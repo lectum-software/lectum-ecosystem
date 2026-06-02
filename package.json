@@ -1,0 +1,18 @@
+{
+  "name": "lectum-ecosystem",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "prepare": "lefthook install",
+    "check": "pnpm check:frontend && pnpm check:backend",
+    "check:frontend": "pnpm --dir frontend check",
+    "check:backend": "if [ -f backend/package.json ]; then pnpm --dir backend check; else echo \"backend ainda sem package.json; pulando checks.\"; fi",
+    "commitlint": "commitlint"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.0.2",
+    "@commitlint/config-conventional": "^21.0.2",
+    "lefthook": "^2.1.9"
+  }
+}

@@ -1,0 +1,72 @@
+# Lefthook config
+# O commit e os hooks vivem no git unificado.
+# As ferramentas de qualidade rodam por projeto.
+
+pre-commit:
+  parallel: true
+  commands:
+    frontend-biome:
+      root: frontend/
+      glob:
+        - "*.{js,jsx,ts,tsx,json,jsonc,css}"
+        - "**/*.{js,jsx,ts,tsx,json,jsonc,css}"
+      run: pnpm exec biome check --write --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
+
+    frontend-typecheck:
+      root: frontend/
+      glob:
+        - "*.{ts,tsx}"
+        - "**/*.{ts,tsx}"
+      run: pnpm typecheck
+
+    backend-biome:
+      root: backend/
+      glob:
+        - "*.{js,jsx,ts,tsx,json,jsonc,css}"
+        - "**/*.{js,jsx,ts,tsx,json,jsonc,css}"
+      run: |
+        if [ -f package.json ]; then
+          pnpm exec biome check --write --no-errors-on-unmatched {staged_files}
+        fi
+      stage_fixed: true
+
+    backend-typecheck:
+      root: backend/
+      glob:
+        - "*.{ts,tsx}"
+        - "**/*.{ts,tsx}"
+      run: |
+        if [ -f package.json ]; then
+          pnpm typecheck
+        fi
+
+commit-msg:
+  commands:
+    commitlint:
+      run: pnpm exec commitlint --edit {1}
+
+pre-push:
+  parallel: false
+  commands:
+    frontend-check:
+      glob:
+        - "frontend/**/*.{js,jsx,ts,tsx,json,jsonc,css}"
+        - "frontend/package.json"
+        - "frontend/pnpm-lock.yaml"
+        - "frontend/tsconfig.json"
+        - "frontend/next.config.*"
+        - "frontend/eslint.config.*"
+        - "frontend/postcss.config.*"
+      run: pnpm check:frontend
+
+    backend-check:
+      glob:
+        - "backend/**/*.{js,jsx,ts,tsx,json,jsonc,css}"
+        - "backend/package.json"
+        - "backend/pnpm-lock.yaml"
+        - "backend/tsconfig.json"
+        - "backend/biome.json"
+        - "backend/eslint.config.*"
+        - "backend/.eslintrc*"
+      run: pnpm check:backend
