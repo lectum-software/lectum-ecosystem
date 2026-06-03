@@ -40,8 +40,9 @@ Permitir que psicólogo veja assinatura atual e altere método de pagamento via 
 
 ## Pré-requisitos e bloqueios
 
-- Alteração de cartão é **delegada ao gateway** e depende do provedor real — **bloqueio TASK-03** (ver `DATA-MODEL.md` › "Assinatura e cobrança"), herdado via TASK-32. Sem gateway, parar e registrar pendência.
-- Persistir **apenas `gateway_token`** e dados de exibição (`brand`/`last4`/`exp_month`/`exp_year`). **Nunca** armazenar PAN/CVV. O fluxo permanece agnóstico ao gateway.
+- Provedor **decidido: Mercado Pago** (ADR-0003), via porta `PaymentGateway`/`MercadoPagoAdapter` herdada da TASK-32. Bloqueio restante = **credenciais MP**; sem elas, construir o fluxo mas não transacionar — parar e registrar pendência.
+- Alteração de cartão = **re-tokenização**: tokenizar o novo cartão no client (Card Payment Brick) → atualizar o cartão do preapproval via adapter (`updateSubscriptionCard`). Tokens não são portáveis entre gateways (ver `DATA-MODEL.md` › "Abstração de gateway").
+- Persistir **apenas `gateway_token`** e dados de exibição (`brand`/`last4`/`exp_month`/`exp_year`). **Nunca** armazenar PAN/CVV.
 
 Se qualquer bloqueio obrigatório estiver ativo, pare a implementação, registre ADR/pendência e não marque a task como concluída.
 
@@ -80,7 +81,7 @@ Endpoints esperados:
 
 - GET `/api/private/psychologist/billing/subscription`
 - POST `/api/private/psychologist/billing/payment-method/session`
-- POST `/api/public/billing/webhook` — **verificar assinatura do provedor antes de processar**.
+- POST `/api/public/billing/webhook` — mesmo webhook da TASK-32; **validar `x-signature` (HMAC-SHA256) antes de processar**; confirmar atualização de cartão/assinatura e refletir status normalizado.
 
 **Guarda de papel:** as rotas de gestão de assinatura/cartão são exclusivas de psicólogo. Vivem sob `/api/private/psychologist/billing/*` e são protegidas por `requireRole("psicologo")` (criado na TASK-12), aplicado no mount em `write.ts`, **fail-closed** (papel divergente → `403`, sem `next()`). O escopo de ownership é feito por `req.auth.id`. O webhook `POST /api/public/billing/webhook` **permanece público** (chamado pelo gateway, não autenticado por usuário; autenticidade via verificação de assinatura do provedor). Ver `DATA-MODEL.md` "Camadas de autenticação e autorização" e `adrs/0002-arquitetura-auth-roles.md`.
 

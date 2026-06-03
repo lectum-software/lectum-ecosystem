@@ -361,9 +361,39 @@ Push real (web-push/VAPID) é **bloqueio TASK-03**: sem VAPID configurado, persi
 
 ---
 
-## Assinatura e cobrança (gateway = **bloqueio TASK-03**)
+## Assinatura e cobrança (gateway = **Mercado Pago**; pendência = credenciais)
 
-Trabalho agnóstico ao gateway. Sem provedor decidido em TASK-03, TASK-32/33 param antes de qualquer chamada real de cobrança; TASK-31 entrega só listagem read-only.
+O provedor foi decidido: **Mercado Pago** (ver `adrs/0003-gateway-pagamento-mercado-pago.md`). A pendência da TASK-03 deixa de ser "qual provedor" e passa a ser "credenciais reais" (access token + public key). Sem credenciais, TASK-32/33 constroem o fluxo/adapter mas não transacionam ao vivo; TASK-31 entrega só listagem read-only. A implementação é **obrigatoriamente agnóstica** via porta de domínio (abaixo).
+
+### Abstração de gateway (porta `PaymentGateway`)
+
+O app nunca importa o SDK do provedor direto; depende da porta. `MercadoPagoAdapter` é a única parte que conhece o MP. Operações mínimas:
+
+- `createSubscription({ plan, card_token, payer_email, external_reference }) -> { gateway_subscription_id, status }`
+- `updateSubscriptionCard({ gateway_subscription_id, card_token })`
+- `cancelSubscription(gateway_subscription_id)`
+- `getSubscription(gateway_subscription_id) -> status normalizado`
+- `parseWebhook(req) -> { type, external_id, gateway_subscription_id, status }`
+
+Trocar de provedor = novo adapter. **Limite real:** card tokens são específicos do gateway e **não portáveis** — uma troca exige re-tokenização (re-coletar cartão ou migração gerenciada). Projetar a troca prevendo re-tokenização; nunca tentar "copiar o token".
+
+### Modo de integração Mercado Pago
+
+- **Cartão (transparente):** tokenização **client-side** via Checkout Bricks (Card Payment Brick) / SDK MP → `card_token`. PAN/CVV nunca tocam o backend (escopo PCI reduzido). O token vira a referência em `payment_method.gateway_token`.
+- **Recorrência:** API de Assinaturas (**Preapproval**) — `POST /preapproval` com `card_token_id`, `auto_recurring { frequency: 1, frequency_type: "months", transaction_amount, currency_id: "BRL" }`, `payer_email`, `external_reference` = nosso `professional_subscription.id`, `status: "authorized"`. O `id` do preapproval → `professional_subscription.gateway_subscription_id`. (Confirmar nomes de campos na doc vigente do MP no momento da TASK-32.)
+- **Webhook:** tópicos `subscription_preapproval`, `subscription_authorized_payment`, `payment`. Validar `x-signature` (HMAC-SHA256 sobre o manifest `id:<data.id>;request-id:<x-request-id>;ts:<ts>;` com o secret da aplicação) **antes** de processar; persistir o payload bruto em `payment_event` com idempotência `@@unique([gateway, external_id])`.
+
+### Mapa de status (MP preapproval → `professional_subscription.status`)
+
+| MP | nosso |
+|---|---|
+| `authorized` | `ativa` |
+| `pending` | `inativa` |
+| `paused` | `inadimplente` |
+| `cancelled` | `cancelada` |
+| pagamento recorrente rejeitado / chargeback | `inadimplente` |
+
+**Soberania de dados:** o entitlement ("é Pro?") é respondido pelo nosso banco (`professional_subscription.status`, atualizado via webhook) — nunca por chamada síncrona ao MP. `gateway` (= `"mercadopago"`), `gateway_subscription_id`, `gateway_token` e `payment_event` bruto sustentam auditoria, replay e reconciliação.
 
 `subscription_plan` (TASK-31; PRD §13):
 

@@ -39,8 +39,9 @@ Implementar checkout real de assinatura com endereço de faturamento e gateway d
 
 ## Pré-requisitos e bloqueios
 
-- Gateway de pagamento é **bloqueio rígido (HARD BLOCK) da TASK-03** (ver `DATA-MODEL.md` › "Assinatura e cobrança"). Sem provedor e credenciais reais, **não** iniciar checkout nem ativar assinatura; parar e registrar pendência.
-- O fluxo de checkout deve ser **agnóstico ao gateway**: nenhuma dependência de provedor específico fora do que a TASK-03 decidir.
+- Provedor **decidido: Mercado Pago** (ADR-0003; ver `DATA-MODEL.md` › "Assinatura e cobrança"). O bloqueio restante são as **credenciais** (access token + public key, sandbox/prod): sem elas, construir o fluxo/adapter mas **não** transacionar ao vivo nem ativar assinatura — parar e registrar pendência.
+- O fluxo deve ser **agnóstico ao gateway**: implementar atrás da porta `PaymentGateway`; só `MercadoPagoAdapter` conhece o MP. Nenhum import do SDK do MP fora do adapter.
+- Cartão tokenizado **client-side** (Checkout Bricks); PAN/CVV nunca tocam o backend. Persistir apenas `payment_method.gateway_token` + display; nunca PAN/CVV.
 - CEP via controller `cep` da TASK-02; não criar consulta de CEP paralela.
 
 Se qualquer bloqueio obrigatório estiver ativo, pare a implementação, registre ADR/pendência e não marque a task como concluída.
@@ -55,18 +56,19 @@ Rotas esperadas:
 Implementação esperada:
 
 - Criar tela de checkout e endereço de faturamento.
-- Validar dados fiscais/endereço com Zod.
-- Integrar fluxo do gateway escolhido.
-- Exibir erro de pagamento, pendente e sucesso conforme retorno real.
+- Validar dados fiscais/endereço com Zod (fundação TASK-02; CEP via controller `cep`).
+- Coletar e tokenizar o cartão com o **Card Payment Brick do Mercado Pago** (SDK MP no client); enviar ao backend apenas o `card_token` (nunca PAN/CVV).
+- Exibir erro de pagamento, pendente e sucesso conforme retorno real (status normalizado do `DATA-MODEL.md`).
 - Não armazenar dados sensíveis de cartão no frontend fora do provedor.
 
 ## Escopo backend
 
 Implementação esperada:
 
-- Criar sessão de checkout no gateway escolhido.
+- Implementar a porta `PaymentGateway` + `MercadoPagoAdapter` (ver `DATA-MODEL.md` › "Abstração de gateway"); o service depende da porta, não do SDK.
+- Criar a assinatura via **Preapproval** do MP com o `card_token` recebido (`auto_recurring` mensal, `external_reference` = `professional_subscription.id`); guardar o `id` do preapproval em `gateway_subscription_id`.
 - Persistir endereço de faturamento permitido.
-- Criar assinatura em status pendente/ativa conforme webhook.
+- Criar/atualizar `professional_subscription` com status **normalizado** do MP (mapa no `DATA-MODEL.md`); só ativar via webhook confirmado.
 - Validar plano e usuário profissional.
 - Não ativar plano sem confirmação real do gateway/webhook.
 
@@ -80,7 +82,7 @@ Endpoints esperados:
 
 - POST `/api/private/psychologist/billing/checkout`
 - PUT `/api/private/psychologist/billing/address`
-- POST `/api/public/billing/webhook` — **verificar a assinatura do provedor antes de processar**; só então persistir `payment_event` e refletir em `professional_subscription`.
+- POST `/api/public/billing/webhook` — tópicos MP `subscription_preapproval`/`subscription_authorized_payment`/`payment`; **validar `x-signature` (HMAC-SHA256, manifest `id:<data.id>;request-id:<x-request-id>;ts:<ts>;`) antes de processar**; só então persistir `payment_event` (idempotente) e refletir status normalizado em `professional_subscription`.
 
 **Guarda de papel:** as rotas de checkout/endereço de billing são exclusivas de psicólogo. Vivem sob `/api/private/psychologist/billing/*` e são protegidas por `requireRole("psicologo")` (criado na TASK-12), aplicado no mount em `write.ts`, **fail-closed** (papel divergente → `403`, sem `next()`). O escopo de ownership é feito por `req.auth.id`. O webhook `POST /api/public/billing/webhook` **permanece público** (chamado pelo gateway, não autenticado por usuário; autenticidade via verificação de assinatura do provedor). Ver `DATA-MODEL.md` "Camadas de autenticação e autorização" e `adrs/0002-arquitetura-auth-roles.md`.
 
@@ -105,12 +107,11 @@ Arquitetura backend obrigatória:
 - Respostas usando `send`, `error500`, `error` e traduções em `backend/locales/pt/translation.json`.
 - Prisma com nomes e padrões já definidos em `ARCHITECTURE.md`.
 
-Packages permitidos nesta task:
+Packages permitidos nesta task (instalar só aqui, com ADR; ver `PACKAGES.md`):
 
-- Gateway escolhido em TASK-03
-- React Hook Form
-- Zod
-- Prisma
+- `mercadopago` (SDK Node, backend) — só dentro do `MercadoPagoAdapter`.
+- `@mercadopago/sdk-react` (Checkout Bricks, frontend) para o Card Payment Brick.
+- React Hook Form, Zod, Prisma (já instalados).
 
 Regras anti-recriação específicas:
 

@@ -133,9 +133,10 @@ Instalar somente na `TASK-02` ou em task que realmente precise do campo.
 
 | Pacote | Versão verificada | Condição |
 |---|---:|---|
-| `stripe` | `22.2.0` | Se TASK-03 escolher Stripe |
-| `mercadopago` | `3.1.0` | Se TASK-03 escolher Mercado Pago |
-| `asaas` | `1.1.0` | Se TASK-03 escolher Asaas e pacote for suficiente |
+| `mercadopago` | confirmar no install (SDK Node) | **Gateway escolhido (ADR-0003)**. Instalar só na TASK-32, dentro do `MercadoPagoAdapter`. |
+| `@mercadopago/sdk-react` | confirmar no install | **Frontend** — Checkout Bricks (Card Payment Brick) na TASK-32. Tokenização client-side. |
+| `stripe` | `22.2.0` | Não escolhido. Manter como referência caso troque de gateway (novo adapter). |
+| `asaas` | `1.1.0` | Não escolhido. |
 | `@aws-sdk/s3-request-presigner` | `3.1060.0` | URLs assinadas S3 |
 | `@sentry/nextjs` | `10.56.0` | Observabilidade frontend |
 | `@sentry/node` | `10.56.0` | Observabilidade backend |

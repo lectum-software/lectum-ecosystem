@@ -22,8 +22,13 @@ Esta task não implementa gateway ou provedor específico. Ela registra decisõe
 
 - `_product/tasks/ARCHITECTURE.md`
 - `_product/tasks/PACKAGES.md`
+- `_product/tasks/DATA-MODEL.md`
 - `_product/tasks/PROTO-INVENTORY.md`
 - `_product/tasks/ROADMAP-REVALIDADO.md`
+
+## Decisões já tomadas
+
+- **Gateway de pagamento: Mercado Pago** — decidido com o cliente. Checkout transparente (Bricks) + Assinaturas (Preapproval). Registrado em `adrs/0003-gateway-pagamento-mercado-pago.md`; contrato em `DATA-MODEL.md` › "Assinatura e cobrança". Pendência restante = **credenciais** (access token + public key, sandbox/prod).
 
 ## Objetivo
 
@@ -38,11 +43,10 @@ Criar um documento de decisões pendentes/definidas para integrações externas 
 
 ## Decisões a registrar
 
-- Gateway de pagamento:
-  - provedor;
-  - modelo de assinatura;
-  - ambiente sandbox/prod;
-  - eventos/webhooks necessários.
+- Gateway de pagamento (**provedor já decidido: Mercado Pago — ver ADR-0003**); registrar o que resta:
+  - credenciais sandbox/prod (access token + public key);
+  - preço final e eventual período de teste do Plano Profissional;
+  - confirmação dos webhooks (`subscription_preapproval`, `subscription_authorized_payment`, `payment`).
 - Storage/bucket:
   - provedor;
   - política de acesso;
@@ -74,7 +78,7 @@ Criar um documento de decisões pendentes/definidas para integrações externas 
 
 ## Saída esperada
 
-- Criar `adrs/0003-integracoes-externas-e-decisoes-pendentes.md` (ADR-0002 já está em uso para a arquitetura de auth/papéis).
+- Criar `adrs/0004-integracoes-externas-e-decisoes-pendentes.md` para as integrações ainda abertas (ADR-0002 = auth/papéis; ADR-0003 = gateway Mercado Pago, já decidido).
 - Criar ou atualizar `_product/decisions.md` com decisões e pendências.
 - Marcar claramente o que está decidido e o que ainda bloqueia implementação.
 
@@ -124,7 +128,7 @@ Impacto nas tasks:
 
 Decisões técnicas mínimas:
 
-- Pagamento: definir se será `stripe`, `mercadopago`, `asaas` ou outro. Não instalar SDK até decisão.
+- Pagamento: **decidido — Mercado Pago** (ADR-0003). Não instalar SDK até a TASK-32 (com ADR); registrar credenciais como pendência.
 - Storage: confirmar se usará S3/AWS SDK já instalado ou outro provider.
 - WhatsApp: confirmar link direto, Twilio ou WhatsApp Business API.
 - CFP: confirmar fonte de consulta e fallback operacional.
@@ -143,7 +147,7 @@ Esta task não possui interface. O estado verificável é documental:
 ## Critérios de aceite
 
 - [ ] `_product/decisions.md` existe.
-- [ ] Gateway de pagamento está definido ou marcado como bloqueio explícito.
+- [ ] Gateway de pagamento definido (**Mercado Pago, ADR-0003**); credenciais sandbox/prod registradas como pendência se ainda ausentes.
 - [ ] Storage/bucket está definido ou marcado como bloqueio explícito.
 - [ ] WhatsApp está definido ou marcado como bloqueio explícito.
 - [ ] CFP está definido ou marcado como bloqueio explícito.

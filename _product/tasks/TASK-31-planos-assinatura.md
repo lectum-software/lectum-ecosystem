@@ -38,7 +38,7 @@ Exibir planos profissionais reais e preparar upgrade sem escolher gateway no có
 
 ## Pré-requisitos e bloqueios
 
-- Gateway de pagamento é **bloqueio TASK-03** (ver `DATA-MODEL.md` › "Assinatura e cobrança"). Sem provedor decidido, esta task entrega **apenas listagem read-only** de planos e da assinatura atual; nenhuma chamada de cobrança.
+- Provedor **decidido: Mercado Pago** (ADR-0003). Esta task de planos é **listagem read-only** de planos e da assinatura atual de qualquer forma (a compra real é a TASK-32); não faz chamada de cobrança. Não depende de credenciais MP.
 - Preço do Plano Profissional = `990` centavos (R$ 9,90/mês, PRD §13), em `subscription_plan.price_cents`; preço final confirmado em TASK-03. Não hardcodar preço fora desse modelo.
 
 Se qualquer bloqueio obrigatório estiver ativo, pare a implementação, registre ADR/pendência e não marque a task como concluída.
@@ -61,7 +61,7 @@ Implementação esperada:
 
 Implementação esperada:
 
-- Modelar planos ou configurar fonte de planos versionada.
+- Modelar `subscription_plan` conforme `DATA-MODEL.md` (não inventar fonte alternativa).
 - Endpoint de listagem de planos e assinatura atual.
 - Não aceitar plano atual vindo do frontend.
 - Registrar regra de features por plano.

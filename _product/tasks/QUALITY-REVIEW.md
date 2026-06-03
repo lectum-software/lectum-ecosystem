@@ -227,3 +227,25 @@ Ajustes aplicados:
 - `adrs/0002-arquitetura-auth-roles.md` criada; índice de ADRs atualizado.
 - TASK-12 estabelece o `requireRole` + check de boot + smoke test; TASK-34 audita os guards de forma transversal.
 - Tasks psicólogo-only (10, 11, 18, 19, 20, 31, 32, 33) e paciente-only (08, 14, 17, 21) ganharam nota de guarda + critério de aceite; tasks de descoberta (13, 15, 16) movidas para `/api/private/directory/*` com `_auth` neutro. Webhook de billing permanece público (autenticado por assinatura do gateway).
+
+## Reavaliação 2026-06-03 - Gateway de pagamento decidido (Mercado Pago, ADR-0003)
+
+Decisão de cliente: gateway = **Mercado Pago**. Pesquisa na doc oficial (jun/2026) confirmou compatibilidade total, sem breaking change com o `DATA-MODEL.md`.
+
+Confirmado no Mercado Pago:
+
+- Checkout transparente via **Checkout Bricks (Card Payment Brick)**: tokenização client-side (PAN/CVV não tocam o backend; escopo PCI reduzido).
+- Recorrência via **API de Assinaturas (Preapproval)** com `card_token_id` (`auto_recurring`, `external_reference`, `status: authorized`).
+- Webhooks `subscription_preapproval`/`subscription_authorized_payment`/`payment` com validação `x-signature` (HMAC-SHA256).
+
+Ajustes aplicados:
+
+- `DATA-MODEL.md` › "Assinatura e cobrança": seção "Abstração de gateway" (porta `PaymentGateway` + `MercadoPagoAdapter`), modo de integração MP, mapa de status MP→nosso, webhook e nota de re-tokenização (token não-portável). Cabeçalho mudou de "bloqueio TASK-03" para "Mercado Pago; pendência = credenciais".
+- `adrs/0003-gateway-pagamento-mercado-pago.md` criada (Accepted); índice de ADRs atualizado.
+- TASK-03: gateway marcado como decidido (MP/ADR-0003); o ADR-bundle das demais integrações passou a `0004`; pendência restante = credenciais.
+- TASK-31/32/33: alinhadas ao MP via porta/adapter; TASK-32 com Card Payment Brick + Preapproval + webhook `x-signature`; TASK-33 com troca de cartão por re-tokenização. Bloqueio dessas tasks deixou de ser "qual provedor" e passou a "credenciais MP".
+- `PACKAGES.md`: `mercadopago` (backend) e `@mercadopago/sdk-react` (frontend) marcados como escolhidos (instalar só na TASK-32 + ADR); Stripe/Asaas como não escolhidos.
+
+Arquitetura preservada: ports & adapters + soberania de dados (nosso banco é a fonte de verdade do entitlement; MP nunca é consultado de forma síncrona para "é Pro?"). Troca de gateway futura = novo adapter + re-tokenização.
+
+Pendência aberta: credenciais Mercado Pago (sandbox/prod) e preço/free-trial final do Plano Profissional — TASK-03.
