@@ -65,7 +65,7 @@ export function Container({
       {label ? (
         <span className="flex items-center gap-1.5">
           <span>{label}</span>
-          {required ? <span className="text-red-600">*</span> : null}
+          {required ? <span className="text-danger">*</span> : null}
           {tooltip ? (
             <span className="inline-flex text-subtle" title={tooltip}>
               <Info className="h-4 w-4" aria-hidden="true" />
@@ -85,7 +85,7 @@ export function Container({
       {/* Slot de erro com altura fixa reservada em todos os campos (com ou sem erro),
           para evitar layout shift quando a mensagem aparece/some. */}
       <span
-        className="block min-h-4 text-xs font-medium leading-4 text-red-600"
+        className="block min-h-4 text-xs font-medium leading-4 text-danger"
         id={`${id}-error`}
         role="alert"
       >

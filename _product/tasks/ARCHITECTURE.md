@@ -120,6 +120,7 @@ Templates/shells devem viver em `frontend/src/templates`.
 
 - **Mobile-first obrigatório**: projetar e implementar primeiro para mobile (base ~390px dos protótipos) e progredir para telas maiores com breakpoints. Toda task com UI deve tornar isso explícito na execução.
 - **Nunca usar `<img>`**: sempre o componente `Image` de `next/image` (otimização e estabilidade de layout). `<img>` cru é proibido.
+- **Tema claro/escuro/sistema** via `next-themes` (`attribute="class"`, `defaultTheme="system"`, `enableSystem`). Cores SEMPRE por tokens (`bg-background`, `bg-surface`, `text-foreground`, `text-muted`, `text-subtle`, `border-border`, `text-primary`/`bg-primary`/`bg-primary-soft`…), **nunca valores hardcoded** (`zinc-*`, `#fff`, `bg-[#...]`). A paleta dark vive em `.dark` no `frontend/src/app/globals.css`; toda tela deve funcionar nos dois temas.
 - Primeiro ajustar e reutilizar componentes existentes.
 - Não criar um design system paralelo.
 - Design foundation deve transformar `registry/new-york-v4` e `components/ui` no padrão Lectum.

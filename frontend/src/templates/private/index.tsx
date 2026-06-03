@@ -5,6 +5,7 @@ import type { PropsWithChildren } from "react";
 
 import { Logo } from "@/components/ui/logo";
 import { PageShell } from "@/components/ui/page-shell";
+import { ThemeSwitch } from "@/components/ui/theme-switch";
 import { useSignOut } from "@/hooks/cookies/signout";
 import { NotificationManager } from "@/hooks/notification";
 import { Button } from "@/registry/new-york-v4/ui/button";
@@ -25,7 +26,8 @@ export const PrivateTemplate = ({ children }: PropsWithChildren) => {
                   <p className="mt-0.5 text-xs text-muted">Dashboard</p>
                 </div>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
+                <ThemeSwitch />
                 <a
                   aria-label="Notificações"
                   className="grid h-9 w-9 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary"

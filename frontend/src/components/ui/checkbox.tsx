@@ -23,7 +23,7 @@ export function Checkbox({ className, label, error, id, ...props }: CheckboxProp
       />
       <span>
         {label}
-        {error ? <span className="mt-1 block text-xs text-red-600">{error}</span> : null}
+        {error ? <span className="mt-1 block text-xs text-danger">{error}</span> : null}
       </span>
     </label>
   );

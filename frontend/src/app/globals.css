@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Tema escuro baseado em classe (.dark), alinhado ao next-themes (attribute="class"). */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #f6f7f8;
   --foreground: #0f172a;
@@ -7,6 +10,7 @@
   --lectum-primary-hover: #247bd1;
   --lectum-primary-soft: #eaf5ff;
   --lectum-surface: #ffffff;
+  --lectum-surface-muted: #f8fafc;
   --lectum-border: #e2e8f0;
   --lectum-border-strong: #cbd5e1;
   --lectum-muted: #64748b;
@@ -22,15 +26,40 @@
   --lectum-shadow-soft: 0 8px 20px rgb(15 23 42 / 6%);
 }
 
+.dark {
+  --background: #0b1120;
+  --foreground: #e2e8f0;
+  --lectum-primary: #4aa0f0;
+  --lectum-primary-hover: #6cb4f5;
+  --lectum-primary-soft: #16243a;
+  --lectum-surface: #131c2e;
+  --lectum-surface-muted: #0f1726;
+  --lectum-border: #273349;
+  --lectum-border-strong: #3a4a63;
+  --lectum-muted: #94a3b8;
+  --lectum-subtle: #6b7a90;
+  --lectum-danger: #f87171;
+  --lectum-success: #4ade80;
+  --lectum-warning: #fbbf24;
+  --lectum-shadow: 0 16px 40px rgb(0 0 0 / 45%);
+  --lectum-shadow-soft: 0 8px 20px rgb(0 0 0 / 35%);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--lectum-primary);
+  --color-primary-hover: var(--lectum-primary-hover);
   --color-primary-soft: var(--lectum-primary-soft);
   --color-surface: var(--lectum-surface);
+  --color-surface-muted: var(--lectum-surface-muted);
   --color-border: var(--lectum-border);
+  --color-border-strong: var(--lectum-border-strong);
   --color-muted: var(--lectum-muted);
   --color-subtle: var(--lectum-subtle);
+  --color-danger: var(--lectum-danger);
+  --color-success: var(--lectum-success);
+  --color-warning: var(--lectum-warning);
   --font-sans: var(--font-manrope);
   --font-mono: var(--font-manrope);
 }
@@ -56,6 +85,11 @@ input,
 textarea,
 select {
   font: inherit;
+}
+
+button,
+a {
+  cursor: pointer;
 }
 
 ::selection {

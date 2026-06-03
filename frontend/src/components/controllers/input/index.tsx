@@ -60,7 +60,7 @@ export function InputController<FormType extends FieldValues>({
                 autoComplete={autoComplete}
                 autoFocus={autoFocus}
                 className={cn(
-                  error && "border-red-400 focus:border-red-500 focus:ring-red-500/10",
+                  error && "border-danger focus:border-danger focus:ring-danger/10",
                   type === "password" && "pr-11",
                   inputClassName,
                 )}

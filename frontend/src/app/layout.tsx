@@ -31,7 +31,12 @@ export default function RootLayout({
         className={`${manrope.variable} bg-background text-foreground antialiased`}
         suppressHydrationWarning
       >
-        <ThemeProvider attribute="class">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          disableTransitionOnChange
+          enableSystem
+        >
           <Progress />
           <Redux>
             <Query>

@@ -56,6 +56,7 @@ Criar a fundação visual do Lectum no frontend para que as próximas telas seja
 
 - Configurar Manrope como fonte principal no Next.js.
 - Definir tokens CSS/Tailwind para cores, radius, shadow, typography e layout mobile-first.
+- Definir paletas de **tema claro e escuro** (tokens em `:root` e `.dark` no `globals.css`) com suporte a `system` via `next-themes` (`attribute="class"`, `defaultTheme="system"`); expor um alternador de tema. Telas usam tokens, nunca cores hardcoded.
 - Criar componentes base do design:
   - `Button`;
   - `Input`;
@@ -126,6 +127,7 @@ Componentes base devem prever estados reutilizáveis:
 ## Critérios de aceite
 
 - [x] Design tokens Lectum documentados em código e ADR.
+- [x] Tema claro/escuro/sistema suportado via tokens (paleta `.dark`) + `next-themes`, com alternador de tema.
 - [x] Manrope aplicada globalmente.
 - [x] Componentes base criados ou ajustados.
 - [x] Login atual continua funcional após troca visual.

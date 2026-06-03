@@ -49,7 +49,7 @@ export const AuthLogic = () => {
           <span>
             Não tem uma conta?{" "}
             <a
-              className="font-semibold text-primary hover:text-[#247bd1]"
+              className="font-semibold text-primary hover:text-primary-hover"
               href="/auth/profile-selection"
             >
               Cadastre-se
@@ -67,7 +67,7 @@ export const AuthLogic = () => {
 
         <Form {...formProps} className="grid gap-2" onSubmit={hook.handleSubmit(handleSubmit)}>
           <a
-            className="-mt-2 justify-self-end text-sm font-medium text-primary hover:text-[#247bd1]"
+            className="-mt-2 justify-self-end text-sm font-medium text-primary hover:text-primary-hover"
             href="/auth/recovery"
           >
             Esqueci minha senha

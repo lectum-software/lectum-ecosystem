@@ -10,8 +10,8 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-white shadow-[var(--lectum-shadow-soft)] hover:bg-[#247bd1] focus-visible:outline-primary",
-        destructive: "bg-red-600 text-white hover:bg-red-700 focus-visible:outline-red-600",
+          "bg-primary text-white shadow-[var(--lectum-shadow-soft)] hover:bg-primary-hover focus-visible:outline-primary",
+        destructive: "bg-danger text-white hover:bg-danger/90 focus-visible:outline-danger",
         outline:
           "border border-border bg-surface text-foreground hover:bg-primary-soft focus-visible:outline-primary",
         ghost:

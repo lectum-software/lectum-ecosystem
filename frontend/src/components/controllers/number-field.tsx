@@ -68,7 +68,7 @@ export function NumberFieldController<FormType extends FieldValues>({
                 aria-invalid={Boolean(error)}
                 autoFocus={autoFocus}
                 className={cn(
-                  error && "border-red-400 focus:border-red-500 focus:ring-red-500/10",
+                  error && "border-danger focus:border-danger focus:ring-danger/10",
                   adornment && "pl-11",
                   inputClassName,
                 )}

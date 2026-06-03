@@ -49,8 +49,8 @@ export function SelectController<FormType extends FieldValues>({
               aria-describedby={describedBy({ id: inputId, description, error })}
               aria-invalid={Boolean(error)}
               className={cn(
-                "h-12 rounded-[var(--lectum-control-radius)] border border-border bg-surface px-4 text-sm text-foreground shadow-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:bg-[#f8fafc] disabled:text-muted",
-                error && "border-red-400 focus:border-red-500 focus:ring-red-500/10",
+                "h-12 rounded-[var(--lectum-control-radius)] border border-border bg-surface px-4 text-sm text-foreground shadow-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted",
+                error && "border-danger focus:border-danger focus:ring-danger/10",
                 inputClassName,
               )}
               disabled={disabled || readOnly || loading}

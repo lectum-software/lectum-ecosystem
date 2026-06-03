@@ -17,15 +17,15 @@ const variants = {
   },
   success: {
     icon: CheckCircle2,
-    className: "border-green-200 bg-green-50 text-green-700",
+    className: "border-success/30 bg-success/10 text-success",
   },
   warning: {
     icon: TriangleAlert,
-    className: "border-amber-200 bg-amber-50 text-amber-700",
+    className: "border-warning/30 bg-warning/10 text-warning",
   },
   error: {
     icon: TriangleAlert,
-    className: "border-red-200 bg-red-50 text-red-700",
+    className: "border-danger/30 bg-danger/10 text-danger",
   },
 };
 

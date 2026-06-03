@@ -86,6 +86,7 @@ Regras de UI obrigatórias (ver `ARCHITECTURE.md` › "Regras de UI"):
 
 - **Mobile-first**: implementar primeiro para mobile (~390px) e progredir com breakpoints.
 - **Nunca usar `<img>`**; sempre `Image` de `next/image`.
+- **Tema claro/escuro/sistema**: cores por tokens (`bg-background`/`bg-surface`/`text-foreground`/`border-border`/`text-primary`…), nunca hardcoded; funcionar nos dois temas.
 - Campos de formulário em largura total; slot de erro com altura fixa (sem layout shift).
 
 ## Critérios de aceite
