@@ -11,11 +11,11 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variants = {
   primary:
-    "bg-zinc-950 text-white hover:bg-zinc-800 focus-visible:outline-zinc-950 disabled:bg-zinc-400",
+    "bg-primary text-white shadow-[var(--lectum-shadow-soft)] hover:bg-[#247bd1] focus-visible:outline-primary disabled:bg-[#94a3b8]",
   secondary:
-    "border border-zinc-200 bg-white text-zinc-950 hover:bg-zinc-50 focus-visible:outline-zinc-400 disabled:text-zinc-400",
+    "border border-border bg-surface text-foreground hover:bg-primary-soft focus-visible:outline-primary disabled:text-subtle",
   ghost:
-    "bg-transparent text-zinc-700 hover:bg-zinc-100 focus-visible:outline-zinc-400 disabled:text-zinc-400",
+    "bg-transparent text-muted hover:bg-primary-soft hover:text-foreground focus-visible:outline-primary disabled:text-subtle",
 };
 
 export function Button({
@@ -29,7 +29,7 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex h-11 items-center justify-center gap-2 rounded-md px-4 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed",
+        "inline-flex h-12 items-center justify-center gap-2 rounded-[var(--lectum-control-radius)] px-5 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed",
         variants[variant],
         className,
       )}

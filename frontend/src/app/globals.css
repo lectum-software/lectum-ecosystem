@@ -1,15 +1,38 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f6f2ec;
-  --foreground: #18181b;
+  --background: #f6f7f8;
+  --foreground: #0f172a;
+  --lectum-primary: #308ce8;
+  --lectum-primary-hover: #247bd1;
+  --lectum-primary-soft: #eaf5ff;
+  --lectum-surface: #ffffff;
+  --lectum-border: #e2e8f0;
+  --lectum-border-strong: #cbd5e1;
+  --lectum-muted: #64748b;
+  --lectum-subtle: #94a3b8;
+  --lectum-danger: #dc2626;
+  --lectum-success: #16a34a;
+  --lectum-warning: #d97706;
+  --lectum-card-radius: 12px;
+  --lectum-control-radius: 16px;
+  --lectum-auth-radius: 24px;
+  --lectum-container: 448px;
+  --lectum-shadow: 0 16px 40px rgb(15 23 42 / 8%);
+  --lectum-shadow-soft: 0 8px 20px rgb(15 23 42 / 6%);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: var(--lectum-primary);
+  --color-primary-soft: var(--lectum-primary-soft);
+  --color-surface: var(--lectum-surface);
+  --color-border: var(--lectum-border);
+  --color-muted: var(--lectum-muted);
+  --color-subtle: var(--lectum-subtle);
+  --font-sans: var(--font-manrope);
+  --font-mono: var(--font-manrope);
 }
 
 * {
@@ -24,10 +47,21 @@ body {
   min-height: 100%;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-manrope), Arial, Helvetica, sans-serif;
+  text-rendering: optimizeLegibility;
 }
 
 button,
-input {
+input,
+textarea,
+select {
   font: inherit;
+}
+
+::selection {
+  background: rgb(48 140 232 / 18%);
+}
+
+:focus-visible {
+  outline-color: var(--lectum-primary);
 }

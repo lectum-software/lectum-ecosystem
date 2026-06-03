@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Manrope } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 
 import "@/app/globals.css";
@@ -9,14 +9,10 @@ import { Provider as Redux } from "@/providers/redux";
 import { Provider as Socket } from "@/providers/socket";
 import { Toaster } from "@/registry/new-york-v4/ui/sonner";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -31,9 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html suppressHydrationWarning lang="pt-BR">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} bg-background text-foreground antialiased`}
-      >
+      <body className={`${manrope.variable} bg-background text-foreground antialiased`}>
         <ThemeProvider attribute="class">
           <Progress />
           <Redux>
