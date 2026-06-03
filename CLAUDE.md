@@ -37,7 +37,9 @@ Leia antes de executar qualquer task:
 - Não use `sample/` como fonte ativa, exceto quando a task citar expressamente uma referência técnica específica, como a `TASK-02`.
 - Antes de criar estrutura nova, procure padrões existentes no frontend/backend.
 - Antes de instalar package novo, consulte `PACKAGES.md` e registre ADR.
-- Formulários/campos de produto devem seguir `TASK-02`: React Hook Form, Zod, `frontend/src/hooks/form` e `frontend/src/components/controllers`.
+- Formulários/campos de produto devem seguir `TASK-02`: React Hook Form, Zod, `frontend/src/hooks/form` e `frontend/src/components/controllers`. Campos ocupam largura total; slot de erro com altura fixa (sem layout shift).
+- Toda UI é **mobile-first** e explícita na execução (base ~390px dos protótipos).
+- **Nunca use `<img>`**; sempre `Image` de `next/image`.
 - Não crie design system, API client, auth guard, validator ou helper de resposta paralelo.
 - Se mudar UI, valide com browser local além dos checks.
 

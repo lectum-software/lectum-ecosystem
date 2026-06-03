@@ -339,23 +339,25 @@ Não há modelo persistido obrigatório. O ranking é **derivado** de `post_vote
 
 ## Notificações
 
-`notification` (in-app, TASK-29; PRD §12, fluxograma 19.9). Distinto de `notification_subscription` (que já existe e guarda a inscrição web-push):
+`notification` (in-app, TASK-29A; PRD §12, fluxograma 19.9). **Já migrado** (`@@map("notifications")`). Distinto de `notification_subscription` (que guarda a inscrição web-push). A forma abaixo é o schema real (derivado do sample), reconciliado com o PRD §12 — não usar `type/data/read_at`:
 
 | Campo | Tipo | Notas |
 |---|---|---|
-| `user_id` | `String` | destinatário |
-| `type` | `String` | eventos do PRD §12: `"nova_avaliacao" \| "novo_favorito" \| "visualizacao_perfil" \| "clique_whatsapp" \| "novo_post" \| "nova_resposta" \| "upvote" \| "downvote" \| "compartilhamento" \| "salvamento"` |
-| `data` | `Json?` | payload para "Abrir Conteúdo Relacionado" (ids de post/perfil/etc.) |
-| `read_at` | `DateTime?` | null = não lida |
-| `@@index([user_id, read_at, createdAt])` | | |
+| `user_id` | `String` | destinatário; `@@index([user_id])` |
+| `read` | `Boolean @default(false)` | flag de leitura (não há `read_at`) |
+| `message_key` | `String` | **tipo/chave do evento (PRD §12)** e chave de i18n: `"nova_avaliacao" \| "novo_favorito" \| "visualizacao_perfil" \| "clique_whatsapp" \| "novo_post" \| "nova_resposta" \| "upvote" \| "downvote" \| "compartilhamento" \| "salvamento"` |
+| `message_props` | `Json?` | payload (ids de post/perfil/etc.) para render e "Abrir Conteúdo Relacionado" |
+| `redirect` | `String?` | rota/deep-link do conteúdo relacionado |
 
-`notification_preference` (TASK-29, "Configurações de Notificações"):
+`notification_preference` (TASK-29A, "Configurações de Notificações"):
 
 | Campo | Tipo | Notas |
 |---|---|---|
 | `user_id` | `String @unique` | |
-| `prefs` | `Json` | mapa `tipo → boolean` (push/in-app por categoria) |
-| `@@index([user_id])` | | |
+| `prefs` | `Json` | mapa `message_key → { in_app: boolean; push: boolean }` por categoria do PRD §12 |
+| `@@map("notification_preferences")` | | |
+
+Endpoints de notificação (módulos separados, padrão do projeto): `notification/{index,update/:id,clean}`; `notification_preference/{show,update}`; `notification_subscription/{key,store}`. Cada caso é um módulo próprio sob `/api/private/...`.
 
 Push real foi decidido na TASK-03 (ver ADR-0006), usando `web-push`/VAPID e `notification_subscription`. Sem chaves VAPID reais no ambiente, persistir preferência mas não prometer entrega push.
 
@@ -470,8 +472,11 @@ Reutilizar a infraestrutura existente (ver `ARCHITECTURE.md` e o módulo `auth` 
 
 - **Resposta de sucesso** (helper `send`): `{ success: true, status?, message?, code?, data }`. O frontend (`handleReq`) desembrulha `data`.
 - **Resposta de erro** (`send`/`error`/`error500`): `{ success: false, status, error, code, ... }`. Status default 400; 401 dispara signout no frontend.
-- **Paginação padrão** para toda listagem (TASK-13/19/23/26/28): query `page` (1-based) e `limit` (default 20, máx 50); resposta `data: { items: T[], total: number, page: number, limit: number }`. Para feeds/listas muito longas, avaliar cursor por `createdAt`+`id` e `@tanstack/react-virtual` (ver `PACKAGES.md`), registrando em ADR.
-- **Validação**: `validator/index.ts` com o pacote local (`method:"email"`, `"password"` = mín. 12 com maiúscula/minúscula/dígito/especial, `"string"`, etc.). Mensagens de erro traduzidas em `backend/locales/pt/translation.json`.
+- **Paginação padrão** para toda listagem (TASK-13/19/23/26/28): query `page` (1-based) e `limit` (default 20, máx 50); resposta `data: { data: T[], page: number, pages: number, count: number }` (forma do `PaginationResponse` real do backend). Para feeds/listas muito longas, avaliar cursor por `createdAt`+`id` e `@tanstack/react-virtual` (ver `PACKAGES.md`), registrando em ADR.
+- **Sem `select`/`include` vindos do frontend**: o frontend NÃO define o shape dos dados (nada de seleção de campos estilo GraphQL). O backend retorna o conjunto de campos que a tela precisa, definido no service/repository. Não reintroduzir `select`/`include` nos validators/DTOs/repos das rotas de produto.
+- **Filtro `deleted`**: toda query de listagem/leitura filtra `deleted: false` diretamente no `where` (soft delete; nunca retornar registros deletados).
+- **GET sem corpo**: endpoints GET sem entrada não precisam de validator de body; se usarem o validator, ele já trata `body/query/params` ausentes como `{}` (evita erro `invalid_structure`).
+- **Validação**: `validator/index.ts` com o pacote local (`method:"email"`, `"password"` = mín. 12 com maiúscula/minúscula/dígito/especial, `"string"`, etc.). Mensagens de erro traduzidas em `backend/locales/pt/translation.json` (incl. `invalid_structure`).
 - **Privado**: exige headers `Authorization: Bearer <jwt>` + `x-device`; `req.auth` traz o `user`. Nunca recriar autenticação.
 - **Query keys** (frontend): adicionar famílias em `frontend/src/api/cache/keys.ts` ao lado de `auth.hydrate`; invalidar após mutations que alteram listas/detalhes.
 
@@ -483,5 +488,5 @@ Para evitar referência a tabela inexistente, criar nesta ordem (cada uma com su
 2. catálogos `specialty`/`service`/`approach` + joins (TASK-09/13).
 3. `psychologist_favorite`/`psychologist_follow`/`contact_request`/`professional_review` (TASK-14/16/17).
 4. comunidade: `community` → `community_member`/`community_suggestion` → `community_post` → `post_reply`/`post_vote`/`post_save` (TASK-22..28).
-5. `notification`/`notification_preference` (TASK-29).
+5. `notification`/`notification_preference` (TASK-29A).
 6. `subscription_plan`/`professional_subscription`/`billing_address`/`payment_method`/`payment_event` (TASK-31..33) — após TASK-03.

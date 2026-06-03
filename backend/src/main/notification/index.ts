@@ -1,81 +1,106 @@
 import webPush from "@/config/webPush";
-
+import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
-import type { user } from "@/interfaces/objects";
+import { notification as emitNotification } from "@/main/socket/events/notification";
 import { messages } from "./constants";
 
 const BASE = process.env.BASE;
 
-export const notify = async (
-  items: { id: string }[] | { email: string }[],
-  meta: {
-    message_key: keyof typeof messages;
-    message_props?: unknown;
-    redirect?: string;
-    searchParams?: Record<string, string | undefined | null>;
-  },
-  icon?: string,
-) => {
+type NotifyMeta = {
+  message_key: string;
+  message_props?: Record<string, unknown>;
+  redirect?: string;
+};
+
+type ChannelPrefs = { in_app?: boolean; push?: boolean };
+
+// Default: permitir quando não há preferência registrada para a categoria.
+const isAllowed = (prefs: unknown, key: string, channel: keyof ChannelPrefs) => {
+  if (!prefs || typeof prefs !== "object") return true;
+  const entry = (prefs as Record<string, ChannelPrefs>)[key];
+  if (!entry) return true;
+  return entry[channel] !== false;
+};
+
+/**
+ * Cria a notificação in-app, emite em tempo real (Socket.IO) e envia push web,
+ * respeitando `notification_preference` por canal. Não é ligado a eventos de
+ * domínio aqui — a produção de eventos é responsabilidade da TASK-29B.
+ */
+export const notify = async (userIds: string[], meta: NotifyMeta) => {
   try {
-    if (items.length === 0) return;
+    const ids = [...new Set(userIds)].filter(Boolean);
+    if (ids.length === 0) return;
 
-    let notificationTargets: {
-      subscription: any;
-      icon: string;
-      profile_id?: string | null;
-    }[] = [];
-
-    const users: user[] = await prisma.user.findMany({
-      where: {
-        email: {
-          in: items.map((item) => (item as { email: string }).email),
-        },
-      },
-      include: {
-        notification_subscriptions: true,
-      },
+    const users = await prisma.user.findMany({
+      where: { id: { in: ids }, deleted: false },
+      include: { notification_subscriptions: true, notification_preference: true },
     });
-    notificationTargets = users
-      .flatMap((user) =>
-        (user?.notification_subscriptions || []).map((sub) => ({
-          subscription: sub.subscription,
-          icon: icon || `${BASE}/logo.png`,
+
+    const props = (meta.message_props ?? {}) as Prisma.InputJsonValue;
+
+    // 1. Persistir notificações in-app (canal in_app permitido).
+    const inAppUsers = users.filter((user) =>
+      isAllowed(user.notification_preference?.prefs, meta.message_key, "in_app"),
+    );
+
+    if (inAppUsers.length > 0) {
+      await prisma.notification.createMany({
+        data: inAppUsers.map((user) => ({
+          user_id: user.id,
+          message_key: meta.message_key,
+          message_props: props,
+          redirect: meta.redirect,
         })),
-      )
-      .filter((target) => !!target.subscription);
+      });
 
-    const notificationPayloadBase = {
-      notification: {
-        ...messages[meta.message_key](meta?.message_props || ({} as any)),
-      },
-      data: {
-        redirect: meta.redirect,
-        searchParams: meta.searchParams,
-      },
-    };
+      // 2. Tempo real para quem estiver conectado.
+      await emitNotification(inAppUsers.map((user) => user.id));
+    }
 
-    notificationTargets.forEach(async ({ subscription, icon, profile_id }) => {
-      const searchParams = meta.searchParams || {};
-      if (profile_id) searchParams.profile_id = profile_id;
+    // 3. Push web (canal push permitido + subscription + VAPID configurado).
+    const build = messages[meta.message_key as keyof typeof messages];
+    let targeted = 0;
+    let sent = 0;
+    let failed = 0;
 
-      try {
-        const notificationPayload = {
-          ...notificationPayloadBase,
-          data: {
-            ...notificationPayloadBase.data,
-            searchParams,
-          },
-          notification: {
-            ...notificationPayloadBase.notification,
-            icon,
-          },
-        };
-        await webPush.sendNotification(subscription, JSON.stringify(notificationPayload));
-      } catch (error: any) {
-        console.error("[WEB NOTIFICATION] Error sending notification", error?.message);
+    for (const user of users) {
+      if (!isAllowed(user.notification_preference?.prefs, meta.message_key, "push")) continue;
+
+      for (const sub of user.notification_subscriptions ?? []) {
+        if (!sub.subscription) continue;
+        targeted++;
+
+        try {
+          const content = build
+            ? build(meta.message_props ?? {})
+            : { title: "Lectum", body: "Você tem uma nova notificação" };
+
+          const payload = JSON.stringify({
+            notification: { ...content, icon: `${BASE}/logo.png` },
+            data: { redirect: meta.redirect, message_props: meta.message_props },
+          });
+
+          await webPush.sendNotification(
+            sub.subscription as unknown as Parameters<typeof webPush.sendNotification>[0],
+            payload,
+          );
+          sent++;
+        } catch (error) {
+          failed++;
+          console.error(
+            "[WEB NOTIFICATION] erro ao enviar push:",
+            (error as { statusCode?: number })?.statusCode,
+            (error as Error)?.message,
+          );
+        }
       }
-    });
-  } catch (error: any) {
-    console.error("[WEB NOTIFICATION] Error sending notification", error?.message);
+    }
+
+    console.log(
+      `[WEB NOTIFICATION] push "${meta.message_key}": ${targeted} alvo(s), ${sent} enviado(s), ${failed} falha(s).`,
+    );
+  } catch (error) {
+    console.error("[WEB NOTIFICATION] erro no dispatcher:", (error as Error)?.message);
   }
 };

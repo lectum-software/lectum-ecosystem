@@ -197,9 +197,9 @@ const validator = (data: IValidatorRequest, i18next?: any) => async (req, res, n
     });
 
     const resolved = await schemaZod.parseAsync({
-      body: req.body,
-      query: req.query,
-      params: req.params,
+      body: req.body ?? {},
+      query: req.query ?? {},
+      params: req.params ?? {},
     });
 
     Object.keys(resolved?.body || []).forEach((item) => {

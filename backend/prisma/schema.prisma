@@ -34,9 +34,24 @@ model user {
   user_backgrounds           user_background[]           @relation("user_background_user")
   notification_subscriptions notification_subscription[] @relation("notification_subscription_user")
   logs                       log__user[]                 @relation("log__user_user")
+  notifications              notification[]              @relation("notifications")
+  notification_preference    notification_preference?    @relation("notification_preference_user")
 
   @@index([email, deleted])
   @@map("users")
+}
+
+model notification_preference {
+  id        String    @id @default(cuid())
+  deleted   Boolean   @default(false)
+  deletedAt DateTime? @map("deleted_at")
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  user_id   String    @unique
+  prefs     Json
+  user      user      @relation("notification_preference_user", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
 }
 
 model user_token {
@@ -85,6 +100,24 @@ model notification_subscription {
   @@index([user_id, device_id])
   @@map("notification_subscriptions")
 }
+
+model notification {
+  id            String    @id @default(cuid())
+  deleted       Boolean   @default(false)
+  deletedAt     DateTime?
+  updatedAt     DateTime  @default(now()) @updatedAt
+  createdAt     DateTime  @default(now())
+  user_id       String
+  read          Boolean   @default(false)
+  redirect      String?
+  message_key   String
+  message_props Json?
+  user          user      @relation("notifications", fields: [user_id], references: [id])
+
+  @@index([user_id])
+  @@map("notifications")
+}
+
 
 model log__user {
   id        String    @id @default(cuid())

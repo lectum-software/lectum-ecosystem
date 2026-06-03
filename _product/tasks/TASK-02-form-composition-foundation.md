@@ -74,6 +74,8 @@ Arquivos/estruturas esperadas:
 Implementação esperada:
 
 - Criar `Container` único para label, required, tooltip opcional, descrição opcional e erro inline.
+- O `Container` reserva **altura fixa** para o slot de erro em todos os campos (com ou sem erro), evitando layout shift quando a mensagem aparece/some. Nunca renderizar o erro de forma condicional que empurre o layout.
+- Campos de input ocupam **largura total** (`w-full`) do container por padrão.
 - Criar registry de controllers por tipo de campo.
 - Criar `useFormList<FormType>()` inspirado no sample, aceitando:
   - `fields`;
@@ -170,6 +172,8 @@ Regras anti-recriação específicas:
 - [x] Fundação `frontend/src/hooks/form` criada.
 - [x] Controllers mínimos criados para input, textarea, checkbox, select, switch, phone, cpf, cnpj, cep, money, numeric, percentage e calendar.
 - [x] `Container` único implementa label, required, tooltip/descrição e erro inline.
+- [x] Slot de erro tem altura fixa reservada em todos os campos (sem layout shift).
+- [x] Campos de input ocupam largura total (`w-full`) do container.
 - [x] Login atual foi migrado como smoke test sem quebrar autenticação.
 - [x] Todo schema usa Zod e `zodResolver`.
 - [x] Todos os erros visíveis estão em PT-BR.

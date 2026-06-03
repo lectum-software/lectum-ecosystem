@@ -82,11 +82,15 @@ export function Container({
 
       {children}
 
-      {error ? (
-        <span className="text-xs font-medium text-red-600" id={`${id}-error`} role="alert">
-          {error}
-        </span>
-      ) : null}
+      {/* Slot de erro com altura fixa reservada em todos os campos (com ou sem erro),
+          para evitar layout shift quando a mensagem aparece/some. */}
+      <span
+        className="block min-h-4 text-xs font-medium leading-4 text-red-600"
+        id={`${id}-error`}
+        role="alert"
+      >
+        {error}
+      </span>
     </Label>
   );
 }

@@ -136,8 +136,8 @@ O comando acima não deve ser usado como geração final automática. Quando usa
 | Posts | Meus Posts - Paciente | `_product/proto/Meus Posts - Paciente.jpg` | 414x1438 | TASK-28 |
 | Posts | Meus Posts - Psicólogo | `_product/proto/Meus Posts - Psicólogo.jpg` | 394x1593 | TASK-28 |
 | Posts | Posts Salvos | `_product/proto/Posts Salvos.jpg` | 390x1784 | TASK-28 |
-| Conta | Notificações | `_product/proto/Notificações.jpg` | 414x1317 | TASK-29 |
-| Conta | Configurações de Notificações | `_product/proto/Configurações de Notificações.jpg` | 390x1099 | TASK-29 |
+| Conta | Notificações | `_product/proto/Notificações.jpg` | 414x1317 | TASK-29A |
+| Conta | Configurações de Notificações | `_product/proto/Configurações de Notificações.jpg` | 390x1099 | TASK-29A |
 | Conta | Configurações de Conta - Login Google | `_product/proto/Configurações de Conta - Login Google.jpg` | 390x884 | TASK-30 |
 | Conta | Editar E-mail e Senha | `_product/proto/Editar E-mail e Senha.jpg` | 390x965 | TASK-30 |
 | Assinatura | Planos de Assinatura | `_product/proto/Planos de Assinatura.jpg` | 390x2058 | TASK-31 |

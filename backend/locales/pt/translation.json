@@ -1,5 +1,6 @@
 {
   "error": {
+    "invalid_structure": "Estrutura da requisição inválida",
     "not_found": "não encontrad{{gender}}",
     "inactive": "inativ{{gender}}",
     "unique": "{{property}} já cadastrad{{gender}}",

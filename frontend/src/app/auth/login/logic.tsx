@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, LogInIcon } from "lucide-react";
+import Image from "next/image";
 import { toast } from "sonner";
 import { useAuth } from "@/api/callers/auth";
 import { AuthCard } from "@/components/ui/auth-card";
@@ -10,7 +11,6 @@ import { useUserSet } from "@/hooks/user-set";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { AuthTemplate } from "@/templates/auth";
 import { fingerprint } from "@/utils/fingerprint";
-
 import { type LoginForm, useForm } from "./use-form";
 
 export const AuthLogic = () => {
@@ -58,14 +58,14 @@ export const AuthLogic = () => {
         }
       >
         <div className="mb-8 grid justify-items-center text-center">
-          <Logo />
+          <Logo className="w-[200px]" priority />
           <h1 className="mt-8 text-3xl font-bold leading-tight text-foreground">
             Bem-vindo de volta
           </h1>
           <p className="mt-2 text-base text-muted">Faça o login na sua conta</p>
         </div>
 
-        <Form {...formProps} className="grid gap-5" onSubmit={hook.handleSubmit(handleSubmit)}>
+        <Form {...formProps} className="grid gap-2" onSubmit={hook.handleSubmit(handleSubmit)}>
           <a
             className="-mt-2 justify-self-end text-sm font-medium text-primary hover:text-[#247bd1]"
             href="/auth/recovery"
@@ -89,9 +89,7 @@ export const AuthLogic = () => {
           type="button"
           variant="outline"
         >
-          <span className="grid h-5 w-5 place-items-center rounded-full border border-border text-xs font-semibold text-primary">
-            G
-          </span>
+          <Image src="/svg/google.svg" alt="Google" width={30} height={30} />
           Continuar com Google
         </Button>
       </AuthCard>

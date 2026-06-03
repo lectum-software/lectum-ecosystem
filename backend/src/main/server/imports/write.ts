@@ -5,6 +5,14 @@ import apiPrivateAuthConfirm from "@/modules/api/private/auth/confirm";
 import apiPrivateAuthHidrate from "@/modules/api/private/auth/hidrate";
 import apiPrivateAuthNeedReset from "@/modules/api/private/auth/need_reset";
 import apiPrivateAuthReset from "@/modules/api/private/auth/reset";
+import apiPrivateNotificationClean from "@/modules/api/private/notification/clean";
+import apiPrivateNotificationIndex from "@/modules/api/private/notification/index";
+import apiPrivateNotificationTest from "@/modules/api/private/notification/test";
+import apiPrivateNotificationUpdate from "@/modules/api/private/notification/update";
+import apiPrivateNotificationPreferenceShow from "@/modules/api/private/notification_preference/show";
+import apiPrivateNotificationPreferenceUpdate from "@/modules/api/private/notification_preference/update";
+import apiPrivateNotificationSubscriptionKey from "@/modules/api/private/notification_subscription/key";
+import apiPrivateNotificationSubscriptionStore from "@/modules/api/private/notification_subscription/store";
 import apiPublicAuthLogin from "@/modules/api/public/auth/login";
 import apiPublicAuthRecovery from "@/modules/api/public/auth/recovery";
 import apiPublicAuthReset from "@/modules/api/public/auth/reset";
@@ -27,5 +35,20 @@ endpoint.use("/api/public/google/callback", apiPublicGoogleCallback);
 endpoint.use("/api/public/google/login", apiPublicGoogleLogin);
 endpoint.use("/api/public/google/me", apiPublicGoogleMe);
 endpoint.use("/api/public/user", apiPublicUser);
+endpoint.use("/api/private/notification/clean", apiPrivateNotificationClean);
+endpoint.use("/api/private/notification/index", apiPrivateNotificationIndex);
+endpoint.use("/api/private/notification/update", apiPrivateNotificationUpdate);
+endpoint.use("/api/private/notification_preference/show", apiPrivateNotificationPreferenceShow);
+endpoint.use("/api/private/notification_preference/update", apiPrivateNotificationPreferenceUpdate);
+endpoint.use("/api/private/notification_subscription/key", apiPrivateNotificationSubscriptionKey);
+endpoint.use(
+  "/api/private/notification_subscription/store",
+  apiPrivateNotificationSubscriptionStore,
+);
+
+// Rota de desenvolvimento (sem auth): dispara notificação de teste para todos.
+if (process.env.NODE_ENV !== "production") {
+  endpoint.use("/api/private/notification/test", apiPrivateNotificationTest);
+}
 
 export default endpoint;

@@ -118,6 +118,8 @@ Templates/shells devem viver em `frontend/src/templates`.
 
 ### Regras de UI
 
+- **Mobile-first obrigatório**: projetar e implementar primeiro para mobile (base ~390px dos protótipos) e progredir para telas maiores com breakpoints. Toda task com UI deve tornar isso explícito na execução.
+- **Nunca usar `<img>`**: sempre o componente `Image` de `next/image` (otimização e estabilidade de layout). `<img>` cru é proibido.
 - Primeiro ajustar e reutilizar componentes existentes.
 - Não criar um design system paralelo.
 - Design foundation deve transformar `registry/new-york-v4` e `components/ui` no padrão Lectum.
@@ -145,6 +147,8 @@ Templates/shells devem viver em `frontend/src/templates`.
 - Encapsular `Controller`/`useController` nos controllers.
 - Arquivos `use-form.tsx` de páginas devem declarar schema, fields, valores iniciais e submit; a renderização deve delegar para a fundação.
 - Todo erro visível deve estar em PT-BR e aparecer inline quando for erro de campo.
+- Campos de formulário ocupam **largura total** do container (`w-full`) por padrão.
+- O slot de mensagem de erro tem **altura fixa reservada em todos os campos** (com ou sem erro), evitando layout shift quando o erro aparece/some. Já implementado no `Container` dos controllers (TASK-02) — não reintroduzir erro condicional que empurre o layout.
 - Campos com máscara/normalização devem transformar valor visual em valor de domínio antes do submit.
 - Inputs soltos só são aceitáveis para busca simples sem persistência nem validação; filtros avançados, edição e submit usam a fundação.
 

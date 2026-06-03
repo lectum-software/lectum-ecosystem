@@ -26,7 +26,9 @@ Estas instruções valem para agentes de IA trabalhando neste workspace.
 - Usar Builder/Quick Copy quando disponível no cliente; se a ferramenta não estiver acessível no ambiente, usar as imagens locais e registrar a limitação.
 - Não usar Figma como fonte ativa, salvo pedido explícito do usuário.
 - Não aceitar código gerado por Builder CLI como final sem adequar à arquitetura do projeto.
-- Formulários/campos de produto devem usar a fundação da `TASK-02`: React Hook Form, Zod, `frontend/src/hooks/form` e `frontend/src/components/controllers`.
+- Formulários/campos de produto devem usar a fundação da `TASK-02`: React Hook Form, Zod, `frontend/src/hooks/form` e `frontend/src/components/controllers`. Campos ocupam largura total e o slot de erro tem altura fixa (sem layout shift).
+- Toda UI é **mobile-first** e isso deve ser explícito na execução da task (base ~390px dos protótipos, progredindo para telas maiores).
+- **Nunca usar `<img>`**; sempre o componente `Image` de `next/image`.
 - Cada task concluída deve atualizar seus critérios de aceite de `[ ]` para `[x]`.
 - Cada task concluída deve criar ou atualizar pelo menos um ADR quando houver decisão arquitetural, integração, regra de domínio, fluxo crítico ou trade-off relevante.
 - Cada task concluída deve gerar commit próprio.

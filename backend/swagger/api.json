@@ -10,6 +10,15 @@
       "name": "[API] - GOOGLE (Public)"
     },
     {
+      "name": "[API] - NOTIFICATION (Private)"
+    },
+    {
+      "name": "[API] - NOTIFICATION PREFERENCE (Private)"
+    },
+    {
+      "name": "[API] - NOTIFICATION SUBSCRIPTION (Private)"
+    },
+    {
       "name": "[API] - USER (Public)"
     }
   ],
@@ -204,6 +213,354 @@
                   }
                 },
                 "required": ["current_password", "password", "password_confirm"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/notification_preference/show": {
+      "get": {
+        "tags": ["[API] - NOTIFICATION PREFERENCE (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/notification_preference/update": {
+      "put": {
+        "tags": ["[API] - NOTIFICATION PREFERENCE (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "prefs": {
+                    "description": "Parâmetro prefs do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/notification_subscription/key": {
+      "get": {
+        "tags": ["[API] - NOTIFICATION SUBSCRIPTION (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/notification_subscription/store": {
+      "post": {
+        "tags": ["[API] - NOTIFICATION SUBSCRIPTION (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "force": {
+                    "description": "Parâmetro force do body.",
+                    "nullable": false,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "subscription": {
+                    "description": "Parâmetro subscription do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/notification/clean": {
+      "post": {
+        "tags": ["[API] - NOTIFICATION (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/notification/index": {
+      "get": {
+        "tags": ["[API] - NOTIFICATION (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [
+          {
+            "description": "Parâmetro limit do query.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro page do query.",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro search do query.",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro orderKey do query.",
+            "in": "query",
+            "name": "orderKey",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro orderValue do query.",
+            "in": "query",
+            "name": "orderValue",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro startDate do query.",
+            "in": "query",
+            "name": "startDate",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro endDate do query.",
+            "in": "query",
+            "name": "endDate",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/notification/test": {
+      "get": {
+        "tags": ["[API] - NOTIFICATION (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/notification/update/:id": {
+      "put": {
+        "tags": ["[API] - NOTIFICATION (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [
+          {
+            "description": "Parâmetro id do path.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "read": {
+                    "description": "Parâmetro read do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "required": ["read"],
                 "type": "object"
               }
             }

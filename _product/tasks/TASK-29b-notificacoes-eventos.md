@@ -1,0 +1,104 @@
+# TASK-29B: Notificações — eventos de domínio
+
+## Metadata
+
+| Campo | Valor |
+|---|---|
+| ID | TASK-29B |
+| Prioridade | P1 |
+| Esforço | M |
+| Fase | Conta |
+| Status | Pending |
+| Dependências | TASK-29A (e as tasks que produzem cada evento: 14, 15/16, 17, 20, 23, 24, 26) |
+| ADR alvo | ADR de eventos de notificação |
+
+## Referências obrigatórias
+
+- `_product/tasks/ARCHITECTURE.md`
+- `_product/tasks/DATA-MODEL.md`
+- `_product/tasks/PROTO-INVENTORY.md`
+- `_product/tasks/ROADMAP-REVALIDADO.md`
+
+## Divisão da TASK-29
+
+- **29A**: terreno de recebimento (models, CRUD in-app, subscription/VAPID, push, realtime, central e preferências, dispatcher pronto).
+- **29B (esta)**: liga os **eventos reais** de domínio ao dispatcher da 29A, respeitando preferências e o enum do PRD §12.
+
+## Contexto
+
+Com o canal pronto (29A), falta produzir notificações a partir dos eventos reais do produto. Cada evento dispara o dispatcher (`main/notification`) que persiste a `notification`, emite via Socket.IO e envia push quando aplicável — sempre respeitando `notification_preference`.
+
+## Objetivo
+
+Disparar notificações reais nos pontos de domínio do PRD §12, sem mock, com idempotência e respeito às preferências do destinatário.
+
+## Pré-requisitos e bloqueios
+
+- 29A concluída (dispatcher, models, preferências e canal de entrega prontos).
+- Cada evento depende da task que o origina existir; se a task de origem ainda não foi executada, ligar o evento quando ela existir e registrar a dependência.
+- Não enviar por canal (push/e-mail/WhatsApp) sem consentimento em `notification_preference` e sem credenciais reais.
+
+Se qualquer bloqueio obrigatório estiver ativo, pare a implementação, registre ADR/pendência e não marque a task como concluída.
+
+## Escopo
+
+Ligar o dispatcher em cada evento, com o `type` correto (enum do PRD §12) e o destinatário correto:
+
+| Evento (PRD §12) | `notification.message_key` | Disparado em | Destinatário |
+|---|---|---|---|
+| Nova avaliação | `nova_avaliacao` | TASK-17 (criar avaliação) | psicólogo avaliado |
+| Novo favorito | `novo_favorito` | TASK-14 (favoritar) | psicólogo favoritado |
+| Visualização de perfil | `visualizacao_perfil` | TASK-15/20 (view de perfil) | psicólogo (Plano Profissional) |
+| Clique no WhatsApp | `clique_whatsapp` | TASK-16 (`contact_request`) | psicólogo contatado |
+| Novo post | `novo_post` | TASK-24 (criar post) | seguidores da comunidade |
+| Nova resposta | `nova_resposta` | TASK-26 (`post_reply`) | autor do post/comentário |
+| Upvote | `upvote` | TASK-26 (`post_vote`) | autor do post/reply |
+| Downvote | `downvote` | TASK-26 (`post_vote`) | (não público — ver PRD §9; tratar com cautela) |
+| Compartilhamento | `compartilhamento` | TASK-26/feed | autor do conteúdo |
+| Salvamento | `salvamento` | TASK-28 (`post_save`) | autor do post |
+
+Regras:
+
+- Disparar a notificação **dentro do fluxo real** que origina o evento (no service da task de origem), chamando o dispatcher da 29A — não criar endpoint paralelo de "criar notificação".
+- Preencher `redirect`/`message_key`/`message_props` para o "Abrir Conteúdo Relacionado" (fluxograma 19.9).
+- Respeitar `notification_preference` por categoria antes de emitir/enviar.
+- Idempotência/anti-spam: evitar duplicar notificação para o mesmo evento/destinatário (ex.: re-favoritar). Downvote não deve expor quem votou.
+- Não notificar o próprio autor das próprias ações.
+
+## Contrato técnico detalhado
+
+- Backend conforme `ARCHITECTURE.md`; reusar o dispatcher e os models da 29A (sem recriar). Sem novo endpoint de produção de notificação.
+- Eventos em tempo real via Socket.IO já montado na 29A.
+- Push/e-mail só quando consentido e com credenciais reais; senão, registrar in-app apenas.
+
+## Estados obrigatórios
+
+- Sem interface própria; a validação é por efeito: ao executar o evento real, a notificação aparece na central (29A) do destinatário e, quando aplicável, em tempo real.
+
+## Fora do escopo
+
+- Construir a central/preferências/canal (é a 29A).
+- Criar eventos fake/mock para simular notificação.
+- Moderação de conteúdo (decisões em `_product/decisions.md`).
+
+## Critérios de aceite
+
+- [ ] Cada evento do PRD §12 dispara o dispatcher da 29A com `type` e destinatário corretos, dentro do fluxo real de origem.
+- [ ] Preferências (`notification_preference`) respeitadas por categoria antes de emitir/enviar.
+- [ ] Idempotência/anti-spam aplicada; autor não é notificado das próprias ações; downvote não expõe o votante.
+- [ ] `redirect`/`message_key`/`message_props` permitem abrir o conteúdo relacionado.
+- [ ] Nenhum mock, evento fake ou endpoint simulado.
+- [ ] Eventos de tasks ainda não executadas ficam registrados como pendência e ligados quando a origem existir.
+- [ ] Modelos e contratos seguem `DATA-MODEL.md`.
+- [ ] ADR criado/atualizado em `adrs/`.
+- [ ] `pnpm --dir backend check` e builds relevantes verdes.
+- [ ] Commit criado com mensagem convencional.
+
+## Validação mínima
+
+- `pnpm --dir backend check` e `pnpm --dir backend build`.
+- Teste manual: executar um evento real (ex.: favoritar um psicólogo) e ver a notificação na central do destinatário, em tempo real quando conectado.
+
+## Notas para executor
+
+Esta task só produz eventos; o canal já existe na 29A. Ligue cada evento no service real que o origina, não em um endpoint separado. Commit próprio.

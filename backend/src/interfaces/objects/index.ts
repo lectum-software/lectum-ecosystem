@@ -35,6 +35,31 @@ export interface notification_subscription {
   user?: user | null;
 }
 
+export interface notification {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  read?: boolean | null;
+  redirect?: string | null;
+  message_key?: string | null;
+  message_props?: unknown;
+  user_id?: string | null;
+  user?: user | null;
+}
+
+export interface notification_preference {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  user_id?: string | null;
+  prefs?: unknown;
+  user?: user | null;
+}
+
 export interface user {
   id?: string | null;
   deleted?: boolean | null;
@@ -58,4 +83,6 @@ export interface user {
   user_tokens?: user_token[] | null;
   user_backgrounds?: user_background[] | null;
   notification_subscriptions?: notification_subscription[] | null;
+  notifications?: notification[] | null;
+  notification_preference?: notification_preference | null;
 }

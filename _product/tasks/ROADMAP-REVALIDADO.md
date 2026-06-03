@@ -44,7 +44,8 @@ Este roadmap descreve a fila operacional atual por telas e jornadas. Ele existe 
 | 26 | Dentro do post | Comunidades | Dentro do Post | 02, 24, 25 |
 | 27 | Ranking Top Mentores | Comunidades | Top 5 Mentores | 03, 23 |
 | 28 | Meus posts e posts salvos | Posts | Meus Posts Paciente/Psicólogo, Posts Salvos | 24 |
-| 29 | Notificações | Conta | Notificações, Configurações de Notificações | 02, 12 |
+| 29a | Notificações: fundação/recebimento | Conta | Notificações, Configurações de Notificações | 02, 12 |
+| 29b | Notificações: eventos de domínio | Conta | (sem tela; dispara eventos) | 29a |
 | 30 | Configurações de conta | Conta | Login Google, Editar E-mail e Senha | 02, 12 |
 | 31 | Planos de assinatura | Assinatura | Planos de Assinatura | 03, 18 |
 | 32 | Checkout de assinatura | Assinatura | Finalizar Assinatura, Endereço de Faturamento | 02, 03, 31 |

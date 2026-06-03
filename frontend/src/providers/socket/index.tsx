@@ -1,9 +1,10 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 //React && Hooks
 import { useCallback, useEffect } from "react";
 import io from "socket.io-client";
-
+import keys from "@/api/cache/keys";
 import { getToken } from "@/hooks/cookies/token";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { update as updateSocket } from "@/store/modules/socket/actions";
@@ -20,6 +21,7 @@ export const socket = io(URL, {
 });
 
 export const Provider = () => {
+  const queryClient = useQueryClient();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.user);
   const token = getToken();
@@ -58,10 +60,9 @@ export const Provider = () => {
     });
 
     socket.on("notification", () => {
-      //TODO: Remove this comments when feature is ready
-      // queryClient.refetchQueries({ queryKey: keys.notification.index() });
+      queryClient.refetchQueries({ queryKey: keys.notification.index() });
     });
-  }, [dispatch, token, userId]);
+  }, [dispatch, token, userId, queryClient]);
 
   useEffect(() => {
     actions();

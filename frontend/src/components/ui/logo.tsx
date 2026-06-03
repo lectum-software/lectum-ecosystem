@@ -1,30 +1,29 @@
+import Image from "next/image";
+import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 
 type LogoProps = {
   className?: string;
-  markClassName?: string;
-  textClassName?: string;
+  priority?: boolean;
 };
 
-export function Logo({ className, markClassName, textClassName }: LogoProps) {
+export function Logo({ className, priority }: LogoProps) {
+  const { theme } = useTheme();
+  const path = theme === "dark" ? "/logo-dark.png" : "/logo-light.png";
+  const APP_NAME = process.env.NEXT_PUBLIC_SYSTEM_NAME || "Lectum";
+
+  // Dimensões intrínsecas reais do asset (500x134): mantêm a proporção e evitam
+  // o aviso de aspect-ratio do Next quando o Tailwind aplica height:auto.
+  // O tamanho de exibição é controlado por className (largura), com h-auto.
   return (
-    <div aria-label="Lectum" className={cn("inline-flex items-end gap-1.5", className)} role="img">
-      <span
-        aria-hidden="true"
-        className={cn(
-          "relative mb-1 inline-block h-9 w-6 rounded-b-[3px] rounded-t-sm bg-primary",
-          "before:absolute before:bottom-0 before:left-0 before:h-2 before:w-9 before:rounded-sm before:bg-primary",
-          markClassName,
-        )}
-      />
-      <span
-        className={cn(
-          "text-[42px] font-semibold leading-none tracking-normal text-[#020617]",
-          textClassName,
-        )}
-      >
-        ectum
-      </span>
-    </div>
+    <Image
+      alt={APP_NAME}
+      className={cn("h-auto w-[150px]", className)}
+      height={134}
+      loading="eager"
+      priority={priority}
+      src={path}
+      width={500}
+    />
   );
 }

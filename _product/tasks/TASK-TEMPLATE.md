@@ -82,10 +82,17 @@ Regras anti-recriação:
 - Forms existentes a reutilizar: `frontend/src/hooks/form` e `frontend/src/components/controllers`.
 - Motivos que justificam estrutura nova.
 
+Regras de UI obrigatórias (ver `ARCHITECTURE.md` › "Regras de UI"):
+
+- **Mobile-first**: implementar primeiro para mobile (~390px) e progredir com breakpoints.
+- **Nunca usar `<img>`**; sempre `Image` de `next/image`.
+- Campos de formulário em largura total; slot de erro com altura fixa (sem layout shift).
+
 ## Critérios de aceite
 
 - [ ] Critério verificável 1.
 - [ ] Critério verificável 2.
+- [ ] UI mobile-first; nenhum `<img>` cru (somente `next/image`).
 - [ ] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
 - [ ] Formulários/campos usam React Hook Form, Zod e controllers da `TASK-02` quando aplicável.
 - [ ] Builder/Quick Copy foi usado quando disponível, ou as imagens locais de `_product/proto` foram citadas quando houver UI.

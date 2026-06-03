@@ -20,3 +20,4 @@ Formato recomendado:
 - [ADR-0004 - Design System Lectum Foundation](0004-design-system-lectum-foundation.md) — Accepted
 - [ADR-0005 - Form Composition Foundation](0005-form-composition-foundation.md) — Accepted
 - [ADR-0006 - Integrações externas e decisões pendentes](0006-integracoes-externas-e-decisoes-pendentes.md) — Accepted
+- [ADR-0007 - Notificações: fundação de recebimento (TASK-29A)](0007-notificacoes-fundacao.md) — Accepted

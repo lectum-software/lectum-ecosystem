@@ -73,7 +73,7 @@ export const handleReq = async <T = unknown>({
         signOut(true);
       }
 
-      const message = res?.error || res?.message || err?.message || "Erro de conexao";
+      const message = res?.error || res?.message || err?.message || "Erro de conexão";
 
       if (!isGetMethod && !hideError) {
         toast.error(message);
