@@ -1,0 +1,30 @@
+---
+description: Lectum frontend architecture and Builder usage rules
+globs:
+alwaysApply: true
+---
+
+Builder references are visual guidance only. Do not treat generated code as final product code.
+
+Always follow the existing Lectum frontend architecture:
+
+- Next.js App Router pages live in `src/app/{route}/page.tsx`.
+- Route logic lives in `src/app/{route}/logic.tsx`.
+- Route forms live in `src/app/{route}/use-form.tsx` when needed.
+- API HTTP calls live in `src/api/req/{domain}/index.ts`.
+- React Query hooks live in `src/api/callers/{domain}/index.tsx`.
+- Query keys live in `src/api/cache/keys.ts`.
+- Shared route shells live in `src/templates`.
+- Reuse `src/registry/new-york-v4/ui` and `src/components/ui` before creating new UI.
+
+Do not create:
+
+- a parallel API client;
+- a parallel auth/session system;
+- fake users or mocked endpoints;
+- new state management outside the existing Redux Persist/session flow;
+- new design tokens per screen.
+
+Use Builder/prototype images to infer layout, hierarchy, spacing, states and copy. Implement with real Lectum components, Tailwind CSS 4, React Hook Form, Zod, TanStack Query and the existing session architecture.
+
+If a screen requires backend data, stop and define the backend contract instead of hardcoding fake data.

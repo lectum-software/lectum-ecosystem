@@ -1,0 +1,196 @@
+# Arquitetura de Execução Lectum
+
+Este documento é obrigatório para qualquer task de produto. Ele existe para impedir que o executor recrie o projeto do zero ou ignore padrões já existentes.
+
+## Princípio
+
+Frontend e backend estão no mesmo repositório apenas para desenvolvimento. Em código, decisões e validação, trate-os como aplicações separadas.
+
+## Backend
+
+Stack atual:
+
+- Express 5;
+- Prisma 7 com PostgreSQL;
+- Passport/JWT/Google OAuth;
+- Zod por meio do pacote local `src/packages/validator`;
+- Swagger/Scalar por meio do pacote local `src/packages/swagger`;
+- i18next em `locales/pt`;
+- Socket.IO para eventos em tempo real.
+
+### Estrutura obrigatória de módulos
+
+Novas features de API devem seguir a estrutura atual:
+
+```text
+backend/src/modules/api/{public|private}/{dominio}/{caso}/
+  DTOs/
+  index.ts
+  repositories/
+  repositories/interfaces/
+  use-cases/controller.ts
+  use-cases/services.ts
+  validator/index.ts
+```
+
+Para rotas simples de listagem, é aceitável começar com menos arquivos, mas a task deve justificar. Fluxos com regra de domínio, persistência ou autenticação devem usar controller/service/repository.
+
+### Registro de rotas
+
+- Registrar novas rotas em `backend/src/main/server/imports/write.ts`.
+- Manter prefixos:
+  - público: `/api/public/...`;
+  - privado: `/api/private/...`.
+- Rotas privadas devem usar o middleware de autenticação existente quando exigirem usuário autenticado.
+
+### Resposta e erro
+
+- Usar `send`, `error500`, `error` e `msg`.
+- Não retornar formatos ad hoc de resposta.
+- Erros visíveis ao usuário devem ter chave em `backend/locales/pt/translation.json`.
+- Não criar mensagem em inglês em resposta pública.
+
+### Validação
+
+- Usar `backend/src/utils/validator.ts` e `src/packages/validator`.
+- Não validar payload manualmente em service quando puder ser validado no `validator/index.ts`.
+- O pacote local tem funções internas chamadas `mocks`; elas são mocks de geração/validação do pacote, não autorização para usar dados fake no produto.
+
+### Prisma
+
+- Modelos atuais usam nomes snake_case e `@@map` para tabela plural.
+- Novos modelos devem manter campos padrão quando aplicável:
+  - `id`;
+  - `deleted`;
+  - `deletedAt`;
+  - `createdAt`;
+  - `updatedAt`.
+- Criar índices para filtros usados em listagens e relações.
+- Atualizar `backend/src/interfaces/objects` quando o frontend/backend dependerem dos tipos.
+- Rodar `prisma generate` via scripts existentes.
+
+### Autenticação e sessão
+
+- Fluxos privados dependem de token JWT e header `x-device`.
+- Não contornar `getDevice`, `passToken`, `LoginRepository.hidrate` ou cookies/store no frontend.
+- Login Google precisa preservar token real retornado pelo backend.
+
+### Documentação de API
+
+- Manter estrutura compatível com `src/packages/swagger`, que lê rotas, validators e arquivos.
+- Se um endpoint novo não aparecer em docs, corrigir a estrutura em vez de criar documentação paralela manual.
+
+## Frontend
+
+Stack atual:
+
+- Next.js 16 App Router;
+- React 19;
+- Tailwind CSS 4;
+- TanStack Query 5;
+- Redux Toolkit + Redux Persist;
+- Axios;
+- React Hook Form + Zod;
+- Sonner;
+- Socket.IO client;
+- Lucide React;
+- componentes base em `frontend/src/registry/new-york-v4/ui` e `frontend/src/components/ui`.
+
+### Estrutura obrigatória
+
+Novas chamadas de API devem seguir:
+
+```text
+frontend/src/api/req/{dominio}/index.ts        # chamada HTTP usando callEndpoint + handleReq
+frontend/src/api/callers/{dominio}/index.tsx   # hooks React Query/useMutation/useQuery
+frontend/src/api/cache/keys.ts                 # query keys
+```
+
+Novas telas devem seguir:
+
+```text
+frontend/src/app/{rota}/page.tsx
+frontend/src/app/{rota}/logic.tsx
+frontend/src/app/{rota}/use-form.tsx           # quando houver formulário
+```
+
+Templates/shells devem viver em `frontend/src/templates`.
+
+### Regras de UI
+
+- Primeiro ajustar e reutilizar componentes existentes.
+- Não criar um design system paralelo.
+- Design foundation deve transformar `registry/new-york-v4` e `components/ui` no padrão Lectum.
+- Componentes de interface devem usar ícones `lucide-react` quando houver equivalente.
+- Telas devem consultar `PROTO-INVENTORY.md` antes da implementação.
+- Quando Builder/Quick Copy estiver disponível no cliente, usar o Quick Copy ativo para complementar a leitura visual.
+- Quando Builder/Quick Copy não estiver acessível no ambiente, usar as imagens exportadas em `_product/proto` e registrar a limitação.
+- Imagens de protótipo não autorizam copiar arquitetura, criar mocks ou aceitar código gerado automaticamente.
+- Não manter URLs temporárias de ferramentas visuais como assets finais.
+
+### Estado, sessão e guards
+
+- Sessão real usa cookie de token e Redux Persist.
+- `proxy.ts` protege rotas privadas.
+- `useUserSet` é o caminho para gravar usuário/token pós-login.
+- Não criar usuário fake em store para passar por rota privada.
+
+### Forms
+
+- `TASK-02` é a fundação obrigatória de formulários.
+- Usar React Hook Form como única base de formulários do produto.
+- Validar com Zod e `@hookform/resolvers`.
+- Renderizar campos por `frontend/src/components/controllers`, não por inputs soltos em páginas.
+- Usar `frontend/src/hooks/form` para composição dinâmica de fields, default values, schema, estado dirty/error e read-only.
+- Encapsular `Controller`/`useController` nos controllers.
+- Arquivos `use-form.tsx` de páginas devem declarar schema, fields, valores iniciais e submit; a renderização deve delegar para a fundação.
+- Todo erro visível deve estar em PT-BR e aparecer inline quando for erro de campo.
+- Campos com máscara/normalização devem transformar valor visual em valor de domínio antes do submit.
+- Inputs soltos só são aceitáveis para busca simples sem persistência nem validação; filtros avançados, edição e submit usam a fundação.
+
+### Data fetching
+
+- Usar TanStack Query nos callers.
+- Mutations para comandos; queries para leitura.
+- Keys em `api/cache/keys.ts`.
+- Não chamar Axios diretamente em componentes.
+- Invalidar queries por `queryClient.invalidateQueries` depois de mutations que alteram listas/detalhes.
+- Preferir optimistic UI somente quando houver rollback claro e baixo risco de inconsistência.
+- Para filtros em URL no Next App Router, usar `searchParams` da page ou `useSearchParams` em client component; se a task exigir tipagem/serialização complexa, avaliar `nuqs` com ADR.
+- Para listas muito longas, avaliar `@tanstack/react-virtual`.
+- Para tabelas/datagirds complexos, avaliar `@tanstack/react-table`.
+- Não instalar TanStack Router enquanto Next App Router for a arquitetura vigente.
+
+## Anti-recriação
+
+Antes de criar arquivo novo, o executor deve procurar:
+
+- componente equivalente;
+- template equivalente;
+- caller/req equivalente;
+- helper de backend equivalente;
+- modelo Prisma existente;
+- tradução existente;
+- pacote local em `backend/src/packages`.
+
+Se for necessário criar estrutura nova, registrar a decisão em ADR.
+
+Para modelos Prisma e contratos de API ainda não implementados, `DATA-MODEL.md` é a fonte única: campos, enums, relações, papel do usuário (`user.role`), paginação e convenção de rotas. Uma task deve referenciar a seção correspondente em vez de inventar schema; se faltar um campo, adicioná-lo primeiro em `DATA-MODEL.md`.
+
+## Builder e protótipos
+
+O Builder MCP e as imagens exportadas existem para reduzir ambiguidade visual. Eles não substituem:
+
+- `ARCHITECTURE.md`;
+- `PACKAGES.md`;
+- padrões atuais de `frontend/src/api`;
+- padrões atuais de `backend/src/modules/api`;
+- decisões externas registradas em ADR.
+
+Regras obrigatórias:
+
+- não rodar Builder CLI a partir da raiz do repositório para geração de UI;
+- quando necessário, rodar a partir de `frontend/` ou com `--cwd frontend`;
+- respeitar `.builderignore` e `frontend/.builder/rules/lectum-frontend.mdc`;
+- revisar qualquer código sugerido antes de aplicar;
+- tratar Builder output como rascunho visual, não como implementação final.

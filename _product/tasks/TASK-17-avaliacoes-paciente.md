@@ -1,0 +1,164 @@
+# TASK-17: Avaliações pelo paciente
+
+## Metadata
+
+| Campo | Valor |
+|---|---|
+| ID | TASK-17 |
+| Prioridade | P1 |
+| Esforço | L |
+| Fase | Avaliações |
+| Status | Pending |
+| Dependências | TASK-02, TASK-15, TASK-16 |
+| ADR alvo | ADR de avaliações de profissionais |
+
+## Referências obrigatórias
+
+- `_product/tasks/ARCHITECTURE.md`
+- `_product/tasks/PACKAGES.md`
+- `_product/tasks/DATA-MODEL.md`
+- `_product/tasks/PROTO-INVENTORY.md`
+- `_product/tasks/ROADMAP-REVALIDADO.md`
+
+## Referências visuais
+
+| Imagem local | Artefato Builder |
+|---|---|
+| `_product/proto/Avaliar do Psicólogo.jpg` | `figma-design-frame-32-Avaliar-do-Psic-logo.html` |
+| `_product/proto/Confirmação de Avaliação.jpg` | `figma-design-frame-27-Confirma--o-de-Avalia--o.html` |
+| `_product/proto/Avaliações Feitas - Paciente.jpg` | `figma-design-frame-26-Avalia--es-Feitas---Paciente.html` |
+
+As referências visuais são norte de produto e layout. Elas não autorizam recriar arquitetura, aceitar código gerado sem revisão, usar mock ou ignorar os padrões atuais do projeto.
+
+## Contexto
+
+Avaliações são sensíveis para reputação. Não podem ser criadas sem usuário real nem com profissional fake. A elegibilidade deve estar ligada a contato/interação persistida.
+
+## Objetivo
+
+Permitir que pacientes avaliem psicólogos com regra de elegibilidade real e lista de avaliações feitas.
+
+## Pré-requisitos e bloqueios
+
+- Sem regra de elegibilidade, registrar ADR antes de permitir avaliação.
+
+Se qualquer bloqueio obrigatório estiver ativo, pare a implementação, registre ADR/pendência e não marque a task como concluída.
+
+## Escopo frontend
+
+Rotas esperadas:
+
+- `/app/reviews/new`
+- `/app/reviews/success`
+- `/app/reviews`
+
+Implementação esperada:
+
+- Criar formulário de avaliação com nota, texto e critérios.
+- Criar confirmação pós-envio.
+- Criar lista de avaliações feitas pelo paciente.
+- Usar mutations e queries React Query.
+- Bloquear UI quando usuário não for elegível.
+
+## Escopo backend
+
+**Guarda de papel:** estes endpoints são exclusivos de paciente, vivem sob `/api/private/patient/*` e são protegidos por `requireRole("paciente")` (criado na TASK-12), aplicado no mount em `write.ts`, **fail-closed** (papel divergente → `403`). O escopo de ownership usa `req.auth.id` (autor da avaliação). O **alvo** da avaliação é um psicólogo (`:id` = `user.id`), mas a ação é executada **pelo** paciente sob `/api/private/patient/...`. Ver `DATA-MODEL.md` "Camadas de autenticação e autorização" e `adrs/0002-arquitetura-auth-roles.md`.
+
+Implementação esperada:
+
+- Criar a avaliação usando o modelo `professional_review` (ver `DATA-MODEL.md`): `rating Int` validado na faixa 1..5, `comment String?`, `status @default("publicada")` (`"publicada" | "oculta"`), `@@unique([psychologist_id, author_id])` (1 avaliação por par paciente/psicólogo).
+- Validar elegibilidade antes de permitir avaliar. A regra de elegibilidade (quem pode avaliar — ex.: exigir `contact_request` prévio) é **decisão de ADR desta task**; o modelo `professional_review` apenas armazena o resultado. Registrar a regra escolhida no ADR e referenciar a forma do schema em `DATA-MODEL.md`.
+- Endpoints para criar/listar avaliações do paciente.
+- Recalcular `psychologist_profile.rating_avg`/`rating_count` (ver `DATA-MODEL.md`: `rating_avg` é a média ×100) de forma transacional após criar avaliação aprovada; o recálculo detalhado é coberto na TASK-19.
+- Moderar conteúdo via `status` (`"oculta"`) sem apagar o registro real (soft-only).
+
+Modelos/tabelas envolvidos (ver `DATA-MODEL.md`):
+
+- `professional_review`
+- `contact_request` (insumo de elegibilidade, conforme ADR)
+- `psychologist_profile` (agregados `rating_avg`/`rating_count`)
+
+Endpoints esperados (privados, sob `/api/private/patient`):
+
+- POST `/api/private/patient/reviews` (alvo: psicólogo `:id` = `user.id` no body)
+- GET `/api/private/patient/reviews` (avaliações feitas pelo paciente autenticado)
+- GET `/api/private/patient/reviews/eligibility/:id` (`:id` = `user.id` do psicólogo alvo)
+
+## Contrato técnico detalhado
+
+Arquitetura frontend obrigatória:
+
+- Telas em `frontend/src/app/{rota}/page.tsx`, `logic.tsx` e `use-form.tsx` quando houver formulário.
+- Chamadas HTTP em `frontend/src/api/req/{dominio}/index.ts` usando `callEndpoint` e `handleReq`.
+- Hooks React Query em `frontend/src/api/callers/{dominio}/index.tsx`.
+- Query keys em `frontend/src/api/cache/keys.ts`.
+- Shells/templates em `frontend/src/templates`.
+- Componentes existentes em `frontend/src/registry/new-york-v4/ui` e `frontend/src/components/ui` devem ser reutilizados antes de criar novos.
+- Quando houver formulário ou campo, usar `frontend/src/hooks/form`, `frontend/src/components/controllers`, React Hook Form e Zod conforme `TASK-02`.
+
+Arquitetura backend obrigatória:
+
+- Novas APIs em `backend/src/modules/api/{public|private}/{dominio}/{caso}`.
+- Rotas registradas em `backend/src/main/server/imports/write.ts`.
+- Validadores em `validator/index.ts` usando os helpers/pacote local de validação.
+- Services e repositories separados quando houver regra de domínio ou persistência.
+- Respostas usando `send`, `error500`, `error` e traduções em `backend/locales/pt/translation.json`.
+- Prisma com nomes e padrões já definidos em `ARCHITECTURE.md`.
+
+Packages permitidos nesta task:
+
+- React Hook Form
+- Zod
+- TanStack Query
+- Prisma
+
+Regras anti-recriação específicas:
+
+- Procurar componente, helper, model, endpoint e query key equivalente antes de criar estrutura nova.
+- Não criar client HTTP paralelo, store paralela, autenticação paralela, validator paralelo ou design system paralelo.
+- Não usar `sample/` como referência direta de implementação futura.
+- Não instalar package novo sem consultar `PACKAGES.md` e registrar ADR.
+
+## Estados obrigatórios
+
+- Loading inicial.
+- Erro de rede/API em PT-BR.
+- Estado vazio quando não houver dado real.
+- Sucesso com feedback visual discreto.
+- Responsividade mobile-first baseada nas imagens exportadas.
+
+## Fora do escopo
+
+- Criar dados fake, seed artificial ou mock para preencher tela.
+- Concluir integração externa ausente.
+- Refatorar módulos não relacionados à task.
+- Trocar package manager ou stack base.
+
+## Critérios de aceite
+
+- [ ] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
+- [ ] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
+- [ ] Backend implementado nos endpoints/modelos esperados quando aplicável.
+- [ ] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
+- [ ] Rotas sob `/api/private/patient/*` exigem `requireRole("paciente")` (fail-closed), conforme ADR-0002.
+- [ ] Todos os estados obrigatórios existem e usam textos em PT-BR.
+- [ ] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
+- [ ] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
+- [ ] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
+- [ ] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
+- [ ] ADR criado ou atualizado em `adrs/`.
+- [ ] Checks/builds relevantes foram executados sem erros.
+- [ ] Commit criado com mensagem convencional.
+
+## Validação mínima
+
+- `pnpm --dir frontend check` quando frontend mudar.
+- `pnpm --dir frontend build` quando mudar rota ou UI.
+- `pnpm --dir backend check` quando backend mudar.
+- `pnpm --dir backend build` quando backend estrutural mudar.
+- `pnpm check` quando a task tocar frontend e backend.
+- Browser local na rota principal da task quando houver interface.
+
+## Notas para executor
+
+Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.

@@ -1,0 +1,23 @@
+node_modules/
+.next/
+dist/
+coverage/
+.env
+.env.*
+
+# Builder visual output is allowed to guide UI only.
+# Protect infrastructure and product-critical contracts.
+src/api/
+src/store/
+src/proxy.ts
+src/middleware.ts
+src/providers/
+src/hooks/user-set/
+src/socket/
+
+# Generated references must not mutate package governance.
+package.json
+pnpm-lock.yaml
+biome.json
+eslint.config.*
+tsconfig.json

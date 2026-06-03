@@ -4,10 +4,13 @@ Nos estamos desenvolvendo um novo sistema focado em psicólogos e pacientes, est
 
 Ambas fazem parte de um mesmo repositório para facilitar o desenvolvimento mas não devem ser tratadas como um "monorepo" em produção.
 
-Para base de arquitetura e fundamentos estamos utilizando todo o conteúdo da pasta: /Users/rezende/Desktop/lectum-ecosystem/sample. Aqui encontramos exemplos de arquitetura não de DESIGN
+Historicamente, a pasta `/Users/rezende/Desktop/lectum-ecosystem/sample` foi usada apenas como referência inicial de arquitetura. A fonte ativa de execução agora é `_product/tasks/README.md`, `ARCHITECTURE.md`, `PACKAGES.md`, `PROTO-INVENTORY.md` e os ADRs.
 
-# Design Figma
-Utilize o MCP do figma para acessar: https://www.figma.com/design/vSdKmDm3SvQc9e8UJD4S2Y/Lectum?node-id=0-1&p=f&t=oPSUvf37sDOpogzP-0
+# Design e protótipos
+
+Utilize Builder/Quick Copy quando disponível no cliente, com o Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a`.
+
+As telas exportadas estão em `/Users/rezende/Desktop/lectum-ecosystem/_product/proto` e devem ser tratadas como referência visual de produto, não como código final nem como qualidade final da aplicação.
 
 # Contexto
 
@@ -28,11 +31,11 @@ Você deverá popular a pasta /Users/rezende/Desktop/lectum-ecosystem/_product/t
 - As primeiras tasks devem fazer referencia ao setup do projeto em termos de design, o frontend que temos hoje não é o ideal e foge totalmente dos padrões
 - A história do produto esta descrita em: /Users/rezende/Desktop/lectum-ecosystem/_product/Fluxogramas do Produto.pdf
 /Users/rezende/Desktop/lectum-ecosystem/_product/Lectum PRD.pdf. Utilize para entender o fluxo.
-- É recomendado que as tasks sigam o mesmo nome da tela no figma, assim o usuario que esta desenvolvendo consegue se situar de qual tela será utilizada.
+- É recomendado que as tasks sigam o mesmo nome da tela exportada/protótipo, assim o usuário que está desenvolvendo consegue se situar de qual tela será utilizada.
 - Ações pendentes do usuário como por exemplo: gateway de pagamento, bucket de armazenamento, devem estar em uma primeira task pós design (apenas uma). Onde o usuário devera registrar suas decisões. Nesse caso a tarefa como implementação de pagamento deverá ser agnostica ao projeto pois assim não ficamos presos a decisÕes
-- Utilize sempre o figma como base
+- Utilize sempre Builder/protótipos exportados como base visual
 - Caso necessário utilize o conceito de épico/task, assim você poderá quebrar em arquvos menores de execução para não prejudicar a janela de contexto da aplicação
-- Não utilize a pasta "sample" como referencia direta na task, ela não estará presente no workspace do executor
+- Não utilize a pasta "sample" como referência direta na task, salvo quando a própria task citar expressamente uma referência técnica específica. Ela não deve ser considerada fonte ativa geral do executor.
 
 ## Skill/Agent
 
@@ -49,6 +52,7 @@ Você deverá popular a pasta /Users/rezende/Desktop/lectum-ecosystem/_product/t
 
 - Após a criação das Tasks, preciso que faça 3 loops de interação sobre as tasks criadas buscando melhorar o contexto e melhorar a descrição. Não apenas crie as tarefas, volte e as verifique.
 Nosso foco no momento não é velocidade na criação dos documentos de execução e sim a qualidade e pontencial de execução desacoplado de cada épico
-- Antes de iniciar, faça uma busca (web ou similiar), de quais as melhores práticas para um desenvolvimento com IA orientado a tarefas e quais as estruturas para trabalhar com Codex no VSCode seguindo o padrão de pastas e informações de `.codex`.
+- Antes de iniciar, faça uma busca (web ou similiar), de quais as melhores práticas para um desenvolvimento com IA orientado a tarefas e quais as estruturas para trabalhar com Codex no VSCode seguindo o padrão de pastas e informações de `.codex`. e Enriqueça o máximo possível nosso workspace.
+- Caso encontre regras de ouro válidas que não estão listadas, inclua nas tarefas essas diretrizes e arquiteturas.
 
 Data atual para fins de pesquisa 02/06/2026

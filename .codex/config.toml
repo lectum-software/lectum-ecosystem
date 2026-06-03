@@ -1,4 +1,5 @@
 model_instructions_file = "instructions.md"
 
-[mcp_servers.figma]
-url = "https://mcp.figma.com/mcp"
+[mcp_servers.builder-mcp]
+command = "npx"
+args = ["@builder.io/dev-tools@latest", "mcp"]

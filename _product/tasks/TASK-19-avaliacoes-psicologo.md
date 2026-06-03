@@ -1,0 +1,157 @@
+# TASK-19: Avaliações do psicólogo
+
+## Metadata
+
+| Campo | Valor |
+|---|---|
+| ID | TASK-19 |
+| Prioridade | P1 |
+| Esforço | M |
+| Fase | Psicólogo privado |
+| Status | Pending |
+| Dependências | TASK-17, TASK-18 |
+| ADR alvo | ADR de leitura de avaliações profissionais |
+
+## Referências obrigatórias
+
+- `_product/tasks/ARCHITECTURE.md`
+- `_product/tasks/PACKAGES.md`
+- `_product/tasks/DATA-MODEL.md`
+- `_product/tasks/PROTO-INVENTORY.md`
+- `_product/tasks/ROADMAP-REVALIDADO.md`
+
+## Referências visuais
+
+| Imagem local | Artefato Builder |
+|---|---|
+| `_product/proto/Minhas Avaliações - Psicólogo.jpg` | `figma-design-frame-13-Minhas-Avalia--es---Psic-logo.html` |
+
+As referências visuais são norte de produto e layout. Elas não autorizam recriar arquitetura, aceitar código gerado sem revisão, usar mock ou ignorar os padrões atuais do projeto.
+
+## Contexto
+
+A tela deve mostrar avaliações reais recebidas e não permitir manipular nota pelo frontend.
+
+## Objetivo
+
+Criar tela privada onde o psicólogo acompanha avaliações recebidas e métricas básicas.
+
+## Pré-requisitos e bloqueios
+
+- Depende da TASK-17 para criação de avaliações reais.
+
+Se qualquer bloqueio obrigatório estiver ativo, pare a implementação, registre ADR/pendência e não marque a task como concluída.
+
+## Escopo frontend
+
+Rotas esperadas:
+
+- `/app/professional/reviews`
+
+Implementação esperada:
+
+- Criar listagem paginada (contrato de `DATA-MODEL.md`) com filtros por nota/data.
+- Exibir resumo de média e quantidade (a partir de `psychologist_profile.rating_avg`/`rating_count`).
+- Permitir responder a uma avaliação (`response`), sem editar a nota/comentário recebidos.
+- Exibir estado vazio quando não houver avaliações.
+- Não permitir editar nota recebida.
+- Usar query keys próprias.
+
+## Escopo backend
+
+Implementação esperada:
+
+- Endpoint privado para ler as avaliações do profissional autenticado a partir de `professional_review` (ver `DATA-MODEL.md`), filtrando por `psychologist_id` do usuário logado e considerando `status="publicada"` para agregados.
+- Permitir que o psicólogo responda a uma avaliação preenchendo `professional_review.response` e `responded_at` (ver `DATA-MODEL.md`); nunca alterar `rating`/`comment` recebidos.
+- Calcular média e distribuição por nota e **recomputar `psychologist_profile.rating_avg`/`rating_count`** de forma transacional (`rating_avg` armazenado como média ×100, conforme `DATA-MODEL.md`).
+- Paginar respostas usando o contrato padrão de `DATA-MODEL.md`: query `page` (1-based) e `limit` (default 20, máx 50); resposta `data: { items, total, page, limit }`.
+- Garantir que o psicólogo só veja/responda suas próprias avaliações.
+
+Modelos/tabelas envolvidos (ver `DATA-MODEL.md`):
+
+- `professional_review` (leitura + `response`/`responded_at`)
+- `psychologist_profile` (recálculo de `rating_avg`/`rating_count`)
+
+Endpoints esperados (autogestão do psicólogo, sob `/api/private/psychologist/*`):
+
+- GET `/api/private/psychologist/reviews` (paginado)
+- POST `/api/private/psychologist/reviews/:id/response`
+
+**Guarda de papel:** estes endpoints são exclusivos de psicólogo. Vivem sob `/api/private/psychologist/*` e são protegidos por `requireRole("psicologo")` (criado na TASK-12), aplicado no mount em `write.ts`, **fail-closed** (papel divergente → `403`, sem `next()`). O escopo de ownership é feito por `req.auth.id`. Ver `DATA-MODEL.md` "Camadas de autenticação e autorização" e `adrs/0002-arquitetura-auth-roles.md`.
+
+## Contrato técnico detalhado
+
+Arquitetura frontend obrigatória:
+
+- Telas em `frontend/src/app/{rota}/page.tsx`, `logic.tsx` e `use-form.tsx` quando houver formulário.
+- Chamadas HTTP em `frontend/src/api/req/{dominio}/index.ts` usando `callEndpoint` e `handleReq`.
+- Hooks React Query em `frontend/src/api/callers/{dominio}/index.tsx`.
+- Query keys em `frontend/src/api/cache/keys.ts`.
+- Shells/templates em `frontend/src/templates`.
+- Componentes existentes em `frontend/src/registry/new-york-v4/ui` e `frontend/src/components/ui` devem ser reutilizados antes de criar novos.
+- Quando houver formulário ou campo, usar `frontend/src/hooks/form`, `frontend/src/components/controllers`, React Hook Form e Zod conforme `TASK-02`.
+
+Arquitetura backend obrigatória:
+
+- Novas APIs em `backend/src/modules/api/{public|private}/{dominio}/{caso}`.
+- Rotas registradas em `backend/src/main/server/imports/write.ts`.
+- Validadores em `validator/index.ts` usando os helpers/pacote local de validação.
+- Services e repositories separados quando houver regra de domínio ou persistência.
+- Respostas usando `send`, `error500`, `error` e traduções em `backend/locales/pt/translation.json`.
+- Prisma com nomes e padrões já definidos em `ARCHITECTURE.md`.
+
+Packages permitidos nesta task:
+
+- TanStack Query
+- Prisma
+
+Regras anti-recriação específicas:
+
+- Procurar componente, helper, model, endpoint e query key equivalente antes de criar estrutura nova.
+- Não criar client HTTP paralelo, store paralela, autenticação paralela, validator paralelo ou design system paralelo.
+- Não usar `sample/` como referência direta de implementação futura.
+- Não instalar package novo sem consultar `PACKAGES.md` e registrar ADR.
+
+## Estados obrigatórios
+
+- Loading inicial.
+- Erro de rede/API em PT-BR.
+- Estado vazio quando não houver dado real.
+- Sucesso com feedback visual discreto.
+- Responsividade mobile-first baseada nas imagens exportadas.
+
+## Fora do escopo
+
+- Criar dados fake, seed artificial ou mock para preencher tela.
+- Concluir integração externa ausente.
+- Refatorar módulos não relacionados à task.
+- Trocar package manager ou stack base.
+
+## Critérios de aceite
+
+- [ ] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
+- [ ] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
+- [ ] Backend implementado nos endpoints/modelos esperados quando aplicável.
+- [ ] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
+- [ ] Rotas sob `/api/private/psychologist/*` exigem `requireRole("psicologo")` (fail-closed), conforme ADR-0002.
+- [ ] Todos os estados obrigatórios existem e usam textos em PT-BR.
+- [ ] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
+- [ ] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
+- [ ] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
+- [ ] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
+- [ ] ADR criado ou atualizado em `adrs/`.
+- [ ] Checks/builds relevantes foram executados sem erros.
+- [ ] Commit criado com mensagem convencional.
+
+## Validação mínima
+
+- `pnpm --dir frontend check` quando frontend mudar.
+- `pnpm --dir frontend build` quando mudar rota ou UI.
+- `pnpm --dir backend check` quando backend mudar.
+- `pnpm --dir backend build` quando backend estrutural mudar.
+- `pnpm check` quando a task tocar frontend e backend.
+- Browser local na rota principal da task quando houver interface.
+
+## Notas para executor
+
+Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.

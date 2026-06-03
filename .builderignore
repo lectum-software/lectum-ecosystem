@@ -1,0 +1,23 @@
+# Builder CLI must not generate code from the repository root.
+# Run visual/code operations from frontend/ or pass --cwd frontend.
+
+backend/
+sample/
+_product/
+adrs/
+.codex/
+.claude/
+.cursor/
+.vscode/
+.github/
+.git/
+.mcp.json
+AGENTS.md
+CLAUDE.md
+node_modules/
+frontend/node_modules/
+frontend/.next/
+frontend/dist/
+frontend/coverage/
+frontend/.builderignore
+frontend/.builder/

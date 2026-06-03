@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "builder-mcp": {
+      "command": "npx",
+      "args": ["@builder.io/dev-tools@latest", "mcp"]
+    }
+  }
+}
