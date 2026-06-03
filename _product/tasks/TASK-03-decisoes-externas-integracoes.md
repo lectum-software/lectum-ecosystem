@@ -8,9 +8,9 @@
 | Prioridade | P0 |
 | Esforço | M |
 | Fase | Product decisions |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-00 |
-| ADR alvo | ADR de integrações externas |
+| ADR alvo | ADR-0006 |
 
 ## Contexto
 
@@ -78,7 +78,7 @@ Criar um documento de decisões pendentes/definidas para integrações externas 
 
 ## Saída esperada
 
-- Criar `adrs/0004-integracoes-externas-e-decisoes-pendentes.md` para as integrações ainda abertas (ADR-0002 = auth/papéis; ADR-0003 = gateway Mercado Pago, já decidido).
+- Criar `adrs/0006-integracoes-externas-e-decisoes-pendentes.md` para as integrações ainda abertas (ADR-0002 = auth/papéis; ADR-0003 = gateway Mercado Pago, ADR-0004 e ADR-0005 já foram usados por tasks de frontend).
 - Criar ou atualizar `_product/decisions.md` com decisões e pendências.
 - Marcar claramente o que está decidido e o que ainda bloqueia implementação.
 
@@ -129,11 +129,11 @@ Impacto nas tasks:
 Decisões técnicas mínimas:
 
 - Pagamento: **decidido — Mercado Pago** (ADR-0003). Não instalar SDK até a TASK-32 (com ADR); registrar credenciais como pendência.
-- Storage: confirmar se usará S3/AWS SDK já instalado ou outro provider.
-- WhatsApp: confirmar link direto, Twilio ou WhatsApp Business API.
-- CFP: confirmar fonte de consulta e fallback operacional.
-- E-mail/SMS: confirmar uso de `nodemailer`/`twilio` já instalados ou troca de provedor.
-- Observabilidade: decidir se Sentry entra no MVP ou fica para TASK-34.
+- Storage: decidido Cloudflare R2 via API S3-compatible e `@aws-sdk/client-s3`.
+- WhatsApp: decidido link direto `wa.me` para contato e Twilio SMS/OTP para verificação de número.
+- CFP: consulta automática bloqueada; aprovação manual CRP decidida como fluxo inicial.
+- E-mail/SMS: decidido Resend via Nodemailer/SMTP e Twilio para SMS/OTP.
+- Observabilidade: decidido Sentry, implementação em task dedicada/TASK-34.
 
 ## Estados obrigatórios
 
@@ -146,21 +146,29 @@ Esta task não possui interface. O estado verificável é documental:
 
 ## Critérios de aceite
 
-- [ ] `_product/decisions.md` existe.
-- [ ] Gateway de pagamento definido (**Mercado Pago, ADR-0003**); credenciais sandbox/prod registradas como pendência se ainda ausentes.
-- [ ] Storage/bucket está definido ou marcado como bloqueio explícito.
-- [ ] WhatsApp está definido ou marcado como bloqueio explícito.
-- [ ] CFP está definido ou marcado como bloqueio explícito.
-- [ ] E-mail/SMS estão definidos ou marcados como bloqueio explícito.
-- [ ] LGPD/termos têm responsável e status.
-- [ ] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
-- [ ] ADR criado em `adrs/`.
-- [ ] Commit criado com mensagem convencional.
+- [x] `_product/decisions.md` existe.
+- [x] Gateway de pagamento definido (**Mercado Pago, ADR-0003**); credenciais sandbox/prod registradas como pendência.
+- [x] Storage/bucket definido: Cloudflare R2 via API S3-compatible; credenciais/buckets reais seguem como pendência operacional quando ausentes.
+- [x] WhatsApp definido: `wa.me` para contato e Twilio SMS/OTP para verificação de número.
+- [x] CFP definido como aprovação manual inicial; consulta automática marcada como bloqueio explícito até fonte/API autorizada.
+- [x] E-mail/SMS definidos: Resend via Nodemailer/SMTP e Twilio SMS/OTP.
+- [x] LGPD/termos têm status: telas padrão e aceite explícito no MVP; revisão posterior.
+- [x] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
+- [x] ADR criado em `adrs/`.
+- [x] Commit criado com mensagem convencional.
 
 ## Validação mínima
 
 - Revisão manual dos documentos criados.
 - Não há necessidade de build se apenas documentação for alterada.
+
+## Evidências de execução
+
+- Criado `_product/decisions.md` com decisões e pendências por integração.
+- Criada `adrs/0006-integracoes-externas-e-decisoes-pendentes.md`.
+- Atualizado `adrs/README.md`.
+- Atualizados documentos futuros para refletir R2, Resend, Twilio, push real, Sentry e CFP manual/bloqueado.
+- Verificado que esta task alterou apenas documentação; nenhum SDK, endpoint, model ou mock foi criado.
 
 ## Notas para executor
 

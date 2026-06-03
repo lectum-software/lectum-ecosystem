@@ -39,7 +39,7 @@ Criar perfil privado do paciente e edição de dados pessoais permitidos.
 
 ## Pré-requisitos e bloqueios
 
-- Upload de avatar depende de storage decidido; sem storage, manter avatar textual/initials.
+- Upload de avatar usa Cloudflare R2 (ADR-0006); sem credenciais/bucket no ambiente, manter avatar textual/initials e registrar pendência.
 
 Se qualquer bloqueio obrigatório estiver ativo, pare a implementação, registre ADR/pendência e não marque a task como concluída.
 

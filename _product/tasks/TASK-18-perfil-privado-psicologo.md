@@ -73,7 +73,7 @@ A tela de edição é longa e **não pode ser um componente único**. Cada seç�
 | Abordagens | `approach` + `psychologist_approach` | seleção de catálogo `approach` via join `psychologist_approach` |
 | Idiomas | `psychologist_profile` | `languages Json?` (`string[]`, ex.: `["pt","en"]`) |
 | Modalidade | `psychologist_profile` | `modality` (`"online" \| "presencial" \| "hibrido"`) |
-| WhatsApp | `psychologist_profile` | `whatsapp` (E.164; `whatsapp_verified_at` é somente leitura — verificação real é bloqueio TASK-03/TASK-16) |
+| WhatsApp | `psychologist_profile` | `whatsapp` (E.164; `whatsapp_verified_at` é somente leitura — verificação real por Twilio SMS/OTP, ver ADR-0006 e TASK-16) |
 | Documentos / CRP | `professional_document` + `psychologist_profile` | upload/lista de `professional_document` (`type="crp"`, `file_key`, `status`); `crp`/`crp_status`/`cfp_verified_at` exibidos como somente leitura (fluxo de validação em TASK-10/11) |
 | Publicação | `psychologist_profile` | `published Boolean` (só `true` aparece na busca, PRD §7) |
 

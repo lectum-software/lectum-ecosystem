@@ -240,9 +240,9 @@ Confirmado no Mercado Pago:
 
 Ajustes aplicados:
 
-- `DATA-MODEL.md` › "Assinatura e cobrança": seção "Abstração de gateway" (porta `PaymentGateway` + `MercadoPagoAdapter`), modo de integração MP, mapa de status MP→nosso, webhook e nota de re-tokenização (token não-portável). Cabeçalho mudou de "bloqueio TASK-03" para "Mercado Pago; pendência = credenciais".
+- `DATA-MODEL.md` › "Assinatura e cobrança": seção "Abstração de gateway" (porta `PaymentGateway` + `MercadoPagoAdapter`), modo de integração MP, mapa de status MP→nosso, webhook e nota de re-tokenização (token não-portável). Cabeçalho passou a refletir "Mercado Pago; pendência = credenciais".
 - `adrs/0003-gateway-pagamento-mercado-pago.md` criada (Accepted); índice de ADRs atualizado.
-- TASK-03: gateway marcado como decidido (MP/ADR-0003); o ADR-bundle das demais integrações passou a `0004`; pendência restante = credenciais.
+- TASK-03: gateway marcado como decidido (MP/ADR-0003); o ADR-bundle das demais integrações passou a `0006`; pendência restante = credenciais.
 - TASK-31/32/33: alinhadas ao MP via porta/adapter; TASK-32 com Card Payment Brick + Preapproval + webhook `x-signature`; TASK-33 com troca de cartão por re-tokenização. Bloqueio dessas tasks deixou de ser "qual provedor" e passou a "credenciais MP".
 - `PACKAGES.md`: `mercadopago` (backend) e `@mercadopago/sdk-react` (frontend) marcados como escolhidos (instalar só na TASK-32 + ADR); Stripe/Asaas como não escolhidos.
 

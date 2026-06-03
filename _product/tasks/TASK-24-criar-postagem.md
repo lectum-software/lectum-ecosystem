@@ -41,7 +41,7 @@ Permitir criação real de post por paciente e psicólogo, com diferenças de pe
 
 ## Pré-requisitos e bloqueios
 
-- Anexos dependem de storage; sem storage, implementar texto sem upload e registrar decisão.
+- Anexos usam Cloudflare R2 via API S3-compatible (decisão da TASK-03 / ADR-0006); sem credenciais/bucket no ambiente, implementar texto sem upload e registrar pendência.
 
 Se qualquer bloqueio obrigatório estiver ativo, pare a implementação, registre ADR/pendência e não marque a task como concluída.
 
@@ -67,7 +67,7 @@ Implementação esperada:
 - Endpoint privado para criar post.
 - Validar comunidade existente (por `slug`) e usuário autenticado.
 - Persistir `community_post.status` segundo a decisão de moderação abaixo.
-- Se anexos forem usados, depender de storage real (bloqueio storage `TASK-03`).
+- Se anexos forem usados, depender de storage real R2.
 - Registrar `author_id`; o tipo de perfil deriva de `user.role`, não é coluna nova do post.
 
 Decisão de moderação (ADR desta task): adotar o default de `DATA-MODEL.md` — criar post diretamente como `status = "publicado"` com **moderação reativa** (remoção posterior para `"removido"`), pois o PRD §16 só prevê moderação por IA na V3. O valor `"pendente"` fica reservado para quando uma regra de pré-moderação for aprovada em ADR; não implementar fila de aprovação agora. Registrar esta decisão no ADR alvo.
@@ -109,7 +109,7 @@ Packages permitidos nesta task:
 - React Hook Form
 - Zod
 - TanStack Query
-- multer/S3 apenas se storage decidido
+- multer/R2 S3-compatible apenas se credenciais reais estiverem disponíveis
 
 Regras anti-recriação específicas:
 

@@ -51,7 +51,7 @@ Entregar a verificação de e-mail por código de 6 dígitos consumindo `confirm
 ## Pré-requisitos e bloqueios
 
 - Os endpoints são privados: o usuário precisa estar autenticado (vindo de cadastro/login). Garantir que a sessão (Bearer + `x-device`) esteja ativa antes de chamar.
-- Envio real depende de `EMAIL_API_EMAIL`/`EMAIL_API_KEY`; sem provedor, `nodemailer` faz no-op. Registrar bloqueio se o ambiente não tiver e-mail configurado (UI/contratos podem concluir).
+- Envio real usa Resend via Nodemailer/SMTP (decisão TASK-03 / ADR-0006) e depende de `EMAIL_API_EMAIL`/`EMAIL_API_KEY` e demais envs `EMAIL_API_*`; sem provedor, `nodemailer` faz no-op. Registrar bloqueio se o ambiente não tiver e-mail configurado (UI/contratos podem concluir).
 
 Se qualquer bloqueio obrigatório estiver ativo, pare a implementação, registre ADR/pendência e não marque a task como concluída.
 

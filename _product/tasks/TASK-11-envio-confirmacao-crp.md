@@ -41,7 +41,8 @@ Permitir envio/registro de CRP com storage real e status de validação profissi
 
 ## Pré-requisitos e bloqueios
 
-- O upload de documento depende de **storage real (S3 via `@aws-sdk/client-s3`)**, uma integração externa. Sem bucket/credenciais definidos na **TASK-03**, este é um **bloqueio obrigatório**: parar antes de qualquer upload real, registrar ADR e **não usar mock** nem URL temporária de protótipo. O trabalho deve ser **agnóstico ao provedor de storage** (interface de armazenamento, sem acoplar a um fornecedor específico).
+- O upload de documento usa **Cloudflare R2 via API S3-compatible e `@aws-sdk/client-s3`** (decisão da TASK-03 / ADR-0006). Sem bucket/credenciais R2 reais no ambiente, este é um **bloqueio obrigatório**: parar antes de qualquer upload real, registrar pendência e **não usar mock** nem URL temporária de protótipo.
+- Documentos CRP devem ser privados por padrão. Se a configuração atual usar apenas bucket público, adaptar a política/bucket antes de armazenar CRP.
 - `professional_document.file_key` persiste a chave no bucket (nunca URL temporária), conforme `DATA-MODEL.md`.
 
 Se qualquer bloqueio obrigatório estiver ativo, pare a implementação, registre ADR/pendência e não marque a task como concluída.
@@ -67,7 +68,7 @@ Este é um **módulo novo** (documentos profissionais): seguir os padrões de co
 Implementação esperada:
 
 - Criar endpoints privados de upload/submissão/status.
-- Usar storage real **agnóstico ao provedor** definido em TASK-03 (bloqueio).
+- Usar storage real Cloudflare R2 definido em TASK-03.
 - Persistir documento profissional em `professional_document` (`type="crp"`, `file_key`, `status`) conforme `DATA-MODEL.md`.
 - Refletir o status no `psychologist_profile.crp_status` (`"pendente" | "em_analise" | "aprovado" | "rejeitado"`, ver `DATA-MODEL.md`).
 - Registrar logs de alteração de status.
@@ -143,7 +144,7 @@ Regras anti-recriação específicas:
 - [ ] Backend implementado nos endpoints/modelos esperados quando aplicável.
 - [ ] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
 - [ ] Rotas sob `/api/private/psychologist/*` exigem `requireRole("psicologo")` (fail-closed), conforme ADR-0002.
-- [ ] Bloqueio de storage (integração externa) respeitado: sem bucket/credenciais em TASK-03, parar com ADR, sem mock nem URL temporária.
+- [ ] Storage R2 respeitado: sem bucket/credenciais reais no ambiente, parar com pendência, sem mock nem URL temporária.
 - [ ] Todos os estados obrigatórios existem e usam textos em PT-BR.
 - [ ] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
 - [ ] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.

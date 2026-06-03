@@ -41,7 +41,8 @@ Consultar CFP/CRP por integração real ou registrar bloqueio formal se a decis�
 
 ## Pré-requisitos e bloqueios
 
-- A consulta CFP é uma **integração externa** (CFP/CRP). Sem provedor/contrato CFP real definido na **TASK-03**, este é um **bloqueio obrigatório**: parar antes de qualquer chamada real, registrar ADR e **não usar mock** nem dado inventado. O trabalho deve ser **agnóstico ao provedor** (definir interface/gateway de consulta, sem acoplar a um fornecedor específico).
+- A consulta CFP automática permanece **bloqueada** pela TASK-03 / ADR-0006 até existir fonte oficial, API contratada ou processo autorizado. Parar antes de qualquer chamada real e **não usar mock**, scraping não autorizado nem dado inventado.
+- A aprovação manual de CRP é o fluxo inicial decidido e continua necessária mesmo se uma API CFP for adicionada futuramente. Se a consulta automática não existir, encaminhar para TASK-11 (upload CRP + análise manual).
 - `psychologist_profile.cfp_verified_at` só é preenchido com consulta CFP real (ver `DATA-MODEL.md`); sem ela, manter `crp_status="pendente"`.
 
 Se qualquer bloqueio obrigatório estiver ativo, pare a implementação, registre ADR/pendência e não marque a task como concluída.
@@ -66,7 +67,7 @@ Este é um **módulo novo** (domínio de verificação profissional): seguir os 
 
 Implementação esperada:
 
-- Criar provider/interface de consulta CFP **agnóstica ao fornecedor**, definida por ADR (bloqueio TASK-03).
+- Criar provider/interface de consulta CFP **agnóstica ao fornecedor** somente quando a fonte/API for definida em nova ADR.
 - Endpoint privado para consultar e salvar resultado selecionado.
 - Persistir payload auditável mínimo da consulta em `professional_registry_check` (campo `raw`, ver `DATA-MODEL.md`).
 - Ao confirmar resultado, atualizar `psychologist_profile.cpf` e `psychologist_profile.cfp_verified_at` (ver `DATA-MODEL.md`).
@@ -141,7 +142,7 @@ Regras anti-recriação específicas:
 - [ ] Backend implementado nos endpoints/modelos esperados quando aplicável.
 - [ ] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
 - [ ] Rotas sob `/api/private/psychologist/*` exigem `requireRole("psicologo")` (fail-closed), conforme ADR-0002.
-- [ ] Bloqueio CFP (integração externa) respeitado: sem provedor/contrato em TASK-03, parar com ADR, sem mock.
+- [ ] Bloqueio CFP automático respeitado: sem fonte/API autorizada, parar com pendência, sem mock nem scraping não autorizado.
 - [ ] Todos os estados obrigatórios existem e usam textos em PT-BR.
 - [ ] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
 - [ ] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.

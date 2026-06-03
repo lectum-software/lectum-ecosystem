@@ -51,7 +51,7 @@ Entregar as três telas de recuperação consumindo `recovery` e `reset/:code` r
 
 ## Pré-requisitos e bloqueios
 
-- Envio de e-mail real depende de `EMAIL_API_EMAIL`/`EMAIL_API_KEY`. Sem essas variáveis, o `nodemailer` faz no-op (loga e não envia). Se o ambiente não tiver provedor configurado, registrar bloqueio em ADR e não marcar o envio como validado ponta a ponta (a UI e os contratos podem ser concluídos).
+- Envio de e-mail real usa Resend via Nodemailer/SMTP (decisão TASK-03 / ADR-0006) e depende de `EMAIL_API_EMAIL`/`EMAIL_API_KEY` e demais envs `EMAIL_API_*`. Sem essas variáveis, o `nodemailer` faz no-op (loga e não envia). Se o ambiente não tiver provedor configurado, registrar bloqueio em ADR e não marcar o envio como validado ponta a ponta (a UI e os contratos podem ser concluídos).
 - `RECOVERY_URL` (env do backend) deve apontar para a rota de nova senha do frontend (abaixo). Se divergir, alinhar a env ou a rota e registrar.
 
 Se qualquer bloqueio obrigatório estiver ativo, pare a implementação, registre ADR/pendência e não marque a task como concluída.

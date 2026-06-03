@@ -54,7 +54,7 @@ Implementação esperada:
 - Criar tela de planos com plano atual e CTAs.
 - Buscar planos do backend/config real.
 - Destacar limitações do plano atual.
-- Se gateway ausente, CTA deve registrar bloqueio/pendência e não simular checkout.
+- Se credenciais/ambiente Mercado Pago estiverem ausentes, CTA deve registrar bloqueio/pendência e não simular checkout.
 - Não hardcodar preço fora de fonte definida.
 
 ## Escopo backend

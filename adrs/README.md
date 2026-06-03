@@ -19,4 +19,4 @@ Formato recomendado:
 - [ADR-0003 - Gateway de pagamento: Mercado Pago (checkout transparente + assinaturas)](0003-gateway-pagamento-mercado-pago.md) — Accepted
 - [ADR-0004 - Design System Lectum Foundation](0004-design-system-lectum-foundation.md) — Accepted
 - [ADR-0005 - Form Composition Foundation](0005-form-composition-foundation.md) — Accepted
-- ADR-0006 - Integrações externas e decisões pendentes (storage, CFP, WhatsApp, e-mail/SMS, push, LGPD) — a criar na TASK-03
+- [ADR-0006 - Integrações externas e decisões pendentes](0006-integracoes-externas-e-decisoes-pendentes.md) — Accepted

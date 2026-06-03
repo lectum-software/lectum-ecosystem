@@ -81,7 +81,7 @@ Endpoints esperados:
 
 - Todas as rotas públicas e privadas principais.
 
-Pacotes de teste (`Vitest`/`Playwright`/`supertest`/`Sentry`) permanecem **candidatos**: não instalar nenhum sem consultar `PACKAGES.md` e registrar ADR.
+Pacotes de teste (`Vitest`/`Playwright`/`supertest`) permanecem **candidatos**. Sentry foi decidido na TASK-03 / ADR-0006, mas deve ser instalado apenas nesta task ou em task dedicada de observabilidade.
 
 ## Contrato técnico detalhado
 
@@ -109,7 +109,7 @@ Packages permitidos nesta task:
 - Vitest candidato
 - Playwright candidato
 - supertest candidato
-- Sentry candidato se decidido
+- Sentry decidido na TASK-03 / ADR-0006; instalar/configurar somente nesta task ou em task dedicada
 
 Regras anti-recriação específicas:
 
@@ -146,7 +146,7 @@ Regras anti-recriação específicas:
 - [ ] Logs revisados sem dados sensíveis em claro.
 - [ ] Fluxos LGPD mínimos (consentimento, exclusão/anonimização, privacidade) documentados.
 - [ ] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado restou.
-- [ ] Packages de teste continuam candidatos; nenhum instalado sem consulta a `PACKAGES.md` + ADR.
+- [ ] Packages de teste continuam candidatos; nenhum instalado sem consulta a `PACKAGES.md` + ADR. Sentry, embora decidido, só foi instalado/configurado nesta task ou em task dedicada.
 - [ ] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
 - [ ] ADR criado ou atualizado em `adrs/`.
 - [ ] Checks/builds relevantes foram executados sem erros.

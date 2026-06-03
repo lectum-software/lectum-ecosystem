@@ -9,7 +9,7 @@
 | Esforço | L |
 | Fase | Conta |
 | Status | Pending |
-| Dependências | TASK-02, TASK-12 |
+| Dependências | TASK-02, TASK-03, TASK-12 |
 | ADR alvo | ADR de notificações e preferências |
 
 ## Referências obrigatórias
@@ -39,8 +39,8 @@ Criar notificações reais e preferências de recebimento por canal.
 
 ## Pré-requisitos e bloqueios
 
-- Push web (web-push/VAPID) é **bloqueio TASK-03** (ver `DATA-MODEL.md` › "Notificações"): sem VAPID configurado, persistir a preferência em `notification_preference` mas **não prometer entrega push**.
-- E-mail/WhatsApp dependem de decisões e chaves reais; sem isso, implementar apenas preferências e lista in-app.
+- Push web real foi decidido na TASK-03 / ADR-0006, usando `web-push`/VAPID e `notification_subscription`. Sem VAPID configurado no ambiente, persistir a preferência em `notification_preference` mas **não prometer entrega push**.
+- E-mail usa Resend via Nodemailer; telefone/WhatsApp usa Twilio SMS/OTP quando aplicável. Sem credenciais reais, implementar apenas preferências e lista in-app para o canal ausente.
 
 Se qualquer bloqueio obrigatório estiver ativo, pare a implementação, registre ADR/pendência e não marque a task como concluída.
 

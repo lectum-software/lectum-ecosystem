@@ -155,9 +155,9 @@ Quando construído: módulo de audiência próprio (ex.: `backend/src/modules/ma
 | `cpf` | `String?` | usado na consulta CFP; dado sensível (LGPD) |
 | `crp` | `String?` | registro profissional exibido no cabeçalho |
 | `crp_status` | `String @default("pendente")` | `"pendente" \| "em_analise" \| "aprovado" \| "rejeitado"` (TASK-10/11) |
-| `cfp_verified_at` | `DateTime?` | preenchido só com consulta CFP real (TASK-10, **bloqueio TASK-03**) |
+| `cfp_verified_at` | `DateTime?` | preenchido só com consulta CFP real; consulta automática segue bloqueada até fonte/API autorizada (ADR-0006) |
 | `whatsapp` | `String?` | E.164; validado em TASK-16 |
-| `whatsapp_verified_at` | `DateTime?` | só com verificação real (**bloqueio TASK-03**) |
+| `whatsapp_verified_at` | `DateTime?` | só com verificação real por Twilio SMS/OTP (ADR-0006) |
 | `languages` | `Json?` | lista de idiomas `string[]` (ex.: `["pt","en"]`); baixo volume, não precisa catálogo |
 | `modality` | `String?` | `"online" \| "presencial" \| "hibrido"` |
 | `rating_avg` | `Int @default(0)` | nota média *×100* (ex.: 4.75 → 475); recalculado em TASK-19 |
@@ -194,11 +194,11 @@ Especialidade, serviço e abordagem são filtros da busca (TASK-13) e seções d
 |---|---|---|
 | `psychologist_id` | `String` | FK |
 | `type` | `String` | `"crp"` (extensível) |
-| `file_key` | `String` | chave no bucket (S3 via `@aws-sdk/client-s3`); nunca URL temporária persistida |
+| `file_key` | `String` | chave no bucket Cloudflare R2 (API S3-compatible via `@aws-sdk/client-s3`); nunca URL temporária persistida |
 | `status` | `String @default("enviado")` | `"enviado" \| "em_analise" \| "aprovado" \| "rejeitado"` |
 | `@@index([psychologist_id, type])` | | |
 
-`professional_registry_check` (log de consulta CFP, TASK-10; **bloqueio contrato CFP TASK-03**):
+`professional_registry_check` (log de consulta CFP, TASK-10; **consulta automática bloqueada até fonte/API autorizada — ver ADR-0006**):
 
 | Campo | Tipo | Notas |
 |---|---|---|
@@ -357,7 +357,7 @@ Não há modelo persistido obrigatório. O ranking é **derivado** de `post_vote
 | `prefs` | `Json` | mapa `tipo → boolean` (push/in-app por categoria) |
 | `@@index([user_id])` | | |
 
-Push real (web-push/VAPID) é **bloqueio TASK-03**: sem VAPID configurado, persistir preferência mas não prometer entrega push.
+Push real foi decidido na TASK-03 (ver ADR-0006), usando `web-push`/VAPID e `notification_subscription`. Sem chaves VAPID reais no ambiente, persistir preferência mas não prometer entrega push.
 
 ---
 
@@ -401,7 +401,7 @@ Trocar de provedor = novo adapter. **Limite real:** card tokens são específico
 |---|---|---|
 | `slug` | `String @unique` | `"gratuito" \| "profissional"` |
 | `name` | `String` | |
-| `price_cents` | `Int @default(0)` | profissional = `990` (R$ 9,90/mês, PRD §13) — preço final confirmado em TASK-03 |
+| `price_cents` | `Int @default(0)` | profissional = `990` (R$ 9,90/mês, sem trial; confirmado em TASK-03) |
 | `interval` | `String @default("month")` | |
 | `features` | `Json?` | flags (selo, analytics, vídeo, ranking) |
 | `active` | `Boolean @default(true)` | |

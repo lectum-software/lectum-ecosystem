@@ -113,8 +113,8 @@ Instalar somente na `TASK-02` ou em task que realmente precise do campo.
 | `bcrypt` | `^6.0.0` | `6.0.0` | Compat senha |
 | `zod` | `^4.4.3` | `4.4.3` | Validation |
 | `i18next` | `^26.3.0` | `26.3.0` | i18n |
-| `nodemailer` | `^8.0.10` | `8.0.10` | E-mail |
-| `twilio` | `^6.0.2` | `6.0.2` | SMS/WhatsApp candidato |
+| `nodemailer` | `^8.0.10` | `8.0.10` | E-mail transacional via Resend SMTP |
+| `twilio` | `^6.0.2` | `6.0.2` | SMS/OTP para verificação de telefone/WhatsApp |
 | `web-push` | `^3.6.7` | `3.6.7` | Push web |
 | `socket.io` | `^4.8.3` | `4.8.3` | Tempo real |
 | `helmet` | `^8.2.0` | `8.2.0` | Segurança HTTP |
@@ -122,7 +122,7 @@ Instalar somente na `TASK-02` ou em task que realmente precise do campo.
 | `cookie-parser` | `^1.4.7` | `1.4.7` | Cookies |
 | `express-session` | `^1.19.0` | `1.19.0` | Sessão OAuth |
 | `multer` | `^2.1.1` | `2.1.1` | Upload |
-| `@aws-sdk/client-s3` | `^3.1059.0` | `3.1060.0` | S3/storage |
+| `@aws-sdk/client-s3` | `^3.1059.0` | `3.1060.0` | Cloudflare R2 via API S3-compatible |
 | `date-fns` | `^4.4.0` | `4.4.0` | Datas |
 | `@paralleldrive/cuid2` | `^3.3.0` | `3.3.0` | IDs |
 | `@scalar/express-api-reference` | `^0.9.20` | `0.9.20` | API docs |
@@ -138,8 +138,8 @@ Instalar somente na `TASK-02` ou em task que realmente precise do campo.
 | `stripe` | `22.2.0` | Não escolhido. Manter como referência caso troque de gateway (novo adapter). |
 | `asaas` | `1.1.0` | Não escolhido. |
 | `@aws-sdk/s3-request-presigner` | `3.1060.0` | URLs assinadas S3 |
-| `@sentry/nextjs` | `10.56.0` | Observabilidade frontend |
-| `@sentry/node` | `10.56.0` | Observabilidade backend |
+| `@sentry/nextjs` | `10.56.0` | Observabilidade frontend — decidido, instalar em task dedicada |
+| `@sentry/node` | `10.56.0` | Observabilidade backend — decidido, instalar em task dedicada |
 
 ## Testes e qualidade candidatos
 

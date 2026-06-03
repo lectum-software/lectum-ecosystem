@@ -38,8 +38,9 @@ Implementar confirmação de contato WhatsApp com persistência de intenção e 
 
 ## Pré-requisitos e bloqueios
 
-- Verificação de WhatsApp (`psychologist_profile.whatsapp_verified_at`) depende de provedor externo: **bloqueio TASK-03**. Sem o contrato decidido, persistir o número e a intenção, mas não preencher `whatsapp_verified_at` nem disparar envio ativo.
-- Sem decisão de WhatsApp/SMS, implementar apenas registro (`contact_request`) e link autorizado; bloquear envio ativo.
+- Contato WhatsApp foi decidido na TASK-03 / ADR-0006: registrar `contact_request` e abrir link direto `wa.me` com o número real do psicólogo.
+- Verificação de número usa Twilio SMS/OTP. Sem credenciais/número de teste Twilio no ambiente, persistir o número como não verificado e não preencher `whatsapp_verified_at`.
+- WhatsApp Business API não entra no MVP; não disparar mensagem ativa pelo WhatsApp.
 
 Se qualquer bloqueio obrigatório estiver ativo, pare a implementação, registre ADR/pendência e não marque a task como concluída.
 
@@ -63,8 +64,8 @@ Implementação esperada:
 
 - Endpoint para criar contato/intenção, persistindo `contact_request` (ver `DATA-MODEL.md`; `channel` default `"whatsapp"`) para analytics e elegibilidade de avaliação.
 - Validar profissional publicado (`psychologist_profile.published`) e WhatsApp configurado (`psychologist_profile.whatsapp`).
-- Só liberar/abrir o WhatsApp quando `psychologist_profile.whatsapp` existir; o preenchimento de `whatsapp_verified_at` fica condicionado ao provedor externo (**bloqueio TASK-03**).
-- Se houver provedor WhatsApp/SMS, usar contrato decidido em TASK-03.
+- Só liberar/abrir o WhatsApp quando `psychologist_profile.whatsapp` existir; o preenchimento de `whatsapp_verified_at` depende de verificação real por Twilio SMS/OTP (ADR-0006).
+- Usar Twilio SMS/OTP quando for verificar o número; usar `wa.me` para contato do paciente.
 - Não expor telefone sem regra de privacidade definida.
 
 Modelos/tabelas envolvidos (ver `DATA-MODEL.md`):
@@ -109,7 +110,7 @@ Packages permitidos nesta task:
 - libphonenumber-js
 - TanStack Query
 - Prisma
-- twilio candidato se decidido
+- twilio
 
 Regras anti-recriação específicas:
 
