@@ -8,7 +8,6 @@ import { DividerWithLabel } from "@/components/ui/divider-with-label";
 import { Logo } from "@/components/ui/logo";
 import { useUserSet } from "@/hooks/user-set";
 import { Button } from "@/registry/new-york-v4/ui/button";
-import { Input } from "@/registry/new-york-v4/ui/input";
 import { AuthTemplate } from "@/templates/auth";
 import { fingerprint } from "@/utils/fingerprint";
 
@@ -16,7 +15,7 @@ import { type LoginForm, useForm } from "./use-form";
 
 export const AuthLogic = () => {
   const { setter } = useUserSet("/dashboard");
-  const { hook, isDirty } = useForm();
+  const { Form, formProps, hook } = useForm();
 
   const { login } = useAuth({
     callbacks: {
@@ -66,39 +65,7 @@ export const AuthLogic = () => {
           <p className="mt-2 text-base text-muted">Faça o login na sua conta</p>
         </div>
 
-        <form className="grid gap-5" onSubmit={hook.handleSubmit(handleSubmit)}>
-          <label className="grid gap-2 text-sm font-semibold text-foreground" htmlFor="email">
-            E-mail
-            <Input
-              id="email"
-              autoComplete="email"
-              placeholder="seu@email.com"
-              type="email"
-              {...hook.register("email")}
-            />
-            {hook.formState.errors.email?.message ? (
-              <span className="text-xs font-medium text-red-600">
-                {hook.formState.errors.email.message}
-              </span>
-            ) : null}
-          </label>
-
-          <label className="grid gap-2 text-sm font-semibold text-foreground" htmlFor="password">
-            Senha
-            <Input
-              id="password"
-              autoComplete="current-password"
-              placeholder="Digite sua senha"
-              type="password"
-              {...hook.register("password")}
-            />
-            {hook.formState.errors.password?.message ? (
-              <span className="text-xs font-medium text-red-600">
-                {hook.formState.errors.password.message}
-              </span>
-            ) : null}
-          </label>
-
+        <Form {...formProps} className="grid gap-5" onSubmit={hook.handleSubmit(handleSubmit)}>
           <a
             className="-mt-2 justify-self-end text-sm font-medium text-primary hover:text-[#247bd1]"
             href="/auth/recovery"
@@ -106,12 +73,12 @@ export const AuthLogic = () => {
             Esqueci minha senha
           </a>
 
-          <Button className="mt-1 w-full" disabled={!isDirty || login.isPending} type="submit">
+          <Button className="mt-1 w-full" disabled={login.isPending} type="submit">
             <LogInIcon className="h-4 w-4" aria-hidden="true" />
             Entrar
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Button>
-        </form>
+        </Form>
 
         <DividerWithLabel className="my-8">ou</DividerWithLabel>
 
