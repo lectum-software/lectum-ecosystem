@@ -1,0 +1,349 @@
+<html lang='pt-br'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>{{template_name}}</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+
+      .label {
+          font-size: 16px;
+          line-height: 20px;
+          font-family: 'Poppins', sans-serif;
+          margin: 10px 0 0 30px;
+          color: black;
+          margin-top: 30px;
+      }
+
+      .code {
+          padding: 5px 50px;
+          color: #fff;
+          background-color: #0f2140;
+          border-radius: 5px;
+          text-align: center;
+          margin-bottom: 25px;
+          font-size: 30px;
+          margin-top: 8px;
+          text-transform: uppercase;
+        }
+
+      .button {
+        text-decoration: none;
+        padding: 10px 20px;
+        color: #fff;
+        background-color: #0f2140;
+        border-radius: 5px;
+        text-align: center;
+        margin-top: 8px;
+        margin-bottom: 50px;
+        font-size: 20px;
+      }
+
+      .footer {
+        font-size: 14px;
+        line-height: 28px;
+        font-family: 'Poppins', sans-serif;
+        margin: 10px 0 0 30px;
+        color: black;
+      }
+
+      .important {
+        font-size: 12px;
+        line-height: 28px;
+        font-weight: bold;
+        font-family: 'Poppins', sans-serif;
+        margin: 10px 0 0 30px;
+        color: black;
+      }
+
+      .html {
+        font-size: 14px;
+        line-height: 20px;
+        font-family: 'Poppins', sans-serif;
+        margin: 20px 0;
+        color: black;
+        text-align: left;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #0f2140;
+      }
+
+      .mention {
+        color: #0f2140;
+        font-weight: bold;
+        text-decoration: none;
+      }
+
+      .html {
+        margin-bottom: 20px;
+      }
+
+    </style>
+  </head>
+  <body>
+    <table
+      role='presentation'
+      border='0'
+      cellpadding='0'
+      cellspacing='0'
+      width='100%'
+      style='max-width: 600px'
+      align='center'
+      bgcolor='white'
+    >
+      <tbody style='background: white; opacity: 0.85; color: #ffffff'>
+        <tr>
+          <td
+            align='center'
+            valign='top'
+            style='
+              padding: 60px 0;
+              margin: 10px 0 0 30px;
+
+              border-right: 1px solid #bbb9b9;
+              border-left: 1px solid #bbb9b9;
+              border-top: 1px solid #bbb9b9;
+              border-radius: 20px 20px 0 0;
+              background-color: #0f2140;
+            '
+            width='100%'
+          >
+          {{#if logo}}
+          <img          
+              src={{logo}}
+              alt='Logo - {{system}}'
+              border='0'
+              style='display: block; object-fit: contain'
+              ,
+              width='300px'
+              height='160px'
+              ;
+            />
+          {{else}}
+          <h1 style="color: white; font-size: 20px; line-height: 28px; font-family: 'Poppins', sans-serif; margin: 10px 0 0 30px;">{{system}}</h1>
+          {{/if}}
+          </td>
+          
+        </tr>
+
+        <tr>
+          <td
+            valign='left'
+            style='border-right: 1px solid #bbb9b9; border-left: 1px solid #bbb9b9; padding: 0 20px'
+          >
+            <strong
+              style="font-size: 30px; font-family: 'Poppins', sans-serif; color: black"
+              align='center'
+              ,
+            >
+              <br />
+              {{#if welcome}}
+                <p>{{welcome}}</p>
+              {{/if}}
+              {{#if hello}}
+                <p>{{hello}}</p>
+              {{/if}}
+              {{#if invited_title}}
+                <p>{{invited_title}}</p>
+              {{/if}}
+            </strong>
+          </td>
+        </tr>
+
+        <tr>
+          <td
+            style='
+              border-right: 1px solid #bbb9b9;
+              border-left: 1px solid #bbb9b9;
+              padding: 0 20px;
+            '
+          >
+          {{!-- LABELS --}}
+          {{#if mention_card_title}}
+            <p
+              class='label'
+              align='center'
+            >
+              {{mention_card_title}}
+            </p>
+          {{/if}}
+
+          {{#if use_to_confirm}}
+            <p
+              class='label'
+              align='center'
+            >
+              {{use_to_confirm}}
+            </p>
+          {{/if}}
+
+          {{#if two_auth_use_to_confirm}}
+            <p
+              class='label'
+              align='center'
+            >
+              {{two_auth_use_to_confirm}}
+            </p>
+          {{/if}}
+          
+           {{#if on_click_to_recovery}}
+            <p
+              class='label'
+              align='center'
+            >
+              {{on_click_to_recovery}}
+            </p>
+          {{/if}}
+          {{#if invited_description}}
+            <p
+              class='label'
+              align='center'
+            >
+              {{invited_description}}
+            </p>
+          {{/if}}
+          {{#if use_email}}
+            <p
+              class='important'
+              align='center'
+            >
+              {{use_email}}
+            </p>
+          {{/if}}
+          {{!-- LABELS --}}
+
+
+          {{!-- HTML --}}
+          {{#if html}}
+            <div
+              class='html'
+              align='center'
+            >
+              {{{html}}}
+            </div>
+          {{/if}}
+
+
+          {{!-- CORE --}}
+          {{#if code}}
+            <p
+              class='code'
+            >
+              {{code}}
+            </p>
+            {{/if}}
+
+            {{#if url}}
+            <p align='center'>
+              <a
+                href='{{url}}'
+                target='_blank'
+                class='button'
+              >
+              <span style="color: #fff !important;">
+              {{#if btn_accept_invite}}
+                {{btn_accept_invite}}
+              {{/if}}
+              {{#if btn_recovery_password}}
+                {{btn_recovery_password}}
+              {{/if}}
+              {{#if see_card}}
+                {{see_card}}
+              {{/if}}
+              </span>
+              </a>
+            </p>  
+            {{/if}}
+          {{!-- CORE --}}
+
+          {{!-- FOOTER --}}
+          {{#if valid_link}}
+            <p
+              class='footer'
+              align='center'
+            >
+              {{valid_link}}
+            </p>
+          {{/if}}
+
+            {{#if valid_code}}
+            <p
+              class='footer'
+              align='center'
+            >
+              {{valid_code}}
+            </p>
+          {{/if}}
+
+            {{#if not_share_code}}
+            <p
+              class='footer'
+              align='center'
+            >
+              {{not_share_code}}
+            </p>
+            {{/if}}
+
+            {{#if not_share_link}}
+            <p
+              class='footer'
+              align='center'
+            >
+              {{not_share_link}}
+            </p>
+            {{/if}}
+
+            {{#if not_registered}}
+              <p
+                class='footer'
+                align='center'
+              >
+                {{not_registered}}
+              </p>
+            {{/if}}
+          {{!-- FOOTER --}}
+          </td>
+        </tr>
+
+        <tr>
+          <td
+            align='center'
+            style="
+              font-family: 'Montserrat', Helvetica, Arial, sans-serif;
+              font-size: 14px;
+              line-height: 24px;
+              font-weight: 300;
+              padding: 20px 20px 50px;
+              border-right: 1px solid #bbb9b9;
+              border-left: 1px solid #bbb9b9;
+              border-bottom: 1px solid #bbb9b9;
+              border-radius: 0 0 20px 20px;
+              margin: 10px 0 0 30px;
+            "
+            valign='middle'
+          >
+            <table
+              role='presentation'
+              border='0'
+              cellpadding='0'
+              cellspacing='0'
+              style='margin-top: 50px; margin-bottom: 20px'
+            >
+              <tbody>
+                <tr>
+                  {{#if send_for}}
+                  <td>
+                    <p style='color: #7e8790; margin: 0'>{{send_for}} {{system}}</p>
+                  </td>
+                  {{/if}}
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>

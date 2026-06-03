@@ -1,0 +1,544 @@
+{
+  "tags": [
+    {
+      "name": "[API] - AUTH (Private)"
+    },
+    {
+      "name": "[API] - AUTH (Public)"
+    },
+    {
+      "name": "[API] - GOOGLE (Public)"
+    },
+    {
+      "name": "[API] - USER (Public)"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "bearerFormat": "JWT",
+        "scheme": "bearer",
+        "type": "http"
+      },
+      "DeviceHeader": {
+        "description": "Header x-device (padrão: web)",
+        "in": "header",
+        "name": "x-device",
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "description": "Endpoints API",
+    "title": "Project LECTUM",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/private/auth/code/:code": {
+      "put": {
+        "tags": ["[API] - AUTH (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [
+          {
+            "description": "Parâmetro code do path.",
+            "in": "path",
+            "name": "code",
+            "required": true,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/auth/confirm": {
+      "get": {
+        "tags": ["[API] - AUTH (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/auth/hidrate": {
+      "get": {
+        "tags": ["[API] - AUTH (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/auth/need_reset": {
+      "post": {
+        "tags": ["[API] - AUTH (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "password": {
+                    "description": "Parâmetro password do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  },
+                  "password_confirm": {
+                    "description": "Parâmetro password_confirm do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "required": ["password", "password_confirm"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/auth/reset": {
+      "post": {
+        "tags": ["[API] - AUTH (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "current_password": {
+                    "description": "Parâmetro current_password do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  },
+                  "password": {
+                    "description": "Parâmetro password do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  },
+                  "password_confirm": {
+                    "description": "Parâmetro password_confirm do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "required": ["current_password", "password", "password_confirm"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/public/auth/login": {
+      "post": {
+        "tags": ["[API] - AUTH (Public)"],
+        "description": "Endpoint (Public)",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "email": {
+                    "description": "Parâmetro email do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  },
+                  "password": {
+                    "description": "Parâmetro password do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "required": ["email", "password"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/public/auth/recovery": {
+      "post": {
+        "tags": ["[API] - AUTH (Public)"],
+        "description": "Endpoint (Public)",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "email": {
+                    "description": "Parâmetro email do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "required": ["email"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/public/auth/reset/:code": {
+      "post": {
+        "tags": ["[API] - AUTH (Public)"],
+        "description": "Endpoint (Public)",
+        "parameters": [
+          {
+            "description": "Parâmetro code do path.",
+            "in": "path",
+            "name": "code",
+            "required": true,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "password": {
+                    "description": "Parâmetro password do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  },
+                  "password_confirm": {
+                    "description": "Parâmetro password_confirm do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "required": ["password", "password_confirm"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/public/google/callback": {
+      "get": {
+        "tags": ["[API] - GOOGLE (Public)"],
+        "description": "Endpoint (Public)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/public/google/login/:id": {
+      "get": {
+        "tags": ["[API] - GOOGLE (Public)"],
+        "description": "Endpoint (Public)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/public/google/me": {
+      "get": {
+        "tags": ["[API] - GOOGLE (Public)"],
+        "description": "Endpoint (Public)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/public/user/store": {
+      "post": {
+        "tags": ["[API] - USER (Public)"],
+        "description": "Endpoint (Public)",
+        "parameters": [
+          {
+            "description": "Parâmetro select do query.",
+            "explode": true,
+            "in": "query",
+            "name": "select",
+            "required": false,
+            "schema": {
+              "nullable": true,
+              "type": "object"
+            },
+            "style": "deepObject"
+          },
+          {
+            "description": "Parâmetro include do query.",
+            "explode": true,
+            "in": "query",
+            "name": "include",
+            "required": false,
+            "schema": {
+              "nullable": true,
+              "type": "object"
+            },
+            "style": "deepObject"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "active": {
+                    "description": "Parâmetro active do body.",
+                    "nullable": false,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "email": {
+                    "description": "Parâmetro email do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "Parâmetro name do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  },
+                  "password": {
+                    "description": "Parâmetro password do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  },
+                  "password_confirm": {
+                    "description": "Parâmetro password_confirm do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "required": ["name", "email", "password", "password_confirm"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3001"
+    }
+  ]
+}

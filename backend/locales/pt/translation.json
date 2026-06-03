@@ -1,0 +1,74 @@
+{
+  "error": {
+    "not_found": "não encontrad{{gender}}",
+    "inactive": "inativ{{gender}}",
+    "unique": "{{property}} já cadastrad{{gender}}",
+    "exceeded_file_limit": "arquivo excede o limite de {{limit}}MB",
+    "unexpected_field": "campo inesperado",
+    "upload_error": "erro ao fazer upload",
+    "upload_config_error": "erro ao configurar o upload",
+    "unexpected_type_file": "tipo de arquivo {{type}} não é permitido",
+    "device_not_found": "Dispositivo não encontrado",
+    "device_id_not_found": "ID do dispositivo não encontrado",
+    "token_not_authorized": "Token não autorizado",
+    "token_not_provided": "Token não fornecido",
+    "token_mal_formatted": "Token mal formatado",
+    "token_invalid": "Token inválido",
+    "token_device_not_authorized": "Token de dispositivo não autorizado",
+    "auth_inactive": "Usuário inativo",
+    "google_email_not_authorized": "Email do Google não encontrado",
+    "google_unexpected_error": "Ocorreu um erro inesperado com o google: {{message}}",
+    "auth_incorrect": "Verifique as informações inseridas e tente novamente",
+    "code_incorrect": "Código incorreto",
+    "code_expired": "Código expirado",
+    "not_need_reset": "Não é necessário redefinir a senha",
+    "code_confirmed": "Código já confirmado",
+    "confirmed_already": "Usuário já confirmado",
+    "origin_not_allowed": "Origem não permitida"
+  },
+  "message": {
+    "store": "dado criado",
+    "login_success": "Login realizado com sucesso.",
+    "auth_success": "Autenticação realizada com sucesso",
+    "recovery_code_success": "Código de recuperação enviado com sucesso",
+    "password_update_success": "Senha atualizada com sucesso",
+    "auth_reset_success": "Autenticação redefinida com sucesso",
+    "confirmed_success": "Código confirmado com sucesso",
+    "confirm_code_success": "Código de confirmação enviado com sucesso"
+  },
+  "gender": {
+    "o": "o"
+  },
+  "model": {
+    "user": "user",
+    "user_token": "user_token",
+    "user_background": "user_background",
+    "notification_subscription": "notification_subscription"
+  },
+  "property": {
+    "email": "email"
+  },
+  "notification": {
+    "test": {
+      "title": "Teste de notificação",
+      "body": "Olá {{name}}. Este é um teste de notificação."
+    }
+  },
+  "email": {
+    "not_share_code": "Para sua segurança não compartilhe esse código com ninguém.",
+    "not_share_link": "Para sua segurança não compartilhe esse link com ninguém.",
+    "use_to_confirm": "Utilize o código abaixo para confirmar sua conta.",
+    "on_click_to_recovery": "Ao clicar no botão abaixo, você será redirecionado para a página de recuperação de senha.",
+    "valid_link": "Esse link é válido por {{minutes}} minutos.",
+    "valid_code": "Esse código é válido por {{minutes}} minutos.",
+    "hello": "Olá {{name}}!",
+    "send_for": "Enviado por",
+    "recovery_code": "Código de recuperação",
+    "confirm_code": "Código de confirmação",
+    "btn_recovery_password": "Recuperar senha"
+  },
+  "sms": {
+    "code": "Código de confirmação",
+    "use_to_confirm": "Utilize o código {{code}} para confirmar seu telefone."
+  }
+}

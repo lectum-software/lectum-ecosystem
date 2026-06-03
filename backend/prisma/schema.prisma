@@ -1,0 +1,103 @@
+generator client {
+  provider               = "prisma-client"
+  output                 = "../src/external/generated/prisma"
+  moduleFormat           = "cjs"
+  generatedFileExtension = "ts"
+  importFileExtension    = ""
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model user {
+  id                         String                      @id @default(cuid())
+  deleted                    Boolean                     @default(false)
+  deletedAt                  DateTime?                   @map("deleted_at")
+  updatedAt                  DateTime                    @default(now()) @updatedAt @map("updated_at")
+  createdAt                  DateTime                    @default(now()) @map("created_at")
+  name                       String
+  avatar                     String?
+  provider                   String                      @default("manual")
+  email                      String                      @unique
+  password                   String?
+  password_confirm           String?
+  active                     Boolean                     @default(true)
+  need_reset                 Boolean                     @default(false)
+  confirmed                  Boolean                     @default(false)
+  confirmed_date             DateTime?
+  recovery_code              String?
+  recovery_date              DateTime?
+  confirm_code               String?
+  confirm_date               DateTime?
+  user_tokens                user_token[]                @relation("user_token_user")
+  user_backgrounds           user_background[]           @relation("user_background_user")
+  notification_subscriptions notification_subscription[] @relation("notification_subscription_user")
+  logs                       log__user[]                 @relation("log__user_user")
+
+  @@index([email, deleted])
+  @@map("users")
+}
+
+model user_token {
+  id        String    @id @default(cuid())
+  deleted   Boolean   @default(false)
+  deletedAt DateTime? @map("deleted_at")
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  user_id   String
+  token     String?
+  device_id String?
+  user      user      @relation("user_token_user", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, device_id])
+  @@index([token])
+  @@map("user_tokens")
+}
+
+model user_background {
+  id        String    @id @default(cuid())
+  deleted   Boolean   @default(false)
+  deletedAt DateTime? @map("deleted_at")
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  user_id   String
+  type      String
+  data      Json?
+  device_id String?
+  user      user      @relation("user_background_user", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, type])
+  @@map("user_backgrounds")
+}
+
+model notification_subscription {
+  id           String    @id @default(cuid())
+  deleted      Boolean   @default(false)
+  deletedAt    DateTime? @map("deleted_at")
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  device_id    String?
+  user_id      String
+  subscription Json?
+  user         user      @relation("notification_subscription_user", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, device_id])
+  @@map("notification_subscriptions")
+}
+
+model log__user {
+  id        String    @id @default(cuid())
+  deleted   Boolean   @default(false)
+  deletedAt DateTime? @map("deleted_at")
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  ref_id    String?
+  action    String
+  old       String?
+  new       String?
+  ref       user?     @relation("log__user_user", fields: [ref_id], references: [id], onDelete: Cascade)
+
+  @@index([ref_id])
+  @@map("log__users")
+}

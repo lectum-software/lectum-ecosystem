@@ -1,0 +1,28 @@
+export type MessageProps = {
+  not_share_code?: string;
+  not_share_link?: string;
+  not_registered?: string;
+  use_to_confirm?: string;
+  welcome?: string;
+  valid_link?: string;
+  valid_code?: string;
+  send_for?: string;
+  recovery_code?: string;
+  btn_recovery_password?: string;
+  template_name?: string;
+  name?: string;
+  email: string;
+  code?: string;
+  url?: string;
+  hello?: string;
+  on_click_to_recovery?: string;
+  company?: string;
+  invited?: string;
+  invited_title?: string;
+  invited_description?: string;
+  use_email?: string;
+  btn_accept_invite?: string;
+  see_card?: string;
+  html?: string;
+  mention_card_title?: string;
+};

@@ -27,7 +27,42 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "style": {
+        "noNonNullAssertion": "off"
+      },
+      "suspicious": {
+        "noExplicitAny": "off"
+      }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["src/packages/**"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noEmptyPattern": "off",
+            "noUnusedFunctionParameters": "off",
+            "noUnusedImports": "off",
+            "noUnusedVariables": "off",
+            "useParseIntRadix": "off"
+          },
+          "complexity": {
+            "noImportantStyles": "off",
+            "useOptionalChain": "off"
+          },
+          "style": {
+            "noDescendingSpecificity": "off",
+            "useImportType": "off"
+          },
+          "suspicious": {
+            "noDuplicateProperties": "off",
+            "noImplicitAnyLet": "off",
+            "noTsIgnore": "off"
+          }
+        }
+      }
+    }
+  ]
 }
