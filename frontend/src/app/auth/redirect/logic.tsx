@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/api/callers/auth";
+import { Logo } from "@/components/ui/logo";
 import { getToken } from "@/hooks/cookies/token";
 import { useUserSet } from "@/hooks/user-set";
 import { CenterTemplate } from "@/templates/center";
@@ -34,10 +35,13 @@ export const RedirectLogic = () => {
 
   return (
     <CenterTemplate>
-      <div className="rounded-lg border border-zinc-200 bg-white p-8 text-center shadow-sm">
-        <Loader2 className="mx-auto h-8 w-8 animate-spin text-zinc-950" aria-hidden="true" />
-        <h1 className="mt-5 text-xl font-semibold">Conectando com Google</h1>
-        <p className="mt-2 text-sm text-zinc-500">Aguarde enquanto validamos sua sessao.</p>
+      <div className="grid w-full justify-items-center gap-5 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-8 text-center shadow-[var(--lectum-shadow-soft)]">
+        <Logo className="w-[160px]" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
+        <div className="grid gap-1.5">
+          <h1 className="text-xl font-bold text-foreground">Conectando com o Google</h1>
+          <p className="text-sm leading-6 text-muted">Aguarde enquanto validamos sua sessão.</p>
+        </div>
       </div>
     </CenterTemplate>
   );
