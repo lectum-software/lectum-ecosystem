@@ -17,7 +17,7 @@ Use esta skill no Claude Code quando o usuário pedir para executar a próxima t
 6. Verificar requisitos externos: pagamento, storage, e-mail, WhatsApp/SMS, CFP, OAuth, push e LGPD.
 7. Se faltar requisito externo, parar e registrar bloqueio em task/ADR.
 8. Mapear arquivos existentes antes de criar estrutura nova:
-   - frontend: `src/api/req`, `src/api/callers`, `src/api/cache/keys.ts`, `src/templates`, `src/registry/new-york-v4/ui`, `src/components/ui`;
+   - frontend: `src/api/req`, `src/api/callers`, `src/api/cache/keys.ts`, `src/templates`, `src/registry/new-york-v4/ui`, `src/components/ui`, `src/components/controllers`, `src/hooks/form`;
    - backend: `src/modules/api`, `src/utils/validator.ts`, `src/helpers/return`, `src/helpers/translate`, `src/main/server/imports/write.ts`.
 9. Implementar sem mocks.
 10. Rodar checks/builds relevantes.
@@ -34,6 +34,7 @@ Use esta skill no Claude Code quando o usuário pedir para executar a próxima t
 - Não aceitar Builder output como implementação final sem revisão arquitetural.
 - Não concluir task com erro de TypeScript, warning Biome ou build quebrado.
 - Não avançar para outra task sem concluir validação e commit.
+- Não usar `sample/` como fonte ativa, exceto quando a task citar expressamente uma referência técnica específica, como a `TASK-02`.
 
 ## Saída Esperada
 

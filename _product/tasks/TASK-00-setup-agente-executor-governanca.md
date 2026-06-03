@@ -8,7 +8,7 @@
 | Prioridade | P0 |
 | Esforço | M |
 | Fase | Foundation |
-| Status | Pending |
+| Status | Completed |
 | Dependências | Nenhuma |
 | ADR alvo | ADR-0001 |
 
@@ -104,32 +104,40 @@ Esta task não possui interface. O estado verificável é documental/operacional
 
 ## Critérios de aceite
 
-- [ ] `AGENTS.md` existe e descreve regras de execução.
-- [ ] `.codex/skills/execute-lectum-task/SKILL.md` existe e contém workflow completo.
-- [ ] `.codex/prompts/execute-next-lectum-task.md` existe.
-- [ ] `.github/copilot-instructions.md` existe com regras resumidas.
-- [ ] `.github/instructions/` possui instruções segmentadas para frontend, backend e docs.
-- [ ] `.github/prompts/execute-next-lectum-task.prompt.md` existe.
-- [ ] `CLAUDE.md` existe com instruções de projeto para Claude Code.
-- [ ] `.claude/skills/execute-lectum-task/SKILL.md` existe.
-- [ ] `.claude/commands/execute-next-lectum-task.md` existe.
-- [ ] `.mcp.json`, `.vscode/mcp.json` e `.cursor/mcp.json` existem com Builder MCP.
-- [ ] `adrs/0001-spec-driven-task-execution.md` existe.
-- [ ] `adrs/TEMPLATE.md` existe.
-- [ ] `_product/tasks/TASK-TEMPLATE.md` existe.
-- [ ] `_product/tasks/ARCHITECTURE.md` existe.
-- [ ] `_product/tasks/PACKAGES.md` existe.
-- [ ] `_product/tasks/PROTO-INVENTORY.md` existe.
-- [ ] `_product/tasks/ROADMAP-REVALIDADO.md` existe.
-- [ ] `.builderignore`, `.builderrules`, `frontend/.builderignore` e `frontend/.builder/rules/lectum-frontend.mdc` existem.
-- [ ] `_product/tasks/README.md` lista todas as tasks de `TASK-00` a `TASK-34` em ordem.
-- [ ] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
-- [ ] `pnpm check` executa sem erros.
-- [ ] Commit criado com mensagem convencional.
+- [x] `AGENTS.md` existe e descreve regras de execução.
+- [x] `.codex/skills/execute-lectum-task/SKILL.md` existe e contém workflow completo.
+- [x] `.codex/prompts/execute-next-lectum-task.md` existe.
+- [x] `.github/copilot-instructions.md` existe com regras resumidas.
+- [x] `.github/instructions/` possui instruções segmentadas para frontend, backend e docs.
+- [x] `.github/prompts/execute-next-lectum-task.prompt.md` existe.
+- [x] `CLAUDE.md` existe com instruções de projeto para Claude Code.
+- [x] `.claude/skills/execute-lectum-task/SKILL.md` existe.
+- [x] `.claude/commands/execute-next-lectum-task.md` existe.
+- [x] `.mcp.json`, `.vscode/mcp.json` e `.cursor/mcp.json` existem com Builder MCP.
+- [x] `adrs/0001-spec-driven-task-execution.md` existe.
+- [x] `adrs/TEMPLATE.md` existe.
+- [x] `_product/tasks/TASK-TEMPLATE.md` existe.
+- [x] `_product/tasks/ARCHITECTURE.md` existe.
+- [x] `_product/tasks/PACKAGES.md` existe.
+- [x] `_product/tasks/PROTO-INVENTORY.md` existe.
+- [x] `_product/tasks/ROADMAP-REVALIDADO.md` existe.
+- [x] `.builderignore`, `.builderrules`, `frontend/.builderignore` e `frontend/.builder/rules/lectum-frontend.mdc` existem.
+- [x] `_product/tasks/README.md` lista todas as tasks de `TASK-00` a `TASK-34` em ordem.
+- [x] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
+- [x] `pnpm check` executa sem erros.
+- [x] Commit criado com mensagem convencional.
 
 ## Validação mínima
 
 - `pnpm check`
+
+## Evidências de execução
+
+- Arquivos obrigatórios auditados sem ausências.
+- `.github/instructions/` contém `backend.instructions.md`, `frontend.instructions.md` e `product-docs.instructions.md`.
+- `_product/tasks/README.md` lista 35 tasks contínuas, de `TASK-00` a `TASK-34`.
+- Builder CLI autenticado no espaço `Lectum`.
+- `pnpm check` executado sem erros.
 
 ## Notas para executor
 

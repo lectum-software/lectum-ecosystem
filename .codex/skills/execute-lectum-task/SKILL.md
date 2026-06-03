@@ -9,7 +9,7 @@ Use esta skill quando o usuário pedir para executar a próxima task, uma task e
 
 ## Workflow Obrigatório
 
-1. Ler `AGENTS.md`, `_product/tasks/README.md`, `_product/tasks/ARCHITECTURE.md`, `_product/tasks/PACKAGES.md` e o arquivo da task alvo.
+1. Ler `AGENTS.md`, `_product/tasks/README.md`, `_product/tasks/ARCHITECTURE.md`, `_product/tasks/DATA-MODEL.md`, `_product/tasks/PACKAGES.md` e o arquivo da task alvo.
 2. Confirmar que todas as dependências da task estão concluídas.
 3. Se a task envolver tela, ler `_product/tasks/PROTO-INVENTORY.md` e identificar as imagens de referência.
 4. Se Builder/Quick Copy estiver disponível no cliente, usar `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` para complementar o contexto visual.
@@ -23,7 +23,7 @@ Use esta skill quando o usuário pedir para executar a próxima task, uma task e
    - chaves OAuth.
 7. Se faltar requisito externo, parar a implementação e registrar a pendência no arquivo da task/ADR.
 8. Mapear arquivos existentes antes de criar estrutura nova:
-   - frontend: `api/req`, `api/callers`, `api/cache/keys`, `templates`, `registry/new-york-v4/ui`;
+   - frontend: `api/req`, `api/callers`, `api/cache/keys`, `templates`, `registry/new-york-v4/ui`, `components/controllers`, `hooks/form`;
    - backend: `modules/api`, `utils/validator`, `helpers/return`, `helpers/translate`, `main/server/imports/write.ts`.
 9. Implementar sem mocks.
 10. Rodar validação:

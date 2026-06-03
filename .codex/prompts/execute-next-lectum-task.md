@@ -5,7 +5,9 @@ Execute a próxima task pendente em `_product/tasks/README.md` usando a skill `e
 Regras:
 
 - leia `_product/tasks/ARCHITECTURE.md`;
+- leia `_product/tasks/DATA-MODEL.md` quando a task envolver modelo Prisma, DTO ou contrato de API;
 - leia `_product/tasks/PACKAGES.md`;
+- use a fundação da `TASK-02` para formulários/campos de produto;
 - execute apenas uma task;
 - use Builder/Quick Copy quando disponível ou imagens de `_product/proto` quando a ferramenta não estiver acessível;
 - não use mocks;
