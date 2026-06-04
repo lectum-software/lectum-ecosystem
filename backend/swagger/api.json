@@ -19,6 +19,9 @@
       "name": "[API] - NOTIFICATION SUBSCRIPTION (Private)"
     },
     {
+      "name": "[API] - PATIENT (Private)"
+    },
+    {
       "name": "[API] - USER (Public)"
     }
   ],
@@ -601,6 +604,91 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/patient/onboarding": {
+      "put": {
+        "tags": [
+          "[API] - PATIENT (Private)"
+        ],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "birthdate": {
+                    "description": "Parâmetro birthdate do body.",
+                    "nullable": false,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "goal": {
+                    "description": "Parâmetro goal do body.",
+                    "nullable": false,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "phone": {
+                    "description": "Parâmetro phone do body.",
+                    "nullable": false,
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/patient/profile": {
+      "get": {
+        "tags": [
+          "[API] - PATIENT (Private)"
+        ],
+        "description": "Endpoint (Private)",
+        "parameters": [],
         "responses": {
           "200": {
             "description": "Successful operation"

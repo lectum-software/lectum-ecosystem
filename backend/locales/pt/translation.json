@@ -26,7 +26,8 @@
     "code_confirmed": "Código já confirmado",
     "confirmed_already": "Usuário já confirmado",
     "origin_not_allowed": "Origem não permitida",
-    "terms_required": "Aceite os termos para continuar"
+    "terms_required": "Aceite os termos para continuar",
+    "role_not_authorized": "Acesso permitido apenas para o perfil autorizado"
   },
   "message": {
     "store": "dado criado",
@@ -36,7 +37,10 @@
     "password_update_success": "Senha atualizada com sucesso",
     "auth_reset_success": "Autenticação redefinida com sucesso",
     "confirmed_success": "Código confirmado com sucesso",
-    "confirm_code_success": "Código de confirmação enviado com sucesso"
+    "confirm_code_success": "Código de confirmação enviado com sucesso",
+    "show": "dados encontrados com sucesso",
+    "update": "dados atualizados com sucesso",
+    "patient_onboarding_success": "Onboarding do paciente conclu?do com sucesso"
   },
   "gender": {
     "o": "o"
@@ -51,7 +55,10 @@
   "property": {
     "email": "email",
     "role": "perfil",
-    "terms_accepted": "termos"
+    "terms_accepted": "termos",
+    "goal": "objetivo",
+    "birthdate": "data de nascimento",
+    "phone": "telefone"
   },
   "notification": {
     "test": {

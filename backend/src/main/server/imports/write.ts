@@ -1,5 +1,6 @@
 import { Router } from "express";
-
+import privateAuth from "@/modules/api/middlewares/_auth";
+import { requireRole } from "@/modules/api/middlewares/require-role";
 import apiPrivateAuthCode from "@/modules/api/private/auth/code";
 import apiPrivateAuthConfirm from "@/modules/api/private/auth/confirm";
 import apiPrivateAuthHidrate from "@/modules/api/private/auth/hidrate";
@@ -13,6 +14,8 @@ import apiPrivateNotificationPreferenceShow from "@/modules/api/private/notifica
 import apiPrivateNotificationPreferenceUpdate from "@/modules/api/private/notification_preference/update";
 import apiPrivateNotificationSubscriptionKey from "@/modules/api/private/notification_subscription/key";
 import apiPrivateNotificationSubscriptionStore from "@/modules/api/private/notification_subscription/store";
+import apiPrivatePatientOnboarding from "@/modules/api/private/patient/onboarding";
+import apiPrivatePatientProfile from "@/modules/api/private/patient/profile";
 import apiPublicAuthLogin from "@/modules/api/public/auth/login";
 import apiPublicAuthRecovery from "@/modules/api/public/auth/recovery";
 import apiPublicAuthReset from "@/modules/api/public/auth/reset";
@@ -35,6 +38,18 @@ endpoint.use("/api/public/google/callback", apiPublicGoogleCallback);
 endpoint.use("/api/public/google/login", apiPublicGoogleLogin);
 endpoint.use("/api/public/google/me", apiPublicGoogleMe);
 endpoint.use("/api/public/user", apiPublicUser);
+endpoint.use(
+  "/api/private/patient/profile",
+  privateAuth,
+  requireRole("paciente"),
+  apiPrivatePatientProfile,
+);
+endpoint.use(
+  "/api/private/patient/onboarding",
+  privateAuth,
+  requireRole("paciente"),
+  apiPrivatePatientOnboarding,
+);
 endpoint.use("/api/private/notification/clean", apiPrivateNotificationClean);
 endpoint.use("/api/private/notification/index", apiPrivateNotificationIndex);
 endpoint.use("/api/private/notification/update", apiPrivateNotificationUpdate);

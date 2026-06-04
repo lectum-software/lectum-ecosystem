@@ -169,6 +169,7 @@ export const VerifyEmailLogic = () => {
     () => hydratedUser || storedUser || null,
     [hydratedUser, storedUser],
   );
+  const continueHref = currentUser?.role === "paciente" ? "/patient/welcome" : "/dashboard";
   const currentEmail = maskEmail(currentUser?.email);
   const isConfirmed = Boolean(currentUser?.confirmed) || alreadyConfirmed;
   const isHydrating = hidrate.isLoading || hidrate.isPending;
@@ -238,7 +239,7 @@ export const VerifyEmailLogic = () => {
               Sua conta já está verificada. Continue para acessar a Lectum.
             </p>
             <Button asChild className="mt-8 w-full">
-              <Link href="/dashboard">
+              <Link href={continueHref}>
                 Continuar
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>

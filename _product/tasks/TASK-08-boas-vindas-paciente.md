@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | M |
 | Fase | Paciente |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-07 (TASK-12 quando o shell privado existir) |
 | ADR alvo | ADR de onboarding paciente |
 
@@ -129,19 +129,39 @@ Regras anti-recriação específicas:
 
 ## Critérios de aceite
 
-- [ ] As referências visuais foram consultadas via Builder Quick Copy ou imagens locais citadas.
-- [ ] Onboarding em etapas com voltar/avançar e progresso.
-- [ ] Conclusão persiste em `patient_profile.onboarding_completed_at` via `PUT /api/private/patient/onboarding` real.
-- [ ] `GET /api/private/patient/profile` evita repetir o onboarding em re-login/outro device.
-- [ ] Endpoints privados exigem sessão e validam `role="paciente"`.
-- [ ] Rotas sob `/api/private/patient/*` exigem `requireRole("paciente")` (fail-closed), conforme ADR-0002.
-- [ ] Campos usam a fundação da TASK-02.
-- [ ] Conclusão não fica apenas em localStorage/redux.
-- [ ] Nenhum mock, paciente fake ou seed artificial foi usado.
-- [ ] ADR criado/atualizado em `adrs/`.
-- [ ] `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build` sem erros.
-- [ ] Browser local validou onboarding completo e o caso "já concluído".
-- [ ] Commit criado com mensagem convencional.
+- [x] As referências visuais foram consultadas via Builder Quick Copy ou imagens locais citadas.
+- [x] Onboarding em etapas com voltar/avançar e progresso.
+- [x] Conclusão persiste em `patient_profile.onboarding_completed_at` via `PUT /api/private/patient/onboarding` real.
+- [x] `GET /api/private/patient/profile` evita repetir o onboarding em re-login/outro device.
+- [x] Endpoints privados exigem sessão e validam `role="paciente"`.
+- [x] Rotas sob `/api/private/patient/*` exigem `requireRole("paciente")` (fail-closed), conforme ADR-0002.
+- [x] Campos usam a fundação da TASK-02.
+- [x] Conclusão não fica apenas em localStorage/redux.
+- [x] Nenhum mock, paciente fake ou seed artificial foi usado.
+- [x] ADR criado/atualizado em `adrs/`.
+- [x] `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build` sem erros.
+- [x] Browser local validou onboarding completo e o caso "já concluído".
+- [x] Commit criado com mensagem convencional.
+
+## Execucao TASK-08
+
+- Builder/Quick Copy nao estava disponivel como ferramenta direta nesta sessao; foram usadas as imagens locais `_product/proto/Boas-vindas Paciente - 1.jpg`, `_product/proto/Boas-vindas Paciente - 2.jpg` e `_product/proto/Boas-vindas Paciente - 3.jpg`.
+- Implementado `/patient/welcome` com UI mobile-first em 3 etapas: acolhimento, informacoes pessoais e escolha do objetivo.
+- Campos de informacoes pessoais usam a fundacao da TASK-02 (React Hook Form, Zod, controllers `calendar` e `phone`); objetivo usa cards controlados pelo mesmo form.
+- Criados `GET /api/private/patient/profile` e `PUT /api/private/patient/onboarding` em `backend/src/modules/api/private/patient/*`, sem criar modelo novo.
+- Criado `requireRole("paciente")` fail-closed e aplicado no mount de `/api/private/patient/*` em `write.ts`, com reforco redundante nos services.
+- A conclusao persiste `goal` e `onboarding_completed_at` em `patient_profile`; o `PUT` e idempotente quando o onboarding ja esta concluido.
+- Redirecionamento de pacientes apos login/verificacao passa por `/patient/welcome`; se o profile ja estiver concluido, a rota pula para `/dashboard`.
+- Como a TASK-12 ainda nao existe formalmente, foi usado o `PrivateTemplate` atual como shell minimo; a substituicao pelo shell privado mobile ficou registrada no ADR.
+- ADR registrado: `adrs/0013-onboarding-boas-vindas-paciente.md`.
+- Validacoes executadas:
+  - `pnpm --dir backend check`
+  - `pnpm --dir backend build`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - browser local em `http://localhost:3000/patient/welcome`
+- A validacao criou usuarios temporarios por endpoints reais, testou profile, guard `403` para papel divergente, fluxo completo no browser, skip de onboarding ja concluido e removeu os registros ao final sem deixar dado fake permanente.
 
 ## Validação mínima
 

@@ -1,7 +1,7 @@
 import type { user } from "@/api/generator/types";
 
 export const USER_HOME_PATHS = {
-  paciente: "/dashboard",
+  paciente: "/patient/welcome",
   psicologo: "/dashboard",
 } as const;
 
