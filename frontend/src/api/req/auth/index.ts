@@ -7,6 +7,15 @@ export type LoginPayload = {
   password: string;
 };
 
+export type RecoveryPayload = {
+  email: string;
+};
+
+export type ResetPasswordPayload = {
+  password: string;
+  password_confirm: string;
+};
+
 export const login = async (body: LoginPayload) => {
   const handle = callEndpoint({
     route: "/api/public/auth/login",
@@ -25,6 +34,32 @@ export const hidrate = async () => {
   });
 
   return handleReq<user>(handle);
+};
+
+export const recovery = async (body: RecoveryPayload) => {
+  const handle = callEndpoint({
+    route: "/api/public/auth/recovery",
+    body,
+  });
+
+  return handleReq<boolean>({
+    ...handle,
+    hideError: true,
+  });
+};
+
+export const resetPassword = async (code: string, body: ResetPasswordPayload) => {
+  const handle = callEndpoint({
+    route: "/api/public/auth/reset/:code",
+    params: { code },
+    body,
+  });
+
+  return handleReq<user>({
+    ...handle,
+    hideError: true,
+    signOutOnUnauthorized: false,
+  });
 };
 
 export const googleMe = async () => {

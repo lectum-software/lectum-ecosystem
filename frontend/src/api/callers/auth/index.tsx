@@ -13,6 +13,14 @@ export interface UseAuthProps {
       onSuccess?: (data: user) => void;
       onError?: (error: unknown) => void;
     };
+    recovery?: {
+      onSuccess?: (data: boolean) => void;
+      onError?: (error: unknown) => void;
+    };
+    resetPassword?: {
+      onSuccess?: (data: user) => void;
+      onError?: (error: unknown) => void;
+    };
     hidrate?: {
       onSuccess?: (data: user) => void;
       onError?: (error: unknown) => void;
@@ -34,6 +42,19 @@ export const useAuth = ({ callbacks, enableHidrate = false }: UseAuthProps = {})
     onError: callbacks?.login?.onError,
   });
 
+  const recovery = useMutation({
+    mutationFn: (body: api.RecoveryPayload) => api.recovery(body),
+    onSuccess: callbacks?.recovery?.onSuccess,
+    onError: callbacks?.recovery?.onError,
+  });
+
+  const resetPassword = useMutation({
+    mutationFn: ({ code, body }: { code: string; body: api.ResetPasswordPayload }) =>
+      api.resetPassword(code, body),
+    onSuccess: callbacks?.resetPassword?.onSuccess,
+    onError: callbacks?.resetPassword?.onError,
+  });
+
   const hidrate = useQuery({
     queryKey: hydrateKey,
     queryFn: () => api.hidrate(),
@@ -48,5 +69,5 @@ export const useAuth = ({ callbacks, enableHidrate = false }: UseAuthProps = {})
     onError: callbacks?.googleMe?.onError,
   });
 
-  return { login, hidrate, googleMe };
+  return { login, recovery, resetPassword, hidrate, googleMe };
 };

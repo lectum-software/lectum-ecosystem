@@ -8,7 +8,7 @@
 | Prioridade | P0 |
 | Esforço | M |
 | Fase | Auth |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-02, TASK-04 |
 | ADR alvo | ADR de recuperação de senha reutilizando fluxo existente |
 
@@ -117,19 +117,19 @@ Regras anti-recriação específicas:
 
 ## Critérios de aceite
 
-- [ ] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
-- [ ] As três telas consomem `POST /api/public/auth/recovery` e `POST /api/public/auth/reset/:code` reais.
-- [ ] Nenhum endpoint, validator ou service de recuperação foi duplicado.
-- [ ] `/auth/reset-password` corresponde ao `RECOVERY_URL` do backend (ou divergência registrada).
-- [ ] Formulários usam a fundação da TASK-02; senha valida a regra forte (mín. 12, maiúscula/minúscula/dígito/especial) e confirmação.
-- [ ] Todos os estados obrigatórios existem em PT-BR.
-- [ ] Anti-enumeração preservado na tela de envio.
-- [ ] Nenhum mock, dado fake ou endpoint simulado foi usado.
-- [ ] Bloqueio de provedor de e-mail registrado se aplicável.
-- [ ] ADR criado/atualizado em `adrs/` (decisão de redirecionamento pós-reset).
-- [ ] `pnpm --dir frontend check` e `pnpm --dir frontend build` sem erros.
-- [ ] Browser local validou envio e ao menos um erro (código inválido/expirado).
-- [ ] Commit criado com mensagem convencional.
+- [x] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
+- [x] As três telas consomem `POST /api/public/auth/recovery` e `POST /api/public/auth/reset/:code` reais.
+- [x] Nenhum endpoint, validator ou service de recuperação foi duplicado.
+- [x] `/auth/reset-password` corresponde ao `RECOVERY_URL` do backend (ou divergência registrada).
+- [x] Formulários usam a fundação da TASK-02; senha valida a regra forte (mín. 12, maiúscula/minúscula/dígito/especial) e confirmação.
+- [x] Todos os estados obrigatórios existem em PT-BR.
+- [x] Anti-enumeração preservado na tela de envio.
+- [x] Nenhum mock, dado fake ou endpoint simulado foi usado.
+- [x] Bloqueio de provedor de e-mail registrado se aplicável.
+- [x] ADR criado/atualizado em `adrs/` (decisão de redirecionamento pós-reset).
+- [x] `pnpm --dir frontend check` e `pnpm --dir frontend build` sem erros.
+- [x] Browser local validou envio e ao menos um erro (código inválido/expirado).
+- [x] Commit criado com mensagem convencional.
 
 ## Validação mínima
 
@@ -141,3 +141,30 @@ Regras anti-recriação específicas:
 ## Notas para executor
 
 O peso desta task é frontend e fidelidade ao contrato real. Se for tentado a "melhorar" criando um endpoint próprio, pare: o backend já resolve. Concluir em commit próprio.
+
+
+## Evidencias de execucao
+
+- Referencias visuais consultadas por fallback local:
+  - `_product/proto/Recuperar Senha - Inserir Email.jpg`;
+  - `_product/proto/Recuperar Senha - Link Enviado.jpg`;
+  - `_product/proto/Recuperar Senha - Criar Nova Senha.jpg`.
+- Builder/Quick Copy nao estava disponivel como ferramenta MCP direta nesta sessao; limitacao registrada na `ADR-0010`.
+- Endpoints reais adicionados no frontend:
+  - `POST /api/public/auth/recovery`;
+  - `POST /api/public/auth/reset/:code`.
+- `backend/.env` local alinhado para `RECOVERY_URL=/auth/reset-password`; como `.env` e ignorado pelo Git, a decisao foi registrada na `ADR-0010`.
+- Provedor de e-mail: variaveis `EMAIL_API_EMAIL`, `EMAIL_API_KEY` e demais `EMAIL_API_*` esperadas estavam presentes no ambiente local; sem bloqueio aplicavel nesta execucao. A entrega em caixa real fica pendente para destinatario operacional autorizado.
+- `pnpm --dir frontend check`: aprovado sem erros.
+- `pnpm --dir frontend build`: aprovado, incluindo as rotas `/auth/recovery` e `/auth/reset-password`.
+- Dev local:
+  - `GET http://localhost:3000/auth/recovery`: 200;
+  - `GET http://localhost:3000/auth/reset-password?code=invalid-task05`: 200;
+  - `POST http://localhost:3001/api/public/auth/recovery`: 200 com `recovery_code_success`;
+  - `POST http://localhost:3001/api/public/auth/reset/invalid-task05`: 404 com `code_incorrect`.
+- Chrome headless/CDP validou browser local:
+  - tela `/auth/recovery` renderizou;
+  - submit de e-mail exibiu `Link enviado!`;
+  - tela `/auth/reset-password?code=invalid-task05-browser` renderizou;
+  - submit com codigo invalido exibiu CTA `Solicitar novo link`.
+- ADR criado: `adrs/0010-recuperacao-senha-frontend.md`.
