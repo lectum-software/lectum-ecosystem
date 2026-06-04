@@ -35,6 +35,9 @@ como ferramenta direta nesta sessao.
 - O frontend implementa `/auth/register/patient` usando a fundacao da TASK-02
   (`useFormList`, controllers e Zod), com senha forte, confirmacao, aceite de termos,
   Google e chamada real a `POST /api/public/user/store`.
+- O cadastro com Google pela rota de paciente nao depende de preencher os campos de
+  e-mail/senha; o clique na CTA exibe copy de consentimento e envia
+  `terms_accepted=true`/`terms_version` no `state` para persistencia no callback.
 - O sucesso usa `useUserSet("/auth/verify-email")`; como `confirmed=false`, o guard de
   auth da TASK-06 tambem reforca o redirecionamento para verificacao.
 

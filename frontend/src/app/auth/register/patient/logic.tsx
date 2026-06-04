@@ -76,19 +76,14 @@ export const RegisterPatientLogic = () => {
   };
 
   const handleGoogleRegister = async () => {
-    const hasAcceptedTerms = hook.getValues("terms_accepted");
-
-    if (!hasAcceptedTerms) {
-      hook.setError("terms_accepted", {
-        type: "manual",
-        message: "Aceite os termos para continuar",
-      });
-      return;
-    }
-
     try {
       setGooglePending(true);
       setApiError(null);
+      hook.setValue("terms_accepted", true, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
 
       const currentDeviceId = await fingerprint();
       const loginUrl =
@@ -144,6 +139,11 @@ export const RegisterPatientLogic = () => {
           )}
           {googlePending ? "Conectando com Google" : "Continuar com Google"}
         </Button>
+
+        <p className="mt-3 text-center text-xs leading-5 text-muted">
+          Ao continuar com Google, você aceita os termos de uso e a política de privacidade. O texto
+          legal final ainda será revisado nas próximas etapas de LGPD.
+        </p>
 
         <DividerWithLabel className="my-7">ou e-mail</DividerWithLabel>
 

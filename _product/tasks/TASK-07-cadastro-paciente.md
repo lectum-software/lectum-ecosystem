@@ -154,6 +154,7 @@ Regras anti-recriação específicas:
 - Implementado `/auth/register/patient` com UI mobile-first, Google, aceite de termos e formulario baseado na fundacao da TASK-02.
 - Estendido `POST /api/public/user/store` para aceitar `role`, `terms_accepted` e `terms_version`, criar `patient_profile` e persistir aceite em `user_background` na mesma transacao do usuario.
 - Estendido o fluxo Google existente para propagar `role=paciente` e dados de aceite pelo `state` do OAuth.
+- Ajuste posterior: o CTA "Continuar com Google" foi habilitado sem depender dos campos de e-mail/senha; o clique exibe consentimento e envia o aceite no `state` do OAuth.
 - Criada e aplicada a migracao `backend/prisma/migrations/20260604223000_add_patient_profile/migration.sql`.
 - ADR registrado: `adrs/0012-cadastro-paciente-role-profile.md`.
 - Pendencia registrada: texto legal/LGPD final ainda sera revisado nas tasks futuras; o aceite e persistido com `terms_version=task07-pending-legal-copy`.
