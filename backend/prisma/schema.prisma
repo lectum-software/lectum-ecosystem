@@ -33,6 +33,7 @@ model user {
   confirm_date               DateTime?
   user_tokens                user_token[]                @relation("user_token_user")
   user_backgrounds           user_background[]           @relation("user_background_user")
+  patient_profile            patient_profile?            @relation("patient_profile_user")
   notification_subscriptions notification_subscription[] @relation("notification_subscription_user")
   logs                       log__user[]                 @relation("log__user_user")
   notifications              notification[]              @relation("notifications")
@@ -86,6 +87,24 @@ model user_background {
 
   @@index([user_id, type])
   @@map("user_backgrounds")
+}
+
+model patient_profile {
+  id                      String    @id @default(cuid())
+  deleted                 Boolean   @default(false)
+  deletedAt               DateTime? @map("deleted_at")
+  updatedAt               DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt               DateTime  @default(now()) @map("created_at")
+  user_id                 String    @unique
+  goal                    String?
+  birthdate               DateTime?
+  phone                   String?
+  bio                     String?
+  onboarding_completed_at DateTime?
+  user                    user      @relation("patient_profile_user", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("patient_profiles")
 }
 
 model notification_subscription {

@@ -8,7 +8,7 @@
 | Prioridade | P0 |
 | Esforço | M |
 | Fase | Paciente |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-02, TASK-04, TASK-06 |
 | ADR alvo | ADR de papel do usuário e perfil paciente |
 
@@ -134,19 +134,38 @@ Regras anti-recriação específicas:
 
 ## Critérios de aceite
 
-- [ ] A referência visual foi consultada via Builder Quick Copy ou imagem local citada.
-- [ ] `user.role` e `patient_profile` criados conforme `DATA-MODEL.md`, com migração aditiva que não quebra a auth existente.
-- [ ] Cadastro reaproveita `POST /api/public/user/store` (estendido), sem endpoint/auth paralelo.
-- [ ] `patient_profile` criado na mesma transação do usuário, com `role="paciente"`.
-- [ ] Google de paciente persiste `role` via callback existente.
-- [ ] Form usa a fundação da TASK-02; senha valida regra forte + confirmação.
-- [ ] Pós-cadastro redireciona para `/auth/verify-email` (sessão hidratada, `confirmed=false`).
-- [ ] Aceite de termos capturado/persistido; pendência de texto registrada se aplicável.
-- [ ] Nenhum mock, paciente fake ou seed artificial foi usado.
-- [ ] ADR criado/atualizado em `adrs/` (papel do usuário + perfil paciente).
-- [ ] `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build` sem erros.
-- [ ] Browser local validou cadastro real e erro de e-mail duplicado.
-- [ ] Commit criado com mensagem convencional.
+- [x] A referência visual foi consultada via Builder Quick Copy ou imagem local citada.
+- [x] `user.role` e `patient_profile` criados conforme `DATA-MODEL.md`, com migração aditiva que não quebra a auth existente.
+- [x] Cadastro reaproveita `POST /api/public/user/store` (estendido), sem endpoint/auth paralelo.
+- [x] `patient_profile` criado na mesma transação do usuário, com `role="paciente"`.
+- [x] Google de paciente persiste `role` via callback existente.
+- [x] Form usa a fundação da TASK-02; senha valida regra forte + confirmação.
+- [x] Pós-cadastro redireciona para `/auth/verify-email` (sessão hidratada, `confirmed=false`).
+- [x] Aceite de termos capturado/persistido; pendência de texto registrada se aplicável.
+- [x] Nenhum mock, paciente fake ou seed artificial foi usado.
+- [x] ADR criado/atualizado em `adrs/` (papel do usuário + perfil paciente).
+- [x] `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build` sem erros.
+- [x] Browser local validou cadastro real e erro de e-mail duplicado.
+- [x] Commit criado com mensagem convencional.
+
+## Execucao TASK-07
+
+- Builder/Quick Copy nao estava disponivel como ferramenta direta nesta sessao; foi usada a imagem local `_product/proto/Cadastro de Paciente.jpg`.
+- Implementado `/auth/register/patient` com UI mobile-first, Google, aceite de termos e formulario baseado na fundacao da TASK-02.
+- Estendido `POST /api/public/user/store` para aceitar `role`, `terms_accepted` e `terms_version`, criar `patient_profile` e persistir aceite em `user_background` na mesma transacao do usuario.
+- Estendido o fluxo Google existente para propagar `role=paciente` e dados de aceite pelo `state` do OAuth.
+- Criada e aplicada a migracao `backend/prisma/migrations/20260604223000_add_patient_profile/migration.sql`.
+- ADR registrado: `adrs/0012-cadastro-paciente-role-profile.md`.
+- Pendencia registrada: texto legal/LGPD final ainda sera revisado nas tasks futuras; o aceite e persistido com `terms_version=task07-pending-legal-copy`.
+- Validacoes executadas:
+  - `pnpm --dir backend db:migrate`
+  - `pnpm --dir backend check`
+  - `pnpm --dir backend build`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - browser local em `http://localhost:3000/auth/register/patient`
+- A validacao criou usuario temporario por endpoint real, verificou `role="paciente"`, `patient_profile` e aceite de termos, e removeu o registro ao final sem deixar dado fake permanente.
 
 ## Validação mínima
 

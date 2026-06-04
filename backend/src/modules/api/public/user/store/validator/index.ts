@@ -53,6 +53,25 @@ export const schema: IValidatorRequest = {
       method: "password",
       coerse: "string",
     },
+    {
+      key: "role",
+      method: "enumeric",
+      values: ["paciente", "psicologo"],
+      coerse: "string",
+      optional: true,
+    },
+    {
+      key: "terms_accepted",
+      method: "boolean",
+      coerse: "boolean",
+      optional: true,
+    },
+    {
+      key: "terms_version",
+      method: "string",
+      coerse: "string",
+      optional: true,
+    },
   ],
   relations: {
     query: [],

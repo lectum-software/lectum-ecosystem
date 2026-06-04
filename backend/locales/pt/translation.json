@@ -25,7 +25,8 @@
     "not_need_reset": "Não é necessário redefinir a senha",
     "code_confirmed": "Código já confirmado",
     "confirmed_already": "Usuário já confirmado",
-    "origin_not_allowed": "Origem não permitida"
+    "origin_not_allowed": "Origem não permitida",
+    "terms_required": "Aceite os termos para continuar"
   },
   "message": {
     "store": "dado criado",
@@ -44,10 +45,13 @@
     "user": "user",
     "user_token": "user_token",
     "user_background": "user_background",
-    "notification_subscription": "notification_subscription"
+    "notification_subscription": "notification_subscription",
+    "patient_profile": "patient_profile"
   },
   "property": {
-    "email": "email"
+    "email": "email",
+    "role": "perfil",
+    "terms_accepted": "termos"
   },
   "notification": {
     "test": {

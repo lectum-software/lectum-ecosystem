@@ -23,6 +23,21 @@ export interface user_background {
   user?: user | null;
 }
 
+export interface patient_profile {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  user_id?: string | null;
+  goal?: string | null;
+  birthdate?: Date | null;
+  phone?: string | null;
+  bio?: string | null;
+  onboarding_completed_at?: Date | null;
+  user?: user | null;
+}
+
 export interface notification_subscription {
   id?: string | null;
   deleted?: boolean | null;
@@ -83,6 +98,7 @@ export interface user {
   confirm_date?: Date | null;
   user_tokens?: user_token[] | null;
   user_backgrounds?: user_background[] | null;
+  patient_profile?: patient_profile | null;
   notification_subscriptions?: notification_subscription[] | null;
   notifications?: notification[] | null;
   notification_preference?: notification_preference | null;

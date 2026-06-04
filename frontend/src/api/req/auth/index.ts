@@ -16,6 +16,16 @@ export type ResetPasswordPayload = {
   password_confirm: string;
 };
 
+export type RegisterPatientPayload = {
+  name: string;
+  email: string;
+  password: string;
+  password_confirm: string;
+  role: "paciente";
+  terms_accepted: true;
+  terms_version: string;
+};
+
 export type VerifyCodePayload = {
   code: string;
 };
@@ -63,6 +73,18 @@ export const resetPassword = async (code: string, body: ResetPasswordPayload) =>
     ...handle,
     hideError: true,
     signOutOnUnauthorized: false,
+  });
+};
+
+export const registerPatient = async (body: RegisterPatientPayload) => {
+  const handle = callEndpoint({
+    route: "/api/public/user/store",
+    body,
+  });
+
+  return handleReq<user>({
+    ...handle,
+    hideError: true,
   });
 };
 

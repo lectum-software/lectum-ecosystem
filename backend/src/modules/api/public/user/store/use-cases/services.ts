@@ -24,6 +24,15 @@ export default async (data: IStoreDTO) => {
     };
 
   const _USER = new StoreRepository();
+  const role = data.b.role || "paciente";
+
+  if (!data.b.terms_accepted)
+    return {
+      status: 400,
+      ...error("terms_required", {
+        //If you need a custom text
+      }),
+    };
 
   //Verify if email is unique
   if (data.b.email) {
@@ -48,7 +57,14 @@ export default async (data: IStoreDTO) => {
   //Encrypt password_confirm
   if (data.b.password_confirm) data.b.password_confirm = await encrypt(data.b.password_confirm);
 
-  const res = await _USER.store(data);
+  const res = await _USER.store({
+    ...data,
+    b: {
+      ...data.b,
+      role,
+    },
+    device_id: device.id,
+  });
 
   //
   const _LOGIN = new LoginRepository(device.id);

@@ -25,3 +25,4 @@ Formato recomendado:
 - [ADR-0009 - Migrations dev obrigatorias em tasks com alteracao de banco](0009-migrations-dev-obrigatorias-em-tasks-com-banco.md) — Accepted
 - [ADR-0010 - Fluxo frontend de recuperacao de senha](0010-recuperacao-senha-frontend.md) ? Accepted
 - [ADR-0011 - Verificacao de e-mail por codigo](0011-verificacao-email-codigo.md) - Accepted
+- [ADR-0012 - Cadastro de paciente com role e patient_profile](0012-cadastro-paciente-role-profile.md) - Accepted

@@ -24,8 +24,10 @@ export class LoginRepository implements ILoginRepository {
   readonly repository: ORM["user"];
   readonly user_token: ORM["user_token"];
   readonly tokens: any;
+  readonly device_id: string;
 
   constructor(device_id = "", _allowedSensitive: SensitiveField[] = []) {
+    this.device_id = device_id;
     this.repository = prisma.user;
     this.user_token = prisma.user_token;
     this.tokens = {
@@ -92,19 +94,52 @@ export class LoginRepository implements ILoginRepository {
   }
 
   async store(data: IStoreDTO): Promise<user | null> {
-    const res = await this.repository.create({
-      data: {
-        ...data.b,
-        confirmed: true,
-        confirmed_date: new Date(),
-        need_reset: true,
-      },
-      include: {
-        user_tokens: this.tokens,
-        //
-        ...include,
-      },
+    const res = await prisma.$transaction(async (tx) => {
+      const { terms_accepted, terms_version, ...userData } = data.b;
+      const role = userData.role || "paciente";
+
+      const user = await tx.user.create({
+        data: {
+          ...userData,
+          role,
+          confirmed: true,
+          confirmed_date: new Date(),
+          need_reset: true,
+        },
+        include: {
+          user_tokens: this.tokens,
+          //
+          ...include,
+        },
+      });
+
+      if (role === "paciente") {
+        await tx.patient_profile.create({
+          data: {
+            user_id: user.id,
+          },
+        });
+      }
+
+      if (terms_accepted) {
+        await tx.user_background.create({
+          data: {
+            user_id: user.id,
+            type: "terms_accept",
+            device_id: this.device_id,
+            data: {
+              accepted_at: new Date().toISOString(),
+              terms_version: terms_version || "pending-legal-copy",
+              source: "google_registration",
+              role,
+            },
+          },
+        });
+      }
+
+      return user;
     });
+
     return res;
   }
 

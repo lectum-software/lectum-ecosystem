@@ -46,7 +46,9 @@
   "paths": {
     "/api/private/auth/code/:code": {
       "put": {
-        "tags": ["[API] - AUTH (Private)"],
+        "tags": [
+          "[API] - AUTH (Private)"
+        ],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -83,7 +85,9 @@
     },
     "/api/private/auth/confirm": {
       "get": {
-        "tags": ["[API] - AUTH (Private)"],
+        "tags": [
+          "[API] - AUTH (Private)"
+        ],
         "description": "Endpoint (Private)",
         "parameters": [],
         "responses": {
@@ -109,7 +113,9 @@
     },
     "/api/private/auth/hidrate": {
       "get": {
-        "tags": ["[API] - AUTH (Private)"],
+        "tags": [
+          "[API] - AUTH (Private)"
+        ],
         "description": "Endpoint (Private)",
         "parameters": [],
         "responses": {
@@ -135,7 +141,9 @@
     },
     "/api/private/auth/need_reset": {
       "post": {
-        "tags": ["[API] - AUTH (Private)"],
+        "tags": [
+          "[API] - AUTH (Private)"
+        ],
         "description": "Endpoint (Private)",
         "parameters": [],
         "requestBody": {
@@ -156,7 +164,10 @@
                     "type": "string"
                   }
                 },
-                "required": ["password", "password_confirm"],
+                "required": [
+                  "password",
+                  "password_confirm"
+                ],
                 "type": "object"
               }
             }
@@ -185,7 +196,9 @@
     },
     "/api/private/auth/reset": {
       "post": {
-        "tags": ["[API] - AUTH (Private)"],
+        "tags": [
+          "[API] - AUTH (Private)"
+        ],
         "description": "Endpoint (Private)",
         "parameters": [],
         "requestBody": {
@@ -212,7 +225,11 @@
                     "type": "string"
                   }
                 },
-                "required": ["current_password", "password", "password_confirm"],
+                "required": [
+                  "current_password",
+                  "password",
+                  "password_confirm"
+                ],
                 "type": "object"
               }
             }
@@ -241,7 +258,9 @@
     },
     "/api/private/notification_preference/show": {
       "get": {
-        "tags": ["[API] - NOTIFICATION PREFERENCE (Private)"],
+        "tags": [
+          "[API] - NOTIFICATION PREFERENCE (Private)"
+        ],
         "description": "Endpoint (Private)",
         "parameters": [],
         "responses": {
@@ -267,7 +286,9 @@
     },
     "/api/private/notification_preference/update": {
       "put": {
-        "tags": ["[API] - NOTIFICATION PREFERENCE (Private)"],
+        "tags": [
+          "[API] - NOTIFICATION PREFERENCE (Private)"
+        ],
         "description": "Endpoint (Private)",
         "parameters": [],
         "requestBody": {
@@ -310,7 +331,9 @@
     },
     "/api/private/notification_subscription/key": {
       "get": {
-        "tags": ["[API] - NOTIFICATION SUBSCRIPTION (Private)"],
+        "tags": [
+          "[API] - NOTIFICATION SUBSCRIPTION (Private)"
+        ],
         "description": "Endpoint (Private)",
         "parameters": [],
         "responses": {
@@ -336,7 +359,9 @@
     },
     "/api/private/notification_subscription/store": {
       "post": {
-        "tags": ["[API] - NOTIFICATION SUBSCRIPTION (Private)"],
+        "tags": [
+          "[API] - NOTIFICATION SUBSCRIPTION (Private)"
+        ],
         "description": "Endpoint (Private)",
         "parameters": [],
         "requestBody": {
@@ -385,7 +410,9 @@
     },
     "/api/private/notification/clean": {
       "post": {
-        "tags": ["[API] - NOTIFICATION (Private)"],
+        "tags": [
+          "[API] - NOTIFICATION (Private)"
+        ],
         "description": "Endpoint (Private)",
         "parameters": [],
         "responses": {
@@ -411,7 +438,9 @@
     },
     "/api/private/notification/index": {
       "get": {
-        "tags": ["[API] - NOTIFICATION (Private)"],
+        "tags": [
+          "[API] - NOTIFICATION (Private)"
+        ],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -508,7 +537,9 @@
     },
     "/api/private/notification/test": {
       "get": {
-        "tags": ["[API] - NOTIFICATION (Private)"],
+        "tags": [
+          "[API] - NOTIFICATION (Private)"
+        ],
         "description": "Endpoint (Private)",
         "parameters": [],
         "responses": {
@@ -534,7 +565,9 @@
     },
     "/api/private/notification/update/:id": {
       "put": {
-        "tags": ["[API] - NOTIFICATION (Private)"],
+        "tags": [
+          "[API] - NOTIFICATION (Private)"
+        ],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -560,7 +593,9 @@
                     "type": "string"
                   }
                 },
-                "required": ["read"],
+                "required": [
+                  "read"
+                ],
                 "type": "object"
               }
             }
@@ -589,7 +624,9 @@
     },
     "/api/public/auth/login": {
       "post": {
-        "tags": ["[API] - AUTH (Public)"],
+        "tags": [
+          "[API] - AUTH (Public)"
+        ],
         "description": "Endpoint (Public)",
         "parameters": [],
         "requestBody": {
@@ -610,7 +647,10 @@
                     "type": "string"
                   }
                 },
-                "required": ["email", "password"],
+                "required": [
+                  "email",
+                  "password"
+                ],
                 "type": "object"
               }
             }
@@ -636,7 +676,9 @@
     },
     "/api/public/auth/recovery": {
       "post": {
-        "tags": ["[API] - AUTH (Public)"],
+        "tags": [
+          "[API] - AUTH (Public)"
+        ],
         "description": "Endpoint (Public)",
         "parameters": [],
         "requestBody": {
@@ -651,7 +693,9 @@
                     "type": "string"
                   }
                 },
-                "required": ["email"],
+                "required": [
+                  "email"
+                ],
                 "type": "object"
               }
             }
@@ -677,7 +721,9 @@
     },
     "/api/public/auth/reset/:code": {
       "post": {
-        "tags": ["[API] - AUTH (Public)"],
+        "tags": [
+          "[API] - AUTH (Public)"
+        ],
         "description": "Endpoint (Public)",
         "parameters": [
           {
@@ -709,7 +755,10 @@
                     "type": "string"
                   }
                 },
-                "required": ["password", "password_confirm"],
+                "required": [
+                  "password",
+                  "password_confirm"
+                ],
                 "type": "object"
               }
             }
@@ -735,7 +784,9 @@
     },
     "/api/public/google/callback": {
       "get": {
-        "tags": ["[API] - GOOGLE (Public)"],
+        "tags": [
+          "[API] - GOOGLE (Public)"
+        ],
         "description": "Endpoint (Public)",
         "parameters": [],
         "responses": {
@@ -758,7 +809,9 @@
     },
     "/api/public/google/login/:id": {
       "get": {
-        "tags": ["[API] - GOOGLE (Public)"],
+        "tags": [
+          "[API] - GOOGLE (Public)"
+        ],
         "description": "Endpoint (Public)",
         "parameters": [],
         "responses": {
@@ -781,7 +834,9 @@
     },
     "/api/public/google/me": {
       "get": {
-        "tags": ["[API] - GOOGLE (Public)"],
+        "tags": [
+          "[API] - GOOGLE (Public)"
+        ],
         "description": "Endpoint (Public)",
         "parameters": [],
         "responses": {
@@ -804,7 +859,9 @@
     },
     "/api/public/user/store": {
       "post": {
-        "tags": ["[API] - USER (Public)"],
+        "tags": [
+          "[API] - USER (Public)"
+        ],
         "description": "Endpoint (Public)",
         "parameters": [
           {
@@ -866,9 +923,32 @@
                     "nullable": false,
                     "required": true,
                     "type": "string"
+                  },
+                  "role": {
+                    "description": "Parâmetro role do body.",
+                    "nullable": false,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "terms_accepted": {
+                    "description": "Parâmetro terms_accepted do body.",
+                    "nullable": false,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "terms_version": {
+                    "description": "Parâmetro terms_version do body.",
+                    "nullable": false,
+                    "required": false,
+                    "type": "string"
                   }
                 },
-                "required": ["name", "email", "password", "password_confirm"],
+                "required": [
+                  "name",
+                  "email",
+                  "password",
+                  "password_confirm"
+                ],
                 "type": "object"
               }
             }

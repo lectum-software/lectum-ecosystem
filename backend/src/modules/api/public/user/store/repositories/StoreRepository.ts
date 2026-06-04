@@ -36,12 +36,40 @@ export class StoreRepository implements IStoreRepository {
     else if (props.include) read.include = props.include;
 
     const created = await prisma.$transaction(async (tx) => {
+      const { terms_accepted, terms_version, ...userData } = props.b;
+      const role = userData.role || "paciente";
+
       const item = await tx.user.create({
         data: {
-          ...props.b,
+          ...userData,
+          role,
         },
         ...read,
       });
+
+      if (role === "paciente") {
+        await tx.patient_profile.create({
+          data: {
+            user_id: item.id,
+          },
+        });
+      }
+
+      if (terms_accepted) {
+        await tx.user_background.create({
+          data: {
+            user_id: item.id,
+            type: "terms_accept",
+            device_id: props.device_id,
+            data: {
+              accepted_at: new Date().toISOString(),
+              terms_version: terms_version || "pending-legal-copy",
+              source: "patient_registration",
+              role,
+            },
+          },
+        });
+      }
 
       const newItem = {
         ...item,

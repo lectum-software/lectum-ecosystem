@@ -5,5 +5,7 @@ export interface IStoreDTO {
     avatar?: string;
     provider: string;
     role?: "paciente" | "psicologo";
+    terms_accepted?: boolean;
+    terms_version?: string;
   };
 }

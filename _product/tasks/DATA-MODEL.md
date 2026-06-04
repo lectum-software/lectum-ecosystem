@@ -17,6 +17,7 @@ Regra de uso:
 - `user` (com `role` desde a TASK-04);
 - `user_token`;
 - `user_background`;
+- `patient_profile` (criado na TASK-07);
 - `notification_subscription`;
 - `notification`;
 - `notification_preference`;

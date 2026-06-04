@@ -1,1 +1,3 @@
-export const include = {};
+export const include = {
+  patient_profile: true,
+};

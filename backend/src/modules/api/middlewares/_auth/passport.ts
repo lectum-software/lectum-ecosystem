@@ -57,12 +57,20 @@ passport.use(
       try {
         let device_id = req.query.state as string;
         let role: UserRole | undefined;
+        let termsAccepted = false;
+        let termsVersion: string | undefined;
 
         try {
           const stateObj = JSON.parse(device_id);
           if (stateObj && typeof stateObj === "object" && stateObj.device_id) {
             device_id = stateObj.device_id;
             role = parseUserRole(stateObj.query?.role);
+            termsAccepted =
+              stateObj.query?.terms_accepted === "true" || stateObj.query?.terms_accepted === true;
+            termsVersion =
+              typeof stateObj.query?.terms_version === "string"
+                ? stateObj.query.terms_version
+                : undefined;
           }
         } catch (e) {
           console.log(e);
@@ -97,6 +105,8 @@ passport.use(
               avatar: profile.photos?.[0]?.value,
               provider: "google",
               role,
+              terms_accepted: termsAccepted,
+              terms_version: termsVersion,
             },
           });
         }
