@@ -2,7 +2,13 @@ import { spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
 import net from "node:net";
 
-const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+const pnpmCommand = process.platform === "win32" ? "cmd.exe" : "pnpm";
+
+function pnpmArgs(args) {
+  if (process.platform !== "win32") return args;
+
+  return ["/d", "/s", "/c", "pnpm.cmd", ...args];
+}
 
 function readEnvValue(filePath, key) {
   try {
@@ -60,7 +66,7 @@ function assertPortIsFree(port, label) {
 }
 
 const backendPort = parsePort(process.env.PORT ?? readEnvValue("backend/.env", "PORT"), 3001);
-const defaultFrontendPort = backendPort === 3002 ? 3000 : 3002;
+const defaultFrontendPort = backendPort === 3000 ? 3002 : 3000;
 const frontendPort = parsePort(process.env.FRONTEND_PORT, defaultFrontendPort);
 
 const apps = [
@@ -87,7 +93,9 @@ function stopAll(signal = "SIGTERM") {
     if (child.killed) continue;
 
     if (process.platform === "win32") {
-      child.kill(signal);
+      spawn("taskkill.exe", ["/pid", String(child.pid), "/t", "/f"], {
+        stdio: "ignore",
+      });
       continue;
     }
 
@@ -114,7 +122,7 @@ for (const app of apps) {
 console.log("");
 
 for (const app of apps) {
-  const child = spawn(pnpm, app.args, {
+  const child = spawn(pnpmCommand, pnpmArgs(app.args), {
     detached: process.platform !== "win32",
     env: process.env,
     stdio: "inherit",
