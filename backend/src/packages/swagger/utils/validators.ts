@@ -2,6 +2,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 const zodToSwagger = (zodSchema, location = "body") => {
   if (!zodSchema?._def) return [];
@@ -79,7 +80,7 @@ export async function loadValidations(route) {
       return [];
     }
 
-    const mod = await import(fileValidator);
+    const mod = await import(pathToFileURL(fileValidator).href);
     const validator = mod.default as (opts: { schema: boolean }) => any;
 
     const items = await validator({ schema: true });
