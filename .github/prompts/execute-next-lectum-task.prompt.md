@@ -20,5 +20,6 @@ Instructions:
 14. Create/update ADRs.
 15. Mark completed acceptance criteria.
 16. Commit with a conventional commit message.
+17. Run `git push` to publish the current branch to its remote. If the branch has no upstream, run `git push -u origin <branch>`. If push fails because of credentials, network, or permission, report that blocker explicitly.
 
-Return the task ID, changed files, ADRs, validations, commit hash and any real blockers.
+Return the task ID, changed files, ADRs, validations, commit hash, push status and any real blockers.

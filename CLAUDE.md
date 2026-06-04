@@ -7,7 +7,7 @@ Use este arquivo como memória de projeto para Claude Code.
 - Este repositório reúne `backend/` e `frontend/` apenas para desenvolvimento local.
 - Em produção, backend e frontend devem ser tratados como aplicações separadas.
 - O produto Lectum é uma plataforma responsiva para psicólogos e pacientes.
-- O desenvolvimento deve seguir spec-driven development: uma task por vez, com validação, ADR e commit.
+- O desenvolvimento deve seguir spec-driven development: uma task por vez, com validação, ADR, commit e push.
 
 ## Fontes de Verdade
 
@@ -44,6 +44,7 @@ Leia antes de executar qualquer task:
 - Se mudar UI, valide com browser local além dos checks.
 - Toda task que alterar `backend/prisma/schema.prisma` ou `backend/prisma/migrations` deve executar `pnpm --dir backend db:migrate` durante a task. O usuário não deve precisar aplicar migrations manualmente.
 - Se `prisma migrate dev` falhar por dados ou estado preexistente no banco de desenvolvimento, pare e pergunte se pode resetar o banco antes de rodar comandos destrutivos como `pnpm --dir backend exec prisma migrate reset`.
+- Toda task concluída deve gerar commit próprio e executar `git push` para publicar a branch/remoto correspondente. Se o push falhar por credenciais, rede ou permissão, reporte o bloqueio explicitamente.
 
 ## Validação
 
@@ -63,4 +64,4 @@ Para executar a próxima task no Claude Code, use a skill/comando de projeto:
 - Skill: `.claude/skills/execute-lectum-task/SKILL.md`
 - Comando legado: `.claude/commands/execute-next-lectum-task.md`
 
-Ao final, responda com task executada, arquivos alterados, ADR, validações, commit e bloqueios reais.
+Ao final, responda com task executada, arquivos alterados, ADR, validações, commit, status do push e bloqueios reais.

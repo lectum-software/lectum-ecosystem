@@ -1,6 +1,6 @@
 ---
 name: execute-lectum-task
-description: Execute uma task Lectum de ponta a ponta usando Builder/proto, arquitetura existente, ADR, validação e commit.
+description: Execute uma task Lectum de ponta a ponta usando Builder/proto, arquitetura existente, ADR, validação, commit e push.
 ---
 
 # Execute Lectum Task
@@ -25,6 +25,7 @@ Use esta skill no Claude Code quando o usuário pedir para executar a próxima t
 12. Criar ou atualizar ADR em `adrs/`.
 13. Marcar critérios de aceite concluídos no arquivo da task.
 14. Fazer commit com mensagem convencional.
+15. Executar `git push` para publicar a branch/remoto correspondente. Se a branch não tiver upstream, usar `git push -u origin <branch>`. Se o push falhar por credenciais, rede ou permissão, registrar o bloqueio explicitamente.
 
 ## Proibições
 
@@ -34,7 +35,7 @@ Use esta skill no Claude Code quando o usuário pedir para executar a próxima t
 - Não rodar Builder CLI a partir da raiz para gerar UI; use `frontend/` ou `--cwd frontend`.
 - Não aceitar Builder output como implementação final sem revisão arquitetural.
 - Não concluir task com erro de TypeScript, warning Biome ou build quebrado.
-- Não avançar para outra task sem concluir validação e commit.
+- Não avançar para outra task sem concluir validação, commit e push.
 - Não usar `sample/` como fonte ativa, exceto quando a task citar expressamente uma referência técnica específica, como a `TASK-02`.
 
 ## Saída Esperada
@@ -46,4 +47,5 @@ Ao final, responder com:
 - ADR criado/atualizado;
 - validações executadas;
 - hash do commit;
+- status do push;
 - bloqueios reais, se houver.

@@ -31,7 +31,7 @@ Estas instruções valem para agentes de IA trabalhando neste workspace.
 - **Nunca usar `<img>`**; sempre o componente `Image` de `next/image`.
 - Cada task concluída deve atualizar seus critérios de aceite de `[ ]` para `[x]`.
 - Cada task concluída deve criar ou atualizar pelo menos um ADR quando houver decisão arquitetural, integração, regra de domínio, fluxo crítico ou trade-off relevante.
-- Cada task concluída deve gerar commit próprio.
+- Cada task concluída deve gerar commit próprio e executar `git push` para publicar a branch/remoto correspondente; não deixe commits apenas locais. Se o push falhar por credenciais, rede ou permissão, reporte o bloqueio explicitamente.
 - Não usar a pasta `sample/` como fonte ativa de implementação futura, exceto quando a task citar expressamente uma referência técnica específica, como a `TASK-02`.
 - Antes de criar estrutura nova, verificar `_product/tasks/ARCHITECTURE.md`.
 - Antes de instalar pacote novo, verificar `_product/tasks/PACKAGES.md` e registrar ADR.

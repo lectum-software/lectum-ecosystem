@@ -38,7 +38,7 @@ Quando uma task citar artefato `figma-design-frame-*.html`, leia como nome virtu
 - Antes de implementar UI, consulte `PROTO-INVENTORY.md`.
 - Use o Quick Copy Builder para obter contexto visual quando a ferramenta estiver disponível.
 - Use as imagens exportadas de `_product/proto` como fallback e como referência auditável da task.
-- Ao concluir, marque critérios de aceite `[x]`, registre ADR e faça commit.
+- Ao concluir, marque critérios de aceite `[x]`, registre ADR, faça commit próprio e execute `git push` para publicar a branch/remoto correspondente. Se a branch ainda não tiver upstream, use `git push -u origin <branch>`.
 - Não use referências externas ao workspace da task como atalho arquitetural.
 - Antes de criar código novo, consulte `ARCHITECTURE.md`.
 - Antes de criar/alterar modelo Prisma ou contrato de API, consulte `DATA-MODEL.md` e referencie a seção em vez de redefinir o schema.
@@ -113,7 +113,8 @@ Uma task só pode ser marcada como concluída quando:
 - checks/builds relevantes estiverem verdes;
 - UI tiver sido validada com Builder/Quick Copy quando disponível ou com imagem local registrada em `PROTO-INVENTORY.md`;
 - UI tiver sido validada no browser local quando houver tela;
-- houver commit próprio da task.
+- houver commit próprio da task;
+- o commit tiver sido publicado com `git push`, ou o bloqueio de push tiver sido registrado explicitamente quando houver falha de credenciais, rede ou permissão.
 
 ## Templates
 

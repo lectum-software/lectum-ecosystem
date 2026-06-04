@@ -1,6 +1,6 @@
 ---
 name: execute-lectum-task
-description: Execute uma task de produto Lectum de ponta a ponta, com Builder/proto, sem mocks, ADR, validação e commit.
+description: Execute uma task de produto Lectum de ponta a ponta, com Builder/proto, sem mocks, ADR, validação, commit e push.
 ---
 
 # Execute Lectum Task
@@ -36,6 +36,7 @@ Use esta skill quando o usuário pedir para executar a próxima task, uma task e
 12. Criar ou atualizar ADR em `adrs/` para decisões e execuções importantes.
 13. Marcar critérios de aceite concluídos no arquivo da task, trocando `[ ]` por `[x]`.
 14. Fazer commit com mensagem convencional e escopo da task.
+15. Executar `git push` para publicar a branch/remoto correspondente. Se a branch não tiver upstream, usar `git push -u origin <branch>`. Se o push falhar por credenciais, rede ou permissão, registrar o bloqueio explicitamente.
 
 ## Proibições
 
@@ -45,7 +46,7 @@ Use esta skill quando o usuário pedir para executar a próxima task, uma task e
 - Não rodar Builder CLI a partir da raiz para gerar UI; use `frontend/` ou `--cwd frontend`.
 - Não aceitar Builder output como implementação final sem revisão arquitetural.
 - Não deixar task como concluída se existir erro de TypeScript, warning do Biome ou build quebrado.
-- Não avançar para outra task sem finalizar validação e commit da atual.
+- Não avançar para outra task sem finalizar validação, commit e push da atual.
 - Não usar `sample/` como fonte ativa, exceto quando a task citar expressamente uma referência técnica específica, como a `TASK-02`.
 - Não marcar critério `[x]` por intenção; marcar apenas com evidência executada.
 
@@ -58,4 +59,5 @@ Ao final, responder ao usuário com:
 - ADR criado/atualizado;
 - validações executadas;
 - hash do commit;
+- status do push;
 - pendências reais, se houver.
