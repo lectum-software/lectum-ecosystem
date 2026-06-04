@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Loader2, LogInIcon } from "lucide-react";
+import { Loader2, LogInIcon } from "lucide-react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -116,7 +116,6 @@ export const AuthLogic = () => {
               <LogInIcon className="h-4 w-4" aria-hidden="true" />
             )}
             {login.isPending ? "Entrando" : "Entrar"}
-            {!login.isPending ? <ArrowRight className="h-4 w-4" aria-hidden="true" /> : null}
           </Button>
         </Form>
 
