@@ -16,10 +16,14 @@ export function getUserHomePath(data: Pick<user, "role"> | null | undefined, fal
 }
 
 export function resolveAuthRedirect(
-  data: Pick<user, "role"> | null | undefined,
+  data: Pick<user, "role" | "confirmed"> | null | undefined,
   callbackUrl: string | null,
   fallback: RedirectFallback,
 ) {
+  if (data && "confirmed" in data && data.confirmed === false) {
+    return "/auth/verify-email";
+  }
+
   if (callbackUrl) return callbackUrl;
   if (!fallback) return null;
 

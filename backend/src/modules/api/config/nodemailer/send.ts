@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
@@ -13,6 +14,63 @@ type Send = {
   template: string;
   type?: "transactional" | "marketing";
   messageProps: MessageProps;
+};
+
+type TemplateContext = Record<string, unknown>;
+
+const getTemplateValue = (context: TemplateContext, key: string) => {
+  return key.split(".").reduce<unknown>((acc, item) => {
+    if (acc && typeof acc === "object" && item in acc) {
+      return (acc as TemplateContext)[item];
+    }
+
+    return undefined;
+  }, context);
+};
+
+const escapeHtml = (value: string) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+const renderConditionalBlocks = (template: string, context: TemplateContext) => {
+  let html = template;
+  let start = html.lastIndexOf("{{#if ");
+
+  while (start !== -1) {
+    const startEnd = html.indexOf("}}", start);
+    const closeStart = html.indexOf("{{/if}}", startEnd);
+
+    if (startEnd === -1 || closeStart === -1) {
+      return html;
+    }
+
+    const closeEnd = closeStart + "{{/if}}".length;
+    const key = html.slice(start + "{{#if ".length, startEnd).trim();
+    const content = html.slice(startEnd + 2, closeStart);
+    const replacement = getTemplateValue(context, key) ? content : "";
+
+    html = `${html.slice(0, start)}${replacement}${html.slice(closeEnd)}`;
+    start = html.lastIndexOf("{{#if ");
+  }
+
+  return html;
+};
+
+const renderTemplate = (template: string, context: TemplateContext) => {
+  let html = template.replace(/{{!--[\s\S]*?--}}/g, "");
+  html = renderConditionalBlocks(html, context);
+
+  html = html.replace(/{{{\s*([\w.]+)\s*}}}/g, (_, key) =>
+    String(getTemplateValue(context, key) ?? ""),
+  );
+
+  return html.replace(/{{\s*([\w.]+)\s*}}/g, (_, key) =>
+    escapeHtml(String(getTemplateValue(context, key) ?? "")),
+  );
 };
 
 const send = async ({
@@ -45,18 +103,21 @@ const send = async ({
         },
       });
 
-      const handlebarOptions = {
-        viewEngine: {
-          extName: ".hbs",
-          partialsDir: path.resolve("templates"),
-          defaultLayout: false,
+      const templatesPath = path.resolve("templates");
+      const viewEngine = {
+        renderView: async (templatePath: string, context: TemplateContext) => {
+          const template = await readFile(templatePath, "utf8");
+          return renderTemplate(template, context);
         },
-        viewPath: path.resolve("templates"),
+      };
+
+      const handlebarOptions = {
+        viewEngine,
+        viewPath: templatesPath,
         extName: ".hbs",
       };
 
-      //@ts-expect-error
-      transporter.use("compile", hbs(handlebarOptions));
+      transporter.use("compile", hbs(handlebarOptions as unknown as Parameters<typeof hbs>[0]));
 
       const headers: any = {};
 

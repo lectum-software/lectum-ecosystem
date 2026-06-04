@@ -12,6 +12,7 @@ export type FieldType =
   | "cpf"
   | "cnpj"
   | "cep"
+  | "otp"
   | "money"
   | "numeric"
   | "percentage"
@@ -45,6 +46,7 @@ export type Field<FormType extends FieldValues> = {
   rows?: number;
   min?: number;
   max?: number;
+  length?: number;
   step?: number;
   int?: boolean;
   positive?: boolean;

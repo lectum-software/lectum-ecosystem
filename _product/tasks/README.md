@@ -58,7 +58,7 @@ Quando uma task citar artefato `figma-design-frame-*.html`, leia como nome virtu
 | 03 | [TASK-03 - Decisões externas e integrações obrigatórias](TASK-03-decisoes-externas-integracoes.md) | Pending | 00 |
 | 04 | [TASK-04 - Seleção de perfil e login](TASK-04-selecao-perfil-login.md) | Pending | 01, 02, 03 |
 | 05 | [TASK-05 - Recuperação de senha](TASK-05-recuperacao-senha.md) | Completed | 02, 04 |
-| 06 | [TASK-06 - Verificação de e-mail por código](TASK-06-verificacao-email-codigo.md) | Pending | 02, 04 |
+| 06 | [TASK-06 - Verificação de e-mail por código](TASK-06-verificacao-email-codigo.md) | Completed | 02, 04 |
 | 07 | [TASK-07 - Cadastro de paciente](TASK-07-cadastro-paciente.md) | Pending | 02, 04, 06 |
 | 08 | [TASK-08 - Boas-vindas do paciente](TASK-08-boas-vindas-paciente.md) | Pending | 07 |
 | 09 | [TASK-09 - Cadastro inicial de psicólogo](TASK-09-cadastro-inicial-psicologo.md) | Pending | 02, 04, 06 |

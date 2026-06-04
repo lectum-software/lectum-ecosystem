@@ -10,6 +10,7 @@ export function getInitialValueForField<FormType extends FieldValues>(
     case "cpf":
     case "cnpj":
     case "cep":
+    case "otp":
       return "";
     case "textarea":
       return undefined;

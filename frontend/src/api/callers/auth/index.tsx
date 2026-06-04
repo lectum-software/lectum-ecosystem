@@ -21,6 +21,14 @@ export interface UseAuthProps {
       onSuccess?: (data: user) => void;
       onError?: (error: unknown) => void;
     };
+    sendConfirmCode?: {
+      onSuccess?: (data: boolean) => void;
+      onError?: (error: unknown) => void;
+    };
+    verifyCode?: {
+      onSuccess?: (data: user) => void;
+      onError?: (error: unknown) => void;
+    };
     hidrate?: {
       onSuccess?: (data: user) => void;
       onError?: (error: unknown) => void;
@@ -55,6 +63,18 @@ export const useAuth = ({ callbacks, enableHidrate = false }: UseAuthProps = {})
     onError: callbacks?.resetPassword?.onError,
   });
 
+  const sendConfirmCode = useMutation({
+    mutationFn: () => api.sendConfirmCode(),
+    onSuccess: callbacks?.sendConfirmCode?.onSuccess,
+    onError: callbacks?.sendConfirmCode?.onError,
+  });
+
+  const verifyCode = useMutation({
+    mutationFn: (body: api.VerifyCodePayload) => api.verifyCode(body),
+    onSuccess: callbacks?.verifyCode?.onSuccess,
+    onError: callbacks?.verifyCode?.onError,
+  });
+
   const hidrate = useQuery({
     queryKey: hydrateKey,
     queryFn: () => api.hidrate(),
@@ -69,5 +89,5 @@ export const useAuth = ({ callbacks, enableHidrate = false }: UseAuthProps = {})
     onError: callbacks?.googleMe?.onError,
   });
 
-  return { login, recovery, resetPassword, hidrate, googleMe };
+  return { login, recovery, resetPassword, sendConfirmCode, verifyCode, hidrate, googleMe };
 };

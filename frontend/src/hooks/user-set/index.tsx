@@ -7,7 +7,9 @@ import { useAppDispatch } from "@/hooks/redux";
 import * as userActions from "@/store/modules/user/actions";
 import { resolveAuthRedirect } from "@/utils/auth-redirect";
 
-export const useUserSet = (redirect: string | null = "/dashboard") => {
+type RedirectTarget = string | null | ((data: user) => string | null);
+
+export const useUserSet = (redirect: RedirectTarget = "/dashboard") => {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -24,7 +26,8 @@ export const useUserSet = (redirect: string | null = "/dashboard") => {
       dispatch(userActions.create(data));
 
       const callbackUrl = searchParams.get("callbackUrl");
-      const target = resolveAuthRedirect(data, callbackUrl, redirect);
+      const fallback = typeof redirect === "function" ? redirect(data) : redirect;
+      const target = resolveAuthRedirect(data, callbackUrl, fallback);
 
       if (target) {
         router.replace(target);

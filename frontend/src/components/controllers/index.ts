@@ -6,6 +6,7 @@ import { CpfController } from "@/components/controllers/cpf";
 import { InputController } from "@/components/controllers/input";
 import { MoneyController } from "@/components/controllers/money";
 import { NumericController } from "@/components/controllers/numeric";
+import { OtpController } from "@/components/controllers/otp";
 import { PercentageController } from "@/components/controllers/percentage";
 import { PhoneController } from "@/components/controllers/phone";
 import { SelectController } from "@/components/controllers/select";
@@ -23,6 +24,7 @@ export const components = {
   cpf: CpfController,
   cnpj: CnpjController,
   cep: CepController,
+  otp: OtpController,
   money: MoneyController,
   numeric: NumericController,
   percentage: PercentageController,
@@ -40,6 +42,7 @@ export { CpfController } from "@/components/controllers/cpf";
 export { InputController } from "@/components/controllers/input";
 export { MoneyController } from "@/components/controllers/money";
 export { NumericController } from "@/components/controllers/numeric";
+export { OtpController } from "@/components/controllers/otp";
 export { PercentageController } from "@/components/controllers/percentage";
 export { PhoneController } from "@/components/controllers/phone";
 export { SelectController } from "@/components/controllers/select";

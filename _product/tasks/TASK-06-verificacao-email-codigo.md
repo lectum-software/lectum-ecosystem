@@ -8,7 +8,7 @@
 | Prioridade | P0 |
 | Esforço | M |
 | Fase | Auth |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-02, TASK-04 |
 | ADR alvo | ADR de verificação de e-mail reutilizando fluxo privado existente |
 
@@ -113,19 +113,35 @@ Regras anti-recriação específicas:
 
 ## Critérios de aceite
 
-- [ ] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
-- [ ] As telas consomem `GET /api/private/auth/confirm` (enviar/reenviar) e `PUT /api/private/auth/code/:code` (validar) reais.
-- [ ] Nenhum endpoint público de verificação foi criado; nenhum fluxo de auth duplicado.
-- [ ] Input de 6 dígitos funciona com colagem e teclado numérico mobile.
-- [ ] Reenvio tem cooldown visível.
-- [ ] Erros `code_incorrect`/`code_expired`/`code_confirmed` tratados em PT-BR.
-- [ ] Sucesso hidrata sessão e redireciona por `user.role`.
-- [ ] Nenhum mock, dado fake ou endpoint simulado foi usado.
-- [ ] Bloqueio de provedor de e-mail registrado se aplicável.
-- [ ] ADR criado/atualizado em `adrs/`.
-- [ ] `pnpm --dir frontend check` e `pnpm --dir frontend build` sem erros.
-- [ ] Browser local validou envio, reenvio com cooldown e um erro de código.
-- [ ] Commit criado com mensagem convencional.
+- [x] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
+- [x] As telas consomem `GET /api/private/auth/confirm` (enviar/reenviar) e `PUT /api/private/auth/code/:code` (validar) reais.
+- [x] Nenhum endpoint público de verificação foi criado; nenhum fluxo de auth duplicado.
+- [x] Input de 6 dígitos funciona com colagem e teclado numérico mobile.
+- [x] Reenvio tem cooldown visível.
+- [x] Erros `code_incorrect`/`code_expired`/`code_confirmed` tratados em PT-BR.
+- [x] Sucesso hidrata sessão e redireciona por `user.role`.
+- [x] Nenhum mock, dado fake ou endpoint simulado foi usado.
+- [x] Bloqueio de provedor de e-mail registrado se aplicável.
+- [x] ADR criado/atualizado em `adrs/`.
+- [x] `pnpm --dir frontend check` e `pnpm --dir frontend build` sem erros.
+- [x] Browser local validou envio, reenvio com cooldown e um erro de código.
+- [x] Commit criado com mensagem convencional.
+
+## Execucao TASK-06
+
+- Builder/Quick Copy nao estava disponivel como ferramenta direta nesta sessao; foram usadas as imagens locais `_product/proto/Verificacao de E-mail com Codigo.jpg` e `_product/proto/Confirmacao de Codigo - Versao Moderna.jpg`.
+- Implementado `/auth/verify-email` com controller OTP reutilizavel sobre a fundacao da TASK-02.
+- Reutilizados os endpoints privados reais `confirm` e `code/:code`; nenhum endpoint publico novo foi criado.
+- Corrigido o renderer transacional de e-mail para que os endpoints reais consigam enviar o codigo com `nodemailer-express-handlebars` no runtime atual, sem adicionar package novo.
+- ADR registrado: `adrs/0011-verificacao-email-codigo.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm --dir backend check`
+  - `pnpm --dir backend build`
+  - `pnpm check`
+  - browser local em `http://localhost:3000/auth/verify-email`
+- A validacao criou usuarios temporarios por endpoint real e removeu todos ao final, sem deixar dado fake permanente.
 
 ## Validação mínima
 

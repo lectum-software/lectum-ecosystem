@@ -16,6 +16,10 @@ export type ResetPasswordPayload = {
   password_confirm: string;
 };
 
+export type VerifyCodePayload = {
+  code: string;
+};
+
 export const login = async (body: LoginPayload) => {
   const handle = callEndpoint({
     route: "/api/public/auth/login",
@@ -59,6 +63,30 @@ export const resetPassword = async (code: string, body: ResetPasswordPayload) =>
     ...handle,
     hideError: true,
     signOutOnUnauthorized: false,
+  });
+};
+
+export const sendConfirmCode = async () => {
+  const handle = callEndpoint({
+    route: "/api/private/auth/confirm",
+  });
+
+  return handleReq<boolean>({
+    ...handle,
+    hideError: true,
+  });
+};
+
+export const verifyCode = async ({ code }: VerifyCodePayload) => {
+  const handle = callEndpoint({
+    route: "/api/private/auth/code/:code",
+    method: "PUT",
+    params: { code },
+  });
+
+  return handleReq<user>({
+    ...handle,
+    hideError: true,
   });
 };
 
