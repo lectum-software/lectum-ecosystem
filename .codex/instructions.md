@@ -27,3 +27,5 @@
 - Para formulários/campos de produto, use a fundação da `TASK-02`: React Hook Form, Zod, `frontend/src/hooks/form` e `frontend/src/components/controllers`.
 - Para UI, valide com Builder/proto, build e browser local.
 - Para backend, valide Prisma, TypeScript e Biome.
+- Para qualquer alteração em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`, execute `pnpm --dir backend db:migrate` durante a task.
+- Se `prisma migrate dev` falhar por conflito com dados/estado do banco de desenvolvimento, pergunte ao usuário antes de resetar o banco ou rodar comando destrutivo.

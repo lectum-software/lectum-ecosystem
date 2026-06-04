@@ -168,6 +168,7 @@ Regras anti-recriação específicas:
   - `GET /api/public/google/me`;
   - `GET /api/private/auth/hidrate`.
 - Validação executada:
+  - `pnpm --dir backend db:migrate` (`Already in sync`);
   - `pnpm --dir frontend check`;
   - `pnpm --dir backend check`;
   - `pnpm --dir frontend build`;

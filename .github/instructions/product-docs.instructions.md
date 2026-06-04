@@ -12,6 +12,7 @@ applyTo: "_product/**/*.md,adrs/**/*.md,.codex/**/*.md,AGENTS.md,.github/**/*.md
 - Do not reference architectural material outside the executor workspace as required context.
 - Criteria must be checkboxes that the executor can mark from `[ ]` to `[x]`.
 - Prefer concrete commands over generic "run tests" language.
+- For any task that changes Prisma schema/migrations, include `pnpm --dir backend db:migrate` in validation and a reset warning that requires user confirmation.
 - Record important decisions in `adrs/`.
 - Reference `_product/tasks/ARCHITECTURE.md` when describing implementation rules.
 - Reference `_product/tasks/PACKAGES.md` when describing dependencies.

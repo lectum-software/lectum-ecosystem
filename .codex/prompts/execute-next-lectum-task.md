@@ -12,6 +12,8 @@ Regras:
 - use Builder/Quick Copy quando disponível ou imagens de `_product/proto` quando a ferramenta não estiver acessível;
 - não use mocks;
 - registre ADRs relevantes;
+- se a task alterar banco/schema/migrations, rode `pnpm --dir backend db:migrate`;
+- se a migration falhar por dados/estado preexistente, pergunte antes de resetar o banco de desenvolvimento;
 - rode checks/builds;
 - marque critérios concluídos;
 - faça commit ao final.

@@ -67,7 +67,10 @@ Para rotas simples de listagem, é aceitável começar com menos arquivos, mas a
   - `updatedAt`.
 - Criar índices para filtros usados em listagens e relações.
 - Atualizar `backend/src/interfaces/objects` quando o frontend/backend dependerem dos tipos.
-- Rodar `prisma generate` via scripts existentes.
+- Quando uma task alterar `backend/prisma/schema.prisma` ou arquivos em `backend/prisma/migrations`, rodar obrigatoriamente `pnpm --dir backend db:migrate` durante a execução da task. O usuário não-dev não deve precisar aplicar migrations manualmente.
+- Depois da migration, rodar checks/builds relevantes (`pnpm --dir backend check`, `pnpm --dir backend build` quando estrutural).
+- Se `prisma migrate dev` falhar por conflito com dados ou estado preexistente no banco de desenvolvimento, não resetar automaticamente. Perguntar ao usuário se pode apagar os dados do ambiente de desenvolvimento antes de executar qualquer comando destrutivo, como `pnpm --dir backend exec prisma migrate reset`.
+- Rodar `prisma generate` via scripts existentes quando necessário; `prisma migrate dev` e os scripts de check/build já geram o client.
 
 ### Autenticação e sessão
 

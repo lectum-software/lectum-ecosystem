@@ -10,10 +10,13 @@ Hard rules:
 - For visual work, use `_product/tasks/PROTO-INVENTORY.md`.
 - Use Builder/Quick Copy when available in the client; otherwise use exported `_product/proto` images and register the tool limitation.
 - Before closing a task, mark acceptance criteria, create/update ADRs, run checks/builds, and commit.
+- If a task changes `backend/prisma/schema.prisma` or `backend/prisma/migrations`, run `pnpm --dir backend db:migrate` during execution.
+- If `prisma migrate dev` fails because of existing development data/state, ask the user before resetting the database or running destructive commands.
 - Treat `backend/` and `frontend/` as separate apps that share this repository only for development.
 
 Validation baseline:
 
 - Root: `pnpm check`
 - Backend: `pnpm --dir backend check`
+- Backend database changes: `pnpm --dir backend db:migrate`
 - Frontend: `pnpm --dir frontend check`

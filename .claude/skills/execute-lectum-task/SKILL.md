@@ -20,10 +20,11 @@ Use esta skill no Claude Code quando o usuário pedir para executar a próxima t
    - frontend: `src/api/req`, `src/api/callers`, `src/api/cache/keys.ts`, `src/templates`, `src/registry/new-york-v4/ui`, `src/components/ui`, `src/components/controllers`, `src/hooks/form`;
    - backend: `src/modules/api`, `src/utils/validator.ts`, `src/helpers/return`, `src/helpers/translate`, `src/main/server/imports/write.ts`.
 9. Implementar sem mocks.
-10. Rodar checks/builds relevantes.
-11. Criar ou atualizar ADR em `adrs/`.
-12. Marcar critérios de aceite concluídos no arquivo da task.
-13. Fazer commit com mensagem convencional.
+10. Se alterar `backend/prisma/schema.prisma` ou `backend/prisma/migrations`, executar `pnpm --dir backend db:migrate`. Se `prisma migrate dev` falhar por dados ou estado preexistente no banco de desenvolvimento, perguntar ao usuário se pode resetar o banco antes de rodar comando destrutivo.
+11. Rodar checks/builds relevantes.
+12. Criar ou atualizar ADR em `adrs/`.
+13. Marcar critérios de aceite concluídos no arquivo da task.
+14. Fazer commit com mensagem convencional.
 
 ## Proibições
 

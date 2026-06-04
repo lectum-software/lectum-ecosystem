@@ -42,6 +42,8 @@ Quando uma task citar artefato `figma-design-frame-*.html`, leia como nome virtu
 - Não use referências externas ao workspace da task como atalho arquitetural.
 - Antes de criar código novo, consulte `ARCHITECTURE.md`.
 - Antes de criar/alterar modelo Prisma ou contrato de API, consulte `DATA-MODEL.md` e referencie a seção em vez de redefinir o schema.
+- Toda task que alterar o banco (`backend/prisma/schema.prisma` ou `backend/prisma/migrations`) deve executar `pnpm --dir backend db:migrate` na própria execução. O usuário não-dev não deve ficar responsável por aplicar migrations.
+- Se `prisma migrate dev` falhar por dados ou estado preexistente do banco de desenvolvimento, pare e pergunte ao usuário se pode resetar o banco antes de rodar qualquer comando destrutivo, como `pnpm --dir backend exec prisma migrate reset`.
 - Antes de instalar pacote, consulte `PACKAGES.md`.
 - Antes de qualquer tela com campo, edição, filtro avançado ou submit, execute/consulte `TASK-02` e use `frontend/src/hooks/form` + `frontend/src/components/controllers`.
 - Nunca aceite código gerado pelo Builder CLI como final sem adequação aos padrões de front/back.
@@ -94,6 +96,7 @@ Toda task deve rodar os comandos relevantes:
 - `pnpm --dir backend check`
 - `pnpm --dir frontend check`
 - `pnpm check`
+- `pnpm --dir backend db:migrate` quando a task alterar banco/schema/migrations
 - `pnpm --dir backend build` quando backend estrutural mudar
 - `pnpm --dir frontend build` quando frontend visual/rota mudar
 
@@ -106,6 +109,7 @@ Uma task só pode ser marcada como concluída quando:
 - decisões externas pendentes estiverem registradas como bloqueio;
 - formulários/campos usarem a fundação da `TASK-02` quando aplicável;
 - ADR relevante existir ou a task justificar por que não precisou de ADR novo;
+- migrations terem sido aplicadas com `pnpm --dir backend db:migrate` quando a task alterar banco/schema/migrations;
 - checks/builds relevantes estiverem verdes;
 - UI tiver sido validada com Builder/Quick Copy quando disponível ou com imagem local registrada em `PROTO-INVENTORY.md`;
 - UI tiver sido validada no browser local quando houver tela;

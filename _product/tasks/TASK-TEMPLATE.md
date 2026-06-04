@@ -53,6 +53,7 @@ Referências obrigatórias:
 Backend esperado:
 
 - Modelos Prisma.
+- Migration aplicada com `pnpm --dir backend db:migrate` quando houver mudança de banco/schema/migrations.
 - Endpoints.
 - Validators.
 - Controllers/services/repositories.
@@ -95,6 +96,7 @@ Regras de UI obrigatórias (ver `ARCHITECTURE.md` › "Regras de UI"):
 - [ ] Critério verificável 2.
 - [ ] UI mobile-first; nenhum `<img>` cru (somente `next/image`).
 - [ ] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [ ] Se houve alteração de banco/schema/migrations, `pnpm --dir backend db:migrate` foi executado sem erro.
 - [ ] Formulários/campos usam React Hook Form, Zod e controllers da `TASK-02` quando aplicável.
 - [ ] Builder/Quick Copy foi usado quando disponível, ou as imagens locais de `_product/proto` foram citadas quando houver UI.
 - [ ] Checks/builds relevantes foram executados sem erros.
@@ -104,6 +106,7 @@ Regras de UI obrigatórias (ver `ARCHITECTURE.md` › "Regras de UI"):
 ## Validação mínima
 
 - `pnpm --dir backend check` quando backend mudar.
+- `pnpm --dir backend db:migrate` quando houver alteração em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`.
 - `pnpm --dir frontend check` quando frontend mudar.
 - `pnpm check` quando ambos mudarem.
 - Builds relevantes.
@@ -112,3 +115,5 @@ Regras de UI obrigatórias (ver `ARCHITECTURE.md` › "Regras de UI"):
 ## Notas de execução
 
 Registre observações úteis para o executor, sem depender de arquivos externos não garantidos.
+
+Se `prisma migrate dev` falhar por dados ou estado preexistente no banco de desenvolvimento, registre o erro e pergunte ao usuário se pode resetar o banco antes de rodar comando destrutivo como `pnpm --dir backend exec prisma migrate reset`.

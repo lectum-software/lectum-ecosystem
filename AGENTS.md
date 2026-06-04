@@ -35,6 +35,8 @@ Estas instruções valem para agentes de IA trabalhando neste workspace.
 - Não usar a pasta `sample/` como fonte ativa de implementação futura, exceto quando a task citar expressamente uma referência técnica específica, como a `TASK-02`.
 - Antes de criar estrutura nova, verificar `_product/tasks/ARCHITECTURE.md`.
 - Antes de instalar pacote novo, verificar `_product/tasks/PACKAGES.md` e registrar ADR.
+- Toda task que alterar `backend/prisma/schema.prisma` ou criar/alterar arquivo em `backend/prisma/migrations` deve rodar `pnpm --dir backend db:migrate` durante a execução, além de `check`/`build`.
+- Se `prisma migrate dev` falhar por conflito com dados ou estado preexistente do banco de desenvolvimento, não rode reset automaticamente. Explique o erro e pergunte ao usuário se pode resetar o banco antes de executar qualquer comando destrutivo, como `pnpm --dir backend exec prisma migrate reset`.
 
 ## Validação
 
@@ -42,6 +44,7 @@ Use estes comandos como baseline:
 
 - Raiz: `pnpm check`
 - Backend: `pnpm --dir backend check` e, quando houver mudança estrutural, `pnpm --dir backend build`
+- Backend com mudança de banco: `pnpm --dir backend db:migrate`
 - Frontend: `pnpm --dir frontend check` e, quando houver mudança visual/rota, `pnpm --dir frontend build`
 
 Para mudanças de interface, também validar manualmente no browser local depois de subir o dev server apropriado.

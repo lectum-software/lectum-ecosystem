@@ -10,8 +10,9 @@ Obrigatório:
 4. Não use mocks, dados fake permanentes ou endpoints simulados.
 5. Reutilize a arquitetura existente antes de criar estrutura nova.
 6. Registre ADRs relevantes.
-7. Rode checks/builds.
-8. Marque critérios concluídos.
-9. Faça commit ao final.
+7. Se alterar banco/schema/migrations, rode `pnpm --dir backend db:migrate`; se falhar por dados/estado preexistente, pergunte antes de resetar o banco de desenvolvimento.
+8. Rode checks/builds.
+9. Marque critérios concluídos.
+10. Faça commit ao final.
 
 Responda com task ID, arquivos alterados, ADRs, validações, commit hash e bloqueios reais.

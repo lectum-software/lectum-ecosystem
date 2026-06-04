@@ -15,9 +15,10 @@ Instructions:
 9. Reuse existing frontend/backend architecture before creating new structure.
 10. Install no package unless the task and `PACKAGES.md` allow it.
 11. Implement the task.
-12. Run relevant checks/builds.
-13. Create/update ADRs.
-14. Mark completed acceptance criteria.
-15. Commit with a conventional commit message.
+12. If the task changes `backend/prisma/schema.prisma` or `backend/prisma/migrations`, run `pnpm --dir backend db:migrate`. If it fails because of existing development data/state, ask the user before resetting the database.
+13. Run relevant checks/builds.
+14. Create/update ADRs.
+15. Mark completed acceptance criteria.
+16. Commit with a conventional commit message.
 
 Return the task ID, changed files, ADRs, validations, commit hash and any real blockers.

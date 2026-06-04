@@ -26,15 +26,16 @@ Use esta skill quando o usuário pedir para executar a próxima task, uma task e
    - frontend: `api/req`, `api/callers`, `api/cache/keys`, `templates`, `registry/new-york-v4/ui`, `components/controllers`, `hooks/form`;
    - backend: `modules/api`, `utils/validator`, `helpers/return`, `helpers/translate`, `main/server/imports/write.ts`.
 9. Implementar sem mocks.
-10. Rodar validação:
+10. Se a task alterar `backend/prisma/schema.prisma` ou `backend/prisma/migrations`, executar `pnpm --dir backend db:migrate` durante a task. Se `prisma migrate dev` falhar por conflito com dados ou estado preexistente do banco de desenvolvimento, parar e perguntar ao usuário se pode resetar o banco antes de rodar comando destrutivo como `pnpm --dir backend exec prisma migrate reset`.
+11. Rodar validação:
    - `pnpm --dir backend check` se backend mudou;
    - `pnpm --dir frontend check` se frontend mudou;
    - `pnpm check` quando a task tocar ambos;
    - builds relevantes;
    - browser local para interface.
-11. Criar ou atualizar ADR em `adrs/` para decisões e execuções importantes.
-12. Marcar critérios de aceite concluídos no arquivo da task, trocando `[ ]` por `[x]`.
-13. Fazer commit com mensagem convencional e escopo da task.
+12. Criar ou atualizar ADR em `adrs/` para decisões e execuções importantes.
+13. Marcar critérios de aceite concluídos no arquivo da task, trocando `[ ]` por `[x]`.
+14. Fazer commit com mensagem convencional e escopo da task.
 
 ## Proibições
 

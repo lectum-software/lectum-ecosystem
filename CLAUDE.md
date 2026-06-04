@@ -42,6 +42,8 @@ Leia antes de executar qualquer task:
 - **Nunca use `<img>`**; sempre `Image` de `next/image`.
 - Não crie design system, API client, auth guard, validator ou helper de resposta paralelo.
 - Se mudar UI, valide com browser local além dos checks.
+- Toda task que alterar `backend/prisma/schema.prisma` ou `backend/prisma/migrations` deve executar `pnpm --dir backend db:migrate` durante a task. O usuário não deve precisar aplicar migrations manualmente.
+- Se `prisma migrate dev` falhar por dados ou estado preexistente no banco de desenvolvimento, pare e pergunte se pode resetar o banco antes de rodar comandos destrutivos como `pnpm --dir backend exec prisma migrate reset`.
 
 ## Validação
 
@@ -50,6 +52,7 @@ Use como baseline:
 - raiz: `pnpm check`
 - backend: `pnpm --dir backend check`
 - backend build quando estrutural: `pnpm --dir backend build`
+- backend com alteração de banco: `pnpm --dir backend db:migrate`
 - frontend: `pnpm --dir frontend check`
 - frontend build quando mudar rota/UI: `pnpm --dir frontend build`
 

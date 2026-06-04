@@ -22,3 +22,4 @@ Formato recomendado:
 - [ADR-0006 - Integrações externas e decisões pendentes](0006-integracoes-externas-e-decisoes-pendentes.md) — Accepted
 - [ADR-0007 - Notificações: fundação de recebimento (TASK-29A)](0007-notificacoes-fundacao.md) — Accepted
 - [ADR-0008 - Fluxo publico de auth, selecao de perfil e login](0008-fluxo-publico-auth-selecao-perfil-login.md) — Accepted
+- [ADR-0009 - Migrations dev obrigatorias em tasks com alteracao de banco](0009-migrations-dev-obrigatorias-em-tasks-com-banco.md) — Accepted
