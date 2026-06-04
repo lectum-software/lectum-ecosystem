@@ -13,7 +13,10 @@ export const login = async (body: LoginPayload) => {
     body,
   });
 
-  return handleReq<user>(handle);
+  return handleReq<user>({
+    ...handle,
+    hideError: true,
+  });
 };
 
 export const hidrate = async () => {

@@ -1,0 +1,73 @@
+"use client";
+
+import { BriefcaseBusiness, ChevronRight, UserRound } from "lucide-react";
+import Link from "next/link";
+import { Logo } from "@/components/ui/logo";
+import { cn } from "@/lib/utils";
+import { AuthTemplate } from "@/templates/auth";
+
+const profileOptions = [
+  {
+    href: "/auth/register/patient",
+    icon: UserRound,
+    title: "Sou Usuário/Paciente",
+    description: "Cadastre-se para publicar na comunidade, salvar favoritos e mais.",
+  },
+  {
+    href: "/auth/register/psychologist",
+    icon: BriefcaseBusiness,
+    title: "Sou Psicólogo",
+    description: "Cadastre-se para se conectar com pacientes e crescer sua carreira.",
+  },
+];
+
+export const ProfileSelectionLogic = () => {
+  return (
+    <AuthTemplate>
+      <div className="grid w-full gap-8">
+        <div className="grid justify-items-center gap-8 text-center">
+          <Logo className="w-[230px]" priority />
+          <h1 className="text-xl font-bold text-foreground">Qual o seu perfil?</h1>
+        </div>
+
+        <div className="grid gap-4">
+          {profileOptions.map((option) => {
+            const Icon = option.icon;
+
+            return (
+              <Link
+                className={cn(
+                  "group flex min-h-28 items-center gap-4 rounded-[var(--lectum-card-radius)] border border-border bg-surface px-6 py-5 shadow-[var(--lectum-shadow-soft)] transition",
+                  "hover:border-primary/40 hover:bg-primary-soft/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                )}
+                href={option.href}
+                key={option.href}
+              >
+                <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+                  <Icon className="h-7 w-7" aria-hidden="true" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-base font-bold text-foreground">{option.title}</span>
+                  <span className="mt-1 block text-sm leading-5 text-muted">
+                    {option.description}
+                  </span>
+                </span>
+                <ChevronRight
+                  className="h-5 w-5 shrink-0 text-subtle transition group-hover:text-primary"
+                  aria-hidden="true"
+                />
+              </Link>
+            );
+          })}
+        </div>
+
+        <p className="text-center text-sm text-muted">
+          Já possui uma conta?{" "}
+          <Link className="font-semibold text-primary hover:text-primary-hover" href="/auth/login">
+            Fazer login
+          </Link>
+        </p>
+      </div>
+    </AuthTemplate>
+  );
+};

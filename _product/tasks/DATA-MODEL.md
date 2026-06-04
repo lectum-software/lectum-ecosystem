@@ -10,13 +10,19 @@ Regra de uso:
 - Se a task precisar de um campo que não existe aqui, primeiro adicione o campo aqui (com ADR quando for decisão relevante), depois implemente.
 - Este documento descreve o destino. O schema real ainda é só `user`, `user_token`, `user_background`, `notification_subscription`, `log__user`. Tudo abaixo, exceto a seção "Identidade (já existe)", é a criar.
 
-## Estado real do backend (verificado 2026-06-03)
+## Estado real do backend (verificado 2026-06-04)
 
-`backend/prisma/schema.prisma` contém apenas 5 modelos:
+`backend/prisma/schema.prisma` contém 7 modelos:
 
-- `user`, `user_token`, `user_background`, `notification_subscription`, `log__user`.
+- `user` (com `role` desde a TASK-04);
+- `user_token`;
+- `user_background`;
+- `notification_subscription`;
+- `notification`;
+- `notification_preference`;
+- `log__user`.
 
-Não existe nenhum modelo de perfil, comunidade, post, avaliação, favorito, assinatura ou notificação in-app. Todos os módulos de API existentes são de autenticação/usuário (`auth`, `google`, `user`). Ver `ARCHITECTURE.md` para os padrões de módulo/rotas/resposta.
+Não existe nenhum modelo de perfil, comunidade, post, avaliação, favorito ou assinatura. Os módulos de API existentes são de autenticação/usuário (`auth`, `google`, `user`) e notificações. Ver `ARCHITECTURE.md` para os padrões de módulo/rotas/resposta.
 
 ## Convenções obrigatórias
 
@@ -34,7 +40,7 @@ Todo modelo novo segue o padrão dos modelos atuais:
 
 ## Decisão estrutural: papel do usuário (paciente vs psicólogo)
 
-O `user` atual **não tem** campo de papel. O fluxo de produto (PRD §5, fluxograma 19.1) escolhe o perfil já na "Seleção de Perfil", antes do cadastro.
+O `user` atual possui campo de papel desde a TASK-04. O fluxo de produto (PRD §5, fluxograma 19.1) escolhe o perfil já na "Seleção de Perfil", antes do cadastro.
 
 Decisão adotada (ver `adrs/0002-arquitetura-auth-roles.md`):
 
@@ -42,13 +48,13 @@ Decisão adotada (ver `adrs/0002-arquitetura-auth-roles.md`):
 - Dados específicos de papel vivem em `patient_profile` (1:1) e `psychologist_profile` (1:1), criados sob demanda.
 - O redirecionamento pós-login e a navegação privada (TASK-04, TASK-12) ramificam por `user.role` — mas isso é UX; a fronteira de segurança é imposta no servidor (ver "Camadas de autenticação e autorização").
 
-Campos a adicionar ao `user` existente (migração aditiva, sem quebrar auth):
+Campos relacionados ao `user` existente:
 
 | Campo | Tipo | Notas |
 |---|---|---|
-| `role` | `String @default("paciente")` | `"paciente" \| "psicologo"`. `@@index([role, deleted])`. |
-| `patient_profile` | relação 1:1 opcional | `patient_profile?` |
-| `psychologist_profile` | relação 1:1 opcional | `psychologist_profile?` |
+| `role` | `String @default("paciente")` | **Já adicionado na TASK-04**. `"paciente" \| "psicologo"`. `@@index([role, deleted])`. |
+| `patient_profile` | relação 1:1 opcional | A criar na TASK-07. |
+| `psychologist_profile` | relação 1:1 opcional | A criar na TASK-09. |
 
 Verificação de e-mail **reaproveita os campos já existentes** `user.confirmed`, `user.confirmed_date`, `user.confirm_code`, `user.confirm_date` (ver TASK-06). Não criar `emailVerifiedAt`.
 

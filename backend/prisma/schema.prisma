@@ -19,6 +19,7 @@ model user {
   name                       String
   avatar                     String?
   provider                   String                      @default("manual")
+  role                       String                      @default("paciente")
   email                      String                      @unique
   password                   String?
   password_confirm           String?
@@ -38,6 +39,7 @@ model user {
   notification_preference    notification_preference?    @relation("notification_preference_user")
 
   @@index([email, deleted])
+  @@index([role, deleted])
   @@map("users")
 }
 

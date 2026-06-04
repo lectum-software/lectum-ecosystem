@@ -69,6 +69,7 @@ export interface user {
   name?: string | null;
   avatar?: string | null;
   provider?: string | null;
+  role?: string | null;
   email?: string | null;
   password?: string | null;
   password_confirm?: string | null;

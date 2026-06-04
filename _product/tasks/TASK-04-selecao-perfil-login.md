@@ -8,9 +8,9 @@
 | Prioridade | P0 |
 | Esforço | M |
 | Fase | Auth |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-01, TASK-02, TASK-03 |
-| ADR alvo | ADR de fluxo de autenticação pública |
+| ADR alvo | ADR-0008 |
 
 ## Referências obrigatórias
 
@@ -138,19 +138,46 @@ Regras anti-recriação específicas:
 
 ## Critérios de aceite
 
-- [ ] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
-- [ ] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
-- [ ] Backend implementado nos endpoints/modelos esperados quando aplicável.
-- [ ] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema; sessão via `/api/private/auth/hidrate`, não `/me`).
-- [ ] Redirecionamento por `user.role` no frontend é UX; a proteção por papel fica no servidor (TASK-12 / ADR-0002).
-- [ ] Todos os estados obrigatórios existem e usam textos em PT-BR.
-- [ ] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
-- [ ] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
-- [ ] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
-- [ ] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
-- [ ] ADR criado ou atualizado em `adrs/`.
-- [ ] Checks/builds relevantes foram executados sem erros.
-- [ ] Commit criado com mensagem convencional.
+- [x] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
+- [x] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
+- [x] Backend implementado nos endpoints/modelos esperados quando aplicável.
+- [x] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema; sessão via `/api/private/auth/hidrate`, não `/me`).
+- [x] Redirecionamento por `user.role` no frontend é UX; a proteção por papel fica no servidor (TASK-12 / ADR-0002).
+- [x] Todos os estados obrigatórios existem e usam textos em PT-BR.
+- [x] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
+- [x] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
+- [x] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
+- [x] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
+- [x] ADR criado ou atualizado em `adrs/`.
+- [x] Checks/builds relevantes foram executados sem erros.
+- [x] Commit criado com mensagem convencional.
+
+## Evidências de execução
+
+- Referências visuais consultadas por imagens locais:
+  - `_product/proto/Seleção de Perfil.jpg`;
+  - `_product/proto/Login.jpg`.
+- ADR criado: `adrs/0008-fluxo-publico-auth-selecao-perfil-login.md`.
+- Schema aditivo criado: `backend/prisma/migrations/20260604100000_add_user_role/migration.sql`.
+- Rotas frontend entregues:
+  - `/auth/profile-selection`;
+  - `/auth/login`.
+- Endpoints reais preservados:
+  - `POST /api/public/auth/login`;
+  - `GET /api/public/google/login/:deviceId`;
+  - `GET /api/public/google/me`;
+  - `GET /api/private/auth/hidrate`.
+- Validação executada:
+  - `pnpm --dir frontend check`;
+  - `pnpm --dir backend check`;
+  - `pnpm --dir frontend build`;
+  - `pnpm --dir backend build`;
+  - `pnpm check`.
+- Validação local:
+  - `next dev --webpack` em `http://localhost:3000`;
+  - `HEAD /auth/profile-selection` retornou `200`;
+  - `HEAD /auth/login` retornou `200`;
+  - Chrome headless validou screenshots de `/auth/profile-selection` e `/auth/login` em viewport larga (`500x900`). A tentativa inicial via Browser in-app não estava disponível na sessão; a validação foi feita por navegador local headless.
 
 ## Validação mínima
 

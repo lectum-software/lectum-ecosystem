@@ -5,6 +5,7 @@ import { useCallback } from "react";
 import type { user } from "@/api/generator/types";
 import { useAppDispatch } from "@/hooks/redux";
 import * as userActions from "@/store/modules/user/actions";
+import { resolveAuthRedirect } from "@/utils/auth-redirect";
 
 export const useUserSet = (redirect: string | null = "/dashboard") => {
   const dispatch = useAppDispatch();
@@ -23,7 +24,7 @@ export const useUserSet = (redirect: string | null = "/dashboard") => {
       dispatch(userActions.create(data));
 
       const callbackUrl = searchParams.get("callbackUrl");
-      const target = callbackUrl || redirect;
+      const target = resolveAuthRedirect(data, callbackUrl, redirect);
 
       if (target) {
         router.replace(target);

@@ -4,5 +4,6 @@ export interface IStoreDTO {
     email: string;
     avatar?: string;
     provider: string;
+    role?: "paciente" | "psicologo";
   };
 }

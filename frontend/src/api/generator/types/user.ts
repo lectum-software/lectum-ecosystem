@@ -8,6 +8,7 @@ export type user = {
   name?: string | null;
   email?: string | null;
   avatar?: string | null;
+  role?: "paciente" | "psicologo" | null;
   active?: boolean;
   confirmed?: boolean;
   provider?: string | null;

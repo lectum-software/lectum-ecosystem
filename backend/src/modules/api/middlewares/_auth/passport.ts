@@ -20,6 +20,15 @@ dotenv.config();
 
 const TOKEN_API_USER = Number(process.env.TOKEN_API_USER_HIDRATE_HOURS);
 const notAuthorized = { status: 401 };
+const allowedUserRoles = ["paciente", "psicologo"] as const;
+
+type UserRole = (typeof allowedUserRoles)[number];
+
+const parseUserRole = (role: unknown): UserRole | undefined => {
+  if (typeof role !== "string") return undefined;
+
+  return allowedUserRoles.includes(role as UserRole) ? (role as UserRole) : undefined;
+};
 
 passport.serializeUser<user>((user, done) => {
   done(null, user);
@@ -47,11 +56,13 @@ passport.use(
     async (req: Request, _accessToken: string, _refreshToken: string, profile: Profile, done) => {
       try {
         let device_id = req.query.state as string;
+        let role: UserRole | undefined;
 
         try {
           const stateObj = JSON.parse(device_id);
           if (stateObj && typeof stateObj === "object" && stateObj.device_id) {
             device_id = stateObj.device_id;
+            role = parseUserRole(stateObj.query?.role);
           }
         } catch (e) {
           console.log(e);
@@ -85,6 +96,7 @@ passport.use(
               email,
               avatar: profile.photos?.[0]?.value,
               provider: "google",
+              role,
             },
           });
         }

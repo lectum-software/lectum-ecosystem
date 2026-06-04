@@ -4,10 +4,16 @@ import { ShieldCheck, UserRound } from "lucide-react";
 import { useEffect } from "react";
 import { useAuth } from "@/api/callers/auth";
 import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingState } from "@/components/ui/loading-state";
 import { getToken } from "@/hooks/cookies/token";
 import { useAppSelector } from "@/hooks/redux";
 import { useUserSet } from "@/hooks/user-set";
 import { PrivateTemplate } from "@/templates/private";
+
+const roleLabels = {
+  paciente: "Paciente",
+  psicologo: "Psicólogo",
+} as const;
 
 export const DashboardLogic = () => {
   const storedUser = useAppSelector((state) => state.user);
@@ -25,10 +31,14 @@ export const DashboardLogic = () => {
   }, [hidrate.data, setter]);
 
   const currentUser = hidrate.data || storedUser;
+  const roleLabel =
+    currentUser?.role && currentUser.role in roleLabels ? roleLabels[currentUser.role] : "Perfil";
 
   return (
     <PrivateTemplate>
       <section className="grid gap-5">
+        {hidrate.isLoading ? <LoadingState label="Atualizando sua sessão" /> : null}
+
         <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-6 shadow-[var(--lectum-shadow-soft)]">
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div>
@@ -36,7 +46,9 @@ export const DashboardLogic = () => {
               <h1 className="mt-2 text-3xl font-semibold">
                 Olá, {currentUser?.name || "usuário"}.
               </h1>
-              <p className="mt-2 text-sm text-muted">Sessão autenticada com o backend Lectum.</p>
+              <p className="mt-2 text-sm text-muted">
+                Sessão autenticada com perfil {roleLabel.toLowerCase()}.
+              </p>
             </div>
             <div className="flex h-16 w-16 items-center justify-center rounded-[var(--lectum-card-radius)] bg-primary-soft text-primary">
               <ShieldCheck className="h-8 w-8" aria-hidden="true" />
@@ -51,17 +63,15 @@ export const DashboardLogic = () => {
                 <UserRound className="h-5 w-5" aria-hidden="true" />
               </span>
               <div>
-                <h2 className="text-sm font-semibold">Usuario</h2>
+                <h2 className="text-sm font-semibold">Usuário</h2>
                 <p className="text-sm text-muted">{currentUser?.email || "Sem e-mail"}</p>
               </div>
             </div>
           </article>
 
           <article className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
-            <h2 className="text-sm font-semibold">Status</h2>
-            <p className="mt-2 text-2xl font-semibold">
-              {currentUser?.active === false ? "Inativo" : "Ativo"}
-            </p>
+            <h2 className="text-sm font-semibold">Perfil</h2>
+            <p className="mt-2 text-2xl font-semibold">{roleLabel}</p>
           </article>
 
           <article className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">

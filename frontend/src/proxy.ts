@@ -4,7 +4,8 @@ const AUTH_PREFIX = "/auth";
 const DASHBOARD_PATH = "/dashboard";
 const TOKEN_COOKIE_NAME = process.env.NEXT_PUBLIC_TOKEN_LOCAL || "lectum.token";
 
-const PUBLIC_ROUTES = ["/auth/login", "/auth/redirect", "/auth/error"];
+const PUBLIC_ROUTES = ["/auth/profile-selection", "/auth/login", "/auth/redirect", "/auth/error"];
+const PRIVATE_PREFIXES = [DASHBOARD_PATH, "/app"];
 
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -12,7 +13,7 @@ export function proxy(req: NextRequest) {
 
   const isAuthRoute = pathname.startsWith(AUTH_PREFIX);
   const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
-  const isPrivateRoute = pathname.startsWith(DASHBOARD_PATH);
+  const isPrivateRoute = PRIVATE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
   if (token && isAuthRoute) {
     return NextResponse.redirect(new URL(DASHBOARD_PATH, req.url));
