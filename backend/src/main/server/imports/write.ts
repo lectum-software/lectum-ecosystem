@@ -16,6 +16,8 @@ import apiPrivateNotificationSubscriptionKey from "@/modules/api/private/notific
 import apiPrivateNotificationSubscriptionStore from "@/modules/api/private/notification_subscription/store";
 import apiPrivatePatientOnboarding from "@/modules/api/private/patient/onboarding";
 import apiPrivatePatientProfile from "@/modules/api/private/patient/profile";
+import apiPrivatePsychologistBillingCurrent from "@/modules/api/private/psychologist/billing/current";
+import apiPrivatePsychologistBillingPlans from "@/modules/api/private/psychologist/billing/plans";
 import apiPublicAuthLogin from "@/modules/api/public/auth/login";
 import apiPublicAuthRecovery from "@/modules/api/public/auth/recovery";
 import apiPublicAuthReset from "@/modules/api/public/auth/reset";
@@ -49,6 +51,18 @@ endpoint.use(
   privateAuth,
   requireRole("paciente"),
   apiPrivatePatientOnboarding,
+);
+endpoint.use(
+  "/api/private/psychologist/billing/plans",
+  privateAuth,
+  requireRole("psicologo"),
+  apiPrivatePsychologistBillingPlans,
+);
+endpoint.use(
+  "/api/private/psychologist/billing/current",
+  privateAuth,
+  requireRole("psicologo"),
+  apiPrivatePsychologistBillingCurrent,
 );
 endpoint.use("/api/private/notification/clean", apiPrivateNotificationClean);
 endpoint.use("/api/private/notification/index", apiPrivateNotificationIndex);

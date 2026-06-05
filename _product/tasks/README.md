@@ -84,7 +84,7 @@ Quando uma task citar artefato `figma-design-frame-*.html`, leia como nome virtu
 | 29a | [TASK-29A - Notificações: fundação e recebimento](TASK-29a-notificacoes-fundacao.md) | Pending | 02, 12 |
 | 29b | [TASK-29B - Notificações: eventos de domínio](TASK-29b-notificacoes-eventos.md) | Pending | 29a |
 | 30 | [TASK-30 - Configurações de conta](TASK-30-configuracoes-conta.md) | Pending | 02, 12 |
-| 31 | [TASK-31 - Planos de assinatura](TASK-31-planos-assinatura.md) | Pending | 03, 18 |
+| 31 | [TASK-31 - Planos de assinatura](TASK-31-planos-assinatura.md) | Completed | 03, 18 |
 | 32 | [TASK-32 - Checkout de assinatura](TASK-32-checkout-assinatura.md) | Pending | 02, 03, 31 |
 | 33 | [TASK-33 - Gestão de assinatura e cartão](TASK-33-gestao-assinatura-cartao.md) | Pending | 02, 32 |
 | 34 | [TASK-34 - Qualidade, segurança, LGPD e operação](TASK-34-qualidade-seguranca-lgpd-operacao.md) | Pending | 13 a 33 |

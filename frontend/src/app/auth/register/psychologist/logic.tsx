@@ -173,7 +173,7 @@ export const RegisterPsychologistLogic = () => {
             ) : (
               <UserPlus className="h-4 w-4" aria-hidden="true" />
             )}
-            {registerPsychologist.isPending ? "Criando conta" : "Criar conta gratuita"}
+            {registerPsychologist.isPending ? "Criando conta" : "Criar conta e escolher plano"}
             {!registerPsychologist.isPending ? (
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             ) : null}

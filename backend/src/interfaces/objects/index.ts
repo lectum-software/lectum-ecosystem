@@ -61,6 +61,38 @@ export interface psychologist_profile {
   rating_count?: number | null;
   published?: boolean | null;
   user?: user | null;
+  subscriptions?: professional_subscription[] | null;
+}
+
+export interface subscription_plan {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  slug?: "gratuito" | "profissional" | string | null;
+  name?: string | null;
+  price_cents?: number | null;
+  interval?: string | null;
+  features?: unknown;
+  active?: boolean | null;
+  subscriptions?: professional_subscription[] | null;
+}
+
+export interface professional_subscription {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  psychologist_id?: string | null;
+  plan_id?: string | null;
+  status?: "inativa" | "ativa" | "inadimplente" | "cancelada" | string | null;
+  gateway?: string | null;
+  gateway_subscription_id?: string | null;
+  current_period_end?: Date | null;
+  psychologist?: psychologist_profile | null;
+  plan?: subscription_plan | null;
 }
 
 export interface notification_subscription {

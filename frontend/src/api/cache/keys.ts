@@ -9,6 +9,10 @@ const keys = {
   patient: {
     profile: () => ["patient_profile"],
   },
+  psychologistBilling: {
+    plans: () => ["psychologist_billing_plans"],
+    current: () => ["psychologist_billing_current"],
+  },
 };
 
 export default keys;

@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | M |
 | Fase | Assinatura |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-03, TASK-18 |
 | ADR alvo | ADR de planos profissionais |
 
@@ -130,19 +130,19 @@ Regras anti-recriação específicas:
 
 ## Critérios de aceite
 
-- [ ] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
-- [ ] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
-- [ ] Backend implementado nos endpoints/modelos esperados quando aplicável.
-- [ ] Todos os estados obrigatórios existem e usam textos em PT-BR.
-- [ ] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
-- [ ] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
-- [ ] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
-- [ ] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
-- [ ] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
-- [ ] Rotas sob `/api/private/psychologist/*` exigem `requireRole("psicologo")` (fail-closed), conforme ADR-0002.
-- [ ] ADR criado ou atualizado em `adrs/`.
-- [ ] Checks/builds relevantes foram executados sem erros.
-- [ ] Commit criado com mensagem convencional.
+- [x] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
+- [x] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
+- [x] Backend implementado nos endpoints/modelos esperados quando aplicável.
+- [x] Todos os estados obrigatórios existem e usam textos em PT-BR.
+- [x] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
+- [x] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
+- [x] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
+- [x] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
+- [x] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
+- [x] Rotas sob `/api/private/psychologist/*` exigem `requireRole("psicologo")` (fail-closed), conforme ADR-0002.
+- [x] ADR criado ou atualizado em `adrs/`.
+- [x] Checks/builds relevantes foram executados sem erros.
+- [x] Commit criado com mensagem convencional.
 
 ## Validação mínima
 
@@ -156,3 +156,30 @@ Regras anti-recriação específicas:
 ## Notas para executor
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
+
+## Execucao TASK-31
+
+- Referencia visual consultada pela imagem local `_product/proto/Planos de Assinatura.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente.
+- Implementada rota mobile-first `/app/professional/billing/plans` com `page.tsx` e `logic.tsx`, reutilizando `PrivateTemplate`, componentes UI existentes, TanStack Query e textos em PT-BR.
+- O cadastro do psicologo agora usa `USER_HOME_PATHS.psicologo = "/app/professional/billing/plans"`; Google vai direto para planos quando a conta volta confirmada, e e-mail/senha continua passando por `/auth/verify-email` antes de planos.
+- Criados modelos `subscription_plan` e `professional_subscription` conforme `DATA-MODEL.md` > "Assinatura e cobranca".
+- Criada migration `20260605120000_add_subscription_plans` com os planos reais `gratuito` e `profissional`; preco do profissional fica persistido em `subscription_plan.price_cents = 990` e o frontend apenas formata esse valor.
+- Criados endpoints `GET /api/private/psychologist/billing/plans` e `GET /api/private/psychologist/billing/current`, ambos montados com `_auth` e `requireRole("psicologo")` em `write.ts`.
+- CTA do plano profissional nao simula checkout: enquanto a TASK-32 nao existir com credenciais reais do Mercado Pago, exibe pendencia via feedback visual e nao cria assinatura nem cobranca.
+- Plano gratuito encaminha para a etapa atual `/psychologist/cfp`, sem persistir assinatura fake.
+- ADR criado: `adrs/0016-planos-apos-cadastro-psicologo.md`.
+
+## Validacao executada
+
+- `pnpm --dir backend db:migrate` (primeira tentativa falhou por BOM na migration SQL; arquivo corrigido para UTF-8 sem BOM e segunda tentativa aplicada com sucesso).
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke local com `next start --port 3012`: `curl` em `/app/professional/billing/plans` com cookie de sessao de smoke retornou HTTP 200.
+
+## Pendencias
+
+- Checkout real do Plano Profissional permanece na TASK-32 e depende de credenciais reais do Mercado Pago; nenhum pagamento ou ativacao de assinatura foi simulado.
+- A etapa CFP/CRP continua com as pendencias ja registradas em TASK-10/TASK-11.
