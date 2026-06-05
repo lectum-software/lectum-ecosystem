@@ -71,3 +71,41 @@ Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao.
 - Substituir a versao pendente de termos profissionais/LGPD quando a copy legal for
   aprovada.
 - Implementar consulta CFP/CRP real somente na TASK-10, com fonte/API autorizada.
+
+## Atualizacao visual em 2026-06-05
+
+### Contexto
+
+Pedido direto de produto solicitou que `/auth/register/psychologist` ficasse visualmente
+alinhada a imagem local `_product/proto/Cadastro de Psicólogo.jpg`, mantendo os campos
+adicionais de nome completo e confirmacao de senha. O Builder/Quick Copy nao esta
+exposto como ferramenta direta nesta sessao; a referencia auditavel usada foi a imagem
+local do inventario.
+
+### Decisao
+
+- A tela foi ajustada de forma mobile-first na base do prototipo, com card estreito,
+  cabecalho com logo/tag, copy, botao Google, divisor, formulario e rodape interno.
+- O formulario continuou usando React Hook Form, Zod, `useFormList` e controllers da
+  TASK-02; os campos `name` e `password_confirm` foram preservados.
+- A copy do CTA voltou para `Criar conta gratuita`, sem alterar o fluxo real posterior
+  de verificacao de e-mail/planos definido nos ADRs anteriores.
+- A mensagem de metricas sem fonte persistida foi evitada; o rodape mantem beneficios
+  visuais e a regra real de perfil protegido ate validacao profissional.
+- O script `frontend` de build foi alinhado para `next build --webpack`, preservando o
+  mesmo bundler ja usado em `next dev --webpack`, porque o build Turbopack falhou por
+  OOM no ambiente durante a validacao.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm check`
+- `pnpm --dir frontend build` foi executado inicialmente com Turbopack e falhou na
+  etapa TypeScript com `FATAL ERROR: Zone Allocation failed - process out of memory`;
+  a repeticao com `NODE_OPTIONS=--max-old-space-size=4096` falhou pelo mesmo motivo.
+- `NODE_OPTIONS=--max-old-space-size=4096 pnpm --dir frontend exec next build --webpack`
+  passou antes da alteracao do script.
+- `pnpm --dir frontend build` passou apos alinhar o script para `next build --webpack`.
+- Browser local via Chrome headless em
+  `http://localhost:3000/auth/register/psychologist`, viewport mobile, retornou 200 e
+  gerou captura visual para conferencia.

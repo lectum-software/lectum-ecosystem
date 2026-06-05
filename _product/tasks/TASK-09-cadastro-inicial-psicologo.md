@@ -201,3 +201,33 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 - Texto legal profissional/LGPD definitivo permanece pendente das tasks legais; o aceite foi registrado com `terms_version="task09-professional-terms-pending-legal-copy"`.
 - Consulta CFP/CRP automática permanece dependente da TASK-10 e de fonte/API autorizada.
+
+## Ajuste visual posterior em 2026-06-05
+
+- Pedido direto de produto: alinhar `/auth/register/psychologist` à imagem
+  `_product/proto/Cadastro de Psicólogo.jpg`, mantendo os campos de nome completo e
+  confirmação de senha.
+- Builder/Quick Copy não está exposto como ferramenta direta nesta sessão; a imagem
+  local do inventário foi usada como referência auditável.
+- A tela foi reestruturada de forma mobile-first com card estreito, header com logo/tag,
+  copy do protótipo, botão Google, divisor, formulário e rodapé interno.
+- O formulário continua usando a fundação da TASK-02, Zod e o endpoint real
+  `POST /api/public/user/store`; nenhum mock, endpoint paralelo ou dado fake foi criado.
+- A métrica visual sem fonte persistida foi evitada; o rodapé mantém a regra real de
+  perfil protegido até validação profissional.
+- O script de build do frontend foi alinhado para `next build --webpack`, mantendo o
+  mesmo bundler já usado em `next dev --webpack`, após OOM do Turbopack na validação.
+
+### Validação do ajuste visual
+
+- `pnpm --dir frontend check`
+- `pnpm check`
+- `pnpm --dir frontend build` tentou usar Turbopack e falhou por OOM do processo
+  (`FATAL ERROR: Zone Allocation failed - process out of memory`), inclusive com
+  `NODE_OPTIONS=--max-old-space-size=4096`.
+- `NODE_OPTIONS=--max-old-space-size=4096 pnpm --dir frontend exec next build --webpack`
+  passou.
+- `pnpm --dir frontend build` passou após o ajuste do script para webpack.
+- Browser local via Chrome headless em
+  `http://localhost:3000/auth/register/psychologist`, viewport mobile, retornou 200 e
+  gerou captura visual de conferência.
