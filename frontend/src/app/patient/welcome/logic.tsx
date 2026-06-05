@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, LockKeyhole, Sparkles } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2, LockKeyhole } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -67,6 +67,12 @@ export const WelcomePatientLogic = () => {
           setApiError(null);
           toast.success("Boas-vindas concluídas");
           router.replace("/dashboard");
+
+          window.setTimeout(() => {
+            if (window.location.pathname !== "/dashboard") {
+              window.location.assign("/dashboard");
+            }
+          }, 800);
         },
         onError: (error) => {
           setApiError(resolvePatientErrorMessage(error));
@@ -89,13 +95,6 @@ export const WelcomePatientLogic = () => {
 
   const isInitialLoading = profile.isLoading || profile.isPending;
   const isCompleted = Boolean(profile.data?.onboarding_completed_at);
-  const isLastStep = step === TOTAL_STEPS - 1;
-
-  const goBack = () => {
-    setApiError(null);
-    setStep((current) => Math.max(current - 1, 0));
-  };
-
   const goNext = async () => {
     setApiError(null);
 
@@ -125,7 +124,9 @@ export const WelcomePatientLogic = () => {
     setStep((current) => Math.min(current + 1, TOTAL_STEPS - 1));
   };
 
-  const finish = async () => {
+  const completeWithGoal = (goal: SelectedGoal) => {
+    if (completeOnboarding.isPending) return;
+
     setApiError(null);
     const data = hook.getValues() as PatientOnboardingForm;
     const name = String(data.name || "").trim();
@@ -149,18 +150,17 @@ export const WelcomePatientLogic = () => {
       return;
     }
 
-    if (!selectedGoal) {
-      hook.setError("goal", {
-        message: "Escolha como prefere começar",
-        type: "manual",
-      });
-      return;
-    }
+    setSelectedGoal(goal);
+    hook.setValue("goal", goal, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
 
     completeOnboarding.mutate({
       name,
       gender: selectedGender,
-      goal: selectedGoal,
+      goal,
     });
   };
 
@@ -203,7 +203,8 @@ export const WelcomePatientLogic = () => {
                 className="mt-12 h-auto w-[260px] max-w-full"
                 height={218}
                 priority
-                src="/images/patient-welcome-hug.png"
+                src="/images/patient-welcome-hug.svg"
+                unoptimized
                 width={260}
               />
               <p className="mt-12 max-w-[330px] text-lg leading-8 text-muted">
@@ -297,20 +298,14 @@ export const WelcomePatientLogic = () => {
                   return (
                     <button
                       aria-pressed={selected}
+                      disabled={completeOnboarding.isPending}
                       className={cn(
                         "flex w-full items-center justify-between gap-4 rounded-[var(--lectum-card-radius)] border bg-surface p-5 text-left shadow-[var(--lectum-shadow-soft)] transition hover:border-primary hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                        completeOnboarding.isPending && "cursor-not-allowed opacity-70",
                         selected ? "border-primary bg-primary-soft" : "border-border",
                       )}
                       key={option.value}
-                      onClick={() => {
-                        setSelectedGoal(option.value);
-                        hook.setValue("goal", option.value, {
-                          shouldDirty: true,
-                          shouldTouch: true,
-                          shouldValidate: false,
-                        });
-                        hook.clearErrors("goal");
-                      }}
+                      onClick={() => completeWithGoal(option.value)}
                       type="button"
                     >
                       <span>
@@ -327,7 +322,9 @@ export const WelcomePatientLogic = () => {
                           selected ? "bg-primary text-white" : "bg-primary-soft text-primary",
                         )}
                       >
-                        {selected ? (
+                        {selected && completeOnboarding.isPending ? (
+                          <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+                        ) : selected ? (
                           <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
                         ) : (
                           <ArrowRight className="h-5 w-5" aria-hidden="true" />
@@ -354,41 +351,14 @@ export const WelcomePatientLogic = () => {
           </InlineAlert>
         ) : null}
 
-        <footer className="grid gap-3">
-          {isLastStep ? (
-            <Button
-              className="w-full"
-              disabled={completeOnboarding.isPending}
-              onClick={finish}
-              type="button"
-            >
-              {completeOnboarding.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-              ) : (
-                <Sparkles className="h-4 w-4" aria-hidden="true" />
-              )}
-              {completeOnboarding.isPending ? "Concluindo" : "Finalizar boas-vindas"}
-            </Button>
-          ) : (
+        {step < 2 ? (
+          <footer className="grid gap-3">
             <Button className="w-full" onClick={goNext} type="button">
               {step === 0 ? "Vamos lá" : "Próximo"}
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Button>
-          )}
-
-          {step > 0 ? (
-            <Button
-              className="w-full"
-              disabled={completeOnboarding.isPending}
-              onClick={goBack}
-              type="button"
-              variant="ghost"
-            >
-              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-              Voltar
-            </Button>
-          ) : null}
-        </footer>
+          </footer>
+        ) : null}
       </section>
     </main>
   );

@@ -166,12 +166,18 @@ Regras anti-recriação específicas:
 ## Ajuste visual solicitado em 2026-06-04
 
 - Removidos o cabecalho privado do onboarding e as copias auxiliares de etapa/progresso salvo.
-- Etapa 1 passou a usar o asset anexado `frontend/public/images/patient-welcome-hug.png` com `next/image` e a copia de acolhimento solicitada.
+- Etapa 1 passou a usar o asset anexado `frontend/public/images/patient-welcome-hug.svg` com `next/image` e a copia de acolhimento solicitada.
 - Etapa 2 removeu data de nascimento/telefone da interface e passou a coletar nome e genero, alinhado ao prototipo `Boas-vindas Paciente - 2`.
 - Etapa 3 removeu copias auxiliares e ajustou a descricao do objetivo "Escolher um psicólogo".
 - O backend passou a aceitar `name` e `gender` no `PUT /api/private/patient/onboarding`; `gender` foi adicionado a `patient_profile`.
 - Migration aplicada durante a execucao: `20260605001000_add_patient_profile_gender`.
 - Validacao adicional executada em browser local (`http://localhost:3000/patient/welcome`) com usuario temporario criado por endpoint real, confirmando as copias removidas/alteradas, persistencia de `gender`, `goal`, `onboarding_completed_at` e atualizacao de `user.name`; o usuario temporario foi removido do banco ao final.
+
+## Ajuste visual solicitado em 2026-06-04 22h
+
+- Etapa 1 trocou a imagem PNG pelo icone SVG anexado em `frontend/public/images/patient-welcome-hug.svg`.
+- Etapa 2 removeu o botao "Voltar".
+- Etapa 3 removeu os botoes "Finalizar boas-vindas" e "Voltar"; a conclusao agora acontece ao selecionar um objetivo, mantendo a persistencia real no `PUT /api/private/patient/onboarding`.
 
 ## Validação mínima
 

@@ -20,7 +20,7 @@ As referencias visuais foram consultadas pelas imagens locais:
 - `_product/proto/Boas-vindas Paciente - 2.jpg`;
 - `_product/proto/Boas-vindas Paciente - 3.jpg`.
 - asset solicitado pelo usuário:
-  `frontend/public/images/patient-welcome-hug.png`.
+  `frontend/public/images/patient-welcome-hug.svg`.
 
 Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao, entao as
 imagens locais foram usadas como fallback auditavel.
@@ -52,6 +52,9 @@ imagens locais foram usadas como fallback auditavel.
   consulta o backend e pula para `/dashboard` quando o onboarding ja esta concluido.
 - Remover o cabecalho privado do onboarding a pedido do usuario, mantendo a tela
   focada/mobile-first e sem reintroduzir shell paralelo.
+- Remover os botoes "Voltar" da etapa 2 e "Finalizar boas-vindas"/"Voltar" da etapa 3
+  a pedido do usuario. Como a etapa 3 nao deve exibir CTA final, a selecao de um
+  objetivo passa a concluir o onboarding imediatamente pelo mesmo endpoint real.
 
 ## Consequencias
 
@@ -63,6 +66,8 @@ imagens locais foram usadas como fallback auditavel.
   backend preserva esses campos opcionais legados para compatibilidade.
 - `gender` passa a ser persistido no perfil do paciente para orientar tratamento futuro
   pelos profissionais.
+- A etapa de objetivo passa a ter comportamento de acao direta: clicar em um objetivo
+  seleciona e conclui o fluxo, evitando estado sem saida apos a remocao dos botoes.
 - Rotas de paciente passam a ter uma primeira implementacao de `requireRole`, que deve
   ser reutilizada e auditada na TASK-12 para os demais namespaces privados.
 - A Home privada real do paciente ainda e futura; apos concluir, o destino temporario e
@@ -78,9 +83,12 @@ imagens locais foram usadas como fallback auditavel.
 - `pnpm check`
 - Browser local em `http://localhost:3000/patient/welcome` validando:
   - remocao do cabecalho e das copias auxiliares de etapa/progresso;
-  - uso do asset `patient-welcome-hug.png` na primeira etapa;
+  - uso do asset `patient-welcome-hug.svg` na primeira etapa;
   - segunda etapa com nome e genero, sem data de nascimento/telefone;
+  - segunda etapa sem botao "Voltar";
   - terceira etapa sem "Escolha do objetivo"/"Seu objetivo fica salvo";
+  - terceira etapa sem botoes "Finalizar boas-vindas" e "Voltar";
+  - conclusao automatica ao selecionar um objetivo;
   - carregamento do profile real;
   - fluxo completo ate `PUT /api/private/patient/onboarding`;
   - persistencia de `gender`, `goal` e `onboarding_completed_at` no banco;
