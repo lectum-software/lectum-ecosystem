@@ -1,6 +1,6 @@
 # Decisões de Integração Lectum
 
-Última atualização: 2026-06-03.
+Última atualização: 2026-06-05.
 
 Este documento registra decisões externas necessárias para evitar implementação falsa de integrações. Quando uma credencial real estiver ausente, a task futura deve pedir ao usuário e parar antes de simular sucesso.
 
@@ -108,6 +108,12 @@ Fallback quando registro não for encontrado:
 - Nunca aprovar automaticamente por ausência de retorno.
 
 Impacto nas tasks: TASK-10, TASK-11, TASK-18.
+
+Execução TASK-10 em 2026-06-05:
+
+- Bloqueio confirmado e formalizado em `adrs/0015-bloqueio-consulta-cfp-automatica.md`.
+- Nenhum endpoint, provider, schema ou tela de consulta automática deve ser implementado até existir fonte/API autorizada.
+- Encaminhar a jornada do psicólogo para o fluxo manual da TASK-11, mantendo `cfp_verified_at=null`, `crp_status="pendente"` e `published=false` até validação real.
 
 ## E-mail e SMS
 

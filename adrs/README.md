@@ -27,3 +27,5 @@ Formato recomendado:
 - [ADR-0011 - Verificacao de e-mail por codigo](0011-verificacao-email-codigo.md) - Accepted
 - [ADR-0012 - Cadastro de paciente com role e patient_profile](0012-cadastro-paciente-role-profile.md) - Accepted
 - [ADR-0013 - Onboarding de boas-vindas do paciente](0013-onboarding-boas-vindas-paciente.md) - Accepted
+- [ADR-0014 - Cadastro inicial de psicologo com psychologist_profile](0014-cadastro-inicial-psicologo-profile.md) - Accepted
+- [ADR-0015 - Bloqueio da consulta CFP automatica](0015-bloqueio-consulta-cfp-automatica.md) - Accepted

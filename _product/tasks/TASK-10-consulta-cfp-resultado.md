@@ -8,7 +8,7 @@
 | Prioridade | P0 |
 | Esforço | L |
 | Fase | Psicólogo |
-| Status | Pending |
+| Status | Blocked |
 | Dependências | TASK-02, TASK-03, TASK-09 |
 | ADR alvo | ADR de integração CFP |
 
@@ -164,3 +164,27 @@ Regras anti-recriação específicas:
 ## Notas para executor
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
+
+## Execução bloqueada em 2026-06-05
+
+- Dependências documentais confirmadas: TASK-02, TASK-03 e TASK-09 estão com `Status | Completed |` em seus arquivos.
+- Referências visuais consultadas pelas imagens locais:
+  - `_product/proto/Verificação de CPF - Consulta CFP.jpg`;
+  - `_product/proto/Carregando Consulta CFP.jpg`;
+  - `_product/proto/Resultado CFP - Variação em Cards.jpg`;
+  - `_product/proto/Resultado CFP - Não Encontrado.jpg`.
+- Builder/Quick Copy não está exposto como ferramenta direta neste ambiente; por isso foi usado o fallback auditável das imagens locais.
+- Bloqueio externo confirmado: não há fonte oficial, API contratada ou processo autorizado para consulta automática CFP/CRP.
+- A implementação de `POST /api/private/psychologist/cfp/search`, `POST /api/private/psychologist/cfp/confirm`, provider CFP e modelo `professional_registry_check` foi interrompida antes de qualquer código, chamada real, scraping ou dado inventado.
+- `psychologist_profile.cfp_verified_at` deve permanecer `null`; `psychologist_profile.crp_status` deve permanecer `"pendente"` sem consulta real.
+- ADR criado: `adrs/0015-bloqueio-consulta-cfp-automatica.md`.
+- Encaminhamento operacional: seguir para o fluxo manual da TASK-11 (upload/validação de CRP) quando houver storage R2 privado e credenciais/bucket reais conforme a própria TASK-11.
+
+## Validação executada
+
+- Revisão manual de `TASK-10`, `_product/decisions.md`, `DATA-MODEL.md` e `adrs/0006-integracoes-externas-e-decisoes-pendentes.md`.
+- `git diff --check`
+
+## Observação sobre critérios de aceite
+
+Os critérios acima permanecem sem marcação completa porque a task está formalmente bloqueada por requisito externo. Não houve implementação de tela, endpoint, provider, schema ou mock.
