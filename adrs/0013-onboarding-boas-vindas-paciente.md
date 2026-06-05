@@ -19,6 +19,8 @@ As referencias visuais foram consultadas pelas imagens locais:
 - `_product/proto/Boas-vindas Paciente - 1.jpg`;
 - `_product/proto/Boas-vindas Paciente - 2.jpg`;
 - `_product/proto/Boas-vindas Paciente - 3.jpg`.
+- asset solicitado pelo usuário:
+  `frontend/public/images/patient-welcome-hug.png`.
 
 Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao, entao as
 imagens locais foram usadas como fallback auditavel.
@@ -28,8 +30,12 @@ imagens locais foram usadas como fallback auditavel.
 - Criar os endpoints privados reais:
   - `GET /api/private/patient/profile` para retornar ou garantir o `patient_profile` de
     `req.auth.id`;
-  - `PUT /api/private/patient/onboarding` para persistir `goal`, `birthdate`, `phone` e
-    setar `onboarding_completed_at`.
+  - `PUT /api/private/patient/onboarding` para persistir `gender`, `goal`, campos
+    opcionais legados (`birthdate`, `phone`) e setar `onboarding_completed_at`.
+- Permitir que o onboarding atualize `user.name` quando a etapa de identificação coletar
+  nome, mantendo o nome canônico do usuário fora de `patient_profile`.
+- Adicionar `patient_profile.gender` como `String?`, com os valores aceitos
+  `"feminino" | "masculino" | "nao_binario" | "prefiro_nao_dizer"`.
 - Implementar `requireRole("paciente")` agora, antes da TASK-12, porque a TASK-08 ja
   introduz o namespace `/api/private/patient/*` e o guard fail-closed e criterio de
   aceite obrigatorio. O guard fica aplicado no mount de `write.ts`, depois do `_auth`.
@@ -39,13 +45,13 @@ imagens locais foram usadas como fallback auditavel.
 - O `PUT` e idempotente: se `onboarding_completed_at` ja existe, retorna o estado atual
   sem erro e sem sobrescrever campos.
 - Implementar `/patient/welcome` no frontend, com fluxo mobile-first em 3 etapas
-  alinhadas aos prototipos: acolhimento, informacoes pessoais e objetivo.
-- Usar a fundacao da TASK-02 para os campos de informacoes pessoais (`calendar` e
-  `phone`) e cards controlados por React Hook Form/Zod para o objetivo.
+  alinhadas aos prototipos: acolhimento, identificação e objetivo.
+- Usar a fundacao da TASK-02 para o campo de nome (`input`) e controles por React Hook
+  Form/Zod para genero e objetivo.
 - Atualizar o redirecionamento de usuario paciente para `/patient/welcome`; a rota
   consulta o backend e pula para `/dashboard` quando o onboarding ja esta concluido.
-- Como a TASK-12 ainda nao existe formalmente, usar o `PrivateTemplate` atual como shell
-  minimo e registrar a dependencia de substituicao pelo shell privado mobile futuro.
+- Remover o cabecalho privado do onboarding a pedido do usuario, mantendo a tela
+  focada/mobile-first e sem reintroduzir shell paralelo.
 
 ## Consequencias
 
@@ -53,6 +59,10 @@ imagens locais foram usadas como fallback auditavel.
   fazer login.
 - Pacientes com `onboarding_completed_at` preenchido nao repetem o fluxo em outro
   dispositivo.
+- O onboarding deixa de pedir data de nascimento e telefone na interface atual, mas o
+  backend preserva esses campos opcionais legados para compatibilidade.
+- `gender` passa a ser persistido no perfil do paciente para orientar tratamento futuro
+  pelos profissionais.
 - Rotas de paciente passam a ter uma primeira implementacao de `requireRole`, que deve
   ser reutilizada e auditada na TASK-12 para os demais namespaces privados.
 - A Home privada real do paciente ainda e futura; apos concluir, o destino temporario e
@@ -62,13 +72,19 @@ imagens locais foram usadas como fallback auditavel.
 
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
+- `pnpm --dir backend db:migrate`
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser local em `http://localhost:3000/patient/welcome` validando:
+  - remocao do cabecalho e das copias auxiliares de etapa/progresso;
+  - uso do asset `patient-welcome-hug.png` na primeira etapa;
+  - segunda etapa com nome e genero, sem data de nascimento/telefone;
+  - terceira etapa sem "Escolha do objetivo"/"Seu objetivo fica salvo";
   - carregamento do profile real;
   - fluxo completo ate `PUT /api/private/patient/onboarding`;
-  - persistencia de `onboarding_completed_at` no banco;
+  - persistencia de `gender`, `goal` e `onboarding_completed_at` no banco;
+  - atualizacao de `user.name`;
   - reentrada com onboarding ja concluido pulando para `/dashboard`.
 
 ## Pendencias

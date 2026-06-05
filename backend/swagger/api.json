@@ -643,8 +643,20 @@
                     "required": false,
                     "type": "string"
                   },
+                  "gender": {
+                    "description": "Parâmetro gender do body.",
+                    "nullable": false,
+                    "required": false,
+                    "type": "string"
+                  },
                   "goal": {
                     "description": "Parâmetro goal do body.",
+                    "nullable": false,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "Parâmetro name do body.",
                     "nullable": false,
                     "required": false,
                     "type": "string"

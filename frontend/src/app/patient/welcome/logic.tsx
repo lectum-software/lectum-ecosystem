@@ -1,29 +1,23 @@
-﻿"use client";
+"use client";
 
-import {
-  ArrowLeft,
-  ArrowRight,
-  CheckCircle2,
-  HeartHandshake,
-  Loader2,
-  LockKeyhole,
-  ShieldCheck,
-  Sparkles,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, LockKeyhole, Sparkles } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { usePatient } from "@/api/callers/patient";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
-import { Logo } from "@/components/ui/logo";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
-import { PrivateTemplate } from "@/templates/private";
-import { goalOptions, type PatientOnboardingForm, useForm } from "./use-form";
+import { genderOptions, goalOptions, type PatientOnboardingForm, useForm } from "./use-form";
 
-const steps = ["Acolhimento", "Informações", "Objetivo"] as const;
+const TOTAL_STEPS = 3;
+const PROGRESS_STEPS = ["welcome-progress-1", "welcome-progress-2", "welcome-progress-3"] as const;
+
+type SelectedGender = (typeof genderOptions)[number]["value"];
+type SelectedGoal = (typeof goalOptions)[number]["value"];
 
 type ApiErrorData = {
   error?: string;
@@ -51,30 +45,19 @@ const resolvePatientErrorMessage = (error: unknown) => {
     return "Sua sessão precisa estar ativa para continuar.";
   }
 
-  if (normalized.includes("telefone") || normalized.includes("phone")) {
-    return "Confira o telefone informado e tente novamente.";
-  }
-
   return rawMessage || "Não foi possível carregar seu onboarding agora.";
-};
-
-const normalizePhoneToE164 = (phone?: string | null) => {
-  const digits = String(phone || "").replace(/\D/g, "");
-  if (!digits) return undefined;
-
-  if (digits.startsWith("55") && digits.length > 11) return `+${digits}`;
-
-  return `+55${digits}`;
 };
 
 export const WelcomePatientLogic = () => {
   const router = useRouter();
   const storedUser = useAppSelector((state) => state.user);
-  const { Form, formProps, hook } = useForm();
+  const { Form, formProps, hook } = useForm(storedUser?.name || "");
   const [step, setStep] = useState(0);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [selectedGender, setSelectedGender] = useState<SelectedGender | null>(null);
+  const [selectedGoal, setSelectedGoal] = useState<SelectedGoal | null>(null);
 
-  const selectedGoal = hook.watch("goal");
+  const genderError = hook.formState.errors.gender?.message;
   const goalError = hook.formState.errors.goal?.message;
 
   const { completeOnboarding, profile } = usePatient({
@@ -98,12 +81,6 @@ export const WelcomePatientLogic = () => {
     }
   }, [profile.data?.onboarding_completed_at, router]);
 
-  const firstName = useMemo(() => {
-    const [name] = String(storedUser?.name || "")
-      .trim()
-      .split(" ");
-    return name || "você";
-  }, [storedUser?.name]);
   const profileError = useMemo(
     () => (profile.error ? resolvePatientErrorMessage(profile.error) : null),
     [profile.error],
@@ -112,7 +89,7 @@ export const WelcomePatientLogic = () => {
 
   const isInitialLoading = profile.isLoading || profile.isPending;
   const isCompleted = Boolean(profile.data?.onboarding_completed_at);
-  const isLastStep = step === steps.length - 1;
+  const isLastStep = step === TOTAL_STEPS - 1;
 
   const goBack = () => {
     setApiError(null);
@@ -122,69 +99,115 @@ export const WelcomePatientLogic = () => {
   const goNext = async () => {
     setApiError(null);
 
-    setStep((current) => Math.min(current + 1, steps.length - 1));
+    if (step === 1) {
+      const data = hook.getValues();
+      const name = String(data.name || "").trim();
+
+      hook.clearErrors(["name", "gender"]);
+
+      if (name.length < 2) {
+        hook.setError("name", {
+          message: "Informe seu nome e sobrenome",
+          type: "manual",
+        });
+        return;
+      }
+
+      if (!selectedGender) {
+        hook.setError("gender", {
+          message: "Escolha seu gênero ou prefira não dizer",
+          type: "manual",
+        });
+        return;
+      }
+    }
+
+    setStep((current) => Math.min(current + 1, TOTAL_STEPS - 1));
   };
 
   const finish = async () => {
     setApiError(null);
-    const valid = await hook.trigger();
-    if (!valid) return;
-
     const data = hook.getValues() as PatientOnboardingForm;
+    const name = String(data.name || "").trim();
+
+    hook.clearErrors(["name", "gender", "goal"]);
+
+    if (name.length < 2) {
+      hook.setError("name", {
+        message: "Informe seu nome e sobrenome",
+        type: "manual",
+      });
+      return;
+    }
+
+    if (!selectedGender) {
+      hook.setError("gender", {
+        message: "Escolha seu gênero ou prefira não dizer",
+        type: "manual",
+      });
+      setStep(1);
+      return;
+    }
+
+    if (!selectedGoal) {
+      hook.setError("goal", {
+        message: "Escolha como prefere começar",
+        type: "manual",
+      });
+      return;
+    }
 
     completeOnboarding.mutate({
-      goal: data.goal || undefined,
-      birthdate: data.birthdate || undefined,
-      phone: normalizePhoneToE164(data.phone),
+      name,
+      gender: selectedGender,
+      goal: selectedGoal,
     });
   };
 
   if (isInitialLoading || isCompleted) {
     return (
-      <PrivateTemplate>
-        <div className="mx-auto grid min-h-[60vh] w-full max-w-[390px] place-items-center px-4">
+      <main className="min-h-screen bg-background text-foreground">
+        <div className="mx-auto grid min-h-screen w-full max-w-[390px] place-items-center px-4 py-8">
           <div className="grid w-full justify-items-center gap-5 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-8 text-center shadow-[var(--lectum-shadow-soft)]">
-            <Logo className="w-[160px]" />
             <LoadingState
               label={isCompleted ? "Abrindo sua área privada" : "Carregando seu onboarding"}
             />
           </div>
         </div>
-      </PrivateTemplate>
+      </main>
     );
   }
 
   return (
-    <PrivateTemplate>
-      <section className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-[390px] flex-col px-4 py-6 text-foreground sm:max-w-xl">
-        <div className="grid gap-2">
-          <div className="grid grid-cols-3 gap-2">
-            {steps.map((item, index) => (
-              <span
-                className={cn(
-                  "h-1 rounded-full transition",
-                  index <= step ? "bg-primary" : "bg-border",
-                )}
-                key={item}
-              />
-            ))}
-          </div>
-          <p className="text-center text-xs font-medium text-subtle">
-            Etapa {step + 1} de {steps.length}: {steps[step]}
-          </p>
+    <main className="min-h-screen bg-background text-foreground">
+      <section className="mx-auto flex min-h-screen w-full max-w-[390px] flex-col px-4 py-10 sm:max-w-xl">
+        <div className="grid grid-cols-3 gap-2">
+          {PROGRESS_STEPS.map((progressKey, index) => (
+            <span
+              className={cn(
+                "h-1 rounded-full transition",
+                index <= step ? "bg-primary" : "bg-border",
+              )}
+              key={progressKey}
+            />
+          ))}
         </div>
 
         <div className="flex flex-1 flex-col justify-center py-8">
           {step === 0 ? (
             <div className="grid justify-items-center text-center">
-              <div className="grid h-48 w-48 place-items-center rounded-[48px] bg-primary-soft text-primary shadow-[var(--lectum-shadow-soft)]">
-                <HeartHandshake className="h-28 w-28" aria-hidden="true" />
-              </div>
-              <p className="mt-10 text-3xl leading-tight text-muted">Bem-vindo(a)</p>
+              <p className="text-3xl leading-tight text-muted">Bem-vindo(a)</p>
               <h1 className="mt-1 text-4xl font-bold leading-tight text-foreground">à Lectum</h1>
-              <p className="mt-10 max-w-[330px] text-lg leading-8 text-muted">
-                {firstName}, você está em um ambiente seguro e será acolhido com empatia e
-                humanidade.
+              <Image
+                alt="Abraço acolhedor Lectum"
+                className="mt-12 h-auto w-[260px] max-w-full"
+                height={218}
+                priority
+                src="/images/patient-welcome-hug.png"
+                width={260}
+              />
+              <p className="mt-12 max-w-[330px] text-lg leading-8 text-muted">
+                Você está em um ambiente seguro e será acolhido com empatia e humanidade 💙
               </p>
             </div>
           ) : null}
@@ -192,14 +215,11 @@ export const WelcomePatientLogic = () => {
           {step === 1 ? (
             <div className="grid gap-6">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-wide text-primary">
-                  Informações pessoais
-                </p>
-                <h1 className="mt-2 text-2xl font-bold leading-tight text-foreground">
-                  Conte-nos um pouco sobre você
+                <h1 className="text-2xl font-bold leading-tight text-foreground">
+                  Conte-nos sobre você
                 </h1>
                 <p className="mt-2 text-sm leading-6 text-muted">
-                  Esses dados ajudam a personalizar sua jornada. Você poderá revisar tudo depois.
+                  Como os profissionais devem se referir a você?
                 </p>
               </div>
 
@@ -209,14 +229,54 @@ export const WelcomePatientLogic = () => {
                 onSubmit={(event) => event.preventDefault()}
               />
 
+              <div className="grid gap-3">
+                <p className="text-xs font-bold uppercase tracking-wide text-foreground">Gênero</p>
+                <div className="flex flex-wrap gap-3">
+                  {genderOptions.map((option) => {
+                    const selected = selectedGender === option.value;
+
+                    return (
+                      <button
+                        aria-pressed={selected}
+                        className={cn(
+                          "h-12 rounded-full border px-5 text-base font-medium text-muted shadow-sm transition hover:border-primary hover:bg-primary-soft hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                          selected
+                            ? "border-primary bg-primary-soft text-primary"
+                            : "border-border bg-surface",
+                        )}
+                        key={option.value}
+                        onClick={() => {
+                          setSelectedGender(option.value);
+                          hook.setValue("gender", option.value, {
+                            shouldDirty: true,
+                            shouldTouch: true,
+                            shouldValidate: false,
+                          });
+                          hook.clearErrors("gender");
+                        }}
+                        type="button"
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <span
+                  className="block min-h-4 text-xs font-medium leading-4 text-danger"
+                  role="alert"
+                >
+                  {genderError}
+                </span>
+              </div>
+
               <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
                 <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-primary">
                   <LockKeyhole className="h-4 w-4" aria-hidden="true" />
                   Privacidade
                 </div>
                 <p className="mt-3 text-sm leading-6 text-muted">
-                  Seus dados são protegidos e nunca serão compartilhados com terceiros sem seu
-                  consentimento explícito.
+                  Seus dados são protegidos por criptografia de ponta a ponta e nunca serão
+                  compartilhados com terceiros sem seu consentimento explícito.
                 </p>
               </div>
             </div>
@@ -225,10 +285,7 @@ export const WelcomePatientLogic = () => {
           {step === 2 ? (
             <div className="grid gap-7">
               <div className="text-center">
-                <p className="text-sm font-semibold uppercase tracking-wide text-primary">
-                  Escolha do objetivo
-                </p>
-                <h1 className="mx-auto mt-2 max-w-[300px] text-3xl font-bold leading-tight text-foreground">
+                <h1 className="mx-auto max-w-[300px] text-3xl font-bold leading-tight text-foreground">
                   Como você prefere começar?
                 </h1>
               </div>
@@ -245,13 +302,15 @@ export const WelcomePatientLogic = () => {
                         selected ? "border-primary bg-primary-soft" : "border-border",
                       )}
                       key={option.value}
-                      onClick={() =>
+                      onClick={() => {
+                        setSelectedGoal(option.value);
                         hook.setValue("goal", option.value, {
                           shouldDirty: true,
                           shouldTouch: true,
-                          shouldValidate: true,
-                        })
-                      }
+                          shouldValidate: false,
+                        });
+                        hook.clearErrors("goal");
+                      }}
                       type="button"
                     >
                       <span>
@@ -285,11 +344,6 @@ export const WelcomePatientLogic = () => {
               >
                 {goalError}
               </span>
-
-              <InlineAlert variant="info">
-                Seu objetivo fica salvo no perfil do paciente e evita repetir o onboarding em outro
-                dispositivo.
-              </InlineAlert>
             </div>
           ) : null}
         </div>
@@ -334,13 +388,8 @@ export const WelcomePatientLogic = () => {
               Voltar
             </Button>
           ) : null}
-
-          <div className="flex items-center justify-center gap-2 text-center text-xs leading-5 text-subtle">
-            <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-            Progresso salvo somente após confirmação no backend.
-          </div>
         </footer>
       </section>
-    </PrivateTemplate>
+    </main>
   );
 };

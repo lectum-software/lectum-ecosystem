@@ -3,8 +3,15 @@ import type { patient_profile } from "@/api/generator/types";
 import { handleReq } from "@/api/handle";
 
 export type PatientOnboardingGoal = "encontrar_psicologo" | "conhecer_comunidade";
+export type PatientOnboardingGender =
+  | "feminino"
+  | "masculino"
+  | "nao_binario"
+  | "prefiro_nao_dizer";
 
 export type CompletePatientOnboardingPayload = {
+  name?: string;
+  gender?: PatientOnboardingGender;
   goal?: PatientOnboardingGoal;
   birthdate?: string;
   phone?: string;

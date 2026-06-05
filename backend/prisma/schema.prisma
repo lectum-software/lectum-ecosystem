@@ -97,6 +97,7 @@ model patient_profile {
   createdAt               DateTime  @default(now()) @map("created_at")
   user_id                 String    @unique
   goal                    String?
+  gender                  String?
   birthdate               DateTime?
   phone                   String?
   bio                     String?

@@ -31,6 +31,7 @@ export interface patient_profile {
   createdAt?: Date | null;
   user_id?: string | null;
   goal?: string | null;
+  gender?: string | null;
   birthdate?: Date | null;
   phone?: string | null;
   bio?: string | null;

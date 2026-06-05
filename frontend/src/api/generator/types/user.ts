@@ -7,6 +7,7 @@ export type patient_profile = {
   id?: string;
   user_id?: string;
   goal?: string | null;
+  gender?: string | null;
   birthdate?: string | null;
   phone?: string | null;
   bio?: string | null;

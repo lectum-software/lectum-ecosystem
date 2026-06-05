@@ -49,14 +49,28 @@ export class OnboardingRepository implements IOnboardingRepository {
     };
 
     if (props.b.goal !== undefined) data.goal = props.b.goal;
+    if (props.b.gender !== undefined) data.gender = props.b.gender;
     if (props.b.birthdate !== undefined) data.birthdate = props.b.birthdate;
     if (props.b.phone !== undefined) data.phone = props.b.phone;
 
-    return this.repository.update({
-      where: {
-        id: profile.id!,
-      },
-      data,
+    return prisma.$transaction(async (tx) => {
+      if (props.b.name !== undefined) {
+        await tx.user.update({
+          where: {
+            id: props.auth.id!,
+          },
+          data: {
+            name: props.b.name.trim(),
+          },
+        });
+      }
+
+      return tx.patient_profile.update({
+        where: {
+          id: profile.id!,
+        },
+        data,
+      });
     });
   }
 }

@@ -1,39 +1,27 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 import { type Field, useFormList } from "@/hooks/form";
 
 export const patientOnboardingGoals = ["encontrar_psicologo", "conhecer_comunidade"] as const;
-
-const optionalDate = z
-  .string()
-  .nullable()
-  .optional()
-  .refine((value) => {
-    if (!value) return true;
-
-    const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) return false;
-
-    return parsed <= new Date();
-  }, "Informe uma data de nascimento válida");
-
-const optionalPhone = z
-  .string()
-  .optional()
-  .refine(
-    (value) => {
-      if (!value) return true;
-      if (/^\d{10,11}$/.test(value)) return true;
-
-      return value.startsWith("55") && /^\d{12,13}$/.test(value);
-    },
-    {
-      message: "Informe um telefone com DDD",
-    },
-  );
+export const patientOnboardingGenders = [
+  "feminino",
+  "masculino",
+  "nao_binario",
+  "prefiro_nao_dizer",
+] as const;
 
 export const patientOnboardingSchema = z.object({
-  birthdate: optionalDate,
-  phone: optionalPhone,
+  name: z
+    .string()
+    .trim()
+    .min(2, "Informe seu nome e sobrenome")
+    .max(120, "Use no máximo 120 caracteres"),
+  gender: z
+    .enum(patientOnboardingGenders)
+    .nullable()
+    .optional()
+    .refine((value) => Boolean(value), {
+      message: "Escolha seu gênero ou prefira não dizer",
+    }),
   goal: z
     .enum(patientOnboardingGoals)
     .nullable()
@@ -45,11 +33,34 @@ export const patientOnboardingSchema = z.object({
 
 export type PatientOnboardingForm = z.infer<typeof patientOnboardingSchema>;
 
+export const genderOptions = [
+  {
+    value: "feminino",
+    label: "Feminino",
+  },
+  {
+    value: "masculino",
+    label: "Masculino",
+  },
+  {
+    value: "nao_binario",
+    label: "Não-binário",
+  },
+  {
+    value: "prefiro_nao_dizer",
+    label: "Prefiro não dizer",
+  },
+] satisfies Array<{
+  value: (typeof patientOnboardingGenders)[number];
+  label: string;
+}>;
+
 export const goalOptions = [
   {
     value: "encontrar_psicologo",
     title: "Escolher um psicólogo",
-    description: "Vá direto ao ponto e encontre um profissional para sua primeira sessão.",
+    description:
+      "Vá direto ao ponto e encontre um profissional para a sua primeira sessão hoje mesmo.",
   },
   {
     value: "conhecer_comunidade",
@@ -64,27 +75,22 @@ export const goalOptions = [
 
 const fields = [
   {
-    name: "birthdate",
-    field: "calendar",
-    label: "Data de nascimento",
-    description: "Opcional, mas ajuda a personalizar sua experiência.",
-  },
-  {
-    name: "phone",
-    field: "phone",
-    label: "Telefone",
-    description: "Opcional. Use DDD; guardaremos em formato seguro no perfil.",
-    placeholder: "(00) 00000-0000",
+    name: "name",
+    field: "input",
+    label: "Nome e sobrenome",
+    placeholder: "Como você gostaria de ser chamado?",
+    autoComplete: "name",
+    required: true,
   },
 ] satisfies Field<PatientOnboardingForm>[];
 
-export const useForm = () => {
+export const useForm = (initialName = "") => {
   return useFormList<PatientOnboardingForm>({
     fields,
     schema: patientOnboardingSchema,
     defaultValues: {
-      birthdate: null,
-      phone: "",
+      name: initialName,
+      gender: null,
       goal: null,
     },
   });

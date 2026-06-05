@@ -141,6 +141,7 @@ Quando construído: módulo de audiência próprio (ex.: `backend/src/modules/ma
 |---|---|---|
 | `user_id` | `String @unique` | FK `user`, cascade |
 | `goal` | `String?` | objetivo escolhido no onboarding: `"encontrar_psicologo" \| "conhecer_comunidade"` (fluxograma 19.2) |
+| `gender` | `String?` | preferência informada no onboarding: `"feminino" \| "masculino" \| "nao_binario" \| "prefiro_nao_dizer"` |
 | `birthdate` | `DateTime?` | "Informações Pessoais" |
 | `phone` | `String?` | E.164; opcional |
 | `bio` | `String?` | curto |

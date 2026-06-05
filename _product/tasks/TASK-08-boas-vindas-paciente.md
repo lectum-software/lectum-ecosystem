@@ -41,7 +41,7 @@ Usa o `patient_profile` da TASK-07. Campos relevantes (ver `DATA-MODEL.md`): `go
 Endpoints a criar (privados, módulo `private/patient`, padrão controller/service/repository de `ARCHITECTURE.md`):
 
 - **`GET /api/private/patient/profile`** — retorna o `patient_profile` do `req.auth`, incluindo `onboarding_completed_at` (para o frontend decidir se mostra o onboarding). Cria/garante o profile se faltar.
-- **`PUT /api/private/patient/onboarding`** — body `{ goal?, birthdate?, phone? }`; grava os campos e seta `onboarding_completed_at=now`. Idempotente: se já concluído, retorna o estado atual sem erro.
+- **`PUT /api/private/patient/onboarding`** — body `{ name?, gender?, goal?, birthdate?, phone? }`; grava os campos aplicáveis e seta `onboarding_completed_at=now`. Idempotente: se já concluído, retorna o estado atual sem erro.
 
 Ambos exigem `Authorization: Bearer` + `x-device` (middleware `_auth`) e devem validar `req.auth.role === "paciente"`.
 
@@ -64,8 +64,8 @@ Rotas esperadas:
 
 Implementação esperada:
 
-- Fluxo em etapas (carrossel) com voltar/avançar, progresso e conclusão, refletindo as 3 telas + "Informações Pessoais" + "Escolha do Objetivo".
-- Campos de informações pessoais e objetivo via fundação da TASK-02 (controllers: input, calendar/date, phone, select/cards de objetivo).
+- Fluxo em etapas (carrossel) com voltar/avançar, progresso e conclusão, refletindo as 3 telas + dados de identificação e objetivo.
+- Campos de identificação e objetivo via fundação da TASK-02 (controllers: input e cards/chips controlados por React Hook Form/Zod).
 - Ao concluir, chamar o caller de `PUT /api/private/patient/onboarding`; só então redirecionar para a Home privada do paciente.
 - Na entrada, consultar `GET /api/private/patient/profile`: se `onboarding_completed_at` já preenchido, pular o onboarding e ir para a Home.
 - Não persistir conclusão apenas em localStorage/redux; a verdade é o backend.
@@ -147,10 +147,10 @@ Regras anti-recriação específicas:
 
 - Builder/Quick Copy nao estava disponivel como ferramenta direta nesta sessao; foram usadas as imagens locais `_product/proto/Boas-vindas Paciente - 1.jpg`, `_product/proto/Boas-vindas Paciente - 2.jpg` e `_product/proto/Boas-vindas Paciente - 3.jpg`.
 - Implementado `/patient/welcome` com UI mobile-first em 3 etapas: acolhimento, informacoes pessoais e escolha do objetivo.
-- Campos de informacoes pessoais usam a fundacao da TASK-02 (React Hook Form, Zod, controllers `calendar` e `phone`); objetivo usa cards controlados pelo mesmo form.
+- Campos de identificacao usam a fundacao da TASK-02 (React Hook Form, Zod e controller `input`); genero e objetivo usam chips/cards controlados pelo mesmo form.
 - Criados `GET /api/private/patient/profile` e `PUT /api/private/patient/onboarding` em `backend/src/modules/api/private/patient/*`, sem criar modelo novo.
 - Criado `requireRole("paciente")` fail-closed e aplicado no mount de `/api/private/patient/*` em `write.ts`, com reforco redundante nos services.
-- A conclusao persiste `goal` e `onboarding_completed_at` em `patient_profile`; o `PUT` e idempotente quando o onboarding ja esta concluido.
+- A conclusao persiste `gender`, `goal` e `onboarding_completed_at` em `patient_profile`, e atualiza `user.name`; o `PUT` e idempotente quando o onboarding ja esta concluido.
 - Redirecionamento de pacientes apos login/verificacao passa por `/patient/welcome`; se o profile ja estiver concluido, a rota pula para `/dashboard`.
 - Como a TASK-12 ainda nao existe formalmente, foi usado o `PrivateTemplate` atual como shell minimo; a substituicao pelo shell privado mobile ficou registrada no ADR.
 - ADR registrado: `adrs/0013-onboarding-boas-vindas-paciente.md`.
@@ -162,6 +162,16 @@ Regras anti-recriação específicas:
   - `pnpm check`
   - browser local em `http://localhost:3000/patient/welcome`
 - A validacao criou usuarios temporarios por endpoints reais, testou profile, guard `403` para papel divergente, fluxo completo no browser, skip de onboarding ja concluido e removeu os registros ao final sem deixar dado fake permanente.
+
+## Ajuste visual solicitado em 2026-06-04
+
+- Removidos o cabecalho privado do onboarding e as copias auxiliares de etapa/progresso salvo.
+- Etapa 1 passou a usar o asset anexado `frontend/public/images/patient-welcome-hug.png` com `next/image` e a copia de acolhimento solicitada.
+- Etapa 2 removeu data de nascimento/telefone da interface e passou a coletar nome e genero, alinhado ao prototipo `Boas-vindas Paciente - 2`.
+- Etapa 3 removeu copias auxiliares e ajustou a descricao do objetivo "Escolher um psicólogo".
+- O backend passou a aceitar `name` e `gender` no `PUT /api/private/patient/onboarding`; `gender` foi adicionado a `patient_profile`.
+- Migration aplicada durante a execucao: `20260605001000_add_patient_profile_gender`.
+- Validacao adicional executada em browser local (`http://localhost:3000/patient/welcome`) com usuario temporario criado por endpoint real, confirmando as copias removidas/alteradas, persistencia de `gender`, `goal`, `onboarding_completed_at` e atualizacao de `user.name`; o usuario temporario foi removido do banco ao final.
 
 ## Validação mínima
 

@@ -58,7 +58,9 @@
     "terms_accepted": "termos",
     "goal": "objetivo",
     "birthdate": "data de nascimento",
-    "phone": "telefone"
+    "phone": "telefone",
+    "name": "nome",
+    "gender": "gênero"
   },
   "notification": {
     "test": {
