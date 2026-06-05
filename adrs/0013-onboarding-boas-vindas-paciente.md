@@ -100,3 +100,40 @@ imagens locais foram usadas como fallback auditavel.
 - Substituir o shell minimo pelo shell privado mobile da TASK-12 quando ele existir.
 - Redirecionar para a Home/busca/comunidade real quando as tasks privadas do paciente
   forem implementadas.
+
+## Atualização em 2026-06-05: saudação nominal e remoção da etapa de identificação
+
+### Contexto
+
+Produto solicitou que a primeira tela de boas-vindas passasse a usar o nome já capturado
+no cadastro/login (`[NOME], bem-vindo à Lectum`) e que a segunda tela do fluxo em três
+telas fosse removida.
+
+### Decisão
+
+- O frontend de `/patient/welcome` usa `state.user.name` como fonte da saudação nominal,
+  sem criar endpoint novo nem duplicar dado de perfil.
+- O onboarding visual passa de 3 para 2 etapas: acolhimento nominal e escolha do objetivo.
+- A etapa de identificação (`name` + `gender`) deixa de ser exibida e enviada pelo
+  frontend. O nome passa a ser responsabilidade do cadastro/autenticação; o endpoint
+  `PUT /api/private/patient/onboarding` permanece compatível com `name`/`gender`
+  opcionais para não quebrar contratos existentes.
+- A conclusão continua dependendo do `PUT /api/private/patient/onboarding` real, com
+  `goal` e `onboarding_completed_at` persistidos no `patient_profile`.
+
+### Consequências
+
+- O paciente tem um fluxo mais curto, sem redigitar nome após o cadastro.
+- `patient_profile.gender` pode ficar nulo para novos fluxos que pularem a antiga etapa;
+  se gênero voltar a ser necessário, deve reaparecer em uma task própria de perfil.
+- O progresso visual e os estados do frontend refletem duas etapas, evitando a antiga
+  tela 2 de 3.
+
+### Validação
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `NODE_OPTIONS=--max-old-space-size=4096 pnpm check`
+- Browser local mobile em `/patient/welcome` com usuário temporário real validou saudação
+  nominal, remoção de "Conte-nos sobre você"/nome/gênero/privacidade e etapa final direta
+  de objetivo. O usuário temporário foi removido do banco ao final.

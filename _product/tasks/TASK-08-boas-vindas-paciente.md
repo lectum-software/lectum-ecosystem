@@ -189,3 +189,25 @@ Regras anti-recriação específicas:
 ## Notas para executor
 
 O onboarding só termina quando o backend confirma. Se o shell privado (TASK-12) ainda não existir, use um container mínimo e registre a dependência. Concluir em commit próprio.
+
+## Ajuste posterior em 2026-06-05: saudacao nominal e fluxo em 2 telas
+
+- Pedido direto de produto: a primeira tela de `/patient/welcome` passou a exibir
+  `[NOME], bem-vindo à Lectum`, usando `user.name` já capturado no cadastro/login real.
+- A tela intermediária "Conte-nos sobre você" foi removida do fluxo; o onboarding agora
+  tem 2 etapas: acolhimento nominal e escolha do objetivo.
+- O progresso visual foi reduzido de 3 para 2 barras, e a seleção de objetivo continua
+  concluindo o onboarding pelo `PUT /api/private/patient/onboarding` real.
+- O frontend deixou de reenviar `name`/`gender` nesta etapa; o nome canônico vem do
+  cadastro do usuário, e o backend permanece compatível com campos opcionais legados.
+
+### Validação do ajuste
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `NODE_OPTIONS=--max-old-space-size=4096 pnpm check`
+- Browser local em `http://localhost:3000/patient/welcome`, viewport mobile 390x884,
+  com usuário temporário criado via endpoint real, validou a saudação `Tulio Codex,
+  bem-vindo à Lectum`, ausência da tela "Conte-nos sobre você" e etapa final direta
+  "Como você prefere começar?".
+- O usuário temporário da validação foi removido do banco ao final.
