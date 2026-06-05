@@ -78,3 +78,36 @@ credenciais reais.
 - Smoke local com `next start --port 3012`: rota
   `/app/professional/billing/plans` retornou HTTP 200 com cookie de sessao de
   smoke.
+
+## Atualização em 2026-06-05: planos sem cabeçalho privado
+
+### Contexto
+
+Produto solicitou remover o cabeçalho da página de planos e retirar o bloco visual de
+`Pagamento seguro`, mantendo a tela focada na escolha entre os planos.
+
+### Decisão
+
+- `PrivateTemplate` agora aceita `showHeader`, com valor padrão `true`, para permitir
+  páginas privadas sem cabeçalho sem criar outro shell/template.
+- A rota `/app/professional/billing/plans` usa `showHeader={false}`.
+- O bloco informativo `Pagamento seguro` foi removido da página de planos. A regra de
+  checkout honesto permanece no CTA do plano profissional: sem TASK-32/credenciais reais,
+  o clique informa pendência e não cria cobrança nem assinatura.
+
+### Consequências
+
+- Demais páginas privadas continuam exibindo o cabeçalho porque o padrão do template não
+  mudou.
+- A seleção de planos fica visualmente mais próxima do fluxo dedicado pós-cadastro.
+- A remoção é apenas visual; contratos reais de planos e assinatura atual permanecem os
+  mesmos.
+
+### Validação
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `NODE_OPTIONS=--max-old-space-size=4096 pnpm check`
+- Browser local com usuário psicólogo temporário validou ausência de `header`,
+  `Dashboard`, `Sair` e do bloco `Pagamento seguro`. O usuário temporário foi removido
+  do banco ao final.

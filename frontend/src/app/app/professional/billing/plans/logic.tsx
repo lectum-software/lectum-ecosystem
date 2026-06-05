@@ -1,15 +1,6 @@
 ﻿"use client";
 
-import {
-  ArrowRight,
-  BadgeCheck,
-  Banknote,
-  CheckCircle2,
-  CreditCard,
-  Loader2,
-  ShieldCheck,
-  XCircle,
-} from "lucide-react";
+import { ArrowRight, BadgeCheck, Banknote, CheckCircle2, XCircle } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
@@ -206,7 +197,7 @@ export const PsychologistBillingPlansLogic = () => {
   const currentSlug = current.data?.current?.plan?.slug || null;
 
   return (
-    <PrivateTemplate>
+    <PrivateTemplate showHeader={false}>
       <section className="mx-auto grid w-full max-w-[430px] gap-6 md:max-w-5xl">
         <div className="grid justify-items-center gap-4 text-center">
           <span className="grid h-16 w-16 place-items-center rounded-[var(--lectum-card-radius)] bg-primary-soft text-primary shadow-[var(--lectum-shadow-soft)]">
@@ -247,25 +238,6 @@ export const PsychologistBillingPlansLogic = () => {
             ))}
           </div>
         ) : null}
-
-        <InlineAlert variant="info" title="Pagamento seguro">
-          <span className="inline-flex flex-wrap items-center gap-3">
-            <span className="inline-flex items-center gap-1.5">
-              <CreditCard className="h-4 w-4" aria-hidden />
-              Cartão via Mercado Pago
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <ShieldCheck className="h-4 w-4" aria-hidden />
-              Sem simular cobrança
-            </span>
-            {plans.isFetching || current.isFetching ? (
-              <span className="inline-flex items-center gap-1.5">
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-                Atualizando
-              </span>
-            ) : null}
-          </span>
-        </InlineAlert>
       </section>
     </PrivateTemplate>
   );

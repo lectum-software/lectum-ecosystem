@@ -183,3 +183,25 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 - Checkout real do Plano Profissional permanece na TASK-32 e depende de credenciais reais do Mercado Pago; nenhum pagamento ou ativacao de assinatura foi simulado.
 - A etapa CFP/CRP continua com as pendencias ja registradas em TASK-10/TASK-11.
+
+## Ajuste visual solicitado em 2026-06-05: tela sem cabeçalho e sem aviso de pagamento
+
+- Pedido direto de produto: remover o cabeçalho privado da página de planos e remover o
+  bloco informativo `Pagamento seguro` do rodapé da listagem.
+- `PrivateTemplate` passou a aceitar `showHeader={false}`, mantendo `NotificationManager`
+  e o `PageShell` sem criar template paralelo.
+- `/app/professional/billing/plans` usa o template sem cabeçalho e continua consumindo os
+  endpoints reais de planos/assinatura atual.
+- O aviso `Pagamento seguro`, `Cartão via Mercado Pago` e `Sem simular cobrança` foi
+  removido apenas da UI; a regra de não simular checkout permanece no CTA do plano
+  profissional.
+
+### Validação do ajuste
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `NODE_OPTIONS=--max-old-space-size=4096 pnpm check`
+- Browser local em `/app/professional/billing/plans`, com usuário psicólogo temporário
+  criado por endpoint real, validou `headerCount=0` e ausência dos textos `Dashboard`,
+  `Sair`, `Pagamento seguro`, `Cartão via Mercado Pago` e `Sem simular cobrança`.
+- O usuário temporário da validação foi removido do banco ao final.
