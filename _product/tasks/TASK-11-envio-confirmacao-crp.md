@@ -8,7 +8,7 @@
 | Prioridade | P0 |
 | Esforço | L |
 | Fase | Psicólogo |
-| Status | Pending |
+| Status | Blocked |
 | Dependências | TASK-02, TASK-03, TASK-10 |
 | ADR alvo | ADR de documentos profissionais e storage |
 
@@ -166,3 +166,46 @@ Regras anti-recriação específicas:
 ## Notas para executor
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
+
+## Execução bloqueada em 2026-06-05
+
+- Dependências documentais verificadas: TASK-02, TASK-03 e TASK-09 estão concluídas; a
+  TASK-10 permanece `Blocked` porque a consulta CFP automática não possui fonte/API
+  autorizada, mas registrou o encaminhamento operacional para validação manual por CRP.
+- Referências visuais consultadas pelas imagens locais:
+  - `_product/proto/Confirmação de Envio de CRP - Layout Ajustado.jpg`;
+  - `_product/proto/Confirmação de Envio de CRP - Layout Ajustado-1.jpg`;
+  - `_product/proto/Confirmação de Envio de CRP - Layout Ajustado-2.jpg`;
+  - `_product/proto/Confirmação de Envio de CRP - Layout Ajustado-3.jpg`.
+- Builder/Quick Copy não está exposto como ferramenta direta neste ambiente; por isso foi
+  usado o fallback auditável das imagens locais.
+- Bloqueio externo confirmado: a configuração atual de storage expõe apenas
+  `CLOUDFLARE_R2_PUBLIC_BUCKET_NAME=public`. Não há env/bucket privado documentado, como
+  `CLOUDFLARE_R2_PRIVATE_BUCKET_NAME`, nem política privada confirmada para documentos CRP.
+- A implementação existente em `backend/src/config/multer/storage.ts` grava no
+  `PUBLIC_BUCKET`, portanto não pode ser reutilizada para documentos profissionais sem
+  violar a regra de privacidade da TASK-11 e do ADR-0006.
+- A implementação de `POST /api/private/psychologist/documents`,
+  `GET /api/private/psychologist/documents/status`,
+  `POST /api/private/psychologist/documents/resubmit`, schema `professional_document` e
+  upload real foi interrompida antes de qualquer endpoint, migration, chamada R2, mock,
+  URL temporária ou dado inventado.
+- `psychologist_profile.crp_status` deve permanecer `"pendente"`/estado atual e
+  `psychologist_profile.published` não deve ser ativado sem análise profissional real.
+- ADR criado: `adrs/0017-bloqueio-storage-privado-crp.md`.
+- Pendência operacional para retomar: provisionar e informar bucket privado Cloudflare R2
+  para CRP, credenciais com permissão adequada e política de acesso privada. Só depois
+  implementar upload, persistência de `file_key` e status manual.
+
+## Validação executada
+
+- Revisão manual de TASK-11, TASK-10, `_product/decisions.md`,
+  `DATA-MODEL.md`, `adrs/0006-integracoes-externas-e-decisoes-pendentes.md` e
+  configuração `backend/src/config/multer/*`.
+- `git diff --check`
+
+## Observação sobre critérios de aceite
+
+Os critérios acima permanecem sem marcação completa porque a task está formalmente
+bloqueada por requisito externo de storage privado. Não houve implementação de tela,
+endpoint, schema, migration, upload, mock ou URL temporária.

@@ -64,6 +64,15 @@ Pendências:
 
 Impacto nas tasks: TASK-11, TASK-18, TASK-21, TASK-24.
 
+Execução TASK-11 em 2026-06-05:
+
+- Bloqueio confirmado e formalizado em `adrs/0017-bloqueio-storage-privado-crp.md`.
+- A configuração atual contém apenas `CLOUDFLARE_R2_PUBLIC_BUCKET_NAME=public`; documentos
+  CRP não podem ser armazenados nesse bucket público.
+- Antes de retomar TASK-11, provisionar bucket/política privada e env específico para
+  documentos profissionais, por exemplo `CLOUDFLARE_R2_PRIVATE_BUCKET_NAME`, mantendo a
+  regra de persistir somente `file_key`.
+
 ## WhatsApp e verificação de telefone
 
 Status: Decidido para MVP.

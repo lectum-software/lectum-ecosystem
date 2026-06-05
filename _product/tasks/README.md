@@ -63,7 +63,7 @@ Quando uma task citar artefato `figma-design-frame-*.html`, leia como nome virtu
 | 08 | [TASK-08 - Boas-vindas do paciente](TASK-08-boas-vindas-paciente.md) | Completed | 07 |
 | 09 | [TASK-09 - Cadastro inicial de psicólogo](TASK-09-cadastro-inicial-psicologo.md) | Completed | 02, 04, 06 |
 | 10 | [TASK-10 - Consulta CFP e resultado](TASK-10-consulta-cfp-resultado.md) | Blocked | 02, 03, 09 |
-| 11 | [TASK-11 - Envio e confirmação de CRP](TASK-11-envio-confirmacao-crp.md) | Pending | 02, 03, 10 |
+| 11 | [TASK-11 - Envio e confirmação de CRP](TASK-11-envio-confirmacao-crp.md) | Blocked | 02, 03, 10 |
 | 12 | [TASK-12 - Shell privado mobile](TASK-12-shell-privado-mobile.md) | Pending | 06, 08 ou 11 |
 | 13 | [TASK-13 - Psicólogos: listagem e filtros](TASK-13-psicologos-listagem-filtros.md) | Pending | 02, 12 |
 | 14 | [TASK-14 - Favoritos e seguindo](TASK-14-favoritos-seguindo.md) | Pending | 13 |
