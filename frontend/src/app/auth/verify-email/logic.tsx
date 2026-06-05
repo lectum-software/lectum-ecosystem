@@ -118,7 +118,6 @@ export const VerifyEmailLogic = () => {
   const storedUser = useAppSelector((state) => state.user);
   const [apiError, setApiError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
-  const [codeSent, setCodeSent] = useState(false);
   const [alreadyConfirmed, setAlreadyConfirmed] = useState(false);
   const initialRequestSent = useRef(false);
   const sendMode = useRef<"initial" | "manual">("initial");
@@ -131,7 +130,6 @@ export const VerifyEmailLogic = () => {
       sendConfirmCode: {
         onSuccess: () => {
           setApiError(null);
-          setCodeSent(true);
           setCooldown(RESEND_COOLDOWN_SECONDS);
 
           if (sendMode.current === "manual") {
@@ -282,12 +280,6 @@ export const VerifyEmailLogic = () => {
             <LoadingState label="Enviando código de confirmação" />
           ) : null}
         </div>
-
-        {codeSent && !apiError ? (
-          <InlineAlert className="mt-6" variant="success">
-            Código enviado. Confira sua caixa de entrada e a pasta de spam.
-          </InlineAlert>
-        ) : null}
 
         <Form className="mt-8 grid gap-3" {...formProps} onSubmit={hook.handleSubmit(handleSubmit)}>
           {apiError ? (
