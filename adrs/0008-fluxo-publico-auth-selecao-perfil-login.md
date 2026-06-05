@@ -59,3 +59,28 @@ conforme ADR-0002.
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - Browser local nas rotas `/auth/profile-selection` e `/auth/login`
+
+## Atualizacao em 2026-06-05: seletor de conta no Google OAuth
+
+### Contexto
+
+Ao clicar em Google no login, cadastro de paciente ou cadastro de psicologo, o navegador
+reaproveitava automaticamente a sessao Google ativa. Isso impedia o usuario de revisar
+a conta ou escolher outro e-mail antes de concluir o OAuth.
+
+### Decisao
+
+- O endpoint real `GET /api/public/google/login/:deviceId` passa a enviar
+  `prompt: "select_account"` para o Passport Google OAuth.
+- A decisao fica no backend porque os tres fluxos publicos usam o mesmo endpoint:
+  login, cadastro de paciente e cadastro de psicologo.
+- O fluxo continua preservando `role`, `terms_accepted` e `terms_version` via `state`;
+  nao foi criado endpoint, sessao ou autenticacao paralela.
+
+### Consequencias
+
+- O Google deve abrir o seletor/confirmacao de conta mesmo quando ja houver uma conta
+  Google autenticada no navegador.
+- O usuario pode trocar o e-mail antes de permitir o acesso ao perfil/e-mail Google.
+- O comportamento e um pouco menos automatico para quem tem apenas uma conta ativa, mas
+  evita cadastro/login acidental com e-mail errado.

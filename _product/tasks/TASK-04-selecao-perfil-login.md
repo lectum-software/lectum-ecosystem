@@ -192,3 +192,23 @@ Regras anti-recriação específicas:
 ## Notas para executor
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
+
+## Ajuste posterior em 2026-06-05: confirmação de conta Google
+
+- Pedido direto de produto: ao clicar em Google no login, cadastro de paciente ou
+  cadastro de psicólogo, o usuário deve poder confirmar/trocar a conta Google em vez de
+  conectar automaticamente com a sessão ativa do navegador.
+- O ajuste foi centralizado no endpoint real `GET /api/public/google/login/:deviceId`,
+  adicionando `prompt: "select_account"` ao Passport Google OAuth.
+- Login, cadastro de paciente e cadastro de psicólogo continuam usando o mesmo endpoint
+  real e preservam `role`, `terms_accepted` e `terms_version` via `state`.
+- Nenhum endpoint paralelo, mock, store paralela ou dado fake foi criado.
+
+### Validação do ajuste
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`
+- Validação local do redirect OAuth em
+  `GET /api/public/google/login/:deviceId` confirmando `prompt=select_account` na URL do
+  Google.

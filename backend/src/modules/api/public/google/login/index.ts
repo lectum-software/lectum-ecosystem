@@ -13,6 +13,9 @@ session(routes);
 //Routes
 routes.get("/:id", (req, res, next) => {
   passport.authenticate("google", {
+    // Forca o seletor/confirmacao de conta do Google mesmo quando ha uma
+    // sessao Google ativa no navegador, permitindo trocar o e-mail antes do OAuth.
+    prompt: "select_account",
     scope: ["profile", "email"],
     state: JSON.stringify({
       device_id: req.params.id,
