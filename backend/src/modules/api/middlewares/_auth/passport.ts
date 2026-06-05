@@ -92,6 +92,9 @@ passport.use(
             type: 3,
           });
 
+        const googleName = profile.displayName?.trim();
+        const googleAvatar = profile.photos?.[0]?.value;
+
         const repo = new LoginRepository(device_id, [
           { model: "company", columns: ["ai_api_key"] },
         ]);
@@ -100,15 +103,37 @@ passport.use(
         if (!user) {
           user = await repo.store({
             b: {
-              name: profile.displayName,
+              name: googleName || email,
               email,
-              avatar: profile.photos?.[0]?.value,
+              avatar: googleAvatar,
               provider: "google",
               role,
               terms_accepted: termsAccepted,
               terms_version: termsVersion,
             },
           });
+        } else {
+          const profileUpdate: { name?: string; avatar?: string | null; provider?: string } = {};
+
+          if (googleName && (!user.name || user.provider === "google")) {
+            profileUpdate.name = googleName;
+          }
+
+          if (googleAvatar && (!user.avatar || user.provider === "google")) {
+            profileUpdate.avatar = googleAvatar;
+          }
+
+          if (user.provider !== "google") {
+            profileUpdate.provider = "google";
+          }
+
+          if (Object.keys(profileUpdate).length > 0 && user.id) {
+            user = await repo.update({
+              p: { id: user.id },
+              b: profileUpdate,
+              auth: user,
+            });
+          }
         }
 
         if (!user)

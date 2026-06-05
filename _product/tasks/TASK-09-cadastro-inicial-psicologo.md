@@ -231,3 +231,19 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Browser local via Chrome headless em
   `http://localhost:3000/auth/register/psychologist`, viewport mobile, retornou 200 e
   gerou captura visual de conferência.
+
+## Ajuste posterior em 2026-06-05: captura de identidade Google
+
+- Pedido direto de produto: cadastros de psicologo e paciente devem capturar o nome do
+  usuario; quando feitos com Google, tambem devem capturar a foto de perfil.
+- O cadastro de psicologo por e-mail ja preservava `name` e `password_confirm`; o fluxo
+  foi mantido.
+- O callback Google agora garante persistencia de `user.name` e `user.avatar` a partir do
+  perfil Google para novos usuarios e atualizacao controlada para usuarios existentes.
+- Nenhum endpoint paralelo, mock ou novo modelo foi criado.
+
+### Validacao do ajuste
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `NODE_OPTIONS=--max-old-space-size=4096 pnpm check`

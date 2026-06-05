@@ -74,3 +74,49 @@ como ferramenta direta nesta sessao.
 - Revisar e substituir o texto legal pendente nas tasks de LGPD/operacao.
 - Quando TASK-08 criar o onboarding, atualizar o destino final do paciente apos
   confirmacao de e-mail se necessario.
+
+## Atualizacao em 2026-06-05: nome no cadastro e identidade Google
+
+### Contexto
+
+Pedido direto de produto solicitou que o cadastro de paciente por e-mail voltasse a
+capturar nome completo e confirmacao de senha, e que os cadastros por e-mail/Google de
+paciente e psicologo preservassem dados de identidade para uso posterior. Com Google, a
+foto de perfil tambem precisa ser persistida quando disponivel.
+
+### Decisao
+
+- `/auth/register/patient` mantem a UI mobile-first atual e volta a enviar
+  `name` informado pelo usuario e `password_confirm` real para `POST /api/public/user/store`.
+- O schema Zod do paciente volta a validar nome completo, senha forte e igualdade entre
+  senha/confirmacao.
+- O cadastro por e-mail de paciente e psicologo continua usando o mesmo endpoint real
+  `user/store`, que ja persiste `user.name`.
+- O Google OAuth continua usando o endpoint real existente. Novos usuarios Google sao
+  criados com `name` vindo de `profile.displayName` e `avatar` vindo de
+  `profile.photos[0].value`.
+- Para usuarios existentes que autenticarem com Google, o backend preenche/atualiza os
+  dados de identidade Google de forma controlada: nome quando ausente ou quando a conta
+  ja e Google, avatar quando ausente ou quando a conta ja e Google, e `provider="google"`
+  para registrar o vinculo OAuth.
+
+### Consequencias
+
+- Nome de paciente nao e mais derivado do e-mail; passa a ser dado informado pelo usuario.
+- A confirmacao de senha volta a proteger erro de digitacao no cadastro de paciente.
+- A foto Google fica disponivel em `user.avatar` para uso futuro em perfis, comunidades
+  e navegacao privada, sem criar modelo ou endpoint paralelo.
+- Nao foi criada dependencia nova nem alteracao de schema.
+
+### Validacao
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `NODE_OPTIONS=--max-old-space-size=4096 pnpm check`
+- Browser local em `http://localhost:3000/auth/register/patient`, viewport mobile,
+  validou visualmente os campos Nome completo e Confirmar senha.
+- Cadastro real por `POST /api/public/user/store` validou persistencia do nome informado,
+  `role="paciente"`, `patient_profile` e aceite de termos; o usuario temporario foi
+  removido ao final.

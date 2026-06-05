@@ -84,3 +84,37 @@ a conta ou escolher outro e-mail antes de concluir o OAuth.
 - O usuario pode trocar o e-mail antes de permitir o acesso ao perfil/e-mail Google.
 - O comportamento e um pouco menos automatico para quem tem apenas uma conta ativa, mas
   evita cadastro/login acidental com e-mail errado.
+
+## Atualizacao em 2026-06-05: captura de nome e foto no Google OAuth
+
+### Contexto
+
+Os fluxos de login/cadastro com Google precisam disponibilizar nome e foto de perfil do
+usuario para uso posterior no produto, sem criar autenticacao paralela nem endpoint novo.
+
+### Decisao
+
+- O callback Google continua usando `GET /api/public/google/login/:deviceId` -> callback
+  -> `/api/public/google/me`.
+- Novos usuarios Google sao criados com `user.name` a partir de `profile.displayName` e
+  `user.avatar` a partir de `profile.photos[0].value`.
+- Usuarios existentes autenticados por Google recebem atualizacao controlada de
+  identidade: `name` quando ausente ou quando o provider ja e Google, `avatar` quando
+  ausente ou quando o provider ja e Google, e `provider="google"` para registrar o vinculo.
+- O `role` salvo no banco continua sendo a fonte de verdade para usuarios existentes;
+  o `state` de role segue valendo apenas para criacao de novo usuario.
+
+### Consequencias
+
+- Login, cadastro de paciente e cadastro de psicologo passam a compartilhar a mesma
+  captura de nome/foto Google.
+- Dados de perfil basicos ficam disponiveis para tasks futuras sem schema novo.
+- A escolha de conta Google com `prompt="select_account"` permanece ativa.
+
+### Validacao
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `NODE_OPTIONS=--max-old-space-size=4096 pnpm check`
+- Redirect OAuth local continua incluindo `prompt=select_account`; a persistencia de
+  nome/foto foi validada por typecheck/build do callback real, sem mockar perfil Google.

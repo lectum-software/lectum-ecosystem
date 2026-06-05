@@ -5,6 +5,9 @@ export interface IUpdateDTO {
     id: string;
   };
   b: {
+    name?: string;
+    avatar?: string | null;
+    provider?: string;
     password?: string;
     password_confirm?: string;
     confirmed?: boolean;

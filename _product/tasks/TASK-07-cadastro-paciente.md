@@ -178,3 +178,28 @@ Regras anti-recriação específicas:
 ## Notas para executor
 
 A adição de `user.role` afeta o redirecionamento por perfil da TASK-04 e a navegação da TASK-12 — mantenha o valor consistente. Concluir em commit próprio.
+
+## Ajuste posterior em 2026-06-05: nome e confirmacao no cadastro de paciente
+
+- Pedido direto de produto: no cadastro de paciente por e-mail, adicionar os campos
+  `Nome completo` e `Confirmar senha` na tela atual.
+- O formulario continua usando a fundacao da TASK-02, com Zod, React Hook Form,
+  `useFormList` e controllers.
+- O submit voltou a enviar `name` informado pelo usuario e `password_confirm` real para
+  `POST /api/public/user/store`; o nome nao e mais derivado do e-mail.
+- O cadastro Google de paciente continua sem exigir preenchimento dos campos de e-mail,
+  mas o backend passa a persistir nome e foto vindos do perfil Google quando disponiveis.
+- O rodape visual foi mantido sem metrica numerica sem fonte persistida.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `NODE_OPTIONS=--max-old-space-size=4096 pnpm check`
+- Browser local em `http://localhost:3000/auth/register/patient`, viewport mobile,
+  validou visualmente os campos Nome completo e Confirmar senha.
+- Cadastro real por `POST /api/public/user/store` com nome informado retornou
+  `name="Maria Teste Codex"`, `role="paciente"`, `patient_profile` e aceite de termos;
+  o usuario temporario foi removido ao final.

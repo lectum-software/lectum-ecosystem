@@ -1,18 +1,16 @@
 "use client";
 
-import { CheckCircle2, Loader2, ShieldCheck, UserPlus } from "lucide-react";
+import { ArrowRight, Loader2, ShieldCheck, Zap } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/api/callers/auth";
-import { AuthCard } from "@/components/ui/auth-card";
 import { DividerWithLabel } from "@/components/ui/divider-with-label";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { Logo } from "@/components/ui/logo";
 import { useUserSet } from "@/hooks/user-set";
 import { Button } from "@/registry/new-york-v4/ui/button";
-import { AuthTemplate } from "@/templates/auth";
 import { fingerprint } from "@/utils/fingerprint";
 import { type RegisterPatientForm, TERMS_VERSION, useForm } from "./use-form";
 
@@ -103,10 +101,55 @@ export const RegisterPatientLogic = () => {
   };
 
   return (
-    <AuthTemplate>
-      <AuthCard
-        footer={
-          <span>
+    <main className="min-h-screen bg-background text-foreground">
+      <div className="mx-auto flex min-h-screen w-full max-w-[390px] flex-col px-4 py-8">
+        <section className="mt-5 overflow-hidden rounded-[var(--lectum-auth-radius)] border border-border bg-surface shadow-[var(--lectum-shadow)]">
+          <div className="border-b border-border px-6 py-8 text-center">
+            <Logo className="mx-auto w-[160px]" priority />
+          </div>
+
+          <div className="px-6 pb-7 pt-6">
+            <h1 className="text-center text-2xl font-bold leading-tight text-foreground">
+              Cadastre-se
+            </h1>
+
+            <Button
+              className="mt-6 h-[52px] w-full rounded-[var(--lectum-control-radius)] text-base"
+              disabled={isPending}
+              onClick={handleGoogleRegister}
+              type="button"
+              variant="outline"
+            >
+              {googlePending ? (
+                <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
+              ) : (
+                <Image src="/svg/google.svg" alt="Google" width={26} height={26} />
+              )}
+              {googlePending ? "Conectando com Google" : "Continuar com Google"}
+            </Button>
+
+            <DividerWithLabel className="my-6">ou e-mail</DividerWithLabel>
+
+            <Form className="grid gap-2" {...formProps} onSubmit={hook.handleSubmit(handleSubmit)}>
+              {apiError ? <InlineAlert variant="error">{apiError}</InlineAlert> : null}
+
+              <Button
+                className="mt-3 h-14 w-full rounded-[18px] text-base"
+                disabled={isPending}
+                type="submit"
+              >
+                {registerPatient.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                ) : null}
+                {registerPatient.isPending ? "Criando conta" : "Criar conta gratuita"}
+                {!registerPatient.isPending ? (
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                ) : null}
+              </Button>
+            </Form>
+          </div>
+
+          <div className="border-t border-border bg-surface-muted px-6 py-5 text-center text-sm text-muted">
             Já possui uma conta?{" "}
             <Link
               className="font-semibold text-primary hover:text-primary-hover"
@@ -114,77 +157,26 @@ export const RegisterPatientLogic = () => {
             >
               Fazer login
             </Link>
-          </span>
-        }
-      >
-        <div className="mb-7 grid justify-items-center text-center">
-          <Logo className="w-[200px]" priority />
-          <h1 className="mt-8 text-3xl font-bold leading-tight text-foreground">Cadastre-se</h1>
-          <p className="mt-2 max-w-[300px] text-sm leading-6 text-muted">
-            Crie sua conta gratuita de paciente para acessar a Lectum.
-          </p>
-        </div>
-
-        <Button
-          className="w-full"
-          disabled={isPending}
-          onClick={handleGoogleRegister}
-          type="button"
-          variant="outline"
-        >
-          {googlePending ? (
-            <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
-          ) : (
-            <Image src="/svg/google.svg" alt="Google" width={30} height={30} />
-          )}
-          {googlePending ? "Conectando com Google" : "Continuar com Google"}
-        </Button>
-
-        <p className="mt-3 text-center text-xs leading-5 text-muted">
-          Ao continuar com Google, você aceita os termos de uso e a política de privacidade. O texto
-          legal final ainda será revisado nas próximas etapas de LGPD.
-        </p>
-
-        <DividerWithLabel className="my-7">ou e-mail</DividerWithLabel>
-
-        <Form className="grid gap-2" {...formProps} onSubmit={hook.handleSubmit(handleSubmit)}>
-          {apiError ? <InlineAlert variant="error">{apiError}</InlineAlert> : null}
-
-          <div className="rounded-[var(--lectum-card-radius)] border border-border bg-primary-soft/50 p-4 text-sm leading-6 text-muted">
-            <div className="flex items-center gap-2 font-semibold text-foreground">
-              <ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />
-              Seguro e criptografado
-            </div>
-            <p className="mt-2">
-              Após o cadastro, enviaremos um código para confirmar seu e-mail antes do onboarding.
-            </p>
           </div>
+        </section>
 
-          <Button className="mt-2 w-full" disabled={isPending} type="submit">
-            {registerPatient.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <UserPlus className="h-4 w-4" aria-hidden="true" />
-            )}
-            {registerPatient.isPending ? "Criando conta" : "Criar conta gratuita"}
-          </Button>
-        </Form>
-
-        <div className="mt-8 grid gap-3 text-center text-xs text-subtle sm:grid-cols-3">
+        <div className="grid gap-5 pt-7 text-center text-xs font-medium text-subtle">
+          <div className="grid grid-cols-2 gap-3">
+            <span className="inline-flex items-center justify-center gap-1.5">
+              <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+              Seguro e Criptografado
+            </span>
+            <span className="inline-flex items-center justify-center gap-1.5">
+              <Zap className="h-4 w-4" aria-hidden="true" />
+              Configuração em 2 minutos
+            </span>
+          </div>
           <span className="inline-flex items-center justify-center gap-1.5">
-            <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-            Seguro
-          </span>
-          <span className="inline-flex items-center justify-center gap-1.5">
-            <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-            Configuração rápida
-          </span>
-          <span className="inline-flex items-center justify-center gap-1.5">
-            <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-            Perfil paciente
+            <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+            Perfil paciente protegido
           </span>
         </div>
-      </AuthCard>
-    </AuthTemplate>
+      </div>
+    </main>
   );
 };

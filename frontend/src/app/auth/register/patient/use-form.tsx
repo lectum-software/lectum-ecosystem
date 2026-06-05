@@ -44,6 +44,7 @@ const fields = [
     placeholder: "Seu nome",
     autoComplete: "name",
     required: true,
+    inputClassName: "h-14 rounded-[var(--lectum-control-radius)] bg-surface-muted text-base",
   },
   {
     name: "email",
@@ -53,31 +54,34 @@ const fields = [
     type: "email",
     autoComplete: "email",
     required: true,
+    inputClassName: "h-14 rounded-[var(--lectum-control-radius)] bg-surface-muted text-base",
   },
   {
     name: "password",
     field: "input",
     label: "Senha",
-    placeholder: "Crie uma senha forte",
+    placeholder: "••••••••",
     type: "password",
     autoComplete: "new-password",
     required: true,
+    inputClassName: "h-14 rounded-[var(--lectum-control-radius)] bg-surface-muted text-base",
   },
   {
     name: "password_confirm",
     field: "input",
     label: "Confirmar senha",
-    placeholder: "Repita sua senha",
+    placeholder: "••••••••",
     type: "password",
     autoComplete: "new-password",
     required: true,
+    inputClassName: "h-14 rounded-[var(--lectum-control-radius)] bg-surface-muted text-base",
   },
   {
     name: "terms_accepted",
     field: "checkbox",
-    label: "Aceito os termos de uso e a política de privacidade",
-    description: "O texto legal final ainda será revisado nas próximas etapas de LGPD.",
-    required: true,
+    label:
+      "Ao criar uma conta, você concorda com nossos Termos de Serviço e Política de Privacidade.",
+    inputClassName: "mt-0.5 h-4 w-4",
   },
 ] satisfies Field<RegisterPatientForm>[];
 
