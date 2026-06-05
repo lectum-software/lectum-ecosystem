@@ -64,11 +64,11 @@ export const WelcomePatientLogic = () => {
         onSuccess: () => {
           setApiError(null);
           toast.success("Boas-vindas concluídas");
-          router.replace("/dashboard");
+          router.replace("/app");
 
           window.setTimeout(() => {
-            if (window.location.pathname !== "/dashboard") {
-              window.location.assign("/dashboard");
+            if (window.location.pathname !== "/app") {
+              window.location.assign("/app");
             }
           }, 800);
         },
@@ -81,7 +81,7 @@ export const WelcomePatientLogic = () => {
 
   useEffect(() => {
     if (profile.data?.onboarding_completed_at) {
-      router.replace("/dashboard");
+      router.replace("/app");
     }
   }, [profile.data?.onboarding_completed_at, router]);
 

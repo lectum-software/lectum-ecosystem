@@ -8,7 +8,7 @@
 | Prioridade | P0 |
 | Esforço | L |
 | Fase | Infra UI |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-06, TASK-08 ou TASK-11 |
 | ADR alvo | ADR de navegação privada mobile |
 
@@ -144,20 +144,47 @@ Regras anti-recriação específicas:
 
 ## Critérios de aceite
 
-- [ ] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
-- [ ] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
-- [ ] Backend implementado nos endpoints/modelos esperados quando aplicável.
-- [ ] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
-- [ ] Middleware `requireRole(...)` criado, fail-closed, aplicado por namespace no `write.ts` conforme `DATA-MODEL.md`/ADR-0002.
-- [ ] Smoke test: token de paciente recebe `403` em rota psicólogo-only e vice-versa.
-- [ ] Todos os estados obrigatórios existem e usam textos em PT-BR.
-- [ ] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
-- [ ] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
-- [ ] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
-- [ ] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
-- [ ] ADR criado ou atualizado em `adrs/`.
-- [ ] Checks/builds relevantes foram executados sem erros.
-- [ ] Commit criado com mensagem convencional.
+- [x] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
+- [x] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
+- [x] Backend implementado nos endpoints/modelos esperados quando aplicável.
+- [x] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
+- [x] Middleware `requireRole(...)` criado, fail-closed, aplicado por namespace no `write.ts` conforme `DATA-MODEL.md`/ADR-0002.
+- [x] Smoke test: token de paciente recebe `403` em rota psicólogo-only e vice-versa.
+- [x] Todos os estados obrigatórios existem e usam textos em PT-BR.
+- [x] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
+- [x] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
+- [x] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
+- [x] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
+- [x] ADR criado ou atualizado em `adrs/`.
+- [x] Checks/builds relevantes foram executados sem erros.
+- [x] Commit criado com mensagem convencional.
+
+## Execução
+
+- Builder/Quick Copy não está exposto como ferramenta direta nesta sessão; a validação visual
+  usou as imagens locais obrigatórias de `_product/proto`.
+- Rotas criadas/ajustadas no prefixo canônico `/app`: `/app`, `/app/psychologists`,
+  `/app/community`, `/app/notifications`, `/app/profile`; a rota adicional
+  `/app/favorites` foi criada para manter o item obrigatório da navegação inferior do PRD sem
+  usar dados simulados.
+- `PrivateTemplate` passou a hidratar a sessão real via `GET /api/private/auth/hidrate`, exibir
+  loading/erro de sessão e renderizar navegação inferior mobile-first com ícones `lucide-react`.
+- O onboarding do paciente passou a encaminhar para `/app` após conclusão, substituindo o destino
+  transitório `/dashboard`.
+- O backend manteve o contrato real de sessão e consolidou mounts role-only com `_auth` seguido de
+  `requireRole(...)`, além de check de boot para namespaces `/api/private/patient/*` e
+  `/api/private/psychologist/*`.
+- Smoke de autorização real: token de paciente retornou `403` em
+  `/api/private/psychologist/billing/plans`; token de psicólogo retornou `403` em
+  `/api/private/patient/profile`. Usuários temporários foram removidos ao final.
+- Browser local headless em viewport mobile `390x844` validou `/app/profile` com cookie real,
+  sessão hidratada, header e bottom nav. Usuário temporário removido ao final.
+- Validações executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm --dir backend check`
+  - `pnpm --dir backend build`
+  - `pnpm check`
 
 ## Validação mínima
 

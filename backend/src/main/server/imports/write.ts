@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { type RequestHandler, Router } from "express";
 import privateAuth from "@/modules/api/middlewares/_auth";
 import { requireRole } from "@/modules/api/middlewares/require-role";
 import apiPrivateAuthCode from "@/modules/api/private/auth/code";
@@ -27,57 +27,90 @@ import apiPublicGoogleMe from "@/modules/api/public/google/me";
 import apiPublicUser from "@/modules/api/public/user";
 
 const endpoint = Router();
+type ExpressRouter = ReturnType<typeof Router>;
+type MountHandler = ExpressRouter | RequestHandler;
+type RoleGuard = "paciente" | "psicologo";
+type MountedRoute = {
+  path: string;
+  role?: RoleGuard;
+};
 
-endpoint.use("/api/private/auth/code", apiPrivateAuthCode);
-endpoint.use("/api/private/auth/confirm", apiPrivateAuthConfirm);
-endpoint.use("/api/private/auth/hidrate", apiPrivateAuthHidrate);
-endpoint.use("/api/private/auth/need_reset", apiPrivateAuthNeedReset);
-endpoint.use("/api/private/auth/reset", apiPrivateAuthReset);
-endpoint.use("/api/public/auth/login", apiPublicAuthLogin);
-endpoint.use("/api/public/auth/recovery", apiPublicAuthRecovery);
-endpoint.use("/api/public/auth/reset", apiPublicAuthReset);
-endpoint.use("/api/public/google/callback", apiPublicGoogleCallback);
-endpoint.use("/api/public/google/login", apiPublicGoogleLogin);
-endpoint.use("/api/public/google/me", apiPublicGoogleMe);
-endpoint.use("/api/public/user", apiPublicUser);
-endpoint.use(
-  "/api/private/patient/profile",
-  privateAuth,
-  requireRole("paciente"),
-  apiPrivatePatientProfile,
-);
-endpoint.use(
-  "/api/private/patient/onboarding",
-  privateAuth,
-  requireRole("paciente"),
-  apiPrivatePatientOnboarding,
-);
-endpoint.use(
+const mountedRoutes: MountedRoute[] = [];
+const endpointUse = endpoint.use.bind(endpoint) as (
+  path: string,
+  ...handlers: MountHandler[]
+) => void;
+
+const mountRoute = (path: string, ...handlers: MountHandler[]) => {
+  mountedRoutes.push({ path });
+  endpointUse(path, ...handlers);
+};
+
+const mountRoleGuardedRoute = (path: string, role: RoleGuard, router: ExpressRouter) => {
+  mountedRoutes.push({ path, role });
+  endpointUse(path, privateAuth, requireRole(role), router);
+};
+
+const getExpectedRole = (path: string): RoleGuard | null => {
+  if (path.startsWith("/api/private/patient/")) return "paciente";
+  if (path.startsWith("/api/private/psychologist/")) return "psicologo";
+
+  return null;
+};
+
+const assertPrivateRoleGuards = () => {
+  const violations = mountedRoutes.filter((route) => {
+    const expectedRole = getExpectedRole(route.path);
+
+    return Boolean(expectedRole && route.role !== expectedRole);
+  });
+
+  if (violations.length > 0) {
+    throw new Error(
+      `[security] Rotas privadas sem requireRole correto: ${violations
+        .map((route) => `${route.path}=>${route.role || "sem-role"}`)
+        .join(", ")}`,
+    );
+  }
+};
+
+mountRoute("/api/private/auth/code", apiPrivateAuthCode);
+mountRoute("/api/private/auth/confirm", apiPrivateAuthConfirm);
+mountRoute("/api/private/auth/hidrate", apiPrivateAuthHidrate);
+mountRoute("/api/private/auth/need_reset", apiPrivateAuthNeedReset);
+mountRoute("/api/private/auth/reset", apiPrivateAuthReset);
+mountRoute("/api/public/auth/login", apiPublicAuthLogin);
+mountRoute("/api/public/auth/recovery", apiPublicAuthRecovery);
+mountRoute("/api/public/auth/reset", apiPublicAuthReset);
+mountRoute("/api/public/google/callback", apiPublicGoogleCallback);
+mountRoute("/api/public/google/login", apiPublicGoogleLogin);
+mountRoute("/api/public/google/me", apiPublicGoogleMe);
+mountRoute("/api/public/user", apiPublicUser);
+mountRoleGuardedRoute("/api/private/patient/profile", "paciente", apiPrivatePatientProfile);
+mountRoleGuardedRoute("/api/private/patient/onboarding", "paciente", apiPrivatePatientOnboarding);
+mountRoleGuardedRoute(
   "/api/private/psychologist/billing/plans",
-  privateAuth,
-  requireRole("psicologo"),
+  "psicologo",
   apiPrivatePsychologistBillingPlans,
 );
-endpoint.use(
+mountRoleGuardedRoute(
   "/api/private/psychologist/billing/current",
-  privateAuth,
-  requireRole("psicologo"),
+  "psicologo",
   apiPrivatePsychologistBillingCurrent,
 );
-endpoint.use("/api/private/notification/clean", apiPrivateNotificationClean);
-endpoint.use("/api/private/notification/index", apiPrivateNotificationIndex);
-endpoint.use("/api/private/notification/update", apiPrivateNotificationUpdate);
-endpoint.use("/api/private/notification_preference/show", apiPrivateNotificationPreferenceShow);
-endpoint.use("/api/private/notification_preference/update", apiPrivateNotificationPreferenceUpdate);
-endpoint.use("/api/private/notification_subscription/key", apiPrivateNotificationSubscriptionKey);
-endpoint.use(
-  "/api/private/notification_subscription/store",
-  apiPrivateNotificationSubscriptionStore,
-);
+mountRoute("/api/private/notification/clean", apiPrivateNotificationClean);
+mountRoute("/api/private/notification/index", apiPrivateNotificationIndex);
+mountRoute("/api/private/notification/update", apiPrivateNotificationUpdate);
+mountRoute("/api/private/notification_preference/show", apiPrivateNotificationPreferenceShow);
+mountRoute("/api/private/notification_preference/update", apiPrivateNotificationPreferenceUpdate);
+mountRoute("/api/private/notification_subscription/key", apiPrivateNotificationSubscriptionKey);
+mountRoute("/api/private/notification_subscription/store", apiPrivateNotificationSubscriptionStore);
 
 // Rota de desenvolvimento (sem auth): dispara notificação de teste para todos.
 if (process.env.NODE_ENV !== "production") {
-  endpoint.use("/api/private/notification/test", apiPrivateNotificationTest);
+  mountRoute("/api/private/notification/test", apiPrivateNotificationTest);
 }
+
+assertPrivateRoleGuards();
 
 export default endpoint;
