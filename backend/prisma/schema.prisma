@@ -34,6 +34,7 @@ model user {
   user_tokens                user_token[]                @relation("user_token_user")
   user_backgrounds           user_background[]           @relation("user_background_user")
   patient_profile            patient_profile?            @relation("patient_profile_user")
+  psychologist_profile       psychologist_profile?       @relation("psychologist_profile_user")
   notification_subscriptions notification_subscription[] @relation("notification_subscription_user")
   logs                       log__user[]                 @relation("log__user_user")
   notifications              notification[]              @relation("notifications")
@@ -106,6 +107,34 @@ model patient_profile {
 
   @@index([user_id])
   @@map("patient_profiles")
+}
+
+model psychologist_profile {
+  id                   String    @id @default(cuid())
+  deleted              Boolean   @default(false)
+  deletedAt            DateTime? @map("deleted_at")
+  updatedAt            DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  user_id              String    @unique
+  headline             String?
+  bio                  String?
+  video_url            String?
+  cpf                  String?
+  crp                  String?
+  crp_status           String    @default("pendente")
+  cfp_verified_at      DateTime?
+  whatsapp             String?
+  whatsapp_verified_at DateTime?
+  languages            Json?
+  modality             String?
+  rating_avg           Int       @default(0)
+  rating_count         Int       @default(0)
+  published            Boolean   @default(false)
+  user                 user      @relation("psychologist_profile_user", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([published, deleted])
+  @@map("psychologist_profiles")
 }
 
 model notification_subscription {

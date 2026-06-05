@@ -25,6 +25,10 @@ export interface UseAuthProps {
       onSuccess?: (data: user) => void;
       onError?: (error: unknown) => void;
     };
+    registerPsychologist?: {
+      onSuccess?: (data: user) => void;
+      onError?: (error: unknown) => void;
+    };
     sendConfirmCode?: {
       onSuccess?: (data: boolean) => void;
       onError?: (error: unknown) => void;
@@ -73,6 +77,12 @@ export const useAuth = ({ callbacks, enableHidrate = false }: UseAuthProps = {})
     onError: callbacks?.registerPatient?.onError,
   });
 
+  const registerPsychologist = useMutation({
+    mutationFn: (body: api.RegisterPsychologistPayload) => api.registerPsychologist(body),
+    onSuccess: callbacks?.registerPsychologist?.onSuccess,
+    onError: callbacks?.registerPsychologist?.onError,
+  });
+
   const sendConfirmCode = useMutation({
     mutationFn: () => api.sendConfirmCode(),
     onSuccess: callbacks?.sendConfirmCode?.onSuccess,
@@ -104,6 +114,7 @@ export const useAuth = ({ callbacks, enableHidrate = false }: UseAuthProps = {})
     recovery,
     resetPassword,
     registerPatient,
+    registerPsychologist,
     sendConfirmCode,
     verifyCode,
     hidrate,

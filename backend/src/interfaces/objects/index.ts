@@ -39,6 +39,30 @@ export interface patient_profile {
   user?: user | null;
 }
 
+export interface psychologist_profile {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  user_id?: string | null;
+  headline?: string | null;
+  bio?: string | null;
+  video_url?: string | null;
+  cpf?: string | null;
+  crp?: string | null;
+  crp_status?: string | null;
+  cfp_verified_at?: Date | null;
+  whatsapp?: string | null;
+  whatsapp_verified_at?: Date | null;
+  languages?: unknown;
+  modality?: string | null;
+  rating_avg?: number | null;
+  rating_count?: number | null;
+  published?: boolean | null;
+  user?: user | null;
+}
+
 export interface notification_subscription {
   id?: string | null;
   deleted?: boolean | null;
@@ -100,6 +124,7 @@ export interface user {
   user_tokens?: user_token[] | null;
   user_backgrounds?: user_background[] | null;
   patient_profile?: patient_profile | null;
+  psychologist_profile?: psychologist_profile | null;
   notification_subscriptions?: notification_subscription[] | null;
   notifications?: notification[] | null;
   notification_preference?: notification_preference | null;

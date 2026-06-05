@@ -19,6 +19,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { useAppSelector } from "@/hooks/redux";
 import { useUserSet } from "@/hooks/user-set";
 import { Button } from "@/registry/new-york-v4/ui/button";
+import { getUserHomePath } from "@/utils/auth-redirect";
 import { useForm, type VerifyEmailForm } from "./use-form";
 
 type ApiErrorData = {
@@ -169,7 +170,7 @@ export const VerifyEmailLogic = () => {
     () => hydratedUser || storedUser || null,
     [hydratedUser, storedUser],
   );
-  const continueHref = currentUser?.role === "paciente" ? "/patient/welcome" : "/dashboard";
+  const continueHref = getUserHomePath(currentUser, "/dashboard");
   const currentEmail = maskEmail(currentUser?.email);
   const isConfirmed = Boolean(currentUser?.confirmed) || alreadyConfirmed;
   const isHydrating = hidrate.isLoading || hidrate.isPending;

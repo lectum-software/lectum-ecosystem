@@ -16,6 +16,27 @@ export type patient_profile = {
   updatedAt?: string;
 };
 
+export type psychologist_profile = {
+  id?: string;
+  user_id?: string;
+  headline?: string | null;
+  bio?: string | null;
+  video_url?: string | null;
+  cpf?: string | null;
+  crp?: string | null;
+  crp_status?: "pendente" | "em_analise" | "aprovado" | "rejeitado" | null;
+  cfp_verified_at?: string | null;
+  whatsapp?: string | null;
+  whatsapp_verified_at?: string | null;
+  languages?: unknown;
+  modality?: "online" | "presencial" | "hibrido" | null;
+  rating_avg?: number;
+  rating_count?: number;
+  published?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export type user = {
   id?: string;
   name?: string | null;
@@ -27,6 +48,7 @@ export type user = {
   provider?: string | null;
   user_tokens?: user_token[];
   patient_profile?: patient_profile | null;
+  psychologist_profile?: psychologist_profile | null;
   createdAt?: string;
   updatedAt?: string;
 };

@@ -55,6 +55,16 @@ export class StoreRepository implements IStoreRepository {
         });
       }
 
+      if (role === "psicologo") {
+        await tx.psychologist_profile.create({
+          data: {
+            user_id: item.id,
+            crp_status: "pendente",
+            published: false,
+          },
+        });
+      }
+
       if (terms_accepted) {
         await tx.user_background.create({
           data: {
@@ -64,7 +74,7 @@ export class StoreRepository implements IStoreRepository {
             data: {
               accepted_at: new Date().toISOString(),
               terms_version: terms_version || "pending-legal-copy",
-              source: "patient_registration",
+              source: role === "psicologo" ? "psychologist_registration" : "patient_registration",
               role,
             },
           },

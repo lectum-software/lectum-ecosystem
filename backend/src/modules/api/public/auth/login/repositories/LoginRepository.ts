@@ -8,6 +8,7 @@ import type { user, user_token } from "@/interfaces/objects";
 import { generateToken } from "@/modules/api/middlewares/_auth/utils/generateToken";
 //
 import { include } from "@/query/login";
+import { log } from "@/utils/logs";
 import type { IFindByEmailDTO } from "../DTOs/IFindByEmailDTO";
 import type { IFindToEmitDTO } from "../DTOs/IFindToEmitDTO";
 //DTOs
@@ -121,6 +122,16 @@ export class LoginRepository implements ILoginRepository {
         });
       }
 
+      if (role === "psicologo") {
+        await tx.psychologist_profile.create({
+          data: {
+            user_id: user.id,
+            crp_status: "pendente",
+            published: false,
+          },
+        });
+      }
+
       if (terms_accepted) {
         await tx.user_background.create({
           data: {
@@ -136,6 +147,14 @@ export class LoginRepository implements ILoginRepository {
           },
         });
       }
+
+      await tx.log__user.create({
+        data: {
+          action: log.store,
+          ref_id: user.id,
+          new: JSON.stringify(user),
+        },
+      });
 
       return user;
     });

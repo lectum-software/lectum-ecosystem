@@ -2,7 +2,7 @@ import type { user } from "@/api/generator/types";
 
 export const USER_HOME_PATHS = {
   paciente: "/patient/welcome",
-  psicologo: "/dashboard",
+  psicologo: "/psychologist/cfp",
 } as const;
 
 type RedirectFallback = string | null;

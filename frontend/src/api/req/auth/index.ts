@@ -26,6 +26,16 @@ export type RegisterPatientPayload = {
   terms_version: string;
 };
 
+export type RegisterPsychologistPayload = {
+  name: string;
+  email: string;
+  password: string;
+  password_confirm: string;
+  role: "psicologo";
+  terms_accepted: true;
+  terms_version: string;
+};
+
 export type VerifyCodePayload = {
   code: string;
 };
@@ -77,6 +87,18 @@ export const resetPassword = async (code: string, body: ResetPasswordPayload) =>
 };
 
 export const registerPatient = async (body: RegisterPatientPayload) => {
+  const handle = callEndpoint({
+    route: "/api/public/user/store",
+    body,
+  });
+
+  return handleReq<user>({
+    ...handle,
+    hideError: true,
+  });
+};
+
+export const registerPsychologist = async (body: RegisterPsychologistPayload) => {
   const handle = callEndpoint({
     route: "/api/public/user/store",
     body,

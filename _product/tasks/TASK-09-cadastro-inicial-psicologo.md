@@ -8,7 +8,7 @@
 | Prioridade | P0 |
 | Esforço | M |
 | Fase | Psicólogo |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-02, TASK-04, TASK-06 |
 | ADR alvo | ADR de perfil psicólogo e status profissional |
 
@@ -148,19 +148,19 @@ Regras anti-recriação específicas:
 
 ## Critérios de aceite
 
-- [ ] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
-- [ ] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
-- [ ] Backend implementado nos endpoints/modelos esperados quando aplicável.
-- [ ] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
-- [ ] Cadastro reaproveita `POST /api/public/user/store` (estendido para `role="psicologo"`), sem endpoint/auth paralelo.
-- [ ] Todos os estados obrigatórios existem e usam textos em PT-BR.
-- [ ] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
-- [ ] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
-- [ ] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
-- [ ] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
-- [ ] ADR criado ou atualizado em `adrs/`.
-- [ ] Checks/builds relevantes foram executados sem erros.
-- [ ] Commit criado com mensagem convencional.
+- [x] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
+- [x] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
+- [x] Backend implementado nos endpoints/modelos esperados quando aplicável.
+- [x] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
+- [x] Cadastro reaproveita `POST /api/public/user/store` (estendido para `role="psicologo"`), sem endpoint/auth paralelo.
+- [x] Todos os estados obrigatórios existem e usam textos em PT-BR.
+- [x] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
+- [x] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
+- [x] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
+- [x] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
+- [x] ADR criado ou atualizado em `adrs/`.
+- [x] Checks/builds relevantes foram executados sem erros.
+- [x] Commit criado com mensagem convencional.
 
 ## Validação mínima
 
@@ -174,3 +174,30 @@ Regras anti-recriação específicas:
 ## Notas para executor
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
+
+## Execução TASK-09
+
+- Referência visual consultada pela imagem local `_product/proto/Cadastro de Psicólogo.jpg`; Builder/Quick Copy não está exposto como ferramenta direta neste ambiente.
+- Implementado `/auth/register/psychologist` com UI mobile-first, Google, e-mail/senha, aceite de termos profissionais e formulário via fundação da TASK-02.
+- Criado caller `registerPsychologist` reaproveitando `POST /api/public/user/store`.
+- Estendido `user/store` para criar `psychologist_profile` na mesma transação do usuário quando `role="psicologo"`.
+- `psychologist_profile` nasce com `crp_status="pendente"` e `published=false`.
+- Fluxo Google existente continua usando o callback atual; o `state` recebe `role=psicologo`, `terms_accepted` e `terms_version` para novos usuários.
+- Criada rota de handoff `/psychologist/cfp` para o destino pós-verificação do psicólogo, sem consulta automática, mock ou scraping; a integração CFP/CRP real permanece no escopo da TASK-10.
+
+## Validação executada
+
+- `pnpm --dir backend db:migrate`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local headless em `http://localhost:3000/auth/register/psychologist`.
+- Cadastro real via `POST /api/public/user/store` validou retorno `role="psicologo"`, `confirmed=false`, token, `psychologist_profile.crp_status="pendente"`, `psychologist_profile.published=false` e aceite em `user_background type="terms_accept"`. O usuário temporário de validação foi removido ao final.
+- `GET /api/public/google/login/:deviceId?role=psicologo...` retornou redirect real ao Google com `role` e aceite preservados no `state`.
+
+## Pendências
+
+- Texto legal profissional/LGPD definitivo permanece pendente das tasks legais; o aceite foi registrado com `terms_version="task09-professional-terms-pending-legal-copy"`.
+- Consulta CFP/CRP automática permanece dependente da TASK-10 e de fonte/API autorizada.
