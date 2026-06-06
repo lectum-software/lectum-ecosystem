@@ -22,6 +22,7 @@ import apiPrivatePatientProfile from "@/modules/api/private/patient/profile";
 import apiPrivatePatientReviews from "@/modules/api/private/patient/reviews";
 import apiPrivatePsychologistBillingCurrent from "@/modules/api/private/psychologist/billing/current";
 import apiPrivatePsychologistBillingPlans from "@/modules/api/private/psychologist/billing/plans";
+import apiPrivatePsychologistCfp from "@/modules/api/private/psychologist/cfp";
 import apiPublicAuthLogin from "@/modules/api/public/auth/login";
 import apiPublicAuthRecovery from "@/modules/api/public/auth/recovery";
 import apiPublicAuthReset from "@/modules/api/public/auth/reset";
@@ -105,6 +106,7 @@ mountRoleGuardedRoute(
   "psicologo",
   apiPrivatePsychologistBillingCurrent,
 );
+mountRoleGuardedRoute("/api/private/psychologist/cfp", "psicologo", apiPrivatePsychologistCfp);
 mountRoute("/api/private/directory/psychologists", apiPrivateDirectoryPsychologists);
 mountRoute("/api/private/notification/clean", apiPrivateNotificationClean);
 mountRoute("/api/private/notification/index", apiPrivateNotificationIndex);

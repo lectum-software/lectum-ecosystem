@@ -210,12 +210,16 @@ Especialidade, serviço e abordagem são filtros da busca (TASK-13) e seções d
 
 | Campo | Tipo | Notas |
 |---|---|---|
-| `psychologist_id` | `String` | FK |
-| `cpf` | `String` | consultado |
-| `found` | `Boolean` | resultado |
-| `raw` | `Json?` | resposta do provedor real (sem mock) |
-| `checked_at` | `DateTime @default(now())` | |
-| `@@index([psychologist_id])` | | |
+| `psychologist_id` | `String` | FK `psychologist_profile`; ownership por `req.auth.id` via perfil do psicologo |
+| `provider` | `String @default("infosimples")` | provedor da consulta |
+| `cpf` | `String?` | CPF consultado, normalizado apenas com digitos |
+| `registro` | `String?` | registro informado/consultado quando aplicavel |
+| `uf` | `String?` | UF informada quando aplicavel |
+| `found` | `Boolean @default(false)` | se a consulta retornou ao menos um resultado |
+| `raw` | `Json?` | resposta do provedor real e resultados normalizados; nunca incluir `DOCUMENT_TOKEN` |
+| `checked_at` | `DateTime @default(now())` | instante da consulta |
+| `@@index([psychologist_id, checked_at])` | | |
+| `@@index([cpf])` | | |
 
 ---
 

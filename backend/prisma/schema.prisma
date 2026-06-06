@@ -123,33 +123,55 @@ model patient_profile {
 }
 
 model psychologist_profile {
-  id                   String                      @id @default(cuid())
-  deleted              Boolean                     @default(false)
-  deletedAt            DateTime?                   @map("deleted_at")
-  updatedAt            DateTime                    @default(now()) @updatedAt @map("updated_at")
-  createdAt            DateTime                    @default(now()) @map("created_at")
-  user_id              String                      @unique
+  id                   String                        @id @default(cuid())
+  deleted              Boolean                       @default(false)
+  deletedAt            DateTime?                     @map("deleted_at")
+  updatedAt            DateTime                      @default(now()) @updatedAt @map("updated_at")
+  createdAt            DateTime                      @default(now()) @map("created_at")
+  user_id              String                        @unique
   headline             String?
   bio                  String?
   video_url            String?
   cpf                  String?
   crp                  String?
-  crp_status           String                      @default("pendente")
+  crp_status           String                        @default("pendente")
   cfp_verified_at      DateTime?
   whatsapp             String?
   whatsapp_verified_at DateTime?
   languages            Json?
   modality             String?
-  rating_avg           Int                         @default(0)
-  rating_count         Int                         @default(0)
-  published            Boolean                     @default(false)
-  user                 user                        @relation("psychologist_profile_user", fields: [user_id], references: [id], onDelete: Cascade)
-  subscriptions        professional_subscription[] @relation("professional_subscription_psychologist")
+  rating_avg           Int                           @default(0)
+  rating_count         Int                           @default(0)
+  published            Boolean                       @default(false)
+  user                 user                          @relation("psychologist_profile_user", fields: [user_id], references: [id], onDelete: Cascade)
+  subscriptions        professional_subscription[]   @relation("professional_subscription_psychologist")
+  registry_checks      professional_registry_check[] @relation("professional_registry_check_psychologist")
 
   @@index([user_id])
   @@index([published, deleted])
   @@index([published, deleted, cfp_verified_at])
   @@map("psychologist_profiles")
+}
+
+model professional_registry_check {
+  id              String               @id @default(cuid())
+  deleted         Boolean              @default(false)
+  deletedAt       DateTime?            @map("deleted_at")
+  updatedAt       DateTime             @default(now()) @updatedAt @map("updated_at")
+  createdAt       DateTime             @default(now()) @map("created_at")
+  psychologist_id String
+  provider        String               @default("infosimples")
+  cpf             String?
+  registro        String?
+  uf              String?
+  found           Boolean              @default(false)
+  raw             Json?
+  checked_at      DateTime             @default(now())
+  psychologist    psychologist_profile @relation("professional_registry_check_psychologist", fields: [psychologist_id], references: [id], onDelete: Cascade)
+
+  @@index([psychologist_id, checked_at])
+  @@index([cpf])
+  @@map("professional_registry_checks")
 }
 
 model specialty {

@@ -8,6 +8,13 @@ export type {
   SubscriptionPlanSlug,
 } from "./billing";
 export type {
+  CfpConfirmPayload,
+  CfpConfirmResponse,
+  CfpResult,
+  CfpSearchPayload,
+  CfpSearchResponse,
+} from "./cfp";
+export type {
   DirectoryCatalogItem,
   DirectoryPsychologist,
   DirectoryPsychologistContactPayload,

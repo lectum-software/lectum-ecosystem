@@ -8,7 +8,7 @@
 | Prioridade | P0 |
 | Esforço | L |
 | Fase | Psicólogo |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-02, TASK-03, TASK-09 |
 | ADR alvo | ADR-0026 |
 
@@ -141,20 +141,20 @@ Regras anti-recriação específicas:
 
 ## Critérios de aceite
 
-- [ ] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
-- [ ] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
-- [ ] Backend implementado nos endpoints/modelos esperados quando aplicável.
-- [ ] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
-- [ ] Rotas sob `/api/private/psychologist/*` exigem `requireRole("psicologo")` (fail-closed), conforme ADR-0002.
-- [ ] Integracao InfoSimples respeitada: sem `DOCUMENT_TOKEN` valido/acesso ao `cfp-cadastro`, parar com pendencia; sem mock nem scraping nao autorizado.
-- [ ] Todos os estados obrigatórios existem e usam textos em PT-BR.
-- [ ] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
-- [ ] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
-- [ ] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
-- [ ] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
-- [ ] ADR criado ou atualizado em `adrs/`.
-- [ ] Checks/builds relevantes foram executados sem erros.
-- [ ] Commit criado com mensagem convencional.
+- [x] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
+- [x] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
+- [x] Backend implementado nos endpoints/modelos esperados quando aplicável.
+- [x] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
+- [x] Rotas sob `/api/private/psychologist/*` exigem `requireRole("psicologo")` (fail-closed), conforme ADR-0002.
+- [x] Integracao InfoSimples respeitada: sem `DOCUMENT_TOKEN` valido/acesso ao `cfp-cadastro`, parar com pendencia; sem mock nem scraping nao autorizado.
+- [x] Todos os estados obrigatórios existem e usam textos em PT-BR.
+- [x] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
+- [x] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
+- [x] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
+- [x] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
+- [x] ADR criado ou atualizado em `adrs/`.
+- [x] Checks/builds relevantes foram executados sem erros.
+- [x] Commit criado com mensagem convencional.
 
 ## Validação mínima
 
@@ -195,11 +195,28 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - ADR criado: `adrs/0015-bloqueio-consulta-cfp-automatica.md`.
 - Encaminhamento operacional: seguir para o fluxo manual da TASK-11 (upload/validação de CRP) quando houver storage R2 privado e credenciais/bucket reais conforme a própria TASK-11.
 
-## Validação executada
+## Execucao concluida em 2026-06-06
 
-- Revisão manual de `TASK-10`, `_product/decisions.md`, `DATA-MODEL.md` e `adrs/0006-integracoes-externas-e-decisoes-pendentes.md`.
-- `git diff --check`
+- Dependencias confirmadas como concluidas: TASK-02, TASK-03 e TASK-09.
+- Referencias visuais consultadas pelas imagens locais em `_product/proto`; Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente, entao foi usado o fallback auditavel.
+- Endpoint InfoSimples confirmado com `DOCUMENT_TOKEN` sem expor o segredo: `POST https://api.infosimples.com/api/v2/consultas/cfp/cadastro`. A chamada autenticada sem parametros retornou `code=606`, validando token/servico e exigencia de `cpf`, `nome`, `registro` ou `cnpj`.
+- Backend implementado em `backend/src/modules/api/private/psychologist/cfp` com provider isolado `InfoSimplesCfpProvider`, endpoints `/search` e `/confirm`, respostas traduzidas e guard `requireRole("psicologo")` via `write.ts`.
+- Prisma atualizado com `professional_registry_check` e migration `20260606223155_add_professional_registry_check`; `pnpm --dir backend db:migrate -- --name add_professional_registry_check` executado com sucesso.
+- Frontend implementado em `/psychologist/cfp` com React Hook Form/Zod, controller CPF da TASK-02, estados de entrada, loading, resultado, vazio e erro.
+- Nenhum mock, seed artificial, scraping nao autorizado ou dado inventado foi usado; a tela so exibe dados retornados pelo backend/InfoSimples.
+- ADR atualizado: `adrs/0026-infosimples-validacao-cfp-crp.md`.
 
-## Observação sobre critérios de aceite
+## Validacao executada
 
-Os criterios acima permanecem sem marcacao completa porque a task ainda nao foi implementada. O bloqueio externo de fonte/API foi removido por ADR-0026, mas a execucao deve parar novamente se `DOCUMENT_TOKEN` ou acesso ao `cfp-cadastro` nao estiverem validos.
+- `pnpm --dir backend db:migrate -- --name add_professional_registry_check`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke local backend: `POST http://localhost:3001/api/private/psychologist/cfp/search` sem auth retornou 401, confirmando rota privada.
+- Browser local: `http://localhost:3000/psychologist/cfp` respondeu 200 e foi renderizado em Chrome headless 390x884 para validar a rota principal.
+
+## Observacao sobre criterios de aceite
+
+Todos os criterios aplicaveis foram atendidos. A confirmacao real de um CPF profissional valido depende de dados reais do usuario/provedor em uso; sem resultado ativo, o fluxo permanece honesto e nao aprova automaticamente.

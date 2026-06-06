@@ -23,10 +23,10 @@ Pesquisa publica identificou a consulta InfoSimples `Conselho Federal de Psicolo
 
 ## Consequencias
 
-- TASK-10 muda de `Blocked` para `Pending` e pode ser executada com consulta real.
+- TASK-10 foi concluida com consulta real integrada via provider InfoSimples; novas falhas de token/acesso devem ser tratadas como bloqueio operacional, sem mock.
 - `psychologist_profile.cfp_verified_at` pode ser preenchido somente depois de confirmacao real da InfoSimples.
 - TASK-11 continua bloqueada enquanto nao houver bucket/politica R2 privada para documentos CRP; InfoSimples valida cadastro/registro, mas nao substitui o storage privado de arquivo profissional.
-- A ordem operacional das tasks deve executar TASK-10 antes das trilhas independentes, e voltar para TASK-11/18/19/20 apenas quando o bloqueio de R2 privado for resolvido ou houver nova ADR mudando o escopo documental.
+- A ordem operacional apos TASK-10 volta para as trilhas independentes; TASK-11/18/19/20 continuam dependendo de R2 privado ou de nova ADR que altere o escopo documental.
 
 ## Fontes
 
@@ -40,3 +40,11 @@ Pesquisa publica identificou a consulta InfoSimples `Conselho Federal de Psicolo
 - Pesquisa web da documentacao publica InfoSimples.
 - Verificacao local apenas de nomes de variaveis presentes no `backend/.env`, sem expor valores.
 - Atualizacao documental de TASK-10, TASK-11, README de tasks, DATA-MODEL, PACKAGES, ARCHITECTURE, decisions e ADRs relacionados.
+
+## Execucao TASK-10 em 2026-06-06
+
+- Endpoint autenticado confirmado sem expor o token: `POST https://api.infosimples.com/api/v2/consultas/cfp/cadastro`.
+- A autenticacao com `DOCUMENT_TOKEN` retornou `code=606` quando nenhum parametro foi enviado, confirmando que o servico `cfp/cadastro` existe e exige ao menos `cpf`, `nome`, `registro` ou `cnpj`.
+- Implementacao realizada sem SDK novo: HTTP nativo no backend, provider isolado e token apenas server-side.
+- Foi criada a tabela `professional_registry_checks` para auditoria minima da consulta e confirmacao de resultado.
+- Resultados inativos, ausentes, ambiguos ou erro/rate limit do provedor nao aprovam automaticamente.

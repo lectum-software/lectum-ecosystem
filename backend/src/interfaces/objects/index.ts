@@ -62,6 +62,24 @@ export interface psychologist_profile {
   published?: boolean | null;
   user?: user | null;
   subscriptions?: professional_subscription[] | null;
+  registry_checks?: professional_registry_check[] | null;
+}
+
+export interface professional_registry_check {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  psychologist_id?: string | null;
+  provider?: string | null;
+  cpf?: string | null;
+  registro?: string | null;
+  uf?: string | null;
+  found?: boolean | null;
+  raw?: unknown;
+  checked_at?: Date | null;
+  psychologist?: psychologist_profile | null;
 }
 
 export interface specialty {

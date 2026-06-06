@@ -34,7 +34,16 @@
     "whatsapp_not_verified": "Este perfil ainda não possui WhatsApp verificado",
     "review_contact_required": "Você precisa registrar contato com este profissional pelo WhatsApp antes de avaliar.",
     "review_already_exists": "Você já avaliou este profissional.",
-    "review_own_profile": "Você não pode avaliar o próprio perfil."
+    "review_own_profile": "Você não pode avaliar o próprio perfil.",
+    "invalid_cpf": "Informe um CPF v?lido para continuar.",
+    "cfp_query_required": "Informe CPF, nome ou registro profissional para consultar o CFP.",
+    "cfp_provider_config_error": "Consulta CFP indispon?vel por configura??o do provedor.",
+    "cfp_provider_validation_error": "N?o foi poss?vel consultar o CFP com os dados informados.",
+    "cfp_provider_unavailable": "Consulta CFP temporariamente indispon?vel. Tente novamente em instantes.",
+    "cfp_provider_rate_limited": "Consulta CFP temporariamente limitada pelo provedor. Tente novamente mais tarde.",
+    "cfp_provider_error": "N?o foi poss?vel concluir a consulta CFP agora.",
+    "cfp_result_not_found": "Resultado CFP n?o encontrado para confirma??o.",
+    "cfp_result_not_active": "O registro encontrado n?o est? ativo para aprova??o autom?tica."
   },
   "message": {
     "store": "dado criado",
@@ -54,7 +63,10 @@
     "follow_success": "psicólogo adicionado em seguindo",
     "unfollow_success": "psicólogo removido de seguindo",
     "contact_success": "Intenção de contato registrada. Abrindo WhatsApp.",
-    "review_success": "Avaliação enviada com sucesso."
+    "review_success": "Avaliação enviada com sucesso.",
+    "cfp_search_success": "Registro profissional encontrado com sucesso.",
+    "cfp_search_empty": "Nenhum registro profissional foi encontrado para os dados informados.",
+    "cfp_confirm_success": "Registro profissional confirmado com sucesso."
   },
   "gender": {
     "o": "o"
@@ -74,7 +86,8 @@
     "professional_review": "avaliação profissional",
     "community": "comunidade",
     "community_post": "publicação",
-    "contact_request": "intenção de contato"
+    "contact_request": "intenção de contato",
+    "professional_registry_check": "consulta CFP"
   },
   "property": {
     "email": "email",
@@ -97,7 +110,13 @@
     "consent_accepted": "consentimento",
     "psychologist_id": "psicólogo",
     "rating": "nota",
-    "comment": "depoimento"
+    "comment": "depoimento",
+    "cpf": "CPF",
+    "nome": "nome",
+    "registro": "registro profissional",
+    "uf": "UF",
+    "check_id": "consulta CFP",
+    "result_key": "resultado CFP"
   },
   "notification": {
     "test": {

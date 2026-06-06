@@ -38,6 +38,9 @@
     plans: () => ["psychologist_billing_plans"],
     current: () => ["psychologist_billing_current"],
   },
+  psychologistCfp: {
+    root: () => ["psychologist_cfp"],
+  },
 };
 
 export default keys;

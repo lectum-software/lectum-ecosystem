@@ -123,7 +123,7 @@ Impacto nas tasks: TASK-10, TASK-11, TASK-18.
 Execucao TASK-10 em 2026-06-05/2026-06-06:
 
 - Bloqueio historico formalizado em `adrs/0015-bloqueio-consulta-cfp-automatica.md`; desbloqueio em `adrs/0026-infosimples-validacao-cfp-crp.md`.
-- TASK-10 pode ser executada com InfoSimples, sem mock, confirmando no painel autenticado o endpoint/payload real.
+- Execucao TASK-10 concluida em 2026-06-06 com InfoSimples, sem mock, usando endpoint autenticado `POST https://api.infosimples.com/api/v2/consultas/cfp/cadastro`.
 - Encaminhar para TASK-11 quando a consulta nao aprovar de forma inequivoca ou quando houver exigencia de documento CRP; TASK-11 ainda exige R2 privado.
 
 ## E-mail e SMS

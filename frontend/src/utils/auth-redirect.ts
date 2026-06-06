@@ -7,7 +7,14 @@ export const USER_HOME_PATHS = {
 
 type RedirectFallback = string | null;
 
-export function getUserHomePath(data: Pick<user, "role"> | null | undefined, fallback: string) {
+export function getUserHomePath(
+  data: Partial<Pick<user, "role" | "psychologist_profile">> | null | undefined,
+  fallback: string,
+) {
+  if (data?.role === "psicologo" && !data.psychologist_profile?.cfp_verified_at) {
+    return "/psychologist/cfp";
+  }
+
   if (data?.role && data.role in USER_HOME_PATHS) {
     return USER_HOME_PATHS[data.role];
   }
