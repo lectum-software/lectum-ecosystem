@@ -20,7 +20,7 @@ Adotar as decisões registradas em `_product/decisions.md`:
 
 - Storage: Cloudflare R2, via S3-compatible API e `@aws-sdk/client-s3`.
 - WhatsApp: contato por `wa.me` e verificação de número por Twilio SMS/OTP.
-- CFP/CRP: aprovação manual inicial; consulta automática CFP permanece bloqueada até fonte/API autorizada.
+- CFP/CRP: consulta automatica autorizada via InfoSimples `cfp-cadastro` com `DOCUMENT_TOKEN` (ADR-0026); aprovacao/upload manual continua para excecoes e depende de R2 privado.
 - E-mail: Resend via Nodemailer/SMTP.
 - SMS: Twilio quando houver verificação por código.
 - Push: web-push real com VAPID e `notification_subscription`.
@@ -34,7 +34,7 @@ Adotar as decisões registradas em `_product/decisions.md`:
 - Tasks futuras não podem usar mocks para simular integração externa.
 - Se credenciais de R2, Resend, Twilio, VAPID, Mercado Pago ou Sentry estiverem ausentes, a task deve pedir ao usuário e registrar bloqueio operacional.
 - Upload de documentos CRP precisa respeitar privacidade: persistir chave de arquivo e não URL pública.
-- `psychologist_profile.cfp_verified_at` continua bloqueado sem consulta CFP real.
+- `psychologist_profile.cfp_verified_at` so pode ser preenchido por consulta real InfoSimples ou provider futuro aprovado por ADR.
 - `psychologist_profile.whatsapp_verified_at` só pode ser preenchido depois de validação real por código.
 - Push pode ser implementado como canal real; se VAPID/browser falhar, a UI deve mostrar estado honesto.
 - Sentry está decidido, mas não deve ser instalado fora da task dedicada.
@@ -52,4 +52,4 @@ Adotar as decisões registradas em `_product/decisions.md`:
 - Test credentials/números Twilio para desenvolvimento.
 - Chaves VAPID reais por ambiente.
 - Implementação dedicada de Sentry.
-- Fonte/API autorizada para consulta automática CFP/CRP, se o produto decidir evoluir além da aprovação manual.
+- Bucket/politica privada para documentos CRP (`CLOUDFLARE_R2_PRIVATE_BUCKET_NAME` ou equivalente); a fonte/API CFP foi decidida na ADR-0026.

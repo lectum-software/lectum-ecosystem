@@ -62,7 +62,7 @@ Quando uma task citar artefato `figma-design-frame-*.html`, leia como nome virtu
 | 07 | [TASK-07 - Cadastro de paciente](TASK-07-cadastro-paciente.md) | Completed | 02, 04, 06 |
 | 08 | [TASK-08 - Boas-vindas do paciente](TASK-08-boas-vindas-paciente.md) | Completed | 07 |
 | 09 | [TASK-09 - Cadastro inicial de psicólogo](TASK-09-cadastro-inicial-psicologo.md) | Completed | 02, 04, 06 |
-| 10 | [TASK-10 - Consulta CFP e resultado](TASK-10-consulta-cfp-resultado.md) | Blocked | 02, 03, 09 |
+| 10 | [TASK-10 - Consulta CFP e resultado](TASK-10-consulta-cfp-resultado.md) | Pending | 02, 03, 09 |
 | 11 | [TASK-11 - Envio e confirmação de CRP](TASK-11-envio-confirmacao-crp.md) | Blocked | 02, 03, 10 |
 | 12 | [TASK-12 - Shell privado mobile](TASK-12-shell-privado-mobile.md) | Completed | 06, 08 ou 11 |
 | 13 | [TASK-13 - Psicólogos: listagem e filtros](TASK-13-psicologos-listagem-filtros.md) | Completed | 02, 12 |
@@ -96,22 +96,23 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 ### 0. Fechar inconsistencias documentais antes de nova feature
 
 1. Revalidar e fechar a [TASK-29A - Notificacoes: fundacao e recebimento](TASK-29a-notificacoes-fundacao.md): a maior parte do codigo ja existe, mas ainda faltam criterios finais no arquivo da task, validacao browser local/migrate e commit de fechamento, se aplicavel.
-2. Manter como bloqueadas as tasks [TASK-10](TASK-10-consulta-cfp-resultado.md), [TASK-11](TASK-11-envio-confirmacao-crp.md), [TASK-18](TASK-18-perfil-privado-psicologo.md), [TASK-19](TASK-19-avaliacoes-psicologo.md) e [TASK-20](TASK-20-analytics-psicologo.md) ate resolver a cadeia CFP/CRP -> perfil privado do psicologo.
+2. A [TASK-10](TASK-10-consulta-cfp-resultado.md) foi desbloqueada por InfoSimples (`DOCUMENT_TOKEN`) e deve entrar na fila executavel. Manter como bloqueadas [TASK-11](TASK-11-envio-confirmacao-crp.md), [TASK-18](TASK-18-perfil-privado-psicologo.md), [TASK-19](TASK-19-avaliacoes-psicologo.md) e [TASK-20](TASK-20-analytics-psicologo.md) ate existir bucket R2 privado/decisao para documentos CRP e perfil privado do psicologo.
 
-### 1. Trilha executavel agora, sem depender de TASK-10/11/18/19/20
+### 1. Trilha executavel agora apos desbloqueio da InfoSimples
 
 Execute uma por vez, sempre validando, marcando criterios, ADR e commit/push:
 
-1. [TASK-21 - Perfil privado do paciente](TASK-21-perfil-privado-paciente.md)
-2. [TASK-22 - Explorar e sugerir comunidades](TASK-22-explorar-sugerir-comunidades.md)
-3. [TASK-23 - Feed de comunidade](TASK-23-feed-comunidade.md)
-4. [TASK-25 - Dentro da comunidade](TASK-25-dentro-comunidade.md)
-5. [TASK-24 - Criar postagem](TASK-24-criar-postagem.md)
-6. [TASK-26 - Dentro do post](TASK-26-dentro-post.md)
-7. [TASK-27 - Ranking Top Mentores](TASK-27-ranking-top-mentores.md)
-8. [TASK-28 - Meus posts e posts salvos](TASK-28-meus-posts-posts-salvos.md)
-9. [TASK-29B - Notificacoes: eventos de dominio](TASK-29b-notificacoes-eventos.md), somente depois de TASK-29A estar fechada e das tasks produtoras de eventos usadas no escopo estarem prontas.
-10. [TASK-30 - Configuracoes de conta](TASK-30-configuracoes-conta.md)
+1. [TASK-10 - Consulta CFP e resultado](TASK-10-consulta-cfp-resultado.md), usando InfoSimples `cfp-cadastro` e `DOCUMENT_TOKEN`; se a documentacao autenticada/token nao permitir a chamada real, registrar bloqueio especifico e nao usar mock.
+2. [TASK-21 - Perfil privado do paciente](TASK-21-perfil-privado-paciente.md)
+3. [TASK-22 - Explorar e sugerir comunidades](TASK-22-explorar-sugerir-comunidades.md)
+4. [TASK-23 - Feed de comunidade](TASK-23-feed-comunidade.md)
+5. [TASK-25 - Dentro da comunidade](TASK-25-dentro-comunidade.md)
+6. [TASK-24 - Criar postagem](TASK-24-criar-postagem.md)
+7. [TASK-26 - Dentro do post](TASK-26-dentro-post.md)
+8. [TASK-27 - Ranking Top Mentores](TASK-27-ranking-top-mentores.md)
+9. [TASK-28 - Meus posts e posts salvos](TASK-28-meus-posts-posts-salvos.md)
+10. [TASK-29B - Notificacoes: eventos de dominio](TASK-29b-notificacoes-eventos.md), somente depois de TASK-29A estar fechada e das tasks produtoras de eventos usadas no escopo estarem prontas.
+11. [TASK-30 - Configuracoes de conta](TASK-30-configuracoes-conta.md)
 
 ### 2. Trilha condicional de pagamento
 
@@ -122,13 +123,12 @@ Execute uma por vez, sempre validando, marcando criterios, ADR e commit/push:
 
 Quando os requisitos externos estiverem resolvidos, retomar nesta ordem:
 
-1. [TASK-10 - Consulta CFP e resultado](TASK-10-consulta-cfp-resultado.md), somente se houver fonte/API/processo autorizado para CFP/CRP automatico; caso a decisao continue sendo aprovacao manual, registrar nova decisao e ajustar a task antes de executar.
-2. [TASK-11 - Envio e confirmacao de CRP](TASK-11-envio-confirmacao-crp.md), depois de provisionar bucket R2 privado para documentos profissionais e definir env como `CLOUDFLARE_R2_PRIVATE_BUCKET_NAME` ou equivalente.
-3. [TASK-18 - Perfil privado do psicologo](TASK-18-perfil-privado-psicologo.md), depois de TASK-11.
-4. [TASK-19 - Avaliacoes do psicologo](TASK-19-avaliacoes-psicologo.md), depois de TASK-18.
-5. [TASK-20 - Analytics do psicologo](TASK-20-analytics-psicologo.md), depois de TASK-18 e com dados reais de contato/avaliacao.
-6. Reavaliar dependencias de billing ([TASK-31](TASK-31-planos-assinatura.md), [TASK-32](TASK-32-checkout-assinatura.md), [TASK-33](TASK-33-gestao-assinatura-cartao.md)) se alguma tiver sido bloqueada por credenciais.
-7. [TASK-34 - Qualidade, seguranca, LGPD e operacao](TASK-34-qualidade-seguranca-lgpd-operacao.md), por ultimo, apenas depois de 13 a 33 estarem completed ou terem bloqueios explicitamente aceitos para fora do MVP.
+1. [TASK-11 - Envio e confirmacao de CRP](TASK-11-envio-confirmacao-crp.md), depois de provisionar bucket R2 privado para documentos profissionais e definir env como `CLOUDFLARE_R2_PRIVATE_BUCKET_NAME` ou equivalente.
+2. [TASK-18 - Perfil privado do psicologo](TASK-18-perfil-privado-psicologo.md), depois de TASK-11.
+3. [TASK-19 - Avaliacoes do psicologo](TASK-19-avaliacoes-psicologo.md), depois de TASK-18.
+4. [TASK-20 - Analytics do psicologo](TASK-20-analytics-psicologo.md), depois de TASK-18 e com dados reais de contato/avaliacao.
+5. Reavaliar dependencias de billing ([TASK-31](TASK-31-planos-assinatura.md), [TASK-32](TASK-32-checkout-assinatura.md), [TASK-33](TASK-33-gestao-assinatura-cartao.md)) se alguma tiver sido bloqueada por credenciais.
+6. [TASK-34 - Qualidade, seguranca, LGPD e operacao](TASK-34-qualidade-seguranca-lgpd-operacao.md), por ultimo, apenas depois de 13 a 33 estarem completed ou terem bloqueios explicitamente aceitos para fora do MVP.
 
 ### 4. Regra para escolher a proxima task
 

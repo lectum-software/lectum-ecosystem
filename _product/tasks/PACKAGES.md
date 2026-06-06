@@ -156,3 +156,9 @@ Atualmente o projeto valida com Biome, ESLint e TypeScript. Para uma suíte auto
 | `@types/supertest` | `7.2.0` | Tipos |
 
 Adicionar esses pacotes somente em task de qualidade/testes ou quando uma task exigir cobertura automatizada.
+
+## Decisao InfoSimples (TASK-10)
+
+- Nao instalar `infosimples-sdk` por padrao. A integracao CFP/CRP deve usar HTTP nativo do backend em adapter isolado, apos confirmar o endpoint/payload na documentacao autenticada da InfoSimples.
+- `DOCUMENT_TOKEN` e segredo backend-only; nunca expor ao frontend, logs ou commits.
+- Qualquer adocao futura de SDK da InfoSimples exige nova validacao deste arquivo e ADR especifico.

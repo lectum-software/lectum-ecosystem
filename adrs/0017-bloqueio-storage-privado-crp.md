@@ -77,3 +77,7 @@ com a regra de persistir apenas a chave privada do bucket.
 - Confirmar se o backend deve criar o bucket automaticamente ou apenas validar existência.
 - Definir rota controlada de download/visualização para operação/admin sem expor URL
   pública.
+
+## Atualizacao em 2026-06-06
+
+A ADR-0026 desbloqueia a consulta cadastral CFP/CRP via InfoSimples para a TASK-10, mas nao desbloqueia esta task de upload de documento. O ambiente continua sem `CLOUDFLARE_R2_PRIVATE_BUCKET_NAME`; portanto documentos CRP nao podem ser persistidos no bucket publico existente.

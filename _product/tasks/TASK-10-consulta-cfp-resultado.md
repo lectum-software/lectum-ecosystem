@@ -8,9 +8,9 @@
 | Prioridade | P0 |
 | Esforço | L |
 | Fase | Psicólogo |
-| Status | Blocked |
+| Status | Pending |
 | Dependências | TASK-02, TASK-03, TASK-09 |
-| ADR alvo | ADR de integração CFP |
+| ADR alvo | ADR-0026 |
 
 ## Referências obrigatórias
 
@@ -37,11 +37,13 @@ A jornada mostra consulta por CPF/CFP, loading e resultados em cards. Como não 
 
 ## Objetivo
 
-Consultar CFP/CRP por integração real ou registrar bloqueio formal se a decisão externa ainda não existir.
+Consultar CFP/CRP por integracao real via InfoSimples ou registrar bloqueio formal se o token/contrato do provedor nao estiver disponivel.
 
 ## Pré-requisitos e bloqueios
 
-- A consulta CFP automática permanece **bloqueada** pela TASK-03 / ADR-0006 até existir fonte oficial, API contratada ou processo autorizado. Parar antes de qualquer chamada real e **não usar mock**, scraping não autorizado nem dado inventado.
+- A consulta CFP automatica foi desbloqueada em 2026-06-06 pela decisao ADR-0026: usar InfoSimples `Conselho Federal de Psicologia / Cadastro` com token backend-only em `DOCUMENT_TOKEN`.
+- Parar antes de qualquer chamada real se `DOCUMENT_TOKEN` estiver ausente, invalido ou sem acesso ao produto `cfp-cadastro`. Nao usar mock, scraping nao autorizado nem dado inventado.
+- A documentacao tecnica completa da InfoSimples fica atras de login em `https://api.infosimples.com/consultas/docs`; durante a implementacao, confirmar no painel autenticado o endpoint/payload HTTP exato antes de codar a chamada.
 - A aprovação manual de CRP é o fluxo inicial decidido e continua necessária mesmo se uma API CFP for adicionada futuramente. Se a consulta automática não existir, encaminhar para TASK-11 (upload CRP + análise manual).
 - `psychologist_profile.cfp_verified_at` só é preenchido com consulta CFP real (ver `DATA-MODEL.md`); sem ela, manter `crp_status="pendente"`.
 
@@ -67,7 +69,7 @@ Este é um **módulo novo** (domínio de verificação profissional): seguir os 
 
 Implementação esperada:
 
-- Criar provider/interface de consulta CFP **agnóstica ao fornecedor** somente quando a fonte/API for definida em nova ADR.
+- Criar provider/interface de consulta CFP **agnostica ao fornecedor**, com implementacao `InfoSimplesCfpProvider` isolada em adapter de backend e sem expor `DOCUMENT_TOKEN` ao frontend.
 - Endpoint privado para consultar e salvar resultado selecionado.
 - Persistir payload auditável mínimo da consulta em `professional_registry_check` (campo `raw`, ver `DATA-MODEL.md`).
 - Ao confirmar resultado, atualizar `psychologist_profile.cpf` e `psychologist_profile.cfp_verified_at` (ver `DATA-MODEL.md`).
@@ -113,6 +115,8 @@ Packages permitidos nesta task:
 - Zod
 - date-fns
 
+Nao instalar `infosimples-sdk` nesta task sem nova validacao/ADR: a decisao atual e usar HTTP nativo do backend apos confirmar a documentacao autenticada.
+
 Regras anti-recriação específicas:
 
 - Procurar componente, helper, model, endpoint e query key equivalente antes de criar estrutura nova.
@@ -142,7 +146,7 @@ Regras anti-recriação específicas:
 - [ ] Backend implementado nos endpoints/modelos esperados quando aplicável.
 - [ ] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
 - [ ] Rotas sob `/api/private/psychologist/*` exigem `requireRole("psicologo")` (fail-closed), conforme ADR-0002.
-- [ ] Bloqueio CFP automático respeitado: sem fonte/API autorizada, parar com pendência, sem mock nem scraping não autorizado.
+- [ ] Integracao InfoSimples respeitada: sem `DOCUMENT_TOKEN` valido/acesso ao `cfp-cadastro`, parar com pendencia; sem mock nem scraping nao autorizado.
 - [ ] Todos os estados obrigatórios existem e usam textos em PT-BR.
 - [ ] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
 - [ ] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
@@ -165,7 +169,18 @@ Regras anti-recriação específicas:
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
 
-## Execução bloqueada em 2026-06-05
+## Desbloqueio InfoSimples em 2026-06-06
+
+- Fonte/API autorizada definida: InfoSimples, consulta publica `Conselho Federal de Psicologia / Cadastro` (`cfp-cadastro`), conforme ADR-0026.
+- Variavel de ambiente backend-only: `DOCUMENT_TOKEN`. Nao ler, logar, commitar ou enviar este token para o frontend.
+- Campos publicamente documentados para consulta: `cnpj`, `cpf`, `nome`, `registro`, `uf`; para o Lectum, preferir minimo necessario (`registro` + `uf`, e `cpf`/`nome` apenas quando precisos para desambiguacao).
+- Campos publicamente documentados de retorno: `resultados[].data_inscricao`, `nome`, `nome_regional`, `registro`, `situacao`.
+- Regra de confirmacao: aceitar somente resultado unico/inequivoco com `registro`+UF compativeis, nome compativel quando informado e `situacao` ativa/regular conforme valores reais observados no primeiro teste autenticado. Resultado ausente, ambiguo, divergente ou inativo nao aprova automaticamente.
+- Persistir auditoria minima em `professional_registry_check.raw`, sem expor resposta bruta em rotas publicas.
+- `cfp_verified_at` so pode ser preenchido depois de confirmacao real da InfoSimples; falha de provedor/rate limit deve manter status honesto e retentavel.
+- Observacao: a documentacao completa de chamadas fica atras de login; confirmar endpoint, metodo, parametros e shape de erro no painel `api.infosimples.com` durante a execucao desta task.
+
+## Execucao bloqueada em 2026-06-05 (historico)
 
 - Dependências documentais confirmadas: TASK-02, TASK-03 e TASK-09 estão com `Status | Completed |` em seus arquivos.
 - Referências visuais consultadas pelas imagens locais:
@@ -187,4 +202,4 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 ## Observação sobre critérios de aceite
 
-Os critérios acima permanecem sem marcação completa porque a task está formalmente bloqueada por requisito externo. Não houve implementação de tela, endpoint, provider, schema ou mock.
+Os criterios acima permanecem sem marcacao completa porque a task ainda nao foi implementada. O bloqueio externo de fonte/API foi removido por ADR-0026, mas a execucao deve parar novamente se `DOCUMENT_TOKEN` ou acesso ao `cfp-cadastro` nao estiverem validos.

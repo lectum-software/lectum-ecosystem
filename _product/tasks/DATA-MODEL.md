@@ -163,7 +163,7 @@ Quando construído: módulo de audiência próprio (ex.: `backend/src/modules/ma
 | `cpf` | `String?` | usado na consulta CFP; dado sensível (LGPD) |
 | `crp` | `String?` | registro profissional exibido no cabeçalho |
 | `crp_status` | `String @default("pendente")` | `"pendente" \| "em_analise" \| "aprovado" \| "rejeitado"` (TASK-10/11) |
-| `cfp_verified_at` | `DateTime?` | preenchido só com consulta CFP real; consulta automática segue bloqueada até fonte/API autorizada (ADR-0006) |
+| `cfp_verified_at` | `DateTime?` | preenchido so com consulta CFP real; fonte autorizada para TASK-10: InfoSimples `cfp-cadastro` via `DOCUMENT_TOKEN` (ADR-0026) |
 | `whatsapp` | `String?` | E.164; validado em TASK-16 |
 | `whatsapp_verified_at` | `DateTime?` | só com verificação real por Twilio SMS/OTP (ADR-0006) |
 | `languages` | `Json?` | lista de idiomas `string[]` (ex.: `["pt","en"]`); baixo volume, não precisa catálogo |
@@ -206,7 +206,7 @@ Especialidade, serviço e abordagem são filtros da busca (TASK-13) e seções d
 | `status` | `String @default("enviado")` | `"enviado" \| "em_analise" \| "aprovado" \| "rejeitado"` |
 | `@@index([psychologist_id, type])` | | |
 
-`professional_registry_check` (log de consulta CFP, TASK-10; **consulta automática bloqueada até fonte/API autorizada — ver ADR-0006**):
+`professional_registry_check` (log de consulta CFP, TASK-10; **fonte autorizada: InfoSimples `cfp-cadastro` - ver ADR-0026**):
 
 | Campo | Tipo | Notas |
 |---|---|---|

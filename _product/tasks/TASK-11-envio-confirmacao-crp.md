@@ -167,7 +167,14 @@ Regras anti-recriação específicas:
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
 
-## Execução bloqueada em 2026-06-05
+## Atualizacao InfoSimples em 2026-06-06
+
+- A validacao cadastral CFP/CRP automatica da TASK-10 foi desbloqueada por ADR-0026 usando InfoSimples e `DOCUMENT_TOKEN`.
+- Isso nao desbloqueia o upload de documento CRP desta task: InfoSimples valida cadastro/registro, mas nao substitui storage privado de arquivo profissional.
+- Como o ambiente ainda nao possui `CLOUDFLARE_R2_PRIVATE_BUCKET_NAME` (apenas bucket publico foi identificado), esta task permanece `Blocked` ate existir bucket/politica privada para documentos CRP.
+- Depois de TASK-10, se o produto decidir dispensar upload manual para casos automaticamente verificados, registrar nova ADR antes de alterar o escopo desta task.
+
+## Execucao bloqueada em 2026-06-05
 
 - Dependências documentais verificadas: TASK-02, TASK-03 e TASK-09 estão concluídas; a
   TASK-10 permanece `Blocked` porque a consulta CFP automática não possui fonte/API

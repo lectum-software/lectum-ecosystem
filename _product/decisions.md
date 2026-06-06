@@ -98,31 +98,33 @@ Impacto nas tasks: TASK-16, TASK-18, TASK-20, TASK-29.
 
 ## CFP/CRP
 
-Status: Parcialmente decidido; consulta automática bloqueada.
+Status: Decidido para consulta automatica; upload/analise manual ainda depende de storage privado.
 
 Decidido:
 
-- Aprovação e bloqueio manual de CRP é o fluxo inicial e continuará necessário mesmo que uma API seja adicionada no futuro.
-- Psicólogo envia documento CRP via R2; operação/admin revisa e altera status (`pendente`, `em_analise`, `aprovado`, `rejeitado`).
+- Consulta automatica CFP/CRP usa InfoSimples `Conselho Federal de Psicologia / Cadastro` (`cfp-cadastro`) com token backend-only `DOCUMENT_TOKEN` (ADR-0026).
+- Aprovacao e bloqueio manual de CRP continuam necessarios para casos nao encontrados, ambiguos, divergentes ou quando o produto exigir arquivo documental.
+- Psicologo envia documento CRP via R2 privado; operacao/admin revisa e altera status (`pendente`, `em_analise`, `aprovado`, `rejeitado`).
 
 Bloqueado:
 
-- Consulta automática CFP/CRP por CPF fica aberta até existir fonte oficial, API contratada ou processo autorizado.
-- Não fazer scraping não autorizado.
-- Não preencher `psychologist_profile.cfp_verified_at` sem consulta real.
+- Nao fazer scraping nao autorizado.
+- Nao preencher `psychologist_profile.cfp_verified_at` sem consulta real via InfoSimples ou provider futuro aprovado por ADR.
+- Se `DOCUMENT_TOKEN` estiver ausente/invalido ou sem acesso ao `cfp-cadastro`, TASK-10 volta a ficar bloqueada operacionalmente.
+- TASK-11 continua bloqueada ate existir bucket/politica R2 privada para documento CRP.
 
-Fallback quando registro não for encontrado:
+Fallback quando registro nao for encontrado:
 
-- Encaminhar para upload de CRP e análise manual.
-- Nunca aprovar automaticamente por ausência de retorno.
+- Encaminhar para upload de CRP e analise manual.
+- Nunca aprovar automaticamente por ausencia de retorno.
 
 Impacto nas tasks: TASK-10, TASK-11, TASK-18.
 
-Execução TASK-10 em 2026-06-05:
+Execucao TASK-10 em 2026-06-05/2026-06-06:
 
-- Bloqueio confirmado e formalizado em `adrs/0015-bloqueio-consulta-cfp-automatica.md`.
-- Nenhum endpoint, provider, schema ou tela de consulta automática deve ser implementado até existir fonte/API autorizada.
-- Encaminhar a jornada do psicólogo para o fluxo manual da TASK-11, mantendo `cfp_verified_at=null`, `crp_status="pendente"` e `published=false` até validação real.
+- Bloqueio historico formalizado em `adrs/0015-bloqueio-consulta-cfp-automatica.md`; desbloqueio em `adrs/0026-infosimples-validacao-cfp-crp.md`.
+- TASK-10 pode ser executada com InfoSimples, sem mock, confirmando no painel autenticado o endpoint/payload real.
+- Encaminhar para TASK-11 quando a consulta nao aprovar de forma inequivoca ou quando houver exigencia de documento CRP; TASK-11 ainda exige R2 privado.
 
 ## E-mail e SMS
 

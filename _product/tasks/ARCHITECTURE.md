@@ -202,3 +202,10 @@ Regras obrigatórias:
 - respeitar `.builderignore` e `frontend/.builder/rules/lectum-frontend.mdc`;
 - revisar qualquer código sugerido antes de aplicar;
 - tratar Builder output como rascunho visual, não como implementação final.
+
+## Integracoes externas de validacao documental
+
+- CFP/CRP automatico: usar provider backend isolado para InfoSimples `cfp-cadastro` (ADR-0026), com token em `DOCUMENT_TOKEN`.
+- A camada de controller/service nao deve conhecer detalhes do fornecedor; criar interface de provider para permitir troca futura sem mudar contratos das rotas `/api/private/psychologist/cfp/*`.
+- Falhas de configuracao, rate limit, timeout ou resultado ambiguo devem falhar de forma honesta, sem mock e sem aprovar profissional automaticamente.
+- O token `DOCUMENT_TOKEN` nunca pode sair do backend nem aparecer em logs, respostas HTTP, traces ou codigo frontend.

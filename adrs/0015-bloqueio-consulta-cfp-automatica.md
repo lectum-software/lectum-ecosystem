@@ -65,3 +65,7 @@ TASK-10 proibe mock, scraping nao autorizado e dado inventado.
 - Definir contrato do provedor, retencao do payload `raw`, limites de rate limit e
   fallback autorizado.
 - Depois da decisao, retomar TASK-10 com endpoint, provider, schema e tela reais.
+
+## Atualizacao em 2026-06-06
+
+O bloqueio desta ADR foi superado para a TASK-10 pela ADR-0026: a fonte/API autorizada passa a ser InfoSimples `Conselho Federal de Psicologia / Cadastro` (`cfp-cadastro`) usando `DOCUMENT_TOKEN` no backend. Esta ADR permanece como historico da execucao bloqueada de 2026-06-05 e como proibicao permanente de mock, scraping nao autorizado e preenchimento de `cfp_verified_at` sem consulta real.
