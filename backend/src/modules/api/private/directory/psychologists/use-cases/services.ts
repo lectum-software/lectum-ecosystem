@@ -1,6 +1,8 @@
 import { error, msg } from "@/helpers/translate";
+import type { IContactDTO } from "../DTOs/IContactDTO";
 import type { IIndexDTO } from "../DTOs/IIndexDTO";
 import type { IProfileListDTO, IProfileShowDTO } from "../DTOs/IProfileDTO";
+import { ContactRepository } from "../repositories/ContactRepository";
 import { IndexRepository } from "../repositories/IndexRepository";
 import { ProfileRepository } from "../repositories/ProfileRepository";
 
@@ -76,5 +78,41 @@ export const reviews = async (data: IProfileListDTO) => {
     status: 200,
     ...msg("index", {}),
     data: res,
+  };
+};
+
+export const contact = async (data: IContactDTO) => {
+  if (!data.b.consent_accepted) {
+    return {
+      status: 400,
+      ...error("contact_consent_required", {}),
+    };
+  }
+
+  const repository = new ContactRepository();
+  const res = await repository.create(data);
+
+  if (!res.ok) {
+    if (res.reason === "not_found") {
+      return {
+        status: 404,
+        ...error("not_found", {
+          model: "psychologist_profile",
+        }),
+      };
+    }
+
+    const status = res.reason === "patient_phone_invalid" ? 400 : 403;
+
+    return {
+      status,
+      ...error(res.reason, {}),
+    };
+  }
+
+  return {
+    status: 200,
+    ...msg("contact_success", {}),
+    data: res.data,
   };
 };

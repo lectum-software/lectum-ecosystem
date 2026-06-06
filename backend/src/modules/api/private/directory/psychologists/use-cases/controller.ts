@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { error500, send } from "@/helpers/return";
 import service, {
+  contact as contactService,
   posts as postsService,
   reviews as reviewsService,
   show as showService,
@@ -43,5 +44,15 @@ export const reviews = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "directory_psychologists_reviews", err);
+  }
+};
+
+export const contact = async (req: Request, res: Response) => {
+  try {
+    const resolve = await contactService(req as unknown as Parameters<typeof contactService>[0]);
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "directory_psychologists_contact", err);
   }
 };

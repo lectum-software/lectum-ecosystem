@@ -1,5 +1,7 @@
 ﻿import { callEndpoint } from "@/api/generator";
 import type {
+  DirectoryPsychologistContactPayload,
+  DirectoryPsychologistContactResponse,
   DirectoryPsychologistProfile,
   DirectoryPsychologistProfileListQuery,
   DirectoryPsychologistProfilePostsResponse,
@@ -51,4 +53,21 @@ export const getDirectoryPsychologistReviews = async (
   });
 
   return handleReq<DirectoryPsychologistProfileReviewsResponse>(handle);
+};
+
+export const createDirectoryPsychologistContact = async (
+  id: string,
+  body: DirectoryPsychologistContactPayload,
+) => {
+  const handle = callEndpoint({
+    route: "/api/private/directory/psychologists/:id/contact",
+    method: "POST",
+    params: { id },
+    body,
+  });
+
+  return handleReq<DirectoryPsychologistContactResponse>({
+    ...handle,
+    showSuccess: true,
+  });
 };

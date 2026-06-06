@@ -35,3 +35,4 @@ Formato recomendado:
 - [ADR-0019 - Descoberta real de psicólogos com filtros por taxonomia](0019-descoberta-psicologos-taxonomias.md) - Accepted
 - [ADR-0020 - Favoritos e seguindo de psicólogos](0020-favoritar-psicologo-na-listagem.md) - Accepted
 - [ADR-0021 - Perfil profissional publico com dados public-safe](0021-perfil-profissional-publico.md) - Accepted
+- [ADR-0022 - Contato WhatsApp por wa.me com intenção persistida](0022-contato-whatsapp-wa-me.md) - Accepted

@@ -27,7 +27,11 @@
     "confirmed_already": "Usuário já confirmado",
     "origin_not_allowed": "Origem não permitida",
     "terms_required": "Aceite os termos para continuar",
-    "role_not_authorized": "Acesso permitido apenas para o perfil autorizado"
+    "role_not_authorized": "Acesso permitido apenas para o perfil autorizado",
+    "contact_consent_required": "Aceite a política de privacidade para abrir o WhatsApp",
+    "patient_phone_invalid": "Informe um número de WhatsApp válido para continuar",
+    "whatsapp_unavailable": "Este perfil ainda não possui WhatsApp disponível para contato",
+    "whatsapp_not_verified": "Este perfil ainda não possui WhatsApp verificado"
   },
   "message": {
     "store": "dado criado",
@@ -45,7 +49,8 @@
     "favorite_success": "psicólogo adicionado aos favoritos",
     "unfavorite_success": "psicólogo removido dos favoritos",
     "follow_success": "psicólogo adicionado em seguindo",
-    "unfollow_success": "psicólogo removido de seguindo"
+    "unfollow_success": "psicólogo removido de seguindo",
+    "contact_success": "Intenção de contato registrada. Abrindo WhatsApp."
   },
   "gender": {
     "o": "o"
@@ -64,7 +69,8 @@
     "psychologist_follow": "psicólogo seguido",
     "professional_review": "avaliação profissional",
     "community": "comunidade",
-    "community_post": "publicação"
+    "community_post": "publicação",
+    "contact_request": "intenção de contato"
   },
   "property": {
     "email": "email",
@@ -82,7 +88,9 @@
     "verified": "verificados",
     "limit": "limite",
     "page": "página",
-    "id": "identificador"
+    "id": "identificador",
+    "patient_phone": "telefone do paciente",
+    "consent_accepted": "consentimento"
   },
   "notification": {
     "test": {

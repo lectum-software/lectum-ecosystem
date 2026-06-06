@@ -8,9 +8,9 @@
 | Prioridade | P1 |
 | Esforço | M |
 | Fase | Perfil |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-02, TASK-03, TASK-15 |
-| ADR alvo | ADR de contato WhatsApp |
+| ADR alvo | ADR-0022 |
 
 ## Referências obrigatórias
 
@@ -136,19 +136,19 @@ Regras anti-recriação específicas:
 
 ## Critérios de aceite
 
-- [ ] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
-- [ ] Rotas de descoberta sob `/api/private/directory/*` usam só `_auth` (neutras), nunca `requireRole`, conforme ADR-0002.
-- [ ] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
-- [ ] Backend implementado nos endpoints/modelos esperados quando aplicável.
-- [ ] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
-- [ ] Todos os estados obrigatórios existem e usam textos em PT-BR.
-- [ ] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
-- [ ] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
-- [ ] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
-- [ ] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
-- [ ] ADR criado ou atualizado em `adrs/`.
-- [ ] Checks/builds relevantes foram executados sem erros.
-- [ ] Commit criado com mensagem convencional.
+- [x] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
+- [x] Rotas de descoberta sob `/api/private/directory/*` usam só `_auth` (neutras), nunca `requireRole`, conforme ADR-0002.
+- [x] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
+- [x] Backend implementado nos endpoints/modelos esperados quando aplicável.
+- [x] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
+- [x] Todos os estados obrigatórios existem e usam textos em PT-BR.
+- [x] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
+- [x] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
+- [x] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
+- [x] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
+- [x] ADR criado ou atualizado em `adrs/`.
+- [x] Checks/builds relevantes foram executados sem erros.
+- [x] Commit criado com mensagem convencional.
 
 ## Validação mínima
 
@@ -162,3 +162,29 @@ Regras anti-recriação específicas:
 ## Notas para executor
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
+
+## Execução TASK-16
+
+- Dependências confirmadas pelos arquivos das tasks: `TASK-02` e `TASK-03` estão `Completed`, e `TASK-15` está `Completed`.
+- Referência visual consultada: `_product/proto/Confirmação de WhatsApp - Inserir Número.jpg` (base mobile ~430px).
+- Builder Quick Copy ativo (`vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a`) foi tentado via `npx "@builder.io/dev-tools@latest" auth status`, mas o ambiente não estava autenticado no Builder; a implementação usou o fallback de imagem local e registrou a limitação na ADR-0022.
+- Backend implementado em `POST /api/private/directory/psychologists/:id/contact`, sob `/api/private/directory/*`, com guarda somente `_auth` e sem `requireRole`.
+- Persistência implementada com `contact_request` e migration `20260606160655_add_contact_requests`.
+- Regra adotada: o link `wa.me` só é retornado quando o perfil publicado possui `whatsapp` e `whatsapp_verified_at`, preservando a trava de verificação real já exposta pela TASK-15.
+- Frontend implementado em `/app/psychologist/[id]/contact`, mobile-first, com React Hook Form/Zod, `PhoneController` e `CheckboxController` da fundação da TASK-02.
+- Nenhum pacote novo foi instalado e nenhum mock/dado fake permanente foi criado. Os dados usados nos smokes de API/browser foram temporários e removidos ao final.
+
+## Validação executada
+
+- `pnpm --dir backend db:migrate --name add_contact_requests`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke real de API com paciente e psicólogo temporários: persistiu `contact_request`, atualizou `patient_profile.phone` normalizado e retornou `whatsapp_url` `wa.me`.
+- Browser local headless em Chrome na rota `/app/psychologist/[id]/contact`: renderizou cópia de WhatsApp, profissional temporário real, privacidade/consentimento, CTA e telefone inicial.
+
+## ADR
+
+- `adrs/0022-contato-whatsapp-wa-me.md`

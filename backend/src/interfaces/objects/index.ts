@@ -191,6 +191,19 @@ export interface professional_subscription {
   plan?: subscription_plan | null;
 }
 
+export interface contact_request {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  user_id?: string | null;
+  psychologist_id?: string | null;
+  channel?: "whatsapp" | string | null;
+  user?: user | null;
+  psychologist?: user | null;
+}
+
 export interface professional_review {
   id?: string | null;
   deleted?: boolean | null;
@@ -310,6 +323,8 @@ export interface user {
   favorited_by_patients?: psychologist_favorite[] | null;
   followed_psychologists?: psychologist_follow[] | null;
   followed_by_patients?: psychologist_follow[] | null;
+  contact_requests?: contact_request[] | null;
+  received_contact_requests?: contact_request[] | null;
   professional_reviews?: professional_review[] | null;
   received_reviews?: professional_review[] | null;
   community_posts?: community_post[] | null;

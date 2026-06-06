@@ -94,5 +94,22 @@ export const profileListSchema: IValidatorRequest = {
   ],
 };
 
+export const contactSchema: IValidatorRequest = {
+  ...profileShowSchema,
+  body: [
+    {
+      key: "patient_phone",
+      coerse: "string",
+      method: "phone",
+    },
+    {
+      key: "consent_accepted",
+      coerse: "boolean",
+      method: "boolean",
+    },
+  ],
+};
+
 export const profileShowValidator = validator(profileShowSchema);
 export const profileListValidator = validator(profileListSchema);
+export const contactValidator = validator(contactSchema);

@@ -52,6 +52,17 @@ export type DirectoryPsychologistProfile = DirectoryPsychologist & {
   whatsapp_available: boolean;
 };
 
+export type DirectoryPsychologistContactPayload = {
+  patient_phone: string;
+  consent_accepted: boolean;
+};
+
+export type DirectoryPsychologistContactResponse = {
+  contact_request_id: string;
+  psychologist_id: string;
+  whatsapp_url: string;
+};
+
 export type DirectoryPsychologistProfilePost = {
   id: string;
   title: string;

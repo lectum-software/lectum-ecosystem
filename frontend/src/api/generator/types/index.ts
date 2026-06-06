@@ -10,6 +10,8 @@ export type {
 export type {
   DirectoryCatalogItem,
   DirectoryPsychologist,
+  DirectoryPsychologistContactPayload,
+  DirectoryPsychologistContactResponse,
   DirectoryPsychologistFilters,
   DirectoryPsychologistProfile,
   DirectoryPsychologistProfileListQuery,
