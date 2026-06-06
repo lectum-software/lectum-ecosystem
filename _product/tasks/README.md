@@ -52,11 +52,11 @@ Quando uma task citar artefato `figma-design-frame-*.html`, leia como nome virtu
 
 | Ordem | Task | Status | Depende |
 |---|---|---|---|
-| 00 | [TASK-00 - Setup do agente executor e governança](TASK-00-setup-agente-executor-governanca.md) | Pending | - |
-| 01 | [TASK-01 - Design System Lectum Foundation](TASK-01-design-system-lectum-foundation.md) | Pending | 00 |
-| 02 | [TASK-02 - Form Composition Foundation](TASK-02-form-composition-foundation.md) | Pending | 01 |
-| 03 | [TASK-03 - Decisões externas e integrações obrigatórias](TASK-03-decisoes-externas-integracoes.md) | Pending | 00 |
-| 04 | [TASK-04 - Seleção de perfil e login](TASK-04-selecao-perfil-login.md) | Pending | 01, 02, 03 |
+| 00 | [TASK-00 - Setup do agente executor e governança](TASK-00-setup-agente-executor-governanca.md) | Completed | - |
+| 01 | [TASK-01 - Design System Lectum Foundation](TASK-01-design-system-lectum-foundation.md) | Completed | 00 |
+| 02 | [TASK-02 - Form Composition Foundation](TASK-02-form-composition-foundation.md) | Completed | 01 |
+| 03 | [TASK-03 - Decisões externas e integrações obrigatórias](TASK-03-decisoes-externas-integracoes.md) | Completed | 00 |
+| 04 | [TASK-04 - Seleção de perfil e login](TASK-04-selecao-perfil-login.md) | Completed | 01, 02, 03 |
 | 05 | [TASK-05 - Recuperação de senha](TASK-05-recuperacao-senha.md) | Completed | 02, 04 |
 | 06 | [TASK-06 - Verificação de e-mail por código](TASK-06-verificacao-email-codigo.md) | Completed | 02, 04 |
 | 07 | [TASK-07 - Cadastro de paciente](TASK-07-cadastro-paciente.md) | Completed | 02, 04, 06 |
@@ -89,7 +89,54 @@ Quando uma task citar artefato `figma-design-frame-*.html`, leia como nome virtu
 | 33 | [TASK-33 - Gestão de assinatura e cartão](TASK-33-gestao-assinatura-cartao.md) | Pending | 02, 32 |
 | 34 | [TASK-34 - Qualidade, segurança, LGPD e operação](TASK-34-qualidade-seguranca-lgpd-operacao.md) | Pending | 13 a 33 |
 
-## Validação base por task
+## Ordem operacional recomendada sem bloqueios
+
+Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas por dependencias externas. A fonte de verdade de cada execucao continua sendo o arquivo da task, mas a ordem abaixo evita iniciar uma task que depende de outra ainda bloqueada.
+
+### 0. Fechar inconsistencias documentais antes de nova feature
+
+1. Revalidar e fechar a [TASK-29A - Notificacoes: fundacao e recebimento](TASK-29a-notificacoes-fundacao.md): a maior parte do codigo ja existe, mas ainda faltam criterios finais no arquivo da task, validacao browser local/migrate e commit de fechamento, se aplicavel.
+2. Manter como bloqueadas as tasks [TASK-10](TASK-10-consulta-cfp-resultado.md), [TASK-11](TASK-11-envio-confirmacao-crp.md), [TASK-18](TASK-18-perfil-privado-psicologo.md), [TASK-19](TASK-19-avaliacoes-psicologo.md) e [TASK-20](TASK-20-analytics-psicologo.md) ate resolver a cadeia CFP/CRP -> perfil privado do psicologo.
+
+### 1. Trilha executavel agora, sem depender de TASK-10/11/18/19/20
+
+Execute uma por vez, sempre validando, marcando criterios, ADR e commit/push:
+
+1. [TASK-21 - Perfil privado do paciente](TASK-21-perfil-privado-paciente.md)
+2. [TASK-22 - Explorar e sugerir comunidades](TASK-22-explorar-sugerir-comunidades.md)
+3. [TASK-23 - Feed de comunidade](TASK-23-feed-comunidade.md)
+4. [TASK-25 - Dentro da comunidade](TASK-25-dentro-comunidade.md)
+5. [TASK-24 - Criar postagem](TASK-24-criar-postagem.md)
+6. [TASK-26 - Dentro do post](TASK-26-dentro-post.md)
+7. [TASK-27 - Ranking Top Mentores](TASK-27-ranking-top-mentores.md)
+8. [TASK-28 - Meus posts e posts salvos](TASK-28-meus-posts-posts-salvos.md)
+9. [TASK-29B - Notificacoes: eventos de dominio](TASK-29b-notificacoes-eventos.md), somente depois de TASK-29A estar fechada e das tasks produtoras de eventos usadas no escopo estarem prontas.
+10. [TASK-30 - Configuracoes de conta](TASK-30-configuracoes-conta.md)
+
+### 2. Trilha condicional de pagamento
+
+1. [TASK-32 - Checkout de assinatura](TASK-32-checkout-assinatura.md), apenas se as credenciais/contrato Mercado Pago necessarios estiverem disponiveis; se nao estiverem, registrar bloqueio especifico e nao simular checkout.
+2. [TASK-33 - Gestao de assinatura e cartao](TASK-33-gestao-assinatura-cartao.md), somente depois da TASK-32.
+
+### 3. Voltar nas bloqueadas para concluir o produto
+
+Quando os requisitos externos estiverem resolvidos, retomar nesta ordem:
+
+1. [TASK-10 - Consulta CFP e resultado](TASK-10-consulta-cfp-resultado.md), somente se houver fonte/API/processo autorizado para CFP/CRP automatico; caso a decisao continue sendo aprovacao manual, registrar nova decisao e ajustar a task antes de executar.
+2. [TASK-11 - Envio e confirmacao de CRP](TASK-11-envio-confirmacao-crp.md), depois de provisionar bucket R2 privado para documentos profissionais e definir env como `CLOUDFLARE_R2_PRIVATE_BUCKET_NAME` ou equivalente.
+3. [TASK-18 - Perfil privado do psicologo](TASK-18-perfil-privado-psicologo.md), depois de TASK-11.
+4. [TASK-19 - Avaliacoes do psicologo](TASK-19-avaliacoes-psicologo.md), depois de TASK-18.
+5. [TASK-20 - Analytics do psicologo](TASK-20-analytics-psicologo.md), depois de TASK-18 e com dados reais de contato/avaliacao.
+6. Reavaliar dependencias de billing ([TASK-31](TASK-31-planos-assinatura.md), [TASK-32](TASK-32-checkout-assinatura.md), [TASK-33](TASK-33-gestao-assinatura-cartao.md)) se alguma tiver sido bloqueada por credenciais.
+7. [TASK-34 - Qualidade, seguranca, LGPD e operacao](TASK-34-qualidade-seguranca-lgpd-operacao.md), por ultimo, apenas depois de 13 a 33 estarem completed ou terem bloqueios explicitamente aceitos para fora do MVP.
+
+### 4. Regra para escolher a proxima task
+
+- Se a proxima task da trilha estiver `Pending` e todas as dependencias estiverem `Completed`, execute.
+- Se alguma dependencia estiver `Blocked`, nao implemente parcialmente: registre bloqueio na task/ADR e avance para a proxima task independente da trilha acima.
+- Se houver requisito externo sem credencial/decisao real, registre bloqueio e nao use mock.
+
+## Validacao base por task
 
 Toda task deve rodar os comandos relevantes:
 
