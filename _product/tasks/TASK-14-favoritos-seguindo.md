@@ -147,6 +147,24 @@ Regras anti-recriação específicas:
 - [ ] Checks/builds relevantes foram executados sem erros.
 - [ ] Commit criado com mensagem convencional.
 
+## Execução parcial solicitada no card da TASK-13 (2026-06-06)
+
+- Para atender ao pedido de coração clicável no card de `/app/psychologists`, foi implementado o toggle real de
+  favorito, sem concluir a TASK-14 inteira.
+- Backend criado neste recorte:
+  - modelos `psychologist_favorite` e `psychologist_follow` previstos no `DATA-MODEL.md`;
+  - `POST /api/private/patient/favorites/:id`;
+  - `DELETE /api/private/patient/favorites/:id`;
+  - montagem sob `/api/private/patient/favorites` com `requireRole("paciente")`.
+- Frontend criado neste recorte:
+  - campo `favorited` em `GET /api/private/directory/psychologists`;
+  - botão de coração persistente no card da listagem.
+- Não foram marcados critérios de aceite desta task porque ainda faltam:
+  - `GET /api/private/patient/favorites`;
+  - rotas e ações de `follows`;
+  - telas dedicadas `/app/favorites` e `/app/following` com dados reais.
+- ADR relacionado: `adrs/0020-favoritar-psicologo-na-listagem.md`.
+
 ## Validação mínima
 
 - `pnpm --dir frontend check` quando frontend mudar.

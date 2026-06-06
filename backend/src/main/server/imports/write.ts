@@ -15,6 +15,7 @@ import apiPrivateNotificationPreferenceShow from "@/modules/api/private/notifica
 import apiPrivateNotificationPreferenceUpdate from "@/modules/api/private/notification_preference/update";
 import apiPrivateNotificationSubscriptionKey from "@/modules/api/private/notification_subscription/key";
 import apiPrivateNotificationSubscriptionStore from "@/modules/api/private/notification_subscription/store";
+import apiPrivatePatientFavorites from "@/modules/api/private/patient/favorites";
 import apiPrivatePatientOnboarding from "@/modules/api/private/patient/onboarding";
 import apiPrivatePatientProfile from "@/modules/api/private/patient/profile";
 import apiPrivatePsychologistBillingCurrent from "@/modules/api/private/psychologist/billing/current";
@@ -87,6 +88,7 @@ mountRoute("/api/public/google/callback", apiPublicGoogleCallback);
 mountRoute("/api/public/google/login", apiPublicGoogleLogin);
 mountRoute("/api/public/google/me", apiPublicGoogleMe);
 mountRoute("/api/public/user", apiPublicUser);
+mountRoleGuardedRoute("/api/private/patient/favorites", "paciente", apiPrivatePatientFavorites);
 mountRoleGuardedRoute("/api/private/patient/profile", "paciente", apiPrivatePatientProfile);
 mountRoleGuardedRoute("/api/private/patient/onboarding", "paciente", apiPrivatePatientOnboarding);
 mountRoleGuardedRoute(

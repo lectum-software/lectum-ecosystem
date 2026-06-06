@@ -146,6 +146,16 @@ export class IndexRepository implements IIndexRepository {
               id: true,
               name: true,
               avatar: true,
+              favorited_by_patients: {
+                where: {
+                  user_id: props.auth.id!,
+                  deleted: false,
+                },
+                select: {
+                  id: true,
+                },
+                take: 1,
+              },
               psychologist_specialties: {
                 where: {
                   deleted: false,
@@ -211,6 +221,7 @@ export class IndexRepository implements IIndexRepository {
         rating_avg: item.rating_avg,
         rating_count: item.rating_count,
         verified: Boolean(item.cfp_verified_at),
+        favorited: item.user.favorited_by_patients.length > 0,
         specialties: item.user.psychologist_specialties
           .map(({ specialty }) => specialty)
           .filter(isCatalogItem),

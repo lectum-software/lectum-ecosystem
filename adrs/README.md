@@ -33,3 +33,4 @@ Formato recomendado:
 - [ADR-0017 - Bloqueio de storage privado para documentos CRP](0017-bloqueio-storage-privado-crp.md) - Accepted
 - [ADR-0018 - Shell privado mobile-first e navegacao por papel](0018-shell-privado-mobile.md) - Accepted
 - [ADR-0019 - Descoberta real de psicólogos com filtros por taxonomia](0019-descoberta-psicologos-taxonomias.md) - Accepted
+- [ADR-0020 - Favoritar psicólogo direto na listagem de descoberta](0020-favoritar-psicologo-na-listagem.md) - Accepted

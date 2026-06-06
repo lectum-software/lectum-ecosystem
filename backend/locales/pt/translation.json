@@ -41,7 +41,9 @@
     "show": "dados encontrados com sucesso",
     "update": "dados atualizados com sucesso",
     "patient_onboarding_success": "Onboarding do paciente conclu?do com sucesso",
-    "index": "dados encontrados com sucesso"
+    "index": "dados encontrados com sucesso",
+    "favorite_success": "psicólogo adicionado aos favoritos",
+    "unfavorite_success": "psicólogo removido dos favoritos"
   },
   "gender": {
     "o": "o"
@@ -55,7 +57,9 @@
     "psychologist_profile": "perfil de psicólogo",
     "specialty": "especialidade",
     "service": "serviço",
-    "approach": "abordagem"
+    "approach": "abordagem",
+    "psychologist_favorite": "favorito de psicólogo",
+    "psychologist_follow": "psicólogo seguido"
   },
   "property": {
     "email": "email",

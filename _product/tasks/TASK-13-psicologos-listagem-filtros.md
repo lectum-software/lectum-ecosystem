@@ -201,6 +201,30 @@ Regras anti-recriação específicas:
   - browser local headless em viewport desktop `1440x1000`, com cookie real, sessão hidratada, `sectionWidth=1112`
     e modal de filtros aberta com largura `520px`; usuário temporário de validação removido ao final.
 
+## Execução complementar: ajustes de card e favoritos no card (2026-06-06)
+
+- Pedido do usuário: ajustar o card com inspiração de densidade/tipografia do Reddit, trocar o selo para
+  `Disponível hoje`, trocar CTA para `Chamar no WhatsApp`, usar tags fixas abaixo da busca e mover
+  `Somente verificados` para uma faixa abaixo das tags.
+- Tags rápidas abaixo da busca: `Ansiedade`, `Depressão`, `Luto`, `Compulsões`, `Traumas`; elas aplicam busca real
+  no endpoint existente, sem catálogo fake persistido.
+- O coração do card deixou de ser apenas decorativo e passou a executar favorito real com endpoints de paciente
+  (`POST`/`DELETE /api/private/patient/favorites/:id`) e campo contextual `favorited` na listagem.
+- Como favorito pertence à TASK-14, a execução criou os modelos previstos no `DATA-MODEL.md`, mas **não** concluiu
+  a TASK-14 completa; listas dedicadas de favoritos/seguindo seguem pendentes.
+- ADR criado: `adrs/0020-favoritar-psicologo-na-listagem.md`.
+- Validações executadas:
+  - `pnpm --dir backend db:migrate --name add_psychologist_favorites`
+  - `pnpm --dir backend check`
+  - `pnpm --dir backend build`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - smoke real de API com paciente temporário: favoritar, refletir `favorited=true` na listagem, desfavoritar e
+    remover o usuário temporário;
+  - browser local headless em viewport desktop `1440x1000`, validando tags, selo, CTA e clique no coração com
+    `aria-pressed=true`.
+
 ## Validação mínima
 
 - `pnpm --dir frontend check` quando frontend mudar.

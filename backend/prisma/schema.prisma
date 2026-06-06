@@ -38,6 +38,10 @@ model user {
   psychologist_specialties   psychologist_specialty[]    @relation("psychologist_specialty_psychologist")
   psychologist_services      psychologist_service[]      @relation("psychologist_service_psychologist")
   psychologist_approaches    psychologist_approach[]     @relation("psychologist_approach_psychologist")
+  favorite_psychologists     psychologist_favorite[]     @relation("psychologist_favorite_user")
+  favorited_by_patients      psychologist_favorite[]     @relation("psychologist_favorite_psychologist")
+  followed_psychologists     psychologist_follow[]       @relation("psychologist_follow_user")
+  followed_by_patients       psychologist_follow[]       @relation("psychologist_follow_psychologist")
   notification_subscriptions notification_subscription[] @relation("notification_subscription_user")
   logs                       log__user[]                 @relation("log__user_user")
   notifications              notification[]              @relation("notifications")
@@ -240,6 +244,40 @@ model psychologist_approach {
   @@index([psychologist_id])
   @@index([approach_id])
   @@map("psychologist_approaches")
+}
+
+model psychologist_favorite {
+  id              String    @id @default(cuid())
+  deleted         Boolean   @default(false)
+  deletedAt       DateTime? @map("deleted_at")
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  user_id         String
+  psychologist_id String
+  user            user      @relation("psychologist_favorite_user", fields: [user_id], references: [id], onDelete: Cascade)
+  psychologist    user      @relation("psychologist_favorite_psychologist", fields: [psychologist_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, psychologist_id])
+  @@index([user_id, deleted])
+  @@index([psychologist_id])
+  @@map("psychologist_favorites")
+}
+
+model psychologist_follow {
+  id              String    @id @default(cuid())
+  deleted         Boolean   @default(false)
+  deletedAt       DateTime? @map("deleted_at")
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  user_id         String
+  psychologist_id String
+  user            user      @relation("psychologist_follow_user", fields: [user_id], references: [id], onDelete: Cascade)
+  psychologist    user      @relation("psychologist_follow_psychologist", fields: [psychologist_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, psychologist_id])
+  @@index([user_id, deleted])
+  @@index([psychologist_id])
+  @@map("psychologist_follows")
 }
 
 model subscription_plan {

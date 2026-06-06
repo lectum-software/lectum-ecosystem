@@ -6,7 +6,7 @@ import {
   ChevronRight,
   Heart,
   Info,
-  MessageCircle,
+  PhoneCall,
   Search,
   SlidersHorizontal,
   Star,
@@ -18,6 +18,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type FormEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useDirectoryPsychologists } from "@/api/callers/directory";
+import { usePatient } from "@/api/callers/patient";
 import type {
   DirectoryCatalogItem,
   DirectoryPsychologist,
@@ -37,6 +38,7 @@ import {
 } from "./use-form";
 
 const PAGE_LIMIT = 20;
+const QUICK_TOPIC_TAGS = ["Ansiedade", "Depressão", "Luto", "Compulsões", "Traumas"];
 
 type ActiveFilter = {
   key: keyof PsychologistsFilterForm;
@@ -166,7 +168,15 @@ const buildActiveFilters = (
   return active;
 };
 
-function PsychologistCard({ psychologist }: { psychologist: DirectoryPsychologist }) {
+function PsychologistCard({
+  favoritePending,
+  onToggleFavorite,
+  psychologist,
+}: {
+  favoritePending?: boolean;
+  onToggleFavorite: (psychologist: DirectoryPsychologist) => void;
+  psychologist: DirectoryPsychologist;
+}) {
   const tags = [
     ...psychologist.specialties.slice(0, 2).map((item) => item.name),
     ...psychologist.services.slice(0, 2).map((item) => item.name),
@@ -174,30 +184,43 @@ function PsychologistCard({ psychologist }: { psychologist: DirectoryPsychologis
   ].filter(Boolean) as string[];
 
   return (
-    <article className="overflow-hidden rounded-[18px] border border-border bg-surface shadow-[var(--lectum-shadow)]">
-      <div className="grid gap-4 p-5">
+    <article className="overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_8px_28px_rgb(15_23_42_/_5%)] transition hover:border-border-strong hover:shadow-[0_12px_32px_rgb(15_23_42_/_7%)]">
+      <div className="grid gap-3 p-4">
         <div className="flex items-center justify-between gap-3">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[0.68rem] font-bold text-success">
-            <span className="h-2 w-2 rounded-full bg-success" aria-hidden="true" />
-            Perfil publicado
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[0.72rem] font-bold text-success">
+            <span className="h-2.5 w-2.5 rounded-full bg-success" aria-hidden="true" />
+            Disponível hoje
           </span>
-          <span
-            aria-label="Favoritos serão habilitados na próxima etapa"
-            className="grid h-12 w-12 place-items-center rounded-full border border-border bg-surface text-muted shadow-[var(--lectum-shadow-soft)]"
-            role="img"
+          <button
+            aria-label={
+              psychologist.favorited
+                ? `Remover ${psychologist.name} dos favoritos`
+                : `Favoritar ${psychologist.name}`
+            }
+            aria-pressed={psychologist.favorited}
+            className={cn(
+              "grid h-11 w-11 place-items-center rounded-full border border-border bg-surface text-muted shadow-[var(--lectum-shadow-soft)] transition hover:border-primary/40 hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-60",
+              psychologist.favorited && "border-primary/30 bg-primary-soft text-primary",
+            )}
+            disabled={favoritePending}
+            onClick={() => onToggleFavorite(psychologist)}
+            type="button"
           >
-            <Heart className="h-6 w-6" aria-hidden="true" />
-          </span>
+            <Heart
+              className={cn("h-5 w-5", psychologist.favorited && "fill-current")}
+              aria-hidden="true"
+            />
+          </button>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="relative grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl bg-primary-soft text-xl font-bold text-primary">
+          <div className="relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-primary-soft text-lg font-bold text-primary">
             {isGoogleAvatar(psychologist.avatar) ? (
               <Image
                 alt={psychologist.name}
                 className="object-cover"
                 fill
-                sizes="56px"
+                sizes="48px"
                 src={psychologist.avatar as string}
               />
             ) : (
@@ -206,17 +229,17 @@ function PsychologistCard({ psychologist }: { psychologist: DirectoryPsychologis
           </div>
 
           <div className="min-w-0 flex-1">
-            <h2 className="flex items-center gap-1.5 text-[1.32rem] font-extrabold leading-6 text-foreground">
+            <h2 className="flex items-center gap-1.5 text-[1.08rem] font-extrabold leading-6 text-foreground lg:text-[1.12rem]">
               <span className="truncate">{psychologist.name}</span>
               {psychologist.verified ? (
-                <BadgeCheck className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+                <BadgeCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
               ) : null}
             </h2>
             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span className="text-[0.68rem] font-bold uppercase tracking-[0.28em] text-subtle">
+              <span className="text-[0.65rem] font-bold uppercase tracking-[0.26em] text-subtle">
                 Psicólogo
               </span>
-              <span className="inline-flex items-center gap-1 text-xs font-semibold text-muted">
+              <span className="inline-flex items-center gap-1 text-[0.78rem] font-semibold text-muted">
                 <Star className="h-3.5 w-3.5 fill-warning text-warning" aria-hidden="true" />
                 {formatRating(psychologist.rating_avg, psychologist.rating_count)}
               </span>
@@ -232,7 +255,7 @@ function PsychologistCard({ psychologist }: { psychologist: DirectoryPsychologis
           </Link>
         </div>
 
-        <p className="line-clamp-3 text-[0.92rem] leading-6 text-muted">
+        <p className="line-clamp-3 text-[0.88rem] leading-6 text-muted">
           {psychologist.headline ||
             psychologist.bio ||
             "Perfil publicado na Lectum. Abra o perfil para conferir as informações disponíveis."}
@@ -242,14 +265,14 @@ function PsychologistCard({ psychologist }: { psychologist: DirectoryPsychologis
           {tags.length > 0 ? (
             tags.map((tag) => (
               <span
-                className="rounded-[10px] border border-border bg-surface-muted px-2.5 py-1.5 text-[0.68rem] font-bold text-muted"
+                className="rounded-full border border-border bg-surface-muted px-2.5 py-1 text-[0.7rem] font-semibold text-muted"
                 key={tag}
               >
                 {tag}
               </span>
             ))
           ) : (
-            <span className="rounded-[10px] border border-border bg-surface-muted px-2.5 py-1.5 text-[0.68rem] font-bold text-muted">
+            <span className="rounded-full border border-border bg-surface-muted px-2.5 py-1 text-[0.7rem] font-semibold text-muted">
               Dados profissionais públicos
             </span>
           )}
@@ -257,11 +280,11 @@ function PsychologistCard({ psychologist }: { psychologist: DirectoryPsychologis
 
         <Button
           asChild
-          className="h-12 w-full rounded-xl bg-success text-white hover:bg-success/90"
+          className="h-11 w-full rounded-full bg-success text-sm font-extrabold text-white hover:bg-success/90"
         >
           <Link href={`/app/psychologist/${psychologist.id}`}>
-            <MessageCircle className="h-5 w-5" aria-hidden="true" />
-            Ver perfil profissional
+            <PhoneCall className="h-5 w-5" aria-hidden="true" />
+            Chamar no WhatsApp
           </Link>
         </Button>
       </div>
@@ -277,6 +300,7 @@ export const PsychologistsLogic = () => {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const closeFiltersButtonRef = useRef<HTMLButtonElement>(null);
   const filtersTitleId = useId();
+  const { favoritePsychologist, unfavoritePsychologist } = usePatient({ enableProfile: false });
 
   const params = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
   const filterValues = useMemo(() => readFiltersFromParams(params), [params]);
@@ -397,7 +421,36 @@ export const PsychologistsLogic = () => {
     navigateWithFilters(filterValues, page);
   };
 
-  const quickSpecialties = response?.filters.specialties.slice(0, 2) ?? [];
+  const toggleTopic = (topic: string) => {
+    const selected = (filterValues.search || "").toLowerCase() === topic.toLowerCase();
+    const next = normalizeFormValues({
+      ...filterValues,
+      search: selected ? "" : topic,
+    });
+
+    if (searchInputRef.current) {
+      searchInputRef.current.value = next.search || "";
+    }
+
+    hook.reset(next);
+    navigateWithFilters(next, 1);
+  };
+
+  const toggleFavorite = (psychologist: DirectoryPsychologist) => {
+    if (psychologist.favorited) {
+      unfavoritePsychologist.mutate(psychologist.id);
+      return;
+    }
+
+    favoritePsychologist.mutate(psychologist.id);
+  };
+
+  const favoritePendingId =
+    favoritePsychologist.isPending && typeof favoritePsychologist.variables === "string"
+      ? favoritePsychologist.variables
+      : unfavoritePsychologist.isPending && typeof unfavoritePsychologist.variables === "string"
+        ? unfavoritePsychologist.variables
+        : null;
   const hasFilters = activeFilters.length > 0;
   const errorMessage = directory.isError ? resolveDirectoryErrorMessage(directory.error) : null;
   const showInitialLoading = directory.isLoading && !response;
@@ -426,8 +479,8 @@ export const PsychologistsLogic = () => {
           </div>
         </header>
 
-        <div className="-mx-5 grid gap-3 border-b border-border bg-surface-muted/70 px-4 py-4 sm:mx-0 sm:border-x lg:grid-cols-[minmax(0,1fr)_280px] lg:items-stretch lg:gap-x-6 lg:gap-y-3 lg:rounded-b-[28px] lg:border-b lg:px-8 lg:pb-6 lg:pt-3">
-          <form className="grid grid-cols-[1fr_auto] gap-3 lg:col-start-1" onSubmit={submitSearch}>
+        <div className="-mx-5 grid gap-3 border-b border-border bg-surface-muted/70 px-4 py-4 sm:mx-0 sm:border-x lg:gap-y-3 lg:rounded-b-[28px] lg:border-b lg:px-8 lg:pb-6 lg:pt-3">
+          <form className="grid grid-cols-[1fr_auto] gap-3" onSubmit={submitSearch}>
             <label className="relative block" htmlFor="directory-psychologist-search">
               <span className="sr-only">Buscar profissional</span>
               <Search
@@ -459,60 +512,29 @@ export const PsychologistsLogic = () => {
             </Button>
           </form>
 
-          <div className="flex gap-2 overflow-x-auto pb-1 lg:col-start-1 lg:flex-wrap lg:overflow-visible lg:pb-0">
-            <button
-              className={cn(
-                "shrink-0 rounded-full border px-5 py-2 text-sm font-semibold transition",
-                !hasFilters
-                  ? "border-primary bg-primary text-white"
-                  : "border-border bg-surface text-muted hover:border-primary hover:text-primary",
-              )}
-              onClick={clearFilters}
-              type="button"
-            >
-              Tudo
-            </button>
-
-            {quickSpecialties.map((item) => {
-              const selected = filterValues.specialty === item.slug;
+          <div className="flex gap-2 overflow-x-auto pb-1 lg:flex-wrap lg:overflow-visible lg:pb-0">
+            {QUICK_TOPIC_TAGS.map((topic) => {
+              const selected = (filterValues.search || "").toLowerCase() === topic.toLowerCase();
 
               return (
                 <button
                   className={cn(
-                    "shrink-0 rounded-full border px-5 py-2 text-sm font-semibold transition",
+                    "shrink-0 rounded-full border px-4 py-2 text-sm font-bold transition",
                     selected
                       ? "border-primary bg-primary text-white"
                       : "border-border bg-surface text-muted hover:border-primary hover:text-primary",
                   )}
-                  key={item.id}
-                  onClick={() =>
-                    navigateWithFilters(
-                      normalizeFormValues({
-                        ...filterValues,
-                        specialty: selected ? null : item.slug,
-                      }),
-                      1,
-                    )
-                  }
+                  key={topic}
+                  onClick={() => toggleTopic(topic)}
                   type="button"
                 >
-                  {item.name}
+                  {topic}
                 </button>
               );
             })}
-            {quickSpecialties.length === 0 ? (
-              <>
-                <span className="shrink-0 rounded-full border border-border bg-surface px-5 py-2 text-sm font-semibold text-muted">
-                  Especialidades
-                </span>
-                <span className="shrink-0 rounded-full border border-border bg-surface px-5 py-2 text-sm font-semibold text-muted">
-                  Serviços
-                </span>
-              </>
-            ) : null}
           </div>
 
-          <div className="-mx-4 -mb-4 mt-1 flex items-center justify-between border-t border-border bg-surface px-4 py-3 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:mx-0 lg:mb-0 lg:mt-0 lg:rounded-2xl lg:border lg:border-border lg:px-4 lg:py-3">
+          <div className="-mx-4 -mb-4 mt-1 flex items-center justify-between border-t border-border bg-surface px-4 py-3 lg:mx-0 lg:mb-0 lg:mt-0 lg:rounded-2xl lg:border lg:border-border lg:px-4 lg:py-3">
             <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
               Somente verificados
               <Info className="h-3.5 w-3.5 text-subtle" aria-hidden="true" />
@@ -664,7 +686,12 @@ export const PsychologistsLogic = () => {
             {psychologists.length > 0 ? (
               <div className="mt-4 grid gap-6 lg:grid-cols-2">
                 {psychologists.map((psychologist) => (
-                  <PsychologistCard key={psychologist.id} psychologist={psychologist} />
+                  <PsychologistCard
+                    favoritePending={favoritePendingId === psychologist.id}
+                    key={psychologist.id}
+                    onToggleFavorite={toggleFavorite}
+                    psychologist={psychologist}
+                  />
                 ))}
               </div>
             ) : (

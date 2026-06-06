@@ -17,6 +17,11 @@ export type CompletePatientOnboardingPayload = {
   phone?: string;
 };
 
+export type FavoritePsychologistResponse = {
+  psychologist_id: string;
+  favorited: boolean;
+};
+
 export const getPatientProfile = async () => {
   const handle = callEndpoint({
     route: "/api/private/patient/profile",
@@ -36,4 +41,24 @@ export const completePatientOnboarding = async (body: CompletePatientOnboardingP
     ...handle,
     hideError: true,
   });
+};
+
+export const favoritePsychologist = async (id: string) => {
+  const handle = callEndpoint({
+    route: "/api/private/patient/favorites/:id",
+    method: "POST",
+    params: { id },
+  });
+
+  return handleReq<FavoritePsychologistResponse>(handle);
+};
+
+export const unfavoritePsychologist = async (id: string) => {
+  const handle = callEndpoint({
+    route: "/api/private/patient/favorites/:id",
+    method: "DELETE",
+    params: { id },
+  });
+
+  return handleReq<FavoritePsychologistResponse>(handle);
 };
