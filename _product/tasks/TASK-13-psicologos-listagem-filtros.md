@@ -182,6 +182,25 @@ Regras anti-recriação específicas:
   - browser local headless em viewport mobile `390x844` com cookie real, sessão hidratada,
     estado vazio/lista real e bottom nav.
 
+## Execução complementar: desktop e filtros em modal (2026-06-06)
+
+- Pedido do usuário: adaptar `/app/psychologists` para desktop e fazer os filtros abrirem em modal.
+- Builder/Quick Copy foi revalidado via `npx "@builder.io/dev-tools@latest" auth status`, mas o CLI retornou
+  não autenticado nesta sessão; a execução manteve o fallback auditável das imagens locais obrigatórias da task.
+- A tela permanece mobile-first com base nos protótipos `390px`, mas agora expande em desktop para `lg:max-w-6xl`,
+  card de busca/filtros responsivo e grid de resultados em duas colunas.
+- Os filtros avançados deixaram de abrir inline e passaram a abrir em modal com `role="dialog"`, `aria-modal`,
+  fechamento por `Escape`/backdrop e foco inicial no botão de fechar, sem instalar pacote novo.
+- A busca, filtros e switch continuam usando dados reais da URL/API e a fundação da TASK-02 (`useFormList` +
+  controllers) para campos avançados.
+- ADR atualizado: `adrs/0019-descoberta-psicologos-taxonomias.md`.
+- Validações executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - browser local headless em viewport desktop `1440x1000`, com cookie real, sessão hidratada, `sectionWidth=1112`
+    e modal de filtros aberta com largura `520px`; usuário temporário de validação removido ao final.
+
 ## Validação mínima
 
 - `pnpm --dir frontend check` quando frontend mudar.

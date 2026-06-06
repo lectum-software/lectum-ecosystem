@@ -4,18 +4,19 @@ import {
   BadgeCheck,
   ChevronLeft,
   ChevronRight,
-  Filter,
+  Heart,
+  Info,
+  MessageCircle,
   Search,
   SlidersHorizontal,
   Star,
   UserRound,
-  UsersRound,
   X,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useDirectoryPsychologists } from "@/api/callers/directory";
 import type {
   DirectoryCatalogItem,
@@ -27,6 +28,7 @@ import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
+import { Input } from "@/registry/new-york-v4/ui/input";
 import { PrivateTemplate } from "@/templates/private";
 import {
   defaultPsychologistsFilterValues,
@@ -172,16 +174,30 @@ function PsychologistCard({ psychologist }: { psychologist: DirectoryPsychologis
   ].filter(Boolean) as string[];
 
   return (
-    <article className="overflow-hidden rounded-[var(--lectum-card-radius)] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
+    <article className="overflow-hidden rounded-[18px] border border-border bg-surface shadow-[var(--lectum-shadow)]">
       <div className="grid gap-4 p-5">
-        <div className="flex items-start gap-4">
-          <div className="relative grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-2xl bg-primary-soft text-lg font-bold text-primary">
+        <div className="flex items-center justify-between gap-3">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[0.68rem] font-bold text-success">
+            <span className="h-2 w-2 rounded-full bg-success" aria-hidden="true" />
+            Perfil publicado
+          </span>
+          <span
+            aria-label="Favoritos serão habilitados na próxima etapa"
+            className="grid h-12 w-12 place-items-center rounded-full border border-border bg-surface text-muted shadow-[var(--lectum-shadow-soft)]"
+            role="img"
+          >
+            <Heart className="h-6 w-6" aria-hidden="true" />
+          </span>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="relative grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl bg-primary-soft text-xl font-bold text-primary">
             {isGoogleAvatar(psychologist.avatar) ? (
               <Image
                 alt={psychologist.name}
                 className="object-cover"
                 fill
-                sizes="64px"
+                sizes="56px"
                 src={psychologist.avatar as string}
               />
             ) : (
@@ -190,64 +206,63 @@ function PsychologistCard({ psychologist }: { psychologist: DirectoryPsychologis
           </div>
 
           <div className="min-w-0 flex-1">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h2 className="flex items-center gap-1.5 text-lg font-bold leading-6 text-foreground">
-                  <span className="truncate">{psychologist.name}</span>
-                  {psychologist.verified ? (
-                    <BadgeCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-                  ) : null}
-                </h2>
-                <p className="mt-1 text-[0.68rem] font-bold uppercase tracking-[0.28em] text-subtle">
-                  Psicólogo
-                </p>
-              </div>
-
-              <Link
-                aria-label={`Abrir perfil de ${psychologist.name}`}
-                className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-surface text-muted transition hover:border-primary hover:text-primary"
-                href={`/app/psychologist/${psychologist.id}`}
-              >
-                <ChevronRight className="h-5 w-5" aria-hidden="true" />
-              </Link>
-            </div>
-
-            <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-muted">
-              <Star className="h-4 w-4 fill-warning text-warning" aria-hidden="true" />
-              <span>{formatRating(psychologist.rating_avg, psychologist.rating_count)}</span>
+            <h2 className="flex items-center gap-1.5 text-[1.32rem] font-extrabold leading-6 text-foreground">
+              <span className="truncate">{psychologist.name}</span>
+              {psychologist.verified ? (
+                <BadgeCheck className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+              ) : null}
+            </h2>
+            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="text-[0.68rem] font-bold uppercase tracking-[0.28em] text-subtle">
+                Psicólogo
+              </span>
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-muted">
+                <Star className="h-3.5 w-3.5 fill-warning text-warning" aria-hidden="true" />
+                {formatRating(psychologist.rating_avg, psychologist.rating_count)}
+              </span>
             </div>
           </div>
+
+          <Link
+            aria-label={`Abrir perfil de ${psychologist.name}`}
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-subtle transition hover:bg-primary-soft hover:text-primary"
+            href={`/app/psychologist/${psychologist.id}`}
+          >
+            <ChevronRight className="h-6 w-6" aria-hidden="true" />
+          </Link>
         </div>
 
-        {psychologist.headline || psychologist.bio ? (
-          <p className="line-clamp-3 text-sm leading-6 text-muted">
-            {psychologist.headline || psychologist.bio}
-          </p>
-        ) : (
-          <p className="text-sm leading-6 text-muted">
-            Perfil publicado na Lectum. Abra o perfil para conferir as informações disponíveis.
-          </p>
-        )}
+        <p className="line-clamp-3 text-[0.92rem] leading-6 text-muted">
+          {psychologist.headline ||
+            psychologist.bio ||
+            "Perfil publicado na Lectum. Abra o perfil para conferir as informações disponíveis."}
+        </p>
 
         <div className="flex flex-wrap gap-2">
           {tags.length > 0 ? (
             tags.map((tag) => (
               <span
-                className="rounded-full border border-border bg-surface-muted px-3 py-1 text-xs font-semibold text-muted"
+                className="rounded-[10px] border border-border bg-surface-muted px-2.5 py-1.5 text-[0.68rem] font-bold text-muted"
                 key={tag}
               >
                 {tag}
               </span>
             ))
           ) : (
-            <span className="rounded-full border border-border bg-surface-muted px-3 py-1 text-xs font-semibold text-muted">
+            <span className="rounded-[10px] border border-border bg-surface-muted px-2.5 py-1.5 text-[0.68rem] font-bold text-muted">
               Dados profissionais públicos
             </span>
           )}
         </div>
 
-        <Button asChild className="w-full" variant="outline">
-          <Link href={`/app/psychologist/${psychologist.id}`}>Ver perfil profissional</Link>
+        <Button
+          asChild
+          className="h-12 w-full rounded-xl bg-success text-white hover:bg-success/90"
+        >
+          <Link href={`/app/psychologist/${psychologist.id}`}>
+            <MessageCircle className="h-5 w-5" aria-hidden="true" />
+            Ver perfil profissional
+          </Link>
         </Button>
       </div>
     </article>
@@ -259,6 +274,9 @@ export const PsychologistsLogic = () => {
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const closeFiltersButtonRef = useRef<HTMLButtonElement>(null);
+  const filtersTitleId = useId();
 
   const params = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
   const filterValues = useMemo(() => readFiltersFromParams(params), [params]);
@@ -281,10 +299,32 @@ export const PsychologistsLogic = () => {
     values: filterValues,
   });
   const { Form, formProps, hook } = form;
-  const searchFormProps = {
+  const filterFormProps = {
     ...formProps,
-    fields: formProps.fields.filter((field) => field.name === "search"),
+    fields: formProps.fields.filter((field) => field.name !== "search"),
   };
+
+  useEffect(() => {
+    if (!filtersOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setFiltersOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    const focusTimer = window.setTimeout(() => closeFiltersButtonRef.current?.focus(), 0);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+      window.clearTimeout(focusTimer);
+    };
+  }, [filtersOpen]);
 
   const navigateWithFilters = useCallback(
     (values: PsychologistsFilterForm, page = 1) => {
@@ -306,19 +346,44 @@ export const PsychologistsLogic = () => {
     [router],
   );
 
-  const submitFilters = hook.handleSubmit((values) => {
-    const normalized = normalizeFormValues(values);
-    hook.reset(normalized);
-    navigateWithFilters(normalized, 1);
-    setFiltersOpen(false);
-  });
+  const submitFilters = (event: FormEvent<HTMLFormElement>) => {
+    void hook.handleSubmit((values) => {
+      const normalized = normalizeFormValues({
+        ...values,
+        search: searchInputRef.current?.value ?? values.search ?? "",
+      });
+      hook.reset(normalized);
+      navigateWithFilters(normalized, 1);
+      setFiltersOpen(false);
+    })(event);
+  };
 
   const clearFilters = () => {
+    if (searchInputRef.current) {
+      searchInputRef.current.value = "";
+    }
+
     hook.reset(defaultPsychologistsFilterValues);
     navigateWithFilters(defaultPsychologistsFilterValues, 1);
   };
 
+  const submitSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const next = normalizeFormValues({
+      ...filterValues,
+      search: searchInputRef.current?.value || "",
+    });
+
+    hook.reset(next);
+    navigateWithFilters(next, 1);
+  };
+
   const removeFilter = (key: keyof PsychologistsFilterForm) => {
+    if (key === "search" && searchInputRef.current) {
+      searchInputRef.current.value = "";
+    }
+
     const next = normalizeFormValues({
       ...filterValues,
       [key]: key === "verified" ? false : key === "search" ? "" : null,
@@ -339,137 +404,225 @@ export const PsychologistsLogic = () => {
 
   return (
     <PrivateTemplate>
-      <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-3xl">
-        <header className="grid gap-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="grid h-10 w-10 place-items-center rounded-2xl bg-primary-soft text-primary">
-              <UsersRound className="h-5 w-5" aria-hidden="true" />
-            </div>
-            <div className="min-w-0 flex-1 text-center">
-              <p className="text-xs font-bold uppercase tracking-[0.28em] text-subtle">Lectum</p>
-              <h1 className="truncate text-xl font-bold text-foreground">Encontre seu psicólogo</h1>
-            </div>
-            <Button
-              aria-expanded={filtersOpen}
-              aria-label="Abrir filtros"
-              className="h-10 w-10 px-0"
-              onClick={() => setFiltersOpen((current) => !current)}
-              type="button"
-              variant="outline"
-            >
-              {filtersOpen ? (
-                <X className="h-5 w-5" aria-hidden="true" />
-              ) : (
-                <Filter className="h-5 w-5" aria-hidden="true" />
-              )}
-            </Button>
-          </div>
-
-          <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
-            <Form className="grid gap-3" {...searchFormProps} onSubmit={submitFilters}>
-              <div className="grid grid-cols-[1fr_auto] gap-3">
-                <Button className="h-12 px-4" disabled={directory.isFetching} type="submit">
-                  <Search className="h-4 w-4" aria-hidden="true" />
-                  Buscar
-                </Button>
-              </div>
-            </Form>
-
-            <div className="mt-2 flex flex-wrap gap-2">
-              <button
-                className={cn(
-                  "rounded-full border px-4 py-2 text-sm font-semibold transition",
-                  !hasFilters
-                    ? "border-primary bg-primary text-white"
-                    : "border-border bg-surface text-muted hover:border-primary hover:text-primary",
-                )}
-                onClick={clearFilters}
-                type="button"
-              >
-                Tudo
-              </button>
-
-              {quickSpecialties.map((item) => {
-                const selected = filterValues.specialty === item.slug;
-
-                return (
-                  <button
-                    className={cn(
-                      "rounded-full border px-4 py-2 text-sm font-semibold transition",
-                      selected
-                        ? "border-primary bg-primary text-white"
-                        : "border-border bg-surface text-muted hover:border-primary hover:text-primary",
-                    )}
-                    key={item.id}
-                    onClick={() =>
-                      navigateWithFilters(
-                        normalizeFormValues({
-                          ...filterValues,
-                          specialty: selected ? null : item.slug,
-                        }),
-                        1,
-                      )
-                    }
-                    type="button"
-                  >
-                    {item.name}
-                  </button>
-                );
-              })}
-
-              <button
-                className={cn(
-                  "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition",
-                  filterValues.verified
-                    ? "border-primary bg-primary text-white"
-                    : "border-border bg-surface text-muted hover:border-primary hover:text-primary",
-                )}
-                onClick={() =>
-                  navigateWithFilters(
-                    normalizeFormValues({
-                      ...filterValues,
-                      verified: !filterValues.verified,
-                    }),
-                    1,
-                  )
-                }
-                type="button"
-              >
-                <BadgeCheck className="h-4 w-4" aria-hidden="true" />
-                Verificados
-              </button>
+      <section className="mx-auto grid w-full max-w-[390px] gap-0 bg-background sm:max-w-[430px] lg:max-w-6xl lg:gap-5 lg:bg-transparent">
+        <header className="-mx-5 -mt-6 border-b border-border bg-surface px-4 pb-4 pt-4 sm:mx-0 sm:mt-0 sm:rounded-t-[20px] sm:border sm:border-b-0 lg:rounded-t-[28px] lg:px-8 lg:pb-4 lg:pt-8">
+          <div className="relative flex min-h-12 items-center justify-center lg:justify-start lg:gap-4">
+            <Image
+              alt="Lectum"
+              className="absolute left-0 h-8 w-8 object-contain lg:static lg:h-10 lg:w-10"
+              height={40}
+              priority
+              src="/icon.png"
+              width={40}
+            />
+            <div className="min-w-0 px-10 text-center lg:px-0 lg:text-left">
+              <h1 className="text-lg font-extrabold text-foreground lg:text-3xl">
+                Encontre seu psicólogo
+              </h1>
+              <p className="mt-1 hidden text-sm font-medium text-muted lg:block">
+                Busque profissionais publicados, filtre por especialidade e refine a descoberta.
+              </p>
             </div>
           </div>
         </header>
 
-        {filtersOpen ? (
-          <section className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
-            <div className="mb-4 flex items-center justify-between gap-4">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.28em] text-subtle">Filtros</p>
-                <h2 className="text-lg font-bold text-foreground">Refinar busca</h2>
-              </div>
-              <Button onClick={clearFilters} type="button" variant="ghost">
-                Limpar
-              </Button>
-            </div>
+        <div className="-mx-5 grid gap-3 border-b border-border bg-surface-muted/70 px-4 py-4 sm:mx-0 sm:border-x lg:grid-cols-[minmax(0,1fr)_280px] lg:items-stretch lg:gap-x-6 lg:gap-y-3 lg:rounded-b-[28px] lg:border-b lg:px-8 lg:pb-6 lg:pt-3">
+          <form className="grid grid-cols-[1fr_auto] gap-3 lg:col-start-1" onSubmit={submitSearch}>
+            <label className="relative block" htmlFor="directory-psychologist-search">
+              <span className="sr-only">Buscar profissional</span>
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-subtle lg:left-4"
+                aria-hidden="true"
+              />
+              <Input
+                className="h-11 rounded-xl bg-surface pl-10 text-[0.95rem] lg:h-14 lg:rounded-2xl lg:pl-12 lg:text-base"
+                defaultValue={filterValues.search || ""}
+                disabled={directory.isFetching}
+                id="directory-psychologist-search"
+                key={filterValues.search || "empty-search"}
+                placeholder="Buscar profissional..."
+                ref={searchInputRef}
+                type="search"
+              />
+            </label>
+            <Button
+              aria-controls="directory-psychologists-filters"
+              aria-expanded={filtersOpen}
+              className="h-11 rounded-xl border-border bg-surface px-4 text-xs uppercase tracking-wide lg:h-14 lg:rounded-2xl lg:px-6 lg:text-sm"
+              disabled={directory.isFetching}
+              onClick={() => setFiltersOpen(true)}
+              type="button"
+              variant="outline"
+            >
+              <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+              Filtros
+            </Button>
+          </form>
 
-            <Form className="grid gap-3" {...formProps} onSubmit={submitFilters}>
-              <Button className="mt-1 w-full" disabled={directory.isFetching} type="submit">
-                <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
-                Aplicar filtros
-                {typeof total === "number" ? (
-                  <span className="rounded-full bg-white/15 px-2 py-1 text-[0.68rem]">
-                    {total} resultado{total === 1 ? "" : "s"}
-                  </span>
-                ) : null}
-              </Button>
-            </Form>
-          </section>
+          <div className="flex gap-2 overflow-x-auto pb-1 lg:col-start-1 lg:flex-wrap lg:overflow-visible lg:pb-0">
+            <button
+              className={cn(
+                "shrink-0 rounded-full border px-5 py-2 text-sm font-semibold transition",
+                !hasFilters
+                  ? "border-primary bg-primary text-white"
+                  : "border-border bg-surface text-muted hover:border-primary hover:text-primary",
+              )}
+              onClick={clearFilters}
+              type="button"
+            >
+              Tudo
+            </button>
+
+            {quickSpecialties.map((item) => {
+              const selected = filterValues.specialty === item.slug;
+
+              return (
+                <button
+                  className={cn(
+                    "shrink-0 rounded-full border px-5 py-2 text-sm font-semibold transition",
+                    selected
+                      ? "border-primary bg-primary text-white"
+                      : "border-border bg-surface text-muted hover:border-primary hover:text-primary",
+                  )}
+                  key={item.id}
+                  onClick={() =>
+                    navigateWithFilters(
+                      normalizeFormValues({
+                        ...filterValues,
+                        specialty: selected ? null : item.slug,
+                      }),
+                      1,
+                    )
+                  }
+                  type="button"
+                >
+                  {item.name}
+                </button>
+              );
+            })}
+            {quickSpecialties.length === 0 ? (
+              <>
+                <span className="shrink-0 rounded-full border border-border bg-surface px-5 py-2 text-sm font-semibold text-muted">
+                  Especialidades
+                </span>
+                <span className="shrink-0 rounded-full border border-border bg-surface px-5 py-2 text-sm font-semibold text-muted">
+                  Serviços
+                </span>
+              </>
+            ) : null}
+          </div>
+
+          <div className="-mx-4 -mb-4 mt-1 flex items-center justify-between border-t border-border bg-surface px-4 py-3 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:mx-0 lg:mb-0 lg:mt-0 lg:rounded-2xl lg:border lg:border-border lg:px-4 lg:py-3">
+            <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
+              Somente verificados
+              <Info className="h-3.5 w-3.5 text-subtle" aria-hidden="true" />
+            </span>
+            <button
+              aria-checked={filterValues.verified}
+              aria-label="Filtrar somente psicólogos verificados"
+              className={cn(
+                "relative h-8 w-14 rounded-full border border-border bg-border transition",
+                filterValues.verified && "border-primary bg-primary",
+              )}
+              onClick={() =>
+                navigateWithFilters(
+                  normalizeFormValues({
+                    ...filterValues,
+                    verified: !filterValues.verified,
+                  }),
+                  1,
+                )
+              }
+              role="switch"
+              type="button"
+            >
+              <span
+                className={cn(
+                  "absolute left-1 top-1 h-6 w-6 rounded-full bg-surface shadow-sm transition",
+                  filterValues.verified && "translate-x-6",
+                )}
+              />
+            </button>
+          </div>
+        </div>
+
+        {filtersOpen ? (
+          <div className="fixed inset-0 z-50 flex items-end bg-slate-950/45 backdrop-blur-sm sm:items-center sm:justify-center sm:p-6">
+            <button
+              aria-label="Fechar filtros"
+              className="absolute inset-0 cursor-default"
+              onClick={() => setFiltersOpen(false)}
+              type="button"
+            />
+            <section
+              aria-labelledby={filtersTitleId}
+              aria-modal="true"
+              className="relative z-10 grid max-h-[100dvh] w-full gap-5 overflow-y-auto bg-background px-4 pb-5 pt-4 shadow-2xl sm:max-h-[min(760px,calc(100dvh-3rem))] sm:max-w-[520px] sm:rounded-[28px] sm:border sm:border-border sm:px-6 sm:pb-6 sm:pt-5"
+              id="directory-psychologists-filters"
+              role="dialog"
+            >
+              <div className="sticky top-0 z-10 -mx-4 -mt-4 flex items-center justify-between gap-4 border-b border-border bg-background/95 px-4 py-4 backdrop-blur sm:-mx-6 sm:-mt-5 sm:px-6">
+                <div className="flex min-w-0 items-center gap-3">
+                  <button
+                    aria-label="Fechar filtros"
+                    className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    onClick={() => setFiltersOpen(false)}
+                    ref={closeFiltersButtonRef}
+                    type="button"
+                  >
+                    <X className="h-5 w-5" aria-hidden="true" />
+                  </button>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold uppercase tracking-[0.28em] text-subtle">
+                      Filtros
+                    </p>
+                    <h2
+                      className="truncate text-xl font-extrabold text-foreground"
+                      id={filtersTitleId}
+                    >
+                      Refinar busca
+                    </h2>
+                  </div>
+                </div>
+
+                <Button
+                  className="h-10 px-2 text-primary hover:text-primary"
+                  onClick={clearFilters}
+                  type="button"
+                  variant="ghost"
+                >
+                  Limpar
+                </Button>
+              </div>
+
+              <p className="text-sm leading-6 text-muted">
+                Ajuste os filtros avançados sem sair da listagem. No desktop, a busca continua
+                visível ao fundo e esta janela concentra o refinamento.
+              </p>
+
+              <Form className="grid gap-3" {...filterFormProps} onSubmit={submitFilters}>
+                <div className="sticky bottom-0 -mx-4 -mb-5 mt-2 border-t border-border bg-background/95 p-4 backdrop-blur sm:-mx-6 sm:-mb-6 sm:p-6">
+                  <Button
+                    className="w-full rounded-xl"
+                    disabled={directory.isFetching}
+                    type="submit"
+                  >
+                    <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+                    Aplicar filtros
+                    {typeof total === "number" ? (
+                      <span className="rounded-full bg-white/15 px-2 py-1 text-[0.68rem]">
+                        {total} resultado{total === 1 ? "" : "s"}
+                      </span>
+                    ) : null}
+                  </Button>
+                </div>
+              </Form>
+            </section>
+          </div>
         ) : null}
 
         {hasFilters ? (
-          <fieldset className="flex flex-wrap gap-2">
+          <fieldset className="mt-4 flex flex-wrap gap-2 lg:mt-0">
             <legend className="sr-only">Filtros ativos</legend>
             {activeFilters.map((item) => (
               <button
@@ -486,20 +639,20 @@ export const PsychologistsLogic = () => {
         ) : null}
 
         {errorMessage ? (
-          <InlineAlert title="Não foi possível carregar" variant="error">
+          <InlineAlert className="mt-4 lg:mt-0" title="Não foi possível carregar" variant="error">
             {errorMessage}
           </InlineAlert>
         ) : null}
 
         {showInitialLoading ? (
-          <div className="grid min-h-[40vh] place-items-center rounded-[var(--lectum-card-radius)] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
+          <div className="mt-4 grid min-h-[40vh] place-items-center rounded-[18px] border border-border bg-surface shadow-[var(--lectum-shadow-soft)] lg:mt-0">
             <LoadingState label="Carregando psicólogos" />
           </div>
         ) : null}
 
         {!showInitialLoading && !errorMessage ? (
           <>
-            <div className="flex items-center justify-between gap-3 text-sm text-muted">
+            <div className="mt-4 flex items-center justify-between gap-3 text-sm text-muted lg:mt-0">
               <span>
                 {total > 0
                   ? `${total} profissional${total === 1 ? "" : "is"} encontrado${total === 1 ? "" : "s"}`
@@ -508,20 +661,15 @@ export const PsychologistsLogic = () => {
               {directory.isFetching ? <LoadingState label="Atualizando" /> : null}
             </div>
 
-            {total > 0 ? (
-              <InlineAlert title="Busca conectada" variant="success">
-                A listagem usa somente psicólogos publicados e dados persistidos da API privada.
-              </InlineAlert>
-            ) : null}
-
             {psychologists.length > 0 ? (
-              <div className="grid gap-4">
+              <div className="mt-4 grid gap-6 lg:grid-cols-2">
                 {psychologists.map((psychologist) => (
                   <PsychologistCard key={psychologist.id} psychologist={psychologist} />
                 ))}
               </div>
             ) : (
               <EmptyState
+                className="mt-4"
                 description="Ainda não existem psicólogos publicados para estes filtros. Quando profissionais reais forem aprovados e publicados, eles aparecerão aqui."
                 icon={UserRound}
                 title="Nenhum psicólogo encontrado"
@@ -531,7 +679,7 @@ export const PsychologistsLogic = () => {
             {pages > 1 ? (
               <nav
                 aria-label="Paginação de psicólogos"
-                className="flex items-center justify-between gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-3"
+                className="mt-4 flex items-center justify-between gap-3 rounded-[18px] border border-border bg-surface p-3 lg:col-span-2"
               >
                 <Button
                   disabled={currentPage <= 1 || directory.isFetching}

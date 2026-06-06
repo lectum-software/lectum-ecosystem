@@ -19,6 +19,8 @@ As referências visuais consultadas foram as imagens locais:
 
 Builder/Quick Copy não está exposto como ferramenta direta nesta sessão; por isso a validação visual usou o fallback auditável das imagens exportadas.
 
+Em 2026-06-06 a tela precisou deixar de ficar limitada ao frame mobile quando aberta em desktop. A referência mobile continua sendo a fonte visual ativa, mas o layout de desktop deve ampliar o conteúdo de descoberta sem criar uma arquitetura paralela de shell ou instalar um pacote de modal.
+
 ## Decisão
 
 - Criar `GET /api/private/directory/psychologists` como endpoint real de listagem paginada (`page`/`limit`, default 20 e máximo 50), busca e filtros.
@@ -32,6 +34,8 @@ Builder/Quick Copy não está exposto como ferramenta direta nesta sessão; por 
 - Retornar `filters` junto da resposta paginada para que a tela use apenas o endpoint esperado da task e liste opções reais de catálogo, sem endpoint paralelo nem dados estáticos.
 - Expor apenas campos public-safe: `user.id`, `user.name`, `user.avatar`, `headline`, `bio`, `crp`, `modality`, `languages`, `rating_avg`, `rating_count`, `verified` e taxonomias. `cpf`, `whatsapp`, e-mail e dados de conta não são retornados.
 - Implementar a tela mobile-first em `/app/psychologists` dentro do `PrivateTemplate`, usando React Query, query keys dedicadas e a fundação da TASK-02 (`useFormList` + controllers) para busca e filtros avançados.
+- Evoluir a mesma tela para desktop com largura máxima de conteúdo ampliada, barra de busca/filtros em card responsivo e grid de resultados em duas colunas a partir de `lg`, preservando a base mobile-first dos protótipos.
+- Abrir filtros avançados em modal própria da tela, sem instalar `@radix-ui/react-dialog` nesta etapa. A modal usa `role="dialog"`, `aria-modal`, fechamento por `Escape`, backdrop e foco inicial no botão de fechar; os campos seguem a fundação da TASK-02.
 
 ## Consequências
 
@@ -40,6 +44,8 @@ Builder/Quick Copy não está exposto como ferramenta direta nesta sessão; por 
 - A resposta paginada ganha o campo adicional `filters`; clientes devem continuar usando `data/page/pages/count` para paginação e tratar `filters` como metadado de UI.
 - A TASK-15 pode reutilizar o mesmo identificador público (`user.id`) para abrir `/app/psychologist/[id]`.
 - A curadoria/seed real de especialidades, serviços e abordagens permanece fora desta task e deve ser decidida sem inventar categorias permanentes.
+- O desktop deixa de parecer um frame mobile centralizado, mas a navegação inferior do `PrivateTemplate` permanece como decisão da TASK-12 até haver uma task específica de shell desktop.
+- A ausência de pacote de dialog reduz dependência nova agora, mas uma task futura pode trocar para Radix Dialog se houver necessidade de foco preso completo e padrões compartilhados de modal.
 
 ## Validação
 
@@ -52,6 +58,13 @@ Builder/Quick Copy não está exposto como ferramenta direta nesta sessão; por 
 - `pnpm check`
 - Smoke de API real: cadastro temporário de paciente via `POST /api/public/user/store`, chamada autenticada a `GET /api/private/directory/psychologists?page=1&limit=20&verified=true`, resposta `success=true`, paginação válida, filtros reais vazios e remoção do usuário temporário.
 - Browser local headless em viewport mobile `390x844`: `/app/psychologists` renderizou com cookie real, sessão hidratada, título da tela, estado vazio/lista real, bottom nav e sem erro de sessão. Usuário temporário removido ao final.
+- Validação complementar desktop em 2026-06-06:
+  - `npx "@builder.io/dev-tools@latest" auth status` retornou não autenticado; Quick Copy não esteve acessível e a execução manteve o fallback das imagens locais.
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - Browser local headless em viewport desktop `1440x1000`: `/app/psychologists` renderizou com `sectionWidth=1112`, botão de filtros presente e rota privada sem redirecionar para `/auth`.
+  - A modal de filtros abriu no desktop com `role="dialog"`, título "Refinar busca" e largura `520px`; usuário temporário de validação removido ao final.
 
 ## Pendências
 
