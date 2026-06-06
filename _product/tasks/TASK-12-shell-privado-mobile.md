@@ -186,6 +186,18 @@ Regras anti-recriação específicas:
   - `pnpm --dir backend build`
   - `pnpm check`
 
+### Ajuste posterior em 2026-06-05
+
+- Produto solicitou remover o cabeçalho das telas do shell privado.
+- `PrivateTemplate` passou a renderizar somente conteúdo e navegação inferior, mantendo hidratação de
+  sessão, loading/erro e bottom nav.
+- ADR atualizado: `adrs/0018-shell-privado-mobile.md`.
+- Validações executadas no ajuste:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - Browser local headless em viewport mobile `390x844` validou `/app/profile` com
+    `hasHeader=false` e `navCount=1`.
+
 ## Validação mínima
 
 - `pnpm --dir frontend check` quando frontend mudar.

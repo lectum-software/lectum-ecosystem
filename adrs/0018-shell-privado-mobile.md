@@ -81,3 +81,29 @@ fallback auditável das imagens exportadas.
   - psicólogo em `/api/private/patient/profile` retornou `403`.
 - Browser local headless em `390x844` validou `/app/profile` com cookie real, sessão hidratada,
   header e bottom nav. Usuários temporários de smoke foram removidos do banco.
+
+## Atualização em 2026-06-05: shell privado sem cabeçalho
+
+### Contexto
+
+Produto solicitou remover o cabeçalho das telas do shell privado, mantendo a navegação inferior
+como principal elemento persistente do layout interno.
+
+### Decisão
+
+- `PrivateTemplate` não renderiza mais o header privado.
+- A prop `showHeader` permanece aceita por compatibilidade com páginas existentes, mas não altera a
+  renderização enquanto o shell privado estiver definido como sem cabeçalho.
+- A navegação inferior, hidratação real de sessão e estados de loading/erro permanecem inalterados.
+
+### Consequências
+
+- As telas internas começam diretamente pelo conteúdo da página, alinhadas ao pedido visual atual.
+- Ações antes disponíveis no cabeçalho, como sair ou alternar tema, continuam acessíveis nas telas de
+  perfil/configuração já existentes ou futuras.
+
+### Validação
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Browser local headless em `390x844` validou `/app/profile` com `hasHeader=false` e `navCount=1`.
