@@ -37,3 +37,4 @@ Formato recomendado:
 - [ADR-0021 - Perfil profissional publico com dados public-safe](0021-perfil-profissional-publico.md) - Accepted
 - [ADR-0022 - Contato WhatsApp por wa.me com intenção persistida](0022-contato-whatsapp-wa-me.md) - Accepted
 - [ADR-0023 - Avaliações de profissionais por contato prévio](0023-avaliacoes-paciente-elegibilidade-contato.md) - Accepted
+- [ADR-0024 - Bloqueio da TASK-18 por dependência de validação CRP](0024-bloqueio-task18-dependencia-crp.md) - Accepted

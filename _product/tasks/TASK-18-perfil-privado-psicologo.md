@@ -8,9 +8,9 @@
 | Prioridade | P0 |
 | Esforço | L |
 | Fase | Psicólogo privado |
-| Status | Pending |
+| Status | Blocked |
 | Dependências | TASK-02, TASK-11, TASK-12 |
-| ADR alvo | ADR de edição de perfil profissional |
+| ADR alvo | ADR-0024 |
 
 ## Referências obrigatórias
 
@@ -182,3 +182,11 @@ Regras anti-recriação específicas:
 ## Notas para executor
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
+
+
+## Execucao bloqueada
+
+- Execucao interrompida porque a dependencia obrigatoria TASK-11 esta Blocked.
+- Bloqueio registrado em adrs/0024-bloqueio-task18-dependencia-crp.md.
+- Referencias visuais consultadas via imagens locais: _product/proto/Perfil - Psicologo.jpg, _product/proto/Editar Perfil - Psicologo.jpg e _product/proto/Modal de Atualizacao de Perfil do Psicologo.jpg.
+- Nao foi criada implementacao parcial, endpoints, schema, migration ou UI final para evitar contornar documentos/CRP e regras de validacao profissional.
