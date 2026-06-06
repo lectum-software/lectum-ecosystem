@@ -31,7 +31,10 @@
     "contact_consent_required": "Aceite a política de privacidade para abrir o WhatsApp",
     "patient_phone_invalid": "Informe um número de WhatsApp válido para continuar",
     "whatsapp_unavailable": "Este perfil ainda não possui WhatsApp disponível para contato",
-    "whatsapp_not_verified": "Este perfil ainda não possui WhatsApp verificado"
+    "whatsapp_not_verified": "Este perfil ainda não possui WhatsApp verificado",
+    "review_contact_required": "Você precisa registrar contato com este profissional pelo WhatsApp antes de avaliar.",
+    "review_already_exists": "Você já avaliou este profissional.",
+    "review_own_profile": "Você não pode avaliar o próprio perfil."
   },
   "message": {
     "store": "dado criado",
@@ -50,7 +53,8 @@
     "unfavorite_success": "psicólogo removido dos favoritos",
     "follow_success": "psicólogo adicionado em seguindo",
     "unfollow_success": "psicólogo removido de seguindo",
-    "contact_success": "Intenção de contato registrada. Abrindo WhatsApp."
+    "contact_success": "Intenção de contato registrada. Abrindo WhatsApp.",
+    "review_success": "Avaliação enviada com sucesso."
   },
   "gender": {
     "o": "o"
@@ -90,7 +94,10 @@
     "page": "página",
     "id": "identificador",
     "patient_phone": "telefone do paciente",
-    "consent_accepted": "consentimento"
+    "consent_accepted": "consentimento",
+    "psychologist_id": "psicólogo",
+    "rating": "nota",
+    "comment": "depoimento"
   },
   "notification": {
     "test": {

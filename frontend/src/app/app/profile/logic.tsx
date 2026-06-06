@@ -125,7 +125,7 @@ export const ProfileLogic = () => {
             label: "Minha Assinatura",
           },
         ]
-      : [{ icon: Star, label: "Avaliações" }]),
+      : [{ href: "/app/reviews", icon: Star, label: "Avaliações" }]),
     { icon: Lock, label: "E-mail e senha" },
   ];
 

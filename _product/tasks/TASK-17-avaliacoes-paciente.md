@@ -8,9 +8,9 @@
 | Prioridade | P1 |
 | Esforço | L |
 | Fase | Avaliações |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-02, TASK-15, TASK-16 |
-| ADR alvo | ADR de avaliações de profissionais |
+| ADR alvo | ADR-0023 |
 
 ## Referências obrigatórias
 
@@ -136,19 +136,19 @@ Regras anti-recriação específicas:
 
 ## Critérios de aceite
 
-- [ ] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
-- [ ] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
-- [ ] Backend implementado nos endpoints/modelos esperados quando aplicável.
-- [ ] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
-- [ ] Rotas sob `/api/private/patient/*` exigem `requireRole("paciente")` (fail-closed), conforme ADR-0002.
-- [ ] Todos os estados obrigatórios existem e usam textos em PT-BR.
-- [ ] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
-- [ ] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
-- [ ] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
-- [ ] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
-- [ ] ADR criado ou atualizado em `adrs/`.
-- [ ] Checks/builds relevantes foram executados sem erros.
-- [ ] Commit criado com mensagem convencional.
+- [x] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
+- [x] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
+- [x] Backend implementado nos endpoints/modelos esperados quando aplicável.
+- [x] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
+- [x] Rotas sob `/api/private/patient/*` exigem `requireRole("paciente")` (fail-closed), conforme ADR-0002.
+- [x] Todos os estados obrigatórios existem e usam textos em PT-BR.
+- [x] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
+- [x] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
+- [x] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
+- [x] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
+- [x] ADR criado ou atualizado em `adrs/`.
+- [x] Checks/builds relevantes foram executados sem erros.
+- [x] Commit criado com mensagem convencional.
 
 ## Validação mínima
 
@@ -162,3 +162,27 @@ Regras anti-recriação específicas:
 ## Notas para executor
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
+
+
+## Execucao
+
+- Dependencias confirmadas: TASK-02, TASK-15 e TASK-16 estavam concluidas.
+- Builder Quick Copy ativo (`vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a`) nao foi usado nesta sessao por indisponibilidade operacional; a validacao visual usou as imagens locais obrigatorias `_product/proto/Avaliar do Psicologo.jpg`, `_product/proto/Confirmacao de Avaliacao.jpg` e `_product/proto/Avaliacoes Feitas - Paciente.jpg`.
+- Regra de elegibilidade registrada na ADR-0023: paciente so avalia psicologo publicado apos `contact_request` real de WhatsApp persistido pela TASK-16.
+- Backend criado em `/api/private/patient/reviews`, protegido no mount por `requireRole("paciente")`, com listagem, elegibilidade e criacao transacional.
+- Frontend criado nas rotas `/app/reviews/new`, `/app/reviews/success` e `/app/reviews`, mobile-first, usando React Query, `api/req`, `api/callers`, query keys e fundacao de formulario da TASK-02.
+- Nao houve alteracao em `backend/prisma/schema.prisma` nem em migrations; `db:migrate` nao se aplicou nesta task.
+
+## Validacoes executadas
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke HTTP real: elegibilidade, criacao, listagem, duplicidade e fail-closed para psicologo.
+- Browser local headless em `http://localhost:3000/app/reviews` com sessao real de paciente.
+
+## ADR
+
+- `adrs/0023-avaliacoes-paciente-elegibilidade-contato.md`

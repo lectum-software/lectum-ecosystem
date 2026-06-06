@@ -1,4 +1,4 @@
-import { type RequestHandler, Router } from "express";
+﻿import { type RequestHandler, Router } from "express";
 import privateAuth from "@/modules/api/middlewares/_auth";
 import { requireRole } from "@/modules/api/middlewares/require-role";
 import apiPrivateAuthCode from "@/modules/api/private/auth/code";
@@ -19,6 +19,7 @@ import apiPrivatePatientFavorites from "@/modules/api/private/patient/favorites"
 import apiPrivatePatientFollows from "@/modules/api/private/patient/follows";
 import apiPrivatePatientOnboarding from "@/modules/api/private/patient/onboarding";
 import apiPrivatePatientProfile from "@/modules/api/private/patient/profile";
+import apiPrivatePatientReviews from "@/modules/api/private/patient/reviews";
 import apiPrivatePsychologistBillingCurrent from "@/modules/api/private/psychologist/billing/current";
 import apiPrivatePsychologistBillingPlans from "@/modules/api/private/psychologist/billing/plans";
 import apiPublicAuthLogin from "@/modules/api/public/auth/login";
@@ -93,6 +94,7 @@ mountRoleGuardedRoute("/api/private/patient/favorites", "paciente", apiPrivatePa
 mountRoleGuardedRoute("/api/private/patient/follows", "paciente", apiPrivatePatientFollows);
 mountRoleGuardedRoute("/api/private/patient/profile", "paciente", apiPrivatePatientProfile);
 mountRoleGuardedRoute("/api/private/patient/onboarding", "paciente", apiPrivatePatientOnboarding);
+mountRoleGuardedRoute("/api/private/patient/reviews", "paciente", apiPrivatePatientReviews);
 mountRoleGuardedRoute(
   "/api/private/psychologist/billing/plans",
   "psicologo",
@@ -112,7 +114,7 @@ mountRoute("/api/private/notification_preference/update", apiPrivateNotification
 mountRoute("/api/private/notification_subscription/key", apiPrivateNotificationSubscriptionKey);
 mountRoute("/api/private/notification_subscription/store", apiPrivateNotificationSubscriptionStore);
 
-// Rota de desenvolvimento (sem auth): dispara notificação de teste para todos.
+// Rota de desenvolvimento (sem auth): dispara notificaÃ§Ã£o de teste para todos.
 if (process.env.NODE_ENV !== "production") {
   mountRoute("/api/private/notification/test", apiPrivateNotificationTest);
 }

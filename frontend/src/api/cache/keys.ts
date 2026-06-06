@@ -1,4 +1,4 @@
-const keys = {
+﻿const keys = {
   auth: {
     hydrate: (cache?: unknown) => ["auth_hydrate", cache],
   },
@@ -12,6 +12,9 @@ const keys = {
     favorites: (filters?: unknown) => ["patient_favorites", filters],
     followsRoot: () => ["patient_follows"],
     follows: (filters?: unknown) => ["patient_follows", filters],
+    reviewsRoot: () => ["patient_reviews"],
+    reviews: (filters?: unknown) => ["patient_reviews", filters],
+    reviewEligibility: (id: string) => ["patient_review_eligibility", id],
   },
   directory: {
     psychologistsRoot: () => ["directory_psychologists"],
