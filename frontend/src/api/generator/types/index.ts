@@ -11,8 +11,16 @@ export type {
   DirectoryCatalogItem,
   DirectoryPsychologist,
   DirectoryPsychologistFilters,
+  DirectoryPsychologistProfile,
+  DirectoryPsychologistProfileListQuery,
+  DirectoryPsychologistProfilePost,
+  DirectoryPsychologistProfilePostsResponse,
+  DirectoryPsychologistProfileReview,
+  DirectoryPsychologistProfileReviewsResponse,
+  DirectoryPsychologistReviewAuthor,
   DirectoryPsychologistsQuery,
   DirectoryPsychologistsResponse,
+  DirectoryReviewSummary,
 } from "./directory";
 export type { notification } from "./notification";
 export type {

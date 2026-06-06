@@ -191,6 +191,56 @@ export interface professional_subscription {
   plan?: subscription_plan | null;
 }
 
+export interface professional_review {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  psychologist_id?: string | null;
+  author_id?: string | null;
+  rating?: number | null;
+  comment?: string | null;
+  response?: string | null;
+  responded_at?: Date | null;
+  status?: "publicada" | "oculta" | string | null;
+  psychologist?: user | null;
+  author?: user | null;
+}
+
+export interface community {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  name?: string | null;
+  slug?: string | null;
+  description?: string | null;
+  category?: string | null;
+  members_count?: number | null;
+  posts?: community_post[] | null;
+}
+
+export interface community_post {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  community_id?: string | null;
+  author_id?: string | null;
+  title?: string | null;
+  content?: string | null;
+  status?: "publicado" | "pendente" | "removido" | string | null;
+  upvotes_count?: number | null;
+  downvotes_count?: number | null;
+  replies_count?: number | null;
+  saves_count?: number | null;
+  community?: community | null;
+  author?: user | null;
+}
+
 export interface notification_subscription {
   id?: string | null;
   deleted?: boolean | null;
@@ -260,6 +310,9 @@ export interface user {
   favorited_by_patients?: psychologist_favorite[] | null;
   followed_psychologists?: psychologist_follow[] | null;
   followed_by_patients?: psychologist_follow[] | null;
+  professional_reviews?: professional_review[] | null;
+  received_reviews?: professional_review[] | null;
+  community_posts?: community_post[] | null;
   notification_subscriptions?: notification_subscription[] | null;
   notifications?: notification[] | null;
   notification_preference?: notification_preference | null;

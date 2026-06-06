@@ -16,6 +16,20 @@ const keys = {
   directory: {
     psychologistsRoot: () => ["directory_psychologists"],
     psychologists: (filters?: unknown) => ["directory_psychologists", filters],
+    psychologistRoot: (id: string) => ["directory_psychologist", id],
+    psychologist: (id: string) => ["directory_psychologist", id, "profile"],
+    psychologistPosts: (id: string, filters?: unknown) => [
+      "directory_psychologist",
+      id,
+      "posts",
+      filters,
+    ],
+    psychologistReviews: (id: string, filters?: unknown) => [
+      "directory_psychologist",
+      id,
+      "reviews",
+      filters,
+    ],
   },
   psychologistBilling: {
     plans: () => ["psychologist_billing_plans"],

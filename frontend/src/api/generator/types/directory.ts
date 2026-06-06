@@ -46,3 +46,61 @@ export type DirectoryPsychologistsQuery = {
   approach?: string;
   verified?: boolean;
 };
+
+export type DirectoryPsychologistProfile = DirectoryPsychologist & {
+  video_url: string | null;
+  whatsapp_available: boolean;
+};
+
+export type DirectoryPsychologistProfilePost = {
+  id: string;
+  title: string;
+  content: string;
+  created_at: string;
+  upvotes_count: number;
+  downvotes_count: number;
+  replies_count: number;
+  saves_count: number;
+  community: DirectoryCatalogItem;
+};
+
+export type DirectoryPsychologistProfilePostsResponse = {
+  data: DirectoryPsychologistProfilePost[];
+  page: number;
+  pages: number;
+  count: number;
+};
+
+export type DirectoryPsychologistReviewAuthor = {
+  initials: string;
+  name: string;
+};
+
+export type DirectoryPsychologistProfileReview = {
+  id: string;
+  rating: number;
+  comment: string | null;
+  response: string | null;
+  responded_at: string | null;
+  created_at: string;
+  author: DirectoryPsychologistReviewAuthor;
+};
+
+export type DirectoryReviewSummary = {
+  rating_avg: number;
+  rating_count: number;
+  distribution: Record<1 | 2 | 3 | 4 | 5, number>;
+};
+
+export type DirectoryPsychologistProfileReviewsResponse = {
+  data: DirectoryPsychologistProfileReview[];
+  page: number;
+  pages: number;
+  count: number;
+  summary: DirectoryReviewSummary;
+};
+
+export type DirectoryPsychologistProfileListQuery = {
+  page?: number;
+  limit?: number;
+};

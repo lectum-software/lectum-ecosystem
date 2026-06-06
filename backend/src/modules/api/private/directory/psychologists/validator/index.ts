@@ -60,3 +60,39 @@ export const schema: IValidatorRequest = {
 };
 
 export default validator(schema);
+
+export const profileShowSchema: IValidatorRequest = {
+  params: [
+    {
+      key: "id",
+      coerse: "string",
+      method: "string",
+    },
+  ],
+};
+
+export const profileListSchema: IValidatorRequest = {
+  ...profileShowSchema,
+  query: [
+    {
+      key: "limit",
+      coerse: "number",
+      method: "numeric",
+      int: true,
+      positive: true,
+      max: 50,
+      optional: true,
+    },
+    {
+      key: "page",
+      coerse: "number",
+      method: "numeric",
+      int: true,
+      positive: true,
+      optional: true,
+    },
+  ],
+};
+
+export const profileShowValidator = validator(profileShowSchema);
+export const profileListValidator = validator(profileListSchema);

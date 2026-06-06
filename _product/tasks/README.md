@@ -67,7 +67,7 @@ Quando uma task citar artefato `figma-design-frame-*.html`, leia como nome virtu
 | 12 | [TASK-12 - Shell privado mobile](TASK-12-shell-privado-mobile.md) | Completed | 06, 08 ou 11 |
 | 13 | [TASK-13 - Psicólogos: listagem e filtros](TASK-13-psicologos-listagem-filtros.md) | Completed | 02, 12 |
 | 14 | [TASK-14 - Favoritos e seguindo](TASK-14-favoritos-seguindo.md) | Completed | 13 |
-| 15 | [TASK-15 - Perfil profissional público](TASK-15-perfil-profissional-publico.md) | Pending | 13 |
+| 15 | [TASK-15 - Perfil profissional público](TASK-15-perfil-profissional-publico.md) | Completed | 13 |
 | 16 | [TASK-16 - Contato por WhatsApp](TASK-16-contato-whatsapp.md) | Pending | 02, 03, 15 |
 | 17 | [TASK-17 - Avaliações pelo paciente](TASK-17-avaliacoes-paciente.md) | Pending | 02, 15, 16 |
 | 18 | [TASK-18 - Perfil privado do psicólogo](TASK-18-perfil-privado-psicologo.md) | Pending | 02, 11, 12 |

@@ -42,6 +42,9 @@ model user {
   favorited_by_patients      psychologist_favorite[]     @relation("psychologist_favorite_psychologist")
   followed_psychologists     psychologist_follow[]       @relation("psychologist_follow_user")
   followed_by_patients       psychologist_follow[]       @relation("psychologist_follow_psychologist")
+  professional_reviews       professional_review[]       @relation("professional_review_author")
+  received_reviews           professional_review[]       @relation("professional_review_psychologist")
+  community_posts            community_post[]            @relation("community_post_author")
   notification_subscriptions notification_subscription[] @relation("notification_subscription_user")
   logs                       log__user[]                 @relation("log__user_user")
   notifications              notification[]              @relation("notifications")
@@ -316,6 +319,70 @@ model professional_subscription {
   @@index([psychologist_id, status])
   @@index([plan_id])
   @@map("professional_subscriptions")
+}
+
+model professional_review {
+  id              String    @id @default(cuid())
+  deleted         Boolean   @default(false)
+  deletedAt       DateTime? @map("deleted_at")
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  psychologist_id String
+  author_id       String
+  rating          Int
+  comment         String?
+  response        String?
+  responded_at    DateTime?
+  status          String    @default("publicada")
+  psychologist    user      @relation("professional_review_psychologist", fields: [psychologist_id], references: [id], onDelete: Cascade)
+  author          user      @relation("professional_review_author", fields: [author_id], references: [id], onDelete: Cascade)
+
+  @@unique([psychologist_id, author_id])
+  @@index([psychologist_id, status])
+  @@index([author_id])
+  @@map("professional_reviews")
+}
+
+model community {
+  id            String           @id @default(cuid())
+  deleted       Boolean          @default(false)
+  deletedAt     DateTime?        @map("deleted_at")
+  updatedAt     DateTime         @default(now()) @updatedAt @map("updated_at")
+  createdAt     DateTime         @default(now()) @map("created_at")
+  name          String
+  slug          String           @unique
+  description   String?
+  category      String?
+  members_count Int              @default(0)
+  posts         community_post[] @relation("community_post_community")
+
+  @@index([slug])
+  @@index([category, deleted])
+  @@map("communities")
+}
+
+model community_post {
+  id              String    @id @default(cuid())
+  deleted         Boolean   @default(false)
+  deletedAt       DateTime? @map("deleted_at")
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  community_id    String
+  author_id       String
+  title           String
+  content         String
+  status          String    @default("publicado")
+  upvotes_count   Int       @default(0)
+  downvotes_count Int       @default(0)
+  replies_count   Int       @default(0)
+  saves_count     Int       @default(0)
+  community       community @relation("community_post_community", fields: [community_id], references: [id], onDelete: Cascade)
+  author          user      @relation("community_post_author", fields: [author_id], references: [id], onDelete: Cascade)
+
+  @@index([community_id, status, createdAt])
+  @@index([author_id])
+  @@index([author_id, status, createdAt])
+  @@map("community_posts")
 }
 
 model notification_subscription {

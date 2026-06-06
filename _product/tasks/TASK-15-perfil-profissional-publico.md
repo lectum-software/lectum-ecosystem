@@ -8,7 +8,7 @@
 | Prioridade | P0 |
 | Esforço | L |
 | Fase | Perfil |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-13 |
 | ADR alvo | ADR de perfil profissional público |
 
@@ -141,19 +141,41 @@ Regras anti-recriação específicas:
 
 ## Critérios de aceite
 
-- [ ] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
-- [ ] Rotas de descoberta sob `/api/private/directory/*` usam só `_auth` (neutras), nunca `requireRole`, conforme ADR-0002.
-- [ ] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
-- [ ] Backend implementado nos endpoints/modelos esperados quando aplicável.
-- [ ] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
-- [ ] Todos os estados obrigatórios existem e usam textos em PT-BR.
-- [ ] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
-- [ ] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
-- [ ] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
-- [ ] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
-- [ ] ADR criado ou atualizado em `adrs/`.
-- [ ] Checks/builds relevantes foram executados sem erros.
-- [ ] Commit criado com mensagem convencional.
+- [x] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
+- [x] Rotas de descoberta sob `/api/private/directory/*` usam só `_auth` (neutras), nunca `requireRole`, conforme ADR-0002.
+- [x] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
+- [x] Backend implementado nos endpoints/modelos esperados quando aplicável.
+- [x] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
+- [x] Todos os estados obrigatórios existem e usam textos em PT-BR.
+- [x] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
+- [x] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
+- [x] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
+- [x] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
+- [x] ADR criado ou atualizado em `adrs/`.
+- [x] Checks/builds relevantes foram executados sem erros.
+- [x] Commit criado com mensagem convencional.
+
+## Execução
+
+- Builder/Quick Copy foi revalidado com `npx "@builder.io/dev-tools@latest" auth status`, mas o CLI retornou não autenticado nesta sessão; a validação visual usou as imagens locais obrigatórias da TASK-15.
+- Backend criou os endpoints `GET /api/private/directory/psychologists/:id`, `/:id/posts` e `/:id/reviews` no namespace neutro `directory`, protegido apenas por `_auth` via `routes.use(middlewares)`, sem `requireRole`.
+- O detalhe do perfil retorna apenas campos public-safe e a flag derivada `whatsapp_available`; `cpf`, `whatsapp`, `whatsapp_verified_at`, e-mail, tokens e documentos não são expostos.
+- Prisma criou as tabelas persistentes `professional_review`, `community` e `community_post` conforme `DATA-MODEL.md`, sem seed artificial ou dado fake permanente.
+- Frontend implementou `/app/psychologist/[id]` mobile-first dentro do shell privado, com abas Sobre, Publicações e Avaliações, estados de loading, erro, vazio, sucesso discreto, paginação e CTA WhatsApp condicionado.
+- A rota não possui formulário/campo de submit; a fundação da TASK-02 não foi aplicável diretamente.
+- ADR criado: `adrs/0021-perfil-profissional-publico.md`.
+- Validações executadas:
+  - `npx "@builder.io/dev-tools@latest" auth status`
+  - `pnpm --dir backend db:migrate --name add_public_profile_posts_reviews`
+  - `pnpm --dir backend db:generate`
+  - `pnpm --dir backend check`
+  - `pnpm --dir backend build`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - smoke real de API com paciente/psicólogo temporários removidos ao final, confirmando detalhe public-safe, posts e avaliações paginados;
+  - browser local headless em Chrome com cookie real: mobile (~390px) validando abas e CTA; desktop `1440x1000` com `sectionWidth=1112`.
+
 
 ## Validação mínima
 

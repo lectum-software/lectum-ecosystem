@@ -7,7 +7,10 @@ import type {
   PatientRelationQuery,
   patient_profile,
 } from "@/api/generator/types";
-import type { DirectoryPsychologistsResponse } from "@/api/generator/types/directory";
+import type {
+  DirectoryPsychologistProfile,
+  DirectoryPsychologistsResponse,
+} from "@/api/generator/types/directory";
 import * as api from "@/api/req/patient";
 
 export interface UsePatientProps {
@@ -51,6 +54,7 @@ type QuerySnapshot = ReturnType<ReturnType<typeof useQueryClient>["getQueriesDat
 
 type MutationSnapshot = {
   directory: QuerySnapshot;
+  directoryProfiles: QuerySnapshot;
   favorites: QuerySnapshot;
   follows: QuerySnapshot;
 };
@@ -94,6 +98,17 @@ const updateRelationLists = (
   }
 };
 
+const updateDirectoryProfileRelation = (
+  queryClient: ReturnType<typeof useQueryClient>,
+  psychologistId: string,
+  patch: RelationPatch,
+) => {
+  queryClient.setQueryData<DirectoryPsychologistProfile>(
+    keys.directory.psychologist(psychologistId),
+    (old) => (old ? { ...old, ...patch } : old),
+  );
+};
+
 const removeFromRelationList = (
   queryClient: ReturnType<typeof useQueryClient>,
   queryKey: string[],
@@ -117,6 +132,9 @@ const removeFromRelationList = (
 
 const getSnapshot = (queryClient: ReturnType<typeof useQueryClient>): MutationSnapshot => ({
   directory: queryClient.getQueriesData({ queryKey: keys.directory.psychologistsRoot() }),
+  directoryProfiles: queryClient.getQueriesData({
+    predicate: (query) => query.queryKey[0] === "directory_psychologist",
+  }),
   favorites: queryClient.getQueriesData({ queryKey: keys.patient.favoritesRoot() }),
   follows: queryClient.getQueriesData({ queryKey: keys.patient.followsRoot() }),
 });
@@ -129,6 +147,7 @@ const restoreSnapshot = (
 
   for (const [queryKey, data] of [
     ...snapshot.directory,
+    ...snapshot.directoryProfiles,
     ...snapshot.favorites,
     ...snapshot.follows,
   ]) {
@@ -138,6 +157,9 @@ const restoreSnapshot = (
 
 const invalidateRelationQueries = (queryClient: ReturnType<typeof useQueryClient>) => {
   queryClient.invalidateQueries({ queryKey: keys.directory.psychologistsRoot() });
+  queryClient.invalidateQueries({
+    predicate: (query) => query.queryKey[0] === "directory_psychologist",
+  });
   queryClient.invalidateQueries({ queryKey: keys.patient.favoritesRoot() });
   queryClient.invalidateQueries({ queryKey: keys.patient.followsRoot() });
 };
@@ -199,6 +221,7 @@ export const usePatient = ({
       ]);
       const snapshot = getSnapshot(queryClient);
       updateDirectoryRelation(queryClient, id, { favorited: true });
+      updateDirectoryProfileRelation(queryClient, id, { favorited: true });
       updateRelationLists(queryClient, id, { favorited: true });
       return snapshot;
     },
@@ -222,6 +245,7 @@ export const usePatient = ({
       ]);
       const snapshot = getSnapshot(queryClient);
       updateDirectoryRelation(queryClient, id, { favorited: false });
+      updateDirectoryProfileRelation(queryClient, id, { favorited: false });
       updateRelationLists(queryClient, id, { favorited: false });
       removeFromRelationList(queryClient, keys.patient.favoritesRoot(), id);
       return snapshot;
@@ -246,6 +270,7 @@ export const usePatient = ({
       ]);
       const snapshot = getSnapshot(queryClient);
       updateDirectoryRelation(queryClient, id, { followed: true });
+      updateDirectoryProfileRelation(queryClient, id, { followed: true });
       updateRelationLists(queryClient, id, { followed: true });
       return snapshot;
     },
@@ -269,6 +294,7 @@ export const usePatient = ({
       ]);
       const snapshot = getSnapshot(queryClient);
       updateDirectoryRelation(queryClient, id, { followed: false });
+      updateDirectoryProfileRelation(queryClient, id, { followed: false });
       updateRelationLists(queryClient, id, { followed: false });
       removeFromRelationList(queryClient, keys.patient.followsRoot(), id);
       return snapshot;

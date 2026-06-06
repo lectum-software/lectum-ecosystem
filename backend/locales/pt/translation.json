@@ -61,7 +61,10 @@
     "service": "serviço",
     "approach": "abordagem",
     "psychologist_favorite": "favorito de psicólogo",
-    "psychologist_follow": "psicólogo seguido"
+    "psychologist_follow": "psicólogo seguido",
+    "professional_review": "avaliação profissional",
+    "community": "comunidade",
+    "community_post": "publicação"
   },
   "property": {
     "email": "email",
@@ -78,7 +81,8 @@
     "approach": "abordagem",
     "verified": "verificados",
     "limit": "limite",
-    "page": "página"
+    "page": "página",
+    "id": "identificador"
   },
   "notification": {
     "test": {
