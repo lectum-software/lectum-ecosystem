@@ -64,6 +64,78 @@ export interface psychologist_profile {
   subscriptions?: professional_subscription[] | null;
 }
 
+export interface specialty {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  name?: string | null;
+  slug?: string | null;
+  active?: boolean | null;
+  psychologist_specialties?: psychologist_specialty[] | null;
+}
+
+export interface service {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  name?: string | null;
+  slug?: string | null;
+  active?: boolean | null;
+  psychologist_services?: psychologist_service[] | null;
+}
+
+export interface approach {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  name?: string | null;
+  slug?: string | null;
+  active?: boolean | null;
+  psychologist_approaches?: psychologist_approach[] | null;
+}
+
+export interface psychologist_specialty {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  psychologist_id?: string | null;
+  specialty_id?: string | null;
+  psychologist?: user | null;
+  specialty?: specialty | null;
+}
+
+export interface psychologist_service {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  psychologist_id?: string | null;
+  service_id?: string | null;
+  psychologist?: user | null;
+  service?: service | null;
+}
+
+export interface psychologist_approach {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  psychologist_id?: string | null;
+  approach_id?: string | null;
+  psychologist?: user | null;
+  approach?: approach | null;
+}
+
 export interface subscription_plan {
   id?: string | null;
   deleted?: boolean | null;
@@ -157,6 +229,9 @@ export interface user {
   user_backgrounds?: user_background[] | null;
   patient_profile?: patient_profile | null;
   psychologist_profile?: psychologist_profile | null;
+  psychologist_specialties?: psychologist_specialty[] | null;
+  psychologist_services?: psychologist_service[] | null;
+  psychologist_approaches?: psychologist_approach[] | null;
   notification_subscriptions?: notification_subscription[] | null;
   notifications?: notification[] | null;
   notification_preference?: notification_preference | null;

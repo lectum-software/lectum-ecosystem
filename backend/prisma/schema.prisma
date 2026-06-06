@@ -35,12 +35,16 @@ model user {
   user_backgrounds           user_background[]           @relation("user_background_user")
   patient_profile            patient_profile?            @relation("patient_profile_user")
   psychologist_profile       psychologist_profile?       @relation("psychologist_profile_user")
+  psychologist_specialties   psychologist_specialty[]    @relation("psychologist_specialty_psychologist")
+  psychologist_services      psychologist_service[]      @relation("psychologist_service_psychologist")
+  psychologist_approaches    psychologist_approach[]     @relation("psychologist_approach_psychologist")
   notification_subscriptions notification_subscription[] @relation("notification_subscription_user")
   logs                       log__user[]                 @relation("log__user_user")
   notifications              notification[]              @relation("notifications")
   notification_preference    notification_preference?    @relation("notification_preference_user")
 
   @@index([email, deleted])
+  @@index([active, deleted])
   @@index([role, deleted])
   @@map("users")
 }
@@ -135,7 +139,107 @@ model psychologist_profile {
 
   @@index([user_id])
   @@index([published, deleted])
+  @@index([published, deleted, cfp_verified_at])
   @@map("psychologist_profiles")
+}
+
+model specialty {
+  id                       String                   @id @default(cuid())
+  deleted                  Boolean                  @default(false)
+  deletedAt                DateTime?                @map("deleted_at")
+  updatedAt                DateTime                 @default(now()) @updatedAt @map("updated_at")
+  createdAt                DateTime                 @default(now()) @map("created_at")
+  name                     String
+  slug                     String                   @unique
+  active                   Boolean                  @default(true)
+  psychologist_specialties psychologist_specialty[] @relation("psychologist_specialty_specialty")
+
+  @@index([slug, active])
+  @@index([active, deleted])
+  @@map("specialties")
+}
+
+model service {
+  id                    String                 @id @default(cuid())
+  deleted               Boolean                @default(false)
+  deletedAt             DateTime?              @map("deleted_at")
+  updatedAt             DateTime               @default(now()) @updatedAt @map("updated_at")
+  createdAt             DateTime               @default(now()) @map("created_at")
+  name                  String
+  slug                  String                 @unique
+  active                Boolean                @default(true)
+  psychologist_services psychologist_service[] @relation("psychologist_service_service")
+
+  @@index([slug, active])
+  @@index([active, deleted])
+  @@map("services")
+}
+
+model approach {
+  id                      String                  @id @default(cuid())
+  deleted                 Boolean                 @default(false)
+  deletedAt               DateTime?               @map("deleted_at")
+  updatedAt               DateTime                @default(now()) @updatedAt @map("updated_at")
+  createdAt               DateTime                @default(now()) @map("created_at")
+  name                    String
+  slug                    String                  @unique
+  active                  Boolean                 @default(true)
+  psychologist_approaches psychologist_approach[] @relation("psychologist_approach_approach")
+
+  @@index([slug, active])
+  @@index([active, deleted])
+  @@map("approaches")
+}
+
+model psychologist_specialty {
+  id              String    @id @default(cuid())
+  deleted         Boolean   @default(false)
+  deletedAt       DateTime? @map("deleted_at")
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  psychologist_id String
+  specialty_id    String
+  psychologist    user      @relation("psychologist_specialty_psychologist", fields: [psychologist_id], references: [id], onDelete: Cascade)
+  specialty       specialty @relation("psychologist_specialty_specialty", fields: [specialty_id], references: [id], onDelete: Cascade)
+
+  @@unique([psychologist_id, specialty_id])
+  @@index([psychologist_id])
+  @@index([specialty_id])
+  @@map("psychologist_specialties")
+}
+
+model psychologist_service {
+  id              String    @id @default(cuid())
+  deleted         Boolean   @default(false)
+  deletedAt       DateTime? @map("deleted_at")
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  psychologist_id String
+  service_id      String
+  psychologist    user      @relation("psychologist_service_psychologist", fields: [psychologist_id], references: [id], onDelete: Cascade)
+  service         service   @relation("psychologist_service_service", fields: [service_id], references: [id], onDelete: Cascade)
+
+  @@unique([psychologist_id, service_id])
+  @@index([psychologist_id])
+  @@index([service_id])
+  @@map("psychologist_services")
+}
+
+model psychologist_approach {
+  id              String    @id @default(cuid())
+  deleted         Boolean   @default(false)
+  deletedAt       DateTime? @map("deleted_at")
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  psychologist_id String
+  approach_id     String
+  psychologist    user      @relation("psychologist_approach_psychologist", fields: [psychologist_id], references: [id], onDelete: Cascade)
+  approach        approach  @relation("psychologist_approach_approach", fields: [approach_id], references: [id], onDelete: Cascade)
+
+  @@unique([psychologist_id, approach_id])
+  @@index([psychologist_id])
+  @@index([approach_id])
+  @@map("psychologist_approaches")
 }
 
 model subscription_plan {

@@ -6,6 +6,7 @@ import apiPrivateAuthConfirm from "@/modules/api/private/auth/confirm";
 import apiPrivateAuthHidrate from "@/modules/api/private/auth/hidrate";
 import apiPrivateAuthNeedReset from "@/modules/api/private/auth/need_reset";
 import apiPrivateAuthReset from "@/modules/api/private/auth/reset";
+import apiPrivateDirectoryPsychologists from "@/modules/api/private/directory/psychologists";
 import apiPrivateNotificationClean from "@/modules/api/private/notification/clean";
 import apiPrivateNotificationIndex from "@/modules/api/private/notification/index";
 import apiPrivateNotificationTest from "@/modules/api/private/notification/test";
@@ -98,6 +99,7 @@ mountRoleGuardedRoute(
   "psicologo",
   apiPrivatePsychologistBillingCurrent,
 );
+mountRoute("/api/private/directory/psychologists", apiPrivateDirectoryPsychologists);
 mountRoute("/api/private/notification/clean", apiPrivateNotificationClean);
 mountRoute("/api/private/notification/index", apiPrivateNotificationIndex);
 mountRoute("/api/private/notification/update", apiPrivateNotificationUpdate);

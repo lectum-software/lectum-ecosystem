@@ -9,6 +9,9 @@ const keys = {
   patient: {
     profile: () => ["patient_profile"],
   },
+  directory: {
+    psychologists: (filters?: unknown) => ["directory_psychologists", filters],
+  },
   psychologistBilling: {
     plans: () => ["psychologist_billing_plans"],
     current: () => ["psychologist_billing_current"],

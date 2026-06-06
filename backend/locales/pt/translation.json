@@ -40,7 +40,8 @@
     "confirm_code_success": "Código de confirmação enviado com sucesso",
     "show": "dados encontrados com sucesso",
     "update": "dados atualizados com sucesso",
-    "patient_onboarding_success": "Onboarding do paciente conclu?do com sucesso"
+    "patient_onboarding_success": "Onboarding do paciente conclu?do com sucesso",
+    "index": "dados encontrados com sucesso"
   },
   "gender": {
     "o": "o"
@@ -50,7 +51,11 @@
     "user_token": "user_token",
     "user_background": "user_background",
     "notification_subscription": "notification_subscription",
-    "patient_profile": "patient_profile"
+    "patient_profile": "patient_profile",
+    "psychologist_profile": "perfil de psicólogo",
+    "specialty": "especialidade",
+    "service": "serviço",
+    "approach": "abordagem"
   },
   "property": {
     "email": "email",
@@ -60,7 +65,14 @@
     "birthdate": "data de nascimento",
     "phone": "telefone",
     "name": "nome",
-    "gender": "gênero"
+    "gender": "gênero",
+    "search": "busca",
+    "specialty": "especialidade",
+    "service": "serviço",
+    "approach": "abordagem",
+    "verified": "verificados",
+    "limit": "limite",
+    "page": "página"
   },
   "notification": {
     "test": {

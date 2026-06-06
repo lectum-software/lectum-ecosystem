@@ -7,5 +7,12 @@ export type {
   SubscriptionPlanFeatures,
   SubscriptionPlanSlug,
 } from "./billing";
+export type {
+  DirectoryCatalogItem,
+  DirectoryPsychologist,
+  DirectoryPsychologistFilters,
+  DirectoryPsychologistsQuery,
+  DirectoryPsychologistsResponse,
+} from "./directory";
 export type { notification } from "./notification";
 export type { patient_profile, psychologist_profile, user, user_token } from "./user";

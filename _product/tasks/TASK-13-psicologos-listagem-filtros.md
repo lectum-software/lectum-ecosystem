@@ -8,7 +8,7 @@
 | Prioridade | P0 |
 | Esforço | L |
 | Fase | Descoberta |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-02, TASK-12 |
 | ADR alvo | ADR de descoberta de psicólogos |
 
@@ -139,19 +139,48 @@ Regras anti-recriação específicas:
 
 ## Critérios de aceite
 
-- [ ] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
-- [ ] Rotas de descoberta sob `/api/private/directory/*` usam só `_auth` (neutras), nunca `requireRole`, conforme ADR-0002.
-- [ ] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
-- [ ] Backend implementado nos endpoints/modelos esperados quando aplicável.
-- [ ] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
-- [ ] Todos os estados obrigatórios existem e usam textos em PT-BR.
-- [ ] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
-- [ ] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
-- [ ] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
-- [ ] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
-- [ ] ADR criado ou atualizado em `adrs/`.
-- [ ] Checks/builds relevantes foram executados sem erros.
-- [ ] Commit criado com mensagem convencional.
+- [x] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
+- [x] Rotas de descoberta sob `/api/private/directory/*` usam só `_auth` (neutras), nunca `requireRole`, conforme ADR-0002.
+- [x] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
+- [x] Backend implementado nos endpoints/modelos esperados quando aplicável.
+- [x] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
+- [x] Todos os estados obrigatórios existem e usam textos em PT-BR.
+- [x] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
+- [x] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
+- [x] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
+- [x] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
+- [x] ADR criado ou atualizado em `adrs/`.
+- [x] Checks/builds relevantes foram executados sem erros.
+- [x] Commit criado com mensagem convencional.
+
+## Execução
+
+- Builder/Quick Copy não está exposto como ferramenta direta nesta sessão; a validação visual
+  usou as imagens locais obrigatórias `_product/proto/Psicólogos.jpg` e
+  `_product/proto/Filtros de Psicólogos - Serviços Expandidos.jpg`.
+- Backend criou `GET /api/private/directory/psychologists`, montado sob namespace neutro com apenas
+  `_auth`, sem `requireRole`.
+- Prisma criou os catálogos `specialty`, `service`, `approach` e os joins
+  `psychologist_specialty`, `psychologist_service`, `psychologist_approach`, sem seed artificial.
+- A listagem retorna somente `psychologist_profile.published = true`, usuário ativo e campos
+  public-safe; `cpf`, `whatsapp`, e-mail e dados de conta não são expostos.
+- Frontend implementou `/app/psychologists` mobile-first dentro do shell privado, com busca,
+  filtros expandidos, chips ativos, limpar filtros, paginação, loading, erro, sucesso e vazio
+  honesto.
+- Busca e filtros usam a fundação da TASK-02 (`useFormList` e controllers), React Query, req/caller
+  dedicados e query key `directory.psychologists`.
+- ADR criado: `adrs/0019-descoberta-psicologos-taxonomias.md`.
+- Validações executadas:
+  - `pnpm --dir backend db:migrate --name add_directory_taxonomies`
+  - `pnpm --dir backend db:generate`
+  - `pnpm --dir backend check`
+  - `pnpm --dir backend build`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - smoke de API real com paciente temporário removido ao final;
+  - browser local headless em viewport mobile `390x844` com cookie real, sessão hidratada,
+    estado vazio/lista real e bottom nav.
 
 ## Validação mínima
 
