@@ -8,9 +8,9 @@
 | Prioridade | P1 |
 | Esforço | M |
 | Fase | Psicólogo privado |
-| Status | Pending |
+| Status | Blocked |
 | Dependências | TASK-17, TASK-18 |
-| ADR alvo | ADR de leitura de avaliações profissionais |
+| ADR alvo | ADR-0025 |
 
 ## Referências obrigatórias
 
@@ -155,3 +155,11 @@ Regras anti-recriação específicas:
 ## Notas para executor
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
+
+
+## Execucao bloqueada
+
+- Execucao interrompida porque a dependencia obrigatoria TASK-18 esta Blocked.
+- Bloqueio registrado em adrs/0025-bloqueio-task19-dependencia-task18.md.
+- Referencia visual consultada via imagem local: _product/proto/Minhas Avaliacoes - Psicologo.jpg.
+- Nao foi criada implementacao parcial, endpoints, schema, migration ou UI final para evitar rota solta e experiencia privada incompleta.
