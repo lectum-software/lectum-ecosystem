@@ -1,8 +1,8 @@
 import { error, msg } from "@/helpers/translate";
-import type { IFavoriteActionDTO, IFavoriteIndexDTO } from "../DTOs/IFavoriteDTO";
-import { FavoriteRepository } from "../repositories/FavoriteRepository";
+import type { IFollowActionDTO, IFollowIndexDTO } from "../DTOs/IFollowDTO";
+import { FollowRepository } from "../repositories/FollowRepository";
 
-type FavoriteAction = "favorite" | "unfavorite";
+type FollowAction = "follow" | "unfollow";
 
 const ensurePatient = (data: { auth: { role?: string | null } }) => {
   if (data.auth.role === "paciente") return null;
@@ -13,11 +13,11 @@ const ensurePatient = (data: { auth: { role?: string | null } }) => {
   };
 };
 
-export const index = async (data: IFavoriteIndexDTO) => {
+export const index = async (data: IFollowIndexDTO) => {
   const unauthorized = ensurePatient(data);
   if (unauthorized) return unauthorized;
 
-  const repository = new FavoriteRepository();
+  const repository = new FollowRepository();
   const res = await repository.index(data);
 
   return {
@@ -27,11 +27,11 @@ export const index = async (data: IFavoriteIndexDTO) => {
   };
 };
 
-export const action = async (data: IFavoriteActionDTO, actionType: FavoriteAction) => {
+export const action = async (data: IFollowActionDTO, actionType: FollowAction) => {
   const unauthorized = ensurePatient(data);
   if (unauthorized) return unauthorized;
 
-  const repository = new FavoriteRepository();
+  const repository = new FollowRepository();
   const psychologistId = data.p.id;
   const isPublishedPsychologist = await repository.hasPublishedPsychologist(psychologistId);
 
@@ -45,13 +45,13 @@ export const action = async (data: IFavoriteActionDTO, actionType: FavoriteActio
   }
 
   const res =
-    actionType === "favorite"
-      ? await repository.favorite(data.auth.id!, psychologistId)
-      : await repository.unfavorite(data.auth.id!, psychologistId);
+    actionType === "follow"
+      ? await repository.follow(data.auth.id!, psychologistId)
+      : await repository.unfollow(data.auth.id!, psychologistId);
 
   return {
     status: 200,
-    ...msg(actionType === "favorite" ? "favorite_success" : "unfavorite_success", {}),
+    ...msg(actionType === "follow" ? "follow_success" : "unfollow_success", {}),
     data: res,
   };
 };

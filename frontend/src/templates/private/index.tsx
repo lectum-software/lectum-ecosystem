@@ -54,6 +54,7 @@ const navigationByRole: Record<Extract<UserRole, "paciente" | "psicologo">, Navi
       icon: Heart,
       label: "Favoritos",
       title: "Favoritos",
+      activePrefixes: ["/app/following"],
     },
     {
       href: "/app/community",
@@ -87,6 +88,7 @@ const navigationByRole: Record<Extract<UserRole, "paciente" | "psicologo">, Navi
       icon: Heart,
       label: "Favoritos",
       title: "Favoritos",
+      activePrefixes: ["/app/following"],
     },
     {
       href: "/app/community",

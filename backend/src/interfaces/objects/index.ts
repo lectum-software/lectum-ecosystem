@@ -136,6 +136,30 @@ export interface psychologist_approach {
   approach?: approach | null;
 }
 
+export interface psychologist_favorite {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  user_id?: string | null;
+  psychologist_id?: string | null;
+  user?: user | null;
+  psychologist?: user | null;
+}
+
+export interface psychologist_follow {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  user_id?: string | null;
+  psychologist_id?: string | null;
+  user?: user | null;
+  psychologist?: user | null;
+}
+
 export interface subscription_plan {
   id?: string | null;
   deleted?: boolean | null;
@@ -232,6 +256,10 @@ export interface user {
   psychologist_specialties?: psychologist_specialty[] | null;
   psychologist_services?: psychologist_service[] | null;
   psychologist_approaches?: psychologist_approach[] | null;
+  favorite_psychologists?: psychologist_favorite[] | null;
+  favorited_by_patients?: psychologist_favorite[] | null;
+  followed_psychologists?: psychologist_follow[] | null;
+  followed_by_patients?: psychologist_follow[] | null;
   notification_subscriptions?: notification_subscription[] | null;
   notifications?: notification[] | null;
   notification_preference?: notification_preference | null;

@@ -1,29 +1,27 @@
 ﻿"use client";
 
 import {
-  BadgeCheck,
   ChevronLeft,
   ChevronRight,
-  Heart,
   Info,
-  PhoneCall,
   Search,
   SlidersHorizontal,
-  Star,
   UserRound,
   X,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type FormEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useDirectoryPsychologists } from "@/api/callers/directory";
 import { usePatient } from "@/api/callers/patient";
 import type {
   DirectoryCatalogItem,
-  DirectoryPsychologist,
   DirectoryPsychologistsQuery,
 } from "@/api/generator/types/directory";
+import {
+  PsychologistCard,
+  type PsychologistCardItem,
+} from "@/components/psychologists/psychologist-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -103,25 +101,6 @@ const findCatalogLabel = (items: DirectoryCatalogItem[] | undefined, slug?: stri
   return items?.find((item) => item.slug === slug)?.name || slug;
 };
 
-const getInitials = (name: string) => {
-  const parts = name.split(/\s+/).filter(Boolean);
-
-  if (parts.length === 0) return "L";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-};
-
-const isGoogleAvatar = (avatar?: string | null) => {
-  return Boolean(avatar?.startsWith("https://lh3.googleusercontent.com/"));
-};
-
-const formatRating = (ratingAvg: number, ratingCount: number) => {
-  if (ratingCount <= 0) return "Sem avaliações";
-
-  return `${(ratingAvg / 100).toFixed(1)} (${ratingCount})`;
-};
-
 const resolveDirectoryErrorMessage = (error: unknown) => {
   const apiError = error as ApiError;
   const rawMessage =
@@ -168,130 +147,6 @@ const buildActiveFilters = (
   return active;
 };
 
-function PsychologistCard({
-  favoritePending,
-  onToggleFavorite,
-  psychologist,
-}: {
-  favoritePending?: boolean;
-  onToggleFavorite: (psychologist: DirectoryPsychologist) => void;
-  psychologist: DirectoryPsychologist;
-}) {
-  const tags = [
-    ...psychologist.specialties.slice(0, 2).map((item) => item.name),
-    ...psychologist.services.slice(0, 2).map((item) => item.name),
-    psychologist.modality,
-  ].filter(Boolean) as string[];
-
-  return (
-    <article className="overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_8px_28px_rgb(15_23_42_/_5%)] transition hover:border-border-strong hover:shadow-[0_12px_32px_rgb(15_23_42_/_7%)]">
-      <div className="grid gap-3 p-4">
-        <div className="flex items-center justify-between gap-3">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[0.72rem] font-bold text-success">
-            <span className="h-2.5 w-2.5 rounded-full bg-success" aria-hidden="true" />
-            Disponível hoje
-          </span>
-          <button
-            aria-label={
-              psychologist.favorited
-                ? `Remover ${psychologist.name} dos favoritos`
-                : `Favoritar ${psychologist.name}`
-            }
-            aria-pressed={psychologist.favorited}
-            className={cn(
-              "grid h-11 w-11 place-items-center rounded-full border border-border bg-surface text-muted shadow-[var(--lectum-shadow-soft)] transition hover:border-primary/40 hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-60",
-              psychologist.favorited && "border-primary/30 bg-primary-soft text-primary",
-            )}
-            disabled={favoritePending}
-            onClick={() => onToggleFavorite(psychologist)}
-            type="button"
-          >
-            <Heart
-              className={cn("h-5 w-5", psychologist.favorited && "fill-current")}
-              aria-hidden="true"
-            />
-          </button>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-primary-soft text-lg font-bold text-primary">
-            {isGoogleAvatar(psychologist.avatar) ? (
-              <Image
-                alt={psychologist.name}
-                className="object-cover"
-                fill
-                sizes="48px"
-                src={psychologist.avatar as string}
-              />
-            ) : (
-              getInitials(psychologist.name)
-            )}
-          </div>
-
-          <div className="min-w-0 flex-1">
-            <h2 className="flex items-center gap-1.5 text-[1.08rem] font-extrabold leading-6 text-foreground lg:text-[1.12rem]">
-              <span className="truncate">{psychologist.name}</span>
-              {psychologist.verified ? (
-                <BadgeCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-              ) : null}
-            </h2>
-            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span className="text-[0.65rem] font-bold uppercase tracking-[0.26em] text-subtle">
-                Psicólogo
-              </span>
-              <span className="inline-flex items-center gap-1 text-[0.78rem] font-semibold text-muted">
-                <Star className="h-3.5 w-3.5 fill-warning text-warning" aria-hidden="true" />
-                {formatRating(psychologist.rating_avg, psychologist.rating_count)}
-              </span>
-            </div>
-          </div>
-
-          <Link
-            aria-label={`Abrir perfil de ${psychologist.name}`}
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-subtle transition hover:bg-primary-soft hover:text-primary"
-            href={`/app/psychologist/${psychologist.id}`}
-          >
-            <ChevronRight className="h-6 w-6" aria-hidden="true" />
-          </Link>
-        </div>
-
-        <p className="line-clamp-3 text-[0.88rem] leading-6 text-muted">
-          {psychologist.headline ||
-            psychologist.bio ||
-            "Perfil publicado na Lectum. Abra o perfil para conferir as informações disponíveis."}
-        </p>
-
-        <div className="flex flex-wrap gap-2">
-          {tags.length > 0 ? (
-            tags.map((tag) => (
-              <span
-                className="rounded-full border border-border bg-surface-muted px-2.5 py-1 text-[0.7rem] font-semibold text-muted"
-                key={tag}
-              >
-                {tag}
-              </span>
-            ))
-          ) : (
-            <span className="rounded-full border border-border bg-surface-muted px-2.5 py-1 text-[0.7rem] font-semibold text-muted">
-              Dados profissionais públicos
-            </span>
-          )}
-        </div>
-
-        <Button
-          asChild
-          className="h-11 w-full rounded-full bg-success text-sm font-extrabold text-white hover:bg-success/90"
-        >
-          <Link href={`/app/psychologist/${psychologist.id}`}>
-            <PhoneCall className="h-5 w-5" aria-hidden="true" />
-            Chamar no WhatsApp
-          </Link>
-        </Button>
-      </div>
-    </article>
-  );
-}
-
 export const PsychologistsLogic = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -300,7 +155,8 @@ export const PsychologistsLogic = () => {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const closeFiltersButtonRef = useRef<HTMLButtonElement>(null);
   const filtersTitleId = useId();
-  const { favoritePsychologist, unfavoritePsychologist } = usePatient({ enableProfile: false });
+  const { favoritePsychologist, followPsychologist, unfavoritePsychologist, unfollowPsychologist } =
+    usePatient({ enableProfile: false });
 
   const params = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
   const filterValues = useMemo(() => readFiltersFromParams(params), [params]);
@@ -436,7 +292,7 @@ export const PsychologistsLogic = () => {
     navigateWithFilters(next, 1);
   };
 
-  const toggleFavorite = (psychologist: DirectoryPsychologist) => {
+  const toggleFavorite = (psychologist: PsychologistCardItem) => {
     if (psychologist.favorited) {
       unfavoritePsychologist.mutate(psychologist.id);
       return;
@@ -445,11 +301,26 @@ export const PsychologistsLogic = () => {
     favoritePsychologist.mutate(psychologist.id);
   };
 
+  const toggleFollow = (psychologist: PsychologistCardItem) => {
+    if (psychologist.followed) {
+      unfollowPsychologist.mutate(psychologist.id);
+      return;
+    }
+
+    followPsychologist.mutate(psychologist.id);
+  };
+
   const favoritePendingId =
     favoritePsychologist.isPending && typeof favoritePsychologist.variables === "string"
       ? favoritePsychologist.variables
       : unfavoritePsychologist.isPending && typeof unfavoritePsychologist.variables === "string"
         ? unfavoritePsychologist.variables
+        : null;
+  const followPendingId =
+    followPsychologist.isPending && typeof followPsychologist.variables === "string"
+      ? followPsychologist.variables
+      : unfollowPsychologist.isPending && typeof unfollowPsychologist.variables === "string"
+        ? unfollowPsychologist.variables
         : null;
   const hasFilters = activeFilters.length > 0;
   const errorMessage = directory.isError ? resolveDirectoryErrorMessage(directory.error) : null;
@@ -688,8 +559,10 @@ export const PsychologistsLogic = () => {
                 {psychologists.map((psychologist) => (
                   <PsychologistCard
                     favoritePending={favoritePendingId === psychologist.id}
+                    followPending={followPendingId === psychologist.id}
                     key={psychologist.id}
                     onToggleFavorite={toggleFavorite}
+                    onToggleFollow={toggleFollow}
                     psychologist={psychologist}
                   />
                 ))}

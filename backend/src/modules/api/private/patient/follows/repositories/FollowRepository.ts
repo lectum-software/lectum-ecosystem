@@ -1,12 +1,12 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import type {
-  FavoriteActionResponse,
-  IFavoriteIndexDTO,
-  PatientRelationCatalogItem,
-  PatientRelationPsychologist,
-} from "../DTOs/IFavoriteDTO";
-import type { IFavoriteRepository } from "./interfaces/IFavoriteRepository";
+  FollowActionResponse,
+  IFollowIndexDTO,
+  PatientFollowCatalogItem,
+  PatientFollowPsychologist,
+} from "../DTOs/IFollowDTO";
+import type { IFollowRepository } from "./interfaces/IFollowRepository";
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
@@ -17,7 +17,7 @@ const catalogSelect = {
   slug: true,
 };
 
-const normalizePagination = (query: IFavoriteIndexDTO["q"]) => {
+const normalizePagination = (query: IFollowIndexDTO["q"]) => {
   const page = Math.max(1, Number(query.page || 1));
   const limit = Math.min(MAX_LIMIT, Math.max(1, Number(query.limit || DEFAULT_LIMIT)));
 
@@ -35,21 +35,21 @@ const normalizeStringArray = (value: unknown): string[] => {
 };
 
 const isCatalogItem = (
-  value: PatientRelationCatalogItem | null,
-): value is PatientRelationCatalogItem => {
+  value: PatientFollowCatalogItem | null,
+): value is PatientFollowCatalogItem => {
   return Boolean(value?.id && value.name && value.slug);
 };
 
-export class FavoriteRepository implements IFavoriteRepository {
-  readonly repository: ORM["psychologist_favorite"];
+export class FollowRepository implements IFollowRepository {
+  readonly repository: ORM["psychologist_follow"];
 
   constructor() {
-    this.repository = prisma.psychologist_favorite;
+    this.repository = prisma.psychologist_follow;
   }
 
-  async index(data: IFavoriteIndexDTO) {
+  async index(data: IFollowIndexDTO) {
     const pagination = normalizePagination(data.q);
-    const where: Prisma.psychologist_favoriteWhereInput = {
+    const where: Prisma.psychologist_followWhereInput = {
       user_id: data.auth.id!,
       deleted: false,
       psychologist: {
@@ -164,7 +164,7 @@ export class FavoriteRepository implements IFavoriteRepository {
 
     return {
       data: items
-        .map<PatientRelationPsychologist | null>((item) => {
+        .map<PatientFollowPsychologist | null>((item) => {
           const profile = item.psychologist.psychologist_profile;
           if (!profile) return null;
 
@@ -195,7 +195,7 @@ export class FavoriteRepository implements IFavoriteRepository {
               .filter(isCatalogItem),
           };
         })
-        .filter((item): item is PatientRelationPsychologist => Boolean(item)),
+        .filter((item): item is PatientFollowPsychologist => Boolean(item)),
       page: pagination.page,
       pages: Math.ceil(count / pagination.limit),
       count,
@@ -224,7 +224,7 @@ export class FavoriteRepository implements IFavoriteRepository {
     return Boolean(psychologist);
   }
 
-  async favorite(userId: string, psychologistId: string): Promise<FavoriteActionResponse> {
+  async follow(userId: string, psychologistId: string): Promise<FollowActionResponse> {
     const existing = await this.repository.findUnique({
       where: {
         user_id_psychologist_id: {
@@ -258,11 +258,11 @@ export class FavoriteRepository implements IFavoriteRepository {
 
     return {
       psychologist_id: psychologistId,
-      favorited: true,
+      followed: true,
     };
   }
 
-  async unfavorite(userId: string, psychologistId: string): Promise<FavoriteActionResponse> {
+  async unfollow(userId: string, psychologistId: string): Promise<FollowActionResponse> {
     const existing = await this.repository.findUnique({
       where: {
         user_id_psychologist_id: {
@@ -292,7 +292,7 @@ export class FavoriteRepository implements IFavoriteRepository {
 
     return {
       psychologist_id: psychologistId,
-      favorited: false,
+      followed: false,
     };
   }
 }

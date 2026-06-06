@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | M |
 | Fase | Descoberta |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-13 |
 | ADR alvo | ADR de favoritos e seguindo |
 
@@ -133,19 +133,19 @@ Regras anti-recriação específicas:
 
 ## Critérios de aceite
 
-- [ ] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
-- [ ] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
-- [ ] Backend implementado nos endpoints/modelos esperados quando aplicável.
-- [ ] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
-- [ ] Rotas sob `/api/private/patient/*` exigem `requireRole("paciente")` (fail-closed), conforme ADR-0002.
-- [ ] Todos os estados obrigatórios existem e usam textos em PT-BR.
-- [ ] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
-- [ ] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
-- [ ] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
-- [ ] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
-- [ ] ADR criado ou atualizado em `adrs/`.
-- [ ] Checks/builds relevantes foram executados sem erros.
-- [ ] Commit criado com mensagem convencional.
+- [x] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
+- [x] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
+- [x] Backend implementado nos endpoints/modelos esperados quando aplicável.
+- [x] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
+- [x] Rotas sob `/api/private/patient/*` exigem `requireRole("paciente")` (fail-closed), conforme ADR-0002.
+- [x] Todos os estados obrigatórios existem e usam textos em PT-BR.
+- [x] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
+- [x] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
+- [x] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
+- [x] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
+- [x] ADR criado ou atualizado em `adrs/`.
+- [x] Checks/builds relevantes foram executados sem erros.
+- [x] Commit criado com mensagem convencional.
 
 ## Execução parcial solicitada no card da TASK-13 (2026-06-06)
 
@@ -159,11 +159,12 @@ Regras anti-recriação específicas:
 - Frontend criado neste recorte:
   - campo `favorited` em `GET /api/private/directory/psychologists`;
   - botão de coração persistente no card da listagem.
-- Não foram marcados critérios de aceite desta task porque ainda faltam:
+- Naquele momento não foram marcados critérios de aceite desta task porque ainda faltavam:
   - `GET /api/private/patient/favorites`;
   - rotas e ações de `follows`;
   - telas dedicadas `/app/favorites` e `/app/following` com dados reais.
 - ADR relacionado: `adrs/0020-favoritar-psicologo-na-listagem.md`.
+- Pendências resolvidas na execução completa de 2026-06-06, mantendo como histórica a execução parcial acima.
 
 ## Validação mínima
 
@@ -177,3 +178,28 @@ Regras anti-recriação específicas:
 ## Notas para executor
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
+
+## Execu??o completa (2026-06-06)
+
+- Refer?ncias visuais consultadas: `_product/proto/Favoritos.jpg` e `_product/proto/Seguindo.jpg`. Builder/Quick Copy n?o est? exposto como ferramenta MCP nesta sess?o; foi usado o fallback audit?vel de imagens locais conforme `PROTO-INVENTORY.md`.
+- Backend conclu?do sob guarda `requireRole("paciente")`:
+  - `GET /api/private/patient/favorites`;
+  - `POST /api/private/patient/favorites/:id`;
+  - `DELETE /api/private/patient/favorites/:id`;
+  - `GET /api/private/patient/follows`;
+  - `POST /api/private/patient/follows/:id`;
+  - `DELETE /api/private/patient/follows/:id`.
+- Listagens paginadas usam dados reais, escopo por `req.auth.id`, filtros `deleted=false`, alvo psic?logo ativo e `psychologist_profile.published=true`.
+- Frontend conclu?do nas rotas `/app/favorites` e `/app/following`, com estados de loading, erro e vazio em PT-BR, tabs entre listas, contadores reais e cards reutilizados da descoberta.
+- O card de psic?logo da descoberta foi extra?do para componente reutiliz?vel e agora diferencia `favorited` e `followed` com atualiza??es otimistas e rollback por snapshot em erro.
+- N?o foram criados formul?rios nesta task; a funda??o da TASK-02 n?o era aplic?vel.
+- A rota de perfil profissional `/app/psychologist/[id]` ainda pertence ? TASK-15 e n?o existe no produto atual; a integra??o dos mesmos bot?es no perfil deve ser feita quando a TASK-15 materializar essa tela.
+- ADR atualizado: `adrs/0020-favoritar-psicologo-na-listagem.md`.
+- Valida??es executadas:
+  - `pnpm --dir backend db:migrate` (sem migration pendente; schema j? sincronizado pela execu??o parcial anterior);
+  - `pnpm --dir backend check`;
+  - `pnpm --dir backend build`;
+  - `pnpm --dir frontend check`;
+  - `pnpm --dir frontend build`;
+  - smoke real de API com paciente e psic?logo tempor?rios: guarda 403 para psic?logo em rota paciente, criar/listar/remover favorito, criar/listar/remover seguindo e refletir `favorited/followed` no diret?rio;
+  - browser local headless desktop `1440x1000`: `/app/favorites` com remo??o pelo cora??o e estado vazio; `/app/following` com remo??o pelo bot?o `Seguindo` e estado vazio.

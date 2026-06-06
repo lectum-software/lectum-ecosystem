@@ -8,6 +8,10 @@ const keys = {
   },
   patient: {
     profile: () => ["patient_profile"],
+    favoritesRoot: () => ["patient_favorites"],
+    favorites: (filters?: unknown) => ["patient_favorites", filters],
+    followsRoot: () => ["patient_follows"],
+    follows: (filters?: unknown) => ["patient_follows", filters],
   },
   directory: {
     psychologistsRoot: () => ["directory_psychologists"],

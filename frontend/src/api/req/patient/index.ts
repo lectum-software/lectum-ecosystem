@@ -1,5 +1,9 @@
-﻿import { callEndpoint } from "@/api/generator";
-import type { patient_profile } from "@/api/generator/types";
+import { callEndpoint } from "@/api/generator";
+import type {
+  PatientRelationListResponse,
+  PatientRelationQuery,
+  patient_profile,
+} from "@/api/generator/types";
 import { handleReq } from "@/api/handle";
 
 export type PatientOnboardingGoal = "encontrar_psicologo" | "conhecer_comunidade";
@@ -20,6 +24,11 @@ export type CompletePatientOnboardingPayload = {
 export type FavoritePsychologistResponse = {
   psychologist_id: string;
   favorited: boolean;
+};
+
+export type FollowPsychologistResponse = {
+  psychologist_id: string;
+  followed: boolean;
 };
 
 export const getPatientProfile = async () => {
@@ -43,6 +52,17 @@ export const completePatientOnboarding = async (body: CompletePatientOnboardingP
   });
 };
 
+export const getFavoritePsychologists = async (query: PatientRelationQuery = {}) => {
+  const handle = callEndpoint({
+    route: "/api/private/patient/favorites",
+    config: {
+      params: query,
+    },
+  });
+
+  return handleReq<PatientRelationListResponse>(handle);
+};
+
 export const favoritePsychologist = async (id: string) => {
   const handle = callEndpoint({
     route: "/api/private/patient/favorites/:id",
@@ -50,7 +70,10 @@ export const favoritePsychologist = async (id: string) => {
     params: { id },
   });
 
-  return handleReq<FavoritePsychologistResponse>(handle);
+  return handleReq<FavoritePsychologistResponse>({
+    ...handle,
+    showSuccess: true,
+  });
 };
 
 export const unfavoritePsychologist = async (id: string) => {
@@ -60,5 +83,45 @@ export const unfavoritePsychologist = async (id: string) => {
     params: { id },
   });
 
-  return handleReq<FavoritePsychologistResponse>(handle);
+  return handleReq<FavoritePsychologistResponse>({
+    ...handle,
+    showSuccess: true,
+  });
+};
+
+export const getFollowedPsychologists = async (query: PatientRelationQuery = {}) => {
+  const handle = callEndpoint({
+    route: "/api/private/patient/follows",
+    config: {
+      params: query,
+    },
+  });
+
+  return handleReq<PatientRelationListResponse>(handle);
+};
+
+export const followPsychologist = async (id: string) => {
+  const handle = callEndpoint({
+    route: "/api/private/patient/follows/:id",
+    method: "POST",
+    params: { id },
+  });
+
+  return handleReq<FollowPsychologistResponse>({
+    ...handle,
+    showSuccess: true,
+  });
+};
+
+export const unfollowPsychologist = async (id: string) => {
+  const handle = callEndpoint({
+    route: "/api/private/patient/follows/:id",
+    method: "DELETE",
+    params: { id },
+  });
+
+  return handleReq<FollowPsychologistResponse>({
+    ...handle,
+    showSuccess: true,
+  });
 };

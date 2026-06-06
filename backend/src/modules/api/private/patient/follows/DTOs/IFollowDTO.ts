@@ -1,13 +1,13 @@
 import type { user } from "@/interfaces/objects";
 import type { PaginationResponse } from "@/interfaces/pagination";
 
-export type PatientRelationCatalogItem = {
+export type PatientFollowCatalogItem = {
   id: string;
   name: string;
   slug: string;
 };
 
-export type PatientRelationPsychologist = {
+export type PatientFollowPsychologist = {
   id: string;
   relation_id: string;
   relation_created_at: Date;
@@ -23,19 +23,19 @@ export type PatientRelationPsychologist = {
   verified: boolean;
   favorited: boolean;
   followed: boolean;
-  specialties: PatientRelationCatalogItem[];
-  services: PatientRelationCatalogItem[];
-  approaches: PatientRelationCatalogItem[];
+  specialties: PatientFollowCatalogItem[];
+  services: PatientFollowCatalogItem[];
+  approaches: PatientFollowCatalogItem[];
 };
 
-export type FavoriteActionResponse = {
+export type FollowActionResponse = {
   psychologist_id: string;
-  favorited: boolean;
+  followed: boolean;
 };
 
-export type FavoriteIndexResponse = PaginationResponse<PatientRelationPsychologist>;
+export type FollowIndexResponse = PaginationResponse<PatientFollowPsychologist>;
 
-export interface IFavoriteIndexDTO {
+export interface IFollowIndexDTO {
   q: {
     limit?: number;
     page?: number;
@@ -43,7 +43,7 @@ export interface IFavoriteIndexDTO {
   auth: user;
 }
 
-export interface IFavoriteActionDTO {
+export interface IFollowActionDTO {
   p: {
     id: string;
   };

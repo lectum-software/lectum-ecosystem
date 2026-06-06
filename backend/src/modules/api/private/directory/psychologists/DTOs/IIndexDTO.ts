@@ -20,6 +20,7 @@ export type DirectoryPsychologist = {
   rating_count: number;
   verified: boolean;
   favorited: boolean;
+  followed: boolean;
   specialties: DirectoryCatalogItem[];
   services: DirectoryCatalogItem[];
   approaches: DirectoryCatalogItem[];

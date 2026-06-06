@@ -2,6 +2,6 @@
 
 import { PsychologistRelationList } from "@/components/psychologists/psychologist-relation-list";
 
-export const FavoritesLogic = () => {
-  return <PsychologistRelationList mode="favorites" />;
+export const FollowingLogic = () => {
+  return <PsychologistRelationList mode="following" />;
 };

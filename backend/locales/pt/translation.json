@@ -43,7 +43,9 @@
     "patient_onboarding_success": "Onboarding do paciente conclu?do com sucesso",
     "index": "dados encontrados com sucesso",
     "favorite_success": "psicólogo adicionado aos favoritos",
-    "unfavorite_success": "psicólogo removido dos favoritos"
+    "unfavorite_success": "psicólogo removido dos favoritos",
+    "follow_success": "psicólogo adicionado em seguindo",
+    "unfollow_success": "psicólogo removido de seguindo"
   },
   "gender": {
     "o": "o"
