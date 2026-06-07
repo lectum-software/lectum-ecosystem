@@ -20,6 +20,37 @@ const normalizeStringArray = (value: unknown): string[] => {
   return value.filter((item): item is string => typeof item === "string");
 };
 
+const onlyDigits = (value?: string | null) => String(value ?? "").replace(/\D/g, "");
+
+const buildWhatsappUrl = (value?: string | null) => {
+  const digits = onlyDigits(value);
+  return digits ? `https://wa.me/${digits}` : null;
+};
+
+const parseCrp = (value?: string | null) => {
+  const normalized = value?.trim();
+  if (!normalized) {
+    return {
+      crp_region: null,
+      crp_number: null,
+    };
+  }
+
+  const [region, ...numberParts] = normalized.split("/");
+  const crp_region = region?.trim() || null;
+  const crp_number = numberParts.join("/").trim() || null;
+
+  return { crp_region, crp_number };
+};
+
+const buildCrp = (region?: string | null, number?: string | null) => {
+  const normalizedRegion = region?.trim();
+  const normalizedNumber = number?.trim();
+
+  if (normalizedRegion && normalizedNumber) return `${normalizedRegion}/${normalizedNumber}`;
+  return normalizedRegion || normalizedNumber || null;
+};
+
 const isCatalogItem = (value: FreeProfileCatalogItem | null): value is FreeProfileCatalogItem => {
   return Boolean(value?.id && value.name && value.slug);
 };
@@ -43,6 +74,7 @@ const getUserWithProfile = (userId: string) => {
           bio: true,
           modality: true,
           languages: true,
+          cpf: true,
           whatsapp: true,
           published: true,
           crp: true,
@@ -112,6 +144,7 @@ const toResponse = async (
   const isFree = planSlug === "gratuito" || !planSlug;
   const specialtyLimit = isFree ? 3 : 99;
   const catalogs = await getCatalogs();
+  const crp = parseCrp(profile.crp);
 
   return {
     user: {
@@ -125,9 +158,13 @@ const toResponse = async (
       bio: profile.bio,
       modality: profile.modality,
       languages: normalizeStringArray(profile.languages),
+      cpf: profile.cpf,
       whatsapp: profile.whatsapp,
+      whatsapp_url: buildWhatsappUrl(profile.whatsapp),
       published: profile.published,
       crp: profile.crp,
+      crp_region: crp.crp_region,
+      crp_number: crp.crp_number,
       crp_status: profile.crp_status,
       cfp_verified_at: profile.cfp_verified_at,
     },
@@ -176,6 +213,9 @@ export class FreeProfileRepository implements IFreeProfileRepository {
           headline: body.headline,
           bio: body.bio,
           modality: body.modality,
+          cpf: body.cpf,
+          crp: buildCrp(body.crp_region, body.crp_number),
+          whatsapp: body.whatsapp,
           languages: body.languages as Prisma.InputJsonValue,
           video_url: null,
           published: body.published,

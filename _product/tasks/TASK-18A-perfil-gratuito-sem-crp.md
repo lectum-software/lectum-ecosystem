@@ -6,24 +6,28 @@
 |---|---|
 | ID | TASK-18A |
 | Prioridade | P0 |
-| EsforÁo | M |
-| Fase | PsicÛlogo privado |
+| Esfor√ßo | M |
+| Fase | Psic√≥logo privado |
 | Status | Completed |
-| DependÍncias | TASK-02, TASK-12, TASK-16, TASK-31 |
+| Depend√™ncias | TASK-02, TASK-12, TASK-16, TASK-31 |
 | ADR alvo | ADR-0027 |
 
 ## Contexto
 
-Esta task cria um recorte explÌcito e limitado para permitir que psicÛlogos do plano gratuito configurem o perfil profissional depois de informar o WhatsApp, sem upload de documento CRP e sem validaÁ„o CFP/CRP por API.
+Esta task cria um recorte expl√≠cito e limitado para permitir que psic√≥logos do plano gratuito configurem o perfil profissional depois de informar o WhatsApp, sem upload de documento CRP e sem valida√ß√£o CFP/CRP por API.
 
-A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CRP e `professional_document`. Este recorte n„o altera `professional_document`, `crp`, `crp_status` ou `cfp_verified_at`.
+A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CRP e `professional_document`. Este recorte n√£o altera `professional_document`, `crp_status`, `cfp_verified_at` ou `whatsapp_verified_at`.
 
 ## Escopo
 
-- Backend exclusivo para psicÛlogos em `/api/private/psychologist/free-profile`.
+- Backend exclusivo para psic√≥logos em `/api/private/psychologist/free-profile`.
 - Frontend em `/app/professional/profile/setup`.
+- Tela baseada no prot√≥tipo local `_product/proto/Editar Perfil - Psic√≥logo.jpg`.
 - Editar apenas campos seguros:
   - `user.name`;
+  - `psychologist_profile.cpf`;
+  - dados de registro livres em `psychologist_profile.crp` (`regional/registro`);
+  - `psychologist_profile.whatsapp`;
   - `psychologist_profile.headline`;
   - `psychologist_profile.bio`;
   - `psychologist_profile.modality`;
@@ -31,42 +35,46 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
   - joins `psychologist_specialty`, `psychologist_service`, `psychologist_approach`;
   - `psychologist_profile.published`.
 - Plano gratuito limita especialidades a 3.
-- Plano gratuito mantÈm `video_url=null`.
-- PublicaÁ„o gratuita n„o valida CRP por API e n„o toca em documento CRP.
+- Plano gratuito mant√©m `video_url=null`.
+- Publica√ß√£o gratuita n√£o valida CRP por API e n√£o toca em documento CRP.
+- A tela inclui a√ß√£o para abrir o link `wa.me` gerado a partir do WhatsApp informado.
 
 ## Fora do escopo
 
 - Upload/lista/reenvio de documento CRP.
 - `professional_document`.
-- Alterar `crp`, `crp_status`, `cfp_verified_at` ou `whatsapp_verified_at`.
+- Alterar `crp_status`, `cfp_verified_at` ou `whatsapp_verified_at`.
 - Selo de verificado.
 - Perfil profissional pago completo.
 
-## CritÈrios de aceite
+## Crit√©rios de aceite
 
 - [x] Recorte documentado como task separada da TASK-18 completa.
 - [x] Backend implementado sem criar schema/migration e sem tocar em documentos CRP.
 - [x] Endpoint privado exige `requireRole("psicologo")` pelo mount em `/api/private/psychologist/*`.
 - [x] Frontend implementado em `/app/professional/profile/setup` com dados reais do backend.
-- [x] Formul·rios/campos usam React Hook Form, Zod, `hooks/form` e controllers da TASK-02 para campos principais.
-- [x] Cat·logos reais de especialidades, serviÁos e abordagens s„o lidos do banco.
-- [x] Limite de 3 especialidades no plano gratuito È validado no backend.
+- [x] Tela ajustada a partir de `_product/proto/Editar Perfil - Psic√≥logo.jpg`.
+- [x] CPF, regional, registro e WhatsApp ficam edit√°veis no plano gratuito sem consulta CFP/CRP por API.
+- [x] Tela inclui a√ß√£o para abrir o link `wa.me` gerado e testar o WhatsApp informado.
+- [x] Formul√°rios/campos usam React Hook Form, Zod, `hooks/form` e controllers da TASK-02 para campos principais.
+- [x] Cat√°logos reais de especialidades, servi√ßos e abordagens s√£o lidos do banco.
+- [x] Limite de 3 especialidades no plano gratuito √© validado no backend.
 - [x] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
 - [x] Packages usados conferem com `PACKAGES.md`; nenhum package novo foi instalado.
 - [x] ADR criada em `adrs/0027-perfil-gratuito-sem-crp.md`.
 - [x] Checks/builds relevantes foram executados sem erros.
 - [x] Commit criado com mensagem convencional.
 
-## ValidaÁ„o executada
+## Valida√ß√£o executada
 
 - `pnpm --dir backend check`
 - `pnpm --dir frontend check`
 - `pnpm --dir backend build`
 - `pnpm --dir frontend build`
 - `pnpm check`
-- Browser local sem sess„o na rota `/app/professional/profile/setup`: redireciona para login com 307, confirmando rota privada.
+- Browser local sem sess√£o na rota `/app/professional/profile/setup`: redireciona para login com 307, confirmando rota privada.
 
-## ImplementaÁ„o
+## Implementa√ß√£o
 
 - Backend:
   - `backend/src/modules/api/private/psychologist/free-profile`

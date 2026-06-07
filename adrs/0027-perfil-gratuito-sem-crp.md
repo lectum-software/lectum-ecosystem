@@ -6,28 +6,31 @@ Accepted
 
 ## Contexto
 
-A TASK-18 completa permanece bloqueada por depender da TASK-11, que exige storage privado R2 para documentos CRP. Ao mesmo tempo, o fluxo de produto do plano gratuito precisa permitir que o psicÛlogo configure informaÁıes p˙blicas b·sicas depois de informar o WhatsApp, sem validar CRP pela API.
+A TASK-18 completa permanece bloqueada por depender da TASK-11, que exige storage privado R2 para documentos CRP. Ao mesmo tempo, o fluxo de produto do plano gratuito precisa permitir que o psic√≥logo configure informa√ß√µes p√∫blicas b√°sicas depois de informar o WhatsApp, sem validar CRP pela API.
 
-## Decis„o
+O prot√≥tipo `_product/proto/Editar Perfil - Psic√≥logo.jpg` tamb√©m mostra CPF, dados de registro e WhatsApp dentro da edi√ß√£o do perfil. Para o plano gratuito, o usu√°rio pediu que estes campos sejam edit√°veis mesmo sem documento CRP.
 
-Criar um recorte separado da TASK-18 chamado TASK-18A, limitado ao perfil gratuito sem documentos CRP.
+## Decis√£o
 
-O recorte permite editar apenas campos seguros: nome, tÌtulo, bio, modalidade, idiomas, especialidades, serviÁos, abordagens e publicaÁ„o. O backend expıe `/api/private/psychologist/free-profile` protegido por `requireRole("psicologo")`.
+Manter o recorte separado da TASK-18 chamado TASK-18A, limitado ao perfil gratuito sem documentos CRP, e ampliar o recorte para permitir edi√ß√£o de CPF, dados de registro livres e WhatsApp.
 
-O recorte n„o cria nem altera `professional_document`, n„o faz upload CRP, n„o altera `crp`, `crp_status`, `cfp_verified_at` ou `whatsapp_verified_at`, e n„o concede selo de verificado.
+O backend exp√µe `/api/private/psychologist/free-profile` protegido por `requireRole("psicologo")`. O CPF √© salvo em `psychologist_profile.cpf`; o registro livre √© serializado em `psychologist_profile.crp` como `regional/registro`; o WhatsApp √© salvo em `psychologist_profile.whatsapp` e a resposta retorna o link `wa.me` derivado do n√∫mero normalizado.
 
-## ConsequÍncias
+O recorte n√£o cria nem altera `professional_document`, n√£o faz upload CRP, n√£o altera `crp_status`, `cfp_verified_at` ou `whatsapp_verified_at`, e n√£o concede selo de verificado.
 
-- PsicÛlogos gratuitos conseguem configurar o perfil b·sico sem desbloquear a TASK-18 completa.
-- A TASK-18 continua bloqueada para documentos/CRP e perfil profissional completo.
-- O plano gratuito limita especialidades a 3 e mantÈm `video_url=null`.
-- A publicaÁ„o do perfil gratuito n„o equivale a validaÁ„o profissional por CRP.
+## Consequ√™ncias
 
-## ValidaÁ„o
+- Psic√≥logos gratuitos conseguem configurar o perfil b√°sico sem desbloquear a TASK-18 completa.
+- CPF, regional, registro e WhatsApp s√£o campos declarat√≥rios no plano gratuito; n√£o representam valida√ß√£o profissional.
+- A TASK-18 continua bloqueada para documentos/CRP, valida√ß√£o profissional e perfil profissional completo.
+- O plano gratuito limita especialidades a 3 e mant√©m `video_url=null`.
+- A publica√ß√£o do perfil gratuito n√£o equivale a valida√ß√£o profissional por CRP.
+
+## Valida√ß√£o
 
 - `pnpm --dir backend check`
 - `pnpm --dir frontend check`
 - `pnpm --dir backend build`
 - `pnpm --dir frontend build`
 - `pnpm check`
-- Browser local sem sess„o em `/app/professional/profile/setup` retornou 307 para login.
+- Browser local sem sess√£o em `/app/professional/profile/setup` retornou 307 para login.

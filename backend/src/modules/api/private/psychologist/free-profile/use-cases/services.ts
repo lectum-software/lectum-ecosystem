@@ -12,6 +12,19 @@ const trimToNull = (value?: string | null) => {
   return normalized || null;
 };
 
+const onlyDigits = (value?: string | null) => String(value ?? "").replace(/\D/g, "");
+
+const normalizeCpf = (value?: string | null) => {
+  const digits = onlyDigits(value);
+  return digits || null;
+};
+
+const normalizeWhatsapp = (value?: string | null) => {
+  const digits = onlyDigits(value);
+  if (!digits) return null;
+  return `+${digits.slice(0, 15)}`;
+};
+
 const normalizeList = (value?: string[]) => {
   if (!Array.isArray(value)) return [];
 
@@ -20,6 +33,10 @@ const normalizeList = (value?: string[]) => {
 
 const updateSchema = z.object({
   name: z.string().trim().min(2).max(120),
+  cpf: z.string().nullable().optional(),
+  crp_region: z.string().trim().max(20).nullable().optional(),
+  crp_number: z.string().trim().max(40).nullable().optional(),
+  whatsapp: z.string().nullable().optional(),
   headline: z.string().trim().min(3).max(160).nullable().optional(),
   bio: z.string().trim().min(20).max(2000).nullable().optional(),
   modality: z.enum(["online", "presencial", "hibrido"]).nullable().optional(),
@@ -117,8 +134,29 @@ export const update = async (data: IFreeProfessionalProfileUpdateDTO) => {
     };
   }
 
+  const cpf = normalizeCpf(parsed.data.cpf);
+  if (cpf && cpf.length !== 11) {
+    return {
+      status: 400,
+      ...error("invalid_cpf", {}),
+    };
+  }
+
+  const whatsapp = normalizeWhatsapp(parsed.data.whatsapp);
+  const whatsappDigits = onlyDigits(whatsapp);
+  if (whatsapp && (whatsappDigits.length < 8 || whatsappDigits.length > 15)) {
+    return {
+      status: 400,
+      ...error("invalid_phone", {}),
+    };
+  }
+
   const body: Required<FreeProfessionalProfileUpdateBody> = {
     name: parsed.data.name,
+    cpf,
+    crp_region: trimToNull(parsed.data.crp_region),
+    crp_number: trimToNull(parsed.data.crp_number),
+    whatsapp,
     headline: trimToNull(parsed.data.headline),
     bio: trimToNull(parsed.data.bio),
     modality: parsed.data.modality || null,
