@@ -237,3 +237,11 @@ Esta task deve ser concluÃ­da em um commit prÃ³prio. Se houver bloqueio externo,
 - Codigo ajustado para retornar erro especifico de remetente Twilio invalido, registrar `provider_message_id` quando o envio for aceito e aceitar `TWILIO_API_MESSAGING_SERVICE_SID` como alternativa real ao numero remetente.
 - Nao houve envio simulado, OTP fake, preenchimento de `whatsapp_verified_at` sem SMS real nem alteracao destrutiva no banco.
 - Pendencia externa: configurar um numero Twilio SMS-capable pertencente a conta ou um Messaging Service valido; depois disso, o mesmo fluxo real de OTP pode ser usado.
+
+## Complemento em 2026-06-07: WhatsApp sem autenticação
+
+- Por decisão de produto, o número de WhatsApp profissional não será mais autenticado por SMS nem por WhatsApp no MVP.
+- A rota `/app/professional/whatsapp/verify` foi mantida como endereço existente, mas agora é apenas a etapa de informar e salvar o WhatsApp profissional.
+- O backend salva o número normalizado em `psychologist_profile.whatsapp` e mantém `whatsapp_verified_at=null`.
+- O contato do paciente continua gerando o link `wa.me` internamente apenas depois do consentimento e da persistência de `contact_request`.
+- O campo `whatsapp_verified_at` permanece no banco por compatibilidade histórica, mas não bloqueia mais `whatsapp_available` nem a criação do link de contato.

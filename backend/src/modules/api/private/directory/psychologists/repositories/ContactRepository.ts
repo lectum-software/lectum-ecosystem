@@ -1,4 +1,4 @@
-import { parsePhoneNumberFromString } from "libphonenumber-js";
+﻿import { parsePhoneNumberFromString } from "libphonenumber-js";
 import prisma from "@/infra/database/prisma";
 import type { DirectoryPsychologistContactResponse, IContactDTO } from "../DTOs/IContactDTO";
 import type { IContactRepository } from "./interfaces/IContactRepository";
@@ -6,11 +6,7 @@ import type { IContactRepository } from "./interfaces/IContactRepository";
 const CONTACT_MESSAGE =
   "Olá, encontrei seu perfil na Lectum e gostaria de conversar sobre atendimento.";
 
-type ContactError =
-  | "not_found"
-  | "patient_phone_invalid"
-  | "whatsapp_unavailable"
-  | "whatsapp_not_verified";
+type ContactError = "not_found" | "patient_phone_invalid" | "whatsapp_unavailable";
 
 export type ContactRepositoryResult =
   | {
@@ -66,7 +62,6 @@ export class ContactRepository implements IContactRepository {
         psychologist_profile: {
           select: {
             whatsapp: true,
-            whatsapp_verified_at: true,
           },
         },
       },
@@ -85,13 +80,6 @@ export class ContactRepository implements IContactRepository {
       return {
         ok: false,
         reason: "whatsapp_unavailable",
-      };
-    }
-
-    if (!profile.whatsapp_verified_at) {
-      return {
-        ok: false,
-        reason: "whatsapp_not_verified",
       };
     }
 

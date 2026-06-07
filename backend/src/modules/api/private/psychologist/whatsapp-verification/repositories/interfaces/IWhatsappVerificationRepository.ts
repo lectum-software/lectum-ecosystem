@@ -11,6 +11,16 @@ export type CreateWhatsappVerificationOutput = {
   verification: phone_verification;
 };
 
+export type SaveWhatsappInput = {
+  userId: string;
+  phone: string;
+};
+
+export type SaveWhatsappOutput = {
+  phone: string;
+  whatsapp_verified_at: Date | null;
+};
+
 export type ConfirmWhatsappVerificationInput = {
   verification: phone_verification;
   verifiedAt: Date;
@@ -18,6 +28,7 @@ export type ConfirmWhatsappVerificationInput = {
 
 export interface IWhatsappVerificationRepository {
   getProfile(userId: string): Promise<psychologist_profile | null>;
+  saveWhatsapp(input: SaveWhatsappInput): Promise<SaveWhatsappOutput>;
   getRecentPending(userId: string, phone: string, since: Date): Promise<phone_verification | null>;
   createVerification(
     input: CreateWhatsappVerificationInput,

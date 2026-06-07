@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import keys from "@/api/cache/keys";
@@ -31,7 +31,13 @@ export const usePsychologistWhatsappVerification = ({
   const request = useMutation({
     mutationFn: (body: WhatsappVerificationRequestPayload) =>
       api.requestPsychologistWhatsappVerification(body),
-    onSuccess: callbacks?.request?.onSuccess,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        predicate: (query) => query.queryKey[0] === "auth_hydrate",
+      });
+      queryClient.invalidateQueries({ queryKey: keys.psychologistWhatsappVerification.root() });
+      callbacks?.request?.onSuccess?.(data);
+    },
     onError: callbacks?.request?.onError,
   });
 

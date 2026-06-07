@@ -1,19 +1,13 @@
-﻿import { randomInt } from "node:crypto";
 import argon2 from "argon2";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { error, msg } from "@/helpers/translate";
-import { isTwilioConfigured, type SMSResult } from "@/modules/api/config/twilio";
-import { messages } from "@/modules/api/config/twilio/messages";
 import type {
   IConfirmWhatsappVerificationDTO,
   IRequestWhatsappVerificationDTO,
 } from "../DTOs/IWhatsappVerificationDTO";
 import { WhatsappVerificationRepository } from "../repositories/WhatsappVerificationRepository";
 
-const CODE_EXPIRATION_MINUTES = 10;
 const CODE_ATTEMPT_LIMIT = 5;
-const RESEND_WAIT_SECONDS = 60;
-type SMSFailureResult = Extract<SMSResult, { success: false }>;
 
 const normalizePhone = (value: string) => {
   const parsed = parsePhoneNumberFromString(value, "BR");
@@ -22,44 +16,11 @@ const normalizePhone = (value: string) => {
 
   return parsed.number;
 };
-
-const createCode = () => String(randomInt(0, 1_000_000)).padStart(6, "0");
-const addMinutes = (date: Date, minutes: number) => new Date(date.getTime() + minutes * 60_000);
-const subtractSeconds = (date: Date, seconds: number) => new Date(date.getTime() - seconds * 1_000);
-
-const resolveSendFailure = (sendResult: SMSFailureResult) => {
-  if (sendResult.configurationError) {
-    return {
-      status: 503,
-      key: "phone_verification_config_error",
-    };
-  }
-
-  if (sendResult.errorCode === "21659") {
-    return {
-      status: 503,
-      key: "phone_verification_sender_invalid",
-    };
-  }
-
-  return {
-    status: 502,
-    key: "phone_verification_send_failed",
-  };
-};
-
 export const requestVerification = async (data: IRequestWhatsappVerificationDTO) => {
   if (data.auth.role !== "psicologo") {
     return {
       status: 403,
       ...error("role_not_authorized", {}),
-    };
-  }
-
-  if (!isTwilioConfigured()) {
-    return {
-      status: 503,
-      ...error("phone_verification_config_error", {}),
     };
   }
 
@@ -84,77 +45,17 @@ export const requestVerification = async (data: IRequestWhatsappVerificationDTO)
     };
   }
 
-  if (profile.whatsapp === phone && profile.whatsapp_verified_at) {
-    return {
-      status: 200,
-      ...msg("phone_verification_already_confirmed", {}),
-      data: {
-        verification_id: null,
-        phone,
-        expires_at: null,
-        already_verified: true,
-      },
-    };
-  }
-
-  const recent = await repository.getRecentPending(
-    data.auth.id!,
-    phone,
-    subtractSeconds(new Date(), RESEND_WAIT_SECONDS),
-  );
-
-  if (recent) {
-    return {
-      status: 429,
-      ...error("phone_verification_recent", {
-        seconds: RESEND_WAIT_SECONDS,
-      }),
-    };
-  }
-
-  const code = createCode();
-  const codeHash = await argon2.hash(code);
-  const expiresAt = addMinutes(new Date(), CODE_EXPIRATION_MINUTES);
-  const { verification } = await repository.createVerification({
+  const saved = await repository.saveWhatsapp({
     userId: data.auth.id!,
     phone,
-    codeHash,
-    expiresAt,
   });
-
-  const sendResult = await messages.code({
-    to: phone,
-    code,
-  });
-
-  if (!sendResult.success) {
-    await repository.deleteVerification(verification.id!);
-    const failure = resolveSendFailure(sendResult);
-
-    return {
-      status: failure.status,
-      ...error(failure.key, {}),
-    };
-  }
-
-  if (sendResult.providerMessageId) {
-    await repository.updateProviderMessageId(verification.id!, sendResult.providerMessageId);
-  }
 
   return {
     status: 200,
-    ...msg("phone_verification_code_sent", {
-      minutes: CODE_EXPIRATION_MINUTES,
-    }),
-    data: {
-      verification_id: verification.id,
-      phone,
-      expires_at: expiresAt,
-      already_verified: false,
-    },
+    ...msg("whatsapp_saved", {}),
+    data: saved,
   };
 };
-
 export const confirmVerification = async (data: IConfirmWhatsappVerificationDTO) => {
   if (data.auth.role !== "psicologo") {
     return {

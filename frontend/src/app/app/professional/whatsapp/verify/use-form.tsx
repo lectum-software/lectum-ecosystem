@@ -1,13 +1,9 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 import { onlyDigits } from "@/components/controllers/utils";
 import { type Field, useFormList } from "@/hooks/form";
 
 export type WhatsappPhoneForm = {
   phone: string;
-};
-
-export type WhatsappCodeForm = {
-  code: string;
 };
 
 const getBrazilNationalDigits = (value?: string | null) => {
@@ -40,34 +36,18 @@ export const whatsappPhoneSchema = z.object({
   }),
 });
 
-export const whatsappCodeSchema = z.object({
-  code: z.string().regex(/^\d{6}$/, "Informe o código de 6 dígitos"),
-});
-
 const phoneFields = [
   {
     name: "phone",
     field: "phone",
     label: "WhatsApp profissional",
     placeholder: "(00) 00000-0000",
-    description: "Enviaremos um SMS real para confirmar que este número pertence a você.",
+    description: "Usaremos este número para gerar o link de contato por WhatsApp.",
     required: true,
     autoComplete: "tel",
     autoFocus: true,
   },
 ] satisfies Field<WhatsappPhoneForm>[];
-
-const codeFields = [
-  {
-    name: "code",
-    field: "otp",
-    label: "Código recebido por SMS",
-    description: "Digite os 6 dígitos enviados pela Twilio. O código expira em 10 minutos.",
-    required: true,
-    length: 6,
-    autoFocus: true,
-  },
-] satisfies Field<WhatsappCodeForm>[];
 
 export const usePhoneForm = (initialPhone?: string | null) => {
   const phone = toWhatsappPhoneInput(initialPhone);
@@ -84,16 +64,6 @@ export const usePhoneForm = (initialPhone?: string | null) => {
     resetOptions: {
       keepDirtyValues: true,
       keepErrors: true,
-    },
-  });
-};
-
-export const useCodeForm = () => {
-  return useFormList<WhatsappCodeForm>({
-    fields: codeFields,
-    schema: whatsappCodeSchema,
-    defaultValues: {
-      code: "",
     },
   });
 };

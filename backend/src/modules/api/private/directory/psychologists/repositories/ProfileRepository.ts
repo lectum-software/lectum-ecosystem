@@ -130,7 +130,6 @@ export class ProfileRepository implements IProfileRepository {
             rating_avg: true,
             rating_count: true,
             whatsapp: true,
-            whatsapp_verified_at: true,
           },
         },
         psychologist_specialties: {
@@ -196,7 +195,7 @@ export class ProfileRepository implements IProfileRepository {
       verified: Boolean(profile.cfp_verified_at),
       favorited: item.favorited_by_patients.length > 0,
       followed: item.followed_by_patients.length > 0,
-      whatsapp_available: Boolean(profile.whatsapp && profile.whatsapp_verified_at),
+      whatsapp_available: Boolean(profile.whatsapp),
       specialties: item.psychologist_specialties
         .map(({ specialty }) => specialty)
         .filter(isCatalogItem),

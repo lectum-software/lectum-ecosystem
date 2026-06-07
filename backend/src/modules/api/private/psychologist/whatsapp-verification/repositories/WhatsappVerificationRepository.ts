@@ -5,6 +5,8 @@ import type {
   CreateWhatsappVerificationInput,
   CreateWhatsappVerificationOutput,
   IWhatsappVerificationRepository,
+  SaveWhatsappInput,
+  SaveWhatsappOutput,
 } from "./interfaces/IWhatsappVerificationRepository";
 
 const PURPOSE = "psychologist_whatsapp";
@@ -22,6 +24,24 @@ export class WhatsappVerificationRepository implements IWhatsappVerificationRepo
     });
 
     return mapProfile(profile);
+  }
+
+  async saveWhatsapp(input: SaveWhatsappInput): Promise<SaveWhatsappOutput> {
+    await prisma.psychologist_profile.updateMany({
+      where: {
+        user_id: input.userId,
+        deleted: false,
+      },
+      data: {
+        whatsapp: input.phone,
+        whatsapp_verified_at: null,
+      },
+    });
+
+    return {
+      phone: input.phone,
+      whatsapp_verified_at: null,
+    };
   }
 
   async getRecentPending(

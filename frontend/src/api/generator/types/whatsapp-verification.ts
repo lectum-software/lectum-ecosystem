@@ -1,4 +1,4 @@
-﻿export type WhatsappVerificationRequestPayload = {
+export type WhatsappVerificationRequestPayload = {
   phone: string;
 };
 
@@ -8,10 +8,8 @@ export type WhatsappVerificationConfirmPayload = {
 };
 
 export type WhatsappVerificationRequestResponse = {
-  verification_id: string | null;
   phone: string;
-  expires_at: string | null;
-  already_verified: boolean;
+  whatsapp_verified_at: string | null;
 };
 
 export type WhatsappVerificationConfirmResponse = {

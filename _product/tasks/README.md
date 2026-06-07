@@ -204,3 +204,8 @@ Uma task sÃ³ pode ser marcada como concluÃ­da quando:
 - `_product/Fluxogramas do Produto.pdf`
 - Builder Quick Copy: `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a`
 - ProtÃ³tipos exportados: `_product/proto`
+
+## Atualização de fluxo em 2026-06-07
+
+- A etapa de WhatsApp profissional deixa de ser verificação por SMS/OTP e passa a ser apenas cadastro do número para geração interna do link `wa.me` após intenção de contato.
+- O fluxo visual ainda usa `/app/professional/whatsapp/verify` por compatibilidade de rota, mas a cópia e a regra de domínio tratam a tela como inserção/salvamento do WhatsApp.

@@ -79,7 +79,8 @@
     "phone_verification_code_sent": "Código enviado por SMS. Ele é válido por {{minutes}} minutos.",
     "phone_verification_confirmed": "Telefone verificado com sucesso.",
     "phone_verification_already_confirmed": "Este telefone já está verificado.",
-    "billing_free_selected": "Plano gratuito selecionado com sucesso."
+    "billing_free_selected": "Plano gratuito selecionado com sucesso.",
+    "whatsapp_saved": "WhatsApp profissional salvo com sucesso."
   },
   "gender": {
     "o": "o"

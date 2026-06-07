@@ -10,10 +10,8 @@ export type ConfirmWhatsappVerificationBody = {
 };
 
 export type WhatsappVerificationRequestResponse = {
-  verification_id: string | null;
   phone: string;
-  expires_at: Date | null;
-  already_verified: boolean;
+  whatsapp_verified_at: Date | null;
 };
 
 export type WhatsappVerificationConfirmResponse = {

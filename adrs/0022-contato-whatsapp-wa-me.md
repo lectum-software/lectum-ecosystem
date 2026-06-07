@@ -122,3 +122,22 @@ A Twilio retornou mensagens `failed` com `errorCode=21659`. A documentação ofi
 - A falha deixa de aparecer como erro genérico de envio e passa a apontar a pendência real de configuração.
 - O fluxo permanece bloqueado até existir número Twilio SMS-capable pertencente à conta configurada ou Messaging Service válido.
 - Não há mock, bypass de OTP ou alteração manual de `whatsapp_verified_at`.
+
+## Atualização em 2026-06-07: WhatsApp sem OTP
+
+### Contexto
+
+Por decisão de produto, o cadastro do WhatsApp profissional deixou de exigir autenticação do número por SMS ou por WhatsApp. O contato entre paciente e psicólogo continuará acontecendo por WhatsApp, mas a Lectum não fará verificação de posse do número no MVP.
+
+### Decisão
+
+- O endpoint existente `/api/private/psychologist/whatsapp/verification/request` passa a salvar o número informado em E.164, sem disparar SMS, sem criar OTP e sem preencher `whatsapp_verified_at`.
+- O fluxo de contato `wa.me` passa a exigir apenas `psychologist_profile.whatsapp` em perfil publicado, mantendo consentimento do paciente e persistência de `contact_request` antes de retornar o link.
+- O campo `whatsapp_verified_at` permanece no schema como histórico/compatibilidade, mas não é requisito para liberar o contato no MVP atual.
+- A tela `/app/professional/whatsapp/verify` vira uma etapa de inserção/salvamento do WhatsApp profissional, sem etapa de código.
+
+### Consequências
+
+- Não há custo ou dependência operacional de Twilio para cadastrar o WhatsApp profissional.
+- O risco aceito é não validar posse do número antes de gerar o link interno de contato.
+- O telefone segue fora do perfil público; ele só é embutido no `wa.me` após intenção de contato e consentimento.
