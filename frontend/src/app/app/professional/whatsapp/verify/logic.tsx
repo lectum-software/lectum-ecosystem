@@ -138,7 +138,7 @@ export const WhatsappVerificationLogic = () => {
   const submitPhone = phoneForm.hook.handleSubmit((values: WhatsappPhoneForm) => {
     setApiError(null);
     request.mutate({
-      phone: toWhatsappPhoneE164(values.phone),
+      phone: toWhatsappPhoneE164(values.phone, values.countryCode),
     });
   });
 

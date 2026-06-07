@@ -13,6 +13,8 @@ export function PhoneController<FormType extends FieldValues>({
   className,
   inputClassName,
   label,
+  countryCodeName,
+  countryCodeOptions = [],
   prefix,
   required,
   tooltip,
@@ -45,8 +47,36 @@ export function PhoneController<FormType extends FieldValues>({
             required={required}
             tooltip={tooltip}
           >
-            <div className="relative">
-              {prefix ? (
+            <div className="relative flex items-stretch">
+              {countryCodeName ? (
+                <Controller
+                  control={control}
+                  name={countryCodeName}
+                  render={({ field: countryField }) => (
+                    <select
+                      aria-label="Código do país"
+                      className="h-12 w-32 rounded-l-[var(--lectum-control-radius)] border border-border bg-surface px-3 text-sm font-semibold text-muted shadow-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+                      disabled={disabled || readOnly}
+                      name={countryField.name}
+                      onBlur={countryField.onBlur}
+                      onChange={(event) => countryField.onChange(event.target.value)}
+                      ref={countryField.ref}
+                      tabIndex={tabIndex}
+                      value={String(countryField.value || "")}
+                    >
+                      {countryCodeOptions.map((option) => (
+                        <option
+                          key={`${option.label}-${String(option.value)}`}
+                          value={String(option.value)}
+                        >
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                />
+              ) : null}
+              {!countryCodeName && prefix ? (
                 <span className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-5 text-base font-semibold text-muted">
                   {prefix}
                 </span>
@@ -57,6 +87,7 @@ export function PhoneController<FormType extends FieldValues>({
                 autoFocus={autoFocus}
                 className={cn(
                   prefix && "pl-16",
+                  countryCodeName && "rounded-l-none border-l-0",
                   error && "border-danger focus:border-danger focus:ring-danger/10",
                   inputClassName,
                 )}
@@ -66,7 +97,7 @@ export function PhoneController<FormType extends FieldValues>({
                 name={field.name}
                 onBlur={field.onBlur}
                 onChange={(event) => {
-                  const nextValue = onlyDigits(event.target.value).slice(0, 13);
+                  const nextValue = onlyDigits(event.target.value).slice(0, 15);
                   field.onChange(nextValue);
                   onChangeCallback?.(nextValue);
                 }}

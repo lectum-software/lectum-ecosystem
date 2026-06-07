@@ -30,6 +30,8 @@ export type Field<FormType extends FieldValues> = {
   label?: string;
   placeholder?: string;
   prefix?: string;
+  countryCodeName?: FieldPath<FormType>;
+  countryCodeOptions?: FieldOption[];
   description?: string;
   tooltip?: string;
   required?: boolean;

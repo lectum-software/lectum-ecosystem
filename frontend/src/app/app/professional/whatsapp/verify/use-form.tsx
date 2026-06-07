@@ -1,40 +1,54 @@
 import { z } from "zod";
 import { onlyDigits } from "@/components/controllers/utils";
 import { type Field, useFormList } from "@/hooks/form";
+import {
+  COUNTRY_CALLING_CODE_OPTIONS,
+  DEFAULT_COUNTRY_CALLING_CODE,
+  findCountryCallingCode,
+} from "@/utils/country-calling-codes";
 
 export type WhatsappPhoneForm = {
+  countryCode: string;
   phone: string;
 };
 
-const getBrazilNationalDigits = (value?: string | null) => {
+const getNationalDigits = (value?: string | null, countryCode = DEFAULT_COUNTRY_CALLING_CODE) => {
   const digits = onlyDigits(value);
 
-  if (digits.startsWith("55") && digits.length > 11) {
-    return digits.slice(2);
+  if (digits.startsWith(countryCode) && digits.length > countryCode.length) {
+    return digits.slice(countryCode.length);
   }
 
   return digits;
 };
 
-const isBrazilPhone = (value: string) => {
-  const nationalDigits = getBrazilNationalDigits(value);
+const isPhoneLengthValid = (value: string, countryCode: string) => {
+  const nationalDigits = getNationalDigits(value, countryCode);
+  const totalLength = (countryCode + nationalDigits).length;
 
-  return nationalDigits.length === 10 || nationalDigits.length === 11;
+  return nationalDigits.length >= 6 && totalLength <= 15;
 };
 
-export const toWhatsappPhoneInput = (value?: string | null) => onlyDigits(value).slice(0, 13);
+export const toWhatsappPhoneInput = (
+  value?: string | null,
+  countryCode = DEFAULT_COUNTRY_CALLING_CODE,
+) => getNationalDigits(value, countryCode).slice(0, 15);
 
-export const toWhatsappPhoneE164 = (value: string) => {
-  const nationalDigits = getBrazilNationalDigits(value);
+export const toWhatsappPhoneE164 = (value: string, countryCode = DEFAULT_COUNTRY_CALLING_CODE) => {
+  const nationalDigits = getNationalDigits(value, countryCode);
 
-  return nationalDigits ? `+55${nationalDigits}` : "";
+  return nationalDigits ? `+${countryCode}${nationalDigits}` : "";
 };
 
-export const whatsappPhoneSchema = z.object({
-  phone: z.string().refine(isBrazilPhone, {
-    message: "Informe um WhatsApp com DDD válido",
-  }),
-});
+export const whatsappPhoneSchema = z
+  .object({
+    countryCode: z.string().min(1, "Selecione o país"),
+    phone: z.string(),
+  })
+  .refine((data) => isPhoneLengthValid(data.phone, data.countryCode), {
+    message: "Informe um WhatsApp válido",
+    path: ["phone"],
+  });
 
 const phoneFields = [
   {
@@ -42,7 +56,8 @@ const phoneFields = [
     field: "phone",
     label: "WhatsApp profissional",
     placeholder: "(00) 00000-0000",
-    prefix: "+55",
+    countryCodeName: "countryCode",
+    countryCodeOptions: COUNTRY_CALLING_CODE_OPTIONS,
     description: "Usaremos este número para gerar o link de contato por WhatsApp.",
     required: true,
     autoComplete: "tel",
@@ -51,15 +66,18 @@ const phoneFields = [
 ] satisfies Field<WhatsappPhoneForm>[];
 
 export const usePhoneForm = (initialPhone?: string | null) => {
-  const phone = toWhatsappPhoneInput(initialPhone);
+  const countryCode = findCountryCallingCode(initialPhone);
+  const phone = toWhatsappPhoneInput(initialPhone, countryCode);
 
   return useFormList<WhatsappPhoneForm>({
     fields: phoneFields,
     schema: whatsappPhoneSchema,
     defaultValues: {
+      countryCode,
       phone,
     },
     values: {
+      countryCode,
       phone,
     },
     resetOptions: {
