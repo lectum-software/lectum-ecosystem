@@ -92,6 +92,7 @@ TASK-11 nao tiver armazenamento privado para documentos CRP.
 | 16 | [TASK-16 - Contato por WhatsApp](TASK-16-contato-whatsapp.md) | Completed | 02, 03, 15 |
 | 17 | [TASK-17 - Avaliações pelo paciente](TASK-17-avaliacoes-paciente.md) | Completed | 02, 15, 16 |
 | 18 | [TASK-18 - Perfil privado do psicólogo](TASK-18-perfil-privado-psicologo.md) | Blocked | 02, 11, 12 |
+| 18A | [TASK-18A - Perfil gratuito sem documento CRP](TASK-18A-perfil-gratuito-sem-crp.md) | Completed | 02, 12, 16, 31 |
 | 19 | [TASK-19 - Avaliações do psicólogo](TASK-19-avaliacoes-psicologo.md) | Blocked | 17, 18 |
 | 20 | [TASK-20 - Analytics do psicólogo](TASK-20-analytics-psicologo.md) | Pending | 16, 17, 18 |
 | 21 | [TASK-21 - Perfil privado do paciente](TASK-21-perfil-privado-paciente.md) | Pending | 02, 12 |
@@ -117,7 +118,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 ### 0. Fechar inconsistencias documentais antes de nova feature
 
 1. Revalidar e fechar a [TASK-29A - Notificacoes: fundacao e recebimento](TASK-29a-notificacoes-fundacao.md): a maior parte do codigo ja existe, mas ainda faltam criterios finais no arquivo da task, validacao browser local/migrate e commit de fechamento, se aplicavel.
-2. A [TASK-10](TASK-10-consulta-cfp-resultado.md) foi concluida com InfoSimples (`DOCUMENT_TOKEN`). Manter como bloqueadas [TASK-11](TASK-11-envio-confirmacao-crp.md), [TASK-18](TASK-18-perfil-privado-psicologo.md), [TASK-19](TASK-19-avaliacoes-psicologo.md) e [TASK-20](TASK-20-analytics-psicologo.md) ate existir bucket R2 privado/decisao para documentos CRP e perfil privado do psicologo.
+2. A [TASK-10](TASK-10-consulta-cfp-resultado.md) foi concluida com InfoSimples (`DOCUMENT_TOKEN`). Manter como bloqueadas [TASK-11](TASK-11-envio-confirmacao-crp.md), [TASK-18](TASK-18-perfil-privado-psicologo.md), [TASK-19](TASK-19-avaliacoes-psicologo.md) e [TASK-20](TASK-20-analytics-psicologo.md) ate existir bucket R2 privado/decisao para documentos CRP e perfil privado completo do psicologo. O recorte [TASK-18A](TASK-18A-perfil-gratuito-sem-crp.md) foi concluido para perfil gratuito sem documentos CRP.
 
 ### 1. Trilha executavel agora apos TASK-10
 
@@ -214,4 +215,3 @@ Uma task só pode ser marcada como concluída quando:
 
 - Psicologos no plano gratuito seguem da escolha do plano para `/app/professional/whatsapp/verify` e depois para `/app/professional/profile/setup`.
 - O plano gratuito exige apenas insercao do WhatsApp antes do perfil; nao exige consulta/validacao CFP/CRP via API.
-

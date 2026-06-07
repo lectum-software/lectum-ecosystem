@@ -44,6 +44,9 @@
   psychologistWhatsappVerification: {
     root: () => ["psychologist_whatsapp_verification"],
   },
+  psychologistFreeProfile: {
+    root: () => ["psychologist_free_profile"],
+  },
 };
 
 export default keys;

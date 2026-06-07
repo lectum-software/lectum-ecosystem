@@ -32,6 +32,11 @@ export type {
   DirectoryPsychologistsResponse,
   DirectoryReviewSummary,
 } from "./directory";
+export type {
+  FreeProfessionalProfile,
+  FreeProfessionalProfilePayload,
+  FreeProfileCatalogItem,
+} from "./free-profile";
 export type { notification } from "./notification";
 export type {
   PatientRelationListResponse,
