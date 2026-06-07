@@ -107,6 +107,18 @@ export class WhatsappVerificationRepository implements IWhatsappVerificationRepo
     });
   }
 
+  async updateProviderMessageId(id: string, providerMessageId: string): Promise<void> {
+    await prisma.phone_verification.updateMany({
+      where: {
+        id,
+        deleted: false,
+      },
+      data: {
+        provider_message_id: providerMessageId,
+      },
+    });
+  }
+
   async getVerification(id: string, userId: string): Promise<phone_verification | null> {
     const verification = await prisma.phone_verification.findFirst({
       where: {

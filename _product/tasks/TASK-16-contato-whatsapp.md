@@ -226,5 +226,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 - O sucesso da verificacao de telefone agora continua a jornada de onboarding do psicologo.
 - Plano gratuito segue para `/app/professional/profile/setup`.
-- Assinatura profissional ativa real segue para `/app/professional/billing/address`.
+- Assinatura profissional ativa real segue para `/psychologist/cfp`, pois o endereco de faturamento
+  passou a ser etapa anterior ao telefone, logo apos confirmacao real de pagamento.
 - A etapa nao simula pagamento, endereco ou perfil final; apenas usa o status real de `professional_subscription` para decidir o proximo passo.
+
+## Diagnostico de SMS em 2026-06-07
+
+- A falha reportada na rota `/app/professional/whatsapp/verify` foi auditada sem expor segredos: as mensagens Twilio recentes para o telefone de teste estavam `failed` com `errorCode=21659`.
+- A conta Twilio configurada nas variaveis `TWILIO_API_ACCOUNT_SID`/`TWILIO_API_AUTH_TOKEN` nao lista nenhum `incomingPhoneNumber` nem `Messaging Service`; portanto o `TWILIO_API_PHONE_NUMBER` atual nao e um remetente SMS valido dessa conta.
+- Codigo ajustado para retornar erro especifico de remetente Twilio invalido, registrar `provider_message_id` quando o envio for aceito e aceitar `TWILIO_API_MESSAGING_SERVICE_SID` como alternativa real ao numero remetente.
+- Nao houve envio simulado, OTP fake, preenchimento de `whatsapp_verified_at` sem SMS real nem alteracao destrutiva no banco.
+- Pendencia externa: configurar um numero Twilio SMS-capable pertencente a conta ou um Messaging Service valido; depois disso, o mesmo fluxo real de OTP pode ser usado.

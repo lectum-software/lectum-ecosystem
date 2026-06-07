@@ -1,13 +1,13 @@
 //
 import { resolve } from "@/helpers/translate/resolve";
-import { sendSMS } from "./index";
+import { type SMSResult, sendSMS } from "./index";
 
 export type MessagePath = {
   to: string;
   code?: string;
 };
 
-export type Message = (path: MessagePath) => Promise<boolean>;
+export type Message = (path: MessagePath) => Promise<SMSResult>;
 
 export const messages: Record<string, Message> = {
   code: async (path: MessagePath) => {

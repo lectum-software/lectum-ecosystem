@@ -232,8 +232,9 @@ export const PsychologistBillingPlansLogic = () => {
               Escolha o plano ideal para sua carreira
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-muted">
-              Após escolher um plano, você confirma o WhatsApp profissional. O plano gratuito segue
-              direto para a configuração de perfil; a assinatura passa primeiro pelo pagamento real.
+              O plano gratuito segue para WhatsApp e configuração de perfil. A assinatura passa pelo
+              pagamento real, coleta endereço de faturamento após a confirmação e só então segue
+              para o WhatsApp profissional.
             </p>
           </div>
         </div>
@@ -243,8 +244,8 @@ export const PsychologistBillingPlansLogic = () => {
             <strong className="text-foreground">Gratuito:</strong> plano → telefone → perfil.
           </div>
           <div>
-            <strong className="text-foreground">Assinatura:</strong> plano → pagamento → telefone →
-            endereço → CRP → perfil.
+            <strong className="text-foreground">Assinatura:</strong> plano → pagamento → confirmação
+            do pagamento → endereço → telefone → CRP → perfil.
           </div>
         </div>
 

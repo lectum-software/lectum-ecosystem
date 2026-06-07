@@ -101,3 +101,24 @@ Validações adicionais:
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
+
+## Atualização em 2026-06-07: diagnóstico de falha Twilio SMS
+
+### Contexto
+
+A rota `/app/professional/whatsapp/verify` falhava ao enviar o OTP por SMS. A auditoria consultou os logs recentes da própria API Twilio usando as credenciais locais sem expor segredos, telefones completos ou tokens.
+
+A Twilio retornou mensagens `failed` com `errorCode=21659`. A documentação oficial da Twilio descreve esse erro como remetente `From` que não pertence à Twilio/conta ou incompatibilidade de país para shortcode; a checagem da conta local não encontrou `incomingPhoneNumbers` nem `Messaging Services` disponíveis.
+
+### Decisão
+
+- Não simular SMS nem preencher `whatsapp_verified_at` sem confirmação real.
+- Manter Twilio como provedor real de OTP, mas aceitar `TWILIO_API_MESSAGING_SERVICE_SID` como alternativa ao `TWILIO_API_PHONE_NUMBER` quando a conta usar Messaging Service.
+- Tratar erro Twilio `21659` como configuração inválida de remetente, retornando mensagem específica em PT-BR para o frontend.
+- Persistir `provider_message_id` em `phone_verification` quando a Twilio aceitar o envio.
+
+### Consequências
+
+- A falha deixa de aparecer como erro genérico de envio e passa a apontar a pendência real de configuração.
+- O fluxo permanece bloqueado até existir número Twilio SMS-capable pertencente à conta configurada ou Messaging Service válido.
+- Não há mock, bypass de OTP ou alteração manual de `whatsapp_verified_at`.

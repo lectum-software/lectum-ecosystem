@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { type CfpSearchForm, useForm } from "./use-form";
 
-const nextStepHref = "/app/professional/billing/plans";
+const nextStepHref = "/app/professional/profile/setup";
 
 type ApiErrorData = {
   error?: string;

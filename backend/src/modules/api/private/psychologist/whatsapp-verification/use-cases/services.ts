@@ -2,7 +2,7 @@
 import argon2 from "argon2";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { error, msg } from "@/helpers/translate";
-import { isTwilioConfigured } from "@/modules/api/config/twilio";
+import { isTwilioConfigured, type SMSResult } from "@/modules/api/config/twilio";
 import { messages } from "@/modules/api/config/twilio/messages";
 import type {
   IConfirmWhatsappVerificationDTO,
@@ -13,6 +13,7 @@ import { WhatsappVerificationRepository } from "../repositories/WhatsappVerifica
 const CODE_EXPIRATION_MINUTES = 10;
 const CODE_ATTEMPT_LIMIT = 5;
 const RESEND_WAIT_SECONDS = 60;
+type SMSFailureResult = Extract<SMSResult, { success: false }>;
 
 const normalizePhone = (value: string) => {
   const parsed = parsePhoneNumberFromString(value, "BR");
@@ -25,6 +26,27 @@ const normalizePhone = (value: string) => {
 const createCode = () => String(randomInt(0, 1_000_000)).padStart(6, "0");
 const addMinutes = (date: Date, minutes: number) => new Date(date.getTime() + minutes * 60_000);
 const subtractSeconds = (date: Date, seconds: number) => new Date(date.getTime() - seconds * 1_000);
+
+const resolveSendFailure = (sendResult: SMSFailureResult) => {
+  if (sendResult.configurationError) {
+    return {
+      status: 503,
+      key: "phone_verification_config_error",
+    };
+  }
+
+  if (sendResult.errorCode === "21659") {
+    return {
+      status: 503,
+      key: "phone_verification_sender_invalid",
+    };
+  }
+
+  return {
+    status: 502,
+    key: "phone_verification_send_failed",
+  };
+};
 
 export const requestVerification = async (data: IRequestWhatsappVerificationDTO) => {
   if (data.auth.role !== "psicologo") {
@@ -100,18 +122,23 @@ export const requestVerification = async (data: IRequestWhatsappVerificationDTO)
     expiresAt,
   });
 
-  const sent = await messages.code({
+  const sendResult = await messages.code({
     to: phone,
     code,
   });
 
-  if (!sent) {
+  if (!sendResult.success) {
     await repository.deleteVerification(verification.id!);
+    const failure = resolveSendFailure(sendResult);
 
     return {
-      status: 502,
-      ...error("phone_verification_send_failed", {}),
+      status: failure.status,
+      ...error(failure.key, {}),
     };
+  }
+
+  if (sendResult.providerMessageId) {
+    await repository.updateProviderMessageId(verification.id!, sendResult.providerMessageId);
   }
 
   return {

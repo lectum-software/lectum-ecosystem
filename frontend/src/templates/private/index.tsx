@@ -20,6 +20,7 @@ import * as userActions from "@/store/modules/user/actions";
 
 type PrivateTemplateProps = PropsWithChildren<{
   showHeader?: boolean;
+  showNavigation?: boolean;
 }>;
 
 type UserRole = NonNullable<user["role"]>;
@@ -128,7 +129,11 @@ const isActivePath = (pathname: string, item: NavigationItem) => {
   );
 };
 
-export const PrivateTemplate = ({ children }: PrivateTemplateProps) => {
+export const PrivateTemplate = ({
+  children,
+  showHeader = true,
+  showNavigation,
+}: PrivateTemplateProps) => {
   const pathname = usePathname();
   const dispatch = useAppDispatch();
   const storedUser = useAppSelector((state) => state.user);
@@ -149,6 +154,7 @@ export const PrivateTemplate = ({ children }: PrivateTemplateProps) => {
 
   const sessionUser = hidrate.data ?? storedUser;
   const navigation = useMemo(() => getNavigation(sessionUser?.role), [sessionUser?.role]);
+  const shouldShowNavigation = showNavigation ?? showHeader;
   const isSessionLoading = hasToken && !sessionUser && (hidrate.isLoading || hidrate.isPending);
   const shouldShowSessionError = Boolean(hasToken && hidrate.isError && !sessionUser);
 
@@ -182,35 +188,39 @@ export const PrivateTemplate = ({ children }: PrivateTemplateProps) => {
   return (
     <>
       <NotificationManager />
-      <PageShell contentClassName="pb-28 sm:pb-32">{children}</PageShell>
-      <nav
-        aria-label="Navegação principal"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 shadow-[0_-10px_30px_rgb(15_23_42_/_8%)] backdrop-blur supports-[backdrop-filter]:bg-surface/85 sm:bottom-4 sm:left-1/2 sm:right-auto sm:w-[min(560px,calc(100vw-2rem))] sm:-translate-x-1/2 sm:rounded-[var(--lectum-card-radius)] sm:border"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-      >
-        <ul className="mx-auto grid max-w-[560px] grid-cols-5">
-          {navigation.map((item) => {
-            const Icon = item.icon;
-            const isActive = isActivePath(pathname, item);
+      <PageShell contentClassName={shouldShowNavigation ? "pb-28 sm:pb-32" : undefined}>
+        {children}
+      </PageShell>
+      {shouldShowNavigation ? (
+        <nav
+          aria-label="Navegação principal"
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 shadow-[0_-10px_30px_rgb(15_23_42_/_8%)] backdrop-blur supports-[backdrop-filter]:bg-surface/85 sm:bottom-4 sm:left-1/2 sm:right-auto sm:w-[min(560px,calc(100vw-2rem))] sm:-translate-x-1/2 sm:rounded-[var(--lectum-card-radius)] sm:border"
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
+          <ul className="mx-auto grid max-w-[560px] grid-cols-5">
+            {navigation.map((item) => {
+              const Icon = item.icon;
+              const isActive = isActivePath(pathname, item);
 
-            return (
-              <li key={item.href}>
-                <Link
-                  aria-current={isActive ? "page" : undefined}
-                  className={cn(
-                    "flex min-h-16 flex-col items-center justify-center gap-1 px-1 text-[0.68rem] font-semibold transition",
-                    isActive ? "text-primary" : "text-muted hover:text-primary",
-                  )}
-                  href={item.href}
-                >
-                  <Icon className="h-5 w-5" aria-hidden="true" />
-                  <span className="truncate">{item.label}</span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+              return (
+                <li key={item.href}>
+                  <Link
+                    aria-current={isActive ? "page" : undefined}
+                    className={cn(
+                      "flex min-h-16 flex-col items-center justify-center gap-1 px-1 text-[0.68rem] font-semibold transition",
+                      isActive ? "text-primary" : "text-muted hover:text-primary",
+                    )}
+                    href={item.href}
+                  >
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                    <span className="truncate">{item.label}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      ) : null}
     </>
   );
 };

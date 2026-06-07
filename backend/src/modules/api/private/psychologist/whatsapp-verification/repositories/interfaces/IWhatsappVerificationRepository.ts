@@ -22,6 +22,7 @@ export interface IWhatsappVerificationRepository {
   createVerification(
     input: CreateWhatsappVerificationInput,
   ): Promise<CreateWhatsappVerificationOutput>;
+  updateProviderMessageId(id: string, providerMessageId: string): Promise<void>;
   deleteVerification(id: string): Promise<void>;
   getVerification(id: string, userId: string): Promise<phone_verification | null>;
   incrementAttempts(id: string): Promise<void>;

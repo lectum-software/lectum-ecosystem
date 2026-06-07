@@ -158,7 +158,7 @@ export const WhatsappVerificationLogic = () => {
 
   if (!user) {
     return (
-      <PrivateTemplate>
+      <PrivateTemplate showHeader={false}>
         <section className="grid min-h-[55vh] place-items-center">
           <LoadingState label="Carregando sua sessão" />
         </section>
@@ -167,7 +167,7 @@ export const WhatsappVerificationLogic = () => {
   }
 
   return (
-    <PrivateTemplate>
+    <PrivateTemplate showHeader={false}>
       <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-2xl">
         <Link
           className="inline-flex items-center gap-2 text-sm font-semibold text-muted"

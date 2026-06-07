@@ -120,7 +120,7 @@ Produto redefiniu a jornada do psicologo depois do cadastro:
 
 - Google ou e-mail confirmado sempre entram primeiro em `/app/professional/billing/plans`.
 - Plano gratuito segue para validacao de telefone e depois configuracao do perfil.
-- Plano pago segue para pagamento, validacao de telefone, endereco de faturamento,
+- Plano pago segue para pagamento, endereco de faturamento, validacao de telefone,
   verificacao CRP e configuracao do perfil.
 
 A parte paga continua limitada por dependencias reais: TASK-32 exige credenciais
@@ -139,8 +139,8 @@ fluxo nao pode fingir pagamento, endereco salvo, CRP aprovado ou perfil publicad
   `/app/professional/whatsapp/verify`.
 - Atualizar a verificacao de telefone para continuar para:
   - `/app/professional/profile/setup` no plano gratuito;
-  - `/app/professional/billing/address` quando houver assinatura profissional
-    ativa real.
+  - `/psychologist/cfp` quando houver assinatura profissional ativa real, pois o
+    endereco de faturamento ja deve ter sido coletado depois do pagamento.
 - Criar telas honestas de bloqueio/continuidade em:
   - `/app/professional/billing/checkout` para explicar a pendencia Mercado Pago;
   - `/app/professional/billing/address` para reservar a etapa ao checkout real;
@@ -155,3 +155,26 @@ fluxo nao pode fingir pagamento, endereco salvo, CRP aprovado ou perfil publicad
   credenciais/checkout reais; nenhuma assinatura profissional e ativada por UI.
 - A configuracao final do perfil continua protegida ate a dependencia de CRP
   privado ser resolvida.
+
+## Atualizacao em 2026-06-07: telas pós-plano sem navegação e endereço pós-pagamento
+
+### Contexto
+
+Produto solicitou dois ajustes no onboarding do psicólogo depois da tela de planos:
+
+- remover a navegação inferior privada das telas de planos para frente;
+- no plano profissional, coletar endereço de faturamento apenas depois da confirmação real do pagamento.
+
+### Decisão
+
+- Reutilizar `PrivateTemplate` sem criar shell paralelo: `showHeader={false}` agora também remove a navegação inferior e o padding reservado para ela.
+- Aplicar o fluxo sem navegação às telas dedicadas de onboarding profissional: planos, checkout, endereço, verificação de WhatsApp e setup de perfil.
+- Atualizar a ordem do plano profissional para `plano -> pagamento confirmado -> endereço -> telefone -> CRP -> perfil`.
+- Manter o plano gratuito como `plano gratuito persistido -> telefone -> perfil`.
+- Sem credenciais Mercado Pago, a tela de checkout continua bloqueada honestamente e não ativa assinatura profissional.
+
+### Consequências
+
+- A navegação inferior deixa de cobrir CTAs de onboarding mobile-first, como o envio do código SMS.
+- O endereço não é tratado como pré-requisito antes do pagamento; ele passa a ser etapa pós-confirmação de pagamento.
+- Nenhuma cobrança, assinatura profissional, endereço, CRP ou perfil final é simulado.

@@ -170,3 +170,10 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - O CTA do plano profissional aponta para essa rota para manter a ordem solicitada: planos -> pagamento.
 - Nenhum checkout, SDK Mercado Pago, tokenizacao de cartao, webhook, endereco de faturamento persistido ou assinatura profissional ativa foi implementado.
 - TASK-32 continua Pending/Bloqueada operacionalmente ate existirem credenciais reais Mercado Pago (`MERCADO_PAGO_ACCESS_TOKEN`, public key e segredo de webhook) e contrato final de checkout.
+
+## Ajuste de ordem solicitado em 2026-06-07
+
+- Pedido direto de produto: no plano de assinatura, o endereço de faturamento deve vir depois da confirmação do pagamento.
+- Enquanto a TASK-32 segue pendente por credenciais Mercado Pago, a tela de checkout informa que a próxima etapa real, após webhook/assinatura ativa confirmada, será `/app/professional/billing/address`.
+- A tela de endereço permanece honesta e sem persistência enquanto o pagamento real estiver bloqueado; quando liberada, ela deve salvar o endereço e seguir para `/app/professional/whatsapp/verify`.
+- Ordem operacional paga atualizada: plano -> pagamento confirmado -> endereço -> telefone -> CRP -> perfil.

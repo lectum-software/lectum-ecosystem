@@ -29,14 +29,15 @@ export const ProfessionalBillingCheckoutLogic = () => {
             Checkout real ainda bloqueado
           </h1>
           <p className="mt-3 text-base leading-7 text-muted">
-            O fluxo pago deve passar por Mercado Pago antes de liberar telefone, endereço, CRP e
-            configuração do perfil. Como as credenciais reais da TASK-32 ainda não estão
-            configuradas, a Lectum não simula cobrança nem ativa assinatura.
+            O fluxo pago deve passar por Mercado Pago e, após a confirmação real do pagamento,
+            seguir para endereço de faturamento, telefone, CRP e configuração do perfil. Como as
+            credenciais reais da TASK-32 ainda não estão configuradas, a Lectum não simula cobrança
+            nem ativa assinatura.
           </p>
 
           <InlineAlert className="mt-7 text-left" title="Pendência externa" variant="warning">
             Configure access token, public key e segredo de webhook do Mercado Pago para retomar o
-            pagamento real. Até lá, use o plano gratuito para seguir sem cobrança.
+            pagamento real. Só depois da confirmação real o endereço de faturamento será solicitado.
           </InlineAlert>
 
           <div className="mt-7 grid gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface-muted p-4 text-left text-sm text-muted">

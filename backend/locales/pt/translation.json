@@ -51,7 +51,8 @@
     "phone_verification_not_found": "Solicitação de verificação não encontrada.",
     "phone_verification_expired": "Código expirado. Solicite um novo código.",
     "phone_verification_too_many_attempts": "Muitas tentativas incorretas. Solicite um novo código.",
-    "professional_subscription_active": "Sua assinatura profissional ativa precisa ser gerenciada antes de mudar para o plano gratuito."
+    "professional_subscription_active": "Sua assinatura profissional ativa precisa ser gerenciada antes de mudar para o plano gratuito.",
+    "phone_verification_sender_invalid": "Verificação por SMS indisponível: o remetente configurado na Twilio não pertence à conta ou não está apto para SMS. Configure um número Twilio ou Messaging Service válido."
   },
   "message": {
     "store": "dado criado",

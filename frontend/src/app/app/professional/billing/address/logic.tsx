@@ -12,10 +12,10 @@ export const ProfessionalBillingAddressLogic = () => {
       <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-2xl">
         <Link
           className="inline-flex items-center gap-2 text-sm font-semibold text-muted"
-          href="/app/professional/whatsapp/verify"
+          href="/app/professional/billing/checkout"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Voltar para telefone
+          Voltar para pagamento
         </Link>
 
         <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-8 text-center shadow-[var(--lectum-shadow-soft)]">
@@ -29,9 +29,9 @@ export const ProfessionalBillingAddressLogic = () => {
             Etapa reservada ao checkout real
           </h1>
           <p className="mt-3 text-base leading-7 text-muted">
-            No fluxo de assinatura, esta etapa vem depois do pagamento e da verificação de telefone.
-            O formulário real de endereço pertence à TASK-32 junto com o checkout Mercado Pago e não
-            deve ser preenchido antes de existir assinatura paga real.
+            No fluxo de assinatura, esta etapa vem somente depois da confirmação real do pagamento.
+            Depois de salvar o endereço, a jornada segue para a verificação do WhatsApp
+            profissional. O formulário real pertence à TASK-32 junto com o checkout Mercado Pago.
           </p>
 
           <InlineAlert className="mt-7 text-left" title="Sem dados fictícios" variant="warning">
@@ -50,7 +50,7 @@ export const ProfessionalBillingAddressLogic = () => {
 
           <div className="mt-8 grid gap-3">
             <Button asChild className="h-12 rounded-full">
-              <Link href="/psychologist/cfp">Continuar para verificação de CRP</Link>
+              <Link href="/app/professional/whatsapp/verify">Continuar para telefone</Link>
             </Button>
             <Button asChild className="h-12 rounded-full" variant="outline">
               <Link href="/app/professional/billing/checkout">Ver pagamento</Link>

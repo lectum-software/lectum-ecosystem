@@ -44,7 +44,8 @@ O fluxo operacional de cadastro profissional, atualizado em 2026-06-07, e:
 5. Se escolher **Plano Profissional**:
    - seguir para `/app/professional/billing/checkout`;
    - so avancar com pagamento real Mercado Pago na TASK-32;
-   - apos assinatura ativa real, seguir para telefone, endereco de faturamento, CRP e perfil.
+   - apos confirmacao real do pagamento/assinatura ativa, seguir para endereco de faturamento,
+     telefone, CRP e perfil.
 
 Bloqueios mantidos: o checkout pago nao pode ativar assinatura sem credenciais/webhook reais do
 Mercado Pago; a configuracao final do perfil profissional continua bloqueada pela TASK-18 enquanto

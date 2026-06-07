@@ -1,10 +1,12 @@
 import { Twilio } from "twilio";
 
-const accountSid = process.env.TWILIO_API_ACCOUNT_SID!;
-const authToken = process.env.TWILIO_API_AUTH_TOKEN!;
-const phone = process.env.TWILIO_API_PHONE_NUMBER!;
+const accountSid = process.env.TWILIO_API_ACCOUNT_SID;
+const authToken = process.env.TWILIO_API_AUTH_TOKEN;
+const phone = process.env.TWILIO_API_PHONE_NUMBER;
+const messagingServiceSid = process.env.TWILIO_API_MESSAGING_SERVICE_SID;
 
-export const isTwilioConfigured = () => Boolean(accountSid && authToken && phone);
+export const isTwilioConfigured = () =>
+  Boolean(accountSid && authToken && (phone || messagingServiceSid));
 
 //
 export type SMS = {
@@ -13,10 +15,29 @@ export type SMS = {
   message: string;
 };
 
-export const sendSMS = async ({ to, subject, message }: SMS) => {
-  if (!isTwilioConfigured()) return false;
+export type SMSResult =
+  | {
+      success: true;
+      providerMessageId?: string;
+      providerStatus?: string;
+    }
+  | {
+      success: false;
+      configurationError?: boolean;
+      errorCode?: string;
+      providerMessageId?: string;
+      providerStatus?: string;
+    };
 
-  const client = new Twilio(accountSid, authToken);
+export const sendSMS = async ({ to, subject, message }: SMS) => {
+  if (!isTwilioConfigured()) {
+    return {
+      success: false,
+      configurationError: true,
+    } satisfies SMSResult;
+  }
+
+  const client = new Twilio(accountSid!, authToken!);
 
   const numb = to?.toString();
   const digits = numb.replace(/\D/g, "");
@@ -26,19 +47,39 @@ export const sendSMS = async ({ to, subject, message }: SMS) => {
       ? `+${digits}`
       : `+55${digits}`;
 
-  const res = await client.messages
-    .create({
+  try {
+    const twilioMessage = await client.messages.create({
       body: `${subject?.toUpperCase()}: ${message}`,
-      from: phone,
+      ...(messagingServiceSid ? { messagingServiceSid } : { from: phone! }),
       to: target,
-    })
-    .then(() => {
-      return true;
-    })
-    .catch((error) => {
-      console.error("SMS send failed", error?.code || "unknown");
-      return false;
     });
 
-  return res;
+    if (
+      twilioMessage.errorCode ||
+      twilioMessage.status === "failed" ||
+      twilioMessage.status === "undelivered"
+    ) {
+      console.error("SMS send failed", twilioMessage.errorCode || "unknown");
+      return {
+        success: false,
+        errorCode: twilioMessage.errorCode ? String(twilioMessage.errorCode) : undefined,
+        providerMessageId: twilioMessage.sid,
+        providerStatus: twilioMessage.status,
+      } satisfies SMSResult;
+    }
+
+    return {
+      success: true,
+      providerMessageId: twilioMessage.sid,
+      providerStatus: twilioMessage.status,
+    } satisfies SMSResult;
+  } catch (error) {
+    const twilioError = error as { code?: number | string };
+
+    console.error("SMS send failed", twilioError?.code || "unknown");
+    return {
+      success: false,
+      errorCode: twilioError?.code ? String(twilioError.code) : undefined,
+    } satisfies SMSResult;
+  }
 };

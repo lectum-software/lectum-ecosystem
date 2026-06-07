@@ -18,7 +18,7 @@ export const isProfessionalSubscriptionActive = (subscription: SubscriptionLike)
 
 export const getAfterPhoneVerificationPath = (subscription: SubscriptionLike) => {
   if (isProfessionalSubscriptionActive(subscription)) {
-    return PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress;
+    return PSYCHOLOGIST_ONBOARDING_PATHS.cfp;
   }
 
   return PSYCHOLOGIST_ONBOARDING_PATHS.profileSetup;
