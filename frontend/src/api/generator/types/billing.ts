@@ -1,4 +1,4 @@
-﻿export type SubscriptionPlanSlug = "gratuito" | "profissional";
+export type SubscriptionPlanSlug = "gratuito" | "profissional";
 
 export type SubscriptionPlanFeatures = {
   specialties_limit?: number;
@@ -46,4 +46,8 @@ export type BillingPlansResponse = {
 
 export type BillingCurrentResponse = {
   current: ProfessionalSubscription | null;
+};
+
+export type BillingSelectFreeResponse = {
+  current: ProfessionalSubscription;
 };

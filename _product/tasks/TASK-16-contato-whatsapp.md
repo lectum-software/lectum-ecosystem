@@ -221,3 +221,10 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   `/app/professional/whatsapp/verify` respondeu 307 para login sem cookie, confirmando proteção
   privada; a tela autenticada foi validada por build porque não havia token real de psicólogo ativo
   no banco local e não foi criado usuário/token fake para passar pelo guard.
+
+## Execucao complementar em 2026-06-07
+
+- O sucesso da verificacao de telefone agora continua a jornada de onboarding do psicologo.
+- Plano gratuito segue para `/app/professional/profile/setup`.
+- Assinatura profissional ativa real segue para `/app/professional/billing/address`.
+- A etapa nao simula pagamento, endereco ou perfil final; apenas usa o status real de `professional_subscription` para decidir o proximo passo.

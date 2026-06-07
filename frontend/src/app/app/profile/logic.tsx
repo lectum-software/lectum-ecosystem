@@ -115,7 +115,11 @@ export const ProfileLogic = () => {
     : "Paciente";
 
   const accountRows: ProfileRow[] = [
-    { icon: Edit3, label: "Editar perfil" },
+    {
+      href: isPsychologist ? "/app/professional/profile/setup" : undefined,
+      icon: Edit3,
+      label: "Editar perfil",
+    },
     ...(isPsychologist
       ? [
           { icon: BarChart3, label: "Meus Analytics" },

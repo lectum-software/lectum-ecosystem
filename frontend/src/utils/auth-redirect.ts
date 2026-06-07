@@ -1,4 +1,5 @@
 import type { user } from "@/api/generator/types";
+import { getPsychologistRegistrationEntryPath } from "./psychologist-onboarding";
 
 export const USER_HOME_PATHS = {
   paciente: "/patient/welcome",
@@ -11,12 +12,8 @@ export function getUserHomePath(
   data: Partial<Pick<user, "role" | "psychologist_profile">> | null | undefined,
   fallback: string,
 ) {
-  if (data?.role === "psicologo" && !data.psychologist_profile?.cfp_verified_at) {
-    return "/psychologist/cfp";
-  }
-
   if (data?.role && data.role in USER_HOME_PATHS) {
-    return USER_HOME_PATHS[data.role];
+    return getPsychologistRegistrationEntryPath(data, USER_HOME_PATHS[data.role]);
   }
 
   return fallback;

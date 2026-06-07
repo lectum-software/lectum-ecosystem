@@ -190,3 +190,9 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Bloqueio registrado em adrs/0024-bloqueio-task18-dependencia-crp.md.
 - Referencias visuais consultadas via imagens locais: _product/proto/Perfil - Psicologo.jpg, _product/proto/Editar Perfil - Psicologo.jpg e _product/proto/Modal de Atualizacao de Perfil do Psicologo.jpg.
 - Nao foi criada implementacao parcial, endpoints, schema, migration ou UI final para evitar contornar documentos/CRP e regras de validacao profissional.
+
+## Execucao parcial de fluxo em 2026-06-07
+
+- A rota `/app/professional/profile/setup` foi criada apenas como etapa de continuidade/bloqueio para o fluxo gratuito apos telefone verificado.
+- A tela informa que a edicao final do perfil profissional continua bloqueada pela dependencia TASK-11 (armazenamento privado de documentos CRP).
+- Nenhum endpoint de perfil profissional, formulario de edicao, publicacao ou alteracao de documento foi implementado nesta execucao.

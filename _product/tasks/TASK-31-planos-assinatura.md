@@ -205,3 +205,10 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   criado por endpoint real, validou `headerCount=0` e ausência dos textos `Dashboard`,
   `Sair`, `Pagamento seguro`, `Cartão via Mercado Pago` e `Sem simular cobrança`.
 - O usuário temporário da validação foi removido do banco ao final.
+
+## Execucao complementar em 2026-06-07
+
+- O CTA do Plano Gratuito deixou de mandar direto para CFP e agora persiste a escolha real por `POST /api/private/psychologist/billing/select-free`.
+- A assinatura gratuita usa `professional_subscription` com plano `gratuito`, status `ativa` e sem gateway.
+- Depois da escolha gratuita, a UI segue para `/app/professional/whatsapp/verify`, preservando o fluxo solicitado de planos -> telefone -> perfil.
+- O CTA do Plano Profissional segue para `/app/professional/billing/checkout`, que permanece bloqueado ate a TASK-32 ter Mercado Pago real.

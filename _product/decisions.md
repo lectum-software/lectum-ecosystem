@@ -231,3 +231,23 @@ Pacotes candidatos:
 - Backend: `@sentry/node`.
 
 Impacto nas tasks: TASK-34 ou task dedicada de observabilidade.
+
+## Fluxo de cadastro do psicólogo
+
+Status: Definido em 2026-06-07.
+
+Decisão:
+
+- Após cadastro com Google ou confirmação de e-mail, psicólogos entram em `/app/professional/billing/plans`.
+- Plano gratuito persiste assinatura gratuita real (`professional_subscription.status="ativa"`) e segue para verificação de telefone por SMS.
+- Depois do telefone, plano gratuito segue para `/app/professional/profile/setup`; essa tela informa o bloqueio real da TASK-18/TASK-11 sem simular edição final.
+- Plano profissional segue para `/app/professional/billing/checkout`; sem credenciais Mercado Pago, o checkout fica bloqueado e não ativa assinatura.
+- Quando o pagamento real existir, assinatura profissional ativa segue para telefone, endereço de faturamento, verificação CRP e configuração de perfil.
+
+Regras:
+
+- Nunca enviar psicólogo recém-cadastrado direto para `/psychologist/cfp` antes de plano.
+- Nunca ativar plano profissional sem confirmação real do gateway/webhook.
+- Nunca salvar endereço de faturamento ou publicar perfil como atalho enquanto TASK-32/TASK-18 estiverem bloqueadas.
+
+Impacto nas tasks: TASK-09, TASK-16, TASK-18, TASK-31, TASK-32.

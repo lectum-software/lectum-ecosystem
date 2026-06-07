@@ -1,15 +1,17 @@
-﻿"use client";
+"use client";
 
 import { ArrowLeft, CheckCircle2, Loader2, MessageSquareText, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
 import { usePsychologistWhatsappVerification } from "@/api/callers/psychologist-whatsapp-verification";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAppSelector } from "@/hooks/redux";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { getAfterPhoneVerificationPath } from "@/utils/psychologist-onboarding";
 import {
   toWhatsappPhoneE164,
   useCodeForm,
@@ -80,6 +82,7 @@ const Header = ({ step }: { step: Step }) => (
 
 export const WhatsappVerificationLogic = () => {
   const user = useAppSelector((state) => state.user);
+  const { current } = usePsychologistBilling();
   const [step, setStep] = useState<Step>("phone");
   const [apiError, setApiError] = useState<string | null>(null);
   const [verificationId, setVerificationId] = useState<string | null>(null);
@@ -91,6 +94,7 @@ export const WhatsappVerificationLogic = () => {
 
   const initialVerifiedAt = user?.psychologist_profile?.whatsapp_verified_at;
   const initialPhone = user?.psychologist_profile?.whatsapp;
+  const afterPhoneHref = getAfterPhoneVerificationPath(current.data?.current);
 
   const isPsychologist = user?.role === "psicologo";
   const alreadyVerifiedLabel = useMemo(() => {
@@ -183,10 +187,15 @@ export const WhatsappVerificationLogic = () => {
           ) : null}
 
           {alreadyVerifiedLabel && step === "phone" ? (
-            <InlineAlert className="mt-6" title="WhatsApp atual verificado" variant="success">
-              O número {alreadyVerifiedLabel} já possui confirmação por SMS real. Envie um novo
-              código apenas se quiser alterar o telefone.
-            </InlineAlert>
+            <div className="mt-6 grid gap-3">
+              <InlineAlert title="WhatsApp atual verificado" variant="success">
+                O número {alreadyVerifiedLabel} já possui confirmação por SMS real. Envie um novo
+                código apenas se quiser alterar o telefone.
+              </InlineAlert>
+              <Button asChild className="h-12 rounded-full">
+                <Link href={afterPhoneHref}>Continuar para próxima etapa</Link>
+              </Button>
+            </div>
           ) : null}
 
           {apiError ? (
@@ -255,7 +264,7 @@ export const WhatsappVerificationLogic = () => {
                 Confirmação salva com data/hora no perfil profissional.
               </div>
               <Button asChild className="h-12 rounded-full">
-                <Link href="/app/profile">Voltar para meu perfil</Link>
+                <Link href={afterPhoneHref}>Continuar configuração</Link>
               </Button>
             </div>
           ) : null}

@@ -111,3 +111,47 @@ Produto solicitou remover o cabeçalho da página de planos e retirar o bloco vi
 - Browser local com usuário psicólogo temporário validou ausência de `header`,
   `Dashboard`, `Sair` e do bloco `Pagamento seguro`. O usuário temporário foi removido
   do banco ao final.
+
+## Atualizacao em 2026-06-07: fluxo planos -> telefone -> perfil
+
+### Contexto
+
+Produto redefiniu a jornada do psicologo depois do cadastro:
+
+- Google ou e-mail confirmado sempre entram primeiro em `/app/professional/billing/plans`.
+- Plano gratuito segue para validacao de telefone e depois configuracao do perfil.
+- Plano pago segue para pagamento, validacao de telefone, endereco de faturamento,
+  verificacao CRP e configuracao do perfil.
+
+A parte paga continua limitada por dependencias reais: TASK-32 exige credenciais
+Mercado Pago e TASK-18/TASK-11 ainda exigem documentos CRP privados. Portanto, o
+fluxo nao pode fingir pagamento, endereco salvo, CRP aprovado ou perfil publicado.
+
+### Decisao
+
+- Remover o desvio automatico pos-login para `/psychologist/cfp`; o resolvedor de
+  home do psicologo agora entra sempre pela tela de planos.
+- Criar `POST /api/private/psychologist/billing/select-free` para persistir a
+  escolha real do plano gratuito em `professional_subscription` com status
+  `ativa`, sem gateway e sem cobrar.
+- Proibir a troca para gratuito quando existir assinatura profissional ativa.
+- Atualizar o CTA do plano gratuito para gravar a escolha e ir para
+  `/app/professional/whatsapp/verify`.
+- Atualizar a verificacao de telefone para continuar para:
+  - `/app/professional/profile/setup` no plano gratuito;
+  - `/app/professional/billing/address` quando houver assinatura profissional
+    ativa real.
+- Criar telas honestas de bloqueio/continuidade em:
+  - `/app/professional/billing/checkout` para explicar a pendencia Mercado Pago;
+  - `/app/professional/billing/address` para reservar a etapa ao checkout real;
+  - `/app/professional/profile/setup` para explicar que TASK-18 depende de CRP
+    privado da TASK-11.
+
+### Consequencias
+
+- O cadastro do psicologo fica alinhado ao fluxo solicitado sem usar mock.
+- A jornada gratuita e persistida no banco antes da validacao do telefone.
+- A jornada paga fica roteada, mas bloqueada de forma explicita ate existirem
+  credenciais/checkout reais; nenhuma assinatura profissional e ativada por UI.
+- A configuracao final do perfil continua protegida ate a dependencia de CRP
+  privado ser resolvida.

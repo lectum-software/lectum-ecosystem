@@ -1,4 +1,4 @@
-﻿import { type RequestHandler, Router } from "express";
+import { type RequestHandler, Router } from "express";
 import privateAuth from "@/modules/api/middlewares/_auth";
 import { requireRole } from "@/modules/api/middlewares/require-role";
 import apiPrivateAuthCode from "@/modules/api/private/auth/code";
@@ -22,6 +22,7 @@ import apiPrivatePatientProfile from "@/modules/api/private/patient/profile";
 import apiPrivatePatientReviews from "@/modules/api/private/patient/reviews";
 import apiPrivatePsychologistBillingCurrent from "@/modules/api/private/psychologist/billing/current";
 import apiPrivatePsychologistBillingPlans from "@/modules/api/private/psychologist/billing/plans";
+import apiPrivatePsychologistBillingSelectFree from "@/modules/api/private/psychologist/billing/select-free";
 import apiPrivatePsychologistCfp from "@/modules/api/private/psychologist/cfp";
 import apiPrivatePsychologistWhatsappVerification from "@/modules/api/private/psychologist/whatsapp-verification";
 import apiPublicAuthLogin from "@/modules/api/public/auth/login";
@@ -106,6 +107,11 @@ mountRoleGuardedRoute(
   "/api/private/psychologist/billing/current",
   "psicologo",
   apiPrivatePsychologistBillingCurrent,
+);
+mountRoleGuardedRoute(
+  "/api/private/psychologist/billing/select-free",
+  "psicologo",
+  apiPrivatePsychologistBillingSelectFree,
 );
 mountRoleGuardedRoute("/api/private/psychologist/cfp", "psicologo", apiPrivatePsychologistCfp);
 mountRoleGuardedRoute(

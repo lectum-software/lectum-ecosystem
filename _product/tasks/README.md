@@ -30,6 +30,26 @@ As imagens não representam a qualidade final do código nem autorizam recriar a
 
 Quando uma task citar artefato `figma-design-frame-*.html`, leia como nome virtual preservado pelo Builder Quick Copy. Isso não torna Figma uma fonte ativa.
 
+## Fluxo vigente de cadastro do psicologo
+
+O fluxo operacional de cadastro profissional, atualizado em 2026-06-07, e:
+
+1. Cadastro com Google ou e-mail/senha.
+2. Se e-mail/senha, confirmar e-mail por codigo.
+3. Entrar em `/app/professional/billing/plans`.
+4. Se escolher **Plano Gratuito**:
+   - persistir `professional_subscription` real com plano `gratuito` e status `ativa`;
+   - seguir para `/app/professional/whatsapp/verify`;
+   - depois ir para `/app/professional/profile/setup`.
+5. Se escolher **Plano Profissional**:
+   - seguir para `/app/professional/billing/checkout`;
+   - so avancar com pagamento real Mercado Pago na TASK-32;
+   - apos assinatura ativa real, seguir para telefone, endereco de faturamento, CRP e perfil.
+
+Bloqueios mantidos: o checkout pago nao pode ativar assinatura sem credenciais/webhook reais do
+Mercado Pago; a configuracao final do perfil profissional continua bloqueada pela TASK-18 enquanto
+TASK-11 nao tiver armazenamento privado para documentos CRP.
+
 ## Regras de execução
 
 - Execute uma task por vez.

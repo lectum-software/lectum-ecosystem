@@ -1,7 +1,8 @@
-﻿"use client";
+"use client";
 
-import { ArrowRight, BadgeCheck, Banknote, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowRight, BadgeCheck, Banknote, CheckCircle2, Loader2, XCircle } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
 import type { SubscriptionPlan, SubscriptionPlanFeatures } from "@/api/generator/types/billing";
@@ -11,6 +12,10 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import {
+  getAfterPlanSelectionPath,
+  PSYCHOLOGIST_ONBOARDING_PATHS,
+} from "@/utils/psychologist-onboarding";
 
 type FeatureRow = {
   included: boolean;
@@ -102,21 +107,20 @@ const getFeatureRows = (plan: SubscriptionPlan): FeatureRow[] => {
 
 const PlanCard = ({
   currentSlug,
+  isSelectingFree,
+  onSelectFree,
   plan,
 }: {
   currentSlug?: string | null;
+  isSelectingFree?: boolean;
+  onSelectFree: () => void;
   plan: SubscriptionPlan;
 }) => {
   const tone = planTones[plan.slug] || { eyebrow: "Plano" };
   const isProfessional = plan.slug === "profissional";
+  const isFree = plan.slug === "gratuito";
   const isCurrent = currentSlug === plan.slug;
   const features = getFeatureRows(plan);
-
-  const handleProfessionalClick = () => {
-    toast.info(
-      "Checkout com Mercado Pago será liberado quando a TASK-32 tiver credenciais reais configuradas.",
-    );
-  };
 
   return (
     <article
@@ -173,24 +177,43 @@ const PlanCard = ({
       </ul>
 
       {isProfessional ? (
-        <Button className="mt-8 w-full" onClick={handleProfessionalClick} type="button">
-          {isCurrent ? "Plano profissional ativo" : "Assinar agora"}
-          <ArrowRight className="h-4 w-4" aria-hidden />
-        </Button>
-      ) : (
-        <Button asChild className="mt-8 w-full" variant="outline">
-          <Link href="/psychologist/cfp">
-            Começar agora
+        <Button asChild className="mt-8 w-full">
+          <Link href={PSYCHOLOGIST_ONBOARDING_PATHS.checkout}>
+            {isCurrent ? "Continuar assinatura" : "Assinar agora"}
             <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
         </Button>
-      )}
+      ) : null}
+
+      {isFree ? (
+        <Button
+          className="mt-8 w-full"
+          disabled={isSelectingFree}
+          onClick={onSelectFree}
+          type="button"
+          variant="outline"
+        >
+          {isSelectingFree ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
+          {isCurrent ? "Continuar configuração" : "Começar grátis"}
+          <ArrowRight className="h-4 w-4" aria-hidden />
+        </Button>
+      ) : null}
     </article>
   );
 };
 
 export const PsychologistBillingPlansLogic = () => {
-  const { current, plans } = usePsychologistBilling();
+  const router = useRouter();
+  const { current, plans, selectFree } = usePsychologistBilling({
+    callbacks: {
+      selectFree: {
+        onSuccess: () => {
+          toast.success("Plano gratuito selecionado");
+          router.push(getAfterPlanSelectionPath());
+        },
+      },
+    },
+  });
   const isLoading = plans.isLoading || current.isLoading;
   const hasError = plans.isError || current.isError;
   const planList = plans.data?.plans || [];
@@ -209,9 +232,19 @@ export const PsychologistBillingPlansLogic = () => {
               Escolha o plano ideal para sua carreira
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-muted">
-              Comece gratuitamente ou assine o plano Profissional para obter acesso completo às
-              ferramentas da Lectum.
+              Após escolher um plano, você confirma o WhatsApp profissional. O plano gratuito segue
+              direto para a configuração de perfil; a assinatura passa primeiro pelo pagamento real.
             </p>
+          </div>
+        </div>
+
+        <div className="grid gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface-muted p-4 text-sm text-muted md:grid-cols-2">
+          <div>
+            <strong className="text-foreground">Gratuito:</strong> plano → telefone → perfil.
+          </div>
+          <div>
+            <strong className="text-foreground">Assinatura:</strong> plano → pagamento → telefone →
+            endereço → CRP → perfil.
           </div>
         </div>
 
@@ -234,7 +267,20 @@ export const PsychologistBillingPlansLogic = () => {
         {planList.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 md:items-start">
             {planList.map((plan) => (
-              <PlanCard currentSlug={currentSlug} key={plan.id} plan={plan} />
+              <PlanCard
+                currentSlug={currentSlug}
+                isSelectingFree={selectFree.isPending && plan.slug === "gratuito"}
+                key={plan.id}
+                onSelectFree={() => {
+                  if (currentSlug === "gratuito") {
+                    router.push(getAfterPlanSelectionPath());
+                    return;
+                  }
+
+                  selectFree.mutate();
+                }}
+                plan={plan}
+              />
             ))}
           </div>
         ) : null}

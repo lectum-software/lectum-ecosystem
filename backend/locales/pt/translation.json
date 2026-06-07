@@ -50,7 +50,8 @@
     "phone_verification_recent": "Aguarde {{seconds}} segundos antes de solicitar um novo código.",
     "phone_verification_not_found": "Solicitação de verificação não encontrada.",
     "phone_verification_expired": "Código expirado. Solicite um novo código.",
-    "phone_verification_too_many_attempts": "Muitas tentativas incorretas. Solicite um novo código."
+    "phone_verification_too_many_attempts": "Muitas tentativas incorretas. Solicite um novo código.",
+    "professional_subscription_active": "Sua assinatura profissional ativa precisa ser gerenciada antes de mudar para o plano gratuito."
   },
   "message": {
     "store": "dado criado",
@@ -76,7 +77,8 @@
     "cfp_confirm_success": "Registro profissional confirmado com sucesso.",
     "phone_verification_code_sent": "Código enviado por SMS. Ele é válido por {{minutes}} minutos.",
     "phone_verification_confirmed": "Telefone verificado com sucesso.",
-    "phone_verification_already_confirmed": "Este telefone já está verificado."
+    "phone_verification_already_confirmed": "Este telefone já está verificado.",
+    "billing_free_selected": "Plano gratuito selecionado com sucesso."
   },
   "gender": {
     "o": "o"
@@ -98,7 +100,9 @@
     "community_post": "publicação",
     "contact_request": "intenção de contato",
     "professional_registry_check": "consulta CFP",
-    "phone_verification": "verificação de telefone"
+    "phone_verification": "verificação de telefone",
+    "subscription_plan": "plano de assinatura",
+    "professional_subscription": "assinatura profissional"
   },
   "property": {
     "email": "email",

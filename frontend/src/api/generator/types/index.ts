@@ -1,6 +1,7 @@
 export type {
   BillingCurrentResponse,
   BillingPlansResponse,
+  BillingSelectFreeResponse,
   ProfessionalSubscription,
   ProfessionalSubscriptionStatus,
   SubscriptionPlan,

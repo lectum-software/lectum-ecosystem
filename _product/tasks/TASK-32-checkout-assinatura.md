@@ -163,3 +163,10 @@ Regras anti-recriação específicas:
 ## Notas para executor
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
+
+## Execucao parcial de fluxo em 2026-06-07
+
+- A rota `/app/professional/billing/checkout` foi criada apenas como tela honesta de bloqueio para o fluxo pago.
+- O CTA do plano profissional aponta para essa rota para manter a ordem solicitada: planos -> pagamento.
+- Nenhum checkout, SDK Mercado Pago, tokenizacao de cartao, webhook, endereco de faturamento persistido ou assinatura profissional ativa foi implementado.
+- TASK-32 continua Pending/Bloqueada operacionalmente ate existirem credenciais reais Mercado Pago (`MERCADO_PAGO_ACCESS_TOKEN`, public key e segredo de webhook) e contrato final de checkout.
