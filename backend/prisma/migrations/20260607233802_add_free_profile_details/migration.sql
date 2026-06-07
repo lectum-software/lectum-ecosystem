@@ -1,0 +1,18 @@
+-- AlterTable
+ALTER TABLE "psychologist_profiles" ADD COLUMN     "academic_graduation_year" TEXT,
+ADD COLUMN     "academic_institution" TEXT,
+ADD COLUMN     "academic_title" TEXT,
+ADD COLUMN     "accepts_insurance" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "available_days" JSONB,
+ADD COLUMN     "discount_first_session" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "gender" TEXT,
+ADD COLUMN     "professional_address_city" TEXT,
+ADD COLUMN     "professional_address_complement" TEXT,
+ADD COLUMN     "professional_address_district" TEXT,
+ADD COLUMN     "professional_address_number" TEXT,
+ADD COLUMN     "professional_address_state" TEXT,
+ADD COLUMN     "professional_address_street" TEXT,
+ADD COLUMN     "professional_address_zip" TEXT,
+ADD COLUMN     "race_color" TEXT,
+ADD COLUMN     "social_value" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "target_audience" JSONB;

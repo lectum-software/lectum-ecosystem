@@ -7,9 +7,19 @@ import {
   DEFAULT_COUNTRY_CALLING_CODE,
   findCountryCallingCode,
 } from "@/utils/country-calling-codes";
+import {
+  CRP_REGION_OPTIONS,
+  GENDER_OPTIONS,
+  LANGUAGE_OPTIONS,
+  RACE_COLOR_OPTIONS,
+  STATE_OPTIONS,
+} from "./options";
 
 export type FreeProfileForm = {
   name: string;
+  avatar_url: string;
+  gender: string;
+  race_color: string;
   cpf: string;
   crp_region: string;
   crp_number: string;
@@ -17,12 +27,28 @@ export type FreeProfileForm = {
   whatsapp: string;
   headline: string;
   bio: string;
+  video_url: string;
   modality: "online" | "presencial" | "hibrido" | "";
-  languagesText: string;
+  language: string;
   published: boolean;
+  discount_first_session: boolean;
+  social_value: boolean;
+  accepts_insurance: boolean;
+  academic_title: string;
+  academic_institution: string;
+  academic_graduation_year: string;
+  address_street: string;
+  address_number: string;
+  address_complement: string;
+  address_district: string;
+  address_zip: string;
+  address_city: string;
+  address_state: string;
   specialty_ids: string[];
   service_ids: string[];
   approach_ids: string[];
+  target_audience: string[];
+  available_days: string[];
 };
 
 const getNationalDigits = (value?: string | null, countryCode = DEFAULT_COUNTRY_CALLING_CODE) => {
@@ -42,6 +68,11 @@ const isPhoneLengthValid = (value: string, countryCode: string) => {
   return nationalDigits.length >= 6 && totalLength <= 15;
 };
 
+const optionalUrl = z
+  .string()
+  .trim()
+  .refine((value) => !value || /^https:\/\/.+\..+/.test(value), "Informe uma URL https válida");
+
 export const toWhatsappPhoneE164 = (value: string, countryCode = DEFAULT_COUNTRY_CALLING_CODE) => {
   const nationalDigits = getNationalDigits(value, countryCode);
 
@@ -51,23 +82,46 @@ export const toWhatsappPhoneE164 = (value: string, countryCode = DEFAULT_COUNTRY
 export const freeProfileSchema = z
   .object({
     name: z.string().trim().min(2, "Informe seu nome profissional").max(120),
+    avatar_url: optionalUrl,
+    gender: z.string().trim().max(40),
+    race_color: z.string().trim().max(40),
     cpf: z
       .string()
       .refine((value) => !value || onlyDigits(value).length === 11, "Informe um CPF válido"),
-    crp_region: z.string().trim().max(20, "Regional muito longa"),
+    crp_region: z.string().trim().max(40, "Regional muito longa"),
     crp_number: z.string().trim().max(40, "Registro muito longo"),
     countryCode: z.string().min(1, "Selecione o país"),
     whatsapp: z.string(),
-    headline: z.string().trim().min(3, "Informe um título profissional").max(160),
-    bio: z.string().trim().min(20, "Escreva uma bio com pelo menos 20 caracteres").max(2000),
+    headline: z.string().trim().min(3, "Informe uma bio curta").max(160),
+    bio: z
+      .string()
+      .trim()
+      .min(20, "Escreva uma apresentação com pelo menos 20 caracteres")
+      .max(2000),
+    video_url: optionalUrl,
     modality: z.enum(["online", "presencial", "hibrido", ""], {
       message: "Selecione a modalidade",
     }),
-    languagesText: z.string().trim().min(2, "Informe ao menos um idioma"),
+    language: z.string().trim().min(2, "Selecione um idioma"),
     published: z.boolean(),
+    discount_first_session: z.boolean(),
+    social_value: z.boolean(),
+    accepts_insurance: z.boolean(),
+    academic_title: z.string().trim().max(160),
+    academic_institution: z.string().trim().max(160),
+    academic_graduation_year: z.string().trim().max(20),
+    address_street: z.string().trim().max(160),
+    address_number: z.string().trim().max(40),
+    address_complement: z.string().trim().max(80),
+    address_district: z.string().trim().max(120),
+    address_zip: z.string().trim().max(20),
+    address_city: z.string().trim().max(120),
+    address_state: z.string().trim().max(2),
     specialty_ids: z.array(z.string()),
     service_ids: z.array(z.string()),
     approach_ids: z.array(z.string()),
+    target_audience: z.array(z.string()),
+    available_days: z.array(z.string()),
   })
   .refine((data) => isPhoneLengthValid(data.whatsapp, data.countryCode), {
     message: "Informe um WhatsApp válido",
@@ -78,24 +132,46 @@ export const fields = [
   {
     name: "name",
     field: "input",
-    label: "Nome profissional",
+    label: "Nome completo",
     placeholder: "Ex.: Roberto Silva",
     required: true,
     autoComplete: "name",
+  },
+  {
+    name: "avatar_url",
+    field: "input",
+    label: "URL da foto de perfil",
+    placeholder: "https://...",
+    description: "Use uma URL pública de imagem. Upload de arquivo fica fora deste recorte.",
+    autoComplete: "off",
+  },
+  {
+    name: "gender",
+    field: "select",
+    label: "Gênero",
+    placeholder: "Selecione seu gênero",
+    options: GENDER_OPTIONS,
+  },
+  {
+    name: "race_color",
+    field: "select",
+    label: "Raça/Cor",
+    placeholder: "Selecione sua raça/cor",
+    options: RACE_COLOR_OPTIONS,
   },
   {
     name: "cpf",
     field: "cpf",
     label: "CPF",
     placeholder: "000.000.000-00",
-    description: "Editável no plano gratuito; não dispara consulta CFP/CRP por API.",
     autoComplete: "off",
   },
   {
     name: "crp_region",
-    field: "input",
+    field: "select",
     label: "Regional",
-    placeholder: "Ex.: CRP-04",
+    placeholder: "19ª Região - SE",
+    options: CRP_REGION_OPTIONS,
   },
   {
     name: "crp_number",
@@ -110,25 +186,31 @@ export const fields = [
     placeholder: "(00) 00000-0000",
     countryCodeName: "countryCode",
     countryCodeOptions: COUNTRY_CALLING_CODE_OPTIONS,
-    description: "O ícone ao lado do título abre o link gerado para teste.",
     required: true,
     autoComplete: "tel",
   },
   {
     name: "headline",
     field: "input",
-    label: "Texto de apresentação curto",
+    label: "Bio",
     placeholder: "Ex.: Especialista em Relacionamentos",
-    description: "Frase curta exibida no card público.",
     required: true,
   },
   {
     name: "bio",
     field: "textarea",
-    label: "Bio",
-    placeholder: "Escreva uma bio curta para o seu card.",
+    label: "Apresentação de texto",
+    placeholder: "Conte sobre sua trajetória, experiência e como você ajuda seus pacientes.",
     required: true,
     rows: 6,
+  },
+  {
+    name: "video_url",
+    field: "input",
+    label: "Vídeo de apresentação",
+    placeholder: "https://...",
+    description: "Informe uma URL pública do vídeo. Upload de arquivo fica fora deste recorte.",
+    autoComplete: "off",
   },
   {
     name: "modality",
@@ -142,36 +224,90 @@ export const fields = [
     ],
   },
   {
-    name: "languagesText",
-    field: "input",
+    name: "language",
+    field: "select",
     label: "Idiomas",
-    placeholder: "Português, Inglês",
-    description: "Separe por vírgula.",
+    placeholder: "Selecione o idioma",
     required: true,
+    options: LANGUAGE_OPTIONS,
+  },
+  {
+    name: "academic_title",
+    field: "input",
+    label: "Título e especialidade",
+    placeholder: "Ex.: Doutor em Neuropsicologia",
+  },
+  {
+    name: "academic_institution",
+    field: "input",
+    label: "Instituição",
+    placeholder: "USP",
+  },
+  {
+    name: "academic_graduation_year",
+    field: "input",
+    label: "Ano de formação",
+    placeholder: "Ex.: 2012",
+  },
+  {
+    name: "address_street",
+    field: "input",
+    label: "Logradouro",
+    placeholder: "Ex.: Rua das Flores",
+  },
+  {
+    name: "address_number",
+    field: "input",
+    label: "Número",
+    placeholder: "123",
+  },
+  {
+    name: "address_complement",
+    field: "input",
+    label: "Complemento",
+    placeholder: "Apto 42",
+  },
+  {
+    name: "address_district",
+    field: "input",
+    label: "Bairro",
+    placeholder: "Centro",
+  },
+  {
+    name: "address_zip",
+    field: "input",
+    label: "CEP",
+    placeholder: "00000-000",
+  },
+  {
+    name: "address_city",
+    field: "select",
+    label: "Cidade",
+    placeholder: "Selecione a cidade",
+    options: [],
+  },
+  {
+    name: "address_state",
+    field: "select",
+    label: "Estado",
+    placeholder: "Selecione o estado",
+    options: STATE_OPTIONS,
   },
 ] satisfies Field<FreeProfileForm>[];
-
-const toLanguagesText = (languages?: string[]) => (languages || []).join(", ");
 
 const toWhatsappPhoneInput = (value?: string | null, countryCode = DEFAULT_COUNTRY_CALLING_CODE) =>
   getNationalDigits(value, countryCode).slice(0, 15);
 
-export const parseLanguages = (value: string) => {
-  return Array.from(
-    new Set(
-      value
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean),
-    ),
-  );
-};
+export const getLanguages = (value: string) => (value ? [value] : []);
 
 export const getDefaultValues = (data?: FreeProfessionalProfile | null): FreeProfileForm => {
   const countryCode = findCountryCallingCode(data?.profile.whatsapp);
 
   return {
     name: data?.user.name || "",
+    avatar_url: data?.user.avatar || "",
+    gender: data?.profile.gender || "",
+    race_color: data?.profile.race_color || "",
     cpf: data?.profile.cpf || "",
     crp_region: data?.profile.crp_region || "",
     crp_number: data?.profile.crp_number || "",
@@ -179,12 +315,28 @@ export const getDefaultValues = (data?: FreeProfessionalProfile | null): FreePro
     whatsapp: toWhatsappPhoneInput(data?.profile.whatsapp, countryCode),
     headline: data?.profile.headline || "",
     bio: data?.profile.bio || "",
+    video_url: data?.profile.video_url || "",
     modality: (data?.profile.modality as FreeProfileForm["modality"]) || "",
-    languagesText: toLanguagesText(data?.profile.languages),
+    language: data?.profile.languages[0] || "Português",
     published: Boolean(data?.profile.published),
+    discount_first_session: Boolean(data?.profile.discount_first_session),
+    social_value: Boolean(data?.profile.social_value),
+    accepts_insurance: Boolean(data?.profile.accepts_insurance),
+    academic_title: data?.profile.academic.title || "",
+    academic_institution: data?.profile.academic.institution || "",
+    academic_graduation_year: data?.profile.academic.graduation_year || "",
+    address_street: data?.profile.address.street || "",
+    address_number: data?.profile.address.number || "",
+    address_complement: data?.profile.address.complement || "",
+    address_district: data?.profile.address.district || "",
+    address_zip: data?.profile.address.zip || "",
+    address_city: data?.profile.address.city || "",
+    address_state: data?.profile.address.state || "",
     specialty_ids: data?.selected.specialties.map((item) => item.id) || [],
     service_ids: data?.selected.services.map((item) => item.id) || [],
     approach_ids: data?.selected.approaches.map((item) => item.id) || [],
+    target_audience: data?.profile.target_audience || [],
+    available_days: data?.profile.available_days || [],
   };
 };
 

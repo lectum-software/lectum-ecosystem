@@ -1,6 +1,8 @@
 ﻿import { z } from "zod";
 import { error, msg } from "@/helpers/translate";
 import type {
+  FreeProfessionalProfileAcademic,
+  FreeProfessionalProfileAddress,
   FreeProfessionalProfileUpdateBody,
   IFreeProfessionalProfileShowDTO,
   IFreeProfessionalProfileUpdateDTO,
@@ -31,18 +33,71 @@ const normalizeList = (value?: string[]) => {
   return Array.from(new Set(value.map((item) => item.trim()).filter(Boolean)));
 };
 
+const nullableUrl = z.string().trim().url().max(500).nullable().optional();
+
+const academicSchema = z
+  .object({
+    title: z.string().trim().max(160).nullable().optional(),
+    institution: z.string().trim().max(160).nullable().optional(),
+    graduation_year: z.string().trim().max(20).nullable().optional(),
+  })
+  .optional();
+
+const addressSchema = z
+  .object({
+    street: z.string().trim().max(160).nullable().optional(),
+    number: z.string().trim().max(40).nullable().optional(),
+    complement: z.string().trim().max(80).nullable().optional(),
+    district: z.string().trim().max(120).nullable().optional(),
+    zip: z.string().trim().max(20).nullable().optional(),
+    city: z.string().trim().max(120).nullable().optional(),
+    state: z.string().trim().max(2).nullable().optional(),
+  })
+  .optional();
+
+const normalizeAcademic = (
+  value?: z.infer<typeof academicSchema>,
+): FreeProfessionalProfileAcademic => ({
+  title: trimToNull(value?.title),
+  institution: trimToNull(value?.institution),
+  graduation_year: trimToNull(value?.graduation_year),
+});
+
+const normalizeAddress = (
+  value?: z.infer<typeof addressSchema>,
+): FreeProfessionalProfileAddress => ({
+  street: trimToNull(value?.street),
+  number: trimToNull(value?.number),
+  complement: trimToNull(value?.complement),
+  district: trimToNull(value?.district),
+  zip: trimToNull(value?.zip),
+  city: trimToNull(value?.city),
+  state: trimToNull(value?.state)?.toUpperCase() || null,
+});
+
 const updateSchema = z.object({
   name: z.string().trim().min(2).max(120),
+  avatar_url: nullableUrl,
   cpf: z.string().nullable().optional(),
+  gender: z.string().trim().max(40).nullable().optional(),
+  race_color: z.string().trim().max(40).nullable().optional(),
   crp_region: z.string().trim().max(20).nullable().optional(),
   crp_number: z.string().trim().max(40).nullable().optional(),
   whatsapp: z.string().nullable().optional(),
   headline: z.string().trim().min(3).max(160).nullable().optional(),
   bio: z.string().trim().min(20).max(2000).nullable().optional(),
+  video_url: nullableUrl,
   modality: z.enum(["online", "presencial", "hibrido"]).nullable().optional(),
   languages: z.array(z.string().trim().min(2).max(40)).max(8).optional(),
+  target_audience: z.array(z.string().trim().min(2).max(40)).max(8).optional(),
+  discount_first_session: z.boolean().optional(),
+  social_value: z.boolean().optional(),
+  accepts_insurance: z.boolean().optional(),
+  academic: academicSchema,
+  available_days: z.array(z.string().trim().min(2).max(20)).max(7).optional(),
+  address: addressSchema,
   specialty_ids: z.array(z.string().min(8).max(80)).max(3).optional(),
-  service_ids: z.array(z.string().min(8).max(80)).max(10).optional(),
+  service_ids: z.array(z.string().min(8).max(80)).max(1).optional(),
   approach_ids: z.array(z.string().min(8).max(80)).max(10).optional(),
   published: z.boolean().optional(),
 });
@@ -153,14 +208,25 @@ export const update = async (data: IFreeProfessionalProfileUpdateDTO) => {
 
   const body: Required<FreeProfessionalProfileUpdateBody> = {
     name: parsed.data.name,
+    avatar_url: trimToNull(parsed.data.avatar_url),
     cpf,
+    gender: trimToNull(parsed.data.gender),
+    race_color: trimToNull(parsed.data.race_color),
     crp_region: trimToNull(parsed.data.crp_region),
     crp_number: trimToNull(parsed.data.crp_number),
     whatsapp,
     headline: trimToNull(parsed.data.headline),
     bio: trimToNull(parsed.data.bio),
+    video_url: trimToNull(parsed.data.video_url),
     modality: parsed.data.modality || null,
     languages: normalizeList(parsed.data.languages),
+    target_audience: normalizeList(parsed.data.target_audience),
+    discount_first_session: Boolean(parsed.data.discount_first_session),
+    social_value: Boolean(parsed.data.social_value),
+    accepts_insurance: Boolean(parsed.data.accepts_insurance),
+    academic: normalizeAcademic(parsed.data.academic),
+    available_days: normalizeList(parsed.data.available_days),
+    address: normalizeAddress(parsed.data.address),
     specialty_ids: normalizeList(parsed.data.specialty_ids),
     service_ids: normalizeList(parsed.data.service_ids),
     approach_ids: normalizeList(parsed.data.approach_ids),
@@ -171,6 +237,13 @@ export const update = async (data: IFreeProfessionalProfileUpdateDTO) => {
     return {
       status: 400,
       ...error("free_specialty_limit", { limit: current.plan.specialty_limit }),
+    };
+  }
+
+  if (body.service_ids.length > current.plan.service_limit) {
+    return {
+      status: 400,
+      ...error("free_service_limit", { limit: current.plan.service_limit }),
     };
   }
 

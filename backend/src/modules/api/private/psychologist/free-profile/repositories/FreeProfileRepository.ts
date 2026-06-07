@@ -75,6 +75,24 @@ const getUserWithProfile = (userId: string) => {
           modality: true,
           languages: true,
           cpf: true,
+          gender: true,
+          race_color: true,
+          video_url: true,
+          target_audience: true,
+          discount_first_session: true,
+          social_value: true,
+          accepts_insurance: true,
+          academic_title: true,
+          academic_institution: true,
+          academic_graduation_year: true,
+          available_days: true,
+          professional_address_street: true,
+          professional_address_number: true,
+          professional_address_complement: true,
+          professional_address_district: true,
+          professional_address_zip: true,
+          professional_address_city: true,
+          professional_address_state: true,
           whatsapp: true,
           published: true,
           crp: true,
@@ -143,6 +161,7 @@ const toResponse = async (
   const planSlug = current?.plan?.slug || null;
   const isFree = planSlug === "gratuito" || !planSlug;
   const specialtyLimit = isFree ? 3 : 99;
+  const serviceLimit = isFree ? 1 : 99;
   const catalogs = await getCatalogs();
   const crp = parseCrp(profile.crp);
 
@@ -159,8 +178,30 @@ const toResponse = async (
       modality: profile.modality,
       languages: normalizeStringArray(profile.languages),
       cpf: profile.cpf,
+      gender: profile.gender,
+      race_color: profile.race_color,
       whatsapp: profile.whatsapp,
       whatsapp_url: buildWhatsappUrl(profile.whatsapp),
+      video_url: profile.video_url,
+      target_audience: normalizeStringArray(profile.target_audience),
+      discount_first_session: profile.discount_first_session,
+      social_value: profile.social_value,
+      accepts_insurance: profile.accepts_insurance,
+      academic: {
+        title: profile.academic_title,
+        institution: profile.academic_institution,
+        graduation_year: profile.academic_graduation_year,
+      },
+      available_days: normalizeStringArray(profile.available_days),
+      address: {
+        street: profile.professional_address_street,
+        number: profile.professional_address_number,
+        complement: profile.professional_address_complement,
+        district: profile.professional_address_district,
+        zip: profile.professional_address_zip,
+        city: profile.professional_address_city,
+        state: profile.professional_address_state,
+      },
       published: profile.published,
       crp: profile.crp,
       crp_region: crp.crp_region,
@@ -172,6 +213,7 @@ const toResponse = async (
       slug: planSlug,
       is_free: isFree,
       specialty_limit: specialtyLimit,
+      service_limit: serviceLimit,
     },
     selected: {
       specialties: item.psychologist_specialties
@@ -204,7 +246,7 @@ export class FreeProfileRepository implements IFreeProfileRepository {
     await prisma.$transaction(async (tx) => {
       await tx.user.update({
         where: { id: userId },
-        data: { name: body.name },
+        data: { avatar: body.avatar_url, name: body.name },
       });
 
       await tx.psychologist_profile.update({
@@ -214,10 +256,27 @@ export class FreeProfileRepository implements IFreeProfileRepository {
           bio: body.bio,
           modality: body.modality,
           cpf: body.cpf,
+          gender: body.gender,
+          race_color: body.race_color,
           crp: buildCrp(body.crp_region, body.crp_number),
           whatsapp: body.whatsapp,
           languages: body.languages as Prisma.InputJsonValue,
-          video_url: null,
+          video_url: body.video_url,
+          target_audience: body.target_audience as Prisma.InputJsonValue,
+          discount_first_session: body.discount_first_session,
+          social_value: body.social_value,
+          accepts_insurance: body.accepts_insurance,
+          academic_title: body.academic.title,
+          academic_institution: body.academic.institution,
+          academic_graduation_year: body.academic.graduation_year,
+          available_days: body.available_days as Prisma.InputJsonValue,
+          professional_address_street: body.address.street,
+          professional_address_number: body.address.number,
+          professional_address_complement: body.address.complement,
+          professional_address_district: body.address.district,
+          professional_address_zip: body.address.zip,
+          professional_address_city: body.address.city,
+          professional_address_state: body.address.state,
           published: body.published,
         },
       });

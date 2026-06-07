@@ -22,22 +22,22 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
 
 - Backend exclusivo para psicólogos em `/api/private/psychologist/free-profile`.
 - Frontend em `/app/professional/profile/setup`.
-- Tela baseada no protótipo local `_product/proto/Editar Perfil - Psicólogo.jpg`.
-- Editar apenas campos seguros:
-  - `user.name`;
-  - `psychologist_profile.cpf`;
-  - dados de registro livres em `psychologist_profile.crp` (`regional/registro`);
-  - `psychologist_profile.whatsapp`;
-  - `psychologist_profile.headline`;
-  - `psychologist_profile.bio`;
-  - `psychologist_profile.modality`;
-  - `psychologist_profile.languages`;
-  - joins `psychologist_specialty`, `psychologist_service`, `psychologist_approach`;
-  - `psychologist_profile.published`.
-- Plano gratuito limita especialidades a 3.
-- Plano gratuito mantém `video_url=null`.
+- Tela baseada no protótipo local `_product/proto/Editar Perfil - Psicólogo.jpg` e no ajuste visual enviado pelo usuário (`Html → Body.png`).
+- Builder/Quick Copy não foi acionado neste ambiente; a referência auditável usada foi o protótipo local e a imagem enviada pelo usuário.
+- CPF, gênero, raça/cor, regional, registro, WhatsApp, apresentação, vídeo por URL, filtros, formação acadêmica, atendimento e endereço profissional.
+- Regional em dropdown conforme a lista oficial de CRPs publicada pelo CFP em `https://site.cfp.org.br/cfp/sistema-conselhos/conselhos-pelo-brasil/`.
+- Foto profissional alterável por URL pública após clique na foto; upload de arquivo fica fora deste recorte por depender de storage público/privado real.
+- Vídeo de apresentação por URL pública; upload de vídeo fica fora deste recorte por depender de storage real.
+- Plano gratuito limita especialidades a 3 e serviços a 1.
 - Publicação gratuita não valida CRP por API e não toca em documento CRP.
 - A tela inclui ação para abrir o link `wa.me` gerado a partir do WhatsApp informado.
+
+## Persistência
+
+- Campos diretos em `psychologist_profile`:
+  - `cpf`, `crp`, `gender`, `race_color`, `headline`, `bio`, `video_url`, `languages`, `modality`, `target_audience`, `discount_first_session`, `social_value`, `accepts_insurance`, `academic_*`, `available_days`, `professional_address_*`, `published`.
+- Foto profissional em `user.avatar`.
+- Catálogos reais via joins `psychologist_specialty`, `psychologist_service`, `psychologist_approach`.
 
 ## Fora do escopo
 
@@ -45,28 +45,36 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
 - `professional_document`.
 - Alterar `crp_status`, `cfp_verified_at` ou `whatsapp_verified_at`.
 - Selo de verificado.
+- Upload binário de foto/vídeo.
 - Perfil profissional pago completo.
 
 ## Critérios de aceite
 
 - [x] Recorte documentado como task separada da TASK-18 completa.
-- [x] Backend implementado sem criar schema/migration e sem tocar em documentos CRP.
+- [x] Backend implementado sem tocar em documentos CRP.
+- [x] Migration de dados do perfil gratuito criada e aplicada com `pnpm --dir backend db:migrate`.
 - [x] Endpoint privado exige `requireRole("psicologo")` pelo mount em `/api/private/psychologist/*`.
 - [x] Frontend implementado em `/app/professional/profile/setup` com dados reais do backend.
-- [x] Tela ajustada a partir de `_product/proto/Editar Perfil - Psicólogo.jpg`.
+- [x] Tela ajustada a partir de `_product/proto/Editar Perfil - Psicólogo.jpg` e do print `Html → Body.png`.
+- [x] Clique na foto abre campo de URL para alterar foto de perfil.
+- [x] Faixa azul direciona para upgrade do plano profissional.
 - [x] CPF, regional, registro e WhatsApp ficam editáveis no plano gratuito sem consulta CFP/CRP por API.
-- [x] Tela inclui ação para abrir o link `wa.me` gerado e testar o WhatsApp informado.
+- [x] Regional usa dropdown no formato `19ª Região - SE`, conforme lista CFP.
+- [x] Tela inclui ação por ícone alinhado ao telefone para abrir o link `wa.me` gerado e testar o WhatsApp informado.
+- [x] Apresentação, vídeo por URL, filtros, benefícios, formação acadêmica, atendimento e endereço foram incluídos.
 - [x] Formulários/campos usam React Hook Form, Zod, `hooks/form` e controllers da TASK-02 para campos principais.
 - [x] Catálogos reais de especialidades, serviços e abordagens são lidos do banco.
-- [x] Limite de 3 especialidades no plano gratuito é validado no backend.
+- [x] Limite de 3 especialidades e 1 serviço no plano gratuito é validado no backend.
 - [x] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
 - [x] Packages usados conferem com `PACKAGES.md`; nenhum package novo foi instalado.
-- [x] ADR criada em `adrs/0027-perfil-gratuito-sem-crp.md`.
+- [x] ADR atualizada em `adrs/0027-perfil-gratuito-sem-crp.md`.
 - [x] Checks/builds relevantes foram executados sem erros.
 - [x] Commit criado com mensagem convencional.
 
 ## Validação executada
 
+- `pnpm --dir backend exec prisma migrate dev --name add_free_profile_details`
+- `pnpm --dir backend db:migrate`
 - `pnpm --dir backend check`
 - `pnpm --dir frontend check`
 - `pnpm --dir backend build`
@@ -77,10 +85,11 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
 ## Implementação
 
 - Backend:
+  - `backend/prisma/schema.prisma`
+  - `backend/prisma/migrations/20260607233802_add_free_profile_details/migration.sql`
   - `backend/src/modules/api/private/psychologist/free-profile`
-  - rota montada em `backend/src/main/server/imports/write.ts`
+  - `backend/src/interfaces/objects/index.ts`
 - Frontend:
   - `frontend/src/app/app/professional/profile/setup`
-  - `frontend/src/api/req/psychologist-free-profile`
-  - `frontend/src/api/callers/psychologist-free-profile`
   - `frontend/src/api/generator/types/free-profile.ts`
+  - `frontend/next.config.ts`
