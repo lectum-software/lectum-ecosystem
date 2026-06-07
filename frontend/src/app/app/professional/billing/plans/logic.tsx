@@ -232,16 +232,16 @@ export const PsychologistBillingPlansLogic = () => {
               Escolha o plano ideal para sua carreira
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-muted">
-              O plano gratuito segue direto para a configuração de perfil, sem validação de CRP pela
-              API. A assinatura passa pelo pagamento real, coleta endereço de faturamento após a
-              confirmação e só então segue para o WhatsApp profissional.
+              O plano gratuito segue para WhatsApp e configuração de perfil, sem validação de CRP
+              pela API. A assinatura passa pelo pagamento real, coleta endereço de faturamento após
+              a confirmação e só então segue para o WhatsApp profissional.
             </p>
           </div>
         </div>
 
         <div className="grid gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface-muted p-4 text-sm text-muted md:grid-cols-2">
           <div>
-            <strong className="text-foreground">Gratuito:</strong> plano → perfil.
+            <strong className="text-foreground">Gratuito:</strong> plano → WhatsApp → perfil.
           </div>
           <div>
             <strong className="text-foreground">Assinatura:</strong> plano → pagamento → confirmação

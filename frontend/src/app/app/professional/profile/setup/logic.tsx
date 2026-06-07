@@ -29,7 +29,7 @@ export const ProfessionalProfileSetupLogic = () => {
             Perfil profissional protegido até a validação completa
           </h1>
           <p className="mt-3 text-base leading-7 text-muted">
-            No plano gratuito, esta etapa vem logo depois da escolha do plano, sem consulta de CRP
+            No plano gratuito, esta etapa vem depois da inserção do WhatsApp, sem consulta de CRP
             pela API. A edição completa do perfil profissional continua vinculada à TASK-18.
           </p>
 

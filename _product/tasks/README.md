@@ -212,6 +212,6 @@ Uma task só pode ser marcada como concluída quando:
 
 ## Atualizacao de fluxo em 2026-06-07: gratuito sem CRP API
 
-- Psicologos no plano gratuito seguem da escolha do plano direto para `/app/professional/profile/setup`.
-- O plano gratuito nao exige consulta/validacao CFP/CRP via API antes da edicao/configuracao do perfil.
+- Psicologos no plano gratuito seguem da escolha do plano para `/app/professional/whatsapp/verify` e depois para `/app/professional/profile/setup`.
+- O plano gratuito exige apenas insercao do WhatsApp antes do perfil; nao exige consulta/validacao CFP/CRP via API.
 

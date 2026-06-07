@@ -170,7 +170,7 @@ Produto solicitou dois ajustes no onboarding do psicólogo depois da tela de pla
 - Reutilizar `PrivateTemplate` sem criar shell paralelo: `showHeader={false}` agora também remove a navegação inferior e o padding reservado para ela.
 - Aplicar o fluxo sem navegação às telas dedicadas de onboarding profissional: planos, checkout, endereço, verificação de WhatsApp e setup de perfil.
 - Atualizar a ordem do plano profissional para `plano -> pagamento confirmado -> endereço -> telefone -> CRP -> perfil`.
-- Manter o plano gratuito como `plano gratuito persistido -> perfil`.
+- Manter o plano gratuito como `plano gratuito persistido -> WhatsApp -> perfil`.
 - Sem credenciais Mercado Pago, a tela de checkout continua bloqueada honestamente e não ativa assinatura profissional.
 
 ### Consequências
@@ -181,5 +181,5 @@ Produto solicitou dois ajustes no onboarding do psicólogo depois da tela de pla
 
 ## Atualizacao em 2026-06-07: plano gratuito sem CRP API
 
-Por decisao de produto, psicologos no plano gratuito nao precisam validar CRP pela API antes de editar/configurar o perfil. A escolha do plano gratuito persiste a assinatura gratuita real e redireciona direto para `/app/professional/profile/setup`. A validacao CFP/CRP automatica permanece apenas para fluxos que exigirem selo/assinatura profissional, sem mock ou preenchimento artificial de cfp_verified_at.
+Por decisao de produto, psicologos no plano gratuito nao precisam validar CRP pela API antes de editar/configurar o perfil. A escolha do plano gratuito persiste a assinatura gratuita real e redireciona para `/app/professional/whatsapp/verify` antes de `/app/professional/profile/setup`. A validacao CFP/CRP automatica permanece apenas para fluxos que exigirem selo/assinatura profissional, sem mock ou preenchimento artificial de cfp_verified_at.
 
