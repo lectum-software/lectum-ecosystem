@@ -24,7 +24,7 @@ export const getAfterPhoneVerificationPath = (subscription: SubscriptionLike) =>
   return PSYCHOLOGIST_ONBOARDING_PATHS.profileSetup;
 };
 
-export const getAfterPlanSelectionPath = () => PSYCHOLOGIST_ONBOARDING_PATHS.phone;
+export const getAfterPlanSelectionPath = () => PSYCHOLOGIST_ONBOARDING_PATHS.profileSetup;
 
 export const getPsychologistRegistrationEntryPath = (
   data: Partial<Pick<user, "role">> | null | undefined,

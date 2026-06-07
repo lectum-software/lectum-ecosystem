@@ -210,13 +210,20 @@ Esta task deve ser concluÃ­da em um commit prÃ³prio. Se houver bloqueio externo,
 
 - O CTA do Plano Gratuito deixou de mandar direto para CFP e agora persiste a escolha real por `POST /api/private/psychologist/billing/select-free`.
 - A assinatura gratuita usa `professional_subscription` com plano `gratuito`, status `ativa` e sem gateway.
-- Depois da escolha gratuita, a UI segue para `/app/professional/whatsapp/verify`, preservando o fluxo solicitado de planos -> telefone -> perfil.
+- Depois da escolha gratuita, a UI segue direto para `/app/professional/profile/setup`, sem validar CRP pela API no plano gratuito.
 - O CTA do Plano Profissional segue para `/app/professional/billing/checkout`, que permanece bloqueado ate a TASK-32 ter Mercado Pago real.
 
-## Ajuste de jornada em 2026-06-07: sem navegação privada e endereço pós-pagamento
+## Ajuste de jornada em 2026-06-07: sem navegaï¿½ï¿½o privada e endereï¿½o pï¿½s-pagamento
 
-- Pedido direto de produto: remover a navegação inferior das telas a partir de planos no onboarding do psicólogo.
-- `PrivateTemplate` passou a tratar `showHeader={false}` como fluxo sem navegação inferior, preservando o shell privado e sem criar template paralelo.
+- Pedido direto de produto: remover a navegaï¿½ï¿½o inferior das telas a partir de planos no onboarding do psicï¿½logo.
+- `PrivateTemplate` passou a tratar `showHeader={false}` como fluxo sem navegaï¿½ï¿½o inferior, preservando o shell privado e sem criar template paralelo.
 - Telas cobertas pelo ajuste: `/app/professional/billing/plans`, `/app/professional/billing/checkout`, `/app/professional/billing/address`, `/app/professional/whatsapp/verify` e `/app/professional/profile/setup`.
-- A jornada paga foi reordenada para: plano -> pagamento real confirmado -> endereço de faturamento -> telefone -> CRP -> perfil.
-- A jornada gratuita permanece: plano gratuito persistido -> telefone -> perfil, sem cobrança simulada.
+- A jornada paga foi reordenada para: plano -> pagamento real confirmado -> endereï¿½o de faturamento -> telefone -> CRP -> perfil.
+- A jornada gratuita permanece: plano gratuito persistido -> perfil, sem cobranï¿½a simulada.
+
+## Atualizacao em 2026-06-07: gratuito direto para perfil
+
+- O plano gratuito nao passa mais pela etapa de telefone nem pela validacao CFP/CRP por API antes da configuracao do perfil.
+- A selecao do plano gratuito segue direto para `/app/professional/profile/setup`.
+- A API CFP/CRP continua reservada aos fluxos que exigirem verificacao real, sem mock ou preenchimento artificial de cfp_verified_at.
+

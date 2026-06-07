@@ -12,10 +12,10 @@ export const ProfessionalProfileSetupLogic = () => {
       <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-2xl">
         <Link
           className="inline-flex items-center gap-2 text-sm font-semibold text-muted"
-          href="/app/professional/whatsapp/verify"
+          href="/app/professional/billing/plans"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Voltar para telefone
+          Voltar aos planos
         </Link>
 
         <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-8 text-center shadow-[var(--lectum-shadow-soft)]">
@@ -29,9 +29,8 @@ export const ProfessionalProfileSetupLogic = () => {
             Perfil profissional protegido até a validação completa
           </h1>
           <p className="mt-3 text-base leading-7 text-muted">
-            No plano gratuito, esta etapa vem depois da confirmação do telefone. A edição completa
-            do perfil profissional continua vinculada à TASK-18, que depende da TASK-11 para
-            documentos CRP privados.
+            No plano gratuito, esta etapa vem logo depois da escolha do plano, sem consulta de CRP
+            pela API. A edição completa do perfil profissional continua vinculada à TASK-18.
           </p>
 
           <InlineAlert className="mt-7 text-left" title="Dependência bloqueada" variant="warning">
