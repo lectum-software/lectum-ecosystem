@@ -29,6 +29,7 @@ export type Field<FormType extends FieldValues> = {
   field: FieldType;
   label?: string;
   placeholder?: string;
+  prefix?: string;
   description?: string;
   tooltip?: string;
   required?: boolean;

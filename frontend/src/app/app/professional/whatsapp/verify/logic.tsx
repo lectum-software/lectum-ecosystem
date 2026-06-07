@@ -1,18 +1,18 @@
 "use client";
 
-import { ArrowLeft, CheckCircle2, Loader2, MessageSquareText } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2, MessageSquareText, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
 import { usePsychologistWhatsappVerification } from "@/api/callers/psychologist-whatsapp-verification";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAppSelector } from "@/hooks/redux";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
-import { getAfterPhoneVerificationPath } from "@/utils/psychologist-onboarding";
 import { toWhatsappPhoneE164, usePhoneForm, type WhatsappPhoneForm } from "./use-form";
+
+const PROFILE_SETUP_HREF = "/app/professional/profile/setup";
 
 type ApiErrorData = {
   error?: string;
@@ -50,14 +50,10 @@ const formatDisplayPhone = (phone?: string | null) => {
   return phone || "telefone informado";
 };
 
-const Header = ({ saved }: { saved: boolean }) => (
+const FormHeader = () => (
   <header className="text-center">
     <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-primary-soft text-primary">
-      {saved ? (
-        <CheckCircle2 className="h-10 w-10" aria-hidden="true" />
-      ) : (
-        <MessageSquareText className="h-10 w-10" aria-hidden="true" />
-      )}
+      <MessageSquareText className="h-10 w-10" aria-hidden="true" />
     </div>
     <p className="mt-6 text-xs font-bold uppercase tracking-[0.18em] text-primary">
       WhatsApp profissional
@@ -72,16 +68,54 @@ const Header = ({ saved }: { saved: boolean }) => (
   </header>
 );
 
+const SavedConfirmation = ({ phone }: { phone: string }) => (
+  <div className="grid min-h-[520px] content-between gap-8 text-center">
+    <div>
+      <div className="mx-auto grid h-28 w-28 place-items-center rounded-full bg-surface text-primary shadow-[var(--lectum-shadow-soft)]">
+        <CheckCircle2 className="h-14 w-14" aria-hidden="true" />
+      </div>
+      <h1 className="mt-9 text-2xl font-bold leading-tight text-foreground">WhatsApp salvo!</h1>
+      <p className="mx-auto mt-4 max-w-sm text-sm leading-6 text-muted">
+        O número {formatDisplayPhone(phone)} foi salvo com sucesso. Agora a Lectum pode gerar o link
+        de contato por WhatsApp para pacientes.
+      </p>
+
+      <div className="mt-10 rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-6 text-left shadow-[var(--lectum-shadow-soft)]">
+        <div className="flex items-start gap-4">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+            <UserRound className="h-5 w-5" aria-hidden="true" />
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
+              Última etapa
+            </p>
+            <h2 className="mt-1 text-xl font-bold text-foreground">Configuração de Perfil</h2>
+            <p className="mt-3 text-sm leading-6 text-muted">
+              Para finalizar, basta configurar seu perfil. Uma bio completa com foto e vídeo
+              profissionais aumenta sua conversão.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <Button
+      asChild
+      className="h-14 w-full rounded-full text-base shadow-[var(--lectum-shadow-soft)]"
+    >
+      <Link href={PROFILE_SETUP_HREF}>Configurar perfil</Link>
+    </Button>
+  </div>
+);
+
 export const WhatsappVerificationLogic = () => {
   const user = useAppSelector((state) => state.user);
-  const { current } = usePsychologistBilling();
   const [apiError, setApiError] = useState<string | null>(null);
   const [savedPhone, setSavedPhone] = useState<string | null>(null);
   const phoneForm = usePhoneForm(user?.psychologist_profile?.whatsapp);
   const PhoneForm = phoneForm.Form;
 
   const initialPhone = user?.psychologist_profile?.whatsapp;
-  const afterPhoneHref = getAfterPhoneVerificationPath(current.data?.current);
   const isPsychologist = user?.role === "psicologo";
   const savedLabel = useMemo(
     () => (savedPhone || initialPhone ? formatDisplayPhone(savedPhone || initialPhone) : null),
@@ -130,60 +164,58 @@ export const WhatsappVerificationLogic = () => {
         </Link>
 
         <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-7 shadow-[var(--lectum-shadow-soft)]">
-          <Header saved={Boolean(savedPhone)} />
-
-          {!isPsychologist ? (
-            <InlineAlert className="mt-6" title="Perfil não autorizado" variant="warning">
-              Este campo é exclusivo para psicólogos cadastrados na Lectum.
-            </InlineAlert>
-          ) : null}
-
-          {savedLabel && !savedPhone ? (
-            <div className="mt-6 grid gap-3">
-              <InlineAlert title="WhatsApp atual" variant="success">
-                O número {savedLabel} já está salvo como contato profissional. Você pode continuar
-                ou informar outro WhatsApp.
-              </InlineAlert>
-              <Button asChild className="h-12 rounded-full">
-                <Link href={afterPhoneHref}>Continuar para próxima etapa</Link>
-              </Button>
-            </div>
-          ) : null}
-
-          {apiError ? (
-            <InlineAlert className="mt-6" title="Não foi possível salvar" variant="error">
-              {apiError}
-            </InlineAlert>
-          ) : null}
-
-          <PhoneForm className="mt-8 grid gap-5" {...phoneForm.formProps} onSubmit={submitPhone}>
-            <InlineAlert title="Privacidade do número" variant="info">
-              O telefone não aparece no perfil público. Ele é usado apenas para montar o link de
-              WhatsApp depois do registro da intenção de contato do paciente.
-            </InlineAlert>
-            <Button
-              className="h-14 w-full rounded-full text-base"
-              disabled={!isPsychologist || request.isPending}
-              type="submit"
-            >
-              {request.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-              ) : null}
-              Salvar WhatsApp
-            </Button>
-          </PhoneForm>
-
           {savedPhone ? (
-            <div className="mt-8 grid gap-5 text-center">
-              <InlineAlert title="WhatsApp salvo" variant="success">
-                O número {formatDisplayPhone(savedPhone)} foi salvo e será usado para gerar o link
-                interno de redirecionamento ao WhatsApp.
-              </InlineAlert>
-              <Button asChild className="h-12 rounded-full">
-                <Link href={afterPhoneHref}>Continuar configuração</Link>
-              </Button>
-            </div>
-          ) : null}
+            <SavedConfirmation phone={savedPhone} />
+          ) : (
+            <>
+              <FormHeader />
+
+              {!isPsychologist ? (
+                <InlineAlert className="mt-6" title="Perfil não autorizado" variant="warning">
+                  Este campo é exclusivo para psicólogos cadastrados na Lectum.
+                </InlineAlert>
+              ) : null}
+
+              {savedLabel ? (
+                <div className="mt-6 grid gap-3">
+                  <InlineAlert title="WhatsApp atual" variant="success">
+                    O número {savedLabel} já está salvo como contato profissional. Você pode
+                    configurar o perfil ou informar outro WhatsApp.
+                  </InlineAlert>
+                  <Button asChild className="h-12 rounded-full">
+                    <Link href={PROFILE_SETUP_HREF}>Configurar perfil</Link>
+                  </Button>
+                </div>
+              ) : null}
+
+              {apiError ? (
+                <InlineAlert className="mt-6" title="Não foi possível salvar" variant="error">
+                  {apiError}
+                </InlineAlert>
+              ) : null}
+
+              <PhoneForm
+                className="mt-8 grid gap-5"
+                {...phoneForm.formProps}
+                onSubmit={submitPhone}
+              >
+                <InlineAlert title="Privacidade do número" variant="info">
+                  O telefone não aparece no perfil público. Ele é usado apenas para montar o link de
+                  WhatsApp depois do registro da intenção de contato do paciente.
+                </InlineAlert>
+                <Button
+                  className="h-14 w-full rounded-full text-base"
+                  disabled={!isPsychologist || request.isPending}
+                  type="submit"
+                >
+                  {request.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  ) : null}
+                  Salvar WhatsApp
+                </Button>
+              </PhoneForm>
+            </>
+          )}
         </div>
       </section>
     </PrivateTemplate>

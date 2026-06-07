@@ -42,6 +42,7 @@ const phoneFields = [
     field: "phone",
     label: "WhatsApp profissional",
     placeholder: "(00) 00000-0000",
+    prefix: "+55",
     description: "Usaremos este número para gerar o link de contato por WhatsApp.",
     required: true,
     autoComplete: "tel",
