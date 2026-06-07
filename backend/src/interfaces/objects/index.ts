@@ -23,6 +23,25 @@ export interface user_background {
   user?: user | null;
 }
 
+export interface phone_verification {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  user_id?: string | null;
+  phone?: string | null;
+  purpose?: "psychologist_whatsapp" | string | null;
+  provider?: "twilio" | string | null;
+  provider_message_id?: string | null;
+  code_hash?: string | null;
+  expires_at?: Date | null;
+  attempts?: number | null;
+  sent_at?: Date | null;
+  verified_at?: Date | null;
+  user?: user | null;
+}
+
 export interface patient_profile {
   id?: string | null;
   deleted?: boolean | null;
@@ -332,6 +351,7 @@ export interface user {
   confirm_date?: Date | null;
   user_tokens?: user_token[] | null;
   user_backgrounds?: user_background[] | null;
+  phone_verifications?: phone_verification[] | null;
   patient_profile?: patient_profile | null;
   psychologist_profile?: psychologist_profile | null;
   psychologist_specialties?: psychologist_specialty[] | null;

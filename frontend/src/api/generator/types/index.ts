@@ -38,3 +38,9 @@ export type {
   PatientRelationQuery,
 } from "./patient-relations";
 export type { patient_profile, psychologist_profile, user, user_token } from "./user";
+export type {
+  WhatsappVerificationConfirmPayload,
+  WhatsappVerificationConfirmResponse,
+  WhatsappVerificationRequestPayload,
+  WhatsappVerificationRequestResponse,
+} from "./whatsapp-verification";

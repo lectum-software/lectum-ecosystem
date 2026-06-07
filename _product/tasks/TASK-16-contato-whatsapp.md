@@ -188,3 +188,36 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 ## ADR
 
 - `adrs/0022-contato-whatsapp-wa-me.md`
+
+## Complemento de verificação de telefone em 2026-06-07
+
+- A verificação real do WhatsApp do psicólogo foi implementada como complemento da TASK-16, sem
+  alterar a decisão de contato por `wa.me`.
+- Requisito externo auditado: `TWILIO_API_ACCOUNT_SID`, `TWILIO_API_AUTH_TOKEN` e
+  `TWILIO_API_PHONE_NUMBER` existem no `backend/.env`; os valores não foram expostos.
+- Backend criado em `/api/private/psychologist/whatsapp/verification/request` e
+  `/api/private/psychologist/whatsapp/verification/confirm`, sob `requireRole("psicologo")`.
+- Prisma atualizado com `phone_verification`, armazenando somente hash do OTP, expiração, tentativas
+  e auditoria mínima; o código puro nunca é persistido.
+- Ao solicitar código, o WhatsApp é persistido em E.164 com `whatsapp_verified_at=null`; ao confirmar
+  código real enviado por Twilio SMS, `psychologist_profile.whatsapp_verified_at` é preenchido.
+- Frontend mobile-first criado em `/app/professional/whatsapp/verify`, usando React Hook Form/Zod e
+  controllers `phone`/`otp` da TASK-02. O item “Verificar WhatsApp” foi adicionado ao perfil privado
+  atual para tornar o fluxo acessível enquanto TASK-18 permanece bloqueada.
+- Não foi enviado SMS de teste automaticamente para evitar custo/uso de número pessoal sem confirmação
+  explícita do usuário; os endpoints foram validados por build/check e smoke sem autenticação.
+
+## Validação adicional executada
+
+- `pnpm --dir backend db:migrate -- --name add_phone_verifications`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke local sem autenticação:
+  `POST /api/private/psychologist/whatsapp/verification/request` retornou 401.
+- Smoke local da rota:
+  `/app/professional/whatsapp/verify` respondeu 307 para login sem cookie, confirmando proteção
+  privada; a tela autenticada foi validada por build porque não havia token real de psicólogo ativo
+  no banco local e não foi criado usuário/token fake para passar pelo guard.

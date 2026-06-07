@@ -41,6 +41,9 @@
   psychologistCfp: {
     root: () => ["psychologist_cfp"],
   },
+  psychologistWhatsappVerification: {
+    root: () => ["psychologist_whatsapp_verification"],
+  },
 };
 
 export default keys;

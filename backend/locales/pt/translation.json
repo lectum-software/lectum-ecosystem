@@ -43,7 +43,14 @@
     "cfp_provider_rate_limited": "Consulta CFP temporariamente limitada pelo provedor. Tente novamente mais tarde.",
     "cfp_provider_error": "Não foi possível concluir a consulta CFP agora.",
     "cfp_result_not_found": "Resultado CFP não encontrado para confirmação.",
-    "cfp_result_not_active": "O registro encontrado não está ativo para aprovação automática."
+    "cfp_result_not_active": "O registro encontrado não está ativo para aprovação automática.",
+    "invalid_phone": "Informe um número de telefone válido.",
+    "phone_verification_config_error": "Verificação de telefone indisponível por configuração do provedor SMS.",
+    "phone_verification_send_failed": "Não foi possível enviar o código por SMS agora.",
+    "phone_verification_recent": "Aguarde {{seconds}} segundos antes de solicitar um novo código.",
+    "phone_verification_not_found": "Solicitação de verificação não encontrada.",
+    "phone_verification_expired": "Código expirado. Solicite um novo código.",
+    "phone_verification_too_many_attempts": "Muitas tentativas incorretas. Solicite um novo código."
   },
   "message": {
     "store": "dado criado",
@@ -66,7 +73,10 @@
     "review_success": "Avaliação enviada com sucesso.",
     "cfp_search_success": "Registro profissional encontrado com sucesso.",
     "cfp_search_empty": "Nenhum registro profissional foi encontrado para os dados informados.",
-    "cfp_confirm_success": "Registro profissional confirmado com sucesso."
+    "cfp_confirm_success": "Registro profissional confirmado com sucesso.",
+    "phone_verification_code_sent": "Código enviado por SMS. Ele é válido por {{minutes}} minutos.",
+    "phone_verification_confirmed": "Telefone verificado com sucesso.",
+    "phone_verification_already_confirmed": "Este telefone já está verificado."
   },
   "gender": {
     "o": "o"
@@ -87,7 +97,8 @@
     "community": "comunidade",
     "community_post": "publicação",
     "contact_request": "intenção de contato",
-    "professional_registry_check": "consulta CFP"
+    "professional_registry_check": "consulta CFP",
+    "phone_verification": "verificação de telefone"
   },
   "property": {
     "email": "email",
@@ -116,7 +127,9 @@
     "registro": "registro profissional",
     "uf": "UF",
     "check_id": "consulta CFP",
-    "result_key": "resultado CFP"
+    "result_key": "resultado CFP",
+    "verification_id": "verificação de telefone",
+    "code": "código"
   },
   "notification": {
     "test": {

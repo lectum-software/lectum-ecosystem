@@ -67,7 +67,37 @@ estava autenticado no Builder; por isso a execução usou as imagens locais como
   backend/frontend locais: tela renderizou cópia de WhatsApp, profissional real temporário, card de
   privacidade, CTA de registro e campo de telefone pré-preenchido.
 
-## Pendências
+## Pendências históricas
 
 - Credenciais/número de teste Twilio continuam necessários para fluxos futuros de cadastro/alteração
-  e verificação do WhatsApp do psicólogo.
+  e verificação do WhatsApp do psicólogo. Esta pendência foi endereçada no complemento de
+  2026-06-07, quando as variáveis `TWILIO_API_ACCOUNT_SID`, `TWILIO_API_AUTH_TOKEN` e
+  `TWILIO_API_PHONE_NUMBER` foram encontradas no ambiente backend.
+
+## Complemento: verificação real de WhatsApp por SMS
+
+Em 2026-06-07 a pendência operacional de verificação foi implementada sem alterar a decisão de
+contato por `wa.me`.
+
+- Criar `phone_verification` para OTP por SMS com `purpose="psychologist_whatsapp"`, hash do código
+  por `argon2`, expiração em 10 minutos, limite de tentativas e throttle de reenvio.
+- Expor endpoints privados de autogestão do psicólogo em
+  `/api/private/psychologist/whatsapp/verification/request` e
+  `/api/private/psychologist/whatsapp/verification/confirm`, montados com
+  `requireRole("psicologo")`.
+- Usar Twilio SMS real por `TWILIO_API_ACCOUNT_SID`, `TWILIO_API_AUTH_TOKEN` e
+  `TWILIO_API_PHONE_NUMBER`; se a configuração faltar ou o envio falhar, não preencher
+  `whatsapp_verified_at`.
+- Persistir `psychologist_profile.whatsapp` como número E.164 e preencher
+  `whatsapp_verified_at` somente após confirmação correta do código.
+- Manter o telefone fora do perfil público; o link `wa.me` continua sendo liberado apenas pelo fluxo
+  de contato após consentimento e intenção persistida.
+
+Validações adicionais:
+
+- `pnpm --dir backend db:migrate -- --name add_phone_verifications`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`

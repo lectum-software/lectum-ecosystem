@@ -11,6 +11,7 @@ import {
   LogOut,
   MessagesSquare,
   Moon,
+  Phone,
   Star,
   UsersRound,
 } from "lucide-react";
@@ -123,6 +124,11 @@ export const ProfileLogic = () => {
             href: "/app/professional/billing/plans",
             icon: BadgeCheck,
             label: "Minha Assinatura",
+          },
+          {
+            href: "/app/professional/whatsapp/verify",
+            icon: Phone,
+            label: "Verificar WhatsApp",
           },
         ]
       : [{ href: "/app/reviews", icon: Star, label: "Avaliações" }]),

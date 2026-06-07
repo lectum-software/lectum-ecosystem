@@ -173,6 +173,26 @@ Quando construído: módulo de audiência próprio (ex.: `backend/src/modules/ma
 | `published` | `Boolean @default(false)` | só `true` aparece na busca (PRD §7: apenas ativos/verificados) |
 | `@@index([user_id])`, `@@index([published, deleted])` | | |
 
+`phone_verification` (OTP por SMS/Twilio para WhatsApp do psicólogo, TASK-16):
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `user_id` | `String` | FK `user`; ownership por `req.auth.id` |
+| `phone` | `String` | E.164 normalizado; telefone alvo da verificação |
+| `purpose` | `String @default("psychologist_whatsapp")` | escopo inicial da verificação |
+| `provider` | `String @default("twilio")` | provedor SMS usado |
+| `provider_message_id` | `String?` | reservado para auditoria do provedor quando disponível |
+| `code_hash` | `String` | hash do OTP; nunca persistir o código puro |
+| `expires_at` | `DateTime` | expiração do OTP |
+| `attempts` | `Int @default(0)` | tentativas de confirmação |
+| `sent_at` | `DateTime @default(now())` | instante do envio |
+| `verified_at` | `DateTime?` | preenchido após código correto |
+| `@@index([user_id, purpose, createdAt])`, `@@index([phone, purpose])` | | |
+
+Ao confirmar `phone_verification` real, atualizar `psychologist_profile.whatsapp` e
+`psychologist_profile.whatsapp_verified_at`. Sem envio/confirmação Twilio real, manter
+`whatsapp_verified_at=null`.
+
 ### Taxonomias filtráveis (catálogo + join)
 
 Especialidade, serviço e abordagem são filtros da busca (TASK-13) e seções do perfil (TASK-15/18). Modelados como catálogo + tabela de junção para permitir filtro indexado.

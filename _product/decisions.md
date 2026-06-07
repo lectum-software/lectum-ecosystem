@@ -96,6 +96,17 @@ Pacotes: `twilio` já instalado no backend.
 
 Impacto nas tasks: TASK-16, TASK-18, TASK-20, TASK-29.
 
+Execucao complementar TASK-16 em 2026-06-07:
+
+- Verificacao real do WhatsApp do psicologo implementada com Twilio SMS/OTP usando as envs backend
+  `TWILIO_API_ACCOUNT_SID`, `TWILIO_API_AUTH_TOKEN` e `TWILIO_API_PHONE_NUMBER`.
+- Novo modelo `phone_verification` guarda hash do codigo, expiracao, tentativas e auditoria minima;
+  nunca persiste o OTP puro.
+- Endpoints privados de psicologo:
+  `POST /api/private/psychologist/whatsapp/verification/request` e
+  `POST /api/private/psychologist/whatsapp/verification/confirm`.
+- `whatsapp_verified_at` continua sendo preenchido somente apos confirmacao correta do codigo SMS.
+
 ## CFP/CRP
 
 Status: Decidido para consulta automatica; upload/analise manual ainda depende de storage privado.

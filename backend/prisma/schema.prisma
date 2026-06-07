@@ -33,6 +33,7 @@ model user {
   confirm_date               DateTime?
   user_tokens                user_token[]                @relation("user_token_user")
   user_backgrounds           user_background[]           @relation("user_background_user")
+  phone_verifications         phone_verification[]        @relation("phone_verification_user")
   patient_profile            patient_profile?            @relation("patient_profile_user")
   psychologist_profile       psychologist_profile?       @relation("psychologist_profile_user")
   psychologist_specialties   psychologist_specialty[]    @relation("psychologist_specialty_psychologist")
@@ -101,6 +102,29 @@ model user_background {
 
   @@index([user_id, type])
   @@map("user_backgrounds")
+}
+
+model phone_verification {
+  id                  String    @id @default(cuid())
+  deleted             Boolean   @default(false)
+  deletedAt           DateTime? @map("deleted_at")
+  updatedAt           DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  user_id             String
+  phone               String
+  purpose             String    @default("psychologist_whatsapp")
+  provider            String    @default("twilio")
+  provider_message_id String?
+  code_hash           String
+  expires_at          DateTime
+  attempts            Int       @default(0)
+  sent_at             DateTime  @default(now())
+  verified_at         DateTime?
+  user                user      @relation("phone_verification_user", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, purpose, createdAt])
+  @@index([phone, purpose])
+  @@map("phone_verifications")
 }
 
 model patient_profile {
