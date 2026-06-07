@@ -196,3 +196,11 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - A rota `/app/professional/profile/setup` foi criada apenas como etapa de continuidade/bloqueio para o fluxo gratuito apos telefone verificado.
 - A tela informa que a edicao final do perfil profissional continua bloqueada pela dependencia TASK-11 (armazenamento privado de documentos CRP).
 - Nenhum endpoint de perfil profissional, formulario de edicao, publicacao ou alteracao de documento foi implementado nesta execucao.
+
+## Revalidacao de bloqueio em 2026-06-07
+
+- Pedido recebido para executar a configuracao do perfil do psicologo.
+- A dependencia obrigatoria TASK-11 permanece `Blocked`: ainda nao ha bucket privado R2 confirmado para documentos CRP (`CLOUDFLARE_R2_PRIVATE_BUCKET_NAME` ou equivalente) nem politica privada validada.
+- A decisao recente de produto para o plano gratuito dispensa a validacao CRP via API antes da edicao/configuracao do perfil, mas nao remove do escopo formal da TASK-18 a secao Documentos / CRP, `professional_document`, `crp_status` e regras de publicacao profissional.
+- Para nao criar implementacao parcial, mock, upload em bucket publico, endpoint simulado ou atalho sobre campos sensiveis, a execucao foi interrompida antes de criar UI final, endpoints ou migrations.
+- Proxima acao para desbloquear: provisionar storage privado de CRP e concluir TASK-11, ou criar uma nova task/ADR explicitamente separando um perfil gratuito sem documentos CRP do escopo completo da TASK-18.

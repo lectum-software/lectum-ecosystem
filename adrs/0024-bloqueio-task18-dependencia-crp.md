@@ -45,3 +45,11 @@ Também fica decidido que, até o desbloqueio:
 
 - Revisão de `_product/tasks/README.md`, `_product/tasks/TASK-11-envio-confirmacao-crp.md`, `_product/tasks/TASK-18-perfil-privado-psicologo.md` e `adrs/0017-bloqueio-storage-privado-crp.md`.
 - Revisão visual local das três imagens obrigatórias da TASK-18.
+
+## Revalidacao em 2026-06-07
+
+A execucao da configuracao do perfil do psicologo foi solicitada novamente. A TASK-11 segue bloqueada por ausencia de bucket privado R2 para documentos CRP, e a TASK-18 ainda inclui formalmente a secao Documentos / CRP e `professional_document`.
+
+A decisao de produto de nao exigir validacao CRP via API no plano gratuito nao equivale a concluir ou remover a dependencia de documentos CRP da TASK-18. Portanto, permanece proibido implementar parcialmente os endpoints/telas finais de perfil privado omitindo a parte sensivel sem nova task/ADR de recorte.
+
+Opcao segura para retomar antes da TASK-11: abrir uma nova task especifica para "perfil gratuito sem documentos CRP", com escopo, criterios e regras de publicacao separados da TASK-18 completa.
