@@ -124,6 +124,7 @@ Execucao TASK-10 em 2026-06-05/2026-06-06:
 
 - Bloqueio historico formalizado em `adrs/0015-bloqueio-consulta-cfp-automatica.md`; desbloqueio em `adrs/0026-infosimples-validacao-cfp-crp.md`.
 - Execucao TASK-10 concluida em 2026-06-06 com InfoSimples, sem mock, usando endpoint autenticado `POST https://api.infosimples.com/api/v2/consultas/cfp/cadastro`.
+- CPF sem registro no CFP retorna `code=612` pela InfoSimples; o backend trata esse codigo como estado vazio auditavel (`found=false`), nao como erro de provedor.
 - Encaminhar para TASK-11 quando a consulta nao aprovar de forma inequivoca ou quando houver exigencia de documento CRP; TASK-11 ainda exige R2 privado.
 
 ## E-mail e SMS

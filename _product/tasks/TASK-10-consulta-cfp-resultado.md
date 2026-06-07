@@ -220,3 +220,9 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 ## Observacao sobre criterios de aceite
 
 Todos os criterios aplicaveis foram atendidos. A confirmacao real de um CPF profissional valido depende de dados reais do usuario/provedor em uso; sem resultado ativo, o fluxo permanece honesto e nao aprova automaticamente.
+
+## Correcao de vazio InfoSimples em 2026-06-06
+
+- Caso real validado: CPF sem registro no CFP retorna `code=612` na InfoSimples, com `data=[]` e sem `resultados`.
+- Esse codigo agora e tratado como estado vazio funcional, nao como erro de provedor: o backend persiste `professional_registry_check.found=false` e retorna `cfp_search_empty`.
+- A UI de `/psychologist/cfp` passa a receber `found=false` e exibir a tela "Resultado CFP - Nao Encontrado" para o usuario tentar novamente.

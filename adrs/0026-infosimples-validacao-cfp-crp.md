@@ -48,3 +48,9 @@ Pesquisa publica identificou a consulta InfoSimples `Conselho Federal de Psicolo
 - Implementacao realizada sem SDK novo: HTTP nativo no backend, provider isolado e token apenas server-side.
 - Foi criada a tabela `professional_registry_checks` para auditoria minima da consulta e confirmacao de resultado.
 - Resultados inativos, ausentes, ambiguos ou erro/rate limit do provedor nao aprovam automaticamente.
+
+## Correcao de vazio TASK-10 em 2026-06-06
+
+- Em consulta autenticada com CPF sem registro no CFP, a InfoSimples retornou HTTP 200 com `code=612`, `data=[]` e erro textual de nenhum dado encontrado.
+- O backend passa a tratar `code=612` como resultado vazio auditavel, persistindo `professional_registry_check.found=false` e respondendo sucesso funcional `cfp_search_empty` para a UI exibir o estado "Nao encontrado".
+- `code=612` nao aprova profissional e nao e tratado como indisponibilidade do provedor; erros de configuracao, validacao, rate limit e demais codigos continuam falhando de forma honesta.

@@ -18,6 +18,7 @@ const normalizeUf = (value?: string | null) => normalizeText(value)?.toUpperCase
 
 const isProviderConfigError = (code: number | null) => code === 601 || code === 602;
 const isProviderValidationError = (code: number | null) => code === 606;
+const isProviderNotFound = (code: number | null) => code === 612;
 const isProviderRateLimit = (code: number | null, message: string | null) => {
   const text = (message || "").toLowerCase();
   return code === 609 || code === 610 || text.includes("limite") || text.includes("saldo");
@@ -128,7 +129,9 @@ export const search = async (data: ICfpSearchDTO) => {
     };
   }
 
-  if (response.code !== 200) {
+  const shouldPersistResult = response.code === 200 || isProviderNotFound(response.code);
+
+  if (!shouldPersistResult) {
     return {
       status: 502,
       ...error("cfp_provider_error", {

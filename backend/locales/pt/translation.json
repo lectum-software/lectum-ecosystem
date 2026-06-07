@@ -35,15 +35,15 @@
     "review_contact_required": "Você precisa registrar contato com este profissional pelo WhatsApp antes de avaliar.",
     "review_already_exists": "Você já avaliou este profissional.",
     "review_own_profile": "Você não pode avaliar o próprio perfil.",
-    "invalid_cpf": "Informe um CPF v?lido para continuar.",
+    "invalid_cpf": "Informe um CPF válido para continuar.",
     "cfp_query_required": "Informe CPF, nome ou registro profissional para consultar o CFP.",
-    "cfp_provider_config_error": "Consulta CFP indispon?vel por configura??o do provedor.",
-    "cfp_provider_validation_error": "N?o foi poss?vel consultar o CFP com os dados informados.",
-    "cfp_provider_unavailable": "Consulta CFP temporariamente indispon?vel. Tente novamente em instantes.",
+    "cfp_provider_config_error": "Consulta CFP indisponível por configuração do provedor.",
+    "cfp_provider_validation_error": "Não foi possível consultar o CFP com os dados informados.",
+    "cfp_provider_unavailable": "Consulta CFP temporariamente indisponível. Tente novamente em instantes.",
     "cfp_provider_rate_limited": "Consulta CFP temporariamente limitada pelo provedor. Tente novamente mais tarde.",
-    "cfp_provider_error": "N?o foi poss?vel concluir a consulta CFP agora.",
-    "cfp_result_not_found": "Resultado CFP n?o encontrado para confirma??o.",
-    "cfp_result_not_active": "O registro encontrado n?o est? ativo para aprova??o autom?tica."
+    "cfp_provider_error": "Não foi possível concluir a consulta CFP agora.",
+    "cfp_result_not_found": "Resultado CFP não encontrado para confirmação.",
+    "cfp_result_not_active": "O registro encontrado não está ativo para aprovação automática."
   },
   "message": {
     "store": "dado criado",
