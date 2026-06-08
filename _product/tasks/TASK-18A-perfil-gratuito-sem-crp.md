@@ -83,6 +83,8 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
 - [x] Alterar visibilidade publica invalida a listagem de psicologos; perfis publicados ficam elegiveis para /app/psychologists.
 - [x] Cards e perfil publico exibem "Disponivel hoje" apenas quando o dia atual em America/Sao_Paulo esta em dias disponiveis, com bolinha verde pulsando suavemente.
 
+- [x] Ajuste visual de 2026-06-08 aplicado: Especialidades e Abordagens usam campo compacto com tags removiveis, placeholder e lista suspensa como no print anexado pelo usuario, mantendo limites reais do plano gratuito.
+
 ## Validação executada
 
 - `pnpm --dir backend exec prisma migrate dev --name add_free_profile_details`
@@ -111,6 +113,11 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
 - 2026-06-08 complementar: `pnpm --dir frontend build`
 - 2026-06-08 complementar: `pnpm check`
 - 2026-06-08 complementar: HTTP local `/health` respondeu 200; rotas privadas `/app/profile`, `/app/professional/profile/setup` e `/app/psychologists` responderam 307 sem sessao, mantendo protecao. Validacao visual autenticada ficou limitada por nao haver token real acessivel ao agente sem criar mock.
+
+- 2026-06-08 tags de catalogo: `pnpm --dir frontend check`
+- 2026-06-08 tags de catalogo: `pnpm --dir frontend build`
+- 2026-06-08 tags de catalogo: `pnpm check`
+- 2026-06-08 tags de catalogo: HTTP local em `/app/professional/profile/setup` respondeu 307 sem sessao, mantendo protecao; validacao visual autenticada ficou limitada por nao haver token real acessivel ao agente sem criar mock.
 
 ## Implementação
 
@@ -146,3 +153,9 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
 - A lista publica calcula `available_today` no backend a partir de `available_days` e do fuso `America/Sao_Paulo`, para evitar divergencia entre cliente e servidor.
 - A edicao do perfil gratuito reforca campos obrigatorios no Zod e no backend quando publicado, incluindo dados demograficos, CRP, abordagens e endereco.
 - A limitacao de abordagens foi adicionada ao contrato do plano gratuito como `approach_limit=1`.
+
+## Ajuste visual de catalogos em 2026-06-08
+
+- Referencia usada: print anexado pelo usuario (`Html -> Body.png`) e prototipo local `_product/proto/Editar Perfil - Psicologo.jpg`. Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente.
+- `Especialidades` e `Abordagens` passaram a usar um campo visual unico com tags pequenas, botao de remover, placeholder interno e dropdown de opcoes reais do catalogo.
+- `Servicos` permanece no padrao de chips atual porque o pedido citou apenas Especialidades e Abordagens.

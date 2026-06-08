@@ -41,6 +41,9 @@ A exibicao de CRP foi padronizada no frontend como `Psicologo &bull; CRP 00/0000
 
 Para o plano gratuito, abordagens ganharam limite explicito `approach_limit=1` no contrato do free-profile. O frontend bloqueia novas selecoes acima desse limite, e o backend rejeita payloads acima do limite para impedir burla por requisicao manual.
 
+
+Em 2026-06-08, a UI de catalogos do perfil gratuito foi ajustada para alinhar Especialidades e Abordagens ao print anexado pelo usuario: ambos usam um campo compacto com tags removiveis, placeholder interno e dropdown de opcoes reais. A decisao preserva os limites do backend (`specialty_limit` e `approach_limit`) e nao altera contratos de API nem dados persistidos. Servicos permanece como chips porque nao foi citado no pedido e ja tem limite unitario visivel.
+
 ## Consequências
 
 - Psicólogos gratuitos conseguem configurar um perfil mais próximo do protótipo sem desbloquear a TASK-18 completa.
@@ -62,6 +65,9 @@ Para o plano gratuito, abordagens ganharam limite explicito `approach_limit=1` n
 - Psicologos gratuitos publicados aparecem na busca sem selo, desde que `published=true` e atendam aos requisitos de publicacao.
 - A disponibilidade "Disponivel hoje" fica consistente entre listagem e perfil publico porque e calculada no backend.
 - O plano gratuito permanece limitado a uma abordagem, alem dos limites ja existentes de especialidades e servicos.
+
+- Especialidades e Abordagens ficam visualmente mais proximas do prototipo mobile, sem novo package e sem catalogos mockados.
+- O controle continua usando os catalogos reais retornados por `/api/private/psychologist/free-profile` e os mesmos limites de plano.
 
 ## Validação
 
@@ -87,3 +93,7 @@ Para o plano gratuito, abordagens ganharam limite explicito `approach_limit=1` n
 - 2026-06-08 complementar: `pnpm --dir frontend build`
 - 2026-06-08 complementar: `pnpm check`
 - 2026-06-08 complementar: HTTP local `/health` respondeu 200; rotas privadas `/app/profile`, `/app/professional/profile/setup` e `/app/psychologists` responderam 307 sem sessao, mantendo protecao. Validacao visual autenticada ficou limitada por nao haver token real acessivel ao agente sem criar mock.
+- 2026-06-08 tags de catalogo: `pnpm --dir frontend check`
+- 2026-06-08 tags de catalogo: `pnpm --dir frontend build`
+- 2026-06-08 tags de catalogo: `pnpm check`
+- 2026-06-08 tags de catalogo: HTTP local em `/app/professional/profile/setup` respondeu 307 sem sessao, mantendo protecao; validacao visual autenticada ficou limitada por nao haver token real acessivel ao agente sem criar mock.

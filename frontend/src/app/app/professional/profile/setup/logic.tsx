@@ -8,6 +8,7 @@ import {
   BookOpen,
   Camera,
   CheckCircle2,
+  ChevronDown,
   ExternalLink,
   FileVideo,
   GraduationCap,
@@ -18,6 +19,7 @@ import {
   Trash2,
   UploadCloud,
   UserRound,
+  X,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -157,6 +159,159 @@ const CatalogPicker = ({
             </button>
           );
         })}
+      </div>
+    </div>
+  );
+};
+
+const CatalogTagField = ({
+  description,
+  items,
+  limit,
+  name,
+  placeholder,
+  required,
+  selected,
+  title,
+  onChange,
+}: {
+  description?: string;
+  items: FreeProfileCatalogItem[];
+  limit?: number;
+  name: keyof Pick<FreeProfileForm, "specialty_ids" | "approach_ids">;
+  placeholder: string;
+  required?: boolean;
+  selected: string[];
+  title: string;
+  onChange: (
+    name: keyof Pick<FreeProfileForm, "specialty_ids" | "service_ids" | "approach_ids">,
+    value: string[],
+  ) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const isEmpty = items.length === 0;
+  const selectedItems = items.filter((item) => selected.includes(item.id));
+  const selectedMap = new Set(selected);
+  const limitReached = Boolean(limit && selected.length >= limit);
+
+  const removeItem = (id: string) => {
+    onChange(
+      name,
+      selected.filter((item) => item !== id),
+    );
+  };
+
+  const toggleItem = (id: string) => {
+    if (selectedMap.has(id)) {
+      removeItem(id);
+      return;
+    }
+
+    if (limitReached) return;
+    onChange(name, [...selected, id]);
+
+    if (limit === 1) {
+      setOpen(false);
+    }
+  };
+
+  return (
+    <div className="grid gap-3">
+      <div>
+        <h3 className="flex items-center gap-1 text-sm font-bold text-foreground">
+          <span>{title}</span>
+          {required ? <span className="text-danger">*</span> : null}
+        </h3>
+        {description ? <p className="mt-1 text-xs leading-5 text-muted">{description}</p> : null}
+      </div>
+
+      {isEmpty ? (
+        <InlineAlert title="Catálogo vazio" variant="warning">
+          Nenhuma opção ativa foi encontrada no backend para esta seção.
+        </InlineAlert>
+      ) : null}
+
+      <div className="relative">
+        <div
+          className={cn(
+            "flex min-h-12 items-center gap-2 rounded-[var(--lectum-control-radius)] border border-border bg-surface px-3 py-2 shadow-sm transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10",
+            open && "border-primary ring-4 ring-primary/10",
+          )}
+        >
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+            {selectedItems.map((item) => (
+              <span
+                className="inline-flex max-w-full items-center gap-1 rounded-md bg-primary-soft px-2 py-1 text-[0.68rem] font-bold text-primary"
+                key={item.id}
+              >
+                <span className="max-w-[11rem] truncate">{item.name}</span>
+                <button
+                  aria-label={`Remover ${item.name}`}
+                  className="grid h-3.5 w-3.5 place-items-center rounded-full text-primary transition hover:bg-primary/10"
+                  onClick={() => removeItem(item.id)}
+                  type="button"
+                >
+                  <X className="h-3 w-3" aria-hidden="true" />
+                </button>
+              </span>
+            ))}
+            <button
+              aria-expanded={open}
+              className={cn(
+                "min-w-[9rem] flex-1 py-1 text-left text-xs text-subtle outline-none",
+                limitReached && "text-muted",
+              )}
+              onClick={() => setOpen((current) => !current)}
+              type="button"
+            >
+              {placeholder}
+            </button>
+          </div>
+          <button
+            aria-label={`Abrir opções de ${title}`}
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary"
+            onClick={() => setOpen((current) => !current)}
+            type="button"
+          >
+            <ChevronDown
+              className={cn("h-4 w-4 transition", open && "rotate-180")}
+              aria-hidden="true"
+            />
+          </button>
+        </div>
+
+        {open ? (
+          <div className="absolute z-20 mt-2 max-h-56 w-full overflow-y-auto rounded-2xl border border-border bg-surface p-2 shadow-[var(--lectum-shadow-soft)]">
+            {items.length > 0 ? (
+              <div className="grid gap-1">
+                {items.map((item) => {
+                  const checked = selectedMap.has(item.id);
+                  const disabled = Boolean(limitReached && !checked);
+
+                  return (
+                    <button
+                      className={cn(
+                        "flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-sm font-semibold text-foreground transition hover:bg-primary-soft hover:text-primary",
+                        checked && "bg-primary-soft text-primary",
+                        disabled &&
+                          "cursor-not-allowed opacity-45 hover:bg-transparent hover:text-foreground",
+                      )}
+                      disabled={disabled}
+                      key={item.id}
+                      onClick={() => toggleItem(item.id)}
+                      type="button"
+                    >
+                      <span>{item.name}</span>
+                      {checked ? <span className="text-xs font-bold">Selecionado</span> : null}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="px-3 py-2 text-sm text-muted">Nenhuma opção ativa encontrada.</p>
+            )}
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -686,15 +841,16 @@ export const ProfessionalProfileSetupLogic = () => {
 
             <SectionCard icon={Award} title="Especialidades e Filtros">
               <div className="grid gap-6">
-                <CatalogPicker
+                <CatalogTagField
                   description="Selecione até 3 opções. Faça o upgrade para adicionar 10 especialidades."
                   items={profile.data.catalogs.specialties}
                   limit={profile.data.plan.specialty_limit}
                   name="specialty_ids"
                   onChange={setCatalogValue}
+                  placeholder="Adicione uma especialidade..."
                   required
                   selected={selectedSpecialties}
-                  title="Especialidades"
+                  title={`Especialidades (Até ${profile.data.plan.specialty_limit} tags)`}
                 />
                 <CatalogPicker
                   description="Selecione 1 opção. Faça o upgrade para adicionar todos os serviços."
@@ -706,12 +862,13 @@ export const ProfessionalProfileSetupLogic = () => {
                   selected={selectedServices}
                   title="Serviços"
                 />
-                <CatalogPicker
+                <CatalogTagField
                   description="Selecione 1 opção. Faça o upgrade para adicionar várias abordagens."
                   items={profile.data.catalogs.approaches}
                   limit={profile.data.plan.approach_limit}
                   name="approach_ids"
                   onChange={setCatalogValue}
+                  placeholder="Adicione uma abordagem..."
                   required
                   selected={selectedApproaches}
                   title="Abordagens"
