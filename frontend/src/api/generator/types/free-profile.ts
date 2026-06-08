@@ -35,6 +35,7 @@ export type FreeProfessionalProfile = {
     cpf: string | null;
     gender: string | null;
     race_color: string | null;
+    religion: string | null;
     whatsapp: string | null;
     whatsapp_url: string | null;
     video_url: string | null;
@@ -43,6 +44,7 @@ export type FreeProfessionalProfile = {
     social_value: boolean;
     accepts_insurance: boolean;
     academic: FreeProfessionalProfileAcademic;
+    academic_formations: FreeProfessionalProfileAcademic[];
     available_days: string[];
     address: FreeProfessionalProfileAddress;
     published: boolean;
@@ -72,16 +74,15 @@ export type FreeProfessionalProfile = {
 
 export type FreeProfessionalProfilePayload = {
   name: string;
-  avatar_url: string | null;
   cpf: string | null;
   gender: string | null;
   race_color: string | null;
+  religion: string | null;
   crp_region: string | null;
   crp_number: string | null;
   whatsapp: string | null;
   headline: string | null;
   bio: string | null;
-  video_url: string | null;
   modality: "online" | "presencial" | "hibrido" | null;
   languages: string[];
   target_audience: string[];
@@ -89,10 +90,16 @@ export type FreeProfessionalProfilePayload = {
   social_value: boolean;
   accepts_insurance: boolean;
   academic: FreeProfessionalProfileAcademic;
+  academic_formations: FreeProfessionalProfileAcademic[];
   available_days: string[];
   address: FreeProfessionalProfileAddress;
   specialty_ids: string[];
   service_ids: string[];
   approach_ids: string[];
   published: boolean;
+};
+
+export type FreeProfessionalProfileAvatarUpload = {
+  avatar_url: string;
+  profile: FreeProfessionalProfile | null;
 };

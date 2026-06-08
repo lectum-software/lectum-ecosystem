@@ -1,9 +1,19 @@
-﻿import { Router } from "express";
-import { show, update } from "./use-cases/controller";
+import { Router } from "express";
+import multer from "@/config/multer";
+import { show, update, uploadAvatar } from "./use-cases/controller";
 
 const routes = Router();
 
 routes.get("", show);
 routes.put("", update);
+routes.post(
+  "/avatar",
+  multer({
+    single: "avatar",
+    allowed: ["image/jpeg", "image/png", "image/webp"],
+    size: 5,
+  }),
+  uploadAvatar,
+);
 
 export default routes;

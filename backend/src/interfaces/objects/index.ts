@@ -72,6 +72,7 @@ export interface psychologist_profile {
   crp?: string | null;
   gender?: string | null;
   race_color?: string | null;
+  religion?: string | null;
   target_audience?: unknown;
   discount_first_session?: boolean | null;
   social_value?: boolean | null;
@@ -79,6 +80,7 @@ export interface psychologist_profile {
   academic_title?: string | null;
   academic_institution?: string | null;
   academic_graduation_year?: string | null;
+  academic_formations?: unknown;
   available_days?: unknown;
   professional_address_street?: string | null;
   professional_address_number?: string | null;

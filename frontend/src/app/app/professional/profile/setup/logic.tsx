@@ -13,13 +13,16 @@ import {
   Loader2,
   type LucideIcon,
   MapPin,
+  Plus,
   Sparkles,
+  Trash2,
+  UploadCloud,
   UserRound,
-  WalletCards,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { type ChangeEvent, useRef } from "react";
+import { type FieldPath, useFieldArray } from "react-hook-form";
 import { toast } from "sonner";
 import { usePsychologistFreeProfile } from "@/api/callers/psychologist-free-profile";
 import type { FreeProfileCatalogItem } from "@/api/generator/types/free-profile";
@@ -31,6 +34,7 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { CITY_OPTIONS_BY_STATE, PUBLIC_TARGET_OPTIONS, WEEKDAY_OPTIONS } from "./options";
 import {
+  type AcademicFormationForm,
   type FreeProfileForm,
   getLanguages,
   toWhatsappPhoneE164,
@@ -60,7 +64,7 @@ const toggleValue = (values: string[], id: string) => {
   return values.includes(id) ? values.filter((item) => item !== id) : [...values, id];
 };
 
-const isHttpsUrl = (value?: string | null) => Boolean(value?.startsWith("https://"));
+const isImageUrl = (value?: string | null): value is string => Boolean(value?.startsWith("http"));
 
 const SectionCard = ({
   children,
@@ -211,16 +215,24 @@ const BooleanBenefit = ({
 );
 
 export const ProfessionalProfileSetupLogic = () => {
-  const [avatarFieldOpen, setAvatarFieldOpen] = useState(false);
-  const { profile, update } = usePsychologistFreeProfile({
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const { profile, update, uploadAvatar } = usePsychologistFreeProfile({
     callbacks: {
       update: {
         onSuccess: () => toast.success("Perfil gratuito atualizado"),
         onError: (error) => toast.error(resolveApiError(error)),
       },
+      avatar: {
+        onSuccess: () => toast.success("Foto de perfil atualizada"),
+        onError: (error) => toast.error(resolveApiError(error)),
+      },
     },
   });
   const form = useFreeProfileForm(profile.data);
+  const academicFormations = useFieldArray({
+    control: form.hook.control,
+    name: "academic_formations",
+  });
   const Form = form.Form;
   const renderedFields = form.formProps.fields;
   const selectedSpecialties = form.hook.watch("specialty_ids") || [];
@@ -231,7 +243,7 @@ export const ProfessionalProfileSetupLogic = () => {
   const published = form.hook.watch("published");
   const whatsappPhone = form.hook.watch("whatsapp");
   const countryCode = form.hook.watch("countryCode");
-  const avatarUrl = form.hook.watch("avatar_url");
+  const avatarUrl = profile.data?.user.avatar;
   const addressState = form.hook.watch("address_state");
   const addressCity = form.hook.watch("address_city");
   const baseCityOptions = CITY_OPTIONS_BY_STATE[addressState] || [];
@@ -274,30 +286,63 @@ export const ProfessionalProfileSetupLogic = () => {
     <div className="grid gap-4">{names.map((name) => renderField(name))}</div>
   );
 
+  const renderAcademicField = (
+    index: number,
+    name: keyof AcademicFormationForm,
+    label: string,
+    placeholder: string,
+  ) => {
+    const Component = components.input;
+
+    return (
+      <Component
+        control={form.hook.control}
+        field="input"
+        label={label}
+        name={`academic_formations.${index}.${name}` as FieldPath<FreeProfileForm>}
+        placeholder={placeholder}
+      />
+    );
+  };
+
+  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) return;
+    uploadAvatar.mutate(file);
+  };
+
   const submit = form.hook.handleSubmit((values) => {
     update.mutate({
       name: values.name,
-      avatar_url: values.avatar_url || null,
       cpf: values.cpf || null,
       gender: values.gender || null,
       race_color: values.race_color || null,
+      religion: values.religion || null,
       crp_region: values.crp_region || null,
       crp_number: values.crp_number || null,
       whatsapp: toWhatsappPhoneE164(values.whatsapp, values.countryCode),
       headline: values.headline || null,
       bio: values.bio || null,
-      video_url: values.video_url || null,
       modality: values.modality || null,
       languages: getLanguages(values.language),
       target_audience: values.target_audience,
       discount_first_session: values.discount_first_session,
       social_value: values.social_value,
       accepts_insurance: values.accepts_insurance,
-      academic: {
-        title: values.academic_title || null,
-        institution: values.academic_institution || null,
-        graduation_year: values.academic_graduation_year || null,
-      },
+      academic: values.academic_formations[0]
+        ? {
+            title: values.academic_formations[0].title || null,
+            institution: values.academic_formations[0].institution || null,
+            graduation_year: values.academic_formations[0].graduation_year || null,
+          }
+        : { title: null, institution: null, graduation_year: null },
+      academic_formations: values.academic_formations.map((item) => ({
+        title: item.title || null,
+        institution: item.institution || null,
+        graduation_year: item.graduation_year || null,
+      })),
       available_days: values.available_days,
       address: {
         street: values.address_street || null,
@@ -336,30 +381,50 @@ export const ProfessionalProfileSetupLogic = () => {
         </div>
 
         <header className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-7 text-center shadow-[var(--lectum-shadow-soft)]">
-          <button
-            className="relative mx-auto block h-24 w-24 overflow-hidden rounded-full bg-surface-muted ring-4 ring-white"
-            onClick={() => setAvatarFieldOpen((current) => !current)}
-            type="button"
-          >
-            {isHttpsUrl(avatarUrl) ? (
-              <Image
-                alt="Foto profissional"
-                className="object-cover"
-                fill
-                sizes="96px"
-                src={avatarUrl}
-              />
-            ) : (
-              <span className="grid h-full w-full place-items-center text-primary">
-                <UserRound className="h-10 w-10" aria-hidden="true" />
-              </span>
-            )}
-            <span className="absolute right-0 bottom-0 grid h-8 w-8 place-items-center rounded-full bg-primary text-white shadow-sm">
-              <Camera className="h-4 w-4" aria-hidden="true" />
-            </span>
-          </button>
+          <div className="relative mx-auto h-24 w-32">
+            <button
+              className="relative mx-auto block h-24 w-24 overflow-hidden rounded-full bg-surface-muted ring-4 ring-white"
+              disabled={uploadAvatar.isPending}
+              onClick={() => avatarInputRef.current?.click()}
+              type="button"
+            >
+              {isImageUrl(avatarUrl) ? (
+                <Image
+                  alt="Foto profissional"
+                  className="object-cover"
+                  fill
+                  sizes="96px"
+                  src={avatarUrl}
+                />
+              ) : (
+                <span className="grid h-full w-full place-items-center text-primary">
+                  <UserRound className="h-10 w-10" aria-hidden="true" />
+                </span>
+              )}
+            </button>
+            <button
+              aria-label="Alterar foto profissional"
+              className="absolute right-2 bottom-0 grid h-8 w-8 place-items-center rounded-full bg-primary text-white shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
+              disabled={uploadAvatar.isPending}
+              onClick={() => avatarInputRef.current?.click()}
+              type="button"
+            >
+              {uploadAvatar.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Camera className="h-4 w-4" aria-hidden="true" />
+              )}
+            </button>
+          </div>
+          <input
+            accept="image/png,image/jpeg,image/webp"
+            className="sr-only"
+            onChange={handleAvatarChange}
+            ref={avatarInputRef}
+            type="file"
+          />
           <p className="mt-4 text-xs leading-5 text-muted">
-            Toque na foto para abrir o campo de alteração da foto profissional
+            Toque na foto para enviar uma imagem PNG, JPG ou WebP de até 5MB.
           </p>
         </header>
 
@@ -379,10 +444,6 @@ export const ProfessionalProfileSetupLogic = () => {
             id="free-profile-form"
             onSubmit={submit}
           >
-            {avatarFieldOpen ? (
-              <SectionCard title="Foto de perfil">{renderField("avatar_url")}</SectionCard>
-            ) : null}
-
             <Link
               className="flex items-center justify-between rounded-2xl border border-primary/20 bg-primary-soft p-4 text-primary"
               href="/app/professional/billing/plans"
@@ -398,13 +459,21 @@ export const ProfessionalProfileSetupLogic = () => {
 
             <SectionCard icon={UserRound} title="Informações básicas">
               <div className="grid gap-4">
-                {renderFields(["name", "gender", "race_color", "cpf", "crp_region", "crp_number"])}
-                <div className="relative">
-                  {renderField("whatsapp", { inputClassName: "pr-12" })}
+                {renderFields([
+                  "name",
+                  "gender",
+                  "race_color",
+                  "religion",
+                  "cpf",
+                  "crp_region",
+                  "crp_number",
+                ])}
+                <div className="flex items-start gap-2">
+                  <div className="min-w-0 flex-1">{renderField("whatsapp")}</div>
                   <a
                     aria-label="Testar link do WhatsApp"
                     className={cn(
-                      "absolute right-2 bottom-4 grid h-9 w-9 place-items-center rounded-full text-primary transition hover:bg-primary-soft",
+                      "mt-7 grid h-12 w-12 shrink-0 place-items-center rounded-full border border-border text-primary transition hover:bg-primary-soft",
                       !whatsappUrl && "pointer-events-none opacity-40",
                     )}
                     href={whatsappUrl || "#"}
@@ -421,53 +490,23 @@ export const ProfessionalProfileSetupLogic = () => {
               <div className="grid gap-4">
                 {renderField("headline")}
                 {renderField("bio")}
-                <div className="rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-center">
+                <div className="rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-center opacity-80">
                   <FileVideo className="mx-auto h-8 w-8 text-muted" aria-hidden="true" />
                   <p className="mt-2 text-sm font-bold text-foreground">Vídeo de Apresentação</p>
                   <p className="mt-1 text-xs leading-5 text-muted">
-                    Cole uma URL pública do vídeo. Upload de arquivo será tratado apenas quando
-                    houver storage privado.
+                    Upload de vídeo está disponível no Plano Profissional. Faça upgrade para enviar
+                    um vídeo de apresentação.
                   </p>
-                  <div className="mt-4 text-left">{renderField("video_url")}</div>
+                  <Link
+                    className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-primary-soft px-4 py-2 text-xs font-bold text-primary"
+                    href="/app/professional/billing/plans"
+                  >
+                    <UploadCloud className="h-4 w-4" aria-hidden="true" />
+                    Upgrade para enviar vídeo
+                  </Link>
                 </div>
               </div>
             </SectionCard>
-
-            <div className="grid gap-3">
-              <BooleanBenefit
-                checked={form.hook.watch("discount_first_session")}
-                description="Reduza a barreira do primeiro contato."
-                onChange={(checked) =>
-                  form.hook.setValue("discount_first_session", checked, {
-                    shouldDirty: true,
-                    shouldValidate: true,
-                  })
-                }
-                title="Desconto na 1ª sessão"
-              />
-              <BooleanBenefit
-                checked={form.hook.watch("social_value")}
-                description="Atenda a população de baixa renda."
-                onChange={(checked) =>
-                  form.hook.setValue("social_value", checked, {
-                    shouldDirty: true,
-                    shouldValidate: true,
-                  })
-                }
-                title="Valor social"
-              />
-              <BooleanBenefit
-                checked={form.hook.watch("accepts_insurance")}
-                description="Atenda pacientes que possuem planos de saúde."
-                onChange={(checked) =>
-                  form.hook.setValue("accepts_insurance", checked, {
-                    shouldDirty: true,
-                    shouldValidate: true,
-                  })
-                }
-                title="Aceita Convênios"
-              />
-            </div>
 
             <SectionCard icon={Award} title="Especialidades e Filtros">
               <div className="grid gap-6">
@@ -505,11 +544,88 @@ export const ProfessionalProfileSetupLogic = () => {
                   />
                 </div>
                 {renderField("language")}
+                <div className="grid gap-3">
+                  <h3 className="text-sm font-bold text-foreground">Selos e condições</h3>
+                  <BooleanBenefit
+                    checked={form.hook.watch("discount_first_session")}
+                    description="Reduza a barreira do primeiro contato."
+                    onChange={(checked) =>
+                      form.hook.setValue("discount_first_session", checked, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
+                    }
+                    title="Desconto na 1ª sessão"
+                  />
+                  <BooleanBenefit
+                    checked={form.hook.watch("social_value")}
+                    description="Atenda a população de baixa renda."
+                    onChange={(checked) =>
+                      form.hook.setValue("social_value", checked, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
+                    }
+                    title="Valor social"
+                  />
+                  <BooleanBenefit
+                    checked={form.hook.watch("accepts_insurance")}
+                    description="Atenda pacientes que possuem planos de saúde."
+                    onChange={(checked) =>
+                      form.hook.setValue("accepts_insurance", checked, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
+                    }
+                    title="Aceita Convênios"
+                  />
+                </div>
               </div>
             </SectionCard>
 
             <SectionCard icon={GraduationCap} title="Formação Acadêmica">
-              {renderFields(["academic_title", "academic_institution", "academic_graduation_year"])}
+              <div className="grid gap-4">
+                {academicFormations.fields.map((field, index) => (
+                  <div className="grid gap-4 rounded-2xl border border-border p-4" key={field.id}>
+                    <div className="flex items-center justify-between gap-3">
+                      <h3 className="text-sm font-bold text-foreground">Formação {index + 1}</h3>
+                      {academicFormations.fields.length > 1 ? (
+                        <button
+                          className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-bold text-danger transition hover:bg-danger/10"
+                          onClick={() => academicFormations.remove(index)}
+                          type="button"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                          Remover
+                        </button>
+                      ) : null}
+                    </div>
+                    {renderAcademicField(
+                      index,
+                      "title",
+                      "Título e especialidade",
+                      "Ex.: Doutor em Neuropsicologia",
+                    )}
+                    {renderAcademicField(index, "institution", "Instituição", "USP")}
+                    {renderAcademicField(index, "graduation_year", "Ano de formação", "Ex.: 2012")}
+                  </div>
+                ))}
+                <button
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-primary/30 px-4 py-3 text-sm font-bold text-primary transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={academicFormations.fields.length >= 5}
+                  onClick={() =>
+                    academicFormations.append({
+                      title: "",
+                      institution: "",
+                      graduation_year: "",
+                    })
+                  }
+                  type="button"
+                >
+                  <Plus className="h-4 w-4" aria-hidden="true" />
+                  Adicionar nova formação
+                </button>
+              </div>
             </SectionCard>
 
             <SectionCard icon={MapPin} title="Atendimento">
@@ -547,32 +663,24 @@ export const ProfessionalProfileSetupLogic = () => {
               </div>
             </SectionCard>
 
-            <SectionCard icon={WalletCards} title="Publicação">
-              <div className="grid gap-4">
-                <label className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-surface-muted p-4 text-left">
-                  <span>
-                    <span className="block font-bold text-foreground">
-                      Perfil visível para pacientes
-                    </span>
-                    <span className="mt-1 block text-sm leading-5 text-muted">
-                      A publicação gratuita não valida CRP por API e não altera documentos
-                      profissionais.
-                    </span>
-                  </span>
-                  <input
-                    checked={published}
-                    className="h-5 w-5 accent-primary"
-                    onChange={(event) =>
-                      form.hook.setValue("published", event.target.checked, {
-                        shouldDirty: true,
-                        shouldValidate: true,
-                      })
-                    }
-                    type="checkbox"
-                  />
-                </label>
-              </div>
-            </SectionCard>
+            <section className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
+              <label className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-surface-muted p-4 text-left">
+                <span className="block font-bold text-foreground">
+                  Perfil visível para pacientes
+                </span>
+                <input
+                  checked={published}
+                  className="h-5 w-5 accent-primary"
+                  onChange={(event) =>
+                    form.hook.setValue("published", event.target.checked, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                  }
+                  type="checkbox"
+                />
+              </label>
+            </section>
 
             <div className="sticky bottom-4 z-10 rounded-full bg-surface/90 p-2 shadow-[var(--lectum-shadow-soft)] backdrop-blur">
               <Button

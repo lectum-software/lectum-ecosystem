@@ -1,4 +1,6 @@
-﻿import type { Prisma } from "@/external/generated/prisma/client";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { PUBLIC_BUCKET, S3 } from "@/config/multer/s3";
+import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import type {
   FreeProfessionalProfileResponse,
@@ -18,6 +20,35 @@ type UserWithProfile = NonNullable<Awaited<ReturnType<typeof getUserWithProfile>
 const normalizeStringArray = (value: unknown): string[] => {
   if (!Array.isArray(value)) return [];
   return value.filter((item): item is string => typeof item === "string");
+};
+
+const normalizeAcademicFormations = (
+  value: unknown,
+  fallback: FreeProfessionalProfileUpdateBody["academic"],
+) => {
+  const normalize = (item: unknown): NonNullable<FreeProfessionalProfileUpdateBody["academic"]> => {
+    if (!item || typeof item !== "object") {
+      return { title: null, institution: null, graduation_year: null };
+    }
+
+    const academic = item as Record<string, unknown>;
+
+    return {
+      title: typeof academic.title === "string" ? academic.title : null,
+      institution: typeof academic.institution === "string" ? academic.institution : null,
+      graduation_year:
+        typeof academic.graduation_year === "string" ? academic.graduation_year : null,
+    };
+  };
+
+  const hasContent = (item: NonNullable<FreeProfessionalProfileUpdateBody["academic"]>) =>
+    Boolean(item.title || item.institution || item.graduation_year);
+
+  if (Array.isArray(value)) {
+    return value.map(normalize).filter(hasContent);
+  }
+
+  return fallback && hasContent(fallback) ? [fallback] : [];
 };
 
 const onlyDigits = (value?: string | null) => String(value ?? "").replace(/\D/g, "");
@@ -51,6 +82,38 @@ const buildCrp = (region?: string | null, number?: string | null) => {
   return normalizedRegion || normalizedNumber || null;
 };
 
+const publicFileKeyFromUrl = (value?: string | null) => {
+  if (!value) return null;
+
+  try {
+    const url = new URL(value, process.env.BASE || "http://localhost");
+    const prefix = "/public/files/";
+
+    if (!url.pathname.startsWith(prefix)) return null;
+
+    const key = decodeURIComponent(url.pathname.slice(prefix.length));
+    return key.startsWith("psychologist/avatar/") ? key : null;
+  } catch (_err) {
+    return null;
+  }
+};
+
+const deletePublicAvatar = async (value?: string | null) => {
+  const key = publicFileKeyFromUrl(value);
+  if (!key) return;
+
+  try {
+    await S3.send(
+      new DeleteObjectCommand({
+        Bucket: PUBLIC_BUCKET,
+        Key: key,
+      }),
+    );
+  } catch (_err) {
+    // A troca de foto não deve falhar por limpeza assíncrona de arquivo anterior.
+  }
+};
+
 const isCatalogItem = (value: FreeProfileCatalogItem | null): value is FreeProfileCatalogItem => {
   return Boolean(value?.id && value.name && value.slug);
 };
@@ -77,6 +140,7 @@ const getUserWithProfile = (userId: string) => {
           cpf: true,
           gender: true,
           race_color: true,
+          religion: true,
           video_url: true,
           target_audience: true,
           discount_first_session: true,
@@ -85,6 +149,7 @@ const getUserWithProfile = (userId: string) => {
           academic_title: true,
           academic_institution: true,
           academic_graduation_year: true,
+          academic_formations: true,
           available_days: true,
           professional_address_street: true,
           professional_address_number: true,
@@ -164,6 +229,11 @@ const toResponse = async (
   const serviceLimit = isFree ? 1 : 99;
   const catalogs = await getCatalogs();
   const crp = parseCrp(profile.crp);
+  const academic = {
+    title: profile.academic_title,
+    institution: profile.academic_institution,
+    graduation_year: profile.academic_graduation_year,
+  };
 
   return {
     user: {
@@ -180,6 +250,7 @@ const toResponse = async (
       cpf: profile.cpf,
       gender: profile.gender,
       race_color: profile.race_color,
+      religion: profile.religion,
       whatsapp: profile.whatsapp,
       whatsapp_url: buildWhatsappUrl(profile.whatsapp),
       video_url: profile.video_url,
@@ -187,11 +258,8 @@ const toResponse = async (
       discount_first_session: profile.discount_first_session,
       social_value: profile.social_value,
       accepts_insurance: profile.accepts_insurance,
-      academic: {
-        title: profile.academic_title,
-        institution: profile.academic_institution,
-        graduation_year: profile.academic_graduation_year,
-      },
+      academic,
+      academic_formations: normalizeAcademicFormations(profile.academic_formations, academic),
       available_days: normalizeStringArray(profile.available_days),
       address: {
         street: profile.professional_address_street,
@@ -246,7 +314,7 @@ export class FreeProfileRepository implements IFreeProfileRepository {
     await prisma.$transaction(async (tx) => {
       await tx.user.update({
         where: { id: userId },
-        data: { avatar: body.avatar_url, name: body.name },
+        data: { name: body.name },
       });
 
       await tx.psychologist_profile.update({
@@ -258,10 +326,11 @@ export class FreeProfileRepository implements IFreeProfileRepository {
           cpf: body.cpf,
           gender: body.gender,
           race_color: body.race_color,
+          religion: body.religion,
           crp: buildCrp(body.crp_region, body.crp_number),
           whatsapp: body.whatsapp,
           languages: body.languages as Prisma.InputJsonValue,
-          video_url: body.video_url,
+          video_url: null,
           target_audience: body.target_audience as Prisma.InputJsonValue,
           discount_first_session: body.discount_first_session,
           social_value: body.social_value,
@@ -269,6 +338,7 @@ export class FreeProfileRepository implements IFreeProfileRepository {
           academic_title: body.academic.title,
           academic_institution: body.academic.institution,
           academic_graduation_year: body.academic.graduation_year,
+          academic_formations: body.academic_formations as Prisma.InputJsonValue,
           available_days: body.available_days as Prisma.InputJsonValue,
           professional_address_street: body.address.street,
           professional_address_number: body.address.number,
@@ -308,6 +378,23 @@ export class FreeProfileRepository implements IFreeProfileRepository {
         });
       }
     });
+
+    return this.show(userId);
+  }
+
+  async updateAvatar(
+    userId: string,
+    avatarUrl: string,
+  ): Promise<FreeProfessionalProfileResponse | null> {
+    const existing = await getUserWithProfile(userId);
+    if (!existing?.psychologist_profile) return null;
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { avatar: avatarUrl },
+    });
+
+    await deletePublicAvatar(existing.avatar);
 
     return this.show(userId);
   }

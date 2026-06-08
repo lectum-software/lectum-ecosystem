@@ -1,6 +1,7 @@
 import { callEndpoint } from "@/api/generator";
 import type {
   FreeProfessionalProfile,
+  FreeProfessionalProfileAvatarUpload,
   FreeProfessionalProfilePayload,
 } from "@/api/generator/types/free-profile";
 import { handleReq } from "@/api/handle";
@@ -15,4 +16,12 @@ export const getPsychologistFreeProfile = async () => {
 export const updatePsychologistFreeProfile = async (body: FreeProfessionalProfilePayload) => {
   const handle = callEndpoint({ route, method: "PUT", body });
   return handleReq<FreeProfessionalProfile>(handle);
+};
+
+export const uploadPsychologistFreeProfileAvatar = async (file: File) => {
+  const body = new FormData();
+  body.append("avatar", file);
+
+  const handle = callEndpoint({ route: `${route}/avatar`, method: "POST", body });
+  return handleReq<FreeProfessionalProfileAvatarUpload>(handle);
 };

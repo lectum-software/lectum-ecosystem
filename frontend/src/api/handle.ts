@@ -31,7 +31,7 @@ const methods = {
 
 type HandleApiRequestParams = {
   url: string;
-  body?: object;
+  body?: object | FormData;
   method: keyof typeof methods;
   config?: AxiosRequestConfig;
   showSuccess?: boolean;

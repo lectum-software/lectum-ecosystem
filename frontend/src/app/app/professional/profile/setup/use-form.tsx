@@ -12,14 +12,21 @@ import {
   GENDER_OPTIONS,
   LANGUAGE_OPTIONS,
   RACE_COLOR_OPTIONS,
+  RELIGION_OPTIONS,
   STATE_OPTIONS,
 } from "./options";
 
+export type AcademicFormationForm = {
+  title: string;
+  institution: string;
+  graduation_year: string;
+};
+
 export type FreeProfileForm = {
   name: string;
-  avatar_url: string;
   gender: string;
   race_color: string;
+  religion: string;
   cpf: string;
   crp_region: string;
   crp_number: string;
@@ -27,16 +34,13 @@ export type FreeProfileForm = {
   whatsapp: string;
   headline: string;
   bio: string;
-  video_url: string;
   modality: "online" | "presencial" | "hibrido" | "";
   language: string;
   published: boolean;
   discount_first_session: boolean;
   social_value: boolean;
   accepts_insurance: boolean;
-  academic_title: string;
-  academic_institution: string;
-  academic_graduation_year: string;
+  academic_formations: AcademicFormationForm[];
   address_street: string;
   address_number: string;
   address_complement: string;
@@ -68,11 +72,6 @@ const isPhoneLengthValid = (value: string, countryCode: string) => {
   return nationalDigits.length >= 6 && totalLength <= 15;
 };
 
-const optionalUrl = z
-  .string()
-  .trim()
-  .refine((value) => !value || /^https:\/\/.+\..+/.test(value), "Informe uma URL https válida");
-
 export const toWhatsappPhoneE164 = (value: string, countryCode = DEFAULT_COUNTRY_CALLING_CODE) => {
   const nationalDigits = getNationalDigits(value, countryCode);
 
@@ -82,9 +81,9 @@ export const toWhatsappPhoneE164 = (value: string, countryCode = DEFAULT_COUNTRY
 export const freeProfileSchema = z
   .object({
     name: z.string().trim().min(2, "Informe seu nome profissional").max(120),
-    avatar_url: optionalUrl,
     gender: z.string().trim().max(40),
     race_color: z.string().trim().max(40),
+    religion: z.string().trim().max(80),
     cpf: z
       .string()
       .refine((value) => !value || onlyDigits(value).length === 11, "Informe um CPF válido"),
@@ -98,7 +97,6 @@ export const freeProfileSchema = z
       .trim()
       .min(20, "Escreva uma apresentação com pelo menos 20 caracteres")
       .max(2000),
-    video_url: optionalUrl,
     modality: z.enum(["online", "presencial", "hibrido", ""], {
       message: "Selecione a modalidade",
     }),
@@ -107,9 +105,15 @@ export const freeProfileSchema = z
     discount_first_session: z.boolean(),
     social_value: z.boolean(),
     accepts_insurance: z.boolean(),
-    academic_title: z.string().trim().max(160),
-    academic_institution: z.string().trim().max(160),
-    academic_graduation_year: z.string().trim().max(20),
+    academic_formations: z
+      .array(
+        z.object({
+          title: z.string().trim().max(160),
+          institution: z.string().trim().max(160),
+          graduation_year: z.string().trim().max(20),
+        }),
+      )
+      .max(5, "Adicione no máximo 5 formações"),
     address_street: z.string().trim().max(160),
     address_number: z.string().trim().max(40),
     address_complement: z.string().trim().max(80),
@@ -138,14 +142,6 @@ export const fields = [
     autoComplete: "name",
   },
   {
-    name: "avatar_url",
-    field: "input",
-    label: "URL da foto de perfil",
-    placeholder: "https://...",
-    description: "Use uma URL pública de imagem. Upload de arquivo fica fora deste recorte.",
-    autoComplete: "off",
-  },
-  {
     name: "gender",
     field: "select",
     label: "Gênero",
@@ -160,6 +156,13 @@ export const fields = [
     options: RACE_COLOR_OPTIONS,
   },
   {
+    name: "religion",
+    field: "select",
+    label: "Religião",
+    placeholder: "Selecione sua religião",
+    options: RELIGION_OPTIONS,
+  },
+  {
     name: "cpf",
     field: "cpf",
     label: "CPF",
@@ -170,7 +173,7 @@ export const fields = [
     name: "crp_region",
     field: "select",
     label: "Regional",
-    placeholder: "19ª Região - SE",
+    placeholder: "Selecione a regional",
     options: CRP_REGION_OPTIONS,
   },
   {
@@ -205,14 +208,6 @@ export const fields = [
     rows: 6,
   },
   {
-    name: "video_url",
-    field: "input",
-    label: "Vídeo de apresentação",
-    placeholder: "https://...",
-    description: "Informe uma URL pública do vídeo. Upload de arquivo fica fora deste recorte.",
-    autoComplete: "off",
-  },
-  {
     name: "modality",
     field: "select",
     label: "Modalidades",
@@ -230,24 +225,6 @@ export const fields = [
     placeholder: "Selecione o idioma",
     required: true,
     options: LANGUAGE_OPTIONS,
-  },
-  {
-    name: "academic_title",
-    field: "input",
-    label: "Título e especialidade",
-    placeholder: "Ex.: Doutor em Neuropsicologia",
-  },
-  {
-    name: "academic_institution",
-    field: "input",
-    label: "Instituição",
-    placeholder: "USP",
-  },
-  {
-    name: "academic_graduation_year",
-    field: "input",
-    label: "Ano de formação",
-    placeholder: "Ex.: 2012",
   },
   {
     name: "address_street",
@@ -300,14 +277,54 @@ const toWhatsappPhoneInput = (value?: string | null, countryCode = DEFAULT_COUNT
 
 export const getLanguages = (value: string) => (value ? [value] : []);
 
+const emptyAcademicFormation = (): AcademicFormationForm => ({
+  title: "",
+  institution: "",
+  graduation_year: "",
+});
+
+const hasAcademicFormationContent = (value: AcademicFormationForm) =>
+  Boolean(value.title || value.institution || value.graduation_year);
+
+const getAcademicFormations = (data?: FreeProfessionalProfile | null): AcademicFormationForm[] => {
+  const formations =
+    data?.profile.academic_formations?.map((item) => ({
+      title: item.title || "",
+      institution: item.institution || "",
+      graduation_year: item.graduation_year || "",
+    })) || [];
+
+  if (formations.length > 0) return formations;
+
+  const legacyFormation = {
+    title: data?.profile.academic.title || "",
+    institution: data?.profile.academic.institution || "",
+    graduation_year: data?.profile.academic.graduation_year || "",
+  };
+
+  return hasAcademicFormationContent(legacyFormation)
+    ? [legacyFormation]
+    : [emptyAcademicFormation()];
+};
+
+const hasConfiguredProfile = (data?: FreeProfessionalProfile | null) => {
+  return Boolean(
+    data?.profile.headline ||
+      data?.profile.bio ||
+      data?.profile.modality ||
+      data?.selected.specialties.length ||
+      data?.selected.services.length,
+  );
+};
+
 export const getDefaultValues = (data?: FreeProfessionalProfile | null): FreeProfileForm => {
   const countryCode = findCountryCallingCode(data?.profile.whatsapp);
 
   return {
     name: data?.user.name || "",
-    avatar_url: data?.user.avatar || "",
     gender: data?.profile.gender || "",
     race_color: data?.profile.race_color || "",
+    religion: data?.profile.religion || "",
     cpf: data?.profile.cpf || "",
     crp_region: data?.profile.crp_region || "",
     crp_number: data?.profile.crp_number || "",
@@ -315,16 +332,13 @@ export const getDefaultValues = (data?: FreeProfessionalProfile | null): FreePro
     whatsapp: toWhatsappPhoneInput(data?.profile.whatsapp, countryCode),
     headline: data?.profile.headline || "",
     bio: data?.profile.bio || "",
-    video_url: data?.profile.video_url || "",
     modality: (data?.profile.modality as FreeProfileForm["modality"]) || "",
     language: data?.profile.languages[0] || "Português",
-    published: Boolean(data?.profile.published),
+    published: data ? Boolean(data.profile.published || !hasConfiguredProfile(data)) : true,
     discount_first_session: Boolean(data?.profile.discount_first_session),
     social_value: Boolean(data?.profile.social_value),
     accepts_insurance: Boolean(data?.profile.accepts_insurance),
-    academic_title: data?.profile.academic.title || "",
-    academic_institution: data?.profile.academic.institution || "",
-    academic_graduation_year: data?.profile.academic.graduation_year || "",
+    academic_formations: getAcademicFormations(data),
     address_street: data?.profile.address.street || "",
     address_number: data?.profile.address.number || "",
     address_complement: data?.profile.address.complement || "",

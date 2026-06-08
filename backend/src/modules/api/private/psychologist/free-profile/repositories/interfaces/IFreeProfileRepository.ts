@@ -9,4 +9,5 @@ export interface IFreeProfileRepository {
     userId: string,
     body: Required<FreeProfessionalProfileUpdateBody>,
   ): Promise<FreeProfessionalProfileResponse | null>;
+  updateAvatar(userId: string, avatarUrl: string): Promise<FreeProfessionalProfileResponse | null>;
 }

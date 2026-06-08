@@ -162,11 +162,13 @@ Quando construído: módulo de audiência próprio (ex.: `backend/src/modules/ma
 | `video_url` | `String?` | apenas Plano Profissional (PRD §13); manter null no gratuito |
 | `cpf` | `String?` | usado na consulta CFP; dado sensível (LGPD) |
 | `crp` | `String?` | registro profissional exibido no cabeçalho |
+| `gender`, `race_color`, `religion` | `String?` | campos declaratórios editáveis no recorte gratuito sem CRP; não entram em validação profissional |
 | `crp_status` | `String @default("pendente")` | `"pendente" \| "em_analise" \| "aprovado" \| "rejeitado"` (TASK-10/11) |
 | `cfp_verified_at` | `DateTime?` | preenchido so com consulta CFP real; fonte autorizada para TASK-10: InfoSimples `cfp-cadastro` via `DOCUMENT_TOKEN` (ADR-0026) |
 | `whatsapp` | `String?` | E.164; validado em TASK-16 |
 | `whatsapp_verified_at` | `DateTime?` | só com verificação real por Twilio SMS/OTP (ADR-0006) |
 | `languages` | `Json?` | lista de idiomas `string[]` (ex.: `["pt","en"]`); baixo volume, não precisa catálogo |
+| `academic_formations` | `Json?` | lista curta de formações acadêmicas `{ title, institution, graduation_year }[]`; mantém `academic_*` legados como primeira formação |
 | `modality` | `String?` | `"online" \| "presencial" \| "hibrido"` |
 | `rating_avg` | `Int @default(0)` | nota média *×100* (ex.: 4.75 → 475); recalculado em TASK-19 |
 | `rating_count` | `Int @default(0)` | total de avaliações aprovadas |

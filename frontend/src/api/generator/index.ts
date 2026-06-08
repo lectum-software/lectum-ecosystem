@@ -5,7 +5,7 @@ export type ApiMethod = "POST" | "GET" | "PUT" | "DELETE";
 export type CallEndpointParams = {
   route: string;
   method?: ApiMethod;
-  body?: object;
+  body?: object | FormData;
   params?: Record<string, string | number | boolean | undefined | null>;
   query?: Record<string, string | number | boolean | undefined | null>;
   config?: AxiosRequestConfig;

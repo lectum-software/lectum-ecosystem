@@ -37,6 +37,7 @@ export type FreeProfessionalProfileResponse = {
     cpf: string | null;
     gender: string | null;
     race_color: string | null;
+    religion: string | null;
     whatsapp: string | null;
     whatsapp_url: string | null;
     video_url: string | null;
@@ -45,6 +46,7 @@ export type FreeProfessionalProfileResponse = {
     social_value: boolean;
     accepts_insurance: boolean;
     academic: FreeProfessionalProfileAcademic;
+    academic_formations: FreeProfessionalProfileAcademic[];
     available_days: string[];
     address: FreeProfessionalProfileAddress;
     published: boolean;
@@ -74,16 +76,15 @@ export type FreeProfessionalProfileResponse = {
 
 export type FreeProfessionalProfileUpdateBody = {
   name?: string;
-  avatar_url?: string | null;
   cpf?: string | null;
   gender?: string | null;
   race_color?: string | null;
+  religion?: string | null;
   crp_region?: string | null;
   crp_number?: string | null;
   whatsapp?: string | null;
   headline?: string | null;
   bio?: string | null;
-  video_url?: string | null;
   modality?: "online" | "presencial" | "hibrido" | null;
   languages?: string[];
   target_audience?: string[];
@@ -91,6 +92,7 @@ export type FreeProfessionalProfileUpdateBody = {
   social_value?: boolean;
   accepts_insurance?: boolean;
   academic?: FreeProfessionalProfileAcademic;
+  academic_formations?: FreeProfessionalProfileAcademic[];
   available_days?: string[];
   address?: FreeProfessionalProfileAddress;
   specialty_ids?: string[];
@@ -106,4 +108,18 @@ export interface IFreeProfessionalProfileShowDTO {
 export interface IFreeProfessionalProfileUpdateDTO {
   auth: user;
   b: FreeProfessionalProfileUpdateBody;
+}
+
+export type FreeProfessionalProfileAvatarUploadResponse = {
+  avatar_url: string;
+};
+
+export interface IFreeProfessionalProfileUploadAvatarDTO {
+  auth: user;
+  file?: {
+    path?: string;
+    key?: string;
+    fileUrl?: string;
+    mimetype?: string;
+  };
 }

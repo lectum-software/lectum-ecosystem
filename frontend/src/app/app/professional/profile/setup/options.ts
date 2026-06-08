@@ -44,6 +44,20 @@ export const RACE_COLOR_OPTIONS = [
   { label: "Prefiro não informar", value: "nao_informar" },
 ] satisfies FieldOption[];
 
+export const RELIGION_OPTIONS = [
+  { label: "Católica", value: "catolica" },
+  { label: "Evangélica", value: "evangelica" },
+  { label: "Espírita", value: "espirita" },
+  { label: "Umbanda/Candomblé", value: "umbanda_candomble" },
+  { label: "Judaica", value: "judaica" },
+  { label: "Islâmica", value: "islamica" },
+  { label: "Budista", value: "budista" },
+  { label: "Sem religião", value: "sem_religiao" },
+  { label: "Ateu/Agnóstico", value: "ateu_agnostico" },
+  { label: "Outra", value: "outra" },
+  { label: "Prefiro não informar", value: "nao_informar" },
+] satisfies FieldOption[];
+
 export const LANGUAGE_OPTIONS = [
   { label: "Português", value: "Português" },
   { label: "Inglês", value: "Inglês" },

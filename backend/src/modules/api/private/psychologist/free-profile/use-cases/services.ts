@@ -6,6 +6,7 @@ import type {
   FreeProfessionalProfileUpdateBody,
   IFreeProfessionalProfileShowDTO,
   IFreeProfessionalProfileUpdateDTO,
+  IFreeProfessionalProfileUploadAvatarDTO,
 } from "../DTOs/IFreeProfileDTO";
 import { FreeProfileRepository } from "../repositories/FreeProfileRepository";
 
@@ -33,15 +34,15 @@ const normalizeList = (value?: string[]) => {
   return Array.from(new Set(value.map((item) => item.trim()).filter(Boolean)));
 };
 
-const nullableUrl = z.string().trim().url().max(500).nullable().optional();
+const academicFormationSchema = z.object({
+  title: z.string().trim().max(160).nullable().optional(),
+  institution: z.string().trim().max(160).nullable().optional(),
+  graduation_year: z.string().trim().max(20).nullable().optional(),
+});
 
-const academicSchema = z
-  .object({
-    title: z.string().trim().max(160).nullable().optional(),
-    institution: z.string().trim().max(160).nullable().optional(),
-    graduation_year: z.string().trim().max(20).nullable().optional(),
-  })
-  .optional();
+const academicSchema = academicFormationSchema.optional();
+
+const academicFormationsSchema = z.array(academicFormationSchema).max(5).optional();
 
 const addressSchema = z
   .object({
@@ -63,6 +64,18 @@ const normalizeAcademic = (
   graduation_year: trimToNull(value?.graduation_year),
 });
 
+const hasAcademicContent = (value: FreeProfessionalProfileAcademic) => {
+  return Boolean(value.title || value.institution || value.graduation_year);
+};
+
+const normalizeAcademicFormations = (
+  value?: z.infer<typeof academicFormationsSchema>,
+): FreeProfessionalProfileAcademic[] => {
+  if (!Array.isArray(value)) return [];
+
+  return value.map((item) => normalizeAcademic(item)).filter(hasAcademicContent);
+};
+
 const normalizeAddress = (
   value?: z.infer<typeof addressSchema>,
 ): FreeProfessionalProfileAddress => ({
@@ -77,16 +90,15 @@ const normalizeAddress = (
 
 const updateSchema = z.object({
   name: z.string().trim().min(2).max(120),
-  avatar_url: nullableUrl,
   cpf: z.string().nullable().optional(),
   gender: z.string().trim().max(40).nullable().optional(),
   race_color: z.string().trim().max(40).nullable().optional(),
+  religion: z.string().trim().max(80).nullable().optional(),
   crp_region: z.string().trim().max(20).nullable().optional(),
   crp_number: z.string().trim().max(40).nullable().optional(),
   whatsapp: z.string().nullable().optional(),
   headline: z.string().trim().min(3).max(160).nullable().optional(),
   bio: z.string().trim().min(20).max(2000).nullable().optional(),
-  video_url: nullableUrl,
   modality: z.enum(["online", "presencial", "hibrido"]).nullable().optional(),
   languages: z.array(z.string().trim().min(2).max(40)).max(8).optional(),
   target_audience: z.array(z.string().trim().min(2).max(40)).max(8).optional(),
@@ -94,6 +106,7 @@ const updateSchema = z.object({
   social_value: z.boolean().optional(),
   accepts_insurance: z.boolean().optional(),
   academic: academicSchema,
+  academic_formations: academicFormationsSchema,
   available_days: z.array(z.string().trim().min(2).max(20)).max(7).optional(),
   address: addressSchema,
   specialty_ids: z.array(z.string().min(8).max(80)).max(3).optional(),
@@ -127,6 +140,13 @@ const assertCatalogIds = (
   }
 
   return null;
+};
+
+const publicFileUrl = (key: string) => {
+  const base = String(process.env.BASE || "").replace(/\/$/, "");
+  const publicPath = `/public/files/${key}`;
+
+  return base ? `${base}${publicPath}` : publicPath;
 };
 
 export const show = async (data: IFreeProfessionalProfileShowDTO) => {
@@ -206,25 +226,35 @@ export const update = async (data: IFreeProfessionalProfileUpdateDTO) => {
     };
   }
 
+  const academicFormations = normalizeAcademicFormations(parsed.data.academic_formations);
+  const legacyAcademic = normalizeAcademic(parsed.data.academic);
+  const resolvedAcademicFormations =
+    academicFormations.length > 0
+      ? academicFormations
+      : hasAcademicContent(legacyAcademic)
+        ? [legacyAcademic]
+        : [];
+  const primaryAcademic = resolvedAcademicFormations[0] || legacyAcademic;
+
   const body: Required<FreeProfessionalProfileUpdateBody> = {
     name: parsed.data.name,
-    avatar_url: trimToNull(parsed.data.avatar_url),
     cpf,
     gender: trimToNull(parsed.data.gender),
     race_color: trimToNull(parsed.data.race_color),
+    religion: trimToNull(parsed.data.religion),
     crp_region: trimToNull(parsed.data.crp_region),
     crp_number: trimToNull(parsed.data.crp_number),
     whatsapp,
     headline: trimToNull(parsed.data.headline),
     bio: trimToNull(parsed.data.bio),
-    video_url: trimToNull(parsed.data.video_url),
     modality: parsed.data.modality || null,
     languages: normalizeList(parsed.data.languages),
     target_audience: normalizeList(parsed.data.target_audience),
     discount_first_session: Boolean(parsed.data.discount_first_session),
     social_value: Boolean(parsed.data.social_value),
     accepts_insurance: Boolean(parsed.data.accepts_insurance),
-    academic: normalizeAcademic(parsed.data.academic),
+    academic: primaryAcademic,
+    academic_formations: resolvedAcademicFormations,
     available_days: normalizeList(parsed.data.available_days),
     address: normalizeAddress(parsed.data.address),
     specialty_ids: normalizeList(parsed.data.specialty_ids),
@@ -281,5 +311,51 @@ export const update = async (data: IFreeProfessionalProfileUpdateDTO) => {
     status: 200,
     ...msg("free_profile_updated", {}),
     data: updated,
+  };
+};
+
+export const uploadAvatar = async (data: IFreeProfessionalProfileUploadAvatarDTO) => {
+  if (data.auth.role !== "psicologo") {
+    return {
+      status: 403,
+      ...error("role_not_authorized", {}),
+    };
+  }
+
+  const key = data.file?.path || data.file?.key;
+  if (!key?.startsWith("psychologist/avatar/")) {
+    return {
+      status: 400,
+      ...error("upload_error", {}),
+    };
+  }
+
+  const repository = new FreeProfileRepository();
+  const current = await repository.show(data.auth.id!);
+
+  if (!current) {
+    return {
+      status: 404,
+      ...error("not_found", { model: "psychologist_profile" }),
+    };
+  }
+
+  if (!current.plan.is_free) {
+    return {
+      status: 403,
+      ...error("free_profile_professional_plan", {}),
+    };
+  }
+
+  const avatarUrl = publicFileUrl(key);
+  const updated = await repository.updateAvatar(data.auth.id!, avatarUrl);
+
+  return {
+    status: 200,
+    ...msg("free_profile_avatar_uploaded", {}),
+    data: {
+      avatar_url: avatarUrl,
+      profile: updated,
+    },
   };
 };

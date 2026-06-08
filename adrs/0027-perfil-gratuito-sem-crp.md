@@ -14,9 +14,11 @@ O protótipo `_product/proto/Editar Perfil - Psicólogo.jpg` e o ajuste visual e
 
 Manter o recorte separado da TASK-18 chamado TASK-18A, limitado ao perfil gratuito sem documentos CRP, e ampliar o recorte para persistir dados declaratórios do perfil gratuito.
 
-O backend expõe `/api/private/psychologist/free-profile` protegido por `requireRole("psicologo")`. CPF é salvo em `psychologist_profile.cpf`; o registro livre é serializado em `psychologist_profile.crp` como `regional/registro`; WhatsApp é salvo em `psychologist_profile.whatsapp`; foto profissional é uma URL pública em `user.avatar`; vídeo de apresentação é uma URL pública em `psychologist_profile.video_url`.
+O backend expõe `/api/private/psychologist/free-profile` protegido por `requireRole("psicologo")`. CPF é salvo em `psychologist_profile.cpf`; o registro livre é serializado em `psychologist_profile.crp` como `regional/registro`; WhatsApp é salvo em `psychologist_profile.whatsapp`; foto profissional é enviada por upload real para o R2 usando a infraestrutura existente em `backend/src/config/multer` e a URL pública streamada por `/public/files/psychologist/avatar/*` é persistida em `user.avatar`.
 
-Foram adicionados campos opcionais em `psychologist_profile` para gênero, raça/cor, público atendido, benefícios comerciais, formação acadêmica, dias disponíveis e endereço profissional. A lista de regionais do dropdown segue a lista oficial do CFP em `https://site.cfp.org.br/cfp/sistema-conselhos/conselhos-pelo-brasil/`.
+Foram adicionados campos opcionais em `psychologist_profile` para gênero, raça/cor, religião, público atendido, benefícios comerciais, formações acadêmicas, dias disponíveis e endereço profissional. A lista de regionais do dropdown segue a lista oficial do CFP em `https://site.cfp.org.br/cfp/sistema-conselhos/conselhos-pelo-brasil/`.
+
+No plano gratuito, vídeo de apresentação permanece bloqueado: a UI exibe CTA de upgrade e o backend mantém `psychologist_profile.video_url=null` nesse recorte. Upload de vídeo fica reservado para o plano profissional.
 
 O recorte não cria nem altera `professional_document`, não faz upload CRP, não altera `crp_status`, `cfp_verified_at` ou `whatsapp_verified_at`, e não concede selo de verificado.
 
@@ -24,7 +26,9 @@ O recorte não cria nem altera `professional_document`, não faz upload CRP, nã
 
 - Psicólogos gratuitos conseguem configurar um perfil mais próximo do protótipo sem desbloquear a TASK-18 completa.
 - CPF, regional, registro e WhatsApp são campos declaratórios no plano gratuito; não representam validação profissional.
-- Foto e vídeo aceitam somente URL pública neste recorte; upload binário depende de storage real e permanece fora do escopo.
+- Foto profissional usa upload real no R2 público; o endpoint público de leitura limita exposição aos avatares em `psychologist/avatar/*`.
+- Vídeo não é permitido no plano gratuito; qualquer entrada anterior é limpa para `null` ao atualizar o perfil gratuito.
+- Religião e múltiplas formações acadêmicas passam a compor o perfil gratuito como dados declaratórios.
 - A TASK-18 continua bloqueada para documentos/CRP, validação profissional e perfil profissional completo.
 - O plano gratuito limita especialidades a 3 e serviços a 1.
 - A publicação do perfil gratuito não equivale a validação profissional por CRP.
@@ -32,10 +36,12 @@ O recorte não cria nem altera `professional_document`, não faz upload CRP, nã
 ## Validação
 
 - `pnpm --dir backend exec prisma migrate dev --name add_free_profile_details`
+- `pnpm --dir backend exec prisma migrate dev --name add_free_profile_media_religion`
 - `pnpm --dir backend db:migrate`
 - `pnpm --dir backend check`
 - `pnpm --dir frontend check`
 - `pnpm --dir backend build`
 - `pnpm --dir frontend build`
 - `pnpm check`
-- Browser local sem sessão em `/app/professional/profile/setup` retornou 307 para login.
+- Browser local/HTTP sem sessão em `/app/professional/profile/setup` retornou 307 para login.
+- Backend local em `/health` respondeu `200` com status `ok`.

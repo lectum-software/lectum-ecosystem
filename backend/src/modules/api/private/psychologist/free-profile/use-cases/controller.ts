@@ -1,6 +1,10 @@
-﻿import type { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { error500, send } from "@/helpers/return";
-import { show as showService, update as updateService } from "./services";
+import {
+  show as showService,
+  update as updateService,
+  uploadAvatar as uploadAvatarService,
+} from "./services";
 
 export const show = async (req: Request, res: Response) => {
   try {
@@ -17,5 +21,20 @@ export const update = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "psychologist_free_profile_update", err);
+  }
+};
+
+export const uploadAvatar = async (req: Request, res: Response) => {
+  try {
+    const file = req.file as
+      | (Express.Multer.File & { path?: string; key?: string; fileUrl?: string })
+      | undefined;
+    const resolve = await uploadAvatarService({
+      auth: req.auth,
+      file,
+    });
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "psychologist_free_profile_upload_avatar", err);
   }
 };

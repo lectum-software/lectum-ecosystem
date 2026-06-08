@@ -160,6 +160,7 @@ model psychologist_profile {
   crp                             String?
   gender                          String?
   race_color                      String?                       @map("race_color")
+  religion                        String?
   target_audience                 Json?                         @map("target_audience")
   discount_first_session          Boolean                       @default(false) @map("discount_first_session")
   social_value                    Boolean                       @default(false) @map("social_value")
@@ -167,6 +168,7 @@ model psychologist_profile {
   academic_title                  String?                       @map("academic_title")
   academic_institution            String?                       @map("academic_institution")
   academic_graduation_year        String?                       @map("academic_graduation_year")
+  academic_formations             Json?                         @map("academic_formations")
   available_days                  Json?                         @map("available_days")
   professional_address_street     String?                       @map("professional_address_street")
   professional_address_number     String?                       @map("professional_address_number")
