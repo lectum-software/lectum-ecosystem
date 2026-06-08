@@ -54,7 +54,7 @@ export const completePatientOnboarding = async (body: CompletePatientOnboardingP
 
 export const getFavoritePsychologists = async (query: PatientRelationQuery = {}) => {
   const handle = callEndpoint({
-    route: "/api/private/patient/favorites",
+    route: "/api/private/user/favorites",
     config: {
       params: query,
     },
@@ -65,7 +65,7 @@ export const getFavoritePsychologists = async (query: PatientRelationQuery = {})
 
 export const favoritePsychologist = async (id: string) => {
   const handle = callEndpoint({
-    route: "/api/private/patient/favorites/:id",
+    route: "/api/private/user/favorites/:id",
     method: "POST",
     params: { id },
   });
@@ -78,7 +78,7 @@ export const favoritePsychologist = async (id: string) => {
 
 export const unfavoritePsychologist = async (id: string) => {
   const handle = callEndpoint({
-    route: "/api/private/patient/favorites/:id",
+    route: "/api/private/user/favorites/:id",
     method: "DELETE",
     params: { id },
   });

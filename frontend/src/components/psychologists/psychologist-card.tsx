@@ -106,9 +106,9 @@ const AvailabilityBadge = ({ available }: { available?: boolean }) => {
   if (!available) return null;
 
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[0.68rem] font-extrabold text-success">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/95 px-2.5 py-1 text-[0.68rem] font-extrabold text-[#16A34A] shadow-[0_8px_20px_rgb(15_23_42_/_14%)] backdrop-blur-sm">
       <span
-        className="h-2.5 w-2.5 rounded-full bg-success motion-safe:animate-pulse"
+        className="h-2.5 w-2.5 rounded-full bg-[#22C55E] motion-safe:animate-pulse"
         aria-hidden="true"
       />
       Disponível hoje
@@ -132,20 +132,20 @@ const FavoriteButton = ({
   <button
     aria-label={
       !canFavorite
-        ? "Favoritos disponíveis apenas para pacientes"
+        ? "Favoritos disponíveis apenas para usuários autenticados"
         : psychologist.favorited
           ? `Remover ${psychologist.name} dos favoritos`
           : `Favoritar ${psychologist.name}`
     }
     aria-pressed={psychologist.favorited}
     className={cn(
-      "grid h-12 w-12 place-items-center rounded-full border border-border bg-surface/95 text-muted shadow-[var(--lectum-shadow-soft)] transition hover:border-primary/40 hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-60",
-      psychologist.favorited && "border-primary/30 bg-primary-soft text-primary",
+      "grid h-12 w-12 place-items-center rounded-full border border-border bg-surface/95 text-muted shadow-[var(--lectum-shadow-soft)] transition hover:border-red-200 hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-60",
+      psychologist.favorited && "border-red-200 bg-red-50 text-red-500",
       className,
     )}
     disabled={favoritePending || !canFavorite}
     onClick={() => onToggleFavorite(psychologist)}
-    title={!canFavorite ? "Favoritos disponíveis apenas para pacientes" : undefined}
+    title={!canFavorite ? "Favoritos disponíveis apenas para usuários autenticados" : undefined}
     type="button"
   >
     <Heart className={cn("h-6 w-6", psychologist.favorited && "fill-current")} aria-hidden="true" />

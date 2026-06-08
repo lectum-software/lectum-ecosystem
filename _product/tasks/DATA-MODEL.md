@@ -106,7 +106,8 @@ Convenção `requireRole(...)` — middleware fino aplicado **depois** do `_auth
 | Namespace backend | Guard | Audiência/papel | Tasks |
 |---|---|---|---|
 | `/api/private/psychologist/*` | `requireRole("psicologo")` | psicólogo autogestão (perfil, CRP/CFP, analytics, assinatura) | 10, 11, 18, 19, 20, 31, 32, 33 |
-| `/api/private/patient/*` | `requireRole("paciente")` | paciente autogestão (onboarding, avaliar, favoritar/seguir) | 08, 14, 17, 21 |
+| `/api/private/patient/*` | `requireRole("paciente")` | paciente autogestão (onboarding, avaliar) e rotas legadas de favoritos/follows quando mantidas | 08, 14, 17, 21 |
+| `/api/private/user/favorites/*` | só `_auth` | favoritos de psicólogos de qualquer usuário autenticado | 14 |
 | `/api/private/directory/*` | só `_auth` | qualquer autenticado (descoberta/leitura de psicólogos) | 13, 15, 16 |
 | `/api/private/community/*`, `/api/private/posts/*` | só `_auth` | qualquer autenticado | 22-28 |
 | `/api/private/notification/*`, conta | só `_auth` | qualquer autenticado | 29, 30 |
@@ -252,7 +253,7 @@ Especialidade, serviço e abordagem são filtros da busca (TASK-13) e seções d
 
 | Campo | Tipo | Notas |
 |---|---|---|
-| `user_id` | `String` | quem favoritou (paciente) |
+| `user_id` | `String` | quem favoritou (qualquer usuário autenticado) |
 | `psychologist_id` | `String` | alvo |
 | `@@unique([user_id, psychologist_id])`, `@@index([psychologist_id])` | | |
 
@@ -507,7 +508,8 @@ Backend privado — **o prefixo determina o guard** (ver "Camadas de autenticaç
 
 - **Descoberta/leitura de psicólogos** (chamada por pacientes): `/api/private/directory/psychologists`, `/api/private/directory/psychologists/:id` → só `_auth`. **Não** usar `/api/private/psychologists` para descoberta — esse namespace é confundível com autogestão.
 - **Autogestão do psicólogo**: `/api/private/psychologist/*` (perfil, CRP, CFP, analytics, assinatura) → `requireRole("psicologo")`.
-- **Autogestão do paciente**: `/api/private/patient/*` (onboarding, avaliar, favoritar/seguir) → `requireRole("paciente")`.
+- **Favoritos de psicólogos**: `/api/private/user/favorites` e `/api/private/user/favorites/:id` → só `_auth`, porque o produto permite favorito para qualquer usuário autenticado.
+- **Autogestão do paciente**: `/api/private/patient/*` (onboarding, avaliar; favoritos/follows legados se mantidos) → `requireRole("paciente")`.
 - **Comunidade/posts** (qualquer autenticado): `/api/private/community`, `/api/private/community/:slug/posts`, `/api/private/posts/:id`, `/api/private/posts/:id/replies`, `/api/private/posts/:id/vote`, `/api/private/posts/:id/save`. Singular `community`/`posts`.
 - Cada task deve usar exatamente esses prefixos; divergência exige atualizar este documento.
 

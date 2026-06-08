@@ -4,19 +4,7 @@ import { FavoriteRepository } from "../repositories/FavoriteRepository";
 
 type FavoriteAction = "favorite" | "unfavorite";
 
-const ensurePatient = (data: { auth: { role?: string | null } }) => {
-  if (data.auth.role === "paciente") return null;
-
-  return {
-    status: 403,
-    ...error("role_not_authorized", {}),
-  };
-};
-
 export const index = async (data: IFavoriteIndexDTO) => {
-  const unauthorized = ensurePatient(data);
-  if (unauthorized) return unauthorized;
-
   const repository = new FavoriteRepository();
   const res = await repository.index(data);
 
@@ -28,9 +16,6 @@ export const index = async (data: IFavoriteIndexDTO) => {
 };
 
 export const action = async (data: IFavoriteActionDTO, actionType: FavoriteAction) => {
-  const unauthorized = ensurePatient(data);
-  if (unauthorized) return unauthorized;
-
   const repository = new FavoriteRepository();
   const psychologistId = data.p.id;
   const isPublishedPsychologist = await repository.hasPublishedPsychologist(psychologistId);

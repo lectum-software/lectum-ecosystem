@@ -157,7 +157,7 @@ export const PsychologistsLogic = () => {
   const closeFiltersButtonRef = useRef<HTMLButtonElement>(null);
   const filtersTitleId = useId();
   const currentUser = useAppSelector((state) => state.user);
-  const canFavoritePsychologists = currentUser?.role === "paciente";
+  const canFavoritePsychologists = Boolean(currentUser?.id);
   const { favoritePsychologist, unfavoritePsychologist } = usePatient({ enableProfile: false });
 
   const params = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);

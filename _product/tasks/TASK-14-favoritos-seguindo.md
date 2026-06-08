@@ -179,6 +179,22 @@ Regras anti-recriação específicas:
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
 
+## Execução complementar: favoritos por usuário e coração vermelho (2026-06-08)
+
+- Pedido do usuário: o coração do card deve ficar vermelho ao favoritar e o psicólogo deve aparecer em `/app/favorites`; o selo `Disponível hoje` deve ter fundo branco para ficar legível sobre vídeos.
+- Regra de produto atualizada: favoritar psicólogo é relação de qualquer usuário autenticado, enquanto seguir usuários segue removido/depreciado na UI porque usuários seguem comunidades.
+- Backend manteve `/api/private/patient/favorites` como rota legada role-guarded e adicionou a rota canônica `/api/private/user/favorites`, protegida apenas por `_auth`, reutilizando a persistência real `psychologist_favorite`.
+- Frontend passou a chamar `/api/private/user/favorites`, habilitou o coração para qualquer sessão autenticada, manteve optimistic update/rollback e preservou a listagem real em `/app/favorites`.
+- O coração favoritado usa estado vermelho (`text-red-500`, `fill-current`) no card e no perfil público.
+- O badge `Disponível hoje` passou a usar fundo branco, borda/sombra e bolinha verde pulsante para contraste sobre vídeo.
+- ADRs atualizados: `adrs/0019-descoberta-psicologos-taxonomias.md` e `adrs/0020-favoritar-psicologo-na-listagem.md`.
+- Validações executadas:
+  - `pnpm --dir backend check`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir backend build`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+
 ## Execu??o completa (2026-06-06)
 
 - Refer?ncias visuais consultadas: `_product/proto/Favoritos.jpg` e `_product/proto/Seguindo.jpg`. Builder/Quick Copy n?o est? exposto como ferramenta MCP nesta sess?o; foi usado o fallback audit?vel de imagens locais conforme `PROTO-INVENTORY.md`.

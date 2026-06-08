@@ -304,19 +304,21 @@ const ProfileHero = ({
           <button
             aria-label={
               !canFavorite
-                ? "Favoritos disponíveis apenas para pacientes"
+                ? "Favoritos disponíveis apenas para usuários autenticados"
                 : profile.favorited
                   ? `Remover ${profile.name} dos favoritos`
                   : `Favoritar ${profile.name}`
             }
             aria-pressed={profile.favorited}
             className={cn(
-              "absolute -right-2 -top-2 grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-muted shadow-[var(--lectum-shadow-soft)] transition hover:border-primary/40 hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-60",
-              profile.favorited && "border-primary/30 bg-primary-soft text-primary",
+              "absolute -right-2 -top-2 grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-muted shadow-[var(--lectum-shadow-soft)] transition hover:border-red-200 hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-60",
+              profile.favorited && "border-red-200 bg-red-50 text-red-500",
             )}
             disabled={favoritePending || !canFavorite}
             onClick={onToggleFavorite}
-            title={!canFavorite ? "Favoritos disponíveis apenas para pacientes" : undefined}
+            title={
+              !canFavorite ? "Favoritos disponíveis apenas para usuários autenticados" : undefined
+            }
             type="button"
           >
             <Heart className={cn("h-5 w-5", profile.favorited && "fill-current")} />
@@ -823,7 +825,7 @@ export const PsychologistProfileLogic = () => {
   const searchParamsString = searchParams.toString();
   const [shareFeedback, setShareFeedback] = useState(false);
   const currentUser = useAppSelector((state) => state.user);
-  const canFavoritePsychologists = currentUser?.role === "paciente";
+  const canFavoritePsychologists = Boolean(currentUser?.id);
   const id = params.id;
 
   const urlParams = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);

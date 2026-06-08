@@ -94,6 +94,7 @@ mountRoute("/api/public/google/callback", apiPublicGoogleCallback);
 mountRoute("/api/public/google/login", apiPublicGoogleLogin);
 mountRoute("/api/public/google/me", apiPublicGoogleMe);
 mountRoute("/api/public/user", apiPublicUser);
+mountRoute("/api/private/user/favorites", privateAuth, apiPrivatePatientFavorites);
 mountRoleGuardedRoute("/api/private/patient/favorites", "paciente", apiPrivatePatientFavorites);
 mountRoleGuardedRoute("/api/private/patient/follows", "paciente", apiPrivatePatientFollows);
 mountRoleGuardedRoute("/api/private/patient/profile", "paciente", apiPrivatePatientProfile);

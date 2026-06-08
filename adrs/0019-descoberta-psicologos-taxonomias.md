@@ -27,8 +27,8 @@ também precisa abrir WhatsApp via `wa.me`, exibir benefícios comerciais reais 
 gratuitos.
 
 Ainda em 2026-06-08, o card precisou receber ajuste visual fino do CTA de WhatsApp a partir do SVG anexado pelo
-usuário e corrigir o erro `Acesso permitido apenas para o perfil autorizado`, disparado quando uma conta de psicólogo
-acionava favorito, funcionalidade restrita a pacientes.
+usuário e, depois, ajustar a ação de favorito para funcionar como favorito de usuário autenticado, não apenas de
+paciente.
 
 ## Decisão
 
@@ -50,9 +50,11 @@ acionava favorito, funcionalidade restrita a pacientes.
 - Exibir selo verificado, prefixo `Dr.`/`Dra.` e miniatura de vídeo no card apenas para assinantes. Perfis gratuitos publicados não recebem selo nem prefixo.
 - Usar o ícone vetorial de WhatsApp fornecido pelo usuário como componente React (`WhatsAppIcon`), preservando a regra
   de não usar `<img>`, e padronizar o verde dos CTAs de WhatsApp em `#22C55E`.
-- Desabilitar ações de favorito na descoberta e no perfil público quando o usuário autenticado não for paciente. A API
-  permanece protegida por regra de domínio, e a UI deixa de disparar chamadas que geravam o erro de autorização para
-  psicólogos.
+- Permitir ações de favorito na descoberta e no perfil público para qualquer usuário autenticado, usando a rota
+  canônica `/api/private/user/favorites`. O coração favoritado passa a ficar vermelho e a tela `/app/favorites` lista
+  os psicólogos favoritados pelo usuário atual.
+- Tornar o selo `Disponível hoje` branco com texto verde e sombra, para manter leitura quando sobreposto à miniatura
+  de vídeo.
 
 ## Consequências
 
@@ -66,9 +68,8 @@ acionava favorito, funcionalidade restrita a pacientes.
 - O follow de psicólogos fica depreciado na UI. Modelos/endpoints legados de follow não foram removidos nesta mudança para evitar migração destrutiva fora de escopo, mas não há opção visível para o usuário seguir outro usuário.
 - O CTA de WhatsApp passa a expor uma URL `wa.me` gerada no backend; isso atende o pedido explícito de produto, mas deve ser revisitado quando houver política final de privacidade/contato.
 - Vídeos de apresentação enviados por profissionais são renderizados no card como mídia nativa quando o profissional é assinante. Como ainda não há recurso de legendas no upload, o componente registra exceção pontual de lint para `useMediaCaption`.
-- O botão de favorito continua visível para manter consistência visual com a referência, mas fica desabilitado fora do
-  papel `paciente`; se psicólogos também puderem favoritar no futuro, será necessária regra de domínio e endpoint
-  próprios.
+- O botão de favorito continua visível para manter consistência visual com a referência e agora é acionável por
+  qualquer usuário autenticado. A relação persistida continua por `user_id`, sem criar tabela nova.
 
 ## Validação
 
@@ -101,6 +102,12 @@ acionava favorito, funcionalidade restrita a pacientes.
 - Validação complementar de ajuste fino em 2026-06-08:
   - `pnpm --dir frontend biome:fix`
   - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+- Validação complementar de favorito user-level e badge em 2026-06-08:
+  - `pnpm --dir backend check`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir backend build`
   - `pnpm --dir frontend build`
   - `pnpm check`
 
