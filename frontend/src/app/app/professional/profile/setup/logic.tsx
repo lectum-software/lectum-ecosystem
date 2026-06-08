@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { type ChangeEvent, useRef } from "react";
+import { type ChangeEvent, useRef, useState } from "react";
 import { type FieldPath, useFieldArray } from "react-hook-form";
 import { toast } from "sonner";
 import { usePsychologistFreeProfile } from "@/api/callers/psychologist-free-profile";
@@ -236,6 +236,7 @@ const BooleanBenefit = ({
 
 export const ProfessionalProfileSetupLogic = () => {
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [avatarActionsOpen, setAvatarActionsOpen] = useState(false);
   const { deleteAvatar, profile, update, uploadAvatar } = usePsychologistFreeProfile({
     callbacks: {
       update: {
@@ -335,7 +336,19 @@ export const ProfessionalProfileSetupLogic = () => {
     event.target.value = "";
 
     if (!file) return;
+    setAvatarActionsOpen(false);
     uploadAvatar.mutate(file);
+  };
+
+  const openAvatarFilePicker = () => {
+    setAvatarActionsOpen(false);
+    avatarInputRef.current?.click();
+  };
+
+  const handleAvatarRemoval = () => {
+    if (!profile.data?.user.avatar) return;
+    setAvatarActionsOpen(false);
+    deleteAvatar.mutate();
   };
 
   const submit = form.hook.handleSubmit((values) => {
@@ -408,12 +421,7 @@ export const ProfessionalProfileSetupLogic = () => {
 
         <header className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-7 text-center shadow-[var(--lectum-shadow-soft)]">
           <div className="relative mx-auto h-24 w-32">
-            <button
-              className="relative mx-auto block h-24 w-24 overflow-hidden rounded-full bg-surface-muted ring-4 ring-white"
-              disabled={uploadAvatar.isPending}
-              onClick={() => avatarInputRef.current?.click()}
-              type="button"
-            >
+            <div className="relative mx-auto block h-24 w-24 overflow-hidden rounded-full bg-surface-muted ring-4 ring-white">
               {avatarSrc ? (
                 <Image
                   alt="Foto profissional"
@@ -429,20 +437,51 @@ export const ProfessionalProfileSetupLogic = () => {
                   <UserRound className="h-10 w-10" aria-hidden="true" />
                 </span>
               )}
-            </button>
-            <button
-              aria-label="Alterar foto profissional"
-              className="absolute -right-4 bottom-1 grid h-8 w-8 place-items-center rounded-full bg-primary text-white shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
-              disabled={uploadAvatar.isPending}
-              onClick={() => avatarInputRef.current?.click()}
-              type="button"
-            >
-              {uploadAvatar.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-              ) : (
-                <Camera className="h-4 w-4" aria-hidden="true" />
-              )}
-            </button>
+            </div>
+            <div className="absolute -right-4 bottom-1">
+              <button
+                aria-expanded={avatarActionsOpen}
+                aria-haspopup="menu"
+                aria-label="Opções da foto profissional"
+                className="grid h-8 w-8 place-items-center rounded-full bg-primary text-white shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
+                disabled={uploadAvatar.isPending || deleteAvatar.isPending}
+                onClick={() => setAvatarActionsOpen((current) => !current)}
+                type="button"
+              >
+                {uploadAvatar.isPending || deleteAvatar.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Camera className="h-4 w-4" aria-hidden="true" />
+                )}
+              </button>
+
+              {avatarActionsOpen ? (
+                <div
+                  className="absolute right-0 top-10 z-20 w-44 overflow-hidden rounded-2xl border border-border bg-surface text-left shadow-[var(--lectum-shadow-soft)]"
+                  role="menu"
+                >
+                  <button
+                    className="flex w-full items-center gap-2 px-4 py-3 text-sm font-semibold text-foreground transition hover:bg-primary-soft hover:text-primary"
+                    onClick={openAvatarFilePicker}
+                    role="menuitem"
+                    type="button"
+                  >
+                    <UploadCloud className="h-4 w-4" aria-hidden="true" />
+                    Alterar imagem
+                  </button>
+                  <button
+                    className="flex w-full items-center gap-2 px-4 py-3 text-sm font-semibold text-danger transition hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-45"
+                    disabled={!profile.data?.user.avatar}
+                    onClick={handleAvatarRemoval}
+                    role="menuitem"
+                    type="button"
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    Excluir imagem
+                  </button>
+                </div>
+              ) : null}
+            </div>
           </div>
           <input
             accept="image/png,image/jpeg,image/webp"
@@ -452,23 +491,8 @@ export const ProfessionalProfileSetupLogic = () => {
             type="file"
           />
           <p className="mt-4 text-xs leading-5 text-muted">
-            Toque na foto para enviar uma imagem PNG, JPG ou WebP de até 5MB.
+            Use o botão junto à foto para alterar ou excluir uma imagem PNG, JPG ou WebP de até 5MB.
           </p>
-          {profile.data?.user.avatar ? (
-            <button
-              className="mt-3 inline-flex items-center justify-center gap-2 rounded-full px-3 py-2 text-xs font-bold text-danger transition hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-60"
-              disabled={deleteAvatar.isPending || uploadAvatar.isPending}
-              onClick={() => deleteAvatar.mutate()}
-              type="button"
-            >
-              {deleteAvatar.isPending ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-              ) : (
-                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-              )}
-              Excluir foto
-            </button>
-          ) : null}
         </header>
 
         {profile.isLoading ? <LoadingState label="Carregando perfil profissional" /> : null}
@@ -652,7 +676,12 @@ export const ProfessionalProfileSetupLogic = () => {
                       "Título e especialidade",
                       "Ex.: Doutor em Neuropsicologia",
                     )}
-                    {renderAcademicField(index, "institution", "Instituição", "USP")}
+                    {renderAcademicField(
+                      index,
+                      "institution",
+                      "Instituição",
+                      "Ex.: Universidade de São Paulo",
+                    )}
                     {renderAcademicField(index, "graduation_year", "Ano de formação", "Ex.: 2012")}
                   </div>
                 ))}

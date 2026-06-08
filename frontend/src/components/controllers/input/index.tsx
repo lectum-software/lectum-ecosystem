@@ -28,6 +28,7 @@ export function InputController<FormType extends FieldValues>({
   tabIndex,
   min,
   max,
+  showCounter,
   step,
   onChangeCallback,
 }: ControllerFieldProps<FormType>) {
@@ -91,6 +92,12 @@ export function InputController<FormType extends FieldValues>({
                 type={inputType}
                 value={field.value ?? ""}
               />
+
+              {showCounter && typeof max === "number" ? (
+                <span className="-mt-1 block pr-1 text-right text-xs font-medium text-muted">
+                  {String(field.value ?? "").length}/{max}
+                </span>
+              ) : null}
 
               {type === "password" ? (
                 <button

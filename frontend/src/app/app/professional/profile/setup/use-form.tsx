@@ -203,6 +203,7 @@ export const fields = [
     placeholder: "Ex.: Especialista em Relacionamentos",
     description: "Texto curto com até 120 caracteres.",
     max: 120,
+    showCounter: true,
     required: true,
   },
   {

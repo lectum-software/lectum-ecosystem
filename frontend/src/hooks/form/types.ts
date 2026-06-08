@@ -49,6 +49,7 @@ export type Field<FormType extends FieldValues> = {
   rows?: number;
   min?: number;
   max?: number;
+  showCounter?: boolean;
   length?: number;
   step?: number;
   int?: boolean;
