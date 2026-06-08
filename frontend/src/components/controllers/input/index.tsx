@@ -67,6 +67,7 @@ export function InputController<FormType extends FieldValues>({
                 disabled={disabled}
                 id={inputId}
                 max={max}
+                maxLength={typeof max === "number" && inputType !== "number" ? max : undefined}
                 min={min}
                 name={field.name}
                 onBlur={field.onBlur}

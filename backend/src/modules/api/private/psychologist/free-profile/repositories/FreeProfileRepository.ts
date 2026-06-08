@@ -398,4 +398,18 @@ export class FreeProfileRepository implements IFreeProfileRepository {
 
     return this.show(userId);
   }
+
+  async removeAvatar(userId: string): Promise<FreeProfessionalProfileResponse | null> {
+    const existing = await getUserWithProfile(userId);
+    if (!existing?.psychologist_profile) return null;
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { avatar: null },
+    });
+
+    await deletePublicAvatar(existing.avatar);
+
+    return this.show(userId);
+  }
 }

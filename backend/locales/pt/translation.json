@@ -87,7 +87,8 @@
     "billing_free_selected": "Plano gratuito selecionado com sucesso.",
     "whatsapp_saved": "WhatsApp profissional salvo com sucesso.",
     "free_profile_updated": "Perfil gratuito atualizado com sucesso.",
-    "free_profile_avatar_uploaded": "Foto de perfil atualizada com sucesso."
+    "free_profile_avatar_uploaded": "Foto de perfil atualizada com sucesso.",
+    "free_profile_avatar_removed": "Foto de perfil removida com sucesso."
   },
   "gender": {
     "o": "o"

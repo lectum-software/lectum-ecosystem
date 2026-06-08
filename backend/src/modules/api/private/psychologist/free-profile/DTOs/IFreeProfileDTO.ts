@@ -112,6 +112,7 @@ export interface IFreeProfessionalProfileUpdateDTO {
 
 export type FreeProfessionalProfileAvatarUploadResponse = {
   avatar_url: string;
+  profile: FreeProfessionalProfileResponse | null;
 };
 
 export interface IFreeProfessionalProfileUploadAvatarDTO {
@@ -122,4 +123,8 @@ export interface IFreeProfessionalProfileUploadAvatarDTO {
     fileUrl?: string;
     mimetype?: string;
   };
+}
+
+export interface IFreeProfessionalProfileRemoveAvatarDTO {
+  auth: user;
 }

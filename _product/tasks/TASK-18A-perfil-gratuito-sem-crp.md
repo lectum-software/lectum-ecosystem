@@ -26,7 +26,7 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
 - Builder/Quick Copy não foi acionado neste ambiente; a referência auditável usada foi o protótipo local e a imagem enviada pelo usuário.
 - CPF, gênero, raça/cor, religião, regional, registro, WhatsApp, apresentação, filtros, formações acadêmicas, atendimento e endereço profissional.
 - Regional em dropdown conforme a lista oficial de CRPs publicada pelo CFP em `https://site.cfp.org.br/cfp/sistema-conselhos/conselhos-pelo-brasil/`.
-- Foto profissional alterável por upload real em R2 público usando `backend/src/config/multer`; a URL pública streamada por `/public/files/psychologist/avatar/*` é persistida em `user.avatar`.
+- Foto profissional alterável por upload real em R2 público usando `backend/src/config/multer`; a URL pública streamada por `/public/files/psychologist/avatar/*` é persistida em `user.avatar`, normalizada no frontend para exibição local/prod e pode ser excluída pelo psicólogo.
 - Vídeo de apresentação permanece indisponível no plano gratuito; a tela exibe CTA de upgrade e o backend mantém `video_url=null` neste recorte.
 - Plano gratuito limita especialidades a 3 e serviços a 1.
 - Publicação gratuita não valida CRP por API e não toca em documento CRP.
@@ -56,12 +56,13 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
 - [x] Endpoint privado exige `requireRole("psicologo")` pelo mount em `/api/private/psychologist/*`.
 - [x] Frontend implementado em `/app/professional/profile/setup` com dados reais do backend.
 - [x] Tela ajustada a partir de `_product/proto/Editar Perfil - Psicólogo.jpg` e do print `Html → Body.png`.
-- [x] Clique na foto aciona upload real de imagem para alterar foto de perfil.
+- [x] Clique na foto aciona upload real de imagem para alterar foto de perfil, a imagem salva é exibida no card e há opção de excluir foto.
 - [x] Faixa azul direciona para upgrade do plano profissional.
 - [x] CPF, regional, registro e WhatsApp ficam editáveis no plano gratuito sem consulta CFP/CRP por API.
 - [x] Regional usa dropdown no formato `19ª Região - SE`, conforme lista CFP.
 - [x] Tela inclui ação por ícone alinhado ao telefone para abrir o link `wa.me` gerado e testar o WhatsApp informado.
 - [x] Apresentação, bloqueio de vídeo com upgrade, filtros, benefícios, formações acadêmicas, atendimento e endereço foram incluídos.
+- [x] Bio curta limitada a 120 caracteres no frontend e no backend.
 - [x] Formulários/campos usam React Hook Form, Zod, `hooks/form` e controllers da TASK-02 para campos principais.
 - [x] Catálogos reais de especialidades, serviços e abordagens são lidos do banco.
 - [x] Limite de 3 especialidades e 1 serviço no plano gratuito é validado no backend.

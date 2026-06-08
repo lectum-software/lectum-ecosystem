@@ -16,6 +16,8 @@ Manter o recorte separado da TASK-18 chamado TASK-18A, limitado ao perfil gratui
 
 O backend expõe `/api/private/psychologist/free-profile` protegido por `requireRole("psicologo")`. CPF é salvo em `psychologist_profile.cpf`; o registro livre é serializado em `psychologist_profile.crp` como `regional/registro`; WhatsApp é salvo em `psychologist_profile.whatsapp`; foto profissional é enviada por upload real para o R2 usando a infraestrutura existente em `backend/src/config/multer` e a URL pública streamada por `/public/files/psychologist/avatar/*` é persistida em `user.avatar`.
 
+O avatar do perfil gratuito também pode ser removido por `DELETE /api/private/psychologist/free-profile/avatar`. A remoção limpa `user.avatar` e tenta apagar o objeto anterior do bucket público quando a URL pertence ao prefixo interno `psychologist/avatar/*`. No frontend, URLs relativas ou absolutas de `/public/files/*` são normalizadas contra `NEXT_PUBLIC_API_URL`, e o componente `Image` usa `unoptimized` nesses arquivos para evitar falha de exibição causada pelo otimizador do Next ao buscar mídia servida pelo backend.
+
 Foram adicionados campos opcionais em `psychologist_profile` para gênero, raça/cor, religião, público atendido, benefícios comerciais, formações acadêmicas, dias disponíveis e endereço profissional. A lista de regionais do dropdown segue a lista oficial do CFP em `https://site.cfp.org.br/cfp/sistema-conselhos/conselhos-pelo-brasil/`.
 
 No plano gratuito, vídeo de apresentação permanece bloqueado: a UI exibe CTA de upgrade e o backend mantém `psychologist_profile.video_url=null` nesse recorte. Upload de vídeo fica reservado para o plano profissional.
@@ -27,8 +29,11 @@ O recorte não cria nem altera `professional_document`, não faz upload CRP, nã
 - Psicólogos gratuitos conseguem configurar um perfil mais próximo do protótipo sem desbloquear a TASK-18 completa.
 - CPF, regional, registro e WhatsApp são campos declaratórios no plano gratuito; não representam validação profissional.
 - Foto profissional usa upload real no R2 público; o endpoint público de leitura limita exposição aos avatares em `psychologist/avatar/*`.
+- Psicólogos gratuitos podem excluir a foto profissional; a limpeza do objeto R2 é best-effort e não bloqueia a atualização de perfil.
+- A exibição do avatar não depende mais da origem persistida em `BASE`; a UI resolve mídia pública pelo `NEXT_PUBLIC_API_URL` ativo.
 - Vídeo não é permitido no plano gratuito; qualquer entrada anterior é limpa para `null` ao atualizar o perfil gratuito.
 - Religião e múltiplas formações acadêmicas passam a compor o perfil gratuito como dados declaratórios.
+- A bio curta do card do perfil gratuito fica limitada a 120 caracteres no frontend e no backend.
 - A TASK-18 continua bloqueada para documentos/CRP, validação profissional e perfil profissional completo.
 - O plano gratuito limita especialidades a 3 e serviços a 1.
 - A publicação do perfil gratuito não equivale a validação profissional por CRP.

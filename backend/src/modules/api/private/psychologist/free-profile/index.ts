@@ -1,6 +1,6 @@
 import { Router } from "express";
 import multer from "@/config/multer";
-import { show, update, uploadAvatar } from "./use-cases/controller";
+import { removeAvatar, show, update, uploadAvatar } from "./use-cases/controller";
 
 const routes = Router();
 
@@ -15,5 +15,6 @@ routes.post(
   }),
   uploadAvatar,
 );
+routes.delete("/avatar", removeAvatar);
 
 export default routes;

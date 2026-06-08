@@ -91,7 +91,11 @@ export const freeProfileSchema = z
     crp_number: z.string().trim().max(40, "Registro muito longo"),
     countryCode: z.string().min(1, "Selecione o país"),
     whatsapp: z.string(),
-    headline: z.string().trim().min(3, "Informe uma bio curta").max(160),
+    headline: z
+      .string()
+      .trim()
+      .min(3, "Informe uma bio curta")
+      .max(120, "A bio curta deve ter no máximo 120 caracteres"),
     bio: z
       .string()
       .trim()
@@ -197,6 +201,8 @@ export const fields = [
     field: "input",
     label: "Bio",
     placeholder: "Ex.: Especialista em Relacionamentos",
+    description: "Texto curto com até 120 caracteres.",
+    max: 120,
     required: true,
   },
   {

@@ -2,6 +2,7 @@
 
 import {
   ArrowLeft,
+  ArrowRight,
   Award,
   BadgeCheck,
   BookOpen,
@@ -14,7 +15,6 @@ import {
   type LucideIcon,
   MapPin,
   Plus,
-  Sparkles,
   Trash2,
   UploadCloud,
   UserRound,
@@ -64,7 +64,27 @@ const toggleValue = (values: string[], id: string) => {
   return values.includes(id) ? values.filter((item) => item !== id) : [...values, id];
 };
 
-const isImageUrl = (value?: string | null): value is string => Boolean(value?.startsWith("http"));
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
+const resolvePublicMediaUrl = (value?: string | null) => {
+  if (!value) return null;
+
+  const apiBase = API_URL.replace(/\/$/, "");
+
+  try {
+    const parsed = new URL(value, apiBase);
+
+    if (parsed.pathname.startsWith("/public/files/")) {
+      return `${apiBase}${parsed.pathname}${parsed.search}`;
+    }
+
+    if (value.startsWith("http")) return value;
+    return `${apiBase}${value.startsWith("/") ? value : `/${value}`}`;
+  } catch {
+    if (value.startsWith("/public/files/")) return `${apiBase}${value}`;
+    return value.startsWith("http") ? value : null;
+  }
+};
 
 const SectionCard = ({
   children,
@@ -216,7 +236,7 @@ const BooleanBenefit = ({
 
 export const ProfessionalProfileSetupLogic = () => {
   const avatarInputRef = useRef<HTMLInputElement>(null);
-  const { profile, update, uploadAvatar } = usePsychologistFreeProfile({
+  const { deleteAvatar, profile, update, uploadAvatar } = usePsychologistFreeProfile({
     callbacks: {
       update: {
         onSuccess: () => toast.success("Perfil gratuito atualizado"),
@@ -224,6 +244,10 @@ export const ProfessionalProfileSetupLogic = () => {
       },
       avatar: {
         onSuccess: () => toast.success("Foto de perfil atualizada"),
+        onError: (error) => toast.error(resolveApiError(error)),
+      },
+      deleteAvatar: {
+        onSuccess: () => toast.success("Foto de perfil removida"),
         onError: (error) => toast.error(resolveApiError(error)),
       },
     },
@@ -243,7 +267,8 @@ export const ProfessionalProfileSetupLogic = () => {
   const published = form.hook.watch("published");
   const whatsappPhone = form.hook.watch("whatsapp");
   const countryCode = form.hook.watch("countryCode");
-  const avatarUrl = profile.data?.user.avatar;
+  const avatarSrc = resolvePublicMediaUrl(profile.data?.user.avatar);
+  const isPublicAvatar = Boolean(avatarSrc?.includes("/public/files/"));
   const addressState = form.hook.watch("address_state");
   const addressCity = form.hook.watch("address_city");
   const baseCityOptions = CITY_OPTIONS_BY_STATE[addressState] || [];
@@ -373,6 +398,7 @@ export const ProfessionalProfileSetupLogic = () => {
           </Link>
           <button
             className="text-sm font-semibold text-primary"
+            disabled={update.isPending || uploadAvatar.isPending || deleteAvatar.isPending}
             form="free-profile-form"
             type="submit"
           >
@@ -388,13 +414,15 @@ export const ProfessionalProfileSetupLogic = () => {
               onClick={() => avatarInputRef.current?.click()}
               type="button"
             >
-              {isImageUrl(avatarUrl) ? (
+              {avatarSrc ? (
                 <Image
                   alt="Foto profissional"
                   className="object-cover"
                   fill
+                  priority
                   sizes="96px"
-                  src={avatarUrl}
+                  src={avatarSrc}
+                  unoptimized={isPublicAvatar}
                 />
               ) : (
                 <span className="grid h-full w-full place-items-center text-primary">
@@ -404,7 +432,7 @@ export const ProfessionalProfileSetupLogic = () => {
             </button>
             <button
               aria-label="Alterar foto profissional"
-              className="absolute right-2 bottom-0 grid h-8 w-8 place-items-center rounded-full bg-primary text-white shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
+              className="absolute -right-4 bottom-1 grid h-8 w-8 place-items-center rounded-full bg-primary text-white shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
               disabled={uploadAvatar.isPending}
               onClick={() => avatarInputRef.current?.click()}
               type="button"
@@ -426,6 +454,21 @@ export const ProfessionalProfileSetupLogic = () => {
           <p className="mt-4 text-xs leading-5 text-muted">
             Toque na foto para enviar uma imagem PNG, JPG ou WebP de até 5MB.
           </p>
+          {profile.data?.user.avatar ? (
+            <button
+              className="mt-3 inline-flex items-center justify-center gap-2 rounded-full px-3 py-2 text-xs font-bold text-danger transition hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={deleteAvatar.isPending || uploadAvatar.isPending}
+              onClick={() => deleteAvatar.mutate()}
+              type="button"
+            >
+              {deleteAvatar.isPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+              Excluir foto
+            </button>
+          ) : null}
         </header>
 
         {profile.isLoading ? <LoadingState label="Carregando perfil profissional" /> : null}
@@ -445,26 +488,29 @@ export const ProfessionalProfileSetupLogic = () => {
             onSubmit={submit}
           >
             <Link
-              className="flex items-center justify-between rounded-2xl border border-primary/20 bg-primary-soft p-4 text-primary"
+              className="flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary-soft p-4 text-primary"
               href="/app/professional/billing/plans"
             >
-              <span>
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-primary shadow-sm">
+                <BadgeCheck className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <span className="min-w-0 flex-1">
                 <span className="block text-sm font-bold">Upgrade para o Plano Profissional</span>
                 <span className="mt-1 block text-xs leading-5">
                   Aumente limites, inclua mais recursos e ganhe visibilidade.
                 </span>
               </span>
-              <Sparkles className="h-5 w-5 shrink-0" aria-hidden="true" />
+              <ArrowRight className="h-5 w-5 shrink-0" aria-hidden="true" />
             </Link>
 
             <SectionCard icon={UserRound} title="Informações básicas">
               <div className="grid gap-4">
                 {renderFields([
                   "name",
+                  "cpf",
                   "gender",
                   "race_color",
                   "religion",
-                  "cpf",
                   "crp_region",
                   "crp_number",
                 ])}
@@ -685,7 +731,7 @@ export const ProfessionalProfileSetupLogic = () => {
             <div className="sticky bottom-4 z-10 rounded-full bg-surface/90 p-2 shadow-[var(--lectum-shadow-soft)] backdrop-blur">
               <Button
                 className="h-14 w-full rounded-full text-base"
-                disabled={update.isPending}
+                disabled={update.isPending || uploadAvatar.isPending || deleteAvatar.isPending}
                 type="submit"
               >
                 {update.isPending ? (

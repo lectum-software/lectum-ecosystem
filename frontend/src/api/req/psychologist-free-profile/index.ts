@@ -1,6 +1,7 @@
 import { callEndpoint } from "@/api/generator";
 import type {
   FreeProfessionalProfile,
+  FreeProfessionalProfileAvatarRemoval,
   FreeProfessionalProfileAvatarUpload,
   FreeProfessionalProfilePayload,
 } from "@/api/generator/types/free-profile";
@@ -24,4 +25,9 @@ export const uploadPsychologistFreeProfileAvatar = async (file: File) => {
 
   const handle = callEndpoint({ route: `${route}/avatar`, method: "POST", body });
   return handleReq<FreeProfessionalProfileAvatarUpload>(handle);
+};
+
+export const deletePsychologistFreeProfileAvatar = async () => {
+  const handle = callEndpoint({ route: `${route}/avatar`, method: "DELETE" });
+  return handleReq<FreeProfessionalProfileAvatarRemoval>(handle);
 };

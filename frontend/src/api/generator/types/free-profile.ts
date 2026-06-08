@@ -103,3 +103,7 @@ export type FreeProfessionalProfileAvatarUpload = {
   avatar_url: string;
   profile: FreeProfessionalProfile | null;
 };
+
+export type FreeProfessionalProfileAvatarRemoval = {
+  profile: FreeProfessionalProfile | null;
+};

@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import keys from "@/api/cache/keys";
 import type {
   FreeProfessionalProfile,
+  FreeProfessionalProfileAvatarRemoval,
   FreeProfessionalProfileAvatarUpload,
   FreeProfessionalProfilePayload,
 } from "@/api/generator/types/free-profile";
@@ -17,6 +18,10 @@ export interface UsePsychologistFreeProfileProps {
     };
     avatar?: {
       onSuccess?: (data: FreeProfessionalProfileAvatarUpload) => void;
+      onError?: (error: unknown) => void;
+    };
+    deleteAvatar?: {
+      onSuccess?: (data: FreeProfessionalProfileAvatarRemoval) => void;
       onError?: (error: unknown) => void;
     };
   };
@@ -52,5 +57,15 @@ export const usePsychologistFreeProfile = ({ callbacks }: UsePsychologistFreePro
     onError: callbacks?.avatar?.onError,
   });
 
-  return { profile, update, uploadAvatar };
+  const deleteAvatar = useMutation({
+    mutationFn: () => api.deletePsychologistFreeProfileAvatar(),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: keys.psychologistFreeProfile.root() });
+      queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === "auth_hydrate" });
+      callbacks?.deleteAvatar?.onSuccess?.(data);
+    },
+    onError: callbacks?.deleteAvatar?.onError,
+  });
+
+  return { profile, update, uploadAvatar, deleteAvatar };
 };

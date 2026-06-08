@@ -4,6 +4,7 @@ import type {
   FreeProfessionalProfileAcademic,
   FreeProfessionalProfileAddress,
   FreeProfessionalProfileUpdateBody,
+  IFreeProfessionalProfileRemoveAvatarDTO,
   IFreeProfessionalProfileShowDTO,
   IFreeProfessionalProfileUpdateDTO,
   IFreeProfessionalProfileUploadAvatarDTO,
@@ -97,7 +98,7 @@ const updateSchema = z.object({
   crp_region: z.string().trim().max(20).nullable().optional(),
   crp_number: z.string().trim().max(40).nullable().optional(),
   whatsapp: z.string().nullable().optional(),
-  headline: z.string().trim().min(3).max(160).nullable().optional(),
+  headline: z.string().trim().min(3).max(120).nullable().optional(),
   bio: z.string().trim().min(20).max(2000).nullable().optional(),
   modality: z.enum(["online", "presencial", "hibrido"]).nullable().optional(),
   languages: z.array(z.string().trim().min(2).max(40)).max(8).optional(),
@@ -143,7 +144,15 @@ const assertCatalogIds = (
 };
 
 const publicFileUrl = (key: string) => {
-  const base = String(process.env.BASE || "").replace(/\/$/, "");
+  const rawBase = String(process.env.BASE || "").trim();
+  let base = rawBase.replace(/\/$/, "");
+
+  try {
+    base = rawBase ? new URL(rawBase).origin : "";
+  } catch (_err) {
+    base = rawBase.replace(/\/$/, "");
+  }
+
   const publicPath = `/public/files/${key}`;
 
   return base ? `${base}${publicPath}` : publicPath;
@@ -355,6 +364,42 @@ export const uploadAvatar = async (data: IFreeProfessionalProfileUploadAvatarDTO
     ...msg("free_profile_avatar_uploaded", {}),
     data: {
       avatar_url: avatarUrl,
+      profile: updated,
+    },
+  };
+};
+
+export const removeAvatar = async (data: IFreeProfessionalProfileRemoveAvatarDTO) => {
+  if (data.auth.role !== "psicologo") {
+    return {
+      status: 403,
+      ...error("role_not_authorized", {}),
+    };
+  }
+
+  const repository = new FreeProfileRepository();
+  const current = await repository.show(data.auth.id!);
+
+  if (!current) {
+    return {
+      status: 404,
+      ...error("not_found", { model: "psychologist_profile" }),
+    };
+  }
+
+  if (!current.plan.is_free) {
+    return {
+      status: 403,
+      ...error("free_profile_professional_plan", {}),
+    };
+  }
+
+  const updated = await repository.removeAvatar(data.auth.id!);
+
+  return {
+    status: 200,
+    ...msg("free_profile_avatar_removed", {}),
+    data: {
       profile: updated,
     },
   };
