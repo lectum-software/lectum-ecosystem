@@ -1,5 +1,6 @@
 ﻿import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
+import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   DirectoryCatalogItem,
   DirectoryPsychologistResponse,
@@ -108,18 +109,6 @@ const buildWhatsappUrl = (value?: string | null) => {
   return `https://wa.me/${digits}?text=${encodeURIComponent(CONTACT_MESSAGE)}`;
 };
 
-const activeVerifiedSubscriptionWhere = {
-  deleted: false,
-  status: "ativa",
-  plan: {
-    active: true,
-    deleted: false,
-    slug: {
-      not: "gratuito",
-    },
-  },
-} satisfies Prisma.professional_subscriptionWhereInput;
-
 const normalizePagination = (query: IIndexDTO["q"]) => {
   const page = Math.max(1, Number(query.page || 1));
   const limit = Math.min(MAX_LIMIT, Math.max(1, Number(query.limit || DEFAULT_LIMIT)));
@@ -147,7 +136,7 @@ export class IndexRepository implements IIndexRepository {
       published: true,
       subscriptions: props.q.verified
         ? {
-            some: activeVerifiedSubscriptionWhere,
+            some: activeProfessionalEntitlementWhere(),
           }
         : undefined,
       user: {
@@ -249,7 +238,7 @@ export class IndexRepository implements IIndexRepository {
           rating_count: true,
           whatsapp: true,
           subscriptions: {
-            where: activeVerifiedSubscriptionWhere,
+            where: activeProfessionalEntitlementWhere(),
             select: {
               id: true,
             },

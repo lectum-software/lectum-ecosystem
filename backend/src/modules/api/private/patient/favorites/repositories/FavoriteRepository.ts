@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
+import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   FavoriteActionResponse,
   IFavoriteIndexDTO,
@@ -122,18 +123,6 @@ const isCatalogItem = (
   return Boolean(value?.id && value.name && value.slug);
 };
 
-const activeVerifiedSubscriptionWhere = {
-  deleted: false,
-  status: "ativa",
-  plan: {
-    active: true,
-    deleted: false,
-    slug: {
-      not: "gratuito",
-    },
-  },
-} satisfies Prisma.professional_subscriptionWhereInput;
-
 export class FavoriteRepository implements IFavoriteRepository {
   readonly repository: ORM["psychologist_favorite"];
 
@@ -214,7 +203,7 @@ export class FavoriteRepository implements IFavoriteRepository {
                   academic_formations: true,
                   whatsapp: true,
                   subscriptions: {
-                    where: activeVerifiedSubscriptionWhere,
+                    where: activeProfessionalEntitlementWhere(),
                     select: {
                       id: true,
                     },

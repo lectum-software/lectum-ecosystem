@@ -26,15 +26,25 @@ export type SubscriptionPlan = {
 };
 
 export type ProfessionalSubscriptionStatus = "inativa" | "ativa" | "inadimplente" | "cancelada";
+export type ProfessionalSubscriptionSource =
+  | "free_signup"
+  | "mercadopago"
+  | "admin_grant"
+  | "legacy";
 
 export type ProfessionalSubscription = {
   id: string;
   psychologist_id: string;
   plan_id: string;
   status: ProfessionalSubscriptionStatus | string;
+  source?: ProfessionalSubscriptionSource | string | null;
   gateway?: string | null;
   gateway_subscription_id?: string | null;
   current_period_end?: string | null;
+  grant_reason?: string | null;
+  grant_notes?: string | null;
+  granted_by?: string | null;
+  grant_started_at?: string | null;
   plan?: SubscriptionPlan | null;
   createdAt?: string;
   updatedAt?: string;

@@ -7,7 +7,7 @@ import type { user, user_token } from "@/interfaces/objects";
 //Utils
 import { generateToken } from "@/modules/api/middlewares/_auth/utils/generateToken";
 //
-import { include } from "@/query/login";
+import { loginInclude } from "@/query/login";
 import { log } from "@/utils/logs";
 import type { IFindByEmailDTO } from "../DTOs/IFindByEmailDTO";
 import type { IFindToEmitDTO } from "../DTOs/IFindToEmitDTO";
@@ -71,7 +71,7 @@ export class LoginRepository implements ILoginRepository {
       include: {
         user_tokens: this.tokens,
         //
-        ...include,
+        ...loginInclude(),
       },
     });
 
@@ -88,7 +88,7 @@ export class LoginRepository implements ILoginRepository {
       include: {
         user_tokens: this.tokens,
         //
-        ...include,
+        ...loginInclude(),
       },
     });
     return res;
@@ -110,7 +110,7 @@ export class LoginRepository implements ILoginRepository {
         include: {
           user_tokens: this.tokens,
           //
-          ...include,
+          ...loginInclude(),
         },
       });
 
@@ -169,7 +169,7 @@ export class LoginRepository implements ILoginRepository {
       include: {
         user_tokens: this.tokens,
         //
-        ...include,
+        ...loginInclude(),
       },
     });
     return res;
@@ -190,7 +190,7 @@ export class LoginRepository implements ILoginRepository {
         where: { id: { in: b.ids || [] } },
         include: {
           user_tokens: this.tokens,
-          ...include,
+          ...loginInclude(),
         },
       });
       return res;

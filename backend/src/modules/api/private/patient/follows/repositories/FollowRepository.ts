@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
+import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   FollowActionResponse,
   IFollowIndexDTO,
@@ -39,18 +40,6 @@ const isCatalogItem = (
 ): value is PatientFollowCatalogItem => {
   return Boolean(value?.id && value.name && value.slug);
 };
-
-const activeVerifiedSubscriptionWhere = {
-  deleted: false,
-  status: "ativa",
-  plan: {
-    active: true,
-    deleted: false,
-    slug: {
-      not: "gratuito",
-    },
-  },
-} satisfies Prisma.professional_subscriptionWhereInput;
 
 export class FollowRepository implements IFollowRepository {
   readonly repository: ORM["psychologist_follow"];
@@ -123,7 +112,7 @@ export class FollowRepository implements IFollowRepository {
                   rating_avg: true,
                   rating_count: true,
                   subscriptions: {
-                    where: activeVerifiedSubscriptionWhere,
+                    where: activeProfessionalEntitlementWhere(),
                     select: {
                       id: true,
                     },

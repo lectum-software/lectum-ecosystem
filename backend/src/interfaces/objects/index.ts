@@ -240,9 +240,14 @@ export interface professional_subscription {
   psychologist_id?: string | null;
   plan_id?: string | null;
   status?: "inativa" | "ativa" | "inadimplente" | "cancelada" | string | null;
+  source?: "free_signup" | "mercadopago" | "admin_grant" | "legacy" | string | null;
   gateway?: string | null;
   gateway_subscription_id?: string | null;
   current_period_end?: Date | null;
+  grant_reason?: string | null;
+  grant_notes?: string | null;
+  granted_by?: string | null;
+  grant_started_at?: Date | null;
   psychologist?: psychologist_profile | null;
   plan?: subscription_plan | null;
 }

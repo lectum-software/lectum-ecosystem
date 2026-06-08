@@ -429,7 +429,7 @@ Trocar de provedor = novo adapter. **Limite real:** card tokens são específico
 | `cancelled` | `cancelada` |
 | pagamento recorrente rejeitado / chargeback | `inadimplente` |
 
-**Soberania de dados:** o entitlement ("é Pro?") é respondido pelo nosso banco (`professional_subscription.status`, atualizado via webhook) — nunca por chamada síncrona ao MP. `gateway` (= `"mercadopago"`), `gateway_subscription_id`, `gateway_token` e `payment_event` bruto sustentam auditoria, replay e reconciliação.
+**Soberania de dados:** o entitlement ("é Pro?") é respondido pelo nosso banco (`professional_subscription.status` + `current_period_end`, atualizado via webhook ou concessão administrativa auditada) — nunca por chamada síncrona ao MP. `gateway` (= `"mercadopago"`), `gateway_subscription_id`, `gateway_token` e `payment_event` bruto sustentam auditoria, replay e reconciliação.
 
 `subscription_plan` (TASK-31; PRD §13):
 
@@ -449,10 +449,16 @@ Trocar de provedor = novo adapter. **Limite real:** card tokens são específico
 | `psychologist_id` | `String` | |
 | `plan_id` | `String` | FK `subscription_plan` |
 | `status` | `String @default("inativa")` | `"inativa" \| "ativa" \| "inadimplente" \| "cancelada"` |
+| `source` | `String @default("legacy")` | `"free_signup" \| "mercadopago" \| "admin_grant" \| "legacy"`; origem operacional da assinatura |
 | `gateway` | `String?` | nome do provedor (TASK-03) |
 | `gateway_subscription_id` | `String?` | id externo; nunca dados de cartão |
-| `current_period_end` | `DateTime?` | |
+| `current_period_end` | `DateTime?` | obrigatório para concessões administrativas com prazo; `null` em plano gratuito/legado sem expiração |
+| `grant_reason` | `String?` | motivo da concessão administrativa gratuita |
+| `grant_notes` | `String?` | observações internas opcionais da concessão |
+| `granted_by` | `String?` | responsável operacional pela concessão; texto livre enquanto `admin` segue fora do MVP |
+| `grant_started_at` | `DateTime?` | data/hora da concessão administrativa |
 | `@@index([psychologist_id, status])` | | habilita selo/destaque/ranking quando `ativa` |
+| `@@index([source, status])`, `@@index([status, current_period_end])` | | auditoria e filtro de entitlement ativo não expirado |
 
 `billing_address` (TASK-32, "Endereço de Faturamento"):
 

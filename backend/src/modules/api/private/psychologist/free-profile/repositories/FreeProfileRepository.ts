@@ -2,6 +2,7 @@ import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { PUBLIC_BUCKET, S3 } from "@/config/multer/s3";
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { activeSubscriptionPeriodWhere } from "@/utils/subscription-entitlement";
 import type {
   FreeProfessionalProfileResponse,
   FreeProfessionalProfileUpdateBody,
@@ -164,10 +165,7 @@ const getUserWithProfile = (userId: string) => {
           crp_status: true,
           cfp_verified_at: true,
           subscriptions: {
-            where: {
-              deleted: false,
-              status: "ativa",
-            },
+            where: activeSubscriptionPeriodWhere(),
             include: {
               plan: true,
             },

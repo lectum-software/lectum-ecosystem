@@ -41,3 +41,4 @@ Formato recomendado:
 - [ADR-0025 - Bloqueio da TASK-19 por dependencia do perfil privado do psicologo](0025-bloqueio-task19-dependencia-task18.md) - Accepted
 - [ADR-0026 - InfoSimples para validacao CFP/CRP](0026-infosimples-validacao-cfp-crp.md) - Accepted
 - [ADR-0027 - Perfil gratuito sem documentos CRP](0027-perfil-gratuito-sem-crp.md) - Accepted
+- [ADR-0028 - Concessao administrativa de assinatura profissional](0028-concessao-administrativa-assinatura.md) - Accepted

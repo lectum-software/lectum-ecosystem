@@ -4,6 +4,7 @@ import type {
   psychologist_profile,
   subscription_plan,
 } from "@/interfaces/objects";
+import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type { ISelectFreeRepository } from "./interfaces/ISelectFreeRepository";
 
 export class SelectFreeRepository implements ISelectFreeRepository {
@@ -61,12 +62,8 @@ export class SelectFreeRepository implements ISelectFreeRepository {
   ): Promise<professional_subscription | null> {
     return this.subscriptionRepository.findFirst({
       where: {
+        ...activeProfessionalEntitlementWhere(),
         psychologist_id: psychologistId,
-        deleted: false,
-        status: "ativa",
-        plan: {
-          slug: "profissional",
-        },
       },
       include: {
         plan: true,
@@ -100,6 +97,14 @@ export class SelectFreeRepository implements ISelectFreeRepository {
           psychologist_id: psychologistId,
           plan_id: planId,
           status: "ativa",
+          source: "free_signup",
+          gateway: null,
+          gateway_subscription_id: null,
+          current_period_end: null,
+          grant_reason: null,
+          grant_notes: null,
+          granted_by: null,
+          grant_started_at: null,
         },
         include: {
           plan: true,

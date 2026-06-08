@@ -377,14 +377,21 @@ model professional_subscription {
   psychologist_id         String
   plan_id                 String
   status                  String               @default("inativa")
+  source                  String               @default("legacy")
   gateway                 String?
   gateway_subscription_id String?
   current_period_end      DateTime?
+  grant_reason            String?
+  grant_notes             String?
+  granted_by              String?
+  grant_started_at        DateTime?
   psychologist            psychologist_profile @relation("professional_subscription_psychologist", fields: [psychologist_id], references: [id], onDelete: Cascade)
   plan                    subscription_plan    @relation("professional_subscription_plan", fields: [plan_id], references: [id])
 
   @@index([psychologist_id, status])
   @@index([plan_id])
+  @@index([source, status])
+  @@index([status, current_period_end])
   @@map("professional_subscriptions")
 }
 

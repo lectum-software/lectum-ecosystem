@@ -107,6 +107,7 @@ TASK-11 nao tiver armazenamento privado para documentos CRP.
 | 29b | [TASK-29B - Notificações: eventos de domínio](TASK-29b-notificacoes-eventos.md) | Pending | 29a |
 | 30 | [TASK-30 - Configurações de conta](TASK-30-configuracoes-conta.md) | Pending | 02, 12 |
 | 31 | [TASK-31 - Planos de assinatura](TASK-31-planos-assinatura.md) | Completed | 03, 18 |
+| 31A | [TASK-31A - Concessão administrativa de assinatura profissional](TASK-31A-concessao-administrativa-assinatura.md) | Completed | 31 |
 | 32 | [TASK-32 - Checkout de assinatura](TASK-32-checkout-assinatura.md) | Pending | 02, 03, 31 |
 | 33 | [TASK-33 - Gestão de assinatura e cartão](TASK-33-gestao-assinatura-cartao.md) | Pending | 02, 32 |
 | 34 | [TASK-34 - Qualidade, segurança, LGPD e operação](TASK-34-qualidade-seguranca-lgpd-operacao.md) | Pending | 13 a 33 |

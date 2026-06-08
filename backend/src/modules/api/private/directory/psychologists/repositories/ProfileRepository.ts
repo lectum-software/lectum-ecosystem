@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   DirectoryProfileCatalogItem,
   DirectoryPsychologistPostsResponse,
@@ -107,18 +108,6 @@ const buildWhatsappUrl = (value?: string | null) => {
 
   return `https://wa.me/${digits}?text=${encodeURIComponent(CONTACT_MESSAGE)}`;
 };
-
-const activeVerifiedSubscriptionWhere = {
-  deleted: false,
-  status: "ativa",
-  plan: {
-    active: true,
-    deleted: false,
-    slug: {
-      not: "gratuito",
-    },
-  },
-} satisfies Prisma.professional_subscriptionWhereInput;
 
 const normalizePagination = (query: IProfileListDTO["q"] = {}) => {
   const page = Math.max(1, Number(query.page || 1));
@@ -232,7 +221,7 @@ export class ProfileRepository implements IProfileRepository {
             rating_count: true,
             whatsapp: true,
             subscriptions: {
-              where: activeVerifiedSubscriptionWhere,
+              where: activeProfessionalEntitlementWhere(),
               select: {
                 id: true,
               },
