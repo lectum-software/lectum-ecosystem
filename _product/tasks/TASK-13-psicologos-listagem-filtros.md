@@ -265,6 +265,25 @@ Regras anti-recriação específicas:
   - smoke local HTTP: `GET /health` no backend retornou `200`; `/app/psychologists` e `/app/following` responderam
     pelo proxy privado local com `307` quando acessados sem sessão de browser reutilizável nesta execução.
 
+## Execução complementar: WhatsApp SVG e ajuste fino do card (2026-06-08)
+
+- Pedido do usuário: substituir o ícone do CTA de WhatsApp pelo SVG anexado `SVG.svg`, usar verde `#22C55E`,
+  aproximar o espaçamento de `PSICÓLOGO` e a cor da estrela de avaliação da referência anterior, e corrigir o erro
+  `Acesso permitido apenas para o perfil autorizado`.
+- Builder/Quick Copy segue sem ferramenta direta nesta sessão; a referência ativa foi a imagem de card enviada
+  anteriormente pelo usuário e o SVG anexado nesta solicitação.
+- Foi criado um componente vetorial reutilizável `WhatsAppIcon` com o path do SVG anexado, sem usar `<img>`.
+- Os CTAs de WhatsApp do card e do perfil público usam background `#22C55E` e o novo ícone em branco.
+- O texto `PSICÓLOGO` no card teve tracking reduzido para ficar mais próximo da referência, e a estrela de avaliação
+  passou para `#FACC15`.
+- O erro de autorização foi tratado na UI: ações de favorito em cards/perfis ficam desabilitadas para usuários que não
+  sejam pacientes, evitando chamadas aos endpoints de paciente por contas de psicólogo.
+- Validações executadas:
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+
 ## Validação mínima
 
 - `pnpm --dir frontend check` quando frontend mudar.

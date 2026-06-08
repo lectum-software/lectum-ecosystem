@@ -11,7 +11,6 @@ import {
   Heart,
   Languages,
   MapPin,
-  MessageCircle,
   MessageSquareText,
   Play,
   Share2,
@@ -40,6 +39,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
+import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -280,10 +281,12 @@ const ProfileAvatar = ({ profile }: { profile: DirectoryPsychologistProfile }) =
 };
 
 const ProfileHero = ({
+  canFavorite,
   favoritePending,
   onToggleFavorite,
   profile,
 }: {
+  canFavorite: boolean;
   favoritePending: boolean;
   onToggleFavorite: () => void;
   profile: DirectoryPsychologistProfile;
@@ -300,17 +303,20 @@ const ProfileHero = ({
           <ProfileAvatar profile={profile} />
           <button
             aria-label={
-              profile.favorited
-                ? `Remover ${profile.name} dos favoritos`
-                : `Favoritar ${profile.name}`
+              !canFavorite
+                ? "Favoritos disponíveis apenas para pacientes"
+                : profile.favorited
+                  ? `Remover ${profile.name} dos favoritos`
+                  : `Favoritar ${profile.name}`
             }
             aria-pressed={profile.favorited}
             className={cn(
               "absolute -right-2 -top-2 grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-muted shadow-[var(--lectum-shadow-soft)] transition hover:border-primary/40 hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-60",
               profile.favorited && "border-primary/30 bg-primary-soft text-primary",
             )}
-            disabled={favoritePending}
+            disabled={favoritePending || !canFavorite}
             onClick={onToggleFavorite}
+            title={!canFavorite ? "Favoritos disponíveis apenas para pacientes" : undefined}
             type="button"
           >
             <Heart className={cn("h-5 w-5", profile.favorited && "fill-current")} />
@@ -799,10 +805,10 @@ const WhatsAppCta = ({ profile }: { profile: DirectoryPsychologistProfile }) => 
     <div className="sticky bottom-20 z-20 px-4 pb-2 sm:bottom-24 sm:px-0 lg:bottom-6">
       <Button
         asChild
-        className="h-14 w-full rounded-2xl bg-success text-base font-extrabold hover:bg-success/90"
+        className="h-14 w-full rounded-2xl bg-[#22C55E] text-base font-extrabold hover:bg-[#22C55E]/90"
       >
         <a href={profile.whatsapp_url} rel="noreferrer" target="_blank">
-          <MessageCircle className="h-5 w-5" aria-hidden="true" />
+          <WhatsAppIcon className="h-5 w-5" aria-hidden="true" />
           Chamar no WhatsApp
         </a>
       </Button>
@@ -816,6 +822,8 @@ export const PsychologistProfileLogic = () => {
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
   const [shareFeedback, setShareFeedback] = useState(false);
+  const currentUser = useAppSelector((state) => state.user);
+  const canFavoritePsychologists = currentUser?.role === "paciente";
   const id = params.id;
 
   const urlParams = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
@@ -878,6 +886,7 @@ export const PsychologistProfileLogic = () => {
   };
 
   const toggleFavorite = () => {
+    if (!canFavoritePsychologists) return;
     if (!profile) return;
 
     if (profile.favorited) {
@@ -990,6 +999,7 @@ export const PsychologistProfileLogic = () => {
           {!showInitialLoading && !profileErrorMessage && profile ? (
             <>
               <ProfileHero
+                canFavorite={canFavoritePsychologists}
                 favoritePending={favoritePendingId === profile.id}
                 onToggleFavorite={toggleFavorite}
                 profile={profile}

@@ -6,7 +6,6 @@ import {
   ChevronRight,
   Heart,
   HeartHandshake,
-  MessageCircle,
   Play,
   ShieldCheck,
   Star,
@@ -15,6 +14,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
@@ -44,6 +44,7 @@ export type PsychologistCardItem = {
 };
 
 type PsychologistCardProps = {
+  canFavorite?: boolean;
   favoritePending?: boolean;
   psychologist: PsychologistCardItem;
   onToggleFavorite: (psychologist: PsychologistCardItem) => void;
@@ -117,20 +118,24 @@ const AvailabilityBadge = ({ available }: { available?: boolean }) => {
 
 const FavoriteButton = ({
   className,
+  canFavorite = true,
   favoritePending,
   onToggleFavorite,
   psychologist,
 }: {
   className?: string;
+  canFavorite?: boolean;
   favoritePending?: boolean;
   onToggleFavorite: (psychologist: PsychologistCardItem) => void;
   psychologist: PsychologistCardItem;
 }) => (
   <button
     aria-label={
-      psychologist.favorited
-        ? `Remover ${psychologist.name} dos favoritos`
-        : `Favoritar ${psychologist.name}`
+      !canFavorite
+        ? "Favoritos disponíveis apenas para pacientes"
+        : psychologist.favorited
+          ? `Remover ${psychologist.name} dos favoritos`
+          : `Favoritar ${psychologist.name}`
     }
     aria-pressed={psychologist.favorited}
     className={cn(
@@ -138,8 +143,9 @@ const FavoriteButton = ({
       psychologist.favorited && "border-primary/30 bg-primary-soft text-primary",
       className,
     )}
-    disabled={favoritePending}
+    disabled={favoritePending || !canFavorite}
     onClick={() => onToggleFavorite(psychologist)}
+    title={!canFavorite ? "Favoritos disponíveis apenas para pacientes" : undefined}
     type="button"
   >
     <Heart className={cn("h-6 w-6", psychologist.favorited && "fill-current")} aria-hidden="true" />
@@ -186,6 +192,7 @@ const CardVideo = ({ name, url }: { name: string; url: string }) => {
 };
 
 export function PsychologistCard({
+  canFavorite = true,
   favoritePending,
   onToggleFavorite,
   psychologist,
@@ -210,6 +217,7 @@ export function PsychologistCard({
           </div>
           <FavoriteButton
             className="absolute right-4 top-4"
+            canFavorite={canFavorite}
             favoritePending={favoritePending}
             onToggleFavorite={onToggleFavorite}
             psychologist={psychologist}
@@ -219,6 +227,7 @@ export function PsychologistCard({
         <div className="flex items-center justify-between gap-3 px-5 pt-5">
           <AvailabilityBadge available={psychologist.available_today} />
           <FavoriteButton
+            canFavorite={canFavorite}
             favoritePending={favoritePending}
             onToggleFavorite={onToggleFavorite}
             psychologist={psychologist}
@@ -253,11 +262,11 @@ export function PsychologistCard({
               ) : null}
             </h2>
             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span className="text-[0.66rem] font-extrabold uppercase tracking-[0.28em] text-subtle">
+              <span className="text-[0.66rem] font-extrabold uppercase tracking-[0.16em] text-subtle">
                 Psicólogo
               </span>
               <span className="inline-flex items-center gap-1 text-[0.78rem] font-bold text-muted">
-                <Star className="h-3.5 w-3.5 fill-warning text-warning" aria-hidden="true" />
+                <Star className="h-3.5 w-3.5 fill-[#FACC15] text-[#FACC15]" aria-hidden="true" />
                 {formatRating(psychologist.rating_avg, psychologist.rating_count)}
               </span>
             </div>
@@ -295,20 +304,20 @@ export function PsychologistCard({
         {psychologist.whatsapp_url ? (
           <Button
             asChild
-            className="h-12 rounded-xl bg-success text-sm font-extrabold text-white hover:bg-success/90"
+            className="h-12 rounded-xl bg-[#22C55E] text-sm font-extrabold text-white hover:bg-[#22C55E]/90"
           >
             <a href={psychologist.whatsapp_url} rel="noreferrer" target="_blank">
-              <MessageCircle className="h-5 w-5" aria-hidden="true" />
+              <WhatsAppIcon className="h-5 w-5" aria-hidden="true" />
               Chamar no WhatsApp
             </a>
           </Button>
         ) : (
           <Button
-            className="h-12 rounded-xl bg-success text-sm font-extrabold text-white"
+            className="h-12 rounded-xl bg-[#22C55E] text-sm font-extrabold text-white"
             disabled
             type="button"
           >
-            <MessageCircle className="h-5 w-5" aria-hidden="true" />
+            <WhatsAppIcon className="h-5 w-5" aria-hidden="true" />
             WhatsApp indisponível
           </Button>
         )}

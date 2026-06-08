@@ -26,6 +26,10 @@ oferecer seguir psicólogos, porque o relacionamento de "seguir" será aplicado 
 também precisa abrir WhatsApp via `wa.me`, exibir benefícios comerciais reais e diferenciar assinantes de perfis
 gratuitos.
 
+Ainda em 2026-06-08, o card precisou receber ajuste visual fino do CTA de WhatsApp a partir do SVG anexado pelo
+usuário e corrigir o erro `Acesso permitido apenas para o perfil autorizado`, disparado quando uma conta de psicólogo
+acionava favorito, funcionalidade restrita a pacientes.
+
 ## Decisão
 
 - Criar `GET /api/private/directory/psychologists` como endpoint real de listagem paginada (`page`/`limit`, default 20 e máximo 50), busca e filtros.
@@ -44,6 +48,11 @@ gratuitos.
 - Remover a opção de seguir psicólogos da interface: os cards não têm botão de seguir, `/app/following` redireciona para `/app/community` e o menu de perfil usa a linguagem de comunidades seguidas.
 - Restringir as tags do card a benefícios reais: tempo de formação somente para assinantes, desconto de 1ª sessão, valor social e aceita convênios.
 - Exibir selo verificado, prefixo `Dr.`/`Dra.` e miniatura de vídeo no card apenas para assinantes. Perfis gratuitos publicados não recebem selo nem prefixo.
+- Usar o ícone vetorial de WhatsApp fornecido pelo usuário como componente React (`WhatsAppIcon`), preservando a regra
+  de não usar `<img>`, e padronizar o verde dos CTAs de WhatsApp em `#22C55E`.
+- Desabilitar ações de favorito na descoberta e no perfil público quando o usuário autenticado não for paciente. A API
+  permanece protegida por regra de domínio, e a UI deixa de disparar chamadas que geravam o erro de autorização para
+  psicólogos.
 
 ## Consequências
 
@@ -57,6 +66,9 @@ gratuitos.
 - O follow de psicólogos fica depreciado na UI. Modelos/endpoints legados de follow não foram removidos nesta mudança para evitar migração destrutiva fora de escopo, mas não há opção visível para o usuário seguir outro usuário.
 - O CTA de WhatsApp passa a expor uma URL `wa.me` gerada no backend; isso atende o pedido explícito de produto, mas deve ser revisitado quando houver política final de privacidade/contato.
 - Vídeos de apresentação enviados por profissionais são renderizados no card como mídia nativa quando o profissional é assinante. Como ainda não há recurso de legendas no upload, o componente registra exceção pontual de lint para `useMediaCaption`.
+- O botão de favorito continua visível para manter consistência visual com a referência, mas fica desabilitado fora do
+  papel `paciente`; se psicólogos também puderem favoritar no futuro, será necessária regra de domínio e endpoint
+  próprios.
 
 ## Validação
 
@@ -86,6 +98,11 @@ gratuitos.
   - `pnpm check`
   - Smoke real de API com paciente temporário removido ao final: `GET /api/private/directory/psychologists?page=1&limit=3` retornou `success=true`, `count=1`, `page=1` e os campos do novo card (`whatsapp_url`, `video_url`, `available_today`, benefícios e `formation_years`).
   - Smoke local HTTP: backend `/health` retornou `200`; `/app/psychologists` e `/app/following` responderam `307` pelo proxy privado quando acessados sem sessão de browser reutilizável.
+- Validação complementar de ajuste fino em 2026-06-08:
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
 
 ## Pendências
 

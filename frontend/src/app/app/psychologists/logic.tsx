@@ -25,6 +25,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { Input } from "@/registry/new-york-v4/ui/input";
@@ -155,6 +156,8 @@ export const PsychologistsLogic = () => {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const closeFiltersButtonRef = useRef<HTMLButtonElement>(null);
   const filtersTitleId = useId();
+  const currentUser = useAppSelector((state) => state.user);
+  const canFavoritePsychologists = currentUser?.role === "paciente";
   const { favoritePsychologist, unfavoritePsychologist } = usePatient({ enableProfile: false });
 
   const params = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
@@ -292,6 +295,8 @@ export const PsychologistsLogic = () => {
   };
 
   const toggleFavorite = (psychologist: PsychologistCardItem) => {
+    if (!canFavoritePsychologists) return;
+
     if (psychologist.favorited) {
       unfavoritePsychologist.mutate(psychologist.id);
       return;
@@ -542,6 +547,7 @@ export const PsychologistsLogic = () => {
               <div className="mt-4 grid gap-6 lg:grid-cols-2">
                 {psychologists.map((psychologist) => (
                   <PsychologistCard
+                    canFavorite={canFavoritePsychologists}
                     favoritePending={favoritePendingId === psychologist.id}
                     key={psychologist.id}
                     onToggleFavorite={toggleFavorite}
