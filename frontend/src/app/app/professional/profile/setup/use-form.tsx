@@ -176,14 +176,14 @@ export const fields = [
   {
     name: "crp_region",
     field: "select",
-    label: "Regional",
+    label: "Regional do CRP",
     placeholder: "Selecione a regional",
     options: CRP_REGION_OPTIONS,
   },
   {
     name: "crp_number",
     field: "input",
-    label: "Registro",
+    label: "Nº Registro CRP",
     placeholder: "000000",
   },
   {

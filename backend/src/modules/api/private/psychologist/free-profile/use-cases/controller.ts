@@ -18,7 +18,10 @@ export const show = async (req: Request, res: Response) => {
 
 export const update = async (req: Request, res: Response) => {
   try {
-    const resolve = await updateService(req as unknown as Parameters<typeof updateService>[0]);
+    const resolve = await updateService({
+      auth: req.auth,
+      b: req.body,
+    });
     return send(res, resolve);
   } catch (err) {
     return error500(res, "psychologist_free_profile_update", err);

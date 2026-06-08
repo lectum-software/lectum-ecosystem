@@ -24,6 +24,14 @@ No plano gratuito, vídeo de apresentação permanece bloqueado: a UI exibe CTA 
 
 O recorte não cria nem altera `professional_document`, não faz upload CRP, não altera `crp_status`, `cfp_verified_at` ou `whatsapp_verified_at`, e não concede selo de verificado.
 
+Em 2026-06-08, o menu privado de perfil passou a reutilizar a mesma normalizacao de midia publica do formulario de edicao, garantindo que `user.avatar` salvo por upload real seja exibido fora da tela de edicao. O selo visual de perfil verificado foi padronizado com o SVG `Container.svg` enviado pelo usuario, implementado como componente inline reutilizavel para evitar `<img>` e preservar o uso de assets seguros no frontend.
+
+Na mesma revisao, a escolha de tema deixou de usar opcao `system` por padrao: `next-themes` fica com `defaultTheme="light"` e a tela de perfil exibe um switch binario para ativar/desativar o modo escuro. A acao "Verificar WhatsApp" foi removida do menu de perfil porque o recorte gratuito trata o WhatsApp como telefone profissional editavel, nao como verificacao OTP nessa tela.
+
+Para endereco profissional, a selecao de cidade passou a usar uma lista local gerada a partir da API oficial de Localidades do IBGE em 2026-06-08 (`/localidades/municipios?orderBy=nome`). A lista fica versionada no frontend em `brazil-cities.ts`, sem pacote novo e sem dependencia de API externa em runtime; apos selecionar UF, a UI mostra as cidades daquele estado em um campo pesquisavel.
+
+O erro "Estrutura da requisicao invalida" ao salvar o perfil gratuito foi corrigido no controller do backend: como a rota nao usa o middleware `validator`, o service agora recebe explicitamente `auth: req.auth` e `b: req.body`, em vez de esperar `req.b`.
+
 ## Consequências
 
 - Psicólogos gratuitos conseguem configurar um perfil mais próximo do protótipo sem desbloquear a TASK-18 completa.
@@ -37,6 +45,9 @@ O recorte não cria nem altera `professional_document`, não faz upload CRP, nã
 - A TASK-18 continua bloqueada para documentos/CRP, validação profissional e perfil profissional completo.
 - O plano gratuito limita especialidades a 3 e serviços a 1.
 - A publicação do perfil gratuito não equivale a validação profissional por CRP.
+- O menu de perfil nao exibe mais "Sessao ativa" nem "Verificar WhatsApp".
+- O modo claro e o padrao visual; modo escuro e uma preferencia local ativada por switch.
+- A lista de cidades aumenta o bundle estatico, mas remove dependencia externa de runtime e cumpre o requisito de listar todos os municipios por UF.
 
 ## Validação
 
@@ -50,3 +61,9 @@ O recorte não cria nem altera `professional_document`, não faz upload CRP, nã
 - `pnpm check`
 - Browser local/HTTP sem sessão em `/app/professional/profile/setup` retornou 307 para login.
 - Backend local em `/health` respondeu `200` com status `ok`.
+- 2026-06-08: `pnpm --dir frontend check`
+- 2026-06-08: `pnpm --dir backend check`
+- 2026-06-08: `pnpm --dir backend build`
+- 2026-06-08: `pnpm --dir frontend build`
+- 2026-06-08: `pnpm check`
+- 2026-06-08: Chrome headless local em `/app/profile` e `/app/professional/profile/setup` redirecionou para login sem sessao; validacao autenticada visual ficou limitada por nao haver token real acessivel ao agente sem criar mock.

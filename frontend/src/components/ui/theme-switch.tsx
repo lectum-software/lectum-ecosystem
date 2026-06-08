@@ -1,50 +1,47 @@
 "use client";
 
-import { Monitor, Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
-const OPTIONS = [
-  { value: "light", label: "Tema claro", Icon: Sun },
-  { value: "dark", label: "Tema escuro", Icon: Moon },
-  { value: "system", label: "Tema do sistema", Icon: Monitor },
-] as const;
-
 export function ThemeSwitch() {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme, theme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   // next-themes só resolve o tema no client; aguardamos a montagem para não
-  // divergir o destaque do ativo entre server e client (hydration). Padrão
-  // idiomático do next-themes — o setState de montagem aqui é intencional.
+  // divergir o estado do switch entre server e client (hydration).
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
-  return (
-    <div className="inline-flex items-center gap-0.5 rounded-full border border-border bg-surface p-0.5">
-      {OPTIONS.map(({ value, label, Icon }) => {
-        const active = mounted && theme === value;
+  const enabled = mounted && (theme === "dark" || resolvedTheme === "dark");
 
-        return (
-          <button
-            aria-label={label}
-            aria-pressed={active}
-            className={cn(
-              "grid h-8 w-8 place-items-center rounded-full text-muted transition hover:text-primary",
-              active && "bg-primary-soft text-primary",
-            )}
-            key={value}
-            onClick={() => setTheme(value)}
-            title={label}
-            type="button"
-          >
-            <Icon className="h-4 w-4" aria-hidden="true" />
-          </button>
-        );
-      })}
-    </div>
+  return (
+    <button
+      aria-checked={enabled}
+      aria-label={enabled ? "Desativar modo escuro" : "Ativar modo escuro"}
+      className={cn(
+        "inline-flex h-8 w-14 items-center rounded-full border border-border bg-surface-muted p-1 transition focus:outline-none focus:ring-4 focus:ring-primary/10",
+        enabled && "border-primary/40 bg-primary",
+      )}
+      onClick={() => setTheme(enabled ? "light" : "dark")}
+      role="switch"
+      type="button"
+    >
+      <span
+        className={cn(
+          "grid h-6 w-6 place-items-center rounded-full bg-surface text-muted shadow-sm transition",
+          enabled && "translate-x-6 text-primary",
+        )}
+      >
+        {enabled ? (
+          <Moon className="h-3.5 w-3.5" aria-hidden="true" />
+        ) : (
+          <Sun className="h-3.5 w-3.5" aria-hidden="true" />
+        )}
+      </span>
+    </button>
   );
 }

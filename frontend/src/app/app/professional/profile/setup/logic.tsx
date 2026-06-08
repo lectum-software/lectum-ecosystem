@@ -21,18 +21,22 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { type ChangeEvent, useRef, useState } from "react";
-import { type FieldPath, useFieldArray } from "react-hook-form";
+import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import { Controller, type FieldPath, useFieldArray } from "react-hook-form";
 import { toast } from "sonner";
 import { usePsychologistFreeProfile } from "@/api/callers/psychologist-free-profile";
 import type { FreeProfileCatalogItem } from "@/api/generator/types/free-profile";
 import { components } from "@/components/controllers";
+import { Container } from "@/components/controllers/container";
+import { describedBy, fieldId } from "@/components/controllers/utils";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
-import { CITY_OPTIONS_BY_STATE, PUBLIC_TARGET_OPTIONS, WEEKDAY_OPTIONS } from "./options";
+import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { CITY_OPTIONS_BY_STATE } from "./brazil-cities";
+import { PUBLIC_TARGET_OPTIONS, WEEKDAY_OPTIONS } from "./options";
 import {
   type AcademicFormationForm,
   type FreeProfileForm,
@@ -64,28 +68,6 @@ const toggleValue = (values: string[], id: string) => {
   return values.includes(id) ? values.filter((item) => item !== id) : [...values, id];
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-
-const resolvePublicMediaUrl = (value?: string | null) => {
-  if (!value) return null;
-
-  const apiBase = API_URL.replace(/\/$/, "");
-
-  try {
-    const parsed = new URL(value, apiBase);
-
-    if (parsed.pathname.startsWith("/public/files/")) {
-      return `${apiBase}${parsed.pathname}${parsed.search}`;
-    }
-
-    if (value.startsWith("http")) return value;
-    return `${apiBase}${value.startsWith("/") ? value : `/${value}`}`;
-  } catch {
-    if (value.startsWith("/public/files/")) return `${apiBase}${value}`;
-    return value.startsWith("http") ? value : null;
-  }
-};
-
 const SectionCard = ({
   children,
   title,
@@ -112,6 +94,7 @@ const CatalogPicker = ({
   items,
   limit,
   name,
+  required,
   selected,
   title,
   onChange,
@@ -120,6 +103,7 @@ const CatalogPicker = ({
   items: FreeProfileCatalogItem[];
   limit?: number;
   name: keyof Pick<FreeProfileForm, "specialty_ids" | "service_ids" | "approach_ids">;
+  required?: boolean;
   selected: string[];
   title: string;
   onChange: (
@@ -133,7 +117,10 @@ const CatalogPicker = ({
     <div className="grid gap-3">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-sm font-bold text-foreground">{title}</h3>
+          <h3 className="flex items-center gap-1 text-sm font-bold text-foreground">
+            <span>{title}</span>
+            {required ? <span className="text-danger">*</span> : null}
+          </h3>
           {description ? <p className="mt-1 text-xs leading-5 text-muted">{description}</p> : null}
         </div>
         {limit ? (
@@ -234,6 +221,131 @@ const BooleanBenefit = ({
   </label>
 );
 
+const normalizeCitySearch = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .trim();
+
+const CityField = ({
+  control,
+  options,
+  stateSelected,
+}: {
+  control: ReturnType<typeof useFreeProfileForm>["hook"]["control"];
+  options: { label: string; value: string | number | boolean; disabled?: boolean }[];
+  stateSelected: boolean;
+}) => {
+  const [search, setSearch] = useState("");
+  const inputId = fieldId<FreeProfileForm>("address_city");
+  const normalizedSearch = normalizeCitySearch(search);
+  const filteredOptions = normalizedSearch
+    ? options.filter((option) =>
+        normalizeCitySearch(String(option.label)).includes(normalizedSearch),
+      )
+    : options;
+
+  return (
+    <Controller
+      control={control}
+      name="address_city"
+      render={({ field, fieldState }) => {
+        const error = fieldState.error?.message;
+        const selectedLabel = options.find((option) => option.value === field.value)?.label;
+
+        return (
+          <Container
+            description={
+              stateSelected
+                ? "Digite para filtrar e selecione uma cidade da lista oficial do IBGE."
+                : "Selecione o estado para carregar as cidades."
+            }
+            error={error}
+            htmlFor={inputId}
+            label="Cidade"
+            name="address_city"
+            skipHtmlFor
+          >
+            <input
+              aria-label="Filtrar cidades"
+              aria-describedby={describedBy({
+                id: inputId,
+                description: stateSelected
+                  ? "Digite para filtrar e selecione uma cidade da lista oficial do IBGE."
+                  : "Selecione o estado para carregar as cidades.",
+                error,
+              })}
+              aria-invalid={Boolean(error)}
+              className={cn(
+                "h-12 rounded-[var(--lectum-control-radius)] border border-border bg-surface px-4 text-sm text-foreground shadow-sm outline-none transition placeholder:text-subtle focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted",
+                error && "border-danger focus:border-danger focus:ring-danger/10",
+              )}
+              disabled={!stateSelected}
+              id={inputId}
+              onBlur={field.onBlur}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder={stateSelected ? "Digite para filtrar cidades" : "Selecione o estado"}
+              ref={field.ref}
+              type="search"
+              value={search}
+            />
+
+            {selectedLabel ? (
+              <div className="-mt-1 flex items-center justify-between gap-3 rounded-2xl bg-primary-soft px-3 py-2 text-xs font-semibold text-primary">
+                <span>Cidade selecionada: {selectedLabel}</span>
+                <button
+                  className="rounded-full px-2 py-1 transition hover:bg-primary/10"
+                  onClick={() => {
+                    field.onChange("");
+                    setSearch("");
+                  }}
+                  type="button"
+                >
+                  Trocar
+                </button>
+              </div>
+            ) : null}
+
+            {stateSelected ? (
+              <div className="max-h-56 overflow-y-auto rounded-2xl border border-border bg-surface p-2">
+                {filteredOptions.length > 0 ? (
+                  <div className="grid gap-1">
+                    {filteredOptions.map((option) => {
+                      const checked = option.value === field.value;
+
+                      return (
+                        <button
+                          className={cn(
+                            "rounded-xl px-3 py-2 text-left text-sm font-semibold text-foreground transition hover:bg-primary-soft hover:text-primary",
+                            checked && "bg-primary text-white hover:bg-primary hover:text-white",
+                          )}
+                          key={String(option.value)}
+                          onClick={() => {
+                            field.onChange(option.value);
+                            setSearch(String(option.label));
+                          }}
+                          type="button"
+                        >
+                          {option.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="px-3 py-2 text-sm text-muted">
+                    Nenhuma cidade encontrada para este filtro.
+                  </p>
+                )}
+              </div>
+            ) : null}
+          </Container>
+        );
+      }}
+    />
+  );
+};
+
 export const ProfessionalProfileSetupLogic = () => {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [avatarActionsOpen, setAvatarActionsOpen] = useState(false);
@@ -269,10 +381,10 @@ export const ProfessionalProfileSetupLogic = () => {
   const whatsappPhone = form.hook.watch("whatsapp");
   const countryCode = form.hook.watch("countryCode");
   const avatarSrc = resolvePublicMediaUrl(profile.data?.user.avatar);
-  const isPublicAvatar = Boolean(avatarSrc?.includes("/public/files/"));
+  const isPublicAvatar = isPublicMediaUrl(profile.data?.user.avatar);
   const addressState = form.hook.watch("address_state");
   const addressCity = form.hook.watch("address_city");
-  const baseCityOptions = CITY_OPTIONS_BY_STATE[addressState] || [];
+  const baseCityOptions = useMemo(() => CITY_OPTIONS_BY_STATE[addressState] || [], [addressState]);
   const cityOptions =
     addressCity && !baseCityOptions.some((item) => item.value === addressCity)
       ? [{ label: addressCity, value: addressCity }, ...baseCityOptions]
@@ -281,6 +393,14 @@ export const ProfessionalProfileSetupLogic = () => {
     /^\+/,
     "https://wa.me/",
   );
+
+  useEffect(() => {
+    if (!addressState || !addressCity) return;
+
+    if (!baseCityOptions.some((item) => item.value === addressCity)) {
+      form.hook.setValue("address_city", "", { shouldDirty: true, shouldValidate: true });
+    }
+  }, [addressCity, addressState, baseCityOptions, form.hook]);
 
   const setArrayValue = (
     name: keyof Pick<FreeProfileForm, "target_audience" | "available_days">,
@@ -404,10 +524,10 @@ export const ProfessionalProfileSetupLogic = () => {
         <div className="flex items-center justify-between gap-3">
           <Link
             className="inline-flex items-center gap-2 text-sm font-semibold text-muted"
-            href="/app/professional/whatsapp/verify"
+            href="/app/profile"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Editar Perfil
+            Voltar ao perfil
           </Link>
           <button
             className="text-sm font-semibold text-primary"
@@ -420,7 +540,7 @@ export const ProfessionalProfileSetupLogic = () => {
         </div>
 
         <header className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-7 text-center shadow-[var(--lectum-shadow-soft)]">
-          <div className="relative mx-auto h-24 w-32">
+          <div className="relative mx-auto h-24 w-24">
             <div className="relative mx-auto block h-24 w-24 overflow-hidden rounded-full bg-surface-muted ring-4 ring-white">
               {avatarSrc ? (
                 <Image
@@ -438,12 +558,12 @@ export const ProfessionalProfileSetupLogic = () => {
                 </span>
               )}
             </div>
-            <div className="absolute -right-4 bottom-1">
+            <div className="absolute right-0 bottom-0">
               <button
                 aria-expanded={avatarActionsOpen}
                 aria-haspopup="menu"
                 aria-label="Opções da foto profissional"
-                className="grid h-8 w-8 place-items-center rounded-full bg-primary text-white shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
+                className="grid h-9 w-9 place-items-center rounded-full border-2 border-surface bg-primary text-white shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
                 disabled={uploadAvatar.isPending || deleteAvatar.isPending}
                 onClick={() => setAvatarActionsOpen((current) => !current)}
                 type="button"
@@ -586,6 +706,7 @@ export const ProfessionalProfileSetupLogic = () => {
                   limit={profile.data.plan.specialty_limit}
                   name="specialty_ids"
                   onChange={setCatalogValue}
+                  required
                   selected={selectedSpecialties}
                   title="Especialidades"
                 />
@@ -595,6 +716,7 @@ export const ProfessionalProfileSetupLogic = () => {
                   limit={profile.data.plan.service_limit}
                   name="service_ids"
                   onChange={setCatalogValue}
+                  required
                   selected={selectedServices}
                   title="Serviços"
                 />
@@ -731,7 +853,12 @@ export const ProfessionalProfileSetupLogic = () => {
                   {renderField("address_zip")}
                 </div>
                 {renderField("address_state")}
-                {renderField("address_city", { options: cityOptions })}
+                <CityField
+                  control={form.hook.control}
+                  key={addressState || "sem-estado"}
+                  options={cityOptions}
+                  stateSelected={Boolean(addressState)}
+                />
                 <p className="text-xs leading-5 text-muted">
                   Suas informações de cidade e estado ficarão disponíveis no seu perfil público.
                 </p>

@@ -11,20 +11,20 @@ import {
   LogOut,
   MessagesSquare,
   Moon,
-  Phone,
   Star,
   UsersRound,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ComponentType } from "react";
-import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { ThemeSwitch } from "@/components/ui/theme-switch";
+import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { useSignOut } from "@/hooks/cookies/signout";
 import { useAppSelector } from "@/hooks/redux";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 type ProfileRow = {
   href?: string;
@@ -41,10 +41,6 @@ const getInitials = (name?: string | null, email?: string | null) => {
   }
 
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-};
-
-const isGoogleAvatar = (avatar?: string | null) => {
-  return Boolean(avatar?.startsWith("https://lh3.googleusercontent.com/"));
 };
 
 const Row = ({ href, icon: Icon, label }: ProfileRow) => {
@@ -113,6 +109,8 @@ export const ProfileLogic = () => {
   const subtitle = isPsychologist
     ? `Psicólogo${user.psychologist_profile?.crp ? ` · CRP ${user.psychologist_profile.crp}` : ""}`
     : "Paciente";
+  const avatarSrc = resolvePublicMediaUrl(user.avatar);
+  const avatarIsPublicMedia = isPublicMediaUrl(user.avatar);
 
   const accountRows: ProfileRow[] = [
     {
@@ -128,11 +126,6 @@ export const ProfileLogic = () => {
             href: "/app/professional/billing/plans",
             icon: BadgeCheck,
             label: "Minha Assinatura",
-          },
-          {
-            href: "/app/professional/whatsapp/verify",
-            icon: Phone,
-            label: "Verificar WhatsApp",
           },
         ]
       : [{ href: "/app/reviews", icon: Star, label: "Avaliações" }]),
@@ -152,12 +145,13 @@ export const ProfileLogic = () => {
         <div className="overflow-hidden rounded-[var(--lectum-card-radius)] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
           <div className="grid justify-items-center bg-primary-soft/50 px-6 py-8 text-center">
             <div className="grid h-28 w-28 place-items-center overflow-hidden rounded-full border-4 border-white bg-primary text-3xl font-bold text-white shadow-[var(--lectum-shadow-soft)]">
-              {isGoogleAvatar(user.avatar) ? (
+              {avatarSrc ? (
                 <Image
                   alt={displayName}
                   className="h-full w-full object-cover"
                   height={112}
-                  src={user.avatar as string}
+                  src={avatarSrc}
+                  unoptimized={avatarIsPublicMedia}
                   width={112}
                 />
               ) : (
@@ -167,18 +161,12 @@ export const ProfileLogic = () => {
 
             <h1 className="mt-5 flex items-center gap-2 text-2xl font-bold text-foreground">
               {displayName}
-              {isPsychologist ? (
-                <BadgeCheck className="h-5 w-5 text-primary" aria-hidden="true" />
-              ) : null}
+              {isPsychologist ? <VerifiedBadgeIcon aria-hidden="true" className="h-5 w-5" /> : null}
             </h1>
             <p className="mt-1 text-sm text-muted">{subtitle}</p>
             {user.email ? <p className="mt-2 text-xs text-subtle">{user.email}</p> : null}
           </div>
         </div>
-
-        <InlineAlert title="Sessão ativa" variant="success">
-          Nome, papel e foto do perfil são lidos da sessão real hidratada pela API privada.
-        </InlineAlert>
 
         <Section rows={accountRows} title="Conta" />
 
@@ -188,8 +176,8 @@ export const ProfileLogic = () => {
               <Moon className="h-5 w-5" aria-hidden="true" />
             </span>
             <div className="flex-1">
-              <p className="text-sm font-semibold text-foreground">Modo escuro</p>
-              <p className="text-xs text-muted">Preferência visual local da sua conta.</p>
+              <p className="text-sm font-semibold text-foreground">Ativar modo escuro</p>
+              <p className="text-xs text-muted">O tema claro permanece como padrão da conta.</p>
             </div>
             <ThemeSwitch />
           </div>

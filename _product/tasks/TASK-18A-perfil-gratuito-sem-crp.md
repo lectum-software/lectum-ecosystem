@@ -71,6 +71,8 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
 - [x] ADR atualizada em `adrs/0027-perfil-gratuito-sem-crp.md`.
 - [x] Checks/builds relevantes foram executados sem erros.
 - [x] Commit criado com mensagem convencional.
+- [x] Ajustes pos-validacao de perfil em 2026-06-08 aplicados: avatar do menu usa a mesma foto da edicao, selo SVG enviado, remocao de sessao ativa/Verificar WhatsApp, switch de modo escuro com padrao claro, voltar para `/app/profile`, labels CRP atualizados, indicador obrigatorio e cidades IBGE filtraveis por UF.
+- [x] Salvamento do perfil gratuito corrigido para enviar `req.body` ao service sem depender de `req.b` quando a rota nao usa o middleware `validator`.
 
 ## Validação executada
 
@@ -82,8 +84,17 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
 - `pnpm --dir backend build`
 - `pnpm --dir frontend build`
 - `pnpm check`
+- `pnpm --dir frontend biome:check`
+- `pnpm --dir frontend typecheck`
+- `pnpm --dir backend check`
 - Browser local/HTTP sem sessão na rota `/app/professional/profile/setup`: redireciona para login com 307, confirmando rota privada.
 - Backend local em `/health`: respondeu `200` com status `ok`.
+- 2026-06-08: `pnpm --dir frontend check`
+- 2026-06-08: `pnpm --dir backend check`
+- 2026-06-08: `pnpm --dir backend build`
+- 2026-06-08: `pnpm --dir frontend build`
+- 2026-06-08: `pnpm check`
+- 2026-06-08: Chrome headless local em `/app/profile` e `/app/professional/profile/setup` redirecionou para login sem sessao; validacao visual autenticada ficou limitada por nao haver token real acessivel ao agente sem criar mock.
 
 ## Implementação
 
@@ -95,6 +106,19 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
   - `backend/src/modules/api/private/psychologist/free-profile`
   - `backend/src/interfaces/objects/index.ts`
 - Frontend:
+  - `frontend/src/app/app/profile`
   - `frontend/src/app/app/professional/profile/setup`
+  - `frontend/src/app/app/professional/profile/setup/brazil-cities.ts`
+  - `frontend/src/app/app/psychologist/[id]`
+  - `frontend/src/components/psychologists/psychologist-card.tsx`
+  - `frontend/src/components/ui/theme-switch.tsx`
+  - `frontend/src/components/ui/verified-badge.tsx`
+  - `frontend/src/utils/media.ts`
   - `frontend/src/api/generator/types/free-profile.ts`
   - `frontend/next.config.ts`
+
+## Ajuste pos-validacao em 2026-06-08
+
+- Referencias visuais consultadas: `_product/proto/Perfil - Psicologo.jpg`, `_product/proto/Editar Perfil - Psicologo.jpg` e prints enviados pelo usuario no pedido. Builder/Quick Copy nao esta exposto como ferramenta neste ambiente; a limitacao permanece registrada e as imagens locais foram usadas como fonte auditavel.
+- Lista de cidades gerada a partir da API oficial de Localidades do IBGE em 2026-06-08 e versionada no frontend para nao criar dependencia externa de runtime.
+- ADR atualizada em `adrs/0027-perfil-gratuito-sem-crp.md`.

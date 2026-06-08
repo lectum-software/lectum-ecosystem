@@ -2,7 +2,6 @@
 
 import {
   ArrowLeft,
-  BadgeCheck,
   Bookmark,
   CalendarDays,
   Check,
@@ -42,9 +41,11 @@ import type {
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 const PAGE_LIMIT = 5;
 const PROFILE_TABS = ["sobre", "publicacoes", "avaliacoes"] as const;
@@ -98,10 +99,6 @@ const getInitials = (name: string) => {
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
 
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-};
-
-const isGoogleAvatar = (avatar?: string | null) => {
-  return Boolean(avatar?.startsWith("https://lh3.googleusercontent.com/"));
 };
 
 const formatRating = (ratingAvg: number, ratingCount: number) => {
@@ -247,16 +244,20 @@ const Pagination = ({
 };
 
 const ProfileAvatar = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
+  const avatarSrc = resolvePublicMediaUrl(profile.avatar);
+  const avatarIsPublicMedia = isPublicMediaUrl(profile.avatar);
+
   return (
     <div className="relative grid h-[92px] w-[92px] shrink-0 place-items-center overflow-hidden rounded-[28px] bg-primary-soft text-3xl font-extrabold text-primary shadow-[var(--lectum-shadow-soft)]">
-      {isGoogleAvatar(profile.avatar) ? (
+      {avatarSrc ? (
         <Image
           alt={profile.name}
           className="object-cover"
           fill
           priority
           sizes="92px"
-          src={profile.avatar as string}
+          src={avatarSrc}
+          unoptimized={avatarIsPublicMedia}
         />
       ) : (
         getInitials(profile.name)
@@ -313,9 +314,7 @@ const ProfileHero = ({
         <div className="min-w-0 flex-1 pt-2">
           <h1 className="flex items-center gap-2 text-[1.55rem] font-extrabold leading-tight text-foreground lg:text-3xl">
             <span className="min-w-0 truncate">{profile.name}</span>
-            {profile.verified ? (
-              <BadgeCheck className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
-            ) : null}
+            {profile.verified ? <VerifiedBadgeIcon aria-hidden="true" className="h-5 w-5" /> : null}
           </h1>
           <p className="mt-1 text-sm font-semibold text-muted">
             Psicóloga(o) {profile.crp ? `• CRP: ${profile.crp}` : "• CRP não informado"}

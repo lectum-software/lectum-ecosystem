@@ -1,10 +1,12 @@
 "use client";
 
-import { BadgeCheck, Check, ChevronRight, Heart, PhoneCall, Star, UserPlus } from "lucide-react";
+import { Check, ChevronRight, Heart, PhoneCall, Star, UserPlus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
+import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 export type PsychologistCardItem = {
   id: string;
@@ -39,10 +41,6 @@ const getInitials = (name: string) => {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
 
-const isGoogleAvatar = (avatar?: string | null) => {
-  return Boolean(avatar?.startsWith("https://lh3.googleusercontent.com/"));
-};
-
 const formatRating = (ratingAvg: number, ratingCount: number) => {
   if (ratingCount <= 0) return "Sem avaliações";
 
@@ -56,6 +54,8 @@ export function PsychologistCard({
   onToggleFollow,
   psychologist,
 }: PsychologistCardProps) {
+  const avatarSrc = resolvePublicMediaUrl(psychologist.avatar);
+  const avatarIsPublicMedia = isPublicMediaUrl(psychologist.avatar);
   const tags = [
     ...psychologist.specialties.slice(0, 2).map((item) => item.name),
     ...psychologist.services.slice(0, 2).map((item) => item.name),
@@ -118,13 +118,14 @@ export function PsychologistCard({
 
         <div className="flex items-center gap-3">
           <div className="relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-primary-soft text-lg font-bold text-primary">
-            {isGoogleAvatar(psychologist.avatar) ? (
+            {avatarSrc ? (
               <Image
                 alt={psychologist.name}
                 className="object-cover"
                 fill
                 sizes="48px"
-                src={psychologist.avatar as string}
+                src={avatarSrc}
+                unoptimized={avatarIsPublicMedia}
               />
             ) : (
               getInitials(psychologist.name)
@@ -135,7 +136,7 @@ export function PsychologistCard({
             <h2 className="flex items-center gap-1.5 text-[1.08rem] font-extrabold leading-6 text-foreground lg:text-[1.12rem]">
               <span className="truncate">{psychologist.name}</span>
               {psychologist.verified ? (
-                <BadgeCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                <VerifiedBadgeIcon aria-hidden="true" className="h-4 w-4" />
               ) : null}
             </h2>
             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
