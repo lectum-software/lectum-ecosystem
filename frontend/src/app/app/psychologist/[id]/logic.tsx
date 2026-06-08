@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   Bookmark,
   CalendarDays,
-  Check,
   ChevronLeft,
   ChevronRight,
   FileText,
@@ -19,7 +18,6 @@ import {
   ShieldCheck,
   Star,
   ThumbsUp,
-  UserPlus,
   UsersRound,
 } from "lucide-react";
 import Image from "next/image";
@@ -106,6 +104,15 @@ const formatRating = (ratingAvg: number, ratingCount: number) => {
   if (ratingCount <= 0) return "Sem avaliações";
 
   return `${(ratingAvg / 100).toFixed(1)} (${ratingCount})`;
+};
+
+const getHonorificName = (profile: DirectoryPsychologistProfile) => {
+  if (!profile.verified) return profile.name;
+
+  const gender = profile.gender?.toLowerCase();
+  const honorific = gender === "feminino" ? "Dra." : "Dr.";
+
+  return `${honorific} ${profile.name}`;
 };
 
 const formatRatingNumber = (ratingAvg: number, ratingCount: number) => {
@@ -274,20 +281,17 @@ const ProfileAvatar = ({ profile }: { profile: DirectoryPsychologistProfile }) =
 
 const ProfileHero = ({
   favoritePending,
-  followPending,
   onToggleFavorite,
-  onToggleFollow,
   profile,
 }: {
   favoritePending: boolean;
-  followPending: boolean;
   onToggleFavorite: () => void;
-  onToggleFollow: () => void;
   profile: DirectoryPsychologistProfile;
 }) => {
   const primarySpecialty = profile.specialties[0]?.name;
   const headline = profile.headline || profile.bio;
   const formattedCrp = formatCrpNumber(profile.crp);
+  const displayName = getHonorificName(profile);
 
   return (
     <section className="border-b border-border bg-surface px-4 pb-5 pt-6 sm:rounded-b-[28px] sm:border sm:px-6 lg:px-8">
@@ -315,7 +319,7 @@ const ProfileHero = ({
 
         <div className="min-w-0 flex-1 pt-2">
           <h1 className="flex items-center gap-2 text-[1.55rem] font-extrabold leading-tight text-foreground lg:text-3xl">
-            <span className="min-w-0 truncate">{profile.name}</span>
+            <span className="min-w-0 truncate">{displayName}</span>
             {profile.verified ? <VerifiedBadgeIcon aria-hidden="true" className="h-5 w-5" /> : null}
           </h1>
           <p className="mt-1 text-sm font-semibold text-muted">
@@ -361,28 +365,7 @@ const ProfileHero = ({
         ) : null}
       </div>
 
-      <div className="mt-5 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
-        <button
-          aria-label={
-            profile.followed ? `Deixar de seguir ${profile.name}` : `Seguir ${profile.name}`
-          }
-          aria-pressed={profile.followed}
-          className={cn(
-            "inline-flex h-11 items-center justify-center gap-2 rounded-full border border-border bg-surface-muted px-4 text-sm font-extrabold text-muted transition hover:border-primary/40 hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-60",
-            profile.followed && "border-primary/30 bg-primary-soft text-primary",
-          )}
-          disabled={followPending}
-          onClick={onToggleFollow}
-          type="button"
-        >
-          {profile.followed ? (
-            <Check className="h-4 w-4" aria-hidden="true" />
-          ) : (
-            <UserPlus className="h-4 w-4" aria-hidden="true" />
-          )}
-          {profile.followed ? "Seguindo" : "Seguir"}
-        </button>
-
+      <div className="mt-5 grid gap-3 sm:flex sm:flex-wrap">
         <Button asChild className="h-11 rounded-full" variant="outline">
           <Link href="/app/psychologists">
             <UsersRound className="h-4 w-4" aria-hidden="true" />
@@ -544,8 +527,8 @@ const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
 
       <InlineAlert title="Contato seguro" variant={profile.whatsapp_available ? "info" : "warning"}>
         {profile.whatsapp_available
-          ? "Para consultar agenda, valores e demais informações, avance pelo fluxo de contato por WhatsApp. O número não é exposto nesta tela pública."
-          : "Este perfil ainda não possui WhatsApp verificado. O contato por WhatsApp será liberado quando houver verificação real."}
+          ? "Para consultar agenda, valores e demais informações, use o botão de WhatsApp. A conversa abre no wa.me em uma nova aba."
+          : "Este perfil ainda não possui WhatsApp disponível. O botão será exibido quando o profissional informar um número válido."}
       </InlineAlert>
     </div>
   );
@@ -808,7 +791,7 @@ const ReviewsTab = ({
 };
 
 const WhatsAppCta = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
-  if (!profile.whatsapp_available) {
+  if (!profile.whatsapp_url) {
     return null;
   }
 
@@ -818,10 +801,10 @@ const WhatsAppCta = ({ profile }: { profile: DirectoryPsychologistProfile }) => 
         asChild
         className="h-14 w-full rounded-2xl bg-success text-base font-extrabold hover:bg-success/90"
       >
-        <Link href={`/app/psychologist/${profile.id}/contact`}>
+        <a href={profile.whatsapp_url} rel="noreferrer" target="_blank">
           <MessageCircle className="h-5 w-5" aria-hidden="true" />
           Chamar no WhatsApp
-        </Link>
+        </a>
       </Button>
     </div>
   );
@@ -854,8 +837,7 @@ export const PsychologistProfileLogic = () => {
     reviewsQuery,
     activeTab === "avaliacoes" && Boolean(profile),
   );
-  const { favoritePsychologist, followPsychologist, unfavoritePsychologist, unfollowPsychologist } =
-    usePatient({ enableProfile: false });
+  const { favoritePsychologist, unfavoritePsychologist } = usePatient({ enableProfile: false });
 
   const navigateWithParams = useCallback(
     (mutate: (next: URLSearchParams) => void) => {
@@ -906,17 +888,6 @@ export const PsychologistProfileLogic = () => {
     favoritePsychologist.mutate(profile.id);
   };
 
-  const toggleFollow = () => {
-    if (!profile) return;
-
-    if (profile.followed) {
-      unfollowPsychologist.mutate(profile.id);
-      return;
-    }
-
-    followPsychologist.mutate(profile.id);
-  };
-
   const shareProfile = async () => {
     if (typeof window === "undefined") return;
 
@@ -942,13 +913,6 @@ export const PsychologistProfileLogic = () => {
       : unfavoritePsychologist.isPending && typeof unfavoritePsychologist.variables === "string"
         ? unfavoritePsychologist.variables
         : null;
-  const followPendingId =
-    followPsychologist.isPending && typeof followPsychologist.variables === "string"
-      ? followPsychologist.variables
-      : unfollowPsychologist.isPending && typeof unfollowPsychologist.variables === "string"
-        ? unfollowPsychologist.variables
-        : null;
-
   const showInitialLoading = profileQuery.isLoading && !profile;
   const profileErrorMessage = profileQuery.isError
     ? resolveErrorMessage(profileQuery.error, "Não foi possível carregar o perfil profissional.")
@@ -1027,9 +991,7 @@ export const PsychologistProfileLogic = () => {
             <>
               <ProfileHero
                 favoritePending={favoritePendingId === profile.id}
-                followPending={followPendingId === profile.id}
                 onToggleFavorite={toggleFavorite}
-                onToggleFollow={toggleFollow}
                 profile={profile}
               />
 
@@ -1078,7 +1040,7 @@ export const PsychologistProfileLogic = () => {
               <div>
                 <p className="text-sm font-extrabold text-foreground">Contato e agenda</p>
                 <p className="text-xs leading-5 text-muted">
-                  WhatsApp só é liberado no fluxo dedicado e com número verificado.
+                  O botão abre uma conversa no wa.me quando o profissional possui número válido.
                 </p>
               </div>
             </div>

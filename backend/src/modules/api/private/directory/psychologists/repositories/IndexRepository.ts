@@ -9,6 +9,8 @@ import type { IIndexRepository } from "./interfaces/IIndexRepository";
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
+const CONTACT_MESSAGE =
+  "Olá, encontrei seu perfil na Lectum e gostaria de conversar sobre atendimento.";
 
 const catalogSelect = {
   id: true,
@@ -48,6 +50,62 @@ const currentWeekdayValue = () => {
 
 const hasAvailableToday = (value: unknown) => {
   return normalizeStringArray(value).includes(currentWeekdayValue());
+};
+
+const currentYearValue = () => {
+  return Number(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Sao_Paulo",
+      year: "numeric",
+    }).format(new Date()),
+  );
+};
+
+const parseYear = (value: unknown) => {
+  if (typeof value !== "string") return null;
+
+  const match = value.match(/\d{4}/);
+  if (!match) return null;
+
+  const year = Number(match[0]);
+  const currentYear = currentYearValue();
+
+  if (!Number.isFinite(year) || year < 1950 || year > currentYear) return null;
+
+  return year;
+};
+
+const academicFormationYears = (
+  primaryYear: string | null,
+  formations: Prisma.JsonValue | null,
+) => {
+  const years: number[] = [];
+  const primary = parseYear(primaryYear);
+
+  if (primary) years.push(primary);
+
+  if (Array.isArray(formations)) {
+    for (const item of formations) {
+      if (!item || typeof item !== "object" || Array.isArray(item)) continue;
+
+      const formation = item as Record<string, unknown>;
+      const year = parseYear(formation.graduation_year);
+
+      if (year) years.push(year);
+    }
+  }
+
+  if (years.length === 0) return null;
+
+  const yearsSince = currentYearValue() - Math.min(...years);
+  return yearsSince > 0 ? yearsSince : null;
+};
+
+const buildWhatsappUrl = (value?: string | null) => {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  if (digits.length < 8) return null;
+
+  return `https://wa.me/${digits}?text=${encodeURIComponent(CONTACT_MESSAGE)}`;
 };
 
 const activeVerifiedSubscriptionWhere = {
@@ -175,13 +233,21 @@ export class IndexRepository implements IIndexRepository {
           user_id: true,
           headline: true,
           bio: true,
+          video_url: true,
           crp: true,
           cfp_verified_at: true,
+          gender: true,
+          discount_first_session: true,
+          social_value: true,
+          accepts_insurance: true,
+          academic_graduation_year: true,
+          academic_formations: true,
           available_days: true,
           modality: true,
           languages: true,
           rating_avg: true,
           rating_count: true,
+          whatsapp: true,
           subscriptions: {
             where: activeVerifiedSubscriptionWhere,
             select: {
@@ -273,13 +339,23 @@ export class IndexRepository implements IIndexRepository {
         avatar: item.user.avatar,
         headline: item.headline,
         bio: item.bio,
+        video_url: item.video_url,
         crp: item.crp,
+        gender: item.gender,
         modality: item.modality,
         languages: normalizeStringArray(item.languages),
         rating_avg: item.rating_avg,
         rating_count: item.rating_count,
         verified: item.subscriptions.length > 0,
         available_today: hasAvailableToday(item.available_days),
+        formation_years: academicFormationYears(
+          item.academic_graduation_year,
+          item.academic_formations,
+        ),
+        discount_first_session: item.discount_first_session,
+        social_value: item.social_value,
+        accepts_insurance: item.accepts_insurance,
+        whatsapp_url: buildWhatsappUrl(item.whatsapp),
         favorited: item.user.favorited_by_patients.length > 0,
         followed: item.user.followed_by_patients.length > 0,
         specialties: item.user.psychologist_specialties

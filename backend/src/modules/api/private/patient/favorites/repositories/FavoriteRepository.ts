@@ -10,6 +10,8 @@ import type { IFavoriteRepository } from "./interfaces/IFavoriteRepository";
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
+const CONTACT_MESSAGE =
+  "Olá, encontrei seu perfil na Lectum e gostaria de conversar sobre atendimento.";
 
 const catalogSelect = {
   id: true,
@@ -32,6 +34,86 @@ const normalizeStringArray = (value: unknown): string[] => {
   if (!Array.isArray(value)) return [];
 
   return value.filter((item): item is string => typeof item === "string");
+};
+
+const currentWeekdayValue = () => {
+  const weekday = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    weekday: "long",
+  }).format(new Date());
+
+  const normalized = weekday
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+
+  if (normalized.includes("segunda")) return "segunda";
+  if (normalized.includes("terca")) return "terca";
+  if (normalized.includes("quarta")) return "quarta";
+  if (normalized.includes("quinta")) return "quinta";
+  if (normalized.includes("sexta")) return "sexta";
+  if (normalized.includes("sabado")) return "sabado";
+  return "domingo";
+};
+
+const hasAvailableToday = (value: unknown) => {
+  return normalizeStringArray(value).includes(currentWeekdayValue());
+};
+
+const currentYearValue = () => {
+  return Number(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Sao_Paulo",
+      year: "numeric",
+    }).format(new Date()),
+  );
+};
+
+const parseYear = (value: unknown) => {
+  if (typeof value !== "string") return null;
+
+  const match = value.match(/\d{4}/);
+  if (!match) return null;
+
+  const year = Number(match[0]);
+  const currentYear = currentYearValue();
+
+  if (!Number.isFinite(year) || year < 1950 || year > currentYear) return null;
+
+  return year;
+};
+
+const academicFormationYears = (
+  primaryYear: string | null,
+  formations: Prisma.JsonValue | null,
+) => {
+  const years: number[] = [];
+  const primary = parseYear(primaryYear);
+
+  if (primary) years.push(primary);
+
+  if (Array.isArray(formations)) {
+    for (const item of formations) {
+      if (!item || typeof item !== "object" || Array.isArray(item)) continue;
+
+      const formation = item as Record<string, unknown>;
+      const year = parseYear(formation.graduation_year);
+
+      if (year) years.push(year);
+    }
+  }
+
+  if (years.length === 0) return null;
+
+  const yearsSince = currentYearValue() - Math.min(...years);
+  return yearsSince > 0 ? yearsSince : null;
+};
+
+const buildWhatsappUrl = (value?: string | null) => {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  if (digits.length < 8) return null;
+
+  return `https://wa.me/${digits}?text=${encodeURIComponent(CONTACT_MESSAGE)}`;
 };
 
 const isCatalogItem = (
@@ -117,11 +199,20 @@ export class FavoriteRepository implements IFavoriteRepository {
                 select: {
                   headline: true,
                   bio: true,
+                  video_url: true,
                   crp: true,
+                  gender: true,
                   modality: true,
                   languages: true,
                   rating_avg: true,
                   rating_count: true,
+                  available_days: true,
+                  discount_first_session: true,
+                  social_value: true,
+                  accepts_insurance: true,
+                  academic_graduation_year: true,
+                  academic_formations: true,
+                  whatsapp: true,
                   subscriptions: {
                     where: activeVerifiedSubscriptionWhere,
                     select: {
@@ -194,12 +285,23 @@ export class FavoriteRepository implements IFavoriteRepository {
             avatar: item.psychologist.avatar,
             headline: profile.headline,
             bio: profile.bio,
+            video_url: profile.video_url,
             crp: profile.crp,
+            gender: profile.gender,
             modality: profile.modality,
             languages: normalizeStringArray(profile.languages),
             rating_avg: profile.rating_avg,
             rating_count: profile.rating_count,
             verified: profile.subscriptions.length > 0,
+            available_today: hasAvailableToday(profile.available_days),
+            formation_years: academicFormationYears(
+              profile.academic_graduation_year,
+              profile.academic_formations,
+            ),
+            discount_first_session: profile.discount_first_session,
+            social_value: profile.social_value,
+            accepts_insurance: profile.accepts_insurance,
+            whatsapp_url: buildWhatsappUrl(profile.whatsapp),
             favorited: item.psychologist.favorited_by_patients.length > 0,
             followed: item.psychologist.followed_by_patients.length > 0,
             specialties: item.psychologist.psychologist_specialties

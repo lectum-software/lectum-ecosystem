@@ -1,12 +1,22 @@
 "use client";
 
-import { Check, ChevronRight, Heart, PhoneCall, Star, UserPlus } from "lucide-react";
+import {
+  BadgePercent,
+  BriefcaseBusiness,
+  ChevronRight,
+  Heart,
+  HeartHandshake,
+  MessageCircle,
+  Play,
+  ShieldCheck,
+  Star,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRef, useState } from "react";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
-import { formatCrpNumber } from "@/utils/crp";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 export type PsychologistCardItem = {
@@ -15,24 +25,28 @@ export type PsychologistCardItem = {
   avatar: string | null;
   headline: string | null;
   bio: string | null;
+  video_url?: string | null;
   crp?: string | null;
+  gender?: string | null;
   modality: string | null;
   rating_avg: number;
   rating_count: number;
   verified: boolean;
   available_today?: boolean;
+  formation_years?: number | null;
+  discount_first_session?: boolean;
+  social_value?: boolean;
+  accepts_insurance?: boolean;
+  whatsapp_url?: string | null;
   favorited: boolean;
-  followed: boolean;
   specialties: Array<{ name: string }>;
   services: Array<{ name: string }>;
 };
 
 type PsychologistCardProps = {
   favoritePending?: boolean;
-  followPending?: boolean;
   psychologist: PsychologistCardItem;
   onToggleFavorite: (psychologist: PsychologistCardItem) => void;
-  onToggleFollow: (psychologist: PsychologistCardItem) => void;
 };
 
 const getInitials = (name: string) => {
@@ -50,111 +64,199 @@ const formatRating = (ratingAvg: number, ratingCount: number) => {
   return `${(ratingAvg / 100).toFixed(1)} (${ratingCount})`;
 };
 
+const getHonorificName = (psychologist: PsychologistCardItem) => {
+  if (!psychologist.verified) return psychologist.name;
+
+  const gender = psychologist.gender?.toLowerCase();
+  const honorific = gender === "feminino" ? "Dra." : "Dr.";
+
+  return `${honorific} ${psychologist.name}`;
+};
+
+const buildBenefitTags = (psychologist: PsychologistCardItem) => {
+  const tags: Array<{
+    icon: typeof BriefcaseBusiness;
+    label: string;
+  }> = [];
+
+  if (psychologist.verified && psychologist.formation_years) {
+    tags.push({
+      icon: BriefcaseBusiness,
+      label: `${psychologist.formation_years} anos de experiência`,
+    });
+  }
+
+  if (psychologist.accepts_insurance) {
+    tags.push({ icon: ShieldCheck, label: "Aceita convênios" });
+  }
+
+  if (psychologist.social_value) {
+    tags.push({ icon: HeartHandshake, label: "Valor social" });
+  }
+
+  if (psychologist.discount_first_session) {
+    tags.push({ icon: BadgePercent, label: "Desconto 1ª sessão" });
+  }
+
+  return tags;
+};
+
+const AvailabilityBadge = ({ available }: { available?: boolean }) => {
+  if (!available) return null;
+
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[0.68rem] font-extrabold text-success">
+      <span
+        className="h-2.5 w-2.5 rounded-full bg-success motion-safe:animate-pulse"
+        aria-hidden="true"
+      />
+      Disponível hoje
+    </span>
+  );
+};
+
+const FavoriteButton = ({
+  className,
+  favoritePending,
+  onToggleFavorite,
+  psychologist,
+}: {
+  className?: string;
+  favoritePending?: boolean;
+  onToggleFavorite: (psychologist: PsychologistCardItem) => void;
+  psychologist: PsychologistCardItem;
+}) => (
+  <button
+    aria-label={
+      psychologist.favorited
+        ? `Remover ${psychologist.name} dos favoritos`
+        : `Favoritar ${psychologist.name}`
+    }
+    aria-pressed={psychologist.favorited}
+    className={cn(
+      "grid h-12 w-12 place-items-center rounded-full border border-border bg-surface/95 text-muted shadow-[var(--lectum-shadow-soft)] transition hover:border-primary/40 hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-60",
+      psychologist.favorited && "border-primary/30 bg-primary-soft text-primary",
+      className,
+    )}
+    disabled={favoritePending}
+    onClick={() => onToggleFavorite(psychologist)}
+    type="button"
+  >
+    <Heart className={cn("h-6 w-6", psychologist.favorited && "fill-current")} aria-hidden="true" />
+  </button>
+);
+
+const CardVideo = ({ name, url }: { name: string; url: string }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [playing, setPlaying] = useState(false);
+
+  const play = () => {
+    setPlaying(true);
+    void videoRef.current?.play();
+  };
+
+  return (
+    <div className="relative aspect-[1.55] overflow-hidden bg-surface-muted">
+      {/* biome-ignore lint/a11y/useMediaCaption: vídeos enviados por profissionais ainda não possuem trilha de legenda nesta etapa. */}
+      <video
+        aria-label={`Vídeo de apresentação de ${name}`}
+        className="h-full w-full object-cover"
+        controls={playing}
+        onPause={() => setPlaying(false)}
+        onPlay={() => setPlaying(true)}
+        playsInline
+        preload="metadata"
+        ref={videoRef}
+        src={url}
+      />
+      {!playing ? (
+        <button
+          aria-label={`Reproduzir vídeo de ${name}`}
+          className="absolute inset-0 grid place-items-center bg-slate-950/5 text-white transition hover:bg-slate-950/15"
+          onClick={play}
+          type="button"
+        >
+          <span className="grid h-16 w-16 place-items-center rounded-full border-4 border-white/90 bg-white/20 text-white shadow-lg backdrop-blur-sm">
+            <Play className="ml-1 h-8 w-8 fill-current" aria-hidden="true" />
+          </span>
+        </button>
+      ) : null}
+    </div>
+  );
+};
+
 export function PsychologistCard({
   favoritePending,
-  followPending,
   onToggleFavorite,
-  onToggleFollow,
   psychologist,
 }: PsychologistCardProps) {
   const avatarSrc = resolvePublicMediaUrl(psychologist.avatar);
   const avatarIsPublicMedia = isPublicMediaUrl(psychologist.avatar);
-  const formattedCrp = formatCrpNumber(psychologist.crp);
-  const tags = [
-    ...psychologist.specialties.slice(0, 2).map((item) => item.name),
-    ...psychologist.services.slice(0, 2).map((item) => item.name),
-    psychologist.modality,
-  ].filter(Boolean) as string[];
+  const videoSrc = psychologist.verified ? resolvePublicMediaUrl(psychologist.video_url) : null;
+  const tags = buildBenefitTags(psychologist);
+  const displayName = getHonorificName(psychologist);
+  const summary =
+    psychologist.headline ||
+    psychologist.bio ||
+    "Perfil profissional publicado na Lectum com informações públicas do psicólogo.";
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_8px_28px_rgb(15_23_42_/_5%)] transition hover:border-border-strong hover:shadow-[0_12px_32px_rgb(15_23_42_/_7%)]">
-      <div className="grid gap-3 p-4">
-        <div className="flex items-center justify-between gap-3">
-          {psychologist.available_today ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[0.72rem] font-bold text-success">
-              <span
-                className="h-2.5 w-2.5 rounded-full bg-success motion-safe:animate-pulse"
-                aria-hidden="true"
-              />
-              Disponível hoje
-            </span>
-          ) : (
-            <span />
-          )}
-          <div className="flex items-center gap-2">
-            <button
-              aria-label={
-                psychologist.followed
-                  ? `Deixar de seguir ${psychologist.name}`
-                  : `Seguir ${psychologist.name}`
-              }
-              aria-pressed={psychologist.followed}
-              className={cn(
-                "inline-flex h-10 items-center gap-1.5 rounded-full border border-border bg-surface px-3 text-xs font-extrabold text-muted shadow-[var(--lectum-shadow-soft)] transition hover:border-primary/40 hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-60",
-                psychologist.followed && "border-primary/30 bg-primary-soft text-primary",
-              )}
-              disabled={followPending}
-              onClick={() => onToggleFollow(psychologist)}
-              type="button"
-            >
-              {psychologist.followed ? (
-                <Check className="h-4 w-4" aria-hidden="true" />
-              ) : (
-                <UserPlus className="h-4 w-4" aria-hidden="true" />
-              )}
-              {psychologist.followed ? "Seguindo" : "Seguir"}
-            </button>
-            <button
-              aria-label={
-                psychologist.favorited
-                  ? `Remover ${psychologist.name} dos favoritos`
-                  : `Favoritar ${psychologist.name}`
-              }
-              aria-pressed={psychologist.favorited}
-              className={cn(
-                "grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-muted shadow-[var(--lectum-shadow-soft)] transition hover:border-primary/40 hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-60",
-                psychologist.favorited && "border-primary/30 bg-primary-soft text-primary",
-              )}
-              disabled={favoritePending}
-              onClick={() => onToggleFavorite(psychologist)}
-              type="button"
-            >
-              <Heart
-                className={cn("h-5 w-5", psychologist.favorited && "fill-current")}
-                aria-hidden="true"
-              />
-            </button>
+    <article className="w-full max-w-[390px] overflow-hidden rounded-[20px] border border-border bg-surface shadow-[0_14px_32px_rgb(15_23_42_/_10%)] transition hover:border-border-strong hover:shadow-[0_18px_38px_rgb(15_23_42_/_12%)]">
+      {videoSrc ? (
+        <div className="relative">
+          <CardVideo name={psychologist.name} url={videoSrc} />
+          <div className="absolute left-4 top-4">
+            <AvailabilityBadge available={psychologist.available_today} />
           </div>
+          <FavoriteButton
+            className="absolute right-4 top-4"
+            favoritePending={favoritePending}
+            onToggleFavorite={onToggleFavorite}
+            psychologist={psychologist}
+          />
         </div>
+      ) : (
+        <div className="flex items-center justify-between gap-3 px-5 pt-5">
+          <AvailabilityBadge available={psychologist.available_today} />
+          <FavoriteButton
+            favoritePending={favoritePending}
+            onToggleFavorite={onToggleFavorite}
+            psychologist={psychologist}
+          />
+        </div>
+      )}
 
+      <div className="grid gap-4 p-5">
         <div className="flex items-center gap-3">
-          <div className="relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-primary-soft text-lg font-bold text-primary">
-            {avatarSrc ? (
-              <Image
-                alt={psychologist.name}
-                className="object-cover"
-                fill
-                sizes="48px"
-                src={avatarSrc}
-                unoptimized={avatarIsPublicMedia}
-              />
-            ) : (
-              getInitials(psychologist.name)
-            )}
-          </div>
+          {!videoSrc ? (
+            <div className="relative grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl bg-primary-soft text-lg font-bold text-primary">
+              {avatarSrc ? (
+                <Image
+                  alt={psychologist.name}
+                  className="object-cover"
+                  fill
+                  sizes="56px"
+                  src={avatarSrc}
+                  unoptimized={avatarIsPublicMedia}
+                />
+              ) : (
+                getInitials(psychologist.name)
+              )}
+            </div>
+          ) : null}
 
           <div className="min-w-0 flex-1">
-            <h2 className="flex items-center gap-1.5 text-[1.08rem] font-extrabold leading-6 text-foreground lg:text-[1.12rem]">
-              <span className="truncate">{psychologist.name}</span>
+            <h2 className="flex items-center gap-1.5 text-[1.22rem] font-extrabold leading-6 text-foreground">
+              <span className="truncate">{displayName}</span>
               {psychologist.verified ? (
-                <VerifiedBadgeIcon aria-hidden="true" className="h-4 w-4" />
+                <VerifiedBadgeIcon aria-hidden="true" className="h-[18px] w-[18px] shrink-0" />
               ) : null}
             </h2>
             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span className="text-[0.65rem] font-bold uppercase tracking-[0.26em] text-subtle">
-                Psicólogo{formattedCrp ? ` • CRP ${formattedCrp}` : ""}
+              <span className="text-[0.66rem] font-extrabold uppercase tracking-[0.28em] text-subtle">
+                Psicólogo
               </span>
-              <span className="inline-flex items-center gap-1 text-[0.78rem] font-semibold text-muted">
+              <span className="inline-flex items-center gap-1 text-[0.78rem] font-bold text-muted">
                 <Star className="h-3.5 w-3.5 fill-warning text-warning" aria-hidden="true" />
                 {formatRating(psychologist.rating_avg, psychologist.rating_count)}
               </span>
@@ -170,38 +272,46 @@ export function PsychologistCard({
           </Link>
         </div>
 
-        <p className="line-clamp-3 text-[0.88rem] leading-6 text-muted">
-          {psychologist.headline ||
-            psychologist.bio ||
-            "Perfil publicado na Lectum. Abra o perfil para conferir as informações disponíveis."}
-        </p>
+        <p className="line-clamp-3 text-[0.86rem] leading-6 text-muted">{summary}</p>
 
-        <div className="flex flex-wrap gap-2">
-          {tags.length > 0 ? (
-            tags.map((tag) => (
-              <span
-                className="rounded-full border border-border bg-surface-muted px-2.5 py-1 text-[0.7rem] font-semibold text-muted"
-                key={tag}
-              >
-                {tag}
-              </span>
-            ))
-          ) : (
-            <span className="rounded-full border border-border bg-surface-muted px-2.5 py-1 text-[0.7rem] font-semibold text-muted">
-              Dados profissionais públicos
-            </span>
-          )}
-        </div>
+        {tags.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {tags.map((tag) => {
+              const Icon = tag.icon;
 
-        <Button
-          asChild
-          className="h-11 w-full rounded-full bg-success text-sm font-extrabold text-white hover:bg-success/90"
-        >
-          <Link href={`/app/psychologist/${psychologist.id}`}>
-            <PhoneCall className="h-5 w-5" aria-hidden="true" />
-            Chamar no WhatsApp
-          </Link>
-        </Button>
+              return (
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface-muted px-2.5 py-1.5 text-[0.68rem] font-bold text-muted"
+                  key={tag.label}
+                >
+                  <Icon className="h-3.5 w-3.5 text-subtle" aria-hidden="true" />
+                  {tag.label}
+                </span>
+              );
+            })}
+          </div>
+        ) : null}
+
+        {psychologist.whatsapp_url ? (
+          <Button
+            asChild
+            className="h-12 rounded-xl bg-success text-sm font-extrabold text-white hover:bg-success/90"
+          >
+            <a href={psychologist.whatsapp_url} rel="noreferrer" target="_blank">
+              <MessageCircle className="h-5 w-5" aria-hidden="true" />
+              Chamar no WhatsApp
+            </a>
+          </Button>
+        ) : (
+          <Button
+            className="h-12 rounded-xl bg-success text-sm font-extrabold text-white"
+            disabled
+            type="button"
+          >
+            <MessageCircle className="h-5 w-5" aria-hidden="true" />
+            WhatsApp indisponível
+          </Button>
+        )}
       </div>
     </article>
   );

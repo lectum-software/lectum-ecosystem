@@ -211,7 +211,8 @@ Regras anti-recriação específicas:
 - O coração do card deixou de ser apenas decorativo e passou a executar favorito real com endpoints de paciente
   (`POST`/`DELETE /api/private/patient/favorites/:id`) e campo contextual `favorited` na listagem.
 - Como favorito pertence à TASK-14, a execução criou os modelos previstos no `DATA-MODEL.md`, mas **não** concluiu
-  a TASK-14 completa; listas dedicadas de favoritos/seguindo seguem pendentes.
+  a TASK-14 completa; a lista dedicada de favoritos segue como fluxo separado, e seguir psicólogos foi depreciado na
+  UI em 2026-06-08.
 - ADR criado: `adrs/0020-favoritar-psicologo-na-listagem.md`.
 - Validações executadas:
   - `pnpm --dir backend db:migrate --name add_psychologist_favorites`
@@ -224,6 +225,45 @@ Regras anti-recriação específicas:
     remover o usuário temporário;
   - browser local headless em viewport desktop `1440x1000`, validando tags, selo, CTA e clique no coração com
     `aria-pressed=true`.
+
+## Execução complementar: card conforme referência de psicólogos (2026-06-08)
+
+- Pedido do usuário: adaptar o card de psicólogo conforme a referência anexada `Psicólogos (1).jpg`, remover a opção
+  de seguir psicólogos e manter favoritos/WhatsApp como ações principais.
+- Builder/Quick Copy não está exposto como ferramenta direta nesta sessão; a validação visual usou a imagem anexada
+  pelo usuário e o fallback local `_product/proto/Psicólogos.jpg`.
+- O card público agora usa layout mobile-first de até `390px`, sem botão de seguir, com coração de favorito, selo
+  `Disponível hoje` pulsando suavemente quando `available_today=true`, CTA verde `Chamar no WhatsApp` e link direto
+  para `wa.me`.
+- Tags abaixo da bio ficaram restritas a benefícios reais: tempo de formação apenas para assinantes, desconto de
+  1ª sessão, valor social e aceita convênios. Especialidades, serviços, abordagens e modalidade não aparecem como
+  tags de benefício no card.
+- O selo verificado e o prefixo `Dr.`/`Dra.` aparecem somente para assinantes; perfis gratuitos publicados não exibem
+  o selo nem o prefixo.
+- Quando o assinante possui `video_url`, o card mostra uma miniatura de vídeo com botão de play no próprio card.
+  Vídeos enviados por profissionais ainda não possuem trilha de legenda nesta etapa; a exceção de lint foi registrada
+  localmente no componente.
+- A rota `/app/following` passou a redirecionar para `/app/community`, a navegação não destaca mais `/app/following`
+  como favoritos e o menu de perfil passou a usar `Comunidades seguidas`, alinhado à decisão de que usuários seguem
+  comunidades, não outros usuários.
+- O backend da descoberta e da lista de favoritos passou a expor campos publicáveis necessários ao card
+  (`gender`, `video_url`, `available_today`, benefícios, `formation_years` e `whatsapp_url`). O campo bruto
+  `whatsapp` continua fora do contrato; `whatsapp_url` é uma URL de CTA gerada para o pedido explícito de abrir
+  `wa.me`.
+- ADR atualizado: `adrs/0019-descoberta-psicologos-taxonomias.md`.
+- Validações executadas:
+  - `pnpm --dir backend biome:fix`
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir backend check`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir backend build`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - smoke real de API com paciente temporário removido ao final: `GET /api/private/directory/psychologists?page=1&limit=3`
+    retornou `success=true`, `count=1`, `page=1` e campos novos do card (`whatsapp_url`, `video_url`,
+    `available_today`, benefícios e `formation_years`);
+  - smoke local HTTP: `GET /health` no backend retornou `200`; `/app/psychologists` e `/app/following` responderam
+    pelo proxy privado local com `307` quando acessados sem sessão de browser reutilizável nesta execução.
 
 ## Validação mínima
 

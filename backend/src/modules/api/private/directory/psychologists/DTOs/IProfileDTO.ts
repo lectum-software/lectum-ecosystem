@@ -15,12 +15,18 @@ export type DirectoryPsychologistProfile = {
   bio: string | null;
   video_url: string | null;
   crp: string | null;
+  gender: string | null;
   modality: string | null;
   languages: string[];
   rating_avg: number;
   rating_count: number;
   verified: boolean;
   available_today: boolean;
+  formation_years: number | null;
+  discount_first_session: boolean;
+  social_value: boolean;
+  accepts_insurance: boolean;
+  whatsapp_url: string | null;
   favorited: boolean;
   followed: boolean;
   whatsapp_available: boolean;

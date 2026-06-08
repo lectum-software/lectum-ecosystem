@@ -155,8 +155,7 @@ export const PsychologistsLogic = () => {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const closeFiltersButtonRef = useRef<HTMLButtonElement>(null);
   const filtersTitleId = useId();
-  const { favoritePsychologist, followPsychologist, unfavoritePsychologist, unfollowPsychologist } =
-    usePatient({ enableProfile: false });
+  const { favoritePsychologist, unfavoritePsychologist } = usePatient({ enableProfile: false });
 
   const params = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
   const filterValues = useMemo(() => readFiltersFromParams(params), [params]);
@@ -301,26 +300,11 @@ export const PsychologistsLogic = () => {
     favoritePsychologist.mutate(psychologist.id);
   };
 
-  const toggleFollow = (psychologist: PsychologistCardItem) => {
-    if (psychologist.followed) {
-      unfollowPsychologist.mutate(psychologist.id);
-      return;
-    }
-
-    followPsychologist.mutate(psychologist.id);
-  };
-
   const favoritePendingId =
     favoritePsychologist.isPending && typeof favoritePsychologist.variables === "string"
       ? favoritePsychologist.variables
       : unfavoritePsychologist.isPending && typeof unfavoritePsychologist.variables === "string"
         ? unfavoritePsychologist.variables
-        : null;
-  const followPendingId =
-    followPsychologist.isPending && typeof followPsychologist.variables === "string"
-      ? followPsychologist.variables
-      : unfollowPsychologist.isPending && typeof unfollowPsychologist.variables === "string"
-        ? unfollowPsychologist.variables
         : null;
   const hasFilters = activeFilters.length > 0;
   const errorMessage = directory.isError ? resolveDirectoryErrorMessage(directory.error) : null;
@@ -559,10 +543,8 @@ export const PsychologistsLogic = () => {
                 {psychologists.map((psychologist) => (
                   <PsychologistCard
                     favoritePending={favoritePendingId === psychologist.id}
-                    followPending={followPendingId === psychologist.id}
                     key={psychologist.id}
                     onToggleFavorite={toggleFavorite}
-                    onToggleFollow={toggleFollow}
                     psychologist={psychologist}
                   />
                 ))}

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, BellRing, Heart, Search, UserRoundCheck } from "lucide-react";
+import { ArrowLeft, BellRing, Heart, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
@@ -9,14 +9,13 @@ import type { PatientRelationPsychologist, PatientRelationQuery } from "@/api/ge
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
-import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { PsychologistCard, type PsychologistCardItem } from "./psychologist-card";
 
 const PAGE_LIMIT = 20;
 
-type RelationMode = "favorites" | "following";
+type RelationMode = "favorites";
 
 type PsychologistRelationListProps = {
   mode: RelationMode;
@@ -41,15 +40,6 @@ const config = {
       "Favorite psicólogos publicados na descoberta para montar sua lista pessoal com dados reais.",
     icon: Heart,
     countLabel: "Perfis favoritos",
-  },
-  following: {
-    title: "Seguindo",
-    subtitle: "Profissionais que você acompanha na Lectum.",
-    emptyTitle: "Nenhum psicólogo seguido",
-    emptyDescription:
-      "Siga profissionais publicados para acompanhar seus perfis em uma lista dedicada.",
-    icon: UserRoundCheck,
-    countLabel: "Profissionais seguidos",
   },
 } satisfies Record<RelationMode, Record<string, unknown>>;
 
@@ -87,23 +77,14 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
     [currentPage],
   );
   const copy = config[mode];
-  const isFavorites = mode === "favorites";
-  const {
-    favoritePsychologist,
-    favorites,
-    followPsychologist,
-    follows,
-    unfavoritePsychologist,
-    unfollowPsychologist,
-  } = usePatient({
-    enableFavorites: isFavorites,
-    enableFollows: !isFavorites,
+  const { favoritePsychologist, favorites, unfavoritePsychologist } = usePatient({
+    enableFavorites: true,
+    enableFollows: false,
     enableProfile: false,
     favoritesQuery: query,
-    followsQuery: query,
   });
 
-  const activeQuery = isFavorites ? favorites : follows;
+  const activeQuery = favorites;
   const response = activeQuery.data;
   const psychologists: PatientRelationPsychologist[] = response?.data ?? [];
   const total = response?.count ?? 0;
@@ -117,12 +98,9 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
     if (page > 1) next.set("page", String(page));
     else next.delete("page");
 
-    router.replace(
-      `${isFavorites ? "/app/favorites" : "/app/following"}${next.toString() ? `?${next}` : ""}`,
-      {
-        scroll: false,
-      },
-    );
+    router.replace(`/app/favorites${next.toString() ? `?${next}` : ""}`, {
+      scroll: false,
+    });
   };
 
   const toggleFavorite = (psychologist: PsychologistCardItem) => {
@@ -134,26 +112,11 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
     favoritePsychologist.mutate(psychologist.id);
   };
 
-  const toggleFollow = (psychologist: PsychologistCardItem) => {
-    if (psychologist.followed) {
-      unfollowPsychologist.mutate(psychologist.id);
-      return;
-    }
-
-    followPsychologist.mutate(psychologist.id);
-  };
-
   const favoritePendingId =
     favoritePsychologist.isPending && typeof favoritePsychologist.variables === "string"
       ? favoritePsychologist.variables
       : unfavoritePsychologist.isPending && typeof unfavoritePsychologist.variables === "string"
         ? unfavoritePsychologist.variables
-        : null;
-  const followPendingId =
-    followPsychologist.isPending && typeof followPsychologist.variables === "string"
-      ? followPsychologist.variables
-      : unfollowPsychologist.isPending && typeof unfollowPsychologist.variables === "string"
-        ? unfollowPsychologist.variables
         : null;
 
   return (
@@ -179,33 +142,10 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
             </div>
           </div>
 
-          <nav
-            aria-label="Alternar entre favoritos e seguindo"
-            className="mt-5 grid grid-cols-2 rounded-2xl border border-border bg-surface-muted p-1"
-          >
-            {[
-              { href: "/app/favorites", label: "Favoritos", value: "favorites" },
-              { href: "/app/following", label: "Seguindo", value: "following" },
-            ].map((item) => {
-              const active = item.value === mode;
-
-              return (
-                <Link
-                  aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "rounded-xl px-4 py-2 text-center text-sm font-extrabold transition",
-                    active
-                      ? "bg-surface text-primary shadow-[var(--lectum-shadow-soft)]"
-                      : "text-muted hover:text-primary",
-                  )}
-                  href={item.href}
-                  key={item.value}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
+          <p className="mt-5 rounded-2xl border border-border bg-surface-muted px-4 py-3 text-sm leading-6 text-muted">
+            A Lectum não possui seguir psicólogos: pacientes salvam favoritos e, futuramente,
+            seguirão comunidades.
+          </p>
         </header>
 
         <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(240px,320px)] lg:items-start">
@@ -270,10 +210,8 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
                   {psychologists.map((psychologist) => (
                     <PsychologistCard
                       favoritePending={favoritePendingId === psychologist.id}
-                      followPending={followPendingId === psychologist.id}
                       key={psychologist.id}
                       onToggleFavorite={toggleFavorite}
-                      onToggleFollow={toggleFollow}
                       psychologist={psychologist}
                     />
                   ))}

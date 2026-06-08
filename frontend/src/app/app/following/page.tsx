@@ -1,5 +1,5 @@
-import { FollowingLogic } from "./logic";
+import { redirect } from "next/navigation";
 
 export default function FollowingPage() {
-  return <FollowingLogic />;
+  redirect("/app/community");
 }
