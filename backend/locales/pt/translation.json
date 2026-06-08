@@ -61,7 +61,8 @@
     "professional_profile_service_limit": "Este plano permite selecionar até {{limit}} serviços.",
     "professional_profile_approach_limit": "Este plano permite selecionar até {{limit}} abordagens.",
     "free_service_limit": "O plano gratuito permite selecionar {{limit}} serviço.",
-    "free_approach_limit": "O plano gratuito permite selecionar {{limit}} abordagem."
+    "free_approach_limit": "O plano gratuito permite selecionar {{limit}} abordagem.",
+    "professional_profile_target_audience_required": "Selecione pelo menos um público atendido antes de publicar."
   },
   "message": {
     "store": "dado criado",
@@ -74,7 +75,7 @@
     "confirm_code_success": "Código de confirmação enviado com sucesso",
     "show": "dados encontrados com sucesso",
     "update": "dados atualizados com sucesso",
-    "patient_onboarding_success": "Onboarding do paciente conclu?do com sucesso",
+    "patient_onboarding_success": "Onboarding do paciente concluído com sucesso",
     "index": "dados encontrados com sucesso",
     "favorite_success": "psicólogo adicionado aos favoritos",
     "unfavorite_success": "psicólogo removido dos favoritos",
@@ -95,7 +96,8 @@
     "free_profile_avatar_uploaded": "Foto de perfil atualizada com sucesso.",
     "free_profile_avatar_removed": "Foto de perfil removida com sucesso.",
     "professional_profile_video_uploaded": "Vídeo de apresentação atualizado com sucesso.",
-    "professional_profile_video_removed": "Vídeo de apresentação removido com sucesso."
+    "professional_profile_video_removed": "Vídeo de apresentação removido com sucesso.",
+    "patient_profile_updated": "Perfil do paciente atualizado com sucesso."
   },
   "gender": {
     "o": "o"

@@ -1,5 +1,6 @@
 import { callEndpoint } from "@/api/generator";
 import type {
+  PatientPrivateProfile,
   PatientRelationListResponse,
   PatientRelationQuery,
   patient_profile,
@@ -19,6 +20,15 @@ export type CompletePatientOnboardingPayload = {
   goal?: PatientOnboardingGoal;
   birthdate?: string;
   phone?: string;
+};
+
+export type UpdatePatientProfilePayload = {
+  name: string;
+  gender?: PatientOnboardingGender | null;
+  goal?: PatientOnboardingGoal | null;
+  birthdate?: string | null;
+  phone?: string | null;
+  bio?: string | null;
 };
 
 export type FavoritePsychologistResponse = {
@@ -49,6 +59,19 @@ export const completePatientOnboarding = async (body: CompletePatientOnboardingP
   return handleReq<patient_profile>({
     ...handle,
     hideError: true,
+  });
+};
+
+export const updatePatientProfile = async (body: UpdatePatientProfilePayload) => {
+  const handle = callEndpoint({
+    route: "/api/private/patient/profile",
+    method: "PUT",
+    body,
+  });
+
+  return handleReq<PatientPrivateProfile>({
+    ...handle,
+    showSuccess: true,
   });
 };
 

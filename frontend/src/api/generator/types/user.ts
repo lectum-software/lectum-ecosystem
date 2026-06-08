@@ -55,3 +55,10 @@ export type user = {
   createdAt?: string;
   updatedAt?: string;
 };
+
+export type PatientPrivateProfile = {
+  user: Pick<user, "id" | "name" | "email" | "avatar" | "role" | "confirmed" | "provider"> & {
+    patient_profile?: patient_profile | null;
+  };
+  profile: patient_profile;
+};

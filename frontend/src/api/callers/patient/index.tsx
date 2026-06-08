@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import keys from "@/api/cache/keys";
 import type {
+  PatientPrivateProfile,
   PatientRelationListResponse,
   PatientRelationQuery,
   patient_profile,
@@ -26,6 +27,10 @@ export interface UsePatientProps {
     };
     completeOnboarding?: {
       onSuccess?: (data: patient_profile) => void;
+      onError?: (error: unknown) => void;
+    };
+    updateProfile?: {
+      onSuccess?: (data: PatientPrivateProfile) => void;
       onError?: (error: unknown) => void;
     };
     favoritePsychologist?: {
@@ -211,6 +216,16 @@ export const usePatient = ({
     onError: callbacks?.completeOnboarding?.onError,
   });
 
+  const updateProfile = useMutation({
+    mutationFn: (body: api.UpdatePatientProfilePayload) => api.updatePatientProfile(body),
+    onSuccess: (data) => {
+      queryClient.setQueryData(profileKey, data.profile);
+      queryClient.invalidateQueries({ queryKey: profileKey });
+      callbacks?.updateProfile?.onSuccess?.(data);
+    },
+    onError: callbacks?.updateProfile?.onError,
+  });
+
   const favoritePsychologist = useMutation({
     mutationFn: (id: string) => api.favoritePsychologist(id),
     onMutate: async (id) => {
@@ -314,6 +329,7 @@ export const usePatient = ({
     favorites,
     follows,
     completeOnboarding,
+    updateProfile,
     favoritePsychologist,
     unfavoritePsychologist,
     followPsychologist,

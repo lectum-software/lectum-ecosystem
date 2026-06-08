@@ -43,7 +43,13 @@ export type {
   PatientRelationPsychologist,
   PatientRelationQuery,
 } from "./patient-relations";
-export type { patient_profile, psychologist_profile, user, user_token } from "./user";
+export type {
+  PatientPrivateProfile,
+  patient_profile,
+  psychologist_profile,
+  user,
+  user_token,
+} from "./user";
 export type {
   WhatsappVerificationConfirmPayload,
   WhatsappVerificationConfirmResponse,

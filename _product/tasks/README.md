@@ -95,7 +95,7 @@ TASK-11 nao tiver armazenamento privado para documentos CRP.
 | 18A | [TASK-18A - Perfil gratuito sem documento CRP](TASK-18A-perfil-gratuito-sem-crp.md) | Completed | 02, 12, 16, 31 |
 | 19 | [TASK-19 - Avaliações do psicólogo](TASK-19-avaliacoes-psicologo.md) | Blocked | 17, 18 |
 | 20 | [TASK-20 - Analytics do psicólogo](TASK-20-analytics-psicologo.md) | Pending | 16, 17, 18 |
-| 21 | [TASK-21 - Perfil privado do paciente](TASK-21-perfil-privado-paciente.md) | Pending | 02, 12 |
+| 21 | [TASK-21 - Perfil privado do paciente](TASK-21-perfil-privado-paciente.md) | Completed | 02, 12 |
 | 22 | [TASK-22 - Explorar e sugerir comunidades](TASK-22-explorar-sugerir-comunidades.md) | Pending | 02, 12 |
 | 23 | [TASK-23 - Feed de comunidade](TASK-23-feed-comunidade.md) | Pending | 22 |
 | 24 | [TASK-24 - Criar postagem](TASK-24-criar-postagem.md) | Pending | 02, 23 |
