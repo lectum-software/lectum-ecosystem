@@ -490,23 +490,33 @@ const CityField = ({
 
 export const ProfessionalProfileSetupLogic = () => {
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const [avatarActionsOpen, setAvatarActionsOpen] = useState(false);
-  const { deleteAvatar, profile, update, uploadAvatar } = usePsychologistFreeProfile({
-    callbacks: {
-      update: {
-        onSuccess: () => toast.success("Perfil gratuito atualizado"),
-        onError: (error) => toast.error(resolveApiError(error)),
+  const { deleteAvatar, deleteVideo, profile, update, uploadAvatar, uploadVideo } =
+    usePsychologistFreeProfile({
+      callbacks: {
+        update: {
+          onSuccess: () => toast.success("Perfil profissional atualizado"),
+          onError: (error) => toast.error(resolveApiError(error)),
+        },
+        avatar: {
+          onSuccess: () => toast.success("Foto de perfil atualizada"),
+          onError: (error) => toast.error(resolveApiError(error)),
+        },
+        deleteAvatar: {
+          onSuccess: () => toast.success("Foto de perfil removida"),
+          onError: (error) => toast.error(resolveApiError(error)),
+        },
+        video: {
+          onSuccess: () => toast.success("Vídeo de apresentação atualizado"),
+          onError: (error) => toast.error(resolveApiError(error)),
+        },
+        deleteVideo: {
+          onSuccess: () => toast.success("Vídeo de apresentação removido"),
+          onError: (error) => toast.error(resolveApiError(error)),
+        },
       },
-      avatar: {
-        onSuccess: () => toast.success("Foto de perfil atualizada"),
-        onError: (error) => toast.error(resolveApiError(error)),
-      },
-      deleteAvatar: {
-        onSuccess: () => toast.success("Foto de perfil removida"),
-        onError: (error) => toast.error(resolveApiError(error)),
-      },
-    },
-  });
+    });
   const form = useFreeProfileForm(profile.data);
   const academicFormations = useFieldArray({
     control: form.hook.control,
@@ -524,6 +534,14 @@ export const ProfessionalProfileSetupLogic = () => {
   const countryCode = form.hook.watch("countryCode");
   const avatarSrc = resolvePublicMediaUrl(profile.data?.user.avatar);
   const isPublicAvatar = isPublicMediaUrl(profile.data?.user.avatar);
+  const videoSrc = resolvePublicMediaUrl(profile.data?.profile.video_url);
+  const canUploadVideo = Boolean(profile.data?.plan.can_upload_video);
+  const isSavingMedia =
+    uploadAvatar.isPending ||
+    deleteAvatar.isPending ||
+    uploadVideo.isPending ||
+    deleteVideo.isPending;
+  const isSubmitting = update.isPending || isSavingMedia;
   const addressState = form.hook.watch("address_state");
   const addressCity = form.hook.watch("address_city");
   const baseCityOptions = useMemo(() => CITY_OPTIONS_BY_STATE[addressState] || [], [addressState]);
@@ -613,6 +631,19 @@ export const ProfessionalProfileSetupLogic = () => {
     deleteAvatar.mutate();
   };
 
+  const handleVideoChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) return;
+    uploadVideo.mutate(file);
+  };
+
+  const handleVideoRemoval = () => {
+    if (!profile.data?.profile.video_url) return;
+    deleteVideo.mutate();
+  };
+
   const submit = form.hook.handleSubmit((values) => {
     update.mutate({
       name: values.name,
@@ -673,7 +704,7 @@ export const ProfessionalProfileSetupLogic = () => {
           </Link>
           <button
             className="text-sm font-semibold text-primary"
-            disabled={update.isPending || uploadAvatar.isPending || deleteAvatar.isPending}
+            disabled={isSubmitting}
             form="free-profile-form"
             type="submit"
           >
@@ -705,11 +736,11 @@ export const ProfessionalProfileSetupLogic = () => {
                 aria-haspopup="menu"
                 aria-label="Opções da foto profissional"
                 className="grid h-9 w-9 place-items-center rounded-full border-2 border-surface bg-primary text-white shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
-                disabled={uploadAvatar.isPending || deleteAvatar.isPending}
+                disabled={isSavingMedia}
                 onClick={() => setAvatarActionsOpen((current) => !current)}
                 type="button"
               >
-                {uploadAvatar.isPending || deleteAvatar.isPending ? (
+                {isSavingMedia ? (
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 ) : (
                   <Camera className="h-4 w-4" aria-hidden="true" />
@@ -772,21 +803,23 @@ export const ProfessionalProfileSetupLogic = () => {
             id="free-profile-form"
             onSubmit={submit}
           >
-            <Link
-              className="flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary-soft p-4 text-primary"
-              href="/app/professional/billing/plans"
-            >
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-primary shadow-sm">
-                <BadgeCheck className="h-5 w-5" aria-hidden="true" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-bold">Upgrade para o Plano Profissional</span>
-                <span className="mt-1 block text-xs leading-5">
-                  Aumente limites, inclua mais recursos e ganhe visibilidade.
+            {profile.data.plan.is_free ? (
+              <Link
+                className="flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary-soft p-4 text-primary"
+                href="/app/professional/billing/plans"
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-primary shadow-sm">
+                  <BadgeCheck className="h-5 w-5" aria-hidden="true" />
                 </span>
-              </span>
-              <ArrowRight className="h-5 w-5 shrink-0" aria-hidden="true" />
-            </Link>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-bold">Upgrade para o Plano Profissional</span>
+                  <span className="mt-1 block text-xs leading-5">
+                    Aumente limites, inclua mais recursos e ganhe visibilidade.
+                  </span>
+                </span>
+                <ArrowRight className="h-5 w-5 shrink-0" aria-hidden="true" />
+              </Link>
+            ) : null}
 
             <SectionCard icon={UserRound} title="Informações básicas">
               <div className="grid gap-4">
@@ -821,28 +854,122 @@ export const ProfessionalProfileSetupLogic = () => {
               <div className="grid gap-4">
                 {renderField("headline")}
                 {renderField("bio")}
-                <div className="rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-center opacity-80">
-                  <FileVideo className="mx-auto h-8 w-8 text-muted" aria-hidden="true" />
-                  <p className="mt-2 text-sm font-bold text-foreground">Vídeo de Apresentação</p>
-                  <p className="mt-1 text-xs leading-5 text-muted">
-                    Upload de vídeo está disponível no Plano Profissional. Faça upgrade para enviar
-                    um vídeo de apresentação.
-                  </p>
-                  <Link
-                    className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-primary-soft px-4 py-2 text-xs font-bold text-primary"
-                    href="/app/professional/billing/plans"
-                  >
-                    <UploadCloud className="h-4 w-4" aria-hidden="true" />
-                    Upgrade para enviar vídeo
-                  </Link>
-                </div>
+                {canUploadVideo ? (
+                  <div className="rounded-2xl border border-border bg-surface-muted p-4">
+                    <div className="flex items-start gap-3">
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-primary shadow-sm">
+                        <FileVideo className="h-5 w-5" aria-hidden="true" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-bold text-foreground">Vídeo de Apresentação</p>
+                        <p className="mt-1 text-xs leading-5 text-muted">
+                          Envie um vídeo MP4, MOV ou WebM de até 50MB para destacar seu perfil.
+                        </p>
+                      </div>
+                    </div>
+
+                    {videoSrc ? (
+                      // biome-ignore lint/a11y/useMediaCaption: vídeos enviados pelo usuário ainda não têm faixa de legenda no recorte atual.
+                      <video
+                        className="mt-4 aspect-video w-full rounded-2xl border border-border bg-black object-cover"
+                        controls
+                        preload="metadata"
+                        src={videoSrc}
+                      >
+                        Seu navegador não suporta a pré-visualização de vídeo.
+                      </video>
+                    ) : (
+                      <button
+                        className="mt-4 grid min-h-32 w-full place-items-center rounded-2xl border border-dashed border-border bg-surface px-4 py-6 text-center transition hover:border-primary hover:bg-primary-soft/40 disabled:cursor-not-allowed disabled:opacity-60"
+                        disabled={uploadVideo.isPending}
+                        onClick={() => videoInputRef.current?.click()}
+                        type="button"
+                      >
+                        <span>
+                          {uploadVideo.isPending ? (
+                            <Loader2
+                              className="mx-auto h-8 w-8 animate-spin text-primary"
+                              aria-hidden="true"
+                            />
+                          ) : (
+                            <UploadCloud
+                              className="mx-auto h-8 w-8 text-primary"
+                              aria-hidden="true"
+                            />
+                          )}
+                          <span className="mt-3 block text-sm font-bold text-foreground">
+                            Toque para enviar seu vídeo
+                          </span>
+                          <span className="mt-1 block text-xs text-muted">MP4, MOV ou WebM.</span>
+                        </span>
+                      </button>
+                    )}
+
+                    <input
+                      accept="video/mp4,video/webm,video/quicktime"
+                      className="sr-only"
+                      onChange={handleVideoChange}
+                      ref={videoInputRef}
+                      type="file"
+                    />
+
+                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                      <Button
+                        disabled={uploadVideo.isPending || deleteVideo.isPending}
+                        onClick={() => videoInputRef.current?.click()}
+                        type="button"
+                        variant="outline"
+                      >
+                        {uploadVideo.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                        ) : (
+                          <UploadCloud className="h-4 w-4" aria-hidden="true" />
+                        )}
+                        {videoSrc ? "Trocar vídeo" : "Enviar vídeo"}
+                      </Button>
+                      <Button
+                        disabled={!videoSrc || uploadVideo.isPending || deleteVideo.isPending}
+                        onClick={handleVideoRemoval}
+                        type="button"
+                        variant="outline"
+                      >
+                        {deleteVideo.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
+                        )}
+                        Remover vídeo
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-center opacity-80">
+                    <FileVideo className="mx-auto h-8 w-8 text-muted" aria-hidden="true" />
+                    <p className="mt-2 text-sm font-bold text-foreground">Vídeo de Apresentação</p>
+                    <p className="mt-1 text-xs leading-5 text-muted">
+                      Upload de vídeo está disponível no Plano Profissional. Faça upgrade para
+                      enviar um vídeo de apresentação.
+                    </p>
+                    <Link
+                      className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-primary-soft px-4 py-2 text-xs font-bold text-primary"
+                      href="/app/professional/billing/plans"
+                    >
+                      <UploadCloud className="h-4 w-4" aria-hidden="true" />
+                      Upgrade para enviar vídeo
+                    </Link>
+                  </div>
+                )}
               </div>
             </SectionCard>
 
             <SectionCard icon={Award} title="Especialidades e Filtros">
               <div className="grid gap-6">
                 <CatalogTagField
-                  description="Selecione até 3 opções. Faça o upgrade para adicionar 10 especialidades."
+                  description={
+                    profile.data.plan.is_free
+                      ? "Selecione até 3 opções. Faça o upgrade para adicionar 10 especialidades."
+                      : "Selecione até 10 especialidades."
+                  }
                   items={profile.data.catalogs.specialties}
                   limit={profile.data.plan.specialty_limit}
                   name="specialty_ids"
@@ -853,7 +980,11 @@ export const ProfessionalProfileSetupLogic = () => {
                   title={`Especialidades (Até ${profile.data.plan.specialty_limit} tags)`}
                 />
                 <CatalogPicker
-                  description="Selecione 1 opção. Faça o upgrade para adicionar todos os serviços."
+                  description={
+                    profile.data.plan.is_free
+                      ? "Selecione 1 opção. Faça o upgrade para adicionar todos os serviços."
+                      : "Selecione todos os serviços que você oferece."
+                  }
                   items={profile.data.catalogs.services}
                   limit={profile.data.plan.service_limit}
                   name="service_ids"
@@ -863,7 +994,11 @@ export const ProfessionalProfileSetupLogic = () => {
                   title="Serviços"
                 />
                 <CatalogTagField
-                  description="Selecione 1 opção. Faça o upgrade para adicionar várias abordagens."
+                  description={
+                    profile.data.plan.is_free
+                      ? "Selecione 1 opção. Faça o upgrade para adicionar várias abordagens."
+                      : "Selecione todas as abordagens que fazem parte da sua prática."
+                  }
                   items={profile.data.catalogs.approaches}
                   limit={profile.data.plan.approach_limit}
                   name="approach_ids"
@@ -1034,7 +1169,7 @@ export const ProfessionalProfileSetupLogic = () => {
             <div className="sticky bottom-4 z-10 rounded-full bg-surface/90 p-2 shadow-[var(--lectum-shadow-soft)] backdrop-blur">
               <Button
                 className="h-14 w-full rounded-full text-base"
-                disabled={update.isPending || uploadAvatar.isPending || deleteAvatar.isPending}
+                disabled={isSubmitting}
                 type="submit"
               >
                 {update.isPending ? (
@@ -1050,7 +1185,7 @@ export const ProfessionalProfileSetupLogic = () => {
               <InlineAlert title="Perfil publicado" variant="success">
                 <div className="flex gap-2">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                  <span>Seu perfil está marcado como publicado no plano gratuito.</span>
+                  <span>Seu perfil está marcado como publicado para pacientes.</span>
                 </div>
               </InlineAlert>
             ) : null}

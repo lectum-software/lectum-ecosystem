@@ -83,7 +83,7 @@ const buildCrp = (region?: string | null, number?: string | null) => {
   return normalizedRegion || normalizedNumber || null;
 };
 
-const publicFileKeyFromUrl = (value?: string | null) => {
+const publicProfileMediaKeyFromUrl = (value?: string | null) => {
   if (!value) return null;
 
   try {
@@ -93,14 +93,16 @@ const publicFileKeyFromUrl = (value?: string | null) => {
     if (!url.pathname.startsWith(prefix)) return null;
 
     const key = decodeURIComponent(url.pathname.slice(prefix.length));
-    return key.startsWith("psychologist/avatar/") ? key : null;
+    return key.startsWith("psychologist/avatar/") || key.startsWith("psychologist/video/")
+      ? key
+      : null;
   } catch (_err) {
     return null;
   }
 };
 
-const deletePublicAvatar = async (value?: string | null) => {
-  const key = publicFileKeyFromUrl(value);
+const deletePublicProfileMedia = async (value?: string | null) => {
+  const key = publicProfileMediaKeyFromUrl(value);
   if (!key) return;
 
   try {
@@ -222,11 +224,12 @@ const toResponse = async (
 
   const current = profile.subscriptions[0] || null;
   const planSlug = current?.plan?.slug || null;
-  const isFree = planSlug === "gratuito" || !planSlug;
-  const specialtyLimit = isFree ? 3 : 99;
-  const serviceLimit = isFree ? 1 : 99;
-  const approachLimit = isFree ? 1 : 99;
   const catalogs = await getCatalogs();
+  const isFree = planSlug === "gratuito" || !planSlug;
+  const canUseProfessionalFeatures = !isFree;
+  const specialtyLimit = isFree ? 3 : 10;
+  const serviceLimit = isFree ? 1 : Math.max(catalogs.services.length, 1);
+  const approachLimit = isFree ? 1 : Math.max(catalogs.approaches.length, 1);
   const crp = parseCrp(profile.crp);
   const academic = {
     title: profile.academic_title,
@@ -277,11 +280,15 @@ const toResponse = async (
       cfp_verified_at: profile.cfp_verified_at,
     },
     plan: {
+      approach_limit: approachLimit,
+      can_upload_video: canUseProfessionalFeatures,
+      current_period_end: current?.current_period_end ?? null,
+      is_courtesy: current?.source === "admin_grant",
       slug: planSlug,
       is_free: isFree,
-      specialty_limit: specialtyLimit,
       service_limit: serviceLimit,
-      approach_limit: approachLimit,
+      source: current?.source ?? null,
+      specialty_limit: specialtyLimit,
     },
     selected: {
       specialties: item.psychologist_specialties
@@ -306,6 +313,7 @@ export class FreeProfileRepository implements IFreeProfileRepository {
   async update(
     userId: string,
     body: Required<FreeProfessionalProfileUpdateBody>,
+    options: { canUseProfessionalFeatures: boolean },
   ): Promise<FreeProfessionalProfileResponse | null> {
     const existing = await getUserWithProfile(userId);
     const profile = existing?.psychologist_profile;
@@ -330,7 +338,7 @@ export class FreeProfileRepository implements IFreeProfileRepository {
           crp: buildCrp(body.crp_region, body.crp_number),
           whatsapp: body.whatsapp,
           languages: body.languages as Prisma.InputJsonValue,
-          video_url: null,
+          video_url: options.canUseProfessionalFeatures ? undefined : null,
           target_audience: body.target_audience as Prisma.InputJsonValue,
           discount_first_session: body.discount_first_session,
           social_value: body.social_value,
@@ -379,6 +387,10 @@ export class FreeProfileRepository implements IFreeProfileRepository {
       }
     });
 
+    if (!options.canUseProfessionalFeatures) {
+      await deletePublicProfileMedia(profile.video_url);
+    }
+
     return this.show(userId);
   }
 
@@ -394,7 +406,7 @@ export class FreeProfileRepository implements IFreeProfileRepository {
       data: { avatar: avatarUrl },
     });
 
-    await deletePublicAvatar(existing.avatar);
+    await deletePublicProfileMedia(existing.avatar);
 
     return this.show(userId);
   }
@@ -408,7 +420,40 @@ export class FreeProfileRepository implements IFreeProfileRepository {
       data: { avatar: null },
     });
 
-    await deletePublicAvatar(existing.avatar);
+    await deletePublicProfileMedia(existing.avatar);
+
+    return this.show(userId);
+  }
+
+  async updateVideo(
+    userId: string,
+    videoUrl: string,
+  ): Promise<FreeProfessionalProfileResponse | null> {
+    const existing = await getUserWithProfile(userId);
+    const profile = existing?.psychologist_profile;
+    if (!profile) return null;
+
+    await prisma.psychologist_profile.update({
+      where: { id: profile.id },
+      data: { video_url: videoUrl },
+    });
+
+    await deletePublicProfileMedia(profile.video_url);
+
+    return this.show(userId);
+  }
+
+  async removeVideo(userId: string): Promise<FreeProfessionalProfileResponse | null> {
+    const existing = await getUserWithProfile(userId);
+    const profile = existing?.psychologist_profile;
+    if (!profile) return null;
+
+    await prisma.psychologist_profile.update({
+      where: { id: profile.id },
+      data: { video_url: null },
+    });
+
+    await deletePublicProfileMedia(profile.video_url);
 
     return this.show(userId);
   }

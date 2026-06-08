@@ -135,10 +135,7 @@ export const freeProfileSchema = z
     address_state: z.string().trim().min(2, "Selecione o estado").max(2),
     specialty_ids: z.array(z.string()),
     service_ids: z.array(z.string()),
-    approach_ids: z
-      .array(z.string())
-      .min(1, "Selecione uma abordagem")
-      .max(1, "Selecione apenas 1 abordagem no plano gratuito"),
+    approach_ids: z.array(z.string()).min(1, "Selecione uma abordagem"),
     target_audience: z.array(z.string()),
     available_days: z.array(z.string()),
   })

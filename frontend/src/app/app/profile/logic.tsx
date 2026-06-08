@@ -130,7 +130,7 @@ export const ProfileLogic = () => {
           { icon: BarChart3, label: "Meus Analytics" },
           { icon: Star, label: "Minhas Avaliações" },
           {
-            href: "/app/professional/billing/plans",
+            href: "/app/professional/billing/subscription",
             icon: BadgeCheck,
             label: "Minha Assinatura",
           },

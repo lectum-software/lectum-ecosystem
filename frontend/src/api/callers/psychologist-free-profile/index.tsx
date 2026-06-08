@@ -7,6 +7,8 @@ import type {
   FreeProfessionalProfileAvatarRemoval,
   FreeProfessionalProfileAvatarUpload,
   FreeProfessionalProfilePayload,
+  FreeProfessionalProfileVideoRemoval,
+  FreeProfessionalProfileVideoUpload,
 } from "@/api/generator/types/free-profile";
 import * as api from "@/api/req/psychologist-free-profile";
 
@@ -22,6 +24,14 @@ export interface UsePsychologistFreeProfileProps {
     };
     deleteAvatar?: {
       onSuccess?: (data: FreeProfessionalProfileAvatarRemoval) => void;
+      onError?: (error: unknown) => void;
+    };
+    video?: {
+      onSuccess?: (data: FreeProfessionalProfileVideoUpload) => void;
+      onError?: (error: unknown) => void;
+    };
+    deleteVideo?: {
+      onSuccess?: (data: FreeProfessionalProfileVideoRemoval) => void;
       onError?: (error: unknown) => void;
     };
   };
@@ -81,5 +91,37 @@ export const usePsychologistFreeProfile = ({ callbacks }: UsePsychologistFreePro
     onError: callbacks?.deleteAvatar?.onError,
   });
 
-  return { profile, update, uploadAvatar, deleteAvatar };
+  const uploadVideo = useMutation({
+    mutationFn: (file: File) => api.uploadPsychologistFreeProfileVideo(file),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: keys.psychologistFreeProfile.root() });
+      queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === "auth_hydrate" });
+      queryClient.invalidateQueries({ queryKey: keys.directory.psychologistsRoot() });
+      if (data.profile?.user.id) {
+        queryClient.invalidateQueries({
+          queryKey: keys.directory.psychologistRoot(data.profile.user.id),
+        });
+      }
+      callbacks?.video?.onSuccess?.(data);
+    },
+    onError: callbacks?.video?.onError,
+  });
+
+  const deleteVideo = useMutation({
+    mutationFn: () => api.deletePsychologistFreeProfileVideo(),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: keys.psychologistFreeProfile.root() });
+      queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === "auth_hydrate" });
+      queryClient.invalidateQueries({ queryKey: keys.directory.psychologistsRoot() });
+      if (data.profile?.user.id) {
+        queryClient.invalidateQueries({
+          queryKey: keys.directory.psychologistRoot(data.profile.user.id),
+        });
+      }
+      callbacks?.deleteVideo?.onSuccess?.(data);
+    },
+    onError: callbacks?.deleteVideo?.onError,
+  });
+
+  return { profile, update, uploadAvatar, deleteAvatar, uploadVideo, deleteVideo };
 };

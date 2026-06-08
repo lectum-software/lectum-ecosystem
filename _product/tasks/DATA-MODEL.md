@@ -159,7 +159,7 @@ Quando construído: módulo de audiência próprio (ex.: `backend/src/modules/ma
 | `user_id` | `String @unique` | FK `user`, cascade |
 | `headline` | `String?` | chamada curta exibida no card/perfil |
 | `bio` | `String?` | "Sobre"/experiência (texto longo) |
-| `video_url` | `String?` | apenas Plano Profissional (PRD §13); manter null no gratuito |
+| `video_url` | `String?` | apenas Plano Profissional ou concessão `admin_grant` ativa (PRD §13); manter null no gratuito |
 | `cpf` | `String?` | usado na consulta CFP; dado sensível (LGPD) |
 | `crp` | `String?` | registro profissional exibido no cabeçalho |
 | `gender`, `race_color`, `religion` | `String?` | campos declaratórios editáveis no recorte gratuito sem CRP; não entram em validação profissional |
@@ -459,6 +459,8 @@ Trocar de provedor = novo adapter. **Limite real:** card tokens são específico
 | `grant_started_at` | `DateTime?` | data/hora da concessão administrativa |
 | `@@index([psychologist_id, status])` | | habilita selo/destaque/ranking quando `ativa` |
 | `@@index([source, status])`, `@@index([status, current_period_end])` | | auditoria e filtro de entitlement ativo não expirado |
+
+`source="admin_grant"` com plano `profissional`, `status="ativa"` e `current_period_end` futuro concede a mesma experiência de perfil do Plano Profissional até expirar: selo, vídeo de apresentação, até 10 especialidades e seleção de todos os serviços/abordagens ativos.
 
 `billing_address` (TASK-32, "Endereço de Faturamento"):
 

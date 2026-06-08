@@ -5,9 +5,11 @@ import type {
   FreeProfessionalProfileAddress,
   FreeProfessionalProfileUpdateBody,
   IFreeProfessionalProfileRemoveAvatarDTO,
+  IFreeProfessionalProfileRemoveVideoDTO,
   IFreeProfessionalProfileShowDTO,
   IFreeProfessionalProfileUpdateDTO,
   IFreeProfessionalProfileUploadAvatarDTO,
+  IFreeProfessionalProfileUploadVideoDTO,
 } from "../DTOs/IFreeProfileDTO";
 import { FreeProfileRepository } from "../repositories/FreeProfileRepository";
 
@@ -110,9 +112,9 @@ const updateSchema = z.object({
   academic_formations: academicFormationsSchema,
   available_days: z.array(z.string().trim().min(2).max(20)).max(7).optional(),
   address: addressSchema,
-  specialty_ids: z.array(z.string().min(8).max(80)).max(3).optional(),
-  service_ids: z.array(z.string().min(8).max(80)).max(1).optional(),
-  approach_ids: z.array(z.string().min(8).max(80)).max(10).optional(),
+  specialty_ids: z.array(z.string().min(8).max(80)).optional(),
+  service_ids: z.array(z.string().min(8).max(80)).optional(),
+  approach_ids: z.array(z.string().min(8).max(80)).optional(),
   published: z.boolean().optional(),
 });
 
@@ -219,13 +221,6 @@ export const update = async (data: IFreeProfessionalProfileUpdateDTO) => {
     };
   }
 
-  if (!current.plan.is_free) {
-    return {
-      status: 403,
-      ...error("free_profile_professional_plan", {}),
-    };
-  }
-
   const cpf = normalizeCpf(parsed.data.cpf);
   if (cpf && cpf.length !== 11) {
     return {
@@ -283,21 +278,21 @@ export const update = async (data: IFreeProfessionalProfileUpdateDTO) => {
   if (body.specialty_ids.length > current.plan.specialty_limit) {
     return {
       status: 400,
-      ...error("free_specialty_limit", { limit: current.plan.specialty_limit }),
+      ...error("professional_profile_specialty_limit", { limit: current.plan.specialty_limit }),
     };
   }
 
   if (body.service_ids.length > current.plan.service_limit) {
     return {
       status: 400,
-      ...error("free_service_limit", { limit: current.plan.service_limit }),
+      ...error("professional_profile_service_limit", { limit: current.plan.service_limit }),
     };
   }
 
   if (body.approach_ids.length > current.plan.approach_limit) {
     return {
       status: 400,
-      ...error("free_approach_limit", { limit: current.plan.approach_limit }),
+      ...error("professional_profile_approach_limit", { limit: current.plan.approach_limit }),
     };
   }
 
@@ -329,11 +324,13 @@ export const update = async (data: IFreeProfessionalProfileUpdateDTO) => {
     };
   }
 
-  const updated = await repository.update(data.auth.id!, body);
+  const updated = await repository.update(data.auth.id!, body, {
+    canUseProfessionalFeatures: current.plan.can_upload_video,
+  });
 
   return {
     status: 200,
-    ...msg("free_profile_updated", {}),
+    ...msg("professional_profile_updated", {}),
     data: updated,
   };
 };
@@ -361,13 +358,6 @@ export const uploadAvatar = async (data: IFreeProfessionalProfileUploadAvatarDTO
     return {
       status: 404,
       ...error("not_found", { model: "psychologist_profile" }),
-    };
-  }
-
-  if (!current.plan.is_free) {
-    return {
-      status: 403,
-      ...error("free_profile_professional_plan", {}),
     };
   }
 
@@ -402,18 +392,93 @@ export const removeAvatar = async (data: IFreeProfessionalProfileRemoveAvatarDTO
     };
   }
 
-  if (!current.plan.is_free) {
-    return {
-      status: 403,
-      ...error("free_profile_professional_plan", {}),
-    };
-  }
-
   const updated = await repository.removeAvatar(data.auth.id!);
 
   return {
     status: 200,
     ...msg("free_profile_avatar_removed", {}),
+    data: {
+      profile: updated,
+    },
+  };
+};
+
+export const uploadVideo = async (data: IFreeProfessionalProfileUploadVideoDTO) => {
+  if (data.auth.role !== "psicologo") {
+    return {
+      status: 403,
+      ...error("role_not_authorized", {}),
+    };
+  }
+
+  const key = data.file?.path || data.file?.key;
+  if (!key?.startsWith("psychologist/video/")) {
+    return {
+      status: 400,
+      ...error("upload_error", {}),
+    };
+  }
+
+  const repository = new FreeProfileRepository();
+  const current = await repository.show(data.auth.id!);
+
+  if (!current) {
+    return {
+      status: 404,
+      ...error("not_found", { model: "psychologist_profile" }),
+    };
+  }
+
+  if (!current.plan.can_upload_video) {
+    return {
+      status: 403,
+      ...error("profile_video_professional_plan", {}),
+    };
+  }
+
+  const videoUrl = publicFileUrl(key);
+  const updated = await repository.updateVideo(data.auth.id!, videoUrl);
+
+  return {
+    status: 200,
+    ...msg("professional_profile_video_uploaded", {}),
+    data: {
+      video_url: videoUrl,
+      profile: updated,
+    },
+  };
+};
+
+export const removeVideo = async (data: IFreeProfessionalProfileRemoveVideoDTO) => {
+  if (data.auth.role !== "psicologo") {
+    return {
+      status: 403,
+      ...error("role_not_authorized", {}),
+    };
+  }
+
+  const repository = new FreeProfileRepository();
+  const current = await repository.show(data.auth.id!);
+
+  if (!current) {
+    return {
+      status: 404,
+      ...error("not_found", { model: "psychologist_profile" }),
+    };
+  }
+
+  if (!current.plan.can_upload_video) {
+    return {
+      status: 403,
+      ...error("profile_video_professional_plan", {}),
+    };
+  }
+
+  const updated = await repository.removeVideo(data.auth.id!);
+
+  return {
+    status: 200,
+    ...msg("professional_profile_video_removed", {}),
     data: {
       profile: updated,
     },

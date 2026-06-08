@@ -1,6 +1,13 @@
 import { Router } from "express";
 import multer from "@/config/multer";
-import { removeAvatar, show, update, uploadAvatar } from "./use-cases/controller";
+import {
+  removeAvatar,
+  removeVideo,
+  show,
+  update,
+  uploadAvatar,
+  uploadVideo,
+} from "./use-cases/controller";
 
 const routes = Router();
 
@@ -16,5 +23,15 @@ routes.post(
   uploadAvatar,
 );
 routes.delete("/avatar", removeAvatar);
+routes.post(
+  "/video",
+  multer({
+    single: "video",
+    allowed: ["video/mp4", "video/webm", "video/quicktime"],
+    size: 50,
+  }),
+  uploadVideo,
+);
+routes.delete("/video", removeVideo);
 
 export default routes;

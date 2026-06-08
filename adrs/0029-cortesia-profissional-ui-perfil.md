@@ -1,0 +1,55 @@
+# ADR-0029: Cortesia profissional como experiência de assinante
+
+## Status
+
+Accepted
+
+## Task relacionada
+
+TASK-31B
+
+## Contexto
+
+Após a criação da concessão administrativa (`source="admin_grant"`), psicólogos em cortesia aparecem como assinantes no entitlement, mas a tela de edição de perfil ainda exibia CTA de upgrade e bloqueava recursos do Plano Profissional. A tela "Minha Assinatura" também apontava para a listagem de planos, sem explicar a cortesia e sua expiração.
+
+O checkout e a coleta real de cartão continuam condicionados à TASK-32 e ao Mercado Pago. Pelas ADRs anteriores, a Lectum não deve coletar PAN/CVV fora do gateway real nem simular cobrança.
+
+## Decisão
+
+Tratar qualquer assinatura ativa não gratuita, inclusive `admin_grant`, como experiência profissional na edição do perfil gratuito expandido da TASK-18A.
+
+O backend passa a retornar no contrato de perfil:
+
+- `plan.source`;
+- `plan.current_period_end`;
+- `plan.is_courtesy`;
+- `plan.can_upload_video`;
+- limites calculados por plano.
+
+Para plano gratuito, os limites permanecem 3 especialidades, 1 serviço e 1 abordagem. Para Plano Profissional/cortesia, a edição permite 10 especialidades e todos os serviços/abordagens ativos retornados pelos catálogos reais.
+
+O upload de vídeo foi liberado apenas quando `plan.can_upload_video=true`, usando o storage público existente em `psychologist/video/*`, com limite de 50MB e tipos MP4, WebM e QuickTime/MOV. A rota pública de arquivos foi ampliada para servir `psychologist/video/*`, pois o vídeo de apresentação é parte do perfil público do profissional assinante.
+
+A opção "Minha Assinatura" no menu do perfil agora abre `/app/professional/billing/subscription`. Para cortesia, a tela mostra Plano Profissional de cortesia, data de expiração e CTA "Inserir dados do cartão". Esse CTA aponta para o checkout real (`/app/professional/billing/checkout?intent=courtesy-renewal`), que continua bloqueado de forma honesta até a TASK-32 configurar Mercado Pago.
+
+## Consequências
+
+- Psicólogos em cortesia têm a mesma experiência de configuração de perfil de um assinante.
+- O plano gratuito mantém limitações e CTA de upgrade.
+- A UI informa o caminho para cartão após a cortesia sem coletar cartão fora do gateway real.
+- O vídeo de apresentação fica publicamente acessível quando o profissional assinante o publica, alinhado ao card/perfil público.
+- Legendas/captions de vídeos enviados por usuários ficam pendentes para uma task futura de acessibilidade de mídia; o recorte atual apenas disponibiliza upload e preview.
+
+## Validação
+
+- `pnpm --dir backend check`
+- `pnpm --dir frontend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local sem sessão em `/app/profile`, `/app/professional/profile/setup` e `/app/professional/billing/subscription` respondeu `307`.
+
+## Pendências
+
+- TASK-32: implementar checkout/cartão real Mercado Pago.
+- Futuro: suporte a legenda/transcrição para vídeos enviados por profissionais.

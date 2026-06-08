@@ -50,7 +50,7 @@ export const filesRoute = (server: Application) => {
     };
     const file = getRequestedFile(params.file);
 
-    if (!file?.startsWith("psychologist/avatar/")) {
+    if (!file?.startsWith("psychologist/avatar/") && !file?.startsWith("psychologist/video/")) {
       return send(res, {
         status: 404,
         ...error("not_found"),

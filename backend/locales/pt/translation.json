@@ -55,8 +55,11 @@
     "phone_verification_sender_invalid": "Verificação por SMS indisponível: o remetente configurado na Twilio não pertence à conta ou não está apto para SMS. Configure um número Twilio ou Messaging Service válido.",
     "invalid_catalog_selection": "Seleção inválida no catálogo {{catalog}}.",
     "free_specialty_limit": "O plano gratuito permite selecionar até {{limit}} especialidades.",
+    "professional_profile_specialty_limit": "Este plano permite selecionar até {{limit}} especialidades.",
     "free_profile_publish_requirements": "Preencha nome, gênero, raça/cor, religião, CRP, bio, apresentação, modalidade, idioma, especialidade, serviço, abordagem, estado e cidade antes de publicar.",
-    "free_profile_professional_plan": "Esta configuração é exclusiva do plano gratuito.",
+    "profile_video_professional_plan": "O envio de vídeo está disponível apenas para assinantes do Plano Profissional.",
+    "professional_profile_service_limit": "Este plano permite selecionar até {{limit}} serviços.",
+    "professional_profile_approach_limit": "Este plano permite selecionar até {{limit}} abordagens.",
     "free_service_limit": "O plano gratuito permite selecionar {{limit}} serviço.",
     "free_approach_limit": "O plano gratuito permite selecionar {{limit}} abordagem."
   },
@@ -88,8 +91,11 @@
     "billing_free_selected": "Plano gratuito selecionado com sucesso.",
     "whatsapp_saved": "WhatsApp profissional salvo com sucesso.",
     "free_profile_updated": "Perfil gratuito atualizado com sucesso.",
+    "professional_profile_updated": "Perfil profissional atualizado com sucesso.",
     "free_profile_avatar_uploaded": "Foto de perfil atualizada com sucesso.",
-    "free_profile_avatar_removed": "Foto de perfil removida com sucesso."
+    "free_profile_avatar_removed": "Foto de perfil removida com sucesso.",
+    "professional_profile_video_uploaded": "Vídeo de apresentação atualizado com sucesso.",
+    "professional_profile_video_removed": "Vídeo de apresentação removido com sucesso."
   },
   "gender": {
     "o": "o"

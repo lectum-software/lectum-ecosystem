@@ -57,11 +57,15 @@ export type FreeProfessionalProfileResponse = {
     cfp_verified_at: Date | null;
   };
   plan: {
+    approach_limit: number;
+    can_upload_video: boolean;
+    current_period_end: Date | null;
+    is_courtesy: boolean;
     slug: string | null;
     is_free: boolean;
-    specialty_limit: number;
     service_limit: number;
-    approach_limit: number;
+    source: string | null;
+    specialty_limit: number;
   };
   selected: {
     specialties: FreeProfileCatalogItem[];
@@ -116,6 +120,11 @@ export type FreeProfessionalProfileAvatarUploadResponse = {
   profile: FreeProfessionalProfileResponse | null;
 };
 
+export type FreeProfessionalProfileVideoUploadResponse = {
+  profile: FreeProfessionalProfileResponse | null;
+  video_url: string;
+};
+
 export interface IFreeProfessionalProfileUploadAvatarDTO {
   auth: user;
   file?: {
@@ -127,5 +136,19 @@ export interface IFreeProfessionalProfileUploadAvatarDTO {
 }
 
 export interface IFreeProfessionalProfileRemoveAvatarDTO {
+  auth: user;
+}
+
+export interface IFreeProfessionalProfileUploadVideoDTO {
+  auth: user;
+  file?: {
+    path?: string;
+    key?: string;
+    fileUrl?: string;
+    mimetype?: string;
+  };
+}
+
+export interface IFreeProfessionalProfileRemoveVideoDTO {
   auth: user;
 }
