@@ -20,6 +20,7 @@ export type DirectoryPsychologistProfile = {
   rating_avg: number;
   rating_count: number;
   verified: boolean;
+  available_today: boolean;
   favorited: boolean;
   followed: boolean;
   whatsapp_available: boolean;

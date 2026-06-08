@@ -231,13 +231,16 @@ const normalizeCitySearch = (value: string) =>
 const CityField = ({
   control,
   options,
+  selectedValue,
   stateSelected,
 }: {
   control: ReturnType<typeof useFreeProfileForm>["hook"]["control"];
   options: { label: string; value: string | number | boolean; disabled?: boolean }[];
+  selectedValue?: string;
   stateSelected: boolean;
 }) => {
-  const [search, setSearch] = useState("");
+  const selectedLabel = options.find((option) => option.value === selectedValue)?.label;
+  const [search, setSearch] = useState(selectedLabel ? String(selectedLabel) : "");
   const inputId = fieldId<FreeProfileForm>("address_city");
   const normalizedSearch = normalizeCitySearch(search);
   const filteredOptions = normalizedSearch
@@ -245,6 +248,7 @@ const CityField = ({
         normalizeCitySearch(String(option.label)).includes(normalizedSearch),
       )
     : options;
+  const shouldShowOptions = stateSelected && (!selectedLabel || search !== String(selectedLabel));
 
   return (
     <Controller
@@ -252,28 +256,20 @@ const CityField = ({
       name="address_city"
       render={({ field, fieldState }) => {
         const error = fieldState.error?.message;
-        const selectedLabel = options.find((option) => option.value === field.value)?.label;
 
         return (
           <Container
-            description={
-              stateSelected
-                ? "Digite para filtrar e selecione uma cidade da lista oficial do IBGE."
-                : "Selecione o estado para carregar as cidades."
-            }
             error={error}
             htmlFor={inputId}
             label="Cidade"
             name="address_city"
+            required
             skipHtmlFor
           >
             <input
               aria-label="Filtrar cidades"
               aria-describedby={describedBy({
                 id: inputId,
-                description: stateSelected
-                  ? "Digite para filtrar e selecione uma cidade da lista oficial do IBGE."
-                  : "Selecione o estado para carregar as cidades.",
                 error,
               })}
               aria-invalid={Boolean(error)}
@@ -284,30 +280,21 @@ const CityField = ({
               disabled={!stateSelected}
               id={inputId}
               onBlur={field.onBlur}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder={stateSelected ? "Digite para filtrar cidades" : "Selecione o estado"}
+              onChange={(event) => {
+                const nextSearch = event.target.value;
+                setSearch(nextSearch);
+
+                if (selectedLabel && nextSearch !== String(selectedLabel)) {
+                  field.onChange("");
+                }
+              }}
+              placeholder={stateSelected ? "Buscar cidade" : "Selecione o estado"}
               ref={field.ref}
               type="search"
               value={search}
             />
 
-            {selectedLabel ? (
-              <div className="-mt-1 flex items-center justify-between gap-3 rounded-2xl bg-primary-soft px-3 py-2 text-xs font-semibold text-primary">
-                <span>Cidade selecionada: {selectedLabel}</span>
-                <button
-                  className="rounded-full px-2 py-1 transition hover:bg-primary/10"
-                  onClick={() => {
-                    field.onChange("");
-                    setSearch("");
-                  }}
-                  type="button"
-                >
-                  Trocar
-                </button>
-              </div>
-            ) : null}
-
-            {stateSelected ? (
+            {shouldShowOptions ? (
               <div className="max-h-56 overflow-y-auto rounded-2xl border border-border bg-surface p-2">
                 {filteredOptions.length > 0 ? (
                   <div className="grid gap-1">
@@ -318,7 +305,7 @@ const CityField = ({
                         <button
                           className={cn(
                             "rounded-xl px-3 py-2 text-left text-sm font-semibold text-foreground transition hover:bg-primary-soft hover:text-primary",
-                            checked && "bg-primary text-white hover:bg-primary hover:text-white",
+                            checked && "bg-primary-soft text-primary",
                           )}
                           key={String(option.value)}
                           onClick={() => {
@@ -540,20 +527,19 @@ export const ProfessionalProfileSetupLogic = () => {
         </div>
 
         <header className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-7 text-center shadow-[var(--lectum-shadow-soft)]">
-          <div className="relative mx-auto h-24 w-24">
-            <div className="relative mx-auto block h-24 w-24 overflow-hidden rounded-full bg-surface-muted ring-4 ring-white">
+          <div className="relative mx-auto h-28 w-28">
+            <div className="relative mx-auto grid h-28 w-28 place-items-center overflow-hidden rounded-full border-4 border-white bg-primary text-3xl font-bold text-white shadow-[var(--lectum-shadow-soft)]">
               {avatarSrc ? (
                 <Image
                   alt="Foto profissional"
-                  className="object-cover"
-                  fill
-                  priority
-                  sizes="96px"
+                  className="h-full w-full object-cover"
+                  height={112}
                   src={avatarSrc}
                   unoptimized={isPublicAvatar}
+                  width={112}
                 />
               ) : (
-                <span className="grid h-full w-full place-items-center text-primary">
+                <span className="grid h-full w-full place-items-center text-white">
                   <UserRound className="h-10 w-10" aria-hidden="true" />
                 </span>
               )}
@@ -721,9 +707,12 @@ export const ProfessionalProfileSetupLogic = () => {
                   title="Serviços"
                 />
                 <CatalogPicker
+                  description="Selecione 1 opção. Faça o upgrade para adicionar várias abordagens."
                   items={profile.data.catalogs.approaches}
+                  limit={profile.data.plan.approach_limit}
                   name="approach_ids"
                   onChange={setCatalogValue}
+                  required
                   selected={selectedApproaches}
                   title="Abordagens"
                 />
@@ -857,6 +846,7 @@ export const ProfessionalProfileSetupLogic = () => {
                   control={form.hook.control}
                   key={addressState || "sem-estado"}
                   options={cityOptions}
+                  selectedValue={addressCity}
                   stateSelected={Boolean(addressState)}
                 />
                 <p className="text-xs leading-5 text-muted">

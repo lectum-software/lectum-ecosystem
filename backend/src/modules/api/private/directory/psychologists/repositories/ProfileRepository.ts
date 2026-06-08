@@ -26,6 +26,42 @@ const normalizeStringArray = (value: unknown): string[] => {
   return value.filter((item): item is string => typeof item === "string");
 };
 
+const currentWeekdayValue = () => {
+  const weekday = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    weekday: "long",
+  }).format(new Date());
+
+  const normalized = weekday
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+
+  if (normalized.includes("segunda")) return "segunda";
+  if (normalized.includes("terca")) return "terca";
+  if (normalized.includes("quarta")) return "quarta";
+  if (normalized.includes("quinta")) return "quinta";
+  if (normalized.includes("sexta")) return "sexta";
+  if (normalized.includes("sabado")) return "sabado";
+  return "domingo";
+};
+
+const hasAvailableToday = (value: unknown) => {
+  return normalizeStringArray(value).includes(currentWeekdayValue());
+};
+
+const activeVerifiedSubscriptionWhere = {
+  deleted: false,
+  status: "ativa",
+  plan: {
+    active: true,
+    deleted: false,
+    slug: {
+      not: "gratuito",
+    },
+  },
+} satisfies Prisma.professional_subscriptionWhereInput;
+
 const normalizePagination = (query: IProfileListDTO["q"] = {}) => {
   const page = Math.max(1, Number(query.page || 1));
   const limit = Math.min(MAX_LIMIT, Math.max(1, Number(query.limit || DEFAULT_LIMIT)));
@@ -125,11 +161,19 @@ export class ProfileRepository implements IProfileRepository {
             video_url: true,
             crp: true,
             cfp_verified_at: true,
+            available_days: true,
             modality: true,
             languages: true,
             rating_avg: true,
             rating_count: true,
             whatsapp: true,
+            subscriptions: {
+              where: activeVerifiedSubscriptionWhere,
+              select: {
+                id: true,
+              },
+              take: 1,
+            },
           },
         },
         psychologist_specialties: {
@@ -192,7 +236,8 @@ export class ProfileRepository implements IProfileRepository {
       languages: normalizeStringArray(profile.languages),
       rating_avg: profile.rating_avg,
       rating_count: profile.rating_count,
-      verified: Boolean(profile.cfp_verified_at),
+      verified: profile.subscriptions.length > 0,
+      available_today: hasAvailableToday(profile.available_days),
       favorited: item.favorited_by_patients.length > 0,
       followed: item.followed_by_patients.length > 0,
       whatsapp_available: Boolean(profile.whatsapp),

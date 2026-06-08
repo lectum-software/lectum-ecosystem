@@ -24,6 +24,7 @@ import { useSignOut } from "@/hooks/cookies/signout";
 import { useAppSelector } from "@/hooks/redux";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { formatCrpNumber } from "@/utils/crp";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 type ProfileRow = {
@@ -106,8 +107,14 @@ export const ProfileLogic = () => {
 
   const isPsychologist = user.role === "psicologo";
   const displayName = user.name?.trim() || user.email || "Usuário Lectum";
+  const formattedCrp = formatCrpNumber(user.psychologist_profile?.crp);
+  const hasVerifiedBadge = Boolean(
+    user.psychologist_profile?.subscriptions?.some(
+      (subscription) => subscription.status === "ativa" && subscription.plan?.slug !== "gratuito",
+    ),
+  );
   const subtitle = isPsychologist
-    ? `Psicólogo${user.psychologist_profile?.crp ? ` · CRP ${user.psychologist_profile.crp}` : ""}`
+    ? `Psicólogo${formattedCrp ? ` • CRP ${formattedCrp}` : ""}`
     : "Paciente";
   const avatarSrc = resolvePublicMediaUrl(user.avatar);
   const avatarIsPublicMedia = isPublicMediaUrl(user.avatar);
@@ -161,7 +168,9 @@ export const ProfileLogic = () => {
 
             <h1 className="mt-5 flex items-center gap-2 text-2xl font-bold text-foreground">
               {displayName}
-              {isPsychologist ? <VerifiedBadgeIcon aria-hidden="true" className="h-5 w-5" /> : null}
+              {isPsychologist && hasVerifiedBadge ? (
+                <VerifiedBadgeIcon aria-hidden="true" className="h-5 w-5" />
+              ) : null}
             </h1>
             <p className="mt-1 text-sm text-muted">{subtitle}</p>
             {user.email ? <p className="mt-2 text-xs text-subtle">{user.email}</p> : null}

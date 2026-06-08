@@ -26,6 +26,42 @@ const normalizeStringArray = (value: unknown): string[] => {
   return value.filter((item): item is string => typeof item === "string");
 };
 
+const currentWeekdayValue = () => {
+  const weekday = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    weekday: "long",
+  }).format(new Date());
+
+  const normalized = weekday
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+
+  if (normalized.includes("segunda")) return "segunda";
+  if (normalized.includes("terca")) return "terca";
+  if (normalized.includes("quarta")) return "quarta";
+  if (normalized.includes("quinta")) return "quinta";
+  if (normalized.includes("sexta")) return "sexta";
+  if (normalized.includes("sabado")) return "sabado";
+  return "domingo";
+};
+
+const hasAvailableToday = (value: unknown) => {
+  return normalizeStringArray(value).includes(currentWeekdayValue());
+};
+
+const activeVerifiedSubscriptionWhere = {
+  deleted: false,
+  status: "ativa",
+  plan: {
+    active: true,
+    deleted: false,
+    slug: {
+      not: "gratuito",
+    },
+  },
+} satisfies Prisma.professional_subscriptionWhereInput;
+
 const normalizePagination = (query: IIndexDTO["q"]) => {
   const page = Math.max(1, Number(query.page || 1));
   const limit = Math.min(MAX_LIMIT, Math.max(1, Number(query.limit || DEFAULT_LIMIT)));
@@ -51,7 +87,11 @@ export class IndexRepository implements IIndexRepository {
     const whereConditions: Prisma.psychologist_profileWhereInput = {
       deleted: false,
       published: true,
-      cfp_verified_at: props.q.verified ? { not: null } : undefined,
+      subscriptions: props.q.verified
+        ? {
+            some: activeVerifiedSubscriptionWhere,
+          }
+        : undefined,
       user: {
         active: true,
         deleted: false,
@@ -137,10 +177,18 @@ export class IndexRepository implements IIndexRepository {
           bio: true,
           crp: true,
           cfp_verified_at: true,
+          available_days: true,
           modality: true,
           languages: true,
           rating_avg: true,
           rating_count: true,
+          subscriptions: {
+            where: activeVerifiedSubscriptionWhere,
+            select: {
+              id: true,
+            },
+            take: 1,
+          },
           user: {
             select: {
               id: true,
@@ -230,7 +278,8 @@ export class IndexRepository implements IIndexRepository {
         languages: normalizeStringArray(item.languages),
         rating_avg: item.rating_avg,
         rating_count: item.rating_count,
-        verified: Boolean(item.cfp_verified_at),
+        verified: item.subscriptions.length > 0,
+        available_today: hasAvailableToday(item.available_days),
         favorited: item.user.favorited_by_patients.length > 0,
         followed: item.user.followed_by_patients.length > 0,
         specialties: item.user.psychologist_specialties

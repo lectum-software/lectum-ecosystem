@@ -55,9 +55,10 @@
     "phone_verification_sender_invalid": "Verificação por SMS indisponível: o remetente configurado na Twilio não pertence à conta ou não está apto para SMS. Configure um número Twilio ou Messaging Service válido.",
     "invalid_catalog_selection": "Seleção inválida no catálogo {{catalog}}.",
     "free_specialty_limit": "O plano gratuito permite selecionar até {{limit}} especialidades.",
-    "free_profile_publish_requirements": "Preencha nome, bio, apresenta??o, modalidade, idioma, especialidade e servi?o antes de publicar.",
+    "free_profile_publish_requirements": "Preencha nome, gênero, raça/cor, religião, CRP, bio, apresentação, modalidade, idioma, especialidade, serviço, abordagem, estado e cidade antes de publicar.",
     "free_profile_professional_plan": "Esta configuração é exclusiva do plano gratuito.",
-    "free_service_limit": "O plano gratuito permite selecionar {{limit}} servi?o."
+    "free_service_limit": "O plano gratuito permite selecionar {{limit}} serviço.",
+    "free_approach_limit": "O plano gratuito permite selecionar {{limit}} abordagem."
   },
   "message": {
     "store": "dado criado",

@@ -59,6 +59,7 @@ export type FreeProfessionalProfile = {
     is_free: boolean;
     specialty_limit: number;
     service_limit: number;
+    approach_limit: number;
   };
   selected: {
     specialties: FreeProfileCatalogItem[];

@@ -81,14 +81,22 @@ export const toWhatsappPhoneE164 = (value: string, countryCode = DEFAULT_COUNTRY
 export const freeProfileSchema = z
   .object({
     name: z.string().trim().min(2, "Informe seu nome profissional").max(120),
-    gender: z.string().trim().max(40),
-    race_color: z.string().trim().max(40),
-    religion: z.string().trim().max(80),
+    gender: z.string().trim().min(1, "Selecione seu gênero").max(40),
+    race_color: z.string().trim().min(1, "Selecione sua raça/cor").max(40),
+    religion: z.string().trim().min(1, "Selecione sua religião").max(80),
     cpf: z
       .string()
       .refine((value) => !value || onlyDigits(value).length === 11, "Informe um CPF válido"),
-    crp_region: z.string().trim().max(40, "Regional muito longa"),
-    crp_number: z.string().trim().max(40, "Registro muito longo"),
+    crp_region: z
+      .string()
+      .trim()
+      .min(1, "Selecione a Regional do CRP")
+      .max(40, "Regional muito longa"),
+    crp_number: z
+      .string()
+      .trim()
+      .min(1, "Informe o Nº Registro CRP")
+      .max(40, "Registro muito longo"),
     countryCode: z.string().min(1, "Selecione o país"),
     whatsapp: z.string(),
     headline: z
@@ -123,11 +131,14 @@ export const freeProfileSchema = z
     address_complement: z.string().trim().max(80),
     address_district: z.string().trim().max(120),
     address_zip: z.string().trim().max(20),
-    address_city: z.string().trim().max(120),
-    address_state: z.string().trim().max(2),
+    address_city: z.string().trim().min(1, "Selecione a cidade").max(120),
+    address_state: z.string().trim().min(2, "Selecione o estado").max(2),
     specialty_ids: z.array(z.string()),
     service_ids: z.array(z.string()),
-    approach_ids: z.array(z.string()),
+    approach_ids: z
+      .array(z.string())
+      .min(1, "Selecione uma abordagem")
+      .max(1, "Selecione apenas 1 abordagem no plano gratuito"),
     target_audience: z.array(z.string()),
     available_days: z.array(z.string()),
   })
@@ -151,6 +162,7 @@ export const fields = [
     label: "Gênero",
     placeholder: "Selecione seu gênero",
     options: GENDER_OPTIONS,
+    required: true,
   },
   {
     name: "race_color",
@@ -158,6 +170,7 @@ export const fields = [
     label: "Raça/Cor",
     placeholder: "Selecione sua raça/cor",
     options: RACE_COLOR_OPTIONS,
+    required: true,
   },
   {
     name: "religion",
@@ -165,6 +178,7 @@ export const fields = [
     label: "Religião",
     placeholder: "Selecione sua religião",
     options: RELIGION_OPTIONS,
+    required: true,
   },
   {
     name: "cpf",
@@ -179,12 +193,14 @@ export const fields = [
     label: "Regional do CRP",
     placeholder: "Selecione a regional",
     options: CRP_REGION_OPTIONS,
+    required: true,
   },
   {
     name: "crp_number",
     field: "input",
     label: "Nº Registro CRP",
     placeholder: "000000",
+    required: true,
   },
   {
     name: "whatsapp",
@@ -269,6 +285,7 @@ export const fields = [
     label: "Cidade",
     placeholder: "Selecione a cidade",
     options: [],
+    required: true,
   },
   {
     name: "address_state",
@@ -276,6 +293,7 @@ export const fields = [
     label: "Estado",
     placeholder: "Selecione o estado",
     options: STATE_OPTIONS,
+    required: true,
   },
 ] satisfies Field<FreeProfileForm>[];
 

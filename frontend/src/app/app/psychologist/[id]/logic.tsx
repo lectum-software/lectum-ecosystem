@@ -45,6 +45,7 @@ import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { formatCrpNumber } from "@/utils/crp";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 const PAGE_LIMIT = 5;
@@ -286,6 +287,7 @@ const ProfileHero = ({
 }) => {
   const primarySpecialty = profile.specialties[0]?.name;
   const headline = profile.headline || profile.bio;
+  const formattedCrp = formatCrpNumber(profile.crp);
 
   return (
     <section className="border-b border-border bg-surface px-4 pb-5 pt-6 sm:rounded-b-[28px] sm:border sm:px-6 lg:px-8">
@@ -317,14 +319,19 @@ const ProfileHero = ({
             {profile.verified ? <VerifiedBadgeIcon aria-hidden="true" className="h-5 w-5" /> : null}
           </h1>
           <p className="mt-1 text-sm font-semibold text-muted">
-            Psicóloga(o) {profile.crp ? `• CRP: ${profile.crp}` : "• CRP não informado"}
+            Psicólogo {formattedCrp ? `• CRP ${formattedCrp}` : "• CRP não informado"}
           </p>
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-xs font-extrabold text-success">
-              <span className="h-2 w-2 rounded-full bg-success" aria-hidden="true" />
-              Disponível hoje
-            </span>
+            {profile.available_today ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-xs font-extrabold text-success">
+                <span
+                  className="h-2 w-2 rounded-full bg-success motion-safe:animate-pulse"
+                  aria-hidden="true"
+                />
+                Disponível hoje
+              </span>
+            ) : null}
             <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-extrabold text-primary">
               <Star className="h-3.5 w-3.5 fill-warning text-warning" aria-hidden="true" />
               {formatRating(profile.rating_avg, profile.rating_count)}

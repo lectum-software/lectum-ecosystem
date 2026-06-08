@@ -1,3 +1,5 @@
+import type { ProfessionalSubscription } from "./billing";
+
 export type user_token = {
   token?: string;
   createdAt?: string;
@@ -33,6 +35,7 @@ export type psychologist_profile = {
   rating_avg?: number;
   rating_count?: number;
   published?: boolean;
+  subscriptions?: ProfessionalSubscription[];
   createdAt?: string;
   updatedAt?: string;
 };

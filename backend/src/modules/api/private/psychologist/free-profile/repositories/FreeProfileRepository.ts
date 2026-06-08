@@ -227,6 +227,7 @@ const toResponse = async (
   const isFree = planSlug === "gratuito" || !planSlug;
   const specialtyLimit = isFree ? 3 : 99;
   const serviceLimit = isFree ? 1 : 99;
+  const approachLimit = isFree ? 1 : 99;
   const catalogs = await getCatalogs();
   const crp = parseCrp(profile.crp);
   const academic = {
@@ -282,6 +283,7 @@ const toResponse = async (
       is_free: isFree,
       specialty_limit: specialtyLimit,
       service_limit: serviceLimit,
+      approach_limit: approachLimit,
     },
     selected: {
       specialties: item.psychologist_specialties

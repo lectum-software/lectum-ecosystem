@@ -42,6 +42,8 @@ export const usePsychologistFreeProfile = ({ callbacks }: UsePsychologistFreePro
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: keys.psychologistFreeProfile.root() });
       queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === "auth_hydrate" });
+      queryClient.invalidateQueries({ queryKey: keys.directory.psychologistsRoot() });
+      queryClient.invalidateQueries({ queryKey: keys.directory.psychologistRoot(data.user.id) });
       callbacks?.update?.onSuccess?.(data);
     },
     onError: callbacks?.update?.onError,
@@ -52,6 +54,12 @@ export const usePsychologistFreeProfile = ({ callbacks }: UsePsychologistFreePro
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: keys.psychologistFreeProfile.root() });
       queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === "auth_hydrate" });
+      queryClient.invalidateQueries({ queryKey: keys.directory.psychologistsRoot() });
+      if (data.profile?.user.id) {
+        queryClient.invalidateQueries({
+          queryKey: keys.directory.psychologistRoot(data.profile.user.id),
+        });
+      }
       callbacks?.avatar?.onSuccess?.(data);
     },
     onError: callbacks?.avatar?.onError,
@@ -62,6 +70,12 @@ export const usePsychologistFreeProfile = ({ callbacks }: UsePsychologistFreePro
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: keys.psychologistFreeProfile.root() });
       queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === "auth_hydrate" });
+      queryClient.invalidateQueries({ queryKey: keys.directory.psychologistsRoot() });
+      if (data.profile?.user.id) {
+        queryClient.invalidateQueries({
+          queryKey: keys.directory.psychologistRoot(data.profile.user.id),
+        });
+      }
       callbacks?.deleteAvatar?.onSuccess?.(data);
     },
     onError: callbacks?.deleteAvatar?.onError,

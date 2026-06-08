@@ -32,6 +32,15 @@ Para endereco profissional, a selecao de cidade passou a usar uma lista local ge
 
 O erro "Estrutura da requisicao invalida" ao salvar o perfil gratuito foi corrigido no controller do backend: como a rota nao usa o middleware `validator`, o service agora recebe explicitamente `auth: req.auth` e `b: req.body`, em vez de esperar `req.b`.
 
+
+Em 2026-06-08, a exibicao de perfil publico foi alinhada ao modelo comercial: selo verificado passa a depender exclusivamente de uma `professional_subscription` ativa cujo plano nao seja `gratuito`. `cfp_verified_at` continua existindo para futuros fluxos de validacao profissional, mas nao concede selo no perfil gratuito. A regra foi aplicada na listagem de psicologos, no perfil publico, em favoritos/seguindo e no menu privado.
+
+O backend tambem passou a calcular `available_today` com base em `psychologist_profile.available_days` e no fuso `America/Sao_Paulo`, devolvendo o indicador para cards e perfil publico. A UI apenas renderiza o indicador quando a API confirma disponibilidade no dia.
+
+A exibicao de CRP foi padronizada no frontend como `Psicologo &bull; CRP 00/000000`, reaproveitando o campo declaratorio `psychologist_profile.crp` sem validar CRP por API neste recorte.
+
+Para o plano gratuito, abordagens ganharam limite explicito `approach_limit=1` no contrato do free-profile. O frontend bloqueia novas selecoes acima desse limite, e o backend rejeita payloads acima do limite para impedir burla por requisicao manual.
+
 ## Consequências
 
 - Psicólogos gratuitos conseguem configurar um perfil mais próximo do protótipo sem desbloquear a TASK-18 completa.
@@ -48,6 +57,11 @@ O erro "Estrutura da requisicao invalida" ao salvar o perfil gratuito foi corrig
 - O menu de perfil nao exibe mais "Sessao ativa" nem "Verificar WhatsApp".
 - O modo claro e o padrao visual; modo escuro e uma preferencia local ativada por switch.
 - A lista de cidades aumenta o bundle estatico, mas remove dependencia externa de runtime e cumpre o requisito de listar todos os municipios por UF.
+
+- O selo verificado passa a representar assinatura paga ativa, nao apenas cadastro CFP preenchido.
+- Psicologos gratuitos publicados aparecem na busca sem selo, desde que `published=true` e atendam aos requisitos de publicacao.
+- A disponibilidade "Disponivel hoje" fica consistente entre listagem e perfil publico porque e calculada no backend.
+- O plano gratuito permanece limitado a uma abordagem, alem dos limites ja existentes de especialidades e servicos.
 
 ## Validação
 
@@ -67,3 +81,9 @@ O erro "Estrutura da requisicao invalida" ao salvar o perfil gratuito foi corrig
 - 2026-06-08: `pnpm --dir frontend build`
 - 2026-06-08: `pnpm check`
 - 2026-06-08: Chrome headless local em `/app/profile` e `/app/professional/profile/setup` redirecionou para login sem sessao; validacao autenticada visual ficou limitada por nao haver token real acessivel ao agente sem criar mock.
+- 2026-06-08 complementar: `pnpm --dir frontend check`
+- 2026-06-08 complementar: `pnpm --dir backend check`
+- 2026-06-08 complementar: `pnpm --dir backend build`
+- 2026-06-08 complementar: `pnpm --dir frontend build`
+- 2026-06-08 complementar: `pnpm check`
+- 2026-06-08 complementar: HTTP local `/health` respondeu 200; rotas privadas `/app/profile`, `/app/professional/profile/setup` e `/app/psychologists` responderam 307 sem sessao, mantendo protecao. Validacao visual autenticada ficou limitada por nao haver token real acessivel ao agente sem criar mock.

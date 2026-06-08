@@ -74,6 +74,15 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
 - [x] Ajustes pos-validacao de perfil em 2026-06-08 aplicados: avatar do menu usa a mesma foto da edicao, selo SVG enviado, remocao de sessao ativa/Verificar WhatsApp, switch de modo escuro com padrao claro, voltar para `/app/profile`, labels CRP atualizados, indicador obrigatorio e cidades IBGE filtraveis por UF.
 - [x] Salvamento do perfil gratuito corrigido para enviar `req.body` ao service sem depender de `req.b` quando a rota nao usa o middleware `validator`.
 
+- [x] Ajuste complementar de 2026-06-08 aplicado: selo de verificado agora depende de assinatura ativa nao gratuita, e nao de CFP, inclusive nas listas, favoritos e perfil publico.
+- [x] Exibicao de CRP padronizada como `Psicologo &bull; CRP 00/000000` no menu de perfil, card e perfil publico.
+- [x] Avatar do menu e da edicao usa a mesma moldura/tamanho de 112px com `Image` do Next.
+- [x] Campos obrigatorios adicionais marcados e validados: genero, raca/cor, religiao, Regional do CRP, No Registro CRP, abordagens, estado e cidade.
+- [x] Abordagens no plano gratuito limitadas a 1 selecao, com texto de upgrade, validacao frontend/backend e erro especifico.
+- [x] Cidade simplificada: sem texto "Digite para filtrar...", sem faixa de cidade selecionada e sem item azul escuro persistente.
+- [x] Alterar visibilidade publica invalida a listagem de psicologos; perfis publicados ficam elegiveis para /app/psychologists.
+- [x] Cards e perfil publico exibem "Disponivel hoje" apenas quando o dia atual em America/Sao_Paulo esta em dias disponiveis, com bolinha verde pulsando suavemente.
+
 ## Validação executada
 
 - `pnpm --dir backend exec prisma migrate dev --name add_free_profile_details`
@@ -95,6 +104,13 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
 - 2026-06-08: `pnpm --dir frontend build`
 - 2026-06-08: `pnpm check`
 - 2026-06-08: Chrome headless local em `/app/profile` e `/app/professional/profile/setup` redirecionou para login sem sessao; validacao visual autenticada ficou limitada por nao haver token real acessivel ao agente sem criar mock.
+
+- 2026-06-08 complementar: `pnpm --dir frontend check`
+- 2026-06-08 complementar: `pnpm --dir backend check`
+- 2026-06-08 complementar: `pnpm --dir backend build`
+- 2026-06-08 complementar: `pnpm --dir frontend build`
+- 2026-06-08 complementar: `pnpm check`
+- 2026-06-08 complementar: HTTP local `/health` respondeu 200; rotas privadas `/app/profile`, `/app/professional/profile/setup` e `/app/psychologists` responderam 307 sem sessao, mantendo protecao. Validacao visual autenticada ficou limitada por nao haver token real acessivel ao agente sem criar mock.
 
 ## Implementação
 
@@ -122,3 +138,11 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
 - Referencias visuais consultadas: `_product/proto/Perfil - Psicologo.jpg`, `_product/proto/Editar Perfil - Psicologo.jpg` e prints enviados pelo usuario no pedido. Builder/Quick Copy nao esta exposto como ferramenta neste ambiente; a limitacao permanece registrada e as imagens locais foram usadas como fonte auditavel.
 - Lista de cidades gerada a partir da API oficial de Localidades do IBGE em 2026-06-08 e versionada no frontend para nao criar dependencia externa de runtime.
 - ADR atualizada em `adrs/0027-perfil-gratuito-sem-crp.md`.
+
+## Ajuste complementar em 2026-06-08
+
+- O selo verificado deixou de ser derivado de `cfp_verified_at` no recorte de exibicao publica. A regra de UI/API agora considera somente assinatura profissional ativa com plano diferente de `gratuito`.
+- O CRP exibido ao lado de "Psicologo" e normalizado por utilitario frontend para o padrao `CRP 00/000000`.
+- A lista publica calcula `available_today` no backend a partir de `available_days` e do fuso `America/Sao_Paulo`, para evitar divergencia entre cliente e servidor.
+- A edicao do perfil gratuito reforca campos obrigatorios no Zod e no backend quando publicado, incluindo dados demograficos, CRP, abordagens e endereco.
+- A limitacao de abordagens foi adicionada ao contrato do plano gratuito como `approach_limit=1`.

@@ -40,6 +40,18 @@ const isCatalogItem = (
   return Boolean(value?.id && value.name && value.slug);
 };
 
+const activeVerifiedSubscriptionWhere = {
+  deleted: false,
+  status: "ativa",
+  plan: {
+    active: true,
+    deleted: false,
+    slug: {
+      not: "gratuito",
+    },
+  },
+} satisfies Prisma.professional_subscriptionWhereInput;
+
 export class FavoriteRepository implements IFavoriteRepository {
   readonly repository: ORM["psychologist_favorite"];
 
@@ -106,11 +118,17 @@ export class FavoriteRepository implements IFavoriteRepository {
                   headline: true,
                   bio: true,
                   crp: true,
-                  cfp_verified_at: true,
                   modality: true,
                   languages: true,
                   rating_avg: true,
                   rating_count: true,
+                  subscriptions: {
+                    where: activeVerifiedSubscriptionWhere,
+                    select: {
+                      id: true,
+                    },
+                    take: 1,
+                  },
                 },
               },
               psychologist_specialties: {
@@ -181,7 +199,7 @@ export class FavoriteRepository implements IFavoriteRepository {
             languages: normalizeStringArray(profile.languages),
             rating_avg: profile.rating_avg,
             rating_count: profile.rating_count,
-            verified: Boolean(profile.cfp_verified_at),
+            verified: profile.subscriptions.length > 0,
             favorited: item.psychologist.favorited_by_patients.length > 0,
             followed: item.psychologist.followed_by_patients.length > 0,
             specialties: item.psychologist.psychologist_specialties

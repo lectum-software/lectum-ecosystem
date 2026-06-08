@@ -6,6 +6,7 @@ import Link from "next/link";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
+import { formatCrpNumber } from "@/utils/crp";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 export type PsychologistCardItem = {
@@ -14,10 +15,12 @@ export type PsychologistCardItem = {
   avatar: string | null;
   headline: string | null;
   bio: string | null;
+  crp?: string | null;
   modality: string | null;
   rating_avg: number;
   rating_count: number;
   verified: boolean;
+  available_today?: boolean;
   favorited: boolean;
   followed: boolean;
   specialties: Array<{ name: string }>;
@@ -56,6 +59,7 @@ export function PsychologistCard({
 }: PsychologistCardProps) {
   const avatarSrc = resolvePublicMediaUrl(psychologist.avatar);
   const avatarIsPublicMedia = isPublicMediaUrl(psychologist.avatar);
+  const formattedCrp = formatCrpNumber(psychologist.crp);
   const tags = [
     ...psychologist.specialties.slice(0, 2).map((item) => item.name),
     ...psychologist.services.slice(0, 2).map((item) => item.name),
@@ -66,10 +70,17 @@ export function PsychologistCard({
     <article className="overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_8px_28px_rgb(15_23_42_/_5%)] transition hover:border-border-strong hover:shadow-[0_12px_32px_rgb(15_23_42_/_7%)]">
       <div className="grid gap-3 p-4">
         <div className="flex items-center justify-between gap-3">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[0.72rem] font-bold text-success">
-            <span className="h-2.5 w-2.5 rounded-full bg-success" aria-hidden="true" />
-            Disponível hoje
-          </span>
+          {psychologist.available_today ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[0.72rem] font-bold text-success">
+              <span
+                className="h-2.5 w-2.5 rounded-full bg-success motion-safe:animate-pulse"
+                aria-hidden="true"
+              />
+              Disponível hoje
+            </span>
+          ) : (
+            <span />
+          )}
           <div className="flex items-center gap-2">
             <button
               aria-label={
@@ -141,7 +152,7 @@ export function PsychologistCard({
             </h2>
             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
               <span className="text-[0.65rem] font-bold uppercase tracking-[0.26em] text-subtle">
-                Psicólogo
+                Psicólogo{formattedCrp ? ` • CRP ${formattedCrp}` : ""}
               </span>
               <span className="inline-flex items-center gap-1 text-[0.78rem] font-semibold text-muted">
                 <Star className="h-3.5 w-3.5 fill-warning text-warning" aria-hidden="true" />

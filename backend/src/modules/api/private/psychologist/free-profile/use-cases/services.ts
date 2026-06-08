@@ -124,7 +124,15 @@ const hasRequiredPublishingFields = (body: Required<FreeProfessionalProfileUpdat
       body.modality &&
       body.languages.length > 0 &&
       body.specialty_ids.length > 0 &&
-      body.service_ids.length > 0,
+      body.service_ids.length > 0 &&
+      body.approach_ids.length > 0 &&
+      body.gender &&
+      body.race_color &&
+      body.religion &&
+      body.crp_region &&
+      body.crp_number &&
+      body.address.state &&
+      body.address.city,
   );
 };
 
@@ -283,6 +291,13 @@ export const update = async (data: IFreeProfessionalProfileUpdateDTO) => {
     return {
       status: 400,
       ...error("free_service_limit", { limit: current.plan.service_limit }),
+    };
+  }
+
+  if (body.approach_ids.length > current.plan.approach_limit) {
+    return {
+      status: 400,
+      ...error("free_approach_limit", { limit: current.plan.approach_limit }),
     };
   }
 
