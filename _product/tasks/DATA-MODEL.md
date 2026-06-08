@@ -162,6 +162,7 @@ Quando construído: módulo de audiência próprio (ex.: `backend/src/modules/ma
 | `video_url` | `String?` | apenas Plano Profissional ou concessão `admin_grant` ativa (PRD §13); manter null no gratuito |
 | `cpf` | `String?` | usado na consulta CFP; dado sensível (LGPD) |
 | `crp` | `String?` | registro profissional exibido no cabeçalho |
+| `crp_registration_date` | `DateTime?` | data interna de inscrição no CRP, preenchida pela consulta CFP real ou pela operação na concessão `admin_grant`; não é editável pelo psicólogo e é usada para calcular tempo de experiência no card |
 | `gender`, `race_color`, `religion` | `String?` | campos declaratórios editáveis no recorte gratuito sem CRP; não entram em validação profissional |
 | `crp_status` | `String @default("pendente")` | `"pendente" \| "em_analise" \| "aprovado" \| "rejeitado"` (TASK-10/11) |
 | `cfp_verified_at` | `DateTime?` | preenchido so com consulta CFP real; fonte autorizada para TASK-10: InfoSimples `cfp-cadastro` via `DOCUMENT_TOKEN` (ADR-0026) |
@@ -461,6 +462,8 @@ Trocar de provedor = novo adapter. **Limite real:** card tokens são específico
 | `@@index([source, status])`, `@@index([status, current_period_end])` | | auditoria e filtro de entitlement ativo não expirado |
 
 `source="admin_grant"` com plano `profissional`, `status="ativa"` e `current_period_end` futuro concede a mesma experiência de perfil do Plano Profissional até expirar: selo, vídeo de apresentação, até 10 especialidades e seleção de todos os serviços/abordagens ativos.
+
+Quando uma concessão `admin_grant` substitui a validação automática do CFP, a operação deve informar a data de inscrição no CRP do profissional para atualizar `psychologist_profile.crp_registration_date`. Essa data permanece interna, não é editável na tela de perfil e alimenta o cálculo de anos de experiência exibido apenas para assinantes/cortesias ativos.
 
 `billing_address` (TASK-32, "Endereço de Faturamento"):
 

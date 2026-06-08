@@ -70,6 +70,7 @@ export interface psychologist_profile {
   video_url?: string | null;
   cpf?: string | null;
   crp?: string | null;
+  crp_registration_date?: Date | null;
   gender?: string | null;
   race_color?: string | null;
   religion?: string | null;

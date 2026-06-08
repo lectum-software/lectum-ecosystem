@@ -1,5 +1,6 @@
 ﻿import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
+import { crpExperienceYears } from "@/utils/professional-experience";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   DirectoryCatalogItem,
@@ -51,55 +52,6 @@ const currentWeekdayValue = () => {
 
 const hasAvailableToday = (value: unknown) => {
   return normalizeStringArray(value).includes(currentWeekdayValue());
-};
-
-const currentYearValue = () => {
-  return Number(
-    new Intl.DateTimeFormat("en-US", {
-      timeZone: "America/Sao_Paulo",
-      year: "numeric",
-    }).format(new Date()),
-  );
-};
-
-const parseYear = (value: unknown) => {
-  if (typeof value !== "string") return null;
-
-  const match = value.match(/\d{4}/);
-  if (!match) return null;
-
-  const year = Number(match[0]);
-  const currentYear = currentYearValue();
-
-  if (!Number.isFinite(year) || year < 1950 || year > currentYear) return null;
-
-  return year;
-};
-
-const academicFormationYears = (
-  primaryYear: string | null,
-  formations: Prisma.JsonValue | null,
-) => {
-  const years: number[] = [];
-  const primary = parseYear(primaryYear);
-
-  if (primary) years.push(primary);
-
-  if (Array.isArray(formations)) {
-    for (const item of formations) {
-      if (!item || typeof item !== "object" || Array.isArray(item)) continue;
-
-      const formation = item as Record<string, unknown>;
-      const year = parseYear(formation.graduation_year);
-
-      if (year) years.push(year);
-    }
-  }
-
-  if (years.length === 0) return null;
-
-  const yearsSince = currentYearValue() - Math.min(...years);
-  return yearsSince > 0 ? yearsSince : null;
 };
 
 const buildWhatsappUrl = (value?: string | null) => {
@@ -224,13 +176,12 @@ export class IndexRepository implements IIndexRepository {
           bio: true,
           video_url: true,
           crp: true,
+          crp_registration_date: true,
           cfp_verified_at: true,
           gender: true,
           discount_first_session: true,
           social_value: true,
           accepts_insurance: true,
-          academic_graduation_year: true,
-          academic_formations: true,
           available_days: true,
           modality: true,
           languages: true,
@@ -337,10 +288,7 @@ export class IndexRepository implements IIndexRepository {
         rating_count: item.rating_count,
         verified: item.subscriptions.length > 0,
         available_today: hasAvailableToday(item.available_days),
-        formation_years: academicFormationYears(
-          item.academic_graduation_year,
-          item.academic_formations,
-        ),
+        formation_years: crpExperienceYears(item.crp_registration_date),
         discount_first_session: item.discount_first_session,
         social_value: item.social_value,
         accepts_insurance: item.accepts_insurance,

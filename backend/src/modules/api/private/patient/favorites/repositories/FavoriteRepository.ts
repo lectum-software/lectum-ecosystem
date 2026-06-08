@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
+import { crpExperienceYears } from "@/utils/professional-experience";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   FavoriteActionResponse,
@@ -59,55 +60,6 @@ const currentWeekdayValue = () => {
 
 const hasAvailableToday = (value: unknown) => {
   return normalizeStringArray(value).includes(currentWeekdayValue());
-};
-
-const currentYearValue = () => {
-  return Number(
-    new Intl.DateTimeFormat("en-US", {
-      timeZone: "America/Sao_Paulo",
-      year: "numeric",
-    }).format(new Date()),
-  );
-};
-
-const parseYear = (value: unknown) => {
-  if (typeof value !== "string") return null;
-
-  const match = value.match(/\d{4}/);
-  if (!match) return null;
-
-  const year = Number(match[0]);
-  const currentYear = currentYearValue();
-
-  if (!Number.isFinite(year) || year < 1950 || year > currentYear) return null;
-
-  return year;
-};
-
-const academicFormationYears = (
-  primaryYear: string | null,
-  formations: Prisma.JsonValue | null,
-) => {
-  const years: number[] = [];
-  const primary = parseYear(primaryYear);
-
-  if (primary) years.push(primary);
-
-  if (Array.isArray(formations)) {
-    for (const item of formations) {
-      if (!item || typeof item !== "object" || Array.isArray(item)) continue;
-
-      const formation = item as Record<string, unknown>;
-      const year = parseYear(formation.graduation_year);
-
-      if (year) years.push(year);
-    }
-  }
-
-  if (years.length === 0) return null;
-
-  const yearsSince = currentYearValue() - Math.min(...years);
-  return yearsSince > 0 ? yearsSince : null;
 };
 
 const buildWhatsappUrl = (value?: string | null) => {
@@ -199,8 +151,7 @@ export class FavoriteRepository implements IFavoriteRepository {
                   discount_first_session: true,
                   social_value: true,
                   accepts_insurance: true,
-                  academic_graduation_year: true,
-                  academic_formations: true,
+                  crp_registration_date: true,
                   whatsapp: true,
                   subscriptions: {
                     where: activeProfessionalEntitlementWhere(),
@@ -283,10 +234,7 @@ export class FavoriteRepository implements IFavoriteRepository {
             rating_count: profile.rating_count,
             verified: profile.subscriptions.length > 0,
             available_today: hasAvailableToday(profile.available_days),
-            formation_years: academicFormationYears(
-              profile.academic_graduation_year,
-              profile.academic_formations,
-            ),
+            formation_years: crpExperienceYears(profile.crp_registration_date),
             discount_first_session: profile.discount_first_session,
             social_value: profile.social_value,
             accepts_insurance: profile.accepts_insurance,

@@ -43,3 +43,4 @@ Formato recomendado:
 - [ADR-0027 - Perfil gratuito sem documentos CRP](0027-perfil-gratuito-sem-crp.md) - Accepted
 - [ADR-0028 - Concessao administrativa de assinatura profissional](0028-concessao-administrativa-assinatura.md) - Accepted
 - [ADR-0029 - Cortesia profissional como experiencia de assinante](0029-cortesia-profissional-ui-perfil.md) - Accepted
+- [ADR-0030 - Data de inscricao CRP como fonte do tempo de experiencia](0030-data-inscricao-crp-experiencia.md) - Accepted

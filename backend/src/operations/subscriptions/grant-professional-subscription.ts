@@ -1,6 +1,7 @@
 import "dotenv/config";
 
 import prisma from "@/infra/database/prisma";
+import { parseCrpRegistrationDate } from "@/utils/professional-experience";
 
 const SOURCE_ADMIN_GRANT = "admin_grant";
 
@@ -12,6 +13,7 @@ type GrantArgs = {
   psychologistProfileId?: string;
   psychologistUserId?: string;
   reason: string;
+  registrationDate?: Date;
   until?: Date;
 };
 
@@ -41,6 +43,11 @@ Auditoria:
   --actor <responsável obrigatório>
   --notes <observações opcionais>
 
+Experiência profissional:
+  --crp-registration-date <YYYY-MM-DD ou DD/MM/YYYY>
+  Data de inscrição no CRP. Campo interno usado para calcular tempo de experiência
+  quando a cortesia substitui a consulta CFP automática.
+
 Segurança:
   se houver assinatura não cancelada vinculada a gateway, o comando bloqueia a concessão.
 `;
@@ -56,6 +63,22 @@ const parseUntil = (value: string) => {
 
   if (Number.isNaN(date.getTime())) {
     throw new Error("--until deve ser uma data válida.");
+  }
+
+  return date;
+};
+
+const parseRegistrationDate = (value: string) => {
+  const date = parseCrpRegistrationDate(value, {
+    allowFuture: true,
+  });
+
+  if (!date) {
+    throw new Error("--crp-registration-date deve ser uma data válida.");
+  }
+
+  if (date > new Date()) {
+    throw new Error("--crp-registration-date não pode estar no futuro.");
   }
 
   return date;
@@ -122,6 +145,7 @@ const parseArgs = (argv: string[]): GrantArgs | null => {
 
   const allowedFlags = new Set([
     "actor",
+    "crp-registration-date",
     "days",
     "notes",
     "psychologist-email",
@@ -151,6 +175,7 @@ const parseArgs = (argv: string[]): GrantArgs | null => {
 
   const rawDays = getOptionalString(flags, "days");
   const rawUntil = getOptionalString(flags, "until");
+  const rawRegistrationDate = getOptionalString(flags, "crp-registration-date");
 
   if (rawDays && rawUntil) {
     throw new Error("Informe apenas um período: --days ou --until.");
@@ -173,6 +198,7 @@ const parseArgs = (argv: string[]): GrantArgs | null => {
     psychologistProfileId: getOptionalString(flags, "psychologist-profile-id"),
     psychologistUserId: getOptionalString(flags, "psychologist-user-id"),
     reason: assertNonEmpty(flags.get("reason"), "--reason é obrigatório para auditoria."),
+    registrationDate: rawRegistrationDate ? parseRegistrationDate(rawRegistrationDate) : undefined,
     until: rawUntil ? parseUntil(rawUntil) : undefined,
   };
 };
@@ -325,6 +351,17 @@ const grantProfessionalSubscription = async (args: GrantArgs) => {
       },
     });
 
+    if (args.registrationDate) {
+      await tx.psychologist_profile.update({
+        where: {
+          id: target.profileId,
+        },
+        data: {
+          crp_registration_date: args.registrationDate,
+        },
+      });
+    }
+
     return tx.professional_subscription.create({
       data: {
         current_period_end: periodEnd,
@@ -346,6 +383,7 @@ const grantProfessionalSubscription = async (args: GrantArgs) => {
   });
 
   return {
+    crp_registration_date: args.registrationDate ?? null,
     granted_to: target,
     subscription: {
       id: subscription.id,
