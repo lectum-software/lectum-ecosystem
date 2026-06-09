@@ -130,9 +130,9 @@ const hasRequiredPublishingFields = (body: Required<FreeProfessionalProfileUpdat
       body.specialty_ids.length > 0 &&
       body.service_ids.length > 0 &&
       body.approach_ids.length > 0 &&
+      body.target_audience.length > 0 &&
       body.gender &&
-      body.race_color &&
-      body.religion &&
+      body.cpf &&
       body.crp_region &&
       body.crp_number &&
       body.address.state &&
@@ -224,7 +224,7 @@ export const update = async (data: IFreeProfessionalProfileUpdateDTO) => {
   }
 
   const cpf = normalizeCpf(parsed.data.cpf);
-  if (cpf && cpf.length !== 11) {
+  if (cpf?.length !== 11) {
     return {
       status: 400,
       ...error("invalid_cpf", {}),
@@ -267,7 +267,9 @@ export const update = async (data: IFreeProfessionalProfileUpdateDTO) => {
     discount_first_session: Boolean(parsed.data.discount_first_session),
     social_value: Boolean(parsed.data.social_value),
     accepts_insurance: Boolean(parsed.data.accepts_insurance),
-    show_experience_tag: parsed.data.show_experience_tag ?? true,
+    show_experience_tag: current.plan.is_free
+      ? false
+      : Boolean(parsed.data.show_experience_tag ?? true),
     academic: primaryAcademic,
     academic_formations: resolvedAcademicFormations,
     available_days: normalizeList(parsed.data.available_days),
@@ -277,6 +279,13 @@ export const update = async (data: IFreeProfessionalProfileUpdateDTO) => {
     approach_ids: normalizeList(parsed.data.approach_ids),
     published: Boolean(parsed.data.published),
   };
+
+  if (body.target_audience.length === 0) {
+    return {
+      status: 400,
+      ...error("professional_profile_target_audience_required", {}),
+    };
+  }
 
   if (body.specialty_ids.length > current.plan.specialty_limit) {
     return {

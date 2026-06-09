@@ -83,11 +83,9 @@ export const freeProfileSchema = z
   .object({
     name: z.string().trim().min(2, "Informe seu nome profissional").max(120),
     gender: z.string().trim().min(1, "Selecione seu gênero").max(40),
-    race_color: z.string().trim().min(1, "Selecione sua raça/cor").max(40),
-    religion: z.string().trim().min(1, "Selecione sua religião").max(80),
-    cpf: z
-      .string()
-      .refine((value) => !value || onlyDigits(value).length === 11, "Informe um CPF válido"),
+    race_color: z.string().trim().max(40),
+    religion: z.string().trim().max(80),
+    cpf: z.string().refine((value) => onlyDigits(value).length === 11, "Informe um CPF válido"),
     crp_region: z
       .string()
       .trim()
@@ -138,7 +136,7 @@ export const freeProfileSchema = z
     specialty_ids: z.array(z.string()),
     service_ids: z.array(z.string()),
     approach_ids: z.array(z.string()).min(1, "Selecione uma abordagem"),
-    target_audience: z.array(z.string()),
+    target_audience: z.array(z.string()).min(1, "Selecione pelo menos um público"),
     available_days: z.array(z.string()),
   })
   .refine((data) => isPhoneLengthValid(data.whatsapp, data.countryCode), {
@@ -173,7 +171,6 @@ export const fields = [
     label: "Raça/Cor",
     placeholder: "Selecione sua raça/cor",
     options: RACE_COLOR_OPTIONS,
-    required: true,
   },
   {
     name: "religion",
@@ -181,13 +178,13 @@ export const fields = [
     label: "Religião",
     placeholder: "Selecione sua religião",
     options: RELIGION_OPTIONS,
-    required: true,
   },
   {
     name: "cpf",
     field: "cpf",
     label: "CPF",
     placeholder: "000.000.000-00",
+    required: true,
     autoComplete: "off",
   },
   {
@@ -210,6 +207,7 @@ export const fields = [
     field: "phone",
     label: "WhatsApp profissional",
     placeholder: "(00) 00000-0000",
+    countryCodeClassName: "w-fit min-w-12 px-2 py-0.5",
     countryCodeName: "countryCode",
     countryCodeOptions: PROFESSIONAL_COUNTRY_CALLING_CODE_OPTIONS,
     required: true,

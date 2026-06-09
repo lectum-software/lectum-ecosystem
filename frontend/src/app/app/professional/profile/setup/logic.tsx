@@ -358,17 +358,24 @@ const ChipPicker = ({
 );
 
 const BooleanBenefit = ({
+  disabled = false,
   checked,
   description,
   title,
   onChange,
 }: {
+  disabled?: boolean;
   checked: boolean;
   description: string;
   title: string;
   onChange: (checked: boolean) => void;
 }) => (
-  <label className="flex items-center justify-between gap-4 rounded-2xl bg-primary-soft/50 p-4">
+  <label
+    className={cn(
+      "flex items-center justify-between gap-4 rounded-2xl bg-primary-soft/50 p-4",
+      disabled && "opacity-60",
+    )}
+  >
     <span className="flex items-start gap-3">
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface text-primary shadow-sm">
         <Award className="h-4 w-4" aria-hidden="true" />
@@ -379,8 +386,9 @@ const BooleanBenefit = ({
       </span>
     </span>
     <input
-      checked={checked}
-      className="h-5 w-5 shrink-0 accent-primary"
+      checked={disabled ? false : checked}
+      className="h-5 w-5 shrink-0 accent-primary disabled:cursor-not-allowed"
+      disabled={disabled}
       onChange={(event) => onChange(event.target.checked)}
       type="checkbox"
     />
@@ -915,7 +923,7 @@ export const ProfessionalProfileSetupLogic = () => {
       discount_first_session: values.discount_first_session,
       social_value: values.social_value,
       accepts_insurance: values.accepts_insurance,
-      show_experience_tag: values.show_experience_tag,
+      show_experience_tag: profile.data?.plan.is_free ? false : values.show_experience_tag,
       academic: values.academic_formations[0]
         ? {
             title: values.academic_formations[0].title || null,
@@ -1215,8 +1223,8 @@ export const ProfessionalProfileSetupLogic = () => {
                 {renderField("bio")}
                 {canUploadVideo ? (
                   <div className="rounded-2xl border border-border bg-surface-muted p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex min-w-0 items-start gap-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-3">
                         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-primary shadow-sm">
                           <FileVideo className="h-5 w-5" aria-hidden="true" />
                         </span>
@@ -1434,7 +1442,10 @@ export const ProfessionalProfileSetupLogic = () => {
                 <div className="grid gap-3">
                   <h3 className="text-sm font-bold text-foreground">Selos e Facilidades</h3>
                   <BooleanBenefit
-                    checked={form.hook.watch("show_experience_tag")}
+                    checked={Boolean(
+                      !profile.data?.plan.is_free && form.hook.watch("show_experience_tag"),
+                    )}
+                    disabled={profile.data?.plan.is_free}
                     description="Mostre a tag com o tempo de experiência calculado pelo registro profissional."
                     onChange={(checked) =>
                       form.hook.setValue("show_experience_tag", checked, {

@@ -62,9 +62,12 @@ const getInitials = (name: string) => {
 };
 
 const formatRating = (ratingAvg: number, ratingCount: number) => {
-  if (ratingCount <= 0) return "Sem avaliações";
+  if (ratingCount <= 0) return "0,0 (0)";
 
-  return `${(ratingAvg / 100).toFixed(1)} (${ratingCount})`;
+  return `${(ratingAvg / 100).toLocaleString("pt-BR", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  })} (${ratingCount})`;
 };
 
 const getHonorificName = (psychologist: PsychologistCardItem) => {

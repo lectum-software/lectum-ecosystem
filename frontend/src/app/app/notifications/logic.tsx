@@ -1,9 +1,11 @@
 "use client";
 
 import { Bell, Check } from "lucide-react";
+import { useState } from "react";
 import { useNotification } from "@/api/callers/notification";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
+import { getToken } from "@/hooks/cookies/token";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -22,7 +24,12 @@ const LABELS: Record<string, string> = {
 };
 
 export const NotificationsLogic = () => {
-  const { index, update, clean } = useNotification({ enabledIndex: true });
+  const [hasAuthToken] = useState(() => {
+    if (typeof window === "undefined") return false;
+
+    return Boolean(getToken());
+  });
+  const { index, update, clean } = useNotification({ enabledIndex: hasAuthToken });
   const items = index.data?.pages.flatMap((page) => page.data) ?? [];
 
   return (

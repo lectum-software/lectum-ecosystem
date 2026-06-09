@@ -15,6 +15,7 @@ export function PhoneController<FormType extends FieldValues>({
   label,
   countryCodeName,
   countryCodeOptions = [],
+  countryCodeClassName,
   prefix,
   required,
   tooltip,
@@ -55,7 +56,10 @@ export function PhoneController<FormType extends FieldValues>({
                   render={({ field: countryField }) => (
                     <select
                       aria-label="Código do país"
-                      className="h-12 w-32 rounded-l-[var(--lectum-control-radius)] border border-border bg-surface px-3 text-sm font-semibold text-muted shadow-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+                      className={cn(
+                        "h-12 w-32 rounded-l-[var(--lectum-control-radius)] border border-border bg-surface px-3 text-sm font-semibold text-muted shadow-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted",
+                        countryCodeClassName,
+                      )}
                       disabled={disabled || readOnly}
                       name={countryField.name}
                       onBlur={countryField.onBlur}

@@ -3,12 +3,13 @@
 import { Heart, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { usePatient } from "@/api/callers/patient";
 import type { PatientRelationPsychologist, PatientRelationQuery } from "@/api/generator/types";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { getToken } from "@/hooks/cookies/token";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { PsychologistCard, type PsychologistCardItem } from "./psychologist-card";
@@ -70,6 +71,11 @@ const resolveRelationErrorMessage = (error: unknown) => {
 export function PsychologistRelationList({ mode }: PsychologistRelationListProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [hasAuthToken] = useState(() => {
+    if (typeof window === "undefined") return false;
+
+    return Boolean(getToken());
+  });
   const currentPage = useMemo(() => getPageFromParams(searchParams), [searchParams]);
   const query = useMemo<PatientRelationQuery>(
     () => ({ page: currentPage, limit: PAGE_LIMIT }),
@@ -77,7 +83,7 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
   );
   const copy = config[mode];
   const { favoritePsychologist, favorites, unfavoritePsychologist } = usePatient({
-    enableFavorites: true,
+    enableFavorites: hasAuthToken,
     enableFollows: false,
     enableProfile: false,
     favoritesQuery: query,

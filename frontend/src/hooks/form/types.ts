@@ -32,6 +32,7 @@ export type Field<FormType extends FieldValues> = {
   prefix?: string;
   countryCodeName?: FieldPath<FormType>;
   countryCodeOptions?: FieldOption[];
+  countryCodeClassName?: string;
   description?: string;
   tooltip?: string;
   required?: boolean;
@@ -62,6 +63,7 @@ export type Field<FormType extends FieldValues> = {
 
 export type ControllerFieldProps<FormType extends FieldValues> = Field<FormType> & {
   control: Control<FormType>;
+  countryCodeClassName?: string;
   read?: string;
 };
 

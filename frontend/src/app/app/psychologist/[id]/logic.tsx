@@ -114,13 +114,16 @@ const getInitials = (name: string) => {
 };
 
 const formatRating = (ratingAvg: number, ratingCount: number) => {
-  if (ratingCount <= 0) return "Sem avaliações";
+  if (ratingCount <= 0) return "0,0 (0)";
 
-  return `${(ratingAvg / 100).toFixed(1)} (${ratingCount})`;
+  return `${(ratingAvg / 100).toLocaleString("pt-BR", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  })} (${ratingCount})`;
 };
 
 const formatHeroRating = (ratingAvg: number, ratingCount: number) => {
-  if (ratingCount <= 0) return "0.0 (0)";
+  if (ratingCount <= 0) return "0,0 (0)";
 
   return formatRating(ratingAvg, ratingCount);
 };
@@ -135,9 +138,12 @@ const getHonorificName = (profile: DirectoryPsychologistProfile) => {
 };
 
 const formatRatingNumber = (ratingAvg: number, ratingCount: number) => {
-  if (ratingCount <= 0) return "0.0";
+  if (ratingCount <= 0) return "0,0";
 
-  return (ratingAvg / 100).toFixed(1);
+  return (ratingAvg / 100).toLocaleString("pt-BR", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  });
 };
 
 const formatDate = (value: string | null) => {
@@ -341,7 +347,7 @@ const ProfileAvatar = ({ profile }: { profile: DirectoryPsychologistProfile }) =
 
   return (
     <div
-      className="relative grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-muted text-xl font-extrabold text-primary"
+      className="relative grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-muted text-2xl font-extrabold text-primary"
       data-profile-avatar="true"
     >
       {avatarSrc ? (
@@ -350,7 +356,7 @@ const ProfileAvatar = ({ profile }: { profile: DirectoryPsychologistProfile }) =
           className="object-cover"
           fill
           priority
-          sizes="64px"
+          sizes="80px"
           src={avatarSrc}
           unoptimized={avatarIsPublicMedia}
         />
@@ -378,13 +384,13 @@ const ProfileHero = ({
   const benefitTags = buildBenefitTags(profile);
 
   return (
-    <section className="bg-surface px-5 pb-7 pt-5 sm:px-6 lg:px-8" data-profile-hero="true">
+    <section className="bg-background px-5 pb-7 pt-5 sm:px-6 lg:px-8" data-profile-hero="true">
       <div className="flex items-start gap-3">
         <ProfileAvatar profile={profile} />
 
         <div className="min-w-0 flex-1">
           <span className="inline-flex items-center gap-1 text-[0.66rem] font-extrabold text-muted">
-            <Star className="h-3.5 w-3.5 fill-warning text-warning" aria-hidden="true" />
+            <Star className="h-3.5 w-3.5 fill-[#FACC15] text-[#FACC15]" aria-hidden="true" />
             {formatHeroRating(profile.rating_avg, profile.rating_count)}
           </span>
           <h1 className="mt-0.5 flex items-center gap-1.5 text-[1.18rem] font-extrabold leading-5 text-foreground lg:text-2xl">
@@ -444,7 +450,7 @@ const ProfileHero = ({
       )}
 
       {benefitTags.length > 0 ? (
-        <div className="mt-5 flex flex-wrap gap-2" data-profile-benefit-tags="true">
+        <div className="mt-6 flex flex-wrap gap-2" data-profile-benefit-tags="true">
           {benefitTags.map((tag) => {
             const Icon = tag.icon;
 
@@ -473,7 +479,7 @@ const ProfileTabs = ({
   return (
     <nav
       aria-label="Seções do perfil profissional"
-      className="grid grid-cols-3 border-b border-border bg-surface"
+      className="mt-1 grid grid-cols-3 border-b border-border bg-background"
     >
       {tabs.map((tab) => {
         const Icon = tab.icon;
@@ -483,7 +489,7 @@ const ProfileTabs = ({
           <button
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex min-h-12 items-center justify-center gap-1 border-b-2 px-1.5 text-[0.68rem] font-extrabold transition sm:text-xs",
+              "flex min-h-12 items-center justify-center gap-1 border-b-2 px-1.5 text-[0.58rem] font-extrabold transition sm:text-xs",
               active
                 ? "border-primary text-primary"
                 : "border-transparent text-muted hover:text-primary",
@@ -601,7 +607,7 @@ const ExpandableBio = ({ text }: { text: string }) => {
       </p>
       {canExpand ? (
         <button
-          className="w-fit text-[0.78rem] font-extrabold text-primary transition hover:text-primary/80"
+          className="w-fit text-[0.66rem] font-extrabold text-primary transition hover:text-primary/80"
           onClick={() => setExpanded((current) => !current)}
           type="button"
         >
@@ -616,7 +622,7 @@ const FormationSection = ({ profile }: { profile: DirectoryPsychologistProfile }
   const formations = profile.academic_formations ?? [];
 
   return (
-    <section className="grid gap-3 border-t border-border bg-surface px-5 py-6 sm:px-6 lg:px-8">
+    <section className="grid gap-3 border-t border-border bg-background px-5 py-6 sm:px-6 lg:px-8">
       <h2 className="text-base font-extrabold text-foreground">Formação & Títulos</h2>
       {formations.length > 0 ? (
         <div className="grid gap-3">
@@ -682,7 +688,7 @@ const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
     "Este profissional ainda não informou uma biografia pública. Assim que houver dados persistidos, eles aparecerão aqui sem usar conteúdo fictício.";
 
   return (
-    <div className="bg-surface">
+    <div className="bg-background">
       <div className="grid gap-5 px-5 py-5 sm:px-6 lg:px-8">
         <PresentationVideo profile={profile} />
 
@@ -694,7 +700,7 @@ const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
         </div>
       </div>
 
-      <section className="grid gap-3 border-t border-border bg-surface px-5 py-6 sm:px-6 lg:px-8">
+      <section className="grid gap-3 border-t border-border bg-background px-5 py-6 sm:px-6 lg:px-8">
         <h2 className="text-base font-extrabold text-foreground">Atendimento</h2>
         <div className="grid gap-3">
           <ProfileInfoCard
@@ -710,7 +716,7 @@ const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
 
       <FormationSection profile={profile} />
 
-      <section className="border-t border-border bg-surface px-5 pb-24 pt-6 sm:px-6 lg:px-8">
+      <section className="border-t border-border bg-background px-5 pb-28 pt-6 sm:px-6 lg:px-8">
         <div className="flex items-start gap-3 rounded-[18px] border border-primary/20 bg-primary-soft px-4 py-4 text-primary">
           <CalendarDays className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
           <p className="text-sm font-semibold leading-5 text-foreground">
@@ -725,7 +731,7 @@ const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
 };
 const PostCard = ({ post }: { post: DirectoryPsychologistProfilePost }) => {
   return (
-    <article className="rounded-[20px] border border-border bg-surface p-4">
+    <article className="rounded-[20px] border border-border bg-surface p-5">
       <div className="flex items-start justify-between gap-3 text-xs font-semibold text-muted">
         <span className="inline-flex items-center gap-1.5">
           <FileText className="h-4 w-4 text-subtle" aria-hidden="true" />
@@ -777,7 +783,7 @@ const PostsTab = ({
   total: number;
 }) => {
   return (
-    <div className="grid gap-4 border-x border-b border-border bg-surface px-4 py-5 sm:rounded-b-2xl sm:px-6 lg:px-8">
+    <div className="grid gap-4 border-x border-b border-border bg-background px-4 py-5 sm:rounded-b-2xl sm:px-6 lg:px-8">
       <div className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface-muted p-4">
         <div>
           <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-subtle">
@@ -936,7 +942,7 @@ const ReviewsTab = ({
   summary: DirectoryReviewSummary;
 }) => {
   return (
-    <div className="grid gap-4 border-x border-b border-border bg-surface px-4 py-5 sm:rounded-b-2xl sm:px-6 lg:px-8">
+    <div className="grid gap-4 border-x border-b border-border bg-background px-4 py-5 sm:rounded-b-2xl sm:px-6 lg:px-8">
       <ReviewSummaryCard summary={summary} />
 
       {isError ? (
@@ -985,16 +991,21 @@ const WhatsAppCta = ({ profile }: { profile: DirectoryPsychologistProfile }) => 
   }
 
   return (
-    <div className="sticky bottom-4 z-20 px-4 pb-2 sm:px-0 lg:bottom-6">
-      <Button
-        asChild
-        className="h-14 w-full rounded-2xl bg-[#22C55E] text-base font-extrabold hover:bg-[#22C55E]/90"
-      >
-        <a href={profile.whatsapp_url} rel="noreferrer" target="_blank">
-          <WhatsAppIcon className="h-5 w-5" aria-hidden="true" />
-          Chamar no WhatsApp
-        </a>
-      </Button>
+    <div
+      className="fixed inset-x-0 bottom-0 z-30 px-4 pb-2 pt-2 sm:px-6"
+      style={{ paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom))" }}
+    >
+      <div className="mx-auto w-full max-w-[390px] sm:max-w-[430px] lg:max-w-[760px]">
+        <Button
+          asChild
+          className="h-14 w-full rounded-2xl bg-[#22C55E] text-base font-extrabold hover:bg-[#22C55E]/90"
+        >
+          <a href={profile.whatsapp_url} rel="noreferrer" target="_blank">
+            <WhatsAppIcon className="h-5 w-5" aria-hidden="true" />
+            Chamar no WhatsApp
+          </a>
+        </Button>
+      </div>
     </div>
   );
 };
@@ -1130,10 +1141,10 @@ export const PsychologistProfileLogic = () => {
 
   return (
     <PrivateTemplate allowAnonymous showNavigation={false}>
-      <section className="mx-auto -my-6 grid w-full max-w-[390px] gap-0 overflow-hidden bg-background sm:my-0 sm:rounded-[24px] sm:border sm:border-border lg:max-w-[760px]">
+      <section className="mx-auto -my-6 grid w-full max-w-[390px] gap-0 overflow-hidden bg-background px-0 sm:my-0 sm:max-w-[430px] sm:w-full sm:rounded-[24px] sm:border sm:border-border lg:max-w-[760px]">
         <div>
           <header
-            className="border-b border-border bg-surface px-4 pt-3 lg:px-8"
+            className="border-b border-border bg-background px-4 pt-3 lg:px-8"
             data-profile-header="true"
           >
             <div className="flex min-h-12 items-center justify-between gap-3 pb-3">
@@ -1170,13 +1181,13 @@ export const PsychologistProfileLogic = () => {
           ) : null}
 
           {showInitialLoading ? (
-            <div className="grid min-h-[45vh] place-items-center bg-surface sm:rounded-b-[28px] sm:border">
+            <div className="grid min-h-[45vh] place-items-center bg-background sm:rounded-b-[28px] sm:border">
               <LoadingState label="Carregando perfil profissional" />
             </div>
           ) : null}
 
           {!showInitialLoading && profileErrorMessage ? (
-            <div className="grid gap-4 bg-surface px-4 py-8 sm:rounded-b-[28px] sm:border sm:px-6">
+            <div className="grid gap-4 bg-background px-4 py-8 sm:rounded-b-[28px] sm:border sm:px-6">
               <InlineAlert title="Perfil indisponível" variant="error">
                 {profileErrorMessage}
               </InlineAlert>

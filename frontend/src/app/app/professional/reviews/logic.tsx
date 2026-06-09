@@ -232,7 +232,7 @@ export const ProfessionalReviewsLogic = () => {
 
   return (
     <PrivateTemplate showNavigation={false}>
-      <section className="mx-[-1.25rem] my-[-1.5rem] min-h-screen bg-[#f5f6f8] pb-10 md:mx-auto md:my-0 md:w-[390px] md:overflow-hidden md:rounded-[24px] md:border md:border-[#e5e7eb]">
+      <section className="mx-auto my-0 min-h-screen w-full max-w-[430px] bg-[#f5f6f8] pb-10 sm:rounded-[24px] sm:border sm:border-[#e5e7eb] sm:overflow-hidden lg:max-w-[760px]">
         <header className="grid h-[72px] grid-cols-[72px_1fr_72px] items-center border-b border-[#e5e7eb] bg-white">
           <Link
             aria-label="Voltar para perfil"

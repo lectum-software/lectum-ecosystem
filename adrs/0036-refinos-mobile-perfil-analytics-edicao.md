@@ -17,17 +17,18 @@ As regras do produto impedem simular métricas ou dados de perfil. O ajuste deve
 ## Decisão
 
 - O perfil profissional público mantém o conteúdo de `Atendimento` para baixo sobre `bg-surface`, com formação em duas linhas e uma área de respiro antes do CTA fixo de WhatsApp.
-- A avaliação é sempre mostrada acima do nome no hero; quando não há avaliações persistidas, a UI exibe `0.0 (0)` em vez de omitir o bloco.
+- A avaliação é sempre mostrada acima do nome no hero; quando não há avaliações persistidas, a UI exibe `0,0 (0)` em vez de omitir o bloco.
 - A bio pública abaixo do vídeo é colapsada em 4 linhas e expande com `Ver mais`, evitando que textos longos dominem o primeiro scroll mobile.
 - A tela de analytics usa o viewport disponível dentro do `PageShell` no mobile, compacta cards/filtros e reduz padding para evitar overflow horizontal.
 - A edição profissional mantém o seletor de país existente, mas troca a opção brasileira para exibir apenas `+55` naquele formulário. Controles auxiliares de formação e vídeo viram botões iconográficos para ganhar densidade.
 - O cabeçalho de favoritos fica direto em `Favoritos`, sem seta e sem rótulo secundário `Minha lista`.
+- O selo `Exibir tempo de experiência` fica desativado para o plano gratuito: no frontend o controle é bloqueado e no service backend o valor persistido é forçado para `false`.
 
 ## Consequências
 
 - As telas ficam mais próximas da densidade mobile do protótipo sem criar componentes paralelos ou instalar pacote.
 - O analytics continua honesto: métrica sem evento real permanece sem valor simulado, apenas em layout que cabe na tela.
-- A escolha `0.0 (0)` no hero explicita ausência de avaliações sem ocultar a posição visual esperada.
+- A escolha `0,0 (0)` no hero explicita ausência de avaliações sem ocultar a posição visual esperada.
 - A opção `+55` é limitada ao formulário profissional; a lista global de países permanece disponível para outros fluxos.
 
 ## Validação

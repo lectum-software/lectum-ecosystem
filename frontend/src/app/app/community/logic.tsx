@@ -7,7 +7,7 @@ import { PrivateTemplate } from "@/templates/private";
 
 export const CommunityLogic = () => {
   return (
-    <PrivateTemplate>
+    <PrivateTemplate allowAnonymous>
       <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-3xl">
         <div className="grid gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
           <span className="grid h-12 w-12 place-items-center rounded-full bg-primary-soft text-primary">

@@ -17,6 +17,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { getToken } from "@/hooks/cookies/token";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
@@ -143,8 +144,13 @@ export const PsychologistsLogic = () => {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const closeFiltersButtonRef = useRef<HTMLButtonElement>(null);
   const filtersTitleId = useId();
+  const [hasAuthToken] = useState(() => {
+    if (typeof window === "undefined") return false;
+
+    return Boolean(getToken());
+  });
   const currentUser = useAppSelector((state) => state.user);
-  const canFavoritePsychologists = Boolean(currentUser?.id);
+  const canFavoritePsychologists = Boolean(hasAuthToken && currentUser?.id);
   const { favoritePsychologist, unfavoritePsychologist } = usePatient({ enableProfile: false });
 
   const params = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
@@ -302,7 +308,7 @@ export const PsychologistsLogic = () => {
   const showInitialLoading = directory.isLoading && !response;
 
   return (
-    <PrivateTemplate>
+    <PrivateTemplate allowAnonymous>
       <section className="mx-auto grid w-full max-w-[390px] gap-0 bg-background sm:max-w-[430px] lg:max-w-6xl lg:gap-5 lg:bg-transparent">
         <header className="-mx-5 -mt-6 border-b border-border bg-surface px-4 pb-4 pt-4 sm:mx-0 sm:mt-0 sm:rounded-t-[20px] sm:border sm:border-b-0 lg:rounded-t-[28px] lg:px-8 lg:pb-4 lg:pt-8">
           <div className="relative flex min-h-12 items-center justify-center lg:justify-start lg:gap-4">
@@ -325,7 +331,7 @@ export const PsychologistsLogic = () => {
           </div>
         </header>
 
-        <div className="-mx-5 grid gap-3 border-b border-border bg-surface-muted/70 px-4 py-4 sm:mx-0 sm:border-x lg:gap-y-3 lg:rounded-b-[28px] lg:border-b lg:px-8 lg:pb-6 lg:pt-3">
+        <div className="-mx-5 grid gap-3 bg-surface-muted/70 px-4 py-4 sm:mx-0 sm:border-x lg:gap-y-3 lg:rounded-b-[28px] lg:border-b lg:px-8 lg:pb-6 lg:pt-3">
           <form className="grid grid-cols-[1fr_auto] gap-3" onSubmit={submitSearch}>
             <label className="relative block" htmlFor="directory-psychologist-search">
               <span className="sr-only">Buscar profissional</span>

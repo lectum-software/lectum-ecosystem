@@ -319,7 +319,7 @@ export const ProfessionalAnalyticsLogic = () => {
 
   return (
     <PrivateTemplate showNavigation={false}>
-      <section className="-mx-5 my-[-1.5rem] min-h-screen w-[calc(100%+2.5rem)] max-w-none overflow-x-hidden bg-[#f5f6f8] pb-8 sm:mx-auto sm:my-0 sm:w-full sm:max-w-[390px] sm:rounded-[24px] sm:border sm:border-[#e5e7eb]">
+      <section className="mx-auto my-0 min-h-screen w-full max-w-[430px] overflow-x-hidden bg-[#f5f6f8] pb-8 sm:rounded-[24px] sm:border sm:border-[#e5e7eb] sm:overflow-hidden lg:max-w-[760px]">
         <header className="grid h-[58px] grid-cols-[52px_1fr_52px] items-center border-b border-[#e5e7eb] bg-white">
           <Link
             aria-label="Voltar para perfil"
