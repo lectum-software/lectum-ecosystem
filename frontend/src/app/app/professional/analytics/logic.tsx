@@ -35,7 +35,27 @@ const PERIOD_OPTIONS: Array<{ label: string; value: PsychologistAnalyticsPeriodK
   { label: "30 dias", value: "30d" },
   { label: "3 meses", value: "90d" },
   { label: "Anual", value: "365d" },
+  { label: "Período", value: "custom" },
 ];
+
+const toInputDate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+const getDefaultCustomRange = () => {
+  const end = new Date();
+  const start = new Date(end);
+  start.setDate(start.getDate() - 30);
+
+  return {
+    end_at: toInputDate(end),
+    start_at: toInputDate(start),
+  };
+};
 
 type AnalyticsCardView = {
   description?: string;
@@ -133,7 +153,7 @@ const PeriodTabs = ({
   disabled?: boolean;
   onChange: (period: PsychologistAnalyticsPeriodKey) => void;
 }) => (
-  <div className="grid h-[52px] grid-cols-4 border-b border-[#e5e7eb] bg-white" role="tablist">
+  <div className="grid h-[50px] grid-cols-5 border-b border-[#e5e7eb] bg-white" role="tablist">
     {PERIOD_OPTIONS.map((option) => {
       const active = option.value === current;
 
@@ -141,7 +161,7 @@ const PeriodTabs = ({
         <button
           aria-selected={active}
           className={cn(
-            "relative text-[13px] font-semibold transition disabled:opacity-60",
+            "relative text-[11px] font-bold transition disabled:opacity-60",
             active ? "text-[#308ce8]" : "text-[#64748b] hover:text-[#111827]",
           )}
           disabled={disabled}
@@ -151,10 +171,47 @@ const PeriodTabs = ({
           type="button"
         >
           {option.label}
-          {active ? <span className="absolute inset-x-7 bottom-0 h-0.5 bg-[#308ce8]" /> : null}
+          {active ? <span className="absolute inset-x-3 bottom-0 h-0.5 bg-[#308ce8]" /> : null}
         </button>
       );
     })}
+  </div>
+);
+
+const CustomPeriodFields = ({
+  disabled,
+  endAt,
+  onChange,
+  startAt,
+}: {
+  disabled?: boolean;
+  endAt: string;
+  onChange: (range: { end_at: string; start_at: string }) => void;
+  startAt: string;
+}) => (
+  <div className="grid grid-cols-2 gap-2 border-b border-[#e5e7eb] bg-white px-4 py-3">
+    <label className="grid gap-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#94a3b8]">
+      Início
+      <input
+        className="h-10 min-w-0 rounded-[12px] border border-[#e2e8f0] bg-[#fbfcfe] px-2 text-[12px] font-bold text-[#111827] outline-none focus:border-[#308ce8] disabled:opacity-60"
+        disabled={disabled}
+        max={endAt || undefined}
+        onChange={(event) => onChange({ start_at: event.target.value, end_at: endAt })}
+        type="date"
+        value={startAt}
+      />
+    </label>
+    <label className="grid gap-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#94a3b8]">
+      Fim
+      <input
+        className="h-10 min-w-0 rounded-[12px] border border-[#e2e8f0] bg-[#fbfcfe] px-2 text-[12px] font-bold text-[#111827] outline-none focus:border-[#308ce8] disabled:opacity-60"
+        disabled={disabled}
+        min={startAt || undefined}
+        onChange={(event) => onChange({ start_at: startAt, end_at: event.target.value })}
+        type="date"
+        value={endAt}
+      />
+    </label>
   </div>
 );
 
@@ -162,19 +219,19 @@ const MetricCard = ({ metric }: { metric: AnalyticsCardView }) => {
   const Icon = metric.icon;
 
   return (
-    <article className="h-[113px] rounded-[19px] border border-[#e2e8f0] bg-white px-[19px] py-[21px] shadow-[0_2px_8px_rgb(15_23_42_/_5%)]">
-      <div className="flex items-start gap-2.5">
-        <Icon className="mt-0.5 h-[17px] w-[17px] shrink-0 text-[#6f7f95]" aria-hidden />
-        <h2 className="whitespace-pre-line text-[11px] font-bold uppercase leading-[14px] tracking-[0.05em] text-[#6f7f95]">
+    <article className="min-w-0 rounded-[18px] border border-[#e2e8f0] bg-white px-3 py-4 shadow-[0_2px_8px_rgb(15_23_42_/_5%)]">
+      <div className="flex min-w-0 items-start gap-2">
+        <Icon className="mt-0.5 h-[15px] w-[15px] shrink-0 text-[#6f7f95]" aria-hidden />
+        <h2 className="min-w-0 whitespace-pre-line text-[9.5px] font-bold uppercase leading-[12px] tracking-[0.04em] text-[#6f7f95]">
           {metric.label}
         </h2>
       </div>
-      <div className="mt-[14px] flex items-end gap-2">
-        <p className="text-[24px] font-extrabold leading-none tracking-[-0.03em] text-[#111827]">
+      <div className="mt-3 flex min-w-0 items-end gap-1.5">
+        <p className="min-w-0 text-[21px] font-extrabold leading-none tracking-[-0.03em] text-[#111827]">
           {metric.value}
         </p>
         {metric.isUnavailable ? (
-          <span className="pb-0.5 text-[10px] font-semibold text-[#94a3b8]">sem evento</span>
+          <span className="pb-0.5 text-[9px] font-semibold text-[#94a3b8]">sem evento</span>
         ) : null}
       </div>
     </article>
@@ -244,8 +301,12 @@ const ProTipCard = () => (
 
 export const ProfessionalAnalyticsLogic = () => {
   const [period, setPeriod] = useState<PsychologistAnalyticsPeriodKey>("30d");
+  const [customRange, setCustomRange] = useState(getDefaultCustomRange);
   const user = useAppSelector((state) => state.user);
-  const query = useMemo(() => ({ period }), [period]);
+  const query = useMemo(
+    () => (period === "custom" ? { period, ...customRange } : { period }),
+    [customRange, period],
+  );
   const analytics = usePsychologistAnalytics(query);
   const data = analytics.data;
   const errorMessage = analytics.isError ? resolveApiError(analytics.error) : null;
@@ -258,8 +319,8 @@ export const ProfessionalAnalyticsLogic = () => {
 
   return (
     <PrivateTemplate showNavigation={false}>
-      <section className="mx-[-1.25rem] my-[-1.5rem] min-h-screen bg-[#f5f6f8] pb-8 md:mx-auto md:my-0 md:w-[390px] md:overflow-hidden md:rounded-[24px] md:border md:border-[#e5e7eb]">
-        <header className="grid h-[72px] grid-cols-[72px_1fr_72px] items-center border-b border-[#e5e7eb] bg-white">
+      <section className="mx-auto my-[-1.5rem] min-h-screen w-full max-w-[390px] overflow-hidden bg-[#f5f6f8] pb-8 sm:my-0 sm:rounded-[24px] sm:border sm:border-[#e5e7eb]">
+        <header className="grid h-[64px] grid-cols-[56px_1fr_56px] items-center border-b border-[#e5e7eb] bg-white">
           <Link
             aria-label="Voltar para perfil"
             className="grid h-full place-items-center text-[#64748b]"
@@ -267,15 +328,23 @@ export const ProfessionalAnalyticsLogic = () => {
           >
             <ArrowLeft className="h-[22px] w-[22px]" aria-hidden />
           </Link>
-          <h1 className="text-center text-[18px] font-extrabold tracking-[-0.02em] text-[#111827]">
+          <h1 className="text-center text-[15px] font-extrabold tracking-[-0.02em] text-[#111827]">
             Meus Analytics
           </h1>
           <span />
         </header>
 
         <PeriodTabs current={period} disabled={analytics.isFetching} onChange={setPeriod} />
+        {period === "custom" ? (
+          <CustomPeriodFields
+            disabled={analytics.isFetching}
+            endAt={customRange.end_at}
+            onChange={setCustomRange}
+            startAt={customRange.start_at}
+          />
+        ) : null}
 
-        <div className="grid gap-[17px] px-4 pt-[17px]">
+        <div className="grid gap-4 px-4 pt-4">
           {analytics.isLoading ? <LoadingState label="Carregando analytics reais" /> : null}
 
           {errorMessage ? (
@@ -295,7 +364,7 @@ export const ProfessionalAnalyticsLogic = () => {
           ) : null}
 
           {!analytics.isError ? (
-            <section className="grid grid-cols-2 gap-[17px]" aria-label="Cards de analytics">
+            <section className="grid grid-cols-2 gap-3" aria-label="Cards de analytics">
               {metricCards(data).map((metric) => (
                 <MetricCard key={metric.id} metric={metric} />
               ))}

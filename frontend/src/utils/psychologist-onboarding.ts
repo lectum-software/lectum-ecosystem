@@ -27,11 +27,24 @@ export const getAfterPhoneVerificationPath = (subscription: SubscriptionLike) =>
 export const getAfterPlanSelectionPath = () => PSYCHOLOGIST_ONBOARDING_PATHS.phone;
 
 export const getPsychologistRegistrationEntryPath = (
-  data: Partial<Pick<user, "role">> | null | undefined,
+  data: Partial<Pick<user, "role" | "psychologist_profile">> | null | undefined,
   fallback: string,
 ) => {
-  if (data?.role === "psicologo") {
+  if (data?.role !== "psicologo") return fallback;
+
+  const profile = data.psychologist_profile;
+  const currentSubscription = profile?.subscriptions?.[0];
+
+  if (!profile || !currentSubscription || currentSubscription.status !== "ativa") {
     return PSYCHOLOGIST_ONBOARDING_PATHS.plans;
+  }
+
+  if (!profile.whatsapp) {
+    return PSYCHOLOGIST_ONBOARDING_PATHS.phone;
+  }
+
+  if (!profile.published) {
+    return PSYCHOLOGIST_ONBOARDING_PATHS.profileSetup;
   }
 
   return fallback;

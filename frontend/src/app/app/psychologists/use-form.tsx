@@ -8,7 +8,6 @@ export const psychologistsFilterSchema = z.object({
   specialty: z.string().nullable().optional(),
   service: z.string().nullable().optional(),
   approach: z.string().nullable().optional(),
-  verified: z.boolean().optional(),
 });
 
 export type PsychologistsFilterForm = z.infer<typeof psychologistsFilterSchema>;
@@ -18,7 +17,6 @@ export const defaultPsychologistsFilterValues: Required<PsychologistsFilterForm>
   specialty: null,
   service: null,
   approach: null,
-  verified: false,
 };
 
 type UsePsychologistsFilterFormProps = {
@@ -73,12 +71,6 @@ export const usePsychologistsFilterForm = ({
         inputClassName: "w-full",
         loading,
         options: toOptions(filters?.approaches),
-      },
-      {
-        name: "verified",
-        field: "switch",
-        label: "Somente verificados",
-        description: "Mostra apenas profissionais com CFP confirmado.",
       },
     ],
     [filters?.approaches, filters?.services, filters?.specialties, loading],

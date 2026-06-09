@@ -1,7 +1,9 @@
-﻿export type PsychologistAnalyticsPeriodKey = "7d" | "30d" | "90d" | "365d";
+export type PsychologistAnalyticsPeriodKey = "7d" | "30d" | "90d" | "365d" | "custom";
 
 export type PsychologistAnalyticsQuery = {
   period?: PsychologistAnalyticsPeriodKey;
+  end_at?: string;
+  start_at?: string;
 };
 
 export type PsychologistAnalyticsMetricId =

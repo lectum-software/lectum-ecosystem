@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, BellRing, Heart, Search } from "lucide-react";
+import { ArrowLeft, Heart, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
@@ -39,7 +39,6 @@ const config = {
     emptyDescription:
       "Favorite psicólogos publicados na descoberta para montar sua lista pessoal com dados reais.",
     icon: Heart,
-    countLabel: "Perfis favoritos",
   },
 } satisfies Record<RelationMode, Record<string, unknown>>;
 
@@ -123,131 +122,107 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
     <PrivateTemplate>
       <section className="mx-auto grid w-full max-w-[390px] gap-5 sm:max-w-[430px] lg:max-w-6xl">
         <header className="-mx-5 -mt-6 border-b border-border bg-surface px-4 py-4 sm:mx-0 sm:mt-0 sm:rounded-[28px] sm:border sm:p-6 lg:p-8">
-          <div className="flex items-center gap-3">
-            <Link
-              aria-label="Voltar para psicólogos"
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary"
-              href="/app/psychologists"
-            >
-              <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-            </Link>
-            <div className="min-w-0">
+          <div className="grid gap-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <Link
+                aria-label="Voltar para psicólogos"
+                className="-ml-2 grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary"
+                href="/app/psychologists"
+              >
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+              </Link>
               <p className="text-xs font-extrabold uppercase tracking-[0.26em] text-subtle">
                 Minha lista
               </p>
+            </div>
+            <div className="flex min-w-0 items-center justify-between gap-3">
               <h1 className="text-2xl font-extrabold text-foreground lg:text-3xl">
                 {copy.title as string}
               </h1>
-              <p className="mt-1 text-sm leading-6 text-muted">{copy.subtitle as string}</p>
+              <span className="shrink-0 rounded-full border border-border bg-primary-soft px-3 py-1.5 text-xs font-extrabold text-primary">
+                {total} perfil{total === 1 ? "" : "s"} selecionado{total === 1 ? "" : "s"}
+              </span>
             </div>
+            <p className="text-sm leading-6 text-muted">{copy.subtitle as string}</p>
           </div>
-
-          <p className="mt-5 rounded-2xl border border-border bg-surface-muted px-4 py-3 text-sm leading-6 text-muted">
-            A Lectum não possui seguir psicólogos: pacientes salvam favoritos e, futuramente,
-            seguirão comunidades.
-          </p>
         </header>
 
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(240px,320px)] lg:items-start">
-          <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)] lg:order-2 lg:sticky lg:top-5">
-            <div className="flex items-center gap-3">
-              <span className="grid h-11 w-11 place-items-center rounded-full bg-primary-soft text-primary">
-                <Icon className="h-5 w-5" aria-hidden="true" />
-              </span>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.22em] text-subtle">
-                  {copy.countLabel as string}
-                </p>
-                <p className="text-2xl font-extrabold text-foreground">{total}</p>
-              </div>
+        <div className="grid gap-4">
+          {errorMessage ? (
+            <InlineAlert title="Não foi possível carregar" variant="error">
+              {errorMessage}
+            </InlineAlert>
+          ) : null}
+
+          {showInitialLoading ? (
+            <div className="grid min-h-[38vh] place-items-center rounded-[18px] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
+              <LoadingState label={`Carregando ${copy.title as string}`} />
             </div>
-            <div className="mt-4 rounded-2xl border border-border bg-surface-muted p-3 text-sm leading-6 text-muted">
-              <BellRing className="mr-2 inline h-4 w-4 text-primary" aria-hidden="true" />
-              As alterações são persistidas e refletidas imediatamente na descoberta.
-            </div>
-          </div>
+          ) : null}
 
-          <div className="grid gap-4 lg:order-1">
-            {errorMessage ? (
-              <InlineAlert title="Não foi possível carregar" variant="error">
-                {errorMessage}
-              </InlineAlert>
-            ) : null}
+          {!showInitialLoading && !errorMessage && psychologists.length === 0 ? (
+            <EmptyState
+              action={
+                <Button asChild className="rounded-full">
+                  <Link href="/app/psychologists">
+                    <Search className="h-4 w-4" aria-hidden="true" />
+                    Buscar psicólogos
+                  </Link>
+                </Button>
+              }
+              description={copy.emptyDescription as string}
+              icon={Icon}
+              title={copy.emptyTitle as string}
+            />
+          ) : null}
 
-            {showInitialLoading ? (
-              <div className="grid min-h-[38vh] place-items-center rounded-[18px] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
-                <LoadingState label={`Carregando ${copy.title as string}`} />
+          {!showInitialLoading && !errorMessage && psychologists.length > 0 ? (
+            <>
+              <div className="flex items-center justify-end gap-3 text-sm text-muted">
+                {activeQuery.isFetching ? <LoadingState label="Atualizando" /> : null}
               </div>
-            ) : null}
 
-            {!showInitialLoading && !errorMessage && psychologists.length === 0 ? (
-              <EmptyState
-                action={
-                  <Button asChild className="rounded-full">
-                    <Link href="/app/psychologists">
-                      <Search className="h-4 w-4" aria-hidden="true" />
-                      Buscar psicólogos
-                    </Link>
-                  </Button>
-                }
-                description={copy.emptyDescription as string}
-                icon={Icon}
-                title={copy.emptyTitle as string}
-              />
-            ) : null}
+              <div className="grid gap-4 lg:grid-cols-2">
+                {psychologists.map((psychologist) => (
+                  <PsychologistCard
+                    favoritePending={favoritePendingId === psychologist.id}
+                    key={psychologist.id}
+                    onToggleFavorite={toggleFavorite}
+                    psychologist={psychologist}
+                  />
+                ))}
+              </div>
+            </>
+          ) : null}
 
-            {!showInitialLoading && !errorMessage && psychologists.length > 0 ? (
-              <>
-                <div className="flex items-center justify-between gap-3 text-sm text-muted">
-                  <span>
-                    {total} profissional{total === 1 ? "" : "is"} encontrado
-                    {total === 1 ? "" : "s"}
-                  </span>
-                  {activeQuery.isFetching ? <LoadingState label="Atualizando" /> : null}
-                </div>
-
-                <div className="grid gap-4 lg:grid-cols-2">
-                  {psychologists.map((psychologist) => (
-                    <PsychologistCard
-                      favoritePending={favoritePendingId === psychologist.id}
-                      key={psychologist.id}
-                      onToggleFavorite={toggleFavorite}
-                      psychologist={psychologist}
-                    />
-                  ))}
-                </div>
-              </>
-            ) : null}
-
-            {pages > 1 ? (
-              <nav
-                aria-label={`Paginação de ${copy.title as string}`}
-                className="flex items-center justify-between gap-3 rounded-[18px] border border-border bg-surface p-3"
+          {pages > 1 ? (
+            <nav
+              aria-label={`Paginação de ${copy.title as string}`}
+              className="flex items-center justify-between gap-3 rounded-[18px] border border-border bg-surface p-3"
+            >
+              <Button
+                disabled={currentPage <= 1 || activeQuery.isFetching}
+                onClick={() => goToPage(currentPage - 1)}
+                type="button"
+                variant="outline"
               >
-                <Button
-                  disabled={currentPage <= 1 || activeQuery.isFetching}
-                  onClick={() => goToPage(currentPage - 1)}
-                  type="button"
-                  variant="outline"
-                >
-                  Anterior
-                </Button>
+                Anterior
+              </Button>
 
-                <span className="text-sm font-semibold text-muted">
-                  Página {currentPage} de {pages}
-                </span>
+              <span className="text-sm font-semibold text-muted">
+                Página {currentPage} de {pages}
+              </span>
 
-                <Button
-                  disabled={currentPage >= pages || activeQuery.isFetching}
-                  onClick={() => goToPage(currentPage + 1)}
-                  type="button"
-                  variant="outline"
-                >
-                  Próxima
-                </Button>
-              </nav>
-            ) : null}
-          </div>
+              <Button
+                disabled={currentPage >= pages || activeQuery.isFetching}
+                onClick={() => goToPage(currentPage + 1)}
+                type="button"
+                variant="outline"
+              >
+                Próxima
+              </Button>
+            </nav>
+          ) : null}
         </div>
       </section>
     </PrivateTemplate>

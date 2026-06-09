@@ -9,6 +9,7 @@ import {
   Camera,
   ChevronDown,
   ExternalLink,
+  Eye,
   FileVideo,
   GraduationCap,
   Loader2,
@@ -22,6 +23,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   type ChangeEvent,
   type PointerEvent as ReactPointerEvent,
@@ -567,6 +569,7 @@ const CityField = ({
 };
 
 export const ProfessionalProfileSetupLogic = () => {
+  const router = useRouter();
   const avatarFrameRef = useRef<HTMLDivElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const avatarDraftUrlRef = useRef<string | null>(null);
@@ -588,7 +591,10 @@ export const ProfessionalProfileSetupLogic = () => {
   } = usePsychologistFreeProfile({
     callbacks: {
       update: {
-        onSuccess: () => toast.success("Perfil profissional atualizado"),
+        onSuccess: () => {
+          toast.success("Perfil profissional atualizado");
+          router.replace("/app/profile");
+        },
         onError: (error) => toast.error(resolveApiError(error)),
       },
       avatar: {
@@ -641,6 +647,9 @@ export const ProfessionalProfileSetupLogic = () => {
     uploadVideoCover.isPending ||
     deleteVideo.isPending;
   const isSubmitting = update.isPending || isSavingMedia;
+  const publicProfileHref = profile.data?.user.id
+    ? `/app/psychologist/${profile.data.user.id}`
+    : "/app/profile";
   const addressState = form.hook.watch("address_state");
   const addressCity = form.hook.watch("address_city");
   const baseCityOptions = useMemo(() => CITY_OPTIONS_BY_STATE[addressState] || [], [addressState]);
@@ -946,14 +955,13 @@ export const ProfessionalProfileSetupLogic = () => {
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Voltar ao perfil
           </Link>
-          <button
-            className="text-sm font-semibold text-primary"
-            disabled={isSubmitting}
-            form="free-profile-form"
-            type="submit"
+          <Link
+            aria-label="Ver perfil público"
+            className="grid h-9 w-9 place-items-center rounded-full text-primary transition hover:bg-primary-soft"
+            href={publicProfileHref}
           >
-            Salvar
-          </button>
+            <Eye className="h-5 w-5" aria-hidden="true" />
+          </Link>
         </div>
 
         <header className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-7 text-center shadow-[var(--lectum-shadow-soft)]">

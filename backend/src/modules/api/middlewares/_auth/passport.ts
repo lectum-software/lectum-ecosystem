@@ -119,7 +119,7 @@ passport.use(
             profileUpdate.name = googleName;
           }
 
-          if (googleAvatar && (!user.avatar || user.provider === "google")) {
+          if (googleAvatar && !user.avatar) {
             profileUpdate.avatar = googleAvatar;
           }
 

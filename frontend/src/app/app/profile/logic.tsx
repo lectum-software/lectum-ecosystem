@@ -7,7 +7,7 @@ import {
   CalendarDays,
   ChevronRight,
   Edit3,
-  ExternalLink,
+  Eye,
   HeartHandshake,
   Lock,
   LogOut,
@@ -246,7 +246,7 @@ export const ProfileLogic = () => {
       ? [
           {
             href: `/app/psychologist/${user.id}`,
-            icon: ExternalLink,
+            icon: Eye,
             label: "Ver meu perfil público",
           },
         ]

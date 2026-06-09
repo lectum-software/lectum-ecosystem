@@ -176,7 +176,7 @@ const CardVideo = ({
   };
 
   return (
-    <div className="relative aspect-[1.55] overflow-hidden bg-surface-muted">
+    <div className="relative aspect-video overflow-hidden bg-surface-muted">
       {/* biome-ignore lint/a11y/useMediaCaption: vídeos enviados por profissionais ainda não possuem trilha de legenda nesta etapa. */}
       <video
         aria-label={`Vídeo de apresentação de ${name}`}

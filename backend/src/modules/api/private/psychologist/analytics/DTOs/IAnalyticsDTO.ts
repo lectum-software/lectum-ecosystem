@@ -1,6 +1,6 @@
 ﻿import type { user } from "@/interfaces/objects";
 
-export type PsychologistAnalyticsPeriodKey = "7d" | "30d" | "90d" | "365d";
+export type PsychologistAnalyticsPeriodKey = "7d" | "30d" | "90d" | "365d" | "custom";
 
 export type PsychologistAnalyticsMetricId =
   | "whatsapp_clicks"
@@ -61,7 +61,9 @@ export type PsychologistAnalyticsResponse = {
 
 export interface IPsychologistAnalyticsIndexDTO {
   q: {
+    end_at?: string;
     period?: PsychologistAnalyticsPeriodKey;
+    start_at?: string;
   };
   auth: user;
 }

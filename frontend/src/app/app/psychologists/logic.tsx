@@ -1,14 +1,6 @@
 ﻿"use client";
 
-import {
-  ChevronLeft,
-  ChevronRight,
-  Info,
-  Search,
-  SlidersHorizontal,
-  UserRound,
-  X,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, UserRound, X } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type FormEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
@@ -64,7 +56,6 @@ const normalizeFormValues = (values: Partial<PsychologistsFilterForm>): Psycholo
     specialty: normalizeNullable(values.specialty),
     service: normalizeNullable(values.service),
     approach: normalizeNullable(values.approach),
-    verified: Boolean(values.verified),
   };
 };
 
@@ -74,7 +65,6 @@ const readFiltersFromParams = (params: URLSearchParams): PsychologistsFilterForm
     specialty: params.get("specialty"),
     service: params.get("service"),
     approach: params.get("approach"),
-    verified: params.get("verified") === "true",
   });
 };
 
@@ -92,7 +82,6 @@ const toQuery = (values: PsychologistsFilterForm, page: number): DirectoryPsycho
     specialty: values.specialty || undefined,
     service: values.service || undefined,
     approach: values.approach || undefined,
-    verified: values.verified || undefined,
   };
 };
 
@@ -142,8 +131,6 @@ const buildActiveFilters = (
 
   const approachLabel = findCatalogLabel(filters?.approaches, values.approach);
   if (approachLabel) active.push({ key: "approach", label: approachLabel });
-
-  if (values.verified) active.push({ key: "verified", label: "Somente verificados" });
 
   return active;
 };
@@ -217,7 +204,6 @@ export const PsychologistsLogic = () => {
       if (normalized.specialty) next.set("specialty", normalized.specialty);
       if (normalized.service) next.set("service", normalized.service);
       if (normalized.approach) next.set("approach", normalized.approach);
-      if (normalized.verified) next.set("verified", "true");
       if (page > 1) next.set("page", String(page));
 
       const queryString = next.toString();
@@ -268,7 +254,7 @@ export const PsychologistsLogic = () => {
 
     const next = normalizeFormValues({
       ...filterValues,
-      [key]: key === "verified" ? false : key === "search" ? "" : null,
+      [key]: key === "search" ? "" : null,
     });
 
     hook.reset(next);
@@ -372,7 +358,7 @@ export const PsychologistsLogic = () => {
             </Button>
           </form>
 
-          <div className="flex gap-2 overflow-x-auto pb-1 lg:flex-wrap lg:overflow-visible lg:pb-0">
+          <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] lg:flex-wrap lg:overflow-visible [&::-webkit-scrollbar]:hidden">
             {QUICK_TOPIC_TAGS.map((topic) => {
               const selected = (filterValues.search || "").toLowerCase() === topic.toLowerCase();
 
@@ -392,39 +378,6 @@ export const PsychologistsLogic = () => {
                 </button>
               );
             })}
-          </div>
-
-          <div className="-mx-4 -mb-4 mt-1 flex items-center justify-between border-t border-border bg-surface px-4 py-3 lg:mx-0 lg:mb-0 lg:mt-0 lg:rounded-2xl lg:border lg:border-border lg:px-4 lg:py-3">
-            <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
-              Somente verificados
-              <Info className="h-3.5 w-3.5 text-subtle" aria-hidden="true" />
-            </span>
-            <button
-              aria-checked={filterValues.verified}
-              aria-label="Filtrar somente psicólogos verificados"
-              className={cn(
-                "relative h-8 w-14 rounded-full border border-border bg-border transition",
-                filterValues.verified && "border-primary bg-primary",
-              )}
-              onClick={() =>
-                navigateWithFilters(
-                  normalizeFormValues({
-                    ...filterValues,
-                    verified: !filterValues.verified,
-                  }),
-                  1,
-                )
-              }
-              role="switch"
-              type="button"
-            >
-              <span
-                className={cn(
-                  "absolute left-1 top-1 h-6 w-6 rounded-full bg-surface shadow-sm transition",
-                  filterValues.verified && "translate-x-6",
-                )}
-              />
-            </button>
           </div>
         </div>
 
@@ -534,14 +487,11 @@ export const PsychologistsLogic = () => {
 
         {!showInitialLoading && !errorMessage ? (
           <>
-            <div className="mt-4 flex items-center justify-between gap-3 text-sm text-muted lg:mt-0">
-              <span>
-                {total > 0
-                  ? `${total} profissional${total === 1 ? "" : "is"} encontrado${total === 1 ? "" : "s"}`
-                  : "Nenhum profissional publicado encontrado"}
-              </span>
-              {directory.isFetching ? <LoadingState label="Atualizando" /> : null}
-            </div>
+            {directory.isFetching ? (
+              <div className="mt-4 flex items-center justify-end text-sm text-muted lg:mt-0">
+                <LoadingState label="Atualizando" />
+              </div>
+            ) : null}
 
             {psychologists.length > 0 ? (
               <div className="mt-4 grid gap-6 lg:grid-cols-2">
