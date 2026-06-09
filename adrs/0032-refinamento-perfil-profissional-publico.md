@@ -27,6 +27,8 @@ O endpoint de detalhe já era leitura pública-safe e havia campos persistidos e
 - A faixa promocional superior passou a ser derivada dos selos reais do perfil (`discount_first_session`, `accepts_insurance` e `social_value`), fica oculta quando não há selo marcado e usa `position: sticky` para permanecer no topo durante a rolagem.
 - O chip de avaliação abaixo do nome só aparece quando há reviews reais; perfis sem avaliação deixam de exibir a cópia "Sem avaliações" nessa região.
 - O vídeo da aba Sobre foi normalizado para proporção 16:9, e o bloco hero/abas passou a ser uma superfície branca contínua com bordas e sombras mais discretas, em linguagem mais sóbria inspirada em feeds sociais/profissionais.
+- O hero do perfil passou a espelhar as tags de benefício do card da listagem de psicólogos, exibindo experiência e selos reais abaixo da bio, mantendo a faixa sticky como destaque superior.
+- A disponibilidade no hero deixa de usar fundo verde; o avatar fica redondo; o header ganha uma separação inferior fina; e a aba Sobre/Publicações/Avaliações perde a borda superior para reduzir ruído visual.
 
 ## Consequências
 
@@ -60,6 +62,18 @@ Ajuste complementar de 2026-06-09:
   - texto "Sem avaliações" ausente abaixo do nome;
   - espaço entre hero e menu removido (`heroBottom` igual ao topo do menu em mobile);
   - strip promocional oculto corretamente porque o perfil local persistido está com os três selos desmarcados (`discount_first_session=false`, `accepts_insurance=false`, `social_value=false`).
+
+Ajuste complementar de header/tags:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local via Chrome headless/CDP em 390px na rota `/app/psychologist/cmq5m0vse000ftkuhybmagcn6`:
+  - header com `border-bottom: 1px`;
+  - avatar redondo no hero;
+  - disponibilidade com fundo transparente;
+  - tags de experiência, convênio, valor social e desconto abaixo da bio;
+  - menu de abas com `border-top: 0px`.
 
 ## Pendências
 

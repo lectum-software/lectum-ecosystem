@@ -202,6 +202,9 @@ Regras anti-recriação específicas:
 - Removido o chip "Sem avaliações" abaixo do nome quando `rating_count` é zero; a contagem continua aparecendo apenas nos cards de estatística.
 - Layout visual ajustado para uma linguagem mais sóbria, com tags, cards e sombras menos chamativos, sem criar componente ou design system paralelo.
 - Validações complementares executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local via Chrome headless/CDP em 390px e desktop 1440px.
+- Segundo refinamento visual complementar: o header `Perfil Profissional` recebeu linha fina inferior, a foto do hero passou a ser redonda, o chip `Disponível hoje` perdeu o fundo verde e o menu Sobre/Publicações/Avaliações perdeu a borda superior.
+- As tags de benefícios abaixo da bio agora reutilizam a mesma lógica visual do card da listagem de psicólogos: tempo de experiência e selos reais de convênio, valor social e desconto na primeira sessão.
+- Validações complementares executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local via Chrome headless/CDP em 390px.
 
 
 ## Validação mínima

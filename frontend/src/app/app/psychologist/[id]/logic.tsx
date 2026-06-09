@@ -2,16 +2,20 @@
 
 import {
   ArrowLeft,
+  BadgePercent,
   Bookmark,
+  BriefcaseBusiness,
   ChevronLeft,
   ChevronRight,
   FileText,
   GraduationCap,
   Heart,
+  HeartHandshake,
   MapPin,
   MessageSquareText,
   Play,
   Share2,
+  ShieldCheck,
   Star,
   ThumbsUp,
   UsersRound,
@@ -161,6 +165,34 @@ const getPromotionalBadges = (profile: DirectoryPsychologistProfile) => {
   ].filter((item): item is string => Boolean(item));
 };
 
+const buildBenefitTags = (profile: DirectoryPsychologistProfile) => {
+  const tags: Array<{
+    icon: typeof BriefcaseBusiness;
+    label: string;
+  }> = [];
+
+  if (profile.verified && profile.formation_years) {
+    tags.push({
+      icon: BriefcaseBusiness,
+      label: `${profile.formation_years} anos de experiência`,
+    });
+  }
+
+  if (profile.accepts_insurance) {
+    tags.push({ icon: ShieldCheck, label: "Aceita convênios" });
+  }
+
+  if (profile.social_value) {
+    tags.push({ icon: HeartHandshake, label: "Valor social" });
+  }
+
+  if (profile.discount_first_session) {
+    tags.push({ icon: BadgePercent, label: "Desconto 1ª sessão" });
+  }
+
+  return tags;
+};
+
 const hasInPersonCare = (modality?: string | null) => {
   const normalized = modality?.toLowerCase() || "";
 
@@ -297,7 +329,10 @@ const ProfileAvatar = ({ profile }: { profile: DirectoryPsychologistProfile }) =
   const avatarIsPublicMedia = isPublicMediaUrl(profile.avatar);
 
   return (
-    <div className="relative grid h-[92px] w-[92px] shrink-0 place-items-center overflow-hidden rounded-3xl bg-surface-muted text-3xl font-extrabold text-primary">
+    <div
+      className="relative grid h-[92px] w-[92px] shrink-0 place-items-center overflow-hidden rounded-full bg-surface-muted text-3xl font-extrabold text-primary"
+      data-profile-avatar="true"
+    >
       {avatarSrc ? (
         <Image
           alt={profile.name}
@@ -329,6 +364,7 @@ const ProfileHero = ({
   const headline = profile.headline || profile.bio;
   const formattedCrp = formatCrpNumber(profile.crp);
   const displayName = getHonorificName(profile);
+  const benefitTags = buildBenefitTags(profile);
 
   return (
     <section
@@ -373,7 +409,10 @@ const ProfileHero = ({
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {profile.available_today ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-xs font-extrabold text-success">
+              <span
+                className="inline-flex items-center gap-1.5 py-1 text-xs font-extrabold text-success"
+                data-availability-badge="true"
+              >
                 <span
                   className="h-2 w-2 rounded-full bg-success motion-safe:animate-pulse"
                   aria-hidden="true"
@@ -398,6 +437,24 @@ const ProfileHero = ({
           Perfil profissional publicado na Lectum com dados públicos persistidos.
         </p>
       )}
+
+      {benefitTags.length > 0 ? (
+        <div className="mt-4 flex flex-wrap gap-2" data-profile-benefit-tags="true">
+          {benefitTags.map((tag) => {
+            const Icon = tag.icon;
+
+            return (
+              <span
+                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface-muted px-2.5 py-1.5 text-[0.68rem] font-bold text-muted"
+                key={tag.label}
+              >
+                <Icon className="h-3.5 w-3.5 text-subtle" aria-hidden="true" />
+                {tag.label}
+              </span>
+            );
+          })}
+        </div>
+      ) : null}
     </section>
   );
 };
@@ -412,7 +469,7 @@ const ProfileTabs = ({
   return (
     <nav
       aria-label="Seções do perfil profissional"
-      className="grid grid-cols-3 border-x border-y border-border bg-surface"
+      className="grid grid-cols-3 border-x border-b border-border bg-surface"
     >
       {tabs.map((tab) => {
         const Icon = tab.icon;
@@ -1069,7 +1126,10 @@ export const PsychologistProfileLogic = () => {
     <PrivateTemplate allowAnonymous showNavigation={false}>
       <section className="-mx-5 grid w-[calc(100%+2.5rem)] max-w-none gap-0 bg-background sm:mx-auto sm:w-full sm:max-w-[430px] lg:max-w-[760px] lg:bg-transparent">
         <div>
-          <header className="-mt-6 border-x border-t border-border bg-surface px-4 pt-4 sm:mt-0 sm:rounded-t-2xl lg:px-8 lg:pt-6">
+          <header
+            className="-mt-6 border-x border-y border-border bg-surface px-4 pt-4 sm:mt-0 sm:rounded-t-2xl lg:px-8 lg:pt-6"
+            data-profile-header="true"
+          >
             <div className="flex min-h-12 items-center justify-between gap-3 pb-4">
               <Link
                 aria-label="Voltar para psicólogos"
