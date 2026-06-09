@@ -29,6 +29,7 @@ O endpoint de detalhe já era leitura pública-safe e havia campos persistidos e
 - O vídeo da aba Sobre foi normalizado para proporção 16:9, e o bloco hero/abas passou a ser uma superfície branca contínua com bordas e sombras mais discretas, em linguagem mais sóbria inspirada em feeds sociais/profissionais.
 - O hero do perfil passou a espelhar as tags de benefício do card da listagem de psicólogos, exibindo experiência e selos reais abaixo da bio, mantendo a faixa sticky como destaque superior.
 - A disponibilidade no hero deixa de usar fundo verde; o avatar fica redondo; o header ganha uma separação inferior fina; e a aba Sobre/Publicações/Avaliações perde a borda superior para reduzir ruído visual.
+- A capa do vídeo de apresentação passa a ser o próprio vídeo pausado, sem `poster` derivado de avatar/foto de perfil, para evitar divergência entre imagem de capa e conteúdo do vídeo.
 
 ## Consequências
 
@@ -74,6 +75,17 @@ Ajuste complementar de header/tags:
   - disponibilidade com fundo transparente;
   - tags de experiência, convênio, valor social e desconto abaixo da bio;
   - menu de abas com `border-top: 0px`.
+
+Ajuste complementar de capa do vídeo:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local via Chrome headless/CDP em 390px na rota `/app/psychologist/cmq5m0vse000ftkuhybmagcn6`:
+  - nenhum `<img>` dentro do card de vídeo (`imageCountInsideVideo=0`);
+  - preview usa `<video aria-hidden="true">` com `src` igual ao `video_url` real;
+  - preview sem `poster` de avatar;
+  - proporção 16:9 preservada (`ratio=1.78`).
 
 ## Pendências
 

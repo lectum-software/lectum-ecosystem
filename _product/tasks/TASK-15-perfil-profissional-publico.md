@@ -205,6 +205,8 @@ Regras anti-recriação específicas:
 - Segundo refinamento visual complementar: o header `Perfil Profissional` recebeu linha fina inferior, a foto do hero passou a ser redonda, o chip `Disponível hoje` perdeu o fundo verde e o menu Sobre/Publicações/Avaliações perdeu a borda superior.
 - As tags de benefícios abaixo da bio agora reutilizam a mesma lógica visual do card da listagem de psicólogos: tempo de experiência e selos reais de convênio, valor social e desconto na primeira sessão.
 - Validações complementares executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local via Chrome headless/CDP em 390px.
+- A capa do vídeo de apresentação deixou de usar a foto/avatar do perfil; o card agora renderiza um `<video>` sem controles como preview, usando o próprio arquivo público de vídeo e mantendo o play inline no mesmo local.
+- Validações complementares executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local via Chrome headless/CDP confirmando ausência de `<img>` dentro do card de vídeo e `previewSrc` igual ao `video_url` real.
 
 
 ## Validação mínima

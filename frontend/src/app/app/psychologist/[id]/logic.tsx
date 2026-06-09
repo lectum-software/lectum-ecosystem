@@ -544,8 +544,6 @@ const StatGrid = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
 const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
   const [playing, setPlaying] = useState(false);
   const videoSrc = resolvePublicMediaUrl(profile.video_url);
-  const posterSrc = resolvePublicMediaUrl(profile.avatar);
-  const posterIsPublicMedia = isPublicMediaUrl(profile.avatar);
 
   if (!videoSrc) return null;
 
@@ -564,7 +562,6 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
             controls
             onEnded={() => setPlaying(false)}
             playsInline
-            poster={posterSrc || undefined}
             preload="metadata"
             src={videoSrc}
           >
@@ -575,34 +572,31 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
           </span>
         </>
       ) : (
-        <button
-          aria-label={`Reproduzir vídeo de apresentação de ${profile.name}`}
-          className="relative grid h-full w-full place-items-center overflow-hidden bg-surface-muted text-white"
-          onClick={() => setPlaying(true)}
-          type="button"
-        >
-          {posterSrc ? (
-            <Image
-              alt={`Prévia do vídeo de ${profile.name}`}
-              className="object-cover"
-              fill
-              sizes="(min-width: 1024px) 696px, calc(100vw - 2rem)"
-              src={posterSrc}
-              unoptimized={posterIsPublicMedia}
-            />
-          ) : (
-            <span className="grid h-full w-full place-items-center bg-primary-soft text-5xl font-extrabold text-primary">
-              {getInitials(profile.name)}
-            </span>
-          )}
+        <div className="relative h-full w-full overflow-hidden bg-surface-muted text-white">
+          <video
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full object-cover"
+            muted
+            playsInline
+            preload="auto"
+            src={videoSrc}
+            tabIndex={-1}
+          />
           <span className="absolute inset-0 bg-gradient-to-t from-foreground/65 via-foreground/10 to-transparent" />
-          <span className="relative grid h-16 w-16 place-items-center rounded-full bg-white/90 text-primary shadow-sm transition hover:scale-105">
-            <Play className="ml-1 h-8 w-8 fill-current" aria-hidden="true" />
-          </span>
+          <button
+            aria-label={`Reproduzir vídeo de apresentação de ${profile.name}`}
+            className="absolute inset-0 grid place-items-center text-white transition hover:bg-foreground/10"
+            onClick={() => setPlaying(true)}
+            type="button"
+          >
+            <span className="grid h-16 w-16 place-items-center rounded-full bg-white/90 text-primary shadow-sm transition hover:scale-105">
+              <Play className="ml-1 h-8 w-8 fill-current" aria-hidden="true" />
+            </span>
+          </button>
           <span className="absolute bottom-4 left-4 rounded-full bg-foreground/75 px-3 py-1.5 text-xs font-extrabold text-white">
             Vídeo de apresentação
           </span>
-        </button>
+        </div>
       )}
     </div>
   );
