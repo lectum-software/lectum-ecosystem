@@ -20,6 +20,8 @@ const reasonText = (reason?: string) => {
   if (reason === "already_reviewed")
     return "Você já avaliou este profissional. Consulte sua lista de avaliações feitas.";
   if (reason === "own_profile") return "Não é possível avaliar o próprio perfil.";
+  if (reason === "professional_plan_required")
+    return "Este psicólogo precisa ter Plano Profissional ativo ou cortesia manual para receber avaliações.";
   return "Não foi possível liberar a avaliação para este profissional.";
 };
 

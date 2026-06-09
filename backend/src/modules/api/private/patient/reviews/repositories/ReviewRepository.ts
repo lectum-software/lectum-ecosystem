@@ -1,5 +1,6 @@
-﻿import type { Prisma } from "@/external/generated/prisma/client";
+import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   CreateReviewResponse,
   IReviewIndexDTO,
@@ -87,7 +88,16 @@ export class ReviewRepository implements IReviewRepository {
         id: true,
         name: true,
         avatar: true,
-        psychologist_profile: { select: { headline: true } },
+        psychologist_profile: {
+          select: {
+            headline: true,
+            subscriptions: {
+              where: activeProfessionalEntitlementWhere(),
+              select: { id: true },
+              take: 1,
+            },
+          },
+        },
       },
     });
 
@@ -102,6 +112,9 @@ export class ReviewRepository implements IReviewRepository {
 
     if (!psychologist) return { ...base, eligible: false, reason: "not_found" };
     if (patientId === psychologistId) return { ...base, eligible: false, reason: "own_profile" };
+    if ((psychologist.psychologist_profile?.subscriptions.length || 0) === 0) {
+      return { ...base, eligible: false, reason: "professional_plan_required" };
+    }
 
     const existing = await prisma.professional_review.findUnique({
       where: {

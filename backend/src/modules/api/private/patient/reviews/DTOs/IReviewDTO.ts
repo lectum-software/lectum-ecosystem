@@ -6,7 +6,8 @@ export type ReviewEligibilityReason =
   | "not_found"
   | "contact_required"
   | "already_reviewed"
-  | "own_profile";
+  | "own_profile"
+  | "professional_plan_required";
 
 export type PatientReviewItem = {
   id: string;

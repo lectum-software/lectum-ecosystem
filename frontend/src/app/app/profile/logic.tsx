@@ -259,7 +259,7 @@ export const ProfileLogic = () => {
     ...(isPsychologist
       ? [
           { icon: BarChart3, label: "Meus Analytics" },
-          { icon: Star, label: "Minhas Avaliações" },
+          { href: "/app/professional/reviews", icon: Star, label: "Minhas Avaliações" },
           {
             href: "/app/professional/billing/subscription",
             icon: BadgeCheck,

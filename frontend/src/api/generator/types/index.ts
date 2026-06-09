@@ -44,6 +44,14 @@ export type {
   PatientRelationQuery,
 } from "./patient-relations";
 export type {
+  PsychologistReview,
+  PsychologistReviewSummary,
+  PsychologistReviewsQuery,
+  PsychologistReviewsResponse,
+  RespondPsychologistReviewPayload,
+  RespondPsychologistReviewResponse,
+} from "./psychologist-reviews";
+export type {
   PatientPrivateProfile,
   patient_profile,
   psychologist_profile,

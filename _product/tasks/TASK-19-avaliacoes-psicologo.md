@@ -8,8 +8,8 @@
 | Prioridade | P1 |
 | Esforço | M |
 | Fase | Psicólogo privado |
-| Status | Blocked |
-| Dependências | TASK-17, TASK-18 |
+| Status | Completed |
+| Dependências | TASK-17, TASK-18A, TASK-31, TASK-31A, TASK-31B |
 | ADR alvo | ADR-0025 |
 
 ## Referências obrigatórias
@@ -39,6 +39,10 @@ Criar tela privada onde o psicólogo acompanha avaliações recebidas e métrica
 ## Pré-requisitos e bloqueios
 
 - Depende da TASK-17 para criação de avaliações reais.
+- A antiga dependência da TASK-18 completa foi revalidada em 2026-06-09: documentos/upload de
+  CRP foram abandonados como bloqueio deste fluxo; o perfil executável é o recorte real da
+  TASK-18A e a elegibilidade para receber avaliações depende de Plano Profissional ativo ou
+  cortesia manual administrativa.
 
 Se qualquer bloqueio obrigatório estiver ativo, pare a implementação, registre ADR/pendência e não marque a task como concluída.
 
@@ -129,19 +133,19 @@ Regras anti-recriação específicas:
 
 ## Critérios de aceite
 
-- [ ] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
-- [ ] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
-- [ ] Backend implementado nos endpoints/modelos esperados quando aplicável.
-- [ ] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
-- [ ] Rotas sob `/api/private/psychologist/*` exigem `requireRole("psicologo")` (fail-closed), conforme ADR-0002.
-- [ ] Todos os estados obrigatórios existem e usam textos em PT-BR.
-- [ ] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
-- [ ] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
-- [ ] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
-- [ ] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
-- [ ] ADR criado ou atualizado em `adrs/`.
-- [ ] Checks/builds relevantes foram executados sem erros.
-- [ ] Commit criado com mensagem convencional.
+- [x] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
+- [x] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
+- [x] Backend implementado nos endpoints/modelos esperados quando aplicável.
+- [x] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
+- [x] Rotas sob `/api/private/psychologist/*` exigem `requireRole("psicologo")` (fail-closed), conforme ADR-0002.
+- [x] Todos os estados obrigatórios existem e usam textos em PT-BR.
+- [x] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
+- [x] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
+- [x] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
+- [x] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
+- [x] ADR criado ou atualizado em `adrs/`.
+- [x] Checks/builds relevantes foram executados sem erros.
+- [x] Commit criado com mensagem convencional.
 
 ## Validação mínima
 
@@ -157,9 +161,17 @@ Regras anti-recriação específicas:
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
 
 
-## Execucao bloqueada
+## Revalidacao de bloqueio em 2026-06-09
 
-- Execucao interrompida porque a dependencia obrigatoria TASK-18 esta Blocked.
-- Bloqueio registrado em adrs/0025-bloqueio-task19-dependencia-task18.md.
-- Referencia visual consultada via imagem local: _product/proto/Minhas Avaliacoes - Psicologo.jpg.
-- Nao foi criada implementacao parcial, endpoints, schema, migration ou UI final para evitar rota solta e experiencia privada incompleta.
+- Decisao de produto: a documentacao/upload de CRP do perfil deixou de ser dependencia para esta funcionalidade; a validacao profissional ocorre via API InfoSimples ou por cortesia manual administrativa.
+- A area privada executavel usada como base e o recorte real de perfil profissional em `/app/professional/profile/setup` (TASK-18A), com entitlements de assinatura das TASK-31/31A/31B.
+- Nova regra de dominio: somente psicologos com Plano Profissional ativo ou cortesia manual podem receber avaliacoes. A elegibilidade do paciente e a autogestao do psicologo foram ajustadas para exigir esse entitlement.
+
+## Execucao concluida em 2026-06-09
+
+- Referencia visual consultada via imagem local `_product/proto/Minhas Avaliacoes - Psicologo.jpg`; Builder/Quick Copy nao esteve acessivel neste ambiente.
+- Backend implementado em `/api/private/psychologist/reviews` com listagem paginada, filtros por nota/periodo, resumo, distribuicao e resposta transacional da avaliacao.
+- Frontend implementado em `/app/professional/reviews`, com estados de loading, erro, vazio, filtros e formulario de resposta usando React Hook Form/Zod via `hooks/form`.
+- A tela de perfil privado recebeu link para "Minhas Avaliacoes".
+- Nenhum schema Prisma ou migration foi criado nesta task; os modelos existentes `professional_review` e `psychologist_profile` foram reutilizados.
+- Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm check` e Chrome headless local em `/app/professional/reviews` (sem sessao autenticada, validando protecao/redirect para login).

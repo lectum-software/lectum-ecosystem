@@ -296,6 +296,11 @@ Especialidade, serviço e abordagem são filtros da busca (TASK-13) e seções d
 | `@@unique([psychologist_id, author_id])` | | 1 avaliação por par; elegibilidade (ex.: exigir contato prévio) decidida em ADR da TASK-17 |
 | `@@index([psychologist_id, status])` | | agregação alimenta `psychologist_profile.rating_avg/count` (TASK-19) |
 
+Regra vigente revalidada em 2026-06-09: somente psicólogos com entitlement profissional ativo
+(`professional_subscription.status="ativa"` em plano não gratuito, incluindo cortesia manual `admin_grant`)
+podem receber novas avaliações. A criação pelo paciente deve barrar perfis sem Plano Profissional; a
+autogestão do psicólogo em `/api/private/psychologist/reviews` também exige esse entitlement.
+
 ---
 
 ## Comunidade

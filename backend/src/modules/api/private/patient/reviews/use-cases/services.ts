@@ -21,6 +21,8 @@ const eligibilityError = (result: ReviewEligibilityResponse) => {
     return { status: 409, ...error("review_already_exists", {}), data: result };
   if (result.reason === "own_profile")
     return { status: 403, ...error("review_own_profile", {}), data: result };
+  if (result.reason === "professional_plan_required")
+    return { status: 403, ...error("professional_reviews_professional_plan", {}), data: result };
   return { status: 403, ...error("review_contact_required", {}), data: result };
 };
 

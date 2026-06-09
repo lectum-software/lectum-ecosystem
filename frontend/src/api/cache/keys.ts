@@ -47,6 +47,10 @@
   psychologistFreeProfile: {
     root: () => ["psychologist_free_profile"],
   },
+  psychologistReviews: {
+    root: () => ["psychologist_reviews"],
+    list: (filters?: unknown) => ["psychologist_reviews", filters],
+  },
 };
 
 export default keys;
