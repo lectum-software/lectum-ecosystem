@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
+  GraduationCap,
   Heart,
   MapPin,
   MessageSquareText,
@@ -519,6 +520,44 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
   );
 };
 
+const FormationSection = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
+  const formations = profile.academic_formations ?? [];
+
+  return (
+    <section className="grid gap-3">
+      <h2 className="text-lg font-extrabold text-foreground">Formação e Títulos</h2>
+      {formations.length > 0 ? (
+        <div className="grid gap-3">
+          {formations.map((formation, index) => (
+            <article
+              className="flex items-start gap-3 rounded-2xl border border-border bg-surface-muted p-4"
+              key={`${formation.title || "formacao"}-${formation.institution || index}`}
+            >
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+                <GraduationCap className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <div className="min-w-0">
+                <h3 className="text-sm font-extrabold text-foreground">
+                  {formation.title || "Título não informado"}
+                </h3>
+                {formation.institution || formation.graduation_year ? (
+                  <p className="mt-1 text-sm leading-5 text-muted">
+                    {[formation.institution, formation.graduation_year].filter(Boolean).join(", ")}
+                  </p>
+                ) : null}
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm leading-6 text-muted">
+          Nenhuma formação pública foi cadastrada para este perfil.
+        </p>
+      )}
+    </section>
+  );
+};
+
 const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
   return (
     <div className="grid gap-6 bg-surface px-4 py-5 sm:rounded-b-[28px] sm:border sm:border-t-0 sm:border-border sm:px-6 lg:px-8">
@@ -533,6 +572,8 @@ const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
             "Este profissional ainda não informou uma biografia pública. Assim que houver dados persistidos, eles aparecerão aqui sem usar conteúdo fictício."}
         </p>
       </section>
+
+      <FormationSection profile={profile} />
 
       <section className="grid gap-3">
         <h2 className="text-lg font-extrabold text-foreground">Atendimento</h2>

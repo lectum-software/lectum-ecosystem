@@ -7,6 +7,12 @@ export type DirectoryProfileCatalogItem = {
   slug: string;
 };
 
+export type DirectoryPsychologistAcademicFormation = {
+  title: string | null;
+  institution: string | null;
+  graduation_year: string | null;
+};
+
 export type DirectoryPsychologistProfile = {
   id: string;
   name: string;
@@ -21,6 +27,7 @@ export type DirectoryPsychologistProfile = {
   target_audience: string[];
   address_city: string | null;
   address_state: string | null;
+  academic_formations: DirectoryPsychologistAcademicFormation[];
   rating_avg: number;
   rating_count: number;
   verified: boolean;

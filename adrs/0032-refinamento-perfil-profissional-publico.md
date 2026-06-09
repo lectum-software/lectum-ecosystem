@@ -12,7 +12,7 @@ TASK-15 (ajuste complementar solicitado sobre a tela pública do psicólogo)
 
 A tela `/app/psychologist/[id]` precisava se aproximar da referência `Perfil Profissional - Sobre.jpg` e do ajuste visual solicitado: remover elementos administrativos/duplicados, reduzir ruído de navegação dentro do perfil e deixar o vídeo de apresentação reproduzível no próprio card.
 
-O endpoint de detalhe já era leitura pública-safe e havia campos persistidos em `psychologist_profile` para cidade/UF de atendimento e `target_audience`, mas esses dados ainda não eram expostos no contrato do perfil público.
+O endpoint de detalhe já era leitura pública-safe e havia campos persistidos em `psychologist_profile` para cidade/UF de atendimento, `target_audience` e formações acadêmicas, mas esses dados ainda não eram expostos no contrato do perfil público.
 
 ## Decisão
 
@@ -20,12 +20,15 @@ O endpoint de detalhe já era leitura pública-safe e havia campos persistidos e
 - O card lateral desktop de contato/agenda foi removido; o CTA principal permanece como botão de WhatsApp condicionado ao dado real.
 - O vídeo de apresentação passou a ter prévia visual com `next/image` e botão de play; ao acionar, o `<video>` substitui a prévia e reproduz no mesmo local, sem nova aba.
 - `target_audience`, `professional_address_city` e `professional_address_state` foram promovidos ao contrato public-safe do perfil público. CPF, e-mail, telefone bruto, tokens e documentos seguem fora da resposta.
+- `academic_formations` também foi promovido ao contrato public-safe do perfil público, mantendo fallback nos campos legados `academic_title`, `academic_institution` e `academic_graduation_year`.
 - A modalidade presencial/híbrida passa a exibir `Online e Presencial em CIDADE/UF` quando cidade/UF reais existirem.
+- A aba Sobre exibe a seção `Formação e Títulos` entre `Sobre` e `Atendimento`, usando apenas formações persistidas ou estado vazio em PT-BR.
 
 ## Consequências
 
 - A vitrine do psicólogo fica mais fiel ao protótipo mobile-first e sem navegação concorrendo com o conteúdo.
 - A API expõe novos campos public-safe já persistidos, sem migration e sem dados fictícios.
+- Formações aparecem na vitrine pública sem criar seeds ou conteúdo artificial; perfis sem formação mantêm mensagem vazia controlada.
 - A prévia do vídeo depende de avatar público real; quando não existir avatar, a UI usa iniciais do profissional como fallback visual, sem mock externo.
 - A tela fica acessível também sem sessão, coerente com a leitura caller-neutral do diretório.
 
@@ -41,7 +44,7 @@ O endpoint de detalhe já era leitura pública-safe e havia campos persistidos e
   - sem card lateral de contato/agenda;
   - banner com `VALOR SOCIAL`;
   - vídeo com prévia e play local;
-  - atendimento e público atendido vindos da API real.
+  - atendimento, formação/títulos e público atendido vindos da API real.
 
 ## Pendências
 

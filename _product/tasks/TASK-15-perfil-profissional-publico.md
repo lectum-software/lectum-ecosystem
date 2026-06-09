@@ -189,6 +189,14 @@ Regras anti-recriação específicas:
 - ADR criado: `adrs/0032-refinamento-perfil-profissional-publico.md`.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` e browser local via Chrome headless/CDP em 390px e desktop.
 
+## Registro de ajuste complementar em 2026-06-09
+
+- Inserida a seção `Formação e Títulos` entre `Sobre` e `Atendimento` na aba Sobre do perfil profissional público.
+- O contrato public-safe do detalhe passou a expor `academic_formations` a partir de dados persistidos em `psychologist_profile.academic_formations`, com fallback para os campos legados `academic_title`, `academic_institution` e `academic_graduation_year`.
+- A UI exibe estado vazio em PT-BR quando não houver formação pública cadastrada, sem seed/mock.
+- ADR atualizado: `adrs/0032-refinamento-perfil-profissional-publico.md`.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` e browser local via Chrome headless/CDP em 390px.
+
 
 ## Validação mínima
 

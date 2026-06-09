@@ -3,6 +3,11 @@
   name: string;
   slug: string;
 };
+export type DirectoryAcademicFormation = {
+  title: string | null;
+  institution: string | null;
+  graduation_year: string | null;
+};
 
 export type DirectoryPsychologist = {
   id: string;
@@ -58,6 +63,7 @@ export type DirectoryPsychologistsQuery = {
 export type DirectoryPsychologistProfile = DirectoryPsychologist & {
   address_city: string | null;
   address_state: string | null;
+  academic_formations: DirectoryAcademicFormation[];
   target_audience: string[];
   whatsapp_available: boolean;
 };

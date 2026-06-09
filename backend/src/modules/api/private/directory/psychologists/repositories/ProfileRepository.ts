@@ -4,6 +4,7 @@ import { crpExperienceYears } from "@/utils/professional-experience";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   DirectoryProfileCatalogItem,
+  DirectoryPsychologistAcademicFormation,
   DirectoryPsychologistPostsResponse,
   DirectoryPsychologistProfile,
   DirectoryPsychologistReviewsResponse,
@@ -28,6 +29,41 @@ const normalizeStringArray = (value: unknown): string[] => {
   if (!Array.isArray(value)) return [];
 
   return value.filter((item): item is string => typeof item === "string");
+};
+
+const trimToNull = (value: unknown) => {
+  if (typeof value !== "string") return null;
+
+  return value.trim() || null;
+};
+
+const hasAcademicContent = (item: DirectoryPsychologistAcademicFormation) => {
+  return Boolean(item.title || item.institution || item.graduation_year);
+};
+
+const normalizeAcademicFormation = (item: unknown): DirectoryPsychologistAcademicFormation => {
+  if (!item || typeof item !== "object") {
+    return { title: null, institution: null, graduation_year: null };
+  }
+
+  const academic = item as Record<string, unknown>;
+
+  return {
+    title: trimToNull(academic.title),
+    institution: trimToNull(academic.institution),
+    graduation_year: trimToNull(academic.graduation_year),
+  };
+};
+
+const normalizeAcademicFormations = (
+  value: unknown,
+  fallback: DirectoryPsychologistAcademicFormation,
+) => {
+  if (Array.isArray(value)) {
+    return value.map(normalizeAcademicFormation).filter(hasAcademicContent);
+  }
+
+  return hasAcademicContent(fallback) ? [fallback] : [];
 };
 
 const currentWeekdayValue = () => {
@@ -173,6 +209,10 @@ export class ProfileRepository implements IProfileRepository {
             modality: true,
             languages: true,
             target_audience: true,
+            academic_title: true,
+            academic_institution: true,
+            academic_graduation_year: true,
+            academic_formations: true,
             professional_address_city: true,
             professional_address_state: true,
             rating_avg: true,
@@ -249,6 +289,11 @@ export class ProfileRepository implements IProfileRepository {
       target_audience: normalizeStringArray(profile.target_audience),
       address_city: profile.professional_address_city,
       address_state: profile.professional_address_state,
+      academic_formations: normalizeAcademicFormations(profile.academic_formations, {
+        title: trimToNull(profile.academic_title),
+        institution: trimToNull(profile.academic_institution),
+        graduation_year: trimToNull(profile.academic_graduation_year),
+      }),
       rating_avg: profile.rating_avg,
       rating_count: profile.rating_count,
       verified: profile.subscriptions.length > 0,
