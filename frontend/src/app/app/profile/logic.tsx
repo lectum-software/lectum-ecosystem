@@ -347,7 +347,6 @@ export const ProfileLogic = () => {
             </span>
             <div className="flex-1">
               <p className="text-sm font-semibold text-foreground">Ativar modo escuro</p>
-              <p className="text-xs text-muted">O tema claro permanece como padrão da conta.</p>
             </div>
             <ThemeSwitch />
           </div>
