@@ -280,13 +280,18 @@ export function PsychologistCard({
           ) : null}
 
           <div className="min-w-0 flex-1">
-            <div className="mt-0.5 flex min-w-0 items-start gap-1.5">
-              <h2 className="min-w-0 flex-1 text-[1.22rem] font-extrabold leading-6 text-foreground">
-                <span className="line-clamp-2 block break-words">{displayName}</span>
+            <div className="mt-0.5 min-w-0">
+              <h2 className="min-w-0 text-[1.22rem] font-extrabold leading-6 text-foreground">
+                <span className="line-clamp-2 block min-w-0 break-words">
+                  <span>{displayName}</span>
+                  {psychologist.verified ? (
+                    <VerifiedBadgeIcon
+                      aria-hidden="true"
+                      className="ml-1 inline h-[18px] w-[18px]"
+                    />
+                  ) : null}
+                </span>
               </h2>
-              {psychologist.verified ? (
-                <VerifiedBadgeIcon aria-hidden="true" className="mt-1 h-[18px] w-[18px] shrink-0" />
-              ) : null}
             </div>
             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
               <span className="text-[0.66rem] font-extrabold uppercase tracking-[0.16em] text-subtle">
