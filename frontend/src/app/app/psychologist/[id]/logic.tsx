@@ -157,14 +157,6 @@ const translateTargetAudience = (target: string) => {
   return targetAudienceLabel[target] || target;
 };
 
-const getPromotionalBadges = (profile: DirectoryPsychologistProfile) => {
-  return [
-    profile.discount_first_session ? "Desconto na 1ª sessão" : null,
-    profile.accepts_insurance ? "Aceita convênios" : null,
-    profile.social_value ? "Valor social" : null,
-  ].filter((item): item is string => Boolean(item));
-};
-
 const buildBenefitTags = (profile: DirectoryPsychologistProfile) => {
   const tags: Array<{
     icon: typeof BriefcaseBusiness;
@@ -403,11 +395,11 @@ const ProfileHero = ({
             <span className="min-w-0 truncate">{displayName}</span>
             {profile.verified ? <VerifiedBadgeIcon aria-hidden="true" className="h-5 w-5" /> : null}
           </h1>
-          <p className="mt-1 text-sm font-semibold text-muted">
+          <p className="mt-1 text-[0.66rem] font-extrabold uppercase tracking-[0.16em] text-subtle">
             Psicólogo {formattedCrp ? `• CRP ${formattedCrp}` : "• CRP não informado"}
           </p>
 
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+          <div className="mt-1 flex flex-wrap items-center gap-2">
             {profile.available_today ? (
               <span
                 className="inline-flex items-center gap-1.5 py-1 text-xs font-extrabold text-success"
@@ -494,21 +486,6 @@ const ProfileTabs = ({
         );
       })}
     </nav>
-  );
-};
-
-const PromoStrip = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
-  const badges = getPromotionalBadges(profile);
-
-  if (badges.length === 0) return null;
-
-  return (
-    <div
-      className="sticky top-0 z-30 border-x border-primary bg-primary px-3 py-2 text-center text-[0.58rem] font-extrabold uppercase tracking-[0.06em] text-white sm:px-4 sm:text-[0.68rem] sm:tracking-[0.12em]"
-      data-promo-strip="true"
-    >
-      {badges.join(" • ")}
-    </div>
   );
 };
 
@@ -1175,8 +1152,6 @@ export const PsychologistProfileLogic = () => {
 
           {!showInitialLoading && !profileErrorMessage && profile ? (
             <>
-              <PromoStrip profile={profile} />
-
               <ProfileHero
                 canFavorite={canFavoritePsychologists}
                 favoritePending={favoritePendingId === profile.id}

@@ -30,6 +30,8 @@ O endpoint de detalhe já era leitura pública-safe e havia campos persistidos e
 - O hero do perfil passou a espelhar as tags de benefício do card da listagem de psicólogos, exibindo experiência e selos reais abaixo da bio, mantendo a faixa sticky como destaque superior.
 - A disponibilidade no hero deixa de usar fundo verde; o avatar fica redondo; o header ganha uma separação inferior fina; e a aba Sobre/Publicações/Avaliações perde a borda superior para reduzir ruído visual.
 - A capa do vídeo de apresentação passa a ser o próprio vídeo pausado, sem `poster` derivado de avatar/foto de perfil, para evitar divergência entre imagem de capa e conteúdo do vídeo.
+- A faixa promocional azul foi retirada do perfil; a comunicação de selos fica concentrada nas tags abaixo da bio para evitar duplicidade visual.
+- A linha de profissão/CRP do hero passa a reutilizar a tipografia do rótulo `Psicólogo` do card de listagem (`text-[0.66rem]`, `font-extrabold`, `uppercase`, `tracking-[0.16em]`, `text-subtle`) e fica mais próxima do indicador de disponibilidade.
 
 ## Consequências
 
@@ -86,6 +88,16 @@ Ajuste complementar de capa do vídeo:
   - preview usa `<video aria-hidden="true">` com `src` igual ao `video_url` real;
   - preview sem `poster` de avatar;
   - proporção 16:9 preservada (`ratio=1.78`).
+
+Ajuste complementar de tipografia e faixa:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local via Chrome headless/CDP em 390px na rota `/app/psychologist/cmq5m0vse000ftkuhybmagcn6`:
+  - faixa azul superior ausente (`promoStripExists=false`);
+  - texto `PSICÓLOGO • CRP 04/123456` com `font-size=10.56px`, `font-weight=800`, `text-transform=uppercase` e cor `rgb(148, 163, 184)`;
+  - gap entre linha CRP e disponibilidade reduzido para `4px`.
 
 ## Pendências
 

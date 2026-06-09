@@ -207,6 +207,9 @@ Regras anti-recriação específicas:
 - Validações complementares executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local via Chrome headless/CDP em 390px.
 - A capa do vídeo de apresentação deixou de usar a foto/avatar do perfil; o card agora renderiza um `<video>` sem controles como preview, usando o próprio arquivo público de vídeo e mantendo o play inline no mesmo local.
 - Validações complementares executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local via Chrome headless/CDP confirmando ausência de `<img>` dentro do card de vídeo e `previewSrc` igual ao `video_url` real.
+- A faixa azul promocional superior foi removida do perfil; os selos permanecem apenas nas tags abaixo da bio.
+- A linha `PSICÓLOGO • CRP ...` passou a usar a mesma tipografia/cor do rótulo `Psicólogo` no card da listagem, e o espaçamento até `Disponível hoje` foi reduzido.
+- Validações complementares executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local via Chrome headless/CDP em 390px, confirmando ausência da faixa azul, tipografia `10.56px/800/uppercase` e gap de 4px.
 
 
 ## Validação mínima
