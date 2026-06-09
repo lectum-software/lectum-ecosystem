@@ -1,6 +1,15 @@
 "use client";
 
-import { Bell, Heart, Home, type LucideIcon, Network, UserRound, UsersRound } from "lucide-react";
+import {
+  Bell,
+  Heart,
+  LogIn,
+  type LucideIcon,
+  Network,
+  UserPlus,
+  UserRound,
+  UsersRound,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { PropsWithChildren } from "react";
@@ -19,6 +28,7 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import * as userActions from "@/store/modules/user/actions";
 
 type PrivateTemplateProps = PropsWithChildren<{
+  allowAnonymous?: boolean;
   showHeader?: boolean;
   showNavigation?: boolean;
 }>;
@@ -35,10 +45,35 @@ type NavigationItem = {
 
 const fallbackNavigation: NavigationItem[] = [
   {
-    href: "/app",
-    icon: Home,
-    label: "Início",
-    title: "Lectum",
+    href: "/app/psychologists",
+    icon: UsersRound,
+    label: "Psicólogos",
+    title: "Encontre seu psicólogo",
+  },
+  {
+    href: "/app/favorites",
+    icon: Heart,
+    label: "Favoritos",
+    title: "Favoritos",
+  },
+  {
+    href: "/app/community",
+    icon: Network,
+    label: "Comunidade",
+    title: "Comunidade",
+  },
+  {
+    href: "/app/notifications",
+    icon: Bell,
+    label: "Notificações",
+    title: "Notificações",
+    activePrefixes: ["/app/settings/notifications"],
+  },
+  {
+    href: "/app/profile",
+    icon: UserRound,
+    label: "Perfil",
+    title: "Meu Perfil",
   },
 ];
 
@@ -128,6 +163,7 @@ const isActivePath = (pathname: string, item: NavigationItem) => {
 };
 
 export const PrivateTemplate = ({
+  allowAnonymous = false,
   children,
   showHeader = true,
   showNavigation,
@@ -150,11 +186,43 @@ export const PrivateTemplate = ({
     }
   }, [dispatch, hidrate.data]);
 
-  const sessionUser = hidrate.data ?? storedUser;
+  const sessionUser = hasToken ? (hidrate.data ?? storedUser) : null;
   const navigation = useMemo(() => getNavigation(sessionUser?.role), [sessionUser?.role]);
   const shouldShowNavigation = showNavigation ?? showHeader;
+  const pageShellClassName = shouldShowNavigation ? "pb-28 sm:pb-32" : undefined;
   const isSessionLoading = hasToken && !sessionUser && (hidrate.isLoading || hidrate.isPending);
   const shouldShowSessionError = Boolean(hasToken && hidrate.isError && !sessionUser);
+
+  const navigationMarkup = shouldShowNavigation ? (
+    <nav
+      aria-label="Navegação principal"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 shadow-[0_-10px_30px_rgb(15_23_42_/_8%)] backdrop-blur supports-[backdrop-filter]:bg-surface/85 sm:bottom-4 sm:left-1/2 sm:right-auto sm:w-[min(560px,calc(100vw-2rem))] sm:-translate-x-1/2 sm:rounded-[var(--lectum-card-radius)] sm:border"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
+      <ul className="mx-auto grid max-w-[560px] grid-cols-5">
+        {navigation.map((item) => {
+          const Icon = item.icon;
+          const isActive = isActivePath(pathname, item);
+
+          return (
+            <li key={item.href}>
+              <Link
+                aria-current={isActive ? "page" : undefined}
+                className={cn(
+                  "flex min-h-16 flex-col items-center justify-center gap-1 px-1 text-[0.68rem] font-semibold transition",
+                  isActive ? "text-primary" : "text-muted hover:text-primary",
+                )}
+                href={item.href}
+              >
+                <Icon className="h-5 w-5" aria-hidden="true" />
+                <span className="truncate">{item.label}</span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  ) : null;
 
   if (isSessionLoading) {
     return (
@@ -163,6 +231,17 @@ export const PrivateTemplate = ({
         <PageShell contentClassName="grid min-h-[55vh] place-items-center pb-28">
           <LoadingState label="Carregando sua sessão" />
         </PageShell>
+        {navigationMarkup}
+      </>
+    );
+  }
+
+  if (!hasToken && allowAnonymous) {
+    return (
+      <>
+        <NotificationManager />
+        <PageShell contentClassName={pageShellClassName}>{children}</PageShell>
+        {navigationMarkup}
       </>
     );
   }
@@ -171,14 +250,28 @@ export const PrivateTemplate = ({
     return (
       <>
         <NotificationManager />
-        <PageShell contentClassName="grid min-h-[55vh] place-items-center pb-28">
-          <InlineAlert title="Sessão não encontrada" variant="error">
-            Entre novamente para acessar sua área privada da Lectum.
-          </InlineAlert>
-          <Button className="mt-4" onClick={() => out("/auth/login")} type="button">
-            Ir para login
-          </Button>
+        <PageShell
+          contentClassName={cn("grid min-h-[55vh] place-items-center", pageShellClassName)}
+        >
+          <div className="grid w-full max-w-[430px] gap-4 text-center">
+            <InlineAlert title="Acesse sua conta" variant="info">
+              Esta área é autenticada. Cadastre-se ou faça login para continuar na Lectum.
+            </InlineAlert>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Button asChild>
+                <Link href="/auth/profile-selection">
+                  <UserPlus className="h-4 w-4" aria-hidden="true" />
+                  Criar conta
+                </Link>
+              </Button>
+              <Button onClick={() => out("/auth/login")} type="button" variant="outline">
+                <LogIn className="h-4 w-4" aria-hidden="true" />
+                Fazer login
+              </Button>
+            </div>
+          </div>
         </PageShell>
+        {navigationMarkup}
       </>
     );
   }
@@ -186,39 +279,8 @@ export const PrivateTemplate = ({
   return (
     <>
       <NotificationManager />
-      <PageShell contentClassName={shouldShowNavigation ? "pb-28 sm:pb-32" : undefined}>
-        {children}
-      </PageShell>
-      {shouldShowNavigation ? (
-        <nav
-          aria-label="Navegação principal"
-          className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 shadow-[0_-10px_30px_rgb(15_23_42_/_8%)] backdrop-blur supports-[backdrop-filter]:bg-surface/85 sm:bottom-4 sm:left-1/2 sm:right-auto sm:w-[min(560px,calc(100vw-2rem))] sm:-translate-x-1/2 sm:rounded-[var(--lectum-card-radius)] sm:border"
-          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-        >
-          <ul className="mx-auto grid max-w-[560px] grid-cols-5">
-            {navigation.map((item) => {
-              const Icon = item.icon;
-              const isActive = isActivePath(pathname, item);
-
-              return (
-                <li key={item.href}>
-                  <Link
-                    aria-current={isActive ? "page" : undefined}
-                    className={cn(
-                      "flex min-h-16 flex-col items-center justify-center gap-1 px-1 text-[0.68rem] font-semibold transition",
-                      isActive ? "text-primary" : "text-muted hover:text-primary",
-                    )}
-                    href={item.href}
-                  >
-                    <Icon className="h-5 w-5" aria-hidden="true" />
-                    <span className="truncate">{item.label}</span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-      ) : null}
+      <PageShell contentClassName={pageShellClassName}>{children}</PageShell>
+      {navigationMarkup}
     </>
   );
 };

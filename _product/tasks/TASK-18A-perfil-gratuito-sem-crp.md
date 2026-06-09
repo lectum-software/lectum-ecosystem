@@ -84,6 +84,7 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
 - [x] Cards e perfil publico exibem "Disponivel hoje" apenas quando o dia atual em America/Sao_Paulo esta em dias disponiveis, com bolinha verde pulsando suavemente.
 
 - [x] Ajuste visual de 2026-06-08 aplicado: Especialidades e Abordagens usam campo compacto com tags removiveis, placeholder e lista suspensa como no print anexado pelo usuario, mantendo limites reais do plano gratuito.
+- [x] Ajuste de midias de 2026-06-08 aplicado: foto de perfil abre modal de enquadramento antes do upload real, video de apresentacao usa um unico menu "Editar" para trocar/remover e expor a acao futura de capa, Especialidades remove texto de limite do titulo e Formacao Academica reduz o espaco vertical entre campos.
 
 ## Validação executada
 
@@ -118,6 +119,11 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
 - 2026-06-08 tags de catalogo: `pnpm --dir frontend build`
 - 2026-06-08 tags de catalogo: `pnpm check`
 - 2026-06-08 tags de catalogo: HTTP local em `/app/professional/profile/setup` respondeu 307 sem sessao, mantendo protecao; validacao visual autenticada ficou limitada por nao haver token real acessivel ao agente sem criar mock.
+
+- 2026-06-08 midias do setup: `pnpm --dir frontend check`
+- 2026-06-08 midias do setup: `pnpm --dir frontend build`
+- 2026-06-08 midias do setup: `pnpm check`
+- 2026-06-08 midias do setup: HTTP local em `/app/professional/profile/setup` respondeu 307 sem sessao, e Chrome headless local renderizou a pagina de login apos o redirect; validacao visual autenticada ficou limitada por nao haver token real acessivel ao agente sem criar mock.
 
 ## Implementação
 
@@ -159,3 +165,11 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
 - Referencia usada: print anexado pelo usuario (`Html -> Body.png`) e prototipo local `_product/proto/Editar Perfil - Psicologo.jpg`. Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente.
 - `Especialidades` e `Abordagens` passaram a usar um campo visual unico com tags pequenas, botao de remover, placeholder interno e dropdown de opcoes reais do catalogo.
 - `Servicos` permanece no padrao de chips atual porque o pedido citou apenas Especialidades e Abordagens.
+
+## Ajuste de midias do setup em 2026-06-08
+
+- Referencia usada: print anexado pelo usuario da rota `/app/professional/profile/setup`; Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente.
+- O ajuste de foto de perfil passou a abrir uma modal dedicada com preview circular e arraste para enquadramento antes do upload real para o endpoint existente de avatar.
+- O bloco "Video de Apresentacao" passou a ter apenas um botao "Editar" com menu de acoes: trocar video, remover video e adicionar imagem de capa do video.
+- A imagem de capa do video ainda nao foi persistida porque o contrato/backend atual possui apenas `video_url`; a UI informa a pendencia sem criar mock ou dado falso.
+- O titulo de Especialidades nao exibe mais a copia "(Ate 10 tags)" e a formacao academica ficou mais compacta entre titulo/especialidade, instituicao e ano de formacao.

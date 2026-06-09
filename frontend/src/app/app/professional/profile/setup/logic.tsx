@@ -7,7 +7,6 @@ import {
   BadgeCheck,
   BookOpen,
   Camera,
-  CheckCircle2,
   ChevronDown,
   ExternalLink,
   FileVideo,
@@ -23,7 +22,14 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ChangeEvent,
+  type PointerEvent as ReactPointerEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Controller, type FieldPath, useFieldArray } from "react-hook-form";
 import { toast } from "sonner";
 import { usePsychologistFreeProfile } from "@/api/callers/psychologist-free-profile";
@@ -98,6 +104,7 @@ const CatalogPicker = ({
   name,
   required,
   selected,
+  showLimitCounter = true,
   title,
   onChange,
 }: {
@@ -107,6 +114,7 @@ const CatalogPicker = ({
   name: keyof Pick<FreeProfileForm, "specialty_ids" | "service_ids" | "approach_ids">;
   required?: boolean;
   selected: string[];
+  showLimitCounter?: boolean;
   title: string;
   onChange: (
     name: keyof Pick<FreeProfileForm, "specialty_ids" | "service_ids" | "approach_ids">,
@@ -125,7 +133,7 @@ const CatalogPicker = ({
           </h3>
           {description ? <p className="mt-1 text-xs leading-5 text-muted">{description}</p> : null}
         </div>
-        {limit ? (
+        {limit && showLimitCounter ? (
           <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-semibold text-muted">
             {selected.length}/{limit}
           </span>
@@ -383,6 +391,76 @@ const normalizeCitySearch = (value: string) =>
     .toLowerCase()
     .trim();
 
+type AvatarDraft = {
+  file: File;
+  position: {
+    x: number;
+    y: number;
+  };
+  url: string;
+};
+
+type AvatarDragState = {
+  height: number;
+  originX: number;
+  originY: number;
+  pointerId: number;
+  startX: number;
+  startY: number;
+  width: number;
+};
+
+const AVATAR_MAX_SIZE_BYTES = 5 * 1024 * 1024;
+const AVATAR_CROP_SIZE = 512;
+
+const clampPercent = (value: number) => Math.max(0, Math.min(100, value));
+
+const cropAvatarFile = async (draft: AvatarDraft) => {
+  const bitmap = await createImageBitmap(draft.file);
+  const sourceSize = Math.min(bitmap.width, bitmap.height);
+  const sourceX = Math.round((bitmap.width - sourceSize) * (draft.position.x / 100));
+  const sourceY = Math.round((bitmap.height - sourceSize) * (draft.position.y / 100));
+  const canvas = document.createElement("canvas");
+  canvas.width = AVATAR_CROP_SIZE;
+  canvas.height = AVATAR_CROP_SIZE;
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    bitmap.close();
+    throw new Error("Não foi possível preparar a imagem.");
+  }
+
+  context.drawImage(
+    bitmap,
+    sourceX,
+    sourceY,
+    sourceSize,
+    sourceSize,
+    0,
+    0,
+    AVATAR_CROP_SIZE,
+    AVATAR_CROP_SIZE,
+  );
+  bitmap.close();
+
+  const outputType =
+    draft.file.type === "image/png" || draft.file.type === "image/webp"
+      ? draft.file.type
+      : "image/jpeg";
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, outputType, 0.92),
+  );
+
+  if (!blob) {
+    throw new Error("Não foi possível preparar a imagem.");
+  }
+
+  return new File([blob], draft.file.name, {
+    lastModified: Date.now(),
+    type: outputType,
+  });
+};
+
 const CityField = ({
   control,
   options,
@@ -489,9 +567,15 @@ const CityField = ({
 };
 
 export const ProfessionalProfileSetupLogic = () => {
+  const avatarFrameRef = useRef<HTMLDivElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const avatarDraftUrlRef = useRef<string | null>(null);
+  const avatarDragRef = useRef<AvatarDragState | null>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const [avatarActionsOpen, setAvatarActionsOpen] = useState(false);
+  const [avatarEditorOpen, setAvatarEditorOpen] = useState(false);
+  const [avatarDraft, setAvatarDraft] = useState<AvatarDraft | null>(null);
+  const [videoActionsOpen, setVideoActionsOpen] = useState(false);
   const { deleteAvatar, deleteVideo, profile, update, uploadAvatar, uploadVideo } =
     usePsychologistFreeProfile({
       callbacks: {
@@ -533,6 +617,7 @@ export const ProfessionalProfileSetupLogic = () => {
   const whatsappPhone = form.hook.watch("whatsapp");
   const countryCode = form.hook.watch("countryCode");
   const avatarSrc = resolvePublicMediaUrl(profile.data?.user.avatar);
+  const visibleAvatarSrc = avatarDraft?.url || avatarSrc;
   const isPublicAvatar = isPublicMediaUrl(profile.data?.user.avatar);
   const videoSrc = resolvePublicMediaUrl(profile.data?.profile.video_url);
   const canUploadVideo = Boolean(profile.data?.plan.can_upload_video);
@@ -549,6 +634,7 @@ export const ProfessionalProfileSetupLogic = () => {
     addressCity && !baseCityOptions.some((item) => item.value === addressCity)
       ? [{ label: addressCity, value: addressCity }, ...baseCityOptions]
       : baseCityOptions;
+  const targetAudienceError = form.hook.formState.errors.target_audience?.message;
   const whatsappUrl = toWhatsappPhoneE164(whatsappPhone, countryCode)?.replace(
     /^\+/,
     "https://wa.me/",
@@ -561,6 +647,14 @@ export const ProfessionalProfileSetupLogic = () => {
       form.hook.setValue("address_city", "", { shouldDirty: true, shouldValidate: true });
     }
   }, [addressCity, addressState, baseCityOptions, form.hook]);
+
+  useEffect(() => {
+    return () => {
+      if (avatarDraftUrlRef.current) {
+        URL.revokeObjectURL(avatarDraftUrlRef.current);
+      }
+    };
+  }, []);
 
   const setArrayValue = (
     name: keyof Pick<FreeProfileForm, "target_audience" | "available_days">,
@@ -611,13 +705,49 @@ export const ProfessionalProfileSetupLogic = () => {
     );
   };
 
+  const clearAvatarDraft = () => {
+    if (avatarDraftUrlRef.current) {
+      URL.revokeObjectURL(avatarDraftUrlRef.current);
+      avatarDraftUrlRef.current = null;
+    }
+
+    avatarDragRef.current = null;
+    setAvatarEditorOpen(false);
+    setAvatarDraft(null);
+  };
+
   const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
 
     if (!file) return;
+
+    if (file.size > AVATAR_MAX_SIZE_BYTES) {
+      toast.error("Envie uma imagem de até 5MB.");
+      return;
+    }
+
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+      toast.error("Envie uma imagem PNG, JPG ou WebP.");
+      return;
+    }
+
     setAvatarActionsOpen(false);
-    uploadAvatar.mutate(file);
+    if (avatarDraftUrlRef.current) {
+      URL.revokeObjectURL(avatarDraftUrlRef.current);
+    }
+
+    const url = URL.createObjectURL(file);
+    avatarDraftUrlRef.current = url;
+    setAvatarDraft({
+      file,
+      position: {
+        x: 50,
+        y: 50,
+      },
+      url,
+    });
+    setAvatarEditorOpen(true);
   };
 
   const openAvatarFilePicker = () => {
@@ -627,8 +757,66 @@ export const ProfessionalProfileSetupLogic = () => {
 
   const handleAvatarRemoval = () => {
     if (!profile.data?.user.avatar) return;
+    clearAvatarDraft();
     setAvatarActionsOpen(false);
     deleteAvatar.mutate();
+  };
+
+  const handleAvatarPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!avatarDraft) return;
+
+    const rect = avatarFrameRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    avatarDragRef.current = {
+      height: rect.height || 1,
+      originX: avatarDraft.position.x,
+      originY: avatarDraft.position.y,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      width: rect.width || 1,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handleAvatarPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const drag = avatarDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+
+    const deltaX = ((event.clientX - drag.startX) / drag.width) * 100;
+    const deltaY = ((event.clientY - drag.startY) / drag.height) * 100;
+
+    setAvatarDraft((current) =>
+      current
+        ? {
+            ...current,
+            position: {
+              x: clampPercent(drag.originX - deltaX),
+              y: clampPercent(drag.originY - deltaY),
+            },
+          }
+        : current,
+    );
+  };
+
+  const handleAvatarPointerEnd = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (avatarDragRef.current?.pointerId === event.pointerId) {
+      avatarDragRef.current = null;
+    }
+  };
+
+  const applyAvatarDraft = async () => {
+    if (!avatarDraft) return;
+
+    try {
+      const croppedFile = await cropAvatarFile(avatarDraft);
+      uploadAvatar.mutate(croppedFile, {
+        onSuccess: clearAvatarDraft,
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível preparar a imagem.");
+    }
   };
 
   const handleVideoChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -636,12 +824,24 @@ export const ProfessionalProfileSetupLogic = () => {
     event.target.value = "";
 
     if (!file) return;
+    setVideoActionsOpen(false);
     uploadVideo.mutate(file);
+  };
+
+  const openVideoFilePicker = () => {
+    setVideoActionsOpen(false);
+    videoInputRef.current?.click();
   };
 
   const handleVideoRemoval = () => {
     if (!profile.data?.profile.video_url) return;
+    setVideoActionsOpen(false);
     deleteVideo.mutate();
+  };
+
+  const handleVideoCoverRequest = () => {
+    setVideoActionsOpen(false);
+    toast.info("Imagem de capa do vídeo ainda depende de suporte no backend.");
   };
 
   const submit = form.hook.handleSubmit((values) => {
@@ -714,15 +914,25 @@ export const ProfessionalProfileSetupLogic = () => {
 
         <header className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-7 text-center shadow-[var(--lectum-shadow-soft)]">
           <div className="relative mx-auto h-28 w-28">
-            <div className="relative mx-auto grid h-28 w-28 place-items-center overflow-hidden rounded-full border-4 border-white bg-primary text-3xl font-bold text-white shadow-[var(--lectum-shadow-soft)]">
-              {avatarSrc ? (
+            <div
+              className={cn(
+                "relative mx-auto grid h-28 w-28 place-items-center overflow-hidden rounded-full border-4 border-white bg-primary text-3xl font-bold text-white shadow-[var(--lectum-shadow-soft)]",
+                avatarDraft && "ring-4 ring-primary/20",
+              )}
+            >
+              {visibleAvatarSrc ? (
                 <Image
-                  alt="Foto profissional"
-                  className="h-full w-full object-cover"
-                  height={112}
-                  src={avatarSrc}
-                  unoptimized={isPublicAvatar}
-                  width={112}
+                  alt={avatarDraft ? "Pré-visualização da foto profissional" : "Foto profissional"}
+                  className="object-cover"
+                  fill
+                  sizes="112px"
+                  src={visibleAvatarSrc}
+                  style={{
+                    objectPosition: avatarDraft
+                      ? `${avatarDraft.position.x}% ${avatarDraft.position.y}%`
+                      : "50% 50%",
+                  }}
+                  unoptimized={Boolean(avatarDraft) || isPublicAvatar}
                 />
               ) : (
                 <span className="grid h-full w-full place-items-center text-white">
@@ -783,9 +993,105 @@ export const ProfessionalProfileSetupLogic = () => {
             type="file"
           />
           <p className="mt-4 text-xs leading-5 text-muted">
-            Use o botão junto à foto para alterar ou excluir uma imagem PNG, JPG ou WebP de até 5MB.
+            Envie uma imagem PNG, JPG ou WebP de até 5MB.
           </p>
+          {avatarDraft ? (
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              <Button
+                disabled={uploadAvatar.isPending}
+                onClick={() => setAvatarEditorOpen(true)}
+                type="button"
+                variant="outline"
+              >
+                <Camera className="h-4 w-4" aria-hidden="true" />
+                Ajustar foto
+              </Button>
+              <Button
+                disabled={uploadAvatar.isPending}
+                onClick={clearAvatarDraft}
+                type="button"
+                variant="ghost"
+              >
+                <X className="h-4 w-4" aria-hidden="true" />
+                Descartar
+              </Button>
+            </div>
+          ) : null}
         </header>
+
+        {avatarDraft && avatarEditorOpen ? (
+          <div
+            aria-labelledby="avatar-editor-title"
+            aria-modal="true"
+            className="fixed inset-0 z-50 grid place-items-center bg-foreground/50 px-4 py-6 backdrop-blur-sm"
+            role="dialog"
+          >
+            <div className="grid max-h-[calc(100vh-3rem)] w-full max-w-[430px] gap-4 overflow-y-auto rounded-[28px] border border-border bg-surface p-5 shadow-[0_24px_70px_rgb(15_23_42_/_26%)]">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-extrabold text-foreground" id="avatar-editor-title">
+                    Ajustar foto de perfil
+                  </h2>
+                  <p className="mt-1 text-sm leading-6 text-muted">
+                    Arraste a imagem dentro do círculo para enquadrar o rosto antes de aplicar.
+                  </p>
+                </div>
+                <button
+                  aria-label="Fechar ajuste de foto"
+                  className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-foreground"
+                  disabled={uploadAvatar.isPending}
+                  onClick={() => setAvatarEditorOpen(false)}
+                  type="button"
+                >
+                  <X className="h-5 w-5" aria-hidden="true" />
+                </button>
+              </div>
+
+              <div className="rounded-3xl border border-border bg-surface-muted p-4">
+                <div
+                  className="relative mx-auto grid h-72 w-72 max-w-full cursor-grab touch-none place-items-center overflow-hidden rounded-full bg-primary text-white shadow-[inset_0_0_0_1px_rgb(255_255_255_/_60%)] active:cursor-grabbing"
+                  onPointerCancel={handleAvatarPointerEnd}
+                  onPointerDown={handleAvatarPointerDown}
+                  onPointerMove={handleAvatarPointerMove}
+                  onPointerUp={handleAvatarPointerEnd}
+                  ref={avatarFrameRef}
+                >
+                  <Image
+                    alt="Pré-visualização da foto profissional"
+                    className="object-cover"
+                    fill
+                    sizes="288px"
+                    src={avatarDraft.url}
+                    style={{
+                      objectPosition: `${avatarDraft.position.x}% ${avatarDraft.position.y}%`,
+                    }}
+                    unoptimized
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Button disabled={uploadAvatar.isPending} onClick={applyAvatarDraft} type="button">
+                  {uploadAvatar.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <UploadCloud className="h-4 w-4" aria-hidden="true" />
+                  )}
+                  Aplicar foto
+                </Button>
+                <Button
+                  disabled={uploadAvatar.isPending}
+                  onClick={clearAvatarDraft}
+                  type="button"
+                  variant="outline"
+                >
+                  <X className="h-4 w-4" aria-hidden="true" />
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         {profile.isLoading ? <LoadingState label="Carregando perfil profissional" /> : null}
 
@@ -856,15 +1162,68 @@ export const ProfessionalProfileSetupLogic = () => {
                 {renderField("bio")}
                 {canUploadVideo ? (
                   <div className="rounded-2xl border border-border bg-surface-muted p-4">
-                    <div className="flex items-start gap-3">
-                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-primary shadow-sm">
-                        <FileVideo className="h-5 w-5" aria-hidden="true" />
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold text-foreground">Vídeo de Apresentação</p>
-                        <p className="mt-1 text-xs leading-5 text-muted">
-                          Envie um vídeo MP4, MOV ou WebM de até 50MB para destacar seu perfil.
-                        </p>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-start gap-3">
+                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-primary shadow-sm">
+                          <FileVideo className="h-5 w-5" aria-hidden="true" />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-bold text-foreground">Vídeo de Apresentação</p>
+                          <p className="mt-1 text-xs leading-5 text-muted">
+                            Envie um vídeo MP4, MOV ou WebM de até 50MB para destacar seu perfil.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="relative shrink-0">
+                        <button
+                          aria-expanded={videoActionsOpen}
+                          aria-haspopup="menu"
+                          className="inline-flex h-9 items-center gap-1 rounded-full border border-border bg-surface px-3 text-xs font-bold text-primary transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-60"
+                          disabled={uploadVideo.isPending || deleteVideo.isPending}
+                          onClick={() => setVideoActionsOpen((current) => !current)}
+                          type="button"
+                        >
+                          Editar
+                          <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+                        </button>
+
+                        {videoActionsOpen ? (
+                          <div
+                            className="absolute right-0 top-11 z-20 w-64 overflow-hidden rounded-2xl border border-border bg-surface text-left shadow-[var(--lectum-shadow-soft)]"
+                            role="menu"
+                          >
+                            <button
+                              className="flex w-full items-center gap-2 px-4 py-3 text-sm font-semibold text-foreground transition hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-45"
+                              disabled={uploadVideo.isPending}
+                              onClick={openVideoFilePicker}
+                              role="menuitem"
+                              type="button"
+                            >
+                              <UploadCloud className="h-4 w-4" aria-hidden="true" />
+                              Trocar vídeo
+                            </button>
+                            <button
+                              className="flex w-full items-center gap-2 px-4 py-3 text-sm font-semibold text-danger transition hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-45"
+                              disabled={!videoSrc || uploadVideo.isPending || deleteVideo.isPending}
+                              onClick={handleVideoRemoval}
+                              role="menuitem"
+                              type="button"
+                            >
+                              <Trash2 className="h-4 w-4" aria-hidden="true" />
+                              Remover Vídeo
+                            </button>
+                            <button
+                              className="flex w-full items-center gap-2 px-4 py-3 text-sm font-semibold text-foreground transition hover:bg-primary-soft hover:text-primary"
+                              onClick={handleVideoCoverRequest}
+                              role="menuitem"
+                              type="button"
+                            >
+                              <Camera className="h-4 w-4" aria-hidden="true" />
+                              Adicionar imagem de capa do vídeo
+                            </button>
+                          </div>
+                        ) : null}
                       </div>
                     </div>
 
@@ -912,35 +1271,6 @@ export const ProfessionalProfileSetupLogic = () => {
                       ref={videoInputRef}
                       type="file"
                     />
-
-                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                      <Button
-                        disabled={uploadVideo.isPending || deleteVideo.isPending}
-                        onClick={() => videoInputRef.current?.click()}
-                        type="button"
-                        variant="outline"
-                      >
-                        {uploadVideo.isPending ? (
-                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                        ) : (
-                          <UploadCloud className="h-4 w-4" aria-hidden="true" />
-                        )}
-                        {videoSrc ? "Trocar vídeo" : "Enviar vídeo"}
-                      </Button>
-                      <Button
-                        disabled={!videoSrc || uploadVideo.isPending || deleteVideo.isPending}
-                        onClick={handleVideoRemoval}
-                        type="button"
-                        variant="outline"
-                      >
-                        {deleteVideo.isPending ? (
-                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                        ) : (
-                          <Trash2 className="h-4 w-4" aria-hidden="true" />
-                        )}
-                        Remover vídeo
-                      </Button>
-                    </div>
                   </div>
                 ) : (
                   <div className="rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-center opacity-80">
@@ -962,7 +1292,7 @@ export const ProfessionalProfileSetupLogic = () => {
               </div>
             </SectionCard>
 
-            <SectionCard icon={Award} title="Especialidades e Filtros">
+            <SectionCard icon={Award} title="Filtros">
               <div className="grid gap-6">
                 <CatalogTagField
                   description={
@@ -977,7 +1307,7 @@ export const ProfessionalProfileSetupLogic = () => {
                   placeholder="Adicione uma especialidade..."
                   required
                   selected={selectedSpecialties}
-                  title={`Especialidades (Até ${profile.data.plan.specialty_limit} tags)`}
+                  title="Especialidades"
                 />
                 <CatalogPicker
                   description={
@@ -991,6 +1321,7 @@ export const ProfessionalProfileSetupLogic = () => {
                   onChange={setCatalogValue}
                   required
                   selected={selectedServices}
+                  showLimitCounter={false}
                   title="Serviços"
                 />
                 <CatalogTagField
@@ -1009,16 +1340,22 @@ export const ProfessionalProfileSetupLogic = () => {
                   title="Abordagens"
                 />
                 <div className="grid gap-3">
-                  <h3 className="text-sm font-bold text-foreground">Público</h3>
+                  <h3 className="flex items-center gap-1 text-sm font-bold text-foreground">
+                    <span>Público</span>
+                    <span className="text-danger">*</span>
+                  </h3>
                   <ChipPicker
                     items={PUBLIC_TARGET_OPTIONS}
                     onChange={(value) => setArrayValue("target_audience", value)}
                     selected={selectedTargets}
                   />
+                  <span className="block min-h-4 text-xs font-medium leading-4 text-danger">
+                    {targetAudienceError}
+                  </span>
                 </div>
                 {renderField("language")}
                 <div className="grid gap-3">
-                  <h3 className="text-sm font-bold text-foreground">Selos e condições</h3>
+                  <h3 className="text-sm font-bold text-foreground">Selos e Facilidades</h3>
                   <BooleanBenefit
                     checked={form.hook.watch("discount_first_session")}
                     description="Reduza a barreira do primeiro contato."
@@ -1059,7 +1396,7 @@ export const ProfessionalProfileSetupLogic = () => {
             <SectionCard icon={GraduationCap} title="Formação Acadêmica">
               <div className="grid gap-4">
                 {academicFormations.fields.map((field, index) => (
-                  <div className="grid gap-4 rounded-2xl border border-border p-4" key={field.id}>
+                  <div className="grid gap-3 rounded-2xl border border-border p-4" key={field.id}>
                     <div className="flex items-center justify-between gap-3">
                       <h3 className="text-sm font-bold text-foreground">Formação {index + 1}</h3>
                       {academicFormations.fields.length > 1 ? (
@@ -1073,19 +1410,26 @@ export const ProfessionalProfileSetupLogic = () => {
                         </button>
                       ) : null}
                     </div>
-                    {renderAcademicField(
-                      index,
-                      "title",
-                      "Título e especialidade",
-                      "Ex.: Doutor em Neuropsicologia",
-                    )}
-                    {renderAcademicField(
-                      index,
-                      "institution",
-                      "Instituição",
-                      "Ex.: Universidade de São Paulo",
-                    )}
-                    {renderAcademicField(index, "graduation_year", "Ano de formação", "Ex.: 2012")}
+                    <div className="grid gap-2">
+                      {renderAcademicField(
+                        index,
+                        "title",
+                        "Título e especialidade",
+                        "Ex.: Doutor em Neuropsicologia",
+                      )}
+                      {renderAcademicField(
+                        index,
+                        "institution",
+                        "Instituição",
+                        "Ex.: Universidade de São Paulo",
+                      )}
+                      {renderAcademicField(
+                        index,
+                        "graduation_year",
+                        "Ano de formação",
+                        "Ex.: 2012",
+                      )}
+                    </div>
                   </div>
                 ))}
                 <button
@@ -1180,15 +1524,6 @@ export const ProfessionalProfileSetupLogic = () => {
                 Salvar alterações
               </Button>
             </div>
-
-            {profile.data.profile.published ? (
-              <InlineAlert title="Perfil publicado" variant="success">
-                <div className="flex gap-2">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                  <span>Seu perfil está marcado como publicado para pacientes.</span>
-                </div>
-              </InlineAlert>
-            ) : null}
           </Form>
         ) : null}
       </section>

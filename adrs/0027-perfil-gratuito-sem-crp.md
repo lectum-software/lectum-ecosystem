@@ -44,6 +44,10 @@ Para o plano gratuito, abordagens ganharam limite explicito `approach_limit=1` n
 
 Em 2026-06-08, a UI de catalogos do perfil gratuito foi ajustada para alinhar Especialidades e Abordagens ao print anexado pelo usuario: ambos usam um campo compacto com tags removiveis, placeholder interno e dropdown de opcoes reais. A decisao preserva os limites do backend (`specialty_limit` e `approach_limit`) e nao altera contratos de API nem dados persistidos. Servicos permanece como chips porque nao foi citado no pedido e ja tem limite unitario visivel.
 
+Em 2026-06-08, o ajuste de avatar da tela `/app/professional/profile/setup` passou a usar uma modal dedicada, inspirada no fluxo de redes sociais, para permitir enquadramento circular por arraste antes do upload real. A decisao preserva o endpoint atual de avatar e nao cria dado local permanente.
+
+Na mesma revisao, o bloco "Video de Apresentacao" passou a concentrar acoes em um unico menu "Editar". Trocar e remover video continuam usando os endpoints reais ja existentes; a opcao "Adicionar imagem de capa do video" fica exposta como intencao de produto, mas sem persistencia, porque o contrato atual so possui `video_url` e nao ha campo/endpoint de capa.
+
 ## Consequências
 
 - Psicólogos gratuitos conseguem configurar um perfil mais próximo do protótipo sem desbloquear a TASK-18 completa.
@@ -68,6 +72,8 @@ Em 2026-06-08, a UI de catalogos do perfil gratuito foi ajustada para alinhar Es
 
 - Especialidades e Abordagens ficam visualmente mais proximas do prototipo mobile, sem novo package e sem catalogos mockados.
 - O controle continua usando os catalogos reais retornados por `/api/private/psychologist/free-profile` e os mesmos limites de plano.
+- O avatar fica mais facil de enquadrar sem alterar contrato, storage ou endpoint.
+- Capa customizada de video permanece pendente de contrato backend; ate la a UI nao salva imagem falsa nem deriva persistencia local.
 
 ## Validação
 
@@ -97,3 +103,7 @@ Em 2026-06-08, a UI de catalogos do perfil gratuito foi ajustada para alinhar Es
 - 2026-06-08 tags de catalogo: `pnpm --dir frontend build`
 - 2026-06-08 tags de catalogo: `pnpm check`
 - 2026-06-08 tags de catalogo: HTTP local em `/app/professional/profile/setup` respondeu 307 sem sessao, mantendo protecao; validacao visual autenticada ficou limitada por nao haver token real acessivel ao agente sem criar mock.
+- 2026-06-08 midias do setup: `pnpm --dir frontend check`
+- 2026-06-08 midias do setup: `pnpm --dir frontend build`
+- 2026-06-08 midias do setup: `pnpm check`
+- 2026-06-08 midias do setup: HTTP local em `/app/professional/profile/setup` respondeu 307 sem sessao, e Chrome headless local renderizou a pagina de login apos o redirect; validacao visual autenticada ficou limitada por nao haver token real acessivel ao agente sem criar mock.
