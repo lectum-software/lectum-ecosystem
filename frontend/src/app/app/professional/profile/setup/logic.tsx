@@ -973,7 +973,7 @@ export const ProfessionalProfileSetupLogic = () => {
           </Link>
         </div>
 
-        <header className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-7 text-center shadow-[var(--lectum-shadow-soft)]">
+        <header className="rounded-[var(--lectum-card-radius)] border border-border bg-white px-5 py-7 text-center shadow-[var(--lectum-shadow-soft)]">
           <div className="relative mx-auto h-28 w-28">
             <div
               className={cn(

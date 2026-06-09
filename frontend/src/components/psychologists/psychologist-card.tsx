@@ -280,12 +280,14 @@ export function PsychologistCard({
           ) : null}
 
           <div className="min-w-0 flex-1">
-            <h2 className="flex items-center gap-1.5 text-[1.22rem] font-extrabold leading-6 text-foreground">
-              <span className="truncate">{displayName}</span>
+            <div className="mt-0.5 flex min-w-0 items-start gap-1.5">
+              <h2 className="min-w-0 flex-1 text-[1.22rem] font-extrabold leading-6 text-foreground">
+                <span className="line-clamp-2 block break-words">{displayName}</span>
+              </h2>
               {psychologist.verified ? (
-                <VerifiedBadgeIcon aria-hidden="true" className="h-[18px] w-[18px] shrink-0" />
+                <VerifiedBadgeIcon aria-hidden="true" className="mt-1 h-[18px] w-[18px] shrink-0" />
               ) : null}
-            </h2>
+            </div>
             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
               <span className="text-[0.66rem] font-extrabold uppercase tracking-[0.16em] text-subtle">
                 {getPsychologistTitle(psychologist.gender)}
