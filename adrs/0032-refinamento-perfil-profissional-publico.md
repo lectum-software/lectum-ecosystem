@@ -24,6 +24,10 @@ O endpoint de detalhe já era leitura pública-safe e havia campos persistidos e
 - A modalidade presencial/híbrida passa a exibir `Online e Presencial em CIDADE/UF` quando cidade/UF reais existirem.
 - A aba Sobre exibe a seção `Formação e Títulos` entre `Sobre` e `Atendimento`, usando apenas formações persistidas ou estado vazio em PT-BR.
 
+- A faixa promocional superior passou a ser derivada dos selos reais do perfil (`discount_first_session`, `accepts_insurance` e `social_value`), fica oculta quando não há selo marcado e usa `position: sticky` para permanecer no topo durante a rolagem.
+- O chip de avaliação abaixo do nome só aparece quando há reviews reais; perfis sem avaliação deixam de exibir a cópia "Sem avaliações" nessa região.
+- O vídeo da aba Sobre foi normalizado para proporção 16:9, e o bloco hero/abas passou a ser uma superfície branca contínua com bordas e sombras mais discretas, em linguagem mais sóbria inspirada em feeds sociais/profissionais.
+
 ## Consequências
 
 - A vitrine do psicólogo fica mais fiel ao protótipo mobile-first e sem navegação concorrendo com o conteúdo.
@@ -45,6 +49,17 @@ O endpoint de detalhe já era leitura pública-safe e havia campos persistidos e
   - banner com `VALOR SOCIAL`;
   - vídeo com prévia e play local;
   - atendimento, formação/títulos e público atendido vindos da API real.
+
+Ajuste complementar de 2026-06-09:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local via Chrome headless/CDP em 390px e desktop 1440px na rota `/app/psychologist/cmq5m0vse000ftkuhybmagcn6`:
+  - vídeo renderizado em proporção 16:9 (`videoRatio=1.78`);
+  - texto "Sem avaliações" ausente abaixo do nome;
+  - espaço entre hero e menu removido (`heroBottom` igual ao topo do menu em mobile);
+  - strip promocional oculto corretamente porque o perfil local persistido está com os três selos desmarcados (`discount_first_session=false`, `accepts_insurance=false`, `social_value=false`).
 
 ## Pendências
 

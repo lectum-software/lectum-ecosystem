@@ -153,6 +153,14 @@ const translateTargetAudience = (target: string) => {
   return targetAudienceLabel[target] || target;
 };
 
+const getPromotionalBadges = (profile: DirectoryPsychologistProfile) => {
+  return [
+    profile.discount_first_session ? "Desconto na 1ª sessão" : null,
+    profile.accepts_insurance ? "Aceita convênios" : null,
+    profile.social_value ? "Valor social" : null,
+  ].filter((item): item is string => Boolean(item));
+};
+
 const hasInPersonCare = (modality?: string | null) => {
   const normalized = modality?.toLowerCase() || "";
 
@@ -229,7 +237,7 @@ const TagList = ({ empty, items }: { empty: string; items: string[] }) => {
     <div className="flex flex-wrap gap-2">
       {items.map((item) => (
         <span
-          className="rounded-full bg-primary-soft px-3 py-1.5 text-xs font-extrabold text-primary"
+          className="rounded-full border border-border bg-surface-muted px-3 py-1.5 text-xs font-semibold text-muted"
           key={item}
         >
           {item}
@@ -289,7 +297,7 @@ const ProfileAvatar = ({ profile }: { profile: DirectoryPsychologistProfile }) =
   const avatarIsPublicMedia = isPublicMediaUrl(profile.avatar);
 
   return (
-    <div className="relative grid h-[92px] w-[92px] shrink-0 place-items-center overflow-hidden rounded-[28px] bg-primary-soft text-3xl font-extrabold text-primary shadow-[var(--lectum-shadow-soft)]">
+    <div className="relative grid h-[92px] w-[92px] shrink-0 place-items-center overflow-hidden rounded-3xl bg-surface-muted text-3xl font-extrabold text-primary">
       {avatarSrc ? (
         <Image
           alt={profile.name}
@@ -323,7 +331,10 @@ const ProfileHero = ({
   const displayName = getHonorificName(profile);
 
   return (
-    <section className="border-b border-border bg-surface px-4 pb-5 pt-6 sm:rounded-b-[28px] sm:border sm:px-6 lg:px-8">
+    <section
+      className="border-x border-border bg-surface px-4 pb-6 pt-6 sm:px-6 lg:px-8"
+      data-profile-hero="true"
+    >
       <div className="flex gap-4">
         <div className="relative">
           <ProfileAvatar profile={profile} />
@@ -337,7 +348,7 @@ const ProfileHero = ({
             }
             aria-pressed={profile.favorited}
             className={cn(
-              "absolute -right-2 -top-2 grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-muted shadow-[var(--lectum-shadow-soft)] transition hover:border-red-200 hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-60",
+              "absolute -right-2 -top-2 grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-muted shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-60",
               profile.favorited && "border-red-200 bg-red-50 text-red-500",
             )}
             disabled={favoritePending || !canFavorite}
@@ -370,10 +381,12 @@ const ProfileHero = ({
                 Disponível hoje
               </span>
             ) : null}
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-extrabold text-primary">
-              <Star className="h-3.5 w-3.5 fill-warning text-warning" aria-hidden="true" />
-              {formatRating(profile.rating_avg, profile.rating_count)}
-            </span>
+            {profile.rating_count > 0 ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-extrabold text-primary">
+                <Star className="h-3.5 w-3.5 fill-warning text-warning" aria-hidden="true" />
+                {formatRating(profile.rating_avg, profile.rating_count)}
+              </span>
+            ) : null}
           </div>
         </div>
       </div>
@@ -399,7 +412,7 @@ const ProfileTabs = ({
   return (
     <nav
       aria-label="Seções do perfil profissional"
-      className="grid grid-cols-3 bg-surface sm:rounded-t-[28px] sm:border sm:border-b-0 sm:border-border"
+      className="grid grid-cols-3 border-x border-y border-border bg-surface"
     >
       {tabs.map((tab) => {
         const Icon = tab.icon;
@@ -427,18 +440,33 @@ const ProfileTabs = ({
   );
 };
 
+const PromoStrip = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
+  const badges = getPromotionalBadges(profile);
+
+  if (badges.length === 0) return null;
+
+  return (
+    <div
+      className="sticky top-0 z-30 border-x border-primary bg-primary px-3 py-2 text-center text-[0.58rem] font-extrabold uppercase tracking-[0.06em] text-white sm:px-4 sm:text-[0.68rem] sm:tracking-[0.12em]"
+      data-promo-strip="true"
+    >
+      {badges.join(" • ")}
+    </div>
+  );
+};
+
 const StatGrid = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
   const experience = profile.formation_years ? `${profile.formation_years} anos` : "Não informada";
 
   return (
     <div className="grid grid-cols-3 gap-3">
-      <div className="rounded-2xl border border-border bg-surface p-3 text-center shadow-[var(--lectum-shadow-soft)]">
+      <div className="rounded-2xl border border-border bg-surface p-3 text-center">
         <p className="text-[0.64rem] font-extrabold uppercase tracking-[0.18em] text-subtle">
           Experiência
         </p>
         <p className="mt-1 text-sm font-extrabold text-foreground">{experience}</p>
       </div>
-      <div className="rounded-2xl border border-border bg-surface p-3 text-center shadow-[var(--lectum-shadow-soft)]">
+      <div className="rounded-2xl border border-border bg-surface p-3 text-center">
         <p className="text-[0.64rem] font-extrabold uppercase tracking-[0.18em] text-subtle">
           Avaliação
         </p>
@@ -446,7 +474,7 @@ const StatGrid = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
           {formatRatingNumber(profile.rating_avg, profile.rating_count)}
         </p>
       </div>
-      <div className="rounded-2xl border border-border bg-surface p-3 text-center shadow-[var(--lectum-shadow-soft)]">
+      <div className="rounded-2xl border border-border bg-surface p-3 text-center">
         <p className="text-[0.64rem] font-extrabold uppercase tracking-[0.18em] text-subtle">
           Reviews
         </p>
@@ -465,14 +493,17 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
   if (!videoSrc) return null;
 
   return (
-    <div className="relative overflow-hidden rounded-[22px] border border-border bg-surface-muted shadow-[var(--lectum-shadow-soft)]">
+    <div
+      className="relative aspect-video overflow-hidden rounded-2xl border border-border bg-surface-muted"
+      data-presentation-video="true"
+    >
       {playing ? (
         <>
           {/* biome-ignore lint/a11y/useMediaCaption: vídeos enviados pelos profissionais ainda não possuem trilha de legenda no recorte atual. */}
           <video
             aria-label={`Vídeo de apresentação de ${profile.name}`}
             autoPlay
-            className="h-[230px] w-full bg-black object-cover sm:h-[260px]"
+            className="h-full w-full bg-black object-cover"
             controls
             onEnded={() => setPlaying(false)}
             playsInline
@@ -489,7 +520,7 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
       ) : (
         <button
           aria-label={`Reproduzir vídeo de apresentação de ${profile.name}`}
-          className="relative grid h-[230px] w-full place-items-center overflow-hidden bg-surface-muted text-white sm:h-[260px]"
+          className="relative grid h-full w-full place-items-center overflow-hidden bg-surface-muted text-white"
           onClick={() => setPlaying(true)}
           type="button"
         >
@@ -508,7 +539,7 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
             </span>
           )}
           <span className="absolute inset-0 bg-gradient-to-t from-foreground/65 via-foreground/10 to-transparent" />
-          <span className="relative grid h-16 w-16 place-items-center rounded-full bg-white/85 text-primary shadow-[var(--lectum-shadow)] transition hover:scale-105">
+          <span className="relative grid h-16 w-16 place-items-center rounded-full bg-white/90 text-primary shadow-sm transition hover:scale-105">
             <Play className="ml-1 h-8 w-8 fill-current" aria-hidden="true" />
           </span>
           <span className="absolute bottom-4 left-4 rounded-full bg-foreground/75 px-3 py-1.5 text-xs font-extrabold text-white">
@@ -560,7 +591,7 @@ const FormationSection = ({ profile }: { profile: DirectoryPsychologistProfile }
 
 const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
   return (
-    <div className="grid gap-6 bg-surface px-4 py-5 sm:rounded-b-[28px] sm:border sm:border-t-0 sm:border-border sm:px-6 lg:px-8">
+    <div className="grid gap-6 border-x border-b border-border bg-surface px-4 py-5 sm:rounded-b-2xl sm:px-6 lg:px-8">
       <PresentationVideo profile={profile} />
 
       <StatGrid profile={profile} />
@@ -640,7 +671,7 @@ const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
 
 const PostCard = ({ post }: { post: DirectoryPsychologistProfilePost }) => {
   return (
-    <article className="rounded-[20px] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
+    <article className="rounded-[20px] border border-border bg-surface p-4">
       <div className="flex items-start justify-between gap-3 text-xs font-semibold text-muted">
         <span className="inline-flex items-center gap-1.5">
           <FileText className="h-4 w-4 text-subtle" aria-hidden="true" />
@@ -692,7 +723,7 @@ const PostsTab = ({
   total: number;
 }) => {
   return (
-    <div className="grid gap-4 bg-surface px-4 py-5 sm:rounded-b-[28px] sm:border sm:border-t-0 sm:border-border sm:px-6 lg:px-8">
+    <div className="grid gap-4 border-x border-b border-border bg-surface px-4 py-5 sm:rounded-b-2xl sm:px-6 lg:px-8">
       <div className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface-muted p-4">
         <div>
           <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-subtle">
@@ -745,7 +776,7 @@ const ReviewSummaryCard = ({ summary }: { summary: DirectoryReviewSummary }) => 
   const max = Math.max(1, summary.rating_count);
 
   return (
-    <section className="rounded-[20px] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
+    <section className="rounded-[20px] border border-border bg-surface p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-5xl font-extrabold tracking-tight text-foreground">
@@ -788,7 +819,7 @@ const ReviewSummaryCard = ({ summary }: { summary: DirectoryReviewSummary }) => 
 
 const ReviewCard = ({ review }: { review: DirectoryPsychologistProfileReview }) => {
   return (
-    <article className="rounded-[20px] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
+    <article className="rounded-[20px] border border-border bg-surface p-5">
       <div className="flex items-start gap-3">
         <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-primary-soft text-sm font-extrabold text-primary">
           {review.author.initials}
@@ -851,7 +882,7 @@ const ReviewsTab = ({
   summary: DirectoryReviewSummary;
 }) => {
   return (
-    <div className="grid gap-4 bg-surface px-4 py-5 sm:rounded-b-[28px] sm:border sm:border-t-0 sm:border-border sm:px-6 lg:px-8">
+    <div className="grid gap-4 border-x border-b border-border bg-surface px-4 py-5 sm:rounded-b-2xl sm:px-6 lg:px-8">
       <ReviewSummaryCard summary={summary} />
 
       {isError ? (
@@ -1038,7 +1069,7 @@ export const PsychologistProfileLogic = () => {
     <PrivateTemplate allowAnonymous showNavigation={false}>
       <section className="-mx-5 grid w-[calc(100%+2.5rem)] max-w-none gap-0 bg-background sm:mx-auto sm:w-full sm:max-w-[430px] lg:max-w-[760px] lg:bg-transparent">
         <div>
-          <header className="-mt-6 border-b border-border bg-surface px-4 pb-0 pt-4 sm:mt-0 sm:rounded-t-[28px] sm:border sm:pb-0 lg:px-8 lg:pt-6">
+          <header className="-mt-6 border-x border-t border-border bg-surface px-4 pt-4 sm:mt-0 sm:rounded-t-2xl lg:px-8 lg:pt-6">
             <div className="flex min-h-12 items-center justify-between gap-3 pb-4">
               <Link
                 aria-label="Voltar para psicólogos"
@@ -1061,13 +1092,10 @@ export const PsychologistProfileLogic = () => {
                 <Share2 className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
-            <div className="-mx-4 bg-primary px-3 py-1.5 text-center text-[0.48rem] font-extrabold uppercase tracking-[0.01em] text-white sm:-mx-6 sm:px-4 sm:text-[0.65rem] sm:tracking-[0.12em] lg:-mx-8">
-              Desconto na 1ª sessão • aceita convênios • valor social
-            </div>
           </header>
         </div>
 
-        <div className="grid gap-0 lg:gap-5">
+        <div className="grid gap-0">
           {shareFeedback ? (
             <InlineAlert className="mt-4" title="Link copiado" variant="success">
               Compartilhamento preparado com o link público seguro deste perfil.
@@ -1093,6 +1121,8 @@ export const PsychologistProfileLogic = () => {
 
           {!showInitialLoading && !profileErrorMessage && profile ? (
             <>
+              <PromoStrip profile={profile} />
+
               <ProfileHero
                 canFavorite={canFavoritePsychologists}
                 favoritePending={favoritePendingId === profile.id}
@@ -1100,7 +1130,7 @@ export const PsychologistProfileLogic = () => {
                 profile={profile}
               />
 
-              <div className="mt-4 grid gap-0 lg:mt-0">
+              <div className="grid gap-0">
                 <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
                 {activeTab === "sobre" ? <AboutTab profile={profile} /> : null}
                 {activeTab === "publicacoes" ? (

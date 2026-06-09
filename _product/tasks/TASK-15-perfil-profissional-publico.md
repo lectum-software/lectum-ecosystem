@@ -196,6 +196,12 @@ Regras anti-recriação específicas:
 - A UI exibe estado vazio em PT-BR quando não houver formação pública cadastrada, sem seed/mock.
 - ADR atualizado: `adrs/0032-refinamento-perfil-profissional-publico.md`.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` e browser local via Chrome headless/CDP em 390px.
+- Refinamento visual complementar na mesma rota: removido o espaço cinza entre hero e menu, mantendo bloco superior e abas como superfície branca contínua.
+- A faixa azul superior passou a ser dinâmica a partir de `discount_first_session`, `accepts_insurance` e `social_value`, com `sticky top-0` quando houver ao menos um selo marcado; no perfil local validado os três selos estavam desmarcados e a faixa ficou corretamente oculta.
+- O vídeo de apresentação dentro da aba Sobre passou a usar proporção 16:9, preservando prévia e reprodução inline.
+- Removido o chip "Sem avaliações" abaixo do nome quando `rating_count` é zero; a contagem continua aparecendo apenas nos cards de estatística.
+- Layout visual ajustado para uma linguagem mais sóbria, com tags, cards e sombras menos chamativos, sem criar componente ou design system paralelo.
+- Validações complementares executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local via Chrome headless/CDP em 390px e desktop 1440px.
 
 
 ## Validação mínima
