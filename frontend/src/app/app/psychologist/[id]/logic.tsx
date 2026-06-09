@@ -128,6 +128,18 @@ const formatHeroRating = (ratingAvg: number, ratingCount: number) => {
   return formatRating(ratingAvg, ratingCount);
 };
 
+const getPsychologistTitle = (gender?: string | null) => {
+  const normalized = gender?.toLowerCase();
+
+  return normalized === "feminino" ? "Psicóloga" : "Psicólogo";
+};
+
+const getPsychologistArticle = (gender?: string | null) => {
+  const normalized = gender?.toLowerCase();
+
+  return normalized === "feminino" ? "a psicóloga" : "o psicólogo";
+};
+
 const getHonorificName = (profile: DirectoryPsychologistProfile) => {
   if (!profile.verified) return profile.name;
 
@@ -283,7 +295,7 @@ const ProfileInfoCard = ({
   label: string;
   value: string;
 }) => (
-  <article className="flex items-start gap-3 rounded-[18px] bg-surface-muted px-4 py-4">
+  <article className="flex items-start gap-3 rounded-[18px] border border-border bg-background px-4 py-4">
     <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
       <Icon className="h-5 w-5" aria-hidden="true" />
     </span>
@@ -347,7 +359,7 @@ const ProfileAvatar = ({ profile }: { profile: DirectoryPsychologistProfile }) =
 
   return (
     <div
-      className="relative grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-muted text-2xl font-extrabold text-primary"
+      className="relative grid h-24 w-24 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-muted text-2xl font-extrabold text-primary sm:h-28 sm:w-28"
       data-profile-avatar="true"
     >
       {avatarSrc ? (
@@ -379,9 +391,9 @@ const ProfileHero = ({
   profile: DirectoryPsychologistProfile;
 }) => {
   const headline = profile.headline || profile.bio;
-  const formattedCrp = formatCrpNumber(profile.crp);
   const displayName = getHonorificName(profile);
   const benefitTags = buildBenefitTags(profile);
+  const formattedCrp = formatCrpNumber(profile.crp);
 
   return (
     <section className="bg-background px-5 pb-7 pt-5 sm:px-6 lg:px-8" data-profile-hero="true">
@@ -400,7 +412,8 @@ const ProfileHero = ({
             ) : null}
           </h1>
           <p className="mt-1 text-[0.62rem] font-extrabold uppercase tracking-[0.16em] text-subtle">
-            Psicólogo {formattedCrp ? `• CRP ${formattedCrp}` : "• CRP não informado"}
+            {getPsychologistTitle(profile.gender)}{" "}
+            {formattedCrp ? `• CRP ${formattedCrp}` : "• CRP não informado"}
           </p>
 
           {profile.available_today ? (
@@ -450,7 +463,7 @@ const ProfileHero = ({
       )}
 
       {benefitTags.length > 0 ? (
-        <div className="mt-6 flex flex-wrap gap-2" data-profile-benefit-tags="true">
+        <div className="mt-7 flex flex-wrap gap-2" data-profile-benefit-tags="true">
           {benefitTags.map((tag) => {
             const Icon = tag.icon;
 
@@ -489,7 +502,7 @@ const ProfileTabs = ({
           <button
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex min-h-12 items-center justify-center gap-1 border-b-2 px-1.5 text-[0.58rem] font-extrabold transition sm:text-xs",
+              "flex min-h-12 items-center justify-center gap-1 border-b-2 px-1.5 text-[0.52rem] font-extrabold transition sm:text-[0.61rem]",
               active
                 ? "border-primary text-primary"
                 : "border-transparent text-muted hover:text-primary",
@@ -622,7 +635,7 @@ const FormationSection = ({ profile }: { profile: DirectoryPsychologistProfile }
   const formations = profile.academic_formations ?? [];
 
   return (
-    <section className="grid gap-3 border-t border-border bg-background px-5 py-6 sm:px-6 lg:px-8">
+    <section className="grid gap-3 border-t border-border bg-white px-5 py-6 sm:px-6 lg:px-8">
       <h2 className="text-base font-extrabold text-foreground">Formação & Títulos</h2>
       {formations.length > 0 ? (
         <div className="grid gap-3">
@@ -688,7 +701,7 @@ const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
     "Este profissional ainda não informou uma biografia pública. Assim que houver dados persistidos, eles aparecerão aqui sem usar conteúdo fictício.";
 
   return (
-    <div className="bg-background">
+    <div className="bg-white">
       <div className="grid gap-5 px-5 py-5 sm:px-6 lg:px-8">
         <PresentationVideo profile={profile} />
 
@@ -700,7 +713,7 @@ const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
         </div>
       </div>
 
-      <section className="grid gap-3 border-t border-border bg-background px-5 py-6 sm:px-6 lg:px-8">
+      <section className="grid gap-3 border-t border-border bg-white px-5 py-6 sm:px-6 lg:px-8">
         <h2 className="text-base font-extrabold text-foreground">Atendimento</h2>
         <div className="grid gap-3">
           <ProfileInfoCard
@@ -716,12 +729,12 @@ const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
 
       <FormationSection profile={profile} />
 
-      <section className="border-t border-border bg-background px-5 pb-28 pt-6 sm:px-6 lg:px-8">
+      <section className="border-t border-border bg-white px-5 pb-32 pt-6 sm:px-6 lg:px-8">
         <div className="flex items-start gap-3 rounded-[18px] border border-primary/20 bg-primary-soft px-4 py-4 text-primary">
           <CalendarDays className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
           <p className="text-sm font-semibold leading-5 text-foreground">
             {profile.whatsapp_available
-              ? "Para consultar agenda, valores e demais informações, chame o psicólogo no WhatsApp."
+              ? `Para consultar agenda, valores e demais informações, chame ${getPsychologistArticle(profile.gender)} no WhatsApp.`
               : "Este perfil ainda não possui WhatsApp disponível. O botão será exibido quando o profissional informar um número válido."}
           </p>
         </div>

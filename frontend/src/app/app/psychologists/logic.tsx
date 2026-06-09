@@ -310,7 +310,7 @@ export const PsychologistsLogic = () => {
   return (
     <PrivateTemplate allowAnonymous>
       <section className="mx-auto grid w-full max-w-[390px] gap-0 bg-background sm:max-w-[430px] lg:max-w-6xl lg:gap-5 lg:bg-transparent">
-        <header className="-mx-5 -mt-6 border-b border-border bg-surface px-4 pb-4 pt-4 sm:mx-0 sm:mt-0 sm:rounded-t-[20px] sm:border sm:border-b-0 lg:rounded-t-[28px] lg:px-8 lg:pb-4 lg:pt-8">
+        <header className="-mt-6 bg-background px-4 pb-0 pt-4 sm:mx-0 sm:mt-0 sm:rounded-t-[20px] lg:rounded-t-[28px] lg:px-8 lg:pb-2 lg:pt-8">
           <div className="relative flex min-h-12 items-center justify-center lg:justify-start lg:gap-4">
             <Image
               alt="Lectum"
@@ -331,7 +331,7 @@ export const PsychologistsLogic = () => {
           </div>
         </header>
 
-        <div className="-mx-5 grid gap-3 bg-surface-muted/70 px-4 py-4 sm:mx-0 sm:border-x lg:gap-y-3 lg:rounded-b-[28px] lg:border-b lg:px-8 lg:pb-6 lg:pt-3">
+        <div className="grid gap-0 bg-background px-4 py-3 sm:mx-0 lg:gap-y-3 lg:rounded-b-[28px] lg:px-8 lg:pb-6 lg:pt-3">
           <form className="grid grid-cols-[1fr_auto] gap-3" onSubmit={submitSearch}>
             <label className="relative block" htmlFor="directory-psychologist-search">
               <span className="sr-only">Buscar profissional</span>
@@ -340,7 +340,7 @@ export const PsychologistsLogic = () => {
                 aria-hidden="true"
               />
               <Input
-                className="h-11 rounded-xl bg-surface pl-10 text-[0.95rem] lg:h-14 lg:rounded-2xl lg:pl-12 lg:text-base"
+                className="h-11 rounded-xl border border-border bg-white pl-10 text-[0.95rem] lg:h-14 lg:rounded-2xl lg:pl-12 lg:text-base"
                 defaultValue={filterValues.search || ""}
                 disabled={directory.isFetching}
                 id="directory-psychologist-search"
@@ -353,11 +353,11 @@ export const PsychologistsLogic = () => {
             <Button
               aria-controls="directory-psychologists-filters"
               aria-expanded={filtersOpen}
-              className="h-11 rounded-xl border-border bg-surface px-4 text-xs uppercase tracking-wide lg:h-14 lg:rounded-2xl lg:px-6 lg:text-sm"
+              className="h-11 rounded-xl bg-white px-4 text-[0.54rem] font-semibold uppercase tracking-[0.14em] lg:h-14 lg:rounded-2xl lg:px-6 lg:text-[0.62rem]"
               disabled={directory.isFetching}
               onClick={() => setFiltersOpen(true)}
               type="button"
-              variant="outline"
+              variant="ghost"
             >
               <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
               Filtros
@@ -371,7 +371,7 @@ export const PsychologistsLogic = () => {
               return (
                 <button
                   className={cn(
-                    "shrink-0 rounded-full border px-4 py-2 text-sm font-bold transition",
+                    "shrink-0 rounded-full border border-border bg-white px-3 py-1.5 text-[0.7rem] font-semibold transition",
                     selected
                       ? "border-primary bg-primary text-white"
                       : "border-border bg-surface text-muted hover:border-primary hover:text-primary",

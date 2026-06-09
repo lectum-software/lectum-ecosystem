@@ -60,6 +60,25 @@ const genderLabels: Record<string, string> = {
   prefiro_nao_dizer: "Prefiro não dizer",
 };
 
+const getPsychologistGenderTitle = (gender?: string | null) => {
+  const normalized = gender?.toLowerCase();
+
+  return normalized === "feminino" ? "Psicóloga" : "Psicólogo";
+};
+
+type PsychologistProfileWithGender = {
+  gender?: string | null;
+};
+
+const getPsychologistGender = (user: {
+  psychologist_profile?: { [key: string]: unknown } | null;
+  patient_profile?: { gender?: string | null } | null;
+}) => {
+  const psychologistProfile = user.psychologist_profile as PsychologistProfileWithGender | null;
+
+  return psychologistProfile?.gender || user.patient_profile?.gender || null;
+};
+
 const getInitials = (name?: string | null, email?: string | null) => {
   const source = name?.trim() || email?.split("@")[0] || "Lectum";
   const parts = source.split(/\s+/).filter(Boolean);
@@ -202,13 +221,14 @@ export const ProfileLogic = () => {
   const isPsychologist = user.role === "psicologo";
   const displayName = user.name?.trim() || user.email || "Usuário Lectum";
   const formattedCrp = formatCrpNumber(user.psychologist_profile?.crp);
+  const profileGender = getPsychologistGender(user);
   const hasVerifiedBadge = Boolean(
     user.psychologist_profile?.subscriptions?.some(
       (subscription) => subscription.status === "ativa" && subscription.plan?.slug !== "gratuito",
     ),
   );
   const subtitle = isPsychologist
-    ? `Psicólogo${formattedCrp ? ` • CRP ${formattedCrp}` : ""}`
+    ? `${getPsychologistGenderTitle(profileGender)}${formattedCrp ? ` • CRP ${formattedCrp}` : ""}`
     : "Paciente";
   const avatarSrc = resolvePublicMediaUrl(user.avatar);
   const avatarIsPublicMedia = isPublicMediaUrl(user.avatar);
@@ -281,7 +301,7 @@ export const ProfileLogic = () => {
     <PrivateTemplate>
       <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-3xl">
         <div className="overflow-hidden rounded-[var(--lectum-card-radius)] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
-          <div className="grid justify-items-center bg-primary-soft/50 px-6 py-8 text-center">
+          <div className="grid justify-items-center bg-white px-6 py-8 text-center">
             <div className="grid h-28 w-28 place-items-center overflow-hidden rounded-full border-4 border-white bg-primary text-3xl font-bold text-white shadow-[var(--lectum-shadow-soft)]">
               {avatarSrc ? (
                 <Image

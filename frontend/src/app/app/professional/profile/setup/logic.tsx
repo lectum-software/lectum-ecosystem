@@ -1229,7 +1229,9 @@ export const ProfessionalProfileSetupLogic = () => {
                           <FileVideo className="h-5 w-5" aria-hidden="true" />
                         </span>
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-bold text-foreground">Vídeo de Apresentação</p>
+                          <p className="text-sm font-bold leading-5 text-foreground">
+                            Vídeo de Apresentação
+                          </p>
                         </div>
                       </div>
 
@@ -1256,32 +1258,7 @@ export const ProfessionalProfileSetupLogic = () => {
                             role="menu"
                           >
                             <button
-                              className="flex w-full items-center gap-2 px-4 py-3 text-sm font-semibold text-foreground transition hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-45"
-                              disabled={uploadVideo.isPending || uploadVideoCover.isPending}
-                              onClick={openVideoFilePicker}
-                              role="menuitem"
-                              type="button"
-                            >
-                              <UploadCloud className="h-4 w-4" aria-hidden="true" />
-                              Trocar vídeo
-                            </button>
-                            <button
-                              className="flex w-full items-center gap-2 px-4 py-3 text-sm font-semibold text-danger transition hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-45"
-                              disabled={
-                                !videoSrc ||
-                                uploadVideo.isPending ||
-                                uploadVideoCover.isPending ||
-                                deleteVideo.isPending
-                              }
-                              onClick={handleVideoRemoval}
-                              role="menuitem"
-                              type="button"
-                            >
-                              <Trash2 className="h-4 w-4" aria-hidden="true" />
-                              Remover Vídeo
-                            </button>
-                            <button
-                              className="flex w-full items-center gap-2 px-4 py-3 text-sm font-semibold text-foreground transition hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-45"
+                              className="flex w-full items-center gap-2 px-4 py-3 text-xs font-semibold text-foreground transition hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-45"
                               disabled={
                                 !videoSrc ||
                                 uploadVideo.isPending ||
@@ -1293,14 +1270,39 @@ export const ProfessionalProfileSetupLogic = () => {
                               type="button"
                             >
                               <Camera className="h-4 w-4" aria-hidden="true" />
-                              Adicionar imagem de capa do vídeo
+                              Adicionar imagem de capa
+                            </button>
+                            <button
+                              className="flex w-full items-center gap-2 px-4 py-3 text-xs font-semibold text-foreground transition hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-45"
+                              disabled={uploadVideo.isPending || uploadVideoCover.isPending}
+                              onClick={openVideoFilePicker}
+                              role="menuitem"
+                              type="button"
+                            >
+                              <UploadCloud className="h-4 w-4" aria-hidden="true" />
+                              Trocar vídeo
+                            </button>
+                            <button
+                              className="flex w-full items-center gap-2 px-4 py-3 text-xs font-semibold text-danger transition hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-45"
+                              disabled={
+                                !videoSrc ||
+                                uploadVideo.isPending ||
+                                uploadVideoCover.isPending ||
+                                deleteVideo.isPending
+                              }
+                              onClick={handleVideoRemoval}
+                              role="menuitem"
+                              type="button"
+                            >
+                              <Trash2 className="h-4 w-4" aria-hidden="true" />
+                              Excluir vídeo
                             </button>
                           </div>
                         ) : null}
                       </div>
                     </div>
 
-                    <p className="mt-3 w-full text-xs leading-4 text-muted">
+                    <p className="mt-3 w-full text-xs leading-5 text-muted">
                       Envie um vídeo MP4, MOV ou WebM de até 50MB para destacar seu perfil.
                     </p>
 

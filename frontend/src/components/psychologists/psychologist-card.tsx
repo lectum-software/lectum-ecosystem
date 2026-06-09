@@ -79,6 +79,12 @@ const getHonorificName = (psychologist: PsychologistCardItem) => {
   return `${honorific} ${psychologist.name}`;
 };
 
+const getPsychologistTitle = (gender?: string | null) => {
+  const normalized = gender?.toLowerCase();
+
+  return normalized === "feminino" ? "Psicóloga" : "Psicólogo";
+};
+
 const buildBenefitTags = (psychologist: PsychologistCardItem) => {
   const tags: Array<{
     icon: typeof BriefcaseBusiness;
@@ -282,7 +288,7 @@ export function PsychologistCard({
             </h2>
             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
               <span className="text-[0.66rem] font-extrabold uppercase tracking-[0.16em] text-subtle">
-                Psicólogo
+                {getPsychologistTitle(psychologist.gender)}
               </span>
               <span className="inline-flex items-center gap-1 text-[0.78rem] font-bold text-muted">
                 <Star className="h-3.5 w-3.5 fill-[#FACC15] text-[#FACC15]" aria-hidden="true" />
