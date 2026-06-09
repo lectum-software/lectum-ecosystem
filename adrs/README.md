@@ -44,3 +44,5 @@ Formato recomendado:
 - [ADR-0028 - Concessao administrativa de assinatura profissional](0028-concessao-administrativa-assinatura.md) - Accepted
 - [ADR-0029 - Cortesia profissional como experiencia de assinante](0029-cortesia-profissional-ui-perfil.md) - Accepted
 - [ADR-0030 - Data de inscricao CRP como fonte do tempo de experiencia](0030-data-inscricao-crp-experiencia.md) - Accepted
+- [ADR-0031 - Perfil privado do paciente](0031-perfil-privado-paciente.md) - Accepted
+- [ADR-0032 - Refinamento mobile-first do perfil profissional público](0032-refinamento-perfil-profissional-publico.md) - Accepted

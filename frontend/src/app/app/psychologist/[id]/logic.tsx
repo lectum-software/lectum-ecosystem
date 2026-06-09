@@ -3,18 +3,14 @@
 import {
   ArrowLeft,
   Bookmark,
-  CalendarDays,
   ChevronLeft,
   ChevronRight,
   FileText,
-  GraduationCap,
   Heart,
-  Languages,
   MapPin,
   MessageSquareText,
   Play,
   Share2,
-  ShieldCheck,
   Star,
   ThumbsUp,
   UsersRound,
@@ -82,6 +78,13 @@ const languageLabel: Record<string, string> = {
   fr: "Francês",
 };
 
+const targetAudienceLabel: Record<string, string> = {
+  adolescentes: "Adolescentes (12-17)",
+  adultos: "Adultos (18-59)",
+  criancas: "Crianças (até 11)",
+  idosos: "Idosos (60+)",
+};
+
 const normalizeTab = (value: string | null): ProfileTab => {
   return PROFILE_TABS.includes(value as ProfileTab) ? (value as ProfileTab) : "sobre";
 };
@@ -143,6 +146,34 @@ const translateLanguage = (language: string) => {
   const normalized = language.toLowerCase();
 
   return languageLabel[normalized] || language;
+};
+
+const translateTargetAudience = (target: string) => {
+  return targetAudienceLabel[target] || target;
+};
+
+const hasInPersonCare = (modality?: string | null) => {
+  const normalized = modality?.toLowerCase() || "";
+
+  return (
+    normalized === "presencial" || normalized === "hibrido" || normalized.includes("presencial")
+  );
+};
+
+const formatAttendanceLabel = (profile: DirectoryPsychologistProfile) => {
+  if (hasInPersonCare(profile.modality)) {
+    const city = profile.address_city?.trim();
+    const state = profile.address_state?.trim().toUpperCase();
+
+    if (city && state) return `Online e Presencial em ${city}/${state}`;
+    if (city) return `Online e Presencial em ${city}`;
+
+    return "Online e Presencial";
+  }
+
+  if (!profile.modality) return "Modalidade não informada";
+
+  return modalityLabel[profile.modality] || profile.modality;
 };
 
 const resolveErrorMessage = (error: unknown, fallback: string) => {
@@ -271,11 +302,6 @@ const ProfileAvatar = ({ profile }: { profile: DirectoryPsychologistProfile }) =
       ) : (
         getInitials(profile.name)
       )}
-      <span
-        className="absolute bottom-1.5 right-1.5 h-5 w-5 rounded-full border-4 border-surface bg-success"
-        aria-label="Profissional disponível"
-        role="img"
-      />
     </div>
   );
 };
@@ -291,7 +317,6 @@ const ProfileHero = ({
   onToggleFavorite: () => void;
   profile: DirectoryPsychologistProfile;
 }) => {
-  const primarySpecialty = profile.specialties[0]?.name;
   const headline = profile.headline || profile.bio;
   const formattedCrp = formatCrpNumber(profile.crp);
   const displayName = getHonorificName(profile);
@@ -359,28 +384,6 @@ const ProfileHero = ({
           Perfil profissional publicado na Lectum com dados públicos persistidos.
         </p>
       )}
-
-      <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-semibold text-muted">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-muted px-3 py-1.5">
-          <ShieldCheck className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-          Dados públicos seguros
-        </span>
-        {primarySpecialty ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-muted px-3 py-1.5">
-            <GraduationCap className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-            {primarySpecialty}
-          </span>
-        ) : null}
-      </div>
-
-      <div className="mt-5 grid gap-3 sm:flex sm:flex-wrap">
-        <Button asChild className="h-11 rounded-full" variant="outline">
-          <Link href="/app/psychologists">
-            <UsersRound className="h-4 w-4" aria-hidden="true" />
-            Buscar mais
-          </Link>
-        </Button>
-      </div>
     </section>
   );
 };
@@ -395,7 +398,7 @@ const ProfileTabs = ({
   return (
     <nav
       aria-label="Seções do perfil profissional"
-      className="grid grid-cols-3 border-b border-border bg-surface sm:rounded-t-[28px] sm:border sm:border-b-0"
+      className="grid grid-cols-3 bg-surface sm:rounded-t-[28px] sm:border sm:border-b-0 sm:border-border"
     >
       {tabs.map((tab) => {
         const Icon = tab.icon;
@@ -424,15 +427,15 @@ const ProfileTabs = ({
 };
 
 const StatGrid = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
+  const experience = profile.formation_years ? `${profile.formation_years} anos` : "Não informada";
+
   return (
     <div className="grid grid-cols-3 gap-3">
       <div className="rounded-2xl border border-border bg-surface p-3 text-center shadow-[var(--lectum-shadow-soft)]">
         <p className="text-[0.64rem] font-extrabold uppercase tracking-[0.18em] text-subtle">
-          Modalidade
+          Experiência
         </p>
-        <p className="mt-1 text-sm font-extrabold text-foreground">
-          {profile.modality ? modalityLabel[profile.modality] || profile.modality : "Não informada"}
-        </p>
+        <p className="mt-1 text-sm font-extrabold text-foreground">{experience}</p>
       </div>
       <div className="rounded-2xl border border-border bg-surface p-3 text-center shadow-[var(--lectum-shadow-soft)]">
         <p className="text-[0.64rem] font-extrabold uppercase tracking-[0.18em] text-subtle">
@@ -452,25 +455,74 @@ const StatGrid = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
   );
 };
 
-const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
+const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
+  const [playing, setPlaying] = useState(false);
+  const videoSrc = resolvePublicMediaUrl(profile.video_url);
+  const posterSrc = resolvePublicMediaUrl(profile.avatar);
+  const posterIsPublicMedia = isPublicMediaUrl(profile.avatar);
+
+  if (!videoSrc) return null;
+
   return (
-    <div className="grid gap-6 bg-surface px-4 py-5 sm:rounded-b-[28px] sm:border sm:px-6 lg:px-8">
-      {profile.video_url ? (
-        <a
-          className="group relative grid min-h-[190px] place-items-center overflow-hidden rounded-[22px] border border-border bg-surface-muted text-primary shadow-[var(--lectum-shadow-soft)]"
-          href={profile.video_url}
-          rel="noreferrer"
-          target="_blank"
+    <div className="relative overflow-hidden rounded-[22px] border border-border bg-surface-muted shadow-[var(--lectum-shadow-soft)]">
+      {playing ? (
+        <>
+          {/* biome-ignore lint/a11y/useMediaCaption: vídeos enviados pelos profissionais ainda não possuem trilha de legenda no recorte atual. */}
+          <video
+            aria-label={`Vídeo de apresentação de ${profile.name}`}
+            autoPlay
+            className="h-[230px] w-full bg-black object-cover sm:h-[260px]"
+            controls
+            onEnded={() => setPlaying(false)}
+            playsInline
+            poster={posterSrc || undefined}
+            preload="metadata"
+            src={videoSrc}
+          >
+            Seu navegador não suporta a reprodução de vídeo.
+          </video>
+          <span className="pointer-events-none absolute bottom-4 left-4 rounded-full bg-foreground/75 px-3 py-1.5 text-xs font-extrabold text-white">
+            Vídeo de apresentação
+          </span>
+        </>
+      ) : (
+        <button
+          aria-label={`Reproduzir vídeo de apresentação de ${profile.name}`}
+          className="relative grid h-[230px] w-full place-items-center overflow-hidden bg-surface-muted text-white sm:h-[260px]"
+          onClick={() => setPlaying(true)}
+          type="button"
         >
-          <span className="absolute inset-0 bg-gradient-to-br from-primary/10 via-primary-soft to-surface-muted" />
-          <span className="relative grid h-16 w-16 place-items-center rounded-full bg-surface/90 text-primary shadow-[var(--lectum-shadow)] transition group-hover:scale-105">
-            <Play className="h-8 w-8 fill-current" aria-hidden="true" />
+          {posterSrc ? (
+            <Image
+              alt={`Prévia do vídeo de ${profile.name}`}
+              className="object-cover"
+              fill
+              sizes="(min-width: 1024px) 696px, calc(100vw - 2rem)"
+              src={posterSrc}
+              unoptimized={posterIsPublicMedia}
+            />
+          ) : (
+            <span className="grid h-full w-full place-items-center bg-primary-soft text-5xl font-extrabold text-primary">
+              {getInitials(profile.name)}
+            </span>
+          )}
+          <span className="absolute inset-0 bg-gradient-to-t from-foreground/65 via-foreground/10 to-transparent" />
+          <span className="relative grid h-16 w-16 place-items-center rounded-full bg-white/85 text-primary shadow-[var(--lectum-shadow)] transition hover:scale-105">
+            <Play className="ml-1 h-8 w-8 fill-current" aria-hidden="true" />
           </span>
           <span className="absolute bottom-4 left-4 rounded-full bg-foreground/75 px-3 py-1.5 text-xs font-extrabold text-white">
             Vídeo de apresentação
           </span>
-        </a>
-      ) : null}
+        </button>
+      )}
+    </div>
+  );
+};
+
+const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
+  return (
+    <div className="grid gap-6 bg-surface px-4 py-5 sm:rounded-b-[28px] sm:border sm:border-t-0 sm:border-border sm:px-6 lg:px-8">
+      <PresentationVideo profile={profile} />
 
       <StatGrid profile={profile} />
 
@@ -490,12 +542,7 @@ const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
           </span>
           <div>
             <p className="text-sm font-extrabold text-foreground">
-              {profile.modality
-                ? modalityLabel[profile.modality] || profile.modality
-                : "Modalidade não informada"}
-            </p>
-            <p className="mt-0.5 text-xs font-semibold text-muted">
-              Agenda, valores e endereço serão tratados no fluxo de contato.
+              {formatAttendanceLabel(profile)}
             </p>
           </div>
         </div>
@@ -522,6 +569,14 @@ const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
         <TagList
           empty="Nenhuma abordagem pública foi cadastrada para este perfil."
           items={profile.approaches.map((item) => item.name)}
+        />
+      </section>
+
+      <section className="grid gap-3">
+        <h2 className="text-lg font-extrabold text-foreground">Público atendido</h2>
+        <TagList
+          empty="Nenhum público atendido foi cadastrado para este perfil."
+          items={(profile.target_audience ?? []).map(translateTargetAudience)}
         />
       </section>
 
@@ -596,7 +651,7 @@ const PostsTab = ({
   total: number;
 }) => {
   return (
-    <div className="grid gap-4 bg-surface px-4 py-5 sm:rounded-b-[28px] sm:border sm:px-6 lg:px-8">
+    <div className="grid gap-4 bg-surface px-4 py-5 sm:rounded-b-[28px] sm:border sm:border-t-0 sm:border-border sm:px-6 lg:px-8">
       <div className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface-muted p-4">
         <div>
           <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-subtle">
@@ -755,7 +810,7 @@ const ReviewsTab = ({
   summary: DirectoryReviewSummary;
 }) => {
   return (
-    <div className="grid gap-4 bg-surface px-4 py-5 sm:rounded-b-[28px] sm:border sm:px-6 lg:px-8">
+    <div className="grid gap-4 bg-surface px-4 py-5 sm:rounded-b-[28px] sm:border sm:border-t-0 sm:border-border sm:px-6 lg:px-8">
       <ReviewSummaryCard summary={summary} />
 
       {isError ? (
@@ -804,7 +859,7 @@ const WhatsAppCta = ({ profile }: { profile: DirectoryPsychologistProfile }) => 
   }
 
   return (
-    <div className="sticky bottom-20 z-20 px-4 pb-2 sm:bottom-24 sm:px-0 lg:bottom-6">
+    <div className="sticky bottom-4 z-20 px-4 pb-2 sm:px-0 lg:bottom-6">
       <Button
         asChild
         className="h-14 w-full rounded-2xl bg-[#22C55E] text-base font-extrabold hover:bg-[#22C55E]/90"
@@ -939,10 +994,10 @@ export const PsychologistProfileLogic = () => {
   );
 
   return (
-    <PrivateTemplate>
-      <section className="mx-auto grid w-full max-w-[390px] gap-0 bg-background sm:max-w-[430px] lg:max-w-6xl lg:grid-cols-[minmax(0,760px)_minmax(300px,1fr)] lg:items-start lg:gap-5 lg:bg-transparent">
-        <div className="lg:col-span-2">
-          <header className="-mx-5 -mt-6 border-b border-border bg-surface px-4 pb-0 pt-4 sm:mx-0 sm:mt-0 sm:rounded-t-[28px] sm:border sm:pb-0 lg:px-8 lg:pt-6">
+    <PrivateTemplate allowAnonymous showNavigation={false}>
+      <section className="-mx-5 grid w-[calc(100%+2.5rem)] max-w-none gap-0 bg-background sm:mx-auto sm:w-full sm:max-w-[430px] lg:max-w-[760px] lg:bg-transparent">
+        <div>
+          <header className="-mt-6 border-b border-border bg-surface px-4 pb-0 pt-4 sm:mt-0 sm:rounded-t-[28px] sm:border sm:pb-0 lg:px-8 lg:pt-6">
             <div className="flex min-h-12 items-center justify-between gap-3 pb-4">
               <Link
                 aria-label="Voltar para psicólogos"
@@ -952,9 +1007,6 @@ export const PsychologistProfileLogic = () => {
                 <ArrowLeft className="h-5 w-5" aria-hidden="true" />
               </Link>
               <div className="min-w-0 text-center">
-                <p className="text-xs font-extrabold uppercase tracking-[0.24em] text-subtle">
-                  Perfil profissional
-                </p>
                 <h1 className="truncate text-lg font-extrabold text-foreground">
                   Perfil Profissional
                 </h1>
@@ -968,8 +1020,8 @@ export const PsychologistProfileLogic = () => {
                 <Share2 className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
-            <div className="-mx-4 bg-primary px-4 py-1.5 text-center text-[0.65rem] font-extrabold uppercase tracking-[0.12em] text-white sm:-mx-6 lg:-mx-8">
-              Desconto na 1ª sessão • aceita convênios • valor social quando informado
+            <div className="-mx-4 bg-primary px-3 py-1.5 text-center text-[0.48rem] font-extrabold uppercase tracking-[0.01em] text-white sm:-mx-6 sm:px-4 sm:text-[0.65rem] sm:tracking-[0.12em] lg:-mx-8">
+              Desconto na 1ª sessão • aceita convênios • valor social
             </div>
           </header>
         </div>
@@ -1042,44 +1094,6 @@ export const PsychologistProfileLogic = () => {
             </>
           ) : null}
         </div>
-
-        {!showInitialLoading && !profileErrorMessage && profile ? (
-          <aside className="mt-5 hidden rounded-[28px] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)] lg:sticky lg:top-6 lg:mt-0 lg:block">
-            <div className="flex items-center gap-3">
-              <span className="grid h-11 w-11 place-items-center rounded-full bg-primary-soft text-primary">
-                <CalendarDays className="h-5 w-5" aria-hidden="true" />
-              </span>
-              <div>
-                <p className="text-sm font-extrabold text-foreground">Contato e agenda</p>
-                <p className="text-xs leading-5 text-muted">
-                  O botão abre uma conversa no wa.me quando o profissional possui número válido.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-5 grid gap-3">
-              <div className="rounded-2xl border border-border bg-surface-muted p-4">
-                <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-subtle">
-                  Segurança
-                </p>
-                <p className="mt-2 text-sm leading-6 text-muted">
-                  Esta tela não expõe e-mail, CPF, telefone, tokens ou documentos do profissional.
-                </p>
-              </div>
-              <div className="rounded-2xl border border-border bg-surface-muted p-4">
-                <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-subtle">
-                  Idiomas
-                </p>
-                <p className="mt-2 flex items-center gap-2 text-sm font-semibold text-muted">
-                  <Languages className="h-4 w-4 text-primary" aria-hidden="true" />
-                  {profile.languages.length > 0
-                    ? profile.languages.map(translateLanguage).join(", ")
-                    : "Não informados"}
-                </p>
-              </div>
-            </div>
-          </aside>
-        ) : null}
       </section>
     </PrivateTemplate>
   );

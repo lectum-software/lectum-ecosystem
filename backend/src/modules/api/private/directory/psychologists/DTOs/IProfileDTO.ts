@@ -18,6 +18,9 @@ export type DirectoryPsychologistProfile = {
   gender: string | null;
   modality: string | null;
   languages: string[];
+  target_audience: string[];
+  address_city: string | null;
+  address_state: string | null;
   rating_avg: number;
   rating_count: number;
   verified: boolean;
@@ -79,7 +82,7 @@ export interface IProfileShowDTO {
   p: {
     id: string;
   };
-  auth: user;
+  auth?: user | null;
 }
 
 export interface IProfileListDTO extends IProfileShowDTO {

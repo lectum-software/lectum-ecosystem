@@ -174,7 +174,20 @@ Regras anti-recriação específicas:
   - `pnpm --dir frontend build`
   - `pnpm check`
   - smoke real de API com paciente/psicólogo temporários removidos ao final, confirmando detalhe public-safe, posts e avaliações paginados;
-  - browser local headless em Chrome com cookie real: mobile (~390px) validando abas e CTA; desktop `1440x1000` com `sectionWidth=1112`.
+- browser local headless em Chrome com cookie real: mobile (~390px) validando abas e CTA; desktop `1440x1000` com `sectionWidth=1112`.
+
+## Registro de ajuste complementar em 2026-06-08
+
+- Ajuste visual solicitado sobre `/app/psychologist/[id]`, usando `_product/proto/Perfil Profissional - Sobre.jpg` como referência local. Builder/Quick Copy não ficou exposto como ferramenta MCP no ambiente desta sessão.
+- Removidos da vitrine: navegação inferior do shell, card lateral de contato/agenda, subtítulo cinza do cabeçalho, ponto verde da foto, chips de dados públicos/especialidade e botão "Buscar mais".
+- Faixa promocional alterada para `Desconto na 1ª sessão • aceita convênios • valor social`.
+- Vídeo de apresentação passou a ter prévia com `next/image` e reprodução inline no mesmo card.
+- Estatísticas abaixo do vídeo ajustadas para Experiência, Avaliação e Reviews.
+- Atendimento presencial/híbrido exibe `Online e Presencial em CIDADE/UF` quando cidade/UF reais estão persistidos.
+- Público atendido passou a aparecer como tags public-safe vindas de `psychologist_profile.target_audience`.
+- Leituras do diretório/profile passaram a aceitar autenticação opcional; relações de favorito/seguindo só são marcadas quando há usuário autenticado, e o contato continua exigindo `_auth`.
+- ADR criado: `adrs/0032-refinamento-perfil-profissional-publico.md`.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` e browser local via Chrome headless/CDP em 390px e desktop.
 
 
 ## Validação mínima

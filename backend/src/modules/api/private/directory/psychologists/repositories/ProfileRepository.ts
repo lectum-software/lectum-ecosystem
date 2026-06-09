@@ -127,6 +127,16 @@ export class ProfileRepository implements IProfileRepository {
   }
 
   async show(data: IProfileShowDTO): Promise<DirectoryPsychologistProfile | null> {
+    const viewerId = data.auth?.id;
+    const viewerRelationWhere = viewerId
+      ? {
+          user_id: viewerId,
+          deleted: false,
+        }
+      : {
+          id: "__anonymous__",
+        };
+
     const item = await prisma.user.findFirst({
       where: publishedProfileWhere(data.p.id),
       select: {
@@ -134,20 +144,14 @@ export class ProfileRepository implements IProfileRepository {
         name: true,
         avatar: true,
         favorited_by_patients: {
-          where: {
-            user_id: data.auth.id!,
-            deleted: false,
-          },
+          where: viewerRelationWhere,
           select: {
             id: true,
           },
           take: 1,
         },
         followed_by_patients: {
-          where: {
-            user_id: data.auth.id!,
-            deleted: false,
-          },
+          where: viewerRelationWhere,
           select: {
             id: true,
           },
@@ -168,6 +172,9 @@ export class ProfileRepository implements IProfileRepository {
             available_days: true,
             modality: true,
             languages: true,
+            target_audience: true,
+            professional_address_city: true,
+            professional_address_state: true,
             rating_avg: true,
             rating_count: true,
             whatsapp: true,
@@ -239,6 +246,9 @@ export class ProfileRepository implements IProfileRepository {
       gender: profile.gender,
       modality: profile.modality,
       languages: normalizeStringArray(profile.languages),
+      target_audience: normalizeStringArray(profile.target_audience),
+      address_city: profile.professional_address_city,
+      address_state: profile.professional_address_state,
       rating_avg: profile.rating_avg,
       rating_count: profile.rating_count,
       verified: profile.subscriptions.length > 0,

@@ -82,6 +82,15 @@ export class IndexRepository implements IIndexRepository {
   async index(props: IIndexDTO): Promise<DirectoryPsychologistResponse> {
     const pagination = normalizePagination(props.q);
     const search = props.q.search?.trim();
+    const viewerId = props.auth?.id;
+    const viewerRelationWhere = viewerId
+      ? {
+          user_id: viewerId,
+          deleted: false,
+        }
+      : {
+          id: "__anonymous__",
+        };
 
     const whereConditions: Prisma.psychologist_profileWhereInput = {
       deleted: false,
@@ -201,20 +210,14 @@ export class IndexRepository implements IIndexRepository {
               name: true,
               avatar: true,
               favorited_by_patients: {
-                where: {
-                  user_id: props.auth.id!,
-                  deleted: false,
-                },
+                where: viewerRelationWhere,
                 select: {
                   id: true,
                 },
                 take: 1,
               },
               followed_by_patients: {
-                where: {
-                  user_id: props.auth.id!,
-                  deleted: false,
-                },
+                where: viewerRelationWhere,
                 select: {
                   id: true,
                 },

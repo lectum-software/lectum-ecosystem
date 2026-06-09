@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { type RequestHandler, Router } from "express";
 import middlewares from "../../../middlewares/_auth";
 import { contact, index, posts, reviews, show } from "./use-cases/controller";
 import validator, {
@@ -9,19 +9,24 @@ import validator, {
 
 const routes = Router();
 
-routes.use(middlewares);
+const optionalAuth: RequestHandler = (req, res, next) => {
+  if (!req.headers.authorization) return next();
+
+  return middlewares(req, res, next);
+};
 
 routes.get(
   "",
+  optionalAuth,
   (req, res, next) =>
     validator(req, res, (e: Error) => {
       if (!e) return next();
     }),
   index,
 );
-routes.post("/:id/contact", contactValidator, contact);
-routes.get("/:id/posts", profileListValidator, posts);
-routes.get("/:id/reviews", profileListValidator, reviews);
-routes.get("/:id", profileShowValidator, show);
+routes.post("/:id/contact", middlewares, contactValidator, contact);
+routes.get("/:id/posts", optionalAuth, profileListValidator, posts);
+routes.get("/:id/reviews", optionalAuth, profileListValidator, reviews);
+routes.get("/:id", optionalAuth, profileShowValidator, show);
 
 export default routes;

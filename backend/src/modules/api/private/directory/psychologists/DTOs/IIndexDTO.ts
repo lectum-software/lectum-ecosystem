@@ -54,5 +54,5 @@ export interface IIndexDTO {
     approach?: string;
     verified?: boolean;
   };
-  auth: user;
+  auth?: user | null;
 }

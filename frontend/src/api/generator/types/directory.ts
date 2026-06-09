@@ -56,6 +56,9 @@ export type DirectoryPsychologistsQuery = {
 };
 
 export type DirectoryPsychologistProfile = DirectoryPsychologist & {
+  address_city: string | null;
+  address_state: string | null;
+  target_audience: string[];
   whatsapp_available: boolean;
 };
 
