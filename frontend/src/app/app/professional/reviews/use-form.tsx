@@ -11,16 +11,17 @@ export const reviewResponseSchema = z.object({
 
 export type ReviewResponseFormValues = z.infer<typeof reviewResponseSchema>;
 
-export const useReviewResponseForm = (initialResponse = "") => {
+export const useReviewResponseForm = (
+  initialResponse = "",
+  placeholder = "Escreva uma resposta acolhedora e profissional...",
+) => {
   const fields: Field<ReviewResponseFormValues>[] = [
     {
       name: "response",
       field: "textarea",
-      label: "Sua resposta",
-      placeholder: "Escreva uma resposta acolhedora e profissional...",
-      inputClassName: "min-h-28 resize-none",
-      showCounter: true,
-      length: 1000,
+      placeholder,
+      inputClassName:
+        "min-h-[84px] resize-none rounded-[16px] border-[#e5e7eb] bg-white px-4 py-3 text-[14px] leading-6 shadow-none placeholder:text-[#94a3b8] focus:border-[#308ce8] focus:ring-[#308ce8]/10",
     },
   ];
 

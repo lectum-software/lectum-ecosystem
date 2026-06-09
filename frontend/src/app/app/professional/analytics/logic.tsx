@@ -3,17 +3,19 @@
 import {
   ArrowLeft,
   BarChart3,
-  CalendarDays,
-  ExternalLink,
-  EyeOff,
-  MessageCircle,
-  MessageSquareText,
-  RefreshCcw,
+  Copy,
+  Eye,
+  Heart,
+  Info,
+  Lightbulb,
+  MessageSquare,
+  PlayCircle,
+  Search,
   Star,
-  TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { usePsychologistAnalytics } from "@/api/callers/psychologist-analytics";
 import type {
   PsychologistAnalyticsMetric,
@@ -23,6 +25,7 @@ import type {
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -34,20 +37,15 @@ const PERIOD_OPTIONS: Array<{ label: string; value: PsychologistAnalyticsPeriodK
   { label: "Anual", value: "365d" },
 ];
 
-const metricIcons = {
-  whatsapp_clicks: MessageCircle,
-  reviews_received: Star,
-  rating_average: TrendingUp,
-  posts_published: MessageSquareText,
-  post_engagement: BarChart3,
-} satisfies Record<PsychologistAnalyticsMetric["id"], typeof BarChart3>;
-
-const sourceLabels = {
-  contact_request: "contact_request",
-  professional_review: "professional_review",
-  psychologist_profile: "psychologist_profile",
-  community_post: "community_post",
-} satisfies Record<PsychologistAnalyticsMetric["source"], string>;
+type AnalyticsCardView = {
+  description?: string;
+  icon: typeof BarChart3;
+  id: string;
+  isUnavailable?: boolean;
+  label: string;
+  source?: PsychologistAnalyticsMetric["source"] | "untracked";
+  value: string;
+};
 
 const resolveApiError = (error: unknown) => {
   if (error instanceof Error && error.message) return error.message;
@@ -59,29 +57,7 @@ const resolveApiError = (error: unknown) => {
   return "Não foi possível conectar à API agora. Tente novamente em instantes.";
 };
 
-const formatDate = (value?: string) => {
-  if (!value) return "";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(date);
-};
-
-const formatMetricValue = (metric: PsychologistAnalyticsMetric) => {
-  if (metric.unit === "rating") {
-    return (metric.value / 100).toLocaleString("pt-BR", {
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1,
-    });
-  }
-
-  return metric.value.toLocaleString("pt-BR");
-};
+const toCount = (value?: number) => (value ?? 0).toLocaleString("pt-BR");
 
 const hasAnyRealEvent = (data?: PsychologistAnalyticsResponse) => {
   if (!data) return false;
@@ -95,6 +71,59 @@ const hasAnyRealEvent = (data?: PsychologistAnalyticsResponse) => {
   );
 };
 
+const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCardView[] => [
+  {
+    id: "search_results",
+    icon: Search,
+    label: "RESULTADOS\nDE BUSCA",
+    value: "—",
+    source: "untracked",
+    isUnavailable: true,
+    description: "Busca ainda não possui evento persistido.",
+  },
+  {
+    id: "profile_views",
+    icon: Eye,
+    label: "ABERTURA DE\nPERFIL",
+    value: "—",
+    source: "untracked",
+    isUnavailable: true,
+    description: "Visualização de perfil aguarda profile_view_event.",
+  },
+  {
+    id: "video_views",
+    icon: PlayCircle,
+    label: "VIDEO VIEWS",
+    value: "—",
+    source: "untracked",
+    isUnavailable: true,
+    description: "Views do vídeo ainda não são rastreadas.",
+  },
+  {
+    id: "whatsapp_clicks",
+    icon: MessageSquare,
+    label: "CONVERSÕES\nWHATSAPP",
+    value: toCount(data?.metrics.whatsapp_clicks),
+    source: "contact_request",
+  },
+  {
+    id: "reviews_received",
+    icon: Star,
+    label: "AVALIAÇÕES",
+    value: toCount(data?.metrics.reviews_received),
+    source: "professional_review",
+  },
+  {
+    id: "favorited",
+    icon: Heart,
+    label: "FAVORITADO",
+    value: "—",
+    source: "untracked",
+    isUnavailable: true,
+    description: "Favoritos não fazem parte do contrato real desta tela.",
+  },
+];
+
 const PeriodTabs = ({
   current,
   disabled,
@@ -104,7 +133,7 @@ const PeriodTabs = ({
   disabled?: boolean;
   onChange: (period: PsychologistAnalyticsPeriodKey) => void;
 }) => (
-  <div className="grid grid-cols-4 border-b border-border bg-surface" role="tablist">
+  <div className="grid h-[52px] grid-cols-4 border-b border-[#e5e7eb] bg-white" role="tablist">
     {PERIOD_OPTIONS.map((option) => {
       const active = option.value === current;
 
@@ -112,8 +141,8 @@ const PeriodTabs = ({
         <button
           aria-selected={active}
           className={cn(
-            "relative h-14 text-sm font-semibold transition disabled:opacity-60",
-            active ? "text-primary" : "text-muted hover:text-foreground",
+            "relative text-[13px] font-semibold transition disabled:opacity-60",
+            active ? "text-[#308ce8]" : "text-[#64748b] hover:text-[#111827]",
           )}
           disabled={disabled}
           key={option.value}
@@ -122,210 +151,170 @@ const PeriodTabs = ({
           type="button"
         >
           {option.label}
-          {active ? (
-            <span className="absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-primary" />
-          ) : null}
+          {active ? <span className="absolute inset-x-7 bottom-0 h-0.5 bg-[#308ce8]" /> : null}
         </button>
       );
     })}
   </div>
 );
 
-const MetricCard = ({ metric }: { metric: PsychologistAnalyticsMetric }) => {
-  const Icon = metricIcons[metric.id];
+const MetricCard = ({ metric }: { metric: AnalyticsCardView }) => {
+  const Icon = metric.icon;
 
   return (
-    <article className="grid min-h-36 gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
-      <div className="flex items-start gap-3">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-          <Icon className="h-4 w-4" aria-hidden />
-        </span>
-        <div className="min-w-0">
-          <h2 className="text-[0.72rem] font-black uppercase leading-4 tracking-[0.14em] text-subtle">
-            {metric.label}
-          </h2>
-          <p className="mt-2 text-3xl font-black tracking-tight text-foreground">
-            {formatMetricValue(metric)}
-          </p>
-        </div>
+    <article className="h-[113px] rounded-[19px] border border-[#e2e8f0] bg-white px-[19px] py-[21px] shadow-[0_2px_8px_rgb(15_23_42_/_5%)]">
+      <div className="flex items-start gap-2.5">
+        <Icon className="mt-0.5 h-[17px] w-[17px] shrink-0 text-[#6f7f95]" aria-hidden />
+        <h2 className="whitespace-pre-line text-[11px] font-bold uppercase leading-[14px] tracking-[0.05em] text-[#6f7f95]">
+          {metric.label}
+        </h2>
       </div>
-      <p className="text-xs leading-5 text-muted">{metric.description}</p>
-      <p className="mt-auto text-[0.68rem] font-bold uppercase tracking-wide text-subtle">
-        Fonte: {sourceLabels[metric.source]}
-      </p>
+      <div className="mt-[14px] flex items-end gap-2">
+        <p className="text-[24px] font-extrabold leading-none tracking-[-0.03em] text-[#111827]">
+          {metric.value}
+        </p>
+        {metric.isUnavailable ? (
+          <span className="pb-0.5 text-[10px] font-semibold text-[#94a3b8]">sem evento</span>
+        ) : null}
+      </div>
     </article>
   );
 };
 
-const MetricGrid = ({ cards }: { cards: PsychologistAnalyticsMetric[] }) => (
-  <section className="grid grid-cols-2 gap-4" aria-label="Cards de analytics">
-    {cards.map((metric) => (
-      <MetricCard key={metric.id} metric={metric} />
-    ))}
-  </section>
-);
-
-const EngagementBreakdown = ({ data }: { data: PsychologistAnalyticsResponse }) => {
-  const total = data.metrics.post_engagement;
-  const rows = [
-    { label: "Votos positivos", value: data.metrics.post_upvotes },
-    { label: "Respostas", value: data.metrics.post_replies },
-  ];
+const ReviewsLinkCard = ({ link }: { link: string }) => {
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(link);
+      toast.success("Link copiado.");
+    } catch {
+      toast.error("Não foi possível copiar o link agora.");
+    }
+  };
 
   return (
-    <section className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-subtle">Comunidade</p>
-          <h2 className="mt-1 text-lg font-extrabold text-foreground">Engajamento dos posts</h2>
-        </div>
-        <span className="grid h-10 w-10 place-items-center rounded-full bg-primary-soft text-primary">
-          <BarChart3 className="h-5 w-5" aria-hidden />
-        </span>
+    <section className="rounded-[22px] border border-[#e2e8f0] bg-white p-5 shadow-[0_2px_8px_rgb(15_23_42_/_5%)]">
+      <h2 className="text-[16px] font-semibold text-[#111827]">
+        Link da minha página de avaliações
+      </h2>
+      <div className="mt-4 flex h-[50px] items-center gap-3 rounded-[14px] border border-[#e5e7eb] bg-[#fbfcfe] px-4">
+        <p className="min-w-0 flex-1 truncate text-[12px] font-medium text-[#64748b]">{link}</p>
+        <button
+          aria-label="Copiar link de avaliações"
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[#308ce8] transition hover:bg-[#eaf5ff]"
+          onClick={copyLink}
+          type="button"
+        >
+          <Copy className="h-[18px] w-[18px]" aria-hidden />
+        </button>
       </div>
-
-      <div className="mt-5 grid gap-4">
-        {rows.map((row) => {
-          const width = total > 0 ? Math.max(6, Math.round((row.value / total) * 100)) : 0;
-
-          return (
-            <div className="grid gap-2" key={row.label}>
-              <div className="flex items-center justify-between gap-3 text-sm">
-                <span className="font-semibold text-foreground">{row.label}</span>
-                <span className="font-bold text-muted">{row.value.toLocaleString("pt-BR")}</span>
-              </div>
-              <div className="h-2 overflow-hidden rounded-full bg-surface-muted">
-                <div className="h-full rounded-full bg-primary" style={{ width: `${width}%` }} />
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <p className="mt-3 text-[12px] leading-[17px] text-[#64748b]">
+        Incentive os pacientes a te avaliarem para aparecer nos primeiros resultados de busca
+      </p>
     </section>
   );
 };
 
-const ReviewsLinkCard = () => (
-  <section className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
-    <div className="flex items-start justify-between gap-3">
-      <div>
-        <h2 className="text-base font-extrabold text-foreground">
-          Link da minha página de avaliações
-        </h2>
-        <p className="mt-2 text-sm leading-6 text-muted">
-          Use a tela de avaliações para responder depoimentos e acompanhar a reputação pública.
-        </p>
-      </div>
-      <Star className="h-5 w-5 shrink-0 text-primary" aria-hidden />
+const SpecialtySearchCard = () => (
+  <section className="rounded-[22px] border border-[#e2e8f0] bg-white p-5 shadow-[0_2px_8px_rgb(15_23_42_/_5%)]">
+    <div className="flex items-center justify-between gap-3">
+      <h2 className="text-[19px] font-extrabold tracking-[-0.02em] text-[#111827]">
+        Busca por especialidades
+      </h2>
+      <Info className="h-5 w-5 text-[#94a3b8]" aria-hidden />
     </div>
+    <div className="mt-5 rounded-[16px] border border-dashed border-[#cfe1f5] bg-[#f8fbff] p-4 text-[13px] leading-5 text-[#64748b]">
+      Esta seção seguirá o layout do protótipo quando houver evento persistido de busca por
+      especialidade. Nenhum percentual é simulado.
+    </div>
+  </section>
+);
 
-    <Button asChild className="mt-4 w-full rounded-full" variant="outline">
-      <Link href="/app/professional/reviews">
-        Abrir minhas avaliações
-        <ExternalLink className="h-4 w-4" aria-hidden />
-      </Link>
-    </Button>
+const ProTipCard = () => (
+  <section className="flex gap-3 rounded-[21px] border border-[#c9dff6] bg-[#eaf5ff] px-5 py-[18px] text-[#1f5f97]">
+    <Lightbulb className="mt-0.5 h-5 w-5 shrink-0 text-[#308ce8]" aria-hidden />
+    <div>
+      <h2 className="text-[14px] font-extrabold text-[#308ce8]">Dica Pro</h2>
+      <p className="mt-1 text-[14px] leading-[22px] text-[#40546a]">
+        Vídeos de apresentação com alto engajamento geram até 3x mais conversões para o WhatsApp.
+        Faça testes e descubra o que funciona melhor para você!
+      </p>
+    </div>
   </section>
 );
 
 export const ProfessionalAnalyticsLogic = () => {
   const [period, setPeriod] = useState<PsychologistAnalyticsPeriodKey>("30d");
+  const user = useAppSelector((state) => state.user);
   const query = useMemo(() => ({ period }), [period]);
   const analytics = usePsychologistAnalytics(query);
   const data = analytics.data;
   const errorMessage = analytics.isError ? resolveApiError(analytics.error) : null;
   const isProfessionalPlanError = Boolean(errorMessage?.includes("Plano Profissional"));
   const hasEvents = hasAnyRealEvent(data);
+  const reviewLink =
+    typeof window === "undefined"
+      ? "lectum.com.br/app/reviews/new"
+      : `${window.location.origin}/app/reviews/new${user?.id ? `?psychologist_id=${user.id}` : ""}`;
 
   return (
-    <PrivateTemplate>
-      <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-3xl">
-        <header className="flex items-center justify-between border-b border-border bg-surface px-1 pb-4">
-          <Button asChild variant="ghost" className="h-10 w-10 px-0">
-            <Link aria-label="Voltar para perfil" href="/app/profile">
-              <ArrowLeft className="h-5 w-5" aria-hidden />
-            </Link>
-          </Button>
-          <h1 className="text-lg font-extrabold text-foreground">Meus Analytics</h1>
-          <Button
-            aria-label="Atualizar analytics"
-            className="h-10 w-10 px-0"
-            disabled={analytics.isFetching}
-            onClick={() => analytics.refetch()}
-            type="button"
-            variant="ghost"
+    <PrivateTemplate showNavigation={false}>
+      <section className="mx-[-1.25rem] my-[-1.5rem] min-h-screen bg-[#f5f6f8] pb-8 md:mx-auto md:my-0 md:w-[390px] md:overflow-hidden md:rounded-[24px] md:border md:border-[#e5e7eb]">
+        <header className="grid h-[72px] grid-cols-[72px_1fr_72px] items-center border-b border-[#e5e7eb] bg-white">
+          <Link
+            aria-label="Voltar para perfil"
+            className="grid h-full place-items-center text-[#64748b]"
+            href="/app/profile"
           >
-            <RefreshCcw
-              className={cn("h-5 w-5", analytics.isFetching && "animate-spin")}
-              aria-hidden
-            />
-          </Button>
+            <ArrowLeft className="h-[22px] w-[22px]" aria-hidden />
+          </Link>
+          <h1 className="text-center text-[18px] font-extrabold tracking-[-0.02em] text-[#111827]">
+            Meus Analytics
+          </h1>
+          <span />
         </header>
 
-        <section className="overflow-hidden rounded-[var(--lectum-card-radius)] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
-          <PeriodTabs current={period} disabled={analytics.isFetching} onChange={setPeriod} />
-          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-xs text-muted">
-            <span className="inline-flex items-center gap-2 font-semibold">
-              <CalendarDays className="h-4 w-4 text-primary" aria-hidden />
-              {data?.period.label || "Período selecionado"}
-            </span>
-            {data ? (
-              <span>
-                {formatDate(data.period.start_at)} a {formatDate(data.period.end_at)}
-              </span>
-            ) : null}
-          </div>
-        </section>
+        <PeriodTabs current={period} disabled={analytics.isFetching} onChange={setPeriod} />
 
-        {analytics.isLoading ? <LoadingState label="Carregando analytics reais" /> : null}
+        <div className="grid gap-[17px] px-4 pt-[17px]">
+          {analytics.isLoading ? <LoadingState label="Carregando analytics reais" /> : null}
 
-        {errorMessage ? (
-          <InlineAlert
-            title="Não foi possível carregar os analytics"
-            variant={isProfessionalPlanError ? "warning" : "error"}
-          >
-            <div className="grid gap-3">
-              <p>{errorMessage}</p>
-              {isProfessionalPlanError ? (
-                <Button asChild className="h-10 rounded-full px-4" variant="outline">
-                  <Link href="/app/professional/billing/subscription">Ver assinatura</Link>
-                </Button>
-              ) : null}
-            </div>
-          </InlineAlert>
-        ) : null}
+          {errorMessage ? (
+            <InlineAlert
+              title="Não foi possível carregar os analytics"
+              variant={isProfessionalPlanError ? "warning" : "error"}
+            >
+              <div className="grid gap-3">
+                <p>{errorMessage}</p>
+                {isProfessionalPlanError ? (
+                  <Button asChild className="h-10 rounded-full px-4" variant="outline">
+                    <Link href="/app/professional/billing/subscription">Ver assinatura</Link>
+                  </Button>
+                ) : null}
+              </div>
+            </InlineAlert>
+          ) : null}
 
-        {data && !analytics.isError ? (
-          <InlineAlert title="Dados atualizados" variant="success">
-            Métricas carregadas a partir de tabelas persistidas. Percentuais de crescimento não são
-            exibidos porque não há série histórica comparável nesta task.
-          </InlineAlert>
-        ) : null}
+          {!analytics.isError ? (
+            <section className="grid grid-cols-2 gap-[17px]" aria-label="Cards de analytics">
+              {metricCards(data).map((metric) => (
+                <MetricCard key={metric.id} metric={metric} />
+              ))}
+            </section>
+          ) : null}
 
-        {data && !analytics.isError ? <MetricGrid cards={data.cards} /> : null}
+          {data && !analytics.isError && !hasEvents ? (
+            <EmptyState
+              className="rounded-[22px] bg-white"
+              icon={BarChart3}
+              title="Ainda não há eventos reais neste período"
+              description="Contatos por WhatsApp, avaliações e posts aparecerão aqui sem dados simulados."
+            />
+          ) : null}
 
-        {data && !analytics.isError && !hasEvents ? (
-          <EmptyState
-            icon={BarChart3}
-            title="Ainda não há eventos reais neste período"
-            description="Quando houver contatos por WhatsApp, avaliações públicas ou posts publicados, os números aparecerão aqui sem dados simulados."
-          />
-        ) : null}
-
-        {data && !analytics.isError ? <ReviewsLinkCard /> : null}
-
-        {data && !analytics.isError ? <EngagementBreakdown data={data} /> : null}
-
-        {data?.unavailable?.map((metric) => (
-          <InlineAlert key={metric.id} title={`${metric.label} não exibida`} variant="info">
-            <span className="inline-flex items-start gap-2">
-              <EyeOff className="mt-1 h-4 w-4 shrink-0" aria-hidden />
-              <span>
-                {metric.description} Fonte esperada: <strong>{metric.source}</strong>.
-              </span>
-            </span>
-          </InlineAlert>
-        ))}
+          {!analytics.isError ? <ReviewsLinkCard link={reviewLink} /> : null}
+          {!analytics.isError ? <SpecialtySearchCard /> : null}
+          {!analytics.isError ? <ProTipCard /> : null}
+        </div>
       </section>
     </PrivateTemplate>
   );

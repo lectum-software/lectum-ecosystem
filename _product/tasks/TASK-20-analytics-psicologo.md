@@ -184,3 +184,11 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm --dir frontend build`
   - `pnpm check`
   - Browser local via Chrome headless em `http://localhost:3000/app/professional/analytics`; sem sessão autenticada, a rota carregou e redirecionou corretamente para login.
+
+## Ajuste visual complementar em 2026-06-09
+
+- Tela `/app/professional/analytics` realinhada à referência `Meus Analytics - Psicólogo.jpg`: header mobile, tabs de período, grid 2x3, card de link, bloco de busca por especialidades e dica Pro.
+- Métricas sem fonte persistida (`resultados de busca`, `abertura de perfil`, `video views`, `favoritado` e percentuais de especialidade) permanecem sem número real e são exibidas com `—`/mensagem discreta, sem simulação.
+- Conversões WhatsApp e avaliações seguem usando os dados persistidos retornados pelo endpoint da TASK-20.
+- Validações do ajuste: `pnpm --dir frontend check`, `pnpm check`, `pnpm --dir frontend exec next build --turbo`, `pnpm --dir frontend build` e browser local em `/app/professional/analytics` (sem sessão autenticada, validando resposta da rota e gate de login).
+- ADR complementar: ADR-0034.

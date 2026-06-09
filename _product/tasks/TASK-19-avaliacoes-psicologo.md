@@ -175,3 +175,11 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - A tela de perfil privado recebeu link para "Minhas Avaliacoes".
 - Nenhum schema Prisma ou migration foi criado nesta task; os modelos existentes `professional_review` e `psychologist_profile` foram reutilizados.
 - Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm check` e Chrome headless local em `/app/professional/reviews` (sem sessao autenticada, validando protecao/redirect para login).
+
+## Ajuste visual complementar em 2026-06-09
+
+- Tela `/app/professional/reviews` realinhada à referência `Minhas Avaliações - Psicólogo.jpg`: header mobile, card de média, barras de distribuição, lista de depoimentos, resposta destacada, formulário inline e botão pontilhado para carregar avaliações anteriores.
+- Filtros visíveis foram removidos do primeiro corte visual para aproximar o protótipo; a consulta segue real, paginada e sem dados simulados.
+- O formulário de resposta continua usando React Hook Form/Zod via fundação de `frontend/src/hooks/form`.
+- Validações do ajuste: `pnpm --dir frontend check`, `pnpm check`, `pnpm --dir frontend exec next build --turbo`, `pnpm --dir frontend build` e browser local em `/app/professional/reviews` (sem sessão autenticada, validando resposta da rota e gate de login).
+- ADR complementar: ADR-0034.

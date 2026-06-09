@@ -47,3 +47,4 @@ Formato recomendado:
 - [ADR-0031 - Perfil privado do paciente](0031-perfil-privado-paciente.md) - Accepted
 - [ADR-0032 - Refinamento mobile-first do perfil profissional público](0032-refinamento-perfil-profissional-publico.md) - Accepted
 - [ADR-0033 - Analytics profissionais com fontes persistidas e gate de plano](0033-analytics-profissionais-fontes-persistidas.md) - Accepted
+- [ADR-0034 - Paridade visual mobile de analytics e avaliações do psicólogo](0034-paridade-visual-analytics-avaliacoes-psicologo.md) - Accepted

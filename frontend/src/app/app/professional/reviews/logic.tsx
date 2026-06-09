@@ -1,16 +1,6 @@
-"use client";
+﻿"use client";
 
-import {
-  ArrowLeft,
-  BarChart3,
-  CalendarDays,
-  Filter,
-  MessageSquareReply,
-  RefreshCcw,
-  Send,
-  Star,
-  UserRound,
-} from "lucide-react";
+import { ArrowLeft, MessageSquareReply, RefreshCcw, Star, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
@@ -20,7 +10,6 @@ import {
 import type {
   PsychologistReview,
   PsychologistReviewSummary,
-  PsychologistReviewsQuery,
 } from "@/api/generator/types/psychologist-reviews";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -30,24 +19,17 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { useReviewResponseForm } from "./use-form";
 
-const LIMIT = 10;
+const INITIAL_LIMIT = 10;
+const LOAD_STEP = 10;
 const STAR_KEYS = [1, 2, 3, 4, 5] as const;
-const PERIOD_OPTIONS: Array<{
-  label: string;
-  value: NonNullable<PsychologistReviewsQuery["period"]>;
-}> = [
-  { label: "Todo período", value: "all" },
-  { label: "Últimos 7 dias", value: "7d" },
-  { label: "Últimos 30 dias", value: "30d" },
-  { label: "Últimos 90 dias", value: "90d" },
-];
+const MONTHS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
-const formatDate = (value: string) =>
-  new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(value));
+const formatDate = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return `${String(date.getDate()).padStart(2, "0")} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
+};
 
 const resolveApiError = (error: unknown) => {
   if (error instanceof Error && error.message) return error.message;
@@ -59,12 +41,17 @@ const resolveApiError = (error: unknown) => {
   return "Não foi possível conectar à API agora. Tente novamente em instantes.";
 };
 
+const firstName = (name: string) => name.split(/\s+/).filter(Boolean)[0] || "paciente";
+
 const Stars = ({ rating, size = "sm" }: { rating: number; size?: "sm" | "lg" }) => (
-  <span className="inline-flex text-warning" role="img" aria-label={`${rating} de 5 estrelas`}>
+  <span className="inline-flex text-[#f7c51e]" role="img" aria-label={`${rating} de 5 estrelas`}>
     {STAR_KEYS.map((star) => (
       <Star
         key={star}
-        className={cn(size === "lg" ? "h-6 w-6" : "h-4 w-4", star <= rating && "fill-current")}
+        className={cn(
+          size === "lg" ? "h-[22px] w-[22px]" : "h-[14px] w-[14px]",
+          star <= rating && "fill-current",
+        )}
         aria-hidden
       />
     ))}
@@ -89,36 +76,32 @@ const RatingSummary = ({ summary }: { summary?: PsychologistReviewSummary }) => 
   const total = summaryTotal(summary);
 
   return (
-    <section className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-6 shadow-[var(--lectum-shadow-soft)]">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-5xl font-black tracking-tight text-foreground">
-            {averageLabel(summary)}
-          </p>
-          <div className="mt-2">
-            <Stars rating={Math.round((summary?.rating_avg || 0) / 100)} size="lg" />
-          </div>
-          <p className="mt-2 text-sm text-muted">
-            Total de {total} avalia{total === 1 ? "ção" : "ções"}
-          </p>
-        </div>
-        <span className="grid h-11 w-11 place-items-center rounded-full bg-primary-soft text-primary">
-          <BarChart3 className="h-5 w-5" aria-hidden />
-        </span>
+    <section className="rounded-[22px] border border-[#e5e7eb] bg-white px-5 py-[30px] shadow-[0_2px_8px_rgb(15_23_42_/_5%)]">
+      <p className="text-[48px] font-extrabold leading-none tracking-[-0.05em] text-[#111827]">
+        {averageLabel(summary)}
+      </p>
+      <div className="mt-3">
+        <Stars rating={Math.round((summary?.rating_avg || 0) / 100)} size="lg" />
       </div>
+      <p className="mt-2 text-[15px] text-[#64748b]">
+        Total de {total.toLocaleString("pt-BR")} avaliações
+      </p>
 
-      <div className="mt-6 grid gap-3">
+      <div className="mt-[29px] grid gap-[13px]">
         {[5, 4, 3, 2, 1].map((rating) => {
           const count = summary?.distribution[rating as 1 | 2 | 3 | 4 | 5] || 0;
           const percent = total > 0 ? Math.round((count / total) * 100) : 0;
 
           return (
-            <div className="grid grid-cols-[1.25rem_1fr_3rem] items-center gap-3" key={rating}>
-              <span className="text-sm font-semibold text-muted">{rating}</span>
-              <div className="h-2 overflow-hidden rounded-full bg-surface-muted">
-                <div className="h-full rounded-full bg-primary" style={{ width: `${percent}%` }} />
+            <div className="grid grid-cols-[12px_1fr_34px] items-center gap-[13px]" key={rating}>
+              <span className="text-[12px] font-semibold text-[#334155]">{rating}</span>
+              <div className="h-[7px] overflow-hidden rounded-full bg-[#eef2f7]">
+                <div
+                  className="h-full rounded-full bg-[#308ce8]"
+                  style={{ width: `${percent}%` }}
+                />
               </div>
-              <span className="text-right text-xs font-semibold text-subtle">{percent}%</span>
+              <span className="text-right text-[12px] font-medium text-[#64748b]">{percent}%</span>
             </div>
           );
         })}
@@ -127,77 +110,18 @@ const RatingSummary = ({ summary }: { summary?: PsychologistReviewSummary }) => 
   );
 };
 
-const Filters = ({
-  period,
-  rating,
-  onPeriodChange,
-  onRatingChange,
+const ReviewResponseForm = ({
+  defaultOpen,
+  review,
 }: {
-  period: NonNullable<PsychologistReviewsQuery["period"]>;
-  rating: number | null;
-  onPeriodChange: (value: NonNullable<PsychologistReviewsQuery["period"]>) => void;
-  onRatingChange: (value: number | null) => void;
-}) => (
-  <section className="grid gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
-    <div className="flex items-center gap-2 text-sm font-bold text-foreground">
-      <Filter className="h-4 w-4 text-primary" aria-hidden />
-      Filtros
-    </div>
-
-    <fieldset className="flex flex-wrap gap-2">
-      <legend className="sr-only">Filtrar por nota</legend>
-      <button
-        className={cn(
-          "rounded-full border px-3 py-2 text-xs font-bold transition",
-          rating === null
-            ? "border-primary bg-primary text-white"
-            : "border-border bg-surface text-muted hover:border-primary hover:text-primary",
-        )}
-        onClick={() => onRatingChange(null)}
-        type="button"
-      >
-        Todas
-      </button>
-      {[5, 4, 3, 2, 1].map((value) => (
-        <button
-          className={cn(
-            "inline-flex items-center gap-1 rounded-full border px-3 py-2 text-xs font-bold transition",
-            rating === value
-              ? "border-primary bg-primary text-white"
-              : "border-border bg-surface text-muted hover:border-primary hover:text-primary",
-          )}
-          key={value}
-          onClick={() => onRatingChange(value)}
-          type="button"
-        >
-          {value}
-          <Star className="h-3.5 w-3.5 fill-current" aria-hidden />
-        </button>
-      ))}
-    </fieldset>
-
-    <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-subtle">
-      Data
-      <select
-        className="h-12 rounded-[var(--lectum-control-radius)] border border-border bg-surface px-4 text-sm font-semibold normal-case tracking-normal text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
-        onChange={(event) =>
-          onPeriodChange(event.target.value as NonNullable<PsychologistReviewsQuery["period"]>)
-        }
-        value={period}
-      >
-        {PERIOD_OPTIONS.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </label>
-  </section>
-);
-
-const ReviewResponseForm = ({ review }: { review: PsychologistReview }) => {
-  const [isEditing, setIsEditing] = useState(!review.response);
-  const form = useReviewResponseForm(review.response || "");
+  defaultOpen: boolean;
+  review: PsychologistReview;
+}) => {
+  const [isEditing, setIsEditing] = useState(defaultOpen);
+  const form = useReviewResponseForm(
+    review.response || "",
+    `Escreva uma resposta para ${firstName(review.author.name)}...`,
+  );
   const { Form, formProps, hook } = form;
   const mutation = useRespondPsychologistReview({
     onSuccess: (data) => {
@@ -208,14 +132,14 @@ const ReviewResponseForm = ({ review }: { review: PsychologistReview }) => {
 
   if (review.response && !isEditing) {
     return (
-      <div className="rounded-3xl border-l-4 border-primary bg-primary-soft/50 px-4 py-3">
-        <p className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-primary">
-          <MessageSquareReply className="h-3.5 w-3.5" aria-hidden />
+      <div className="mt-2 rounded-[16px] border-l-[4px] border-[#308ce8] bg-[#f2f7ff] px-4 py-[14px]">
+        <p className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#308ce8]">
+          <MessageSquareReply className="h-[13px] w-[13px]" aria-hidden />
           Sua resposta
         </p>
-        <p className="mt-2 text-sm leading-6 text-muted">{review.response}</p>
+        <p className="mt-3 text-[14px] leading-[21px] text-[#334155]">“{review.response}”</p>
         <button
-          className="mt-3 text-sm font-bold text-primary hover:text-primary-hover"
+          className="mt-3 text-[13px] font-bold text-[#308ce8] hover:text-[#247bd1]"
           onClick={() => setIsEditing(true)}
           type="button"
         >
@@ -225,27 +149,35 @@ const ReviewResponseForm = ({ review }: { review: PsychologistReview }) => {
     );
   }
 
+  if (!isEditing) {
+    return (
+      <div className="mt-2 flex items-center justify-between gap-3">
+        <p className="text-[13px] text-[#94a3b8]">Aguardando sua resposta</p>
+        <button
+          className="inline-flex h-9 items-center justify-center gap-1 rounded-full border border-[#e2e8f0] bg-white px-4 text-[14px] font-extrabold text-[#308ce8] shadow-sm transition hover:bg-[#f8fbff]"
+          onClick={() => setIsEditing(true)}
+          type="button"
+        >
+          ↩ Responder
+        </button>
+      </div>
+    );
+  }
+
   return (
     <Form
-      className="grid gap-3"
+      className="mt-2 grid gap-0"
       {...formProps}
       onSubmit={hook.handleSubmit((values) =>
         mutation.mutate({ id: review.id, body: { response: values.response } }),
       )}
     >
-      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        {review.response ? (
-          <Button
-            className="h-10 rounded-full px-4"
-            onClick={() => setIsEditing(false)}
-            type="button"
-            variant="ghost"
-          >
-            Cancelar
-          </Button>
-        ) : null}
-        <Button className="h-10 rounded-full px-5" disabled={mutation.isPending} type="submit">
-          <Send className="h-4 w-4" aria-hidden />
+      <div className="flex justify-end">
+        <Button
+          className="h-9 rounded-full bg-[#308ce8] px-5 text-[14px] font-extrabold shadow-none hover:bg-[#247bd1]"
+          disabled={mutation.isPending}
+          type="submit"
+        >
           {mutation.isPending ? "Salvando..." : "Responder"}
         </Button>
       </div>
@@ -253,162 +185,145 @@ const ReviewResponseForm = ({ review }: { review: PsychologistReview }) => {
   );
 };
 
-const ReviewCard = ({ review }: { review: PsychologistReview }) => (
-  <article className="grid gap-4 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
+const ReviewCard = ({
+  defaultOpenResponse,
+  review,
+}: {
+  defaultOpenResponse: boolean;
+  review: PsychologistReview;
+}) => (
+  <article className="rounded-[22px] border border-[#eef2f7] bg-white px-5 py-[18px] shadow-[0_2px_8px_rgb(15_23_42_/_4%)]">
     <div className="flex items-start justify-between gap-3">
-      <div className="flex min-w-0 items-start gap-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-sm font-black text-primary">
-          {review.author.initials}
-        </span>
-        <div className="min-w-0">
-          <h2 className="truncate text-base font-extrabold text-foreground">
-            {review.author.name}
-          </h2>
+      <div className="min-w-0">
+        <h2 className="truncate text-[16px] font-extrabold tracking-[-0.01em] text-[#111827]">
+          {review.author.name}
+        </h2>
+        <div className="mt-0.5">
           <Stars rating={review.rating} />
         </div>
       </div>
-      <time className="shrink-0 text-xs text-subtle" dateTime={review.created_at}>
+      <time className="shrink-0 text-[12px] text-[#94a3b8]" dateTime={review.created_at}>
         {formatDate(review.created_at)}
       </time>
     </div>
 
     {review.comment ? (
-      <p className="text-sm leading-6 text-muted">{review.comment}</p>
+      <p className="mt-[18px] text-[14px] leading-[24px] text-[#374151]">{review.comment}</p>
     ) : (
-      <p className="text-sm text-subtle">Avaliação sem depoimento textual.</p>
+      <p className="mt-[18px] text-[14px] text-[#94a3b8]">Avaliação sem depoimento textual.</p>
     )}
 
-    <ReviewResponseForm review={review} />
+    <div className="mt-[22px]">
+      <ReviewResponseForm defaultOpen={defaultOpenResponse} review={review} />
+    </div>
   </article>
 );
 
 export const ProfessionalReviewsLogic = () => {
-  const [page, setPage] = useState(1);
-  const [rating, setRating] = useState<number | null>(null);
-  const [period, setPeriod] = useState<NonNullable<PsychologistReviewsQuery["period"]>>("all");
-  const query = useMemo(
-    () => ({ page, limit: LIMIT, rating: rating || undefined, period }),
-    [page, rating, period],
-  );
+  const [limit, setLimit] = useState(INITIAL_LIMIT);
+  const query = useMemo(() => ({ page: 1, limit, period: "all" as const }), [limit]);
   const reviews = usePsychologistReviews(query);
   const data = reviews.data;
   const items = data?.data ?? [];
+  const firstUnansweredId = items.find((review) => !review.response)?.id;
 
   const errorMessage = reviews.isError ? resolveApiError(reviews.error) : null;
   const isProfessionalPlanError = Boolean(errorMessage?.includes("Plano Profissional"));
-  const hasFilters = rating !== null || period !== "all";
 
   return (
-    <PrivateTemplate>
-      <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-3xl">
-        <header className="flex items-center justify-between border-b border-border bg-surface px-1 pb-4">
-          <Button asChild variant="ghost" className="h-10 w-10 px-0">
-            <Link aria-label="Voltar para perfil" href="/app/profile">
-              <ArrowLeft className="h-5 w-5" aria-hidden />
-            </Link>
-          </Button>
-          <h1 className="text-lg font-extrabold text-foreground">Minhas Avaliações</h1>
-          <span className="h-10 w-10" />
+    <PrivateTemplate showNavigation={false}>
+      <section className="mx-[-1.25rem] my-[-1.5rem] min-h-screen bg-[#f5f6f8] pb-10 md:mx-auto md:my-0 md:w-[390px] md:overflow-hidden md:rounded-[24px] md:border md:border-[#e5e7eb]">
+        <header className="grid h-[72px] grid-cols-[72px_1fr_72px] items-center border-b border-[#e5e7eb] bg-white">
+          <Link
+            aria-label="Voltar para perfil"
+            className="grid h-full place-items-center text-[#308ce8]"
+            href="/app/profile"
+          >
+            <ArrowLeft className="h-[22px] w-[22px]" aria-hidden />
+          </Link>
+          <h1 className="text-center text-[18px] font-extrabold tracking-[-0.02em] text-[#111827]">
+            Minhas Avaliações
+          </h1>
+          <span />
         </header>
 
-        {reviews.isLoading && page === 1 ? <LoadingState label="Carregando avaliações" /> : null}
+        <div className="grid gap-[27px] px-4 pt-[17px]">
+          {reviews.isLoading && limit === INITIAL_LIMIT ? (
+            <LoadingState label="Carregando avaliações" />
+          ) : null}
 
-        {errorMessage ? (
-          <InlineAlert
-            title="Não foi possível carregar"
-            variant={isProfessionalPlanError ? "warning" : "error"}
-          >
-            <div className="grid gap-3">
-              <p>{errorMessage}</p>
-              {isProfessionalPlanError ? (
-                <Button asChild className="h-10 rounded-full px-4" variant="outline">
-                  <Link href="/app/professional/billing/subscription">Ver assinatura</Link>
-                </Button>
-              ) : null}
-            </div>
-          </InlineAlert>
-        ) : null}
-
-        {!reviews.isError ? <RatingSummary summary={data?.summary} /> : null}
-
-        {!reviews.isError ? (
-          <Filters
-            period={period}
-            rating={rating}
-            onPeriodChange={(value) => {
-              setPeriod(value);
-              setPage(1);
-            }}
-            onRatingChange={(value) => {
-              setRating(value);
-              setPage(1);
-            }}
-          />
-        ) : null}
-
-        {!reviews.isLoading && !reviews.isError && items.length === 0 ? (
-          <EmptyState
-            icon={UserRound}
-            title={hasFilters ? "Nenhuma avaliação neste filtro" : "Nenhuma avaliação recebida"}
-            description={
-              hasFilters
-                ? "Ajuste os filtros para visualizar outras avaliações reais recebidas."
-                : "Quando pacientes com contato registrado avaliarem seu perfil, os depoimentos aparecerão aqui."
-            }
-            action={
-              hasFilters ? (
-                <Button
-                  onClick={() => {
-                    setRating(null);
-                    setPeriod("all");
-                    setPage(1);
-                  }}
-                  type="button"
-                  variant="outline"
-                >
-                  <RefreshCcw className="h-4 w-4" aria-hidden />
-                  Limpar filtros
-                </Button>
-              ) : undefined
-            }
-          />
-        ) : null}
-
-        {items.length > 0 ? (
-          <section className="grid gap-4" aria-labelledby="professional-reviews-list-title">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-subtle">
-                  <CalendarDays className="h-4 w-4 text-primary" aria-hidden />
-                  Depoimentos recentes
-                </p>
-                <h2
-                  id="professional-reviews-list-title"
-                  className="mt-1 text-xl font-extrabold text-foreground"
-                >
-                  Avaliações recebidas
-                </h2>
+          {errorMessage ? (
+            <InlineAlert
+              title="Não foi possível carregar"
+              variant={isProfessionalPlanError ? "warning" : "error"}
+            >
+              <div className="grid gap-3">
+                <p>{errorMessage}</p>
+                {isProfessionalPlanError ? (
+                  <Button asChild className="h-10 rounded-full px-4" variant="outline">
+                    <Link href="/app/professional/billing/subscription">Ver assinatura</Link>
+                  </Button>
+                ) : null}
               </div>
-              {reviews.isFetching && page > 1 ? <LoadingState label="Atualizando" /> : null}
-            </div>
+            </InlineAlert>
+          ) : null}
 
-            {items.map((review) => (
-              <ReviewCard key={review.id} review={review} />
-            ))}
-          </section>
-        ) : null}
+          {!reviews.isError ? <RatingSummary summary={data?.summary} /> : null}
 
-        {(data?.pages || 0) > page ? (
-          <Button
-            className="rounded-full border-dashed"
-            disabled={reviews.isFetching}
-            onClick={() => setPage((current) => current + 1)}
-            type="button"
-            variant="outline"
-          >
-            {reviews.isFetching ? "Carregando..." : "Carregar avaliações anteriores"}
-          </Button>
-        ) : null}
+          {!reviews.isLoading && !reviews.isError && items.length === 0 ? (
+            <EmptyState
+              className="rounded-[22px] bg-white"
+              icon={UserRound}
+              title="Nenhuma avaliação recebida"
+              description="Quando pacientes com contato registrado avaliarem seu perfil, os depoimentos aparecerão aqui."
+            />
+          ) : null}
+
+          {items.length > 0 ? (
+            <section className="grid gap-[17px]" aria-labelledby="professional-reviews-list-title">
+              <h2
+                id="professional-reviews-list-title"
+                className="text-[19px] font-extrabold tracking-[-0.02em] text-[#111827]"
+              >
+                Depoimentos Recentes
+              </h2>
+
+              {items.map((review) => (
+                <ReviewCard
+                  defaultOpenResponse={review.id === firstUnansweredId}
+                  key={review.id}
+                  review={review}
+                />
+              ))}
+            </section>
+          ) : null}
+
+          {(data?.count || 0) > items.length ? (
+            <button
+              className="h-[54px] rounded-[22px] border border-dashed border-[#bddaf3] bg-white text-[15px] font-extrabold text-[#308ce8] transition hover:bg-[#f8fbff] disabled:opacity-60"
+              disabled={reviews.isFetching}
+              onClick={() => setLimit((current) => current + LOAD_STEP)}
+              type="button"
+            >
+              {reviews.isFetching ? "Carregando..." : "Carregar avaliações anteriores"}
+            </button>
+          ) : null}
+
+          {reviews.isFetching && limit > INITIAL_LIMIT ? (
+            <LoadingState label="Atualizando avaliações" />
+          ) : null}
+
+          {!reviews.isError && items.length > 0 ? (
+            <button
+              className="mx-auto hidden items-center gap-2 text-sm font-semibold text-[#64748b]"
+              onClick={() => reviews.refetch()}
+              type="button"
+            >
+              <RefreshCcw className="h-4 w-4" aria-hidden />
+              Atualizar
+            </button>
+          ) : null}
+        </div>
       </section>
     </PrivateTemplate>
   );
