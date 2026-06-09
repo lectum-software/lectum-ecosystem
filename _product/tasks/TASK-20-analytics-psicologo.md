@@ -8,9 +8,9 @@
 | Prioridade | P1 |
 | Esforço | L |
 | Fase | Psicólogo privado |
-| Status | Pending |
-| Dependências | TASK-16, TASK-17, TASK-18 |
-| ADR alvo | ADR de analytics profissionais |
+| Status | Completed |
+| Dependências | TASK-16, TASK-17, TASK-18A, TASK-19, TASK-31 |
+| ADR alvo | ADR-0033 |
 
 ## Referências obrigatórias
 
@@ -141,19 +141,19 @@ Regras anti-recriação específicas:
 
 ## Critérios de aceite
 
-- [ ] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
-- [ ] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
-- [ ] Backend implementado nos endpoints/modelos esperados quando aplicável.
-- [ ] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
-- [ ] Rotas sob `/api/private/psychologist/*` exigem `requireRole("psicologo")` (fail-closed), conforme ADR-0002.
-- [ ] Todos os estados obrigatórios existem e usam textos em PT-BR.
-- [ ] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
-- [ ] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
-- [ ] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
-- [ ] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
-- [ ] ADR criado ou atualizado em `adrs/`.
-- [ ] Checks/builds relevantes foram executados sem erros.
-- [ ] Commit criado com mensagem convencional.
+- [x] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
+- [x] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
+- [x] Backend implementado nos endpoints/modelos esperados quando aplicável.
+- [x] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
+- [x] Rotas sob `/api/private/psychologist/*` exigem `requireRole("psicologo")` (fail-closed), conforme ADR-0002.
+- [x] Todos os estados obrigatórios existem e usam textos em PT-BR.
+- [x] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
+- [x] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
+- [x] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
+- [x] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
+- [x] ADR criado ou atualizado em `adrs/`.
+- [x] Checks/builds relevantes foram executados sem erros.
+- [x] Commit criado com mensagem convencional.
 
 ## Validação mínima
 
@@ -167,3 +167,20 @@ Regras anti-recriação específicas:
 ## Notas para executor
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
+
+## Execução 2026-06-09
+
+- Builder/Quick Copy não estava disponível como ferramenta neste ambiente; a referência visual `_product/proto/Meus Analytics - Psicólogo.jpg` foi consultada localmente.
+- Implementado `GET /api/private/psychologist/analytics` com mount `requireRole("psicologo")` fail-closed e gate por assinatura/cortesia profissional ativa em `professional_subscription`.
+- As métricas exibidas vêm somente de fontes persistidas: `contact_request`, `professional_review`, `psychologist_profile` e `community_post`.
+- `profile_view_event` não existe no schema atual; visualizações de perfil foram omitidas/explicadas na UI para evitar simulação.
+- Não houve alteração em `backend/prisma/schema.prisma` ou migrations; `db:migrate` não se aplica a esta execução.
+- A rota `/app/professional/analytics` foi criada com filtros de período, loading, erro, vazio, sucesso discreto, CTA de assinatura quando o plano profissional não existe e aviso de métricas indisponíveis sem fonte persistida.
+- Não houve formulário nesta task; a fundação TASK-02 não foi necessária.
+- Validações executadas:
+  - `pnpm --dir backend check`
+  - `pnpm --dir backend build`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - Browser local via Chrome headless em `http://localhost:3000/app/professional/analytics`; sem sessão autenticada, a rota carregou e redirecionou corretamente para login.

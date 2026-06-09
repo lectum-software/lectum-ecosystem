@@ -36,6 +36,7 @@
     "review_already_exists": "Você já avaliou este profissional.",
     "review_own_profile": "Você não pode avaliar o próprio perfil.",
     "professional_reviews_professional_plan": "Somente psicólogos com Plano Profissional ativo ou cortesia manual podem receber avaliações.",
+    "professional_analytics_professional_plan": "Analytics estão disponíveis apenas para psicólogos com Plano Profissional ativo ou cortesia manual.",
     "invalid_cpf": "Informe um CPF válido para continuar.",
     "cfp_query_required": "Informe CPF, nome ou registro profissional para consultar o CFP.",
     "cfp_provider_config_error": "Consulta CFP indisponível por configuração do provedor.",

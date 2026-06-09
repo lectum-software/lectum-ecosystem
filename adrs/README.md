@@ -46,3 +46,4 @@ Formato recomendado:
 - [ADR-0030 - Data de inscricao CRP como fonte do tempo de experiencia](0030-data-inscricao-crp-experiencia.md) - Accepted
 - [ADR-0031 - Perfil privado do paciente](0031-perfil-privado-paciente.md) - Accepted
 - [ADR-0032 - Refinamento mobile-first do perfil profissional público](0032-refinamento-perfil-profissional-publico.md) - Accepted
+- [ADR-0033 - Analytics profissionais com fontes persistidas e gate de plano](0033-analytics-profissionais-fontes-persistidas.md) - Accepted

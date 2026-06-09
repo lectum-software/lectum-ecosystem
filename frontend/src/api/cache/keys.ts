@@ -47,6 +47,10 @@
   psychologistFreeProfile: {
     root: () => ["psychologist_free_profile"],
   },
+  psychologistAnalytics: {
+    root: () => ["psychologist_analytics"],
+    show: (filters?: unknown) => ["psychologist_analytics", filters],
+  },
   psychologistReviews: {
     root: () => ["psychologist_reviews"],
     list: (filters?: unknown) => ["psychologist_reviews", filters],
