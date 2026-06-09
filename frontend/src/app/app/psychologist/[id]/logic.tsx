@@ -396,7 +396,7 @@ const ProfileHero = ({
   const formattedCrp = formatCrpNumber(profile.crp);
 
   return (
-    <section className="bg-background px-5 pb-7 pt-5 sm:px-6 lg:px-8" data-profile-hero="true">
+    <section className="bg-white px-5 pb-7 pt-5 sm:px-6 lg:px-8" data-profile-hero="true">
       <div className="flex items-start gap-3">
         <ProfileAvatar profile={profile} />
 
@@ -492,7 +492,7 @@ const ProfileTabs = ({
   return (
     <nav
       aria-label="Seções do perfil profissional"
-      className="mt-1 grid grid-cols-3 border-b border-border bg-background"
+      className="mt-1 grid grid-cols-3 border-b border-border bg-white"
     >
       {tabs.map((tab) => {
         const Icon = tab.icon;
