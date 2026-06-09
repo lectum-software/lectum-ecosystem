@@ -405,11 +405,13 @@ const ProfileHero = ({
             <Star className="h-3.5 w-3.5 fill-[#FACC15] text-[#FACC15]" aria-hidden="true" />
             {formatHeroRating(profile.rating_avg, profile.rating_count)}
           </span>
-          <h1 className="mt-0.5 flex min-w-0 items-start gap-1.5 text-[1.18rem] font-extrabold leading-5 text-foreground lg:text-2xl">
-            <span className="line-clamp-2 block min-w-0 break-words">{displayName}</span>
-            {profile.verified ? (
-              <VerifiedBadgeIcon aria-hidden="true" className="mt-0.5 h-[18px] w-[18px] shrink-0" />
-            ) : null}
+          <h1 className="mt-0.5 text-[1.18rem] font-extrabold leading-5 text-foreground lg:text-2xl">
+            <span className="line-clamp-2 block min-w-0 break-words">
+              <span>{displayName}</span>
+              {profile.verified ? (
+                <VerifiedBadgeIcon aria-hidden="true" className="ml-1 inline h-[18px] w-[18px]" />
+              ) : null}
+            </span>
           </h1>
           <p className="mt-1 text-[0.62rem] font-extrabold uppercase tracking-[0.16em] text-subtle">
             {getPsychologistTitle(profile.gender)}{" "}

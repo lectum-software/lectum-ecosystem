@@ -307,11 +307,11 @@ export const ProfileLogic = () => {
               )}
             </div>
 
-            <h1 className="mt-5 text-2xl font-bold text-foreground">
-              <span className="inline-flex min-w-0 items-end">
-                <span className="min-w-0 break-words">{displayName}</span>
+            <h1 className="mt-5 text-2xl font-bold leading-7 text-foreground">
+              <span className="line-clamp-2 block min-w-0 break-words">
+                <span>{displayName}</span>
                 {isPsychologist && hasVerifiedBadge ? (
-                  <VerifiedBadgeIcon aria-hidden="true" className="ml-0.5 h-5 w-5 shrink-0" />
+                  <VerifiedBadgeIcon aria-hidden="true" className="ml-1 inline h-5 w-5" />
                 ) : null}
               </span>
             </h1>
