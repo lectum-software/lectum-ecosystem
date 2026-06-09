@@ -68,6 +68,7 @@ export interface psychologist_profile {
   headline?: string | null;
   bio?: string | null;
   video_url?: string | null;
+  video_cover_url?: string | null;
   cpf?: string | null;
   crp?: string | null;
   crp_registration_date?: Date | null;
@@ -78,6 +79,7 @@ export interface psychologist_profile {
   discount_first_session?: boolean | null;
   social_value?: boolean | null;
   accepts_insurance?: boolean | null;
+  show_experience_tag?: boolean | null;
   academic_title?: string | null;
   academic_institution?: string | null;
   academic_graduation_year?: string | null;

@@ -85,6 +85,7 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
 
 - [x] Ajuste visual de 2026-06-08 aplicado: Especialidades e Abordagens usam campo compacto com tags removiveis, placeholder e lista suspensa como no print anexado pelo usuario, mantendo limites reais do plano gratuito.
 - [x] Ajuste de midias de 2026-06-08 aplicado: foto de perfil abre modal de enquadramento antes do upload real, video de apresentacao usa um unico menu "Editar" para trocar/remover e expor a acao futura de capa, Especialidades remove texto de limite do titulo e Formacao Academica reduz o espaco vertical entre campos.
+- [x] Ajuste de 2026-06-09 aplicado: Selos e Facilidades ganhou a opcao "Exibir tempo de experiencia" marcada por padrao, menu de conta ganhou "Ver meu perfil publico" antes de Editar perfil, e capa de video passou a ter upload real no backend/frontend.
 
 ## Validação executada
 
@@ -124,6 +125,13 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
 - 2026-06-08 midias do setup: `pnpm --dir frontend build`
 - 2026-06-08 midias do setup: `pnpm check`
 - 2026-06-08 midias do setup: HTTP local em `/app/professional/profile/setup` respondeu 307 sem sessao, e Chrome headless local renderizou a pagina de login apos o redirect; validacao visual autenticada ficou limitada por nao haver token real acessivel ao agente sem criar mock.
+- 2026-06-09 capa de video e experiencia: `pnpm --dir backend db:migrate --name add_profile_video_cover_experience_tag`
+- 2026-06-09 capa de video e experiencia: `pnpm --dir backend check`
+- 2026-06-09 capa de video e experiencia: `pnpm --dir backend build`
+- 2026-06-09 capa de video e experiencia: `pnpm --dir frontend check`
+- 2026-06-09 capa de video e experiencia: `pnpm --dir frontend build`
+- 2026-06-09 capa de video e experiencia: `pnpm check`
+- 2026-06-09 capa de video e experiencia: HTTP local em `/app/professional/profile/setup` respondeu 307 sem sessao, mantendo a protecao da rota privada; validacao visual autenticada ficou limitada por nao haver token real acessivel ao agente sem criar mock.
 
 ## Implementação
 
@@ -131,6 +139,7 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
   - `backend/prisma/schema.prisma`
   - `backend/prisma/migrations/20260607233802_add_free_profile_details/migration.sql`
   - `backend/prisma/migrations/20260608010043_add_free_profile_media_religion/migration.sql`
+  - `backend/prisma/migrations/20260609034204_add_profile_video_cover_experience_tag/migration.sql`
   - `backend/src/config/multer/filesRoute.ts`
   - `backend/src/modules/api/private/psychologist/free-profile`
   - `backend/src/interfaces/objects/index.ts`
@@ -173,3 +182,11 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
 - O bloco "Video de Apresentacao" passou a ter apenas um botao "Editar" com menu de acoes: trocar video, remover video e adicionar imagem de capa do video.
 - A imagem de capa do video ainda nao foi persistida porque o contrato/backend atual possui apenas `video_url`; a UI informa a pendencia sem criar mock ou dado falso.
 - O titulo de Especialidades nao exibe mais a copia "(Ate 10 tags)" e a formacao academica ficou mais compacta entre titulo/especialidade, instituicao e ano de formacao.
+
+## Ajuste de capa de video e experiencia em 2026-06-09
+
+- `psychologist_profile.video_cover_url` foi adicionado ao contrato e ao banco para persistir a capa publica do video de apresentacao, com upload real em `psychologist/video-cover/*`.
+- `psychologist_profile.show_experience_tag` foi adicionado com default `true` para controlar apenas a exibicao publica da tag de tempo de experiencia; a data de registro CRP continua interna.
+- Ao trocar ou remover o video, a capa associada e limpa para evitar preview antigo em video novo.
+- O perfil publico e os cards passam a respeitar `show_experience_tag` e usam `video_cover_url` como poster/preview quando informado.
+- A opcao "Adicionar imagem de capa do video" deixou de ser pendencia visual e agora chama endpoint real, sem mock.

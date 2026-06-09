@@ -7,6 +7,7 @@ import type {
   FreeProfessionalProfileAvatarRemoval,
   FreeProfessionalProfileAvatarUpload,
   FreeProfessionalProfilePayload,
+  FreeProfessionalProfileVideoCoverUpload,
   FreeProfessionalProfileVideoRemoval,
   FreeProfessionalProfileVideoUpload,
 } from "@/api/generator/types/free-profile";
@@ -28,6 +29,10 @@ export interface UsePsychologistFreeProfileProps {
     };
     video?: {
       onSuccess?: (data: FreeProfessionalProfileVideoUpload) => void;
+      onError?: (error: unknown) => void;
+    };
+    videoCover?: {
+      onSuccess?: (data: FreeProfessionalProfileVideoCoverUpload) => void;
       onError?: (error: unknown) => void;
     };
     deleteVideo?: {
@@ -107,6 +112,22 @@ export const usePsychologistFreeProfile = ({ callbacks }: UsePsychologistFreePro
     onError: callbacks?.video?.onError,
   });
 
+  const uploadVideoCover = useMutation({
+    mutationFn: (file: File) => api.uploadPsychologistFreeProfileVideoCover(file),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: keys.psychologistFreeProfile.root() });
+      queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === "auth_hydrate" });
+      queryClient.invalidateQueries({ queryKey: keys.directory.psychologistsRoot() });
+      if (data.profile?.user.id) {
+        queryClient.invalidateQueries({
+          queryKey: keys.directory.psychologistRoot(data.profile.user.id),
+        });
+      }
+      callbacks?.videoCover?.onSuccess?.(data);
+    },
+    onError: callbacks?.videoCover?.onError,
+  });
+
   const deleteVideo = useMutation({
     mutationFn: () => api.deletePsychologistFreeProfileVideo(),
     onSuccess: (data) => {
@@ -123,5 +144,13 @@ export const usePsychologistFreeProfile = ({ callbacks }: UsePsychologistFreePro
     onError: callbacks?.deleteVideo?.onError,
   });
 
-  return { profile, update, uploadAvatar, deleteAvatar, uploadVideo, deleteVideo };
+  return {
+    profile,
+    update,
+    uploadAvatar,
+    deleteAvatar,
+    uploadVideo,
+    uploadVideoCover,
+    deleteVideo,
+  };
 };

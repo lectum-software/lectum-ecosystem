@@ -93,7 +93,9 @@ const publicProfileMediaKeyFromUrl = (value?: string | null) => {
     if (!url.pathname.startsWith(prefix)) return null;
 
     const key = decodeURIComponent(url.pathname.slice(prefix.length));
-    return key.startsWith("psychologist/avatar/") || key.startsWith("psychologist/video/")
+    return key.startsWith("psychologist/avatar/") ||
+      key.startsWith("psychologist/video/") ||
+      key.startsWith("psychologist/video-cover/")
       ? key
       : null;
   } catch (_err) {
@@ -145,10 +147,12 @@ const getUserWithProfile = (userId: string) => {
           race_color: true,
           religion: true,
           video_url: true,
+          video_cover_url: true,
           target_audience: true,
           discount_first_session: true,
           social_value: true,
           accepts_insurance: true,
+          show_experience_tag: true,
           academic_title: true,
           academic_institution: true,
           academic_graduation_year: true,
@@ -256,10 +260,12 @@ const toResponse = async (
       whatsapp: profile.whatsapp,
       whatsapp_url: buildWhatsappUrl(profile.whatsapp),
       video_url: profile.video_url,
+      video_cover_url: profile.video_cover_url,
       target_audience: normalizeStringArray(profile.target_audience),
       discount_first_session: profile.discount_first_session,
       social_value: profile.social_value,
       accepts_insurance: profile.accepts_insurance,
+      show_experience_tag: profile.show_experience_tag,
       academic,
       academic_formations: normalizeAcademicFormations(profile.academic_formations, academic),
       available_days: normalizeStringArray(profile.available_days),
@@ -339,10 +345,12 @@ export class FreeProfileRepository implements IFreeProfileRepository {
           whatsapp: body.whatsapp,
           languages: body.languages as Prisma.InputJsonValue,
           video_url: options.canUseProfessionalFeatures ? undefined : null,
+          video_cover_url: options.canUseProfessionalFeatures ? undefined : null,
           target_audience: body.target_audience as Prisma.InputJsonValue,
           discount_first_session: body.discount_first_session,
           social_value: body.social_value,
           accepts_insurance: body.accepts_insurance,
+          show_experience_tag: body.show_experience_tag,
           academic_title: body.academic.title,
           academic_institution: body.academic.institution,
           academic_graduation_year: body.academic.graduation_year,
@@ -389,6 +397,7 @@ export class FreeProfileRepository implements IFreeProfileRepository {
 
     if (!options.canUseProfessionalFeatures) {
       await deletePublicProfileMedia(profile.video_url);
+      await deletePublicProfileMedia(profile.video_cover_url);
     }
 
     return this.show(userId);
@@ -435,10 +444,29 @@ export class FreeProfileRepository implements IFreeProfileRepository {
 
     await prisma.psychologist_profile.update({
       where: { id: profile.id },
-      data: { video_url: videoUrl },
+      data: { video_url: videoUrl, video_cover_url: null },
     });
 
     await deletePublicProfileMedia(profile.video_url);
+    await deletePublicProfileMedia(profile.video_cover_url);
+
+    return this.show(userId);
+  }
+
+  async updateVideoCover(
+    userId: string,
+    videoCoverUrl: string,
+  ): Promise<FreeProfessionalProfileResponse | null> {
+    const existing = await getUserWithProfile(userId);
+    const profile = existing?.psychologist_profile;
+    if (!profile) return null;
+
+    await prisma.psychologist_profile.update({
+      where: { id: profile.id },
+      data: { video_cover_url: videoCoverUrl },
+    });
+
+    await deletePublicProfileMedia(profile.video_cover_url);
 
     return this.show(userId);
   }
@@ -450,10 +478,11 @@ export class FreeProfileRepository implements IFreeProfileRepository {
 
     await prisma.psychologist_profile.update({
       where: { id: profile.id },
-      data: { video_url: null },
+      data: { video_url: null, video_cover_url: null },
     });
 
     await deletePublicProfileMedia(profile.video_url);
+    await deletePublicProfileMedia(profile.video_cover_url);
 
     return this.show(userId);
   }

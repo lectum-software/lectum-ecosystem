@@ -30,6 +30,8 @@ Para plano gratuito, os limites permanecem 3 especialidades, 1 serviço e 1 abor
 
 O upload de vídeo foi liberado apenas quando `plan.can_upload_video=true`, usando o storage público existente em `psychologist/video/*`, com limite de 50MB e tipos MP4, WebM e QuickTime/MOV. A rota pública de arquivos foi ampliada para servir `psychologist/video/*`, pois o vídeo de apresentação é parte do perfil público do profissional assinante.
 
+Em 2026-06-09, o mesmo entitlement passou a cobrir a imagem de capa do vídeo de apresentação. A capa é enviada para `psychologist/video-cover/*`, persistida em `psychologist_profile.video_cover_url`, servida publicamente apenas por esse prefixo e limpa quando o vídeo é trocado/removido.
+
 A opção "Minha Assinatura" no menu do perfil agora abre `/app/professional/billing/subscription`. Para cortesia, a tela mostra Plano Profissional de cortesia, data de expiração e CTA "Inserir dados do cartão". Esse CTA aponta para o checkout real (`/app/professional/billing/checkout?intent=courtesy-renewal`), que continua bloqueado de forma honesta até a TASK-32 configurar Mercado Pago.
 
 ## Consequências
@@ -38,6 +40,7 @@ A opção "Minha Assinatura" no menu do perfil agora abre `/app/professional/bil
 - O plano gratuito mantém limitações e CTA de upgrade.
 - A UI informa o caminho para cartão após a cortesia sem coletar cartão fora do gateway real.
 - O vídeo de apresentação fica publicamente acessível quando o profissional assinante o publica, alinhado ao card/perfil público.
+- A capa do vídeo fica publicamente acessível apenas para profissionais com recurso de vídeo, alinhada ao mesmo modelo de exposição do preview do card/perfil público.
 - Legendas/captions de vídeos enviados por usuários ficam pendentes para uma task futura de acessibilidade de mídia; o recorte atual apenas disponibiliza upload e preview.
 
 ## Validação
@@ -48,6 +51,12 @@ A opção "Minha Assinatura" no menu do perfil agora abre `/app/professional/bil
 - `pnpm --dir frontend build`
 - `pnpm check`
 - HTTP local sem sessão em `/app/profile`, `/app/professional/profile/setup` e `/app/professional/billing/subscription` respondeu `307`.
+- 2026-06-09 capa de vídeo: `pnpm --dir backend db:migrate --name add_profile_video_cover_experience_tag`
+- 2026-06-09 capa de vídeo: `pnpm --dir backend check`
+- 2026-06-09 capa de vídeo: `pnpm --dir backend build`
+- 2026-06-09 capa de vídeo: `pnpm --dir frontend check`
+- 2026-06-09 capa de vídeo: `pnpm --dir frontend build`
+- 2026-06-09 capa de vídeo: `pnpm check`
 
 ## Pendências
 

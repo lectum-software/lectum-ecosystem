@@ -4,6 +4,7 @@ import type {
   FreeProfessionalProfileAvatarRemoval,
   FreeProfessionalProfileAvatarUpload,
   FreeProfessionalProfilePayload,
+  FreeProfessionalProfileVideoCoverUpload,
   FreeProfessionalProfileVideoRemoval,
   FreeProfessionalProfileVideoUpload,
 } from "@/api/generator/types/free-profile";
@@ -40,6 +41,14 @@ export const uploadPsychologistFreeProfileVideo = async (file: File) => {
 
   const handle = callEndpoint({ route: `${route}/video`, method: "POST", body });
   return handleReq<FreeProfessionalProfileVideoUpload>(handle);
+};
+
+export const uploadPsychologistFreeProfileVideoCover = async (file: File) => {
+  const body = new FormData();
+  body.append("video-cover", file);
+
+  const handle = callEndpoint({ route: `${route}/video/cover`, method: "POST", body });
+  return handleReq<FreeProfessionalProfileVideoCoverUpload>(handle);
 };
 
 export const deletePsychologistFreeProfileVideo = async () => {

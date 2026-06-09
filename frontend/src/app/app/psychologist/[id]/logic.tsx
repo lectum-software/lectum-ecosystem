@@ -163,7 +163,7 @@ const buildBenefitTags = (profile: DirectoryPsychologistProfile) => {
     label: string;
   }> = [];
 
-  if (profile.verified && profile.formation_years) {
+  if (profile.show_experience_tag !== false && profile.verified && profile.formation_years) {
     tags.push({
       icon: BriefcaseBusiness,
       label: `${profile.formation_years} anos de experiência`,
@@ -521,6 +521,8 @@ const StatGrid = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
 const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
   const [playing, setPlaying] = useState(false);
   const videoSrc = resolvePublicMediaUrl(profile.video_url);
+  const videoCoverSrc = resolvePublicMediaUrl(profile.video_cover_url);
+  const videoCoverIsPublicMedia = isPublicMediaUrl(profile.video_cover_url);
 
   if (!videoSrc) return null;
 
@@ -539,6 +541,7 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
             controls
             onEnded={() => setPlaying(false)}
             playsInline
+            poster={videoCoverSrc || undefined}
             preload="metadata"
             src={videoSrc}
           >
@@ -550,15 +553,27 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
         </>
       ) : (
         <div className="relative h-full w-full overflow-hidden bg-surface-muted text-white">
-          <video
-            aria-hidden="true"
-            className="absolute inset-0 h-full w-full object-cover"
-            muted
-            playsInline
-            preload="auto"
-            src={videoSrc}
-            tabIndex={-1}
-          />
+          {videoCoverSrc ? (
+            <Image
+              alt=""
+              aria-hidden="true"
+              className="object-cover"
+              fill
+              sizes="(min-width: 768px) 720px, calc(100vw - 32px)"
+              src={videoCoverSrc}
+              unoptimized={videoCoverIsPublicMedia}
+            />
+          ) : (
+            <video
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full object-cover"
+              muted
+              playsInline
+              preload="auto"
+              src={videoSrc}
+              tabIndex={-1}
+            />
+          )}
           <span className="absolute inset-0 bg-gradient-to-t from-foreground/65 via-foreground/10 to-transparent" />
           <button
             aria-label={`Reproduzir vídeo de apresentação de ${profile.name}`}

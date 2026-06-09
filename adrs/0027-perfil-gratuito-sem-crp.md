@@ -46,7 +46,11 @@ Em 2026-06-08, a UI de catalogos do perfil gratuito foi ajustada para alinhar Es
 
 Em 2026-06-08, o ajuste de avatar da tela `/app/professional/profile/setup` passou a usar uma modal dedicada, inspirada no fluxo de redes sociais, para permitir enquadramento circular por arraste antes do upload real. A decisao preserva o endpoint atual de avatar e nao cria dado local permanente.
 
-Na mesma revisao, o bloco "Video de Apresentacao" passou a concentrar acoes em um unico menu "Editar". Trocar e remover video continuam usando os endpoints reais ja existentes; a opcao "Adicionar imagem de capa do video" fica exposta como intencao de produto, mas sem persistencia, porque o contrato atual so possui `video_url` e nao ha campo/endpoint de capa.
+Na mesma revisao, o bloco "Video de Apresentacao" passou a concentrar acoes em um unico menu "Editar". Trocar e remover video continuam usando os endpoints reais ja existentes; a opcao "Adicionar imagem de capa do video" ficou exposta como intencao de produto ate haver contrato backend.
+
+Em 2026-06-09, a capa de video passou a ter contrato real: `psychologist_profile.video_cover_url`, upload para o prefixo publico `psychologist/video-cover/*`, rota privada `POST /api/private/psychologist/free-profile/video/cover` e leitura publica restrita por `/public/files/psychologist/video-cover/*`. A capa usa o mesmo entitlement de video (`plan.can_upload_video=true`) e e removida quando o video e trocado/removido ou quando o perfil deixa de ter recurso profissional.
+
+Na mesma revisao, `psychologist_profile.show_experience_tag` foi criado com default `true`. O campo controla somente a exibicao publica da tag de tempo de experiencia calculada de `crp_registration_date`, sem expor a data interna nem alterar o bloco de estatisticas do perfil.
 
 ## Consequências
 
@@ -73,7 +77,8 @@ Na mesma revisao, o bloco "Video de Apresentacao" passou a concentrar acoes em u
 - Especialidades e Abordagens ficam visualmente mais proximas do prototipo mobile, sem novo package e sem catalogos mockados.
 - O controle continua usando os catalogos reais retornados por `/api/private/psychologist/free-profile` e os mesmos limites de plano.
 - O avatar fica mais facil de enquadrar sem alterar contrato, storage ou endpoint.
-- Capa customizada de video permanece pendente de contrato backend; ate la a UI nao salva imagem falsa nem deriva persistencia local.
+- A capa customizada de video usa storage real no mesmo padrao de midia publica do perfil e evita previews antigos ao limpar `video_cover_url` junto com `video_url`.
+- A tag de tempo de experiencia fica opt-out pelo profissional, preservando default visivel e sem expor o dado bruto de registro CRP.
 
 ## Validação
 
@@ -107,3 +112,10 @@ Na mesma revisao, o bloco "Video de Apresentacao" passou a concentrar acoes em u
 - 2026-06-08 midias do setup: `pnpm --dir frontend build`
 - 2026-06-08 midias do setup: `pnpm check`
 - 2026-06-08 midias do setup: HTTP local em `/app/professional/profile/setup` respondeu 307 sem sessao, e Chrome headless local renderizou a pagina de login apos o redirect; validacao visual autenticada ficou limitada por nao haver token real acessivel ao agente sem criar mock.
+- 2026-06-09 capa de video e experiencia: `pnpm --dir backend db:migrate --name add_profile_video_cover_experience_tag`
+- 2026-06-09 capa de video e experiencia: `pnpm --dir backend check`
+- 2026-06-09 capa de video e experiencia: `pnpm --dir backend build`
+- 2026-06-09 capa de video e experiencia: `pnpm --dir frontend check`
+- 2026-06-09 capa de video e experiencia: `pnpm --dir frontend build`
+- 2026-06-09 capa de video e experiencia: `pnpm check`
+- 2026-06-09 capa de video e experiencia: HTTP local em `/app/professional/profile/setup` respondeu 307 sem sessao, mantendo a protecao da rota privada; validacao visual autenticada ficou limitada por nao haver token real acessivel ao agente sem criar mock.

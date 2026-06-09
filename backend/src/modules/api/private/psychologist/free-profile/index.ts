@@ -7,6 +7,7 @@ import {
   update,
   uploadAvatar,
   uploadVideo,
+  uploadVideoCover,
 } from "./use-cases/controller";
 
 const routes = Router();
@@ -31,6 +32,15 @@ routes.post(
     size: 50,
   }),
   uploadVideo,
+);
+routes.post(
+  "/video/cover",
+  multer({
+    single: "video-cover",
+    allowed: ["image/jpeg", "image/png", "image/webp"],
+    size: 5,
+  }),
+  uploadVideoCover,
 );
 routes.delete("/video", removeVideo);
 

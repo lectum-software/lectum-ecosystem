@@ -41,10 +41,12 @@ export type FreeProfessionalProfileResponse = {
     whatsapp: string | null;
     whatsapp_url: string | null;
     video_url: string | null;
+    video_cover_url: string | null;
     target_audience: string[];
     discount_first_session: boolean;
     social_value: boolean;
     accepts_insurance: boolean;
+    show_experience_tag: boolean;
     academic: FreeProfessionalProfileAcademic;
     academic_formations: FreeProfessionalProfileAcademic[];
     available_days: string[];
@@ -96,6 +98,7 @@ export type FreeProfessionalProfileUpdateBody = {
   discount_first_session?: boolean;
   social_value?: boolean;
   accepts_insurance?: boolean;
+  show_experience_tag?: boolean;
   academic?: FreeProfessionalProfileAcademic;
   academic_formations?: FreeProfessionalProfileAcademic[];
   available_days?: string[];
@@ -125,6 +128,11 @@ export type FreeProfessionalProfileVideoUploadResponse = {
   video_url: string;
 };
 
+export type FreeProfessionalProfileVideoCoverUploadResponse = {
+  profile: FreeProfessionalProfileResponse | null;
+  video_cover_url: string;
+};
+
 export interface IFreeProfessionalProfileUploadAvatarDTO {
   auth: user;
   file?: {
@@ -140,6 +148,16 @@ export interface IFreeProfessionalProfileRemoveAvatarDTO {
 }
 
 export interface IFreeProfessionalProfileUploadVideoDTO {
+  auth: user;
+  file?: {
+    path?: string;
+    key?: string;
+    fileUrl?: string;
+    mimetype?: string;
+  };
+}
+
+export interface IFreeProfessionalProfileUploadVideoCoverDTO {
   auth: user;
   file?: {
     path?: string;

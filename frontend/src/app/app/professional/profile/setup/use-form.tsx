@@ -40,6 +40,7 @@ export type FreeProfileForm = {
   discount_first_session: boolean;
   social_value: boolean;
   accepts_insurance: boolean;
+  show_experience_tag: boolean;
   academic_formations: AcademicFormationForm[];
   address_street: string;
   address_number: string;
@@ -117,6 +118,7 @@ export const freeProfileSchema = z
     discount_first_session: z.boolean(),
     social_value: z.boolean(),
     accepts_insurance: z.boolean(),
+    show_experience_tag: z.boolean(),
     academic_formations: z
       .array(
         z.object({
@@ -360,6 +362,7 @@ export const getDefaultValues = (data?: FreeProfessionalProfile | null): FreePro
     discount_first_session: Boolean(data?.profile.discount_first_session),
     social_value: Boolean(data?.profile.social_value),
     accepts_insurance: Boolean(data?.profile.accepts_insurance),
+    show_experience_tag: data?.profile.show_experience_tag ?? true,
     academic_formations: getAcademicFormations(data),
     address_street: data?.profile.address.street || "",
     address_number: data?.profile.address.number || "",

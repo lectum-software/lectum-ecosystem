@@ -9,6 +9,7 @@ import type {
   IFreeProfessionalProfileShowDTO,
   IFreeProfessionalProfileUpdateDTO,
   IFreeProfessionalProfileUploadAvatarDTO,
+  IFreeProfessionalProfileUploadVideoCoverDTO,
   IFreeProfessionalProfileUploadVideoDTO,
 } from "../DTOs/IFreeProfileDTO";
 import { FreeProfileRepository } from "../repositories/FreeProfileRepository";
@@ -108,6 +109,7 @@ const updateSchema = z.object({
   discount_first_session: z.boolean().optional(),
   social_value: z.boolean().optional(),
   accepts_insurance: z.boolean().optional(),
+  show_experience_tag: z.boolean().optional(),
   academic: academicSchema,
   academic_formations: academicFormationsSchema,
   available_days: z.array(z.string().trim().min(2).max(20)).max(7).optional(),
@@ -265,6 +267,7 @@ export const update = async (data: IFreeProfessionalProfileUpdateDTO) => {
     discount_first_session: Boolean(parsed.data.discount_first_session),
     social_value: Boolean(parsed.data.social_value),
     accepts_insurance: Boolean(parsed.data.accepts_insurance),
+    show_experience_tag: parsed.data.show_experience_tag ?? true,
     academic: primaryAcademic,
     academic_formations: resolvedAcademicFormations,
     available_days: normalizeList(parsed.data.available_days),
@@ -444,6 +447,52 @@ export const uploadVideo = async (data: IFreeProfessionalProfileUploadVideoDTO) 
     ...msg("professional_profile_video_uploaded", {}),
     data: {
       video_url: videoUrl,
+      profile: updated,
+    },
+  };
+};
+
+export const uploadVideoCover = async (data: IFreeProfessionalProfileUploadVideoCoverDTO) => {
+  if (data.auth.role !== "psicologo") {
+    return {
+      status: 403,
+      ...error("role_not_authorized", {}),
+    };
+  }
+
+  const key = data.file?.path || data.file?.key;
+  if (!key?.startsWith("psychologist/video-cover/")) {
+    return {
+      status: 400,
+      ...error("upload_error", {}),
+    };
+  }
+
+  const repository = new FreeProfileRepository();
+  const current = await repository.show(data.auth.id!);
+
+  if (!current) {
+    return {
+      status: 404,
+      ...error("not_found", { model: "psychologist_profile" }),
+    };
+  }
+
+  if (!current.plan.can_upload_video) {
+    return {
+      status: 403,
+      ...error("profile_video_professional_plan", {}),
+    };
+  }
+
+  const videoCoverUrl = publicFileUrl(key);
+  const updated = await repository.updateVideoCover(data.auth.id!, videoCoverUrl);
+
+  return {
+    status: 200,
+    ...msg("professional_profile_video_cover_uploaded", {}),
+    data: {
+      video_cover_url: videoCoverUrl,
       profile: updated,
     },
   };

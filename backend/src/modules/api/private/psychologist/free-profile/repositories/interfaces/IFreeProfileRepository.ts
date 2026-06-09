@@ -13,5 +13,9 @@ export interface IFreeProfileRepository {
   updateAvatar(userId: string, avatarUrl: string): Promise<FreeProfessionalProfileResponse | null>;
   removeAvatar(userId: string): Promise<FreeProfessionalProfileResponse | null>;
   updateVideo(userId: string, videoUrl: string): Promise<FreeProfessionalProfileResponse | null>;
+  updateVideoCover(
+    userId: string,
+    videoCoverUrl: string,
+  ): Promise<FreeProfessionalProfileResponse | null>;
   removeVideo(userId: string): Promise<FreeProfessionalProfileResponse | null>;
 }

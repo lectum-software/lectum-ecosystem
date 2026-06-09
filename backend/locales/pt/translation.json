@@ -96,6 +96,7 @@
     "free_profile_avatar_uploaded": "Foto de perfil atualizada com sucesso.",
     "free_profile_avatar_removed": "Foto de perfil removida com sucesso.",
     "professional_profile_video_uploaded": "Vídeo de apresentação atualizado com sucesso.",
+    "professional_profile_video_cover_uploaded": "Imagem de capa do vídeo atualizada com sucesso.",
     "professional_profile_video_removed": "Vídeo de apresentação removido com sucesso.",
     "patient_profile_updated": "Perfil do paciente atualizado com sucesso."
   },

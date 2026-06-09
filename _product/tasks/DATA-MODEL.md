@@ -161,9 +161,11 @@ Quando construído: módulo de audiência próprio (ex.: `backend/src/modules/ma
 | `headline` | `String?` | chamada curta exibida no card/perfil |
 | `bio` | `String?` | "Sobre"/experiência (texto longo) |
 | `video_url` | `String?` | apenas Plano Profissional ou concessão `admin_grant` ativa (PRD §13); manter null no gratuito |
+| `video_cover_url` | `String?` | imagem pública opcional de capa do vídeo de apresentação; usa o mesmo entitlement de vídeo e deve ser limpa junto ao vídeo |
 | `cpf` | `String?` | usado na consulta CFP; dado sensível (LGPD) |
 | `crp` | `String?` | registro profissional exibido no cabeçalho |
 | `crp_registration_date` | `DateTime?` | data interna de inscrição no CRP, preenchida pela consulta CFP real ou pela operação na concessão `admin_grant`; não é editável pelo psicólogo e é usada para calcular tempo de experiência no card |
+| `show_experience_tag` | `Boolean @default(true)` | controla se o tempo de experiência calculado por `crp_registration_date` aparece como tag pública |
 | `gender`, `race_color`, `religion` | `String?` | campos declaratórios editáveis no recorte gratuito sem CRP; não entram em validação profissional |
 | `crp_status` | `String @default("pendente")` | `"pendente" \| "em_analise" \| "aprovado" \| "rejeitado"` (TASK-10/11) |
 | `cfp_verified_at` | `DateTime?` | preenchido so com consulta CFP real; fonte autorizada para TASK-10: InfoSimples `cfp-cadastro` via `DOCUMENT_TOKEN` (ADR-0026) |

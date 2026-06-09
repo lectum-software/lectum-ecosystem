@@ -9,6 +9,7 @@ export type PatientRelationPsychologist = {
   headline: string | null;
   bio: string | null;
   video_url?: string | null;
+  video_cover_url?: string | null;
   crp: string | null;
   gender?: string | null;
   modality: string | null;
@@ -21,6 +22,7 @@ export type PatientRelationPsychologist = {
   discount_first_session?: boolean;
   social_value?: boolean;
   accepts_insurance?: boolean;
+  show_experience_tag?: boolean;
   whatsapp_url?: string | null;
   favorited: boolean;
   followed: boolean;

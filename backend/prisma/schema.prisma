@@ -156,6 +156,7 @@ model psychologist_profile {
   headline                        String?
   bio                             String?
   video_url                       String?
+  video_cover_url                 String?                       @map("video_cover_url")
   cpf                             String?
   crp                             String?
   crp_registration_date           DateTime?                     @map("crp_registration_date")
@@ -166,6 +167,7 @@ model psychologist_profile {
   discount_first_session          Boolean                       @default(false) @map("discount_first_session")
   social_value                    Boolean                       @default(false) @map("social_value")
   accepts_insurance               Boolean                       @default(false) @map("accepts_insurance")
+  show_experience_tag             Boolean                       @default(true) @map("show_experience_tag")
   academic_title                  String?                       @map("academic_title")
   academic_institution            String?                       @map("academic_institution")
   academic_graduation_year        String?                       @map("academic_graduation_year")

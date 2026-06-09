@@ -39,10 +39,12 @@ export type FreeProfessionalProfile = {
     whatsapp: string | null;
     whatsapp_url: string | null;
     video_url: string | null;
+    video_cover_url: string | null;
     target_audience: string[];
     discount_first_session: boolean;
     social_value: boolean;
     accepts_insurance: boolean;
+    show_experience_tag: boolean;
     academic: FreeProfessionalProfileAcademic;
     academic_formations: FreeProfessionalProfileAcademic[];
     available_days: string[];
@@ -94,6 +96,7 @@ export type FreeProfessionalProfilePayload = {
   discount_first_session: boolean;
   social_value: boolean;
   accepts_insurance: boolean;
+  show_experience_tag: boolean;
   academic: FreeProfessionalProfileAcademic;
   academic_formations: FreeProfessionalProfileAcademic[];
   available_days: string[];
@@ -115,6 +118,11 @@ export type FreeProfessionalProfileAvatarRemoval = {
 
 export type FreeProfessionalProfileVideoUpload = {
   video_url: string;
+  profile: FreeProfessionalProfile | null;
+};
+
+export type FreeProfessionalProfileVideoCoverUpload = {
+  video_cover_url: string;
   profile: FreeProfessionalProfile | null;
 };
 

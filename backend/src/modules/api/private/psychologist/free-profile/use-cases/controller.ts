@@ -6,6 +6,7 @@ import {
   show as showService,
   update as updateService,
   uploadAvatar as uploadAvatarService,
+  uploadVideoCover as uploadVideoCoverService,
   uploadVideo as uploadVideoService,
 } from "./services";
 
@@ -68,6 +69,21 @@ export const uploadVideo = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "psychologist_free_profile_upload_video", err);
+  }
+};
+
+export const uploadVideoCover = async (req: Request, res: Response) => {
+  try {
+    const file = req.file as
+      | (Express.Multer.File & { path?: string; key?: string; fileUrl?: string })
+      | undefined;
+    const resolve = await uploadVideoCoverService({
+      auth: req.auth,
+      file,
+    });
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "psychologist_free_profile_upload_video_cover", err);
   }
 };
 

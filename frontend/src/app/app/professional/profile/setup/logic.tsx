@@ -572,35 +572,47 @@ export const ProfessionalProfileSetupLogic = () => {
   const avatarDraftUrlRef = useRef<string | null>(null);
   const avatarDragRef = useRef<AvatarDragState | null>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const videoCoverInputRef = useRef<HTMLInputElement>(null);
   const [avatarActionsOpen, setAvatarActionsOpen] = useState(false);
   const [avatarEditorOpen, setAvatarEditorOpen] = useState(false);
   const [avatarDraft, setAvatarDraft] = useState<AvatarDraft | null>(null);
   const [videoActionsOpen, setVideoActionsOpen] = useState(false);
-  const { deleteAvatar, deleteVideo, profile, update, uploadAvatar, uploadVideo } =
-    usePsychologistFreeProfile({
-      callbacks: {
-        update: {
-          onSuccess: () => toast.success("Perfil profissional atualizado"),
-          onError: (error) => toast.error(resolveApiError(error)),
-        },
-        avatar: {
-          onSuccess: () => toast.success("Foto de perfil atualizada"),
-          onError: (error) => toast.error(resolveApiError(error)),
-        },
-        deleteAvatar: {
-          onSuccess: () => toast.success("Foto de perfil removida"),
-          onError: (error) => toast.error(resolveApiError(error)),
-        },
-        video: {
-          onSuccess: () => toast.success("Vídeo de apresentação atualizado"),
-          onError: (error) => toast.error(resolveApiError(error)),
-        },
-        deleteVideo: {
-          onSuccess: () => toast.success("Vídeo de apresentação removido"),
-          onError: (error) => toast.error(resolveApiError(error)),
-        },
+  const {
+    deleteAvatar,
+    deleteVideo,
+    profile,
+    update,
+    uploadAvatar,
+    uploadVideo,
+    uploadVideoCover,
+  } = usePsychologistFreeProfile({
+    callbacks: {
+      update: {
+        onSuccess: () => toast.success("Perfil profissional atualizado"),
+        onError: (error) => toast.error(resolveApiError(error)),
       },
-    });
+      avatar: {
+        onSuccess: () => toast.success("Foto de perfil atualizada"),
+        onError: (error) => toast.error(resolveApiError(error)),
+      },
+      deleteAvatar: {
+        onSuccess: () => toast.success("Foto de perfil removida"),
+        onError: (error) => toast.error(resolveApiError(error)),
+      },
+      video: {
+        onSuccess: () => toast.success("Vídeo de apresentação atualizado"),
+        onError: (error) => toast.error(resolveApiError(error)),
+      },
+      videoCover: {
+        onSuccess: () => toast.success("Imagem de capa do vídeo atualizada"),
+        onError: (error) => toast.error(resolveApiError(error)),
+      },
+      deleteVideo: {
+        onSuccess: () => toast.success("Vídeo de apresentação removido"),
+        onError: (error) => toast.error(resolveApiError(error)),
+      },
+    },
+  });
   const form = useFreeProfileForm(profile.data);
   const academicFormations = useFieldArray({
     control: form.hook.control,
@@ -620,11 +632,13 @@ export const ProfessionalProfileSetupLogic = () => {
   const visibleAvatarSrc = avatarDraft?.url || avatarSrc;
   const isPublicAvatar = isPublicMediaUrl(profile.data?.user.avatar);
   const videoSrc = resolvePublicMediaUrl(profile.data?.profile.video_url);
+  const videoCoverSrc = resolvePublicMediaUrl(profile.data?.profile.video_cover_url);
   const canUploadVideo = Boolean(profile.data?.plan.can_upload_video);
   const isSavingMedia =
     uploadAvatar.isPending ||
     deleteAvatar.isPending ||
     uploadVideo.isPending ||
+    uploadVideoCover.isPending ||
     deleteVideo.isPending;
   const isSubmitting = update.isPending || isSavingMedia;
   const addressState = form.hook.watch("address_state");
@@ -828,9 +842,39 @@ export const ProfessionalProfileSetupLogic = () => {
     uploadVideo.mutate(file);
   };
 
+  const handleVideoCoverChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) return;
+
+    if (file.size > AVATAR_MAX_SIZE_BYTES) {
+      toast.error("Envie uma imagem de capa de até 5MB.");
+      return;
+    }
+
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+      toast.error("Envie uma imagem PNG, JPG ou WebP para a capa.");
+      return;
+    }
+
+    setVideoActionsOpen(false);
+    uploadVideoCover.mutate(file);
+  };
+
   const openVideoFilePicker = () => {
     setVideoActionsOpen(false);
     videoInputRef.current?.click();
+  };
+
+  const openVideoCoverFilePicker = () => {
+    if (!videoSrc) {
+      toast.info("Envie um vídeo antes de adicionar a imagem de capa.");
+      return;
+    }
+
+    setVideoActionsOpen(false);
+    videoCoverInputRef.current?.click();
   };
 
   const handleVideoRemoval = () => {
@@ -840,8 +884,7 @@ export const ProfessionalProfileSetupLogic = () => {
   };
 
   const handleVideoCoverRequest = () => {
-    setVideoActionsOpen(false);
-    toast.info("Imagem de capa do vídeo ainda depende de suporte no backend.");
+    openVideoCoverFilePicker();
   };
 
   const submit = form.hook.handleSubmit((values) => {
@@ -862,6 +905,7 @@ export const ProfessionalProfileSetupLogic = () => {
       discount_first_session: values.discount_first_session,
       social_value: values.social_value,
       accepts_insurance: values.accepts_insurance,
+      show_experience_tag: values.show_experience_tag,
       academic: values.academic_formations[0]
         ? {
             title: values.academic_formations[0].title || null,
@@ -1180,7 +1224,11 @@ export const ProfessionalProfileSetupLogic = () => {
                           aria-expanded={videoActionsOpen}
                           aria-haspopup="menu"
                           className="inline-flex h-9 items-center gap-1 rounded-full border border-border bg-surface px-3 text-xs font-bold text-primary transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-60"
-                          disabled={uploadVideo.isPending || deleteVideo.isPending}
+                          disabled={
+                            uploadVideo.isPending ||
+                            uploadVideoCover.isPending ||
+                            deleteVideo.isPending
+                          }
                           onClick={() => setVideoActionsOpen((current) => !current)}
                           type="button"
                         >
@@ -1195,7 +1243,7 @@ export const ProfessionalProfileSetupLogic = () => {
                           >
                             <button
                               className="flex w-full items-center gap-2 px-4 py-3 text-sm font-semibold text-foreground transition hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-45"
-                              disabled={uploadVideo.isPending}
+                              disabled={uploadVideo.isPending || uploadVideoCover.isPending}
                               onClick={openVideoFilePicker}
                               role="menuitem"
                               type="button"
@@ -1205,7 +1253,12 @@ export const ProfessionalProfileSetupLogic = () => {
                             </button>
                             <button
                               className="flex w-full items-center gap-2 px-4 py-3 text-sm font-semibold text-danger transition hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-45"
-                              disabled={!videoSrc || uploadVideo.isPending || deleteVideo.isPending}
+                              disabled={
+                                !videoSrc ||
+                                uploadVideo.isPending ||
+                                uploadVideoCover.isPending ||
+                                deleteVideo.isPending
+                              }
                               onClick={handleVideoRemoval}
                               role="menuitem"
                               type="button"
@@ -1214,7 +1267,13 @@ export const ProfessionalProfileSetupLogic = () => {
                               Remover Vídeo
                             </button>
                             <button
-                              className="flex w-full items-center gap-2 px-4 py-3 text-sm font-semibold text-foreground transition hover:bg-primary-soft hover:text-primary"
+                              className="flex w-full items-center gap-2 px-4 py-3 text-sm font-semibold text-foreground transition hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-45"
+                              disabled={
+                                !videoSrc ||
+                                uploadVideo.isPending ||
+                                uploadVideoCover.isPending ||
+                                deleteVideo.isPending
+                              }
                               onClick={handleVideoCoverRequest}
                               role="menuitem"
                               type="button"
@@ -1232,6 +1291,7 @@ export const ProfessionalProfileSetupLogic = () => {
                       <video
                         className="mt-4 aspect-video w-full rounded-2xl border border-border bg-black object-cover"
                         controls
+                        poster={videoCoverSrc || undefined}
                         preload="metadata"
                         src={videoSrc}
                       >
@@ -1269,6 +1329,13 @@ export const ProfessionalProfileSetupLogic = () => {
                       className="sr-only"
                       onChange={handleVideoChange}
                       ref={videoInputRef}
+                      type="file"
+                    />
+                    <input
+                      accept="image/jpeg,image/png,image/webp"
+                      className="sr-only"
+                      onChange={handleVideoCoverChange}
+                      ref={videoCoverInputRef}
                       type="file"
                     />
                   </div>
@@ -1356,6 +1423,17 @@ export const ProfessionalProfileSetupLogic = () => {
                 {renderField("language")}
                 <div className="grid gap-3">
                   <h3 className="text-sm font-bold text-foreground">Selos e Facilidades</h3>
+                  <BooleanBenefit
+                    checked={form.hook.watch("show_experience_tag")}
+                    description="Mostre a tag com o tempo de experiência calculado pelo registro profissional."
+                    onChange={(checked) =>
+                      form.hook.setValue("show_experience_tag", checked, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
+                    }
+                    title="Exibir tempo de experiência"
+                  />
                   <BooleanBenefit
                     checked={form.hook.watch("discount_first_session")}
                     description="Reduza a barreira do primeiro contato."

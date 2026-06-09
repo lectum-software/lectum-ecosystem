@@ -26,6 +26,7 @@ export type PsychologistCardItem = {
   headline: string | null;
   bio: string | null;
   video_url?: string | null;
+  video_cover_url?: string | null;
   crp?: string | null;
   gender?: string | null;
   modality: string | null;
@@ -37,6 +38,7 @@ export type PsychologistCardItem = {
   discount_first_session?: boolean;
   social_value?: boolean;
   accepts_insurance?: boolean;
+  show_experience_tag?: boolean;
   whatsapp_url?: string | null;
   favorited: boolean;
   specialties: Array<{ name: string }>;
@@ -80,7 +82,11 @@ const buildBenefitTags = (psychologist: PsychologistCardItem) => {
     label: string;
   }> = [];
 
-  if (psychologist.verified && psychologist.formation_years) {
+  if (
+    psychologist.show_experience_tag !== false &&
+    psychologist.verified &&
+    psychologist.formation_years
+  ) {
     tags.push({
       icon: BriefcaseBusiness,
       label: `${psychologist.formation_years} anos de experiência`,
@@ -152,7 +158,15 @@ const FavoriteButton = ({
   </button>
 );
 
-const CardVideo = ({ name, url }: { name: string; url: string }) => {
+const CardVideo = ({
+  name,
+  poster,
+  url,
+}: {
+  name: string;
+  poster?: string | null;
+  url: string;
+}) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
 
@@ -172,6 +186,7 @@ const CardVideo = ({ name, url }: { name: string; url: string }) => {
         onPlay={() => setPlaying(true)}
         playsInline
         preload="metadata"
+        poster={poster || undefined}
         ref={videoRef}
         src={url}
       />
@@ -200,6 +215,7 @@ export function PsychologistCard({
   const avatarSrc = resolvePublicMediaUrl(psychologist.avatar);
   const avatarIsPublicMedia = isPublicMediaUrl(psychologist.avatar);
   const videoSrc = psychologist.verified ? resolvePublicMediaUrl(psychologist.video_url) : null;
+  const videoCoverSrc = resolvePublicMediaUrl(psychologist.video_cover_url);
   const tags = buildBenefitTags(psychologist);
   const displayName = getHonorificName(psychologist);
   const summary =
@@ -211,7 +227,7 @@ export function PsychologistCard({
     <article className="w-full max-w-[390px] overflow-hidden rounded-[20px] border border-border bg-surface shadow-[0_14px_32px_rgb(15_23_42_/_10%)] transition hover:border-border-strong hover:shadow-[0_18px_38px_rgb(15_23_42_/_12%)]">
       {videoSrc ? (
         <div className="relative">
-          <CardVideo name={psychologist.name} url={videoSrc} />
+          <CardVideo name={psychologist.name} poster={videoCoverSrc} url={videoSrc} />
           <div className="absolute left-4 top-4">
             <AvailabilityBadge available={psychologist.available_today} />
           </div>
