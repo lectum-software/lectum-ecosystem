@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 37 tasks: `TASK-00` a `TASK-35`, incluindo complementos `TASK-31A` a `TASK-31C`.
+- A fila operacional agora possui 38 tasks: `TASK-00` a `TASK-36`, incluindo complementos `TASK-31A` a `TASK-31C`.
 
 ## Inventário visual ativo
 
@@ -116,6 +116,7 @@ ou cortesia manual.
 | 33 | [TASK-33 - Gestão de assinatura e cartão](TASK-33-gestao-assinatura-cartao.md) | Pending | 02, 32 |
 | 34 | [TASK-34 - Qualidade, segurança, LGPD e operação](TASK-34-qualidade-seguranca-lgpd-operacao.md) | Pending | 13 a 33 |
 | 35 | [TASK-35 - Ajustes mobile de regressão em login, perfil e descoberta](TASK-35-ajustes-mobile-regressao-login-perfil.md) | Completed | 12, 13, 14, 15, 18A, 20 |
+| 36 | [TASK-36 - Refinos mobile de perfil público, analytics e edição profissional](TASK-36-refinos-mobile-perfil-analytics-edicao.md) | Completed | 14, 15, 18A, 20, 35 |
 
 ## Ordem operacional recomendada sem bloqueios
 

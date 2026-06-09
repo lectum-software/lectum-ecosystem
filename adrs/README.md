@@ -48,3 +48,5 @@ Formato recomendado:
 - [ADR-0032 - Refinamento mobile-first do perfil profissional público](0032-refinamento-perfil-profissional-publico.md) - Accepted
 - [ADR-0033 - Analytics profissionais com fontes persistidas e gate de plano](0033-analytics-profissionais-fontes-persistidas.md) - Accepted
 - [ADR-0034 - Paridade visual mobile de analytics e avaliações do psicólogo](0034-paridade-visual-analytics-avaliacoes-psicologo.md) - Accepted
+- [ADR-0035 - Correções mobile de regressão em autenticação, perfil e descoberta](0035-ajustes-mobile-regressao-login-perfil.md) - Accepted
+- [ADR-0036 - Refinos mobile de perfil público, analytics e edição profissional](0036-refinos-mobile-perfil-analytics-edicao.md) - Accepted

@@ -146,6 +146,10 @@ export const freeProfileSchema = z
     path: ["whatsapp"],
   });
 
+const PROFESSIONAL_COUNTRY_CALLING_CODE_OPTIONS = COUNTRY_CALLING_CODE_OPTIONS.map((option) =>
+  option.country === "BR" ? { ...option, label: "+55" } : option,
+);
+
 export const fields = [
   {
     name: "name",
@@ -207,7 +211,7 @@ export const fields = [
     label: "WhatsApp profissional",
     placeholder: "(00) 00000-0000",
     countryCodeName: "countryCode",
-    countryCodeOptions: COUNTRY_CALLING_CODE_OPTIONS,
+    countryCodeOptions: PROFESSIONAL_COUNTRY_CALLING_CODE_OPTIONS,
     required: true,
     autoComplete: "tel",
   },

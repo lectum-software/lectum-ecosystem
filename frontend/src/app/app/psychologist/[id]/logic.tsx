@@ -27,7 +27,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   useDirectoryPsychologist,
   useDirectoryPsychologistPosts,
@@ -117,6 +117,12 @@ const formatRating = (ratingAvg: number, ratingCount: number) => {
   if (ratingCount <= 0) return "Sem avaliações";
 
   return `${(ratingAvg / 100).toFixed(1)} (${ratingCount})`;
+};
+
+const formatHeroRating = (ratingAvg: number, ratingCount: number) => {
+  if (ratingCount <= 0) return "0.0 (0)";
+
+  return formatRating(ratingAvg, ratingCount);
 };
 
 const getHonorificName = (profile: DirectoryPsychologistProfile) => {
@@ -372,17 +378,15 @@ const ProfileHero = ({
   const benefitTags = buildBenefitTags(profile);
 
   return (
-    <section className="bg-surface px-5 pb-5 pt-5 sm:px-6 lg:px-8" data-profile-hero="true">
+    <section className="bg-surface px-5 pb-7 pt-5 sm:px-6 lg:px-8" data-profile-hero="true">
       <div className="flex items-start gap-3">
         <ProfileAvatar profile={profile} />
 
         <div className="min-w-0 flex-1">
-          {profile.rating_count > 0 ? (
-            <span className="inline-flex items-center gap-1 text-[0.66rem] font-extrabold text-muted">
-              <Star className="h-3.5 w-3.5 fill-warning text-warning" aria-hidden="true" />
-              {formatRating(profile.rating_avg, profile.rating_count)}
-            </span>
-          ) : null}
+          <span className="inline-flex items-center gap-1 text-[0.66rem] font-extrabold text-muted">
+            <Star className="h-3.5 w-3.5 fill-warning text-warning" aria-hidden="true" />
+            {formatHeroRating(profile.rating_avg, profile.rating_count)}
+          </span>
           <h1 className="mt-0.5 flex items-center gap-1.5 text-[1.18rem] font-extrabold leading-5 text-foreground lg:text-2xl">
             <span className="min-w-0 truncate">{displayName}</span>
             {profile.verified ? (
@@ -440,7 +444,7 @@ const ProfileHero = ({
       )}
 
       {benefitTags.length > 0 ? (
-        <div className="mt-4 flex flex-wrap gap-2" data-profile-benefit-tags="true">
+        <div className="mt-5 flex flex-wrap gap-2" data-profile-benefit-tags="true">
           {benefitTags.map((tag) => {
             const Icon = tag.icon;
 
@@ -479,7 +483,7 @@ const ProfileTabs = ({
           <button
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex min-h-12 items-center justify-center gap-1.5 border-b-2 px-2 text-xs font-extrabold transition sm:text-sm",
+              "flex min-h-12 items-center justify-center gap-1 border-b-2 px-1.5 text-[0.68rem] font-extrabold transition sm:text-xs",
               active
                 ? "border-primary text-primary"
                 : "border-transparent text-muted hover:text-primary",
@@ -488,7 +492,7 @@ const ProfileTabs = ({
             onClick={() => onTabChange(tab.value)}
             type="button"
           >
-            <Icon className="h-4 w-4" aria-hidden="true" />
+            <Icon className="h-3.5 w-3.5" aria-hidden="true" />
             {tab.label}
           </button>
         );
@@ -573,25 +577,74 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
   );
 };
 
+const ExpandableBio = ({ text }: { text: string }) => {
+  const [expanded, setExpanded] = useState(false);
+  const [canExpand, setCanExpand] = useState(false);
+  const textRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const element = textRef.current;
+      setCanExpand(Boolean(element && element.scrollHeight > element.clientHeight + 2));
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  return (
+    <div className="grid gap-2">
+      <p
+        className={cn("text-[0.86rem] leading-6 text-muted", !expanded && "line-clamp-4")}
+        ref={textRef}
+      >
+        {text}
+      </p>
+      {canExpand ? (
+        <button
+          className="w-fit text-[0.78rem] font-extrabold text-primary transition hover:text-primary/80"
+          onClick={() => setExpanded((current) => !current)}
+          type="button"
+        >
+          {expanded ? "Ver menos" : "Ver mais"}
+        </button>
+      ) : null}
+    </div>
+  );
+};
+
 const FormationSection = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
   const formations = profile.academic_formations ?? [];
 
   return (
-    <section className="grid gap-3 border-t border-border bg-background px-5 py-6 sm:px-6 lg:px-8">
+    <section className="grid gap-3 border-t border-border bg-surface px-5 py-6 sm:px-6 lg:px-8">
       <h2 className="text-base font-extrabold text-foreground">Formação & Títulos</h2>
       {formations.length > 0 ? (
         <div className="grid gap-3">
-          {formations.map((formation, index) => (
-            <ProfileInfoCard
-              icon={GraduationCap}
-              key={`${formation.title || "formacao"}-${formation.institution || index}`}
-              label={formation.institution || "Formação"}
-              value={formatList(
-                [formation.title || "Título não informado", formation.graduation_year || ""],
-                "Título não informado",
-              )}
-            />
-          ))}
+          {formations.map((formation, index) => {
+            const institutionLine = formatList(
+              [formation.institution || "", formation.graduation_year || ""],
+              "Instituição e data não informadas",
+            );
+
+            return (
+              <article
+                className="flex items-start gap-3 rounded-[18px] bg-surface-muted px-4 py-4"
+                key={`${formation.title || "formacao"}-${formation.institution || index}`}
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+                  <GraduationCap className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-extrabold leading-5 text-foreground">
+                    {formation.title || "Título não informado"}
+                  </p>
+                  <p className="mt-0.5 text-sm font-semibold leading-5 text-muted">
+                    {institutionLine}
+                  </p>
+                </div>
+              </article>
+            );
+          })}
         </div>
       ) : (
         <p className="text-sm leading-6 text-muted">
@@ -624,15 +677,16 @@ const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
     "Nenhum idioma cadastrado.",
   );
 
+  const bioText =
+    profile.bio ||
+    "Este profissional ainda não informou uma biografia pública. Assim que houver dados persistidos, eles aparecerão aqui sem usar conteúdo fictício.";
+
   return (
     <div className="bg-surface">
       <div className="grid gap-5 px-5 py-5 sm:px-6 lg:px-8">
         <PresentationVideo profile={profile} />
 
-        <p className="text-[0.86rem] leading-6 text-muted">
-          {profile.bio ||
-            "Este profissional ainda não informou uma biografia pública. Assim que houver dados persistidos, eles aparecerão aqui sem usar conteúdo fictício."}
-        </p>
+        <ExpandableBio text={bioText} />
 
         <div className="grid gap-3">
           <ProfileInfoCard icon={Brain} label="Especialidades" value={specialtyText} />
@@ -640,7 +694,7 @@ const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
         </div>
       </div>
 
-      <section className="grid gap-3 border-t border-border bg-background px-5 py-6 sm:px-6 lg:px-8">
+      <section className="grid gap-3 border-t border-border bg-surface px-5 py-6 sm:px-6 lg:px-8">
         <h2 className="text-base font-extrabold text-foreground">Atendimento</h2>
         <div className="grid gap-3">
           <ProfileInfoCard
@@ -656,7 +710,7 @@ const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
 
       <FormationSection profile={profile} />
 
-      <section className="border-t border-border bg-background px-5 py-6 sm:px-6 lg:px-8">
+      <section className="border-t border-border bg-surface px-5 pb-24 pt-6 sm:px-6 lg:px-8">
         <div className="flex items-start gap-3 rounded-[18px] border border-primary/20 bg-primary-soft px-4 py-4 text-primary">
           <CalendarDays className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
           <p className="text-sm font-semibold leading-5 text-foreground">

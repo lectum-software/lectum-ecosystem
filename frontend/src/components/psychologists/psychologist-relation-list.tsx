@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Heart, Search } from "lucide-react";
+import { Heart, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
@@ -122,19 +122,7 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
     <PrivateTemplate>
       <section className="mx-auto grid w-full max-w-[390px] gap-5 sm:max-w-[430px] lg:max-w-6xl">
         <header className="-mx-5 -mt-6 border-b border-border bg-surface px-4 py-4 sm:mx-0 sm:mt-0 sm:rounded-[28px] sm:border sm:p-6 lg:p-8">
-          <div className="grid gap-2">
-            <div className="flex min-w-0 items-center gap-2">
-              <Link
-                aria-label="Voltar para psicólogos"
-                className="-ml-2 grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary"
-                href="/app/psychologists"
-              >
-                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-              </Link>
-              <p className="text-xs font-extrabold uppercase tracking-[0.26em] text-subtle">
-                Minha lista
-              </p>
-            </div>
+          <div className="grid gap-3">
             <div className="flex min-w-0 items-center justify-between gap-3">
               <h1 className="text-2xl font-extrabold text-foreground lg:text-3xl">
                 {copy.title as string}

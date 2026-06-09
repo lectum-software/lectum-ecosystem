@@ -15,6 +15,7 @@ import {
   Loader2,
   type LucideIcon,
   MapPin,
+  PencilLine,
   Plus,
   Trash2,
   UploadCloud,
@@ -1221,9 +1222,6 @@ export const ProfessionalProfileSetupLogic = () => {
                         </span>
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-bold text-foreground">Vídeo de Apresentação</p>
-                          <p className="mt-1 text-xs leading-5 text-muted">
-                            Envie um vídeo MP4, MOV ou WebM de até 50MB para destacar seu perfil.
-                          </p>
                         </div>
                       </div>
 
@@ -1231,7 +1229,8 @@ export const ProfessionalProfileSetupLogic = () => {
                         <button
                           aria-expanded={videoActionsOpen}
                           aria-haspopup="menu"
-                          className="inline-flex h-9 items-center gap-1 rounded-full border border-border bg-surface px-3 text-xs font-bold text-primary transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-60"
+                          aria-label="Editar vídeo de apresentação"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface text-primary transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-60"
                           disabled={
                             uploadVideo.isPending ||
                             uploadVideoCover.isPending ||
@@ -1240,8 +1239,7 @@ export const ProfessionalProfileSetupLogic = () => {
                           onClick={() => setVideoActionsOpen((current) => !current)}
                           type="button"
                         >
-                          Editar
-                          <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+                          <PencilLine className="h-4 w-4" aria-hidden="true" />
                         </button>
 
                         {videoActionsOpen ? (
@@ -1293,6 +1291,10 @@ export const ProfessionalProfileSetupLogic = () => {
                         ) : null}
                       </div>
                     </div>
+
+                    <p className="mt-3 w-full text-xs leading-4 text-muted">
+                      Envie um vídeo MP4, MOV ou WebM de até 50MB para destacar seu perfil.
+                    </p>
 
                     {videoSrc ? (
                       // biome-ignore lint/a11y/useMediaCaption: vídeos enviados pelo usuário ainda não têm faixa de legenda no recorte atual.
@@ -1487,12 +1489,12 @@ export const ProfessionalProfileSetupLogic = () => {
                       <h3 className="text-sm font-bold text-foreground">Formação {index + 1}</h3>
                       {academicFormations.fields.length > 1 ? (
                         <button
-                          className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-bold text-danger transition hover:bg-danger/10"
+                          aria-label={`Remover formação ${index + 1}`}
+                          className="grid h-8 w-8 place-items-center rounded-full text-danger transition hover:bg-danger/10"
                           onClick={() => academicFormations.remove(index)}
                           type="button"
                         >
-                          <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                          Remover
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
                         </button>
                       ) : null}
                     </div>

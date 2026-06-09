@@ -153,7 +153,7 @@ const PeriodTabs = ({
   disabled?: boolean;
   onChange: (period: PsychologistAnalyticsPeriodKey) => void;
 }) => (
-  <div className="grid h-[50px] grid-cols-5 border-b border-[#e5e7eb] bg-white" role="tablist">
+  <div className="grid h-[46px] grid-cols-5 border-b border-[#e5e7eb] bg-white" role="tablist">
     {PERIOD_OPTIONS.map((option) => {
       const active = option.value === current;
 
@@ -161,7 +161,7 @@ const PeriodTabs = ({
         <button
           aria-selected={active}
           className={cn(
-            "relative text-[11px] font-bold transition disabled:opacity-60",
+            "relative px-0.5 text-[10.5px] font-bold transition disabled:opacity-60",
             active ? "text-[#308ce8]" : "text-[#64748b] hover:text-[#111827]",
           )}
           disabled={disabled}
@@ -189,11 +189,11 @@ const CustomPeriodFields = ({
   onChange: (range: { end_at: string; start_at: string }) => void;
   startAt: string;
 }) => (
-  <div className="grid grid-cols-2 gap-2 border-b border-[#e5e7eb] bg-white px-4 py-3">
+  <div className="grid grid-cols-2 gap-2 border-b border-[#e5e7eb] bg-white px-3 py-3">
     <label className="grid gap-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#94a3b8]">
       Início
       <input
-        className="h-10 min-w-0 rounded-[12px] border border-[#e2e8f0] bg-[#fbfcfe] px-2 text-[12px] font-bold text-[#111827] outline-none focus:border-[#308ce8] disabled:opacity-60"
+        className="h-10 min-w-0 rounded-[12px] border border-[#e2e8f0] bg-[#fbfcfe] px-2 text-[11px] font-bold text-[#111827] outline-none focus:border-[#308ce8] disabled:opacity-60"
         disabled={disabled}
         max={endAt || undefined}
         onChange={(event) => onChange({ start_at: event.target.value, end_at: endAt })}
@@ -204,7 +204,7 @@ const CustomPeriodFields = ({
     <label className="grid gap-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#94a3b8]">
       Fim
       <input
-        className="h-10 min-w-0 rounded-[12px] border border-[#e2e8f0] bg-[#fbfcfe] px-2 text-[12px] font-bold text-[#111827] outline-none focus:border-[#308ce8] disabled:opacity-60"
+        className="h-10 min-w-0 rounded-[12px] border border-[#e2e8f0] bg-[#fbfcfe] px-2 text-[11px] font-bold text-[#111827] outline-none focus:border-[#308ce8] disabled:opacity-60"
         disabled={disabled}
         min={startAt || undefined}
         onChange={(event) => onChange({ start_at: startAt, end_at: event.target.value })}
@@ -219,19 +219,19 @@ const MetricCard = ({ metric }: { metric: AnalyticsCardView }) => {
   const Icon = metric.icon;
 
   return (
-    <article className="min-w-0 rounded-[18px] border border-[#e2e8f0] bg-white px-3 py-4 shadow-[0_2px_8px_rgb(15_23_42_/_5%)]">
+    <article className="min-w-0 rounded-[16px] border border-[#e2e8f0] bg-white px-2.5 py-3.5 shadow-[0_2px_8px_rgb(15_23_42_/_5%)]">
       <div className="flex min-w-0 items-start gap-2">
-        <Icon className="mt-0.5 h-[15px] w-[15px] shrink-0 text-[#6f7f95]" aria-hidden />
-        <h2 className="min-w-0 whitespace-pre-line text-[9.5px] font-bold uppercase leading-[12px] tracking-[0.04em] text-[#6f7f95]">
+        <Icon className="mt-0.5 h-[14px] w-[14px] shrink-0 text-[#6f7f95]" aria-hidden />
+        <h2 className="min-w-0 whitespace-pre-line text-[8.8px] font-bold uppercase leading-[11px] tracking-[0.03em] text-[#6f7f95]">
           {metric.label}
         </h2>
       </div>
-      <div className="mt-3 flex min-w-0 items-end gap-1.5">
-        <p className="min-w-0 text-[21px] font-extrabold leading-none tracking-[-0.03em] text-[#111827]">
+      <div className="mt-3 flex min-w-0 items-end gap-1">
+        <p className="min-w-0 text-[19px] font-extrabold leading-none tracking-[-0.03em] text-[#111827]">
           {metric.value}
         </p>
         {metric.isUnavailable ? (
-          <span className="pb-0.5 text-[9px] font-semibold text-[#94a3b8]">sem evento</span>
+          <span className="pb-0.5 text-[8.5px] font-semibold text-[#94a3b8]">sem evento</span>
         ) : null}
       </div>
     </article>
@@ -249,7 +249,7 @@ const ReviewsLinkCard = ({ link }: { link: string }) => {
   };
 
   return (
-    <section className="rounded-[22px] border border-[#e2e8f0] bg-white p-5 shadow-[0_2px_8px_rgb(15_23_42_/_5%)]">
+    <section className="rounded-[20px] border border-[#e2e8f0] bg-white p-4 shadow-[0_2px_8px_rgb(15_23_42_/_5%)]">
       <h2 className="text-[16px] font-semibold text-[#111827]">
         Link da minha página de avaliações
       </h2>
@@ -272,7 +272,7 @@ const ReviewsLinkCard = ({ link }: { link: string }) => {
 };
 
 const SpecialtySearchCard = () => (
-  <section className="rounded-[22px] border border-[#e2e8f0] bg-white p-5 shadow-[0_2px_8px_rgb(15_23_42_/_5%)]">
+  <section className="rounded-[20px] border border-[#e2e8f0] bg-white p-4 shadow-[0_2px_8px_rgb(15_23_42_/_5%)]">
     <div className="flex items-center justify-between gap-3">
       <h2 className="text-[19px] font-extrabold tracking-[-0.02em] text-[#111827]">
         Busca por especialidades
@@ -287,7 +287,7 @@ const SpecialtySearchCard = () => (
 );
 
 const ProTipCard = () => (
-  <section className="flex gap-3 rounded-[21px] border border-[#c9dff6] bg-[#eaf5ff] px-5 py-[18px] text-[#1f5f97]">
+  <section className="flex gap-3 rounded-[20px] border border-[#c9dff6] bg-[#eaf5ff] px-4 py-4 text-[#1f5f97]">
     <Lightbulb className="mt-0.5 h-5 w-5 shrink-0 text-[#308ce8]" aria-hidden />
     <div>
       <h2 className="text-[14px] font-extrabold text-[#308ce8]">Dica Pro</h2>
@@ -319,8 +319,8 @@ export const ProfessionalAnalyticsLogic = () => {
 
   return (
     <PrivateTemplate showNavigation={false}>
-      <section className="mx-auto my-[-1.5rem] min-h-screen w-full max-w-[390px] overflow-hidden bg-[#f5f6f8] pb-8 sm:my-0 sm:rounded-[24px] sm:border sm:border-[#e5e7eb]">
-        <header className="grid h-[64px] grid-cols-[56px_1fr_56px] items-center border-b border-[#e5e7eb] bg-white">
+      <section className="-mx-5 my-[-1.5rem] min-h-screen w-[calc(100%+2.5rem)] max-w-none overflow-x-hidden bg-[#f5f6f8] pb-8 sm:mx-auto sm:my-0 sm:w-full sm:max-w-[390px] sm:rounded-[24px] sm:border sm:border-[#e5e7eb]">
+        <header className="grid h-[58px] grid-cols-[52px_1fr_52px] items-center border-b border-[#e5e7eb] bg-white">
           <Link
             aria-label="Voltar para perfil"
             className="grid h-full place-items-center text-[#64748b]"
@@ -344,7 +344,7 @@ export const ProfessionalAnalyticsLogic = () => {
           />
         ) : null}
 
-        <div className="grid gap-4 px-4 pt-4">
+        <div className="grid min-w-0 gap-3 px-3 pt-3">
           {analytics.isLoading ? <LoadingState label="Carregando analytics reais" /> : null}
 
           {errorMessage ? (
@@ -364,7 +364,10 @@ export const ProfessionalAnalyticsLogic = () => {
           ) : null}
 
           {!analytics.isError ? (
-            <section className="grid grid-cols-2 gap-3" aria-label="Cards de analytics">
+            <section
+              className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2"
+              aria-label="Cards de analytics"
+            >
               {metricCards(data).map((metric) => (
                 <MetricCard key={metric.id} metric={metric} />
               ))}
