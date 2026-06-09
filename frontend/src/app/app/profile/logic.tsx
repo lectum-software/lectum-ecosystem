@@ -7,7 +7,6 @@ import {
   CalendarDays,
   ChevronRight,
   Edit3,
-  Eye,
   HeartHandshake,
   Lock,
   LogOut,
@@ -262,15 +261,6 @@ export const ProfileLogic = () => {
   ];
 
   const accountRows: ProfileRow[] = [
-    ...(isPsychologist
-      ? [
-          {
-            href: `/app/psychologist/${user.id}`,
-            icon: Eye,
-            label: "Ver meu perfil público",
-          },
-        ]
-      : []),
     {
       href: isPsychologist ? "/app/professional/profile/setup" : "/app/profile/edit",
       icon: Edit3,
@@ -317,14 +307,21 @@ export const ProfileLogic = () => {
               )}
             </div>
 
-            <h1 className="mt-5 flex items-center gap-2 text-2xl font-bold text-foreground">
-              {displayName}
-              {isPsychologist && hasVerifiedBadge ? (
-                <VerifiedBadgeIcon aria-hidden="true" className="h-5 w-5" />
-              ) : null}
+            <h1 className="mt-5 text-2xl font-bold text-foreground">
+              <span className="inline-flex min-w-0 items-end">
+                <span className="min-w-0 break-words">{displayName}</span>
+                {isPsychologist && hasVerifiedBadge ? (
+                  <VerifiedBadgeIcon aria-hidden="true" className="ml-0.5 h-5 w-5 shrink-0" />
+                ) : null}
+              </span>
             </h1>
             <p className="mt-1 text-sm text-muted">{subtitle}</p>
             {user.email ? <p className="mt-2 text-xs text-subtle">{user.email}</p> : null}
+            {isPsychologist ? (
+              <Button asChild className="mt-3 h-10 rounded-full" variant="outline">
+                <Link href={`/app/psychologist/${user.id}`}>Ver perfil público</Link>
+              </Button>
+            ) : null}
           </div>
         </div>
 
