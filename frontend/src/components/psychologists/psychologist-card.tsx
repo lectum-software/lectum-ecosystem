@@ -599,6 +599,7 @@ export function PsychologistCard({
   const cardRef = useRef<HTMLElement>(null);
   const tagContainerRef = useRef<HTMLDivElement>(null);
   const [tagTopOffsetPx, setTagTopOffsetPx] = useState<number | null>(null);
+  const [overlayHeightPx, setOverlayHeightPx] = useState<number | null>(null);
 
   const recalculateTagTopOffset = useCallback(() => {
     const cardNode = cardRef.current;
@@ -615,12 +616,14 @@ export function PsychologistCard({
     const shareButtonRect = shareButtonNode.getBoundingClientRect();
     const tagContainerHeight = tagContainerNode.getBoundingClientRect().height;
     const overlayShareGap = Math.abs(overlayRect.top - shareButtonRect.top);
+    const nextOverlayHeight = Math.round(overlayRect.height);
 
     const nextTop = Math.round(
       overlayRect.top - cardRect.top - overlayShareGap - tagContainerHeight,
     );
 
     setTagTopOffsetPx((current) => (current === nextTop ? current : nextTop));
+    setOverlayHeightPx((current) => (current === nextOverlayHeight ? current : nextOverlayHeight));
   }, []);
 
   useEffect(() => {
@@ -652,7 +655,8 @@ export function PsychologistCard({
       ref={cardRef}
       style={
         {
-          "--psychologist-overlay-height": PSYCHOLOGIST_OVERLAY_HEIGHT,
+          "--psychologist-overlay-height":
+            overlayHeightPx === null ? PSYCHOLOGIST_OVERLAY_HEIGHT : `${overlayHeightPx}px`,
           aspectRatio: "9 / 16",
           maxWidth: "380px",
           minWidth: "320px",
