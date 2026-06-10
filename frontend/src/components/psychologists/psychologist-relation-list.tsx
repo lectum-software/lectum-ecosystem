@@ -38,7 +38,7 @@ const config = {
     subtitle: "",
     emptyTitle: "Nenhum favorito encontrado",
     emptyDescription:
-      "Favorite psicólogos publicados na descoberta para montar sua lista pessoal com dados reais.",
+      "Favorite psic\u00f3logos publicados na descoberta para montar sua lista pessoal com dados reais.",
     icon: Heart,
   },
 } satisfies Record<RelationMode, Record<string, unknown>>;
@@ -58,14 +58,14 @@ const resolveRelationErrorMessage = (error: unknown) => {
   const normalized = rawMessage.toLowerCase();
 
   if (normalized.includes("token") || normalized.includes("sess")) {
-    return "Sua sessão precisa estar ativa para carregar esta lista.";
+    return "Sua sess\u00e3o precisa estar ativa para carregar esta lista.";
   }
 
   if (normalized.includes("network") || normalized.includes("conex")) {
-    return "Não foi possível conectar à API agora. Tente novamente em alguns instantes.";
+    return "N\u00e3o foi poss\u00edvel conectar \u00e0 API agora. Tente novamente em alguns instantes.";
   }
 
-  return rawMessage || "Não foi possível carregar os psicólogos desta lista.";
+  return rawMessage || "N\u00e3o foi poss\u00edvel carregar os psic\u00f3logos desta lista.";
 };
 
 export function PsychologistRelationList({ mode }: PsychologistRelationListProps) {
@@ -126,9 +126,9 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
 
   return (
     <PrivateTemplate>
-      <section className="mx-auto grid w-full max-w-[390px] gap-5 sm:max-w-[430px] lg:max-w-6xl">
-        <header className="-mx-5 -mt-6 border-b border-border bg-surface px-4 py-4 sm:mx-0 sm:mt-0 sm:rounded-[28px] sm:border sm:p-6 lg:p-8">
-          <div className="grid gap-3">
+      <div className="grid w-full gap-4">
+        <header className="-mt-6 sticky top-0 left-1/2 z-30 w-screen -translate-x-1/2 border-b border-border bg-surface px-4 py-4 backdrop-blur-sm sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+          <div className="mx-auto grid w-full max-w-[390px] gap-3 sm:max-w-[430px] lg:max-w-6xl">
             <div className="flex min-w-0 items-center justify-between gap-3">
               <h1 className="text-2xl font-extrabold text-foreground lg:text-3xl">
                 {copy.title as string}
@@ -143,84 +143,86 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
           </div>
         </header>
 
-        <div className="grid gap-4">
-          {errorMessage ? (
-            <InlineAlert title="Não foi possível carregar" variant="error">
-              {errorMessage}
-            </InlineAlert>
-          ) : null}
+        <section className="mx-auto grid w-full max-w-[390px] gap-5 px-4 sm:max-w-[430px] sm:px-0 lg:max-w-6xl">
+          <div className="grid gap-4">
+            {errorMessage ? (
+              <InlineAlert title="N\u00e3o foi poss\u00edvel carregar" variant="error">
+                {errorMessage}
+              </InlineAlert>
+            ) : null}
 
-          {showInitialLoading ? (
-            <div className="grid min-h-[38vh] place-items-center rounded-[18px] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
-              <LoadingState label={`Carregando ${copy.title as string}`} />
-            </div>
-          ) : null}
+            {showInitialLoading ? (
+              <div className="grid min-h-[38vh] place-items-center rounded-[18px] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
+                <LoadingState label={`Carregando ${copy.title as string}`} />
+              </div>
+            ) : null}
 
-          {!showInitialLoading && !errorMessage && psychologists.length === 0 ? (
-            <EmptyState
-              action={
-                <Button asChild className="rounded-full">
-                  <Link href="/app/psychologists">
-                    <Search className="h-4 w-4" aria-hidden="true" />
-                    Buscar psicólogos
-                  </Link>
+            {!showInitialLoading && !errorMessage && psychologists.length === 0 ? (
+              <EmptyState
+                action={
+                  <Button asChild className="rounded-full">
+                    <Link href="/app/psychologists">
+                      <Search className="h-4 w-4" aria-hidden="true" />
+                      Buscar psic\u00f3logos
+                    </Link>
+                  </Button>
+                }
+                description={copy.emptyDescription as string}
+                icon={Icon}
+                title={copy.emptyTitle as string}
+              />
+            ) : null}
+
+            {!showInitialLoading && !errorMessage && psychologists.length > 0 ? (
+              <>
+                <div className="flex items-center justify-end gap-3 text-sm text-muted">
+                  {activeQuery.isFetching ? <LoadingState label="Atualizando" /> : null}
+                </div>
+
+                <div className="grid gap-4 lg:grid-cols-2">
+                  {psychologists.map((psychologist) => (
+                    <PsychologistCard
+                      favoritePending={favoritePendingId === psychologist.id}
+                      key={psychologist.id}
+                      onToggleFavorite={toggleFavorite}
+                      psychologist={psychologist}
+                    />
+                  ))}
+                </div>
+              </>
+            ) : null}
+
+            {pages > 1 ? (
+              <nav
+                aria-label={`Pagina\u00e7\u00e3o de ${copy.title as string}`}
+                className="flex items-center justify-between gap-3 rounded-[18px] border border-border bg-surface p-3"
+              >
+                <Button
+                  disabled={currentPage <= 1 || activeQuery.isFetching}
+                  onClick={() => goToPage(currentPage - 1)}
+                  type="button"
+                  variant="outline"
+                >
+                  Anterior
                 </Button>
-              }
-              description={copy.emptyDescription as string}
-              icon={Icon}
-              title={copy.emptyTitle as string}
-            />
-          ) : null}
 
-          {!showInitialLoading && !errorMessage && psychologists.length > 0 ? (
-            <>
-              <div className="flex items-center justify-end gap-3 text-sm text-muted">
-                {activeQuery.isFetching ? <LoadingState label="Atualizando" /> : null}
-              </div>
+                <span className="text-sm font-semibold text-muted">
+                  P\u00e1gina {currentPage} de {pages}
+                </span>
 
-              <div className="grid gap-4 lg:grid-cols-2">
-                {psychologists.map((psychologist) => (
-                  <PsychologistCard
-                    favoritePending={favoritePendingId === psychologist.id}
-                    key={psychologist.id}
-                    onToggleFavorite={toggleFavorite}
-                    psychologist={psychologist}
-                  />
-                ))}
-              </div>
-            </>
-          ) : null}
-
-          {pages > 1 ? (
-            <nav
-              aria-label={`Paginação de ${copy.title as string}`}
-              className="flex items-center justify-between gap-3 rounded-[18px] border border-border bg-surface p-3"
-            >
-              <Button
-                disabled={currentPage <= 1 || activeQuery.isFetching}
-                onClick={() => goToPage(currentPage - 1)}
-                type="button"
-                variant="outline"
-              >
-                Anterior
-              </Button>
-
-              <span className="text-sm font-semibold text-muted">
-                Página {currentPage} de {pages}
-              </span>
-
-              <Button
-                disabled={currentPage >= pages || activeQuery.isFetching}
-                onClick={() => goToPage(currentPage + 1)}
-                type="button"
-                variant="outline"
-              >
-                Próxima
-              </Button>
-            </nav>
-          ) : null}
-        </div>
-      </section>
+                <Button
+                  disabled={currentPage >= pages || activeQuery.isFetching}
+                  onClick={() => goToPage(currentPage + 1)}
+                  type="button"
+                  variant="outline"
+                >
+                  Pr\u00f3xima
+                </Button>
+              </nav>
+            ) : null}
+          </div>
+        </section>
+      </div>
     </PrivateTemplate>
   );
 }

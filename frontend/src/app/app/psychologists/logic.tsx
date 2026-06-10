@@ -226,9 +226,9 @@ export const PsychologistsLogic = () => {
 
   return (
     <PrivateTemplate allowAnonymous autoHideNavigation>
-      <section className="mx-auto grid w-full max-w-[390px] gap-4 px-4 sm:max-w-[430px] sm:px-0">
-        <header className="-mx-5 -mt-6 border-b border-border bg-surface px-4 py-4 sm:mx-0 sm:mt-0 sm:rounded-[28px] sm:border sm:p-6 lg:p-8 sticky top-0 z-30 backdrop-blur-sm bg-surface/95">
-          <div className="grid gap-3">
+      <div className="grid w-full gap-4">
+        <header className="-mt-6 sticky top-0 left-1/2 z-30 w-screen -translate-x-1/2 border-b border-border bg-surface px-4 py-4 backdrop-blur-sm sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+          <div className="mx-auto grid w-full max-w-[390px] gap-3 sm:max-w-[430px] lg:max-w-6xl">
             <div className="flex min-w-0 items-center justify-between gap-3">
               <h1 className="text-2xl font-extrabold text-foreground lg:text-3xl">Psicólogos</h1>
               <button
@@ -248,130 +248,132 @@ export const PsychologistsLogic = () => {
           </div>
         </header>
 
-        {isFiltersOpen ? (
-          <div
-            aria-labelledby="psychologist-filters-title"
-            aria-modal="true"
-            className="fixed inset-0 z-50 grid place-items-center bg-foreground/50 p-4 backdrop-blur-sm"
-            onMouseDown={handleFiltersClose}
-            role="dialog"
-          >
+        <section className="mx-auto grid w-full max-w-[390px] gap-4 px-4 sm:max-w-[430px] sm:px-0 lg:max-w-6xl">
+          {isFiltersOpen ? (
             <div
-              className="grid w-full max-w-[500px] gap-4 rounded-[28px] border border-border bg-surface p-5 shadow-[0_24px_70px_rgb(15_23_42_/_26%)]"
-              onMouseDown={(event) => event.stopPropagation()}
-              ref={filterDialogRef}
-              role="document"
-              tabIndex={-1}
+              aria-labelledby="psychologist-filters-title"
+              aria-modal="true"
+              className="fixed inset-0 z-50 grid place-items-center bg-foreground/50 p-4 backdrop-blur-sm"
+              onMouseDown={handleFiltersClose}
+              role="dialog"
             >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h2
-                    className="text-lg font-extrabold text-foreground"
-                    id="psychologist-filters-title"
-                  >
-                    Filtros de busca
-                  </h2>
-                  <p className="mt-1 text-sm leading-6 text-muted">
-                    Ajuste os critérios e aplique para refinar sua busca.
-                  </p>
-                </div>
-                <button
-                  aria-label="Fechar filtros"
-                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-foreground"
-                  onClick={handleFiltersClose}
-                  type="button"
-                >
-                  <X className="h-4 w-4" aria-hidden="true" />
-                </button>
-              </div>
-
-              <form onSubmit={handleSubmitFilters}>
-                <filters.Form {...filters.formProps} />
-                <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-end">
-                  <Button onClick={clearFilters} type="button" variant="outline">
-                    Limpar filtros
-                  </Button>
-                  <Button type="submit">Aplicar filtros</Button>
-                </div>
-              </form>
-            </div>
-          </div>
-        ) : null}
-
-        {errorMessage ? (
-          <InlineAlert className="" title="Não foi possível carregar" variant="error">
-            {errorMessage}
-          </InlineAlert>
-        ) : null}
-
-        {showInitialLoading ? (
-          <div className="grid min-h-[42vh] place-items-center rounded-[18px] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
-            <LoadingState label="Carregando psicólogos" />
-          </div>
-        ) : null}
-
-        {!showInitialLoading && !errorMessage ? (
-          <>
-            {directory.isFetching ? (
-              <div className="flex items-center justify-end text-sm text-muted">
-                <LoadingState label="Atualizando" />
-              </div>
-            ) : null}
-
-            {psychologists.length > 0 ? (
-              <div className="grid gap-6">
-                {psychologists.map((psychologist) => (
-                  <PsychologistCard
-                    canFavorite={canFavoritePsychologists}
-                    favoritePending={favoritePendingId === psychologist.id}
-                    key={psychologist.id}
-                    onToggleFavorite={toggleFavorite}
-                    psychologist={psychologist}
-                  />
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                className="mt-0"
-                description="Ainda não existem psicólogos publicados para estes filtros. Quando profissionais reais forem aprovados e publicados, eles aparecerão aqui."
-                icon={UserRound}
-                title="Nenhum psicólogo encontrado"
-              />
-            )}
-
-            {pages > 1 ? (
-              <nav
-                aria-label="Paginação de psicólogos"
-                className="mt-4 flex items-center justify-between gap-3 rounded-[18px] border border-border bg-surface p-3"
+              <div
+                className="grid w-full max-w-[500px] gap-4 rounded-[28px] border border-border bg-surface p-5 shadow-[0_24px_70px_rgb(15_23_42_/_26%)]"
+                onMouseDown={(event) => event.stopPropagation()}
+                ref={filterDialogRef}
+                role="document"
+                tabIndex={-1}
               >
-                <Button
-                  disabled={currentPage <= 1 || directory.isFetching}
-                  onClick={() => goToPage(currentPage - 1)}
-                  type="button"
-                  variant="outline"
-                >
-                  <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-                  Anterior
-                </Button>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h2
+                      className="text-lg font-extrabold text-foreground"
+                      id="psychologist-filters-title"
+                    >
+                      Filtros de busca
+                    </h2>
+                    <p className="mt-1 text-sm leading-6 text-muted">
+                      Ajuste os critérios e aplique para refinar sua busca.
+                    </p>
+                  </div>
+                  <button
+                    aria-label="Fechar filtros"
+                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-foreground"
+                    onClick={handleFiltersClose}
+                    type="button"
+                  >
+                    <X className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                </div>
 
-                <span className="text-sm font-semibold text-muted">
-                  Página {currentPage} de {pages}
-                </span>
+                <form onSubmit={handleSubmitFilters}>
+                  <filters.Form {...filters.formProps} />
+                  <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-end">
+                    <Button onClick={clearFilters} type="button" variant="outline">
+                      Limpar filtros
+                    </Button>
+                    <Button type="submit">Aplicar filtros</Button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          ) : null}
 
-                <Button
-                  disabled={currentPage >= pages || directory.isFetching}
-                  onClick={() => goToPage(currentPage + 1)}
-                  type="button"
-                  variant="outline"
+          {errorMessage ? (
+            <InlineAlert className="" title="Não foi possível carregar" variant="error">
+              {errorMessage}
+            </InlineAlert>
+          ) : null}
+
+          {showInitialLoading ? (
+            <div className="grid min-h-[42vh] place-items-center rounded-[18px] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
+              <LoadingState label="Carregando psicólogos" />
+            </div>
+          ) : null}
+
+          {!showInitialLoading && !errorMessage ? (
+            <>
+              {directory.isFetching ? (
+                <div className="flex items-center justify-end text-sm text-muted">
+                  <LoadingState label="Atualizando" />
+                </div>
+              ) : null}
+
+              {psychologists.length > 0 ? (
+                <div className="grid gap-6">
+                  {psychologists.map((psychologist) => (
+                    <PsychologistCard
+                      canFavorite={canFavoritePsychologists}
+                      favoritePending={favoritePendingId === psychologist.id}
+                      key={psychologist.id}
+                      onToggleFavorite={toggleFavorite}
+                      psychologist={psychologist}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  className="mt-0"
+                  description="Ainda não existem psicólogos publicados para estes filtros. Quando profissionais reais forem aprovados e publicados, eles aparecerão aqui."
+                  icon={UserRound}
+                  title="Nenhum psicólogo encontrado"
+                />
+              )}
+
+              {pages > 1 ? (
+                <nav
+                  aria-label="Paginação de psicólogos"
+                  className="mt-4 flex items-center justify-between gap-3 rounded-[18px] border border-border bg-surface p-3"
                 >
-                  Próxima
-                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
-                </Button>
-              </nav>
-            ) : null}
-          </>
-        ) : null}
-      </section>
+                  <Button
+                    disabled={currentPage <= 1 || directory.isFetching}
+                    onClick={() => goToPage(currentPage - 1)}
+                    type="button"
+                    variant="outline"
+                  >
+                    <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+                    Anterior
+                  </Button>
+
+                  <span className="text-sm font-semibold text-muted">
+                    Página {currentPage} de {pages}
+                  </span>
+
+                  <Button
+                    disabled={currentPage >= pages || directory.isFetching}
+                    onClick={() => goToPage(currentPage + 1)}
+                    type="button"
+                    variant="outline"
+                  >
+                    Próxima
+                    <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                </nav>
+              ) : null}
+            </>
+          ) : null}
+        </section>
+      </div>
     </PrivateTemplate>
   );
 };
