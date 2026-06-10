@@ -650,11 +650,11 @@ export function PsychologistCard({
             ))}
           </div>
 
-          <div className="mt-auto flex items-center justify-start">
+          <div className="mt-auto flex w-full items-center justify-start">
             {psychologist.whatsapp_url ? (
               <Button
                 asChild
-                className="h-[50px] w-[323px] rounded-[999px] bg-[#22C55E] text-[15px] font-medium leading-none text-white hover:bg-[#22C55E]/90"
+                className="h-[52px] min-h-[52px] w-full rounded-[999px] bg-[#22C55E] px-4 text-[15px] font-medium leading-none text-white hover:bg-[#22C55E]/90"
               >
                 <a
                   className="grid h-full w-full place-items-center gap-2"
@@ -662,18 +662,18 @@ export function PsychologistCard({
                   rel="noreferrer"
                   target="_blank"
                 >
-                  <WhatsAppIcon className="h-5 w-5" aria-hidden="true" />
+                  <WhatsAppIcon className="h-5 w-5 text-white" aria-hidden="true" />
                   Chamar no WhatsApp
                 </a>
               </Button>
             ) : (
               <Button
-                className="h-[50px] w-[323px] rounded-[999px] bg-[#22C55E] text-[15px] font-medium leading-none text-white"
+                className="h-[52px] min-h-[52px] w-full rounded-[999px] bg-[#22C55E] px-4 text-[15px] font-medium leading-none text-white"
                 disabled
                 type="button"
               >
                 <span className="inline-flex w-full items-center justify-center gap-2">
-                  <WhatsAppIcon className="h-5 w-5" aria-hidden="true" />
+                  <WhatsAppIcon className="h-5 w-5 text-white" aria-hidden="true" />
                   WhatsApp indisponível
                 </span>
               </Button>
