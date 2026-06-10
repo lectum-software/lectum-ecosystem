@@ -70,7 +70,7 @@ const getHonorificName = (psychologist: PsychologistCardItem) => {
 const getPsychologistTitle = (gender?: string | null) => {
   const normalized = gender?.toLowerCase();
 
-  return normalized === "feminino" ? "PSICÓLOGA" : "PSICÓLOGO";
+  return normalized === "feminino" ? "PSICÃ“LOGA" : "PSICÃ“LOGO";
 };
 
 const getSubinfo = (psychologist: PsychologistCardItem) => {
@@ -78,7 +78,7 @@ const getSubinfo = (psychologist: PsychologistCardItem) => {
   const years = psychologist.formation_years ?? 10;
   const rating = formatRating(psychologist.rating_avg, psychologist.rating_count);
 
-  return `${role} • ${years} ANOS EXP • ★ ${rating}`;
+  return `${role} â€¢ ${years} ANOS EXP â€¢ â˜… ${rating}`;
 };
 
 const buildBenefitTags = (psychologist: PsychologistCardItem) => {
@@ -89,11 +89,11 @@ const buildBenefitTags = (psychologist: PsychologistCardItem) => {
     psychologist.verified &&
     psychologist.formation_years
   ) {
-    tags.push(`${psychologist.formation_years} anos de experiência`);
+    tags.push(`${psychologist.formation_years} anos de experiÃªncia`);
   }
 
   if (psychologist.accepts_insurance) {
-    tags.push("Aceita convênios");
+    tags.push("Aceita convÃªnios");
   }
 
   if (psychologist.social_value) {
@@ -101,7 +101,7 @@ const buildBenefitTags = (psychologist: PsychologistCardItem) => {
   }
 
   if (psychologist.discount_first_session) {
-    tags.push("Desconto 1ª sessão");
+    tags.push("Desconto 1Âª sessÃ£o");
   }
 
   return tags;
@@ -120,7 +120,7 @@ const AvailabilityBadge = ({ available }: { available?: boolean }) => {
       }}
     >
       <span className="h-2 w-2 rounded-full bg-[#2ecc71]" aria-hidden="true" />
-      Disponível hoje
+      DisponÃ­vel hoje
     </span>
   );
 };
@@ -139,7 +139,7 @@ const FavoriteButton = ({
   <button
     aria-label={
       !canFavorite
-        ? "Favoritos disponíveis apenas para usuários autenticados"
+        ? "Favoritos disponÃ­veis apenas para usuÃ¡rios autenticados"
         : psychologist.favorited
           ? `Remover ${psychologist.name} dos favoritos`
           : `Favoritar ${psychologist.name}`
@@ -152,7 +152,7 @@ const FavoriteButton = ({
     disabled={favoritePending || !canFavorite}
     onClick={() => onToggleFavorite(psychologist)}
     style={{ borderRadius: "999px" }}
-    title={!canFavorite ? "Favoritos disponíveis apenas para usuários autenticados" : undefined}
+    title={!canFavorite ? "Favoritos disponÃ­veis apenas para usuÃ¡rios autenticados" : undefined}
     type="button"
   >
     <Heart
@@ -184,9 +184,9 @@ const CardVideo = ({
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-surface-muted">
-      {/* biome-ignore lint/a11y/useMediaCaption: vídeos enviados por profissionais ainda não possuem trilha de legenda nesta etapa. */}
+      {/* biome-ignore lint/a11y/useMediaCaption: vÃ­deos enviados por profissionais ainda nÃ£o possuem trilha de legenda nesta etapa. */}
       <video
-        aria-label={`Vídeo de apresentação de ${name}`}
+        aria-label={`VÃ­deo de apresentaÃ§Ã£o de ${name}`}
         className="h-full w-full bg-black object-cover object-top"
         controls={playing}
         onPause={() => setPlaying(false)}
@@ -201,7 +201,7 @@ const CardVideo = ({
 
       {!playing ? (
         <button
-          aria-label={`Reproduzir vídeo de ${name}`}
+          aria-label={`Reproduzir vÃ­deo de ${name}`}
           className="absolute left-1/2 top-[56%] -translate-x-1/2 -translate-y-1/2"
           onClick={play}
           style={{
@@ -351,25 +351,32 @@ export function PsychologistCard({
             ))}
           </div>
 
-          <div className="mt-auto flex items-center justify-end gap-2">
+          <div className="mt-auto flex items-center justify-start">
             {psychologist.whatsapp_url ? (
               <Button
                 asChild
-                className="h-10 w-full rounded-lg bg-[#22C55E] text-xs font-bold text-white hover:bg-[#22C55E]/90"
+                className="h-[39px] w-[323px] rounded-full bg-[#22C55E] text-[15px] font-medium text-white hover:bg-[#22C55E]/90"
               >
-                <a href={psychologist.whatsapp_url} rel="noreferrer" target="_blank">
-                  <WhatsAppIcon className="h-4 w-4" aria-hidden="true" />
+                <a
+                  className="grid h-full w-full place-items-center gap-2"
+                  href={psychologist.whatsapp_url}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  <WhatsAppIcon className="h-5 w-5" aria-hidden="true" />
                   Chamar no WhatsApp
                 </a>
               </Button>
             ) : (
               <Button
-                className="h-10 w-full rounded-lg bg-[#22C55E] text-xs font-bold text-white"
+                className="h-[39px] w-[323px] rounded-full bg-[#22C55E] text-[15px] font-medium text-white"
                 disabled
                 type="button"
               >
-                <WhatsAppIcon className="h-4 w-4" aria-hidden="true" />
-                WhatsApp indisponível
+                <span className="inline-flex w-full items-center justify-center gap-2">
+                  <WhatsAppIcon className="h-5 w-5" aria-hidden="true" />
+                  WhatsApp indisponÃ­vel
+                </span>
               </Button>
             )}
           </div>
