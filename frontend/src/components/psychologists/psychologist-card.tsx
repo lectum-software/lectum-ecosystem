@@ -585,7 +585,7 @@ export function PsychologistCard({
             {psychologist.whatsapp_url ? (
               <Button
                 asChild
-                className="h-[39px] w-[323px] rounded-full bg-[#22C55E] text-[15px] font-medium text-white hover:bg-[#22C55E]/90"
+                className="h-[clamp(36px,5vw,44px)] w-[323px] rounded-full bg-[#22C55E] text-[15px] font-medium text-white hover:bg-[#22C55E]/90"
               >
                 <a
                   className="grid h-full w-full place-items-center gap-2"
@@ -599,7 +599,7 @@ export function PsychologistCard({
               </Button>
             ) : (
               <Button
-                className="h-[39px] w-[323px] rounded-full bg-[#22C55E] text-[15px] font-medium text-white"
+                className="h-[clamp(36px,5vw,44px)] w-[323px] rounded-full bg-[#22C55E] text-[15px] font-medium text-white"
                 disabled
                 type="button"
               >
