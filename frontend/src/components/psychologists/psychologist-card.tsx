@@ -562,7 +562,7 @@ export function PsychologistCard({
 
             <Link
               aria-label={`Abrir perfil de ${psychologist.name}`}
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/85 text-[#334155] transition hover:bg-white"
+              className="grid h-9 w-9 shrink-0 place-items-center text-[#334155] transition"
               href={route}
             >
               <ChevronRight className="h-5 w-5" aria-hidden="true" />
