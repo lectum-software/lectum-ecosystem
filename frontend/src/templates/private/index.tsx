@@ -13,7 +13,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { PropsWithChildren } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/api/callers/auth";
 import type { user } from "@/api/generator/types";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -29,6 +29,7 @@ import * as userActions from "@/store/modules/user/actions";
 
 type PrivateTemplateProps = PropsWithChildren<{
   allowAnonymous?: boolean;
+  autoHideNavigation?: boolean;
   showHeader?: boolean;
   showNavigation?: boolean;
 }>;
@@ -164,6 +165,7 @@ const isActivePath = (pathname: string, item: NavigationItem) => {
 
 export const PrivateTemplate = ({
   allowAnonymous = false,
+  autoHideNavigation = false,
   children,
   showHeader = true,
   showNavigation,
@@ -189,15 +191,63 @@ export const PrivateTemplate = ({
   const sessionUser = hasToken ? (hidrate.data ?? storedUser) : null;
   const navigation = useMemo(() => getNavigation(sessionUser?.role), [sessionUser?.role]);
   const shouldShowNavigation = showNavigation ?? showHeader;
+  const shouldAutoHideNavigation = shouldShowNavigation && autoHideNavigation;
+  const [isNavigationVisible, setIsNavigationVisible] = useState(true);
+  const lastScrollY = useRef(0);
+  const ticking = useRef(false);
   const pageShellClassName = shouldShowNavigation ? "pb-28 sm:pb-32" : undefined;
   const isSessionLoading = hasToken && !sessionUser && (hidrate.isLoading || hidrate.isPending);
   const shouldShowSessionError = Boolean(hasToken && hidrate.isError && !sessionUser);
 
+  useEffect(() => {
+    if (!shouldAutoHideNavigation) return;
+
+    const onScroll = () => {
+      if (ticking.current) return;
+
+      ticking.current = true;
+
+      requestAnimationFrame(() => {
+        const currentY = window.scrollY;
+
+        if (currentY <= 12) {
+          setIsNavigationVisible(true);
+          lastScrollY.current = currentY;
+          ticking.current = false;
+
+          return;
+        }
+
+        const delta = currentY - lastScrollY.current;
+
+        if (delta > 8) {
+          setIsNavigationVisible(false);
+        } else if (delta < -8) {
+          setIsNavigationVisible(true);
+        }
+
+        lastScrollY.current = currentY;
+        ticking.current = false;
+      });
+    };
+
+    lastScrollY.current = window.scrollY;
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [shouldAutoHideNavigation]);
+
   const navigationMarkup = shouldShowNavigation ? (
     <nav
       aria-label="Navegação principal"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 shadow-[0_-10px_30px_rgb(15_23_42_/_8%)] backdrop-blur supports-[backdrop-filter]:bg-surface/85 sm:bottom-4 sm:left-1/2 sm:right-auto sm:w-[min(560px,calc(100vw-2rem))] sm:-translate-x-1/2 sm:rounded-[var(--lectum-card-radius)] sm:border"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 shadow-[0_-10px_30px_rgb(15_23_42_/_8%)] backdrop-blur transition-transform duration-300 ease-out supports-[backdrop-filter]:bg-surface/85 sm:bottom-4 sm:left-1/2 sm:right-auto sm:w-[min(560px,calc(100vw-2rem))] sm:-translate-x-1/2 sm:rounded-[var(--lectum-card-radius)] sm:border"
+      style={{
+        paddingBottom: "env(safe-area-inset-bottom)",
+        transform: isNavigationVisible ? "translateY(0)" : "translateY(140%)",
+        pointerEvents: isNavigationVisible ? "auto" : "none",
+      }}
     >
       <ul className="mx-auto grid max-w-[560px] grid-cols-5">
         {navigation.map((item) => {

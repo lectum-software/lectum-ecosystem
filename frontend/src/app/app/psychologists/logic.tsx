@@ -225,9 +225,9 @@ export const PsychologistsLogic = () => {
   const showInitialLoading = directory.isLoading && !response;
 
   return (
-    <PrivateTemplate allowAnonymous>
+    <PrivateTemplate allowAnonymous autoHideNavigation>
       <section className="mx-auto grid w-full max-w-[390px] gap-4 px-4 sm:max-w-[430px] sm:px-0">
-        <header className="-mx-5 -mt-6 border-b border-border bg-surface px-4 py-4 sm:mx-0 sm:mt-0 sm:rounded-[28px] sm:border sm:p-6 lg:p-8">
+        <header className="-mx-5 -mt-6 border-b border-border bg-surface px-4 py-4 sm:mx-0 sm:mt-0 sm:rounded-[28px] sm:border sm:p-6 lg:p-8 sticky top-0 z-30 backdrop-blur-sm bg-surface/95">
           <div className="grid gap-3">
             <div className="flex min-w-0 items-center justify-between gap-3">
               <h1 className="text-2xl font-extrabold text-foreground lg:text-3xl">Psicólogos</h1>
