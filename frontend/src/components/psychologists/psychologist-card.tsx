@@ -109,8 +109,6 @@ const PSYCHOLOGIST_OVERLAY_HEIGHT = "26%";
 const OVERLAY_FAVORITE_OFFSET = "17%";
 const OVERLAY_SHARE_GAP = "clamp(48px, 12vw, 54px)";
 const OVERLAY_SIDE_BADGE_GAP = "clamp(8px, 2vw, 10px)";
-const VIDEO_CONTROLS_AUTO_HIDE_DELAY_MS = 3000;
-
 type CardOverlayStyle = CSSProperties & { "--psychologist-overlay-height": string };
 
 const getSubinfo = (psychologist: PsychologistCardItem) => {
@@ -329,17 +327,6 @@ const CardVideo = ({
     }
   }, []);
 
-  const scheduleControlsAutoHide = useCallback(() => {
-    clearControlsAutoHideTimeout();
-
-    if (!playing) return;
-
-    controlsAutoHideTimeoutRef.current = setTimeout(() => {
-      setControlMode("hidden");
-      controlsAutoHideTimeoutRef.current = null;
-    }, VIDEO_CONTROLS_AUTO_HIDE_DELAY_MS);
-  }, [clearControlsAutoHideTimeout, playing]);
-
   const onPlay = () => {
     if (userInitiatedPlayRef.current) {
       setControlMode("hidden");
@@ -366,21 +353,17 @@ const CardVideo = ({
     if (!currentVideo) return;
 
     const shouldAutoplay = currentVideo.paused;
+    setControlMode("hidden");
 
     setSoundEnabled(true);
     setGlobalSoundEnabled(true);
     clearControlsAutoHideTimeout();
     currentVideo.muted = false;
 
-    if (shouldAutoplay) {
-      userInitiatedPlayRef.current = true;
-      setControlMode("hidden");
-      void currentVideo.play();
-      return;
-    }
+    if (!shouldAutoplay) return;
 
-    setControlMode("media");
-    scheduleControlsAutoHide();
+    userInitiatedPlayRef.current = true;
+    void currentVideo.play();
   };
 
   const togglePlayback = () => {
@@ -565,25 +548,9 @@ const CardVideo = ({
 
       {focused && showPlaybackControls && (
         <div className="absolute left-1/2 top-[56%] flex -translate-x-1/2 -translate-y-1/2 items-center gap-4">
-          <button
-            aria-label={playing ? "Pausar vídeo" : "Retomar vídeo"}
-            className="z-10 grid h-[52px] w-[52px] place-items-center rounded-full border-4 border-white bg-black/25"
-            onClick={(event) => {
-              event.stopPropagation();
-              togglePlayback();
-            }}
-            type="button"
-          >
-            {playing ? (
-              <Pause aria-hidden="true" className="h-6 w-6 text-white/90" />
-            ) : (
-              <Play aria-hidden="true" className="ml-[1px] h-6 w-6 text-white/90" />
-            )}
-          </button>
-
           {!soundEnabled ? (
             <button
-              aria-label={`Desativar mudo do vídeo de ${name}`}
+              aria-label={`Desmutar o vídeo de ${name}`}
               className="z-10 grid h-[52px] w-[52px] place-items-center rounded-full border-4 border-white bg-black/25"
               onClick={(event) => {
                 event.stopPropagation();
@@ -593,7 +560,23 @@ const CardVideo = ({
             >
               <VolumeX aria-hidden="true" className="ml-[1px] h-6 w-6 text-white/90" />
             </button>
-          ) : null}
+          ) : (
+            <button
+              aria-label={playing ? "Pausar vídeo" : "Retomar vídeo"}
+              className="z-10 grid h-[52px] w-[52px] place-items-center rounded-full border-4 border-white bg-black/25"
+              onClick={(event) => {
+                event.stopPropagation();
+                togglePlayback();
+              }}
+              type="button"
+            >
+              {playing ? (
+                <Pause aria-hidden="true" className="h-6 w-6 text-white/90" />
+              ) : (
+                <Play aria-hidden="true" className="ml-[1px] h-6 w-6 text-white/90" />
+              )}
+            </button>
+          )}
         </div>
       )}
     </div>
