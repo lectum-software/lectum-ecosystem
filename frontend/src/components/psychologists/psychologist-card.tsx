@@ -594,8 +594,9 @@ export function PsychologistCard({
       </div>
 
       <div
-        className="absolute inset-x-0 bottom-0 z-10 w-full min-h-[26%] overflow-hidden rounded-[14px] p-[4.5%]"
+        className="pointer-events-none absolute bottom-0 left-0 right-0 z-20 w-full min-h-[26%] overflow-hidden rounded-[14px] p-[4.5%]"
         style={{
+          top: "auto",
           background: "rgba(255, 255, 255, 0.38)",
           backdropFilter: "blur(24px) saturate(180%)",
           WebkitBackdropFilter: "blur(24px) saturate(180%)",
