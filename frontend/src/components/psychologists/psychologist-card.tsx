@@ -372,7 +372,7 @@ const CardVideo = ({
     void currentVideo.play();
 
     clearControlsAutoHideTimeout();
-    setControlMode(next ? "media" : "volume");
+    setControlMode(next ? "hidden" : "volume");
   };
 
   const togglePlayback = () => {
