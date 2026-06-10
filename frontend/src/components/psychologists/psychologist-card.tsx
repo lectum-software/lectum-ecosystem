@@ -1,15 +1,6 @@
 ﻿"use client";
 
-import {
-  ChevronRight,
-  Heart,
-  Pause,
-  Play,
-  Share2,
-  ShieldCheck,
-  Volume2,
-  VolumeX,
-} from "lucide-react";
+import { ChevronRight, Heart, Pause, Play, Share2, Volume2, VolumeX } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { type CSSProperties, type MouseEvent, useEffect, useRef, useState } from "react";
@@ -647,13 +638,12 @@ export function PsychologistCard({
             </Link>
           </div>
 
-          <div className="flex flex-wrap gap-1.5">
+          <div className="mt-1 flex flex-nowrap items-center gap-1 overflow-hidden">
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center gap-1 rounded-full border border-white/80 bg-white/55 px-2 py-0.5 text-[0.64rem] font-bold text-[#334155]"
+                className="inline-flex shrink-0 items-center rounded-full border border-white/80 bg-white/55 px-1.5 py-0.5 text-[0.58rem] font-bold leading-none whitespace-nowrap text-[#334155]"
               >
-                <ShieldCheck className="h-3 w-3" aria-hidden="true" />
                 {tag}
               </span>
             ))}
