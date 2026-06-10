@@ -382,7 +382,7 @@ export function PsychologistCard({
       </div>
 
       <div
-        className="absolute inset-x-0 bottom-0 z-10 w-full min-h-[26%] rounded-b-[14px] p-[4.5%]"
+        className="absolute inset-x-0 bottom-0 z-10 w-full min-h-[26%] overflow-hidden rounded-[14px] p-[4.5%]"
         style={{
           background: "rgba(255, 255, 255, 0.38)",
           backdropFilter: "blur(24px) saturate(180%)",
@@ -393,7 +393,7 @@ export function PsychologistCard({
         }}
       >
         <span
-          className="pointer-events-none absolute inset-0 rounded-b-[14px]"
+          className="pointer-events-none absolute inset-0 rounded-[14px]"
           style={{
             background:
               "linear-gradient(135deg, rgba(255,255,255,0.72) 0%, rgba(255,255,255,0.30) 42%, rgba(255,255,255,0.14) 100%)",
