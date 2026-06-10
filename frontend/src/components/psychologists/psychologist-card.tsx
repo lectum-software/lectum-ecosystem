@@ -261,7 +261,7 @@ const CardVideo = ({
   const handleVideoClick = () => {
     if (!focused) return;
 
-    setControlMode("media");
+    setControlMode(soundEnabled ? "media" : "volume");
   };
 
   const handleVideoPosterExtraction = () => {
