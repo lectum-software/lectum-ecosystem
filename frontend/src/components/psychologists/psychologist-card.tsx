@@ -314,7 +314,9 @@ const CardVideo = ({
   const [playing, setPlaying] = useState(false);
   const [focused, setFocused] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(globalSoundEnabled);
-  const [controlMode, setControlMode] = useState<"hidden" | "media">("hidden");
+  const [controlMode, setControlMode] = useState<"hidden" | "media">(
+    globalSoundEnabled ? "hidden" : "media",
+  );
   const [videoPoster, setVideoPoster] = useState<string | null>(null);
   const posterExtractionStarted = useRef(false);
   const userInitiatedPlayRef = useRef(false);
