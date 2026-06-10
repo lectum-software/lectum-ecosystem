@@ -627,9 +627,15 @@ export function PsychologistCard({
         />
 
         <div className="relative z-10 grid h-full w-full gap-2 text-[color:rgba(15,23,42,0.9)]">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0 flex-1">
-              <h2 className="text-[1rem] font-extrabold leading-[1.15] tracking-tight text-[#0f172a] sm:text-[1.05rem]">
+          <div className="relative">
+            <div className="min-w-0 flex-1" style={{ paddingRight: "44px" }}>
+              <h2
+                className="line-clamp-2 min-h-[24px] font-extrabold tracking-tight text-[#0f172a]"
+                style={{
+                  fontSize: "clamp(18px, 5vw, 22px)",
+                  lineHeight: "clamp(24px, 5.4vw, 27px)",
+                }}
+              >
                 <span className="line-clamp-2 inline-flex min-w-0 items-center gap-1.5">
                   {displayName}
                   {psychologist.verified ? (
@@ -638,36 +644,61 @@ export function PsychologistCard({
                 </span>
               </h2>
 
-              <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] font-extrabold tracking-[0.8px] text-[#000]">
+              <div
+                className="mt-1 w-full truncate text-[#000]"
+                style={{
+                  fontSize: "clamp(10px, 3vw, 12px)",
+                  lineHeight: "1.15",
+                }}
+              >
                 <span>{getSubinfo(psychologist)}</span>
               </div>
             </div>
 
             <Link
               aria-label={`Abrir perfil de ${psychologist.name}`}
-              className="grid h-9 w-9 shrink-0 place-items-center text-[#334155] transition"
+              className="pointer-events-auto absolute right-[16px] top-[20px] z-30 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/80 text-[#334155] transition"
               href={route}
+              style={{
+                width: "clamp(26px, 4vw, 28px)",
+                height: "clamp(26px, 4vw, 28px)",
+              }}
             >
-              <ChevronRight className="h-5 w-5" aria-hidden="true" />
+              <ChevronRight
+                aria-hidden="true"
+                className="text-[#334155]"
+                style={{ width: "clamp(26px, 4vw, 28px)", height: "clamp(26px, 4vw, 28px)" }}
+              />
             </Link>
           </div>
 
-          <div className="mt-1 flex w-full flex-nowrap items-center gap-1">
+          <div className="mt-1 flex w-full flex-nowrap items-stretch gap-2">
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="inline-flex min-w-0 max-w-full flex-1 items-center justify-center overflow-hidden truncate rounded-full border border-white/80 bg-white/55 px-1.5 py-1.5 text-[clamp(0.56rem,2vw,0.66rem)] font-bold leading-none text-[#334155] whitespace-nowrap"
+                className="inline-flex min-w-0 items-center justify-center overflow-hidden truncate rounded-full border border-white/80 bg-white/55 text-center whitespace-nowrap font-bold leading-none text-[#334155]"
+                style={{
+                  flex: 1,
+                  height: "clamp(26px, calc(22px + 2vw), 28px)",
+                  minWidth: 0,
+                  paddingLeft: "clamp(6px, 2vw, 10px)",
+                  paddingRight: "clamp(6px, 2vw, 10px)",
+                  fontSize: "clamp(10px, 2.8vw, 12px)",
+                }}
               >
                 {tag}
               </span>
             ))}
           </div>
 
-          <div className="mt-auto flex w-full items-center justify-start">
+          <div
+            className="mt-auto flex w-full items-center justify-start"
+            style={{ marginTop: "clamp(14px, 3vw, 18px)" }}
+          >
             {psychologist.whatsapp_url ? (
               <Button
                 asChild
-                className="h-[45px] min-h-[45px] w-full rounded-[999px] bg-[#22C55E] px-4 text-[15px] font-medium leading-none text-white hover:bg-[#22C55E]/90"
+                className="pointer-events-auto h-[clamp(44px,12vw,52px)] min-h-[clamp(44px,12vw,52px)] w-full rounded-[999px] bg-[#22C55E] px-4 text-[15px] font-medium leading-none text-white hover:bg-[#22C55E]/90"
               >
                 <a
                   className="grid h-full w-full place-items-center gap-2"
@@ -681,7 +712,7 @@ export function PsychologistCard({
               </Button>
             ) : (
               <Button
-                className="h-[45px] min-h-[45px] w-full rounded-[999px] bg-[#22C55E] px-4 text-[15px] font-medium leading-none text-white"
+                className="pointer-events-auto h-[clamp(44px,12vw,52px)] min-h-[clamp(44px,12vw,52px)] w-full rounded-[999px] bg-[#22C55E] px-4 text-[15px] font-medium leading-none text-white"
                 disabled
                 type="button"
               >
