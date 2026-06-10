@@ -1,8 +1,9 @@
 "use client";
 
-import { ChevronRight, Heart, ShieldCheck, Star } from "lucide-react";
+import { ChevronRight, Heart, Play, ShieldCheck, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRef, useState } from "react";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
@@ -105,8 +106,15 @@ const AvailabilityBadge = ({ available }: { available?: boolean }) => {
   if (!available) return null;
 
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-[#22c55e]/45 bg-white/90 px-2.5 py-1 text-[0.68rem] font-semibold text-[#15803d] shadow-[0_1px_12px_rgb(15_23_42_/_12%)]">
-      <span className="h-2 w-2 rounded-full bg-[#22c55e]" aria-hidden="true" />
+    <span
+      className="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-[10px] font-semibold leading-none text-[#22c55e]"
+      style={{
+        width: "107px",
+        height: "23px",
+        borderRadius: "999px",
+      }}
+    >
+      <span className="h-2 w-2 rounded-full bg-[#2ecc71]" aria-hidden="true" />
       Disponível hoje
     </span>
   );
@@ -133,17 +141,82 @@ const FavoriteButton = ({
     }
     aria-pressed={psychologist.favorited}
     className={cn(
-      "grid h-9 w-9 place-items-center rounded-full border border-white/80 bg-white/90 text-muted shadow-[0_10px_24px_rgb(15_23_42_/_14%)] transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-500 disabled:cursor-not-allowed disabled:opacity-60",
-      psychologist.favorited && "border-rose-200 bg-rose-50 text-rose-500",
+      "grid h-10 w-10 place-items-center rounded-full border border-[#e2e8f0] bg-white text-[#64748b] shadow-[0_10px_24px_rgb(15_23_42_/_14%)] transition disabled:cursor-not-allowed disabled:opacity-60",
+      psychologist.favorited && "border-[#22c55e]/55 text-[#22c55e]",
     )}
     disabled={favoritePending || !canFavorite}
     onClick={() => onToggleFavorite(psychologist)}
+    style={{ borderRadius: "999px" }}
     title={!canFavorite ? "Favoritos disponíveis apenas para usuários autenticados" : undefined}
     type="button"
   >
-    <Heart className={cn("h-5 w-5", psychologist.favorited && "fill-current")} aria-hidden="true" />
+    <Heart
+      aria-hidden="true"
+      className={cn(
+        "h-[22px] w-[22px]",
+        psychologist.favorited ? "fill-[#22c55e] stroke-[#22c55e]" : "fill-none stroke-[#64748b]",
+      )}
+    />
   </button>
 );
+
+const CardVideo = ({
+  name,
+  poster,
+  url,
+}: {
+  name: string;
+  poster?: string | null;
+  url: string;
+}) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [playing, setPlaying] = useState(false);
+
+  const play = () => {
+    setPlaying(true);
+    void videoRef.current?.play();
+  };
+
+  return (
+    <div className="relative h-full w-full overflow-hidden bg-surface-muted">
+      {/* biome-ignore lint/a11y/useMediaCaption: vídeos enviados por profissionais ainda não possuem trilha de legenda nesta etapa. */}
+      <video
+        aria-label={`Vídeo de apresentação de ${name}`}
+        className="h-full w-full bg-black object-cover object-top"
+        controls={playing}
+        onPause={() => setPlaying(false)}
+        onPlay={() => setPlaying(true)}
+        onEnded={() => setPlaying(false)}
+        playsInline
+        preload="metadata"
+        poster={poster || undefined}
+        ref={videoRef}
+        src={url}
+      />
+
+      {!playing ? (
+        <button
+          aria-label={`Reproduzir vídeo de ${name}`}
+          className="absolute left-1/2 top-[56%] -translate-x-1/2 -translate-y-1/2"
+          onClick={play}
+          style={{
+            width: "52px",
+            height: "52px",
+          }}
+          type="button"
+        >
+          <span className="grid h-full w-full place-items-center rounded-full border-4 border-white">
+            <Play
+              aria-hidden="true"
+              className="ml-[1px] h-5 w-5 text-white/90"
+              fill="currentColor"
+            />
+          </span>
+        </button>
+      ) : null}
+    </div>
+  );
+};
 
 export function PsychologistCard({
   canFavorite = true,
@@ -153,6 +226,7 @@ export function PsychologistCard({
 }: PsychologistCardProps) {
   const avatarSrc = resolvePublicMediaUrl(psychologist.avatar);
   const videoCoverSrc = resolvePublicMediaUrl(psychologist.video_cover_url);
+  const videoSrc = psychologist.verified ? resolvePublicMediaUrl(psychologist.video_url) : null;
   const mediaSrc = videoCoverSrc || avatarSrc;
   const mediaIsPublic = isPublicMediaUrl(mediaSrc);
   const tags = buildBenefitTags(psychologist);
@@ -174,7 +248,9 @@ export function PsychologistCard({
       }}
     >
       <div className="absolute inset-0">
-        {mediaSrc ? (
+        {videoSrc ? (
+          <CardVideo name={displayName} poster={mediaSrc} url={videoSrc} />
+        ) : mediaSrc ? (
           <Image
             alt={displayName}
             className="h-full w-full object-cover object-top"
@@ -188,6 +264,33 @@ export function PsychologistCard({
             {getInitials(psychologist.name)}
           </div>
         )}
+      </div>
+
+      <div className="pointer-events-none absolute inset-0 z-20">
+        <div
+          className="pointer-events-auto absolute"
+          style={{
+            top: "11.24%",
+            left: "11.8%",
+          }}
+        >
+          <AvailabilityBadge available={psychologist.available_today} />
+        </div>
+
+        <div
+          className="pointer-events-auto absolute"
+          style={{
+            top: "11.24%",
+            right: "2.63%",
+          }}
+        >
+          <FavoriteButton
+            canFavorite={canFavorite}
+            favoritePending={favoritePending}
+            onToggleFavorite={onToggleFavorite}
+            psychologist={psychologist}
+          />
+        </div>
       </div>
 
       <div
@@ -230,15 +333,13 @@ export function PsychologistCard({
               </div>
             </div>
 
-            <div className="shrink-0 pt-0.5">
-              <Link
-                aria-label={`Abrir perfil de ${psychologist.name}`}
-                className="grid h-9 w-9 place-items-center rounded-full bg-white/85 text-[#334155] transition hover:bg-white"
-                href={route}
-              >
-                <ChevronRight className="h-5 w-5" aria-hidden="true" />
-              </Link>
-            </div>
+            <Link
+              aria-label={`Abrir perfil de ${psychologist.name}`}
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/85 text-[#334155] transition hover:bg-white"
+              href={route}
+            >
+              <ChevronRight className="h-5 w-5" aria-hidden="true" />
+            </Link>
           </div>
 
           <p className="line-clamp-3 text-[0.72rem] leading-4 text-[#0f172a]/85">{summary}</p>
@@ -255,39 +356,29 @@ export function PsychologistCard({
             ))}
           </div>
 
-          <div className="mt-auto flex items-center justify-between gap-2">
-            <AvailabilityBadge available={psychologist.available_today} />
-            <FavoriteButton
-              canFavorite={canFavorite}
-              favoritePending={favoritePending}
-              onToggleFavorite={onToggleFavorite}
-              psychologist={psychologist}
-            />
+          <div className="mt-auto flex items-center justify-end gap-2">
+            {psychologist.whatsapp_url ? (
+              <Button
+                asChild
+                className="h-10 w-full rounded-lg bg-[#22C55E] text-xs font-bold text-white hover:bg-[#22C55E]/90"
+              >
+                <a href={psychologist.whatsapp_url} rel="noreferrer" target="_blank">
+                  <WhatsAppIcon className="h-4 w-4" aria-hidden="true" />
+                  Chamar no WhatsApp
+                </a>
+              </Button>
+            ) : (
+              <Button
+                className="h-10 w-full rounded-lg bg-[#22C55E] text-xs font-bold text-white"
+                disabled
+                type="button"
+              >
+                <WhatsAppIcon className="h-4 w-4" aria-hidden="true" />
+                WhatsApp indisponível
+              </Button>
+            )}
           </div>
         </div>
-      </div>
-
-      <div className="absolute inset-x-0 bottom-[4.5%] left-[4.5%] z-[3] w-[91%]">
-        {psychologist.whatsapp_url ? (
-          <Button
-            asChild
-            className="h-10 w-full rounded-lg bg-[#22C55E] text-xs font-bold text-white hover:bg-[#22C55E]/90"
-          >
-            <a href={psychologist.whatsapp_url} rel="noreferrer" target="_blank">
-              <WhatsAppIcon className="h-4 w-4" aria-hidden="true" />
-              Chamar no WhatsApp
-            </a>
-          </Button>
-        ) : (
-          <Button
-            className="h-10 w-full rounded-lg bg-[#22C55E] text-xs font-bold text-white"
-            disabled
-            type="button"
-          >
-            <WhatsAppIcon className="h-4 w-4" aria-hidden="true" />
-            WhatsApp indisponível
-          </Button>
-        )}
       </div>
     </article>
   );
