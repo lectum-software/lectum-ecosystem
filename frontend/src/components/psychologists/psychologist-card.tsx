@@ -178,6 +178,26 @@ const FavoriteButton = ({
   className?: string;
 }) => {
   const isFavorited = psychologist.favorited;
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    if (!isAnimating) return;
+
+    const timer = window.setTimeout(() => {
+      setIsAnimating(false);
+    }, 420);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [isAnimating]);
+
+  const handleFavoriteClick = () => {
+    if (favoritePending || !canFavorite) return;
+
+    setIsAnimating(true);
+    onToggleFavorite(psychologist);
+  };
 
   return (
     <button
@@ -191,11 +211,13 @@ const FavoriteButton = ({
       aria-pressed={psychologist.favorited}
       className={cn(
         "grid place-items-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-60",
+        "duration-300 motion-safe:hover:scale-105",
+        isAnimating ? "scale-110" : "scale-100",
         isFavorited ? "bg-[#fee2e2] text-[#ef4444]" : "bg-[rgba(255,255,255,0.94)] text-[#64748b]",
         className,
       )}
       disabled={favoritePending || !canFavorite}
-      onClick={() => onToggleFavorite(psychologist)}
+      onClick={handleFavoriteClick}
       style={{
         width: "clamp(38px, 10vw, 44px)",
         height: "clamp(38px, 10vw, 44px)",
@@ -209,7 +231,8 @@ const FavoriteButton = ({
       <Heart
         aria-hidden="true"
         className={cn(
-          "h-[22px] w-[22px]",
+          "h-[22px] w-[22px] transition-transform duration-300 motion-safe:hover:scale-110",
+          isAnimating ? "scale-125" : "scale-100",
           isFavorited ? "fill-[#ef4444] stroke-[#ef4444]" : "fill-none stroke-[#64748b]",
         )}
       />
