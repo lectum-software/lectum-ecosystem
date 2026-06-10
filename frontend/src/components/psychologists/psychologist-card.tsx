@@ -162,35 +162,46 @@ const FavoriteButton = ({
   favoritePending?: boolean;
   onToggleFavorite: (psychologist: PsychologistCardItem) => void;
   psychologist: PsychologistCardItem;
-}) => (
-  <button
-    aria-label={
-      !canFavorite
-        ? "Favoritos disponÃƒÂ­veis apenas para usuÃƒÂ¡rios autenticados"
-        : psychologist.favorited
-          ? `Remover ${psychologist.name} dos favoritos`
-          : `Favoritar ${psychologist.name}`
-    }
-    aria-pressed={psychologist.favorited}
-    className={cn(
-      "grid place-items-center rounded-full bg-[rgba(255,255,255,0.92)] text-[#64748b] transition disabled:cursor-not-allowed disabled:opacity-60",
-    )}
-    disabled={favoritePending || !canFavorite}
-    onClick={() => onToggleFavorite(psychologist)}
-    style={{
-      width: "clamp(38px, 10.5vw, 44px)",
-      height: "clamp(38px, 10.5vw, 44px)",
-      borderRadius: "999px",
-      zIndex: 5,
-    }}
-    title={
-      !canFavorite ? "Favoritos disponÃƒÂ­veis apenas para usuÃƒÂ¡rios autenticados" : undefined
-    }
-    type="button"
-  >
-    <Heart aria-hidden="true" className={cn("h-[22px] w-[22px]", "fill-none stroke-[#64748b]")} />
-  </button>
-);
+}) => {
+  const isFavorited = psychologist.favorited;
+
+  return (
+    <button
+      aria-label={
+        !canFavorite
+          ? "Favoritos disponÃƒÂ­veis apenas para usuÃƒÂ¡rios autenticados"
+          : psychologist.favorited
+            ? `Remover ${psychologist.name} dos favoritos`
+            : `Favoritar ${psychologist.name}`
+      }
+      aria-pressed={psychologist.favorited}
+      className={cn(
+        "grid place-items-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-60",
+        isFavorited ? "bg-[#fee2e2] text-[#ef4444]" : "bg-[rgba(255,255,255,0.92)] text-[#64748b]",
+      )}
+      disabled={favoritePending || !canFavorite}
+      onClick={() => onToggleFavorite(psychologist)}
+      style={{
+        width: "clamp(38px, 10.5vw, 44px)",
+        height: "clamp(38px, 10.5vw, 44px)",
+        borderRadius: "999px",
+        zIndex: 5,
+      }}
+      title={
+        !canFavorite ? "Favoritos disponÃƒÂ­veis apenas para usuÃƒÂ¡rios autenticados" : undefined
+      }
+      type="button"
+    >
+      <Heart
+        aria-hidden="true"
+        className={cn(
+          "h-[22px] w-[22px]",
+          isFavorited ? "fill-[#ef4444] stroke-[#ef4444]" : "fill-none stroke-[#64748b]",
+        )}
+      />
+    </button>
+  );
+};
 
 const CardVideo = ({
   name,
@@ -207,6 +218,8 @@ const CardVideo = ({
   const [focused, setFocused] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(globalSoundEnabled);
   const [controlMode, setControlMode] = useState<"hidden" | "volume" | "media">("hidden");
+  const [videoPoster, setVideoPoster] = useState<string | null>(null);
+  const posterExtractionStarted = useRef(false);
 
   const onPlay = () => {
     setPlaying(true);
@@ -249,6 +262,67 @@ const CardVideo = ({
     if (!focused) return;
 
     setControlMode("media");
+  };
+
+  const handleVideoPosterExtraction = () => {
+    const currentVideo = videoRef.current;
+    if (!currentVideo || videoPoster || posterExtractionStarted.current) return;
+    if (
+      currentVideo.readyState < 1 ||
+      !Number.isFinite(currentVideo.duration) ||
+      currentVideo.duration <= 0
+    )
+      return;
+
+    posterExtractionStarted.current = true;
+    const currentTime = currentVideo.currentTime;
+    const wasPlaying = !currentVideo.paused;
+    const captureTime =
+      currentVideo.duration > 1 ? 0.1 : Math.max(0.001, currentVideo.duration * 0.3);
+    const restorePlayback = () => {
+      if (Number.isFinite(currentTime)) {
+        try {
+          currentVideo.currentTime = currentTime;
+        } catch {
+          // ignore
+        }
+      }
+
+      if (wasPlaying) {
+        void currentVideo.play().catch(() => {});
+      }
+    };
+
+    const onSeeked = () => {
+      currentVideo.removeEventListener("seeked", onSeeked);
+      posterExtractionStarted.current = false;
+
+      try {
+        const width = currentVideo.videoWidth;
+        const height = currentVideo.videoHeight;
+
+        if (!width || !height) return;
+
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+
+        if (!context) return;
+
+        canvas.width = width;
+        canvas.height = height;
+        context.drawImage(currentVideo, 0, 0, width, height);
+
+        const nextPoster = canvas.toDataURL("image/jpeg", 0.74);
+        setVideoPoster(nextPoster);
+      } catch {
+        // Ignore when browser/CORS restrictions prevent poster extraction.
+      } finally {
+        restorePlayback();
+      }
+    };
+
+    currentVideo.addEventListener("seeked", onSeeked, { once: true });
+    currentVideo.currentTime = captureTime;
   };
 
   useEffect(() => {
@@ -315,12 +389,14 @@ const CardVideo = ({
         className="h-full w-full bg-black object-cover object-top"
         controls={false}
         muted
+        crossOrigin="anonymous"
+        onLoadedMetadata={handleVideoPosterExtraction}
+        poster={videoPoster || poster || undefined}
         onPause={onPause}
         onPlay={onPlay}
         onEnded={onEnded}
         playsInline
         preload="metadata"
-        poster={poster || undefined}
         ref={videoRef}
         src={url}
       />
@@ -394,10 +470,8 @@ export function PsychologistCard({
   psychologist,
 }: PsychologistCardProps) {
   const avatarSrc = resolvePublicMediaUrl(psychologist.avatar);
-  const videoCoverSrc = resolvePublicMediaUrl(psychologist.video_cover_url);
   const videoSrc = psychologist.verified ? resolvePublicMediaUrl(psychologist.video_url) : null;
-  const mediaSrc = videoCoverSrc || avatarSrc;
-  const mediaIsPublic = isPublicMediaUrl(mediaSrc);
+  const mediaIsPublic = isPublicMediaUrl(avatarSrc);
   const tags = buildBenefitTags(psychologist);
   const displayName = getHonorificName(psychologist);
   const route = `/app/psychologist/${psychologist.id}`;
@@ -414,14 +488,14 @@ export function PsychologistCard({
     >
       <div className="absolute inset-0">
         {videoSrc ? (
-          <CardVideo name={displayName} poster={mediaSrc} url={videoSrc} />
-        ) : mediaSrc ? (
+          <CardVideo name={displayName} url={videoSrc} />
+        ) : avatarSrc ? (
           <Image
             alt={displayName}
             className="h-full w-full object-cover object-top"
             fill
             sizes="(max-width: 430px) 92vw, 380px"
-            src={mediaSrc}
+            src={avatarSrc}
             unoptimized={mediaIsPublic}
           />
         ) : (
