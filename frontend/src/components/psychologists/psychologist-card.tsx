@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { ChevronRight, Heart, Pause, Play, Share2, Volume2, VolumeX } from "lucide-react";
+import { ChevronRight, Heart, Pause, Play, Share2, VolumeX } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -109,7 +109,6 @@ const PSYCHOLOGIST_OVERLAY_HEIGHT = "26%";
 const OVERLAY_FAVORITE_OFFSET = "17%";
 const OVERLAY_SHARE_GAP = "clamp(48px, 12vw, 54px)";
 const OVERLAY_SIDE_BADGE_GAP = "clamp(8px, 2vw, 10px)";
-const VIDEO_DOUBLE_TAP_DELAY_MS = 280;
 const VIDEO_CONTROLS_AUTO_HIDE_DELAY_MS = 3000;
 
 type CardOverlayStyle = CSSProperties & { "--psychologist-overlay-height": string };
@@ -315,13 +314,11 @@ const CardVideo = ({
   const [playing, setPlaying] = useState(false);
   const [focused, setFocused] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(globalSoundEnabled);
-  const [controlMode, setControlMode] = useState<"hidden" | "volume" | "media">("hidden");
+  const [controlMode, setControlMode] = useState<"hidden" | "media">("hidden");
   const [videoPoster, setVideoPoster] = useState<string | null>(null);
   const posterExtractionStarted = useRef(false);
   const userInitiatedPlayRef = useRef(false);
-  const doubleTapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const controlsAutoHideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastVideoTapRef = useRef<number | null>(null);
 
   const clearControlsAutoHideTimeout = useCallback(() => {
     if (controlsAutoHideTimeoutRef.current) {
@@ -360,19 +357,28 @@ const CardVideo = ({
     setPlaying(false);
   };
 
-  const toggleSound = () => {
-    const next = !soundEnabled;
-    setSoundEnabled(next);
-    setGlobalSoundEnabled(next);
+  const unmuteVideo = () => {
+    if (soundEnabled) return;
 
     const currentVideo = videoRef.current;
     if (!currentVideo) return;
 
-    currentVideo.muted = !next;
-    void currentVideo.play();
+    const shouldAutoplay = currentVideo.paused;
 
+    setSoundEnabled(true);
+    setGlobalSoundEnabled(true);
     clearControlsAutoHideTimeout();
-    setControlMode(next ? "hidden" : "volume");
+    currentVideo.muted = false;
+
+    if (shouldAutoplay) {
+      userInitiatedPlayRef.current = true;
+      setControlMode("hidden");
+      void currentVideo.play();
+      return;
+    }
+
+    setControlMode("media");
+    scheduleControlsAutoHide();
   };
 
   const togglePlayback = () => {
@@ -392,42 +398,25 @@ const CardVideo = ({
 
   const handleVideoTap = () => {
     if (!focused) return;
+    const currentVideo = videoRef.current;
+    if (!currentVideo) return;
 
-    const now = performance.now();
-    const previousTap = lastVideoTapRef.current;
-    const isDoubleTap = previousTap !== null && now - previousTap <= VIDEO_DOUBLE_TAP_DELAY_MS;
-
-    lastVideoTapRef.current = now;
-
-    if (isDoubleTap && doubleTapTimeoutRef.current) {
-      clearTimeout(doubleTapTimeoutRef.current);
-      doubleTapTimeoutRef.current = null;
-      lastVideoTapRef.current = null;
-
-      const currentVideo = videoRef.current;
-      if (!currentVideo || currentVideo.paused) return;
-
-      currentVideo.pause();
-      setControlMode("media");
-      clearControlsAutoHideTimeout();
-
+    if (!soundEnabled) {
+      unmuteVideo();
       return;
     }
 
-    if (doubleTapTimeoutRef.current) {
-      clearTimeout(doubleTapTimeoutRef.current);
-      doubleTapTimeoutRef.current = null;
+    if (currentVideo.paused) {
+      userInitiatedPlayRef.current = true;
+      setControlMode("hidden");
+      clearControlsAutoHideTimeout();
+      void currentVideo.play();
+      return;
     }
 
-    doubleTapTimeoutRef.current = setTimeout(() => {
-      doubleTapTimeoutRef.current = null;
-      lastVideoTapRef.current = null;
-    }, VIDEO_DOUBLE_TAP_DELAY_MS);
-
-    setControlMode(soundEnabled ? "media" : "volume");
-    if (playing) {
-      scheduleControlsAutoHide();
-    }
+    setControlMode("media");
+    clearControlsAutoHideTimeout();
+    currentVideo.pause();
   };
 
   const handleVideoPosterExtraction = () => {
@@ -502,7 +491,7 @@ const CardVideo = ({
         const nextFocused = Boolean(entry?.isIntersecting) && ratio >= 0.35;
 
         setFocused(nextFocused);
-        setControlMode(nextFocused ? "volume" : "hidden");
+        setControlMode(nextFocused ? "media" : "hidden");
       },
       {
         threshold: [0, 0.35],
@@ -519,11 +508,6 @@ const CardVideo = ({
 
   useEffect(() => {
     return () => {
-      if (doubleTapTimeoutRef.current) {
-        clearTimeout(doubleTapTimeoutRef.current);
-        doubleTapTimeoutRef.current = null;
-      }
-
       clearControlsAutoHideTimeout();
     };
   }, [clearControlsAutoHideTimeout]);
@@ -544,7 +528,6 @@ const CardVideo = ({
     });
   }, [focused, soundEnabled]);
 
-  const showVolumeControl = controlMode === "volume";
   const showPlaybackControls = controlMode === "media";
 
   return (
@@ -578,30 +561,6 @@ const CardVideo = ({
         src={url}
       />
 
-      {focused && showVolumeControl && (
-        <button
-          aria-label={`Controlar áudio do vídeo de ${name}`}
-          className="absolute left-1/2 top-[56%] z-10 -translate-x-1/2 -translate-y-1/2"
-          onClick={(event) => {
-            event.stopPropagation();
-            toggleSound();
-          }}
-          style={{
-            width: "52px",
-            height: "52px",
-          }}
-          type="button"
-        >
-          <span className="grid h-full w-full place-items-center rounded-full border-4 border-white">
-            {soundEnabled ? (
-              <Volume2 aria-hidden="true" className="ml-[1px] h-5 w-5 text-white/90" />
-            ) : (
-              <VolumeX aria-hidden="true" className="ml-[1px] h-5 w-5 text-white/90" />
-            )}
-          </span>
-        </button>
-      )}
-
       {focused && showPlaybackControls && (
         <div className="absolute left-1/2 top-[56%] flex -translate-x-1/2 -translate-y-1/2 items-center gap-4">
           <button
@@ -620,21 +579,19 @@ const CardVideo = ({
             )}
           </button>
 
-          <button
-            aria-label={`Controlar áudio do vídeo de ${name}`}
-            className="z-10 grid h-[52px] w-[52px] place-items-center rounded-full border-4 border-white bg-black/25"
-            onClick={(event) => {
-              event.stopPropagation();
-              toggleSound();
-            }}
-            type="button"
-          >
-            {soundEnabled ? (
-              <Volume2 aria-hidden="true" className="ml-[1px] h-6 w-6 text-white/90" />
-            ) : (
+          {!soundEnabled ? (
+            <button
+              aria-label={`Desativar mudo do vídeo de ${name}`}
+              className="z-10 grid h-[52px] w-[52px] place-items-center rounded-full border-4 border-white bg-black/25"
+              onClick={(event) => {
+                event.stopPropagation();
+                unmuteVideo();
+              }}
+              type="button"
+            >
               <VolumeX aria-hidden="true" className="ml-[1px] h-6 w-6 text-white/90" />
-            )}
-          </button>
+            </button>
+          ) : null}
         </div>
       )}
     </div>
