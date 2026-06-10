@@ -284,6 +284,19 @@ Regras anti-recriação específicas:
   - `pnpm --dir frontend build`
   - `pnpm check`
 
+## Execução complementar: selos do card com largura por conteúdo e animação (2026-06-10)
+
+- Pedido do usuário: ajustar os selos de benefícios do card para largura ajustada ao texto, garantir que o espaçamento vertical entre o último selo e o `overlay` seja igual ao espaçamento entre `overlay` e botão de compartilhar, e adicionar animação suave de flutuação nos selos.
+- O card foi ajustado para:
+  - `width: fit-content` com `max-width` responsivo e `truncate` para evitar overflow;
+  - posicionamento vertical calculado por medição do DOM para manter distância equivalente entre selo e overlay / overlay e botão de compartilhamento;
+  - animação de flutuação contínua com atraso escalonado por selo e respeito ao `prefers-reduced-motion`.
+- Validações executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - `adrs/0047-selos-card-fitted-animation-e-espacamento-dinamico.md` criado e atualizado com esta decisão.
+
 ## Validação mínima
 
 - `pnpm --dir frontend check` quando frontend mudar.

@@ -3,7 +3,15 @@
 import { ChevronRight, Heart, Pause, Play, Share2, Volume2, VolumeX } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { type CSSProperties, type MouseEvent, useEffect, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  type MouseEvent,
+  type Ref,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
@@ -214,9 +222,11 @@ const ShareButton = ({
   psychologistName,
   buttonStyle,
   className,
+  buttonRef,
 }: {
   route: string;
   psychologistName: string;
+  buttonRef?: Ref<HTMLButtonElement>;
   buttonStyle?: CSSProperties;
   className?: string;
 }) => {
@@ -245,6 +255,7 @@ const ShareButton = ({
 
   return (
     <button
+      ref={buttonRef}
       aria-label={`Compartilhar perfil de ${psychologistName}`}
       className={cn(
         "grid place-items-center rounded-full bg-[rgba(255,255,255,0.94)] text-[#334155] transition",
@@ -537,10 +548,62 @@ export function PsychologistCard({
   const tags = buildBenefitTags(psychologist);
   const displayName = getHonorificName(psychologist);
   const route = `/app/psychologist/${psychologist.id}`;
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const shareButtonRef = useRef<HTMLButtonElement>(null);
+  const cardRef = useRef<HTMLElement>(null);
+  const tagContainerRef = useRef<HTMLDivElement>(null);
+  const [tagTopOffsetPx, setTagTopOffsetPx] = useState<number | null>(null);
+
+  const recalculateTagTopOffset = useCallback(() => {
+    const cardNode = cardRef.current;
+    const overlayNode = overlayRef.current;
+    const shareButtonNode = shareButtonRef.current;
+    const tagContainerNode = tagContainerRef.current;
+
+    if (!cardNode || !overlayNode || !shareButtonNode || !tagContainerNode) {
+      return;
+    }
+
+    const cardRect = cardNode.getBoundingClientRect();
+    const overlayRect = overlayNode.getBoundingClientRect();
+    const shareButtonRect = shareButtonNode.getBoundingClientRect();
+    const tagContainerHeight = tagContainerNode.getBoundingClientRect().height;
+    const overlayShareGap = Math.abs(overlayRect.top - shareButtonRect.top);
+
+    const nextTop = Math.round(
+      overlayRect.top - cardRect.top - overlayShareGap - tagContainerHeight,
+    );
+
+    setTagTopOffsetPx((current) => (current === nextTop ? current : nextTop));
+  }, []);
+
+  useEffect(() => {
+    const cardNode = cardRef.current;
+    if (!cardNode) return;
+    if (typeof window === "undefined" || typeof ResizeObserver === "undefined") return;
+
+    const animationFrameHandle = requestAnimationFrame(() => {
+      recalculateTagTopOffset();
+    });
+
+    const resizeObserver = new ResizeObserver(() => {
+      recalculateTagTopOffset();
+    });
+
+    resizeObserver.observe(cardNode);
+    window.addEventListener("resize", recalculateTagTopOffset);
+
+    return () => {
+      cancelAnimationFrame(animationFrameHandle);
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", recalculateTagTopOffset);
+    };
+  }, [recalculateTagTopOffset]);
 
   return (
     <article
       className="relative w-[calc(100vw-54px)] overflow-hidden rounded-[14px] shadow-[0_10px_24px_rgba(15,23,42,0.18)]"
+      ref={cardRef}
       style={
         {
           "--psychologist-overlay-height": PSYCHOLOGIST_OVERLAY_HEIGHT,
@@ -598,6 +661,7 @@ export function PsychologistCard({
         />
 
         <ShareButton
+          buttonRef={shareButtonRef}
           className="pointer-events-auto"
           buttonStyle={{
             right: "3.2%",
@@ -612,25 +676,30 @@ export function PsychologistCard({
         {tags.length > 0 ? (
           <div
             className="pointer-events-none absolute flex flex-col"
+            ref={tagContainerRef}
             style={{
               left: "3.2%",
-              top: `calc(100% - (var(--psychologist-overlay-height) + ${OVERLAY_FAVORITE_OFFSET}))`,
+              top:
+                tagTopOffsetPx === null
+                  ? `calc(100% - (var(--psychologist-overlay-height) + ${OVERLAY_FAVORITE_OFFSET}))`
+                  : `${tagTopOffsetPx}px`,
               gap: OVERLAY_SIDE_BADGE_GAP,
               zIndex: 21,
             }}
           >
-            {tags.map((tag) => (
+            {tags.map((tag, index) => (
               <span
                 key={tag}
-                className="inline-flex min-w-0 max-w-full items-center justify-center overflow-hidden rounded-full border border-white/80 bg-white/55 py-0 text-center font-bold leading-none text-[#334155] truncate whitespace-nowrap"
+                className="inline-flex min-w-0 max-w-full items-center justify-center overflow-hidden rounded-full border border-white/80 bg-white/55 py-0 text-center font-bold leading-none text-[#334155] truncate whitespace-nowrap psychologist-tag-float"
                 style={{
                   height: "clamp(26px, calc(22px + 2vw), 28px)",
                   minWidth: 0,
-                  width: "min(45vw, 180px)",
-                  maxWidth: "min(45vw, 180px)",
+                  width: "fit-content",
+                  maxWidth: "min(46vw, 178px)",
                   fontSize: "clamp(10px, 2.8vw, 12px)",
                   paddingLeft: "clamp(6px, 2vw, 10px)",
                   paddingRight: "clamp(6px, 2vw, 10px)",
+                  animationDelay: `${index * 0.14}s`,
                 }}
               >
                 {tag}
@@ -642,6 +711,7 @@ export function PsychologistCard({
 
       <div
         className="pointer-events-none absolute bottom-0 left-0 right-0 z-20 w-full overflow-hidden rounded-[14px] p-[4.5%]"
+        ref={overlayRef}
         style={{
           minHeight: PSYCHOLOGIST_OVERLAY_HEIGHT,
           top: "auto",

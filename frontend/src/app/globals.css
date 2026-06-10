@@ -106,3 +106,24 @@ a {
 :focus-visible {
   outline-color: var(--lectum-primary);
 }
+
+@keyframes psychologist-tag-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.psychologist-tag-float {
+  animation: psychologist-tag-float 2.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .psychologist-tag-float {
+    animation: none;
+  }
+}
