@@ -470,7 +470,7 @@ export function PsychologistCard({
 
   return (
     <article
-      className="relative mx-auto w-[calc(100vw-54px)] overflow-hidden rounded-[14px]"
+      className="relative mx-auto w-[calc(100vw-54px)] overflow-hidden rounded-[14px] shadow-[0_10px_24px_rgba(15,23,42,0.18)]"
       style={{
         aspectRatio: "9 / 16",
         maxWidth: "380px",
