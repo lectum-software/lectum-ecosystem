@@ -596,7 +596,7 @@ export function PsychologistCard({
           className="pointer-events-auto"
           buttonStyle={{
             right: "3.2%",
-            bottom: "calc(26% + clamp(10px, 3vw, 14px))",
+            bottom: "calc(26% + clamp(48px, 12vw, 54px))",
             position: "absolute",
           }}
           route={route}
