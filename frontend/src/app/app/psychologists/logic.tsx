@@ -1,8 +1,8 @@
 ﻿"use client";
 
-import { ChevronLeft, ChevronRight, UserRound } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, UserRound, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDirectoryPsychologists } from "@/api/callers/directory";
 import { usePatient } from "@/api/callers/patient";
 import type { DirectoryPsychologistsQuery } from "@/api/generator/types/directory";
@@ -17,7 +17,11 @@ import { getToken } from "@/hooks/cookies/token";
 import { useAppSelector } from "@/hooks/redux";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
-import type { PsychologistsFilterForm } from "./use-form";
+import {
+  defaultPsychologistsFilterValues,
+  type PsychologistsFilterForm,
+  usePsychologistsFilterForm,
+} from "./use-form";
 
 const PAGE_LIMIT = 20;
 
@@ -70,6 +74,19 @@ const toQuery = (values: PsychologistsFilterForm, page: number): DirectoryPsycho
   };
 };
 
+const buildFiltersParams = (values: PsychologistsFilterForm, page = 1) => {
+  const normalized = normalizeFormValues(values);
+  const next = new URLSearchParams();
+
+  if (normalized.search?.trim()) next.set("search", normalized.search.trim());
+  if (normalized.specialty) next.set("specialty", normalized.specialty);
+  if (normalized.service) next.set("service", normalized.service);
+  if (normalized.approach) next.set("approach", normalized.approach);
+  if (page > 1) next.set("page", String(page));
+
+  return next;
+};
+
 const resolveDirectoryErrorMessage = (error: unknown) => {
   const apiError = error as ApiError;
   const rawMessage =
@@ -93,6 +110,8 @@ export const PsychologistsLogic = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const filterDialogRef = useRef<HTMLDivElement>(null);
   const [hasAuthToken] = useState(() => {
     if (typeof window === "undefined") return false;
 
@@ -111,19 +130,79 @@ export const PsychologistsLogic = () => {
   const response = directory.data;
   const pages = response?.pages ?? 0;
   const psychologists = response?.data ?? [];
-  const goToPage = (page: number) => {
-    const next = new URLSearchParams();
+  const hasActiveFilters =
+    Boolean(filterValues.search?.trim()) ||
+    Boolean(filterValues.specialty) ||
+    Boolean(filterValues.service) ||
+    Boolean(filterValues.approach);
 
-    if (filterValues.search?.trim()) next.set("search", filterValues.search.trim());
-    if (filterValues.specialty) next.set("specialty", filterValues.specialty);
-    if (filterValues.service) next.set("service", filterValues.service);
-    if (filterValues.approach) next.set("approach", filterValues.approach);
-    if (page > 1) next.set("page", String(page));
+  const filters = usePsychologistsFilterForm({
+    filters: response?.filters,
+    loading: directory.isLoading || directory.isFetching,
+    values: filterValues,
+  });
+
+  const goToPage = (page: number) => {
+    const next = buildFiltersParams(filterValues, page);
 
     router.replace(next.toString() ? `/app/psychologists?${next}` : "/app/psychologists", {
       scroll: false,
     });
   };
+
+  const applyFilterValues = (values: PsychologistsFilterForm) => {
+    const next = buildFiltersParams(normalizeFormValues(values), 1);
+
+    router.replace(next.toString() ? `/app/psychologists?${next}` : "/app/psychologists", {
+      scroll: false,
+    });
+  };
+
+  const handleSubmitFilters = filters.hook.handleSubmit((values) => {
+    applyFilterValues(values);
+    setIsFiltersOpen(false);
+  });
+
+  const clearFilters = () => {
+    filters.hook.reset(defaultPsychologistsFilterValues);
+    applyFilterValues(defaultPsychologistsFilterValues);
+    setIsFiltersOpen(false);
+  };
+
+  const handleFiltersOpen = useCallback(() => {
+    setIsFiltersOpen(true);
+  }, []);
+
+  const handleFiltersClose = useCallback(() => {
+    filters.hook.reset(filterValues);
+    setIsFiltersOpen(false);
+  }, [filterValues, filters.hook]);
+
+  useEffect(() => {
+    if (!isFiltersOpen) return;
+
+    const timer = setTimeout(() => {
+      filterDialogRef.current?.focus();
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [isFiltersOpen]);
+
+  useEffect(() => {
+    if (!isFiltersOpen) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        handleFiltersClose();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [handleFiltersClose, isFiltersOpen]);
 
   const toggleFavorite = (psychologist: PsychologistCardItem) => {
     if (!canFavoritePsychologists) return;
@@ -148,11 +227,76 @@ export const PsychologistsLogic = () => {
   return (
     <PrivateTemplate allowAnonymous>
       <section className="mx-auto grid w-full max-w-[390px] gap-4 px-4 sm:max-w-[430px] sm:px-0">
-        <header className="pt-2 sm:pt-4">
-          <h1 className="text-[2rem] leading-tight font-extrabold tracking-tight text-foreground sm:text-[2.2rem]">
-            Psicólogos
-          </h1>
+        <header className="-mx-5 -mt-6 border-b border-border bg-surface px-4 py-4 sm:mx-0 sm:mt-0 sm:rounded-[28px] sm:border sm:p-6 lg:p-8">
+          <div className="grid gap-3">
+            <div className="flex min-w-0 items-center justify-between gap-3">
+              <h1 className="text-2xl font-extrabold text-foreground lg:text-3xl">Psicólogos</h1>
+              <button
+                aria-label="Abrir filtros"
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-primary-soft text-primary transition hover:bg-primary/15"
+                onClick={handleFiltersOpen}
+                type="button"
+              >
+                <Search className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+            <p className="text-sm leading-6 text-muted">
+              {hasActiveFilters
+                ? "Filtros ativos aplicados. Clique na lupa para ajustar."
+                : "Use a lupa para filtrar os psicólogos."}
+            </p>
+          </div>
         </header>
+
+        {isFiltersOpen ? (
+          <div
+            aria-labelledby="psychologist-filters-title"
+            aria-modal="true"
+            className="fixed inset-0 z-50 grid place-items-center bg-foreground/50 p-4 backdrop-blur-sm"
+            onMouseDown={handleFiltersClose}
+            role="dialog"
+          >
+            <div
+              className="grid w-full max-w-[500px] gap-4 rounded-[28px] border border-border bg-surface p-5 shadow-[0_24px_70px_rgb(15_23_42_/_26%)]"
+              onMouseDown={(event) => event.stopPropagation()}
+              ref={filterDialogRef}
+              role="document"
+              tabIndex={-1}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2
+                    className="text-lg font-extrabold text-foreground"
+                    id="psychologist-filters-title"
+                  >
+                    Filtros de busca
+                  </h2>
+                  <p className="mt-1 text-sm leading-6 text-muted">
+                    Ajuste os critérios e aplique para refinar sua busca.
+                  </p>
+                </div>
+                <button
+                  aria-label="Fechar filtros"
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-foreground"
+                  onClick={handleFiltersClose}
+                  type="button"
+                >
+                  <X className="h-4 w-4" aria-hidden="true" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmitFilters}>
+                <filters.Form {...filters.formProps} />
+                <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-end">
+                  <Button onClick={clearFilters} type="button" variant="outline">
+                    Limpar filtros
+                  </Button>
+                  <Button type="submit">Aplicar filtros</Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        ) : null}
 
         {errorMessage ? (
           <InlineAlert className="" title="Não foi possível carregar" variant="error">
