@@ -108,14 +108,6 @@ const getSubinfo = (psychologist: PsychologistCardItem) => {
 const buildBenefitTags = (psychologist: PsychologistCardItem) => {
   const tags: string[] = [];
 
-  if (
-    psychologist.show_experience_tag !== false &&
-    psychologist.verified &&
-    psychologist.formation_years
-  ) {
-    tags.push(`${psychologist.formation_years} anos de experiÃƒÂªncia`);
-  }
-
   if (psychologist.accepts_insurance) {
     tags.push("Aceita convÃƒÂªnios");
   }
