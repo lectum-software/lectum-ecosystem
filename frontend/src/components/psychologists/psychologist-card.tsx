@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { ChevronRight, Heart, ShieldCheck, Volume2, VolumeX } from "lucide-react";
+import { ChevronRight, Heart, Pause, Play, ShieldCheck, Volume2, VolumeX } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -206,6 +206,7 @@ const CardVideo = ({
   const [playing, setPlaying] = useState(false);
   const [focused, setFocused] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(globalSoundEnabled);
+  const [controlMode, setControlMode] = useState<"hidden" | "volume" | "media">("hidden");
 
   const onPlay = () => {
     setPlaying(true);
@@ -229,6 +230,25 @@ const CardVideo = ({
 
     currentVideo.muted = !next;
     void currentVideo.play();
+
+    setControlMode("hidden");
+  };
+
+  const togglePlayback = () => {
+    const currentVideo = videoRef.current;
+    if (!currentVideo) return;
+
+    if (currentVideo.paused) {
+      void currentVideo.play();
+    } else {
+      currentVideo.pause();
+    }
+  };
+
+  const handleVideoClick = () => {
+    if (!focused) return;
+
+    setControlMode("media");
   };
 
   useEffect(() => {
@@ -239,7 +259,10 @@ const CardVideo = ({
       (entries) => {
         const entry = entries.at(0);
         const ratio = entry?.intersectionRatio ?? 0;
-        setFocused(Boolean(entry?.isIntersecting) && ratio >= 0.35);
+        const nextFocused = Boolean(entry?.isIntersecting) && ratio >= 0.35;
+
+        setFocused(nextFocused);
+        setControlMode(nextFocused ? "volume" : "hidden");
       },
       {
         threshold: [0, 0.35],
@@ -270,12 +293,27 @@ const CardVideo = ({
     });
   }, [focused, soundEnabled]);
 
+  const showVolumeControl = controlMode === "volume";
+  const showPlaybackControls = controlMode === "media";
+
   return (
     <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-surface-muted">
+      <button
+        aria-label={`Abrir controles do vÃƒÂ­deo de ${name}`}
+        className="absolute inset-0 z-0 h-full w-full cursor-default border-0 bg-transparent p-0"
+        onClick={handleVideoClick}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            handleVideoClick();
+          }
+        }}
+        type="button"
+      />
       <video
         aria-label={`VÃƒÂ­deo de apresentaÃƒÂ§ÃƒÂ£o de ${name}`}
         className="h-full w-full bg-black object-cover object-top"
-        controls={playing}
+        controls={false}
         muted
         onPause={onPause}
         onPlay={onPlay}
@@ -287,11 +325,14 @@ const CardVideo = ({
         src={url}
       />
 
-      {focused ? (
+      {focused && showVolumeControl && (
         <button
           aria-label={`Controlar Ã¡udio do vÃƒÂ­deo de ${name}`}
-          className="absolute left-1/2 top-[56%] -translate-x-1/2 -translate-y-1/2"
-          onClick={toggleSound}
+          className="absolute left-1/2 top-[56%] z-10 -translate-x-1/2 -translate-y-1/2"
+          onClick={(event) => {
+            event.stopPropagation();
+            toggleSound();
+          }}
           style={{
             width: "52px",
             height: "52px",
@@ -306,7 +347,43 @@ const CardVideo = ({
             )}
           </span>
         </button>
-      ) : null}
+      )}
+
+      {focused && showPlaybackControls && (
+        <div className="absolute left-1/2 top-[56%] flex -translate-x-1/2 -translate-y-1/2 items-center gap-4">
+          <button
+            aria-label={playing ? "Pausar vÃƒÂ­deo" : "Retomar vÃƒÂ­deo"}
+            className="z-10 grid h-[52px] w-[52px] place-items-center rounded-full border-4 border-white bg-black/25"
+            onClick={(event) => {
+              event.stopPropagation();
+              togglePlayback();
+            }}
+            type="button"
+          >
+            {playing ? (
+              <Pause aria-hidden="true" className="h-6 w-6 text-white/90" />
+            ) : (
+              <Play aria-hidden="true" className="ml-[1px] h-6 w-6 text-white/90" />
+            )}
+          </button>
+
+          <button
+            aria-label={`Controlar Ã¡udio do vÃƒÂ­deo de ${name}`}
+            className="z-10 grid h-[52px] w-[52px] place-items-center rounded-full border-4 border-white bg-black/25"
+            onClick={(event) => {
+              event.stopPropagation();
+              toggleSound();
+            }}
+            type="button"
+          >
+            {soundEnabled ? (
+              <Volume2 aria-hidden="true" className="ml-[1px] h-6 w-6 text-white/90" />
+            ) : (
+              <VolumeX aria-hidden="true" className="ml-[1px] h-6 w-6 text-white/90" />
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 };
