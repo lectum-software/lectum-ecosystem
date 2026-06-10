@@ -35,7 +35,7 @@ type ApiError = Error & {
 const config = {
   favorites: {
     title: "Favoritos",
-    subtitle: "Psicólogos salvos para acessar rapidamente quando precisar.",
+    subtitle: "",
     emptyTitle: "Nenhum favorito encontrado",
     emptyDescription:
       "Favorite psicólogos publicados na descoberta para montar sua lista pessoal com dados reais.",
@@ -137,7 +137,9 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
                 {total} perfil{total === 1 ? "" : "s"} selecionado{total === 1 ? "" : "s"}
               </span>
             </div>
-            <p className="text-sm leading-6 text-muted">{copy.subtitle as string}</p>
+            {copy.subtitle ? (
+              <p className="text-sm leading-6 text-muted">{copy.subtitle as string}</p>
+            ) : null}
           </div>
         </header>
 
