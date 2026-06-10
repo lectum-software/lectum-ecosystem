@@ -240,11 +240,11 @@ export const PsychologistsLogic = () => {
                 <Search className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
-            <p className="text-sm leading-6 text-muted">
-              {hasActiveFilters
-                ? "Filtros ativos aplicados. Clique na lupa para ajustar."
-                : "Use a lupa para filtrar os psicólogos."}
-            </p>
+            {hasActiveFilters ? (
+              <p className="text-sm leading-6 text-muted">
+                Filtros ativos aplicados. Clique na lupa para ajustar.
+              </p>
+            ) : null}
           </div>
         </header>
 
