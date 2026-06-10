@@ -640,11 +640,11 @@ export function PsychologistCard({
             </Link>
           </div>
 
-          <div className="mt-1 flex w-full flex-nowrap items-center gap-1.5">
+          <div className="mt-1 flex w-full flex-nowrap items-center gap-1">
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="inline-flex min-w-0 flex-1 items-center justify-center rounded-full border border-white/80 bg-white/55 px-2 py-1.5 text-[0.68rem] font-bold leading-none text-[#334155]"
+                className="inline-flex min-w-0 max-w-full flex-1 items-center justify-center overflow-hidden truncate rounded-full border border-white/80 bg-white/55 px-1.5 py-1.5 text-[clamp(0.56rem,2vw,0.66rem)] font-bold leading-none text-[#334155] whitespace-nowrap"
               >
                 {tag}
               </span>
