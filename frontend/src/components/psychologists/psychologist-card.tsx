@@ -109,6 +109,7 @@ const PSYCHOLOGIST_OVERLAY_HEIGHT = "26%";
 const OVERLAY_FAVORITE_OFFSET = "17%";
 const OVERLAY_SHARE_GAP = "clamp(48px, 12vw, 54px)";
 const OVERLAY_SIDE_BADGE_GAP = "clamp(8px, 2vw, 10px)";
+const VIDEO_DOUBLE_TAP_DELAY_MS = 280;
 
 type CardOverlayStyle = CSSProperties & { "--psychologist-overlay-height": string };
 
@@ -317,6 +318,8 @@ const CardVideo = ({
   const [videoPoster, setVideoPoster] = useState<string | null>(null);
   const posterExtractionStarted = useRef(false);
   const userInitiatedPlayRef = useRef(false);
+  const doubleTapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastVideoTapRef = useRef<number | null>(null);
 
   const onPlay = () => {
     if (userInitiatedPlayRef.current) {
@@ -362,8 +365,38 @@ const CardVideo = ({
     }
   };
 
-  const handleVideoClick = () => {
+  const handleVideoTap = () => {
     if (!focused) return;
+
+    const now = performance.now();
+    const previousTap = lastVideoTapRef.current;
+    const isDoubleTap = previousTap !== null && now - previousTap <= VIDEO_DOUBLE_TAP_DELAY_MS;
+
+    lastVideoTapRef.current = now;
+
+    if (isDoubleTap && doubleTapTimeoutRef.current) {
+      clearTimeout(doubleTapTimeoutRef.current);
+      doubleTapTimeoutRef.current = null;
+      lastVideoTapRef.current = null;
+
+      const currentVideo = videoRef.current;
+      if (!currentVideo || currentVideo.paused) return;
+
+      currentVideo.pause();
+      setControlMode("media");
+
+      return;
+    }
+
+    if (doubleTapTimeoutRef.current) {
+      clearTimeout(doubleTapTimeoutRef.current);
+      doubleTapTimeoutRef.current = null;
+    }
+
+    doubleTapTimeoutRef.current = setTimeout(() => {
+      doubleTapTimeoutRef.current = null;
+      lastVideoTapRef.current = null;
+    }, VIDEO_DOUBLE_TAP_DELAY_MS);
 
     setControlMode(soundEnabled ? "media" : "volume");
   };
@@ -456,6 +489,15 @@ const CardVideo = ({
   }, []);
 
   useEffect(() => {
+    return () => {
+      if (doubleTapTimeoutRef.current) {
+        clearTimeout(doubleTapTimeoutRef.current);
+        doubleTapTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     const currentVideo = videoRef.current;
     if (!currentVideo) return;
 
@@ -479,11 +521,11 @@ const CardVideo = ({
       <button
         aria-label={`Abrir controles do vídeo de ${name}`}
         className="absolute inset-0 z-0 h-full w-full cursor-default border-0 bg-transparent p-0"
-        onClick={handleVideoClick}
+        onClick={handleVideoTap}
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
-            handleVideoClick();
+            handleVideoTap();
           }
         }}
         type="button"
