@@ -97,6 +97,12 @@ const getPsychologistTitle = (gender?: string | null) => {
   return normalized === "feminino" ? "PSICÓLOGA" : "PSICÓLOGO";
 };
 
+const PSYCHOLOGIST_OVERLAY_HEIGHT = "26%";
+const OVERLAY_FAVORITE_OFFSET = "17%";
+const OVERLAY_SHARE_GAP = "clamp(48px, 12vw, 54px)";
+
+type CardOverlayStyle = CSSProperties & { "--psychologist-overlay-height": string };
+
 const getSubinfo = (psychologist: PsychologistCardItem) => {
   const role = getPsychologistTitle(psychologist.gender);
   const years = psychologist.formation_years ?? 10;
@@ -531,12 +537,15 @@ export function PsychologistCard({
   return (
     <article
       className="relative mx-auto w-[calc(100vw-54px)] overflow-hidden rounded-[14px] shadow-[0_10px_24px_rgba(15,23,42,0.18)]"
-      style={{
-        aspectRatio: "9 / 16",
-        maxWidth: "380px",
-        minWidth: "320px",
-        width: "min(calc(100vw - 54px), 380px, calc((100dvh - 170px) * 9 / 16))",
-      }}
+      style={
+        {
+          "--psychologist-overlay-height": PSYCHOLOGIST_OVERLAY_HEIGHT,
+          aspectRatio: "9 / 16",
+          maxWidth: "380px",
+          minWidth: "320px",
+          width: "min(calc(100vw - 54px), 380px, calc((100dvh - 170px) * 9 / 16))",
+        } as CardOverlayStyle
+      }
     >
       <div className="absolute inset-0">
         {videoSrc ? (
@@ -571,9 +580,10 @@ export function PsychologistCard({
         <FavoriteButton
           className="pointer-events-auto"
           buttonStyle={{
-            top: "57%",
             right: "3.2%",
             position: "absolute",
+            // mantém a distância relativa ao topo do overlay quando sua altura muda
+            top: `calc(100% - (var(--psychologist-overlay-height) + ${OVERLAY_FAVORITE_OFFSET}))`,
           }}
           canFavorite={canFavorite}
           favoritePending={favoritePending}
@@ -585,8 +595,9 @@ export function PsychologistCard({
           className="pointer-events-auto"
           buttonStyle={{
             right: "3.2%",
-            top: "calc(57% + clamp(48px, 12vw, 54px))",
             position: "absolute",
+            // mantém a distância relativa ao topo do overlay quando sua altura muda
+            top: `calc(100% - (var(--psychologist-overlay-height) + ${OVERLAY_FAVORITE_OFFSET} - ${OVERLAY_SHARE_GAP}))`,
           }}
           route={route}
           psychologistName={displayName}
@@ -594,8 +605,9 @@ export function PsychologistCard({
       </div>
 
       <div
-        className="pointer-events-none absolute bottom-0 left-0 right-0 z-20 w-full min-h-[26%] overflow-hidden rounded-[14px] p-[4.5%]"
+        className="pointer-events-none absolute bottom-0 left-0 right-0 z-20 w-full overflow-hidden rounded-[14px] p-[4.5%]"
         style={{
+          minHeight: PSYCHOLOGIST_OVERLAY_HEIGHT,
           top: "auto",
           background: "rgba(255, 255, 255, 0.38)",
           backdropFilter: "blur(24px) saturate(180%)",
