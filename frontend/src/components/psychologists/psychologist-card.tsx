@@ -307,7 +307,7 @@ const CardVideo = ({
     currentVideo.muted = !next;
     void currentVideo.play();
 
-    setControlMode(next ? "media" : "volume");
+    setControlMode(next ? "hidden" : "volume");
   };
 
   const togglePlayback = () => {
