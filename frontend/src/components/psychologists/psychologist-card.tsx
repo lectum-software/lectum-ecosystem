@@ -103,7 +103,7 @@ const getHonorificName = (psychologist: PsychologistCardItem) => {
 const getPsychologistTitle = (gender?: string | null) => {
   const normalized = gender?.toLowerCase();
 
-  return normalized === "feminino" ? "PSICÃƒâ€œLOGA" : "PSICÃƒâ€œLOGO";
+  return normalized === "feminino" ? "PSICÓLOGA" : "PSICÓLOGO";
 };
 
 const getSubinfo = (psychologist: PsychologistCardItem) => {
@@ -111,14 +111,14 @@ const getSubinfo = (psychologist: PsychologistCardItem) => {
   const years = psychologist.formation_years ?? 10;
   const rating = formatRating(psychologist.rating_avg, psychologist.rating_count);
 
-  return `${role} Ã¢â‚¬Â¢ ${years} ANOS EXP Ã¢â‚¬Â¢ Ã¢Ëœâ€¦ ${rating}`;
+  return `${role} • ${years} ANOS EXP • ★ ${rating}`;
 };
 
 const buildBenefitTags = (psychologist: PsychologistCardItem) => {
   const tags: string[] = [];
 
   if (psychologist.accepts_insurance) {
-    tags.push("Aceita convÃƒÂªnios");
+    tags.push("Aceita convênios");
   }
 
   if (psychologist.social_value) {
@@ -126,7 +126,7 @@ const buildBenefitTags = (psychologist: PsychologistCardItem) => {
   }
 
   if (psychologist.discount_first_session) {
-    tags.push("Desconto 1Ã‚Âª sessÃƒÂ£o");
+    tags.push("Desconto 1ª sessão");
   }
 
   return tags;
@@ -148,7 +148,7 @@ const AvailabilityBadge = ({ available }: { available?: boolean }) => {
       }}
     >
       <span className="h-2 w-2 rounded-full bg-[#2ecc71]" aria-hidden="true" />
-      DisponÃƒÂ­vel hoje
+      Disponível hoje
     </span>
   );
 };
@@ -174,7 +174,7 @@ const FavoriteButton = ({
     <button
       aria-label={
         !canFavorite
-          ? "Favoritos disponÃƒÂ­veis apenas para usuÃƒÂ¡rios autenticados"
+          ? "Favoritos disponíveis apenas para usuários autenticados"
           : psychologist.favorited
             ? `Remover ${psychologist.name} dos favoritos`
             : `Favoritar ${psychologist.name}`
@@ -194,9 +194,7 @@ const FavoriteButton = ({
         zIndex: 5,
         ...buttonStyle,
       }}
-      title={
-        !canFavorite ? "Favoritos disponÃƒÂ­veis apenas para usuÃƒÂ¡rios autenticados" : undefined
-      }
+      title={!canFavorite ? "Favoritos disponíveis apenas para usuários autenticados" : undefined}
       type="button"
     >
       <Heart
@@ -436,7 +434,7 @@ const CardVideo = ({
   return (
     <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-surface-muted">
       <button
-        aria-label={`Abrir controles do vÃƒÂ­deo de ${name}`}
+        aria-label={`Abrir controles do vídeo de ${name}`}
         className="absolute inset-0 z-0 h-full w-full cursor-default border-0 bg-transparent p-0"
         onClick={handleVideoClick}
         onKeyDown={(event) => {
@@ -448,7 +446,7 @@ const CardVideo = ({
         type="button"
       />
       <video
-        aria-label={`VÃƒÂ­deo de apresentaÃƒÂ§ÃƒÂ£o de ${name}`}
+        aria-label={`Vídeo de apresentação de ${name}`}
         className="h-full w-full bg-black object-cover object-top"
         controls={false}
         muted
@@ -466,7 +464,7 @@ const CardVideo = ({
 
       {focused && showVolumeControl && (
         <button
-          aria-label={`Controlar Ã¡udio do vÃƒÂ­deo de ${name}`}
+          aria-label={`Controlar áudio do vídeo de ${name}`}
           className="absolute left-1/2 top-[56%] z-10 -translate-x-1/2 -translate-y-1/2"
           onClick={(event) => {
             event.stopPropagation();
@@ -491,7 +489,7 @@ const CardVideo = ({
       {focused && showPlaybackControls && (
         <div className="absolute left-1/2 top-[56%] flex -translate-x-1/2 -translate-y-1/2 items-center gap-4">
           <button
-            aria-label={playing ? "Pausar vÃƒÂ­deo" : "Retomar vÃƒÂ­deo"}
+            aria-label={playing ? "Pausar vídeo" : "Retomar vídeo"}
             className="z-10 grid h-[52px] w-[52px] place-items-center rounded-full border-4 border-white bg-black/25"
             onClick={(event) => {
               event.stopPropagation();
@@ -507,7 +505,7 @@ const CardVideo = ({
           </button>
 
           <button
-            aria-label={`Controlar Ã¡udio do vÃƒÂ­deo de ${name}`}
+            aria-label={`Controlar áudio do vídeo de ${name}`}
             className="z-10 grid h-[52px] w-[52px] place-items-center rounded-full border-4 border-white bg-black/25"
             onClick={(event) => {
               event.stopPropagation();
@@ -596,7 +594,7 @@ export function PsychologistCard({
           className="pointer-events-auto"
           buttonStyle={{
             right: "3.2%",
-            bottom: "calc(26% + clamp(48px, 12vw, 54px))",
+            top: "calc(57% + clamp(48px, 12vw, 54px))",
             position: "absolute",
           }}
           route={route}
@@ -685,7 +683,7 @@ export function PsychologistCard({
               >
                 <span className="inline-flex w-full items-center justify-center gap-2">
                   <WhatsAppIcon className="h-5 w-5" aria-hidden="true" />
-                  WhatsApp indisponÃƒÂ­vel
+                  WhatsApp indisponível
                 </span>
               </Button>
             )}
