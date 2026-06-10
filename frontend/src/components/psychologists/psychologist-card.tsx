@@ -100,8 +100,7 @@ const getPsychologistTitle = (gender?: string | null) => {
 const PSYCHOLOGIST_OVERLAY_HEIGHT = "26%";
 const OVERLAY_FAVORITE_OFFSET = "17%";
 const OVERLAY_SHARE_GAP = "clamp(48px, 12vw, 54px)";
-const OVERLAY_BADGE_OFFSET = "calc(var(--psychologist-overlay-height) + 8px)";
-const OVERLAY_BADGE_GAP = "clamp(38px, 9.5vw, 44px)";
+const OVERLAY_SIDE_BADGE_GAP = "clamp(8px, 2vw, 10px)";
 
 type CardOverlayStyle = CSSProperties & { "--psychologist-overlay-height": string };
 
@@ -609,6 +608,36 @@ export function PsychologistCard({
           route={route}
           psychologistName={displayName}
         />
+
+        {tags.length > 0 ? (
+          <div
+            className="pointer-events-none absolute flex flex-col"
+            style={{
+              left: "3.2%",
+              top: `calc(100% - (var(--psychologist-overlay-height) + ${OVERLAY_FAVORITE_OFFSET}))`,
+              gap: OVERLAY_SIDE_BADGE_GAP,
+              zIndex: 21,
+            }}
+          >
+            {tags.map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex min-w-0 max-w-full items-center justify-center overflow-hidden rounded-full border border-white/80 bg-white/55 py-0 text-center font-bold leading-none text-[#334155] truncate whitespace-nowrap"
+                style={{
+                  height: "clamp(26px, calc(22px + 2vw), 28px)",
+                  minWidth: 0,
+                  width: "min(45vw, 180px)",
+                  maxWidth: "min(45vw, 180px)",
+                  fontSize: "clamp(10px, 2.8vw, 12px)",
+                  paddingLeft: "clamp(6px, 2vw, 10px)",
+                  paddingRight: "clamp(6px, 2vw, 10px)",
+                }}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       <div
@@ -678,33 +707,6 @@ export function PsychologistCard({
               />
             </Link>
           </div>
-
-          {tags.length > 0 ? (
-            <div
-              className="pointer-events-none absolute left-[3.2%] flex w-auto flex-col"
-              style={{
-                bottom: OVERLAY_BADGE_OFFSET,
-                gap: OVERLAY_BADGE_GAP,
-              }}
-            >
-              {tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex min-w-0 items-center justify-center overflow-hidden truncate rounded-full border border-white/80 bg-white/55 text-center whitespace-nowrap font-bold leading-none text-[#334155]"
-                  style={{
-                    height: "clamp(26px, calc(22px + 2vw), 28px)",
-                    width: "max-content",
-                    minWidth: 0,
-                    paddingLeft: "clamp(6px, 2vw, 10px)",
-                    paddingRight: "clamp(6px, 2vw, 10px)",
-                    fontSize: "clamp(10px, 2.8vw, 12px)",
-                  }}
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          ) : null}
 
           <div
             className="mt-auto flex w-full items-center justify-start"
