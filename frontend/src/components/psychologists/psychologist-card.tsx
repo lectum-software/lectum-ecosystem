@@ -100,7 +100,7 @@ const getPsychologistTitle = (gender?: string | null) => {
 const PSYCHOLOGIST_OVERLAY_HEIGHT = "26%";
 const OVERLAY_FAVORITE_OFFSET = "17%";
 const OVERLAY_SHARE_GAP = "clamp(48px, 12vw, 54px)";
-const OVERLAY_BADGES_OFFSET = "17%";
+const OVERLAY_BADGE_OFFSET = "calc(var(--psychologist-overlay-height) + 8px)";
 const OVERLAY_BADGE_GAP = "clamp(38px, 9.5vw, 44px)";
 
 type CardOverlayStyle = CSSProperties & { "--psychologist-overlay-height": string };
@@ -683,7 +683,7 @@ export function PsychologistCard({
             <div
               className="pointer-events-none absolute left-[3.2%] flex w-auto flex-col"
               style={{
-                top: `calc(100% - (var(--psychologist-overlay-height) + ${OVERLAY_BADGES_OFFSET}))`,
+                bottom: OVERLAY_BADGE_OFFSET,
                 gap: OVERLAY_BADGE_GAP,
               }}
             >
