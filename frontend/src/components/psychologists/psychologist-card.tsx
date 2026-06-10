@@ -85,35 +85,6 @@ const getPsychologistTitle = (gender?: string | null) => {
   return normalized === "feminino" ? "Psicóloga" : "Psicólogo";
 };
 
-const PsychologistDisplayName = ({
-  displayName,
-  verified,
-}: {
-  displayName: string;
-  verified: boolean;
-}) => {
-  if (!verified) {
-    return <span className="block break-words leading-none">{displayName}</span>;
-  }
-
-  const normalizedName = displayName.trim().replace(/\s+/g, " ");
-  const parts = normalizedName.split(" ");
-  const lastName = parts.pop();
-  const leadingName = parts.join(" ");
-  const hasLeadingName = leadingName.length > 0;
-
-  return (
-    <span className="inline-flex min-w-0 items-baseline leading-none">
-      {hasLeadingName ? <span className="leading-none">{leadingName}</span> : null}
-      <span className="inline-flex min-w-0 items-baseline whitespace-nowrap">
-        {hasLeadingName ? " " : ""}
-        {lastName}
-        <VerifiedBadgeIcon aria-hidden="true" className="ml-1 inline h-[18px] w-[18px]" />
-      </span>
-    </span>
-  );
-};
-
 const buildBenefitTags = (psychologist: PsychologistCardItem) => {
   const tags: Array<{
     icon: typeof BriefcaseBusiness;
@@ -312,10 +283,13 @@ export function PsychologistCard({
             <div className="mt-0.5 min-w-0">
               <h2 className="min-w-0 text-[1.22rem] font-extrabold leading-6 text-foreground">
                 <span className="line-clamp-2 block min-w-0 break-words">
-                  <PsychologistDisplayName
-                    displayName={displayName}
-                    verified={psychologist.verified}
-                  />
+                  <span>{displayName}</span>
+                  {psychologist.verified ? (
+                    <VerifiedBadgeIcon
+                      aria-hidden="true"
+                      className="ml-1 inline h-[18px] w-[18px]"
+                    />
+                  ) : null}
                 </span>
               </h2>
             </div>
