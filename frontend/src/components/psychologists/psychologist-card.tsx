@@ -547,7 +547,7 @@ const CardVideo = ({
       />
 
       {focused && showPlaybackControls && (
-        <div className="absolute left-1/2 top-[56%] flex -translate-x-1/2 -translate-y-1/2 items-center gap-4">
+        <div className="absolute left-1/2 top-[46%] flex -translate-x-1/2 -translate-y-1/2 items-center gap-4">
           {!soundEnabled ? (
             <button
               aria-label={`Desmutar o vídeo de ${name}`}
