@@ -109,6 +109,7 @@ const PSYCHOLOGIST_OVERLAY_HEIGHT = "26%";
 const OVERLAY_FAVORITE_OFFSET = "17%";
 const OVERLAY_SHARE_GAP = "clamp(48px, 12vw, 54px)";
 const OVERLAY_SIDE_BADGE_GAP = "clamp(8px, 2vw, 10px)";
+const OVERLAY_TAGS_MARGIN_PX = 8;
 type CardOverlayStyle = CSSProperties & { "--psychologist-overlay-height": string };
 
 const getSubinfo = (psychologist: PsychologistCardItem) => {
@@ -604,25 +605,21 @@ export function PsychologistCard({
   const recalculateTagTopOffset = useCallback(() => {
     const cardNode = cardRef.current;
     const overlayNode = overlayRef.current;
-    const shareButtonNode = shareButtonRef.current;
     const tagContainerNode = tagContainerRef.current;
 
-    if (!cardNode || !overlayNode || !shareButtonNode || !tagContainerNode) {
+    if (!cardNode || !overlayNode || !tagContainerNode) {
       return;
     }
 
     const cardRect = cardNode.getBoundingClientRect();
     const overlayRect = overlayNode.getBoundingClientRect();
-    const shareButtonRect = shareButtonNode.getBoundingClientRect();
     const tagContainerHeight = tagContainerNode.getBoundingClientRect().height;
-    const overlayShareGap = Math.abs(overlayRect.top - shareButtonRect.top);
     const nextOverlayHeight = Math.round(overlayRect.height);
-
-    const nextTop = Math.round(
-      overlayRect.top - cardRect.top - overlayShareGap - tagContainerHeight,
+    const nextTagTop = Math.round(
+      overlayRect.top - cardRect.top - tagContainerHeight - OVERLAY_TAGS_MARGIN_PX,
     );
 
-    setTagTopOffsetPx((current) => (current === nextTop ? current : nextTop));
+    setTagTopOffsetPx((current) => (current === nextTagTop ? current : nextTagTop));
     setOverlayHeightPx((current) => (current === nextOverlayHeight ? current : nextOverlayHeight));
   }, []);
 
@@ -727,13 +724,13 @@ export function PsychologistCard({
 
         {tags.length > 0 ? (
           <div
-            className="pointer-events-none absolute flex flex-col"
+            className="pointer-events-none absolute flex flex-col-reverse"
             ref={tagContainerRef}
             style={{
               left: "3.2%",
               top:
                 tagTopOffsetPx === null
-                  ? `calc(100% - (var(--psychologist-overlay-height) + ${OVERLAY_FAVORITE_OFFSET}))`
+                  ? `calc(100% - (var(--psychologist-overlay-height) + ${OVERLAY_TAGS_MARGIN_PX}px))`
                   : `${tagTopOffsetPx}px`,
               gap: OVERLAY_SIDE_BADGE_GAP,
               zIndex: 21,
