@@ -595,8 +595,8 @@ export function PsychologistCard({
         <ShareButton
           className="pointer-events-auto"
           buttonStyle={{
-            top: "calc(57% + clamp(48px, 12vw, 54px))",
             right: "3.2%",
+            bottom: "calc(26% + clamp(10px, 3vw, 14px))",
             position: "absolute",
           }}
           route={route}
