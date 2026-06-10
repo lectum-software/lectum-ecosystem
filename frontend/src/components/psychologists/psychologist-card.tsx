@@ -722,16 +722,13 @@ export function PsychologistCard({
           psychologistName={displayName}
         />
 
-        {tags.length > 0 ? (
+        {tags.length > 0 && tagTopOffsetPx !== null ? (
           <div
             className="pointer-events-none absolute flex flex-col-reverse"
             ref={tagContainerRef}
             style={{
               left: "3.2%",
-              top:
-                tagTopOffsetPx === null
-                  ? `calc(100% - (var(--psychologist-overlay-height) + ${OVERLAY_TAGS_MARGIN_PX}px))`
-                  : `${tagTopOffsetPx}px`,
+              top: `${tagTopOffsetPx}px`,
               gap: OVERLAY_SIDE_BADGE_GAP,
               zIndex: 21,
             }}
