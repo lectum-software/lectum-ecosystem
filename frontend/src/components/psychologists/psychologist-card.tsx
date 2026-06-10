@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, Heart, Play, ShieldCheck, Star } from "lucide-react";
+import { ChevronRight, Heart, Play, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
@@ -53,12 +53,9 @@ const getInitials = (name: string) => {
 };
 
 const formatRating = (ratingAvg: number, ratingCount: number) => {
-  if (ratingCount <= 0) return "0,0 (0)";
+  if (ratingCount <= 0) return "0.0 (0)";
 
-  return `${(ratingAvg / 100).toLocaleString("pt-BR", {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
-  })} (${ratingCount})`;
+  return `${(ratingAvg / 100).toFixed(1)} (${ratingCount})`;
 };
 
 const getHonorificName = (psychologist: PsychologistCardItem) => {
@@ -73,7 +70,15 @@ const getHonorificName = (psychologist: PsychologistCardItem) => {
 const getPsychologistTitle = (gender?: string | null) => {
   const normalized = gender?.toLowerCase();
 
-  return normalized === "feminino" ? "Psicóloga" : "Psicólogo";
+  return normalized === "feminino" ? "PSICÓLOGA" : "PSICÓLOGO";
+};
+
+const getSubinfo = (psychologist: PsychologistCardItem) => {
+  const role = getPsychologistTitle(psychologist.gender);
+  const years = psychologist.formation_years ?? 10;
+  const rating = formatRating(psychologist.rating_avg, psychologist.rating_count);
+
+  return `${role} • ${years} ANOS EXP • ★ ${rating}`;
 };
 
 const buildBenefitTags = (psychologist: PsychologistCardItem) => {
@@ -231,10 +236,6 @@ export function PsychologistCard({
   const mediaIsPublic = isPublicMediaUrl(mediaSrc);
   const tags = buildBenefitTags(psychologist);
   const displayName = getHonorificName(psychologist);
-  const summary =
-    psychologist.headline ||
-    psychologist.bio ||
-    "Perfil profissional publicado na Lectum com informações públicas do psicólogo.";
   const route = `/app/psychologist/${psychologist.id}`;
 
   return (
@@ -324,12 +325,8 @@ export function PsychologistCard({
                 </span>
               </h2>
 
-              <div className="mt-1 flex flex-wrap items-center gap-2 text-[0.66rem] font-semibold uppercase tracking-[0.12em] text-[#334155]/85">
-                <span>{getPsychologistTitle(psychologist.gender)}</span>
-                <span className="inline-flex items-center gap-1 text-[0.72rem] font-bold text-[#f59e0b]">
-                  <Star className="h-3.5 w-3.5 fill-[#f59e0b] text-[#f59e0b]" aria-hidden="true" />
-                  {formatRating(psychologist.rating_avg, psychologist.rating_count)}
-                </span>
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] font-extrabold tracking-[0.8px] text-[#000]">
+                <span>{getSubinfo(psychologist)}</span>
               </div>
             </div>
 
@@ -341,8 +338,6 @@ export function PsychologistCard({
               <ChevronRight className="h-5 w-5" aria-hidden="true" />
             </Link>
           </div>
-
-          <p className="line-clamp-3 text-[0.72rem] leading-4 text-[#0f172a]/85">{summary}</p>
 
           <div className="flex flex-wrap gap-1.5">
             {tags.slice(0, 2).map((tag) => (
