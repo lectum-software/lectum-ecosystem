@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
-import { ChevronRight, Heart, Play, ShieldCheck } from "lucide-react";
+import { ChevronRight, Heart, ShieldCheck, Volume2, VolumeX } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
@@ -43,6 +43,30 @@ type PsychologistCardProps = {
   onToggleFavorite: (psychologist: PsychologistCardItem) => void;
 };
 
+type AudioPreferenceListener = (soundEnabled: boolean) => void;
+
+let globalSoundEnabled = false;
+const audioPreferenceListeners = new Set<AudioPreferenceListener>();
+
+const subscribeAudioPreference = (listener: AudioPreferenceListener) => {
+  listener(globalSoundEnabled);
+  audioPreferenceListeners.add(listener);
+
+  return () => {
+    audioPreferenceListeners.delete(listener);
+  };
+};
+
+const setGlobalSoundEnabled = (next: boolean) => {
+  if (globalSoundEnabled === next) return;
+
+  globalSoundEnabled = next;
+
+  for (const listener of audioPreferenceListeners) {
+    listener(next);
+  }
+};
+
 const getInitials = (name: string) => {
   const parts = name.split(/\s+/).filter(Boolean);
 
@@ -70,7 +94,7 @@ const getHonorificName = (psychologist: PsychologistCardItem) => {
 const getPsychologistTitle = (gender?: string | null) => {
   const normalized = gender?.toLowerCase();
 
-  return normalized === "feminino" ? "PSICÃ“LOGA" : "PSICÃ“LOGO";
+  return normalized === "feminino" ? "PSICÃƒâ€œLOGA" : "PSICÃƒâ€œLOGO";
 };
 
 const getSubinfo = (psychologist: PsychologistCardItem) => {
@@ -78,7 +102,7 @@ const getSubinfo = (psychologist: PsychologistCardItem) => {
   const years = psychologist.formation_years ?? 10;
   const rating = formatRating(psychologist.rating_avg, psychologist.rating_count);
 
-  return `${role} â€¢ ${years} ANOS EXP â€¢ â˜… ${rating}`;
+  return `${role} Ã¢â‚¬Â¢ ${years} ANOS EXP Ã¢â‚¬Â¢ Ã¢Ëœâ€¦ ${rating}`;
 };
 
 const buildBenefitTags = (psychologist: PsychologistCardItem) => {
@@ -89,11 +113,11 @@ const buildBenefitTags = (psychologist: PsychologistCardItem) => {
     psychologist.verified &&
     psychologist.formation_years
   ) {
-    tags.push(`${psychologist.formation_years} anos de experiÃªncia`);
+    tags.push(`${psychologist.formation_years} anos de experiÃƒÂªncia`);
   }
 
   if (psychologist.accepts_insurance) {
-    tags.push("Aceita convÃªnios");
+    tags.push("Aceita convÃƒÂªnios");
   }
 
   if (psychologist.social_value) {
@@ -101,7 +125,7 @@ const buildBenefitTags = (psychologist: PsychologistCardItem) => {
   }
 
   if (psychologist.discount_first_session) {
-    tags.push("Desconto 1Âª sessÃ£o");
+    tags.push("Desconto 1Ã‚Âª sessÃƒÂ£o");
   }
 
   return tags;
@@ -123,7 +147,7 @@ const AvailabilityBadge = ({ available }: { available?: boolean }) => {
       }}
     >
       <span className="h-2 w-2 rounded-full bg-[#2ecc71]" aria-hidden="true" />
-      DisponÃ­vel hoje
+      DisponÃƒÂ­vel hoje
     </span>
   );
 };
@@ -142,7 +166,7 @@ const FavoriteButton = ({
   <button
     aria-label={
       !canFavorite
-        ? "Favoritos disponÃ­veis apenas para usuÃ¡rios autenticados"
+        ? "Favoritos disponÃƒÂ­veis apenas para usuÃƒÂ¡rios autenticados"
         : psychologist.favorited
           ? `Remover ${psychologist.name} dos favoritos`
           : `Favoritar ${psychologist.name}`
@@ -159,7 +183,9 @@ const FavoriteButton = ({
       borderRadius: "999px",
       zIndex: 5,
     }}
-    title={!canFavorite ? "Favoritos disponÃ­veis apenas para usuÃ¡rios autenticados" : undefined}
+    title={
+      !canFavorite ? "Favoritos disponÃƒÂ­veis apenas para usuÃƒÂ¡rios autenticados" : undefined
+    }
     type="button"
   >
     <Heart aria-hidden="true" className={cn("h-[22px] w-[22px]", "fill-none stroke-[#64748b]")} />
@@ -175,24 +201,85 @@ const CardVideo = ({
   poster?: string | null;
   url: string;
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(globalSoundEnabled);
 
-  const play = () => {
+  const onPlay = () => {
     setPlaying(true);
-    void videoRef.current?.play();
   };
 
+  const onPause = () => {
+    setPlaying(false);
+  };
+
+  const onEnded = () => {
+    setPlaying(false);
+  };
+
+  const toggleSound = () => {
+    const next = !soundEnabled;
+    setSoundEnabled(next);
+    setGlobalSoundEnabled(next);
+
+    const currentVideo = videoRef.current;
+    if (!currentVideo) return;
+
+    currentVideo.muted = !next;
+    void currentVideo.play();
+  };
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries.at(0);
+        const ratio = entry?.intersectionRatio ?? 0;
+        setFocused(Boolean(entry?.isIntersecting) && ratio >= 0.35);
+      },
+      {
+        threshold: [0, 0.35],
+      },
+    );
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    return subscribeAudioPreference(setSoundEnabled);
+  }, []);
+
+  useEffect(() => {
+    const currentVideo = videoRef.current;
+    if (!currentVideo) return;
+
+    currentVideo.muted = !soundEnabled;
+
+    if (!focused) {
+      currentVideo.pause();
+      return;
+    }
+
+    void currentVideo.play().catch(() => {
+      setPlaying(false);
+    });
+  }, [focused, soundEnabled]);
+
   return (
-    <div className="relative h-full w-full overflow-hidden bg-surface-muted">
-      {/* biome-ignore lint/a11y/useMediaCaption: vÃ­deos enviados por profissionais ainda nÃ£o possuem trilha de legenda nesta etapa. */}
+    <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-surface-muted">
       <video
-        aria-label={`VÃ­deo de apresentaÃ§Ã£o de ${name}`}
+        aria-label={`VÃƒÂ­deo de apresentaÃƒÂ§ÃƒÂ£o de ${name}`}
         className="h-full w-full bg-black object-cover object-top"
         controls={playing}
-        onPause={() => setPlaying(false)}
-        onPlay={() => setPlaying(true)}
-        onEnded={() => setPlaying(false)}
+        muted
+        onPause={onPause}
+        onPlay={onPlay}
+        onEnded={onEnded}
         playsInline
         preload="metadata"
         poster={poster || undefined}
@@ -200,11 +287,11 @@ const CardVideo = ({
         src={url}
       />
 
-      {!playing ? (
+      {focused ? (
         <button
-          aria-label={`Reproduzir vÃ­deo de ${name}`}
+          aria-label={`Controlar Ã¡udio do vÃƒÂ­deo de ${name}`}
           className="absolute left-1/2 top-[56%] -translate-x-1/2 -translate-y-1/2"
-          onClick={play}
+          onClick={toggleSound}
           style={{
             width: "52px",
             height: "52px",
@@ -212,18 +299,17 @@ const CardVideo = ({
           type="button"
         >
           <span className="grid h-full w-full place-items-center rounded-full border-4 border-white">
-            <Play
-              aria-hidden="true"
-              className="ml-[1px] h-5 w-5 text-white/90"
-              fill="currentColor"
-            />
+            {soundEnabled ? (
+              <Volume2 aria-hidden="true" className="ml-[1px] h-5 w-5 text-white/90" />
+            ) : (
+              <VolumeX aria-hidden="true" className="ml-[1px] h-5 w-5 text-white/90" />
+            )}
           </span>
         </button>
       ) : null}
     </div>
   );
 };
-
 export function PsychologistCard({
   canFavorite = true,
   favoritePending,
@@ -376,7 +462,7 @@ export function PsychologistCard({
               >
                 <span className="inline-flex w-full items-center justify-center gap-2">
                   <WhatsAppIcon className="h-5 w-5" aria-hidden="true" />
-                  WhatsApp indisponÃ­vel
+                  WhatsApp indisponÃƒÂ­vel
                 </span>
               </Button>
             )}
