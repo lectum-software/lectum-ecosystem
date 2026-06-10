@@ -316,16 +316,36 @@ const CardVideo = ({
   const [controlMode, setControlMode] = useState<"hidden" | "volume" | "media">("hidden");
   const [videoPoster, setVideoPoster] = useState<string | null>(null);
   const posterExtractionStarted = useRef(false);
+  const hideControlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const userInitiatedPlayRef = useRef(false);
+
+  const clearHideControlsTimeout = useCallback(() => {
+    if (hideControlsTimeoutRef.current) {
+      clearTimeout(hideControlsTimeoutRef.current);
+      hideControlsTimeoutRef.current = null;
+    }
+  }, []);
 
   const onPlay = () => {
     setPlaying(true);
+
+    if (!userInitiatedPlayRef.current) return;
+
+    userInitiatedPlayRef.current = false;
+    clearHideControlsTimeout();
+
+    hideControlsTimeoutRef.current = setTimeout(() => {
+      setControlMode("hidden");
+    }, 900);
   };
 
   const onPause = () => {
+    clearHideControlsTimeout();
     setPlaying(false);
   };
 
   const onEnded = () => {
+    clearHideControlsTimeout();
     setPlaying(false);
   };
 
@@ -348,8 +368,10 @@ const CardVideo = ({
     if (!currentVideo) return;
 
     if (currentVideo.paused) {
+      userInitiatedPlayRef.current = true;
       void currentVideo.play();
     } else {
+      clearHideControlsTimeout();
       currentVideo.pause();
     }
   };
@@ -446,6 +468,8 @@ const CardVideo = ({
   useEffect(() => {
     return subscribeAudioPreference(setSoundEnabled);
   }, []);
+
+  useEffect(() => clearHideControlsTimeout, [clearHideControlsTimeout]);
 
   useEffect(() => {
     const currentVideo = videoRef.current;
