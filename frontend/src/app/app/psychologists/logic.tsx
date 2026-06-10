@@ -15,6 +15,7 @@ import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { getToken } from "@/hooks/cookies/token";
 import { useAppSelector } from "@/hooks/redux";
+import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import {
@@ -223,12 +224,13 @@ export const PsychologistsLogic = () => {
         : null;
   const errorMessage = directory.isError ? resolveDirectoryErrorMessage(directory.error) : null;
   const showInitialLoading = directory.isLoading && !response;
+  const pageMaxWidth = "max-w-[430px]";
 
   return (
     <PrivateTemplate allowAnonymous autoHideNavigation>
       <div className="grid w-full gap-4">
-        <header className="-mt-6 sticky top-0 left-1/2 z-30 w-screen -translate-x-1/2 border-b border-border bg-surface px-4 py-4 backdrop-blur-sm sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-          <div className="mx-auto grid w-full max-w-[390px] gap-3 sm:max-w-[430px] lg:max-w-6xl">
+        <header className="-mt-6 sticky top-0 left-1/2 z-30 w-screen -translate-x-1/2 border-b border-border bg-surface px-4 py-4 backdrop-blur-sm sm:px-6 sm:py-6">
+          <div className={cn("mx-auto grid w-full gap-3", pageMaxWidth)}>
             <div className="flex min-w-0 items-center justify-between gap-3">
               <h1 className="text-2xl font-extrabold text-foreground lg:text-3xl">Psicólogos</h1>
               <button
@@ -248,7 +250,7 @@ export const PsychologistsLogic = () => {
           </div>
         </header>
 
-        <section className="mx-auto grid w-full max-w-[390px] gap-4 px-4 sm:max-w-[430px] sm:px-0 lg:max-w-6xl">
+        <section className={cn("mx-auto grid w-full gap-4 px-4 sm:px-0", pageMaxWidth)}>
           {isFiltersOpen ? (
             <div
               aria-labelledby="psychologist-filters-title"
