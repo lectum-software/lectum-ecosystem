@@ -427,7 +427,7 @@ export function PsychologistCard({
           </div>
 
           <div className="flex flex-wrap gap-1.5">
-            {tags.slice(0, 2).map((tag) => (
+            {tags.map((tag) => (
               <span
                 key={tag}
                 className="inline-flex items-center gap-1 rounded-full border border-white/80 bg-white/55 px-2 py-0.5 text-[0.64rem] font-bold text-[#334155]"
