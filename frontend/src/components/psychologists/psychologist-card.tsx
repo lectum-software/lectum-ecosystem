@@ -100,6 +100,8 @@ const getPsychologistTitle = (gender?: string | null) => {
 const PSYCHOLOGIST_OVERLAY_HEIGHT = "26%";
 const OVERLAY_FAVORITE_OFFSET = "17%";
 const OVERLAY_SHARE_GAP = "clamp(48px, 12vw, 54px)";
+const OVERLAY_BADGES_OFFSET = "17%";
+const OVERLAY_BADGE_GAP = "clamp(38px, 9.5vw, 44px)";
 
 type CardOverlayStyle = CSSProperties & { "--psychologist-overlay-height": string };
 
@@ -677,24 +679,32 @@ export function PsychologistCard({
             </Link>
           </div>
 
-          <div className="mt-1 flex w-full flex-nowrap items-stretch gap-2">
-            {tags.map((tag) => (
-              <span
-                key={tag}
-                className="inline-flex min-w-0 items-center justify-center overflow-hidden truncate rounded-full border border-white/80 bg-white/55 text-center whitespace-nowrap font-bold leading-none text-[#334155]"
-                style={{
-                  flex: 1,
-                  height: "clamp(26px, calc(22px + 2vw), 28px)",
-                  minWidth: 0,
-                  paddingLeft: "clamp(6px, 2vw, 10px)",
-                  paddingRight: "clamp(6px, 2vw, 10px)",
-                  fontSize: "clamp(10px, 2.8vw, 12px)",
-                }}
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
+          {tags.length > 0 ? (
+            <div
+              className="pointer-events-none absolute left-[3.2%] flex w-auto flex-col"
+              style={{
+                top: `calc(100% - (var(--psychologist-overlay-height) + ${OVERLAY_BADGES_OFFSET}))`,
+                gap: OVERLAY_BADGE_GAP,
+              }}
+            >
+              {tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex min-w-0 items-center justify-center overflow-hidden truncate rounded-full border border-white/80 bg-white/55 text-center whitespace-nowrap font-bold leading-none text-[#334155]"
+                  style={{
+                    height: "clamp(26px, calc(22px + 2vw), 28px)",
+                    width: "max-content",
+                    minWidth: 0,
+                    paddingLeft: "clamp(6px, 2vw, 10px)",
+                    paddingRight: "clamp(6px, 2vw, 10px)",
+                    fontSize: "clamp(10px, 2.8vw, 12px)",
+                  }}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          ) : null}
 
           <div
             className="mt-auto flex w-full items-center justify-start"
