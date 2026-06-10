@@ -112,11 +112,14 @@ const AvailabilityBadge = ({ available }: { available?: boolean }) => {
 
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-[10px] font-semibold leading-none text-[#22c55e]"
+      className="inline-flex items-center gap-1.5 rounded-full text-[10px] font-semibold leading-none text-[#22c55e]"
       style={{
-        width: "107px",
-        height: "23px",
+        height: "clamp(22px, 3.6vw, 26px)",
+        paddingLeft: "clamp(10px, 3vw, 14px)",
+        paddingRight: "clamp(10px, 3vw, 14px)",
+        background: "rgba(255, 255, 255, 0.92)",
         borderRadius: "999px",
+        zIndex: 5,
       }}
     >
       <span className="h-2 w-2 rounded-full bg-[#2ecc71]" aria-hidden="true" />
@@ -146,11 +149,16 @@ const FavoriteButton = ({
     }
     aria-pressed={psychologist.favorited}
     className={cn(
-      "grid h-10 w-10 place-items-center rounded-full bg-[#ffffff] text-[#64748b] transition disabled:cursor-not-allowed disabled:opacity-60",
+      "grid place-items-center rounded-full bg-[rgba(255,255,255,0.92)] text-[#64748b] transition disabled:cursor-not-allowed disabled:opacity-60",
     )}
     disabled={favoritePending || !canFavorite}
     onClick={() => onToggleFavorite(psychologist)}
-    style={{ borderRadius: "999px" }}
+    style={{
+      width: "clamp(38px, 10.5vw, 44px)",
+      height: "clamp(38px, 10.5vw, 44px)",
+      borderRadius: "999px",
+      zIndex: 5,
+    }}
     title={!canFavorite ? "Favoritos disponÃ­veis apenas para usuÃ¡rios autenticados" : undefined}
     type="button"
   >
@@ -264,8 +272,8 @@ export function PsychologistCard({
         <div
           className="pointer-events-auto absolute"
           style={{
-            top: "11.24%",
-            left: "11.8%",
+            top: "3.2%",
+            left: "4.5%",
           }}
         >
           <AvailabilityBadge available={psychologist.available_today} />
@@ -274,8 +282,8 @@ export function PsychologistCard({
         <div
           className="pointer-events-auto absolute"
           style={{
-            top: "11.24%",
-            right: "2.63%",
+            top: "3.2%",
+            right: "4.5%",
           }}
         >
           <FavoriteButton
