@@ -141,8 +141,8 @@ const FavoriteButton = ({
     }
     aria-pressed={psychologist.favorited}
     className={cn(
-      "grid h-10 w-10 place-items-center rounded-full border border-[#e2e8f0] bg-white text-[#64748b] shadow-[0_10px_24px_rgb(15_23_42_/_14%)] transition disabled:cursor-not-allowed disabled:opacity-60",
-      psychologist.favorited && "border-[#22c55e]/55 text-[#22c55e]",
+      "grid h-10 w-10 place-items-center rounded-full bg-white text-[#64748b] transition disabled:cursor-not-allowed disabled:opacity-60",
+      psychologist.favorited && "text-[#22c55e]",
     )}
     disabled={favoritePending || !canFavorite}
     onClick={() => onToggleFavorite(psychologist)}
@@ -239,7 +239,7 @@ export function PsychologistCard({
 
   return (
     <article
-      className="relative mx-auto w-[calc(100vw-54px)] overflow-hidden rounded-[14px] border border-border/20 bg-white"
+      className="relative mx-auto w-[calc(100vw-54px)] overflow-hidden rounded-[14px]"
       style={{
         aspectRatio: "9 / 16",
         maxWidth: "380px",
