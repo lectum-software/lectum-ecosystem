@@ -639,11 +639,11 @@ export function PsychologistCard({
             </Link>
           </div>
 
-          <div className="mt-1 flex flex-nowrap items-center gap-1 overflow-hidden">
+          <div className="mt-1 flex w-full flex-nowrap items-center gap-1.5">
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="inline-flex shrink-0 items-center rounded-full border border-white/80 bg-white/55 px-1.5 py-0.5 text-[0.58rem] font-bold leading-none whitespace-nowrap text-[#334155]"
+                className="inline-flex min-w-0 flex-1 items-center justify-center rounded-full border border-white/80 bg-white/55 px-2 py-1.5 text-[0.68rem] font-bold leading-none text-[#334155]"
               >
                 {tag}
               </span>
