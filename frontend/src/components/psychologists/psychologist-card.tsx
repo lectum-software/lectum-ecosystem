@@ -600,6 +600,7 @@ export function PsychologistCard({
           background: "rgba(255, 255, 255, 0.38)",
           backdropFilter: "blur(24px) saturate(180%)",
           WebkitBackdropFilter: "blur(24px) saturate(180%)",
+          border: "1px solid rgba(255,255,255,0.55)",
           borderTop: "1px solid rgba(255,255,255,0.55)",
           boxShadow:
             "inset 0 1px 0 rgba(255,255,255,0.65), inset 0 -1px 0 rgba(255,255,255,0.18), 0 -8px 24px rgba(15,23,42,0.10)",
