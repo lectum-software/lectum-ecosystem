@@ -144,7 +144,10 @@ const AvailabilityBadge = ({ available }: { available?: boolean }) => {
         zIndex: 5,
       }}
     >
-      <span className="h-2 w-2 rounded-full bg-[#2ecc71]" aria-hidden="true" />
+      <span
+        className="h-2 w-2 rounded-full bg-[#2ecc71] motion-safe:animate-pulse"
+        aria-hidden="true"
+      />
       Disponível hoje
     </span>
   );
@@ -536,7 +539,7 @@ export function PsychologistCard({
 
   return (
     <article
-      className="relative mx-auto w-[calc(100vw-54px)] overflow-hidden rounded-[14px] shadow-[0_10px_24px_rgba(15,23,42,0.18)]"
+      className="relative w-[calc(100vw-54px)] overflow-hidden rounded-[14px] shadow-[0_10px_24px_rgba(15,23,42,0.18)]"
       style={
         {
           "--psychologist-overlay-height": PSYCHOLOGIST_OVERLAY_HEIGHT,
@@ -544,6 +547,8 @@ export function PsychologistCard({
           maxWidth: "380px",
           minWidth: "320px",
           width: "min(calc(100vw - 54px), 380px, calc((100dvh - 170px) * 9 / 16))",
+          left: "50%",
+          transform: "translateX(-50%)",
         } as CardOverlayStyle
       }
     >
