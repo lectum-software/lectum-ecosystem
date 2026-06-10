@@ -110,6 +110,7 @@ const OVERLAY_FAVORITE_OFFSET = "17%";
 const OVERLAY_SHARE_GAP = "clamp(48px, 12vw, 54px)";
 const OVERLAY_SIDE_BADGE_GAP = "clamp(8px, 2vw, 10px)";
 const VIDEO_DOUBLE_TAP_DELAY_MS = 280;
+const VIDEO_CONTROLS_AUTO_HIDE_DELAY_MS = 3000;
 
 type CardOverlayStyle = CSSProperties & { "--psychologist-overlay-height": string };
 
@@ -319,7 +320,26 @@ const CardVideo = ({
   const posterExtractionStarted = useRef(false);
   const userInitiatedPlayRef = useRef(false);
   const doubleTapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const controlsAutoHideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastVideoTapRef = useRef<number | null>(null);
+
+  const clearControlsAutoHideTimeout = useCallback(() => {
+    if (controlsAutoHideTimeoutRef.current) {
+      clearTimeout(controlsAutoHideTimeoutRef.current);
+      controlsAutoHideTimeoutRef.current = null;
+    }
+  }, []);
+
+  const scheduleControlsAutoHide = useCallback(() => {
+    clearControlsAutoHideTimeout();
+
+    if (!playing) return;
+
+    controlsAutoHideTimeoutRef.current = setTimeout(() => {
+      setControlMode("hidden");
+      controlsAutoHideTimeoutRef.current = null;
+    }, VIDEO_CONTROLS_AUTO_HIDE_DELAY_MS);
+  }, [clearControlsAutoHideTimeout, playing]);
 
   const onPlay = () => {
     if (userInitiatedPlayRef.current) {
@@ -331,10 +351,12 @@ const CardVideo = ({
   };
 
   const onPause = () => {
+    clearControlsAutoHideTimeout();
     setPlaying(false);
   };
 
   const onEnded = () => {
+    clearControlsAutoHideTimeout();
     setPlaying(false);
   };
 
@@ -349,7 +371,8 @@ const CardVideo = ({
     currentVideo.muted = !next;
     void currentVideo.play();
 
-    setControlMode(next ? "hidden" : "volume");
+    clearControlsAutoHideTimeout();
+    setControlMode(next ? "media" : "volume");
   };
 
   const togglePlayback = () => {
@@ -359,8 +382,10 @@ const CardVideo = ({
     if (currentVideo.paused) {
       userInitiatedPlayRef.current = true;
       setControlMode("hidden");
+      clearControlsAutoHideTimeout();
       void currentVideo.play();
     } else {
+      clearControlsAutoHideTimeout();
       currentVideo.pause();
     }
   };
@@ -384,6 +409,7 @@ const CardVideo = ({
 
       currentVideo.pause();
       setControlMode("media");
+      clearControlsAutoHideTimeout();
 
       return;
     }
@@ -399,6 +425,9 @@ const CardVideo = ({
     }, VIDEO_DOUBLE_TAP_DELAY_MS);
 
     setControlMode(soundEnabled ? "media" : "volume");
+    if (playing) {
+      scheduleControlsAutoHide();
+    }
   };
 
   const handleVideoPosterExtraction = () => {
@@ -494,8 +523,10 @@ const CardVideo = ({
         clearTimeout(doubleTapTimeoutRef.current);
         doubleTapTimeoutRef.current = null;
       }
+
+      clearControlsAutoHideTimeout();
     };
-  }, []);
+  }, [clearControlsAutoHideTimeout]);
 
   useEffect(() => {
     const currentVideo = videoRef.current;
