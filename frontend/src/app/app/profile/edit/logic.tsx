@@ -102,7 +102,7 @@ export const ProfileEditLogic = () => {
 
   return (
     <PrivateTemplate>
-      <section className="mx-auto grid w-full max-w-[394px] gap-5 sm:max-w-xl lg:max-w-2xl">
+      <section className="mx-auto grid w-full max-w-[394px] gap-4 sm:max-w-xl lg:max-w-2xl">
         <header className="-mx-5 -mt-6 flex min-h-16 items-center justify-between border-b border-border bg-surface px-4 py-3 sm:mx-0 sm:mt-0 sm:rounded-[var(--lectum-card-radius)] sm:border sm:px-5">
           <Link
             aria-label="Voltar para meu perfil"
@@ -137,7 +137,7 @@ export const ProfileEditLogic = () => {
 
         {!profile.isLoading && !profile.isPending ? (
           <form
-            className="grid gap-6"
+            className="grid gap-4"
             data-testid="form"
             id="patient-profile-form"
             noValidate
@@ -167,12 +167,12 @@ export const ProfileEditLogic = () => {
               </p>
             </section>
 
-            <section className="grid gap-4 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
+            <section className="grid gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
               <div className="flex items-center gap-2">
                 <UserRound className="h-5 w-5 text-primary" aria-hidden="true" />
                 <h2 className="text-lg font-extrabold text-foreground">Informações Básicas</h2>
               </div>
-              <div className="grid gap-1">
+              <div className="grid gap-0.5">
                 {formProps.fields.map((field) => {
                   const Component = components[field.field];
 
