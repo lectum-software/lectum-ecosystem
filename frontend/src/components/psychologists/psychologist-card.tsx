@@ -1,9 +1,18 @@
 ﻿"use client";
 
-import { ChevronRight, Heart, Pause, Play, ShieldCheck, Volume2, VolumeX } from "lucide-react";
+import {
+  ChevronRight,
+  Heart,
+  Pause,
+  Play,
+  Share2,
+  ShieldCheck,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { type CSSProperties, type MouseEvent, useEffect, useRef, useState } from "react";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
@@ -149,11 +158,15 @@ const FavoriteButton = ({
   favoritePending,
   onToggleFavorite,
   psychologist,
+  buttonStyle,
+  className,
 }: {
   canFavorite?: boolean;
   favoritePending?: boolean;
   onToggleFavorite: (psychologist: PsychologistCardItem) => void;
   psychologist: PsychologistCardItem;
+  buttonStyle?: CSSProperties;
+  className?: string;
 }) => {
   const isFavorited = psychologist.favorited;
 
@@ -169,15 +182,17 @@ const FavoriteButton = ({
       aria-pressed={psychologist.favorited}
       className={cn(
         "grid place-items-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-60",
-        isFavorited ? "bg-[#fee2e2] text-[#ef4444]" : "bg-[rgba(255,255,255,0.92)] text-[#64748b]",
+        isFavorited ? "bg-[#fee2e2] text-[#ef4444]" : "bg-[rgba(255,255,255,0.94)] text-[#64748b]",
+        className,
       )}
       disabled={favoritePending || !canFavorite}
       onClick={() => onToggleFavorite(psychologist)}
       style={{
-        width: "clamp(38px, 10.5vw, 44px)",
-        height: "clamp(38px, 10.5vw, 44px)",
+        width: "clamp(38px, 10vw, 44px)",
+        height: "clamp(38px, 10vw, 44px)",
         borderRadius: "999px",
         zIndex: 5,
+        ...buttonStyle,
       }}
       title={
         !canFavorite ? "Favoritos disponÃƒÂ­veis apenas para usuÃƒÂ¡rios autenticados" : undefined
@@ -191,6 +206,62 @@ const FavoriteButton = ({
           isFavorited ? "fill-[#ef4444] stroke-[#ef4444]" : "fill-none stroke-[#64748b]",
         )}
       />
+    </button>
+  );
+};
+
+const ShareButton = ({
+  route,
+  psychologistName,
+  buttonStyle,
+  className,
+}: {
+  route: string;
+  psychologistName: string;
+  buttonStyle?: CSSProperties;
+  className?: string;
+}) => {
+  const handleShare = async (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const shareUrl = new URL(route, window.location.origin).toString();
+
+    if (typeof navigator !== "undefined" && "share" in navigator) {
+      try {
+        await navigator.share({
+          title: `Perfil de ${psychologistName}`,
+          text: `Confira o perfil de ${psychologistName} na Lectum.`,
+          url: shareUrl,
+        });
+
+        return;
+      } catch {
+        // ignore
+      }
+    }
+
+    await navigator.clipboard?.writeText(shareUrl);
+  };
+
+  return (
+    <button
+      aria-label={`Compartilhar perfil de ${psychologistName}`}
+      className={cn(
+        "grid place-items-center rounded-full bg-[rgba(255,255,255,0.94)] text-[#334155] transition",
+        className,
+      )}
+      onClick={handleShare}
+      style={{
+        width: "clamp(38px, 10vw, 44px)",
+        height: "clamp(38px, 10vw, 44px)",
+        borderRadius: "999px",
+        zIndex: 6,
+        ...buttonStyle,
+      }}
+      type="button"
+    >
+      <Share2 aria-hidden="true" className="h-5 w-5" />
     </button>
   );
 };
@@ -508,20 +579,29 @@ export function PsychologistCard({
           <AvailabilityBadge available={psychologist.available_today} />
         </div>
 
-        <div
-          className="pointer-events-auto absolute"
-          style={{
-            top: "3.2%",
-            right: "4.5%",
+        <FavoriteButton
+          className="pointer-events-auto"
+          buttonStyle={{
+            top: "57%",
+            right: "3.2%",
+            position: "absolute",
           }}
-        >
-          <FavoriteButton
-            canFavorite={canFavorite}
-            favoritePending={favoritePending}
-            onToggleFavorite={onToggleFavorite}
-            psychologist={psychologist}
-          />
-        </div>
+          canFavorite={canFavorite}
+          favoritePending={favoritePending}
+          onToggleFavorite={onToggleFavorite}
+          psychologist={psychologist}
+        />
+
+        <ShareButton
+          className="pointer-events-auto"
+          buttonStyle={{
+            top: "calc(57% + clamp(48px, 12vw, 54px))",
+            right: "3.2%",
+            position: "absolute",
+          }}
+          route={route}
+          psychologistName={displayName}
+        />
       </div>
 
       <div
