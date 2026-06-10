@@ -313,7 +313,7 @@ export function PsychologistCard({
           </Link>
         </div>
 
-        <p className="line-clamp-3 text-[0.86rem] leading-6 text-muted">{summary}</p>
+        <p className="line-clamp-4 text-[0.86rem] leading-6 text-muted">{summary}</p>
 
         {tags.length > 0 ? (
           <div className="flex flex-wrap gap-2">
