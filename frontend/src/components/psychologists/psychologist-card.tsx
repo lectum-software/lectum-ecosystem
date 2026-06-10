@@ -146,8 +146,7 @@ const FavoriteButton = ({
     }
     aria-pressed={psychologist.favorited}
     className={cn(
-      "grid h-10 w-10 place-items-center rounded-full bg-white text-[#64748b] transition disabled:cursor-not-allowed disabled:opacity-60",
-      psychologist.favorited && "text-[#22c55e]",
+      "grid h-10 w-10 place-items-center rounded-full bg-[#ffffff] text-[#64748b] transition disabled:cursor-not-allowed disabled:opacity-60",
     )}
     disabled={favoritePending || !canFavorite}
     onClick={() => onToggleFavorite(psychologist)}
@@ -155,13 +154,7 @@ const FavoriteButton = ({
     title={!canFavorite ? "Favoritos disponÃ­veis apenas para usuÃ¡rios autenticados" : undefined}
     type="button"
   >
-    <Heart
-      aria-hidden="true"
-      className={cn(
-        "h-[22px] w-[22px]",
-        psychologist.favorited ? "fill-[#22c55e] stroke-[#22c55e]" : "fill-none stroke-[#64748b]",
-      )}
-    />
+    <Heart aria-hidden="true" className={cn("h-[22px] w-[22px]", "fill-none stroke-[#64748b]")} />
   </button>
 );
 
