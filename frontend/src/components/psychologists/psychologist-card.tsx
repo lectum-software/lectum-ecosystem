@@ -628,7 +628,8 @@ export function PsychologistCard({
 
   useEffect(() => {
     const cardNode = cardRef.current;
-    if (!cardNode) return;
+    const overlayNode = overlayRef.current;
+    if (!cardNode || !overlayNode) return;
     if (typeof window === "undefined" || typeof ResizeObserver === "undefined") return;
 
     const animationFrameHandle = requestAnimationFrame(() => {
@@ -640,6 +641,7 @@ export function PsychologistCard({
     });
 
     resizeObserver.observe(cardNode);
+    resizeObserver.observe(overlayNode);
     window.addEventListener("resize", recalculateTagTopOffset);
 
     return () => {
