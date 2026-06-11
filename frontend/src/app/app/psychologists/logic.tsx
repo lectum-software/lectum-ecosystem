@@ -82,6 +82,22 @@ const formatDisplayName = (name: string) => {
   return name;
 };
 
+const splitNameForBadge = (name: string) => {
+  const words = formatDisplayName(name).trim().split(/\s+/).filter(Boolean);
+
+  if (words.length <= 1) {
+    return {
+      firstPart: "",
+      lastPart: words[0] ?? "",
+    };
+  }
+
+  return {
+    firstPart: words.slice(0, -1).join(" "),
+    lastPart: words[words.length - 1],
+  };
+};
+
 const normalizeFormValues = (
   values: Partial<PsychologistsFilterForm>,
 ): PsychologistsFilterForm => ({
@@ -180,6 +196,7 @@ const useViewportMetrics = () => {
     const effectiveWidth = Math.min(width, 430);
     const isCompact = effectiveWidth <= 390;
     const isTiny = effectiveWidth < 360;
+    const actionRailWidth = isTiny ? 64 : 72;
 
     return {
       actionBottomOffset: isCompact ? 12 : 14,
@@ -188,8 +205,10 @@ const useViewportMetrics = () => {
       actionIconSize: isTiny ? 13 : 14,
       actionLabelSize: isCompact ? 9 : 10,
       actionRightPadding: isTiny ? 12 : 16,
+      actionRailWidth,
       actionTextLineHeight: 1,
       bioBottomOffset: isCompact ? 12 : 14,
+      bioLineClamp: isCompact ? 2 : 3,
       ratingIconSize: isCompact ? 11 : 12,
       ratingLineHeight: isCompact ? 16 : 18,
       ratingTextSize: isCompact ? 11 : 12,
@@ -202,7 +221,9 @@ const useViewportMetrics = () => {
       searchRightGap: isCompact ? 62 : 74,
       searchTop: isCompact ? 36 : 40,
       subtitleSize: isCompact ? 13 : 14,
-      titleSize: isCompact ? 20 : 22,
+      textRightSafeArea: actionRailWidth + (isCompact ? 18 : 22),
+      titleLineClamp: 3,
+      titleSize: isTiny ? 18 : isCompact ? 19 : 22,
     };
   }, [width]);
 };
@@ -222,7 +243,7 @@ export const PsychologistsLogic = () => {
 
   const filterDialogRef = useRef<HTMLDivElement | null>(null);
   const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
-  const bioBaselineRef = useRef<HTMLSpanElement | null>(null);
+  const bioTextRef = useRef<HTMLParagraphElement | null>(null);
   const actionColumnRef = useRef<HTMLDivElement | null>(null);
   const profileTextRef = useRef<HTMLSpanElement | null>(null);
   const [hasAuthToken] = useState(() => {
@@ -255,6 +276,7 @@ export const PsychologistsLogic = () => {
   const shouldShowVideo = Boolean(backgroundVideoSrc) && !isVideoPlaybackFailed;
   const activeVideoSource = shouldShowVideo ? backgroundVideoSrc : null;
   const featuredBio = featuredPsychologist?.headline?.trim() || "";
+  const featuredNameParts = splitNameForBadge(featuredPsychologist?.name ?? "");
   const isFavorited = Boolean(featuredPsychologist?.favorited);
 
   const filters = usePsychologistsFilterForm({
@@ -276,14 +298,14 @@ export const PsychologistsLogic = () => {
 
   const syncActionColumnAlignment = useCallback(() => {
     const baselineText = featuredBio;
-    const bioMarker = bioBaselineRef.current;
+    const bioText = bioTextRef.current;
     const profileLabel = profileTextRef.current;
     const actionColumn = actionColumnRef.current;
 
-    if (!baselineText || !bioMarker || !profileLabel || !actionColumn) return;
+    if (!baselineText || !bioText || !profileLabel || !actionColumn) return;
 
     const delta =
-      bioMarker.getBoundingClientRect().bottom - profileLabel.getBoundingClientRect().bottom;
+      bioText.getBoundingClientRect().bottom - profileLabel.getBoundingClientRect().bottom;
 
     setActionColumnTranslateY((current) => (Math.abs(current - delta) > 0.5 ? delta : current));
   }, [featuredBio]);
@@ -683,7 +705,7 @@ export const PsychologistsLogic = () => {
                       className="pointer-events-none absolute inset-x-0 text-[#ffffff]"
                       style={{
                         left: `${metrics.horizontalPadding}px`,
-                        right: `${metrics.actionRightPadding + metrics.actionButtonSize + 12}px`,
+                        right: `${metrics.textRightSafeArea}px`,
                         bottom: infoSectionBottom,
                       }}
                     >
@@ -699,18 +721,34 @@ export const PsychologistsLogic = () => {
 
                       <div className="mt-2 grid gap-1">
                         <p
-                          className="flex min-w-0 flex-wrap items-center gap-1.5 leading-tight font-bold text-white"
-                          style={{ fontSize: `${metrics.titleSize}px` }}
+                          className="min-w-0 max-w-full font-bold text-white"
+                          style={{
+                            display: "-webkit-box",
+                            fontSize: `${metrics.titleSize}px`,
+                            lineHeight: 1.15,
+                            maxWidth: "100%",
+                            overflow: "hidden",
+                            overflowWrap: "normal",
+                            WebkitBoxOrient: "vertical",
+                            WebkitLineClamp: metrics.titleLineClamp,
+                            wordBreak: "normal",
+                          }}
                         >
-                          <span className="min-w-0">
-                            {formatDisplayName(featuredPsychologist.name)}
-                          </span>
-                          {featuredPsychologist.verified ? (
-                            <VerifiedBadgeIcon
-                              aria-hidden="true"
-                              className="mt-0.5 h-4 w-4 shrink-0"
-                            />
+                          {featuredNameParts.firstPart ? (
+                            <span>{featuredNameParts.firstPart} </span>
                           ) : null}
+                          <span className="inline-flex max-w-full items-center gap-1 whitespace-nowrap align-baseline">
+                            <span>
+                              {featuredNameParts.lastPart ||
+                                formatDisplayName(featuredPsychologist.name)}
+                            </span>
+                            {featuredPsychologist.verified ? (
+                              <VerifiedBadgeIcon
+                                aria-hidden="true"
+                                className="h-4 w-4 shrink-0 translate-y-[1px]"
+                              />
+                            ) : null}
+                          </span>
                         </p>
 
                         <div
@@ -750,18 +788,18 @@ export const PsychologistsLogic = () => {
                       {featuredBio ? (
                         <p
                           className="mt-2 text-white/95"
+                          ref={bioTextRef}
                           style={{
+                            display: "-webkit-box",
                             fontSize: `${metrics.bioSize}px`,
                             lineHeight: `${metrics.bioLineHeight}px`,
+                            maxWidth: "100%",
+                            overflow: "hidden",
+                            WebkitBoxOrient: "vertical",
+                            WebkitLineClamp: metrics.bioLineClamp,
                           }}
                         >
                           {featuredBio}
-                          <span
-                            aria-hidden="true"
-                            className="inline-block h-0 w-0"
-                            ref={bioBaselineRef}
-                            style={{ verticalAlign: "baseline" }}
-                          />
                         </p>
                       ) : null}
 
