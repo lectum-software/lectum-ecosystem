@@ -1303,7 +1303,8 @@ export const ProfessionalProfileSetupLogic = () => {
                     </div>
 
                     <p className="mt-3 w-full text-xs leading-5 text-muted">
-                      Envie um vídeo de até 50MB para aparecer na listagem de profissionais.
+                      Envie um vídeo vertical de até 50MB para aparecer na listagem de
+                      profissionais.
                     </p>
 
                     {videoSrc ? (
