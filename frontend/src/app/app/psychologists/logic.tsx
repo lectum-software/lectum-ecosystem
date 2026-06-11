@@ -113,6 +113,17 @@ const normalizeFormValues = (
   specialty: values.specialty?.trim() || null,
   service: values.service?.trim() || null,
   approach: values.approach?.trim() || null,
+  target_audience: values.target_audience?.trim() || null,
+  state: values.state?.trim() || null,
+  city: values.city?.trim() || null,
+  gender: values.gender?.trim() || null,
+  race_color: values.race_color?.trim() || null,
+  religion: values.religion?.trim() || null,
+  language: values.language?.trim() || null,
+  more_experienced: Boolean(values.more_experienced),
+  discount_first_session: Boolean(values.discount_first_session),
+  accepts_insurance: Boolean(values.accepts_insurance),
+  social_value: Boolean(values.social_value),
 });
 
 const toQuery = (values: PsychologistsFilterForm, page: number): DirectoryPsychologistsQuery => ({
@@ -122,6 +133,17 @@ const toQuery = (values: PsychologistsFilterForm, page: number): DirectoryPsycho
   specialty: values.specialty || undefined,
   service: values.service || undefined,
   approach: values.approach || undefined,
+  target_audience: values.target_audience || undefined,
+  state: values.state || undefined,
+  city: values.city || undefined,
+  gender: values.gender || undefined,
+  race_color: values.race_color || undefined,
+  religion: values.religion || undefined,
+  language: values.language || undefined,
+  more_experienced: values.more_experienced || undefined,
+  discount_first_session: values.discount_first_session || undefined,
+  accepts_insurance: values.accepts_insurance || undefined,
+  social_value: values.social_value || undefined,
 });
 
 const getInitials = (name: string) => {
@@ -145,6 +167,17 @@ const readFiltersFromParams = (params: URLSearchParams): PsychologistsFilterForm
     specialty: params.get("specialty"),
     service: params.get("service"),
     approach: params.get("approach"),
+    target_audience: params.get("target_audience"),
+    state: params.get("state"),
+    city: params.get("city"),
+    gender: params.get("gender"),
+    race_color: params.get("race_color"),
+    religion: params.get("religion"),
+    language: params.get("language"),
+    more_experienced: params.get("more_experienced") === "true",
+    discount_first_session: params.get("discount_first_session") === "true",
+    accepts_insurance: params.get("accepts_insurance") === "true",
+    social_value: params.get("social_value") === "true",
   });
 };
 
@@ -156,6 +189,17 @@ const buildFiltersParams = (values: PsychologistsFilterForm, page = 1) => {
   if (normalized.specialty) next.set("specialty", normalized.specialty);
   if (normalized.service) next.set("service", normalized.service);
   if (normalized.approach) next.set("approach", normalized.approach);
+  if (normalized.target_audience) next.set("target_audience", normalized.target_audience);
+  if (normalized.state) next.set("state", normalized.state);
+  if (normalized.city) next.set("city", normalized.city);
+  if (normalized.gender) next.set("gender", normalized.gender);
+  if (normalized.race_color) next.set("race_color", normalized.race_color);
+  if (normalized.religion) next.set("religion", normalized.religion);
+  if (normalized.language) next.set("language", normalized.language);
+  if (normalized.more_experienced) next.set("more_experienced", "true");
+  if (normalized.discount_first_session) next.set("discount_first_session", "true");
+  if (normalized.accepts_insurance) next.set("accepts_insurance", "true");
+  if (normalized.social_value) next.set("social_value", "true");
   if (page > 1) next.set("page", String(page));
 
   return next;
@@ -340,7 +384,18 @@ export const PsychologistsLogic = () => {
     Boolean(filterValues.search?.trim()) ||
     Boolean(filterValues.specialty) ||
     Boolean(filterValues.service) ||
-    Boolean(filterValues.approach);
+    Boolean(filterValues.approach) ||
+    Boolean(filterValues.target_audience) ||
+    Boolean(filterValues.state) ||
+    Boolean(filterValues.city) ||
+    Boolean(filterValues.gender) ||
+    Boolean(filterValues.race_color) ||
+    Boolean(filterValues.religion) ||
+    Boolean(filterValues.language) ||
+    Boolean(filterValues.more_experienced) ||
+    Boolean(filterValues.discount_first_session) ||
+    Boolean(filterValues.accepts_insurance) ||
+    Boolean(filterValues.social_value);
 
   const showInitialLoading = directory.isLoading && !response;
   const infoSectionBottom = `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom) + ${metrics.bioBottomOffset}px)`;
@@ -789,7 +844,7 @@ export const PsychologistsLogic = () => {
                       className="h-full w-full bg-transparent pr-3 pl-7 text-[14px] text-white outline-none placeholder:text-white/72"
                       maxLength={120}
                       defaultValue={filterValues.search}
-                      placeholder="Buscar psicólogos..."
+                      placeholder="Busque pelo nome ou CRP"
                       name="search"
                       type="text"
                     />
@@ -1276,7 +1331,7 @@ export const PsychologistsLogic = () => {
                     role="dialog"
                   >
                     <div
-                      className="grid w-full max-w-[500px] gap-4 rounded-[28px] border border-[#e2e8f0] bg-surface p-5 shadow-[0_24px_70px_rgb(15_23_42_/_26%)]"
+                      className="grid max-h-[calc(100dvh-2rem)] w-full max-w-[500px] gap-4 overflow-y-auto rounded-[28px] border border-[#e2e8f0] bg-surface p-5 shadow-[0_24px_70px_rgb(15_23_42_/_26%)]"
                       onMouseDown={(event) => event.stopPropagation()}
                       ref={filterDialogRef}
                       role="document"
@@ -1291,7 +1346,7 @@ export const PsychologistsLogic = () => {
                             Filtros de busca
                           </h2>
                           <p className="mt-1 text-sm leading-6 text-muted">
-                            Ajuste os critérios e aplique para refinar sua busca.
+                            Ajuste os critérios para encontrar o psicólogo ideal para você
                           </p>
                         </div>
                         <button
@@ -1304,8 +1359,7 @@ export const PsychologistsLogic = () => {
                         </button>
                       </div>
 
-                      <form onSubmit={handleSubmitFilters}>
-                        <filters.Form {...filters.formProps} />
+                      <filters.Form {...filters.formProps} onSubmit={handleSubmitFilters}>
                         <div className="mt-4 flex flex-col gap-3">
                           <button
                             className="inline-flex h-10 items-center justify-center rounded-full border border-[#e2e8f0] bg-white text-sm font-semibold text-foreground"
@@ -1321,7 +1375,7 @@ export const PsychologistsLogic = () => {
                             Aplicar filtros
                           </button>
                         </div>
-                      </form>
+                      </filters.Form>
                     </div>
                   </div>
                 ) : null}

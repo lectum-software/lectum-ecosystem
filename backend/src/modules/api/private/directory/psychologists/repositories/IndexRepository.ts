@@ -72,6 +72,13 @@ const normalizePagination = (query: IIndexDTO["q"]) => {
   };
 };
 
+const moreExperiencedCutoffDate = () => {
+  const date = new Date();
+  date.setFullYear(date.getFullYear() - 10);
+
+  return date;
+};
+
 export class IndexRepository implements IIndexRepository {
   readonly repository: ORM["psychologist_profile"];
 
@@ -95,6 +102,40 @@ export class IndexRepository implements IIndexRepository {
     const whereConditions: Prisma.psychologist_profileWhereInput = {
       deleted: false,
       published: true,
+      crp_registration_date: props.q.more_experienced
+        ? {
+            lt: moreExperiencedCutoffDate(),
+          }
+        : undefined,
+      show_experience_tag: props.q.more_experienced ? true : undefined,
+      target_audience: props.q.target_audience
+        ? {
+            array_contains: [props.q.target_audience],
+          }
+        : undefined,
+      professional_address_state: props.q.state
+        ? {
+            equals: props.q.state,
+            mode: "insensitive",
+          }
+        : undefined,
+      professional_address_city: props.q.city
+        ? {
+            equals: props.q.city,
+            mode: "insensitive",
+          }
+        : undefined,
+      gender: props.q.gender || undefined,
+      race_color: props.q.race_color || undefined,
+      religion: props.q.religion || undefined,
+      languages: props.q.language
+        ? {
+            array_contains: [props.q.language],
+          }
+        : undefined,
+      discount_first_session: props.q.discount_first_session ? true : undefined,
+      accepts_insurance: props.q.accepts_insurance ? true : undefined,
+      social_value: props.q.social_value ? true : undefined,
       subscriptions: props.q.verified
         ? {
             some: activeProfessionalEntitlementWhere(),

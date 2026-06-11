@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Search } from "lucide-react";
 import { useState } from "react";
 import { Controller, type FieldValues } from "react-hook-form";
 import { Container } from "@/components/controllers/container";
@@ -21,6 +21,7 @@ export function InputController<FormType extends FieldValues>({
   id,
   type = "text",
   placeholder,
+  leadingIcon,
   disabled,
   readOnly,
   autoComplete,
@@ -63,6 +64,7 @@ export function InputController<FormType extends FieldValues>({
                 className={cn(
                   error && "border-danger focus:border-danger focus:ring-danger/10",
                   type === "password" && "pr-11",
+                  leadingIcon === "search" && "pl-11",
                   inputClassName,
                 )}
                 disabled={disabled}
@@ -92,6 +94,13 @@ export function InputController<FormType extends FieldValues>({
                 type={inputType}
                 value={field.value ?? ""}
               />
+
+              {leadingIcon === "search" ? (
+                <Search
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
+                />
+              ) : null}
 
               {showCounter && typeof max === "number" ? (
                 <span className="mt-1 block pr-1 text-right text-xs font-medium text-muted">

@@ -59,6 +59,17 @@ export type DirectoryPsychologistsQuery = {
   specialty?: string;
   service?: string;
   approach?: string;
+  target_audience?: string;
+  state?: string;
+  city?: string;
+  gender?: string;
+  race_color?: string;
+  religion?: string;
+  language?: string;
+  more_experienced?: boolean;
+  discount_first_session?: boolean;
+  accepts_insurance?: boolean;
+  social_value?: boolean;
   verified?: boolean;
 };
 

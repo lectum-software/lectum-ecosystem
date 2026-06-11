@@ -455,3 +455,30 @@ ext/image`.
 - O ajuste nao altera navbar, botoes laterais, dados do psicologo, backend, Prisma, migrations ou packages.
 - ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
 - Validacoes executadas nesta etapa: ver registro do commit desta execucao.
+
+## Execucao complementar: filtros avancados de busca (2026-06-11)
+
+- Pedido do usuario: revisar a copia dos filtros, trocar o placeholder de busca para `Busque pelo nome ou CRP`,
+  adicionar lupa no campo, permitir busca digitavel em especialidade, ordenar servicos e adicionar filtros por
+  publico, localizacao, genero, raca/cor, religiao, idiomas e selos de experiencia/acessibilidade.
+- O endpoint real `GET /api/private/directory/psychologists` passou a aceitar e aplicar os novos query params:
+  `target_audience`, `state`, `city`, `gender`, `race_color`, `religion`, `language`,
+  `more_experienced`, `discount_first_session`, `accepts_insurance` e `social_value`.
+- Os filtros usam campos persistidos de `psychologist_profile`; `more_experienced=true` usa a data real de
+  inscricao CRP anterior a 10 anos e respeita `show_experience_tag=true`.
+- O frontend manteve a fundacao da TASK-02 e estendeu os controllers existentes para input com icone leading,
+  select pesquisavel e opcoes dependentes (cidade por estado), sem instalar pacote novo.
+- A especialidade pesquisavel segue as mesmas categorias da configuracao do psicologo; servicos seguem a ordem
+  solicitada pelo produto.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual continua sendo
+  `_product/proto/Psicologos.jpg` e `_product/proto/Filtros de Psicologos - Servicos Expandidos.jpg`.
+- ADR criado: `adrs/0059-filtros-avancados-busca-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir backend check`
+  - `pnpm --dir backend build`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - smoke real do endpoint local com todos os novos filtros retornando HTTP 200;
+  - Chrome headless local em `http://127.0.0.1:3005/app/psychologists`, viewport `390x844`,
+    confirmando renderizacao da tela com a busca `Busque pelo nome ou CRP`.

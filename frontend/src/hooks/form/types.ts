@@ -23,6 +23,7 @@ export type FieldOption = {
   value: string | number | boolean;
   key?: string;
   disabled?: boolean;
+  group?: string;
 };
 
 export type Field<FormType extends FieldValues> = {
@@ -31,6 +32,7 @@ export type Field<FormType extends FieldValues> = {
   label?: string;
   placeholder?: string;
   prefix?: string;
+  leadingIcon?: "search";
   countryCodeName?: FieldPath<FormType>;
   countryCodeOptions?: FieldOption[];
   countryCodeClassName?: string;
@@ -58,7 +60,14 @@ export type Field<FormType extends FieldValues> = {
   positive?: boolean;
   currency?: string;
   options?: FieldOption[];
+  optionsByField?: {
+    name: FieldPath<FormType>;
+    options: Record<string, FieldOption[]>;
+    emptyLabel?: string;
+  };
   emptyLabel?: string;
+  searchable?: boolean;
+  searchPlaceholder?: string;
   onChangeCallback?: (value: unknown) => void;
 };
 
