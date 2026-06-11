@@ -43,6 +43,14 @@ export const schema: IValidatorRequest = {
       optional: true,
     },
     {
+      key: "modality",
+      coerse: "string",
+      method: "string",
+      max: 20,
+      format: "lower",
+      optional: true,
+    },
+    {
       key: "approach",
       coerse: "string",
       method: "string",

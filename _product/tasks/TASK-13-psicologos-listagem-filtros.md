@@ -418,7 +418,15 @@ ext/image`.
 - A animacao foi refinada para entrada em cascata e flutuacao suave, com visual transl?cido e discreto, sem efeito de curtidas/TikTok.
 - Nao houve alteracao de backend, Prisma, migrations, packages, mocks ou dados do psicologo.
 - ADR atualizado: `adrs/0057-animacao-selos-video-psicologos.md`.
-- Validacoes executadas nesta etapa: ver registro do commit desta execucao.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir backend check`
+  - `pnpm --dir backend build`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - smoke real do endpoint local `GET /api/private/directory/psychologists?limit=1&modality=online`
+    retornando HTTP 200;
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
 
 
 ## Execucao complementar: alinhamento lateral dos elementos imersivos (2026-06-11)
@@ -528,3 +536,13 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: Modalidades de atendimento nos filtros (2026-06-11)
+
+- Pedido do usuario: no filtro de psicologos, apos `Servicos`, adicionar `Modalidades de atendimento`.
+- A modal de filtros manteve a fundacao da TASK-02 e passou a renderizar o novo select logo depois de `Servicos`, antes de `Abordagens`.
+- As opcoes reutilizam a mesma taxonomia da configuracao do psicologo: `Online`, `Presencial` e `Presencial e Online`.
+- O endpoint real `GET /api/private/directory/psychologists` passou a aceitar `modality` e filtrar por `psychologist_profile.modality`, sem mocks, seeds, migrations ou packages novos.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual permanece `_product/proto/Psicologos.jpg` e `_product/proto/Filtros de Psicologos - Servicos Expandidos.jpg`.
+- ADR atualizado: `adrs/0059-filtros-avancados-busca-psicologos.md`.
+- Validacoes executadas nesta etapa: ver registro do commit desta execucao.

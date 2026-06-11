@@ -53,6 +53,7 @@ export interface IIndexDTO {
     search?: string;
     specialty?: string;
     service?: string;
+    modality?: string;
     approach?: string;
     target_audience?: string;
     state?: string;

@@ -76,6 +76,12 @@ export const PUBLIC_TARGET_OPTIONS = [
   { label: "LGBTQIA+", value: "lgbtqia_plus" },
 ] satisfies FieldOption[];
 
+export const MODALITY_OPTIONS = [
+  { label: "Online", value: "online" },
+  { label: "Presencial", value: "presencial" },
+  { label: "Presencial e Online", value: "hibrido" },
+] satisfies FieldOption[];
+
 export const WEEKDAY_OPTIONS = [
   { label: "Segunda", value: "segunda" },
   { label: "Terça", value: "terca" },

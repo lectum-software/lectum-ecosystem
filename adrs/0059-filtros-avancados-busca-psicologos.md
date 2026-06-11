@@ -58,6 +58,19 @@ acessibilidade/experiência.
 - A cidade continua dependente do estado selecionado, usando as mesmas opções locais do setup de
   perfil profissional.
 
+## Atualização 2026-06-11: filtro por Modalidades de atendimento
+
+- A modal de filtros passa a exibir `Modalidades de atendimento` imediatamente após `Serviços`.
+- As opções reutilizam a mesma taxonomia do setup profissional: `Online`, `Presencial` e
+  `Presencial e Online`.
+- O contrato `GET /api/private/directory/psychologists` passa a aceitar o query param opcional
+  `modality`, aplicado diretamente sobre `psychologist_profile.modality`, mantendo filtros em dados
+  reais e sem novo pacote.
+- Validação complementar: `pnpm --dir frontend check`, `pnpm --dir backend check`,
+  `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm check`, HTTP 200 em
+  `/app/psychologists` e smoke real
+  `GET /api/private/directory/psychologists?limit=1&modality=online`.
+
 ## Task relacionada
 
 - TASK-13 - Psicólogos: listagem e filtros

@@ -126,6 +126,7 @@ export class IndexRepository implements IIndexRepository {
           }
         : undefined,
       gender: props.q.gender || undefined,
+      modality: props.q.modality || undefined,
       race_color: props.q.race_color || undefined,
       religion: props.q.religion || undefined,
       languages: props.q.language

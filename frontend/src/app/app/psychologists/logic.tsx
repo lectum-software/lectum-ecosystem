@@ -120,6 +120,7 @@ const normalizeFormValues = (
   search: values.search?.trim() || "",
   specialty: values.specialty?.trim() || null,
   service: values.service?.trim() || null,
+  modality: values.modality?.trim() || null,
   approach: values.approach?.trim() || null,
   target_audience: values.target_audience?.trim() || null,
   state: values.state?.trim() || null,
@@ -140,6 +141,7 @@ const toQuery = (values: PsychologistsFilterForm, page: number): DirectoryPsycho
   search: values.search?.trim() || undefined,
   specialty: values.specialty || undefined,
   service: values.service || undefined,
+  modality: values.modality || undefined,
   approach: values.approach || undefined,
   target_audience: values.target_audience || undefined,
   state: values.state || undefined,
@@ -174,6 +176,7 @@ const readFiltersFromParams = (params: URLSearchParams): PsychologistsFilterForm
     search: params.get("search") || "",
     specialty: params.get("specialty"),
     service: params.get("service"),
+    modality: params.get("modality"),
     approach: params.get("approach"),
     target_audience: params.get("target_audience"),
     state: params.get("state"),
@@ -196,6 +199,7 @@ const buildFiltersParams = (values: PsychologistsFilterForm, page = 1) => {
   if (normalized.search?.trim()) next.set("search", normalized.search.trim());
   if (normalized.specialty) next.set("specialty", normalized.specialty);
   if (normalized.service) next.set("service", normalized.service);
+  if (normalized.modality) next.set("modality", normalized.modality);
   if (normalized.approach) next.set("approach", normalized.approach);
   if (normalized.target_audience) next.set("target_audience", normalized.target_audience);
   if (normalized.state) next.set("state", normalized.state);
@@ -408,6 +412,7 @@ export const PsychologistsLogic = () => {
     Boolean(filterValues.search?.trim()) ||
     Boolean(filterValues.specialty) ||
     Boolean(filterValues.service) ||
+    Boolean(filterValues.modality) ||
     Boolean(filterValues.approach) ||
     Boolean(filterValues.target_audience) ||
     Boolean(filterValues.state) ||

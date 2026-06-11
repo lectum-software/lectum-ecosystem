@@ -11,6 +11,7 @@ import {
   CRP_REGION_OPTIONS,
   GENDER_OPTIONS,
   LANGUAGE_OPTIONS,
+  MODALITY_OPTIONS,
   RACE_COLOR_OPTIONS,
   RELIGION_OPTIONS,
   STATE_OPTIONS,
@@ -236,11 +237,7 @@ export const fields = [
     field: "select",
     label: "Modalidades",
     required: true,
-    options: [
-      { label: "Online", value: "online" },
-      { label: "Presencial", value: "presencial" },
-      { label: "Presencial e Online", value: "hibrido" },
-    ],
+    options: MODALITY_OPTIONS,
   },
   {
     name: "language",
