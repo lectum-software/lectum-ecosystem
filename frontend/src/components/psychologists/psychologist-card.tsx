@@ -107,7 +107,9 @@ const getPsychologistTitle = (gender?: string | null) => {
 
 const PSYCHOLOGIST_OVERLAY_HEIGHT = "26%";
 const OVERLAY_FAVORITE_OFFSET = "17%";
-const OVERLAY_SHARE_GAP = "clamp(48px, 12vw, 54px)";
+const OVERLAY_ACTIONS_RIGHT_OFFSET = "3.2%";
+const OVERLAY_ACTIONS_GAP = "clamp(6px, 2vw, 9px)";
+const OVERLAY_ACTION_ICON_SIZE = "clamp(38px, 10vw, 44px)";
 const OVERLAY_SIDE_BADGE_GAP = "clamp(8px, 2vw, 10px)";
 const OVERLAY_TAGS_MARGIN_PX = 8;
 type CardOverlayStyle = CSSProperties & { "--psychologist-overlay-height": string };
@@ -600,13 +602,16 @@ export function PsychologistCard({
   const shareButtonRef = useRef<HTMLButtonElement>(null);
   const cardRef = useRef<HTMLElement>(null);
   const tagContainerRef = useRef<HTMLDivElement>(null);
+  const nameLineRef = useRef<HTMLHeadingElement>(null);
   const [tagTopOffsetPx, setTagTopOffsetPx] = useState<number | null>(null);
+  const [profileActionTopPx, setProfileActionTopPx] = useState<number | null>(null);
   const [overlayHeightPx, setOverlayHeightPx] = useState<number | null>(null);
 
   const recalculateTagTopOffset = useCallback(() => {
     const cardNode = cardRef.current;
     const overlayNode = overlayRef.current;
     const tagContainerNode = tagContainerRef.current;
+    const nameLineNode = nameLineRef.current;
 
     if (!cardNode || !overlayNode) {
       return;
@@ -624,6 +629,17 @@ export function PsychologistCard({
       );
     }
 
+    let nextProfileActionTop: number | null = null;
+    if (nameLineNode) {
+      nextProfileActionTop = Math.max(
+        0,
+        Math.round(nameLineNode.getBoundingClientRect().top - cardRect.top),
+      );
+    }
+
+    setProfileActionTopPx((current) =>
+      current === nextProfileActionTop ? current : nextProfileActionTop,
+    );
     setTagTopOffsetPx((current) => (current === nextTagTop ? current : nextTagTop));
     setOverlayHeightPx((current) => (current === nextOverlayHeight ? current : nextOverlayHeight));
   }, []);
@@ -631,6 +647,7 @@ export function PsychologistCard({
   useEffect(() => {
     const cardNode = cardRef.current;
     const overlayNode = overlayRef.current;
+    const nameLineNode = nameLineRef.current;
 
     if (!cardNode || !overlayNode) return;
 
@@ -646,6 +663,7 @@ export function PsychologistCard({
 
     resizeObserver.observe(cardNode);
     resizeObserver.observe(overlayNode);
+    if (nameLineNode) resizeObserver.observe(nameLineNode);
     window.addEventListener("resize", recalculateTagTopOffset);
 
     return () => {
@@ -654,6 +672,11 @@ export function PsychologistCard({
       window.removeEventListener("resize", recalculateTagTopOffset);
     };
   }, [recalculateTagTopOffset]);
+
+  const profileActionTop =
+    profileActionTopPx === null
+      ? `calc(100% - (var(--psychologist-overlay-height) + ${OVERLAY_FAVORITE_OFFSET}))`
+      : `${profileActionTopPx}px`;
 
   return (
     <article
@@ -702,54 +725,58 @@ export function PsychologistCard({
           <AvailabilityBadge available={psychologist.available_today} />
         </div>
 
-        <FavoriteButton
-          className="pointer-events-auto"
-          buttonStyle={{
-            right: "3.2%",
-            position: "absolute",
-            // mantém a distância relativa ao topo do overlay quando sua altura muda
-            top: `calc(100% - (var(--psychologist-overlay-height) + ${OVERLAY_FAVORITE_OFFSET}))`,
-            zIndex: 31,
-          }}
-          canFavorite={canFavorite}
-          favoritePending={favoritePending}
-          onToggleFavorite={onToggleFavorite}
-          psychologist={psychologist}
-        />
-
-        <ShareButton
-          buttonRef={shareButtonRef}
-          className="pointer-events-auto z-31"
-          buttonStyle={{
-            right: "3.2%",
-            position: "absolute",
-            // mantém a distância relativa ao topo do overlay quando sua altura muda
-            top: `calc(100% - (var(--psychologist-overlay-height) + ${OVERLAY_FAVORITE_OFFSET} - ${OVERLAY_SHARE_GAP}))`,
-            zIndex: 31,
-          }}
-          route={route}
-          psychologistName={displayName}
-        />
-
-        <Link
-          aria-label={`Abrir perfil de ${psychologist.name}`}
-          className="pointer-events-auto absolute grid place-items-center rounded-full text-[#334155] transition"
-          href={route}
+        <div
+          className="pointer-events-auto absolute z-31 flex items-center"
           style={{
-            right: "3.2%",
-            position: "absolute",
-            top: `calc(100% - (var(--psychologist-overlay-height) + ${OVERLAY_FAVORITE_OFFSET} - ${OVERLAY_SHARE_GAP}))`,
-            width: "clamp(38px, 10vw, 44px)",
-            height: "clamp(38px, 10vw, 44px)",
-            zIndex: 31,
+            gap: OVERLAY_ACTIONS_GAP,
+            right: OVERLAY_ACTIONS_RIGHT_OFFSET,
+            top: profileActionTop,
           }}
         >
-          <ChevronRight
-            aria-hidden="true"
-            className="text-[#334155]"
-            style={{ width: "clamp(22px, 8vw, 26px)", height: "clamp(22px, 8vw, 26px)" }}
+          <FavoriteButton
+            className="pointer-events-auto"
+            buttonStyle={{
+              width: OVERLAY_ACTION_ICON_SIZE,
+              height: OVERLAY_ACTION_ICON_SIZE,
+              borderRadius: "999px",
+              zIndex: 31,
+            }}
+            canFavorite={canFavorite}
+            favoritePending={favoritePending}
+            onToggleFavorite={onToggleFavorite}
+            psychologist={psychologist}
           />
-        </Link>
+
+          <ShareButton
+            buttonRef={shareButtonRef}
+            className="pointer-events-auto z-31"
+            buttonStyle={{
+              width: OVERLAY_ACTION_ICON_SIZE,
+              height: OVERLAY_ACTION_ICON_SIZE,
+              borderRadius: "999px",
+              zIndex: 31,
+            }}
+            route={route}
+            psychologistName={displayName}
+          />
+
+          <Link
+            aria-label={`Abrir perfil de ${psychologist.name}`}
+            className="pointer-events-auto grid place-items-center rounded-full text-[#334155] transition"
+            href={route}
+            style={{
+              width: OVERLAY_ACTION_ICON_SIZE,
+              height: OVERLAY_ACTION_ICON_SIZE,
+              zIndex: 31,
+            }}
+          >
+            <ChevronRight
+              aria-hidden="true"
+              className="text-[#334155]"
+              style={{ width: "clamp(22px, 8vw, 26px)", height: "clamp(22px, 8vw, 26px)" }}
+            />
+          </Link>
+        </div>
 
         {tags.length > 0 ? (
           <div
@@ -814,6 +841,7 @@ export function PsychologistCard({
           <div className="relative">
             <div className="min-w-0 flex-1" style={{ paddingRight: "44px" }}>
               <h2
+                ref={nameLineRef}
                 className="line-clamp-2 min-h-[24px] font-extrabold tracking-tight text-[#0f172a]"
                 style={{
                   fontSize: "clamp(18px, 5vw, 22px)",
