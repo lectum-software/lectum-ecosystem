@@ -534,6 +534,7 @@ const CardVideo = ({
         aria-label={`Vídeo de apresentação de ${name}`}
         className="h-full w-full bg-black object-cover object-top"
         controls={false}
+        loop
         muted
         crossOrigin="anonymous"
         onLoadedMetadata={handleVideoPosterExtraction}
