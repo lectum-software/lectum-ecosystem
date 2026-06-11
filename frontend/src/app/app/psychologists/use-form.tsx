@@ -67,6 +67,7 @@ export const usePsychologistsFilterForm = ({
       {
         name: "specialty",
         field: "select",
+        className: "col-span-2",
         label: "Especialidade",
         emptyLabel: "Todas",
         inputClassName: "w-full bg-white text-[0.82rem]",
@@ -78,6 +79,7 @@ export const usePsychologistsFilterForm = ({
       {
         name: "service",
         field: "select",
+        className: "col-span-2",
         label: "Serviços",
         emptyLabel: "Todos os serviços",
         inputClassName: "w-full bg-white text-[0.82rem]",
@@ -87,6 +89,7 @@ export const usePsychologistsFilterForm = ({
       {
         name: "approach",
         field: "select",
+        className: "col-span-2",
         label: "Abordagens",
         emptyLabel: "Todas as abordagens",
         inputClassName: "w-full bg-white text-[0.82rem]",
@@ -96,6 +99,7 @@ export const usePsychologistsFilterForm = ({
       {
         name: "target_audience",
         field: "select",
+        className: "col-span-2",
         label: "Público atendido",
         emptyLabel: "Todos os públicos",
         inputClassName: "w-full bg-white text-[0.82rem]",
@@ -104,7 +108,8 @@ export const usePsychologistsFilterForm = ({
       {
         name: "state",
         field: "select",
-        label: "Localização — Estado",
+        className: "col-span-1 min-w-0",
+        label: "Estado",
         emptyLabel: "Todos os estados",
         inputClassName: "w-full bg-white text-[0.82rem]",
         options: STATE_OPTIONS,
@@ -112,7 +117,8 @@ export const usePsychologistsFilterForm = ({
       {
         name: "city",
         field: "select",
-        label: "Localização — Cidade",
+        className: "col-span-1 min-w-0",
+        label: "Cidade",
         emptyLabel: "Todas as cidades",
         inputClassName: "w-full bg-white text-[0.82rem]",
         optionsByField: {
@@ -124,6 +130,7 @@ export const usePsychologistsFilterForm = ({
       {
         name: "gender",
         field: "select",
+        className: "col-span-2",
         label: "Gênero do psicólogo",
         emptyLabel: "Todos os gêneros",
         inputClassName: "w-full bg-white text-[0.82rem]",
@@ -132,6 +139,7 @@ export const usePsychologistsFilterForm = ({
       {
         name: "race_color",
         field: "select",
+        className: "col-span-2",
         label: "Raça do psicólogo",
         emptyLabel: "Todas as raças/cores",
         inputClassName: "w-full bg-white text-[0.82rem]",
@@ -140,6 +148,7 @@ export const usePsychologistsFilterForm = ({
       {
         name: "religion",
         field: "select",
+        className: "col-span-2",
         label: "Religião do psicólogo",
         emptyLabel: "Todas as religiões",
         inputClassName: "w-full bg-white text-[0.82rem]",
@@ -148,6 +157,7 @@ export const usePsychologistsFilterForm = ({
       {
         name: "language",
         field: "select",
+        className: "col-span-2",
         label: "Idiomas de atendimento",
         emptyLabel: "Todos os idiomas",
         inputClassName: "w-full bg-white text-[0.82rem]",
@@ -158,28 +168,28 @@ export const usePsychologistsFilterForm = ({
         field: "checkbox",
         label: "Mais experientes",
         description: "Com mais de 10 anos de experiência.",
-        className: "rounded-2xl border border-border bg-white p-3",
+        className: "col-span-2 rounded-2xl border border-border bg-white p-3",
       },
       {
         name: "discount_first_session",
         field: "checkbox",
         label: "Desconto na 1ª sessão",
         description: "Mais acessibilidade na sessão experimental.",
-        className: "rounded-2xl border border-border bg-white p-3",
+        className: "col-span-2 rounded-2xl border border-border bg-white p-3",
       },
       {
         name: "accepts_insurance",
         field: "checkbox",
         label: "Aceita planos de saúde",
         description: "Para quem possui convênio.",
-        className: "rounded-2xl border border-border bg-white p-3",
+        className: "col-span-2 rounded-2xl border border-border bg-white p-3",
       },
       {
         name: "social_value",
         field: "checkbox",
         label: "Atende por valor social",
         description: "Para a população de baixa renda.",
-        className: "rounded-2xl border border-border bg-white p-3",
+        className: "col-span-2 rounded-2xl border border-border bg-white p-3",
       },
     ],
     [filters?.approaches, filters?.services, filters?.specialties, loading],

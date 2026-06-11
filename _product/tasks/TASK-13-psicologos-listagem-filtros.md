@@ -514,3 +514,17 @@ ext/image`.
   - smoke real do endpoint local `GET /api/private/directory/psychologists?limit=8&search=Ana`
     retornando HTTP 200 e sugestao `Ana Rubia Cunha Papi`;
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: Estado e Cidade lado a lado nos filtros (2026-06-11)
+
+- Pedido do usuario: dentro do filtro de psicologos, colocar `Estado` e `Cidade` lado a lado.
+- A modal de filtros manteve a fundacao da TASK-02 e passou a renderizar o formulario em grid de duas colunas.
+- Apenas os campos `Estado` e `Cidade` ocupam uma coluna cada; os demais filtros seguem em largura total para preservar legibilidade, hierarquia e o comportamento mobile-first.
+- A dependencia de cidade por estado foi preservada, sem alterar backend, dados, Prisma, migrations, packages ou filtros existentes.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual permanece `_product/proto/Psicologos.jpg` e `_product/proto/Filtros de Psicologos - Servicos Expandidos.jpg`.
+- ADR atualizado: `adrs/0059-filtros-avancados-busca-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

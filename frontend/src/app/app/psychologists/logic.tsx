@@ -1471,8 +1471,12 @@ export const PsychologistsLogic = () => {
                         </button>
                       </div>
 
-                      <filters.Form {...filters.formProps} onSubmit={handleSubmitFilters}>
-                        <div className="mt-4 flex flex-col gap-3">
+                      <filters.Form
+                        {...filters.formProps}
+                        className="grid grid-cols-2 gap-x-3 gap-y-1"
+                        onSubmit={handleSubmitFilters}
+                      >
+                        <div className="col-span-2 mt-4 flex flex-col gap-3">
                           <button
                             className="inline-flex h-10 items-center justify-center rounded-full border border-[#e2e8f0] bg-white text-sm font-semibold text-foreground"
                             onClick={clearFilters}

@@ -49,6 +49,15 @@ acessibilidade/experiência.
 - Validação complementar: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`,
   HTTP 200 em `/app/psychologists` e smoke real `GET /api/private/directory/psychologists?limit=8&search=Ana`.
 
+## Atualização 2026-06-11: Estado e Cidade lado a lado
+
+- A modal de filtros mantém a fundação da TASK-02, mas o formulário de filtros da tela
+  `/app/psychologists` passa a renderizar em grid de duas colunas.
+- Apenas os campos `Estado` e `Cidade` ocupam uma coluna cada, lado a lado; os demais filtros seguem
+  em largura total para preservar legibilidade e evitar mudanças amplas no layout.
+- A cidade continua dependente do estado selecionado, usando as mesmas opções locais do setup de
+  perfil profissional.
+
 ## Task relacionada
 
 - TASK-13 - Psicólogos: listagem e filtros
