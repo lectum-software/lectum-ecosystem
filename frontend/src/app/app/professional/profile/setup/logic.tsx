@@ -11,6 +11,7 @@ import {
   ExternalLink,
   Eye,
   FileVideo,
+  Filter,
   GraduationCap,
   Loader2,
   type LucideIcon,
@@ -27,6 +28,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   type ChangeEvent,
+  type CSSProperties,
   type PointerEvent as ReactPointerEvent,
   useEffect,
   useMemo,
@@ -77,6 +79,19 @@ const resolveApiError = (error: unknown) => {
 
 const toggleValue = (values: string[], id: string) => {
   return values.includes(id) ? values.filter((item) => item !== id) : [...values, id];
+};
+
+const profileSetupSelectableChip =
+  "inline-flex items-center justify-center rounded-full border border-border bg-surface-muted px-[10px] py-[6px] text-[12px] leading-[16px] font-medium text-foreground transition h-auto min-h-[28px]";
+
+const profileSetupSelectableChipStyle: CSSProperties = {
+  fontSize: "12px",
+  lineHeight: "16px",
+  fontWeight: 500,
+  padding: "6px 10px",
+  minHeight: "28px",
+  height: "auto",
+  borderRadius: "999px",
 };
 
 const SectionCard = ({
@@ -157,10 +172,11 @@ const CatalogPicker = ({
           return (
             <button
               className={cn(
-                "rounded-full border border-border bg-surface-muted px-3 py-2 text-xs font-semibold text-foreground transition",
+                profileSetupSelectableChip,
                 checked && "border-primary bg-primary text-white shadow-sm",
                 disabled && "cursor-not-allowed opacity-50",
               )}
+              style={profileSetupSelectableChipStyle}
               disabled={disabled}
               key={item.id}
               onClick={() => onChange(name, toggleValue(selected, item.id))}
@@ -177,6 +193,7 @@ const CatalogPicker = ({
 
 const CatalogTagField = ({
   description,
+  placeholderClassName = "text-xs",
   items,
   limit,
   name,
@@ -189,6 +206,7 @@ const CatalogTagField = ({
   description?: string;
   items: FreeProfileCatalogItem[];
   limit?: number;
+  placeholderClassName?: string;
   name: keyof Pick<FreeProfileForm, "specialty_ids" | "approach_ids">;
   placeholder: string;
   required?: boolean;
@@ -269,7 +287,8 @@ const CatalogTagField = ({
             <button
               aria-expanded={open}
               className={cn(
-                "min-w-[9rem] flex-1 py-1 text-left text-[11px] text-subtle outline-none",
+                "min-w-[9rem] flex-1 py-1 text-left text-subtle outline-none",
+                placeholderClassName,
                 limitReached && "text-muted",
               )}
               onClick={() => setOpen((current) => !current)}
@@ -302,7 +321,7 @@ const CatalogTagField = ({
                   return (
                     <button
                       className={cn(
-                        "flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-sm font-semibold text-foreground transition hover:bg-primary-soft hover:text-primary",
+                        "flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-[11px] font-semibold text-foreground transition hover:bg-primary-soft hover:text-primary",
                         checked && "bg-primary-soft text-primary",
                         disabled &&
                           "cursor-not-allowed opacity-45 hover:bg-transparent hover:text-foreground",
@@ -343,9 +362,10 @@ const ChipPicker = ({
       return (
         <button
           className={cn(
-            "rounded-full border border-border bg-surface-muted px-3 py-2 text-xs font-semibold text-foreground transition",
+            profileSetupSelectableChip,
             checked && "border-primary bg-primary text-white shadow-sm",
           )}
+          style={profileSetupSelectableChipStyle}
           key={item.value}
           onClick={() => onChange(toggleValue(selected, item.value))}
           type="button"
@@ -667,6 +687,13 @@ export const ProfessionalProfileSetupLogic = () => {
       ? [{ label: addressCity, value: addressCity }, ...baseCityOptions]
       : baseCityOptions;
   const targetAudienceError = form.hook.formState.errors.target_audience?.message;
+  const orderedApproachOptions = useMemo(
+    () =>
+      [...(profile.data?.catalogs.approaches || [])].sort((a, b) =>
+        a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }),
+      ),
+    [profile.data?.catalogs.approaches],
+  );
   const whatsappUrl = toWhatsappPhoneE164(whatsappPhone, countryCode)?.replace(
     /^\+/,
     "https://wa.me/",
@@ -715,7 +742,7 @@ export const ProfessionalProfileSetupLogic = () => {
   };
 
   const renderFields = (names: (keyof FreeProfileForm)[]) => (
-    <div className="grid gap-4">{names.map((name) => renderField(name))}</div>
+    <div className="grid gap-3">{names.map((name) => renderField(name))}</div>
   );
 
   const renderAcademicField = (
@@ -1380,7 +1407,7 @@ export const ProfessionalProfileSetupLogic = () => {
               </div>
             </SectionCard>
 
-            <SectionCard icon={Award} title="Filtros">
+            <SectionCard icon={Filter} title="Filtros">
               <div className="grid gap-6">
                 <CatalogTagField
                   description={
@@ -1393,10 +1420,28 @@ export const ProfessionalProfileSetupLogic = () => {
                   name="specialty_ids"
                   onChange={setCatalogValue}
                   placeholder="Adicione uma especialidade..."
+                  placeholderClassName="text-[12px]"
                   required
                   selected={selectedSpecialties}
                   title="Especialidades"
                 />
+                <CatalogTagField
+                  description={
+                    profile.data.plan.is_free
+                      ? "Selecione 1 opção. Faça o upgrade para adicionar várias abordagens."
+                      : "Selecione todas as abordagens que fazem parte da sua prática."
+                  }
+                  items={orderedApproachOptions}
+                  limit={profile.data.plan.approach_limit}
+                  name="approach_ids"
+                  onChange={setCatalogValue}
+                  placeholder="Adicione uma abordagem..."
+                  placeholderClassName="text-[12px]"
+                  required
+                  selected={selectedApproaches}
+                  title="Abordagens"
+                />
+                {renderField("language")}
                 <CatalogPicker
                   description={
                     profile.data.plan.is_free
@@ -1412,21 +1457,6 @@ export const ProfessionalProfileSetupLogic = () => {
                   showLimitCounter={false}
                   title="Serviços"
                 />
-                <CatalogTagField
-                  description={
-                    profile.data.plan.is_free
-                      ? "Selecione 1 opção. Faça o upgrade para adicionar várias abordagens."
-                      : "Selecione todas as abordagens que fazem parte da sua prática."
-                  }
-                  items={profile.data.catalogs.approaches}
-                  limit={profile.data.plan.approach_limit}
-                  name="approach_ids"
-                  onChange={setCatalogValue}
-                  placeholder="Adicione uma abordagem..."
-                  required
-                  selected={selectedApproaches}
-                  title="Abordagens"
-                />
                 <div className="grid gap-3">
                   <h3 className="flex items-center gap-1 text-sm font-bold text-foreground">
                     <span>Público</span>
@@ -1441,7 +1471,6 @@ export const ProfessionalProfileSetupLogic = () => {
                     {targetAudienceError}
                   </span>
                 </div>
-                {renderField("language")}
                 <div className="grid gap-3">
                   <h3 className="text-sm font-bold text-foreground">Selos e Facilidades</h3>
                   <BooleanBenefit
