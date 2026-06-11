@@ -10,10 +10,14 @@ import type {
 } from "@/api/generator/types/directory";
 import * as api from "@/api/req/directory";
 
-export const useDirectoryPsychologists = (query: DirectoryPsychologistsQuery = {}) => {
+export const useDirectoryPsychologists = (
+  query: DirectoryPsychologistsQuery = {},
+  enabled = true,
+) => {
   return useQuery({
     queryKey: keys.directory.psychologists(query),
     queryFn: () => api.getDirectoryPsychologists(query),
+    enabled,
     refetchOnWindowFocus: false,
     retry: false,
   });

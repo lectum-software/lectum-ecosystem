@@ -20,6 +20,7 @@ import {
   type CSSProperties,
   type FormEvent,
   useCallback,
+  useDeferredValue,
   useEffect,
   useMemo,
   useRef,
@@ -89,6 +90,13 @@ const formatProfileTitle = (
 const formatDisplayName = (name: string) => {
   return name;
 };
+
+const normalizeSuggestionText = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .trim();
 
 const splitNameForBadge = (name: string) => {
   const words = formatDisplayName(name).trim().split(/\s+/).filter(Boolean);
@@ -331,6 +339,10 @@ export const PsychologistsLogic = () => {
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
   const metrics = useViewportMetrics();
+  const params = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
+  const filterValues = useMemo(() => readFiltersFromParams(params), [params]);
+  const currentPage = useMemo(() => getPageFromParams(params), [params]);
+  const query = useMemo(() => toQuery(filterValues, currentPage), [currentPage, filterValues]);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [shareFeedback, setShareFeedback] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
@@ -341,6 +353,8 @@ export const PsychologistsLogic = () => {
   const [favoriteOverrides, setFavoriteOverrides] = useState<Record<string, boolean>>({});
   const [isBioExpanded, setIsBioExpanded] = useState(false);
   const [isBioTruncated, setIsBioTruncated] = useState(false);
+  const [searchDraft, setSearchDraft] = useState(() => filterValues.search || "");
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   const filterDialogRef = useRef<HTMLDivElement | null>(null);
   const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -351,12 +365,22 @@ export const PsychologistsLogic = () => {
     enableProfile: false,
   });
 
-  const params = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
-  const filterValues = useMemo(() => readFiltersFromParams(params), [params]);
-  const currentPage = useMemo(() => getPageFromParams(params), [params]);
-  const query = useMemo(() => toQuery(filterValues, currentPage), [currentPage, filterValues]);
-
   const directory = useDirectoryPsychologists(query);
+  const deferredSearchDraft = useDeferredValue(searchDraft);
+  const suggestionSearch = deferredSearchDraft.trim();
+  const shouldFetchSearchSuggestions = isSearchFocused && suggestionSearch.length >= 2;
+  const suggestionQuery = useMemo<DirectoryPsychologistsQuery>(
+    () => ({
+      limit: 8,
+      page: 1,
+      search: suggestionSearch || undefined,
+    }),
+    [suggestionSearch],
+  );
+  const searchSuggestionsDirectory = useDirectoryPsychologists(
+    suggestionQuery,
+    shouldFetchSearchSuggestions,
+  );
   const response = directory.data;
   const psychologists = response?.data ?? [];
   const featuredPsychologist = psychologists[0];
@@ -403,6 +427,25 @@ export const PsychologistsLogic = () => {
     ? `/app/psychologist/${featuredPsychologist.id}`
     : "/app/psychologists";
   const floatingBenefitBadges = buildFloatingBenefitBadges(featuredPsychologist);
+  const searchSuggestionItems = useMemo(() => {
+    const typedName = normalizeSuggestionText(searchDraft);
+    if (typedName.length < 2) return [];
+
+    const seen = new Set<string>();
+
+    return (searchSuggestionsDirectory.data?.data ?? [])
+      .filter((psychologist) => normalizeSuggestionText(psychologist.name).includes(typedName))
+      .filter((psychologist) => {
+        if (seen.has(psychologist.id)) return false;
+        seen.add(psychologist.id);
+        return true;
+      })
+      .slice(0, 5);
+  }, [searchDraft, searchSuggestionsDirectory.data?.data]);
+  const shouldRenderSearchSuggestions =
+    isSearchFocused &&
+    searchDraft.trim().length >= 2 &&
+    (searchSuggestionsDirectory.isFetching || searchSuggestionItems.length > 0);
 
   const syncActionColumnAlignment = useCallback(() => {
     const baselineText = featuredBio;
@@ -556,12 +599,18 @@ export const PsychologistsLogic = () => {
   );
 
   const handleSubmitFilters = filters.hook.handleSubmit((values) => {
-    applyFilterValues(values);
+    applyFilterValues({
+      ...filterValues,
+      ...values,
+      search: filterValues.search,
+    });
     setIsFiltersOpen(false);
   });
 
   const clearFilters = useCallback(() => {
     filters.hook.reset(defaultPsychologistsFilterValues);
+    setSearchDraft("");
+    setIsSearchFocused(false);
     applyFilterValues(defaultPsychologistsFilterValues);
     setIsFiltersOpen(false);
   }, [applyFilterValues, filters.hook]);
@@ -569,12 +618,25 @@ export const PsychologistsLogic = () => {
   const handleSearchSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      const formData = new FormData(event.currentTarget);
-      const nextSearch = String(formData.get("search") || "").trim();
+      const nextSearch = searchDraft.trim();
 
+      setSearchDraft(nextSearch);
+      setIsSearchFocused(false);
       applyFilterValues({
         ...filterValues,
         search: nextSearch,
+      });
+    },
+    [applyFilterValues, filterValues, searchDraft],
+  );
+
+  const handleSearchSuggestionSelect = useCallback(
+    (name: string) => {
+      setSearchDraft(name);
+      setIsSearchFocused(false);
+      applyFilterValues({
+        ...filterValues,
+        search: name,
       });
     },
     [applyFilterValues, filterValues],
@@ -834,7 +896,8 @@ export const PsychologistsLogic = () => {
             {!showInitialLoading && !errorMessage && featuredPsychologist ? (
               <>
                 <form
-                  className="absolute z-30"
+                  className="absolute z-40"
+                  onMouseDown={stopInteractionPropagation}
                   onSubmit={handleSearchSubmit}
                   style={{
                     top: `calc(env(safe-area-inset-top) + ${metrics.searchTop}px)`,
@@ -849,12 +912,55 @@ export const PsychologistsLogic = () => {
                       aria-label="Buscar Psicólogos"
                       className="h-full w-full bg-transparent pr-3 pl-7 text-[14px] text-white outline-none placeholder:text-white/72"
                       maxLength={120}
-                      defaultValue={filterValues.search}
+                      onBlur={() => {
+                        window.setTimeout(() => setIsSearchFocused(false), 120);
+                      }}
+                      onChange={(event) => {
+                        setSearchDraft(event.target.value);
+                        setIsSearchFocused(true);
+                      }}
+                      onFocus={() => setIsSearchFocused(true)}
                       placeholder="Busque pelo nome ou CRP"
                       name="search"
                       type="text"
+                      value={searchDraft}
                     />
                   </div>
+
+                  {shouldRenderSearchSuggestions ? (
+                    <div
+                      aria-label="Sugestões de psicólogos"
+                      className="absolute top-[calc(100%+8px)] left-0 right-0 overflow-hidden rounded-2xl border border-white/25 bg-white/95 text-[#0f172a] shadow-[0_18px_45px_rgba(15,23,42,0.22)] backdrop-blur-md"
+                      onMouseDown={(event) => event.preventDefault()}
+                      role="listbox"
+                    >
+                      <div className="border-[#e2e8f0] border-b px-3 py-2 text-[11px] font-extrabold tracking-[0.08em] text-[#64748b] uppercase">
+                        Profissionais cadastrados
+                      </div>
+                      {searchSuggestionsDirectory.isFetching ? (
+                        <div className="px-3 py-3 text-sm font-medium text-[#64748b]">
+                          Buscando profissionais...
+                        </div>
+                      ) : (
+                        searchSuggestionItems.map((psychologist) => (
+                          <button
+                            aria-label={`Buscar por ${psychologist.name}`}
+                            className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold transition hover:bg-[#f8fafc]"
+                            key={psychologist.id}
+                            aria-selected={false}
+                            onClick={() => handleSearchSuggestionSelect(psychologist.name)}
+                            role="option"
+                            type="button"
+                          >
+                            <span className="min-w-0 truncate">{psychologist.name}</span>
+                            <span className="shrink-0 rounded-full bg-[#eff6ff] px-2 py-0.5 text-[10px] font-extrabold text-[#308ce8]">
+                              {psychologist.verified ? "Verificado" : "Gratuito"}
+                            </span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  ) : null}
                 </form>
 
                 <button

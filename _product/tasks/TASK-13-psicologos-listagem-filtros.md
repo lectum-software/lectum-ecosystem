@@ -493,3 +493,24 @@ ext/image`.
 - O ajuste nao altera filtros, dados, backend, Prisma, migrations ou packages.
 - ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
 - Validacoes executadas nesta etapa: ver registro do commit desta execucao.
+
+## Execucao complementar: sugestoes na busca principal e filtros sem busca textual (2026-06-11)
+
+- Pedido do usuario: remover o campo de busca por nome/CRP de dentro da modal de filtros e sugerir nomes de
+  profissionais cadastrados, verificados e gratuitos quando o usuario digitar na busca principal da tela.
+- A modal de filtros agora exibe apenas criterios avancados; a busca textual fica somente na barra principal da
+  tela `/app/psychologists`.
+- A barra principal passou a ser controlada e, a partir de 2 caracteres, consulta o endpoint real
+  `GET /api/private/directory/psychologists` com `limit=8` para sugerir psicologos publicados/cadastrados.
+- As sugestoes filtram o retorno pelo nome do profissional e exibem selo `Verificado` para perfis com entitlement
+  profissional ativo ou `Gratuito` para perfis publicados sem esse entitlement.
+- Selecionar uma sugestao aplica o nome na busca preservando os demais filtros ativos.
+- Nao houve alteracao de backend, Prisma, migrations, packages, mocks ou dados do psicologo.
+- ADR atualizado: `adrs/0059-filtros-avancados-busca-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - smoke real do endpoint local `GET /api/private/directory/psychologists?limit=8&search=Ana`
+    retornando HTTP 200 e sugestao `Ana Rubia Cunha Papi`;
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

@@ -65,14 +65,6 @@ export const usePsychologistsFilterForm = ({
   const fields = useMemo<Field<PsychologistsFilterForm>[]>(
     () => [
       {
-        name: "search",
-        field: "input",
-        label: "Buscar profissional",
-        placeholder: "Busque pelo nome ou CRP",
-        leadingIcon: "search",
-        autoComplete: "off",
-      },
-      {
         name: "specialty",
         field: "select",
         label: "Especialidade",

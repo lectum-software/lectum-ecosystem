@@ -36,6 +36,19 @@ acessibilidade/experiência.
 - A extensão dos controllers é reutilizável por futuras telas, sem instalar pacote novo nem criar
   design system paralelo.
 
+## Atualização 2026-06-11: busca principal com sugestões
+
+- O campo `Buscar profissional` foi removido da modal de filtros para separar critérios avançados da
+  busca principal da tela.
+- A busca principal em `/app/psychologists` passou a consultar o endpoint real de diretório enquanto
+  o usuário digita e exibir sugestões de nomes de psicólogos publicados/cadastrados.
+- As sugestões reutilizam `GET /api/private/directory/psychologists` com `limit=8`, filtram nomes no
+  cliente e mostram o marcador `Verificado` quando há entitlement profissional ativo; caso contrário,
+  o perfil publicado aparece como `Gratuito`.
+- Selecionar uma sugestão aplica o nome na busca e preserva os demais filtros ativos da URL.
+- Validação complementar: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`,
+  HTTP 200 em `/app/psychologists` e smoke real `GET /api/private/directory/psychologists?limit=8&search=Ana`.
+
 ## Task relacionada
 
 - TASK-13 - Psicólogos: listagem e filtros
