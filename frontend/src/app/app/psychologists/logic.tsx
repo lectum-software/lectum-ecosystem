@@ -246,9 +246,9 @@ export const PsychologistsLogic = () => {
   const psychologists = response?.data ?? [];
   const featuredPsychologist = psychologists[0];
   const backgroundVideoSrc = resolvePublicMediaUrl(featuredPsychologist?.video_url);
-  const backgroundPosterSrc = resolvePublicMediaUrl(
-    featuredPsychologist?.video_cover_url || featuredPsychologist?.avatar,
-  );
+  const backgroundPosterSrc = featuredPsychologist?.video_cover_url
+    ? resolvePublicMediaUrl(featuredPsychologist.video_cover_url)
+    : null;
   const shouldShowVideo = Boolean(backgroundVideoSrc) && !isVideoPlaybackFailed;
   const activeVideoSource = shouldShowVideo ? backgroundVideoSrc : null;
   const featuredBio = featuredPsychologist?.headline?.trim() || "";
@@ -626,9 +626,7 @@ export const PsychologistsLogic = () => {
                         priority
                         sizes="(min-width: 768px) 430px, 100vw"
                         src={backgroundPosterSrc}
-                        unoptimized={isPublicMediaUrl(
-                          featuredPsychologist.video_cover_url || featuredPsychologist.avatar,
-                        )}
+                        unoptimized={isPublicMediaUrl(featuredPsychologist.video_cover_url)}
                       />
                     ) : (
                       <div className="grid h-full w-full place-items-center bg-[#e2e8f0] text-3xl font-extrabold text-[#94a3b8]">
