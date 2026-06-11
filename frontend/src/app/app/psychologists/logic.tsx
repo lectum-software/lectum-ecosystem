@@ -15,7 +15,15 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type FormEvent,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useDirectoryPsychologists } from "@/api/callers/directory";
 import { usePatient } from "@/api/callers/patient";
 import type { DirectoryPsychologistsQuery } from "@/api/generator/types/directory";
@@ -174,11 +182,14 @@ const useViewportMetrics = () => {
     const isTiny = effectiveWidth < 360;
 
     return {
-      actionButtonSize: isTiny ? 40 : 44,
-      actionGap: isCompact ? 10 : 12,
-      actionRightPadding: isCompact ? 14 : 24,
-      actionTop: isCompact ? "66.5%" : "67%",
-      bioBottomOffset: isCompact ? 8 : 10,
+      actionBottomOffset: isCompact ? 12 : 14,
+      actionButtonSize: isTiny ? 34 : 36,
+      actionGap: isCompact ? 8 : 9,
+      actionIconSize: isTiny ? 13 : 14,
+      actionLabelSize: isCompact ? 9 : 10,
+      actionRightPadding: isTiny ? 12 : 16,
+      actionTextLineHeight: 1,
+      bioBottomOffset: isCompact ? 12 : 14,
       bioLineHeight: isCompact ? 20 : 22,
       bioSize: isCompact ? 13 : 15,
       filterButtonSize: isCompact ? 40 : 42,
@@ -204,9 +215,13 @@ export const PsychologistsLogic = () => {
   const [isVideoMuted, setIsVideoMuted] = useState(true);
   const [isVideoPaused, setIsVideoPaused] = useState(false);
   const [isVideoPlaybackFailed, setIsVideoPlaybackFailed] = useState(false);
+  const [actionColumnTranslateY, setActionColumnTranslateY] = useState(0);
 
   const filterDialogRef = useRef<HTMLDivElement | null>(null);
   const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
+  const bioBaselineRef = useRef<HTMLSpanElement | null>(null);
+  const actionColumnRef = useRef<HTMLDivElement | null>(null);
+  const profileTextRef = useRef<HTMLSpanElement | null>(null);
   const [hasAuthToken] = useState(() => {
     if (typeof window === "undefined") return false;
 
@@ -252,6 +267,26 @@ export const PsychologistsLogic = () => {
     Boolean(filterValues.approach);
 
   const showInitialLoading = directory.isLoading && !response;
+  const actionColumnBottom = `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom) + ${metrics.actionBottomOffset}px)`;
+  const infoSectionBottom = `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom) + ${metrics.bioBottomOffset}px)`;
+
+  const syncActionColumnAlignment = useCallback(() => {
+    const baselineText = featuredBio;
+    const bioMarker = bioBaselineRef.current;
+    const profileLabel = profileTextRef.current;
+    const actionColumn = actionColumnRef.current;
+
+    if (!baselineText || !bioMarker || !profileLabel || !actionColumn) return;
+
+    const delta =
+      bioMarker.getBoundingClientRect().bottom - profileLabel.getBoundingClientRect().bottom;
+
+    setActionColumnTranslateY((current) => (Math.abs(current - delta) > 0.5 ? delta : current));
+  }, [featuredBio]);
+
+  useLayoutEffect(() => {
+    syncActionColumnAlignment();
+  }, [syncActionColumnAlignment]);
 
   useEffect(() => {
     const currentVideo = backgroundVideoRef.current;
@@ -278,6 +313,20 @@ export const PsychologistsLogic = () => {
         video.muted = isVideoMuted;
       });
   }, [isVideoMuted]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const onResize = () => {
+      syncActionColumnAlignment();
+    };
+
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      window.removeEventListener("resize", onResize);
+    };
+  }, [syncActionColumnAlignment]);
 
   const applyFilterValues = useCallback(
     (values: PsychologistsFilterForm) => {
@@ -623,138 +672,13 @@ export const PsychologistsLogic = () => {
                       </button>
                     ) : null}
 
-                    <div
-                      className="absolute z-20 flex flex-col items-center"
-                      style={{
-                        right: `${metrics.actionRightPadding}px`,
-                        top: metrics.actionTop,
-                        gap: `${metrics.actionGap}px`,
-                      }}
-                    >
-                      <div className="grid justify-items-center gap-1 text-center">
-                        <button
-                          aria-label={`Favoritar ${featuredPsychologist.name}`}
-                          aria-pressed={featuredPsychologist.favorited}
-                          className={cn(
-                            "grid place-items-center rounded-full bg-white text-[#64748b] transition disabled:cursor-not-allowed disabled:opacity-60",
-                            featuredPsychologist.favorited
-                              ? "text-[#ef4444]"
-                              : "hover:bg-[#f8fafc]",
-                          )}
-                          disabled={isFavoritePending || !canFavoritePsychologists}
-                          onClick={toggleFavorite}
-                          style={{
-                            width: `${metrics.actionButtonSize}px`,
-                            height: `${metrics.actionButtonSize}px`,
-                          }}
-                          type="button"
-                        >
-                          <Heart
-                            className={cn(
-                              "h-5 w-5",
-                              featuredPsychologist.favorited && "fill-[#ef4444]",
-                            )}
-                            aria-hidden="true"
-                          />
-                        </button>
-                        <span className="text-[10px] font-semibold leading-none">Favoritar</span>
-                      </div>
-
-                      {featuredPsychologist.whatsapp_url ? (
-                        <div className="grid justify-items-center gap-1 text-center">
-                          <a
-                            aria-label={`Chamar ${featuredPsychologist.name} no WhatsApp`}
-                            className="grid place-items-center rounded-full bg-[#22C55E] text-white transition hover:bg-[#16A34A]"
-                            href={featuredPsychologist.whatsapp_url}
-                            rel="noreferrer"
-                            target="_blank"
-                            style={{
-                              width: `${metrics.actionButtonSize}px`,
-                              height: `${metrics.actionButtonSize}px`,
-                            }}
-                          >
-                            <WhatsAppIcon
-                              className="h-[18px] w-[18px] text-white"
-                              aria-hidden="true"
-                            />
-                          </a>
-                          <span className="text-[10px] font-semibold leading-none">WhatsApp</span>
-                        </div>
-                      ) : (
-                        <div className="grid justify-items-center gap-1 text-center">
-                          <button
-                            aria-label="WhatsApp indisponível"
-                            className="grid cursor-not-allowed place-items-center rounded-full bg-[#22C55E]/70 text-white"
-                            disabled
-                            type="button"
-                            style={{
-                              width: `${metrics.actionButtonSize}px`,
-                              height: `${metrics.actionButtonSize}px`,
-                            }}
-                          >
-                            <MessageCircle className="h-[18px] w-[18px]" aria-hidden="true" />
-                          </button>
-                          <span className="text-[10px] font-semibold leading-none">WhatsApp</span>
-                        </div>
-                      )}
-
-                      <div className="grid justify-items-center gap-1 text-center">
-                        <button
-                          aria-label={`Compartilhar perfil de ${featuredPsychologist.name}`}
-                          className="grid place-items-center rounded-full bg-white text-[#64748b] transition hover:bg-[#e2e8f0]"
-                          onClick={shareCurrent}
-                          type="button"
-                          style={{
-                            width: `${metrics.actionButtonSize}px`,
-                            height: `${metrics.actionButtonSize}px`,
-                          }}
-                        >
-                          <Share2 className="h-[18px] w-[18px]" aria-hidden="true" />
-                        </button>
-                        <span className="text-[10px] font-semibold leading-none">Compartilhar</span>
-                      </div>
-
-                      <div className="grid justify-items-center gap-1 text-center">
-                        <Link
-                          aria-label={`Ver perfil de ${featuredPsychologist.name}`}
-                          className="grid place-items-center rounded-full bg-transparent"
-                          href={`/app/psychologist/${featuredPsychologist.id}`}
-                        >
-                          <div
-                            className="relative overflow-hidden rounded-full bg-white p-0.5 text-[#0f172a]"
-                            style={{
-                              width: `${metrics.actionButtonSize}px`,
-                              height: `${metrics.actionButtonSize}px`,
-                              border: "2px solid #fff",
-                            }}
-                          >
-                            {featuredPsychologist.avatar ? (
-                              <Image
-                                alt={featuredPsychologist.name}
-                                className="h-full w-full rounded-full object-cover"
-                                fill
-                                sizes={`${metrics.actionButtonSize}px`}
-                                src={resolvePublicMediaUrl(featuredPsychologist.avatar) ?? ""}
-                                unoptimized={isPublicMediaUrl(featuredPsychologist.avatar)}
-                              />
-                            ) : (
-                              <span className="grid h-full w-full place-items-center rounded-full bg-[#e2e8f0] text-[11px] font-semibold text-[#334155]">
-                                {getInitials(featuredPsychologist.name)}
-                              </span>
-                            )}
-                          </div>
-                        </Link>
-                        <span className="text-[10px] font-semibold leading-none">Perfil</span>
-                      </div>
-                    </div>
-
                     <section
                       aria-live={shareFeedback ? "polite" : "off"}
                       className="pointer-events-none absolute inset-x-0 text-[#ffffff]"
                       style={{
                         left: `${metrics.horizontalPadding}px`,
                         right: `${metrics.actionRightPadding + metrics.actionButtonSize + 12}px`,
-                        bottom: `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom) + ${metrics.bioBottomOffset}px)`,
+                        bottom: infoSectionBottom,
                       }}
                     >
                       {featuredPsychologist.available_today ? (
@@ -812,6 +736,12 @@ export const PsychologistsLogic = () => {
                           }}
                         >
                           {featuredBio}
+                          <span
+                            aria-hidden="true"
+                            className="inline-block h-0 w-0"
+                            ref={bioBaselineRef}
+                            style={{ verticalAlign: "baseline" }}
+                          />
                         </p>
                       ) : null}
 
@@ -824,6 +754,197 @@ export const PsychologistsLogic = () => {
                         </p>
                       ) : null}
                     </section>
+
+                    <div
+                      className="absolute z-20 flex flex-col items-center pointer-events-auto"
+                      ref={actionColumnRef}
+                      style={{
+                        right: `${metrics.actionRightPadding}px`,
+                        bottom: actionColumnBottom,
+                        gap: `${metrics.actionGap}px`,
+                        transform: `translateY(${actionColumnTranslateY}px)`,
+                      }}
+                    >
+                      <div className="grid justify-items-center gap-1 text-center">
+                        <button
+                          aria-label={`Favoritar ${featuredPsychologist.name}`}
+                          aria-pressed={featuredPsychologist.favorited}
+                          className={cn(
+                            "grid place-items-center rounded-full bg-white text-[#64748b] transition disabled:cursor-not-allowed disabled:opacity-60",
+                            featuredPsychologist.favorited
+                              ? "text-[#ef4444]"
+                              : "hover:bg-[#f8fafc]",
+                          )}
+                          disabled={isFavoritePending || !canFavoritePsychologists}
+                          onClick={toggleFavorite}
+                          style={{
+                            width: `${metrics.actionButtonSize}px`,
+                            height: `${metrics.actionButtonSize}px`,
+                          }}
+                          type="button"
+                        >
+                          <Heart
+                            className={cn(
+                              "h-4 w-4",
+                              featuredPsychologist.favorited && "fill-[#ef4444]",
+                            )}
+                            aria-hidden="true"
+                            style={{
+                              height: `${metrics.actionIconSize}px`,
+                              width: `${metrics.actionIconSize}px`,
+                            }}
+                          />
+                        </button>
+                        <span
+                          className="font-semibold leading-none"
+                          style={{
+                            fontSize: `${metrics.actionLabelSize}px`,
+                            lineHeight: metrics.actionTextLineHeight.toString(),
+                          }}
+                        >
+                          Favoritar
+                        </span>
+                      </div>
+
+                      <div className="grid justify-items-center gap-1 text-center">
+                        <button
+                          aria-label={`Compartilhar perfil de ${featuredPsychologist.name}`}
+                          className="grid place-items-center rounded-full bg-white text-[#64748b] transition hover:bg-[#e2e8f0]"
+                          onClick={shareCurrent}
+                          type="button"
+                          style={{
+                            width: `${metrics.actionButtonSize}px`,
+                            height: `${metrics.actionButtonSize}px`,
+                          }}
+                        >
+                          <Share2
+                            className="h-4 w-4"
+                            aria-hidden="true"
+                            style={{
+                              height: `${metrics.actionIconSize}px`,
+                              width: `${metrics.actionIconSize}px`,
+                            }}
+                          />
+                        </button>
+                        <span
+                          className="font-semibold leading-none"
+                          style={{
+                            fontSize: `${metrics.actionLabelSize}px`,
+                            lineHeight: metrics.actionTextLineHeight.toString(),
+                          }}
+                        >
+                          Compartilhar
+                        </span>
+                      </div>
+
+                      {featuredPsychologist.whatsapp_url ? (
+                        <div className="grid justify-items-center gap-1 text-center">
+                          <a
+                            aria-label={`Chamar ${featuredPsychologist.name} no WhatsApp`}
+                            className="grid place-items-center rounded-full bg-[#22C55E] text-white transition hover:bg-[#16A34A]"
+                            href={featuredPsychologist.whatsapp_url}
+                            rel="noreferrer"
+                            target="_blank"
+                            style={{
+                              width: `${metrics.actionButtonSize}px`,
+                              height: `${metrics.actionButtonSize}px`,
+                            }}
+                          >
+                            <WhatsAppIcon
+                              aria-hidden="true"
+                              className="h-4 w-4"
+                              style={{
+                                color: "white",
+                                height: `${metrics.actionIconSize}px`,
+                                width: `${metrics.actionIconSize}px`,
+                              }}
+                            />
+                          </a>
+                          <span
+                            className="font-semibold leading-none"
+                            style={{
+                              fontSize: `${metrics.actionLabelSize}px`,
+                              lineHeight: metrics.actionTextLineHeight.toString(),
+                            }}
+                          >
+                            WhatsApp
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="grid justify-items-center gap-1 text-center">
+                          <button
+                            aria-label="WhatsApp indisponível"
+                            className="grid cursor-not-allowed place-items-center rounded-full bg-[#22C55E]/70 text-white"
+                            disabled
+                            type="button"
+                            style={{
+                              width: `${metrics.actionButtonSize}px`,
+                              height: `${metrics.actionButtonSize}px`,
+                            }}
+                          >
+                            <MessageCircle
+                              className="h-4 w-4"
+                              aria-hidden="true"
+                              style={{
+                                height: `${metrics.actionIconSize}px`,
+                                width: `${metrics.actionIconSize}px`,
+                              }}
+                            />
+                          </button>
+                          <span
+                            className="font-semibold leading-none"
+                            style={{
+                              fontSize: `${metrics.actionLabelSize}px`,
+                              lineHeight: metrics.actionTextLineHeight.toString(),
+                            }}
+                          >
+                            WhatsApp
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="grid justify-items-center gap-1 text-center">
+                        <Link
+                          aria-label={`Ver perfil de ${featuredPsychologist.name}`}
+                          className="grid place-items-center rounded-full bg-transparent"
+                          href={`/app/psychologist/${featuredPsychologist.id}`}
+                        >
+                          <div
+                            className="relative overflow-hidden rounded-full bg-white p-0.5 text-[#0f172a]"
+                            style={{
+                              width: `${metrics.actionButtonSize}px`,
+                              height: `${metrics.actionButtonSize}px`,
+                              border: "2px solid #fff",
+                            }}
+                          >
+                            {featuredPsychologist.avatar ? (
+                              <Image
+                                alt={featuredPsychologist.name}
+                                className="h-full w-full rounded-full object-cover"
+                                fill
+                                sizes={`${metrics.actionButtonSize}px`}
+                                src={resolvePublicMediaUrl(featuredPsychologist.avatar) ?? ""}
+                                unoptimized={isPublicMediaUrl(featuredPsychologist.avatar)}
+                              />
+                            ) : (
+                              <span className="grid h-full w-full place-items-center rounded-full bg-[#e2e8f0] text-[11px] font-semibold text-[#334155]">
+                                {getInitials(featuredPsychologist.name)}
+                              </span>
+                            )}
+                          </div>
+                        </Link>
+                        <span
+                          className="font-semibold leading-none"
+                          style={{
+                            fontSize: `${metrics.actionLabelSize}px`,
+                            lineHeight: metrics.actionTextLineHeight.toString(),
+                          }}
+                          ref={profileTextRef}
+                        >
+                          Perfil
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
