@@ -81,3 +81,25 @@ Decisoes complementares:
 ### Complemento 2026-06-11: eixo vertical da coluna de acoes
 
 A coluna lateral de acoes usa labels com larguras diferentes. Para preservar o eixo vertical unico dos botoes em um padrao de rede social, cada grupo da coluna deve centralizar explicitamente o botao/icone sobre o texto com `justify-items-center`, em vez de depender do alinhamento padrao do grid.
+
+### Complemento 2026-06-11: robustez de playback e overlay textual
+
+Durante ajustes finais da tela imersiva, observou-se a necessidade de comportamentos específicos de estabilidade visual e legibilidade:
+
+- quando o `video_url` falha antes de entrar em reprodução, a UI deve apresentar imagem de capa (`video_cover_url`) em vez do avatar para manter consistência visual;
+- a bio exibida abaixo de nome/titulo deve aparecer completa no overlay, sem `line-clamp`/truncamento automático;
+- o sombreado preto do fundo deve ser limitado à regiao inferior para não encobrir indevidamente a area do rosto;
+- a coluna lateral de acoes e o bloco de texto inferior devem ser rebaixados para alinharem melhor as linhas de base com a barra inferior.
+
+Decisao aplicada:
+
+- manter o `video` como mídia principal com autoplay loop/mudo, mas com fallback visual para `video_cover_url` quando `play`/`error` falhar;
+- manter controle de estado de reprodução (`isVideoPaused`/`isVideoPlaybackFailed`) para alternar entre mídia e imagem sem introduzir mock, sem alterar arquitetura e sem bloquear fallback de imagem pública;
+- reduzir alcance do `linear-gradient` de escurecimento;
+- adicionar margem dinâmica para overlay inferior (`bioBottomOffset`) e deslocar `actionTop` da coluna lateral.
+
+Consequencias:
+
+- maior previsibilidade da exibição quando o vídeo nao consegue iniciar;
+- melhor alinhamento visual da ação lateral em relação ao bloco de texto sem quebrar padrões da tela;
+- texto biográfico completo melhora contexto imediato no topo da descoberta.

@@ -177,7 +177,8 @@ const useViewportMetrics = () => {
       actionButtonSize: isTiny ? 40 : 44,
       actionGap: isCompact ? 10 : 12,
       actionRightPadding: isCompact ? 14 : 24,
-      actionTop: isCompact ? "41%" : "42.5%",
+      actionTop: isCompact ? "66.5%" : "67%",
+      bioBottomOffset: isCompact ? 8 : 10,
       bioLineHeight: isCompact ? 20 : 22,
       bioSize: isCompact ? 13 : 15,
       filterButtonSize: isCompact ? 40 : 42,
@@ -202,6 +203,7 @@ export const PsychologistsLogic = () => {
   const [isSharing, setIsSharing] = useState(false);
   const [isVideoMuted, setIsVideoMuted] = useState(true);
   const [isVideoPaused, setIsVideoPaused] = useState(false);
+  const [isVideoPlaybackFailed, setIsVideoPlaybackFailed] = useState(false);
 
   const filterDialogRef = useRef<HTMLDivElement | null>(null);
   const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -232,6 +234,8 @@ export const PsychologistsLogic = () => {
   const backgroundPosterSrc = resolvePublicMediaUrl(
     featuredPsychologist?.video_cover_url || featuredPsychologist?.avatar,
   );
+  const shouldShowVideo = Boolean(backgroundVideoSrc) && !isVideoPlaybackFailed;
+  const activeVideoSource = shouldShowVideo ? backgroundVideoSrc : null;
   const featuredBio =
     featuredPsychologist?.bio?.trim() || featuredPsychologist?.headline?.trim() || "";
 
@@ -252,7 +256,7 @@ export const PsychologistsLogic = () => {
 
   useEffect(() => {
     const currentVideo = backgroundVideoRef.current;
-    if (!currentVideo || !backgroundVideoSrc) return;
+    if (!currentVideo || !activeVideoSource) return;
 
     currentVideo.muted = isVideoMuted;
 
@@ -262,9 +266,10 @@ export const PsychologistsLogic = () => {
     }
 
     void currentVideo.play().catch(() => {
+      setIsVideoPlaybackFailed(true);
       setIsVideoPaused(true);
     });
-  }, [backgroundVideoSrc, isVideoMuted, isVideoPaused]);
+  }, [activeVideoSource, isVideoMuted, isVideoPaused]);
 
   const applyFilterValues = useCallback(
     (values: PsychologistsFilterForm) => {
@@ -314,11 +319,12 @@ export const PsychologistsLogic = () => {
 
   const toggleVideoPlayback = useCallback(() => {
     const currentVideo = backgroundVideoRef.current;
-    if (!currentVideo || !backgroundVideoSrc) return;
+    if (!currentVideo || !shouldShowVideo) return;
 
     if (currentVideo.paused) {
       setIsVideoPaused(false);
       void currentVideo.play().catch(() => {
+        setIsVideoPlaybackFailed(true);
         setIsVideoPaused(true);
       });
       return;
@@ -326,7 +332,7 @@ export const PsychologistsLogic = () => {
 
     currentVideo.pause();
     setIsVideoPaused(true);
-  }, [backgroundVideoSrc]);
+  }, [shouldShowVideo]);
 
   const toggleVideoMute = useCallback(() => {
     setIsVideoMuted((current) => !current);
@@ -502,7 +508,7 @@ export const PsychologistsLogic = () => {
                   }}
                 >
                   <div className="relative h-full w-full overflow-hidden">
-                    {backgroundVideoSrc ? (
+                    {shouldShowVideo ? (
                       <video
                         aria-label={`Vídeo de apresentação de ${featuredPsychologist.name}`}
                         autoPlay
@@ -510,13 +516,18 @@ export const PsychologistsLogic = () => {
                         controls={false}
                         loop
                         muted={isVideoMuted}
+                        onError={() => setIsVideoPlaybackFailed(true)}
+                        onLoadedData={() => {
+                          setIsVideoPlaybackFailed(false);
+                          setIsVideoPaused(false);
+                        }}
                         onPause={() => setIsVideoPaused(true)}
                         onPlay={() => setIsVideoPaused(false)}
                         playsInline
                         poster={backgroundPosterSrc || undefined}
                         preload="metadata"
                         ref={backgroundVideoRef}
-                        src={backgroundVideoSrc}
+                        src={backgroundVideoSrc ?? undefined}
                       />
                     ) : backgroundPosterSrc ? (
                       <Image
@@ -540,11 +551,11 @@ export const PsychologistsLogic = () => {
                       className="pointer-events-none absolute inset-0"
                       style={{
                         background:
-                          "linear-gradient(to top, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.96) 23%, rgba(0,0,0,0.74) 38%, rgba(0,0,0,0.18) 58%, rgba(0,0,0,0) 74%)",
+                          "linear-gradient(to top, rgba(0,0,0,0.96) 0%, rgba(0,0,0,0.9) 15%, rgba(0,0,0,0.58) 28%, rgba(0,0,0,0.22) 40%, rgba(0,0,0,0) 55%)",
                       }}
                     />
 
-                    {backgroundVideoSrc ? (
+                    {shouldShowVideo ? (
                       <button
                         aria-label={
                           isVideoPaused
@@ -557,7 +568,7 @@ export const PsychologistsLogic = () => {
                       />
                     ) : null}
 
-                    {backgroundVideoSrc && (isVideoMuted || isVideoPaused) ? (
+                    {shouldShowVideo && (isVideoMuted || isVideoPaused) ? (
                       <button
                         aria-label={
                           isVideoPaused
@@ -576,7 +587,7 @@ export const PsychologistsLogic = () => {
                       </button>
                     ) : null}
 
-                    {backgroundVideoSrc && !isVideoMuted ? (
+                    {shouldShowVideo && !isVideoMuted ? (
                       <button
                         aria-label={`Silenciar vídeo de ${featuredPsychologist.name}`}
                         className="absolute left-6 top-[calc(env(safe-area-inset-top)+92px)] z-20 grid h-8 w-8 place-items-center rounded-full bg-black/25 text-white backdrop-blur-sm transition hover:bg-black/35"
@@ -718,7 +729,7 @@ export const PsychologistsLogic = () => {
                       style={{
                         left: `${metrics.horizontalPadding}px`,
                         right: `${metrics.actionRightPadding + metrics.actionButtonSize + 12}px`,
-                        bottom: `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom) + 28px)`,
+                        bottom: `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom) + ${metrics.bioBottomOffset}px)`,
                       }}
                     >
                       {featuredPsychologist.available_today ? (
@@ -769,7 +780,7 @@ export const PsychologistsLogic = () => {
 
                       {featuredBio ? (
                         <p
-                          className="mt-2 line-clamp-2 text-white/95"
+                          className="mt-2 text-white/95"
                           style={{
                             fontSize: `${metrics.bioSize}px`,
                             lineHeight: `${metrics.bioLineHeight}px`,

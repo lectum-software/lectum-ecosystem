@@ -367,3 +367,23 @@ ext/image`.
 - Os grupos da coluna lateral passaram a centralizar explicitamente seus itens com `justify-items-center`, evitando que labels mais largos desloquem o centro visual do botao.
 - Navbar, tamanhos, comportamento do video, dados e API nao foram alterados.
 - Validacoes executadas nesta etapa: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP 200 em `/app/psychologists`.
+
+## Execucao complementar: fallback de capa do video e readequacao do bloco de overlay (2026-06-11)
+
+- Pedido do usuario:
+  - Caso o video trave antes de iniciar, exibir a imagem de capa (quando houver), evitando fallback para avatar;
+  - manter a bio completa abaixo da linha de titulo do profissional, sem truncamento;
+  - reduzir a area de escurecimento da imagem de fundo ao recorte inferior onde fica o nome/bio;
+  - aproximar a base da bio do topo da navbar e deslocar a coluna lateral de acoes para baixo.
+- Ajustes implementados:
+  - `logic.tsx` agora trata falha de carregamento do `video` via estado local `isVideoPlaybackFailed`;
+  - ao ocorrer erro/rejeição de play antes da reprodução, a tela passa a exibir `video_cover_url` (ou avatar como fallback) em vez do avatar quando o video nao carrega;
+  - o texto da bio passou a renderizar sem `line-clamp`, garantindo exibicao integral;
+  - o gradiente do overlay foi encurtado para escurecer apenas ate a faixa inferior da imagem;
+  - o bloco de overlay inferior recebeu `bioBottomOffset` para aproximar a base do texto da base da navbar;
+  - a posição vertical da coluna lateral (`actionTop`) foi rebaixada para alinhar o label `Perfil` com a linha de base do texto de bio.
+- Nenhum novo pacote foi instalado.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
