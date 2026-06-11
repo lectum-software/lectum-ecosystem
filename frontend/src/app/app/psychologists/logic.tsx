@@ -792,10 +792,14 @@ export const PsychologistsLogic = () => {
                             className="mt-2 text-white/95"
                             ref={bioTextRef}
                             style={{
+                              display: "-webkit-box",
                               fontSize: `${metrics.bioSize}px`,
                               lineHeight: `${metrics.bioLineHeight}px`,
+                              overflow: "hidden",
                               maxWidth: "100%",
                               overflowWrap: "break-word",
+                              WebkitBoxOrient: "vertical",
+                              WebkitLineClamp: 3,
                               wordBreak: "normal",
                             }}
                           >
