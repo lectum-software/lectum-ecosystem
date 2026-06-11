@@ -694,6 +694,39 @@ export const ProfessionalProfileSetupLogic = () => {
       ),
     [profile.data?.catalogs.approaches],
   );
+  const orderedServiceOptions = useMemo(() => {
+    const serviceDisplayOrder = [
+      "terapia-individual",
+      "terapia-de-casal",
+      "coach",
+      "hipnoterapia",
+      "terapia-familiar",
+      "orientacao-vocacional",
+    ];
+
+    const orderBySlug = new Map(serviceDisplayOrder.map((slug, index) => [slug, index]));
+    const normalize = (value: string) =>
+      value
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+        .toLowerCase();
+
+    return [...(profile.data?.catalogs.services || [])].sort((a, b) => {
+      const aPos =
+        orderBySlug.get(a.slug) ?? orderBySlug.get(normalize(a.name)) ?? Number.POSITIVE_INFINITY;
+      const bPos =
+        orderBySlug.get(b.slug) ?? orderBySlug.get(normalize(b.name)) ?? Number.POSITIVE_INFINITY;
+
+      if (aPos === bPos) {
+        return a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" });
+      }
+
+      if (!Number.isFinite(aPos) && Number.isFinite(bPos)) return 1;
+      if (Number.isFinite(aPos) && !Number.isFinite(bPos)) return -1;
+
+      return aPos - bPos;
+    });
+  }, [profile.data?.catalogs.services]);
   const whatsappUrl = toWhatsappPhoneE164(whatsappPhone, countryCode)?.replace(
     /^\+/,
     "https://wa.me/",
@@ -1448,7 +1481,7 @@ export const ProfessionalProfileSetupLogic = () => {
                       ? "Selecione 1 opção. Faça o upgrade para adicionar todos os serviços."
                       : "Selecione todos os serviços que você oferece."
                   }
-                  items={profile.data.catalogs.services}
+                  items={orderedServiceOptions}
                   limit={profile.data.plan.service_limit}
                   name="service_ids"
                   onChange={setCatalogValue}
