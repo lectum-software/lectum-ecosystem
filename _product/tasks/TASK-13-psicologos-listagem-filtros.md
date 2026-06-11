@@ -429,3 +429,13 @@ ext/image`.
 - Nao houve alteracao de backend, Prisma, migrations, packages, mocks ou dados do psicologo.
 - ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
 - Validacoes executadas nesta etapa: ver registro do commit desta execucao.
+
+
+## Execucao complementar: nome semibold e visibilidade do tempo de experiencia (2026-06-11)
+
+- Pedido do usuario: deixar o nome do psicologo em semibold no card e remover o tempo de experiencia ao lado de Psicologo/Psicologa quando o profissional desmarcar a opcao de exibir experiencia.
+- A tela imersiva `/app/psychologists` e o componente de card `frontend/src/components/psychologists/psychologist-card.tsx` passaram a respeitar `show_experience_tag === false`.
+- Quando a preferencia esta ausente ou verdadeira, o comportamento anterior de mostrar tempo de experiencia e preservado.
+- Nao houve alteracao de backend, Prisma, migrations, packages, mocks ou dados do psicologo.
+- ADR criado: `adrs/0058-visibilidade-experiencia-card-psicologo.md`.
+- Validacoes executadas nesta etapa: ver registro do commit desta execucao.

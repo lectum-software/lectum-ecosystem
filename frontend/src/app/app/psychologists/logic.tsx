@@ -66,11 +66,20 @@ const formatRating = (ratingAvg: number, ratingCount: number) => {
   });
 };
 
-const formatProfileTitle = (gender?: string | null, formationYears?: number | null) => {
+const formatProfileTitle = (
+  gender?: string | null,
+  formationYears?: number | null,
+  showExperienceTag?: boolean | null,
+) => {
   const base =
     gender?.toLowerCase() === "feminino" || gender?.toLowerCase() === "mulher"
       ? "Psicóloga"
       : "Psicólogo";
+
+  if (showExperienceTag === false) {
+    return base;
+  }
+
   const years = formationYears ?? 0;
   const yearsLabel = years === 1 ? "1 ano exp." : `${years} anos exp.`;
 
@@ -952,7 +961,7 @@ export const PsychologistsLogic = () => {
                         <div className="mt-2 grid gap-1">
                           <button
                             aria-label={`Ver perfil de ${featuredPsychologist.name}`}
-                            className="block w-full min-w-0 max-w-full cursor-pointer text-left font-bold text-white"
+                            className="block w-full min-w-0 max-w-full cursor-pointer text-left font-semibold text-white"
                             onClick={navigateToProfile}
                             type="button"
                             style={{
@@ -988,6 +997,7 @@ export const PsychologistsLogic = () => {
                               {formatProfileTitle(
                                 featuredPsychologist.gender,
                                 featuredPsychologist.formation_years,
+                                featuredPsychologist.show_experience_tag,
                               )}
                             </span>
                             <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/20 px-1.5 py-0.5 text-[#FACC15] shadow-[0_8px_24px_rgba(0,0,0,0.18)] backdrop-blur-sm">

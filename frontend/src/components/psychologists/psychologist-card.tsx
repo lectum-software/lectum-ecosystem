@@ -117,6 +117,10 @@ const getSubinfo = (psychologist: PsychologistCardItem) => {
   const years = psychologist.formation_years ?? 10;
   const rating = formatRating(psychologist.rating_avg, psychologist.rating_count);
 
+  if (psychologist.show_experience_tag === false) {
+    return `${role} • ★ ${rating}`;
+  }
+
   return `${role} • ${years} ANOS EXP • ★ ${rating}`;
 };
 
@@ -836,7 +840,7 @@ export function PsychologistCard({
             <div className="min-w-0 flex-1" style={{ paddingRight: "44px" }}>
               <h2
                 ref={nameLineRef}
-                className="line-clamp-2 min-h-[24px] font-extrabold tracking-tight text-[#0f172a]"
+                className="line-clamp-2 min-h-[24px] font-semibold tracking-tight text-[#0f172a]"
                 style={{
                   fontSize: "clamp(18px, 5vw, 22px)",
                   lineHeight: "clamp(24px, 5.4vw, 27px)",
