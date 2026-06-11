@@ -936,6 +936,15 @@ export const PsychologistsLogic = () => {
                       </ul>
                     ) : null}
 
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-auto absolute inset-x-0 z-[35]"
+                      style={{
+                        bottom: `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom))`,
+                        height: `${metrics.bioBottomOffset}px`,
+                      }}
+                    />
+
                     <section
                       aria-live={shareFeedback ? "polite" : "off"}
                       className="pointer-events-none absolute inset-x-0 z-40 grid items-end text-[#ffffff]"

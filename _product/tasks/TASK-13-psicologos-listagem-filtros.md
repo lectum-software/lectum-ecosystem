@@ -447,3 +447,11 @@ ext/image`.
 - A guia direita do filtro/acoes, navbar, dados, backend, Prisma, migrations e packages nao foram alterados.
 - ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
 - Validacoes executadas nesta etapa: ver registro do commit desta execucao.
+
+## Execucao complementar: bloqueio de play/pause na faixa entre bio e navbar (2026-06-11)
+
+- Pedido do usuario: impedir que o espaco entre a base do texto da bio e a navbar ative play/pause do video.
+- Foi adicionada uma faixa transparente acima da navbar que intercepta clique/toque e nao executa acao, mantendo o video controlavel apenas na area livre da midia.
+- O ajuste nao altera navbar, botoes laterais, dados do psicologo, backend, Prisma, migrations ou packages.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas nesta etapa: ver registro do commit desta execucao.

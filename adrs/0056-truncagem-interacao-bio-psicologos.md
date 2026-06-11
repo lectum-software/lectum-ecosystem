@@ -58,3 +58,7 @@ A tela `/app/psychologists` passa a manter guias laterais consistentes:
 ## Atualizacao 2026-06-11: reducao da margem esquerda
 
 A guia esquerda da tela `/app/psychologists` foi reduzida para aproximar barra de busca, selos flutuantes e bloco textual da borda esquerda, preservando o alinhamento entre esses elementos e sem alterar a guia direita, navbar, dados ou acoes.
+
+## Atualizacao 2026-06-11: zona inferior neutra do player
+
+A faixa transparente entre a base da bio e a navbar em `/app/psychologists` passou a interceptar cliques/toques sem executar acao, impedindo que essa area acione play/pause do video. A area livre da midia acima do bloco informativo continua controlando o player.
