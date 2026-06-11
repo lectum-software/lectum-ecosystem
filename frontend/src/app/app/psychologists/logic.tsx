@@ -720,11 +720,20 @@ export const PsychologistsLogic = () => {
                             )}
                           </span>
                           <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/20 px-1.5 py-0.5 text-[#FACC15] shadow-[0_8px_24px_rgba(0,0,0,0.18)] backdrop-blur-sm">
-                            <Star className="h-3 w-3 fill-[#FACC15]" aria-hidden="true" />
-                            {formatRating(
-                              featuredPsychologist.rating_avg,
-                              featuredPsychologist.rating_count,
-                            )}
+                            <Star
+                              aria-hidden="true"
+                              className="fill-[#FACC15]"
+                              style={{
+                                height: `${metrics.subtitleSize}px`,
+                                width: `${metrics.subtitleSize}px`,
+                              }}
+                            />
+                            <span style={{ fontSize: `${metrics.subtitleSize}px` }}>
+                              {formatRating(
+                                featuredPsychologist.rating_avg,
+                                featuredPsychologist.rating_count,
+                              )}
+                            </span>
                           </span>
                         </div>
                       </div>
