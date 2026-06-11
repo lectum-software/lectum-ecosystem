@@ -170,10 +170,12 @@ const SPECIALTY_CATEGORIES: readonly SpecialtyCategory[] = [
     options: [
       { name: "Psicologia Infantil", slugs: ["psicologia-infantil"] },
       { name: "Adolescência", slugs: ["adolescencia"] },
+      { name: "Separação dos pais", slugs: ["separacao-dos-pais"] },
       { name: "Desenvolvimento Infantil", slugs: ["desenvolvimento-infantil"] },
       { name: "Orientação Parental", slugs: ["orientacao-parental"] },
       { name: "Bullying", slugs: ["bullying"] },
       { name: "Dificuldades Escolares", slugs: ["dificuldades-escolares"] },
+      { name: "Comportamento infantil", slugs: ["comportamento-infantil"] },
     ],
   },
   {
@@ -181,6 +183,8 @@ const SPECIALTY_CATEGORIES: readonly SpecialtyCategory[] = [
     options: [
       { name: "Sexualidade", slugs: ["sexualidade"] },
       { name: "Identidade de Gênero", slugs: ["identidade-genero"] },
+      { name: "Transição de gênero", slugs: ["processo-de-transicao-de-genero"] },
+      { name: "Aceitação familiar", slugs: ["aceitacao-familiar"] },
       { name: "LGBTQIA+", slugs: ["lgbtqia"] },
       { name: "Sexologia", slugs: ["sexologia"] },
       { name: "Disfunções Sexuais", slugs: ["disfuncoes-sexuais"] },
