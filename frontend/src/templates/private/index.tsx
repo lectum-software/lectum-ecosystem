@@ -30,6 +30,7 @@ import * as userActions from "@/store/modules/user/actions";
 type PrivateTemplateProps = PropsWithChildren<{
   allowAnonymous?: boolean;
   autoHideNavigation?: boolean;
+  contentClassName?: string;
   showHeader?: boolean;
   showNavigation?: boolean;
 }>;
@@ -167,6 +168,7 @@ export const PrivateTemplate = ({
   allowAnonymous = false,
   autoHideNavigation = false,
   children,
+  contentClassName,
   showHeader = true,
   showNavigation,
 }: PrivateTemplateProps) => {
@@ -195,7 +197,10 @@ export const PrivateTemplate = ({
   const [isNavigationVisible, setIsNavigationVisible] = useState(true);
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
-  const pageShellClassName = shouldShowNavigation ? "pb-28 sm:pb-32" : undefined;
+  const pageShellClassName = cn(
+    shouldShowNavigation ? "pb-28 sm:pb-32" : undefined,
+    contentClassName,
+  );
   const isSessionLoading = hasToken && !sessionUser && (hidrate.isLoading || hidrate.isPending);
   const shouldShowSessionError = Boolean(hasToken && hidrate.isError && !sessionUser);
 
@@ -249,7 +254,7 @@ export const PrivateTemplate = ({
         pointerEvents: isNavigationVisible ? "auto" : "none",
       }}
     >
-      <ul className="mx-auto grid max-w-[560px] grid-cols-5">
+      <ul className="mx-auto grid w-full max-w-[560px] grid-cols-5">
         {navigation.map((item) => {
           const Icon = item.icon;
           const isActive = isActivePath(pathname, item);

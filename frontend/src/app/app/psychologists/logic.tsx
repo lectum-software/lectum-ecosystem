@@ -1,22 +1,19 @@
 ﻿"use client";
 
 import {
-  Bell,
   Heart,
   MessageCircle,
-  Network,
   Play,
   Search,
   Share2,
   SlidersHorizontal,
   Star,
-  UserRound,
   UsersRound,
   X,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDirectoryPsychologists } from "@/api/callers/directory";
 import { usePatient } from "@/api/callers/patient";
@@ -67,6 +64,24 @@ const formatProfileTitle = (gender?: string | null, formationYears?: number | nu
       : "Psicólogo";
 
   return `${base} • ${formationYears ?? 0} anos de experiência`;
+};
+
+const formatDisplayName = ({
+  gender,
+  name,
+  verified,
+}: {
+  gender?: string | null;
+  name: string;
+  verified: boolean;
+}) => {
+  if (!verified) return name;
+
+  const normalizedGender = gender?.toLowerCase();
+  const honorific =
+    normalizedGender === "feminino" || normalizedGender === "mulher" ? "Dra." : "Dr.";
+
+  return `${honorific} ${name}`;
 };
 
 const normalizeFormValues = (
@@ -168,51 +183,20 @@ const useViewportMetrics = () => {
 
     return {
       isSmall,
-      horizontalPadding: isSmall ? 18 : 24,
+      horizontalPadding: isSmall ? 20 : 28,
       actionButtonSize: isSmall ? 48 : 54,
-      actionGap: isSmall ? 14 : 20,
-      titleSize: isSmall ? 20 : 22,
-      bioSize: isSmall ? 14 : 15,
+      actionGap: isSmall ? 16 : 22,
+      titleSize: isSmall ? 22 : 26,
+      bioSize: isSmall ? 15 : 16,
       navBarHeight: isSmall ? 64 : DEFAULT_NAV_BAR_HEIGHT,
       searchRightGap: isSmall ? 72 : 78,
+      searchTop: isSmall ? 32 : 40,
     };
   }, [width]);
 };
 
-const navigationItems = [
-  {
-    href: "/app/psychologists",
-    icon: UsersRound,
-    label: "Psicólogos",
-  },
-  {
-    href: "/app/favorites",
-    icon: Heart,
-    label: "Favoritos",
-  },
-  {
-    href: "/app/community",
-    icon: Network,
-    label: "Comunidade",
-  },
-  {
-    href: "/app/notifications",
-    icon: Bell,
-    label: "Notificações",
-  },
-  {
-    href: "/app/profile",
-    icon: UserRound,
-    label: "Perfil",
-  },
-] as const;
-
-const isActivePath = (pathname: string, href: string) =>
-  pathname === href || pathname.startsWith(`${href}/`);
-
 export const PsychologistsLogic = () => {
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
   const metrics = useViewportMetrics();
@@ -227,7 +211,9 @@ export const PsychologistsLogic = () => {
     return Boolean(getToken());
   });
   const currentUser = useAppSelector((state) => state.user);
-  const canFavoritePsychologists = Boolean(hasAuthToken && currentUser?.id);
+  const canFavoritePsychologists = Boolean(
+    hasAuthToken && currentUser?.id && currentUser.role === "paciente",
+  );
 
   const { favoritePsychologist, unfavoritePsychologist } = usePatient({
     enableProfile: false,
@@ -382,10 +368,10 @@ export const PsychologistsLogic = () => {
   }, [featuredPsychologist, isSharing]);
 
   return (
-    <PrivateTemplate allowAnonymous showNavigation={false}>
-      <div className="relative isolate min-h-[100dvh] overflow-x-hidden bg-[#F8FAFC] text-white">
+    <PrivateTemplate allowAnonymous contentClassName="max-w-none p-0 sm:p-0">
+      <div className="relative isolate min-h-[100dvh] overflow-hidden bg-background text-white">
         <div
-          className="relative mx-auto flex h-[100dvh] w-full overflow-hidden"
+          className="relative mx-auto flex h-[100dvh] w-full overflow-hidden bg-black"
           style={{
             maxWidth: "430px",
           }}
@@ -432,7 +418,7 @@ export const PsychologistsLogic = () => {
                   className="absolute z-30"
                   onSubmit={handleSearchSubmit}
                   style={{
-                    top: "calc(env(safe-area-inset-top) + 44px)",
+                    top: `calc(env(safe-area-inset-top) + ${metrics.searchTop}px)`,
                     left: `${metrics.horizontalPadding}px`,
                     right: `${metrics.searchRightGap}px`,
                     height: "48px",
@@ -445,7 +431,7 @@ export const PsychologistsLogic = () => {
                       className="h-full w-full bg-transparent pr-3 pl-7 text-[15px] text-white outline-none placeholder:text-white/72"
                       maxLength={120}
                       defaultValue={filterValues.search}
-                      placeholder="Buscar Psicólogos..."
+                      placeholder="Buscar psicólogos..."
                       name="search"
                       type="text"
                     />
@@ -457,7 +443,7 @@ export const PsychologistsLogic = () => {
                   className="absolute z-30 grid items-center justify-center rounded-full border border-[rgba(255,255,255,0.35)] bg-white/35 text-white shadow-[0_5px_24px_rgba(15,23,42,0.2)] backdrop-blur-md hover:bg-white/45"
                   onClick={handleFiltersOpen}
                   style={{
-                    top: "calc(env(safe-area-inset-top) + 44px)",
+                    top: `calc(env(safe-area-inset-top) + ${metrics.searchTop}px)`,
                     right: `${metrics.horizontalPadding}px`,
                     width: `${metrics.actionButtonSize}px`,
                     height: `${metrics.actionButtonSize}px`,
@@ -468,13 +454,12 @@ export const PsychologistsLogic = () => {
                 </button>
 
                 <div
-                  className="absolute inset-x-0 overflow-hidden rounded-[2px]"
+                  className="absolute inset-0 overflow-hidden"
                   style={{
                     top: 0,
-                    bottom: `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom))`,
                   }}
                 >
-                  <div className="relative h-full w-full overflow-hidden rounded-[14px]">
+                  <div className="relative h-full w-full overflow-hidden">
                     {featuredPsychologist.video_cover_url || featuredPsychologist.avatar ? (
                       <Image
                         alt={featuredPsychologist.name}
@@ -501,7 +486,7 @@ export const PsychologistsLogic = () => {
                       className="pointer-events-none absolute inset-0"
                       style={{
                         background:
-                          "linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.22) 22%, rgba(0,0,0,0.02) 44%, rgba(0,0,0,0) 58%)",
+                          "linear-gradient(to top, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.96) 23%, rgba(0,0,0,0.74) 38%, rgba(0,0,0,0.18) 58%, rgba(0,0,0,0) 74%)",
                       }}
                     />
 
@@ -615,7 +600,7 @@ export const PsychologistsLogic = () => {
                           href={`/app/psychologist/${featuredPsychologist.id}`}
                         >
                           <div
-                            className="overflow-hidden rounded-full bg-white p-0.5 text-[#0f172a]"
+                            className="relative overflow-hidden rounded-full bg-white p-0.5 text-[#0f172a]"
                             style={{
                               width: `${metrics.actionButtonSize}px`,
                               height: `${metrics.actionButtonSize}px`,
@@ -647,8 +632,8 @@ export const PsychologistsLogic = () => {
                       className="pointer-events-none absolute inset-x-0 text-[#ffffff]"
                       style={{
                         left: `${metrics.horizontalPadding}px`,
-                        right: "96px",
-                        bottom: `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom) + 24px)`,
+                        right: `${metrics.horizontalPadding + metrics.actionButtonSize + 24}px`,
+                        bottom: `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom) + 28px)`,
                       }}
                     >
                       {featuredPsychologist.available_today ? (
@@ -663,7 +648,13 @@ export const PsychologistsLogic = () => {
                           className="flex min-w-0 flex-wrap items-center gap-1.5 leading-tight font-bold text-white"
                           style={{ fontSize: `${metrics.titleSize}px` }}
                         >
-                          <span className="min-w-0">{featuredPsychologist.name}</span>
+                          <span className="min-w-0">
+                            {formatDisplayName({
+                              gender: featuredPsychologist.gender,
+                              name: featuredPsychologist.name,
+                              verified: featuredPsychologist.verified,
+                            })}
+                          </span>
                           {featuredPsychologist.verified ? (
                             <VerifiedBadgeIcon
                               aria-hidden="true"
@@ -672,16 +663,15 @@ export const PsychologistsLogic = () => {
                           ) : null}
                         </p>
 
-                        <p className="text-[16px] font-bold leading-tight text-white">
-                          {formatProfileTitle(
-                            featuredPsychologist.gender,
-                            featuredPsychologist.formation_years,
-                          )}
-                        </p>
-
-                        <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                          <span className="inline-flex items-center rounded-full border border-white/30 bg-white/22 px-2.5 py-0.5 text-xs font-semibold text-white">
-                            <Star className="h-3.5 w-3.5 text-[#FACC15]" aria-hidden="true" />
+                        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[18px] font-bold leading-tight text-white">
+                          <span>
+                            {formatProfileTitle(
+                              featuredPsychologist.gender,
+                              featuredPsychologist.formation_years,
+                            )}
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-[#FACC15]">
+                            <Star className="h-4 w-4 fill-[#FACC15]" aria-hidden="true" />
                             {formatRating(
                               featuredPsychologist.rating_avg,
                               featuredPsychologist.rating_count,
@@ -773,41 +763,6 @@ export const PsychologistsLogic = () => {
             ) : null}
           </div>
         </div>
-
-        <nav
-          aria-label="Navegação principal"
-          className="fixed inset-x-0 bottom-0 z-40 border-t border-[#e2e8f0] bg-white"
-          style={{
-            height: `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom))`,
-          }}
-        >
-          <div
-            className="mx-auto grid h-16 max-w-[430px] grid-cols-5"
-            style={{
-              paddingBottom: "env(safe-area-inset-bottom)",
-            }}
-          >
-            {navigationItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname ? isActivePath(pathname, item.href) : false;
-
-              return (
-                <Link
-                  key={item.href}
-                  aria-current={isActive ? "page" : undefined}
-                  className={cn(
-                    "grid min-h-16 place-items-center gap-0.5 text-[11px] font-semibold transition",
-                    isActive ? "text-[#308ce8]" : "text-[#94a3b8] hover:text-[#0f172a]",
-                  )}
-                  href={item.href}
-                >
-                  <Icon className="h-4 w-4" aria-hidden="true" />
-                  <span className="leading-none">{item.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-        </nav>
       </div>
     </PrivateTemplate>
   );

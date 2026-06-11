@@ -309,3 +309,14 @@ Regras anti-recriação específicas:
 ## Notas para executor
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
+
+## Execucao complementar: layout imersivo alinhado ao PDF e navbar compartilhada (2026-06-11)
+
+- Pedido do usuario: aplicar o layout visual do PDF anexado `Nova tela psicologos.pdf` na rota `/app/psychologists`, preservando a arquitetura e a navbar padrao do projeto.
+- Antes de alterar o codigo, foram mapeados os reaproveitamentos: `PrivateTemplate`/navbar compartilhada, `PageShell`, `useDirectoryPsychologists`, `usePatient`, filtros via `usePsychologistsFilterForm`, `LoadingState`, `InlineAlert`, `EmptyState`, `VerifiedBadgeIcon`, `WhatsAppIcon` e `next/image`.
+- A navbar customizada local da tela foi removida; a rota passou a reutilizar exclusivamente a navegacao do `PrivateTemplate`, mantendo item ativo, altura, espacamento, icones e comportamento globais.
+- O `PrivateTemplate` recebeu a prop opcional `contentClassName` para permitir tela imersiva sem padding do `PageShell` nesta rota, sem alterar o default das demais telas.
+- O layout foi ajustado para foto em tela cheia, busca flutuante, botao de filtros, overlay inferior mais forte, coluna lateral de acoes e informacoes do psicologo sobre a imagem, sem criar mocks nem dados fake.
+- Referencia visual: PDF anexado pelo usuario (`C:\Users\tulio\Downloads\Nova tela psicólogos.pdf`), renderizado localmente apenas para inspecao visual; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao.
+- ADR atualizado: `adrs/0055-refatoracao-listagem-psicologos-imersiva.md`.
+- Validacoes executadas: ver registro do commit desta execucao.

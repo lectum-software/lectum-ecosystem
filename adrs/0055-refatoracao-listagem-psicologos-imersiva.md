@@ -6,42 +6,48 @@ Accepted
 
 ## Task relacionada
 
-Refatoração da tela `/app/psychologists` baseada em referência visual (modo imersivo), conforme solicitação do usuário.
+Refatoracao da tela `/app/psychologists` baseada em referencia visual (modo imersivo), conforme solicitacoes do usuario.
 
 ## Contexto
 
-A listagem anterior de psicólogos usava estrutura tradicional de paginação e cards múltiplos, com excesso de rolagem e comportamento não aderente ao protótipo imersivo. A nova entrega exige:
+A listagem anterior de psicologos usava estrutura tradicional de paginacao e cards multiplos, com excesso de rolagem e comportamento nao aderente ao prototipo imersivo. A nova entrega exige:
 
 - card visual em destaque ocupando quase toda a área útil;
 - barra de busca e controles sobrepostos na imagem;
 - coluna de ações laterais direita;
 - overlay de texto com nome, cargo, nota e bio;
-- navegação inferior fixa e sem scroll horizontal;
+- navegacao inferior fixa e sem scroll horizontal;
 - responsividade entre 320px e 430px usando constantes de layout.
+
+Em 2026-06-11, o usuario anexou o PDF `Nova tela psicologos.pdf` como referencia visual principal e explicitou que a tela nao deve criar uma navbar nova. A navbar precisa ser exatamente a mesma usada nas demais telas via `PrivateTemplate`.
 
 ## Decisão
 
-Mantive a rota `/app/psychologists` em único card imersivo, reutilizando dados/filtros já existentes e o fluxo de favoritos/compartilhamento, com as seguintes decisões técnicas:
+Manter a rota `/app/psychologists` em unico card imersivo, reutilizando dados/filtros ja existentes e o fluxo de favoritos/compartilhamento, com as seguintes decisoes tecnicas:
 
-- remover visualmente o comportamento de listagem vertical e renderizar apenas o primeiro psicólogo em destaque;
+- remover visualmente o comportamento de listagem vertical e renderizar apenas o primeiro psicologo em destaque;
 - introduzir métricas de layout responsivo (`isSmall`, `horizontalPadding`, `actionButtonSize`, `actionGap`, `titleSize`, `bioSize`, `navBarHeight`, `searchRightGap`);
-- implementar estrutura de sobreposição com `position: absolute` para busca, filtros, botão play, ações laterais e bloco de informação;
-- preservar `PrivateTemplate` com navegação inferior customizada fixa para evitar sobreposição indevida;
+- implementar estrutura de sobreposicao com `position: absolute` para busca, filtros, botao play, acoes laterais e bloco de informacao;
+- remover a navegacao customizada da tela e reutilizar exclusivamente a navbar padrao renderizada pelo `PrivateTemplate`;
+- adicionar `contentClassName` opcional ao `PrivateTemplate` para permitir uma tela imersiva sem padding do `PageShell`, sem alterar a navbar nem o comportamento padrao das demais telas;
+- manter a lista da navbar com `w-full` dentro do proprio `PrivateTemplate`, garantindo que os cinco itens continuem distribuidos no viewport mobile quando a tela usa conteudo sem padding;
 - manter acessibilidade básica via rótulos, labels e atalhos de fechamento do modal (Escape).
 
 ## Consequências
 
-- Melhor aderência visual à referência e redução do “ruído” de layout na descoberta de psicólogo.
-- Melhor aproveitamento de tela (padrão 9:16 mobile), com redução de complexidade do scroll vertical.
-- Há dependência de dados reais (foto/video + metadados), então o estado vazio/filtro continua coberto pela lógica já existente.
-- Decisão de manter somente o primeiro item em destaque pode impactar usabilidade de múltiplos profissionais; a paginação foi mantida no serviço, mas não apresentada no layout novo.
+- Melhor aderencia visual a referencia e reducao do ruido de layout na descoberta de psicologo.
+- Melhor aproveitamento de tela (padrao 9:16 mobile), com reducao de complexidade do scroll vertical.
+- A navbar volta a seguir exatamente o componente compartilhado usado em Perfil, Perfil Profissional, Setup do Perfil e demais telas privadas.
+- Ha dependencia de dados reais (foto/video + metadados), entao o estado vazio/filtro continua coberto pela logica ja existente.
+- Decisao de manter somente o primeiro item em destaque pode impactar usabilidade de multiplos profissionais; a paginacao foi mantida no servico, mas nao apresentada no layout novo.
 
 ## Validação
 
 - `pnpm check`
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
+- browser local em viewport mobile, usando o PDF anexado como comparacao visual.
 
 ## Pendências
 
-- Validar com design QA visual no dispositivo se espaçamentos laterais e tamanhos de botões atendem exatamente ao PDF de referência em todos os intervalos de largura.
+- Validar com design QA visual no dispositivo fisico se espacamentos laterais e tamanhos de botoes atendem exatamente ao PDF de referencia em todos os intervalos de largura.
