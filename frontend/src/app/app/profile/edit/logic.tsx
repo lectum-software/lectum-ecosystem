@@ -136,95 +136,104 @@ export const ProfileEditLogic = () => {
         ) : null}
 
         {!profile.isLoading && !profile.isPending ? (
-          <form
-            className="grid gap-4"
-            data-testid="form"
-            id="patient-profile-form"
-            noValidate
-            onSubmit={onSubmit}
-          >
-            <section className="grid justify-items-center gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-8 text-center shadow-[var(--lectum-shadow-soft)]">
-              <div className="relative grid h-32 w-32 place-items-center overflow-hidden rounded-full bg-surface-muted text-3xl font-extrabold text-primary ring-4 ring-primary-soft">
-                {avatarSrc ? (
-                  <Image
-                    alt={storedUser?.name || "Foto do paciente"}
-                    className="h-full w-full object-cover"
-                    height={128}
-                    src={avatarSrc}
-                    unoptimized={avatarIsPublicMedia}
-                    width={128}
-                  />
-                ) : (
-                  getInitials(storedUser?.name, storedUser?.email)
-                )}
-                <span className="absolute bottom-1 right-1 grid h-9 w-9 place-items-center rounded-full bg-primary text-white shadow-[var(--lectum-shadow-soft)]">
-                  <Camera className="h-4 w-4" aria-hidden="true" />
-                </span>
-              </div>
-              <p className="max-w-xs text-sm leading-6 text-muted">
-                Avatar por upload fica pendente até o bucket Cloudflare R2 público estar
-                configurado. Por enquanto, a Lectum mantém sua foto de login ou suas iniciais.
-              </p>
-            </section>
-
-            <section className="grid gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
-              <div className="flex items-center gap-2">
-                <UserRound className="h-5 w-5 text-primary" aria-hidden="true" />
-                <h2 className="text-lg font-extrabold text-foreground">Informações Básicas</h2>
-              </div>
-              <div className="grid gap-0.5">
-                {formProps.fields.map((field) => {
-                  const Component = components[field.field];
-
-                  if (!Component) return null;
-
-                  return (
-                    <Component
-                      control={hook.control}
-                      key={`patient-profile-${String(field.name)}`}
-                      {...field}
+          <>
+            <form
+              className="grid gap-4"
+              data-testid="form"
+              id="patient-profile-form"
+              noValidate
+              onSubmit={onSubmit}
+            >
+              <section className="grid justify-items-center gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-8 text-center shadow-[var(--lectum-shadow-soft)]">
+                <div className="relative grid h-32 w-32 place-items-center overflow-hidden rounded-full bg-surface-muted text-3xl font-extrabold text-primary ring-4 ring-primary-soft">
+                  {avatarSrc ? (
+                    <Image
+                      alt={storedUser?.name || "Foto do paciente"}
+                      className="h-full w-full object-cover"
+                      height={128}
+                      src={avatarSrc}
+                      unoptimized={avatarIsPublicMedia}
+                      width={128}
                     />
-                  );
-                })}
+                  ) : (
+                    getInitials(storedUser?.name, storedUser?.email)
+                  )}
+                  <span className="absolute bottom-1 right-1 grid h-9 w-9 place-items-center rounded-full bg-primary text-white shadow-[var(--lectum-shadow-soft)]">
+                    <Camera className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                </div>
+                <p className="max-w-xs text-sm leading-6 text-muted">
+                  Avatar por upload fica pendente até o bucket Cloudflare R2 público estar
+                  configurado. Por enquanto, a Lectum mantém sua foto de login ou suas iniciais.
+                </p>
+              </section>
+              <section className="grid gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
+                <div className="flex items-center gap-2">
+                  <UserRound className="h-5 w-5 text-primary" aria-hidden="true" />
+                  <h2 className="text-lg font-extrabold text-foreground">Informações Básicas</h2>
+                </div>
+                <div className="grid gap-0.5">
+                  {formProps.fields.map((field) => {
+                    const Component = components[field.field];
+
+                    if (!Component) return null;
+
+                    return (
+                      <Component
+                        control={hook.control}
+                        key={`patient-profile-${String(field.name)}`}
+                        {...field}
+                      />
+                    );
+                  })}
+                </div>
+              </section>
+              {visibleError ? (
+                <InlineAlert title="Não foi possível salvar" variant="error">
+                  {visibleError}
+                </InlineAlert>
+              ) : null}
+              <section className="grid justify-items-center gap-3 border-t border-border py-8 text-center">
+                <button
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-danger disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled
+                  type="button"
+                >
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  Excluir minha conta
+                </button>
+                <p className="max-w-xs text-xs leading-5 text-subtle">
+                  A exclusão de conta fica na task de configurações de conta para separar dados de
+                  perfil de autenticação sensível.
+                </p>
+              </section>
+            </form>
+
+            <footer
+              className="fixed inset-x-0 bottom-24 z-30 px-4 pb-2 sm:bottom-28"
+              style={{
+                paddingBottom: "calc(env(safe-area-inset-bottom) + 0.25rem)",
+              }}
+            >
+              <div className="mx-auto w-full max-w-[394px] sm:max-w-xl lg:max-w-2xl">
+                <div className="rounded-[var(--lectum-card-radius)] bg-background/90 p-1 backdrop-blur">
+                  <Button
+                    className="h-14 w-full rounded-full"
+                    disabled={isSaving || !isPatient}
+                    form="patient-profile-form"
+                    type="submit"
+                  >
+                    {isSaving ? (
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    ) : (
+                      <Save className="h-4 w-4" aria-hidden="true" />
+                    )}
+                    Salvar Alterações
+                  </Button>
+                </div>
               </div>
-            </section>
-
-            {visibleError ? (
-              <InlineAlert title="Não foi possível salvar" variant="error">
-                {visibleError}
-              </InlineAlert>
-            ) : null}
-
-            <section className="grid justify-items-center gap-3 border-t border-border py-8 text-center">
-              <button
-                className="inline-flex items-center gap-2 text-sm font-semibold text-danger disabled:cursor-not-allowed disabled:opacity-60"
-                disabled
-                type="button"
-              >
-                <Trash2 className="h-4 w-4" aria-hidden="true" />
-                Excluir minha conta
-              </button>
-              <p className="max-w-xs text-xs leading-5 text-subtle">
-                A exclusão de conta fica na task de configurações de conta para separar dados de
-                perfil de autenticação sensível.
-              </p>
-            </section>
-
-            <footer className="sticky bottom-24 z-10 -mx-1 rounded-[var(--lectum-card-radius)] bg-background/90 p-1 backdrop-blur sm:bottom-28">
-              <Button
-                className="h-14 w-full rounded-full"
-                disabled={isSaving || !isPatient}
-                type="submit"
-              >
-                {isSaving ? (
-                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                ) : (
-                  <Save className="h-4 w-4" aria-hidden="true" />
-                )}
-                Salvar Alterações
-              </Button>
             </footer>
-          </form>
+          </>
         ) : null}
       </section>
     </PrivateTemplate>
