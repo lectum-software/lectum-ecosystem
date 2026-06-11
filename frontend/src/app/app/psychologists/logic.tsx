@@ -228,7 +228,7 @@ export const PsychologistsLogic = () => {
   const [isVideoPlaybackFailed, setIsVideoPlaybackFailed] = useState(false);
   const [actionColumnTranslateY, setActionColumnTranslateY] = useState(0);
   const [favoriteOverrides, setFavoriteOverrides] = useState<Record<string, boolean>>({});
-  const [isBioSheetOpen, setIsBioSheetOpen] = useState(false);
+  const [isBioExpanded, setIsBioExpanded] = useState(false);
   const [isBioTruncated, setIsBioTruncated] = useState(false);
 
   const filterDialogRef = useRef<HTMLDivElement | null>(null);
@@ -256,6 +256,7 @@ export const PsychologistsLogic = () => {
   const shouldShowVideo = Boolean(backgroundVideoSrc) && !isVideoPlaybackFailed;
   const activeVideoSource = shouldShowVideo ? backgroundVideoSrc : null;
   const featuredBio = featuredPsychologist?.headline?.trim() || "";
+  const featuredPsychologistId = featuredPsychologist?.id;
   const featuredNameParts = splitNameForBadge(featuredPsychologist?.name ?? "");
   const isFavorited = featuredPsychologist
     ? (favoriteOverrides[featuredPsychologist.id] ?? Boolean(featuredPsychologist.favorited))
@@ -276,6 +277,9 @@ export const PsychologistsLogic = () => {
 
   const showInitialLoading = directory.isLoading && !response;
   const infoSectionBottom = `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom) + ${metrics.bioBottomOffset}px)`;
+  const profileHref = featuredPsychologist
+    ? `/app/psychologist/${featuredPsychologist.id}`
+    : "/app/psychologists";
 
   const syncActionColumnAlignment = useCallback(() => {
     const baselineText = featuredBio;
@@ -300,10 +304,18 @@ export const PsychologistsLogic = () => {
     const bioText = bioTextRef.current;
     if (!bioText) return;
 
-    const nextIsTruncated = bioText.scrollHeight > bioText.clientHeight + 1;
+    const computedStyles = window.getComputedStyle(bioText);
+    const computedLineHeight = Number.parseFloat(computedStyles.lineHeight);
+    const lineHeight = Number.isFinite(computedLineHeight)
+      ? computedLineHeight
+      : metrics.bioLineHeight;
+    const nextIsTruncated = bioText.scrollHeight > lineHeight * 2 + 1;
 
     setIsBioTruncated((current) => (current === nextIsTruncated ? current : nextIsTruncated));
-  }, [featuredBio]);
+    if (!nextIsTruncated) {
+      setIsBioExpanded(false);
+    }
+  }, [featuredBio, metrics.bioLineHeight]);
 
   const recalculateInfoOverlayLayout = useCallback(() => {
     syncActionColumnAlignment();
@@ -372,31 +384,42 @@ export const PsychologistsLogic = () => {
       });
   }, [isVideoMuted]);
 
-  const openBioSheet = useCallback(() => {
-    if (!isBioTruncated) return;
-
-    setIsBioSheetOpen(true);
-  }, [isBioTruncated]);
-
-  const closeBioSheet = useCallback(() => {
-    setIsBioSheetOpen(false);
-  }, []);
-
   useEffect(() => {
-    if (!isBioSheetOpen || typeof window === "undefined") return;
+    if (typeof window === "undefined") return;
+    if (!featuredPsychologistId) return;
 
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        closeBioSheet();
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
+    const frame = window.requestAnimationFrame(() => {
+      setIsBioExpanded(false);
+    });
 
     return () => {
-      window.removeEventListener("keydown", onKeyDown);
+      window.cancelAnimationFrame(frame);
     };
-  }, [closeBioSheet, isBioSheetOpen]);
+  }, [featuredPsychologistId]);
+
+  const stopInteractionPropagation = useCallback((event: { stopPropagation: () => void }) => {
+    event.stopPropagation();
+  }, []);
+
+  const navigateToProfile = useCallback(
+    (event: { stopPropagation: () => void }) => {
+      event.stopPropagation();
+      if (!featuredPsychologist) return;
+
+      router.push(profileHref);
+    },
+    [featuredPsychologist, profileHref, router],
+  );
+
+  const toggleExpandedBio = useCallback(
+    (event: { stopPropagation: () => void }) => {
+      event.stopPropagation();
+      if (!isBioTruncated) return;
+
+      setIsBioExpanded((current) => !current);
+    },
+    [isBioTruncated],
+  );
 
   const applyFilterValues = useCallback(
     (values: PsychologistsFilterForm) => {
@@ -663,7 +686,10 @@ export const PsychologistsLogic = () => {
                 <button
                   aria-label="Abrir filtros"
                   className="absolute z-30 grid items-center justify-center rounded-full border border-[rgba(255,255,255,0.35)] bg-white/35 text-white shadow-[0_5px_24px_rgba(15,23,42,0.2)] backdrop-blur-md hover:bg-white/45"
-                  onClick={handleFiltersOpen}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleFiltersOpen();
+                  }}
                   style={{
                     top: `calc(env(safe-area-inset-top) + ${metrics.searchTop}px)`,
                     right: `${metrics.actionRightPadding}px`,
@@ -771,7 +797,7 @@ export const PsychologistsLogic = () => {
                         gridTemplateColumns: `minmax(0, 1fr) ${metrics.actionRailWidth}px`,
                       }}
                     >
-                      <div className="min-w-0">
+                      <div className="pointer-events-auto min-w-0">
                         {featuredPsychologist.available_today ? (
                           <div className="inline-flex animate-pulse items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-[#22C55E]">
                             <span className="relative flex h-2 w-2">
@@ -783,8 +809,11 @@ export const PsychologistsLogic = () => {
                         ) : null}
 
                         <div className="mt-2 grid gap-1">
-                          <p
-                            className="min-w-0 max-w-full font-bold text-white"
+                          <button
+                            aria-label={`Ver perfil de ${featuredPsychologist.name}`}
+                            className="block w-full min-w-0 max-w-full cursor-pointer text-left font-bold text-white"
+                            onClick={navigateToProfile}
+                            type="button"
                             style={{
                               fontSize: `${metrics.titleSize}px`,
                               lineHeight: 1.12,
@@ -808,7 +837,7 @@ export const PsychologistsLogic = () => {
                                 />
                               ) : null}
                             </span>
-                          </p>
+                          </button>
 
                           <div
                             className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 leading-tight font-medium text-white/75"
@@ -846,20 +875,22 @@ export const PsychologistsLogic = () => {
 
                         {featuredBio ? (
                           <button
+                            aria-expanded={isBioTruncated ? isBioExpanded : undefined}
                             className={cn(
                               "pointer-events-auto mt-2 w-full text-left text-white/95",
-                              "line-clamp-2",
+                              isBioExpanded ? "overflow-y-auto" : "line-clamp-2",
                               isBioTruncated
                                 ? "cursor-default md:cursor-pointer"
                                 : "cursor-default",
                             )}
-                            onClick={openBioSheet}
+                            onClick={toggleExpandedBio}
                             type="button"
                             ref={bioTextRef}
                             style={{
                               fontSize: `${metrics.bioSize}px`,
                               lineHeight: `${metrics.bioLineHeight}px`,
                               maxWidth: "100%",
+                              maxHeight: isBioExpanded ? "min(34dvh, 220px)" : undefined,
                               overflowWrap: "break-word",
                               wordBreak: "normal",
                             }}
@@ -896,7 +927,10 @@ export const PsychologistsLogic = () => {
                               "relative z-50 grid cursor-pointer place-items-center rounded-full bg-white text-[#64748b] transition hover:bg-[#f8fafc] active:scale-95",
                               isFavorited ? "text-[#ef4444]" : "text-[#64748b] hover:bg-[#f8fafc]",
                             )}
-                            onClick={toggleFavorite}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              toggleFavorite();
+                            }}
                             style={{
                               width: `${metrics.actionButtonSize}px`,
                               height: `${metrics.actionButtonSize}px`,
@@ -929,7 +963,10 @@ export const PsychologistsLogic = () => {
                           <button
                             aria-label={`Compartilhar perfil de ${featuredPsychologist.name}`}
                             className="grid place-items-center rounded-full bg-white text-[#64748b] transition hover:bg-[#e2e8f0]"
-                            onClick={shareCurrent}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void shareCurrent();
+                            }}
                             type="button"
                             style={{
                               width: `${metrics.actionButtonSize}px`,
@@ -962,6 +999,7 @@ export const PsychologistsLogic = () => {
                               aria-label={`Chamar ${featuredPsychologist.name} no WhatsApp`}
                               className="grid place-items-center rounded-full bg-[#22C55E] text-white transition hover:bg-[#16A34A]"
                               href={featuredPsychologist.whatsapp_url}
+                              onClick={stopInteractionPropagation}
                               rel="noreferrer"
                               target="_blank"
                               style={{
@@ -1026,7 +1064,8 @@ export const PsychologistsLogic = () => {
                           <Link
                             aria-label={`Ver perfil de ${featuredPsychologist.name}`}
                             className="grid place-items-center rounded-full bg-transparent"
-                            href={`/app/psychologist/${featuredPsychologist.id}`}
+                            href={profileHref}
+                            onClick={stopInteractionPropagation}
                           >
                             <div
                               className="relative overflow-hidden rounded-full bg-white p-0.5 text-[#0f172a]"
@@ -1123,42 +1162,6 @@ export const PsychologistsLogic = () => {
                           </button>
                         </div>
                       </form>
-                    </div>
-                  </div>
-                ) : null}
-
-                {isBioSheetOpen ? (
-                  <div
-                    aria-labelledby="bio-modal-title"
-                    aria-modal="true"
-                    className="fixed inset-0 z-[60] grid place-items-end bg-foreground/55 p-4 backdrop-blur-sm"
-                    onMouseDown={closeBioSheet}
-                    role="dialog"
-                  >
-                    <div
-                      className="grid w-full max-w-[430px] gap-4 rounded-[20px] border border-[#e2e8f0] bg-surface p-4 shadow-[0_-24px_70px_rgba(15,23,42,0.26)]"
-                      onMouseDown={(event) => event.stopPropagation()}
-                      role="document"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <h2
-                          className="text-base font-extrabold text-foreground sm:text-lg"
-                          id="bio-modal-title"
-                        >
-                          Bio
-                        </h2>
-                        <button
-                          aria-label="Fechar bio"
-                          className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-foreground"
-                          onClick={closeBioSheet}
-                          type="button"
-                        >
-                          <X className="h-4 w-4" aria-hidden="true" />
-                        </button>
-                      </div>
-                      <p className="max-h-[60vh] overflow-y-auto text-sm leading-[1.45] text-[#334155]">
-                        {featuredBio}
-                      </p>
                     </div>
                   </div>
                 ) : null}

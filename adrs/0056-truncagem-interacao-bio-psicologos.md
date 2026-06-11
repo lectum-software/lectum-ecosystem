@@ -1,4 +1,4 @@
-# ADR-0056: Exibir bio truncada com ação de detalhamento no modal na tela de Psicólogos
+# ADR-0056: Bio truncada e expansão inline na tela de Psicólogos
 
 ## Status
 
@@ -10,39 +10,39 @@ Ajustes de UX na tela `/app/psychologists` (continuidade da refatoração imersi
 
 ## Contexto
 
-A nova tela de descoberta de psicólogos apresenta texto de apresentação (campo `headline`) abaixo do nome e título.
-O comportamento atual exibia esse texto sem limite de duas linhas fixo e sem interação de expansão,
-o que dificulta comparar rapidamente perfis com textos longos e conflita com a orientação do layout mobile.
+A tela de descoberta de psicólogos usa vídeo/foto em tela cheia e o bloco inferior ancorado acima da navbar.
+O usuário precisa pausar/reproduzir o vídeo apenas ao tocar na área livre da mídia, sem que interações no selo,
+nome, subtítulo, bio, botões laterais ou navbar disparem o player.
 
-Também havia risco de ambiguidade de interação com o nome do psicólogo, que já possui outras
-regras de espaçamento e não deveria ser afetado por truncamento nesse fluxo.
+A bio também precisa preservar o estado compacto de 2 linhas, mas permitir leitura completa sem modal, mantendo a
+base do bloco acima da navbar e sem sobrepor a coluna lateral de ações.
 
 ## Decisão
 
 Definimos para a tela `/app/psychologists`:
 
-- limitar o texto da bio a **2 linhas no estado compacto**;
-- usar truncamento visual com `ellipsis` apenas no bloco de bio;
-- disponibilizar abertura de **modal/bottom sheet simples** com título `"Bio"` e texto completo quando a bio estiver truncada;
-- manter o clique limitado à área de texto da bio;
-- manter cursor pointer apenas em telas desktop (via breakpoint Tailwind) quando há truncamento.
+- limitar a bio a **2 linhas no estado recolhido**, usando `ellipsis` apenas nesse texto;
+- expandir/recolher a bio **inline** ao clicar/tocar no próprio texto quando houver truncamento;
+- manter o bloco inferior ancorado com `bottom` fixo acima da navbar, deixando o crescimento acontecer para cima;
+- aplicar `max-height` e rolagem interna na bio expandida para evitar invasão da navbar ou da coluna lateral;
+- tornar o nome do psicólogo clicável, navegando para a rota de perfil já usada no botão lateral;
+- separar zonas de interação para que mídia livre controle o vídeo e elementos de UI interceptem o toque/clique.
 
 ## Consequências
 
-- Melhora de legibilidade no card imersivo, com previsibilidade de altura do overlay.
-- Interação explícita para casos em que a bio ultrapassa 2 linhas, sem impactar
-  a navbar, botões laterais ou demais ações de card.
-- Regras de não-truncamento do nome permanecem preservadas para esse fluxo.
+- O vídeo não pausa quando o usuário interage com nome, bio, selos, subtítulo, botões laterais ou navegação.
+- A leitura completa da bio não depende de modal/bottom sheet e preserva a experiência imersiva.
+- O nome não recebe `ellipsis`; apenas a bio usa truncamento visual no estado recolhido.
+- Biografias muito longas continuam acessíveis por rolagem interna da bio expandida, sem empurrar a navbar.
 
 ## Validação
 
-- `pnpm check`
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
-- `pnpm --dir frontend check` seguido de validação manual da interação na tela `/app/psychologists`
-  (desktop e mobile), confirmando abertura e fechamento do modal por clique e `Escape`.
+- `pnpm check`
+- Validação local da rota `/app/psychologists` em servidor Next, garantindo resposta HTTP e preservação da tela.
 
 ## Pendências
 
-- Alinhar com produto se futuras biografias maiores deverão mostrar contagem de caracteres ou CTA textual
-  (“Ver mais”) além do comportamento por clique atual.
+- Validar futuramente em dispositivo real se a área de mídia livre deve excluir também espaços vazios do bloco inferior
+  ou se o comportamento atual de bloqueio por camada textual é suficiente para a UX final.

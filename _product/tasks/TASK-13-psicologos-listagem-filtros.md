@@ -387,3 +387,15 @@ ext/image`.
   - `pnpm --dir frontend check`
   - `pnpm --dir frontend build`
   - `pnpm check`
+
+## Execucao complementar: zonas de interacao e bio inline (2026-06-11)
+
+- Pedido do usuario: ajustar zonas de interacao da tela de Psicologos para que apenas a area livre da midia pause/reproduza o video, enquanto selo, nome, subtitulo, bio, botoes laterais e navbar nao disparem o player.
+- O nome do psicologo passou a ser clicavel em toda a area do texto e navega para a mesma rota de perfil usada no botao lateral.
+- A bio permanece limitada a 2 linhas no estado recolhido, com ellipsis apenas nela; quando truncada, o toque/clique alterna expansao inline, sem modal ou bottom sheet.
+- O bloco inferior permanece ancorado acima da navbar; a expansao cresce para cima e usa limite de altura/rolagem interna para evitar sobreposicao da navbar ou da coluna lateral.
+- Botoes laterais mantem suas acoes especificas e interrompem a propagacao do clique antes de executar favorito, compartilhar, WhatsApp ou perfil.
+- Nao houve alteracao de backend, Prisma, migrations, packages, mocks ou dados do psicologo.
+- Referencia visual/proto reconsultada: tela Psicologos no `PROTO-INVENTORY.md` e imagem local correspondente em `_product/proto`; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas nesta etapa: ver registro do commit desta execucao.
