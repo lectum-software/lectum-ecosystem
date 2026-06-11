@@ -94,83 +94,168 @@ type SpecialtyCategory = {
 
 const SPECIALTY_CATEGORIES: readonly SpecialtyCategory[] = [
   {
-    title: "Para jovens adultos",
+    title: "Ansiedade e Transtornos Relacionados",
     options: [
       { name: "Ansiedade", slugs: ["ansiedade"] },
-      { name: "TDAH", slugs: ["tdah"] },
-      { name: "Relacionamentos", slugs: ["relacionamentos"] },
-      { name: "Autoestima", slugs: ["autoestima"] },
-      { name: "Burnout", slugs: ["burnout"] },
-      { name: "Desenvolvimento Pessoal", slugs: ["desenvolvimento-pessoal"] },
-      { name: "Inteligência Emocional", slugs: ["inteligencia-emocional"] },
-      { name: "Sexualidade", slugs: ["sexualidade"] },
-      { name: "Carreira e Propósito", slugs: ["carreira-e-proposito"] },
-      { name: "Dependência Emocional", slugs: ["dependencia-emocional"] },
-    ],
-  },
-  {
-    title: "Para pais e famílias",
-    options: [
-      { name: "Psicologia Infantil", slugs: ["psicologia-infantil"] },
-      { name: "Orientação Parental", slugs: ["orientacao-parental"] },
-      { name: "Adolescência", slugs: ["adolescencia"] },
-      { name: "Autismo (TEA)", slugs: ["autismo-tea"] },
-      { name: "TDAH Infantil", slugs: ["tdah-infantil"] },
-      { name: "Dificuldades Escolares", slugs: ["dificuldades-escolares"] },
-      { name: "Separação dos Pais", slugs: ["separacao-dos-pais"] },
-      { name: "Comportamento Infantil", slugs: ["comportamento-infantil"] },
-    ],
-  },
-  {
-    title: "Para nichos LGBTQIA+",
-    options: [
-      { name: "Sexualidade", slugs: ["sexualidade"] },
-      { name: "Identidade de Gênero", slugs: ["identidade-genero"] },
-      { name: "Relacionamentos LGBTQIA+", slugs: ["relacionamentos-lgbtqia"] },
+      { name: "Ansiedade Generalizada (TAG)", slugs: ["ansiedade-generalizada-tag"] },
+      { name: "Síndrome do Pânico", slugs: ["sindrome-do-panico"] },
+      { name: "Fobias", slugs: ["fobias"] },
+      { name: "TOC", slugs: ["toc"] },
+      { name: "Estresse", slugs: ["estresse"] },
       {
-        name: "Processo de Transição de Gênero",
-        slugs: ["processo-de-transicao-de-genero", "transicao-genero"],
+        name: "TEPT (Transtorno de Estresse Pós-Traumático)",
+        slugs: ["tept-transtorno-de-estresse-pos-traumatico"],
       },
-      { name: "Aceitação Familiar", slugs: ["aceitacao-familiar"] },
-      { name: "Preconceito e Discriminação", slugs: ["preconceito-discriminacao"] },
+    ],
+  },
+  {
+    title: "Humor e Saúde Mental",
+    options: [
+      { name: "Depressão", slugs: ["depressao"] },
+      { name: "Transtorno Bipolar", slugs: ["transtorno-bipolar"] },
+      { name: "Burnout", slugs: ["burnout"] },
+      { name: "Tristeza Persistente", slugs: ["tristeza-persistente"] },
+      { name: "Esquizofrenia", slugs: ["esquizofrenia"] },
+      { name: "Transtornos de Humor", slugs: ["transtornos-de-humor"] },
     ],
   },
   {
     title: "Relacionamentos",
     options: [
       { name: "Relacionamentos", slugs: ["relacionamentos"] },
-      { name: "Terapia de Casal", slugs: ["terapia-de-casal"] },
-      { name: "Dependência Emocional", slugs: ["dependencia-emocional"] },
-      { name: "Divórcio", slugs: ["divorcio"] },
+      { name: "Relacionamento Abusivo", slugs: ["relacionamento-abusivo"] },
+      { name: "Conflitos Amorosos", slugs: ["conflitos-amorosos"] },
       { name: "Conflitos Familiares", slugs: ["conflitos-familiares"] },
-      { name: "Desenvolvimento Pessoal", slugs: ["desenvolvimento-pessoal"] },
+      { name: "Casamento", slugs: ["casamento"] },
+      { name: "Separação e Divórcio", slugs: ["divorcio"] },
+      { name: "Dependência Emocional", slugs: ["dependencia-emocional"] },
+      { name: "Ciúmes", slugs: ["ciumes"] },
     ],
   },
   {
-    title: "Desenvolvimento Pessoal",
+    title: "Autoestima e Desenvolvimento Pessoal",
     options: [
       { name: "Autoestima", slugs: ["autoestima"] },
-      { name: "Inteligência Emocional", slugs: ["inteligencia-emocional"] },
       { name: "Autoconhecimento", slugs: ["autoconhecimento"] },
-      { name: "Carreira e Propósito", slugs: ["carreira-e-proposito"] },
+      { name: "Inteligência Emocional", slugs: ["inteligencia-emocional"] },
+      { name: "Desenvolvimento Pessoal", slugs: ["desenvolvimento-pessoal"] },
+      { name: "Projeto de Vida", slugs: ["projeto-de-vida"] },
+      { name: "Propósito", slugs: ["proposito"] },
+      { name: "Motivação", slugs: ["motivacao"] },
+      { name: "Autoconfiança", slugs: ["autoconfianca"] },
+    ],
+  },
+  {
+    title: "Trabalho e Carreira",
+    options: [
+      { name: "Carreira", slugs: ["carreira"] },
+      { name: "Transição de Carreira", slugs: ["transicao-de-carreira"] },
+      { name: "Produtividade", slugs: ["produtividade"] },
+      { name: "Liderança", slugs: ["lideranca"] },
+      { name: "Ambiente Corporativo", slugs: ["ambiente-corporativo"] },
     ],
   },
   {
     title: "Neurodivergências",
     options: [
       { name: "TDAH", slugs: ["tdah"] },
-      { name: "Autismo (TEA)", slugs: ["autismo-tea"] },
+      { name: "TEA (Autismo)", slugs: ["autismo-tea"] },
       { name: "Altas Habilidades", slugs: ["altas-habilidades"] },
+      { name: "Dislexia", slugs: ["dislexia"] },
+      { name: "Dificuldades de Aprendizagem", slugs: ["dificuldades-de-aprendizagem"] },
     ],
   },
   {
-    title: "Ciclos da Vida",
+    title: "Infância e Adolescência",
+    options: [
+      { name: "Psicologia Infantil", slugs: ["psicologia-infantil"] },
+      { name: "Adolescência", slugs: ["adolescencia"] },
+      { name: "Desenvolvimento Infantil", slugs: ["desenvolvimento-infantil"] },
+      { name: "Orientação Parental", slugs: ["orientacao-parental"] },
+      { name: "Bullying", slugs: ["bullying"] },
+      { name: "Dificuldades Escolares", slugs: ["dificuldades-escolares"] },
+    ],
+  },
+  {
+    title: "Sexualidade e Diversidade",
+    options: [
+      { name: "Sexualidade", slugs: ["sexualidade"] },
+      { name: "Identidade de Gênero", slugs: ["identidade-genero"] },
+      { name: "LGBTQIA+", slugs: ["lgbtqia"] },
+      { name: "Sexologia", slugs: ["sexologia"] },
+      { name: "Disfunções Sexuais", slugs: ["disfuncoes-sexuais"] },
+    ],
+  },
+  {
+    title: "Alimentação e Corpo",
+    options: [
+      { name: "Transtornos Alimentares", slugs: ["transtornos-alimentares"] },
+      { name: "Anorexia", slugs: ["anorexia"] },
+      { name: "Bulimia", slugs: ["bulimia"] },
+      { name: "Compulsão Alimentar", slugs: ["compulsao-alimentar"] },
+      { name: "Obesidade", slugs: ["obesidade"] },
+      { name: "Imagem Corporal", slugs: ["imagem-corporal"] },
+    ],
+  },
+  {
+    title: "Dependências",
+    options: [
+      { name: "Dependência Química", slugs: ["dependencia-quimica"] },
+      { name: "Dependência Tecnológica", slugs: ["dependencia-tecnologica"] },
+      { name: "Jogos e Games", slugs: ["jogos-e-games"] },
+      { name: "Compras Compulsivas", slugs: ["compras-compulsivas"] },
+      { name: "Vícios", slugs: ["vicios"] },
+    ],
+  },
+  {
+    title: "Luto e Transições da Vida",
     options: [
       { name: "Luto", slugs: ["luto"] },
+      { name: "Mudanças de Vida", slugs: ["mudancas-de-vida"] },
+      { name: "Menopausa", slugs: ["menopausa"] },
+      { name: "Aposentadoria", slugs: ["aposentadoria"] },
+    ],
+  },
+  {
+    title: "Saúde da Mulher e Maternidade",
+    options: [
+      { name: "Saúde da Mulher", slugs: ["saude-da-mulher"] },
+      { name: "Gestação", slugs: ["gestacao"] },
+      { name: "Puerpério", slugs: ["puerperio"] },
       { name: "Maternidade", slugs: ["maternidade"] },
-      { name: "Paternidade", slugs: ["paternidade"] },
-      { name: "Adolescência", slugs: ["adolescencia"] },
-      { name: "Envelhecimento", slugs: ["envelhecimento"] },
+      { name: "Saúde Mental Materna", slugs: ["saude-mental-materna"] },
+      { name: "Pré-natal Psicológico", slugs: ["pre-natal-psicologico"] },
+    ],
+  },
+  {
+    title: "Saúde e Doenças",
+    options: [
+      { name: "Doenças Crônicas", slugs: ["doencas-cronicas"] },
+      { name: "Câncer", slugs: ["cancer"] },
+      { name: "Dor Crônica", slugs: ["dor-cronica"] },
+      { name: "Cuidados Paliativos", slugs: ["cuidados-paliativos"] },
+      { name: "Psicologia Hospitalar", slugs: ["psicologia-hospitalar"] },
+    ],
+  },
+  {
+    title: "Violência e Direitos Humanos",
+    options: [
+      { name: "Violência Doméstica", slugs: ["violencia-domestica"] },
+      { name: "Violência de Gênero", slugs: ["violencia-de-genero"] },
+      { name: "Violência Sexual", slugs: ["violencia-sexual"] },
+      { name: "Racismo", slugs: ["racismo"] },
+      { name: "Discriminação", slugs: ["discriminacao"] },
+      { name: "Preconceito", slugs: ["preconceito"] },
+    ],
+  },
+  {
+    title: "Temas Gerais",
+    options: [
+      { name: "Comunicação", slugs: ["comunicacao"] },
+      { name: "Emoções", slugs: ["emocoes"] },
+      { name: "Sentimentos", slugs: ["sentimentos"] },
+      { name: "Comportamento", slugs: ["comportamento"] },
+      { name: "Saúde Mental", slugs: ["saude-mental"] },
     ],
   },
 ] as const;
@@ -840,18 +925,6 @@ export const ProfessionalProfileSetupLogic = () => {
         .map((option) => resolveSpecialtyCatalogItem(option, bySlug, byName))
         .filter(Boolean) as FreeProfileCatalogItem[],
     }));
-    const categorizedIds = new Set(grouped.flatMap((group) => group.items.map((item) => item.id)));
-    const remaining = specialties
-      .filter((item) => !categorizedIds.has(item.id))
-      .sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }));
-
-    if (remaining.length > 0) {
-      grouped.push({
-        title: "Outras",
-        items: remaining,
-      });
-    }
-
     return grouped.filter((group) => group.items.length > 0);
   }, [profile.data?.catalogs.specialties]);
   const orderedServiceOptions = useMemo(() => {
