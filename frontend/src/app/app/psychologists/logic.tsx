@@ -15,15 +15,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  type FormEvent,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDirectoryPsychologists } from "@/api/callers/directory";
 import { usePatient } from "@/api/callers/patient";
 import type { DirectoryPsychologistsQuery } from "@/api/generator/types/directory";
@@ -236,10 +228,12 @@ export const PsychologistsLogic = () => {
   const [isVideoPlaybackFailed, setIsVideoPlaybackFailed] = useState(false);
   const [actionColumnTranslateY, setActionColumnTranslateY] = useState(0);
   const [favoriteOverrides, setFavoriteOverrides] = useState<Record<string, boolean>>({});
+  const [isBioSheetOpen, setIsBioSheetOpen] = useState(false);
+  const [isBioTruncated, setIsBioTruncated] = useState(false);
 
   const filterDialogRef = useRef<HTMLDivElement | null>(null);
   const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
-  const bioTextRef = useRef<HTMLParagraphElement | null>(null);
+  const bioTextRef = useRef<HTMLButtonElement | null>(null);
   const actionColumnRef = useRef<HTMLDivElement | null>(null);
   const profileTextRef = useRef<HTMLSpanElement | null>(null);
   const { favoritePsychologist, unfavoritePsychologist } = usePatient({
@@ -297,9 +291,60 @@ export const PsychologistsLogic = () => {
     setActionColumnTranslateY((current) => (Math.abs(current - delta) > 0.5 ? delta : current));
   }, [featuredBio]);
 
-  useLayoutEffect(() => {
+  const recalculateBioTruncation = useCallback(() => {
+    if (!featuredBio) {
+      setIsBioTruncated(false);
+      return;
+    }
+
+    const bioText = bioTextRef.current;
+    if (!bioText) return;
+
+    const nextIsTruncated = bioText.scrollHeight > bioText.clientHeight + 1;
+
+    setIsBioTruncated((current) => (current === nextIsTruncated ? current : nextIsTruncated));
+  }, [featuredBio]);
+
+  const recalculateInfoOverlayLayout = useCallback(() => {
     syncActionColumnAlignment();
-  }, [syncActionColumnAlignment]);
+    recalculateBioTruncation();
+  }, [recalculateBioTruncation, syncActionColumnAlignment]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const frame = window.requestAnimationFrame(() => {
+      recalculateInfoOverlayLayout();
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
+  }, [recalculateInfoOverlayLayout]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const onResize = () => {
+      recalculateInfoOverlayLayout();
+    };
+
+    const bioNode = bioTextRef.current;
+    const resizeObserver = bioNode
+      ? new ResizeObserver(() => recalculateInfoOverlayLayout())
+      : null;
+
+    if (bioNode) {
+      resizeObserver?.observe(bioNode);
+    }
+
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      window.removeEventListener("resize", onResize);
+      resizeObserver?.disconnect();
+    };
+  }, [recalculateInfoOverlayLayout]);
 
   useEffect(() => {
     const currentVideo = backgroundVideoRef.current;
@@ -327,19 +372,31 @@ export const PsychologistsLogic = () => {
       });
   }, [isVideoMuted]);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  const openBioSheet = useCallback(() => {
+    if (!isBioTruncated) return;
 
-    const onResize = () => {
-      syncActionColumnAlignment();
+    setIsBioSheetOpen(true);
+  }, [isBioTruncated]);
+
+  const closeBioSheet = useCallback(() => {
+    setIsBioSheetOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (!isBioSheetOpen || typeof window === "undefined") return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeBioSheet();
+      }
     };
 
-    window.addEventListener("resize", onResize);
+    window.addEventListener("keydown", onKeyDown);
 
     return () => {
-      window.removeEventListener("resize", onResize);
+      window.removeEventListener("keydown", onKeyDown);
     };
-  }, [syncActionColumnAlignment]);
+  }, [closeBioSheet, isBioSheetOpen]);
 
   const applyFilterValues = useCallback(
     (values: PsychologistsFilterForm) => {
@@ -788,23 +845,27 @@ export const PsychologistsLogic = () => {
                         </div>
 
                         {featuredBio ? (
-                          <p
-                            className="mt-2 text-white/95"
+                          <button
+                            className={cn(
+                              "pointer-events-auto mt-2 w-full text-left text-white/95",
+                              "line-clamp-2",
+                              isBioTruncated
+                                ? "cursor-default md:cursor-pointer"
+                                : "cursor-default",
+                            )}
+                            onClick={openBioSheet}
+                            type="button"
                             ref={bioTextRef}
                             style={{
-                              display: "-webkit-box",
                               fontSize: `${metrics.bioSize}px`,
                               lineHeight: `${metrics.bioLineHeight}px`,
-                              overflow: "hidden",
                               maxWidth: "100%",
                               overflowWrap: "break-word",
-                              WebkitBoxOrient: "vertical",
-                              WebkitLineClamp: 3,
                               wordBreak: "normal",
                             }}
                           >
                             {featuredBio}
-                          </p>
+                          </button>
                         ) : null}
 
                         {shareFeedback ? (
@@ -1062,6 +1123,42 @@ export const PsychologistsLogic = () => {
                           </button>
                         </div>
                       </form>
+                    </div>
+                  </div>
+                ) : null}
+
+                {isBioSheetOpen ? (
+                  <div
+                    aria-labelledby="bio-modal-title"
+                    aria-modal="true"
+                    className="fixed inset-0 z-[60] grid place-items-end bg-foreground/55 p-4 backdrop-blur-sm"
+                    onMouseDown={closeBioSheet}
+                    role="dialog"
+                  >
+                    <div
+                      className="grid w-full max-w-[430px] gap-4 rounded-[20px] border border-[#e2e8f0] bg-surface p-4 shadow-[0_-24px_70px_rgba(15,23,42,0.26)]"
+                      onMouseDown={(event) => event.stopPropagation()}
+                      role="document"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <h2
+                          className="text-base font-extrabold text-foreground sm:text-lg"
+                          id="bio-modal-title"
+                        >
+                          Bio
+                        </h2>
+                        <button
+                          aria-label="Fechar bio"
+                          className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-foreground"
+                          onClick={closeBioSheet}
+                          type="button"
+                        >
+                          <X className="h-4 w-4" aria-hidden="true" />
+                        </button>
+                      </div>
+                      <p className="max-h-[60vh] overflow-y-auto text-sm leading-[1.45] text-[#334155]">
+                        {featuredBio}
+                      </p>
                     </div>
                   </div>
                 ) : null}
