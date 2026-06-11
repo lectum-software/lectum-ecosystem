@@ -32,8 +32,6 @@ import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
-import { getToken } from "@/hooks/cookies/token";
-import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { PrivateTemplate } from "@/templates/private";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
@@ -237,22 +235,13 @@ export const PsychologistsLogic = () => {
   const [isVideoPaused, setIsVideoPaused] = useState(false);
   const [isVideoPlaybackFailed, setIsVideoPlaybackFailed] = useState(false);
   const [actionColumnTranslateY, setActionColumnTranslateY] = useState(0);
+  const [favoriteOverrides, setFavoriteOverrides] = useState<Record<string, boolean>>({});
 
   const filterDialogRef = useRef<HTMLDivElement | null>(null);
   const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
   const bioTextRef = useRef<HTMLParagraphElement | null>(null);
   const actionColumnRef = useRef<HTMLDivElement | null>(null);
   const profileTextRef = useRef<HTMLSpanElement | null>(null);
-  const [hasAuthToken] = useState(() => {
-    if (typeof window === "undefined") return false;
-
-    return Boolean(getToken());
-  });
-  const currentUser = useAppSelector((state) => state.user);
-  const canFavoritePsychologists = Boolean(
-    hasAuthToken && currentUser?.id && currentUser.role === "paciente",
-  );
-
   const { favoritePsychologist, unfavoritePsychologist } = usePatient({
     enableProfile: false,
   });
@@ -274,7 +263,9 @@ export const PsychologistsLogic = () => {
   const activeVideoSource = shouldShowVideo ? backgroundVideoSrc : null;
   const featuredBio = featuredPsychologist?.headline?.trim() || "";
   const featuredNameParts = splitNameForBadge(featuredPsychologist?.name ?? "");
-  const isFavorited = Boolean(featuredPsychologist?.favorited);
+  const isFavorited = featuredPsychologist
+    ? (favoriteOverrides[featuredPsychologist.id] ?? Boolean(featuredPsychologist.favorited))
+    : false;
 
   const filters = usePsychologistsFilterForm({
     filters: response?.filters,
@@ -466,20 +457,36 @@ export const PsychologistsLogic = () => {
   }, [handleFiltersClose, isFiltersOpen]);
 
   const toggleFavorite = useCallback(() => {
-    if (!canFavoritePsychologists || !featuredPsychologist) return;
+    if (!featuredPsychologist) return;
 
-    if (featuredPsychologist.favorited) {
-      unfavoritePsychologist.mutate(featuredPsychologist.id);
+    const psychologistId = featuredPsychologist.id;
+    const nextFavorited = !isFavorited;
+    const clearFavoriteOverride = () => {
+      setFavoriteOverrides((current) => {
+        const next = { ...current };
+        delete next[psychologistId];
+        return next;
+      });
+    };
+
+    setFavoriteOverrides((current) => ({
+      ...current,
+      [psychologistId]: nextFavorited,
+    }));
+
+    if (nextFavorited) {
+      favoritePsychologist.mutate(psychologistId, {
+        onError: clearFavoriteOverride,
+        onSuccess: clearFavoriteOverride,
+      });
       return;
     }
 
-    favoritePsychologist.mutate(featuredPsychologist.id);
-  }, [
-    canFavoritePsychologists,
-    favoritePsychologist,
-    featuredPsychologist,
-    unfavoritePsychologist,
-  ]);
+    unfavoritePsychologist.mutate(psychologistId, {
+      onError: clearFavoriteOverride,
+      onSuccess: clearFavoriteOverride,
+    });
+  }, [favoritePsychologist, featuredPsychologist, isFavorited, unfavoritePsychologist]);
 
   const favoritePendingId =
     favoritePsychologist.isPending && typeof favoritePsychologist.variables === "string"
@@ -698,7 +705,7 @@ export const PsychologistsLogic = () => {
 
                     <section
                       aria-live={shareFeedback ? "polite" : "off"}
-                      className="pointer-events-none absolute inset-x-0 z-20 grid items-end text-[#ffffff]"
+                      className="pointer-events-none absolute inset-x-0 z-40 grid items-end text-[#ffffff]"
                       style={{
                         left: `${metrics.horizontalPadding}px`,
                         right: `${metrics.actionRightPadding}px`,
@@ -807,7 +814,7 @@ export const PsychologistsLogic = () => {
                       </div>
 
                       <div
-                        className="z-20 flex flex-col items-center justify-self-end pointer-events-auto"
+                        className="pointer-events-auto relative z-50 flex flex-col items-center justify-self-end"
                         ref={actionColumnRef}
                         style={{
                           gap: `${metrics.actionGap}px`,
@@ -818,12 +825,12 @@ export const PsychologistsLogic = () => {
                         <div className="grid justify-items-center gap-1 text-center">
                           <button
                             aria-label={`Favoritar ${featuredPsychologist.name}`}
+                            aria-busy={isFavoritePending}
                             aria-pressed={isFavorited}
                             className={cn(
-                              "grid place-items-center rounded-full bg-white text-[#64748b] transition disabled:cursor-not-allowed disabled:opacity-60",
+                              "relative z-50 grid cursor-pointer place-items-center rounded-full bg-white text-[#64748b] transition hover:bg-[#f8fafc] active:scale-95",
                               isFavorited ? "text-[#ef4444]" : "text-[#64748b] hover:bg-[#f8fafc]",
                             )}
-                            disabled={isFavoritePending || !canFavoritePsychologists}
                             onClick={toggleFavorite}
                             style={{
                               width: `${metrics.actionButtonSize}px`,
@@ -843,7 +850,7 @@ export const PsychologistsLogic = () => {
                             />
                           </button>
                           <span
-                            className="font-semibold leading-none"
+                            className="pointer-events-none font-semibold leading-none"
                             style={{
                               fontSize: `${metrics.actionLabelSize}px`,
                               lineHeight: metrics.actionTextLineHeight.toString(),
