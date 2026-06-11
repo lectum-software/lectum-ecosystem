@@ -1303,13 +1303,13 @@ export const ProfessionalProfileSetupLogic = () => {
                     </div>
 
                     <p className="mt-3 w-full text-xs leading-5 text-muted">
-                      Envie um vídeo MP4, MOV ou WebM de até 50MB para destacar seu perfil.
+                      Envie um vídeo de até 50MB para aparecer na listagem de profissionais.
                     </p>
 
                     {videoSrc ? (
                       // biome-ignore lint/a11y/useMediaCaption: vídeos enviados pelo usuário ainda não têm faixa de legenda no recorte atual.
                       <video
-                        className="mt-4 aspect-video w-full rounded-2xl border border-border bg-black object-cover"
+                        className="mt-4 aspect-[9/16] w-full rounded-2xl border border-border bg-black object-cover"
                         controls
                         poster={videoCoverSrc || undefined}
                         preload="metadata"
