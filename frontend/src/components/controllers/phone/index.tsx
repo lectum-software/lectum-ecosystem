@@ -48,7 +48,7 @@ export function PhoneController<FormType extends FieldValues>({
             required={required}
             tooltip={tooltip}
           >
-            <div className="relative flex items-stretch">
+            <div className="relative flex min-w-0 w-full items-stretch">
               {countryCodeName ? (
                 <Controller
                   control={control}
@@ -57,7 +57,7 @@ export function PhoneController<FormType extends FieldValues>({
                     <select
                       aria-label="Código do país"
                       className={cn(
-                        "h-12 w-32 rounded-l-[var(--lectum-control-radius)] border border-border bg-surface px-3 text-sm font-semibold text-muted shadow-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted",
+                        "h-12 w-32 shrink-0 rounded-l-[var(--lectum-control-radius)] border border-border bg-surface px-3 text-sm font-semibold text-muted shadow-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted",
                         countryCodeClassName,
                       )}
                       disabled={disabled || readOnly}
@@ -93,6 +93,7 @@ export function PhoneController<FormType extends FieldValues>({
                   prefix && "pl-16",
                   countryCodeName && "rounded-l-none border-l-0",
                   error && "border-danger focus:border-danger focus:ring-danger/10",
+                  "min-w-0 flex-1",
                   inputClassName,
                 )}
                 disabled={disabled}
