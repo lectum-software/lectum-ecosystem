@@ -62,3 +62,7 @@ A guia esquerda da tela `/app/psychologists` foi reduzida para aproximar barra d
 ## Atualizacao 2026-06-11: zona inferior neutra do player
 
 A faixa transparente entre a base da bio e a navbar em `/app/psychologists` passou a interceptar cliques/toques sem executar acao, impedindo que essa area acione play/pause do video. A area livre da midia acima do bloco informativo continua controlando o player.
+
+## Atualizacao 2026-06-11: modal de filtros pausa o video
+
+Ao abrir a modal de filtros em `/app/psychologists`, o video de fundo em reproducao passa a ser pausado e o estado local do player fica marcado como pausado. O fechamento da modal nao retoma o video automaticamente; a retomada permanece sob controle explicito do usuario pela area livre da midia.

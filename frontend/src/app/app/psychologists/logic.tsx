@@ -581,9 +581,15 @@ export const PsychologistsLogic = () => {
   );
 
   const handleFiltersOpen = useCallback(() => {
+    const currentVideo = backgroundVideoRef.current;
+    if (currentVideo && shouldShowVideo) {
+      currentVideo.pause();
+      setIsVideoPaused(true);
+    }
+
     filters.hook.reset(filterValues);
     setIsFiltersOpen(true);
-  }, [filterValues, filters.hook]);
+  }, [filterValues, filters.hook, shouldShowVideo]);
 
   const handleFiltersClose = useCallback(() => {
     filters.hook.reset(filterValues);

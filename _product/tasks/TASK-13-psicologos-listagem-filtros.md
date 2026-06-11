@@ -482,3 +482,14 @@ ext/image`.
   - smoke real do endpoint local com todos os novos filtros retornando HTTP 200;
   - Chrome headless local em `http://127.0.0.1:3005/app/psychologists`, viewport `390x844`,
     confirmando renderizacao da tela com a busca `Busque pelo nome ou CRP`.
+
+## Execucao complementar: pausa do video ao abrir filtros (2026-06-11)
+
+- Pedido do usuario: quando abrir a modal de filtros, pausar o video do psicologo que estiver rodando ao fundo.
+- `handleFiltersOpen` agora pausa o `video` referenciado pela tela imersiva e marca `isVideoPaused=true` antes de
+  abrir a modal.
+- O fechamento da modal nao retoma o video automaticamente; o usuario continua controlando play/pause pela area
+  livre da midia.
+- O ajuste nao altera filtros, dados, backend, Prisma, migrations ou packages.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas nesta etapa: ver registro do commit desta execucao.
