@@ -52,3 +52,15 @@ Manter a rota `/app/psychologists` em unico card imersivo, reutilizando dados/fi
 ## Pendências
 
 - Validar com design QA visual no dispositivo fisico se espacamentos laterais e tamanhos de botoes atendem exatamente ao PDF de referencia em todos os intervalos de largura.
+
+### Complemento 2026-06-11: visual matching sem pixel matching
+
+Por orientacao do usuario, a calibracao do layout imersivo passa a ser tratada como **visual matching** e nao como pixel matching. A referencia PDF define hierarquia, peso visual, posicao relativa e sensacao de escala; o codigo nao deve perseguir coordenadas exatas que possam quebrar a responsividade ou a navbar compartilhada.
+
+Decisoes complementares:
+
+- manter a navbar compartilhada como limite arquitetural inalteravel da tela;
+- dimensionar o botao de filtro como controle menor que acoes laterais, preservando leitura de busca + filtro no topo;
+- ancorar a coluna lateral de acoes no meio-inferior da foto, em vez de centralizar matematicamente a coluna completa;
+- tratar nota/rating como pill translucida para aproximar o peso visual da referencia;
+- usar metricas por faixa compacta/normal, nao medidas absolutas do PDF.

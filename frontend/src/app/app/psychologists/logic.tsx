@@ -179,21 +179,25 @@ const useViewportMetrics = () => {
   }, []);
 
   return useMemo(() => {
-    const isSmall = width < 360;
+    const effectiveWidth = Math.min(width, 430);
+    const isCompact = effectiveWidth <= 390;
+    const isTiny = effectiveWidth < 360;
 
     return {
-      isSmall,
-      horizontalPadding: isSmall ? 20 : 28,
-      actionRightPadding: isSmall ? 12 : 14,
-      actionButtonSize: isSmall ? 44 : 48,
-      actionGap: isSmall ? 14 : 18,
-      titleSize: isSmall ? 20 : 23,
-      subtitleSize: isSmall ? 15 : 16,
-      bioSize: isSmall ? 14 : 15,
-      navBarHeight: isSmall ? 64 : DEFAULT_NAV_BAR_HEIGHT,
-      searchHeight: isSmall ? 46 : 48,
-      searchRightGap: isSmall ? 68 : 74,
-      searchTop: isSmall ? 32 : 40,
+      actionButtonSize: isTiny ? 44 : 48,
+      actionGap: isCompact ? 14 : 18,
+      actionRightPadding: isCompact ? 14 : 24,
+      actionTop: isCompact ? "42%" : "43.5%",
+      bioLineHeight: isCompact ? 21 : 24,
+      bioSize: isCompact ? 14 : 16,
+      filterButtonSize: isCompact ? 40 : 42,
+      horizontalPadding: isCompact ? 24 : 28,
+      navBarHeight: DEFAULT_NAV_BAR_HEIGHT,
+      searchHeight: isCompact ? 44 : 48,
+      searchRightGap: isCompact ? 62 : 74,
+      searchTop: isCompact ? 36 : 40,
+      subtitleSize: isCompact ? 14 : 16,
+      titleSize: isCompact ? 22 : 24,
     };
   }, [width]);
 };
@@ -448,12 +452,12 @@ export const PsychologistsLogic = () => {
                   style={{
                     top: `calc(env(safe-area-inset-top) + ${metrics.searchTop}px)`,
                     right: `${metrics.actionRightPadding}px`,
-                    width: `${metrics.actionButtonSize}px`,
-                    height: `${metrics.actionButtonSize}px`,
+                    width: `${metrics.filterButtonSize}px`,
+                    height: `${metrics.filterButtonSize}px`,
                   }}
                   type="button"
                 >
-                  <SlidersHorizontal className="h-5 w-5" aria-hidden="true" />
+                  <SlidersHorizontal className="h-[18px] w-[18px]" aria-hidden="true" />
                 </button>
 
                 <div
@@ -511,8 +515,7 @@ export const PsychologistsLogic = () => {
                       className="absolute z-20 flex flex-col items-center"
                       style={{
                         right: `${metrics.actionRightPadding}px`,
-                        top: "42%",
-                        transform: "translateY(-50%)",
+                        top: metrics.actionTop,
                         gap: `${metrics.actionGap}px`,
                       }}
                     >
@@ -635,7 +638,7 @@ export const PsychologistsLogic = () => {
                       className="pointer-events-none absolute inset-x-0 text-[#ffffff]"
                       style={{
                         left: `${metrics.horizontalPadding}px`,
-                        right: `${metrics.actionRightPadding + metrics.actionButtonSize + 18}px`,
+                        right: `${metrics.actionRightPadding + metrics.actionButtonSize + 12}px`,
                         bottom: `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom) + 28px)`,
                       }}
                     >
@@ -646,7 +649,7 @@ export const PsychologistsLogic = () => {
                         </div>
                       ) : null}
 
-                      <div className="mt-3 grid gap-1">
+                      <div className="mt-2 grid gap-1">
                         <p
                           className="flex min-w-0 flex-wrap items-center gap-1.5 leading-tight font-bold text-white"
                           style={{ fontSize: `${metrics.titleSize}px` }}
@@ -667,7 +670,7 @@ export const PsychologistsLogic = () => {
                         </p>
 
                         <div
-                          className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 font-bold leading-tight text-white"
+                          className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 font-bold leading-tight text-white"
                           style={{ fontSize: `${metrics.subtitleSize}px` }}
                         >
                           <span>
@@ -676,8 +679,8 @@ export const PsychologistsLogic = () => {
                               featuredPsychologist.formation_years,
                             )}
                           </span>
-                          <span className="inline-flex items-center gap-1 text-[#FACC15]">
-                            <Star className="h-4 w-4 fill-[#FACC15]" aria-hidden="true" />
+                          <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2 py-0.5 text-[#FACC15] shadow-[0_8px_24px_rgba(0,0,0,0.18)] backdrop-blur-sm">
+                            <Star className="h-3.5 w-3.5 fill-[#FACC15]" aria-hidden="true" />
                             {formatRating(
                               featuredPsychologist.rating_avg,
                               featuredPsychologist.rating_count,
@@ -687,9 +690,10 @@ export const PsychologistsLogic = () => {
                       </div>
 
                       <p
-                        className="mt-2 line-clamp-2 leading-[22px] text-white/95"
+                        className="mt-2 line-clamp-2 text-white/95"
                         style={{
                           fontSize: `${metrics.bioSize}px`,
+                          lineHeight: `${metrics.bioLineHeight}px`,
                         }}
                       >
                         {featuredPsychologist.bio || featuredPsychologist.headline}

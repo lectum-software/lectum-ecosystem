@@ -330,3 +330,17 @@ ext/image`.
 - Os elementos da camada imersiva foram recalibrados: botoes laterais, botao de filtro, espacamentos da coluna de acoes e tipografia do bloco inferior ficaram mais compactos para se aproximar da escala visual do PDF e evitar quebra desnecessaria do subtitulo/avaliacao.
 - Nao houve alteracao de API, dados, mocks ou migrations.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local em 375x667 na rota `/app/psychologists` (com limitacao de dados reais por sessao/API local do agente).
+
+## Execucao complementar: visual matching do layout imersivo (2026-06-11)
+
+- Pedido do usuario: nao fazer pixel matching; fazer visual matching contra o PDF `Nova tela psicologos.pdf`.
+- O PDF foi renderizado localmente apenas para leitura visual de hierarquia e proporcao; nao foi usado como fonte de medidas pixel-perfect.
+- A navbar compartilhada do `PrivateTemplate` foi preservada sem mudanca de componente, altura, itens ou comportamento.
+- A tela de Psicologos passou a usar proporcoes visuais mais proximas da referencia: botao de filtro menor que os botoes laterais, coluna lateral ancorada mais abaixo no campo visual, busca compacta, rating em pill translucida e overlay inferior com tipografia menos pesada.
+- Nenhum mock, seed ou dado fake foi criado; a tela continua dependente dos dados reais da API ja existente.
+- Nao houve alteracao de Prisma, migrations ou backend.
+- Validacoes executadas nesta etapa:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - `Invoke-WebRequest http://127.0.0.1:3000/app/psychologists` retornou HTTP 200
