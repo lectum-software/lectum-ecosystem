@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   ArrowLeft,
@@ -6,7 +6,6 @@ import {
   Bookmark,
   Brain,
   BriefcaseBusiness,
-  CalendarDays,
   ChevronLeft,
   ChevronRight,
   FileText,
@@ -67,10 +66,10 @@ type ApiError = Error & {
   data?: ApiErrorData;
 };
 
-const tabs: Array<{ label: string; value: ProfileTab; icon: typeof FileText }> = [
-  { label: "Sobre", value: "sobre", icon: UsersRound },
-  { label: "Publicações", value: "publicacoes", icon: FileText },
-  { label: "Avaliações", value: "avaliacoes", icon: Star },
+const tabs: Array<{ label: string; value: ProfileTab }> = [
+  { label: "Sobre", value: "sobre" },
+  { label: "Publicações", value: "publicacoes" },
+  { label: "Avaliações", value: "avaliacoes" },
 ];
 
 const modalityLabel: Record<string, string> = {
@@ -134,19 +133,11 @@ const getPsychologistTitle = (gender?: string | null) => {
   return normalized === "feminino" ? "Psicóloga" : "Psicólogo";
 };
 
-const getPsychologistArticle = (gender?: string | null) => {
-  const normalized = gender?.toLowerCase();
-
-  return normalized === "feminino" ? "a psicóloga" : "o psicólogo";
-};
-
 const getHonorificName = (profile: DirectoryPsychologistProfile) => {
-  if (!profile.verified) return profile.name;
-
-  const gender = profile.gender?.toLowerCase();
-  const honorific = gender === "feminino" ? "Dra." : "Dr.";
-
-  return `${honorific} ${profile.name}`;
+  return profile.name
+    .replace(/^(?:Dr\\.?\\s*|Dra\\.?\\s*)/i, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
 };
 
 const formatRatingNumber = (ratingAvg: number, ratingCount: number) => {
@@ -295,15 +286,19 @@ const ProfileInfoCard = ({
   label: string;
   value: string;
 }) => (
-  <article className="flex items-start gap-3 rounded-[18px] border border-border bg-background px-4 py-4">
-    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-      <Icon className="h-5 w-5" aria-hidden="true" />
-    </span>
-    <div className="min-w-0">
-      <p className="text-[0.64rem] font-extrabold uppercase tracking-[0.18em] text-subtle">
-        {label}
-      </p>
-      <p className="mt-1 text-sm font-extrabold leading-5 text-foreground">{value}</p>
+  <article className="box-border rounded-[8px] border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-3">
+    <div className="flex min-h-0 items-start gap-2.5">
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#EAF5FF] text-[#2F8DEB]">
+        <Icon className="h-[15px] w-[15px]" aria-hidden="true" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-[7px] font-medium uppercase leading-none tracking-[0.08em] text-[#94A3B8]">
+          {label}
+        </p>
+        <p className="mt-0.5 line-clamp-4 break-words text-[10px] font-semibold leading-[1.35] text-[#0F172A]">
+          {value}
+        </p>
+      </div>
     </div>
   </article>
 );
@@ -359,7 +354,7 @@ const ProfileAvatar = ({ profile }: { profile: DirectoryPsychologistProfile }) =
 
   return (
     <div
-      className="relative grid h-24 w-24 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-muted text-2xl font-extrabold text-primary sm:h-28 sm:w-28"
+      className="relative grid size-14 shrink-0 place-items-center overflow-hidden rounded-[12px] border-[3px] border-white bg-surface-muted text-2xl font-extrabold text-primary"
       data-profile-avatar="true"
     >
       {avatarSrc ? (
@@ -382,11 +377,15 @@ const ProfileAvatar = ({ profile }: { profile: DirectoryPsychologistProfile }) =
 const ProfileHero = ({
   canFavorite,
   favoritePending,
+  onBack,
+  onShareProfile,
   onToggleFavorite,
   profile,
 }: {
   canFavorite: boolean;
   favoritePending: boolean;
+  onBack: () => void;
+  onShareProfile: () => void;
   onToggleFavorite: () => void;
   profile: DirectoryPsychologistProfile;
 }) => {
@@ -396,94 +395,126 @@ const ProfileHero = ({
   const formattedCrp = formatCrpNumber(profile.crp);
 
   return (
-    <section className="bg-white px-5 pb-7 pt-5 sm:px-6 lg:px-8" data-profile-hero="true">
-      <div className="flex items-start gap-3">
-        <ProfileAvatar profile={profile} />
-
-        <div className="min-w-0 flex-1">
-          <span className="inline-flex items-center gap-1 text-[0.66rem] font-extrabold text-muted">
-            <Star className="h-3.5 w-3.5 fill-[#FACC15] text-[#FACC15]" aria-hidden="true" />
-            {formatHeroRating(profile.rating_avg, profile.rating_count)}
-          </span>
-          <h1 className="mt-0.5 text-[1.18rem] font-extrabold leading-5 text-foreground lg:text-2xl">
-            <span className="line-clamp-2 block min-w-0 break-words">
-              <span>{displayName}</span>
-              {profile.verified ? (
-                <VerifiedBadgeIcon aria-hidden="true" className="ml-1 inline h-[18px] w-[18px]" />
-              ) : null}
-            </span>
-          </h1>
-          <p className="mt-1 text-[0.62rem] font-extrabold uppercase tracking-[0.16em] text-subtle">
-            {getPsychologistTitle(profile.gender)}{" "}
-            {formattedCrp ? `• CRP ${formattedCrp}` : "• CRP não informado"}
-          </p>
-
-          {profile.available_today ? (
-            <span
-              className="mt-1 inline-flex items-center gap-1.5 text-[0.7rem] font-extrabold text-success"
-              data-availability-badge="true"
-            >
-              <span
-                className="h-2 w-2 rounded-full bg-success motion-safe:animate-pulse"
-                aria-hidden="true"
-              />
-              Disponível hoje
-            </span>
-          ) : null}
-        </div>
-
+    <section className="box-border bg-[#F6F8FB]" data-profile-hero="true">
+      <div className="relative h-24 overflow-hidden bg-gradient-to-br from-[#2F8DEB] to-[#60A5FA]">
         <button
-          aria-label={
-            !canFavorite
-              ? "Favoritos disponíveis apenas para usuários autenticados"
-              : profile.favorited
-                ? `Remover ${profile.name} dos favoritos`
-                : `Favoritar ${profile.name}`
-          }
-          aria-pressed={profile.favorited}
-          className={cn(
-            "grid h-10 w-10 shrink-0 place-items-center rounded-full text-muted transition hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-60",
-            profile.favorited && "text-red-500",
-          )}
-          disabled={favoritePending || !canFavorite}
-          onClick={onToggleFavorite}
-          title={
-            !canFavorite ? "Favoritos disponíveis apenas para usuários autenticados" : undefined
-          }
+          aria-label="Voltar para a tela anterior"
+          className="absolute left-3 top-3 grid h-7 w-7 place-items-center rounded-full bg-white/75 text-[#0F172A] transition hover:bg-white/90 sm:left-4 sm:top-4"
+          onClick={onBack}
           type="button"
         >
-          <Heart className={cn("h-5 w-5", profile.favorited && "fill-current")} />
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        </button>
+        <button
+          aria-label="Compartilhar perfil"
+          className="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full bg-white/75 text-[#0F172A] transition hover:bg-white/90 sm:right-4 sm:top-4"
+          onClick={onShareProfile}
+          type="button"
+        >
+          <Share2 className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
 
-      {headline ? (
-        <p className="mt-4 text-[0.82rem] leading-5 text-muted">{headline}</p>
-      ) : (
-        <p className="mt-4 text-[0.82rem] leading-5 text-muted">
-          Perfil profissional publicado na Lectum com dados públicos persistidos.
-        </p>
-      )}
+      <div className="mx-3 mt-3 sm:mx-4">
+        <article className="box-border rounded-[12px] border border-[#E2E8F0] bg-white px-3 py-3">
+          <div className="relative -mt-7 flex items-start gap-3">
+            <ProfileAvatar profile={profile} />
 
-      {benefitTags.length > 0 ? (
-        <div className="mt-7 flex flex-wrap gap-2" data-profile-benefit-tags="true">
-          {benefitTags.map((tag) => {
-            const Icon = tag.icon;
+            <div className="min-w-0 flex-1">
+              <h1 className="text-[16px] font-extrabold leading-[1.2] text-[#0F172A] sm:text-[17px]">
+                <span className="line-clamp-2 block min-w-0 break-words">
+                  <span>{displayName}</span>
+                  {profile.verified ? (
+                    <VerifiedBadgeIcon
+                      aria-hidden="true"
+                      className="ml-1 inline h-[16px] w-[16px]"
+                    />
+                  ) : null}
+                </span>
+              </h1>
 
-            return (
-              <span
-                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface-muted px-2.5 py-1.5 text-[0.68rem] font-bold text-muted"
-                key={tag.label}
-              >
-                <Icon className="h-3.5 w-3.5 text-subtle" aria-hidden="true" />
-                {tag.label}
-              </span>
-            );
-          })}
-        </div>
-      ) : null}
+              <p className="mt-1 flex flex-wrap items-center gap-x-1 text-[10px] leading-[1.25] text-[#64748B] sm:text-[11px]">
+                {getPsychologistTitle(profile.gender)}
+                <span aria-hidden="true" className="h-1 w-1 rounded-full bg-[#94A3B8]" />
+                <span>{formattedCrp ? `CRP ${formattedCrp}` : "CRP não informado"}</span>
+                <span aria-hidden="true" className="h-1 w-1 rounded-full bg-[#94A3B8]" />
+                <span className="inline-flex items-center gap-1">
+                  <Star className="h-3 w-3 fill-[#FACC15] text-[#FACC15]" aria-hidden="true" />
+                  {formatHeroRating(profile.rating_avg, profile.rating_count)}
+                </span>
+              </p>
+
+              {profile.available_today ? (
+                <span
+                  className="mt-1 inline-flex items-center gap-1.5 text-[10px] font-medium text-[#16A34A]"
+                  data-availability-badge="true"
+                >
+                  <span
+                    className="h-2 w-2 rounded-full bg-[#16A34A] motion-safe:animate-pulse"
+                    aria-hidden="true"
+                  />
+                  Disponível hoje
+                </span>
+              ) : null}
+            </div>
+
+            <button
+              aria-label={
+                !canFavorite
+                  ? "Favoritos disponíveis apenas para usuários autenticados"
+                  : profile.favorited
+                    ? `Remover ${profile.name} dos favoritos`
+                    : `Favoritar ${profile.name}`
+              }
+              aria-pressed={profile.favorited}
+              className={cn(
+                "mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full border border-[#E2E8F0] text-[#94A3B8] transition hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-60 sm:h-8 sm:w-8",
+                profile.favorited && "text-red-500",
+              )}
+              disabled={favoritePending || !canFavorite}
+              onClick={onToggleFavorite}
+              title={
+                !canFavorite ? "Favoritos disponíveis apenas para usuários autenticados" : undefined
+              }
+              type="button"
+            >
+              <Heart className={cn("h-4 w-4", profile.favorited && "fill-current")} />
+            </button>
+          </div>
+
+          {headline ? (
+            <p className="mt-2 line-clamp-2 text-[11px] leading-[1.35] text-[#64748B] sm:text-[12px]">
+              {headline}
+            </p>
+          ) : (
+            <p className="mt-2 text-[11px] leading-[1.35] text-[#64748B] sm:text-[12px]">
+              Perfil profissional publicado na Lectum com dados públicos persistidos.
+            </p>
+          )}
+
+          {benefitTags.length > 0 ? (
+            <div className="mt-3 flex flex-wrap gap-1.5" data-profile-benefit-tags="true">
+              {benefitTags.map((tag) => {
+                const Icon = tag.icon;
+
+                return (
+                  <span
+                    className="inline-flex h-6 items-center gap-1 rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 text-[9px] font-medium text-[#334155]"
+                    key={tag.label}
+                  >
+                    <Icon className="h-3 w-3 text-[#2F8DEB]" aria-hidden="true" />
+                    {tag.label}
+                  </span>
+                );
+              })}
+            </div>
+          ) : null}
+        </article>
+      </div>
     </section>
   );
 };
+
 const ProfileTabs = ({
   activeTab,
   onTabChange,
@@ -494,26 +525,24 @@ const ProfileTabs = ({
   return (
     <nav
       aria-label="Seções do perfil profissional"
-      className="mt-1 grid grid-cols-3 border-b border-border bg-white"
+      className="grid w-full grid-cols-3 border-b border-[#E5E7EB] bg-white text-[11px]"
     >
       {tabs.map((tab) => {
-        const Icon = tab.icon;
         const active = tab.value === activeTab;
 
         return (
           <button
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex min-h-12 items-center justify-center gap-1 border-b-2 px-1.5 text-[0.52rem] font-extrabold transition sm:text-[0.61rem]",
+              "flex h-11 items-center justify-center gap-1 border-b-2 px-1.5 font-medium transition",
               active
-                ? "border-primary text-primary"
-                : "border-transparent text-muted hover:text-primary",
+                ? "border-[#2F8DEB] text-[#2F8DEB]"
+                : "border-transparent text-[#64748B] hover:text-[#0F172A]",
             )}
             key={tab.value}
             onClick={() => onTabChange(tab.value)}
             type="button"
           >
-            <Icon className="h-3.5 w-3.5" aria-hidden="true" />
             {tab.label}
           </button>
         );
@@ -532,12 +561,12 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
 
   return (
     <div
-      className="relative aspect-video overflow-hidden rounded-2xl border border-border bg-surface-muted"
+      className="box-border relative h-[300px] overflow-hidden rounded-[8px] border border-[#E2E8F0] bg-[#e2e8f0]"
       data-presentation-video="true"
     >
       {playing ? (
-        <>
-          {/* biome-ignore lint/a11y/useMediaCaption: vídeos enviados pelos profissionais ainda não possuem trilha de legenda no recorte atual. */}
+        <div className="relative h-full w-full">
+          {/* biome-ignore lint/a11y/useMediaCaption: Vídeos enviados pelos profissionais não possuem legenda no momento do cadastro. */}
           <video
             aria-label={`Vídeo de apresentação de ${profile.name}`}
             autoPlay
@@ -551,12 +580,19 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
           >
             Seu navegador não suporta a reprodução de vídeo.
           </video>
-          <span className="pointer-events-none absolute bottom-4 left-4 rounded-full bg-foreground/75 px-3 py-1.5 text-xs font-extrabold text-white">
-            Vídeo de apresentação
-          </span>
-        </>
+          <button
+            aria-label="Fechar vídeo"
+            className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-white/75 text-[#0F172A] shadow-sm transition hover:bg-white/90"
+            onClick={() => setPlaying(false)}
+            type="button"
+          >
+            <span aria-hidden="true" className="text-sm font-bold leading-none">
+              ×
+            </span>
+          </button>
+        </div>
       ) : (
-        <div className="relative h-full w-full overflow-hidden bg-surface-muted text-white">
+        <div className="relative h-full w-full">
           {videoCoverSrc ? (
             <Image
               alt=""
@@ -578,20 +614,16 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
               tabIndex={-1}
             />
           )}
-          <span className="absolute inset-0 bg-gradient-to-t from-foreground/65 via-foreground/10 to-transparent" />
           <button
             aria-label={`Reproduzir vídeo de apresentação de ${profile.name}`}
             className="absolute inset-0 grid place-items-center text-white transition hover:bg-foreground/10"
             onClick={() => setPlaying(true)}
             type="button"
           >
-            <span className="grid h-16 w-16 place-items-center rounded-full bg-white/90 text-primary shadow-sm transition hover:scale-105">
-              <Play className="ml-1 h-8 w-8 fill-current" aria-hidden="true" />
+            <span className="grid h-11 w-11 place-items-center rounded-full bg-white/65 text-white shadow-sm">
+              <Play className="ml-1 h-5 w-5 fill-current" aria-hidden="true" />
             </span>
           </button>
-          <span className="absolute bottom-4 left-4 rounded-full bg-foreground/75 px-3 py-1.5 text-xs font-extrabold text-white">
-            Vídeo de apresentação
-          </span>
         </div>
       )}
     </div>
@@ -615,14 +647,14 @@ const ExpandableBio = ({ text }: { text: string }) => {
   return (
     <div className="grid gap-2">
       <p
-        className={cn("text-[0.86rem] leading-6 text-muted", !expanded && "line-clamp-4")}
+        className={cn("text-[11px] leading-[1.45] text-[#64748B]", !expanded && "line-clamp-4")}
         ref={textRef}
       >
         {text}
       </p>
       {canExpand ? (
         <button
-          className="w-fit text-[0.66rem] font-extrabold text-primary transition hover:text-primary/80"
+          className="w-fit text-[11px] font-semibold text-[#2F8DEB] transition hover:text-[#1d4ed8]"
           onClick={() => setExpanded((current) => !current)}
           type="button"
         >
@@ -637,8 +669,11 @@ const FormationSection = ({ profile }: { profile: DirectoryPsychologistProfile }
   const formations = profile.academic_formations ?? [];
 
   return (
-    <section className="grid gap-3 border-t border-border bg-white px-5 py-6 sm:px-6 lg:px-8">
-      <h2 className="text-base font-extrabold text-foreground">Formação & Títulos</h2>
+    <section className="grid gap-3 px-3 pb-3 sm:px-4">
+      <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#94A3B8]">
+        Formação & Títulos
+      </h2>
+
       {formations.length > 0 ? (
         <div className="grid gap-3">
           {formations.map((formation, index) => {
@@ -649,17 +684,17 @@ const FormationSection = ({ profile }: { profile: DirectoryPsychologistProfile }
 
             return (
               <article
-                className="flex items-start gap-3 rounded-[18px] bg-surface-muted px-4 py-4"
+                className="box-border flex items-start gap-3 rounded-[8px] border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-3"
                 key={`${formation.title || "formacao"}-${formation.institution || index}`}
               >
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-                  <GraduationCap className="h-5 w-5" aria-hidden="true" />
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#EAF5FF] text-[#2F8DEB]">
+                  <GraduationCap className="h-4 w-4" aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-sm font-extrabold leading-5 text-foreground">
+                  <p className="text-[10px] font-semibold leading-[1.3] text-[#0F172A]">
                     {formation.title || "Título não informado"}
                   </p>
-                  <p className="mt-0.5 text-sm font-semibold leading-5 text-muted">
+                  <p className="mt-0.5 text-[10px] leading-[1.35] text-[#64748B]">
                     {institutionLine}
                   </p>
                 </div>
@@ -668,7 +703,7 @@ const FormationSection = ({ profile }: { profile: DirectoryPsychologistProfile }
           })}
         </div>
       ) : (
-        <p className="text-sm leading-6 text-muted">
+        <p className="text-[11px] leading-[1.45] text-[#64748B]">
           Nenhuma formação pública foi cadastrada para este perfil.
         </p>
       )}
@@ -703,20 +738,32 @@ const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
     "Este profissional ainda não informou uma biografia pública. Assim que houver dados persistidos, eles aparecerão aqui sem usar conteúdo fictício.";
 
   return (
-    <div className="bg-white">
-      <div className="grid gap-5 px-5 py-5 sm:px-6 lg:px-8">
-        <PresentationVideo profile={profile} />
-
+    <div className="grid gap-3 bg-[#F6F8FB] pb-1 pt-3 sm:pt-4">
+      <section className="mx-3 box-border rounded-[8px] border border-[#E2E8F0] bg-white px-3 py-3 sm:px-4">
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#94A3B8]">
+          Sobre
+        </h2>
         <ExpandableBio text={bioText} />
+      </section>
 
+      <div className="px-3 sm:px-4">
+        <PresentationVideo profile={profile} />
+      </div>
+
+      <section className="grid gap-3 px-3 sm:px-4">
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#94A3B8]">
+          Especialidades
+        </h2>
         <div className="grid gap-3">
           <ProfileInfoCard icon={Brain} label="Especialidades" value={specialtyText} />
           <ProfileInfoCard icon={MessageSquareText} label="Abordagens" value={approachText} />
         </div>
-      </div>
+      </section>
 
-      <section className="grid gap-3 border-t border-border bg-white px-5 py-6 sm:px-6 lg:px-8">
-        <h2 className="text-base font-extrabold text-foreground">Atendimento</h2>
+      <section className="grid gap-3 px-3 pb-3 sm:px-4">
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#94A3B8]">
+          Atendimento
+        </h2>
         <div className="grid gap-3">
           <ProfileInfoCard
             icon={MapPin}
@@ -730,35 +777,49 @@ const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
       </section>
 
       <FormationSection profile={profile} />
-
-      <section className="border-t border-border bg-white px-5 pb-32 pt-6 sm:px-6 lg:px-8">
-        <div className="flex items-start gap-3 rounded-[18px] border border-primary/20 bg-primary-soft px-4 py-4 text-primary">
-          <CalendarDays className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
-          <p className="text-sm font-semibold leading-5 text-foreground">
-            {profile.whatsapp_available
-              ? `Para consultar agenda, valores e demais informações, chame ${getPsychologistArticle(profile.gender)} no WhatsApp.`
-              : "Este perfil ainda não possui WhatsApp disponível. O botão será exibido quando o profissional informar um número válido."}
-          </p>
-        </div>
-      </section>
     </div>
   );
 };
+
 const PostCard = ({ post }: { post: DirectoryPsychologistProfilePost }) => {
+  const previewImage = (post as { media_url?: string | null }).media_url;
+
   return (
-    <article className="rounded-[20px] border border-border bg-surface p-5">
-      <div className="flex items-start justify-between gap-3 text-xs font-semibold text-muted">
+    <article className="box-border rounded-[8px] border border-[#E2E8F0] bg-white p-3">
+      <div className="flex items-start justify-between gap-3 text-[10px] font-semibold text-[#64748B]">
         <span className="inline-flex items-center gap-1.5">
-          <FileText className="h-4 w-4 text-subtle" aria-hidden="true" />
-          Postado em <strong className="text-foreground">{post.community.name}</strong>
+          <FileText className="h-4 w-4 text-[#64748B]" aria-hidden="true" />
+          <span>
+            Postado em <strong className="text-[#0F172A]">{post.community.name}</strong>
+          </span>
         </span>
         <span>{formatCompactDate(post.created_at)}</span>
       </div>
 
-      <h2 className="mt-4 text-lg font-extrabold leading-6 text-foreground">{post.title}</h2>
-      <p className="mt-2 line-clamp-4 text-sm leading-6 text-muted">{post.content}</p>
+      {previewImage ? (
+        <div className="relative mt-3 h-40 w-full overflow-hidden rounded-[8px] bg-[#e2e8f0]">
+          <Image
+            alt="Prévia da publicação"
+            className="object-cover"
+            fill
+            sizes="(min-width: 768px) 720px, 100vw"
+            src={previewImage}
+            unoptimized={isPublicMediaUrl(previewImage)}
+          />
+          <span className="absolute inset-0 grid place-items-center bg-black/25">
+            <span className="grid h-10 w-10 place-items-center rounded-full bg-white/90">
+              <Play className="h-4 w-4 fill-[#2F8DEB] text-[#2F8DEB]" aria-hidden="true" />
+            </span>
+          </span>
+        </div>
+      ) : null}
 
-      <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-border pt-3 text-sm font-semibold text-muted">
+      <h2 className="mt-3 text-[11px] font-extrabold leading-[1.35] text-[#0F172A]">
+        {post.title}
+      </h2>
+      <p className="mt-2 text-[10px] leading-[1.4] text-[#64748B] line-clamp-3">{post.content}</p>
+
+      <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-[#E2E8F0] pt-3 text-[10px] font-semibold text-[#64748B]">
         <span className="inline-flex items-center gap-1.5">
           <ThumbsUp className="h-4 w-4" aria-hidden="true" />
           {post.upvotes_count}
@@ -798,15 +859,12 @@ const PostsTab = ({
   total: number;
 }) => {
   return (
-    <div className="grid gap-4 border-x border-b border-border bg-background px-4 py-5 sm:rounded-b-2xl sm:px-6 lg:px-8">
-      <div className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface-muted p-4">
-        <div>
-          <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-subtle">
-            Publicações
-          </p>
-          <h2 className="text-2xl font-extrabold text-foreground">{total}</h2>
-        </div>
-        {isFetching && !isLoading ? <LoadingState label="Atualizando" /> : null}
+    <div className="grid gap-4 bg-[#F6F8FB] pb-1 pt-3 sm:pt-4 px-3 sm:px-4">
+      <div className="rounded-[8px] border border-[#E2E8F0] bg-white px-3 py-3">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#94A3B8]">
+          Publicações &gt;
+        </p>
+        <p className="mt-1 text-base font-extrabold text-[#0F172A]">{total}</p>
       </div>
 
       {isError ? (
@@ -816,7 +874,7 @@ const PostsTab = ({
       ) : null}
 
       {isLoading ? (
-        <div className="grid min-h-[30vh] place-items-center rounded-2xl border border-border bg-surface-muted">
+        <div className="grid min-h-[30vh] place-items-center rounded-[8px] border border-[#E2E8F0] bg-white box-border">
           <LoadingState label="Carregando publicações" />
         </div>
       ) : null}
@@ -851,79 +909,85 @@ const ReviewSummaryCard = ({ summary }: { summary: DirectoryReviewSummary }) => 
   const max = Math.max(1, summary.rating_count);
 
   return (
-    <section className="rounded-[20px] border border-border bg-surface p-5">
+    <article className="grid gap-3 rounded-[8px] border border-[#E2E8F0] bg-white p-3 box-border">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-5xl font-extrabold tracking-tight text-foreground">
+          <p className="text-[28px] font-extrabold leading-none text-[#0F172A]">
             {formatRatingNumber(summary.rating_avg, summary.rating_count)}
           </p>
-          <div className="mt-2">
+          <div className="mt-1.5">
             <StarRating rating={summary.rating_avg / 100} />
           </div>
-          <p className="mt-2 text-sm font-semibold text-muted">
-            Total de {summary.rating_count} avaliações
-          </p>
+          <p className="mt-1.5 text-[11px] text-[#64748B]">{summary.rating_count} avaliações</p>
         </div>
-        <Button disabled type="button" variant="ghost">
-          Avaliar em breve
-        </Button>
       </div>
 
-      <div className="mt-5 grid gap-2">
+      <div className="mt-2 grid gap-2">
         {[5, 4, 3, 2, 1].map((rating) => {
           const count = summary.distribution[rating as 1 | 2 | 3 | 4 | 5] ?? 0;
           const percent = Math.round((count / max) * 100);
 
           return (
             <div className="grid grid-cols-[18px_1fr_42px] items-center gap-2" key={rating}>
-              <span className="text-xs font-bold text-muted">{rating}</span>
-              <span className="h-2 overflow-hidden rounded-full bg-surface-muted">
+              <span className="text-[10px] font-semibold text-[#64748B]">{rating}</span>
+              <span className="h-2 overflow-hidden rounded-full bg-[#E2E8F0]">
                 <span
-                  className="block h-full rounded-full bg-primary"
+                  className="block h-full rounded-full bg-[#FACC15]"
                   style={{ width: `${percent}%` }}
                 />
               </span>
-              <span className="text-right text-xs font-bold text-muted">{percent}%</span>
+              <span className="text-right text-[10px] font-semibold text-[#64748B]">
+                {percent}%
+              </span>
             </div>
           );
         })}
       </div>
-    </section>
+
+      <div className="mt-1 flex justify-center gap-1.5">
+        <span className="h-1.5 w-1.5 rounded-full bg-[#2F8DEB]" aria-hidden="true" />
+        <span className="h-1.5 w-1.5 rounded-full bg-[#CBD5E1]" aria-hidden="true" />
+        <span className="h-1.5 w-1.5 rounded-full bg-[#CBD5E1]" aria-hidden="true" />
+      </div>
+    </article>
   );
 };
 
 const ReviewCard = ({ review }: { review: DirectoryPsychologistProfileReview }) => {
   return (
-    <article className="rounded-[20px] border border-border bg-surface p-5">
+    <article className="box-border rounded-[8px] border border-[#E2E8F0] bg-white p-3">
       <div className="flex items-start gap-3">
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-primary-soft text-sm font-extrabold text-primary">
+        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#EAF5FF] text-[11px] font-extrabold text-[#2F8DEB]">
           {review.author.initials}
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h2 className="font-extrabold text-foreground">{review.author.name}</h2>
-              <p className="text-xs font-semibold text-muted">{formatDate(review.created_at)}</p>
+              <h2 className="text-[11px] font-extrabold text-[#0F172A]">{review.author.name}</h2>
+              <p className="text-[10px] text-[#64748B]">{formatDate(review.created_at)}</p>
             </div>
             <StarRating rating={review.rating} />
           </div>
 
           {review.comment ? (
-            <p className="mt-4 text-sm leading-6 text-muted">“{review.comment}”</p>
+            <p className="mt-3 text-[11px] leading-[1.45] text-[#64748B]">
+              &ldquo;{review.comment}&rdquo;
+            </p>
           ) : (
-            <p className="mt-4 text-sm leading-6 text-muted">
+            <p className="mt-3 text-[11px] leading-[1.45] text-[#64748B]">
               Avaliação publicada sem comentário textual.
             </p>
           )}
-
           {review.response ? (
-            <div className="mt-4 border-l-2 border-primary bg-surface-muted px-4 py-3">
-              <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-primary">
+            <div className="mt-3 border-l-2 border-[#2F8DEB] bg-[#F8FAFC] px-3 py-2.5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#2F8DEB]">
                 Resposta do profissional
               </p>
-              <p className="mt-2 text-sm leading-6 text-foreground">“{review.response}”</p>
+              <p className="mt-1 text-[11px] leading-[1.45] text-[#0F172A]">
+                &ldquo;{review.response}&rdquo;
+              </p>
               {review.responded_at ? (
-                <p className="mt-2 text-xs font-semibold text-muted">
+                <p className="mt-1 text-[10px] text-[#64748B]">
                   Respondido em {formatDate(review.responded_at)}
                 </p>
               ) : null}
@@ -957,7 +1021,10 @@ const ReviewsTab = ({
   summary: DirectoryReviewSummary;
 }) => {
   return (
-    <div className="grid gap-4 border-x border-b border-border bg-background px-4 py-5 sm:rounded-b-2xl sm:px-6 lg:px-8">
+    <div className="grid gap-4 bg-[#F6F8FB] pb-1 pt-3 sm:pt-4 px-3 sm:px-4">
+      <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#94A3B8]">
+        Avaliações &gt;
+      </h2>
       <ReviewSummaryCard summary={summary} />
 
       {isError ? (
@@ -967,7 +1034,7 @@ const ReviewsTab = ({
       ) : null}
 
       {isLoading ? (
-        <div className="grid min-h-[30vh] place-items-center rounded-2xl border border-border bg-surface-muted">
+        <div className="grid min-h-[30vh] place-items-center rounded-[8px] border border-[#E2E8F0] bg-white box-border">
           <LoadingState label="Carregando avaliações" />
         </div>
       ) : null}
@@ -1007,16 +1074,22 @@ const WhatsAppCta = ({ profile }: { profile: DirectoryPsychologistProfile }) => 
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-30 px-4 pb-2 pt-2 sm:px-6"
-      style={{ paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom))" }}
+      className="fixed inset-x-0 bottom-0 z-30 bg-white px-3 pb-2 pt-2 shadow-[0_-6px_18px_rgba(15,23,42,0.12)] sm:px-4"
+      style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
     >
-      <div className="mx-auto w-full max-w-[390px] sm:max-w-[430px] lg:max-w-[760px]">
+      <div className="mx-auto w-full max-w-[430px] space-y-2 lg:max-w-[760px]">
+        <div className="rounded-[8px] border border-[#DBEAFE] bg-[#EFF6FF] box-border px-2.5 py-2.5">
+          <p className="text-[10px] leading-[1.35] text-[#0F172A]">
+            Para consultar agenda, valores e demais informações, chame o psicólogo no WhatsApp.
+          </p>
+        </div>
+
         <Button
           asChild
-          className="h-14 w-full rounded-2xl bg-[#22C55E] text-base font-extrabold hover:bg-[#22C55E]/90"
+          className="h-11 w-full rounded-[8px] bg-[#22C55E] text-[13px] font-bold text-white hover:bg-[#22C55E]/90"
         >
           <a href={profile.whatsapp_url} rel="noreferrer" target="_blank">
-            <WhatsAppIcon className="h-5 w-5" aria-hidden="true" />
+            <WhatsAppIcon className="h-4 w-4" aria-hidden="true" />
             Chamar no WhatsApp
           </a>
         </Button>
@@ -1156,107 +1229,82 @@ export const PsychologistProfileLogic = () => {
 
   return (
     <PrivateTemplate allowAnonymous showNavigation={false}>
-      <section className="mx-auto -my-6 grid w-full max-w-[390px] gap-0 overflow-hidden bg-background px-0 sm:my-0 sm:max-w-[430px] sm:w-full sm:rounded-[24px] sm:border sm:border-border lg:max-w-[760px]">
-        <div>
-          <header
-            className="border-b border-border bg-background px-4 pt-3 lg:px-8"
-            data-profile-header="true"
-          >
-            <div className="flex min-h-12 items-center justify-between gap-3 pb-3">
-              <button
-                aria-label="Voltar para a tela anterior"
-                className="grid h-10 w-10 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary"
-                onClick={goBack}
-                type="button"
-              >
-                <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-              </button>
-              <div className="min-w-0 text-center">
-                <h1 className="truncate text-base font-extrabold text-foreground">
-                  Perfil Profissional
-                </h1>
+      <div className="-mt-6 -mx-5">
+        <section className="mx-auto grid w-full max-w-[430px] bg-[#F6F8FB] sm:max-w-[430px] lg:max-w-[760px]">
+          <div className="grid gap-0 pb-28">
+            {shareFeedback ? (
+              <div className="mx-3 pt-3">
+                <InlineAlert title="Link copiado" variant="success">
+                  Compartilhamento preparado com o link público seguro deste perfil.
+                </InlineAlert>
               </div>
-              <button
-                aria-label="Compartilhar perfil"
-                className="grid h-10 w-10 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary"
-                onClick={shareProfile}
-                type="button"
-              >
-                <Share2 className="h-5 w-5" aria-hidden="true" />
-              </button>
-            </div>
-          </header>
-        </div>
+            ) : null}
 
-        <div className="grid gap-0">
-          {shareFeedback ? (
-            <InlineAlert className="mt-4" title="Link copiado" variant="success">
-              Compartilhamento preparado com o link público seguro deste perfil.
-            </InlineAlert>
-          ) : null}
-
-          {showInitialLoading ? (
-            <div className="grid min-h-[45vh] place-items-center bg-background sm:rounded-b-[28px] sm:border">
-              <LoadingState label="Carregando perfil profissional" />
-            </div>
-          ) : null}
-
-          {!showInitialLoading && profileErrorMessage ? (
-            <div className="grid gap-4 bg-background px-4 py-8 sm:rounded-b-[28px] sm:border sm:px-6">
-              <InlineAlert title="Perfil indisponível" variant="error">
-                {profileErrorMessage}
-              </InlineAlert>
-              <Button asChild variant="outline">
-                <Link href="/app/psychologists">Voltar para a busca</Link>
-              </Button>
-            </div>
-          ) : null}
-
-          {!showInitialLoading && !profileErrorMessage && profile ? (
-            <>
-              <ProfileHero
-                canFavorite={canFavoritePsychologists}
-                favoritePending={favoritePendingId === profile.id}
-                onToggleFavorite={toggleFavorite}
-                profile={profile}
-              />
-
-              <div className="grid gap-0">
-                <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
-                {activeTab === "sobre" ? <AboutTab profile={profile} /> : null}
-                {activeTab === "publicacoes" ? (
-                  <PostsTab
-                    currentPage={postsPage}
-                    error={posts.error}
-                    isError={posts.isError}
-                    isFetching={posts.isFetching}
-                    isLoading={posts.isLoading}
-                    onPageChange={setPostsPage}
-                    pages={posts.data?.pages ?? 0}
-                    posts={posts.data?.data ?? []}
-                    total={posts.data?.count ?? 0}
-                  />
-                ) : null}
-                {activeTab === "avaliacoes" ? (
-                  <ReviewsTab
-                    currentPage={reviewsPage}
-                    error={reviews.error}
-                    isError={reviews.isError}
-                    isFetching={reviews.isFetching}
-                    isLoading={reviews.isLoading}
-                    onPageChange={setReviewsPage}
-                    pages={reviews.data?.pages ?? 0}
-                    reviews={reviews.data?.data ?? []}
-                    summary={reviews.data?.summary ?? emptySummary}
-                  />
-                ) : null}
+            {showInitialLoading ? (
+              <div className="grid min-h-[45vh] place-items-center bg-background">
+                <LoadingState label="Carregando perfil profissional" />
               </div>
+            ) : null}
 
-              <WhatsAppCta profile={profile} />
-            </>
-          ) : null}
-        </div>
-      </section>
+            {!showInitialLoading && profileErrorMessage ? (
+              <div className="mx-3 grid gap-4 bg-background px-0 py-8">
+                <InlineAlert title="Perfil indisponível" variant="error">
+                  {profileErrorMessage}
+                </InlineAlert>
+                <Button asChild variant="outline">
+                  <Link href="/app/psychologists">Voltar para a busca</Link>
+                </Button>
+              </div>
+            ) : null}
+
+            {!showInitialLoading && !profileErrorMessage && profile ? (
+              <>
+                <ProfileHero
+                  canFavorite={canFavoritePsychologists}
+                  favoritePending={favoritePendingId === profile.id}
+                  onBack={goBack}
+                  onShareProfile={shareProfile}
+                  onToggleFavorite={toggleFavorite}
+                  profile={profile}
+                />
+
+                <div className="grid gap-0">
+                  <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
+                  {activeTab === "sobre" ? <AboutTab profile={profile} /> : null}
+                  {activeTab === "publicacoes" ? (
+                    <PostsTab
+                      currentPage={postsPage}
+                      error={posts.error}
+                      isError={posts.isError}
+                      isFetching={posts.isFetching}
+                      isLoading={posts.isLoading}
+                      onPageChange={setPostsPage}
+                      pages={posts.data?.pages ?? 0}
+                      posts={posts.data?.data ?? []}
+                      total={posts.data?.count ?? 0}
+                    />
+                  ) : null}
+                  {activeTab === "avaliacoes" ? (
+                    <ReviewsTab
+                      currentPage={reviewsPage}
+                      error={reviews.error}
+                      isError={reviews.isError}
+                      isFetching={reviews.isFetching}
+                      isLoading={reviews.isLoading}
+                      onPageChange={setReviewsPage}
+                      pages={reviews.data?.pages ?? 0}
+                      reviews={reviews.data?.data ?? []}
+                      summary={reviews.data?.summary ?? emptySummary}
+                    />
+                  ) : null}
+                </div>
+
+                <WhatsAppCta profile={profile} />
+              </>
+            ) : null}
+          </div>
+        </section>
+      </div>
     </PrivateTemplate>
   );
 };
