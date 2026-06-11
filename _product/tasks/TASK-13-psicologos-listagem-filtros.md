@@ -439,3 +439,11 @@ ext/image`.
 - Nao houve alteracao de backend, Prisma, migrations, packages, mocks ou dados do psicologo.
 - ADR criado: `adrs/0058-visibilidade-experiencia-card-psicologo.md`.
 - Validacoes executadas nesta etapa: ver registro do commit desta execucao.
+
+## Execucao complementar: reducao da margem esquerda (2026-06-11)
+
+- Pedido do usuario: diminuir a margem esquerda na tela de Psicologos.
+- O `horizontalPadding` da tela imersiva foi reduzido, movendo barra de busca, selos flutuantes e bloco textual inferior para mais perto da borda esquerda de forma consistente.
+- A guia direita do filtro/acoes, navbar, dados, backend, Prisma, migrations e packages nao foram alterados.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas nesta etapa: ver registro do commit desta execucao.

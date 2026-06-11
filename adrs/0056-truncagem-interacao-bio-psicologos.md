@@ -54,3 +54,7 @@ A tela `/app/psychologists` passa a manter guias laterais consistentes:
 - barra de busca, selos flutuantes e bloco textual inferior compartilham a mesma margem esquerda;
 - botao de filtros e coluna lateral de acoes compartilham a mesma guia direita;
 - a mudanca e apenas visual, sem alterar dados, API, navbar ou comportamento dos botoes.
+
+## Atualizacao 2026-06-11: reducao da margem esquerda
+
+A guia esquerda da tela `/app/psychologists` foi reduzida para aproximar barra de busca, selos flutuantes e bloco textual da borda esquerda, preservando o alinhamento entre esses elementos e sem alterar a guia direita, navbar, dados ou acoes.

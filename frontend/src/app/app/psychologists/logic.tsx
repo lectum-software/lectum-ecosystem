@@ -270,7 +270,7 @@ const useViewportMetrics = () => {
       bioLineHeight: isTiny ? 16 : isCompact ? 17 : 19,
       bioSize: isTiny ? 11 : isCompact ? 12 : 13,
       filterButtonSize: isCompact ? 40 : 42,
-      horizontalPadding: isCompact ? 24 : 28,
+      horizontalPadding: isCompact ? 16 : 20,
       navBarHeight: DEFAULT_NAV_BAR_HEIGHT,
       searchHeight: isCompact ? 42 : 46,
       searchRightGap: isCompact ? 62 : 74,
