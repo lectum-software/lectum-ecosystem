@@ -185,7 +185,8 @@ Regras anti-recriação específicas:
 ## Execução complementar: desktop e filtros em modal (2026-06-06)
 
 - Pedido do usuário: adaptar `/app/psychologists` para desktop e fazer os filtros abrirem em modal.
-- Builder/Quick Copy foi revalidado via `npx "@builder.io/dev-tools@latest" auth status`, mas o CLI retornou
+- Builder/Quick Copy foi revalidado via
+px "@builder.io/dev-tools@latest" auth status`, mas o CLI retornou
   não autenticado nesta sessão; a execução manteve o fallback auditável das imagens locais obrigatórias da task.
 - A tela permanece mobile-first com base nos protótipos `390px`, mas agora expande em desktop para `lg:max-w-6xl`,
   card de busca/filtros responsivo e grid de resultados em duas colunas.
@@ -313,10 +314,19 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 ## Execucao complementar: layout imersivo alinhado ao PDF e navbar compartilhada (2026-06-11)
 
 - Pedido do usuario: aplicar o layout visual do PDF anexado `Nova tela psicologos.pdf` na rota `/app/psychologists`, preservando a arquitetura e a navbar padrao do projeto.
-- Antes de alterar o codigo, foram mapeados os reaproveitamentos: `PrivateTemplate`/navbar compartilhada, `PageShell`, `useDirectoryPsychologists`, `usePatient`, filtros via `usePsychologistsFilterForm`, `LoadingState`, `InlineAlert`, `EmptyState`, `VerifiedBadgeIcon`, `WhatsAppIcon` e `next/image`.
+- Antes de alterar o codigo, foram mapeados os reaproveitamentos: `PrivateTemplate`/navbar compartilhada, `PageShell`, `useDirectoryPsychologists`, `usePatient`, filtros via `usePsychologistsFilterForm`, `LoadingState`, `InlineAlert`, `EmptyState`, `VerifiedBadgeIcon`, `WhatsAppIcon` e
+ext/image`.
 - A navbar customizada local da tela foi removida; a rota passou a reutilizar exclusivamente a navegacao do `PrivateTemplate`, mantendo item ativo, altura, espacamento, icones e comportamento globais.
 - O `PrivateTemplate` recebeu a prop opcional `contentClassName` para permitir tela imersiva sem padding do `PageShell` nesta rota, sem alterar o default das demais telas.
 - O layout foi ajustado para foto em tela cheia, busca flutuante, botao de filtros, overlay inferior mais forte, coluna lateral de acoes e informacoes do psicologo sobre a imagem, sem criar mocks nem dados fake.
 - Referencia visual: PDF anexado pelo usuario (`C:\Users\tulio\Downloads\Nova tela psicólogos.pdf`), renderizado localmente apenas para inspecao visual; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao.
 - ADR atualizado: `adrs/0055-refatoracao-listagem-psicologos-imersiva.md`.
 - Validacoes executadas: ver registro do commit desta execucao.
+
+## Execucao complementar: ajuste de escala dos elementos do layout imersivo (2026-06-11)
+
+- Pedido do usuario: ajustar o tamanho dos elementos da tela de Psicologos tomando o PDF `Nova tela psicologos.pdf` como referencia visual.
+- A navbar compartilhada do `PrivateTemplate` foi preservada sem criar componente novo.
+- Os elementos da camada imersiva foram recalibrados: botoes laterais, botao de filtro, espacamentos da coluna de acoes e tipografia do bloco inferior ficaram mais compactos para se aproximar da escala visual do PDF e evitar quebra desnecessaria do subtitulo/avaliacao.
+- Nao houve alteracao de API, dados, mocks ou migrations.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local em 375x667 na rota `/app/psychologists` (com limitacao de dados reais por sessao/API local do agente).

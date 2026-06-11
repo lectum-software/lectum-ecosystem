@@ -184,12 +184,15 @@ const useViewportMetrics = () => {
     return {
       isSmall,
       horizontalPadding: isSmall ? 20 : 28,
-      actionButtonSize: isSmall ? 48 : 54,
-      actionGap: isSmall ? 16 : 22,
-      titleSize: isSmall ? 22 : 26,
-      bioSize: isSmall ? 15 : 16,
+      actionRightPadding: isSmall ? 12 : 14,
+      actionButtonSize: isSmall ? 44 : 48,
+      actionGap: isSmall ? 14 : 18,
+      titleSize: isSmall ? 20 : 23,
+      subtitleSize: isSmall ? 15 : 16,
+      bioSize: isSmall ? 14 : 15,
       navBarHeight: isSmall ? 64 : DEFAULT_NAV_BAR_HEIGHT,
-      searchRightGap: isSmall ? 72 : 78,
+      searchHeight: isSmall ? 46 : 48,
+      searchRightGap: isSmall ? 68 : 74,
       searchTop: isSmall ? 32 : 40,
     };
   }, [width]);
@@ -421,7 +424,7 @@ export const PsychologistsLogic = () => {
                     top: `calc(env(safe-area-inset-top) + ${metrics.searchTop}px)`,
                     left: `${metrics.horizontalPadding}px`,
                     right: `${metrics.searchRightGap}px`,
-                    height: "48px",
+                    height: `${metrics.searchHeight}px`,
                   }}
                 >
                   <div className="relative flex h-full w-full items-center rounded-[999px] border border-[rgba(255,255,255,0.35)] bg-white/35 p-3 backdrop-blur-md">
@@ -444,7 +447,7 @@ export const PsychologistsLogic = () => {
                   onClick={handleFiltersOpen}
                   style={{
                     top: `calc(env(safe-area-inset-top) + ${metrics.searchTop}px)`,
-                    right: `${metrics.horizontalPadding}px`,
+                    right: `${metrics.actionRightPadding}px`,
                     width: `${metrics.actionButtonSize}px`,
                     height: `${metrics.actionButtonSize}px`,
                   }}
@@ -507,7 +510,7 @@ export const PsychologistsLogic = () => {
                     <div
                       className="absolute z-20 flex flex-col items-center"
                       style={{
-                        right: `${metrics.horizontalPadding}px`,
+                        right: `${metrics.actionRightPadding}px`,
                         top: "42%",
                         transform: "translateY(-50%)",
                         gap: `${metrics.actionGap}px`,
@@ -533,7 +536,7 @@ export const PsychologistsLogic = () => {
                         >
                           <Heart
                             className={cn(
-                              "h-6 w-6",
+                              "h-5 w-5",
                               featuredPsychologist.favorited && "fill-[#ef4444]",
                             )}
                             aria-hidden="true"
@@ -551,8 +554,8 @@ export const PsychologistsLogic = () => {
                             rel="noreferrer"
                             target="_blank"
                             style={{
-                              width: `${metrics.actionButtonSize + 4}px`,
-                              height: `${metrics.actionButtonSize + 4}px`,
+                              width: `${metrics.actionButtonSize}px`,
+                              height: `${metrics.actionButtonSize}px`,
                             }}
                           >
                             <WhatsAppIcon className="h-5 w-5 text-white" aria-hidden="true" />
@@ -567,8 +570,8 @@ export const PsychologistsLogic = () => {
                             disabled
                             type="button"
                             style={{
-                              width: `${metrics.actionButtonSize + 4}px`,
-                              height: `${metrics.actionButtonSize + 4}px`,
+                              width: `${metrics.actionButtonSize}px`,
+                              height: `${metrics.actionButtonSize}px`,
                             }}
                           >
                             <MessageCircle className="h-5 w-5" aria-hidden="true" />
@@ -588,7 +591,7 @@ export const PsychologistsLogic = () => {
                             height: `${metrics.actionButtonSize}px`,
                           }}
                         >
-                          <Share2 className="h-6 w-6" aria-hidden="true" />
+                          <Share2 className="h-5 w-5" aria-hidden="true" />
                         </button>
                         <span className="text-[11px] font-semibold">Compartilhar</span>
                       </div>
@@ -632,7 +635,7 @@ export const PsychologistsLogic = () => {
                       className="pointer-events-none absolute inset-x-0 text-[#ffffff]"
                       style={{
                         left: `${metrics.horizontalPadding}px`,
-                        right: `${metrics.horizontalPadding + metrics.actionButtonSize + 24}px`,
+                        right: `${metrics.actionRightPadding + metrics.actionButtonSize + 18}px`,
                         bottom: `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom) + 28px)`,
                       }}
                     >
@@ -663,7 +666,10 @@ export const PsychologistsLogic = () => {
                           ) : null}
                         </p>
 
-                        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[18px] font-bold leading-tight text-white">
+                        <div
+                          className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 font-bold leading-tight text-white"
+                          style={{ fontSize: `${metrics.subtitleSize}px` }}
+                        >
                           <span>
                             {formatProfileTitle(
                               featuredPsychologist.gender,

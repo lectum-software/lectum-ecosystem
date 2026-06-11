@@ -1,4 +1,4 @@
-﻿# ADR-0055: Refatorar tela de psicólogos para layout imersivo mobile 9:16 com destaque no card principal
+# ADR-0055: Refatorar tela de psicólogos para layout imersivo mobile 9:16 com destaque no card principal
 
 ## Status
 
@@ -31,6 +31,7 @@ Manter a rota `/app/psychologists` em unico card imersivo, reutilizando dados/fi
 - remover a navegacao customizada da tela e reutilizar exclusivamente a navbar padrao renderizada pelo `PrivateTemplate`;
 - adicionar `contentClassName` opcional ao `PrivateTemplate` para permitir uma tela imersiva sem padding do `PageShell`, sem alterar a navbar nem o comportamento padrao das demais telas;
 - manter a lista da navbar com `w-full` dentro do proprio `PrivateTemplate`, garantindo que os cinco itens continuem distribuidos no viewport mobile quando a tela usa conteudo sem padding;
+- recalibrar a escala dos elementos imersivos (botoes laterais, botao de filtro, coluna de acoes e tipografia do overlay) para se aproximar do PDF sem alterar a navbar compartilhada;
 - manter acessibilidade básica via rótulos, labels e atalhos de fechamento do modal (Escape).
 
 ## Consequências
