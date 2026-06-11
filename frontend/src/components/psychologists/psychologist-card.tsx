@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { ChevronRight, Heart, Pause, Play, Share2, VolumeX } from "lucide-react";
 import Image from "next/image";
@@ -730,6 +730,26 @@ export function PsychologistCard({
           psychologistName={displayName}
         />
 
+        <Link
+          aria-label={`Abrir perfil de ${psychologist.name}`}
+          className="pointer-events-auto absolute grid place-items-center rounded-full text-[#334155] transition"
+          href={route}
+          style={{
+            right: "3.2%",
+            position: "absolute",
+            top: `calc(100% - (var(--psychologist-overlay-height) + ${OVERLAY_FAVORITE_OFFSET} - ${OVERLAY_SHARE_GAP}))`,
+            width: "clamp(38px, 10vw, 44px)",
+            height: "clamp(38px, 10vw, 44px)",
+            zIndex: 31,
+          }}
+        >
+          <ChevronRight
+            aria-hidden="true"
+            className="text-[#334155]"
+            style={{ width: "clamp(22px, 8vw, 26px)", height: "clamp(22px, 8vw, 26px)" }}
+          />
+        </Link>
+
         {tags.length > 0 ? (
           <div
             className="pointer-events-none absolute flex flex-col-reverse"
@@ -817,22 +837,6 @@ export function PsychologistCard({
                 <span>{getSubinfo(psychologist)}</span>
               </div>
             </div>
-
-            <Link
-              aria-label={`Abrir perfil de ${psychologist.name}`}
-              className="pointer-events-auto absolute right-[16px] top-[20px] z-30 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/80 text-[#334155] transition"
-              href={route}
-              style={{
-                width: "clamp(26px, 4vw, 28px)",
-                height: "clamp(26px, 4vw, 28px)",
-              }}
-            >
-              <ChevronRight
-                aria-hidden="true"
-                className="text-[#334155]"
-                style={{ width: "clamp(26px, 4vw, 28px)", height: "clamp(26px, 4vw, 28px)" }}
-              />
-            </Link>
           </div>
 
           <div
