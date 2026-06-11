@@ -190,6 +190,9 @@ const useViewportMetrics = () => {
       actionRightPadding: isTiny ? 12 : 16,
       actionTextLineHeight: 1,
       bioBottomOffset: isCompact ? 12 : 14,
+      ratingIconSize: isCompact ? 11 : 12,
+      ratingLineHeight: isCompact ? 16 : 18,
+      ratingTextSize: isCompact ? 11 : 12,
       bioLineHeight: isCompact ? 20 : 22,
       bioSize: isCompact ? 13 : 15,
       filterButtonSize: isCompact ? 40 : 42,
@@ -725,11 +728,16 @@ export const PsychologistsLogic = () => {
                               aria-hidden="true"
                               className="fill-[#FACC15]"
                               style={{
-                                height: `${metrics.subtitleSize}px`,
-                                width: `${metrics.subtitleSize}px`,
+                                height: `${metrics.ratingIconSize}px`,
+                                width: `${metrics.ratingIconSize}px`,
                               }}
                             />
-                            <span style={{ fontSize: `${metrics.subtitleSize}px` }}>
+                            <span
+                              style={{
+                                fontSize: `${metrics.ratingTextSize}px`,
+                                lineHeight: `${metrics.ratingLineHeight}px`,
+                              }}
+                            >
                               {formatRating(
                                 featuredPsychologist.rating_avg,
                                 featuredPsychologist.rating_count,
