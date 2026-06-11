@@ -77,6 +77,127 @@ const resolveApiError = (error: unknown) => {
   );
 };
 
+type CatalogTagGroup = {
+  title: string;
+  items: FreeProfileCatalogItem[];
+};
+
+type SpecialtyCategoryOption = {
+  name: string;
+  slugs: readonly string[];
+};
+
+type SpecialtyCategory = {
+  title: string;
+  options: readonly SpecialtyCategoryOption[];
+};
+
+const SPECIALTY_CATEGORIES: readonly SpecialtyCategory[] = [
+  {
+    title: "Para jovens adultos",
+    options: [
+      { name: "Ansiedade", slugs: ["ansiedade"] },
+      { name: "TDAH", slugs: ["tdah"] },
+      { name: "Relacionamentos", slugs: ["relacionamentos"] },
+      { name: "Autoestima", slugs: ["autoestima"] },
+      { name: "Burnout", slugs: ["burnout"] },
+      { name: "Desenvolvimento Pessoal", slugs: ["desenvolvimento-pessoal"] },
+      { name: "Inteligência Emocional", slugs: ["inteligencia-emocional"] },
+      { name: "Sexualidade", slugs: ["sexualidade"] },
+      { name: "Carreira e Propósito", slugs: ["carreira-e-proposito"] },
+      { name: "Dependência Emocional", slugs: ["dependencia-emocional"] },
+    ],
+  },
+  {
+    title: "Para pais e famílias",
+    options: [
+      { name: "Psicologia Infantil", slugs: ["psicologia-infantil"] },
+      { name: "Orientação Parental", slugs: ["orientacao-parental"] },
+      { name: "Adolescência", slugs: ["adolescencia"] },
+      { name: "Autismo (TEA)", slugs: ["autismo-tea"] },
+      { name: "TDAH Infantil", slugs: ["tdah-infantil"] },
+      { name: "Dificuldades Escolares", slugs: ["dificuldades-escolares"] },
+      { name: "Separação dos Pais", slugs: ["separacao-dos-pais"] },
+      { name: "Comportamento Infantil", slugs: ["comportamento-infantil"] },
+    ],
+  },
+  {
+    title: "Para nichos LGBTQIA+",
+    options: [
+      { name: "Sexualidade", slugs: ["sexualidade"] },
+      { name: "Identidade de Gênero", slugs: ["identidade-genero"] },
+      { name: "Relacionamentos LGBTQIA+", slugs: ["relacionamentos-lgbtqia"] },
+      {
+        name: "Processo de Transição de Gênero",
+        slugs: ["processo-de-transicao-de-genero", "transicao-genero"],
+      },
+      { name: "Aceitação Familiar", slugs: ["aceitacao-familiar"] },
+      { name: "Preconceito e Discriminação", slugs: ["preconceito-discriminacao"] },
+    ],
+  },
+  {
+    title: "Relacionamentos",
+    options: [
+      { name: "Relacionamentos", slugs: ["relacionamentos"] },
+      { name: "Terapia de Casal", slugs: ["terapia-de-casal"] },
+      { name: "Dependência Emocional", slugs: ["dependencia-emocional"] },
+      { name: "Divórcio", slugs: ["divorcio"] },
+      { name: "Conflitos Familiares", slugs: ["conflitos-familiares"] },
+      { name: "Desenvolvimento Pessoal", slugs: ["desenvolvimento-pessoal"] },
+    ],
+  },
+  {
+    title: "Desenvolvimento Pessoal",
+    options: [
+      { name: "Autoestima", slugs: ["autoestima"] },
+      { name: "Inteligência Emocional", slugs: ["inteligencia-emocional"] },
+      { name: "Autoconhecimento", slugs: ["autoconhecimento"] },
+      { name: "Carreira e Propósito", slugs: ["carreira-e-proposito"] },
+    ],
+  },
+  {
+    title: "Neurodivergências",
+    options: [
+      { name: "TDAH", slugs: ["tdah"] },
+      { name: "Autismo (TEA)", slugs: ["autismo-tea"] },
+      { name: "Altas Habilidades", slugs: ["altas-habilidades"] },
+    ],
+  },
+  {
+    title: "Ciclos da Vida",
+    options: [
+      { name: "Luto", slugs: ["luto"] },
+      { name: "Maternidade", slugs: ["maternidade"] },
+      { name: "Paternidade", slugs: ["paternidade"] },
+      { name: "Adolescência", slugs: ["adolescencia"] },
+      { name: "Envelhecimento", slugs: ["envelhecimento"] },
+    ],
+  },
+] as const;
+
+const resolveSpecialtyCatalogItem = (
+  option: SpecialtyCategoryOption,
+  bySlug: Map<string, FreeProfileCatalogItem>,
+  byNormalizedName: Map<string, FreeProfileCatalogItem>,
+) => {
+  for (const slug of option.slugs) {
+    const direct = bySlug.get(slug);
+    if (direct) return direct;
+
+    const bySlugAsName = byNormalizedName.get(normalizeCatalogText(slug.replace(/-/g, " ")));
+    if (bySlugAsName) return bySlugAsName;
+  }
+
+  return byNormalizedName.get(normalizeCatalogText(option.name));
+};
+
+const normalizeCatalogText = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .trim();
+
 const toggleValue = (values: string[], id: string) => {
   return values.includes(id) ? values.filter((item) => item !== id) : [...values, id];
 };
@@ -195,6 +316,7 @@ const CatalogTagField = ({
   description,
   placeholderClassName = "text-xs",
   items,
+  groupedItems,
   limit,
   name,
   placeholder,
@@ -205,6 +327,7 @@ const CatalogTagField = ({
 }: {
   description?: string;
   items: FreeProfileCatalogItem[];
+  groupedItems?: CatalogTagGroup[];
   limit?: number;
   placeholderClassName?: string;
   name: keyof Pick<FreeProfileForm, "specialty_ids" | "approach_ids">;
@@ -222,6 +345,8 @@ const CatalogTagField = ({
   const selectedItems = items.filter((item) => selected.includes(item.id));
   const selectedMap = new Set(selected);
   const limitReached = Boolean(limit && selected.length >= limit);
+  const groupedCatalogItems =
+    groupedItems && groupedItems.length > 0 ? groupedItems : [{ title: "Todos", items }];
 
   const removeItem = (id: string) => {
     onChange(
@@ -314,28 +439,39 @@ const CatalogTagField = ({
           <div className="absolute z-20 mt-2 max-h-56 w-full overflow-y-auto rounded-2xl border border-border bg-surface p-2 shadow-[var(--lectum-shadow-soft)]">
             {items.length > 0 ? (
               <div className="grid gap-1">
-                {items.map((item) => {
-                  const checked = selectedMap.has(item.id);
-                  const disabled = Boolean(limitReached && !checked);
+                {groupedCatalogItems.map((group) => (
+                  <div className="grid gap-1" key={group.title}>
+                    <p className="px-1 text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-muted">
+                      {group.title}
+                    </p>
+                    <div className="grid gap-1">
+                      {group.items.map((item) => {
+                        const checked = selectedMap.has(item.id);
+                        const disabled = Boolean(limitReached && !checked);
 
-                  return (
-                    <button
-                      className={cn(
-                        "flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-[11px] font-semibold text-foreground transition hover:bg-primary-soft hover:text-primary",
-                        checked && "bg-primary-soft text-primary",
-                        disabled &&
-                          "cursor-not-allowed opacity-45 hover:bg-transparent hover:text-foreground",
-                      )}
-                      disabled={disabled}
-                      key={item.id}
-                      onClick={() => toggleItem(item.id)}
-                      type="button"
-                    >
-                      <span>{item.name}</span>
-                      {checked ? <span className="text-xs font-bold">Selecionado</span> : null}
-                    </button>
-                  );
-                })}
+                        return (
+                          <button
+                            className={cn(
+                              "flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-[11px] font-semibold text-foreground transition hover:bg-primary-soft hover:text-primary",
+                              checked && "bg-primary-soft text-primary",
+                              disabled &&
+                                "cursor-not-allowed opacity-45 hover:bg-transparent hover:text-foreground",
+                            )}
+                            disabled={disabled}
+                            key={`${item.id}-${group.title}`}
+                            onClick={() => toggleItem(item.id)}
+                            type="button"
+                          >
+                            <span>{item.name}</span>
+                            {checked ? (
+                              <span className="text-xs font-bold">Selecionado</span>
+                            ) : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
               <p className="px-3 py-2 text-sm text-muted">Nenhuma opção ativa encontrada.</p>
@@ -694,6 +830,30 @@ export const ProfessionalProfileSetupLogic = () => {
       ),
     [profile.data?.catalogs.approaches],
   );
+  const orderedSpecialtyGroups = useMemo(() => {
+    const specialties = profile.data?.catalogs.specialties || [];
+    const bySlug = new Map(specialties.map((item) => [item.slug, item]));
+    const byName = new Map(specialties.map((item) => [normalizeCatalogText(item.name), item]));
+    const grouped = SPECIALTY_CATEGORIES.map((category) => ({
+      title: category.title,
+      items: category.options
+        .map((option) => resolveSpecialtyCatalogItem(option, bySlug, byName))
+        .filter(Boolean) as FreeProfileCatalogItem[],
+    }));
+    const categorizedIds = new Set(grouped.flatMap((group) => group.items.map((item) => item.id)));
+    const remaining = specialties
+      .filter((item) => !categorizedIds.has(item.id))
+      .sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }));
+
+    if (remaining.length > 0) {
+      grouped.push({
+        title: "Outras",
+        items: remaining,
+      });
+    }
+
+    return grouped.filter((group) => group.items.length > 0);
+  }, [profile.data?.catalogs.specialties]);
   const orderedServiceOptions = useMemo(() => {
     const serviceDisplayOrder = [
       "terapia-individual",
@@ -1451,6 +1611,7 @@ export const ProfessionalProfileSetupLogic = () => {
                       : "Selecione até 10 especialidades."
                   }
                   items={profile.data.catalogs.specialties}
+                  groupedItems={orderedSpecialtyGroups}
                   limit={profile.data.plan.specialty_limit}
                   name="specialty_ids"
                   onChange={setCatalogValue}

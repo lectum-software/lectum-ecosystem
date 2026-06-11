@@ -1,0 +1,41 @@
+INSERT INTO specialties (id, name, slug, active, deleted)
+VALUES
+  ('specialty-ansiedade', 'Ansiedade', 'ansiedade', true, false),
+  ('specialty-tdah', 'TDAH', 'tdah', true, false),
+  ('specialty-relacionamentos', 'Relacionamentos', 'relacionamentos', true, false),
+  ('specialty-autoestima', 'Autoestima', 'autoestima', true, false),
+  ('specialty-burnout', 'Burnout', 'burnout', true, false),
+  ('specialty-desenvolvimento-pessoal', 'Desenvolvimento Pessoal', 'desenvolvimento-pessoal', true, false),
+  ('specialty-inteligencia-emocional', 'Inteligência Emocional', 'inteligencia-emocional', true, false),
+  ('specialty-sexualidade', 'Sexualidade', 'sexualidade', true, false),
+  ('specialty-carreira-e-proposito', 'Carreira e Propósito', 'carreira-e-proposito', true, false),
+  ('specialty-dependencia-emocional', 'Dependência Emocional', 'dependencia-emocional', true, false),
+  ('specialty-psicologia-infantil', 'Psicologia Infantil', 'psicologia-infantil', true, false),
+  ('specialty-orientacao-parental', 'Orientação Parental', 'orientacao-parental', true, false),
+  ('specialty-adolescencia', 'Adolescência', 'adolescencia', true, false),
+  ('specialty-autismo-tea', 'Autismo (TEA)', 'autismo-tea', true, false),
+  ('specialty-tdah-infantil', 'TDAH Infantil', 'tdah-infantil', true, false),
+  ('specialty-dificuldades-escolares', 'Dificuldades Escolares', 'dificuldades-escolares', true, false),
+  ('specialty-separacao-dos-pais', 'Separação dos Pais', 'separacao-dos-pais', true, false),
+  ('specialty-comportamento-infantil', 'Comportamento Infantil', 'comportamento-infantil', true, false),
+  ('specialty-identidade-genero', 'Identidade de Gênero', 'identidade-genero', true, false),
+  ('specialty-relacionamentos-lgbtqia', 'Relacionamentos LGBTQIA+', 'relacionamentos-lgbtqia', true, false),
+  ('specialty-processo-de-transicao-de-genero', 'Processo de Transição de Gênero', 'processo-de-transicao-de-genero', true, false),
+  ('specialty-aceitacao-familiar', 'Aceitação Familiar', 'aceitacao-familiar', true, false),
+  ('specialty-preconceito-discriminacao', 'Preconceito e Discriminação', 'preconceito-discriminacao', true, false),
+  ('specialty-terapia-de-casal', 'Terapia de Casal', 'terapia-de-casal', true, false),
+  ('specialty-divorcio', 'Divórcio', 'divorcio', true, false),
+  ('specialty-conflitos-familiares', 'Conflitos Familiares', 'conflitos-familiares', true, false),
+  ('specialty-autoconhecimento', 'Autoconhecimento', 'autoconhecimento', true, false),
+  ('specialty-altas-habilidades', 'Altas Habilidades', 'altas-habilidades', true, false),
+  ('specialty-luto', 'Luto', 'luto', true, false),
+  ('specialty-maternidade', 'Maternidade', 'maternidade', true, false),
+  ('specialty-paternidade', 'Paternidade', 'paternidade', true, false),
+  ('specialty-envelhecimento', 'Envelhecimento', 'envelhecimento', true, false)
+ON CONFLICT (slug)
+DO UPDATE
+SET
+  name = EXCLUDED.name,
+  active = EXCLUDED.active,
+  deleted = EXCLUDED.deleted,
+  updated_at = NOW();

@@ -218,7 +218,7 @@ export const fields = [
     field: "input",
     label: "Bio",
     placeholder: "Ex.: Especialista em Relacionamentos",
-    description: "Texto curto com até 120 caracteres.",
+    description: "Escreva brevemente a sua proposta de valor",
     max: 120,
     showCounter: true,
     required: true,
