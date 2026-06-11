@@ -236,8 +236,7 @@ export const PsychologistsLogic = () => {
   );
   const shouldShowVideo = Boolean(backgroundVideoSrc) && !isVideoPlaybackFailed;
   const activeVideoSource = shouldShowVideo ? backgroundVideoSrc : null;
-  const featuredBio =
-    featuredPsychologist?.bio?.trim() || featuredPsychologist?.headline?.trim() || "";
+  const featuredBio = featuredPsychologist?.headline?.trim() || "";
 
   const filters = usePsychologistsFilterForm({
     filters: response?.filters,
