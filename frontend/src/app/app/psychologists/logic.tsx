@@ -208,8 +208,8 @@ const useViewportMetrics = () => {
       ratingIconSize: isCompact ? 11 : 12,
       ratingLineHeight: isCompact ? 16 : 18,
       ratingTextSize: isCompact ? 11 : 12,
-      bioLineHeight: isTiny ? 17 : isCompact ? 18 : 20,
-      bioSize: isTiny ? 12 : isCompact ? 13 : 14,
+      bioLineHeight: isTiny ? 16 : isCompact ? 17 : 19,
+      bioSize: isTiny ? 11 : isCompact ? 12 : 13,
       filterButtonSize: isCompact ? 40 : 42,
       horizontalPadding: isCompact ? 24 : 28,
       navBarHeight: DEFAULT_NAV_BAR_HEIGHT,
@@ -754,7 +754,7 @@ export const PsychologistsLogic = () => {
                           </p>
 
                           <div
-                            className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 leading-tight font-semibold text-white"
+                            className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 leading-tight font-medium text-white/75"
                             style={{ fontSize: `${metrics.subtitleSize}px` }}
                           >
                             <span className="min-w-0">
