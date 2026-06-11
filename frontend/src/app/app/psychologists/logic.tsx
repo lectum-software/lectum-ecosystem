@@ -244,15 +244,15 @@ const useViewportMetrics = () => {
     const effectiveWidth = Math.min(width, 430);
     const isCompact = effectiveWidth <= 390;
     const isTiny = effectiveWidth < 360;
-    const actionRailWidth = isTiny ? 64 : 72;
+    const actionButtonSize = isTiny ? 34 : 36;
 
     return {
-      actionButtonSize: isTiny ? 34 : 36,
+      actionButtonSize,
       actionGap: isCompact ? 14 : 18,
       actionIconSize: isTiny ? 13 : 14,
       actionLabelSize: isCompact ? 9 : 10,
       actionRightPadding: isTiny ? 12 : 16,
-      actionRailWidth,
+      actionRailWidth: actionButtonSize,
       actionTextLineHeight: 1,
       bioBottomOffset: isCompact ? 12 : 14,
       ratingIconSize: isCompact ? 11 : 12,
@@ -895,7 +895,7 @@ export const PsychologistsLogic = () => {
                         aria-label="Benefícios do psicólogo"
                         className="pointer-events-none absolute z-30 flex w-[min(190px,56vw)] list-none flex-col items-start gap-2 overflow-visible p-0"
                         style={{
-                          left: `${Math.max(8, metrics.horizontalPadding - 18)}px`,
+                          left: `${metrics.horizontalPadding}px`,
                           top: `calc(env(safe-area-inset-top) + ${
                             metrics.searchTop + metrics.searchHeight + 24
                           }px)`,

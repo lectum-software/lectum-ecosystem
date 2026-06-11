@@ -419,3 +419,13 @@ ext/image`.
 - Nao houve alteracao de backend, Prisma, migrations, packages, mocks ou dados do psicologo.
 - ADR atualizado: `adrs/0057-animacao-selos-video-psicologos.md`.
 - Validacoes executadas nesta etapa: ver registro do commit desta execucao.
+
+
+## Execucao complementar: alinhamento lateral dos elementos imersivos (2026-06-11)
+
+- Pedido do usuario: alinhar as margens dos elementos da tela, mantendo barra de pesquisa, selos e texto/bio na mesma guia esquerda, e botao de filtros com a coluna lateral de acoes na mesma guia direita.
+- A largura da coluna lateral foi ajustada ao tamanho real dos botoes de acao para que o eixo visual fique alinhado ao filtro, sem alterar navbar, dados ou acoes.
+- Os selos flutuantes passaram a usar a mesma margem esquerda do campo de busca e do bloco de informacoes do psicologo.
+- Nao houve alteracao de backend, Prisma, migrations, packages, mocks ou dados do psicologo.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas nesta etapa: ver registro do commit desta execucao.

@@ -46,3 +46,11 @@ Definimos para a tela `/app/psychologists`:
 
 - Validar futuramente em dispositivo real se a área de mídia livre deve excluir também espaços vazios do bloco inferior
   ou se o comportamento atual de bloqueio por camada textual é suficiente para a UX final.
+
+## Atualizacao 2026-06-11: guias laterais da tela imersiva
+
+A tela `/app/psychologists` passa a manter guias laterais consistentes:
+
+- barra de busca, selos flutuantes e bloco textual inferior compartilham a mesma margem esquerda;
+- botao de filtros e coluna lateral de acoes compartilham a mesma guia direita;
+- a mudanca e apenas visual, sem alterar dados, API, navbar ou comportamento dos botoes.
