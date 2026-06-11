@@ -70,7 +70,7 @@ export function PhoneController<FormType extends FieldValues>({
                     >
                       {countryCodeOptions.map((option) => (
                         <option
-                          key={`${option.label}-${String(option.value)}`}
+                          key={option.key ?? `${option.label}-${String(option.value)}`}
                           value={String(option.value)}
                         >
                           {option.label}
