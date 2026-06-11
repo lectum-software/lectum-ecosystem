@@ -146,7 +146,7 @@ export const ProfileEditLogic = () => {
         )}
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
-        <div className="mx-auto flex h-16 w-full max-w-[394px] items-center justify-between px-4 sm:max-w-xl lg:max-w-2xl">
+        <div className="mx-auto flex h-16 w-full max-w-[430px] items-center justify-between px-4 sm:max-w-xl lg:max-w-2xl">
           <Link
             aria-label="Voltar para meu perfil"
             className="grid h-10 w-10 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary"
@@ -166,7 +166,7 @@ export const ProfileEditLogic = () => {
         </div>
       </header>
 
-      <section className="mx-auto grid w-full max-w-[394px] gap-4 overflow-x-hidden pt-20 sm:max-w-xl lg:max-w-2xl">
+      <section className="mx-auto grid w-full max-w-[430px] gap-4 pt-20 sm:max-w-xl lg:max-w-2xl">
         {!isPatient ? (
           <InlineAlert title="Perfil de paciente" variant="warning">
             Esta tela edita apenas dados do paciente. Psicólogos devem usar a tela de perfil
@@ -260,7 +260,7 @@ export const ProfileEditLogic = () => {
                 paddingBottom: "calc(env(safe-area-inset-bottom) + 0.25rem)",
               }}
             >
-              <div className="mx-auto w-full max-w-[394px] sm:max-w-xl lg:max-w-2xl">
+              <div className="mx-auto w-full max-w-[430px] sm:max-w-xl lg:max-w-2xl">
                 <div className="rounded-[var(--lectum-card-radius)] bg-background/90 p-1 backdrop-blur">
                   <Button
                     className="h-14 w-full rounded-full"
