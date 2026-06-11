@@ -1,30 +1,41 @@
 ﻿"use client";
 
-import { ChevronLeft, ChevronRight, Search, UserRound, X } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Bell,
+  Heart,
+  MessageCircle,
+  Network,
+  Play,
+  Search,
+  Share2,
+  SlidersHorizontal,
+  Star,
+  UserRound,
+  UsersRound,
+  X,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDirectoryPsychologists } from "@/api/callers/directory";
 import { usePatient } from "@/api/callers/patient";
 import type { DirectoryPsychologistsQuery } from "@/api/generator/types/directory";
-import {
-  PsychologistCard,
-  type PsychologistCardItem,
-} from "@/components/psychologists/psychologist-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { getToken } from "@/hooks/cookies/token";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
-import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import {
   defaultPsychologistsFilterValues,
   type PsychologistsFilterForm,
   usePsychologistsFilterForm,
 } from "./use-form";
-
-const PAGE_LIMIT = 20;
 
 type ApiErrorData = {
   error?: string;
@@ -36,17 +47,59 @@ type ApiError = Error & {
   data?: ApiErrorData;
 };
 
-const normalizeNullable = (value?: string | null) => {
-  return value?.trim() ? value : null;
+const PAGE_LIMIT = 20;
+
+const DEFAULT_NAV_BAR_HEIGHT = 72;
+
+const formatRating = (ratingAvg: number, ratingCount: number) => {
+  if (ratingCount <= 0) return "0,0";
+
+  return (ratingAvg / 100).toLocaleString("pt-BR", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  });
 };
 
-const normalizeFormValues = (values: Partial<PsychologistsFilterForm>): PsychologistsFilterForm => {
-  return {
-    search: values.search?.trim() || "",
-    specialty: normalizeNullable(values.specialty),
-    service: normalizeNullable(values.service),
-    approach: normalizeNullable(values.approach),
-  };
+const formatProfileTitle = (gender?: string | null, formationYears?: number | null) => {
+  const base =
+    gender?.toLowerCase() === "feminino" || gender?.toLowerCase() === "mulher"
+      ? "Psicóloga"
+      : "Psicólogo";
+
+  return `${base} • ${formationYears ?? 0} anos de experiência`;
+};
+
+const normalizeFormValues = (
+  values: Partial<PsychologistsFilterForm>,
+): PsychologistsFilterForm => ({
+  search: values.search?.trim() || "",
+  specialty: values.specialty?.trim() || null,
+  service: values.service?.trim() || null,
+  approach: values.approach?.trim() || null,
+});
+
+const toQuery = (values: PsychologistsFilterForm, page: number): DirectoryPsychologistsQuery => ({
+  page,
+  limit: PAGE_LIMIT,
+  search: values.search?.trim() || undefined,
+  specialty: values.specialty || undefined,
+  service: values.service || undefined,
+  approach: values.approach || undefined,
+});
+
+const getInitials = (name: string) => {
+  const parts = name.split(/\s+/).filter(Boolean);
+
+  if (parts.length === 0) return "L";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+};
+
+const getPageFromParams = (params: URLSearchParams) => {
+  const parsed = Number(params.get("page") || "1");
+
+  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 1;
 };
 
 const readFiltersFromParams = (params: URLSearchParams): PsychologistsFilterForm => {
@@ -56,23 +109,6 @@ const readFiltersFromParams = (params: URLSearchParams): PsychologistsFilterForm
     service: params.get("service"),
     approach: params.get("approach"),
   });
-};
-
-const getPageFromParams = (params: URLSearchParams) => {
-  const parsed = Number(params.get("page") || "1");
-
-  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 1;
-};
-
-const toQuery = (values: PsychologistsFilterForm, page: number): DirectoryPsychologistsQuery => {
-  return {
-    page,
-    limit: PAGE_LIMIT,
-    search: values.search?.trim() || undefined,
-    specialty: values.specialty || undefined,
-    service: values.service || undefined,
-    approach: values.approach || undefined,
-  };
 };
 
 const buildFiltersParams = (values: PsychologistsFilterForm, page = 1) => {
@@ -107,12 +143,84 @@ const resolveDirectoryErrorMessage = (error: unknown) => {
   return rawMessage || "Não foi possível carregar a listagem de psicólogos.";
 };
 
+const useViewportMetrics = () => {
+  const [width, setWidth] = useState(() =>
+    typeof window === "undefined" ? 390 : window.innerWidth,
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const onResize = () => {
+      setWidth(window.innerWidth);
+    };
+
+    onResize();
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      window.removeEventListener("resize", onResize);
+    };
+  }, []);
+
+  return useMemo(() => {
+    const isSmall = width < 360;
+
+    return {
+      isSmall,
+      horizontalPadding: isSmall ? 18 : 24,
+      actionButtonSize: isSmall ? 48 : 54,
+      actionGap: isSmall ? 14 : 20,
+      titleSize: isSmall ? 20 : 22,
+      bioSize: isSmall ? 14 : 15,
+      navBarHeight: isSmall ? 64 : DEFAULT_NAV_BAR_HEIGHT,
+      searchRightGap: isSmall ? 72 : 78,
+    };
+  }, [width]);
+};
+
+const navigationItems = [
+  {
+    href: "/app/psychologists",
+    icon: UsersRound,
+    label: "Psicólogos",
+  },
+  {
+    href: "/app/favorites",
+    icon: Heart,
+    label: "Favoritos",
+  },
+  {
+    href: "/app/community",
+    icon: Network,
+    label: "Comunidade",
+  },
+  {
+    href: "/app/notifications",
+    icon: Bell,
+    label: "Notificações",
+  },
+  {
+    href: "/app/profile",
+    icon: UserRound,
+    label: "Perfil",
+  },
+] as const;
+
+const isActivePath = (pathname: string, href: string) =>
+  pathname === href || pathname.startsWith(`${href}/`);
+
 export const PsychologistsLogic = () => {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
+  const metrics = useViewportMetrics();
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const filterDialogRef = useRef<HTMLDivElement>(null);
+  const [shareFeedback, setShareFeedback] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+
+  const filterDialogRef = useRef<HTMLDivElement | null>(null);
   const [hasAuthToken] = useState(() => {
     if (typeof window === "undefined") return false;
 
@@ -120,7 +228,10 @@ export const PsychologistsLogic = () => {
   });
   const currentUser = useAppSelector((state) => state.user);
   const canFavoritePsychologists = Boolean(hasAuthToken && currentUser?.id);
-  const { favoritePsychologist, unfavoritePsychologist } = usePatient({ enableProfile: false });
+
+  const { favoritePsychologist, unfavoritePsychologist } = usePatient({
+    enableProfile: false,
+  });
 
   const params = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
   const filterValues = useMemo(() => readFiltersFromParams(params), [params]);
@@ -129,13 +240,8 @@ export const PsychologistsLogic = () => {
 
   const directory = useDirectoryPsychologists(query);
   const response = directory.data;
-  const pages = response?.pages ?? 0;
   const psychologists = response?.data ?? [];
-  const hasActiveFilters =
-    Boolean(filterValues.search?.trim()) ||
-    Boolean(filterValues.specialty) ||
-    Boolean(filterValues.service) ||
-    Boolean(filterValues.approach);
+  const featuredPsychologist = psychologists[0];
 
   const filters = usePsychologistsFilterForm({
     filters: response?.filters,
@@ -143,36 +249,55 @@ export const PsychologistsLogic = () => {
     values: filterValues,
   });
 
-  const goToPage = (page: number) => {
-    const next = buildFiltersParams(filterValues, page);
+  const errorMessage = directory.isError ? resolveDirectoryErrorMessage(directory.error) : null;
+  const hasActiveFilters =
+    Boolean(filterValues.search?.trim()) ||
+    Boolean(filterValues.specialty) ||
+    Boolean(filterValues.service) ||
+    Boolean(filterValues.approach);
 
-    router.replace(next.toString() ? `/app/psychologists?${next}` : "/app/psychologists", {
-      scroll: false,
-    });
-  };
+  const showInitialLoading = directory.isLoading && !response;
 
-  const applyFilterValues = (values: PsychologistsFilterForm) => {
-    const next = buildFiltersParams(normalizeFormValues(values), 1);
+  const applyFilterValues = useCallback(
+    (values: PsychologistsFilterForm) => {
+      const next = buildFiltersParams(normalizeFormValues(values), 1);
 
-    router.replace(next.toString() ? `/app/psychologists?${next}` : "/app/psychologists", {
-      scroll: false,
-    });
-  };
+      router.replace(next.toString() ? `/app/psychologists?${next}` : "/app/psychologists", {
+        scroll: false,
+      });
+    },
+    [router],
+  );
 
   const handleSubmitFilters = filters.hook.handleSubmit((values) => {
     applyFilterValues(values);
     setIsFiltersOpen(false);
   });
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     filters.hook.reset(defaultPsychologistsFilterValues);
     applyFilterValues(defaultPsychologistsFilterValues);
     setIsFiltersOpen(false);
-  };
+  }, [applyFilterValues, filters.hook]);
+
+  const handleSearchSubmit = useCallback(
+    (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      const formData = new FormData(event.currentTarget);
+      const nextSearch = String(formData.get("search") || "").trim();
+
+      applyFilterValues({
+        ...filterValues,
+        search: nextSearch,
+      });
+    },
+    [applyFilterValues, filterValues],
+  );
 
   const handleFiltersOpen = useCallback(() => {
+    filters.hook.reset(filterValues);
     setIsFiltersOpen(true);
-  }, []);
+  }, [filterValues, filters.hook]);
 
   const handleFiltersClose = useCallback(() => {
     filters.hook.reset(filterValues);
@@ -182,15 +307,9 @@ export const PsychologistsLogic = () => {
   useEffect(() => {
     if (!isFiltersOpen) return;
 
-    const timer = setTimeout(() => {
+    const timer = window.setTimeout(() => {
       filterDialogRef.current?.focus();
     }, 0);
-
-    return () => clearTimeout(timer);
-  }, [isFiltersOpen]);
-
-  useEffect(() => {
-    if (!isFiltersOpen) return;
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -201,20 +320,26 @@ export const PsychologistsLogic = () => {
     window.addEventListener("keydown", onKeyDown);
 
     return () => {
+      window.clearTimeout(timer);
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [handleFiltersClose, isFiltersOpen]);
 
-  const toggleFavorite = (psychologist: PsychologistCardItem) => {
-    if (!canFavoritePsychologists) return;
+  const toggleFavorite = useCallback(() => {
+    if (!canFavoritePsychologists || !featuredPsychologist) return;
 
-    if (psychologist.favorited) {
-      unfavoritePsychologist.mutate(psychologist.id);
+    if (featuredPsychologist.favorited) {
+      unfavoritePsychologist.mutate(featuredPsychologist.id);
       return;
     }
 
-    favoritePsychologist.mutate(psychologist.id);
-  };
+    favoritePsychologist.mutate(featuredPsychologist.id);
+  }, [
+    canFavoritePsychologists,
+    favoritePsychologist,
+    featuredPsychologist,
+    unfavoritePsychologist,
+  ]);
 
   const favoritePendingId =
     favoritePsychologist.isPending && typeof favoritePsychologist.variables === "string"
@@ -222,159 +347,467 @@ export const PsychologistsLogic = () => {
       : unfavoritePsychologist.isPending && typeof unfavoritePsychologist.variables === "string"
         ? unfavoritePsychologist.variables
         : null;
-  const errorMessage = directory.isError ? resolveDirectoryErrorMessage(directory.error) : null;
-  const showInitialLoading = directory.isLoading && !response;
-  const pageMaxWidth = "max-w-[430px]";
+
+  const isFavoritePending = featuredPsychologist
+    ? favoritePendingId === featuredPsychologist.id
+    : false;
+
+  const shareCurrent = useCallback(async () => {
+    if (!featuredPsychologist || isSharing) return;
+
+    const url =
+      typeof window === "undefined"
+        ? ""
+        : `${window.location.origin}/app/psychologist/${featuredPsychologist.id}`;
+
+    try {
+      setIsSharing(true);
+      if (typeof window !== "undefined" && "share" in navigator) {
+        await navigator.share({
+          title: `Perfil de ${featuredPsychologist.name}`,
+          text: featuredPsychologist.headline || "Perfis de Psicólogos na Lectum",
+          url,
+        });
+        return;
+      }
+
+      if (url) {
+        await navigator.clipboard.writeText(url);
+        setShareFeedback(true);
+        window.setTimeout(() => setShareFeedback(false), 1800);
+      }
+    } finally {
+      setIsSharing(false);
+    }
+  }, [featuredPsychologist, isSharing]);
 
   return (
-    <PrivateTemplate allowAnonymous autoHideNavigation>
-      <div className="grid w-full gap-4">
-        <header className="-mt-6 sticky top-0 left-1/2 z-30 w-screen -translate-x-1/2 border-b border-border bg-surface px-4 py-4 backdrop-blur-sm sm:px-6 sm:py-6">
-          <div className={cn("mx-auto grid w-full gap-3", pageMaxWidth)}>
-            <div className="flex min-w-0 items-center justify-between gap-3">
-              <h1 className="text-2xl font-extrabold text-foreground lg:text-3xl">Psicólogos</h1>
-              <button
-                aria-label="Abrir filtros"
-                className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-primary-soft text-primary transition hover:bg-primary/15"
-                onClick={handleFiltersOpen}
-                type="button"
-              >
-                <Search className="h-4 w-4" aria-hidden="true" />
-              </button>
-            </div>
-            {hasActiveFilters ? (
-              <p className="text-sm leading-6 text-muted">
-                Filtros ativos aplicados. Clique na lupa para ajustar.
-              </p>
+    <PrivateTemplate allowAnonymous showNavigation={false}>
+      <div className="relative isolate min-h-[100dvh] overflow-x-hidden bg-[#F8FAFC] text-white">
+        <div
+          className="relative mx-auto flex h-[100dvh] w-full overflow-hidden"
+          style={{
+            maxWidth: "430px",
+          }}
+        >
+          <div className="relative z-20 h-full w-full">
+            {showInitialLoading ? (
+              <div className="grid h-full place-items-center bg-[#F8FAFC] px-4 text-foreground">
+                <LoadingState label="Carregando Psicólogos" />
+              </div>
             ) : null}
-          </div>
-        </header>
 
-        <section className={cn("mx-auto grid w-full gap-4 px-4 sm:px-0", pageMaxWidth)}>
-          {isFiltersOpen ? (
-            <div
-              aria-labelledby="psychologist-filters-title"
-              aria-modal="true"
-              className="fixed inset-0 z-50 grid place-items-center bg-foreground/50 p-4 backdrop-blur-sm"
-              onMouseDown={handleFiltersClose}
-              role="dialog"
-            >
-              <div
-                className="grid w-full max-w-[500px] gap-4 rounded-[28px] border border-border bg-surface p-5 shadow-[0_24px_70px_rgb(15_23_42_/_26%)]"
-                onMouseDown={(event) => event.stopPropagation()}
-                ref={filterDialogRef}
-                role="document"
-                tabIndex={-1}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h2
-                      className="text-lg font-extrabold text-foreground"
-                      id="psychologist-filters-title"
-                    >
-                      Filtros de busca
-                    </h2>
-                    <p className="mt-1 text-sm leading-6 text-muted">
-                      Ajuste os critérios e aplique para refinar sua busca.
-                    </p>
-                  </div>
-                  <button
-                    aria-label="Fechar filtros"
-                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-foreground"
-                    onClick={handleFiltersClose}
-                    type="button"
-                  >
-                    <X className="h-4 w-4" aria-hidden="true" />
-                  </button>
-                </div>
+            {errorMessage ? (
+              <InlineAlert className="mt-10" title="Não foi possível carregar" variant="error">
+                {errorMessage}
+              </InlineAlert>
+            ) : null}
 
-                <form onSubmit={handleSubmitFilters}>
-                  <filters.Form {...filters.formProps} />
-                  <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-end">
-                    <Button onClick={clearFilters} type="button" variant="outline">
-                      Limpar filtros
-                    </Button>
-                    <Button type="submit">Aplicar filtros</Button>
+            {!showInitialLoading && !errorMessage && !featuredPsychologist ? (
+              <div className="grid h-full w-full place-items-center px-4 py-8">
+                <EmptyState
+                  className="w-full"
+                  description="Ainda não existem psicólogos publicados para estes filtros."
+                  icon={UsersRound}
+                  title="Nenhum Psicólogo encontrado"
+                  action={
+                    hasActiveFilters ? (
+                      <button
+                        aria-label="Limpar filtros"
+                        className="mt-3 rounded-full bg-[#22c55e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#16a34a]"
+                        onClick={clearFilters}
+                        type="button"
+                      >
+                        Limpar filtros
+                      </button>
+                    ) : null
+                  }
+                />
+              </div>
+            ) : null}
+
+            {!showInitialLoading && !errorMessage && featuredPsychologist ? (
+              <>
+                <form
+                  className="absolute z-30"
+                  onSubmit={handleSearchSubmit}
+                  style={{
+                    top: "calc(env(safe-area-inset-top) + 44px)",
+                    left: `${metrics.horizontalPadding}px`,
+                    right: `${metrics.searchRightGap}px`,
+                    height: "48px",
+                  }}
+                >
+                  <div className="relative flex h-full w-full items-center rounded-[999px] border border-[rgba(255,255,255,0.35)] bg-white/35 p-3 backdrop-blur-md">
+                    <Search className="absolute left-3 h-4 w-4 text-white/85" aria-hidden="true" />
+                    <input
+                      aria-label="Buscar Psicólogos"
+                      className="h-full w-full bg-transparent pr-3 pl-7 text-[15px] text-white outline-none placeholder:text-white/72"
+                      maxLength={120}
+                      defaultValue={filterValues.search}
+                      placeholder="Buscar Psicólogos..."
+                      name="search"
+                      type="text"
+                    />
                   </div>
                 </form>
-              </div>
-            </div>
-          ) : null}
 
-          {errorMessage ? (
-            <InlineAlert className="" title="Não foi possível carregar" variant="error">
-              {errorMessage}
-            </InlineAlert>
-          ) : null}
-
-          {showInitialLoading ? (
-            <div className="grid min-h-[42vh] place-items-center rounded-[18px] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
-              <LoadingState label="Carregando psicólogos" />
-            </div>
-          ) : null}
-
-          {!showInitialLoading && !errorMessage ? (
-            <>
-              {directory.isFetching ? (
-                <div className="flex items-center justify-end text-sm text-muted">
-                  <LoadingState label="Atualizando" />
-                </div>
-              ) : null}
-
-              {psychologists.length > 0 ? (
-                <div className="grid gap-6">
-                  {psychologists.map((psychologist) => (
-                    <PsychologistCard
-                      canFavorite={canFavoritePsychologists}
-                      favoritePending={favoritePendingId === psychologist.id}
-                      key={psychologist.id}
-                      onToggleFavorite={toggleFavorite}
-                      psychologist={psychologist}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <EmptyState
-                  className="mt-0"
-                  description="Ainda não existem psicólogos publicados para estes filtros. Quando profissionais reais forem aprovados e publicados, eles aparecerão aqui."
-                  icon={UserRound}
-                  title="Nenhum psicólogo encontrado"
-                />
-              )}
-
-              {pages > 1 ? (
-                <nav
-                  aria-label="Paginação de psicólogos"
-                  className="mt-4 flex items-center justify-between gap-3 rounded-[18px] border border-border bg-surface p-3"
+                <button
+                  aria-label="Abrir filtros"
+                  className="absolute z-30 grid items-center justify-center rounded-full border border-[rgba(255,255,255,0.35)] bg-white/35 text-white shadow-[0_5px_24px_rgba(15,23,42,0.2)] backdrop-blur-md hover:bg-white/45"
+                  onClick={handleFiltersOpen}
+                  style={{
+                    top: "calc(env(safe-area-inset-top) + 44px)",
+                    right: `${metrics.horizontalPadding}px`,
+                    width: `${metrics.actionButtonSize}px`,
+                    height: `${metrics.actionButtonSize}px`,
+                  }}
+                  type="button"
                 >
-                  <Button
-                    disabled={currentPage <= 1 || directory.isFetching}
-                    onClick={() => goToPage(currentPage - 1)}
-                    type="button"
-                    variant="outline"
-                  >
-                    <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-                    Anterior
-                  </Button>
+                  <SlidersHorizontal className="h-5 w-5" aria-hidden="true" />
+                </button>
 
-                  <span className="text-sm font-semibold text-muted">
-                    Página {currentPage} de {pages}
-                  </span>
+                <div
+                  className="absolute inset-x-0 overflow-hidden rounded-[2px]"
+                  style={{
+                    top: 0,
+                    bottom: `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom))`,
+                  }}
+                >
+                  <div className="relative h-full w-full overflow-hidden rounded-[14px]">
+                    {featuredPsychologist.video_cover_url || featuredPsychologist.avatar ? (
+                      <Image
+                        alt={featuredPsychologist.name}
+                        className="h-full w-full object-cover"
+                        fill
+                        priority
+                        sizes="(min-width: 768px) 430px, 100vw"
+                        src={
+                          resolvePublicMediaUrl(
+                            featuredPsychologist.video_cover_url || featuredPsychologist.avatar,
+                          ) ?? ""
+                        }
+                        unoptimized={isPublicMediaUrl(
+                          featuredPsychologist.video_cover_url || featuredPsychologist.avatar,
+                        )}
+                      />
+                    ) : (
+                      <div className="grid h-full w-full place-items-center bg-[#e2e8f0] text-3xl font-extrabold text-[#94a3b8]">
+                        {getInitials(featuredPsychologist.name)}
+                      </div>
+                    )}
 
-                  <Button
-                    disabled={currentPage >= pages || directory.isFetching}
-                    onClick={() => goToPage(currentPage + 1)}
-                    type="button"
-                    variant="outline"
+                    <div
+                      className="pointer-events-none absolute inset-0"
+                      style={{
+                        background:
+                          "linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.22) 22%, rgba(0,0,0,0.02) 44%, rgba(0,0,0,0) 58%)",
+                      }}
+                    />
+
+                    <button
+                      aria-label={`Abrir perfil de ${featuredPsychologist.name}`}
+                      className="absolute left-1/2 top-1/2 z-20 grid -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/35 bg-white/22 text-white transition hover:scale-105 hover:bg-white/30"
+                      onClick={() => router.push(`/app/psychologist/${featuredPsychologist.id}`)}
+                      style={{
+                        width: "64px",
+                        height: "64px",
+                        borderRadius: "999px",
+                      }}
+                      type="button"
+                    >
+                      <Play className="ml-1 h-8 w-8" aria-hidden="true" />
+                    </button>
+
+                    <div
+                      className="absolute z-20 flex flex-col items-center"
+                      style={{
+                        right: `${metrics.horizontalPadding}px`,
+                        top: "42%",
+                        transform: "translateY(-50%)",
+                        gap: `${metrics.actionGap}px`,
+                      }}
+                    >
+                      <div className="grid items-center gap-1 text-center">
+                        <button
+                          aria-label={`Favoritar ${featuredPsychologist.name}`}
+                          aria-pressed={featuredPsychologist.favorited}
+                          className={cn(
+                            "grid place-items-center rounded-full bg-white text-[#64748b] transition disabled:cursor-not-allowed disabled:opacity-60",
+                            featuredPsychologist.favorited
+                              ? "text-[#ef4444]"
+                              : "hover:bg-[#f8fafc]",
+                          )}
+                          disabled={isFavoritePending || !canFavoritePsychologists}
+                          onClick={toggleFavorite}
+                          style={{
+                            width: `${metrics.actionButtonSize}px`,
+                            height: `${metrics.actionButtonSize}px`,
+                          }}
+                          type="button"
+                        >
+                          <Heart
+                            className={cn(
+                              "h-6 w-6",
+                              featuredPsychologist.favorited && "fill-[#ef4444]",
+                            )}
+                            aria-hidden="true"
+                          />
+                        </button>
+                        <span className="text-[11px] font-semibold">Favoritar</span>
+                      </div>
+
+                      {featuredPsychologist.whatsapp_url ? (
+                        <div className="grid items-center gap-1 text-center">
+                          <a
+                            aria-label={`Chamar ${featuredPsychologist.name} no WhatsApp`}
+                            className="grid place-items-center rounded-full bg-[#22C55E] text-white transition hover:bg-[#16A34A]"
+                            href={featuredPsychologist.whatsapp_url}
+                            rel="noreferrer"
+                            target="_blank"
+                            style={{
+                              width: `${metrics.actionButtonSize + 4}px`,
+                              height: `${metrics.actionButtonSize + 4}px`,
+                            }}
+                          >
+                            <WhatsAppIcon className="h-5 w-5 text-white" aria-hidden="true" />
+                          </a>
+                          <span className="text-[11px] font-semibold">WhatsApp</span>
+                        </div>
+                      ) : (
+                        <div className="grid items-center gap-1 text-center">
+                          <button
+                            aria-label="WhatsApp indisponível"
+                            className="grid cursor-not-allowed place-items-center rounded-full bg-[#22C55E]/70 text-white"
+                            disabled
+                            type="button"
+                            style={{
+                              width: `${metrics.actionButtonSize + 4}px`,
+                              height: `${metrics.actionButtonSize + 4}px`,
+                            }}
+                          >
+                            <MessageCircle className="h-5 w-5" aria-hidden="true" />
+                          </button>
+                          <span className="text-[11px] font-semibold">WhatsApp</span>
+                        </div>
+                      )}
+
+                      <div className="grid items-center gap-1 text-center">
+                        <button
+                          aria-label={`Compartilhar perfil de ${featuredPsychologist.name}`}
+                          className="grid place-items-center rounded-full bg-white text-[#64748b] transition hover:bg-[#e2e8f0]"
+                          onClick={shareCurrent}
+                          type="button"
+                          style={{
+                            width: `${metrics.actionButtonSize}px`,
+                            height: `${metrics.actionButtonSize}px`,
+                          }}
+                        >
+                          <Share2 className="h-6 w-6" aria-hidden="true" />
+                        </button>
+                        <span className="text-[11px] font-semibold">Compartilhar</span>
+                      </div>
+
+                      <div className="grid items-center gap-1 text-center">
+                        <Link
+                          aria-label={`Ver perfil de ${featuredPsychologist.name}`}
+                          className="grid place-items-center rounded-full bg-transparent"
+                          href={`/app/psychologist/${featuredPsychologist.id}`}
+                        >
+                          <div
+                            className="overflow-hidden rounded-full bg-white p-0.5 text-[#0f172a]"
+                            style={{
+                              width: `${metrics.actionButtonSize}px`,
+                              height: `${metrics.actionButtonSize}px`,
+                              border: "2px solid #fff",
+                            }}
+                          >
+                            {featuredPsychologist.avatar ? (
+                              <Image
+                                alt={featuredPsychologist.name}
+                                className="h-full w-full rounded-full object-cover"
+                                fill
+                                sizes={`${metrics.actionButtonSize}px`}
+                                src={resolvePublicMediaUrl(featuredPsychologist.avatar) ?? ""}
+                                unoptimized={isPublicMediaUrl(featuredPsychologist.avatar)}
+                              />
+                            ) : (
+                              <span className="grid h-full w-full place-items-center rounded-full bg-[#e2e8f0] text-[11px] font-semibold text-[#334155]">
+                                {getInitials(featuredPsychologist.name)}
+                              </span>
+                            )}
+                          </div>
+                        </Link>
+                        <span className="text-[11px] font-semibold">Perfil</span>
+                      </div>
+                    </div>
+
+                    <section
+                      aria-live={shareFeedback ? "polite" : "off"}
+                      className="pointer-events-none absolute inset-x-0 text-[#ffffff]"
+                      style={{
+                        left: `${metrics.horizontalPadding}px`,
+                        right: "96px",
+                        bottom: `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom) + 24px)`,
+                      }}
+                    >
+                      {featuredPsychologist.available_today ? (
+                        <div className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-[#22C55E]">
+                          <span className="h-2 w-2 rounded-full bg-[#22C55E]" />
+                          Disponível hoje
+                        </div>
+                      ) : null}
+
+                      <div className="mt-3 grid gap-1">
+                        <p
+                          className="flex min-w-0 flex-wrap items-center gap-1.5 leading-tight font-bold text-white"
+                          style={{ fontSize: `${metrics.titleSize}px` }}
+                        >
+                          <span className="min-w-0">{featuredPsychologist.name}</span>
+                          {featuredPsychologist.verified ? (
+                            <VerifiedBadgeIcon
+                              aria-hidden="true"
+                              className="mt-0.5 h-4 w-4 shrink-0"
+                            />
+                          ) : null}
+                        </p>
+
+                        <p className="text-[16px] font-bold leading-tight text-white">
+                          {formatProfileTitle(
+                            featuredPsychologist.gender,
+                            featuredPsychologist.formation_years,
+                          )}
+                        </p>
+
+                        <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                          <span className="inline-flex items-center rounded-full border border-white/30 bg-white/22 px-2.5 py-0.5 text-xs font-semibold text-white">
+                            <Star className="h-3.5 w-3.5 text-[#FACC15]" aria-hidden="true" />
+                            {formatRating(
+                              featuredPsychologist.rating_avg,
+                              featuredPsychologist.rating_count,
+                            )}
+                          </span>
+                        </div>
+                      </div>
+
+                      <p
+                        className="mt-2 line-clamp-2 leading-[22px] text-white/95"
+                        style={{
+                          fontSize: `${metrics.bioSize}px`,
+                        }}
+                      >
+                        {featuredPsychologist.bio || featuredPsychologist.headline}
+                      </p>
+
+                      {shareFeedback ? (
+                        <p
+                          aria-live="polite"
+                          className="mt-2 rounded-full bg-black/45 px-2 py-1 text-xs text-white"
+                        >
+                          Link copiado
+                        </p>
+                      ) : null}
+                    </section>
+                  </div>
+                </div>
+
+                {isFiltersOpen ? (
+                  <div
+                    aria-labelledby="psychologist-filters-title"
+                    aria-modal="true"
+                    className="fixed inset-0 z-50 grid place-items-center bg-foreground/55 p-4 backdrop-blur-sm"
+                    onMouseDown={handleFiltersClose}
+                    role="dialog"
                   >
-                    Próxima
-                    <ChevronRight className="h-4 w-4" aria-hidden="true" />
-                  </Button>
-                </nav>
-              ) : null}
-            </>
-          ) : null}
-        </section>
+                    <div
+                      className="grid w-full max-w-[500px] gap-4 rounded-[28px] border border-[#e2e8f0] bg-surface p-5 shadow-[0_24px_70px_rgb(15_23_42_/_26%)]"
+                      onMouseDown={(event) => event.stopPropagation()}
+                      ref={filterDialogRef}
+                      role="document"
+                      tabIndex={-1}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h2
+                            className="text-lg font-extrabold text-foreground"
+                            id="psychologist-filters-title"
+                          >
+                            Filtros de busca
+                          </h2>
+                          <p className="mt-1 text-sm leading-6 text-muted">
+                            Ajuste os critérios e aplique para refinar sua busca.
+                          </p>
+                        </div>
+                        <button
+                          aria-label="Fechar filtros"
+                          className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-foreground"
+                          onClick={handleFiltersClose}
+                          type="button"
+                        >
+                          <X className="h-4 w-4" aria-hidden="true" />
+                        </button>
+                      </div>
+
+                      <form onSubmit={handleSubmitFilters}>
+                        <filters.Form {...filters.formProps} />
+                        <div className="mt-4 flex flex-col gap-3">
+                          <button
+                            className="inline-flex h-10 items-center justify-center rounded-full border border-[#e2e8f0] bg-white text-sm font-semibold text-foreground"
+                            onClick={clearFilters}
+                            type="button"
+                          >
+                            Limpar filtros
+                          </button>
+                          <button
+                            className="inline-flex h-10 items-center justify-center rounded-full bg-[#308ce8] font-semibold text-white"
+                            type="submit"
+                          >
+                            Aplicar filtros
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                ) : null}
+              </>
+            ) : null}
+          </div>
+        </div>
+
+        <nav
+          aria-label="Navegação principal"
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-[#e2e8f0] bg-white"
+          style={{
+            height: `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom))`,
+          }}
+        >
+          <div
+            className="mx-auto grid h-16 max-w-[430px] grid-cols-5"
+            style={{
+              paddingBottom: "env(safe-area-inset-bottom)",
+            }}
+          >
+            {navigationItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname ? isActivePath(pathname, item.href) : false;
+
+              return (
+                <Link
+                  key={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                  className={cn(
+                    "grid min-h-16 place-items-center gap-0.5 text-[11px] font-semibold transition",
+                    isActive ? "text-[#308ce8]" : "text-[#94a3b8] hover:text-[#0f172a]",
+                  )}
+                  href={item.href}
+                >
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                  <span className="leading-none">{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
       </div>
     </PrivateTemplate>
   );
