@@ -599,6 +599,7 @@ export function PsychologistCard({
   const shareButtonRef = useRef<HTMLButtonElement>(null);
   const cardRef = useRef<HTMLElement>(null);
   const tagContainerRef = useRef<HTMLDivElement>(null);
+  const hasTags = tags.length > 0;
   const [tagTopOffsetPx, setTagTopOffsetPx] = useState<number | null>(null);
   const [overlayHeightPx, setOverlayHeightPx] = useState<number | null>(null);
 
@@ -626,7 +627,10 @@ export function PsychologistCard({
   useEffect(() => {
     const cardNode = cardRef.current;
     const overlayNode = overlayRef.current;
+
     if (!cardNode || !overlayNode) return;
+    if (!hasTags) return;
+
     if (typeof window === "undefined" || typeof ResizeObserver === "undefined") return;
 
     const animationFrameHandle = requestAnimationFrame(() => {
@@ -646,7 +650,7 @@ export function PsychologistCard({
       resizeObserver.disconnect();
       window.removeEventListener("resize", recalculateTagTopOffset);
     };
-  }, [recalculateTagTopOffset]);
+  }, [hasTags, recalculateTagTopOffset]);
 
   return (
     <article
@@ -684,7 +688,7 @@ export function PsychologistCard({
         )}
       </div>
 
-      <div className="pointer-events-none absolute inset-0 z-20">
+      <div className="pointer-events-none absolute inset-0 z-30">
         <div
           className="pointer-events-auto absolute"
           style={{
@@ -702,6 +706,7 @@ export function PsychologistCard({
             position: "absolute",
             // mantém a distância relativa ao topo do overlay quando sua altura muda
             top: `calc(100% - (var(--psychologist-overlay-height) + ${OVERLAY_FAVORITE_OFFSET}))`,
+            zIndex: 31,
           }}
           canFavorite={canFavorite}
           favoritePending={favoritePending}
@@ -711,12 +716,13 @@ export function PsychologistCard({
 
         <ShareButton
           buttonRef={shareButtonRef}
-          className="pointer-events-auto"
+          className="pointer-events-auto z-31"
           buttonStyle={{
             right: "3.2%",
             position: "absolute",
             // mantém a distância relativa ao topo do overlay quando sua altura muda
             top: `calc(100% - (var(--psychologist-overlay-height) + ${OVERLAY_FAVORITE_OFFSET} - ${OVERLAY_SHARE_GAP}))`,
+            zIndex: 31,
           }}
           route={route}
           psychologistName={displayName}
@@ -730,7 +736,7 @@ export function PsychologistCard({
               left: "3.2%",
               top: `${tagTopOffsetPx}px`,
               gap: OVERLAY_SIDE_BADGE_GAP,
-              zIndex: 21,
+              zIndex: 31,
             }}
           >
             {tags.map((tag, index) => (
