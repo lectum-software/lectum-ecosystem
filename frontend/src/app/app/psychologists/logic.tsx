@@ -595,7 +595,7 @@ export const PsychologistsLogic = () => {
                         gap: `${metrics.actionGap}px`,
                       }}
                     >
-                      <div className="grid items-center gap-1 text-center">
+                      <div className="grid justify-items-center gap-1 text-center">
                         <button
                           aria-label={`Favoritar ${featuredPsychologist.name}`}
                           aria-pressed={featuredPsychologist.favorited}
@@ -625,7 +625,7 @@ export const PsychologistsLogic = () => {
                       </div>
 
                       {featuredPsychologist.whatsapp_url ? (
-                        <div className="grid items-center gap-1 text-center">
+                        <div className="grid justify-items-center gap-1 text-center">
                           <a
                             aria-label={`Chamar ${featuredPsychologist.name} no WhatsApp`}
                             className="grid place-items-center rounded-full bg-[#22C55E] text-white transition hover:bg-[#16A34A]"
@@ -645,7 +645,7 @@ export const PsychologistsLogic = () => {
                           <span className="text-[10px] font-semibold leading-none">WhatsApp</span>
                         </div>
                       ) : (
-                        <div className="grid items-center gap-1 text-center">
+                        <div className="grid justify-items-center gap-1 text-center">
                           <button
                             aria-label="WhatsApp indisponível"
                             className="grid cursor-not-allowed place-items-center rounded-full bg-[#22C55E]/70 text-white"
@@ -662,7 +662,7 @@ export const PsychologistsLogic = () => {
                         </div>
                       )}
 
-                      <div className="grid items-center gap-1 text-center">
+                      <div className="grid justify-items-center gap-1 text-center">
                         <button
                           aria-label={`Compartilhar perfil de ${featuredPsychologist.name}`}
                           className="grid place-items-center rounded-full bg-white text-[#64748b] transition hover:bg-[#e2e8f0]"
@@ -678,7 +678,7 @@ export const PsychologistsLogic = () => {
                         <span className="text-[10px] font-semibold leading-none">Compartilhar</span>
                       </div>
 
-                      <div className="grid items-center gap-1 text-center">
+                      <div className="grid justify-items-center gap-1 text-center">
                         <Link
                           aria-label={`Ver perfil de ${featuredPsychologist.name}`}
                           className="grid place-items-center rounded-full bg-transparent"

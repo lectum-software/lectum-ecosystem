@@ -77,3 +77,7 @@ Decisoes complementares:
 - compactar experiencia para `N anos exp.` e manter avaliacao na mesma linha em uma pill translucida;
 - reduzir botoes laterais, icones e labels para uma escala mais proxima de TikTok/Reels, preservando acessibilidade por `aria-label`;
 - manter a navbar do `PrivateTemplate` como componente compartilhado intocado.
+
+### Complemento 2026-06-11: eixo vertical da coluna de acoes
+
+A coluna lateral de acoes usa labels com larguras diferentes. Para preservar o eixo vertical unico dos botoes em um padrao de rede social, cada grupo da coluna deve centralizar explicitamente o botao/icone sobre o texto com `justify-items-center`, em vez de depender do alinhamento padrao do grid.

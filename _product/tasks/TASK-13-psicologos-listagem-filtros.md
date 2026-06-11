@@ -360,3 +360,10 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - `Invoke-WebRequest http://127.0.0.1:3000/app/psychologists` retornou HTTP 200
+
+## Execucao complementar: alinhamento da coluna de acoes (2026-06-11)
+
+- Pedido do usuario: alinhar o eixo vertical dos quatro botoes laterais (`Favoritar`, `WhatsApp`, `Compartilhar` e `Perfil`), pois `Compartilhar` estava visualmente desalinhado.
+- Os grupos da coluna lateral passaram a centralizar explicitamente seus itens com `justify-items-center`, evitando que labels mais largos desloquem o centro visual do botao.
+- Navbar, tamanhos, comportamento do video, dados e API nao foram alterados.
+- Validacoes executadas nesta etapa: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP 200 em `/app/psychologists`.
