@@ -269,7 +269,7 @@ const CatalogTagField = ({
             <button
               aria-expanded={open}
               className={cn(
-                "min-w-[9rem] flex-1 py-1 text-left text-xs text-subtle outline-none",
+                "min-w-[9rem] flex-1 py-1 text-left text-[11px] text-subtle outline-none",
                 limitReached && "text-muted",
               )}
               onClick={() => setOpen((current) => !current)}
