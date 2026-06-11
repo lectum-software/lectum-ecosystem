@@ -166,7 +166,7 @@ export const ProfileEditLogic = () => {
         </div>
       </header>
 
-      <section className="mx-auto grid w-full max-w-[394px] gap-4 pt-20 sm:max-w-xl lg:max-w-2xl">
+      <section className="mx-auto grid w-full max-w-[394px] gap-4 overflow-x-hidden pt-20 sm:max-w-xl lg:max-w-2xl">
         {!isPatient ? (
           <InlineAlert title="Perfil de paciente" variant="warning">
             Esta tela edita apenas dados do paciente. Psicólogos devem usar a tela de perfil
@@ -217,7 +217,7 @@ export const ProfileEditLogic = () => {
                   <UserRound className="h-5 w-5 text-primary" aria-hidden="true" />
                   <h2 className="text-lg font-extrabold text-foreground">Informações Básicas</h2>
                 </div>
-                <div className="grid gap-0.5">
+                <div className="grid min-w-0 gap-0.5">
                   {formProps.fields.map((field) => {
                     const Component = components[field.field];
 

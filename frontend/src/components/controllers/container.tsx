@@ -57,7 +57,7 @@ export function Container({
 
   return (
     <Label
-      className={cn("grid gap-2 text-sm font-semibold text-foreground", className)}
+      className={cn("grid min-w-0 gap-2 text-sm font-semibold text-foreground", className)}
       htmlFor={htmlFor}
       skipHtmlFor={skipHtmlFor}
       testId={`input-controller-${name}`}
