@@ -702,6 +702,8 @@ export const ProfessionalProfileSetupLogic = () => {
       "hipnoterapia",
       "terapia-familiar",
       "orientacao-vocacional",
+      "avaliacao-psicologica",
+      "neuropsicologia",
     ];
 
     const orderBySlug = new Map(serviceDisplayOrder.map((slug, index) => [slug, index]));

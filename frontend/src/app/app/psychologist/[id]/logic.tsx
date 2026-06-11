@@ -91,6 +91,9 @@ const targetAudienceLabel: Record<string, string> = {
   adultos: "Adultos (18-59)",
   criancas: "Crianças (até 11)",
   idosos: "Idosos (60+)",
+  casais: "Casais",
+  familias: "Famílias",
+  lgbtqia_plus: "LGBTQIA+",
 };
 
 const normalizeTab = (value: string | null): ProfileTab => {

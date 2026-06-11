@@ -71,6 +71,9 @@ export const PUBLIC_TARGET_OPTIONS = [
   { label: "Adolescentes (12-17)", value: "adolescentes" },
   { label: "Adultos (18-59)", value: "adultos" },
   { label: "Idosos (60+)", value: "idosos" },
+  { label: "Casais", value: "casais" },
+  { label: "Famílias", value: "familias" },
+  { label: "LGBTQIA+", value: "lgbtqia_plus" },
 ] satisfies FieldOption[];
 
 export const WEEKDAY_OPTIONS = [
