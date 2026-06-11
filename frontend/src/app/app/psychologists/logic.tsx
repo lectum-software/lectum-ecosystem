@@ -9,7 +9,6 @@ import {
   SlidersHorizontal,
   Star,
   UsersRound,
-  Volume2,
   VolumeX,
   X,
 } from "lucide-react";
@@ -49,6 +48,7 @@ type ApiError = Error & {
 const PAGE_LIMIT = 20;
 
 const DEFAULT_NAV_BAR_HEIGHT = 72;
+const PSYCHOLOGISTS_BACKGROUND_VIDEO_SELECTOR = "video[data-psychologists-background='true']";
 
 const formatRating = (ratingAvg: number, ratingCount: number) => {
   if (ratingCount <= 0) return "0,0";
@@ -265,10 +265,19 @@ export const PsychologistsLogic = () => {
     }
 
     void currentVideo.play().catch(() => {
-      setIsVideoPlaybackFailed(true);
       setIsVideoPaused(true);
     });
   }, [activeVideoSource, isVideoMuted, isVideoPaused]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    document
+      .querySelectorAll<HTMLVideoElement>(PSYCHOLOGISTS_BACKGROUND_VIDEO_SELECTOR)
+      .forEach((video) => {
+        video.muted = isVideoMuted;
+      });
+  }, [isVideoMuted]);
 
   const applyFilterValues = useCallback(
     (values: PsychologistsFilterForm) => {
@@ -316,26 +325,53 @@ export const PsychologistsLogic = () => {
     setIsFiltersOpen(false);
   }, [filterValues, filters.hook]);
 
-  const toggleVideoPlayback = useCallback(() => {
+  const pauseVideoPlayback = useCallback(() => {
     const currentVideo = backgroundVideoRef.current;
     if (!currentVideo || !shouldShowVideo) return;
-
-    if (currentVideo.paused) {
-      setIsVideoPaused(false);
-      void currentVideo.play().catch(() => {
-        setIsVideoPlaybackFailed(true);
-        setIsVideoPaused(true);
-      });
-      return;
-    }
 
     currentVideo.pause();
     setIsVideoPaused(true);
   }, [shouldShowVideo]);
 
-  const toggleVideoMute = useCallback(() => {
-    setIsVideoMuted((current) => !current);
+  const unmuteAllVideos = useCallback(() => {
+    if (typeof window === "undefined") return;
+
+    document
+      .querySelectorAll<HTMLVideoElement>(PSYCHOLOGISTS_BACKGROUND_VIDEO_SELECTOR)
+      .forEach((video) => {
+        video.muted = false;
+      });
   }, []);
+
+  const playCurrentVideo = useCallback(() => {
+    const currentVideo = backgroundVideoRef.current;
+    if (!currentVideo || !shouldShowVideo) return;
+
+    setIsVideoPaused(false);
+    void currentVideo.play().catch(() => {
+      setIsVideoPaused(true);
+    });
+  }, [shouldShowVideo]);
+
+  const handleVideoTap = useCallback(() => {
+    const currentVideo = backgroundVideoRef.current;
+    if (!currentVideo || !shouldShowVideo) return;
+
+    if (isVideoMuted) {
+      currentVideo.muted = false;
+      unmuteAllVideos();
+      setIsVideoMuted(false);
+      playCurrentVideo();
+      return;
+    }
+
+    if (!currentVideo.paused) {
+      pauseVideoPlayback();
+      return;
+    }
+
+    playCurrentVideo();
+  }, [isVideoMuted, pauseVideoPlayback, playCurrentVideo, shouldShowVideo, unmuteAllVideos]);
 
   useEffect(() => {
     if (!isFiltersOpen) return;
@@ -510,6 +546,7 @@ export const PsychologistsLogic = () => {
                     {shouldShowVideo ? (
                       <video
                         aria-label={`Vídeo de apresentação de ${featuredPsychologist.name}`}
+                        data-psychologists-background="true"
                         autoPlay
                         className="h-full w-full bg-black object-cover"
                         controls={false}
@@ -559,10 +596,10 @@ export const PsychologistsLogic = () => {
                         aria-label={
                           isVideoPaused
                             ? `Retomar vídeo de ${featuredPsychologist.name}`
-                            : `Pausar vídeo de ${featuredPsychologist.name}`
+                            : `Desativar reprodução do vídeo de ${featuredPsychologist.name}`
                         }
                         className="absolute inset-0 z-10 h-full w-full cursor-default border-0 bg-transparent p-0"
-                        onClick={toggleVideoPlayback}
+                        onClick={handleVideoTap}
                         type="button"
                       />
                     ) : null}
@@ -575,7 +612,7 @@ export const PsychologistsLogic = () => {
                             : `Ativar som do vídeo de ${featuredPsychologist.name}`
                         }
                         className="absolute left-1/2 top-1/2 z-20 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/35 bg-black/30 text-white shadow-[0_10px_30px_rgba(0,0,0,0.22)] backdrop-blur-sm transition hover:bg-black/40"
-                        onClick={isVideoPaused ? toggleVideoPlayback : toggleVideoMute}
+                        onClick={handleVideoTap}
                         type="button"
                       >
                         {isVideoPaused ? (
@@ -583,17 +620,6 @@ export const PsychologistsLogic = () => {
                         ) : isVideoMuted ? (
                           <VolumeX className="h-5 w-5" aria-hidden="true" />
                         ) : null}
-                      </button>
-                    ) : null}
-
-                    {shouldShowVideo && !isVideoMuted ? (
-                      <button
-                        aria-label={`Silenciar vídeo de ${featuredPsychologist.name}`}
-                        className="absolute left-6 top-[calc(env(safe-area-inset-top)+92px)] z-20 grid h-8 w-8 place-items-center rounded-full bg-black/25 text-white backdrop-blur-sm transition hover:bg-black/35"
-                        onClick={toggleVideoMute}
-                        type="button"
-                      >
-                        <Volume2 className="h-4 w-4" aria-hidden="true" />
                       </button>
                     ) : null}
 
