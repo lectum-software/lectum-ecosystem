@@ -599,7 +599,6 @@ export function PsychologistCard({
   const shareButtonRef = useRef<HTMLButtonElement>(null);
   const cardRef = useRef<HTMLElement>(null);
   const tagContainerRef = useRef<HTMLDivElement>(null);
-  const hasTags = tags.length > 0;
   const [tagTopOffsetPx, setTagTopOffsetPx] = useState<number | null>(null);
   const [overlayHeightPx, setOverlayHeightPx] = useState<number | null>(null);
 
@@ -608,17 +607,21 @@ export function PsychologistCard({
     const overlayNode = overlayRef.current;
     const tagContainerNode = tagContainerRef.current;
 
-    if (!cardNode || !overlayNode || !tagContainerNode) {
+    if (!cardNode || !overlayNode) {
       return;
     }
 
     const cardRect = cardNode.getBoundingClientRect();
     const overlayRect = overlayNode.getBoundingClientRect();
-    const tagContainerHeight = tagContainerNode.getBoundingClientRect().height;
     const nextOverlayHeight = Math.round(overlayRect.height);
-    const nextTagTop = Math.round(
-      overlayRect.top - cardRect.top - tagContainerHeight - OVERLAY_TAGS_MARGIN_PX,
-    );
+    let nextTagTop: number | null = null;
+
+    if (tagContainerNode) {
+      const tagContainerHeight = tagContainerNode.getBoundingClientRect().height;
+      nextTagTop = Math.round(
+        overlayRect.top - cardRect.top - tagContainerHeight - OVERLAY_TAGS_MARGIN_PX,
+      );
+    }
 
     setTagTopOffsetPx((current) => (current === nextTagTop ? current : nextTagTop));
     setOverlayHeightPx((current) => (current === nextOverlayHeight ? current : nextOverlayHeight));
@@ -629,7 +632,6 @@ export function PsychologistCard({
     const overlayNode = overlayRef.current;
 
     if (!cardNode || !overlayNode) return;
-    if (!hasTags) return;
 
     if (typeof window === "undefined" || typeof ResizeObserver === "undefined") return;
 
@@ -650,7 +652,7 @@ export function PsychologistCard({
       resizeObserver.disconnect();
       window.removeEventListener("resize", recalculateTagTopOffset);
     };
-  }, [hasTags, recalculateTagTopOffset]);
+  }, [recalculateTagTopOffset]);
 
   return (
     <article
@@ -728,13 +730,16 @@ export function PsychologistCard({
           psychologistName={displayName}
         />
 
-        {tags.length > 0 && tagTopOffsetPx !== null ? (
+        {tags.length > 0 ? (
           <div
             className="pointer-events-none absolute flex flex-col-reverse"
             ref={tagContainerRef}
             style={{
               left: "3.2%",
-              top: `${tagTopOffsetPx}px`,
+              top:
+                tagTopOffsetPx === null
+                  ? `calc(100% - (var(--psychologist-overlay-height) + ${OVERLAY_TAGS_MARGIN_PX}px))`
+                  : `${tagTopOffsetPx}px`,
               gap: OVERLAY_SIDE_BADGE_GAP,
               zIndex: 31,
             }}
