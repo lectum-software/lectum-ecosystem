@@ -409,3 +409,13 @@ ext/image`.
 - O MP4 local informado foi tratado como referencia de intencao visual; este ambiente nao expos `ffmpeg`/decoder para extracao confiavel de frames.
 - ADR criado: `adrs/0057-animacao-selos-video-psicologos.md`.
 - Validacoes executadas nesta etapa: ver registro do commit desta execucao.
+
+
+## Execucao complementar: refinamento visual dos selos comerciais (2026-06-11)
+
+- Pedido do usuario: substituir a ideia anterior por um layout igual a referencia local `image (6).png`: pills pequenas empilhadas sobre o video, com icone de premio/prize em cada selo.
+- Os selos continuam usando somente os campos reais `discount_first_session`, `social_value` e `accepts_insurance`.
+- A animacao foi refinada para entrada em cascata e flutuacao suave, com visual transl?cido e discreto, sem efeito de curtidas/TikTok.
+- Nao houve alteracao de backend, Prisma, migrations, packages, mocks ou dados do psicologo.
+- ADR atualizado: `adrs/0057-animacao-selos-video-psicologos.md`.
+- Validacoes executadas nesta etapa: ver registro do commit desta execucao.
