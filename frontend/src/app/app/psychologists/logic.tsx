@@ -184,7 +184,7 @@ const useViewportMetrics = () => {
     return {
       actionBottomOffset: isCompact ? 12 : 14,
       actionButtonSize: isTiny ? 34 : 36,
-      actionGap: isCompact ? 8 : 9,
+      actionGap: isCompact ? 12 : 14,
       actionIconSize: isTiny ? 13 : 14,
       actionLabelSize: isCompact ? 9 : 10,
       actionRightPadding: isTiny ? 12 : 16,
@@ -252,6 +252,7 @@ export const PsychologistsLogic = () => {
   const shouldShowVideo = Boolean(backgroundVideoSrc) && !isVideoPlaybackFailed;
   const activeVideoSource = shouldShowVideo ? backgroundVideoSrc : null;
   const featuredBio = featuredPsychologist?.headline?.trim() || "";
+  const isFavorited = Boolean(featuredPsychologist?.favorited);
 
   const filters = usePsychologistsFilterForm({
     filters: response?.filters,
@@ -779,12 +780,10 @@ export const PsychologistsLogic = () => {
                       <div className="grid justify-items-center gap-1 text-center">
                         <button
                           aria-label={`Favoritar ${featuredPsychologist.name}`}
-                          aria-pressed={featuredPsychologist.favorited}
+                          aria-pressed={isFavorited}
                           className={cn(
                             "grid place-items-center rounded-full bg-white text-[#64748b] transition disabled:cursor-not-allowed disabled:opacity-60",
-                            featuredPsychologist.favorited
-                              ? "text-[#ef4444]"
-                              : "hover:bg-[#f8fafc]",
+                            isFavorited ? "text-[#ef4444]" : "text-[#64748b] hover:bg-[#f8fafc]",
                           )}
                           disabled={isFavoritePending || !canFavoritePsychologists}
                           onClick={toggleFavorite}
@@ -797,7 +796,7 @@ export const PsychologistsLogic = () => {
                           <Heart
                             className={cn(
                               "h-4 w-4",
-                              featuredPsychologist.favorited && "fill-[#ef4444]",
+                              isFavorited ? "fill-[#ef4444]" : "fill-transparent text-[#64748b]",
                             )}
                             aria-hidden="true"
                             style={{
