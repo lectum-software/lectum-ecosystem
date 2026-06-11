@@ -399,3 +399,13 @@ ext/image`.
 - Referencia visual/proto reconsultada: tela Psicologos no `PROTO-INVENTORY.md` e imagem local correspondente em `_product/proto`; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao.
 - ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
 - Validacoes executadas nesta etapa: ver registro do commit desta execucao.
+
+## Execucao complementar: animacao lateral de selos comerciais (2026-06-11)
+
+- Pedido do usuario: criar no video do psicologo uma animacao lateral similar a curtidas do TikTok, usando os selos `desconto 1a sessao`, `valor social` e `aceita convenios`.
+- A tela passou a montar os selos apenas a partir dos campos reais ja expostos pela API (`discount_first_session`, `social_value`, `accepts_insurance`), sem mocks ou dados inventados.
+- Foi adicionada uma camada visual lateral esquerda com pills flutuantes em loop sobre a midia, sem alterar navbar, botoes laterais, dados do psicologo ou fluxo de reproducao do video.
+- A animacao respeita `prefers-reduced-motion`, ficando estatica quando o usuario prefere menos movimento.
+- O MP4 local informado foi tratado como referencia de intencao visual; este ambiente nao expos `ffmpeg`/decoder para extracao confiavel de frames.
+- ADR criado: `adrs/0057-animacao-selos-video-psicologos.md`.
+- Validacoes executadas nesta etapa: ver registro do commit desta execucao.

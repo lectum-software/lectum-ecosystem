@@ -51,3 +51,4 @@ Formato recomendado:
 - [ADR-0035 - Correções mobile de regressão em autenticação, perfil e descoberta](0035-ajustes-mobile-regressao-login-perfil.md) - Accepted
 - [ADR-0036 - Refinos mobile de perfil público, analytics e edição profissional](0036-refinos-mobile-perfil-analytics-edicao.md) - Accepted
 - [ADR-0056 - Bio truncada e expansao inline na tela de Psicologos](0056-truncagem-interacao-bio-psicologos.md) - Accepted
+- [ADR-0057 - Animacao lateral de selos comerciais no video de Psicologos](0057-animacao-selos-video-psicologos.md) - Accepted

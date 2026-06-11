@@ -15,7 +15,15 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  type FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useDirectoryPsychologists } from "@/api/callers/directory";
 import { usePatient } from "@/api/callers/patient";
 import type { DirectoryPsychologistsQuery } from "@/api/generator/types/directory";
@@ -141,6 +149,74 @@ const buildFiltersParams = (values: PsychologistsFilterForm, page = 1) => {
   if (page > 1) next.set("page", String(page));
 
   return next;
+};
+
+type FloatingBenefitBadgeStyle = CSSProperties & {
+  "--benefit-delay": string;
+  "--benefit-duration": string;
+  "--benefit-float-end-x": string;
+  "--benefit-float-x": string;
+};
+
+const buildFloatingBenefitBadges = (
+  psychologist:
+    | {
+        accepts_insurance?: boolean | null;
+        discount_first_session?: boolean | null;
+        social_value?: boolean | null;
+      }
+    | null
+    | undefined,
+) => {
+  if (!psychologist) return [];
+
+  const badges: Array<{
+    id: string;
+    label: string;
+    toneClassName: string;
+    floatX: string;
+    floatEndX: string;
+    delay: string;
+    duration: string;
+  }> = [];
+
+  if (psychologist.discount_first_session) {
+    badges.push({
+      id: "discount-first-session",
+      label: "Desconto 1ª sessão",
+      toneClassName: "border-[#60A5FA]/60 bg-white/92 text-[#1D4ED8]",
+      floatX: "16px",
+      floatEndX: "28px",
+      delay: "0s",
+      duration: "5.2s",
+    });
+  }
+
+  if (psychologist.social_value) {
+    badges.push({
+      id: "social-value",
+      label: "Valor social",
+      toneClassName: "border-[#34D399]/60 bg-white/92 text-[#047857]",
+      floatX: "-4px",
+      floatEndX: "10px",
+      delay: "1.35s",
+      duration: "5.5s",
+    });
+  }
+
+  if (psychologist.accepts_insurance) {
+    badges.push({
+      id: "accepts-insurance",
+      label: "Aceita convênios",
+      toneClassName: "border-[#A78BFA]/60 bg-white/92 text-[#6D28D9]",
+      floatX: "10px",
+      floatEndX: "22px",
+      delay: "2.7s",
+      duration: "5.35s",
+    });
+  }
+
+  return badges;
 };
 
 const resolveDirectoryErrorMessage = (error: unknown) => {
@@ -280,6 +356,7 @@ export const PsychologistsLogic = () => {
   const profileHref = featuredPsychologist
     ? `/app/psychologist/${featuredPsychologist.id}`
     : "/app/psychologists";
+  const floatingBenefitBadges = buildFloatingBenefitBadges(featuredPsychologist);
 
   const syncActionColumnAlignment = useCallback(() => {
     const baselineText = featuredBio;
@@ -614,6 +691,51 @@ export const PsychologistsLogic = () => {
       contentClassName="max-w-none p-0 sm:p-0"
       navigationTheme="solidWhite"
     >
+      <style>
+        {`
+          @keyframes psychologists-benefit-float {
+            0% {
+              opacity: 0;
+              transform: translate3d(0, 28px, 0) scale(0.92);
+            }
+            12% {
+              opacity: 0;
+              transform: translate3d(0, 22px, 0) scale(0.94);
+            }
+            22% {
+              opacity: 1;
+              transform: translate3d(0, 0, 0) scale(1);
+            }
+            58% {
+              opacity: 1;
+              transform: translate3d(var(--benefit-float-x), -78px, 0) scale(1.02);
+            }
+            100% {
+              opacity: 0;
+              transform: translate3d(var(--benefit-float-end-x), -168px, 0) scale(1.08);
+            }
+          }
+
+          .psychologists-benefit-float {
+            animation: psychologists-benefit-float var(--benefit-duration) ease-in-out infinite;
+            animation-delay: var(--benefit-delay);
+            bottom: 0;
+            left: 0;
+            opacity: 0;
+            position: absolute;
+            will-change: opacity, transform;
+          }
+
+          @media (prefers-reduced-motion: reduce) {
+            .psychologists-benefit-float {
+              animation: none;
+              opacity: 1;
+              position: relative;
+              transform: none;
+            }
+          }
+        `}
+      </style>
       <div className="relative isolate min-h-[100dvh] overflow-hidden bg-background text-white">
         <div
           className="relative mx-auto flex h-[100dvh] w-full overflow-hidden bg-black"
@@ -784,6 +906,39 @@ export const PsychologistsLogic = () => {
                           <VolumeX className="h-5 w-5" aria-hidden="true" />
                         ) : null}
                       </button>
+                    ) : null}
+
+                    {floatingBenefitBadges.length > 0 ? (
+                      <ul
+                        aria-label="Benefícios do psicólogo"
+                        className="pointer-events-none absolute top-[34%] left-4 z-30 flex h-[32dvh] w-[min(250px,70vw)] list-none flex-col justify-end gap-2 overflow-visible p-0"
+                      >
+                        {floatingBenefitBadges.map((badge) => {
+                          const badgeStyle: FloatingBenefitBadgeStyle = {
+                            "--benefit-delay": badge.delay,
+                            "--benefit-duration": badge.duration,
+                            "--benefit-float-end-x": badge.floatEndX,
+                            "--benefit-float-x": badge.floatX,
+                          };
+
+                          return (
+                            <li
+                              className={cn(
+                                "psychologists-benefit-float pointer-events-auto inline-flex w-max max-w-[220px] items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] leading-none font-extrabold tracking-[-0.01em] shadow-[0_12px_28px_rgba(15,23,42,0.24)] backdrop-blur-md",
+                                badge.toneClassName,
+                              )}
+                              key={badge.id}
+                              style={badgeStyle}
+                            >
+                              <span
+                                aria-hidden="true"
+                                className="h-1.5 w-1.5 rounded-full bg-current opacity-75"
+                              />
+                              {badge.label}
+                            </li>
+                          );
+                        })}
+                      </ul>
                     ) : null}
 
                     <section
