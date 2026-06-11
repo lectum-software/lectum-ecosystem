@@ -184,7 +184,7 @@ const useViewportMetrics = () => {
     return {
       actionBottomOffset: isCompact ? 12 : 14,
       actionButtonSize: isTiny ? 34 : 36,
-      actionGap: isCompact ? 12 : 14,
+      actionGap: isCompact ? 14 : 18,
       actionIconSize: isTiny ? 13 : 14,
       actionLabelSize: isCompact ? 9 : 10,
       actionRightPadding: isTiny ? 12 : 16,
@@ -794,14 +794,13 @@ export const PsychologistsLogic = () => {
                           type="button"
                         >
                           <Heart
-                            className={cn(
-                              "h-4 w-4",
-                              isFavorited ? "fill-[#ef4444]" : "fill-transparent text-[#64748b]",
-                            )}
+                            className={cn("h-4 w-4")}
                             aria-hidden="true"
                             style={{
                               height: `${metrics.actionIconSize}px`,
                               width: `${metrics.actionIconSize}px`,
+                              color: isFavorited ? "#ef4444" : "#64748b",
+                              fill: isFavorited ? "#ef4444" : "transparent",
                             }}
                           />
                         </button>
