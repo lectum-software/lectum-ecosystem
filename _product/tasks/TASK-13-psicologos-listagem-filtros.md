@@ -344,3 +344,19 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - `Invoke-WebRequest http://127.0.0.1:3000/app/psychologists` retornou HTTP 200
+
+## Execucao complementar: video imersivo e escala social (2026-06-11)
+
+- Pedido do usuario: usar o video do psicologo como fundo da tela de Psicologos, em loop, iniciando mudo com icone de mute, com tap na tela para pausar/retomar, e reduzir a escala dos controles para um padrao mais proximo de redes sociais como TikTok.
+- A implementacao usa `video_url` real do contrato de descoberta como camada de fundo quando disponivel, com `autoPlay`, `loop`, `muted`, `playsInline`, poster por `video_cover_url`/avatar e fallback honesto para imagem/iniciais quando nao ha video.
+- O tap na area de midia pausa/retoma o video; o controle de som e separado para nao confundir pause com unmute.
+- O nome deixou de receber prefixo `Dr.`/`Dra.` nesta tela; o selo verificado permanece como indicador visual independente.
+- O texto de experiencia foi compactado para `N anos exp.` e a avaliacao foi mantida na mesma linha, em pill translucida.
+- O selo `Disponivel hoje` passou a pulsar; o texto inferior usa a bio real (`bio`) com fallback apenas para headline publica quando a bio estiver ausente, sem lorem ipsum ou mock.
+- Botoes laterais, icones, labels, busca e tipografia do overlay foram reduzidos para peso visual mais parecido com redes sociais, preservando a navbar compartilhada.
+- Nao houve alteracao de backend, Prisma, migrations, seeds ou dados fake.
+- Validacoes executadas nesta etapa:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - `Invoke-WebRequest http://127.0.0.1:3000/app/psychologists` retornou HTTP 200

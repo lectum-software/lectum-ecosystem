@@ -64,3 +64,16 @@ Decisoes complementares:
 - ancorar a coluna lateral de acoes no meio-inferior da foto, em vez de centralizar matematicamente a coluna completa;
 - tratar nota/rating como pill translucida para aproximar o peso visual da referencia;
 - usar metricas por faixa compacta/normal, nao medidas absolutas do PDF.
+
+### Complemento 2026-06-11: video como midia principal e escala de rede social
+
+A tela imersiva de Psicologos passa a priorizar o video real do profissional como fundo quando `video_url` estiver disponivel. A decisao segue o padrao de consumo de redes sociais: midia em tela cheia, autoplay em loop, inicio mudo, controle de som explicito e tap na area de midia para pausar/retomar.
+
+Decisoes complementares:
+
+- usar `video_url`/`video_cover_url` do contrato publico existente, sem criar mock ou fonte paralela;
+- manter fallback para imagem/avatar/iniciais quando o perfil nao possui video;
+- remover os prefixos honorificos `Dr.` e `Dra.` desta tela para reduzir ruido visual e alinhar ao padrao social;
+- compactar experiencia para `N anos exp.` e manter avaliacao na mesma linha em uma pill translucida;
+- reduzir botoes laterais, icones e labels para uma escala mais proxima de TikTok/Reels, preservando acessibilidade por `aria-label`;
+- manter a navbar do `PrivateTemplate` como componente compartilhado intocado.
