@@ -500,7 +500,11 @@ export const PsychologistsLogic = () => {
   }, [featuredPsychologist, isSharing]);
 
   return (
-    <PrivateTemplate allowAnonymous contentClassName="max-w-none p-0 sm:p-0">
+    <PrivateTemplate
+      allowAnonymous
+      contentClassName="max-w-none p-0 sm:p-0"
+      navigationTheme="solidWhite"
+    >
       <div className="relative isolate min-h-[100dvh] overflow-hidden bg-background text-white">
         <div
           className="relative mx-auto flex h-[100dvh] w-full overflow-hidden bg-black"
