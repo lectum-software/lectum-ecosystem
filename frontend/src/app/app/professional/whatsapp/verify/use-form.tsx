@@ -62,7 +62,7 @@ const phoneFields = [
       label: `+${option.value}`,
       key: `${option.value}-${option.country}`,
     })),
-    countryCodeClassName: "w-fit min-w-11 px-2 py-0.5",
+    countryCodeClassName: "w-20 min-w-20 shrink-0 px-2 py-0.5",
     description: "Usaremos este número para gerar o link de contato por WhatsApp.",
     required: true,
     autoComplete: "tel",

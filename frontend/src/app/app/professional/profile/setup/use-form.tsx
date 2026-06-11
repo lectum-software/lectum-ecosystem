@@ -207,7 +207,7 @@ export const fields = [
     field: "phone",
     label: "WhatsApp profissional",
     placeholder: "(00) 00000-0000",
-    countryCodeClassName: "w-fit min-w-11 px-2 py-0.5",
+    countryCodeClassName: "w-20 min-w-20 shrink-0 px-2 py-0.5",
     countryCodeName: "countryCode",
     countryCodeOptions: PROFESSIONAL_COUNTRY_CALLING_CODE_OPTIONS,
     required: true,
