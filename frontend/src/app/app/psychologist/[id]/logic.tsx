@@ -302,21 +302,21 @@ const ProfileInfoCard = ({
 }) => (
   <article
     className={cn(
-      "box-border rounded-[12px] border border-[#E2E8F0] bg-[#F8FAFC]",
-      compact ? "p-2.5" : "px-3 py-3",
+      "box-border rounded-[11px] border border-[#E2E8F0] bg-[#F8FAFC]",
+      compact ? "px-2.5 py-2" : "px-3 py-2.5",
     )}
   >
-    <div className="flex min-h-0 items-start gap-2.5">
-      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white text-[#2F8DEB] shadow-[0_4px_12px_rgba(47,141,235,0.08)]">
-        <Icon className="h-[15px] w-[15px]" aria-hidden="true" />
+    <div className="flex min-h-0 items-start gap-2">
+      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white text-[#2F8DEB] shadow-[0_4px_12px_rgba(47,141,235,0.08)]">
+        <Icon className="h-[14px] w-[14px]" aria-hidden="true" />
       </span>
       <div className="min-w-0">
-        <p className="text-[7px] font-medium uppercase leading-none tracking-[0.08em] text-[#94A3B8]">
+        <p className="text-[8px] font-medium uppercase leading-none tracking-[0.08em] text-[#94A3B8]">
           {label}
         </p>
         <p
           className={cn(
-            "mt-0.5 break-words text-[10px] font-semibold leading-[1.35] text-[#0F172A]",
+            "mt-0.5 break-words text-[11.5px] font-semibold leading-[1.3] text-[#0F172A]",
             compact ? "line-clamp-3" : "line-clamp-4",
           )}
         >
@@ -342,7 +342,7 @@ const ProfileSectionCard = ({
       className,
     )}
   >
-    <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#94A3B8]">
+    <h2 className="text-[14px] font-semibold leading-[1.25] tracking-[-0.01em] text-[#0F172A]">
       {title}
     </h2>
     {children}
@@ -357,14 +357,14 @@ const ProfileChipList = ({
   items: DirectoryCatalogItem[];
 }) => {
   if (items.length === 0) {
-    return <p className="mt-2 text-[11px] leading-[1.45] text-[#64748B]">{emptyMessage}</p>;
+    return <p className="mt-2 text-[12px] leading-[1.55] text-[#64748B]">{emptyMessage}</p>;
   }
 
   return (
     <div className="mt-2.5 flex flex-wrap gap-1.5">
       {items.map((item) => (
         <span
-          className="inline-flex min-h-7 items-center rounded-full border border-[#DBEAFE] bg-[#F8FAFC] px-2.5 text-[10px] font-semibold leading-none text-[#1E3A8A]"
+          className="inline-flex min-h-7 items-center rounded-full border border-[#DBEAFE] bg-[#F8FAFC] px-2.5 text-[11px] font-semibold leading-none text-[#1E3A8A]"
           key={item.id}
         >
           {item.name}
@@ -537,30 +537,30 @@ const ProfileHero = ({
         ) : null}
       </div>
 
-      <article className="relative mx-3 -mt-10 rounded-[22px] border border-[#E2E8F0] bg-white px-3.5 py-3.5 shadow-[0_18px_40px_rgba(15,23,42,0.12)] sm:mx-4 sm:px-4">
+      <article className="relative mx-2 -mt-10 rounded-[22px] border border-[#E2E8F0] bg-white px-4 py-4 shadow-[0_18px_40px_rgba(15,23,42,0.12)] sm:mx-3 sm:px-5">
         <div className="flex items-start gap-3">
           <ProfileAvatar profile={profile} />
 
           <div className="min-w-0 flex-1">
-            <h1 className="text-[19px] font-extrabold leading-[1.08] tracking-[-0.03em] text-[#0F172A]">
+            <h1 className="text-[25px] font-extrabold leading-[1.04] tracking-[-0.04em] text-[#0F172A] sm:text-[26px]">
               <span className="inline-flex min-w-0 flex-wrap items-start gap-1.5">
                 {prefix ? <span className="break-words">{`${prefix} `}</span> : null}
-                <span className="inline-flex shrink-0 items-center gap-1">
+                <span className="inline-flex shrink-0 items-center gap-1.5">
                   <span>{last || "Profissional"}</span>
                   {profile.verified ? (
-                    <VerifiedBadgeIcon aria-hidden="true" className="h-[15px] w-[15px]" />
+                    <VerifiedBadgeIcon aria-hidden="true" className="h-[17px] w-[17px]" />
                   ) : null}
                 </span>
               </span>
             </h1>
 
-            <p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[10px] font-medium leading-[1.25] text-[#64748B] sm:text-[11px]">
+            <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] font-medium leading-[1.35] text-[#475569] sm:text-[12.5px]">
               {getPsychologistTitle(profile.gender)}
               <span aria-hidden="true" className="h-1 w-1 rounded-full bg-[#94A3B8]" />
               <span>{formattedCrp ? `CRP ${formattedCrp}` : "CRP não informado"}</span>
               <span aria-hidden="true" className="h-1 w-1 rounded-full bg-[#94A3B8]" />
               <span className="inline-flex items-center gap-0.5 text-[#B45309]">
-                <Star className="h-2.5 w-2.5 fill-[#FBBF24] text-[#FBBF24]" aria-hidden="true" />
+                <Star className="h-3 w-3 fill-[#FBBF24] text-[#FBBF24]" aria-hidden="true" />
                 {formatHeroRating(profile.rating_avg)}
               </span>
             </p>
@@ -610,7 +610,7 @@ const ProfileHero = ({
           </button>
         </div>
 
-        <p className="mt-3 whitespace-pre-line text-[11px] leading-[1.45] text-[#64748B] sm:text-[11.5px]">
+        <p className="mt-3.5 whitespace-pre-line text-[13px] leading-[1.6] text-[#334155] sm:text-[13.5px]">
           {headline.trim()}
         </p>
 
@@ -621,7 +621,7 @@ const ProfileHero = ({
 
               return (
                 <span
-                  className="inline-flex h-6 items-center gap-1 rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 text-[9px] font-medium text-[#334155]"
+                  className="inline-flex h-6 items-center gap-1 rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 text-[9px] font-medium text-[#475569]"
                   key={tag.label}
                 >
                   <Icon className="h-3 w-3 text-[#2F8DEB]" aria-hidden="true" />
@@ -855,10 +855,10 @@ const ExpandableAboutText = ({ text }: { text: string }) => {
   }, [recalculate]);
 
   return (
-    <div className="relative mt-2 grid gap-1.5">
+    <div className="relative mt-2.5 grid gap-1.5">
       <p
         className={cn(
-          "whitespace-pre-line text-[11px] leading-[1.45] text-[#64748B] sm:text-[11.5px]",
+          "whitespace-pre-line text-[13px] leading-[1.6] text-[#475569] sm:text-[13.5px]",
           !expanded && "line-clamp-3",
         )}
       >
@@ -866,14 +866,14 @@ const ExpandableAboutText = ({ text }: { text: string }) => {
       </p>
       <p
         aria-hidden="true"
-        className="pointer-events-none invisible absolute left-0 top-0 h-auto w-full overflow-hidden whitespace-pre-line text-[11px] leading-[1.45] text-[#64748B] opacity-0 sm:text-[11.5px]"
+        className="pointer-events-none invisible absolute left-0 top-0 h-auto w-full overflow-hidden whitespace-pre-line text-[13px] leading-[1.6] text-[#475569] opacity-0 sm:text-[13.5px]"
         ref={measureRef}
       >
         {content}
       </p>
       {canExpand ? (
         <button
-          className="w-fit text-[11px] font-semibold text-[#2F8DEB] transition hover:text-[#1d4ed8]"
+          className="w-fit text-[12px] font-semibold text-[#2F8DEB] transition hover:text-[#1d4ed8]"
           onClick={() => setExpanded((previous) => !previous)}
           type="button"
         >
@@ -891,7 +891,7 @@ const FormationSection = ({ profile }: { profile: DirectoryPsychologistProfile }
   return (
     <ProfileSectionCard title="Formação & Títulos">
       {hasAnyFormation ? (
-        <div className="mt-3 grid gap-2.5">
+        <div className="mt-2.5 grid gap-2">
           {formations.map((formation, index) => {
             const institutionLine = formatList(
               [formation.institution || "", formation.graduation_year || ""],
@@ -900,17 +900,17 @@ const FormationSection = ({ profile }: { profile: DirectoryPsychologistProfile }
 
             return (
               <article
-                className="box-border flex items-start gap-3 rounded-[12px] border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-3"
+                className="box-border flex items-start gap-2.5 rounded-[11px] border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2"
                 key={`${formation.title || "formacao"}-${formation.institution || index}`}
               >
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white text-[#2F8DEB] shadow-[0_4px_12px_rgba(47,141,235,0.08)]">
-                  <GraduationCap className="h-4 w-4" aria-hidden="true" />
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white text-[#2F8DEB] shadow-[0_4px_12px_rgba(47,141,235,0.08)]">
+                  <GraduationCap className="h-[15px] w-[15px]" aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[10px] font-semibold leading-[1.3] text-[#0F172A]">
+                  <p className="text-[12px] font-semibold leading-[1.28] text-[#0F172A]">
                     {formation.title || "Título não informado"}
                   </p>
-                  <p className="mt-0.5 text-[10px] leading-[1.35] text-[#64748B]">
+                  <p className="mt-0.5 text-[11px] leading-[1.35] text-[#64748B]">
                     {institutionLine}
                   </p>
                 </div>
@@ -919,7 +919,7 @@ const FormationSection = ({ profile }: { profile: DirectoryPsychologistProfile }
           })}
         </div>
       ) : (
-        <p className="text-[11px] leading-[1.45] text-[#64748B]">
+        <p className="mt-2 text-[12px] leading-[1.55] text-[#64748B]">
           Este profissional ainda não cadastrou formação e títulos.
         </p>
       )}
@@ -937,13 +937,13 @@ const ReviewPreviewCard = ({ review }: { review: DirectoryPsychologistProfileRev
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="truncate text-[11px] font-bold text-[#0F172A]">{review.author.name}</p>
-              <p className="text-[10px] text-[#64748B]">{formatDate(review.created_at)}</p>
+              <p className="truncate text-[12px] font-bold text-[#0F172A]">{review.author.name}</p>
+              <p className="text-[11px] text-[#64748B]">{formatDate(review.created_at)}</p>
             </div>
             <StarRating rating={review.rating} />
           </div>
 
-          <p className="mt-2 line-clamp-3 text-[11px] leading-[1.45] text-[#64748B]">
+          <p className="mt-2 line-clamp-3 text-[12px] leading-[1.55] text-[#64748B]">
             &ldquo;{review.comment || "Avaliação publicada sem comentário textual."}&rdquo;
           </p>
         </div>
@@ -970,22 +970,22 @@ const ReviewsPreviewSection = ({
 
   return (
     <ProfileSectionCard title="Avaliações">
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <div>
-          <div className="flex items-end gap-2">
-            <p className="text-[26px] font-extrabold leading-none text-[#0F172A]">
-              {formatRatingNumber(summary.rating_avg, summary.rating_count)}
-            </p>
-            <p className="pb-0.5 text-[11px] font-medium text-[#64748B]">
-              {summary.rating_count} avaliações
-            </p>
+      {hasReviews ? (
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <div>
+            <div className="flex items-end gap-2">
+              <p className="text-[26px] font-extrabold leading-none text-[#0F172A]">
+                {formatRatingNumber(summary.rating_avg, summary.rating_count)}
+              </p>
+              <p className="pb-0.5 text-[12px] font-medium text-[#64748B]">
+                {summary.rating_count} avaliações
+              </p>
+            </div>
+            <div className="mt-1.5">
+              <StarRating rating={summary.rating_avg / 100} />
+            </div>
           </div>
-          <div className="mt-1.5">
-            <StarRating rating={summary.rating_avg / 100} />
-          </div>
-        </div>
 
-        {hasReviews ? (
           <button
             className="shrink-0 rounded-full border border-[#DBEAFE] bg-[#F8FAFC] px-3 py-1.5 text-[10px] font-bold text-[#2F8DEB] transition hover:bg-[#EFF6FF]"
             onClick={onViewAll}
@@ -993,8 +993,8 @@ const ReviewsPreviewSection = ({
           >
             Ver todas
           </button>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
 
       {isError ? (
         <p className="mt-3 rounded-[12px] border border-[#FECACA] bg-[#FEF2F2] px-3 py-2 text-[11px] leading-[1.4] text-[#991B1B]">
@@ -1007,9 +1007,14 @@ const ReviewsPreviewSection = ({
       {!isLoading && !isError && firstReview ? <ReviewPreviewCard review={firstReview} /> : null}
 
       {!isLoading && !isError && !firstReview ? (
-        <p className="mt-3 text-[11px] leading-[1.45] text-[#64748B]">
-          Este profissional ainda não possui avaliações publicadas.
-        </p>
+        <div className="mt-3 flex items-center gap-2.5 rounded-[12px] border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-[#64748B]">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white text-[#94A3B8]">
+            <Star className="h-4 w-4" aria-hidden="true" />
+          </span>
+          <p className="text-[12px] leading-[1.45]">
+            Este profissional ainda não possui avaliações.
+          </p>
+        </div>
       ) : null}
     </ProfileSectionCard>
   );
@@ -1020,7 +1025,7 @@ const PostPreviewCard = ({ post }: { post: DirectoryPsychologistProfilePost }) =
 
   return (
     <article className="mt-3 box-border rounded-[12px] border border-[#E2E8F0] bg-[#F8FAFC] p-3">
-      <div className="flex items-start justify-between gap-3 text-[10px] font-semibold text-[#64748B]">
+      <div className="flex items-start justify-between gap-3 text-[11px] font-semibold text-[#64748B]">
         <span className="inline-flex min-w-0 items-center gap-1.5">
           <FileText className="h-4 w-4 shrink-0 text-[#64748B]" aria-hidden="true" />
           <span className="truncate">{post.community.name}</span>
@@ -1030,10 +1035,10 @@ const PostPreviewCard = ({ post }: { post: DirectoryPsychologistProfilePost }) =
 
       <div className="mt-3 grid grid-cols-[1fr_auto] gap-3">
         <div className="min-w-0">
-          <h3 className="line-clamp-2 text-[12px] font-extrabold leading-[1.35] text-[#0F172A]">
+          <h3 className="line-clamp-2 text-[13px] font-extrabold leading-[1.35] text-[#0F172A]">
             {post.title}
           </h3>
-          <p className="mt-1.5 line-clamp-3 text-[10px] leading-[1.4] text-[#64748B]">
+          <p className="mt-1.5 line-clamp-3 text-[11px] leading-[1.45] text-[#64748B]">
             {post.content}
           </p>
         </div>
@@ -1052,7 +1057,7 @@ const PostPreviewCard = ({ post }: { post: DirectoryPsychologistProfilePost }) =
         ) : null}
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-[#E2E8F0] pt-3 text-[10px] font-semibold text-[#64748B]">
+      <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-[#E2E8F0] pt-3 text-[11px] font-semibold text-[#64748B]">
         <span className="inline-flex items-center gap-1.5">
           <ThumbsUp className="h-3.5 w-3.5" aria-hidden="true" />
           {post.upvotes_count}
@@ -1088,7 +1093,7 @@ const PostsPreviewSection = ({
   return (
     <ProfileSectionCard title="Publicações">
       <div className="mt-3 flex items-center justify-between gap-3">
-        <p className="text-[11px] leading-[1.45] text-[#64748B]">
+        <p className="text-[12px] leading-[1.55] text-[#64748B]">
           {total > 0
             ? `${total} publicação${total === 1 ? "" : "ões"} deste profissional.`
             : "Este profissional ainda não possui publicações públicas."}
@@ -1181,7 +1186,7 @@ const AboutTab = ({
       />
 
       <ProfileSectionCard title="Atendimento" className="mb-0">
-        <div className="mt-3 grid gap-2.5">
+        <div className="mt-2.5 grid gap-2">
           <ProfileInfoCard compact icon={MapPin} label="Modalidade" value={modalityText} />
           <ProfileInfoCard
             compact
@@ -1213,7 +1218,7 @@ const PostCard = ({ post }: { post: DirectoryPsychologistProfilePost }) => {
 
   return (
     <article className="box-border rounded-[8px] border border-[#E2E8F0] bg-white p-3">
-      <div className="flex items-start justify-between gap-3 text-[10px] font-semibold text-[#64748B]">
+      <div className="flex items-start justify-between gap-3 text-[11px] font-semibold text-[#64748B]">
         <span className="inline-flex items-center gap-1.5">
           <FileText className="h-4 w-4 text-[#64748B]" aria-hidden="true" />
           <span>
@@ -1241,12 +1246,12 @@ const PostCard = ({ post }: { post: DirectoryPsychologistProfilePost }) => {
         </div>
       ) : null}
 
-      <h2 className="mt-3 text-[11px] font-extrabold leading-[1.35] text-[#0F172A]">
+      <h2 className="mt-3 text-[13px] font-extrabold leading-[1.35] text-[#0F172A]">
         {post.title}
       </h2>
-      <p className="mt-2 text-[10px] leading-[1.4] text-[#64748B] line-clamp-3">{post.content}</p>
+      <p className="mt-2 line-clamp-3 text-[12px] leading-[1.55] text-[#64748B]">{post.content}</p>
 
-      <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-[#E2E8F0] pt-3 text-[10px] font-semibold text-[#64748B]">
+      <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-[#E2E8F0] pt-3 text-[11px] font-semibold text-[#64748B]">
         <span className="inline-flex items-center gap-1.5">
           <ThumbsUp className="h-4 w-4" aria-hidden="true" />
           {post.upvotes_count}
@@ -1288,7 +1293,7 @@ const PostsTab = ({
   return (
     <div className="grid gap-4 bg-[#F6F8FB] pb-1 pt-3 sm:pt-4 px-3 sm:px-4">
       <div className="rounded-[8px] border border-[#E2E8F0] bg-white px-3 py-3">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#94A3B8]">
+        <p className="text-[14px] font-semibold tracking-[-0.01em] text-[#0F172A]">
           Publicações &gt;
         </p>
         <p className="mt-1 text-base font-extrabold text-[#0F172A]">{total}</p>
@@ -1333,6 +1338,24 @@ const PostsTab = ({
 };
 
 const ReviewSummaryCard = ({ summary }: { summary: DirectoryReviewSummary }) => {
+  if (summary.rating_count <= 0) {
+    return (
+      <article className="flex items-center gap-3 rounded-[12px] border border-[#E2E8F0] bg-white px-3 py-3 text-[#64748B]">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#F8FAFC] text-[#94A3B8]">
+          <Star className="h-4 w-4" aria-hidden="true" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-[13px] font-semibold leading-[1.35] text-[#0F172A]">
+            Este profissional ainda não possui avaliações.
+          </p>
+          <p className="mt-0.5 text-[12px] leading-[1.45] text-[#64748B]">
+            As avaliações aparecerão aqui quando pacientes publicarem comentários.
+          </p>
+        </div>
+      </article>
+    );
+  }
+
   const max = Math.max(1, summary.rating_count);
 
   return (
@@ -1390,18 +1413,18 @@ const ReviewCard = ({ review }: { review: DirectoryPsychologistProfileReview }) 
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h2 className="text-[11px] font-extrabold text-[#0F172A]">{review.author.name}</h2>
-              <p className="text-[10px] text-[#64748B]">{formatDate(review.created_at)}</p>
+              <h2 className="text-[12px] font-extrabold text-[#0F172A]">{review.author.name}</h2>
+              <p className="text-[11px] text-[#64748B]">{formatDate(review.created_at)}</p>
             </div>
             <StarRating rating={review.rating} />
           </div>
 
           {review.comment ? (
-            <p className="mt-3 text-[11px] leading-[1.45] text-[#64748B]">
+            <p className="mt-3 text-[12px] leading-[1.55] text-[#64748B]">
               &ldquo;{review.comment}&rdquo;
             </p>
           ) : (
-            <p className="mt-3 text-[11px] leading-[1.45] text-[#64748B]">
+            <p className="mt-3 text-[12px] leading-[1.55] text-[#64748B]">
               Avaliação publicada sem comentário textual.
             </p>
           )}
@@ -1410,7 +1433,7 @@ const ReviewCard = ({ review }: { review: DirectoryPsychologistProfileReview }) 
               <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#2F8DEB]">
                 Resposta do profissional
               </p>
-              <p className="mt-1 text-[11px] leading-[1.45] text-[#0F172A]">
+              <p className="mt-1 text-[12px] leading-[1.55] text-[#0F172A]">
                 &ldquo;{review.response}&rdquo;
               </p>
               {review.responded_at ? (
@@ -1449,7 +1472,7 @@ const ReviewsTab = ({
 }) => {
   return (
     <div className="grid gap-4 bg-[#F6F8FB] pb-1 pt-3 sm:pt-4 px-3 sm:px-4">
-      <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#94A3B8]">
+      <h2 className="text-[14px] font-semibold tracking-[-0.01em] text-[#0F172A]">
         Avaliações &gt;
       </h2>
       <ReviewSummaryCard summary={summary} />
@@ -1464,14 +1487,6 @@ const ReviewsTab = ({
         <div className="grid min-h-[30vh] place-items-center rounded-[8px] border border-[#E2E8F0] bg-white box-border">
           <LoadingState label="Carregando avaliações" />
         </div>
-      ) : null}
-
-      {!isLoading && !isError && reviews.length === 0 ? (
-        <EmptyState
-          description="Este profissional ainda não possui avaliações publicadas."
-          icon={Star}
-          title="Nenhuma avaliação pública"
-        />
       ) : null}
 
       {!isLoading && !isError && reviews.length > 0 ? (

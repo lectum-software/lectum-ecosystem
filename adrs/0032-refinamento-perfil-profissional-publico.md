@@ -209,3 +209,13 @@ Validacao complementar da capa compacta e navegacao segmentada:
   - estado inicial sem nome no menu sticky e sem barra branca solida;
   - apos scroll, menu no topo com nome+selo, fundo `rgba(255,255,255,0.72)` e blur;
   - sem overflow horizontal.
+
+## Atualizacao 2026-06-12: hierarquia visual premium do perfil publico
+
+A tela publica do psicologo foi refinada para priorizar leitura profissional, usando o LinkedIn apenas como referencia de hierarquia: nome forte, subtitulo legivel, texto confortavel e conteudo de secoes com contraste suficiente.
+
+A decisao foi nao alterar dados, rotas, contratos ou funcionalidades. O ajuste ficou restrito a escala, contraste, line-height, padding e compactacao vertical. O card principal agora destaca `nome -> profissao/CRP/avaliacao -> bio -> chips`, enquanto as secoes internas deixam de parecer rotulos administrativos e passam a funcionar como blocos de conteudo editorial.
+
+Tambem foi ajustado o estado sem avaliacoes: em vez de enfatizar `0,0` e estrelas vazias, a interface exibe um estado vazio compacto e discreto. Cards de atendimento e formacao foram compactados para leitura tipo linha informativa, sem desperdiçar altura.
+
+Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP 200 na rota publica local do perfil.

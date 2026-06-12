@@ -336,3 +336,22 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm check`
   - HTTP 200 em `/app/psychologist/cmq5m0vse000ftkuhybmagcn6`
   - Chrome headless/CDP em 390px confirmando capa com 118px, card sobreposto, sem `Ver mais` no hero, texto `Sobre` com `line-clamp: 3` e botao `Ver mais`, controle segmentado unico com 3 botoes, sem nome no sticky inicial, sem overflow horizontal, e sticky no topo com nome+selo, fundo translucido e blur.
+
+## Registro de ajuste complementar em 2026-06-12 - hierarquia visual premium tipo LinkedIn
+
+- Ajuste visual solicitado para `/app/psychologist/[id]` com foco em legibilidade profissional inspirada na hierarquia de leitura do LinkedIn, sem copiar layout externo e sem alterar funcionalidades, rotas, dados, contratos ou backend.
+- O nome no card principal foi aumentado para ser o elemento textual dominante, mantendo o selo verificado junto da ultima palavra e sem transforma-lo em linha isolada.
+- A linha de profissao, CRP e avaliacao foi ampliada e ganhou contraste de subtitulo, permanecendo na mesma linha de metadados public-safe.
+- A bio do topo foi ampliada com line-height mais confortavel para comunicar rapidamente a proposta de valor do psicologo; os chips superiores foram mantidos compactos e complementares.
+- O card principal passou a aproveitar melhor a largura util no mobile, com margens laterais menores e padding interno mais confortavel.
+- A secao `Sobre` teve texto editorial maior, line-height ampliado e manteve o comportamento existente de 3 linhas com `Ver mais`/`Ver menos` apenas para o texto longo da secao.
+- Os titulos de secoes deixaram de parecer rotulos de formulario: ganharam escala, peso 600 e contraste maior em `Sobre`, `Especialidades`, `Avaliacoes`, `Atendimento`, `Formacao & Titulos` e `Publicacoes`.
+- O conteudo dos cards foi ampliado aproximadamente 10%, enquanto os cards de `Atendimento` e `Formacao & Titulos` foram compactados verticalmente para parecerem linhas informativas, no estilo de leitura profissional.
+- Estados sem avaliacoes foram refinados para um empty state compacto com icone discreto, removendo o bloco visual de `0,0` + estrelas vazias.
+- Nao houve alteracao de banco, Prisma, contratos, packages, rotas, favoritos, WhatsApp, sticky tabs ou dados persistidos.
+- Validacoes executadas:
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `/app/psychologist/cmq5m0vse000ftkuhybmagcn6`
