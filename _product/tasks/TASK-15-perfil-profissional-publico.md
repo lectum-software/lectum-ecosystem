@@ -211,6 +211,25 @@ Regras anti-recriação específicas:
 - A linha `PSICÓLOGO • CRP ...` passou a usar a mesma tipografia/cor do rótulo `Psicólogo` no card da listagem, e o espaçamento até `Disponível hoje` foi reduzido.
 - Validações complementares executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local via Chrome headless/CDP em 390px, confirmando ausência da faixa azul, tipografia `10.56px/800/uppercase` e gap de 4px.
 
+## Registro de ajuste complementar em 2026-06-11
+
+- Reestruturação visual final da tela `/app/psychologist/[id]` alinhada ao PDF de referência (`Perfil psicólogo (1).pdf`) com foco em `media` como elemento principal e card principal limpo, branco e de baixa elevação.
+- Ajustes no header/hero:
+  - botões de voltar e compartilhar no topo da mídia;
+  - nome com selo verificado atrelado à última palavra para evitar selo isolado.
+- Comportamento da bio:
+  - texto em até 2 linhas inicialmente com ellipsis;
+  - expansão/recolhimento inline no toque no próprio texto (sem modal);
+  - apenas bio usa truncagem visual; nome sem ellipsis.
+- Aba ativa e layout visual mantidos como solicitado em `Geral`, `Publicações` e `Avaliações`.
+- Vídeo de apresentação com prévia (ou mídia de fallback) + CTA interno em destaque discreto; seção Sobre com cards compactos por tema e faixa informativa para WhatsApp.
+- Validação executada:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - validação manual de rota `/app/psychologist/[id]` em resolução mobile orientada no ambiente local.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+
 
 ## Validação mínima
 

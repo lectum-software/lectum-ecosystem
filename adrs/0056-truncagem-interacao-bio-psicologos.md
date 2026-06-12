@@ -66,3 +66,13 @@ A faixa transparente entre a base da bio e a navbar em `/app/psychologists` pass
 ## Atualizacao 2026-06-11: modal de filtros pausa o video
 
 Ao abrir a modal de filtros em `/app/psychologists`, o video de fundo em reproducao passa a ser pausado e o estado local do player fica marcado como pausado. O fechamento da modal nao retoma o video automaticamente; a retomada permanece sob controle explicito do usuario pela area livre da midia.
+
+## Atualizacao 2026-06-11: refinamento de perfil público do psicólogo
+
+No fluxo de `/app/psychologist/[id]`, o comportamento visual e de interação da bio foi padronizado com a regra de truncagem inline:
+
+- O card principal (hero) foi reorganizado com mídia de destaque, botões de voltar/compartilhar e card branco ancorado;
+- O nome permanece sem `ellipsis`, com o selo verificado agregado à última palavra visível;
+- Bio inicial em 2 linhas com `ellipsis`, expandindo/recolhendo inline no clique no texto;
+- Sem modal ou bottom sheet para leitura completa da bio, preservando continuidade da página;
+- Manutenção da mesma política de áreas clicáveis no topo para evitar acionar reações de mídia fora da área livre.
