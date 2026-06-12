@@ -809,3 +809,20 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: tolerancia de movimento no long press (2026-06-12)
+
+- Pedido do usuario: ajustar o pressionar-e-segurar da tela de Psicologos para pausar como apps modernos de video curto, tolerando pequenos movimentos involuntarios do dedo/mouse.
+- O long press passou a usar uma tolerancia explicita de 20px antes de considerar que o ponteiro saiu da area de pressao natural.
+- Movimentos leves dentro da tolerancia nao cancelam o timer de long press e, se o video ja estiver pausado por long press, continuam mantendo a pausa ativa.
+- O cancelamento agora exige intencao clara de navegacao: deslocamento vertical dominante acima do limiar ou drag significativo, permitindo scroll/swipe para trocar de psicologo sem transformar qualquer microdeslocamento em cancelamento.
+- Foi separado o movimento que apenas deve suprimir um clique acidental do movimento que cancela o long press, preservando pausa com pequenas oscilacoes e evitando toggle de UI quando o usuario arrastou antes de soltar.
+- Quando um scroll intencional e detectado depois de a pausa por long press estar ativa, o estado de long press e encerrado, o video retoma e a captura do ponteiro e liberada para o feed.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, busca, filtros, barra de progresso, favoritos, navbar ou navegacao de perfil.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual permanece `_product/proto/Psicologos.jpg` e o contrato da TASK-13.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

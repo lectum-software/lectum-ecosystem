@@ -66,7 +66,10 @@ const PSYCHOLOGISTS_BACKGROUND_VIDEO_SELECTOR = "video[data-psychologists-backgr
 const SWIPE_HINT_STORAGE_KEY = "lectum:psychologists:has-seen-swipe-hint";
 const VIDEO_SINGLE_TAP_DELAY_MS = 260;
 const VIDEO_LONG_PRESS_DELAY_MS = 520;
-const VIDEO_POINTER_MOVE_THRESHOLD_PX = 12;
+const LONG_PRESS_MOVE_TOLERANCE_PX = 20;
+const LONG_PRESS_SCROLL_INTENT_THRESHOLD_PX = 32;
+const LONG_PRESS_SIGNIFICANT_DRAG_THRESHOLD_PX = 44;
+const LONG_PRESS_VERTICAL_DOMINANCE_RATIO = 1.15;
 const SWIPE_HINT_INITIAL_DURATION_MS = 3000;
 const SWIPE_HINT_IDLE_DELAY_MS = 5000;
 const SWIPE_HINT_IDLE_DURATION_MS = 2000;
@@ -426,6 +429,7 @@ export const PsychologistsLogic = () => {
   const suppressNextTapRef = useRef(false);
   const didLongPressRef = useRef(false);
   const didMoveDuringPressRef = useRef(false);
+  const didMoveBeyondLongPressToleranceRef = useRef(false);
   const isSearchModeActiveRef = useRef(false);
   const shouldResumeVideoAfterSearchRef = useRef(false);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -600,6 +604,7 @@ export const PsychologistsLogic = () => {
     suppressNextTapRef.current = false;
     didLongPressRef.current = false;
     didMoveDuringPressRef.current = false;
+    didMoveBeyondLongPressToleranceRef.current = false;
     isSearchModeActiveRef.current = false;
     shouldResumeVideoAfterSearchRef.current = false;
     pointerStartRef.current = null;
@@ -1333,6 +1338,7 @@ export const PsychologistsLogic = () => {
         y: event.clientY,
       };
       didMoveDuringPressRef.current = false;
+      didMoveBeyondLongPressToleranceRef.current = false;
       didLongPressRef.current = false;
 
       if (longPressTimeoutRef.current) {
@@ -1361,23 +1367,48 @@ export const PsychologistsLogic = () => {
     [isSearchFocused, shouldShowVideo],
   );
 
-  const handleLongPressMove = useCallback((event: PointerEvent<HTMLButtonElement>) => {
-    const start = pointerStartRef.current;
-    if (!start) return;
-    if (didLongPressRef.current) return;
+  const handleLongPressMove = useCallback(
+    (event: PointerEvent<HTMLButtonElement>) => {
+      const start = pointerStartRef.current;
+      if (!start) return;
 
-    const deltaX = event.clientX - start.x;
-    const deltaY = event.clientY - start.y;
-    const distance = Math.hypot(deltaX, deltaY);
+      const deltaX = event.clientX - start.x;
+      const deltaY = event.clientY - start.y;
+      const absoluteDeltaX = Math.abs(deltaX);
+      const absoluteDeltaY = Math.abs(deltaY);
+      const distance = Math.hypot(deltaX, deltaY);
 
-    if (distance < VIDEO_POINTER_MOVE_THRESHOLD_PX) return;
+      if (distance <= LONG_PRESS_MOVE_TOLERANCE_PX) return;
 
-    didMoveDuringPressRef.current = true;
-    if (longPressTimeoutRef.current) {
-      window.clearTimeout(longPressTimeoutRef.current);
-      longPressTimeoutRef.current = null;
-    }
-  }, []);
+      didMoveBeyondLongPressToleranceRef.current = true;
+
+      const hasVerticalScrollIntent =
+        absoluteDeltaY >= LONG_PRESS_SCROLL_INTENT_THRESHOLD_PX &&
+        absoluteDeltaY >= absoluteDeltaX * LONG_PRESS_VERTICAL_DOMINANCE_RATIO;
+      const hasSignificantDragIntent = distance >= LONG_PRESS_SIGNIFICANT_DRAG_THRESHOLD_PX;
+
+      if (!hasVerticalScrollIntent && !hasSignificantDragIntent) return;
+
+      didMoveDuringPressRef.current = true;
+
+      if (longPressTimeoutRef.current) {
+        window.clearTimeout(longPressTimeoutRef.current);
+        longPressTimeoutRef.current = null;
+      }
+
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+
+      if (!didLongPressRef.current) return;
+
+      setIsLongPressing(false);
+      didLongPressRef.current = false;
+      suppressNextTapRef.current = true;
+      playCurrentVideo();
+    },
+    [playCurrentVideo],
+  );
 
   const handleLongPressEnd = useCallback(
     (event?: PointerEvent<HTMLButtonElement>) => {
@@ -1392,11 +1423,15 @@ export const PsychologistsLogic = () => {
         longPressTimeoutRef.current = null;
       }
 
-      if (didMoveDuringPressRef.current && !didLongPressRef.current) {
+      if (
+        (didMoveDuringPressRef.current || didMoveBeyondLongPressToleranceRef.current) &&
+        !didLongPressRef.current
+      ) {
         suppressNextTapRef.current = true;
         window.setTimeout(() => {
           suppressNextTapRef.current = false;
           didMoveDuringPressRef.current = false;
+          didMoveBeyondLongPressToleranceRef.current = false;
         }, VIDEO_SINGLE_TAP_DELAY_MS);
         return;
       }
@@ -1410,6 +1445,7 @@ export const PsychologistsLogic = () => {
         suppressNextTapRef.current = false;
         didLongPressRef.current = false;
         didMoveDuringPressRef.current = false;
+        didMoveBeyondLongPressToleranceRef.current = false;
       }, VIDEO_SINGLE_TAP_DELAY_MS);
     },
     [playCurrentVideo],

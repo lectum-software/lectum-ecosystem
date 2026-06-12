@@ -248,3 +248,11 @@ A decisao foi pausar o `HTMLVideoElement` no inicio do scrubbing, guardar se ele
 A barra fica sem margens laterais e usa o token `primary` como azul Lectum. Com UI visivel, sua linha visual fica encostada no topo da navbar; com UI oculta, permanece no rodape da viewport, mantendo o modo imersivo com apenas video e progresso.
 
 Essa decisao preserva os gestos existentes porque a barra captura seus proprios eventos com `stopPropagation`, `preventDefault`, `touch-action: none` e captura de ponteiro. Assim, interagir com ela nao dispara single tap, double tap, long press, scroll vertical, favorito ou alternancia de UI.
+
+## Atualizacao 2026-06-12: tolerancia de movimento no long press
+
+O gesto de pressionar e segurar em `/app/psychologists` passa a diferenciar microdeslocamento involuntario de intencao real de navegacao.
+
+A decisao foi introduzir uma tolerancia de 20px para preservar o timer e o estado de long press enquanto o dedo/mouse oscila pouco. Movimentos acima dessa tolerancia apenas suprimem clique acidental; o long press so e cancelado quando ha deslocamento vertical dominante ou drag significativo.
+
+Se o video ja estiver pausado por long press, pequenos movimentos continuam mantendo a pausa. Quando o usuario inicia um swipe/drag claro para navegar, o estado de long press e encerrado, a captura do ponteiro e liberada e o video volta a reproduzir para permitir a rolagem do feed.
