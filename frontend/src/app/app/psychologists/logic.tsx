@@ -322,10 +322,9 @@ const useViewportMetrics = () => {
       actionButtonSize,
       actionGap: isCompact ? 14 : 18,
       actionIconSize: isTiny ? 13 : 14,
-      actionLabelSize: isCompact ? 9 : 10,
       actionRightPadding: isTiny ? 12 : 16,
       actionRailWidth: actionButtonSize,
-      actionTextLineHeight: 1,
+      actionStandaloneIconSize: isTiny ? 22 : 24,
       bioBottomOffset: isCompact ? 12 : 14,
       ratingIconSize: isCompact ? 11 : 12,
       ratingLineHeight: isCompact ? 16 : 18,
@@ -376,7 +375,7 @@ export const PsychologistsLogic = () => {
   const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
   const bioTextRef = useRef<HTMLButtonElement | null>(null);
   const actionColumnRef = useRef<HTMLDivElement | null>(null);
-  const profileTextRef = useRef<HTMLSpanElement | null>(null);
+  const profileTextRef = useRef<HTMLElement | null>(null);
   const lastSearchParamsStringRef = useRef(searchParamsString);
   const tapTimeoutRef = useRef<number | null>(null);
   const longPressTimeoutRef = useRef<number | null>(null);
@@ -1636,7 +1635,7 @@ export const PsychologistsLogic = () => {
                                 width: `${metrics.actionRailWidth}px`,
                               }}
                             >
-                              <div className="grid justify-items-center gap-1 text-center">
+                              <div className="grid justify-items-center text-center">
                                 <button
                                   aria-label={`Favoritar ${psychologist.name}`}
                                   aria-busy={slideIsFavoritePending}
@@ -1659,25 +1658,16 @@ export const PsychologistsLogic = () => {
                                     className={cn("h-4 w-4")}
                                     aria-hidden="true"
                                     style={{
-                                      height: `${metrics.actionIconSize}px`,
-                                      width: `${metrics.actionIconSize}px`,
+                                      height: `${metrics.actionStandaloneIconSize}px`,
+                                      width: `${metrics.actionStandaloneIconSize}px`,
                                       color: slideIsFavorited ? "#ef4444" : "white",
                                       fill: slideIsFavorited ? "#ef4444" : "transparent",
                                     }}
                                   />
                                 </button>
-                                <span
-                                  className="pointer-events-none font-semibold leading-none"
-                                  style={{
-                                    fontSize: `${metrics.actionLabelSize}px`,
-                                    lineHeight: metrics.actionTextLineHeight.toString(),
-                                  }}
-                                >
-                                  Favoritar
-                                </span>
                               </div>
 
-                              <div className="grid justify-items-center gap-1 text-center">
+                              <div className="grid justify-items-center text-center">
                                 <button
                                   aria-label={`Compartilhar perfil de ${psychologist.name}`}
                                   className="grid place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10"
@@ -1695,24 +1685,15 @@ export const PsychologistsLogic = () => {
                                     className="h-4 w-4"
                                     aria-hidden="true"
                                     style={{
-                                      height: `${metrics.actionIconSize}px`,
-                                      width: `${metrics.actionIconSize}px`,
+                                      height: `${metrics.actionStandaloneIconSize}px`,
+                                      width: `${metrics.actionStandaloneIconSize}px`,
                                     }}
                                   />
                                 </button>
-                                <span
-                                  className="font-semibold leading-none"
-                                  style={{
-                                    fontSize: `${metrics.actionLabelSize}px`,
-                                    lineHeight: metrics.actionTextLineHeight.toString(),
-                                  }}
-                                >
-                                  Compartilhar
-                                </span>
                               </div>
 
                               {psychologist.whatsapp_url ? (
-                                <div className="grid justify-items-center gap-1 text-center">
+                                <div className="grid justify-items-center text-center">
                                   <a
                                     aria-label={`Chamar ${psychologist.name} no WhatsApp`}
                                     className="grid place-items-center rounded-full bg-[#22C55E] text-white transition hover:bg-[#16A34A]"
@@ -1735,18 +1716,9 @@ export const PsychologistsLogic = () => {
                                       }}
                                     />
                                   </a>
-                                  <span
-                                    className="font-semibold leading-none"
-                                    style={{
-                                      fontSize: `${metrics.actionLabelSize}px`,
-                                      lineHeight: metrics.actionTextLineHeight.toString(),
-                                    }}
-                                  >
-                                    WhatsApp
-                                  </span>
                                 </div>
                               ) : (
-                                <div className="grid justify-items-center gap-1 text-center">
+                                <div className="grid justify-items-center text-center">
                                   <button
                                     aria-disabled="true"
                                     aria-label={`WhatsApp indisponível para ${psychologist.name}`}
@@ -1768,24 +1740,20 @@ export const PsychologistsLogic = () => {
                                       }}
                                     />
                                   </button>
-                                  <span
-                                    className="font-semibold leading-none"
-                                    style={{
-                                      fontSize: `${metrics.actionLabelSize}px`,
-                                      lineHeight: metrics.actionTextLineHeight.toString(),
-                                    }}
-                                  >
-                                    WhatsApp
-                                  </span>
                                 </div>
                               )}
 
-                              <div className="grid justify-items-center gap-1 text-center">
+                              <div className="grid justify-items-center text-center">
                                 <Link
                                   aria-label={`Ver perfil de ${psychologist.name}`}
                                   className="grid place-items-center rounded-full bg-transparent"
                                   href={slideProfileHref}
                                   onClick={stopInteractionPropagation}
+                                  ref={(node) => {
+                                    if (isActiveSlide) {
+                                      profileTextRef.current = node;
+                                    }
+                                  }}
                                 >
                                   <div
                                     className="relative overflow-hidden rounded-full bg-white p-0.5 text-[#0f172a]"
@@ -1811,20 +1779,6 @@ export const PsychologistsLogic = () => {
                                     )}
                                   </div>
                                 </Link>
-                                <span
-                                  className="font-semibold leading-none"
-                                  style={{
-                                    fontSize: `${metrics.actionLabelSize}px`,
-                                    lineHeight: metrics.actionTextLineHeight.toString(),
-                                  }}
-                                  ref={(node) => {
-                                    if (isActiveSlide) {
-                                      profileTextRef.current = node;
-                                    }
-                                  }}
-                                >
-                                  Perfil
-                                </span>
                               </div>
                             </div>
                           </section>

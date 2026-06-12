@@ -618,3 +618,17 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: coluna lateral apenas com icones (2026-06-12)
+
+- Pedido do usuario: remover os labels `Favoritar`, `Compartilhar`, `WhatsApp` e `Perfil` da coluna lateral e ajustar a escala dos icones de favoritar/compartilhar para equilibrar os quatro itens.
+- A coluna lateral agora exibe apenas coracao, compartilhar, WhatsApp e avatar do perfil, sem reservar espaco visual para texto.
+- Os containers dos botoes foram mantidos; apenas o tamanho interno de coracao e compartilhar foi aumentado para aproximar o peso visual de WhatsApp e Perfil.
+- As acoes, `aria-labels`, modo imersivo, scroll-snap, navbar, responsividade e dados do psicologo foram preservados.
+- Nao houve alteracao de backend, Prisma, migrations, packages, mocks ou dados do psicologo.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

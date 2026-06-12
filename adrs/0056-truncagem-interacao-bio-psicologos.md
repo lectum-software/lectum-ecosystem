@@ -122,3 +122,13 @@ A tela `/app/psychologists` passou a separar a area livre de midia dos elementos
 - ao trocar o psicologo ativo no feed, timeouts e estados transitorios de gesto sao limpos, `isUiHidden` volta para `false` e a nova tela abre com UI visivel.
 
 Os elementos interativos existentes permanecem com suas proprias acoes e nao propagam gesto para a area de video.
+
+## Atualizacao 2026-06-12: coluna lateral apenas com icones
+
+A coluna lateral de acoes em `/app/psychologists` deixa de exibir labels visiveis abaixo dos botoes. Os textos
+`Favoritar`, `Compartilhar`, `WhatsApp` e `Perfil` foram removidos do layout visual, mantendo apenas `aria-label`
+para acessibilidade e preservando as acoes existentes.
+
+Para compensar a ausencia dos fundos brancos em favoritar/compartilhar, os icones de coracao e compartilhar usam uma
+escala interna maior dentro do mesmo container, aproximando o peso visual dos botoes de WhatsApp e Perfil sem alterar
+o tamanho dos containers nem a responsividade da coluna.
