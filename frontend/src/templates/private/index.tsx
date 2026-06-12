@@ -31,6 +31,7 @@ type PrivateTemplateProps = PropsWithChildren<{
   allowAnonymous?: boolean;
   autoHideNavigation?: boolean;
   contentClassName?: string;
+  desktopNavigation?: "bottom" | "sidebar";
   navigationDimmed?: boolean;
   navigationHidden?: boolean;
   navigationTheme?: "default" | "solidWhite";
@@ -172,6 +173,7 @@ export const PrivateTemplate = ({
   autoHideNavigation = false,
   children,
   contentClassName,
+  desktopNavigation = "bottom",
   navigationDimmed = false,
   navigationHidden = false,
   navigationTheme = "default",
@@ -199,6 +201,7 @@ export const PrivateTemplate = ({
   const sessionUser = hasToken ? (hidrate.data ?? storedUser) : null;
   const navigation = useMemo(() => getNavigation(sessionUser?.role), [sessionUser?.role]);
   const shouldShowNavigation = showNavigation ?? showHeader;
+  const shouldRenderDesktopSidebar = shouldShowNavigation && desktopNavigation === "sidebar";
   const shouldAutoHideNavigation = shouldShowNavigation && autoHideNavigation;
   const [isNavigationVisible, setIsNavigationVisible] = useState(true);
   const isNavigationRenderedVisible = isNavigationVisible && !navigationHidden;
@@ -251,11 +254,12 @@ export const PrivateTemplate = ({
     };
   }, [shouldAutoHideNavigation]);
 
-  const navigationMarkup = shouldShowNavigation ? (
+  const bottomNavigationMarkup = shouldShowNavigation ? (
     <nav
       aria-label="Navegação principal"
       className={cn(
         "fixed inset-x-0 bottom-0 z-40 transition-[transform,opacity,filter] duration-200 ease-out sm:bottom-4 sm:left-1/2 sm:right-auto sm:w-[min(560px,calc(100vw-2rem))] sm:-translate-x-1/2 sm:rounded-[var(--lectum-card-radius)]",
+        shouldRenderDesktopSidebar ? "lg:hidden" : undefined,
         navigationDimmed ? "opacity-55 brightness-90 saturate-75" : "opacity-100",
         navigationTheme === "solidWhite"
           ? "border-t border-[#e5e7eb] bg-white shadow-[0_-10px_30px_rgb(15_23_42_/_8%)]"
@@ -290,6 +294,59 @@ export const PrivateTemplate = ({
         })}
       </ul>
     </nav>
+  ) : null;
+
+  const desktopSidebarMarkup = shouldRenderDesktopSidebar ? (
+    <aside
+      aria-label="Navegação principal"
+      className={cn(
+        "fixed inset-y-0 left-0 z-50 hidden w-[240px] border-[#e5e7eb] border-r bg-white px-4 py-6 text-[#0f172a] shadow-[12px_0_36px_rgb(15_23_42_/_5%)] transition-[transform,opacity,filter] duration-200 ease-out lg:flex lg:flex-col",
+        navigationDimmed ? "opacity-55 brightness-95 saturate-75" : "opacity-100",
+        isNavigationRenderedVisible ? "translate-x-0" : "-translate-x-full opacity-0",
+      )}
+      style={{
+        paddingTop: "max(24px, env(safe-area-inset-top))",
+        pointerEvents: isNavigationRenderedVisible && !navigationDimmed ? "auto" : "none",
+      }}
+    >
+      <div className="mb-8 flex items-center gap-2 px-2 text-xl font-black tracking-tight text-[#0f172a]">
+        <span className="grid h-9 w-9 place-items-center rounded-2xl bg-primary text-sm font-black text-white">
+          L
+        </span>
+        <span>Lectum</span>
+      </div>
+
+      <nav className="flex flex-1 flex-col gap-1" aria-label="Menu lateral">
+        {navigation.map((item) => {
+          const Icon = item.icon;
+          const isActive = isActivePath(pathname, item);
+
+          return (
+            <Link
+              aria-current={isActive ? "page" : undefined}
+              className={cn(
+                "flex min-h-12 items-center gap-3 rounded-2xl px-3 text-[15px] font-bold transition",
+                isActive
+                  ? "bg-primary/10 text-primary"
+                  : "text-[#334155] hover:bg-[#f8fafc] hover:text-primary",
+              )}
+              href={item.href}
+              key={item.href}
+            >
+              <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+              <span className="truncate">{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+    </aside>
+  ) : null;
+
+  const navigationMarkup = shouldShowNavigation ? (
+    <>
+      {bottomNavigationMarkup}
+      {desktopSidebarMarkup}
+    </>
   ) : null;
 
   if (isSessionLoading) {

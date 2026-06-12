@@ -356,3 +356,25 @@ O reset continua restrito a troca do psicologo/video ativo: nesse caso, todos os
 inicio, a barra volta a zero, `isUiHidden=false`, o player volta a reproduzir e `playbackRate` retorna a `1x`. A
 preferencia de mute/volume permanece global, permitindo que os proximos videos iniciem com som ou mutados conforme a
 ultima escolha do usuario.
+
+## Atualizacao 2026-06-12: layout desktop com sidebar e acoes externas
+
+A tela `/app/psychologists` passa a ter uma variante desktop sem alterar o modelo mobile.
+
+A decisao foi manter a composicao mobile como fonte para larguras menores que `1024px` e, a partir de `lg`, usar uma
+estrutura inspirada no TikTok Web: menu lateral esquerdo fixo, video vertical centralizado e coluna de acoes externa a
+direita do video.
+
+Para evitar criar uma navegacao paralela, o `PrivateTemplate` recebeu a opcao `desktopNavigation="sidebar"`. A rota de
+Psicologos ativa essa opcao e reaproveita o mesmo array de destinos da bottom navbar. Assim, no desktop a bottom navbar
+fica escondida e o menu lateral exibe Psicologos, Favoritos, Comunidade, Notificacoes e Perfil com o item ativo em
+`primary`.
+
+As informacoes especificas do psicologo continuam dentro do video: busca, filtro, chips, disponibilidade, nome, selo
+verificado, profissao, avaliacao, bio, gradiente, barra de progresso e controles imersivos. Apenas Favoritar,
+Compartilhar, WhatsApp e Perfil saem do video no desktop e passam para uma coluna lateral externa com botoes circulares
+brancos, sombra leve e icones com contraste. No mobile, esses botoes permanecem exatamente na coluna interna do video.
+
+Como a navbar inferior deixa de existir no desktop, os offsets dependentes de `navBarHeight` passam a ser zero em
+`>=1024px`, mantendo texto e barra de progresso dentro do video sem reservar espaco para uma navegacao que nao esta
+visivel. O modo imersivo continua escondendo a navegacao desktop e acoes externas junto com o restante da UI.

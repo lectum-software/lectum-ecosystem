@@ -1010,3 +1010,21 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: layout desktop TikTok Web (2026-06-12)
+
+- Pedido do usuario: manter o layout mobile atual e criar, apenas para desktop `>=1024px`, uma experiencia inspirada no TikTok Web.
+- O `PrivateTemplate` recebeu a opcao `desktopNavigation="sidebar"` para renderizar, somente nesta rota, um menu lateral esquerdo fixo de `240px` com os mesmos destinos da bottom navbar: Psicologos, Favoritos, Comunidade, Notificacoes e Perfil.
+- A bottom navbar permanece inalterada no mobile e passa a ficar escondida no desktop quando a rota solicita sidebar.
+- A area principal de `/app/psychologists` ganhou offset desktop para o menu lateral e centraliza o video vertical no restante da tela.
+- Busca, filtro, chips, disponibilidade, nome, selo verificado, profissao, avaliacao, bio, gradiente, barra de progresso e controles imersivos continuam dentro do video.
+- No desktop, a coluna de Favoritar, Compartilhar, WhatsApp e Perfil sai de dentro do video e e renderizada a direita, com botoes circulares de fundo branco, sombra leve e icones com contraste adequado.
+- No mobile, a coluna lateral original permanece dentro do video, preservando posicionamento, gestos, barra de progresso, modo imersivo e navbar inferior.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, filtros, favoritos ou contratos de API.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual adicional foi a imagem do TikTok Web enviada pelo usuario, e a referencia base permanece `_product/proto/Psicologos.jpg`.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

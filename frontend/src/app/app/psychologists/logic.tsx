@@ -369,6 +369,7 @@ const useViewportMetrics = () => {
 
   return useMemo(() => {
     const effectiveWidth = Math.min(width, 430);
+    const isDesktop = width >= 1024;
     const isCompact = effectiveWidth <= 390;
     const isTiny = effectiveWidth < 360;
     const actionButtonSize = isTiny ? 34 : 36;
@@ -389,7 +390,7 @@ const useViewportMetrics = () => {
       bioSize: 12,
       filterButtonSize: isCompact ? 40 : 42,
       horizontalPadding: isCompact ? 16 : 20,
-      navBarHeight: DEFAULT_NAV_BAR_HEIGHT,
+      navBarHeight: isDesktop ? 0 : DEFAULT_NAV_BAR_HEIGHT,
       searchHeight: isCompact ? 42 : 46,
       searchRightGap: isCompact ? 62 : 74,
       searchTop: isCompact ? 36 : 40,
@@ -1955,11 +1956,29 @@ export const PsychologistsLogic = () => {
   const globalControlsVisibilityClass = areGlobalControlsHidden
     ? "psychologists-ui-inert pointer-events-none opacity-0"
     : "opacity-100";
+  const desktopActionPsychologist = featuredPsychologist;
+  const desktopActionProfileHref = desktopActionPsychologist
+    ? `/app/psychologist/${desktopActionPsychologist.id}`
+    : "";
+  const desktopActionIsFavorited = desktopActionPsychologist
+    ? (favoriteOverrides[desktopActionPsychologist.id] ??
+      Boolean(desktopActionPsychologist.favorited))
+    : false;
+  const desktopActionIsFavoritePending = desktopActionPsychologist
+    ? favoritePendingId === desktopActionPsychologist.id
+    : false;
+  const shouldRenderDesktopActionRail =
+    shouldRenderGlobalControls && Boolean(desktopActionPsychologist);
+  const isDesktopActionRailHidden = isUiHidden || isFiltersOpen || isSearchFocused;
+  const desktopActionRailVisibilityClass = isDesktopActionRailHidden
+    ? "psychologists-ui-inert pointer-events-none opacity-0"
+    : "opacity-100";
 
   return (
     <PrivateTemplate
       allowAnonymous
-      contentClassName="max-w-none p-0 sm:p-0"
+      contentClassName="max-w-none p-0 sm:p-0 lg:pl-[240px]"
+      desktopNavigation="sidebar"
       navigationDimmed={isSearchFocused}
       navigationHidden={isUiHidden}
       navigationTheme="solidWhite"
@@ -2111,14 +2130,9 @@ export const PsychologistsLogic = () => {
           }
         `}
       </style>
-      <div className="relative isolate min-h-[100dvh] overflow-hidden bg-background text-white">
-        <div
-          className="relative mx-auto flex h-[100dvh] w-full overflow-hidden bg-black"
-          style={{
-            maxWidth: "430px",
-          }}
-        >
-          <div className="relative z-20 h-full w-full">
+      <div className="relative isolate min-h-[100dvh] overflow-hidden bg-background text-white lg:bg-[#f8fafc]">
+        <div className="relative mx-auto flex h-[100dvh] w-full max-w-[430px] justify-center overflow-visible bg-black lg:max-w-none lg:items-center lg:gap-6 lg:bg-transparent lg:px-8">
+          <div className="relative z-20 h-full w-full overflow-hidden bg-black lg:w-[430px] lg:shrink-0 lg:rounded-[22px] lg:shadow-[0_24px_80px_rgba(15,23,42,0.18)]">
             {showInitialLoading ? (
               <div className="grid h-full place-items-center bg-[#F8FAFC] px-4 text-foreground">
                 <LoadingState label="Carregando Psicólogos" />
@@ -2356,7 +2370,9 @@ export const PsychologistsLogic = () => {
                       : 0;
                   const slideProgressBottom = slideIsUiHidden
                     ? `calc(env(safe-area-inset-bottom) + ${VIDEO_IMMERSIVE_PROGRESS_CONTROLS_OFFSET}px)`
-                    : `calc(${VIDEO_PROGRESS_VISIBLE_NAV_BAR_HEIGHT}px + env(safe-area-inset-bottom))`;
+                    : `calc(${
+                        metrics.navBarHeight > 0 ? VIDEO_PROGRESS_VISIBLE_NAV_BAR_HEIGHT : 0
+                      }px + env(safe-area-inset-bottom))`;
 
                   return (
                     <section
@@ -2883,7 +2899,7 @@ export const PsychologistsLogic = () => {
                             </div>
 
                             <div
-                              className="pointer-events-auto relative z-50 flex flex-col items-center justify-self-end"
+                              className="pointer-events-auto relative z-50 flex flex-col items-center justify-self-end lg:hidden"
                               ref={(node) => {
                                 if (isActiveSlide) {
                                   actionColumnRef.current = node;
@@ -3134,6 +3150,123 @@ export const PsychologistsLogic = () => {
               </div>
             ) : null}
           </div>
+
+          {shouldRenderDesktopActionRail && desktopActionPsychologist ? (
+            <aside
+              aria-hidden={isDesktopActionRailHidden ? true : undefined}
+              aria-label={`Ações de ${desktopActionPsychologist.name}`}
+              className={cn(
+                "hidden w-20 shrink-0 flex-col items-center justify-center gap-4 self-stretch pt-28 transition-opacity duration-200 ease-out lg:flex",
+                desktopActionRailVisibilityClass,
+              )}
+            >
+              <div className="grid justify-items-center gap-1.5 text-center">
+                <button
+                  aria-label={`Favoritar ${desktopActionPsychologist.name}`}
+                  aria-busy={desktopActionIsFavoritePending}
+                  aria-pressed={desktopActionIsFavorited}
+                  className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#334155] shadow-[0_10px_28px_rgba(15,23,42,0.14)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
+                  disabled={isDesktopActionRailHidden}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    toggleFavorite(desktopActionPsychologist);
+                  }}
+                  tabIndex={isDesktopActionRailHidden ? -1 : undefined}
+                  type="button"
+                >
+                  <Heart
+                    className="h-6 w-6"
+                    aria-hidden="true"
+                    style={{
+                      color: desktopActionIsFavorited ? "#ef4444" : "#334155",
+                      fill: desktopActionIsFavorited ? "#ef4444" : "transparent",
+                    }}
+                  />
+                </button>
+                <span className="text-[11px] font-bold text-[#475569]">Favoritar</span>
+              </div>
+
+              <div className="grid justify-items-center gap-1.5 text-center">
+                <button
+                  aria-label={`Compartilhar perfil de ${desktopActionPsychologist.name}`}
+                  className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#334155] shadow-[0_10px_28px_rgba(15,23,42,0.14)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
+                  disabled={isDesktopActionRailHidden}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    void shareCurrent(desktopActionPsychologist);
+                  }}
+                  tabIndex={isDesktopActionRailHidden ? -1 : undefined}
+                  type="button"
+                >
+                  <Share2 className="h-6 w-6" aria-hidden="true" />
+                </button>
+                <span className="text-[11px] font-bold text-[#475569]">Compartilhar</span>
+              </div>
+
+              <div className="grid justify-items-center gap-1.5 text-center">
+                {desktopActionPsychologist.whatsapp_url ? (
+                  <a
+                    aria-label={`Chamar ${desktopActionPsychologist.name} no WhatsApp`}
+                    className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#22C55E] shadow-[0_10px_28px_rgba(15,23,42,0.14)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
+                    href={desktopActionPsychologist.whatsapp_url}
+                    onClick={stopInteractionPropagation}
+                    rel="noreferrer"
+                    tabIndex={isDesktopActionRailHidden ? -1 : undefined}
+                    target="_blank"
+                  >
+                    <WhatsAppIcon
+                      aria-hidden="true"
+                      className="h-6 w-6"
+                      style={{ color: "#22C55E" }}
+                    />
+                  </a>
+                ) : (
+                  <button
+                    aria-disabled="true"
+                    aria-label={`WhatsApp indisponível para ${desktopActionPsychologist.name}`}
+                    className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#22C55E] opacity-55 shadow-[0_10px_28px_rgba(15,23,42,0.14)]"
+                    disabled={isDesktopActionRailHidden}
+                    onClick={stopInteractionPropagation}
+                    tabIndex={isDesktopActionRailHidden ? -1 : undefined}
+                    type="button"
+                  >
+                    <WhatsAppIcon
+                      aria-hidden="true"
+                      className="h-6 w-6"
+                      style={{ color: "#22C55E" }}
+                    />
+                  </button>
+                )}
+                <span className="text-[11px] font-bold text-[#475569]">WhatsApp</span>
+              </div>
+
+              <div className="grid justify-items-center gap-1.5 text-center">
+                <Link
+                  aria-label={`Ver perfil de ${desktopActionPsychologist.name}`}
+                  className="grid h-12 w-12 place-items-center overflow-hidden rounded-full bg-white p-0.5 text-[#0f172a] shadow-[0_10px_28px_rgba(15,23,42,0.14)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
+                  href={desktopActionProfileHref}
+                  onClick={stopInteractionPropagation}
+                  tabIndex={isDesktopActionRailHidden ? -1 : undefined}
+                >
+                  <span className="relative grid h-full w-full place-items-center overflow-hidden rounded-full bg-[#e2e8f0] text-[12px] font-bold text-[#334155]">
+                    {desktopActionPsychologist.avatar ? (
+                      <Image
+                        alt={desktopActionPsychologist.name}
+                        className="h-full w-full rounded-full object-cover"
+                        fill
+                        sizes="48px"
+                        src={resolvePublicMediaUrl(desktopActionPsychologist.avatar) ?? ""}
+                        unoptimized={isPublicMediaUrl(desktopActionPsychologist.avatar)}
+                      />
+                    ) : (
+                      getInitials(desktopActionPsychologist.name)
+                    )}
+                  </span>
+                </Link>
+                <span className="text-[11px] font-bold text-[#475569]">Perfil</span>
+              </div>
+            </aside>
+          ) : null}
         </div>
       </div>
     </PrivateTemplate>
