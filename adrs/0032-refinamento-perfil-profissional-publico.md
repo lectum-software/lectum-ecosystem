@@ -102,3 +102,19 @@ Ajuste complementar de tipografia e faixa:
 ## Pendências
 
 - Nenhuma pendência externa nova. Legendas/transcrições para vídeos de profissionais continuam fora deste recorte e devem ser tratadas em task futura de acessibilidade/conteúdo.
+
+Ajuste complementar de alinhamento ao PDF em 2026-06-12:
+
+- O perfil público `/app/psychologist/[id]` foi refinado a partir do PDF `Perfil psicólogo (1).pdf` e do texto anexado pelo usuário como referência visual, mantendo a arquitetura e os dados reais existentes.
+- A mídia do topo passou a ter altura maior e overlay suave; o card principal se sobrepõe à mídia com avatar maior, nome mais forte, selo verificado preso à última palavra e metadados compactos.
+- Especialidades foram separadas em seção própria com chips derivados de `profile.specialties`, sem fallback fictício; a seção Atendimento concentra Modalidade, Abordagens, Serviços, Público atendido e Idiomas.
+- O refinamento ficou restrito ao frontend da rota pública; não houve migration, alteração de contrato, novo pacote ou dado artificial.
+
+Validação complementar:
+
+- `pnpm --dir frontend biome:fix`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP 200 em `http://localhost:3000/app/psychologist/cmq5m0vse000ftkuhybmagcn6`
+- Chrome headless em 390px confirmando hero maior, card sobreposto, abas e CTA fixo renderizados.

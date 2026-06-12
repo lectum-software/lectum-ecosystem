@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   BadgePercent,
   Bookmark,
-  Brain,
   BriefcaseBusiness,
   ChevronLeft,
   ChevronRight,
@@ -26,7 +25,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   useDirectoryPsychologist,
   useDirectoryPsychologistPosts,
@@ -34,6 +33,7 @@ import {
 } from "@/api/callers/directory";
 import { usePatient } from "@/api/callers/patient";
 import type {
+  DirectoryCatalogItem,
   DirectoryPsychologistProfile,
   DirectoryPsychologistProfilePost,
   DirectoryPsychologistProfileReview,
@@ -309,12 +309,12 @@ const ProfileInfoCard = ({
 }) => (
   <article
     className={cn(
-      "box-border rounded-[10px] border border-[#E2E8F0] bg-white",
+      "box-border rounded-[12px] border border-[#E2E8F0] bg-[#F8FAFC]",
       compact ? "p-2.5" : "px-3 py-3",
     )}
   >
     <div className="flex min-h-0 items-start gap-2.5">
-      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#EAF5FF] text-[#2F8DEB]">
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white text-[#2F8DEB] shadow-[0_4px_12px_rgba(47,141,235,0.08)]">
         <Icon className="h-[15px] w-[15px]" aria-hidden="true" />
       </span>
       <div className="min-w-0">
@@ -333,6 +333,53 @@ const ProfileInfoCard = ({
     </div>
   </article>
 );
+
+const ProfileSectionCard = ({
+  children,
+  className,
+  title,
+}: {
+  children: ReactNode;
+  className?: string;
+  title: string;
+}) => (
+  <section
+    className={cn(
+      "box-border rounded-[16px] border border-[#E2E8F0] bg-white px-3.5 py-3.5 shadow-[0_8px_22px_rgba(15,23,42,0.04)]",
+      className,
+    )}
+  >
+    <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#94A3B8]">
+      {title}
+    </h2>
+    {children}
+  </section>
+);
+
+const ProfileChipList = ({
+  emptyMessage,
+  items,
+}: {
+  emptyMessage: string;
+  items: DirectoryCatalogItem[];
+}) => {
+  if (items.length === 0) {
+    return <p className="mt-2 text-[11px] leading-[1.45] text-[#64748B]">{emptyMessage}</p>;
+  }
+
+  return (
+    <div className="mt-2.5 flex flex-wrap gap-1.5">
+      {items.map((item) => (
+        <span
+          className="inline-flex min-h-7 items-center rounded-full border border-[#DBEAFE] bg-[#F8FAFC] px-2.5 text-[10px] font-semibold leading-none text-[#1E3A8A]"
+          key={item.id}
+        >
+          {item.name}
+        </span>
+      ))}
+    </div>
+  );
+};
 
 const Pagination = ({
   currentPage,
@@ -385,7 +432,7 @@ const ProfileAvatar = ({ profile }: { profile: DirectoryPsychologistProfile }) =
 
   return (
     <div
-      className="relative grid size-15 shrink-0 place-items-center overflow-hidden rounded-[12px] border-[3px] border-white bg-surface-muted text-2xl font-extrabold text-primary"
+      className="relative grid size-[68px] shrink-0 place-items-center overflow-hidden rounded-[18px] border-[4px] border-white bg-surface-muted text-2xl font-extrabold text-primary shadow-[0_10px_22px_rgba(15,23,42,0.14)]"
       data-profile-avatar="true"
     >
       {avatarSrc ? (
@@ -412,18 +459,18 @@ const ProfileHeroMedia = ({ profile }: { profile: DirectoryPsychologistProfile }
 
   if (!videoSrc && !coverImageSrc) {
     return (
-      <div className="relative h-[190px] overflow-hidden bg-gradient-to-br from-[#2F8DEB] to-[#60A5FA] sm:h-[210px]">
+      <div className="relative h-[236px] overflow-hidden bg-gradient-to-br from-[#2F8DEB] to-[#60A5FA] sm:h-[260px] lg:h-[300px]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.2),transparent_45%),linear-gradient(to_right,#2F8DEB,#60A5FA)] opacity-95" />
       </div>
     );
   }
 
   return (
-    <div className="relative h-[190px] overflow-hidden bg-black sm:h-[210px]">
+    <div className="relative h-[236px] overflow-hidden bg-black sm:h-[260px] lg:h-[300px]">
       {coverImageSrc ? (
         <Image
           alt={profile.name}
-          className="h-full w-full object-cover"
+          className="h-full w-full object-cover object-center"
           fill
           priority={false}
           sizes="(min-width: 768px) 720px, 100vw"
@@ -432,7 +479,7 @@ const ProfileHeroMedia = ({ profile }: { profile: DirectoryPsychologistProfile }
         />
       ) : (
         <video
-          className="h-full w-full object-cover"
+          className="h-full w-full object-cover object-center"
           loop
           muted
           playsInline
@@ -440,7 +487,7 @@ const ProfileHeroMedia = ({ profile }: { profile: DirectoryPsychologistProfile }
           src={videoSrc || undefined}
         />
       )}
-      <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(15,23,42,0.56)_0%,rgba(15,23,42,0.24)_32%,rgba(15,23,42,0.08)_60%,rgba(15,23,42,0.38)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(15,23,42,0.62)_0%,rgba(15,23,42,0.24)_30%,rgba(15,23,42,0.08)_58%,rgba(15,23,42,0.42)_100%)]" />
     </div>
   );
 };
@@ -466,15 +513,19 @@ const ProfileHero = ({
   const { last, prefix } = splitNameWithBadge(displayName);
   const benefitTags = buildBenefitTags(profile);
   const formattedCrp = formatCrpNumber(profile.crp);
+  const experienceLabel =
+    profile.show_experience_tag !== false && profile.formation_years
+      ? `${profile.formation_years} anos exp.`
+      : null;
 
   return (
-    <section className="box-border bg-[#F6F8FB]" data-profile-hero="true">
+    <section className="box-border bg-[#F6F8FB] pb-2" data-profile-hero="true">
       <div className="relative">
         <ProfileHeroMedia profile={profile} />
 
         <button
           aria-label="Voltar para a tela anterior"
-          className="absolute left-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-full bg-white/80 text-[#0F172A] shadow-[0_8px_16px_rgba(15,23,42,0.18)] transition hover:bg-white sm:left-4 sm:top-4"
+          className="absolute top-4 left-4 z-10 grid h-9 w-9 place-items-center rounded-full bg-white/88 text-[#0F172A] shadow-[0_10px_20px_rgba(15,23,42,0.18)] backdrop-blur-md transition hover:bg-white"
           onClick={onBack}
           type="button"
         >
@@ -483,7 +534,7 @@ const ProfileHero = ({
 
         <button
           aria-label="Compartilhar perfil"
-          className="absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-full bg-white/80 text-[#0F172A] shadow-[0_8px_16px_rgba(15,23,42,0.18)] transition hover:bg-white sm:right-4 sm:top-4"
+          className="absolute top-4 right-4 z-10 grid h-9 w-9 place-items-center rounded-full bg-white/88 text-[#0F172A] shadow-[0_10px_20px_rgba(15,23,42,0.18)] backdrop-blur-md transition hover:bg-white"
           onClick={onShareProfile}
           type="button"
         >
@@ -491,12 +542,12 @@ const ProfileHero = ({
         </button>
       </div>
 
-      <article className="mx-3 -mt-8 rounded-[14px] border border-[#E2E8F0] bg-white px-3 py-3 shadow-[0_12px_24px_rgba(15,23,42,0.08)] sm:mx-4">
-        <div className="flex items-start gap-2.5">
+      <article className="relative mx-3 -mt-14 rounded-[22px] border border-[#E2E8F0] bg-white px-3.5 py-3.5 shadow-[0_18px_40px_rgba(15,23,42,0.12)] sm:mx-4 sm:px-4">
+        <div className="flex items-start gap-3">
           <ProfileAvatar profile={profile} />
 
           <div className="min-w-0 flex-1">
-            <h1 className="text-[17px] font-semibold leading-tight tracking-tight text-[#0F172A]">
+            <h1 className="text-[19px] font-extrabold leading-[1.08] tracking-[-0.03em] text-[#0F172A]">
               <span className="inline-flex min-w-0 flex-wrap items-start gap-1.5">
                 {prefix ? <span className="break-words">{`${prefix} `}</span> : null}
                 <span className="inline-flex shrink-0 items-center gap-1">
@@ -508,20 +559,26 @@ const ProfileHero = ({
               </span>
             </h1>
 
-            <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] leading-[1.25] text-[#64748B] sm:text-[11px]">
+            <p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[10px] font-medium leading-[1.25] text-[#64748B] sm:text-[11px]">
               {getPsychologistTitle(profile.gender)}
               <span aria-hidden="true" className="h-1 w-1 rounded-full bg-[#94A3B8]" />
               <span>{formattedCrp ? `CRP ${formattedCrp}` : "CRP não informado"}</span>
+              {experienceLabel ? (
+                <>
+                  <span aria-hidden="true" className="h-1 w-1 rounded-full bg-[#94A3B8]" />
+                  <span>{experienceLabel}</span>
+                </>
+              ) : null}
               <span aria-hidden="true" className="h-1 w-1 rounded-full bg-[#94A3B8]" />
-              <span className="inline-flex items-center gap-1">
-                <Star className="h-3 w-3 fill-[#FACC15] text-[#FACC15]" aria-hidden="true" />
+              <span className="inline-flex items-center gap-0.5 text-[#B45309]">
+                <Star className="h-2.5 w-2.5 fill-[#FBBF24] text-[#FBBF24]" aria-hidden="true" />
                 {formatHeroRating(profile.rating_avg, profile.rating_count)}
               </span>
             </p>
 
             {profile.available_today ? (
               <span
-                className="mt-1 inline-flex items-center gap-1.5 text-[10px] font-medium text-[#16A34A]"
+                className="mt-1.5 inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#16A34A]"
                 data-availability-badge="true"
               >
                 <span
@@ -564,13 +621,10 @@ const ProfileHero = ({
           </button>
         </div>
 
-        <ExpandableBio
-          className="mt-2 text-[11px] leading-[1.45] text-[#64748B] sm:text-[12px]"
-          text={headline}
-        />
+        <ExpandableBio className="mt-3 text-[12px] leading-[1.48] text-[#64748B]" text={headline} />
 
         {benefitTags.length > 0 ? (
-          <div className="mt-2.5 flex flex-wrap gap-1.5" data-profile-benefit-tags="true">
+          <div className="mt-3 flex flex-wrap gap-1.5" data-profile-benefit-tags="true">
             {benefitTags.map((tag) => {
               const Icon = tag.icon;
 
@@ -805,13 +859,9 @@ const FormationSection = ({ profile }: { profile: DirectoryPsychologistProfile }
   const hasAnyFormation = formations.length > 0;
 
   return (
-    <section className="grid gap-3 px-3 pb-3 sm:px-4">
-      <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#94A3B8]">
-        Formação & Títulos
-      </h2>
-
+    <ProfileSectionCard title="Formação & Títulos">
       {hasAnyFormation ? (
-        <div className="grid gap-3">
+        <div className="mt-3 grid gap-2.5">
           {formations.map((formation, index) => {
             const institutionLine = formatList(
               [formation.institution || "", formation.graduation_year || ""],
@@ -820,10 +870,10 @@ const FormationSection = ({ profile }: { profile: DirectoryPsychologistProfile }
 
             return (
               <article
-                className="box-border flex items-start gap-3 rounded-[10px] border border-[#E2E8F0] bg-white px-3 py-3"
+                className="box-border flex items-start gap-3 rounded-[12px] border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-3"
                 key={`${formation.title || "formacao"}-${formation.institution || index}`}
               >
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#EAF5FF] text-[#2F8DEB]">
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white text-[#2F8DEB] shadow-[0_4px_12px_rgba(47,141,235,0.08)]">
                   <GraduationCap className="h-4 w-4" aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
@@ -843,16 +893,12 @@ const FormationSection = ({ profile }: { profile: DirectoryPsychologistProfile }
           Este profissional ainda não cadastrou formação e títulos.
         </p>
       )}
-    </section>
+    </ProfileSectionCard>
   );
 };
 
 const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
   const bioText = profile.bio || "Este profissional ainda não informou uma biografia pública.";
-  const specialtyText = formatList(
-    profile.specialties.map((item) => item.name),
-    "Especialidade não informada.",
-  );
   const serviceText = formatList(
     profile.services.map((item) => item.name),
     "Serviços não informados.",
@@ -872,27 +918,28 @@ const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
   const modalityText = formatList([formatAttendanceLabel(profile)], "Modalidade não informada.");
 
   return (
-    <div className="grid gap-3 bg-[#F6F8FB] pb-1 pt-3 sm:pt-4">
-      <section className="mx-3 box-border rounded-[12px] border border-[#E2E8F0] bg-white px-3 py-3 sm:px-4">
-        <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#94A3B8]">
-          Sobre
-        </h2>
+    <div className="grid gap-3 bg-[#F6F8FB] px-3 pt-3 pb-1 sm:px-4 sm:pt-4">
+      <ProfileSectionCard title="Sobre">
         <ExpandableBio
           className="mt-2 text-[11px] leading-[1.45] text-[#64748B] sm:text-[12px]"
           text={bioText}
         />
-      </section>
+      </ProfileSectionCard>
 
-      <div className="px-3 sm:px-4">
+      <div>
         <PresentationVideo profile={profile} />
       </div>
 
-      <section className="grid gap-3 px-3 sm:px-4">
-        <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#94A3B8]">
-          Especialidades
-        </h2>
-        <div className="grid gap-3">
-          <ProfileInfoCard compact icon={Brain} label="Especialidades" value={specialtyText} />
+      <ProfileSectionCard title="Especialidades">
+        <ProfileChipList
+          emptyMessage="Este profissional ainda não informou especialidades públicas."
+          items={profile.specialties}
+        />
+      </ProfileSectionCard>
+
+      <ProfileSectionCard title="Atendimento" className="mb-0">
+        <div className="mt-3 grid gap-2.5">
+          <ProfileInfoCard compact icon={MapPin} label="Modalidade" value={modalityText} />
           <ProfileInfoCard
             compact
             icon={MessageSquareText}
@@ -901,19 +948,9 @@ const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
           />
           <ProfileInfoCard compact icon={BriefcaseBusiness} label="Serviços" value={serviceText} />
           <ProfileInfoCard compact icon={UsersRound} label="Público atendido" value={targetText} />
-        </div>
-      </section>
-
-      <section className="grid gap-3 px-3 pb-3 sm:px-4">
-        <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#94A3B8]">
-          Atendimento
-        </h2>
-        <div className="grid gap-3">
-          <ProfileInfoCard compact icon={MapPin} label="Modalidade" value={modalityText} />
-          <ProfileInfoCard compact icon={UsersRound} label="Público atendido" value={targetText} />
           <ProfileInfoCard compact icon={Languages} label="Idiomas" value={languageText} />
         </div>
-      </section>
+      </ProfileSectionCard>
 
       <FormationSection profile={profile} />
     </div>

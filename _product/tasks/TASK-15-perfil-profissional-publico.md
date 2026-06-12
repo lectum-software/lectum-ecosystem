@@ -243,3 +243,19 @@ Regras anti-recriação específicas:
 ## Notas para executor
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
+
+## Registro de ajuste complementar em 2026-06-12
+
+- Ajuste visual solicitado para `/app/psychologist/[id]`, usando `Perfil psicólogo (1).pdf` e o texto anexado pelo usuário como referência de composição. O PDF foi tratado como referência visual, sem reconstrução pixel-perfect e sem substituir a arquitetura existente.
+- Builder/Quick Copy não ficou exposto como ferramenta direta no ambiente desta sessão; a validação visual foi feita com a referência anexada, inspeção local e navegador local.
+- Header/mídia superior ficou mais alto e proporcional, com `object-cover`, overlay suave e botões de voltar/compartilhar sobre a mídia.
+- Card principal passou a sobrepor mais a mídia, com avatar maior parcialmente ancorado no card, nome mais forte, selo verificado junto da última palavra, metadados compactos de profissão/CRP/experiência/avaliação e disponibilidade discreta.
+- Bio do hero e seção Sobre mantêm o comportamento de `Ver mais` existente para textos longos, sem modal/bottom sheet e sem alterar dados.
+- Selos reais de experiência, convênio, valor social e desconto permaneceram compactos e condicionados aos dados persistidos do perfil.
+- Aba Geral reorganizada em cards brancos sobre fundo cinza claro: Sobre, vídeo de apresentação, Especialidades, Atendimento e Formação & Títulos.
+- Especialidades passaram a ser chips visuais usando `profile.specialties`; quando não há dados reais, a tela usa estado vazio em PT-BR, sem dado fake.
+- Atendimento agora agrupa Modalidade, Abordagens, Serviços, Público atendido e Idiomas com os dados reais já expostos pelo contrato public-safe.
+- Abas Publicações/Avaliações e CTA fixo de WhatsApp foram preservados com a lógica atual, apenas integrados ao novo respiro visual do perfil.
+- Não houve alteração de backend, Prisma, contratos, packages ou dados persistidos.
+- ADR atualizado: `adrs/0032-refinamento-perfil-profissional-publico.md`.
+- Validações executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, HTTP 200 em `/app/psychologist/cmq5m0vse000ftkuhybmagcn6` e Chrome headless mobile 390px.
