@@ -74,6 +74,8 @@ const VIDEO_IMMERSIVE_CONTROLS_BOTTOM_GAP = 14;
 const VIDEO_IMMERSIVE_PROGRESS_CONTROLS_OFFSET = 74;
 const VIDEO_PROGRESS_TRACK_COLOR = "rgba(255,255,255,0.22)";
 const VIDEO_PROGRESS_FILL_COLOR = "rgba(255,255,255,0.75)";
+const DEFAULT_VIDEO_PLAYBACK_RATE = 1;
+const IMMERSIVE_VIDEO_PLAYBACK_RATES = [1, 1.5, 2] as const;
 const LONG_PRESS_MOVE_TOLERANCE_PX = 20;
 const LONG_PRESS_SCROLL_INTENT_THRESHOLD_PX = 32;
 const LONG_PRESS_SIGNIFICANT_DRAG_THRESHOLD_PX = 44;
@@ -197,6 +199,18 @@ const getInitials = (name: string) => {
 
 const clampNumber = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
+
+const formatPlaybackRate = (rate: number) =>
+  `${Number.isInteger(rate) ? rate.toFixed(0) : rate.toFixed(1)}x`;
+
+const getNextPlaybackRate = (currentRate: number) => {
+  const currentIndex = IMMERSIVE_VIDEO_PLAYBACK_RATES.findIndex(
+    (rate) => Math.abs(rate - currentRate) < 0.01,
+  );
+  const nextIndex = currentIndex >= 0 ? currentIndex + 1 : 0;
+
+  return IMMERSIVE_VIDEO_PLAYBACK_RATES[nextIndex % IMMERSIVE_VIDEO_PLAYBACK_RATES.length];
+};
 
 const getReadableVideoDuration = (video: HTMLVideoElement) =>
   Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 0;
@@ -402,6 +416,8 @@ export const PsychologistsLogic = () => {
   const [isSharing, setIsSharing] = useState(false);
   const [isVideoMuted, setIsVideoMuted] = useState(true);
   const [isVideoPaused, setIsVideoPaused] = useState(false);
+  const [videoPlaybackRate, setVideoPlaybackRate] = useState(DEFAULT_VIDEO_PLAYBACK_RATE);
+  const [videoVolume, setVideoVolume] = useState(1);
   const [isVideoPlaybackFailed, setIsVideoPlaybackFailed] = useState(false);
   const [isUiHidden, setIsUiHidden] = useState(false);
   const [isLongPressing, setIsLongPressing] = useState(false);
@@ -890,6 +906,10 @@ export const PsychologistsLogic = () => {
     if (typeof window === "undefined") return;
 
     const hasActiveVideoChanged = lastActiveVideoResetKeyRef.current !== activeVideoResetKey;
+    const nextPlaybackRate = hasActiveVideoChanged
+      ? DEFAULT_VIDEO_PLAYBACK_RATE
+      : videoPlaybackRate;
+    const nextVolume = clampNumber(videoVolume, 0, 1);
     let activeVideo: HTMLVideoElement | null = null;
 
     const videos = document.querySelectorAll<HTMLVideoElement>(
@@ -899,6 +919,8 @@ export const PsychologistsLogic = () => {
     for (const video of videos) {
       const isActiveVideo = video.dataset.psychologistId === featuredPsychologistId;
       video.muted = isVideoMuted;
+      video.volume = nextVolume;
+      video.playbackRate = nextPlaybackRate;
 
       if (!isActiveVideo || !activeVideoSource) {
         resetVideoElementToStart(video);
@@ -919,6 +941,7 @@ export const PsychologistsLogic = () => {
       };
 
       setIsVideoPaused(false);
+      setVideoPlaybackRate(DEFAULT_VIDEO_PLAYBACK_RATE);
       videoProgressStateRef.current = nextProgress;
       setVideoProgress(nextProgress);
       applyVideoProgressRatio(0);
@@ -944,6 +967,8 @@ export const PsychologistsLogic = () => {
     featuredPsychologistId,
     isVideoMuted,
     isVideoPaused,
+    videoPlaybackRate,
+    videoVolume,
   ]);
 
   useEffect(() => {
@@ -1192,11 +1217,12 @@ export const PsychologistsLogic = () => {
     const currentVideo = backgroundVideoRef.current;
     if (!currentVideo || !shouldShowVideo) return;
 
+    currentVideo.playbackRate = videoPlaybackRate;
     setIsVideoPaused(false);
     void currentVideo.play().catch(() => {
       setIsVideoPaused(true);
     });
-  }, [shouldShowVideo]);
+  }, [shouldShowVideo, videoPlaybackRate]);
 
   const unmuteCurrentVideo = useCallback(() => {
     const currentVideo = backgroundVideoRef.current;
@@ -1224,6 +1250,23 @@ export const PsychologistsLogic = () => {
     }
 
     setIsVideoMuted(muted);
+  }, []);
+
+  const setAllVideosPlaybackRate = useCallback((playbackRate: number) => {
+    if (typeof window !== "undefined") {
+      document
+        .querySelectorAll<HTMLVideoElement>(PSYCHOLOGISTS_BACKGROUND_VIDEO_SELECTOR)
+        .forEach((video) => {
+          video.playbackRate = playbackRate;
+        });
+    }
+
+    const currentVideo = backgroundVideoRef.current;
+    if (currentVideo) {
+      currentVideo.playbackRate = playbackRate;
+    }
+
+    setVideoPlaybackRate(playbackRate);
   }, []);
 
   const stopVideoControlInteraction = useCallback(
@@ -1272,6 +1315,14 @@ export const PsychologistsLogic = () => {
       setAllVideosMuted(!isVideoMuted);
     },
     [isVideoMuted, setAllVideosMuted, stopVideoControlInteraction],
+  );
+
+  const handleImmersivePlaybackRateToggle = useCallback(
+    (event: { preventDefault?: () => void; stopPropagation: () => void }) => {
+      stopVideoControlInteraction(event);
+      setAllVideosPlaybackRate(getNextPlaybackRate(videoPlaybackRate));
+    },
+    [setAllVideosPlaybackRate, stopVideoControlInteraction, videoPlaybackRate],
   );
 
   const handleFeedScroll = useCallback(
@@ -2361,8 +2412,19 @@ export const PsychologistsLogic = () => {
                                 setIsVideoPaused(false);
                                 syncActiveVideoProgress();
                               }}
+                              onRateChange={(event) => {
+                                if (!isActiveSlide) return;
+
+                                setVideoPlaybackRate(event.currentTarget.playbackRate);
+                              }}
                               onTimeUpdate={(event) => {
                                 if (isActiveSlide) syncActiveVideoProgress(event.currentTarget);
+                              }}
+                              onVolumeChange={(event) => {
+                                if (!isActiveSlide) return;
+
+                                setIsVideoMuted(event.currentTarget.muted);
+                                setVideoVolume(event.currentTarget.volume);
                               }}
                               playsInline
                               poster={slidePosterSrc || undefined}
@@ -2613,9 +2675,16 @@ export const PsychologistsLogic = () => {
 
                                 <span aria-hidden="true" className="h-6 w-px bg-white/18" />
 
-                                <span className="px-2 text-[15px] leading-none font-semibold text-white/88">
-                                  1x
-                                </span>
+                                <button
+                                  aria-label={`Alterar velocidade do vídeo. Atual: ${formatPlaybackRate(
+                                    videoPlaybackRate,
+                                  )}`}
+                                  className="min-w-10 rounded-full px-2 py-2 text-[15px] leading-none font-semibold text-white/88 transition hover:bg-white/10 active:scale-95"
+                                  onClick={handleImmersivePlaybackRateToggle}
+                                  type="button"
+                                >
+                                  {formatPlaybackRate(videoPlaybackRate)}
+                                </button>
                               </div>
                             </div>
                           ) : null}

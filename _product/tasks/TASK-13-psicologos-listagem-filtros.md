@@ -993,3 +993,20 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: persistencia dos controles imersivos (2026-06-12)
+
+- Pedido do usuario: manter as alteracoes feitas nos controles do modo sem UI ao retornar para a UI normal, sem resetar play/pause, mute/unmute, volume, velocidade ou posicao atual.
+- O botao `X` do modo imersivo agora apenas restaura `isUiHidden=false`; ele nao altera `currentTime`, `muted`, `volume`, `playbackRate` ou estado de pausa do player ativo.
+- Play/Pause e Volume/Mute continuam controlando diretamente o `HTMLVideoElement` e atualizam estados globais do feed, entao suas escolhas permanecem quando a UI volta a aparecer.
+- O indicador de velocidade deixou de ser apenas texto fixo e passou a alternar entre `1x`, `1.5x` e `2x`; a velocidade aplicada persiste ao sair do modo imersivo.
+- `volume` e `playbackRate` sao sincronizados pelos eventos nativos do video e reaplicados ao player ativo sem depender de remount ou troca de `src`.
+- A troca de psicologo continua sendo o unico fluxo que reseta exibicao: `currentTime=0`, barra visual zerada, `isUiHidden=false`, pause limpo e `playbackRate=1x`; a preferencia de mute/volume permanece global para os proximos videos.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, layout principal, busca, filtros, posicao dos textos, navbar ou botoes laterais quando a UI esta visivel.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual permanece `_product/proto/Psicologos.jpg` e a imagem anexada pelo usuario.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

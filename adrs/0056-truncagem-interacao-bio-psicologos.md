@@ -338,3 +338,21 @@ A barra de progresso passa a separar ainda mais progresso visual e estado React.
 A decisao foi usar `requestAnimationFrame` para ler o `currentTime` do video ativo enquanto ele esta reproduzindo e aplicar o progresso diretamente no elemento interno da barra via `transform: scaleX(progress)`. O estado React de `currentTime`/`duration` permanece para acessibilidade, teclado e sincronizacoes forçadas, mas nao roda a cada frame.
 
 Durante o drag, a barra tambem responde pelo mesmo caminho direto via ref, sem transicao, e o seek continua sendo aplicado apenas no release. Quando o video pausa ou o usuario esta em scrub, o RAF e cancelado pelo efeito; quando o video volta a tocar, o loop e reiniciado. Isso reduz saltos visuais e evita re-render excessivo no feed vertical.
+
+## Atualizacao 2026-06-12: persistencia dos controles imersivos
+
+O modo imersivo nao deve ser tratado como um novo player, mas como uma camada de controles temporaria sobre o mesmo
+`HTMLVideoElement` ativo.
+
+A decisao foi manter play/pause, mute/unmute, volume, velocidade e posicao atual como estado do player/feed, e nao como
+estado exclusivo da UI oculta. Ao tocar no `X`, apenas `isUiHidden` volta para `false`; o video permanece no mesmo
+tempo, com o mesmo audio, mesmo volume, mesma velocidade e mesmo estado de reproducao.
+
+Os controles inferiores atualizam diretamente o video ativo e sincronizam os estados React correspondentes. A velocidade
+passa a ser alternavel no pill (`1x`, `1.5x`, `2x`) e persiste ao retornar para a UI normal. Eventos nativos de
+`ratechange` e `volumechange` mantem o estado alinhado ao elemento de video.
+
+O reset continua restrito a troca do psicologo/video ativo: nesse caso, todos os videos do feed sao enviados para o
+inicio, a barra volta a zero, `isUiHidden=false`, o player volta a reproduzir e `playbackRate` retorna a `1x`. A
+preferencia de mute/volume permanece global, permitindo que os proximos videos iniciem com som ou mutados conforme a
+ultima escolha do usuario.
