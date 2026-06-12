@@ -561,3 +561,16 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: padronizacao do botao WhatsApp nos videos (2026-06-12)
+
+- Pedido do usuario: manter o botao de WhatsApp identico em todos os videos, usando como referencia o primeiro botao criado.
+- A tela `/app/psychologists` passou a renderizar o mesmo circulo verde `#22C55E` com `WhatsAppIcon` branco tanto para profissionais com `whatsapp_url` quanto para profissionais sem WhatsApp publico disponivel.
+- Quando nao ha `whatsapp_url`, o botao fica visualmente igual, mas sem abrir link externo; ele usa `aria-disabled` e bloqueia propagacao do clique/toque para nao pausar/reproduzir o video por acidente.
+- Nao houve alteracao de backend, Prisma, migrations, packages, mocks ou dados do psicologo.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

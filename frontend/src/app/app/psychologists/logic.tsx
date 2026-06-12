@@ -3,7 +3,6 @@
 import {
   Award,
   Heart,
-  MessageCircle,
   Play,
   Search,
   Share2,
@@ -1540,19 +1539,21 @@ export const PsychologistsLogic = () => {
                         ) : (
                           <div className="grid justify-items-center gap-1 text-center">
                             <button
-                              aria-label="WhatsApp indisponível"
-                              className="grid cursor-not-allowed place-items-center rounded-full bg-[#22C55E]/70 text-white"
-                              disabled
+                              aria-disabled="true"
+                              aria-label={`WhatsApp indisponível para ${featuredPsychologist.name}`}
+                              className="grid place-items-center rounded-full bg-[#22C55E] text-white transition"
+                              onClick={stopInteractionPropagation}
                               type="button"
                               style={{
                                 width: `${metrics.actionButtonSize}px`,
                                 height: `${metrics.actionButtonSize}px`,
                               }}
                             >
-                              <MessageCircle
-                                className="h-4 w-4"
+                              <WhatsAppIcon
                                 aria-hidden="true"
+                                className="h-4 w-4"
                                 style={{
+                                  color: "white",
                                   height: `${metrics.actionIconSize}px`,
                                   width: `${metrics.actionIconSize}px`,
                                 }}

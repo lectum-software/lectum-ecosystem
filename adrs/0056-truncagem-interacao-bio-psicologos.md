@@ -87,3 +87,9 @@ Para preservar as zonas de interacao ja decididas:
 - swipe vertical sobre a tela navega o feed e nao deve disparar play/pause residual;
 - campos de busca, modal de filtros e bio expandida bloqueiam a navegacao por scroll para permitir edicao/rolagem interna;
 - ao trocar o psicologo ativo, estado de bio expandida, falha de video e feedback de compartilhamento volta ao estado inicial.
+
+## Atualizacao 2026-06-12: padronizacao visual do botao WhatsApp
+
+O botao lateral de WhatsApp em `/app/psychologists` deve manter o mesmo visual em todos os psicologos exibidos no feed imersivo, usando como referencia o primeiro botao criado na tela: circulo `#22C55E` com `WhatsAppIcon` branco e label `WhatsApp`.
+
+Quando o profissional ainda nao possui `whatsapp_url` no contrato publico, o botao permanece visualmente identico, mas fica semanticamente marcado como indisponivel (`aria-disabled`) e intercepta o clique/toque para nao acionar o player de video por propagacao.
