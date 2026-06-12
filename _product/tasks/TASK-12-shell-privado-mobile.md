@@ -210,3 +210,19 @@ Regras anti-recriação específicas:
 ## Notas para executor
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
+
+### Ajuste complementar em 2026-06-12: sidebar desktop padronizada
+
+- O shell privado continua mobile-first: abaixo de `1024px`, a navegação inferior permanece igual.
+- A partir de `1024px`, toda tela que renderiza a navegação do `PrivateTemplate` passa a ocultar a bottom nav e exibir menu lateral esquerdo fixo com os mesmos itens: Psicólogos, Favoritos, Comunidade, Notificações e Perfil.
+- O perfil público do psicólogo permanece fora da regra porque usa `showNavigation={false}`.
+- O conteúdo das telas com navegação recebe compensação lateral no desktop para não ficar sob a sidebar, preservando a largura confortável dos containers existentes.
+- O item Psicólogos também considera rotas singulares `/app/psychologist/*` como ativas quando alguma tela interna com navegação apontar para um perfil/contato de psicólogo.
+- Não houve alteração de rotas, dados, autenticação, backend, Prisma ou packages.
+
+Validações do ajuste desktop:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local/HTTP em `localhost:3000`: `/app/psychologists`, `/app/profile`, `/app/community` e `/app/psychologist/test-public` responderam `200`, preservando acesso às rotas e mantendo o perfil público fora do shell com navegação.

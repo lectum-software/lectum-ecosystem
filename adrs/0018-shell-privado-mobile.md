@@ -107,3 +107,31 @@ como principal elemento persistente do layout interno.
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - Browser local headless em `390x844` validou `/app/profile` com `hasHeader=false` e `navCount=1`.
+
+## Atualização em 2026-06-12: menu lateral desktop para telas com bottom nav
+
+### Contexto
+
+Produto definiu que toda tela que usa a navegação inferior no mobile deve adotar, no desktop (`>=1024px`), o mesmo padrão visual já usado na experiência de Psicólogos: bottom nav oculta e menu lateral esquerdo fixo. O perfil público do psicólogo não entra nesta regra porque não renderiza a navegação do shell.
+
+### Decisão
+
+- O `PrivateTemplate` passa a usar `desktopNavigation="sidebar"` como padrão.
+- A bottom nav continua inalterada no mobile e recebe `lg:hidden` no shell.
+- O menu lateral desktop é renderizado uma única vez pelo shell, com logo Lectum, itens com ícone e texto, destaque em azul para o item ativo e itens secundários em tom neutro.
+- O conteúdo das telas que renderizam a navegação recebe `lg:pl-[240px]` e `lg:pb-8` para respeitar a largura da sidebar sem alterar o layout mobile.
+- Rotas públicas que usam `showNavigation={false}`, como `/app/psychologist/[id]`, permanecem sem adaptação de sidebar.
+- A rota singular `/app/psychologist/*` passa a ativar o item Psicólogos quando estiver em uma tela interna que renderiza o shell com navegação.
+
+### Consequências
+
+- Telas como Psicólogos, Favoritos, Comunidade, Notificações e Perfil passam a compartilhar a mesma navegação desktop sem duplicar componentes por página.
+- O layout mobile permanece intacto.
+- Telas que já optam por `showNavigation={false}` ou `showHeader={false}` continuam sem navegação global, preservando fluxos específicos de perfil público, setup ou billing.
+
+Validações do ajuste desktop:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local/HTTP em `localhost:3000`: `/app/psychologists`, `/app/profile`, `/app/community` e `/app/psychologist/test-public` responderam `200`, preservando acesso às rotas e mantendo o perfil público fora do shell com navegação.

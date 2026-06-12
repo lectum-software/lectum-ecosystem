@@ -55,6 +55,7 @@ const fallbackNavigation: NavigationItem[] = [
     icon: UsersRound,
     label: "Psicólogos",
     title: "Encontre seu psicólogo",
+    activePrefixes: ["/app/psychologist"],
   },
   {
     href: "/app/favorites",
@@ -90,6 +91,7 @@ const navigationByRole: Record<Extract<UserRole, "paciente" | "psicologo">, Navi
       icon: UsersRound,
       label: "Psicólogos",
       title: "Encontre seu psicólogo",
+      activePrefixes: ["/app/psychologist"],
     },
     {
       href: "/app/favorites",
@@ -123,6 +125,7 @@ const navigationByRole: Record<Extract<UserRole, "paciente" | "psicologo">, Navi
       icon: UsersRound,
       label: "Psicólogos",
       title: "Psicólogos",
+      activePrefixes: ["/app/psychologist"],
     },
     {
       href: "/app/favorites",
@@ -173,7 +176,7 @@ export const PrivateTemplate = ({
   autoHideNavigation = false,
   children,
   contentClassName,
-  desktopNavigation = "bottom",
+  desktopNavigation = "sidebar",
   navigationDimmed = false,
   navigationHidden = false,
   navigationTheme = "default",
@@ -209,6 +212,7 @@ export const PrivateTemplate = ({
   const ticking = useRef(false);
   const pageShellClassName = cn(
     shouldShowNavigation ? "pb-28 sm:pb-32" : undefined,
+    shouldRenderDesktopSidebar ? "lg:pl-[240px] lg:pb-8" : undefined,
     contentClassName,
   );
   const isSessionLoading = hasToken && !sessionUser && (hidrate.isLoading || hidrate.isPending);
@@ -258,8 +262,7 @@ export const PrivateTemplate = ({
     <nav
       aria-label="Navegação principal"
       className={cn(
-        "fixed inset-x-0 bottom-0 z-40 transition-[transform,opacity,filter] duration-200 ease-out sm:bottom-4 sm:left-1/2 sm:right-auto sm:w-[min(560px,calc(100vw-2rem))] sm:-translate-x-1/2 sm:rounded-[var(--lectum-card-radius)]",
-        shouldRenderDesktopSidebar ? "lg:hidden" : undefined,
+        "fixed inset-x-0 bottom-0 z-40 transition-[transform,opacity,filter] duration-200 ease-out sm:bottom-4 sm:left-1/2 sm:right-auto sm:w-[min(560px,calc(100vw-2rem))] sm:-translate-x-1/2 sm:rounded-[var(--lectum-card-radius)] lg:hidden",
         navigationDimmed ? "opacity-55 brightness-90 saturate-75" : "opacity-100",
         navigationTheme === "solidWhite"
           ? "border-t border-[#e5e7eb] bg-white shadow-[0_-10px_30px_rgb(15_23_42_/_8%)]"
@@ -300,7 +303,7 @@ export const PrivateTemplate = ({
     <aside
       aria-label="Navegação principal"
       className={cn(
-        "fixed inset-y-0 left-0 z-50 hidden w-[240px] border-[#e5e7eb] border-r bg-white px-4 py-6 text-[#0f172a] shadow-[12px_0_36px_rgb(15_23_42_/_5%)] transition-[transform,opacity,filter] duration-200 ease-out lg:flex lg:flex-col",
+        "fixed inset-y-0 left-0 z-50 hidden w-[240px] border-border border-r bg-surface px-4 py-6 text-foreground shadow-[12px_0_36px_rgb(15_23_42_/_5%)] transition-[transform,opacity,filter] duration-200 ease-out lg:flex lg:flex-col",
         navigationDimmed ? "opacity-55 brightness-95 saturate-75" : "opacity-100",
         isNavigationRenderedVisible ? "translate-x-0" : "-translate-x-full opacity-0",
       )}
@@ -309,7 +312,7 @@ export const PrivateTemplate = ({
         pointerEvents: isNavigationRenderedVisible && !navigationDimmed ? "auto" : "none",
       }}
     >
-      <div className="mb-8 flex items-center gap-2 px-2 text-xl font-black tracking-tight text-[#0f172a]">
+      <div className="mb-8 flex items-center gap-2 px-2 text-xl font-black tracking-tight text-foreground">
         <span className="grid h-9 w-9 place-items-center rounded-2xl bg-primary text-sm font-black text-white">
           L
         </span>
@@ -327,8 +330,8 @@ export const PrivateTemplate = ({
               className={cn(
                 "flex min-h-12 items-center gap-3 rounded-2xl px-3 text-[15px] font-bold transition",
                 isActive
-                  ? "bg-primary/10 text-primary"
-                  : "text-[#334155] hover:bg-[#f8fafc] hover:text-primary",
+                  ? "bg-primary-soft text-primary"
+                  : "text-muted hover:bg-primary-soft/60 hover:text-primary",
               )}
               href={item.href}
               key={item.href}
@@ -353,7 +356,9 @@ export const PrivateTemplate = ({
     return (
       <>
         <NotificationManager />
-        <PageShell contentClassName="grid min-h-[55vh] place-items-center pb-28">
+        <PageShell
+          contentClassName={cn("grid min-h-[55vh] place-items-center", pageShellClassName)}
+        >
           <LoadingState label="Carregando sua sessão" />
         </PageShell>
         {navigationMarkup}
