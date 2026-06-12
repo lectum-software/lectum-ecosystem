@@ -675,3 +675,19 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: busca e filtro fixos no feed vertical (2026-06-12)
+
+- Pedido do usuario: ao scrollar/swipar entre videos na tela de Psicologos, manter a barra de busca e o botao de filtros fixos no topo, sem acompanhar o deslocamento dos slides.
+- A busca e o botao de filtros sairam do `map` de psicologos e passaram a ser renderizados uma unica vez no container principal da tela, acima da camada de videos.
+- Os slides agora mantem apenas conteudos especificos do psicologo: video/midia, selos, nome, selo verificado, profissao/experiencia/nota, bio, coluna lateral e gradientes/overlays.
+- A camada global de busca/filtro fica ancorada no topo com z-index acima da midia, permitindo que os videos passem por tras sem piscar ou recriar controles a cada item.
+- No modo imersivo, `isUiHidden=true` tambem oculta busca e filtro; ao mudar de psicologo, o reset existente de `isUiHidden=false` faz a camada global reaparecer.
+- A modal de filtros segue cobrindo a tela e pausando o video ativo; busca, filtros, sugestoes, gestos, favoritos, navbar, backend, Prisma, migrations e packages nao foram alterados.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual permanece `_product/proto/Psicologos.jpg` e o contrato da TASK-13.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

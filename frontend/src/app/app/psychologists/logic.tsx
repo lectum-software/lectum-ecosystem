@@ -1235,6 +1235,10 @@ export const PsychologistsLogic = () => {
     !isFiltersOpen &&
     !showInitialLoading &&
     !errorMessage;
+  const shouldRenderGlobalControls =
+    !showInitialLoading && !errorMessage && psychologists.length > 0;
+  const globalControlsVisibilityClass =
+    isUiHidden || isFiltersOpen ? "pointer-events-none opacity-0" : "opacity-100";
 
   return (
     <PrivateTemplate
@@ -1402,6 +1406,111 @@ export const PsychologistsLogic = () => {
               </div>
             ) : null}
 
+            {shouldRenderGlobalControls ? (
+              <>
+                <form
+                  className={cn(
+                    "absolute z-50 transition-opacity duration-200 ease-out",
+                    globalControlsVisibilityClass,
+                  )}
+                  data-psychologists-scroll-lock="true"
+                  onMouseDown={stopInteractionPropagation}
+                  onPointerDown={(event) => {
+                    event.stopPropagation();
+                    registerSwipeHintInteraction();
+                  }}
+                  onSubmit={handleSearchSubmit}
+                  style={{
+                    top: `calc(env(safe-area-inset-top) + ${metrics.searchTop}px)`,
+                    left: `${metrics.horizontalPadding}px`,
+                    right: `${metrics.searchRightGap}px`,
+                    height: `${metrics.searchHeight}px`,
+                  }}
+                >
+                  <div className="relative flex h-full w-full items-center rounded-[999px] border border-[rgba(255,255,255,0.35)] bg-white/35 p-3 backdrop-blur-md">
+                    <Search className="absolute left-3 h-4 w-4 text-white/85" aria-hidden="true" />
+                    <input
+                      aria-label="Buscar Psicólogos"
+                      className="h-full w-full bg-transparent pr-3 pl-7 text-[14px] text-white outline-none placeholder:text-white/72"
+                      maxLength={120}
+                      onBlur={() => {
+                        window.setTimeout(() => setIsSearchFocused(false), 120);
+                      }}
+                      onChange={(event) => {
+                        setSearchDraft(event.target.value);
+                        setIsSearchFocused(true);
+                      }}
+                      onFocus={() => setIsSearchFocused(true)}
+                      placeholder="Busque pelo nome ou CRP"
+                      name="search"
+                      type="text"
+                      value={searchDraft}
+                    />
+                  </div>
+
+                  {shouldRenderSearchSuggestions ? (
+                    <div
+                      aria-label="Sugestões de psicólogos"
+                      className="absolute top-[calc(100%+8px)] right-0 left-0 overflow-hidden rounded-2xl border border-white/25 bg-white/95 text-[#0f172a] shadow-[0_18px_45px_rgba(15,23,42,0.22)] backdrop-blur-md"
+                      onMouseDown={(event) => event.preventDefault()}
+                      role="listbox"
+                    >
+                      <div className="border-[#e2e8f0] border-b px-3 py-2 text-[11px] font-extrabold tracking-[0.08em] text-[#64748b] uppercase">
+                        Profissionais cadastrados
+                      </div>
+                      {searchSuggestionsDirectory.isFetching ? (
+                        <div className="px-3 py-3 text-sm font-medium text-[#64748b]">
+                          Buscando profissionais...
+                        </div>
+                      ) : (
+                        searchSuggestionItems.map((suggestion) => (
+                          <button
+                            aria-label={`Buscar por ${suggestion.name}`}
+                            className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold transition hover:bg-[#f8fafc]"
+                            key={suggestion.id}
+                            aria-selected={false}
+                            onClick={() => handleSearchSuggestionSelect(suggestion.name)}
+                            role="option"
+                            type="button"
+                          >
+                            <span className="min-w-0 truncate">{suggestion.name}</span>
+                            <span className="shrink-0 rounded-full bg-[#eff6ff] px-2 py-0.5 text-[10px] font-extrabold text-[#308ce8]">
+                              {suggestion.verified ? "Verificado" : "Gratuito"}
+                            </span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  ) : null}
+                </form>
+
+                <button
+                  aria-label="Abrir filtros"
+                  className={cn(
+                    "absolute z-50 grid items-center justify-center rounded-full border border-[rgba(255,255,255,0.35)] bg-white/35 text-white shadow-[0_5px_24px_rgba(15,23,42,0.2)] backdrop-blur-md transition hover:bg-white/45",
+                    globalControlsVisibilityClass,
+                  )}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleFiltersOpen();
+                  }}
+                  onPointerDown={(event) => {
+                    event.stopPropagation();
+                    registerSwipeHintInteraction();
+                  }}
+                  style={{
+                    top: `calc(env(safe-area-inset-top) + ${metrics.searchTop}px)`,
+                    right: `${metrics.actionRightPadding}px`,
+                    width: `${metrics.filterButtonSize}px`,
+                    height: `${metrics.filterButtonSize}px`,
+                  }}
+                  type="button"
+                >
+                  <SlidersHorizontal className="h-[18px] w-[18px]" aria-hidden="true" />
+                </button>
+              </>
+            ) : null}
+
             {!showInitialLoading && !errorMessage && psychologists.length > 0 ? (
               <div
                 className="psychologists-video-feed h-full w-full snap-y snap-mandatory overflow-y-auto overscroll-contain"
@@ -1443,102 +1552,6 @@ export const PsychologistsLogic = () => {
                       )}
                       key={psychologist.id}
                     >
-                      <form
-                        className={cn(
-                          "absolute z-40 transition-opacity duration-200 ease-out",
-                          slideUiVisibilityClass,
-                        )}
-                        data-psychologists-scroll-lock="true"
-                        onMouseDown={stopInteractionPropagation}
-                        onSubmit={handleSearchSubmit}
-                        style={{
-                          top: `calc(env(safe-area-inset-top) + ${metrics.searchTop}px)`,
-                          left: `${metrics.horizontalPadding}px`,
-                          right: `${metrics.searchRightGap}px`,
-                          height: `${metrics.searchHeight}px`,
-                        }}
-                      >
-                        <div className="relative flex h-full w-full items-center rounded-[999px] border border-[rgba(255,255,255,0.35)] bg-white/35 p-3 backdrop-blur-md">
-                          <Search
-                            className="absolute left-3 h-4 w-4 text-white/85"
-                            aria-hidden="true"
-                          />
-                          <input
-                            aria-label="Buscar Psicólogos"
-                            className="h-full w-full bg-transparent pr-3 pl-7 text-[14px] text-white outline-none placeholder:text-white/72"
-                            maxLength={120}
-                            onBlur={() => {
-                              window.setTimeout(() => setIsSearchFocused(false), 120);
-                            }}
-                            onChange={(event) => {
-                              setSearchDraft(event.target.value);
-                              setIsSearchFocused(true);
-                            }}
-                            onFocus={() => setIsSearchFocused(true)}
-                            placeholder="Busque pelo nome ou CRP"
-                            name="search"
-                            type="text"
-                            value={searchDraft}
-                          />
-                        </div>
-
-                        {isActiveSlide && shouldRenderSearchSuggestions ? (
-                          <div
-                            aria-label="Sugestões de psicólogos"
-                            className="absolute top-[calc(100%+8px)] right-0 left-0 overflow-hidden rounded-2xl border border-white/25 bg-white/95 text-[#0f172a] shadow-[0_18px_45px_rgba(15,23,42,0.22)] backdrop-blur-md"
-                            onMouseDown={(event) => event.preventDefault()}
-                            role="listbox"
-                          >
-                            <div className="border-[#e2e8f0] border-b px-3 py-2 text-[11px] font-extrabold tracking-[0.08em] text-[#64748b] uppercase">
-                              Profissionais cadastrados
-                            </div>
-                            {searchSuggestionsDirectory.isFetching ? (
-                              <div className="px-3 py-3 text-sm font-medium text-[#64748b]">
-                                Buscando profissionais...
-                              </div>
-                            ) : (
-                              searchSuggestionItems.map((suggestion) => (
-                                <button
-                                  aria-label={`Buscar por ${suggestion.name}`}
-                                  className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold transition hover:bg-[#f8fafc]"
-                                  key={suggestion.id}
-                                  aria-selected={false}
-                                  onClick={() => handleSearchSuggestionSelect(suggestion.name)}
-                                  role="option"
-                                  type="button"
-                                >
-                                  <span className="min-w-0 truncate">{suggestion.name}</span>
-                                  <span className="shrink-0 rounded-full bg-[#eff6ff] px-2 py-0.5 text-[10px] font-extrabold text-[#308ce8]">
-                                    {suggestion.verified ? "Verificado" : "Gratuito"}
-                                  </span>
-                                </button>
-                              ))
-                            )}
-                          </div>
-                        ) : null}
-                      </form>
-
-                      <button
-                        aria-label="Abrir filtros"
-                        className={cn(
-                          "absolute z-30 grid items-center justify-center rounded-full border border-[rgba(255,255,255,0.35)] bg-white/35 text-white shadow-[0_5px_24px_rgba(15,23,42,0.2)] backdrop-blur-md transition hover:bg-white/45",
-                          slideUiVisibilityClass,
-                        )}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          handleFiltersOpen();
-                        }}
-                        style={{
-                          top: `calc(env(safe-area-inset-top) + ${metrics.searchTop}px)`,
-                          right: `${metrics.actionRightPadding}px`,
-                          width: `${metrics.filterButtonSize}px`,
-                          height: `${metrics.filterButtonSize}px`,
-                        }}
-                        type="button"
-                      >
-                        <SlidersHorizontal className="h-[18px] w-[18px]" aria-hidden="true" />
-                      </button>
-
                       <div
                         className="absolute inset-0 overflow-hidden"
                         style={{

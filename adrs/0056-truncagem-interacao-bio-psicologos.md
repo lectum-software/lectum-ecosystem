@@ -163,3 +163,15 @@ A tela `/app/psychologists` refinou a hierarquia visual do bloco inferior para e
 - o gradiente inferior ficou mais sutil, preservando legibilidade sem dominar a midia.
 
 A expansao da bio continua crescendo para cima por causa do bloco ancorado acima da navbar, sem alterar navbar, video, busca, filtros, coluna lateral, gestos, favoritos ou navegacao para perfil.
+
+## Atualizacao 2026-06-12: busca e filtro fixos no feed vertical
+
+A tela `/app/psychologists` separa a camada global de busca/filtros da camada de slides do feed vertical:
+
+- a barra de busca e o botao de filtros sao renderizados uma unica vez no container principal, fora do `map` de psicologos;
+- durante o `scroll-snap`, apenas video, overlays, selo, nome, bio, avaliacao e coluna lateral pertencentes ao psicologo sobem/descem com o slide;
+- busca e filtro permanecem ancorados no topo do viewport do feed, com z-index acima da midia, permitindo que os videos passem por tras;
+- quando `isUiHidden=true`, a camada global tambem fica invisivel e sem eventos; ao trocar de slide, o reset existente de `isUiHidden=false` faz busca/filtro reaparecerem;
+- a modal de filtros continua acima dessa camada global e pausa o video ativo ao abrir.
+
+Essa decisao evita recriar busca/filtro por item do feed e preserva as interacoes, sugestoes de busca, filtros, gestos e navegacao existentes.
