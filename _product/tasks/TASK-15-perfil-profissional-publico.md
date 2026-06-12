@@ -320,3 +320,19 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm check`
   - HTTP 200 em `/app/psychologist/cmq5m0vse000ftkuhybmagcn6`
   - Chrome headless/CDP em 390px confirmando estado inicial com `hasName=false`, apenas 3 chips, fundo transparente e sem faixa branca solida; apos scroll, `hasName=true`, selo verificado visivel, `top=0`, fundo `rgba(255,255,255,0.72)` e `backdrop-filter: blur(12px)`.
+
+## Registro de ajuste complementar em 2026-06-12 - capa compacta e navegacao segmentada
+
+- Ajustado apenas o visual de `/app/psychologist/[id]`, sem mudar rotas, dados, contratos, favoritos, WhatsApp ou logica das abas.
+- A imagem de capa foi reduzida novamente para atuar apenas como identidade visual, preservando botao voltar, compartilhar e card principal sobreposto.
+- O botao `Editar perfil` do proprio psicologo deixou de exibir texto e passou a ser um botao circular apenas com icone de lapis, alinhado aos controles da capa.
+- A bio do card principal permanece completa e sem truncamento, conforme decisao de produto deste ajuste.
+- O texto longo da secao `Sobre` passou a ser o unico texto expansivel: inicia com 3 linhas e exibe `Ver mais`/`Ver menos` quando ha conteudo excedente.
+- A navegacao `Sobre/Publicacoes/Avaliacoes` foi transformada em controle segmentado unico com glass, bordas arredondadas, sombra leve e estado ativo destacado, mantendo comportamento sticky.
+- Validacoes executadas para capa compacta/navegacao segmentada:
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `/app/psychologist/cmq5m0vse000ftkuhybmagcn6`
+  - Chrome headless/CDP em 390px confirmando capa com 118px, card sobreposto, sem `Ver mais` no hero, texto `Sobre` com `line-clamp: 3` e botao `Ver mais`, controle segmentado unico com 3 botoes, sem nome no sticky inicial, sem overflow horizontal, e sticky no topo com nome+selo, fundo translucido e blur.

@@ -184,3 +184,28 @@ Validacao complementar do menu sticky leve:
 - Chrome headless/CDP em 390px:
   - estado inicial com apenas 3 chips, `hasName=false`, fundo transparente e sem barra branca solida;
   - apos scroll, menu fixado em `top=0`, `hasName=true`, selo verificado presente, fundo `rgba(255,255,255,0.72)` e `backdrop-filter: blur(12px)`.
+
+Ajuste complementar de capa compacta e navegacao segmentada em 2026-06-12:
+
+- A capa do perfil publico foi compactada para reduzir o peso visual da primeira dobra, mantendo a sobreposicao do card principal e a identidade visual independente.
+- A acao `Editar perfil` permanece condicionada ao proprio psicologo autenticado, mas agora usa apenas botao circular com icone de lapis para reduzir ruido visual no topo.
+- O card principal continua exibindo a bio completa, sem clamp ou expansao.
+- A secao `Sobre` concentra o comportamento expansivel para textos longos, com `line-clamp-3` inicial e acao `Ver mais`/`Ver menos` quando necessario.
+- A navegacao das secoes foi alterada de chips independentes para um controle segmentado unico, inspirado em segmented controls modernos, com container translucido e aba ativa em destaque suave.
+- Nao houve alteracao de backend, Prisma, contrato, dados, rotas ou logica de navegacao.
+
+Validacao complementar da capa compacta e navegacao segmentada:
+
+- `pnpm --dir frontend biome:fix`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP 200 em `/app/psychologist/cmq5m0vse000ftkuhybmagcn6`.
+- Chrome headless/CDP em 390px:
+  - capa renderizada com 118px e card principal sobreposto;
+  - hero sem `Ver mais`/`Ver menos`;
+  - secao `Sobre` com `line-clamp: 3` e botao `Ver mais`;
+  - navegacao segmentada unica com 3 botoes e fundo translucido;
+  - estado inicial sem nome no menu sticky e sem barra branca solida;
+  - apos scroll, menu no topo com nome+selo, fundo `rgba(255,255,255,0.72)` e blur;
+  - sem overflow horizontal.

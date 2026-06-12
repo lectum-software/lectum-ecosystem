@@ -453,14 +453,14 @@ const ProfileHeroMedia = ({ profile }: { profile: DirectoryPsychologistProfile }
 
   if (!coverImageSrc || coverImageFailed) {
     return (
-      <div className="relative h-[196px] overflow-hidden bg-gradient-to-br from-[#2F8DEB] to-[#60A5FA] sm:h-[216px] lg:h-[248px]">
+      <div className="relative h-[118px] overflow-hidden bg-gradient-to-br from-[#2F8DEB] to-[#60A5FA] sm:h-[132px] lg:h-[160px]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_15%,rgba(255,255,255,0.34),transparent_32%),radial-gradient(circle_at_82%_18%,rgba(191,219,254,0.48),transparent_34%),linear-gradient(135deg,#EAF5FF,#D9ECFF_52%,#F8FAFC)] opacity-100" />
       </div>
     );
   }
 
   return (
-    <div className="relative h-[196px] overflow-hidden bg-black sm:h-[216px] lg:h-[248px]">
+    <div className="relative h-[118px] overflow-hidden bg-black sm:h-[132px] lg:h-[160px]">
       <Image
         alt={`Imagem de capa de ${profile.name}`}
         className="h-full w-full object-cover object-center"
@@ -528,17 +528,16 @@ const ProfileHero = ({
         {canEditProfile ? (
           <button
             aria-label="Editar perfil"
-            className="absolute top-4 right-16 z-10 inline-flex h-9 items-center gap-1.5 rounded-full bg-white/82 px-3 text-[11px] font-bold text-[#0F172A] shadow-[0_10px_20px_rgba(15,23,42,0.16)] backdrop-blur-md transition hover:bg-white"
+            className="absolute top-4 right-16 z-10 grid h-9 w-9 place-items-center rounded-full bg-white/88 text-[#0F172A] shadow-[0_10px_20px_rgba(15,23,42,0.18)] backdrop-blur-md transition hover:bg-white"
             onClick={onEditProfile}
             type="button"
           >
-            <PencilLine className="h-3.5 w-3.5" aria-hidden="true" />
-            Editar perfil
+            <PencilLine className="h-4 w-4" aria-hidden="true" />
           </button>
         ) : null}
       </div>
 
-      <article className="relative mx-3 -mt-14 rounded-[22px] border border-[#E2E8F0] bg-white px-3.5 py-3.5 shadow-[0_18px_40px_rgba(15,23,42,0.12)] sm:mx-4 sm:px-4">
+      <article className="relative mx-3 -mt-10 rounded-[22px] border border-[#E2E8F0] bg-white px-3.5 py-3.5 shadow-[0_18px_40px_rgba(15,23,42,0.12)] sm:mx-4 sm:px-4">
         <div className="flex items-start gap-3">
           <ProfileAvatar profile={profile} />
 
@@ -700,7 +699,8 @@ const ProfileTabs = ({
 
         <nav
           aria-label="Seções do perfil profissional"
-          className="flex items-center gap-1.5 overflow-x-auto py-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="grid grid-cols-3 rounded-full border border-[rgba(226,232,240,0.78)] bg-[rgba(255,255,255,0.48)] p-1 shadow-[0_10px_24px_rgba(15,23,42,0.055)] backdrop-blur-[14px]"
+          data-profile-segmented-navigation="true"
         >
           {tabs.map((tab) => {
             const active = tab.value === activeTab;
@@ -709,10 +709,10 @@ const ProfileTabs = ({
               <button
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "inline-flex h-8 shrink-0 items-center justify-center rounded-full border px-3 text-[11px] font-semibold leading-none shadow-[0_6px_16px_rgba(15,23,42,0.05)] backdrop-blur-md transition",
+                  "inline-flex h-8 min-w-0 items-center justify-center rounded-full px-2.5 text-[11px] font-semibold leading-none transition",
                   active
-                    ? "border-[#BFDBFE] bg-[rgba(239,246,255,0.78)] text-[#2F8DEB]"
-                    : "border-[rgba(226,232,240,0.72)] bg-[rgba(255,255,255,0.58)] text-[#475569] hover:border-[#DBEAFE] hover:bg-[rgba(255,255,255,0.82)] hover:text-[#0F172A]",
+                    ? "bg-[rgba(255,255,255,0.92)] text-[#2F8DEB] shadow-[0_5px_14px_rgba(15,23,42,0.08)] ring-1 ring-[#BFDBFE]/70"
+                    : "bg-transparent text-[#475569] hover:bg-white/45 hover:text-[#0F172A]",
                 )}
                 key={tab.value}
                 onClick={() => onTabChange(tab.value)}
@@ -816,6 +816,70 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
           Toque no botão verde para iniciar a conversa.
         </p>
       </article>
+    </div>
+  );
+};
+
+const ExpandableAboutText = ({ text }: { text: string }) => {
+  const [expanded, setExpanded] = useState(false);
+  const [canExpand, setCanExpand] = useState(false);
+  const measureRef = useRef<HTMLParagraphElement>(null);
+  const content = text.trim();
+
+  const recalculate = useCallback(() => {
+    const measure = measureRef.current;
+
+    if (!measure || typeof window === "undefined") return;
+
+    const computedLineHeight = parseFloat(getComputedStyle(measure).lineHeight);
+    const maxLinesHeight = (Number.isFinite(computedLineHeight) ? computedLineHeight : 0) * 3;
+    const nextCanExpand = maxLinesHeight > 0 ? measure.scrollHeight > maxLinesHeight + 2 : false;
+
+    setCanExpand((current) => (current === nextCanExpand ? current : nextCanExpand));
+
+    if (!nextCanExpand) {
+      setExpanded(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const frame = window.requestAnimationFrame(recalculate);
+    window.addEventListener("resize", recalculate);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", recalculate);
+    };
+  }, [recalculate]);
+
+  return (
+    <div className="relative mt-2 grid gap-1.5">
+      <p
+        className={cn(
+          "whitespace-pre-line text-[11px] leading-[1.45] text-[#64748B] sm:text-[11.5px]",
+          !expanded && "line-clamp-3",
+        )}
+      >
+        {content}
+      </p>
+      <p
+        aria-hidden="true"
+        className="pointer-events-none invisible absolute left-0 top-0 h-auto w-full overflow-hidden whitespace-pre-line text-[11px] leading-[1.45] text-[#64748B] opacity-0 sm:text-[11.5px]"
+        ref={measureRef}
+      >
+        {content}
+      </p>
+      {canExpand ? (
+        <button
+          className="w-fit text-[11px] font-semibold text-[#2F8DEB] transition hover:text-[#1d4ed8]"
+          onClick={() => setExpanded((previous) => !previous)}
+          type="button"
+        >
+          {expanded ? "Ver menos" : "Ver mais"}
+        </button>
+      ) : null}
     </div>
   );
 };
@@ -1097,9 +1161,7 @@ const AboutTab = ({
   return (
     <div className="grid gap-3 bg-[#F6F8FB] px-3 pt-3 pb-1 sm:px-4 sm:pt-4">
       <ProfileSectionCard title="Sobre">
-        <p className="mt-2 whitespace-pre-line text-[11px] leading-[1.45] text-[#64748B] sm:text-[11.5px]">
-          {bioText.trim()}
-        </p>
+        <ExpandableAboutText text={bioText} />
         <PresentationVideo profile={profile} />
       </ProfileSectionCard>
 
