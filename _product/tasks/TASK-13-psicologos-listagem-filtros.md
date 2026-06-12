@@ -710,3 +710,20 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: prioridade de gestos e primeiro toque com som (2026-06-12)
+
+- Pedido do usuario: corrigir pressionar-e-segurar, manter autoplay inicial mudo e fazer o primeiro toque em area livre desmutar o video e ocultar a UI ao mesmo tempo.
+- O long press agora usa timer de 520ms iniciado no `pointerDown`; ao ativar, pausa o video ativo, cancela toque simples pendente e marca o gesto para nao disparar favorito, mute/unmute ou alternancia da UI.
+- Ao soltar apos long press, o video volta a reproduzir e o estado visual da UI e do som permanece igual ao anterior ao gesto.
+- O primeiro toque simples em video mudo executa `unmute`, mantem/reinicia a reproducao e oculta a UI; depois disso, o icone de mute deixa de aparecer, salvo se existir acao explicita futura de mutar.
+- A prioridade fica long press > double tap > single tap: duplo toque cancela o single tap e continua usando a logica real de favorito/desfavorito, sem pausar, ocultar UI ou alterar som.
+- A barra de progresso segue bloqueando os gestos do video com `stopPropagation`, `preventDefault` e cancelamento dos timers pendentes durante seek.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, busca, filtros, navbar, favoritos ou navegacao de perfil.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual permanece `_product/proto/Psicologos.jpg` e o contrato da TASK-13.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

@@ -188,3 +188,16 @@ A tela `/app/psychologists` passa a ter uma barra de progresso por slide de vide
 - quando a UI esta visivel, o bloco textual fica mais alto para reservar espaco para a barra acima da navbar, evitando cobertura de bio, nome ou botoes laterais.
 
 A busca e o botao de filtros permanecem globais/fixos no topo; a barra pertence ao slide por ser especifica do video exibido.
+
+## Atualizacao 2026-06-12: prioridade de gestos e primeiro toque com som
+
+A tela `/app/psychologists` refinou a prioridade dos gestos sobre a area livre do video:
+
+- long press usa janela de 520ms, captura o ponteiro do slide ativo, pausa diretamente o video atual e cancela qualquer toque simples pendente;
+- ao soltar depois de long press, o video volta a reproduzir e o gesto nao favorita, nao altera a UI e nao muda mute/unmute;
+- o primeiro toque simples em video ainda mudo desmuta o player ativo, mantem a reproducao e oculta a UI de uma vez;
+- depois do primeiro toque, o estado global fica com som e os toques simples seguintes voltam a apenas alternar a UI imersiva;
+- duplo toque continua com prioridade sobre toque simples e apenas aciona favorito/desfavorito com feedback visual;
+- a barra de progresso permanece com prioridade propria, bloqueando propagacao e cancelando timers de toque/long press durante seek.
+
+Essa decisao preserva autoplay inicial em mute, mas evita que o icone de mute continue poluindo a tela depois da primeira interacao real do usuario.

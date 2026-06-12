@@ -65,7 +65,7 @@ const DEFAULT_NAV_BAR_HEIGHT = 72;
 const PSYCHOLOGISTS_BACKGROUND_VIDEO_SELECTOR = "video[data-psychologists-background='true']";
 const SWIPE_HINT_STORAGE_KEY = "lectum:psychologists:has-seen-swipe-hint";
 const VIDEO_SINGLE_TAP_DELAY_MS = 260;
-const VIDEO_LONG_PRESS_DELAY_MS = 380;
+const VIDEO_LONG_PRESS_DELAY_MS = 520;
 const VIDEO_POINTER_MOVE_THRESHOLD_PX = 12;
 const SWIPE_HINT_INITIAL_DURATION_MS = 3000;
 const SWIPE_HINT_IDLE_DELAY_MS = 5000;
@@ -424,7 +424,6 @@ export const PsychologistsLogic = () => {
   const suppressNextTapRef = useRef(false);
   const didLongPressRef = useRef(false);
   const didMoveDuringPressRef = useRef(false);
-  const wasVideoPausedBeforeLongPressRef = useRef(false);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
   const { favoritePsychologist, unfavoritePsychologist } = usePatient({
     enableProfile: false,
@@ -597,7 +596,6 @@ export const PsychologistsLogic = () => {
     suppressNextTapRef.current = false;
     didLongPressRef.current = false;
     didMoveDuringPressRef.current = false;
-    wasVideoPausedBeforeLongPressRef.current = false;
     pointerStartRef.current = null;
 
     setIsUiHidden(false);
@@ -1039,6 +1037,17 @@ export const PsychologistsLogic = () => {
     });
   }, [shouldShowVideo]);
 
+  const unmuteCurrentVideo = useCallback(() => {
+    const currentVideo = backgroundVideoRef.current;
+
+    if (currentVideo) {
+      currentVideo.muted = false;
+    }
+
+    unmuteAllVideos();
+    setIsVideoMuted(false);
+  }, [unmuteAllVideos]);
+
   const handleFeedScroll = useCallback(
     (event: UIEvent<HTMLDivElement>) => {
       const container = event.currentTarget;
@@ -1191,16 +1200,25 @@ export const PsychologistsLogic = () => {
 
       tapTimeoutRef.current = window.setTimeout(() => {
         tapTimeoutRef.current = null;
+
+        if (isVideoMuted && shouldShowVideo) {
+          unmuteCurrentVideo();
+          playCurrentVideo();
+          setIsUiHidden(true);
+          return;
+        }
+
         setIsUiHidden((current) => !current);
       }, VIDEO_SINGLE_TAP_DELAY_MS);
     },
-    [triggerDoubleTapFavorite],
+    [isVideoMuted, playCurrentVideo, shouldShowVideo, triggerDoubleTapFavorite, unmuteCurrentVideo],
   );
 
   const handleLongPressStart = useCallback(
     (event: PointerEvent<HTMLButtonElement>) => {
       if (!event.isPrimary || !shouldShowVideo) return;
 
+      event.currentTarget.setPointerCapture(event.pointerId);
       pointerStartRef.current = {
         x: event.clientX,
         y: event.clientY,
@@ -1215,25 +1233,29 @@ export const PsychologistsLogic = () => {
       longPressTimeoutRef.current = window.setTimeout(() => {
         if (didMoveDuringPressRef.current) return;
 
+        const currentVideo = backgroundVideoRef.current;
+        if (!currentVideo) return;
+
         didLongPressRef.current = true;
         suppressNextTapRef.current = true;
-        wasVideoPausedBeforeLongPressRef.current = isVideoPaused;
 
         if (tapTimeoutRef.current) {
           window.clearTimeout(tapTimeoutRef.current);
           tapTimeoutRef.current = null;
         }
 
-        pauseVideoPlayback();
+        currentVideo.pause();
+        setIsVideoPaused(true);
         setIsLongPressing(true);
       }, VIDEO_LONG_PRESS_DELAY_MS);
     },
-    [isVideoPaused, pauseVideoPlayback, shouldShowVideo],
+    [shouldShowVideo],
   );
 
   const handleLongPressMove = useCallback((event: PointerEvent<HTMLButtonElement>) => {
     const start = pointerStartRef.current;
     if (!start) return;
+    if (didLongPressRef.current) return;
 
     const deltaX = event.clientX - start.x;
     const deltaY = event.clientY - start.y;
@@ -1248,36 +1270,41 @@ export const PsychologistsLogic = () => {
     }
   }, []);
 
-  const handleLongPressEnd = useCallback(() => {
-    pointerStartRef.current = null;
+  const handleLongPressEnd = useCallback(
+    (event?: PointerEvent<HTMLButtonElement>) => {
+      if (event?.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
 
-    if (longPressTimeoutRef.current) {
-      window.clearTimeout(longPressTimeoutRef.current);
-      longPressTimeoutRef.current = null;
-    }
+      pointerStartRef.current = null;
 
-    if (didMoveDuringPressRef.current && !didLongPressRef.current) {
-      suppressNextTapRef.current = true;
+      if (longPressTimeoutRef.current) {
+        window.clearTimeout(longPressTimeoutRef.current);
+        longPressTimeoutRef.current = null;
+      }
+
+      if (didMoveDuringPressRef.current && !didLongPressRef.current) {
+        suppressNextTapRef.current = true;
+        window.setTimeout(() => {
+          suppressNextTapRef.current = false;
+          didMoveDuringPressRef.current = false;
+        }, VIDEO_SINGLE_TAP_DELAY_MS);
+        return;
+      }
+
+      if (!didLongPressRef.current) return;
+
+      setIsLongPressing(false);
+      playCurrentVideo();
+
       window.setTimeout(() => {
         suppressNextTapRef.current = false;
+        didLongPressRef.current = false;
         didMoveDuringPressRef.current = false;
       }, VIDEO_SINGLE_TAP_DELAY_MS);
-      return;
-    }
-
-    if (!didLongPressRef.current) return;
-
-    setIsLongPressing(false);
-    if (!wasVideoPausedBeforeLongPressRef.current) {
-      playCurrentVideo();
-    }
-
-    window.setTimeout(() => {
-      suppressNextTapRef.current = false;
-      didLongPressRef.current = false;
-      didMoveDuringPressRef.current = false;
-    }, VIDEO_SINGLE_TAP_DELAY_MS);
-  }, [playCurrentVideo]);
+    },
+    [playCurrentVideo],
+  );
 
   const handleVideoControlTap = useCallback(
     (event: { stopPropagation: () => void }) => {
@@ -1287,10 +1314,9 @@ export const PsychologistsLogic = () => {
       if (!currentVideo || !shouldShowVideo) return;
 
       if (isVideoMuted) {
-        currentVideo.muted = false;
-        unmuteAllVideos();
-        setIsVideoMuted(false);
+        unmuteCurrentVideo();
         playCurrentVideo();
+        setIsUiHidden(true);
         return;
       }
 
@@ -1301,7 +1327,7 @@ export const PsychologistsLogic = () => {
 
       playCurrentVideo();
     },
-    [isVideoMuted, pauseVideoPlayback, playCurrentVideo, shouldShowVideo, unmuteAllVideos],
+    [isVideoMuted, pauseVideoPlayback, playCurrentVideo, shouldShowVideo, unmuteCurrentVideo],
   );
 
   const cancelPendingVideoGestureTimers = useCallback(() => {
