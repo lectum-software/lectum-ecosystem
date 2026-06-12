@@ -674,29 +674,33 @@ const ProfileTabs = ({
   return (
     <div
       className={cn(
-        "sticky z-20 border-b border-[rgba(15,23,42,0.06)] bg-[rgba(255,255,255,0.78)] px-3 pb-2.5 pt-2.5 backdrop-blur-[12px] transition-shadow sm:px-4",
-        isStuck ? "shadow-[0_8px_22px_rgba(15,23,42,0.05)]" : "shadow-none",
+        "sticky z-20 px-3 py-2.5 transition-[background-color,border-color,box-shadow] duration-200 sm:px-4",
+        isStuck
+          ? "border-b border-[rgba(15,23,42,0.06)] bg-[rgba(255,255,255,0.72)] shadow-[0_8px_22px_rgba(15,23,42,0.05)] backdrop-blur-[12px]"
+          : "border-b border-transparent bg-transparent shadow-none",
       )}
       data-profile-sticky-navigation="true"
       ref={stickyContainerRef}
       style={{ top: "env(safe-area-inset-top, 0px)" }}
     >
-      <div className="mx-auto grid w-full max-w-[430px] gap-2 lg:max-w-[760px]">
-        <div className="flex min-w-0 items-center gap-1.5">
-          <span className="min-w-0 truncate text-[13px] font-bold leading-[1.25] tracking-[-0.01em] text-[#0F172A]">
-            {stickyName}
-          </span>
-          {profile.verified ? (
-            <VerifiedBadgeIcon
-              aria-label="Perfil verificado"
-              className="h-[14px] w-[14px] shrink-0"
-            />
-          ) : null}
-        </div>
+      <div className={cn("mx-auto grid w-full max-w-[430px] lg:max-w-[760px]", isStuck && "gap-2")}>
+        {isStuck ? (
+          <div className="flex min-w-0 items-center gap-1.5" data-profile-sticky-name="true">
+            <span className="min-w-0 truncate text-[13px] font-bold leading-[1.25] tracking-[-0.01em] text-[#0F172A]">
+              {stickyName}
+            </span>
+            {profile.verified ? (
+              <VerifiedBadgeIcon
+                aria-label="Perfil verificado"
+                className="h-[14px] w-[14px] shrink-0"
+              />
+            ) : null}
+          </div>
+        ) : null}
 
         <nav
           aria-label="Seções do perfil profissional"
-          className="flex items-center gap-1.5 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex items-center gap-1.5 overflow-x-auto py-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {tabs.map((tab) => {
             const active = tab.value === activeTab;
@@ -705,10 +709,10 @@ const ProfileTabs = ({
               <button
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "inline-flex h-8 shrink-0 items-center justify-center rounded-full border px-3 text-[11px] font-semibold leading-none shadow-[0_4px_12px_rgba(15,23,42,0.04)] backdrop-blur-md transition",
+                  "inline-flex h-8 shrink-0 items-center justify-center rounded-full border px-3 text-[11px] font-semibold leading-none shadow-[0_6px_16px_rgba(15,23,42,0.05)] backdrop-blur-md transition",
                   active
-                    ? "border-[#BFDBFE] bg-[rgba(239,246,255,0.88)] text-[#2F8DEB]"
-                    : "border-white/70 bg-[rgba(255,255,255,0.62)] text-[#475569] hover:border-[#DBEAFE] hover:bg-[rgba(255,255,255,0.86)] hover:text-[#0F172A]",
+                    ? "border-[#BFDBFE] bg-[rgba(239,246,255,0.78)] text-[#2F8DEB]"
+                    : "border-[rgba(226,232,240,0.72)] bg-[rgba(255,255,255,0.58)] text-[#475569] hover:border-[#DBEAFE] hover:bg-[rgba(255,255,255,0.82)] hover:text-[#0F172A]",
                 )}
                 key={tab.value}
                 onClick={() => onTabChange(tab.value)}

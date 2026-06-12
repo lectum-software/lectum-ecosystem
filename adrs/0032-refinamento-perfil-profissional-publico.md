@@ -165,3 +165,22 @@ Validação complementar do ajuste de hierarquia/previews:
   - vídeo de apresentação renderizado em 9:16 (`214x379`);
   - sem overflow horizontal;
   - seções da aba Geral em ordem: `Sobre`, `Especialidades`, `Avaliações`, `Atendimento`, `Formação & Títulos`, `Publicações`.
+
+Ajuste complementar de menu sticky leve em 2026-06-12:
+
+- A identificacao compacta do psicologo no menu sticky passa a aparecer somente quando o container realmente esta preso ao topo (`isStuck=true`).
+- O estado inicial abaixo do card principal exibe apenas os chips de navegacao, evitando uma linha extra com nome antes do scroll.
+- O fundo solido do container foi removido no estado inicial; os chips usam fundo branco/translucido, borda sutil e sombra minima para parecerem elementos flutuantes conectados ao card.
+- Quando sticky, o container aplica apenas uma camada glass leve com `rgba(255,255,255,0.72)`, `backdrop-blur` e borda inferior sutil.
+- A logica das abas, query params, conteudo das secoes e dados do perfil nao foram alterados.
+
+Validacao complementar do menu sticky leve:
+
+- `pnpm --dir frontend biome:fix`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP 200 em `/app/psychologist/cmq5m0vse000ftkuhybmagcn6`.
+- Chrome headless/CDP em 390px:
+  - estado inicial com apenas 3 chips, `hasName=false`, fundo transparente e sem barra branca solida;
+  - apos scroll, menu fixado em `top=0`, `hasName=true`, selo verificado presente, fundo `rgba(255,255,255,0.72)` e `backdrop-filter: blur(12px)`.

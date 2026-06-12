@@ -305,3 +305,18 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm check`
   - HTTP 200 em `http://localhost:3000/app/psychologist/cmq5m0vse000ftkuhybmagcn6`
   - Chrome headless/CDP em 360px, 375px e 390px confirmando ausencia de `Ver mais`/`Ver menos`, ausencia da caixa `Para consultar agenda...`, CTA fixo de WhatsApp, capa com 196px no mobile, sem overflow horizontal, metadados sem experiencia solta e sem contagem entre parenteses, video vertical com proporcao 9:16 (`214x379`) e secoes na ordem `Sobre`, `Especialidades`, `Avaliacoes`, `Atendimento`, `Formacao & Titulos`, `Publicacoes`.
+
+## Registro de ajuste complementar em 2026-06-12 - menu sticky leve
+
+- Ajustado apenas o menu sticky/chips do perfil publico `/app/psychologist/[id]`, sem alterar card principal, capa, avatar, WhatsApp, conteudo, dados ou logica das abas.
+- No estado inicial abaixo do card principal, o menu mostra somente os chips `Sobre`, `Publicacoes` e `Avaliacoes`; a linha com nome + selo verificado fica oculta para reduzir excesso de informacao no topo.
+- Quando o menu fica sticky no topo durante o scroll, a linha superior com nome + selo verificado passa a aparecer, com nome truncado em uma linha e selo preservado como item `shrink-0`.
+- A faixa branca solida foi removida do estado inicial; os chips agora ficam sobre fundo transparente, com aparencia flutuante, glass leve, borda sutil e sombra minima.
+- No estado sticky, o container usa fundo translucido (`rgba(255,255,255,0.72)`), blur e sombra discreta para parecer camada leve, nao barra tradicional.
+- Validacoes executadas para o menu sticky leve:
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `/app/psychologist/cmq5m0vse000ftkuhybmagcn6`
+  - Chrome headless/CDP em 390px confirmando estado inicial com `hasName=false`, apenas 3 chips, fundo transparente e sem faixa branca solida; apos scroll, `hasName=true`, selo verificado visivel, `top=0`, fundo `rgba(255,255,255,0.72)` e `backdrop-filter: blur(12px)`.
