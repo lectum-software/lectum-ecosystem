@@ -138,3 +138,30 @@ Validação complementar:
   - após rolagem, menu fixado no topo (`top=0`, `position=sticky`, `z-index=20`);
   - chips `Sobre`, `Publicações` e `Avaliações` renderizados, com `Sobre` ativo;
   - selo verificado visível na linha do nome.
+
+Ajuste complementar de hierarquia e previews em 2026-06-12:
+
+- A capa do perfil público foi reduzida para preservar espaço na primeira dobra, mantendo-a como mídia independente de identidade visual.
+- A ação `Editar perfil` foi adicionada sobre a capa apenas quando o usuário autenticado é o próprio psicólogo (`role=psicologo` e `user.id` igual ao perfil exibido), sem expor a ação a pacientes ou visitantes.
+- A experiência deixou de aparecer como texto na linha de metadados do hero; permanece somente como chip de benefício, respeitando a preferência persistida `show_experience_tag`.
+- A avaliação do hero passa a exibir apenas `⭐ N,N`, sem quantidade de reviews; a contagem fica concentrada nas áreas de avaliação.
+- A bio curta no card principal e a apresentação textual da aba Sobre são renderizadas completas, sem mecanismo de expansão/truncamento, e com peso visual menor.
+- O vídeo de apresentação do perfil passou para proporção vertical 9:16, evitando mídia achatada/horizontal quando o profissional usa vídeos verticais.
+- O CTA inferior foi simplificado para apenas o botão fixo de WhatsApp; a caixa explicativa anterior foi removida para reduzir ruído.
+- A aba Geral ganhou previews com dados reais de avaliações e publicações: avaliações antes de Atendimento e publicações após Formação & Títulos, reutilizando os endpoints paginados existentes também quando a aba ativa é `geral`.
+
+Validação complementar do ajuste de hierarquia/previews:
+
+- `pnpm --dir frontend biome:fix`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP 200 em `/app/psychologist/cmq5m0vse000ftkuhybmagcn6`.
+- Chrome headless/CDP em 360px, 375px e 390px:
+  - sem `Ver mais`/`Ver menos` e sem caixa `Para consultar agenda...`;
+  - CTA fixo de WhatsApp presente;
+  - capa mobile com 196px;
+  - linha de metadados sem experiência solta e sem quantidade de reviews entre parênteses;
+  - vídeo de apresentação renderizado em 9:16 (`214x379`);
+  - sem overflow horizontal;
+  - seções da aba Geral em ordem: `Sobre`, `Especialidades`, `Avaliações`, `Atendimento`, `Formação & Títulos`, `Publicações`.

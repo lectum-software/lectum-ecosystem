@@ -15,6 +15,7 @@ import {
   type LucideIcon,
   MapPin,
   MessageSquareText,
+  PencilLine,
   Play,
   Share2,
   ShieldCheck,
@@ -117,19 +118,11 @@ const getInitials = (name: string) => {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
 
-const formatRating = (ratingAvg: number, ratingCount: number) => {
-  if (ratingCount <= 0) return "0,0 (0)";
-
-  return `${(ratingAvg / 100).toLocaleString("pt-BR", {
+const formatHeroRating = (ratingAvg: number) => {
+  return (ratingAvg / 100).toLocaleString("pt-BR", {
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
-  })} (${ratingCount})`;
-};
-
-const formatHeroRating = (ratingAvg: number, ratingCount: number) => {
-  if (ratingCount <= 0) return "0,0 (0)";
-
-  return formatRating(ratingAvg, ratingCount);
+  });
 };
 
 const getPsychologistTitle = (gender?: string | null) => {
@@ -460,14 +453,14 @@ const ProfileHeroMedia = ({ profile }: { profile: DirectoryPsychologistProfile }
 
   if (!coverImageSrc || coverImageFailed) {
     return (
-      <div className="relative h-[236px] overflow-hidden bg-gradient-to-br from-[#2F8DEB] to-[#60A5FA] sm:h-[260px] lg:h-[300px]">
+      <div className="relative h-[196px] overflow-hidden bg-gradient-to-br from-[#2F8DEB] to-[#60A5FA] sm:h-[216px] lg:h-[248px]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_15%,rgba(255,255,255,0.34),transparent_32%),radial-gradient(circle_at_82%_18%,rgba(191,219,254,0.48),transparent_34%),linear-gradient(135deg,#EAF5FF,#D9ECFF_52%,#F8FAFC)] opacity-100" />
       </div>
     );
   }
 
   return (
-    <div className="relative h-[236px] overflow-hidden bg-black sm:h-[260px] lg:h-[300px]">
+    <div className="relative h-[196px] overflow-hidden bg-black sm:h-[216px] lg:h-[248px]">
       <Image
         alt={`Imagem de capa de ${profile.name}`}
         className="h-full w-full object-cover object-center"
@@ -485,15 +478,19 @@ const ProfileHeroMedia = ({ profile }: { profile: DirectoryPsychologistProfile }
 
 const ProfileHero = ({
   canFavorite,
+  canEditProfile,
   favoritePending,
   onBack,
+  onEditProfile,
   onShareProfile,
   onToggleFavorite,
   profile,
 }: {
   canFavorite: boolean;
+  canEditProfile: boolean;
   favoritePending: boolean;
   onBack: () => void;
+  onEditProfile: () => void;
   onShareProfile: () => void;
   onToggleFavorite: () => void;
   profile: DirectoryPsychologistProfile;
@@ -504,10 +501,6 @@ const ProfileHero = ({
   const { last, prefix } = splitNameWithBadge(displayName);
   const benefitTags = buildBenefitTags(profile);
   const formattedCrp = formatCrpNumber(profile.crp);
-  const experienceLabel =
-    profile.show_experience_tag !== false && profile.formation_years
-      ? `${profile.formation_years} anos exp.`
-      : null;
 
   return (
     <section className="box-border bg-[#F6F8FB] pb-2" data-profile-hero="true">
@@ -531,6 +524,18 @@ const ProfileHero = ({
         >
           <Share2 className="h-4 w-4" aria-hidden="true" />
         </button>
+
+        {canEditProfile ? (
+          <button
+            aria-label="Editar perfil"
+            className="absolute top-4 right-16 z-10 inline-flex h-9 items-center gap-1.5 rounded-full bg-white/82 px-3 text-[11px] font-bold text-[#0F172A] shadow-[0_10px_20px_rgba(15,23,42,0.16)] backdrop-blur-md transition hover:bg-white"
+            onClick={onEditProfile}
+            type="button"
+          >
+            <PencilLine className="h-3.5 w-3.5" aria-hidden="true" />
+            Editar perfil
+          </button>
+        ) : null}
       </div>
 
       <article className="relative mx-3 -mt-14 rounded-[22px] border border-[#E2E8F0] bg-white px-3.5 py-3.5 shadow-[0_18px_40px_rgba(15,23,42,0.12)] sm:mx-4 sm:px-4">
@@ -554,16 +559,10 @@ const ProfileHero = ({
               {getPsychologistTitle(profile.gender)}
               <span aria-hidden="true" className="h-1 w-1 rounded-full bg-[#94A3B8]" />
               <span>{formattedCrp ? `CRP ${formattedCrp}` : "CRP não informado"}</span>
-              {experienceLabel ? (
-                <>
-                  <span aria-hidden="true" className="h-1 w-1 rounded-full bg-[#94A3B8]" />
-                  <span>{experienceLabel}</span>
-                </>
-              ) : null}
               <span aria-hidden="true" className="h-1 w-1 rounded-full bg-[#94A3B8]" />
               <span className="inline-flex items-center gap-0.5 text-[#B45309]">
                 <Star className="h-2.5 w-2.5 fill-[#FBBF24] text-[#FBBF24]" aria-hidden="true" />
-                {formatHeroRating(profile.rating_avg, profile.rating_count)}
+                {formatHeroRating(profile.rating_avg)}
               </span>
             </p>
 
@@ -612,7 +611,9 @@ const ProfileHero = ({
           </button>
         </div>
 
-        <ExpandableBio className="mt-3 text-[12px] leading-[1.48] text-[#64748B]" text={headline} />
+        <p className="mt-3 whitespace-pre-line text-[11px] leading-[1.45] text-[#64748B] sm:text-[11.5px]">
+          {headline.trim()}
+        </p>
 
         {benefitTags.length > 0 ? (
           <div className="mt-3 flex flex-wrap gap-1.5" data-profile-benefit-tags="true">
@@ -732,12 +733,12 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
   if (!videoSrc) return null;
 
   return (
-    <div className="grid gap-2.5">
+    <div className="mt-3 grid gap-2.5">
       <article
-        className="box-border relative overflow-hidden rounded-[12px] border border-[#E2E8F0] bg-[#e2e8f0]"
+        className="box-border relative mx-auto w-full max-w-[214px] overflow-hidden rounded-[16px] border border-[#E2E8F0] bg-[#e2e8f0] shadow-[0_10px_24px_rgba(15,23,42,0.08)] sm:max-w-[240px]"
         data-presentation-video="true"
       >
-        <div className="relative aspect-[16/10] w-full md:aspect-[16/9]">
+        <div className="relative aspect-[9/16] w-full">
           {playing ? (
             <div className="relative h-full w-full">
               {/* biome-ignore lint/a11y/useMediaCaption: Vídeos enviados pelos profissionais não possuem legenda no momento do cadastro. */}
@@ -773,7 +774,7 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
                   aria-hidden="true"
                   className="object-cover"
                   fill
-                  sizes="(min-width: 768px) 720px, calc(100vw - 32px)"
+                  sizes="(min-width: 768px) 240px, 214px"
                   src={videoCoverSrc}
                   unoptimized={videoCoverIsPublicMedia}
                 />
@@ -803,95 +804,14 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
         </div>
       </article>
 
-      <article className="box-border rounded-[10px] border border-[#DBEAFE] bg-[#EFF6FF] px-3 py-3 text-[10px] text-[#0F172A]">
+      <article className="box-border rounded-[10px] border border-[#DBEAFE] bg-[#EFF6FF] px-2.5 py-2 text-[9px] text-[#0F172A]">
         <p className="font-semibold">Quer falar com o profissional?</p>
-        <p className="mt-1 leading-[1.4] text-[#1E293B]">
+        <p className="mt-1 leading-[1.35] text-[#1E293B]">
           O atendimento e os valores são alinhados diretamente no WhatsApp.
           <br />
           Toque no botão verde para iniciar a conversa.
         </p>
       </article>
-    </div>
-  );
-};
-
-const ExpandableBio = ({ className, text }: { className?: string; text: string }) => {
-  const [expanded, setExpanded] = useState(false);
-  const [canExpand, setCanExpand] = useState(false);
-  const measureBioRef = useRef<HTMLParagraphElement>(null);
-
-  const recalculate = useCallback(() => {
-    const measure = measureBioRef.current;
-
-    if (!measure || typeof window === "undefined") return;
-
-    const computedLineHeight = parseFloat(getComputedStyle(measure).lineHeight);
-    const maxLinesHeight = (Number.isFinite(computedLineHeight) ? computedLineHeight : 0) * 2;
-    const nextCanExpand = maxLinesHeight > 0 ? measure.scrollHeight > maxLinesHeight + 2 : false;
-
-    setCanExpand((current) => (current === nextCanExpand ? current : nextCanExpand));
-
-    if (!nextCanExpand) {
-      setExpanded(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const frame = window.requestAnimationFrame(() => {
-      recalculate();
-    });
-    window.addEventListener("resize", recalculate);
-
-    return () => {
-      window.cancelAnimationFrame(frame);
-      window.removeEventListener("resize", recalculate);
-    };
-  }, [recalculate]);
-
-  const content = text.trim();
-
-  return (
-    <div className="relative grid gap-1">
-      <button
-        aria-expanded={canExpand ? expanded : undefined}
-        className={cn(
-          "w-full text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F8DEB]/40",
-          className,
-          !expanded && "line-clamp-2",
-          canExpand ? "cursor-pointer" : "cursor-default",
-        )}
-        onClick={() => {
-          if (!canExpand) return;
-          setExpanded((previous) => !previous);
-        }}
-        type="button"
-      >
-        {content}
-      </button>
-      <p
-        aria-hidden="true"
-        className={cn(
-          className,
-          "pointer-events-none absolute left-0 top-0 h-auto w-full overflow-hidden text-wrap invisible opacity-0",
-        )}
-        ref={measureBioRef}
-      >
-        {content}
-      </p>
-      {canExpand ? (
-        <button
-          className={cn(
-            "w-fit text-[11px] font-semibold transition hover:text-[#1d4ed8]",
-            expanded ? "text-[#2563eb]" : "text-[#2F8DEB]",
-          )}
-          onClick={() => setExpanded((previous) => !previous)}
-          type="button"
-        >
-          {expanded ? "Ver menos" : "Ver mais"}
-        </button>
-      ) : null}
     </div>
   );
 };
@@ -939,7 +859,218 @@ const FormationSection = ({ profile }: { profile: DirectoryPsychologistProfile }
   );
 };
 
-const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
+const ReviewPreviewCard = ({ review }: { review: DirectoryPsychologistProfileReview }) => {
+  return (
+    <article className="mt-3 box-border rounded-[12px] border border-[#E2E8F0] bg-[#F8FAFC] p-3">
+      <div className="flex items-start gap-3">
+        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#EAF5FF] text-[11px] font-extrabold text-[#2F8DEB]">
+          {review.author.initials}
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="truncate text-[11px] font-bold text-[#0F172A]">{review.author.name}</p>
+              <p className="text-[10px] text-[#64748B]">{formatDate(review.created_at)}</p>
+            </div>
+            <StarRating rating={review.rating} />
+          </div>
+
+          <p className="mt-2 line-clamp-3 text-[11px] leading-[1.45] text-[#64748B]">
+            &ldquo;{review.comment || "Avaliação publicada sem comentário textual."}&rdquo;
+          </p>
+        </div>
+      </div>
+    </article>
+  );
+};
+
+const ReviewsPreviewSection = ({
+  isError,
+  isLoading,
+  onViewAll,
+  reviews,
+  summary,
+}: {
+  isError: boolean;
+  isLoading: boolean;
+  onViewAll: () => void;
+  reviews: DirectoryPsychologistProfileReview[];
+  summary: DirectoryReviewSummary;
+}) => {
+  const firstReview = reviews[0];
+  const hasReviews = summary.rating_count > 0 || reviews.length > 0;
+
+  return (
+    <ProfileSectionCard title="Avaliações">
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <div>
+          <div className="flex items-end gap-2">
+            <p className="text-[26px] font-extrabold leading-none text-[#0F172A]">
+              {formatRatingNumber(summary.rating_avg, summary.rating_count)}
+            </p>
+            <p className="pb-0.5 text-[11px] font-medium text-[#64748B]">
+              {summary.rating_count} avaliações
+            </p>
+          </div>
+          <div className="mt-1.5">
+            <StarRating rating={summary.rating_avg / 100} />
+          </div>
+        </div>
+
+        {hasReviews ? (
+          <button
+            className="shrink-0 rounded-full border border-[#DBEAFE] bg-[#F8FAFC] px-3 py-1.5 text-[10px] font-bold text-[#2F8DEB] transition hover:bg-[#EFF6FF]"
+            onClick={onViewAll}
+            type="button"
+          >
+            Ver todas
+          </button>
+        ) : null}
+      </div>
+
+      {isError ? (
+        <p className="mt-3 rounded-[12px] border border-[#FECACA] bg-[#FEF2F2] px-3 py-2 text-[11px] leading-[1.4] text-[#991B1B]">
+          Não foi possível carregar a prévia de avaliações.
+        </p>
+      ) : null}
+
+      {isLoading ? <LoadingState label="Carregando avaliações" /> : null}
+
+      {!isLoading && !isError && firstReview ? <ReviewPreviewCard review={firstReview} /> : null}
+
+      {!isLoading && !isError && !firstReview ? (
+        <p className="mt-3 text-[11px] leading-[1.45] text-[#64748B]">
+          Este profissional ainda não possui avaliações publicadas.
+        </p>
+      ) : null}
+    </ProfileSectionCard>
+  );
+};
+
+const PostPreviewCard = ({ post }: { post: DirectoryPsychologistProfilePost }) => {
+  const previewImage = (post as { media_url?: string | null }).media_url;
+
+  return (
+    <article className="mt-3 box-border rounded-[12px] border border-[#E2E8F0] bg-[#F8FAFC] p-3">
+      <div className="flex items-start justify-between gap-3 text-[10px] font-semibold text-[#64748B]">
+        <span className="inline-flex min-w-0 items-center gap-1.5">
+          <FileText className="h-4 w-4 shrink-0 text-[#64748B]" aria-hidden="true" />
+          <span className="truncate">{post.community.name}</span>
+        </span>
+        <span className="shrink-0">{formatCompactDate(post.created_at)}</span>
+      </div>
+
+      <div className="mt-3 grid grid-cols-[1fr_auto] gap-3">
+        <div className="min-w-0">
+          <h3 className="line-clamp-2 text-[12px] font-extrabold leading-[1.35] text-[#0F172A]">
+            {post.title}
+          </h3>
+          <p className="mt-1.5 line-clamp-3 text-[10px] leading-[1.4] text-[#64748B]">
+            {post.content}
+          </p>
+        </div>
+
+        {previewImage ? (
+          <div className="relative h-[72px] w-[56px] shrink-0 overflow-hidden rounded-[10px] bg-[#E2E8F0]">
+            <Image
+              alt="Prévia da publicação"
+              className="object-cover"
+              fill
+              sizes="56px"
+              src={previewImage}
+              unoptimized={isPublicMediaUrl(previewImage)}
+            />
+          </div>
+        ) : null}
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-[#E2E8F0] pt-3 text-[10px] font-semibold text-[#64748B]">
+        <span className="inline-flex items-center gap-1.5">
+          <ThumbsUp className="h-3.5 w-3.5" aria-hidden="true" />
+          {post.upvotes_count}
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <MessageSquareText className="h-3.5 w-3.5" aria-hidden="true" />
+          {post.replies_count}
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <Bookmark className="h-3.5 w-3.5" aria-hidden="true" />
+          {post.saves_count}
+        </span>
+      </div>
+    </article>
+  );
+};
+
+const PostsPreviewSection = ({
+  isError,
+  isLoading,
+  onViewAll,
+  posts,
+  total,
+}: {
+  isError: boolean;
+  isLoading: boolean;
+  onViewAll: () => void;
+  posts: DirectoryPsychologistProfilePost[];
+  total: number;
+}) => {
+  const firstPost = posts[0];
+
+  return (
+    <ProfileSectionCard title="Publicações">
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <p className="text-[11px] leading-[1.45] text-[#64748B]">
+          {total > 0
+            ? `${total} publicação${total === 1 ? "" : "ões"} deste profissional.`
+            : "Este profissional ainda não possui publicações públicas."}
+        </p>
+
+        {total > 0 ? (
+          <button
+            className="shrink-0 rounded-full border border-[#DBEAFE] bg-[#F8FAFC] px-3 py-1.5 text-[10px] font-bold text-[#2F8DEB] transition hover:bg-[#EFF6FF]"
+            onClick={onViewAll}
+            type="button"
+          >
+            Ver todas
+          </button>
+        ) : null}
+      </div>
+
+      {isError ? (
+        <p className="mt-3 rounded-[12px] border border-[#FECACA] bg-[#FEF2F2] px-3 py-2 text-[11px] leading-[1.4] text-[#991B1B]">
+          Não foi possível carregar a prévia de publicações.
+        </p>
+      ) : null}
+
+      {isLoading ? <LoadingState label="Carregando publicações" /> : null}
+
+      {!isLoading && !isError && firstPost ? <PostPreviewCard post={firstPost} /> : null}
+    </ProfileSectionCard>
+  );
+};
+
+const AboutTab = ({
+  onTabChange,
+  postsPreview,
+  profile,
+  reviewsPreview,
+}: {
+  onTabChange: (tab: ProfileTab) => void;
+  postsPreview: {
+    isError: boolean;
+    isLoading: boolean;
+    posts: DirectoryPsychologistProfilePost[];
+    total: number;
+  };
+  profile: DirectoryPsychologistProfile;
+  reviewsPreview: {
+    isError: boolean;
+    isLoading: boolean;
+    reviews: DirectoryPsychologistProfileReview[];
+    summary: DirectoryReviewSummary;
+  };
+}) => {
   const bioText = profile.bio || "Este profissional ainda não informou uma biografia pública.";
   const serviceText = formatList(
     profile.services.map((item) => item.name),
@@ -962,15 +1093,11 @@ const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
   return (
     <div className="grid gap-3 bg-[#F6F8FB] px-3 pt-3 pb-1 sm:px-4 sm:pt-4">
       <ProfileSectionCard title="Sobre">
-        <ExpandableBio
-          className="mt-2 text-[11px] leading-[1.45] text-[#64748B] sm:text-[12px]"
-          text={bioText}
-        />
-      </ProfileSectionCard>
-
-      <div>
+        <p className="mt-2 whitespace-pre-line text-[11px] leading-[1.45] text-[#64748B] sm:text-[11.5px]">
+          {bioText.trim()}
+        </p>
         <PresentationVideo profile={profile} />
-      </div>
+      </ProfileSectionCard>
 
       <ProfileSectionCard title="Especialidades">
         <ProfileChipList
@@ -978,6 +1105,14 @@ const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
           items={profile.specialties}
         />
       </ProfileSectionCard>
+
+      <ReviewsPreviewSection
+        isError={reviewsPreview.isError}
+        isLoading={reviewsPreview.isLoading}
+        onViewAll={() => onTabChange("avaliacoes")}
+        reviews={reviewsPreview.reviews}
+        summary={reviewsPreview.summary}
+      />
 
       <ProfileSectionCard title="Atendimento" className="mb-0">
         <div className="mt-3 grid gap-2.5">
@@ -995,6 +1130,14 @@ const AboutTab = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
       </ProfileSectionCard>
 
       <FormationSection profile={profile} />
+
+      <PostsPreviewSection
+        isError={postsPreview.isError}
+        isLoading={postsPreview.isLoading}
+        onViewAll={() => onTabChange("publicacoes")}
+        posts={postsPreview.posts}
+        total={postsPreview.total}
+      />
     </div>
   );
 };
@@ -1295,13 +1438,7 @@ const WhatsAppCta = ({ profile }: { profile: DirectoryPsychologistProfile }) => 
       className="fixed inset-x-0 bottom-0 z-30 bg-white px-3 pb-2 pt-2 shadow-[0_-6px_18px_rgba(15,23,42,0.12)] sm:px-4"
       style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
     >
-      <div className="mx-auto w-full max-w-[430px] space-y-2 lg:max-w-[760px]">
-        <div className="rounded-[8px] border border-[#DBEAFE] bg-[#EFF6FF] box-border px-2.5 py-2.5">
-          <p className="text-[10px] leading-[1.35] text-[#0F172A]">
-            Para consultar agenda, valores e demais informações, chame o psicólogo no WhatsApp.
-          </p>
-        </div>
-
+      <div className="mx-auto w-full max-w-[430px] lg:max-w-[760px]">
         <Button
           asChild
           className="h-11 w-full rounded-[8px] bg-[#22C55E] text-[13px] font-bold text-white hover:bg-[#22C55E]/90"
@@ -1330,20 +1467,26 @@ export const PsychologistProfileLogic = () => {
   const activeTab = useMemo(() => normalizeTab(urlParams.get("tab")), [urlParams]);
   const postsPage = useMemo(() => getPageFromParams(urlParams, "postsPage"), [urlParams]);
   const reviewsPage = useMemo(() => getPageFromParams(urlParams, "reviewsPage"), [urlParams]);
-  const postsQuery = useMemo(() => ({ page: postsPage, limit: PAGE_LIMIT }), [postsPage]);
-  const reviewsQuery = useMemo(() => ({ page: reviewsPage, limit: PAGE_LIMIT }), [reviewsPage]);
+  const postsQuery = useMemo(
+    () => ({ page: activeTab === "geral" ? 1 : postsPage, limit: PAGE_LIMIT }),
+    [activeTab, postsPage],
+  );
+  const reviewsQuery = useMemo(
+    () => ({ page: activeTab === "geral" ? 1 : reviewsPage, limit: PAGE_LIMIT }),
+    [activeTab, reviewsPage],
+  );
 
   const profileQuery = useDirectoryPsychologist(id);
   const profile = profileQuery.data;
   const posts = useDirectoryPsychologistPosts(
     id,
     postsQuery,
-    activeTab === "publicacoes" && Boolean(profile),
+    (activeTab === "publicacoes" || activeTab === "geral") && Boolean(profile),
   );
   const reviews = useDirectoryPsychologistReviews(
     id,
     reviewsQuery,
-    activeTab === "avaliacoes" && Boolean(profile),
+    (activeTab === "avaliacoes" || activeTab === "geral") && Boolean(profile),
   );
   const { favoritePsychologist, unfavoritePsychologist } = usePatient({ enableProfile: false });
 
@@ -1425,6 +1568,10 @@ export const PsychologistProfileLogic = () => {
     router.push("/app/psychologists");
   };
 
+  const goToProfileEdit = () => {
+    router.push("/app/professional/profile/setup");
+  };
+
   const favoritePendingId =
     favoritePsychologist.isPending && typeof favoritePsychologist.variables === "string"
       ? favoritePsychologist.variables
@@ -1435,6 +1582,8 @@ export const PsychologistProfileLogic = () => {
   const profileErrorMessage = profileQuery.isError
     ? resolveErrorMessage(profileQuery.error, "Não foi possível carregar o perfil profissional.")
     : null;
+  const canEditProfile =
+    currentUser?.role === "psicologo" && Boolean(profile?.id) && currentUser.id === profile?.id;
 
   const emptySummary = useMemo<DirectoryReviewSummary>(
     () => ({
@@ -1479,8 +1628,10 @@ export const PsychologistProfileLogic = () => {
               <>
                 <ProfileHero
                   canFavorite={canFavoritePsychologists}
+                  canEditProfile={canEditProfile}
                   favoritePending={favoritePendingId === profile.id}
                   onBack={goBack}
+                  onEditProfile={goToProfileEdit}
                   onShareProfile={shareProfile}
                   onToggleFavorite={toggleFavorite}
                   profile={profile}
@@ -1488,7 +1639,24 @@ export const PsychologistProfileLogic = () => {
 
                 <div className="grid gap-0">
                   <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} profile={profile} />
-                  {activeTab === "geral" ? <AboutTab profile={profile} /> : null}
+                  {activeTab === "geral" ? (
+                    <AboutTab
+                      onTabChange={setActiveTab}
+                      postsPreview={{
+                        isError: posts.isError,
+                        isLoading: posts.isLoading,
+                        posts: posts.data?.data ?? [],
+                        total: posts.data?.count ?? 0,
+                      }}
+                      profile={profile}
+                      reviewsPreview={{
+                        isError: reviews.isError,
+                        isLoading: reviews.isLoading,
+                        reviews: reviews.data?.data ?? [],
+                        summary: reviews.data?.summary ?? emptySummary,
+                      }}
+                    />
+                  ) : null}
                   {activeTab === "publicacoes" ? (
                     <PostsTab
                       currentPage={postsPage}

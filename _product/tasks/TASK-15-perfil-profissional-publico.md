@@ -286,3 +286,22 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm check`
   - HTTP 200 em `/app/psychologist/cmq5m0vse000ftkuhybmagcn6`
   - Chrome headless/CDP em 390px confirmando menu abaixo do card antes do scroll, sticky no topo apos rolagem, chips renderizados e selo verificado visivel.
+
+## Registro de ajuste complementar em 2026-06-12 (hierarquia e previews do perfil)
+
+- Refinada a tela publica `/app/psychologist/[id]` a partir da solicitacao de produto e da referencia em PDF/anexo local; Builder/Quick Copy nao esteve exposto como ferramenta MCP nesta sessao, entao a validacao visual usou a implementacao atual e os artefatos locais.
+- A imagem de capa foi reduzida para atuar como identidade visual sem consumir excesso da primeira dobra, mantendo botoes de voltar/compartilhar e o card principal sobreposto.
+- Quando o psicologo autenticado visualiza o proprio perfil, a capa passa a exibir o botao discreto `Editar perfil`; pacientes/outros usuarios nao veem essa acao.
+- A linha de metadados removeu o tempo de experiencia solto e mantem profissao, CRP e avaliacao `N,N` sem quantidade entre parenteses; a experiencia permanece apenas como chip real quando habilitada.
+- A bio curta do card principal e o texto de apresentacao da aba Sobre passaram a ser exibidos integralmente, sem `Ver mais`, truncamento, ellipsis ou line-clamp, com tipografia mais discreta.
+- O video de apresentacao da aba Sobre foi ajustado para proporcao vertical 9:16, com cantos arredondados e midia preenchida sem distorcao.
+- A caixa informativa acima do WhatsApp fixo foi removida; permanece apenas o botao fixo verde `Chamar no WhatsApp` respeitando safe-area.
+- A aba Geral agora ordena o conteudo como: Sobre, Especialidades, previa de Avaliacoes, Atendimento, Formacao & Titulos e previa de Publicacoes, usando dados reais dos endpoints ja existentes.
+- Nao houve alteracao de backend, banco, contrato de dados, packages, rotas, favoritos, logica de WhatsApp ou sticky tabs/chips.
+- Validacoes executadas para este ajuste:
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://localhost:3000/app/psychologist/cmq5m0vse000ftkuhybmagcn6`
+  - Chrome headless/CDP em 360px, 375px e 390px confirmando ausencia de `Ver mais`/`Ver menos`, ausencia da caixa `Para consultar agenda...`, CTA fixo de WhatsApp, capa com 196px no mobile, sem overflow horizontal, metadados sem experiencia solta e sem contagem entre parenteses, video vertical com proporcao 9:16 (`214x379`) e secoes na ordem `Sobre`, `Especialidades`, `Avaliacoes`, `Atendimento`, `Formacao & Titulos`, `Publicacoes`.
