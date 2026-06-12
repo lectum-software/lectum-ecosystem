@@ -16,6 +16,11 @@
     reviews: (filters?: unknown) => ["patient_reviews", filters],
     reviewEligibility: (id: string) => ["patient_review_eligibility", id],
   },
+  community: {
+    root: () => ["community"],
+    list: (filters?: unknown) => ["community", "list", filters],
+    posts: (slug: string, filters?: unknown) => ["community", slug, "posts", filters],
+  },
   directory: {
     psychologistsRoot: () => ["directory_psychologists"],
     psychologists: (filters?: unknown) => ["directory_psychologists", filters],

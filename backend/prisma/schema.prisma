@@ -47,6 +47,7 @@ model user {
   received_contact_requests  contact_request[]           @relation("contact_request_psychologist")
   professional_reviews       professional_review[]       @relation("professional_review_author")
   received_reviews           professional_review[]       @relation("professional_review_psychologist")
+  community_suggestions      community_suggestion[]      @relation("community_suggestion_user")
   community_posts            community_post[]            @relation("community_post_author")
   notification_subscriptions notification_subscription[] @relation("notification_subscription_user")
   logs                       log__user[]                 @relation("log__user_user")
@@ -454,6 +455,21 @@ model community {
   @@index([slug])
   @@index([category, deleted])
   @@map("communities")
+}
+
+model community_suggestion {
+  id        String    @id @default(cuid())
+  deleted   Boolean   @default(false)
+  deletedAt DateTime? @map("deleted_at")
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  user_id   String
+  theme     String
+  status    String    @default("pendente")
+  user      user      @relation("community_suggestion_user", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("community_suggestions")
 }
 
 model community_post {

@@ -300,6 +300,18 @@ export interface community {
   posts?: community_post[] | null;
 }
 
+export interface community_suggestion {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  user_id?: string | null;
+  theme?: string | null;
+  status?: "pendente" | "aprovada" | "rejeitada" | string | null;
+  user?: user | null;
+}
+
 export interface community_post {
   id?: string | null;
   deleted?: boolean | null;
@@ -393,6 +405,7 @@ export interface user {
   received_contact_requests?: contact_request[] | null;
   professional_reviews?: professional_review[] | null;
   received_reviews?: professional_review[] | null;
+  community_suggestions?: community_suggestion[] | null;
   community_posts?: community_post[] | null;
   notification_subscriptions?: notification_subscription[] | null;
   notifications?: notification[] | null;

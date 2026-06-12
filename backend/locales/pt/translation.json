@@ -104,7 +104,8 @@
     "professional_profile_video_uploaded": "Vídeo de apresentação atualizado com sucesso.",
     "professional_profile_video_cover_uploaded": "Imagem de capa do vídeo atualizada com sucesso.",
     "professional_profile_video_removed": "Vídeo de apresentação removido com sucesso.",
-    "patient_profile_updated": "Perfil do paciente atualizado com sucesso."
+    "patient_profile_updated": "Perfil do paciente atualizado com sucesso.",
+    "community_suggestion_created": "Sugestão de comunidade enviada com sucesso."
   },
   "gender": {
     "o": "o"
@@ -124,6 +125,7 @@
     "professional_review": "avaliação profissional",
     "community": "comunidade",
     "community_post": "publicação",
+    "community_suggestion": "sugestão de comunidade",
     "contact_request": "intenção de contato",
     "professional_registry_check": "consulta CFP",
     "phone_verification": "verificação de telefone",
@@ -159,7 +161,9 @@
     "check_id": "consulta CFP",
     "result_key": "resultado CFP",
     "verification_id": "verificação de telefone",
-    "code": "código"
+    "code": "código",
+    "theme": "tema da comunidade",
+    "category": "categoria"
   },
   "notification": {
     "test": {

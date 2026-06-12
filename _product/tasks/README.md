@@ -98,8 +98,8 @@ ou cortesia manual.
 | 19 | [TASK-19 - Avaliações do psicólogo](TASK-19-avaliacoes-psicologo.md) | Completed | 17, 18A, 31, 31A, 31B |
 | 20 | [TASK-20 - Analytics do psicólogo](TASK-20-analytics-psicologo.md) | Completed | 16, 17, 18A, 19, 31 |
 | 21 | [TASK-21 - Perfil privado do paciente](TASK-21-perfil-privado-paciente.md) | Completed | 02, 12 |
-| 22 | [TASK-22 - Explorar e sugerir comunidades](TASK-22-explorar-sugerir-comunidades.md) | Pending | 02, 12 |
-| 23 | [TASK-23 - Feed de comunidade](TASK-23-feed-comunidade.md) | Pending | 22 |
+| 22 | [TASK-22 - Explorar e sugerir comunidades](TASK-22-explorar-sugerir-comunidades.md) | Completed | 02, 12 |
+| 23 | [TASK-23 - Feed de comunidade](TASK-23-feed-comunidade.md) | Completed | 22 |
 | 24 | [TASK-24 - Criar postagem](TASK-24-criar-postagem.md) | Pending | 02, 23 |
 | 25 | [TASK-25 - Dentro da comunidade](TASK-25-dentro-comunidade.md) | Pending | 23 |
 | 26 | [TASK-26 - Dentro do post](TASK-26-dentro-post.md) | Pending | 02, 24, 25 |

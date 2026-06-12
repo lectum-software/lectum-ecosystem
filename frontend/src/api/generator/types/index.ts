@@ -16,6 +16,17 @@ export type {
   CfpSearchResponse,
 } from "./cfp";
 export type {
+  Community,
+  CommunityAuthor,
+  CommunityListQuery,
+  CommunityListResponse,
+  CommunityPost,
+  CommunityPostsQuery,
+  CommunityPostsResponse,
+  CommunitySuggestion,
+  SuggestCommunityPayload,
+} from "./community";
+export type {
   DirectoryCatalogItem,
   DirectoryPsychologist,
   DirectoryPsychologistContactPayload,
