@@ -826,3 +826,20 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: bio completa sem truncamento (2026-06-12)
+
+- Pedido do usuario: a decisao mais recente de produto substitui a implementacao anterior de truncagem/expansao da bio na tela de Psicologos.
+- A bio deixou de usar `Ver mais`, `Ver menos`, limite por linhas, `max-height`, `overflow: hidden`, ellipsis ou qualquer interacao de expansao.
+- O texto da bio agora e renderizado integralmente em um paragrafo simples, preservando quebras de linha com `white-space: pre-line` e mantendo a tipografia definida para legibilidade.
+- O bloco inferior permanece ancorado acima da navbar; quando a bio tem mais linhas, o conteudo cresce para cima, preservando a base acima da navbar e sem empurrar a navegacao.
+- A bio continua ocupando apenas a coluna textual, reservando a coluna lateral para os botoes de acao e mantendo a propagacao de eventos bloqueada para nao acionar gestos do video ao tocar no texto.
+- Removidos estados e calculos de truncamento/expansao da bio, incluindo medicao de linhas e controle de `isBioExpanded`/`isBioTruncated`.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, busca, filtros, barra de progresso, favoritos, navbar ou navegacao de perfil.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual permanece `_product/proto/Psicologos.jpg` e o contrato da TASK-13.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

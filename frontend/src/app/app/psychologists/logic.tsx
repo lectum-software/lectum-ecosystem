@@ -74,7 +74,6 @@ const SWIPE_HINT_INITIAL_DURATION_MS = 3000;
 const SWIPE_HINT_IDLE_DELAY_MS = 5000;
 const SWIPE_HINT_IDLE_DURATION_MS = 2000;
 const SWIPE_HINT_NUDGE_DURATION_MS = 760;
-const BIO_COLLAPSED_LINE_COUNT = 2;
 
 type VideoProgressState = {
   currentTime: number;
@@ -393,8 +392,6 @@ export const PsychologistsLogic = () => {
   const [shouldNudgeSwipeCard, setShouldNudgeSwipeCard] = useState(false);
   const [actionColumnTranslateY, setActionColumnTranslateY] = useState(0);
   const [favoriteOverrides, setFavoriteOverrides] = useState<Record<string, boolean>>({});
-  const [isBioExpanded, setIsBioExpanded] = useState(false);
-  const [isBioTruncated, setIsBioTruncated] = useState(false);
   const [isVideoProgressSeeking, setIsVideoProgressSeeking] = useState(false);
   const [videoProgress, setVideoProgress] = useState<VideoProgressState>({
     currentTime: 0,
@@ -409,8 +406,7 @@ export const PsychologistsLogic = () => {
   const feedContainerRef = useRef<HTMLDivElement | null>(null);
   const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
-  const bioTextRef = useRef<HTMLButtonElement | null>(null);
-  const bioContentRef = useRef<HTMLSpanElement | null>(null);
+  const bioTextRef = useRef<HTMLParagraphElement | null>(null);
   const progressTrackRef = useRef<HTMLDivElement | null>(null);
   const actionColumnRef = useRef<HTMLDivElement | null>(null);
   const profileTextRef = useRef<HTMLElement | null>(null);
@@ -761,32 +757,9 @@ export const PsychologistsLogic = () => {
     setActionColumnTranslateY((current) => (Math.abs(current - delta) > 0.5 ? delta : current));
   }, [featuredBio]);
 
-  const recalculateBioTruncation = useCallback(() => {
-    if (!featuredBio) {
-      setIsBioTruncated(false);
-      return;
-    }
-
-    const bioContent = bioContentRef.current;
-    if (!bioContent) return;
-
-    const computedStyles = window.getComputedStyle(bioContent);
-    const computedLineHeight = Number.parseFloat(computedStyles.lineHeight);
-    const lineHeight = Number.isFinite(computedLineHeight)
-      ? computedLineHeight
-      : metrics.bioLineHeight;
-    const nextIsTruncated = bioContent.scrollHeight > lineHeight * BIO_COLLAPSED_LINE_COUNT + 1;
-
-    setIsBioTruncated((current) => (current === nextIsTruncated ? current : nextIsTruncated));
-    if (!nextIsTruncated) {
-      setIsBioExpanded(false);
-    }
-  }, [featuredBio, metrics.bioLineHeight]);
-
   const recalculateInfoOverlayLayout = useCallback(() => {
     syncActionColumnAlignment();
-    recalculateBioTruncation();
-  }, [recalculateBioTruncation, syncActionColumnAlignment]);
+  }, [syncActionColumnAlignment]);
 
   const syncActiveVideoProgress = useCallback((video?: HTMLVideoElement | null) => {
     const currentVideo = video ?? backgroundVideoRef.current;
@@ -839,7 +812,7 @@ export const PsychologistsLogic = () => {
       recalculateInfoOverlayLayout();
     };
 
-    const bioNode = bioContentRef.current;
+    const bioNode = bioTextRef.current;
     const resizeObserver = bioNode
       ? new ResizeObserver(() => recalculateInfoOverlayLayout())
       : null;
@@ -910,7 +883,6 @@ export const PsychologistsLogic = () => {
 
     const frame = window.requestAnimationFrame(() => {
       resetVideoInteractionState();
-      setIsBioExpanded(false);
       setIsVideoPlaybackFailed(false);
       setIsVideoPaused(false);
       setVideoProgress({
@@ -939,16 +911,6 @@ export const PsychologistsLogic = () => {
       router.push(`/app/psychologist/${psychologistId}`);
     },
     [router],
-  );
-
-  const toggleExpandedBio = useCallback(
-    (event: { stopPropagation: () => void }) => {
-      event.stopPropagation();
-      if (!isBioTruncated) return;
-
-      setIsBioExpanded((current) => !current);
-    },
-    [isBioTruncated],
   );
 
   const cancelPendingVideoGestureTimers = useCallback(() => {
@@ -1989,8 +1951,6 @@ export const PsychologistsLogic = () => {
                   const slideIsFavorited =
                     favoriteOverrides[psychologist.id] ?? Boolean(psychologist.favorited);
                   const slideIsFavoritePending = favoritePendingId === psychologist.id;
-                  const slideIsBioExpanded = isActiveSlide && isBioExpanded;
-                  const slideIsBioTruncated = isActiveSlide && isBioTruncated;
                   const slideActionColumnTranslateY = isActiveSlide ? actionColumnTranslateY : 0;
                   const slideIsUiHidden = isActiveSlide && isUiHidden;
                   const slideUiVisibilityClass = slideIsUiHidden
@@ -2376,30 +2336,9 @@ export const PsychologistsLogic = () => {
                               </div>
 
                               {slideBio ? (
-                                <button
-                                  aria-expanded={
-                                    slideIsBioTruncated ? slideIsBioExpanded : undefined
-                                  }
-                                  className={cn(
-                                    "pointer-events-auto mt-2 w-full text-left text-white/90",
-                                    slideIsBioExpanded ? "overflow-y-auto pr-1" : null,
-                                    slideIsBioTruncated ? "cursor-pointer" : "cursor-default",
-                                  )}
-                                  data-psychologists-scroll-lock={
-                                    slideIsBioExpanded ? "true" : undefined
-                                  }
-                                  onClick={(event) => {
-                                    if (!isActiveSlide) {
-                                      event.stopPropagation();
-                                      return;
-                                    }
-
-                                    toggleExpandedBio(event);
-                                  }}
-                                  onWheel={(event) => {
-                                    if (slideIsBioExpanded) event.stopPropagation();
-                                  }}
-                                  type="button"
+                                <p
+                                  className="pointer-events-auto mt-2 w-full whitespace-pre-line text-left text-white/90"
+                                  onPointerDown={stopInteractionPropagation}
                                   ref={(node) => {
                                     if (isActiveSlide) {
                                       bioTextRef.current = node;
@@ -2409,33 +2348,12 @@ export const PsychologistsLogic = () => {
                                     fontSize: `${metrics.bioSize}px`,
                                     lineHeight: `${metrics.bioLineHeight}px`,
                                     maxWidth: "100%",
-                                    maxHeight: slideIsBioExpanded ? "min(40dvh, 260px)" : undefined,
                                     overflowWrap: "break-word",
                                     wordBreak: "normal",
                                   }}
                                 >
-                                  <span
-                                    className="block whitespace-pre-line"
-                                    ref={(node) => {
-                                      if (isActiveSlide) {
-                                        bioContentRef.current = node;
-                                      }
-                                    }}
-                                    style={{
-                                      maxHeight: slideIsBioExpanded
-                                        ? undefined
-                                        : `${metrics.bioLineHeight * BIO_COLLAPSED_LINE_COUNT}px`,
-                                      overflow: slideIsBioExpanded ? "visible" : "hidden",
-                                    }}
-                                  >
-                                    {slideBio}
-                                  </span>
-                                  {slideIsBioTruncated ? (
-                                    <span className="mt-1 inline-flex text-[11px] leading-4 font-bold text-white">
-                                      {slideIsBioExpanded ? "Ver menos" : "Ver mais"}
-                                    </span>
-                                  ) : null}
-                                </button>
+                                  {slideBio}
+                                </p>
                               ) : null}
 
                               {isActiveSlide && shareFeedback ? (

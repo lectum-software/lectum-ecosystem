@@ -256,3 +256,11 @@ O gesto de pressionar e segurar em `/app/psychologists` passa a diferenciar micr
 A decisao foi introduzir uma tolerancia de 20px para preservar o timer e o estado de long press enquanto o dedo/mouse oscila pouco. Movimentos acima dessa tolerancia apenas suprimem clique acidental; o long press so e cancelado quando ha deslocamento vertical dominante ou drag significativo.
 
 Se o video ja estiver pausado por long press, pequenos movimentos continuam mantendo a pausa. Quando o usuario inicia um swipe/drag claro para navegar, o estado de long press e encerrado, a captura do ponteiro e liberada e o video volta a reproduzir para permitir a rolagem do feed.
+
+## Atualizacao 2026-06-12: bio completa sem truncamento
+
+A decisao mais recente de produto para `/app/psychologists` substitui a regra anterior de truncagem/expansao da bio.
+
+A bio passa a ser exibida integralmente direto no bloco inferior, sem `Ver mais`, `Ver menos`, ellipsis, line-clamp, `max-height`, medicao de linhas ou modal/bottom sheet. A justificativa e que a tela ja possui modo imersivo: um toque oculta a UI e preserva o video, entao a leitura completa da bio tem prioridade sobre economizar altura fixa.
+
+A implementacao mantém o bloco ancorado acima da navbar; bios maiores crescem para cima e continuam dentro da coluna textual, sem invadir a coluna lateral de acoes. O texto ainda bloqueia propagacao de pointer/click para nao acionar gestos do video ao tocar na bio, mas nao executa nenhuma interacao propria.
