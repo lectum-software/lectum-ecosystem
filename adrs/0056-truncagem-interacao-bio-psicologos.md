@@ -312,3 +312,9 @@ O offset visual tambem foi ajustado: com UI visivel, a barra fica em `64px + saf
 A barra de progresso nao deve empurrar o conteudo principal do slide para cima. A decisao foi manter a barra integrada a navbar e reduzir apenas o offset inferior do bloco textual/coluna lateral.
 
 O espaco morto reservado acima da navbar/progresso caiu de 34-36px para 8px. Assim, nome, profissao, avaliacao, bio e botoes laterais descem juntos e voltam a ocupar a area visual anterior, deixando apenas um respiro curto entre a bio e a barra. A coluna lateral continua usando o alinhamento dinamico existente com a bio, sem mudar tamanho, ordem, acoes ou responsividade dos botoes.
+
+## Atualizacao 2026-06-12: disponibilidade com ponto pulsante
+
+O indicador `Disponível hoje` continua sem badge, fundo, borda ou container destacado, mas passa a usar o mesmo verde da bolinha (`#22C55E`) também no texto para reforçar unidade visual.
+
+A bolinha recebe uma animacao discreta de pulso apenas no proprio ponto, com halo curto e escala suave. A decisao preserva o indicador como metadado complementar: ha movimento suficiente para sinalizar disponibilidade, mas sem competir com o nome do psicologo ou recriar o destaque de pill removido anteriormente. A animacao e desativada por `prefers-reduced-motion`.

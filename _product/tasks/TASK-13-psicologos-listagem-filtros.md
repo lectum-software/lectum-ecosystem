@@ -942,3 +942,18 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: disponibilidade em verde pulsante (2026-06-12)
+
+- Pedido do usuario: deixar o texto `Disponível hoje` no mesmo verde da bolinha e tornar a bolinha pulsante.
+- O texto do indicador passou de verde claro (`#86EFAC`) para o mesmo verde da bolinha (`#22C55E`).
+- A bolinha recebeu animacao sutil de pulso com escala/halo discreto, sem recuperar fundo, pill, borda ou sombra de badge.
+- A animacao respeita `prefers-reduced-motion`, ficando estatica para usuarios que preferem menos movimento.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, barra de progresso, favoritos, busca, filtros, navbar ou navegacao de perfil.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual permanece `_product/proto/Psicologos.jpg` e o contrato da TASK-13.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

@@ -1800,6 +1800,20 @@ export const PsychologistsLogic = () => {
             }
           }
 
+          @keyframes psychologists-availability-dot-pulse {
+            0%,
+            100% {
+              box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+              opacity: 1;
+              transform: scale(1);
+            }
+            50% {
+              box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.22);
+              opacity: 0.92;
+              transform: scale(1.18);
+            }
+          }
+
           .psychologists-benefit-pill {
             animation:
               psychologists-benefit-pill-in 520ms var(--benefit-delay) cubic-bezier(0.2, 0.9, 0.25, 1) both,
@@ -1835,6 +1849,11 @@ export const PsychologistsLogic = () => {
             animation: psychologists-swipe-card-nudge 760ms cubic-bezier(0.2, 0.85, 0.2, 1) both;
           }
 
+          .psychologists-availability-dot {
+            animation: psychologists-availability-dot-pulse 1.6s ease-in-out infinite;
+            will-change: box-shadow, opacity, transform;
+          }
+
           .psychologists-ui-inert,
           .psychologists-ui-inert * {
             pointer-events: none !important;
@@ -1859,6 +1878,13 @@ export const PsychologistsLogic = () => {
             .psychologists-swipe-hint,
             .psychologists-swipe-nudge {
               animation: none;
+            }
+
+            .psychologists-availability-dot {
+              animation: none;
+              box-shadow: none;
+              opacity: 1;
+              transform: none;
             }
           }
         `}
@@ -2415,7 +2441,7 @@ export const PsychologistsLogic = () => {
                             <div className="pointer-events-auto min-w-0">
                               {psychologist.available_today ? (
                                 <div
-                                  className="mb-1.5 flex w-fit items-center gap-1.5 font-semibold text-[#86EFAC]"
+                                  className="mb-1.5 flex w-fit items-center gap-1.5 font-semibold text-[#22C55E]"
                                   style={{
                                     fontSize: `${metrics.availableBadgeTextSize}px`,
                                     lineHeight: "12px",
@@ -2423,7 +2449,7 @@ export const PsychologistsLogic = () => {
                                 >
                                   <span
                                     aria-hidden="true"
-                                    className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#22C55E]"
+                                    className="psychologists-availability-dot h-1.5 w-1.5 shrink-0 rounded-full bg-[#22C55E]"
                                   />
                                   Disponível hoje
                                 </div>
