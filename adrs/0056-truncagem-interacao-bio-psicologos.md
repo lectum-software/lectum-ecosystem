@@ -1,4 +1,4 @@
-# ADR-0056: Bio truncada e expansão inline na tela de Psicólogos
+﻿# ADR-0056: Bio truncada e expansÃ£o inline na tela de PsicÃ³logos
 
 ## Status
 
@@ -6,46 +6,46 @@ Accepted
 
 ## Task relacionada
 
-Ajustes de UX na tela `/app/psychologists` (continuidade da refatoração imersiva da listagem).
+Ajustes de UX na tela `/app/psychologists` (continuidade da refatoraÃ§Ã£o imersiva da listagem).
 
 ## Contexto
 
-A tela de descoberta de psicólogos usa vídeo/foto em tela cheia e o bloco inferior ancorado acima da navbar.
-O usuário precisa pausar/reproduzir o vídeo apenas ao tocar na área livre da mídia, sem que interações no selo,
-nome, subtítulo, bio, botões laterais ou navbar disparem o player.
+A tela de descoberta de psicÃ³logos usa vÃ­deo/foto em tela cheia e o bloco inferior ancorado acima da navbar.
+O usuÃ¡rio precisa pausar/reproduzir o vÃ­deo apenas ao tocar na Ã¡rea livre da mÃ­dia, sem que interaÃ§Ãµes no selo,
+nome, subtÃ­tulo, bio, botÃµes laterais ou navbar disparem o player.
 
-A bio também precisa preservar o estado compacto de 2 linhas, mas permitir leitura completa sem modal, mantendo a
-base do bloco acima da navbar e sem sobrepor a coluna lateral de ações.
+A bio tambÃ©m precisa preservar o estado compacto de 2 linhas, mas permitir leitura completa sem modal, mantendo a
+base do bloco acima da navbar e sem sobrepor a coluna lateral de aÃ§Ãµes.
 
-## Decisão
+## DecisÃ£o
 
 Definimos para a tela `/app/psychologists`:
 
 - limitar a bio a **2 linhas no estado recolhido**, usando `ellipsis` apenas nesse texto;
-- expandir/recolher a bio **inline** ao clicar/tocar no próprio texto quando houver truncamento;
+- expandir/recolher a bio **inline** ao clicar/tocar no prÃ³prio texto quando houver truncamento;
 - manter o bloco inferior ancorado com `bottom` fixo acima da navbar, deixando o crescimento acontecer para cima;
-- aplicar `max-height` e rolagem interna na bio expandida para evitar invasão da navbar ou da coluna lateral;
-- tornar o nome do psicólogo clicável, navegando para a rota de perfil já usada no botão lateral;
-- separar zonas de interação para que mídia livre controle o vídeo e elementos de UI interceptem o toque/clique.
+- aplicar `max-height` e rolagem interna na bio expandida para evitar invasÃ£o da navbar ou da coluna lateral;
+- tornar o nome do psicÃ³logo clicÃ¡vel, navegando para a rota de perfil jÃ¡ usada no botÃ£o lateral;
+- separar zonas de interaÃ§Ã£o para que mÃ­dia livre controle o vÃ­deo e elementos de UI interceptem o toque/clique.
 
-## Consequências
+## ConsequÃªncias
 
-- O vídeo não pausa quando o usuário interage com nome, bio, selos, subtítulo, botões laterais ou navegação.
-- A leitura completa da bio não depende de modal/bottom sheet e preserva a experiência imersiva.
-- O nome não recebe `ellipsis`; apenas a bio usa truncamento visual no estado recolhido.
-- Biografias muito longas continuam acessíveis por rolagem interna da bio expandida, sem empurrar a navbar.
+- O vÃ­deo nÃ£o pausa quando o usuÃ¡rio interage com nome, bio, selos, subtÃ­tulo, botÃµes laterais ou navegaÃ§Ã£o.
+- A leitura completa da bio nÃ£o depende de modal/bottom sheet e preserva a experiÃªncia imersiva.
+- O nome nÃ£o recebe `ellipsis`; apenas a bio usa truncamento visual no estado recolhido.
+- Biografias muito longas continuam acessÃ­veis por rolagem interna da bio expandida, sem empurrar a navbar.
 
-## Validação
+## ValidaÃ§Ã£o
 
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
-- Validação local da rota `/app/psychologists` em servidor Next, garantindo resposta HTTP e preservação da tela.
+- ValidaÃ§Ã£o local da rota `/app/psychologists` em servidor Next, garantindo resposta HTTP e preservaÃ§Ã£o da tela.
 
-## Pendências
+## PendÃªncias
 
-- Validar futuramente em dispositivo real se a área de mídia livre deve excluir também espaços vazios do bloco inferior
-  ou se o comportamento atual de bloqueio por camada textual é suficiente para a UX final.
+- Validar futuramente em dispositivo real se a Ã¡rea de mÃ­dia livre deve excluir tambÃ©m espaÃ§os vazios do bloco inferior
+  ou se o comportamento atual de bloqueio por camada textual Ã© suficiente para a UX final.
 
 ## Atualizacao 2026-06-11: guias laterais da tela imersiva
 
@@ -67,15 +67,15 @@ A faixa transparente entre a base da bio e a navbar em `/app/psychologists` pass
 
 Ao abrir a modal de filtros em `/app/psychologists`, o video de fundo em reproducao passa a ser pausado e o estado local do player fica marcado como pausado. O fechamento da modal nao retoma o video automaticamente; a retomada permanece sob controle explicito do usuario pela area livre da midia.
 
-## Atualizacao 2026-06-11: refinamento de perfil público do psicólogo
+## Atualizacao 2026-06-11: refinamento de perfil pÃºblico do psicÃ³logo
 
-No fluxo de `/app/psychologist/[id]`, o comportamento visual e de interação da bio foi padronizado com a regra de truncagem inline:
+No fluxo de `/app/psychologist/[id]`, o comportamento visual e de interaÃ§Ã£o da bio foi padronizado com a regra de truncagem inline:
 
-- O card principal (hero) foi reorganizado com mídia de destaque, botões de voltar/compartilhar e card branco ancorado;
-- O nome permanece sem `ellipsis`, com o selo verificado agregado à última palavra visível;
+- O card principal (hero) foi reorganizado com mÃ­dia de destaque, botÃµes de voltar/compartilhar e card branco ancorado;
+- O nome permanece sem `ellipsis`, com o selo verificado agregado Ã  Ãºltima palavra visÃ­vel;
 - Bio inicial em 2 linhas com `ellipsis`, expandindo/recolhendo inline no clique no texto;
-- Sem modal ou bottom sheet para leitura completa da bio, preservando continuidade da página;
-- Manutenção da mesma política de áreas clicáveis no topo para evitar acionar reações de mídia fora da área livre.
+- Sem modal ou bottom sheet para leitura completa da bio, preservando continuidade da pÃ¡gina;
+- ManutenÃ§Ã£o da mesma polÃ­tica de Ã¡reas clicÃ¡veis no topo para evitar acionar reaÃ§Ãµes de mÃ­dia fora da Ã¡rea livre.
 
 ## Atualizacao 2026-06-12: alternancia por scroll no feed imersivo
 
@@ -224,3 +224,9 @@ Decidimos tratar o nome como principal ancora textual do slide, aumentando-o par
 O selo `Disponivel hoje` mantem seu tamanho atual, mas recebe mais espaco abaixo para funcionar como indicador secundario. O selo verificado permanece agrupado ao nome por `inline-flex` com `nowrap`, preservando a regra de nao ficar sozinho em uma linha.
 
 A decisao preserva chips superiores, busca, filtro, navbar, coluna lateral, gestos e dados reais do psicologo, alterando apenas escala e espacamentos do bloco textual inferior.
+
+## Atualizacao 2026-06-12: microcopy da busca principal
+
+A barra de busca global de `/app/psychologists` passa a usar o placeholder mais generico `Busque psicólogos`, reduzindo ruido visual no feed imersivo.
+
+A mudanca e apenas de microcopy: a busca continua aplicando o mesmo parametro textual, mantendo sugestoes, filtros, rota, dados reais da API e comportamento de busca por nome/CRP sem alterar contrato tecnico.

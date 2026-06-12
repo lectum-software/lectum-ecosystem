@@ -1687,7 +1687,7 @@ export const PsychologistsLogic = () => {
                         setIsSearchFocused(true);
                       }}
                       onFocus={() => setIsSearchFocused(true)}
-                      placeholder="Busque pelo nome ou CRP"
+                      placeholder="Busque psicólogos"
                       name="search"
                       type="text"
                       value={searchDraft}
