@@ -872,3 +872,20 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: reset de video ao trocar psicologo ativo (2026-06-12)
+
+- Pedido do usuario: ao sair de um psicologo e voltar para ele no feed vertical, o video deve sempre reiniciar do comeco, em vez de continuar do ponto anterior.
+- A troca do psicologo ativo agora compara uma chave composta por psicologo e fonte de video; quando ela muda, todos os videos do feed sao normalizados.
+- Videos inativos sao pausados e resetados para `currentTime = 0`, impedindo reproducao fora da tela e removendo memoria de progresso ao voltar.
+- O novo video ativo tambem e pausado, resetado para `currentTime = 0`, tem a barra visual zerada e entao volta a reproduzir quando o estado global permite playback.
+- A barra de progresso e o preview de scrubbing sao resetados na troca, e os estados transitorios ja existentes continuam sendo limpos: UI imersiva volta visivel, long press/timeouts/scrubbing sao encerrados, pause e feedbacks voltam ao estado inicial do slide.
+- A regra vale tanto para avancar quanto para voltar no feed; o video reaparece sempre no inicio.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, busca, filtros, bio, favoritos, navbar ou navegacao de perfil.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual permanece `_product/proto/Psicologos.jpg` e o contrato da TASK-13.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

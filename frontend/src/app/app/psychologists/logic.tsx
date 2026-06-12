@@ -193,6 +193,18 @@ const clampNumber = (value: number, min: number, max: number) =>
 const getReadableVideoDuration = (video: HTMLVideoElement) =>
   Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 0;
 
+const resetVideoElementToStart = (video: HTMLVideoElement) => {
+  video.pause();
+
+  if (video.currentTime === 0) return;
+
+  try {
+    video.currentTime = 0;
+  } catch {
+    // Alguns browsers podem negar seek antes de metadata suficiente; o proximo load mantem o inicio.
+  }
+};
+
 const getPageFromParams = (params: URLSearchParams) => {
   const parsed = Number(params.get("page") || "1");
 
@@ -411,6 +423,7 @@ export const PsychologistsLogic = () => {
   const actionColumnRef = useRef<HTMLDivElement | null>(null);
   const profileTextRef = useRef<HTMLElement | null>(null);
   const lastSearchParamsStringRef = useRef(searchParamsString);
+  const lastActiveVideoResetKeyRef = useRef<string | null>(null);
   const tapTimeoutRef = useRef<number | null>(null);
   const longPressTimeoutRef = useRef<number | null>(null);
   const favoriteFeedbackTimeoutRef = useRef<number | null>(null);
@@ -457,6 +470,9 @@ export const PsychologistsLogic = () => {
   const activeVideoSource = shouldShowVideo ? backgroundVideoSrc : null;
   const featuredBio = featuredPsychologist?.headline?.trim() || "";
   const featuredPsychologistId = featuredPsychologist?.id;
+  const activeVideoResetKey = featuredPsychologistId
+    ? `${featuredPsychologistId}:${activeVideoSource ?? ""}`
+    : null;
 
   const filters = usePsychologistsFilterForm({
     filters: response?.filters,
@@ -832,22 +848,50 @@ export const PsychologistsLogic = () => {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    document
-      .querySelectorAll<HTMLVideoElement>(PSYCHOLOGISTS_BACKGROUND_VIDEO_SELECTOR)
-      .forEach((video) => {
-        const isActiveVideo = video.dataset.psychologistId === featuredPsychologistId;
-        video.muted = isVideoMuted;
+    const hasActiveVideoChanged = lastActiveVideoResetKeyRef.current !== activeVideoResetKey;
+    let activeVideo: HTMLVideoElement | null = null;
 
-        if (!isActiveVideo || !activeVideoSource || isVideoPaused) {
-          video.pause();
-          return;
-        }
+    const videos = document.querySelectorAll<HTMLVideoElement>(
+      PSYCHOLOGISTS_BACKGROUND_VIDEO_SELECTOR,
+    );
 
-        void video.play().catch(() => {
-          setIsVideoPaused(true);
-        });
+    for (const video of videos) {
+      const isActiveVideo = video.dataset.psychologistId === featuredPsychologistId;
+      video.muted = isVideoMuted;
+
+      if (!isActiveVideo || !activeVideoSource) {
+        resetVideoElementToStart(video);
+        continue;
+      }
+
+      activeVideo = video;
+
+      if (hasActiveVideoChanged) {
+        resetVideoElementToStart(video);
+      }
+    }
+
+    if (hasActiveVideoChanged) {
+      setIsVideoPaused(false);
+      setVideoProgress({
+        currentTime: 0,
+        duration: activeVideo ? getReadableVideoDuration(activeVideo) : 0,
       });
-  }, [activeVideoSource, featuredPsychologistId, isVideoMuted, isVideoPaused]);
+      setVideoSeekPreviewRatio(null);
+      setIsVideoProgressSeeking(false);
+    }
+
+    lastActiveVideoResetKeyRef.current = activeVideoResetKey;
+
+    if (!activeVideo || !activeVideoSource || isVideoPaused) {
+      activeVideo?.pause();
+      return;
+    }
+
+    void activeVideo.play().catch(() => {
+      setIsVideoPaused(true);
+    });
+  }, [activeVideoResetKey, activeVideoSource, featuredPsychologistId, isVideoMuted, isVideoPaused]);
 
   useEffect(() => {
     if (typeof window === "undefined" || !activeVideoSource || !featuredPsychologistId) return;

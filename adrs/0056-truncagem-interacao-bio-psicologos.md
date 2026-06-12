@@ -276,3 +276,11 @@ A decisao foi remover fundo, pill, padding de destaque e animacoes, mantendo ape
 A busca global de `/app/psychologists` passa a usar o placeholder `Buscar psicólogos`, substituindo `Busque psicólogos`.
 
 A decisao e apenas de microcopy e nao altera contrato de busca, filtros, sugestoes, dados reais da API ou comportamento de foco da barra.
+
+## Atualizacao 2026-06-12: reset de video ao trocar psicologo ativo
+
+A experiencia do feed de `/app/psychologists` passa a tratar cada entrada no viewport como uma nova exibicao do video.
+
+A decisao foi resetar todos os elementos `<video>` do feed sempre que a chave do video ativo muda. Videos inativos sao pausados e enviados para `currentTime = 0`; o novo video ativo tambem e enviado para o inicio antes de reproduzir. A barra de progresso global do slide ativo e zerada junto com o preview de scrubbing.
+
+Isso evita que, ao voltar para um psicologo ja assistido, o video continue do ponto anterior. A navegacao vertical passa a se comportar como uma lista de exibicoes completas, com cada video iniciando do comeco ao entrar novamente como ativo.
