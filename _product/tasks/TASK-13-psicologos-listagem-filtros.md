@@ -574,3 +574,15 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: icones laterais sem fundo branco (2026-06-12)
+
+- Pedido do usuario: remover o fundo branco dos icones de favoritar e compartilhar e trocar a cor cinza por branco.
+- Os botoes laterais `Favoritar` e `Compartilhar` em `/app/psychologists` agora usam fundo transparente sobre o video; o icone neutro fica branco e o estado favoritado preserva vermelho como feedback de selecao.
+- O comportamento das acoes, navbar, WhatsApp, perfil, dados, backend, Prisma, migrations e packages nao foi alterado.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

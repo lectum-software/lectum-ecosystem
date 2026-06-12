@@ -1433,8 +1433,8 @@ export const PsychologistsLogic = () => {
                             aria-busy={isFavoritePending}
                             aria-pressed={isFavorited}
                             className={cn(
-                              "relative z-50 grid cursor-pointer place-items-center rounded-full bg-white text-[#64748b] transition hover:bg-[#f8fafc] active:scale-95",
-                              isFavorited ? "text-[#ef4444]" : "text-[#64748b] hover:bg-[#f8fafc]",
+                              "relative z-50 grid cursor-pointer place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10 active:scale-95",
+                              isFavorited ? "text-[#ef4444]" : "text-white",
                             )}
                             onClick={(event) => {
                               event.stopPropagation();
@@ -1452,7 +1452,7 @@ export const PsychologistsLogic = () => {
                               style={{
                                 height: `${metrics.actionIconSize}px`,
                                 width: `${metrics.actionIconSize}px`,
-                                color: isFavorited ? "#ef4444" : "#64748b",
+                                color: isFavorited ? "#ef4444" : "white",
                                 fill: isFavorited ? "#ef4444" : "transparent",
                               }}
                             />
@@ -1471,7 +1471,7 @@ export const PsychologistsLogic = () => {
                         <div className="grid justify-items-center gap-1 text-center">
                           <button
                             aria-label={`Compartilhar perfil de ${featuredPsychologist.name}`}
-                            className="grid place-items-center rounded-full bg-white text-[#64748b] transition hover:bg-[#e2e8f0]"
+                            className="grid place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10"
                             onClick={(event) => {
                               event.stopPropagation();
                               void shareCurrent();

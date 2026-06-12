@@ -93,3 +93,7 @@ Para preservar as zonas de interacao ja decididas:
 O botao lateral de WhatsApp em `/app/psychologists` deve manter o mesmo visual em todos os psicologos exibidos no feed imersivo, usando como referencia o primeiro botao criado na tela: circulo `#22C55E` com `WhatsAppIcon` branco e label `WhatsApp`.
 
 Quando o profissional ainda nao possui `whatsapp_url` no contrato publico, o botao permanece visualmente identico, mas fica semanticamente marcado como indisponivel (`aria-disabled`) e intercepta o clique/toque para nao acionar o player de video por propagacao.
+
+## Atualizacao 2026-06-12: favoritar e compartilhar sem fundo branco
+
+Os botoes laterais de favoritar e compartilhar em `/app/psychologists` deixam de usar circulo branco de fundo e passam a renderizar os icones em branco sobre o video. O estado favoritado preserva o vermelho como indicador de selecao, mas o estado neutro deixa de usar cinza.
