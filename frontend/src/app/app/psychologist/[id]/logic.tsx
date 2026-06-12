@@ -1007,11 +1007,8 @@ const ReviewsPreviewSection = ({
       {!isLoading && !isError && firstReview ? <ReviewPreviewCard review={firstReview} /> : null}
 
       {!isLoading && !isError && !firstReview ? (
-        <div className="mt-3 flex items-center gap-2.5 rounded-[12px] border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-[#64748B]">
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white text-[#94A3B8]">
-            <Star className="h-4 w-4" aria-hidden="true" />
-          </span>
-          <p className="text-[12px] leading-[1.45]">
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <p className="text-[12px] leading-[1.55] text-[#64748B]">
             Este profissional ainda não possui avaliações.
           </p>
         </div>
@@ -1340,18 +1337,10 @@ const PostsTab = ({
 const ReviewSummaryCard = ({ summary }: { summary: DirectoryReviewSummary }) => {
   if (summary.rating_count <= 0) {
     return (
-      <article className="flex items-center gap-3 rounded-[12px] border border-[#E2E8F0] bg-white px-3 py-3 text-[#64748B]">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#F8FAFC] text-[#94A3B8]">
-          <Star className="h-4 w-4" aria-hidden="true" />
-        </span>
-        <div className="min-w-0">
-          <p className="text-[13px] font-semibold leading-[1.35] text-[#0F172A]">
-            Este profissional ainda não possui avaliações.
-          </p>
-          <p className="mt-0.5 text-[12px] leading-[1.45] text-[#64748B]">
-            As avaliações aparecerão aqui quando pacientes publicarem comentários.
-          </p>
-        </div>
+      <article className="rounded-[8px] bg-transparent">
+        <p className="text-[12px] leading-[1.55] text-[#64748B]">
+          Este profissional ainda não possui avaliações.
+        </p>
       </article>
     );
   }

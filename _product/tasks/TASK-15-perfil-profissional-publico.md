@@ -355,3 +355,19 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `/app/psychologist/cmq5m0vse000ftkuhybmagcn6`
+
+## Registro de ajuste complementar em 2026-06-12 - estado vazio compacto de Avaliações
+
+- A seção `Avaliações` do perfil público `/app/psychologist/[id]` passou a seguir a mesma lógica visual da seção `Publicações` quando não há conteúdo.
+- Quando `rating_count` é zero e não há avaliações carregadas, a UI exibe apenas `Este profissional ainda não possui avaliações.`, sem nota `0,0`, sem estrelas vazias, sem contador e sem ícone de rating.
+- Quando existem avaliações, a seção preserva o comportamento atual com nota média, estrelas, quantidade e prévia/card de avaliação.
+- O ajuste foi aplicado tanto na prévia da aba Geral quanto na aba Avaliações, sem alterar dados, rotas, endpoints, contratos, WhatsApp, sticky tabs ou backend.
+- Builder/Quick Copy não está exposto como ferramenta direta neste ambiente; a referência auditável permanece o protótipo local `_product/proto/Perfil Profissional - Avaliações.jpg` e a consistência visual com a seção `Publicações` já implementada.
+
+Validações executadas:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP 200 em `http://localhost:3000/app/psychologist/cmq5m0vse000ftkuhybmagcn6`
+- Verificação estática confirmou que os blocos vazios de Avaliações renderizam apenas a mensagem textual, enquanto `formatRatingNumber` e `StarRating` permanecem restritos aos ramos com avaliações.
