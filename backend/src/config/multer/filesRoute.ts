@@ -52,6 +52,7 @@ export const filesRoute = (server: Application) => {
 
     if (
       !file?.startsWith("psychologist/avatar/") &&
+      !file?.startsWith("psychologist/cover-image/") &&
       !file?.startsWith("psychologist/video/") &&
       !file?.startsWith("psychologist/video-cover/")
     ) {

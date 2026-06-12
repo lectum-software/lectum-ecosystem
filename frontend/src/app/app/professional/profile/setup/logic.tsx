@@ -865,11 +865,17 @@ export const ProfessionalProfileSetupLogic = () => {
         onError: (error) => toast.error(resolveApiError(error)),
       },
       coverImage: {
-        onSuccess: () => toast.success("Imagem de capa atualizada"),
+        onSuccess: () => {
+          setFailedCoverImageUrl(null);
+          toast.success("Imagem de capa atualizada");
+        },
         onError: (error) => toast.error(resolveApiError(error)),
       },
       deleteCoverImage: {
-        onSuccess: () => toast.success("Imagem de capa removida"),
+        onSuccess: () => {
+          setFailedCoverImageUrl(null);
+          toast.success("Imagem de capa removida");
+        },
         onError: (error) => toast.error(resolveApiError(error)),
       },
       video: {

@@ -109,6 +109,9 @@ export const usePsychologistFreeProfile = ({ callbacks }: UsePsychologistFreePro
   const uploadCoverImage = useMutation({
     mutationFn: (file: File) => api.uploadPsychologistFreeProfileCoverImage(file),
     onSuccess: (data) => {
+      if (data.profile) {
+        queryClient.setQueryData(keys.psychologistFreeProfile.root(), data.profile);
+      }
       queryClient.invalidateQueries({ queryKey: keys.psychologistFreeProfile.root() });
       queryClient.invalidateQueries({ queryKey: keys.directory.psychologistsRoot() });
       if (data.profile?.user.id) {
@@ -124,6 +127,9 @@ export const usePsychologistFreeProfile = ({ callbacks }: UsePsychologistFreePro
   const deleteCoverImage = useMutation({
     mutationFn: () => api.deletePsychologistFreeProfileCoverImage(),
     onSuccess: (data) => {
+      if (data.profile) {
+        queryClient.setQueryData(keys.psychologistFreeProfile.root(), data.profile);
+      }
       queryClient.invalidateQueries({ queryKey: keys.psychologistFreeProfile.root() });
       queryClient.invalidateQueries({ queryKey: keys.directory.psychologistsRoot() });
       if (data.profile?.user.id) {

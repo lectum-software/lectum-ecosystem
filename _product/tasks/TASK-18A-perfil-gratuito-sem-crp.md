@@ -249,3 +249,22 @@ Validacoes executadas:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessao, preservando protecao da rota privada.
+
+## Correcao em 2026-06-12 - exibicao publica da imagem de capa apos upload
+
+- Causa identificada: o upload persistia `cover_image_url` com o prefixo publico `psychologist/cover-image/*`, mas a rota publica `/public/files/*` ainda permitia apenas `psychologist/avatar/*`, `psychologist/video/*` e `psychologist/video-cover/*`. Por isso a URL salva retornava 404 e o frontend caia no placeholder.
+- A rota publica de arquivos passou a permitir `psychologist/cover-image/*`, mantendo a validacao de namespace controlado e sem abrir acesso irrestrito ao bucket.
+- O hook `usePsychologistFreeProfile` agora atualiza imediatamente o cache de `psychologist_free_profile` com `data.profile` retornado pelo upload/remocao da capa antes de invalidar as queries. Assim, ao limpar o preview local (`ObjectURL`), a tela ja possui a URL final persistida para renderizar.
+- A tela limpa o estado de falha de imagem ao concluir upload/remocao, evitando placeholder preso apos uma URL anterior ter falhado.
+- Logs temporarios de debug nao foram mantidos no codigo final; a causa foi confirmada por inspecao do fluxo storage -> URL -> rota publica -> cache frontend.
+- Nao houve alteracao de schema, migration, endpoint de upload, storage, dados ou packages.
+
+Validacoes executadas:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessao, preservando a protecao da rota privada.
+- Verificacao estatica confirmou que `backend/src/config/multer/filesRoute.ts` permite o prefixo `psychologist/cover-image/`.

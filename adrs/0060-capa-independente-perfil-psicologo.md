@@ -92,3 +92,21 @@ Validacoes executadas:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessao, preservando protecao da rota privada.
+
+## Correcao em 2026-06-12 - rota publica e cache da capa do perfil
+
+O upload da capa ja armazenava o arquivo e persistia `cover_image_url`, mas a leitura publica falhava porque `/public/files/*` nao autorizava o namespace `psychologist/cover-image/*`. A decisao foi incluir esse prefixo na allowlist da rota publica, mantendo o acesso restrito apenas aos namespaces publicos de midias do perfil.
+
+No frontend, o cache de `psychologist_free_profile` passa a ser atualizado com o `profile` retornado pelo upload/remocao antes da invalidacao. Isso evita que a remocao do `ObjectURL` temporario deixe a UI mostrando placeholder enquanto aguarda refetch. A tela tambem limpa o estado de falha de carregamento da capa ao concluir upload/remocao.
+
+Nao foram mantidos logs temporarios em producao. A correcao nao altera schema Prisma, contratos de payload, endpoints de upload/remocao, storage ou packages.
+
+Validacoes:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessao.
+- Verificacao estatica confirmou que `psychologist/cover-image/` esta autorizado em `filesRoute.ts`.
