@@ -586,3 +586,18 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: feed vertical com scroll-snap entre videos (2026-06-12)
+
+- Pedido do usuario: transformar a transicao entre psicologos em uma rolagem vertical fluida no estilo TikTok/Reels, fazendo a tela inteira do psicologo atual subir enquanto a proxima entra por baixo.
+- A tela `/app/psychologists` passou a renderizar os profissionais reais da pagina retornada pela API como uma lista vertical paginada por `scroll-snap`, com cada slide ocupando `100dvh`.
+- Busca, botao de filtros, selos, video/fallback, overlay, nome, selo verificado, profissao/experiencia/nota, bio e botoes laterais agora vivem dentro do slide de cada psicologo, evitando UI presa globalmente enquanto apenas o video muda.
+- O indice ativo e calculado pela posicao de rolagem do container; ao mudar o psicologo ativo, a UI volta ao estado visivel padrao, a bio recolhe, o feedback de compartilhamento fecha, o estado do player e reiniciado e a coluna lateral e recalculada.
+- Videos fora do slide ativo sao pausados; somente o slide ativo responde a play/pause e mute/unmute. A navbar global do `PrivateTemplate` foi preservada como componente compartilhado do shell.
+- Nao houve alteracao de backend, Prisma, migrations, packages, mocks ou dados do psicologo.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

@@ -18,18 +18,20 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   type CSSProperties,
   type FormEvent,
-  type TouchEvent,
+  type UIEvent,
   useCallback,
   useDeferredValue,
   useEffect,
   useMemo,
   useRef,
   useState,
-  type WheelEvent,
 } from "react";
 import { useDirectoryPsychologists } from "@/api/callers/directory";
 import { usePatient } from "@/api/callers/patient";
-import type { DirectoryPsychologistsQuery } from "@/api/generator/types/directory";
+import type {
+  DirectoryPsychologist,
+  DirectoryPsychologistsQuery,
+} from "@/api/generator/types/directory";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -58,9 +60,6 @@ const PAGE_LIMIT = 20;
 
 const DEFAULT_NAV_BAR_HEIGHT = 72;
 const PSYCHOLOGISTS_BACKGROUND_VIDEO_SELECTOR = "video[data-psychologists-background='true']";
-const FEED_SCROLL_COOLDOWN_MS = 620;
-const FEED_WHEEL_THRESHOLD = 34;
-const FEED_TOUCH_THRESHOLD = 56;
 
 const formatRating = (ratingAvg: number, ratingCount: number) => {
   if (ratingCount <= 0) return "0,0";
@@ -366,14 +365,12 @@ export const PsychologistsLogic = () => {
   const [activePsychologistIndex, setActivePsychologistIndex] = useState(0);
 
   const filterDialogRef = useRef<HTMLDivElement | null>(null);
+  const feedContainerRef = useRef<HTMLDivElement | null>(null);
   const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
   const bioTextRef = useRef<HTMLButtonElement | null>(null);
   const actionColumnRef = useRef<HTMLDivElement | null>(null);
   const profileTextRef = useRef<HTMLSpanElement | null>(null);
-  const feedScrollLastAtRef = useRef(0);
   const lastSearchParamsStringRef = useRef(searchParamsString);
-  const feedTouchStartRef = useRef<{ x: number; y: number } | null>(null);
-  const suppressNextVideoTapRef = useRef(false);
   const { favoritePsychologist, unfavoritePsychologist } = usePatient({
     enableProfile: false,
   });
@@ -398,17 +395,10 @@ export const PsychologistsLogic = () => {
   const psychologists = response?.data ?? [];
   const featuredPsychologist = psychologists[activePsychologistIndex] ?? psychologists[0];
   const backgroundVideoSrc = resolvePublicMediaUrl(featuredPsychologist?.video_url);
-  const backgroundPosterSrc = featuredPsychologist?.video_cover_url
-    ? resolvePublicMediaUrl(featuredPsychologist.video_cover_url)
-    : null;
   const shouldShowVideo = Boolean(backgroundVideoSrc) && !isVideoPlaybackFailed;
   const activeVideoSource = shouldShowVideo ? backgroundVideoSrc : null;
   const featuredBio = featuredPsychologist?.headline?.trim() || "";
   const featuredPsychologistId = featuredPsychologist?.id;
-  const featuredNameParts = splitNameForBadge(featuredPsychologist?.name ?? "");
-  const isFavorited = featuredPsychologist
-    ? (favoriteOverrides[featuredPsychologist.id] ?? Boolean(featuredPsychologist.favorited))
-    : false;
 
   const filters = usePsychologistsFilterForm({
     filters: response?.filters,
@@ -437,10 +427,6 @@ export const PsychologistsLogic = () => {
 
   const showInitialLoading = directory.isLoading && !response;
   const infoSectionBottom = `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom) + ${metrics.bioBottomOffset}px)`;
-  const profileHref = featuredPsychologist
-    ? `/app/psychologist/${featuredPsychologist.id}`
-    : "/app/psychologists";
-  const floatingBenefitBadges = buildFloatingBenefitBadges(featuredPsychologist);
   const searchSuggestionItems = useMemo(() => {
     const typedName = normalizeSuggestionText(searchDraft);
     if (typedName.length < 2) return [];
@@ -467,6 +453,10 @@ export const PsychologistsLogic = () => {
     lastSearchParamsStringRef.current = searchParamsString;
     const frame = window.requestAnimationFrame(() => {
       setActivePsychologistIndex(0);
+      feedContainerRef.current?.scrollTo({
+        top: 0,
+        behavior: "auto",
+      });
     });
 
     return () => {
@@ -569,20 +559,24 @@ export const PsychologistsLogic = () => {
   }, [recalculateInfoOverlayLayout]);
 
   useEffect(() => {
-    const currentVideo = backgroundVideoRef.current;
-    if (!currentVideo || !activeVideoSource) return;
+    if (typeof window === "undefined") return;
 
-    currentVideo.muted = isVideoMuted;
+    document
+      .querySelectorAll<HTMLVideoElement>(PSYCHOLOGISTS_BACKGROUND_VIDEO_SELECTOR)
+      .forEach((video) => {
+        const isActiveVideo = video.dataset.psychologistId === featuredPsychologistId;
+        video.muted = isVideoMuted;
 
-    if (isVideoPaused) {
-      currentVideo.pause();
-      return;
-    }
+        if (!isActiveVideo || !activeVideoSource || isVideoPaused) {
+          video.pause();
+          return;
+        }
 
-    void currentVideo.play().catch(() => {
-      setIsVideoPaused(true);
-    });
-  }, [activeVideoSource, isVideoMuted, isVideoPaused]);
+        void video.play().catch(() => {
+          setIsVideoPaused(true);
+        });
+      });
+  }, [activeVideoSource, featuredPsychologistId, isVideoMuted, isVideoPaused]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -616,13 +610,12 @@ export const PsychologistsLogic = () => {
   }, []);
 
   const navigateToProfile = useCallback(
-    (event: { stopPropagation: () => void }) => {
+    (psychologistId: string, event: { stopPropagation: () => void }) => {
       event.stopPropagation();
-      if (!featuredPsychologist) return;
 
-      router.push(profileHref);
+      router.push(`/app/psychologist/${psychologistId}`);
     },
-    [featuredPsychologist, profileHref, router],
+    [router],
   );
 
   const toggleExpandedBio = useCallback(
@@ -735,11 +728,6 @@ export const PsychologistsLogic = () => {
   }, [shouldShowVideo]);
 
   const handleVideoTap = useCallback(() => {
-    if (suppressNextVideoTapRef.current) {
-      suppressNextVideoTapRef.current = false;
-      return;
-    }
-
     const currentVideo = backgroundVideoRef.current;
     if (!currentVideo || !shouldShowVideo) return;
 
@@ -759,125 +747,20 @@ export const PsychologistsLogic = () => {
     playCurrentVideo();
   }, [isVideoMuted, pauseVideoPlayback, playCurrentVideo, shouldShowVideo, unmuteAllVideos]);
 
-  const replaceCurrentFiltersPage = useCallback(
-    (page: number) => {
-      const next = buildFiltersParams(filterValues, page);
+  const handleFeedScroll = useCallback(
+    (event: UIEvent<HTMLDivElement>) => {
+      const container = event.currentTarget;
+      const slideHeight = container.clientHeight;
+      if (slideHeight <= 0 || psychologists.length === 0) return;
 
-      router.replace(next.toString() ? `/app/psychologists?${next}` : "/app/psychologists", {
-        scroll: false,
-      });
+      const nextIndex = Math.max(
+        0,
+        Math.min(psychologists.length - 1, Math.round(container.scrollTop / slideHeight)),
+      );
+
+      setActivePsychologistIndex((current) => (current === nextIndex ? current : nextIndex));
     },
-    [filterValues, router],
-  );
-
-  const navigateFeed = useCallback(
-    (direction: 1 | -1) => {
-      if (isFiltersOpen || directory.isFetching || psychologists.length === 0) return false;
-
-      if (direction > 0) {
-        if (activePsychologistIndex < psychologists.length - 1) {
-          setActivePsychologistIndex((current) => Math.min(current + 1, psychologists.length - 1));
-          return true;
-        }
-
-        if (response && currentPage < response.pages) {
-          replaceCurrentFiltersPage(currentPage + 1);
-          return true;
-        }
-
-        return false;
-      }
-
-      if (activePsychologistIndex > 0) {
-        setActivePsychologistIndex((current) => Math.max(current - 1, 0));
-        return true;
-      }
-
-      if (currentPage > 1) {
-        replaceCurrentFiltersPage(currentPage - 1);
-        return true;
-      }
-
-      return false;
-    },
-    [
-      activePsychologistIndex,
-      currentPage,
-      directory.isFetching,
-      isFiltersOpen,
-      psychologists.length,
-      replaceCurrentFiltersPage,
-      response,
-    ],
-  );
-
-  const navigateFeedFromScroll = useCallback(
-    (direction: 1 | -1) => {
-      const now = Date.now();
-      if (now - feedScrollLastAtRef.current < FEED_SCROLL_COOLDOWN_MS) return false;
-
-      const didNavigate = navigateFeed(direction);
-      if (didNavigate) {
-        feedScrollLastAtRef.current = now;
-        setIsBioExpanded(false);
-      }
-
-      return didNavigate;
-    },
-    [navigateFeed],
-  );
-
-  const handleFeedWheel = useCallback(
-    (event: WheelEvent<HTMLDivElement>) => {
-      const target = event.target as HTMLElement | null;
-      if (target?.closest("[data-psychologists-scroll-lock='true']")) return;
-
-      const absY = Math.abs(event.deltaY);
-      if (absY < FEED_WHEEL_THRESHOLD || absY <= Math.abs(event.deltaX)) return;
-
-      event.preventDefault();
-      navigateFeedFromScroll(event.deltaY > 0 ? 1 : -1);
-    },
-    [navigateFeedFromScroll],
-  );
-
-  const handleFeedTouchStart = useCallback((event: TouchEvent<HTMLDivElement>) => {
-    const target = event.target as HTMLElement | null;
-    if (target?.closest("[data-psychologists-scroll-lock='true']")) {
-      feedTouchStartRef.current = null;
-      return;
-    }
-
-    const touch = event.touches[0];
-    feedTouchStartRef.current = touch ? { x: touch.clientX, y: touch.clientY } : null;
-  }, []);
-
-  const handleFeedTouchEnd = useCallback(
-    (event: TouchEvent<HTMLDivElement>) => {
-      const start = feedTouchStartRef.current;
-      feedTouchStartRef.current = null;
-
-      if (!start) return;
-
-      const touch = event.changedTouches[0];
-      if (!touch) return;
-
-      const deltaX = touch.clientX - start.x;
-      const deltaY = start.y - touch.clientY;
-
-      if (Math.abs(deltaY) < FEED_TOUCH_THRESHOLD || Math.abs(deltaY) <= Math.abs(deltaX) * 1.2) {
-        return;
-      }
-
-      const didNavigate = navigateFeedFromScroll(deltaY > 0 ? 1 : -1);
-      if (didNavigate) {
-        suppressNextVideoTapRef.current = true;
-        window.setTimeout(() => {
-          suppressNextVideoTapRef.current = false;
-        }, 250);
-      }
-    },
-    [navigateFeedFromScroll],
+    [psychologists.length],
   );
 
   useEffect(() => {
@@ -901,37 +784,39 @@ export const PsychologistsLogic = () => {
     };
   }, [handleFiltersClose, isFiltersOpen]);
 
-  const toggleFavorite = useCallback(() => {
-    if (!featuredPsychologist) return;
+  const toggleFavorite = useCallback(
+    (psychologist: DirectoryPsychologist) => {
+      const psychologistId = psychologist.id;
+      const currentFavorited = favoriteOverrides[psychologistId] ?? Boolean(psychologist.favorited);
+      const nextFavorited = !currentFavorited;
+      const clearFavoriteOverride = () => {
+        setFavoriteOverrides((current) => {
+          const next = { ...current };
+          delete next[psychologistId];
+          return next;
+        });
+      };
 
-    const psychologistId = featuredPsychologist.id;
-    const nextFavorited = !isFavorited;
-    const clearFavoriteOverride = () => {
-      setFavoriteOverrides((current) => {
-        const next = { ...current };
-        delete next[psychologistId];
-        return next;
-      });
-    };
+      setFavoriteOverrides((current) => ({
+        ...current,
+        [psychologistId]: nextFavorited,
+      }));
 
-    setFavoriteOverrides((current) => ({
-      ...current,
-      [psychologistId]: nextFavorited,
-    }));
+      if (nextFavorited) {
+        favoritePsychologist.mutate(psychologistId, {
+          onError: clearFavoriteOverride,
+          onSuccess: clearFavoriteOverride,
+        });
+        return;
+      }
 
-    if (nextFavorited) {
-      favoritePsychologist.mutate(psychologistId, {
+      unfavoritePsychologist.mutate(psychologistId, {
         onError: clearFavoriteOverride,
         onSuccess: clearFavoriteOverride,
       });
-      return;
-    }
-
-    unfavoritePsychologist.mutate(psychologistId, {
-      onError: clearFavoriteOverride,
-      onSuccess: clearFavoriteOverride,
-    });
-  }, [favoritePsychologist, featuredPsychologist, isFavorited, unfavoritePsychologist]);
+    },
+    [favoriteOverrides, favoritePsychologist, unfavoritePsychologist],
+  );
 
   const favoritePendingId =
     favoritePsychologist.isPending && typeof favoritePsychologist.variables === "string"
@@ -940,38 +825,37 @@ export const PsychologistsLogic = () => {
         ? unfavoritePsychologist.variables
         : null;
 
-  const isFavoritePending = featuredPsychologist
-    ? favoritePendingId === featuredPsychologist.id
-    : false;
+  const shareCurrent = useCallback(
+    async (psychologist: DirectoryPsychologist) => {
+      if (isSharing) return;
 
-  const shareCurrent = useCallback(async () => {
-    if (!featuredPsychologist || isSharing) return;
+      const url =
+        typeof window === "undefined"
+          ? ""
+          : `${window.location.origin}/app/psychologist/${psychologist.id}`;
 
-    const url =
-      typeof window === "undefined"
-        ? ""
-        : `${window.location.origin}/app/psychologist/${featuredPsychologist.id}`;
+      try {
+        setIsSharing(true);
+        if (typeof window !== "undefined" && "share" in navigator) {
+          await navigator.share({
+            title: `Perfil de ${psychologist.name}`,
+            text: psychologist.headline || "Perfis de Psicólogos na Lectum",
+            url,
+          });
+          return;
+        }
 
-    try {
-      setIsSharing(true);
-      if (typeof window !== "undefined" && "share" in navigator) {
-        await navigator.share({
-          title: `Perfil de ${featuredPsychologist.name}`,
-          text: featuredPsychologist.headline || "Perfis de Psicólogos na Lectum",
-          url,
-        });
-        return;
+        if (url) {
+          await navigator.clipboard.writeText(url);
+          setShareFeedback(true);
+          window.setTimeout(() => setShareFeedback(false), 1800);
+        }
+      } finally {
+        setIsSharing(false);
       }
-
-      if (url) {
-        await navigator.clipboard.writeText(url);
-        setShareFeedback(true);
-        window.setTimeout(() => setShareFeedback(false), 1800);
-      }
-    } finally {
-      setIsSharing(false);
-    }
-  }, [featuredPsychologist, isSharing]);
+    },
+    [isSharing],
+  );
 
   return (
     <PrivateTemplate
@@ -1015,11 +899,25 @@ export const PsychologistsLogic = () => {
             will-change: opacity, transform;
           }
 
+          .psychologists-video-feed {
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+          }
+
+          .psychologists-video-feed::-webkit-scrollbar {
+            display: none;
+          }
+
           @media (prefers-reduced-motion: reduce) {
             .psychologists-benefit-pill {
               animation: none;
               opacity: 1;
               transform: none;
+            }
+
+            .psychologists-video-feed {
+              scroll-behavior: auto;
             }
           }
         `}
@@ -1027,9 +925,6 @@ export const PsychologistsLogic = () => {
       <div className="relative isolate min-h-[100dvh] overflow-hidden bg-background text-white">
         <div
           className="relative mx-auto flex h-[100dvh] w-full overflow-hidden bg-black"
-          onTouchEnd={handleFeedTouchEnd}
-          onTouchStart={handleFeedTouchStart}
-          onWheel={handleFeedWheel}
           style={{
             maxWidth: "430px",
           }}
@@ -1047,7 +942,7 @@ export const PsychologistsLogic = () => {
               </InlineAlert>
             ) : null}
 
-            {!showInitialLoading && !errorMessage && !featuredPsychologist ? (
+            {!showInitialLoading && !errorMessage && psychologists.length === 0 ? (
               <div className="grid h-full w-full place-items-center px-4 py-8">
                 <EmptyState
                   className="w-full"
@@ -1070,617 +965,690 @@ export const PsychologistsLogic = () => {
               </div>
             ) : null}
 
-            {!showInitialLoading && !errorMessage && featuredPsychologist ? (
-              <>
-                <form
-                  className="absolute z-40"
-                  data-psychologists-scroll-lock="true"
-                  onMouseDown={stopInteractionPropagation}
-                  onSubmit={handleSearchSubmit}
-                  style={{
-                    top: `calc(env(safe-area-inset-top) + ${metrics.searchTop}px)`,
-                    left: `${metrics.horizontalPadding}px`,
-                    right: `${metrics.searchRightGap}px`,
-                    height: `${metrics.searchHeight}px`,
-                  }}
-                >
-                  <div className="relative flex h-full w-full items-center rounded-[999px] border border-[rgba(255,255,255,0.35)] bg-white/35 p-3 backdrop-blur-md">
-                    <Search className="absolute left-3 h-4 w-4 text-white/85" aria-hidden="true" />
-                    <input
-                      aria-label="Buscar Psicólogos"
-                      className="h-full w-full bg-transparent pr-3 pl-7 text-[14px] text-white outline-none placeholder:text-white/72"
-                      maxLength={120}
-                      onBlur={() => {
-                        window.setTimeout(() => setIsSearchFocused(false), 120);
-                      }}
-                      onChange={(event) => {
-                        setSearchDraft(event.target.value);
-                        setIsSearchFocused(true);
-                      }}
-                      onFocus={() => setIsSearchFocused(true)}
-                      placeholder="Busque pelo nome ou CRP"
-                      name="search"
-                      type="text"
-                      value={searchDraft}
-                    />
-                  </div>
+            {!showInitialLoading && !errorMessage && psychologists.length > 0 ? (
+              <div
+                className="psychologists-video-feed h-full w-full snap-y snap-mandatory overflow-y-auto overscroll-contain"
+                onScroll={handleFeedScroll}
+                ref={feedContainerRef}
+              >
+                {psychologists.map((psychologist, index) => {
+                  const isActiveSlide = index === activePsychologistIndex;
+                  const slideProfileHref = `/app/psychologist/${psychologist.id}`;
+                  const slideVideoSrc = resolvePublicMediaUrl(psychologist.video_url);
+                  const slidePosterSrc = psychologist.video_cover_url
+                    ? resolvePublicMediaUrl(psychologist.video_cover_url)
+                    : null;
+                  const slideShouldShowVideo =
+                    Boolean(slideVideoSrc) && (!isActiveSlide || !isVideoPlaybackFailed);
+                  const slideBio = psychologist.headline?.trim() || "";
+                  const slideNameParts = splitNameForBadge(psychologist.name);
+                  const slideBenefitBadges = buildFloatingBenefitBadges(psychologist);
+                  const slideIsFavorited =
+                    favoriteOverrides[psychologist.id] ?? Boolean(psychologist.favorited);
+                  const slideIsFavoritePending = favoritePendingId === psychologist.id;
+                  const slideIsBioExpanded = isActiveSlide && isBioExpanded;
+                  const slideIsBioTruncated = isActiveSlide && isBioTruncated;
+                  const slideActionColumnTranslateY = isActiveSlide ? actionColumnTranslateY : 0;
 
-                  {shouldRenderSearchSuggestions ? (
-                    <div
-                      aria-label="Sugestões de psicólogos"
-                      className="absolute top-[calc(100%+8px)] left-0 right-0 overflow-hidden rounded-2xl border border-white/25 bg-white/95 text-[#0f172a] shadow-[0_18px_45px_rgba(15,23,42,0.22)] backdrop-blur-md"
-                      onMouseDown={(event) => event.preventDefault()}
-                      role="listbox"
-                    >
-                      <div className="border-[#e2e8f0] border-b px-3 py-2 text-[11px] font-extrabold tracking-[0.08em] text-[#64748b] uppercase">
-                        Profissionais cadastrados
-                      </div>
-                      {searchSuggestionsDirectory.isFetching ? (
-                        <div className="px-3 py-3 text-sm font-medium text-[#64748b]">
-                          Buscando profissionais...
-                        </div>
-                      ) : (
-                        searchSuggestionItems.map((psychologist) => (
-                          <button
-                            aria-label={`Buscar por ${psychologist.name}`}
-                            className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold transition hover:bg-[#f8fafc]"
-                            key={psychologist.id}
-                            aria-selected={false}
-                            onClick={() => handleSearchSuggestionSelect(psychologist.name)}
-                            role="option"
-                            type="button"
-                          >
-                            <span className="min-w-0 truncate">{psychologist.name}</span>
-                            <span className="shrink-0 rounded-full bg-[#eff6ff] px-2 py-0.5 text-[10px] font-extrabold text-[#308ce8]">
-                              {psychologist.verified ? "Verificado" : "Gratuito"}
-                            </span>
-                          </button>
-                        ))
-                      )}
-                    </div>
-                  ) : null}
-                </form>
-
-                <button
-                  aria-label="Abrir filtros"
-                  className="absolute z-30 grid items-center justify-center rounded-full border border-[rgba(255,255,255,0.35)] bg-white/35 text-white shadow-[0_5px_24px_rgba(15,23,42,0.2)] backdrop-blur-md hover:bg-white/45"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    handleFiltersOpen();
-                  }}
-                  style={{
-                    top: `calc(env(safe-area-inset-top) + ${metrics.searchTop}px)`,
-                    right: `${metrics.actionRightPadding}px`,
-                    width: `${metrics.filterButtonSize}px`,
-                    height: `${metrics.filterButtonSize}px`,
-                  }}
-                  type="button"
-                >
-                  <SlidersHorizontal className="h-[18px] w-[18px]" aria-hidden="true" />
-                </button>
-
-                <div
-                  className="absolute inset-0 overflow-hidden"
-                  style={{
-                    top: 0,
-                  }}
-                >
-                  <div className="relative h-full w-full overflow-hidden">
-                    {shouldShowVideo ? (
-                      <video
-                        aria-label={`Vídeo de apresentação de ${featuredPsychologist.name}`}
-                        data-psychologists-background="true"
-                        autoPlay
-                        className="h-full w-full bg-black object-cover"
-                        controls={false}
-                        loop
-                        muted={isVideoMuted}
-                        onError={() => setIsVideoPlaybackFailed(true)}
-                        onLoadedData={() => {
-                          setIsVideoPlaybackFailed(false);
-                          setIsVideoPaused(false);
-                        }}
-                        onPause={() => setIsVideoPaused(true)}
-                        onPlay={() => setIsVideoPaused(false)}
-                        playsInline
-                        poster={backgroundPosterSrc || undefined}
-                        preload="metadata"
-                        ref={backgroundVideoRef}
-                        src={backgroundVideoSrc ?? undefined}
-                      />
-                    ) : backgroundPosterSrc ? (
-                      <Image
-                        alt={featuredPsychologist.name}
-                        className="h-full w-full object-cover"
-                        fill
-                        priority
-                        sizes="(min-width: 768px) 430px, 100vw"
-                        src={backgroundPosterSrc}
-                        unoptimized={isPublicMediaUrl(featuredPsychologist.video_cover_url)}
-                      />
-                    ) : (
-                      <div className="grid h-full w-full place-items-center bg-[#e2e8f0] text-3xl font-extrabold text-[#94a3b8]">
-                        {getInitials(featuredPsychologist.name)}
-                      </div>
-                    )}
-
-                    <div
-                      className="pointer-events-none absolute inset-0"
-                      style={{
-                        background:
-                          "linear-gradient(to top, rgba(0,0,0,0.96) 0%, rgba(0,0,0,0.9) 15%, rgba(0,0,0,0.58) 28%, rgba(0,0,0,0.22) 40%, rgba(0,0,0,0) 55%)",
-                      }}
-                    />
-
-                    {shouldShowVideo ? (
-                      <button
-                        aria-label={
-                          isVideoPaused
-                            ? `Retomar vídeo de ${featuredPsychologist.name}`
-                            : `Desativar reprodução do vídeo de ${featuredPsychologist.name}`
-                        }
-                        className="absolute inset-0 z-10 h-full w-full cursor-default border-0 bg-transparent p-0"
-                        onClick={handleVideoTap}
-                        type="button"
-                      />
-                    ) : null}
-
-                    {shouldShowVideo && (isVideoMuted || isVideoPaused) ? (
-                      <button
-                        aria-label={
-                          isVideoPaused
-                            ? `Retomar vídeo de ${featuredPsychologist.name}`
-                            : `Ativar som do vídeo de ${featuredPsychologist.name}`
-                        }
-                        className="absolute left-1/2 top-1/2 z-20 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/35 bg-black/30 text-white shadow-[0_10px_30px_rgba(0,0,0,0.22)] backdrop-blur-sm transition hover:bg-black/40"
-                        onClick={handleVideoTap}
-                        type="button"
-                      >
-                        {isVideoPaused ? (
-                          <Play className="ml-0.5 h-5 w-5" aria-hidden="true" />
-                        ) : isVideoMuted ? (
-                          <VolumeX className="h-5 w-5" aria-hidden="true" />
-                        ) : null}
-                      </button>
-                    ) : null}
-
-                    {floatingBenefitBadges.length > 0 ? (
-                      <ul
-                        aria-label="Benefícios do psicólogo"
-                        className="pointer-events-none absolute z-30 flex w-[min(190px,56vw)] list-none flex-col items-start gap-2 overflow-visible p-0"
-                        style={{
-                          left: `${metrics.horizontalPadding}px`,
-                          top: `calc(env(safe-area-inset-top) + ${
-                            metrics.searchTop + metrics.searchHeight + 24
-                          }px)`,
-                        }}
-                      >
-                        {floatingBenefitBadges.map((badge) => {
-                          const badgeStyle: FloatingBenefitBadgeStyle = {
-                            "--benefit-delay": badge.delay,
-                          };
-
-                          return (
-                            <li
-                              className={cn(
-                                "psychologists-benefit-pill pointer-events-auto inline-flex w-max max-w-[172px] items-center gap-1.5 rounded-full border border-white/55 px-2.5 py-1.5 text-[10px] leading-none font-extrabold tracking-[-0.02em] text-[#64748B] backdrop-blur-md",
-                              )}
-                              key={badge.id}
-                              style={badgeStyle}
-                            >
-                              <span
-                                aria-hidden="true"
-                                className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-white/70 text-[#64748B]"
-                              >
-                                <Award className="h-3 w-3" strokeWidth={2.4} />
-                              </span>
-                              {badge.label}
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    ) : null}
-
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-auto absolute inset-x-0 z-[35]"
-                      style={{
-                        bottom: `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom))`,
-                        height: `${metrics.bioBottomOffset}px`,
-                      }}
-                    />
-
+                  return (
                     <section
-                      aria-live={shareFeedback ? "polite" : "off"}
-                      className="pointer-events-none absolute inset-x-0 z-40 grid items-end text-[#ffffff]"
-                      style={{
-                        left: `${metrics.horizontalPadding}px`,
-                        right: `${metrics.actionRightPadding}px`,
-                        bottom: infoSectionBottom,
-                        columnGap: `${metrics.textColumnGap}px`,
-                        gridTemplateColumns: `minmax(0, 1fr) ${metrics.actionRailWidth}px`,
-                      }}
+                      aria-label={`Psicólogo ${psychologist.name}`}
+                      className="relative h-[100dvh] w-full snap-start snap-always overflow-hidden"
+                      key={psychologist.id}
                     >
-                      <div className="pointer-events-auto min-w-0">
-                        {featuredPsychologist.available_today ? (
-                          <div className="inline-flex animate-pulse items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-[#22C55E]">
-                            <span className="relative flex h-2 w-2">
-                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#22C55E] opacity-60" />
-                              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#22C55E]" />
-                            </span>
-                            Disponível hoje
-                          </div>
-                        ) : null}
-
-                        <div className="mt-2 grid gap-1">
-                          <button
-                            aria-label={`Ver perfil de ${featuredPsychologist.name}`}
-                            className="block w-full min-w-0 max-w-full cursor-pointer text-left font-semibold text-white"
-                            onClick={navigateToProfile}
-                            type="button"
-                            style={{
-                              fontSize: `${metrics.titleSize}px`,
-                              lineHeight: 1.12,
-                              maxWidth: "100%",
-                              overflowWrap: "break-word",
-                              wordBreak: "normal",
+                      <form
+                        className="absolute z-40"
+                        data-psychologists-scroll-lock="true"
+                        onMouseDown={stopInteractionPropagation}
+                        onSubmit={handleSearchSubmit}
+                        style={{
+                          top: `calc(env(safe-area-inset-top) + ${metrics.searchTop}px)`,
+                          left: `${metrics.horizontalPadding}px`,
+                          right: `${metrics.searchRightGap}px`,
+                          height: `${metrics.searchHeight}px`,
+                        }}
+                      >
+                        <div className="relative flex h-full w-full items-center rounded-[999px] border border-[rgba(255,255,255,0.35)] bg-white/35 p-3 backdrop-blur-md">
+                          <Search
+                            className="absolute left-3 h-4 w-4 text-white/85"
+                            aria-hidden="true"
+                          />
+                          <input
+                            aria-label="Buscar Psicólogos"
+                            className="h-full w-full bg-transparent pr-3 pl-7 text-[14px] text-white outline-none placeholder:text-white/72"
+                            maxLength={120}
+                            onBlur={() => {
+                              window.setTimeout(() => setIsSearchFocused(false), 120);
                             }}
-                          >
-                            {featuredNameParts.firstPart ? (
-                              <span>{featuredNameParts.firstPart} </span>
-                            ) : null}
-                            <span className="inline-flex max-w-full items-center gap-1 whitespace-nowrap align-baseline">
-                              <span>
-                                {featuredNameParts.lastPart ||
-                                  formatDisplayName(featuredPsychologist.name)}
-                              </span>
-                              {featuredPsychologist.verified ? (
-                                <VerifiedBadgeIcon
-                                  aria-hidden="true"
-                                  className="h-4 w-4 shrink-0 translate-y-[1px]"
-                                />
-                              ) : null}
-                            </span>
-                          </button>
-
-                          <div
-                            className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 leading-tight font-medium text-white/75"
-                            style={{ fontSize: `${metrics.subtitleSize}px` }}
-                          >
-                            <span className="min-w-0">
-                              {formatProfileTitle(
-                                featuredPsychologist.gender,
-                                featuredPsychologist.formation_years,
-                                featuredPsychologist.show_experience_tag,
-                              )}
-                            </span>
-                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/20 px-1.5 py-0.5 text-[#FACC15] shadow-[0_8px_24px_rgba(0,0,0,0.18)] backdrop-blur-sm">
-                              <Star
-                                aria-hidden="true"
-                                className="fill-[#FACC15]"
-                                style={{
-                                  height: `${metrics.ratingIconSize}px`,
-                                  width: `${metrics.ratingIconSize}px`,
-                                }}
-                              />
-                              <span
-                                style={{
-                                  fontSize: `${metrics.ratingTextSize}px`,
-                                  lineHeight: `${metrics.ratingLineHeight}px`,
-                                }}
-                              >
-                                {formatRating(
-                                  featuredPsychologist.rating_avg,
-                                  featuredPsychologist.rating_count,
-                                )}
-                              </span>
-                            </span>
-                          </div>
+                            onChange={(event) => {
+                              setSearchDraft(event.target.value);
+                              setIsSearchFocused(true);
+                            }}
+                            onFocus={() => setIsSearchFocused(true)}
+                            placeholder="Busque pelo nome ou CRP"
+                            name="search"
+                            type="text"
+                            value={searchDraft}
+                          />
                         </div>
 
-                        {featuredBio ? (
-                          <button
-                            aria-expanded={isBioTruncated ? isBioExpanded : undefined}
-                            className={cn(
-                              "pointer-events-auto mt-2 w-full text-left text-white/95",
-                              isBioExpanded ? "overflow-y-auto" : "line-clamp-2",
-                              isBioTruncated
-                                ? "cursor-default md:cursor-pointer"
-                                : "cursor-default",
+                        {isActiveSlide && shouldRenderSearchSuggestions ? (
+                          <div
+                            aria-label="Sugestões de psicólogos"
+                            className="absolute top-[calc(100%+8px)] right-0 left-0 overflow-hidden rounded-2xl border border-white/25 bg-white/95 text-[#0f172a] shadow-[0_18px_45px_rgba(15,23,42,0.22)] backdrop-blur-md"
+                            onMouseDown={(event) => event.preventDefault()}
+                            role="listbox"
+                          >
+                            <div className="border-[#e2e8f0] border-b px-3 py-2 text-[11px] font-extrabold tracking-[0.08em] text-[#64748b] uppercase">
+                              Profissionais cadastrados
+                            </div>
+                            {searchSuggestionsDirectory.isFetching ? (
+                              <div className="px-3 py-3 text-sm font-medium text-[#64748b]">
+                                Buscando profissionais...
+                              </div>
+                            ) : (
+                              searchSuggestionItems.map((suggestion) => (
+                                <button
+                                  aria-label={`Buscar por ${suggestion.name}`}
+                                  className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold transition hover:bg-[#f8fafc]"
+                                  key={suggestion.id}
+                                  aria-selected={false}
+                                  onClick={() => handleSearchSuggestionSelect(suggestion.name)}
+                                  role="option"
+                                  type="button"
+                                >
+                                  <span className="min-w-0 truncate">{suggestion.name}</span>
+                                  <span className="shrink-0 rounded-full bg-[#eff6ff] px-2 py-0.5 text-[10px] font-extrabold text-[#308ce8]">
+                                    {suggestion.verified ? "Verificado" : "Gratuito"}
+                                  </span>
+                                </button>
+                              ))
                             )}
-                            data-psychologists-scroll-lock={isBioExpanded ? "true" : undefined}
-                            onClick={toggleExpandedBio}
-                            onWheel={(event) => {
-                              if (isBioExpanded) event.stopPropagation();
-                            }}
-                            type="button"
-                            ref={bioTextRef}
-                            style={{
-                              fontSize: `${metrics.bioSize}px`,
-                              lineHeight: `${metrics.bioLineHeight}px`,
-                              maxWidth: "100%",
-                              maxHeight: isBioExpanded ? "min(34dvh, 220px)" : undefined,
-                              overflowWrap: "break-word",
-                              wordBreak: "normal",
-                            }}
-                          >
-                            {featuredBio}
-                          </button>
+                          </div>
                         ) : null}
+                      </form>
 
-                        {shareFeedback ? (
-                          <p
-                            aria-live="polite"
-                            className="mt-2 rounded-full bg-black/45 px-2 py-1 text-xs text-white"
-                          >
-                            Link copiado
-                          </p>
-                        ) : null}
-                      </div>
+                      <button
+                        aria-label="Abrir filtros"
+                        className="absolute z-30 grid items-center justify-center rounded-full border border-[rgba(255,255,255,0.35)] bg-white/35 text-white shadow-[0_5px_24px_rgba(15,23,42,0.2)] backdrop-blur-md hover:bg-white/45"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleFiltersOpen();
+                        }}
+                        style={{
+                          top: `calc(env(safe-area-inset-top) + ${metrics.searchTop}px)`,
+                          right: `${metrics.actionRightPadding}px`,
+                          width: `${metrics.filterButtonSize}px`,
+                          height: `${metrics.filterButtonSize}px`,
+                        }}
+                        type="button"
+                      >
+                        <SlidersHorizontal className="h-[18px] w-[18px]" aria-hidden="true" />
+                      </button>
 
                       <div
-                        className="pointer-events-auto relative z-50 flex flex-col items-center justify-self-end"
-                        ref={actionColumnRef}
+                        className="absolute inset-0 overflow-hidden"
                         style={{
-                          gap: `${metrics.actionGap}px`,
-                          transform: `translateY(${actionColumnTranslateY}px)`,
-                          width: `${metrics.actionRailWidth}px`,
+                          top: 0,
                         }}
                       >
-                        <div className="grid justify-items-center gap-1 text-center">
-                          <button
-                            aria-label={`Favoritar ${featuredPsychologist.name}`}
-                            aria-busy={isFavoritePending}
-                            aria-pressed={isFavorited}
-                            className={cn(
-                              "relative z-50 grid cursor-pointer place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10 active:scale-95",
-                              isFavorited ? "text-[#ef4444]" : "text-white",
-                            )}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              toggleFavorite();
-                            }}
-                            style={{
-                              width: `${metrics.actionButtonSize}px`,
-                              height: `${metrics.actionButtonSize}px`,
-                            }}
-                            type="button"
-                          >
-                            <Heart
-                              className={cn("h-4 w-4")}
-                              aria-hidden="true"
-                              style={{
-                                height: `${metrics.actionIconSize}px`,
-                                width: `${metrics.actionIconSize}px`,
-                                color: isFavorited ? "#ef4444" : "white",
-                                fill: isFavorited ? "#ef4444" : "transparent",
+                        <div className="relative h-full w-full overflow-hidden">
+                          {slideShouldShowVideo ? (
+                            <video
+                              aria-label={`Vídeo de apresentação de ${psychologist.name}`}
+                              data-psychologist-id={psychologist.id}
+                              data-psychologists-background="true"
+                              autoPlay={isActiveSlide && !isVideoPaused}
+                              className="h-full w-full bg-black object-cover"
+                              controls={false}
+                              loop
+                              muted={isVideoMuted}
+                              onError={() => {
+                                if (isActiveSlide) setIsVideoPlaybackFailed(true);
                               }}
+                              onLoadedData={() => {
+                                if (!isActiveSlide) return;
+
+                                setIsVideoPlaybackFailed(false);
+                                setIsVideoPaused(false);
+                              }}
+                              onPause={() => {
+                                if (isActiveSlide) setIsVideoPaused(true);
+                              }}
+                              onPlay={() => {
+                                if (isActiveSlide) setIsVideoPaused(false);
+                              }}
+                              playsInline
+                              poster={slidePosterSrc || undefined}
+                              preload={isActiveSlide ? "auto" : "metadata"}
+                              ref={(node) => {
+                                if (isActiveSlide) {
+                                  backgroundVideoRef.current = node;
+                                }
+                              }}
+                              src={slideVideoSrc ?? undefined}
                             />
-                          </button>
-                          <span
-                            className="pointer-events-none font-semibold leading-none"
-                            style={{
-                              fontSize: `${metrics.actionLabelSize}px`,
-                              lineHeight: metrics.actionTextLineHeight.toString(),
-                            }}
-                          >
-                            Favoritar
-                          </span>
-                        </div>
-
-                        <div className="grid justify-items-center gap-1 text-center">
-                          <button
-                            aria-label={`Compartilhar perfil de ${featuredPsychologist.name}`}
-                            className="grid place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              void shareCurrent();
-                            }}
-                            type="button"
-                            style={{
-                              width: `${metrics.actionButtonSize}px`,
-                              height: `${metrics.actionButtonSize}px`,
-                            }}
-                          >
-                            <Share2
-                              className="h-4 w-4"
-                              aria-hidden="true"
-                              style={{
-                                height: `${metrics.actionIconSize}px`,
-                                width: `${metrics.actionIconSize}px`,
-                              }}
+                          ) : slidePosterSrc ? (
+                            <Image
+                              alt={psychologist.name}
+                              className="h-full w-full object-cover"
+                              fill
+                              priority={index === 0}
+                              sizes="(min-width: 768px) 430px, 100vw"
+                              src={slidePosterSrc}
+                              unoptimized={isPublicMediaUrl(psychologist.video_cover_url)}
                             />
-                          </button>
-                          <span
-                            className="font-semibold leading-none"
-                            style={{
-                              fontSize: `${metrics.actionLabelSize}px`,
-                              lineHeight: metrics.actionTextLineHeight.toString(),
-                            }}
-                          >
-                            Compartilhar
-                          </span>
-                        </div>
-
-                        {featuredPsychologist.whatsapp_url ? (
-                          <div className="grid justify-items-center gap-1 text-center">
-                            <a
-                              aria-label={`Chamar ${featuredPsychologist.name} no WhatsApp`}
-                              className="grid place-items-center rounded-full bg-[#22C55E] text-white transition hover:bg-[#16A34A]"
-                              href={featuredPsychologist.whatsapp_url}
-                              onClick={stopInteractionPropagation}
-                              rel="noreferrer"
-                              target="_blank"
-                              style={{
-                                width: `${metrics.actionButtonSize}px`,
-                                height: `${metrics.actionButtonSize}px`,
-                              }}
-                            >
-                              <WhatsAppIcon
-                                aria-hidden="true"
-                                className="h-4 w-4"
-                                style={{
-                                  color: "white",
-                                  height: `${metrics.actionIconSize}px`,
-                                  width: `${metrics.actionIconSize}px`,
-                                }}
-                              />
-                            </a>
-                            <span
-                              className="font-semibold leading-none"
-                              style={{
-                                fontSize: `${metrics.actionLabelSize}px`,
-                                lineHeight: metrics.actionTextLineHeight.toString(),
-                              }}
-                            >
-                              WhatsApp
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="grid justify-items-center gap-1 text-center">
-                            <button
-                              aria-disabled="true"
-                              aria-label={`WhatsApp indisponível para ${featuredPsychologist.name}`}
-                              className="grid place-items-center rounded-full bg-[#22C55E] text-white transition"
-                              onClick={stopInteractionPropagation}
-                              type="button"
-                              style={{
-                                width: `${metrics.actionButtonSize}px`,
-                                height: `${metrics.actionButtonSize}px`,
-                              }}
-                            >
-                              <WhatsAppIcon
-                                aria-hidden="true"
-                                className="h-4 w-4"
-                                style={{
-                                  color: "white",
-                                  height: `${metrics.actionIconSize}px`,
-                                  width: `${metrics.actionIconSize}px`,
-                                }}
-                              />
-                            </button>
-                            <span
-                              className="font-semibold leading-none"
-                              style={{
-                                fontSize: `${metrics.actionLabelSize}px`,
-                                lineHeight: metrics.actionTextLineHeight.toString(),
-                              }}
-                            >
-                              WhatsApp
-                            </span>
-                          </div>
-                        )}
-
-                        <div className="grid justify-items-center gap-1 text-center">
-                          <Link
-                            aria-label={`Ver perfil de ${featuredPsychologist.name}`}
-                            className="grid place-items-center rounded-full bg-transparent"
-                            href={profileHref}
-                            onClick={stopInteractionPropagation}
-                          >
-                            <div
-                              className="relative overflow-hidden rounded-full bg-white p-0.5 text-[#0f172a]"
-                              style={{
-                                width: `${metrics.actionButtonSize}px`,
-                                height: `${metrics.actionButtonSize}px`,
-                                border: "2px solid #fff",
-                              }}
-                            >
-                              {featuredPsychologist.avatar ? (
-                                <Image
-                                  alt={featuredPsychologist.name}
-                                  className="h-full w-full rounded-full object-cover"
-                                  fill
-                                  sizes={`${metrics.actionButtonSize}px`}
-                                  src={resolvePublicMediaUrl(featuredPsychologist.avatar) ?? ""}
-                                  unoptimized={isPublicMediaUrl(featuredPsychologist.avatar)}
-                                />
-                              ) : (
-                                <span className="grid h-full w-full place-items-center rounded-full bg-[#e2e8f0] text-[11px] font-semibold text-[#334155]">
-                                  {getInitials(featuredPsychologist.name)}
-                                </span>
-                              )}
+                          ) : (
+                            <div className="grid h-full w-full place-items-center bg-[#e2e8f0] text-3xl font-extrabold text-[#94a3b8]">
+                              {getInitials(psychologist.name)}
                             </div>
-                          </Link>
-                          <span
-                            className="font-semibold leading-none"
+                          )}
+
+                          <div
+                            className="pointer-events-none absolute inset-0"
                             style={{
-                              fontSize: `${metrics.actionLabelSize}px`,
-                              lineHeight: metrics.actionTextLineHeight.toString(),
+                              background:
+                                "linear-gradient(to top, rgba(0,0,0,0.96) 0%, rgba(0,0,0,0.9) 15%, rgba(0,0,0,0.58) 28%, rgba(0,0,0,0.22) 40%, rgba(0,0,0,0) 55%)",
                             }}
-                            ref={profileTextRef}
+                          />
+
+                          {slideShouldShowVideo ? (
+                            <button
+                              aria-label={
+                                isActiveSlide && isVideoPaused
+                                  ? `Retomar vídeo de ${psychologist.name}`
+                                  : `Desativar reprodução do vídeo de ${psychologist.name}`
+                              }
+                              className="absolute inset-0 z-10 h-full w-full cursor-default border-0 bg-transparent p-0"
+                              onClick={isActiveSlide ? handleVideoTap : stopInteractionPropagation}
+                              type="button"
+                            />
+                          ) : null}
+
+                          {isActiveSlide &&
+                          slideShouldShowVideo &&
+                          (isVideoMuted || isVideoPaused) ? (
+                            <button
+                              aria-label={
+                                isVideoPaused
+                                  ? `Retomar vídeo de ${psychologist.name}`
+                                  : `Ativar som do vídeo de ${psychologist.name}`
+                              }
+                              className="absolute top-1/2 left-1/2 z-20 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/35 bg-black/30 text-white shadow-[0_10px_30px_rgba(0,0,0,0.22)] backdrop-blur-sm transition hover:bg-black/40"
+                              onClick={handleVideoTap}
+                              type="button"
+                            >
+                              {isVideoPaused ? (
+                                <Play className="ml-0.5 h-5 w-5" aria-hidden="true" />
+                              ) : isVideoMuted ? (
+                                <VolumeX className="h-5 w-5" aria-hidden="true" />
+                              ) : null}
+                            </button>
+                          ) : null}
+
+                          {slideBenefitBadges.length > 0 ? (
+                            <ul
+                              aria-label="Benefícios do psicólogo"
+                              className="pointer-events-none absolute z-30 flex w-[min(190px,56vw)] list-none flex-col items-start gap-2 overflow-visible p-0"
+                              style={{
+                                left: `${metrics.horizontalPadding}px`,
+                                top: `calc(env(safe-area-inset-top) + ${
+                                  metrics.searchTop + metrics.searchHeight + 24
+                                }px)`,
+                              }}
+                            >
+                              {slideBenefitBadges.map((badge) => {
+                                const badgeStyle: FloatingBenefitBadgeStyle = {
+                                  "--benefit-delay": badge.delay,
+                                };
+
+                                return (
+                                  <li
+                                    className={cn(
+                                      "psychologists-benefit-pill pointer-events-auto inline-flex w-max max-w-[172px] items-center gap-1.5 rounded-full border border-white/55 px-2.5 py-1.5 text-[10px] leading-none font-extrabold tracking-[-0.02em] text-[#64748B] backdrop-blur-md",
+                                    )}
+                                    key={badge.id}
+                                    style={badgeStyle}
+                                  >
+                                    <span
+                                      aria-hidden="true"
+                                      className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-white/70 text-[#64748B]"
+                                    >
+                                      <Award className="h-3 w-3" strokeWidth={2.4} />
+                                    </span>
+                                    {badge.label}
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          ) : null}
+
+                          <div
+                            aria-hidden="true"
+                            className="pointer-events-auto absolute inset-x-0 z-[35]"
+                            style={{
+                              bottom: `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom))`,
+                              height: `${metrics.bioBottomOffset}px`,
+                            }}
+                          />
+
+                          <section
+                            aria-live={isActiveSlide && shareFeedback ? "polite" : "off"}
+                            className="pointer-events-none absolute inset-x-0 z-40 grid items-end text-[#ffffff]"
+                            style={{
+                              left: `${metrics.horizontalPadding}px`,
+                              right: `${metrics.actionRightPadding}px`,
+                              bottom: infoSectionBottom,
+                              columnGap: `${metrics.textColumnGap}px`,
+                              gridTemplateColumns: `minmax(0, 1fr) ${metrics.actionRailWidth}px`,
+                            }}
                           >
-                            Perfil
-                          </span>
+                            <div className="pointer-events-auto min-w-0">
+                              {psychologist.available_today ? (
+                                <div className="inline-flex animate-pulse items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-[#22C55E]">
+                                  <span className="relative flex h-2 w-2">
+                                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#22C55E] opacity-60" />
+                                    <span className="relative inline-flex h-2 w-2 rounded-full bg-[#22C55E]" />
+                                  </span>
+                                  Disponível hoje
+                                </div>
+                              ) : null}
+
+                              <div className="mt-2 grid gap-1">
+                                <button
+                                  aria-label={`Ver perfil de ${psychologist.name}`}
+                                  className="block w-full min-w-0 max-w-full cursor-pointer text-left font-semibold text-white"
+                                  onClick={(event) => navigateToProfile(psychologist.id, event)}
+                                  type="button"
+                                  style={{
+                                    fontSize: `${metrics.titleSize}px`,
+                                    lineHeight: 1.12,
+                                    maxWidth: "100%",
+                                    overflowWrap: "break-word",
+                                    wordBreak: "normal",
+                                  }}
+                                >
+                                  {slideNameParts.firstPart ? (
+                                    <span>{slideNameParts.firstPart} </span>
+                                  ) : null}
+                                  <span className="inline-flex max-w-full items-center gap-1 whitespace-nowrap align-baseline">
+                                    <span>
+                                      {slideNameParts.lastPart ||
+                                        formatDisplayName(psychologist.name)}
+                                    </span>
+                                    {psychologist.verified ? (
+                                      <VerifiedBadgeIcon
+                                        aria-hidden="true"
+                                        className="h-4 w-4 shrink-0 translate-y-[1px]"
+                                      />
+                                    ) : null}
+                                  </span>
+                                </button>
+
+                                <div
+                                  className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 leading-tight font-medium text-white/75"
+                                  style={{ fontSize: `${metrics.subtitleSize}px` }}
+                                >
+                                  <span className="min-w-0">
+                                    {formatProfileTitle(
+                                      psychologist.gender,
+                                      psychologist.formation_years,
+                                      psychologist.show_experience_tag,
+                                    )}
+                                  </span>
+                                  <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/20 px-1.5 py-0.5 text-[#FACC15] shadow-[0_8px_24px_rgba(0,0,0,0.18)] backdrop-blur-sm">
+                                    <Star
+                                      aria-hidden="true"
+                                      className="fill-[#FACC15]"
+                                      style={{
+                                        height: `${metrics.ratingIconSize}px`,
+                                        width: `${metrics.ratingIconSize}px`,
+                                      }}
+                                    />
+                                    <span
+                                      style={{
+                                        fontSize: `${metrics.ratingTextSize}px`,
+                                        lineHeight: `${metrics.ratingLineHeight}px`,
+                                      }}
+                                    >
+                                      {formatRating(
+                                        psychologist.rating_avg,
+                                        psychologist.rating_count,
+                                      )}
+                                    </span>
+                                  </span>
+                                </div>
+                              </div>
+
+                              {slideBio ? (
+                                <button
+                                  aria-expanded={
+                                    slideIsBioTruncated ? slideIsBioExpanded : undefined
+                                  }
+                                  className={cn(
+                                    "pointer-events-auto mt-2 w-full text-left text-white/95",
+                                    slideIsBioExpanded ? "overflow-y-auto" : "line-clamp-2",
+                                    slideIsBioTruncated
+                                      ? "cursor-default md:cursor-pointer"
+                                      : "cursor-default",
+                                  )}
+                                  data-psychologists-scroll-lock={
+                                    slideIsBioExpanded ? "true" : undefined
+                                  }
+                                  onClick={(event) => {
+                                    if (!isActiveSlide) {
+                                      event.stopPropagation();
+                                      return;
+                                    }
+
+                                    toggleExpandedBio(event);
+                                  }}
+                                  onWheel={(event) => {
+                                    if (slideIsBioExpanded) event.stopPropagation();
+                                  }}
+                                  type="button"
+                                  ref={(node) => {
+                                    if (isActiveSlide) {
+                                      bioTextRef.current = node;
+                                    }
+                                  }}
+                                  style={{
+                                    fontSize: `${metrics.bioSize}px`,
+                                    lineHeight: `${metrics.bioLineHeight}px`,
+                                    maxWidth: "100%",
+                                    maxHeight: slideIsBioExpanded ? "min(34dvh, 220px)" : undefined,
+                                    overflowWrap: "break-word",
+                                    wordBreak: "normal",
+                                  }}
+                                >
+                                  {slideBio}
+                                </button>
+                              ) : null}
+
+                              {isActiveSlide && shareFeedback ? (
+                                <p
+                                  aria-live="polite"
+                                  className="mt-2 rounded-full bg-black/45 px-2 py-1 text-xs text-white"
+                                >
+                                  Link copiado
+                                </p>
+                              ) : null}
+                            </div>
+
+                            <div
+                              className="pointer-events-auto relative z-50 flex flex-col items-center justify-self-end"
+                              ref={(node) => {
+                                if (isActiveSlide) {
+                                  actionColumnRef.current = node;
+                                }
+                              }}
+                              style={{
+                                gap: `${metrics.actionGap}px`,
+                                transform: `translateY(${slideActionColumnTranslateY}px)`,
+                                width: `${metrics.actionRailWidth}px`,
+                              }}
+                            >
+                              <div className="grid justify-items-center gap-1 text-center">
+                                <button
+                                  aria-label={`Favoritar ${psychologist.name}`}
+                                  aria-busy={slideIsFavoritePending}
+                                  aria-pressed={slideIsFavorited}
+                                  className={cn(
+                                    "relative z-50 grid cursor-pointer place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10 active:scale-95",
+                                    slideIsFavorited ? "text-[#ef4444]" : "text-white",
+                                  )}
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    toggleFavorite(psychologist);
+                                  }}
+                                  style={{
+                                    width: `${metrics.actionButtonSize}px`,
+                                    height: `${metrics.actionButtonSize}px`,
+                                  }}
+                                  type="button"
+                                >
+                                  <Heart
+                                    className={cn("h-4 w-4")}
+                                    aria-hidden="true"
+                                    style={{
+                                      height: `${metrics.actionIconSize}px`,
+                                      width: `${metrics.actionIconSize}px`,
+                                      color: slideIsFavorited ? "#ef4444" : "white",
+                                      fill: slideIsFavorited ? "#ef4444" : "transparent",
+                                    }}
+                                  />
+                                </button>
+                                <span
+                                  className="pointer-events-none font-semibold leading-none"
+                                  style={{
+                                    fontSize: `${metrics.actionLabelSize}px`,
+                                    lineHeight: metrics.actionTextLineHeight.toString(),
+                                  }}
+                                >
+                                  Favoritar
+                                </span>
+                              </div>
+
+                              <div className="grid justify-items-center gap-1 text-center">
+                                <button
+                                  aria-label={`Compartilhar perfil de ${psychologist.name}`}
+                                  className="grid place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    void shareCurrent(psychologist);
+                                  }}
+                                  type="button"
+                                  style={{
+                                    width: `${metrics.actionButtonSize}px`,
+                                    height: `${metrics.actionButtonSize}px`,
+                                  }}
+                                >
+                                  <Share2
+                                    className="h-4 w-4"
+                                    aria-hidden="true"
+                                    style={{
+                                      height: `${metrics.actionIconSize}px`,
+                                      width: `${metrics.actionIconSize}px`,
+                                    }}
+                                  />
+                                </button>
+                                <span
+                                  className="font-semibold leading-none"
+                                  style={{
+                                    fontSize: `${metrics.actionLabelSize}px`,
+                                    lineHeight: metrics.actionTextLineHeight.toString(),
+                                  }}
+                                >
+                                  Compartilhar
+                                </span>
+                              </div>
+
+                              {psychologist.whatsapp_url ? (
+                                <div className="grid justify-items-center gap-1 text-center">
+                                  <a
+                                    aria-label={`Chamar ${psychologist.name} no WhatsApp`}
+                                    className="grid place-items-center rounded-full bg-[#22C55E] text-white transition hover:bg-[#16A34A]"
+                                    href={psychologist.whatsapp_url}
+                                    onClick={stopInteractionPropagation}
+                                    rel="noreferrer"
+                                    target="_blank"
+                                    style={{
+                                      width: `${metrics.actionButtonSize}px`,
+                                      height: `${metrics.actionButtonSize}px`,
+                                    }}
+                                  >
+                                    <WhatsAppIcon
+                                      aria-hidden="true"
+                                      className="h-4 w-4"
+                                      style={{
+                                        color: "white",
+                                        height: `${metrics.actionIconSize}px`,
+                                        width: `${metrics.actionIconSize}px`,
+                                      }}
+                                    />
+                                  </a>
+                                  <span
+                                    className="font-semibold leading-none"
+                                    style={{
+                                      fontSize: `${metrics.actionLabelSize}px`,
+                                      lineHeight: metrics.actionTextLineHeight.toString(),
+                                    }}
+                                  >
+                                    WhatsApp
+                                  </span>
+                                </div>
+                              ) : (
+                                <div className="grid justify-items-center gap-1 text-center">
+                                  <button
+                                    aria-disabled="true"
+                                    aria-label={`WhatsApp indisponível para ${psychologist.name}`}
+                                    className="grid place-items-center rounded-full bg-[#22C55E] text-white transition"
+                                    onClick={stopInteractionPropagation}
+                                    type="button"
+                                    style={{
+                                      width: `${metrics.actionButtonSize}px`,
+                                      height: `${metrics.actionButtonSize}px`,
+                                    }}
+                                  >
+                                    <WhatsAppIcon
+                                      aria-hidden="true"
+                                      className="h-4 w-4"
+                                      style={{
+                                        color: "white",
+                                        height: `${metrics.actionIconSize}px`,
+                                        width: `${metrics.actionIconSize}px`,
+                                      }}
+                                    />
+                                  </button>
+                                  <span
+                                    className="font-semibold leading-none"
+                                    style={{
+                                      fontSize: `${metrics.actionLabelSize}px`,
+                                      lineHeight: metrics.actionTextLineHeight.toString(),
+                                    }}
+                                  >
+                                    WhatsApp
+                                  </span>
+                                </div>
+                              )}
+
+                              <div className="grid justify-items-center gap-1 text-center">
+                                <Link
+                                  aria-label={`Ver perfil de ${psychologist.name}`}
+                                  className="grid place-items-center rounded-full bg-transparent"
+                                  href={slideProfileHref}
+                                  onClick={stopInteractionPropagation}
+                                >
+                                  <div
+                                    className="relative overflow-hidden rounded-full bg-white p-0.5 text-[#0f172a]"
+                                    style={{
+                                      width: `${metrics.actionButtonSize}px`,
+                                      height: `${metrics.actionButtonSize}px`,
+                                      border: "2px solid #fff",
+                                    }}
+                                  >
+                                    {psychologist.avatar ? (
+                                      <Image
+                                        alt={psychologist.name}
+                                        className="h-full w-full rounded-full object-cover"
+                                        fill
+                                        sizes={`${metrics.actionButtonSize}px`}
+                                        src={resolvePublicMediaUrl(psychologist.avatar) ?? ""}
+                                        unoptimized={isPublicMediaUrl(psychologist.avatar)}
+                                      />
+                                    ) : (
+                                      <span className="grid h-full w-full place-items-center rounded-full bg-[#e2e8f0] text-[11px] font-semibold text-[#334155]">
+                                        {getInitials(psychologist.name)}
+                                      </span>
+                                    )}
+                                  </div>
+                                </Link>
+                                <span
+                                  className="font-semibold leading-none"
+                                  style={{
+                                    fontSize: `${metrics.actionLabelSize}px`,
+                                    lineHeight: metrics.actionTextLineHeight.toString(),
+                                  }}
+                                  ref={(node) => {
+                                    if (isActiveSlide) {
+                                      profileTextRef.current = node;
+                                    }
+                                  }}
+                                >
+                                  Perfil
+                                </span>
+                              </div>
+                            </div>
+                          </section>
                         </div>
                       </div>
                     </section>
-                  </div>
-                </div>
+                  );
+                })}
+              </div>
+            ) : null}
 
-                {isFiltersOpen ? (
-                  <div
-                    aria-labelledby="psychologist-filters-title"
-                    aria-modal="true"
-                    className="fixed inset-0 z-50 grid place-items-center bg-foreground/55 p-4 backdrop-blur-sm"
-                    data-psychologists-scroll-lock="true"
-                    onMouseDown={handleFiltersClose}
-                    role="dialog"
-                  >
-                    <div
-                      className="grid max-h-[calc(100dvh-2rem)] w-full max-w-[500px] gap-4 overflow-y-auto rounded-[28px] border border-[#e2e8f0] bg-surface p-5 shadow-[0_24px_70px_rgb(15_23_42_/_26%)]"
-                      onMouseDown={(event) => event.stopPropagation()}
-                      ref={filterDialogRef}
-                      role="document"
-                      tabIndex={-1}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h2
-                            className="text-lg font-extrabold text-foreground"
-                            id="psychologist-filters-title"
-                          >
-                            Filtros de busca
-                          </h2>
-                          <p className="mt-1 text-sm leading-6 text-muted">
-                            Ajuste os critérios para encontrar o psicólogo ideal para você
-                          </p>
-                        </div>
-                        <button
-                          aria-label="Fechar filtros"
-                          className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-foreground"
-                          onClick={handleFiltersClose}
-                          type="button"
-                        >
-                          <X className="h-4 w-4" aria-hidden="true" />
-                        </button>
-                      </div>
-
-                      <filters.Form
-                        {...filters.formProps}
-                        className="grid grid-cols-2 gap-x-3 gap-y-1"
-                        onSubmit={handleSubmitFilters}
+            {isFiltersOpen ? (
+              <div
+                aria-labelledby="psychologist-filters-title"
+                aria-modal="true"
+                className="fixed inset-0 z-50 grid place-items-center bg-foreground/55 p-4 backdrop-blur-sm"
+                data-psychologists-scroll-lock="true"
+                onMouseDown={handleFiltersClose}
+                role="dialog"
+              >
+                <div
+                  className="grid max-h-[calc(100dvh-2rem)] w-full max-w-[500px] gap-4 overflow-y-auto rounded-[28px] border border-[#e2e8f0] bg-surface p-5 shadow-[0_24px_70px_rgb(15_23_42_/_26%)]"
+                  onMouseDown={(event) => event.stopPropagation()}
+                  ref={filterDialogRef}
+                  role="document"
+                  tabIndex={-1}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h2
+                        className="text-lg font-extrabold text-foreground"
+                        id="psychologist-filters-title"
                       >
-                        <div className="col-span-2 mt-4 flex flex-col gap-3">
-                          <button
-                            className="inline-flex h-10 items-center justify-center rounded-full border border-[#e2e8f0] bg-white text-sm font-semibold text-foreground"
-                            onClick={clearFilters}
-                            type="button"
-                          >
-                            Limpar filtros
-                          </button>
-                          <button
-                            className="inline-flex h-10 items-center justify-center rounded-full bg-[#308ce8] font-semibold text-white"
-                            type="submit"
-                          >
-                            Aplicar filtros
-                          </button>
-                        </div>
-                      </filters.Form>
+                        Filtros de busca
+                      </h2>
+                      <p className="mt-1 text-sm leading-6 text-muted">
+                        Ajuste os critérios para encontrar o psicólogo ideal para você
+                      </p>
                     </div>
+                    <button
+                      aria-label="Fechar filtros"
+                      className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-foreground"
+                      onClick={handleFiltersClose}
+                      type="button"
+                    >
+                      <X className="h-4 w-4" aria-hidden="true" />
+                    </button>
                   </div>
-                ) : null}
-              </>
+
+                  <filters.Form
+                    {...filters.formProps}
+                    className="grid grid-cols-2 gap-x-3 gap-y-1"
+                    onSubmit={handleSubmitFilters}
+                  >
+                    <div className="col-span-2 mt-4 flex flex-col gap-3">
+                      <button
+                        className="inline-flex h-10 items-center justify-center rounded-full border border-[#e2e8f0] bg-white text-sm font-semibold text-foreground"
+                        onClick={clearFilters}
+                        type="button"
+                      >
+                        Limpar filtros
+                      </button>
+                      <button
+                        className="inline-flex h-10 items-center justify-center rounded-full bg-[#308ce8] font-semibold text-white"
+                        type="submit"
+                      >
+                        Aplicar filtros
+                      </button>
+                    </div>
+                  </filters.Form>
+                </div>
+              </div>
             ) : null}
           </div>
         </div>

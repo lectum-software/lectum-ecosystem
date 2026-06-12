@@ -97,3 +97,16 @@ Quando o profissional ainda nao possui `whatsapp_url` no contrato publico, o bot
 ## Atualizacao 2026-06-12: favoritar e compartilhar sem fundo branco
 
 Os botoes laterais de favoritar e compartilhar em `/app/psychologists` deixam de usar circulo branco de fundo e passam a renderizar os icones em branco sobre o video. O estado favoritado preserva o vermelho como indicador de selecao, mas o estado neutro deixa de usar cinza.
+
+## Atualizacao 2026-06-12: feed vertical com scroll-snap
+
+A alternancia entre psicologos em `/app/psychologists` passa a usar um feed vertical real com `scroll-snap`:
+
+- cada psicologo da pagina de resultados da API e renderizado como um slide proprio de `100dvh`;
+- video/fallback, busca, botao de filtros, selos, gradiente, bloco de texto e botoes laterais ficam dentro do slide, entao sobem/descem junto durante a rolagem;
+- a navbar do `PrivateTemplate` permanece compartilhada e global, preservando o padrao do shell privado;
+- o indice ativo agora e detectado pela posicao de `scrollTop` no container, sem troca brusca por wheel/swipe manual;
+- ao trocar o slide ativo, os estados locais de UI existentes voltam ao padrao: bio recolhida, feedback de compartilhamento fechado, player retomavel e alinhamento da coluna lateral recalculado;
+- videos fora do slide ativo sao pausados e apenas o video ativo responde a play/pause, mute/unmute e falha de carregamento.
+
+Essa decisao substitui a alternancia anterior por eventos de wheel/touch, que trocava o conteudo instantaneamente e nao fazia a tela inteira acompanhar o movimento.
