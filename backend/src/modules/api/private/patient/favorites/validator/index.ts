@@ -19,6 +19,43 @@ export const indexSchema: IValidatorRequest = {
       positive: true,
       optional: true,
     },
+    {
+      key: "search",
+      coerse: "string",
+      method: "string",
+      max: 120,
+      optional: true,
+    },
+    {
+      key: "available_today",
+      coerse: "boolean",
+      method: "boolean",
+      optional: true,
+    },
+    {
+      key: "accepts_insurance",
+      coerse: "boolean",
+      method: "boolean",
+      optional: true,
+    },
+    {
+      key: "social_value",
+      coerse: "boolean",
+      method: "boolean",
+      optional: true,
+    },
+    {
+      key: "discount_first_session",
+      coerse: "boolean",
+      method: "boolean",
+      optional: true,
+    },
+    {
+      key: "verified",
+      coerse: "boolean",
+      method: "boolean",
+      optional: true,
+    },
   ],
 };
 

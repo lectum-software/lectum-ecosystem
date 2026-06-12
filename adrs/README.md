@@ -54,3 +54,5 @@ Formato recomendado:
 - [ADR-0057 - Animacao lateral de selos comerciais no video de Psicologos](0057-animacao-selos-video-psicologos.md) - Accepted
 - [ADR-0058 - Nome semibold e visibilidade real do tempo de experiencia nos cards](0058-visibilidade-experiencia-card-psicologo.md) - Accepted
 - [ADR-0059 - Filtros avancados na busca de psicologos](0059-filtros-avancados-busca-psicologos.md) - Accepted
+- [ADR-0060 - Imagem de capa independente do perfil do psicologo](0060-capa-independente-perfil-psicologo.md) - Accepted
+- [ADR-0061 - Favoritos com cards premium e filtros reais](0061-favoritos-cards-premium-filtros-reais.md) - Accepted

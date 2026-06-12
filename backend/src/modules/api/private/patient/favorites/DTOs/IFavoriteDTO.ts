@@ -49,6 +49,12 @@ export interface IFavoriteIndexDTO {
   q: {
     limit?: number;
     page?: number;
+    search?: string;
+    available_today?: boolean;
+    accepts_insurance?: boolean;
+    social_value?: boolean;
+    discount_first_session?: boolean;
+    verified?: boolean;
   };
   auth: user;
 }

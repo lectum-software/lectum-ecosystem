@@ -84,20 +84,102 @@ export class FavoriteRepository implements IFavoriteRepository {
 
   async index(data: IFavoriteIndexDTO) {
     const pagination = normalizePagination(data.q);
+    const search = data.q.search?.trim();
+    const profileWhere: Prisma.psychologist_profileWhereInput = {
+      published: true,
+      deleted: false,
+      available_days: data.q.available_today
+        ? {
+            array_contains: [currentWeekdayValue()],
+          }
+        : undefined,
+      discount_first_session: data.q.discount_first_session ? true : undefined,
+      accepts_insurance: data.q.accepts_insurance ? true : undefined,
+      social_value: data.q.social_value ? true : undefined,
+      subscriptions: data.q.verified
+        ? {
+            some: activeProfessionalEntitlementWhere(),
+          }
+        : undefined,
+    };
+    const psychologistWhere: Prisma.userWhereInput = {
+      role: "psicologo",
+      active: true,
+      deleted: false,
+      psychologist_profile: {
+        is: profileWhere,
+      },
+      ...(search
+        ? {
+            OR: [
+              {
+                name: {
+                  contains: search,
+                  mode: "insensitive",
+                },
+              },
+              {
+                psychologist_profile: {
+                  is: {
+                    headline: {
+                      contains: search,
+                      mode: "insensitive",
+                    },
+                  },
+                },
+              },
+              {
+                psychologist_profile: {
+                  is: {
+                    bio: {
+                      contains: search,
+                      mode: "insensitive",
+                    },
+                  },
+                },
+              },
+              {
+                psychologist_profile: {
+                  is: {
+                    crp: {
+                      contains: search,
+                      mode: "insensitive",
+                    },
+                  },
+                },
+              },
+              {
+                psychologist_specialties: {
+                  some: {
+                    specialty: {
+                      name: {
+                        contains: search,
+                        mode: "insensitive",
+                      },
+                    },
+                  },
+                },
+              },
+              {
+                psychologist_services: {
+                  some: {
+                    service: {
+                      name: {
+                        contains: search,
+                        mode: "insensitive",
+                      },
+                    },
+                  },
+                },
+              },
+            ],
+          }
+        : {}),
+    };
     const where: Prisma.psychologist_favoriteWhereInput = {
       user_id: data.auth.id!,
       deleted: false,
-      psychologist: {
-        role: "psicologo",
-        active: true,
-        deleted: false,
-        psychologist_profile: {
-          is: {
-            published: true,
-            deleted: false,
-          },
-        },
-      },
+      psychologist: psychologistWhere,
     };
 
     const [items, count] = await Promise.all([

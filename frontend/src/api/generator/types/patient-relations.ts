@@ -41,4 +41,10 @@ export type PatientRelationListResponse = {
 export type PatientRelationQuery = {
   page?: number;
   limit?: number;
+  search?: string;
+  available_today?: boolean;
+  accepts_insurance?: boolean;
+  social_value?: boolean;
+  discount_first_session?: boolean;
+  verified?: boolean;
 };

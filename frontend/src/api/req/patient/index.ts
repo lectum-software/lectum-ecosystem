@@ -78,9 +78,7 @@ export const updatePatientProfile = async (body: UpdatePatientProfilePayload) =>
 export const getFavoritePsychologists = async (query: PatientRelationQuery = {}) => {
   const handle = callEndpoint({
     route: "/api/private/user/favorites",
-    config: {
-      params: query,
-    },
+    query,
   });
 
   return handleReq<PatientRelationListResponse>(handle);
@@ -109,9 +107,7 @@ export const unfavoritePsychologist = async (id: string) => {
 export const getFollowedPsychologists = async (query: PatientRelationQuery = {}) => {
   const handle = callEndpoint({
     route: "/api/private/patient/follows",
-    config: {
-      params: query,
-    },
+    query,
   });
 
   return handleReq<PatientRelationListResponse>(handle);
