@@ -858,3 +858,17 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: microcopy da busca para Buscar psicologos (2026-06-12)
+
+- Pedido do usuario: alterar o placeholder da barra de busca da pagina de Psicologos de `Busque psicologos` para `Buscar psicologos`.
+- A mudanca foi aplicada somente no texto do placeholder da busca global/fixa de `/app/psychologists`.
+- A busca continua usando a mesma logica, parametro textual, sugestoes, foco prioritario, filtros, rota e dados reais da API.
+- Nao houve alteracao de backend, Prisma, migrations, packages, layout estrutural, gestos, barra de progresso, favoritos, navbar ou navegacao de perfil.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual permanece `_product/proto/Psicologos.jpg` e o contrato da TASK-13.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

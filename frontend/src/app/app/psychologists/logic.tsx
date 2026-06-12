@@ -1844,7 +1844,7 @@ export const PsychologistsLogic = () => {
                         enterSearchMode();
                       }}
                       onFocus={enterSearchMode}
-                      placeholder="Busque psicólogos"
+                      placeholder="Buscar psicólogos"
                       name="search"
                       ref={searchInputRef}
                       type="text"

@@ -270,3 +270,9 @@ A implementacao mantém o bloco ancorado acima da navbar; bios maiores crescem p
 O indicador `Disponivel hoje` em `/app/psychologists` deixa de ser tratado visualmente como badge ou botao.
 
 A decisao foi remover fundo, pill, padding de destaque e animacoes, mantendo apenas uma bolinha verde pequena e texto em verde claro. Assim, disponibilidade vira metadado complementar do card, enquanto o nome do psicologo permanece como principal ancora textual do bloco inferior.
+
+## Atualizacao 2026-06-12: microcopy Buscar psicologos
+
+A busca global de `/app/psychologists` passa a usar o placeholder `Buscar psicólogos`, substituindo `Busque psicólogos`.
+
+A decisao e apenas de microcopy e nao altera contrato de busca, filtros, sugestoes, dados reais da API ou comportamento de foco da barra.
