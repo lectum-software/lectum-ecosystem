@@ -438,3 +438,11 @@ No mobile, focar a busca continua pausando o video, bloqueando gestos e colocand
 A coluna direita desktop tambem passa a ter um eixo fixo de 76px para alinhar Pesquisa, Filtro, Favoritar, Compartilhar, WhatsApp e Perfil pelo mesmo centro horizontal. Pesquisa/Filtro continuam em um grupo superior e as acoes do psicologo continuam em grupo inferior, preservando a separacao sem desalinhamento visual.
 
 O modo sem UI no desktop foi limitado ao que esta dentro/sobre o video: textos, chips, gradientes e demais overlays internos somem, mas a navegacao lateral esquerda e a coluna externa direita permanecem visiveis e interativas. No mobile, a regra anterior de esconder a interface inteira permanece inalterada.
+
+## Atualizacao 2026-06-12: avaliacao como metadado secundario e respiro desktop da bio
+
+A avaliacao exibida no bloco inferior de `/app/psychologists` deixa de competir visualmente com o nome e com a linha de profissao/experiencia.
+
+A decisao foi manter a avaliacao no mesmo lugar, mas reduzir sua escala: icone e texto menores, padding mais compacto, gap reduzido, sombra removida, fundo mais discreto e amarelo suavizado. Ela continua legivel e reconhecivel como nota, porem passa a ser tratada como metadado complementar da linha profissional.
+
+Para o desktop, a bio precisava de mais respiro em relacao a borda inferior do video. A decisao foi aumentar apenas o offset inferior do bloco textual em `>=1024px`, de 8px para 24px, preservando o comportamento mobile e mantendo a alteracao restrita a composicao visual da tela de Psicologos.

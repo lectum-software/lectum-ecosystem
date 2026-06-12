@@ -1093,3 +1093,19 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: avaliacao secundaria e respiro inferior desktop da bio (2026-06-12)
+
+- Pedido do usuario: refinar apenas a hierarquia visual da avaliacao e o espacamento inferior da bio, sem alterar layout geral, video, nome, busca, filtros, chips, acoes laterais, navbar ou modo imersivo.
+- A avaliacao `estrela + nota` foi reduzida visualmente: icone e texto menores, line-height mais compacto, padding menor, gap menor, sombra removida e amarelo suavizado para deixar de competir com nome, profissao e experiencia.
+- A avaliacao permanece legivel e na mesma linha de metadados, mas passa a funcionar como informacao complementar.
+- No desktop `>=1024px`, o offset inferior do bloco textual passou de 8px para 24px, criando respiro visual entre a bio e a borda inferior do video.
+- No mobile, o offset inferior permanece em 8px; a unica alteracao perceptivel no mobile e o refinamento visual da avaliacao.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, filtros, contratos de API, video, nome, busca, chips, acoes laterais, navbar ou modo imersivo.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

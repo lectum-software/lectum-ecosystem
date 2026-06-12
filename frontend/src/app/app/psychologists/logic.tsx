@@ -383,10 +383,10 @@ const useViewportMetrics = () => {
       actionRailWidth: actionButtonSize,
       actionStandaloneIconSize: isTiny ? 22 : 24,
       availableBadgeTextSize: isTiny ? 10 : 11,
-      bioBottomOffset: 8,
-      ratingIconSize: isCompact ? 10 : 11,
-      ratingLineHeight: 15,
-      ratingTextSize: 11,
+      bioBottomOffset: isDesktop ? 24 : 8,
+      ratingIconSize: isCompact ? 9 : 10,
+      ratingLineHeight: 13,
+      ratingTextSize: 10,
       bioLineHeight: 17,
       bioSize: 12,
       filterButtonSize: isCompact ? 40 : 42,
@@ -2932,10 +2932,10 @@ export const PsychologistsLogic = () => {
                                       psychologist.show_experience_tag,
                                     )}
                                   </span>
-                                  <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/20 px-1.5 py-0.5 text-[#FACC15] shadow-[0_8px_24px_rgba(0,0,0,0.14)] backdrop-blur-sm">
+                                  <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-white/10 px-1 py-0 text-[#FDE68A] shadow-none backdrop-blur-[1px]">
                                     <Star
                                       aria-hidden="true"
-                                      className="fill-[#FACC15]"
+                                      className="fill-[#FDE68A] opacity-85"
                                       style={{
                                         height: `${metrics.ratingIconSize}px`,
                                         width: `${metrics.ratingIconSize}px`,
@@ -2944,6 +2944,7 @@ export const PsychologistsLogic = () => {
                                     <span
                                       style={{
                                         fontSize: `${metrics.ratingTextSize}px`,
+                                        fontWeight: 600,
                                         lineHeight: `${metrics.ratingLineHeight}px`,
                                       }}
                                     >
