@@ -110,3 +110,16 @@ Validacoes:
 - `pnpm check`
 - HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessao.
 - Verificacao estatica confirmou que `psychologist/cover-image/` esta autorizado em `filesRoute.ts`.
+
+## Ajuste complementar em 2026-06-12 - ações contextuais para capa e avatar
+
+A seção `Imagens do perfil` mantém o conceito de editor visual do perfil, mas as ações de edição deixam de ficar expostas permanentemente. A decisão foi padronizar capa e avatar com um único ícone de lápis por mídia, abrindo um menu contextual com as opções de alterar ou excluir.
+
+Essa alteração reduz ruído visual e aproxima a experiência de produtos profissionais como LinkedIn, Apple e Notion, sem mudar a persistência: `cover_image_url` e `user.avatar` continuam usando os mesmos endpoints, storage público, preview local com `ObjectURL`, validações e fluxo de remoção.
+
+Validações executadas:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessão.

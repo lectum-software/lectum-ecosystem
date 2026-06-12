@@ -268,3 +268,19 @@ Validacoes executadas:
 - `pnpm check`
 - HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessao, preservando a protecao da rota privada.
 - Verificacao estatica confirmou que `backend/src/config/multer/filesRoute.ts` permite o prefixo `psychologist/cover-image/`.
+
+## Ajuste complementar em 2026-06-12 - menus discretos nas imagens do perfil
+
+- A seção `Imagens do perfil` em `/app/professional/profile/setup` passou a expor apenas um ícone de edição sobre a capa e um ícone de edição sobre o avatar.
+- As ações permanentes de capa e foto foram substituídas por menus contextuais com `Alterar` e `Excluir`, reutilizando o padrão já presente na tela para mídia de apresentação.
+- Os textos visíveis `Foto de perfil` e `Remover foto` foram removidos do bloco para reduzir ruído visual; a imagem passa a ser o elemento protagonista.
+- O upload real, remoção, preview local via `ObjectURL`, validações de formato/tamanho, endpoints e dados persistidos foram preservados sem alteração de backend, Prisma, packages ou rotas.
+- Builder/Quick Copy não está exposto como ferramenta direta neste ambiente; a referência auditável permanece o protótipo local `_product/proto/Editar Perfil - Psicólogo.jpg` e os refinamentos solicitados pelo usuário.
+
+Validações executadas:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Verificação estática confirmou que `Foto de perfil` e `Remover foto` não permanecem em `frontend/src/app/app/professional/profile/setup/logic.tsx`, e que os menus exibem `Alterar capa`, `Excluir capa`, `Alterar foto` e `Excluir foto`.
+- HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessão, preservando a proteção da rota privada.
