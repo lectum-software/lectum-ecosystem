@@ -18,6 +18,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   type CSSProperties,
   type FormEvent,
+  type PointerEvent,
   type UIEvent,
   useCallback,
   useDeferredValue,
@@ -60,6 +61,9 @@ const PAGE_LIMIT = 20;
 
 const DEFAULT_NAV_BAR_HEIGHT = 72;
 const PSYCHOLOGISTS_BACKGROUND_VIDEO_SELECTOR = "video[data-psychologists-background='true']";
+const VIDEO_SINGLE_TAP_DELAY_MS = 260;
+const VIDEO_LONG_PRESS_DELAY_MS = 380;
+const VIDEO_POINTER_MOVE_THRESHOLD_PX = 12;
 
 const formatRating = (ratingAvg: number, ratingCount: number) => {
   if (ratingCount <= 0) return "0,0";
@@ -356,6 +360,9 @@ export const PsychologistsLogic = () => {
   const [isVideoMuted, setIsVideoMuted] = useState(true);
   const [isVideoPaused, setIsVideoPaused] = useState(false);
   const [isVideoPlaybackFailed, setIsVideoPlaybackFailed] = useState(false);
+  const [isUiHidden, setIsUiHidden] = useState(false);
+  const [isLongPressing, setIsLongPressing] = useState(false);
+  const [showDoubleTapFavoriteFeedback, setShowDoubleTapFavoriteFeedback] = useState(false);
   const [actionColumnTranslateY, setActionColumnTranslateY] = useState(0);
   const [favoriteOverrides, setFavoriteOverrides] = useState<Record<string, boolean>>({});
   const [isBioExpanded, setIsBioExpanded] = useState(false);
@@ -371,6 +378,14 @@ export const PsychologistsLogic = () => {
   const actionColumnRef = useRef<HTMLDivElement | null>(null);
   const profileTextRef = useRef<HTMLSpanElement | null>(null);
   const lastSearchParamsStringRef = useRef(searchParamsString);
+  const tapTimeoutRef = useRef<number | null>(null);
+  const longPressTimeoutRef = useRef<number | null>(null);
+  const favoriteFeedbackTimeoutRef = useRef<number | null>(null);
+  const suppressNextTapRef = useRef(false);
+  const didLongPressRef = useRef(false);
+  const didMoveDuringPressRef = useRef(false);
+  const wasVideoPausedBeforeLongPressRef = useRef(false);
+  const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
   const { favoritePsychologist, unfavoritePsychologist } = usePatient({
     enableProfile: false,
   });
@@ -447,12 +462,46 @@ export const PsychologistsLogic = () => {
     searchDraft.trim().length >= 2 &&
     (searchSuggestionsDirectory.isFetching || searchSuggestionItems.length > 0);
 
+  const resetVideoInteractionState = useCallback(() => {
+    if (tapTimeoutRef.current) {
+      window.clearTimeout(tapTimeoutRef.current);
+      tapTimeoutRef.current = null;
+    }
+
+    if (longPressTimeoutRef.current) {
+      window.clearTimeout(longPressTimeoutRef.current);
+      longPressTimeoutRef.current = null;
+    }
+
+    if (favoriteFeedbackTimeoutRef.current) {
+      window.clearTimeout(favoriteFeedbackTimeoutRef.current);
+      favoriteFeedbackTimeoutRef.current = null;
+    }
+
+    suppressNextTapRef.current = false;
+    didLongPressRef.current = false;
+    didMoveDuringPressRef.current = false;
+    wasVideoPausedBeforeLongPressRef.current = false;
+    pointerStartRef.current = null;
+
+    setIsUiHidden(false);
+    setIsLongPressing(false);
+    setShowDoubleTapFavoriteFeedback(false);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      resetVideoInteractionState();
+    };
+  }, [resetVideoInteractionState]);
+
   useEffect(() => {
     if (lastSearchParamsStringRef.current === searchParamsString) return;
 
     lastSearchParamsStringRef.current = searchParamsString;
     const frame = window.requestAnimationFrame(() => {
       setActivePsychologistIndex(0);
+      resetVideoInteractionState();
       feedContainerRef.current?.scrollTo({
         top: 0,
         behavior: "auto",
@@ -462,7 +511,7 @@ export const PsychologistsLogic = () => {
     return () => {
       window.cancelAnimationFrame(frame);
     };
-  }, [searchParamsString]);
+  }, [resetVideoInteractionState, searchParamsString]);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -593,6 +642,7 @@ export const PsychologistsLogic = () => {
     if (!featuredPsychologistId) return;
 
     const frame = window.requestAnimationFrame(() => {
+      resetVideoInteractionState();
       setIsBioExpanded(false);
       setIsVideoPlaybackFailed(false);
       setIsVideoPaused(false);
@@ -603,7 +653,7 @@ export const PsychologistsLogic = () => {
     return () => {
       window.cancelAnimationFrame(frame);
     };
-  }, [featuredPsychologistId]);
+  }, [featuredPsychologistId, resetVideoInteractionState]);
 
   const stopInteractionPropagation = useCallback((event: { stopPropagation: () => void }) => {
     event.stopPropagation();
@@ -727,26 +777,6 @@ export const PsychologistsLogic = () => {
     });
   }, [shouldShowVideo]);
 
-  const handleVideoTap = useCallback(() => {
-    const currentVideo = backgroundVideoRef.current;
-    if (!currentVideo || !shouldShowVideo) return;
-
-    if (isVideoMuted) {
-      currentVideo.muted = false;
-      unmuteAllVideos();
-      setIsVideoMuted(false);
-      playCurrentVideo();
-      return;
-    }
-
-    if (!currentVideo.paused) {
-      pauseVideoPlayback();
-      return;
-    }
-
-    playCurrentVideo();
-  }, [isVideoMuted, pauseVideoPlayback, playCurrentVideo, shouldShowVideo, unmuteAllVideos]);
-
   const handleFeedScroll = useCallback(
     (event: UIEvent<HTMLDivElement>) => {
       const container = event.currentTarget;
@@ -857,10 +887,163 @@ export const PsychologistsLogic = () => {
     [isSharing],
   );
 
+  const triggerDoubleTapFavorite = useCallback(
+    (psychologist: DirectoryPsychologist) => {
+      toggleFavorite(psychologist);
+      setShowDoubleTapFavoriteFeedback(true);
+
+      if (favoriteFeedbackTimeoutRef.current) {
+        window.clearTimeout(favoriteFeedbackTimeoutRef.current);
+      }
+
+      favoriteFeedbackTimeoutRef.current = window.setTimeout(() => {
+        setShowDoubleTapFavoriteFeedback(false);
+        favoriteFeedbackTimeoutRef.current = null;
+      }, 520);
+    },
+    [toggleFavorite],
+  );
+
+  const handleVideoAreaTap = useCallback(
+    (psychologist: DirectoryPsychologist) => {
+      if (suppressNextTapRef.current || didMoveDuringPressRef.current) {
+        suppressNextTapRef.current = false;
+        didMoveDuringPressRef.current = false;
+        return;
+      }
+
+      if (didLongPressRef.current) {
+        didLongPressRef.current = false;
+        return;
+      }
+
+      if (tapTimeoutRef.current) {
+        window.clearTimeout(tapTimeoutRef.current);
+        tapTimeoutRef.current = null;
+        triggerDoubleTapFavorite(psychologist);
+        return;
+      }
+
+      tapTimeoutRef.current = window.setTimeout(() => {
+        tapTimeoutRef.current = null;
+        setIsUiHidden((current) => !current);
+      }, VIDEO_SINGLE_TAP_DELAY_MS);
+    },
+    [triggerDoubleTapFavorite],
+  );
+
+  const handleLongPressStart = useCallback(
+    (event: PointerEvent<HTMLButtonElement>) => {
+      if (!event.isPrimary || !shouldShowVideo) return;
+
+      pointerStartRef.current = {
+        x: event.clientX,
+        y: event.clientY,
+      };
+      didMoveDuringPressRef.current = false;
+      didLongPressRef.current = false;
+
+      if (longPressTimeoutRef.current) {
+        window.clearTimeout(longPressTimeoutRef.current);
+      }
+
+      longPressTimeoutRef.current = window.setTimeout(() => {
+        if (didMoveDuringPressRef.current) return;
+
+        didLongPressRef.current = true;
+        suppressNextTapRef.current = true;
+        wasVideoPausedBeforeLongPressRef.current = isVideoPaused;
+
+        if (tapTimeoutRef.current) {
+          window.clearTimeout(tapTimeoutRef.current);
+          tapTimeoutRef.current = null;
+        }
+
+        pauseVideoPlayback();
+        setIsLongPressing(true);
+      }, VIDEO_LONG_PRESS_DELAY_MS);
+    },
+    [isVideoPaused, pauseVideoPlayback, shouldShowVideo],
+  );
+
+  const handleLongPressMove = useCallback((event: PointerEvent<HTMLButtonElement>) => {
+    const start = pointerStartRef.current;
+    if (!start) return;
+
+    const deltaX = event.clientX - start.x;
+    const deltaY = event.clientY - start.y;
+    const distance = Math.hypot(deltaX, deltaY);
+
+    if (distance < VIDEO_POINTER_MOVE_THRESHOLD_PX) return;
+
+    didMoveDuringPressRef.current = true;
+    if (longPressTimeoutRef.current) {
+      window.clearTimeout(longPressTimeoutRef.current);
+      longPressTimeoutRef.current = null;
+    }
+  }, []);
+
+  const handleLongPressEnd = useCallback(() => {
+    pointerStartRef.current = null;
+
+    if (longPressTimeoutRef.current) {
+      window.clearTimeout(longPressTimeoutRef.current);
+      longPressTimeoutRef.current = null;
+    }
+
+    if (didMoveDuringPressRef.current && !didLongPressRef.current) {
+      suppressNextTapRef.current = true;
+      window.setTimeout(() => {
+        suppressNextTapRef.current = false;
+        didMoveDuringPressRef.current = false;
+      }, VIDEO_SINGLE_TAP_DELAY_MS);
+      return;
+    }
+
+    if (!didLongPressRef.current) return;
+
+    setIsLongPressing(false);
+    if (!wasVideoPausedBeforeLongPressRef.current) {
+      playCurrentVideo();
+    }
+
+    window.setTimeout(() => {
+      suppressNextTapRef.current = false;
+      didLongPressRef.current = false;
+      didMoveDuringPressRef.current = false;
+    }, VIDEO_SINGLE_TAP_DELAY_MS);
+  }, [playCurrentVideo]);
+
+  const handleVideoControlTap = useCallback(
+    (event: { stopPropagation: () => void }) => {
+      event.stopPropagation();
+
+      const currentVideo = backgroundVideoRef.current;
+      if (!currentVideo || !shouldShowVideo) return;
+
+      if (isVideoMuted) {
+        currentVideo.muted = false;
+        unmuteAllVideos();
+        setIsVideoMuted(false);
+        playCurrentVideo();
+        return;
+      }
+
+      if (!currentVideo.paused) {
+        pauseVideoPlayback();
+        return;
+      }
+
+      playCurrentVideo();
+    },
+    [isVideoMuted, pauseVideoPlayback, playCurrentVideo, shouldShowVideo, unmuteAllVideos],
+  );
+
   return (
     <PrivateTemplate
       allowAnonymous
       contentClassName="max-w-none p-0 sm:p-0"
+      navigationHidden={isUiHidden}
       navigationTheme="solidWhite"
     >
       <style>
@@ -883,6 +1066,21 @@ export const PsychologistsLogic = () => {
             }
             50% {
               transform: translate3d(0, -4px, 0);
+            }
+          }
+
+          @keyframes psychologists-double-tap-feedback {
+            0% {
+              opacity: 0;
+              transform: translate3d(-50%, -50%, 0) scale(0.72);
+            }
+            22% {
+              opacity: 1;
+              transform: translate3d(-50%, -50%, 0) scale(1.12);
+            }
+            100% {
+              opacity: 0;
+              transform: translate3d(-50%, -50%, 0) scale(1.38);
             }
           }
 
@@ -909,6 +1107,10 @@ export const PsychologistsLogic = () => {
             display: none;
           }
 
+          .psychologists-double-tap-feedback {
+            animation: psychologists-double-tap-feedback 520ms ease-out both;
+          }
+
           @media (prefers-reduced-motion: reduce) {
             .psychologists-benefit-pill {
               animation: none;
@@ -918,6 +1120,11 @@ export const PsychologistsLogic = () => {
 
             .psychologists-video-feed {
               scroll-behavior: auto;
+            }
+
+            .psychologists-double-tap-feedback {
+              animation: none;
+              opacity: 1;
             }
           }
         `}
@@ -989,6 +1196,11 @@ export const PsychologistsLogic = () => {
                   const slideIsBioExpanded = isActiveSlide && isBioExpanded;
                   const slideIsBioTruncated = isActiveSlide && isBioTruncated;
                   const slideActionColumnTranslateY = isActiveSlide ? actionColumnTranslateY : 0;
+                  const slideIsUiHidden = isActiveSlide && isUiHidden;
+                  const slideUiVisibilityClass = slideIsUiHidden
+                    ? "pointer-events-none opacity-0"
+                    : "opacity-100";
+                  const slideOverlayVisibilityClass = slideIsUiHidden ? "opacity-0" : "opacity-100";
 
                   return (
                     <section
@@ -997,7 +1209,10 @@ export const PsychologistsLogic = () => {
                       key={psychologist.id}
                     >
                       <form
-                        className="absolute z-40"
+                        className={cn(
+                          "absolute z-40 transition-opacity duration-200 ease-out",
+                          slideUiVisibilityClass,
+                        )}
                         data-psychologists-scroll-lock="true"
                         onMouseDown={stopInteractionPropagation}
                         onSubmit={handleSearchSubmit}
@@ -1070,7 +1285,10 @@ export const PsychologistsLogic = () => {
 
                       <button
                         aria-label="Abrir filtros"
-                        className="absolute z-30 grid items-center justify-center rounded-full border border-[rgba(255,255,255,0.35)] bg-white/35 text-white shadow-[0_5px_24px_rgba(15,23,42,0.2)] backdrop-blur-md hover:bg-white/45"
+                        className={cn(
+                          "absolute z-30 grid items-center justify-center rounded-full border border-[rgba(255,255,255,0.35)] bg-white/35 text-white shadow-[0_5px_24px_rgba(15,23,42,0.2)] backdrop-blur-md transition hover:bg-white/45",
+                          slideUiVisibilityClass,
+                        )}
                         onClick={(event) => {
                           event.stopPropagation();
                           handleFiltersOpen();
@@ -1145,28 +1363,40 @@ export const PsychologistsLogic = () => {
                           )}
 
                           <div
-                            className="pointer-events-none absolute inset-0"
+                            className={cn(
+                              "pointer-events-none absolute inset-0 transition-opacity duration-200 ease-out",
+                              slideOverlayVisibilityClass,
+                            )}
                             style={{
                               background:
                                 "linear-gradient(to top, rgba(0,0,0,0.96) 0%, rgba(0,0,0,0.9) 15%, rgba(0,0,0,0.58) 28%, rgba(0,0,0,0.22) 40%, rgba(0,0,0,0) 55%)",
                             }}
                           />
 
-                          {slideShouldShowVideo ? (
-                            <button
-                              aria-label={
-                                isActiveSlide && isVideoPaused
-                                  ? `Retomar vídeo de ${psychologist.name}`
-                                  : `Desativar reprodução do vídeo de ${psychologist.name}`
-                              }
-                              className="absolute inset-0 z-10 h-full w-full cursor-default border-0 bg-transparent p-0"
-                              onClick={isActiveSlide ? handleVideoTap : stopInteractionPropagation}
-                              type="button"
-                            />
-                          ) : null}
+                          <button
+                            aria-label={
+                              slideIsUiHidden
+                                ? `Mostrar interface de ${psychologist.name}`
+                                : `Ocultar interface de ${psychologist.name}`
+                            }
+                            className="absolute inset-0 z-10 h-full w-full cursor-default border-0 bg-transparent p-0"
+                            onClick={
+                              isActiveSlide
+                                ? () => handleVideoAreaTap(psychologist)
+                                : stopInteractionPropagation
+                            }
+                            onPointerCancel={isActiveSlide ? handleLongPressEnd : undefined}
+                            onPointerDown={isActiveSlide ? handleLongPressStart : undefined}
+                            onPointerLeave={isActiveSlide ? handleLongPressEnd : undefined}
+                            onPointerMove={isActiveSlide ? handleLongPressMove : undefined}
+                            onPointerUp={isActiveSlide ? handleLongPressEnd : undefined}
+                            type="button"
+                          />
 
                           {isActiveSlide &&
                           slideShouldShowVideo &&
+                          !slideIsUiHidden &&
+                          !isLongPressing &&
                           (isVideoMuted || isVideoPaused) ? (
                             <button
                               aria-label={
@@ -1175,7 +1405,7 @@ export const PsychologistsLogic = () => {
                                   : `Ativar som do vídeo de ${psychologist.name}`
                               }
                               className="absolute top-1/2 left-1/2 z-20 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/35 bg-black/30 text-white shadow-[0_10px_30px_rgba(0,0,0,0.22)] backdrop-blur-sm transition hover:bg-black/40"
-                              onClick={handleVideoTap}
+                              onClick={handleVideoControlTap}
                               type="button"
                             >
                               {isVideoPaused ? (
@@ -1186,10 +1416,22 @@ export const PsychologistsLogic = () => {
                             </button>
                           ) : null}
 
+                          {isActiveSlide && showDoubleTapFavoriteFeedback ? (
+                            <div
+                              aria-hidden="true"
+                              className="psychologists-double-tap-feedback pointer-events-none absolute top-1/2 left-1/2 z-50 grid h-20 w-20 place-items-center rounded-full bg-black/20 text-[#ef4444] backdrop-blur-[2px]"
+                            >
+                              <Heart className="h-11 w-11 fill-[#ef4444]" strokeWidth={2.2} />
+                            </div>
+                          ) : null}
+
                           {slideBenefitBadges.length > 0 ? (
                             <ul
                               aria-label="Benefícios do psicólogo"
-                              className="pointer-events-none absolute z-30 flex w-[min(190px,56vw)] list-none flex-col items-start gap-2 overflow-visible p-0"
+                              className={cn(
+                                "pointer-events-none absolute z-30 flex w-[min(190px,56vw)] list-none flex-col items-start gap-2 overflow-visible p-0 transition-opacity duration-200 ease-out",
+                                slideOverlayVisibilityClass,
+                              )}
                               style={{
                                 left: `${metrics.horizontalPadding}px`,
                                 top: `calc(env(safe-area-inset-top) + ${
@@ -1225,7 +1467,10 @@ export const PsychologistsLogic = () => {
 
                           <div
                             aria-hidden="true"
-                            className="pointer-events-auto absolute inset-x-0 z-[35]"
+                            className={cn(
+                              "pointer-events-auto absolute inset-x-0 z-[35] transition-opacity duration-200 ease-out",
+                              slideUiVisibilityClass,
+                            )}
                             style={{
                               bottom: `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom))`,
                               height: `${metrics.bioBottomOffset}px`,
@@ -1234,7 +1479,10 @@ export const PsychologistsLogic = () => {
 
                           <section
                             aria-live={isActiveSlide && shareFeedback ? "polite" : "off"}
-                            className="pointer-events-none absolute inset-x-0 z-40 grid items-end text-[#ffffff]"
+                            className={cn(
+                              "pointer-events-none absolute inset-x-0 z-40 grid items-end text-[#ffffff] transition-opacity duration-200 ease-out",
+                              slideUiVisibilityClass,
+                            )}
                             style={{
                               left: `${metrics.horizontalPadding}px`,
                               right: `${metrics.actionRightPadding}px`,

@@ -110,3 +110,15 @@ A alternancia entre psicologos em `/app/psychologists` passa a usar um feed vert
 - videos fora do slide ativo sao pausados e apenas o video ativo responde a play/pause, mute/unmute e falha de carregamento.
 
 Essa decisao substitui a alternancia anterior por eventos de wheel/touch, que trocava o conteudo instantaneamente e nao fazia a tela inteira acompanhar o movimento.
+
+## Atualizacao 2026-06-12: gestos imersivos do video
+
+A tela `/app/psychologists` passou a separar a area livre de midia dos elementos de UI para suportar gestos de video:
+
+- toque simples na area livre alterna `isUiHidden`, escondendo busca, filtros, selos, texto, botoes laterais, navbar global e todos os gradientes/sombreamentos do slide;
+- duplo toque cancela o toque simples e chama a mesma logica de favorito do botao lateral, com feedback visual breve;
+- pressionar e segurar cancela toque simples/duplo toque, pausa temporariamente o video ativo e retoma ao soltar quando o video estava tocando;
+- a navbar global do `PrivateTemplate` recebeu uma prop opcional `navigationHidden`, usada apenas pela tela imersiva para sumir junto da UI sem criar uma navbar local;
+- ao trocar o psicologo ativo no feed, timeouts e estados transitorios de gesto sao limpos, `isUiHidden` volta para `false` e a nova tela abre com UI visivel.
+
+Os elementos interativos existentes permanecem com suas proprias acoes e nao propagam gesto para a area de video.

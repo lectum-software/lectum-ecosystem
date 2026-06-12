@@ -601,3 +601,20 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: dinamica imersiva por gestos no video (2026-06-12)
+
+- Pedido do usuario: implementar a experiencia imersiva por gestos na tela de Psicologos, com toque simples para ocultar/exibir UI, duplo toque para favoritar/desfavoritar e pressionar-e-segurar para pausar temporariamente.
+- A area livre da midia agora diferencia toque simples, duplo toque e long press por timeouts curtos, limpando o toque simples quando ha duplo toque ou pressionar-e-segurar.
+- `isUiHidden` oculta busca, filtro, selos, bloco textual, botoes laterais, feedbacks persistentes, gradientes, sombreamento inferior e navbar global, deixando apenas a midia visivel no slide.
+- O duplo toque chama a mesma funcao de favorito do botao lateral e exibe feedback visual rapido sem pausar video nem alterar a visibilidade da UI.
+- O long press pausa o video ativo enquanto o usuario pressiona e retoma ao soltar, sem favoritar e sem alternar UI.
+- A navbar continua sendo a global do `PrivateTemplate`; foi adicionada uma prop opcional para oculta-la no modo imersivo sem criar navegacao paralela.
+- Ao trocar de psicologo ativo, os timeouts e estados de gesto sao resetados e a UI volta visivel no novo video.
+- Nao houve alteracao de backend, Prisma, migrations, packages, mocks ou dados do psicologo.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
