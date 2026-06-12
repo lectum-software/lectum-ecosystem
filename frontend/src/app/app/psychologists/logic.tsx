@@ -364,7 +364,7 @@ const useViewportMetrics = () => {
       actionRailWidth: actionButtonSize,
       actionStandaloneIconSize: isTiny ? 22 : 24,
       availableBadgeTextSize: isTiny ? 10 : 11,
-      bioBottomOffset: isCompact ? 34 : 36,
+      bioBottomOffset: 8,
       ratingIconSize: isCompact ? 10 : 11,
       ratingLineHeight: 15,
       ratingTextSize: 11,

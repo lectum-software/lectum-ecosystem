@@ -306,3 +306,9 @@ A decisao foi separar visualmente e tecnicamente o fluxo de reset por troca de p
 - o feed fica com scroll vertical bloqueado durante scrubbing, preservando prioridade maxima da barra sobre single tap, double tap, long press e troca de slide.
 
 O offset visual tambem foi ajustado: com UI visivel, a barra fica em `64px + safe-area` para encostar no topo da navbar mobile; com UI oculta, fica em `8px + safe-area` para continuar visivel no rodape. O azul Lectum foi removido da barra e substituido por tons discretos de branco/cinza, mantendo o video como foco principal.
+
+## Atualizacao 2026-06-12: bloco inferior proximo da barra
+
+A barra de progresso nao deve empurrar o conteudo principal do slide para cima. A decisao foi manter a barra integrada a navbar e reduzir apenas o offset inferior do bloco textual/coluna lateral.
+
+O espaco morto reservado acima da navbar/progresso caiu de 34-36px para 8px. Assim, nome, profissao, avaliacao, bio e botoes laterais descem juntos e voltam a ocupar a area visual anterior, deixando apenas um respiro curto entre a bio e a barra. A coluna lateral continua usando o alinhamento dinamico existente com a bio, sem mudar tamanho, ordem, acoes ou responsividade dos botoes.

@@ -926,3 +926,19 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: reposicionamento do bloco inferior apos barra de progresso (2026-06-12)
+
+- Pedido do usuario: apos integrar a barra de progresso a navbar, corrigir o bloco inferior que havia subido demais e deixado uma area vazia excessiva entre bio e barra.
+- A barra de progresso permaneceu na mesma posicao integrada a navbar; apenas o offset do bloco textual/coluna lateral foi reduzido.
+- O espaco reservado entre a base da bio e a area da navbar/progresso passou de 34-36px para 8px, fazendo nome, profissao, avaliacao, bio e botoes laterais descerem juntos.
+- A distancia visual entre bio e barra volta a ficar pequena, na faixa esperada de 8-16px, sem reposicionar a barra nem alterar gestos, busca, filtros ou dados reais.
+- A coluna lateral continua alinhada dinamicamente ao bloco textual pelo calculo existente de baseline da bio, mas agora parte da mesma base inferior mais proxima do rodape.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, favoritos, busca, filtros, navbar ou navegacao de perfil.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual permanece `_product/proto/Psicologos.jpg` e o contrato da TASK-13.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
