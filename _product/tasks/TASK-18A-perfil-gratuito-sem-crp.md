@@ -219,3 +219,17 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
 - A capa vigente continua vindo de `profile.cover_image_url` e agora fica em preview horizontal compacto e evidente; ao selecionar nova capa, um `ObjectURL` local atualiza a pre-visualizacao imediatamente enquanto o upload real executa.
 - A foto de perfil permanece com preview circular, troca, remocao e modal de enquadramento existentes, mas dentro do mesmo bloco compacto de midias.
 - Nao houve alteracao de backend, Prisma, contratos, validacoes de arquivo, formatos aceitos ou endpoints de upload/remocao.
+
+## Ajuste complementar em 2026-06-12 - retorno contextual na edicao profissional
+
+- A seta `Voltar ao perfil` em `/app/professional/profile/setup` deixou de apontar sempre para `/app/profile`.
+- O controle agora usa o historico do navegador para retornar a tela anterior, preservando casos em que o psicologo abriu a edicao a partir do perfil publico `/app/psychologist/:id`.
+- Quando nao houver historico disponivel, o fallback seguro usa o perfil publico do psicologo autenticado; se o id ainda nao estiver carregado, retorna para `/app/profile`.
+- Nao houve alteracao de dados, backend, Prisma, packages ou comportamento de salvamento.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessao, preservando protecao da rota privada.

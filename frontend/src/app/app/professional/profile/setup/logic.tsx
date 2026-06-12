@@ -924,6 +924,14 @@ export const ProfessionalProfileSetupLogic = () => {
   const publicProfileHref = profile.data?.user.id
     ? `/app/psychologist/${profile.data.user.id}`
     : "/app/profile";
+  const handleBackNavigation = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+      return;
+    }
+
+    router.push(publicProfileHref);
+  };
   const addressState = form.hook.watch("address_state");
   const addressCity = form.hook.watch("address_city");
   const baseCityOptions = useMemo(() => CITY_OPTIONS_BY_STATE[addressState] || [], [addressState]);
@@ -1393,13 +1401,14 @@ export const ProfessionalProfileSetupLogic = () => {
     <PrivateTemplate showHeader={false}>
       <section className="mx-auto grid w-full max-w-[394px] gap-4 md:max-w-3xl">
         <div className="flex items-center justify-between gap-3">
-          <Link
+          <button
             className="inline-flex items-center gap-2 text-sm font-semibold text-muted"
-            href="/app/profile"
+            onClick={handleBackNavigation}
+            type="button"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Voltar ao perfil
-          </Link>
+          </button>
           <Link
             aria-label="Ver perfil público"
             className="grid h-9 w-9 place-items-center rounded-full text-primary transition hover:bg-primary-soft"

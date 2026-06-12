@@ -119,3 +119,16 @@ Na mesma revisao, `psychologist_profile.show_experience_tag` foi criado com defa
 - 2026-06-09 capa de video e experiencia: `pnpm --dir frontend build`
 - 2026-06-09 capa de video e experiencia: `pnpm check`
 - 2026-06-09 capa de video e experiencia: HTTP local em `/app/professional/profile/setup` respondeu 307 sem sessao, mantendo a protecao da rota privada; validacao visual autenticada ficou limitada por nao haver token real acessivel ao agente sem criar mock.
+
+## Atualizacao em 2026-06-12 - retorno contextual da edicao de perfil
+
+A seta de retorno da tela `/app/professional/profile/setup` passou a usar `router.back()` quando houver historico no navegador, em vez de navegar sempre para `/app/profile`. A decisao preserva o contexto de entrada: se o psicologo abriu a edicao pelo perfil publico, volta ao perfil publico; se veio de outra tela interna, volta para essa tela.
+
+Como fallback para acesso direto sem historico, o frontend usa o perfil publico do psicologo autenticado (`/app/psychologist/:id`) quando o id estiver carregado, ou `/app/profile` enquanto os dados ainda nao estiverem disponiveis. O ajuste nao altera contratos de API, persistencia nem regras de dominio.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessao, preservando protecao da rota privada.
