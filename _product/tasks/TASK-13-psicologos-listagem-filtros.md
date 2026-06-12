@@ -1042,3 +1042,19 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: barra colada a navbar mobile e seek em tempo real (2026-06-12)
+
+- Pedido do usuario: esclarecer/corrigir por que a barra de progresso ainda nao ficava visualmente junta da navbar mobile e por que o arraste nao movia o video para o ponto desejado em tempo real.
+- A causa registrada foi a combinacao de duas decisoes anteriores: a barra estava em uma camada propria do slide com offset fixo, sem sobrepor o topo da navbar, e o scrub havia sido simplificado para atualizar apenas a barra visual durante `pointerMove`, aplicando `video.currentTime` somente no release.
+- A barra em UI visivel agora sobrepoe 1px o topo da navbar mobile (`64px + safe-area - 1px`), eliminando a linha de separacao visual sem mover a navbar.
+- O scrubbing voltou a controlar o `HTMLVideoElement` durante `pointerDown`/`pointerMove`/`touchMove`: a cada movimento, a posicao horizontal e convertida em percentual e aplicada diretamente em `video.currentTime`.
+- Ao iniciar scrub, o video ativo e pausado temporariamente e o estado anterior de reproducao e salvo; ao soltar/cancelar, a reproducao e retomada apenas se estava tocando antes.
+- A barra continua sem chamar reset de video, sem trocar `src` e sem trocar o psicologo ativo; reset para `0` permanece exclusivo da troca de slide.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, filtros, contratos de API ou layout mobile alem da posicao visual da barra e do comportamento de scrub.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

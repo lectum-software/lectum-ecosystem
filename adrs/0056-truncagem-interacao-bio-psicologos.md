@@ -393,3 +393,26 @@ A decisao foi expor `isDesktopLayout` nas metricas de viewport e usar essa regra
 
 Essa separacao evita duplicacao ou ausencia acidental das acoes em emuladores mobile, preserva os gestos do video e
 mantem o desktop limpo conforme a decisao anterior.
+
+## Atualizacao 2026-06-12: barra junto da navbar e scrub com currentTime continuo
+
+A barra de progresso precisa cumprir duas responsabilidades separadas:
+
+1. ficar visualmente integrada ao topo da navbar mobile quando a UI esta visivel;
+2. alterar o tempo real do video durante o arraste, sem acionar o fluxo de reset por troca de psicologo.
+
+A causa da regressao foi uma decisao anterior de simplificar o scrub para atualizar apenas o progresso visual no
+`pointerMove` e aplicar `video.currentTime` somente no `pointerUp`. Isso impedia que o video acompanhasse o dedo/mouse.
+Tambem havia um pequeno desalinhamento visual porque a barra estava posicionada acima da navbar sem sobreposicao.
+
+A decisao atual corrige ambos os pontos:
+
+- com UI visivel no mobile, a barra usa `64px + safe-area - 1px`, sobrepondo 1px o topo da navbar para eliminar o vao
+  visual;
+- durante scrub, `pointerDown`/`touchStart` pausam temporariamente o video e salvam se ele estava tocando;
+- `pointerMove`/`touchMove` convertem a posicao horizontal em percentual e aplicam `video.currentTime` continuamente;
+- `pointerUp`/`touchEnd` mantem o ultimo tempo escolhido e retoma a reproducao apenas se o video estava tocando antes;
+- `pointercancel`/`touchcancel` limpam o estado de scrub e respeitam a mesma regra de retomada.
+
+O reset para `currentTime=0` continua exclusivo da troca de psicologo ativo. Handlers da barra nao chamam reset,
+nao trocam `src` e nao alteram o indice ativo do feed.
