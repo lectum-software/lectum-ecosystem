@@ -227,3 +227,11 @@ A tela pública do psicólogo mantém a hierarquia premium, mas o estado vazio d
 A decisão reduz ruído visual e evita que a ausência de dados pareça um indicador negativo do profissional. Quando existem avaliações, a UI continua exibindo nota média, estrelas, quantidade e cards normalmente. Não houve alteração de backend, contratos, rotas ou persistência.
 
 Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP 200 na rota pública local do perfil.
+
+## Ajuste complementar em 2026-06-12 - largura util do card principal mobile
+
+O card principal do perfil publico foi refinado para preservar a composicao premium do PDF, sem migrar para uma estrutura tipo LinkedIn. A decisao foi manter avatar sobreposto a capa e nome ao lado da foto, mas reduzir o impacto horizontal do avatar no mobile e remover o botao de favorito do fluxo textual.
+
+O favorito passa a flutuar no topo do card, o avatar mobile fica mais compacto e o nome usa escala responsiva com `clamp`, mantendo hierarquia forte em telas estreitas. O container mobile tambem passa a evitar overflow horizontal, para que a composicao caiba na viewport sem cortes laterais. Nao houve mudanca de dados, rotas, contratos, backend, Prisma ou packages.
+
+Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP 200 na rota publica local do perfil.

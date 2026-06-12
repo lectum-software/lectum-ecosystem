@@ -425,7 +425,7 @@ const ProfileAvatar = ({ profile }: { profile: DirectoryPsychologistProfile }) =
 
   return (
     <div
-      className="relative grid size-[68px] shrink-0 place-items-center overflow-hidden rounded-[18px] border-[4px] border-white bg-surface-muted text-2xl font-extrabold text-primary shadow-[0_10px_22px_rgba(15,23,42,0.14)]"
+      className="relative grid size-[60px] shrink-0 place-items-center overflow-hidden rounded-[16px] border-[3px] border-white bg-surface-muted text-xl font-extrabold text-primary shadow-[0_10px_22px_rgba(15,23,42,0.14)] sm:size-[68px] sm:rounded-[18px] sm:border-[4px] sm:text-2xl"
       data-profile-avatar="true"
     >
       {avatarSrc ? (
@@ -434,7 +434,7 @@ const ProfileAvatar = ({ profile }: { profile: DirectoryPsychologistProfile }) =
           className="object-cover"
           fill
           priority
-          sizes="88px"
+          sizes="(min-width: 640px) 88px, 60px"
           src={avatarSrc}
           unoptimized={avatarIsPublicMedia}
         />
@@ -537,12 +537,45 @@ const ProfileHero = ({
         ) : null}
       </div>
 
-      <article className="relative mx-2 -mt-10 rounded-[22px] border border-[#E2E8F0] bg-white px-4 py-4 shadow-[0_18px_40px_rgba(15,23,42,0.12)] sm:mx-3 sm:px-5">
-        <div className="flex items-start gap-3">
+      <article
+        className="relative mx-1.5 -mt-10 rounded-[22px] border border-[#E2E8F0] bg-white px-3.5 py-4 shadow-[0_18px_40px_rgba(15,23,42,0.12)] sm:mx-3 sm:px-5"
+        data-profile-main-card="true"
+      >
+        <button
+          aria-label={
+            !canFavorite
+              ? "Favoritos disponíveis apenas para usuários autenticados"
+              : profile.favorited
+                ? `Remover ${profile.name} dos favoritos`
+                : `Favoritar ${profile.name}`
+          }
+          aria-pressed={profile.favorited}
+          className={cn(
+            "absolute -top-4 right-4 z-10 grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[#E2E8F0] text-[#94A3B8] shadow-[0_10px_22px_rgba(15,23,42,0.12)] transition disabled:cursor-not-allowed disabled:opacity-60",
+            profile.favorited
+              ? "border-[#fecaca] bg-[#fef2f2] text-[#ef4444]"
+              : "bg-white/95 text-[#64748B] hover:bg-[#f8fafc]",
+          )}
+          disabled={favoritePending || !canFavorite}
+          onClick={onToggleFavorite}
+          title={
+            !canFavorite ? "Favoritos disponíveis apenas para usuários autenticados" : undefined
+          }
+          type="button"
+        >
+          <Heart
+            className={cn(
+              "h-4.5 w-4.5",
+              profile.favorited ? "fill-[#ef4444] text-[#ef4444]" : "fill-none",
+            )}
+          />
+        </button>
+
+        <div className="flex items-start gap-2.5 sm:gap-3" data-profile-hero-summary="true">
           <ProfileAvatar profile={profile} />
 
-          <div className="min-w-0 flex-1">
-            <h1 className="text-[25px] font-extrabold leading-[1.04] tracking-[-0.04em] text-[#0F172A] sm:text-[26px]">
+          <div className="min-w-0 flex-1 pt-0.5">
+            <h1 className="text-[clamp(23px,6.4vw,25px)] font-extrabold leading-[1.06] tracking-[-0.04em] text-[#0F172A] sm:text-[27px]">
               <span className="inline-flex min-w-0 flex-wrap items-start gap-1.5">
                 {prefix ? <span className="break-words">{`${prefix} `}</span> : null}
                 <span className="inline-flex shrink-0 items-center gap-1.5">
@@ -578,36 +611,6 @@ const ProfileHero = ({
               </span>
             ) : null}
           </div>
-
-          <button
-            aria-label={
-              !canFavorite
-                ? "Favoritos disponíveis apenas para usuários autenticados"
-                : profile.favorited
-                  ? `Remover ${profile.name} dos favoritos`
-                  : `Favoritar ${profile.name}`
-            }
-            aria-pressed={profile.favorited}
-            className={cn(
-              "mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full border border-[#E2E8F0] text-[#94A3B8] transition disabled:cursor-not-allowed disabled:opacity-60 sm:h-8 sm:w-8",
-              profile.favorited
-                ? "border-[#fecaca] bg-[#fef2f2] text-[#ef4444]"
-                : "bg-white/95 text-[#64748B] hover:bg-[#f8fafc]",
-            )}
-            disabled={favoritePending || !canFavorite}
-            onClick={onToggleFavorite}
-            title={
-              !canFavorite ? "Favoritos disponíveis apenas para usuários autenticados" : undefined
-            }
-            type="button"
-          >
-            <Heart
-              className={cn(
-                "h-4 w-4",
-                profile.favorited ? "fill-[#ef4444] text-[#ef4444]" : "fill-none",
-              )}
-            />
-          </button>
         </div>
 
         <p className="mt-3.5 whitespace-pre-line text-[13px] leading-[1.6] text-[#334155] sm:text-[13.5px]">
@@ -1666,8 +1669,8 @@ export const PsychologistProfileLogic = () => {
 
   return (
     <PrivateTemplate allowAnonymous showNavigation={false}>
-      <div className="-mt-6 -mx-5">
-        <section className="mx-auto grid w-full max-w-[430px] bg-[#F6F8FB] sm:max-w-[430px] lg:max-w-[760px]">
+      <div className="-mx-5 -mt-6 overflow-x-hidden">
+        <section className="mx-auto grid w-screen max-w-[430px] bg-[#F6F8FB] sm:max-w-[430px] lg:max-w-[760px]">
           <div className="grid gap-0 pb-28">
             {shareFeedback ? (
               <div className="mx-3 pt-3">

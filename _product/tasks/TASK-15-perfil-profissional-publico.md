@@ -371,3 +371,21 @@ Validações executadas:
 - `pnpm check`
 - HTTP 200 em `http://localhost:3000/app/psychologist/cmq5m0vse000ftkuhybmagcn6`
 - Verificação estática confirmou que os blocos vazios de Avaliações renderizam apenas a mensagem textual, enquanto `formatRatingNumber` e `StarRating` permanecem restritos aos ramos com avaliações.
+
+## Registro de ajuste complementar em 2026-06-12 - composicao mobile do card principal
+
+- Reavaliada a composicao do card principal de `/app/psychologist/[id]` no mobile para preservar o conceito visual do PDF, com avatar sobreposto a capa e texto principal ao lado da foto.
+- O avatar foi levemente reduzido apenas no mobile e manteve o tamanho anterior em `sm+`, reduzindo seu impacto sobre a largura textual sem abandonar a identidade visual do layout original.
+- O botao de favorito saiu do fluxo horizontal do cabecalho e passou a flutuar no canto superior do card, liberando largura util para nomes longos sem deslocar o nome para baixo nem criar vazio ao lado da foto.
+- O card principal ganhou margens/padding mobile mais eficientes e o nome passou a usar escala responsiva por `clamp`, mantendo hierarquia forte e reduzindo quebras excessivas em 360px, 375px e 390px.
+- O wrapper da rota passou a controlar overflow horizontal e usar `w-screen` no container mobile para evitar cortes laterais do card e preservar a composicao dentro da viewport.
+- Nao houve alteracao de dados, rotas, APIs, favoritos, WhatsApp, sticky tabs, backend, Prisma ou packages.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a referencia auditavel permanece o PDF/anexo conceitual informado pelo usuario e os prototipos locais `_product/proto/Perfil Profissional - Sobre.jpg`, `_product/proto/Perfil Profissional - Publicacoes.jpg` e `_product/proto/Perfil Profissional - Avaliacoes.jpg`.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP 200 em `http://localhost:3000/app/psychologist/cmq5m0vse000ftkuhybmagcn6`
+- Chrome headless gerou screenshots em 360px, 375px e 390px contra a rota local disponivel; o servidor local em 3000 ainda servia a instancia ja aberta do app, enquanto a build validou a alteracao final de codigo.
