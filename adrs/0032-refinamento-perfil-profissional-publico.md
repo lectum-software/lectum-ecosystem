@@ -118,3 +118,23 @@ Validação complementar:
 - `pnpm check`
 - HTTP 200 em `http://localhost:3000/app/psychologist/cmq5m0vse000ftkuhybmagcn6`
 - Chrome headless em 390px confirmando hero maior, card sobreposto, abas e CTA fixo renderizados.
+
+Ajuste complementar de navegação sticky em 2026-06-12:
+
+- O menu de seções do perfil público deixou de usar abas tradicionais em barra plana e passou a ser um container `sticky` mobile-first com duas linhas: identificação compacta do psicólogo e chips de navegação.
+- A primeira linha exibe nome em uma única linha com `truncate`, preservando o selo verificado como elemento `shrink-0` para não quebrar nem desaparecer em nomes longos.
+- A segunda linha mantém a mesma lógica de abas existente, sem recarregar a rota e sem alterar dados, mas troca o rótulo visual `Geral` por `Sobre` e usa chips translúcidos com fundo glass, borda sutil e destaque azul Lectum na seção ativa.
+- O sticky fica abaixo do card principal no estado inicial e usa `top: env(safe-area-inset-top, 0px)` ao fixar, com `z-index` abaixo do CTA fixo de WhatsApp para não cobrir o botão inferior.
+- Não houve alteração de backend, contrato, banco, packages, conteúdo das seções ou lógica de WhatsApp.
+
+Validação complementar:
+
+- `pnpm --dir frontend biome:fix`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome headless/CDP em 390px na rota `/app/psychologist/cmq5m0vse000ftkuhybmagcn6`:
+  - menu existente abaixo do card principal (`top=468` antes do scroll);
+  - após rolagem, menu fixado no topo (`top=0`, `position=sticky`, `z-index=20`);
+  - chips `Sobre`, `Publicações` e `Avaliações` renderizados, com `Sobre` ativo;
+  - selo verificado visível na linha do nome.

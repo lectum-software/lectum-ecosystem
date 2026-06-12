@@ -67,7 +67,7 @@ type ApiError = Error & {
 };
 
 const tabs: Array<{ label: string; value: ProfileTab }> = [
-  { label: "Geral", value: "geral" },
+  { label: "Sobre", value: "geral" },
   { label: "Publicações", value: "publicacoes" },
   { label: "Avaliações", value: "avaliacoes" },
 ];
@@ -639,36 +639,87 @@ const ProfileHero = ({
 const ProfileTabs = ({
   activeTab,
   onTabChange,
+  profile,
 }: {
   activeTab: ProfileTab;
   onTabChange: (tab: ProfileTab) => void;
+  profile: DirectoryPsychologistProfile;
 }) => {
-  return (
-    <nav
-      aria-label="Seções do perfil profissional"
-      className="grid w-full grid-cols-3 border-b border-[#E5E7EB] bg-white text-[11px]"
-    >
-      {tabs.map((tab) => {
-        const active = tab.value === activeTab;
+  const stickyName = getHonorificName(profile) || profile.name || "Profissional";
+  const stickyContainerRef = useRef<HTMLDivElement>(null);
+  const [isStuck, setIsStuck] = useState(false);
 
-        return (
-          <button
-            aria-current={active ? "page" : undefined}
-            className={cn(
-              "flex h-11 items-center justify-center gap-1 border-b-2 px-1.5 font-medium transition",
-              active
-                ? "border-[#2F8DEB] text-[#2F8DEB]"
-                : "border-transparent text-[#64748B] hover:text-[#0F172A]",
-            )}
-            key={tab.value}
-            onClick={() => onTabChange(tab.value)}
-            type="button"
-          >
-            {tab.label}
-          </button>
-        );
-      })}
-    </nav>
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const updateStickyState = () => {
+      const top =
+        stickyContainerRef.current?.getBoundingClientRect().top ?? Number.POSITIVE_INFINITY;
+      const nextIsStuck = top <= 1;
+
+      setIsStuck((current) => (current === nextIsStuck ? current : nextIsStuck));
+    };
+
+    updateStickyState();
+    window.addEventListener("scroll", updateStickyState, { passive: true });
+    window.addEventListener("resize", updateStickyState);
+
+    return () => {
+      window.removeEventListener("scroll", updateStickyState);
+      window.removeEventListener("resize", updateStickyState);
+    };
+  }, []);
+
+  return (
+    <div
+      className={cn(
+        "sticky z-20 border-b border-[rgba(15,23,42,0.06)] bg-[rgba(255,255,255,0.78)] px-3 pb-2.5 pt-2.5 backdrop-blur-[12px] transition-shadow sm:px-4",
+        isStuck ? "shadow-[0_8px_22px_rgba(15,23,42,0.05)]" : "shadow-none",
+      )}
+      data-profile-sticky-navigation="true"
+      ref={stickyContainerRef}
+      style={{ top: "env(safe-area-inset-top, 0px)" }}
+    >
+      <div className="mx-auto grid w-full max-w-[430px] gap-2 lg:max-w-[760px]">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <span className="min-w-0 truncate text-[13px] font-bold leading-[1.25] tracking-[-0.01em] text-[#0F172A]">
+            {stickyName}
+          </span>
+          {profile.verified ? (
+            <VerifiedBadgeIcon
+              aria-label="Perfil verificado"
+              className="h-[14px] w-[14px] shrink-0"
+            />
+          ) : null}
+        </div>
+
+        <nav
+          aria-label="Seções do perfil profissional"
+          className="flex items-center gap-1.5 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {tabs.map((tab) => {
+            const active = tab.value === activeTab;
+
+            return (
+              <button
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "inline-flex h-8 shrink-0 items-center justify-center rounded-full border px-3 text-[11px] font-semibold leading-none shadow-[0_4px_12px_rgba(15,23,42,0.04)] backdrop-blur-md transition",
+                  active
+                    ? "border-[#BFDBFE] bg-[rgba(239,246,255,0.88)] text-[#2F8DEB]"
+                    : "border-white/70 bg-[rgba(255,255,255,0.62)] text-[#475569] hover:border-[#DBEAFE] hover:bg-[rgba(255,255,255,0.86)] hover:text-[#0F172A]",
+                )}
+                key={tab.value}
+                onClick={() => onTabChange(tab.value)}
+                type="button"
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+    </div>
   );
 };
 
@@ -1436,7 +1487,7 @@ export const PsychologistProfileLogic = () => {
                 />
 
                 <div className="grid gap-0">
-                  <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
+                  <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} profile={profile} />
                   {activeTab === "geral" ? <AboutTab profile={profile} /> : null}
                   {activeTab === "publicacoes" ? (
                     <PostsTab

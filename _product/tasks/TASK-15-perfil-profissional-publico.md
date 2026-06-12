@@ -268,3 +268,21 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `video_url` e `video_cover_url` continuam existindo somente para vídeo de apresentação/feed/publicações e não são usados como fallback da capa.
 - ADR criado: `adrs/0060-capa-independente-perfil-psicologo.md`.
 - Validações: `pnpm --dir backend db:migrate --name add_psychologist_profile_cover_image` executado e recusado pelo Prisma por drift antigo sem reset; migration aplicada de forma não destrutiva com `pnpm --dir backend db:migrate-prod`; `pnpm --dir backend exec prisma migrate status`; `pnpm --dir backend db:generate`; `pnpm --dir backend check`; `pnpm --dir backend build`; `pnpm --dir frontend check`; `pnpm --dir frontend build`; `pnpm check`; HTTP 200 no perfil público; Chrome headless mobile 390px.
+
+
+## Registro de ajuste complementar em 2026-06-12 - navegacao sticky em chips
+
+- Ajuste visual solicitado para `/app/psychologist/[id]`, usando a imagem anexada `WhatsApp Image 2026-06-12 at 12.05.46.jpeg` como referencia conceitual de abas flutuantes modernas, sem copiar o produto externo e sem alterar a arquitetura da rota.
+- O menu `Geral/Publicacoes/Avaliacoes` foi substituido por um menu sticky mobile-first com duas linhas: nome do psicologo + selo verificado e chips `Sobre`, `Publicacoes`, `Avaliacoes`.
+- A logica de abas existente foi preservada via `router.replace` e query params, sem reload, sem alterar dados, backend, CTA WhatsApp, card principal, imagem de capa, avatar ou conteudo das secoes.
+- O nome no sticky usa uma unica linha com ellipsis (`truncate`) e mantem o selo verificado visivel e na mesma linha como item `shrink-0`.
+- O container sticky usa fundo translucido com blur, borda inferior sutil, sombra discreta, `top: env(safe-area-inset-top, 0px)` e `z-index` menor que o CTA fixo de WhatsApp.
+- Nao houve alteracao de banco, Prisma, contratos, packages ou dados persistidos.
+- ADR atualizado: `adrs/0032-refinamento-perfil-profissional-publico.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `/app/psychologist/cmq5m0vse000ftkuhybmagcn6`
+  - Chrome headless/CDP em 390px confirmando menu abaixo do card antes do scroll, sticky no topo apos rolagem, chips renderizados e selo verificado visivel.
