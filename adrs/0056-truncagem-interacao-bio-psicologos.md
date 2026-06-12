@@ -330,3 +330,11 @@ Essa decisao remove o seek continuo durante o arraste para evitar efeitos colate
 - barra de progresso apenas calcula o percentual horizontal final e altera `video.currentTime`.
 
 No modo imersivo, a tela passa a expor controles inferiores proprios, inspirados em apps de video curto: um botao `X` para restaurar a UI e um pill escuro com Play/Pause, Volume/Mute e indicador `1x`. Esses controles interceptam seus eventos e nao propagam gestos para a area de video, preservando a regra de que apenas o `X` sai do modo imersivo enquanto Play/Pause e Volume/Mute controlam somente o player.
+
+## Atualizacao 2026-06-12: progresso visual por transform e RAF
+
+A barra de progresso passa a separar ainda mais progresso visual e estado React.
+
+A decisao foi usar `requestAnimationFrame` para ler o `currentTime` do video ativo enquanto ele esta reproduzindo e aplicar o progresso diretamente no elemento interno da barra via `transform: scaleX(progress)`. O estado React de `currentTime`/`duration` permanece para acessibilidade, teclado e sincronizacoes forçadas, mas nao roda a cada frame.
+
+Durante o drag, a barra tambem responde pelo mesmo caminho direto via ref, sem transicao, e o seek continua sendo aplicado apenas no release. Quando o video pausa ou o usuario esta em scrub, o RAF e cancelado pelo efeito; quando o video volta a tocar, o loop e reiniciado. Isso reduz saltos visuais e evita re-render excessivo no feed vertical.

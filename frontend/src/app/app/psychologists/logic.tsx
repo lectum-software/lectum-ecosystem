@@ -417,7 +417,6 @@ export const PsychologistsLogic = () => {
     currentTime: 0,
     duration: 0,
   });
-  const [videoSeekPreviewRatio, setVideoSeekPreviewRatio] = useState<number | null>(null);
   const [searchDraft, setSearchDraft] = useState(() => filterValues.search || "");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [activePsychologistIndex, setActivePsychologistIndex] = useState(0);
@@ -428,8 +427,13 @@ export const PsychologistsLogic = () => {
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const bioTextRef = useRef<HTMLParagraphElement | null>(null);
   const progressTrackRef = useRef<HTMLDivElement | null>(null);
+  const progressFillRef = useRef<HTMLDivElement | null>(null);
   const actionColumnRef = useRef<HTMLDivElement | null>(null);
   const profileTextRef = useRef<HTMLElement | null>(null);
+  const videoProgressStateRef = useRef<VideoProgressState>({
+    currentTime: 0,
+    duration: 0,
+  });
   const lastSearchParamsStringRef = useRef(searchParamsString);
   const lastActiveVideoResetKeyRef = useRef<string | null>(null);
   const tapTimeoutRef = useRef<number | null>(null);
@@ -437,6 +441,7 @@ export const PsychologistsLogic = () => {
   const favoriteFeedbackTimeoutRef = useRef<number | null>(null);
   const progressAnimationFrameRef = useRef<number | null>(null);
   const isVideoProgressSeekingRef = useRef(false);
+  const lastVideoProgressStateSyncRef = useRef(0);
   const videoSeekPreviewRatioRef = useRef<number | null>(null);
   const swipeHintHideTimeoutRef = useRef<number | null>(null);
   const swipeHintIdleTimeoutRef = useRef<number | null>(null);
@@ -635,7 +640,6 @@ export const PsychologistsLogic = () => {
     setIsSearchFocused(false);
     setShowDoubleTapFavoriteFeedback(false);
     setIsVideoProgressSeeking(false);
-    setVideoSeekPreviewRatio(null);
     isVideoProgressSeekingRef.current = false;
     videoSeekPreviewRatioRef.current = null;
   }, []);
@@ -787,37 +791,64 @@ export const PsychologistsLogic = () => {
     syncActionColumnAlignment();
   }, [syncActionColumnAlignment]);
 
-  const syncActiveVideoProgress = useCallback((video?: HTMLVideoElement | null) => {
-    const currentVideo = video ?? backgroundVideoRef.current;
+  const applyVideoProgressRatio = useCallback((ratio: number) => {
+    const progressFill = progressFillRef.current;
+    if (!progressFill) return;
 
-    if (!currentVideo) {
-      setVideoProgress((current) =>
-        current.currentTime === 0 && current.duration === 0
-          ? current
-          : {
-              currentTime: 0,
-              duration: 0,
-            },
-      );
-      return;
-    }
-
-    const duration = getReadableVideoDuration(currentVideo);
-    const currentTime = duration ? clampNumber(currentVideo.currentTime || 0, 0, duration) : 0;
-
-    setVideoProgress((current) => {
-      const shouldUpdate =
-        Math.abs(current.currentTime - currentTime) > 0.04 ||
-        Math.abs(current.duration - duration) > 0.04;
-
-      return shouldUpdate
-        ? {
-            currentTime,
-            duration,
-          }
-        : current;
-    });
+    progressFill.style.transform = `scaleX(${clampNumber(ratio, 0, 1)})`;
   }, []);
+
+  const syncActiveVideoProgress = useCallback(
+    (video?: HTMLVideoElement | null, options?: { forceState?: boolean }) => {
+      const currentVideo = video ?? backgroundVideoRef.current;
+
+      if (!currentVideo) {
+        applyVideoProgressRatio(0);
+        const current = videoProgressStateRef.current;
+
+        if (current.currentTime !== 0 || current.duration !== 0) {
+          const nextProgress = {
+            currentTime: 0,
+            duration: 0,
+          };
+
+          videoProgressStateRef.current = nextProgress;
+          setVideoProgress(nextProgress);
+        }
+
+        return;
+      }
+
+      const duration = getReadableVideoDuration(currentVideo);
+      const currentTime = duration ? clampNumber(currentVideo.currentTime || 0, 0, duration) : 0;
+
+      if (!isVideoProgressSeekingRef.current) {
+        applyVideoProgressRatio(duration ? currentTime / duration : 0);
+      }
+
+      const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+      const current = videoProgressStateRef.current;
+
+      const shouldUpdate =
+        options?.forceState === true ||
+        Math.abs(current.duration - duration) > 0.04 ||
+        (currentTime === 0 && current.currentTime !== 0) ||
+        now - lastVideoProgressStateSyncRef.current > 250;
+
+      if (!shouldUpdate) return;
+
+      lastVideoProgressStateSyncRef.current = now;
+
+      const nextProgress = {
+        currentTime,
+        duration,
+      };
+
+      videoProgressStateRef.current = nextProgress;
+      setVideoProgress(nextProgress);
+    },
+    [applyVideoProgressRatio],
+  );
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -882,12 +913,15 @@ export const PsychologistsLogic = () => {
     }
 
     if (hasActiveVideoChanged) {
-      setIsVideoPaused(false);
-      setVideoProgress({
+      const nextProgress = {
         currentTime: 0,
         duration: activeVideo ? getReadableVideoDuration(activeVideo) : 0,
-      });
-      setVideoSeekPreviewRatio(null);
+      };
+
+      setIsVideoPaused(false);
+      videoProgressStateRef.current = nextProgress;
+      setVideoProgress(nextProgress);
+      applyVideoProgressRatio(0);
       setIsVideoProgressSeeking(false);
       isVideoProgressSeekingRef.current = false;
       videoSeekPreviewRatioRef.current = null;
@@ -903,10 +937,24 @@ export const PsychologistsLogic = () => {
     void activeVideo.play().catch(() => {
       setIsVideoPaused(true);
     });
-  }, [activeVideoResetKey, activeVideoSource, featuredPsychologistId, isVideoMuted, isVideoPaused]);
+  }, [
+    activeVideoResetKey,
+    activeVideoSource,
+    applyVideoProgressRatio,
+    featuredPsychologistId,
+    isVideoMuted,
+    isVideoPaused,
+  ]);
 
   useEffect(() => {
     if (typeof window === "undefined" || !activeVideoSource || !featuredPsychologistId) return;
+
+    if (isVideoPaused || isVideoProgressSeeking) {
+      syncActiveVideoProgress(undefined, {
+        forceState: true,
+      });
+      return;
+    }
 
     const tick = () => {
       syncActiveVideoProgress();
@@ -921,7 +969,13 @@ export const PsychologistsLogic = () => {
         progressAnimationFrameRef.current = null;
       }
     };
-  }, [activeVideoSource, featuredPsychologistId, syncActiveVideoProgress]);
+  }, [
+    activeVideoSource,
+    featuredPsychologistId,
+    isVideoPaused,
+    isVideoProgressSeeking,
+    syncActiveVideoProgress,
+  ]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -938,14 +992,17 @@ export const PsychologistsLogic = () => {
     if (!featuredPsychologistId) return;
 
     const frame = window.requestAnimationFrame(() => {
+      const nextProgress = {
+        currentTime: 0,
+        duration: 0,
+      };
+
       resetVideoInteractionState();
       setIsVideoPlaybackFailed(false);
       setIsVideoPaused(false);
-      setVideoProgress({
-        currentTime: 0,
-        duration: 0,
-      });
-      setVideoSeekPreviewRatio(null);
+      videoProgressStateRef.current = nextProgress;
+      setVideoProgress(nextProgress);
+      applyVideoProgressRatio(0);
       setIsVideoProgressSeeking(false);
       isVideoProgressSeekingRef.current = false;
       videoSeekPreviewRatioRef.current = null;
@@ -956,7 +1013,7 @@ export const PsychologistsLogic = () => {
     return () => {
       window.cancelAnimationFrame(frame);
     };
-  }, [featuredPsychologistId, resetVideoInteractionState]);
+  }, [applyVideoProgressRatio, featuredPsychologistId, resetVideoInteractionState]);
 
   const stopInteractionPropagation = useCallback((event: { stopPropagation: () => void }) => {
     event.stopPropagation();
@@ -1571,12 +1628,16 @@ export const PsychologistsLogic = () => {
 
       const currentTime = clampNumber(nextTime, 0, duration);
       currentVideo.currentTime = currentTime;
-      setVideoProgress({
+      applyVideoProgressRatio(duration ? currentTime / duration : 0);
+      const nextProgress = {
         currentTime,
         duration,
-      });
+      };
+
+      videoProgressStateRef.current = nextProgress;
+      setVideoProgress(nextProgress);
     },
-    [videoProgress.duration],
+    [applyVideoProgressRatio, videoProgress.duration],
   );
 
   const getVideoProgressRatioFromClientX = useCallback(
@@ -1597,9 +1658,9 @@ export const PsychologistsLogic = () => {
       if (ratio === null) return;
 
       videoSeekPreviewRatioRef.current = ratio;
-      setVideoSeekPreviewRatio(ratio);
+      applyVideoProgressRatio(ratio);
     },
-    [getVideoProgressRatioFromClientX],
+    [applyVideoProgressRatio, getVideoProgressRatioFromClientX],
   );
 
   const seekActiveVideoToRatio = useCallback(
@@ -1612,12 +1673,16 @@ export const PsychologistsLogic = () => {
 
       const currentTime = clampNumber(ratio, 0, 1) * duration;
       currentVideo.currentTime = currentTime;
-      setVideoProgress({
+      applyVideoProgressRatio(duration ? currentTime / duration : 0);
+      const nextProgress = {
         currentTime,
         duration,
-      });
+      };
+
+      videoProgressStateRef.current = nextProgress;
+      setVideoProgress(nextProgress);
     },
-    [videoProgress.duration],
+    [applyVideoProgressRatio, videoProgress.duration],
   );
 
   const finishVideoProgressScrub = useCallback(
@@ -1629,7 +1694,6 @@ export const PsychologistsLogic = () => {
       const finalRatio = pointerRatio ?? videoSeekPreviewRatioRef.current;
 
       videoSeekPreviewRatioRef.current = null;
-      setVideoSeekPreviewRatio(null);
       isVideoProgressSeekingRef.current = false;
       setIsVideoProgressSeeking(false);
 
@@ -1647,7 +1711,6 @@ export const PsychologistsLogic = () => {
     videoSeekPreviewRatioRef.current = null;
     isVideoProgressSeekingRef.current = false;
     setIsVideoProgressSeeking(false);
-    setVideoSeekPreviewRatio(null);
     syncActiveVideoProgress();
   }, [syncActiveVideoProgress]);
 
@@ -2238,14 +2301,8 @@ export const PsychologistsLogic = () => {
                   const slideOverlayVisibilityClass = slideIsUiHidden ? "opacity-0" : "opacity-100";
                   const slideProgressRatio =
                     isActiveSlide && videoProgress.duration
-                      ? clampNumber(
-                          videoSeekPreviewRatio ??
-                            videoProgress.currentTime / videoProgress.duration,
-                          0,
-                          1,
-                        )
+                      ? clampNumber(videoProgress.currentTime / videoProgress.duration, 0, 1)
                       : 0;
-                  const slideProgressPercent = `${slideProgressRatio * 100}%`;
                   const slideProgressBottom = slideIsUiHidden
                     ? `calc(env(safe-area-inset-bottom) + ${VIDEO_IMMERSIVE_PROGRESS_CONTROLS_OFFSET}px)`
                     : `calc(${VIDEO_PROGRESS_VISIBLE_NAV_BAR_HEIGHT}px + env(safe-area-inset-bottom))`;
@@ -2464,14 +2521,27 @@ export const PsychologistsLogic = () => {
                               >
                                 <div
                                   className={cn(
-                                    "h-full",
+                                    "h-full origin-left",
                                     isActiveSlide && isVideoProgressSeeking
                                       ? null
-                                      : "transition-[width] duration-100 ease-linear",
+                                      : "transition-transform duration-75 ease-linear",
                                   )}
+                                  ref={(node) => {
+                                    if (isActiveSlide) {
+                                      progressFillRef.current = node;
+
+                                      if (node) {
+                                        node.style.transform = `scaleX(${slideProgressRatio})`;
+                                      }
+                                    } else if (progressFillRef.current === node) {
+                                      progressFillRef.current = null;
+                                    }
+                                  }}
                                   style={{
                                     backgroundColor: VIDEO_PROGRESS_FILL_COLOR,
-                                    width: slideProgressPercent,
+                                    transform: `scaleX(${slideProgressRatio})`,
+                                    willChange: "transform",
+                                    width: "100%",
                                   }}
                                 />
                               </div>

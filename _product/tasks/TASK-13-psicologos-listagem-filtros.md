@@ -975,3 +975,21 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: fluidez da barra de progresso (2026-06-12)
+
+- Pedido do usuario: refinar a fluidez visual da barra de progresso para ficar natural e continua, sem saltos.
+- A barra deixou de depender de `width` atualizado por render React e passou a usar `transform: scaleX(progress)` no fill interno.
+- A sincronizacao visual durante reproducao usa `requestAnimationFrame` e atualiza diretamente o elemento via ref, evitando `setState` React a cada frame.
+- O estado React de `currentTime`/`duration` continua existindo para acessibilidade e teclas, mas foi reduzido para sincronizacoes espaçadas/forcadas, evitando re-render excessivo.
+- Durante o scrub, o movimento atualiza a barra imediatamente via ref; ao soltar, o seek continua sendo aplicado uma unica vez em `video.currentTime`.
+- O RAF e cancelado no cleanup do efeito, para quando o video esta pausado ou durante scrub e retoma quando o video volta a tocar.
+- A transicao curta fica restrita ao estado normal; durante drag a transicao e removida para resposta instantanea.
+- Nao houve alteracao de backend, Prisma, migrations, packages, layout principal, busca, filtros, textos, navbar, botoes laterais, modo imersivo ou regras de seek ja definidas.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual permanece `_product/proto/Psicologos.jpg` e a imagem anexada pelo usuario.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
