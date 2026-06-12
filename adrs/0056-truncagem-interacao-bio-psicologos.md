@@ -416,3 +416,15 @@ A decisao atual corrige ambos os pontos:
 
 O reset para `currentTime=0` continua exclusivo da troca de psicologo ativo. Handlers da barra nao chamam reset,
 nao trocam `src` e nao alteram o indice ativo do feed.
+
+## Atualizacao 2026-06-12: pesquisa e filtro desktop fora do video
+
+A variante desktop de `/app/psychologists` passa a diferenciar controles globais do feed de acoes especificas do psicologo.
+
+A decisao foi manter Busca e Filtro sobrepostos ao video apenas no mobile (`<1024px`) e renderiza-los no desktop (`>=1024px`) como um grupo lateral superior independente. Esse grupo usa botoes circulares de icone para Pesquisa e Filtro, posicionado na mesma regiao visual em que a busca ficava no topo do video, mas fora da moldura do player.
+
+A Pesquisa desktop nao fica permanentemente aberta: o icone de lupa expande um input temporario, foca o campo e reutiliza a mesma logica real de busca, sugestoes e URL params. O clique fora, blur ou ESC fecha a busca sem recriar endpoints ou estado paralelo. O Filtro desktop chama o mesmo fluxo de filtros ja existente.
+
+Favoritar, Compartilhar, WhatsApp e Perfil permanecem em outro grupo lateral, mais abaixo, porque sao acoes do psicologo atual. Essa separacao evita uma coluna unica ambigua e preserva o video mais limpo no desktop. No mobile, busca/filtro e acoes laterais continuam no video, sem mudanca de layout ou gesto.
+
+Como a busca sai da area superior do video no desktop, os selos de beneficios sobem apenas nesse breakpoint; no mobile, continuam abaixo da busca para preservar a composicao atual.

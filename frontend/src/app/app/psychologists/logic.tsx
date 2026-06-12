@@ -1391,6 +1391,18 @@ export const PsychologistsLogic = () => {
     };
   }, [exitSearchMode, isSearchFocused]);
 
+  useEffect(() => {
+    if (!metrics.isDesktopLayout || !isSearchFocused) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      searchInputRef.current?.focus();
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
+  }, [isSearchFocused, metrics.isDesktopLayout]);
+
   const toggleFavorite = useCallback(
     (psychologist: DirectoryPsychologist) => {
       if (isSearchFocused) return;
@@ -1988,8 +2000,14 @@ export const PsychologistsLogic = () => {
     !errorMessage;
   const shouldRenderGlobalControls =
     !showInitialLoading && !errorMessage && psychologists.length > 0;
+  const shouldRenderMobileGlobalControls = shouldRenderGlobalControls && !metrics.isDesktopLayout;
+  const shouldRenderDesktopFeedControls = shouldRenderGlobalControls && metrics.isDesktopLayout;
   const areGlobalControlsHidden = isUiHidden || isFiltersOpen;
   const globalControlsVisibilityClass = areGlobalControlsHidden
+    ? "psychologists-ui-inert pointer-events-none opacity-0"
+    : "opacity-100";
+  const areDesktopFeedControlsHidden = isUiHidden || isFiltersOpen;
+  const desktopFeedControlsVisibilityClass = areDesktopFeedControlsHidden
     ? "psychologists-ui-inert pointer-events-none opacity-0"
     : "opacity-100";
   const desktopActionPsychologist = featuredPsychologist;
@@ -2009,6 +2027,9 @@ export const PsychologistsLogic = () => {
   const desktopActionRailVisibilityClass = isDesktopActionRailHidden
     ? "psychologists-ui-inert pointer-events-none opacity-0"
     : "opacity-100";
+  const shouldRenderDesktopControlRail =
+    shouldRenderDesktopFeedControls ||
+    (shouldRenderDesktopActionRail && Boolean(desktopActionPsychologist));
 
   return (
     <PrivateTemplate
@@ -2167,6 +2188,29 @@ export const PsychologistsLogic = () => {
         `}
       </style>
       <div className="relative isolate min-h-[100dvh] overflow-hidden bg-background text-white lg:bg-[#f8fafc]">
+        {metrics.isDesktopLayout && isSearchFocused ? (
+          <button
+            aria-label="Fechar busca"
+            className="fixed inset-0 z-[30] hidden cursor-default bg-transparent lg:block"
+            data-psychologists-scroll-lock="true"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              exitSearchMode();
+            }}
+            onPointerDown={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              exitSearchMode();
+            }}
+            onWheel={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+            }}
+            type="button"
+          />
+        ) : null}
+
         <div className="relative mx-auto flex h-[100dvh] w-full max-w-[430px] justify-center overflow-visible bg-black lg:max-w-none lg:items-center lg:gap-6 lg:bg-transparent lg:px-8">
           <div className="relative z-20 h-full w-full overflow-hidden bg-black lg:w-[430px] lg:shrink-0 lg:rounded-[22px] lg:shadow-[0_24px_80px_rgba(15,23,42,0.18)]">
             {showInitialLoading ? (
@@ -2204,7 +2248,7 @@ export const PsychologistsLogic = () => {
               </div>
             ) : null}
 
-            {shouldRenderGlobalControls ? (
+            {shouldRenderMobileGlobalControls ? (
               <>
                 {isSearchFocused ? (
                   <button
@@ -2391,6 +2435,9 @@ export const PsychologistsLogic = () => {
                   const slideBio = psychologist.headline?.trim() || "";
                   const slideNameParts = splitNameForBadge(psychologist.name);
                   const slideBenefitBadges = buildFloatingBenefitBadges(psychologist);
+                  const slideBenefitBadgesTop = metrics.isDesktopLayout
+                    ? metrics.searchTop + 8
+                    : metrics.searchTop + metrics.searchHeight + 24;
                   const slideIsFavorited =
                     favoriteOverrides[psychologist.id] ?? Boolean(psychologist.favorited);
                   const slideIsFavoritePending = favoritePendingId === psychologist.id;
@@ -2751,9 +2798,7 @@ export const PsychologistsLogic = () => {
                               )}
                               style={{
                                 left: `${metrics.horizontalPadding}px`,
-                                top: `calc(env(safe-area-inset-top) + ${
-                                  metrics.searchTop + metrics.searchHeight + 24
-                                }px)`,
+                                top: `calc(env(safe-area-inset-top) + ${slideBenefitBadgesTop}px)`,
                               }}
                             >
                               {slideBenefitBadges.map((badge) => {
@@ -3189,120 +3234,251 @@ export const PsychologistsLogic = () => {
             ) : null}
           </div>
 
-          {shouldRenderDesktopActionRail && desktopActionPsychologist ? (
+          {shouldRenderDesktopControlRail ? (
             <aside
-              aria-hidden={isDesktopActionRailHidden ? true : undefined}
-              aria-label={`Ações de ${desktopActionPsychologist.name}`}
-              className={cn(
-                "hidden w-20 shrink-0 flex-col items-center justify-center gap-4 self-stretch pt-28 transition-opacity duration-200 ease-out lg:flex",
-                desktopActionRailVisibilityClass,
-              )}
+              aria-label="Ações da tela de Psicólogos"
+              className="relative z-[60] hidden h-full w-[240px] shrink-0 self-stretch lg:block"
             >
-              <div className="grid justify-items-center gap-1.5 text-center">
-                <button
-                  aria-label={`Favoritar ${desktopActionPsychologist.name}`}
-                  aria-busy={desktopActionIsFavoritePending}
-                  aria-pressed={desktopActionIsFavorited}
-                  className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#334155] shadow-[0_10px_28px_rgba(15,23,42,0.14)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
-                  disabled={isDesktopActionRailHidden}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    toggleFavorite(desktopActionPsychologist);
-                  }}
-                  tabIndex={isDesktopActionRailHidden ? -1 : undefined}
-                  type="button"
+              {shouldRenderDesktopFeedControls ? (
+                <div
+                  aria-hidden={areDesktopFeedControlsHidden ? true : undefined}
+                  className={cn(
+                    "absolute top-[calc(env(safe-area-inset-top)+40px)] left-0 flex flex-col items-start gap-3 transition-opacity duration-200 ease-out",
+                    desktopFeedControlsVisibilityClass,
+                  )}
+                  data-psychologists-scroll-lock="true"
                 >
-                  <Heart
-                    className="h-6 w-6"
-                    aria-hidden="true"
-                    style={{
-                      color: desktopActionIsFavorited ? "#ef4444" : "#334155",
-                      fill: desktopActionIsFavorited ? "#ef4444" : "transparent",
-                    }}
-                  />
-                </button>
-                <span className="text-[11px] font-bold text-[#475569]">Favoritar</span>
-              </div>
+                  {isSearchFocused ? (
+                    <form
+                      className="relative w-[224px]"
+                      onMouseDown={stopInteractionPropagation}
+                      onPointerDown={(event) => {
+                        event.stopPropagation();
+                        registerSwipeHintInteraction();
+                      }}
+                      onSubmit={handleSearchSubmit}
+                    >
+                      <div className="relative flex h-12 w-full items-center rounded-full border border-[#e2e8f0] bg-white px-3 shadow-[0_12px_34px_rgba(15,23,42,0.14)] transition-all duration-200 ease-out">
+                        <Search
+                          className="absolute left-4 h-4 w-4 text-[#64748b]"
+                          aria-hidden="true"
+                        />
+                        <input
+                          aria-label="Buscar Psicólogos"
+                          className="h-full w-full bg-transparent pr-3 pl-8 text-[14px] text-[#0f172a] outline-none placeholder:text-[#64748b]"
+                          disabled={areDesktopFeedControlsHidden}
+                          maxLength={120}
+                          name="search"
+                          onBlur={() => {
+                            window.setTimeout(() => exitSearchMode({ shouldBlur: false }), 120);
+                          }}
+                          onChange={(event) => {
+                            setSearchDraft(event.target.value);
+                            enterSearchMode();
+                          }}
+                          onFocus={enterSearchMode}
+                          placeholder="Buscar psicólogos"
+                          ref={searchInputRef}
+                          tabIndex={areDesktopFeedControlsHidden ? -1 : undefined}
+                          type="text"
+                          value={searchDraft}
+                        />
+                      </div>
 
-              <div className="grid justify-items-center gap-1.5 text-center">
-                <button
-                  aria-label={`Compartilhar perfil de ${desktopActionPsychologist.name}`}
-                  className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#334155] shadow-[0_10px_28px_rgba(15,23,42,0.14)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
-                  disabled={isDesktopActionRailHidden}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    void shareCurrent(desktopActionPsychologist);
-                  }}
-                  tabIndex={isDesktopActionRailHidden ? -1 : undefined}
-                  type="button"
-                >
-                  <Share2 className="h-6 w-6" aria-hidden="true" />
-                </button>
-                <span className="text-[11px] font-bold text-[#475569]">Compartilhar</span>
-              </div>
+                      {shouldRenderSearchSuggestions ? (
+                        <div
+                          aria-label="Sugestões de psicólogos"
+                          className="absolute top-[calc(100%+8px)] left-0 w-full overflow-hidden rounded-2xl border border-[#e2e8f0] bg-white text-[#0f172a] shadow-[0_18px_45px_rgba(15,23,42,0.16)]"
+                          onMouseDown={(event) => event.preventDefault()}
+                          role="listbox"
+                        >
+                          <div className="border-[#e2e8f0] border-b px-3 py-2 text-[11px] font-extrabold tracking-[0.08em] text-[#64748b] uppercase">
+                            Profissionais cadastrados
+                          </div>
+                          {searchSuggestionsDirectory.isFetching ? (
+                            <div className="px-3 py-3 text-sm font-medium text-[#64748b]">
+                              Buscando profissionais...
+                            </div>
+                          ) : (
+                            searchSuggestionItems.map((suggestion) => (
+                              <button
+                                aria-label={`Buscar por ${suggestion.name}`}
+                                aria-selected={false}
+                                className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold transition hover:bg-[#f8fafc]"
+                                key={suggestion.id}
+                                onClick={() => handleSearchSuggestionSelect(suggestion.name)}
+                                role="option"
+                                type="button"
+                              >
+                                <span className="min-w-0 truncate">{suggestion.name}</span>
+                                <span className="shrink-0 rounded-full bg-[#eff6ff] px-2 py-0.5 text-[10px] font-extrabold text-[#308ce8]">
+                                  {suggestion.verified ? "Verificado" : "Gratuito"}
+                                </span>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      ) : null}
+                    </form>
+                  ) : (
+                    <button
+                      aria-label="Pesquisar psicólogos"
+                      className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#334155] shadow-[0_10px_28px_rgba(15,23,42,0.14)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
+                      disabled={areDesktopFeedControlsHidden}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        registerSwipeHintInteraction();
+                        enterSearchMode();
+                        window.setTimeout(() => searchInputRef.current?.focus(), 0);
+                      }}
+                      onPointerDown={(event) => {
+                        event.stopPropagation();
+                      }}
+                      tabIndex={areDesktopFeedControlsHidden ? -1 : undefined}
+                      type="button"
+                    >
+                      <Search className="h-5 w-5" aria-hidden="true" />
+                    </button>
+                  )}
 
-              <div className="grid justify-items-center gap-1.5 text-center">
-                {desktopActionPsychologist.whatsapp_url ? (
-                  <a
-                    aria-label={`Chamar ${desktopActionPsychologist.name} no WhatsApp`}
-                    className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#22C55E] shadow-[0_10px_28px_rgba(15,23,42,0.14)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
-                    href={desktopActionPsychologist.whatsapp_url}
-                    onClick={stopInteractionPropagation}
-                    rel="noreferrer"
-                    tabIndex={isDesktopActionRailHidden ? -1 : undefined}
-                    target="_blank"
-                  >
-                    <WhatsAppIcon
-                      aria-hidden="true"
-                      className="h-6 w-6"
-                      style={{ color: "#22C55E" }}
-                    />
-                  </a>
-                ) : (
                   <button
-                    aria-disabled="true"
-                    aria-label={`WhatsApp indisponível para ${desktopActionPsychologist.name}`}
-                    className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#22C55E] opacity-55 shadow-[0_10px_28px_rgba(15,23,42,0.14)]"
-                    disabled={isDesktopActionRailHidden}
-                    onClick={stopInteractionPropagation}
-                    tabIndex={isDesktopActionRailHidden ? -1 : undefined}
+                    aria-label="Abrir filtros"
+                    className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#334155] shadow-[0_10px_28px_rgba(15,23,42,0.14)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
+                    disabled={areDesktopFeedControlsHidden}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      if (isSearchFocused) {
+                        exitSearchMode({ resumeVideo: false });
+                      }
+                      handleFiltersOpen();
+                    }}
+                    onPointerDown={(event) => {
+                      event.stopPropagation();
+                      registerSwipeHintInteraction();
+                    }}
+                    tabIndex={areDesktopFeedControlsHidden ? -1 : undefined}
                     type="button"
                   >
-                    <WhatsAppIcon
-                      aria-hidden="true"
-                      className="h-6 w-6"
-                      style={{ color: "#22C55E" }}
-                    />
+                    <SlidersHorizontal className="h-5 w-5" aria-hidden="true" />
                   </button>
-                )}
-                <span className="text-[11px] font-bold text-[#475569]">WhatsApp</span>
-              </div>
+                </div>
+              ) : null}
 
-              <div className="grid justify-items-center gap-1.5 text-center">
-                <Link
-                  aria-label={`Ver perfil de ${desktopActionPsychologist.name}`}
-                  className="grid h-12 w-12 place-items-center overflow-hidden rounded-full bg-white p-0.5 text-[#0f172a] shadow-[0_10px_28px_rgba(15,23,42,0.14)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
-                  href={desktopActionProfileHref}
-                  onClick={stopInteractionPropagation}
-                  tabIndex={isDesktopActionRailHidden ? -1 : undefined}
+              {shouldRenderDesktopActionRail && desktopActionPsychologist ? (
+                <div
+                  aria-hidden={isDesktopActionRailHidden ? true : undefined}
+                  className={cn(
+                    "absolute top-1/2 left-0 flex -translate-y-[35%] flex-col items-center gap-4 transition-opacity duration-200 ease-out",
+                    desktopActionRailVisibilityClass,
+                  )}
                 >
-                  <span className="relative grid h-full w-full place-items-center overflow-hidden rounded-full bg-[#e2e8f0] text-[12px] font-bold text-[#334155]">
-                    {desktopActionPsychologist.avatar ? (
-                      <Image
-                        alt={desktopActionPsychologist.name}
-                        className="h-full w-full rounded-full object-cover"
-                        fill
-                        sizes="48px"
-                        src={resolvePublicMediaUrl(desktopActionPsychologist.avatar) ?? ""}
-                        unoptimized={isPublicMediaUrl(desktopActionPsychologist.avatar)}
+                  <div className="grid justify-items-center gap-1.5 text-center">
+                    <button
+                      aria-label={`Favoritar ${desktopActionPsychologist.name}`}
+                      aria-busy={desktopActionIsFavoritePending}
+                      aria-pressed={desktopActionIsFavorited}
+                      className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#334155] shadow-[0_10px_28px_rgba(15,23,42,0.14)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
+                      disabled={isDesktopActionRailHidden}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        toggleFavorite(desktopActionPsychologist);
+                      }}
+                      tabIndex={isDesktopActionRailHidden ? -1 : undefined}
+                      type="button"
+                    >
+                      <Heart
+                        className="h-6 w-6"
+                        aria-hidden="true"
+                        style={{
+                          color: desktopActionIsFavorited ? "#ef4444" : "#334155",
+                          fill: desktopActionIsFavorited ? "#ef4444" : "transparent",
+                        }}
                       />
+                    </button>
+                    <span className="text-[11px] font-bold text-[#475569]">Favoritar</span>
+                  </div>
+
+                  <div className="grid justify-items-center gap-1.5 text-center">
+                    <button
+                      aria-label={`Compartilhar perfil de ${desktopActionPsychologist.name}`}
+                      className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#334155] shadow-[0_10px_28px_rgba(15,23,42,0.14)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
+                      disabled={isDesktopActionRailHidden}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void shareCurrent(desktopActionPsychologist);
+                      }}
+                      tabIndex={isDesktopActionRailHidden ? -1 : undefined}
+                      type="button"
+                    >
+                      <Share2 className="h-6 w-6" aria-hidden="true" />
+                    </button>
+                    <span className="text-[11px] font-bold text-[#475569]">Compartilhar</span>
+                  </div>
+
+                  <div className="grid justify-items-center gap-1.5 text-center">
+                    {desktopActionPsychologist.whatsapp_url ? (
+                      <a
+                        aria-label={`Chamar ${desktopActionPsychologist.name} no WhatsApp`}
+                        className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#22C55E] shadow-[0_10px_28px_rgba(15,23,42,0.14)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
+                        href={desktopActionPsychologist.whatsapp_url}
+                        onClick={stopInteractionPropagation}
+                        rel="noreferrer"
+                        tabIndex={isDesktopActionRailHidden ? -1 : undefined}
+                        target="_blank"
+                      >
+                        <WhatsAppIcon
+                          aria-hidden="true"
+                          className="h-6 w-6"
+                          style={{ color: "#22C55E" }}
+                        />
+                      </a>
                     ) : (
-                      getInitials(desktopActionPsychologist.name)
+                      <button
+                        aria-disabled="true"
+                        aria-label={`WhatsApp indisponível para ${desktopActionPsychologist.name}`}
+                        className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#22C55E] opacity-55 shadow-[0_10px_28px_rgba(15,23,42,0.14)]"
+                        disabled={isDesktopActionRailHidden}
+                        onClick={stopInteractionPropagation}
+                        tabIndex={isDesktopActionRailHidden ? -1 : undefined}
+                        type="button"
+                      >
+                        <WhatsAppIcon
+                          aria-hidden="true"
+                          className="h-6 w-6"
+                          style={{ color: "#22C55E" }}
+                        />
+                      </button>
                     )}
-                  </span>
-                </Link>
-                <span className="text-[11px] font-bold text-[#475569]">Perfil</span>
-              </div>
+                    <span className="text-[11px] font-bold text-[#475569]">WhatsApp</span>
+                  </div>
+
+                  <div className="grid justify-items-center gap-1.5 text-center">
+                    <Link
+                      aria-label={`Ver perfil de ${desktopActionPsychologist.name}`}
+                      className="grid h-12 w-12 place-items-center overflow-hidden rounded-full bg-white p-0.5 text-[#0f172a] shadow-[0_10px_28px_rgba(15,23,42,0.14)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
+                      href={desktopActionProfileHref}
+                      onClick={stopInteractionPropagation}
+                      tabIndex={isDesktopActionRailHidden ? -1 : undefined}
+                    >
+                      <span className="relative grid h-full w-full place-items-center overflow-hidden rounded-full bg-[#e2e8f0] text-[12px] font-bold text-[#334155]">
+                        {desktopActionPsychologist.avatar ? (
+                          <Image
+                            alt={desktopActionPsychologist.name}
+                            className="h-full w-full rounded-full object-cover"
+                            fill
+                            sizes="48px"
+                            src={resolvePublicMediaUrl(desktopActionPsychologist.avatar) ?? ""}
+                            unoptimized={isPublicMediaUrl(desktopActionPsychologist.avatar)}
+                          />
+                        ) : (
+                          getInitials(desktopActionPsychologist.name)
+                        )}
+                      </span>
+                    </Link>
+                    <span className="text-[11px] font-bold text-[#475569]">Perfil</span>
+                  </div>
+                </div>
+              ) : null}
             </aside>
           ) : null}
         </div>

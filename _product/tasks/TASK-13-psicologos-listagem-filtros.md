@@ -1058,3 +1058,21 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: pesquisa e filtro como grupo desktop independente (2026-06-12)
+
+- Pedido do usuario: no desktop, remover Pesquisa e Filtro de cima do video e transforma-los em acoes independentes na lateral direita, separadas de Favoritar, Compartilhar, WhatsApp e Perfil, sem alterar o mobile.
+- A renderizacao dos controles globais passou a ser explicitamente separada por breakpoint: em `<1024px`, a busca e o filtro continuam sobre o video exatamente como antes; em `>=1024px`, eles deixam de ser renderizados dentro do video.
+- No desktop, a lateral direita agora possui dois grupos independentes: um grupo superior com icones de Pesquisa e Filtro proximo ao topo do video, e um grupo inferior separado com as acoes do psicologo exibido.
+- O icone de Pesquisa desktop abre um input temporario na lateral direita, foca automaticamente, reutiliza a busca/sugestoes reais existentes e fecha ao clicar fora, perder foco ou pressionar ESC.
+- O icone de Filtro desktop reutiliza a mesma abertura de filtros ja existente, sem recriar estado, formulario ou contrato de API.
+- Com a area superior do video liberada no desktop, os selos superiores sobem para uma posicao mais proxima do topo, mantendo alinhamento a esquerda e respiro visual; o mobile preserva o offset anterior abaixo da busca.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, favoritos, barra de progresso, modo imersivo, navbar mobile, menu lateral desktop ou contratos de API.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual permanece `_product/proto/Psicologos.jpg`, a imagem TikTok Web enviada pelo usuario e o contrato da TASK-13.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
