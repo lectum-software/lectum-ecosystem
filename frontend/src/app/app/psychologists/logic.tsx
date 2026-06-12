@@ -4,12 +4,14 @@ import {
   ArrowUp,
   Award,
   Heart,
+  Pause,
   Play,
   Search,
   Share2,
   SlidersHorizontal,
   Star,
   UsersRound,
+  Volume2,
   VolumeX,
   X,
 } from "lucide-react";
@@ -68,7 +70,8 @@ const SWIPE_HINT_STORAGE_KEY = "lectum:psychologists:has-seen-swipe-hint";
 const VIDEO_SINGLE_TAP_DELAY_MS = 260;
 const VIDEO_LONG_PRESS_DELAY_MS = 520;
 const VIDEO_PROGRESS_VISIBLE_NAV_BAR_HEIGHT = 64;
-const VIDEO_PROGRESS_HIDDEN_BOTTOM_GAP = 8;
+const VIDEO_IMMERSIVE_CONTROLS_BOTTOM_GAP = 14;
+const VIDEO_IMMERSIVE_PROGRESS_CONTROLS_OFFSET = 74;
 const VIDEO_PROGRESS_TRACK_COLOR = "rgba(255,255,255,0.22)";
 const VIDEO_PROGRESS_FILL_COLOR = "rgba(255,255,255,0.75)";
 const LONG_PRESS_MOVE_TOLERANCE_PX = 20;
@@ -434,7 +437,7 @@ export const PsychologistsLogic = () => {
   const favoriteFeedbackTimeoutRef = useRef<number | null>(null);
   const progressAnimationFrameRef = useRef<number | null>(null);
   const isVideoProgressSeekingRef = useRef(false);
-  const wasVideoPlayingBeforeProgressSeekRef = useRef(false);
+  const videoSeekPreviewRatioRef = useRef<number | null>(null);
   const swipeHintHideTimeoutRef = useRef<number | null>(null);
   const swipeHintIdleTimeoutRef = useRef<number | null>(null);
   const swipeHintNudgeTimeoutRef = useRef<number | null>(null);
@@ -634,7 +637,7 @@ export const PsychologistsLogic = () => {
     setIsVideoProgressSeeking(false);
     setVideoSeekPreviewRatio(null);
     isVideoProgressSeekingRef.current = false;
-    wasVideoPlayingBeforeProgressSeekRef.current = false;
+    videoSeekPreviewRatioRef.current = null;
   }, []);
 
   useEffect(() => {
@@ -887,6 +890,7 @@ export const PsychologistsLogic = () => {
       setVideoSeekPreviewRatio(null);
       setIsVideoProgressSeeking(false);
       isVideoProgressSeekingRef.current = false;
+      videoSeekPreviewRatioRef.current = null;
     }
 
     lastActiveVideoResetKeyRef.current = activeVideoResetKey;
@@ -944,6 +948,7 @@ export const PsychologistsLogic = () => {
       setVideoSeekPreviewRatio(null);
       setIsVideoProgressSeeking(false);
       isVideoProgressSeekingRef.current = false;
+      videoSeekPreviewRatioRef.current = null;
       setShareFeedback(false);
       setActionColumnTranslateY(0);
     });
@@ -1146,6 +1151,71 @@ export const PsychologistsLogic = () => {
     unmuteAllVideos();
     setIsVideoMuted(false);
   }, [unmuteAllVideos]);
+
+  const setAllVideosMuted = useCallback((muted: boolean) => {
+    if (typeof window !== "undefined") {
+      document
+        .querySelectorAll<HTMLVideoElement>(PSYCHOLOGISTS_BACKGROUND_VIDEO_SELECTOR)
+        .forEach((video) => {
+          video.muted = muted;
+        });
+    }
+
+    const currentVideo = backgroundVideoRef.current;
+    if (currentVideo) {
+      currentVideo.muted = muted;
+    }
+
+    setIsVideoMuted(muted);
+  }, []);
+
+  const stopVideoControlInteraction = useCallback(
+    (event: { preventDefault?: () => void; stopPropagation: () => void }) => {
+      event.stopPropagation();
+      event.preventDefault?.();
+      cancelPendingVideoGestureTimers();
+    },
+    [cancelPendingVideoGestureTimers],
+  );
+
+  const handleImmersiveExit = useCallback(
+    (event: { preventDefault?: () => void; stopPropagation: () => void }) => {
+      stopVideoControlInteraction(event);
+      setIsUiHidden(false);
+    },
+    [stopVideoControlInteraction],
+  );
+
+  const handleImmersivePlaybackToggle = useCallback(
+    (event: { preventDefault?: () => void; stopPropagation: () => void }) => {
+      stopVideoControlInteraction(event);
+
+      const currentVideo = backgroundVideoRef.current;
+      if (!currentVideo || !shouldShowVideo) return;
+
+      if (currentVideo.paused || isVideoPaused) {
+        playCurrentVideo();
+        return;
+      }
+
+      pauseVideoPlayback();
+    },
+    [
+      isVideoPaused,
+      pauseVideoPlayback,
+      playCurrentVideo,
+      shouldShowVideo,
+      stopVideoControlInteraction,
+    ],
+  );
+
+  const handleImmersiveMuteToggle = useCallback(
+    (event: { preventDefault?: () => void; stopPropagation: () => void }) => {
+      stopVideoControlInteraction(event);
+      setAllVideosMuted(!isVideoMuted);
+    },
+    [isVideoMuted, setAllVideosMuted, stopVideoControlInteraction],
+  );
 
   const handleFeedScroll = useCallback(
     (event: UIEvent<HTMLDivElement>) => {
@@ -1509,44 +1579,77 @@ export const PsychologistsLogic = () => {
     [videoProgress.duration],
   );
 
-  const seekActiveVideoFromClientX = useCallback(
+  const getVideoProgressRatioFromClientX = useCallback(
     (clientX: number, track: HTMLDivElement | null) => {
+      if (!track) return null;
+
+      const bounds = track.getBoundingClientRect();
+      if (bounds.width <= 0) return null;
+
+      return clampNumber((clientX - bounds.left) / bounds.width, 0, 1);
+    },
+    [],
+  );
+
+  const updateVideoSeekPreviewFromClientX = useCallback(
+    (clientX: number, track: HTMLDivElement | null) => {
+      const ratio = getVideoProgressRatioFromClientX(clientX, track);
+      if (ratio === null) return;
+
+      videoSeekPreviewRatioRef.current = ratio;
+      setVideoSeekPreviewRatio(ratio);
+    },
+    [getVideoProgressRatioFromClientX],
+  );
+
+  const seekActiveVideoToRatio = useCallback(
+    (ratio: number) => {
       const currentVideo = backgroundVideoRef.current;
-      if (!currentVideo || !track) return;
+      if (!currentVideo) return;
 
       const duration = getReadableVideoDuration(currentVideo) || videoProgress.duration;
       if (!duration) return;
 
-      const bounds = track.getBoundingClientRect();
-      if (bounds.width <= 0) return;
-
-      const ratio = clampNumber((clientX - bounds.left) / bounds.width, 0, 1);
-      const nextTime = ratio * duration;
-
-      setVideoSeekPreviewRatio(ratio);
-      seekActiveVideoToTime(nextTime, duration);
+      const currentTime = clampNumber(ratio, 0, 1) * duration;
+      currentVideo.currentTime = currentTime;
+      setVideoProgress({
+        currentTime,
+        duration,
+      });
     },
-    [seekActiveVideoToTime, videoProgress.duration],
+    [videoProgress.duration],
   );
 
-  const finishVideoProgressScrub = useCallback(() => {
-    const shouldResumePlayback = wasVideoPlayingBeforeProgressSeekRef.current;
-    wasVideoPlayingBeforeProgressSeekRef.current = false;
+  const finishVideoProgressScrub = useCallback(
+    (clientX?: number, track?: HTMLDivElement | null) => {
+      const pointerRatio =
+        typeof clientX === "number"
+          ? getVideoProgressRatioFromClientX(clientX, track ?? null)
+          : null;
+      const finalRatio = pointerRatio ?? videoSeekPreviewRatioRef.current;
+
+      videoSeekPreviewRatioRef.current = null;
+      setVideoSeekPreviewRatio(null);
+      isVideoProgressSeekingRef.current = false;
+      setIsVideoProgressSeeking(false);
+
+      if (finalRatio === null) {
+        syncActiveVideoProgress();
+        return;
+      }
+
+      seekActiveVideoToRatio(finalRatio);
+    },
+    [getVideoProgressRatioFromClientX, seekActiveVideoToRatio, syncActiveVideoProgress],
+  );
+
+  const cancelVideoProgressScrub = useCallback(() => {
+    videoSeekPreviewRatioRef.current = null;
     isVideoProgressSeekingRef.current = false;
     setIsVideoProgressSeeking(false);
     setVideoSeekPreviewRatio(null);
     syncActiveVideoProgress();
-
-    if (!shouldResumePlayback || isSearchFocused || !shouldShowVideo) return;
-
-    const currentVideo = backgroundVideoRef.current;
-    if (!currentVideo) return;
-
-    setIsVideoPaused(false);
-    void currentVideo.play().catch(() => {
-      setIsVideoPaused(true);
-    });
-  }, [isSearchFocused, shouldShowVideo, syncActiveVideoProgress]);
+  }, [syncActiveVideoProgress]);
 
   const handleVideoProgressPointerDown = useCallback(
     (event: PointerEvent<HTMLDivElement>) => {
@@ -1560,20 +1663,17 @@ export const PsychologistsLogic = () => {
       const currentVideo = backgroundVideoRef.current;
       if (!currentVideo) return;
 
-      wasVideoPlayingBeforeProgressSeekRef.current = !currentVideo.paused;
-      currentVideo.pause();
-      setIsVideoPaused(true);
       isVideoProgressSeekingRef.current = true;
       setIsVideoProgressSeeking(true);
       event.currentTarget.setPointerCapture(event.pointerId);
-      seekActiveVideoFromClientX(event.clientX, event.currentTarget);
+      updateVideoSeekPreviewFromClientX(event.clientX, event.currentTarget);
     },
     [
       cancelPendingVideoGestureTimers,
       isSearchFocused,
       registerSwipeHintInteraction,
-      seekActiveVideoFromClientX,
       shouldShowVideo,
+      updateVideoSeekPreviewFromClientX,
     ],
   );
 
@@ -1583,9 +1683,9 @@ export const PsychologistsLogic = () => {
       if (!isVideoProgressSeekingRef.current || isSearchFocused) return;
 
       event.preventDefault();
-      seekActiveVideoFromClientX(event.clientX, event.currentTarget);
+      updateVideoSeekPreviewFromClientX(event.clientX, event.currentTarget);
     },
-    [isSearchFocused, seekActiveVideoFromClientX],
+    [isSearchFocused, updateVideoSeekPreviewFromClientX],
   );
 
   const handleVideoProgressPointerEnd = useCallback(
@@ -1597,9 +1697,14 @@ export const PsychologistsLogic = () => {
         event.currentTarget.releasePointerCapture(event.pointerId);
       }
 
-      finishVideoProgressScrub();
+      if (event.type === "pointercancel") {
+        cancelVideoProgressScrub();
+        return;
+      }
+
+      finishVideoProgressScrub(event.clientX, event.currentTarget);
     },
-    [finishVideoProgressScrub],
+    [cancelVideoProgressScrub, finishVideoProgressScrub],
   );
 
   const shouldUseTouchProgressFallback = useCallback(
@@ -1625,20 +1730,17 @@ export const PsychologistsLogic = () => {
       const currentVideo = backgroundVideoRef.current;
       if (!currentVideo) return;
 
-      wasVideoPlayingBeforeProgressSeekRef.current = !currentVideo.paused;
-      currentVideo.pause();
-      setIsVideoPaused(true);
       isVideoProgressSeekingRef.current = true;
       setIsVideoProgressSeeking(true);
-      seekActiveVideoFromClientX(touch.clientX, event.currentTarget);
+      updateVideoSeekPreviewFromClientX(touch.clientX, event.currentTarget);
     },
     [
       cancelPendingVideoGestureTimers,
       isSearchFocused,
       registerSwipeHintInteraction,
-      seekActiveVideoFromClientX,
       shouldShowVideo,
       shouldUseTouchProgressFallback,
+      updateVideoSeekPreviewFromClientX,
     ],
   );
 
@@ -1653,9 +1755,9 @@ export const PsychologistsLogic = () => {
       if (!touch) return;
 
       event.preventDefault();
-      seekActiveVideoFromClientX(touch.clientX, event.currentTarget);
+      updateVideoSeekPreviewFromClientX(touch.clientX, event.currentTarget);
     },
-    [isSearchFocused, seekActiveVideoFromClientX, shouldUseTouchProgressFallback],
+    [isSearchFocused, shouldUseTouchProgressFallback, updateVideoSeekPreviewFromClientX],
   );
 
   const handleVideoProgressTouchEnd = useCallback(
@@ -1665,9 +1767,15 @@ export const PsychologistsLogic = () => {
       if (!shouldUseTouchProgressFallback()) return;
 
       event.preventDefault();
-      finishVideoProgressScrub();
+      if (event.type === "touchcancel") {
+        cancelVideoProgressScrub();
+        return;
+      }
+
+      const touch = event.changedTouches[0];
+      finishVideoProgressScrub(touch?.clientX, event.currentTarget);
     },
-    [finishVideoProgressScrub, shouldUseTouchProgressFallback],
+    [cancelVideoProgressScrub, finishVideoProgressScrub, shouldUseTouchProgressFallback],
   );
 
   const handleVideoProgressKeyDown = useCallback(
@@ -2139,7 +2247,7 @@ export const PsychologistsLogic = () => {
                       : 0;
                   const slideProgressPercent = `${slideProgressRatio * 100}%`;
                   const slideProgressBottom = slideIsUiHidden
-                    ? `calc(env(safe-area-inset-bottom) + ${VIDEO_PROGRESS_HIDDEN_BOTTOM_GAP}px)`
+                    ? `calc(env(safe-area-inset-bottom) + ${VIDEO_IMMERSIVE_PROGRESS_CONTROLS_OFFSET}px)`
                     : `calc(${VIDEO_PROGRESS_VISIBLE_NAV_BAR_HEIGHT}px + env(safe-area-inset-bottom))`;
 
                   return (
@@ -2366,6 +2474,78 @@ export const PsychologistsLogic = () => {
                                     width: slideProgressPercent,
                                   }}
                                 />
+                              </div>
+                            </div>
+                          ) : null}
+
+                          {isActiveSlide && slideShouldShowVideo && slideIsUiHidden ? (
+                            <div
+                              className="pointer-events-auto absolute inset-x-0 z-[60] flex items-center justify-between px-5"
+                              data-psychologists-scroll-lock="true"
+                              onPointerDown={stopInteractionPropagation}
+                              style={{
+                                bottom: `calc(env(safe-area-inset-bottom) + ${VIDEO_IMMERSIVE_CONTROLS_BOTTOM_GAP}px)`,
+                              }}
+                            >
+                              <button
+                                aria-label="Sair do modo imersivo"
+                                className="grid h-12 w-12 place-items-center rounded-full border border-white/10 bg-black/55 text-white shadow-[0_12px_30px_rgba(0,0,0,0.28)] backdrop-blur-md transition hover:bg-black/65 active:scale-95"
+                                onClick={handleImmersiveExit}
+                                type="button"
+                              >
+                                <X className="h-6 w-6" aria-hidden="true" strokeWidth={2.3} />
+                              </button>
+
+                              <div className="inline-flex h-12 items-center gap-1 rounded-full border border-white/10 bg-black/55 px-3 text-white shadow-[0_12px_30px_rgba(0,0,0,0.28)] backdrop-blur-md">
+                                <button
+                                  aria-label={isVideoPaused ? "Reproduzir vídeo" : "Pausar vídeo"}
+                                  className="grid h-9 w-9 place-items-center rounded-full text-white transition hover:bg-white/10 active:scale-95"
+                                  onClick={handleImmersivePlaybackToggle}
+                                  type="button"
+                                >
+                                  {isVideoPaused ? (
+                                    <Play
+                                      className="ml-0.5 h-5 w-5"
+                                      aria-hidden="true"
+                                      strokeWidth={2.4}
+                                    />
+                                  ) : (
+                                    <Pause
+                                      className="h-5 w-5"
+                                      aria-hidden="true"
+                                      strokeWidth={2.4}
+                                    />
+                                  )}
+                                </button>
+
+                                <span aria-hidden="true" className="h-6 w-px bg-white/18" />
+
+                                <button
+                                  aria-label={isVideoMuted ? "Ativar som" : "Silenciar vídeo"}
+                                  className="grid h-9 w-9 place-items-center rounded-full text-white transition hover:bg-white/10 active:scale-95"
+                                  onClick={handleImmersiveMuteToggle}
+                                  type="button"
+                                >
+                                  {isVideoMuted ? (
+                                    <VolumeX
+                                      className="h-5 w-5"
+                                      aria-hidden="true"
+                                      strokeWidth={2.4}
+                                    />
+                                  ) : (
+                                    <Volume2
+                                      className="h-5 w-5"
+                                      aria-hidden="true"
+                                      strokeWidth={2.4}
+                                    />
+                                  )}
+                                </button>
+
+                                <span aria-hidden="true" className="h-6 w-px bg-white/18" />
+
+                                <span className="px-2 text-[15px] leading-none font-semibold text-white/88">
+                                  1x
+                                </span>
                               </div>
                             </div>
                           ) : null}

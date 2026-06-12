@@ -957,3 +957,21 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: seek simplificado e controles imersivos (2026-06-12)
+
+- Pedido do usuario: corrigir definitivamente a barra de progresso para nao reiniciar o video e adicionar controles inferiores no modo sem UI.
+- A barra de progresso deixou de aplicar `video.currentTime` durante `pointerDown`/`pointerMove`; esses eventos agora iniciam o scrub e atualizam apenas a largura visual da barra.
+- O seek real ficou restrito ao `pointerUp`/`touchEnd`: a posicao final e convertida em percentual da duracao e aplicada diretamente em `video.currentTime`.
+- Os handlers da barra nao pausam, nao retomam, nao chamam reset, nao trocam o video ativo, nao trocam `src` e nao remountam o player; a troca de psicologo segue sendo o unico fluxo que reseta video para 0.
+- No modo imersivo (`isUiHidden=true`), a barra permanece visivel acima dos novos controles inferiores, respeitando safe area.
+- Foram adicionados controles inferiores inspirados em video curto: botao `X` para sair do modo imersivo, pill escura com Play/Pause, Volume/Mute e indicador informativo `1x`.
+- Play/Pause e Volume/Mute usam `stopPropagation`/`preventDefault`, nao restauram a UI e nao disparam favorito, long press, toque simples, duplo toque ou troca de video.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, layout principal, busca, filtros, posicao dos textos, navbar ou botoes laterais quando a UI esta visivel.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual adicional foi a imagem anexada pelo usuario e a referencia base permanece `_product/proto/Psicologos.jpg`.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

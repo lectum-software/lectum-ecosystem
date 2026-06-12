@@ -318,3 +318,15 @@ O espaco morto reservado acima da navbar/progresso caiu de 34-36px para 8px. Ass
 O indicador `Disponível hoje` continua sem badge, fundo, borda ou container destacado, mas passa a usar o mesmo verde da bolinha (`#22C55E`) também no texto para reforçar unidade visual.
 
 A bolinha recebe uma animacao discreta de pulso apenas no proprio ponto, com halo curto e escala suave. A decisao preserva o indicador como metadado complementar: ha movimento suficiente para sinalizar disponibilidade, mas sem competir com o nome do psicologo ou recriar o destaque de pill removido anteriormente. A animacao e desativada por `prefers-reduced-motion`.
+
+## Atualizacao 2026-06-12: seek no release e controles do modo imersivo
+
+A barra de progresso de `/app/psychologists` passa a usar um modelo mais simples e previsivel de scrub: `pointerDown`/`touchStart` entram em modo de scrub, `pointerMove`/`touchMove` atualizam apenas o progresso visual, e `pointerUp`/`touchEnd` aplicam o tempo final no `HTMLVideoElement.currentTime`.
+
+Essa decisao remove o seek continuo durante o arraste para evitar efeitos colaterais de reinicio ou conflito com o reset do feed. A separacao fica explicita:
+
+- troca de psicologo ativo pode pausar e resetar videos para `0`;
+- barra de progresso nunca chama reset, nunca troca `src` e nunca troca psicologo ativo;
+- barra de progresso apenas calcula o percentual horizontal final e altera `video.currentTime`.
+
+No modo imersivo, a tela passa a expor controles inferiores proprios, inspirados em apps de video curto: um botao `X` para restaurar a UI e um pill escuro com Play/Pause, Volume/Mute e indicador `1x`. Esses controles interceptam seus eventos e nao propagam gestos para a area de video, preservando a regra de que apenas o `X` sai do modo imersivo enquanto Play/Pause e Volume/Mute controlam somente o player.
