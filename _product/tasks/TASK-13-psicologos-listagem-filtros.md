@@ -1076,3 +1076,20 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: comportamento desktop de busca e modo sem UI (2026-06-12)
+
+- Pedido do usuario: corrigir apenas o desktop da tela de Psicologos, mantendo o mobile exatamente como estava.
+- Os icones desktop de Pesquisar e Filtrar foram alinhados no mesmo eixo horizontal da coluna externa de Favoritar, Compartilhar, WhatsApp e Perfil, mantendo Pesquisa/Filtro no grupo superior e as acoes do psicologo no grupo inferior.
+- A busca desktop deixou de acionar o modo de foco mobile: abrir a lupa agora apenas mostra um campo lateral simples, foca o input e permite digitacao imediata, sem pausar o video, escurecer/desfocar o fundo, aplicar overlay, esconder UI, esconder a sidebar ou esconder as acoes externas.
+- O fechamento da busca desktop passou a ser feito por ESC, blur ou clique fora via listener de pointer, sem overlay visual e sem transformar o clique fora em modo imersivo.
+- O modo sem UI no desktop agora limpa apenas o conteudo sobreposto ao video; a sidebar esquerda e a coluna externa direita continuam visiveis e interativas.
+- No mobile, busca/filtro continuam sobre o video, o modo sem UI continua escondendo a interface inteira e as acoes permanecem sobrepostas ao video.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, filtros, contratos de API, barra de progresso ou comportamento mobile.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

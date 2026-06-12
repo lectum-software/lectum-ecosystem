@@ -444,6 +444,7 @@ export const PsychologistsLogic = () => {
   const feedContainerRef = useRef<HTMLDivElement | null>(null);
   const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const desktopSearchControlsRef = useRef<HTMLDivElement | null>(null);
   const bioTextRef = useRef<HTMLParagraphElement | null>(null);
   const progressTrackRef = useRef<HTMLDivElement | null>(null);
   const progressFillRef = useRef<HTMLDivElement | null>(null);
@@ -501,6 +502,7 @@ export const PsychologistsLogic = () => {
   const featuredPsychologist = psychologists[activePsychologistIndex] ?? psychologists[0];
   const backgroundVideoSrc = resolvePublicMediaUrl(featuredPsychologist?.video_url);
   const shouldShowVideo = Boolean(backgroundVideoSrc) && !isVideoPlaybackFailed;
+  const isMobileSearchFocusMode = isSearchFocused && !metrics.isDesktopLayout;
   const activeVideoSource = shouldShowVideo ? backgroundVideoSrc : null;
   const featuredBio = featuredPsychologist?.headline?.trim() || "";
   const featuredPsychologistId = featuredPsychologist?.id;
@@ -1099,6 +1101,12 @@ export const PsychologistsLogic = () => {
     cancelPendingVideoGestureTimers();
     setShowDoubleTapFavoriteFeedback(false);
 
+    if (metrics.isDesktopLayout) {
+      shouldResumeVideoAfterSearchRef.current = false;
+      setIsSearchFocused(true);
+      return;
+    }
+
     const currentVideo = backgroundVideoRef.current;
     shouldResumeVideoAfterSearchRef.current = Boolean(
       currentVideo && shouldShowVideo && !currentVideo.paused,
@@ -1110,7 +1118,7 @@ export const PsychologistsLogic = () => {
     }
 
     setIsSearchFocused(true);
-  }, [cancelPendingVideoGestureTimers, shouldShowVideo]);
+  }, [cancelPendingVideoGestureTimers, metrics.isDesktopLayout, shouldShowVideo]);
 
   const exitSearchMode = useCallback(
     (options?: { resumeVideo?: boolean; shouldBlur?: boolean }) => {
@@ -1403,9 +1411,32 @@ export const PsychologistsLogic = () => {
     };
   }, [isSearchFocused, metrics.isDesktopLayout]);
 
+  useEffect(() => {
+    if (!metrics.isDesktopLayout || !isSearchFocused) return;
+
+    const onPointerDown = (event: globalThis.PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (desktopSearchControlsRef.current?.contains(target)) return;
+
+      suppressNextTapRef.current = true;
+      cancelPendingVideoGestureTimers();
+      exitSearchMode();
+      window.setTimeout(() => {
+        suppressNextTapRef.current = false;
+      }, 0);
+    };
+
+    window.addEventListener("pointerdown", onPointerDown, true);
+
+    return () => {
+      window.removeEventListener("pointerdown", onPointerDown, true);
+    };
+  }, [cancelPendingVideoGestureTimers, exitSearchMode, isSearchFocused, metrics.isDesktopLayout]);
+
   const toggleFavorite = useCallback(
     (psychologist: DirectoryPsychologist) => {
-      if (isSearchFocused) return;
+      if (isMobileSearchFocusMode) return;
 
       const psychologistId = psychologist.id;
       const currentFavorited = favoriteOverrides[psychologistId] ?? Boolean(psychologist.favorited);
@@ -1436,7 +1467,7 @@ export const PsychologistsLogic = () => {
         onSuccess: clearFavoriteOverride,
       });
     },
-    [favoriteOverrides, favoritePsychologist, isSearchFocused, unfavoritePsychologist],
+    [favoriteOverrides, favoritePsychologist, isMobileSearchFocusMode, unfavoritePsychologist],
   );
 
   const favoritePendingId =
@@ -2006,7 +2037,7 @@ export const PsychologistsLogic = () => {
   const globalControlsVisibilityClass = areGlobalControlsHidden
     ? "psychologists-ui-inert pointer-events-none opacity-0"
     : "opacity-100";
-  const areDesktopFeedControlsHidden = isUiHidden || isFiltersOpen;
+  const areDesktopFeedControlsHidden = isFiltersOpen;
   const desktopFeedControlsVisibilityClass = areDesktopFeedControlsHidden
     ? "psychologists-ui-inert pointer-events-none opacity-0"
     : "opacity-100";
@@ -2023,7 +2054,7 @@ export const PsychologistsLogic = () => {
     : false;
   const shouldRenderDesktopActionRail =
     metrics.isDesktopLayout && shouldRenderGlobalControls && Boolean(desktopActionPsychologist);
-  const isDesktopActionRailHidden = isUiHidden || isFiltersOpen || isSearchFocused;
+  const isDesktopActionRailHidden = isFiltersOpen;
   const desktopActionRailVisibilityClass = isDesktopActionRailHidden
     ? "psychologists-ui-inert pointer-events-none opacity-0"
     : "opacity-100";
@@ -2036,8 +2067,8 @@ export const PsychologistsLogic = () => {
       allowAnonymous
       contentClassName="max-w-none p-0 sm:p-0 lg:pl-[240px]"
       desktopNavigation="sidebar"
-      navigationDimmed={isSearchFocused}
-      navigationHidden={isUiHidden}
+      navigationDimmed={isMobileSearchFocusMode}
+      navigationHidden={metrics.isDesktopLayout ? false : isUiHidden}
       navigationTheme="solidWhite"
     >
       <style>
@@ -2188,29 +2219,6 @@ export const PsychologistsLogic = () => {
         `}
       </style>
       <div className="relative isolate min-h-[100dvh] overflow-hidden bg-background text-white lg:bg-[#f8fafc]">
-        {metrics.isDesktopLayout && isSearchFocused ? (
-          <button
-            aria-label="Fechar busca"
-            className="fixed inset-0 z-[30] hidden cursor-default bg-transparent lg:block"
-            data-psychologists-scroll-lock="true"
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              exitSearchMode();
-            }}
-            onPointerDown={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              exitSearchMode();
-            }}
-            onWheel={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-            }}
-            type="button"
-          />
-        ) : null}
-
         <div className="relative mx-auto flex h-[100dvh] w-full max-w-[430px] justify-center overflow-visible bg-black lg:max-w-none lg:items-center lg:gap-6 lg:bg-transparent lg:px-8">
           <div className="relative z-20 h-full w-full overflow-hidden bg-black lg:w-[430px] lg:shrink-0 lg:rounded-[22px] lg:shadow-[0_24px_80px_rgba(15,23,42,0.18)]">
             {showInitialLoading ? (
@@ -3243,83 +3251,88 @@ export const PsychologistsLogic = () => {
                 <div
                   aria-hidden={areDesktopFeedControlsHidden ? true : undefined}
                   className={cn(
-                    "absolute top-[calc(env(safe-area-inset-top)+40px)] left-0 flex flex-col items-start gap-3 transition-opacity duration-200 ease-out",
+                    "absolute top-[calc(env(safe-area-inset-top)+40px)] left-0 flex w-[76px] flex-col items-center gap-3 transition-opacity duration-200 ease-out",
                     desktopFeedControlsVisibilityClass,
                   )}
                   data-psychologists-scroll-lock="true"
+                  ref={desktopSearchControlsRef}
                 >
                   {isSearchFocused ? (
-                    <form
-                      className="relative w-[224px]"
-                      onMouseDown={stopInteractionPropagation}
-                      onPointerDown={(event) => {
-                        event.stopPropagation();
-                        registerSwipeHintInteraction();
-                      }}
-                      onSubmit={handleSearchSubmit}
-                    >
-                      <div className="relative flex h-12 w-full items-center rounded-full border border-[#e2e8f0] bg-white px-3 shadow-[0_12px_34px_rgba(15,23,42,0.14)] transition-all duration-200 ease-out">
-                        <Search
-                          className="absolute left-4 h-4 w-4 text-[#64748b]"
-                          aria-hidden="true"
-                        />
-                        <input
-                          aria-label="Buscar Psicólogos"
-                          className="h-full w-full bg-transparent pr-3 pl-8 text-[14px] text-[#0f172a] outline-none placeholder:text-[#64748b]"
-                          disabled={areDesktopFeedControlsHidden}
-                          maxLength={120}
-                          name="search"
-                          onBlur={() => {
-                            window.setTimeout(() => exitSearchMode({ shouldBlur: false }), 120);
-                          }}
-                          onChange={(event) => {
-                            setSearchDraft(event.target.value);
-                            enterSearchMode();
-                          }}
-                          onFocus={enterSearchMode}
-                          placeholder="Buscar psicólogos"
-                          ref={searchInputRef}
-                          tabIndex={areDesktopFeedControlsHidden ? -1 : undefined}
-                          type="text"
-                          value={searchDraft}
-                        />
-                      </div>
-
-                      {shouldRenderSearchSuggestions ? (
-                        <div
-                          aria-label="Sugestões de psicólogos"
-                          className="absolute top-[calc(100%+8px)] left-0 w-full overflow-hidden rounded-2xl border border-[#e2e8f0] bg-white text-[#0f172a] shadow-[0_18px_45px_rgba(15,23,42,0.16)]"
-                          onMouseDown={(event) => event.preventDefault()}
-                          role="listbox"
-                        >
-                          <div className="border-[#e2e8f0] border-b px-3 py-2 text-[11px] font-extrabold tracking-[0.08em] text-[#64748b] uppercase">
-                            Profissionais cadastrados
-                          </div>
-                          {searchSuggestionsDirectory.isFetching ? (
-                            <div className="px-3 py-3 text-sm font-medium text-[#64748b]">
-                              Buscando profissionais...
-                            </div>
-                          ) : (
-                            searchSuggestionItems.map((suggestion) => (
-                              <button
-                                aria-label={`Buscar por ${suggestion.name}`}
-                                aria-selected={false}
-                                className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold transition hover:bg-[#f8fafc]"
-                                key={suggestion.id}
-                                onClick={() => handleSearchSuggestionSelect(suggestion.name)}
-                                role="option"
-                                type="button"
-                              >
-                                <span className="min-w-0 truncate">{suggestion.name}</span>
-                                <span className="shrink-0 rounded-full bg-[#eff6ff] px-2 py-0.5 text-[10px] font-extrabold text-[#308ce8]">
-                                  {suggestion.verified ? "Verificado" : "Gratuito"}
-                                </span>
-                              </button>
-                            ))
-                          )}
+                    <div className="relative h-12 w-[76px]">
+                      <span
+                        aria-hidden="true"
+                        className="-translate-x-1/2 absolute top-0 left-1/2 grid h-12 w-12 place-items-center rounded-full bg-white text-[#334155] shadow-[0_10px_28px_rgba(15,23,42,0.14)]"
+                      >
+                        <Search className="h-5 w-5" aria-hidden="true" />
+                      </span>
+                      <form
+                        className="absolute top-0 left-[64px] w-[224px]"
+                        onMouseDown={stopInteractionPropagation}
+                        onPointerDown={(event) => {
+                          event.stopPropagation();
+                          registerSwipeHintInteraction();
+                        }}
+                        onSubmit={handleSearchSubmit}
+                      >
+                        <div className="relative flex h-12 w-full items-center rounded-full border border-[#e2e8f0] bg-white px-4 shadow-[0_12px_34px_rgba(15,23,42,0.14)] transition-all duration-200 ease-out">
+                          <input
+                            aria-label="Buscar Psicólogos"
+                            className="h-full w-full bg-transparent text-[14px] text-[#0f172a] outline-none placeholder:text-[#64748b]"
+                            disabled={areDesktopFeedControlsHidden}
+                            maxLength={120}
+                            name="search"
+                            onBlur={() => {
+                              window.setTimeout(() => exitSearchMode({ shouldBlur: false }), 120);
+                            }}
+                            onChange={(event) => {
+                              setSearchDraft(event.target.value);
+                              enterSearchMode();
+                            }}
+                            onFocus={enterSearchMode}
+                            placeholder="Buscar psicólogos"
+                            ref={searchInputRef}
+                            tabIndex={areDesktopFeedControlsHidden ? -1 : undefined}
+                            type="text"
+                            value={searchDraft}
+                          />
                         </div>
-                      ) : null}
-                    </form>
+
+                        {shouldRenderSearchSuggestions ? (
+                          <div
+                            aria-label="Sugestões de psicólogos"
+                            className="absolute top-[calc(100%+8px)] left-0 w-full overflow-hidden rounded-2xl border border-[#e2e8f0] bg-white text-[#0f172a] shadow-[0_18px_45px_rgba(15,23,42,0.16)]"
+                            onMouseDown={(event) => event.preventDefault()}
+                            role="listbox"
+                          >
+                            <div className="border-[#e2e8f0] border-b px-3 py-2 text-[11px] font-extrabold tracking-[0.08em] text-[#64748b] uppercase">
+                              Profissionais cadastrados
+                            </div>
+                            {searchSuggestionsDirectory.isFetching ? (
+                              <div className="px-3 py-3 text-sm font-medium text-[#64748b]">
+                                Buscando profissionais...
+                              </div>
+                            ) : (
+                              searchSuggestionItems.map((suggestion) => (
+                                <button
+                                  aria-label={`Buscar por ${suggestion.name}`}
+                                  aria-selected={false}
+                                  className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold transition hover:bg-[#f8fafc]"
+                                  key={suggestion.id}
+                                  onClick={() => handleSearchSuggestionSelect(suggestion.name)}
+                                  role="option"
+                                  type="button"
+                                >
+                                  <span className="min-w-0 truncate">{suggestion.name}</span>
+                                  <span className="shrink-0 rounded-full bg-[#eff6ff] px-2 py-0.5 text-[10px] font-extrabold text-[#308ce8]">
+                                    {suggestion.verified ? "Verificado" : "Gratuito"}
+                                  </span>
+                                </button>
+                              ))
+                            )}
+                          </div>
+                        ) : null}
+                      </form>
+                    </div>
                   ) : (
                     <button
                       aria-label="Pesquisar psicólogos"
@@ -3368,11 +3381,11 @@ export const PsychologistsLogic = () => {
                 <div
                   aria-hidden={isDesktopActionRailHidden ? true : undefined}
                   className={cn(
-                    "absolute top-1/2 left-0 flex -translate-y-[35%] flex-col items-center gap-4 transition-opacity duration-200 ease-out",
+                    "absolute top-1/2 left-0 flex w-[76px] -translate-y-[35%] flex-col items-center gap-4 transition-opacity duration-200 ease-out",
                     desktopActionRailVisibilityClass,
                   )}
                 >
-                  <div className="grid justify-items-center gap-1.5 text-center">
+                  <div className="grid w-[76px] justify-items-center gap-1.5 text-center">
                     <button
                       aria-label={`Favoritar ${desktopActionPsychologist.name}`}
                       aria-busy={desktopActionIsFavoritePending}
@@ -3398,7 +3411,7 @@ export const PsychologistsLogic = () => {
                     <span className="text-[11px] font-bold text-[#475569]">Favoritar</span>
                   </div>
 
-                  <div className="grid justify-items-center gap-1.5 text-center">
+                  <div className="grid w-[76px] justify-items-center gap-1.5 text-center">
                     <button
                       aria-label={`Compartilhar perfil de ${desktopActionPsychologist.name}`}
                       className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#334155] shadow-[0_10px_28px_rgba(15,23,42,0.14)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
@@ -3415,7 +3428,7 @@ export const PsychologistsLogic = () => {
                     <span className="text-[11px] font-bold text-[#475569]">Compartilhar</span>
                   </div>
 
-                  <div className="grid justify-items-center gap-1.5 text-center">
+                  <div className="grid w-[76px] justify-items-center gap-1.5 text-center">
                     {desktopActionPsychologist.whatsapp_url ? (
                       <a
                         aria-label={`Chamar ${desktopActionPsychologist.name} no WhatsApp`}
@@ -3452,7 +3465,7 @@ export const PsychologistsLogic = () => {
                     <span className="text-[11px] font-bold text-[#475569]">WhatsApp</span>
                   </div>
 
-                  <div className="grid justify-items-center gap-1.5 text-center">
+                  <div className="grid w-[76px] justify-items-center gap-1.5 text-center">
                     <Link
                       aria-label={`Ver perfil de ${desktopActionPsychologist.name}`}
                       className="grid h-12 w-12 place-items-center overflow-hidden rounded-full bg-white p-0.5 text-[#0f172a] shadow-[0_10px_28px_rgba(15,23,42,0.14)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"

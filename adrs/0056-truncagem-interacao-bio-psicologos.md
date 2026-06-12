@@ -428,3 +428,13 @@ A Pesquisa desktop nao fica permanentemente aberta: o icone de lupa expande um i
 Favoritar, Compartilhar, WhatsApp e Perfil permanecem em outro grupo lateral, mais abaixo, porque sao acoes do psicologo atual. Essa separacao evita uma coluna unica ambigua e preserva o video mais limpo no desktop. No mobile, busca/filtro e acoes laterais continuam no video, sem mudanca de layout ou gesto.
 
 Como a busca sai da area superior do video no desktop, os selos de beneficios sobem apenas nesse breakpoint; no mobile, continuam abaixo da busca para preservar a composicao atual.
+
+## Atualizacao 2026-06-12: desktop busca simples e UI imersiva limitada ao video
+
+A variante desktop de `/app/psychologists` passa a tratar a busca como popover lateral simples, diferente do foco de busca mobile.
+
+No mobile, focar a busca continua pausando o video, bloqueando gestos e colocando a tela em segundo plano. No desktop, clicar na lupa apenas abre um campo lateral fora do video, com foco automatico, sem pausar o player, sem overlay visual, sem blur, sem esconder sidebar e sem esconder as acoes externas. O fechamento ocorre por ESC, blur ou clique fora por listener de pointer, sem criar uma camada visual sobre a pagina.
+
+A coluna direita desktop tambem passa a ter um eixo fixo de 76px para alinhar Pesquisa, Filtro, Favoritar, Compartilhar, WhatsApp e Perfil pelo mesmo centro horizontal. Pesquisa/Filtro continuam em um grupo superior e as acoes do psicologo continuam em grupo inferior, preservando a separacao sem desalinhamento visual.
+
+O modo sem UI no desktop foi limitado ao que esta dentro/sobre o video: textos, chips, gradientes e demais overlays internos somem, mas a navegacao lateral esquerda e a coluna externa direita permanecem visiveis e interativas. No mobile, a regra anterior de esconder a interface inteira permanece inalterada.
