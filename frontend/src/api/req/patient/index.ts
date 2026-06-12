@@ -93,10 +93,7 @@ export const favoritePsychologist = async (id: string) => {
     params: { id },
   });
 
-  return handleReq<FavoritePsychologistResponse>({
-    ...handle,
-    showSuccess: true,
-  });
+  return handleReq<FavoritePsychologistResponse>(handle);
 };
 
 export const unfavoritePsychologist = async (id: string) => {
@@ -106,10 +103,7 @@ export const unfavoritePsychologist = async (id: string) => {
     params: { id },
   });
 
-  return handleReq<FavoritePsychologistResponse>({
-    ...handle,
-    showSuccess: true,
-  });
+  return handleReq<FavoritePsychologistResponse>(handle);
 };
 
 export const getFollowedPsychologists = async (query: PatientRelationQuery = {}) => {

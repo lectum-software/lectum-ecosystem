@@ -201,3 +201,16 @@ A tela `/app/psychologists` refinou a prioridade dos gestos sobre a area livre d
 - a barra de progresso permanece com prioridade propria, bloqueando propagacao e cancelando timers de toque/long press durante seek.
 
 Essa decisao preserva autoplay inicial em mute, mas evita que o icone de mute continue poluindo a tela depois da primeira interacao real do usuario.
+
+## Atualizacao 2026-06-12: favoritos silenciosos no feed imersivo
+
+A experiencia imersiva de `/app/psychologists` nao deve exibir notificacoes textuais de sucesso ao favoritar ou desfavoritar profissionais.
+
+A decisao foi aplicar a mudanca na requisicao compartilhada de favoritos do paciente: `favoritePsychologist` e `unfavoritePsychologist` continuam usando os endpoints reais e a camada de cache/mutacao existente, mas nao passam mais `showSuccess` para `handleReq`.
+
+Com isso:
+
+- a acao permanece persistida e sincronizada com a tela de Favoritos;
+- o feedback visual fica restrito ao icone de coracao e a animacao do duplo toque no feed;
+- mensagens verdes de sucesso deixam de competir com o video e nao quebram o modo imersivo;
+- erros seguem pelo fluxo global de erro do `handleReq`, pois a solicitacao removeu apenas o feedback textual de sucesso.

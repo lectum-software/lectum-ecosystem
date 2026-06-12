@@ -727,3 +727,18 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: favoritos silenciosos no feed imersivo (2026-06-12)
+
+- Pedido do usuario: remover completamente a notificacao verde exibida ao favoritar ou desfavoritar psicologos.
+- As requisicoes reais `POST /api/private/user/favorites/:id` e `DELETE /api/private/user/favorites/:id` deixaram de solicitar `showSuccess` no `handleReq`, entao mensagens como `Psicologo adicionado aos favoritos` e `Psicologo removido dos favoritos` nao geram toast/snackbar/banner.
+- A persistencia no banco, invalidacao/sincronizacao das queries de favoritos, estado otimista e sincronizacao com a tela de Favoritos foram preservadas no caller React Query existente.
+- O feedback da tela de Psicologos fica restrito ao estado visual do coracao e ao feedback animado ja existente no duplo toque, sem texto temporario sobre o video.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, navbar, busca, filtros ou navegacao de perfil.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual permanece `_product/proto/Psicologos.jpg` e o contrato da TASK-13.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
