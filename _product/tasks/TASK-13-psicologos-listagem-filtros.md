@@ -773,3 +773,20 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: foco prioritario da busca com pausa do video (2026-06-12)
+
+- Pedido do usuario: ao focar na busca da tela de Psicologos, colocar a barra em primeiro plano, escurecer/desfocar o restante da tela e pausar imediatamente o video ativo sem reiniciar nem alterar progresso.
+- A busca global ganhou modo focado com overlay `rgba(0,0,0,0.35)`, leve blur do fundo, barra mais solida e filtro acima do overlay; video, selos, textos, botoes laterais e barra de progresso ficam em segundo plano.
+- Ao entrar no modo de busca, o video ativo e pausado no frame atual e a flag local registra se ele estava reproduzindo para retomar apenas quando apropriado.
+- Ao tocar no overlay, perder foco, pressionar `Escape`, submeter busca ou selecionar sugestao, a busca sai do modo focado, o teclado fecha e o video retoma do mesmo `currentTime` quando estava tocando antes da busca.
+- Enquanto a busca esta focada, scroll vertical do feed, troca de slide, single tap, double tap, long press, favoritar e interacao com a barra de progresso ficam bloqueados pela combinacao de overlay, `overflow-hidden`, guards de gesto e cancelamento de timers pendentes.
+- O `PrivateTemplate` recebeu a prop opcional `navigationDimmed`, usada apenas nesta tela para manter a navbar visivel, mas visualmente secundaria e sem interacao durante o foco da busca.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, contrato da API, sugestoes, filtros ou navegacao de perfil.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual permanece `_product/proto/Psicologos.jpg` e o contrato da TASK-13.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

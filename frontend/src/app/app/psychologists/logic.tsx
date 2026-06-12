@@ -405,6 +405,7 @@ export const PsychologistsLogic = () => {
   const filterDialogRef = useRef<HTMLDivElement | null>(null);
   const feedContainerRef = useRef<HTMLDivElement | null>(null);
   const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
   const bioTextRef = useRef<HTMLButtonElement | null>(null);
   const bioContentRef = useRef<HTMLSpanElement | null>(null);
   const progressTrackRef = useRef<HTMLDivElement | null>(null);
@@ -424,6 +425,8 @@ export const PsychologistsLogic = () => {
   const suppressNextTapRef = useRef(false);
   const didLongPressRef = useRef(false);
   const didMoveDuringPressRef = useRef(false);
+  const isSearchModeActiveRef = useRef(false);
+  const shouldResumeVideoAfterSearchRef = useRef(false);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
   const { favoritePsychologist, unfavoritePsychologist } = usePatient({
     enableProfile: false,
@@ -596,10 +599,13 @@ export const PsychologistsLogic = () => {
     suppressNextTapRef.current = false;
     didLongPressRef.current = false;
     didMoveDuringPressRef.current = false;
+    isSearchModeActiveRef.current = false;
+    shouldResumeVideoAfterSearchRef.current = false;
     pointerStartRef.current = null;
 
     setIsUiHidden(false);
     setIsLongPressing(false);
+    setIsSearchFocused(false);
     setShowDoubleTapFavoriteFeedback(false);
     setIsVideoProgressSeeking(false);
     setVideoSeekPreviewRatio(null);
@@ -938,6 +944,24 @@ export const PsychologistsLogic = () => {
     [isBioTruncated],
   );
 
+  const cancelPendingVideoGestureTimers = useCallback(() => {
+    if (tapTimeoutRef.current) {
+      window.clearTimeout(tapTimeoutRef.current);
+      tapTimeoutRef.current = null;
+    }
+
+    if (longPressTimeoutRef.current) {
+      window.clearTimeout(longPressTimeoutRef.current);
+      longPressTimeoutRef.current = null;
+    }
+
+    pointerStartRef.current = null;
+    didLongPressRef.current = false;
+    didMoveDuringPressRef.current = false;
+    suppressNextTapRef.current = false;
+    setIsLongPressing(false);
+  }, []);
+
   const applyFilterValues = useCallback(
     (values: PsychologistsFilterForm) => {
       const next = buildFiltersParams(normalizeFormValues(values), 1);
@@ -947,6 +971,55 @@ export const PsychologistsLogic = () => {
       });
     },
     [router],
+  );
+
+  const enterSearchMode = useCallback(() => {
+    if (isSearchModeActiveRef.current) {
+      setIsSearchFocused(true);
+      return;
+    }
+
+    isSearchModeActiveRef.current = true;
+    cancelPendingVideoGestureTimers();
+    setShowDoubleTapFavoriteFeedback(false);
+
+    const currentVideo = backgroundVideoRef.current;
+    shouldResumeVideoAfterSearchRef.current = Boolean(
+      currentVideo && shouldShowVideo && !currentVideo.paused,
+    );
+
+    if (currentVideo && shouldShowVideo) {
+      currentVideo.pause();
+      setIsVideoPaused(true);
+    }
+
+    setIsSearchFocused(true);
+  }, [cancelPendingVideoGestureTimers, shouldShowVideo]);
+
+  const exitSearchMode = useCallback(
+    (options?: { resumeVideo?: boolean; shouldBlur?: boolean }) => {
+      if (options?.shouldBlur !== false) {
+        searchInputRef.current?.blur();
+      }
+
+      isSearchModeActiveRef.current = false;
+      setIsSearchFocused(false);
+
+      const shouldResumeVideo =
+        options?.resumeVideo !== false && shouldResumeVideoAfterSearchRef.current;
+      shouldResumeVideoAfterSearchRef.current = false;
+
+      if (!shouldResumeVideo) return;
+
+      const currentVideo = backgroundVideoRef.current;
+      if (!currentVideo || !shouldShowVideo) return;
+
+      setIsVideoPaused(false);
+      void currentVideo.play().catch(() => {
+        setIsVideoPaused(true);
+      });
+    },
+    [shouldShowVideo],
   );
 
   const handleSubmitFilters = filters.hook.handleSubmit((values) => {
@@ -961,10 +1034,10 @@ export const PsychologistsLogic = () => {
   const clearFilters = useCallback(() => {
     filters.hook.reset(defaultPsychologistsFilterValues);
     setSearchDraft("");
-    setIsSearchFocused(false);
+    exitSearchMode();
     applyFilterValues(defaultPsychologistsFilterValues);
     setIsFiltersOpen(false);
-  }, [applyFilterValues, filters.hook]);
+  }, [applyFilterValues, exitSearchMode, filters.hook]);
 
   const handleSearchSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
@@ -972,28 +1045,32 @@ export const PsychologistsLogic = () => {
       const nextSearch = searchDraft.trim();
 
       setSearchDraft(nextSearch);
-      setIsSearchFocused(false);
+      exitSearchMode();
       applyFilterValues({
         ...filterValues,
         search: nextSearch,
       });
     },
-    [applyFilterValues, filterValues, searchDraft],
+    [applyFilterValues, exitSearchMode, filterValues, searchDraft],
   );
 
   const handleSearchSuggestionSelect = useCallback(
     (name: string) => {
       setSearchDraft(name);
-      setIsSearchFocused(false);
+      exitSearchMode();
       applyFilterValues({
         ...filterValues,
         search: name,
       });
     },
-    [applyFilterValues, filterValues],
+    [applyFilterValues, exitSearchMode, filterValues],
   );
 
   const handleFiltersOpen = useCallback(() => {
+    exitSearchMode({
+      resumeVideo: false,
+    });
+
     const currentVideo = backgroundVideoRef.current;
     if (currentVideo && shouldShowVideo) {
       currentVideo.pause();
@@ -1002,7 +1079,7 @@ export const PsychologistsLogic = () => {
 
     filters.hook.reset(filterValues);
     setIsFiltersOpen(true);
-  }, [filterValues, filters.hook, shouldShowVideo]);
+  }, [exitSearchMode, filterValues, filters.hook, shouldShowVideo]);
 
   const handleFiltersClose = useCallback(() => {
     filters.hook.reset(filterValues);
@@ -1050,6 +1127,8 @@ export const PsychologistsLogic = () => {
 
   const handleFeedScroll = useCallback(
     (event: UIEvent<HTMLDivElement>) => {
+      if (isSearchFocused) return;
+
       const container = event.currentTarget;
       const slideHeight = container.clientHeight;
       if (slideHeight <= 0 || psychologists.length === 0) return;
@@ -1064,7 +1143,7 @@ export const PsychologistsLogic = () => {
         setActivePsychologistIndex(nextIndex);
       }
     },
-    [activePsychologistIndex, markSwipeHintSeen, psychologists.length],
+    [activePsychologistIndex, isSearchFocused, markSwipeHintSeen, psychologists.length],
   );
 
   useEffect(() => {
@@ -1088,8 +1167,27 @@ export const PsychologistsLogic = () => {
     };
   }, [handleFiltersClose, isFiltersOpen]);
 
+  useEffect(() => {
+    if (!isSearchFocused) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+
+      event.preventDefault();
+      exitSearchMode();
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [exitSearchMode, isSearchFocused]);
+
   const toggleFavorite = useCallback(
     (psychologist: DirectoryPsychologist) => {
+      if (isSearchFocused) return;
+
       const psychologistId = psychologist.id;
       const currentFavorited = favoriteOverrides[psychologistId] ?? Boolean(psychologist.favorited);
       const nextFavorited = !currentFavorited;
@@ -1119,7 +1217,7 @@ export const PsychologistsLogic = () => {
         onSuccess: clearFavoriteOverride,
       });
     },
-    [favoriteOverrides, favoritePsychologist, unfavoritePsychologist],
+    [favoriteOverrides, favoritePsychologist, isSearchFocused, unfavoritePsychologist],
   );
 
   const favoritePendingId =
@@ -1180,6 +1278,8 @@ export const PsychologistsLogic = () => {
 
   const handleVideoAreaTap = useCallback(
     (psychologist: DirectoryPsychologist) => {
+      if (isSearchFocused) return;
+
       if (suppressNextTapRef.current || didMoveDuringPressRef.current) {
         suppressNextTapRef.current = false;
         didMoveDuringPressRef.current = false;
@@ -1211,12 +1311,19 @@ export const PsychologistsLogic = () => {
         setIsUiHidden((current) => !current);
       }, VIDEO_SINGLE_TAP_DELAY_MS);
     },
-    [isVideoMuted, playCurrentVideo, shouldShowVideo, triggerDoubleTapFavorite, unmuteCurrentVideo],
+    [
+      isSearchFocused,
+      isVideoMuted,
+      playCurrentVideo,
+      shouldShowVideo,
+      triggerDoubleTapFavorite,
+      unmuteCurrentVideo,
+    ],
   );
 
   const handleLongPressStart = useCallback(
     (event: PointerEvent<HTMLButtonElement>) => {
-      if (!event.isPrimary || !shouldShowVideo) return;
+      if (!event.isPrimary || !shouldShowVideo || isSearchFocused) return;
 
       event.currentTarget.setPointerCapture(event.pointerId);
       pointerStartRef.current = {
@@ -1249,7 +1356,7 @@ export const PsychologistsLogic = () => {
         setIsLongPressing(true);
       }, VIDEO_LONG_PRESS_DELAY_MS);
     },
-    [shouldShowVideo],
+    [isSearchFocused, shouldShowVideo],
   );
 
   const handleLongPressMove = useCallback((event: PointerEvent<HTMLButtonElement>) => {
@@ -1330,23 +1437,6 @@ export const PsychologistsLogic = () => {
     [isVideoMuted, pauseVideoPlayback, playCurrentVideo, shouldShowVideo, unmuteCurrentVideo],
   );
 
-  const cancelPendingVideoGestureTimers = useCallback(() => {
-    if (tapTimeoutRef.current) {
-      window.clearTimeout(tapTimeoutRef.current);
-      tapTimeoutRef.current = null;
-    }
-
-    if (longPressTimeoutRef.current) {
-      window.clearTimeout(longPressTimeoutRef.current);
-      longPressTimeoutRef.current = null;
-    }
-
-    pointerStartRef.current = null;
-    didLongPressRef.current = false;
-    didMoveDuringPressRef.current = false;
-    setIsLongPressing(false);
-  }, []);
-
   const seekActiveVideoToTime = useCallback((nextTime: number) => {
     const currentVideo = backgroundVideoRef.current;
     if (!currentVideo) return;
@@ -1386,7 +1476,7 @@ export const PsychologistsLogic = () => {
     (event: PointerEvent<HTMLDivElement>) => {
       event.stopPropagation();
       event.preventDefault();
-      if (!event.isPrimary || !shouldShowVideo) return;
+      if (!event.isPrimary || !shouldShowVideo || isSearchFocused) return;
 
       registerSwipeHintInteraction();
       cancelPendingVideoGestureTimers();
@@ -1396,6 +1486,7 @@ export const PsychologistsLogic = () => {
     },
     [
       cancelPendingVideoGestureTimers,
+      isSearchFocused,
       registerSwipeHintInteraction,
       seekActiveVideoFromClientX,
       shouldShowVideo,
@@ -1405,12 +1496,12 @@ export const PsychologistsLogic = () => {
   const handleVideoProgressPointerMove = useCallback(
     (event: PointerEvent<HTMLDivElement>) => {
       event.stopPropagation();
-      if (!isVideoProgressSeeking) return;
+      if (!isVideoProgressSeeking || isSearchFocused) return;
 
       event.preventDefault();
       seekActiveVideoFromClientX(event.clientX, event.currentTarget);
     },
-    [isVideoProgressSeeking, seekActiveVideoFromClientX],
+    [isSearchFocused, isVideoProgressSeeking, seekActiveVideoFromClientX],
   );
 
   const handleVideoProgressPointerEnd = useCallback(
@@ -1431,6 +1522,8 @@ export const PsychologistsLogic = () => {
 
   const handleVideoProgressKeyDown = useCallback(
     (event: ReactKeyboardEvent<HTMLDivElement>) => {
+      if (isSearchFocused) return;
+
       const currentVideo = backgroundVideoRef.current;
       if (!currentVideo || !shouldShowVideo) return;
 
@@ -1466,6 +1559,7 @@ export const PsychologistsLogic = () => {
     },
     [
       cancelPendingVideoGestureTimers,
+      isSearchFocused,
       seekActiveVideoToTime,
       shouldShowVideo,
       syncActiveVideoProgress,
@@ -1479,6 +1573,7 @@ export const PsychologistsLogic = () => {
     canSwipeBetweenPsychologists &&
     !isUiHidden &&
     !isFiltersOpen &&
+    !isSearchFocused &&
     !showInitialLoading &&
     !errorMessage;
   const shouldRenderGlobalControls =
@@ -1490,6 +1585,7 @@ export const PsychologistsLogic = () => {
     <PrivateTemplate
       allowAnonymous
       contentClassName="max-w-none p-0 sm:p-0"
+      navigationDimmed={isSearchFocused}
       navigationHidden={isUiHidden}
       navigationTheme="solidWhite"
     >
@@ -1654,10 +1750,34 @@ export const PsychologistsLogic = () => {
 
             {shouldRenderGlobalControls ? (
               <>
+                {isSearchFocused ? (
+                  <button
+                    aria-label="Fechar busca"
+                    className="absolute inset-0 z-[60] cursor-default bg-black/35 backdrop-blur-[2px] transition-opacity duration-200 ease-out"
+                    data-psychologists-scroll-lock="true"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      exitSearchMode();
+                    }}
+                    onPointerDown={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      exitSearchMode();
+                    }}
+                    onWheel={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                    }}
+                    type="button"
+                  />
+                ) : null}
+
                 <form
                   className={cn(
-                    "absolute z-50 transition-opacity duration-200 ease-out",
+                    "absolute z-[70] transition-all duration-200 ease-out",
                     globalControlsVisibilityClass,
+                    isSearchFocused ? "scale-[1.015]" : null,
                   )}
                   data-psychologists-scroll-lock="true"
                   onMouseDown={stopInteractionPropagation}
@@ -1673,22 +1793,41 @@ export const PsychologistsLogic = () => {
                     height: `${metrics.searchHeight}px`,
                   }}
                 >
-                  <div className="relative flex h-full w-full items-center rounded-[999px] border border-[rgba(255,255,255,0.35)] bg-white/35 p-3 backdrop-blur-md">
-                    <Search className="absolute left-3 h-4 w-4 text-white/85" aria-hidden="true" />
+                  <div
+                    className={cn(
+                      "relative flex h-full w-full items-center rounded-[999px] border p-3 backdrop-blur-md transition-all duration-200 ease-out",
+                      isSearchFocused
+                        ? "border-white/80 bg-white/[0.92] shadow-[0_18px_46px_rgba(15,23,42,0.28)]"
+                        : "border-[rgba(255,255,255,0.35)] bg-white/35",
+                    )}
+                  >
+                    <Search
+                      className={cn(
+                        "absolute left-3 h-4 w-4 transition-colors",
+                        isSearchFocused ? "text-[#64748b]" : "text-white/85",
+                      )}
+                      aria-hidden="true"
+                    />
                     <input
                       aria-label="Buscar Psicólogos"
-                      className="h-full w-full bg-transparent pr-3 pl-7 text-[14px] text-white outline-none placeholder:text-white/72"
+                      className={cn(
+                        "h-full w-full bg-transparent pr-3 pl-7 text-[14px] outline-none transition-colors",
+                        isSearchFocused
+                          ? "text-[#0f172a] placeholder:text-[#64748b]"
+                          : "text-white placeholder:text-white/72",
+                      )}
                       maxLength={120}
                       onBlur={() => {
-                        window.setTimeout(() => setIsSearchFocused(false), 120);
+                        window.setTimeout(() => exitSearchMode({ shouldBlur: false }), 120);
                       }}
                       onChange={(event) => {
                         setSearchDraft(event.target.value);
-                        setIsSearchFocused(true);
+                        enterSearchMode();
                       }}
-                      onFocus={() => setIsSearchFocused(true)}
+                      onFocus={enterSearchMode}
                       placeholder="Busque psicólogos"
                       name="search"
+                      ref={searchInputRef}
                       type="text"
                       value={searchDraft}
                     />
@@ -1733,8 +1872,11 @@ export const PsychologistsLogic = () => {
                 <button
                   aria-label="Abrir filtros"
                   className={cn(
-                    "absolute z-50 grid items-center justify-center rounded-full border border-[rgba(255,255,255,0.35)] bg-white/35 text-white shadow-[0_5px_24px_rgba(15,23,42,0.2)] backdrop-blur-md transition hover:bg-white/45",
+                    "absolute z-[70] grid items-center justify-center rounded-full border shadow-[0_5px_24px_rgba(15,23,42,0.2)] backdrop-blur-md transition hover:bg-white/45",
                     globalControlsVisibilityClass,
+                    isSearchFocused
+                      ? "border-white/80 bg-white/[0.92] text-[#0f172a] shadow-[0_18px_46px_rgba(15,23,42,0.24)]"
+                      : "border-[rgba(255,255,255,0.35)] bg-white/35 text-white",
                   )}
                   onClick={(event) => {
                     event.stopPropagation();
@@ -1742,6 +1884,11 @@ export const PsychologistsLogic = () => {
                   }}
                   onPointerDown={(event) => {
                     event.stopPropagation();
+                    if (isSearchFocused) {
+                      exitSearchMode({
+                        resumeVideo: false,
+                      });
+                    }
                     registerSwipeHintInteraction();
                   }}
                   style={{
@@ -1759,10 +1906,13 @@ export const PsychologistsLogic = () => {
 
             {!showInitialLoading && !errorMessage && psychologists.length > 0 ? (
               <div
-                className="psychologists-video-feed h-full w-full snap-y snap-mandatory overflow-y-auto overscroll-contain"
-                onPointerDownCapture={registerSwipeHintInteraction}
-                onScroll={handleFeedScroll}
-                onWheelCapture={registerSwipeHintInteraction}
+                className={cn(
+                  "psychologists-video-feed h-full w-full snap-y snap-mandatory overscroll-contain",
+                  isSearchFocused ? "overflow-hidden" : "overflow-y-auto",
+                )}
+                onPointerDownCapture={isSearchFocused ? undefined : registerSwipeHintInteraction}
+                onScroll={isSearchFocused ? undefined : handleFeedScroll}
+                onWheelCapture={isSearchFocused ? undefined : registerSwipeHintInteraction}
                 ref={feedContainerRef}
               >
                 {psychologists.map((psychologist, index) => {

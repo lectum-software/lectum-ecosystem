@@ -31,6 +31,7 @@ type PrivateTemplateProps = PropsWithChildren<{
   allowAnonymous?: boolean;
   autoHideNavigation?: boolean;
   contentClassName?: string;
+  navigationDimmed?: boolean;
   navigationHidden?: boolean;
   navigationTheme?: "default" | "solidWhite";
   showHeader?: boolean;
@@ -171,6 +172,7 @@ export const PrivateTemplate = ({
   autoHideNavigation = false,
   children,
   contentClassName,
+  navigationDimmed = false,
   navigationHidden = false,
   navigationTheme = "default",
   showHeader = true,
@@ -253,7 +255,8 @@ export const PrivateTemplate = ({
     <nav
       aria-label="Navegação principal"
       className={cn(
-        "fixed inset-x-0 bottom-0 z-40 transition-transform duration-200 ease-out sm:bottom-4 sm:left-1/2 sm:right-auto sm:w-[min(560px,calc(100vw-2rem))] sm:-translate-x-1/2 sm:rounded-[var(--lectum-card-radius)]",
+        "fixed inset-x-0 bottom-0 z-40 transition-[transform,opacity,filter] duration-200 ease-out sm:bottom-4 sm:left-1/2 sm:right-auto sm:w-[min(560px,calc(100vw-2rem))] sm:-translate-x-1/2 sm:rounded-[var(--lectum-card-radius)]",
+        navigationDimmed ? "opacity-55 brightness-90 saturate-75" : "opacity-100",
         navigationTheme === "solidWhite"
           ? "border-t border-[#e5e7eb] bg-white shadow-[0_-10px_30px_rgb(15_23_42_/_8%)]"
           : "border-t border-border bg-surface/95 shadow-[0_-10px_30px_rgb(15_23_42_/_8%)] backdrop-blur supports-[backdrop-filter]:bg-surface/85 sm:border",
@@ -261,7 +264,7 @@ export const PrivateTemplate = ({
       style={{
         paddingBottom: "env(safe-area-inset-bottom)",
         transform: isNavigationRenderedVisible ? "translateY(0)" : "translateY(140%)",
-        pointerEvents: isNavigationRenderedVisible ? "auto" : "none",
+        pointerEvents: isNavigationRenderedVisible && !navigationDimmed ? "auto" : "none",
       }}
     >
       <ul className="mx-auto grid w-full max-w-[560px] grid-cols-5">

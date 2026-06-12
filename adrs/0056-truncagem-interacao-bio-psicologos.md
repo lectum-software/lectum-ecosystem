@@ -230,3 +230,11 @@ A decisao preserva chips superiores, busca, filtro, navbar, coluna lateral, gest
 A barra de busca global de `/app/psychologists` passa a usar o placeholder mais generico `Busque psicólogos`, reduzindo ruido visual no feed imersivo.
 
 A mudanca e apenas de microcopy: a busca continua aplicando o mesmo parametro textual, mantendo sugestoes, filtros, rota, dados reais da API e comportamento de busca por nome/CRP sem alterar contrato tecnico.
+
+## Atualizacao 2026-06-12: foco prioritario da busca
+
+A busca global de `/app/psychologists` passa a ter prioridade sobre a experiencia imersiva quando recebe foco.
+
+A decisao foi pausar o video ativo no proprio `HTMLVideoElement`, preservando `currentTime`, e manter uma flag local para retomar apenas se o video estava reproduzindo antes da busca. O modo focado adiciona um overlay dentro da tela, bloqueia scroll e gestos do feed, e eleva busca/filtro acima do restante do conteudo.
+
+Para manter a navbar visivel sem competir com a busca, o `PrivateTemplate` recebeu a prop opcional `navigationDimmed`, que reduz opacidade/saturacao e remove eventos apenas quando uma tela solicitar. O comportamento default das demais rotas permanece inalterado.
