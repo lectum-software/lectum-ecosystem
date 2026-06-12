@@ -284,3 +284,11 @@ A experiencia do feed de `/app/psychologists` passa a tratar cada entrada no vie
 A decisao foi resetar todos os elementos `<video>` do feed sempre que a chave do video ativo muda. Videos inativos sao pausados e enviados para `currentTime = 0`; o novo video ativo tambem e enviado para o inicio antes de reproduzir. A barra de progresso global do slide ativo e zerada junto com o preview de scrubbing.
 
 Isso evita que, ao voltar para um psicologo ja assistido, o video continue do ponto anterior. A navegacao vertical passa a se comportar como uma lista de exibicoes completas, com cada video iniciando do comeco ao entrar novamente como ativo.
+
+## Atualizacao 2026-06-12: UI invisivel inativa no modo imersivo
+
+O modo imersivo de `/app/psychologists` passa a tratar UI oculta como UI realmente inativa, nao apenas transparente.
+
+A decisao foi aplicar uma classe inert propria nos wrappers de busca/filtro e do slide quando `isUiHidden=true`, com `pointer-events: none` tambem para todos os descendentes. Isso corrige casos em que filhos com `pointer-events-auto` continuavam clicaveis mesmo com o wrapper invisivel.
+
+Elementos interativos ocultos tambem recebem `disabled` ou `tabIndex=-1` quando aplicavel. Assim, nome, selo verificado, bio, profissao, avaliacao, disponibilidade, botoes laterais, busca e filtro deixam de receber clique/foco no modo sem UI. Apenas a area do video e a barra de progresso continuam interativas.

@@ -889,3 +889,21 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: UI invisivel inativa no modo imersivo (2026-06-12)
+
+- Pedido do usuario: corrigir bug em que, com `isUiHidden=true`, areas invisiveis da UI ainda recebiam clique, principalmente a regiao do nome que redirecionava para o perfil.
+- A tela agora aplica uma classe inert propria (`psychologists-ui-inert`) nos wrappers globais e do slide quando a UI esta oculta, forçando `pointer-events: none` tambem nos descendentes que antes tinham `pointer-events-auto`.
+- Busca e filtro recebem `aria-hidden`, `disabled`/`tabIndex=-1` quando escondidos, impedindo clique, foco e acionamento invisivel.
+- O bloco inferior do slide recebe `aria-hidden`; o nome, favoritos, compartilhar, WhatsApp e link/avatar de perfil ficam desabilitados ou removidos da ordem de foco quando `slideIsUiHidden=true`.
+- Selos/chips superiores, indicador de disponibilidade, profissao, avaliacao e bio ficam sem eventos por heranca da camada inert e nao bloqueiam o toque do video.
+- A navbar continua usando `navigationHidden`, que remove eventos no `PrivateTemplate`; apenas video e barra de progresso permanecem interativos no modo imersivo.
+- Com a UI oculta, tocar onde ficaria o nome passa a atingir a area livre do video e apenas restaura a UI, sem navegar para o perfil.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, busca, filtros, bio, favoritos, barra de progresso, navbar ou navegacao quando a UI esta visivel.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual permanece `_product/proto/Psicologos.jpg` e o contrato da TASK-13.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
