@@ -16,7 +16,6 @@ import {
   X,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   type CSSProperties,
@@ -1053,8 +1052,12 @@ export const PsychologistsLogic = () => {
     event.stopPropagation();
   }, []);
 
-  const navigateToProfile = useCallback(
-    (psychologistId: string, event: { stopPropagation: () => void }) => {
+  const navigateToPublicPsychologistProfile = useCallback(
+    (
+      psychologistId: string,
+      event: { preventDefault?: () => void; stopPropagation: () => void },
+    ) => {
+      event.preventDefault?.();
       event.stopPropagation();
 
       router.push(`/app/psychologist/${psychologistId}`);
@@ -2042,9 +2045,6 @@ export const PsychologistsLogic = () => {
     ? "psychologists-ui-inert pointer-events-none opacity-0"
     : "opacity-100";
   const desktopActionPsychologist = featuredPsychologist;
-  const desktopActionProfileHref = desktopActionPsychologist
-    ? `/app/psychologist/${desktopActionPsychologist.id}`
-    : "";
   const desktopActionIsFavorited = desktopActionPsychologist
     ? (favoriteOverrides[desktopActionPsychologist.id] ??
       Boolean(desktopActionPsychologist.favorited))
@@ -2431,7 +2431,6 @@ export const PsychologistsLogic = () => {
               >
                 {psychologists.map((psychologist, index) => {
                   const isActiveSlide = index === activePsychologistIndex;
-                  const slideProfileHref = `/app/psychologist/${psychologist.id}`;
                   const slideVideoSrc = resolvePublicMediaUrl(psychologist.video_url);
                   const slidePosterSrc = psychologist.video_cover_url
                     ? resolvePublicMediaUrl(psychologist.video_cover_url)
@@ -2884,7 +2883,9 @@ export const PsychologistsLogic = () => {
                                   aria-label={`Ver perfil de ${psychologist.name}`}
                                   className="block w-full min-w-0 max-w-full cursor-pointer text-left font-bold text-white"
                                   disabled={slideIsUiHidden}
-                                  onClick={(event) => navigateToProfile(psychologist.id, event)}
+                                  onClick={(event) =>
+                                    navigateToPublicPsychologistProfile(psychologist.id, event)
+                                  }
                                   tabIndex={slideIsUiHidden ? -1 : undefined}
                                   type="button"
                                   style={{
@@ -3118,17 +3119,21 @@ export const PsychologistsLogic = () => {
                                 )}
 
                                 <div className="grid justify-items-center text-center">
-                                  <Link
+                                  <button
                                     aria-label={`Ver perfil de ${psychologist.name}`}
                                     className="grid place-items-center rounded-full bg-transparent"
-                                    href={slideProfileHref}
-                                    onClick={stopInteractionPropagation}
+                                    disabled={slideIsUiHidden}
+                                    onClick={(event) =>
+                                      navigateToPublicPsychologistProfile(psychologist.id, event)
+                                    }
+                                    onPointerDown={stopInteractionPropagation}
                                     tabIndex={slideIsUiHidden ? -1 : undefined}
                                     ref={(node) => {
                                       if (isActiveSlide) {
                                         profileTextRef.current = node;
                                       }
                                     }}
+                                    type="button"
                                   >
                                     <div
                                       className="relative overflow-hidden rounded-full bg-white p-0.5 text-[#0f172a]"
@@ -3153,7 +3158,7 @@ export const PsychologistsLogic = () => {
                                         </span>
                                       )}
                                     </div>
-                                  </Link>
+                                  </button>
                                 </div>
                               </div>
                             ) : null}
@@ -3467,12 +3472,16 @@ export const PsychologistsLogic = () => {
                   </div>
 
                   <div className="grid w-[76px] justify-items-center gap-1.5 text-center">
-                    <Link
+                    <button
                       aria-label={`Ver perfil de ${desktopActionPsychologist.name}`}
                       className="grid h-12 w-12 place-items-center overflow-hidden rounded-full bg-white p-0.5 text-[#0f172a] shadow-[0_10px_28px_rgba(15,23,42,0.14)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
-                      href={desktopActionProfileHref}
-                      onClick={stopInteractionPropagation}
+                      disabled={isDesktopActionRailHidden}
+                      onClick={(event) =>
+                        navigateToPublicPsychologistProfile(desktopActionPsychologist.id, event)
+                      }
+                      onPointerDown={stopInteractionPropagation}
                       tabIndex={isDesktopActionRailHidden ? -1 : undefined}
+                      type="button"
                     >
                       <span className="relative grid h-full w-full place-items-center overflow-hidden rounded-full bg-[#e2e8f0] text-[12px] font-bold text-[#334155]">
                         {desktopActionPsychologist.avatar ? (
@@ -3488,7 +3497,7 @@ export const PsychologistsLogic = () => {
                           getInitials(desktopActionPsychologist.name)
                         )}
                       </span>
-                    </Link>
+                    </button>
                     <span className="text-[11px] font-bold text-[#475569]">Perfil</span>
                   </div>
                 </div>

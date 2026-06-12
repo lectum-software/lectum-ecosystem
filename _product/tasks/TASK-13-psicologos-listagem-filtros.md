@@ -1109,3 +1109,19 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: acao Perfil sempre abre perfil publico do psicologo exibido (2026-06-12)
+
+- Pedido do usuario: corrigir a acao `Perfil` da coluna lateral do feed de Psicologos para abrir o perfil publico do psicologo exibido no video atual, e nunca o perfil do usuario logado, `/app/profile`, setup ou edicao de perfil.
+- A navegacao da acao foi centralizada em `navigateToPublicPsychologistProfile`, que recebe explicitamente o `psychologist.id` do card/slide atual e executa `router.push('/app/psychologist/{id}')`.
+- No mobile, o avatar/botao `Perfil` da coluna sobreposta deixou de depender de `Link` declarativo e passou a usar a mesma acao imperativa do nome, garantindo que o alvo venha do psicologo renderizado no slide.
+- No desktop, o botao externo `Perfil` tambem usa o `id` do `featuredPsychologist`, preservando a separacao entre a acao do profissional exibido e a navegacao global `Meu Perfil` da sidebar/bottom navbar.
+- A acao continua bloqueando propagacao para nao pausar video, nao favoritar por gesto e nao acionar modo imersivo.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, filtros, favoritos, WhatsApp, compartilhamento ou layout visual.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual permanece `_product/proto/Psicologos.jpg` e o contrato da TASK-13.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - Verificacao estatica confirmou ausencia de href para `/app/profile`/setup na acao lateral `Perfil` do feed.

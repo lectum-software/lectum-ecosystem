@@ -446,3 +446,18 @@ A avaliacao exibida no bloco inferior de `/app/psychologists` deixa de competir 
 A decisao foi manter a avaliacao no mesmo lugar, mas reduzir sua escala: icone e texto menores, padding mais compacto, gap reduzido, sombra removida, fundo mais discreto e amarelo suavizado. Ela continua legivel e reconhecivel como nota, porem passa a ser tratada como metadado complementar da linha profissional.
 
 Para o desktop, a bio precisava de mais respiro em relacao a borda inferior do video. A decisao foi aumentar apenas o offset inferior do bloco textual em `>=1024px`, de 8px para 24px, preservando o comportamento mobile e mantendo a alteracao restrita a composicao visual da tela de Psicologos.
+
+## Correcao em 2026-06-12 - acao Perfil vinculada ao psicologo ativo
+
+A acao `Perfil` do feed de Psicologos deve pertencer ao psicologo exibido no card/video, nao ao usuario autenticado nem a navegacao global da aplicacao. A decisao desta correcao foi centralizar a navegacao em uma funcao que recebe explicitamente o `psychologist.id` do slide ativo e envia para `/app/psychologist/{id}`.
+
+Com isso, tanto a coluna mobile sobreposta quanto a coluna desktop externa usam a mesma regra de dominio: Favoritar, Compartilhar, WhatsApp e Perfil sao acoes do profissional atualmente carregado. A navegacao global `Perfil` continua existindo somente na navbar/sidebar e segue apontando para `/app/profile`.
+
+A implementacao tambem mantem `stopPropagation`/`preventDefault` nos botoes de perfil para impedir que o clique acione gestos do video, pause/play, double tap ou modo imersivo. Nao houve mudanca de contrato de API, schema, dados ou packages.
+
+Validacoes:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Verificacao estatica confirmou que a acao lateral `Perfil` nao usa `/app/profile`, setup ou edicao como destino.
