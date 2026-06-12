@@ -644,3 +644,18 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: onboarding de swipe na tela de Psicologos (2026-06-12)
+
+- Pedido do usuario: ensinar o usuario que pode deslizar verticalmente para navegar entre profissionais.
+- Usuarios sem `lectum:psychologists:has-seen-swipe-hint` no `localStorage` recebem a dica `Deslize para descobrir novos psicologos` acima da navbar, centralizada, com seta para cima e animacao suave de flutuacao.
+- A dica desaparece apos 3 segundos; se o usuario permanecer 5 segundos sem interacao no primeiro video, reaparece por 2 segundos.
+- O slide ativo recebe uma unica animacao sutil de nudge vertical de aproximadamente 8px e retorna ao ponto original.
+- Ao primeiro swipe vertical bem-sucedido, a chave local e marcada como vista, a dica e ocultada e nao aparece automaticamente nas proximas visitas.
+- A dica nao intercepta cliques/toques e nao altera midia, acoes, navbar, dados, backend, Prisma, migrations ou packages.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

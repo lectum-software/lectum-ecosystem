@@ -138,3 +138,15 @@ o tamanho dos containers nem a responsividade da coluna.
 Depois da remocao dos labels, o espacamento vertical entre os botoes laterais foi reduzido em aproximadamente 10% a
 15% (`14px -> 12px` em telas compactas e `18px -> 16px` nas demais). A mudanca compensa a ausencia dos textos e
 mantem a coluna mais agrupada sem alterar tamanho dos containers, posicao geral, acoes ou responsividade.
+
+## Atualizacao 2026-06-12: onboarding de swipe
+
+A tela `/app/psychologists` passa a ensinar a navegacao vertical com uma dica leve e temporaria:
+
+- usuarios sem `lectum:psychologists:has-seen-swipe-hint` em `localStorage` veem a mensagem "Deslize para descobrir novos psicologos" acima da navbar, centralizada e com seta para cima;
+- a dica aparece por 3 segundos na primeira exibicao elegivel, flutua suavemente e nao intercepta cliques;
+- o slide ativo recebe uma unica animacao sutil de nudge vertical (`-8px` e retorno) para reforcar a descoberta do gesto;
+- se nao houver interacao nos primeiros 5 segundos do primeiro video, a dica reaparece por 2 segundos;
+- o primeiro swipe vertical bem-sucedido marca a chave local como vista, oculta a dica e impede novas exibicoes automaticas.
+
+Timers e estados da dica sao limpos no unmount e quando a dica e marcada como vista.
