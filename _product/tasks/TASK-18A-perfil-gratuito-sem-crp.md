@@ -284,3 +284,17 @@ Validações executadas:
 - `pnpm check`
 - Verificação estática confirmou que `Foto de perfil` e `Remover foto` não permanecem em `frontend/src/app/app/professional/profile/setup/logic.tsx`, e que os menus exibem `Alterar capa`, `Excluir capa`, `Alterar foto` e `Excluir foto`.
 - HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessão, preservando a proteção da rota privada.
+
+## Ajuste complementar em 2026-06-12 - retorno fixo para o menu do perfil profissional
+
+- Por decisão de produto, o controle `Voltar ao perfil` em `/app/professional/profile/setup` não usa mais histórico do navegador nem retorna para o perfil público contextual.
+- O controle passou a ser um link direto para `/app/profile`, que é o menu privado do perfil do psicólogo com as opções de conta, edição, analytics, avaliações e assinatura.
+- O link de ícone `Ver perfil público` permanece separado e continua apontando para `/app/psychologist/:id` quando o profissional quiser visualizar o perfil público.
+- Não houve alteração de dados, backend, Prisma, packages, uploads ou comportamento de salvamento.
+
+Validações executadas:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessão, preservando proteção da rota privada.

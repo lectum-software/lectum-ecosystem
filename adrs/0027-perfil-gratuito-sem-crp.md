@@ -132,3 +132,14 @@ Validacoes executadas:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessao, preservando protecao da rota privada.
+
+## Atualização em 2026-06-12 - retorno fixo para o menu privado do psicólogo
+
+A decisão de retorno contextual da edição de perfil foi substituída por decisão de produto posterior: o controle textual `Voltar ao perfil` da rota `/app/professional/profile/setup` deve sempre levar para `/app/profile`, o menu privado do perfil do psicólogo. O perfil público permanece acessível por ação própria (`Ver perfil público`), evitando que a ação de retorno dependa do histórico do navegador ou leve o profissional para uma tela pública quando a intenção é voltar ao menu de perfil.
+
+Validações:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessão.

@@ -67,6 +67,8 @@ type ApiError = Error & {
   data?: ApiErrorData;
 };
 
+const PROFESSIONAL_PROFILE_MENU_HREF = "/app/profile";
+
 const resolveApiError = (error: unknown) => {
   const apiError = error as ApiError;
   return (
@@ -854,7 +856,7 @@ export const ProfessionalProfileSetupLogic = () => {
       update: {
         onSuccess: () => {
           toast.success("Perfil profissional atualizado");
-          router.replace("/app/profile");
+          router.replace(PROFESSIONAL_PROFILE_MENU_HREF);
         },
         onError: (error) => toast.error(resolveApiError(error)),
       },
@@ -931,15 +933,7 @@ export const ProfessionalProfileSetupLogic = () => {
   const isSubmitting = update.isPending || isSavingMedia;
   const publicProfileHref = profile.data?.user.id
     ? `/app/psychologist/${profile.data.user.id}`
-    : "/app/profile";
-  const handleBackNavigation = () => {
-    if (typeof window !== "undefined" && window.history.length > 1) {
-      router.back();
-      return;
-    }
-
-    router.push(publicProfileHref);
-  };
+    : PROFESSIONAL_PROFILE_MENU_HREF;
   const addressState = form.hook.watch("address_state");
   const addressCity = form.hook.watch("address_city");
   const baseCityOptions = useMemo(() => CITY_OPTIONS_BY_STATE[addressState] || [], [addressState]);
@@ -1556,14 +1550,13 @@ export const ProfessionalProfileSetupLogic = () => {
     <PrivateTemplate showHeader={false}>
       <section className="mx-auto grid w-full max-w-[394px] gap-4 md:max-w-3xl">
         <div className="flex items-center justify-between gap-3">
-          <button
-            className="inline-flex items-center gap-2 text-sm font-semibold text-muted"
-            onClick={handleBackNavigation}
-            type="button"
+          <Link
+            className="inline-flex items-center gap-2 text-sm font-semibold text-muted transition hover:text-foreground"
+            href={PROFESSIONAL_PROFILE_MENU_HREF}
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Voltar ao perfil
-          </button>
+          </Link>
           <Link
             aria-label="Ver perfil público"
             className="grid h-9 w-9 place-items-center rounded-full text-primary transition hover:bg-primary-soft"
