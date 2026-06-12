@@ -320,7 +320,7 @@ const useViewportMetrics = () => {
 
     return {
       actionButtonSize,
-      actionGap: isCompact ? 14 : 18,
+      actionGap: isCompact ? 12 : 16,
       actionIconSize: isTiny ? 13 : 14,
       actionRightPadding: isTiny ? 12 : 16,
       actionRailWidth: actionButtonSize,

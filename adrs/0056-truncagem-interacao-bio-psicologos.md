@@ -132,3 +132,9 @@ para acessibilidade e preservando as acoes existentes.
 Para compensar a ausencia dos fundos brancos em favoritar/compartilhar, os icones de coracao e compartilhar usam uma
 escala interna maior dentro do mesmo container, aproximando o peso visual dos botoes de WhatsApp e Perfil sem alterar
 o tamanho dos containers nem a responsividade da coluna.
+
+## Atualizacao 2026-06-12: compactacao do espacamento da coluna lateral
+
+Depois da remocao dos labels, o espacamento vertical entre os botoes laterais foi reduzido em aproximadamente 10% a
+15% (`14px -> 12px` em telas compactas e `18px -> 16px` nas demais). A mudanca compensa a ausencia dos textos e
+mantem a coluna mais agrupada sem alterar tamanho dos containers, posicao geral, acoes ou responsividade.

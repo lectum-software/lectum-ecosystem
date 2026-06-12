@@ -632,3 +632,15 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: compactacao do espacamento lateral (2026-06-12)
+
+- Pedido do usuario: apos remover os labels, reduzir o espacamento vertical entre os botoes laterais em aproximadamente 10% a 15%.
+- O `actionGap` da coluna lateral foi reduzido de `14px` para `12px` em telas compactas e de `18px` para `16px` nas demais, mantendo os containers, acoes, responsividade, modo imersivo e posicao geral.
+- Nao houve alteracao de backend, Prisma, migrations, packages, mocks ou dados do psicologo.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
