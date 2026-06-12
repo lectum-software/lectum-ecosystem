@@ -264,3 +264,9 @@ A decisao mais recente de produto para `/app/psychologists` substitui a regra an
 A bio passa a ser exibida integralmente direto no bloco inferior, sem `Ver mais`, `Ver menos`, ellipsis, line-clamp, `max-height`, medicao de linhas ou modal/bottom sheet. A justificativa e que a tela ja possui modo imersivo: um toque oculta a UI e preserva o video, entao a leitura completa da bio tem prioridade sobre economizar altura fixa.
 
 A implementacao mantém o bloco ancorado acima da navbar; bios maiores crescem para cima e continuam dentro da coluna textual, sem invadir a coluna lateral de acoes. O texto ainda bloqueia propagacao de pointer/click para nao acionar gestos do video ao tocar na bio, mas nao executa nenhuma interacao propria.
+
+## Atualizacao 2026-06-12: indicador Disponivel hoje discreto
+
+O indicador `Disponivel hoje` em `/app/psychologists` deixa de ser tratado visualmente como badge ou botao.
+
+A decisao foi remover fundo, pill, padding de destaque e animacoes, mantendo apenas uma bolinha verde pequena e texto em verde claro. Assim, disponibilidade vira metadado complementar do card, enquanto o nome do psicologo permanece como principal ancora textual do bloco inferior.

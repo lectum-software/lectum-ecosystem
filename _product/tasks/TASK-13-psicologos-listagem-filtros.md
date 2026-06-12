@@ -843,3 +843,18 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: indicador Disponivel hoje discreto (2026-06-12)
+
+- Pedido do usuario: refinar o indicador `Disponivel hoje` para deixar de parecer badge/botao e virar uma informacao complementar no bloco inferior da tela de Psicologos.
+- O indicador perdeu fundo branco, formato pill, padding de badge, animacao de pulse/ping e qualquer destaque de container.
+- O novo visual usa apenas uma bolinha verde pequena a esquerda e texto em verde claro, sem borda, sombra ou superficie propria.
+- A hierarquia do bloco inferior foi preservada para que o nome do psicologo continue sendo o primeiro elemento textual percebido, com o indicador funcionando como metadado discreto.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, busca, filtros, bio, barra de progresso, favoritos, navbar ou navegacao de perfil.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual permanece `_product/proto/Psicologos.jpg` e o contrato da TASK-13.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

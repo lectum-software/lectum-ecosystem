@@ -2246,16 +2246,16 @@ export const PsychologistsLogic = () => {
                             <div className="pointer-events-auto min-w-0">
                               {psychologist.available_today ? (
                                 <div
-                                  className="mb-2 flex w-fit animate-pulse items-center gap-1 rounded-full bg-white px-2 py-1 font-semibold text-[#22C55E]"
+                                  className="mb-1.5 flex w-fit items-center gap-1.5 font-semibold text-[#86EFAC]"
                                   style={{
                                     fontSize: `${metrics.availableBadgeTextSize}px`,
                                     lineHeight: "12px",
                                   }}
                                 >
-                                  <span className="relative flex h-2 w-2">
-                                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#22C55E] opacity-60" />
-                                    <span className="relative inline-flex h-2 w-2 rounded-full bg-[#22C55E]" />
-                                  </span>
+                                  <span
+                                    aria-hidden="true"
+                                    className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#22C55E]"
+                                  />
                                   Disponível hoje
                                 </div>
                               ) : null}
