@@ -390,6 +390,7 @@ const useViewportMetrics = () => {
       bioSize: 12,
       filterButtonSize: isCompact ? 40 : 42,
       horizontalPadding: isCompact ? 16 : 20,
+      isDesktopLayout: isDesktop,
       navBarHeight: isDesktop ? 0 : DEFAULT_NAV_BAR_HEIGHT,
       searchHeight: isCompact ? 42 : 46,
       searchRightGap: isCompact ? 62 : 74,
@@ -1968,7 +1969,7 @@ export const PsychologistsLogic = () => {
     ? favoritePendingId === desktopActionPsychologist.id
     : false;
   const shouldRenderDesktopActionRail =
-    shouldRenderGlobalControls && Boolean(desktopActionPsychologist);
+    metrics.isDesktopLayout && shouldRenderGlobalControls && Boolean(desktopActionPsychologist);
   const isDesktopActionRailHidden = isUiHidden || isFiltersOpen || isSearchFocused;
   const desktopActionRailVisibilityClass = isDesktopActionRailHidden
     ? "psychologists-ui-inert pointer-events-none opacity-0"
@@ -2898,114 +2899,63 @@ export const PsychologistsLogic = () => {
                               ) : null}
                             </div>
 
-                            <div
-                              className="pointer-events-auto relative z-50 flex flex-col items-center justify-self-end lg:hidden"
-                              ref={(node) => {
-                                if (isActiveSlide) {
-                                  actionColumnRef.current = node;
-                                }
-                              }}
-                              style={{
-                                gap: `${metrics.actionGap}px`,
-                                transform: `translateY(${slideActionColumnTranslateY}px)`,
-                                width: `${metrics.actionRailWidth}px`,
-                              }}
-                            >
-                              <div className="grid justify-items-center text-center">
-                                <button
-                                  aria-label={`Favoritar ${psychologist.name}`}
-                                  aria-busy={slideIsFavoritePending}
-                                  aria-pressed={slideIsFavorited}
-                                  className={cn(
-                                    "relative z-50 grid cursor-pointer place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10 active:scale-95",
-                                    slideIsFavorited ? "text-[#ef4444]" : "text-white",
-                                  )}
-                                  disabled={slideIsUiHidden}
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    toggleFavorite(psychologist);
-                                  }}
-                                  tabIndex={slideIsUiHidden ? -1 : undefined}
-                                  style={{
-                                    width: `${metrics.actionButtonSize}px`,
-                                    height: `${metrics.actionButtonSize}px`,
-                                  }}
-                                  type="button"
-                                >
-                                  <Heart
-                                    className={cn("h-4 w-4")}
-                                    aria-hidden="true"
-                                    style={{
-                                      height: `${metrics.actionStandaloneIconSize}px`,
-                                      width: `${metrics.actionStandaloneIconSize}px`,
-                                      color: slideIsFavorited ? "#ef4444" : "white",
-                                      fill: slideIsFavorited ? "#ef4444" : "transparent",
-                                    }}
-                                  />
-                                </button>
-                              </div>
-
-                              <div className="grid justify-items-center text-center">
-                                <button
-                                  aria-label={`Compartilhar perfil de ${psychologist.name}`}
-                                  className="grid place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10"
-                                  disabled={slideIsUiHidden}
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    void shareCurrent(psychologist);
-                                  }}
-                                  tabIndex={slideIsUiHidden ? -1 : undefined}
-                                  type="button"
-                                  style={{
-                                    width: `${metrics.actionButtonSize}px`,
-                                    height: `${metrics.actionButtonSize}px`,
-                                  }}
-                                >
-                                  <Share2
-                                    className="h-4 w-4"
-                                    aria-hidden="true"
-                                    style={{
-                                      height: `${metrics.actionStandaloneIconSize}px`,
-                                      width: `${metrics.actionStandaloneIconSize}px`,
-                                    }}
-                                  />
-                                </button>
-                              </div>
-
-                              {psychologist.whatsapp_url ? (
+                            {!metrics.isDesktopLayout ? (
+                              <div
+                                className="pointer-events-auto relative z-50 flex flex-col items-center justify-self-end"
+                                ref={(node) => {
+                                  if (isActiveSlide) {
+                                    actionColumnRef.current = node;
+                                  }
+                                }}
+                                style={{
+                                  gap: `${metrics.actionGap}px`,
+                                  transform: `translateY(${slideActionColumnTranslateY}px)`,
+                                  width: `${metrics.actionRailWidth}px`,
+                                }}
+                              >
                                 <div className="grid justify-items-center text-center">
-                                  <a
-                                    aria-label={`Chamar ${psychologist.name} no WhatsApp`}
-                                    className="grid place-items-center rounded-full bg-[#22C55E] text-white transition hover:bg-[#16A34A]"
-                                    href={psychologist.whatsapp_url}
-                                    onClick={stopInteractionPropagation}
-                                    rel="noreferrer"
+                                  <button
+                                    aria-label={`Favoritar ${psychologist.name}`}
+                                    aria-busy={slideIsFavoritePending}
+                                    aria-pressed={slideIsFavorited}
+                                    className={cn(
+                                      "relative z-50 grid cursor-pointer place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10 active:scale-95",
+                                      slideIsFavorited ? "text-[#ef4444]" : "text-white",
+                                    )}
+                                    disabled={slideIsUiHidden}
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      toggleFavorite(psychologist);
+                                    }}
                                     tabIndex={slideIsUiHidden ? -1 : undefined}
-                                    target="_blank"
                                     style={{
                                       width: `${metrics.actionButtonSize}px`,
                                       height: `${metrics.actionButtonSize}px`,
                                     }}
+                                    type="button"
                                   >
-                                    <WhatsAppIcon
+                                    <Heart
+                                      className={cn("h-4 w-4")}
                                       aria-hidden="true"
-                                      className="h-4 w-4"
                                       style={{
-                                        color: "white",
-                                        height: `${metrics.actionIconSize}px`,
-                                        width: `${metrics.actionIconSize}px`,
+                                        height: `${metrics.actionStandaloneIconSize}px`,
+                                        width: `${metrics.actionStandaloneIconSize}px`,
+                                        color: slideIsFavorited ? "#ef4444" : "white",
+                                        fill: slideIsFavorited ? "#ef4444" : "transparent",
                                       }}
                                     />
-                                  </a>
+                                  </button>
                                 </div>
-                              ) : (
+
                                 <div className="grid justify-items-center text-center">
                                   <button
-                                    aria-disabled="true"
-                                    aria-label={`WhatsApp indisponível para ${psychologist.name}`}
-                                    className="grid place-items-center rounded-full bg-[#22C55E] text-white transition"
+                                    aria-label={`Compartilhar perfil de ${psychologist.name}`}
+                                    className="grid place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10"
                                     disabled={slideIsUiHidden}
-                                    onClick={stopInteractionPropagation}
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      void shareCurrent(psychologist);
+                                    }}
                                     tabIndex={slideIsUiHidden ? -1 : undefined}
                                     type="button"
                                     style={{
@@ -3013,58 +2963,111 @@ export const PsychologistsLogic = () => {
                                       height: `${metrics.actionButtonSize}px`,
                                     }}
                                   >
-                                    <WhatsAppIcon
-                                      aria-hidden="true"
+                                    <Share2
                                       className="h-4 w-4"
+                                      aria-hidden="true"
                                       style={{
-                                        color: "white",
-                                        height: `${metrics.actionIconSize}px`,
-                                        width: `${metrics.actionIconSize}px`,
+                                        height: `${metrics.actionStandaloneIconSize}px`,
+                                        width: `${metrics.actionStandaloneIconSize}px`,
                                       }}
                                     />
                                   </button>
                                 </div>
-                              )}
 
-                              <div className="grid justify-items-center text-center">
-                                <Link
-                                  aria-label={`Ver perfil de ${psychologist.name}`}
-                                  className="grid place-items-center rounded-full bg-transparent"
-                                  href={slideProfileHref}
-                                  onClick={stopInteractionPropagation}
-                                  tabIndex={slideIsUiHidden ? -1 : undefined}
-                                  ref={(node) => {
-                                    if (isActiveSlide) {
-                                      profileTextRef.current = node;
-                                    }
-                                  }}
-                                >
-                                  <div
-                                    className="relative overflow-hidden rounded-full bg-white p-0.5 text-[#0f172a]"
-                                    style={{
-                                      width: `${metrics.actionButtonSize}px`,
-                                      height: `${metrics.actionButtonSize}px`,
-                                      border: "2px solid #fff",
+                                {psychologist.whatsapp_url ? (
+                                  <div className="grid justify-items-center text-center">
+                                    <a
+                                      aria-label={`Chamar ${psychologist.name} no WhatsApp`}
+                                      className="grid place-items-center rounded-full bg-[#22C55E] text-white transition hover:bg-[#16A34A]"
+                                      href={psychologist.whatsapp_url}
+                                      onClick={stopInteractionPropagation}
+                                      rel="noreferrer"
+                                      tabIndex={slideIsUiHidden ? -1 : undefined}
+                                      target="_blank"
+                                      style={{
+                                        width: `${metrics.actionButtonSize}px`,
+                                        height: `${metrics.actionButtonSize}px`,
+                                      }}
+                                    >
+                                      <WhatsAppIcon
+                                        aria-hidden="true"
+                                        className="h-4 w-4"
+                                        style={{
+                                          color: "white",
+                                          height: `${metrics.actionIconSize}px`,
+                                          width: `${metrics.actionIconSize}px`,
+                                        }}
+                                      />
+                                    </a>
+                                  </div>
+                                ) : (
+                                  <div className="grid justify-items-center text-center">
+                                    <button
+                                      aria-disabled="true"
+                                      aria-label={`WhatsApp indisponível para ${psychologist.name}`}
+                                      className="grid place-items-center rounded-full bg-[#22C55E] text-white transition"
+                                      disabled={slideIsUiHidden}
+                                      onClick={stopInteractionPropagation}
+                                      tabIndex={slideIsUiHidden ? -1 : undefined}
+                                      type="button"
+                                      style={{
+                                        width: `${metrics.actionButtonSize}px`,
+                                        height: `${metrics.actionButtonSize}px`,
+                                      }}
+                                    >
+                                      <WhatsAppIcon
+                                        aria-hidden="true"
+                                        className="h-4 w-4"
+                                        style={{
+                                          color: "white",
+                                          height: `${metrics.actionIconSize}px`,
+                                          width: `${metrics.actionIconSize}px`,
+                                        }}
+                                      />
+                                    </button>
+                                  </div>
+                                )}
+
+                                <div className="grid justify-items-center text-center">
+                                  <Link
+                                    aria-label={`Ver perfil de ${psychologist.name}`}
+                                    className="grid place-items-center rounded-full bg-transparent"
+                                    href={slideProfileHref}
+                                    onClick={stopInteractionPropagation}
+                                    tabIndex={slideIsUiHidden ? -1 : undefined}
+                                    ref={(node) => {
+                                      if (isActiveSlide) {
+                                        profileTextRef.current = node;
+                                      }
                                     }}
                                   >
-                                    {psychologist.avatar ? (
-                                      <Image
-                                        alt={psychologist.name}
-                                        className="h-full w-full rounded-full object-cover"
-                                        fill
-                                        sizes={`${metrics.actionButtonSize}px`}
-                                        src={resolvePublicMediaUrl(psychologist.avatar) ?? ""}
-                                        unoptimized={isPublicMediaUrl(psychologist.avatar)}
-                                      />
-                                    ) : (
-                                      <span className="grid h-full w-full place-items-center rounded-full bg-[#e2e8f0] text-[11px] font-semibold text-[#334155]">
-                                        {getInitials(psychologist.name)}
-                                      </span>
-                                    )}
-                                  </div>
-                                </Link>
+                                    <div
+                                      className="relative overflow-hidden rounded-full bg-white p-0.5 text-[#0f172a]"
+                                      style={{
+                                        width: `${metrics.actionButtonSize}px`,
+                                        height: `${metrics.actionButtonSize}px`,
+                                        border: "2px solid #fff",
+                                      }}
+                                    >
+                                      {psychologist.avatar ? (
+                                        <Image
+                                          alt={psychologist.name}
+                                          className="h-full w-full rounded-full object-cover"
+                                          fill
+                                          sizes={`${metrics.actionButtonSize}px`}
+                                          src={resolvePublicMediaUrl(psychologist.avatar) ?? ""}
+                                          unoptimized={isPublicMediaUrl(psychologist.avatar)}
+                                        />
+                                      ) : (
+                                        <span className="grid h-full w-full place-items-center rounded-full bg-[#e2e8f0] text-[11px] font-semibold text-[#334155]">
+                                          {getInitials(psychologist.name)}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </Link>
+                                </div>
                               </div>
-                            </div>
+                            ) : null}
                           </section>
                         </div>
                       </div>

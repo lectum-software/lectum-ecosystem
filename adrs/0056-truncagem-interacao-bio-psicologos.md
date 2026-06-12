@@ -378,3 +378,18 @@ brancos, sombra leve e icones com contraste. No mobile, esses botoes permanecem 
 Como a navbar inferior deixa de existir no desktop, os offsets dependentes de `navBarHeight` passam a ser zero em
 `>=1024px`, mantendo texto e barra de progresso dentro do video sem reservar espaco para uma navegacao que nao esta
 visivel. O modo imersivo continua escondendo a navegacao desktop e acoes externas junto com o restante da UI.
+
+## Atualizacao 2026-06-12: separacao explicita das acoes por breakpoint
+
+Para evitar que a variante desktop afete o mobile, as acoes laterais de `/app/psychologists` deixam de depender apenas
+de classes responsivas CSS.
+
+A decisao foi expor `isDesktopLayout` nas metricas de viewport e usar essa regra diretamente na renderizacao:
+
+- em `<1024px`, Favoritar, Compartilhar, WhatsApp e Perfil sao renderizados dentro do slide, sobre o video, com o mesmo
+  posicionamento e comportamento mobile original;
+- em `>=1024px`, a coluna interna nao e renderizada, e as mesmas acoes aparecem fora do video na coluna desktop com
+  fundo branco, sombra e labels.
+
+Essa separacao evita duplicacao ou ausencia acidental das acoes em emuladores mobile, preserva os gestos do video e
+mantem o desktop limpo conforme a decisao anterior.

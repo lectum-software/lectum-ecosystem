@@ -1028,3 +1028,17 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: separacao explicita das acoes mobile e desktop (2026-06-12)
+
+- Pedido do usuario: corrigir regressao em que a implementacao desktop removeu as acoes do video tambem no mobile.
+- A regra responsiva passou a ser explicita pelo estado de viewport: abaixo de `1024px`, a coluna interna de Favoritar, Compartilhar, WhatsApp e Perfil e renderizada dentro do video; em `>=1024px`, ela nao e renderizada e a coluna externa desktop assume.
+- A coluna mobile deixou de depender apenas de classe CSS `lg:hidden`, reduzindo risco de regressao em device mode e garantindo que Samsung Galaxy S8+, iPhone SE e iPhone 12 Pro mantenham a experiencia original sobreposta ao video.
+- A coluna desktop externa agora tambem depende do mesmo estado de viewport, evitando qualquer duplicacao de acoes em telas mobile.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, filtros, contratos de API, gestos ou comportamento das acoes.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
