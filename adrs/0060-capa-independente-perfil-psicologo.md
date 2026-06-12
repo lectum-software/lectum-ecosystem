@@ -51,3 +51,17 @@ A capa deve ser uma imagem de identidade visual do profissional, como consultór
 ## Pendências
 
 - Existe drift de checksum em uma migration antiga já aplicada no banco de desenvolvimento. Não foi executado reset porque isso apagaria dados. A migration nova foi aplicada por `migrate deploy` e o status final do schema ficou atualizado.
+
+## Ajuste complementar em 2026-06-12 - capa no bloco de identidade visual
+
+A imagem de capa continua sendo uma midia independente do perfil, mas sua edicao deve ficar visualmente associada a foto de perfil. A tela `/app/professional/profile/setup` passou a renderizar a capa no card superior, imediatamente abaixo da foto de perfil, antes de `Informacoes basicas`.
+
+A secao `Apresentacao` nao abriga mais a capa do perfil; ela permanece dedicada a headline, bio e video de apresentacao. O copy da capa foi reduzido para orientar apenas o uso de foto horizontal de consultorio, ambiente de atendimento ou arte institucional, com formatos `JPG, PNG ou WebP`.
+
+Validacao complementar:
+
+- `pnpm --dir frontend biome:fix`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local `/app/professional/profile/setup` respondeu 307 sem sessao, preservando a protecao da rota privada.

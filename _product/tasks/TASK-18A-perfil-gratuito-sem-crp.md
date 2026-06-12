@@ -199,3 +199,13 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
 - A capa é recurso de identidade visual do perfil e não depende do entitlement de vídeo do Plano Profissional.
 - ADR criado: `adrs/0060-capa-independente-perfil-psicologo.md`.
 - Validações: `pnpm --dir backend db:migrate --name add_psychologist_profile_cover_image` executado e recusado pelo Prisma por drift antigo sem reset; migration aplicada de forma não destrutiva com `pnpm --dir backend db:migrate-prod`; `pnpm --dir backend exec prisma migrate status`; `pnpm --dir backend db:generate`; `pnpm --dir backend check`; `pnpm --dir backend build`; `pnpm --dir frontend check`; `pnpm --dir frontend build`; `pnpm check`; rota privada `/app/professional/profile/setup` respondeu 307 sem sessão.
+
+## Ajuste complementar em 2026-06-12 - capa junto da foto de perfil
+
+- A edicao de `/app/professional/profile/setup` passou a tratar a imagem de capa como midia principal de identidade visual, agrupada no topo junto da foto de perfil.
+- A ordem visual ficou: foto de perfil, imagem de capa, informacoes basicas e demais secoes.
+- A imagem de capa foi removida da secao `Apresentacao`; essa secao voltou a concentrar headline, bio e video de apresentacao.
+- O texto explicativo da capa foi simplificado para: `Use uma foto horizontal do consultorio, ambiente de atendimento ou arte institucional.`
+- O texto de formatos aceitos foi simplificado para: `JPG, PNG ou WebP`.
+- O bloco manteve upload real, troca, remocao, preview com `next/image` e o mesmo padrao visual da plataforma, sem alterar backend, Prisma, contratos ou dados persistidos.
+- Validacoes executadas: `pnpm --dir frontend biome:fix`; `pnpm --dir frontend check`; `pnpm --dir frontend build`; `pnpm check`; HTTP local `/app/professional/profile/setup` respondeu 307 sem sessao, preservando protecao da rota privada.

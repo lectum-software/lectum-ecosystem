@@ -1294,6 +1294,85 @@ export const ProfessionalProfileSetupLogic = () => {
     });
   });
 
+  const renderCoverImageEditor = () => (
+    <div className="rounded-2xl border border-border bg-surface-muted p-4 text-left">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-bold leading-5 text-foreground">Imagem de capa</p>
+          <p className="mt-1 text-xs leading-5 text-muted">
+            Use uma foto horizontal do consultório, ambiente de atendimento ou arte institucional.
+          </p>
+        </div>
+        {profile.data?.profile.cover_image_url ? (
+          <button
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-danger transition hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={deleteCoverImage.isPending || uploadCoverImage.isPending}
+            onClick={handleCoverImageRemoval}
+            type="button"
+            aria-label="Remover imagem de capa"
+          >
+            {deleteCoverImage.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+            )}
+          </button>
+        ) : null}
+      </div>
+
+      <button
+        className="relative mt-4 block aspect-[16/7] w-full overflow-hidden rounded-2xl border border-dashed border-border bg-surface text-left transition hover:border-primary hover:bg-primary-soft/30 disabled:cursor-not-allowed disabled:opacity-60"
+        disabled={!profile.data || uploadCoverImage.isPending || deleteCoverImage.isPending}
+        onClick={() => coverImageInputRef.current?.click()}
+        type="button"
+      >
+        {visibleCoverImageSrc ? (
+          <Image
+            alt="Pré-visualização da imagem de capa do perfil"
+            className="object-cover"
+            fill
+            sizes="(min-width: 768px) 720px, calc(100vw - 40px)"
+            src={visibleCoverImageSrc}
+            unoptimized={isPublicCoverImage}
+            onError={() => setFailedCoverImageUrl(visibleCoverImageSrc)}
+          />
+        ) : (
+          <span className="absolute inset-0 grid place-items-center bg-[radial-gradient(circle_at_25%_20%,rgb(219_234_254),transparent_35%),linear-gradient(135deg,rgb(239_246_255),rgb(248_250_252))] px-4 text-center">
+            <span>
+              {uploadCoverImage.isPending ? (
+                <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" aria-hidden="true" />
+              ) : (
+                <UploadCloud className="mx-auto h-8 w-8 text-primary" aria-hidden="true" />
+              )}
+              <span className="mt-3 block text-sm font-bold text-foreground">
+                Toque para enviar a imagem de capa
+              </span>
+              <span className="mt-1 block text-xs text-muted">JPG, PNG ou WebP</span>
+            </span>
+          </span>
+        )}
+        {visibleCoverImageSrc ? (
+          <span className="absolute right-3 bottom-3 inline-flex items-center gap-2 rounded-full bg-surface/90 px-3 py-2 text-xs font-bold text-foreground shadow-sm backdrop-blur">
+            {uploadCoverImage.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <UploadCloud className="h-4 w-4" aria-hidden="true" />
+            )}
+            Trocar capa
+          </span>
+        ) : null}
+      </button>
+
+      <input
+        accept="image/jpeg,image/png,image/webp"
+        className="sr-only"
+        onChange={handleCoverImageChange}
+        ref={coverImageInputRef}
+        type="file"
+      />
+    </div>
+  );
+
   return (
     <PrivateTemplate showHeader={false}>
       <section className="mx-auto grid w-full max-w-[394px] gap-4 md:max-w-3xl">
@@ -1419,6 +1498,7 @@ export const ProfessionalProfileSetupLogic = () => {
               </Button>
             </div>
           ) : null}
+          <div className="mt-6">{renderCoverImageEditor()}</div>
         </header>
 
         {avatarDraft && avatarEditorOpen ? (
@@ -1560,88 +1640,6 @@ export const ProfessionalProfileSetupLogic = () => {
 
             <SectionCard icon={BookOpen} title="Apresentação">
               <div className="grid gap-4">
-                <div className="rounded-2xl border border-border bg-surface-muted p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold leading-5 text-foreground">Imagem de capa</p>
-                      <p className="mt-1 text-xs leading-5 text-muted">
-                        Use uma foto do consultório, ambiente de atendimento, paisagem ou arte
-                        institucional. Esta imagem é independente dos seus vídeos.
-                      </p>
-                    </div>
-                    {profile.data.profile.cover_image_url ? (
-                      <button
-                        className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-danger transition hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-60"
-                        disabled={deleteCoverImage.isPending || uploadCoverImage.isPending}
-                        onClick={handleCoverImageRemoval}
-                        type="button"
-                        aria-label="Remover imagem de capa"
-                      >
-                        {deleteCoverImage.isPending ? (
-                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                        ) : (
-                          <Trash2 className="h-4 w-4" aria-hidden="true" />
-                        )}
-                      </button>
-                    ) : null}
-                  </div>
-
-                  <button
-                    className="relative mt-4 block aspect-[16/7] w-full overflow-hidden rounded-2xl border border-dashed border-border bg-surface text-left transition hover:border-primary hover:bg-primary-soft/30 disabled:cursor-not-allowed disabled:opacity-60"
-                    disabled={uploadCoverImage.isPending || deleteCoverImage.isPending}
-                    onClick={() => coverImageInputRef.current?.click()}
-                    type="button"
-                  >
-                    {visibleCoverImageSrc ? (
-                      <Image
-                        alt="Pré-visualização da imagem de capa do perfil"
-                        className="object-cover"
-                        fill
-                        sizes="(min-width: 768px) 720px, calc(100vw - 40px)"
-                        src={visibleCoverImageSrc}
-                        unoptimized={isPublicCoverImage}
-                        onError={() => setFailedCoverImageUrl(visibleCoverImageSrc)}
-                      />
-                    ) : (
-                      <span className="absolute inset-0 grid place-items-center bg-[radial-gradient(circle_at_25%_20%,rgb(219_234_254),transparent_35%),linear-gradient(135deg,rgb(239_246_255),rgb(248_250_252))] px-4 text-center">
-                        <span>
-                          {uploadCoverImage.isPending ? (
-                            <Loader2
-                              className="mx-auto h-8 w-8 animate-spin text-primary"
-                              aria-hidden="true"
-                            />
-                          ) : (
-                            <Camera className="mx-auto h-8 w-8 text-primary" aria-hidden="true" />
-                          )}
-                          <span className="mt-3 block text-sm font-bold text-foreground">
-                            Toque para enviar a imagem de capa
-                          </span>
-                          <span className="mt-1 block text-xs text-muted">
-                            JPG, PNG ou WebP. Recomendado: horizontal.
-                          </span>
-                        </span>
-                      </span>
-                    )}
-                    {visibleCoverImageSrc ? (
-                      <span className="absolute right-3 bottom-3 inline-flex items-center gap-2 rounded-full bg-surface/90 px-3 py-2 text-xs font-bold text-foreground shadow-sm backdrop-blur">
-                        {uploadCoverImage.isPending ? (
-                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                        ) : (
-                          <UploadCloud className="h-4 w-4" aria-hidden="true" />
-                        )}
-                        Trocar capa
-                      </span>
-                    ) : null}
-                  </button>
-
-                  <input
-                    accept="image/jpeg,image/png,image/webp"
-                    className="sr-only"
-                    onChange={handleCoverImageChange}
-                    ref={coverImageInputRef}
-                    type="file"
-                  />
-                </div>
                 {renderField("headline")}
                 {renderField("bio")}
                 {canUploadVideo ? (
