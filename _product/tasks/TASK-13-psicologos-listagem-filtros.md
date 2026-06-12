@@ -546,3 +546,18 @@ ext/image`.
 - Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual permanece `_product/proto/Psicologos.jpg` e `_product/proto/Filtros de Psicologos - Servicos Expandidos.jpg`.
 - ADR atualizado: `adrs/0059-filtros-avancados-busca-psicologos.md`.
 - Validacoes executadas nesta etapa: ver registro do commit desta execucao.
+
+## Execucao complementar: alternancia por scroll no feed imersivo (2026-06-12)
+
+- Pedido do usuario: ao scrollar a tela de Psicologos, alternar entre o perfil real `Ana Rubia` e o perfil de teste criado, em vez de manter sempre o primeiro item da listagem.
+- A tela `/app/psychologists` deixou de fixar a exibicao em `psychologists[0]` e passou a manter um indice ativo local sobre os resultados reais da API.
+- Wheel/scroll vertical e swipe vertical agora avancam/voltam entre os psicologos carregados; no limite da pagina, a paginacao real `page`/`limit` e usada quando houver pagina seguinte/anterior.
+- O ajuste preserva as zonas de interacao existentes: tap na midia livre controla play/pause, busca/modal/bio expandida bloqueiam navegacao por scroll e um swipe de navegacao nao dispara play/pause residual.
+- Nao houve alteracao de backend, Prisma, migrations, packages, mocks ou dados do psicologo.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual permanece `_product/proto/Psicologos.jpg` e o contrato da TASK-13.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

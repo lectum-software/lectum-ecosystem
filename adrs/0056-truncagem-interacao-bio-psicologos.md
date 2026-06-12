@@ -76,3 +76,14 @@ No fluxo de `/app/psychologist/[id]`, o comportamento visual e de interação da
 - Bio inicial em 2 linhas com `ellipsis`, expandindo/recolhendo inline no clique no texto;
 - Sem modal ou bottom sheet para leitura completa da bio, preservando continuidade da página;
 - Manutenção da mesma política de áreas clicáveis no topo para evitar acionar reações de mídia fora da área livre.
+
+## Atualizacao 2026-06-12: alternancia por scroll no feed imersivo
+
+A tela `/app/psychologists` passou a manter um indice ativo local sobre a pagina de resultados retornada pela API. Eventos de wheel/scroll vertical e swipe vertical alternam entre os psicologos carregados sem criar dados artificiais nem alterar o contrato do endpoint. Ao chegar ao fim/inicio da pagina atual, a tela usa a paginacao real existente (`page`/`limit`) para carregar a proxima/anterior quando houver.
+
+Para preservar as zonas de interacao ja decididas:
+
+- clique/tap na midia livre continua controlando play/pause;
+- swipe vertical sobre a tela navega o feed e nao deve disparar play/pause residual;
+- campos de busca, modal de filtros e bio expandida bloqueiam a navegacao por scroll para permitir edicao/rolagem interna;
+- ao trocar o psicologo ativo, estado de bio expandida, falha de video e feedback de compartilhamento volta ao estado inicial.

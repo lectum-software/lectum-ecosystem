@@ -19,12 +19,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   type CSSProperties,
   type FormEvent,
+  type TouchEvent,
   useCallback,
   useDeferredValue,
   useEffect,
   useMemo,
   useRef,
   useState,
+  type WheelEvent,
 } from "react";
 import { useDirectoryPsychologists } from "@/api/callers/directory";
 import { usePatient } from "@/api/callers/patient";
@@ -57,6 +59,9 @@ const PAGE_LIMIT = 20;
 
 const DEFAULT_NAV_BAR_HEIGHT = 72;
 const PSYCHOLOGISTS_BACKGROUND_VIDEO_SELECTOR = "video[data-psychologists-background='true']";
+const FEED_SCROLL_COOLDOWN_MS = 620;
+const FEED_WHEEL_THRESHOLD = 34;
+const FEED_TOUCH_THRESHOLD = 56;
 
 const formatRating = (ratingAvg: number, ratingCount: number) => {
   if (ratingCount <= 0) return "0,0";
@@ -359,12 +364,17 @@ export const PsychologistsLogic = () => {
   const [isBioTruncated, setIsBioTruncated] = useState(false);
   const [searchDraft, setSearchDraft] = useState(() => filterValues.search || "");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [activePsychologistIndex, setActivePsychologistIndex] = useState(0);
 
   const filterDialogRef = useRef<HTMLDivElement | null>(null);
   const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
   const bioTextRef = useRef<HTMLButtonElement | null>(null);
   const actionColumnRef = useRef<HTMLDivElement | null>(null);
   const profileTextRef = useRef<HTMLSpanElement | null>(null);
+  const feedScrollLastAtRef = useRef(0);
+  const lastSearchParamsStringRef = useRef(searchParamsString);
+  const feedTouchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const suppressNextVideoTapRef = useRef(false);
   const { favoritePsychologist, unfavoritePsychologist } = usePatient({
     enableProfile: false,
   });
@@ -387,7 +397,7 @@ export const PsychologistsLogic = () => {
   );
   const response = directory.data;
   const psychologists = response?.data ?? [];
-  const featuredPsychologist = psychologists[0];
+  const featuredPsychologist = psychologists[activePsychologistIndex] ?? psychologists[0];
   const backgroundVideoSrc = resolvePublicMediaUrl(featuredPsychologist?.video_url);
   const backgroundPosterSrc = featuredPsychologist?.video_cover_url
     ? resolvePublicMediaUrl(featuredPsychologist.video_cover_url)
@@ -451,6 +461,36 @@ export const PsychologistsLogic = () => {
     isSearchFocused &&
     searchDraft.trim().length >= 2 &&
     (searchSuggestionsDirectory.isFetching || searchSuggestionItems.length > 0);
+
+  useEffect(() => {
+    if (lastSearchParamsStringRef.current === searchParamsString) return;
+
+    lastSearchParamsStringRef.current = searchParamsString;
+    const frame = window.requestAnimationFrame(() => {
+      setActivePsychologistIndex(0);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
+  }, [searchParamsString]);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      if (psychologists.length === 0) {
+        setActivePsychologistIndex(0);
+        return;
+      }
+
+      if (activePsychologistIndex >= psychologists.length) {
+        setActivePsychologistIndex(psychologists.length - 1);
+      }
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
+  }, [activePsychologistIndex, psychologists.length]);
 
   const syncActionColumnAlignment = useCallback(() => {
     const baselineText = featuredBio;
@@ -561,6 +601,10 @@ export const PsychologistsLogic = () => {
 
     const frame = window.requestAnimationFrame(() => {
       setIsBioExpanded(false);
+      setIsVideoPlaybackFailed(false);
+      setIsVideoPaused(false);
+      setShareFeedback(false);
+      setActionColumnTranslateY(0);
     });
 
     return () => {
@@ -692,6 +736,11 @@ export const PsychologistsLogic = () => {
   }, [shouldShowVideo]);
 
   const handleVideoTap = useCallback(() => {
+    if (suppressNextVideoTapRef.current) {
+      suppressNextVideoTapRef.current = false;
+      return;
+    }
+
     const currentVideo = backgroundVideoRef.current;
     if (!currentVideo || !shouldShowVideo) return;
 
@@ -710,6 +759,127 @@ export const PsychologistsLogic = () => {
 
     playCurrentVideo();
   }, [isVideoMuted, pauseVideoPlayback, playCurrentVideo, shouldShowVideo, unmuteAllVideos]);
+
+  const replaceCurrentFiltersPage = useCallback(
+    (page: number) => {
+      const next = buildFiltersParams(filterValues, page);
+
+      router.replace(next.toString() ? `/app/psychologists?${next}` : "/app/psychologists", {
+        scroll: false,
+      });
+    },
+    [filterValues, router],
+  );
+
+  const navigateFeed = useCallback(
+    (direction: 1 | -1) => {
+      if (isFiltersOpen || directory.isFetching || psychologists.length === 0) return false;
+
+      if (direction > 0) {
+        if (activePsychologistIndex < psychologists.length - 1) {
+          setActivePsychologistIndex((current) => Math.min(current + 1, psychologists.length - 1));
+          return true;
+        }
+
+        if (response && currentPage < response.pages) {
+          replaceCurrentFiltersPage(currentPage + 1);
+          return true;
+        }
+
+        return false;
+      }
+
+      if (activePsychologistIndex > 0) {
+        setActivePsychologistIndex((current) => Math.max(current - 1, 0));
+        return true;
+      }
+
+      if (currentPage > 1) {
+        replaceCurrentFiltersPage(currentPage - 1);
+        return true;
+      }
+
+      return false;
+    },
+    [
+      activePsychologistIndex,
+      currentPage,
+      directory.isFetching,
+      isFiltersOpen,
+      psychologists.length,
+      replaceCurrentFiltersPage,
+      response,
+    ],
+  );
+
+  const navigateFeedFromScroll = useCallback(
+    (direction: 1 | -1) => {
+      const now = Date.now();
+      if (now - feedScrollLastAtRef.current < FEED_SCROLL_COOLDOWN_MS) return false;
+
+      const didNavigate = navigateFeed(direction);
+      if (didNavigate) {
+        feedScrollLastAtRef.current = now;
+        setIsBioExpanded(false);
+      }
+
+      return didNavigate;
+    },
+    [navigateFeed],
+  );
+
+  const handleFeedWheel = useCallback(
+    (event: WheelEvent<HTMLDivElement>) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("[data-psychologists-scroll-lock='true']")) return;
+
+      const absY = Math.abs(event.deltaY);
+      if (absY < FEED_WHEEL_THRESHOLD || absY <= Math.abs(event.deltaX)) return;
+
+      event.preventDefault();
+      navigateFeedFromScroll(event.deltaY > 0 ? 1 : -1);
+    },
+    [navigateFeedFromScroll],
+  );
+
+  const handleFeedTouchStart = useCallback((event: TouchEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement | null;
+    if (target?.closest("[data-psychologists-scroll-lock='true']")) {
+      feedTouchStartRef.current = null;
+      return;
+    }
+
+    const touch = event.touches[0];
+    feedTouchStartRef.current = touch ? { x: touch.clientX, y: touch.clientY } : null;
+  }, []);
+
+  const handleFeedTouchEnd = useCallback(
+    (event: TouchEvent<HTMLDivElement>) => {
+      const start = feedTouchStartRef.current;
+      feedTouchStartRef.current = null;
+
+      if (!start) return;
+
+      const touch = event.changedTouches[0];
+      if (!touch) return;
+
+      const deltaX = touch.clientX - start.x;
+      const deltaY = start.y - touch.clientY;
+
+      if (Math.abs(deltaY) < FEED_TOUCH_THRESHOLD || Math.abs(deltaY) <= Math.abs(deltaX) * 1.2) {
+        return;
+      }
+
+      const didNavigate = navigateFeedFromScroll(deltaY > 0 ? 1 : -1);
+      if (didNavigate) {
+        suppressNextVideoTapRef.current = true;
+        window.setTimeout(() => {
+          suppressNextVideoTapRef.current = false;
+        }, 250);
+      }
+    },
+    [navigateFeedFromScroll],
+  );
 
   useEffect(() => {
     if (!isFiltersOpen) return;
@@ -858,6 +1028,9 @@ export const PsychologistsLogic = () => {
       <div className="relative isolate min-h-[100dvh] overflow-hidden bg-background text-white">
         <div
           className="relative mx-auto flex h-[100dvh] w-full overflow-hidden bg-black"
+          onTouchEnd={handleFeedTouchEnd}
+          onTouchStart={handleFeedTouchStart}
+          onWheel={handleFeedWheel}
           style={{
             maxWidth: "430px",
           }}
@@ -902,6 +1075,7 @@ export const PsychologistsLogic = () => {
               <>
                 <form
                   className="absolute z-40"
+                  data-psychologists-scroll-lock="true"
                   onMouseDown={stopInteractionPropagation}
                   onSubmit={handleSearchSubmit}
                   style={{
@@ -1215,7 +1389,11 @@ export const PsychologistsLogic = () => {
                                 ? "cursor-default md:cursor-pointer"
                                 : "cursor-default",
                             )}
+                            data-psychologists-scroll-lock={isBioExpanded ? "true" : undefined}
                             onClick={toggleExpandedBio}
+                            onWheel={(event) => {
+                              if (isBioExpanded) event.stopPropagation();
+                            }}
                             type="button"
                             ref={bioTextRef}
                             style={{
@@ -1444,6 +1622,7 @@ export const PsychologistsLogic = () => {
                     aria-labelledby="psychologist-filters-title"
                     aria-modal="true"
                     className="fixed inset-0 z-50 grid place-items-center bg-foreground/55 p-4 backdrop-blur-sm"
+                    data-psychologists-scroll-lock="true"
                     onMouseDown={handleFiltersClose}
                     role="dialog"
                   >
