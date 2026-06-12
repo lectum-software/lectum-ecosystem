@@ -209,3 +209,13 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
 - O texto de formatos aceitos foi simplificado para: `JPG, PNG ou WebP`.
 - O bloco manteve upload real, troca, remocao, preview com `next/image` e o mesmo padrao visual da plataforma, sem alterar backend, Prisma, contratos ou dados persistidos.
 - Validacoes executadas: `pnpm --dir frontend biome:fix`; `pnpm --dir frontend check`; `pnpm --dir frontend build`; `pnpm check`; HTTP local `/app/professional/profile/setup` respondeu 307 sem sessao, preservando protecao da rota privada.
+
+## Ajuste complementar em 2026-06-12 - secao unica de imagens do perfil
+
+- A tela `/app/professional/profile/setup` reorganizou as midias principais em uma secao unica no topo chamada `Imagens do perfil`, antes de `Informacoes basicas`.
+- A ordem visual passou a ser: imagem de capa, foto de perfil e informacoes basicas.
+- A secao usa apenas um texto explicativo curto: `Adicione uma imagem de capa horizontal e uma foto de perfil.`
+- Os textos de cada midia foram reduzidos para `Imagem de capa` / `JPG, PNG ou WebP` e `Foto de perfil` / `JPG, PNG ou WebP`.
+- A capa vigente continua vindo de `profile.cover_image_url` e agora fica em preview horizontal compacto e evidente; ao selecionar nova capa, um `ObjectURL` local atualiza a pre-visualizacao imediatamente enquanto o upload real executa.
+- A foto de perfil permanece com preview circular, troca, remocao e modal de enquadramento existentes, mas dentro do mesmo bloco compacto de midias.
+- Nao houve alteracao de backend, Prisma, contratos, validacoes de arquivo, formatos aceitos ou endpoints de upload/remocao.

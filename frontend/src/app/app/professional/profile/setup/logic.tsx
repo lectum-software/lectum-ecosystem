@@ -829,11 +829,12 @@ export const ProfessionalProfileSetupLogic = () => {
   const avatarDraftUrlRef = useRef<string | null>(null);
   const avatarDragRef = useRef<AvatarDragState | null>(null);
   const coverImageInputRef = useRef<HTMLInputElement>(null);
+  const coverImageDraftUrlRef = useRef<string | null>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const videoCoverInputRef = useRef<HTMLInputElement>(null);
-  const [avatarActionsOpen, setAvatarActionsOpen] = useState(false);
   const [avatarEditorOpen, setAvatarEditorOpen] = useState(false);
   const [avatarDraft, setAvatarDraft] = useState<AvatarDraft | null>(null);
+  const [coverImageDraftUrl, setCoverImageDraftUrl] = useState<string | null>(null);
   const [failedCoverImageUrl, setFailedCoverImageUrl] = useState<string | null>(null);
   const [videoActionsOpen, setVideoActionsOpen] = useState(false);
   const {
@@ -905,8 +906,9 @@ export const ProfessionalProfileSetupLogic = () => {
   const isPublicAvatar = isPublicMediaUrl(profile.data?.user.avatar);
   const coverImageSrc = resolvePublicMediaUrl(profile.data?.profile.cover_image_url);
   const coverImageFailed = Boolean(coverImageSrc && failedCoverImageUrl === coverImageSrc);
-  const visibleCoverImageSrc = coverImageFailed ? null : coverImageSrc;
-  const isPublicCoverImage = isPublicMediaUrl(profile.data?.profile.cover_image_url);
+  const visibleCoverImageSrc = coverImageDraftUrl || (coverImageFailed ? null : coverImageSrc);
+  const isPublicCoverImage =
+    !coverImageDraftUrl && isPublicMediaUrl(profile.data?.profile.cover_image_url);
   const videoSrc = resolvePublicMediaUrl(profile.data?.profile.video_url);
   const videoCoverSrc = resolvePublicMediaUrl(profile.data?.profile.video_cover_url);
   const canUploadVideo = Boolean(profile.data?.plan.can_upload_video);
@@ -1002,6 +1004,10 @@ export const ProfessionalProfileSetupLogic = () => {
       if (avatarDraftUrlRef.current) {
         URL.revokeObjectURL(avatarDraftUrlRef.current);
       }
+
+      if (coverImageDraftUrlRef.current) {
+        URL.revokeObjectURL(coverImageDraftUrlRef.current);
+      }
     };
   }, []);
 
@@ -1081,7 +1087,6 @@ export const ProfessionalProfileSetupLogic = () => {
       return;
     }
 
-    setAvatarActionsOpen(false);
     if (avatarDraftUrlRef.current) {
       URL.revokeObjectURL(avatarDraftUrlRef.current);
     }
@@ -1100,14 +1105,12 @@ export const ProfessionalProfileSetupLogic = () => {
   };
 
   const openAvatarFilePicker = () => {
-    setAvatarActionsOpen(false);
     avatarInputRef.current?.click();
   };
 
   const handleAvatarRemoval = () => {
     if (!profile.data?.user.avatar) return;
     clearAvatarDraft();
-    setAvatarActionsOpen(false);
     deleteAvatar.mutate();
   };
 
@@ -1168,6 +1171,15 @@ export const ProfessionalProfileSetupLogic = () => {
     }
   };
 
+  const clearCoverImageDraft = () => {
+    if (coverImageDraftUrlRef.current) {
+      URL.revokeObjectURL(coverImageDraftUrlRef.current);
+      coverImageDraftUrlRef.current = null;
+    }
+
+    setCoverImageDraftUrl(null);
+  };
+
   const handleCoverImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -1184,10 +1196,17 @@ export const ProfessionalProfileSetupLogic = () => {
       return;
     }
 
-    uploadCoverImage.mutate(file);
+    clearCoverImageDraft();
+    const previewUrl = URL.createObjectURL(file);
+    coverImageDraftUrlRef.current = previewUrl;
+    setCoverImageDraftUrl(previewUrl);
+    uploadCoverImage.mutate(file, {
+      onSuccess: clearCoverImageDraft,
+    });
   };
 
   const handleCoverImageRemoval = () => {
+    clearCoverImageDraft();
     if (!profile.data?.profile.cover_image_url) return;
     deleteCoverImage.mutate();
   };
@@ -1295,21 +1314,19 @@ export const ProfessionalProfileSetupLogic = () => {
   });
 
   const renderCoverImageEditor = () => (
-    <div className="rounded-2xl border border-border bg-surface-muted p-4 text-left">
-      <div className="flex items-center justify-between gap-3">
+    <div className="rounded-2xl border border-border bg-surface-muted p-3 text-left">
+      <div className="mb-2 flex items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-bold leading-5 text-foreground">Imagem de capa</p>
-          <p className="mt-1 text-xs leading-5 text-muted">
-            Use uma foto horizontal do consultório, ambiente de atendimento ou arte institucional.
-          </p>
+          <p className="text-xs leading-5 text-muted">JPG, PNG ou WebP</p>
         </div>
-        {profile.data?.profile.cover_image_url ? (
+        {profile.data?.profile.cover_image_url || coverImageDraftUrl ? (
           <button
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-danger transition hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-60"
+            aria-label="Remover imagem de capa"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-danger transition hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-60"
             disabled={deleteCoverImage.isPending || uploadCoverImage.isPending}
             onClick={handleCoverImageRemoval}
             type="button"
-            aria-label="Remover imagem de capa"
           >
             {deleteCoverImage.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -1321,7 +1338,7 @@ export const ProfessionalProfileSetupLogic = () => {
       </div>
 
       <button
-        className="relative mt-4 block aspect-[16/7] w-full overflow-hidden rounded-2xl border border-dashed border-border bg-surface text-left transition hover:border-primary hover:bg-primary-soft/30 disabled:cursor-not-allowed disabled:opacity-60"
+        className="relative block aspect-[16/6] w-full overflow-hidden rounded-xl border border-dashed border-border bg-surface text-left transition hover:border-primary hover:bg-primary-soft/30 disabled:cursor-not-allowed disabled:opacity-60"
         disabled={!profile.data || uploadCoverImage.isPending || deleteCoverImage.isPending}
         onClick={() => coverImageInputRef.current?.click()}
         type="button"
@@ -1340,25 +1357,24 @@ export const ProfessionalProfileSetupLogic = () => {
           <span className="absolute inset-0 grid place-items-center bg-[radial-gradient(circle_at_25%_20%,rgb(219_234_254),transparent_35%),linear-gradient(135deg,rgb(239_246_255),rgb(248_250_252))] px-4 text-center">
             <span>
               {uploadCoverImage.isPending ? (
-                <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" aria-hidden="true" />
+                <Loader2 className="mx-auto h-6 w-6 animate-spin text-primary" aria-hidden="true" />
               ) : (
-                <UploadCloud className="mx-auto h-8 w-8 text-primary" aria-hidden="true" />
+                <UploadCloud className="mx-auto h-6 w-6 text-primary" aria-hidden="true" />
               )}
-              <span className="mt-3 block text-sm font-bold text-foreground">
-                Toque para enviar a imagem de capa
+              <span className="mt-2 block text-xs font-bold text-foreground">
+                Enviar imagem de capa
               </span>
-              <span className="mt-1 block text-xs text-muted">JPG, PNG ou WebP</span>
             </span>
           </span>
         )}
         {visibleCoverImageSrc ? (
-          <span className="absolute right-3 bottom-3 inline-flex items-center gap-2 rounded-full bg-surface/90 px-3 py-2 text-xs font-bold text-foreground shadow-sm backdrop-blur">
+          <span className="absolute right-2 bottom-2 inline-flex items-center gap-1.5 rounded-full bg-surface/90 px-2.5 py-1.5 text-[11px] font-bold text-foreground shadow-sm backdrop-blur">
             {uploadCoverImage.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
             ) : (
-              <UploadCloud className="h-4 w-4" aria-hidden="true" />
+              <UploadCloud className="h-3.5 w-3.5" aria-hidden="true" />
             )}
-            Trocar capa
+            Trocar
           </span>
         ) : null}
       </button>
@@ -1393,112 +1409,127 @@ export const ProfessionalProfileSetupLogic = () => {
           </Link>
         </div>
 
-        <header className="rounded-[var(--lectum-card-radius)] border border-border bg-white px-5 py-7 text-center shadow-[var(--lectum-shadow-soft)]">
-          <div className="relative mx-auto h-28 w-28">
-            <div
-              className={cn(
-                "relative mx-auto grid h-28 w-28 place-items-center overflow-hidden rounded-full border-4 border-white bg-primary text-3xl font-bold text-white shadow-[var(--lectum-shadow-soft)]",
-                avatarDraft && "ring-4 ring-primary/20",
-              )}
-            >
-              {visibleAvatarSrc ? (
-                <Image
-                  alt={avatarDraft ? "Pré-visualização da foto profissional" : "Foto profissional"}
-                  className="object-cover"
-                  fill
-                  sizes="112px"
-                  src={visibleAvatarSrc}
-                  style={{
-                    objectPosition: avatarDraft
-                      ? `${avatarDraft.position.x}% ${avatarDraft.position.y}%`
-                      : "50% 50%",
-                  }}
-                  unoptimized={Boolean(avatarDraft) || isPublicAvatar}
-                />
-              ) : (
-                <span className="grid h-full w-full place-items-center text-white">
-                  <UserRound className="h-10 w-10" aria-hidden="true" />
-                </span>
-              )}
-            </div>
-            <div className="absolute right-0 bottom-0">
-              <button
-                aria-expanded={avatarActionsOpen}
-                aria-haspopup="menu"
-                aria-label="Opções da foto profissional"
-                className="grid h-9 w-9 place-items-center rounded-full border-2 border-surface bg-primary text-white shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
-                disabled={isSavingMedia}
-                onClick={() => setAvatarActionsOpen((current) => !current)}
-                type="button"
-              >
-                {isSavingMedia ? (
-                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                ) : (
-                  <Camera className="h-4 w-4" aria-hidden="true" />
-                )}
-              </button>
+        <header className="rounded-[var(--lectum-card-radius)] border border-border bg-white px-4 py-4 text-left shadow-[var(--lectum-shadow-soft)]">
+          <div className="mb-3">
+            <h1 className="text-base font-extrabold tracking-[-0.01em] text-foreground">
+              Imagens do perfil
+            </h1>
+            <p className="mt-1 text-xs leading-5 text-muted">
+              Adicione uma imagem de capa horizontal e uma foto de perfil.
+            </p>
+          </div>
 
-              {avatarActionsOpen ? (
-                <div
-                  className="absolute right-0 top-10 z-20 w-44 overflow-hidden rounded-2xl border border-border bg-surface text-left shadow-[var(--lectum-shadow-soft)]"
-                  role="menu"
-                >
+          <div className="grid gap-3">
+            {renderCoverImageEditor()}
+
+            <div className="rounded-2xl border border-border bg-surface-muted p-3">
+              <div className="mb-2">
+                <p className="text-sm font-bold leading-5 text-foreground">Foto de perfil</p>
+                <p className="text-xs leading-5 text-muted">JPG, PNG ou WebP</p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="relative h-20 w-20 shrink-0">
+                  <div
+                    className={cn(
+                      "relative grid h-20 w-20 place-items-center overflow-hidden rounded-full border-4 border-white bg-primary text-2xl font-bold text-white shadow-[var(--lectum-shadow-soft)]",
+                      avatarDraft && "ring-4 ring-primary/20",
+                    )}
+                  >
+                    {visibleAvatarSrc ? (
+                      <Image
+                        alt={
+                          avatarDraft
+                            ? "Pré-visualização da foto profissional"
+                            : "Foto profissional"
+                        }
+                        className="object-cover"
+                        fill
+                        sizes="80px"
+                        src={visibleAvatarSrc}
+                        style={{
+                          objectPosition: avatarDraft
+                            ? `${avatarDraft.position.x}% ${avatarDraft.position.y}%`
+                            : "50% 50%",
+                        }}
+                        unoptimized={Boolean(avatarDraft) || isPublicAvatar}
+                      />
+                    ) : (
+                      <span className="grid h-full w-full place-items-center text-white">
+                        <UserRound className="h-8 w-8" aria-hidden="true" />
+                      </span>
+                    )}
+                  </div>
                   <button
-                    className="flex w-full items-center gap-2 px-4 py-3 text-sm font-semibold text-foreground transition hover:bg-primary-soft hover:text-primary"
+                    aria-label="Trocar foto de perfil"
+                    className="absolute right-0 bottom-0 grid h-8 w-8 place-items-center rounded-full border-2 border-surface bg-primary text-white shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
+                    disabled={isSavingMedia}
                     onClick={openAvatarFilePicker}
-                    role="menuitem"
+                    type="button"
+                  >
+                    {isSavingMedia ? (
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    ) : (
+                      <Camera className="h-4 w-4" aria-hidden="true" />
+                    )}
+                  </button>
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <button
+                    className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-border bg-surface px-3 text-xs font-bold text-foreground transition hover:border-primary hover:bg-primary-soft/40 disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={isSavingMedia}
+                    onClick={openAvatarFilePicker}
                     type="button"
                   >
                     <UploadCloud className="h-4 w-4" aria-hidden="true" />
-                    Alterar imagem
+                    Trocar foto
                   </button>
-                  <button
-                    className="flex w-full items-center gap-2 px-4 py-3 text-sm font-semibold text-danger transition hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-45"
-                    disabled={!profile.data?.user.avatar}
-                    onClick={handleAvatarRemoval}
-                    role="menuitem"
+                  {profile.data?.user.avatar ? (
+                    <button
+                      className="ml-2 inline-flex h-9 items-center justify-center rounded-full px-3 text-xs font-bold text-danger transition hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-45"
+                      disabled={isSavingMedia}
+                      onClick={handleAvatarRemoval}
+                      type="button"
+                    >
+                      Remover
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+
+              <input
+                accept="image/png,image/jpeg,image/webp"
+                className="sr-only"
+                onChange={handleAvatarChange}
+                ref={avatarInputRef}
+                type="file"
+              />
+
+              {avatarDraft ? (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <Button
+                    disabled={uploadAvatar.isPending}
+                    onClick={() => setAvatarEditorOpen(true)}
                     type="button"
+                    variant="outline"
                   >
-                    <Trash2 className="h-4 w-4" aria-hidden="true" />
-                    Excluir imagem
-                  </button>
+                    <Camera className="h-4 w-4" aria-hidden="true" />
+                    Ajustar foto
+                  </Button>
+                  <Button
+                    disabled={uploadAvatar.isPending}
+                    onClick={clearAvatarDraft}
+                    type="button"
+                    variant="ghost"
+                  >
+                    <X className="h-4 w-4" aria-hidden="true" />
+                    Descartar
+                  </Button>
                 </div>
               ) : null}
             </div>
           </div>
-          <input
-            accept="image/png,image/jpeg,image/webp"
-            className="sr-only"
-            onChange={handleAvatarChange}
-            ref={avatarInputRef}
-            type="file"
-          />
-          <p className="mt-4 text-xs leading-5 text-muted">
-            Envie uma imagem PNG, JPG ou WebP de até 5MB.
-          </p>
-          {avatarDraft ? (
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              <Button
-                disabled={uploadAvatar.isPending}
-                onClick={() => setAvatarEditorOpen(true)}
-                type="button"
-                variant="outline"
-              >
-                <Camera className="h-4 w-4" aria-hidden="true" />
-                Ajustar foto
-              </Button>
-              <Button
-                disabled={uploadAvatar.isPending}
-                onClick={clearAvatarDraft}
-                type="button"
-                variant="ghost"
-              >
-                <X className="h-4 w-4" aria-hidden="true" />
-                Descartar
-              </Button>
-            </div>
-          ) : null}
-          <div className="mt-6">{renderCoverImageEditor()}</div>
         </header>
 
         {avatarDraft && avatarEditorOpen ? (

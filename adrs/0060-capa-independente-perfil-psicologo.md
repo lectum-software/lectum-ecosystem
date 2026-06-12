@@ -65,3 +65,17 @@ Validacao complementar:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - HTTP local `/app/professional/profile/setup` respondeu 307 sem sessao, preservando a protecao da rota privada.
+
+## Ajuste complementar em 2026-06-12 - secao unica de midias no setup
+
+A edicao de `/app/professional/profile/setup` passou a agrupar imagem de capa e foto de perfil em uma unica secao `Imagens do perfil`. A ordem da secao prioriza a capa, depois a foto de perfil, para reforcar que a capa e a primeira midia visual do perfil publico.
+
+A decisao foi manter os endpoints e validacoes existentes, alterando apenas apresentacao, ordem e feedback visual. A capa salva em `cover_image_url` continua sendo exibida com `next/image`; ao selecionar uma nova imagem, o frontend cria um `ObjectURL` temporario para preview imediato e o remove apos sucesso do upload ou descarte/remocao.
+
+Validacao complementar:
+
+- `pnpm --dir frontend biome:fix`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local `/app/professional/profile/setup` respondeu 307 sem sessao, preservando a protecao da rota privada.
