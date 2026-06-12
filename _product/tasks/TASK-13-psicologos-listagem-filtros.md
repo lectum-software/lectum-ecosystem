@@ -742,3 +742,21 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: hierarquia visual premium do bloco inferior (2026-06-12)
+
+- Pedido do usuario: refinar a hierarquia visual do bloco inferior da tela de Psicologos sem alterar chips superiores, busca, filtro, navbar ou posicao da coluna lateral.
+- O nome do psicologo foi aumentado para a faixa 17-18px, com peso 700 e line-height proporcional, mantendo quebra natural sem `ellipsis` e continuando como principal elemento textual.
+- O selo verificado permanece preso a ultima parte do nome com respiro horizontal maior, evitando ficar sozinho em uma linha propria.
+- O selo `Disponivel hoje` manteve o tamanho atual, mas ganhou mais espaco abaixo para funcionar como indicador secundario, e nao como titulo.
+- Profissao/experiencia seguem em 11-12px, peso 500, com opacidade menor; a avaliacao ganhou respiro horizontal para parecer dado complementar.
+- A bio manteve tamanho de 12px, ganhou line-height de 17px e voltou a aparecer recolhida em ate 2 linhas com expansao inline ao clique.
+- O espacamento vertical entre selo, nome, linha profissional e bio foi ampliado para criar blocos mais distintos e uma leitura mais premium em telas compactas.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, chips superiores, busca, filtros, navbar, botoes laterais, gestos, favoritos ou navegacao de perfil.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual permanece `_product/proto/Psicologos.jpg` e o contrato da TASK-13.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

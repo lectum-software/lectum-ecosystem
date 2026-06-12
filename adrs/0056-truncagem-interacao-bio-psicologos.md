@@ -214,3 +214,13 @@ Com isso:
 - o feedback visual fica restrito ao icone de coracao e a animacao do duplo toque no feed;
 - mensagens verdes de sucesso deixam de competir com o video e nao quebram o modo imersivo;
 - erros seguem pelo fluxo global de erro do `handleReq`, pois a solicitacao removeu apenas o feedback textual de sucesso.
+
+## Atualizacao 2026-06-12: hierarquia visual premium do bloco inferior
+
+A tela `/app/psychologists` refinou a hierarquia do bloco inferior sem mexer na estrutura global do feed imersivo.
+
+Decidimos tratar o nome como principal ancora textual do slide, aumentando-o para 17-18px com peso 700, enquanto profissao/experiencia e avaliacao ficam em escala secundaria. A bio permanece legivel em 12px, mas com line-height de 17px e truncagem inicial em 2 linhas para equilibrar leitura e area livre de video.
+
+O selo `Disponivel hoje` mantem seu tamanho atual, mas recebe mais espaco abaixo para funcionar como indicador secundario. O selo verificado permanece agrupado ao nome por `inline-flex` com `nowrap`, preservando a regra de nao ficar sozinho em uma linha.
+
+A decisao preserva chips superiores, busca, filtro, navbar, coluna lateral, gestos e dados reais do psicologo, alterando apenas escala e espacamentos do bloco textual inferior.

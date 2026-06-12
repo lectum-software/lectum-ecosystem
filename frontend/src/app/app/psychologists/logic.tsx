@@ -71,7 +71,7 @@ const SWIPE_HINT_INITIAL_DURATION_MS = 3000;
 const SWIPE_HINT_IDLE_DELAY_MS = 5000;
 const SWIPE_HINT_IDLE_DURATION_MS = 2000;
 const SWIPE_HINT_NUDGE_DURATION_MS = 760;
-const BIO_COLLAPSED_LINE_COUNT = 4;
+const BIO_COLLAPSED_LINE_COUNT = 2;
 
 type VideoProgressState = {
   currentTime: number;
@@ -349,7 +349,7 @@ const useViewportMetrics = () => {
       ratingIconSize: isCompact ? 10 : 11,
       ratingLineHeight: 15,
       ratingTextSize: 11,
-      bioLineHeight: 16,
+      bioLineHeight: 17,
       bioSize: 12,
       filterButtonSize: isCompact ? 40 : 42,
       horizontalPadding: isCompact ? 16 : 20,
@@ -359,8 +359,8 @@ const useViewportMetrics = () => {
       searchTop: isCompact ? 36 : 40,
       subtitleSize: isCompact ? 11 : 12,
       textColumnGap: isTiny ? 8 : 10,
-      titleLineHeight: 20,
-      titleSize: isTiny || isCompact ? 16 : 17,
+      titleLineHeight: isTiny || isCompact ? 21 : 22,
+      titleSize: isTiny || isCompact ? 17 : 18,
       verifiedBadgeSize: isTiny ? 12 : 14,
     };
   }, [width]);
@@ -2087,7 +2087,7 @@ export const PsychologistsLogic = () => {
                             <div className="pointer-events-auto min-w-0">
                               {psychologist.available_today ? (
                                 <div
-                                  className="inline-flex animate-pulse items-center gap-1 rounded-full bg-white px-2 py-1 font-semibold text-[#22C55E]"
+                                  className="mb-2 flex w-fit animate-pulse items-center gap-1 rounded-full bg-white px-2 py-1 font-semibold text-[#22C55E]"
                                   style={{
                                     fontSize: `${metrics.availableBadgeTextSize}px`,
                                     lineHeight: "12px",
@@ -2101,7 +2101,7 @@ export const PsychologistsLogic = () => {
                                 </div>
                               ) : null}
 
-                              <div className="mt-1.5 grid gap-0.5">
+                              <div className="grid gap-1.5">
                                 <button
                                   aria-label={`Ver perfil de ${psychologist.name}`}
                                   className="block w-full min-w-0 max-w-full cursor-pointer text-left font-bold text-white"
@@ -2119,7 +2119,7 @@ export const PsychologistsLogic = () => {
                                   {slideNameParts.firstPart ? (
                                     <span>{slideNameParts.firstPart} </span>
                                   ) : null}
-                                  <span className="inline-flex max-w-full items-center gap-1 whitespace-nowrap align-baseline">
+                                  <span className="inline-flex max-w-full items-center gap-1.5 whitespace-nowrap align-baseline">
                                     <span>
                                       {slideNameParts.lastPart ||
                                         formatDisplayName(psychologist.name)}
@@ -2138,7 +2138,7 @@ export const PsychologistsLogic = () => {
                                 </button>
 
                                 <div
-                                  className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 font-medium text-white/90"
+                                  className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 font-medium text-white/80"
                                   style={{
                                     fontSize: `${metrics.subtitleSize}px`,
                                     fontWeight: 500,
@@ -2182,7 +2182,7 @@ export const PsychologistsLogic = () => {
                                     slideIsBioTruncated ? slideIsBioExpanded : undefined
                                   }
                                   className={cn(
-                                    "pointer-events-auto mt-1.5 w-full text-left text-white/90",
+                                    "pointer-events-auto mt-2 w-full text-left text-white/90",
                                     slideIsBioExpanded ? "overflow-y-auto pr-1" : null,
                                     slideIsBioTruncated ? "cursor-pointer" : "cursor-default",
                                   )}
