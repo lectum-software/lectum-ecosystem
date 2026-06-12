@@ -70,6 +70,7 @@ const SWIPE_HINT_INITIAL_DURATION_MS = 3000;
 const SWIPE_HINT_IDLE_DELAY_MS = 5000;
 const SWIPE_HINT_IDLE_DURATION_MS = 2000;
 const SWIPE_HINT_NUDGE_DURATION_MS = 760;
+const BIO_COLLAPSED_LINE_COUNT = 4;
 
 const formatRating = (ratingAvg: number, ratingCount: number) => {
   if (ratingCount <= 0) return "0,0";
@@ -331,21 +332,24 @@ const useViewportMetrics = () => {
       actionRightPadding: isTiny ? 12 : 16,
       actionRailWidth: actionButtonSize,
       actionStandaloneIconSize: isTiny ? 22 : 24,
+      availableBadgeTextSize: isTiny ? 10 : 11,
       bioBottomOffset: isCompact ? 12 : 14,
-      ratingIconSize: isCompact ? 11 : 12,
-      ratingLineHeight: isCompact ? 16 : 18,
-      ratingTextSize: isCompact ? 11 : 12,
-      bioLineHeight: isTiny ? 16 : isCompact ? 17 : 19,
-      bioSize: isTiny ? 11 : isCompact ? 12 : 13,
+      ratingIconSize: isCompact ? 10 : 11,
+      ratingLineHeight: 15,
+      ratingTextSize: 11,
+      bioLineHeight: 16,
+      bioSize: 12,
       filterButtonSize: isCompact ? 40 : 42,
       horizontalPadding: isCompact ? 16 : 20,
       navBarHeight: DEFAULT_NAV_BAR_HEIGHT,
       searchHeight: isCompact ? 42 : 46,
       searchRightGap: isCompact ? 62 : 74,
       searchTop: isCompact ? 36 : 40,
-      subtitleSize: isCompact ? 13 : 14,
+      subtitleSize: isCompact ? 11 : 12,
       textColumnGap: isTiny ? 8 : 10,
-      titleSize: isTiny ? 17 : isCompact ? 18 : 20,
+      titleLineHeight: 20,
+      titleSize: isTiny || isCompact ? 16 : 17,
+      verifiedBadgeSize: isTiny ? 12 : 14,
     };
   }, [width]);
 };
@@ -384,6 +388,7 @@ export const PsychologistsLogic = () => {
   const feedContainerRef = useRef<HTMLDivElement | null>(null);
   const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
   const bioTextRef = useRef<HTMLButtonElement | null>(null);
+  const bioContentRef = useRef<HTMLSpanElement | null>(null);
   const actionColumnRef = useRef<HTMLDivElement | null>(null);
   const profileTextRef = useRef<HTMLElement | null>(null);
   const lastSearchParamsStringRef = useRef(searchParamsString);
@@ -729,15 +734,15 @@ export const PsychologistsLogic = () => {
       return;
     }
 
-    const bioText = bioTextRef.current;
-    if (!bioText) return;
+    const bioContent = bioContentRef.current;
+    if (!bioContent) return;
 
-    const computedStyles = window.getComputedStyle(bioText);
+    const computedStyles = window.getComputedStyle(bioContent);
     const computedLineHeight = Number.parseFloat(computedStyles.lineHeight);
     const lineHeight = Number.isFinite(computedLineHeight)
       ? computedLineHeight
       : metrics.bioLineHeight;
-    const nextIsTruncated = bioText.scrollHeight > lineHeight * 2 + 1;
+    const nextIsTruncated = bioContent.scrollHeight > lineHeight * BIO_COLLAPSED_LINE_COUNT + 1;
 
     setIsBioTruncated((current) => (current === nextIsTruncated ? current : nextIsTruncated));
     if (!nextIsTruncated) {
@@ -769,7 +774,7 @@ export const PsychologistsLogic = () => {
       recalculateInfoOverlayLayout();
     };
 
-    const bioNode = bioTextRef.current;
+    const bioNode = bioContentRef.current;
     const resizeObserver = bioNode
       ? new ResizeObserver(() => recalculateInfoOverlayLayout())
       : null;
@@ -1599,7 +1604,7 @@ export const PsychologistsLogic = () => {
                             )}
                             style={{
                               background:
-                                "linear-gradient(to top, rgba(0,0,0,0.96) 0%, rgba(0,0,0,0.9) 15%, rgba(0,0,0,0.58) 28%, rgba(0,0,0,0.22) 40%, rgba(0,0,0,0) 55%)",
+                                "linear-gradient(to top, rgba(0,0,0,0.86) 0%, rgba(0,0,0,0.7) 17%, rgba(0,0,0,0.42) 31%, rgba(0,0,0,0.16) 43%, rgba(0,0,0,0) 58%)",
                             }}
                           />
 
@@ -1723,7 +1728,13 @@ export const PsychologistsLogic = () => {
                           >
                             <div className="pointer-events-auto min-w-0">
                               {psychologist.available_today ? (
-                                <div className="inline-flex animate-pulse items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-[#22C55E]">
+                                <div
+                                  className="inline-flex animate-pulse items-center gap-1 rounded-full bg-white px-2 py-1 font-semibold text-[#22C55E]"
+                                  style={{
+                                    fontSize: `${metrics.availableBadgeTextSize}px`,
+                                    lineHeight: "12px",
+                                  }}
+                                >
                                   <span className="relative flex h-2 w-2">
                                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#22C55E] opacity-60" />
                                     <span className="relative inline-flex h-2 w-2 rounded-full bg-[#22C55E]" />
@@ -1732,15 +1743,16 @@ export const PsychologistsLogic = () => {
                                 </div>
                               ) : null}
 
-                              <div className="mt-2 grid gap-1">
+                              <div className="mt-1.5 grid gap-0.5">
                                 <button
                                   aria-label={`Ver perfil de ${psychologist.name}`}
-                                  className="block w-full min-w-0 max-w-full cursor-pointer text-left font-semibold text-white"
+                                  className="block w-full min-w-0 max-w-full cursor-pointer text-left font-bold text-white"
                                   onClick={(event) => navigateToProfile(psychologist.id, event)}
                                   type="button"
                                   style={{
                                     fontSize: `${metrics.titleSize}px`,
-                                    lineHeight: 1.12,
+                                    fontWeight: 700,
+                                    lineHeight: `${metrics.titleLineHeight}px`,
                                     maxWidth: "100%",
                                     overflowWrap: "break-word",
                                     wordBreak: "normal",
@@ -1757,15 +1769,23 @@ export const PsychologistsLogic = () => {
                                     {psychologist.verified ? (
                                       <VerifiedBadgeIcon
                                         aria-hidden="true"
-                                        className="h-4 w-4 shrink-0 translate-y-[1px]"
+                                        className="shrink-0 translate-y-[1px]"
+                                        style={{
+                                          height: `${metrics.verifiedBadgeSize}px`,
+                                          width: `${metrics.verifiedBadgeSize}px`,
+                                        }}
                                       />
                                     ) : null}
                                   </span>
                                 </button>
 
                                 <div
-                                  className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 leading-tight font-medium text-white/75"
-                                  style={{ fontSize: `${metrics.subtitleSize}px` }}
+                                  className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 font-medium text-white/90"
+                                  style={{
+                                    fontSize: `${metrics.subtitleSize}px`,
+                                    fontWeight: 500,
+                                    lineHeight: "16px",
+                                  }}
                                 >
                                   <span className="min-w-0">
                                     {formatProfileTitle(
@@ -1774,7 +1794,7 @@ export const PsychologistsLogic = () => {
                                       psychologist.show_experience_tag,
                                     )}
                                   </span>
-                                  <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/20 px-1.5 py-0.5 text-[#FACC15] shadow-[0_8px_24px_rgba(0,0,0,0.18)] backdrop-blur-sm">
+                                  <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/20 px-1.5 py-0.5 text-[#FACC15] shadow-[0_8px_24px_rgba(0,0,0,0.14)] backdrop-blur-sm">
                                     <Star
                                       aria-hidden="true"
                                       className="fill-[#FACC15]"
@@ -1804,11 +1824,9 @@ export const PsychologistsLogic = () => {
                                     slideIsBioTruncated ? slideIsBioExpanded : undefined
                                   }
                                   className={cn(
-                                    "pointer-events-auto mt-2 w-full text-left text-white/95",
-                                    slideIsBioExpanded ? "overflow-y-auto" : "line-clamp-2",
-                                    slideIsBioTruncated
-                                      ? "cursor-default md:cursor-pointer"
-                                      : "cursor-default",
+                                    "pointer-events-auto mt-1.5 w-full text-left text-white/90",
+                                    slideIsBioExpanded ? "overflow-y-auto pr-1" : null,
+                                    slideIsBioTruncated ? "cursor-pointer" : "cursor-default",
                                   )}
                                   data-psychologists-scroll-lock={
                                     slideIsBioExpanded ? "true" : undefined
@@ -1834,12 +1852,32 @@ export const PsychologistsLogic = () => {
                                     fontSize: `${metrics.bioSize}px`,
                                     lineHeight: `${metrics.bioLineHeight}px`,
                                     maxWidth: "100%",
-                                    maxHeight: slideIsBioExpanded ? "min(34dvh, 220px)" : undefined,
+                                    maxHeight: slideIsBioExpanded ? "min(40dvh, 260px)" : undefined,
                                     overflowWrap: "break-word",
                                     wordBreak: "normal",
                                   }}
                                 >
-                                  {slideBio}
+                                  <span
+                                    className="block whitespace-pre-line"
+                                    ref={(node) => {
+                                      if (isActiveSlide) {
+                                        bioContentRef.current = node;
+                                      }
+                                    }}
+                                    style={{
+                                      maxHeight: slideIsBioExpanded
+                                        ? undefined
+                                        : `${metrics.bioLineHeight * BIO_COLLAPSED_LINE_COUNT}px`,
+                                      overflow: slideIsBioExpanded ? "visible" : "hidden",
+                                    }}
+                                  >
+                                    {slideBio}
+                                  </span>
+                                  {slideIsBioTruncated ? (
+                                    <span className="mt-1 inline-flex text-[11px] leading-4 font-bold text-white">
+                                      {slideIsBioExpanded ? "Ver menos" : "Ver mais"}
+                                    </span>
+                                  ) : null}
                                 </button>
                               ) : null}
 

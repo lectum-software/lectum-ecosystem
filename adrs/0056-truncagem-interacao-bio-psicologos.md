@@ -150,3 +150,16 @@ A tela `/app/psychologists` passa a ensinar a navegacao vertical com uma dica le
 - o primeiro swipe vertical bem-sucedido marca a chave local como vista, oculta a dica e impede novas exibicoes automaticas.
 
 Timers e estados da dica sao limpos no unmount e quando a dica e marcada como vista.
+
+## Atualizacao 2026-06-12: hierarquia tipografica do bloco inferior
+
+A tela `/app/psychologists` refinou a hierarquia visual do bloco inferior para equilibrar a descoberta com o modo imersivo:
+
+- o nome do psicologo passa a ser o texto principal, com 16-17px, peso 700 e linha de 20px, mantendo quebra natural sem `ellipsis`;
+- o selo verificado permanece agrupado com a ultima palavra do nome, em 12-14px, evitando ficar isolado em uma linha propria;
+- profissao/experiencia e avaliacao foram reduzidas para escala secundaria, com texto em 11-12px e pill de nota compacta;
+- a bio passa a usar 12px/16px, mostra ate 4 linhas sem `ellipsis` e usa `Ver mais`/`Ver menos` para expansao inline quando ultrapassa esse limite;
+- o selo `Disponivel hoje` foi compactado para 10-11px e deixa de competir com o nome;
+- o gradiente inferior ficou mais sutil, preservando legibilidade sem dominar a midia.
+
+A expansao da bio continua crescendo para cima por causa do bloco ancorado acima da navbar, sem alterar navbar, video, busca, filtros, coluna lateral, gestos, favoritos ou navegacao para perfil.
