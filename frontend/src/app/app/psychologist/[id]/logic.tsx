@@ -453,40 +453,31 @@ const ProfileAvatar = ({ profile }: { profile: DirectoryPsychologistProfile }) =
 };
 
 const ProfileHeroMedia = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
-  const videoSrc = resolvePublicMediaUrl(profile.video_url);
-  const coverImageSrc = resolvePublicMediaUrl(profile.video_cover_url);
-  const coverImageIsPublicMedia = isPublicMediaUrl(profile.video_cover_url);
+  const coverImageSrc = resolvePublicMediaUrl(profile.cover_image_url);
+  const coverImageIsPublicMedia = isPublicMediaUrl(profile.cover_image_url);
+  const [failedCoverImageUrl, setFailedCoverImageUrl] = useState<string | null>(null);
+  const coverImageFailed = Boolean(coverImageSrc && failedCoverImageUrl === coverImageSrc);
 
-  if (!videoSrc && !coverImageSrc) {
+  if (!coverImageSrc || coverImageFailed) {
     return (
       <div className="relative h-[236px] overflow-hidden bg-gradient-to-br from-[#2F8DEB] to-[#60A5FA] sm:h-[260px] lg:h-[300px]">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.2),transparent_45%),linear-gradient(to_right,#2F8DEB,#60A5FA)] opacity-95" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_15%,rgba(255,255,255,0.34),transparent_32%),radial-gradient(circle_at_82%_18%,rgba(191,219,254,0.48),transparent_34%),linear-gradient(135deg,#EAF5FF,#D9ECFF_52%,#F8FAFC)] opacity-100" />
       </div>
     );
   }
 
   return (
     <div className="relative h-[236px] overflow-hidden bg-black sm:h-[260px] lg:h-[300px]">
-      {coverImageSrc ? (
-        <Image
-          alt={profile.name}
-          className="h-full w-full object-cover object-center"
-          fill
-          priority={false}
-          sizes="(min-width: 768px) 720px, 100vw"
-          src={coverImageSrc}
-          unoptimized={coverImageIsPublicMedia}
-        />
-      ) : (
-        <video
-          className="h-full w-full object-cover object-center"
-          loop
-          muted
-          playsInline
-          preload="metadata"
-          src={videoSrc || undefined}
-        />
-      )}
+      <Image
+        alt={`Imagem de capa de ${profile.name}`}
+        className="h-full w-full object-cover object-center"
+        fill
+        priority={false}
+        sizes="(min-width: 768px) 720px, 100vw"
+        src={coverImageSrc}
+        unoptimized={coverImageIsPublicMedia}
+        onError={() => setFailedCoverImageUrl(coverImageSrc)}
+      />
       <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(15,23,42,0.62)_0%,rgba(15,23,42,0.24)_30%,rgba(15,23,42,0.08)_58%,rgba(15,23,42,0.42)_100%)]" />
     </div>
   );

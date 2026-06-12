@@ -40,6 +40,7 @@ export type FreeProfessionalProfileResponse = {
     religion: string | null;
     whatsapp: string | null;
     whatsapp_url: string | null;
+    cover_image_url: string | null;
     video_url: string | null;
     video_cover_url: string | null;
     target_audience: string[];
@@ -133,6 +134,15 @@ export type FreeProfessionalProfileVideoCoverUploadResponse = {
   video_cover_url: string;
 };
 
+export type FreeProfessionalProfileCoverImageUploadResponse = {
+  cover_image_url: string;
+  profile: FreeProfessionalProfileResponse | null;
+};
+
+export type FreeProfessionalProfileCoverImageRemovalResponse = {
+  profile: FreeProfessionalProfileResponse | null;
+};
+
 export interface IFreeProfessionalProfileUploadAvatarDTO {
   auth: user;
   file?: {
@@ -165,6 +175,20 @@ export interface IFreeProfessionalProfileUploadVideoCoverDTO {
     fileUrl?: string;
     mimetype?: string;
   };
+}
+
+export interface IFreeProfessionalProfileUploadCoverImageDTO {
+  auth: user;
+  file?: {
+    path?: string;
+    key?: string;
+    fileUrl?: string;
+    mimetype?: string;
+  };
+}
+
+export interface IFreeProfessionalProfileRemoveCoverImageDTO {
+  auth: user;
 }
 
 export interface IFreeProfessionalProfileRemoveVideoDTO {

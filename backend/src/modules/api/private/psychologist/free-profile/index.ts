@@ -2,10 +2,12 @@ import { Router } from "express";
 import multer from "@/config/multer";
 import {
   removeAvatar,
+  removeCoverImage,
   removeVideo,
   show,
   update,
   uploadAvatar,
+  uploadCoverImage,
   uploadVideo,
   uploadVideoCover,
 } from "./use-cases/controller";
@@ -24,6 +26,16 @@ routes.post(
   uploadAvatar,
 );
 routes.delete("/avatar", removeAvatar);
+routes.post(
+  "/cover-image",
+  multer({
+    single: "cover-image",
+    allowed: ["image/jpeg", "image/png", "image/webp"],
+    size: 5,
+  }),
+  uploadCoverImage,
+);
+routes.delete("/cover-image", removeCoverImage);
 routes.post(
   "/video",
   multer({

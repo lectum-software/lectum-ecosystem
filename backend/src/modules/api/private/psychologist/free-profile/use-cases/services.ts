@@ -5,10 +5,12 @@ import type {
   FreeProfessionalProfileAddress,
   FreeProfessionalProfileUpdateBody,
   IFreeProfessionalProfileRemoveAvatarDTO,
+  IFreeProfessionalProfileRemoveCoverImageDTO,
   IFreeProfessionalProfileRemoveVideoDTO,
   IFreeProfessionalProfileShowDTO,
   IFreeProfessionalProfileUpdateDTO,
   IFreeProfessionalProfileUploadAvatarDTO,
+  IFreeProfessionalProfileUploadCoverImageDTO,
   IFreeProfessionalProfileUploadVideoCoverDTO,
   IFreeProfessionalProfileUploadVideoDTO,
 } from "../DTOs/IFreeProfileDTO";
@@ -461,6 +463,45 @@ export const uploadVideo = async (data: IFreeProfessionalProfileUploadVideoDTO) 
   };
 };
 
+export const uploadCoverImage = async (data: IFreeProfessionalProfileUploadCoverImageDTO) => {
+  if (data.auth.role !== "psicologo") {
+    return {
+      status: 403,
+      ...error("role_not_authorized", {}),
+    };
+  }
+
+  const key = data.file?.path || data.file?.key;
+  if (!key?.startsWith("psychologist/cover-image/")) {
+    return {
+      status: 400,
+      ...error("upload_error", {}),
+    };
+  }
+
+  const repository = new FreeProfileRepository();
+  const current = await repository.show(data.auth.id!);
+
+  if (!current) {
+    return {
+      status: 404,
+      ...error("not_found", { model: "psychologist_profile" }),
+    };
+  }
+
+  const coverImageUrl = publicFileUrl(key);
+  const updated = await repository.updateCoverImage(data.auth.id!, coverImageUrl);
+
+  return {
+    status: 200,
+    ...msg("professional_profile_cover_image_uploaded", {}),
+    data: {
+      cover_image_url: coverImageUrl,
+      profile: updated,
+    },
+  };
+};
+
 export const uploadVideoCover = async (data: IFreeProfessionalProfileUploadVideoCoverDTO) => {
   if (data.auth.role !== "psicologo") {
     return {
@@ -502,6 +543,35 @@ export const uploadVideoCover = async (data: IFreeProfessionalProfileUploadVideo
     ...msg("professional_profile_video_cover_uploaded", {}),
     data: {
       video_cover_url: videoCoverUrl,
+      profile: updated,
+    },
+  };
+};
+
+export const removeCoverImage = async (data: IFreeProfessionalProfileRemoveCoverImageDTO) => {
+  if (data.auth.role !== "psicologo") {
+    return {
+      status: 403,
+      ...error("role_not_authorized", {}),
+    };
+  }
+
+  const repository = new FreeProfileRepository();
+  const current = await repository.show(data.auth.id!);
+
+  if (!current) {
+    return {
+      status: 404,
+      ...error("not_found", { model: "psychologist_profile" }),
+    };
+  }
+
+  const updated = await repository.removeCoverImage(data.auth.id!);
+
+  return {
+    status: 200,
+    ...msg("professional_profile_cover_image_removed", {}),
+    data: {
       profile: updated,
     },
   };

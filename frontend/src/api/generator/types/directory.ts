@@ -75,6 +75,7 @@ export type DirectoryPsychologistsQuery = {
 };
 
 export type DirectoryPsychologistProfile = DirectoryPsychologist & {
+  cover_image_url: string | null;
   address_city: string | null;
   address_state: string | null;
   academic_formations: DirectoryAcademicFormation[];

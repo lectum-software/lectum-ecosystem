@@ -6,6 +6,8 @@ import type {
   FreeProfessionalProfile,
   FreeProfessionalProfileAvatarRemoval,
   FreeProfessionalProfileAvatarUpload,
+  FreeProfessionalProfileCoverImageRemoval,
+  FreeProfessionalProfileCoverImageUpload,
   FreeProfessionalProfilePayload,
   FreeProfessionalProfileVideoCoverUpload,
   FreeProfessionalProfileVideoRemoval,
@@ -25,6 +27,14 @@ export interface UsePsychologistFreeProfileProps {
     };
     deleteAvatar?: {
       onSuccess?: (data: FreeProfessionalProfileAvatarRemoval) => void;
+      onError?: (error: unknown) => void;
+    };
+    coverImage?: {
+      onSuccess?: (data: FreeProfessionalProfileCoverImageUpload) => void;
+      onError?: (error: unknown) => void;
+    };
+    deleteCoverImage?: {
+      onSuccess?: (data: FreeProfessionalProfileCoverImageRemoval) => void;
       onError?: (error: unknown) => void;
     };
     video?: {
@@ -96,6 +106,36 @@ export const usePsychologistFreeProfile = ({ callbacks }: UsePsychologistFreePro
     onError: callbacks?.deleteAvatar?.onError,
   });
 
+  const uploadCoverImage = useMutation({
+    mutationFn: (file: File) => api.uploadPsychologistFreeProfileCoverImage(file),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: keys.psychologistFreeProfile.root() });
+      queryClient.invalidateQueries({ queryKey: keys.directory.psychologistsRoot() });
+      if (data.profile?.user.id) {
+        queryClient.invalidateQueries({
+          queryKey: keys.directory.psychologistRoot(data.profile.user.id),
+        });
+      }
+      callbacks?.coverImage?.onSuccess?.(data);
+    },
+    onError: callbacks?.coverImage?.onError,
+  });
+
+  const deleteCoverImage = useMutation({
+    mutationFn: () => api.deletePsychologistFreeProfileCoverImage(),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: keys.psychologistFreeProfile.root() });
+      queryClient.invalidateQueries({ queryKey: keys.directory.psychologistsRoot() });
+      if (data.profile?.user.id) {
+        queryClient.invalidateQueries({
+          queryKey: keys.directory.psychologistRoot(data.profile.user.id),
+        });
+      }
+      callbacks?.deleteCoverImage?.onSuccess?.(data);
+    },
+    onError: callbacks?.deleteCoverImage?.onError,
+  });
+
   const uploadVideo = useMutation({
     mutationFn: (file: File) => api.uploadPsychologistFreeProfileVideo(file),
     onSuccess: (data) => {
@@ -149,6 +189,8 @@ export const usePsychologistFreeProfile = ({ callbacks }: UsePsychologistFreePro
     update,
     uploadAvatar,
     deleteAvatar,
+    uploadCoverImage,
+    deleteCoverImage,
     uploadVideo,
     uploadVideoCover,
     deleteVideo,

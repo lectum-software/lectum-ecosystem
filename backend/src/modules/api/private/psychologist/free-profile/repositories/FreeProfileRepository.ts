@@ -94,6 +94,7 @@ const publicProfileMediaKeyFromUrl = (value?: string | null) => {
 
     const key = decodeURIComponent(url.pathname.slice(prefix.length));
     return key.startsWith("psychologist/avatar/") ||
+      key.startsWith("psychologist/cover-image/") ||
       key.startsWith("psychologist/video/") ||
       key.startsWith("psychologist/video-cover/")
       ? key
@@ -146,6 +147,7 @@ const getUserWithProfile = (userId: string) => {
           gender: true,
           race_color: true,
           religion: true,
+          cover_image_url: true,
           video_url: true,
           video_cover_url: true,
           target_audience: true,
@@ -259,6 +261,7 @@ const toResponse = async (
       religion: profile.religion,
       whatsapp: profile.whatsapp,
       whatsapp_url: buildWhatsappUrl(profile.whatsapp),
+      cover_image_url: profile.cover_image_url,
       video_url: profile.video_url,
       video_cover_url: profile.video_cover_url,
       target_audience: normalizeStringArray(profile.target_audience),
@@ -453,6 +456,24 @@ export class FreeProfileRepository implements IFreeProfileRepository {
     return this.show(userId);
   }
 
+  async updateCoverImage(
+    userId: string,
+    coverImageUrl: string,
+  ): Promise<FreeProfessionalProfileResponse | null> {
+    const existing = await getUserWithProfile(userId);
+    const profile = existing?.psychologist_profile;
+    if (!profile) return null;
+
+    await prisma.psychologist_profile.update({
+      where: { id: profile.id },
+      data: { cover_image_url: coverImageUrl },
+    });
+
+    await deletePublicProfileMedia(profile.cover_image_url);
+
+    return this.show(userId);
+  }
+
   async updateVideoCover(
     userId: string,
     videoCoverUrl: string,
@@ -483,6 +504,21 @@ export class FreeProfileRepository implements IFreeProfileRepository {
 
     await deletePublicProfileMedia(profile.video_url);
     await deletePublicProfileMedia(profile.video_cover_url);
+
+    return this.show(userId);
+  }
+
+  async removeCoverImage(userId: string): Promise<FreeProfessionalProfileResponse | null> {
+    const existing = await getUserWithProfile(userId);
+    const profile = existing?.psychologist_profile;
+    if (!profile) return null;
+
+    await prisma.psychologist_profile.update({
+      where: { id: profile.id },
+      data: { cover_image_url: null },
+    });
+
+    await deletePublicProfileMedia(profile.cover_image_url);
 
     return this.show(userId);
   }

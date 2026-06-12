@@ -67,6 +67,7 @@ export interface psychologist_profile {
   user_id?: string | null;
   headline?: string | null;
   bio?: string | null;
+  cover_image_url?: string | null;
   video_url?: string | null;
   video_cover_url?: string | null;
   cpf?: string | null;

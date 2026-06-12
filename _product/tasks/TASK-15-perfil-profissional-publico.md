@@ -259,3 +259,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Não houve alteração de backend, Prisma, contratos, packages ou dados persistidos.
 - ADR atualizado: `adrs/0032-refinamento-perfil-profissional-publico.md`.
 - Validações executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, HTTP 200 em `/app/psychologist/cmq5m0vse000ftkuhybmagcn6` e Chrome headless mobile 390px.
+
+## Registro de ajuste complementar em 2026-06-12 — capa independente do perfil
+
+- Decisão de produto: a mídia superior do perfil público não é vídeo, thumbnail nem frame do vídeo. Foto de perfil, imagem de capa e vídeos do psicólogo são três mídias independentes.
+- Banco/contrato recebeu `psychologist_profile.cover_image_url` como campo public-safe para a capa do perfil.
+- `/app/psychologist/[id]` passou a renderizar a mídia superior apenas a partir de `cover_image_url`; quando não há capa, ou quando o arquivo público não carrega, exibe placeholder elegante da plataforma.
+- `video_url` e `video_cover_url` continuam existindo somente para vídeo de apresentação/feed/publicações e não são usados como fallback da capa.
+- ADR criado: `adrs/0060-capa-independente-perfil-psicologo.md`.
+- Validações: `pnpm --dir backend db:migrate --name add_psychologist_profile_cover_image` executado e recusado pelo Prisma por drift antigo sem reset; migration aplicada de forma não destrutiva com `pnpm --dir backend db:migrate-prod`; `pnpm --dir backend exec prisma migrate status`; `pnpm --dir backend db:generate`; `pnpm --dir backend check`; `pnpm --dir backend build`; `pnpm --dir frontend check`; `pnpm --dir frontend build`; `pnpm check`; HTTP 200 no perfil público; Chrome headless mobile 390px.

@@ -3,6 +3,8 @@ import type {
   FreeProfessionalProfile,
   FreeProfessionalProfileAvatarRemoval,
   FreeProfessionalProfileAvatarUpload,
+  FreeProfessionalProfileCoverImageRemoval,
+  FreeProfessionalProfileCoverImageUpload,
   FreeProfessionalProfilePayload,
   FreeProfessionalProfileVideoCoverUpload,
   FreeProfessionalProfileVideoRemoval,
@@ -33,6 +35,19 @@ export const uploadPsychologistFreeProfileAvatar = async (file: File) => {
 export const deletePsychologistFreeProfileAvatar = async () => {
   const handle = callEndpoint({ route: `${route}/avatar`, method: "DELETE" });
   return handleReq<FreeProfessionalProfileAvatarRemoval>(handle);
+};
+
+export const uploadPsychologistFreeProfileCoverImage = async (file: File) => {
+  const body = new FormData();
+  body.append("cover-image", file);
+
+  const handle = callEndpoint({ route: `${route}/cover-image`, method: "POST", body });
+  return handleReq<FreeProfessionalProfileCoverImageUpload>(handle);
+};
+
+export const deletePsychologistFreeProfileCoverImage = async () => {
+  const handle = callEndpoint({ route: `${route}/cover-image`, method: "DELETE" });
+  return handleReq<FreeProfessionalProfileCoverImageRemoval>(handle);
 };
 
 export const uploadPsychologistFreeProfileVideo = async (file: File) => {

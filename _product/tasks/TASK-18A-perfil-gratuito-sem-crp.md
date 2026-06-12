@@ -190,3 +190,12 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
 - Ao trocar ou remover o video, a capa associada e limpa para evitar preview antigo em video novo.
 - O perfil publico e os cards passam a respeitar `show_experience_tag` e usam `video_cover_url` como poster/preview quando informado.
 - A opcao "Adicionar imagem de capa do video" deixou de ser pendencia visual e agora chama endpoint real, sem mock.
+
+## Registro de ajuste complementar em 2026-06-12 — edição de imagem de capa
+
+- Adicionada seção `Imagem de capa` em `/app/professional/profile/setup`, independente do vídeo de apresentação.
+- A seção permite upload/troca/remoção de imagem JPG/JPEG, PNG ou WebP, com pré-visualização responsiva usando `next/image` e sem criar dado fake.
+- Backend expôs `POST /api/private/psychologist/free-profile/cover-image` e `DELETE /api/private/psychologist/free-profile/cover-image`, reutilizando `multer` e armazenamento público existente em `psychologist/cover-image/*`.
+- A capa é recurso de identidade visual do perfil e não depende do entitlement de vídeo do Plano Profissional.
+- ADR criado: `adrs/0060-capa-independente-perfil-psicologo.md`.
+- Validações: `pnpm --dir backend db:migrate --name add_psychologist_profile_cover_image` executado e recusado pelo Prisma por drift antigo sem reset; migration aplicada de forma não destrutiva com `pnpm --dir backend db:migrate-prod`; `pnpm --dir backend exec prisma migrate status`; `pnpm --dir backend db:generate`; `pnpm --dir backend check`; `pnpm --dir backend build`; `pnpm --dir frontend check`; `pnpm --dir frontend build`; `pnpm check`; rota privada `/app/professional/profile/setup` respondeu 307 sem sessão.

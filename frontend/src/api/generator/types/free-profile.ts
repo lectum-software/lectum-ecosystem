@@ -38,6 +38,7 @@ export type FreeProfessionalProfile = {
     religion: string | null;
     whatsapp: string | null;
     whatsapp_url: string | null;
+    cover_image_url: string | null;
     video_url: string | null;
     video_cover_url: string | null;
     target_audience: string[];
@@ -123,6 +124,15 @@ export type FreeProfessionalProfileVideoUpload = {
 
 export type FreeProfessionalProfileVideoCoverUpload = {
   video_cover_url: string;
+  profile: FreeProfessionalProfile | null;
+};
+
+export type FreeProfessionalProfileCoverImageUpload = {
+  cover_image_url: string;
+  profile: FreeProfessionalProfile | null;
+};
+
+export type FreeProfessionalProfileCoverImageRemoval = {
   profile: FreeProfessionalProfile | null;
 };
 

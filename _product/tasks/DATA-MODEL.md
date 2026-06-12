@@ -160,6 +160,7 @@ Quando construído: módulo de audiência próprio (ex.: `backend/src/modules/ma
 | `user_id` | `String @unique` | FK `user`, cascade |
 | `headline` | `String?` | chamada curta exibida no card/perfil |
 | `bio` | `String?` | "Sobre"/experiência (texto longo) |
+| `cover_image_url` | `String?` | imagem pública independente de capa do perfil; não reutiliza thumbnail/frame de vídeo |
 | `video_url` | `String?` | apenas Plano Profissional ou concessão `admin_grant` ativa (PRD §13); manter null no gratuito |
 | `video_cover_url` | `String?` | imagem pública opcional de capa do vídeo de apresentação; usa o mesmo entitlement de vídeo e deve ser limpa junto ao vídeo |
 | `cpf` | `String?` | usado na consulta CFP; dado sensível (LGPD) |

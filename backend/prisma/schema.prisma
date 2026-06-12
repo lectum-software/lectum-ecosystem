@@ -155,6 +155,7 @@ model psychologist_profile {
   user_id                         String                        @unique
   headline                        String?
   bio                             String?
+  cover_image_url                 String?                       @map("cover_image_url")
   video_url                       String?
   video_cover_url                 String?                       @map("video_cover_url")
   cpf                             String?
