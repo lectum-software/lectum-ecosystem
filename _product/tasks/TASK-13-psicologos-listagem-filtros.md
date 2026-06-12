@@ -790,3 +790,22 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: barra de progresso como controle real do video (2026-06-12)
+
+- Pedido do usuario: ajustar a barra de progresso de `/app/psychologists` para funcionar como controle real do video, com click, arraste, pausa temporaria durante a interacao e posicionamento integrado a navbar/modo imersivo.
+- A barra agora ocupa 100% da largura, sem margens laterais, usando `bg-primary` como azul Lectum e trilha com baixa opacidade; em repouso fica fina e expande somente durante scrubbing.
+- Com UI visivel, a barra fica colada ao topo da navbar global; com UI oculta, permanece visivel no rodape da viewport como unico controle junto do video.
+- No `pointerDown`, a barra salva se o video estava reproduzindo, pausa o `HTMLVideoElement`, cancela timers de toque/long press e aplica seek imediato na posicao tocada.
+- Durante `pointerMove`, o seek e continuo: `video.currentTime`, `currentTime`/`duration` e a largura visual do progresso sao atualizados em tempo real para que o frame acompanhe o arraste.
+- No `pointerUp`/`pointerCancel`, a barra libera a captura do ponteiro, encerra o scrubbing e retoma a reproducao somente se o video estava tocando antes da interacao; se estava pausado, permanece pausado.
+- A interacao da barra continua com prioridade maxima sobre gestos do feed por `stopPropagation`, `preventDefault`, `touch-action: none`, captura de ponteiro e cancelamento de timers, evitando single tap, double tap, long press, favorito ou scroll vertical.
+- Ao trocar de psicologo, o reset de estado limpa scrubbing, preview de seek e a flag de retomada, mantendo o novo video com barra sincronizada desde o inicio.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, busca, filtros, navbar, favoritos ou navegacao de perfil.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual permanece `_product/proto/Psicologos.jpg` e o contrato da TASK-13.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

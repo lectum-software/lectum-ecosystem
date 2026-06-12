@@ -416,6 +416,7 @@ export const PsychologistsLogic = () => {
   const longPressTimeoutRef = useRef<number | null>(null);
   const favoriteFeedbackTimeoutRef = useRef<number | null>(null);
   const progressAnimationFrameRef = useRef<number | null>(null);
+  const wasVideoPlayingBeforeProgressSeekRef = useRef(false);
   const swipeHintHideTimeoutRef = useRef<number | null>(null);
   const swipeHintIdleTimeoutRef = useRef<number | null>(null);
   const swipeHintNudgeTimeoutRef = useRef<number | null>(null);
@@ -609,6 +610,7 @@ export const PsychologistsLogic = () => {
     setShowDoubleTapFavoriteFeedback(false);
     setIsVideoProgressSeeking(false);
     setVideoSeekPreviewRatio(null);
+    wasVideoPlayingBeforeProgressSeekRef.current = false;
   }, []);
 
   useEffect(() => {
@@ -1480,6 +1482,13 @@ export const PsychologistsLogic = () => {
 
       registerSwipeHintInteraction();
       cancelPendingVideoGestureTimers();
+
+      const currentVideo = backgroundVideoRef.current;
+      if (!currentVideo) return;
+
+      wasVideoPlayingBeforeProgressSeekRef.current = !currentVideo.paused;
+      currentVideo.pause();
+      setIsVideoPaused(true);
       setIsVideoProgressSeeking(true);
       event.currentTarget.setPointerCapture(event.pointerId);
       seekActiveVideoFromClientX(event.clientX, event.currentTarget);
@@ -1513,11 +1522,23 @@ export const PsychologistsLogic = () => {
         event.currentTarget.releasePointerCapture(event.pointerId);
       }
 
+      const shouldResumePlayback = wasVideoPlayingBeforeProgressSeekRef.current;
+      wasVideoPlayingBeforeProgressSeekRef.current = false;
       setIsVideoProgressSeeking(false);
       setVideoSeekPreviewRatio(null);
       syncActiveVideoProgress();
+
+      if (!shouldResumePlayback || isSearchFocused || !shouldShowVideo) return;
+
+      const currentVideo = backgroundVideoRef.current;
+      if (!currentVideo) return;
+
+      setIsVideoPaused(false);
+      void currentVideo.play().catch(() => {
+        setIsVideoPaused(true);
+      });
     },
-    [syncActiveVideoProgress],
+    [isSearchFocused, shouldShowVideo, syncActiveVideoProgress],
   );
 
   const handleVideoProgressKeyDown = useCallback(
@@ -1951,8 +1972,8 @@ export const PsychologistsLogic = () => {
                       : 0;
                   const slideProgressPercent = `${slideProgressRatio * 100}%`;
                   const slideProgressBottom = slideIsUiHidden
-                    ? "calc(env(safe-area-inset-bottom) + 10px)"
-                    : `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom) + 6px)`;
+                    ? "env(safe-area-inset-bottom)"
+                    : `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom))`;
 
                   return (
                     <section
@@ -2072,6 +2093,7 @@ export const PsychologistsLogic = () => {
                           slideShouldShowVideo &&
                           !slideIsUiHidden &&
                           !isLongPressing &&
+                          !isVideoProgressSeeking &&
                           (isVideoMuted || isVideoPaused) ? (
                             <button
                               aria-label={
@@ -2109,7 +2131,7 @@ export const PsychologistsLogic = () => {
                                 isActiveSlide ? Math.round(videoProgress.currentTime) : 0
                               }
                               className={cn(
-                                "absolute z-50 flex h-7 items-center outline-none",
+                                "absolute z-50 flex h-6 items-end outline-none",
                                 isActiveSlide
                                   ? "pointer-events-auto cursor-pointer"
                                   : "pointer-events-none",
@@ -2137,33 +2159,24 @@ export const PsychologistsLogic = () => {
                               role="slider"
                               style={{
                                 bottom: slideProgressBottom,
-                                left: `${metrics.horizontalPadding}px`,
-                                right: `${metrics.horizontalPadding}px`,
+                                left: 0,
+                                right: 0,
                                 touchAction: "none",
                               }}
                               tabIndex={isActiveSlide ? 0 : -1}
                             >
                               <div
-                                className="relative w-full overflow-visible rounded-full bg-[rgba(255,255,255,0.25)] transition-[height] duration-150 ease-out"
+                                className="relative w-full overflow-hidden bg-primary/25 transition-[height] duration-150 ease-out"
                                 style={{
                                   height: isActiveSlide && isVideoProgressSeeking ? "5px" : "2.5px",
                                 }}
                               >
                                 <div
-                                  className="h-full rounded-full bg-[rgba(255,255,255,0.9)]"
+                                  className="h-full bg-primary"
                                   style={{
                                     width: slideProgressPercent,
                                   }}
                                 />
-                                {isActiveSlide && isVideoProgressSeeking ? (
-                                  <span
-                                    aria-hidden="true"
-                                    className="absolute top-1/2 block h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-[0_4px_14px_rgba(0,0,0,0.22)]"
-                                    style={{
-                                      left: slideProgressPercent,
-                                    }}
-                                  />
-                                ) : null}
                               </div>
                             </div>
                           ) : null}

@@ -238,3 +238,13 @@ A busca global de `/app/psychologists` passa a ter prioridade sobre a experienci
 A decisao foi pausar o video ativo no proprio `HTMLVideoElement`, preservando `currentTime`, e manter uma flag local para retomar apenas se o video estava reproduzindo antes da busca. O modo focado adiciona um overlay dentro da tela, bloqueia scroll e gestos do feed, e eleva busca/filtro acima do restante do conteudo.
 
 Para manter a navbar visivel sem competir com a busca, o `PrivateTemplate` recebeu a prop opcional `navigationDimmed`, que reduz opacidade/saturacao e remove eventos apenas quando uma tela solicitar. O comportamento default das demais rotas permanece inalterado.
+
+## Atualizacao 2026-06-12: barra de progresso como controle real do video
+
+A barra de progresso de `/app/psychologists` passa a ser tratada como controle prioritario do player, nao apenas como indicador visual.
+
+A decisao foi pausar o `HTMLVideoElement` no inicio do scrubbing, guardar se ele estava reproduzindo antes da interacao e retomar apenas nessa condicao ao soltar. Durante o arraste, o seek e aplicado diretamente em `video.currentTime`, atualizando o frame e o estado local de progresso em tempo real.
+
+A barra fica sem margens laterais e usa o token `primary` como azul Lectum. Com UI visivel, sua linha visual fica encostada no topo da navbar; com UI oculta, permanece no rodape da viewport, mantendo o modo imersivo com apenas video e progresso.
+
+Essa decisao preserva os gestos existentes porque a barra captura seus proprios eventos com `stopPropagation`, `preventDefault`, `touch-action: none` e captura de ponteiro. Assim, interagir com ela nao dispara single tap, double tap, long press, scroll vertical, favorito ou alternancia de UI.
