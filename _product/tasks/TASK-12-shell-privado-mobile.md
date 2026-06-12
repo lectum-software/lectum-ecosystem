@@ -226,3 +226,21 @@ Validações do ajuste desktop:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser local/HTTP em `localhost:3000`: `/app/psychologists`, `/app/profile`, `/app/community` e `/app/psychologist/test-public` responderam `200`, preservando acesso às rotas e mantendo o perfil público fora do shell com navegação.
+
+### Ajuste complementar em 2026-06-12: sidebar desktop recolhivel e perfil publico
+
+- O `PrivateTemplate` passou a suportar menu lateral desktop recolhivel, mantendo o mobile inalterado com bottom nav.
+- O estado expandido exibe logo Lectum, icones e textos; o estado recolhido reduz a largura para 88px, exibe somente icones e mantem `title` nos links para apoio de tooltip nativo.
+- A preferencia do usuario e persistida em `localStorage` com a chave `lectum.desktopSidebar`; sem preferencia salva, telas internas seguem expandidas por padrao.
+- O conteudo principal acompanha automaticamente a largura do menu com padding desktop de 240px ou 88px, sem alterar o layout mobile.
+- A rota publica `/app/psychologist/[id]` passou a renderizar a sidebar apenas em desktop, sem bottom nav no mobile. Nessa rota, o padrao sem preferencia salva e iniciar recolhida para preservar foco no perfil.
+- O item `Psicologos` permanece ativo nas rotas singulares `/app/psychologist/*`.
+- Nao houve alteracao de dados, autenticação, rotas, backend, Prisma, packages ou componentes internos das telas.
+
+Validacoes do ajuste:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local em `/app/psychologist/cmq5m0vse000ftkuhybmagcn6` respondeu `200`.
+- HTTP local em `/app/psychologists` respondeu `200`.

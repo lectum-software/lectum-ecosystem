@@ -6,6 +6,8 @@ import {
   LogIn,
   type LucideIcon,
   Network,
+  PanelLeftClose,
+  PanelLeftOpen,
   UserPlus,
   UserRound,
   UsersRound,
@@ -31,11 +33,13 @@ type PrivateTemplateProps = PropsWithChildren<{
   allowAnonymous?: boolean;
   autoHideNavigation?: boolean;
   contentClassName?: string;
+  desktopSidebarDefaultCollapsed?: boolean;
   desktopNavigation?: "bottom" | "sidebar";
   navigationDimmed?: boolean;
   navigationHidden?: boolean;
   navigationTheme?: "default" | "solidWhite";
   showHeader?: boolean;
+  showMobileNavigation?: boolean;
   showNavigation?: boolean;
 }>;
 
@@ -171,16 +175,20 @@ const isActivePath = (pathname: string, item: NavigationItem) => {
   );
 };
 
+const DESKTOP_SIDEBAR_STORAGE_KEY = "lectum.desktopSidebar";
+
 export const PrivateTemplate = ({
   allowAnonymous = false,
   autoHideNavigation = false,
   children,
   contentClassName,
+  desktopSidebarDefaultCollapsed = false,
   desktopNavigation = "sidebar",
   navigationDimmed = false,
   navigationHidden = false,
   navigationTheme = "default",
   showHeader = true,
+  showMobileNavigation = true,
   showNavigation,
 }: PrivateTemplateProps) => {
   const pathname = usePathname();
@@ -204,15 +212,28 @@ export const PrivateTemplate = ({
   const sessionUser = hasToken ? (hidrate.data ?? storedUser) : null;
   const navigation = useMemo(() => getNavigation(sessionUser?.role), [sessionUser?.role]);
   const shouldShowNavigation = showNavigation ?? showHeader;
+  const shouldRenderMobileNavigation = shouldShowNavigation && showMobileNavigation;
   const shouldRenderDesktopSidebar = shouldShowNavigation && desktopNavigation === "sidebar";
   const shouldAutoHideNavigation = shouldShowNavigation && autoHideNavigation;
   const [isNavigationVisible, setIsNavigationVisible] = useState(true);
+  const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(() => {
+    if (typeof window === "undefined") return desktopSidebarDefaultCollapsed;
+
+    const storedPreference = window.localStorage.getItem(DESKTOP_SIDEBAR_STORAGE_KEY);
+
+    if (storedPreference === "collapsed") return true;
+    if (storedPreference === "expanded") return false;
+
+    return desktopSidebarDefaultCollapsed;
+  });
   const isNavigationRenderedVisible = isNavigationVisible && !navigationHidden;
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
   const pageShellClassName = cn(
-    shouldShowNavigation ? "pb-28 sm:pb-32" : undefined,
-    shouldRenderDesktopSidebar ? "lg:pl-[240px] lg:pb-8" : undefined,
+    shouldRenderMobileNavigation ? "pb-28 sm:pb-32" : undefined,
+    shouldRenderDesktopSidebar
+      ? cn(isDesktopSidebarCollapsed ? "lg:pl-[88px]" : "lg:pl-[240px]", "lg:pb-8")
+      : undefined,
     contentClassName,
   );
   const isSessionLoading = hasToken && !sessionUser && (hidrate.isLoading || hidrate.isPending);
@@ -258,7 +279,22 @@ export const PrivateTemplate = ({
     };
   }, [shouldAutoHideNavigation]);
 
-  const bottomNavigationMarkup = shouldShowNavigation ? (
+  const toggleDesktopSidebar = () => {
+    setIsDesktopSidebarCollapsed((current) => {
+      const nextValue = !current;
+
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(
+          DESKTOP_SIDEBAR_STORAGE_KEY,
+          nextValue ? "collapsed" : "expanded",
+        );
+      }
+
+      return nextValue;
+    });
+  };
+
+  const bottomNavigationMarkup = shouldRenderMobileNavigation ? (
     <nav
       aria-label="Navegação principal"
       className={cn(
@@ -303,7 +339,8 @@ export const PrivateTemplate = ({
     <aside
       aria-label="Navegação principal"
       className={cn(
-        "fixed inset-y-0 left-0 z-50 hidden w-[240px] border-border border-r bg-surface px-4 py-6 text-foreground shadow-[12px_0_36px_rgb(15_23_42_/_5%)] transition-[transform,opacity,filter] duration-200 ease-out lg:flex lg:flex-col",
+        "fixed inset-y-0 left-0 z-50 hidden border-border border-r bg-surface py-6 text-foreground shadow-[12px_0_36px_rgb(15_23_42_/_5%)] transition-[width,transform,opacity,filter,padding] duration-200 ease-out lg:flex lg:flex-col",
+        isDesktopSidebarCollapsed ? "w-[88px] px-2" : "w-[240px] px-4",
         navigationDimmed ? "opacity-55 brightness-95 saturate-75" : "opacity-100",
         isNavigationRenderedVisible ? "translate-x-0" : "-translate-x-full opacity-0",
       )}
@@ -312,11 +349,40 @@ export const PrivateTemplate = ({
         pointerEvents: isNavigationRenderedVisible && !navigationDimmed ? "auto" : "none",
       }}
     >
-      <div className="mb-8 flex items-center gap-2 px-2 text-xl font-black tracking-tight text-foreground">
-        <span className="grid h-9 w-9 place-items-center rounded-2xl bg-primary text-sm font-black text-white">
-          L
-        </span>
-        <span>Lectum</span>
+      <div
+        className={cn(
+          "mb-8 flex items-center gap-2 text-xl font-black tracking-tight text-foreground",
+          isDesktopSidebarCollapsed ? "justify-between px-0" : "justify-between px-2",
+        )}
+      >
+        <Link
+          className={cn(
+            "flex min-w-0 items-center gap-2 transition hover:text-primary",
+            isDesktopSidebarCollapsed ? "justify-center" : "flex-1",
+          )}
+          href="/app/psychologists"
+          title={isDesktopSidebarCollapsed ? "Lectum" : undefined}
+        >
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-primary text-sm font-black text-white">
+            L
+          </span>
+          <span className={cn("truncate", isDesktopSidebarCollapsed ? "sr-only" : undefined)}>
+            Lectum
+          </span>
+        </Link>
+        <button
+          aria-label={isDesktopSidebarCollapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary"
+          onClick={toggleDesktopSidebar}
+          title={isDesktopSidebarCollapsed ? "Expandir menu" : "Recolher menu"}
+          type="button"
+        >
+          {isDesktopSidebarCollapsed ? (
+            <PanelLeftOpen className="h-4 w-4" aria-hidden="true" />
+          ) : (
+            <PanelLeftClose className="h-4 w-4" aria-hidden="true" />
+          )}
+        </button>
       </div>
 
       <nav className="flex flex-1 flex-col gap-1" aria-label="Menu lateral">
@@ -328,16 +394,20 @@ export const PrivateTemplate = ({
             <Link
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex min-h-12 items-center gap-3 rounded-2xl px-3 text-[15px] font-bold transition",
+                "flex min-h-12 items-center rounded-2xl text-[15px] font-bold transition",
+                isDesktopSidebarCollapsed ? "justify-center px-0" : "gap-3 px-3",
                 isActive
                   ? "bg-primary-soft text-primary"
                   : "text-muted hover:bg-primary-soft/60 hover:text-primary",
               )}
               href={item.href}
               key={item.href}
+              title={isDesktopSidebarCollapsed ? item.label : undefined}
             >
               <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
-              <span className="truncate">{item.label}</span>
+              <span className={cn("truncate", isDesktopSidebarCollapsed ? "sr-only" : undefined)}>
+                {item.label}
+              </span>
             </Link>
           );
         })}

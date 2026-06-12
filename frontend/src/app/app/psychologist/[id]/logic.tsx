@@ -1668,7 +1668,12 @@ export const PsychologistProfileLogic = () => {
   );
 
   return (
-    <PrivateTemplate allowAnonymous showNavigation={false}>
+    <PrivateTemplate
+      allowAnonymous
+      desktopSidebarDefaultCollapsed
+      showMobileNavigation={false}
+      showNavigation
+    >
       <div className="-mx-5 -mt-6 overflow-x-hidden">
         <section className="mx-auto grid w-screen max-w-[430px] bg-[#F6F8FB] sm:max-w-[430px] lg:max-w-[760px]">
           <div className="grid gap-0 pb-28">

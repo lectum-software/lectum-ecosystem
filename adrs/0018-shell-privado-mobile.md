@@ -135,3 +135,31 @@ Validações do ajuste desktop:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser local/HTTP em `localhost:3000`: `/app/psychologists`, `/app/profile`, `/app/community` e `/app/psychologist/test-public` responderam `200`, preservando acesso às rotas e mantendo o perfil público fora do shell com navegação.
+
+## Atualizacao em 2026-06-12: sidebar desktop recolhivel e perfil publico
+
+### Contexto
+
+Produto solicitou que o menu lateral desktop do shell pudesse ser recolhido/expandido e que o Perfil Publico do Psicologo tambem exibisse essa navegacao no desktop, sem alterar o mobile.
+
+### Decisao
+
+- O `PrivateTemplate` centraliza o estado recolhido/expandido da sidebar desktop.
+- A preferencia e salva em `localStorage` sob `lectum.desktopSidebar`, com telas internas expandidas por padrao quando nao ha valor salvo.
+- O estado recolhido usa largura de 88px, exibe somente icones, mantem destaque ativo e usa `title` nos links para tooltip nativo; o estado expandido preserva logo, icones e textos.
+- A compensacao lateral do conteudo acompanha a largura efetiva da sidebar (`lg:pl-[240px]` ou `lg:pl-[88px]`).
+- A rota publica `/app/psychologist/[id]` passa a renderizar apenas a sidebar desktop (`showMobileNavigation={false}`), iniciando recolhida por padrao se nao houver preferencia salva. O mobile do perfil publico continua sem navegacao global.
+
+### Consequencias
+
+- A navegacao desktop fica mais flexivel em telas largas, sem duplicar componentes por pagina.
+- O perfil publico ganha acesso ao menu global no desktop, mas preserva a experiencia mobile e o foco no conteudo do psicologo.
+- A preferencia salva e compartilhada entre perfil publico e telas internas.
+
+### Validacoes
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local em `/app/psychologist/cmq5m0vse000ftkuhybmagcn6` respondeu `200`.
+- HTTP local em `/app/psychologists` respondeu `200`.

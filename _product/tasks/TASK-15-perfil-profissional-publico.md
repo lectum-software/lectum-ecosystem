@@ -389,3 +389,20 @@ Validacoes executadas:
 - `pnpm check`
 - HTTP 200 em `http://localhost:3000/app/psychologist/cmq5m0vse000ftkuhybmagcn6`
 - Chrome headless gerou screenshots em 360px, 375px e 390px contra a rota local disponivel; o servidor local em 3000 ainda servia a instancia ja aberta do app, enquanto a build validou a alteracao final de codigo.
+
+## Registro de ajuste complementar em 2026-06-12 - menu lateral desktop no perfil publico
+
+- A pagina publica `/app/psychologist/[id]` passou a usar o mesmo menu lateral do shell da aplicacao apenas em desktop (`>=1024px`).
+- O mobile permanece sem menu lateral e sem bottom nav nessa pagina, preservando o comportamento anterior do perfil publico.
+- No desktop, o menu inicia recolhido por padrao quando nao existe preferencia salva em `localStorage`, mostrando apenas icones para manter o foco no perfil profissional.
+- O usuario pode expandir/recolher o menu pelo botao no proprio menu; apos interacao, a preferencia passa a ser compartilhada com as demais telas que usam o shell.
+- O conteudo principal do perfil respeita automaticamente a largura expandida ou recolhida do menu, sem alterar card, capa, WhatsApp, secoes, tabs, dados ou rotas.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a referencia auditavel permanece a familia de prototipos locais de perfil profissional e a decisao de navegacao desktop solicitada pelo usuario.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local em `http://localhost:3000/app/psychologist/cmq5m0vse000ftkuhybmagcn6` respondeu `200`.
+- HTTP local em `http://localhost:3000/app/psychologists` respondeu `200`.
