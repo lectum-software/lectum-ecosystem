@@ -233,3 +233,19 @@ Validacoes executadas:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessao, preservando protecao da rota privada.
+
+## Ajuste complementar em 2026-06-12 - preview premium de imagens do perfil
+
+- A secao `Imagens do perfil` em `/app/professional/profile/setup` foi refinada visualmente para parecer uma pre-visualizacao real do perfil, e nao um bloco tecnico de upload.
+- A capa agora aparece como banner horizontal compacto dentro de um unico card, com estado vazio em gradiente suave, texto `Adicionar capa` e formatos `JPG, PNG ou WebP`.
+- O avatar circular passou a ficar parcialmente sobreposto a parte inferior da capa, com acao discreta de camera no proprio avatar.
+- As acoes de capa foram reduzidas a botoes circulares de icone para trocar/remover, e a remocao da foto ficou como acao pequena abaixo do avatar.
+- Foram preservados upload, remocao, preview local via `ObjectURL`, validacoes, endpoints, dados persistidos e modal de ajuste da foto.
+- Nao houve alteracao de backend, Prisma, rotas, schema ou packages.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessao, preservando protecao da rota privada.

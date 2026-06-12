@@ -79,3 +79,16 @@ Validacao complementar:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - HTTP local `/app/professional/profile/setup` respondeu 307 sem sessao, preservando a protecao da rota privada.
+
+## Ajuste complementar em 2026-06-12 - preview visual premium no setup
+
+A secao `Imagens do perfil` da tela `/app/professional/profile/setup` passou a ser tratada como um editor visual de identidade do perfil. A decisao foi substituir a aparencia de campos tecnicos separados por um unico card de pre-visualizacao: capa horizontal como banner, avatar circular sobreposto e acoes discretas por icones.
+
+A mudanca e apenas de composicao visual. Os contratos de upload/remocao, validacoes de arquivo, persistencia em `cover_image_url`/`user.avatar`, preview local com `ObjectURL` e modal de enquadramento do avatar permanecem os mesmos. Nenhum endpoint, schema Prisma ou package foi alterado.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessao, preservando protecao da rota privada.
