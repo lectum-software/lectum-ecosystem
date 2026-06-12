@@ -175,3 +175,16 @@ A tela `/app/psychologists` separa a camada global de busca/filtros da camada de
 - a modal de filtros continua acima dessa camada global e pausa o video ativo ao abrir.
 
 Essa decisao evita recriar busca/filtro por item do feed e preserva as interacoes, sugestoes de busca, filtros, gestos e navegacao existentes.
+
+## Atualizacao 2026-06-12: barra de progresso interativa do video
+
+A tela `/app/psychologists` passa a ter uma barra de progresso por slide de video, inspirada em TikTok/Reels e adaptada ao contexto Lectum:
+
+- cada slide com video renderiza sua propria barra na base da midia, entao ela acompanha a rolagem vertical junto com o video e demais informacoes do psicologo;
+- a barra mostra progresso em tempo real usando `currentTime` e `duration`, sincronizada por eventos do video e por `requestAnimationFrame` no video ativo;
+- toque/click na barra executa seek imediato; arraste atualiza o progresso visual e o tempo do video continuamente;
+- a barra intercepta seus proprios eventos com `stopPropagation`/`preventDefault`, cancelando timeouts pendentes de toque/long press para nao ocultar UI, favoritar, pausar ou disparar scroll do feed;
+- quando a UI esta oculta, a barra permanece visivel e funcional no rodape da midia; busca, filtros, texto, botoes, gradientes e navbar continuam ocultos;
+- quando a UI esta visivel, o bloco textual fica mais alto para reservar espaco para a barra acima da navbar, evitando cobertura de bio, nome ou botoes laterais.
+
+A busca e o botao de filtros permanecem globais/fixos no topo; a barra pertence ao slide por ser especifica do video exibido.

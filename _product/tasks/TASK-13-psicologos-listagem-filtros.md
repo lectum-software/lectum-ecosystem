@@ -691,3 +691,22 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: barra de progresso interativa do video (2026-06-12)
+
+- Pedido do usuario: implementar uma barra de progresso discreta no estilo TikTok/Reels para os videos da tela de Psicologos.
+- Cada slide com video agora renderiza sua propria barra de progresso na base da midia; ela acompanha o slide durante o scroll vertical, enquanto busca e filtro seguem fixos no topo.
+- A barra acompanha `currentTime` e `duration` do video ativo em tempo real, usando eventos nativos do video e sincronizacao por `requestAnimationFrame`.
+- Toque/click na barra executa seek imediato; arraste permite avancar e retroceder, atualizando visual e video durante a interacao.
+- A barra expande de forma sutil durante o arraste e mostra thumb apenas enquanto o usuario interage; nao exibe tempo e nao usa visual de player estilo YouTube.
+- A interacao da barra tem prioridade sobre gestos da tela: usa `stopPropagation`, `preventDefault`, `touch-action: none` e cancela timeouts pendentes de toque/long press para nao ocultar UI, favoritar, pausar ou disparar scroll.
+- No modo imersivo, a barra permanece visivel e funcional como unico elemento de interface; tocar fora dela continua restaurando a UI, e long press/duplo toque fora dela seguem funcionando.
+- O bloco inferior foi elevado para reservar espaco da barra acima da navbar, evitando cobrir textos, bio ou botoes laterais em larguras compactas.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, busca, filtros globais, favoritos, navegacao de perfil ou navbar.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual permanece `_product/proto/Psicologos.jpg` e o contrato da TASK-13.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

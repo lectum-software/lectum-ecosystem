@@ -20,6 +20,7 @@ import {
   type CSSProperties,
   type FormEvent,
   type PointerEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
   type UIEvent,
   useCallback,
   useDeferredValue,
@@ -71,6 +72,11 @@ const SWIPE_HINT_IDLE_DELAY_MS = 5000;
 const SWIPE_HINT_IDLE_DURATION_MS = 2000;
 const SWIPE_HINT_NUDGE_DURATION_MS = 760;
 const BIO_COLLAPSED_LINE_COUNT = 4;
+
+type VideoProgressState = {
+  currentTime: number;
+  duration: number;
+};
 
 const formatRating = (ratingAvg: number, ratingCount: number) => {
   if (ratingCount <= 0) return "0,0";
@@ -178,6 +184,12 @@ const getInitials = (name: string) => {
 
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
+
+const clampNumber = (value: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, value));
+
+const getReadableVideoDuration = (video: HTMLVideoElement) =>
+  Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 0;
 
 const getPageFromParams = (params: URLSearchParams) => {
   const parsed = Number(params.get("page") || "1");
@@ -333,7 +345,7 @@ const useViewportMetrics = () => {
       actionRailWidth: actionButtonSize,
       actionStandaloneIconSize: isTiny ? 22 : 24,
       availableBadgeTextSize: isTiny ? 10 : 11,
-      bioBottomOffset: isCompact ? 12 : 14,
+      bioBottomOffset: isCompact ? 34 : 36,
       ratingIconSize: isCompact ? 10 : 11,
       ratingLineHeight: 15,
       ratingTextSize: 11,
@@ -380,6 +392,12 @@ export const PsychologistsLogic = () => {
   const [favoriteOverrides, setFavoriteOverrides] = useState<Record<string, boolean>>({});
   const [isBioExpanded, setIsBioExpanded] = useState(false);
   const [isBioTruncated, setIsBioTruncated] = useState(false);
+  const [isVideoProgressSeeking, setIsVideoProgressSeeking] = useState(false);
+  const [videoProgress, setVideoProgress] = useState<VideoProgressState>({
+    currentTime: 0,
+    duration: 0,
+  });
+  const [videoSeekPreviewRatio, setVideoSeekPreviewRatio] = useState<number | null>(null);
   const [searchDraft, setSearchDraft] = useState(() => filterValues.search || "");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [activePsychologistIndex, setActivePsychologistIndex] = useState(0);
@@ -389,12 +407,14 @@ export const PsychologistsLogic = () => {
   const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
   const bioTextRef = useRef<HTMLButtonElement | null>(null);
   const bioContentRef = useRef<HTMLSpanElement | null>(null);
+  const progressTrackRef = useRef<HTMLDivElement | null>(null);
   const actionColumnRef = useRef<HTMLDivElement | null>(null);
   const profileTextRef = useRef<HTMLElement | null>(null);
   const lastSearchParamsStringRef = useRef(searchParamsString);
   const tapTimeoutRef = useRef<number | null>(null);
   const longPressTimeoutRef = useRef<number | null>(null);
   const favoriteFeedbackTimeoutRef = useRef<number | null>(null);
+  const progressAnimationFrameRef = useRef<number | null>(null);
   const swipeHintHideTimeoutRef = useRef<number | null>(null);
   const swipeHintIdleTimeoutRef = useRef<number | null>(null);
   const swipeHintNudgeTimeoutRef = useRef<number | null>(null);
@@ -583,6 +603,8 @@ export const PsychologistsLogic = () => {
     setIsUiHidden(false);
     setIsLongPressing(false);
     setShowDoubleTapFavoriteFeedback(false);
+    setIsVideoProgressSeeking(false);
+    setVideoSeekPreviewRatio(null);
   }, []);
 
   useEffect(() => {
@@ -755,6 +777,38 @@ export const PsychologistsLogic = () => {
     recalculateBioTruncation();
   }, [recalculateBioTruncation, syncActionColumnAlignment]);
 
+  const syncActiveVideoProgress = useCallback((video?: HTMLVideoElement | null) => {
+    const currentVideo = video ?? backgroundVideoRef.current;
+
+    if (!currentVideo) {
+      setVideoProgress((current) =>
+        current.currentTime === 0 && current.duration === 0
+          ? current
+          : {
+              currentTime: 0,
+              duration: 0,
+            },
+      );
+      return;
+    }
+
+    const duration = getReadableVideoDuration(currentVideo);
+    const currentTime = duration ? clampNumber(currentVideo.currentTime || 0, 0, duration) : 0;
+
+    setVideoProgress((current) => {
+      const shouldUpdate =
+        Math.abs(current.currentTime - currentTime) > 0.04 ||
+        Math.abs(current.duration - duration) > 0.04;
+
+      return shouldUpdate
+        ? {
+            currentTime,
+            duration,
+          }
+        : current;
+    });
+  }, []);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -812,6 +866,24 @@ export const PsychologistsLogic = () => {
   }, [activeVideoSource, featuredPsychologistId, isVideoMuted, isVideoPaused]);
 
   useEffect(() => {
+    if (typeof window === "undefined" || !activeVideoSource || !featuredPsychologistId) return;
+
+    const tick = () => {
+      syncActiveVideoProgress();
+      progressAnimationFrameRef.current = window.requestAnimationFrame(tick);
+    };
+
+    progressAnimationFrameRef.current = window.requestAnimationFrame(tick);
+
+    return () => {
+      if (progressAnimationFrameRef.current) {
+        window.cancelAnimationFrame(progressAnimationFrameRef.current);
+        progressAnimationFrameRef.current = null;
+      }
+    };
+  }, [activeVideoSource, featuredPsychologistId, syncActiveVideoProgress]);
+
+  useEffect(() => {
     if (typeof window === "undefined") return;
 
     document
@@ -830,6 +902,12 @@ export const PsychologistsLogic = () => {
       setIsBioExpanded(false);
       setIsVideoPlaybackFailed(false);
       setIsVideoPaused(false);
+      setVideoProgress({
+        currentTime: 0,
+        duration: 0,
+      });
+      setVideoSeekPreviewRatio(null);
+      setIsVideoProgressSeeking(false);
       setShareFeedback(false);
       setActionColumnTranslateY(0);
     });
@@ -1226,6 +1304,148 @@ export const PsychologistsLogic = () => {
     [isVideoMuted, pauseVideoPlayback, playCurrentVideo, shouldShowVideo, unmuteAllVideos],
   );
 
+  const cancelPendingVideoGestureTimers = useCallback(() => {
+    if (tapTimeoutRef.current) {
+      window.clearTimeout(tapTimeoutRef.current);
+      tapTimeoutRef.current = null;
+    }
+
+    if (longPressTimeoutRef.current) {
+      window.clearTimeout(longPressTimeoutRef.current);
+      longPressTimeoutRef.current = null;
+    }
+
+    pointerStartRef.current = null;
+    didLongPressRef.current = false;
+    didMoveDuringPressRef.current = false;
+    setIsLongPressing(false);
+  }, []);
+
+  const seekActiveVideoToTime = useCallback((nextTime: number) => {
+    const currentVideo = backgroundVideoRef.current;
+    if (!currentVideo) return;
+
+    const duration = getReadableVideoDuration(currentVideo);
+    if (!duration) return;
+
+    const currentTime = clampNumber(nextTime, 0, duration);
+    currentVideo.currentTime = currentTime;
+    setVideoProgress({
+      currentTime,
+      duration,
+    });
+  }, []);
+
+  const seekActiveVideoFromClientX = useCallback(
+    (clientX: number, track: HTMLDivElement | null) => {
+      const currentVideo = backgroundVideoRef.current;
+      if (!currentVideo || !track) return;
+
+      const duration = getReadableVideoDuration(currentVideo);
+      if (!duration) return;
+
+      const bounds = track.getBoundingClientRect();
+      if (bounds.width <= 0) return;
+
+      const ratio = clampNumber((clientX - bounds.left) / bounds.width, 0, 1);
+      const nextTime = ratio * duration;
+
+      setVideoSeekPreviewRatio(ratio);
+      seekActiveVideoToTime(nextTime);
+    },
+    [seekActiveVideoToTime],
+  );
+
+  const handleVideoProgressPointerDown = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      event.stopPropagation();
+      event.preventDefault();
+      if (!event.isPrimary || !shouldShowVideo) return;
+
+      registerSwipeHintInteraction();
+      cancelPendingVideoGestureTimers();
+      setIsVideoProgressSeeking(true);
+      event.currentTarget.setPointerCapture(event.pointerId);
+      seekActiveVideoFromClientX(event.clientX, event.currentTarget);
+    },
+    [
+      cancelPendingVideoGestureTimers,
+      registerSwipeHintInteraction,
+      seekActiveVideoFromClientX,
+      shouldShowVideo,
+    ],
+  );
+
+  const handleVideoProgressPointerMove = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      event.stopPropagation();
+      if (!isVideoProgressSeeking) return;
+
+      event.preventDefault();
+      seekActiveVideoFromClientX(event.clientX, event.currentTarget);
+    },
+    [isVideoProgressSeeking, seekActiveVideoFromClientX],
+  );
+
+  const handleVideoProgressPointerEnd = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      event.stopPropagation();
+      event.preventDefault();
+
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+
+      setIsVideoProgressSeeking(false);
+      setVideoSeekPreviewRatio(null);
+      syncActiveVideoProgress();
+    },
+    [syncActiveVideoProgress],
+  );
+
+  const handleVideoProgressKeyDown = useCallback(
+    (event: ReactKeyboardEvent<HTMLDivElement>) => {
+      const currentVideo = backgroundVideoRef.current;
+      if (!currentVideo || !shouldShowVideo) return;
+
+      const duration = getReadableVideoDuration(currentVideo);
+      if (!duration) return;
+
+      const step = Math.min(5, Math.max(1, duration * 0.05));
+      let nextTime: number | null = null;
+
+      if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
+        nextTime = currentVideo.currentTime - step;
+      }
+
+      if (event.key === "ArrowRight" || event.key === "ArrowUp") {
+        nextTime = currentVideo.currentTime + step;
+      }
+
+      if (event.key === "Home") {
+        nextTime = 0;
+      }
+
+      if (event.key === "End") {
+        nextTime = duration;
+      }
+
+      if (nextTime === null) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      cancelPendingVideoGestureTimers();
+      seekActiveVideoToTime(nextTime);
+      syncActiveVideoProgress();
+    },
+    [
+      cancelPendingVideoGestureTimers,
+      seekActiveVideoToTime,
+      shouldShowVideo,
+      syncActiveVideoProgress,
+    ],
+  );
+
   const shouldRenderSwipeHint =
     hasLoadedSwipeHintPreference &&
     !hasSeenSwipeHint &&
@@ -1528,6 +1748,8 @@ export const PsychologistsLogic = () => {
                     : null;
                   const slideShouldShowVideo =
                     Boolean(slideVideoSrc) && (!isActiveSlide || !isVideoPlaybackFailed);
+                  const slideShouldRenderProgress =
+                    Boolean(slideVideoSrc) && (!isActiveSlide || slideShouldShowVideo);
                   const slideBio = psychologist.headline?.trim() || "";
                   const slideNameParts = splitNameForBadge(psychologist.name);
                   const slideBenefitBadges = buildFloatingBenefitBadges(psychologist);
@@ -1542,6 +1764,19 @@ export const PsychologistsLogic = () => {
                     ? "pointer-events-none opacity-0"
                     : "opacity-100";
                   const slideOverlayVisibilityClass = slideIsUiHidden ? "opacity-0" : "opacity-100";
+                  const slideProgressRatio =
+                    isActiveSlide && videoProgress.duration
+                      ? clampNumber(
+                          videoSeekPreviewRatio ??
+                            videoProgress.currentTime / videoProgress.duration,
+                          0,
+                          1,
+                        )
+                      : 0;
+                  const slideProgressPercent = `${slideProgressRatio * 100}%`;
+                  const slideProgressBottom = slideIsUiHidden
+                    ? "calc(env(safe-area-inset-bottom) + 10px)"
+                    : `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom) + 6px)`;
 
                   return (
                     <section
@@ -1569,6 +1804,9 @@ export const PsychologistsLogic = () => {
                               controls={false}
                               loop
                               muted={isVideoMuted}
+                              onDurationChange={(event) => {
+                                if (isActiveSlide) syncActiveVideoProgress(event.currentTarget);
+                              }}
                               onError={() => {
                                 if (isActiveSlide) setIsVideoPlaybackFailed(true);
                               }}
@@ -1577,12 +1815,25 @@ export const PsychologistsLogic = () => {
 
                                 setIsVideoPlaybackFailed(false);
                                 setIsVideoPaused(false);
+                                syncActiveVideoProgress();
+                              }}
+                              onLoadedMetadata={(event) => {
+                                if (isActiveSlide) syncActiveVideoProgress(event.currentTarget);
                               }}
                               onPause={() => {
-                                if (isActiveSlide) setIsVideoPaused(true);
+                                if (!isActiveSlide) return;
+
+                                setIsVideoPaused(true);
+                                syncActiveVideoProgress();
                               }}
                               onPlay={() => {
-                                if (isActiveSlide) setIsVideoPaused(false);
+                                if (!isActiveSlide) return;
+
+                                setIsVideoPaused(false);
+                                syncActiveVideoProgress();
+                              }}
+                              onTimeUpdate={(event) => {
+                                if (isActiveSlide) syncActiveVideoProgress(event.currentTarget);
                               }}
                               playsInline
                               poster={slidePosterSrc || undefined}
@@ -1670,6 +1921,74 @@ export const PsychologistsLogic = () => {
                               className="psychologists-double-tap-feedback pointer-events-none absolute top-1/2 left-1/2 z-50 grid h-20 w-20 place-items-center rounded-full bg-black/20 text-[#ef4444] backdrop-blur-[2px]"
                             >
                               <Heart className="h-11 w-11 fill-[#ef4444]" strokeWidth={2.2} />
+                            </div>
+                          ) : null}
+
+                          {slideShouldRenderProgress ? (
+                            <div
+                              aria-label={`Progresso do vídeo de ${psychologist.name}`}
+                              aria-valuemax={isActiveSlide ? Math.round(videoProgress.duration) : 0}
+                              aria-valuemin={0}
+                              aria-valuenow={
+                                isActiveSlide ? Math.round(videoProgress.currentTime) : 0
+                              }
+                              className={cn(
+                                "absolute z-50 flex h-7 items-center outline-none",
+                                isActiveSlide
+                                  ? "pointer-events-auto cursor-pointer"
+                                  : "pointer-events-none",
+                              )}
+                              data-psychologists-scroll-lock="true"
+                              onClick={stopInteractionPropagation}
+                              onKeyDown={isActiveSlide ? handleVideoProgressKeyDown : undefined}
+                              onPointerCancel={
+                                isActiveSlide ? handleVideoProgressPointerEnd : undefined
+                              }
+                              onPointerDown={
+                                isActiveSlide ? handleVideoProgressPointerDown : undefined
+                              }
+                              onPointerMove={
+                                isActiveSlide ? handleVideoProgressPointerMove : undefined
+                              }
+                              onPointerUp={
+                                isActiveSlide ? handleVideoProgressPointerEnd : undefined
+                              }
+                              ref={(node) => {
+                                if (isActiveSlide) {
+                                  progressTrackRef.current = node;
+                                }
+                              }}
+                              role="slider"
+                              style={{
+                                bottom: slideProgressBottom,
+                                left: `${metrics.horizontalPadding}px`,
+                                right: `${metrics.horizontalPadding}px`,
+                                touchAction: "none",
+                              }}
+                              tabIndex={isActiveSlide ? 0 : -1}
+                            >
+                              <div
+                                className="relative w-full overflow-visible rounded-full bg-[rgba(255,255,255,0.25)] transition-[height] duration-150 ease-out"
+                                style={{
+                                  height: isActiveSlide && isVideoProgressSeeking ? "5px" : "2.5px",
+                                }}
+                              >
+                                <div
+                                  className="h-full rounded-full bg-[rgba(255,255,255,0.9)]"
+                                  style={{
+                                    width: slideProgressPercent,
+                                  }}
+                                />
+                                {isActiveSlide && isVideoProgressSeeking ? (
+                                  <span
+                                    aria-hidden="true"
+                                    className="absolute top-1/2 block h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-[0_4px_14px_rgba(0,0,0,0.22)]"
+                                    style={{
+                                      left: slideProgressPercent,
+                                    }}
+                                  />
+                                ) : null}
+                              </div>
                             </div>
                           ) : null}
 
