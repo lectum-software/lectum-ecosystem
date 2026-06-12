@@ -21,6 +21,7 @@ import {
   type FormEvent,
   type PointerEvent,
   type KeyboardEvent as ReactKeyboardEvent,
+  type TouchEvent as ReactTouchEvent,
   type UIEvent,
   useCallback,
   useDeferredValue,
@@ -66,6 +67,10 @@ const PSYCHOLOGISTS_BACKGROUND_VIDEO_SELECTOR = "video[data-psychologists-backgr
 const SWIPE_HINT_STORAGE_KEY = "lectum:psychologists:has-seen-swipe-hint";
 const VIDEO_SINGLE_TAP_DELAY_MS = 260;
 const VIDEO_LONG_PRESS_DELAY_MS = 520;
+const VIDEO_PROGRESS_VISIBLE_NAV_BAR_HEIGHT = 64;
+const VIDEO_PROGRESS_HIDDEN_BOTTOM_GAP = 8;
+const VIDEO_PROGRESS_TRACK_COLOR = "rgba(255,255,255,0.22)";
+const VIDEO_PROGRESS_FILL_COLOR = "rgba(255,255,255,0.75)";
 const LONG_PRESS_MOVE_TOLERANCE_PX = 20;
 const LONG_PRESS_SCROLL_INTENT_THRESHOLD_PX = 32;
 const LONG_PRESS_SIGNIFICANT_DRAG_THRESHOLD_PX = 44;
@@ -428,6 +433,7 @@ export const PsychologistsLogic = () => {
   const longPressTimeoutRef = useRef<number | null>(null);
   const favoriteFeedbackTimeoutRef = useRef<number | null>(null);
   const progressAnimationFrameRef = useRef<number | null>(null);
+  const isVideoProgressSeekingRef = useRef(false);
   const wasVideoPlayingBeforeProgressSeekRef = useRef(false);
   const swipeHintHideTimeoutRef = useRef<number | null>(null);
   const swipeHintIdleTimeoutRef = useRef<number | null>(null);
@@ -627,6 +633,7 @@ export const PsychologistsLogic = () => {
     setShowDoubleTapFavoriteFeedback(false);
     setIsVideoProgressSeeking(false);
     setVideoSeekPreviewRatio(null);
+    isVideoProgressSeekingRef.current = false;
     wasVideoPlayingBeforeProgressSeekRef.current = false;
   }, []);
 
@@ -879,6 +886,7 @@ export const PsychologistsLogic = () => {
       });
       setVideoSeekPreviewRatio(null);
       setIsVideoProgressSeeking(false);
+      isVideoProgressSeekingRef.current = false;
     }
 
     lastActiveVideoResetKeyRef.current = activeVideoResetKey;
@@ -935,6 +943,7 @@ export const PsychologistsLogic = () => {
       });
       setVideoSeekPreviewRatio(null);
       setIsVideoProgressSeeking(false);
+      isVideoProgressSeekingRef.current = false;
       setShareFeedback(false);
       setActionColumnTranslateY(0);
     });
@@ -1481,27 +1490,31 @@ export const PsychologistsLogic = () => {
     [isVideoMuted, pauseVideoPlayback, playCurrentVideo, shouldShowVideo, unmuteCurrentVideo],
   );
 
-  const seekActiveVideoToTime = useCallback((nextTime: number) => {
-    const currentVideo = backgroundVideoRef.current;
-    if (!currentVideo) return;
+  const seekActiveVideoToTime = useCallback(
+    (nextTime: number, durationOverride?: number) => {
+      const currentVideo = backgroundVideoRef.current;
+      if (!currentVideo) return;
 
-    const duration = getReadableVideoDuration(currentVideo);
-    if (!duration) return;
+      const duration =
+        getReadableVideoDuration(currentVideo) || durationOverride || videoProgress.duration;
+      if (!duration) return;
 
-    const currentTime = clampNumber(nextTime, 0, duration);
-    currentVideo.currentTime = currentTime;
-    setVideoProgress({
-      currentTime,
-      duration,
-    });
-  }, []);
+      const currentTime = clampNumber(nextTime, 0, duration);
+      currentVideo.currentTime = currentTime;
+      setVideoProgress({
+        currentTime,
+        duration,
+      });
+    },
+    [videoProgress.duration],
+  );
 
   const seekActiveVideoFromClientX = useCallback(
     (clientX: number, track: HTMLDivElement | null) => {
       const currentVideo = backgroundVideoRef.current;
       if (!currentVideo || !track) return;
 
-      const duration = getReadableVideoDuration(currentVideo);
+      const duration = getReadableVideoDuration(currentVideo) || videoProgress.duration;
       if (!duration) return;
 
       const bounds = track.getBoundingClientRect();
@@ -1511,10 +1524,29 @@ export const PsychologistsLogic = () => {
       const nextTime = ratio * duration;
 
       setVideoSeekPreviewRatio(ratio);
-      seekActiveVideoToTime(nextTime);
+      seekActiveVideoToTime(nextTime, duration);
     },
-    [seekActiveVideoToTime],
+    [seekActiveVideoToTime, videoProgress.duration],
   );
+
+  const finishVideoProgressScrub = useCallback(() => {
+    const shouldResumePlayback = wasVideoPlayingBeforeProgressSeekRef.current;
+    wasVideoPlayingBeforeProgressSeekRef.current = false;
+    isVideoProgressSeekingRef.current = false;
+    setIsVideoProgressSeeking(false);
+    setVideoSeekPreviewRatio(null);
+    syncActiveVideoProgress();
+
+    if (!shouldResumePlayback || isSearchFocused || !shouldShowVideo) return;
+
+    const currentVideo = backgroundVideoRef.current;
+    if (!currentVideo) return;
+
+    setIsVideoPaused(false);
+    void currentVideo.play().catch(() => {
+      setIsVideoPaused(true);
+    });
+  }, [isSearchFocused, shouldShowVideo, syncActiveVideoProgress]);
 
   const handleVideoProgressPointerDown = useCallback(
     (event: PointerEvent<HTMLDivElement>) => {
@@ -1531,6 +1563,7 @@ export const PsychologistsLogic = () => {
       wasVideoPlayingBeforeProgressSeekRef.current = !currentVideo.paused;
       currentVideo.pause();
       setIsVideoPaused(true);
+      isVideoProgressSeekingRef.current = true;
       setIsVideoProgressSeeking(true);
       event.currentTarget.setPointerCapture(event.pointerId);
       seekActiveVideoFromClientX(event.clientX, event.currentTarget);
@@ -1547,12 +1580,12 @@ export const PsychologistsLogic = () => {
   const handleVideoProgressPointerMove = useCallback(
     (event: PointerEvent<HTMLDivElement>) => {
       event.stopPropagation();
-      if (!isVideoProgressSeeking || isSearchFocused) return;
+      if (!isVideoProgressSeekingRef.current || isSearchFocused) return;
 
       event.preventDefault();
       seekActiveVideoFromClientX(event.clientX, event.currentTarget);
     },
-    [isSearchFocused, isVideoProgressSeeking, seekActiveVideoFromClientX],
+    [isSearchFocused, seekActiveVideoFromClientX],
   );
 
   const handleVideoProgressPointerEnd = useCallback(
@@ -1564,23 +1597,77 @@ export const PsychologistsLogic = () => {
         event.currentTarget.releasePointerCapture(event.pointerId);
       }
 
-      const shouldResumePlayback = wasVideoPlayingBeforeProgressSeekRef.current;
-      wasVideoPlayingBeforeProgressSeekRef.current = false;
-      setIsVideoProgressSeeking(false);
-      setVideoSeekPreviewRatio(null);
-      syncActiveVideoProgress();
+      finishVideoProgressScrub();
+    },
+    [finishVideoProgressScrub],
+  );
 
-      if (!shouldResumePlayback || isSearchFocused || !shouldShowVideo) return;
+  const shouldUseTouchProgressFallback = useCallback(
+    () => typeof window !== "undefined" && !("PointerEvent" in window),
+    [],
+  );
+
+  const handleVideoProgressTouchStart = useCallback(
+    (event: ReactTouchEvent<HTMLDivElement>) => {
+      event.stopPropagation();
+
+      if (!shouldUseTouchProgressFallback()) return;
+
+      event.preventDefault();
+      if (!shouldShowVideo || isSearchFocused) return;
+
+      const touch = event.touches[0];
+      if (!touch) return;
+
+      registerSwipeHintInteraction();
+      cancelPendingVideoGestureTimers();
 
       const currentVideo = backgroundVideoRef.current;
       if (!currentVideo) return;
 
-      setIsVideoPaused(false);
-      void currentVideo.play().catch(() => {
-        setIsVideoPaused(true);
-      });
+      wasVideoPlayingBeforeProgressSeekRef.current = !currentVideo.paused;
+      currentVideo.pause();
+      setIsVideoPaused(true);
+      isVideoProgressSeekingRef.current = true;
+      setIsVideoProgressSeeking(true);
+      seekActiveVideoFromClientX(touch.clientX, event.currentTarget);
     },
-    [isSearchFocused, shouldShowVideo, syncActiveVideoProgress],
+    [
+      cancelPendingVideoGestureTimers,
+      isSearchFocused,
+      registerSwipeHintInteraction,
+      seekActiveVideoFromClientX,
+      shouldShowVideo,
+      shouldUseTouchProgressFallback,
+    ],
+  );
+
+  const handleVideoProgressTouchMove = useCallback(
+    (event: ReactTouchEvent<HTMLDivElement>) => {
+      event.stopPropagation();
+
+      if (!shouldUseTouchProgressFallback()) return;
+      if (!isVideoProgressSeekingRef.current || isSearchFocused) return;
+
+      const touch = event.touches[0];
+      if (!touch) return;
+
+      event.preventDefault();
+      seekActiveVideoFromClientX(touch.clientX, event.currentTarget);
+    },
+    [isSearchFocused, seekActiveVideoFromClientX, shouldUseTouchProgressFallback],
+  );
+
+  const handleVideoProgressTouchEnd = useCallback(
+    (event: ReactTouchEvent<HTMLDivElement>) => {
+      event.stopPropagation();
+
+      if (!shouldUseTouchProgressFallback()) return;
+
+      event.preventDefault();
+      finishVideoProgressScrub();
+    },
+    [finishVideoProgressScrub, shouldUseTouchProgressFallback],
   );
 
   const handleVideoProgressKeyDown = useCallback(
@@ -1590,7 +1677,7 @@ export const PsychologistsLogic = () => {
       const currentVideo = backgroundVideoRef.current;
       if (!currentVideo || !shouldShowVideo) return;
 
-      const duration = getReadableVideoDuration(currentVideo);
+      const duration = getReadableVideoDuration(currentVideo) || videoProgress.duration;
       if (!duration) return;
 
       const step = Math.min(5, Math.max(1, duration * 0.05));
@@ -1626,6 +1713,7 @@ export const PsychologistsLogic = () => {
       seekActiveVideoToTime,
       shouldShowVideo,
       syncActiveVideoProgress,
+      videoProgress.duration,
     ],
   );
 
@@ -1984,7 +2072,7 @@ export const PsychologistsLogic = () => {
               <div
                 className={cn(
                   "psychologists-video-feed h-full w-full snap-y snap-mandatory overscroll-contain",
-                  isSearchFocused ? "overflow-hidden" : "overflow-y-auto",
+                  isSearchFocused || isVideoProgressSeeking ? "overflow-hidden" : "overflow-y-auto",
                 )}
                 onPointerDownCapture={isSearchFocused ? undefined : registerSwipeHintInteraction}
                 onScroll={isSearchFocused ? undefined : handleFeedScroll}
@@ -2025,8 +2113,8 @@ export const PsychologistsLogic = () => {
                       : 0;
                   const slideProgressPercent = `${slideProgressRatio * 100}%`;
                   const slideProgressBottom = slideIsUiHidden
-                    ? "env(safe-area-inset-bottom)"
-                    : `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom))`;
+                    ? `calc(env(safe-area-inset-bottom) + ${VIDEO_PROGRESS_HIDDEN_BOTTOM_GAP}px)`
+                    : `calc(${VIDEO_PROGRESS_VISIBLE_NAV_BAR_HEIGHT}px + env(safe-area-inset-bottom))`;
 
                   return (
                     <section
@@ -2091,6 +2179,11 @@ export const PsychologistsLogic = () => {
                               ref={(node) => {
                                 if (isActiveSlide) {
                                   backgroundVideoRef.current = node;
+                                } else if (
+                                  backgroundVideoRef.current?.dataset.psychologistId ===
+                                  psychologist.id
+                                ) {
+                                  backgroundVideoRef.current = null;
                                 }
                               }}
                               src={slideVideoSrc ?? undefined}
@@ -2204,9 +2297,19 @@ export const PsychologistsLogic = () => {
                               onPointerUp={
                                 isActiveSlide ? handleVideoProgressPointerEnd : undefined
                               }
+                              onTouchCancel={
+                                isActiveSlide ? handleVideoProgressTouchEnd : undefined
+                              }
+                              onTouchEnd={isActiveSlide ? handleVideoProgressTouchEnd : undefined}
+                              onTouchMove={isActiveSlide ? handleVideoProgressTouchMove : undefined}
+                              onTouchStart={
+                                isActiveSlide ? handleVideoProgressTouchStart : undefined
+                              }
                               ref={(node) => {
                                 if (isActiveSlide) {
                                   progressTrackRef.current = node;
+                                } else if (progressTrackRef.current === node) {
+                                  progressTrackRef.current = null;
                                 }
                               }}
                               role="slider"
@@ -2219,14 +2322,21 @@ export const PsychologistsLogic = () => {
                               tabIndex={isActiveSlide ? 0 : -1}
                             >
                               <div
-                                className="relative w-full overflow-hidden bg-primary/25 transition-[height] duration-150 ease-out"
+                                className="relative w-full overflow-hidden transition-[height] duration-150 ease-out"
                                 style={{
-                                  height: isActiveSlide && isVideoProgressSeeking ? "5px" : "2.5px",
+                                  backgroundColor: VIDEO_PROGRESS_TRACK_COLOR,
+                                  height: isActiveSlide && isVideoProgressSeeking ? "5px" : "3px",
                                 }}
                               >
                                 <div
-                                  className="h-full bg-primary"
+                                  className={cn(
+                                    "h-full",
+                                    isActiveSlide && isVideoProgressSeeking
+                                      ? null
+                                      : "transition-[width] duration-100 ease-linear",
+                                  )}
                                   style={{
+                                    backgroundColor: VIDEO_PROGRESS_FILL_COLOR,
                                     width: slideProgressPercent,
                                   }}
                                 />

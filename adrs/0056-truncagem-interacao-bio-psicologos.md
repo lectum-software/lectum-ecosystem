@@ -292,3 +292,17 @@ O modo imersivo de `/app/psychologists` passa a tratar UI oculta como UI realmen
 A decisao foi aplicar uma classe inert propria nos wrappers de busca/filtro e do slide quando `isUiHidden=true`, com `pointer-events: none` tambem para todos os descendentes. Isso corrige casos em que filhos com `pointer-events-auto` continuavam clicaveis mesmo com o wrapper invisivel.
 
 Elementos interativos ocultos tambem recebem `disabled` ou `tabIndex=-1` quando aplicavel. Assim, nome, selo verificado, bio, profissao, avaliacao, disponibilidade, botoes laterais, busca e filtro deixam de receber clique/foco no modo sem UI. Apenas a area do video e a barra de progresso continuam interativas.
+
+## Atualizacao 2026-06-12: barra de progresso discreta e seek sem reset
+
+A barra de progresso de `/app/psychologists` foi refinada para se comportar como controle discreto de video curto.
+
+A decisao foi separar visualmente e tecnicamente o fluxo de reset por troca de psicologo do fluxo de scrub da barra:
+
+- `onActiveVideoChange` continua responsavel por pausar videos fora da tela e resetar `currentTime = 0`;
+- handlers da barra calculam apenas a posicao horizontal do ponteiro/toque, convertem para `progress * duration` e aplicam diretamente em `video.currentTime`;
+- um ref sincrono (`isVideoProgressSeekingRef`) garante que o arraste comece imediatamente no primeiro movimento, sem esperar re-render do estado React;
+- enquanto o usuario arrasta, a largura da barra nao usa transicao e o frame do video acompanha o tempo aplicado continuamente;
+- o feed fica com scroll vertical bloqueado durante scrubbing, preservando prioridade maxima da barra sobre single tap, double tap, long press e troca de slide.
+
+O offset visual tambem foi ajustado: com UI visivel, a barra fica em `64px + safe-area` para encostar no topo da navbar mobile; com UI oculta, fica em `8px + safe-area` para continuar visivel no rodape. O azul Lectum foi removido da barra e substituido por tons discretos de branco/cinza, mantendo o video como foco principal.

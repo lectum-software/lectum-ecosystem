@@ -906,4 +906,23 @@ ext/image`.
   - `pnpm --dir frontend check`
   - `pnpm --dir frontend build`
   - `pnpm check`
+- HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: refinamento da barra de progresso do video (2026-06-12)
+
+- Pedido do usuario: corrigir posicao, cor e comportamento de seek/arraste da barra de progresso do video em `/app/psychologists`.
+- Com UI visivel, a barra agora usa a altura real da navbar mobile (`64px + safe-area`) para ficar integrada imediatamente acima da navegacao, sem o espaco vazio causado pelo offset anterior de 72px.
+- Com UI oculta, a barra permanece funcional no rodape do video com respiro minimo de `8px + safe-area`, evitando ficar colada demais ao limite inferior da viewport.
+- O visual deixou de usar azul Lectum e passou para uma barra discreta em tons de branco/cinza (`rgba(255,255,255,0.22)` na trilha e `rgba(255,255,255,0.75)` no progresso), mantendo o video como foco principal.
+- O scrubbing foi reforcado com um ref sincrono (`isVideoProgressSeekingRef`) para que o primeiro movimento apos `pointerDown`/`touchStart` ja aplique seek, sem depender do ciclo assíncrono de estado do React.
+- O seek da barra nao chama reset de video: `onActiveVideoChange` continua sendo o unico fluxo que envia videos para `currentTime = 0`; a barra apenas calcula a razao horizontal e aplica `video.currentTime = progress * duration`.
+- Durante o arraste, `video.currentTime`, `currentTime`/`duration` e a largura visual da barra sao atualizados continuamente, sem transicao de largura enquanto o usuario esta arrastando, para o frame acompanhar o dedo/mouse.
+- A interacao da barra bloqueia scroll vertical do feed durante o scrubbing, cancela timers de toque/long press e captura eventos de pointer, com fallback touch para navegadores sem Pointer Events.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, busca, filtros, favoritos, navbar ou navegacao de perfil.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual permanece `_product/proto/Psicologos.jpg` e o contrato da TASK-13.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
