@@ -41,6 +41,7 @@ As páginas de detalhe por comunidade serão criadas depois. Até lá, chips e n
 - Ajustar apenas o CTA central para reproduzir o mockup anexado: dimensão visual 56px com borda branca dentro do próprio botão, `+` proporcional e avanço parcial sobre a borda superior, sem alterar altura, padding, margens ou estrutura da navbar.
 - Manter os demais itens da navegação inferior (`Psicólogos`, `Favoritos`, `Notificações`, `Perfil`) e preservar a navegação lateral desktop padrão.
 - Adicionar no desktop um CTA flutuante azul com ícone `+` no canto inferior direito da área de conteúdo do Feed da Comunidade, apontando para `/app/community/feed/post/new`; no mobile, manter apenas o botão central da bottom navigation.
+- Manter o botão `Seguir` visualmente vinculado à comunidade no cabeçalho do card: a linha `Postado em [comunidade] [Seguir]` usa flex, trunca nomes longos com ellipsis e impede o botão de ser empurrado para fora do card.
 - Enquanto `community_member` não estiver implementado (TASK-25), `scope=following` retorna estado vazio honesto.
 
 ## Consequências
@@ -65,6 +66,7 @@ As páginas de detalhe por comunidade serão criadas depois. Até lá, chips e n
 - Refinamento de proporção do botão central conforme mockup, preservando a navbar: `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`: sucesso.
 - Refinamento dos gradientes de TOP MENTOR conforme Figma: `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`: sucesso.
 - Refinamento do CTA desktop de criação de post: `pnpm --dir frontend check` e `pnpm --dir frontend build`: sucesso.
+- Refinamento do alinhamento `Postado em [comunidade] [Seguir]`: `pnpm --dir frontend check` e `pnpm --dir frontend build`: sucesso.
 - Validação HTTP local do Feed da Comunidade após CTA desktop: `GET http://localhost:3000/app/community/feed` retornou `200`.
 - Validação visual/HTTP local em `http://localhost:3000/app/community/feed`: sucesso (`200`).
 - Validação local de API com token temporário:

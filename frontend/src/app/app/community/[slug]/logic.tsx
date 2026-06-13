@@ -392,21 +392,17 @@ const PostCard = ({
 
   return (
     <article className="overflow-hidden rounded-[22px] border border-[#E6EAF0] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:border-border dark:bg-surface">
-      <div className="mb-4 flex items-center justify-between gap-3 text-[11px] font-semibold text-muted">
-        <span className="inline-flex min-w-0 items-center gap-1.5">
-          <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-          <span className="truncate">
-            Postado em{" "}
-            <Link
-              className="font-black text-foreground underline-offset-4 hover:text-primary hover:underline"
-              href={communityDetailHref(post.community.slug)}
-            >
-              {post.community.name}
-            </Link>
-          </span>
-        </span>
+      <div className="mb-4 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-muted">
+        <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        <span className="shrink-0">Postado em</span>
+        <Link
+          className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-black text-foreground underline-offset-4 hover:text-primary hover:underline"
+          href={communityDetailHref(post.community.slug)}
+        >
+          {post.community.name}
+        </Link>
         <button
-          className="shrink-0 rounded-full border border-[#8FC7EA] px-3 py-1 text-[11px] font-black text-primary transition hover:bg-primary-soft"
+          className="ml-1 shrink-0 rounded-full border border-[#8FC7EA] px-3 py-1 text-[11px] font-black text-primary transition hover:bg-primary-soft"
           type="button"
         >
           Seguir
