@@ -167,18 +167,26 @@ const CountAction = ({ icon: Icon, label, value }: CountActionProps) => (
 
 const mentorBadgeClassName = (badge: string) => {
   if (badge.includes("#1")) {
-    return "from-[#D9B76A] via-[#F1E1B5] to-[#9B6F2D] text-[#2E2110] ring-[#D9C089]";
+    return "text-[#1F2937]";
+  }
+
+  return "text-[#0F172A]";
+};
+
+const mentorBadgeBackground = (badge: string) => {
+  if (badge.includes("#1")) {
+    return "linear-gradient(90deg, #CE953A 0%, #EFEF7B 71%, #9C7924 99%)";
   }
 
   if (badge.includes("#2")) {
-    return "from-[#D7D2C3] via-[#F3EFE5] to-[#9A9384] text-[#2F3033] ring-[#D8D1C1]";
+    return "linear-gradient(90deg, #CBD5E1 0%, #F1F5F9 50%, #94A3B8 100%)";
   }
 
   if (badge.includes("#3")) {
-    return "from-[#B8764B] via-[#E0B18F] to-[#7A442A] text-[#2B160D] ring-[#C99672]";
+    return "linear-gradient(90deg, #A8703A 0%, #E6BE8A 45%, #CD7F32 55%, #8B4513 100%)";
   }
 
-  return "from-[#D9B76A] via-[#F1E1B5] to-[#9B6F2D] text-[#2E2110] ring-[#D9C089]";
+  return "linear-gradient(90deg, #CE953A 0%, #EFEF7B 71%, #9C7924 99%)";
 };
 
 const MentorBadge = ({ badge }: { badge?: string | null }) => {
@@ -187,9 +195,10 @@ const MentorBadge = ({ badge }: { badge?: string | null }) => {
   return (
     <span
       className={cn(
-        "inline-flex w-fit items-center gap-1 rounded-[8px] bg-gradient-to-r px-2 py-1 text-[9px] font-black tracking-[0.02em] ring-1",
+        "inline-flex w-fit items-center gap-1 rounded-[8px] px-2 py-1 text-[9px] font-black tracking-[0.02em] shadow-none ring-1 ring-white/60",
         mentorBadgeClassName(badge),
       )}
+      style={{ background: mentorBadgeBackground(badge) }}
     >
       <Award className="h-3 w-3" aria-hidden="true" />
       {badge}

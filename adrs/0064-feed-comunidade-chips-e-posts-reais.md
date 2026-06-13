@@ -36,6 +36,7 @@ As páginas de detalhe por comunidade serão criadas depois. Até lá, chips e n
 - Esconder o header de busca/chips ao rolar para baixo e reexibir ao rolar para cima com transição suave.
 - Reposicionar metadados de posts de pacientes para mostrar somente o tempo abaixo do nome.
 - Refinar cores dos selos para ouro/champagne/cobre sofisticados e remover shadow/drop-shadow.
+- Atualizar os selos `TOP #1`, `TOP #2` e `TOP #3 MENTOR` para os gradientes exatos do Figma: `#CE953A→#EFEF7B→#9C7924`, `#CBD5E1→#F1F5F9→#94A3B8` e `#A8703A→#E6BE8A→#CD7F32→#8B4513`, com texto/ícone `#1F2937` para #1 e `#0F172A` para #2/#3.
 - No Feed da Comunidade, substituir o item central `Comunidade` da navegação inferior por um CTA circular azul com ícone `+`, sem label visível, apontando para `/app/community/post/new`.
 - Ajustar o CTA central para 52px de diâmetro, ícone `+` proporcional e overhang aproximado de 30% acima da barra, mantendo destaque premium sem roubar atenção do feed.
 - Manter os demais itens da navegação inferior (`Psicólogos`, `Favoritos`, `Notificações`, `Perfil`) e preservar a navegação lateral desktop padrão.
@@ -61,6 +62,7 @@ As páginas de detalhe por comunidade serão criadas depois. Até lá, chips e n
 - `pnpm check`: sucesso.
 - Refinamento da navegação inferior: `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`: sucesso.
 - Refinamento de proporção do FAB central: `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`: sucesso.
+- Refinamento dos gradientes de TOP MENTOR conforme Figma: `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`: sucesso.
 - Validação visual/HTTP local em `http://localhost:3000/app/community/feed`: sucesso (`200`).
 - Validação local de API com token temporário:
   - `GET /api/private/community/feed/posts?page=1&limit=12` retornou `200` com posts persistidos, campo `highlighted_professional_reply` no contrato e badges `TOP #1 MENTOR`, `TOP #2 MENTOR`, `TOP #3 MENTOR` quando aplicável;
