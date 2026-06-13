@@ -72,10 +72,11 @@ const buildFields = ({
         ? "Conte algo interessante à comunidade..."
         : "Conte aos profissionais algo sobre você...",
       required: true,
-      rows: 8,
+      rows: 5,
       max: 2000,
+      autoGrow: true,
       inputClassName:
-        "min-h-[190px] resize-none rounded-2xl border-[#E5E7EB] bg-white px-4 py-4 text-base shadow-none placeholder:text-[#8A94A6] focus:border-[#308CE8] focus:ring-[#308CE8]/10 dark:bg-surface",
+        "min-h-[136px] rounded-2xl border-[#E5E7EB] bg-white px-4 py-4 text-base leading-6 shadow-none placeholder:text-[#8A94A6] focus:border-[#308CE8] focus:ring-[#308CE8]/10 dark:bg-surface",
     },
     {
       name: "anonymous",

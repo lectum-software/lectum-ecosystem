@@ -17,6 +17,7 @@ export function TextareaController<FormType extends FieldValues>({
   description,
   id,
   placeholder,
+  autoGrow,
   disabled,
   readOnly,
   tabIndex,
@@ -24,6 +25,12 @@ export function TextareaController<FormType extends FieldValues>({
   onChangeCallback,
 }: ControllerFieldProps<FormType>) {
   const inputId = fieldId(name, id);
+  const resizeTextarea = (element: HTMLTextAreaElement | null) => {
+    if (!autoGrow || !element) return;
+
+    element.style.height = "auto";
+    element.style.height = `${element.scrollHeight}px`;
+  };
 
   return (
     <Controller
@@ -49,6 +56,7 @@ export function TextareaController<FormType extends FieldValues>({
               className={cn(
                 "min-h-28 w-full rounded-[var(--lectum-control-radius)] border border-border bg-surface px-4 py-3 text-sm text-foreground shadow-sm outline-none transition placeholder:text-subtle focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted",
                 error && "border-danger focus:border-danger focus:ring-danger/10",
+                autoGrow && "resize-none overflow-hidden",
                 inputClassName,
               )}
               disabled={disabled}
@@ -58,11 +66,15 @@ export function TextareaController<FormType extends FieldValues>({
               onChange={(event) => {
                 const nextValue = event.target.value === "" ? undefined : event.target.value;
                 field.onChange(nextValue);
+                resizeTextarea(event.currentTarget);
                 onChangeCallback?.(nextValue);
               }}
               placeholder={placeholder}
               readOnly={readOnly}
-              ref={field.ref}
+              ref={(element) => {
+                field.ref(element);
+                resizeTextarea(element);
+              }}
               required={false}
               rows={rows}
               tabIndex={tabIndex}

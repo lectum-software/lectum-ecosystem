@@ -128,8 +128,17 @@ export const CreateCommunityPostLogic = () => {
     return Object.values(hook.formState.errors)[0]?.message?.toString() ?? null;
   }, [apiError, hook.formState.errors, hook.formState.isSubmitted]);
 
+  const watchedCommunitySlug = hook.watch("community_slug");
+  const watchedTitle = hook.watch("title");
+  const watchedContent = hook.watch("content");
+  const requiredFieldsReady = Boolean(
+    watchedCommunitySlug &&
+      String(watchedTitle ?? "").trim().length >= 3 &&
+      String(watchedContent ?? "").trim().length >= 10,
+  );
   const hasNoCommunities = communitiesQuery.isSuccess && communityOptions.length === 0;
-  const isSubmitDisabled = mutation.isPending || communitiesQuery.isLoading || hasNoCommunities;
+  const isSubmitDisabled =
+    mutation.isPending || communitiesQuery.isLoading || hasNoCommunities || !requiredFieldsReady;
 
   const onSubmit = hook.handleSubmit((values) => {
     setApiError(null);
@@ -138,6 +147,32 @@ export const CreateCommunityPostLogic = () => {
       body: toCreateCommunityPostPayload(values, isPsychologist),
     });
   });
+
+  const renderFormField = (field: (typeof formProps.fields)[number]) => {
+    const Component = components[field.field];
+
+    if (!Component) return null;
+
+    if (field.name === "community_slug") {
+      return (
+        <div className="relative w-fit" key="create-post-community">
+          <UsersRound
+            aria-hidden="true"
+            className="pointer-events-none absolute top-5 left-3 z-10 h-4 w-4 -translate-y-1/2 text-[#111827] dark:text-foreground"
+          />
+          <Component
+            control={hook.control}
+            {...field}
+            inputClassName={cn("pl-9", field.inputClassName)}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <Component control={hook.control} key={`create-post-${String(field.name)}`} {...field} />
+    );
+  };
 
   return (
     <PrivateTemplate
@@ -160,77 +195,55 @@ export const CreateCommunityPostLogic = () => {
         <form className="grid gap-5 px-[18px] pt-5 pb-8" noValidate onSubmit={onSubmit}>
           <div className="grid gap-4">
             {formProps.fields
-              .filter((field) => field.name !== "anonymous")
-              .map((field) => {
-                const Component = components[field.field];
+              .filter((field) => field.name === "community_slug")
+              .map(renderFormField)}
 
-                if (!Component) return null;
+            {!isPsychologist ? (
+              <Controller
+                control={hook.control}
+                name="anonymous"
+                render={({ field }) => {
+                  const checked = Boolean(field.value);
 
-                if (field.name === "community_slug") {
                   return (
-                    <div className="relative w-fit" key="create-post-community">
-                      <UsersRound
-                        aria-hidden="true"
-                        className="pointer-events-none absolute top-5 left-3 z-10 h-4 w-4 -translate-y-1/2 text-[#111827] dark:text-foreground"
-                      />
-                      <Component
-                        control={hook.control}
-                        {...field}
-                        inputClassName={cn("pl-9", field.inputClassName)}
-                      />
+                    <div className="rounded-2xl border border-[#EEF0F3] bg-[#F8FAFC] px-4 py-3 dark:border-border dark:bg-surface-muted">
+                      <div className="flex min-h-8 items-center justify-between gap-4">
+                        <span className="inline-flex items-center gap-2 text-sm font-medium text-[#6B7280]">
+                          <UserRoundX className="h-5 w-5" aria-hidden="true" />
+                          Postar como anônimo
+                        </span>
+                        <button
+                          aria-checked={checked}
+                          aria-label="Postar como anônimo"
+                          className={cn(
+                            "relative h-7 w-12 rounded-full bg-[#EDF1F7] transition focus:outline-none focus:ring-4 focus:ring-[#308CE8]/15",
+                            checked && "bg-[#308CE8]",
+                          )}
+                          onBlur={field.onBlur}
+                          onClick={() => field.onChange(!checked)}
+                          role="switch"
+                          type="button"
+                        >
+                          <span
+                            className={cn(
+                              "absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow-sm transition",
+                              checked && "translate-x-5",
+                            )}
+                          />
+                        </button>
+                      </div>
                     </div>
                   );
-                }
+                }}
+              />
+            ) : null}
 
-                return (
-                  <Component
-                    control={hook.control}
-                    key={`create-post-${String(field.name)}`}
-                    {...field}
-                  />
-                );
-              })}
+            {formProps.fields
+              .filter((field) => field.name !== "community_slug" && field.name !== "anonymous")
+              .map(renderFormField)}
           </div>
 
-          {!isPsychologist ? (
-            <Controller
-              control={hook.control}
-              name="anonymous"
-              render={({ field }) => {
-                const checked = Boolean(field.value);
-
-                return (
-                  <div className="-mx-[18px] border-[#EEF0F3] border-y px-[18px] py-4">
-                    <div className="flex min-h-8 items-center justify-between gap-4">
-                      <span className="inline-flex items-center gap-2 text-sm font-medium text-[#6B7280]">
-                        <UserRoundX className="h-5 w-5" aria-hidden="true" />
-                        Postar como anônimo
-                      </span>
-                      <button
-                        aria-checked={checked}
-                        aria-label="Postar como anônimo"
-                        className={cn(
-                          "relative h-7 w-12 rounded-full bg-[#EDF1F7] transition focus:outline-none focus:ring-4 focus:ring-[#308CE8]/15",
-                          checked && "bg-[#308CE8]",
-                        )}
-                        onBlur={field.onBlur}
-                        onClick={() => field.onChange(!checked)}
-                        role="switch"
-                        type="button"
-                      >
-                        <span
-                          className={cn(
-                            "absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow-sm transition",
-                            checked && "translate-x-5",
-                          )}
-                        />
-                      </button>
-                    </div>
-                  </div>
-                );
-              }}
-            />
-          ) : (
+          {isPsychologist ? (
             <section className="grid gap-3">
               <p className="text-xs font-extrabold tracking-[0.08em] text-[#64748B] uppercase">
                 Adicionar mídia
@@ -251,7 +264,7 @@ export const CreateCommunityPostLogic = () => {
                 </div>
               </div>
             </section>
-          )}
+          ) : null}
 
           <div className="flex gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-sm leading-6 text-[#64748B] dark:border-border dark:bg-surface dark:text-muted">
             <Info className="mt-1 h-5 w-5 shrink-0" aria-hidden="true" />
@@ -277,7 +290,7 @@ export const CreateCommunityPostLogic = () => {
           ) : null}
 
           <Button
-            className="mt-2 h-[56px] w-full rounded-xl bg-[#11162A] text-base font-semibold shadow-[0_10px_22px_rgba(17,22,42,0.16)] hover:bg-[#0B1022]"
+            className="mt-2 h-[60px] w-full rounded-2xl bg-[#308CE8] text-base font-black shadow-[0_14px_28px_rgba(48,140,232,0.24)] hover:bg-[#2579CF] disabled:bg-[#DDEEFF] disabled:text-[#7FAFDF] disabled:opacity-100 disabled:shadow-none"
             disabled={isSubmitDisabled}
             type="submit"
           >

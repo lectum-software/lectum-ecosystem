@@ -28,6 +28,9 @@ O `DATA-MODEL.md` já prevê `community_post` com `author_id`, `community_id`, `
 - Usar React Hook Form, Zod, `frontend/src/hooks/form` e controllers existentes para comunidade, título e texto; o toggle anônimo usa `Controller` do React Hook Form para respeitar a base de formulário e reproduzir o layout do protótipo.
 - Diferenciar a UI por perfil: pacientes veem a opção “Postar como anônimo”; psicólogos veem a seção visual de mídia, desabilitada como pendência de R2.
 - No seletor de comunidade, manter as opções ordenadas alfabeticamente por nome em `pt-BR`, usar ícone de grupo alinhado ao texto e abrir busca interna com placeholder `Buscar comunidade`; quando o filtro não encontrar resultados, exibir `Nenhuma comunidade encontrada`.
+- Refinar a hierarquia mobile-first do formulário para `Comunidade → anonimato → título → conteúdo → postar`, mantendo o switch anônimo imediatamente abaixo do seletor de comunidade apenas para pacientes.
+- Reduzir o textarea de conteúdo para uma entrada inicial de 5 linhas com crescimento automático via extensão do controller `textarea`, sem criar componente paralelo.
+- Fortalecer o CTA `Postar` com azul Lectum, altura ligeiramente maior e estado desabilitado visualmente claro enquanto comunidade, título e conteúdo obrigatórios não estiverem preenchidos.
 
 ## Consequências
 
@@ -36,6 +39,7 @@ O `DATA-MODEL.md` já prevê `community_post` com `author_id`, `community_id`, `
 - A publicação já aparece para o feed imediatamente porque a moderação é reativa.
 - A UI de mídia para psicólogos fica preparada visualmente, mas não envia arquivos até existir storage R2 configurado e schema/endpoint de anexos aprovado.
 - A rota antiga do CTA central não quebra navegações existentes, mas o destino canônico passa a ser a rota com slug.
+- A criação de post fica mais leve para pacientes: a decisão de anonimato fica vinculada ao contexto da comunidade e o texto longo deixa de ocupar altura excessiva antes da digitação.
 
 ## Validação
 
@@ -44,8 +48,9 @@ O `DATA-MODEL.md` já prevê `community_post` com `author_id`, `community_id`, `
 - `pnpm --dir backend build`: sucesso.
 - `pnpm --dir frontend build`: sucesso.
 - Refinamento do seletor de comunidade: `pnpm --dir frontend check` e `pnpm --dir frontend build`: sucesso.
+- Refinamento de hierarquia/UX do Criar Post: `pnpm --dir frontend check` e `pnpm --dir frontend build`: sucesso.
 - Validação HTTP local das rotas Next:
-  - `GET http://localhost:3000/app/community/feed/post/new`: sucesso (`200`), incluindo o refinamento do seletor.
+  - `GET http://localhost:3000/app/community/feed/post/new`: sucesso (`200`), incluindo os refinamentos do seletor e da hierarquia/UX do formulário.
   - `GET http://localhost:3000/app/community/ansiedade-em-equilibrio/post/new`: sucesso (`200`).
   - `GET http://localhost:3000/app/community/ansiedade-em-equilibrio/post/success`: sucesso (`200`).
 - `pnpm check`: sucesso.

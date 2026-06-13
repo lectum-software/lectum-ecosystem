@@ -49,6 +49,7 @@ export type Field<FormType extends FieldValues> = {
   type?: React.HTMLInputTypeAttribute;
   autoComplete?: string;
   autoFocus?: boolean;
+  autoGrow?: boolean;
   tabIndex?: number;
   rows?: number;
   min?: number;

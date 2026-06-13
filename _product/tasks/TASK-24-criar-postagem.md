@@ -166,6 +166,7 @@ Regras anti-recriação específicas:
 - Frontend criado nas rotas canônicas `/app/community/[slug]/post/new` e `/app/community/[slug]/post/success`; `/app/community/post/new` redireciona para `/app/community/feed/post/new`.
 - Mídia/anexos ficaram como pendência explícita por ausência de credenciais/bucket R2 no ambiente; a publicação de texto foi implementada de ponta a ponta.
 - ADR: `adrs/0065-criacao-posts-comunidade.md`.
+- Refinamento de hierarquia/UX: o formulário agora segue `Comunidade → anonimato → título → conteúdo → postar`, com textarea inicial menor/autocrescimento e CTA azul com estado desabilitado.
 
 ## Notas para executor
 
