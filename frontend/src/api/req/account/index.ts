@@ -1,5 +1,6 @@
 import { callEndpoint } from "@/api/generator";
 import type {
+  AccountDeletePayload,
   AccountEmailPayload,
   AccountPasswordPayload,
   AccountSecurityResponse,
@@ -8,7 +9,7 @@ import type {
 } from "@/api/generator/types";
 import { handleReq } from "@/api/handle";
 
-export type { AccountEmailPayload, AccountPasswordPayload };
+export type { AccountDeletePayload, AccountEmailPayload, AccountPasswordPayload };
 
 export const security = async () => {
   const handle = callEndpoint({
@@ -39,6 +40,19 @@ export const updatePassword = async (body: AccountPasswordPayload) => {
   });
 
   return handleReq<user>({
+    ...handle,
+    hideError: true,
+  });
+};
+
+export const deleteAccount = async (body: AccountDeletePayload) => {
+  const handle = callEndpoint({
+    route: "/api/private/account/delete",
+    method: "POST",
+    body,
+  });
+
+  return handleReq<boolean>({
     ...handle,
     hideError: true,
   });

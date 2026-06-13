@@ -80,7 +80,9 @@
     "google_unlink_requires_password": "Crie uma senha antes de desconectar o Google para não perder o acesso.",
     "google_link_invalid": "Não foi possível validar a solicitação de vínculo com o Google.",
     "google_link_expired": "A solicitação de vínculo com o Google expirou. Tente novamente.",
-    "google_link_email_mismatch": "Use no Google o mesmo e-mail da sua conta Lectum para concluir o vínculo."
+    "google_link_email_mismatch": "Use no Google o mesmo e-mail da sua conta Lectum para concluir o vínculo.",
+    "account_delete_confirmation_invalid": "Digite EXCLUIR para confirmar a exclusão da conta.",
+    "account_delete_active_subscription": "Não é possível excluir a conta com assinatura paga vinculada ao gateway ou pagamento em aberto. Cancele ou regularize a cobrança antes de continuar."
   },
   "message": {
     "store": "dado criado",
@@ -132,7 +134,8 @@
     "account_password_update_success": "Senha atualizada com sucesso. Outros dispositivos foram desconectados.",
     "google_link_intent_created": "Redirecionando para o Google.",
     "google_link_success": "Conta conectada ao Google com sucesso.",
-    "google_unlink_success": "Google desconectado da sua conta com sucesso."
+    "google_unlink_success": "Google desconectado da sua conta com sucesso.",
+    "account_delete_success": "Conta excluída com sucesso."
   },
   "gender": {
     "o": "o"

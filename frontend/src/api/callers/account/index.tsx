@@ -11,6 +11,10 @@ export interface UseAccountProps {
       onError?: (error: unknown) => void;
       onSuccess?: (data: Awaited<ReturnType<typeof api.createGoogleLinkIntent>>) => void;
     };
+    deleteAccount?: {
+      onError?: (error: unknown) => void;
+      onSuccess?: (data: boolean) => void;
+    };
     unlinkGoogle?: {
       onError?: (error: unknown) => void;
       onSuccess?: (data: user) => void;
@@ -67,6 +71,12 @@ export const useAccount = ({ callbacks, enableSecurity = true }: UseAccountProps
     onError: callbacks?.createGoogleLinkIntent?.onError,
   });
 
+  const deleteAccount = useMutation({
+    mutationFn: (body: api.AccountDeletePayload) => api.deleteAccount(body),
+    onSuccess: callbacks?.deleteAccount?.onSuccess,
+    onError: callbacks?.deleteAccount?.onError,
+  });
+
   const unlinkGoogle = useMutation({
     mutationFn: () => api.unlinkGoogle(),
     onSuccess: (data) => {
@@ -78,6 +88,7 @@ export const useAccount = ({ callbacks, enableSecurity = true }: UseAccountProps
 
   return {
     createGoogleLinkIntent,
+    deleteAccount,
     security,
     unlinkGoogle,
     updateEmail,

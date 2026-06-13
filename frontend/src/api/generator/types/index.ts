@@ -1,4 +1,5 @@
 export type {
+  AccountDeletePayload,
   AccountEmailPayload,
   AccountGoogleSecurity,
   AccountPasswordPayload,

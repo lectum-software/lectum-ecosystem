@@ -1,6 +1,11 @@
 import type { Request, Response } from "express";
 import { error500, send } from "@/helpers/return";
-import { security as securityService, updateEmail, updatePassword } from "./services";
+import {
+  destroy as destroyService,
+  security as securityService,
+  updateEmail,
+  updatePassword,
+} from "./services";
 
 export const security = async (req: Request, res: Response) => {
   try {
@@ -29,5 +34,15 @@ export const password = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "account_password_update", err);
+  }
+};
+
+export const destroy = async (req: Request, res: Response) => {
+  try {
+    const resolve = await destroyService(req as unknown as Parameters<typeof destroyService>[0]);
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "account_delete", err);
   }
 };

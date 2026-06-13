@@ -11,6 +11,11 @@ export type AccountPasswordBody = {
   password_confirm: string;
 };
 
+export type AccountDeleteBody = {
+  confirmation: string;
+  current_password?: string;
+};
+
 export type AccountGoogleSecurity = {
   available: boolean;
   blocked_reason?: string;
@@ -40,4 +45,8 @@ export interface IAccountEmailDTO extends IAccountDTO {
 
 export interface IAccountPasswordDTO extends IAccountDTO {
   b: AccountPasswordBody;
+}
+
+export interface IAccountDeleteDTO extends IAccountDTO {
+  b: AccountDeleteBody;
 }

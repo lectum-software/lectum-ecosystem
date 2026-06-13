@@ -47,5 +47,26 @@ export const passwordSchema: IValidatorRequest = {
   },
 };
 
+export const deleteSchema: IValidatorRequest = {
+  body: [
+    {
+      key: "confirmation",
+      coerse: "string",
+      method: "string",
+      min: 6,
+      max: 16,
+    },
+    {
+      key: "current_password",
+      coerse: "string",
+      method: "string",
+      min: 1,
+      max: 128,
+      optional: true,
+    },
+  ],
+};
+
+export const deleteValidator = validator(deleteSchema);
 export const emailValidator = validator(emailSchema);
 export const passwordValidator = validator(passwordSchema);

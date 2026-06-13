@@ -68,3 +68,5 @@ Formato recomendado:
 - [ADR-0071 - Responsividade mobile da tela Top Mentores](0071-top-mentores-mobile-overflow.md) - Accepted
 - [ADR-0072 - Meus posts e posts salvos reais](0072-meus-posts-e-posts-salvos.md) - Accepted
 - [ADR-0073 - Tela de comunidades seguidas](0073-comunidades-seguidas.md) - Accepted
+- [ADR-0074 - Configurações de conta e segurança](0074-configuracoes-conta-seguranca.md) - Accepted
+- [ADR-0075 - Exclusão de conta do psicólogo com proteção de cobrança](0075-exclusao-conta-psicologo-assinatura.md) - Accepted

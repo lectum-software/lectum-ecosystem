@@ -11,6 +11,7 @@ import { code } from "@/utils/code";
 import { compare, encrypt } from "@/utils/crypt";
 import type {
   AccountSecurityResponse,
+  IAccountDeleteDTO,
   IAccountDTO,
   IAccountEmailDTO,
   IAccountPasswordDTO,
@@ -188,5 +189,57 @@ export const updatePassword = async (data: IAccountPasswordDTO) => {
     status: 200,
     ...msg("account_password_update_success", {}),
     data: hydrated,
+  };
+};
+
+export const destroy = async (data: IAccountDeleteDTO) => {
+  const device = getDevice(data);
+
+  if (device.err) {
+    return {
+      status: 403,
+      ...error(device.err, {}),
+    };
+  }
+
+  const repository = new AccountRepository();
+  const current = await getCurrentUser(data.auth);
+
+  if (!current?.id) {
+    return {
+      status: 404,
+      ...error("account_not_found", {}),
+    };
+  }
+
+  if (data.b.confirmation.trim().toUpperCase() !== "EXCLUIR") {
+    return {
+      status: 400,
+      ...error("account_delete_confirmation_invalid", {}),
+    };
+  }
+
+  if (current.password) {
+    const passwordError = await validateCurrentPassword(current, data.b.current_password || "");
+    if (passwordError) return passwordError;
+  }
+
+  if (current.role === "psicologo") {
+    const blockingSubscription = await repository.findBlockingSubscription(current.id);
+
+    if (blockingSubscription) {
+      return {
+        status: 409,
+        ...error("account_delete_active_subscription", {}),
+      };
+    }
+  }
+
+  await repository.deleteOwnAccount(current);
+
+  return {
+    status: 200,
+    ...msg("account_delete_success", {}),
+    data: true,
   };
 };

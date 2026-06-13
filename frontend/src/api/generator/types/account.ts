@@ -28,6 +28,11 @@ export type AccountPasswordPayload = {
   password_confirm: string;
 };
 
+export type AccountDeletePayload = {
+  confirmation: string;
+  current_password?: string;
+};
+
 export type GoogleLinkIntentResponse = {
   url: string;
 };
