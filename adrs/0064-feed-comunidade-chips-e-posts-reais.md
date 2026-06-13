@@ -37,6 +37,7 @@ As páginas de detalhe por comunidade serão criadas depois. Até lá, chips e n
 - Reposicionar metadados de posts de pacientes para mostrar somente o tempo abaixo do nome.
 - Refinar cores dos selos para ouro/champagne/cobre sofisticados e remover shadow/drop-shadow.
 - No Feed da Comunidade, substituir o item central `Comunidade` da navegação inferior por um CTA circular azul com ícone `+`, sem label visível, apontando para `/app/community/post/new`.
+- Ajustar o CTA central para 52px de diâmetro, ícone `+` proporcional e overhang aproximado de 30% acima da barra, mantendo destaque premium sem roubar atenção do feed.
 - Manter os demais itens da navegação inferior (`Psicólogos`, `Favoritos`, `Notificações`, `Perfil`) e preservar a navegação lateral desktop padrão.
 - Enquanto `community_member` não estiver implementado (TASK-25), `scope=following` retorna estado vazio honesto.
 
@@ -59,6 +60,7 @@ As páginas de detalhe por comunidade serão criadas depois. Até lá, chips e n
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
 - Refinamento da navegação inferior: `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`: sucesso.
+- Refinamento de proporção do FAB central: `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`: sucesso.
 - Validação visual/HTTP local em `http://localhost:3000/app/community/feed`: sucesso (`200`).
 - Validação local de API com token temporário:
   - `GET /api/private/community/feed/posts?page=1&limit=12` retornou `200` com posts persistidos, campo `highlighted_professional_reply` no contrato e badges `TOP #1 MENTOR`, `TOP #2 MENTOR`, `TOP #3 MENTOR` quando aplicável;
