@@ -167,6 +167,7 @@ Regras anti-recriação específicas:
 - Mídia/anexos ficaram como pendência explícita por ausência de credenciais/bucket R2 no ambiente; a publicação de texto foi implementada de ponta a ponta.
 - ADR: `adrs/0065-criacao-posts-comunidade.md`.
 - Refinamento de hierarquia/UX: o formulário agora segue `Comunidade → anonimato → título → conteúdo → postar`, com textarea inicial menor/autocrescimento e CTA azul com estado desabilitado.
+- Refinamento do switch anônimo: o anonimato permanece desligado por padrão e a dica educativa aparece apenas quando ativado.
 
 ## Notas para executor
 

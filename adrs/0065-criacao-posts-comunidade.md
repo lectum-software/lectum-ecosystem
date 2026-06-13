@@ -31,6 +31,7 @@ O `DATA-MODEL.md` já prevê `community_post` com `author_id`, `community_id`, `
 - Refinar a hierarquia mobile-first do formulário para `Comunidade → anonimato → título → conteúdo → postar`, mantendo o switch anônimo imediatamente abaixo do seletor de comunidade apenas para pacientes.
 - Reduzir o textarea de conteúdo para uma entrada inicial de 5 linhas com crescimento automático via extensão do controller `textarea`, sem criar componente paralelo.
 - Fortalecer o CTA `Postar` com azul Lectum, altura ligeiramente maior e estado desabilitado visualmente claro enquanto comunidade, título e conteúdo obrigatórios não estiverem preenchidos.
+- Manter o switch `Postar como anônimo` desligado por padrão e exibir uma dica educativa somente quando o paciente ativar o anonimato, usando ícone discreto de lâmpada e tom cinza para incentivar publicações identificadas sem tom punitivo.
 
 ## Consequências
 
@@ -49,8 +50,9 @@ O `DATA-MODEL.md` já prevê `community_post` com `author_id`, `community_id`, `
 - `pnpm --dir frontend build`: sucesso.
 - Refinamento do seletor de comunidade: `pnpm --dir frontend check` e `pnpm --dir frontend build`: sucesso.
 - Refinamento de hierarquia/UX do Criar Post: `pnpm --dir frontend check` e `pnpm --dir frontend build`: sucesso.
+- Refinamento do switch anônimo: `pnpm --dir frontend check` e `pnpm --dir frontend build`: sucesso.
 - Validação HTTP local das rotas Next:
-  - `GET http://localhost:3000/app/community/feed/post/new`: sucesso (`200`), incluindo os refinamentos do seletor e da hierarquia/UX do formulário.
+  - `GET http://localhost:3000/app/community/feed/post/new`: sucesso (`200`), incluindo os refinamentos do seletor, da hierarquia/UX do formulário e do switch anônimo.
   - `GET http://localhost:3000/app/community/ansiedade-em-equilibrio/post/new`: sucesso (`200`).
   - `GET http://localhost:3000/app/community/ansiedade-em-equilibrio/post/success`: sucesso (`200`).
 - `pnpm check`: sucesso.
