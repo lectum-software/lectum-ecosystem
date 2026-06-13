@@ -3,7 +3,9 @@ import type {
   ICommunityCreatePostDTO,
   ICommunityFeedDTO,
   ICommunityIndexDTO,
+  ICommunityMembershipDTO,
   ICommunityPostsDTO,
+  ICommunityShowDTO,
   ICommunitySuggestionDTO,
 } from "../DTOs/ICommunityDTO";
 import { CommunityRepository } from "../repositories/CommunityRepository";
@@ -35,6 +37,26 @@ export const suggest = async (data: ICommunitySuggestionDTO) => {
   };
 };
 
+export const show = async (data: ICommunityShowDTO) => {
+  const repository = new CommunityRepository();
+  const res = await repository.show(data);
+
+  if (!res) {
+    return {
+      status: 404,
+      ...error("not_found", {
+        model: "community",
+      }),
+    };
+  }
+
+  return {
+    status: 200,
+    ...msg("index", {}),
+    data: res,
+  };
+};
+
 export const feed = async (data: ICommunityFeedDTO) => {
   const repository = new CommunityRepository();
   const res = await repository.feed(data);
@@ -42,6 +64,63 @@ export const feed = async (data: ICommunityFeedDTO) => {
   return {
     status: 200,
     ...msg("index", {}),
+    data: res,
+  };
+};
+
+const ensureCommunityMemberAuth = (data: ICommunityMembershipDTO) => {
+  const isAllowedRole = data.auth.role === "paciente" || data.auth.role === "psicologo";
+
+  if (data.auth.id && isAllowedRole) return null;
+
+  return {
+    status: 403,
+    ...error("role_not_authorized", {}),
+  };
+};
+
+export const follow = async (data: ICommunityMembershipDTO) => {
+  const unauthorized = ensureCommunityMemberAuth(data);
+  if (unauthorized) return unauthorized;
+
+  const repository = new CommunityRepository();
+  const res = await repository.follow(data);
+
+  if (!res) {
+    return {
+      status: 404,
+      ...error("not_found", {
+        model: "community",
+      }),
+    };
+  }
+
+  return {
+    status: 200,
+    ...msg("community_follow_success", {}),
+    data: res,
+  };
+};
+
+export const unfollow = async (data: ICommunityMembershipDTO) => {
+  const unauthorized = ensureCommunityMemberAuth(data);
+  if (unauthorized) return unauthorized;
+
+  const repository = new CommunityRepository();
+  const res = await repository.unfollow(data);
+
+  if (!res) {
+    return {
+      status: 404,
+      ...error("not_found", {
+        model: "community",
+      }),
+    };
+  }
+
+  return {
+    status: 200,
+    ...msg("community_unfollow_success", {}),
     data: res,
   };
 };

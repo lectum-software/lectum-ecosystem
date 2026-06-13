@@ -18,6 +18,7 @@
   },
   community: {
     root: () => ["community"],
+    detail: (slug: string) => ["community", slug, "detail"],
     feed: (filters?: unknown) => ["community", "feed", filters],
     list: (filters?: unknown) => ["community", "list", filters],
     posts: (slug: string, filters?: unknown) => ["community", slug, "posts", filters],

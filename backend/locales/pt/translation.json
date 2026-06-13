@@ -106,7 +106,9 @@
     "professional_profile_video_removed": "Vídeo de apresentação removido com sucesso.",
     "patient_profile_updated": "Perfil do paciente atualizado com sucesso.",
     "community_suggestion_created": "Sugestão de comunidade enviada com sucesso.",
-    "community_post_created": "Post publicado com sucesso."
+    "community_post_created": "Post publicado com sucesso.",
+    "community_follow_success": "Comunidade adicionada às suas comunidades seguidas.",
+    "community_unfollow_success": "Comunidade removida das suas comunidades seguidas."
   },
   "gender": {
     "o": "o"

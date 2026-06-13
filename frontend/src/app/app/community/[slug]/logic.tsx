@@ -3,6 +3,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowDown,
+  ArrowLeft,
   ArrowUp,
   Award,
   BadgeCheck,
@@ -12,20 +13,35 @@ import {
   ChevronRight,
   Compass,
   FileText,
+  Flame,
+  ListChecks,
+  Loader2,
   MessageCircle,
   Play,
   Plus,
   Search,
   Share2,
+  ShieldCheck,
   SlidersHorizontal,
+  UsersRound,
   UserX,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
-import { useCommunityFeedPosts } from "@/api/callers/community";
-import type { CommunityFeedScope, CommunityPost } from "@/api/generator/types/community";
+import {
+  useCommunityDetail,
+  useCommunityFeedPosts,
+  useCommunityPosts,
+  useFollowCommunity,
+  useUnfollowCommunity,
+} from "@/api/callers/community";
+import type {
+  CommunityDetail,
+  CommunityFeedScope,
+  CommunityPost,
+} from "@/api/generator/types/community";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -38,11 +54,20 @@ import {
   COMMUNITY_EXPLORE_HREF,
   COMMUNITY_FEED_CHIPS,
   COMMUNITY_FEED_SLUG,
+  DEFAULT_COMMUNITY_FEED_HREF,
   getCommunityFeedChip,
 } from "@/utils/community";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 const PAGE_LIMIT = 12;
+
+const COMMUNITY_POST_SORTS = [
+  { icon: Flame, label: "Em destaque", value: "featured" },
+  { icon: CalendarDays, label: "Novos", value: "new" },
+  { icon: MessageCircle, label: "Mais discutidos", value: "discussed" },
+] as const;
+
+type CommunityPostSort = (typeof COMMUNITY_POST_SORTS)[number]["value"];
 
 const FEED_SCOPE_OPTIONS: Array<{ label: string; value: CommunityFeedScope }> = [
   { label: "Todas as comunidades", value: "all" },
@@ -88,6 +113,29 @@ const resolveFeedError = (error: unknown) => {
   return rawMessage || "Não foi possível carregar o feed da comunidade agora.";
 };
 
+const resolveCommunityDetailError = (error: unknown) => {
+  const apiError = error as ApiError;
+  const rawMessage =
+    apiError?.data?.error ||
+    apiError?.data?.message ||
+    (error instanceof Error ? error.message : "");
+  const normalized = rawMessage.toLowerCase();
+
+  if (apiError?.data?.status === 404 || normalized.includes("não encontr")) {
+    return "Comunidade não encontrada ou indisponível.";
+  }
+
+  if (normalized.includes("token") || normalized.includes("sess")) {
+    return "Sua sessão precisa estar ativa para visualizar esta comunidade.";
+  }
+
+  if (normalized.includes("network") || normalized.includes("conex")) {
+    return "Não foi possível conectar à API agora. Tente novamente em alguns instantes.";
+  }
+
+  return rawMessage || "Não foi possível carregar a comunidade agora.";
+};
+
 const formatRelativeTime = (value: string) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "agora";
@@ -108,6 +156,12 @@ const formatRelativeTime = (value: string) => {
   }).format(date);
 };
 
+const formatCompactCount = (value: number, singular: string, plural: string) => {
+  const label = value === 1 ? singular : plural;
+
+  return `${value.toLocaleString("pt-BR")} ${label}`;
+};
+
 const getInitials = (name: string) => {
   const parts = name.split(/\s+/).filter(Boolean);
 
@@ -118,6 +172,8 @@ const getInitials = (name: string) => {
 };
 
 const communityDetailHref = (communitySlug: string) => `/app/community/${communitySlug}`;
+const communityCreatePostHref = (communitySlug: string) =>
+  `/app/community/${communitySlug}/post/new`;
 
 const AuthorAvatar = ({
   anonymous,
@@ -383,31 +439,35 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
 const PostCard = ({
   post,
   onShare,
+  showCommunityHeader = true,
 }: {
   post: CommunityPost;
   onShare: (post: CommunityPost) => void;
+  showCommunityHeader?: boolean;
 }) => {
   const isPsychologistPost = post.author.role === "psicologo";
   const isAnonymousPatient = !isPsychologistPost && post.anonymous;
 
   return (
     <article className="overflow-hidden rounded-[22px] border border-[#E6EAF0] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:border-border dark:bg-surface">
-      <div className="mb-4 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-muted">
-        <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-        <span className="shrink-0">Postado em</span>
-        <Link
-          className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-black text-foreground underline-offset-4 hover:text-primary hover:underline"
-          href={communityDetailHref(post.community.slug)}
-        >
-          {post.community.name}
-        </Link>
-        <button
-          className="ml-1 shrink-0 rounded-full border border-[#8FC7EA] px-3 py-1 text-[11px] font-black text-primary transition hover:bg-primary-soft"
-          type="button"
-        >
-          Seguir
-        </button>
-      </div>
+      {showCommunityHeader ? (
+        <div className="mb-4 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-muted">
+          <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          <span className="shrink-0">Postado em</span>
+          <Link
+            className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-black text-foreground underline-offset-4 hover:text-primary hover:underline"
+            href={communityDetailHref(post.community.slug)}
+          >
+            {post.community.name}
+          </Link>
+          <button
+            className="ml-1 shrink-0 rounded-full border border-[#8FC7EA] px-3 py-1 text-[11px] font-black text-primary transition hover:bg-primary-soft"
+            type="button"
+          >
+            Seguir
+          </button>
+        </div>
+      ) : null}
 
       <div className="mb-3 flex items-start gap-3">
         <AuthorAvatar anonymous={isAnonymousPatient} author={post.author} />
@@ -506,6 +566,421 @@ const Pagination = ({
         <ChevronRight className="h-4 w-4" aria-hidden="true" />
       </Button>
     </nav>
+  );
+};
+
+const sortCommunityPosts = (posts: CommunityPost[], sort: CommunityPostSort) => {
+  const items = [...posts];
+
+  if (sort === "new") {
+    return items.sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
+  }
+
+  if (sort === "discussed") {
+    return items.sort((a, b) => {
+      const replyDiff = b.replies_count - a.replies_count;
+      if (replyDiff !== 0) return replyDiff;
+
+      return b.upvotes_count - a.upvotes_count;
+    });
+  }
+
+  return items.sort((a, b) => {
+    const aScore =
+      a.upvotes_count * 3 +
+      a.replies_count * 2 +
+      a.saves_count +
+      (a.highlighted_professional_reply ? 250 : 0);
+    const bScore =
+      b.upvotes_count * 3 +
+      b.replies_count * 2 +
+      b.saves_count +
+      (b.highlighted_professional_reply ? 250 : 0);
+
+    if (bScore !== aScore) return bScore - aScore;
+
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
+};
+
+const CommunityLogo = ({ community }: { community: CommunityDetail }) => (
+  <span className="grid h-[76px] w-[76px] shrink-0 place-items-center rounded-[18px] border-[4px] border-white bg-gradient-to-br from-[#DFF3FF] via-[#F7FBFF] to-[#BFE7FF] text-center text-lg font-black leading-none text-primary shadow-[0_16px_34px_rgba(15,23,42,0.18)] dark:border-background">
+    {getInitials(community.name)}
+  </span>
+);
+
+const CommunityDetailSkeleton = () => (
+  <div className="grid gap-4">
+    <div className="min-h-[260px] animate-pulse rounded-[28px] bg-white shadow-[var(--lectum-shadow-soft)] dark:bg-surface" />
+    <div className="grid gap-3">
+      <div className="h-48 animate-pulse rounded-[22px] bg-white dark:bg-surface" />
+      <div className="h-48 animate-pulse rounded-[22px] bg-white dark:bg-surface" />
+    </div>
+  </div>
+);
+
+const CommunityRulesCard = () => (
+  <section className="grid gap-3 rounded-[22px] border border-[#E6EAF0] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.05)] dark:border-border dark:bg-surface">
+    <div className="flex items-center gap-2">
+      <span className="grid h-9 w-9 place-items-center rounded-full bg-primary-soft text-primary">
+        <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+      </span>
+      <div>
+        <h2 className="text-sm font-black text-foreground">Regras da comunidade</h2>
+        <p className="text-xs font-semibold text-muted">Curadoria e moderação pela equipe Lectum</p>
+      </div>
+    </div>
+    <ul className="grid gap-2 text-sm leading-6 text-[#64748B] dark:text-muted">
+      <li className="flex gap-2">
+        <ListChecks className="mt-1 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+        Publique com respeito, acolhimento e sem exposição de terceiros.
+      </li>
+      <li className="flex gap-2">
+        <ListChecks className="mt-1 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+        Conteúdos clínicos não substituem atendimento psicológico individualizado.
+      </li>
+      <li className="flex gap-2">
+        <ListChecks className="mt-1 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+        Solicitações de novas comunidades passam por análise da plataforma.
+      </li>
+    </ul>
+  </section>
+);
+
+const CommunityHeader = ({
+  community,
+  following,
+  membershipPending,
+  onShare,
+  onToggleFollow,
+}: {
+  community: CommunityDetail;
+  following: boolean;
+  membershipPending: boolean;
+  onShare: () => void;
+  onToggleFollow: () => void;
+}) => (
+  <header className="-mx-5 overflow-hidden rounded-b-[28px] bg-white pb-5 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:bg-surface">
+    <div className="relative min-h-[132px] bg-[linear-gradient(135deg,#308CE8_0%,#1B56B8_55%,#16418F_100%)] px-5 pt-4 text-white">
+      <div className="relative z-10 flex items-center justify-between">
+        <Link
+          aria-label="Voltar ao feed da comunidade"
+          className="grid h-10 w-10 place-items-center rounded-full bg-black/15 text-white backdrop-blur transition hover:bg-black/25"
+          href={DEFAULT_COMMUNITY_FEED_HREF}
+        >
+          <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            aria-label="Buscar no feed global"
+            className="grid h-10 w-10 place-items-center rounded-full bg-black/15 text-white backdrop-blur transition hover:bg-black/25"
+            href={DEFAULT_COMMUNITY_FEED_HREF}
+          >
+            <Search className="h-5 w-5" aria-hidden="true" />
+          </Link>
+          <button
+            aria-label="Compartilhar comunidade"
+            className="grid h-10 w-10 place-items-center rounded-full bg-black/15 text-white backdrop-blur transition hover:bg-black/25"
+            onClick={onShare}
+            type="button"
+          >
+            <Share2 className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+      <span className="absolute -right-10 -bottom-16 h-44 w-44 rounded-full bg-white/10 blur-2xl" />
+      <span className="absolute left-10 top-8 h-28 w-28 rounded-full bg-white/10 blur-2xl" />
+    </div>
+
+    <div className="relative px-5">
+      <div className="-mt-8 flex items-start justify-between gap-4">
+        <CommunityLogo community={community} />
+        <Button
+          className={cn(
+            "mt-10 h-10 rounded-full px-6 text-sm font-black shadow-none",
+            following
+              ? "border-[#8FC7EA] bg-white text-primary hover:bg-primary-soft dark:bg-surface"
+              : "bg-primary text-white hover:bg-primary/90",
+          )}
+          disabled={membershipPending}
+          onClick={onToggleFollow}
+          type="button"
+          variant={following ? "outline" : "default"}
+        >
+          {membershipPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : null}
+          {following ? "Seguindo" : "Seguir"}
+        </Button>
+      </div>
+
+      <div className="mt-4 grid gap-2">
+        <h1 className="text-[1.55rem] font-black leading-tight tracking-[-0.03em] text-[#182033] dark:text-foreground">
+          {community.name}
+        </h1>
+        <p className="text-sm font-semibold text-muted">
+          {formatCompactCount(community.members_count, "seguidor", "seguidores")}{" "}
+          <span aria-hidden="true">•</span>{" "}
+          {formatCompactCount(community.posts_count, "post", "posts")}
+        </p>
+        {community.description ? (
+          <p className="max-w-2xl text-sm leading-6 text-[#475569] dark:text-muted">
+            {community.description}
+          </p>
+        ) : (
+          <p className="max-w-2xl text-sm leading-6 text-[#475569] dark:text-muted">
+            Esta comunidade ainda não possui descrição cadastrada pela equipe Lectum.
+          </p>
+        )}
+        <p className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1.5 text-xs font-black text-primary">
+          <Award className="h-3.5 w-3.5" aria-hidden="true" />
+          Top 5 mentores da comunidade será ativado na etapa de ranking.
+        </p>
+      </div>
+    </div>
+  </header>
+);
+
+const CommunityPostSortChips = ({
+  onChange,
+  value,
+}: {
+  onChange: (value: CommunityPostSort) => void;
+  value: CommunityPostSort;
+}) => (
+  <nav
+    aria-label="Ordenação dos posts"
+    className="-mx-5 overflow-x-auto px-5 [scrollbar-width:none]"
+  >
+    <div className="flex min-w-max gap-2 pb-1">
+      {COMMUNITY_POST_SORTS.map((item) => {
+        const Icon = item.icon;
+        const active = value === item.value;
+
+        return (
+          <button
+            aria-pressed={active}
+            className={cn(
+              "inline-flex min-h-10 items-center gap-1.5 rounded-full border px-4 text-sm font-black shadow-sm transition",
+              active
+                ? "border-primary bg-primary text-white"
+                : "border-[#E5EAF0] bg-white text-[#64748B] hover:border-primary/40 hover:bg-primary-soft hover:text-primary dark:border-border dark:bg-surface dark:text-muted",
+            )}
+            key={item.value}
+            onClick={() => onChange(item.value)}
+            type="button"
+          >
+            <Icon className="h-4 w-4" aria-hidden="true" />
+            {item.label}
+          </button>
+        );
+      })}
+    </div>
+  </nav>
+);
+
+const CommunityDetailLogic = ({ slug }: { slug: string }) => {
+  const [page, setPage] = useState(1);
+  const [sort, setSort] = useState<CommunityPostSort>("featured");
+  const [shareFeedback, setShareFeedback] = useState<string | null>(null);
+  const detail = useCommunityDetail(slug);
+  const postsQuery = useCommunityPosts(slug, { page, limit: PAGE_LIMIT }, Boolean(detail.data));
+  const followMutation = useFollowCommunity();
+  const unfollowMutation = useUnfollowCommunity();
+  const community = detail.data?.community;
+  const posts = useMemo(
+    () => sortCommunityPosts(postsQuery.data?.data ?? [], sort),
+    [postsQuery.data?.data, sort],
+  );
+  const detailError = detail.isError ? resolveCommunityDetailError(detail.error) : null;
+  const postsError = postsQuery.isError ? resolveFeedError(postsQuery.error) : null;
+  const membershipPending = followMutation.isPending || unfollowMutation.isPending;
+  const following = Boolean(community?.following);
+
+  const sharePost = async (post: CommunityPost) => {
+    if (typeof window === "undefined") return;
+
+    const url = `${window.location.origin}/app/community/${post.community.slug}/post/${post.id}`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: post.title, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+      }
+      setShareFeedback(post.id);
+      window.setTimeout(() => setShareFeedback(null), 2400);
+    } catch {
+      setShareFeedback(null);
+    }
+  };
+
+  const shareCommunity = async () => {
+    if (!community || typeof window === "undefined") return;
+
+    const url = `${window.location.origin}${communityDetailHref(community.slug)}`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: community.name, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+      }
+      setShareFeedback(community.id);
+      window.setTimeout(() => setShareFeedback(null), 2400);
+    } catch {
+      setShareFeedback(null);
+    }
+  };
+
+  const toggleFollow = () => {
+    if (!community || membershipPending) return;
+
+    if (community.following) {
+      unfollowMutation.mutate(community.slug);
+    } else {
+      followMutation.mutate(community.slug);
+    }
+  };
+
+  return (
+    <PrivateTemplate
+      contentClassName="bg-[#F5F7FA] dark:bg-background"
+      navigationTheme="solidWhite"
+      showHeader
+    >
+      <section className="mx-auto grid w-full max-w-[430px] gap-4 sm:max-w-2xl lg:max-w-3xl">
+        {detail.isLoading || detail.isPending ? <CommunityDetailSkeleton /> : null}
+
+        {detailError ? (
+          <EmptyState
+            action={
+              <Button asChild variant="outline">
+                <Link href={DEFAULT_COMMUNITY_FEED_HREF}>Voltar ao feed</Link>
+              </Button>
+            }
+            description={detailError}
+            icon={UsersRound}
+            title="Comunidade indisponível"
+          />
+        ) : null}
+
+        {community ? (
+          <>
+            <CommunityHeader
+              community={community}
+              following={following}
+              membershipPending={membershipPending}
+              onShare={shareCommunity}
+              onToggleFollow={toggleFollow}
+            />
+
+            <CommunityRulesCard />
+
+            {shareFeedback ? (
+              <InlineAlert title="Link preparado" variant="success">
+                Link copiado ou enviado para compartilhamento.
+              </InlineAlert>
+            ) : null}
+
+            {followMutation.isError || unfollowMutation.isError ? (
+              <InlineAlert title="Não foi possível atualizar participação" variant="error">
+                Tente novamente em alguns instantes.
+              </InlineAlert>
+            ) : null}
+
+            <div className="grid gap-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-black text-[#182033] dark:text-foreground">
+                    Posts da comunidade
+                  </h2>
+                  <p className="text-xs font-semibold text-muted">
+                    Dados reais publicados nesta comunidade.
+                  </p>
+                </div>
+                <Button asChild className="hidden rounded-full font-black sm:inline-flex">
+                  <Link href={communityCreatePostHref(community.slug)}>
+                    <Plus className="h-4 w-4" aria-hidden="true" />
+                    Publicar
+                  </Link>
+                </Button>
+              </div>
+              <CommunityPostSortChips
+                onChange={(value) => {
+                  setSort(value);
+                  setPage(1);
+                }}
+                value={sort}
+              />
+            </div>
+
+            {postsQuery.isLoading || postsQuery.isPending ? (
+              <div className="grid min-h-[220px] place-items-center rounded-[22px] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
+                <LoadingState label="Carregando posts da comunidade" />
+              </div>
+            ) : null}
+
+            {postsError ? (
+              <InlineAlert title="Posts indisponíveis" variant="error">
+                {postsError}
+              </InlineAlert>
+            ) : null}
+
+            {!postsQuery.isLoading && !postsQuery.isPending && !postsError && posts.length === 0 ? (
+              <EmptyState
+                action={
+                  <Button asChild>
+                    <Link href={communityCreatePostHref(community.slug)}>Criar primeiro post</Link>
+                  </Button>
+                }
+                description="Ainda não há publicações reais nesta comunidade. Seja a primeira pessoa a iniciar uma conversa."
+                icon={MessageCircle}
+                title="Comunidade sem posts"
+              />
+            ) : null}
+
+            {posts.length > 0 ? (
+              <div className="grid gap-4">
+                {posts.map((post) => (
+                  <PostCard
+                    key={post.id}
+                    onShare={sharePost}
+                    post={post}
+                    showCommunityHeader={false}
+                  />
+                ))}
+              </div>
+            ) : null}
+
+            {postsQuery.isFetching && !postsQuery.isLoading ? (
+              <LoadingState label="Atualizando posts" />
+            ) : null}
+
+            <Pagination
+              currentPage={page}
+              disabled={postsQuery.isFetching}
+              onPageChange={setPage}
+              pages={postsQuery.data?.pages ?? 0}
+            />
+          </>
+        ) : null}
+      </section>
+
+      {community ? (
+        <Link
+          aria-label="Criar publicação nesta comunidade"
+          className="group fixed right-5 bottom-28 z-40 grid h-14 w-14 place-items-center rounded-full border-[5px] border-white bg-[#308CE8] text-white shadow-[0_14px_30px_rgba(48,140,232,0.28)] transition hover:-translate-y-1 hover:bg-[#2579CF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F5F7FA] lg:right-10 lg:bottom-10 xl:right-20 2xl:right-28"
+          href={communityCreatePostHref(community.slug)}
+          title="Criar publicação"
+        >
+          <Plus className="h-7 w-7 stroke-[2.4]" aria-hidden="true" />
+          <span className="sr-only">Criar publicação</span>
+        </Link>
+      ) : null}
+    </PrivateTemplate>
   );
 };
 
@@ -713,4 +1188,15 @@ export const CommunityFeedLogic = () => {
       `}</style>
     </PrivateTemplate>
   );
+};
+
+export const CommunityRouteLogic = () => {
+  const params = useParams<{ slug: string }>();
+  const routeSlug = typeof params.slug === "string" ? params.slug : COMMUNITY_FEED_SLUG;
+
+  if (routeSlug === COMMUNITY_FEED_SLUG) {
+    return <CommunityFeedLogic />;
+  }
+
+  return <CommunityDetailLogic slug={routeSlug} />;
 };

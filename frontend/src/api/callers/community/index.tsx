@@ -5,6 +5,7 @@ import keys from "@/api/cache/keys";
 import type {
   CommunityFeedQuery,
   CommunityListQuery,
+  CommunityMembershipResponse,
   CommunityPost,
   CommunityPostsQuery,
   CommunitySuggestion,
@@ -30,6 +31,50 @@ export const useCommunityFeedPosts = (query: CommunityFeedQuery = {}, enabled = 
     enabled,
     refetchOnWindowFocus: false,
     retry: false,
+  });
+};
+
+export const useCommunityDetail = (slug: string, enabled = true) => {
+  return useQuery({
+    queryKey: keys.community.detail(slug),
+    queryFn: () => api.getCommunityDetail(slug),
+    enabled: Boolean(slug) && enabled,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
+};
+
+export const useFollowCommunity = (callbacks?: {
+  onSuccess?: (data: CommunityMembershipResponse) => void;
+  onError?: (error: unknown) => void;
+}) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (slug: string) => api.followCommunity(slug),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: keys.community.root() });
+      queryClient.invalidateQueries({ queryKey: keys.community.detail(data.community.slug) });
+      callbacks?.onSuccess?.(data);
+    },
+    onError: callbacks?.onError,
+  });
+};
+
+export const useUnfollowCommunity = (callbacks?: {
+  onSuccess?: (data: CommunityMembershipResponse) => void;
+  onError?: (error: unknown) => void;
+}) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (slug: string) => api.unfollowCommunity(slug),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: keys.community.root() });
+      queryClient.invalidateQueries({ queryKey: keys.community.detail(data.community.slug) });
+      callbacks?.onSuccess?.(data);
+    },
+    onError: callbacks?.onError,
   });
 };
 

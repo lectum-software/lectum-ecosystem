@@ -1,9 +1,11 @@
 ﻿import { callEndpoint } from "@/api/generator";
 import type {
+  CommunityDetailResponse,
   CommunityFeedQuery,
   CommunityFeedResponse,
   CommunityListQuery,
   CommunityListResponse,
+  CommunityMembershipResponse,
   CommunityPost,
   CommunityPostsQuery,
   CommunityPostsResponse,
@@ -29,6 +31,41 @@ export const getCommunityFeedPosts = async (query: CommunityFeedQuery = {}) => {
   });
 
   return handleReq<CommunityFeedResponse>(handle);
+};
+
+export const getCommunityDetail = async (slug: string) => {
+  const handle = callEndpoint({
+    route: "/api/private/community/:slug",
+    params: { slug },
+  });
+
+  return handleReq<CommunityDetailResponse>(handle);
+};
+
+export const followCommunity = async (slug: string) => {
+  const handle = callEndpoint({
+    route: "/api/private/community/:slug/members",
+    method: "POST",
+    params: { slug },
+  });
+
+  return handleReq<CommunityMembershipResponse>({
+    ...handle,
+    showSuccess: true,
+  });
+};
+
+export const unfollowCommunity = async (slug: string) => {
+  const handle = callEndpoint({
+    route: "/api/private/community/:slug/members",
+    method: "DELETE",
+    params: { slug },
+  });
+
+  return handleReq<CommunityMembershipResponse>({
+    ...handle,
+    showSuccess: true,
+  });
 };
 
 export const suggestCommunity = async (body: SuggestCommunityPayload) => {

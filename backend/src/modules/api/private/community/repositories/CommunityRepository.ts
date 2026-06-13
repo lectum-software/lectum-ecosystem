@@ -3,15 +3,19 @@ import prisma, { type ORM } from "@/infra/database/prisma";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   CommunityAuthorDTO,
+  CommunityDetailResponse,
   CommunityDTO,
   CommunityFeedResponse,
   CommunityIndexResponse,
+  CommunityMembershipResponse,
   CommunityPostDTO,
   CommunityPostsResponse,
   ICommunityCreatePostDTO,
   ICommunityFeedDTO,
   ICommunityIndexDTO,
+  ICommunityMembershipDTO,
   ICommunityPostsDTO,
+  ICommunityShowDTO,
   ICommunitySuggestionDTO,
 } from "../DTOs/ICommunityDTO";
 import type { ICommunityRepository } from "./interfaces/ICommunityRepository";
@@ -133,6 +137,29 @@ const toCommunityResponse = (item: {
   members_count: item.members_count,
   created_at: item.createdAt,
 });
+
+const toCommunityDetailResponse = (
+  community: Parameters<typeof toCommunityResponse>[0],
+  postsCount: number,
+  membershipCreatedAt: Date | null,
+): CommunityDetailResponse => {
+  const following = Boolean(membershipCreatedAt);
+  const communityDetail = {
+    ...toCommunityResponse(community),
+    posts_count: postsCount,
+    following,
+    membership_created_at: membershipCreatedAt,
+  };
+
+  return {
+    community: communityDetail,
+    participation: {
+      following,
+      member_since: membershipCreatedAt,
+      can_post: true,
+    },
+  };
+};
 
 const buildWhatsappUrl = (value?: string | null) => {
   const digits = String(value ?? "").replace(/\D/g, "");
@@ -414,13 +441,54 @@ export class CommunityRepository implements ICommunityRepository {
     };
   }
 
+  async show(data: ICommunityShowDTO): Promise<CommunityDetailResponse | null> {
+    const community = await this.repository.findFirst({
+      where: {
+        slug: data.p.slug,
+        deleted: false,
+      },
+      select: communitySelect,
+    });
+
+    if (!community) return null;
+
+    const [postsCount, membership] = await Promise.all([
+      prisma.community_post.count({
+        where: {
+          community_id: community.id,
+          deleted: false,
+          status: "publicado",
+        },
+      }),
+      prisma.community_member.findUnique({
+        where: {
+          community_id_user_id: {
+            community_id: community.id,
+            user_id: data.auth.id!,
+          },
+        },
+        select: {
+          createdAt: true,
+          deleted: true,
+        },
+      }),
+    ]);
+
+    return toCommunityDetailResponse(
+      community,
+      postsCount,
+      membership && !membership.deleted ? membership.createdAt : null,
+    );
+  }
+
   async feed(data: ICommunityFeedDTO): Promise<CommunityFeedResponse> {
     const pagination = normalizePagination(data.q);
     const search = data.q.search?.trim();
     const communitySlug = data.q.community?.trim() || null;
     const scope = normalizeScope(data.q.scope);
+    const followerUserId = scope === "following" ? data.auth?.id : undefined;
 
-    if (scope === "following") {
+    if (scope === "following" && !followerUserId) {
       return {
         data: [],
         page: pagination.page,
@@ -431,12 +499,23 @@ export class CommunityRepository implements ICommunityRepository {
       };
     }
 
+    const communityMemberFilter: Prisma.communityWhereInput["members"] =
+      scope === "following" && followerUserId
+        ? {
+            some: {
+              user_id: followerUserId,
+              deleted: false,
+            },
+          }
+        : undefined;
+
     const where: Prisma.community_postWhereInput = {
       deleted: false,
       status: "publicado",
       community: {
         deleted: false,
         slug: communitySlug || undefined,
+        members: communityMemberFilter,
       },
       OR: postSearchWhere(search),
     };
@@ -535,6 +614,164 @@ export class CommunityRepository implements ICommunityRepository {
     });
 
     return toPostResponse(post);
+  }
+
+  async follow(data: ICommunityMembershipDTO): Promise<CommunityMembershipResponse | null> {
+    const community = await this.repository.findFirst({
+      where: {
+        slug: data.p.slug,
+        deleted: false,
+      },
+      select: communitySelect,
+    });
+
+    if (!community) return null;
+
+    const existing = await prisma.community_member.findUnique({
+      where: {
+        community_id_user_id: {
+          community_id: community.id,
+          user_id: data.auth.id!,
+        },
+      },
+      select: {
+        deleted: true,
+      },
+    });
+
+    const membership = await prisma.$transaction(async (transaction) => {
+      const item = existing
+        ? await transaction.community_member.update({
+            where: {
+              community_id_user_id: {
+                community_id: community.id,
+                user_id: data.auth.id!,
+              },
+            },
+            data: {
+              deleted: false,
+              deletedAt: null,
+            },
+            select: {
+              createdAt: true,
+            },
+          })
+        : await transaction.community_member.create({
+            data: {
+              community_id: community.id,
+              user_id: data.auth.id!,
+            },
+            select: {
+              createdAt: true,
+            },
+          });
+
+      if (!existing || existing.deleted) {
+        await transaction.community.update({
+          where: {
+            id: community.id,
+          },
+          data: {
+            members_count: {
+              increment: 1,
+            },
+          },
+        });
+      }
+
+      return item;
+    });
+
+    const postsCount = await prisma.community_post.count({
+      where: {
+        community_id: community.id,
+        deleted: false,
+        status: "publicado",
+      },
+    });
+    const updatedCommunity = await this.repository.findUniqueOrThrow({
+      where: {
+        id: community.id,
+      },
+      select: communitySelect,
+    });
+    const detail = toCommunityDetailResponse(updatedCommunity, postsCount, membership.createdAt);
+
+    return {
+      community: detail.community,
+      following: true,
+    };
+  }
+
+  async unfollow(data: ICommunityMembershipDTO): Promise<CommunityMembershipResponse | null> {
+    const community = await this.repository.findFirst({
+      where: {
+        slug: data.p.slug,
+        deleted: false,
+      },
+      select: communitySelect,
+    });
+
+    if (!community) return null;
+
+    const existing = await prisma.community_member.findUnique({
+      where: {
+        community_id_user_id: {
+          community_id: community.id,
+          user_id: data.auth.id!,
+        },
+      },
+      select: {
+        deleted: true,
+      },
+    });
+
+    if (existing && !existing.deleted) {
+      await prisma.$transaction([
+        prisma.community_member.update({
+          where: {
+            community_id_user_id: {
+              community_id: community.id,
+              user_id: data.auth.id!,
+            },
+          },
+          data: {
+            deleted: true,
+            deletedAt: new Date(),
+          },
+        }),
+        prisma.community.update({
+          where: {
+            id: community.id,
+          },
+          data: {
+            members_count: {
+              decrement: community.members_count > 0 ? 1 : 0,
+            },
+          },
+        }),
+      ]);
+    }
+
+    const postsCount = await prisma.community_post.count({
+      where: {
+        community_id: community.id,
+        deleted: false,
+        status: "publicado",
+      },
+    });
+    const updatedCommunity = await this.repository.findUniqueOrThrow({
+      where: {
+        id: community.id,
+      },
+      select: communitySelect,
+    });
+    const detail = toCommunityDetailResponse(updatedCommunity, postsCount, null);
+
+    return {
+      community: detail.community,
+      following: false,
+    };
   }
 
   async suggest(data: ICommunitySuggestionDTO) {

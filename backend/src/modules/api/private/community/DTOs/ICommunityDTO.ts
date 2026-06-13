@@ -47,6 +47,12 @@ export type CommunityDTO = {
   created_at: Date;
 };
 
+export type CommunityDetailDTO = CommunityDTO & {
+  posts_count: number;
+  following: boolean;
+  membership_created_at: Date | null;
+};
+
 export type CommunityAuthorDTO = {
   id: string;
   name: string;
@@ -118,13 +124,37 @@ export type CommunityFeedResponse = {
   community_slug: string | null;
 };
 
+export type CommunityDetailResponse = {
+  community: CommunityDetailDTO;
+  participation: {
+    following: boolean;
+    member_since: Date | null;
+    can_post: boolean;
+  };
+};
+
+export type CommunityMembershipResponse = {
+  community: CommunityDetailDTO;
+  following: boolean;
+};
+
 export type ICommunityIndexDTO = {
   q: CommunityListQuery;
   auth?: user;
 };
 
+export type ICommunityShowDTO = {
+  p: CommunityParams;
+  auth: user;
+};
+
 export type ICommunitySuggestionDTO = {
   b: CommunitySuggestionBody;
+  auth: user;
+};
+
+export type ICommunityMembershipDTO = {
+  p: CommunityParams;
   auth: user;
 };
 

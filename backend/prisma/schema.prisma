@@ -48,6 +48,7 @@ model user {
   professional_reviews       professional_review[]       @relation("professional_review_author")
   received_reviews           professional_review[]       @relation("professional_review_psychologist")
   community_suggestions      community_suggestion[]      @relation("community_suggestion_user")
+  community_members          community_member[]          @relation("community_member_user")
   community_posts            community_post[]            @relation("community_post_author")
   post_replies               post_reply[]                @relation("post_reply_author")
   notification_subscriptions notification_subscription[] @relation("notification_subscription_user")
@@ -441,21 +442,39 @@ model professional_review {
 }
 
 model community {
-  id            String           @id @default(cuid())
-  deleted       Boolean          @default(false)
-  deletedAt     DateTime?        @map("deleted_at")
-  updatedAt     DateTime         @default(now()) @updatedAt @map("updated_at")
-  createdAt     DateTime         @default(now()) @map("created_at")
+  id            String             @id @default(cuid())
+  deleted       Boolean            @default(false)
+  deletedAt     DateTime?          @map("deleted_at")
+  updatedAt     DateTime           @default(now()) @updatedAt @map("updated_at")
+  createdAt     DateTime           @default(now()) @map("created_at")
   name          String
-  slug          String           @unique
+  slug          String             @unique
   description   String?
   category      String?
-  members_count Int              @default(0)
-  posts         community_post[] @relation("community_post_community")
+  members_count Int                @default(0)
+  members       community_member[] @relation("community_member_community")
+  posts         community_post[]   @relation("community_post_community")
 
   @@index([slug])
   @@index([category, deleted])
   @@map("communities")
+}
+
+model community_member {
+  id           String    @id @default(cuid())
+  deleted      Boolean   @default(false)
+  deletedAt    DateTime? @map("deleted_at")
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  community_id String
+  user_id      String
+  community    community @relation("community_member_community", fields: [community_id], references: [id], onDelete: Cascade)
+  user         user      @relation("community_member_user", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([community_id, user_id])
+  @@index([user_id])
+  @@index([community_id, deleted])
+  @@map("community_members")
 }
 
 model community_suggestion {

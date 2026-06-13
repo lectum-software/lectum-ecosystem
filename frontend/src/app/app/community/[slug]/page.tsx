@@ -1,5 +1,5 @@
-﻿import { CommunityFeedLogic } from "./logic";
+﻿import { CommunityRouteLogic } from "./logic";
 
-export default function CommunityFeedPage() {
-  return <CommunityFeedLogic />;
+export default function CommunityRoutePage() {
+  return <CommunityRouteLogic />;
 }

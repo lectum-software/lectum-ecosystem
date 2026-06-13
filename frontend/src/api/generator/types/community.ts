@@ -31,6 +31,12 @@ export type Community = {
   created_at: string;
 };
 
+export type CommunityDetail = Community & {
+  posts_count: number;
+  following: boolean;
+  membership_created_at: string | null;
+};
+
 export type CommunityAuthor = {
   id: string;
   name: string;
@@ -93,6 +99,20 @@ export type CommunityFeedResponse = {
   count: number;
   scope: CommunityFeedScope;
   community_slug: string | null;
+};
+
+export type CommunityDetailResponse = {
+  community: CommunityDetail;
+  participation: {
+    following: boolean;
+    member_since: string | null;
+    can_post: boolean;
+  };
+};
+
+export type CommunityMembershipResponse = {
+  community: CommunityDetail;
+  following: boolean;
 };
 
 export type CreateCommunityPostPayload = {
