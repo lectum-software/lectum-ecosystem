@@ -328,19 +328,16 @@ export const PrivateTemplate = ({
 
           if (bottomNavigationCenterAction && index === 2) {
             return (
-              <li
-                className="relative flex min-h-16 items-end justify-center pb-3"
-                key="create-post"
-              >
+              <li className="relative flex min-h-16 items-center justify-center" key="create-post">
                 <Link
                   aria-label={bottomNavigationCenterAction.ariaLabel}
-                  className="grid h-14 w-14 place-items-center rounded-full border-[5px] border-white bg-[#308CE8] text-white shadow-[0_12px_28px_rgba(48,140,232,0.28)] transition hover:-translate-y-px hover:bg-[#2579CF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  className="absolute -top-4 grid h-[52px] w-[52px] place-items-center rounded-full bg-[#308CE8] text-white shadow-[0_12px_28px_rgba(48,140,232,0.28)] ring-[5px] ring-white transition hover:-translate-y-px hover:bg-[#2579CF] focus-visible:outline-none focus-visible:ring-[5px] focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   href={bottomNavigationCenterAction.href}
                   title={
                     bottomNavigationCenterAction.title ?? bottomNavigationCenterAction.ariaLabel
                   }
                 >
-                  <Plus className="h-8 w-8 stroke-[2.2]" aria-hidden="true" />
+                  <Plus className="h-7 w-7 stroke-[2.35]" aria-hidden="true" />
                   <span className="sr-only">{bottomNavigationCenterAction.ariaLabel}</span>
                 </Link>
               </li>
