@@ -33,6 +33,7 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { Input } from "@/registry/new-york-v4/ui/input";
 import { PrivateTemplate } from "@/templates/private";
 import {
+  COMMUNITY_CREATE_POST_HREF,
   COMMUNITY_EXPLORE_HREF,
   COMMUNITY_FEED_CHIPS,
   COMMUNITY_FEED_SLUG,
@@ -571,7 +572,16 @@ export const CommunityFeedLogic = () => {
   };
 
   return (
-    <PrivateTemplate contentClassName="bg-[#F5F7FA] dark:bg-background" showHeader>
+    <PrivateTemplate
+      bottomNavigationCenterAction={{
+        ariaLabel: "Criar publicação na comunidade",
+        href: COMMUNITY_CREATE_POST_HREF,
+        title: "Criar publicação",
+      }}
+      contentClassName="bg-[#F5F7FA] dark:bg-background"
+      navigationTheme="solidWhite"
+      showHeader
+    >
       <section className="mx-auto grid w-full max-w-[430px] gap-4 sm:max-w-2xl lg:max-w-3xl">
         <header
           className={cn(

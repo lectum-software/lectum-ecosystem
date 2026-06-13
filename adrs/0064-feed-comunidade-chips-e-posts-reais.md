@@ -36,6 +36,8 @@ As páginas de detalhe por comunidade serão criadas depois. Até lá, chips e n
 - Esconder o header de busca/chips ao rolar para baixo e reexibir ao rolar para cima com transição suave.
 - Reposicionar metadados de posts de pacientes para mostrar somente o tempo abaixo do nome.
 - Refinar cores dos selos para ouro/champagne/cobre sofisticados e remover shadow/drop-shadow.
+- No Feed da Comunidade, substituir o item central `Comunidade` da navegação inferior por um CTA circular azul com ícone `+`, sem label visível, apontando para `/app/community/post/new`.
+- Manter os demais itens da navegação inferior (`Psicólogos`, `Favoritos`, `Notificações`, `Perfil`) e preservar a navegação lateral desktop padrão.
 - Enquanto `community_member` não estiver implementado (TASK-25), `scope=following` retorna estado vazio honesto.
 
 ## Consequências
@@ -45,6 +47,7 @@ As páginas de detalhe por comunidade serão criadas depois. Até lá, chips e n
 - O CTA de WhatsApp fica alinhado ao modelo de negócio: só aparece quando a resposta destacada é de psicólogo verificado e pago.
 - O ranking visual de mentor é derivado por faixas de engajamento até existir o ranking definitivo, sem criar permissões ou poderes de moderação.
 - A navegação para comunidade está preparada para detalhe futuro, mesmo que hoje ainda sirva como filtro/compatibilidade.
+- A criação real de posts permanece fora deste refinamento; a rota `/app/community/post/new` existe como destino honesto/preparado para a task futura de formulário, sem criar mock de publicação.
 
 ## Validação
 
@@ -55,12 +58,14 @@ As páginas de detalhe por comunidade serão criadas depois. Até lá, chips e n
 - `pnpm --dir backend build`: sucesso.
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
+- Refinamento da navegação inferior: `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`: sucesso.
 - Validação visual/HTTP local em `http://localhost:3000/app/community/feed`: sucesso (`200`).
 - Validação local de API com token temporário:
   - `GET /api/private/community/feed/posts?page=1&limit=12` retornou `200` com posts persistidos, campo `highlighted_professional_reply` no contrato e badges `TOP #1 MENTOR`, `TOP #2 MENTOR`, `TOP #3 MENTOR` quando aplicável;
   - `GET /api/private/community/feed/posts?page=1&limit=5&scope=following` retornou `200`, `count=0`.
 - Validação HTTP local de rotas:
   - `GET http://localhost:3000/app/community/feed` retornou `200`;
+  - `GET http://localhost:3000/app/community/post/new` retornou `200` como destino preparado para o CTA central `+`;
   - `GET http://localhost:3000/app/community/ansiedade-em-equilibrio` retornou `200` como compatibilidade/filtro até o detalhe futuro.
 
 ## Pendências

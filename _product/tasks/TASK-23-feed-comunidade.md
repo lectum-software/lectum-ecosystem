@@ -49,6 +49,7 @@ Criar feed real agregado de posts de comunidades com paginação, filtros, chips
 - Comentários de usuários comuns e respostas de psicólogos não verificados não entram na prévia profissional.
 - WhatsApp aparece somente em respostas de psicólogos verificados com entitlement profissional pago ativo.
 - O header do feed esconde ao rolar para baixo e reaparece ao rolar para cima, com transição suave.
+- A navegação inferior do Feed da Comunidade substitui o item central `Comunidade` por um CTA circular azul com ícone `+`, sem texto abaixo, apontando para a rota futura de criação de post.
 
 ## Pré-requisitos e bloqueios
 
@@ -63,6 +64,7 @@ Rotas esperadas (convenção canônica de `DATA-MODEL.md`):
 - `/app/community` exibe a lista/exploração de comunidades.
 - `/app/community/feed` é a rota canônica do Feed da Comunidade agregado.
 - `/app/community/[slug]` fica reservado para detalhe futuro; enquanto o detalhe não existir, pode servir apenas como compatibilidade/filtro do feed.
+- `/app/community/post/new` é a rota preparada para criação futura de posts de pacientes e psicólogos.
 
 Implementação esperada:
 

@@ -8,6 +8,7 @@ import {
   Network,
   PanelLeftClose,
   PanelLeftOpen,
+  Plus,
   UserPlus,
   UserRound,
   UsersRound,
@@ -33,6 +34,11 @@ import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 type PrivateTemplateProps = PropsWithChildren<{
   allowAnonymous?: boolean;
   autoHideNavigation?: boolean;
+  bottomNavigationCenterAction?: {
+    ariaLabel: string;
+    href: string;
+    title?: string;
+  };
   contentClassName?: string;
   desktopSidebarDefaultCollapsed?: boolean;
   desktopNavigation?: "bottom" | "sidebar";
@@ -184,6 +190,7 @@ const DESKTOP_SIDEBAR_STORAGE_KEY = "lectum.desktopSidebar";
 export const PrivateTemplate = ({
   allowAnonymous = false,
   autoHideNavigation = false,
+  bottomNavigationCenterAction,
   children,
   contentClassName,
   desktopSidebarDefaultCollapsed = false,
@@ -315,9 +322,27 @@ export const PrivateTemplate = ({
       }}
     >
       <ul className="mx-auto grid w-full max-w-[560px] grid-cols-5">
-        {navigation.map((item) => {
+        {navigation.map((item, index) => {
           const Icon = item.icon;
           const isActive = isActivePath(pathname, item);
+
+          if (bottomNavigationCenterAction && index === 2) {
+            return (
+              <li className="relative flex min-h-16 items-center justify-center" key="create-post">
+                <Link
+                  aria-label={bottomNavigationCenterAction.ariaLabel}
+                  className="absolute -top-7 grid h-[68px] w-[68px] place-items-center rounded-full bg-[#308CE8] text-white shadow-[0_18px_36px_rgba(48,140,232,0.34)] ring-[7px] ring-white transition hover:-translate-y-0.5 hover:bg-[#2579CF] focus-visible:outline-none focus-visible:ring-[7px] focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  href={bottomNavigationCenterAction.href}
+                  title={
+                    bottomNavigationCenterAction.title ?? bottomNavigationCenterAction.ariaLabel
+                  }
+                >
+                  <Plus className="h-10 w-10 stroke-[2.4]" aria-hidden="true" />
+                  <span className="sr-only">{bottomNavigationCenterAction.ariaLabel}</span>
+                </Link>
+              </li>
+            );
+          }
 
           return (
             <li key={item.href}>
