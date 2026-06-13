@@ -26,8 +26,10 @@ As páginas de detalhe por comunidade serão criadas depois. Até lá, chips e n
 - Selecionar `highlighted_professional_reply` apenas entre respostas de autores `role="psicologo"` com `psychologist_profile.cfp_verified_at` preenchido, ordenando por maior `upvotes_count`.
 - Ignorar comentários de usuários comuns e respostas de psicólogos sem verificação CFP para a prévia profissional.
 - Exibir `Chamar no WhatsApp` somente dentro da prévia profissional quando o psicólogo é verificado e tem entitlement profissional pago ativo; psicólogos verificados gratuitos não recebem o CTA no feed.
-- Manter `TOP MENTOR`/`TOP #1 MENTOR` como destaque visual, sem permissão especial.
+- Manter `TOP MENTOR`/`TOP #1 MENTOR` como destaque visual, sem permissão especial. A UI suporta três posições premium: `TOP #1 MENTOR` (ouro), `TOP #2 MENTOR` (prata) e `TOP #3 MENTOR` (bronze), sempre acima do nome do psicólogo.
 - Manter upvote/downvote, comentários, salvar e compartilhar nas ações do card.
+- Simplificar o botão de filtro para exibir apenas o ícone cinza e remover textos auxiliares do menu, mantendo só `Todas as comunidades` e `Comunidades que sigo`.
+- Adicionar ícone de descoberta no chip `Explorar`.
 - Enquanto `community_member` não estiver implementado (TASK-25), `scope=following` retorna estado vazio honesto.
 
 ## Consequências
@@ -35,6 +37,7 @@ As páginas de detalhe por comunidade serão criadas depois. Até lá, chips e n
 - O feed global passa a estar preparado para destacar respostas profissionais reais sem inventar placeholder.
 - O schema de comentários/respostas foi antecipado para atender a prévia profissional do feed, mas criação/listagem detalhada de comentários segue em tasks futuras.
 - O CTA de WhatsApp fica alinhado ao modelo de negócio: só aparece quando a resposta destacada é de psicólogo verificado e pago.
+- O ranking visual de mentor é derivado por faixas de engajamento até existir o ranking definitivo, sem criar permissões ou poderes de moderação.
 - A navegação para comunidade está preparada para detalhe futuro, mesmo que hoje ainda sirva como filtro/compatibilidade.
 
 ## Validação
@@ -45,8 +48,9 @@ As páginas de detalhe por comunidade serão criadas depois. Até lá, chips e n
 - `pnpm --dir backend build`: sucesso.
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
+- Validação visual/HTTP local em `http://localhost:3000/app/community/feed`: sucesso (`200`).
 - Validação local de API com token temporário:
-  - `GET /api/private/community/feed/posts?page=1&limit=5` retornou `200` com posts persistidos e campo `highlighted_professional_reply` no contrato;
+  - `GET /api/private/community/feed/posts?page=1&limit=12` retornou `200` com posts persistidos, campo `highlighted_professional_reply` no contrato e badges `TOP #1 MENTOR`, `TOP #2 MENTOR`, `TOP #3 MENTOR` quando aplic?vel;
   - `GET /api/private/community/feed/posts?page=1&limit=5&scope=following` retornou `200`, `count=0`.
 - Validação HTTP local de rotas:
   - `GET http://localhost:3000/app/community/feed` retornou `200`;

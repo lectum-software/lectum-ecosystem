@@ -42,7 +42,7 @@ Criar feed real agregado de posts de comunidades com paginação, filtros, chips
 - Comunidades individuais terão telas próprias em task futura; chips e nomes de comunidade já apontam para as rotas futuras.
 - Usuários finais não criam comunidades diretamente: usam "Solicitar nova comunidade" para análise da equipe.
 - Criação, curadoria e moderação de comunidades pertencem à plataforma/administração, não a usuários comuns.
-- O selo `TOP MENTOR`/`TOP #1 MENTOR` é apenas destaque visual e não concede permissão especial.
+- O selo `TOP MENTOR`/`TOP #1 MENTOR` é apenas destaque visual e não concede permissão especial. A UI deve suportar `TOP #1 MENTOR` (ouro), `TOP #2 MENTOR` (prata) e `TOP #3 MENTOR` (bronze), posicionados acima do nome do psicólogo.
 - Posts de pacientes exigem título, texto/descrição e comunidade relacionada.
 - A prévia profissional no card só aparece quando houver resposta/comentário de psicólogo com `cfp_verified_at`; entre várias respostas verificadas, vence a de maior `upvotes_count`.
 - Comentários de usuários comuns e respostas de psicólogos não verificados não entram na prévia profissional.

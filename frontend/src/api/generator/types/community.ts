@@ -38,6 +38,7 @@ export type CommunityAuthor = {
   role: string | null;
   type_label: string;
   verified: boolean;
+  featured_badge: string | null;
   whatsapp_url: string | null;
 };
 

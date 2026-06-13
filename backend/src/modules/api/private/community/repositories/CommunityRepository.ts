@@ -159,6 +159,18 @@ const buildProfessionalWhatsappUrl = (
   return buildWhatsappUrl(profile?.whatsapp);
 };
 
+const mentorBadgeForScore = (
+  profile?: { cfp_verified_at: Date | null; subscriptions: { id: string }[] } | null,
+  score = 0,
+) => {
+  if (!isProfessionalVerified(profile) || !hasPaidProfessionalEntitlement(profile)) return null;
+  if (score >= 80) return "TOP #1 MENTOR";
+  if (score >= 65) return "TOP #2 MENTOR";
+  if (score >= 50) return "TOP #3 MENTOR";
+
+  return null;
+};
+
 const authorTypeLabel = (role?: string | null, gender?: string | null) => {
   if (role === "psicologo") {
     const normalizedGender = String(gender ?? "")
@@ -206,7 +218,7 @@ const postSearchWhere = (search?: string): Prisma.community_postWhereInput["OR"]
   ];
 };
 
-const toAuthorResponse = (author: AuthorResult): CommunityAuthorDTO => {
+const toAuthorResponse = (author: AuthorResult, mentorScore = 0): CommunityAuthorDTO => {
   const profile = author.psychologist_profile;
   const isPsychologist = author.role === "psicologo";
 
@@ -217,6 +229,7 @@ const toAuthorResponse = (author: AuthorResult): CommunityAuthorDTO => {
     role: author.role,
     type_label: authorTypeLabel(author.role, profile?.gender),
     verified: isPsychologist && isProfessionalVerified(profile),
+    featured_badge: isPsychologist ? mentorBadgeForScore(profile, mentorScore) : null,
     whatsapp_url: isPsychologist ? buildProfessionalWhatsappUrl(profile) : null,
   };
 };
@@ -226,7 +239,7 @@ const toHighlightedProfessionalReply = (
 ): CommunityPostDTO["highlighted_professional_reply"] => {
   if (!reply) return null;
 
-  const author = toAuthorResponse(reply.author);
+  const author = toAuthorResponse(reply.author, reply.upvotes_count);
   if (!author.verified) return null;
 
   return {
@@ -240,9 +253,8 @@ const toHighlightedProfessionalReply = (
 
 const toPostResponse = (item: PostResult): CommunityPostDTO => {
   const responseCommunity = toCommunityResponse(item.community);
-  const author = toAuthorResponse(item.author);
+  const author = toAuthorResponse(item.author, item.upvotes_count);
   const highlightedReply = toHighlightedProfessionalReply(item.replies[0]);
-  const hasPaidEntitlement = hasPaidProfessionalEntitlement(item.author.psychologist_profile);
 
   return {
     id: item.id,
@@ -255,8 +267,7 @@ const toPostResponse = (item: PostResult): CommunityPostDTO => {
     saves_count: item.saves_count,
     created_at: item.createdAt,
     tags: responseCommunity.category ? [responseCommunity.category] : [],
-    featured_badge:
-      author.verified && hasPaidEntitlement && item.upvotes_count >= 60 ? "TOP #1 MENTOR" : null,
+    featured_badge: author.featured_badge,
     media_url: null,
     media_type: null,
     community: responseCommunity,

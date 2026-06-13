@@ -8,9 +8,9 @@ import {
   BadgeCheck,
   Bookmark,
   CalendarDays,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Compass,
   FileText,
   MessageCircle,
   Play,
@@ -43,7 +43,7 @@ const PAGE_LIMIT = 12;
 
 const FEED_SCOPE_OPTIONS: Array<{ label: string; value: CommunityFeedScope }> = [
   { label: "Todas as comunidades", value: "all" },
-  { label: "Apenas comunidades que sigo", value: "following" },
+  { label: "Comunidades que sigo", value: "following" },
 ];
 
 type ApiErrorData = {
@@ -149,6 +149,38 @@ const CountAction = ({ icon: Icon, label, value }: CountActionProps) => (
   </button>
 );
 
+const mentorBadgeClassName = (badge: string) => {
+  if (badge.includes("#1")) {
+    return "from-[#FFE27A] via-[#FDBA21] to-[#B87503] text-[#4A2A00] ring-[#FFE9A6] shadow-[#F59E0B]/25";
+  }
+
+  if (badge.includes("#2")) {
+    return "from-[#F8FAFC] via-[#D5DEE8] to-[#8492A6] text-[#253042] ring-white shadow-slate-400/25";
+  }
+
+  if (badge.includes("#3")) {
+    return "from-[#FFD2A1] via-[#D88945] to-[#8A4518] text-[#3A1B06] ring-[#FFD9B0] shadow-[#C66A2B]/25";
+  }
+
+  return "from-[#F7C948] via-[#F59E0B] to-[#B87503] text-[#4A2A00] ring-[#FFE9A6] shadow-[#F59E0B]/25";
+};
+
+const MentorBadge = ({ badge }: { badge?: string | null }) => {
+  if (!badge) return null;
+
+  return (
+    <span
+      className={cn(
+        "inline-flex w-fit items-center gap-1 rounded-[8px] bg-gradient-to-r px-2 py-1 text-[9px] font-black tracking-[0.02em] ring-1 shadow-lg",
+        mentorBadgeClassName(badge),
+      )}
+    >
+      <Award className="h-3 w-3" aria-hidden="true" />
+      {badge}
+    </span>
+  );
+};
+
 const FilterMenu = ({
   onScopeChange,
   open,
@@ -159,57 +191,48 @@ const FilterMenu = ({
   open: boolean;
   scope: CommunityFeedScope;
   setOpen: (value: boolean) => void;
-}) => {
-  const activeLabel = FEED_SCOPE_OPTIONS.find((item) => item.value === scope)?.label;
+}) => (
+  <div className="relative shrink-0">
+    <button
+      aria-expanded={open}
+      aria-label="Filtrar feed"
+      className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-[#DFE5EC] bg-white text-[#64748B] shadow-sm transition hover:border-primary/50 hover:bg-primary-soft hover:text-primary dark:border-border dark:bg-surface dark:text-muted"
+      onClick={() => setOpen(!open)}
+      type="button"
+    >
+      <SlidersHorizontal className="h-5 w-5" aria-hidden="true" />
+    </button>
 
-  return (
-    <div className="relative shrink-0">
-      <button
-        aria-expanded={open}
-        aria-label="Filtrar feed"
-        className="inline-flex h-12 items-center justify-center gap-1.5 rounded-full border border-[#DFE5EC] bg-white px-3 text-primary shadow-sm transition hover:border-primary/50 hover:bg-primary-soft dark:border-border dark:bg-surface"
-        onClick={() => setOpen(!open)}
-        type="button"
-      >
-        <SlidersHorizontal className="h-5 w-5" aria-hidden="true" />
-        <ChevronDown className="h-3.5 w-3.5 text-muted" aria-hidden="true" />
-      </button>
+    {open ? (
+      <div className="absolute right-0 top-14 z-30 w-64 overflow-hidden rounded-[18px] border border-border bg-white p-1.5 shadow-[0_18px_45px_rgba(15,23,42,0.16)] dark:bg-surface">
+        {FEED_SCOPE_OPTIONS.map((item) => {
+          const selected = item.value === scope;
 
-      {open ? (
-        <div className="absolute right-0 top-14 z-30 w-64 overflow-hidden rounded-[18px] border border-border bg-white p-1.5 shadow-[0_18px_45px_rgba(15,23,42,0.16)] dark:bg-surface">
-          <p className="px-3 pb-1 pt-2 text-[11px] font-black uppercase tracking-[0.08em] text-subtle">
-            Filtrar por
-          </p>
-          {FEED_SCOPE_OPTIONS.map((item) => {
-            const selected = item.value === scope;
-
-            return (
-              <button
-                aria-pressed={selected}
-                className={cn(
-                  "flex w-full items-center justify-between rounded-[14px] px-3 py-2.5 text-left text-sm font-bold transition",
-                  selected
-                    ? "bg-primary-soft text-primary"
-                    : "text-[#475569] hover:bg-surface-muted dark:text-muted",
-                )}
-                key={item.value}
-                onClick={() => {
-                  onScopeChange(item.value);
-                  setOpen(false);
-                }}
-                type="button"
-              >
-                {item.label}
-                {selected ? <span className="h-2 w-2 rounded-full bg-primary" /> : null}
-              </button>
-            );
-          })}
-          <p className="px-3 pb-2 pt-1 text-[11px] text-subtle">Filtro atual: {activeLabel}</p>
-        </div>
-      ) : null}
-    </div>
-  );
-};
+          return (
+            <button
+              aria-pressed={selected}
+              className={cn(
+                "flex w-full items-center justify-between rounded-[14px] px-3 py-2.5 text-left text-sm font-bold transition",
+                selected
+                  ? "bg-primary-soft text-primary"
+                  : "text-[#475569] hover:bg-surface-muted dark:text-muted",
+              )}
+              key={item.value}
+              onClick={() => {
+                onScopeChange(item.value);
+                setOpen(false);
+              }}
+              type="button"
+            >
+              {item.label}
+              {selected ? <span className="h-2 w-2 rounded-full bg-primary" /> : null}
+            </button>
+          );
+        })}
+      </div>
+    ) : null}
+  </div>
+);
 
 const CommunityChips = ({
   activeSlug,
@@ -221,10 +244,11 @@ const CommunityChips = ({
   <nav aria-label="Comunidades" className="-mx-5 overflow-x-auto px-5 [scrollbar-width:none]">
     <div className="flex min-w-max gap-2 pb-1">
       <Link
-        className="rounded-full border border-border bg-white px-4 py-2 text-sm font-black text-[#475569] shadow-sm transition hover:border-primary/40 hover:bg-primary-soft hover:text-primary dark:bg-surface dark:text-muted"
+        className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white px-4 py-2 text-sm font-black text-[#475569] shadow-sm transition hover:border-primary/40 hover:bg-primary-soft hover:text-primary dark:bg-surface dark:text-muted"
         href={COMMUNITY_EXPLORE_HREF}
         onClick={onNavigate}
       >
+        <Compass className="h-4 w-4" aria-hidden="true" />
         Explorar
       </Link>
       {COMMUNITY_FEED_CHIPS.map((item) => {
@@ -297,7 +321,8 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
       </p>
       <div className="mb-2 flex items-center gap-2">
         <AuthorAvatar author={reply.author} />
-        <div className="min-w-0">
+        <div className="grid min-w-0 gap-1">
+          <MentorBadge badge={reply.author.featured_badge} />
           <p className="flex items-center gap-1 truncate text-sm font-black text-foreground">
             {reply.author.name}
             {reply.author.verified ? (
@@ -361,7 +386,8 @@ const PostCard = ({
 
       <div className="mb-3 flex items-start gap-3">
         <AuthorAvatar author={post.author} />
-        <div className="min-w-0 flex-1">
+        <div className="grid min-w-0 flex-1 gap-1">
+          <MentorBadge badge={post.author.featured_badge ?? post.featured_badge} />
           <div className="flex flex-wrap items-center gap-1.5">
             <h2 className="truncate text-sm font-black text-foreground">{post.author.name}</h2>
             {post.author.verified ? (
@@ -369,12 +395,6 @@ const PostCard = ({
                 className="h-4 w-4 shrink-0 fill-[#2da7ff] text-white"
                 aria-hidden="true"
               />
-            ) : null}
-            {post.featured_badge ? (
-              <span className="inline-flex items-center gap-1 rounded-[6px] bg-[#F7C948] px-1.5 py-0.5 text-[9px] font-black text-[#573A00]">
-                <Award className="h-3 w-3" aria-hidden="true" />
-                {post.featured_badge}
-              </span>
             ) : null}
           </div>
           <p className="text-[11px] font-semibold text-muted">
