@@ -53,6 +53,8 @@ type NavigationItem = {
   activePrefixes?: string[];
 };
 
+const DEFAULT_COMMUNITY_FEED_HREF = "/app/community/ansiedade-em-equilibrio";
+
 const fallbackNavigation: NavigationItem[] = [
   {
     href: "/app/psychologists",
@@ -68,10 +70,11 @@ const fallbackNavigation: NavigationItem[] = [
     title: "Favoritos",
   },
   {
-    href: "/app/community",
+    href: DEFAULT_COMMUNITY_FEED_HREF,
     icon: Network,
     label: "Comunidade",
     title: "Comunidade",
+    activePrefixes: ["/app/community"],
   },
   {
     href: "/app/notifications",
@@ -104,10 +107,11 @@ const navigationByRole: Record<Extract<UserRole, "paciente" | "psicologo">, Navi
       title: "Favoritos",
     },
     {
-      href: "/app/community",
+      href: DEFAULT_COMMUNITY_FEED_HREF,
       icon: Network,
       label: "Comunidade",
       title: "Comunidade",
+      activePrefixes: ["/app/community"],
     },
     {
       href: "/app/notifications",
@@ -138,10 +142,11 @@ const navigationByRole: Record<Extract<UserRole, "paciente" | "psicologo">, Navi
       title: "Favoritos",
     },
     {
-      href: "/app/community",
+      href: DEFAULT_COMMUNITY_FEED_HREF,
       icon: Network,
       label: "Comunidade",
       title: "Comunidade",
+      activePrefixes: ["/app/community"],
     },
     {
       href: "/app/notifications",

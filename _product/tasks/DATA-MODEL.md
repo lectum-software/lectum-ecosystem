@@ -313,7 +313,7 @@ autogestão do psicólogo em `/api/private/psychologist/reviews` também exige e
 | `name` | `String` | |
 | `slug` | `String @unique` | namespace canônico (ver "Convenção de rotas") |
 | `description` | `String?` | |
-| `category` | `String?` | **categorias iniciais decididas em TASK-03/curadoria, não inventar** |
+| `category` | `String?` | categorias de curadoria; catálogo inicial persistido pela alteração de 2026-06-13: `Ansiedade em equilíbrio`, `Relacionamentos com Propósito`, `Mulheres em Foco`, `Autocuidado em Prática`, `Luto e Ressignificação` |
 | `members_count` | `Int @default(0)` | denormalizado para o card |
 | `@@index([slug])`, `@@index([category, deleted])` | | |
 
