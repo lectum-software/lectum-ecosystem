@@ -59,3 +59,8 @@ Formato recomendado:
 - [ADR-0062 - Comunidades reais e feed paginado](0062-comunidades-feed-paginado.md) - Accepted
 - [ADR-0063 - Vídeo obrigatório para elegibilidade na listagem de psicólogos](0063-video-obrigatorio-listagem-psicologos.md) - Accepted
 - [ADR-0064 - Feed de comunidade vertical com chips canônicos](0064-feed-comunidade-chips-e-posts-reais.md) - Accepted
+- [ADR-0065 - Criacao real de posts da comunidade](0065-criacao-posts-comunidade.md) - Accepted
+- [ADR-0066 - Pagina de detalhe de comunidade com participacao persistida](0066-pagina-detalhe-comunidade-participacao.md) - Accepted
+- [ADR-0067 - Midia em resposta profissional destacada](0067-midia-resposta-profissional-destacada.md) - Accepted
+- [ADR-0068 - Respostas, votos e salvos no detalhe do post](0068-respostas-votos-salvos-post.md) - Accepted
+- [ADR-0069 - Topo TikTok com Minha Busca na tela de Psicologos](0069-topo-tiktok-minha-busca-psicologos.md) - Accepted

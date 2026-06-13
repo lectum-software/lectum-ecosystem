@@ -34,6 +34,7 @@ import {
 import { useDirectoryPsychologists } from "@/api/callers/directory";
 import { usePatient } from "@/api/callers/patient";
 import type {
+  DirectoryCatalogItem,
   DirectoryPsychologist,
   DirectoryPsychologistsQuery,
 } from "@/api/generator/types/directory";
@@ -45,6 +46,16 @@ import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
 import { PrivateTemplate } from "@/templates/private";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { CITY_OPTIONS_BY_STATE } from "../professional/profile/setup/brazil-cities";
+import {
+  GENDER_OPTIONS,
+  LANGUAGE_OPTIONS,
+  MODALITY_OPTIONS,
+  PUBLIC_TARGET_OPTIONS,
+  RACE_COLOR_OPTIONS,
+  RELIGION_OPTIONS,
+  STATE_OPTIONS,
+} from "../professional/profile/setup/options";
 import {
   defaultPsychologistsFilterValues,
   type PsychologistsFilterForm,
@@ -277,6 +288,134 @@ const buildFiltersParams = (values: PsychologistsFilterForm, page = 1) => {
   if (page > 1) next.set("page", String(page));
 
   return next;
+};
+
+type PsychologistFilterKey = keyof PsychologistsFilterForm;
+
+type ActiveFilterChip = {
+  key: PsychologistFilterKey;
+  label: string;
+};
+
+type LabelOption = {
+  label: string;
+  value: boolean | number | string;
+};
+
+const BOOLEAN_FILTER_LABELS = {
+  more_experienced: "Mais experientes",
+  discount_first_session: "Desconto 1ª sessão",
+  accepts_insurance: "Aceita convênio",
+  social_value: "Valor social",
+} satisfies Partial<Record<PsychologistFilterKey, string>>;
+
+const humanizeFilterValue = (value: string) =>
+  value
+    .replace(/[-_]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (letter) => letter.toLocaleUpperCase("pt-BR"));
+
+const findOptionLabel = (options: readonly LabelOption[], value?: string | null) => {
+  if (!value) return null;
+
+  return options.find((option) => String(option.value) === value)?.label ?? null;
+};
+
+const findCatalogLabel = (
+  items: readonly DirectoryCatalogItem[] | undefined,
+  value?: string | null,
+) => {
+  if (!value) return null;
+
+  return items?.find((item) => item.slug === value || item.id === value)?.name ?? null;
+};
+
+const buildActiveFilterChips = (
+  values: PsychologistsFilterForm,
+  filters?: {
+    specialties?: DirectoryCatalogItem[];
+    services?: DirectoryCatalogItem[];
+    approaches?: DirectoryCatalogItem[];
+  },
+) => {
+  const normalizedValues = normalizeFormValues(values);
+  const chips: ActiveFilterChip[] = [];
+  const addChip = (key: PsychologistFilterKey, label?: string | null) => {
+    const normalizedLabel = label?.trim();
+
+    if (!normalizedLabel) return;
+
+    chips.push({
+      key,
+      label: normalizedLabel,
+    });
+  };
+
+  addChip("search", normalizedValues.search);
+  addChip(
+    "specialty",
+    findCatalogLabel(filters?.specialties, normalizedValues.specialty) ??
+      (normalizedValues.specialty ? humanizeFilterValue(normalizedValues.specialty) : null),
+  );
+  addChip(
+    "service",
+    findCatalogLabel(filters?.services, normalizedValues.service) ??
+      (normalizedValues.service ? humanizeFilterValue(normalizedValues.service) : null),
+  );
+  addChip("modality", findOptionLabel(MODALITY_OPTIONS, normalizedValues.modality));
+  addChip(
+    "approach",
+    findCatalogLabel(filters?.approaches, normalizedValues.approach) ??
+      (normalizedValues.approach ? humanizeFilterValue(normalizedValues.approach) : null),
+  );
+  addChip(
+    "target_audience",
+    findOptionLabel(PUBLIC_TARGET_OPTIONS, normalizedValues.target_audience) ??
+      (normalizedValues.target_audience
+        ? humanizeFilterValue(normalizedValues.target_audience)
+        : null),
+  );
+  addChip(
+    "state",
+    findOptionLabel(STATE_OPTIONS, normalizedValues.state) ??
+      (normalizedValues.state ? humanizeFilterValue(normalizedValues.state) : null),
+  );
+  addChip(
+    "city",
+    findOptionLabel(
+      normalizedValues.state ? (CITY_OPTIONS_BY_STATE[normalizedValues.state] ?? []) : [],
+      normalizedValues.city,
+    ) ?? normalizedValues.city,
+  );
+  addChip(
+    "gender",
+    findOptionLabel(GENDER_OPTIONS, normalizedValues.gender) ??
+      (normalizedValues.gender ? humanizeFilterValue(normalizedValues.gender) : null),
+  );
+  addChip(
+    "race_color",
+    findOptionLabel(RACE_COLOR_OPTIONS, normalizedValues.race_color) ??
+      (normalizedValues.race_color ? humanizeFilterValue(normalizedValues.race_color) : null),
+  );
+  addChip(
+    "religion",
+    findOptionLabel(RELIGION_OPTIONS, normalizedValues.religion) ??
+      (normalizedValues.religion ? humanizeFilterValue(normalizedValues.religion) : null),
+  );
+  addChip(
+    "language",
+    findOptionLabel(LANGUAGE_OPTIONS, normalizedValues.language) ??
+      (normalizedValues.language ? humanizeFilterValue(normalizedValues.language) : null),
+  );
+
+  for (const [key, label] of Object.entries(BOOLEAN_FILTER_LABELS)) {
+    if (normalizedValues[key as PsychologistFilterKey]) {
+      addChip(key as PsychologistFilterKey, label);
+    }
+  }
+
+  return chips;
 };
 
 type FloatingBenefitBadgeStyle = CSSProperties & {
@@ -533,6 +672,10 @@ export const PsychologistsLogic = () => {
     Boolean(filterValues.discount_first_session) ||
     Boolean(filterValues.accepts_insurance) ||
     Boolean(filterValues.social_value);
+  const activeFilterChips = useMemo(
+    () => buildActiveFilterChips(filterValues, response?.filters),
+    [filterValues, response?.filters],
+  );
 
   const showInitialLoading = directory.isLoading && !response;
   const canSwipeBetweenPsychologists = psychologists.length > 1;
@@ -1212,6 +1355,90 @@ export const PsychologistsLogic = () => {
     filters.hook.reset(filterValues);
     setIsFiltersOpen(false);
   }, [filterValues, filters.hook]);
+
+  const handleExploreModeClick = useCallback(
+    (event: { stopPropagation: () => void }) => {
+      event.stopPropagation();
+      registerSwipeHintInteraction();
+
+      if (hasActiveFilters) {
+        clearFilters();
+      }
+    },
+    [clearFilters, hasActiveFilters, registerSwipeHintInteraction],
+  );
+
+  const handleMySearchModeClick = useCallback(
+    (event: { stopPropagation: () => void }) => {
+      event.stopPropagation();
+      registerSwipeHintInteraction();
+      handleFiltersOpen();
+    },
+    [handleFiltersOpen, registerSwipeHintInteraction],
+  );
+
+  const handleRemoveActiveFilter = useCallback(
+    (key: PsychologistFilterKey) => {
+      const nextValues = normalizeFormValues(filterValues);
+
+      switch (key) {
+        case "search":
+          nextValues.search = "";
+          setSearchDraft("");
+          break;
+        case "specialty":
+          nextValues.specialty = null;
+          break;
+        case "service":
+          nextValues.service = null;
+          break;
+        case "modality":
+          nextValues.modality = null;
+          break;
+        case "approach":
+          nextValues.approach = null;
+          break;
+        case "target_audience":
+          nextValues.target_audience = null;
+          break;
+        case "state":
+          nextValues.state = null;
+          nextValues.city = null;
+          break;
+        case "city":
+          nextValues.city = null;
+          break;
+        case "gender":
+          nextValues.gender = null;
+          break;
+        case "race_color":
+          nextValues.race_color = null;
+          break;
+        case "religion":
+          nextValues.religion = null;
+          break;
+        case "language":
+          nextValues.language = null;
+          break;
+        case "more_experienced":
+          nextValues.more_experienced = false;
+          break;
+        case "discount_first_session":
+          nextValues.discount_first_session = false;
+          break;
+        case "accepts_insurance":
+          nextValues.accepts_insurance = false;
+          break;
+        case "social_value":
+          nextValues.social_value = false;
+          break;
+      }
+
+      filters.hook.reset(nextValues);
+      applyFilterValues(nextValues);
+    },
+    [applyFilterValues, filterValues, filters.hook],
+  );
 
   const pauseVideoPlayback = useCallback(() => {
     const currentVideo = backgroundVideoRef.current;
@@ -2034,8 +2261,12 @@ export const PsychologistsLogic = () => {
     !errorMessage;
   const shouldRenderGlobalControls =
     !showInitialLoading && !errorMessage && psychologists.length > 0;
-  const shouldRenderMobileGlobalControls = shouldRenderGlobalControls && !metrics.isDesktopLayout;
-  const shouldRenderDesktopFeedControls = shouldRenderGlobalControls && metrics.isDesktopLayout;
+  const shouldRenderMobileGlobalControls = false;
+  const shouldRenderDesktopFeedControls = false;
+  const areFeedModeControlsHidden = isUiHidden || isFiltersOpen;
+  const feedModeControlsVisibilityClass = areFeedModeControlsHidden
+    ? "psychologists-ui-inert pointer-events-none opacity-0"
+    : "opacity-100";
   const areGlobalControlsHidden = isUiHidden || isFiltersOpen;
   const globalControlsVisibilityClass = areGlobalControlsHidden
     ? "psychologists-ui-inert pointer-events-none opacity-0"
@@ -2059,8 +2290,7 @@ export const PsychologistsLogic = () => {
     ? "psychologists-ui-inert pointer-events-none opacity-0"
     : "opacity-100";
   const shouldRenderDesktopControlRail =
-    shouldRenderDesktopFeedControls ||
-    (shouldRenderDesktopActionRail && Boolean(desktopActionPsychologist));
+    shouldRenderDesktopActionRail && Boolean(desktopActionPsychologist);
 
   return (
     <PrivateTemplate
@@ -2253,6 +2483,96 @@ export const PsychologistsLogic = () => {
                     ) : null
                   }
                 />
+              </div>
+            ) : null}
+
+            {shouldRenderGlobalControls ? (
+              <div
+                aria-hidden={areFeedModeControlsHidden ? true : undefined}
+                className={cn(
+                  "pointer-events-none absolute inset-x-0 top-0 z-[76] bg-gradient-to-b from-black/75 via-black/35 to-transparent px-4 pb-5 pt-[calc(env(safe-area-inset-top)+20px)] transition-all duration-200 ease-out",
+                  metrics.isDesktopLayout ? "lg:rounded-t-[22px] lg:px-5" : null,
+                  feedModeControlsVisibilityClass,
+                )}
+                data-psychologists-scroll-lock="true"
+                onMouseDown={stopInteractionPropagation}
+                onPointerDown={(event) => {
+                  event.stopPropagation();
+                  registerSwipeHintInteraction();
+                }}
+              >
+                <div className="pointer-events-auto flex items-center justify-center gap-8 text-white">
+                  <button
+                    aria-current={!hasActiveFilters ? "page" : undefined}
+                    className={cn(
+                      "relative inline-flex h-9 items-center justify-center px-1 text-[15px] font-semibold tracking-[-0.01em] text-white transition-opacity duration-150 ease-out",
+                      hasActiveFilters ? "opacity-70 hover:opacity-100" : "opacity-100",
+                    )}
+                    onClick={handleExploreModeClick}
+                    tabIndex={areFeedModeControlsHidden ? -1 : undefined}
+                    type="button"
+                  >
+                    Explorar
+                    {!hasActiveFilters ? (
+                      <span
+                        aria-hidden="true"
+                        className="absolute -bottom-0.5 left-1/2 h-0.5 w-7 -translate-x-1/2 rounded-full bg-white"
+                      />
+                    ) : null}
+                  </button>
+
+                  <button
+                    aria-current={hasActiveFilters ? "page" : undefined}
+                    className={cn(
+                      "relative inline-flex h-9 items-center justify-center gap-1.5 px-1 text-[15px] font-semibold tracking-[-0.01em] text-white transition-opacity duration-150 ease-out",
+                      hasActiveFilters ? "opacity-100" : "opacity-75 hover:opacity-100",
+                    )}
+                    onClick={handleMySearchModeClick}
+                    tabIndex={areFeedModeControlsHidden ? -1 : undefined}
+                    type="button"
+                  >
+                    <span>Minha Busca</span>
+                    <Search className="h-[17px] w-[17px]" aria-hidden="true" strokeWidth={2.25} />
+                    {hasActiveFilters ? (
+                      <span
+                        aria-hidden="true"
+                        className="absolute -bottom-0.5 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-white"
+                      />
+                    ) : null}
+                  </button>
+                </div>
+
+                {hasActiveFilters && activeFilterChips.length > 0 ? (
+                  <div className="pointer-events-auto -mx-4 mt-2 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:-mx-5 lg:px-5">
+                    <div className="flex min-w-max items-center justify-center gap-2">
+                      {activeFilterChips.map((chip) => (
+                        <button
+                          aria-label={`Remover filtro ${chip.label}`}
+                          className="inline-flex h-8 max-w-[180px] items-center gap-1.5 rounded-full border border-white/20 bg-white/16 px-3 text-xs font-semibold text-white shadow-[0_8px_24px_rgba(15,23,42,0.22)] backdrop-blur-md transition-colors duration-150 ease-out hover:bg-white/24"
+                          key={`${chip.key}-${chip.label}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleRemoveActiveFilter(chip.key);
+                          }}
+                          tabIndex={areFeedModeControlsHidden ? -1 : undefined}
+                          type="button"
+                        >
+                          <span className="truncate">{chip.label}</span>
+                          <X className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                        </button>
+                      ))}
+
+                      <button
+                        className="inline-flex h-8 shrink-0 items-center rounded-full border border-white/25 bg-white px-3 text-xs font-bold text-[#0f172a] shadow-[0_8px_24px_rgba(15,23,42,0.18)] transition-transform duration-150 ease-out hover:scale-[1.02]"
+                        onClick={handleMySearchModeClick}
+                        tabIndex={areFeedModeControlsHidden ? -1 : undefined}
+                        type="button"
+                      >
+                        + Filtros
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             ) : null}
 
