@@ -22,11 +22,6 @@ export const patientGenderOptions = [
   { label: "Prefiro não dizer", value: "prefiro_nao_dizer" },
 ] satisfies FieldOption[];
 
-export const patientGoalOptions = [
-  { label: "Encontrar psicólogo", value: "encontrar_psicologo" },
-  { label: "Conhecer comunidades", value: "conhecer_comunidade" },
-] satisfies FieldOption[];
-
 export const patientProfileSchema = z.object({
   name: z.string().trim().min(2, "Informe seu nome completo").max(120),
   gender: z.enum(patientGenders).nullable().optional(),
@@ -82,41 +77,18 @@ const fields = [
     placeholder: "Selecione seu gênero",
     options: patientGenderOptions,
   },
-  {
-    name: "goal",
-    field: "select",
-    label: "Preferência inicial",
-    placeholder: "Como prefere usar a Lectum?",
-    options: patientGoalOptions,
-  },
-  {
-    name: "birthdate",
-    field: "calendar",
-    label: "Data de nascimento",
-  },
-  {
-    name: "phone",
-    field: "phone",
-    label: "Telefone/WhatsApp",
-    placeholder: "(00) 00000-0000",
-    autoComplete: "tel",
-  },
-  {
-    name: "bio",
-    field: "textarea",
-    label: "Sobre você",
-    placeholder: "Conte brevemente o que você busca na Lectum.",
-    rows: 4,
-  },
 ] satisfies Field<PatientProfileForm>[];
 
-export const toPatientProfilePayload = (values: PatientProfileForm) => ({
+export const toPatientProfilePayload = (
+  values: PatientProfileForm,
+  profile?: patient_profile | null,
+) => ({
   name: values.name.trim(),
   gender: values.gender ?? null,
-  goal: values.goal ?? null,
-  birthdate: values.birthdate || null,
-  phone: onlyDigits(values.phone) || null,
-  bio: values.bio?.trim() || null,
+  goal: values.goal ?? (isPatientGoal(profile?.goal) ? profile.goal : null),
+  birthdate: values.birthdate || profile?.birthdate?.slice(0, 10) || null,
+  phone: onlyDigits(values.phone) || profile?.phone || null,
+  bio: values.bio?.trim() || profile?.bio || null,
 });
 
 export const usePatientProfileForm = ({ profile, user }: UsePatientProfileFormProps = {}) => {
