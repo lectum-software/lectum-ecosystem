@@ -1,5 +1,6 @@
 ﻿import { error, msg } from "@/helpers/translate";
 import type {
+  ICommunityFeedDTO,
   ICommunityIndexDTO,
   ICommunityPostsDTO,
   ICommunitySuggestionDTO,
@@ -29,6 +30,17 @@ export const suggest = async (data: ICommunitySuggestionDTO) => {
   return {
     status: 201,
     ...msg("community_suggestion_created", {}),
+    data: res,
+  };
+};
+
+export const feed = async (data: ICommunityFeedDTO) => {
+  const repository = new CommunityRepository();
+  const res = await repository.feed(data);
+
+  return {
+    status: 200,
+    ...msg("index", {}),
     data: res,
   };
 };

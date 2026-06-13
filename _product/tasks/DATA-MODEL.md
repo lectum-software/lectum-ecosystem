@@ -346,7 +346,7 @@ autogestão do psicólogo em `/api/private/psychologist/reviews` também exige e
 | `upvotes_count` / `downvotes_count` / `replies_count` / `saves_count` | `Int @default(0)` | denormalizados para o feed |
 | `@@index([community_id, status, createdAt])`, `@@index([author_id])` | | feed por comunidade ordenado por data |
 
-DTO do feed (`GET /api/private/community/:slug/posts`): além dos campos persistidos, pode retornar metadados derivados para apresentação (`author.type_label`, `author.verified`, `author.whatsapp_url`, `featured_badge`, `media_url`, `media_type`). O backend deve mascarar autores não psicólogos como `Membro Anônimo` no feed e manter `media_url`/`media_type` nulos enquanto o schema de mídia de posts não existir.
+DTOs do feed: `GET /api/private/community/feed/posts` é o contrato canônico do Feed da Comunidade agregado (posts de destaque de todas as comunidades), com filtros opcionais `search`, `community` e `scope="all"|"following"`; `scope="following"` depende de `community_member` (TASK-25) e não deve inventar vínculo sem persistência. `GET /api/private/community/:slug/posts` permanece como contrato de posts por comunidade para detalhe futuro. Além dos campos persistidos, ambos podem retornar metadados derivados para apresentação (`author.type_label`, `author.verified`, `author.whatsapp_url`, `featured_badge`, `media_url`, `media_type`). O backend deve mascarar autores não psicólogos como `Membro Anônimo` no feed e manter `media_url`/`media_type` nulos enquanto o schema de mídia de posts não existir.
 
 `post_reply` (comentários e respostas, TASK-26; PRD distingue comentário/resposta → árvore de 1 nível):
 
@@ -512,7 +512,7 @@ A auditoria achou namespaces conflitantes nas tasks de comunidade (`/communities
 
 - Frontend privado sob `/app` ou shell privado da TASK-12 (a TASK-12 define o prefixo real; as tasks seguintes o reaproveitam).
 - Psicólogos (visão do paciente): detalhe do perfil em `/app/psychologist/[id]` (`[id]` = `user.id`), contato em `/app/psychologist/[id]/contact`.
-- Comunidades: lista em `/app/community`, detalhe em `/app/community/[slug]`, post em `/app/community/[slug]/post/[id]`.
+- Comunidades: explorar/lista em `/app/community`, feed agregado canônico em `/app/community/feed`, detalhe futuro em `/app/community/[slug]`, post em `/app/community/[slug]/post/[id]`. Enquanto o detalhe não existir, chips podem filtrar o feed por query `community` sem tratar `/app/community/[slug]` como página de detalhe.
 
 Backend privado — **o prefixo determina o guard** (ver "Camadas de autenticação e autorização"):
 
@@ -520,7 +520,7 @@ Backend privado — **o prefixo determina o guard** (ver "Camadas de autenticaç
 - **Autogestão do psicólogo**: `/api/private/psychologist/*` (perfil, CRP, CFP, analytics, assinatura) → `requireRole("psicologo")`.
 - **Favoritos de psicólogos**: `/api/private/user/favorites` e `/api/private/user/favorites/:id` → só `_auth`, porque o produto permite favorito para qualquer usuário autenticado.
 - **Autogestão do paciente**: `/api/private/patient/*` (onboarding, avaliar; favoritos/follows legados se mantidos) → `requireRole("paciente")`.
-- **Comunidade/posts** (qualquer autenticado): `/api/private/community`, `/api/private/community/:slug/posts`, `/api/private/posts/:id`, `/api/private/posts/:id/replies`, `/api/private/posts/:id/vote`, `/api/private/posts/:id/save`. Singular `community`/`posts`.
+- **Comunidade/posts** (qualquer autenticado): `/api/private/community`, `/api/private/community/feed/posts`, `/api/private/community/:slug/posts`, `/api/private/posts/:id`, `/api/private/posts/:id/replies`, `/api/private/posts/:id/vote`, `/api/private/posts/:id/save`. Singular `community`/`posts`.
 - Cada task deve usar exatamente esses prefixos; divergência exige atualizar este documento.
 
 ## Contrato padrão de API

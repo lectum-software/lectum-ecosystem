@@ -18,6 +18,9 @@ export type {
 export type {
   Community,
   CommunityAuthor,
+  CommunityFeedQuery,
+  CommunityFeedResponse,
+  CommunityFeedScope,
   CommunityListQuery,
   CommunityListResponse,
   CommunityPost,

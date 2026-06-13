@@ -13,6 +13,16 @@ export type CommunityPostListQuery = {
   search?: string;
 };
 
+export type CommunityFeedScope = "all" | "following";
+
+export type CommunityFeedQuery = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  community?: string;
+  scope?: CommunityFeedScope;
+};
+
 export type CommunityParams = {
   slug: string;
 };
@@ -82,6 +92,15 @@ export type CommunityPostsResponse = {
   count: number;
 };
 
+export type CommunityFeedResponse = {
+  data: CommunityPostDTO[];
+  page: number;
+  pages: number;
+  count: number;
+  scope: CommunityFeedScope;
+  community_slug: string | null;
+};
+
 export type ICommunityIndexDTO = {
   q: CommunityListQuery;
   auth?: user;
@@ -95,6 +114,11 @@ export type ICommunitySuggestionDTO = {
 export type ICommunityPostsDTO = {
   p: CommunityParams;
   q: CommunityPostListQuery;
+  auth?: user;
+};
+
+export type ICommunityFeedDTO = {
+  q: CommunityFeedQuery;
   auth?: user;
 };
 

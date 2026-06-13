@@ -1,5 +1,7 @@
 ﻿import { callEndpoint } from "@/api/generator";
 import type {
+  CommunityFeedQuery,
+  CommunityFeedResponse,
   CommunityListQuery,
   CommunityListResponse,
   CommunityPostsQuery,
@@ -16,6 +18,15 @@ export const getCommunities = async (query: CommunityListQuery = {}) => {
   });
 
   return handleReq<CommunityListResponse>(handle);
+};
+
+export const getCommunityFeedPosts = async (query: CommunityFeedQuery = {}) => {
+  const handle = callEndpoint({
+    route: "/api/private/community/feed/posts",
+    query,
+  });
+
+  return handleReq<CommunityFeedResponse>(handle);
 };
 
 export const suggestCommunity = async (body: SuggestCommunityPayload) => {

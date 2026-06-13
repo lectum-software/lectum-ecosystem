@@ -30,11 +30,11 @@ As referências visuais são norte de produto e layout. Elas não autorizam recr
 
 ## Contexto
 
-O feed é longo e precisa ser eficiente. Deve listar posts reais, com contadores vindos do backend.
+O feed é longo e precisa ser eficiente. Deve listar posts reais, com contadores vindos do backend. Refinamento de 2026-06-13: a tela principal é o Feed da Comunidade agregado, reunindo destaques de todas as comunidades; detalhes por comunidade serão criados em task futura.
 
 ## Objetivo
 
-Criar feed real de posts de comunidades com paginação, filtros e ações básicas.
+Criar feed real agregado de posts de comunidades com paginação, filtros, chips de comunidade e ações básicas.
 
 ## Pré-requisitos e bloqueios
 
@@ -46,13 +46,16 @@ Se qualquer bloqueio obrigatório estiver ativo, pare a implementação, registr
 
 Rotas esperadas (convenção canônica de `DATA-MODEL.md`):
 
-- `/app/community` (lista) e `/app/community/[slug]` exibem o feed por comunidade.
+- `/app/community` exibe a lista/exploração de comunidades.
+- `/app/community/feed` é a rota canônica do Feed da Comunidade agregado.
+- `/app/community/[slug]` fica reservado para detalhe futuro; enquanto o detalhe não existir, pode servir apenas como compatibilidade/filtro do feed.
 
 Implementação esperada:
 
-- Criar feed com infinite scroll ou paginação.
-- Exibir comunidade, autor, tags, contadores e CTA de abrir post.
-- Filtrar por comunidade/categoria quando disponível.
+- Criar feed agregado com infinite scroll ou paginação.
+- Exibir comunidade, autor, tags, contadores, CTA de WhatsApp quando houver psicólogo e ações de post.
+- Exibir busca, filtro "Todas as comunidades"/"Apenas comunidades que o usuário segue" e chips: Explorar, Ansiedade, Relacionamentos, Mulheres, Autocuidado e Luto.
+- Filtrar por comunidade/categoria quando disponível sem transformar o feed agregado em página de detalhe.
 - Estados loading, erro e vazio.
 - Não usar array local de posts.
 
@@ -60,7 +63,7 @@ Implementação esperada:
 
 Implementação esperada:
 
-- Endpoint de feed paginado por comunidade.
+- Endpoint de feed agregado paginado, com filtro opcional por comunidade para chips/compatibilidade.
 - Retornar apenas posts com `community_post.status = "publicado"`.
 - Usar os contadores denormalizados de `community_post` (`upvotes_count`, `downvotes_count`, `replies_count`, `saves_count`) — não recalcular por agregação a cada request.
 - Índices conforme `DATA-MODEL.md` (`@@index([community_id, status, createdAt])`).
@@ -73,9 +76,10 @@ Modelos/tabelas envolvidos (ver `DATA-MODEL.md`):
 
 Endpoints esperados (convenção canônica de `DATA-MODEL.md`):
 
-- GET `/api/private/community/:slug/posts`
+- GET `/api/private/community/feed/posts`
+- GET `/api/private/community/:slug/posts` (compatibilidade/detalhe futuro)
 
-Request/response: seguir o "Contrato padrão de API" de `DATA-MODEL.md` — paginação `page`/`limit` (default 20, máx 50) com resposta `data: { items, total, page, limit }`; para feed muito longo avaliar cursor por `createdAt`+`id` e `@tanstack/react-virtual` (registrar em ADR).
+Request/response: seguir o "Contrato padrão de API" de `DATA-MODEL.md` — paginação `page`/`limit` (default 20, máx 50), busca `search`, filtro opcional `community` e `scope="all"|"following"`. Para feed muito longo avaliar cursor por `createdAt`+`id` e `@tanstack/react-virtual` (registrar em ADR).
 
 ## Contrato técnico detalhado
 

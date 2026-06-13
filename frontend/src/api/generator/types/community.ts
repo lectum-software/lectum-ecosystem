@@ -11,6 +11,16 @@ export type CommunityPostsQuery = {
   search?: string;
 };
 
+export type CommunityFeedScope = "all" | "following";
+
+export type CommunityFeedQuery = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  community?: string;
+  scope?: CommunityFeedScope;
+};
+
 export type Community = {
   id: string;
   name: string;
@@ -63,6 +73,15 @@ export type CommunityPostsResponse = {
   page: number;
   pages: number;
   count: number;
+};
+
+export type CommunityFeedResponse = {
+  data: CommunityPost[];
+  page: number;
+  pages: number;
+  count: number;
+  scope: CommunityFeedScope;
+  community_slug: string | null;
 };
 
 export type SuggestCommunityPayload = {

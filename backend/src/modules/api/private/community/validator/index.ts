@@ -52,6 +52,35 @@ export const suggestionSchema: IValidatorRequest = {
   ],
 };
 
+export const feedSchema: IValidatorRequest = {
+  query: [
+    ...paginationQuery,
+    {
+      key: "search",
+      coerse: "string",
+      method: "string",
+      max: 120,
+      optional: true,
+    },
+    {
+      key: "community",
+      coerse: "string",
+      method: "string",
+      min: 1,
+      max: 120,
+      format: "lower",
+      optional: true,
+    },
+    {
+      key: "scope",
+      coerse: "string",
+      method: "string",
+      max: 20,
+      optional: true,
+    },
+  ],
+};
+
 export const postsSchema: IValidatorRequest = {
   params: [
     {
@@ -76,6 +105,7 @@ export const postsSchema: IValidatorRequest = {
 };
 
 export const indexValidator = validator(indexSchema);
+export const feedValidator = validator(feedSchema);
 export const suggestionValidator = validator(suggestionSchema);
 export const postsValidator = validator(postsSchema);
 

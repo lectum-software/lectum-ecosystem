@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import keys from "@/api/cache/keys";
 import type {
+  CommunityFeedQuery,
   CommunityListQuery,
   CommunityPostsQuery,
   CommunitySuggestion,
@@ -14,6 +15,16 @@ export const useCommunities = (query: CommunityListQuery = {}, enabled = true) =
   return useQuery({
     queryKey: keys.community.list(query),
     queryFn: () => api.getCommunities(query),
+    enabled,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
+};
+
+export const useCommunityFeedPosts = (query: CommunityFeedQuery = {}, enabled = true) => {
+  return useQuery({
+    queryKey: keys.community.feed(query),
+    queryFn: () => api.getCommunityFeedPosts(query),
     enabled,
     refetchOnWindowFocus: false,
     retry: false,

@@ -2,11 +2,13 @@
 
 import type { LucideIcon } from "lucide-react";
 import {
-  ArrowLeft,
+  ArrowDown,
+  ArrowUp,
   Award,
   BadgeCheck,
   Bookmark,
   CalendarDays,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   FileText,
@@ -15,16 +17,13 @@ import {
   Search,
   Share2,
   SlidersHorizontal,
-  Sparkles,
-  ThumbsUp,
-  UsersRound,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useDeferredValue, useMemo, useState } from "react";
-import { useCommunityPosts } from "@/api/callers/community";
-import type { CommunityPost } from "@/api/generator/types/community";
+import { useCommunityFeedPosts } from "@/api/callers/community";
+import type { CommunityFeedScope, CommunityPost } from "@/api/generator/types/community";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -32,10 +31,20 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { Input } from "@/registry/new-york-v4/ui/input";
 import { PrivateTemplate } from "@/templates/private";
-import { COMMUNITY_FEED_CHIPS, findCommunityFeedChip } from "@/utils/community";
+import {
+  COMMUNITY_EXPLORE_HREF,
+  COMMUNITY_FEED_CHIPS,
+  COMMUNITY_FEED_SLUG,
+  getCommunityFeedChip,
+} from "@/utils/community";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 const PAGE_LIMIT = 12;
+
+const FEED_SCOPE_OPTIONS: Array<{ label: string; value: CommunityFeedScope }> = [
+  { label: "Todas as comunidades", value: "all" },
+  { label: "Apenas comunidades que sigo", value: "following" },
+];
 
 type ApiErrorData = {
   error?: string;
@@ -62,7 +71,7 @@ const resolveFeedError = (error: unknown) => {
   const normalized = rawMessage.toLowerCase();
 
   if (apiError?.data?.status === 404 || normalized.includes("não encontr")) {
-    return "Esta comunidade não foi encontrada ou não está disponível.";
+    return "Este recorte do feed não foi encontrado ou não está disponível.";
   }
 
   if (normalized.includes("token") || normalized.includes("sess")) {
@@ -73,7 +82,7 @@ const resolveFeedError = (error: unknown) => {
     return "Não foi possível conectar à API agora. Tente novamente em alguns instantes.";
   }
 
-  return rawMessage || "Não foi possível carregar o feed desta comunidade agora.";
+  return rawMessage || "Não foi possível carregar o feed da comunidade agora.";
 };
 
 const formatRelativeTime = (value: string) => {
@@ -103,6 +112,11 @@ const getInitials = (name: string) => {
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
 
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+};
+
+const feedHref = (communitySlug?: string | null) => {
+  const base = `/app/community/${COMMUNITY_FEED_SLUG}`;
+  return communitySlug ? `${base}?community=${encodeURIComponent(communitySlug)}` : base;
 };
 
 const AuthorAvatar = ({ post }: { post: CommunityPost }) => {
@@ -138,15 +152,84 @@ const CountAction = ({ icon: Icon, label, value }: CountActionProps) => (
   </button>
 );
 
+const FilterMenu = ({
+  onScopeChange,
+  open,
+  scope,
+  setOpen,
+}: {
+  onScopeChange: (value: CommunityFeedScope) => void;
+  open: boolean;
+  scope: CommunityFeedScope;
+  setOpen: (value: boolean) => void;
+}) => {
+  const activeLabel = FEED_SCOPE_OPTIONS.find((item) => item.value === scope)?.label;
+
+  return (
+    <div className="relative shrink-0">
+      <button
+        aria-expanded={open}
+        aria-label="Filtrar feed"
+        className="inline-flex h-12 items-center justify-center gap-1.5 rounded-full border border-[#DFE5EC] bg-white px-3 text-primary shadow-sm transition hover:border-primary/50 hover:bg-primary-soft dark:border-border dark:bg-surface"
+        onClick={() => setOpen(!open)}
+        type="button"
+      >
+        <SlidersHorizontal className="h-5 w-5" aria-hidden="true" />
+        <ChevronDown className="h-3.5 w-3.5 text-muted" aria-hidden="true" />
+      </button>
+
+      {open ? (
+        <div className="absolute right-0 top-14 z-30 w-64 overflow-hidden rounded-[18px] border border-border bg-white p-1.5 shadow-[0_18px_45px_rgba(15,23,42,0.16)] dark:bg-surface">
+          <p className="px-3 pb-1 pt-2 text-[11px] font-black uppercase tracking-[0.08em] text-subtle">
+            Filtrar por
+          </p>
+          {FEED_SCOPE_OPTIONS.map((item) => {
+            const selected = item.value === scope;
+
+            return (
+              <button
+                aria-pressed={selected}
+                className={cn(
+                  "flex w-full items-center justify-between rounded-[14px] px-3 py-2.5 text-left text-sm font-bold transition",
+                  selected
+                    ? "bg-primary-soft text-primary"
+                    : "text-[#475569] hover:bg-surface-muted dark:text-muted",
+                )}
+                key={item.value}
+                onClick={() => {
+                  onScopeChange(item.value);
+                  setOpen(false);
+                }}
+                type="button"
+              >
+                {item.label}
+                {selected ? <span className="h-2 w-2 rounded-full bg-primary" /> : null}
+              </button>
+            );
+          })}
+          <p className="px-3 pb-2 pt-1 text-[11px] text-subtle">Filtro atual: {activeLabel}</p>
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
 const CommunityChips = ({
   activeSlug,
   onNavigate,
 }: {
-  activeSlug: string;
+  activeSlug: string | null;
   onNavigate: () => void;
 }) => (
   <nav aria-label="Comunidades" className="-mx-5 overflow-x-auto px-5 [scrollbar-width:none]">
     <div className="flex min-w-max gap-2 pb-1">
+      <Link
+        className="rounded-full border border-border bg-white px-4 py-2 text-sm font-black text-[#475569] shadow-sm transition hover:border-primary/40 hover:bg-primary-soft hover:text-primary dark:bg-surface dark:text-muted"
+        href={COMMUNITY_EXPLORE_HREF}
+        onClick={onNavigate}
+      >
+        Explorar
+      </Link>
       {COMMUNITY_FEED_CHIPS.map((item) => {
         const isActive = item.slug === activeSlug;
 
@@ -157,9 +240,9 @@ const CommunityChips = ({
               "rounded-full border px-4 py-2 text-sm font-black shadow-sm transition",
               isActive
                 ? "border-primary bg-primary text-white shadow-primary/20"
-                : "border-border bg-surface text-muted hover:border-primary/40 hover:bg-primary-soft hover:text-primary",
+                : "border-border bg-white text-[#475569] hover:border-primary/40 hover:bg-primary-soft hover:text-primary dark:bg-surface dark:text-muted",
             )}
-            href={`/app/community/${item.slug}`}
+            href={feedHref(item.slug)}
             key={item.slug}
             onClick={onNavigate}
           >
@@ -248,7 +331,13 @@ const PostCard = ({
         <span className="inline-flex min-w-0 items-center gap-1.5">
           <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           <span className="truncate">
-            Postado em <strong className="text-foreground">{post.community.name}</strong>
+            Postado em{" "}
+            <Link
+              className="font-black text-foreground underline-offset-4 hover:text-primary hover:underline"
+              href={`/app/community/${post.community.slug}`}
+            >
+              {post.community.name}
+            </Link>
           </span>
         </span>
         <button
@@ -313,11 +402,12 @@ const PostCard = ({
 
       <div className="mt-4 flex items-center justify-between border-[#EDF1F5] border-t pt-3 dark:border-border">
         <div className="flex items-center gap-1">
-          <CountAction icon={ThumbsUp} label="Curtir post" value={post.upvotes_count} />
+          <CountAction icon={ArrowUp} label="Dar upvote" value={post.upvotes_count} />
+          <CountAction icon={ArrowDown} label="Dar downvote" value={post.downvotes_count} />
           <CountAction icon={MessageCircle} label="Comentar" value={post.replies_count} />
         </div>
         <div className="flex items-center gap-1">
-          <CountAction icon={Bookmark} label="Salvar" />
+          <CountAction icon={Bookmark} label="Salvar" value={post.saves_count} />
           <button
             aria-label={`Compartilhar ${post.title}`}
             className="grid h-9 w-9 place-items-center rounded-full text-[#475569] transition hover:bg-primary-soft hover:text-primary dark:text-muted"
@@ -377,31 +467,31 @@ const Pagination = ({
 
 export const CommunityFeedLogic = () => {
   const params = useParams<{ slug: string }>();
-  const router = useRouter();
-  const slug = params.slug;
-  const activeChip = findCommunityFeedChip(slug);
+  const searchParams = useSearchParams();
+  const routeSlug = typeof params.slug === "string" ? params.slug : COMMUNITY_FEED_SLUG;
+  const communityFromQuery = getCommunityFeedChip(searchParams.get("community"));
+  const communityFromLegacySlug =
+    routeSlug !== COMMUNITY_FEED_SLUG ? getCommunityFeedChip(routeSlug) : null;
+  const selectedCommunitySlug = communityFromQuery?.slug ?? communityFromLegacySlug?.slug ?? null;
   const [page, setPage] = useState(1);
+  const [scope, setScope] = useState<CommunityFeedScope>("all");
+  const [filterOpen, setFilterOpen] = useState(false);
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search.trim());
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const query = useMemo(
-    () => ({ page, limit: PAGE_LIMIT, ...(deferredSearch ? { search: deferredSearch } : {}) }),
-    [deferredSearch, page],
+    () => ({
+      page,
+      limit: PAGE_LIMIT,
+      scope,
+      ...(deferredSearch ? { search: deferredSearch } : {}),
+      ...(selectedCommunitySlug ? { community: selectedCommunitySlug } : {}),
+    }),
+    [deferredSearch, page, scope, selectedCommunitySlug],
   );
-  const feed = useCommunityPosts(slug, query);
+  const feed = useCommunityFeedPosts(query);
   const posts = feed.data?.data ?? [];
-  const community = feed.data?.community;
   const errorMessage = feed.isError ? resolveFeedError(feed.error) : null;
-  const headerTitle = community?.name || activeChip.name;
-
-  const goBack = () => {
-    if (typeof window !== "undefined" && window.history.length > 1) {
-      router.back();
-      return;
-    }
-
-    router.push("/app/community");
-  };
 
   const sharePost = async (post: CommunityPost) => {
     if (typeof window === "undefined") return;
@@ -426,58 +516,39 @@ export const CommunityFeedLogic = () => {
       <section className="mx-auto grid w-full max-w-[430px] gap-4 sm:max-w-2xl lg:max-w-3xl">
         <header className="sticky top-0 z-20 -mx-5 border-[#E5EAF0] border-b bg-[#F5F7FA]/95 px-5 pb-3 pt-2 backdrop-blur supports-[backdrop-filter]:bg-[#F5F7FA]/88 dark:border-border dark:bg-background/90">
           <div className="mx-auto grid max-w-[430px] gap-3 sm:max-w-2xl lg:max-w-3xl">
-            <div className="flex items-center gap-3">
-              <button
-                aria-label="Voltar para comunidades"
-                className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-[#334155] shadow-sm transition hover:bg-primary-soft hover:text-primary dark:bg-surface dark:text-muted"
-                onClick={goBack}
-                type="button"
-              >
-                <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-              </button>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-primary">
-                  Feed da comunidade
-                </p>
-                <h1 className="truncate text-xl font-black text-[#182033] dark:text-foreground">
-                  {headerTitle}
-                </h1>
+            <div className="flex items-center gap-2">
+              <div className="relative min-w-0 flex-1">
+                <Search
+                  className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
+                  aria-hidden="true"
+                />
+                <Input
+                  aria-label="Buscar no feed"
+                  className="h-12 rounded-full border-[#DFE5EC] bg-white pl-11 text-sm shadow-sm dark:bg-surface"
+                  onChange={(event) => {
+                    setSearch(event.target.value);
+                    setPage(1);
+                  }}
+                  placeholder="Buscar no feed"
+                  type="search"
+                  value={search}
+                />
               </div>
-              <SlidersHorizontal className="h-5 w-5 text-muted" aria-hidden="true" />
-            </div>
 
-            <div className="relative">
-              <Search
-                className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
-                aria-hidden="true"
-              />
-              <Input
-                aria-label="Buscar no feed"
-                className="h-12 rounded-full border-[#DFE5EC] bg-white pl-11 text-sm shadow-sm dark:bg-surface"
-                onChange={(event) => {
-                  setSearch(event.target.value);
+              <FilterMenu
+                onScopeChange={(value) => {
+                  setScope(value);
                   setPage(1);
                 }}
-                placeholder="Buscar no feed"
-                type="search"
-                value={search}
+                open={filterOpen}
+                scope={scope}
+                setOpen={setFilterOpen}
               />
             </div>
 
-            <CommunityChips activeSlug={activeChip.slug} onNavigate={() => setPage(1)} />
+            <CommunityChips activeSlug={selectedCommunitySlug} onNavigate={() => setPage(1)} />
           </div>
         </header>
-
-        <div className="flex items-center justify-between rounded-[20px] bg-white px-4 py-3 text-xs font-bold text-muted shadow-[0_10px_24px_rgba(15,23,42,0.05)] dark:bg-surface">
-          <span className="inline-flex items-center gap-2">
-            <UsersRound className="h-4 w-4 text-primary" aria-hidden="true" />
-            {community?.members_count.toLocaleString("pt-BR") ?? "0"} membros
-          </span>
-          <span className="inline-flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
-            {feed.data?.count ?? 0} posts publicados
-          </span>
-        </div>
 
         {feed.isLoading || feed.isPending ? (
           <div className="grid min-h-[45vh] place-items-center rounded-[22px] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
@@ -501,10 +572,14 @@ export const CommunityFeedLogic = () => {
           <EmptyState
             action={
               <Button asChild variant="outline">
-                <Link href="/app/community">Explorar outras comunidades</Link>
+                <Link href={COMMUNITY_EXPLORE_HREF}>Explorar comunidades</Link>
               </Button>
             }
-            description="Esta comunidade ainda não possui posts publicados. O feed usa apenas dados persistidos no backend, sem arrays locais ou mocks."
+            description={
+              scope === "following"
+                ? "Ainda não há comunidades seguidas vinculadas ao seu usuário. Quando a participação em comunidades for ativada, este filtro exibirá esse recorte persistido."
+                : "Nenhum destaque publicado para este recorte do feed. O feed usa apenas dados persistidos no backend."
+            }
             icon={CalendarDays}
             title="Nenhum post publicado"
           />
