@@ -68,7 +68,19 @@
     "professional_profile_target_audience_required": "Selecione pelo menos um público atendido antes de publicar.",
     "post_reply_parent_invalid": "A resposta selecionada n?o pode receber uma nova resposta.",
     "post_vote_invalid_target": "A publica??o ou resposta selecionada n?o est? dispon?vel para voto.",
-    "post_vote_value_invalid": "Informe um voto v?lido para continuar."
+    "post_vote_value_invalid": "Informe um voto v?lido para continuar.",
+    "account_not_found": "Conta não encontrada.",
+    "account_password_login_unavailable": "Esta conta não possui senha cadastrada para confirmar a alteração.",
+    "account_current_password_invalid": "A senha atual está incorreta.",
+    "account_email_unchanged": "Informe um e-mail diferente do e-mail atual.",
+    "account_email_already_exists": "Este e-mail já está em uso em outra conta.",
+    "google_oauth_not_configured": "Login com Google indisponível neste ambiente.",
+    "google_already_connected": "Sua conta já está conectada ao Google.",
+    "google_not_connected": "Sua conta não está conectada ao Google.",
+    "google_unlink_requires_password": "Crie uma senha antes de desconectar o Google para não perder o acesso.",
+    "google_link_invalid": "Não foi possível validar a solicitação de vínculo com o Google.",
+    "google_link_expired": "A solicitação de vínculo com o Google expirou. Tente novamente.",
+    "google_link_email_mismatch": "Use no Google o mesmo e-mail da sua conta Lectum para concluir o vínculo."
   },
   "message": {
     "store": "dado criado",
@@ -115,7 +127,12 @@
     "post_reply_created": "Resposta publicada com sucesso.",
     "post_vote_updated": "Voto atualizado com sucesso.",
     "post_saved": "Publica??o salva com sucesso.",
-    "post_unsaved": "Publica??o removida dos salvos."
+    "post_unsaved": "Publica??o removida dos salvos.",
+    "account_email_update_success": "E-mail atualizado. Enviamos um código para confirmar o novo endereço.",
+    "account_password_update_success": "Senha atualizada com sucesso. Outros dispositivos foram desconectados.",
+    "google_link_intent_created": "Redirecionando para o Google.",
+    "google_link_success": "Conta conectada ao Google com sucesso.",
+    "google_unlink_success": "Google desconectado da sua conta com sucesso."
   },
   "gender": {
     "o": "o"

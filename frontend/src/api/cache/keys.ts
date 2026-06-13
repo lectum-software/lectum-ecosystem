@@ -1,6 +1,10 @@
 ﻿const keys = {
   auth: {
+    root: () => ["auth_hydrate"],
     hydrate: (cache?: unknown) => ["auth_hydrate", cache],
+  },
+  account: {
+    security: () => ["account_security"],
   },
   notification: {
     index: (filters?: unknown) => ["notification_index", filters],

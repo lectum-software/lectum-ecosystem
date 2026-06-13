@@ -21,7 +21,15 @@ routes.get("", passport.authenticate("google", { failureRedirect: "/" }), (_req,
     data?: { user_tokens?: { token?: string }[] };
   };
 
-  if (!user?.success && failPath) return res.redirect(`${failPath}?error=${user?.error}`);
+  if (!user?.success) {
+    const fallbackPath = failPath || process.env.CALLBACK_URL_API_USER || "/";
+    const separator = fallbackPath.includes("?") ? "&" : "?";
+    return res.redirect(
+      `${fallbackPath}${separator}error=${encodeURIComponent(
+        user?.error || "N\u00e3o foi poss\u00edvel concluir a autentica\u00e7\u00e3o com o Google.",
+      )}`,
+    );
+  }
 
   const token = user?.data?.user_tokens?.[0].token;
   const isProduction = process.env.NODE_ENV?.includes("prod");
@@ -39,7 +47,19 @@ routes.get("", passport.authenticate("google", { failureRedirect: "/" }), (_req,
   try {
     const stateObj = JSON.parse(state || "{}");
     if (stateObj?.query) {
-      const params = new URLSearchParams(stateObj.query);
+      const params = new URLSearchParams();
+      Object.entries(stateObj.query as Record<string, unknown>).forEach(([key, value]) => {
+        if (key === "link_token" || value === undefined || value === null) return;
+
+        if (Array.isArray(value)) {
+          value.forEach((item) => {
+            params.append(key, String(item));
+          });
+          return;
+        }
+
+        params.set(key, String(value));
+      });
       originalQueryStr = params.toString();
     }
   } catch (e) {

@@ -277,7 +277,7 @@ export const ProfileLogic = () => {
           },
         ]
       : [{ href: "/app/reviews", icon: Star, label: "Avaliações" }]),
-    { icon: Lock, label: "E-mail e senha" },
+    { href: "/app/settings/account", icon: Lock, label: "E-mail e senha" },
   ];
 
   const communityRows: ProfileRow[] = [

@@ -4,7 +4,7 @@ import { differenceInHours } from "date-fns";
 import dotenv from "dotenv";
 //Types
 import type { Request } from "express";
-import type { JwtPayload } from "jsonwebtoken";
+import jwt, { type JwtPayload } from "jsonwebtoken";
 import passport from "passport";
 import { Strategy as GoogleStrategy, type Profile } from "passport-google-oauth20";
 import { ExtractJwt, Strategy as JWTStrategy, type VerifiedCallback } from "passport-jwt";
@@ -23,6 +23,12 @@ const notAuthorized = { status: 401 };
 const allowedUserRoles = ["paciente", "psicologo"] as const;
 
 type UserRole = (typeof allowedUserRoles)[number];
+type GoogleLinkPayload = JwtPayload & {
+  device_id?: string;
+  email?: string;
+  intent?: string;
+  user_id?: string;
+};
 
 const parseUserRole = (role: unknown): UserRole | undefined => {
   if (typeof role !== "string") return undefined;
@@ -56,6 +62,8 @@ passport.use(
     async (req: Request, _accessToken: string, _refreshToken: string, profile: Profile, done) => {
       try {
         let device_id = req.query.state as string;
+        let intent: string | undefined;
+        let linkToken: string | undefined;
         let role: UserRole | undefined;
         let termsAccepted = false;
         let termsVersion: string | undefined;
@@ -70,6 +78,11 @@ passport.use(
             termsVersion =
               typeof stateObj.query?.terms_version === "string"
                 ? stateObj.query.terms_version
+                : undefined;
+            intent = typeof stateObj.query?.intent === "string" ? stateObj.query.intent : undefined;
+            linkToken =
+              typeof stateObj.query?.link_token === "string"
+                ? stateObj.query.link_token
                 : undefined;
           }
         } catch (e) {
@@ -98,6 +111,93 @@ passport.use(
         const repo = new LoginRepository(device_id, [
           { model: "company", columns: ["ai_api_key"] },
         ]);
+
+        if (intent === "link") {
+          if (!linkToken) {
+            return done(null, {
+              status: 400,
+              ...error("google_link_invalid", {}),
+              type: 3,
+            });
+          }
+
+          let payload: GoogleLinkPayload;
+
+          try {
+            payload = jwt.verify(linkToken, process.env.JWT_SECRET_KEY!) as GoogleLinkPayload;
+          } catch {
+            return done(null, {
+              status: 400,
+              ...error("google_link_expired", {}),
+              type: 3,
+            });
+          }
+
+          if (
+            payload.intent !== "link_google" ||
+            payload.device_id !== device_id ||
+            !payload.user_id ||
+            !payload.email
+          ) {
+            return done(null, {
+              status: 400,
+              ...error("google_link_invalid", {}),
+              type: 3,
+            });
+          }
+
+          if (payload.email.toLowerCase() !== email.toLowerCase()) {
+            return done(null, {
+              status: 400,
+              ...error("google_link_email_mismatch", {}),
+              type: 3,
+            });
+          }
+
+          let linkedUser = await repo.findByEmail({ b: { email: payload.email } });
+
+          if (!linkedUser || linkedUser.id !== payload.user_id) {
+            return done(null, {
+              status: 404,
+              ...error("account_not_found", {}),
+              type: 3,
+            });
+          }
+
+          const profileUpdate: { avatar?: string | null; name?: string; provider?: string } = {
+            provider: "google",
+          };
+
+          if (googleName && (!linkedUser.name || linkedUser.provider === "google")) {
+            profileUpdate.name = googleName;
+          }
+
+          if (googleAvatar && !linkedUser.avatar) {
+            profileUpdate.avatar = googleAvatar;
+          }
+
+          linkedUser = await repo.update({
+            p: { id: linkedUser.id! },
+            b: profileUpdate,
+            auth: linkedUser,
+          });
+
+          if (!linkedUser) {
+            return done(null, {
+              status: 404,
+              ...error("account_not_found", {}),
+              type: 3,
+            });
+          }
+
+          linkedUser = await repo.hidrate(linkedUser, device_id);
+
+          return done(null, {
+            ...msg("google_link_success", {}),
+            data: linkedUser,
+          });
+        }
+
         let user = await repo.findByEmail({ b: { email } });
 
         if (!user) {

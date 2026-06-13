@@ -1,0 +1,192 @@
+import { error, msg } from "@/helpers/translate";
+import type { user } from "@/interfaces/objects";
+import { confirmEmailSend } from "@/modules/api/config/nodemailer/messages/confirm";
+import { getDevice } from "@/modules/api/middlewares/_auth/utils/device";
+import { LoginRepository } from "@/modules/api/public/auth/login/repositories/LoginRepository";
+import {
+  GOOGLE_MANAGE_ACCOUNT_URL,
+  isGoogleOAuthConfigured,
+} from "@/modules/api/public/google/utils/config";
+import { code } from "@/utils/code";
+import { compare, encrypt } from "@/utils/crypt";
+import type {
+  AccountSecurityResponse,
+  IAccountDTO,
+  IAccountEmailDTO,
+  IAccountPasswordDTO,
+} from "../DTOs/IAccountDTO";
+import { AccountRepository } from "../repositories/AccountRepository";
+
+const normalizeEmail = (email: string) => email.trim().toLowerCase();
+
+const getCurrentUser = async (auth: user) => {
+  if (!auth.id) return null;
+
+  const repository = new AccountRepository();
+  return repository.findById(auth.id);
+};
+
+const validateCurrentPassword = async (user: user, currentPassword: string) => {
+  if (!user.password) {
+    return {
+      status: 403,
+      ...error("account_password_login_unavailable", {}),
+    };
+  }
+
+  const passwordMatches = await compare(currentPassword, user.password);
+
+  if (!passwordMatches) {
+    return {
+      status: 403,
+      ...error("account_current_password_invalid", {}),
+    };
+  }
+
+  return null;
+};
+
+const hydrateUpdatedUser = async (user: user, deviceId: string) => {
+  const loginRepository = new LoginRepository(deviceId);
+  return loginRepository.hidrate(user, deviceId);
+};
+
+export const security = async (data: IAccountDTO) => {
+  const current = await getCurrentUser(data.auth);
+
+  if (!current) {
+    return {
+      status: 404,
+      ...error("account_not_found", {}),
+    };
+  }
+
+  const googleAvailable = isGoogleOAuthConfigured();
+  const hasPassword = Boolean(current.password);
+  const googleConnected = current.provider === "google";
+  const response: AccountSecurityResponse = {
+    email: current.email || null,
+    provider: current.provider || null,
+    confirmed: Boolean(current.confirmed),
+    has_password: hasPassword,
+    google: {
+      available: googleAvailable,
+      blocked_reason: googleAvailable ? undefined : "google_oauth_not_configured",
+      connected: googleConnected,
+      can_link: googleAvailable && !googleConnected,
+      can_unlink: googleConnected && hasPassword,
+      manage_url: GOOGLE_MANAGE_ACCOUNT_URL,
+    },
+  };
+
+  return {
+    status: 200,
+    ...msg("show", {}),
+    data: response,
+  };
+};
+
+export const updateEmail = async (data: IAccountEmailDTO) => {
+  const device = getDevice(data);
+
+  if (device.err) {
+    return {
+      status: 403,
+      ...error(device.err, {}),
+    };
+  }
+
+  const repository = new AccountRepository();
+  const current = await getCurrentUser(data.auth);
+
+  if (!current?.id) {
+    return {
+      status: 404,
+      ...error("account_not_found", {}),
+    };
+  }
+
+  const passwordError = await validateCurrentPassword(current, data.b.current_password);
+  if (passwordError) return passwordError;
+
+  const nextEmail = normalizeEmail(data.b.email);
+  const currentEmail = normalizeEmail(current.email || "");
+
+  if (nextEmail === currentEmail) {
+    return {
+      status: 400,
+      ...error("account_email_unchanged", {}),
+    };
+  }
+
+  const existing = await repository.findByEmail(nextEmail);
+
+  if (existing?.id && existing.id !== current.id) {
+    return {
+      status: 409,
+      ...error("account_email_already_exists", {}),
+    };
+  }
+
+  const confirmCode = code();
+
+  await confirmEmailSend({
+    email: nextEmail,
+    name: current.name || nextEmail,
+    code: confirmCode,
+  });
+
+  const updated = await repository.updateUserAndClearTokens(current.id, {
+    email: nextEmail,
+    confirmed: false,
+    confirmed_date: null,
+    confirm_code: confirmCode,
+    confirm_date: new Date(),
+  });
+  const hydrated = await hydrateUpdatedUser(updated, device.id);
+
+  return {
+    status: 200,
+    ...msg("account_email_update_success", {}),
+    data: hydrated,
+  };
+};
+
+export const updatePassword = async (data: IAccountPasswordDTO) => {
+  const device = getDevice(data);
+
+  if (device.err) {
+    return {
+      status: 403,
+      ...error(device.err, {}),
+    };
+  }
+
+  const repository = new AccountRepository();
+  const current = await getCurrentUser(data.auth);
+
+  if (!current?.id) {
+    return {
+      status: 404,
+      ...error("account_not_found", {}),
+    };
+  }
+
+  const passwordError = await validateCurrentPassword(current, data.b.current_password);
+  if (passwordError) return passwordError;
+
+  const password = await encrypt(data.b.password);
+
+  const updated = await repository.updateUserAndClearTokens(current.id, {
+    password,
+    password_confirm: password,
+    need_reset: false,
+  });
+  const hydrated = await hydrateUpdatedUser(updated, device.id);
+
+  return {
+    status: 200,
+    ...msg("account_password_update_success", {}),
+    data: hydrated,
+  };
+};
