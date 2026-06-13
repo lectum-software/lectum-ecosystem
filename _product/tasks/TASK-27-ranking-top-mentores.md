@@ -162,3 +162,4 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 - Formula do ranking ajustada conforme `C:\Users\tulio\Desktop\Lectum\Sistema de Ranking de Mentores.pdf` e ADR-0070.
 - Componentes sem fonte persistida atual (`shares_received` e `community_whatsapp_clicks`) permanecem zerados ate existir rastreamento real por comunidade; nao usar mocks.
+- Responsividade mobile da tela Top Mentores corrigida conforme ADR-0071 para evitar corte/overflow horizontal em 390px.

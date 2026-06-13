@@ -135,19 +135,22 @@ const Avatar = ({ mentor, size = 56 }: { mentor: CommunityTopMentor; size?: numb
 };
 
 const PodiumMentor = ({ mentor, size }: { mentor: CommunityTopMentor; size: number }) => (
-  <Link className="group grid justify-items-center gap-2" href={mentor.professional.profile_url}>
+  <Link
+    className="group grid min-w-0 max-w-20 justify-items-center gap-2"
+    href={mentor.professional.profile_url}
+  >
     <span className="relative">
       <Avatar mentor={mentor} size={size} />
       <span
         className={cn(
-          "absolute -right-1 -top-1 grid h-8 w-8 place-items-center rounded-full border text-xs font-black shadow-sm",
+          "absolute -right-1 -top-1 grid h-7 w-7 place-items-center rounded-full border text-[0.68rem] font-black shadow-sm sm:h-8 sm:w-8 sm:text-xs",
           positionTone(mentor.position),
         )}
       >
         {mentor.position}º
       </span>
     </span>
-    <span className="max-w-28 truncate text-center text-xs font-bold text-muted transition group-hover:text-primary">
+    <span className="max-w-full truncate text-center text-xs font-bold text-muted transition group-hover:text-primary">
       {mentor.professional.name}
     </span>
   </Link>
@@ -165,41 +168,41 @@ const RankingHero = ({
   const third = mentors[2];
 
   return (
-    <section className="relative overflow-hidden rounded-[2rem] border border-border bg-surface px-5 py-8 shadow-[var(--lectum-shadow-soft)]">
+    <section className="relative box-border w-full min-w-0 max-w-full overflow-hidden rounded-[2rem] border border-border bg-surface px-4 py-7 shadow-[var(--lectum-shadow-soft)] sm:px-5 sm:py-8">
       <div
         aria-hidden="true"
-        className="absolute inset-x-8 top-20 h-32 rounded-full bg-primary-soft blur-3xl"
+        className="absolute inset-x-4 top-20 h-32 rounded-full bg-primary-soft blur-3xl sm:inset-x-8"
       />
-      <div className="relative grid justify-items-center gap-7 text-center">
-        <div className="grid gap-2">
+      <div className="relative grid w-full min-w-0 justify-items-center gap-7 text-center">
+        <div className="grid w-full min-w-0 gap-2">
           <p className="text-sm font-black uppercase tracking-[0.16em] text-primary">
             Top 5 Mentores
           </p>
-          <h1 className="text-3xl font-black leading-tight tracking-tight text-foreground">
+          <h1 className="min-w-0 max-w-full text-2xl font-black leading-tight tracking-tight text-foreground sm:text-3xl">
             Mentores em
-            <span className="mt-1 block font-serif text-3xl font-bold italic text-primary">
+            <span className="mt-1 block max-w-full break-words font-serif text-2xl font-bold italic text-primary [overflow-wrap:anywhere] sm:text-3xl">
               {communityName}
             </span>
           </h1>
         </div>
 
         {first ? (
-          <div className="flex w-full items-end justify-center gap-2 sm:gap-6">
-            {second ? <PodiumMentor mentor={second} size={74} /> : null}
-            <div className="grid justify-items-center gap-3">
+          <div className="flex w-full min-w-0 max-w-full items-end justify-center gap-1.5 overflow-hidden sm:gap-6">
+            {second ? <PodiumMentor mentor={second} size={58} /> : null}
+            <div className="grid min-w-0 max-w-[9rem] justify-items-center gap-3">
               <span className="relative">
                 <span
-                  className="absolute -inset-3 rounded-full bg-warning-soft"
+                  className="absolute -inset-2 rounded-full bg-warning-soft sm:-inset-3"
                   aria-hidden="true"
                 />
-                <Avatar mentor={first} size={132} />
-                <span className="absolute -right-2 top-1 grid h-10 w-10 place-items-center rounded-full border border-warning/25 bg-warning-soft text-sm font-black text-warning shadow-sm">
+                <Avatar mentor={first} size={108} />
+                <span className="absolute -right-1 top-1 grid h-9 w-9 place-items-center rounded-full border border-warning/25 bg-warning-soft text-xs font-black text-warning shadow-sm sm:-right-2 sm:h-10 sm:w-10 sm:text-sm">
                   1º
                 </span>
               </span>
-              <div className="grid gap-1">
+              <div className="grid min-w-0 max-w-full gap-1">
                 <Link
-                  className="text-lg font-black text-warning transition hover:text-primary"
+                  className="max-w-full truncate text-lg font-black text-warning transition hover:text-primary"
                   href={first.professional.profile_url}
                 >
                   {first.professional.name}
@@ -209,7 +212,7 @@ const RankingHero = ({
                 </span>
               </div>
             </div>
-            {third ? <PodiumMentor mentor={third} size={74} /> : null}
+            {third ? <PodiumMentor mentor={third} size={58} /> : null}
           </div>
         ) : null}
       </div>
@@ -226,7 +229,7 @@ const MetricPill = ({
   label: string;
   value: string;
 }) => (
-  <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-bold text-muted">
+  <span className="inline-flex max-w-full min-w-0 flex-wrap items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-bold leading-4 text-muted">
     <Icon className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
     {value} {label}
   </span>
@@ -234,10 +237,10 @@ const MetricPill = ({
 
 const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => (
   <Link
-    className="group grid gap-4 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)] transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg"
+    className="group grid w-full min-w-0 max-w-full gap-4 overflow-hidden rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)] transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg"
     href={mentor.professional.profile_url}
   >
-    <div className="flex items-center gap-4">
+    <div className="flex min-w-0 items-center gap-3 sm:gap-4">
       <span
         className={cn(
           "grid h-12 w-12 shrink-0 place-items-center rounded-2xl border text-sm font-black",
@@ -248,7 +251,7 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => (
       </span>
       <Avatar mentor={mentor} />
       <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-1.5">
+        <span className="flex min-w-0 items-center gap-1.5">
           <strong className="truncate text-base font-black text-foreground">
             {mentor.professional.name}
           </strong>
@@ -264,14 +267,14 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => (
       <ChevronRight className="h-5 w-5 shrink-0 text-subtle transition group-hover:translate-x-1 group-hover:text-primary" />
     </div>
 
-    <div className="grid gap-3 rounded-2xl border border-border bg-background p-3">
-      <div className="flex items-center justify-between gap-3">
-        <span className="inline-flex items-center gap-2 text-sm font-black text-foreground">
+    <div className="grid min-w-0 gap-3 rounded-2xl border border-border bg-background p-3">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
+        <span className="inline-flex min-w-0 items-center gap-2 text-sm font-black text-foreground">
           <Trophy className="h-4 w-4 text-warning" aria-hidden="true" />
           {formatNumber(mentor.score)} pontos
         </span>
         {mentor.badge ? (
-          <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-black text-primary">
+          <span className="max-w-full rounded-full bg-primary-soft px-3 py-1 text-xs font-black text-primary">
             {mentor.badge}
           </span>
         ) : null}
@@ -344,7 +347,7 @@ const FormulaWeightCard = ({
   value: string;
   tone?: "positive" | "negative";
 }) => (
-  <span className="rounded-2xl border border-border bg-background p-3 text-sm font-bold text-muted">
+  <span className="min-w-0 rounded-2xl border border-border bg-background p-3 text-sm font-bold leading-5 text-muted">
     <Icon
       className={cn("mb-2 h-4 w-4", tone === "negative" ? "text-warning" : "text-primary")}
       aria-hidden="true"
@@ -381,9 +384,9 @@ export const CommunityTopMentorsLogic = () => {
   };
 
   return (
-    <PrivateTemplate>
-      <section className="mx-auto grid w-full max-w-[430px] gap-6 sm:max-w-2xl lg:max-w-4xl">
-        <header className="grid gap-5">
+    <PrivateTemplate contentClassName="overflow-x-hidden">
+      <section className="mx-auto grid w-full min-w-0 max-w-full gap-6 sm:max-w-2xl lg:max-w-4xl">
+        <header className="grid min-w-0 gap-5">
           <Button asChild className="w-fit rounded-full" variant="ghost">
             <Link href={community ? `/app/community/${community}` : "/app/community"}>
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
@@ -396,7 +399,7 @@ export const CommunityTopMentorsLogic = () => {
 
         <nav
           aria-label="Período do ranking"
-          className="-mx-5 overflow-x-auto px-5 [scrollbar-width:none]"
+          className="w-full min-w-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           <div className="flex min-w-max gap-2 pb-1">
             {PERIOD_OPTIONS.map((item) => {
@@ -450,13 +453,13 @@ export const CommunityTopMentorsLogic = () => {
         ) : null}
 
         {mentors.length > 0 ? (
-          <section className="grid gap-4">
-            <div className="flex items-start justify-between gap-4">
-              <div className="grid gap-1">
+          <section className="grid min-w-0 gap-4">
+            <div className="flex min-w-0 items-start justify-between gap-4">
+              <div className="grid min-w-0 gap-1">
                 <p className="text-xs font-black uppercase tracking-[0.14em] text-primary">
                   Classificação geral
                 </p>
-                <h2 className="text-2xl font-black tracking-tight text-foreground">
+                <h2 className="break-words text-2xl font-black tracking-tight text-foreground [overflow-wrap:anywhere]">
                   Profissionais que mais acolhem e contribuem
                 </h2>
                 <p className="text-sm leading-6 text-muted">
@@ -468,7 +471,7 @@ export const CommunityTopMentorsLogic = () => {
               </span>
             </div>
 
-            <div className="grid gap-3">
+            <div className="grid min-w-0 gap-3">
               {mentors.map((mentor) => (
                 <RankingCard key={mentor.professional.id} mentor={mentor} />
               ))}
@@ -477,13 +480,17 @@ export const CommunityTopMentorsLogic = () => {
         ) : null}
 
         {ranking.data ? (
-          <section className="grid gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
-            <div className="flex items-center gap-2">
+          <section className="grid w-full min-w-0 max-w-full gap-3 overflow-hidden rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
+            <div className="flex min-w-0 items-center gap-2">
               <BarChart3 className="h-5 w-5 text-primary" aria-hidden="true" />
-              <h2 className="text-lg font-black text-foreground">Como a pontuação é calculada</h2>
+              <h2 className="min-w-0 text-lg font-black text-foreground">
+                Como a pontuação é calculada
+              </h2>
             </div>
-            <p className="text-sm leading-6 text-muted">{ranking.data.formula.description}.</p>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            <p className="break-words text-sm leading-6 text-muted [overflow-wrap:anywhere]">
+              {ranking.data.formula.description}.
+            </p>
+            <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
               <FormulaWeightCard
                 icon={ThumbsUp}
                 label="Upvote recebido"
