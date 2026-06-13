@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, Globe2, Info, Loader2, UserRoundX, Video, X } from "lucide-react";
+import { Camera, Info, Loader2, UserRoundX, UsersRound, Video, X } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -64,6 +64,9 @@ const resolveCreatePostError = (error: unknown) => {
 
 const guidanceText =
   "Lembre-se de ser respeitoso com os outros membros. Conteúdos ofensivos ou que violem as diretrizes serão removidos pela moderação.";
+const communityNameCollator = new Intl.Collator("pt-BR", {
+  sensitivity: "base",
+});
 
 export const CreateCommunityPostLogic = () => {
   const router = useRouter();
@@ -76,11 +79,13 @@ export const CreateCommunityPostLogic = () => {
   const communitiesQuery = useCommunities({ limit: 50 });
   const communityOptions = useMemo(
     () =>
-      (communitiesQuery.data?.data ?? []).map((community) => ({
-        label: community.name,
-        value: community.slug,
-        group: community.category ?? undefined,
-      })),
+      (communitiesQuery.data?.data ?? [])
+        .map((community) => ({
+          label: community.name,
+          value: community.slug,
+          group: community.category ?? undefined,
+        }))
+        .sort((a, b) => communityNameCollator.compare(a.label, b.label)),
     [communitiesQuery.data?.data],
   );
   const defaultCommunitySlug = routeSlug && routeSlug !== COMMUNITY_FEED_SLUG ? routeSlug : null;
@@ -164,9 +169,9 @@ export const CreateCommunityPostLogic = () => {
                 if (field.name === "community_slug") {
                   return (
                     <div className="relative w-fit" key="create-post-community">
-                      <Globe2
+                      <UsersRound
                         aria-hidden="true"
-                        className="pointer-events-none absolute top-3 left-3 z-10 h-4 w-4 text-[#111827] dark:text-foreground"
+                        className="pointer-events-none absolute top-5 left-3 z-10 h-4 w-4 -translate-y-1/2 text-[#111827] dark:text-foreground"
                       />
                       <Component
                         control={hook.control}

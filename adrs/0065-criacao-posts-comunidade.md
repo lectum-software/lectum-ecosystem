@@ -27,6 +27,7 @@ O `DATA-MODEL.md` já prevê `community_post` com `author_id`, `community_id`, `
 - Manter `/app/community/post/new` como compatibilidade, redirecionando para o fluxo global `/app/community/feed/post/new` usado pelo CTA central do feed.
 - Usar React Hook Form, Zod, `frontend/src/hooks/form` e controllers existentes para comunidade, título e texto; o toggle anônimo usa `Controller` do React Hook Form para respeitar a base de formulário e reproduzir o layout do protótipo.
 - Diferenciar a UI por perfil: pacientes veem a opção “Postar como anônimo”; psicólogos veem a seção visual de mídia, desabilitada como pendência de R2.
+- No seletor de comunidade, manter as opções ordenadas alfabeticamente por nome em `pt-BR`, usar ícone de grupo alinhado ao texto e abrir busca interna com placeholder `Buscar comunidade`; quando o filtro não encontrar resultados, exibir `Nenhuma comunidade encontrada`.
 
 ## Consequências
 
@@ -42,8 +43,9 @@ O `DATA-MODEL.md` já prevê `community_post` com `author_id`, `community_id`, `
 - `pnpm --dir frontend check`: sucesso.
 - `pnpm --dir backend build`: sucesso.
 - `pnpm --dir frontend build`: sucesso.
+- Refinamento do seletor de comunidade: `pnpm --dir frontend check` e `pnpm --dir frontend build`: sucesso.
 - Validação HTTP local das rotas Next:
-  - `GET http://localhost:3000/app/community/feed/post/new`: sucesso (`200`).
+  - `GET http://localhost:3000/app/community/feed/post/new`: sucesso (`200`), incluindo o refinamento do seletor.
   - `GET http://localhost:3000/app/community/ansiedade-em-equilibrio/post/new`: sucesso (`200`).
   - `GET http://localhost:3000/app/community/ansiedade-em-equilibrio/post/success`: sucesso (`200`).
 - `pnpm check`: sucesso.

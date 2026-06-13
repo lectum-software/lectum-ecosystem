@@ -44,6 +44,10 @@ const buildFields = ({
       emptyLabel: "Escolher comunidade",
       options: communityOptions,
       loading: loadingCommunities,
+      searchable: true,
+      searchMode: "dropdown",
+      searchPlaceholder: "Buscar comunidade",
+      emptySearchLabel: "Nenhuma comunidade encontrada",
       required: true,
       inputClassName:
         "h-10 w-fit min-w-[210px] rounded-full border-transparent bg-[#F5F7FA] px-4 text-sm font-semibold text-[#111827] shadow-none focus:border-transparent focus:ring-0 dark:bg-surface-muted",
