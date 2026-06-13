@@ -51,6 +51,14 @@ export type CommunityAuthorDTO = {
   whatsapp_url: string | null;
 };
 
+export type CommunityProfessionalReplyDTO = {
+  id: string;
+  content: string;
+  upvotes_count: number;
+  created_at: Date;
+  author: CommunityAuthorDTO;
+};
+
 export type CommunityPostDTO = {
   id: string;
   title: string;
@@ -67,6 +75,7 @@ export type CommunityPostDTO = {
   media_type: string | null;
   community: CommunityDTO;
   author: CommunityAuthorDTO;
+  highlighted_professional_reply: CommunityProfessionalReplyDTO | null;
 };
 
 export type CommunitySuggestionDTO = {

@@ -317,6 +317,8 @@ autogestão do psicólogo em `/api/private/psychologist/reviews` também exige e
 | `members_count` | `Int @default(0)` | denormalizado para o card |
 | `@@index([slug])`, `@@index([category, deleted])` | | |
 
+Governança: comunidades são criadas/curadas apenas por administradores da plataforma em fluxo administrativo futuro; usuários finais não têm endpoint de criação direta. Usuários podem apenas registrar `community_suggestion`, que fica pendente para análise da equipe. Moderadores de comunidades também serão administradores da plataforma, não usuários comuns ou mentores.
+
 `community_suggestion` (TASK-22, "Sugerir Comunidade"):
 
 | Campo | Tipo | Notas |
@@ -346,7 +348,7 @@ autogestão do psicólogo em `/api/private/psychologist/reviews` também exige e
 | `upvotes_count` / `downvotes_count` / `replies_count` / `saves_count` | `Int @default(0)` | denormalizados para o feed |
 | `@@index([community_id, status, createdAt])`, `@@index([author_id])` | | feed por comunidade ordenado por data |
 
-DTOs do feed: `GET /api/private/community/feed/posts` é o contrato canônico do Feed da Comunidade agregado (posts de destaque de todas as comunidades), com filtros opcionais `search`, `community` e `scope="all"|"following"`; `scope="following"` depende de `community_member` (TASK-25) e não deve inventar vínculo sem persistência. `GET /api/private/community/:slug/posts` permanece como contrato de posts por comunidade para detalhe futuro. Além dos campos persistidos, ambos podem retornar metadados derivados para apresentação (`author.type_label`, `author.verified`, `author.whatsapp_url`, `featured_badge`, `media_url`, `media_type`). O backend deve mascarar autores não psicólogos como `Membro Anônimo` no feed e manter `media_url`/`media_type` nulos enquanto o schema de mídia de posts não existir.
+DTOs do feed: `GET /api/private/community/feed/posts` é o contrato canônico do Feed da Comunidade agregado (posts de destaque de todas as comunidades), com filtros opcionais `search`, `community` e `scope="all"|"following"`; `scope="following"` depende de `community_member` (TASK-25) e não deve inventar vínculo sem persistência. `GET /api/private/community/:slug/posts` permanece como contrato de posts por comunidade para detalhe futuro. Além dos campos persistidos, ambos podem retornar metadados derivados para apresentação (`author.type_label`, `author.verified`, `author.whatsapp_url`, `featured_badge`, `media_url`, `media_type`, `highlighted_professional_reply`). O backend deve mascarar autores não psicólogos como `Membro Anônimo` no feed, manter `media_url`/`media_type` nulos enquanto o schema de mídia de posts não existir e preencher `highlighted_professional_reply` somente com a resposta de psicólogo com `cfp_verified_at` e maior `upvotes_count`. Comentários de usuários comuns e psicólogos não verificados não entram nessa prévia.
 
 `post_reply` (comentários e respostas, TASK-26; PRD distingue comentário/resposta → árvore de 1 nível):
 
@@ -356,8 +358,8 @@ DTOs do feed: `GET /api/private/community/feed/posts` é o contrato canônico do
 | `author_id` | `String` | |
 | `parent_reply_id` | `String?` | null = comentário; preenchido = resposta a um comentário |
 | `content` | `String` | |
-| `upvotes_count` | `Int @default(0)` | |
-| `@@index([post_id, parent_reply_id, createdAt])` | | paginação por âncora (TASK-26) |
+| `upvotes_count` | `Int @default(0)` | denormalizado para ranking de respostas e prévia profissional |
+| `@@index([post_id, parent_reply_id, createdAt])`, `@@index([author_id])` | | paginação por âncora (TASK-26) e seleção por autor |
 
 `post_vote` (PRD §9 regras: 1 voto/usuário, alteração permitida, downvote não público):
 

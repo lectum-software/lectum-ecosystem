@@ -26,6 +26,7 @@ export type {
   CommunityPost,
   CommunityPostsQuery,
   CommunityPostsResponse,
+  CommunityProfessionalReply,
   CommunitySuggestion,
   SuggestCommunityPayload,
 } from "./community";

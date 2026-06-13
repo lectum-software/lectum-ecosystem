@@ -1,4 +1,4 @@
-# ADR-0064: Feed da Comunidade agregado com posts reais
+# ADR-0064: Feed da Comunidade agregado com prévia profissional real
 
 ## Status
 
@@ -10,58 +10,52 @@ TASK-23, refinamentos solicitados em 2026-06-12 e 2026-06-13.
 
 ## Contexto
 
-A tela de comunidade deixou de representar o detalhe de uma comunidade específica. A regra vigente é que o destino principal da nav bar "Comunidade" seja o **Feed da Comunidade**: um feed vertical com posts de destaque de todas as comunidades, inspirado no PDF local "Feed Comunidade" e sem arrays locais/mocks para preencher a UI.
+A tela de comunidade não representa o detalhe de uma comunidade específica. A regra vigente é que o destino principal da nav bar "Comunidade" seja o **Feed da Comunidade**: um feed vertical global, estilo Reddit adaptado para Lectum, com posts de destaque misturados de todas as comunidades e sem arrays locais/mocks para preencher a UI.
 
-As páginas de detalhe por comunidade serão criadas depois. Até lá, chips e links de comunidade podem filtrar o feed agregado ou apontar para a rota futura, mas não devem tratar a tela atual como detalhe canônico.
+As páginas de detalhe por comunidade serão criadas depois. Até lá, chips e nomes de comunidade apontam para as rotas futuras `/app/community/[slug]`, enquanto a implementação atual usa essa rota como compatibilidade/filtro do feed.
 
 ## Decisão
 
-- Usar `/app/community/feed` como rota canônica do Feed da Comunidade e atualizar a nav inferior para esse destino via `DEFAULT_COMMUNITY_FEED_HREF`.
-- Manter `/app/community` como tela de explorar/listar comunidades; o chip `Explorar` aponta para essa rota.
-- Centralizar os chips em `frontend/src/utils/community.ts`:
-  - `Ansiedade` → `ansiedade-em-equilibrio`;
-  - `Relacionamentos` → `relacionamentos-com-proposito`;
-  - `Mulheres` → `mulheres-em-foco`;
-  - `Autocuidado` → `autocuidado-em-pratica`;
-  - `Luto` → `luto-e-ressignificacao`.
-- Refatorar a tela do feed para mobile-first: primeira linha apenas com busca "Buscar no feed" e botão de filtro; chips abaixo; em seguida, cards de posts.
-- Remover seta de voltar, textos/título de detalhe, faixa de membros e faixa de total de posts.
-- Criar `GET /api/private/community/feed/posts` para retornar posts publicados de destaque de todas as comunidades, ordenados por engajamento denormalizado (`upvotes_count`, `replies_count`, `saves_count`) e data.
-- Aceitar filtros opcionais no endpoint agregado: `search`, `community`, `scope` (`all` ou `following`).
-- Enquanto `community_member`/seguir comunidades não estiver implementado (TASK-25), `scope=following` retorna estado vazio honesto; não inventa vínculo sem persistência.
-- Preservar `GET /api/private/community/:slug/posts` como contrato por comunidade para detalhe futuro/compatibilidade.
-- Enriquecer o DTO de post com dados derivados e públicos: `author.type_label`, `author.verified`, `author.whatsapp_url`, `featured_badge`, `media_url`, `media_type`.
-- Mascarar autores não psicólogos como `Membro Anônimo` e exibir CTA `Chamar no WhatsApp` apenas quando houver psicólogo com WhatsApp público.
-- Substituir a ação visual de curtir por controles de upvote/downvote, mantendo comentários, salvar e compartilhar.
-- Preparar `media_url` e `media_type` retornando `null` enquanto não existir schema de mídia de posts.
+- Usar `/app/community/feed` como rota canônica do Feed da Comunidade e manter `/app/community` como explorar/listar comunidades.
+- Manter a opção de governança `Solicitar nova comunidade` via `community_suggestion`; usuários finais não criam comunidades diretamente.
+- Registrar que criação/curadoria/moderação de comunidades pertence a administradores da plataforma; mentores não moderam e não ganham permissões por selo.
+- Centralizar chips em `frontend/src/utils/community.ts` e apontar os chips de comunidade para `/app/community/[slug]`, preparando o detalhe futuro.
+- Refatorar cards para a ordem: comunidade, autor, tempo, título, texto, prévia profissional quando existir, ações.
+- Criar a tabela `post_replies` conforme o modelo previsto em `DATA-MODEL.md`, com `post_id`, `author_id`, `parent_reply_id`, `content` e `upvotes_count`.
+- Estender `GET /api/private/community/feed/posts` e `GET /api/private/community/:slug/posts` com `highlighted_professional_reply`.
+- Selecionar `highlighted_professional_reply` apenas entre respostas de autores `role="psicologo"` com `psychologist_profile.cfp_verified_at` preenchido, ordenando por maior `upvotes_count`.
+- Ignorar comentários de usuários comuns e respostas de psicólogos sem verificação CFP para a prévia profissional.
+- Exibir `Chamar no WhatsApp` somente dentro da prévia profissional quando o psicólogo é verificado e tem entitlement profissional pago ativo; psicólogos verificados gratuitos não recebem o CTA no feed.
+- Manter `TOP MENTOR`/`TOP #1 MENTOR` como destaque visual, sem permissão especial.
+- Manter upvote/downvote, comentários, salvar e compartilhar nas ações do card.
+- Enquanto `community_member` não estiver implementado (TASK-25), `scope=following` retorna estado vazio honesto.
 
 ## Consequências
 
-- A tela principal da comunidade passa a ter densidade de feed preenchido com dados reais persistidos.
-- A navegação inferior não leva mais o usuário para uma comunidade específica por padrão.
-- Chips de comunidade funcionam como filtros/compatibilidade do feed até a criação das páginas de detalhe.
-- O filtro "Apenas comunidades que sigo" fica disponível na UI e no contrato, mas exibe vazio honesto até a entrega persistida de `community_member`.
-- Mídia/vídeo, detalhe de post, comentários, votos persistidos, salvamentos e respostas estruturadas seguem dependentes de tasks futuras.
+- O feed global passa a estar preparado para destacar respostas profissionais reais sem inventar placeholder.
+- O schema de comentários/respostas foi antecipado para atender a prévia profissional do feed, mas criação/listagem detalhada de comentários segue em tasks futuras.
+- O CTA de WhatsApp fica alinhado ao modelo de negócio: só aparece quando a resposta destacada é de psicólogo verificado e pago.
+- A navegação para comunidade está preparada para detalhe futuro, mesmo que hoje ainda sirva como filtro/compatibilidade.
 
 ## Validação
 
+- `pnpm --dir backend db:migrate --name add_post_replies`: sucesso.
 - `pnpm --dir backend check`: sucesso.
 - `pnpm --dir frontend check`: sucesso.
 - `pnpm --dir backend build`: sucesso.
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
 - Validação local de API com token temporário:
-  - `GET /api/private/community/feed/posts?page=1&limit=5` retornou `200`, `count=10`, `5` itens e primeira comunidade `Mulheres em Foco`;
-  - `GET /api/private/community/feed/posts?page=1&limit=5&community=relacionamentos-com-proposito` retornou `200`, `community_slug=relacionamentos-com-proposito`, `2` itens;
+  - `GET /api/private/community/feed/posts?page=1&limit=5` retornou `200` com posts persistidos e campo `highlighted_professional_reply` no contrato;
   - `GET /api/private/community/feed/posts?page=1&limit=5&scope=following` retornou `200`, `count=0`.
 - Validação HTTP local de rotas:
   - `GET http://localhost:3000/app/community/feed` retornou `200`;
-  - `GET http://localhost:3000/app/community/feed?community=relacionamentos-com-proposito` retornou `200`;
   - `GET http://localhost:3000/app/community/ansiedade-em-equilibrio` retornou `200` como compatibilidade/filtro até o detalhe futuro.
 
 ## Pendências
 
+- Implementar criação de posts e respostas/comentários com regras de moderação (TASK-24/TASK-26).
 - Implementar `community_member`/seguir comunidades para popular o filtro `following` (TASK-25).
+- Criar páginas de detalhe de comunidade e post.
+- Implementar votos, salvamentos e compartilhamentos persistidos quando suas tasks entrarem em execução.
 - Criar schema persistido para mídia de posts quando anexos/vídeos de comunidade entrarem no escopo.
-- Implementar páginas de detalhe de comunidade e post.
-- Implementar comentários, votos, salvamentos e respostas nas tasks 24, 26 e 28.

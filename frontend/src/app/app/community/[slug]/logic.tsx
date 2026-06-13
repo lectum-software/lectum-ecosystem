@@ -114,20 +114,17 @@ const getInitials = (name: string) => {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
 
-const feedHref = (communitySlug?: string | null) => {
-  const base = `/app/community/${COMMUNITY_FEED_SLUG}`;
-  return communitySlug ? `${base}?community=${encodeURIComponent(communitySlug)}` : base;
-};
+const communityDetailHref = (communitySlug: string) => `/app/community/${communitySlug}`;
 
-const AuthorAvatar = ({ post }: { post: CommunityPost }) => {
-  const avatarSrc = resolvePublicMediaUrl(post.author.avatar);
-  const avatarIsPublicMedia = isPublicMediaUrl(post.author.avatar);
+const AuthorAvatar = ({ author }: { author: CommunityPost["author"] }) => {
+  const avatarSrc = resolvePublicMediaUrl(author.avatar);
+  const avatarIsPublicMedia = isPublicMediaUrl(author.avatar);
 
   return (
     <span className="relative grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft text-xs font-black text-primary ring-2 ring-white dark:ring-background">
       {avatarSrc ? (
         <Image
-          alt={post.author.name}
+          alt={author.name}
           className="object-cover"
           fill
           sizes="36px"
@@ -135,7 +132,7 @@ const AuthorAvatar = ({ post }: { post: CommunityPost }) => {
           unoptimized={avatarIsPublicMedia}
         />
       ) : (
-        getInitials(post.author.name)
+        getInitials(author.name)
       )}
     </span>
   );
@@ -242,7 +239,7 @@ const CommunityChips = ({
                 ? "border-primary bg-primary text-white shadow-primary/20"
                 : "border-border bg-white text-[#475569] hover:border-primary/40 hover:bg-primary-soft hover:text-primary dark:bg-surface dark:text-muted",
             )}
-            href={feedHref(item.slug)}
+            href={communityDetailHref(item.slug)}
             key={item.slug}
             onClick={onNavigate}
           >
@@ -289,17 +286,21 @@ const PostMedia = ({ post }: { post: CommunityPost }) => {
   );
 };
 
-const PsychologistResponse = ({ post }: { post: CommunityPost }) => {
-  if (post.author.role !== "psicologo") return null;
+const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
+  const reply = post.highlighted_professional_reply;
+  if (!reply) return null;
 
   return (
-    <div className="ml-4 border-[#E5E7EB] border-l-2 pl-4 dark:border-border">
+    <div className="rounded-[18px] border border-[#D8EDE4] bg-[#F4FBF7] p-4 dark:border-border dark:bg-background/60">
+      <p className="mb-3 text-[11px] font-black uppercase tracking-[0.08em] text-[#168A4A]">
+        Resposta profissional em destaque
+      </p>
       <div className="mb-2 flex items-center gap-2">
-        <AuthorAvatar post={post} />
+        <AuthorAvatar author={reply.author} />
         <div className="min-w-0">
           <p className="flex items-center gap-1 truncate text-sm font-black text-foreground">
-            {post.author.name}
-            {post.author.verified ? (
+            {reply.author.name}
+            {reply.author.verified ? (
               <BadgeCheck
                 className="h-4 w-4 shrink-0 fill-[#2da7ff] text-white"
                 aria-hidden="true"
@@ -307,11 +308,23 @@ const PsychologistResponse = ({ post }: { post: CommunityPost }) => {
             ) : null}
           </p>
           <p className="text-[11px] font-semibold text-muted">
-            {post.author.type_label} • {formatRelativeTime(post.created_at)}
+            {reply.author.type_label} • {formatRelativeTime(reply.created_at)} •{" "}
+            {reply.upvotes_count.toLocaleString("pt-BR")} upvotes
           </p>
         </div>
       </div>
-      <p className="text-sm leading-6 text-[#475569] dark:text-muted">{post.content}</p>
+      <p className="text-sm leading-6 text-[#475569] dark:text-muted">{reply.content}</p>
+      {reply.author.whatsapp_url ? (
+        <Button
+          asChild
+          className="mt-3 h-11 w-full rounded-[14px] border-2 border-[#23C266] bg-transparent text-[#23C266] shadow-none hover:bg-[#23C266] hover:text-white"
+        >
+          <a href={reply.author.whatsapp_url} rel="noreferrer" target="_blank">
+            <MessageCircle className="h-5 w-5" aria-hidden="true" />
+            Chamar no WhatsApp
+          </a>
+        </Button>
+      ) : null}
     </div>
   );
 };
@@ -323,8 +336,6 @@ const PostCard = ({
   post: CommunityPost;
   onShare: (post: CommunityPost) => void;
 }) => {
-  const isPsychologist = post.author.role === "psicologo";
-
   return (
     <article className="overflow-hidden rounded-[22px] border border-[#E6EAF0] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:border-border dark:bg-surface">
       <div className="mb-4 flex items-center justify-between gap-3 text-[11px] font-semibold text-muted">
@@ -334,7 +345,7 @@ const PostCard = ({
             Postado em{" "}
             <Link
               className="font-black text-foreground underline-offset-4 hover:text-primary hover:underline"
-              href={`/app/community/${post.community.slug}`}
+              href={communityDetailHref(post.community.slug)}
             >
               {post.community.name}
             </Link>
@@ -349,7 +360,7 @@ const PostCard = ({
       </div>
 
       <div className="mb-3 flex items-start gap-3">
-        <AuthorAvatar post={post} />
+        <AuthorAvatar author={post.author} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
             <h2 className="truncate text-sm font-black text-foreground">{post.author.name}</h2>
@@ -376,28 +387,14 @@ const PostCard = ({
         <h3 className="text-[1.32rem] font-black leading-[1.18] tracking-[-0.02em] text-[#182033] dark:text-foreground">
           {post.title}
         </h3>
-        {!isPsychologist ? (
-          <p className="whitespace-pre-line text-sm leading-6 text-[#64748B] dark:text-muted">
-            {post.content}
-          </p>
-        ) : null}
+        <p className="whitespace-pre-line text-sm leading-6 text-[#64748B] dark:text-muted">
+          {post.content}
+        </p>
       </div>
 
       <div className="mt-4 grid gap-4">
-        <PsychologistResponse post={post} />
         <PostMedia post={post} />
-
-        {post.author.whatsapp_url ? (
-          <Button
-            asChild
-            className="h-12 rounded-[14px] border-2 border-[#23C266] bg-transparent text-[#23C266] shadow-none hover:bg-[#23C266] hover:text-white"
-          >
-            <a href={post.author.whatsapp_url} rel="noreferrer" target="_blank">
-              <MessageCircle className="h-5 w-5" aria-hidden="true" />
-              Chamar no WhatsApp
-            </a>
-          </Button>
-        ) : null}
+        <ProfessionalReplyPreview post={post} />
       </div>
 
       <div className="mt-4 flex items-center justify-between border-[#EDF1F5] border-t pt-3 dark:border-border">

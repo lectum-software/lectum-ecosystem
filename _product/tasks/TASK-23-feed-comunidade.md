@@ -36,6 +36,18 @@ O feed é longo e precisa ser eficiente. Deve listar posts reais, com contadores
 
 Criar feed real agregado de posts de comunidades com paginação, filtros, chips de comunidade e ações básicas.
 
+## Refinamento vigente do Feed Global
+
+- A tela principal é o Feed da Comunidade global, não detalhe de comunidade.
+- Comunidades individuais terão telas próprias em task futura; chips e nomes de comunidade já apontam para as rotas futuras.
+- Usuários finais não criam comunidades diretamente: usam "Solicitar nova comunidade" para análise da equipe.
+- Criação, curadoria e moderação de comunidades pertencem à plataforma/administração, não a usuários comuns.
+- O selo `TOP MENTOR`/`TOP #1 MENTOR` é apenas destaque visual e não concede permissão especial.
+- Posts de pacientes exigem título, texto/descrição e comunidade relacionada.
+- A prévia profissional no card só aparece quando houver resposta/comentário de psicólogo com `cfp_verified_at`; entre várias respostas verificadas, vence a de maior `upvotes_count`.
+- Comentários de usuários comuns e respostas de psicólogos não verificados não entram na prévia profissional.
+- WhatsApp aparece somente em respostas de psicólogos verificados com entitlement profissional pago ativo.
+
 ## Pré-requisitos e bloqueios
 
 - Depende de comunidades reais ou estado vazio honesto.

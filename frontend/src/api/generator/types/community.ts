@@ -41,6 +41,14 @@ export type CommunityAuthor = {
   whatsapp_url: string | null;
 };
 
+export type CommunityProfessionalReply = {
+  id: string;
+  content: string;
+  upvotes_count: number;
+  created_at: string;
+  author: CommunityAuthor;
+};
+
 export type CommunityPost = {
   id: string;
   title: string;
@@ -57,6 +65,7 @@ export type CommunityPost = {
   media_type: string | null;
   community: Community;
   author: CommunityAuthor;
+  highlighted_professional_reply: CommunityProfessionalReply | null;
 };
 
 export type CommunityListResponse = {

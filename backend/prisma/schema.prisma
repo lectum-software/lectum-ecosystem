@@ -49,6 +49,7 @@ model user {
   received_reviews           professional_review[]       @relation("professional_review_psychologist")
   community_suggestions      community_suggestion[]      @relation("community_suggestion_user")
   community_posts            community_post[]            @relation("community_post_author")
+  post_replies               post_reply[]                @relation("post_reply_author")
   notification_subscriptions notification_subscription[] @relation("notification_subscription_user")
   logs                       log__user[]                 @relation("log__user_user")
   notifications              notification[]              @relation("notifications")
@@ -473,27 +474,49 @@ model community_suggestion {
 }
 
 model community_post {
-  id              String    @id @default(cuid())
-  deleted         Boolean   @default(false)
-  deletedAt       DateTime? @map("deleted_at")
-  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
-  createdAt       DateTime  @default(now()) @map("created_at")
+  id              String       @id @default(cuid())
+  deleted         Boolean      @default(false)
+  deletedAt       DateTime?    @map("deleted_at")
+  updatedAt       DateTime     @default(now()) @updatedAt @map("updated_at")
+  createdAt       DateTime     @default(now()) @map("created_at")
   community_id    String
   author_id       String
   title           String
   content         String
-  status          String    @default("publicado")
-  upvotes_count   Int       @default(0)
-  downvotes_count Int       @default(0)
-  replies_count   Int       @default(0)
-  saves_count     Int       @default(0)
-  community       community @relation("community_post_community", fields: [community_id], references: [id], onDelete: Cascade)
-  author          user      @relation("community_post_author", fields: [author_id], references: [id], onDelete: Cascade)
+  status          String       @default("publicado")
+  upvotes_count   Int          @default(0)
+  downvotes_count Int          @default(0)
+  replies_count   Int          @default(0)
+  saves_count     Int          @default(0)
+  community       community    @relation("community_post_community", fields: [community_id], references: [id], onDelete: Cascade)
+  author          user         @relation("community_post_author", fields: [author_id], references: [id], onDelete: Cascade)
+  replies         post_reply[] @relation("post_reply_post")
 
   @@index([community_id, status, createdAt])
   @@index([author_id])
   @@index([author_id, status, createdAt])
   @@map("community_posts")
+}
+
+model post_reply {
+  id              String         @id @default(cuid())
+  deleted         Boolean        @default(false)
+  deletedAt       DateTime?      @map("deleted_at")
+  updatedAt       DateTime       @default(now()) @updatedAt @map("updated_at")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  post_id         String
+  author_id       String
+  parent_reply_id String?
+  content         String
+  upvotes_count   Int            @default(0)
+  post            community_post @relation("post_reply_post", fields: [post_id], references: [id], onDelete: Cascade)
+  author          user           @relation("post_reply_author", fields: [author_id], references: [id], onDelete: Cascade)
+  parent_reply    post_reply?    @relation("post_reply_thread", fields: [parent_reply_id], references: [id], onDelete: Cascade)
+  replies         post_reply[]   @relation("post_reply_thread")
+
+  @@index([post_id, parent_reply_id, createdAt])
+  @@index([author_id])
+  @@map("post_replies")
 }
 
 model notification_subscription {

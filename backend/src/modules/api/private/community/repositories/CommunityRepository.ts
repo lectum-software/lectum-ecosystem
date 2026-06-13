@@ -2,9 +2,11 @@ import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
+  CommunityAuthorDTO,
   CommunityDTO,
   CommunityFeedResponse,
   CommunityIndexResponse,
+  CommunityPostDTO,
   CommunityPostsResponse,
   ICommunityFeedDTO,
   ICommunityIndexDTO,
@@ -26,6 +28,29 @@ const communitySelect = {
   createdAt: true,
 } satisfies Prisma.communitySelect;
 
+const professionalProfileSelect = {
+  gender: true,
+  whatsapp: true,
+  cfp_verified_at: true,
+  subscriptions: {
+    where: activeProfessionalEntitlementWhere(),
+    select: {
+      id: true,
+    },
+    take: 1,
+  },
+} satisfies Prisma.psychologist_profileSelect;
+
+const authorSelect = {
+  id: true,
+  name: true,
+  avatar: true,
+  role: true,
+  psychologist_profile: {
+    select: professionalProfileSelect,
+  },
+} satisfies Prisma.userSelect;
+
 const postSelect = {
   id: true,
   title: true,
@@ -40,29 +65,40 @@ const postSelect = {
     select: communitySelect,
   },
   author: {
-    select: {
-      id: true,
-      name: true,
-      avatar: true,
-      role: true,
-      psychologist_profile: {
-        select: {
-          gender: true,
-          whatsapp: true,
-          subscriptions: {
-            where: activeProfessionalEntitlementWhere(),
-            select: {
-              id: true,
+    select: authorSelect,
+  },
+  replies: {
+    where: {
+      deleted: false,
+      author: {
+        role: "psicologo",
+        psychologist_profile: {
+          is: {
+            deleted: false,
+            cfp_verified_at: {
+              not: null,
             },
-            take: 1,
           },
         },
+      },
+    },
+    orderBy: [{ upvotes_count: "desc" }, { createdAt: "desc" }, { id: "desc" }],
+    take: 1,
+    select: {
+      id: true,
+      content: true,
+      upvotes_count: true,
+      createdAt: true,
+      author: {
+        select: authorSelect,
       },
     },
   },
 } satisfies Prisma.community_postSelect;
 
 type PostResult = Prisma.community_postGetPayload<{ select: typeof postSelect }>;
+type AuthorResult = PostResult["author"];
+type ProfessionalReplyResult = PostResult["replies"][number];
 
 const CONTACT_MESSAGE =
   "Olá, encontrei seu post na comunidade Lectum e gostaria de conversar sobre atendimento.";
@@ -101,6 +137,26 @@ const buildWhatsappUrl = (value?: string | null) => {
   if (digits.length < 8) return null;
 
   return `https://wa.me/${digits}?text=${encodeURIComponent(CONTACT_MESSAGE)}`;
+};
+
+const isProfessionalVerified = (profile?: { cfp_verified_at: Date | null } | null) => {
+  return Boolean(profile?.cfp_verified_at);
+};
+
+const hasPaidProfessionalEntitlement = (profile?: { subscriptions: { id: string }[] } | null) => {
+  return Boolean(profile?.subscriptions.length);
+};
+
+const buildProfessionalWhatsappUrl = (
+  profile?: {
+    cfp_verified_at: Date | null;
+    subscriptions: { id: string }[];
+    whatsapp: string | null;
+  } | null,
+) => {
+  if (!isProfessionalVerified(profile) || !hasPaidProfessionalEntitlement(profile)) return null;
+
+  return buildWhatsappUrl(profile?.whatsapp);
 };
 
 const authorTypeLabel = (role?: string | null, gender?: string | null) => {
@@ -150,11 +206,43 @@ const postSearchWhere = (search?: string): Prisma.community_postWhereInput["OR"]
   ];
 };
 
-const toPostResponse = (item: PostResult) => {
+const toAuthorResponse = (author: AuthorResult): CommunityAuthorDTO => {
+  const profile = author.psychologist_profile;
+  const isPsychologist = author.role === "psicologo";
+
+  return {
+    id: author.id,
+    name: isPsychologist ? author.name : "Membro Anônimo",
+    avatar: isPsychologist ? author.avatar : null,
+    role: author.role,
+    type_label: authorTypeLabel(author.role, profile?.gender),
+    verified: isPsychologist && isProfessionalVerified(profile),
+    whatsapp_url: isPsychologist ? buildProfessionalWhatsappUrl(profile) : null,
+  };
+};
+
+const toHighlightedProfessionalReply = (
+  reply?: ProfessionalReplyResult,
+): CommunityPostDTO["highlighted_professional_reply"] => {
+  if (!reply) return null;
+
+  const author = toAuthorResponse(reply.author);
+  if (!author.verified) return null;
+
+  return {
+    id: reply.id,
+    content: reply.content,
+    upvotes_count: reply.upvotes_count,
+    created_at: reply.createdAt,
+    author,
+  };
+};
+
+const toPostResponse = (item: PostResult): CommunityPostDTO => {
   const responseCommunity = toCommunityResponse(item.community);
-  const profile = item.author.psychologist_profile;
-  const isPsychologist = item.author.role === "psicologo";
-  const verified = Boolean(profile?.subscriptions.length);
+  const author = toAuthorResponse(item.author);
+  const highlightedReply = toHighlightedProfessionalReply(item.replies[0]);
+  const hasPaidEntitlement = hasPaidProfessionalEntitlement(item.author.psychologist_profile);
 
   return {
     id: item.id,
@@ -167,20 +255,31 @@ const toPostResponse = (item: PostResult) => {
     saves_count: item.saves_count,
     created_at: item.createdAt,
     tags: responseCommunity.category ? [responseCommunity.category] : [],
-    featured_badge: verified && item.upvotes_count >= 60 ? "TOP #1 MENTOR" : null,
+    featured_badge:
+      author.verified && hasPaidEntitlement && item.upvotes_count >= 60 ? "TOP #1 MENTOR" : null,
     media_url: null,
     media_type: null,
     community: responseCommunity,
-    author: {
-      id: item.author.id,
-      name: isPsychologist ? item.author.name : "Membro Anônimo",
-      avatar: isPsychologist ? item.author.avatar : null,
-      role: item.author.role,
-      type_label: authorTypeLabel(item.author.role, profile?.gender),
-      verified,
-      whatsapp_url: isPsychologist ? buildWhatsappUrl(profile?.whatsapp) : null,
-    },
+    author,
+    highlighted_professional_reply: highlightedReply,
   };
+};
+
+const feedEngagementScore = (post: CommunityPostDTO) => {
+  const verifiedReplyBoost = post.highlighted_professional_reply
+    ? 250 + post.highlighted_professional_reply.upvotes_count * 4
+    : 0;
+
+  return post.upvotes_count * 3 + post.replies_count * 2 + post.saves_count + verifiedReplyBoost;
+};
+
+const sortFeedPosts = (items: CommunityPostDTO[]) => {
+  return items.sort((a, b) => {
+    const scoreDiff = feedEngagementScore(b) - feedEngagementScore(a);
+    if (scoreDiff !== 0) return scoreDiff;
+
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
 };
 
 export class CommunityRepository implements ICommunityRepository {
@@ -308,7 +407,7 @@ export class CommunityRepository implements ICommunityRepository {
     ]);
 
     return {
-      data: items.map(toPostResponse),
+      data: sortFeedPosts(items.map(toPostResponse)),
       page: pagination.page,
       pages: Math.ceil(count / pagination.limit),
       count,
