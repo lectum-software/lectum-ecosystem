@@ -5,6 +5,7 @@ export type CommunityListQuery = {
   limit?: number;
   search?: string;
   category?: string;
+  scope?: CommunityFeedScope;
 };
 
 export type CommunityPostListQuery = {
@@ -53,6 +54,10 @@ export type CommunityDTO = {
   category: string | null;
   members_count: number;
   created_at: Date;
+  following?: boolean;
+  membership_created_at?: Date | null;
+  posts_count?: number;
+  new_posts_count?: number;
 };
 
 export type CommunityDetailDTO = CommunityDTO & {
@@ -116,6 +121,9 @@ export type CommunityIndexResponse = {
   page: number;
   pages: number;
   count: number;
+  scope?: CommunityFeedScope;
+  following_count?: number;
+  new_posts_today_count?: number;
 };
 
 export type CommunityPostsResponse = {

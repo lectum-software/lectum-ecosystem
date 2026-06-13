@@ -1,8 +1,9 @@
-﻿export type CommunityListQuery = {
+export type CommunityListQuery = {
   page?: number;
   limit?: number;
   search?: string;
   category?: string;
+  scope?: CommunityFeedScope;
 };
 
 export type CommunityPostsQuery = {
@@ -37,6 +38,10 @@ export type Community = {
   category: string | null;
   members_count: number;
   created_at: string;
+  following?: boolean;
+  membership_created_at?: string | null;
+  posts_count?: number;
+  new_posts_count?: number;
 };
 
 export type CommunityDetail = Community & {
@@ -93,6 +98,9 @@ export type CommunityListResponse = {
   page: number;
   pages: number;
   count: number;
+  scope?: CommunityFeedScope;
+  following_count?: number;
+  new_posts_today_count?: number;
 };
 
 export type CommunityPostsResponse = {

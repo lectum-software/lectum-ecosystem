@@ -530,8 +530,22 @@ export class CommunityRepository implements ICommunityRepository {
     const pagination = normalizePagination(data.q);
     const search = data.q.search?.trim();
     const category = data.q.category?.trim();
+    const scope = normalizeScope(data.q.scope);
+    const userId = data.auth?.id;
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
     const where: Prisma.communityWhereInput = {
       deleted: false,
+      members:
+        scope === "following"
+          ? {
+              some: {
+                user_id: userId || "__missing_user__",
+                deleted: false,
+              },
+            }
+          : undefined,
       category: category
         ? {
             equals: category,
@@ -561,8 +575,31 @@ export class CommunityRepository implements ICommunityRepository {
           ]
         : undefined,
     };
+    const followedMembershipWhere: Prisma.community_memberWhereInput = {
+      user_id: userId || "__missing_user__",
+      deleted: false,
+      community: {
+        deleted: false,
+      },
+    };
+    const followedPostsTodayWhere: Prisma.community_postWhereInput = {
+      deleted: false,
+      status: "publicado",
+      createdAt: {
+        gte: todayStart,
+      },
+      community: {
+        deleted: false,
+        members: {
+          some: {
+            user_id: userId || "__missing_user__",
+            deleted: false,
+          },
+        },
+      },
+    };
 
-    const [items, count, categories] = await Promise.all([
+    const [items, count, categories, followingCount, newPostsTodayCount] = await Promise.all([
       this.repository.findMany({
         where,
         take: pagination.limit,
@@ -586,16 +623,90 @@ export class CommunityRepository implements ICommunityRepository {
           category: true,
         },
       }),
+      userId
+        ? prisma.community_member.count({ where: followedMembershipWhere })
+        : Promise.resolve(0),
+      userId ? prisma.community_post.count({ where: followedPostsTodayWhere }) : Promise.resolve(0),
     ]);
+    const itemIds = items.map((item) => item.id);
+    const [memberships, postsCount, newPostsCount] =
+      userId && itemIds.length > 0
+        ? await Promise.all([
+            prisma.community_member.findMany({
+              where: {
+                user_id: userId,
+                community_id: {
+                  in: itemIds,
+                },
+                deleted: false,
+              },
+              select: {
+                community_id: true,
+                createdAt: true,
+              },
+            }),
+            prisma.community_post.groupBy({
+              by: ["community_id"],
+              where: {
+                community_id: {
+                  in: itemIds,
+                },
+                deleted: false,
+                status: "publicado",
+              },
+              _count: {
+                _all: true,
+              },
+            }),
+            prisma.community_post.groupBy({
+              by: ["community_id"],
+              where: {
+                community_id: {
+                  in: itemIds,
+                },
+                deleted: false,
+                status: "publicado",
+                createdAt: {
+                  gte: todayStart,
+                },
+              },
+              _count: {
+                _all: true,
+              },
+            }),
+          ])
+        : [[], [], []];
+    const membershipByCommunityId = new Map(
+      memberships.map((item) => [item.community_id, item.createdAt]),
+    );
+    const postsCountByCommunityId = new Map(
+      postsCount.map((item) => [item.community_id, item._count._all]),
+    );
+    const newPostsCountByCommunityId = new Map(
+      newPostsCount.map((item) => [item.community_id, item._count._all]),
+    );
 
     return {
-      data: items.map(toCommunityResponse),
+      data: items.map((item) => {
+        const membershipCreatedAt = membershipByCommunityId.get(item.id) ?? null;
+
+        return {
+          ...toCommunityResponse(item),
+          following: Boolean(membershipCreatedAt),
+          membership_created_at: membershipCreatedAt,
+          posts_count: postsCountByCommunityId.get(item.id) ?? 0,
+          new_posts_count: newPostsCountByCommunityId.get(item.id) ?? 0,
+        };
+      }),
       categories: categories
         .map((item) => item.category?.trim())
         .filter((item): item is string => Boolean(item)),
       page: pagination.page,
       pages: Math.ceil(count / pagination.limit),
       count,
+      scope,
+      following_count: followingCount,
+      new_posts_today_count: newPostsTodayCount,
     };
   }
 

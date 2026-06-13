@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { FollowingCommunitiesLogic } from "./logic";
 
 export default function FollowingPage() {
-  redirect("/app/community");
+  return <FollowingCommunitiesLogic />;
 }

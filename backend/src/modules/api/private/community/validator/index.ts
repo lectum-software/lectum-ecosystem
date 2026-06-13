@@ -37,6 +37,13 @@ export const indexSchema: IValidatorRequest = {
       max: 120,
       optional: true,
     },
+    {
+      key: "scope",
+      coerse: "string",
+      method: "string",
+      max: 20,
+      optional: true,
+    },
   ],
 };
 
