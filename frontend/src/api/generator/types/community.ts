@@ -50,7 +50,10 @@ export type CommunityAuthor = {
 
 export type CommunityProfessionalReply = {
   id: string;
+  title: string | null;
   content: string;
+  media_url: string | null;
+  media_type: string | null;
   upvotes_count: number;
   created_at: string;
   author: CommunityAuthor;

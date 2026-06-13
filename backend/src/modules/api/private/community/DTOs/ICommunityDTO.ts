@@ -66,7 +66,10 @@ export type CommunityAuthorDTO = {
 
 export type CommunityProfessionalReplyDTO = {
   id: string;
+  title: string | null;
   content: string;
+  media_url: string | null;
+  media_type: string | null;
   upvotes_count: number;
   created_at: Date;
   author: CommunityAuthorDTO;

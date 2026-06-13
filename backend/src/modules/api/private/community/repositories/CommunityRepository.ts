@@ -92,7 +92,10 @@ const postSelect = {
     take: 1,
     select: {
       id: true,
+      title: true,
       content: true,
+      media_url: true,
+      media_type: true,
       upvotes_count: true,
       createdAt: true,
       author: {
@@ -305,7 +308,10 @@ const toHighlightedProfessionalReply = (
 
   return {
     id: reply.id,
+    title: reply.title,
     content: reply.content,
+    media_url: reply.media_url,
+    media_type: reply.media_type,
     upvotes_count: reply.upvotes_count,
     created_at: reply.createdAt,
     author,

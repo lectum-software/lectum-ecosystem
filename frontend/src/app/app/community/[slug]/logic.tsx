@@ -392,6 +392,45 @@ const PostMedia = ({ post }: { post: CommunityPost }) => {
   );
 };
 
+const ProfessionalReplyMedia = ({
+  reply,
+}: {
+  reply: NonNullable<CommunityPost["highlighted_professional_reply"]>;
+}) => {
+  if (!reply.media_url) return null;
+
+  const mediaUrl = resolvePublicMediaUrl(reply.media_url);
+  if (!mediaUrl) return null;
+
+  if (reply.media_type === "video") {
+    return (
+      <div className="relative mt-3 overflow-hidden rounded-[18px] border border-[#D8EDE4] bg-black shadow-inner">
+        <video className="aspect-[4/5] w-full object-cover" controls playsInline src={mediaUrl}>
+          <track kind="captions" label="Português" srcLang="pt-BR" />
+        </video>
+        <span className="pointer-events-none absolute inset-0 grid place-items-center text-white/70">
+          <span className="grid h-14 w-14 place-items-center rounded-full bg-black/30 backdrop-blur">
+            <Play className="ml-1 h-6 w-6 fill-white" aria-hidden="true" />
+          </span>
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative mt-3 aspect-[4/5] overflow-hidden rounded-[18px] border border-[#D8EDE4] bg-surface-muted">
+      <Image
+        alt={reply.title ?? "Mídia da resposta profissional"}
+        className="object-cover"
+        fill
+        sizes="(max-width: 430px) calc(100vw - 96px), 480px"
+        src={mediaUrl}
+        unoptimized={isPublicMediaUrl(reply.media_url)}
+      />
+    </div>
+  );
+};
+
 const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
   const reply = post.highlighted_professional_reply;
   if (!reply) return null;
@@ -420,7 +459,13 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
           </p>
         </div>
       </div>
+      {reply.title ? (
+        <h4 className="mb-1 text-sm font-black text-[#182033] dark:text-foreground">
+          {reply.title}
+        </h4>
+      ) : null}
       <p className="text-sm leading-6 text-[#475569] dark:text-muted">{reply.content}</p>
+      <ProfessionalReplyMedia reply={reply} />
       {reply.author.whatsapp_url ? (
         <Button
           asChild

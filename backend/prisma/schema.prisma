@@ -527,7 +527,10 @@ model post_reply {
   post_id         String
   author_id       String
   parent_reply_id String?
+  title           String?
   content         String
+  media_url       String?
+  media_type      String?
   upvotes_count   Int            @default(0)
   post            community_post @relation("post_reply_post", fields: [post_id], references: [id], onDelete: Cascade)
   author          user           @relation("post_reply_author", fields: [author_id], references: [id], onDelete: Cascade)

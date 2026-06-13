@@ -358,7 +358,9 @@ DTOs do feed: `GET /api/private/community/feed/posts` é o contrato canônico do
 | `post_id` | `String` | |
 | `author_id` | `String` | |
 | `parent_reply_id` | `String?` | null = comentário; preenchido = resposta a um comentário |
+| `title` | `String?` | t?tulo opcional para resposta profissional em destaque |
 | `content` | `String` | |
+| `media_url` / `media_type` | `String?` | m?dia opcional em respostas; `media_type` inicialmente `"video"` ou `"image"` |
 | `upvotes_count` | `Int @default(0)` | denormalizado para ranking de respostas e prévia profissional |
 | `@@index([post_id, parent_reply_id, createdAt])`, `@@index([author_id])` | | paginação por âncora (TASK-26) e seleção por autor |
 
