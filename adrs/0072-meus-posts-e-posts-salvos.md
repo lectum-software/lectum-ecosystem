@@ -39,6 +39,7 @@ No frontend:
   `frontend/src/api/cache/keys.ts`;
 - componente reutilizavel `CommunityPostCard` para manter a apresentacao de posts consistente com
   o feed;
+- acesso pelas opcoes "Meus posts e respostas" e "Salvos" no menu de Comunidade da tela de Perfil;
 - estados de loading, erro, vazio, sucesso e feedback de remocao dos salvos em PT-BR.
 
 Nao houve alteracao de schema Prisma nem nova dependencia.
