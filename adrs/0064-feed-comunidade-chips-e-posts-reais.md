@@ -37,9 +37,10 @@ As páginas de detalhe por comunidade serão criadas depois. Até lá, chips e n
 - Reposicionar metadados de posts de pacientes para mostrar somente o tempo abaixo do nome.
 - Refinar cores dos selos para ouro/champagne/cobre sofisticados e remover shadow/drop-shadow.
 - Atualizar os selos `TOP #1`, `TOP #2` e `TOP #3 MENTOR` para os gradientes exatos do Figma: `#CE953A→#EFEF7B→#9C7924`, `#CBD5E1→#F1F5F9→#94A3B8` e `#A8703A→#E6BE8A→#CD7F32→#8B4513`, com texto/ícone `#1F2937` para #1 e `#0F172A` para #2/#3.
-- No Feed da Comunidade, substituir o item central `Comunidade` da navegação inferior por um CTA circular azul com ícone `+`, sem label visível, apontando para `/app/community/post/new`.
+- No Feed da Comunidade, substituir o item central `Comunidade` da navegação inferior por um CTA circular azul com ícone `+`, sem label visível, apontando para `/app/community/feed/post/new`.
 - Ajustar apenas o CTA central para reproduzir o mockup anexado: dimensão visual 56px com borda branca dentro do próprio botão, `+` proporcional e avanço parcial sobre a borda superior, sem alterar altura, padding, margens ou estrutura da navbar.
 - Manter os demais itens da navegação inferior (`Psicólogos`, `Favoritos`, `Notificações`, `Perfil`) e preservar a navegação lateral desktop padrão.
+- Adicionar no desktop um CTA flutuante azul com ícone `+` no canto inferior direito da área de conteúdo do Feed da Comunidade, apontando para `/app/community/feed/post/new`; no mobile, manter apenas o botão central da bottom navigation.
 - Enquanto `community_member` não estiver implementado (TASK-25), `scope=following` retorna estado vazio honesto.
 
 ## Consequências
@@ -63,6 +64,8 @@ As páginas de detalhe por comunidade serão criadas depois. Até lá, chips e n
 - Refinamento da navegação inferior: `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`: sucesso.
 - Refinamento de proporção do botão central conforme mockup, preservando a navbar: `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`: sucesso.
 - Refinamento dos gradientes de TOP MENTOR conforme Figma: `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`: sucesso.
+- Refinamento do CTA desktop de criação de post: `pnpm --dir frontend check` e `pnpm --dir frontend build`: sucesso.
+- Validação HTTP local do Feed da Comunidade após CTA desktop: `GET http://localhost:3000/app/community/feed` retornou `200`.
 - Validação visual/HTTP local em `http://localhost:3000/app/community/feed`: sucesso (`200`).
 - Validação local de API com token temporário:
   - `GET /api/private/community/feed/posts?page=1&limit=12` retornou `200` com posts persistidos, campo `highlighted_professional_reply` no contrato e badges `TOP #1 MENTOR`, `TOP #2 MENTOR`, `TOP #3 MENTOR` quando aplicável;

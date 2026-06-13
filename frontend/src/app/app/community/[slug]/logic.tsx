@@ -14,6 +14,7 @@ import {
   FileText,
   MessageCircle,
   Play,
+  Plus,
   Search,
   Share2,
   SlidersHorizontal,
@@ -687,6 +688,33 @@ export const CommunityFeedLogic = () => {
           pages={feed.data?.pages ?? 0}
         />
       </section>
+
+      <Link
+        aria-label="Criar publicação na comunidade"
+        className="group fixed right-10 bottom-10 z-40 hidden h-16 w-16 items-center justify-center rounded-full border-[5px] border-white bg-[#308CE8] text-white shadow-[0_18px_36px_rgba(48,140,232,0.28)] transition hover:-translate-y-1 hover:bg-[#2579CF] hover:shadow-[0_22px_44px_rgba(48,140,232,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F5F7FA] motion-safe:animate-[lectum-desktop-create-float_4.2s_ease-in-out_infinite] lg:flex xl:right-20 2xl:right-28"
+        href={COMMUNITY_CREATE_POST_HREF}
+        title="Criar publicação"
+      >
+        <Plus
+          className="h-8 w-8 stroke-[2.4] transition group-hover:scale-105"
+          aria-hidden="true"
+        />
+        <span className="sr-only">Criar publicação</span>
+      </Link>
+
+      <style>{`
+        @keyframes lectum-desktop-create-float {
+          0%,
+          100% {
+            transform: translateY(0);
+            box-shadow: 0 18px 36px rgba(48, 140, 232, 0.28);
+          }
+          50% {
+            transform: translateY(-5px);
+            box-shadow: 0 22px 44px rgba(48, 140, 232, 0.34);
+          }
+        }
+      `}</style>
     </PrivateTemplate>
   );
 };
