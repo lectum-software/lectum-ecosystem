@@ -4,6 +4,8 @@
 
 Accepted
 
+Nota de 2026-06-12: a decisão original de bloquear vídeo no plano gratuito foi supersedida pela ADR-0063. O recorte gratuito sem documento CRP permanece válido, mas vídeo de apresentação passou a ser permitido para todos os psicólogos.
+
 ## Contexto
 
 A TASK-18 completa permanece bloqueada por depender da TASK-11, que exige storage privado R2 para documentos CRP. Ao mesmo tempo, o fluxo de produto do plano gratuito precisa permitir que o psicólogo configure informações públicas básicas depois de informar o WhatsApp, sem validar CRP pela API.

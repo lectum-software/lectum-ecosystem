@@ -102,6 +102,14 @@ export class IndexRepository implements IIndexRepository {
     const whereConditions: Prisma.psychologist_profileWhereInput = {
       deleted: false,
       published: true,
+      video_url: {
+        not: null,
+      },
+      NOT: [
+        {
+          video_url: "",
+        },
+      ],
       crp_registration_date: props.q.more_experienced
         ? {
             lt: moreExperiencedCutoffDate(),

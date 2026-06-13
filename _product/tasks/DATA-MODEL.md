@@ -161,8 +161,8 @@ Quando construído: módulo de audiência próprio (ex.: `backend/src/modules/ma
 | `headline` | `String?` | chamada curta exibida no card/perfil |
 | `bio` | `String?` | "Sobre"/experiência (texto longo) |
 | `cover_image_url` | `String?` | imagem pública independente de capa do perfil; não reutiliza thumbnail/frame de vídeo |
-| `video_url` | `String?` | apenas Plano Profissional ou concessão `admin_grant` ativa (PRD §13); manter null no gratuito |
-| `video_cover_url` | `String?` | imagem pública opcional de capa do vídeo de apresentação; usa o mesmo entitlement de vídeo e deve ser limpa junto ao vídeo |
+| `video_url` | `String?` | vídeo de apresentação público permitido para todos os psicólogos, inclusive Plano Gratuito; obrigatório para elegibilidade na listagem `/app/psychologists` |
+| `video_cover_url` | `String?` | imagem pública opcional de capa do vídeo de apresentação; deve ser limpa junto ao vídeo |
 | `cpf` | `String?` | usado na consulta CFP; dado sensível (LGPD) |
 | `crp` | `String?` | registro profissional exibido no cabeçalho |
 | `crp_registration_date` | `DateTime?` | data interna de inscrição no CRP, preenchida pela consulta CFP real ou pela operação na concessão `admin_grant`; não é editável pelo psicólogo e é usada para calcular tempo de experiência no card |
@@ -449,7 +449,7 @@ Trocar de provedor = novo adapter. **Limite real:** card tokens são específico
 | `name` | `String` | |
 | `price_cents` | `Int @default(0)` | profissional = `990` (R$ 9,90/mês, sem trial; confirmado em TASK-03) |
 | `interval` | `String @default("month")` | |
-| `features` | `Json?` | flags (selo, analytics, vídeo, ranking) |
+| `features` | `Json?` | flags (selo, analytics, ranking; `profile_video` permanece verdadeiro em todos os planos atuais) |
 | `active` | `Boolean @default(true)` | |
 
 `professional_subscription` (TASK-31/32/33):
@@ -470,7 +470,7 @@ Trocar de provedor = novo adapter. **Limite real:** card tokens são específico
 | `@@index([psychologist_id, status])` | | habilita selo/destaque/ranking quando `ativa` |
 | `@@index([source, status])`, `@@index([status, current_period_end])` | | auditoria e filtro de entitlement ativo não expirado |
 
-`source="admin_grant"` com plano `profissional`, `status="ativa"` e `current_period_end` futuro concede a mesma experiência de perfil do Plano Profissional até expirar: selo, vídeo de apresentação, até 10 especialidades e seleção de todos os serviços/abordagens ativos.
+`source="admin_grant"` com plano `profissional`, `status="ativa"` e `current_period_end` futuro concede a mesma experiência de perfil do Plano Profissional até expirar: selo, até 10 especialidades e seleção de todos os serviços/abordagens ativos. Vídeo de apresentação é permitido a todos os planos.
 
 Quando uma concessão `admin_grant` substitui a validação automática do CFP, a operação deve informar a data de inscrição no CRP do profissional para atualizar `psychologist_profile.crp_registration_date`. Essa data permanece interna, não é editável na tela de perfil e alimenta o cálculo de anos de experiência exibido apenas para assinantes/cortesias ativos.
 

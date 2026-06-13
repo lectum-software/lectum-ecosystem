@@ -8,7 +8,7 @@ export interface IFreeProfileRepository {
   update(
     userId: string,
     body: Required<FreeProfessionalProfileUpdateBody>,
-    options: { canUseProfessionalFeatures: boolean },
+    options: { canUploadVideo: boolean },
   ): Promise<FreeProfessionalProfileResponse | null>;
   updateAvatar(userId: string, avatarUrl: string): Promise<FreeProfessionalProfileResponse | null>;
   removeAvatar(userId: string): Promise<FreeProfessionalProfileResponse | null>;

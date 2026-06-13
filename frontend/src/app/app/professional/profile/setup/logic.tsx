@@ -1792,7 +1792,7 @@ export const ProfessionalProfileSetupLogic = () => {
 
                     <p className="mt-3 w-full text-xs leading-5 text-muted">
                       Envie um vídeo vertical de até 50MB para aparecer na listagem de
-                      profissionais.
+                      profissionais. O vídeo está disponível em todos os planos.
                     </p>
 
                     {videoSrc ? (
@@ -1853,15 +1853,15 @@ export const ProfessionalProfileSetupLogic = () => {
                     <FileVideo className="mx-auto h-8 w-8 text-muted" aria-hidden="true" />
                     <p className="mt-2 text-sm font-bold text-foreground">Vídeo de Apresentação</p>
                     <p className="mt-1 text-xs leading-5 text-muted">
-                      Upload de vídeo está disponível no Plano Profissional. Faça upgrade para
-                      enviar um vídeo de apresentação.
+                      Upload de vídeo deve estar disponível para todos os planos. Recarregue a
+                      página se esta opção não aparecer.
                     </p>
                     <Link
                       className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-primary-soft px-4 py-2 text-xs font-bold text-primary"
-                      href="/app/professional/billing/plans"
+                      href="/app/professional/profile/setup"
                     >
                       <UploadCloud className="h-4 w-4" aria-hidden="true" />
-                      Upgrade para enviar vídeo
+                      Atualizar tela
                     </Link>
                   </div>
                 )}

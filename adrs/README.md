@@ -56,3 +56,5 @@ Formato recomendado:
 - [ADR-0059 - Filtros avancados na busca de psicologos](0059-filtros-avancados-busca-psicologos.md) - Accepted
 - [ADR-0060 - Imagem de capa independente do perfil do psicologo](0060-capa-independente-perfil-psicologo.md) - Accepted
 - [ADR-0061 - Favoritos com cards premium e filtros reais](0061-favoritos-cards-premium-filtros-reais.md) - Accepted
+- [ADR-0062 - Comunidades reais e feed paginado](0062-comunidades-feed-paginado.md) - Accepted
+- [ADR-0063 - Vídeo obrigatório para elegibilidade na listagem de psicólogos](0063-video-obrigatorio-listagem-psicologos.md) - Accepted

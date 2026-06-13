@@ -87,7 +87,7 @@ const getFeatureRows = (plan: SubscriptionPlan): FeatureRow[] => {
       label: "Participe da comunidade como Profissional",
     },
     {
-      included: Boolean(features.profile_video),
+      included: true,
       label: "Upload de vídeo de apresentação",
     },
     {

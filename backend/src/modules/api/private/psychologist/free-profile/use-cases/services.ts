@@ -339,7 +339,7 @@ export const update = async (data: IFreeProfessionalProfileUpdateDTO) => {
   }
 
   const updated = await repository.update(data.auth.id!, body, {
-    canUseProfessionalFeatures: current.plan.can_upload_video,
+    canUploadVideo: current.plan.can_upload_video,
   });
 
   return {

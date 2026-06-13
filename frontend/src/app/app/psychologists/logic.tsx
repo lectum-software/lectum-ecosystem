@@ -2237,7 +2237,7 @@ export const PsychologistsLogic = () => {
               <div className="grid h-full w-full place-items-center px-4 py-8">
                 <EmptyState
                   className="w-full"
-                  description="Ainda não existem psicólogos publicados para estes filtros."
+                  description="Ainda não existem psicólogos publicados com vídeo de apresentação para estes filtros."
                   icon={UsersRound}
                   title="Nenhum Psicólogo encontrado"
                   action={

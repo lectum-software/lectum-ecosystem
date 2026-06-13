@@ -232,7 +232,7 @@ const toResponse = async (
   const planSlug = current?.plan?.slug || null;
   const catalogs = await getCatalogs();
   const isFree = planSlug === "gratuito" || !planSlug;
-  const canUseProfessionalFeatures = !isFree;
+  const canUploadVideo = true;
   const specialtyLimit = isFree ? 3 : 10;
   const serviceLimit = isFree ? 1 : Math.max(catalogs.services.length, 1);
   const approachLimit = isFree ? 1 : Math.max(catalogs.approaches.length, 1);
@@ -290,7 +290,7 @@ const toResponse = async (
     },
     plan: {
       approach_limit: approachLimit,
-      can_upload_video: canUseProfessionalFeatures,
+      can_upload_video: canUploadVideo,
       current_period_end: current?.current_period_end ?? null,
       is_courtesy: current?.source === "admin_grant",
       slug: planSlug,
@@ -322,7 +322,7 @@ export class FreeProfileRepository implements IFreeProfileRepository {
   async update(
     userId: string,
     body: Required<FreeProfessionalProfileUpdateBody>,
-    options: { canUseProfessionalFeatures: boolean },
+    options: { canUploadVideo: boolean },
   ): Promise<FreeProfessionalProfileResponse | null> {
     const existing = await getUserWithProfile(userId);
     const profile = existing?.psychologist_profile;
@@ -347,8 +347,8 @@ export class FreeProfileRepository implements IFreeProfileRepository {
           crp: buildCrp(body.crp_region, body.crp_number),
           whatsapp: body.whatsapp,
           languages: body.languages as Prisma.InputJsonValue,
-          video_url: options.canUseProfessionalFeatures ? undefined : null,
-          video_cover_url: options.canUseProfessionalFeatures ? undefined : null,
+          video_url: options.canUploadVideo ? undefined : null,
+          video_cover_url: options.canUploadVideo ? undefined : null,
           target_audience: body.target_audience as Prisma.InputJsonValue,
           discount_first_session: body.discount_first_session,
           social_value: body.social_value,
@@ -398,7 +398,7 @@ export class FreeProfileRepository implements IFreeProfileRepository {
       }
     });
 
-    if (!options.canUseProfessionalFeatures) {
+    if (!options.canUploadVideo) {
       await deletePublicProfileMedia(profile.video_url);
       await deletePublicProfileMedia(profile.video_cover_url);
     }
