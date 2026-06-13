@@ -23,6 +23,14 @@ export type CommunityFeedQuery = {
   scope?: CommunityFeedScope;
 };
 
+export type CommunityTopMentorsPeriodValue = "30d" | "90d" | "all";
+
+export type CommunityTopMentorsQuery = {
+  period?: CommunityTopMentorsPeriodValue;
+  community?: string;
+  limit?: number;
+};
+
 export type CommunityParams = {
   slug: string;
 };
@@ -141,6 +149,57 @@ export type CommunityMembershipResponse = {
   following: boolean;
 };
 
+export type CommunityTopMentorsPeriod = {
+  key: CommunityTopMentorsPeriodValue;
+  label: string;
+  start_at: Date | null;
+  end_at: Date;
+};
+
+export type CommunityTopMentorMetricsDTO = {
+  upvotes_received: number;
+  posts_published: number;
+  replies_published: number;
+  participation_events: number;
+};
+
+export type CommunityTopMentorBreakdownDTO = {
+  upvotes_points: number;
+  posts_points: number;
+  replies_points: number;
+};
+
+export type CommunityTopMentorDTO = {
+  position: number;
+  score: number;
+  badge: string;
+  professional: {
+    id: string;
+    name: string;
+    avatar: string | null;
+    headline: string | null;
+    crp: string | null;
+    rating_avg: number;
+    rating_count: number;
+    profile_url: string;
+  };
+  metrics: CommunityTopMentorMetricsDTO;
+  score_breakdown: CommunityTopMentorBreakdownDTO;
+};
+
+export type CommunityTopMentorsResponse = {
+  data: CommunityTopMentorDTO[];
+  period: CommunityTopMentorsPeriod;
+  community: CommunityDTO | null;
+  formula: {
+    upvote_weight: number;
+    reply_weight: number;
+    post_weight: number;
+    description: string;
+  };
+  count: number;
+};
+
 export type ICommunityIndexDTO = {
   q: CommunityListQuery;
   auth?: user;
@@ -175,6 +234,11 @@ export type ICommunityPostsDTO = {
 
 export type ICommunityFeedDTO = {
   q: CommunityFeedQuery;
+  auth?: user;
+};
+
+export type ICommunityTopMentorsDTO = {
+  q: CommunityTopMentorsQuery;
   auth?: user;
 };
 

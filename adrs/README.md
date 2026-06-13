@@ -64,3 +64,4 @@ Formato recomendado:
 - [ADR-0067 - Midia em resposta profissional destacada](0067-midia-resposta-profissional-destacada.md) - Accepted
 - [ADR-0068 - Respostas, votos e salvos no detalhe do post](0068-respostas-votos-salvos-post.md) - Accepted
 - [ADR-0069 - Topo TikTok com Minha Busca na tela de Psicologos](0069-topo-tiktok-minha-busca-psicologos.md) - Accepted
+- [ADR-0070 - Ranking derivado de Top Mentores da comunidade](0070-ranking-top-mentores.md) - Accepted

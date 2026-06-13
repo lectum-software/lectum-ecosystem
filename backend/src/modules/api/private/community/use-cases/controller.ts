@@ -8,6 +8,7 @@ import {
   posts as postsService,
   show as showService,
   suggest as suggestService,
+  topMentors as topMentorsService,
   unfollow as unfollowService,
 } from "./services";
 
@@ -48,6 +49,18 @@ export const feed = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "community_feed", err);
+  }
+};
+
+export const topMentors = async (req: Request, res: Response) => {
+  try {
+    const resolve = await topMentorsService(
+      req as unknown as Parameters<typeof topMentorsService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "community_top_mentors", err);
   }
 };
 

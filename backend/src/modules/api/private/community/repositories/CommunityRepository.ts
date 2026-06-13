@@ -10,6 +10,7 @@ import type {
   CommunityMembershipResponse,
   CommunityPostDTO,
   CommunityPostsResponse,
+  CommunityTopMentorsPeriodValue,
   ICommunityCreatePostDTO,
   ICommunityFeedDTO,
   ICommunityIndexDTO,
@@ -17,11 +18,17 @@ import type {
   ICommunityPostsDTO,
   ICommunityShowDTO,
   ICommunitySuggestionDTO,
+  ICommunityTopMentorsDTO,
 } from "../DTOs/ICommunityDTO";
 import type { ICommunityRepository } from "./interfaces/ICommunityRepository";
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
+const DEFAULT_TOP_MENTORS_LIMIT = 5;
+const MAX_TOP_MENTORS_LIMIT = 10;
+const TOP_MENTOR_UPVOTE_WEIGHT = 10;
+const TOP_MENTOR_REPLY_WEIGHT = 3;
+const TOP_MENTOR_POST_WEIGHT = 2;
 
 const communitySelect = {
   id: true,
@@ -53,6 +60,20 @@ const authorSelect = {
   role: true,
   psychologist_profile: {
     select: professionalProfileSelect,
+  },
+} satisfies Prisma.userSelect;
+
+const topMentorUserSelect = {
+  id: true,
+  name: true,
+  avatar: true,
+  psychologist_profile: {
+    select: {
+      headline: true,
+      crp: true,
+      rating_avg: true,
+      rating_count: true,
+    },
   },
 } satisfies Prisma.userSelect;
 
@@ -108,6 +129,7 @@ const postSelect = {
 type PostResult = Prisma.community_postGetPayload<{ select: typeof postSelect }>;
 type AuthorResult = PostResult["author"];
 type ProfessionalReplyResult = PostResult["replies"][number];
+type TopMentorUserResult = Prisma.userGetPayload<{ select: typeof topMentorUserSelect }>;
 
 const CONTACT_MESSAGE =
   "Olá, encontrei seu post na comunidade Lectum e gostaria de conversar sobre atendimento.";
@@ -231,6 +253,70 @@ const authorTypeLabel = (role?: string | null, gender?: string | null, anonymous
 
 const normalizeScope = (value?: string | null) => {
   return value === "following" ? "following" : "all";
+};
+
+const resolveTopMentorsPeriod = (value?: string | null) => {
+  const key: CommunityTopMentorsPeriodValue = value === "90d" || value === "all" ? value : "30d";
+  const endAt = new Date();
+  const startAt = key === "all" ? null : new Date(endAt);
+
+  if (startAt && key === "30d") startAt.setDate(startAt.getDate() - 30);
+  if (startAt && key === "90d") startAt.setDate(startAt.getDate() - 90);
+
+  const labels = {
+    "30d": "Últimos 30 dias",
+    "90d": "Últimos 90 dias",
+    all: "Histórico completo",
+  } as const;
+
+  return {
+    key,
+    label: labels[key],
+    start_at: startAt,
+    end_at: endAt,
+  };
+};
+
+const topMentorsCreatedAtWindow = (period: ReturnType<typeof resolveTopMentorsPeriod>) => {
+  const range: Prisma.DateTimeFilter = {
+    lte: period.end_at,
+  };
+
+  if (period.start_at) range.gte = period.start_at;
+
+  return range;
+};
+
+const normalizeTopMentorsLimit = (limit?: number) => {
+  return Math.min(MAX_TOP_MENTORS_LIMIT, Math.max(1, Number(limit || DEFAULT_TOP_MENTORS_LIMIT)));
+};
+
+type TopMentorMutableMetrics = {
+  upvotes_received: number;
+  posts_published: number;
+  replies_published: number;
+};
+
+const emptyTopMentorMetrics = (): TopMentorMutableMetrics => ({
+  upvotes_received: 0,
+  posts_published: 0,
+  replies_published: 0,
+});
+
+const topMentorScore = (metrics: TopMentorMutableMetrics) => {
+  return (
+    metrics.upvotes_received * TOP_MENTOR_UPVOTE_WEIGHT +
+    metrics.replies_published * TOP_MENTOR_REPLY_WEIGHT +
+    metrics.posts_published * TOP_MENTOR_POST_WEIGHT
+  );
+};
+
+const topMentorBadgeForPosition = (position: number) => {
+  if (position === 1) return "TOP #1 MENTOR";
+  if (position === 2) return "TOP #2 MENTOR";
+  if (position === 3) return "TOP #3 MENTOR";
+
+  return `TOP #${position} MENTOR`;
 };
 
 const postSearchWhere = (search?: string): Prisma.community_postWhereInput["OR"] => {
@@ -550,6 +636,262 @@ export class CommunityRepository implements ICommunityRepository {
       count,
       scope,
       community_slug: communitySlug,
+    };
+  }
+
+  async topMentors(data: ICommunityTopMentorsDTO) {
+    const period = resolveTopMentorsPeriod(data.q.period);
+    const createdAtWindow = topMentorsCreatedAtWindow(period);
+    const communitySlug = data.q.community?.trim() || null;
+    const limit = normalizeTopMentorsLimit(data.q.limit);
+
+    const community = communitySlug
+      ? await this.repository.findFirst({
+          where: {
+            slug: communitySlug,
+            deleted: false,
+          },
+          select: communitySelect,
+        })
+      : null;
+
+    if (communitySlug && !community) return null;
+
+    const eligibleMentors = await prisma.user.findMany({
+      where: {
+        deleted: false,
+        active: true,
+        role: "psicologo",
+        psychologist_profile: {
+          is: {
+            deleted: false,
+            published: true,
+            cfp_verified_at: {
+              not: null,
+            },
+            subscriptions: {
+              some: activeProfessionalEntitlementWhere(),
+            },
+          },
+        },
+      },
+      select: topMentorUserSelect,
+    });
+    const eligibleMentorIds = eligibleMentors.map((mentor) => mentor.id);
+
+    if (eligibleMentorIds.length === 0) {
+      return {
+        data: [],
+        period,
+        community: community ? toCommunityResponse(community) : null,
+        formula: {
+          upvote_weight: TOP_MENTOR_UPVOTE_WEIGHT,
+          reply_weight: TOP_MENTOR_REPLY_WEIGHT,
+          post_weight: TOP_MENTOR_POST_WEIGHT,
+          description:
+            "score = (upvotes recebidos × 10) + (respostas publicadas × 3) + (posts publicados × 2)",
+        },
+        count: 0,
+      };
+    }
+
+    const communityFilter: Prisma.communityWhereInput = {
+      deleted: false,
+      slug: communitySlug || undefined,
+    };
+    const publishedPostFilter: Prisma.community_postWhereInput = {
+      deleted: false,
+      status: "publicado",
+      community: communityFilter,
+    };
+
+    const [postParticipation, replyParticipation, postVotes, replyVotes] = await Promise.all([
+      prisma.community_post.groupBy({
+        by: ["author_id"],
+        where: {
+          ...publishedPostFilter,
+          author_id: {
+            in: eligibleMentorIds,
+          },
+          createdAt: createdAtWindow,
+        },
+        _count: {
+          author_id: true,
+        },
+      }),
+      prisma.post_reply.groupBy({
+        by: ["author_id"],
+        where: {
+          deleted: false,
+          author_id: {
+            in: eligibleMentorIds,
+          },
+          createdAt: createdAtWindow,
+          post: publishedPostFilter,
+        },
+        _count: {
+          author_id: true,
+        },
+      }),
+      prisma.post_vote.findMany({
+        where: {
+          deleted: false,
+          value: 1,
+          createdAt: createdAtWindow,
+          post_id: {
+            not: null,
+          },
+          post: {
+            ...publishedPostFilter,
+            author_id: {
+              in: eligibleMentorIds,
+            },
+          },
+        },
+        select: {
+          post: {
+            select: {
+              author_id: true,
+            },
+          },
+        },
+      }),
+      prisma.post_vote.findMany({
+        where: {
+          deleted: false,
+          value: 1,
+          createdAt: createdAtWindow,
+          reply_id: {
+            not: null,
+          },
+          reply: {
+            deleted: false,
+            author_id: {
+              in: eligibleMentorIds,
+            },
+            post: publishedPostFilter,
+          },
+        },
+        select: {
+          reply: {
+            select: {
+              author_id: true,
+            },
+          },
+        },
+      }),
+    ]);
+
+    const metricsByMentorId = new Map<string, TopMentorMutableMetrics>();
+    const getMetrics = (mentorId: string) => {
+      const existing = metricsByMentorId.get(mentorId);
+      if (existing) return existing;
+
+      const metrics = emptyTopMentorMetrics();
+      metricsByMentorId.set(mentorId, metrics);
+
+      return metrics;
+    };
+
+    for (const item of postParticipation) {
+      getMetrics(item.author_id).posts_published = item._count.author_id;
+    }
+
+    for (const item of replyParticipation) {
+      getMetrics(item.author_id).replies_published = item._count.author_id;
+    }
+
+    for (const vote of postVotes) {
+      if (vote.post?.author_id) {
+        getMetrics(vote.post.author_id).upvotes_received += 1;
+      }
+    }
+
+    for (const vote of replyVotes) {
+      if (vote.reply?.author_id) {
+        getMetrics(vote.reply.author_id).upvotes_received += 1;
+      }
+    }
+
+    const mentorById = new Map<string, TopMentorUserResult>(
+      eligibleMentors.map((mentor) => [mentor.id, mentor]),
+    );
+    const ranked = [...metricsByMentorId.entries()]
+      .map(([mentorId, metrics]) => {
+        const mentor = mentorById.get(mentorId);
+        const score = topMentorScore(metrics);
+
+        if (!mentor || score <= 0) return null;
+
+        return {
+          mentor,
+          metrics,
+          score,
+        };
+      })
+      .filter((item): item is NonNullable<typeof item> => Boolean(item))
+      .sort((a, b) => {
+        const scoreDiff = b.score - a.score;
+        if (scoreDiff !== 0) return scoreDiff;
+
+        const upvoteDiff = b.metrics.upvotes_received - a.metrics.upvotes_received;
+        if (upvoteDiff !== 0) return upvoteDiff;
+
+        const replyDiff = b.metrics.replies_published - a.metrics.replies_published;
+        if (replyDiff !== 0) return replyDiff;
+
+        const postDiff = b.metrics.posts_published - a.metrics.posts_published;
+        if (postDiff !== 0) return postDiff;
+
+        const nameDiff = a.mentor.name.localeCompare(b.mentor.name, "pt-BR");
+        if (nameDiff !== 0) return nameDiff;
+
+        return a.mentor.id.localeCompare(b.mentor.id);
+      })
+      .slice(0, limit);
+
+    const items = ranked.map((item, index) => {
+      const position = index + 1;
+      const profile = item.mentor.psychologist_profile;
+
+      return {
+        position,
+        score: item.score,
+        badge: topMentorBadgeForPosition(position),
+        professional: {
+          id: item.mentor.id,
+          name: item.mentor.name,
+          avatar: item.mentor.avatar,
+          headline: profile?.headline ?? null,
+          crp: profile?.crp ?? null,
+          rating_avg: profile?.rating_avg ?? 0,
+          rating_count: profile?.rating_count ?? 0,
+          profile_url: `/app/psychologist/${item.mentor.id}`,
+        },
+        metrics: {
+          ...item.metrics,
+          participation_events: item.metrics.posts_published + item.metrics.replies_published,
+        },
+        score_breakdown: {
+          upvotes_points: item.metrics.upvotes_received * TOP_MENTOR_UPVOTE_WEIGHT,
+          posts_points: item.metrics.posts_published * TOP_MENTOR_POST_WEIGHT,
+          replies_points: item.metrics.replies_published * TOP_MENTOR_REPLY_WEIGHT,
+        },
+      };
+    });
+
+    return {
+      data: items,
+      period,
+      community: community ? toCommunityResponse(community) : null,
+      formula: {
+        upvote_weight: TOP_MENTOR_UPVOTE_WEIGHT,
+        reply_weight: TOP_MENTOR_REPLY_WEIGHT,
+        post_weight: TOP_MENTOR_POST_WEIGHT,
+        description:
+          "score = (upvotes recebidos × 10) + (respostas publicadas × 3) + (posts publicados × 2)",
+      },
+      count: items.length,
     };
   }
 

@@ -21,6 +21,14 @@ export type CommunityFeedQuery = {
   scope?: CommunityFeedScope;
 };
 
+export type CommunityTopMentorsPeriodValue = "30d" | "90d" | "all";
+
+export type CommunityTopMentorsQuery = {
+  period?: CommunityTopMentorsPeriodValue;
+  community?: string;
+  limit?: number;
+};
+
 export type Community = {
   id: string;
   name: string;
@@ -116,6 +124,57 @@ export type CommunityDetailResponse = {
 export type CommunityMembershipResponse = {
   community: CommunityDetail;
   following: boolean;
+};
+
+export type CommunityTopMentorsPeriod = {
+  key: CommunityTopMentorsPeriodValue;
+  label: string;
+  start_at: string | null;
+  end_at: string;
+};
+
+export type CommunityTopMentorMetrics = {
+  upvotes_received: number;
+  posts_published: number;
+  replies_published: number;
+  participation_events: number;
+};
+
+export type CommunityTopMentorBreakdown = {
+  upvotes_points: number;
+  posts_points: number;
+  replies_points: number;
+};
+
+export type CommunityTopMentor = {
+  position: number;
+  score: number;
+  badge: string;
+  professional: {
+    id: string;
+    name: string;
+    avatar: string | null;
+    headline: string | null;
+    crp: string | null;
+    rating_avg: number;
+    rating_count: number;
+    profile_url: string;
+  };
+  metrics: CommunityTopMentorMetrics;
+  score_breakdown: CommunityTopMentorBreakdown;
+};
+
+export type CommunityTopMentorsResponse = {
+  data: CommunityTopMentor[];
+  period: CommunityTopMentorsPeriod;
+  community: Community | null;
+  formula: {
+    upvote_weight: number;
+    reply_weight: number;
+    post_weight: number;
+    description: string;
+  };
+  count: number;
 };
 
 export type CreateCommunityPostPayload = {

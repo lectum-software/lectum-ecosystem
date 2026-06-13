@@ -7,6 +7,7 @@ import type {
   ICommunityPostsDTO,
   ICommunityShowDTO,
   ICommunitySuggestionDTO,
+  ICommunityTopMentorsDTO,
 } from "../DTOs/ICommunityDTO";
 import { CommunityRepository } from "../repositories/CommunityRepository";
 
@@ -60,6 +61,26 @@ export const show = async (data: ICommunityShowDTO) => {
 export const feed = async (data: ICommunityFeedDTO) => {
   const repository = new CommunityRepository();
   const res = await repository.feed(data);
+
+  return {
+    status: 200,
+    ...msg("index", {}),
+    data: res,
+  };
+};
+
+export const topMentors = async (data: ICommunityTopMentorsDTO) => {
+  const repository = new CommunityRepository();
+  const res = await repository.topMentors(data);
+
+  if (!res) {
+    return {
+      status: 404,
+      ...error("not_found", {
+        model: "community",
+      }),
+    };
+  }
 
   return {
     status: 200,

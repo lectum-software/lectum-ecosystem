@@ -22,6 +22,7 @@
     feed: (filters?: unknown) => ["community", "feed", filters],
     list: (filters?: unknown) => ["community", "list", filters],
     posts: (slug: string, filters?: unknown) => ["community", slug, "posts", filters],
+    topMentors: (filters?: unknown) => ["community", "top_mentors", filters],
   },
   posts: {
     root: () => ["posts"],

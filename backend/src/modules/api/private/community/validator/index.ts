@@ -104,6 +104,36 @@ export const postsSchema: IValidatorRequest = {
   ],
 };
 
+export const topMentorsSchema: IValidatorRequest = {
+  query: [
+    {
+      key: "period",
+      coerse: "string",
+      method: "enumeric",
+      values: ["30d", "90d", "all"],
+      optional: true,
+    },
+    {
+      key: "community",
+      coerse: "string",
+      method: "string",
+      min: 1,
+      max: 120,
+      format: "lower",
+      optional: true,
+    },
+    {
+      key: "limit",
+      coerse: "number",
+      method: "numeric",
+      int: true,
+      positive: true,
+      max: 10,
+      optional: true,
+    },
+  ],
+};
+
 export const showSchema: IValidatorRequest = {
   params: [
     {
@@ -154,6 +184,7 @@ export const createPostSchema: IValidatorRequest = {
 
 export const indexValidator = validator(indexSchema);
 export const feedValidator = validator(feedSchema);
+export const topMentorsValidator = validator(topMentorsSchema);
 export const suggestionValidator = validator(suggestionSchema);
 export const showValidator = validator(showSchema);
 export const membershipValidator = validator(showSchema);

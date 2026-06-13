@@ -10,6 +10,8 @@ import type {
   CommunityPostsQuery,
   CommunityPostsResponse,
   CommunitySuggestion,
+  CommunityTopMentorsQuery,
+  CommunityTopMentorsResponse,
   CreateCommunityPostPayload,
   SuggestCommunityPayload,
 } from "@/api/generator/types/community";
@@ -31,6 +33,15 @@ export const getCommunityFeedPosts = async (query: CommunityFeedQuery = {}) => {
   });
 
   return handleReq<CommunityFeedResponse>(handle);
+};
+
+export const getCommunityTopMentors = async (query: CommunityTopMentorsQuery = {}) => {
+  const handle = callEndpoint({
+    route: "/api/private/community/top-mentors",
+    query,
+  });
+
+  return handleReq<CommunityTopMentorsResponse>(handle);
 };
 
 export const getCommunityDetail = async (slug: string) => {

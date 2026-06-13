@@ -9,6 +9,7 @@ import type {
   CommunityPost,
   CommunityPostsQuery,
   CommunitySuggestion,
+  CommunityTopMentorsQuery,
   CreateCommunityPostPayload,
   SuggestCommunityPayload,
 } from "@/api/generator/types/community";
@@ -28,6 +29,16 @@ export const useCommunityFeedPosts = (query: CommunityFeedQuery = {}, enabled = 
   return useQuery({
     queryKey: keys.community.feed(query),
     queryFn: () => api.getCommunityFeedPosts(query),
+    enabled,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
+};
+
+export const useCommunityTopMentors = (query: CommunityTopMentorsQuery = {}, enabled = true) => {
+  return useQuery({
+    queryKey: keys.community.topMentors(query),
+    queryFn: () => api.getCommunityTopMentors(query),
     enabled,
     refetchOnWindowFocus: false,
     retry: false,

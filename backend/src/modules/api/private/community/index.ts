@@ -7,6 +7,7 @@ import {
   posts,
   show,
   suggest,
+  topMentors,
   unfollow,
 } from "./use-cases/controller";
 import {
@@ -17,12 +18,14 @@ import {
   postsValidator,
   showValidator,
   suggestionValidator,
+  topMentorsValidator,
 } from "./validator";
 
 const routes = Router();
 
 routes.get("", indexValidator, index);
 routes.get("/feed/posts", feedValidator, feed);
+routes.get("/top-mentors", topMentorsValidator, topMentors);
 routes.post("/suggestions", suggestionValidator, suggest);
 routes.post("/:slug/members", membershipValidator, follow);
 routes.delete("/:slug/members", membershipValidator, unfollow);

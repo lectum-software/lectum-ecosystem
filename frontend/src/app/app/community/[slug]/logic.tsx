@@ -784,10 +784,13 @@ const CommunityHeader = ({
             Esta comunidade ainda não possui descrição cadastrada pela equipe Lectum.
           </p>
         )}
-        <p className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1.5 text-xs font-black text-primary">
+        <Link
+          className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1.5 text-xs font-black text-primary transition hover:bg-primary hover:text-white"
+          href={`/app/community/top-mentors?community=${community.slug}`}
+        >
           <Award className="h-3.5 w-3.5" aria-hidden="true" />
-          Top 5 mentores da comunidade será ativado na etapa de ranking.
-        </p>
+          Ver Top 5 mentores da comunidade
+        </Link>
       </div>
     </div>
   </header>
