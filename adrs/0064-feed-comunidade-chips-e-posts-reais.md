@@ -49,7 +49,7 @@ As páginas de detalhe por comunidade serão criadas depois. Até lá, chips e n
 - O CTA de WhatsApp fica alinhado ao modelo de negócio: só aparece quando a resposta destacada é de psicólogo verificado e pago.
 - O ranking visual de mentor é derivado por faixas de engajamento até existir o ranking definitivo, sem criar permissões ou poderes de moderação.
 - A navegação para comunidade está preparada para detalhe futuro, mesmo que hoje ainda sirva como filtro/compatibilidade.
-- A criação real de posts permanece fora deste refinamento; a rota `/app/community/post/new` existe como destino honesto/preparado para a task futura de formulário, sem criar mock de publicação.
+- A criação real de posts foi implementada posteriormente na TASK-24/ADR-0065; este ADR permanece como decisão do feed e do CTA de entrada.
 
 ## Validação
 
@@ -74,7 +74,7 @@ As páginas de detalhe por comunidade serão criadas depois. Até lá, chips e n
 
 ## Pendências
 
-- Implementar criação de posts e respostas/comentários com regras de moderação (TASK-24/TASK-26).
+- Implementar respostas/comentários detalhados com regras de moderação (TASK-26); a criação de posts de texto foi concluída na TASK-24/ADR-0065.
 - Implementar `community_member`/seguir comunidades para popular o filtro `following` (TASK-25).
 - Criar páginas de detalhe de comunidade e post.
 - Implementar votos, salvamentos e compartilhamentos persistidos quando suas tasks entrarem em execução.

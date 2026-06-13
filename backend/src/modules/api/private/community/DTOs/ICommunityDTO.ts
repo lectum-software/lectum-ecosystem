@@ -31,6 +31,12 @@ export type CommunitySuggestionBody = {
   theme: string;
 };
 
+export type CommunityCreatePostBody = {
+  title: string;
+  content: string;
+  anonymous?: boolean;
+};
+
 export type CommunityDTO = {
   id: string;
   name: string;
@@ -119,6 +125,12 @@ export type ICommunityIndexDTO = {
 
 export type ICommunitySuggestionDTO = {
   b: CommunitySuggestionBody;
+  auth: user;
+};
+
+export type ICommunityCreatePostDTO = {
+  p: CommunityParams;
+  b: CommunityCreatePostBody;
   auth: user;
 };
 

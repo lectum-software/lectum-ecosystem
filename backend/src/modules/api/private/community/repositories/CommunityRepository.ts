@@ -8,6 +8,7 @@ import type {
   CommunityIndexResponse,
   CommunityPostDTO,
   CommunityPostsResponse,
+  ICommunityCreatePostDTO,
   ICommunityFeedDTO,
   ICommunityIndexDTO,
   ICommunityPostsDTO,
@@ -489,6 +490,35 @@ export class CommunityRepository implements ICommunityRepository {
       pages: Math.ceil(count / pagination.limit),
       count,
     };
+  }
+
+  async createPost(data: ICommunityCreatePostDTO): Promise<CommunityPostDTO | null> {
+    const community = await this.repository.findFirst({
+      where: {
+        slug: data.p.slug,
+        deleted: false,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!community) return null;
+
+    const isPsychologist = data.auth.role === "psicologo";
+    const post = await prisma.community_post.create({
+      data: {
+        community_id: community.id,
+        author_id: data.auth.id!,
+        title: data.b.title.trim(),
+        content: data.b.content.trim(),
+        anonymous: isPsychologist ? false : data.b.anonymous === true,
+        status: "publicado",
+      },
+      select: postSelect,
+    });
+
+    return toPostResponse(post);
   }
 
   async suggest(data: ICommunitySuggestionDTO) {

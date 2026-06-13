@@ -95,6 +95,12 @@ export type CommunityFeedResponse = {
   community_slug: string | null;
 };
 
+export type CreateCommunityPostPayload = {
+  title: string;
+  content: string;
+  anonymous?: boolean;
+};
+
 export type SuggestCommunityPayload = {
   theme: string;
 };

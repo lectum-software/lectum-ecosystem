@@ -28,6 +28,7 @@ export type {
   CommunityPostsResponse,
   CommunityProfessionalReply,
   CommunitySuggestion,
+  CreateCommunityPostPayload,
   SuggestCommunityPayload,
 } from "./community";
 export type {

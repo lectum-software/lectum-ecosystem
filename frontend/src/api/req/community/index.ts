@@ -4,9 +4,11 @@ import type {
   CommunityFeedResponse,
   CommunityListQuery,
   CommunityListResponse,
+  CommunityPost,
   CommunityPostsQuery,
   CommunityPostsResponse,
   CommunitySuggestion,
+  CreateCommunityPostPayload,
   SuggestCommunityPayload,
 } from "@/api/generator/types/community";
 import { handleReq } from "@/api/handle";
@@ -50,4 +52,18 @@ export const getCommunityPosts = async (slug: string, query: CommunityPostsQuery
   });
 
   return handleReq<CommunityPostsResponse>(handle);
+};
+
+export const createCommunityPost = async (slug: string, body: CreateCommunityPostPayload) => {
+  const handle = callEndpoint({
+    route: "/api/private/community/:slug/posts",
+    method: "POST",
+    params: { slug },
+    body,
+  });
+
+  return handleReq<CommunityPost>({
+    ...handle,
+    showSuccess: true,
+  });
 };

@@ -1,5 +1,6 @@
 ﻿import { error, msg } from "@/helpers/translate";
 import type {
+  ICommunityCreatePostDTO,
   ICommunityFeedDTO,
   ICommunityIndexDTO,
   ICommunityPostsDTO,
@@ -61,6 +62,42 @@ export const posts = async (data: ICommunityPostsDTO) => {
   return {
     status: 200,
     ...msg("index", {}),
+    data: res,
+  };
+};
+
+export const createPost = async (data: ICommunityCreatePostDTO) => {
+  const isAllowedRole = data.auth.role === "paciente" || data.auth.role === "psicologo";
+
+  if (!data.auth.id || !isAllowedRole) {
+    return {
+      status: 403,
+      ...error("role_not_authorized", {}),
+    };
+  }
+
+  const repository = new CommunityRepository();
+  const res = await repository.createPost({
+    ...data,
+    b: {
+      title: data.b.title.trim(),
+      content: data.b.content.trim(),
+      anonymous: data.auth.role === "paciente" ? data.b.anonymous === true : false,
+    },
+  });
+
+  if (!res) {
+    return {
+      status: 404,
+      ...error("not_found", {
+        model: "community",
+      }),
+    };
+  }
+
+  return {
+    status: 201,
+    ...msg("community_post_created", {}),
     data: res,
   };
 };

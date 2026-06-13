@@ -5,8 +5,10 @@ import keys from "@/api/cache/keys";
 import type {
   CommunityFeedQuery,
   CommunityListQuery,
+  CommunityPost,
   CommunityPostsQuery,
   CommunitySuggestion,
+  CreateCommunityPostPayload,
   SuggestCommunityPayload,
 } from "@/api/generator/types/community";
 import * as api from "@/api/req/community";
@@ -58,5 +60,22 @@ export const useCommunityPosts = (
     enabled: Boolean(slug) && enabled,
     refetchOnWindowFocus: false,
     retry: false,
+  });
+};
+
+export const useCreateCommunityPost = (callbacks?: {
+  onSuccess?: (data: CommunityPost) => void;
+  onError?: (error: unknown) => void;
+}) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ slug, body }: { slug: string; body: CreateCommunityPostPayload }) =>
+      api.createCommunityPost(slug, body),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: keys.community.root() });
+      callbacks?.onSuccess?.(data);
+    },
+    onError: callbacks?.onError,
   });
 };

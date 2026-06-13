@@ -105,7 +105,8 @@
     "professional_profile_video_cover_uploaded": "Imagem de capa do vídeo atualizada com sucesso.",
     "professional_profile_video_removed": "Vídeo de apresentação removido com sucesso.",
     "patient_profile_updated": "Perfil do paciente atualizado com sucesso.",
-    "community_suggestion_created": "Sugestão de comunidade enviada com sucesso."
+    "community_suggestion_created": "Sugestão de comunidade enviada com sucesso.",
+    "community_post_created": "Post publicado com sucesso."
   },
   "gender": {
     "o": "o"
@@ -163,7 +164,10 @@
     "verification_id": "verificação de telefone",
     "code": "código",
     "theme": "tema da comunidade",
-    "category": "categoria"
+    "category": "categoria",
+    "title": "título",
+    "content": "conteúdo",
+    "anonymous": "postar como anônimo"
   },
   "notification": {
     "test": {

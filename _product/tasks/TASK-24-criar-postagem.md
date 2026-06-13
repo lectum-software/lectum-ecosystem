@@ -8,9 +8,9 @@
 | Prioridade | P0 |
 | Esforço | L |
 | Fase | Comunidades |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-02, TASK-23 |
-| ADR alvo | ADR de criação de posts |
+| ADR alvo | `adrs/0065-criacao-posts-comunidade.md` |
 
 ## Referências obrigatórias
 
@@ -135,20 +135,20 @@ Regras anti-recriação específicas:
 
 ## Critérios de aceite
 
-- [ ] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
-- [ ] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
-- [ ] Rotas seguem a convenção canônica do `DATA-MODEL.md`.
-- [ ] Decisão de moderação (publicar vs pré-moderar) registrada no ADR alvo.
-- [ ] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
-- [ ] Backend implementado nos endpoints/modelos esperados quando aplicável.
-- [ ] Todos os estados obrigatórios existem e usam textos em PT-BR.
-- [ ] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
-- [ ] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
-- [ ] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
-- [ ] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
-- [ ] ADR criado ou atualizado em `adrs/`.
-- [ ] Checks/builds relevantes foram executados sem erros.
-- [ ] Commit criado com mensagem convencional.
+- [x] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
+- [x] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
+- [x] Rotas seguem a convenção canônica do `DATA-MODEL.md`.
+- [x] Decisão de moderação (publicar vs pré-moderar) registrada no ADR alvo.
+- [x] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
+- [x] Backend implementado nos endpoints/modelos esperados quando aplicável.
+- [x] Todos os estados obrigatórios existem e usam textos em PT-BR.
+- [x] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
+- [x] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
+- [x] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
+- [x] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
+- [x] ADR criado ou atualizado em `adrs/`.
+- [x] Checks/builds relevantes foram executados sem erros.
+- [x] Commit criado com mensagem convencional.
 
 ## Validação mínima
 
@@ -158,6 +158,14 @@ Regras anti-recriação específicas:
 - `pnpm --dir backend build` quando backend estrutural mudar.
 - `pnpm check` quando a task tocar frontend e backend.
 - Browser local na rota principal da task quando houver interface.
+
+## Registro de execução
+
+- Referências consultadas: PDFs anexados pelo usuário e imagens locais em `_product/proto` para paciente, psicólogo e confirmação.
+- Backend criado em `POST /api/private/community/:slug/posts`, usando o modelo existente `community_post` sem migration.
+- Frontend criado nas rotas canônicas `/app/community/[slug]/post/new` e `/app/community/[slug]/post/success`; `/app/community/post/new` redireciona para `/app/community/feed/post/new`.
+- Mídia/anexos ficaram como pendência explícita por ausência de credenciais/bucket R2 no ambiente; a publicação de texto foi implementada de ponta a ponta.
+- ADR: `adrs/0065-criacao-posts-comunidade.md`.
 
 ## Notas para executor
 

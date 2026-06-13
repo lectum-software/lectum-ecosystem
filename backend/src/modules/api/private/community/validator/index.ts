@@ -104,9 +104,45 @@ export const postsSchema: IValidatorRequest = {
   ],
 };
 
+export const createPostSchema: IValidatorRequest = {
+  params: [
+    {
+      key: "slug",
+      coerse: "string",
+      method: "string",
+      min: 1,
+      max: 120,
+      format: "lower",
+    },
+  ],
+  body: [
+    {
+      key: "title",
+      coerse: "string",
+      method: "string",
+      min: 3,
+      max: 140,
+    },
+    {
+      key: "content",
+      coerse: "string",
+      method: "string",
+      min: 10,
+      max: 2000,
+    },
+    {
+      key: "anonymous",
+      coerse: "boolean",
+      method: "boolean",
+      optional: true,
+    },
+  ],
+};
+
 export const indexValidator = validator(indexSchema);
 export const feedValidator = validator(feedSchema);
 export const suggestionValidator = validator(suggestionSchema);
 export const postsValidator = validator(postsSchema);
+export const createPostValidator = validator(createPostSchema);
 
 export default indexValidator;

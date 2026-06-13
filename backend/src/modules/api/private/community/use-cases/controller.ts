@@ -1,6 +1,7 @@
 ﻿import type { Request, Response } from "express";
 import { error500, send } from "@/helpers/return";
 import {
+  createPost as createPostService,
   feed as feedService,
   index as indexService,
   posts as postsService,
@@ -44,5 +45,17 @@ export const posts = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "community_posts", err);
+  }
+};
+
+export const createPost = async (req: Request, res: Response) => {
+  try {
+    const resolve = await createPostService(
+      req as unknown as Parameters<typeof createPostService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "community_create_post", err);
   }
 };
