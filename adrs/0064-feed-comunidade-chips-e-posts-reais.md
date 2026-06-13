@@ -32,6 +32,7 @@ As páginas de detalhe por comunidade serão criadas depois. Até lá, chips e n
 - Adicionar ícone de descoberta no chip `Explorar`.
 - Persistir `community_post.anonymous` para diferenciar posts de pacientes anônimos e identificados; o default `true` preserva privacidade de dados já existentes.
 - Usar avatar com ícone anônimo inspirado em `C:\Users\tulio\Downloads\Membro Anônimo.png` quando `anonymous=true`.
+- Exibir posts anônimos de pacientes como `Membro Anônimo #1234`, com sufixo numérico determinístico derivado do `community_post.id`; o nome mascarado não representa perfil público e não deve ser clicável.
 - Respeitar o anonimato também na busca por nome: posts anônimos de pacientes não devem ser encontrados pelo nome real do autor.
 - Esconder o header de busca/chips ao rolar para baixo e reexibir ao rolar para cima com transição suave.
 - Reposicionar metadados de posts de pacientes para mostrar somente o tempo abaixo do nome.
@@ -67,7 +68,9 @@ As páginas de detalhe por comunidade serão criadas depois. Até lá, chips e n
 - Refinamento dos gradientes de TOP MENTOR conforme Figma: `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`: sucesso.
 - Refinamento do CTA desktop de criação de post: `pnpm --dir frontend check` e `pnpm --dir frontend build`: sucesso.
 - Refinamento do alinhamento `Postado em [comunidade] [Seguir]`: `pnpm --dir frontend check` e `pnpm --dir frontend build`: sucesso.
+- Refinamento de anonimato numerado no feed: `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir backend build`, `pnpm --dir frontend build` e `pnpm check`: sucesso.
 - Validação HTTP local do Feed da Comunidade após CTA desktop: `GET http://localhost:3000/app/community/feed` retornou `200`.
+- Validação HTTP local após anonimato numerado: `GET http://localhost:3000/app/community/feed` retornou `200`.
 - Validação visual/HTTP local em `http://localhost:3000/app/community/feed`: sucesso (`200`).
 - Validação local de API com token temporário:
   - `GET /api/private/community/feed/posts?page=1&limit=12` retornou `200` com posts persistidos, campo `highlighted_professional_reply` no contrato e badges `TOP #1 MENTOR`, `TOP #2 MENTOR`, `TOP #3 MENTOR` quando aplicável;

@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, Info, Lightbulb, Loader2, UserRoundX, UsersRound, Video, X } from "lucide-react";
+import { Camera, Info, Loader2, UserRoundX, UsersRound, Video, X } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -233,15 +233,9 @@ export const CreateCommunityPostLogic = () => {
                         </button>
                       </div>
                       {checked ? (
-                        <p className="mt-3 flex items-start gap-2 text-[12.5px] leading-5 text-[#6B7280]">
-                          <Lightbulb
-                            className="mt-0.5 h-4 w-4 shrink-0 text-[#7C8797]"
-                            aria-hidden="true"
-                          />
-                          <span>
-                            Publicações identificadas costumam receber mais respostas da comunidade
-                            e dos profissionais.
-                          </span>
+                        <p className="mt-3 text-[12.5px] leading-5 text-[#6B7280]">
+                          💡 Publicar com seu nome ajuda a tornar as conversas mais pessoais e
+                          acolhedoras.
                         </p>
                       ) : null}
                     </div>

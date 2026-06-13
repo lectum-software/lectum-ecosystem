@@ -141,6 +141,16 @@ const buildWhatsappUrl = (value?: string | null) => {
   return `https://wa.me/${digits}?text=${encodeURIComponent(CONTACT_MESSAGE)}`;
 };
 
+const anonymousDisplayNameForPost = (postId: string) => {
+  let hash = 0;
+
+  for (const character of postId) {
+    hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
+  }
+
+  return `Membro Anônimo #${1000 + (hash % 9000)}`;
+};
+
 const isProfessionalVerified = (profile?: { cfp_verified_at: Date | null } | null) => {
   return Boolean(profile?.cfp_verified_at);
 };
@@ -240,6 +250,7 @@ const toAuthorResponse = (
   author: AuthorResult,
   mentorScore = 0,
   anonymous = false,
+  anonymousDisplayName?: string,
 ): CommunityAuthorDTO => {
   const profile = author.psychologist_profile;
   const isPsychologist = author.role === "psicologo";
@@ -247,7 +258,7 @@ const toAuthorResponse = (
 
   return {
     id: author.id,
-    name: shouldMaskAuthor ? "Membro Anônimo" : author.name,
+    name: shouldMaskAuthor ? (anonymousDisplayName ?? "Membro Anônimo") : author.name,
     avatar: shouldMaskAuthor ? null : author.avatar,
     role: author.role,
     type_label: authorTypeLabel(author.role, profile?.gender, anonymous),
@@ -277,7 +288,12 @@ const toHighlightedProfessionalReply = (
 const toPostResponse = (item: PostResult): CommunityPostDTO => {
   const responseCommunity = toCommunityResponse(item.community);
   const anonymous = item.author.role !== "psicologo" && item.anonymous;
-  const author = toAuthorResponse(item.author, item.upvotes_count, anonymous);
+  const author = toAuthorResponse(
+    item.author,
+    item.upvotes_count,
+    anonymous,
+    anonymous ? anonymousDisplayNameForPost(item.id) : undefined,
+  );
   const highlightedReply = toHighlightedProfessionalReply(item.replies[0]);
 
   return {
