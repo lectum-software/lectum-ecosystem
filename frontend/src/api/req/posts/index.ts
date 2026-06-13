@@ -8,8 +8,28 @@ import type {
   PostSaveResponse,
   PostVotePayload,
   PostVoteResponse,
+  UserPostsQuery,
+  UserPostsResponse,
 } from "@/api/generator/types/posts";
 import { handleReq } from "@/api/handle";
+
+export const getMyPosts = async (query: UserPostsQuery = {}) => {
+  const handle = callEndpoint({
+    route: "/api/private/posts/mine",
+    query,
+  });
+
+  return handleReq<UserPostsResponse>(handle);
+};
+
+export const getSavedPosts = async (query: UserPostsQuery = {}) => {
+  const handle = callEndpoint({
+    route: "/api/private/posts/saved",
+    query,
+  });
+
+  return handleReq<UserPostsResponse>(handle);
+};
 
 export const getPostDetail = async (id: string) => {
   const handle = callEndpoint({

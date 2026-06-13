@@ -35,6 +35,50 @@ export type PostReply = {
   replies: PostReply[];
 };
 
+export type UserPostsType = "all" | "posts" | "replies";
+
+export type UserPostsQuery = {
+  page?: number;
+  limit?: number;
+  type?: UserPostsType;
+};
+
+export type PostProfessionalReply = {
+  id: string;
+  title: string | null;
+  content: string;
+  media_url: string | null;
+  media_type: string | null;
+  upvotes_count: number;
+  created_at: string;
+  author: CommunityAuthor;
+};
+
+export type PostListPost = PostDetail & {
+  highlighted_professional_reply: PostProfessionalReply | null;
+};
+
+export type UserPostReply = {
+  id: string;
+  title: string | null;
+  content: string;
+  upvotes_count: number;
+  created_at: string;
+  parent_reply_id: string | null;
+  parent_content: string | null;
+};
+
+export type UserPostListItem = {
+  id: string;
+  type: "post" | "reply";
+  created_at: string;
+  saved_at: string | null;
+  status: string;
+  saved: boolean;
+  post: PostListPost;
+  reply: UserPostReply | null;
+};
+
 export type PostDetailResponse = {
   post: PostDetail;
 };
@@ -49,6 +93,16 @@ export type PostRepliesResponse = {
   page: number;
   pages: number;
   count: number;
+};
+
+export type UserPostsResponse = {
+  data: UserPostListItem[];
+  items: UserPostListItem[];
+  page: number;
+  pages: number;
+  count: number;
+  total: number;
+  limit: number;
 };
 
 export type CreatePostReplyPayload = {

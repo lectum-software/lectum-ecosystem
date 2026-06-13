@@ -2,12 +2,34 @@
 import { error500, send } from "@/helpers/return";
 import {
   createReply as createReplyService,
+  mine as mineService,
   replies as repliesService,
+  saved as savedService,
   save as saveService,
   show as showService,
   unsave as unsaveService,
   vote as voteService,
 } from "./services";
+
+export const mine = async (req: Request, res: Response) => {
+  try {
+    const resolve = await mineService(req as unknown as Parameters<typeof mineService>[0]);
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_mine", err);
+  }
+};
+
+export const saved = async (req: Request, res: Response) => {
+  try {
+    const resolve = await savedService(req as unknown as Parameters<typeof savedService>[0]);
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_saved_list", err);
+  }
+};
 
 export const show = async (req: Request, res: Response) => {
   try {

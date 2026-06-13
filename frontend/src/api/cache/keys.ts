@@ -26,6 +26,10 @@
   },
   posts: {
     root: () => ["posts"],
+    mine: (filters?: unknown) =>
+      filters === undefined ? ["posts", "mine"] : ["posts", "mine", filters],
+    saved: (filters?: unknown) =>
+      filters === undefined ? ["posts", "saved"] : ["posts", "saved", filters],
     detail: (id: string) => ["posts", id, "detail"],
     replies: (id: string, filters?: unknown) => ["posts", id, "replies", filters],
   },

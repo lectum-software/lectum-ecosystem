@@ -39,6 +39,20 @@ export const repliesSchema: IValidatorRequest = {
   query: paginationQuery,
 };
 
+export const listSchema: IValidatorRequest = {
+  query: [
+    ...paginationQuery,
+    {
+      key: "type",
+      coerse: "string",
+      method: "string",
+      min: 1,
+      max: 16,
+      optional: true,
+    },
+  ],
+};
+
 export const createReplySchema: IValidatorRequest = {
   params: idParams,
   body: [
@@ -82,6 +96,7 @@ export const voteSchema: IValidatorRequest = {
 
 export const showValidator = validator(showSchema);
 export const repliesValidator = validator(repliesSchema);
+export const listValidator = validator(listSchema);
 export const createReplyValidator = validator(createReplySchema);
 export const voteValidator = validator(voteSchema);
 export const saveValidator = validator(showSchema);

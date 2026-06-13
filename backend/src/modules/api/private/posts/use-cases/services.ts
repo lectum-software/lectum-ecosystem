@@ -1,8 +1,10 @@
 ﻿import { error, msg } from "@/helpers/translate";
 import type {
   IPostCreateReplyDTO,
+  IPostMineDTO,
   IPostRepliesDTO,
   IPostSaveDTO,
+  IPostSavedDTO,
   IPostShowDTO,
   IPostVoteDTO,
   PostMutationResult,
@@ -70,6 +72,34 @@ export const show = async (data: IPostShowDTO) => {
   return {
     status: 200,
     ...msg("show", {}),
+    data: res,
+  };
+};
+
+export const mine = async (data: IPostMineDTO) => {
+  const unauthorized = ensureCommunityActor(data);
+  if (unauthorized) return unauthorized;
+
+  const repository = new PostRepository();
+  const res = await repository.mine(data);
+
+  return {
+    status: 200,
+    ...msg("index", {}),
+    data: res,
+  };
+};
+
+export const saved = async (data: IPostSavedDTO) => {
+  const unauthorized = ensureCommunityActor(data);
+  if (unauthorized) return unauthorized;
+
+  const repository = new PostRepository();
+  const res = await repository.saved(data);
+
+  return {
+    status: 200,
+    ...msg("index", {}),
     data: res,
   };
 };

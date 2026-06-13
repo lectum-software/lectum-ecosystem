@@ -3,15 +3,21 @@ import prisma, { type ORM } from "@/infra/database/prisma";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   IPostCreateReplyDTO,
+  IPostMineDTO,
   IPostRepliesDTO,
   IPostSaveDTO,
+  IPostSavedDTO,
   IPostShowDTO,
   IPostVoteDTO,
   PostAuthorDTO,
   PostCommunityDTO,
   PostDetailDTO,
   PostDetailResponse,
+  PostListItemDTO,
+  PostListPostDTO,
+  PostListResponse,
   PostMutationResult,
+  PostProfessionalReplyDTO,
   PostRepliesResponse,
   PostReplyDTO,
   PostSaveResponse,
@@ -77,6 +83,40 @@ const postSelect = {
   },
 } satisfies Prisma.community_postSelect;
 
+const listPostSelect = {
+  ...postSelect,
+  replies: {
+    where: {
+      deleted: false,
+      author: {
+        role: "psicologo",
+        psychologist_profile: {
+          is: {
+            deleted: false,
+            cfp_verified_at: {
+              not: null,
+            },
+          },
+        },
+      },
+    },
+    orderBy: [{ upvotes_count: "desc" }, { createdAt: "desc" }, { id: "desc" }],
+    take: 1,
+    select: {
+      id: true,
+      title: true,
+      content: true,
+      media_url: true,
+      media_type: true,
+      upvotes_count: true,
+      createdAt: true,
+      author: {
+        select: authorSelect,
+      },
+    },
+  },
+} satisfies Prisma.community_postSelect;
+
 const replyBaseSelect = {
   id: true,
   title: true,
@@ -104,7 +144,9 @@ const replySelect = {
 } satisfies Prisma.post_replySelect;
 
 type PostResult = Prisma.community_postGetPayload<{ select: typeof postSelect }>;
+type ListPostResult = Prisma.community_postGetPayload<{ select: typeof listPostSelect }>;
 type AuthorResult = PostResult["author"];
+type ProfessionalReplyResult = ListPostResult["replies"][number];
 type ReplyBaseResult = Prisma.post_replyGetPayload<{ select: typeof replyBaseSelect }>;
 type ReplyResult = Prisma.post_replyGetPayload<{ select: typeof replySelect }>;
 type CurrentVote = 1 | -1 | null;
@@ -119,6 +161,27 @@ const normalizePagination = (query: { page?: number; limit?: number }) => {
     skip: (page - 1) * limit,
   };
 };
+
+const normalizeListType = (value?: string | null): "all" | "posts" | "replies" => {
+  if (value === "posts" || value === "replies") return value;
+
+  return "all";
+};
+
+const toPaginatedListResponse = (
+  data: PostListItemDTO[],
+  page: number,
+  limit: number,
+  count: number,
+): PostListResponse => ({
+  data,
+  items: data,
+  page,
+  pages: Math.ceil(count / limit),
+  count,
+  total: count,
+  limit,
+});
 
 const toCommunityResponse = (item: {
   id: string;
@@ -267,6 +330,35 @@ const toPostResponse = (
   };
 };
 
+const toHighlightedProfessionalReply = (
+  reply?: ProfessionalReplyResult,
+): PostProfessionalReplyDTO | null => {
+  if (!reply) return null;
+
+  const author = toAuthorResponse(reply.author, reply.upvotes_count);
+  if (!author.verified) return null;
+
+  return {
+    id: reply.id,
+    title: reply.title,
+    content: reply.content,
+    media_url: reply.media_url,
+    media_type: reply.media_type,
+    upvotes_count: reply.upvotes_count,
+    created_at: reply.createdAt,
+    author,
+  };
+};
+
+const toListPostResponse = (
+  item: ListPostResult,
+  currentUserVote: CurrentVote,
+  saved: boolean,
+): PostListPostDTO => ({
+  ...toPostResponse(item, currentUserVote, saved),
+  highlighted_professional_reply: toHighlightedProfessionalReply(item.replies[0]),
+});
+
 const toReplyResponse = (
   item: ReplyResult | ReplyBaseResult,
   currentVotes: Map<string, CurrentVote>,
@@ -325,6 +417,180 @@ export class PostRepository implements IPostRepository {
 
   constructor() {
     this.repository = prisma.community_post;
+  }
+
+  async mine(data: IPostMineDTO): Promise<PostListResponse> {
+    const pagination = normalizePagination(data.q);
+    const type = normalizeListType(data.q.type);
+    const shouldLoadPosts = type === "all" || type === "posts";
+    const shouldLoadReplies = type === "all" || type === "replies";
+    const take = type === "all" ? pagination.skip + pagination.limit : pagination.limit;
+    const skip = type === "all" ? 0 : pagination.skip;
+
+    const [posts, postsCount, replies, repliesCount] = await Promise.all([
+      shouldLoadPosts
+        ? prisma.community_post.findMany({
+            where: {
+              author_id: data.auth.id!,
+              deleted: false,
+              community: {
+                deleted: false,
+              },
+            },
+            take,
+            skip,
+            orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+            select: listPostSelect,
+          })
+        : Promise.resolve([]),
+      shouldLoadPosts
+        ? prisma.community_post.count({
+            where: {
+              author_id: data.auth.id!,
+              deleted: false,
+              community: {
+                deleted: false,
+              },
+            },
+          })
+        : Promise.resolve(0),
+      shouldLoadReplies
+        ? prisma.post_reply.findMany({
+            where: {
+              author_id: data.auth.id!,
+              deleted: false,
+              post: {
+                deleted: false,
+                status: "publicado",
+                community: {
+                  deleted: false,
+                },
+              },
+            },
+            take,
+            skip,
+            orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+            select: {
+              id: true,
+              title: true,
+              content: true,
+              upvotes_count: true,
+              createdAt: true,
+              parent_reply_id: true,
+              parent_reply: {
+                select: {
+                  content: true,
+                },
+              },
+              post: {
+                select: listPostSelect,
+              },
+            },
+          })
+        : Promise.resolve([]),
+      shouldLoadReplies
+        ? prisma.post_reply.count({
+            where: {
+              author_id: data.auth.id!,
+              deleted: false,
+              post: {
+                deleted: false,
+                status: "publicado",
+                community: {
+                  deleted: false,
+                },
+              },
+            },
+          })
+        : Promise.resolve(0),
+    ]);
+
+    const postItems = posts.map<PostListItemDTO>((post) => ({
+      id: post.id,
+      type: "post",
+      created_at: post.createdAt,
+      saved_at: null,
+      status: post.status,
+      saved: false,
+      post: toListPostResponse(post, null, false),
+      reply: null,
+    }));
+    const replyItems = replies.map<PostListItemDTO>((reply) => ({
+      id: reply.id,
+      type: "reply",
+      created_at: reply.createdAt,
+      saved_at: null,
+      status: "publicado",
+      saved: false,
+      post: toListPostResponse(reply.post, null, false),
+      reply: {
+        id: reply.id,
+        title: reply.title,
+        content: reply.content,
+        upvotes_count: reply.upvotes_count,
+        created_at: reply.createdAt,
+        parent_reply_id: reply.parent_reply_id,
+        parent_content: reply.parent_reply?.content ?? null,
+      },
+    }));
+    const merged =
+      type === "all"
+        ? [...postItems, ...replyItems]
+            .sort((a, b) => {
+              const createdAtDiff =
+                new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+              if (createdAtDiff !== 0) return createdAtDiff;
+
+              return b.id.localeCompare(a.id);
+            })
+            .slice(pagination.skip, pagination.skip + pagination.limit)
+        : [...postItems, ...replyItems];
+    const count = postsCount + repliesCount;
+
+    return toPaginatedListResponse(merged, pagination.page, pagination.limit, count);
+  }
+
+  async saved(data: IPostSavedDTO): Promise<PostListResponse> {
+    const pagination = normalizePagination(data.q);
+    const where: Prisma.post_saveWhereInput = {
+      user_id: data.auth.id!,
+      deleted: false,
+      post: {
+        deleted: false,
+        status: "publicado",
+        community: {
+          deleted: false,
+        },
+      },
+    };
+    const [items, count] = await Promise.all([
+      prisma.post_save.findMany({
+        where,
+        take: pagination.limit,
+        skip: pagination.skip,
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        select: {
+          id: true,
+          createdAt: true,
+          post: {
+            select: listPostSelect,
+          },
+        },
+      }),
+      prisma.post_save.count({ where }),
+    ]);
+    const responseItems = items.map<PostListItemDTO>((item) => ({
+      id: item.id,
+      type: "post",
+      created_at: item.post.createdAt,
+      saved_at: item.createdAt,
+      status: item.post.status,
+      saved: true,
+      post: toListPostResponse(item.post, null, true),
+      reply: null,
+    }));
+
+    return toPaginatedListResponse(responseItems, pagination.page, pagination.limit, count);
   }
 
   async show(data: IPostShowDTO): Promise<PostDetailResponse | null> {

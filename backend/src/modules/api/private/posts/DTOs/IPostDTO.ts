@@ -9,6 +9,12 @@ export type PostRepliesQuery = {
   limit?: number;
 };
 
+export type PostListQuery = {
+  page?: number;
+  limit?: number;
+  type?: "all" | "posts" | "replies";
+};
+
 export type PostCreateReplyBody = {
   content: string;
   parentReplyId?: string;
@@ -75,8 +81,54 @@ export type PostReplyDTO = {
   replies: PostReplyDTO[];
 };
 
+export type PostProfessionalReplyDTO = {
+  id: string;
+  title: string | null;
+  content: string;
+  media_url: string | null;
+  media_type: string | null;
+  upvotes_count: number;
+  created_at: Date;
+  author: PostAuthorDTO;
+};
+
+export type PostListPostDTO = PostDetailDTO & {
+  highlighted_professional_reply: PostProfessionalReplyDTO | null;
+};
+
+export type PostListReplyDTO = {
+  id: string;
+  title: string | null;
+  content: string;
+  upvotes_count: number;
+  created_at: Date;
+  parent_reply_id: string | null;
+  parent_content: string | null;
+};
+
+export type PostListItemDTO = {
+  id: string;
+  type: "post" | "reply";
+  created_at: Date;
+  saved_at: Date | null;
+  status: string;
+  saved: boolean;
+  post: PostListPostDTO;
+  reply: PostListReplyDTO | null;
+};
+
 export type PostDetailResponse = {
   post: PostDetailDTO;
+};
+
+export type PostListResponse = {
+  data: PostListItemDTO[];
+  items: PostListItemDTO[];
+  page: number;
+  pages: number;
+  count: number;
+  total: number;
+  limit: number;
 };
 
 export type PostRepliesResponse = {
@@ -115,6 +167,16 @@ export type IPostShowDTO = {
 export type IPostRepliesDTO = {
   p: PostParams;
   q: PostRepliesQuery;
+  auth: user;
+};
+
+export type IPostMineDTO = {
+  q: PostListQuery;
+  auth: user;
+};
+
+export type IPostSavedDTO = {
+  q: PostListQuery;
   auth: user;
 };
 

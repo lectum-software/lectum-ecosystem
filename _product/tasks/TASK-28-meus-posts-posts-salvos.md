@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | M |
 | Fase | Posts |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-24 |
 | ADR alvo | ADR de posts do usuário e salvos |
 
@@ -133,19 +133,19 @@ Regras anti-recriação específicas:
 
 ## Critérios de aceite
 
-- [ ] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
-- [ ] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
-- [ ] Rotas seguem a convenção canônica do `DATA-MODEL.md`.
-- [ ] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
-- [ ] Backend implementado nos endpoints/modelos esperados quando aplicável.
-- [ ] Todos os estados obrigatórios existem e usam textos em PT-BR.
-- [ ] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
-- [ ] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
-- [ ] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
-- [ ] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
-- [ ] ADR criado ou atualizado em `adrs/`.
-- [ ] Checks/builds relevantes foram executados sem erros.
-- [ ] Commit criado com mensagem convencional.
+- [x] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
+- [x] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
+- [x] Rotas seguem a convenção canônica do `DATA-MODEL.md`.
+- [x] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
+- [x] Backend implementado nos endpoints/modelos esperados quando aplicável.
+- [x] Todos os estados obrigatórios existem e usam textos em PT-BR.
+- [x] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
+- [x] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
+- [x] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
+- [x] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
+- [x] ADR criado ou atualizado em `adrs/`.
+- [x] Checks/builds relevantes foram executados sem erros.
+- [x] Commit criado com mensagem convencional.
 
 ## Validação mínima
 
@@ -155,6 +155,22 @@ Regras anti-recriação específicas:
 - `pnpm --dir backend build` quando backend estrutural mudar.
 - `pnpm check` quando a task tocar frontend e backend.
 - Browser local na rota principal da task quando houver interface.
+
+## Execução 2026-06-13
+
+- Referências visuais consultadas pelas imagens locais `_product/proto/Meus Posts - Paciente.jpg`,
+  `_product/proto/Meus Posts - Psicólogo.jpg` e `_product/proto/Posts Salvos.jpg`; o Builder/Quick
+  Copy ativo não estava disponível como ferramenta callable no ambiente.
+- Backend implementado nos endpoints `GET /api/private/posts/mine`, `GET /api/private/posts/saved`
+  e na ação existente `DELETE /api/private/posts/:id/save`, sem alteração de schema Prisma.
+- Frontend implementado em `/app/posts/mine` e `/app/posts/saved`, com estados de loading, erro,
+  vazio, sucesso discreto e remoção de salvo real.
+- Nenhum mock, seed artificial, endpoint simulado, package novo ou código gerado por Builder foi
+  usado.
+- Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`,
+  `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e smoke local mobile
+  390x844 nas rotas privadas, com redirecionamento esperado para login sem sessão persistida e sem
+  overflow horizontal.
 
 ## Notas para executor
 

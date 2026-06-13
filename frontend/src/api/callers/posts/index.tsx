@@ -11,6 +11,7 @@ import type {
   PostSaveResponse,
   PostVotePayload,
   PostVoteResponse,
+  UserPostsQuery,
 } from "@/api/generator/types/posts";
 import * as api from "@/api/req/posts";
 
@@ -70,6 +71,26 @@ export const usePostDetail = (id: string, enabled = true) => {
   });
 };
 
+export const useMyPosts = (query: UserPostsQuery = {}, enabled = true) => {
+  return useQuery({
+    queryKey: keys.posts.mine(query),
+    queryFn: () => api.getMyPosts(query),
+    enabled,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
+};
+
+export const useSavedPosts = (query: UserPostsQuery = {}, enabled = true) => {
+  return useQuery({
+    queryKey: keys.posts.saved(query),
+    queryFn: () => api.getSavedPosts(query),
+    enabled,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
+};
+
 export const usePostReplies = (id: string, query: PostRepliesQuery = {}, enabled = true) => {
   return useQuery({
     queryKey: keys.posts.replies(id, query),
@@ -77,6 +98,24 @@ export const usePostReplies = (id: string, query: PostRepliesQuery = {}, enabled
     enabled: Boolean(id) && enabled,
     refetchOnWindowFocus: false,
     retry: false,
+  });
+};
+
+export const useUnsavePostFromList = (callbacks?: {
+  onSuccess?: (data: PostSaveResponse) => void;
+  onError?: (error: unknown) => void;
+}) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => api.unsavePost(id),
+    onSuccess: (data, id) => {
+      queryClient.invalidateQueries({ queryKey: keys.posts.saved() });
+      queryClient.invalidateQueries({ queryKey: keys.posts.detail(id) });
+      queryClient.invalidateQueries({ queryKey: keys.community.root() });
+      callbacks?.onSuccess?.(data);
+    },
+    onError: callbacks?.onError,
   });
 };
 

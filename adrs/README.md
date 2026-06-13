@@ -66,3 +66,4 @@ Formato recomendado:
 - [ADR-0069 - Topo TikTok com Minha Busca na tela de Psicologos](0069-topo-tiktok-minha-busca-psicologos.md) - Accepted
 - [ADR-0070 - Ranking derivado de Top Mentores da comunidade](0070-ranking-top-mentores.md) - Accepted
 - [ADR-0071 - Responsividade mobile da tela Top Mentores](0071-top-mentores-mobile-overflow.md) - Accepted
+- [ADR-0072 - Meus posts e posts salvos reais](0072-meus-posts-e-posts-salvos.md) - Accepted
