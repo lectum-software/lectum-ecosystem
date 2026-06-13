@@ -1,10 +1,9 @@
 "use client";
 
-import { ArrowLeft, Camera, Loader2, Save, Trash2, UserRound } from "lucide-react";
+import { Camera, Loader2, Save, Trash2, UserRound } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { usePatient } from "@/api/callers/patient";
 import type { PatientPrivateProfile } from "@/api/generator/types";
@@ -12,7 +11,6 @@ import { components } from "@/components/controllers";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAppSelector } from "@/hooks/redux";
-import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import * as userActions from "@/store/modules/user/actions";
 import { PrivateTemplate } from "@/templates/private";
@@ -62,9 +60,6 @@ export const ProfileEditLogic = () => {
   const dispatch = useDispatch();
   const storedUser = useAppSelector((state) => state.user);
   const [apiError, setApiError] = useState<string | null>(null);
-  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
-  const lastScrollY = useRef(0);
-  const ticking = useRef(false);
 
   const handleProfileUpdated = (data: PatientPrivateProfile) => {
     setApiError(null);
@@ -104,69 +99,9 @@ export const ProfileEditLogic = () => {
     updateProfile.mutate(toPatientProfilePayload(values, profile.data));
   });
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const handleScroll = () => {
-      if (ticking.current) return;
-
-      ticking.current = true;
-
-      window.requestAnimationFrame(() => {
-        const currentScrollY = window.scrollY;
-        const delta = currentScrollY - lastScrollY.current;
-
-        if (currentScrollY <= 12) {
-          setIsHeaderVisible(true);
-        } else if (delta > 8) {
-          setIsHeaderVisible(false);
-        } else if (delta < -8) {
-          setIsHeaderVisible(true);
-        }
-
-        lastScrollY.current = currentScrollY;
-        ticking.current = false;
-      });
-    };
-
-    lastScrollY.current = window.scrollY;
-    window.addEventListener("scroll", handleScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
-
   return (
     <PrivateTemplate>
-      <header
-        className={cn(
-          "fixed inset-x-0 top-0 z-40 border-b border-border bg-surface/95 transition-transform duration-300 ease-out supports-[backdrop-filter]:bg-surface/85",
-          isHeaderVisible ? "translate-y-0" : "-translate-y-full",
-        )}
-        style={{ paddingTop: "env(safe-area-inset-top)" }}
-      >
-        <div className="mx-auto flex h-16 w-full max-w-[430px] items-center justify-between px-4 sm:max-w-xl lg:max-w-2xl">
-          <Link
-            aria-label="Voltar para meu perfil"
-            className="grid h-10 w-10 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary"
-            href="/app/profile"
-          >
-            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-          </Link>
-          <h1 className="text-lg font-extrabold text-foreground">Editar Perfil</h1>
-          <button
-            className="text-sm font-extrabold text-primary disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={isSaving || !isPatient}
-            form="patient-profile-form"
-            type="submit"
-          >
-            Salvar
-          </button>
-        </div>
-      </header>
-
-      <section className="mx-auto grid w-full max-w-[430px] gap-4 pt-20 sm:max-w-xl lg:max-w-2xl">
+      <section className="mx-auto grid w-full max-w-[430px] gap-4 pb-6 sm:max-w-xl lg:max-w-2xl">
         {!isPatient ? (
           <InlineAlert title="Perfil de paciente" variant="warning">
             Esta tela edita apenas dados do paciente. Psicólogos devem usar a tela de perfil
@@ -208,7 +143,7 @@ export const ProfileEditLogic = () => {
                   <Camera className="h-4 w-4" aria-hidden="true" />
                 </span>
               </div>
-              <p className="max-w-xs text-sm leading-6 text-muted">
+              <p className="max-w-full whitespace-nowrap text-[11px] leading-5 tracking-[-0.02em] text-muted sm:text-sm sm:tracking-normal">
                 Envie uma foto de perfil PNG, JPG ou WebP de até 50MB
               </p>
             </section>
@@ -259,10 +194,6 @@ export const ProfileEditLogic = () => {
                 <Trash2 className="h-4 w-4" aria-hidden="true" />
                 Excluir minha conta
               </button>
-              <p className="max-w-xs text-xs leading-5 text-subtle">
-                A exclusão de conta fica na task de configurações de conta para separar dados de
-                perfil de autenticação sensível.
-              </p>
             </section>
           </form>
         ) : null}
