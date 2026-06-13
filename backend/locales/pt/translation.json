@@ -65,7 +65,10 @@
     "professional_profile_approach_limit": "Este plano permite selecionar até {{limit}} abordagens.",
     "free_service_limit": "O plano gratuito permite selecionar {{limit}} serviço.",
     "free_approach_limit": "O plano gratuito permite selecionar {{limit}} abordagem.",
-    "professional_profile_target_audience_required": "Selecione pelo menos um público atendido antes de publicar."
+    "professional_profile_target_audience_required": "Selecione pelo menos um público atendido antes de publicar.",
+    "post_reply_parent_invalid": "A resposta selecionada n?o pode receber uma nova resposta.",
+    "post_vote_invalid_target": "A publica??o ou resposta selecionada n?o est? dispon?vel para voto.",
+    "post_vote_value_invalid": "Informe um voto v?lido para continuar."
   },
   "message": {
     "store": "dado criado",
@@ -108,7 +111,11 @@
     "community_suggestion_created": "Sugestão de comunidade enviada com sucesso.",
     "community_post_created": "Post publicado com sucesso.",
     "community_follow_success": "Comunidade adicionada às suas comunidades seguidas.",
-    "community_unfollow_success": "Comunidade removida das suas comunidades seguidas."
+    "community_unfollow_success": "Comunidade removida das suas comunidades seguidas.",
+    "post_reply_created": "Resposta publicada com sucesso.",
+    "post_vote_updated": "Voto atualizado com sucesso.",
+    "post_saved": "Publica??o salva com sucesso.",
+    "post_unsaved": "Publica??o removida dos salvos."
   },
   "gender": {
     "o": "o"
@@ -133,7 +140,10 @@
     "professional_registry_check": "consulta CFP",
     "phone_verification": "verificação de telefone",
     "subscription_plan": "plano de assinatura",
-    "professional_subscription": "assinatura profissional"
+    "professional_subscription": "assinatura profissional",
+    "post_reply": "resposta",
+    "post_vote": "voto",
+    "post_save": "publica??o salva"
   },
   "property": {
     "email": "email",
@@ -169,7 +179,10 @@
     "category": "categoria",
     "title": "título",
     "content": "conteúdo",
-    "anonymous": "postar como anônimo"
+    "anonymous": "postar como anônimo",
+    "parentReplyId": "resposta original",
+    "replyId": "resposta",
+    "value": "voto"
   },
   "notification": {
     "test": {

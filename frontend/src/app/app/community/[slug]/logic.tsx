@@ -174,6 +174,8 @@ const getInitials = (name: string) => {
 const communityDetailHref = (communitySlug: string) => `/app/community/${communitySlug}`;
 const communityCreatePostHref = (communitySlug: string) =>
   `/app/community/${communitySlug}/post/new`;
+const communityPostDetailHref = (post: CommunityPost) =>
+  `/app/community/${post.community.slug}/post/${post.id}`;
 
 const AuthorAvatar = ({
   anonymous,
@@ -536,9 +538,12 @@ const PostCard = ({
       </div>
 
       <div className="grid gap-2">
-        <h3 className="text-[1.32rem] font-black leading-[1.18] tracking-[-0.02em] text-[#182033] dark:text-foreground">
+        <Link
+          className="text-[1.32rem] font-black leading-[1.18] tracking-[-0.02em] text-[#182033] underline-offset-4 transition hover:text-primary hover:underline dark:text-foreground"
+          href={communityPostDetailHref(post)}
+        >
           {post.title}
-        </h3>
+        </Link>
         <p className="whitespace-pre-line text-sm leading-6 text-[#64748B] dark:text-muted">
           {post.content}
         </p>
@@ -552,7 +557,7 @@ const PostCard = ({
       <div className="mt-4 flex items-center justify-between border-[#EDF1F5] border-t pt-3 dark:border-border">
         <div className="flex items-center gap-1">
           <CountAction icon={ArrowUp} label="Dar upvote" value={post.upvotes_count} />
-          <CountAction icon={ArrowDown} label="Dar downvote" value={post.downvotes_count} />
+          <CountAction icon={ArrowDown} label="Dar downvote" />
           <CountAction icon={MessageCircle} label="Comentar" value={post.replies_count} />
         </div>
         <div className="flex items-center gap-1">

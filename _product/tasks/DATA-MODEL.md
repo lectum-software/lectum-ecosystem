@@ -358,11 +358,19 @@ DTOs do feed: `GET /api/private/community/feed/posts` é o contrato canônico do
 | `post_id` | `String` | |
 | `author_id` | `String` | |
 | `parent_reply_id` | `String?` | null = comentário; preenchido = resposta a um comentário |
-| `title` | `String?` | t?tulo opcional para resposta profissional em destaque |
+| `title` | `String?` | título opcional para resposta profissional em destaque |
 | `content` | `String` | |
-| `media_url` / `media_type` | `String?` | m?dia opcional em respostas; `media_type` inicialmente `"video"` ou `"image"` |
+| `media_url` / `media_type` | `String?` | mídia opcional em respostas; `media_type` inicialmente `"video"` ou `"image"` |
 | `upvotes_count` | `Int @default(0)` | denormalizado para ranking de respostas e prévia profissional |
 | `@@index([post_id, parent_reply_id, createdAt])`, `@@index([author_id])` | | paginação por âncora (TASK-26) e seleção por autor |
+
+Contratos da tela interna do post (TASK-26):
+
+- `GET /api/private/posts/:id` retorna `post`, comunidade, autor mascarado quando `anonymous=true`, voto atual do usuário (`current_user_vote`) e estado salvo (`saved`).
+- `GET /api/private/posts/:id/replies?page&limit` retorna comentários de primeiro nível paginados e até um nível de respostas filhas, com `current_user_vote` por resposta.
+- `POST /api/private/posts/:id/replies` recebe `{ content, parentReplyId? }`; `parentReplyId` só pode apontar para comentário raiz, preservando árvore de 1 nível.
+- `POST /api/private/posts/:id/vote` recebe `{ value: 1|-1, replyId? }`; repetir o mesmo voto remove o voto. Downvotes podem influenciar score interno, mas não devem ser exibidos como número público.
+- `POST /api/private/posts/:id/save` e `DELETE /api/private/posts/:id/save` persistem salvos via `post_save` e mantêm `saves_count`.
 
 `post_vote` (PRD §9 regras: 1 voto/usuário, alteração permitida, downvote não público):
 
