@@ -68,7 +68,6 @@ const fields = [
     required: true,
     autoComplete: "name",
     max: 120,
-    showCounter: true,
   },
   {
     name: "gender",
