@@ -390,9 +390,15 @@ Contratos da tela interna do post (TASK-26):
 | `post_id` | `String` | |
 | `@@unique([user_id, post_id])`, `@@index([user_id, createdAt])` | | |
 
-### Ranking de mentores (TASK-27 — derivado, **bloqueado**)
+### Ranking de mentores (TASK-27 - derivado)
 
-Não há modelo persistido obrigatório. O ranking é **derivado** de `post_vote` (upvotes recebidos), participação e `professional_subscription` ativa (PRD §10: só Plano Profissional). A **fórmula de pontuação é decisão externa**: TASK-27 fica bloqueada até ADR aprovar o cálculo. Se for necessário materializar para performance, criar `mentor_score_snapshot` (`psychologist_id`, `score Int`, `period String`, `position Int`) — só após a fórmula existir.
+Nao ha modelo persistido obrigatorio nesta etapa. O ranking e **derivado** de eventos persistidos por comunidade e do entitlement profissional ativo (`professional_subscription`, PRD secao 10: so Plano Profissional). A formula foi aprovada e depois ajustada pelo PDF local `Sistema de Ranking de Mentores.pdf` em ADR-0070:
+
+```text
+score = (upvotes * 5) - (downvotes * 3) + (comentarios recebidos * 2) + (compartilhamentos * 4) + (salvamentos * 3) + (cliques WhatsApp da comunidade * 6) + (posts publicados * 1) + (respostas publicadas * 1) + (dias ativos * 1) - penalidade progressiva por posts removidos
+```
+
+A penalidade de posts removidos e progressiva por comunidade: `30 * removed_posts * (removed_posts + 1) / 2`. No schema atual, `shares_received` e `community_whatsapp_clicks` permanecem zerados ate existir fonte persistida com origem de comunidade; nao usar mocks para preencher esses componentes. Se for necessario materializar para performance, criar `mentor_score_snapshot` (`psychologist_id`, `community_id`, `score Int`, `period String`, `position Int`) ou modelo equivalente apos ADR especifica de snapshot.
 
 ---
 

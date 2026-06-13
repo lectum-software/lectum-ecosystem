@@ -26,9 +26,16 @@ const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
 const DEFAULT_TOP_MENTORS_LIMIT = 5;
 const MAX_TOP_MENTORS_LIMIT = 10;
-const TOP_MENTOR_UPVOTE_WEIGHT = 10;
-const TOP_MENTOR_REPLY_WEIGHT = 3;
-const TOP_MENTOR_POST_WEIGHT = 2;
+const TOP_MENTOR_UPVOTE_WEIGHT = 5;
+const TOP_MENTOR_DOWNVOTE_WEIGHT = 3;
+const TOP_MENTOR_COMMENT_WEIGHT = 2;
+const TOP_MENTOR_SHARE_WEIGHT = 4;
+const TOP_MENTOR_SAVE_WEIGHT = 3;
+const TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT = 6;
+const TOP_MENTOR_POST_WEIGHT = 1;
+const TOP_MENTOR_REPLY_WEIGHT = 1;
+const TOP_MENTOR_ACTIVE_DAY_WEIGHT = 1;
+const TOP_MENTOR_REMOVED_POST_PENALTY_STEP = 30;
 
 const communitySelect = {
   id: true,
@@ -227,10 +234,8 @@ const mentorBadgeForScore = (
   profile?: { cfp_verified_at: Date | null; subscriptions: { id: string }[] } | null,
   score = 0,
 ) => {
+  void score;
   if (!isProfessionalVerified(profile) || !hasPaidProfessionalEntitlement(profile)) return null;
-  if (score >= 80) return "TOP #1 MENTOR";
-  if (score >= 65) return "TOP #2 MENTOR";
-  if (score >= 50) return "TOP #3 MENTOR";
 
   return null;
 };
@@ -293,30 +298,91 @@ const normalizeTopMentorsLimit = (limit?: number) => {
 
 type TopMentorMutableMetrics = {
   upvotes_received: number;
+  downvotes_received: number;
+  comments_received: number;
+  shares_received: number;
+  saves_received: number;
+  community_whatsapp_clicks: number;
   posts_published: number;
   replies_published: number;
+  active_days: number;
+  removed_posts: number;
+  removed_posts_penalty: number;
 };
 
 const emptyTopMentorMetrics = (): TopMentorMutableMetrics => ({
   upvotes_received: 0,
+  downvotes_received: 0,
+  comments_received: 0,
+  shares_received: 0,
+  saves_received: 0,
+  community_whatsapp_clicks: 0,
   posts_published: 0,
   replies_published: 0,
+  active_days: 0,
+  removed_posts: 0,
+  removed_posts_penalty: 0,
 });
 
+const topMentorRemovedPostsPenalty = (removedPosts: number) => {
+  return (removedPosts * (removedPosts + 1) * TOP_MENTOR_REMOVED_POST_PENALTY_STEP) / 2;
+};
+
 const topMentorScore = (metrics: TopMentorMutableMetrics) => {
-  return (
+  const positivePoints =
     metrics.upvotes_received * TOP_MENTOR_UPVOTE_WEIGHT +
+    metrics.comments_received * TOP_MENTOR_COMMENT_WEIGHT +
+    metrics.shares_received * TOP_MENTOR_SHARE_WEIGHT +
+    metrics.saves_received * TOP_MENTOR_SAVE_WEIGHT +
+    metrics.community_whatsapp_clicks * TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT +
+    metrics.posts_published * TOP_MENTOR_POST_WEIGHT +
     metrics.replies_published * TOP_MENTOR_REPLY_WEIGHT +
-    metrics.posts_published * TOP_MENTOR_POST_WEIGHT
+    metrics.active_days * TOP_MENTOR_ACTIVE_DAY_WEIGHT;
+  const penaltyPoints =
+    metrics.downvotes_received * TOP_MENTOR_DOWNVOTE_WEIGHT + metrics.removed_posts_penalty;
+
+  return positivePoints - penaltyPoints;
+};
+
+const hasTopMentorRankingSignal = (metrics: TopMentorMutableMetrics) => {
+  return (
+    metrics.upvotes_received > 0 ||
+    metrics.downvotes_received > 0 ||
+    metrics.comments_received > 0 ||
+    metrics.shares_received > 0 ||
+    metrics.saves_received > 0 ||
+    metrics.community_whatsapp_clicks > 0 ||
+    metrics.posts_published > 0 ||
+    metrics.replies_published > 0 ||
+    metrics.active_days > 0 ||
+    metrics.removed_posts > 0
   );
 };
+
+const topMentorsFormula = () => ({
+  upvote_weight: TOP_MENTOR_UPVOTE_WEIGHT,
+  downvote_weight: TOP_MENTOR_DOWNVOTE_WEIGHT,
+  comment_weight: TOP_MENTOR_COMMENT_WEIGHT,
+  share_weight: TOP_MENTOR_SHARE_WEIGHT,
+  save_weight: TOP_MENTOR_SAVE_WEIGHT,
+  community_whatsapp_weight: TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT,
+  post_weight: TOP_MENTOR_POST_WEIGHT,
+  reply_weight: TOP_MENTOR_REPLY_WEIGHT,
+  active_day_weight: TOP_MENTOR_ACTIVE_DAY_WEIGHT,
+  removed_post_penalty_step: TOP_MENTOR_REMOVED_POST_PENALTY_STEP,
+  description:
+    "score = (upvotes × 5) - (downvotes × 3) + (comentários recebidos × 2) + (compartilhamentos × 4) + (salvamentos × 3) + (cliques WhatsApp da comunidade × 6) + (posts publicados × 1) + (respostas publicadas × 1) + (dias ativos × 1) - penalidade progressiva por posts removidos",
+  notes: [
+    "Compartilhamentos e cliques de WhatsApp por comunidade só entram quando houver evento persistido com origem de comunidade; sem essa fonte real, esses componentes permanecem zerados.",
+  ],
+});
 
 const topMentorBadgeForPosition = (position: number) => {
   if (position === 1) return "TOP #1 MENTOR";
   if (position === 2) return "TOP #2 MENTOR";
   if (position === 3) return "TOP #3 MENTOR";
 
-  return `TOP #${position} MENTOR`;
+  return null;
 };
 
 const postSearchWhere = (search?: string): Prisma.community_postWhereInput["OR"] => {
@@ -684,13 +750,7 @@ export class CommunityRepository implements ICommunityRepository {
         data: [],
         period,
         community: community ? toCommunityResponse(community) : null,
-        formula: {
-          upvote_weight: TOP_MENTOR_UPVOTE_WEIGHT,
-          reply_weight: TOP_MENTOR_REPLY_WEIGHT,
-          post_weight: TOP_MENTOR_POST_WEIGHT,
-          description:
-            "score = (upvotes recebidos × 10) + (respostas publicadas × 3) + (posts publicados × 2)",
-        },
+        formula: topMentorsFormula(),
         count: 0,
       };
     }
@@ -705,7 +765,18 @@ export class CommunityRepository implements ICommunityRepository {
       community: communityFilter,
     };
 
-    const [postParticipation, replyParticipation, postVotes, replyVotes] = await Promise.all([
+    const [
+      postParticipation,
+      replyParticipation,
+      postVotes,
+      replyVotes,
+      postCommentsReceived,
+      replyCommentsReceived,
+      postSaves,
+      removedPostParticipation,
+      postActivityDays,
+      replyActivityDays,
+    ] = await Promise.all([
       prisma.community_post.groupBy({
         by: ["author_id"],
         where: {
@@ -736,11 +807,108 @@ export class CommunityRepository implements ICommunityRepository {
       prisma.post_vote.findMany({
         where: {
           deleted: false,
-          value: 1,
+          value: {
+            in: [1, -1],
+          },
           createdAt: createdAtWindow,
           post_id: {
             not: null,
           },
+          post: {
+            ...publishedPostFilter,
+            author_id: {
+              in: eligibleMentorIds,
+            },
+          },
+        },
+        select: {
+          value: true,
+          post: {
+            select: {
+              author_id: true,
+            },
+          },
+        },
+      }),
+      prisma.post_vote.findMany({
+        where: {
+          deleted: false,
+          value: {
+            in: [1, -1],
+          },
+          createdAt: createdAtWindow,
+          reply_id: {
+            not: null,
+          },
+          reply: {
+            deleted: false,
+            author_id: {
+              in: eligibleMentorIds,
+            },
+            post: publishedPostFilter,
+          },
+        },
+        select: {
+          value: true,
+          reply: {
+            select: {
+              author_id: true,
+            },
+          },
+        },
+      }),
+      prisma.post_reply.findMany({
+        where: {
+          deleted: false,
+          parent_reply_id: null,
+          createdAt: createdAtWindow,
+          post: {
+            ...publishedPostFilter,
+            author_id: {
+              in: eligibleMentorIds,
+            },
+          },
+        },
+        select: {
+          author_id: true,
+          post: {
+            select: {
+              author_id: true,
+            },
+          },
+        },
+      }),
+      prisma.post_reply.findMany({
+        where: {
+          deleted: false,
+          parent_reply_id: {
+            not: null,
+          },
+          createdAt: createdAtWindow,
+          post: publishedPostFilter,
+          parent_reply: {
+            is: {
+              deleted: false,
+              author_id: {
+                in: eligibleMentorIds,
+              },
+              post: publishedPostFilter,
+            },
+          },
+        },
+        select: {
+          author_id: true,
+          parent_reply: {
+            select: {
+              author_id: true,
+            },
+          },
+        },
+      }),
+      prisma.post_save.findMany({
+        where: {
+          deleted: false,
+          createdAt: createdAtWindow,
           post: {
             ...publishedPostFilter,
             author_id: {
@@ -756,33 +924,52 @@ export class CommunityRepository implements ICommunityRepository {
           },
         },
       }),
-      prisma.post_vote.findMany({
+      prisma.community_post.groupBy({
+        by: ["author_id"],
         where: {
           deleted: false,
-          value: 1,
+          status: "removido",
+          author_id: {
+            in: eligibleMentorIds,
+          },
+          community: communityFilter,
+          updatedAt: createdAtWindow,
+        },
+        _count: {
+          author_id: true,
+        },
+      }),
+      prisma.community_post.findMany({
+        where: {
+          ...publishedPostFilter,
+          author_id: {
+            in: eligibleMentorIds,
+          },
           createdAt: createdAtWindow,
-          reply_id: {
-            not: null,
-          },
-          reply: {
-            deleted: false,
-            author_id: {
-              in: eligibleMentorIds,
-            },
-            post: publishedPostFilter,
-          },
         },
         select: {
-          reply: {
-            select: {
-              author_id: true,
-            },
+          author_id: true,
+          createdAt: true,
+        },
+      }),
+      prisma.post_reply.findMany({
+        where: {
+          deleted: false,
+          author_id: {
+            in: eligibleMentorIds,
           },
+          createdAt: createdAtWindow,
+          post: publishedPostFilter,
+        },
+        select: {
+          author_id: true,
+          createdAt: true,
         },
       }),
     ]);
 
     const metricsByMentorId = new Map<string, TopMentorMutableMetrics>();
+    const activeDaysByMentorId = new Map<string, Set<string>>();
     const getMetrics = (mentorId: string) => {
       const existing = metricsByMentorId.get(mentorId);
       if (existing) return existing;
@@ -791,6 +978,11 @@ export class CommunityRepository implements ICommunityRepository {
       metricsByMentorId.set(mentorId, metrics);
 
       return metrics;
+    };
+    const addActiveDay = (mentorId: string, date: Date) => {
+      const existing = activeDaysByMentorId.get(mentorId) ?? new Set<string>();
+      existing.add(date.toISOString().slice(0, 10));
+      activeDaysByMentorId.set(mentorId, existing);
     };
 
     for (const item of postParticipation) {
@@ -803,14 +995,56 @@ export class CommunityRepository implements ICommunityRepository {
 
     for (const vote of postVotes) {
       if (vote.post?.author_id) {
-        getMetrics(vote.post.author_id).upvotes_received += 1;
+        const metrics = getMetrics(vote.post.author_id);
+        if (vote.value === 1) metrics.upvotes_received += 1;
+        if (vote.value === -1) metrics.downvotes_received += 1;
       }
     }
 
     for (const vote of replyVotes) {
       if (vote.reply?.author_id) {
-        getMetrics(vote.reply.author_id).upvotes_received += 1;
+        const metrics = getMetrics(vote.reply.author_id);
+        if (vote.value === 1) metrics.upvotes_received += 1;
+        if (vote.value === -1) metrics.downvotes_received += 1;
       }
+    }
+
+    for (const comment of postCommentsReceived) {
+      const mentorId = comment.post?.author_id;
+      if (mentorId && comment.author_id !== mentorId) {
+        getMetrics(mentorId).comments_received += 1;
+      }
+    }
+
+    for (const comment of replyCommentsReceived) {
+      const mentorId = comment.parent_reply?.author_id;
+      if (mentorId && comment.author_id !== mentorId) {
+        getMetrics(mentorId).comments_received += 1;
+      }
+    }
+
+    for (const save of postSaves) {
+      if (save.post?.author_id) {
+        getMetrics(save.post.author_id).saves_received += 1;
+      }
+    }
+
+    for (const item of removedPostParticipation) {
+      const metrics = getMetrics(item.author_id);
+      metrics.removed_posts = item._count.author_id;
+      metrics.removed_posts_penalty = topMentorRemovedPostsPenalty(metrics.removed_posts);
+    }
+
+    for (const item of postActivityDays) {
+      addActiveDay(item.author_id, item.createdAt);
+    }
+
+    for (const item of replyActivityDays) {
+      addActiveDay(item.author_id, item.createdAt);
+    }
+
+    for (const [mentorId, days] of activeDaysByMentorId.entries()) {
+      getMetrics(mentorId).active_days = days.size;
     }
 
     const mentorById = new Map<string, TopMentorUserResult>(
@@ -821,7 +1055,7 @@ export class CommunityRepository implements ICommunityRepository {
         const mentor = mentorById.get(mentorId);
         const score = topMentorScore(metrics);
 
-        if (!mentor || score <= 0) return null;
+        if (!mentor || !hasTopMentorRankingSignal(metrics)) return null;
 
         return {
           mentor,
@@ -837,11 +1071,30 @@ export class CommunityRepository implements ICommunityRepository {
         const upvoteDiff = b.metrics.upvotes_received - a.metrics.upvotes_received;
         if (upvoteDiff !== 0) return upvoteDiff;
 
+        const commentDiff = b.metrics.comments_received - a.metrics.comments_received;
+        if (commentDiff !== 0) return commentDiff;
+
+        const whatsappDiff =
+          b.metrics.community_whatsapp_clicks - a.metrics.community_whatsapp_clicks;
+        if (whatsappDiff !== 0) return whatsappDiff;
+
+        const saveDiff = b.metrics.saves_received - a.metrics.saves_received;
+        if (saveDiff !== 0) return saveDiff;
+
+        const activeDayDiff = b.metrics.active_days - a.metrics.active_days;
+        if (activeDayDiff !== 0) return activeDayDiff;
+
         const replyDiff = b.metrics.replies_published - a.metrics.replies_published;
         if (replyDiff !== 0) return replyDiff;
 
         const postDiff = b.metrics.posts_published - a.metrics.posts_published;
         if (postDiff !== 0) return postDiff;
+
+        const downvoteDiff = a.metrics.downvotes_received - b.metrics.downvotes_received;
+        if (downvoteDiff !== 0) return downvoteDiff;
+
+        const removedPostDiff = a.metrics.removed_posts - b.metrics.removed_posts;
+        if (removedPostDiff !== 0) return removedPostDiff;
 
         const nameDiff = a.mentor.name.localeCompare(b.mentor.name, "pt-BR");
         if (nameDiff !== 0) return nameDiff;
@@ -869,13 +1122,31 @@ export class CommunityRepository implements ICommunityRepository {
           profile_url: `/app/psychologist/${item.mentor.id}`,
         },
         metrics: {
-          ...item.metrics,
+          upvotes_received: item.metrics.upvotes_received,
+          downvotes_received: item.metrics.downvotes_received,
+          comments_received: item.metrics.comments_received,
+          shares_received: item.metrics.shares_received,
+          saves_received: item.metrics.saves_received,
+          community_whatsapp_clicks: item.metrics.community_whatsapp_clicks,
+          posts_published: item.metrics.posts_published,
+          replies_published: item.metrics.replies_published,
+          active_days: item.metrics.active_days,
+          removed_posts: item.metrics.removed_posts,
+          removed_posts_penalty: item.metrics.removed_posts_penalty,
           participation_events: item.metrics.posts_published + item.metrics.replies_published,
         },
         score_breakdown: {
           upvotes_points: item.metrics.upvotes_received * TOP_MENTOR_UPVOTE_WEIGHT,
+          downvotes_penalty: item.metrics.downvotes_received * TOP_MENTOR_DOWNVOTE_WEIGHT,
+          comments_points: item.metrics.comments_received * TOP_MENTOR_COMMENT_WEIGHT,
+          shares_points: item.metrics.shares_received * TOP_MENTOR_SHARE_WEIGHT,
+          saves_points: item.metrics.saves_received * TOP_MENTOR_SAVE_WEIGHT,
+          community_whatsapp_points:
+            item.metrics.community_whatsapp_clicks * TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT,
           posts_points: item.metrics.posts_published * TOP_MENTOR_POST_WEIGHT,
           replies_points: item.metrics.replies_published * TOP_MENTOR_REPLY_WEIGHT,
+          active_days_points: item.metrics.active_days * TOP_MENTOR_ACTIVE_DAY_WEIGHT,
+          removed_posts_penalty: item.metrics.removed_posts_penalty,
         },
       };
     });
@@ -884,13 +1155,7 @@ export class CommunityRepository implements ICommunityRepository {
       data: items,
       period,
       community: community ? toCommunityResponse(community) : null,
-      formula: {
-        upvote_weight: TOP_MENTOR_UPVOTE_WEIGHT,
-        reply_weight: TOP_MENTOR_REPLY_WEIGHT,
-        post_weight: TOP_MENTOR_POST_WEIGHT,
-        description:
-          "score = (upvotes recebidos × 10) + (respostas publicadas × 3) + (posts publicados × 2)",
-      },
+      formula: topMentorsFormula(),
       count: items.length,
     };
   }

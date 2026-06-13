@@ -5,11 +5,17 @@ import {
   Award,
   BadgeCheck,
   BarChart3,
+  Bookmark,
+  CalendarDays,
   ChevronRight,
   Medal,
   MessageCircle,
+  PhoneCall,
+  Share2,
+  ShieldAlert,
   Sparkles,
   Star,
+  ThumbsDown,
   ThumbsUp,
   Trophy,
   UsersRound,
@@ -264,9 +270,11 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => (
           <Trophy className="h-4 w-4 text-warning" aria-hidden="true" />
           {formatNumber(mentor.score)} pontos
         </span>
-        <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-black text-primary">
-          {mentor.badge}
-        </span>
+        {mentor.badge ? (
+          <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-black text-primary">
+            {mentor.badge}
+          </span>
+        ) : null}
       </div>
       <div className="flex flex-wrap gap-2">
         <MetricPill
@@ -275,19 +283,74 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => (
           value={formatNumber(mentor.metrics.upvotes_received)}
         />
         <MetricPill
+          icon={ThumbsDown}
+          label="downvotes"
+          value={formatNumber(mentor.metrics.downvotes_received)}
+        />
+        <MetricPill
           icon={MessageCircle}
-          label="respostas"
-          value={formatNumber(mentor.metrics.replies_published)}
+          label="comentários recebidos"
+          value={formatNumber(mentor.metrics.comments_received)}
+        />
+        <MetricPill
+          icon={Share2}
+          label="compartilhamentos"
+          value={formatNumber(mentor.metrics.shares_received)}
+        />
+        <MetricPill
+          icon={Bookmark}
+          label="salvamentos"
+          value={formatNumber(mentor.metrics.saves_received)}
+        />
+        <MetricPill
+          icon={PhoneCall}
+          label="cliques WhatsApp"
+          value={formatNumber(mentor.metrics.community_whatsapp_clicks)}
+        />
+        <MetricPill
+          icon={CalendarDays}
+          label="dias ativos"
+          value={formatNumber(mentor.metrics.active_days)}
         />
         <MetricPill
           icon={UsersRound}
           label="posts"
           value={formatNumber(mentor.metrics.posts_published)}
         />
+        <MetricPill
+          icon={MessageCircle}
+          label="respostas"
+          value={formatNumber(mentor.metrics.replies_published)}
+        />
+        <MetricPill
+          icon={ShieldAlert}
+          label="posts removidos"
+          value={formatNumber(mentor.metrics.removed_posts)}
+        />
         <MetricPill icon={Star} label="nota" value={formatRating(mentor.professional.rating_avg)} />
       </div>
     </div>
   </Link>
+);
+
+const FormulaWeightCard = ({
+  icon: Icon,
+  label,
+  value,
+  tone = "positive",
+}: {
+  icon: typeof ThumbsUp;
+  label: string;
+  value: string;
+  tone?: "positive" | "negative";
+}) => (
+  <span className="rounded-2xl border border-border bg-background p-3 text-sm font-bold text-muted">
+    <Icon
+      className={cn("mb-2 h-4 w-4", tone === "negative" ? "text-warning" : "text-primary")}
+      aria-hidden="true"
+    />
+    {label} {value}
+  </span>
 );
 
 export const CommunityTopMentorsLogic = () => {
@@ -420,20 +483,67 @@ export const CommunityTopMentorsLogic = () => {
               <h2 className="text-lg font-black text-foreground">Como a pontuação é calculada</h2>
             </div>
             <p className="text-sm leading-6 text-muted">{ranking.data.formula.description}.</p>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-              <span className="rounded-2xl border border-border bg-background p-3 text-sm font-bold text-muted">
-                <ThumbsUp className="mb-2 h-4 w-4 text-primary" aria-hidden="true" />
-                Upvote recebido vale {ranking.data.formula.upvote_weight} pontos
-              </span>
-              <span className="rounded-2xl border border-border bg-background p-3 text-sm font-bold text-muted">
-                <MessageCircle className="mb-2 h-4 w-4 text-primary" aria-hidden="true" />
-                Resposta publicada vale {ranking.data.formula.reply_weight} pontos
-              </span>
-              <span className="rounded-2xl border border-border bg-background p-3 text-sm font-bold text-muted">
-                <Award className="mb-2 h-4 w-4 text-primary" aria-hidden="true" />
-                Post publicado vale {ranking.data.formula.post_weight} pontos
-              </span>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              <FormulaWeightCard
+                icon={ThumbsUp}
+                label="Upvote recebido"
+                value={`+${ranking.data.formula.upvote_weight} pontos`}
+              />
+              <FormulaWeightCard
+                icon={ThumbsDown}
+                label="Downvote recebido"
+                tone="negative"
+                value={`-${ranking.data.formula.downvote_weight} pontos`}
+              />
+              <FormulaWeightCard
+                icon={MessageCircle}
+                label="Comentário recebido"
+                value={`+${ranking.data.formula.comment_weight} pontos`}
+              />
+              <FormulaWeightCard
+                icon={Share2}
+                label="Compartilhamento"
+                value={`+${ranking.data.formula.share_weight} pontos`}
+              />
+              <FormulaWeightCard
+                icon={Bookmark}
+                label="Salvamento"
+                value={`+${ranking.data.formula.save_weight} pontos`}
+              />
+              <FormulaWeightCard
+                icon={PhoneCall}
+                label="Clique WhatsApp da comunidade"
+                value={`+${ranking.data.formula.community_whatsapp_weight} pontos`}
+              />
+              <FormulaWeightCard
+                icon={Award}
+                label="Post publicado"
+                value={`+${ranking.data.formula.post_weight} ponto`}
+              />
+              <FormulaWeightCard
+                icon={MessageCircle}
+                label="Resposta publicada"
+                value={`+${ranking.data.formula.reply_weight} ponto`}
+              />
+              <FormulaWeightCard
+                icon={CalendarDays}
+                label="Dia ativo"
+                value={`+${ranking.data.formula.active_day_weight} ponto`}
+              />
+              <FormulaWeightCard
+                icon={ShieldAlert}
+                label="Post removido"
+                tone="negative"
+                value={`penalidade progressiva de ${ranking.data.formula.removed_post_penalty_step} pontos`}
+              />
             </div>
+            {ranking.data.formula.notes.length > 0 ? (
+              <div className="grid gap-2 rounded-2xl border border-warning/25 bg-warning-soft p-3 text-xs font-semibold leading-5 text-warning">
+                {ranking.data.formula.notes.map((note) => (
+                  <p key={note}>{note}</p>
+                ))}
+              </div>
+            ) : null}
           </section>
         ) : null}
       </section>

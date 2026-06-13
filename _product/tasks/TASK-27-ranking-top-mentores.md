@@ -157,3 +157,8 @@ Regras anti-recriação específicas:
 ## Notas para executor
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
+
+## Atualizacao 2026-06-13
+
+- Formula do ranking ajustada conforme `C:\Users\tulio\Desktop\Lectum\Sistema de Ranking de Mentores.pdf` e ADR-0070.
+- Componentes sem fonte persistida atual (`shares_received` e `community_whatsapp_clicks`) permanecem zerados ate existir rastreamento real por comunidade; nao usar mocks.

@@ -158,21 +158,36 @@ export type CommunityTopMentorsPeriod = {
 
 export type CommunityTopMentorMetricsDTO = {
   upvotes_received: number;
+  downvotes_received: number;
+  comments_received: number;
+  shares_received: number;
+  saves_received: number;
+  community_whatsapp_clicks: number;
   posts_published: number;
   replies_published: number;
+  active_days: number;
+  removed_posts: number;
+  removed_posts_penalty: number;
   participation_events: number;
 };
 
 export type CommunityTopMentorBreakdownDTO = {
   upvotes_points: number;
+  downvotes_penalty: number;
+  comments_points: number;
+  shares_points: number;
+  saves_points: number;
+  community_whatsapp_points: number;
   posts_points: number;
   replies_points: number;
+  active_days_points: number;
+  removed_posts_penalty: number;
 };
 
 export type CommunityTopMentorDTO = {
   position: number;
   score: number;
-  badge: string;
+  badge: string | null;
   professional: {
     id: string;
     name: string;
@@ -193,9 +208,17 @@ export type CommunityTopMentorsResponse = {
   community: CommunityDTO | null;
   formula: {
     upvote_weight: number;
+    downvote_weight: number;
+    comment_weight: number;
+    share_weight: number;
+    save_weight: number;
+    community_whatsapp_weight: number;
     reply_weight: number;
     post_weight: number;
+    active_day_weight: number;
+    removed_post_penalty_step: number;
     description: string;
+    notes: string[];
   };
   count: number;
 };
