@@ -10,6 +10,7 @@ export type CommunityListQuery = {
 export type CommunityPostListQuery = {
   page?: number;
   limit?: number;
+  search?: string;
 };
 
 export type CommunityParams = {
@@ -35,6 +36,9 @@ export type CommunityAuthorDTO = {
   name: string;
   avatar: string | null;
   role: string | null;
+  type_label: string;
+  verified: boolean;
+  whatsapp_url: string | null;
 };
 
 export type CommunityPostDTO = {
@@ -48,6 +52,9 @@ export type CommunityPostDTO = {
   saves_count: number;
   created_at: Date;
   tags: string[];
+  featured_badge: string | null;
+  media_url: string | null;
+  media_type: string | null;
   community: CommunityDTO;
   author: CommunityAuthorDTO;
 };

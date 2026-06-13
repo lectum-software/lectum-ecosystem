@@ -8,6 +8,7 @@
 export type CommunityPostsQuery = {
   page?: number;
   limit?: number;
+  search?: string;
 };
 
 export type Community = {
@@ -25,6 +26,9 @@ export type CommunityAuthor = {
   name: string;
   avatar: string | null;
   role: string | null;
+  type_label: string;
+  verified: boolean;
+  whatsapp_url: string | null;
 };
 
 export type CommunityPost = {
@@ -38,6 +42,9 @@ export type CommunityPost = {
   saves_count: number;
   created_at: string;
   tags: string[];
+  featured_badge: string | null;
+  media_url: string | null;
+  media_type: string | null;
   community: Community;
   author: CommunityAuthor;
 };

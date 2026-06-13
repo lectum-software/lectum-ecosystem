@@ -1,5 +1,6 @@
-﻿import type { Prisma } from "@/external/generated/prisma/client";
+import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
+import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   CommunityDTO,
   CommunityIndexResponse,
@@ -22,6 +23,9 @@ const communitySelect = {
   members_count: true,
   createdAt: true,
 } satisfies Prisma.communitySelect;
+
+const CONTACT_MESSAGE =
+  "Olá, encontrei seu post na comunidade Lectum e gostaria de conversar sobre atendimento.";
 
 const normalizePagination = (query: { page?: number; limit?: number }) => {
   const page = Math.max(1, Number(query.page || 1));
@@ -51,6 +55,29 @@ const toCommunityResponse = (item: {
   members_count: item.members_count,
   created_at: item.createdAt,
 });
+
+const buildWhatsappUrl = (value?: string | null) => {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  if (digits.length < 8) return null;
+
+  return `https://wa.me/${digits}?text=${encodeURIComponent(CONTACT_MESSAGE)}`;
+};
+
+const authorTypeLabel = (role?: string | null, gender?: string | null) => {
+  if (role === "psicologo") {
+    const normalizedGender = String(gender ?? "")
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .toLowerCase();
+
+    if (normalizedGender.includes("feminino")) return "Psicóloga";
+    if (normalizedGender.includes("masculino")) return "Psicólogo";
+
+    return "Psicólogo(a)";
+  }
+
+  return "Membro Anônimo";
+};
 
 export class CommunityRepository implements ICommunityRepository {
   readonly repository: ORM["community"];
@@ -134,6 +161,7 @@ export class CommunityRepository implements ICommunityRepository {
 
   async posts(data: ICommunityPostsDTO): Promise<CommunityPostsResponse | null> {
     const pagination = normalizePagination(data.q);
+    const search = data.q.search?.trim();
     const community = await this.repository.findFirst({
       where: {
         slug: data.p.slug,
@@ -148,6 +176,30 @@ export class CommunityRepository implements ICommunityRepository {
       community_id: community.id,
       deleted: false,
       status: "publicado",
+      OR: search
+        ? [
+            {
+              title: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+            {
+              content: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+            {
+              author: {
+                name: {
+                  contains: search,
+                  mode: "insensitive",
+                },
+              },
+            },
+          ]
+        : undefined,
     };
 
     const [items, count] = await Promise.all([
@@ -175,6 +227,19 @@ export class CommunityRepository implements ICommunityRepository {
               name: true,
               avatar: true,
               role: true,
+              psychologist_profile: {
+                select: {
+                  gender: true,
+                  whatsapp: true,
+                  subscriptions: {
+                    where: activeProfessionalEntitlementWhere(),
+                    select: {
+                      id: true,
+                    },
+                    take: 1,
+                  },
+                },
+              },
             },
           },
         },
@@ -186,6 +251,9 @@ export class CommunityRepository implements ICommunityRepository {
       community: toCommunityResponse(community),
       data: items.map((item) => {
         const responseCommunity = toCommunityResponse(item.community);
+        const profile = item.author.psychologist_profile;
+        const isPsychologist = item.author.role === "psicologo";
+        const verified = Boolean(profile?.subscriptions.length);
 
         return {
           id: item.id,
@@ -198,12 +266,18 @@ export class CommunityRepository implements ICommunityRepository {
           saves_count: item.saves_count,
           created_at: item.createdAt,
           tags: responseCommunity.category ? [responseCommunity.category] : [],
+          featured_badge: verified && item.upvotes_count >= 60 ? "TOP #1 MENTOR" : null,
+          media_url: null,
+          media_type: null,
           community: responseCommunity,
           author: {
             id: item.author.id,
-            name: item.author.name,
-            avatar: item.author.avatar,
+            name: isPsychologist ? item.author.name : "Membro Anônimo",
+            avatar: isPsychologist ? item.author.avatar : null,
             role: item.author.role,
+            type_label: authorTypeLabel(item.author.role, profile?.gender),
+            verified,
+            whatsapp_url: isPsychologist ? buildWhatsappUrl(profile?.whatsapp) : null,
           },
         };
       }),

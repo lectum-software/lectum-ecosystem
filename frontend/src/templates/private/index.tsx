@@ -28,6 +28,7 @@ import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import * as userActions from "@/store/modules/user/actions";
+import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 
 type PrivateTemplateProps = PropsWithChildren<{
   allowAnonymous?: boolean;
@@ -52,8 +53,6 @@ type NavigationItem = {
   title: string;
   activePrefixes?: string[];
 };
-
-const DEFAULT_COMMUNITY_FEED_HREF = "/app/community/ansiedade-em-equilibrio";
 
 const fallbackNavigation: NavigationItem[] = [
   {

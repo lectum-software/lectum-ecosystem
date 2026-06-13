@@ -58,3 +58,4 @@ Formato recomendado:
 - [ADR-0061 - Favoritos com cards premium e filtros reais](0061-favoritos-cards-premium-filtros-reais.md) - Accepted
 - [ADR-0062 - Comunidades reais e feed paginado](0062-comunidades-feed-paginado.md) - Accepted
 - [ADR-0063 - Vídeo obrigatório para elegibilidade na listagem de psicólogos](0063-video-obrigatorio-listagem-psicologos.md) - Accepted
+- [ADR-0064 - Feed de comunidade vertical com chips canônicos](0064-feed-comunidade-chips-e-posts-reais.md) - Accepted

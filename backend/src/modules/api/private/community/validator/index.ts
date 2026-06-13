@@ -63,7 +63,16 @@ export const postsSchema: IValidatorRequest = {
       format: "lower",
     },
   ],
-  query: paginationQuery,
+  query: [
+    ...paginationQuery,
+    {
+      key: "search",
+      coerse: "string",
+      method: "string",
+      max: 120,
+      optional: true,
+    },
+  ],
 };
 
 export const indexValidator = validator(indexSchema);

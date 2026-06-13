@@ -346,6 +346,8 @@ autogestão do psicólogo em `/api/private/psychologist/reviews` também exige e
 | `upvotes_count` / `downvotes_count` / `replies_count` / `saves_count` | `Int @default(0)` | denormalizados para o feed |
 | `@@index([community_id, status, createdAt])`, `@@index([author_id])` | | feed por comunidade ordenado por data |
 
+DTO do feed (`GET /api/private/community/:slug/posts`): além dos campos persistidos, pode retornar metadados derivados para apresentação (`author.type_label`, `author.verified`, `author.whatsapp_url`, `featured_badge`, `media_url`, `media_type`). O backend deve mascarar autores não psicólogos como `Membro Anônimo` no feed e manter `media_url`/`media_type` nulos enquanto o schema de mídia de posts não existir.
+
 `post_reply` (comentários e respostas, TASK-26; PRD distingue comentário/resposta → árvore de 1 nível):
 
 | Campo | Tipo | Notas |
