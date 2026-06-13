@@ -30,6 +30,12 @@ As páginas de detalhe por comunidade serão criadas depois. Até lá, chips e n
 - Manter upvote/downvote, comentários, salvar e compartilhar nas ações do card.
 - Simplificar o botão de filtro para exibir apenas o ícone cinza e remover textos auxiliares do menu, mantendo só `Todas as comunidades` e `Comunidades que sigo`.
 - Adicionar ícone de descoberta no chip `Explorar`.
+- Persistir `community_post.anonymous` para diferenciar posts de pacientes anônimos e identificados; o default `true` preserva privacidade de dados já existentes.
+- Usar avatar com ícone anônimo inspirado em `C:\Users\tulio\Downloads\Membro Anônimo.png` quando `anonymous=true`.
+- Respeitar o anonimato também na busca por nome: posts anônimos de pacientes não devem ser encontrados pelo nome real do autor.
+- Esconder o header de busca/chips ao rolar para baixo e reexibir ao rolar para cima com transição suave.
+- Reposicionar metadados de posts de pacientes para mostrar somente o tempo abaixo do nome.
+- Refinar cores dos selos para ouro/champagne/cobre sofisticados e remover shadow/drop-shadow.
 - Enquanto `community_member` não estiver implementado (TASK-25), `scope=following` retorna estado vazio honesto.
 
 ## Consequências
@@ -43,6 +49,7 @@ As páginas de detalhe por comunidade serão criadas depois. Até lá, chips e n
 ## Validação
 
 - `pnpm --dir backend db:migrate --name add_post_replies`: sucesso.
+- `pnpm --dir backend db:migrate --name add_community_post_anonymous`: sucesso.
 - `pnpm --dir backend check`: sucesso.
 - `pnpm --dir frontend check`: sucesso.
 - `pnpm --dir backend build`: sucesso.
@@ -50,7 +57,7 @@ As páginas de detalhe por comunidade serão criadas depois. Até lá, chips e n
 - `pnpm check`: sucesso.
 - Validação visual/HTTP local em `http://localhost:3000/app/community/feed`: sucesso (`200`).
 - Validação local de API com token temporário:
-  - `GET /api/private/community/feed/posts?page=1&limit=12` retornou `200` com posts persistidos, campo `highlighted_professional_reply` no contrato e badges `TOP #1 MENTOR`, `TOP #2 MENTOR`, `TOP #3 MENTOR` quando aplic?vel;
+  - `GET /api/private/community/feed/posts?page=1&limit=12` retornou `200` com posts persistidos, campo `highlighted_professional_reply` no contrato e badges `TOP #1 MENTOR`, `TOP #2 MENTOR`, `TOP #3 MENTOR` quando aplicável;
   - `GET /api/private/community/feed/posts?page=1&limit=5&scope=following` retornou `200`, `count=0`.
 - Validação HTTP local de rotas:
   - `GET http://localhost:3000/app/community/feed` retornou `200`;

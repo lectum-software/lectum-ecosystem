@@ -54,6 +54,7 @@ export type CommunityPost = {
   id: string;
   title: string;
   content: string;
+  anonymous: boolean;
   status: string;
   upvotes_count: number;
   downvotes_count: number;

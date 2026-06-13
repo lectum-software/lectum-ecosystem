@@ -17,11 +17,12 @@ import {
   Search,
   Share2,
   SlidersHorizontal,
+  UserX,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useCommunityFeedPosts } from "@/api/callers/community";
 import type { CommunityFeedScope, CommunityPost } from "@/api/generator/types/community";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -116,7 +117,21 @@ const getInitials = (name: string) => {
 
 const communityDetailHref = (communitySlug: string) => `/app/community/${communitySlug}`;
 
-const AuthorAvatar = ({ author }: { author: CommunityPost["author"] }) => {
+const AuthorAvatar = ({
+  anonymous,
+  author,
+}: {
+  anonymous?: boolean;
+  author: CommunityPost["author"];
+}) => {
+  if (anonymous) {
+    return (
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#F1F5F9] text-[#94A3B8] ring-2 ring-[#E2E8F0] dark:bg-surface-muted dark:text-muted dark:ring-border">
+        <UserX className="h-5 w-5" aria-hidden="true" />
+      </span>
+    );
+  }
+
   const avatarSrc = resolvePublicMediaUrl(author.avatar);
   const avatarIsPublicMedia = isPublicMediaUrl(author.avatar);
 
@@ -151,18 +166,18 @@ const CountAction = ({ icon: Icon, label, value }: CountActionProps) => (
 
 const mentorBadgeClassName = (badge: string) => {
   if (badge.includes("#1")) {
-    return "from-[#FFE27A] via-[#FDBA21] to-[#B87503] text-[#4A2A00] ring-[#FFE9A6] shadow-[#F59E0B]/25";
+    return "from-[#D9B76A] via-[#F1E1B5] to-[#9B6F2D] text-[#2E2110] ring-[#D9C089]";
   }
 
   if (badge.includes("#2")) {
-    return "from-[#F8FAFC] via-[#D5DEE8] to-[#8492A6] text-[#253042] ring-white shadow-slate-400/25";
+    return "from-[#D7D2C3] via-[#F3EFE5] to-[#9A9384] text-[#2F3033] ring-[#D8D1C1]";
   }
 
   if (badge.includes("#3")) {
-    return "from-[#FFD2A1] via-[#D88945] to-[#8A4518] text-[#3A1B06] ring-[#FFD9B0] shadow-[#C66A2B]/25";
+    return "from-[#B8764B] via-[#E0B18F] to-[#7A442A] text-[#2B160D] ring-[#C99672]";
   }
 
-  return "from-[#F7C948] via-[#F59E0B] to-[#B87503] text-[#4A2A00] ring-[#FFE9A6] shadow-[#F59E0B]/25";
+  return "from-[#D9B76A] via-[#F1E1B5] to-[#9B6F2D] text-[#2E2110] ring-[#D9C089]";
 };
 
 const MentorBadge = ({ badge }: { badge?: string | null }) => {
@@ -171,7 +186,7 @@ const MentorBadge = ({ badge }: { badge?: string | null }) => {
   return (
     <span
       className={cn(
-        "inline-flex w-fit items-center gap-1 rounded-[8px] bg-gradient-to-r px-2 py-1 text-[9px] font-black tracking-[0.02em] ring-1 shadow-lg",
+        "inline-flex w-fit items-center gap-1 rounded-[8px] bg-gradient-to-r px-2 py-1 text-[9px] font-black tracking-[0.02em] ring-1",
         mentorBadgeClassName(badge),
       )}
     >
@@ -258,7 +273,7 @@ const CommunityChips = ({
           <Link
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "rounded-full border px-4 py-2 text-sm font-black shadow-sm transition",
+              "rounded-full border px-3.5 py-2 text-[13px] font-semibold shadow-sm transition",
               isActive
                 ? "border-primary bg-primary text-white shadow-primary/20"
                 : "border-border bg-white text-[#475569] hover:border-primary/40 hover:bg-primary-soft hover:text-primary dark:bg-surface dark:text-muted",
@@ -361,6 +376,9 @@ const PostCard = ({
   post: CommunityPost;
   onShare: (post: CommunityPost) => void;
 }) => {
+  const isPsychologistPost = post.author.role === "psicologo";
+  const isAnonymousPatient = !isPsychologistPost && post.anonymous;
+
   return (
     <article className="overflow-hidden rounded-[22px] border border-[#E6EAF0] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:border-border dark:bg-surface">
       <div className="mb-4 flex items-center justify-between gap-3 text-[11px] font-semibold text-muted">
@@ -385,7 +403,7 @@ const PostCard = ({
       </div>
 
       <div className="mb-3 flex items-start gap-3">
-        <AuthorAvatar author={post.author} />
+        <AuthorAvatar anonymous={isAnonymousPatient} author={post.author} />
         <div className="grid min-w-0 flex-1 gap-1">
           <MentorBadge badge={post.author.featured_badge ?? post.featured_badge} />
           <div className="flex flex-wrap items-center gap-1.5">
@@ -398,7 +416,9 @@ const PostCard = ({
             ) : null}
           </div>
           <p className="text-[11px] font-semibold text-muted">
-            {post.author.type_label} • {formatRelativeTime(post.created_at)}
+            {isPsychologistPost
+              ? `${post.author.type_label} • ${formatRelativeTime(post.created_at)}`
+              : formatRelativeTime(post.created_at)}
           </p>
         </div>
       </div>
@@ -493,6 +513,8 @@ export const CommunityFeedLogic = () => {
   const [page, setPage] = useState(1);
   const [scope, setScope] = useState<CommunityFeedScope>("all");
   const [filterOpen, setFilterOpen] = useState(false);
+  const [headerHidden, setHeaderHidden] = useState(false);
+  const lastScrollY = useRef(0);
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search.trim());
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
@@ -509,6 +531,26 @@ export const CommunityFeedLogic = () => {
   const feed = useCommunityFeedPosts(query);
   const posts = feed.data?.data ?? [];
   const errorMessage = feed.isError ? resolveFeedError(feed.error) : null;
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const isScrollingDown = currentScrollY > lastScrollY.current;
+
+      if (currentScrollY < 48) {
+        setHeaderHidden(false);
+      } else if (Math.abs(currentScrollY - lastScrollY.current) > 8) {
+        setHeaderHidden(isScrollingDown);
+      }
+
+      lastScrollY.current = currentScrollY;
+    };
+
+    lastScrollY.current = window.scrollY;
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const sharePost = async (post: CommunityPost) => {
     if (typeof window === "undefined") return;
@@ -531,7 +573,14 @@ export const CommunityFeedLogic = () => {
   return (
     <PrivateTemplate contentClassName="bg-[#F5F7FA] dark:bg-background" showHeader>
       <section className="mx-auto grid w-full max-w-[430px] gap-4 sm:max-w-2xl lg:max-w-3xl">
-        <header className="sticky top-0 z-20 -mx-5 border-[#E5EAF0] border-b bg-[#F5F7FA]/95 px-5 pb-3 pt-2 backdrop-blur supports-[backdrop-filter]:bg-[#F5F7FA]/88 dark:border-border dark:bg-background/90">
+        <header
+          className={cn(
+            "sticky top-0 z-20 -mx-5 border-[#E5EAF0] border-b bg-[#F5F7FA]/95 px-5 pb-3 pt-2 backdrop-blur transition-[transform,opacity] duration-300 ease-out supports-[backdrop-filter]:bg-[#F5F7FA]/88 dark:border-border dark:bg-background/90",
+            headerHidden
+              ? "pointer-events-none -translate-y-[calc(100%+8px)] opacity-0"
+              : "translate-y-0 opacity-100",
+          )}
+        >
           <div className="mx-auto grid max-w-[430px] gap-3 sm:max-w-2xl lg:max-w-3xl">
             <div className="flex items-center gap-2">
               <div className="relative min-w-0 flex-1">

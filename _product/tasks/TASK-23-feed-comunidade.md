@@ -44,9 +44,11 @@ Criar feed real agregado de posts de comunidades com paginação, filtros, chips
 - Criação, curadoria e moderação de comunidades pertencem à plataforma/administração, não a usuários comuns.
 - O selo `TOP MENTOR`/`TOP #1 MENTOR` é apenas destaque visual e não concede permissão especial. A UI deve suportar `TOP #1 MENTOR` (ouro), `TOP #2 MENTOR` (prata) e `TOP #3 MENTOR` (bronze), posicionados acima do nome do psicólogo.
 - Posts de pacientes exigem título, texto/descrição e comunidade relacionada.
+- A publicação anônima de paciente usa avatar com ícone anônimo e nome `Membro Anônimo`; a publicação identificada mostra nome/avatar reais do paciente.
 - A prévia profissional no card só aparece quando houver resposta/comentário de psicólogo com `cfp_verified_at`; entre várias respostas verificadas, vence a de maior `upvotes_count`.
 - Comentários de usuários comuns e respostas de psicólogos não verificados não entram na prévia profissional.
 - WhatsApp aparece somente em respostas de psicólogos verificados com entitlement profissional pago ativo.
+- O header do feed esconde ao rolar para baixo e reaparece ao rolar para cima, com transição suave.
 
 ## Pré-requisitos e bloqueios
 

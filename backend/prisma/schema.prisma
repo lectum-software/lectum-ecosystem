@@ -483,6 +483,7 @@ model community_post {
   author_id       String
   title           String
   content         String
+  anonymous       Boolean      @default(true)
   status          String       @default("publicado")
   upvotes_count   Int          @default(0)
   downvotes_count Int          @default(0)

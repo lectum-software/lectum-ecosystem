@@ -55,6 +55,7 @@ const postSelect = {
   id: true,
   title: true,
   content: true,
+  anonymous: true,
   status: true,
   upvotes_count: true,
   downvotes_count: true,
@@ -171,7 +172,7 @@ const mentorBadgeForScore = (
   return null;
 };
 
-const authorTypeLabel = (role?: string | null, gender?: string | null) => {
+const authorTypeLabel = (role?: string | null, gender?: string | null, anonymous = false) => {
   if (role === "psicologo") {
     const normalizedGender = String(gender ?? "")
       .normalize("NFD")
@@ -184,7 +185,7 @@ const authorTypeLabel = (role?: string | null, gender?: string | null) => {
     return "Psicólogo(a)";
   }
 
-  return "Membro Anônimo";
+  return anonymous ? "Membro Anônimo" : "Paciente";
 };
 
 const normalizeScope = (value?: string | null) => {
@@ -208,26 +209,47 @@ const postSearchWhere = (search?: string): Prisma.community_postWhereInput["OR"]
       },
     },
     {
-      author: {
-        name: {
-          contains: search,
-          mode: "insensitive",
+      AND: [
+        {
+          OR: [
+            {
+              anonymous: false,
+            },
+            {
+              author: {
+                role: "psicologo",
+              },
+            },
+          ],
         },
-      },
+        {
+          author: {
+            name: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+        },
+      ],
     },
   ];
 };
 
-const toAuthorResponse = (author: AuthorResult, mentorScore = 0): CommunityAuthorDTO => {
+const toAuthorResponse = (
+  author: AuthorResult,
+  mentorScore = 0,
+  anonymous = false,
+): CommunityAuthorDTO => {
   const profile = author.psychologist_profile;
   const isPsychologist = author.role === "psicologo";
+  const shouldMaskAuthor = !isPsychologist && anonymous;
 
   return {
     id: author.id,
-    name: isPsychologist ? author.name : "Membro Anônimo",
-    avatar: isPsychologist ? author.avatar : null,
+    name: shouldMaskAuthor ? "Membro Anônimo" : author.name,
+    avatar: shouldMaskAuthor ? null : author.avatar,
     role: author.role,
-    type_label: authorTypeLabel(author.role, profile?.gender),
+    type_label: authorTypeLabel(author.role, profile?.gender, anonymous),
     verified: isPsychologist && isProfessionalVerified(profile),
     featured_badge: isPsychologist ? mentorBadgeForScore(profile, mentorScore) : null,
     whatsapp_url: isPsychologist ? buildProfessionalWhatsappUrl(profile) : null,
@@ -253,13 +275,15 @@ const toHighlightedProfessionalReply = (
 
 const toPostResponse = (item: PostResult): CommunityPostDTO => {
   const responseCommunity = toCommunityResponse(item.community);
-  const author = toAuthorResponse(item.author, item.upvotes_count);
+  const anonymous = item.author.role !== "psicologo" && item.anonymous;
+  const author = toAuthorResponse(item.author, item.upvotes_count, anonymous);
   const highlightedReply = toHighlightedProfessionalReply(item.replies[0]);
 
   return {
     id: item.id,
     title: item.title,
     content: item.content,
+    anonymous,
     status: item.status,
     upvotes_count: item.upvotes_count,
     downvotes_count: item.downvotes_count,
