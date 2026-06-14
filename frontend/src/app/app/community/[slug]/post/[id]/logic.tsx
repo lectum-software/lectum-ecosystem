@@ -149,7 +149,10 @@ const MentorBadge = ({ badge }: { badge?: string | null }) => {
 
   return (
     <span
-      className={cn("shrink-0 text-[11px] font-semibold leading-none", mentorBadgeClassName(badge))}
+      className={cn(
+        "shrink-0 text-[11px] font-medium leading-none tracking-[-0.01em] opacity-90",
+        mentorBadgeClassName(badge),
+      )}
     >
       {mentorBadgeLabel(badge)}
     </span>
@@ -310,14 +313,16 @@ const PostHeader = ({ post, slug }: { post: PostDetail; slug: string }) => {
       <div className="flex items-start gap-3">
         <AuthorAvatar anonymous={isAnonymousPatient} author={post.author} />
         <div className="grid min-w-0 flex-1 gap-1">
-          <div className="flex min-w-0 items-center gap-1.5">
-            <h2 className="truncate text-sm font-black text-foreground">{post.author.name}</h2>
-            {post.author.verified ? (
-              <BadgeCheck
-                className="h-4 w-4 shrink-0 fill-[#2da7ff] text-white"
-                aria-hidden="true"
-              />
-            ) : null}
+          <div className="flex min-w-0 items-center gap-x-2">
+            <div className="flex min-w-0 items-center gap-1">
+              <h2 className="truncate text-sm font-black text-foreground">{post.author.name}</h2>
+              {post.author.verified ? (
+                <BadgeCheck
+                  className="h-4 w-4 shrink-0 fill-[#2da7ff] text-white"
+                  aria-hidden="true"
+                />
+              ) : null}
+            </div>
             <MentorBadge badge={post.author.featured_badge ?? post.featured_badge} />
           </div>
           <p className="text-[11px] font-semibold text-muted">
@@ -512,23 +517,25 @@ const ReplyCard = ({
         <div className="flex min-w-0 items-start gap-3">
           <AuthorAvatar author={reply.author} size="sm" />
           <div className="grid min-w-0 gap-1">
-            <div className="flex min-w-0 items-center gap-1.5">
-              {isProfessional ? (
-                <Link
-                  className="truncate text-sm font-black underline-offset-4 transition hover:text-primary hover:underline"
-                  href={`/app/psychologist/${reply.author.id}`}
-                >
-                  {reply.author.name}
-                </Link>
-              ) : (
-                <h3 className="truncate text-sm font-black">{reply.author.name}</h3>
-              )}
-              {reply.author.verified ? (
-                <BadgeCheck
-                  className="h-4 w-4 shrink-0 fill-[#2da7ff] text-white"
-                  aria-hidden="true"
-                />
-              ) : null}
+            <div className="flex min-w-0 items-center gap-x-2">
+              <div className="flex min-w-0 items-center gap-1">
+                {isProfessional ? (
+                  <Link
+                    className="truncate text-sm font-black underline-offset-4 transition hover:text-primary hover:underline"
+                    href={`/app/psychologist/${reply.author.id}`}
+                  >
+                    {reply.author.name}
+                  </Link>
+                ) : (
+                  <h3 className="truncate text-sm font-black">{reply.author.name}</h3>
+                )}
+                {reply.author.verified ? (
+                  <BadgeCheck
+                    className="h-4 w-4 shrink-0 fill-[#2da7ff] text-white"
+                    aria-hidden="true"
+                  />
+                ) : null}
+              </div>
               <MentorBadge badge={reply.author.featured_badge} />
             </div>
             <p className="text-[11px] font-semibold text-muted">

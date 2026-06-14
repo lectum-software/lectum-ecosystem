@@ -129,7 +129,12 @@ const MentorBadge = ({ badge }: { badge?: string | null }) => {
   const label = badge.replace(/\bMENTOR\b/i, "Mentor");
 
   return (
-    <span className={cn("shrink-0 text-[11px] font-semibold leading-none", colorClassName)}>
+    <span
+      className={cn(
+        "shrink-0 text-[11px] font-medium leading-none tracking-[-0.01em] opacity-90",
+        colorClassName,
+      )}
+    >
       {label}
     </span>
   );
@@ -189,11 +194,15 @@ const ProfessionalReplyPreview = ({ reply }: { reply: PostProfessionalReply | nu
       <div className="mb-2 flex items-center gap-2">
         <AuthorAvatar avatar={reply.author.avatar} name={reply.author.name} />
         <div className="grid min-w-0 gap-1">
-          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-            <span className="truncate text-sm font-black text-foreground">{reply.author.name}</span>
-            {reply.author.verified ? (
-              <BadgeCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-            ) : null}
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="inline-flex min-w-0 items-center gap-1">
+              <span className="truncate text-sm font-black text-foreground">
+                {reply.author.name}
+              </span>
+              {reply.author.verified ? (
+                <BadgeCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+              ) : null}
+            </span>
             <MentorBadge badge={reply.author.featured_badge} />
           </div>
           <p className="text-[11px] font-semibold text-muted">
@@ -262,11 +271,13 @@ export const CommunityPostCard = ({
           name={post.author.name}
         />
         <div className="grid min-w-0 flex-1 gap-1">
-          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-            <h2 className="truncate text-sm font-black text-foreground">{post.author.name}</h2>
-            {post.author.verified ? (
-              <BadgeCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-            ) : null}
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+            <div className="flex min-w-0 items-center gap-1">
+              <h2 className="truncate text-sm font-black text-foreground">{post.author.name}</h2>
+              {post.author.verified ? (
+                <BadgeCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+              ) : null}
+            </div>
             <MentorBadge badge={post.author.featured_badge ?? post.featured_badge} />
           </div>
           <p className="text-[11px] font-semibold text-muted">

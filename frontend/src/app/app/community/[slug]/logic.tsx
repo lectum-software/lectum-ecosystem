@@ -261,7 +261,10 @@ const MentorBadge = ({ badge }: { badge?: string | null }) => {
 
   return (
     <span
-      className={cn("shrink-0 text-[11px] font-semibold leading-none", mentorBadgeClassName(badge))}
+      className={cn(
+        "shrink-0 text-[11px] font-medium leading-none tracking-[-0.01em] opacity-90",
+        mentorBadgeClassName(badge),
+      )}
     >
       {mentorBadgeLabel(badge)}
     </span>
@@ -486,20 +489,22 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
         <div className="flex min-w-0 items-start gap-2.5">
           <AuthorAvatar author={reply.author} />
           <div className="grid min-w-0 flex-1 gap-0.5">
-            <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
-              <Link
-                className="pointer-events-auto min-w-0 truncate text-sm font-black text-foreground underline-offset-4 transition hover:text-primary hover:underline"
-                href={profileHref}
-                onClick={(event) => event.stopPropagation()}
-              >
-                {reply.author.name}
-              </Link>
-              {reply.author.verified ? (
-                <BadgeCheck
-                  className="h-4 w-4 shrink-0 fill-[#2da7ff] text-white"
-                  aria-label="Psicólogo verificado"
-                />
-              ) : null}
+            <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="inline-flex min-w-0 items-center gap-1">
+                <Link
+                  className="pointer-events-auto min-w-0 truncate text-sm font-black text-foreground underline-offset-4 transition hover:text-primary hover:underline"
+                  href={profileHref}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  {reply.author.name}
+                </Link>
+                {reply.author.verified ? (
+                  <BadgeCheck
+                    className="h-4 w-4 shrink-0 fill-[#2da7ff] text-white"
+                    aria-label="Psicologo verificado"
+                  />
+                ) : null}
+              </span>
               <MentorBadge badge={reply.author.featured_badge} />
             </div>
             <Link
@@ -678,14 +683,16 @@ const PostCard = ({
       <div className="mb-3 flex items-start gap-3">
         <AuthorAvatar anonymous={isAnonymousPatient} author={post.author} />
         <div className="grid min-w-0 flex-1 gap-1">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <h2 className="truncate text-sm font-black text-foreground">{post.author.name}</h2>
-            {post.author.verified ? (
-              <BadgeCheck
-                className="h-4 w-4 shrink-0 fill-[#2da7ff] text-white"
-                aria-hidden="true"
-              />
-            ) : null}
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <div className="flex min-w-0 items-center gap-1">
+              <h2 className="truncate text-sm font-black text-foreground">{post.author.name}</h2>
+              {post.author.verified ? (
+                <BadgeCheck
+                  className="h-4 w-4 shrink-0 fill-[#2da7ff] text-white"
+                  aria-hidden="true"
+                />
+              ) : null}
+            </div>
             <MentorBadge badge={post.author.featured_badge ?? post.featured_badge} />
           </div>
           <p className="text-[11px] font-semibold text-muted">
