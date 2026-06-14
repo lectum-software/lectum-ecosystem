@@ -87,6 +87,7 @@ export type CommunityPost = {
   featured_badge: string | null;
   media_url: string | null;
   media_type: string | null;
+  current_user_vote: 1 | -1 | null;
   community: Community;
   author: CommunityAuthor;
   highlighted_professional_reply: CommunityProfessionalReply | null;

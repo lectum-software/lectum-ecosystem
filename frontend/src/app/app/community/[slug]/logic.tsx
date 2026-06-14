@@ -37,11 +37,13 @@ import {
   useFollowCommunity,
   useUnfollowCommunity,
 } from "@/api/callers/community";
+import { useVotePost } from "@/api/callers/posts";
 import type {
   CommunityDetail,
   CommunityFeedScope,
   CommunityPost,
 } from "@/api/generator/types/community";
+import { VoteActionButton, type VoteValue } from "@/components/community/vote-action-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -89,6 +91,13 @@ type CountActionProps = {
   icon: LucideIcon;
   label: string;
   value?: number;
+};
+
+type VoteSnapshot = {
+  currentVote: VoteValue;
+  downvotes: number;
+  postId: string;
+  upvotes: number;
 };
 
 const resolveFeedError = (error: unknown) => {
@@ -161,6 +170,19 @@ const formatCompactCount = (value: number, singular: string, plural: string) => 
   const label = value === 1 ? singular : plural;
 
   return `${value.toLocaleString("pt-BR")} ${label}`;
+};
+
+const resolveVoteSnapshot = (snapshot: VoteSnapshot, value: 1 | -1): VoteSnapshot => {
+  const nextVote = snapshot.currentVote === value ? null : value;
+  const upDelta = (nextVote === 1 ? 1 : 0) - (snapshot.currentVote === 1 ? 1 : 0);
+  const downDelta = (nextVote === -1 ? 1 : 0) - (snapshot.currentVote === -1 ? 1 : 0);
+
+  return {
+    ...snapshot,
+    currentVote: nextVote,
+    downvotes: Math.max(0, snapshot.downvotes + downDelta),
+    upvotes: Math.max(0, snapshot.upvotes + upDelta),
+  };
 };
 
 const getInitials = (name: string) => {
@@ -539,7 +561,14 @@ const PostCard = ({
   const isAnonymousPatient = !isPsychologistPost && post.anonymous;
   const [contentExpanded, setContentExpanded] = useState(false);
   const [contentCanToggle, setContentCanToggle] = useState(false);
+  const [voteSnapshot, setVoteSnapshot] = useState<VoteSnapshot>({
+    currentVote: post.current_user_vote,
+    downvotes: post.downvotes_count,
+    postId: post.id,
+    upvotes: post.upvotes_count,
+  });
   const contentRef = useRef<HTMLParagraphElement>(null);
+  const voteMutation = useVotePost(post.id);
 
   useEffect(() => {
     const element = contentRef.current;
@@ -559,6 +588,31 @@ const PostCard = ({
 
     return () => observer.disconnect();
   }, [contentExpanded]);
+
+  const handleVote = (value: 1 | -1) => {
+    const previousSnapshot = voteSnapshot;
+    const optimisticSnapshot = resolveVoteSnapshot(voteSnapshot, value);
+
+    setVoteSnapshot(optimisticSnapshot);
+    voteMutation.mutate(
+      { value },
+      {
+        onError: () => {
+          setVoteSnapshot(previousSnapshot);
+        },
+        onSuccess: (data) => {
+          if (data.target_type !== "post") return;
+
+          setVoteSnapshot({
+            currentVote: data.value,
+            downvotes: data.downvotes_count ?? optimisticSnapshot.downvotes,
+            postId: post.id,
+            upvotes: data.upvotes_count,
+          });
+        },
+      },
+    );
+  };
 
   return (
     <article className="overflow-hidden rounded-[22px] border border-[#E6EAF0] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:border-border dark:bg-surface">
@@ -636,8 +690,27 @@ const PostCard = ({
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-[#EDF1F5] border-t pt-3 dark:border-border">
         <div className="flex min-w-0 items-center gap-1">
-          <CountAction icon={ArrowUp} label="Dar upvote" value={post.upvotes_count} />
-          <CountAction icon={ArrowDown} label="Dar downvote" />
+          <VoteActionButton
+            count={voteSnapshot.upvotes}
+            currentVote={voteSnapshot.currentVote}
+            disabled={voteMutation.isPending}
+            icon={ArrowUp}
+            label="Dar upvote"
+            onVote={handleVote}
+            size="sm"
+            value={1}
+          />
+          <VoteActionButton
+            count={voteSnapshot.downvotes}
+            currentVote={voteSnapshot.currentVote}
+            disabled={voteMutation.isPending}
+            icon={ArrowDown}
+            label="Dar downvote"
+            onVote={handleVote}
+            showPositiveDelta={false}
+            size="sm"
+            value={-1}
+          />
           <CountAction icon={MessageCircle} label="Comentar" value={post.replies_count} />
         </div>
         <div className="flex shrink-0 items-center gap-1">

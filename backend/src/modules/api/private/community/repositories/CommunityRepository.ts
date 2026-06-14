@@ -137,6 +137,7 @@ type PostResult = Prisma.community_postGetPayload<{ select: typeof postSelect }>
 type AuthorResult = PostResult["author"];
 type ProfessionalReplyResult = PostResult["replies"][number];
 type TopMentorUserResult = Prisma.userGetPayload<{ select: typeof topMentorUserSelect }>;
+type CurrentVote = 1 | -1 | null;
 
 const CONTACT_MESSAGE =
   "Olá, encontrei seu post na comunidade Lectum e gostaria de conversar sobre atendimento.";
@@ -258,6 +259,36 @@ const authorTypeLabel = (role?: string | null, gender?: string | null, anonymous
 
 const normalizeScope = (value?: string | null) => {
   return value === "following" ? "following" : "all";
+};
+
+const normalizeVoteValue = (value?: number | null): CurrentVote => {
+  if (value === 1 || value === -1) return value;
+
+  return null;
+};
+
+const getPostCurrentVotes = async (userId: string | undefined, postIds: string[]) => {
+  if (!userId || postIds.length === 0) return new Map<string, CurrentVote>();
+
+  const votes = await prisma.post_vote.findMany({
+    where: {
+      user_id: userId,
+      deleted: false,
+      post_id: {
+        in: postIds,
+      },
+    },
+    select: {
+      post_id: true,
+      value: true,
+    },
+  });
+
+  return new Map(
+    votes
+      .filter((vote): vote is { post_id: string; value: number } => Boolean(vote.post_id))
+      .map((vote) => [vote.post_id, normalizeVoteValue(vote.value)]),
+  );
 };
 
 const resolveTopMentorsPeriod = (value?: string | null) => {
@@ -470,7 +501,10 @@ const toHighlightedProfessionalReply = (
   };
 };
 
-const toPostResponse = (item: PostResult): CommunityPostDTO => {
+const toPostResponse = (
+  item: PostResult,
+  currentUserVote: CurrentVote = null,
+): CommunityPostDTO => {
   const responseCommunity = toCommunityResponse(item.community);
   const anonymous = item.author.role !== "psicologo" && item.anonymous;
   const author = toAuthorResponse(
@@ -496,6 +530,7 @@ const toPostResponse = (item: PostResult): CommunityPostDTO => {
     featured_badge: author.featured_badge,
     media_url: null,
     media_type: null,
+    current_user_vote: currentUserVote,
     community: responseCommunity,
     author,
     highlighted_professional_reply: highlightedReply,
@@ -805,9 +840,15 @@ export class CommunityRepository implements ICommunityRepository {
       }),
       prisma.community_post.count({ where }),
     ]);
+    const currentVotes = await getPostCurrentVotes(
+      data.auth?.id ?? undefined,
+      items.map((item) => item.id),
+    );
 
     return {
-      data: sortFeedPosts(items.map(toPostResponse)),
+      data: sortFeedPosts(
+        items.map((item) => toPostResponse(item, currentVotes.get(item.id) ?? null)),
+      ),
       page: pagination.page,
       pages: Math.ceil(count / pagination.limit),
       count,
@@ -1301,10 +1342,14 @@ export class CommunityRepository implements ICommunityRepository {
       }),
       prisma.community_post.count({ where }),
     ]);
+    const currentVotes = await getPostCurrentVotes(
+      data.auth?.id ?? undefined,
+      items.map((item) => item.id),
+    );
 
     return {
       community: toCommunityResponse(community),
-      data: items.map(toPostResponse),
+      data: items.map((item) => toPostResponse(item, currentVotes.get(item.id) ?? null)),
       page: pagination.page,
       pages: Math.ceil(count / pagination.limit),
       count,

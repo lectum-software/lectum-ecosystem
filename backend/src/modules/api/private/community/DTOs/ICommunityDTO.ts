@@ -103,6 +103,7 @@ export type CommunityPostDTO = {
   featured_badge: string | null;
   media_url: string | null;
   media_type: string | null;
+  current_user_vote: 1 | -1 | null;
   community: CommunityDTO;
   author: CommunityAuthorDTO;
   highlighted_professional_reply: CommunityProfessionalReplyDTO | null;

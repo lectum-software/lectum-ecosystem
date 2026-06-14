@@ -31,6 +31,7 @@ import {
   useVotePost,
 } from "@/api/callers/posts";
 import type { PostDetail, PostReply } from "@/api/generator/types/posts";
+import { VoteActionButton } from "@/components/community/vote-action-button";
 import { components } from "@/components/controllers";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -367,32 +368,25 @@ const PostVoteBar = ({
 }) => (
   <div className="flex items-center justify-between border-[#EDF1F5] border-t px-4 py-3 dark:border-border">
     <div className="flex items-center gap-1">
-      <button
-        aria-pressed={currentVote === 1}
-        className={cn(
-          "inline-flex h-9 items-center gap-1.5 rounded-full px-2.5 text-xs font-bold text-[#475569] transition hover:bg-primary-soft hover:text-primary disabled:opacity-60",
-          currentVote === 1 && "bg-primary-soft text-primary",
-        )}
+      <VoteActionButton
+        count={post.upvotes_count}
+        currentVote={currentVote}
         disabled={disabled}
-        onClick={() => onVote(1)}
-        type="button"
-      >
-        <ArrowUp className="h-4 w-4" aria-hidden="true" />
-        {post.upvotes_count.toLocaleString("pt-BR")}
-      </button>
-      <button
-        aria-label="Dar downvote"
-        aria-pressed={currentVote === -1}
-        className={cn(
-          "grid h-9 w-9 place-items-center rounded-full text-[#475569] transition hover:bg-surface-muted hover:text-[#182033] disabled:opacity-60",
-          currentVote === -1 && "bg-surface-muted text-[#182033]",
-        )}
+        icon={ArrowUp}
+        label="Dar upvote"
+        onVote={onVote}
+        value={1}
+      />
+      <VoteActionButton
+        count={post.downvotes_count}
+        currentVote={currentVote}
         disabled={disabled}
-        onClick={() => onVote(-1)}
-        type="button"
-      >
-        <ArrowDown className="h-4 w-4" aria-hidden="true" />
-      </button>
+        icon={ArrowDown}
+        label="Dar downvote"
+        onVote={onVote}
+        showPositiveDelta={false}
+        value={-1}
+      />
       <a
         className="inline-flex h-9 items-center gap-1.5 rounded-full px-2 text-xs font-bold text-[#475569] transition hover:bg-primary-soft hover:text-primary"
         href="#discussao"
@@ -445,32 +439,26 @@ const ReplyVoteBar = ({
 }) => (
   <div className="mt-3 flex items-center justify-between gap-2">
     <div className="flex items-center gap-1">
-      <button
-        aria-pressed={currentVote === 1}
-        className={cn(
-          "inline-flex h-8 items-center gap-1 rounded-full px-2 text-xs font-bold text-[#64748B] transition hover:bg-primary-soft hover:text-primary disabled:opacity-60",
-          currentVote === 1 && "bg-primary-soft text-primary",
-        )}
+      <VoteActionButton
+        count={reply.upvotes_count}
+        currentVote={currentVote}
         disabled={disabled}
-        onClick={() => onVote(1)}
-        type="button"
-      >
-        <ArrowUp className="h-3.5 w-3.5" aria-hidden="true" />
-        {reply.upvotes_count.toLocaleString("pt-BR")}
-      </button>
-      <button
-        aria-label="Dar downvote na resposta"
-        aria-pressed={currentVote === -1}
-        className={cn(
-          "grid h-8 w-8 place-items-center rounded-full text-[#64748B] transition hover:bg-surface-muted hover:text-[#182033] disabled:opacity-60",
-          currentVote === -1 && "bg-surface-muted text-[#182033]",
-        )}
+        icon={ArrowUp}
+        label="Dar upvote na resposta"
+        onVote={onVote}
+        size="sm"
+        value={1}
+      />
+      <VoteActionButton
+        currentVote={currentVote}
         disabled={disabled}
-        onClick={() => onVote(-1)}
-        type="button"
-      >
-        <ArrowDown className="h-3.5 w-3.5" aria-hidden="true" />
-      </button>
+        icon={ArrowDown}
+        label="Dar downvote na resposta"
+        onVote={onVote}
+        showPositiveDelta={false}
+        size="sm"
+        value={-1}
+      />
       <button
         className="inline-flex h-8 items-center gap-1 rounded-full px-2 text-xs font-bold text-[#64748B] transition hover:bg-primary-soft hover:text-primary"
         onClick={onReply}
