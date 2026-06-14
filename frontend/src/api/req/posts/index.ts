@@ -103,3 +103,29 @@ export const unsavePost = async (id: string) => {
     hideError: true,
   });
 };
+
+export const saveReply = async (id: string, replyId: string) => {
+  const handle = callEndpoint({
+    route: "/api/private/posts/:id/replies/:replyId/save",
+    method: "POST",
+    params: { id, replyId },
+  });
+
+  return handleReq<PostSaveResponse>({
+    ...handle,
+    hideError: true,
+  });
+};
+
+export const unsaveReply = async (id: string, replyId: string) => {
+  const handle = callEndpoint({
+    route: "/api/private/posts/:id/replies/:replyId/save",
+    method: "DELETE",
+    params: { id, replyId },
+  });
+
+  return handleReq<PostSaveResponse>({
+    ...handle,
+    hideError: true,
+  });
+};

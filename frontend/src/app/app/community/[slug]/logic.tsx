@@ -27,7 +27,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { type MouseEvent, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import {
   useCommunityDetail,
   useCommunityFeedPosts,
@@ -35,7 +35,7 @@ import {
   useFollowCommunity,
   useUnfollowCommunity,
 } from "@/api/callers/community";
-import { useSavePost, useVotePost } from "@/api/callers/posts";
+import { useSavePost, useSaveReply, useVotePost } from "@/api/callers/posts";
 import type {
   CommunityDetail,
   CommunityFeedScope,
@@ -418,8 +418,14 @@ const ProfessionalReplyMedia = ({
 
   if (reply.media_type === "video") {
     return (
-      <div className="relative mt-3 aspect-[9/16] w-full overflow-hidden rounded-[18px] border border-border bg-black shadow-inner sm:mx-auto sm:max-w-[320px]">
-        <video className="h-full w-full object-cover" controls playsInline src={mediaUrl}>
+      <div className="pointer-events-auto relative mt-3 aspect-[9/16] w-full overflow-hidden rounded-[18px] border border-border bg-black shadow-inner sm:mx-auto sm:max-w-[320px]">
+        <video
+          className="h-full w-full object-cover"
+          controls
+          onClick={(event) => event.stopPropagation()}
+          playsInline
+          src={mediaUrl}
+        >
           <track kind="captions" label="Português" srcLang="pt-BR" />
         </video>
         <span className="pointer-events-none absolute inset-0 grid place-items-center text-white/70">
@@ -449,7 +455,17 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
   const reply = post.highlighted_professional_reply;
   const [replyExpanded, setReplyExpanded] = useState(false);
   const [replyCanToggle, setReplyCanToggle] = useState(false);
+  const [replySavedOverride, setReplySavedOverride] = useState<{
+    replyId: string;
+    saved: boolean;
+  } | null>(null);
   const replyContentRef = useRef<HTMLParagraphElement>(null);
+  const saveReplyMutation = useSaveReply(post.id, reply?.id ?? "");
+  const postHref = communityPostDetailHref(post);
+  const replySaved =
+    replySavedOverride && replySavedOverride.replyId === reply?.id
+      ? replySavedOverride.saved
+      : Boolean(reply?.saved);
 
   useEffect(() => {
     const element = replyContentRef.current;
@@ -472,19 +488,43 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
 
   if (!reply) return null;
 
+  const handleToggleReplySave = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+
+    const previousSaved = replySaved;
+    setReplySavedOverride({ replyId: reply.id, saved: !previousSaved });
+    saveReplyMutation.mutate(previousSaved, {
+      onError: () => {
+        setReplySavedOverride({ replyId: reply.id, saved: previousSaved });
+      },
+      onSuccess: (data) => {
+        setReplySavedOverride({ replyId: reply.id, saved: data.saved });
+      },
+    });
+  };
+
   return (
-    <div className="grid min-w-0 grid-cols-[18px_minmax(0,1fr)] gap-2">
-      <div className="flex justify-center pt-1" aria-hidden="true">
+    <div className="relative grid min-w-0 cursor-pointer grid-cols-[18px_minmax(0,1fr)] gap-2 rounded-[18px] transition hover:bg-surface-muted/45">
+      <Link
+        aria-label={`Abrir post ${post.title}`}
+        className="absolute inset-0 z-0 rounded-[18px]"
+        href={postHref}
+      />
+      <div className="pointer-events-none flex justify-center pt-1" aria-hidden="true">
         <span className="h-full min-h-24 w-px rounded-full bg-border" />
       </div>
-      <div className="min-w-0 px-1 py-1">
+      <div className="pointer-events-none relative z-10 min-w-0 px-1 py-1">
         <div className="flex min-w-0 items-start gap-2.5">
           <AuthorAvatar author={reply.author} />
           <div className="grid min-w-0 flex-1 gap-0.5">
             <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
-              <p className="min-w-0 truncate text-sm font-black text-foreground">
+              <Link
+                className="pointer-events-auto min-w-0 truncate text-sm font-black text-foreground underline-offset-4 transition hover:text-primary hover:underline"
+                href={`/app/psychologist/${reply.author.id}`}
+                onClick={(event) => event.stopPropagation()}
+              >
                 {reply.author.name}
-              </p>
+              </Link>
               {reply.author.verified ? (
                 <BadgeCheck
                   className="h-4 w-4 shrink-0 fill-[#2da7ff] text-white"
@@ -500,6 +540,16 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
               upvotes
             </p>
           </div>
+          <PostActionButton
+            active={replySaved}
+            className="pointer-events-auto h-8 w-8 shrink-0 px-0"
+            disabled={saveReplyMutation.isPending}
+            icon={Bookmark}
+            iconClassName={replySaved ? "fill-current" : undefined}
+            label={replySaved ? "Remover resposta dos salvos" : "Salvar resposta"}
+            onClick={handleToggleReplySave}
+            size="sm"
+          />
         </div>
         <p
           className={cn(
@@ -512,8 +562,11 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
         </p>
         {replyCanToggle ? (
           <button
-            className="mt-0.5 w-fit text-[10px] font-medium leading-none text-subtle transition hover:text-muted"
-            onClick={() => setReplyExpanded((current) => !current)}
+            className="pointer-events-auto mt-0.5 w-fit text-[10px] font-medium leading-none text-subtle transition hover:text-muted"
+            onClick={(event) => {
+              event.stopPropagation();
+              setReplyExpanded((current) => !current);
+            }}
             type="button"
           >
             {replyExpanded ? "ver menos" : "ver mais"}
@@ -523,10 +576,15 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
         {reply.author.whatsapp_url ? (
           <Button
             asChild
-            className="mt-3 h-11 w-full rounded-[14px] border-2 border-success bg-transparent text-sm font-black text-success shadow-none hover:bg-success hover:text-white sm:mx-auto sm:max-w-[320px]"
+            className="pointer-events-auto mt-3 h-11 w-full rounded-[14px] border-2 border-success bg-transparent text-sm font-black text-success shadow-none hover:bg-success hover:text-white sm:mx-auto sm:max-w-[320px]"
             variant="outline"
           >
-            <a href={reply.author.whatsapp_url} rel="noreferrer" target="_blank">
+            <a
+              href={reply.author.whatsapp_url}
+              onClick={(event) => event.stopPropagation()}
+              rel="noreferrer"
+              target="_blank"
+            >
               <WhatsAppIcon className="h-5 w-5" aria-hidden="true" />
               Chamar no WhatsApp
             </a>
@@ -624,7 +682,7 @@ const PostCard = ({
       onSuccess: (data) => {
         setSaveSnapshot({
           saved: data.saved,
-          saves: data.saves_count,
+          saves: data.saves_count ?? optimisticSnapshot.saves,
         });
       },
     });
@@ -678,15 +736,20 @@ const PostCard = ({
         >
           {post.title}
         </Link>
-        <p
-          className={cn(
-            "whitespace-pre-line text-sm leading-6 text-[#64748B] dark:text-muted",
-            !contentExpanded && "line-clamp-2",
-          )}
-          ref={contentRef}
+        <Link
+          className="block rounded-[12px] underline-offset-4 transition hover:text-foreground"
+          href={communityPostDetailHref(post)}
         >
-          {post.content}
-        </p>
+          <p
+            className={cn(
+              "whitespace-pre-line text-sm leading-6 text-[#64748B] dark:text-muted",
+              !contentExpanded && "line-clamp-2",
+            )}
+            ref={contentRef}
+          >
+            {post.content}
+          </p>
+        </Link>
         {contentCanToggle ? (
           <button
             className="w-fit text-[10px] font-medium leading-none text-subtle transition hover:text-muted"

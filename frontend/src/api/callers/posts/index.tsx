@@ -61,6 +61,12 @@ const updateReplyVote = (reply: PostReply, replyId: string, value: 1 | -1): Post
   };
 };
 
+const updateReplySaved = (reply: PostReply, replyId: string, saved: boolean): PostReply => ({
+  ...reply,
+  saved: reply.id === replyId ? saved : reply.saved,
+  replies: reply.replies.map((child) => updateReplySaved(child, replyId, saved)),
+});
+
 export const usePostDetail = (id: string, enabled = true) => {
   return useQuery({
     queryKey: keys.posts.detail(id),
@@ -112,6 +118,26 @@ export const useUnsavePostFromList = (callbacks?: {
     onSuccess: (data, id) => {
       queryClient.invalidateQueries({ queryKey: keys.posts.saved() });
       queryClient.invalidateQueries({ queryKey: keys.posts.detail(id) });
+      queryClient.invalidateQueries({ queryKey: keys.community.root() });
+      callbacks?.onSuccess?.(data);
+    },
+    onError: callbacks?.onError,
+  });
+};
+
+export const useUnsaveReplyFromList = (callbacks?: {
+  onSuccess?: (data: PostSaveResponse) => void;
+  onError?: (error: unknown) => void;
+}) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ postId, replyId }: { postId: string; replyId: string }) =>
+      api.unsaveReply(postId, replyId),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: keys.posts.saved() });
+      queryClient.invalidateQueries({ queryKey: keys.posts.detail(data.post_id) });
+      queryClient.invalidateQueries({ queryKey: keys.posts.replies(data.post_id) });
       queryClient.invalidateQueries({ queryKey: keys.community.root() });
       callbacks?.onSuccess?.(data);
     },
@@ -270,13 +296,69 @@ export const useSavePost = (postId: string) => {
           post: {
             ...old.post,
             saved: data.saved,
-            saves_count: data.saves_count,
+            saves_count: data.saves_count ?? old.post.saves_count,
           },
         };
       });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: keys.posts.detail(postId) });
+      queryClient.invalidateQueries({ queryKey: keys.community.root() });
+    },
+  });
+};
+
+export const useSaveReply = (postId: string, replyId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (saved: boolean) =>
+      saved ? api.unsaveReply(postId, replyId) : api.saveReply(postId, replyId),
+    onMutate: async (saved) => {
+      await queryClient.cancelQueries({ queryKey: ["posts", postId, "replies"] });
+      const previousReplies = queryClient.getQueriesData<PostRepliesResponse>({
+        queryKey: ["posts", postId, "replies"],
+      });
+      const nextSaved = !saved;
+
+      queryClient.setQueriesData<PostRepliesResponse>(
+        { queryKey: ["posts", postId, "replies"] },
+        (old) => {
+          if (!old) return old;
+
+          return {
+            ...old,
+            data: old.data.map((reply) => updateReplySaved(reply, replyId, nextSaved)),
+          };
+        },
+      );
+
+      return { previousReplies };
+    },
+    onError: (_error, _variables, context) => {
+      context?.previousReplies?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
+    },
+    onSuccess: (data: PostSaveResponse) => {
+      if (data.target_type !== "reply" || !data.reply_id) return;
+      const replyId = data.reply_id;
+
+      queryClient.setQueriesData<PostRepliesResponse>(
+        { queryKey: ["posts", postId, "replies"] },
+        (old) => {
+          if (!old) return old;
+
+          return {
+            ...old,
+            data: old.data.map((reply) => updateReplySaved(reply, replyId, data.saved)),
+          };
+        },
+      );
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts", postId, "replies"] });
+      queryClient.invalidateQueries({ queryKey: keys.posts.saved() });
       queryClient.invalidateQueries({ queryKey: keys.community.root() });
     },
   });

@@ -10,6 +10,17 @@ const idParams = [
   },
 ] satisfies IValidatorRequest["params"];
 
+const replyIdParams = [
+  ...idParams,
+  {
+    key: "replyId",
+    coerse: "string",
+    method: "string",
+    min: 1,
+    max: 120,
+  },
+] satisfies IValidatorRequest["params"];
+
 const paginationQuery = [
   {
     key: "limit",
@@ -94,11 +105,16 @@ export const voteSchema: IValidatorRequest = {
   ],
 };
 
+export const replySaveSchema: IValidatorRequest = {
+  params: replyIdParams,
+};
+
 export const showValidator = validator(showSchema);
 export const repliesValidator = validator(repliesSchema);
 export const listValidator = validator(listSchema);
 export const createReplyValidator = validator(createReplySchema);
 export const voteValidator = validator(voteSchema);
 export const saveValidator = validator(showSchema);
+export const replySaveValidator = validator(replySaveSchema);
 
 export default showValidator;

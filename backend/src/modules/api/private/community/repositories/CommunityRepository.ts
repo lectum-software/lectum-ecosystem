@@ -312,6 +312,28 @@ const getSavedPostIds = async (userId: string | undefined, postIds: string[]) =>
   return new Set(saves.map((save) => save.post_id));
 };
 
+const getSavedReplyIds = async (userId: string | undefined, replyIds: string[]) => {
+  if (!userId || replyIds.length === 0) return new Set<string>();
+
+  const saves = await prisma.post_reply_save.findMany({
+    where: {
+      user_id: userId,
+      deleted: false,
+      reply_id: {
+        in: replyIds,
+      },
+    },
+    select: {
+      reply_id: true,
+    },
+  });
+
+  return new Set(saves.map((save) => save.reply_id));
+};
+
+const highlightedReplyIds = (items: PostResult[]) =>
+  items.flatMap((item) => (item.replies[0] ? [item.replies[0].id] : []));
+
 const getFollowedCommunityIds = async (userId: string | undefined, communityIds: string[]) => {
   if (!userId || communityIds.length === 0) return new Set<string>();
 
@@ -523,6 +545,7 @@ const toAuthorResponse = (
 
 const toHighlightedProfessionalReply = (
   reply?: ProfessionalReplyResult,
+  savedReplyIds?: Set<string>,
 ): CommunityPostDTO["highlighted_professional_reply"] => {
   if (!reply) return null;
 
@@ -537,6 +560,7 @@ const toHighlightedProfessionalReply = (
     media_type: reply.media_type,
     upvotes_count: reply.upvotes_count,
     created_at: reply.createdAt,
+    saved: savedReplyIds?.has(reply.id) ?? false,
     author,
   };
 };
@@ -546,6 +570,7 @@ const toPostResponse = (
   currentUserVote: CurrentVote = null,
   saved = false,
   followedCommunityIds?: Set<string>,
+  savedReplyIds?: Set<string>,
 ): CommunityPostDTO => {
   const responseCommunity = {
     ...toCommunityResponse(item.community),
@@ -558,7 +583,7 @@ const toPostResponse = (
     anonymous,
     anonymous ? anonymousDisplayNameForPost(item.id) : undefined,
   );
-  const highlightedReply = toHighlightedProfessionalReply(item.replies[0]);
+  const highlightedReply = toHighlightedProfessionalReply(item.replies[0], savedReplyIds);
 
   return {
     id: item.id,
@@ -888,9 +913,11 @@ export class CommunityRepository implements ICommunityRepository {
     ]);
     const postIds = items.map((item) => item.id);
     const communityIds = [...new Set(items.map((item) => item.community.id))];
-    const [currentVotes, savedPostIds, followedCommunityIds] = await Promise.all([
+    const replyIds = highlightedReplyIds(items);
+    const [currentVotes, savedPostIds, savedReplyIds, followedCommunityIds] = await Promise.all([
       getPostCurrentVotes(data.auth?.id ?? undefined, postIds),
       getSavedPostIds(data.auth?.id ?? undefined, postIds),
+      getSavedReplyIds(data.auth?.id ?? undefined, replyIds),
       getFollowedCommunityIds(data.auth?.id ?? undefined, communityIds),
     ]);
 
@@ -902,6 +929,7 @@ export class CommunityRepository implements ICommunityRepository {
             currentVotes.get(item.id) ?? null,
             savedPostIds.has(item.id),
             followedCommunityIds,
+            savedReplyIds,
           ),
         ),
       ),
@@ -1399,9 +1427,11 @@ export class CommunityRepository implements ICommunityRepository {
       prisma.community_post.count({ where }),
     ]);
     const postIds = items.map((item) => item.id);
-    const [currentVotes, savedPostIds, followedCommunityIds] = await Promise.all([
+    const replyIds = highlightedReplyIds(items);
+    const [currentVotes, savedPostIds, savedReplyIds, followedCommunityIds] = await Promise.all([
       getPostCurrentVotes(data.auth?.id ?? undefined, postIds),
       getSavedPostIds(data.auth?.id ?? undefined, postIds),
+      getSavedReplyIds(data.auth?.id ?? undefined, replyIds),
       getFollowedCommunityIds(data.auth?.id ?? undefined, [community.id]),
     ]);
 
@@ -1416,6 +1446,7 @@ export class CommunityRepository implements ICommunityRepository {
           currentVotes.get(item.id) ?? null,
           savedPostIds.has(item.id),
           followedCommunityIds,
+          savedReplyIds,
         ),
       ),
       page: pagination.page,

@@ -130,6 +130,8 @@
     "post_vote_updated": "Voto atualizado com sucesso.",
     "post_saved": "Publica??o salva com sucesso.",
     "post_unsaved": "Publica??o removida dos salvos.",
+    "post_reply_saved": "Resposta salva com sucesso.",
+    "post_reply_unsaved": "Resposta removida dos salvos.",
     "account_email_update_success": "E-mail atualizado. Enviamos um código para confirmar o novo endereço.",
     "account_password_update_success": "Senha atualizada com sucesso. Outros dispositivos foram desconectados.",
     "google_link_intent_created": "Redirecionando para o Google.",

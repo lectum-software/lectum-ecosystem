@@ -5,8 +5,10 @@ import {
   mine as mineService,
   replies as repliesService,
   saved as savedService,
+  saveReply as saveReplyService,
   save as saveService,
   show as showService,
+  unsaveReply as unsaveReplyService,
   unsave as unsaveService,
   vote as voteService,
 } from "./services";
@@ -90,5 +92,29 @@ export const unsave = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "post_unsave", err);
+  }
+};
+
+export const saveReply = async (req: Request, res: Response) => {
+  try {
+    const resolve = await saveReplyService(
+      req as unknown as Parameters<typeof saveReplyService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_reply_save", err);
+  }
+};
+
+export const unsaveReply = async (req: Request, res: Response) => {
+  try {
+    const resolve = await unsaveReplyService(
+      req as unknown as Parameters<typeof unsaveReplyService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_reply_unsave", err);
   }
 };

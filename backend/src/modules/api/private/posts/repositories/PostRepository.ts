@@ -5,6 +5,7 @@ import type {
   IPostCreateReplyDTO,
   IPostMineDTO,
   IPostRepliesDTO,
+  IPostReplySaveDTO,
   IPostSaveDTO,
   IPostSavedDTO,
   IPostShowDTO,
@@ -337,6 +338,7 @@ const toPostResponse = (
 
 const toHighlightedProfessionalReply = (
   reply?: ProfessionalReplyResult,
+  savedReplyIds?: Set<string>,
 ): PostProfessionalReplyDTO | null => {
   if (!reply) return null;
 
@@ -351,6 +353,7 @@ const toHighlightedProfessionalReply = (
     media_type: reply.media_type,
     upvotes_count: reply.upvotes_count,
     created_at: reply.createdAt,
+    saved: savedReplyIds?.has(reply.id) ?? false,
     author,
   };
 };
@@ -359,14 +362,16 @@ const toListPostResponse = (
   item: ListPostResult,
   currentUserVote: CurrentVote,
   saved: boolean,
+  savedReplyIds?: Set<string>,
 ): PostListPostDTO => ({
   ...toPostResponse(item, currentUserVote, saved),
-  highlighted_professional_reply: toHighlightedProfessionalReply(item.replies[0]),
+  highlighted_professional_reply: toHighlightedProfessionalReply(item.replies[0], savedReplyIds),
 });
 
 const toReplyResponse = (
   item: ReplyResult | ReplyBaseResult,
   currentVotes: Map<string, CurrentVote>,
+  savedReplyIds?: Set<string>,
 ): PostReplyDTO => {
   const nestedReplies = "replies" in item ? item.replies : [];
 
@@ -380,8 +385,9 @@ const toReplyResponse = (
     created_at: item.createdAt,
     parent_reply_id: item.parent_reply_id,
     current_user_vote: currentVotes.get(item.id) ?? null,
+    saved: savedReplyIds?.has(item.id) ?? false,
     author: toAuthorResponse(item.author, item.upvotes_count),
-    replies: nestedReplies.map((reply) => toReplyResponse(reply, currentVotes)),
+    replies: nestedReplies.map((reply) => toReplyResponse(reply, currentVotes, savedReplyIds)),
   };
 };
 
@@ -413,6 +419,27 @@ const findPublishedPost = (id: string) => {
       upvotes_count: true,
       downvotes_count: true,
       saves_count: true,
+    },
+  });
+};
+
+const findPublishedReply = (postId: string, replyId: string) => {
+  return prisma.post_reply.findFirst({
+    where: {
+      id: replyId,
+      post_id: postId,
+      deleted: false,
+      post: {
+        deleted: false,
+        status: "publicado",
+        community: {
+          deleted: false,
+        },
+      },
+    },
+    select: {
+      id: true,
+      post_id: true,
     },
   });
 };
@@ -557,7 +584,12 @@ export class PostRepository implements IPostRepository {
 
   async saved(data: IPostSavedDTO): Promise<PostListResponse> {
     const pagination = normalizePagination(data.q);
-    const where: Prisma.post_saveWhereInput = {
+    const type = normalizeListType(data.q.type);
+    const shouldLoadPosts = type === "all" || type === "posts";
+    const shouldLoadReplies = type === "all" || type === "replies";
+    const take = type === "all" ? pagination.skip + pagination.limit : pagination.limit;
+    const skip = type === "all" ? 0 : pagination.skip;
+    const postWhere: Prisma.post_saveWhereInput = {
       user_id: data.auth.id!,
       deleted: false,
       post: {
@@ -568,23 +600,70 @@ export class PostRepository implements IPostRepository {
         },
       },
     };
-    const [items, count] = await Promise.all([
-      prisma.post_save.findMany({
-        where,
-        take: pagination.limit,
-        skip: pagination.skip,
-        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-        select: {
-          id: true,
-          createdAt: true,
-          post: {
-            select: listPostSelect,
+    const replyWhere: Prisma.post_reply_saveWhereInput = {
+      user_id: data.auth.id!,
+      deleted: false,
+      reply: {
+        deleted: false,
+        post: {
+          deleted: false,
+          status: "publicado",
+          community: {
+            deleted: false,
           },
         },
-      }),
-      prisma.post_save.count({ where }),
+      },
+    };
+    const [postSaves, postCount, replySaves, replyCount] = await Promise.all([
+      shouldLoadPosts
+        ? prisma.post_save.findMany({
+            where: postWhere,
+            take,
+            skip,
+            orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+            select: {
+              id: true,
+              createdAt: true,
+              post: {
+                select: listPostSelect,
+              },
+            },
+          })
+        : Promise.resolve([]),
+      shouldLoadPosts ? prisma.post_save.count({ where: postWhere }) : Promise.resolve(0),
+      shouldLoadReplies
+        ? prisma.post_reply_save.findMany({
+            where: replyWhere,
+            take,
+            skip,
+            orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+            select: {
+              id: true,
+              createdAt: true,
+              reply: {
+                select: {
+                  id: true,
+                  title: true,
+                  content: true,
+                  upvotes_count: true,
+                  createdAt: true,
+                  parent_reply_id: true,
+                  parent_reply: {
+                    select: {
+                      content: true,
+                    },
+                  },
+                  post: {
+                    select: listPostSelect,
+                  },
+                },
+              },
+            },
+          })
+        : Promise.resolve([]),
+      shouldLoadReplies ? prisma.post_reply_save.count({ where: replyWhere }) : Promise.resolve(0),
     ]);
-    const responseItems = items.map<PostListItemDTO>((item) => ({
+    const postItems = postSaves.map<PostListItemDTO>((item) => ({
       id: item.id,
       type: "post",
       created_at: item.post.createdAt,
@@ -594,6 +673,38 @@ export class PostRepository implements IPostRepository {
       post: toListPostResponse(item.post, null, true),
       reply: null,
     }));
+    const replyItems = replySaves.map<PostListItemDTO>((item) => ({
+      id: item.id,
+      type: "reply",
+      created_at: item.reply.createdAt,
+      saved_at: item.createdAt,
+      status: "publicado",
+      saved: true,
+      post: toListPostResponse(item.reply.post, null, false),
+      reply: {
+        id: item.reply.id,
+        title: item.reply.title,
+        content: item.reply.content,
+        upvotes_count: item.reply.upvotes_count,
+        created_at: item.reply.createdAt,
+        parent_reply_id: item.reply.parent_reply_id,
+        parent_content: item.reply.parent_reply?.content ?? null,
+      },
+    }));
+    const responseItems =
+      type === "all"
+        ? [...postItems, ...replyItems]
+            .sort((a, b) => {
+              const savedAtDiff =
+                new Date(b.saved_at ?? b.created_at).getTime() -
+                new Date(a.saved_at ?? a.created_at).getTime();
+              if (savedAtDiff !== 0) return savedAtDiff;
+
+              return b.id.localeCompare(a.id);
+            })
+            .slice(pagination.skip, pagination.skip + pagination.limit)
+        : [...postItems, ...replyItems];
+    const count = postCount + replyCount;
 
     return toPaginatedListResponse(responseItems, pagination.page, pagination.limit, count);
   }
@@ -683,23 +794,38 @@ export class PostRepository implements IPostRepository {
     ]);
 
     const replyIds = collectReplyIds(items);
-    const votes =
+    const [votes, saves] =
       replyIds.length > 0
-        ? await prisma.post_vote.findMany({
-            where: {
-              user_id: data.auth.id!,
-              reply_id: {
-                in: replyIds,
+        ? await Promise.all([
+            prisma.post_vote.findMany({
+              where: {
+                user_id: data.auth.id!,
+                reply_id: {
+                  in: replyIds,
+                },
+                deleted: false,
               },
-              deleted: false,
-            },
-            select: {
-              reply_id: true,
-              value: true,
-            },
-          })
-        : [];
+              select: {
+                reply_id: true,
+                value: true,
+              },
+            }),
+            prisma.post_reply_save.findMany({
+              where: {
+                user_id: data.auth.id!,
+                reply_id: {
+                  in: replyIds,
+                },
+                deleted: false,
+              },
+              select: {
+                reply_id: true,
+              },
+            }),
+          ])
+        : [[], []];
     const voteMap = new Map<string, CurrentVote>();
+    const savedReplyIds = new Set(saves.map((save) => save.reply_id));
 
     for (const vote of votes) {
       if (vote.reply_id) {
@@ -708,7 +834,7 @@ export class PostRepository implements IPostRepository {
     }
 
     return {
-      data: items.map((item) => toReplyResponse(item, voteMap)),
+      data: items.map((item) => toReplyResponse(item, voteMap, savedReplyIds)),
       page: pagination.page,
       pages: Math.ceil(count / pagination.limit),
       count,
@@ -960,7 +1086,9 @@ export class PostRepository implements IPostRepository {
         : { saves_count: post.saves_count };
 
       return {
+        target_type: "post" as const,
         post_id: post.id,
+        reply_id: null,
         saved: true,
         saves_count: updatedPost.saves_count,
       };
@@ -1020,9 +1148,110 @@ export class PostRepository implements IPostRepository {
         : { saves_count: post.saves_count };
 
       return {
+        target_type: "post" as const,
         post_id: post.id,
+        reply_id: null,
         saved: false,
         saves_count: updatedPost.saves_count,
+      };
+    });
+
+    return {
+      kind: "ok",
+      data: response,
+    };
+  }
+
+  async saveReply(data: IPostReplySaveDTO): Promise<PostMutationResult<PostSaveResponse>> {
+    const reply = await findPublishedReply(data.p.id, data.p.replyId);
+    if (!reply) return { kind: "not_found" };
+
+    const response = await prisma.$transaction(async (transaction) => {
+      const existing = await transaction.post_reply_save.findUnique({
+        where: {
+          user_id_reply_id: {
+            user_id: data.auth.id!,
+            reply_id: reply.id,
+          },
+        },
+        select: {
+          id: true,
+          deleted: true,
+        },
+      });
+
+      if (existing) {
+        if (existing.deleted) {
+          await transaction.post_reply_save.update({
+            where: {
+              id: existing.id,
+            },
+            data: {
+              deleted: false,
+              deletedAt: null,
+            },
+          });
+        }
+      } else {
+        await transaction.post_reply_save.create({
+          data: {
+            user_id: data.auth.id!,
+            reply_id: reply.id,
+          },
+        });
+      }
+
+      return {
+        target_type: "reply" as const,
+        post_id: reply.post_id,
+        reply_id: reply.id,
+        saved: true,
+        saves_count: null,
+      };
+    });
+
+    return {
+      kind: "ok",
+      data: response,
+    };
+  }
+
+  async unsaveReply(data: IPostReplySaveDTO): Promise<PostMutationResult<PostSaveResponse>> {
+    const reply = await findPublishedReply(data.p.id, data.p.replyId);
+    if (!reply) return { kind: "not_found" };
+
+    const response = await prisma.$transaction(async (transaction) => {
+      const existing = await transaction.post_reply_save.findUnique({
+        where: {
+          user_id_reply_id: {
+            user_id: data.auth.id!,
+            reply_id: reply.id,
+          },
+        },
+        select: {
+          id: true,
+          deleted: true,
+        },
+      });
+
+      if (existing && !existing.deleted) {
+        await transaction.post_reply_save.update({
+          where: {
+            id: existing.id,
+          },
+          data: {
+            deleted: true,
+            deletedAt: new Date(),
+          },
+        });
+      }
+
+      return {
+        target_type: "reply" as const,
+        post_id: reply.post_id,
+        reply_id: reply.id,
+        saved: false,
+        saves_count: null,
       };
     });
 

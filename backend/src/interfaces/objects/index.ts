@@ -331,6 +331,51 @@ export interface community_post {
   author?: user | null;
 }
 
+export interface post_reply {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  post_id?: string | null;
+  author_id?: string | null;
+  parent_reply_id?: string | null;
+  title?: string | null;
+  content?: string | null;
+  media_url?: string | null;
+  media_type?: string | null;
+  upvotes_count?: number | null;
+  post?: community_post | null;
+  author?: user | null;
+  parent_reply?: post_reply | null;
+  replies?: post_reply[] | null;
+  saves?: post_reply_save[] | null;
+}
+
+export interface post_save {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  user_id?: string | null;
+  post_id?: string | null;
+  user?: user | null;
+  post?: community_post | null;
+}
+
+export interface post_reply_save {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  user_id?: string | null;
+  reply_id?: string | null;
+  user?: user | null;
+  reply?: post_reply | null;
+}
+
 export interface notification_subscription {
   id?: string | null;
   deleted?: boolean | null;
@@ -407,6 +452,9 @@ export interface user {
   received_reviews?: professional_review[] | null;
   community_suggestions?: community_suggestion[] | null;
   community_posts?: community_post[] | null;
+  post_replies?: post_reply[] | null;
+  post_saves?: post_save[] | null;
+  post_reply_saves?: post_reply_save[] | null;
   notification_subscriptions?: notification_subscription[] | null;
   notifications?: notification[] | null;
   notification_preference?: notification_preference | null;

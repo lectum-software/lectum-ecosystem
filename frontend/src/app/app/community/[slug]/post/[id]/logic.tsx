@@ -22,12 +22,13 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { type RefObject, useMemo, useRef, useState } from "react";
+import { type MouseEvent, type RefObject, useMemo, useRef, useState } from "react";
 import {
   useCreatePostReply,
   usePostDetail,
   usePostReplies,
   useSavePost,
+  useSaveReply,
   useVotePost,
 } from "@/api/callers/posts";
 import type { PostDetail, PostReply } from "@/api/generator/types/posts";
@@ -420,15 +421,19 @@ const ReplyVoteBar = ({
   disabled,
   onReply,
   onShare,
+  onToggleSave,
   onVote,
   reply,
+  savePending,
 }: {
   currentVote: 1 | -1 | null;
   disabled?: boolean;
   onReply: () => void;
   onShare: () => void;
+  onToggleSave: (event: MouseEvent<HTMLButtonElement>) => void;
   onVote: (value: 1 | -1) => void;
   reply: PostReply;
+  savePending?: boolean;
 }) => (
   <div className="mt-3 flex items-center justify-between gap-2">
     <div className="flex items-center gap-1">
@@ -462,21 +467,23 @@ const ReplyVoteBar = ({
       </button>
     </div>
     <div className="flex items-center gap-1">
-      <button
-        aria-label="Salvar resposta"
-        className="grid h-8 w-8 place-items-center rounded-full text-[#64748B] transition hover:bg-primary-soft hover:text-primary"
-        type="button"
-      >
-        <Bookmark className="h-3.5 w-3.5" aria-hidden="true" />
-      </button>
-      <button
-        aria-label="Compartilhar resposta"
-        className="grid h-8 w-8 place-items-center rounded-full text-[#64748B] transition hover:bg-primary-soft hover:text-primary"
+      <PostActionButton
+        active={reply.saved}
+        className="h-8 w-8 px-0"
+        disabled={savePending}
+        icon={Bookmark}
+        iconClassName={reply.saved ? "fill-current" : undefined}
+        label={reply.saved ? "Remover resposta dos salvos" : "Salvar resposta"}
+        onClick={onToggleSave}
+        size="sm"
+      />
+      <PostActionButton
+        className="h-8 w-8 px-0"
+        icon={Share2}
+        label="Compartilhar resposta"
         onClick={onShare}
-        type="button"
-      >
-        <Share2 className="h-3.5 w-3.5" aria-hidden="true" />
-      </button>
+        size="sm"
+      />
     </div>
   </div>
 );
@@ -486,6 +493,7 @@ const ReplyCard = ({
   onReply,
   onShare,
   onVote,
+  postId,
   reply,
   votePending,
 }: {
@@ -493,10 +501,12 @@ const ReplyCard = ({
   onReply: (reply: PostReply) => void;
   onShare: (reply: PostReply) => void;
   onVote: (replyId: string, value: 1 | -1) => void;
+  postId: string;
   reply: PostReply;
   votePending?: boolean;
 }) => {
   const isProfessional = reply.author.role === "psicologo";
+  const saveReplyMutation = useSaveReply(postId, reply.id);
 
   return (
     <article
@@ -514,7 +524,16 @@ const ReplyCard = ({
           <div className="grid min-w-0 gap-1">
             <MentorBadge badge={reply.author.featured_badge} />
             <div className="flex min-w-0 items-center gap-1.5">
-              <h3 className="truncate text-sm font-black">{reply.author.name}</h3>
+              {isProfessional ? (
+                <Link
+                  className="truncate text-sm font-black underline-offset-4 transition hover:text-primary hover:underline"
+                  href={`/app/psychologist/${reply.author.id}`}
+                >
+                  {reply.author.name}
+                </Link>
+              ) : (
+                <h3 className="truncate text-sm font-black">{reply.author.name}</h3>
+              )}
               {reply.author.verified ? (
                 <BadgeCheck
                   className="h-4 w-4 shrink-0 fill-[#2da7ff] text-white"
@@ -563,8 +582,10 @@ const ReplyCard = ({
         disabled={votePending}
         onReply={() => onReply(reply)}
         onShare={() => onShare(reply)}
+        onToggleSave={() => saveReplyMutation.mutate(reply.saved)}
         onVote={(value) => onVote(reply.id, value)}
         reply={reply}
+        savePending={saveReplyMutation.isPending}
       />
 
       {reply.replies.length > 0 ? (
@@ -576,6 +597,7 @@ const ReplyCard = ({
               onReply={onReply}
               onShare={onShare}
               onVote={onVote}
+              postId={postId}
               reply={child}
               votePending={votePending}
             />
@@ -717,6 +739,7 @@ const RepliesList = ({
   onReply,
   onShare,
   onVote,
+  postId,
   replies,
   votePending,
 }: {
@@ -725,6 +748,7 @@ const RepliesList = ({
   onReply: (reply: PostReply) => void;
   onShare: (reply: PostReply) => void;
   onVote: (replyId: string, value: 1 | -1) => void;
+  postId: string;
   replies: PostReply[];
   votePending?: boolean;
 }) => (
@@ -762,6 +786,7 @@ const RepliesList = ({
             onReply={onReply}
             onShare={onShare}
             onVote={onVote}
+            postId={postId}
             reply={reply}
             votePending={votePending}
           />
@@ -922,6 +947,7 @@ export const PostDetailLogic = () => {
                 onReply={handleReplyTarget}
                 onShare={shareReply}
                 onVote={(replyId, value) => voteMutation.mutate({ replyId, value })}
+                postId={post.id}
                 replies={replies}
                 votePending={voteMutation.isPending}
               />

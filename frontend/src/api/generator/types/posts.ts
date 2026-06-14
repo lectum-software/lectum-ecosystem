@@ -31,6 +31,7 @@ export type PostReply = {
   created_at: string;
   parent_reply_id: string | null;
   current_user_vote: 1 | -1 | null;
+  saved: boolean;
   author: CommunityAuthor;
   replies: PostReply[];
 };
@@ -51,6 +52,7 @@ export type PostProfessionalReply = {
   media_type: string | null;
   upvotes_count: number;
   created_at: string;
+  saved: boolean;
   author: CommunityAuthor;
 };
 
@@ -125,7 +127,9 @@ export type PostVoteResponse = {
 };
 
 export type PostSaveResponse = {
+  target_type: "post" | "reply";
   post_id: string;
+  reply_id: string | null;
   saved: boolean;
-  saves_count: number;
+  saves_count: number | null;
 };

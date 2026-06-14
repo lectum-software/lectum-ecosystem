@@ -2,6 +2,7 @@
   IPostCreateReplyDTO,
   IPostMineDTO,
   IPostRepliesDTO,
+  IPostReplySaveDTO,
   IPostSaveDTO,
   IPostSavedDTO,
   IPostShowDTO,
@@ -24,4 +25,6 @@ export interface IPostRepository {
   vote(data: IPostVoteDTO): Promise<PostMutationResult<PostVoteResponse>>;
   save(data: IPostSaveDTO): Promise<PostMutationResult<PostSaveResponse>>;
   unsave(data: IPostSaveDTO): Promise<PostMutationResult<PostSaveResponse>>;
+  saveReply(data: IPostReplySaveDTO): Promise<PostMutationResult<PostSaveResponse>>;
+  unsaveReply(data: IPostReplySaveDTO): Promise<PostMutationResult<PostSaveResponse>>;
 }

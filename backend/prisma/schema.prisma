@@ -53,6 +53,7 @@ model user {
   post_replies               post_reply[]                @relation("post_reply_author")
   post_votes                 post_vote[]                 @relation("post_vote_user")
   post_saves                 post_save[]                 @relation("post_save_user")
+  post_reply_saves           post_reply_save[]           @relation("post_reply_save_user")
   notification_subscriptions notification_subscription[] @relation("notification_subscription_user")
   logs                       log__user[]                 @relation("log__user_user")
   notifications              notification[]              @relation("notifications")
@@ -541,6 +542,7 @@ model post_reply {
   parent_reply    post_reply?    @relation("post_reply_thread", fields: [parent_reply_id], references: [id], onDelete: Cascade)
   replies         post_reply[]   @relation("post_reply_thread")
   votes           post_vote[]    @relation("post_vote_reply")
+  saves           post_reply_save[] @relation("post_reply_save_reply")
 
   @@index([post_id, parent_reply_id, createdAt])
   @@index([author_id])
@@ -583,6 +585,23 @@ model post_save {
   @@index([user_id, createdAt])
   @@index([post_id])
   @@map("post_saves")
+}
+
+model post_reply_save {
+  id        String     @id @default(cuid())
+  deleted   Boolean    @default(false)
+  deletedAt DateTime?  @map("deleted_at")
+  updatedAt DateTime   @default(now()) @updatedAt @map("updated_at")
+  createdAt DateTime   @default(now()) @map("created_at")
+  user_id   String
+  reply_id  String
+  user      user       @relation("post_reply_save_user", fields: [user_id], references: [id], onDelete: Cascade)
+  reply     post_reply @relation("post_reply_save_reply", fields: [reply_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, reply_id])
+  @@index([user_id, createdAt])
+  @@index([reply_id])
+  @@map("post_reply_saves")
 }
 
 model notification_subscription {

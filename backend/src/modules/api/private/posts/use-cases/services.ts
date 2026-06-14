@@ -3,6 +3,7 @@ import type {
   IPostCreateReplyDTO,
   IPostMineDTO,
   IPostRepliesDTO,
+  IPostReplySaveDTO,
   IPostSaveDTO,
   IPostSavedDTO,
   IPostShowDTO,
@@ -174,6 +175,26 @@ export const unsave = async (data: IPostSaveDTO) => {
   const res = await repository.unsave(data);
 
   return resolveMutationResult(res, 200, "post_unsaved");
+};
+
+export const saveReply = async (data: IPostReplySaveDTO) => {
+  const unauthorized = ensureCommunityActor(data);
+  if (unauthorized) return unauthorized;
+
+  const repository = new PostRepository();
+  const res = await repository.saveReply(data);
+
+  return resolveMutationResult(res, 200, "post_reply_saved");
+};
+
+export const unsaveReply = async (data: IPostReplySaveDTO) => {
+  const unauthorized = ensureCommunityActor(data);
+  if (unauthorized) return unauthorized;
+
+  const repository = new PostRepository();
+  const res = await repository.unsaveReply(data);
+
+  return resolveMutationResult(res, 200, "post_reply_unsaved");
 };
 
 export default show;

@@ -4,6 +4,10 @@ export type PostParams = {
   id: string;
 };
 
+export type PostReplyParams = PostParams & {
+  replyId: string;
+};
+
 export type PostRepliesQuery = {
   page?: number;
   limit?: number;
@@ -78,6 +82,7 @@ export type PostReplyDTO = {
   created_at: Date;
   parent_reply_id: string | null;
   current_user_vote: 1 | -1 | null;
+  saved: boolean;
   author: PostAuthorDTO;
   replies: PostReplyDTO[];
 };
@@ -90,6 +95,7 @@ export type PostProfessionalReplyDTO = {
   media_type: string | null;
   upvotes_count: number;
   created_at: Date;
+  saved: boolean;
   author: PostAuthorDTO;
 };
 
@@ -149,9 +155,11 @@ export type PostVoteResponse = {
 };
 
 export type PostSaveResponse = {
+  target_type: "post" | "reply";
   post_id: string;
+  reply_id: string | null;
   saved: boolean;
-  saves_count: number;
+  saves_count: number | null;
 };
 
 export type PostMutationResult<T> =
@@ -195,5 +203,10 @@ export type IPostVoteDTO = {
 
 export type IPostSaveDTO = {
   p: PostParams;
+  auth: user;
+};
+
+export type IPostReplySaveDTO = {
+  p: PostReplyParams;
   auth: user;
 };
