@@ -245,3 +245,22 @@ Esta task deve ser concluÃ­da em um commit prÃ³prio. Se houver bloqueio externo,
 - O backend salva o número normalizado em `psychologist_profile.whatsapp` e mantém `whatsapp_verified_at=null`.
 - O contato do paciente continua gerando o link `wa.me` internamente apenas depois do consentimento e da persistência de `contact_request`.
 - O campo `whatsapp_verified_at` permanece no banco por compatibilidade histórica, mas não bloqueia mais `whatsapp_available` nem a criação do link de contato.
+
+## Execucao complementar: modal global de redirecionamento WhatsApp (2026-06-14)
+
+- Pedido do usuario: corrigir a modal de redirecionamento para WhatsApp no desktop e no mobile, especialmente em `/app/psychologists`, para cobrir a tela inteira, ficar acima da sidebar/feed/botoes e centralizar o card na viewport.
+- O componente compartilhado `PsychologistWhatsAppRedirectButton` passou a renderizar `PsychologistWhatsAppRedirectModal` via portal em `document.body`, com camada `position: fixed`, `inset: 0`, `z-index` global alto, overlay translucido e `backdrop-blur`.
+- O card da transicao agora e centralizado por flex na viewport inteira, com largura maxima responsiva, sem depender do container do feed, da coluna do card ou do layout da comunidade.
+- Enquanto a modal esta aberta, `body` e `documentElement` ficam com `overflow: hidden`, e a rota `/app/psychologists` passa a ignorar eventos de wheel/touch vindos de elementos com `data-psychologists-scroll-lock`, evitando que o feed interno role por tras da modal.
+- O fluxo de registro de clique e redirecionamento para WhatsApp nao foi alterado; apenas a camada visual/portal da transicao foi corrigida.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, endpoints ou contratos de API.
+- ADR atualizado: `adrs/0078-transicao-whatsapp-psicologo.md`.
+
+Validacoes do complemento:
+
+- `pnpm --dir frontend biome:fix`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- HTTP local em `/app/psychologists` e `/app/community/feed` respondeu `200`.

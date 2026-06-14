@@ -88,6 +88,13 @@ const DEFAULT_NAV_BAR_HEIGHT = 72;
 const PSYCHOLOGISTS_BACKGROUND_VIDEO_SELECTOR = "video[data-psychologists-background='true']";
 const SWIPE_HINT_STORAGE_KEY = "lectum:psychologists:has-seen-swipe-hint";
 const VIDEO_SINGLE_TAP_DELAY_MS = 260;
+
+const isPsychologistsScrollLockTarget = (target: EventTarget | null) => {
+  const element =
+    target instanceof Element ? target : target instanceof Node ? target.parentElement : null;
+
+  return Boolean(element?.closest("[data-psychologists-scroll-lock='true']"));
+};
 const VIDEO_LONG_PRESS_DELAY_MS = 520;
 const VIDEO_PROGRESS_VISIBLE_NAV_BAR_HEIGHT = 64;
 const VIDEO_IMMERSIVE_CONTROLS_BOTTOM_GAP = 14;
@@ -1829,6 +1836,7 @@ export const PsychologistsLogic = () => {
 
   const handleDesktopPageWheelCapture = useCallback(
     (event: ReactWheelEvent<HTMLDivElement>) => {
+      if (isPsychologistsScrollLockTarget(event.target)) return;
       if (!shouldForwardDesktopFeedScroll()) return;
 
       const container = feedContainerRef.current;
@@ -1847,6 +1855,7 @@ export const PsychologistsLogic = () => {
 
   const handleDesktopPageTouchStart = useCallback(
     (event: ReactTouchEvent<HTMLDivElement>) => {
+      if (isPsychologistsScrollLockTarget(event.target)) return;
       if (!shouldForwardDesktopFeedScroll()) return;
 
       desktopTouchStartYRef.current = event.touches[0]?.clientY ?? null;
@@ -1856,6 +1865,7 @@ export const PsychologistsLogic = () => {
 
   const handleDesktopPageTouchMove = useCallback(
     (event: ReactTouchEvent<HTMLDivElement>) => {
+      if (isPsychologistsScrollLockTarget(event.target)) return;
       if (!shouldForwardDesktopFeedScroll()) return;
 
       const touch = event.touches[0];

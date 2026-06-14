@@ -19,6 +19,9 @@ pontos, não passava pelo registro persistido de intenção/clique de contato.
 - Expor `crp` nos autores psicólogos de comunidade/posts para a transição não depender de mock.
 - Reutilizar a mesma modal também no fluxo dedicado `/app/psychologist/:id/contact`, mantendo o
   registro completo de contato antes do redirecionamento e removendo links diretos de fallback.
+- Renderizar a transição de redirecionamento via portal em `document.body`, com camada `fixed`
+  global, para que a modal cubra sidebar, feed, botões flutuantes e navegação em qualquer rota que
+  use o CTA.
 
 ## Consequências
 
@@ -27,6 +30,8 @@ pontos, não passava pelo registro persistido de intenção/clique de contato.
 - Métricas de contato passam a capturar CTAs diretos além do fluxo com formulário.
 - Não houve alteração de schema/migration; a persistência usa `contact_request` existente.
 - O fallback manual continua disponível se o navegador não redirecionar automaticamente.
+- A camada visual da transição deixa de depender do container em que o CTA foi acionado; isso evita
+  deslocamento lateral em `/app/psychologists` e mantém o mesmo comportamento em comunidade/feed.
 
 ## Validações
 
