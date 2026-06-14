@@ -4341,7 +4341,7 @@ export const PsychologistsLogic = () => {
                   <button
                     aria-label="Psicólogo anterior"
                     className={cn(
-                      "grid h-14 w-14 place-items-center rounded-full bg-white text-[#0f172a] shadow-[0_10px_28px_rgba(15,23,42,0.12)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95",
+                      "grid h-12 w-12 place-items-center rounded-2xl bg-transparent text-foreground/80 transition-[background,color,opacity,transform] duration-200 ease-out hover:scale-105 hover:bg-surface-muted/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 active:scale-95",
                       !canNavigateToPreviousPsychologist || isDesktopActionRailHidden
                         ? "cursor-not-allowed opacity-35 hover:scale-100"
                         : null,
@@ -4350,13 +4350,13 @@ export const PsychologistsLogic = () => {
                     onClick={navigateToPreviousPsychologist}
                     type="button"
                   >
-                    <ArrowUp className="h-6 w-6" aria-hidden="true" strokeWidth={2.4} />
+                    <ArrowUp className="h-7 w-7" aria-hidden="true" strokeWidth={2.3} />
                   </button>
 
                   <button
                     aria-label="Próximo psicólogo"
                     className={cn(
-                      "grid h-14 w-14 place-items-center rounded-full bg-white text-[#0f172a] shadow-[0_10px_28px_rgba(15,23,42,0.12)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95",
+                      "grid h-12 w-12 place-items-center rounded-2xl bg-transparent text-foreground/80 transition-[background,color,opacity,transform] duration-200 ease-out hover:scale-105 hover:bg-surface-muted/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 active:scale-95",
                       !canNavigateToNextPsychologist || isDesktopActionRailHidden
                         ? "cursor-not-allowed opacity-35 hover:scale-100"
                         : null,
@@ -4365,7 +4365,7 @@ export const PsychologistsLogic = () => {
                     onClick={navigateToNextPsychologist}
                     type="button"
                   >
-                    <ArrowDown className="h-6 w-6" aria-hidden="true" strokeWidth={2.4} />
+                    <ArrowDown className="h-7 w-7" aria-hidden="true" strokeWidth={2.3} />
                   </button>
                 </div>
               ) : null}

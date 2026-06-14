@@ -1265,3 +1265,20 @@ Validacoes do ajuste:
   - `pnpm check`
   - `git diff --check`
   - HTTP local em `/app/psychologists` respondeu `200`.
+
+## Execucao complementar: setas discretas e alinhamento do handle da sidebar (2026-06-14)
+
+- Pedido do usuario: ajustar somente desktop em `/app/psychologists`, removendo o fundo branco dos botoes de subir/descer videos e centralizando verticalmente a seta de expandir/recolher menu em relacao a marca Lectum.
+- As setas desktop de navegacao anterior/proximo mantiveram area clicavel e estados acessiveis, mas perderam fundo branco persistente, sombra e forma circular; agora aparecem como icones discretos com hover suave.
+- O handle desktop da sidebar permaneceu preso a linha divisoria, mas o offset vertical foi ajustado para alinhar seu centro ao centro visual do conjunto avatar + texto `Lectum`, sem alterar logo/avatar/texto ou quebrar a marca.
+- O mobile, a UI interna do card, o scroll-snap, os dados, contratos de API, backend, Prisma, migrations e packages nao foram alterados.
+- ADRs atualizados: `adrs/0080-ajuste-desktop-feed-shorts-psicologos.md` e `adrs/0079-controle-sidebar-desktop-moderno.md`.
+
+Validacoes do complemento:
+
+- `pnpm --dir frontend biome:fix`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- HTTP local em `/app/psychologists` respondeu `200`.

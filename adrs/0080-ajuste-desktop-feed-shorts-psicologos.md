@@ -12,6 +12,8 @@ O pedido foi corrigir somente desktop, preservar mobile, nao alterar a UI intern
 
 Em ajuste complementar de 2026-06-14, o produto identificou que ainda havia respiro vertical superior excessivo entre o topo da area util e o inicio do card de video no desktop.
 
+Em novo refinamento visual no mesmo dia, o produto pediu que as setas de subir/descer deixassem de parecer botoes circulares brancos flutuantes e passassem a ser apenas icones clicaveis discretos.
+
 ## Decisao
 
 A causa raiz da faixa residual na rota era o `contentClassName` de `/app/psychologists` forcar `lg:pl-[240px]`, mesmo quando a sidebar desktop estava recolhida em 88px. A rota deixou de sobrescrever esse padding e voltou a respeitar o padding dinamico do `PrivateTemplate`.
@@ -24,6 +26,7 @@ No feed desktop:
 - as variaveis de layout aumentaram levemente o card 9:16 e reduziram o intervalo ate a previa do proximo card;
 - os botoes de navegacao anterior/proximo passaram a usar posicionamento fixo na lateral direita da viewport, separados do card, no padrao de Shorts.
 - o offset superior do card desktop foi reduzido por `--psychologists-desktop-card-top`, de `24px` para `10px`, sem alterar altura/largura do card, botoes laterais ou UI interna.
+- as setas desktop de navegacao anterior/proximo deixaram de ter fundo branco persistente, sombra e formato circular; mantiveram area clicavel transparente, foco acessivel e hover sutil apenas para indicar interacao.
 
 ## Consequencias
 
@@ -31,6 +34,7 @@ No feed desktop:
 - O scroll global continua bloqueado em desktop para esta rota; a area rolavel segue sendo o container interno `.psychologists-video-feed`.
 - A coluna do feed passa a ser centralizada pela area util real a direita da sidebar, inclusive quando a sidebar esta recolhida.
 - O card ativo sobe visualmente na tela, preservando proporcao 9:16 e mantendo a previa parcial do proximo card.
+- A navegacao por setas fica menos competitiva visualmente com o card e com a coluna de acoes do psicologo.
 - Nenhum contrato de API, Prisma, migration, dado ou package foi alterado.
 
 ## Validacoes

@@ -14,6 +14,8 @@ Uma segunda revisao removeu a superficie destacada do controle no cabecalho, mas
 
 O pedido final e manter a mudanca apenas no desktop, preservar o mobile, e tratar o controle como uma acao secundaria quase invisivel, alinhada a referencias como Notion, Linear, Arc Browser e Slack.
 
+Em refinamento posterior, o handle foi mantido na divisoria, mas sua posicao vertical precisou ser corrigida para alinhar o centro do circulo ao centro visual do conjunto avatar + texto `Lectum`, sem deslocar marca ou conteudo do cabecalho.
+
 ## Decisao
 
 Remover o controle de dentro do cabecalho da marca e renderiza-lo diretamente sobre a linha divisoria direita da sidebar desktop.
@@ -29,6 +31,7 @@ A implementacao final no desktop usa:
 - superficie branca/suave com borda, sombra e opacidade discretas;
 - hover/focus apenas como feedback temporario, sem competir com a marca;
 - transicao de 200ms para opacidade, cor, sombra e rotacao.
+- alinhamento vertical do handle pelo centro visual da marca, usando offset absoluto fora do fluxo do cabecalho para nao alterar logo/avatar/texto.
 
 No estado recolhido, o botao continua preso a divisoria da sidebar, agora na largura de 88px. Como o controle nao participa mais do flex do cabecalho, ele nao empilha com o logo, nao reserva espaco na marca e nao provoca quebra visual.
 
@@ -38,6 +41,7 @@ No estado recolhido, o botao continua preso a divisoria da sidebar, agora na lar
 - O controle deixa de ter destaque persistente para funcionar como acao secundaria contextual.
 - O cabecalho nao quebra linha e nao desalinha a marca Lectum.
 - O divisor lateral ganha um handle funcional integrado, reduzindo a leitura de botao solto.
+- A seta deixa de parecer deslocada em relacao ao topo da marca e permanece alinhada tanto no estado expandido quanto recolhido.
 - Nenhum contrato de API, dado, schema, package ou fluxo de auth foi alterado.
 - Todas as rotas que usam `PrivateTemplate` com sidebar desktop recebem o refinamento visual de forma consistente.
 
