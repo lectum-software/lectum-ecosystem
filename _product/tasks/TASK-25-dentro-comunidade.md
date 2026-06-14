@@ -164,3 +164,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Frontend: `/app/community/feed` permanece como feed global; `/app/community/[slug]` agora renderiza a página de detalhe com capa derivada, nome, descrição, regras gerais Lectum, contadores reais, participação e posts reais da comunidade.
 - Nenhum mock, seed artificial ou endpoint simulado foi criado; o estado vazio informa ausência de publicações persistidas.
 - Validações executadas: `pnpm --dir backend db:migrate --name add_community_membership`, `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm check` e validação local via HTTP em `/app/community/ansiedade-em-equilibrio` e `/app/community/feed`.
+
+## Complemento 2026-06-14 — regras da comunidade em accordion
+
+- Frontend: o bloco “Regras da comunidade” em `/app/community/[slug]` foi transformado em accordion recolhido por padrão, mantendo no cabeçalho o ícone de escudo, título, subtítulo e seta de estado.
+- As regras atuais foram preservadas exatamente como conteúdo expandido; o clique em qualquer área do cabeçalho alterna expansão/retração com animação de 300ms e rotação da seta.
+- Persistência: a preferência de expansão/retração é lembrada apenas durante a sessão do usuário via `sessionStorage`, usando chave por `slug` da comunidade.
+- Escopo: alteração visual aplicada em desktop e mobile, sem mudanças de backend, schema Prisma, lógica de domínio, rotas ou packages.
+- ADR atualizado: `adrs/0066-pagina-detalhe-comunidade-participacao.md`.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `GET http://127.0.0.1:3000/app/community/ansiedade-em-equilibrio` e `GET http://127.0.0.1:3000/app/community/feed`.

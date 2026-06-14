@@ -8,6 +8,7 @@ import {
   BadgeCheck,
   Bookmark,
   CalendarDays,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Compass,
@@ -31,6 +32,7 @@ import {
   type MouseEvent as ReactMouseEvent,
   useDeferredValue,
   useEffect,
+  useId,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -73,6 +75,27 @@ import {
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 const PAGE_LIMIT = 12;
+const COMMUNITY_RULES_SESSION_KEY_PREFIX = "lectum:community-rules";
+
+const readCommunityRulesSessionState = (storageKey: string) => {
+  if (typeof window === "undefined") return false;
+
+  try {
+    return window.sessionStorage.getItem(storageKey) === "expanded";
+  } catch {
+    return false;
+  }
+};
+
+const writeCommunityRulesSessionState = (storageKey: string, isExpanded: boolean) => {
+  if (typeof window === "undefined") return;
+
+  try {
+    window.sessionStorage.setItem(storageKey, isExpanded ? "expanded" : "collapsed");
+  } catch {
+    return;
+  }
+};
 
 const COMMUNITY_POST_SORTS = [
   { icon: Flame, label: "Em destaque", value: "featured" },
@@ -1012,33 +1035,75 @@ const CommunityDetailSkeleton = () => (
   </div>
 );
 
-const CommunityRulesCard = () => (
-  <section className="grid gap-3 rounded-[22px] border border-[#E6EAF0] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.05)] dark:border-border dark:bg-surface">
-    <div className="flex items-center gap-2">
-      <span className="grid h-9 w-9 place-items-center rounded-full bg-primary-soft text-primary">
-        <ShieldCheck className="h-5 w-5" aria-hidden="true" />
-      </span>
-      <div>
-        <h2 className="text-sm font-black text-foreground">Regras da comunidade</h2>
-        <p className="text-xs font-semibold text-muted">Curadoria e moderação pela equipe Lectum</p>
+const CommunityRulesCard = ({ communitySlug }: { communitySlug: string }) => {
+  const rulesContentId = useId();
+  const storageKey = `${COMMUNITY_RULES_SESSION_KEY_PREFIX}:${communitySlug}`;
+  const [isExpanded, setIsExpanded] = useState(() => readCommunityRulesSessionState(storageKey));
+
+  const toggleRules = () => {
+    setIsExpanded((current) => {
+      const next = !current;
+
+      writeCommunityRulesSessionState(storageKey, next);
+
+      return next;
+    });
+  };
+
+  return (
+    <section className="rounded-[22px] border border-[#E6EAF0] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.05)] dark:border-border dark:bg-surface">
+      <button
+        aria-controls={rulesContentId}
+        aria-expanded={isExpanded}
+        className="flex w-full items-center gap-2 rounded-[18px] text-left outline-none transition focus-visible:ring-2 focus-visible:ring-primary/25"
+        onClick={toggleRules}
+        type="button"
+      >
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+          <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-black text-foreground">Regras da comunidade</span>
+          <span className="block text-xs font-semibold text-muted">
+            Curadoria e moderação pela equipe Lectum
+          </span>
+        </span>
+        <ChevronDown
+          className={cn(
+            "h-5 w-5 shrink-0 text-muted transition-transform duration-300 ease-out",
+            isExpanded ? "rotate-180" : "rotate-0",
+          )}
+          aria-hidden="true"
+        />
+      </button>
+
+      <div
+        className={cn(
+          "grid transition-[grid-template-rows,opacity] duration-300 ease-out",
+          isExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+        )}
+        id={rulesContentId}
+      >
+        <div className="overflow-hidden">
+          <ul className="grid gap-2 pt-3 text-sm leading-6 text-[#64748B] dark:text-muted">
+            <li className="flex gap-2">
+              <ListChecks className="mt-1 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+              Publique com respeito, acolhimento e sem exposição de terceiros.
+            </li>
+            <li className="flex gap-2">
+              <ListChecks className="mt-1 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+              Conteúdos clínicos não substituem atendimento psicológico individualizado.
+            </li>
+            <li className="flex gap-2">
+              <ListChecks className="mt-1 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+              Solicitações de novas comunidades passam por análise da plataforma.
+            </li>
+          </ul>
+        </div>
       </div>
-    </div>
-    <ul className="grid gap-2 text-sm leading-6 text-[#64748B] dark:text-muted">
-      <li className="flex gap-2">
-        <ListChecks className="mt-1 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-        Publique com respeito, acolhimento e sem exposição de terceiros.
-      </li>
-      <li className="flex gap-2">
-        <ListChecks className="mt-1 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-        Conteúdos clínicos não substituem atendimento psicológico individualizado.
-      </li>
-      <li className="flex gap-2">
-        <ListChecks className="mt-1 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-        Solicitações de novas comunidades passam por análise da plataforma.
-      </li>
-    </ul>
-  </section>
-);
+    </section>
+  );
+};
 
 const CommunityHeader = ({
   community,
@@ -1270,7 +1335,7 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
               onToggleFollow={toggleFollow}
             />
 
-            <CommunityRulesCard />
+            <CommunityRulesCard key={community.slug} communitySlug={community.slug} />
 
             {shareFeedback ? (
               <InlineAlert title="Link preparado" variant="success">
