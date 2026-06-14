@@ -1142,3 +1142,19 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: controle moderno da sidebar desktop (2026-06-14)
+
+- Pedido do usuario: substituir apenas no desktop o controle antigo de expandir/recolher menu por uma solucao mais moderna, discreta e alinhada a Notion, Linear, Slack, Arc Browser e YouTube, mantendo o mobile exatamente como esta.
+- O `PrivateTemplate` passou a usar um botao circular pequeno com icone `Sidebar`, borda discreta, glass leve, sombra sutil, hover suave e transicao de 300ms.
+- O estado recolhido ganha destaque `primary-soft` e indicador interno deslocado para comunicar que o menu pode ser expandido; o estado expandido permanece mais neutro e minimalista.
+- O topo da sidebar agora integra logo e controle dentro de um bloco visual unico com contorno/glass; em 88px recolhidos, logo e controle ficam empilhados para nao parecerem soltos.
+- A bottom navigation mobile e qualquer comportamento abaixo de `lg` nao foram alterados.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, contratos de API ou rotas.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a decisao foi guiada pelas referencias modernas fornecidas pelo usuario e pelo design system existente da Lectum.
+- ADR criado: `adrs/0079-controle-sidebar-desktop-moderno.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
