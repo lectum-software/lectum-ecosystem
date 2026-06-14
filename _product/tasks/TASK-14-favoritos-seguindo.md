@@ -195,6 +195,17 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm --dir frontend build`
   - `pnpm check`
 
+## Complemento 2026-06-14 — layout compacto da tela Favoritos
+
+- Pedido do usuário: ajustar apenas texto, organização visual e layout de `/app/favorites`, mantendo dados, lógica de favoritos e lógica dos filtros por chips.
+- Referência visual adicional consultada: imagem anexada pelo usuário `WhatsApp Image 2026-06-12 at 20.25.57.jpeg`, usada como direção para grade compacta inspirada em Reddit/Pinterest.
+- Frontend: o cabeçalho passou a usar o texto `Profissionais que você salvou para comparar e chamar no WhatsApp quando quiser.`.
+- Busca, botão de filtros e scrollbar nativa da área de busca foram removidos da tela; permaneceram apenas chips de filtro em linha única, com rolagem horizontal suave e scrollbar oculta.
+- A listagem de favoritos foi reorganizada em cards compactos em grade responsiva, com 2 colunas no mobile quando há espaço, mais colunas em breakpoints maiores, mídia no topo, nome/metadados abaixo, botão de favoritar no canto superior direito e ação discreta de WhatsApp.
+- Escopo: sem mudanças de backend, endpoints, schema Prisma, dados carregados, mutações de favorito ou filtros persistidos.
+- ADR não atualizado por se tratar de refinamento visual local sem nova decisão arquitetural ou regra de domínio.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP local 200 em `/app/favorites`.
+
 ## Execu??o completa (2026-06-06)
 
 - Refer?ncias visuais consultadas: `_product/proto/Favoritos.jpg` e `_product/proto/Seguindo.jpg`. Builder/Quick Copy n?o est? exposto como ferramenta MCP nesta sess?o; foi usado o fallback audit?vel de imagens locais conforme `PROTO-INVENTORY.md`.
