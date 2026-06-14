@@ -407,8 +407,8 @@ const ProfessionalReplyMedia = ({
 
   if (reply.media_type === "video") {
     return (
-      <div className="relative mt-3 overflow-hidden rounded-[18px] border border-border bg-black shadow-inner">
-        <video className="aspect-[9/16] w-full object-cover" controls playsInline src={mediaUrl}>
+      <div className="relative mt-3 aspect-[9/16] w-full overflow-hidden rounded-[18px] border border-border bg-black shadow-inner sm:max-w-[320px]">
+        <video className="h-full w-full object-cover" controls playsInline src={mediaUrl}>
           <track kind="captions" label="Português" srcLang="pt-BR" />
         </video>
         <span className="pointer-events-none absolute inset-0 grid place-items-center text-white/70">
