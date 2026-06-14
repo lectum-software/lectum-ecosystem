@@ -1,7 +1,8 @@
 "use client";
 
-import { Camera, Loader2, Save, Trash2, UserRound } from "lucide-react";
+import { ArrowLeft, Camera, Loader2, Save, Trash2, UserRound } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -102,6 +103,17 @@ export const ProfileEditLogic = () => {
   return (
     <PrivateTemplate>
       <section className="mx-auto grid w-full max-w-[430px] gap-4 pb-6 sm:max-w-xl lg:max-w-2xl">
+        <Button
+          asChild
+          className="h-10 w-fit justify-self-start rounded-full px-3 text-sm font-semibold text-muted hover:text-primary"
+          variant="ghost"
+        >
+          <Link href="/app/profile" aria-label="Voltar ao perfil">
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            Voltar
+          </Link>
+        </Button>
+
         {!isPatient ? (
           <InlineAlert title="Perfil de paciente" variant="warning">
             Esta tela edita apenas dados do paciente. Psicólogos devem usar a tela de perfil
