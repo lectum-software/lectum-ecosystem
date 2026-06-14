@@ -27,7 +27,14 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type MouseEvent as ReactMouseEvent,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   useCommunityDetail,
   useCommunityFeedPosts,
@@ -99,6 +106,63 @@ type VoteSnapshot = {
 type SaveSnapshot = {
   saved: boolean;
   saves: number;
+};
+
+const POST_CONTENT_PREVIEW_LENGTH = 88;
+const REPLY_CONTENT_PREVIEW_LENGTH = 68;
+
+const getInlineTextPreview = (text: string, maxLength: number) => {
+  const normalizedText = text.trimEnd();
+
+  if (normalizedText.length <= maxLength) {
+    return {
+      preview: text,
+      truncated: false,
+    };
+  }
+
+  const slicedText = normalizedText.slice(0, maxLength).trimEnd();
+  const wordBoundaryPreview = slicedText.replace(/\s+\S*$/, "").trimEnd();
+
+  return {
+    preview:
+      wordBoundaryPreview.length >= Math.floor(maxLength * 0.65) ? wordBoundaryPreview : slicedText,
+    truncated: true,
+  };
+};
+
+const InlineExpandableText = ({
+  className,
+  expanded,
+  onToggle,
+  text,
+  truncateAt,
+}: {
+  className?: string;
+  expanded: boolean;
+  onToggle: (event: ReactMouseEvent<HTMLButtonElement>) => void;
+  text: string;
+  truncateAt: number;
+}) => {
+  const { preview, truncated } = getInlineTextPreview(text, truncateAt);
+
+  return (
+    <p className={cn("whitespace-pre-line", className)}>
+      {expanded || !truncated ? text : preview}
+      {truncated ? (
+        <>
+          {" "}
+          <button
+            className="pointer-events-auto inline rounded-none border-0 bg-transparent p-0 align-baseline font-[inherit] text-[#64748B]/80 transition-colors duration-150 [font-size:inherit] [line-height:inherit] hover:text-[#475569] dark:text-muted/80 dark:hover:text-muted"
+            onClick={onToggle}
+            type="button"
+          >
+            {expanded ? "ver menos" : "... ver mais"}
+          </button>
+        </>
+      ) : null}
+    </p>
+  );
 };
 
 const resolveFeedError = (error: unknown) => {
@@ -467,28 +531,7 @@ const ProfessionalReplyMedia = ({
 const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
   const reply = post.highlighted_professional_reply;
   const [replyExpanded, setReplyExpanded] = useState(false);
-  const [replyCanToggle, setReplyCanToggle] = useState(false);
-  const replyContentRef = useRef<HTMLParagraphElement>(null);
   const postHref = communityPostDetailHref(post);
-
-  useEffect(() => {
-    const element = replyContentRef.current;
-
-    if (!element || replyExpanded) return;
-
-    const updateReplyToggle = () => {
-      setReplyCanToggle(element.scrollHeight > element.clientHeight + 1);
-    };
-
-    updateReplyToggle();
-
-    if (typeof ResizeObserver === "undefined") return;
-
-    const observer = new ResizeObserver(updateReplyToggle);
-    observer.observe(element);
-
-    return () => observer.disconnect();
-  }, [replyExpanded]);
 
   if (!reply) return null;
 
@@ -538,42 +581,18 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
             </Link>
           </div>
         </div>
-        <div className="relative mt-2">
-          <p
-            className={cn(
-              "whitespace-pre-line text-sm leading-6 text-[#334155] dark:text-muted",
-              !replyExpanded && "line-clamp-2",
-              replyCanToggle && !replyExpanded && "pr-16",
-            )}
-            ref={replyContentRef}
-          >
-            {reply.content}
-          </p>
-          {replyCanToggle && !replyExpanded ? (
-            <button
-              className="pointer-events-auto absolute right-0 bottom-0 z-10 bg-gradient-to-l from-white via-white/95 to-transparent pl-5 text-[11px] font-medium leading-6 text-[#64748B]/80 transition hover:text-[#475569] dark:from-surface dark:via-surface/95 dark:text-muted/80 dark:hover:text-muted"
-              onClick={(event) => {
-                event.stopPropagation();
-                setReplyExpanded(true);
-              }}
-              type="button"
-            >
-              ... ver mais
-            </button>
-          ) : null}
-        </div>
-        {replyCanToggle && replyExpanded ? (
-          <button
-            className="pointer-events-auto mt-0.5 w-fit text-[11px] font-medium leading-none text-[#64748B]/80 transition hover:text-[#475569] dark:text-muted/80 dark:hover:text-muted"
-            onClick={(event) => {
+        <div className="mt-2">
+          <InlineExpandableText
+            className="text-sm leading-6 text-[#334155] dark:text-muted"
+            expanded={replyExpanded}
+            onToggle={(event) => {
               event.stopPropagation();
               setReplyExpanded((current) => !current);
             }}
-            type="button"
-          >
-            {replyExpanded ? "ver menos" : "ver mais"}
-          </button>
-        ) : null}
+            text={reply.content}
+            truncateAt={REPLY_CONTENT_PREVIEW_LENGTH}
+          />
+        </div>
         {reply.media_url || reply.author.whatsapp_url ? (
           <div className="pointer-events-auto mt-3 grid w-full gap-3 sm:mx-auto sm:max-w-[320px]">
             <ProfessionalReplyMedia reply={reply} />
@@ -613,7 +632,6 @@ const PostCard = ({
   const isPsychologistPost = post.author.role === "psicologo";
   const isAnonymousPatient = !isPsychologistPost && post.anonymous;
   const [contentExpanded, setContentExpanded] = useState(false);
-  const [contentCanToggle, setContentCanToggle] = useState(false);
   const [voteSnapshot, setVoteSnapshot] = useState<VoteSnapshot>({
     currentVote: post.current_user_vote,
     downvotes: post.downvotes_count,
@@ -624,28 +642,8 @@ const PostCard = ({
     saved: post.saved,
     saves: post.saves_count,
   });
-  const contentRef = useRef<HTMLParagraphElement>(null);
   const voteMutation = useVotePost(post.id);
   const saveMutation = useSavePost(post.id);
-
-  useEffect(() => {
-    const element = contentRef.current;
-
-    if (!element || contentExpanded) return;
-
-    const updateContentToggle = () => {
-      setContentCanToggle(element.scrollHeight > element.clientHeight + 1);
-    };
-
-    updateContentToggle();
-
-    if (typeof ResizeObserver === "undefined") return;
-
-    const observer = new ResizeObserver(updateContentToggle);
-    observer.observe(element);
-
-    return () => observer.disconnect();
-  }, [contentExpanded]);
 
   const handleVote = (value: 1 | -1) => {
     const previousSnapshot = voteSnapshot;
@@ -744,41 +742,13 @@ const PostCard = ({
         >
           {post.title}
         </Link>
-        <div className="relative">
-          <Link
-            className="block rounded-[12px] underline-offset-4 transition hover:text-foreground"
-            href={communityPostDetailHref(post)}
-          >
-            <p
-              className={cn(
-                "whitespace-pre-line text-sm leading-6 text-[#64748B] dark:text-muted",
-                !contentExpanded && "line-clamp-2",
-                contentCanToggle && !contentExpanded && "pr-16",
-              )}
-              ref={contentRef}
-            >
-              {post.content}
-            </p>
-          </Link>
-          {contentCanToggle && !contentExpanded ? (
-            <button
-              className="absolute right-0 bottom-0 z-10 bg-gradient-to-l from-white via-white/95 to-transparent pl-5 text-[11px] font-medium leading-6 text-[#64748B]/80 transition hover:text-[#475569] dark:from-surface dark:via-surface/95 dark:text-muted/80 dark:hover:text-muted"
-              onClick={() => setContentExpanded(true)}
-              type="button"
-            >
-              ... ver mais
-            </button>
-          ) : null}
-        </div>
-        {contentCanToggle && contentExpanded ? (
-          <button
-            className="w-fit text-[11px] font-medium leading-none text-[#64748B]/80 transition hover:text-[#475569] dark:text-muted/80 dark:hover:text-muted"
-            onClick={() => setContentExpanded((current) => !current)}
-            type="button"
-          >
-            {contentExpanded ? "ver menos" : "ver mais"}
-          </button>
-        ) : null}
+        <InlineExpandableText
+          className="text-sm leading-6 text-[#64748B] dark:text-muted"
+          expanded={contentExpanded}
+          onToggle={() => setContentExpanded((current) => !current)}
+          text={post.content}
+          truncateAt={POST_CONTENT_PREVIEW_LENGTH}
+        />
       </div>
 
       <div className="mt-4 grid gap-3">

@@ -190,3 +190,20 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/community/feed`.
+
+## Execucao complementar: `ver mais` inline no feed de comunidade (2026-06-14)
+
+- Pedido do usuario: ajustar o alinhamento dos textos do post e da resposta em `/app/community/feed`, principalmente no mobile, sem alterar conteudo textual nem estrutura geral do card.
+- O truncamento deixou de usar `line-clamp` com botao absoluto, gradiente e padding manual para empurrar `... ver mais` para uma posicao fixa.
+- Foi criado um componente local de texto expansivel inline para post e resposta profissional; o `... ver mais` agora entra no fluxo do paragrafo e acompanha a linha do texto.
+- O controle inline herda tamanho de fonte, line-height e fonte do texto imediatamente anterior, com apenas uma cor levemente interativa.
+- O texto completo permanece intacto ao expandir; `ver menos` tambem fica inline no fluxo do paragrafo expandido.
+- Nao houve alteracao de backend, Prisma, migrations, packages, schema, contratos de API ou responsividade geral da pagina.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual usada foi `_product/proto/Feed Comunidade.jpg`, a captura enviada pelo usuario e o pedido detalhado.
+- ADR criado: `adrs/0082-ver-mais-inline-feed-comunidade.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/community/feed`.
