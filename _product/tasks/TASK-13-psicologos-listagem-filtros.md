@@ -1227,3 +1227,19 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: respiro superior reduzido no card desktop (2026-06-14)
+
+- Pedido do usuario: reduzir somente no desktop o espacamento vertical superior entre a area util da tela e o card de video em `/app/psychologists`, preservando mobile, proporcao 9:16, preview inferior e UI interna do card.
+- A variavel CSS desktop `--psychologists-desktop-card-top` foi reduzida de `24px` para `10px`, fazendo o card subir sem alterar largura, altura, botoes laterais, scroll-snap ou controles internos.
+- A altura do card permaneceu calculada por `--psychologists-desktop-card-height` e a largura segue derivada da proporcao 9:16 ja existente, evitando deformacao ou corte adicional do video.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, contratos de API, mobile ou comportamento das acoes laterais.
+- ADR atualizado: `adrs/0080-ajuste-desktop-feed-shorts-psicologos.md`.
+
+Validacoes do ajuste:
+
+- `pnpm --dir frontend biome:fix`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local em `/app/psychologists` respondeu `200`.

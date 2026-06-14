@@ -10,6 +10,8 @@ A versao desktop de `/app/psychologists` ja usava feed vertical com `scroll-snap
 
 O pedido foi corrigir somente desktop, preservar mobile, nao alterar a UI interna do card, nao criar scroll no `body` e manter o comportamento de `scroll-snap`.
 
+Em ajuste complementar de 2026-06-14, o produto identificou que ainda havia respiro vertical superior excessivo entre o topo da area util e o inicio do card de video no desktop.
+
 ## Decisao
 
 A causa raiz da faixa residual na rota era o `contentClassName` de `/app/psychologists` forcar `lg:pl-[240px]`, mesmo quando a sidebar desktop estava recolhida em 88px. A rota deixou de sobrescrever esse padding e voltou a respeitar o padding dinamico do `PrivateTemplate`.
@@ -21,12 +23,14 @@ No feed desktop:
 - a sombra externa do card foi removida, mantendo apenas o fundo limpo e continuo da area principal;
 - as variaveis de layout aumentaram levemente o card 9:16 e reduziram o intervalo ate a previa do proximo card;
 - os botoes de navegacao anterior/proximo passaram a usar posicionamento fixo na lateral direita da viewport, separados do card, no padrao de Shorts.
+- o offset superior do card desktop foi reduzido por `--psychologists-desktop-card-top`, de `24px` para `10px`, sem alterar altura/largura do card, botoes laterais ou UI interna.
 
 ## Consequencias
 
 - O mobile permanece inalterado porque as mudancas de tamanho/posicionamento usam `@media (min-width: 1024px)` ou props da sidebar desktop.
 - O scroll global continua bloqueado em desktop para esta rota; a area rolavel segue sendo o container interno `.psychologists-video-feed`.
 - A coluna do feed passa a ser centralizada pela area util real a direita da sidebar, inclusive quando a sidebar esta recolhida.
+- O card ativo sobe visualmente na tela, preservando proporcao 9:16 e mantendo a previa parcial do proximo card.
 - Nenhum contrato de API, Prisma, migration, dado ou package foi alterado.
 
 ## Validacoes

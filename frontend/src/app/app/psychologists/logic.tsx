@@ -2567,7 +2567,7 @@ export const PsychologistsLogic = () => {
 
           @media (min-width: 1024px) {
             .psychologists-shorts-layout {
-              --psychologists-desktop-card-top: 24px;
+              --psychologists-desktop-card-top: 10px;
               --psychologists-desktop-card-gap: 6px;
               --psychologists-desktop-card-height: min(900px, calc(100dvh - 82px));
               --psychologists-desktop-card-width: min(506px, calc(56.25dvh - 46.125px));
