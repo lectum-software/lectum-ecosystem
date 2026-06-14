@@ -33,6 +33,8 @@ paciente.
 
 Em 2026-06-14 a modal de filtros foi refinada a partir do PDF local fornecido pelo usuario (`C:\Users\tulio\Downloads\Filtros de Psicologos.pdf`). O ajuste precisava preservar a fundacao de formularios da TASK-02, cobrir visualmente toda a aplicacao, inclusive a sidebar, e melhorar a hierarquia de header, busca, selects, selos/facilidades e CTA de aplicacao sem instalar pacote novo.
 
+Ainda em 2026-06-14, a busca por nome/CRP dentro da modal precisava responder em tempo real enquanto o usuário digita, e o bloco de selos/facilidades precisava ficar mais leve, evitando a aparência de caixas cinzas pesadas.
+
 ## Decisão
 
 - Criar `GET /api/private/directory/psychologists` como endpoint real de listagem paginada (`page`/`limit`, default 20 e máximo 50), busca e filtros.
@@ -64,6 +66,8 @@ Em 2026-06-14 a modal de filtros foi refinada a partir do PDF local fornecido pe
 - Adotar cards de selos/facilidades proprios da tela para `verified`, `more_experienced`, `discount_first_session`, `accepts_insurance` e `social_value`, todos conectados ao mesmo React Hook Form e aos mesmos query params reais.
 - Usar o padrao de dropdown pesquisavel para os selects da modal, com seta interna padronizada, mantendo opcoes reais de catalogo e dependencia Estado/Cidade existente.
 - Manter `Limpar filtros` como acao de reset no topo da modal e `Aplicar filtros` como CTA sticky no rodape da area rolavel, sem novo pacote de dialog e sem criar componente global fora de escopo.
+- Enquanto a modal estiver aberta, aplicar o campo `search` como consulta viva da listagem por meio do mesmo hook `useDirectoryPsychologists`, sem alterar a URL nem aplicar os demais filtros antes do CTA. Ao clicar em `Aplicar filtros`, a busca continua sendo persistida nos query params como antes.
+- Refinar os cards/toggles de selos e facilidades sobre os mesmos campos booleanos do React Hook Form, com superfície `bg-surface`, borda delicada e controle tipo switch, sem criar estado paralelo nem remover opções.
 
 ## Consequências
 
@@ -126,6 +130,12 @@ Em 2026-06-14 a modal de filtros foi refinada a partir do PDF local fornecido pe
   - `pnpm --dir frontend build`
   - `pnpm check`
   - `git diff --check`
+  - HTTP local em `/app/psychologists` respondeu `200`.
+- Validacao complementar da busca live e selos em 2026-06-14:
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
   - HTTP local em `/app/psychologists` respondeu `200`.
 
 ## Pendências

@@ -59,12 +59,14 @@ export const defaultPsychologistsFilterValues: Required<PsychologistsFilterForm>
 type UsePsychologistsFilterFormProps = {
   filters?: DirectoryPsychologistFilters;
   loading?: boolean;
+  onSearchChange?: (value: string) => void;
   values?: Partial<PsychologistsFilterForm>;
 };
 
 export const usePsychologistsFilterForm = ({
   filters,
   loading = false,
+  onSearchChange,
   values,
 }: UsePsychologistsFilterFormProps = {}) => {
   const filterFieldClassName = "col-span-2";
@@ -81,6 +83,7 @@ export const usePsychologistsFilterForm = ({
         label: "Pesquisa",
         placeholder: "Buscar por nome ou CRP",
         leadingIcon: "search",
+        onChangeCallback: (value) => onSearchChange?.(String(value ?? "")),
         inputClassName:
           "h-12 rounded-2xl border-border/80 bg-surface-muted text-sm shadow-none placeholder:text-subtle",
       },
@@ -239,7 +242,7 @@ export const usePsychologistsFilterForm = ({
         hide: true,
       },
     ],
-    [filters?.approaches, filters?.services, filters?.specialties, loading],
+    [filters?.approaches, filters?.services, filters?.specialties, loading, onSearchChange],
   );
 
   const form = useFormList<PsychologistsFilterForm>({

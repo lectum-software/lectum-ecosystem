@@ -371,7 +371,7 @@ const FILTER_FEATURE_OPTIONS: FilterFeatureOption[] = [
   {
     name: "social_value",
     label: "Valor social",
-    description: "Atendimento com valor social para ampliar o acesso ao cuidado.",
+    description: "Para a população de baixa renda.",
     icon: HandHeart,
   },
 ];
@@ -391,10 +391,10 @@ const FilterFeatureCard = ({
     <button
       aria-pressed={checked}
       className={cn(
-        "group flex w-full items-start gap-3 rounded-[24px] border p-4 text-left transition duration-200 ease-out",
+        "group flex w-full items-start gap-3 rounded-[22px] border p-3.5 text-left transition duration-200 ease-out sm:p-4",
         checked
-          ? "border-primary/55 bg-primary-soft/80 shadow-[0_14px_34px_rgb(48_140_232_/_12%)]"
-          : "border-border/80 bg-background shadow-[0_10px_28px_rgb(15_23_42_/_5%)] hover:border-primary/30 hover:bg-surface-muted",
+          ? "border-primary/45 bg-surface shadow-[0_12px_28px_rgb(48_140_232_/_10%)]"
+          : "border-border/70 bg-surface shadow-[0_8px_22px_rgb(15_23_42_/_4%)] hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-[0_14px_32px_rgb(15_23_42_/_7%)]",
       )}
       onClick={() => onToggle(option.name)}
       type="button"
@@ -402,7 +402,9 @@ const FilterFeatureCard = ({
       <span
         className={cn(
           "grid h-10 w-10 shrink-0 place-items-center rounded-2xl transition duration-200 ease-out",
-          checked ? "bg-primary text-white" : "bg-primary-soft text-primary",
+          checked
+            ? "bg-primary-soft text-primary ring-1 ring-primary/20"
+            : "bg-primary-soft/70 text-primary",
         )}
       >
         <Icon className="h-5 w-5" aria-hidden="true" strokeWidth={2.2} />
@@ -415,13 +417,20 @@ const FilterFeatureCard = ({
       </span>
       <span
         className={cn(
-          "mt-1 grid h-6 w-6 shrink-0 place-items-center rounded-full border transition duration-200 ease-out",
+          "mt-1 flex h-6 w-11 shrink-0 items-center rounded-full border p-0.5 transition duration-200 ease-out",
           checked
-            ? "border-primary bg-primary text-white"
-            : "border-border bg-surface text-transparent group-hover:text-primary/40",
+            ? "border-primary/45 bg-primary"
+            : "border-border bg-surface-muted group-hover:border-primary/25",
         )}
       >
-        <Check className="h-3.5 w-3.5" aria-hidden="true" strokeWidth={2.6} />
+        <span
+          className={cn(
+            "grid h-5 w-5 place-items-center rounded-full bg-surface text-transparent shadow-[0_2px_8px_rgb(15_23_42_/_12%)] transition duration-200 ease-out",
+            checked && "translate-x-5 text-primary",
+          )}
+        >
+          <Check className="h-3 w-3" aria-hidden="true" strokeWidth={2.8} />
+        </span>
       </span>
     </button>
   );
@@ -669,7 +678,6 @@ export const PsychologistsLogic = () => {
   const params = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
   const filterValues = useMemo(() => readFiltersFromParams(params), [params]);
   const currentPage = useMemo(() => getPageFromParams(params), [params]);
-  const query = useMemo(() => toQuery(filterValues, currentPage), [currentPage, filterValues]);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [shareFeedback, setShareFeedback] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
@@ -693,6 +701,9 @@ export const PsychologistsLogic = () => {
     duration: 0,
   });
   const [searchDraft, setSearchDraft] = useState(() => filterValues.search || "");
+  const [filterModalSearchDraft, setFilterModalSearchDraft] = useState(
+    () => filterValues.search || "",
+  );
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [activePsychologistIndex, setActivePsychologistIndex] = useState(0);
 
@@ -738,6 +749,21 @@ export const PsychologistsLogic = () => {
     enableProfile: false,
   });
 
+  const deferredFilterModalSearchDraft = useDeferredValue(filterModalSearchDraft);
+  const liveFilterValues = useMemo(
+    () =>
+      isFiltersOpen
+        ? normalizeFormValues({
+            ...filterValues,
+            search: deferredFilterModalSearchDraft,
+          })
+        : filterValues,
+    [deferredFilterModalSearchDraft, filterValues, isFiltersOpen],
+  );
+  const query = useMemo(
+    () => toQuery(liveFilterValues, isFiltersOpen ? 1 : currentPage),
+    [currentPage, isFiltersOpen, liveFilterValues],
+  );
   const directory = useDirectoryPsychologists(query);
   const deferredSearchDraft = useDeferredValue(searchDraft);
   const suggestionSearch = deferredSearchDraft.trim();
@@ -767,9 +793,14 @@ export const PsychologistsLogic = () => {
     ? `${featuredPsychologistId}:${activeVideoSource ?? ""}`
     : null;
 
+  const handleFilterSearchChange = useCallback((value: string) => {
+    setFilterModalSearchDraft(value);
+  }, []);
+
   const filters = usePsychologistsFilterForm({
     filters: response?.filters,
     loading: directory.isLoading || directory.isFetching,
+    onSearchChange: handleFilterSearchChange,
     values: filterValues,
   });
 
@@ -1435,6 +1466,7 @@ export const PsychologistsLogic = () => {
     });
 
     setSearchDraft(nextValues.search || "");
+    setFilterModalSearchDraft(nextValues.search || "");
     applyFilterValues(nextValues);
     setIsFiltersOpen(false);
   });
@@ -1442,6 +1474,7 @@ export const PsychologistsLogic = () => {
   const clearFilters = useCallback(() => {
     filters.hook.reset(defaultPsychologistsFilterValues);
     setSearchDraft("");
+    setFilterModalSearchDraft("");
     exitSearchMode();
     applyFilterValues(defaultPsychologistsFilterValues);
     setIsFiltersOpen(false);
@@ -1499,11 +1532,13 @@ export const PsychologistsLogic = () => {
     }
 
     filters.hook.reset(filterValues);
+    setFilterModalSearchDraft(filterValues.search || "");
     setIsFiltersOpen(true);
   }, [exitSearchMode, filterValues, filters.hook, shouldShowVideo]);
 
   const handleFiltersClose = useCallback(() => {
     filters.hook.reset(filterValues);
+    setFilterModalSearchDraft(filterValues.search || "");
     setIsFiltersOpen(false);
   }, [filterValues, filters.hook]);
 

@@ -1282,3 +1282,21 @@ Validacoes do complemento:
 - `pnpm check`
 - `git diff --check`
 - HTTP local em `/app/psychologists` respondeu `200`.
+
+## Execucao complementar: busca live e selos leves na modal (2026-06-14)
+
+- Pedido do usuario: na modal de filtros de `/app/psychologists`, fazer a busca por nome/CRP filtrar profissionais em tempo real, refinar visualmente os selos/facilidades e alterar a descricao de `Valor social`.
+- A busca da modal agora atualiza a consulta viva da listagem enquanto o usuario digita, usando o mesmo parametro real `search` e o mesmo hook `useDirectoryPsychologists`; a URL e os demais filtros continuam sendo aplicados apenas ao clicar em `Aplicar filtros`.
+- A busca mantém o contrato existente do backend, que pesquisa nome e CRP de forma case-insensitive pelo parametro `search`; comparacoes locais de sugestao seguem normalizadas sem acentos.
+- Os cards de selos/facilidades ficaram mais leves, com superficie branca/token `bg-surface`, borda delicada, sombra menor e controle de selecao em formato de switch elegante, mantendo icone, titulo, descricao e os mesmos campos do React Hook Form.
+- A descricao de `Valor social` foi alterada para `Para a população de baixa renda.`.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, endpoints ou contratos de API.
+- ADR atualizado: `adrs/0019-descoberta-psicologos-taxonomias.md`.
+
+Validacoes do complemento:
+
+- `pnpm --dir frontend biome:fix`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local em `/app/psychologists` respondeu `200`.
