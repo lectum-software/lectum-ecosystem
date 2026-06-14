@@ -3,7 +3,6 @@
 import {
   ArrowDown,
   ArrowUp,
-  Award,
   BadgeCheck,
   Bookmark,
   FileText,
@@ -122,10 +121,16 @@ const CountAction = ({ active, icon: Icon, label, value }: CountActionProps) => 
 const MentorBadge = ({ badge }: { badge?: string | null }) => {
   if (!badge) return null;
 
+  const colorClassName = badge.includes("#2")
+    ? "text-[#8A8F98]"
+    : badge.includes("#3")
+      ? "text-[#B87333]"
+      : "text-[#D4A017]";
+  const label = badge.replace(/\bMENTOR\b/i, "Mentor");
+
   return (
-    <span className="inline-flex w-fit items-center gap-1 rounded-lg border border-warning/25 bg-warning-soft px-2 py-1 text-[9px] font-black tracking-[0.02em] text-warning">
-      <Award className="h-3 w-3" aria-hidden="true" />
-      {badge}
+    <span className={cn("shrink-0 text-[11px] font-semibold leading-none", colorClassName)}>
+      {label}
     </span>
   );
 };
@@ -184,13 +189,13 @@ const ProfessionalReplyPreview = ({ reply }: { reply: PostProfessionalReply | nu
       <div className="mb-2 flex items-center gap-2">
         <AuthorAvatar avatar={reply.author.avatar} name={reply.author.name} />
         <div className="grid min-w-0 gap-1">
-          <MentorBadge badge={reply.author.featured_badge} />
-          <p className="flex items-center gap-1 truncate text-sm font-black text-foreground">
-            {reply.author.name}
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <span className="truncate text-sm font-black text-foreground">{reply.author.name}</span>
             {reply.author.verified ? (
               <BadgeCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
             ) : null}
-          </p>
+            <MentorBadge badge={reply.author.featured_badge} />
+          </div>
           <p className="text-[11px] font-semibold text-muted">
             {reply.author.type_label} • {formatRelativeTime(reply.created_at)} •{" "}
             {reply.upvotes_count.toLocaleString("pt-BR")} upvotes
@@ -257,12 +262,12 @@ export const CommunityPostCard = ({
           name={post.author.name}
         />
         <div className="grid min-w-0 flex-1 gap-1">
-          <MentorBadge badge={post.author.featured_badge ?? post.featured_badge} />
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             <h2 className="truncate text-sm font-black text-foreground">{post.author.name}</h2>
             {post.author.verified ? (
               <BadgeCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
             ) : null}
+            <MentorBadge badge={post.author.featured_badge ?? post.featured_badge} />
           </div>
           <p className="text-[11px] font-semibold text-muted">
             {isPsychologistPost

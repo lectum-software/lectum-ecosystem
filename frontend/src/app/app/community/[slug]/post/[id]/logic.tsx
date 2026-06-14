@@ -4,7 +4,6 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowUp,
-  Award,
   BadgeCheck,
   Bookmark,
   ChevronLeft,
@@ -127,26 +126,22 @@ const getInitials = (name: string) => {
 
 const mentorBadgeClassName = (badge: string) => {
   if (badge.includes("#1")) {
-    return "text-[#1F2937]";
-  }
-
-  return "text-[#0F172A]";
-};
-
-const mentorBadgeBackground = (badge: string) => {
-  if (badge.includes("#1")) {
-    return "linear-gradient(90deg, #CE953A 0%, #EFEF7B 71%, #9C7924 99%)";
+    return "text-[#D4A017]";
   }
 
   if (badge.includes("#2")) {
-    return "linear-gradient(90deg, #CBD5E1 0%, #F1F5F9 50%, #94A3B8 100%)";
+    return "text-[#8A8F98]";
   }
 
   if (badge.includes("#3")) {
-    return "linear-gradient(90deg, #A8703A 0%, #E6BE8A 45%, #CD7F32 55%, #8B4513 100%)";
+    return "text-[#B87333]";
   }
 
-  return "linear-gradient(90deg, #CE953A 0%, #EFEF7B 71%, #9C7924 99%)";
+  return "text-[#D4A017]";
+};
+
+const mentorBadgeLabel = (badge: string) => {
+  return badge.replace(/\bMENTOR\b/i, "Mentor");
 };
 
 const MentorBadge = ({ badge }: { badge?: string | null }) => {
@@ -154,14 +149,9 @@ const MentorBadge = ({ badge }: { badge?: string | null }) => {
 
   return (
     <span
-      className={cn(
-        "inline-flex w-fit items-center gap-1 rounded-[8px] px-2 py-1 text-[9px] font-black tracking-[0.02em] ring-1 ring-white/60",
-        mentorBadgeClassName(badge),
-      )}
-      style={{ background: mentorBadgeBackground(badge) }}
+      className={cn("shrink-0 text-[11px] font-semibold leading-none", mentorBadgeClassName(badge))}
     >
-      <Award className="h-3 w-3" aria-hidden="true" />
-      {badge}
+      {mentorBadgeLabel(badge)}
     </span>
   );
 };
@@ -320,7 +310,6 @@ const PostHeader = ({ post, slug }: { post: PostDetail; slug: string }) => {
       <div className="flex items-start gap-3">
         <AuthorAvatar anonymous={isAnonymousPatient} author={post.author} />
         <div className="grid min-w-0 flex-1 gap-1">
-          <MentorBadge badge={post.author.featured_badge ?? post.featured_badge} />
           <div className="flex min-w-0 items-center gap-1.5">
             <h2 className="truncate text-sm font-black text-foreground">{post.author.name}</h2>
             {post.author.verified ? (
@@ -329,6 +318,7 @@ const PostHeader = ({ post, slug }: { post: PostDetail; slug: string }) => {
                 aria-hidden="true"
               />
             ) : null}
+            <MentorBadge badge={post.author.featured_badge ?? post.featured_badge} />
           </div>
           <p className="text-[11px] font-semibold text-muted">
             {isPsychologistPost
@@ -522,7 +512,6 @@ const ReplyCard = ({
         <div className="flex min-w-0 items-start gap-3">
           <AuthorAvatar author={reply.author} size="sm" />
           <div className="grid min-w-0 gap-1">
-            <MentorBadge badge={reply.author.featured_badge} />
             <div className="flex min-w-0 items-center gap-1.5">
               {isProfessional ? (
                 <Link
@@ -540,6 +529,7 @@ const ReplyCard = ({
                   aria-hidden="true"
                 />
               ) : null}
+              <MentorBadge badge={reply.author.featured_badge} />
             </div>
             <p className="text-[11px] font-semibold text-muted">
               {reply.author.type_label} • {formatRelativeTime(reply.created_at)}
