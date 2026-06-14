@@ -1,4 +1,4 @@
-﻿# TASK-13: PsicÃ³logos: listagem e filtros
+# TASK-13: PsicÃ³logos: listagem e filtros
 
 ## Metadata
 
@@ -1170,6 +1170,23 @@ ext/image`.
 - O mobile, o scroll-snap, o bloqueio de scroll no `body`, dados, contratos de API, backend, Prisma, migrations e packages nao foram alterados.
 - Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a decisao foi guiada pela captura do YouTube Shorts anexada pelo usuario, pelo prototipo local `_product/proto/Psicólogos.jpg` e pelo design system existente da Lectum.
 - ADR criado: `adrs/0080-ajuste-desktop-feed-shorts-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: controle minimalista da sidebar desktop (2026-06-14)
+
+- Pedido do usuario: corrigir a versao anterior do controle de expandir/recolher porque o botao estava grande, competia com a marca, quebrava a composicao do cabecalho e parecia um elemento isolado.
+- O cabecalho desktop da sidebar deixou de usar bloco com borda/glass/sombra envolvendo logo e controle; logo/avatar e nome `Lectum` voltam a ser o elemento dominante.
+- O controle passou a ser um botao absoluto pequeno no canto superior direito do cabecalho, sem texto, sem superficie destacada persistente, com icone `Sidebar` de 15px, opacidade reduzida e hover/focus sutil.
+- O estado recolhido usa a mesma abordagem discreta e apenas rotaciona o icone, evitando empilhamento, quebra de linha ou competicao visual com a marca.
+- A bottom navigation mobile e qualquer comportamento abaixo de `lg` nao foram alterados.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, contratos de API ou rotas.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a decisao foi guiada pelas referencias modernas fornecidas pelo usuario e pelo design system existente da Lectum.
+- ADR atualizado: `adrs/0079-controle-sidebar-desktop-moderno.md`.
 - Validacoes executadas:
   - `pnpm --dir frontend biome:fix`
   - `pnpm --dir frontend check`

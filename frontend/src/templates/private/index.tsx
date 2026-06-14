@@ -382,16 +382,14 @@ export const PrivateTemplate = ({
     >
       <div
         className={cn(
-          "mb-8 flex border border-border/70 bg-surface/75 text-xl font-black tracking-tight text-foreground shadow-[0_8px_22px_rgb(15_23_42_/_4%)] backdrop-blur transition-[border-radius,padding,background,box-shadow] duration-300 ease-out",
-          isDesktopSidebarCollapsed
-            ? "flex-col items-center justify-center gap-2 rounded-[26px] px-1 py-1.5"
-            : "items-center justify-between gap-2 rounded-[24px] p-1.5",
+          "relative mb-8 flex h-12 items-center text-xl font-black tracking-tight text-foreground",
+          isDesktopSidebarCollapsed ? "justify-center" : "justify-start pr-8",
         )}
       >
         <Link
           className={cn(
-            "flex min-w-0 items-center gap-2 rounded-[18px] transition-[background,color,transform] duration-200 ease-out hover:bg-primary-soft/60 hover:text-primary",
-            isDesktopSidebarCollapsed ? "h-10 w-10 justify-center" : "min-h-10 flex-1 px-1",
+            "group/brand flex min-w-0 items-center gap-2 rounded-2xl transition-colors duration-200 ease-out hover:text-primary",
+            isDesktopSidebarCollapsed ? "h-12 w-12 justify-center" : "h-12 flex-1",
           )}
           href="/app/psychologists"
           title={isDesktopSidebarCollapsed ? "Lectum" : undefined}
@@ -407,29 +405,20 @@ export const PrivateTemplate = ({
           aria-label={isDesktopSidebarCollapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
           aria-pressed={!isDesktopSidebarCollapsed}
           className={cn(
-            "group relative inline-grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full border text-muted shadow-[0_4px_14px_rgb(15_23_42_/_6%)] backdrop-blur transition-[background,border-color,color,box-shadow,transform] duration-300 ease-out hover:-translate-y-px hover:border-primary/25 hover:bg-primary-soft/70 hover:text-primary hover:shadow-[0_8px_18px_rgb(48_140_232_/_12%)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface active:translate-y-0",
-            isDesktopSidebarCollapsed
-              ? "border-primary/20 bg-primary-soft/80 text-primary"
-              : "border-border/80 bg-background/80",
+            "absolute top-1/2 right-0 inline-grid h-7 w-7 -translate-y-1/2 place-items-center rounded-xl text-muted opacity-40 transition-[background,color,opacity,transform] duration-200 ease-out hover:bg-surface-muted hover:text-foreground hover:opacity-100 focus-visible:bg-primary-soft focus-visible:text-primary focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 active:scale-95",
+            isDesktopSidebarCollapsed ? "right-1" : "right-0",
           )}
           onClick={toggleDesktopSidebar}
           title={isDesktopSidebarCollapsed ? "Expandir menu" : "Recolher menu"}
           type="button"
         >
-          <span
-            aria-hidden="true"
-            className={cn(
-              "absolute top-1 bottom-1 left-1/2 -ml-0.5 w-1 rounded-full bg-primary/70 opacity-60 transition-[transform,opacity] duration-300 ease-out",
-              isDesktopSidebarCollapsed ? "translate-x-[10px] opacity-90" : "-translate-x-[10px]",
-            )}
-          />
           <Sidebar
             className={cn(
-              "relative h-[17px] w-[17px] transition-transform duration-300 ease-out",
+              "h-[15px] w-[15px] transition-transform duration-200 ease-out",
               isDesktopSidebarCollapsed ? "rotate-180" : "rotate-0",
             )}
             aria-hidden="true"
-            strokeWidth={2.15}
+            strokeWidth={1.9}
           />
         </button>
       </div>

@@ -6,31 +6,39 @@ Accepted
 
 ## Contexto
 
-O `PrivateTemplate` usa uma sidebar desktop compartilhada pelas rotas privadas e publicamente acessiveis dentro de `/app`. O controle anterior de expandir/recolher usava icones `PanelLeftOpen`/`PanelLeftClose`, com leitura visual mais antiga e proxima de aplicativos corporativos tradicionais.
+O `PrivateTemplate` usa uma sidebar desktop compartilhada pelas rotas privadas e publicamente acessiveis dentro de `/app`. O controle antigo de expandir/recolher usava icones com leitura visual datada e proxima de aplicativos corporativos tradicionais.
 
-O pedido de produto foi refinar apenas a experiencia desktop, preservando exatamente a navegacao mobile atual, e aproximar o controle de referencias modernas como Notion, Linear, Slack, Arc Browser e YouTube.
+Em 2026-06-14, o primeiro refinamento substituiu o controle por um botao circular com glass, borda e sombra. A revisao visual do produto apontou que essa solucao ainda estava grande, competia com a marca Lectum, alterava a hierarquia do cabecalho e fazia o controle parecer um elemento funcional isolado.
+
+O pedido final e manter a mudanca apenas no desktop, preservar o mobile, e tratar o controle como uma acao secundaria quase invisivel, alinhada a referencias como Notion, Linear, Arc Browser e Slack.
 
 ## Decisao
 
-Substituir o controle desktop da sidebar por um botao circular pequeno, com aparencia glass leve, borda discreta, sombra sutil e transicoes de 300ms. O icone passa a ser `Sidebar`, sem seta antiga dentro de quadrado.
+Manter o icone `Sidebar`, mas remover a superficie destacada do controle em estado normal.
 
-A indicacao de estado foi resolvida sem adicionar complexidade:
+A implementacao final no desktop usa:
 
-- no estado expandido, o botao fica discreto (`bg-background/80`, texto muted) e o indicador interno fica deslocado para o lado esquerdo;
-- no estado recolhido, o botao ganha `primary-soft`, texto primary e indicador deslocado para o lado direito, comunicando que a sidebar pode ser expandida;
-- o icone aplica rotacao suave entre estados, mas continua minimalista.
+- cabecalho da sidebar sem cartao, borda, glass ou sombra ao redor de logo + controle;
+- logo/avatar e texto `Lectum` como elemento dominante do topo;
+- botao absoluto no canto superior direito do cabecalho, sem ocupar espaco relevante no flex do logo;
+- area clicavel pequena (`28px`) e icone visual menor (`15px`) que o avatar/logo;
+- opacidade reduzida no estado normal;
+- hover/focus com fundo `surface-muted`/`primary-soft` apenas como feedback temporario;
+- transicao de 200ms e rotacao discreta do icone entre expandido/recolhido.
 
-O bloco superior da sidebar tambem recebeu um contorno/glass discreto para integrar logo e controle no mesmo topo visual. Em sidebar recolhida, logo e controle ficam empilhados para respeitar os 88px de largura sem parecerem soltos; em sidebar expandida, ficam em linha.
+No estado recolhido, o botao permanece no topo da sidebar e nao empilha com o logo. Isso evita quebra visual, reduz competicao com a marca e preserva a leitura premium/minimalista solicitada.
 
 ## Consequencias
 
 - A alteracao afeta somente a sidebar desktop (`lg:flex`); a bottom navigation mobile permanece inalterada.
+- O controle deixa de ter destaque persistente para funcionar como acao secundaria contextual.
+- O cabecalho nao quebra linha e nao desalinha a marca Lectum.
 - Nenhum contrato de API, dado, schema, package ou fluxo de auth foi alterado.
-- O controle fica mais alinhado ao restante da interface atual sem criar novo design system.
 - Todas as rotas que usam `PrivateTemplate` com sidebar desktop recebem o refinamento visual de forma consistente.
 
 ## Validacoes
 
+- `pnpm --dir frontend biome:fix`
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
