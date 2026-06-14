@@ -1210,3 +1210,20 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: header interno preso ao card no feed desktop (2026-06-14)
+
+- Pedido do usuario: corrigir apenas no desktop o vazamento do menu interno `Explorar / Minha Busca` em `/app/psychologists`, especialmente no ultimo video durante scroll/snap.
+- A causa raiz era que o menu estava renderizado como camada global absoluta sobre o feed, alinhada ao topo desktop do card por offset, mas fora do container visual de cada card; durante a rolagem ele podia aparecer na area entre slides.
+- O header global foi preservado para mobile e ocultado em `lg`, mantendo a experiencia mobile atual.
+- No desktop, o mesmo menu passou a ser renderizado dentro do container visual de cada card/slide, em `top: 0`, respeitando o `overflow-hidden` e o `border-radius` do card.
+- Apenas o slide ativo deixa o header visivel e interativo; slides inativos mantem a camada invisivel e sem pointer events para evitar vazamento visual ou foco indevido.
+- A proporcao 9:16 dos cards, o scroll-snap, os dados, filtros, favoritos, WhatsApp, perfil, video, overlays do card ativo e contratos de API foram preservados.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual usada foi `_product/proto/Psicólogos.jpg`, a captura enviada pelo usuario e o pedido detalhado.
+- ADR criado: `adrs/0087-header-interno-card-psicologos-desktop.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

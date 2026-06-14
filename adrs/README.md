@@ -81,3 +81,4 @@ Formato recomendado:
 - [ADR-0084 - Sidebar desktop orientada por rotas principais](0084-sidebar-desktop-rotas-principais.md) - Accepted
 - [ADR-0085 - Truncamento medido e identidade compacta no feed de comunidade](0085-truncamento-medido-feed-comunidade.md) - Accepted
 - [ADR-0086 - Fullscreen vertical dos videos do feed de comunidade](0086-fullscreen-video-feed-comunidade.md) - Accepted
+- [ADR-0087 - Header interno preso ao card no feed desktop de Psicologos](0087-header-interno-card-psicologos-desktop.md) - Accepted

@@ -2690,7 +2690,7 @@ export const PsychologistsLogic = () => {
               <div
                 aria-hidden={areFeedModeControlsHidden ? true : undefined}
                 className={cn(
-                  "pointer-events-none absolute inset-x-0 top-0 z-[76] bg-gradient-to-b from-black/75 via-black/35 to-transparent px-4 pb-5 pt-[calc(env(safe-area-inset-top)+20px)] transition-all duration-200 ease-out lg:top-[var(--psychologists-desktop-card-top)] lg:bg-none",
+                  "pointer-events-none absolute inset-x-0 top-0 z-[76] bg-gradient-to-b from-black/75 via-black/35 to-transparent px-4 pb-5 pt-[calc(env(safe-area-inset-top)+20px)] transition-all duration-200 ease-out lg:hidden lg:top-[var(--psychologists-desktop-card-top)] lg:bg-none",
                   metrics.isDesktopLayout ? "lg:rounded-t-[22px] lg:px-5" : null,
                   feedModeControlsVisibilityClass,
                 )}
@@ -3002,6 +3002,116 @@ export const PsychologistsLogic = () => {
                     >
                       <div className="absolute inset-0 overflow-hidden lg:inset-x-0 lg:top-[var(--psychologists-desktop-card-top)] lg:bottom-auto lg:h-[var(--psychologists-desktop-card-height)] lg:rounded-[22px] lg:bg-black">
                         <div className="relative h-full w-full overflow-hidden">
+                          {shouldRenderGlobalControls ? (
+                            <div
+                              aria-hidden={
+                                !isActiveSlide || areFeedModeControlsHidden ? true : undefined
+                              }
+                              className={cn(
+                                "pointer-events-none absolute inset-x-0 top-0 z-[76] hidden bg-gradient-to-b from-black/75 via-black/35 to-transparent px-5 pb-5 pt-[calc(env(safe-area-inset-top)+20px)] transition-all duration-200 ease-out lg:block lg:rounded-t-[22px] lg:bg-none",
+                                isActiveSlide
+                                  ? feedModeControlsVisibilityClass
+                                  : "psychologists-ui-inert pointer-events-none opacity-0",
+                              )}
+                              data-psychologists-scroll-lock="true"
+                              onMouseDown={stopInteractionPropagation}
+                              onPointerDown={(event) => {
+                                event.stopPropagation();
+                                registerSwipeHintInteraction();
+                              }}
+                            >
+                              <div className="pointer-events-auto flex items-center justify-center gap-8 text-white">
+                                <button
+                                  aria-current={!hasActiveFilters ? "page" : undefined}
+                                  className={cn(
+                                    "relative inline-flex h-9 items-center justify-center px-1 text-[15px] font-semibold tracking-[-0.01em] text-white transition-opacity duration-150 ease-out",
+                                    hasActiveFilters
+                                      ? "opacity-70 hover:opacity-100"
+                                      : "opacity-100",
+                                  )}
+                                  onClick={handleExploreModeClick}
+                                  tabIndex={
+                                    !isActiveSlide || areFeedModeControlsHidden ? -1 : undefined
+                                  }
+                                  type="button"
+                                >
+                                  Explorar
+                                  {!hasActiveFilters ? (
+                                    <span
+                                      aria-hidden="true"
+                                      className="absolute -bottom-0.5 left-1/2 h-0.5 w-7 -translate-x-1/2 rounded-full bg-white"
+                                    />
+                                  ) : null}
+                                </button>
+
+                                <button
+                                  aria-current={hasActiveFilters ? "page" : undefined}
+                                  className={cn(
+                                    "relative inline-flex h-9 items-center justify-center gap-1.5 px-1 text-[15px] font-semibold tracking-[-0.01em] text-white transition-opacity duration-150 ease-out",
+                                    hasActiveFilters
+                                      ? "opacity-100"
+                                      : "opacity-75 hover:opacity-100",
+                                  )}
+                                  onClick={handleMySearchModeClick}
+                                  tabIndex={
+                                    !isActiveSlide || areFeedModeControlsHidden ? -1 : undefined
+                                  }
+                                  type="button"
+                                >
+                                  <span>Minha Busca</span>
+                                  <Search
+                                    className="h-[17px] w-[17px]"
+                                    aria-hidden="true"
+                                    strokeWidth={2.25}
+                                  />
+                                  {hasActiveFilters ? (
+                                    <span
+                                      aria-hidden="true"
+                                      className="absolute -bottom-0.5 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-white"
+                                    />
+                                  ) : null}
+                                </button>
+                              </div>
+
+                              {hasActiveFilters && activeFilterChips.length > 0 ? (
+                                <div className="pointer-events-auto -mx-5 mt-2 overflow-x-auto px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                                  <div className="flex min-w-max items-center justify-center gap-2">
+                                    {activeFilterChips.map((chip) => (
+                                      <button
+                                        aria-label={`Remover filtro ${chip.label}`}
+                                        className="inline-flex h-8 max-w-[180px] items-center gap-1.5 rounded-full border border-white/20 bg-white/16 px-3 text-xs font-semibold text-white shadow-[0_8px_24px_rgba(15,23,42,0.22)] backdrop-blur-md transition-colors duration-150 ease-out hover:bg-white/24"
+                                        key={`${psychologist.id}-${chip.key}-${chip.label}`}
+                                        onClick={(event) => {
+                                          event.stopPropagation();
+                                          handleRemoveActiveFilter(chip.key);
+                                        }}
+                                        tabIndex={
+                                          !isActiveSlide || areFeedModeControlsHidden
+                                            ? -1
+                                            : undefined
+                                        }
+                                        type="button"
+                                      >
+                                        <span className="truncate">{chip.label}</span>
+                                        <X className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                                      </button>
+                                    ))}
+
+                                    <button
+                                      className="inline-flex h-8 shrink-0 items-center rounded-full border border-white/25 bg-white px-3 text-xs font-bold text-[#0f172a] shadow-[0_8px_24px_rgba(15,23,42,0.18)] transition-transform duration-150 ease-out hover:scale-[1.02]"
+                                      onClick={handleMySearchModeClick}
+                                      tabIndex={
+                                        !isActiveSlide || areFeedModeControlsHidden ? -1 : undefined
+                                      }
+                                      type="button"
+                                    >
+                                      + Filtros
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : null}
+                            </div>
+                          ) : null}
                           {slideShouldShowVideo ? (
                             <video
                               aria-label={`Vídeo de apresentação de ${psychologist.name}`}
