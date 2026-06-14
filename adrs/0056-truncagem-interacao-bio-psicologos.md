@@ -461,3 +461,31 @@ Validacoes:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Verificacao estatica confirmou que a acao lateral `Perfil` nao usa `/app/profile`, setup ou edicao como destino.
+
+## Atualizacao 2026-06-14: desktop em modelo YouTube Shorts
+
+A variante desktop de `/app/psychologists` passa a usar um viewport interno fixo de `100dvh`, sem permitir rolagem do
+`body`/pagina enquanto a rota esta ativa em `>=1024px`. O scroll continua pertencendo ao container interno
+`.psychologists-video-feed`, preservando o shell e a sidebar do `PrivateTemplate`.
+
+A decisao visual foi aproximar o desktop do comportamento do YouTube Shorts:
+
+- o card principal usa proporcao 9:16 por variaveis CSS responsivas;
+- cada psicologo continua sendo uma secao com `scroll-snap` vertical, mas no desktop a secao tem altura calculada para
+  manter margem superior e revelar uma pre-visualizacao parcial do proximo card na parte inferior;
+- a coluna externa de acoes permanece fora do video, e novas setas circulares para cima/baixo ficam a direita do card
+  para navegar explicitamente entre psicologos;
+- a seta de voltar fica desabilitada no primeiro card, e a seta de avancar fica desabilitada no ultimo card.
+
+Para corrigir a area de scroll, eventos de roda/touchpad/touch na area principal da rota sao encaminhados ao
+container interno do feed. A sidebar esquerda nao participa dessa captura porque fica fora do wrapper da tela; assim,
+rolar sobre o menu lateral nao avanca o feed. O mobile permanece com a experiencia anterior: card full-viewport,
+acoes sobrepostas ao video e bottom navigation.
+
+Validacoes:
+
+- `pnpm --dir frontend biome:fix`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

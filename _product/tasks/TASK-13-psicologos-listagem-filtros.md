@@ -1125,3 +1125,20 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - Verificacao estatica confirmou ausencia de href para `/app/profile`/setup na acao lateral `Perfil` do feed.
+
+## Execucao complementar: desktop estilo YouTube Shorts (2026-06-14)
+
+- Pedido do usuario: ajustar apenas o desktop/tablet largo de `/app/psychologists` para se aproximar do YouTube Shorts, preservando a experiencia mobile atual.
+- O scroll do `body`/pagina foi bloqueado em desktop enquanto a rota esta ativa; a unica area rolavel passa a ser o container interno `.psychologists-video-feed` com `scroll-snap` vertical.
+- O card desktop agora usa proporcao 9:16 por variaveis CSS responsivas, tem margem superior visivel e deixa uma pre-visualizacao parcial do proximo card na parte inferior.
+- Foram adicionadas setas circulares externas para psicologo anterior/proximo, com estado desabilitado no primeiro/ultimo item.
+- Eventos de roda/touchpad/touch na area principal a direita da sidebar sao encaminhados para o feed interno, permitindo avancar/voltar mesmo em areas vazias; a sidebar esquerda continua fora desse encaminhamento.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, contratos de API ou UI interna do card.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual de produto permanece `_product/proto/Psicólogos.jpg` e a nova referencia visual foi a captura do YouTube Shorts anexada pelo usuario.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

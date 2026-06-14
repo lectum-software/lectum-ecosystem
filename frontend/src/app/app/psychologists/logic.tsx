@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import {
+  ArrowDown,
   ArrowUp,
   Award,
   Heart,
@@ -23,6 +24,7 @@ import {
   type PointerEvent,
   type KeyboardEvent as ReactKeyboardEvent,
   type TouchEvent as ReactTouchEvent,
+  type WheelEvent as ReactWheelEvent,
   type UIEvent,
   useCallback,
   useDeferredValue,
@@ -616,6 +618,7 @@ export const PsychologistsLogic = () => {
   const isSearchModeActiveRef = useRef(false);
   const shouldResumeVideoAfterSearchRef = useRef(false);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
+  const desktopTouchStartYRef = useRef<number | null>(null);
   const { favoritePsychologist, unfavoritePsychologist } = usePatient({
     enableProfile: false,
   });
@@ -816,6 +819,22 @@ export const PsychologistsLogic = () => {
       clearSwipeHintTimers();
     };
   }, [clearSwipeHintTimers, resetVideoInteractionState]);
+
+  useEffect(() => {
+    if (typeof document === "undefined" || !metrics.isDesktopLayout) return;
+
+    const { body, documentElement } = document;
+    const previousBodyOverflow = body.style.overflow;
+    const previousDocumentOverflow = documentElement.style.overflow;
+
+    body.style.overflow = "hidden";
+    documentElement.style.overflow = "hidden";
+
+    return () => {
+      body.style.overflow = previousBodyOverflow;
+      documentElement.style.overflow = previousDocumentOverflow;
+    };
+  }, [metrics.isDesktopLayout]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -1576,21 +1595,165 @@ export const PsychologistsLogic = () => {
       if (isSearchFocused) return;
 
       const container = event.currentTarget;
-      const slideHeight = container.clientHeight;
-      if (slideHeight <= 0 || psychologists.length === 0) return;
+      if (psychologists.length === 0) return;
 
-      const nextIndex = Math.max(
-        0,
-        Math.min(psychologists.length - 1, Math.round(container.scrollTop / slideHeight)),
-      );
+      let nextIndex = activePsychologistIndex;
+
+      if (metrics.isDesktopLayout) {
+        const slides = Array.from(
+          container.querySelectorAll<HTMLElement>("[data-psychologists-slide-index]"),
+        );
+
+        const nearestSlide = slides.reduce<HTMLElement | null>((nearest, slide) => {
+          if (!nearest) return slide;
+
+          const currentDistance = Math.abs(slide.offsetTop - container.scrollTop);
+          const nearestDistance = Math.abs(nearest.offsetTop - container.scrollTop);
+
+          return currentDistance < nearestDistance ? slide : nearest;
+        }, null);
+
+        const slideIndex = Number(nearestSlide?.dataset.psychologistsSlideIndex);
+
+        if (Number.isFinite(slideIndex)) {
+          nextIndex = Math.max(0, Math.min(psychologists.length - 1, slideIndex));
+        }
+      } else {
+        const slideHeight = container.clientHeight;
+        if (slideHeight <= 0) return;
+
+        nextIndex = Math.max(
+          0,
+          Math.min(psychologists.length - 1, Math.round(container.scrollTop / slideHeight)),
+        );
+      }
 
       if (nextIndex !== activePsychologistIndex) {
         markSwipeHintSeen();
         setActivePsychologistIndex(nextIndex);
       }
     },
-    [activePsychologistIndex, isSearchFocused, markSwipeHintSeen, psychologists.length],
+    [
+      activePsychologistIndex,
+      isSearchFocused,
+      markSwipeHintSeen,
+      metrics.isDesktopLayout,
+      psychologists.length,
+    ],
   );
+
+  const scrollToPsychologistIndex = useCallback(
+    (index: number, behavior: ScrollBehavior = "smooth") => {
+      if (psychologists.length === 0) return;
+
+      const nextIndex = Math.max(0, Math.min(psychologists.length - 1, index));
+      const container = feedContainerRef.current;
+
+      markSwipeHintSeen();
+      setActivePsychologistIndex(nextIndex);
+
+      if (!container) return;
+
+      const targetSlide = container.querySelector<HTMLElement>(
+        `[data-psychologists-slide-index="${nextIndex}"]`,
+      );
+
+      container.scrollTo({
+        behavior,
+        top: targetSlide?.offsetTop ?? nextIndex * container.clientHeight,
+      });
+    },
+    [markSwipeHintSeen, psychologists.length],
+  );
+
+  const navigateToPreviousPsychologist = useCallback(
+    (event: { preventDefault?: () => void; stopPropagation: () => void }) => {
+      event.preventDefault?.();
+      event.stopPropagation();
+      scrollToPsychologistIndex(activePsychologistIndex - 1);
+    },
+    [activePsychologistIndex, scrollToPsychologistIndex],
+  );
+
+  const navigateToNextPsychologist = useCallback(
+    (event: { preventDefault?: () => void; stopPropagation: () => void }) => {
+      event.preventDefault?.();
+      event.stopPropagation();
+      scrollToPsychologistIndex(activePsychologistIndex + 1);
+    },
+    [activePsychologistIndex, scrollToPsychologistIndex],
+  );
+
+  const shouldForwardDesktopFeedScroll = useCallback(() => {
+    return (
+      metrics.isDesktopLayout &&
+      !isFiltersOpen &&
+      !isSearchFocused &&
+      !isVideoProgressSeeking &&
+      psychologists.length > 0
+    );
+  }, [
+    isFiltersOpen,
+    isSearchFocused,
+    isVideoProgressSeeking,
+    metrics.isDesktopLayout,
+    psychologists.length,
+  ]);
+
+  const handleDesktopPageWheelCapture = useCallback(
+    (event: ReactWheelEvent<HTMLDivElement>) => {
+      if (!shouldForwardDesktopFeedScroll()) return;
+
+      const container = feedContainerRef.current;
+      if (!container) return;
+
+      event.preventDefault();
+      registerSwipeHintInteraction();
+      container.scrollBy({
+        behavior: "auto",
+        left: event.deltaX,
+        top: event.deltaY,
+      });
+    },
+    [registerSwipeHintInteraction, shouldForwardDesktopFeedScroll],
+  );
+
+  const handleDesktopPageTouchStart = useCallback(
+    (event: ReactTouchEvent<HTMLDivElement>) => {
+      if (!shouldForwardDesktopFeedScroll()) return;
+
+      desktopTouchStartYRef.current = event.touches[0]?.clientY ?? null;
+    },
+    [shouldForwardDesktopFeedScroll],
+  );
+
+  const handleDesktopPageTouchMove = useCallback(
+    (event: ReactTouchEvent<HTMLDivElement>) => {
+      if (!shouldForwardDesktopFeedScroll()) return;
+
+      const touch = event.touches[0];
+      const lastY = desktopTouchStartYRef.current;
+      const container = feedContainerRef.current;
+
+      if (!touch || lastY === null || !container) return;
+
+      const deltaY = lastY - touch.clientY;
+      if (Math.abs(deltaY) < 1) return;
+
+      event.preventDefault();
+      registerSwipeHintInteraction();
+      container.scrollBy({
+        behavior: "auto",
+        top: deltaY,
+      });
+      desktopTouchStartYRef.current = touch.clientY;
+    },
+    [registerSwipeHintInteraction, shouldForwardDesktopFeedScroll],
+  );
+
+  const handleDesktopPageTouchEnd = useCallback(() => {
+    desktopTouchStartYRef.current = null;
+  }, []);
 
   useEffect(() => {
     if (!isFiltersOpen) return;
@@ -2286,6 +2449,10 @@ export const PsychologistsLogic = () => {
     : false;
   const shouldRenderDesktopActionRail =
     metrics.isDesktopLayout && shouldRenderGlobalControls && Boolean(desktopActionPsychologist);
+  const shouldRenderDesktopNavigationRail =
+    metrics.isDesktopLayout && shouldRenderGlobalControls && psychologists.length > 1;
+  const canNavigateToPreviousPsychologist = activePsychologistIndex > 0;
+  const canNavigateToNextPsychologist = activePsychologistIndex < psychologists.length - 1;
   const isDesktopActionRailHidden = isFiltersOpen;
   const desktopActionRailVisibilityClass = isDesktopActionRailHidden
     ? "psychologists-ui-inert pointer-events-none opacity-0"
@@ -2296,7 +2463,7 @@ export const PsychologistsLogic = () => {
   return (
     <PrivateTemplate
       allowAnonymous
-      contentClassName="max-w-none p-0 sm:p-0 lg:pl-[240px]"
+      contentClassName="h-[100dvh] max-w-none overflow-hidden p-0 sm:p-0 lg:pl-[240px] lg:pb-0"
       desktopNavigation="sidebar"
       navigationDimmed={isMobileSearchFocusMode}
       navigationHidden={metrics.isDesktopLayout ? false : isUiHidden}
@@ -2397,6 +2564,30 @@ export const PsychologistsLogic = () => {
             display: none;
           }
 
+          @media (min-width: 1024px) {
+            .psychologists-shorts-layout {
+              --psychologists-desktop-card-top: 32px;
+              --psychologists-desktop-card-gap: 18px;
+              --psychologists-desktop-card-height: min(860px, calc(100dvh - 112px));
+              --psychologists-desktop-card-width: min(484px, calc(56.25dvh - 63px));
+              --psychologists-desktop-card-half-width: min(242px, calc(28.125dvh - 31.5px));
+              --psychologists-desktop-rail-left: calc(
+                50% +
+                var(--psychologists-desktop-card-half-width) +
+                28px
+              );
+              --psychologists-desktop-slide-height: calc(
+                var(--psychologists-desktop-card-top) +
+                var(--psychologists-desktop-card-height) +
+                var(--psychologists-desktop-card-gap)
+              );
+            }
+
+            .psychologists-video-feed {
+              scroll-padding-top: 0;
+            }
+          }
+
           .psychologists-double-tap-feedback {
             animation: psychologists-double-tap-feedback 520ms ease-out both;
           }
@@ -2449,9 +2640,16 @@ export const PsychologistsLogic = () => {
           }
         `}
       </style>
-      <div className="relative isolate min-h-[100dvh] overflow-hidden bg-background text-white lg:bg-[#f8fafc]">
-        <div className="relative mx-auto flex h-[100dvh] w-full max-w-[430px] justify-center overflow-visible bg-black lg:max-w-none lg:items-center lg:gap-6 lg:bg-transparent lg:px-8">
-          <div className="relative z-20 h-full w-full overflow-hidden bg-black lg:w-[430px] lg:shrink-0 lg:rounded-[22px] lg:shadow-[0_24px_80px_rgba(15,23,42,0.18)]">
+      <div
+        className="psychologists-shorts-layout relative isolate h-[100dvh] min-h-[100dvh] overflow-hidden bg-background text-white lg:bg-[#f8fafc] lg:touch-pan-y"
+        onTouchCancel={handleDesktopPageTouchEnd}
+        onTouchEnd={handleDesktopPageTouchEnd}
+        onTouchMove={handleDesktopPageTouchMove}
+        onTouchStart={handleDesktopPageTouchStart}
+        onWheelCapture={handleDesktopPageWheelCapture}
+      >
+        <div className="relative mx-auto flex h-[100dvh] w-full max-w-[430px] justify-center overflow-hidden bg-black lg:max-w-none lg:items-start lg:gap-0 lg:bg-transparent lg:px-8">
+          <div className="relative z-20 h-full w-full overflow-hidden bg-black lg:h-[100dvh] lg:w-[var(--psychologists-desktop-card-width)] lg:shrink-0 lg:overflow-visible lg:bg-transparent">
             {showInitialLoading ? (
               <div className="grid h-full place-items-center bg-[#F8FAFC] px-4 text-foreground">
                 <LoadingState label="Carregando Psicólogos" />
@@ -2491,7 +2689,7 @@ export const PsychologistsLogic = () => {
               <div
                 aria-hidden={areFeedModeControlsHidden ? true : undefined}
                 className={cn(
-                  "pointer-events-none absolute inset-x-0 top-0 z-[76] bg-gradient-to-b from-black/75 via-black/35 to-transparent px-4 pb-5 pt-[calc(env(safe-area-inset-top)+20px)] transition-all duration-200 ease-out",
+                  "pointer-events-none absolute inset-x-0 top-0 z-[76] bg-gradient-to-b from-black/75 via-black/35 to-transparent px-4 pb-5 pt-[calc(env(safe-area-inset-top)+20px)] transition-all duration-200 ease-out lg:top-[var(--psychologists-desktop-card-top)]",
                   metrics.isDesktopLayout ? "lg:rounded-t-[22px] lg:px-5" : null,
                   feedModeControlsVisibilityClass,
                 )}
@@ -2742,7 +2940,7 @@ export const PsychologistsLogic = () => {
             {!showInitialLoading && !errorMessage && psychologists.length > 0 ? (
               <div
                 className={cn(
-                  "psychologists-video-feed h-full w-full snap-y snap-mandatory overscroll-contain",
+                  "psychologists-video-feed h-full w-full snap-y snap-mandatory overscroll-contain lg:h-[100dvh]",
                   isSearchFocused || isVideoProgressSeeking ? "overflow-hidden" : "overflow-y-auto",
                 )}
                 onPointerDownCapture={isSearchFocused ? undefined : registerSwipeHintInteraction}
@@ -2789,17 +2987,13 @@ export const PsychologistsLogic = () => {
                     <section
                       aria-label={`Psicólogo ${psychologist.name}`}
                       className={cn(
-                        "relative h-[100dvh] w-full snap-start snap-always overflow-hidden",
+                        "relative h-[100dvh] w-full snap-start snap-always overflow-hidden lg:h-[var(--psychologists-desktop-slide-height)] lg:overflow-visible",
                         isActiveSlide && shouldNudgeSwipeCard ? "psychologists-swipe-nudge" : null,
                       )}
+                      data-psychologists-slide-index={index}
                       key={psychologist.id}
                     >
-                      <div
-                        className="absolute inset-0 overflow-hidden"
-                        style={{
-                          top: 0,
-                        }}
-                      >
+                      <div className="absolute inset-0 overflow-hidden lg:inset-x-0 lg:top-[var(--psychologists-desktop-card-top)] lg:bottom-auto lg:h-[var(--psychologists-desktop-card-height)] lg:rounded-[22px] lg:bg-black lg:shadow-[0_24px_80px_rgba(15,23,42,0.18)]">
                         <div className="relative h-full w-full overflow-hidden">
                           {slideShouldShowVideo ? (
                             <video
@@ -3582,7 +3776,7 @@ export const PsychologistsLogic = () => {
           {shouldRenderDesktopControlRail ? (
             <aside
               aria-label="Ações da tela de Psicólogos"
-              className="relative z-[60] hidden h-full w-[240px] shrink-0 self-stretch lg:block"
+              className="absolute top-0 left-[var(--psychologists-desktop-rail-left)] z-[60] hidden h-full w-[176px] lg:block"
             >
               {shouldRenderDesktopFeedControls ? (
                 <div
@@ -3841,6 +4035,46 @@ export const PsychologistsLogic = () => {
                     </button>
                     <span className="text-[11px] font-bold text-[#475569]">Perfil</span>
                   </div>
+                </div>
+              ) : null}
+
+              {shouldRenderDesktopNavigationRail ? (
+                <div
+                  aria-hidden={isDesktopActionRailHidden ? true : undefined}
+                  className={cn(
+                    "absolute top-1/2 right-0 flex -translate-y-1/2 flex-col items-center gap-5 transition-opacity duration-200 ease-out",
+                    desktopActionRailVisibilityClass,
+                  )}
+                >
+                  <button
+                    aria-label="Psicólogo anterior"
+                    className={cn(
+                      "grid h-14 w-14 place-items-center rounded-full bg-white text-[#0f172a] shadow-[0_10px_28px_rgba(15,23,42,0.12)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95",
+                      !canNavigateToPreviousPsychologist || isDesktopActionRailHidden
+                        ? "cursor-not-allowed opacity-35 hover:scale-100"
+                        : null,
+                    )}
+                    disabled={!canNavigateToPreviousPsychologist || isDesktopActionRailHidden}
+                    onClick={navigateToPreviousPsychologist}
+                    type="button"
+                  >
+                    <ArrowUp className="h-6 w-6" aria-hidden="true" strokeWidth={2.4} />
+                  </button>
+
+                  <button
+                    aria-label="Próximo psicólogo"
+                    className={cn(
+                      "grid h-14 w-14 place-items-center rounded-full bg-white text-[#0f172a] shadow-[0_10px_28px_rgba(15,23,42,0.12)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95",
+                      !canNavigateToNextPsychologist || isDesktopActionRailHidden
+                        ? "cursor-not-allowed opacity-35 hover:scale-100"
+                        : null,
+                    )}
+                    disabled={!canNavigateToNextPsychologist || isDesktopActionRailHidden}
+                    onClick={navigateToNextPsychologist}
+                    type="button"
+                  >
+                    <ArrowDown className="h-6 w-6" aria-hidden="true" strokeWidth={2.4} />
+                  </button>
                 </div>
               ) : null}
             </aside>
