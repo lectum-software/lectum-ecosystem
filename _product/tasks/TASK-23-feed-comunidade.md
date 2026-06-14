@@ -226,3 +226,20 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/community/feed`.
+
+## Execucao complementar: fullscreen vertical dos videos do feed de comunidade (2026-06-14)
+
+- Pedido do usuario: ajustar o modo expandido/fullscreen de videos de postagens e respostas em `/app/community/feed`, preservando o player dentro do card e mantendo mobile como esta.
+- Os videos de `PostMedia` e `ProfessionalReplyMedia` receberam a classe `lectum-community-feed-video` sem alterar as classes de exibicao embutida no card.
+- Foi adicionada regra CSS apenas para desktop (`min-width: 1024px`) nos estados nativos `:fullscreen` e `:-webkit-full-screen`.
+- No fullscreen desktop, o video passa a usar `aspect-ratio: 9 / 16`, largura calculada a partir da altura da viewport, `object-fit: contain`, centralizacao via `inset: 0` + `margin: auto` e backdrop preto.
+- No mobile, nenhuma regra nova e aplicada porque o media query desktop nao atua abaixo de 1024px.
+- Nao houve alteracao de backend, Prisma, migrations, packages, schema, contratos de API ou conteudo textual.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual usada foi `_product/proto/Feed Comunidade.jpg`, as capturas enviadas pelo usuario e o pedido detalhado.
+- ADR criado: `adrs/0086-fullscreen-video-feed-comunidade.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/community/feed`.

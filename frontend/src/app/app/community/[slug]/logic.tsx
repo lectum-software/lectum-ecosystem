@@ -577,7 +577,12 @@ const PostMedia = ({ post }: { post: CommunityPost }) => {
   if (post.media_type === "video") {
     return (
       <div className="relative overflow-hidden rounded-[22px] border border-border bg-black shadow-inner">
-        <video className="aspect-[4/5] w-full object-cover" controls playsInline src={mediaUrl}>
+        <video
+          className="lectum-community-feed-video aspect-[4/5] w-full object-cover"
+          controls
+          playsInline
+          src={mediaUrl}
+        >
           <track kind="captions" label="Português" srcLang="pt-BR" />
         </video>
         <span className="pointer-events-none absolute inset-0 grid place-items-center text-white/70">
@@ -617,7 +622,7 @@ const ProfessionalReplyMedia = ({
     return (
       <div className="relative aspect-[9/16] w-full overflow-hidden rounded-[18px] border border-border bg-black shadow-inner">
         <video
-          className="h-full w-full object-cover"
+          className="lectum-community-feed-video h-full w-full object-cover"
           controls
           onClick={(event) => event.stopPropagation()}
           playsInline
@@ -1563,6 +1568,42 @@ export const CommunityFeedLogic = () => {
       </Link>
 
       <style>{`
+        @media (min-width: 1024px) {
+          .lectum-community-feed-video:fullscreen {
+            position: fixed !important;
+            inset: 0 !important;
+            width: min(100vw, calc(100vh * 9 / 16)) !important;
+            height: min(100vh, calc(100vw * 16 / 9)) !important;
+            max-width: 100vw !important;
+            max-height: 100vh !important;
+            margin: auto !important;
+            aspect-ratio: 9 / 16 !important;
+            object-fit: contain !important;
+            background: #000 !important;
+          }
+
+          .lectum-community-feed-video:fullscreen::backdrop {
+            background: rgb(0 0 0 / 0.96);
+          }
+
+          .lectum-community-feed-video:-webkit-full-screen {
+            position: fixed !important;
+            inset: 0 !important;
+            width: min(100vw, calc(100vh * 9 / 16)) !important;
+            height: min(100vh, calc(100vw * 16 / 9)) !important;
+            max-width: 100vw !important;
+            max-height: 100vh !important;
+            margin: auto !important;
+            aspect-ratio: 9 / 16 !important;
+            object-fit: contain !important;
+            background: #000 !important;
+          }
+
+          .lectum-community-feed-video:-webkit-full-screen::backdrop {
+            background: rgb(0 0 0 / 0.96);
+          }
+        }
+
         @keyframes lectum-desktop-create-float {
           0%,
           100% {
