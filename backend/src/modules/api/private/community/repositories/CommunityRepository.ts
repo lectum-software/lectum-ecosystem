@@ -142,10 +142,21 @@ type TopMentorUserResult = Prisma.userGetPayload<{ select: typeof topMentorUserS
 type CurrentVote = 1 | -1 | null;
 type CommunitySortPeriodKey = keyof CommunityPostSortMetricsDTO["comments"];
 type CommunityPostSortValue = "featured" | "new" | "commented" | "voted";
+type GeneralFeedQueueItem = {
+  communityHotScore: number;
+  communityId: string;
+  communitySizeWeight: number;
+  freshnessWeight: number;
+  post: PostResult;
+};
 
 const CONTACT_MESSAGE =
   "Olá, encontrei seu post na comunidade Lectum e gostaria de conversar sobre atendimento.";
 const COMMUNITY_SORT_PERIOD_KEYS: CommunitySortPeriodKey[] = ["week", "month", "year", "all"];
+const GENERAL_FEED_INITIAL_POOL_SIZE_PER_COMMUNITY = 5;
+const GENERAL_FEED_REFILL_SIZE_PER_COMMUNITY = 3;
+const GENERAL_FEED_REFILL_THRESHOLD_PER_COMMUNITY = 1;
+const GENERAL_FEED_RECENT_WINDOW_HOURS = 7 * 24;
 
 const normalizePagination = (query: { page?: number; limit?: number }) => {
   const page = Math.max(1, Number(query.page || 1));
@@ -296,6 +307,201 @@ const sortCommunityPostResults = (
 
     return compareCommunityPostDates(a, b);
   });
+};
+
+const clamp = (min: number, max: number, value: number) => {
+  return Math.min(max, Math.max(min, value));
+};
+
+const generalFeedFreshnessWeight = (hoursSincePublication: number) => {
+  if (hoursSincePublication <= 24) return 1.3;
+  if (hoursSincePublication <= 72) return 1.1;
+  if (hoursSincePublication <= GENERAL_FEED_RECENT_WINDOW_HOURS) return 1;
+
+  return 0.8;
+};
+
+const generalFeedPostHotScore = (
+  post: PostResult,
+  metricsByPostId: Map<string, CommunityPostSortMetricsDTO>,
+) => {
+  const metrics = communityPostMetrics(post.id, metricsByPostId);
+  const downvotePenalty = post.downvotes_count * 0.5;
+
+  return (
+    metrics.upvotes.all * 3 +
+    metrics.comments.all * 5 +
+    metrics.psychologist_replies_count * 25 +
+    metrics.top_mentor_replies_count * 40 +
+    metrics.shares_count * 4 -
+    metrics.penalty -
+    downvotePenalty
+  );
+};
+
+const generalFeedCommunityHotScore = (
+  post: PostResult,
+  metricsByPostId: Map<string, CommunityPostSortMetricsDTO>,
+  now: number,
+) => {
+  const hoursSincePublication = Math.max(0, (now - post.createdAt.getTime()) / 3_600_000);
+
+  return generalFeedPostHotScore(post, metricsByPostId) / (hoursSincePublication + 2) ** 0.5;
+};
+
+const generalFeedDiversityWeight = (communityId: string, recentCommunityHistory: string[]) => {
+  const previousCommunityId = recentCommunityHistory[recentCommunityHistory.length - 1];
+  if (previousCommunityId === communityId) return 0.35;
+
+  const lastThreeCommunityIds = recentCommunityHistory.slice(-3);
+  if (lastThreeCommunityIds.includes(communityId)) return 0.7;
+
+  return 1;
+};
+
+const generalFeedCandidateScore = (
+  item: GeneralFeedQueueItem,
+  recentCommunityHistory: string[],
+) => {
+  return (
+    item.communityHotScore *
+    item.freshnessWeight *
+    item.communitySizeWeight *
+    generalFeedDiversityWeight(item.communityId, recentCommunityHistory)
+  );
+};
+
+const buildGeneralFeedCommunitySizeWeights = (items: PostResult[], now: number) => {
+  const recentCountsByCommunityId = new Map<string, number>();
+
+  for (const item of items) {
+    const communityId = item.community.id;
+    const hoursSincePublication = Math.max(0, (now - item.createdAt.getTime()) / 3_600_000);
+    const increment = hoursSincePublication <= GENERAL_FEED_RECENT_WINDOW_HOURS ? 1 : 0;
+
+    recentCountsByCommunityId.set(
+      communityId,
+      (recentCountsByCommunityId.get(communityId) ?? 0) + increment,
+    );
+  }
+
+  const communityIds = [...new Set(items.map((item) => item.community.id))];
+  const normalizedRecentCounts = communityIds.map((communityId) =>
+    Math.max(1, recentCountsByCommunityId.get(communityId) ?? 0),
+  );
+  const averageRecentCount =
+    normalizedRecentCounts.length > 0
+      ? normalizedRecentCounts.reduce((total, value) => total + value, 0) /
+        normalizedRecentCounts.length
+      : 1;
+
+  return new Map(
+    communityIds.map((communityId) => {
+      const recentCount = Math.max(1, recentCountsByCommunityId.get(communityId) ?? 0);
+      const weight = clamp(0.75, 1.15, 1 / Math.sqrt(recentCount / averageRecentCount));
+
+      return [communityId, weight];
+    }),
+  );
+};
+
+const sortGeneralFeedPostResults = (
+  items: PostResult[],
+  metricsByPostId: Map<string, CommunityPostSortMetricsDTO>,
+) => {
+  const now = Date.now();
+  const communitySizeWeights = buildGeneralFeedCommunitySizeWeights(items, now);
+  const queuesByCommunityId = new Map<string, GeneralFeedQueueItem[]>();
+
+  for (const post of items.filter((item) => item.status !== "removido")) {
+    const communityId = post.community.id;
+    const hoursSincePublication = Math.max(0, (now - post.createdAt.getTime()) / 3_600_000);
+    const queue = queuesByCommunityId.get(communityId) ?? [];
+
+    queue.push({
+      communityHotScore: generalFeedCommunityHotScore(post, metricsByPostId, now),
+      communityId,
+      communitySizeWeight: communitySizeWeights.get(communityId) ?? 1,
+      freshnessWeight: generalFeedFreshnessWeight(hoursSincePublication),
+      post,
+    });
+    queuesByCommunityId.set(communityId, queue);
+  }
+
+  for (const queue of queuesByCommunityId.values()) {
+    queue.sort((a, b) => {
+      const scoreDiff = b.communityHotScore - a.communityHotScore;
+      if (scoreDiff !== 0) return scoreDiff;
+
+      return compareCommunityPostDates(a.post, b.post);
+    });
+  }
+
+  const pool: GeneralFeedQueueItem[] = [];
+  const queueCursorsByCommunityId = new Map<string, number>();
+  const loadNextCandidates = (communityId: string, count: number) => {
+    const queue = queuesByCommunityId.get(communityId);
+    if (!queue) return;
+
+    const cursor = queueCursorsByCommunityId.get(communityId) ?? 0;
+    const nextCursor = Math.min(queue.length, cursor + count);
+
+    pool.push(...queue.slice(cursor, nextCursor));
+    queueCursorsByCommunityId.set(communityId, nextCursor);
+  };
+
+  for (const communityId of queuesByCommunityId.keys()) {
+    loadNextCandidates(communityId, GENERAL_FEED_INITIAL_POOL_SIZE_PER_COMMUNITY);
+  }
+
+  const rankedItems: GeneralFeedQueueItem[] = [];
+  const recentCommunityHistory: string[] = [];
+  const totalCandidates = [...queuesByCommunityId.values()].reduce(
+    (total, queue) => total + queue.length,
+    0,
+  );
+
+  while (rankedItems.length < totalCandidates && pool.length > 0) {
+    let selectedIndex = 0;
+    let selectedScore = Number.NEGATIVE_INFINITY;
+
+    for (let index = 0; index < pool.length; index += 1) {
+      const candidate = pool[index];
+      const score = generalFeedCandidateScore(candidate, recentCommunityHistory);
+
+      if (score > selectedScore) {
+        selectedIndex = index;
+        selectedScore = score;
+        continue;
+      }
+
+      if (score === selectedScore) {
+        const selected = pool[selectedIndex];
+        const hotScoreDiff = candidate.communityHotScore - selected.communityHotScore;
+
+        if (
+          hotScoreDiff > 0 ||
+          (hotScoreDiff === 0 && compareCommunityPostDates(candidate.post, selected.post) < 0)
+        ) {
+          selectedIndex = index;
+        }
+      }
+    }
+
+    const [selected] = pool.splice(selectedIndex, 1);
+    rankedItems.push(selected);
+    recentCommunityHistory.push(selected.communityId);
+
+    const selectedCommunityPoolSize = pool.filter(
+      (candidate) => candidate.communityId === selected.communityId,
+    ).length;
+
+    if (selectedCommunityPoolSize <= GENERAL_FEED_REFILL_THRESHOLD_PER_COMMUNITY) {
+      loadNextCandidates(selected.communityId, GENERAL_FEED_REFILL_SIZE_PER_COMMUNITY);
+    }
+  }
+
+  return rankedItems.map((item) => item.post);
 };
 
 const toCommunityResponse = (item: {
@@ -829,23 +1035,6 @@ const toPostResponse = (
   };
 };
 
-const feedEngagementScore = (post: CommunityPostDTO) => {
-  const verifiedReplyBoost = post.highlighted_professional_reply
-    ? 250 + post.highlighted_professional_reply.upvotes_count * 4
-    : 0;
-
-  return post.upvotes_count * 3 + post.replies_count * 2 + post.saves_count + verifiedReplyBoost;
-};
-
-const sortFeedPosts = (items: CommunityPostDTO[]) => {
-  return items.sort((a, b) => {
-    const scoreDiff = feedEngagementScore(b) - feedEngagementScore(a);
-    if (scoreDiff !== 0) return scoreDiff;
-
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-  });
-};
-
 export class CommunityRepository implements ICommunityRepository {
   readonly repository: ORM["community"];
 
@@ -1116,11 +1305,9 @@ export class CommunityRepository implements ICommunityRepository {
       OR: postSearchWhere(search),
     };
 
-    const [items, count] = await Promise.all([
+    const [allItems, count] = await Promise.all([
       prisma.community_post.findMany({
         where,
-        take: pagination.limit,
-        skip: pagination.skip,
         orderBy: [
           { upvotes_count: "desc" },
           { replies_count: "desc" },
@@ -1132,6 +1319,12 @@ export class CommunityRepository implements ICommunityRepository {
       }),
       prisma.community_post.count({ where }),
     ]);
+    const allPostIds = allItems.map((item) => item.id);
+    const sortMetricsByPostId = await getCommunityPostSortMetrics(allPostIds);
+    const items = sortGeneralFeedPostResults(allItems, sortMetricsByPostId).slice(
+      pagination.skip,
+      pagination.skip + pagination.limit,
+    );
     const postIds = items.map((item) => item.id);
     const communityIds = [...new Set(items.map((item) => item.community.id))];
     const replyIds = highlightedReplyIds(items);
@@ -1143,15 +1336,13 @@ export class CommunityRepository implements ICommunityRepository {
     ]);
 
     return {
-      data: sortFeedPosts(
-        items.map((item) =>
-          toPostResponse(
-            item,
-            currentVotes.get(item.id) ?? null,
-            savedPostIds.has(item.id),
-            followedCommunityIds,
-            savedReplyIds,
-          ),
+      data: items.map((item) =>
+        toPostResponse(
+          item,
+          currentVotes.get(item.id) ?? null,
+          savedPostIds.has(item.id),
+          followedCommunityIds,
+          savedReplyIds,
         ),
       ),
       page: pagination.page,

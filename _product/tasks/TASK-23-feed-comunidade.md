@@ -275,3 +275,18 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://localhost:3000/app/community/feed` com cookie de sessao de desenvolvimento.
+
+## Execucao complementar: ranking diversificado do feed geral (2026-06-14)
+
+- Pedido do usuario: implementar a logica completa de ordenacao do feed geral `/app/community/feed`, reunindo posts de todas as comunidades com diversidade, sem limitar o feed aos Top 5 de cada comunidade e sem alterar as paginas internas `/app/community/[slug]`.
+- Backend: o endpoint agregado `GET /api/private/community/feed/posts` passou a buscar o conjunto elegivel persistido, calcular metricas reais por post, criar filas ranqueadas por comunidade, montar uma janela inicial de ate 5 candidatos por comunidade e recarregar novos candidatos da fila conforme a pagina ordenada e montada.
+- Score base do feed geral: `PostHotScore = upvotes*3 + comentarios*5 + respostasPsicologos*25 + respostasTopMentor*40 + compartilhamentos*4 - penalidades`, com decaimento temporal `CommunityHotScore = PostHotScore / (horasDesdePublicacao + 2)^0.5`.
+- Score final: `FeedScore = CommunityHotScore * FreshnessWeight * CommunitySizeWeight * DiversityWeight`, usando pesos de frescor por janela de idade, peso de tamanho por comunidade com `clamp(0.75, 1.15, ...)` e penalizacao dinamica de repeticao de comunidade no historico recente.
+- Diversidade: se a comunidade apareceu imediatamente antes, o peso e `0.35`; se apareceu nos ultimos 3 posts, `0.70`; caso contrario `1.00`.
+- Paginacao: a ordenacao global e deterministica e a paginacao atual recebe fatias consecutivas dessa ordem, sem repetir posts entre paginas enquanto o conjunto persistido nao mudar. A janela inicial Top 5 por comunidade e apenas o primeiro pool de candidatos; posts abaixo dessa janela continuam elegiveis quando a fila da comunidade e recarregada.
+- Penalidades: posts removidos seguem excluidos por `status = publicado`; nao ha campos persistidos de denuncia/ocultacao/moderacao, entao a estrutura fica preparada via penalidade interna. Downvotes persistidos sao usados apenas como penalidade leve interna e nao sao exibidos ao usuario.
+- Escopo: nao houve alteracao no endpoint `GET /api/private/community/:slug/posts` nem no algoritmo das paginas internas de comunidade, que continuam usando o ranking comunitario proprio.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual registrada permanece `_product/proto/Feed Comunidade.jpg`, mas a alteracao foi de regra de ranking backend sem mudanca visual de layout.
+- ADR criado: `adrs/0088-feed-geral-ranking-diversificado.md`.
+
+- Validacoes executadas nesta execucao: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check`; HTTP local sem cookie autenticado retornou 307 esperado para `/app/community/feed` e `/app/community/ansiedade-em-equilibrio`.
