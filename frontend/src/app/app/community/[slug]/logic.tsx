@@ -1153,7 +1153,7 @@ const CommunityRulesCard = ({ communitySlug }: { communitySlug: string }) => {
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-black text-foreground">Regras da comunidade</span>
           <span className="block text-xs font-semibold text-muted">
-            Curadoria e moderação pela equipe Lectum
+            Comunidade mediada por psicólogos e moderada pela equipe Lectum.
           </span>
         </span>
         <ChevronDown
@@ -1176,15 +1176,27 @@ const CommunityRulesCard = ({ communitySlug }: { communitySlug: string }) => {
           <ul className="grid gap-2 pt-3 text-sm leading-6 text-[#64748B] dark:text-muted">
             <li className="flex gap-2">
               <ListChecks className="mt-1 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-              Publique com respeito, acolhimento e sem exposição de terceiros.
+              Compartilhe sua história à vontade, mas preserve sua privacidade e a de terceiros.
+              Evite publicar informações como telefone, endereço, e-mail, CPF ou nome completo.
             </li>
             <li className="flex gap-2">
               <ListChecks className="mt-1 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-              Conteúdos clínicos não substituem atendimento psicológico individualizado.
+              Comente nos posts com respeito, acolhimento e empatia, mesmo quando discordar.
             </li>
             <li className="flex gap-2">
               <ListChecks className="mt-1 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-              Solicitações de novas comunidades passam por análise da plataforma.
+              Não publique conteúdos que incentivem violência, autolesão ou comportamentos
+              prejudiciais à saúde física ou mental.
+            </li>
+            <li className="flex gap-2">
+              <ListChecks className="mt-1 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+              Psicólogos participam como mediadores e fontes de conhecimento, mas não realizam
+              consultas, diagnósticos ou acompanhamento pela comunidade.
+            </li>
+            <li className="flex gap-2">
+              <ListChecks className="mt-1 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+              Se desejar uma consulta, diagnóstico ou acompanhamento individualizado, entre em
+              contato diretamente com o psicólogo pelo WhatsApp para agendar um atendimento.
             </li>
           </ul>
         </div>

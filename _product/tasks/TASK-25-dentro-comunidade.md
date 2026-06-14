@@ -199,3 +199,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Escopo: não houve alteração no algoritmo, contrato visual ou ordenação do feed geral `/app/community/feed`; a exibição de downvotes ao usuário permanece removida conforme ajustes anteriores.
 - ADR atualizado: `adrs/0066-pagina-detalhe-comunidade-participacao.md`.
 - Validações executadas: `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir backend build`, `pnpm check`; HTTP local sem cookie autenticado retornou 307 esperado para `/app/community/ansiedade-em-equilibrio` e `/app/community/feed`.
+
+## Complemento 2026-06-14 — copy das regras da comunidade
+
+- Pedido do usuário: atualizar apenas o conteúdo textual do card `Regras da comunidade` em `/app/community/[slug]`, preservando layout, accordion, ícones, hierarquia e comportamento existentes.
+- Frontend: o subtítulo do card passou para `Comunidade mediada por psicólogos e moderada pela equipe Lectum.`.
+- As regras foram substituídas e reordenadas para abordar privacidade, respeito, prevenção de conteúdos prejudiciais, papel mediador dos psicólogos e encaminhamento para WhatsApp quando houver desejo de consulta, diagnóstico ou acompanhamento individualizado.
+- Escopo: sem mudanças de backend, Prisma, packages, rotas, lógica de ranking, responsividade ou layout do componente.
+- ADR não atualizado por se tratar apenas de alteração de copy, sem decisão arquitetural, integração, regra de domínio nova ou trade-off relevante.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`; HTTP local sem cookie autenticado retornou 307 esperado para `/app/community/ansiedade-em-equilibrio`.
