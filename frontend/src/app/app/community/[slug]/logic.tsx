@@ -407,8 +407,8 @@ const ProfessionalReplyMedia = ({
 
   if (reply.media_type === "video") {
     return (
-      <div className="relative mt-3 overflow-hidden rounded-[18px] border border-[#D8EDE4] bg-black shadow-inner">
-        <video className="aspect-[4/5] w-full object-cover" controls playsInline src={mediaUrl}>
+      <div className="relative mt-3 overflow-hidden rounded-[18px] border border-border bg-black shadow-inner">
+        <video className="aspect-[9/16] w-full object-cover" controls playsInline src={mediaUrl}>
           <track kind="captions" label="Português" srcLang="pt-BR" />
         </video>
         <span className="pointer-events-none absolute inset-0 grid place-items-center text-white/70">
@@ -421,9 +421,9 @@ const ProfessionalReplyMedia = ({
   }
 
   return (
-    <div className="relative mt-3 aspect-[4/5] overflow-hidden rounded-[18px] border border-[#D8EDE4] bg-surface-muted">
+    <div className="relative mt-3 aspect-[4/5] overflow-hidden rounded-[18px] border border-border bg-surface-muted">
       <Image
-        alt={reply.title ?? "Mídia da resposta profissional"}
+        alt="Mídia da resposta profissional"
         className="object-cover"
         fill
         sizes="(max-width: 430px) calc(100vw - 96px), 480px"
@@ -436,20 +436,40 @@ const ProfessionalReplyMedia = ({
 
 const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
   const reply = post.highlighted_professional_reply;
+  const [replyExpanded, setReplyExpanded] = useState(false);
+  const [replyCanToggle, setReplyCanToggle] = useState(false);
+  const replyContentRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    const element = replyContentRef.current;
+
+    if (!element || replyExpanded) return;
+
+    const updateReplyToggle = () => {
+      setReplyCanToggle(element.scrollHeight > element.clientHeight + 1);
+    };
+
+    updateReplyToggle();
+
+    if (typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(updateReplyToggle);
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, [replyExpanded]);
+
   if (!reply) return null;
 
   return (
     <div className="grid min-w-0 grid-cols-[18px_minmax(0,1fr)] gap-2">
       <div className="flex justify-center pt-1" aria-hidden="true">
-        <span className="h-full min-h-28 w-px rounded-full bg-border" />
+        <span className="h-full min-h-24 w-px rounded-full bg-border" />
       </div>
-      <div className="min-w-0 rounded-[18px] border border-border/80 bg-surface-muted/45 px-3.5 py-3 shadow-none dark:bg-background/55">
-        <p className="mb-2 text-[10px] font-black uppercase tracking-[0.08em] text-success">
-          Resposta do psicólogo
-        </p>
+      <div className="min-w-0 px-1 py-1">
         <div className="flex min-w-0 items-start gap-2.5">
           <AuthorAvatar author={reply.author} />
-          <div className="grid min-w-0 flex-1 gap-1">
+          <div className="grid min-w-0 flex-1 gap-0.5">
             <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
               <p className="min-w-0 truncate text-sm font-black text-foreground">
                 {reply.author.name}
@@ -460,35 +480,34 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
                   aria-label="Psicólogo verificado"
                 />
               ) : null}
-              <span className="text-[11px] font-semibold text-muted" aria-hidden="true">
-                •
-              </span>
-              <span className="text-[11px] font-semibold text-muted">
-                {reply.author.type_label}
-              </span>
-              <span className="text-[11px] font-semibold text-muted" aria-hidden="true">
-                •
-              </span>
-              <time className="text-[11px] font-semibold text-muted" dateTime={reply.created_at}>
-                {formatRelativeTime(reply.created_at)}
-              </time>
-            </div>
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
               <MentorBadge badge={reply.author.featured_badge} />
-              <span className="text-[11px] font-semibold text-muted">
-                {reply.upvotes_count.toLocaleString("pt-BR")} upvotes
-              </span>
             </div>
+            <p className="min-w-0 truncate text-[11px] font-semibold text-muted">
+              {reply.author.type_label} <span aria-hidden="true">•</span>{" "}
+              <time dateTime={reply.created_at}>{formatRelativeTime(reply.created_at)}</time>{" "}
+              <span aria-hidden="true">•</span> {reply.upvotes_count.toLocaleString("pt-BR")}{" "}
+              upvotes
+            </p>
           </div>
         </div>
-        {reply.title ? (
-          <h4 className="mt-3 text-sm font-black text-[#182033] dark:text-foreground">
-            {reply.title}
-          </h4>
-        ) : null}
-        <p className="mt-2 whitespace-pre-line text-[15px] leading-6 text-[#334155] dark:text-muted">
+        <p
+          className={cn(
+            "mt-2 whitespace-pre-line text-sm leading-6 text-[#334155] dark:text-muted",
+            !replyExpanded && "line-clamp-2",
+          )}
+          ref={replyContentRef}
+        >
           {reply.content}
         </p>
+        {replyCanToggle ? (
+          <button
+            className="mt-1 w-fit text-[11px] font-semibold text-muted transition hover:text-foreground"
+            onClick={() => setReplyExpanded((current) => !current)}
+            type="button"
+          >
+            {replyExpanded ? "ver menos" : "ver mais"}
+          </button>
+        ) : null}
         <ProfessionalReplyMedia reply={reply} />
         {reply.author.whatsapp_url ? (
           <Button
@@ -601,11 +620,11 @@ const PostCard = ({
         </p>
         {contentCanToggle ? (
           <button
-            className="w-fit text-xs font-black text-primary transition hover:text-primary/80"
+            className="w-fit text-[11px] font-semibold text-muted transition hover:text-foreground"
             onClick={() => setContentExpanded((current) => !current)}
             type="button"
           >
-            {contentExpanded ? "Ver menos" : "Ver mais"}
+            {contentExpanded ? "ver menos" : "ver mais"}
           </button>
         ) : null}
       </div>

@@ -229,6 +229,7 @@ const MediaBlock = ({
   if (!src) return null;
 
   const radius = size === "lg" ? "rounded-[22px]" : "rounded-[18px]";
+  const videoAspect = size === "md" ? "aspect-[9/16]" : "aspect-[4/5]";
   const imageSizes =
     size === "lg"
       ? "(max-width: 430px) calc(100vw - 40px), 640px"
@@ -242,7 +243,7 @@ const MediaBlock = ({
           radius,
         )}
       >
-        <video className="aspect-[4/5] w-full object-cover" controls playsInline src={src}>
+        <video className={cn(videoAspect, "w-full object-cover")} controls playsInline src={src}>
           <track kind="captions" label="Português" srcLang="pt-BR" />
         </video>
         <span className="pointer-events-none absolute inset-0 grid place-items-center text-white/70">
@@ -554,12 +555,11 @@ const ReplyCard = ({
         </button>
       </div>
 
-      {reply.title ? <h4 className="text-base font-black leading-6">{reply.title}</h4> : null}
       <p className="whitespace-pre-line text-sm leading-6 text-[#475569] dark:text-muted">
         {reply.content}
       </p>
       <MediaBlock
-        alt={reply.title ?? "Mídia da resposta"}
+        alt="Mídia da resposta"
         mediaType={reply.media_type}
         mediaUrl={reply.media_url}
         size="md"
