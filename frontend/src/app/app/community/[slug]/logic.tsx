@@ -203,13 +203,23 @@ const communityPostDetailHref = (post: CommunityPost) =>
 const AuthorAvatar = ({
   anonymous,
   author,
+  size = "md",
 }: {
   anonymous?: boolean;
   author: CommunityPost["author"];
+  size?: "md" | "lg";
 }) => {
+  const sizeClass = size === "lg" ? "h-10 w-10" : "h-9 w-9";
+  const imageSize = size === "lg" ? "40px" : "36px";
+
   if (anonymous) {
     return (
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#F1F5F9] text-[#94A3B8] ring-2 ring-[#E2E8F0] dark:bg-surface-muted dark:text-muted dark:ring-border">
+      <span
+        className={cn(
+          "grid shrink-0 place-items-center rounded-full bg-[#F1F5F9] text-[#94A3B8] ring-2 ring-[#E2E8F0] dark:bg-surface-muted dark:text-muted dark:ring-border",
+          sizeClass,
+        )}
+      >
         <UserX className="h-5 w-5" aria-hidden="true" />
       </span>
     );
@@ -219,13 +229,18 @@ const AuthorAvatar = ({
   const avatarIsPublicMedia = isPublicMediaUrl(author.avatar);
 
   return (
-    <span className="relative grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft text-xs font-black text-primary ring-2 ring-white dark:ring-background">
+    <span
+      className={cn(
+        "relative grid shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft text-xs font-black text-primary ring-2 ring-white dark:ring-background",
+        sizeClass,
+      )}
+    >
       {avatarSrc ? (
         <Image
           alt={author.name}
           className="object-cover"
           fill
-          sizes="36px"
+          sizes={imageSize}
           src={avatarSrc}
           unoptimized={avatarIsPublicMedia}
         />
@@ -262,7 +277,7 @@ const MentorBadge = ({ badge }: { badge?: string | null }) => {
   return (
     <span
       className={cn(
-        "shrink-0 text-[11px] font-medium leading-none tracking-[-0.01em] opacity-90",
+        "shrink-0 text-[11px] font-medium leading-none tracking-normal opacity-75",
         mentorBadgeClassName(badge),
       )}
     >
@@ -487,10 +502,10 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
       </div>
       <div className="pointer-events-none relative z-10 min-w-0 px-1 py-1">
         <div className="flex min-w-0 items-start gap-2.5">
-          <AuthorAvatar author={reply.author} />
+          <AuthorAvatar author={reply.author} size="lg" />
           <div className="grid min-w-0 flex-1 gap-0.5">
             <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-              <span className="inline-flex min-w-0 items-center gap-1">
+              <span className="inline-flex min-w-0 items-center gap-[5px]">
                 <Link
                   className="pointer-events-auto min-w-0 truncate text-sm font-black text-foreground underline-offset-4 transition hover:text-primary hover:underline"
                   href={profileHref}
@@ -519,18 +534,33 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
             </Link>
           </div>
         </div>
-        <p
-          className={cn(
-            "mt-2 whitespace-pre-line text-sm leading-6 text-[#334155] dark:text-muted",
-            !replyExpanded && "line-clamp-2",
-          )}
-          ref={replyContentRef}
-        >
-          {reply.content}
-        </p>
-        {replyCanToggle ? (
+        <div className="relative mt-2">
+          <p
+            className={cn(
+              "whitespace-pre-line text-sm leading-6 text-[#334155] dark:text-muted",
+              !replyExpanded && "line-clamp-2",
+              replyCanToggle && !replyExpanded && "pr-16",
+            )}
+            ref={replyContentRef}
+          >
+            {reply.content}
+          </p>
+          {replyCanToggle && !replyExpanded ? (
+            <button
+              className="pointer-events-auto absolute right-0 bottom-0 z-10 bg-gradient-to-l from-white via-white/95 to-transparent pl-5 text-[11px] font-medium leading-6 text-[#64748B]/80 transition hover:text-[#475569] dark:from-surface dark:via-surface/95 dark:text-muted/80 dark:hover:text-muted"
+              onClick={(event) => {
+                event.stopPropagation();
+                setReplyExpanded(true);
+              }}
+              type="button"
+            >
+              ... ver mais
+            </button>
+          ) : null}
+        </div>
+        {replyCanToggle && replyExpanded ? (
           <button
-            className="pointer-events-auto mt-0.5 w-fit text-[10px] font-medium leading-none text-subtle transition hover:text-muted"
+            className="pointer-events-auto mt-0.5 w-fit text-[11px] font-medium leading-none text-[#64748B]/80 transition hover:text-[#475569] dark:text-muted/80 dark:hover:text-muted"
             onClick={(event) => {
               event.stopPropagation();
               setReplyExpanded((current) => !current);
@@ -684,7 +714,7 @@ const PostCard = ({
         <AuthorAvatar anonymous={isAnonymousPatient} author={post.author} />
         <div className="grid min-w-0 flex-1 gap-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <div className="flex min-w-0 items-center gap-1">
+            <div className="flex min-w-0 items-center gap-[5px]">
               <h2 className="truncate text-sm font-black text-foreground">{post.author.name}</h2>
               {post.author.verified ? (
                 <BadgeCheck
@@ -710,23 +740,35 @@ const PostCard = ({
         >
           {post.title}
         </Link>
-        <Link
-          className="block rounded-[12px] underline-offset-4 transition hover:text-foreground"
-          href={communityPostDetailHref(post)}
-        >
-          <p
-            className={cn(
-              "whitespace-pre-line text-sm leading-6 text-[#64748B] dark:text-muted",
-              !contentExpanded && "line-clamp-2",
-            )}
-            ref={contentRef}
+        <div className="relative">
+          <Link
+            className="block rounded-[12px] underline-offset-4 transition hover:text-foreground"
+            href={communityPostDetailHref(post)}
           >
-            {post.content}
-          </p>
-        </Link>
-        {contentCanToggle ? (
+            <p
+              className={cn(
+                "whitespace-pre-line text-sm leading-6 text-[#64748B] dark:text-muted",
+                !contentExpanded && "line-clamp-2",
+                contentCanToggle && !contentExpanded && "pr-16",
+              )}
+              ref={contentRef}
+            >
+              {post.content}
+            </p>
+          </Link>
+          {contentCanToggle && !contentExpanded ? (
+            <button
+              className="absolute right-0 bottom-0 z-10 bg-gradient-to-l from-white via-white/95 to-transparent pl-5 text-[11px] font-medium leading-6 text-[#64748B]/80 transition hover:text-[#475569] dark:from-surface dark:via-surface/95 dark:text-muted/80 dark:hover:text-muted"
+              onClick={() => setContentExpanded(true)}
+              type="button"
+            >
+              ... ver mais
+            </button>
+          ) : null}
+        </div>
+        {contentCanToggle && contentExpanded ? (
           <button
-            className="w-fit text-[10px] font-medium leading-none text-subtle transition hover:text-muted"
+            className="w-fit text-[11px] font-medium leading-none text-[#64748B]/80 transition hover:text-[#475569] dark:text-muted/80 dark:hover:text-muted"
             onClick={() => setContentExpanded((current) => !current)}
             type="button"
           >

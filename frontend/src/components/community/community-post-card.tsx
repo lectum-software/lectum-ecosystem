@@ -72,14 +72,24 @@ const AuthorAvatar = ({
   anonymous,
   avatar,
   name,
+  size = "md",
 }: {
   anonymous?: boolean;
   avatar: string | null;
   name: string;
+  size?: "md" | "lg";
 }) => {
+  const sizeClass = size === "lg" ? "h-10 w-10" : "h-9 w-9";
+  const imageSize = size === "lg" ? "40px" : "36px";
+
   if (anonymous) {
     return (
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface-muted text-muted ring-2 ring-border">
+      <span
+        className={cn(
+          "grid shrink-0 place-items-center rounded-full bg-surface-muted text-muted ring-2 ring-border",
+          sizeClass,
+        )}
+      >
         <UserX className="h-5 w-5" aria-hidden="true" />
       </span>
     );
@@ -88,13 +98,18 @@ const AuthorAvatar = ({
   const avatarSrc = resolvePublicMediaUrl(avatar);
 
   return (
-    <span className="relative grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft text-xs font-black text-primary ring-2 ring-background">
+    <span
+      className={cn(
+        "relative grid shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft text-xs font-black text-primary ring-2 ring-background",
+        sizeClass,
+      )}
+    >
       {avatarSrc ? (
         <Image
           alt={name}
           className="object-cover"
           fill
-          sizes="36px"
+          sizes={imageSize}
           src={avatarSrc}
           unoptimized={isPublicMediaUrl(avatar)}
         />
@@ -131,7 +146,7 @@ const MentorBadge = ({ badge }: { badge?: string | null }) => {
   return (
     <span
       className={cn(
-        "shrink-0 text-[11px] font-medium leading-none tracking-[-0.01em] opacity-90",
+        "shrink-0 text-[11px] font-medium leading-none tracking-normal opacity-75",
         colorClassName,
       )}
     >
@@ -192,10 +207,10 @@ const ProfessionalReplyPreview = ({ reply }: { reply: PostProfessionalReply | nu
         Resposta profissional em destaque
       </p>
       <div className="mb-2 flex items-center gap-2">
-        <AuthorAvatar avatar={reply.author.avatar} name={reply.author.name} />
+        <AuthorAvatar avatar={reply.author.avatar} name={reply.author.name} size="lg" />
         <div className="grid min-w-0 gap-1">
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="inline-flex min-w-0 items-center gap-1">
+            <span className="inline-flex min-w-0 items-center gap-[5px]">
               <span className="truncate text-sm font-black text-foreground">
                 {reply.author.name}
               </span>
@@ -272,7 +287,7 @@ export const CommunityPostCard = ({
         />
         <div className="grid min-w-0 flex-1 gap-1">
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-            <div className="flex min-w-0 items-center gap-1">
+            <div className="flex min-w-0 items-center gap-[5px]">
               <h2 className="truncate text-sm font-black text-foreground">{post.author.name}</h2>
               {post.author.verified ? (
                 <BadgeCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />

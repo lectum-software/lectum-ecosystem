@@ -150,7 +150,7 @@ const MentorBadge = ({ badge }: { badge?: string | null }) => {
   return (
     <span
       className={cn(
-        "shrink-0 text-[11px] font-medium leading-none tracking-[-0.01em] opacity-90",
+        "shrink-0 text-[11px] font-medium leading-none tracking-normal opacity-75",
         mentorBadgeClassName(badge),
       )}
     >
@@ -166,9 +166,10 @@ const AuthorAvatar = ({
 }: {
   anonymous?: boolean;
   author: PostDetail["author"] | PostReply["author"];
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "reply";
 }) => {
-  const sizeClass = size === "sm" ? "h-8 w-8" : "h-10 w-10";
+  const sizeClass = size === "sm" ? "h-8 w-8" : size === "reply" ? "h-9 w-9" : "h-10 w-10";
+  const imageSize = size === "sm" ? "32px" : size === "reply" ? "36px" : "40px";
 
   if (anonymous) {
     return (
@@ -198,7 +199,7 @@ const AuthorAvatar = ({
           alt={author.name}
           className="object-cover"
           fill
-          sizes={size === "sm" ? "32px" : "40px"}
+          sizes={imageSize}
           src={avatarSrc}
           unoptimized={avatarIsPublicMedia}
         />
@@ -314,7 +315,7 @@ const PostHeader = ({ post, slug }: { post: PostDetail; slug: string }) => {
         <AuthorAvatar anonymous={isAnonymousPatient} author={post.author} />
         <div className="grid min-w-0 flex-1 gap-1">
           <div className="flex min-w-0 items-center gap-x-2">
-            <div className="flex min-w-0 items-center gap-1">
+            <div className="flex min-w-0 items-center gap-[5px]">
               <h2 className="truncate text-sm font-black text-foreground">{post.author.name}</h2>
               {post.author.verified ? (
                 <BadgeCheck
@@ -515,10 +516,10 @@ const ReplyCard = ({
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-start gap-3">
-          <AuthorAvatar author={reply.author} size="sm" />
+          <AuthorAvatar author={reply.author} size={isProfessional ? "reply" : "sm"} />
           <div className="grid min-w-0 gap-1">
             <div className="flex min-w-0 items-center gap-x-2">
-              <div className="flex min-w-0 items-center gap-1">
+              <div className="flex min-w-0 items-center gap-[5px]">
                 {isProfessional ? (
                   <Link
                     className="truncate text-sm font-black underline-offset-4 transition hover:text-primary hover:underline"
