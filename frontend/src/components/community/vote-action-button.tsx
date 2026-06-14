@@ -125,7 +125,7 @@ export const VoteActionButton = ({
       aria-label={label}
       aria-pressed={isActive}
       className={cn(
-        "relative inline-flex items-center rounded-full text-xs font-bold transition-[background-color,color,transform] duration-200 active:scale-[0.97] disabled:opacity-60",
+        "relative inline-flex items-center rounded-full text-[12px] font-semibold tracking-[-0.01em] transition-[background-color,color,transform] duration-200 active:scale-[0.97] disabled:opacity-60",
         "text-muted hover:bg-surface-muted hover:text-foreground",
         size === "sm" ? "h-8 gap-1 px-2" : "h-9 gap-1.5 px-2.5",
         isActive &&
@@ -160,7 +160,7 @@ export const VoteActionButton = ({
       {typeof count === "number" ? (
         <span
           className={cn(
-            "tabular-nums transition-all duration-200",
+            "min-w-[1.1ch] text-center font-semibold tabular-nums leading-none transition-all duration-200",
             counterPulsing ? "scale-105 opacity-90" : "scale-100 opacity-100",
           )}
         >

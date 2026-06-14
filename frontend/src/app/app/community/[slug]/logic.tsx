@@ -27,7 +27,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { type MouseEvent, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import {
   useCommunityDetail,
   useCommunityFeedPosts,
@@ -35,7 +35,7 @@ import {
   useFollowCommunity,
   useUnfollowCommunity,
 } from "@/api/callers/community";
-import { useSavePost, useSaveReply, useVotePost } from "@/api/callers/posts";
+import { useSavePost, useVotePost } from "@/api/callers/posts";
 import type {
   CommunityDetail,
   CommunityFeedScope,
@@ -409,7 +409,7 @@ const ProfessionalReplyMedia = ({
 
   if (reply.media_type === "video") {
     return (
-      <div className="pointer-events-auto relative mt-3 aspect-[9/16] w-full overflow-hidden rounded-[18px] border border-border bg-black shadow-inner sm:mx-auto sm:max-w-[320px]">
+      <div className="relative aspect-[9/16] w-full overflow-hidden rounded-[18px] border border-border bg-black shadow-inner">
         <video
           className="h-full w-full object-cover"
           controls
@@ -429,7 +429,7 @@ const ProfessionalReplyMedia = ({
   }
 
   return (
-    <div className="relative mt-3 aspect-[4/5] overflow-hidden rounded-[18px] border border-border bg-surface-muted">
+    <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[18px] border border-border bg-surface-muted">
       <Image
         alt="Mídia da resposta profissional"
         className="object-cover"
@@ -446,17 +446,8 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
   const reply = post.highlighted_professional_reply;
   const [replyExpanded, setReplyExpanded] = useState(false);
   const [replyCanToggle, setReplyCanToggle] = useState(false);
-  const [replySavedOverride, setReplySavedOverride] = useState<{
-    replyId: string;
-    saved: boolean;
-  } | null>(null);
   const replyContentRef = useRef<HTMLParagraphElement>(null);
-  const saveReplyMutation = useSaveReply(post.id, reply?.id ?? "");
   const postHref = communityPostDetailHref(post);
-  const replySaved =
-    replySavedOverride && replySavedOverride.replyId === reply?.id
-      ? replySavedOverride.saved
-      : Boolean(reply?.saved);
 
   useEffect(() => {
     const element = replyContentRef.current;
@@ -479,20 +470,7 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
 
   if (!reply) return null;
 
-  const handleToggleReplySave = (event: MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-
-    const previousSaved = replySaved;
-    setReplySavedOverride({ replyId: reply.id, saved: !previousSaved });
-    saveReplyMutation.mutate(previousSaved, {
-      onError: () => {
-        setReplySavedOverride({ replyId: reply.id, saved: previousSaved });
-      },
-      onSuccess: (data) => {
-        setReplySavedOverride({ replyId: reply.id, saved: data.saved });
-      },
-    });
-  };
+  const profileHref = `/app/psychologist/${reply.author.id}`;
 
   return (
     <div className="relative grid min-w-0 cursor-pointer grid-cols-[18px_minmax(0,1fr)] gap-2 rounded-[18px] transition hover:bg-surface-muted/45">
@@ -511,7 +489,7 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
             <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
               <Link
                 className="pointer-events-auto min-w-0 truncate text-sm font-black text-foreground underline-offset-4 transition hover:text-primary hover:underline"
-                href={`/app/psychologist/${reply.author.id}`}
+                href={profileHref}
                 onClick={(event) => event.stopPropagation()}
               >
                 {reply.author.name}
@@ -524,23 +502,17 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
               ) : null}
               <MentorBadge badge={reply.author.featured_badge} />
             </div>
-            <p className="min-w-0 truncate text-[11px] font-semibold text-muted">
+            <Link
+              className="pointer-events-auto min-w-0 truncate text-[11px] font-semibold text-muted underline-offset-4 transition hover:text-primary hover:underline"
+              href={profileHref}
+              onClick={(event) => event.stopPropagation()}
+            >
               {reply.author.type_label} <span aria-hidden="true">•</span>{" "}
               <time dateTime={reply.created_at}>{formatRelativeTime(reply.created_at)}</time>{" "}
               <span aria-hidden="true">•</span> {reply.upvotes_count.toLocaleString("pt-BR")}{" "}
               upvotes
-            </p>
+            </Link>
           </div>
-          <PostActionButton
-            active={replySaved}
-            className="pointer-events-auto h-8 w-8 shrink-0 px-0"
-            disabled={saveReplyMutation.isPending}
-            icon={Bookmark}
-            iconClassName={replySaved ? "fill-current" : undefined}
-            label={replySaved ? "Remover resposta dos salvos" : "Salvar resposta"}
-            onClick={handleToggleReplySave}
-            size="sm"
-          />
         </div>
         <p
           className={cn(
@@ -563,23 +535,27 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
             {replyExpanded ? "ver menos" : "ver mais"}
           </button>
         ) : null}
-        <ProfessionalReplyMedia reply={reply} />
-        {reply.author.whatsapp_url ? (
-          <Button
-            asChild
-            className="pointer-events-auto mt-3 h-11 w-full rounded-[14px] border-2 border-success bg-transparent text-sm font-black text-success shadow-none hover:bg-success hover:text-white sm:mx-auto sm:max-w-[320px]"
-            variant="outline"
-          >
-            <a
-              href={reply.author.whatsapp_url}
-              onClick={(event) => event.stopPropagation()}
-              rel="noreferrer"
-              target="_blank"
-            >
-              <WhatsAppIcon className="h-5 w-5" aria-hidden="true" />
-              Chamar no WhatsApp
-            </a>
-          </Button>
+        {reply.media_url || reply.author.whatsapp_url ? (
+          <div className="pointer-events-auto mt-3 grid w-full gap-3 sm:mx-auto sm:max-w-[320px]">
+            <ProfessionalReplyMedia reply={reply} />
+            {reply.author.whatsapp_url ? (
+              <Button
+                asChild
+                className="h-11 w-full rounded-[14px] border-2 border-success bg-transparent text-sm font-black text-success shadow-none hover:bg-success hover:text-white"
+                variant="outline"
+              >
+                <a
+                  href={reply.author.whatsapp_url}
+                  onClick={(event) => event.stopPropagation()}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  <WhatsAppIcon className="h-5 w-5" aria-hidden="true" />
+                  Chamar no WhatsApp
+                </a>
+              </Button>
+            ) : null}
+          </div>
         ) : null}
       </div>
     </div>
@@ -758,29 +734,35 @@ const PostCard = ({
       </div>
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-[#EDF1F5] border-t pt-3 dark:border-border">
-        <div className="flex min-w-0 items-center gap-1">
-          <VoteActionButton
-            count={voteSnapshot.upvotes}
-            currentVote={voteSnapshot.currentVote}
-            disabled={voteMutation.isPending}
-            icon={ArrowUp}
-            label="Dar upvote"
-            onVote={handleVote}
-            size="sm"
-            value={1}
-          />
-          <VoteActionButton
-            count={voteSnapshot.downvotes}
-            currentVote={voteSnapshot.currentVote}
-            disabled={voteMutation.isPending}
-            icon={ArrowDown}
-            label="Dar downvote"
-            onVote={handleVote}
-            showPositiveDelta={false}
-            size="sm"
-            value={-1}
-          />
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="inline-flex items-center gap-0.5 rounded-full bg-[#F4F6F8] p-0.5 ring-1 ring-[#E7ECF2] dark:bg-surface-muted dark:ring-border">
+            <VoteActionButton
+              className="h-8 px-2.5"
+              count={voteSnapshot.upvotes}
+              currentVote={voteSnapshot.currentVote}
+              disabled={voteMutation.isPending}
+              icon={ArrowUp}
+              label="Dar upvote"
+              onVote={handleVote}
+              size="sm"
+              value={1}
+            />
+            <span className="h-4 w-px bg-[#DDE4EC] dark:bg-border" aria-hidden="true" />
+            <VoteActionButton
+              className="h-8 px-2.5"
+              count={voteSnapshot.downvotes}
+              currentVote={voteSnapshot.currentVote}
+              disabled={voteMutation.isPending}
+              icon={ArrowDown}
+              label="Dar downvote"
+              onVote={handleVote}
+              showPositiveDelta={false}
+              size="sm"
+              value={-1}
+            />
+          </div>
           <PostActionLink
+            className="bg-transparent px-2.5"
             count={post.replies_count}
             href={communityPostDetailHref(post)}
             icon={MessageCircle}
