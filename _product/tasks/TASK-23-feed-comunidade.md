@@ -207,3 +207,22 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/community/feed`.
+
+## Execucao complementar: truncamento medido e identidade compacta no feed de comunidade (2026-06-14)
+
+- Pedido do usuario: corrigir `/app/community/feed` no mobile e desktop para que o texto do post e da resposta usem ate 2 linhas completas, aproveitando 100% da largura util antes de truncar, mantendo `... ver mais` inline no final da ultima linha visivel.
+- O truncamento deixou de usar constantes fixas de caracteres (`POST_CONTENT_PREVIEW_LENGTH` e `REPLY_CONTENT_PREVIEW_LENGTH`) e passou a medir a largura real do paragrafo no cliente, com `ResizeObserver`, `document.fonts.ready` e busca binaria do maior prefixo que cabe em 2 linhas junto do sufixo inline.
+- `... ver mais` e `ver menos` permanecem dentro do fluxo do paragrafo, herdando tamanho de fonte e line-height do texto imediatamente anterior, sem posicionamento absoluto ou linha separada.
+- O fundo cinza foi mantido somente no grupo upvote/downvote; comentarios, salvar e compartilhar voltaram a ficar sem essa superficie cinza base, mantendo a mesma escala visual do componente de comentarios.
+- A altura do grupo de votos foi ajustada para `h-8`, alinhada aos demais botoes de interacao.
+- Causa raiz do espacamento excessivo entre nome, selo e `TOP #1 Mentor`: `PostCard` e `ProfessionalReplyPreview` separavam nome+selo verificado em um wrapper e `MentorBadge` em outro item de `flex`, com `flex-wrap`/gaps intermediarios.
+- Correcao estrutural: criacao de `AuthorIdentityLine`, renderizando nome, selo verificado e `MentorBadge` como uma unica linha flex compacta (`gap-1`) reutilizada no post e na resposta profissional.
+- Nao houve alteracao de backend, Prisma, migrations, packages, schema, contratos de API, conteudo textual ou estrutura geral dos cards.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual usada foi `_product/proto/Feed Comunidade.jpg`, as capturas enviadas pelo usuario e o pedido detalhado.
+- ADR criado: `adrs/0085-truncamento-medido-feed-comunidade.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/community/feed`.

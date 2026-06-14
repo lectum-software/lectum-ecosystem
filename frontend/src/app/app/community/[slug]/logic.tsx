@@ -31,6 +31,7 @@ import {
   type MouseEvent as ReactMouseEvent,
   useDeferredValue,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -108,60 +109,139 @@ type SaveSnapshot = {
   saves: number;
 };
 
-const POST_CONTENT_PREVIEW_LENGTH = 88;
-const REPLY_CONTENT_PREVIEW_LENGTH = 68;
-
-const getInlineTextPreview = (text: string, maxLength: number) => {
-  const normalizedText = text.trimEnd();
-
-  if (normalizedText.length <= maxLength) {
-    return {
-      preview: text,
-      truncated: false,
-    };
-  }
-
-  const slicedText = normalizedText.slice(0, maxLength).trimEnd();
-  const wordBoundaryPreview = slicedText.replace(/\s+\S*$/, "").trimEnd();
-
-  return {
-    preview:
-      wordBoundaryPreview.length >= Math.floor(maxLength * 0.65) ? wordBoundaryPreview : slicedText,
-    truncated: true,
-  };
-};
+const INLINE_TEXT_MAX_LINES = 2;
+const INLINE_TEXT_MORE_LABEL = "... ver mais";
+const INLINE_TEXT_LESS_LABEL = "ver menos";
 
 const InlineExpandableText = ({
   className,
   expanded,
   onToggle,
   text,
-  truncateAt,
 }: {
   className?: string;
   expanded: boolean;
   onToggle: (event: ReactMouseEvent<HTMLButtonElement>) => void;
   text: string;
-  truncateAt: number;
 }) => {
-  const { preview, truncated } = getInlineTextPreview(text, truncateAt);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const measureRef = useRef<HTMLParagraphElement>(null);
+  const [preview, setPreview] = useState(text);
+  const [truncated, setTruncated] = useState(false);
+
+  useLayoutEffect(() => {
+    const containerNode = containerRef.current;
+    const measureNode = measureRef.current;
+
+    if (!containerNode || !measureNode) return;
+
+    let animationFrame = 0;
+    let cancelled = false;
+
+    const lineHeightPx = () => {
+      const styles = window.getComputedStyle(measureNode);
+      const parsedLineHeight = Number.parseFloat(styles.lineHeight);
+
+      if (Number.isFinite(parsedLineHeight)) return parsedLineHeight;
+
+      const parsedFontSize = Number.parseFloat(styles.fontSize);
+      return Number.isFinite(parsedFontSize) ? parsedFontSize * 1.5 : 24;
+    };
+
+    const fitsWithinTwoLines = (value: string) => {
+      measureNode.textContent = value;
+
+      return measureNode.scrollHeight <= lineHeightPx() * INLINE_TEXT_MAX_LINES + 1;
+    };
+
+    const measure = () => {
+      if (cancelled) return;
+
+      const availableWidth = containerNode.getBoundingClientRect().width;
+      const normalizedText = text.trimEnd();
+
+      if (availableWidth <= 0 || normalizedText.length === 0) {
+        setPreview(text);
+        setTruncated(false);
+        return;
+      }
+
+      measureNode.style.width = `${availableWidth}px`;
+
+      if (fitsWithinTwoLines(normalizedText)) {
+        setPreview(text);
+        setTruncated(false);
+        return;
+      }
+
+      let low = 0;
+      let high = normalizedText.length;
+      let bestPreview = "";
+
+      while (low <= high) {
+        const middle = Math.floor((low + high) / 2);
+        const candidatePreview = normalizedText.slice(0, middle).trimEnd();
+        const candidate = `${candidatePreview} ${INLINE_TEXT_MORE_LABEL}`;
+
+        if (fitsWithinTwoLines(candidate)) {
+          bestPreview = candidatePreview;
+          low = middle + 1;
+        } else {
+          high = middle - 1;
+        }
+      }
+
+      setPreview(bestPreview || normalizedText.slice(0, 1));
+      setTruncated(true);
+    };
+
+    const scheduleMeasure = () => {
+      window.cancelAnimationFrame(animationFrame);
+      animationFrame = window.requestAnimationFrame(measure);
+    };
+
+    scheduleMeasure();
+
+    const resizeObserver = new ResizeObserver(scheduleMeasure);
+    resizeObserver.observe(containerNode);
+
+    if ("fonts" in document) {
+      void document.fonts.ready.then(scheduleMeasure);
+    }
+
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(animationFrame);
+      resizeObserver.disconnect();
+    };
+  }, [text]);
 
   return (
-    <p className={cn("whitespace-pre-line", className)}>
-      {expanded || !truncated ? text : preview}
-      {truncated ? (
-        <>
-          {" "}
-          <button
-            className="pointer-events-auto inline rounded-none border-0 bg-transparent p-0 align-baseline font-[inherit] text-[#64748B]/80 transition-colors duration-150 [font-size:inherit] [line-height:inherit] hover:text-[#475569] dark:text-muted/80 dark:hover:text-muted"
-            onClick={onToggle}
-            type="button"
-          >
-            {expanded ? "ver menos" : "... ver mais"}
-          </button>
-        </>
-      ) : null}
-    </p>
+    <div className="relative min-w-0 max-w-full" ref={containerRef}>
+      <p className={cn("whitespace-pre-line", className)}>
+        {expanded || !truncated ? text : preview}
+        {truncated ? (
+          <>
+            {" "}
+            <button
+              className="pointer-events-auto inline rounded-none border-0 bg-transparent p-0 align-baseline font-[inherit] text-[#64748B]/80 transition-colors duration-150 [font-size:inherit] [line-height:inherit] hover:text-[#475569] dark:text-muted/80 dark:hover:text-muted"
+              onClick={onToggle}
+              type="button"
+            >
+              {expanded ? INLINE_TEXT_LESS_LABEL : INLINE_TEXT_MORE_LABEL}
+            </button>
+          </>
+        ) : null}
+      </p>
+      <p
+        aria-hidden="true"
+        className={cn(
+          "pointer-events-none invisible absolute inset-x-0 top-0 whitespace-pre-line",
+          className,
+        )}
+        ref={measureRef}
+      />
+    </div>
   );
 };
 
@@ -336,7 +416,7 @@ const mentorBadgeLabel = (badge: string) => {
   return badge.replace(/\bMENTOR\b/i, "Mentor");
 };
 
-const MentorBadge = ({ badge }: { badge?: string | null }) => {
+const MentorBadge = ({ badge, className }: { badge?: string | null; className?: string }) => {
   if (!badge) return null;
 
   return (
@@ -344,6 +424,7 @@ const MentorBadge = ({ badge }: { badge?: string | null }) => {
       className={cn(
         "shrink-0 text-[11px] font-medium leading-none tracking-normal opacity-75",
         mentorBadgeClassName(badge),
+        className,
       )}
     >
       {mentorBadgeLabel(badge)}
@@ -351,8 +432,47 @@ const MentorBadge = ({ badge }: { badge?: string | null }) => {
   );
 };
 
-const postInteractionSurfaceClassName =
-  "bg-[#F4F6F8] ring-1 ring-[#E7ECF2] dark:bg-surface-muted dark:ring-border";
+const AuthorIdentityLine = ({
+  badge,
+  href,
+  name,
+  onClick,
+  verified,
+}: {
+  badge?: string | null;
+  href?: string;
+  name: string;
+  onClick?: (event: ReactMouseEvent<HTMLAnchorElement>) => void;
+  verified?: boolean;
+}) => {
+  const nameClassName = "min-w-0 truncate text-sm font-black text-foreground";
+
+  return (
+    <div className="flex min-w-0 max-w-full items-center gap-1">
+      {href ? (
+        <Link
+          className={cn(
+            "pointer-events-auto underline-offset-4 transition hover:text-primary hover:underline",
+            nameClassName,
+          )}
+          href={href}
+          onClick={onClick}
+        >
+          {name}
+        </Link>
+      ) : (
+        <h2 className={nameClassName}>{name}</h2>
+      )}
+      {verified ? (
+        <BadgeCheck
+          className="h-4 w-4 shrink-0 fill-[#2da7ff] text-white"
+          aria-label="Psicólogo verificado"
+        />
+      ) : null}
+      <MentorBadge badge={badge} />
+    </div>
+  );
+};
 
 const FilterMenu = ({
   onScopeChange,
@@ -551,24 +671,13 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
         <div className="flex min-w-0 items-start gap-2.5">
           <AuthorAvatar author={reply.author} size="lg" />
           <div className="grid min-w-0 flex-1 gap-0.5">
-            <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-              <span className="inline-flex min-w-0 items-center gap-[5px]">
-                <Link
-                  className="pointer-events-auto min-w-0 truncate text-sm font-black text-foreground underline-offset-4 transition hover:text-primary hover:underline"
-                  href={profileHref}
-                  onClick={(event) => event.stopPropagation()}
-                >
-                  {reply.author.name}
-                </Link>
-                {reply.author.verified ? (
-                  <BadgeCheck
-                    className="h-4 w-4 shrink-0 fill-[#2da7ff] text-white"
-                    aria-label="Psicologo verificado"
-                  />
-                ) : null}
-              </span>
-              <MentorBadge badge={reply.author.featured_badge} />
-            </div>
+            <AuthorIdentityLine
+              badge={reply.author.featured_badge}
+              href={profileHref}
+              name={reply.author.name}
+              onClick={(event) => event.stopPropagation()}
+              verified={reply.author.verified}
+            />
             <Link
               className="pointer-events-auto min-w-0 truncate text-[11px] font-semibold text-muted underline-offset-4 transition hover:text-primary hover:underline"
               href={profileHref}
@@ -590,7 +699,6 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
               setReplyExpanded((current) => !current);
             }}
             text={reply.content}
-            truncateAt={REPLY_CONTENT_PREVIEW_LENGTH}
           />
         </div>
         {reply.media_url || reply.author.whatsapp_url ? (
@@ -715,18 +823,11 @@ const PostCard = ({
       <div className="mb-3 flex items-start gap-3">
         <AuthorAvatar anonymous={isAnonymousPatient} author={post.author} />
         <div className="grid min-w-0 flex-1 gap-1">
-          <div className="flex flex-wrap items-center gap-x-1 gap-y-1">
-            <div className="flex min-w-0 items-center gap-1">
-              <h2 className="truncate text-sm font-black text-foreground">{post.author.name}</h2>
-              {post.author.verified ? (
-                <BadgeCheck
-                  className="h-4 w-4 shrink-0 fill-[#2da7ff] text-white"
-                  aria-hidden="true"
-                />
-              ) : null}
-            </div>
-            <MentorBadge badge={post.author.featured_badge ?? post.featured_badge} />
-          </div>
+          <AuthorIdentityLine
+            badge={post.author.featured_badge ?? post.featured_badge}
+            name={post.author.name}
+            verified={post.author.verified}
+          />
           <p className="text-[11px] font-semibold text-muted">
             {isPsychologistPost
               ? `${post.author.type_label} • ${formatRelativeTime(post.created_at)}`
@@ -747,7 +848,6 @@ const PostCard = ({
           expanded={contentExpanded}
           onToggle={() => setContentExpanded((current) => !current)}
           text={post.content}
-          truncateAt={POST_CONTENT_PREVIEW_LENGTH}
         />
       </div>
 
@@ -758,7 +858,7 @@ const PostCard = ({
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-[#EDF1F5] border-t pt-3 dark:border-border">
         <div className="flex min-w-0 items-center gap-2">
-          <div className="inline-flex items-center gap-0.5 rounded-full bg-[#F4F6F8] p-0.5 ring-1 ring-[#E7ECF2] dark:bg-surface-muted dark:ring-border">
+          <div className="inline-flex h-8 items-center overflow-hidden rounded-full bg-[#F4F6F8] ring-1 ring-[#E7ECF2] dark:bg-surface-muted dark:ring-border">
             <VoteActionButton
               count={voteSnapshot.upvotes}
               currentVote={voteSnapshot.currentVote}
@@ -783,7 +883,6 @@ const PostCard = ({
             />
           </div>
           <PostActionLink
-            className={postInteractionSurfaceClassName}
             count={post.replies_count}
             href={communityPostDetailHref(post)}
             icon={MessageCircle}
@@ -794,7 +893,6 @@ const PostCard = ({
         <div className="flex shrink-0 items-center gap-2">
           <PostActionButton
             active={saveSnapshot.saved}
-            className={postInteractionSurfaceClassName}
             count={saveSnapshot.saves}
             disabled={saveMutation.isPending}
             icon={Bookmark}
@@ -804,7 +902,6 @@ const PostCard = ({
             size="sm"
           />
           <PostActionButton
-            className={postInteractionSurfaceClassName}
             icon={Share2}
             label={`Compartilhar ${post.title}`}
             onClick={() => onShare(post)}

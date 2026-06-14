@@ -79,3 +79,4 @@ Formato recomendado:
 - [ADR-0082 - Ver mais inline no feed de comunidade](0082-ver-mais-inline-feed-comunidade.md) - Accepted
 - [ADR-0083 - Confinamento de overlays no feed desktop de Psicologos](0083-overlays-feed-psicologos-desktop.md) - Accepted
 - [ADR-0084 - Sidebar desktop orientada por rotas principais](0084-sidebar-desktop-rotas-principais.md) - Accepted
+- [ADR-0085 - Truncamento medido e identidade compacta no feed de comunidade](0085-truncamento-medido-feed-comunidade.md) - Accepted
