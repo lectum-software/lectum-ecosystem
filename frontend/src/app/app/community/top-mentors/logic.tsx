@@ -35,6 +35,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { formatCrpLabel } from "@/utils/crp";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 const PERIOD_OPTIONS: Array<{ label: string; value: CommunityTopMentorsPeriodValue }> = [
@@ -261,7 +262,9 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => (
           />
         </span>
         <span className="mt-0.5 block truncate text-xs font-bold uppercase tracking-[0.08em] text-muted">
-          {mentor.professional.headline || mentor.professional.crp || "Psicólogo(a)"}
+          {mentor.professional.headline ||
+            (mentor.professional.crp ? formatCrpLabel(mentor.professional.crp) : null) ||
+            "Psicólogo(a)"}
         </span>
       </span>
       <ChevronRight className="h-5 w-5 shrink-0 text-subtle transition group-hover:translate-x-1 group-hover:text-primary" />

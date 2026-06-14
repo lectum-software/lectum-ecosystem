@@ -50,7 +50,7 @@ import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
-import { formatCrpNumber } from "@/utils/crp";
+import { formatCrpLabel, formatCrpNumber } from "@/utils/crp";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 const PAGE_LIMIT = 5;
@@ -501,7 +501,7 @@ const ProfileHero = ({
   const headline = profile.headline || profile.bio || bioFallback;
   const { last, prefix } = splitNameWithBadge(displayName);
   const benefitTags = buildBenefitTags(profile);
-  const formattedCrp = formatCrpNumber(profile.crp);
+  const formattedCrp = formatCrpLabel(profile.crp);
 
   return (
     <section className="box-border bg-[#F6F8FB] pb-2" data-profile-hero="true">
@@ -591,7 +591,7 @@ const ProfileHero = ({
             <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] font-medium leading-[1.35] text-[#475569] sm:text-[12.5px]">
               {getPsychologistTitle(profile.gender)}
               <span aria-hidden="true" className="h-1 w-1 rounded-full bg-[#94A3B8]" />
-              <span>{formattedCrp ? `CRP ${formattedCrp}` : "CRP não informado"}</span>
+              <span>{formattedCrp}</span>
               <span aria-hidden="true" className="h-1 w-1 rounded-full bg-[#94A3B8]" />
               <span className="inline-flex items-center gap-0.5 text-[#B45309]">
                 <Star className="h-3 w-3 fill-[#FBBF24] text-[#FBBF24]" aria-hidden="true" />

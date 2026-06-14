@@ -30,7 +30,7 @@ import { useSignOut } from "@/hooks/cookies/signout";
 import { useAppSelector } from "@/hooks/redux";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
-import { formatCrpNumber } from "@/utils/crp";
+import { formatCrpLabel } from "@/utils/crp";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { useDeleteAccountForm } from "./use-delete-account-form";
 
@@ -175,7 +175,9 @@ export const ProfileLogic = () => {
   }
 
   const displayName = user.name?.trim() || user.email || "Usuário Lectum";
-  const formattedCrp = formatCrpNumber(user.psychologist_profile?.crp);
+  const formattedCrp = user.psychologist_profile?.crp
+    ? formatCrpLabel(user.psychologist_profile.crp)
+    : null;
   const profileGender = getPsychologistGender(user);
   const hasVerifiedBadge = Boolean(
     user.psychologist_profile?.subscriptions?.some(
@@ -183,7 +185,7 @@ export const ProfileLogic = () => {
     ),
   );
   const subtitle = isPsychologist
-    ? `${getPsychologistGenderTitle(profileGender)}${formattedCrp ? ` • CRP ${formattedCrp}` : ""}`
+    ? `${getPsychologistGenderTitle(profileGender)}${formattedCrp ? ` • ${formattedCrp}` : ""}`
     : null;
   const avatarSrc = resolvePublicMediaUrl(user.avatar);
   const avatarIsPublicMedia = isPublicMediaUrl(user.avatar);

@@ -1,7 +1,9 @@
-﻿const onlyDigits = (value?: string | null) => String(value ?? "").replace(/\D/g, "");
+const onlyDigits = (value?: string | null) => String(value ?? "").replace(/\D/g, "");
+
+const stripCrpPrefix = (value: string) => value.replace(/^(?:CRP\s*[:\-–—]?\s*)+/i, "").trim();
 
 export const formatCrpNumber = (value?: string | null) => {
-  const normalized = value?.trim();
+  const normalized = stripCrpPrefix(value?.trim() ?? "");
   if (!normalized) return null;
 
   const [rawRegion, ...rawNumberParts] = normalized.split("/");
@@ -13,4 +15,10 @@ export const formatCrpNumber = (value?: string | null) => {
   }
 
   return normalized;
+};
+
+export const formatCrpLabel = (value?: string | null) => {
+  const crp = formatCrpNumber(value);
+
+  return crp ? `CRP ${crp}` : "CRP não informado";
 };

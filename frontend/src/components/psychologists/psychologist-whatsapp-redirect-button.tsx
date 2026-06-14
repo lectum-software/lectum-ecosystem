@@ -8,7 +8,7 @@ import { createPortal } from "react-dom";
 import { useDirectoryPsychologistContactClick } from "@/api/callers/directory";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { Button } from "@/registry/new-york-v4/ui/button";
-import { formatCrpNumber } from "@/utils/crp";
+import { formatCrpLabel } from "@/utils/crp";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 export const WHATSAPP_REDIRECT_MIN_DELAY_MS = 900;
@@ -55,9 +55,8 @@ const getInitials = (name: string) => {
 
 const professionalLabel = (psychologist: PsychologistWhatsAppIdentity) => {
   const typeLabel = psychologist.typeLabel?.trim() || "Psicólogo(a)";
-  const crp = formatCrpNumber(psychologist.crp);
 
-  return crp ? `${typeLabel} • CRP ${crp}` : `${typeLabel} • CRP não informado`;
+  return `${typeLabel} • ${formatCrpLabel(psychologist.crp)}`;
 };
 
 export const openPsychologistWhatsApp = (url: string) => {
