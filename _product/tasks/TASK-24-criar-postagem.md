@@ -171,6 +171,16 @@ Regras anti-recriação específicas:
 - Ajuste complementar de criação contextual: links originados de uma comunidade específica usam `/app/community/[slug]/post/new`; o formulário também aceita `?community=slug`, valida a opção carregada e pré-seleciona a comunidade sem criar chip ou preview duplicado.
 - Builder Quick Copy não está disponível como ferramenta neste ambiente; a validação visual deste ajuste usou a tela local existente e os protótipos exportados em `_product/proto`.
 
+## Complemento 2026-06-14 — refinamento do seletor e fechamento
+
+- Pedido do usuário: ajustar a tela `Criar Post` sem alterar a lógica de anonimato nem a aparência do switch.
+- Frontend: o seletor de comunidade passou a usar o asset SVG anexado pelo usuário em `frontend/public/svg/public_24dp_64748B_FILL0_wght400_GRAD0_opsz24.svg`, renderizado com `next/image` e mantendo padding/alinhamento do campo.
+- Navegação: o botão `X` do topo agora usa navegação de histórico (`router.back()`), retornando para a origem imediata em vez de uma rota fixa.
+- Formulário: o bloco `Postar como anônimo` foi movido para imediatamente abaixo do seletor de comunidade, mantendo a nova ordem `Comunidade → Anonimato → Título → Conteúdo → demais elementos`.
+- Escopo: sem mudanças de backend, schema Prisma, packages, endpoint, payload de criação ou lógica do anonimato.
+- ADR não atualizado por se tratar de refinamento visual/comportamental local, sem nova decisão arquitetural, integração ou regra de domínio.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`; HTTP local sem cookie autenticado retornou 307 esperado para `/app/community/feed/post/new`.
+
 ## Notas para executor
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.

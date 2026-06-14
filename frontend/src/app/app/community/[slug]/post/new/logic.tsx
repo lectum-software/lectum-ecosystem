@@ -1,7 +1,7 @@
 "use client";
 
-import { Camera, Info, Loader2, UserRoundX, UsersRound, Video, X } from "lucide-react";
-import Link from "next/link";
+import { Camera, Info, Loader2, UserRoundX, Video, X } from "lucide-react";
+import Image from "next/image";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Controller } from "react-hook-form";
@@ -12,7 +12,7 @@ import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
-import { COMMUNITY_FEED_SLUG, DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
+import { COMMUNITY_FEED_SLUG } from "@/utils/community";
 import { toCreateCommunityPostPayload, useCreateCommunityPostForm } from "./use-form";
 
 type ApiErrorData = {
@@ -64,6 +64,7 @@ const resolveCreatePostError = (error: unknown) => {
 
 const guidanceText =
   "Lembre-se de ser respeitoso com os outros membros. Conteúdos ofensivos ou que violem as diretrizes serão removidos pela moderação.";
+const COMMUNITY_SELECTOR_ICON_SRC = "/svg/public_24dp_64748B_FILL0_wght400_GRAD0_opsz24.svg";
 const communityNameCollator = new Intl.Collator("pt-BR", {
   sensitivity: "base",
 });
@@ -168,9 +169,13 @@ export const CreateCommunityPostLogic = () => {
     if (field.name === "community_slug") {
       return (
         <div className="relative inline-block w-fit max-w-full" key="create-post-community">
-          <UsersRound
+          <Image
+            alt=""
             aria-hidden="true"
-            className="pointer-events-none absolute top-5 left-4 z-10 h-4 w-4 -translate-y-1/2 text-[#111827] dark:text-foreground"
+            className="pointer-events-none absolute top-1/2 left-4 z-10 h-4 w-4 -translate-y-1/2"
+            height={16}
+            src={COMMUNITY_SELECTOR_ICON_SRC}
+            width={16}
           />
           <Component
             control={hook.control}
@@ -194,13 +199,14 @@ export const CreateCommunityPostLogic = () => {
     >
       <section className="mx-auto min-h-screen w-full max-w-[430px] bg-white text-[#111827] dark:bg-background dark:text-foreground">
         <header className="relative flex h-[58px] items-center justify-center border-[#EEF0F3] border-b px-4">
-          <Link
-            aria-label="Fechar criação de post"
+          <button
+            aria-label="Fechar criação de post e voltar"
             className="absolute left-2 grid h-10 w-10 place-items-center rounded-full text-[#111827] transition hover:bg-[#F5F7FA] dark:text-foreground dark:hover:bg-surface-muted"
-            href={DEFAULT_COMMUNITY_FEED_HREF}
+            onClick={() => router.back()}
+            type="button"
           >
             <X className="h-5 w-5" aria-hidden="true" />
-          </Link>
+          </button>
           <h1 className="text-[20px] font-extrabold tracking-[-0.02em]">Criar Post</h1>
         </header>
 
@@ -208,10 +214,6 @@ export const CreateCommunityPostLogic = () => {
           <div className="grid gap-4">
             {formProps.fields
               .filter((field) => field.name === "community_slug")
-              .map(renderFormField)}
-
-            {formProps.fields
-              .filter((field) => field.name !== "community_slug" && field.name !== "anonymous")
               .map(renderFormField)}
 
             {!isPsychologist ? (
@@ -259,6 +261,10 @@ export const CreateCommunityPostLogic = () => {
                 }}
               />
             ) : null}
+
+            {formProps.fields
+              .filter((field) => field.name !== "community_slug" && field.name !== "anonymous")
+              .map(renderFormField)}
           </div>
 
           {isPsychologist ? (
