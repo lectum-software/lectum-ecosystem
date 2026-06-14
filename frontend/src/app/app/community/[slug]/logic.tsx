@@ -686,16 +686,16 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
   const profileHref = `/app/psychologist/${reply.author.id}`;
 
   return (
-    <div className="relative grid min-w-0 cursor-pointer grid-cols-[18px_minmax(0,1fr)] gap-2 rounded-[18px] transition hover:bg-surface-muted/45">
+    <div className="relative grid min-w-0 cursor-pointer grid-cols-[18px_minmax(0,1fr)] gap-2 rounded-2xl border border-[#D8ECFF] bg-[#F4FAFF] p-3 transition-colors hover:bg-[#EEF7FF] dark:border-primary/20 dark:bg-primary/5 dark:hover:bg-primary/10">
       <Link
         aria-label={`Abrir post ${post.title}`}
-        className="absolute inset-0 z-0 rounded-[18px]"
+        className="absolute inset-0 z-0 rounded-2xl"
         href={postHref}
       />
       <div className="pointer-events-none flex justify-center pt-1" aria-hidden="true">
-        <span className="h-full min-h-24 w-px rounded-full bg-border" />
+        <span className="h-full min-h-24 w-px rounded-full bg-[#BBDFFF] dark:bg-primary/25" />
       </div>
-      <div className="pointer-events-none relative z-10 min-w-0 px-1 py-1">
+      <div className="pointer-events-none relative z-10 min-w-0">
         <div className="flex min-w-0 items-start gap-2.5">
           <AuthorAvatar author={reply.author} size="lg" />
           <div className="grid min-w-0 flex-1 gap-0.5">

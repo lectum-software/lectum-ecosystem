@@ -243,3 +243,18 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/community/feed`.
+
+## Execucao complementar: destaque leve da resposta profissional no feed (2026-06-14)
+
+- Pedido do usuario: destacar visualmente apenas o bloco da resposta do psicologo em `/app/community/feed`, sem alterar o post original nem transformar a resposta em um card pesado.
+- `ProfessionalReplyPreview` recebeu fundo azul extremamente suave, borda azul sutil, `border-radius` de 16px e padding interno confortavel.
+- A linha lateral interna da resposta passou para um tom azul claro para reforcar que se trata de resposta profissional destacada.
+- Nao foram adicionadas sombras, fundo cinza, novos componentes, novos contratos de API, backend, Prisma, migrations ou packages.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual usada foi `_product/proto/Feed Comunidade.jpg`, a captura enviada pelo usuario e o pedido detalhado.
+- ADR atualizado: `adrs/0081-refinos-feed-comunidade.md`.
+- Validacoes executadas nesta execucao:
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir frontend check` (primeira tentativa excedeu o timeout local de 120s; repetido com timeout maior e concluiu com sucesso)
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://localhost:3000/app/community/feed` com cookie de sessao de desenvolvimento.

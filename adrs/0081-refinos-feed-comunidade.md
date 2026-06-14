@@ -6,31 +6,36 @@ Accepted
 
 ## Contexto
 
-O feed de comunidade (`/app/community/feed`, servido pela rota din‚mica `/app/community/[slug]` quando o slug È `feed`) precisava de ajustes finos sem alterar estrutura de post, conte˙do textual ou responsividade geral.
+O feed de comunidade (`/app/community/feed`, servido pela rota din√¢mica `/app/community/[slug]` quando o slug √© `feed`) precisava de ajustes finos sem alterar estrutura de post, conte√∫do textual ou responsividade geral.
 
-O feedback de seguir/deixar de seguir comunidade vinha do `handleReq` com `showSuccess` nas chamadas de membership, gerando toast verde global. Visualmente, o cabeÁalho do autor ainda separava demais nome, selo verificado e selo de Top Mentor. A barra de interaÁıes tambÈm misturava aÁıes com larguras e superfÌcies diferentes, principalmente compartilhar em formato menor que comentar/salvar e o grupo de votos.
+O feedback de seguir/deixar de seguir comunidade vinha do `handleReq` com `showSuccess` nas chamadas de membership, gerando toast verde global. Visualmente, o cabe√ßalho do autor ainda separava demais nome, selo verificado e selo de Top Mentor. A barra de intera√ß√µes tamb√©m misturava a√ß√µes com larguras e superf√≠cies diferentes, principalmente compartilhar em formato menor que comentar/salvar e o grupo de votos.
 
-## Decis„o
+Em 2026-06-14, o produto tamb√©m pediu que a resposta destacada do psic√≥logo fosse identific√°vel rapidamente no feed, com sinal visual leve de resposta profissional.
 
-- Remover `showSuccess` de `followCommunity` e `unfollowCommunity`, mantendo a mutation, invalidaÁ„o de cache, estado otimista e feedback de erro existentes.
+## Decis√£o
+
+- Remover `showSuccess` de `followCommunity` e `unfollowCommunity`, mantendo a mutation, invalida√ß√£o de cache, estado otimista e feedback de erro existentes.
 - Reduzir o gap horizontal no bloco de autor do `PostCard`, aproximando nome, selo verificado e `TOP #1 Mentor` sem alterar texto nem hierarquia do post.
-- Padronizar a escala de aÁıes do post com `min-w` consistente nos componentes `PostActionButton`, `PostActionLink` e `VoteActionButton`.
-- Aplicar a mesma superfÌcie visual neutra para comentar, salvar e compartilhar no feed; upvote/downvote permanecem agrupados, mas usam a mesma altura, fonte, Ìcone e espaÁamento base.
+- Padronizar a escala de a√ß√µes do post com `min-w` consistente nos componentes `PostActionButton`, `PostActionLink` e `VoteActionButton`.
+- Aplicar a mesma superf√≠cie visual neutra para comentar, salvar e compartilhar no feed; upvote/downvote permanecem agrupados, mas usam a mesma altura, fonte, √≠cone e espa√ßamento base.
+- Destacar apenas `ProfessionalReplyPreview` com fundo azul extremamente suave, borda azul sutil, `border-radius` de 16px, padding interno e linha lateral azul clara, sem sombra e sem fundo cinza.
 
-## ConsequÍncias
+## Consequ√™ncias
 
-- Seguir/deixar de seguir continua funcionando normalmente, porÈm sem toast verde de sucesso.
+- Seguir/deixar de seguir continua funcionando normalmente, por√©m sem toast verde de sucesso.
 - Erros de follow/unfollow continuam aparecendo pelo fluxo atual de erro.
-- A mudanÁa de escala dos botıes usa os componentes existentes, sem criar novo design system ou alterar contratos de API.
+- A mudan√ßa de escala dos bot√µes usa os componentes existentes, sem criar novo design system ou alterar contratos de API.
+- A resposta profissional ganha diferencia√ß√£o visual sem virar um card pesado ou alterar conte√∫do/navega√ß√£o do post.
 - Nenhum backend, Prisma, migration, pacote ou schema foi alterado.
 
-## ValidaÁıes
+## Valida√ß√µes
 
 - `pnpm --dir frontend biome:fix`
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
 - HTTP 200 em `http://127.0.0.1:3000/app/community/feed`
+- Destaque leve da resposta profissional: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP 200 em `http://localhost:3000/app/community/feed` com cookie de sess√£o de desenvolvimento. Observa√ß√£o: a primeira tentativa de `pnpm --dir frontend check` excedeu o timeout local de 120s; repetida com timeout maior e conclu√≠da com sucesso.
 
 ## Task relacionada
 
