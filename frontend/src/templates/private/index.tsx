@@ -284,7 +284,8 @@ export const PrivateTemplate = ({
   );
   const isDesktopSidebarCollapsed =
     storedDesktopSidebarPreference ?? desktopSidebarRouteDefaultCollapsed;
-  const isNavigationRenderedVisible = isNavigationVisible && !navigationHidden;
+  const isNavigationRenderedVisible = !navigationHidden;
+  const isMobileNavigationRenderedVisible = isNavigationVisible && !navigationHidden;
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
   const pageShellClassName = cn(
@@ -361,8 +362,8 @@ export const PrivateTemplate = ({
       )}
       style={{
         paddingBottom: "env(safe-area-inset-bottom)",
-        transform: isNavigationRenderedVisible ? "translateY(0)" : "translateY(140%)",
-        pointerEvents: isNavigationRenderedVisible && !navigationDimmed ? "auto" : "none",
+        transform: isMobileNavigationRenderedVisible ? "translateY(0)" : "translateY(140%)",
+        pointerEvents: isMobileNavigationRenderedVisible && !navigationDimmed ? "auto" : "none",
       }}
     >
       <ul className="mx-auto grid w-full max-w-[560px] grid-cols-5">

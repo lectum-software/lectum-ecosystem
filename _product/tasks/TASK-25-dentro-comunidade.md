@@ -173,3 +173,17 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Escopo: alteração visual aplicada em desktop e mobile, sem mudanças de backend, schema Prisma, lógica de domínio, rotas ou packages.
 - ADR atualizado: `adrs/0066-pagina-detalhe-comunidade-participacao.md`.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `GET http://127.0.0.1:3000/app/community/ansiedade-em-equilibrio` e `GET http://127.0.0.1:3000/app/community/feed`.
+
+## Complemento 2026-06-14 — topo limpo, ordenação e nav mobile
+
+- Pedido do usuário: refinar `/app/community/[slug]` para que a faixa azul do cabeçalho comece no topo da área útil, remover o bloco textual de posts e o botão inline de publicar, ajustar a ordenação e esconder a nav inferior no mobile ao rolar para baixo.
+- Layout: o `PrivateTemplate` da página de comunidade recebeu `!pt-0` no conteúdo para remover o respiro superior herdado do `PageShell`; a faixa azul do `CommunityHeader` passa a ser o primeiro elemento visível da área de conteúdo.
+- Área de posts: removidos os textos `Posts da comunidade` e `Dados reais publicados nesta comunidade`, além do botão `+ Publicar`; permanece apenas o botão flutuante de criação.
+- Ordenação: o menu agora possui `Em destaque`, `Novos`, `Mais comentados` e `Mais votados`; `Novos` usa ícone de relógio.
+- Períodos: `Mais comentados` e `Mais votados` exibem dropdown próprio com `Esta semana`, `Este mês`, `Este ano` e `Desde sempre`, mantendo estados independentes para cada ordenação.
+- Como a API atual expõe contadores agregados do post e `created_at`, o período atua na ordenação priorizando posts criados na janela escolhida, sem ocultar posts antigos nem alterar paginação/backend.
+- Nav mobile: `PrivateTemplate` passou a separar visibilidade mobile e desktop; `autoHideNavigation` agora oculta suavemente apenas a bottom nav em telas mobile ao rolar para baixo e mostra ao rolar para cima. A sidebar desktop não é afetada.
+- Escopo: sem mudanças de backend, Prisma, migrations, packages, schema, contratos de API ou conteúdo dos posts.
+- Builder/Quick Copy não está exposto como ferramenta direta nesta sessão; a referência visual usada foi `_product/proto/Dentro da Comunidade.jpg` e o pedido detalhado do usuário.
+- ADR atualizado: `adrs/0066-pagina-detalhe-comunidade-participacao.md`.
+- Validações executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, HTTP 200 em `http://localhost:3000/app/community/ansiedade-em-equilibrio` e HTTP 200 em `http://localhost:3000/app/community/feed`.

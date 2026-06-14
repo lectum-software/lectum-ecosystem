@@ -11,6 +11,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Clock,
   Compass,
   FileText,
   Flame,
@@ -99,11 +100,24 @@ const writeCommunityRulesSessionState = (storageKey: string, isExpanded: boolean
 
 const COMMUNITY_POST_SORTS = [
   { icon: Flame, label: "Em destaque", value: "featured" },
-  { icon: CalendarDays, label: "Novos", value: "new" },
-  { icon: MessageCircle, label: "Mais discutidos", value: "discussed" },
+  { icon: Clock, label: "Novos", value: "new" },
+  { icon: MessageCircle, label: "Mais comentados", period: true, value: "commented" },
+  { icon: ArrowUp, label: "Mais votados", period: true, value: "voted" },
 ] as const;
 
 type CommunityPostSort = (typeof COMMUNITY_POST_SORTS)[number]["value"];
+type CommunityPostSortPeriod = "week" | "month" | "year" | "all";
+type CommunityPostSortWithPeriod = Extract<CommunityPostSort, "commented" | "voted">;
+
+const COMMUNITY_POST_SORT_PERIODS: Array<{
+  label: string;
+  value: CommunityPostSortPeriod;
+}> = [
+  { label: "Esta semana", value: "week" },
+  { label: "Este mês", value: "month" },
+  { label: "Este ano", value: "year" },
+  { label: "Desde sempre", value: "all" },
+];
 
 const FEED_SCOPE_OPTIONS: Array<{ label: string; value: CommunityFeedScope }> = [
   { label: "Todas as comunidades", value: "all" },
@@ -993,22 +1007,78 @@ const Pagination = ({
   );
 };
 
-const sortCommunityPosts = (posts: CommunityPost[], sort: CommunityPostSort) => {
+const resolveSortPeriodStart = (period: CommunityPostSortPeriod) => {
+  if (period === "all") return null;
+
+  const start = new Date();
+
+  if (period === "week") {
+    const day = start.getDay();
+    const diffToMonday = day === 0 ? 6 : day - 1;
+    start.setDate(start.getDate() - diffToMonday);
+  } else if (period === "month") {
+    start.setDate(1);
+  } else {
+    start.setMonth(0, 1);
+  }
+
+  start.setHours(0, 0, 0, 0);
+
+  return start.getTime();
+};
+
+const isPostInsideSortPeriod = (post: CommunityPost, period: CommunityPostSortPeriod) => {
+  const periodStart = resolveSortPeriodStart(period);
+
+  if (!periodStart) return true;
+
+  return new Date(post.created_at).getTime() >= periodStart;
+};
+
+const comparePostDates = (a: CommunityPost, b: CommunityPost) =>
+  new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+
+const sortCommunityPostsByMetric = (
+  posts: CommunityPost[],
+  metric: "replies_count" | "upvotes_count",
+  period: CommunityPostSortPeriod,
+) => {
+  return posts.sort((a, b) => {
+    const aInPeriod = isPostInsideSortPeriod(a, period);
+    const bInPeriod = isPostInsideSortPeriod(b, period);
+
+    if (aInPeriod !== bInPeriod) return bInPeriod ? 1 : -1;
+
+    const metricDiff = b[metric] - a[metric];
+    if (metricDiff !== 0) return metricDiff;
+
+    const secondaryMetricDiff =
+      metric === "replies_count"
+        ? b.upvotes_count - a.upvotes_count
+        : b.replies_count - a.replies_count;
+    if (secondaryMetricDiff !== 0) return secondaryMetricDiff;
+
+    return comparePostDates(a, b);
+  });
+};
+
+const sortCommunityPosts = (
+  posts: CommunityPost[],
+  sort: CommunityPostSort,
+  periods: Record<CommunityPostSortWithPeriod, CommunityPostSortPeriod>,
+) => {
   const items = [...posts];
 
   if (sort === "new") {
-    return items.sort(
-      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-    );
+    return items.sort(comparePostDates);
   }
 
-  if (sort === "discussed") {
-    return items.sort((a, b) => {
-      const replyDiff = b.replies_count - a.replies_count;
-      if (replyDiff !== 0) return replyDiff;
+  if (sort === "commented") {
+    return sortCommunityPostsByMetric(items, "replies_count", periods.commented);
+  }
 
-      return b.upvotes_count - a.upvotes_count;
-    });
+  if (sort === "voted") {
+    return sortCommunityPostsByMetric(items, "upvotes_count", periods.voted);
   }
 
   return items.sort((a, b) => {
@@ -1025,7 +1095,7 @@ const sortCommunityPosts = (posts: CommunityPost[], sort: CommunityPostSort) => 
 
     if (bScore !== aScore) return bScore - aScore;
 
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    return comparePostDates(a, b);
   });
 };
 
@@ -1204,9 +1274,13 @@ const CommunityHeader = ({
 
 const CommunityPostSortChips = ({
   onChange,
+  onPeriodChange,
+  periods,
   value,
 }: {
   onChange: (value: CommunityPostSort) => void;
+  onPeriodChange: (sort: CommunityPostSortWithPeriod, period: CommunityPostSortPeriod) => void;
+  periods: Record<CommunityPostSortWithPeriod, CommunityPostSortPeriod>;
   value: CommunityPostSort;
 }) => (
   <nav
@@ -1217,23 +1291,58 @@ const CommunityPostSortChips = ({
       {COMMUNITY_POST_SORTS.map((item) => {
         const Icon = item.icon;
         const active = value === item.value;
+        const hasPeriod = "period" in item;
+        const periodValue = hasPeriod ? periods[item.value as CommunityPostSortWithPeriod] : null;
 
         return (
-          <button
-            aria-pressed={active}
+          <div
             className={cn(
-              "inline-flex min-h-10 items-center gap-1.5 rounded-full border px-4 text-sm font-black shadow-sm transition",
+              "inline-flex min-h-10 items-center overflow-hidden rounded-full border text-sm font-black shadow-sm transition",
               active
                 ? "border-primary bg-primary text-white"
                 : "border-[#E5EAF0] bg-white text-[#64748B] hover:border-primary/40 hover:bg-primary-soft hover:text-primary dark:border-border dark:bg-surface dark:text-muted",
             )}
             key={item.value}
-            onClick={() => onChange(item.value)}
-            type="button"
           >
-            <Icon className="h-4 w-4" aria-hidden="true" />
-            {item.label}
-          </button>
+            <button
+              aria-pressed={active}
+              className="inline-flex min-h-10 items-center gap-1.5 px-4"
+              onClick={() => onChange(item.value)}
+              type="button"
+            >
+              <Icon className="h-4 w-4" aria-hidden="true" />
+              {item.label}
+            </button>
+            {active && hasPeriod && periodValue ? (
+              <>
+                <span className="h-5 w-px bg-white/30" aria-hidden="true" />
+                <label className="sr-only" htmlFor={`community-post-sort-period-${item.value}`}>
+                  Período de {item.label}
+                </label>
+                <select
+                  className="min-h-10 cursor-pointer appearance-none bg-transparent py-0 pl-3 pr-8 text-xs font-black text-current outline-none"
+                  id={`community-post-sort-period-${item.value}`}
+                  onChange={(event) =>
+                    onPeriodChange(
+                      item.value as CommunityPostSortWithPeriod,
+                      event.target.value as CommunityPostSortPeriod,
+                    )
+                  }
+                  value={periodValue}
+                >
+                  {COMMUNITY_POST_SORT_PERIODS.map((period) => (
+                    <option className="text-foreground" key={period.value} value={period.value}>
+                      {period.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  className="-ml-7 mr-3 h-4 w-4 pointer-events-none"
+                  aria-hidden="true"
+                />
+              </>
+            ) : null}
+          </div>
         );
       })}
     </div>
@@ -1243,6 +1352,12 @@ const CommunityPostSortChips = ({
 const CommunityDetailLogic = ({ slug }: { slug: string }) => {
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<CommunityPostSort>("featured");
+  const [sortPeriods, setSortPeriods] = useState<
+    Record<CommunityPostSortWithPeriod, CommunityPostSortPeriod>
+  >({
+    commented: "week",
+    voted: "week",
+  });
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const [followingOverride, setFollowingOverride] = useState<boolean | null>(null);
   const detail = useCommunityDetail(slug);
@@ -1251,8 +1366,8 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
   const unfollowMutation = useUnfollowCommunity();
   const community = detail.data?.community;
   const posts = useMemo(
-    () => sortCommunityPosts(postsQuery.data?.data ?? [], sort),
-    [postsQuery.data?.data, sort],
+    () => sortCommunityPosts(postsQuery.data?.data ?? [], sort, sortPeriods),
+    [postsQuery.data?.data, sort, sortPeriods],
   );
   const detailError = detail.isError ? resolveCommunityDetailError(detail.error) : null;
   const postsError = postsQuery.isError ? resolveFeedError(postsQuery.error) : null;
@@ -1315,7 +1430,8 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
 
   return (
     <PrivateTemplate
-      contentClassName="bg-[#F5F7FA] dark:bg-background"
+      autoHideNavigation
+      contentClassName="!pt-0 bg-[#F5F7FA] dark:bg-background sm:!pt-0"
       navigationTheme="solidWhite"
       showHeader
     >
@@ -1360,27 +1476,17 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
             ) : null}
 
             <div className="grid gap-3">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-lg font-black text-[#182033] dark:text-foreground">
-                    Posts da comunidade
-                  </h2>
-                  <p className="text-xs font-semibold text-muted">
-                    Dados reais publicados nesta comunidade.
-                  </p>
-                </div>
-                <Button asChild className="hidden rounded-full font-black sm:inline-flex">
-                  <Link href={communityCreatePostHref(community.slug)}>
-                    <Plus className="h-4 w-4" aria-hidden="true" />
-                    Publicar
-                  </Link>
-                </Button>
-              </div>
               <CommunityPostSortChips
                 onChange={(value) => {
                   setSort(value);
                   setPage(1);
                 }}
+                onPeriodChange={(value, period) => {
+                  setSort(value);
+                  setSortPeriods((current) => ({ ...current, [value]: period }));
+                  setPage(1);
+                }}
+                periods={sortPeriods}
                 value={sort}
               />
             </div>
@@ -1525,6 +1631,7 @@ export const CommunityFeedLogic = () => {
 
   return (
     <PrivateTemplate
+      autoHideNavigation
       bottomNavigationCenterAction={{
         ariaLabel: "Criar publicação na comunidade",
         href: createPostHref,

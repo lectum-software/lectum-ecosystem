@@ -49,3 +49,35 @@ A referência visual obrigatória consultada foi `_product/proto/Dentro da Comun
 
 - Campos persistidos de capa/regras por comunidade não existem em `DATA-MODEL.md`; não foram inventados nesta task.
 - Ranking Top Mentores permanece no escopo da TASK-27.
+
+## Atualização 2026-06-14: topo limpo, ordenação de posts e auto-hide mobile
+
+### Contexto
+
+O detalhe de comunidade precisava reduzir atrito visual no topo e aproximar os posts do usuário. O `PageShell` aplicava padding superior padrão, criando respiro antes da faixa azul do cabeçalho. A área de posts também repetia título/subtítulo e botão de publicação, apesar de já existir CTA flutuante. Produto pediu ainda quatro modos de ordenação, com período apenas para rankings por comentários e votos, além de ocultar a bottom nav no mobile durante rolagem para baixo.
+
+### Decisão
+
+- Aplicar `!pt-0` no conteúdo do `PrivateTemplate` usado por `/app/community/[slug]`, removendo o espaço superior herdado do shell sem alterar outras telas.
+- Remover o cabeçalho textual da lista de posts e o botão inline `+ Publicar`, mantendo o botão flutuante como ação principal.
+- Substituir o menu de ordenação por `Em destaque`, `Novos`, `Mais comentados` e `Mais votados`, com `Novos` usando ícone de relógio.
+- Adicionar dropdowns independentes de período somente nos estados ativos de `Mais comentados` e `Mais votados`: `Esta semana`, `Este mês`, `Este ano` e `Desde sempre`.
+- Com os dados disponíveis atualmente (`created_at`, `replies_count` e `upvotes_count` agregados), o período prioriza posts criados dentro da janela escolhida e depois ordena pela métrica. Posts fora da janela continuam na lista para não quebrar paginação nem esconder dados persistidos.
+- Ajustar `PrivateTemplate` para que `autoHideNavigation` controle apenas a bottom nav mobile; a navegação desktop continua visível mesmo quando a página registra scroll para baixo.
+
+### Consequências
+
+- A faixa azul do cabeçalho inicia no topo da área de conteúdo, sem margem/padding superior.
+- A lista de posts fica mais direta e a publicação permanece centralizada no CTA flutuante.
+- A ordenação ganha períodos por tipo sem criar novos endpoints ou alterar schema.
+- A bottom nav mobile ganha animação de saída/entrada por scroll, enquanto desktop permanece estável.
+- Nenhum backend, Prisma, migration, package ou contrato de API foi alterado.
+
+### Validação
+
+- `pnpm --dir frontend biome:fix`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP 200 em `http://localhost:3000/app/community/ansiedade-em-equilibrio` com cookie de sessão de desenvolvimento.
+- HTTP 200 em `http://localhost:3000/app/community/feed` com cookie de sessão de desenvolvimento.
