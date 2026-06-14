@@ -8,7 +8,9 @@ import { cn } from "@/lib/utils";
 type PostActionSize = "sm" | "md";
 
 const sizeClassName = (size: PostActionSize) =>
-  size === "sm" ? "h-8 gap-1.5 px-2.5 text-[12px]" : "h-9 gap-1.5 px-2.5 text-[12px]";
+  size === "sm"
+    ? "h-8 min-w-8 gap-1.5 px-2.5 text-[12px]"
+    : "h-9 min-w-9 gap-1.5 px-2.5 text-[12px]";
 
 const baseClassName =
   "inline-flex items-center justify-center rounded-full font-semibold leading-none tracking-[-0.01em] text-muted transition-[background-color,color,transform] duration-200 hover:bg-surface-muted hover:text-foreground active:scale-[0.97] disabled:pointer-events-none disabled:opacity-60";
@@ -37,7 +39,7 @@ export const PostActionButton = ({
   <button
     aria-label={label}
     aria-pressed={active}
-    className={cn(baseClassName, sizeClassName(size), active && activeClassName, className)}
+    className={cn(baseClassName, sizeClassName(size), className, active && activeClassName)}
     title={label}
     type="button"
     {...props}

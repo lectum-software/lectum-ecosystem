@@ -60,10 +60,7 @@ export const followCommunity = async (slug: string) => {
     params: { slug },
   });
 
-  return handleReq<CommunityMembershipResponse>({
-    ...handle,
-    showSuccess: true,
-  });
+  return handleReq<CommunityMembershipResponse>(handle);
 };
 
 export const unfollowCommunity = async (slug: string) => {
@@ -73,10 +70,7 @@ export const unfollowCommunity = async (slug: string) => {
     params: { slug },
   });
 
-  return handleReq<CommunityMembershipResponse>({
-    ...handle,
-    showSuccess: true,
-  });
+  return handleReq<CommunityMembershipResponse>(handle);
 };
 
 export const suggestCommunity = async (body: SuggestCommunityPayload) => {

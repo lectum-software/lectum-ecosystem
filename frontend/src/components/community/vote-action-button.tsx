@@ -127,7 +127,7 @@ export const VoteActionButton = ({
       className={cn(
         "relative inline-flex items-center justify-center rounded-full text-[12px] font-semibold leading-none tracking-[-0.01em] transition-[background-color,color,transform] duration-200 active:scale-[0.97] disabled:opacity-60",
         "text-muted hover:bg-surface-muted hover:text-foreground",
-        size === "sm" ? "h-8 gap-1.5 px-2.5" : "h-9 gap-1.5 px-2.5",
+        size === "sm" ? "h-8 min-w-8 gap-1.5 px-2.5" : "h-9 min-w-9 gap-1.5 px-2.5",
         isActive &&
           (isUpvote
             ? "bg-success/10 text-success hover:bg-success/15 hover:text-success"

@@ -287,6 +287,9 @@ const MentorBadge = ({ badge }: { badge?: string | null }) => {
   );
 };
 
+const postInteractionSurfaceClassName =
+  "bg-[#F4F6F8] ring-1 ring-[#E7ECF2] dark:bg-surface-muted dark:ring-border";
+
 const FilterMenu = ({
   onScopeChange,
   open,
@@ -714,8 +717,8 @@ const PostCard = ({
       <div className="mb-3 flex items-start gap-3">
         <AuthorAvatar anonymous={isAnonymousPatient} author={post.author} />
         <div className="grid min-w-0 flex-1 gap-1">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <div className="flex min-w-0 items-center gap-[5px]">
+          <div className="flex flex-wrap items-center gap-x-1 gap-y-1">
+            <div className="flex min-w-0 items-center gap-1">
               <h2 className="truncate text-sm font-black text-foreground">{post.author.name}</h2>
               {post.author.verified ? (
                 <BadgeCheck
@@ -787,7 +790,6 @@ const PostCard = ({
         <div className="flex min-w-0 items-center gap-2">
           <div className="inline-flex items-center gap-0.5 rounded-full bg-[#F4F6F8] p-0.5 ring-1 ring-[#E7ECF2] dark:bg-surface-muted dark:ring-border">
             <VoteActionButton
-              className="h-8 px-2.5"
               count={voteSnapshot.upvotes}
               currentVote={voteSnapshot.currentVote}
               disabled={voteMutation.isPending}
@@ -799,7 +801,6 @@ const PostCard = ({
             />
             <span className="h-4 w-px bg-[#DDE4EC] dark:bg-border" aria-hidden="true" />
             <VoteActionButton
-              className="h-8 px-2.5"
               count={voteSnapshot.downvotes}
               currentVote={voteSnapshot.currentVote}
               disabled={voteMutation.isPending}
@@ -812,7 +813,7 @@ const PostCard = ({
             />
           </div>
           <PostActionLink
-            className="bg-transparent px-2.5"
+            className={postInteractionSurfaceClassName}
             count={post.replies_count}
             href={communityPostDetailHref(post)}
             icon={MessageCircle}
@@ -820,9 +821,10 @@ const PostCard = ({
             size="sm"
           />
         </div>
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="flex shrink-0 items-center gap-2">
           <PostActionButton
             active={saveSnapshot.saved}
+            className={postInteractionSurfaceClassName}
             count={saveSnapshot.saves}
             disabled={saveMutation.isPending}
             icon={Bookmark}
@@ -832,7 +834,7 @@ const PostCard = ({
             size="sm"
           />
           <PostActionButton
-            className="w-8 px-0"
+            className={postInteractionSurfaceClassName}
             icon={Share2}
             label={`Compartilhar ${post.title}`}
             onClick={() => onShare(post)}

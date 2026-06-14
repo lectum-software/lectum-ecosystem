@@ -173,3 +173,20 @@ Regras anti-recriação específicas:
 ## Notas para executor
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
+
+## Execucao complementar: refinamento visual do feed e follow silencioso (2026-06-14)
+
+- Pedido do usuario: ajustar `/app/community/feed` sem alterar estrutura do post, conteudo textual ou responsividade geral.
+- As chamadas `followCommunity` e `unfollowCommunity` deixaram de usar `showSuccess`, removendo o toast/notificacao verde de sucesso ao seguir/deixar de seguir comunidade; a mutation, o estado otimista, a invalidacao de cache e os erros permanecem funcionando.
+- No card do post, o espacamento horizontal entre nome, selo verificado e selo `TOP #1 Mentor` foi reduzido para que os elementos fiquem visualmente conectados e alinhados ao centro.
+- Os botoes/numeros de upvote, downvote, comentarios, salvar e compartilhar foram padronizados em altura, `min-width`, padding, tamanho de icone, fonte tabular e gap interno usando os componentes existentes.
+- Upvote/downvote permanecem agrupados, mas seguem a mesma escala visual dos demais controles; comentarios, salvar e compartilhar receberam a mesma superficie neutra.
+- Nao houve alteracao de backend, Prisma, migrations, packages, schema, textos ou rotas.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual usada foi `_product/proto/Feed Comunidade.jpg` e o pedido detalhado do usuario.
+- ADR criado: `adrs/0081-refinos-feed-comunidade.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/community/feed`.
