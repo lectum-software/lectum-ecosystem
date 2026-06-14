@@ -247,7 +247,7 @@ const InlineExpandableText = ({
           <>
             {" "}
             <button
-              className="pointer-events-auto inline rounded-none border-0 bg-transparent p-0 align-baseline font-[inherit] text-[#64748B]/80 transition-colors duration-150 [font-size:inherit] [line-height:inherit] hover:text-[#475569] dark:text-muted/80 dark:hover:text-muted"
+              className="pointer-events-auto inline cursor-pointer rounded-none border-0 bg-transparent p-0 align-baseline font-[inherit] text-[#64748B]/80 [font-size:inherit] [line-height:inherit] dark:text-muted/80"
               onClick={onToggle}
               type="button"
             >
@@ -474,10 +474,7 @@ const AuthorIdentityLine = ({
     <div className="flex min-w-0 max-w-full items-center gap-1">
       {href ? (
         <Link
-          className={cn(
-            "pointer-events-auto underline-offset-4 transition hover:text-primary hover:underline",
-            nameClassName,
-          )}
+          className={cn("pointer-events-auto cursor-pointer", nameClassName)}
           href={href}
           onClick={onClick}
         >
@@ -686,10 +683,10 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
   const profileHref = `/app/psychologist/${reply.author.id}`;
 
   return (
-    <div className="relative grid min-w-0 cursor-pointer grid-cols-[18px_minmax(0,1fr)] gap-2 rounded-2xl border border-[#D8ECFF] bg-[#F4FAFF] p-3 transition-colors hover:bg-[#EEF7FF] dark:border-primary/20 dark:bg-primary/5 dark:hover:bg-primary/10">
+    <div className="relative grid min-w-0 cursor-pointer grid-cols-[18px_minmax(0,1fr)] gap-2 rounded-2xl border border-[#D8ECFF] bg-[#F4FAFF] p-3 dark:border-primary/20 dark:bg-primary/5">
       <Link
         aria-label={`Abrir post ${post.title}`}
-        className="absolute inset-0 z-0 rounded-2xl"
+        className="absolute inset-0 z-0 cursor-pointer rounded-2xl"
         href={postHref}
       />
       <div className="pointer-events-none flex justify-center pt-1" aria-hidden="true">
@@ -707,7 +704,7 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
               verified={reply.author.verified}
             />
             <Link
-              className="pointer-events-auto min-w-0 truncate text-[11px] font-semibold text-muted underline-offset-4 transition hover:text-primary hover:underline"
+              className="pointer-events-auto min-w-0 cursor-pointer truncate text-[11px] font-semibold text-muted"
               href={profileHref}
               onClick={(event) => event.stopPropagation()}
             >
@@ -780,6 +777,7 @@ const PostCard = ({
   });
   const voteMutation = useVotePost(post.id);
   const saveMutation = useSavePost(post.id);
+  const postDetailHref = communityPostDetailHref(post);
 
   const handleVote = (value: 1 | -1) => {
     const previousSnapshot = voteSnapshot;
@@ -835,7 +833,7 @@ const PostCard = ({
           <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           <span className="shrink-0">Postado em</span>
           <Link
-            className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-black text-foreground underline-offset-4 hover:text-primary hover:underline"
+            className="block min-w-0 cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap font-black text-foreground"
             href={communityDetailHref(post.community.slug)}
           >
             {post.community.name}
@@ -866,17 +864,29 @@ const PostCard = ({
 
       <div className="grid gap-2">
         <Link
-          className="text-[1.32rem] font-black leading-[1.18] tracking-[-0.02em] text-[#182033] underline-offset-4 transition hover:text-primary hover:underline dark:text-foreground"
-          href={communityPostDetailHref(post)}
+          className="cursor-pointer text-[1.32rem] font-black leading-[1.18] tracking-[-0.02em] text-[#182033] dark:text-foreground"
+          href={postDetailHref}
         >
           {post.title}
         </Link>
-        <InlineExpandableText
-          className="text-sm leading-6 text-[#64748B] dark:text-muted"
-          expanded={contentExpanded}
-          onToggle={() => setContentExpanded((current) => !current)}
-          text={post.content}
-        />
+        <div className="relative md:cursor-pointer">
+          <Link
+            aria-label={`Abrir post ${post.title}`}
+            className="absolute inset-0 z-0 hidden cursor-pointer rounded-md md:block"
+            href={postDetailHref}
+          />
+          <div className="relative z-10 md:pointer-events-none">
+            <InlineExpandableText
+              className="text-sm leading-6 text-[#64748B] dark:text-muted"
+              expanded={contentExpanded}
+              onToggle={(event) => {
+                event.stopPropagation();
+                setContentExpanded((current) => !current);
+              }}
+              text={post.content}
+            />
+          </div>
+        </div>
       </div>
 
       <div className="mt-4 grid gap-3">
@@ -911,7 +921,7 @@ const PostCard = ({
           </div>
           <PostActionLink
             count={post.replies_count}
-            href={communityPostDetailHref(post)}
+            href={postDetailHref}
             icon={MessageCircle}
             label="Comentar"
             size="sm"

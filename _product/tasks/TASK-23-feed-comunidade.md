@@ -258,3 +258,20 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://localhost:3000/app/community/feed` com cookie de sessao de desenvolvimento.
+
+## Execucao complementar: links discretos nos campos do card do feed (2026-06-14)
+
+- Pedido do usuario: ajustar os campos clicaveis dos posts em `/app/community/feed` no desktop para abrir detalhe pelo texto do post e remover aparencia de link azul/sublinhado no hover.
+- O texto do post recebeu uma camada de link para `communityPostDetailHref(post)` somente a partir do breakpoint desktop/tablet largo (`md`), mantendo o mobile sem mudanca de comportamento.
+- O controle inline `... ver mais` continua funcionando sobre a camada clicavel porque para a propagacao do clique e permanece no fluxo do texto.
+- Titulo do post, texto do post, nome do psicologo na resposta, metadados do psicologo, nome da comunidade e bloco da resposta profissional mantem apenas cursor de interacao, sem `hover:text-primary`, `hover:underline`, mudanca de peso ou deslocamento de layout.
+- A resposta profissional segue clicavel para o detalhe do post, mas sem alteracao visual de fundo no hover.
+- Nao houve alteracao de backend, Prisma, migrations, packages, schema, contratos de API, conteudo textual ou estrutura geral dos cards.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual usada foi `_product/proto/Feed Comunidade.jpg`, a captura enviada pelo usuario e o pedido detalhado.
+- ADR atualizado: `adrs/0081-refinos-feed-comunidade.md`.
+- Validacoes executadas nesta execucao:
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://localhost:3000/app/community/feed` com cookie de sessao de desenvolvimento.

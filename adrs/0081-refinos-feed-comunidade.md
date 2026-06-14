@@ -40,3 +40,31 @@ Em 2026-06-14, o produto também pediu que a resposta destacada do psicólogo fo
 ## Task relacionada
 
 Ajuste complementar de UX visual da TASK-23 em `/app/community/feed`.
+
+## Atualizacao em 2026-06-14: campos clicaveis sem aparencia de link
+
+### Contexto
+
+No desktop, o titulo do post e outros campos clicaveis do card apareciam com comportamento visual de link tradicional no hover, mudando para azul e/ou sublinhado. Alem disso, o texto do post nao abria o detalhe, embora o titulo abrisse.
+
+### Decisao
+
+- Reutilizar `communityPostDetailHref(post)` como destino unico do card.
+- Adicionar uma camada de `Link` sobre o texto do post apenas no breakpoint desktop/tablet largo, preservando o comportamento mobile atual.
+- Manter o botao inline `... ver mais` acima dessa camada clicavel, parando a propagacao do clique para continuar expandindo/recolhendo o texto.
+- Remover dos campos textuais clicaveis do card (`titulo`, `comunidade`, `nome/metadados do psicologo` e `resposta profissional`) as classes de hover que aplicavam azul, sublinhado ou mudanca de fundo, deixando apenas `cursor: pointer`.
+
+### Consequencias
+
+- O usuario pode abrir o detalhe pelo texto do post no desktop, com o mesmo destino do titulo.
+- O feed deixa de parecer uma pagina de links tradicionais e preserva hierarquia visual limpa.
+- A resposta profissional continua clicavel para o detalhe do post, mas sem flicker ou mudanca de cor/fundo no hover.
+- Nenhum contrato de API, schema, pacote, backend ou conteudo textual foi alterado.
+
+### Validacoes
+
+- `pnpm --dir frontend biome:fix`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP 200 em `http://localhost:3000/app/community/feed` com cookie de sessao de desenvolvimento.
