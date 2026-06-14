@@ -28,20 +28,22 @@ O `DATA-MODEL.md` já prevê `community_post` com `author_id`, `community_id`, `
 - Usar React Hook Form, Zod, `frontend/src/hooks/form` e controllers existentes para comunidade, título e texto; o toggle anônimo usa `Controller` do React Hook Form para respeitar a base de formulário e reproduzir o layout do protótipo.
 - Diferenciar a UI por perfil: pacientes veem a opção “Postar como anônimo”; psicólogos veem a seção visual de mídia, desabilitada como pendência de R2.
 - No seletor de comunidade, manter as opções ordenadas alfabeticamente por nome em `pt-BR`, usar ícone de grupo alinhado ao texto e abrir busca interna com placeholder `Buscar comunidade`; quando o filtro não encontrar resultados, exibir `Nenhuma comunidade encontrada`.
-- Refinar a hierarquia mobile-first do formulário para `Comunidade → anonimato → título → conteúdo → postar`, mantendo o switch anônimo imediatamente abaixo do seletor de comunidade apenas para pacientes.
-- Reduzir o textarea de conteúdo para uma entrada inicial de 5 linhas com crescimento automático via extensão do controller `textarea`, sem criar componente paralelo.
+- Refinar a hierarquia mobile-first do formulário para `Comunidade → título → conteúdo → anonimato → postar`, mantendo o switch anônimo apenas para pacientes e abaixo dos campos principais para não competir com título e conteúdo.
+- Aumentar o textarea de conteúdo para uma entrada inicial de 7 linhas, com placeholder orientativo longo e crescimento automático via extensão do controller `textarea`, sem criar componente paralelo.
 - Fortalecer o CTA `Postar` com azul Lectum, altura ligeiramente maior e estado desabilitado visualmente claro enquanto comunidade, título e conteúdo obrigatórios não estiverem preenchidos.
-- Manter o switch `Postar como anônimo` desligado por padrão e exibir a dica `💡 Publicar com seu nome ajuda a tornar as conversas mais pessoais e acolhedoras.` somente quando o paciente ativar o anonimato, em tom cinza e sem alerta punitivo.
+- Manter o switch `Postar como anônimo` desligado por padrão, em container mais leve e discreto, e exibir a dica `💡 Publicar com seu nome ajuda a tornar as conversas mais pessoais e acolhedoras.` somente quando o paciente ativar o anonimato, em tom cinza e sem alerta punitivo.
+- Remover qualquer duplicação visual da comunidade selecionada no formulário: a comunidade aparece apenas no seletor; o ícone do seletor recebe largura/padding reservados para não colidir com o texto.
+- Pré-selecionar a comunidade quando a criação é iniciada de `/app/community/[slug]/post/new` ou por `?community=slug`, desde que o slug exista nas opções reais retornadas pela API; CTAs do feed com recorte de comunidade passam a apontar para a rota contextual.
 - Ao retornar posts anônimos de pacientes para o feed, usar `Membro Anônimo #1234` com sufixo determinístico por `community_post.id`, evitando que todos os anônimos pareçam o mesmo autor sem criar perfil público.
 
 ## Consequências
 
 - O feed passa a receber posts reais, sem mock ou endpoint simulado.
-- O fluxo global exige seleção explícita de comunidade quando acessado por `/app/community/feed/post/new`; quando acessado por `/app/community/[slug]/post/new`, a comunidade é pré-selecionada.
+- O fluxo global exige seleção explícita de comunidade quando acessado por `/app/community/feed/post/new` sem contexto; quando acessado por `/app/community/[slug]/post/new` ou com `?community=slug`, a comunidade é pré-selecionada após validação contra as opções reais.
 - A publicação já aparece para o feed imediatamente porque a moderação é reativa.
 - A UI de mídia para psicólogos fica preparada visualmente, mas não envia arquivos até existir storage R2 configurado e schema/endpoint de anexos aprovado.
 - A rota antiga do CTA central não quebra navegações existentes, mas o destino canônico passa a ser a rota com slug.
-- A criação de post fica mais leve para pacientes: a decisão de anonimato fica vinculada ao contexto da comunidade e o texto longo deixa de ocupar altura excessiva antes da digitação.
+- A criação de post fica mais focada para pacientes: título e conteúdo ocupam a hierarquia principal, enquanto a decisão de anonimato vira configuração secundária e discreta.
 - O anonimato continua seguro para o paciente, mas cada card anônimo ganha diferenciação visual estável pelo sufixo do post.
 
 ## Validação
@@ -52,12 +54,17 @@ O `DATA-MODEL.md` já prevê `community_post` com `author_id`, `community_id`, `
 - `pnpm --dir frontend build`: sucesso.
 - Refinamento do seletor de comunidade: `pnpm --dir frontend check` e `pnpm --dir frontend build`: sucesso.
 - Refinamento de hierarquia/UX do Criar Post: `pnpm --dir frontend check` e `pnpm --dir frontend build`: sucesso.
+- Ajuste complementar do formulário de criação contextual, placeholder longo, seletor de comunidade e anonimato discreto: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`: sucesso.
 - Refinamento do switch anônimo: `pnpm --dir frontend check` e `pnpm --dir frontend build`: sucesso.
 - Refinamento de anonimato numerado e nova dica do switch: `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir backend build`, `pnpm --dir frontend build` e `pnpm check`: sucesso.
 - Validação HTTP local das rotas Next:
   - `GET http://localhost:3000/app/community/feed/post/new`: sucesso (`200`), incluindo os refinamentos do seletor, da hierarquia/UX do formulário, da nova dica e do switch anônimo.
   - `GET http://localhost:3000/app/community/ansiedade-em-equilibrio/post/new`: sucesso (`200`).
   - `GET http://localhost:3000/app/community/ansiedade-em-equilibrio/post/success`: sucesso (`200`).
+- Validação HTTP local complementar com cookie de sessão de desenvolvimento:
+  - `GET http://localhost:3000/app/community/feed/post/new`: sucesso (`200`).
+  - `GET http://localhost:3000/app/community/ansiedade-em-equilibrio/post/new`: sucesso (`200`).
+  - `GET http://localhost:3000/app/community/feed?community=ansiedade-em-equilibrio`: sucesso (`200`).
 - `pnpm check`: sucesso.
 - Validação HTTP local do endpoint: `POST /api/private/community/:slug/posts` sem autenticação retornou `401`, confirmando rota privada registrada.
 

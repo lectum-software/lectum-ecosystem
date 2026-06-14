@@ -27,6 +27,9 @@ type UseCreateCommunityPostFormParams = {
   loadingCommunities?: boolean;
 };
 
+const contentGuidancePlaceholder =
+  "Conte o que aconteceu, como você se sente e o que já tentou fazer até agora. Dê o máximo de contexto possível para os psicólogos.";
+
 const buildFields = ({
   communityOptions,
   isPsychologist,
@@ -50,7 +53,7 @@ const buildFields = ({
       emptySearchLabel: "Nenhuma comunidade encontrada",
       required: true,
       inputClassName:
-        "h-10 w-fit min-w-[210px] rounded-full border-transparent bg-[#F5F7FA] px-4 text-sm font-semibold text-[#111827] shadow-none focus:border-transparent focus:ring-0 dark:bg-surface-muted",
+        "h-10 w-fit max-w-[calc(100vw-36px)] min-w-[236px] rounded-full border-transparent bg-[#F5F7FA] px-4 text-sm font-semibold text-[#111827] shadow-none focus:border-transparent focus:ring-0 dark:bg-surface-muted",
     },
     {
       name: "title",
@@ -68,15 +71,13 @@ const buildFields = ({
       name: "content",
       field: "textarea",
       label: "O QUE VOCÊ ESTÁ PENSANDO?",
-      placeholder: isPsychologist
-        ? "Conte algo interessante à comunidade..."
-        : "Conte aos profissionais algo sobre você...",
+      placeholder: contentGuidancePlaceholder,
       required: true,
-      rows: 5,
+      rows: 7,
       max: 2000,
       autoGrow: true,
       inputClassName:
-        "min-h-[136px] rounded-2xl border-[#E5E7EB] bg-white px-4 py-4 text-base leading-6 shadow-none placeholder:text-[#8A94A6] focus:border-[#308CE8] focus:ring-[#308CE8]/10 dark:bg-surface",
+        "min-h-[184px] rounded-2xl border-[#E5E7EB] bg-white px-4 py-4 text-base leading-6 shadow-none placeholder:text-[#8A94A6]/85 focus:border-[#308CE8] focus:ring-[#308CE8]/10 dark:bg-surface",
     },
     {
       name: "anonymous",

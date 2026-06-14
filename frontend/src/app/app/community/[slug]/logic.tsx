@@ -1458,6 +1458,9 @@ export const CommunityFeedLogic = () => {
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search.trim());
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
+  const createPostHref = selectedCommunitySlug
+    ? communityCreatePostHref(selectedCommunitySlug)
+    : COMMUNITY_CREATE_POST_HREF;
   const query = useMemo(
     () => ({
       page,
@@ -1514,7 +1517,7 @@ export const CommunityFeedLogic = () => {
     <PrivateTemplate
       bottomNavigationCenterAction={{
         ariaLabel: "Criar publicação na comunidade",
-        href: COMMUNITY_CREATE_POST_HREF,
+        href: createPostHref,
         title: "Criar publicação",
       }}
       contentClassName="bg-[#F5F7FA] dark:bg-background"
@@ -1621,7 +1624,7 @@ export const CommunityFeedLogic = () => {
       <Link
         aria-label="Criar publicação na comunidade"
         className="group fixed right-10 bottom-10 z-40 hidden h-16 w-16 items-center justify-center rounded-full border-[5px] border-white bg-[#308CE8] text-white shadow-[0_18px_36px_rgba(48,140,232,0.28)] transition hover:-translate-y-1 hover:bg-[#2579CF] hover:shadow-[0_22px_44px_rgba(48,140,232,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F5F7FA] motion-safe:animate-[lectum-desktop-create-float_4.2s_ease-in-out_infinite] lg:flex xl:right-20 2xl:right-28"
-        href={COMMUNITY_CREATE_POST_HREF}
+        href={createPostHref}
         title="Criar publicação"
       >
         <Plus

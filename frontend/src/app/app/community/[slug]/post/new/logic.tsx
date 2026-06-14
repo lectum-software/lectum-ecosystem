@@ -2,7 +2,7 @@
 
 import { Camera, Info, Loader2, UserRoundX, UsersRound, Video, X } from "lucide-react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Controller } from "react-hook-form";
 import { useCommunities, useCreateCommunityPost } from "@/api/callers/community";
@@ -70,8 +70,10 @@ const communityNameCollator = new Intl.Collator("pt-BR", {
 
 export const CreateCommunityPostLogic = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const params = useParams<{ slug?: string | string[] }>();
   const routeSlug = normalizeParam(params?.slug);
+  const communitySlugFromQuery = searchParams.get("community")?.trim() || null;
   const storedUser = useAppSelector((state) => state.user);
   const isPsychologist = storedUser?.role === "psicologo";
   const [apiError, setApiError] = useState<string | null>(null);
@@ -88,7 +90,8 @@ export const CreateCommunityPostLogic = () => {
         .sort((a, b) => communityNameCollator.compare(a.label, b.label)),
     [communitiesQuery.data?.data],
   );
-  const defaultCommunitySlug = routeSlug && routeSlug !== COMMUNITY_FEED_SLUG ? routeSlug : null;
+  const defaultCommunitySlug =
+    routeSlug && routeSlug !== COMMUNITY_FEED_SLUG ? routeSlug : communitySlugFromQuery;
 
   const form = useCreateCommunityPostForm({
     communityOptions,
@@ -118,6 +121,12 @@ export const CreateCommunityPostLogic = () => {
         shouldTouch: false,
         shouldValidate: true,
       });
+    } else if (selected === defaultCommunitySlug && !hasOption) {
+      hook.setValue("community_slug", "", {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: true,
+      });
     }
   }, [communityOptions, defaultCommunitySlug, hook]);
 
@@ -131,8 +140,11 @@ export const CreateCommunityPostLogic = () => {
   const watchedCommunitySlug = hook.watch("community_slug");
   const watchedTitle = hook.watch("title");
   const watchedContent = hook.watch("content");
+  const selectedCommunityIsValid = communityOptions.some(
+    (option) => option.value === watchedCommunitySlug,
+  );
   const requiredFieldsReady = Boolean(
-    watchedCommunitySlug &&
+    selectedCommunityIsValid &&
       String(watchedTitle ?? "").trim().length >= 3 &&
       String(watchedContent ?? "").trim().length >= 10,
   );
@@ -155,15 +167,15 @@ export const CreateCommunityPostLogic = () => {
 
     if (field.name === "community_slug") {
       return (
-        <div className="relative w-fit" key="create-post-community">
+        <div className="relative inline-block w-fit max-w-full" key="create-post-community">
           <UsersRound
             aria-hidden="true"
-            className="pointer-events-none absolute top-5 left-3 z-10 h-4 w-4 -translate-y-1/2 text-[#111827] dark:text-foreground"
+            className="pointer-events-none absolute top-5 left-4 z-10 h-4 w-4 -translate-y-1/2 text-[#111827] dark:text-foreground"
           />
           <Component
             control={hook.control}
             {...field}
-            inputClassName={cn("pl-9", field.inputClassName)}
+            inputClassName={cn(field.inputClassName, "pl-11 pr-10")}
           />
         </div>
       );
@@ -198,6 +210,10 @@ export const CreateCommunityPostLogic = () => {
               .filter((field) => field.name === "community_slug")
               .map(renderFormField)}
 
+            {formProps.fields
+              .filter((field) => field.name !== "community_slug" && field.name !== "anonymous")
+              .map(renderFormField)}
+
             {!isPsychologist ? (
               <Controller
                 control={hook.control}
@@ -206,17 +222,17 @@ export const CreateCommunityPostLogic = () => {
                   const checked = Boolean(field.value);
 
                   return (
-                    <div className="rounded-2xl border border-[#EEF0F3] bg-[#F8FAFC] px-4 py-3 dark:border-border dark:bg-surface-muted">
-                      <div className="flex min-h-8 items-center justify-between gap-4">
-                        <span className="inline-flex items-center gap-2 text-sm font-medium text-[#6B7280]">
-                          <UserRoundX className="h-5 w-5" aria-hidden="true" />
+                    <div className="rounded-2xl border border-[#E8EDF3] bg-white/70 px-3.5 py-2.5 dark:border-border dark:bg-surface/70">
+                      <div className="flex min-h-7 items-center justify-between gap-3">
+                        <span className="inline-flex items-center gap-2 text-[13px] font-semibold text-[#64748B]">
+                          <UserRoundX className="h-4 w-4" aria-hidden="true" />
                           Postar como anônimo
                         </span>
                         <button
                           aria-checked={checked}
                           aria-label="Postar como anônimo"
                           className={cn(
-                            "relative h-7 w-12 rounded-full bg-[#EDF1F7] transition focus:outline-none focus:ring-4 focus:ring-[#308CE8]/15",
+                            "relative h-6 w-10 rounded-full bg-[#EDF1F7] transition focus:outline-none focus:ring-4 focus:ring-[#308CE8]/15",
                             checked && "bg-[#308CE8]",
                           )}
                           onBlur={field.onBlur}
@@ -226,14 +242,14 @@ export const CreateCommunityPostLogic = () => {
                         >
                           <span
                             className={cn(
-                              "absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow-sm transition",
-                              checked && "translate-x-5",
+                              "absolute top-1 left-1 h-4 w-4 rounded-full bg-white shadow-sm transition",
+                              checked && "translate-x-4",
                             )}
                           />
                         </button>
                       </div>
                       {checked ? (
-                        <p className="mt-3 text-[12.5px] leading-5 text-[#6B7280]">
+                        <p className="mt-2 text-[11.5px] leading-4 text-[#8A94A6]">
                           💡 Publicar com seu nome ajuda a tornar as conversas mais pessoais e
                           acolhedoras.
                         </p>
@@ -243,10 +259,6 @@ export const CreateCommunityPostLogic = () => {
                 }}
               />
             ) : null}
-
-            {formProps.fields
-              .filter((field) => field.name !== "community_slug" && field.name !== "anonymous")
-              .map(renderFormField)}
           </div>
 
           {isPsychologist ? (

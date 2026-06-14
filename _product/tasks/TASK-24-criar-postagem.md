@@ -166,8 +166,10 @@ Regras anti-recriação específicas:
 - Frontend criado nas rotas canônicas `/app/community/[slug]/post/new` e `/app/community/[slug]/post/success`; `/app/community/post/new` redireciona para `/app/community/feed/post/new`.
 - Mídia/anexos ficaram como pendência explícita por ausência de credenciais/bucket R2 no ambiente; a publicação de texto foi implementada de ponta a ponta.
 - ADR: `adrs/0065-criacao-posts-comunidade.md`.
-- Refinamento de hierarquia/UX: o formulário agora segue `Comunidade → anonimato → título → conteúdo → postar`, com textarea inicial menor/autocrescimento e CTA azul com estado desabilitado.
-- Refinamento do switch anônimo: o anonimato permanece desligado por padrão e a dica educativa `💡 Publicar com seu nome ajuda a tornar as conversas mais pessoais e acolhedoras.` aparece apenas quando ativado; posts anônimos passam a ser exibidos como `Membro Anônimo #1234` no feed.
+- Refinamento de hierarquia/UX: o formulário agora segue `Comunidade → título → conteúdo → anonimato → postar`, mantendo apenas o seletor como exibição da comunidade, com textarea inicial maior/autocrescimento e CTA azul com estado desabilitado.
+- Refinamento do switch anônimo: o anonimato permanece desligado por padrão, abaixo dos campos principais, com peso visual reduzido; a dica educativa `💡 Publicar com seu nome ajuda a tornar as conversas mais pessoais e acolhedoras.` aparece apenas quando ativado; posts anônimos passam a ser exibidos como `Membro Anônimo #1234` no feed.
+- Ajuste complementar de criação contextual: links originados de uma comunidade específica usam `/app/community/[slug]/post/new`; o formulário também aceita `?community=slug`, valida a opção carregada e pré-seleciona a comunidade sem criar chip ou preview duplicado.
+- Builder Quick Copy não está disponível como ferramenta neste ambiente; a validação visual deste ajuste usou a tela local existente e os protótipos exportados em `_product/proto`.
 
 ## Notas para executor
 
