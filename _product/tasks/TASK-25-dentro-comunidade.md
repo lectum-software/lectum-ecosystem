@@ -187,3 +187,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Builder/Quick Copy não está exposto como ferramenta direta nesta sessão; a referência visual usada foi `_product/proto/Dentro da Comunidade.jpg` e o pedido detalhado do usuário.
 - ADR atualizado: `adrs/0066-pagina-detalhe-comunidade-participacao.md`.
 - Validações executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, HTTP 200 em `http://localhost:3000/app/community/ansiedade-em-equilibrio` e HTTP 200 em `http://localhost:3000/app/community/feed`.
+
+## Complemento 2026-06-14 — ranking Lectum apenas dentro da comunidade
+
+- Pedido do usuário: restringir o algoritmo de ordenação estilo Reddit/Lectum às páginas internas de comunidade (`/app/community/[slug]`), mantendo o feed geral `/app/community/feed` sem esta ordenação.
+- Backend: o endpoint `GET /api/private/community/:slug/posts` passou a aceitar `sort`/`period`, ordenar e paginar os posts da comunidade após calcular `sort_metrics`, com contadores reais por período para comentários/respostas (`post_reply.createdAt`) e upvotes (`post_vote.createdAt` com `value=1`). O endpoint do feed geral não recebe nem usa esses metadados.
+- Ranking `Em destaque`: o frontend da página interna aplica `((upvotes * 3) + (comentarios * 5) + (respostasDePsicologos * 15) + (respostasDeTopMentor * 25) + (compartilhamentos * 4) - penalidades) / (horasDesdePublicacao + 2)^0.5` apenas em `CommunityDetailLogic`.
+- `Novos`: ordena por `created_at DESC` e mantém ícone de relógio.
+- `Mais comentados` e `Mais votados`: usam os contadores reais do período selecionado (`Esta semana`, `Este mês`, `Este ano`, `Desde sempre`) e aplicam o outro contador como desempate, preservando posts existentes e paginação.
+- Penalidades: posts removidos continuam excluídos pela query `status = publicado`; campos de denúncia/ocultação/moderação ainda não existem no schema, então `penalty` fica preparado no contrato com valor `0` até haver fonte persistida. Compartilhamentos também ficam em `0` enquanto não existir evento persistido específico.
+- Escopo: não houve alteração no algoritmo, contrato visual ou ordenação do feed geral `/app/community/feed`; a exibição de downvotes ao usuário permanece removida conforme ajustes anteriores.
+- ADR atualizado: `adrs/0066-pagina-detalhe-comunidade-participacao.md`.
+- Validações executadas: `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir backend build`, `pnpm check`; HTTP local sem cookie autenticado retornou 307 esperado para `/app/community/ansiedade-em-equilibrio` e `/app/community/feed`.

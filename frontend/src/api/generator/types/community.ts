@@ -10,6 +10,8 @@ export type CommunityPostsQuery = {
   page?: number;
   limit?: number;
   search?: string;
+  sort?: "featured" | "new" | "commented" | "voted";
+  period?: "week" | "month" | "year" | "all";
 };
 
 export type CommunityFeedScope = "all" | "following";
@@ -74,6 +76,22 @@ export type CommunityProfessionalReply = {
   author: CommunityAuthor;
 };
 
+export type CommunitySortPeriodMetrics = {
+  week: number;
+  month: number;
+  year: number;
+  all: number;
+};
+
+export type CommunityPostSortMetrics = {
+  comments: CommunitySortPeriodMetrics;
+  upvotes: CommunitySortPeriodMetrics;
+  psychologist_replies_count: number;
+  top_mentor_replies_count: number;
+  shares_count: number;
+  penalty: number;
+};
+
 export type CommunityPost = {
   id: string;
   title: string;
@@ -94,6 +112,7 @@ export type CommunityPost = {
   community: Community;
   author: CommunityAuthor;
   highlighted_professional_reply: CommunityProfessionalReply | null;
+  sort_metrics?: CommunityPostSortMetrics;
 };
 
 export type CommunityListResponse = {

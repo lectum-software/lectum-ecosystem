@@ -1007,55 +1007,69 @@ const Pagination = ({
   );
 };
 
-const resolveSortPeriodStart = (period: CommunityPostSortPeriod) => {
-  if (period === "all") return null;
-
-  const start = new Date();
-
-  if (period === "week") {
-    const day = start.getDay();
-    const diffToMonday = day === 0 ? 6 : day - 1;
-    start.setDate(start.getDate() - diffToMonday);
-  } else if (period === "month") {
-    start.setDate(1);
-  } else {
-    start.setMonth(0, 1);
-  }
-
-  start.setHours(0, 0, 0, 0);
-
-  return start.getTime();
-};
-
-const isPostInsideSortPeriod = (post: CommunityPost, period: CommunityPostSortPeriod) => {
-  const periodStart = resolveSortPeriodStart(period);
-
-  if (!periodStart) return true;
-
-  return new Date(post.created_at).getTime() >= periodStart;
-};
-
 const comparePostDates = (a: CommunityPost, b: CommunityPost) =>
   new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
 
-const sortCommunityPostsByMetric = (
-  posts: CommunityPost[],
-  metric: "replies_count" | "upvotes_count",
+const fallbackCommunityPeriodMetrics = (
+  value: number,
+): Record<CommunityPostSortPeriod, number> => ({
+  week: value,
+  month: value,
+  year: value,
+  all: value,
+});
+
+const communityPostSortMetrics = (post: CommunityPost) =>
+  post.sort_metrics ?? {
+    comments: fallbackCommunityPeriodMetrics(post.replies_count),
+    upvotes: fallbackCommunityPeriodMetrics(post.upvotes_count),
+    psychologist_replies_count: post.highlighted_professional_reply ? 1 : 0,
+    top_mentor_replies_count: post.highlighted_professional_reply?.author.featured_badge ? 1 : 0,
+    shares_count: 0,
+    penalty: 0,
+  };
+
+const communityPostMetricForPeriod = (
+  post: CommunityPost,
+  metric: "comments" | "upvotes",
   period: CommunityPostSortPeriod,
 ) => {
+  return communityPostSortMetrics(post)[metric][period] ?? 0;
+};
+
+const communityFeaturedScore = (post: CommunityPost, now: number) => {
+  const metrics = communityPostSortMetrics(post);
+  const createdAt = new Date(post.created_at).getTime();
+  const hoursSincePublication = Number.isNaN(createdAt)
+    ? 0
+    : Math.max(0, (now - createdAt) / 3_600_000);
+  const highlightScore =
+    metrics.upvotes.all * 3 +
+    metrics.comments.all * 5 +
+    metrics.psychologist_replies_count * 15 +
+    metrics.top_mentor_replies_count * 25 +
+    metrics.shares_count * 4 -
+    metrics.penalty;
+
+  return highlightScore / (hoursSincePublication + 2) ** 0.5;
+};
+
+const sortCommunityPostsByMetric = (
+  posts: CommunityPost[],
+  metric: "comments" | "upvotes",
+  period: CommunityPostSortPeriod,
+) => {
+  const secondaryMetric = metric === "comments" ? "upvotes" : "comments";
+
   return posts.sort((a, b) => {
-    const aInPeriod = isPostInsideSortPeriod(a, period);
-    const bInPeriod = isPostInsideSortPeriod(b, period);
-
-    if (aInPeriod !== bInPeriod) return bInPeriod ? 1 : -1;
-
-    const metricDiff = b[metric] - a[metric];
+    const metricDiff =
+      communityPostMetricForPeriod(b, metric, period) -
+      communityPostMetricForPeriod(a, metric, period);
     if (metricDiff !== 0) return metricDiff;
 
     const secondaryMetricDiff =
-      metric === "replies_count"
-        ? b.upvotes_count - a.upvotes_count
-        : b.replies_count - a.replies_count;
+      communityPostMetricForPeriod(b, secondaryMetric, period) -
+      communityPostMetricForPeriod(a, secondaryMetric, period);
     if (secondaryMetricDiff !== 0) return secondaryMetricDiff;
 
     return comparePostDates(a, b);
@@ -1067,31 +1081,25 @@ const sortCommunityPosts = (
   sort: CommunityPostSort,
   periods: Record<CommunityPostSortWithPeriod, CommunityPostSortPeriod>,
 ) => {
-  const items = [...posts];
+  const items = posts.filter((post) => post.status !== "removido");
 
   if (sort === "new") {
     return items.sort(comparePostDates);
   }
 
   if (sort === "commented") {
-    return sortCommunityPostsByMetric(items, "replies_count", periods.commented);
+    return sortCommunityPostsByMetric(items, "comments", periods.commented);
   }
 
   if (sort === "voted") {
-    return sortCommunityPostsByMetric(items, "upvotes_count", periods.voted);
+    return sortCommunityPostsByMetric(items, "upvotes", periods.voted);
   }
 
+  const now = Date.now();
+
   return items.sort((a, b) => {
-    const aScore =
-      a.upvotes_count * 3 +
-      a.replies_count * 2 +
-      a.saves_count +
-      (a.highlighted_professional_reply ? 250 : 0);
-    const bScore =
-      b.upvotes_count * 3 +
-      b.replies_count * 2 +
-      b.saves_count +
-      (b.highlighted_professional_reply ? 250 : 0);
+    const aScore = communityFeaturedScore(a, now);
+    const bScore = communityFeaturedScore(b, now);
 
     if (bScore !== aScore) return bScore - aScore;
 
@@ -1361,7 +1369,17 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const [followingOverride, setFollowingOverride] = useState<boolean | null>(null);
   const detail = useCommunityDetail(slug);
-  const postsQuery = useCommunityPosts(slug, { page, limit: PAGE_LIMIT }, Boolean(detail.data));
+  const postsQueryParams = useMemo(
+    () => ({
+      limit: PAGE_LIMIT,
+      page,
+      sort,
+      ...(sort === "commented" ? { period: sortPeriods.commented } : {}),
+      ...(sort === "voted" ? { period: sortPeriods.voted } : {}),
+    }),
+    [page, sort, sortPeriods.commented, sortPeriods.voted],
+  );
+  const postsQuery = useCommunityPosts(slug, postsQueryParams, Boolean(detail.data));
   const followMutation = useFollowCommunity();
   const unfollowMutation = useUnfollowCommunity();
   const community = detail.data?.community;

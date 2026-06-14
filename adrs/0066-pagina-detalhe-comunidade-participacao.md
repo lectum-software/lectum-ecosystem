@@ -1,4 +1,4 @@
-﻿# ADR-0066: Página de detalhe de comunidade com participação persistida
+# ADR-0066: Página de detalhe de comunidade com participação persistida
 
 ## Status
 
@@ -81,3 +81,39 @@ O detalhe de comunidade precisava reduzir atrito visual no topo e aproximar os p
 - `pnpm check`
 - HTTP 200 em `http://localhost:3000/app/community/ansiedade-em-equilibrio` com cookie de sessão de desenvolvimento.
 - HTTP 200 em `http://localhost:3000/app/community/feed` com cookie de sessão de desenvolvimento.
+
+## Atualização 2026-06-14: ranking Lectum restrito à comunidade
+
+### Contexto
+
+A ordenação estilo Reddit/Lectum combina recência, engajamento e participação profissional, mas o feed geral reúne várias comunidades e terá regras próprias posteriormente. Aplicar o mesmo ranking em `/app/community/feed` poderia misturar critérios de relevância de comunidades diferentes e alterar uma experiência fora do escopo do pedido.
+
+### Decisão
+
+- Restringir o algoritmo de ranking Lectum ao fluxo de detalhe `/app/community/[slug]`, usando `sortCommunityPosts` apenas em `CommunityDetailLogic`.
+- Expor `sort_metrics` somente em `GET /api/private/community/:slug/posts`, aceitando `sort`/`period` para ordenar e paginar o recorte da comunidade no backend, mantendo o contrato do feed geral sem esses metadados e sem a nova ordenação.
+- Calcular métricas reais por período no backend:
+  - comentários/respostas por `post_reply.createdAt`;
+  - upvotes por `post_vote.createdAt` com `value = 1`;
+  - respostas de psicólogos por autor psicólogo verificado;
+  - respostas de Top Mentor reaproveitando a regra atual de badge por perfil elegível e score da resposta.
+- Aplicar `Em destaque` como score final por recência: `((upvotes * 3) + (comentarios * 5) + (respostasDePsicologos * 15) + (respostasDeTopMentor * 25) + (compartilhamentos * 4) - penalidades) / (horasDesdePublicacao + 2)^0.5`.
+- Aplicar `Novos` por `created_at DESC`, `Mais comentados` por `comentariosNoPeriodo DESC` com desempate por upvotes, e `Mais votados` por `upvotesNoPeriodo DESC` com desempate por comentários.
+- Manter posts removidos fora da listagem pela query `status = publicado`. Como ainda não existem campos persistidos de denúncia/ocultação/moderação ou evento de compartilhamento por post comunitário, o contrato já reserva `penalty` e `shares_count` com valor `0` até haver fonte real.
+
+### Consequências
+
+- A página interna de comunidade passa a ordenar por relevância comunitária sem alterar o feed geral.
+- A paginação do detalhe é aplicada depois do ranking da comunidade, evitando que posts relevantes de páginas posteriores fiquem fora da primeira página por causa de `created_at`.
+- Os dropdowns de período agora usam eventos reais dentro da janela selecionada, em vez de inferir período pelo `created_at` do post.
+- O frontend possui fallback para dados agregados antigos caso `sort_metrics` não venha no payload, mas o endpoint de comunidade específica fornece as métricas reais.
+- A lógica continua sem mostrar quantidade de downvotes ao usuário e sem depender de mocks, seeds ou campos inexistentes.
+
+### Validação
+
+- `pnpm --dir backend check`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm --dir backend build`
+- `pnpm check`
+- HTTP local sem cookie autenticado retornou 307 esperado para `http://localhost:3000/app/community/ansiedade-em-equilibrio` e `http://localhost:3000/app/community/feed`, confirmando proteção/roteamento sem erro público.

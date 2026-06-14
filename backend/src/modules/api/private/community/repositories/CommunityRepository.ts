@@ -9,6 +9,7 @@ import type {
   CommunityIndexResponse,
   CommunityMembershipResponse,
   CommunityPostDTO,
+  CommunityPostSortMetricsDTO,
   CommunityPostsResponse,
   CommunityTopMentorsPeriodValue,
   ICommunityCreatePostDTO,
@@ -139,9 +140,12 @@ type AuthorResult = PostResult["author"];
 type ProfessionalReplyResult = PostResult["replies"][number];
 type TopMentorUserResult = Prisma.userGetPayload<{ select: typeof topMentorUserSelect }>;
 type CurrentVote = 1 | -1 | null;
+type CommunitySortPeriodKey = keyof CommunityPostSortMetricsDTO["comments"];
+type CommunityPostSortValue = "featured" | "new" | "commented" | "voted";
 
 const CONTACT_MESSAGE =
   "Olá, encontrei seu post na comunidade Lectum e gostaria de conversar sobre atendimento.";
+const COMMUNITY_SORT_PERIOD_KEYS: CommunitySortPeriodKey[] = ["week", "month", "year", "all"];
 
 const normalizePagination = (query: { page?: number; limit?: number }) => {
   const page = Math.max(1, Number(query.page || 1));
@@ -152,6 +156,146 @@ const normalizePagination = (query: { page?: number; limit?: number }) => {
     limit,
     skip: (page - 1) * limit,
   };
+};
+
+const emptyCommunitySortPeriodMetrics = (): CommunityPostSortMetricsDTO["comments"] => ({
+  week: 0,
+  month: 0,
+  year: 0,
+  all: 0,
+});
+
+const emptyCommunityPostSortMetrics = (): CommunityPostSortMetricsDTO => ({
+  comments: emptyCommunitySortPeriodMetrics(),
+  upvotes: emptyCommunitySortPeriodMetrics(),
+  psychologist_replies_count: 0,
+  top_mentor_replies_count: 0,
+  shares_count: 0,
+  penalty: 0,
+});
+
+const resolveCommunitySortPeriodStarts = () => {
+  const now = new Date();
+  const week = new Date(now);
+  const day = week.getDay();
+  const diffToMonday = day === 0 ? 6 : day - 1;
+  week.setDate(week.getDate() - diffToMonday);
+  week.setHours(0, 0, 0, 0);
+
+  const month = new Date(now);
+  month.setDate(1);
+  month.setHours(0, 0, 0, 0);
+
+  const year = new Date(now);
+  year.setMonth(0, 1);
+  year.setHours(0, 0, 0, 0);
+
+  return {
+    week: week.getTime(),
+    month: month.getTime(),
+    year: year.getTime(),
+    all: null,
+  } satisfies Record<CommunitySortPeriodKey, number | null>;
+};
+
+const incrementCommunitySortPeriodMetrics = (
+  metrics: CommunityPostSortMetricsDTO["comments"],
+  createdAt: Date,
+  periodStarts: ReturnType<typeof resolveCommunitySortPeriodStarts>,
+  amount = 1,
+) => {
+  const createdAtTime = createdAt.getTime();
+
+  for (const period of COMMUNITY_SORT_PERIOD_KEYS) {
+    const periodStart = periodStarts[period];
+
+    if (!periodStart || createdAtTime >= periodStart) {
+      metrics[period] += amount;
+    }
+  }
+};
+
+const normalizeCommunityPostSort = (value?: string | null): CommunityPostSortValue => {
+  if (value === "new" || value === "commented" || value === "voted") return value;
+
+  return "featured";
+};
+
+const normalizeCommunityPostSortPeriod = (value?: string | null): CommunitySortPeriodKey => {
+  if (value === "month" || value === "year" || value === "all") return value;
+
+  return "week";
+};
+
+const compareCommunityPostDates = (a: PostResult, b: PostResult) => {
+  const dateDiff = b.createdAt.getTime() - a.createdAt.getTime();
+  if (dateDiff !== 0) return dateDiff;
+
+  return b.id.localeCompare(a.id);
+};
+
+const communityPostMetrics = (
+  postId: string,
+  metricsByPostId: Map<string, CommunityPostSortMetricsDTO>,
+) => metricsByPostId.get(postId) ?? emptyCommunityPostSortMetrics();
+
+const communityPostFeaturedScore = (
+  post: PostResult,
+  metricsByPostId: Map<string, CommunityPostSortMetricsDTO>,
+  now: number,
+) => {
+  const metrics = communityPostMetrics(post.id, metricsByPostId);
+  const hoursSincePublication = Math.max(0, (now - post.createdAt.getTime()) / 3_600_000);
+  const highlightScore =
+    metrics.upvotes.all * 3 +
+    metrics.comments.all * 5 +
+    metrics.psychologist_replies_count * 15 +
+    metrics.top_mentor_replies_count * 25 +
+    metrics.shares_count * 4 -
+    metrics.penalty;
+
+  return highlightScore / (hoursSincePublication + 2) ** 0.5;
+};
+
+const sortCommunityPostResults = (
+  items: PostResult[],
+  sort: CommunityPostSortValue,
+  period: CommunitySortPeriodKey,
+  metricsByPostId: Map<string, CommunityPostSortMetricsDTO>,
+) => {
+  const sortedItems = items.filter((item) => item.status !== "removido");
+
+  if (sort === "new") {
+    return sortedItems.sort(compareCommunityPostDates);
+  }
+
+  if (sort === "commented" || sort === "voted") {
+    const primaryMetric = sort === "commented" ? "comments" : "upvotes";
+    const secondaryMetric = sort === "commented" ? "upvotes" : "comments";
+
+    return sortedItems.sort((a, b) => {
+      const aMetrics = communityPostMetrics(a.id, metricsByPostId);
+      const bMetrics = communityPostMetrics(b.id, metricsByPostId);
+      const primaryDiff = bMetrics[primaryMetric][period] - aMetrics[primaryMetric][period];
+      if (primaryDiff !== 0) return primaryDiff;
+
+      const secondaryDiff = bMetrics[secondaryMetric][period] - aMetrics[secondaryMetric][period];
+      if (secondaryDiff !== 0) return secondaryDiff;
+
+      return compareCommunityPostDates(a, b);
+    });
+  }
+
+  const now = Date.now();
+
+  return sortedItems.sort((a, b) => {
+    const scoreDiff =
+      communityPostFeaturedScore(b, metricsByPostId, now) -
+      communityPostFeaturedScore(a, metricsByPostId, now);
+    if (scoreDiff !== 0) return scoreDiff;
+
+    return compareCommunityPostDates(a, b);
+  });
 };
 
 const toCommunityResponse = (item: {
@@ -352,6 +496,79 @@ const getFollowedCommunityIds = async (userId: string | undefined, communityIds:
   });
 
   return new Set(memberships.map((membership) => membership.community_id));
+};
+
+const getCommunityPostSortMetrics = async (postIds: string[]) => {
+  const metricsByPostId = new Map<string, CommunityPostSortMetricsDTO>(
+    postIds.map((postId) => [postId, emptyCommunityPostSortMetrics()]),
+  );
+
+  if (postIds.length === 0) return metricsByPostId;
+
+  const periodStarts = resolveCommunitySortPeriodStarts();
+  const [upvotes, replies] = await Promise.all([
+    prisma.post_vote.findMany({
+      where: {
+        deleted: false,
+        value: 1,
+        post_id: {
+          in: postIds,
+        },
+      },
+      select: {
+        post_id: true,
+        createdAt: true,
+      },
+    }),
+    prisma.post_reply.findMany({
+      where: {
+        deleted: false,
+        post_id: {
+          in: postIds,
+        },
+      },
+      select: {
+        post_id: true,
+        createdAt: true,
+        upvotes_count: true,
+        author: {
+          select: authorSelect,
+        },
+      },
+    }),
+  ]);
+
+  for (const upvote of upvotes) {
+    if (!upvote.post_id) continue;
+
+    const metrics = metricsByPostId.get(upvote.post_id);
+    if (!metrics) continue;
+
+    incrementCommunitySortPeriodMetrics(metrics.upvotes, upvote.createdAt, periodStarts);
+  }
+
+  for (const reply of replies) {
+    if (!reply.post_id) continue;
+
+    const metrics = metricsByPostId.get(reply.post_id);
+    if (!metrics) continue;
+
+    incrementCommunitySortPeriodMetrics(metrics.comments, reply.createdAt, periodStarts);
+
+    const profile = reply.author.psychologist_profile;
+    const isVerifiedPsychologist =
+      reply.author.role === "psicologo" && isProfessionalVerified(profile);
+
+    if (!isVerifiedPsychologist) continue;
+
+    metrics.psychologist_replies_count += 1;
+
+    if (mentorBadgeForScore(profile, reply.upvotes_count)) {
+      metrics.top_mentor_replies_count += 1;
+    }
+  }
+
+  return metricsByPostId;
 };
 
 const resolveTopMentorsPeriod = (value?: string | null) => {
@@ -573,6 +790,7 @@ const toPostResponse = (
   saved = false,
   followedCommunityIds?: Set<string>,
   savedReplyIds?: Set<string>,
+  sortMetrics?: CommunityPostSortMetricsDTO,
 ): CommunityPostDTO => {
   const responseCommunity = {
     ...toCommunityResponse(item.community),
@@ -607,6 +825,7 @@ const toPostResponse = (
     community: responseCommunity,
     author,
     highlighted_professional_reply: highlightedReply,
+    ...(sortMetrics ? { sort_metrics: sortMetrics } : {}),
   };
 };
 
@@ -1401,6 +1620,8 @@ export class CommunityRepository implements ICommunityRepository {
   async posts(data: ICommunityPostsDTO): Promise<CommunityPostsResponse | null> {
     const pagination = normalizePagination(data.q);
     const search = data.q.search?.trim();
+    const sort = normalizeCommunityPostSort(data.q.sort);
+    const period = normalizeCommunityPostSortPeriod(data.q.period);
     const community = await this.repository.findFirst({
       where: {
         slug: data.p.slug,
@@ -1418,16 +1639,20 @@ export class CommunityRepository implements ICommunityRepository {
       OR: postSearchWhere(search),
     };
 
-    const [items, count] = await Promise.all([
+    const [allItems, count] = await Promise.all([
       prisma.community_post.findMany({
         where,
-        take: pagination.limit,
-        skip: pagination.skip,
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         select: postSelect,
       }),
       prisma.community_post.count({ where }),
     ]);
+    const allPostIds = allItems.map((item) => item.id);
+    const sortMetricsByPostId = await getCommunityPostSortMetrics(allPostIds);
+    const items = sortCommunityPostResults(allItems, sort, period, sortMetricsByPostId).slice(
+      pagination.skip,
+      pagination.skip + pagination.limit,
+    );
     const postIds = items.map((item) => item.id);
     const replyIds = highlightedReplyIds(items);
     const [currentVotes, savedPostIds, savedReplyIds, followedCommunityIds] = await Promise.all([
@@ -1449,6 +1674,7 @@ export class CommunityRepository implements ICommunityRepository {
           savedPostIds.has(item.id),
           followedCommunityIds,
           savedReplyIds,
+          sortMetricsByPostId.get(item.id),
         ),
       ),
       page: pagination.page,

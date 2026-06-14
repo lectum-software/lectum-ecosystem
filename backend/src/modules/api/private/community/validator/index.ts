@@ -108,6 +108,20 @@ export const postsSchema: IValidatorRequest = {
       max: 120,
       optional: true,
     },
+    {
+      key: "sort",
+      coerse: "string",
+      method: "enumeric",
+      values: ["featured", "new", "commented", "voted"],
+      optional: true,
+    },
+    {
+      key: "period",
+      coerse: "string",
+      method: "enumeric",
+      values: ["week", "month", "year", "all"],
+      optional: true,
+    },
   ],
 };
 
