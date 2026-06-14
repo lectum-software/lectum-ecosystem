@@ -364,35 +364,41 @@ const PostVoteBar = ({
   onVote: (value: 1 | -1) => void;
   post: PostDetail;
 }) => (
-  <div className="flex items-center justify-between border-[#EDF1F5] border-t px-4 py-3 dark:border-border">
-    <div className="flex items-center gap-1">
-      <VoteActionButton
-        count={post.upvotes_count}
-        currentVote={currentVote}
-        disabled={disabled}
-        icon={ArrowUp}
-        label="Dar upvote"
-        onVote={onVote}
-        value={1}
-      />
-      <VoteActionButton
-        count={post.downvotes_count}
-        currentVote={currentVote}
-        disabled={disabled}
-        icon={ArrowDown}
-        label="Dar downvote"
-        onVote={onVote}
-        showPositiveDelta={false}
-        value={-1}
-      />
+  <div className="flex flex-wrap items-center justify-between gap-2 border-[#EDF1F5] border-t px-4 py-3 dark:border-border">
+    <div className="flex min-w-0 items-center gap-2">
+      <div className="inline-flex items-center gap-0.5 rounded-full bg-[#F4F6F8] p-0.5 ring-1 ring-[#E7ECF2] dark:bg-surface-muted dark:ring-border">
+        <VoteActionButton
+          count={post.upvotes_count}
+          currentVote={currentVote}
+          disabled={disabled}
+          icon={ArrowUp}
+          label="Dar upvote"
+          onVote={onVote}
+          size="sm"
+          value={1}
+        />
+        <span className="h-4 w-px bg-[#DDE4EC] dark:bg-border" aria-hidden="true" />
+        <VoteActionButton
+          count={post.downvotes_count}
+          currentVote={currentVote}
+          disabled={disabled}
+          icon={ArrowDown}
+          label="Dar downvote"
+          onVote={onVote}
+          showPositiveDelta={false}
+          size="sm"
+          value={-1}
+        />
+      </div>
       <PostActionLink
         count={post.replies_count}
         href="#discussao"
         icon={MessageCircle}
-        label="Ir para comentÃ¡rios"
+        label={"Ir para coment\u00e1rios"}
+        size="sm"
       />
     </div>
-    <div className="flex items-center gap-1">
+    <div className="flex shrink-0 items-center gap-1">
       <PostActionButton
         active={post.saved}
         count={post.saves_count}
@@ -401,12 +407,14 @@ const PostVoteBar = ({
         iconClassName={post.saved ? "fill-current" : undefined}
         label={post.saved ? "Remover dos salvos" : "Salvar post"}
         onClick={onToggleSave}
+        size="sm"
       />
       <PostActionButton
-        className="w-9 px-0"
+        className="w-8 px-0"
         icon={Share2}
         label={`Compartilhar ${post.title}`}
         onClick={onShare}
+        size="sm"
       />
     </div>
   </div>
@@ -431,38 +439,41 @@ const ReplyVoteBar = ({
   reply: PostReply;
   savePending?: boolean;
 }) => (
-  <div className="mt-3 flex items-center justify-between gap-2">
-    <div className="flex items-center gap-1">
-      <VoteActionButton
-        count={reply.upvotes_count}
-        currentVote={currentVote}
-        disabled={disabled}
-        icon={ArrowUp}
-        label="Dar upvote na resposta"
-        onVote={onVote}
-        size="sm"
-        value={1}
-      />
-      <VoteActionButton
-        currentVote={currentVote}
-        disabled={disabled}
-        icon={ArrowDown}
-        label="Dar downvote na resposta"
-        onVote={onVote}
-        showPositiveDelta={false}
-        size="sm"
-        value={-1}
-      />
+  <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+    <div className="flex min-w-0 items-center gap-2">
+      <div className="inline-flex items-center gap-0.5 rounded-full bg-[#F4F6F8] p-0.5 ring-1 ring-[#E7ECF2] dark:bg-surface-muted dark:ring-border">
+        <VoteActionButton
+          count={reply.upvotes_count}
+          currentVote={currentVote}
+          disabled={disabled}
+          icon={ArrowUp}
+          label="Dar upvote na resposta"
+          onVote={onVote}
+          size="sm"
+          value={1}
+        />
+        <span className="h-4 w-px bg-[#DDE4EC] dark:bg-border" aria-hidden="true" />
+        <VoteActionButton
+          currentVote={currentVote}
+          disabled={disabled}
+          icon={ArrowDown}
+          label="Dar downvote na resposta"
+          onVote={onVote}
+          showPositiveDelta={false}
+          size="sm"
+          value={-1}
+        />
+      </div>
       <button
-        className="inline-flex h-8 items-center gap-1 rounded-full px-2 text-xs font-bold text-[#64748B] transition hover:bg-primary-soft hover:text-primary"
+        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-full px-2.5 text-[12px] font-semibold leading-none tracking-[-0.01em] text-muted transition hover:bg-surface-muted hover:text-foreground active:scale-[0.97]"
         onClick={onReply}
         type="button"
       >
-        <Reply className="h-3.5 w-3.5" aria-hidden="true" />
+        <Reply className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden="true" />
         Responder
       </button>
     </div>
-    <div className="flex items-center gap-1">
+    <div className="flex shrink-0 items-center gap-1">
       <PostActionButton
         active={reply.saved}
         className="h-8 w-8 px-0"

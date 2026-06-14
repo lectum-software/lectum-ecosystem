@@ -125,9 +125,9 @@ export const VoteActionButton = ({
       aria-label={label}
       aria-pressed={isActive}
       className={cn(
-        "relative inline-flex items-center rounded-full text-[12px] font-semibold tracking-[-0.01em] transition-[background-color,color,transform] duration-200 active:scale-[0.97] disabled:opacity-60",
+        "relative inline-flex items-center justify-center rounded-full text-[12px] font-semibold leading-none tracking-[-0.01em] transition-[background-color,color,transform] duration-200 active:scale-[0.97] disabled:opacity-60",
         "text-muted hover:bg-surface-muted hover:text-foreground",
-        size === "sm" ? "h-8 gap-1 px-2" : "h-9 gap-1.5 px-2.5",
+        size === "sm" ? "h-8 gap-1.5 px-2.5" : "h-9 gap-1.5 px-2.5",
         isActive &&
           (isUpvote
             ? "bg-success/10 text-success hover:bg-success/15 hover:text-success"
@@ -152,9 +152,10 @@ export const VoteActionButton = ({
       <Icon
         className={cn(
           "shrink-0 transition-transform duration-200 ease-out",
-          size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4",
+          "h-4 w-4",
           iconPulsing ? "scale-[1.15]" : "scale-100",
         )}
+        strokeWidth={2}
         aria-hidden="true"
       />
       {typeof count === "number" ? (

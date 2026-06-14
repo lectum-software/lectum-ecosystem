@@ -124,11 +124,14 @@ const CountAction = ({ active, icon: Icon, label, value }: CountActionProps) => 
   <span
     title={label}
     className={cn(
-      "inline-flex h-9 items-center gap-1.5 rounded-full px-2 text-xs font-bold text-muted",
+      "inline-flex h-8 items-center justify-center gap-1.5 rounded-full px-2.5 text-[12px] font-semibold leading-none tracking-[-0.01em] text-muted",
       active && "bg-primary-soft text-primary",
     )}
   >
-    <Icon className={cn("h-4 w-4", active && label.includes("Salvar") && "fill-current")} />
+    <Icon
+      className={cn("h-4 w-4 shrink-0", active && label.includes("Salvar") && "fill-current")}
+      strokeWidth={2}
+    />
     {typeof value === "number" ? value.toLocaleString("pt-BR") : null}
   </span>
 );
@@ -319,12 +322,15 @@ export const CommunityPostCard = ({
       </div>
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-border border-t pt-3">
-        <div className="flex items-center gap-1">
-          <CountAction icon={ArrowUp} label="Upvotes" value={post.upvotes_count} />
-          <CountAction icon={ArrowDown} label="Downvotes" />
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="inline-flex items-center gap-0.5 rounded-full bg-[#F4F6F8] p-0.5 ring-1 ring-[#E7ECF2] dark:bg-surface-muted dark:ring-border">
+            <CountAction icon={ArrowUp} label="Upvotes" value={post.upvotes_count} />
+            <span className="h-4 w-px bg-[#DDE4EC] dark:bg-border" aria-hidden="true" />
+            <CountAction icon={ArrowDown} label="Downvotes" value={post.downvotes_count} />
+          </div>
           <CountAction icon={MessageCircle} label="Comentários" value={post.replies_count} />
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex shrink-0 items-center gap-1">
           <CountAction
             active={post.saved}
             icon={Bookmark}
@@ -333,11 +339,11 @@ export const CommunityPostCard = ({
           />
           <button
             aria-label={`Compartilhar ${post.title}`}
-            className="grid h-9 w-9 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary"
+            className="grid h-8 w-8 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary active:scale-[0.97]"
             onClick={() => onShare(post)}
             type="button"
           >
-            <Share2 className="h-4 w-4" aria-hidden="true" />
+            <Share2 className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
           </button>
           {footerExtra}
         </div>
