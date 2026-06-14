@@ -45,6 +45,7 @@ import type {
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { Input } from "@/registry/new-york-v4/ui/input";
@@ -216,7 +217,7 @@ const AuthorAvatar = ({
 const CountAction = ({ icon: Icon, label, value }: CountActionProps) => (
   <button
     aria-label={label}
-    className="inline-flex h-9 items-center gap-1.5 rounded-full px-2 text-xs font-bold text-[#475569] transition hover:bg-primary-soft hover:text-primary dark:text-muted"
+    className="inline-flex h-8 items-center gap-1 rounded-full px-1.5 text-xs font-bold text-[#475569] transition hover:bg-primary-soft hover:text-primary dark:text-muted"
     type="button"
   >
     <Icon className="h-4 w-4" aria-hidden="true" />
@@ -438,47 +439,70 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
   if (!reply) return null;
 
   return (
-    <div className="rounded-[18px] border border-[#D8EDE4] bg-[#F4FBF7] p-4 dark:border-border dark:bg-background/60">
-      <p className="mb-3 text-[11px] font-black uppercase tracking-[0.08em] text-[#168A4A]">
-        Resposta profissional em destaque
-      </p>
-      <div className="mb-2 flex items-center gap-2">
-        <AuthorAvatar author={reply.author} />
-        <div className="grid min-w-0 gap-1">
-          <MentorBadge badge={reply.author.featured_badge} />
-          <p className="flex items-center gap-1 truncate text-sm font-black text-foreground">
-            {reply.author.name}
-            {reply.author.verified ? (
-              <BadgeCheck
-                className="h-4 w-4 shrink-0 fill-[#2da7ff] text-white"
-                aria-hidden="true"
-              />
-            ) : null}
-          </p>
-          <p className="text-[11px] font-semibold text-muted">
-            {reply.author.type_label} • {formatRelativeTime(reply.created_at)} •{" "}
-            {reply.upvotes_count.toLocaleString("pt-BR")} upvotes
-          </p>
-        </div>
+    <div className="grid min-w-0 grid-cols-[18px_minmax(0,1fr)] gap-2">
+      <div className="flex justify-center pt-1" aria-hidden="true">
+        <span className="h-full min-h-28 w-px rounded-full bg-border" />
       </div>
-      {reply.title ? (
-        <h4 className="mb-1 text-sm font-black text-[#182033] dark:text-foreground">
-          {reply.title}
-        </h4>
-      ) : null}
-      <p className="text-sm leading-6 text-[#475569] dark:text-muted">{reply.content}</p>
-      <ProfessionalReplyMedia reply={reply} />
-      {reply.author.whatsapp_url ? (
-        <Button
-          asChild
-          className="mt-3 h-11 w-full rounded-[14px] border-2 border-[#23C266] bg-transparent text-[#23C266] shadow-none hover:bg-[#23C266] hover:text-white"
-        >
-          <a href={reply.author.whatsapp_url} rel="noreferrer" target="_blank">
-            <MessageCircle className="h-5 w-5" aria-hidden="true" />
-            Chamar no WhatsApp
-          </a>
-        </Button>
-      ) : null}
+      <div className="min-w-0 rounded-[18px] border border-border/80 bg-surface-muted/45 px-3.5 py-3 shadow-none dark:bg-background/55">
+        <p className="mb-2 text-[10px] font-black uppercase tracking-[0.08em] text-success">
+          Resposta do psicólogo
+        </p>
+        <div className="flex min-w-0 items-start gap-2.5">
+          <AuthorAvatar author={reply.author} />
+          <div className="grid min-w-0 flex-1 gap-1">
+            <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
+              <p className="min-w-0 truncate text-sm font-black text-foreground">
+                {reply.author.name}
+              </p>
+              {reply.author.verified ? (
+                <BadgeCheck
+                  className="h-4 w-4 shrink-0 fill-[#2da7ff] text-white"
+                  aria-label="Psicólogo verificado"
+                />
+              ) : null}
+              <span className="text-[11px] font-semibold text-muted" aria-hidden="true">
+                •
+              </span>
+              <span className="text-[11px] font-semibold text-muted">
+                {reply.author.type_label}
+              </span>
+              <span className="text-[11px] font-semibold text-muted" aria-hidden="true">
+                •
+              </span>
+              <time className="text-[11px] font-semibold text-muted" dateTime={reply.created_at}>
+                {formatRelativeTime(reply.created_at)}
+              </time>
+            </div>
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <MentorBadge badge={reply.author.featured_badge} />
+              <span className="text-[11px] font-semibold text-muted">
+                {reply.upvotes_count.toLocaleString("pt-BR")} upvotes
+              </span>
+            </div>
+          </div>
+        </div>
+        {reply.title ? (
+          <h4 className="mt-3 text-sm font-black text-[#182033] dark:text-foreground">
+            {reply.title}
+          </h4>
+        ) : null}
+        <p className="mt-2 whitespace-pre-line text-[15px] leading-6 text-[#334155] dark:text-muted">
+          {reply.content}
+        </p>
+        <ProfessionalReplyMedia reply={reply} />
+        {reply.author.whatsapp_url ? (
+          <Button
+            asChild
+            className="mt-3 h-11 w-full rounded-[14px] border-2 border-success bg-transparent text-sm font-black text-success shadow-none hover:bg-success hover:text-white"
+            variant="outline"
+          >
+            <a href={reply.author.whatsapp_url} rel="noreferrer" target="_blank">
+              <WhatsAppIcon className="h-5 w-5" aria-hidden="true" />
+              Chamar no WhatsApp
+            </a>
+          </Button>
+        ) : null}
+      </div>
     </div>
   );
 };
@@ -494,6 +518,28 @@ const PostCard = ({
 }) => {
   const isPsychologistPost = post.author.role === "psicologo";
   const isAnonymousPatient = !isPsychologistPost && post.anonymous;
+  const [contentExpanded, setContentExpanded] = useState(false);
+  const [contentCanToggle, setContentCanToggle] = useState(false);
+  const contentRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    const element = contentRef.current;
+
+    if (!element || contentExpanded) return;
+
+    const updateContentToggle = () => {
+      setContentCanToggle(element.scrollHeight > element.clientHeight + 1);
+    };
+
+    updateContentToggle();
+
+    if (typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(updateContentToggle);
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, [contentExpanded]);
 
   return (
     <article className="overflow-hidden rounded-[22px] border border-[#E6EAF0] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:border-border dark:bg-surface">
@@ -544,27 +590,42 @@ const PostCard = ({
         >
           {post.title}
         </Link>
-        <p className="whitespace-pre-line text-sm leading-6 text-[#64748B] dark:text-muted">
+        <p
+          className={cn(
+            "whitespace-pre-line text-sm leading-6 text-[#64748B] dark:text-muted",
+            !contentExpanded && "line-clamp-2",
+          )}
+          ref={contentRef}
+        >
           {post.content}
         </p>
+        {contentCanToggle ? (
+          <button
+            className="w-fit text-xs font-black text-primary transition hover:text-primary/80"
+            onClick={() => setContentExpanded((current) => !current)}
+            type="button"
+          >
+            {contentExpanded ? "Ver menos" : "Ver mais"}
+          </button>
+        ) : null}
       </div>
 
-      <div className="mt-4 grid gap-4">
+      <div className="mt-4 grid gap-3">
         <PostMedia post={post} />
         <ProfessionalReplyPreview post={post} />
       </div>
 
-      <div className="mt-4 flex items-center justify-between border-[#EDF1F5] border-t pt-3 dark:border-border">
-        <div className="flex items-center gap-1">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-[#EDF1F5] border-t pt-3 dark:border-border">
+        <div className="flex min-w-0 items-center gap-1">
           <CountAction icon={ArrowUp} label="Dar upvote" value={post.upvotes_count} />
           <CountAction icon={ArrowDown} label="Dar downvote" />
           <CountAction icon={MessageCircle} label="Comentar" value={post.replies_count} />
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex shrink-0 items-center gap-1">
           <CountAction icon={Bookmark} label="Salvar" value={post.saves_count} />
           <button
             aria-label={`Compartilhar ${post.title}`}
-            className="grid h-9 w-9 place-items-center rounded-full text-[#475569] transition hover:bg-primary-soft hover:text-primary dark:text-muted"
+            className="grid h-8 w-8 place-items-center rounded-full text-[#475569] transition hover:bg-primary-soft hover:text-primary dark:text-muted"
             onClick={() => onShare(post)}
             type="button"
           >
