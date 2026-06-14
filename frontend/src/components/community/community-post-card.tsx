@@ -335,7 +335,7 @@ export const CommunityPostCard = ({
           <div className="inline-flex items-center gap-0.5 rounded-full bg-[#F4F6F8] p-0.5 ring-1 ring-[#E7ECF2] dark:bg-surface-muted dark:ring-border">
             <CountAction icon={ArrowUp} label="Upvotes" value={post.upvotes_count} />
             <span className="h-4 w-px bg-[#DDE4EC] dark:bg-border" aria-hidden="true" />
-            <CountAction icon={ArrowDown} label="Downvotes" value={post.downvotes_count} />
+            <CountAction icon={ArrowDown} label="Downvotes" />
           </div>
           <CountAction icon={MessageCircle} label="Comentários" value={post.replies_count} />
         </div>

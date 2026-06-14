@@ -121,53 +121,56 @@ export const VoteActionButton = ({
   };
 
   return (
-    <button
-      aria-label={label}
-      aria-pressed={isActive}
-      className={cn(
-        "relative inline-flex items-center justify-center rounded-full text-[12px] font-semibold leading-none tracking-[-0.01em] transition-[background-color,color,transform] duration-200 active:scale-[0.97] disabled:opacity-60",
-        "text-muted hover:bg-surface-muted hover:text-foreground",
-        size === "sm" ? "h-8 min-w-8 gap-1.5 px-2.5" : "h-9 min-w-9 gap-1.5 px-2.5",
-        isActive &&
-          (isUpvote
-            ? "bg-success/10 text-success hover:bg-success/15 hover:text-success"
-            : "bg-danger/10 text-danger hover:bg-danger/15 hover:text-danger"),
-        className,
-      )}
-      disabled={disabled}
-      onClick={handleVote}
-      title={label}
-      type="button"
-    >
+    <span className="relative inline-flex overflow-visible">
       {positiveDeltaVisible ? (
         <span
           className={cn(
-            "pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] font-black text-success transition-all duration-200",
-            positiveDeltaLeaving ? "-translate-y-2 opacity-0" : "translate-y-0 opacity-100",
+            "pointer-events-none absolute -top-3 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap text-[10px] font-black text-success drop-shadow-sm transition-all duration-200 ease-out",
+            positiveDeltaLeaving ? "-translate-y-3 opacity-0" : "translate-y-0 opacity-100",
           )}
         >
           +1
         </span>
       ) : null}
-      <Icon
+
+      <button
+        aria-label={label}
+        aria-pressed={isActive}
         className={cn(
-          "shrink-0 transition-transform duration-200 ease-out",
-          "h-4 w-4",
-          iconPulsing ? "scale-[1.15]" : "scale-100",
+          "relative inline-flex items-center justify-center rounded-full text-[12px] font-semibold leading-none tracking-[-0.01em] transition-[background-color,color,transform] duration-200 active:scale-[0.97] disabled:opacity-60",
+          "text-muted hover:bg-surface-muted hover:text-foreground",
+          size === "sm" ? "h-8 min-w-8 gap-1.5 px-2.5" : "h-9 min-w-9 gap-1.5 px-2.5",
+          isActive &&
+            (isUpvote
+              ? "bg-success/10 text-success hover:bg-success/15 hover:text-success"
+              : "bg-danger/10 text-danger hover:bg-danger/15 hover:text-danger"),
+          className,
         )}
-        strokeWidth={2}
-        aria-hidden="true"
-      />
-      {typeof count === "number" ? (
-        <span
+        disabled={disabled}
+        onClick={handleVote}
+        title={label}
+        type="button"
+      >
+        <Icon
           className={cn(
-            "min-w-[1.1ch] text-center font-semibold tabular-nums leading-none transition-all duration-200",
-            counterPulsing ? "scale-105 opacity-90" : "scale-100 opacity-100",
+            "shrink-0 transition-transform duration-200 ease-out",
+            "h-4 w-4",
+            iconPulsing ? "scale-[1.15]" : "scale-100",
           )}
-        >
-          {count.toLocaleString("pt-BR")}
-        </span>
-      ) : null}
-    </button>
+          strokeWidth={2}
+          aria-hidden="true"
+        />
+        {typeof count === "number" ? (
+          <span
+            className={cn(
+              "min-w-[1.1ch] text-center font-semibold tabular-nums leading-none transition-all duration-200",
+              counterPulsing ? "scale-105 opacity-90" : "scale-100 opacity-100",
+            )}
+          >
+            {count.toLocaleString("pt-BR")}
+          </span>
+        ) : null}
+      </button>
+    </span>
   );
 };

@@ -381,7 +381,6 @@ const PostVoteBar = ({
         />
         <span className="h-4 w-px bg-[#DDE4EC] dark:bg-border" aria-hidden="true" />
         <VoteActionButton
-          count={post.downvotes_count}
           currentVote={currentVote}
           disabled={disabled}
           icon={ArrowDown}

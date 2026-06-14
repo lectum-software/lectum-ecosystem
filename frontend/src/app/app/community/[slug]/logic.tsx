@@ -863,7 +863,7 @@ const PostCard = ({
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-[#EDF1F5] border-t pt-3 dark:border-border">
         <div className="flex min-w-0 items-center gap-2">
-          <div className="inline-flex h-8 items-center overflow-hidden rounded-full bg-[#F4F6F8] ring-1 ring-[#E7ECF2] dark:bg-surface-muted dark:ring-border">
+          <div className="inline-flex h-8 items-center overflow-visible rounded-full bg-[#F4F6F8] ring-1 ring-[#E7ECF2] dark:bg-surface-muted dark:ring-border">
             <VoteActionButton
               count={voteSnapshot.upvotes}
               currentVote={voteSnapshot.currentVote}
@@ -876,7 +876,6 @@ const PostCard = ({
             />
             <span className="h-4 w-px bg-[#DDE4EC] dark:bg-border" aria-hidden="true" />
             <VoteActionButton
-              count={voteSnapshot.downvotes}
               currentVote={voteSnapshot.currentVote}
               disabled={voteMutation.isPending}
               icon={ArrowDown}
