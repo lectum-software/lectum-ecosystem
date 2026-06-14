@@ -1193,3 +1193,20 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: overlays confinados no feed desktop (2026-06-14)
+
+- Pedido do usuario: investigar e corrigir a sombra/gradiente residual que parecia permanecer fixa durante a rolagem vertical entre psicologos em `/app/psychologists`, especialmente na previa do proximo card e no ultimo item.
+- A causa visual principal era a combinacao de um gradiente global absoluto do topo `Explorar / Minha Busca` no desktop com overlays/textos/progresso ainda visiveis em slides inativos durante a transicao do scroll-snap.
+- O gradiente global do topo foi removido somente no breakpoint desktop (`lg:bg-none`), preservando o comportamento visual mobile.
+- No desktop, slides inativos passam a ocultar chrome interno: overlay de legibilidade, badges, textos, botoes internos e trilha de progresso, mantendo essas camadas apenas no card ativo.
+- A previa do proximo psicologo continua aparecendo, mas limpa, sem herdar sombra/gradiente do card anterior; o ultimo card tambem nao recebe camada residual superior.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, contratos de API, scroll-snap ou UI interna do card ativo.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a decisao foi guiada pela captura anexada pelo usuario, pelo prototipo local `_product/proto/Psicólogos.jpg` e pelo design system existente da Lectum.
+- ADR criado: `adrs/0083-overlays-feed-psicologos-desktop.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

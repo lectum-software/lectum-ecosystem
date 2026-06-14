@@ -2690,7 +2690,7 @@ export const PsychologistsLogic = () => {
               <div
                 aria-hidden={areFeedModeControlsHidden ? true : undefined}
                 className={cn(
-                  "pointer-events-none absolute inset-x-0 top-0 z-[76] bg-gradient-to-b from-black/75 via-black/35 to-transparent px-4 pb-5 pt-[calc(env(safe-area-inset-top)+20px)] transition-all duration-200 ease-out lg:top-[var(--psychologists-desktop-card-top)]",
+                  "pointer-events-none absolute inset-x-0 top-0 z-[76] bg-gradient-to-b from-black/75 via-black/35 to-transparent px-4 pb-5 pt-[calc(env(safe-area-inset-top)+20px)] transition-all duration-200 ease-out lg:top-[var(--psychologists-desktop-card-top)] lg:bg-none",
                   metrics.isDesktopLayout ? "lg:rounded-t-[22px] lg:px-5" : null,
                   feedModeControlsVisibilityClass,
                 )}
@@ -2958,7 +2958,9 @@ export const PsychologistsLogic = () => {
                   const slideShouldShowVideo =
                     Boolean(slideVideoSrc) && (!isActiveSlide || !isVideoPlaybackFailed);
                   const slideShouldRenderProgress =
-                    Boolean(slideVideoSrc) && (!isActiveSlide || slideShouldShowVideo);
+                    Boolean(slideVideoSrc) &&
+                    (!metrics.isDesktopLayout || isActiveSlide) &&
+                    (!isActiveSlide || slideShouldShowVideo);
                   const slideBio = psychologist.headline?.trim() || "";
                   const slideNameParts = splitNameForBadge(psychologist.name);
                   const slideBenefitBadges = buildFloatingBenefitBadges(psychologist);
@@ -2970,10 +2972,14 @@ export const PsychologistsLogic = () => {
                   const slideIsFavoritePending = favoritePendingId === psychologist.id;
                   const slideActionColumnTranslateY = isActiveSlide ? actionColumnTranslateY : 0;
                   const slideIsUiHidden = isActiveSlide && isUiHidden;
-                  const slideUiVisibilityClass = slideIsUiHidden
+                  const slideShouldHideChrome =
+                    slideIsUiHidden || (metrics.isDesktopLayout && !isActiveSlide);
+                  const slideUiVisibilityClass = slideShouldHideChrome
                     ? "psychologists-ui-inert pointer-events-none opacity-0"
                     : "opacity-100";
-                  const slideOverlayVisibilityClass = slideIsUiHidden ? "opacity-0" : "opacity-100";
+                  const slideOverlayVisibilityClass = slideShouldHideChrome
+                    ? "opacity-0"
+                    : "opacity-100";
                   const slideProgressRatio =
                     isActiveSlide && videoProgress.duration
                       ? clampNumber(videoProgress.currentTime / videoProgress.duration, 0, 1)
@@ -3314,7 +3320,7 @@ export const PsychologistsLogic = () => {
                           {slideBenefitBadges.length > 0 ? (
                             <ul
                               aria-label="Benefícios do psicólogo"
-                              aria-hidden={slideIsUiHidden ? true : undefined}
+                              aria-hidden={slideShouldHideChrome ? true : undefined}
                               className={cn(
                                 "pointer-events-none absolute z-30 flex w-[min(190px,56vw)] list-none flex-col items-start gap-2 overflow-visible p-0 transition-opacity duration-200 ease-out",
                                 slideOverlayVisibilityClass,
@@ -3363,7 +3369,7 @@ export const PsychologistsLogic = () => {
                           />
 
                           <section
-                            aria-hidden={slideIsUiHidden ? true : undefined}
+                            aria-hidden={slideShouldHideChrome ? true : undefined}
                             aria-live={isActiveSlide && shareFeedback ? "polite" : "off"}
                             className={cn(
                               "pointer-events-none absolute inset-x-0 z-40 grid items-end text-[#ffffff] transition-opacity duration-200 ease-out",
@@ -3398,11 +3404,11 @@ export const PsychologistsLogic = () => {
                                 <button
                                   aria-label={`Ver perfil de ${psychologist.name}`}
                                   className="block w-full min-w-0 max-w-full cursor-pointer text-left font-bold text-white"
-                                  disabled={slideIsUiHidden}
+                                  disabled={slideShouldHideChrome}
                                   onClick={(event) =>
                                     navigateToPublicPsychologistProfile(psychologist.id, event)
                                   }
-                                  tabIndex={slideIsUiHidden ? -1 : undefined}
+                                  tabIndex={slideShouldHideChrome ? -1 : undefined}
                                   type="button"
                                   style={{
                                     fontSize: `${metrics.titleSize}px`,
@@ -3528,12 +3534,12 @@ export const PsychologistsLogic = () => {
                                       "relative z-50 grid cursor-pointer place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10 active:scale-95",
                                       slideIsFavorited ? "text-[#ef4444]" : "text-white",
                                     )}
-                                    disabled={slideIsUiHidden}
+                                    disabled={slideShouldHideChrome}
                                     onClick={(event) => {
                                       event.stopPropagation();
                                       toggleFavorite(psychologist);
                                     }}
-                                    tabIndex={slideIsUiHidden ? -1 : undefined}
+                                    tabIndex={slideShouldHideChrome ? -1 : undefined}
                                     style={{
                                       width: `${metrics.actionButtonSize}px`,
                                       height: `${metrics.actionButtonSize}px`,
@@ -3557,12 +3563,12 @@ export const PsychologistsLogic = () => {
                                   <button
                                     aria-label={`Compartilhar perfil de ${psychologist.name}`}
                                     className="grid place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10"
-                                    disabled={slideIsUiHidden}
+                                    disabled={slideShouldHideChrome}
                                     onClick={(event) => {
                                       event.stopPropagation();
                                       void shareCurrent(psychologist);
                                     }}
-                                    tabIndex={slideIsUiHidden ? -1 : undefined}
+                                    tabIndex={slideShouldHideChrome ? -1 : undefined}
                                     type="button"
                                     style={{
                                       width: `${metrics.actionButtonSize}px`,
@@ -3599,7 +3605,7 @@ export const PsychologistsLogic = () => {
                                         whatsappUrl: psychologist.whatsapp_url,
                                       }}
                                       stopPropagation
-                                      tabIndex={slideIsUiHidden ? -1 : undefined}
+                                      tabIndex={slideShouldHideChrome ? -1 : undefined}
                                       style={{
                                         width: `${metrics.actionButtonSize}px`,
                                         height: `${metrics.actionButtonSize}px`,
@@ -3622,9 +3628,9 @@ export const PsychologistsLogic = () => {
                                       aria-disabled="true"
                                       aria-label={`WhatsApp indisponível para ${psychologist.name}`}
                                       className="grid place-items-center rounded-full bg-[#22C55E] text-white transition"
-                                      disabled={slideIsUiHidden}
+                                      disabled={slideShouldHideChrome}
                                       onClick={stopInteractionPropagation}
-                                      tabIndex={slideIsUiHidden ? -1 : undefined}
+                                      tabIndex={slideShouldHideChrome ? -1 : undefined}
                                       type="button"
                                       style={{
                                         width: `${metrics.actionButtonSize}px`,
@@ -3648,12 +3654,12 @@ export const PsychologistsLogic = () => {
                                   <button
                                     aria-label={`Ver perfil de ${psychologist.name}`}
                                     className="grid place-items-center rounded-full bg-transparent"
-                                    disabled={slideIsUiHidden}
+                                    disabled={slideShouldHideChrome}
                                     onClick={(event) =>
                                       navigateToPublicPsychologistProfile(psychologist.id, event)
                                     }
                                     onPointerDown={stopInteractionPropagation}
-                                    tabIndex={slideIsUiHidden ? -1 : undefined}
+                                    tabIndex={slideShouldHideChrome ? -1 : undefined}
                                     ref={(node) => {
                                       if (isActiveSlide) {
                                         profileTextRef.current = node;

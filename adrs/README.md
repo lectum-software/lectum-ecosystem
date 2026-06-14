@@ -77,3 +77,4 @@ Formato recomendado:
 - [ADR-0080 - Ajuste desktop limpo do feed Shorts de psicologos](0080-ajuste-desktop-feed-shorts-psicologos.md) - Accepted
 - [ADR-0081 - Refinos discretos no feed de comunidade](0081-refinos-feed-comunidade.md) - Accepted
 - [ADR-0082 - Ver mais inline no feed de comunidade](0082-ver-mais-inline-feed-comunidade.md) - Accepted
+- [ADR-0083 - Confinamento de overlays no feed desktop de Psicologos](0083-overlays-feed-psicologos-desktop.md) - Accepted
