@@ -38,6 +38,7 @@ import type {
   DirectoryPsychologist,
   DirectoryPsychologistsQuery,
 } from "@/api/generator/types/directory";
+import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -3386,14 +3387,24 @@ export const PsychologistsLogic = () => {
 
                                 {psychologist.whatsapp_url ? (
                                   <div className="grid justify-items-center text-center">
-                                    <a
+                                    <PsychologistWhatsAppRedirectButton
                                       aria-label={`Chamar ${psychologist.name} no WhatsApp`}
                                       className="grid place-items-center rounded-full bg-[#22C55E] text-white transition hover:bg-[#16A34A]"
-                                      href={psychologist.whatsapp_url}
                                       onClick={stopInteractionPropagation}
-                                      rel="noreferrer"
+                                      psychologist={{
+                                        avatar: psychologist.avatar,
+                                        crp: psychologist.crp,
+                                        id: psychologist.id,
+                                        name: psychologist.name,
+                                        typeLabel: formatProfileTitle(
+                                          psychologist.gender,
+                                          null,
+                                          false,
+                                        ),
+                                        whatsappUrl: psychologist.whatsapp_url,
+                                      }}
+                                      stopPropagation
                                       tabIndex={slideIsUiHidden ? -1 : undefined}
-                                      target="_blank"
                                       style={{
                                         width: `${metrics.actionButtonSize}px`,
                                         height: `${metrics.actionButtonSize}px`,
@@ -3408,7 +3419,7 @@ export const PsychologistsLogic = () => {
                                           width: `${metrics.actionIconSize}px`,
                                         }}
                                       />
-                                    </a>
+                                    </PsychologistWhatsAppRedirectButton>
                                   </div>
                                 ) : (
                                   <div className="grid justify-items-center text-center">
@@ -3756,21 +3767,31 @@ export const PsychologistsLogic = () => {
 
                   <div className="grid w-[76px] justify-items-center gap-1.5 text-center">
                     {desktopActionPsychologist.whatsapp_url ? (
-                      <a
+                      <PsychologistWhatsAppRedirectButton
                         aria-label={`Chamar ${desktopActionPsychologist.name} no WhatsApp`}
                         className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#22C55E] shadow-[0_10px_28px_rgba(15,23,42,0.14)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
-                        href={desktopActionPsychologist.whatsapp_url}
                         onClick={stopInteractionPropagation}
-                        rel="noreferrer"
+                        psychologist={{
+                          avatar: desktopActionPsychologist.avatar,
+                          crp: desktopActionPsychologist.crp,
+                          id: desktopActionPsychologist.id,
+                          name: desktopActionPsychologist.name,
+                          typeLabel: formatProfileTitle(
+                            desktopActionPsychologist.gender,
+                            null,
+                            false,
+                          ),
+                          whatsappUrl: desktopActionPsychologist.whatsapp_url,
+                        }}
+                        stopPropagation
                         tabIndex={isDesktopActionRailHidden ? -1 : undefined}
-                        target="_blank"
                       >
                         <WhatsAppIcon
                           aria-hidden="true"
                           className="h-6 w-6"
                           style={{ color: "#22C55E" }}
                         />
-                      </a>
+                      </PsychologistWhatsAppRedirectButton>
                     ) : (
                       <button
                         aria-disabled="true"

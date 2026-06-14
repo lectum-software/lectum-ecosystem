@@ -16,3 +16,10 @@ export interface IContactDTO {
   };
   auth: user;
 }
+
+export interface IContactClickDTO {
+  p: {
+    id: string;
+  };
+  auth: user;
+}

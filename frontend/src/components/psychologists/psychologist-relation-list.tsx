@@ -18,6 +18,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { type MouseEvent, useMemo, useState } from "react";
 import { usePatient } from "@/api/callers/patient";
 import type { PatientRelationPsychologist, PatientRelationQuery } from "@/api/generator/types";
+import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -143,6 +144,10 @@ const getInitials = (name: string) => {
 
 const getProfession = (gender?: string | null) => {
   return gender?.toLowerCase() === "feminino" ? "Psicóloga" : "Psicólogo";
+};
+
+const getContactProfession = (gender?: string | null) => {
+  return gender?.toLowerCase() === "feminino" ? "Psic\u00f3loga" : "Psic\u00f3logo";
 };
 
 const formatRating = (ratingAvg: number) => {
@@ -272,15 +277,6 @@ const FavoritePsychologistCard = ({
     onToggleFavorite(psychologist);
   };
 
-  const handleWhatsappClick = (event: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    if (!psychologist.whatsapp_url) return;
-
-    window.open(psychologist.whatsapp_url, "_blank", "noopener,noreferrer");
-  };
-
   return (
     <article
       aria-label={`Abrir perfil de ${psychologist.name}`}
@@ -366,21 +362,25 @@ const FavoritePsychologistCard = ({
             ) : null}
 
             {psychologist.whatsapp_url ? (
-              <a
+              <PsychologistWhatsAppRedirectButton
                 className="pointer-events-auto mt-2 inline-flex h-11 items-center justify-center gap-2 rounded-full bg-success px-4 text-sm font-black text-white shadow-[var(--lectum-shadow-soft)] transition hover:brightness-105"
-                href={psychologist.whatsapp_url}
-                onClick={handleWhatsappClick}
-                rel="noreferrer"
-                target="_blank"
+                psychologist={{
+                  avatar: psychologist.avatar,
+                  crp: psychologist.crp,
+                  id: psychologist.id,
+                  name: psychologist.name,
+                  typeLabel: getContactProfession(psychologist.gender),
+                  whatsappUrl: psychologist.whatsapp_url,
+                }}
+                stopPropagation
               >
                 <WhatsAppIcon className="h-4 w-4" aria-hidden="true" />
                 Chamar no WhatsApp
-              </a>
+              </PsychologistWhatsAppRedirectButton>
             ) : (
               <button
                 className="pointer-events-auto mt-2 inline-flex h-11 cursor-not-allowed items-center justify-center gap-2 rounded-full bg-surface-muted px-4 text-sm font-black text-muted"
                 disabled
-                onClick={handleWhatsappClick}
                 type="button"
               >
                 <WhatsAppIcon className="h-4 w-4" aria-hidden="true" />

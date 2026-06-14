@@ -16,8 +16,9 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { PostListPost, PostProfessionalReply } from "@/api/generator/types/posts";
+import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
-import { Button } from "@/registry/new-york-v4/ui/button";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 type CommunityPostCardProps = {
@@ -241,12 +242,20 @@ const ProfessionalReplyPreview = ({ reply }: { reply: PostProfessionalReply | nu
         />
       </div>
       {reply.author.whatsapp_url ? (
-        <Button asChild className="mt-3 h-11 w-full rounded-2xl" variant="outline">
-          <a href={reply.author.whatsapp_url} rel="noreferrer" target="_blank">
-            <MessageCircle className="h-5 w-5" aria-hidden="true" />
-            Chamar no WhatsApp
-          </a>
-        </Button>
+        <PsychologistWhatsAppRedirectButton
+          className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-surface text-sm font-bold text-foreground transition hover:bg-surface-muted"
+          psychologist={{
+            avatar: reply.author.avatar,
+            crp: reply.author.crp,
+            id: reply.author.id,
+            name: reply.author.name,
+            typeLabel: reply.author.type_label,
+            whatsappUrl: reply.author.whatsapp_url,
+          }}
+        >
+          <WhatsAppIcon className="h-5 w-5 text-success" aria-hidden="true" />
+          Chamar no WhatsApp
+        </PsychologistWhatsAppRedirectButton>
       ) : null}
     </div>
   );

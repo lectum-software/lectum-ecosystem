@@ -72,3 +72,4 @@ Formato recomendado:
 - [ADR-0075 - Exclusão de conta do psicólogo com proteção de cobrança](0075-exclusao-conta-psicologo-assinatura.md) - Accepted
 - [ADR-0076 - Estado de interacoes no feed da comunidade](0076-estado-voto-feed-comunidade.md) - Accepted
 - [ADR-0077 - Salvamento de respostas e navegacao contextual no feed da comunidade](0077-salvamento-respostas-feed-comunidade.md) - Accepted
+- [ADR-0078 - Transicao segura para WhatsApp do psicologo](0078-transicao-whatsapp-psicologo.md) - Accepted

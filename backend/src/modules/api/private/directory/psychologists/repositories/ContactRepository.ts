@@ -1,6 +1,10 @@
 ﻿import { parsePhoneNumberFromString } from "libphonenumber-js";
 import prisma from "@/infra/database/prisma";
-import type { DirectoryPsychologistContactResponse, IContactDTO } from "../DTOs/IContactDTO";
+import type {
+  DirectoryPsychologistContactResponse,
+  IContactClickDTO,
+  IContactDTO,
+} from "../DTOs/IContactDTO";
 import type { IContactRepository } from "./interfaces/IContactRepository";
 
 const CONTACT_MESSAGE =
@@ -34,6 +38,76 @@ const toWhatsAppUrl = (phone: string) => {
 };
 
 export class ContactRepository implements IContactRepository {
+  async registerClick(data: IContactClickDTO): Promise<ContactRepositoryResult> {
+    const psychologist = await prisma.user.findFirst({
+      where: {
+        id: data.p.id,
+        role: "psicologo",
+        active: true,
+        deleted: false,
+        psychologist_profile: {
+          is: {
+            published: true,
+            deleted: false,
+          },
+        },
+      },
+      select: {
+        id: true,
+        psychologist_profile: {
+          select: {
+            whatsapp: true,
+          },
+        },
+      },
+    });
+
+    const profile = psychologist?.psychologist_profile;
+
+    if (!psychologist || !profile) {
+      return {
+        ok: false,
+        reason: "not_found",
+      };
+    }
+
+    if (!profile.whatsapp) {
+      return {
+        ok: false,
+        reason: "whatsapp_unavailable",
+      };
+    }
+
+    const psychologistPhone = normalizePhone(profile.whatsapp);
+
+    if (!psychologistPhone) {
+      return {
+        ok: false,
+        reason: "whatsapp_unavailable",
+      };
+    }
+
+    const contact = await prisma.contact_request.create({
+      data: {
+        user_id: data.auth.id,
+        psychologist_id: psychologist.id,
+        channel: "whatsapp",
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    return {
+      ok: true,
+      data: {
+        contact_request_id: contact.id,
+        psychologist_id: psychologist.id,
+        whatsapp_url: toWhatsAppUrl(psychologistPhone),
+      },
+    };
+  }
+
   async create(data: IContactDTO): Promise<ContactRepositoryResult> {
     const patientPhone = normalizePhone(data.b.patient_phone);
 

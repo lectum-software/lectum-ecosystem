@@ -94,6 +94,8 @@ export type DirectoryPsychologistContactResponse = {
   whatsapp_url: string;
 };
 
+export type DirectoryPsychologistContactClickResponse = DirectoryPsychologistContactResponse;
+
 export type DirectoryPsychologistProfilePost = {
   id: string;
   title: string;

@@ -49,6 +49,7 @@ const communitySelect = {
 
 const professionalProfileSelect = {
   gender: true,
+  crp: true,
   whatsapp: true,
   cfp_verified_at: true,
   subscriptions: {
@@ -537,6 +538,7 @@ const toAuthorResponse = (
     avatar: shouldMaskAuthor ? null : author.avatar,
     role: author.role,
     type_label: authorTypeLabel(author.role, profile?.gender, anonymous),
+    crp: isPsychologist ? (profile?.crp ?? null) : null,
     verified: isPsychologist && isProfessionalVerified(profile),
     featured_badge: isPsychologist ? mentorBadgeForScore(profile, mentorScore) : null,
     whatsapp_url: isPsychologist ? buildProfessionalWhatsappUrl(profile) : null,

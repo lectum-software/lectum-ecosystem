@@ -12,6 +12,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
@@ -103,6 +104,12 @@ const getPsychologistTitle = (gender?: string | null) => {
   const normalized = gender?.toLowerCase();
 
   return normalized === "feminino" ? "PSICÓLOGA" : "PSICÓLOGO";
+};
+
+const getPsychologistTypeLabel = (gender?: string | null) => {
+  const normalized = gender?.toLowerCase();
+
+  return normalized === "feminino" ? "Psic\u00f3loga" : "Psic\u00f3logo";
 };
 
 const PSYCHOLOGIST_OVERLAY_HEIGHT = "26%";
@@ -871,20 +878,22 @@ export function PsychologistCard({
             style={{ marginTop: "clamp(14px, 3vw, 18px)" }}
           >
             {psychologist.whatsapp_url ? (
-              <Button
-                asChild
+              <PsychologistWhatsAppRedirectButton
                 className="pointer-events-auto h-[clamp(44px,12vw,52px)] min-h-[clamp(44px,12vw,52px)] w-full rounded-[999px] bg-[#22C55E] px-4 text-[15px] font-medium leading-none text-white hover:bg-[#22C55E]/90"
+                psychologist={{
+                  avatar: psychologist.avatar,
+                  crp: psychologist.crp,
+                  id: psychologist.id,
+                  name: psychologist.name,
+                  typeLabel: getPsychologistTypeLabel(psychologist.gender),
+                  whatsappUrl: psychologist.whatsapp_url,
+                }}
               >
-                <a
-                  className="grid h-full w-full place-items-center gap-2"
-                  href={psychologist.whatsapp_url}
-                  rel="noreferrer"
-                  target="_blank"
-                >
+                <span className="inline-flex h-full w-full items-center justify-center gap-2">
                   <WhatsAppIcon className="h-5 w-5 text-white" aria-hidden="true" />
                   Chamar no WhatsApp
-                </a>
-              </Button>
+                </span>
+              </PsychologistWhatsAppRedirectButton>
             ) : (
               <Button
                 className="pointer-events-auto h-[clamp(44px,12vw,52px)] min-h-[clamp(44px,12vw,52px)] w-full rounded-[999px] bg-[#22C55E] px-4 text-[15px] font-medium leading-none text-white"

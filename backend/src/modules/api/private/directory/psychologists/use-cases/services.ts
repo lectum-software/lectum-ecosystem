@@ -1,5 +1,5 @@
 import { error, msg } from "@/helpers/translate";
-import type { IContactDTO } from "../DTOs/IContactDTO";
+import type { IContactClickDTO, IContactDTO } from "../DTOs/IContactDTO";
 import type { IIndexDTO } from "../DTOs/IIndexDTO";
 import type { IProfileListDTO, IProfileShowDTO } from "../DTOs/IProfileDTO";
 import { ContactRepository } from "../repositories/ContactRepository";
@@ -106,6 +106,33 @@ export const contact = async (data: IContactDTO) => {
 
     return {
       status,
+      ...error(res.reason, {}),
+    };
+  }
+
+  return {
+    status: 200,
+    ...msg("contact_success", {}),
+    data: res.data,
+  };
+};
+
+export const contactClick = async (data: IContactClickDTO) => {
+  const repository = new ContactRepository();
+  const res = await repository.registerClick(data);
+
+  if (!res.ok) {
+    if (res.reason === "not_found") {
+      return {
+        status: 404,
+        ...error("not_found", {
+          model: "psychologist_profile",
+        }),
+      };
+    }
+
+    return {
+      status: 403,
       ...error(res.reason, {}),
     };
   }

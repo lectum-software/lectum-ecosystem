@@ -72,6 +72,7 @@ export type CommunityAuthorDTO = {
   avatar: string | null;
   role: string | null;
   type_label: string;
+  crp: string | null;
   verified: boolean;
   featured_badge: string | null;
   whatsapp_url: string | null;

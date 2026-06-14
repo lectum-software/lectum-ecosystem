@@ -35,9 +35,11 @@ import { CommunityFollowToggle } from "@/components/community/community-follow-t
 import { PostActionButton, PostActionLink } from "@/components/community/post-action-button";
 import { VoteActionButton } from "@/components/community/vote-action-button";
 import { components } from "@/components/controllers";
+import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -575,15 +577,20 @@ const ReplyCard = ({
       />
 
       {isProfessional && reply.author.verified && reply.author.whatsapp_url ? (
-        <Button
-          asChild
-          className="mt-1 h-11 w-full rounded-[14px] border-2 border-[#23C266] bg-transparent text-[#23C266] shadow-none hover:bg-[#23C266] hover:text-white"
+        <PsychologistWhatsAppRedirectButton
+          className="mt-1 inline-flex h-11 w-full items-center justify-center gap-2 rounded-[14px] border-2 border-success bg-transparent text-success shadow-none transition hover:bg-success hover:text-white"
+          psychologist={{
+            avatar: reply.author.avatar,
+            crp: reply.author.crp,
+            id: reply.author.id,
+            name: reply.author.name,
+            typeLabel: reply.author.type_label,
+            whatsappUrl: reply.author.whatsapp_url,
+          }}
         >
-          <a href={reply.author.whatsapp_url} rel="noreferrer" target="_blank">
-            <MessageCircle className="h-5 w-5" aria-hidden="true" />
-            Chamar no WhatsApp
-          </a>
-        </Button>
+          <WhatsAppIcon className="h-5 w-5" aria-hidden="true" />
+          Chamar no WhatsApp
+        </PsychologistWhatsAppRedirectButton>
       ) : null}
 
       <ReplyVoteBar

@@ -45,6 +45,7 @@ import { CommunityFollowButton } from "@/components/community/community-follow-b
 import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
 import { PostActionButton, PostActionLink } from "@/components/community/post-action-button";
 import { VoteActionButton, type VoteValue } from "@/components/community/vote-action-button";
+import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -574,21 +575,21 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
           <div className="pointer-events-auto mt-3 grid w-full gap-3 sm:mx-auto sm:max-w-[320px]">
             <ProfessionalReplyMedia reply={reply} />
             {reply.author.whatsapp_url ? (
-              <Button
-                asChild
-                className="h-11 w-full rounded-[14px] border-2 border-success bg-transparent text-sm font-black text-success shadow-none hover:bg-success hover:text-white"
-                variant="outline"
+              <PsychologistWhatsAppRedirectButton
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[14px] border-2 border-success bg-transparent text-sm font-black text-success shadow-none transition hover:bg-success hover:text-white"
+                psychologist={{
+                  avatar: reply.author.avatar,
+                  crp: reply.author.crp,
+                  id: reply.author.id,
+                  name: reply.author.name,
+                  typeLabel: reply.author.type_label,
+                  whatsappUrl: reply.author.whatsapp_url,
+                }}
+                stopPropagation
               >
-                <a
-                  href={reply.author.whatsapp_url}
-                  onClick={(event) => event.stopPropagation()}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  <WhatsAppIcon className="h-5 w-5" aria-hidden="true" />
-                  Chamar no WhatsApp
-                </a>
-              </Button>
+                <WhatsAppIcon className="h-5 w-5" aria-hidden="true" />
+                Chamar no WhatsApp
+              </PsychologistWhatsAppRedirectButton>
             ) : null}
           </div>
         ) : null}

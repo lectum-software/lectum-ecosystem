@@ -40,6 +40,7 @@ import type {
   DirectoryPsychologistProfileReview,
   DirectoryReviewSummary,
 } from "@/api/generator/types/directory";
+import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -1512,15 +1513,20 @@ const WhatsAppCta = ({ profile }: { profile: DirectoryPsychologistProfile }) => 
       style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
     >
       <div className="mx-auto w-full max-w-[430px] lg:max-w-[760px]">
-        <Button
-          asChild
-          className="h-11 w-full rounded-[8px] bg-[#22C55E] text-[13px] font-bold text-white hover:bg-[#22C55E]/90"
+        <PsychologistWhatsAppRedirectButton
+          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[8px] bg-success text-[13px] font-bold text-white transition hover:bg-success/90"
+          psychologist={{
+            avatar: profile.avatar,
+            crp: profile.crp ? formatCrpNumber(profile.crp) : null,
+            id: profile.id,
+            name: profile.name,
+            typeLabel: getPsychologistTitle(profile.gender),
+            whatsappUrl: profile.whatsapp_url,
+          }}
         >
-          <a href={profile.whatsapp_url} rel="noreferrer" target="_blank">
-            <WhatsAppIcon className="h-4 w-4" aria-hidden="true" />
-            Chamar no WhatsApp
-          </a>
-        </Button>
+          <WhatsAppIcon className="h-4 w-4" aria-hidden="true" />
+          Chamar no WhatsApp
+        </PsychologistWhatsAppRedirectButton>
       </div>
     </div>
   );

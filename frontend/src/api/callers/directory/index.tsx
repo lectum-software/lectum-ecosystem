@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import keys from "@/api/cache/keys";
 import type {
+  DirectoryPsychologistContactClickResponse,
   DirectoryPsychologistContactPayload,
   DirectoryPsychologistContactResponse,
   DirectoryPsychologistProfileListQuery,
@@ -73,6 +74,26 @@ export const useDirectoryPsychologistContact = (
   return useMutation({
     mutationFn: (body: DirectoryPsychologistContactPayload) =>
       api.createDirectoryPsychologistContact(id, body),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: keys.patient.profile() });
+      queryClient.invalidateQueries({ queryKey: keys.directory.psychologist(id) });
+      callbacks?.onSuccess?.(data);
+    },
+    onError: callbacks?.onError,
+  });
+};
+
+export const useDirectoryPsychologistContactClick = (
+  id: string,
+  callbacks?: {
+    onSuccess?: (data: DirectoryPsychologistContactClickResponse) => void;
+    onError?: (error: unknown) => void;
+  },
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => api.createDirectoryPsychologistContactClick(id),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: keys.patient.profile() });
       queryClient.invalidateQueries({ queryKey: keys.directory.psychologist(id) });
