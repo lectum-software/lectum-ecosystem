@@ -13,8 +13,14 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDirectoryPsychologist, useDirectoryPsychologistContact } from "@/api/callers/directory";
+import {
+  openPsychologistWhatsApp,
+  PsychologistWhatsAppRedirectModal,
+  WHATSAPP_REDIRECT_FALLBACK_VISIBLE_DELAY_MS,
+  WHATSAPP_REDIRECT_MIN_DELAY_MS,
+} from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -84,6 +90,12 @@ const getInitials = (name?: string | null) => {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
 
+const getPsychologistTitle = (gender?: string | null) => {
+  const normalized = gender?.toLowerCase();
+
+  return normalized === "feminino" ? "Psicóloga" : "Psicólogo";
+};
+
 const PrivacyCard = () => {
   return (
     <section className="grid gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface-muted p-4">
@@ -119,20 +131,57 @@ export const PsychologistContactLogic = () => {
   const storedUser = useAppSelector((state) => state.user);
   const [apiError, setApiError] = useState<string | null>(null);
   const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null);
+  const [whatsappRedirectUrl, setWhatsappRedirectUrl] = useState<string | null>(null);
+  const [isWhatsAppTransitionOpen, setIsWhatsAppTransitionOpen] = useState(false);
+  const [manualFallbackVisible, setManualFallbackVisible] = useState(false);
+  const redirectTimersRef = useRef<number[]>([]);
   const { Form, formProps, hook } = useForm(storedUser?.patient_profile?.phone);
 
   const profile = useDirectoryPsychologist(psychologistId);
+
+  useEffect(() => {
+    const timers = redirectTimersRef.current;
+
+    return () => {
+      for (const timer of timers) {
+        window.clearTimeout(timer);
+      }
+    };
+  }, []);
+
+  const setRedirectTimer = (callback: () => void, ms: number) => {
+    const timer = window.setTimeout(callback, ms);
+    redirectTimersRef.current.push(timer);
+  };
+
+  const startWhatsappTransition = (url: string) => {
+    setWhatsappUrl(url);
+    setWhatsappRedirectUrl(url);
+    setManualFallbackVisible(false);
+    setIsWhatsAppTransitionOpen(true);
+    setRedirectTimer(
+      () => setManualFallbackVisible(true),
+      WHATSAPP_REDIRECT_FALLBACK_VISIBLE_DELAY_MS,
+    );
+    setRedirectTimer(() => openPsychologistWhatsApp(url), WHATSAPP_REDIRECT_MIN_DELAY_MS);
+  };
+
+  const handleManualWhatsappOpen = () => {
+    if (!whatsappRedirectUrl) return;
+
+    window.open(whatsappRedirectUrl, "_blank", "noopener,noreferrer");
+  };
+
   const contact = useDirectoryPsychologistContact(psychologistId, {
     onSuccess: (data) => {
       setApiError(null);
-      setWhatsappUrl(data.whatsapp_url);
-
-      window.setTimeout(() => {
-        window.location.href = data.whatsapp_url;
-      }, 650);
+      startWhatsappTransition(data.whatsapp_url);
     },
     onError: (error) => {
       setWhatsappUrl(null);
+      setWhatsappRedirectUrl(null);
+      setIsWhatsAppTransitionOpen(false);
+      setManualFallbackVisible(false);
       setApiError(
         resolveApiErrorMessage(
           error,
@@ -155,11 +204,18 @@ export const PsychologistContactLogic = () => {
   const professional = profile.data;
   const isUnavailable = Boolean(professional && !professional.whatsapp_available);
   const submitDisabled =
-    contact.isPending || Boolean(whatsappUrl) || isUnavailable || !professional;
+    contact.isPending ||
+    isWhatsAppTransitionOpen ||
+    Boolean(whatsappUrl) ||
+    isUnavailable ||
+    !professional;
 
   const onSubmit = hook.handleSubmit((values: WhatsAppContactForm) => {
     setApiError(null);
     setWhatsappUrl(null);
+    setWhatsappRedirectUrl(null);
+    setIsWhatsAppTransitionOpen(false);
+    setManualFallbackVisible(false);
 
     if (!professional?.whatsapp_available) {
       setApiError(
@@ -312,10 +368,13 @@ export const PsychologistContactLogic = () => {
                   </Button>
 
                   {whatsappUrl ? (
-                    <Button asChild className="w-full" variant="outline">
-                      <a href={whatsappUrl} rel="noreferrer" target="_blank">
-                        Abrir WhatsApp agora
-                      </a>
+                    <Button
+                      className="w-full"
+                      onClick={() => startWhatsappTransition(whatsappUrl)}
+                      type="button"
+                      variant="outline"
+                    >
+                      Abrir WhatsApp agora
                     </Button>
                   ) : null}
 
@@ -336,6 +395,23 @@ export const PsychologistContactLogic = () => {
           </p>
         </section>
       </div>
+      {professional ? (
+        <PsychologistWhatsAppRedirectModal
+          isOpen={isWhatsAppTransitionOpen}
+          manualFallbackVisible={manualFallbackVisible}
+          onClose={() => setIsWhatsAppTransitionOpen(false)}
+          onManualOpen={handleManualWhatsappOpen}
+          psychologist={{
+            avatar: professional.avatar,
+            crp: professional.crp,
+            id: professional.id,
+            name: professional.name,
+            typeLabel: getPsychologistTitle(professional.gender),
+            whatsappUrl: whatsappRedirectUrl ?? whatsappUrl,
+          }}
+          redirectUrl={whatsappRedirectUrl}
+        />
+      ) : null}
     </PrivateTemplate>
   );
 };
