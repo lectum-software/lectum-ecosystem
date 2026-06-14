@@ -74,3 +74,4 @@ Formato recomendado:
 - [ADR-0077 - Salvamento de respostas e navegacao contextual no feed da comunidade](0077-salvamento-respostas-feed-comunidade.md) - Accepted
 - [ADR-0078 - Transicao segura para WhatsApp do psicologo](0078-transicao-whatsapp-psicologo.md) - Accepted
 - [ADR-0079 - Controle moderno de expandir/recolher sidebar desktop](0079-controle-sidebar-desktop-moderno.md) - Accepted
+- [ADR-0080 - Ajuste desktop limpo do feed Shorts de psicologos](0080-ajuste-desktop-feed-shorts-psicologos.md) - Accepted

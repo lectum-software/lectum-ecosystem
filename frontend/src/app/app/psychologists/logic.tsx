@@ -2463,8 +2463,9 @@ export const PsychologistsLogic = () => {
   return (
     <PrivateTemplate
       allowAnonymous
-      contentClassName="h-[100dvh] max-w-none overflow-hidden p-0 sm:p-0 lg:pl-[240px] lg:pb-0"
+      contentClassName="h-[100dvh] max-w-none overflow-hidden p-0 sm:p-0 lg:pb-0"
       desktopNavigation="sidebar"
+      desktopSidebarSurface="flat"
       navigationDimmed={isMobileSearchFocusMode}
       navigationHidden={metrics.isDesktopLayout ? false : isUiHidden}
       navigationTheme="solidWhite"
@@ -2566,11 +2567,11 @@ export const PsychologistsLogic = () => {
 
           @media (min-width: 1024px) {
             .psychologists-shorts-layout {
-              --psychologists-desktop-card-top: 32px;
-              --psychologists-desktop-card-gap: 18px;
-              --psychologists-desktop-card-height: min(860px, calc(100dvh - 112px));
-              --psychologists-desktop-card-width: min(484px, calc(56.25dvh - 63px));
-              --psychologists-desktop-card-half-width: min(242px, calc(28.125dvh - 31.5px));
+              --psychologists-desktop-card-top: 24px;
+              --psychologists-desktop-card-gap: 6px;
+              --psychologists-desktop-card-height: min(900px, calc(100dvh - 82px));
+              --psychologists-desktop-card-width: min(506px, calc(56.25dvh - 46.125px));
+              --psychologists-desktop-card-half-width: min(253px, calc(28.125dvh - 23.0625px));
               --psychologists-desktop-rail-left: calc(
                 50% +
                 var(--psychologists-desktop-card-half-width) +
@@ -2993,7 +2994,7 @@ export const PsychologistsLogic = () => {
                       data-psychologists-slide-index={index}
                       key={psychologist.id}
                     >
-                      <div className="absolute inset-0 overflow-hidden lg:inset-x-0 lg:top-[var(--psychologists-desktop-card-top)] lg:bottom-auto lg:h-[var(--psychologists-desktop-card-height)] lg:rounded-[22px] lg:bg-black lg:shadow-[0_24px_80px_rgba(15,23,42,0.18)]">
+                      <div className="absolute inset-0 overflow-hidden lg:inset-x-0 lg:top-[var(--psychologists-desktop-card-top)] lg:bottom-auto lg:h-[var(--psychologists-desktop-card-height)] lg:rounded-[22px] lg:bg-black">
                         <div className="relative h-full w-full overflow-hidden">
                           {slideShouldShowVideo ? (
                             <video
@@ -4042,9 +4043,10 @@ export const PsychologistsLogic = () => {
                 <div
                   aria-hidden={isDesktopActionRailHidden ? true : undefined}
                   className={cn(
-                    "absolute top-1/2 right-0 flex -translate-y-1/2 flex-col items-center gap-5 transition-opacity duration-200 ease-out",
+                    "fixed top-1/2 right-[clamp(24px,3vw,54px)] flex -translate-y-1/2 flex-col items-center gap-5 transition-opacity duration-200 ease-out",
                     desktopActionRailVisibilityClass,
                   )}
+                  data-psychologists-scroll-lock="true"
                 >
                   <button
                     aria-label="Psicólogo anterior"

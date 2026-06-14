@@ -1158,3 +1158,21 @@ ext/image`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Execucao complementar: limpeza visual desktop do feed Shorts (2026-06-14)
+
+- Pedido do usuario: ajustar somente o desktop de `/app/psychologists`, removendo faixa/sombra residual da sidebar, sombras externas do feed, recentralizando os cards, ampliando levemente o card 9:16 e movendo as setas up/down para a lateral direita da viewport.
+- A causa raiz da faixa residual era o `contentClassName` da rota forcar `lg:pl-[240px]` mesmo com a sidebar recolhida em 88px; esse override foi removido para respeitar o padding dinamico do `PrivateTemplate`.
+- O `PrivateTemplate` recebeu a opcao `desktopSidebarSurface="flat"` e a rota de Psicologos passa a usa-la para remover a sombra projetada da sidebar desktop sem afetar outras rotas por padrao.
+- A sombra externa desktop do card foi removida, mantendo o fundo da area de feed limpo e continuo; a UI interna do card nao foi alterada.
+- As variaveis desktop do feed foram ajustadas para aumentar levemente o card principal, reduzir o intervalo ate a previa do proximo card e preservar a proporcao 9:16.
+- As setas de psicologo anterior/proximo passaram a ficar fixas na lateral direita da viewport, separadas do card, mantendo estilo circular e discreto.
+- O mobile, o scroll-snap, o bloqueio de scroll no `body`, dados, contratos de API, backend, Prisma, migrations e packages nao foram alterados.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a decisao foi guiada pela captura do YouTube Shorts anexada pelo usuario, pelo prototipo local `_product/proto/Psicólogos.jpg` e pelo design system existente da Lectum.
+- ADR criado: `adrs/0080-ajuste-desktop-feed-shorts-psicologos.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.

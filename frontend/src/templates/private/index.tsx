@@ -41,6 +41,7 @@ type PrivateTemplateProps = PropsWithChildren<{
   contentClassName?: string;
   desktopSidebarDefaultCollapsed?: boolean;
   desktopNavigation?: "bottom" | "sidebar";
+  desktopSidebarSurface?: "default" | "flat";
   navigationDimmed?: boolean;
   navigationHidden?: boolean;
   navigationTheme?: "default" | "solidWhite";
@@ -194,6 +195,7 @@ export const PrivateTemplate = ({
   contentClassName,
   desktopSidebarDefaultCollapsed = false,
   desktopNavigation = "sidebar",
+  desktopSidebarSurface = "default",
   navigationDimmed = false,
   navigationHidden = false,
   navigationTheme = "default",
@@ -367,8 +369,9 @@ export const PrivateTemplate = ({
     <aside
       aria-label="Navegação principal"
       className={cn(
-        "fixed inset-y-0 left-0 z-50 hidden border-border border-r bg-surface py-6 text-foreground shadow-[12px_0_36px_rgb(15_23_42_/_5%)] transition-[width,transform,opacity,filter,padding] duration-200 ease-out lg:flex lg:flex-col",
+        "fixed inset-y-0 left-0 z-50 hidden border-border border-r bg-surface py-6 text-foreground transition-[width,transform,opacity,filter,padding] duration-200 ease-out lg:flex lg:flex-col",
         isDesktopSidebarCollapsed ? "w-[88px] px-2" : "w-[240px] px-4",
+        desktopSidebarSurface === "default" ? "shadow-[12px_0_36px_rgb(15_23_42_/_5%)]" : null,
         navigationDimmed ? "opacity-55 brightness-95 saturate-75" : "opacity-100",
         isNavigationRenderedVisible ? "translate-x-0" : "-translate-x-full opacity-0",
       )}
