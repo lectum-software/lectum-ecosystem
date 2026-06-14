@@ -5,6 +5,7 @@ import {
   ArrowUp,
   Award,
   BadgePercent,
+  CalendarCheck,
   Check,
   HandHeart,
   Heart,
@@ -193,6 +194,7 @@ const normalizeFormValues = (
   discount_first_session: Boolean(values.discount_first_session),
   accepts_insurance: Boolean(values.accepts_insurance),
   social_value: Boolean(values.social_value),
+  available_today: Boolean(values.available_today),
   verified: Boolean(values.verified),
 });
 
@@ -215,6 +217,7 @@ const toQuery = (values: PsychologistsFilterForm, page: number): DirectoryPsycho
   discount_first_session: values.discount_first_session || undefined,
   accepts_insurance: values.accepts_insurance || undefined,
   social_value: values.social_value || undefined,
+  available_today: values.available_today || undefined,
   verified: values.verified || undefined,
 });
 
@@ -281,6 +284,7 @@ const readFiltersFromParams = (params: URLSearchParams): PsychologistsFilterForm
     discount_first_session: params.get("discount_first_session") === "true",
     accepts_insurance: params.get("accepts_insurance") === "true",
     social_value: params.get("social_value") === "true",
+    available_today: params.get("available_today") === "true",
     verified: params.get("verified") === "true",
   });
 };
@@ -305,6 +309,7 @@ const buildFiltersParams = (values: PsychologistsFilterForm, page = 1) => {
   if (normalized.discount_first_session) next.set("discount_first_session", "true");
   if (normalized.accepts_insurance) next.set("accepts_insurance", "true");
   if (normalized.social_value) next.set("social_value", "true");
+  if (normalized.available_today) next.set("available_today", "true");
   if (normalized.verified) next.set("verified", "true");
   if (page > 1) next.set("page", String(page));
 
@@ -329,11 +334,17 @@ const BOOLEAN_FILTER_LABELS = {
   discount_first_session: "Desconto 1ª sessão",
   accepts_insurance: "Aceita convênio",
   social_value: "Valor social",
+  available_today: "Disponível hoje",
 } satisfies Partial<Record<PsychologistFilterKey, string>>;
 
 type FilterFeatureKey = Extract<
   PsychologistFilterKey,
-  "verified" | "more_experienced" | "discount_first_session" | "accepts_insurance" | "social_value"
+  | "verified"
+  | "more_experienced"
+  | "discount_first_session"
+  | "accepts_insurance"
+  | "social_value"
+  | "available_today"
 >;
 
 type FilterFeatureOption = {
@@ -373,6 +384,12 @@ const FILTER_FEATURE_OPTIONS: FilterFeatureOption[] = [
     label: "Valor social",
     description: "Para a população de baixa renda.",
     icon: HandHeart,
+  },
+  {
+    name: "available_today",
+    label: "Disponível hoje",
+    description: "Psicólogos com disponibilidade para atendimento ainda hoje.",
+    icon: CalendarCheck,
   },
 ];
 
@@ -822,6 +839,7 @@ export const PsychologistsLogic = () => {
     Boolean(filterValues.discount_first_session) ||
     Boolean(filterValues.accepts_insurance) ||
     Boolean(filterValues.social_value) ||
+    Boolean(filterValues.available_today) ||
     Boolean(filterValues.verified);
   const activeFilterChips = useMemo(
     () => buildActiveFilterChips(filterValues, response?.filters),
@@ -1620,6 +1638,9 @@ export const PsychologistsLogic = () => {
           break;
         case "social_value":
           nextValues.social_value = false;
+          break;
+        case "available_today":
+          nextValues.available_today = false;
           break;
       }
 

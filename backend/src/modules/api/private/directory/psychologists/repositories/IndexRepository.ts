@@ -116,6 +116,11 @@ export class IndexRepository implements IIndexRepository {
           }
         : undefined,
       show_experience_tag: props.q.more_experienced ? true : undefined,
+      available_days: props.q.available_today
+        ? {
+            array_contains: [currentWeekdayValue()],
+          }
+        : undefined,
       target_audience: props.q.target_audience
         ? {
             array_contains: [props.q.target_audience],

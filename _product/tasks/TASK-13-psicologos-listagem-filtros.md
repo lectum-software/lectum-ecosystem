@@ -1281,6 +1281,7 @@ Validacoes do complemento:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - `git diff --check`
+- Smoke Prisma do catalogo retornou `Terapia Individual` ativa e nao deletada para o slug `terapia-individual`.
 - HTTP local em `/app/psychologists` respondeu `200`.
 
 ## Execucao complementar: busca live e selos leves na modal (2026-06-14)
@@ -1299,4 +1300,27 @@ Validacoes do complemento:
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
+- HTTP local em `/app/psychologists` respondeu `200`.
+
+## Execucao complementar: filtros demograficos, terapia individual e disponivel hoje (2026-06-14)
+
+- Pedido do usuario: ajustar a modal de filtros de `/app/psychologists` no desktop e no mobile removendo `Prefiro não informar` de Religiao/Raca/Genero, adicionando `Terapia Individual` como primeiro servico e criando o selo `Disponivel hoje`.
+- A opcao `Prefiro não informar` foi removida somente dos filtros publicos da descoberta; os demais valores permanecem inalterados e a opcao declaratoria segue existindo nos formularios de perfil profissional.
+- `Terapia Individual` foi adicionada como catalogo real de `services` por migration idempotente e a ordenacao da modal garante esse servico como primeiro item exibido.
+- O selo `Disponivel hoje` foi conectado ao React Hook Form e ao contrato real `available_today`, combinavel com os demais filtros e renderizado com o mesmo card/toggle dos outros selos/facilidades.
+- O backend da descoberta passou a validar `available_today` e filtrar `psychologist_profile.available_days` pelo dia atual no fuso `America/Sao_Paulo`, reutilizando a mesma regra usada para o indicador do card.
+- Nao houve pacote novo, mock, seed fake, endpoint simulado ou alteracao de schema Prisma; houve apenas migration de catalogo de produto e extensao do contrato de query existente.
+- ADR atualizado: `adrs/0019-descoberta-psicologos-taxonomias.md`.
+
+Validacoes do complemento:
+
+- `pnpm --dir backend db:migrate`
+- `pnpm --dir backend biome:fix`
+- `pnpm --dir frontend biome:fix`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
 - HTTP local em `/app/psychologists` respondeu `200`.

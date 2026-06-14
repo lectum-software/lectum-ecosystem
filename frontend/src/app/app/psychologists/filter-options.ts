@@ -196,6 +196,11 @@ const SERVICE_DISPLAY_ORDER = [
   "supervisao-clinica",
 ] as const;
 
+const INDIVIDUAL_THERAPY_SERVICE = {
+  label: "Terapia Individual",
+  value: "terapia-individual",
+} satisfies FieldOption;
+
 const normalizeCatalogText = (value: string) =>
   value
     .normalize("NFD")
@@ -260,8 +265,21 @@ export const toServiceOptions = (items: DirectoryCatalogItem[] = []): FieldOptio
   const orderBySlug = new Map<string, number>(
     SERVICE_DISPLAY_ORDER.map((slug, index) => [slug, index]),
   );
+  const options = toOptions(items);
+  const hasIndividualTherapy = options.some((option) => {
+    const normalizedValue = normalizeCatalogText(String(option.value || option.label)).replace(
+      /\s+/g,
+      "-",
+    );
 
-  return toOptions(items).sort((a, b) => {
+    return normalizedValue === INDIVIDUAL_THERAPY_SERVICE.value;
+  });
+
+  if (!hasIndividualTherapy) {
+    options.unshift(INDIVIDUAL_THERAPY_SERVICE);
+  }
+
+  return options.sort((a, b) => {
     const aKey = normalizeCatalogText(String(a.value || a.label)).replace(/\s+/g, "-");
     const bKey = normalizeCatalogText(String(b.value || b.label)).replace(/\s+/g, "-");
     const aPos = orderBySlug.get(aKey) ?? Number.POSITIVE_INFINITY;

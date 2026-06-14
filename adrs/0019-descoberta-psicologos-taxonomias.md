@@ -35,6 +35,10 @@ Em 2026-06-14 a modal de filtros foi refinada a partir do PDF local fornecido pe
 
 Ainda em 2026-06-14, a busca por nome/CRP dentro da modal precisava responder em tempo real enquanto o usuário digita, e o bloco de selos/facilidades precisava ficar mais leve, evitando a aparência de caixas cinzas pesadas.
 
+Ainda em 2026-06-14, os filtros da modal precisaram remover a alternativa `Prefiro não informar` dos recortes de
+religião, raça e gênero do psicólogo, garantir `Terapia Individual` como primeiro serviço real do catálogo e adicionar
+o filtro combinável `Disponível hoje`.
+
 ## Decisão
 
 - Criar `GET /api/private/directory/psychologists` como endpoint real de listagem paginada (`page`/`limit`, default 20 e máximo 50), busca e filtros.
@@ -68,6 +72,12 @@ Ainda em 2026-06-14, a busca por nome/CRP dentro da modal precisava responder em
 - Manter `Limpar filtros` como acao de reset no topo da modal e `Aplicar filtros` como CTA sticky no rodape da area rolavel, sem novo pacote de dialog e sem criar componente global fora de escopo.
 - Enquanto a modal estiver aberta, aplicar o campo `search` como consulta viva da listagem por meio do mesmo hook `useDirectoryPsychologists`, sem alterar a URL nem aplicar os demais filtros antes do CTA. Ao clicar em `Aplicar filtros`, a busca continua sendo persistida nos query params como antes.
 - Refinar os cards/toggles de selos e facilidades sobre os mesmos campos booleanos do React Hook Form, com superfície `bg-surface`, borda delicada e controle tipo switch, sem criar estado paralelo nem remover opções.
+- Remover `Prefiro não informar` apenas da interface de filtros públicos de religião, raça e gênero, preservando os
+  valores existentes nos formulários de perfil onde o profissional ainda pode optar por não informar.
+- Inserir `Terapia Individual` como opção real do catálogo `services` por migration idempotente e mantê-la como primeiro
+  item da ordenação exibida em `toServiceOptions`.
+- Adicionar `available_today` ao contrato de query da descoberta, validando o parâmetro no backend e filtrando por
+  `psychologist_profile.available_days` com o mesmo cálculo de dia atual em `America/Sao_Paulo` já usado no card.
 
 ## Consequências
 
@@ -83,6 +93,12 @@ Ainda em 2026-06-14, a busca por nome/CRP dentro da modal precisava responder em
 - Vídeos de apresentação enviados por profissionais são renderizados no card como mídia nativa quando o profissional é assinante. Como ainda não há recurso de legendas no upload, o componente registra exceção pontual de lint para `useMediaCaption`.
 - O botão de favorito continua visível para manter consistência visual com a referência e agora é acionável por
   qualquer usuário autenticado. A relação persistida continua por `user_id`, sem criar tabela nova.
+- A opção `Prefiro não informar` deixa de aparecer na busca pública para evitar filtros pouco acionáveis, mas o dado
+  declaratório continua existindo no perfil profissional.
+- `Terapia Individual` passa a existir como taxonomia persistida e pode ser selecionada por profissionais e filtrada por
+  pacientes sem opção sintética no banco.
+- O filtro `Disponível hoje` usa disponibilidade real cadastrada no perfil; se o profissional não tiver o dia atual em
+  `available_days`, ele não entra no resultado desse recorte.
 
 ## Validação
 
@@ -130,12 +146,24 @@ Ainda em 2026-06-14, a busca por nome/CRP dentro da modal precisava responder em
   - `pnpm --dir frontend build`
   - `pnpm check`
   - `git diff --check`
+  - Smoke Prisma do catálogo retornou `{"name":"Terapia Individual","slug":"terapia-individual","active":true,"deleted":false}`.
   - HTTP local em `/app/psychologists` respondeu `200`.
 - Validacao complementar da busca live e selos em 2026-06-14:
   - `pnpm --dir frontend biome:fix`
   - `pnpm --dir frontend check`
   - `pnpm --dir frontend build`
   - `pnpm check`
+  - HTTP local em `/app/psychologists` respondeu `200`.
+- Validacao complementar dos filtros de serviço e disponibilidade em 2026-06-14:
+  - `pnpm --dir backend db:migrate`
+  - `pnpm --dir backend biome:fix`
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir backend check`
+  - `pnpm --dir backend build`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - `git diff --check`
   - HTTP local em `/app/psychologists` respondeu `200`.
 
 ## Pendências

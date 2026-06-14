@@ -137,6 +137,12 @@ export const schema: IValidatorRequest = {
       optional: true,
     },
     {
+      key: "available_today",
+      coerse: "boolean",
+      method: "boolean",
+      optional: true,
+    },
+    {
       key: "verified",
       coerse: "boolean",
       method: "boolean",

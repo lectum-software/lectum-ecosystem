@@ -66,6 +66,7 @@ export interface IIndexDTO {
     discount_first_session?: boolean;
     accepts_insurance?: boolean;
     social_value?: boolean;
+    available_today?: boolean;
     verified?: boolean;
   };
   auth?: user | null;

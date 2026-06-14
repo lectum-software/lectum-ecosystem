@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { z } from "zod";
 import type { DirectoryPsychologistFilters } from "@/api/generator/types/directory";
-import { type Field, useFormList } from "@/hooks/form";
+import { type Field, type FieldOption, useFormList } from "@/hooks/form";
 import { CITY_OPTIONS_BY_STATE } from "../professional/profile/setup/brazil-cities";
 import {
   GENDER_OPTIONS,
@@ -31,6 +31,7 @@ export const psychologistsFilterSchema = z.object({
   discount_first_session: z.boolean().optional(),
   accepts_insurance: z.boolean().optional(),
   social_value: z.boolean().optional(),
+  available_today: z.boolean().optional(),
   verified: z.boolean().optional(),
 });
 
@@ -53,8 +54,23 @@ export const defaultPsychologistsFilterValues: Required<PsychologistsFilterForm>
   discount_first_session: false,
   accepts_insurance: false,
   social_value: false,
+  available_today: false,
   verified: false,
 };
+
+const normalizeFilterOptionText = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .trim();
+
+const withoutPreferNotInform = (options: FieldOption[]) =>
+  options.filter((option) => normalizeFilterOptionText(option.label) !== "prefiro nao informar");
+
+const GENDER_FILTER_OPTIONS = withoutPreferNotInform(GENDER_OPTIONS);
+const RACE_COLOR_FILTER_OPTIONS = withoutPreferNotInform(RACE_COLOR_OPTIONS);
+const RELIGION_FILTER_OPTIONS = withoutPreferNotInform(RELIGION_OPTIONS);
 
 type UsePsychologistsFilterFormProps = {
   filters?: DirectoryPsychologistFilters;
@@ -179,7 +195,7 @@ export const usePsychologistsFilterForm = ({
         label: "Gênero do psicólogo",
         emptyLabel: "Todos os gêneros",
         inputClassName: filterSelectInputClassName,
-        options: GENDER_OPTIONS,
+        options: GENDER_FILTER_OPTIONS,
         searchable: true,
         searchMode: "dropdown",
       },
@@ -190,7 +206,7 @@ export const usePsychologistsFilterForm = ({
         label: "Raça do psicólogo",
         emptyLabel: "Todas as raças/cores",
         inputClassName: filterSelectInputClassName,
-        options: RACE_COLOR_OPTIONS,
+        options: RACE_COLOR_FILTER_OPTIONS,
         searchable: true,
         searchMode: "dropdown",
       },
@@ -201,7 +217,7 @@ export const usePsychologistsFilterForm = ({
         label: "Religião do psicólogo",
         emptyLabel: "Todas as religiões",
         inputClassName: filterSelectInputClassName,
-        options: RELIGION_OPTIONS,
+        options: RELIGION_FILTER_OPTIONS,
         searchable: true,
         searchMode: "dropdown",
       },
@@ -238,6 +254,11 @@ export const usePsychologistsFilterForm = ({
       },
       {
         name: "social_value",
+        field: "checkbox",
+        hide: true,
+      },
+      {
+        name: "available_today",
         field: "checkbox",
         hide: true,
       },
