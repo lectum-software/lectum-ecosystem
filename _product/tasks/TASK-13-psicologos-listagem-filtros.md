@@ -1243,3 +1243,25 @@ Validacoes do ajuste:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - HTTP local em `/app/psychologists` respondeu `200`.
+
+
+## Execucao complementar: modal de filtros refinada por PDF (2026-06-14)
+
+- Pedido do usuario: ajustar a modal de filtros de busca em `/app/psychologists` no desktop e no mobile usando como referencia visual o arquivo local `C:\Users\tulio\Downloads\Filtros de Psicologos.pdf`.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a execucao seguiu a referencia PDF fornecida pelo usuario, o prototipo local ativo e o design system existente da Lectum.
+- A modal de filtros agora e renderizada via portal em `document.body`, com `z-index` acima do menu lateral, botoes flutuantes e navegacao, cobrindo toda a interface tanto no desktop quanto no mobile.
+- O header da modal foi reorganizado com botao de fechar a esquerda do titulo `Filtros de busca` e acao textual azul `Limpar filtros` no topo direito; a acao de limpar foi removida do rodape.
+- O campo `Buscar por nome ou CRP` foi adicionado antes de `Especialidade` e aplica o mesmo parametro de busca real ja existente, sem criar logica paralela.
+- Os selects da modal passaram a usar o mesmo padrao visual de dropdown com seta interna; `Estado` inicia como `Todos` e `Cidade` como `Selecione Estado` enquanto nao ha estado selecionado.
+- O botao `Aplicar filtros` ficou fixo/sticky no rodape da area rolavel da modal, com visual arredondado e destaque consistente com a referencia.
+- Os filtros booleanos de selos/facilidades foram substituidos por cards customizados sobre os mesmos campos do React Hook Form; foi adicionada a opcao `Somente verificados` com a descricao exigida pelo usuario.
+- A barra de rolagem visual da modal foi ocultada, mantendo rolagem interna funcional.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, endpoints ou contratos de API alem de usar o filtro `verified` ja previsto no contrato gerado.
+- ADR atualizado: `adrs/0019-descoberta-psicologos-taxonomias.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - `git diff --check`
+  - HTTP local em `/app/psychologists` respondeu `200`.

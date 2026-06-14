@@ -30,6 +30,9 @@ Ainda em 2026-06-08, o card precisou receber ajuste visual fino do CTA de WhatsA
 usuário e, depois, ajustar a ação de favorito para funcionar como favorito de usuário autenticado, não apenas de
 paciente.
 
+
+Em 2026-06-14 a modal de filtros foi refinada a partir do PDF local fornecido pelo usuario (`C:\Users\tulio\Downloads\Filtros de Psicologos.pdf`). O ajuste precisava preservar a fundacao de formularios da TASK-02, cobrir visualmente toda a aplicacao, inclusive a sidebar, e melhorar a hierarquia de header, busca, selects, selos/facilidades e CTA de aplicacao sem instalar pacote novo.
+
 ## Decisão
 
 - Criar `GET /api/private/directory/psychologists` como endpoint real de listagem paginada (`page`/`limit`, default 20 e máximo 50), busca e filtros.
@@ -55,6 +58,12 @@ paciente.
   os psicólogos favoritados pelo usuário atual.
 - Tornar o selo `Disponível hoje` branco com texto verde e sombra, para manter leitura quando sobreposto à miniatura
   de vídeo.
+
+- Em 2026-06-14, renderizar a modal de filtros em `document.body` via portal para garantir cobertura acima do shell privado, sidebar, acoes flutuantes e navegacao mobile/desktop.
+- Manter os campos da modal dentro de `useFormList`/controllers da TASK-02, adicionando o campo de busca por nome/CRP como uso do parametro real `search` e escondendo os checkboxes booleanos para renderiza-los como cards customizados sem duplicar estado.
+- Adotar cards de selos/facilidades proprios da tela para `verified`, `more_experienced`, `discount_first_session`, `accepts_insurance` e `social_value`, todos conectados ao mesmo React Hook Form e aos mesmos query params reais.
+- Usar o padrao de dropdown pesquisavel para os selects da modal, com seta interna padronizada, mantendo opcoes reais de catalogo e dependencia Estado/Cidade existente.
+- Manter `Limpar filtros` como acao de reset no topo da modal e `Aplicar filtros` como CTA sticky no rodape da area rolavel, sem novo pacote de dialog e sem criar componente global fora de escopo.
 
 ## Consequências
 
@@ -110,6 +119,14 @@ paciente.
   - `pnpm --dir backend build`
   - `pnpm --dir frontend build`
   - `pnpm check`
+
+- Validacao complementar da modal de filtros em 2026-06-14:
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - `git diff --check`
+  - HTTP local em `/app/psychologists` respondeu `200`.
 
 ## Pendências
 

@@ -4,13 +4,19 @@ import {
   ArrowDown,
   ArrowUp,
   Award,
+  BadgePercent,
+  Check,
+  HandHeart,
   Heart,
+  type LucideIcon,
   Pause,
   Play,
   Search,
   Share2,
+  ShieldCheck,
   SlidersHorizontal,
   Star,
+  Stethoscope,
   UsersRound,
   Volume2,
   VolumeX,
@@ -33,6 +39,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import { useDirectoryPsychologists } from "@/api/callers/directory";
 import { usePatient } from "@/api/callers/patient";
 import type {
@@ -179,6 +186,7 @@ const normalizeFormValues = (
   discount_first_session: Boolean(values.discount_first_session),
   accepts_insurance: Boolean(values.accepts_insurance),
   social_value: Boolean(values.social_value),
+  verified: Boolean(values.verified),
 });
 
 const toQuery = (values: PsychologistsFilterForm, page: number): DirectoryPsychologistsQuery => ({
@@ -200,6 +208,7 @@ const toQuery = (values: PsychologistsFilterForm, page: number): DirectoryPsycho
   discount_first_session: values.discount_first_session || undefined,
   accepts_insurance: values.accepts_insurance || undefined,
   social_value: values.social_value || undefined,
+  verified: values.verified || undefined,
 });
 
 const getInitials = (name: string) => {
@@ -265,6 +274,7 @@ const readFiltersFromParams = (params: URLSearchParams): PsychologistsFilterForm
     discount_first_session: params.get("discount_first_session") === "true",
     accepts_insurance: params.get("accepts_insurance") === "true",
     social_value: params.get("social_value") === "true",
+    verified: params.get("verified") === "true",
   });
 };
 
@@ -288,6 +298,7 @@ const buildFiltersParams = (values: PsychologistsFilterForm, page = 1) => {
   if (normalized.discount_first_session) next.set("discount_first_session", "true");
   if (normalized.accepts_insurance) next.set("accepts_insurance", "true");
   if (normalized.social_value) next.set("social_value", "true");
+  if (normalized.verified) next.set("verified", "true");
   if (page > 1) next.set("page", String(page));
 
   return next;
@@ -306,11 +317,108 @@ type LabelOption = {
 };
 
 const BOOLEAN_FILTER_LABELS = {
+  verified: "Somente verificados",
   more_experienced: "Mais experientes",
   discount_first_session: "Desconto 1ª sessão",
   accepts_insurance: "Aceita convênio",
   social_value: "Valor social",
 } satisfies Partial<Record<PsychologistFilterKey, string>>;
+
+type FilterFeatureKey = Extract<
+  PsychologistFilterKey,
+  "verified" | "more_experienced" | "discount_first_session" | "accepts_insurance" | "social_value"
+>;
+
+type FilterFeatureOption = {
+  name: FilterFeatureKey;
+  label: string;
+  description: string;
+  icon: LucideIcon;
+};
+
+const FILTER_FEATURE_OPTIONS: FilterFeatureOption[] = [
+  {
+    name: "verified",
+    label: "Somente verificados",
+    description: "Psicólogos com registro verificado junto ao Conselho Federal de Psicologia",
+    icon: ShieldCheck,
+  },
+  {
+    name: "more_experienced",
+    label: "Mais experientes",
+    description: "Profissionais com mais de 10 anos de experiência clínica.",
+    icon: Award,
+  },
+  {
+    name: "discount_first_session",
+    label: "Desconto na 1ª sessão",
+    description: "Psicólogos com condição especial para a primeira consulta.",
+    icon: BadgePercent,
+  },
+  {
+    name: "accepts_insurance",
+    label: "Aceita convênios",
+    description: "Atendimento disponível para quem possui plano de saúde.",
+    icon: Stethoscope,
+  },
+  {
+    name: "social_value",
+    label: "Valor social",
+    description: "Atendimento com valor social para ampliar o acesso ao cuidado.",
+    icon: HandHeart,
+  },
+];
+
+const FilterFeatureCard = ({
+  checked,
+  onToggle,
+  option,
+}: {
+  checked: boolean;
+  onToggle: (name: FilterFeatureKey) => void;
+  option: FilterFeatureOption;
+}) => {
+  const Icon = option.icon;
+
+  return (
+    <button
+      aria-pressed={checked}
+      className={cn(
+        "group flex w-full items-start gap-3 rounded-[24px] border p-4 text-left transition duration-200 ease-out",
+        checked
+          ? "border-primary/55 bg-primary-soft/80 shadow-[0_14px_34px_rgb(48_140_232_/_12%)]"
+          : "border-border/80 bg-background shadow-[0_10px_28px_rgb(15_23_42_/_5%)] hover:border-primary/30 hover:bg-surface-muted",
+      )}
+      onClick={() => onToggle(option.name)}
+      type="button"
+    >
+      <span
+        className={cn(
+          "grid h-10 w-10 shrink-0 place-items-center rounded-2xl transition duration-200 ease-out",
+          checked ? "bg-primary text-white" : "bg-primary-soft text-primary",
+        )}
+      >
+        <Icon className="h-5 w-5" aria-hidden="true" strokeWidth={2.2} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-extrabold leading-5 text-foreground">
+          {option.label}
+        </span>
+        <span className="mt-1 block text-xs leading-5 text-muted">{option.description}</span>
+      </span>
+      <span
+        className={cn(
+          "mt-1 grid h-6 w-6 shrink-0 place-items-center rounded-full border transition duration-200 ease-out",
+          checked
+            ? "border-primary bg-primary text-white"
+            : "border-border bg-surface text-transparent group-hover:text-primary/40",
+        )}
+      >
+        <Check className="h-3.5 w-3.5" aria-hidden="true" strokeWidth={2.6} />
+      </span>
+    </button>
+  );
+};
 
 const humanizeFilterValue = (value: string) =>
   value
@@ -675,7 +783,8 @@ export const PsychologistsLogic = () => {
     Boolean(filterValues.more_experienced) ||
     Boolean(filterValues.discount_first_session) ||
     Boolean(filterValues.accepts_insurance) ||
-    Boolean(filterValues.social_value);
+    Boolean(filterValues.social_value) ||
+    Boolean(filterValues.verified);
   const activeFilterChips = useMemo(
     () => buildActiveFilterChips(filterValues, response?.filters),
     [filterValues, response?.filters],
@@ -1313,11 +1422,13 @@ export const PsychologistsLogic = () => {
   );
 
   const handleSubmitFilters = filters.hook.handleSubmit((values) => {
-    applyFilterValues({
+    const nextValues = normalizeFormValues({
       ...filterValues,
       ...values,
-      search: filterValues.search,
     });
+
+    setSearchDraft(nextValues.search || "");
+    applyFilterValues(nextValues);
     setIsFiltersOpen(false);
   });
 
@@ -1328,6 +1439,19 @@ export const PsychologistsLogic = () => {
     applyFilterValues(defaultPsychologistsFilterValues);
     setIsFiltersOpen(false);
   }, [applyFilterValues, exitSearchMode, filters.hook]);
+
+  const toggleFilterFeature = useCallback(
+    (name: FilterFeatureKey) => {
+      const currentValue = Boolean(filters.hook.getValues(name));
+
+      filters.hook.setValue(name, !currentValue, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+    },
+    [filters.hook],
+  );
 
   const handleSearchSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
@@ -1439,6 +1563,9 @@ export const PsychologistsLogic = () => {
           break;
         case "language":
           nextValues.language = null;
+          break;
+        case "verified":
+          nextValues.verified = false;
           break;
         case "more_experienced":
           nextValues.more_experienced = false;
@@ -2562,6 +2689,15 @@ export const PsychologistsLogic = () => {
           }
 
           .psychologists-video-feed::-webkit-scrollbar {
+            display: none;
+          }
+
+          .psychologists-filter-dialog-scroll {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+          }
+
+          .psychologists-filter-dialog-scroll::-webkit-scrollbar {
             display: none;
           }
 
@@ -3826,68 +3962,96 @@ export const PsychologistsLogic = () => {
               </div>
             ) : null}
 
-            {isFiltersOpen ? (
-              <div
-                aria-labelledby="psychologist-filters-title"
-                aria-modal="true"
-                className="fixed inset-0 z-50 grid place-items-center bg-foreground/55 p-4 backdrop-blur-sm"
-                data-psychologists-scroll-lock="true"
-                onMouseDown={handleFiltersClose}
-                role="dialog"
-              >
-                <div
-                  className="grid max-h-[calc(100dvh-2rem)] w-full max-w-[500px] gap-4 overflow-y-auto rounded-[28px] border border-[#e2e8f0] bg-surface p-5 shadow-[0_24px_70px_rgb(15_23_42_/_26%)]"
-                  onMouseDown={(event) => event.stopPropagation()}
-                  ref={filterDialogRef}
-                  role="document"
-                  tabIndex={-1}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h2
-                        className="text-lg font-extrabold text-foreground"
-                        id="psychologist-filters-title"
-                      >
-                        Filtros de busca
-                      </h2>
-                      <p className="mt-1 text-sm leading-6 text-muted">
-                        Ajuste os critérios para encontrar o psicólogo ideal para você
-                      </p>
-                    </div>
-                    <button
-                      aria-label="Fechar filtros"
-                      className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-foreground"
-                      onClick={handleFiltersClose}
-                      type="button"
-                    >
-                      <X className="h-4 w-4" aria-hidden="true" />
-                    </button>
-                  </div>
-
-                  <filters.Form
-                    {...filters.formProps}
-                    className="grid grid-cols-2 gap-x-3 gap-y-1"
-                    onSubmit={handleSubmitFilters}
+            {isFiltersOpen && typeof document !== "undefined"
+              ? createPortal(
+                  <div
+                    aria-labelledby="psychologist-filters-title"
+                    aria-modal="true"
+                    className="fixed inset-0 z-[140] flex items-end justify-center bg-foreground/55 p-0 text-foreground backdrop-blur-sm sm:items-center sm:p-6"
+                    data-psychologists-scroll-lock="true"
+                    onMouseDown={handleFiltersClose}
+                    role="dialog"
                   >
-                    <div className="col-span-2 mt-4 flex flex-col gap-3">
-                      <button
-                        className="inline-flex h-10 items-center justify-center rounded-full border border-[#e2e8f0] bg-white text-sm font-semibold text-foreground"
-                        onClick={clearFilters}
-                        type="button"
+                    <div
+                      className="flex h-[100dvh] w-full flex-col overflow-hidden rounded-none border-border bg-surface shadow-[0_24px_70px_rgb(15_23_42_/_26%)] sm:h-auto sm:max-h-[min(880px,calc(100dvh-2rem))] sm:max-w-[560px] sm:rounded-[32px] sm:border"
+                      onMouseDown={(event) => event.stopPropagation()}
+                      ref={filterDialogRef}
+                      role="document"
+                      tabIndex={-1}
+                    >
+                      <div className="flex shrink-0 items-start justify-between gap-3 border-border border-b bg-surface/95 px-5 py-4 backdrop-blur sm:px-6">
+                        <div className="flex min-w-0 items-start gap-3">
+                          <button
+                            aria-label="Fechar filtros"
+                            className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-background text-muted transition duration-200 ease-out hover:bg-surface-muted hover:text-foreground"
+                            onClick={handleFiltersClose}
+                            type="button"
+                          >
+                            <X className="h-4 w-4" aria-hidden="true" strokeWidth={2.4} />
+                          </button>
+                          <div className="min-w-0">
+                            <h2
+                              className="text-lg font-extrabold leading-6 text-foreground"
+                              id="psychologist-filters-title"
+                            >
+                              Filtros de busca
+                            </h2>
+                            <p className="mt-1 text-sm leading-5 text-muted">
+                              Ajuste os critérios para encontrar o psicólogo ideal para você
+                            </p>
+                          </div>
+                        </div>
+
+                        <button
+                          className="shrink-0 rounded-full px-2 py-1 text-sm font-bold text-primary transition duration-200 ease-out hover:bg-primary-soft"
+                          onClick={clearFilters}
+                          type="button"
+                        >
+                          Limpar filtros
+                        </button>
+                      </div>
+
+                      <filters.Form
+                        {...filters.formProps}
+                        className="psychologists-filter-dialog-scroll grid min-h-0 flex-1 grid-cols-2 gap-x-3 gap-y-1 overflow-y-auto px-5 py-4 sm:px-6"
+                        onSubmit={handleSubmitFilters}
                       >
-                        Limpar filtros
-                      </button>
-                      <button
-                        className="inline-flex h-10 items-center justify-center rounded-full bg-[#308ce8] font-semibold text-white"
-                        type="submit"
-                      >
-                        Aplicar filtros
-                      </button>
+                        <section className="col-span-2 mt-2 grid gap-3">
+                          <div>
+                            <h3 className="text-sm font-extrabold text-foreground">
+                              Selos e facilidades
+                            </h3>
+                            <p className="mt-1 text-xs leading-5 text-muted">
+                              Refine por confiança, acessibilidade e condições de atendimento.
+                            </p>
+                          </div>
+
+                          <div className="grid gap-3">
+                            {FILTER_FEATURE_OPTIONS.map((option) => (
+                              <FilterFeatureCard
+                                checked={Boolean(filters.hook.watch(option.name))}
+                                key={option.name}
+                                onToggle={toggleFilterFeature}
+                                option={option}
+                              />
+                            ))}
+                          </div>
+                        </section>
+
+                        <div className="sticky bottom-0 col-span-2 -mx-5 mt-5 bg-gradient-to-t from-surface via-surface/95 to-surface/0 px-5 pt-8 pb-2 sm:-mx-6 sm:px-6">
+                          <button
+                            className="inline-flex h-12 w-full items-center justify-center rounded-full bg-primary px-5 text-sm font-extrabold text-white shadow-[0_16px_34px_rgb(48_140_232_/_26%)] transition duration-200 ease-out hover:-translate-y-px hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                            type="submit"
+                          >
+                            Aplicar filtros
+                          </button>
+                        </div>
+                      </filters.Form>
                     </div>
-                  </filters.Form>
-                </div>
-              </div>
-            ) : null}
+                  </div>,
+                  document.body,
+                )
+              : null}
           </div>
 
           {shouldRenderDesktopControlRail ? (

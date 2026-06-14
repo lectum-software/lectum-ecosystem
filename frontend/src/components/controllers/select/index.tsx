@@ -194,7 +194,7 @@ export function SelectController<FormType extends FieldValues>({
                 </button>
                 <ChevronDown
                   aria-hidden="true"
-                  className="pointer-events-none absolute right-4 top-5 h-4 w-4 -translate-y-1/2 text-muted"
+                  className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
                 />
 
                 {isOpen && !resolvedDisabled && !readOnly && !loading ? (
