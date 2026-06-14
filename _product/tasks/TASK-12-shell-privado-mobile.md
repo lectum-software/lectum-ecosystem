@@ -262,3 +262,21 @@ Validacoes do ajuste:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - HTTP local em rotas principais e secundarias representativas de `/app`.
+
+### Ajuste complementar em 2026-06-14: controle da sidebar integrado ao divisor
+
+- Produto solicitou novo refinamento visual do controle desktop de expandir/recolher a sidebar para remove-lo da area da marca Lectum.
+- O `PrivateTemplate` passou a renderizar o controle como um pequeno handle circular preso a linha divisoria direita do menu lateral, alinhado ao topo do sidebar sem ocupar espaco no cabecalho.
+- O controle usa seta simples: apontando para esquerda quando o menu esta expandido e rotacionando para direita quando o menu esta recolhido.
+- A marca Lectum volta a ser o unico elemento dominante do cabecalho, sem quebra de linha, sem deslocamento de avatar/nome e sem botao dentro do flex da marca.
+- A alteracao afeta somente o desktop (`lg:flex`); mobile e bottom navigation permanecem inalterados.
+- Nao houve alteracao de rotas, dados, autenticacao, backend, Prisma, migrations, packages ou componentes internos das telas.
+- ADR atualizado: `adrs/0079-controle-sidebar-desktop-moderno.md`.
+
+Validacoes do ajuste:
+
+- `pnpm --dir frontend biome:fix`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local em `/app/psychologists` respondeu `200`.

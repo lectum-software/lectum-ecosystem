@@ -2,12 +2,12 @@
 
 import {
   Bell,
+  ChevronLeft,
   Heart,
   LogIn,
   type LucideIcon,
   Network,
   Plus,
-  Sidebar,
   UserPlus,
   UserRound,
   UsersRound,
@@ -423,10 +423,28 @@ export const PrivateTemplate = ({
         pointerEvents: isNavigationRenderedVisible && !navigationDimmed ? "auto" : "none",
       }}
     >
+      <button
+        aria-label={isDesktopSidebarCollapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
+        aria-pressed={!isDesktopSidebarCollapsed}
+        className="absolute top-12 right-0 z-20 inline-grid h-6 w-6 translate-x-1/2 place-items-center rounded-full border border-border/70 bg-surface/95 text-muted opacity-75 shadow-[0_3px_10px_rgb(15_23_42_/_8%)] transition-[background,color,opacity,transform,box-shadow] duration-200 ease-out hover:scale-[1.03] hover:bg-background hover:text-foreground hover:opacity-100 hover:shadow-[0_6px_14px_rgb(15_23_42_/_10%)] focus-visible:bg-background focus-visible:text-primary focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 active:scale-95"
+        onClick={toggleDesktopSidebar}
+        title={isDesktopSidebarCollapsed ? "Expandir menu" : "Recolher menu"}
+        type="button"
+      >
+        <ChevronLeft
+          className={cn(
+            "h-3 w-3 transition-transform duration-200 ease-out",
+            isDesktopSidebarCollapsed ? "rotate-180" : "rotate-0",
+          )}
+          aria-hidden="true"
+          strokeWidth={2}
+        />
+      </button>
+
       <div
         className={cn(
           "relative mb-8 flex h-12 items-center text-xl font-black tracking-tight text-foreground",
-          isDesktopSidebarCollapsed ? "justify-center" : "justify-start pr-8",
+          isDesktopSidebarCollapsed ? "justify-center" : "justify-start",
         )}
       >
         <Link
@@ -444,26 +462,6 @@ export const PrivateTemplate = ({
             Lectum
           </span>
         </Link>
-        <button
-          aria-label={isDesktopSidebarCollapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
-          aria-pressed={!isDesktopSidebarCollapsed}
-          className={cn(
-            "absolute top-1/2 right-0 inline-grid h-7 w-7 -translate-y-1/2 place-items-center rounded-xl text-muted opacity-40 transition-[background,color,opacity,transform] duration-200 ease-out hover:bg-surface-muted hover:text-foreground hover:opacity-100 focus-visible:bg-primary-soft focus-visible:text-primary focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 active:scale-95",
-            isDesktopSidebarCollapsed ? "right-1" : "right-0",
-          )}
-          onClick={toggleDesktopSidebar}
-          title={isDesktopSidebarCollapsed ? "Expandir menu" : "Recolher menu"}
-          type="button"
-        >
-          <Sidebar
-            className={cn(
-              "h-[15px] w-[15px] transition-transform duration-200 ease-out",
-              isDesktopSidebarCollapsed ? "rotate-180" : "rotate-0",
-            )}
-            aria-hidden="true"
-            strokeWidth={1.9}
-          />
-        </button>
       </div>
 
       <nav className="flex flex-1 flex-col gap-1" aria-label="Menu lateral">
