@@ -244,3 +244,21 @@ Validacoes do ajuste:
 - `pnpm check`
 - HTTP local em `/app/psychologist/cmq5m0vse000ftkuhybmagcn6` respondeu `200`.
 - HTTP local em `/app/psychologists` respondeu `200`.
+
+### Ajuste complementar em 2026-06-14: sidebar desktop orientada por rotas principais
+
+- Produto solicitou que, no desktop, a sidebar seja navegacao principal expandida apenas nas cinco areas centrais: `/app/psychologists`, `/app/favorites`, `/app/community/feed`, `/app/notifications` e `/app/profile`.
+- O `PrivateTemplate` passou a derivar o default recolhido/expandido por rota: rotas principais iniciam expandidas; telas secundarias e internas iniciam recolhidas.
+- A persistencia manual do usuario foi escopada por rota (`lectum.desktopSidebar:{pathname}`), evitando que uma escolha em tela secundaria force todas as demais telas a desrespeitarem o default de produto.
+- A faixa azul/estado ativo da sidebar desktop agora aparece somente quando o `pathname` corresponde exatamente a uma das cinco rotas principais e ao `href` do item.
+- A bottom navigation mobile continua usando o calculo anterior por prefixos, preservando o comportamento abaixo de `lg`.
+- Nao houve alteracao de rotas, dados, autenticação, backend, Prisma, migrations, packages ou componentes internos das telas.
+- ADR criado: `adrs/0084-sidebar-desktop-rotas-principais.md`.
+
+Validacoes do ajuste:
+
+- `pnpm --dir frontend biome:fix`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local em rotas principais e secundarias representativas de `/app`.

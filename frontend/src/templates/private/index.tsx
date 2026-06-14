@@ -15,7 +15,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { PropsWithChildren } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/api/callers/auth";
 import type { user } from "@/api/generator/types";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -185,7 +185,53 @@ const isActivePath = (pathname: string, item: NavigationItem) => {
   );
 };
 
-const DESKTOP_SIDEBAR_STORAGE_KEY = "lectum.desktopSidebar";
+const PRIMARY_DESKTOP_NAVIGATION_PATHS = new Set([
+  "/app/psychologists",
+  "/app/favorites",
+  DEFAULT_COMMUNITY_FEED_HREF,
+  "/app/notifications",
+  "/app/profile",
+]);
+
+const isPrimaryDesktopNavigationPath = (pathname: string) => {
+  return PRIMARY_DESKTOP_NAVIGATION_PATHS.has(pathname);
+};
+
+const isDesktopActivePath = (pathname: string, item: NavigationItem) => {
+  return isPrimaryDesktopNavigationPath(pathname) && pathname === item.href;
+};
+
+const DESKTOP_SIDEBAR_STORAGE_KEY_PREFIX = "lectum.desktopSidebar";
+const DESKTOP_SIDEBAR_STORAGE_EVENT = "lectum:desktop-sidebar-change";
+
+const getDesktopSidebarStorageKey = (pathname: string) => {
+  return `${DESKTOP_SIDEBAR_STORAGE_KEY_PREFIX}:${pathname}`;
+};
+
+const readDesktopSidebarPreference = (pathname: string) => {
+  if (typeof window === "undefined") return null;
+
+  const storedPreference = window.localStorage.getItem(getDesktopSidebarStorageKey(pathname));
+
+  if (storedPreference === "collapsed") return true;
+  if (storedPreference === "expanded") return false;
+
+  return null;
+};
+
+const subscribeDesktopSidebarPreference = (onStoreChange: () => void) => {
+  if (typeof window === "undefined") return () => undefined;
+
+  const handleStoreChange = () => onStoreChange();
+
+  window.addEventListener("storage", handleStoreChange);
+  window.addEventListener(DESKTOP_SIDEBAR_STORAGE_EVENT, handleStoreChange);
+
+  return () => {
+    window.removeEventListener("storage", handleStoreChange);
+    window.removeEventListener(DESKTOP_SIDEBAR_STORAGE_EVENT, handleStoreChange);
+  };
+};
 
 export const PrivateTemplate = ({
   allowAnonymous = false,
@@ -193,7 +239,7 @@ export const PrivateTemplate = ({
   bottomNavigationCenterAction,
   children,
   contentClassName,
-  desktopSidebarDefaultCollapsed = false,
+  desktopSidebarDefaultCollapsed,
   desktopNavigation = "sidebar",
   desktopSidebarSurface = "default",
   navigationDimmed = false,
@@ -228,16 +274,16 @@ export const PrivateTemplate = ({
   const shouldRenderDesktopSidebar = shouldShowNavigation && desktopNavigation === "sidebar";
   const shouldAutoHideNavigation = shouldShowNavigation && autoHideNavigation;
   const [isNavigationVisible, setIsNavigationVisible] = useState(true);
-  const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(() => {
-    if (typeof window === "undefined") return desktopSidebarDefaultCollapsed;
-
-    const storedPreference = window.localStorage.getItem(DESKTOP_SIDEBAR_STORAGE_KEY);
-
-    if (storedPreference === "collapsed") return true;
-    if (storedPreference === "expanded") return false;
-
-    return desktopSidebarDefaultCollapsed;
-  });
+  const isMainDesktopNavigationRoute = isPrimaryDesktopNavigationPath(pathname);
+  const desktopSidebarRouteDefaultCollapsed =
+    desktopSidebarDefaultCollapsed ?? !isMainDesktopNavigationRoute;
+  const storedDesktopSidebarPreference = useSyncExternalStore(
+    subscribeDesktopSidebarPreference,
+    () => readDesktopSidebarPreference(pathname),
+    () => null,
+  );
+  const isDesktopSidebarCollapsed =
+    storedDesktopSidebarPreference ?? desktopSidebarRouteDefaultCollapsed;
   const isNavigationRenderedVisible = isNavigationVisible && !navigationHidden;
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
@@ -292,18 +338,15 @@ export const PrivateTemplate = ({
   }, [shouldAutoHideNavigation]);
 
   const toggleDesktopSidebar = () => {
-    setIsDesktopSidebarCollapsed((current) => {
-      const nextValue = !current;
+    const nextValue = !isDesktopSidebarCollapsed;
 
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem(
-          DESKTOP_SIDEBAR_STORAGE_KEY,
-          nextValue ? "collapsed" : "expanded",
-        );
-      }
-
-      return nextValue;
-    });
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(
+        getDesktopSidebarStorageKey(pathname),
+        nextValue ? "collapsed" : "expanded",
+      );
+      window.dispatchEvent(new Event(DESKTOP_SIDEBAR_STORAGE_EVENT));
+    }
   };
 
   const bottomNavigationMarkup = shouldRenderMobileNavigation ? (
@@ -426,7 +469,7 @@ export const PrivateTemplate = ({
       <nav className="flex flex-1 flex-col gap-1" aria-label="Menu lateral">
         {navigation.map((item) => {
           const Icon = item.icon;
-          const isActive = isActivePath(pathname, item);
+          const isActive = isDesktopActivePath(pathname, item);
 
           return (
             <Link
