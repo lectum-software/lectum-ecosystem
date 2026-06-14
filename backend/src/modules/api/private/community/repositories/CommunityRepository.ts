@@ -235,8 +235,10 @@ const mentorBadgeForScore = (
   profile?: { cfp_verified_at: Date | null; subscriptions: { id: string }[] } | null,
   score = 0,
 ) => {
-  void score;
   if (!isProfessionalVerified(profile) || !hasPaidProfessionalEntitlement(profile)) return null;
+  if (score >= 80) return "TOP #1 MENTOR";
+  if (score >= 65) return "TOP #2 MENTOR";
+  if (score >= 50) return "TOP #3 MENTOR";
 
   return null;
 };
@@ -289,6 +291,44 @@ const getPostCurrentVotes = async (userId: string | undefined, postIds: string[]
       .filter((vote): vote is { post_id: string; value: number } => Boolean(vote.post_id))
       .map((vote) => [vote.post_id, normalizeVoteValue(vote.value)]),
   );
+};
+
+const getSavedPostIds = async (userId: string | undefined, postIds: string[]) => {
+  if (!userId || postIds.length === 0) return new Set<string>();
+
+  const saves = await prisma.post_save.findMany({
+    where: {
+      user_id: userId,
+      deleted: false,
+      post_id: {
+        in: postIds,
+      },
+    },
+    select: {
+      post_id: true,
+    },
+  });
+
+  return new Set(saves.map((save) => save.post_id));
+};
+
+const getFollowedCommunityIds = async (userId: string | undefined, communityIds: string[]) => {
+  if (!userId || communityIds.length === 0) return new Set<string>();
+
+  const memberships = await prisma.community_member.findMany({
+    where: {
+      user_id: userId,
+      deleted: false,
+      community_id: {
+        in: communityIds,
+      },
+    },
+    select: {
+      community_id: true,
+    },
+  });
+
+  return new Set(memberships.map((membership) => membership.community_id));
 };
 
 const resolveTopMentorsPeriod = (value?: string | null) => {
@@ -504,8 +544,13 @@ const toHighlightedProfessionalReply = (
 const toPostResponse = (
   item: PostResult,
   currentUserVote: CurrentVote = null,
+  saved = false,
+  followedCommunityIds?: Set<string>,
 ): CommunityPostDTO => {
-  const responseCommunity = toCommunityResponse(item.community);
+  const responseCommunity = {
+    ...toCommunityResponse(item.community),
+    ...(followedCommunityIds ? { following: followedCommunityIds.has(item.community.id) } : {}),
+  };
   const anonymous = item.author.role !== "psicologo" && item.anonymous;
   const author = toAuthorResponse(
     item.author,
@@ -531,6 +576,7 @@ const toPostResponse = (
     media_url: null,
     media_type: null,
     current_user_vote: currentUserVote,
+    saved,
     community: responseCommunity,
     author,
     highlighted_professional_reply: highlightedReply,
@@ -840,14 +886,24 @@ export class CommunityRepository implements ICommunityRepository {
       }),
       prisma.community_post.count({ where }),
     ]);
-    const currentVotes = await getPostCurrentVotes(
-      data.auth?.id ?? undefined,
-      items.map((item) => item.id),
-    );
+    const postIds = items.map((item) => item.id);
+    const communityIds = [...new Set(items.map((item) => item.community.id))];
+    const [currentVotes, savedPostIds, followedCommunityIds] = await Promise.all([
+      getPostCurrentVotes(data.auth?.id ?? undefined, postIds),
+      getSavedPostIds(data.auth?.id ?? undefined, postIds),
+      getFollowedCommunityIds(data.auth?.id ?? undefined, communityIds),
+    ]);
 
     return {
       data: sortFeedPosts(
-        items.map((item) => toPostResponse(item, currentVotes.get(item.id) ?? null)),
+        items.map((item) =>
+          toPostResponse(
+            item,
+            currentVotes.get(item.id) ?? null,
+            savedPostIds.has(item.id),
+            followedCommunityIds,
+          ),
+        ),
       ),
       page: pagination.page,
       pages: Math.ceil(count / pagination.limit),
@@ -1342,14 +1398,26 @@ export class CommunityRepository implements ICommunityRepository {
       }),
       prisma.community_post.count({ where }),
     ]);
-    const currentVotes = await getPostCurrentVotes(
-      data.auth?.id ?? undefined,
-      items.map((item) => item.id),
-    );
+    const postIds = items.map((item) => item.id);
+    const [currentVotes, savedPostIds, followedCommunityIds] = await Promise.all([
+      getPostCurrentVotes(data.auth?.id ?? undefined, postIds),
+      getSavedPostIds(data.auth?.id ?? undefined, postIds),
+      getFollowedCommunityIds(data.auth?.id ?? undefined, [community.id]),
+    ]);
 
     return {
-      community: toCommunityResponse(community),
-      data: items.map((item) => toPostResponse(item, currentVotes.get(item.id) ?? null)),
+      community: {
+        ...toCommunityResponse(community),
+        following: followedCommunityIds.has(community.id),
+      },
+      data: items.map((item) =>
+        toPostResponse(
+          item,
+          currentVotes.get(item.id) ?? null,
+          savedPostIds.has(item.id),
+          followedCommunityIds,
+        ),
+      ),
       page: pagination.page,
       pages: Math.ceil(count / pagination.limit),
       count,

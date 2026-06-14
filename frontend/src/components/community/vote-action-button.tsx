@@ -125,7 +125,7 @@ export const VoteActionButton = ({
       aria-label={label}
       aria-pressed={isActive}
       className={cn(
-        "relative inline-flex items-center rounded-full text-xs font-bold transition-colors duration-200 disabled:opacity-60",
+        "relative inline-flex items-center rounded-full text-xs font-bold transition-[background-color,color,transform] duration-200 active:scale-[0.97] disabled:opacity-60",
         "text-muted hover:bg-surface-muted hover:text-foreground",
         size === "sm" ? "h-8 gap-1 px-2" : "h-9 gap-1.5 px-2.5",
         isActive &&

@@ -88,6 +88,7 @@ export type CommunityPost = {
   media_url: string | null;
   media_type: string | null;
   current_user_vote: 1 | -1 | null;
+  saved: boolean;
   community: Community;
   author: CommunityAuthor;
   highlighted_professional_reply: CommunityProfessionalReply | null;

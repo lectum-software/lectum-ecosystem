@@ -33,6 +33,7 @@ export type PostCommunityDTO = {
   category: string | null;
   members_count: number;
   created_at: Date;
+  following?: boolean;
 };
 
 export type PostAuthorDTO = {

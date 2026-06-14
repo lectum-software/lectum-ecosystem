@@ -183,15 +183,18 @@ const toPaginatedListResponse = (
   limit,
 });
 
-const toCommunityResponse = (item: {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  category: string | null;
-  members_count: number;
-  createdAt: Date;
-}): PostCommunityDTO => ({
+const toCommunityResponse = (
+  item: {
+    id: string;
+    name: string;
+    slug: string;
+    description: string | null;
+    category: string | null;
+    members_count: number;
+    createdAt: Date;
+  },
+  following?: boolean,
+): PostCommunityDTO => ({
   id: item.id,
   name: item.name,
   slug: item.slug,
@@ -199,6 +202,7 @@ const toCommunityResponse = (item: {
   category: item.category,
   members_count: item.members_count,
   created_at: item.createdAt,
+  ...(typeof following === "boolean" ? { following } : {}),
 });
 
 const buildWhatsappUrl = (value?: string | null) => {
@@ -298,8 +302,9 @@ const toPostResponse = (
   item: PostResult,
   currentUserVote: CurrentVote,
   saved: boolean,
+  communityFollowing?: boolean,
 ): PostDetailDTO => {
-  const responseCommunity = toCommunityResponse(item.community);
+  const responseCommunity = toCommunityResponse(item.community, communityFollowing);
   const anonymous = item.author.role !== "psicologo" && item.anonymous;
   const author = toAuthorResponse(
     item.author,
@@ -608,7 +613,7 @@ export class PostRepository implements IPostRepository {
 
     if (!post) return null;
 
-    const [vote, save] = await Promise.all([
+    const [vote, save, membership] = await Promise.all([
       prisma.post_vote.findUnique({
         where: {
           user_id_post_id: {
@@ -632,6 +637,17 @@ export class PostRepository implements IPostRepository {
           deleted: true,
         },
       }),
+      prisma.community_member.findUnique({
+        where: {
+          community_id_user_id: {
+            community_id: post.community.id,
+            user_id: data.auth.id!,
+          },
+        },
+        select: {
+          deleted: true,
+        },
+      }),
     ]);
 
     return {
@@ -639,6 +655,7 @@ export class PostRepository implements IPostRepository {
         post,
         vote && !vote.deleted ? normalizeVoteValue(vote.value) : null,
         Boolean(save && !save.deleted),
+        Boolean(membership && !membership.deleted),
       ),
     };
   }

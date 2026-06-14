@@ -65,6 +65,7 @@ export const useFollowCommunity = (callbacks?: {
     mutationFn: (slug: string) => api.followCommunity(slug),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: keys.community.root() });
+      queryClient.invalidateQueries({ queryKey: keys.posts.root() });
       queryClient.invalidateQueries({ queryKey: keys.community.detail(data.community.slug) });
       callbacks?.onSuccess?.(data);
     },
@@ -82,6 +83,7 @@ export const useUnfollowCommunity = (callbacks?: {
     mutationFn: (slug: string) => api.unfollowCommunity(slug),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: keys.community.root() });
+      queryClient.invalidateQueries({ queryKey: keys.posts.root() });
       queryClient.invalidateQueries({ queryKey: keys.community.detail(data.community.slug) });
       callbacks?.onSuccess?.(data);
     },

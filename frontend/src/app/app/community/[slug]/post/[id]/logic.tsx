@@ -31,6 +31,8 @@ import {
   useVotePost,
 } from "@/api/callers/posts";
 import type { PostDetail, PostReply } from "@/api/generator/types/posts";
+import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
+import { PostActionButton, PostActionLink } from "@/components/community/post-action-button";
 import { VoteActionButton } from "@/components/community/vote-action-button";
 import { components } from "@/components/controllers";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -307,12 +309,11 @@ const PostHeader = ({ post, slug }: { post: PostDetail; slug: string }) => {
         >
           {post.community.name}
         </Link>
-        <button
-          className="ml-1 shrink-0 rounded-full border border-[#8FC7EA] px-3 py-1 text-[11px] font-black text-primary transition hover:bg-primary-soft"
-          type="button"
-        >
-          Seguir
-        </button>
+        <CommunityFollowToggle
+          className="ml-1"
+          initialFollowing={Boolean(post.community.following)}
+          slug={post.community.slug}
+        />
       </div>
 
       <div className="flex items-start gap-3">
@@ -387,37 +388,29 @@ const PostVoteBar = ({
         showPositiveDelta={false}
         value={-1}
       />
-      <a
-        className="inline-flex h-9 items-center gap-1.5 rounded-full px-2 text-xs font-bold text-[#475569] transition hover:bg-primary-soft hover:text-primary"
+      <PostActionLink
+        count={post.replies_count}
         href="#discussao"
-      >
-        <MessageCircle className="h-4 w-4" aria-hidden="true" />
-        {post.replies_count.toLocaleString("pt-BR")}
-      </a>
+        icon={MessageCircle}
+        label="Ir para comentÃ¡rios"
+      />
     </div>
     <div className="flex items-center gap-1">
-      <button
-        aria-label={post.saved ? "Remover dos salvos" : "Salvar post"}
-        aria-pressed={post.saved}
-        className={cn(
-          "inline-flex h-9 items-center gap-1.5 rounded-full px-2 text-xs font-bold text-[#475569] transition hover:bg-primary-soft hover:text-primary disabled:opacity-60",
-          post.saved && "bg-primary-soft text-primary",
-        )}
+      <PostActionButton
+        active={post.saved}
+        count={post.saves_count}
         disabled={disabled}
+        icon={Bookmark}
+        iconClassName={post.saved ? "fill-current" : undefined}
+        label={post.saved ? "Remover dos salvos" : "Salvar post"}
         onClick={onToggleSave}
-        type="button"
-      >
-        <Bookmark className={cn("h-4 w-4", post.saved && "fill-current")} aria-hidden="true" />
-        {post.saves_count.toLocaleString("pt-BR")}
-      </button>
-      <button
-        aria-label={`Compartilhar ${post.title}`}
-        className="grid h-9 w-9 place-items-center rounded-full text-[#475569] transition hover:bg-primary-soft hover:text-primary"
+      />
+      <PostActionButton
+        className="w-9 px-0"
+        icon={Share2}
+        label={`Compartilhar ${post.title}`}
         onClick={onShare}
-        type="button"
-      >
-        <Share2 className="h-4 w-4" aria-hidden="true" />
-      </button>
+      />
     </div>
   </div>
 );

@@ -1,6 +1,5 @@
 "use client";
 
-import type { LucideIcon } from "lucide-react";
 import {
   ArrowDown,
   ArrowLeft,
@@ -15,7 +14,6 @@ import {
   FileText,
   Flame,
   ListChecks,
-  Loader2,
   MessageCircle,
   Play,
   Plus,
@@ -37,12 +35,15 @@ import {
   useFollowCommunity,
   useUnfollowCommunity,
 } from "@/api/callers/community";
-import { useVotePost } from "@/api/callers/posts";
+import { useSavePost, useVotePost } from "@/api/callers/posts";
 import type {
   CommunityDetail,
   CommunityFeedScope,
   CommunityPost,
 } from "@/api/generator/types/community";
+import { CommunityFollowButton } from "@/components/community/community-follow-button";
+import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
+import { PostActionButton, PostActionLink } from "@/components/community/post-action-button";
 import { VoteActionButton, type VoteValue } from "@/components/community/vote-action-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -87,17 +88,16 @@ type ApiError = Error & {
   data?: ApiErrorData;
 };
 
-type CountActionProps = {
-  icon: LucideIcon;
-  label: string;
-  value?: number;
-};
-
 type VoteSnapshot = {
   currentVote: VoteValue;
   downvotes: number;
   postId: string;
   upvotes: number;
+};
+
+type SaveSnapshot = {
+  saved: boolean;
+  saves: number;
 };
 
 const resolveFeedError = (error: unknown) => {
@@ -235,17 +235,6 @@ const AuthorAvatar = ({
     </span>
   );
 };
-
-const CountAction = ({ icon: Icon, label, value }: CountActionProps) => (
-  <button
-    aria-label={label}
-    className="inline-flex h-8 items-center gap-1 rounded-full px-1.5 text-xs font-bold text-[#475569] transition hover:bg-primary-soft hover:text-primary dark:text-muted"
-    type="button"
-  >
-    <Icon className="h-4 w-4" aria-hidden="true" />
-    {typeof value === "number" ? value.toLocaleString("pt-BR") : null}
-  </button>
-);
 
 const mentorBadgeClassName = (badge: string) => {
   if (badge.includes("#1")) {
@@ -502,8 +491,8 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
                   aria-label="Psicólogo verificado"
                 />
               ) : null}
-              <MentorBadge badge={reply.author.featured_badge} />
             </div>
+            <MentorBadge badge={reply.author.featured_badge} />
             <p className="min-w-0 truncate text-[11px] font-semibold text-muted">
               {reply.author.type_label} <span aria-hidden="true">•</span>{" "}
               <time dateTime={reply.created_at}>{formatRelativeTime(reply.created_at)}</time>{" "}
@@ -523,7 +512,7 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
         </p>
         {replyCanToggle ? (
           <button
-            className="mt-1 w-fit text-[11px] font-semibold text-muted transition hover:text-foreground"
+            className="mt-0.5 w-fit text-[10px] font-medium leading-none text-subtle transition hover:text-muted"
             onClick={() => setReplyExpanded((current) => !current)}
             type="button"
           >
@@ -567,8 +556,13 @@ const PostCard = ({
     postId: post.id,
     upvotes: post.upvotes_count,
   });
+  const [saveSnapshot, setSaveSnapshot] = useState<SaveSnapshot>({
+    saved: post.saved,
+    saves: post.saves_count,
+  });
   const contentRef = useRef<HTMLParagraphElement>(null);
   const voteMutation = useVotePost(post.id);
+  const saveMutation = useSavePost(post.id);
 
   useEffect(() => {
     const element = contentRef.current;
@@ -614,6 +608,28 @@ const PostCard = ({
     );
   };
 
+  const handleToggleSave = () => {
+    const previousSnapshot = saveSnapshot;
+    const nextSaved = !previousSnapshot.saved;
+    const optimisticSnapshot = {
+      saved: nextSaved,
+      saves: Math.max(0, previousSnapshot.saves + (nextSaved ? 1 : -1)),
+    };
+
+    setSaveSnapshot(optimisticSnapshot);
+    saveMutation.mutate(previousSnapshot.saved, {
+      onError: () => {
+        setSaveSnapshot(previousSnapshot);
+      },
+      onSuccess: (data) => {
+        setSaveSnapshot({
+          saved: data.saved,
+          saves: data.saves_count,
+        });
+      },
+    });
+  };
+
   return (
     <article className="overflow-hidden rounded-[22px] border border-[#E6EAF0] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:border-border dark:bg-surface">
       {showCommunityHeader ? (
@@ -626,12 +642,11 @@ const PostCard = ({
           >
             {post.community.name}
           </Link>
-          <button
-            className="ml-1 shrink-0 rounded-full border border-[#8FC7EA] px-3 py-1 text-[11px] font-black text-primary transition hover:bg-primary-soft"
-            type="button"
-          >
-            Seguir
-          </button>
+          <CommunityFollowToggle
+            className="ml-1"
+            initialFollowing={Boolean(post.community.following)}
+            slug={post.community.slug}
+          />
         </div>
       ) : null}
 
@@ -674,7 +689,7 @@ const PostCard = ({
         </p>
         {contentCanToggle ? (
           <button
-            className="w-fit text-[11px] font-semibold text-muted transition hover:text-foreground"
+            className="w-fit text-[10px] font-medium leading-none text-subtle transition hover:text-muted"
             onClick={() => setContentExpanded((current) => !current)}
             type="button"
           >
@@ -711,18 +726,32 @@ const PostCard = ({
             size="sm"
             value={-1}
           />
-          <CountAction icon={MessageCircle} label="Comentar" value={post.replies_count} />
+          <PostActionLink
+            count={post.replies_count}
+            href={communityPostDetailHref(post)}
+            icon={MessageCircle}
+            label="Comentar"
+            size="sm"
+          />
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          <CountAction icon={Bookmark} label="Salvar" value={post.saves_count} />
-          <button
-            aria-label={`Compartilhar ${post.title}`}
-            className="grid h-8 w-8 place-items-center rounded-full text-[#475569] transition hover:bg-primary-soft hover:text-primary dark:text-muted"
+          <PostActionButton
+            active={saveSnapshot.saved}
+            count={saveSnapshot.saves}
+            disabled={saveMutation.isPending}
+            icon={Bookmark}
+            iconClassName={saveSnapshot.saved ? "fill-current" : undefined}
+            label={saveSnapshot.saved ? "Remover dos salvos" : "Salvar post"}
+            onClick={handleToggleSave}
+            size="sm"
+          />
+          <PostActionButton
+            className="w-8 px-0"
+            icon={Share2}
+            label={`Compartilhar ${post.title}`}
             onClick={() => onShare(post)}
-            type="button"
-          >
-            <Share2 className="h-4 w-4" aria-hidden="true" />
-          </button>
+            size="sm"
+          />
         </div>
       </div>
     </article>
@@ -900,23 +929,13 @@ const CommunityHeader = ({
     <div className="relative px-5">
       <div className="-mt-8 flex items-start justify-between gap-4">
         <CommunityLogo community={community} />
-        <Button
-          className={cn(
-            "mt-10 h-10 rounded-full px-6 text-sm font-black shadow-none",
-            following
-              ? "border-[#8FC7EA] bg-white text-primary hover:bg-primary-soft dark:bg-surface"
-              : "bg-primary text-white hover:bg-primary/90",
-          )}
+        <CommunityFollowButton
+          className="mt-10 h-10 px-6 text-sm"
           disabled={membershipPending}
+          following={following}
           onClick={onToggleFollow}
-          type="button"
-          variant={following ? "outline" : "default"}
-        >
-          {membershipPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-          ) : null}
-          {following ? "Seguindo" : "Seguir"}
-        </Button>
+          pending={membershipPending}
+        />
       </div>
 
       <div className="mt-4 grid gap-2">
@@ -991,6 +1010,7 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<CommunityPostSort>("featured");
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
+  const [followingOverride, setFollowingOverride] = useState<boolean | null>(null);
   const detail = useCommunityDetail(slug);
   const postsQuery = useCommunityPosts(slug, { page, limit: PAGE_LIMIT }, Boolean(detail.data));
   const followMutation = useFollowCommunity();
@@ -1003,7 +1023,7 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
   const detailError = detail.isError ? resolveCommunityDetailError(detail.error) : null;
   const postsError = postsQuery.isError ? resolveFeedError(postsQuery.error) : null;
   const membershipPending = followMutation.isPending || unfollowMutation.isPending;
-  const following = Boolean(community?.following);
+  const following = followingOverride ?? Boolean(community?.following);
 
   const sharePost = async (post: CommunityPost) => {
     if (typeof window === "undefined") return;
@@ -1044,11 +1064,19 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
   const toggleFollow = () => {
     if (!community || membershipPending) return;
 
-    if (community.following) {
-      unfollowMutation.mutate(community.slug);
-    } else {
-      followMutation.mutate(community.slug);
-    }
+    const previousFollowing = following;
+    const nextFollowing = !previousFollowing;
+    setFollowingOverride(nextFollowing);
+
+    const mutation = previousFollowing ? unfollowMutation : followMutation;
+    mutation.mutate(community.slug, {
+      onError: () => {
+        setFollowingOverride(previousFollowing);
+      },
+      onSuccess: (data) => {
+        setFollowingOverride(data.following);
+      },
+    });
   };
 
   return (
