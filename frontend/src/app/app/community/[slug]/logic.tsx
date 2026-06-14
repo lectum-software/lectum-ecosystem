@@ -429,7 +429,7 @@ const ProfessionalReplyMedia = ({
 
   if (reply.media_type === "video") {
     return (
-      <div className="relative mt-3 aspect-[9/16] w-full overflow-hidden rounded-[18px] border border-border bg-black shadow-inner sm:max-w-[320px]">
+      <div className="relative mt-3 aspect-[9/16] w-full overflow-hidden rounded-[18px] border border-border bg-black shadow-inner sm:mx-auto sm:max-w-[320px]">
         <video className="h-full w-full object-cover" controls playsInline src={mediaUrl}>
           <track kind="captions" label="Português" srcLang="pt-BR" />
         </video>
@@ -534,7 +534,7 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
         {reply.author.whatsapp_url ? (
           <Button
             asChild
-            className="mt-3 h-11 w-full rounded-[14px] border-2 border-success bg-transparent text-sm font-black text-success shadow-none hover:bg-success hover:text-white"
+            className="mt-3 h-11 w-full rounded-[14px] border-2 border-success bg-transparent text-sm font-black text-success shadow-none hover:bg-success hover:text-white sm:mx-auto sm:max-w-[320px]"
             variant="outline"
           >
             <a href={reply.author.whatsapp_url} rel="noreferrer" target="_blank">
@@ -1057,7 +1057,7 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
       navigationTheme="solidWhite"
       showHeader
     >
-      <section className="mx-auto grid w-full max-w-[430px] gap-4 sm:max-w-2xl lg:max-w-3xl">
+      <section className="mx-auto grid w-full max-w-[430px] gap-4 sm:max-w-2xl lg:max-w-[760px]">
         {detail.isLoading || detail.isPending ? <CommunityDetailSkeleton /> : null}
 
         {detailError ? (
@@ -1269,7 +1269,7 @@ export const CommunityFeedLogic = () => {
       navigationTheme="solidWhite"
       showHeader
     >
-      <section className="mx-auto grid w-full max-w-[430px] gap-4 sm:max-w-2xl lg:max-w-3xl">
+      <section className="mx-auto grid w-full max-w-[430px] gap-4 sm:max-w-2xl lg:max-w-[760px]">
         <header
           className={cn(
             "sticky top-0 z-20 -mx-5 border-[#E5EAF0] border-b bg-[#F5F7FA]/95 px-5 pb-3 pt-2 backdrop-blur transition-[transform,opacity] duration-300 ease-out supports-[backdrop-filter]:bg-[#F5F7FA]/88 dark:border-border dark:bg-background/90",
@@ -1278,7 +1278,7 @@ export const CommunityFeedLogic = () => {
               : "translate-y-0 opacity-100",
           )}
         >
-          <div className="mx-auto grid max-w-[430px] gap-3 sm:max-w-2xl lg:max-w-3xl">
+          <div className="mx-auto grid max-w-[430px] gap-3 sm:max-w-2xl lg:max-w-[760px]">
             <div className="flex items-center gap-2">
               <div className="relative min-w-0 flex-1">
                 <Search
