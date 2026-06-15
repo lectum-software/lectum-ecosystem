@@ -623,25 +623,20 @@ const ProfileHero = ({
           </p>
 
           {benefitTags.length > 0 ? (
-            <div
-              className="-mx-5 mt-1 overflow-x-auto px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-              data-profile-benefit-tags="true"
-            >
-              <div className="flex min-w-max gap-2 pb-1">
-                {benefitTags.map((tag) => {
-                  const Icon = tag.icon;
+            <div className="mt-1.5 flex flex-wrap gap-2" data-profile-benefit-tags="true">
+              {benefitTags.map((tag) => {
+                const Icon = tag.icon;
 
-                  return (
-                    <span
-                      className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[#DBEAFE] bg-primary-soft px-3 text-xs font-black text-primary"
-                      key={tag.label}
-                    >
-                      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                      {tag.label}
-                    </span>
-                  );
-                })}
-              </div>
+                return (
+                  <span
+                    className="inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-full border border-[#DBEAFE] bg-primary-soft px-3 py-1 text-xs font-black leading-none text-primary"
+                    key={tag.label}
+                  >
+                    <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    <span className="whitespace-nowrap">{tag.label}</span>
+                  </span>
+                );
+              })}
             </div>
           ) : null}
         </div>
@@ -687,10 +682,10 @@ const ProfileTabs = ({
   return (
     <div
       className={cn(
-        "sticky z-20 px-3 py-2.5 transition-[background-color,border-color,box-shadow] duration-300 sm:px-4",
+        "sticky z-20 border-[#E2E8F0] border-b transition-[background-color,border-color,box-shadow] duration-300 dark:border-border",
         isStuck
-          ? "border-b border-transparent bg-transparent"
-          : "border-b border-transparent bg-white shadow-none dark:bg-background",
+          ? "bg-white/88 shadow-[0_10px_26px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:bg-background/85"
+          : "bg-[#F5F7FA] shadow-none dark:bg-background",
       )}
       data-profile-sticky-navigation="true"
       ref={stickyContainerRef}
@@ -698,20 +693,19 @@ const ProfileTabs = ({
     >
       <div
         className={cn(
-          "mx-auto grid w-full max-w-[430px] transition-all duration-300 lg:max-w-[760px]",
-          isStuck &&
-            "relative gap-2 overflow-hidden rounded-[28px] border border-white/65 bg-white/70 px-3 py-2 shadow-[0_14px_42px_rgba(15,23,42,0.12),inset_0_1px_0_rgba(255,255,255,0.85)] backdrop-blur-2xl ring-1 ring-[#2F8DEB]/[0.04] lg:rounded-none lg:border-0 lg:bg-transparent lg:px-0 lg:py-0 lg:shadow-none lg:backdrop-blur-none lg:ring-0",
+          "mx-auto grid w-full max-w-[430px] px-3 transition-all duration-300 sm:px-4 lg:max-w-[760px]",
+          isStuck && "relative pt-2",
         )}
       >
         {isStuck ? (
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-white/95 to-transparent lg:hidden"
+            className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent lg:hidden"
           />
         ) : null}
         {isStuck ? (
-          <div className="flex min-w-0 items-center gap-1.5" data-profile-sticky-name="true">
-            <span className="min-w-0 truncate text-[13px] font-extrabold leading-[1.25] tracking-[-0.01em] text-[#0F172A]">
+          <div className="flex min-w-0 items-center gap-1.5 pb-1" data-profile-sticky-name="true">
+            <span className="min-w-0 truncate text-[13px] font-extrabold leading-[1.25] tracking-[-0.01em] text-[#1F2937] dark:text-foreground">
               {stickyName}
             </span>
             {profile.verified ? (
@@ -725,31 +719,38 @@ const ProfileTabs = ({
 
         <nav
           aria-label="Seções do perfil profissional"
-          className="-mx-3 overflow-x-auto px-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:-mx-4 sm:px-4"
+          className="grid grid-cols-3"
           data-profile-segmented-navigation="true"
         >
-          <div className="flex min-w-max gap-2 pb-1">
-            {tabs.map((tab) => {
-              const active = tab.value === activeTab;
+          {tabs.map((tab) => {
+            const active = tab.value === activeTab;
 
-              return (
-                <button
-                  aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "inline-flex min-h-9 items-center justify-center rounded-full border px-3.5 text-[13px] font-bold shadow-none transition",
-                    active
-                      ? "border-[#BFDBFE] bg-[#EFF6FF] text-[#1D4ED8]"
-                      : "border-[#E5EAF0] bg-white/80 text-[#64748B] hover:border-[#BFDBFE] hover:bg-[#F8FBFF] hover:text-[#1D4ED8] dark:border-border dark:bg-surface dark:text-muted",
-                  )}
-                  key={tab.value}
-                  onClick={() => onTabChange(tab.value)}
-                  type="button"
-                >
+            return (
+              <button
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "group relative inline-flex h-12 items-center justify-center px-1 text-[13px] font-semibold tracking-[-0.01em] transition-colors duration-200",
+                  active
+                    ? "text-[#1F2937] dark:text-foreground"
+                    : "text-[#64748B] hover:text-[#334155] dark:text-muted dark:hover:text-foreground",
+                )}
+                key={tab.value}
+                onClick={() => onTabChange(tab.value)}
+                type="button"
+              >
+                <span className="relative inline-flex h-full items-center">
                   {tab.label}
-                </button>
-              );
-            })}
-          </div>
+                  <span
+                    className={cn(
+                      "absolute right-0 -bottom-px left-0 h-0.5 rounded-full bg-[#1F2937] transition-all duration-300 dark:bg-foreground",
+                      active ? "scale-x-100 opacity-100" : "scale-x-0 opacity-0",
+                    )}
+                    aria-hidden="true"
+                  />
+                </span>
+              </button>
+            );
+          })}
         </nav>
       </div>
     </div>
@@ -1256,7 +1257,7 @@ const AboutTab = ({
   const modalityText = formatList([formatAttendanceLabel(profile)], "Modalidade não informada.");
 
   return (
-    <div className="grid gap-4 bg-white px-3 pt-3 pb-1 sm:px-4 sm:pt-4">
+    <div className="grid gap-4 bg-[#F5F7FA] px-3 pt-3 pb-1 dark:bg-background sm:px-4 sm:pt-4">
       <ProfileSectionCard title="Sobre">
         <ExpandableAboutText text={bioText} />
         <PresentationVideo profile={profile} />
@@ -1383,7 +1384,7 @@ const PostsTab = ({
   total: number;
 }) => {
   return (
-    <div className="grid gap-4 bg-white px-3 pb-1 pt-3 sm:px-4 sm:pt-4">
+    <div className="grid gap-4 bg-[#F5F7FA] px-3 pb-1 pt-3 dark:bg-background sm:px-4 sm:pt-4">
       <div className={cn(PROFILE_CARD_SURFACE, "p-4")}>
         <p className="text-[14px] font-semibold tracking-[-0.01em] text-[#0F172A]">
           Publicações &gt;
@@ -1555,7 +1556,7 @@ const ReviewsTab = ({
   summary: DirectoryReviewSummary;
 }) => {
   return (
-    <div className="grid gap-4 bg-white px-3 pb-1 pt-3 sm:px-4 sm:pt-4">
+    <div className="grid gap-4 bg-[#F5F7FA] px-3 pb-1 pt-3 dark:bg-background sm:px-4 sm:pt-4">
       <h2 className="text-[14px] font-semibold tracking-[-0.01em] text-[#0F172A]">
         Avaliações &gt;
       </h2>
@@ -1789,13 +1790,13 @@ export const PsychologistProfileLogic = () => {
   return (
     <PrivateTemplate
       allowAnonymous
-      contentClassName="!pt-0 bg-white dark:bg-background sm:!pt-0"
+      contentClassName="!pt-0 bg-[#F5F7FA] dark:bg-background sm:!pt-0"
       desktopSidebarDefaultCollapsed
       showMobileNavigation={false}
       showNavigation
     >
-      <div className="-mx-5 overflow-x-hidden bg-white dark:bg-background">
-        <section className="mx-auto grid w-screen max-w-[430px] bg-white sm:max-w-[430px] lg:max-w-[760px]">
+      <div className="-mx-5 overflow-x-hidden bg-[#F5F7FA] dark:bg-background">
+        <section className="mx-auto grid w-screen max-w-[430px] bg-[#F5F7FA] dark:bg-background sm:max-w-[430px] lg:max-w-[760px]">
           <div className="grid gap-0 pb-28 lg:pb-10">
             {shareFeedback ? (
               <div className="mx-3 pt-3">
