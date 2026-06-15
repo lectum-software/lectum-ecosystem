@@ -292,45 +292,53 @@ export function SelectController<FormType extends FieldValues>({
                 ) : null}
               </div>
             ) : (
-              <select
-                aria-describedby={describedBy({ id: inputId, description, error })}
-                aria-invalid={Boolean(error)}
-                className={cn(
-                  "h-12 w-full rounded-[var(--lectum-control-radius)] border border-border bg-surface px-4 text-sm text-foreground shadow-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted",
-                  error && "border-danger focus:border-danger focus:ring-danger/10",
-                  inputClassName,
-                )}
-                disabled={resolvedDisabled || readOnly || loading}
-                id={inputId}
-                name={field.name}
-                onBlur={field.onBlur}
-                onChange={(event) => {
-                  const option = resolvedOptions.find(
-                    (item) => String(item.value) === event.target.value,
-                  );
-                  const nextValue =
-                    event.target.value === "" ? null : (option?.value ?? event.target.value);
-                  field.onChange(nextValue);
-                  onChangeCallback?.(nextValue);
-                }}
-                ref={field.ref}
-                required={false}
-                tabIndex={tabIndex}
-                value={field.value === null || field.value === undefined ? "" : String(field.value)}
-              >
-                <option value="">
-                  {loading ? "Carregando..." : placeholder || resolvedEmptyLabel}
-                </option>
-                {resolvedOptions.map((option) => (
-                  <option
-                    disabled={option.disabled}
-                    key={`${option.label}-${String(option.value)}`}
-                    value={String(option.value)}
-                  >
-                    {option.label}
+              <div className="relative">
+                <select
+                  aria-describedby={describedBy({ id: inputId, description, error })}
+                  aria-invalid={Boolean(error)}
+                  className={cn(
+                    "h-12 w-full appearance-none rounded-[var(--lectum-control-radius)] border border-border bg-surface px-4 pr-11 text-sm text-foreground shadow-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted",
+                    error && "border-danger focus:border-danger focus:ring-danger/10",
+                    inputClassName,
+                  )}
+                  disabled={resolvedDisabled || readOnly || loading}
+                  id={inputId}
+                  name={field.name}
+                  onBlur={field.onBlur}
+                  onChange={(event) => {
+                    const option = resolvedOptions.find(
+                      (item) => String(item.value) === event.target.value,
+                    );
+                    const nextValue =
+                      event.target.value === "" ? null : (option?.value ?? event.target.value);
+                    field.onChange(nextValue);
+                    onChangeCallback?.(nextValue);
+                  }}
+                  ref={field.ref}
+                  required={false}
+                  tabIndex={tabIndex}
+                  value={
+                    field.value === null || field.value === undefined ? "" : String(field.value)
+                  }
+                >
+                  <option value="">
+                    {loading ? "Carregando..." : placeholder || resolvedEmptyLabel}
                   </option>
-                ))}
-              </select>
+                  {resolvedOptions.map((option) => (
+                    <option
+                      disabled={option.disabled}
+                      key={`${option.label}-${String(option.value)}`}
+                      value={String(option.value)}
+                    >
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  aria-hidden="true"
+                  className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
+                />
+              </div>
             )}
           </Container>
         );

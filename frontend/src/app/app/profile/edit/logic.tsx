@@ -1,10 +1,10 @@
 "use client";
 
-import { ArrowLeft, Camera, Loader2, Save, Trash2, UserRound } from "lucide-react";
+import { ArrowLeft, ImagePlus, Loader2, Pencil, Save, Trash2, UserRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type ChangeEvent, useMemo, useRef, useState } from "react";
+import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { usePatient } from "@/api/callers/patient";
 import type {
@@ -69,6 +69,7 @@ export const ProfileEditLogic = () => {
   const storedUser = useAppSelector((state) => state.user);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [isAvatarMenuOpen, setIsAvatarMenuOpen] = useState(false);
 
   const handleProfileUpdated = (data: PatientPrivateProfile) => {
     setApiError(null);
@@ -132,6 +133,11 @@ export const ProfileEditLogic = () => {
     avatarInputRef.current?.click();
   };
 
+  const handleAvatarFilePickerOption = () => {
+    setIsAvatarMenuOpen(false);
+    openAvatarFilePicker();
+  };
+
   const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -155,8 +161,23 @@ export const ProfileEditLogic = () => {
   const handleAvatarRemoval = () => {
     if (isSavingAvatar || !storedUser?.avatar || !isPatient) return;
     setApiError(null);
+    setIsAvatarMenuOpen(false);
     deleteAvatar.mutate();
   };
+
+  useEffect(() => {
+    if (!isAvatarMenuOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsAvatarMenuOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isAvatarMenuOpen]);
 
   return (
     <PrivateTemplate>
@@ -210,18 +231,60 @@ export const ProfileEditLogic = () => {
                   )}
                 </div>
                 <button
-                  aria-label="Alterar foto de perfil"
+                  aria-expanded={isAvatarMenuOpen}
+                  aria-haspopup="menu"
+                  aria-label="Abrir opções da foto de perfil"
                   className="absolute right-1 bottom-1 z-10 grid h-9 w-9 place-items-center rounded-full bg-primary text-white ring-4 ring-surface shadow-[var(--lectum-shadow-soft)] transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={isSavingAvatar || !isPatient}
-                  onClick={openAvatarFilePicker}
+                  onClick={() => setIsAvatarMenuOpen((current) => !current)}
                   type="button"
                 >
                   {isSavingAvatar ? (
                     <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                   ) : (
-                    <Camera className="h-4 w-4" aria-hidden="true" />
+                    <Pencil className="h-4 w-4" aria-hidden="true" />
                   )}
                 </button>
+                {isAvatarMenuOpen ? (
+                  <>
+                    <button
+                      aria-label="Fechar opções da foto"
+                      className="fixed inset-0 z-20 cursor-default bg-transparent"
+                      onClick={() => setIsAvatarMenuOpen(false)}
+                      tabIndex={-1}
+                      type="button"
+                    />
+                    <div
+                      className="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+1rem)] z-30 overflow-hidden rounded-[28px] border border-border bg-white p-2 text-left shadow-[0_24px_70px_rgba(15,23,42,0.22)] ring-1 ring-[#D9E8F8]/70 sm:absolute sm:top-[calc(100%+0.75rem)] sm:right-auto sm:bottom-auto sm:left-1/2 sm:w-56 sm:-translate-x-1/2 sm:rounded-2xl"
+                      role="menu"
+                    >
+                      <button
+                        className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-foreground transition hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
+                        disabled={isSavingAvatar || !isPatient}
+                        onClick={handleAvatarFilePickerOption}
+                        role="menuitem"
+                        type="button"
+                      >
+                        <span className="grid h-9 w-9 place-items-center rounded-full bg-primary-soft text-primary">
+                          <ImagePlus className="h-4 w-4" aria-hidden="true" />
+                        </span>
+                        Alterar foto
+                      </button>
+                      <button
+                        className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-danger transition hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-50"
+                        disabled={isSavingAvatar || !storedUser?.avatar || !isPatient}
+                        onClick={handleAvatarRemoval}
+                        role="menuitem"
+                        type="button"
+                      >
+                        <span className="grid h-9 w-9 place-items-center rounded-full bg-danger/10 text-danger">
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
+                        </span>
+                        Remover foto
+                      </button>
+                    </div>
+                  </>
+                ) : null}
               </div>
               <p className="max-w-full whitespace-nowrap text-[11px] leading-5 tracking-[-0.02em] text-muted sm:text-sm sm:tracking-normal">
                 Envie uma foto de perfil PNG, JPG ou WebP de até 5MB
@@ -233,16 +296,6 @@ export const ProfileEditLogic = () => {
                 ref={avatarInputRef}
                 type="file"
               />
-              {storedUser?.avatar ? (
-                <button
-                  className="text-xs font-semibold text-danger transition hover:text-danger/80 disabled:cursor-not-allowed disabled:opacity-60"
-                  disabled={isSavingAvatar || !isPatient}
-                  onClick={handleAvatarRemoval}
-                  type="button"
-                >
-                  Remover foto
-                </button>
-              ) : null}
             </section>
             <section className="grid gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
               <div className="flex items-center gap-2">
