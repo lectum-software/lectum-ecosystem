@@ -1,5 +1,6 @@
 ﻿import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
+import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   IPostCreateReplyDTO,
@@ -105,7 +106,6 @@ const listPostSelect = {
       },
     },
     orderBy: [{ upvotes_count: "desc" }, { createdAt: "desc" }, { id: "desc" }],
-    take: 1,
     select: {
       id: true,
       title: true,
@@ -132,6 +132,11 @@ const replyBaseSelect = {
   parent_reply_id: true,
   author: {
     select: authorSelect,
+  },
+  _count: {
+    select: {
+      replies: true,
+    },
   },
 } satisfies Prisma.post_replySelect;
 
@@ -408,6 +413,93 @@ const collectReplyIds = (items: ReplyResult[]) => {
   return [...ids];
 };
 
+const replyDirectRepliesCount = (item: ReplyResult | ReplyBaseResult) => {
+  return item._count?.replies ?? ("replies" in item ? item.replies.length : 0);
+};
+
+const isVerifiedProfessionalReply = (item: ReplyResult | ReplyBaseResult) => {
+  const profile = item.author.psychologist_profile;
+
+  return item.author.role === "psicologo" && isProfessionalVerified(profile);
+};
+
+const rankingPositionForReply = (
+  item: ReplyResult | ReplyBaseResult,
+  rankingSignals: Awaited<ReturnType<typeof getCommunityMentorRankingSignals>>,
+) => rankingSignals.get(item.author.id)?.position ?? Number.POSITIVE_INFINITY;
+
+const replyGeneralRelevanceScore = (
+  item: ReplyResult | ReplyBaseResult,
+  rankingSignals: Awaited<ReturnType<typeof getCommunityMentorRankingSignals>>,
+) => {
+  const verifiedProfessionalBonus = isVerifiedProfessionalReply(item) ? 6 : 0;
+  const rankingPosition = rankingPositionForReply(item, rankingSignals);
+  const rankingBonus = Number.isFinite(rankingPosition) ? Math.max(0, 6 - rankingPosition) : 0;
+
+  return (
+    item.upvotes_count * 3 +
+    replyDirectRepliesCount(item) * 2 +
+    verifiedProfessionalBonus +
+    rankingBonus
+  );
+};
+
+const newestFirst = (a: Date, b: Date) => b.getTime() - a.getTime();
+
+const compareRepliesBySecondaryRelevance = (
+  a: ReplyResult | ReplyBaseResult,
+  b: ReplyResult | ReplyBaseResult,
+  rankingSignals: Awaited<ReturnType<typeof getCommunityMentorRankingSignals>>,
+) => {
+  const scoreDiff =
+    replyGeneralRelevanceScore(b, rankingSignals) - replyGeneralRelevanceScore(a, rankingSignals);
+  if (scoreDiff !== 0) return scoreDiff;
+
+  const repliesDiff = replyDirectRepliesCount(b) - replyDirectRepliesCount(a);
+  if (repliesDiff !== 0) return repliesDiff;
+
+  const upvoteDiff = b.upvotes_count - a.upvotes_count;
+  if (upvoteDiff !== 0) return upvoteDiff;
+
+  const recencyDiff = newestFirst(a.createdAt, b.createdAt);
+  if (recencyDiff !== 0) return recencyDiff;
+
+  return b.id.localeCompare(a.id);
+};
+
+const compareProfessionalReplies = (
+  a: ReplyResult | ReplyBaseResult,
+  b: ReplyResult | ReplyBaseResult,
+  rankingSignals: Awaited<ReturnType<typeof getCommunityMentorRankingSignals>>,
+) => {
+  const upvoteDiff = b.upvotes_count - a.upvotes_count;
+  if (upvoteDiff !== 0) return upvoteDiff;
+
+  const rankingDiff =
+    rankingPositionForReply(a, rankingSignals) - rankingPositionForReply(b, rankingSignals);
+  if (rankingDiff !== 0) return rankingDiff;
+
+  return compareRepliesBySecondaryRelevance(a, b, rankingSignals);
+};
+
+const sortRepliesForDisplay = async (communityId: string, items: ReplyResult[]) => {
+  const verifiedProfessionalIds = items
+    .filter(isVerifiedProfessionalReply)
+    .map((item) => item.author.id);
+  const rankingSignals = await getCommunityMentorRankingSignals(
+    communityId,
+    verifiedProfessionalIds,
+  );
+  const professionalReply = [...items]
+    .filter(isVerifiedProfessionalReply)
+    .sort((a, b) => compareProfessionalReplies(a, b, rankingSignals))[0];
+  const remainingReplies = items
+    .filter((item) => item.id !== professionalReply?.id)
+    .sort((a, b) => compareRepliesBySecondaryRelevance(a, b, rankingSignals));
+
+  return professionalReply ? [professionalReply, ...remainingReplies] : remainingReplies;
+};
+
 const findPublishedPost = (id: string) => {
   return prisma.community_post.findFirst({
     where: {
@@ -420,6 +512,7 @@ const findPublishedPost = (id: string) => {
     },
     select: {
       id: true,
+      community_id: true,
       upvotes_count: true,
       downvotes_count: true,
       saves_count: true,
@@ -828,16 +921,16 @@ export class PostRepository implements IPostRepository {
       deleted: false,
     };
 
-    const [items, count] = await Promise.all([
+    const [allItems, count] = await Promise.all([
       prisma.post_reply.findMany({
         where,
-        take: pagination.limit,
-        skip: pagination.skip,
-        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+        orderBy: [{ upvotes_count: "desc" }, { createdAt: "desc" }, { id: "desc" }],
         select: replySelect,
       }),
       prisma.post_reply.count({ where }),
     ]);
+    const sortedItems = await sortRepliesForDisplay(post.community_id, allItems);
+    const items = sortedItems.slice(pagination.skip, pagination.skip + pagination.limit);
 
     const replyIds = collectReplyIds(items);
     const [votes, saves] =

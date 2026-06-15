@@ -192,6 +192,69 @@ const getInitials = (name: string) => {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
 
+const isVerifiedProfessionalReply = (reply: PostReply) =>
+  reply.author.role === "psicologo" && reply.author.verified;
+
+const mentorBadgePosition = (badge?: string | null) => {
+  const match = badge?.match(/#(\d+)/);
+  if (!match?.[1]) return Number.POSITIVE_INFINITY;
+
+  return Number(match[1]);
+};
+
+const replyGeneralRelevanceScore = (reply: PostReply) => {
+  const professionalBonus = isVerifiedProfessionalReply(reply) ? 6 : 0;
+  const badgePosition = mentorBadgePosition(reply.author.featured_badge);
+  const badgeBonus = Number.isFinite(badgePosition) ? Math.max(0, 6 - badgePosition) : 0;
+
+  return reply.upvotes_count * 3 + reply.replies.length * 2 + professionalBonus + badgeBonus;
+};
+
+const newestReplyFirst = (a: PostReply, b: PostReply) =>
+  new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+
+const compareRepliesByRelevance = (a: PostReply, b: PostReply) => {
+  const scoreDiff = replyGeneralRelevanceScore(b) - replyGeneralRelevanceScore(a);
+  if (scoreDiff !== 0) return scoreDiff;
+
+  const repliesDiff = b.replies.length - a.replies.length;
+  if (repliesDiff !== 0) return repliesDiff;
+
+  const upvoteDiff = b.upvotes_count - a.upvotes_count;
+  if (upvoteDiff !== 0) return upvoteDiff;
+
+  const recencyDiff = newestReplyFirst(a, b);
+  if (recencyDiff !== 0) return recencyDiff;
+
+  return b.id.localeCompare(a.id);
+};
+
+const compareProfessionalReplies = (a: PostReply, b: PostReply) => {
+  const upvoteDiff = b.upvotes_count - a.upvotes_count;
+  if (upvoteDiff !== 0) return upvoteDiff;
+
+  const badgeDiff =
+    mentorBadgePosition(a.author.featured_badge) - mentorBadgePosition(b.author.featured_badge);
+  if (badgeDiff !== 0) return badgeDiff;
+
+  return compareRepliesByRelevance(a, b);
+};
+
+const orderRepliesForProfessionalPriority = (replies: PostReply[]): PostReply[] => {
+  const withOrderedChildren = replies.map((reply) => ({
+    ...reply,
+    replies: orderRepliesForProfessionalPriority(reply.replies),
+  }));
+  const pinnedProfessional = [...withOrderedChildren]
+    .filter(isVerifiedProfessionalReply)
+    .sort(compareProfessionalReplies)[0];
+  const remainingReplies = withOrderedChildren
+    .filter((reply) => reply.id !== pinnedProfessional?.id)
+    .sort(compareRepliesByRelevance);
+
+  return pinnedProfessional ? [pinnedProfessional, ...remainingReplies] : remainingReplies;
+};
+
 const AuthorAvatar = ({
   anonymous,
   author,
@@ -596,6 +659,7 @@ const ReplyCard = ({
   onSubmitReply,
   onVote,
   postId,
+  professionalThread,
   reply,
   replyApiError,
   replyDisabled,
@@ -614,12 +678,15 @@ const ReplyCard = ({
   ) => Promise<void> | void;
   onVote: (replyId: string, value: 1 | -1) => void;
   postId: string;
+  professionalThread?: boolean;
   reply: PostReply;
   replyApiError?: string | null;
   replyDisabled?: boolean;
   votePending?: boolean;
 }) => {
   const isProfessional = reply.author.role === "psicologo";
+  const isVerifiedProfessional = isProfessional && reply.author.verified;
+  const highlightedProfessionalThread = professionalThread || isVerifiedProfessional;
   const saveReplyMutation = useSaveReply(postId, reply.id);
   const psychologistProfileHref = isProfessional ? `/app/psychologist/${reply.author.id}` : null;
   const isReplyComposerOpen = activeReplyTarget?.id === reply.id;
@@ -631,6 +698,8 @@ const ReplyCard = ({
         depth === 0
           ? "border border-[#E5EAF0] shadow-[0_10px_24px_rgba(15,23,42,0.05)]"
           : "border border-[#EDF1F5] shadow-none",
+        highlightedProfessionalThread &&
+          "border-[#D8ECFF] bg-[#F4FAFF] shadow-none dark:border-primary/20 dark:bg-primary/5",
       )}
       id={`reply-${reply.id}`}
     >
@@ -737,7 +806,13 @@ const ReplyCard = ({
       ) : null}
 
       {reply.replies.length > 0 ? (
-        <div className="ml-4 grid gap-3 border-[#DCEBFF] border-l-2 pl-4">
+        <div
+          className={cn(
+            "ml-4 grid gap-3 border-[#DCEBFF] border-l-2 pl-4",
+            highlightedProfessionalThread &&
+              "-mr-1 rounded-2xl border-[#BBDFFF] bg-[#F4FAFF]/70 p-3 pl-4 dark:border-primary/25 dark:bg-primary/5",
+          )}
+        >
           {reply.replies.map((child) => (
             <ReplyCard
               activeReplyTarget={activeReplyTarget}
@@ -750,6 +825,7 @@ const ReplyCard = ({
               onSubmitReply={onSubmitReply}
               onVote={onVote}
               postId={postId}
+              professionalThread={highlightedProfessionalThread}
               reply={child}
               replyApiError={replyApiError}
               replyDisabled={replyDisabled}
@@ -1120,56 +1196,60 @@ const RepliesList = ({
   replyApiError?: string | null;
   replyDisabled?: boolean;
   votePending?: boolean;
-}) => (
-  <section className="grid gap-3" id="discussao">
-    <div className="flex items-center gap-2 px-1">
-      <span className="h-6 w-1 rounded-full bg-[#308CE8]" />
-      <h2 className="text-sm font-black tracking-[0.08em] text-[#64748B] uppercase">Discussão</h2>
-    </div>
+}) => {
+  const orderedReplies = useMemo(() => orderRepliesForProfessionalPriority(replies), [replies]);
 
-    {loading ? (
-      <div className="grid min-h-[220px] place-items-center rounded-[22px] border border-border bg-white shadow-[var(--lectum-shadow-soft)] dark:bg-surface">
-        <LoadingState label="Carregando respostas" />
+  return (
+    <section className="grid gap-3" id="discussao">
+      <div className="flex items-center gap-2 px-1">
+        <span className="h-6 w-1 rounded-full bg-[#308CE8]" />
+        <h2 className="text-sm font-black tracking-[0.08em] text-[#64748B] uppercase">Discussão</h2>
       </div>
-    ) : null}
 
-    {errorMessage ? (
-      <InlineAlert title="Respostas indisponíveis" variant="error">
-        {errorMessage}
-      </InlineAlert>
-    ) : null}
+      {loading ? (
+        <div className="grid min-h-[220px] place-items-center rounded-[22px] border border-border bg-white shadow-[var(--lectum-shadow-soft)] dark:bg-surface">
+          <LoadingState label="Carregando respostas" />
+        </div>
+      ) : null}
 
-    {!loading && !errorMessage && replies.length === 0 ? (
-      <EmptyState
-        description="Ainda não há respostas neste post. Seja a primeira pessoa a participar da conversa."
-        icon={MessageCircle}
-        title="Sem respostas por enquanto"
-      />
-    ) : null}
+      {errorMessage ? (
+        <InlineAlert title="Respostas indisponíveis" variant="error">
+          {errorMessage}
+        </InlineAlert>
+      ) : null}
 
-    {replies.length > 0 ? (
-      <div className="grid gap-4 border-[#DCEBFF] border-l-2 pl-3">
-        {replies.map((reply) => (
-          <ReplyCard
-            activeReplyTarget={activeReplyTarget}
-            key={reply.id}
-            mediaPermission={mediaPermission}
-            onCancelReplyTarget={onCancelReplyTarget}
-            onReply={onReply}
-            onShare={onShare}
-            onSubmitReply={onSubmitReply}
-            onVote={onVote}
-            postId={postId}
-            reply={reply}
-            replyApiError={replyApiError}
-            replyDisabled={replyDisabled}
-            votePending={votePending}
-          />
-        ))}
-      </div>
-    ) : null}
-  </section>
-);
+      {!loading && !errorMessage && replies.length === 0 ? (
+        <EmptyState
+          description="Ainda não há respostas neste post. Seja a primeira pessoa a participar da conversa."
+          icon={MessageCircle}
+          title="Sem respostas por enquanto"
+        />
+      ) : null}
+
+      {orderedReplies.length > 0 ? (
+        <div className="grid gap-4 border-[#DCEBFF] border-l-2 pl-3">
+          {orderedReplies.map((reply) => (
+            <ReplyCard
+              activeReplyTarget={activeReplyTarget}
+              key={reply.id}
+              mediaPermission={mediaPermission}
+              onCancelReplyTarget={onCancelReplyTarget}
+              onReply={onReply}
+              onShare={onShare}
+              onSubmitReply={onSubmitReply}
+              onVote={onVote}
+              postId={postId}
+              reply={reply}
+              replyApiError={replyApiError}
+              replyDisabled={replyDisabled}
+              votePending={votePending}
+            />
+          ))}
+        </div>
+      ) : null}
+    </section>
+  );
+};
 
 export const PostDetailLogic = () => {
   const params = useParams<{ slug: string; id: string }>();

@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
+import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   CommunityAuthorDTO,
@@ -125,7 +126,6 @@ const postSelect = {
       },
     },
     orderBy: [{ upvotes_count: "desc" }, { createdAt: "desc" }, { id: "desc" }],
-    take: 1,
     select: {
       id: true,
       title: true,
@@ -700,8 +700,59 @@ const getSavedReplyIds = async (userId: string | undefined, replyIds: string[]) 
   return new Set(saves.map((save) => save.reply_id));
 };
 
-const highlightedReplyIds = (items: PostResult[]) =>
-  items.flatMap((item) => (item.replies[0] ? [item.replies[0].id] : []));
+const professionalReplyRankingPosition = (
+  reply: ProfessionalReplyResult,
+  rankingSignals: Awaited<ReturnType<typeof getCommunityMentorRankingSignals>>,
+) => rankingSignals.get(reply.author.id)?.position ?? Number.POSITIVE_INFINITY;
+
+const compareProfessionalRepliesForHighlight = (
+  a: ProfessionalReplyResult,
+  b: ProfessionalReplyResult,
+  rankingSignals: Awaited<ReturnType<typeof getCommunityMentorRankingSignals>>,
+) => {
+  const upvoteDiff = b.upvotes_count - a.upvotes_count;
+  if (upvoteDiff !== 0) return upvoteDiff;
+
+  const rankingDiff =
+    professionalReplyRankingPosition(a, rankingSignals) -
+    professionalReplyRankingPosition(b, rankingSignals);
+  if (rankingDiff !== 0) return rankingDiff;
+
+  const recencyDiff = b.createdAt.getTime() - a.createdAt.getTime();
+  if (recencyDiff !== 0) return recencyDiff;
+
+  return b.id.localeCompare(a.id);
+};
+
+const selectHighlightedProfessionalReplies = async (items: PostResult[]) => {
+  const repliesByPostId = new Map<string, ProfessionalReplyResult>();
+  const itemsByCommunityId = new Map<string, PostResult[]>();
+
+  for (const item of items) {
+    if (item.replies.length === 0) continue;
+
+    const communityItems = itemsByCommunityId.get(item.community.id) ?? [];
+    communityItems.push(item);
+    itemsByCommunityId.set(item.community.id, communityItems);
+  }
+
+  for (const [communityId, communityItems] of itemsByCommunityId.entries()) {
+    const professionalIds = communityItems.flatMap((item) =>
+      item.replies.map((reply) => reply.author.id),
+    );
+    const rankingSignals = await getCommunityMentorRankingSignals(communityId, professionalIds);
+
+    for (const item of communityItems) {
+      const highlightedReply = [...item.replies].sort((a, b) =>
+        compareProfessionalRepliesForHighlight(a, b, rankingSignals),
+      )[0];
+
+      if (highlightedReply) repliesByPostId.set(item.id, highlightedReply);
+    }
+  }
+
+  return repliesByPostId;
+};
 
 const getFollowedCommunityIds = async (userId: string | undefined, communityIds: string[]) => {
   if (!userId || communityIds.length === 0) return new Set<string>();
@@ -1036,6 +1087,7 @@ const toPostResponse = (
   followedCommunityIds?: Set<string>,
   savedReplyIds?: Set<string>,
   sortMetrics?: CommunityPostSortMetricsDTO,
+  highlightedProfessionalReply?: ProfessionalReplyResult | null,
 ): CommunityPostDTO => {
   const responseCommunity = {
     ...toCommunityResponse(item.community),
@@ -1048,7 +1100,10 @@ const toPostResponse = (
     anonymous,
     anonymous ? anonymousDisplayNameForPost(item.id) : undefined,
   );
-  const highlightedReply = toHighlightedProfessionalReply(item.replies[0], savedReplyIds);
+  const highlightedReply = toHighlightedProfessionalReply(
+    highlightedProfessionalReply ?? item.replies[0],
+    savedReplyIds,
+  );
 
   return {
     id: item.id,
@@ -1376,9 +1431,10 @@ export class CommunityRepository implements ICommunityRepository {
       pagination.skip,
       pagination.skip + pagination.limit,
     );
+    const highlightedRepliesByPostId = await selectHighlightedProfessionalReplies(items);
     const postIds = items.map((item) => item.id);
     const communityIds = [...new Set(items.map((item) => item.community.id))];
-    const replyIds = highlightedReplyIds(items);
+    const replyIds = [...highlightedRepliesByPostId.values()].map((reply) => reply.id);
     const [currentVotes, savedPostIds, savedReplyIds, followedCommunityIds] = await Promise.all([
       getPostCurrentVotes(data.auth?.id ?? undefined, postIds),
       getSavedPostIds(data.auth?.id ?? undefined, postIds),
@@ -1394,6 +1450,8 @@ export class CommunityRepository implements ICommunityRepository {
           savedPostIds.has(item.id),
           followedCommunityIds,
           savedReplyIds,
+          undefined,
+          highlightedRepliesByPostId.get(item.id) ?? null,
         ),
       ),
       page: pagination.page,
@@ -1896,8 +1954,9 @@ export class CommunityRepository implements ICommunityRepository {
       pagination.skip,
       pagination.skip + pagination.limit,
     );
+    const highlightedRepliesByPostId = await selectHighlightedProfessionalReplies(items);
     const postIds = items.map((item) => item.id);
-    const replyIds = highlightedReplyIds(items);
+    const replyIds = [...highlightedRepliesByPostId.values()].map((reply) => reply.id);
     const [currentVotes, savedPostIds, savedReplyIds, followedCommunityIds] = await Promise.all([
       getPostCurrentVotes(data.auth?.id ?? undefined, postIds),
       getSavedPostIds(data.auth?.id ?? undefined, postIds),
@@ -1918,6 +1977,7 @@ export class CommunityRepository implements ICommunityRepository {
           followedCommunityIds,
           savedReplyIds,
           sortMetricsByPostId.get(item.id),
+          highlightedRepliesByPostId.get(item.id) ?? null,
         ),
       ),
       page: pagination.page,
