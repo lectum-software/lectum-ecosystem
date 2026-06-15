@@ -362,6 +362,18 @@ export const PrivateTemplate = ({
       : undefined,
     contentClassName,
   );
+  const mobileNavigationAwareFabBottom =
+    shouldRenderMobileNavigation && isMobileNavigationRenderedVisible
+      ? "calc(4rem + env(safe-area-inset-bottom) + 0.625rem)"
+      : "calc(env(safe-area-inset-bottom) + 1rem)";
+  const mobileNavigationAwareFabBottomSm =
+    shouldRenderMobileNavigation && isMobileNavigationRenderedVisible
+      ? "calc(5rem + env(safe-area-inset-bottom) + 0.625rem)"
+      : "calc(env(safe-area-inset-bottom) + 1rem)";
+  const pageShellStyle = {
+    "--lectum-mobile-nav-aware-fab-bottom": mobileNavigationAwareFabBottom,
+    "--lectum-mobile-nav-aware-fab-bottom-sm": mobileNavigationAwareFabBottomSm,
+  } as CSSProperties;
   const isSessionLoading = hasToken && !sessionUser && (hidrate.isLoading || hidrate.isPending);
   const shouldShowSessionError = Boolean(hasToken && hidrate.isError && !sessionUser);
 
@@ -575,6 +587,7 @@ export const PrivateTemplate = ({
         <NotificationManager />
         <PageShell
           contentClassName={cn("grid min-h-[55vh] place-items-center", pageShellClassName)}
+          style={pageShellStyle}
         >
           <LoadingState label="Carregando sua sessão" />
         </PageShell>
@@ -587,7 +600,9 @@ export const PrivateTemplate = ({
     return (
       <>
         <NotificationManager />
-        <PageShell contentClassName={pageShellClassName}>{children}</PageShell>
+        <PageShell contentClassName={pageShellClassName} style={pageShellStyle}>
+          {children}
+        </PageShell>
         {navigationMarkup}
       </>
     );
@@ -599,6 +614,7 @@ export const PrivateTemplate = ({
         <NotificationManager />
         <PageShell
           contentClassName={cn("grid min-h-[55vh] place-items-center", pageShellClassName)}
+          style={pageShellStyle}
         >
           <div className="grid w-full max-w-[430px] gap-4 text-center">
             <InlineAlert title="Acesse sua conta" variant="info">
@@ -626,7 +642,9 @@ export const PrivateTemplate = ({
   return (
     <>
       <NotificationManager />
-      <PageShell contentClassName={pageShellClassName}>{children}</PageShell>
+      <PageShell contentClassName={pageShellClassName} style={pageShellStyle}>
+        {children}
+      </PageShell>
       {navigationMarkup}
     </>
   );
