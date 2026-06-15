@@ -31,6 +31,7 @@ import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import {
   type MouseEvent as ReactMouseEvent,
+  useCallback,
   useDeferredValue,
   useEffect,
   useId,
@@ -77,6 +78,27 @@ import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 const PAGE_LIMIT = 12;
 const COMMUNITY_RULES_SESSION_KEY_PREFIX = "lectum:community-rules";
+const COMMUNITY_PUBLISH_ONBOARDING_STORAGE_KEY = "lectum:community:publish-onboarding:v1";
+
+const hasSeenCommunityPublishOnboarding = () => {
+  if (typeof window === "undefined") return true;
+
+  try {
+    return window.localStorage.getItem(COMMUNITY_PUBLISH_ONBOARDING_STORAGE_KEY) === "seen";
+  } catch {
+    return true;
+  }
+};
+
+const writeCommunityPublishOnboardingSeen = () => {
+  if (typeof window === "undefined") return;
+
+  try {
+    window.localStorage.setItem(COMMUNITY_PUBLISH_ONBOARDING_STORAGE_KEY, "seen");
+  } catch {
+    return;
+  }
+};
 
 const readCommunityRulesSessionState = (storageKey: string) => {
   if (typeof window === "undefined") return false;
@@ -1369,6 +1391,151 @@ const CommunityPostSortChips = ({
   </nav>
 );
 
+type CommunityPublishOnboardingVariant = "floating" | "bottomNavigation";
+
+const COMMUNITY_PUBLISH_ONBOARDING_PLACEMENT: Record<
+  CommunityPublishOnboardingVariant,
+  { highlight: string; tooltip: string }
+> = {
+  bottomNavigation: {
+    highlight:
+      "left-1/2 bottom-5 -translate-x-1/2 lg:left-auto lg:right-10 lg:bottom-10 lg:translate-x-0 xl:right-20 2xl:right-28",
+    tooltip:
+      "left-1/2 bottom-[calc(1.25rem+5.5rem)] -translate-x-1/2 lg:left-auto lg:right-10 lg:bottom-[calc(2.5rem+5.75rem)] lg:translate-x-0 xl:right-20 2xl:right-28",
+  },
+  floating: {
+    highlight: "right-5 bottom-28 lg:right-10 lg:bottom-10 xl:right-20 2xl:right-28",
+    tooltip:
+      "right-4 bottom-[calc(7rem+5.25rem)] lg:right-10 lg:bottom-[calc(2.5rem+5.75rem)] xl:right-20 2xl:right-28",
+  },
+};
+
+const CommunityPublishOnboarding = ({
+  variant,
+}: {
+  variant: CommunityPublishOnboardingVariant;
+}) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const placement = COMMUNITY_PUBLISH_ONBOARDING_PLACEMENT[variant];
+
+  const dismiss = useCallback(() => {
+    writeCommunityPublishOnboardingSeen();
+    setIsVisible(false);
+  }, []);
+
+  useEffect(() => {
+    if (hasSeenCommunityPublishOnboarding()) return;
+
+    const timeout = window.setTimeout(() => setIsVisible(true), 450);
+
+    return () => window.clearTimeout(timeout);
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        dismiss();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [dismiss, isVisible]);
+
+  if (!isVisible) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[120] animate-in fade-in duration-200"
+      data-community-publish-onboarding
+    >
+      <button
+        aria-label="Fechar orientação para publicar na comunidade"
+        className="absolute inset-0 h-full w-full cursor-default bg-slate-950/48 backdrop-blur-[2px]"
+        onClick={dismiss}
+        tabIndex={-1}
+        type="button"
+      />
+
+      <div
+        className={cn(
+          "pointer-events-none fixed z-[125] grid h-16 w-16 place-items-center",
+          placement.highlight,
+        )}
+        aria-hidden="true"
+      >
+        <span className="absolute -inset-3 rounded-full border border-[#308CE8]/25 motion-safe:animate-[lectum-community-publish-ring_1.8s_ease-out_infinite]" />
+        <span className="absolute inset-0 rounded-full border-2 border-[#308CE8]/35 motion-safe:animate-[lectum-community-publish-ring_1.8s_ease-out_0.18s_infinite]" />
+        <span className="relative grid h-14 w-14 place-items-center rounded-full border-[5px] border-white bg-[#308CE8] text-white shadow-[0_20px_42px_rgba(48,140,232,0.42)] motion-safe:animate-[lectum-community-publish-pulse_1.8s_ease-in-out_infinite] lg:h-16 lg:w-16">
+          <Plus className="h-7 w-7 stroke-[2.4] lg:h-8 lg:w-8" aria-hidden="true" />
+        </span>
+      </div>
+
+      <section
+        aria-labelledby="community-publish-onboarding-title"
+        aria-modal="true"
+        className={cn(
+          "fixed z-[126] w-[calc(100vw-2rem)] max-w-[342px] rounded-[26px] border border-white/70 bg-white p-5 text-left shadow-[0_24px_70px_rgba(15,23,42,0.22)] ring-1 ring-[#D9E8F8]/80",
+          placement.tooltip,
+        )}
+        role="dialog"
+      >
+        <div className="grid gap-3">
+          <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[#EAF5FF] text-[#308CE8]">
+            <Plus className="h-6 w-6 stroke-[2.3]" aria-hidden="true" />
+          </div>
+          <div className="grid gap-2">
+            <h2
+              className="font-extrabold text-[1.05rem] text-foreground leading-tight"
+              id="community-publish-onboarding-title"
+            >
+              Publique sua dúvida ou relato
+            </h2>
+            <p className="text-sm text-subtle leading-relaxed">
+              Converse gratuitamente na comunidade e receba acolhimento dos psicólogos mediadores.
+            </p>
+          </div>
+          <Button
+            className="mt-1 h-11 rounded-full bg-[#308CE8] font-extrabold text-white shadow-none hover:bg-[#2579CF]"
+            onClick={dismiss}
+            type="button"
+          >
+            Entendi
+          </Button>
+        </div>
+      </section>
+
+      <style>{`
+        @keyframes lectum-community-publish-pulse {
+          0%,
+          100% {
+            transform: scale(1);
+            box-shadow: 0 20px 42px rgba(48, 140, 232, 0.42);
+          }
+          50% {
+            transform: scale(1.06);
+            box-shadow: 0 26px 56px rgba(48, 140, 232, 0.56);
+          }
+        }
+
+        @keyframes lectum-community-publish-ring {
+          0% {
+            opacity: 0.72;
+            transform: scale(0.86);
+          }
+          100% {
+            opacity: 0;
+            transform: scale(1.42);
+          }
+        }
+      `}</style>
+    </div>
+  );
+};
+
 const CommunityDetailLogic = ({ slug }: { slug: string }) => {
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<CommunityPostSort>("featured");
@@ -1584,6 +1751,8 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
           <span className="sr-only">Criar publicação</span>
         </Link>
       ) : null}
+
+      {community ? <CommunityPublishOnboarding variant="floating" /> : null}
     </PrivateTemplate>
   );
 };
@@ -1780,6 +1949,8 @@ export const CommunityFeedLogic = () => {
         />
         <span className="sr-only">Criar publicação</span>
       </Link>
+
+      <CommunityPublishOnboarding variant="bottomNavigation" />
 
       <style>{`
         @media (min-width: 1024px) {

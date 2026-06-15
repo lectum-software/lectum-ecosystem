@@ -290,3 +290,21 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - ADR criado: `adrs/0088-feed-geral-ranking-diversificado.md`.
 
 - Validacoes executadas nesta execucao: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check`; HTTP local sem cookie autenticado retornou 307 esperado para `/app/community/feed` e `/app/community/ansiedade-em-equilibrio`.
+
+## Execucao complementar: onboarding de primeira visita para publicar na comunidade (2026-06-14)
+
+- Pedido do usuario: exibir uma orientacao leve apenas na primeira visita a qualquer tela de comunidade, destacando o botao Publicar sem alterar sua logica nem o layout permanente.
+- Foi criado um onboarding local em `frontend/src/app/app/community/[slug]/logic.tsx`, renderizado em `/app/community/feed` e `/app/community/[slug]`.
+- O estado de visualizacao e persistido em `localStorage` com a chave `lectum:community:publish-onboarding:v1`; depois de fechar por `Entendi`, clique fora ou `Esc`, o onboarding nao aparece novamente.
+- O overlay cobre a viewport inteira acima de menu lateral, navegacao mobile e botoes flutuantes (`z-[120]`), com fundo escurecido e blur leve.
+- O botao Publicar original permanece inalterado; o destaque usa uma camada visual propria com pulso/glow para nao interferir no href, handlers ou estrutura do CTA.
+- No desktop, o tooltip fica proximo ao botao flutuante de publicar; no mobile do feed, o foco fica no botao central da bottom navigation; na comunidade interna, o foco acompanha o botao flutuante existente.
+- O texto segue a regra de comunicacao segura: conversa gratuita dentro da comunidade e acolhimento de psicologos mediadores, sem prometer consulta, diagnostico ou atendimento psicologico gratuito.
+- Nao houve alteracao de backend, Prisma, migrations, packages, schema, contratos de API ou dados persistidos no servidor.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia usada foi `_product/proto/Feed Comunidade.jpg`, o comportamento atual das rotas e o pedido detalhado do usuario.
+- ADR criado: `adrs/0089-onboarding-publicar-comunidade.md`.
+- Validacoes executadas nesta execucao:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP local sem cookie autenticado retornou 307 esperado para `/app/community/feed` e `/app/community/ansiedade-em-equilibrio`.
