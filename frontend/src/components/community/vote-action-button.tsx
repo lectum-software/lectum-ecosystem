@@ -160,6 +160,7 @@ export const VoteActionButton = ({
           strokeWidth={2}
           aria-hidden="true"
         />
+        {isUpvote ? <span className="font-bold leading-none">Útil</span> : null}
         {typeof count === "number" ? (
           <span
             className={cn(
