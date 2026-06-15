@@ -375,10 +375,17 @@ export class FavoriteRepository implements IFavoriteRepository {
           psychologist_id: psychologistId,
         },
       },
+      select: {
+        id: true,
+        deleted: true,
+      },
     });
 
+    let favoriteId = existing?.id ?? null;
+    const shouldNotify = !existing || existing.deleted;
+
     if (existing) {
-      await this.repository.update({
+      const favorite = await this.repository.update({
         where: {
           user_id_psychologist_id: {
             user_id: userId,
@@ -389,19 +396,28 @@ export class FavoriteRepository implements IFavoriteRepository {
           deleted: false,
           deletedAt: null,
         },
+        select: {
+          id: true,
+        },
       });
+      favoriteId = favorite.id;
     } else {
-      await this.repository.create({
+      const favorite = await this.repository.create({
         data: {
           user_id: userId,
           psychologist_id: psychologistId,
         },
+        select: {
+          id: true,
+        },
       });
+      favoriteId = favorite.id;
     }
 
     return {
       psychologist_id: psychologistId,
       favorited: true,
+      notification_event_id: shouldNotify ? favoriteId : null,
     };
   }
 

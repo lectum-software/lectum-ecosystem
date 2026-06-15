@@ -1,4 +1,5 @@
 import { error, msg } from "@/helpers/translate";
+import { notifyNewPsychologistFavorite } from "@/main/notification/domain-events";
 import type { IFavoriteActionDTO, IFavoriteIndexDTO } from "../DTOs/IFavoriteDTO";
 import { FavoriteRepository } from "../repositories/FavoriteRepository";
 
@@ -33,10 +34,19 @@ export const action = async (data: IFavoriteActionDTO, actionType: FavoriteActio
     actionType === "favorite"
       ? await repository.favorite(data.auth.id!, psychologistId)
       : await repository.unfavorite(data.auth.id!, psychologistId);
+  const { notification_event_id: notificationEventId, ...response } = res;
+
+  if (actionType === "favorite" && notificationEventId) {
+    await notifyNewPsychologistFavorite({
+      actorId: data.auth.id!,
+      favoriteId: notificationEventId,
+      psychologistId,
+    });
+  }
 
   return {
     status: 200,
     ...msg(actionType === "favorite" ? "favorite_success" : "unfavorite_success", {}),
-    data: res,
+    data: response,
   };
 };

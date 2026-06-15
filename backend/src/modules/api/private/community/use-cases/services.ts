@@ -1,4 +1,5 @@
 ﻿import { error, msg } from "@/helpers/translate";
+import { notifyNewCommunityPost } from "@/main/notification/domain-events";
 import type {
   ICommunityCreatePostDTO,
   ICommunityFeedDTO,
@@ -194,6 +195,13 @@ export const createPost = async (data: ICommunityCreatePostDTO) => {
       }),
     };
   }
+
+  await notifyNewCommunityPost({
+    actorId: data.auth.id!,
+    communityId: res.community.id,
+    communitySlug: res.community.slug,
+    postId: res.id,
+  });
 
   return {
     status: 201,

@@ -1,4 +1,5 @@
 import { error, msg } from "@/helpers/translate";
+import { notifyWhatsappClick } from "@/main/notification/domain-events";
 import type { IContactClickDTO, IContactDTO } from "../DTOs/IContactDTO";
 import type { IIndexDTO } from "../DTOs/IIndexDTO";
 import type { IProfileListDTO, IProfileShowDTO } from "../DTOs/IProfileDTO";
@@ -110,6 +111,12 @@ export const contact = async (data: IContactDTO) => {
     };
   }
 
+  await notifyWhatsappClick({
+    actorId: data.auth.id,
+    contactRequestId: res.data.contact_request_id,
+    psychologistId: res.data.psychologist_id,
+  });
+
   return {
     status: 200,
     ...msg("contact_success", {}),
@@ -136,6 +143,12 @@ export const contactClick = async (data: IContactClickDTO) => {
       ...error(res.reason, {}),
     };
   }
+
+  await notifyWhatsappClick({
+    actorId: data.auth.id,
+    contactRequestId: res.data.contact_request_id,
+    psychologistId: res.data.psychologist_id,
+  });
 
   return {
     status: 200,

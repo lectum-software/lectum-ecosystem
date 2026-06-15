@@ -1,4 +1,9 @@
 ﻿import { error, msg } from "@/helpers/translate";
+import {
+  notifyNewPostReply,
+  notifyPostSaved,
+  notifyPostVote,
+} from "@/main/notification/domain-events";
 import type {
   IPostCreateReplyDTO,
   IPostMineDTO,
@@ -179,6 +184,15 @@ export const createReply = async (data: IPostCreateReplyDTO) => {
     },
   });
 
+  if (res.kind === "ok") {
+    await notifyNewPostReply({
+      actorId: data.auth.id!,
+      parentReplyId: res.data.parent_reply_id,
+      postId: data.p.id,
+      replyId: res.data.id,
+    });
+  }
+
   return resolveMutationResult(res, 201, "post_reply_created");
 };
 
@@ -270,6 +284,15 @@ export const vote = async (data: IPostVoteDTO) => {
     },
   });
 
+  if (res.kind === "ok") {
+    await notifyPostVote({
+      actorId: data.auth.id!,
+      postId: res.data.post_id,
+      replyId: res.data.reply_id,
+      value: res.data.value,
+    });
+  }
+
   return resolveMutationResult(res, 200, "post_vote_updated");
 };
 
@@ -280,7 +303,23 @@ export const save = async (data: IPostSaveDTO) => {
   const repository = new PostRepository();
   const res = await repository.save(data);
 
-  return resolveMutationResult(res, 200, "post_saved");
+  if (res.kind !== "ok") return resolveMutationResult(res, 200, "post_saved");
+
+  const { notification_event_id: notificationEventId, ...response } = res.data;
+
+  if (notificationEventId) {
+    await notifyPostSaved({
+      actorId: data.auth.id!,
+      postId: response.post_id,
+      saveId: notificationEventId,
+    });
+  }
+
+  return {
+    status: 200,
+    ...msg("post_saved", {}),
+    data: response,
+  };
 };
 
 export const unsave = async (data: IPostSaveDTO) => {

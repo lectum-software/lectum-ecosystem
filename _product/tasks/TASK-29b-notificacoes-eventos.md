@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | M |
 | Fase | Conta |
-| Status | Pending |
+| Status | Blocked |
 | Dependências | TASK-29A (e as tasks que produzem cada evento: 14, 15/16, 17, 20, 23, 24, 26) |
 | ADR alvo | ADR de eventos de notificação |
 
@@ -83,16 +83,16 @@ Regras:
 
 ## Critérios de aceite
 
-- [ ] Cada evento do PRD §12 dispara o dispatcher da 29A com `type` e destinatário corretos, dentro do fluxo real de origem.
-- [ ] Preferências (`notification_preference`) respeitadas por categoria antes de emitir/enviar.
-- [ ] Idempotência/anti-spam aplicada; autor não é notificado das próprias ações; downvote não expõe o votante.
-- [ ] `redirect`/`message_key`/`message_props` permitem abrir o conteúdo relacionado.
-- [ ] Nenhum mock, evento fake ou endpoint simulado.
-- [ ] Eventos de tasks ainda não executadas ficam registrados como pendência e ligados quando a origem existir.
-- [ ] Modelos e contratos seguem `DATA-MODEL.md`.
-- [ ] ADR criado/atualizado em `adrs/`.
-- [ ] `pnpm --dir backend check` e builds relevantes verdes.
-- [ ] Commit criado com mensagem convencional.
+- [ ] Cada evento do PRD §12 dispara o dispatcher da 29A com `type` e destinatário corretos, dentro do fluxo real de origem. Parcial: eventos com fonte persistida real foram ligados; `visualizacao_perfil` e `compartilhamento` seguem pendentes por falta de produtor persistido real.
+- [x] Preferências (`notification_preference`) respeitadas por categoria antes de emitir/enviar.
+- [x] Idempotência/anti-spam aplicada; autor não é notificado das próprias ações; downvote não expõe o votante.
+- [x] `redirect`/`message_key`/`message_props` permitem abrir o conteúdo relacionado.
+- [x] Nenhum mock, evento fake ou endpoint simulado.
+- [x] Eventos sem origem persistida real ficam registrados como pendência e ligados quando a origem existir.
+- [x] Modelos e contratos seguem `DATA-MODEL.md`.
+- [x] ADR criado/atualizado em `adrs/`.
+- [x] `pnpm --dir backend check` e builds relevantes verdes.
+- [x] Commit criado com mensagem convencional.
 
 ## Validação mínima
 
@@ -102,3 +102,22 @@ Regras:
 ## Notas para executor
 
 Esta task só produz eventos; o canal já existe na 29A. Ligue cada evento no service real que o origina, não em um endpoint separado. Commit próprio.
+
+## Execução 2026-06-15
+
+Implementado:
+
+- `nova_avaliacao` a partir de `professional_review` criado.
+- `novo_favorito` a partir de `psychologist_favorite` criado/restaurado.
+- `clique_whatsapp` a partir de `contact_request` criado.
+- `novo_post` a partir de `community_post` criado, notificando seguidores da comunidade exceto o autor.
+- `nova_resposta` a partir de `post_reply` criado, notificando autor do post ou comentário pai.
+- `upvote` e `downvote` a partir de `post_vote`, sem expor votante no downvote.
+- `salvamento` a partir de `post_save` criado/restaurado.
+
+Pendências registradas sem mock:
+
+- `visualizacao_perfil`: não existe `profile_view_event`/fonte persistida real no modelo atual; TASK-20 já registra visualizações como indisponíveis até essa fonte existir.
+- `compartilhamento`: as ações atuais de compartilhar posts usam apenas `navigator.share`/clipboard no frontend e não possuem modelo/endpoint persistido para gerar evento real.
+
+Decisão documentada em `adrs/0098-notificacoes-eventos-dominio.md`.

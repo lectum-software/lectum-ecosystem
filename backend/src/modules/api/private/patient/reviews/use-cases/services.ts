@@ -1,4 +1,5 @@
 ﻿import { error, msg } from "@/helpers/translate";
+import { notifyNewProfessionalReview } from "@/main/notification/domain-events";
 import type {
   IReviewEligibilityDTO,
   IReviewIndexDTO,
@@ -47,6 +48,11 @@ export const store = async (data: IReviewStoreDTO) => {
   if (unauthorized) return unauthorized;
   const repository = new ReviewRepository();
   const res = await repository.create(data);
-  if ("eligible" in res && !res.eligible) return eligibilityError(res);
+  if ("eligible" in res) return eligibilityError(res);
+  await notifyNewProfessionalReview({
+    actorId: data.auth.id!,
+    psychologistId: res.psychologist_id,
+    reviewId: res.review_id,
+  });
   return { status: 201, ...msg("review_success", {}), data: res };
 };

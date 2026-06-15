@@ -41,6 +41,7 @@ export type PatientRelationPsychologist = {
 export type FavoriteActionResponse = {
   psychologist_id: string;
   favorited: boolean;
+  notification_event_id?: string | null;
 };
 
 export type FavoriteIndexResponse = PaginationResponse<PatientRelationPsychologist>;

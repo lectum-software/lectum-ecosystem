@@ -1157,9 +1157,11 @@ export class PostRepository implements IPostRepository {
         },
       });
 
+      let saveId = existing?.id ?? null;
+
       if (existing) {
         if (existing.deleted) {
-          await transaction.post_save.update({
+          const save = await transaction.post_save.update({
             where: {
               id: existing.id,
             },
@@ -1167,15 +1169,23 @@ export class PostRepository implements IPostRepository {
               deleted: false,
               deletedAt: null,
             },
+            select: {
+              id: true,
+            },
           });
+          saveId = save.id;
         }
       } else {
-        await transaction.post_save.create({
+        const save = await transaction.post_save.create({
           data: {
             user_id: data.auth.id!,
             post_id: post.id,
           },
+          select: {
+            id: true,
+          },
         });
+        saveId = save.id;
       }
 
       const shouldIncrement = !existing || existing.deleted;
@@ -1201,6 +1211,7 @@ export class PostRepository implements IPostRepository {
         reply_id: null,
         saved: true,
         saves_count: updatedPost.saves_count,
+        notification_event_id: shouldIncrement ? saveId : null,
       };
     });
 

@@ -1,0 +1,351 @@
+﻿import { createHash } from "node:crypto";
+import prisma from "@/infra/database/prisma";
+import { notify } from "./index";
+
+type MessageKey =
+  | "nova_avaliacao"
+  | "novo_favorito"
+  | "visualizacao_perfil"
+  | "clique_whatsapp"
+  | "novo_post"
+  | "nova_resposta"
+  | "upvote"
+  | "downvote"
+  | "compartilhamento"
+  | "salvamento";
+
+type NotificationSourceType =
+  | "professional_review"
+  | "psychologist_favorite"
+  | "contact_request"
+  | "community_post"
+  | "post_reply"
+  | "post_vote"
+  | "post_save"
+  | "profile_view"
+  | "post_share";
+
+type DispatchEvent = {
+  actorId?: string | null;
+  messageKey: MessageKey;
+  recipientIds: string[];
+  redirect?: string;
+  sourceId: string;
+  sourceType: NotificationSourceType;
+  props?: Record<string, unknown>;
+};
+
+const professionalProfileRedirect = (psychologistId: string) =>
+  `/app/psychologist/${psychologistId}`;
+const professionalReviewsRedirect = "/app/professional/reviews";
+const professionalAnalyticsRedirect = "/app/professional/analytics";
+const communityPostRedirect = (communitySlug: string, postId: string) =>
+  `/app/community/${communitySlug}/post/${postId}`;
+
+const opaqueSourceId = (value: string) =>
+  createHash("sha256").update(value).digest("hex").slice(0, 32);
+
+const normalizeRecipients = (recipientIds: string[], actorId?: string | null) =>
+  [...new Set(recipientIds)].filter((id) => Boolean(id) && id !== actorId);
+
+const notificationAlreadyExists = async (
+  userId: string,
+  messageKey: MessageKey,
+  sourceId: string,
+) => {
+  const existing = await prisma.notification.findFirst({
+    where: {
+      user_id: userId,
+      message_key: messageKey,
+      deleted: false,
+      message_props: {
+        path: ["source_id"],
+        equals: sourceId,
+      },
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  return Boolean(existing);
+};
+
+const notifyOnce = async (event: DispatchEvent) => {
+  const recipients = normalizeRecipients(event.recipientIds, event.actorId);
+  if (recipients.length === 0) return;
+
+  const eligibleRecipients: string[] = [];
+
+  for (const recipientId of recipients) {
+    if (await notificationAlreadyExists(recipientId, event.messageKey, event.sourceId)) continue;
+    eligibleRecipients.push(recipientId);
+  }
+
+  if (eligibleRecipients.length === 0) return;
+
+  await notify(eligibleRecipients, {
+    message_key: event.messageKey,
+    message_props: {
+      ...(event.props ?? {}),
+      source_id: event.sourceId,
+      source_type: event.sourceType,
+    },
+    redirect: event.redirect,
+  });
+};
+
+export const notifyNewProfessionalReview = async (params: {
+  actorId: string;
+  psychologistId: string;
+  reviewId: string;
+}) => {
+  await notifyOnce({
+    actorId: params.actorId,
+    messageKey: "nova_avaliacao",
+    recipientIds: [params.psychologistId],
+    redirect: professionalReviewsRedirect,
+    sourceId: params.reviewId,
+    sourceType: "professional_review",
+    props: {
+      psychologist_id: params.psychologistId,
+      review_id: params.reviewId,
+    },
+  });
+};
+
+export const notifyNewPsychologistFavorite = async (params: {
+  actorId: string;
+  favoriteId: string;
+  psychologistId: string;
+}) => {
+  await notifyOnce({
+    actorId: params.actorId,
+    messageKey: "novo_favorito",
+    recipientIds: [params.psychologistId],
+    redirect: professionalProfileRedirect(params.psychologistId),
+    sourceId: params.favoriteId,
+    sourceType: "psychologist_favorite",
+    props: {
+      favorite_id: params.favoriteId,
+      psychologist_id: params.psychologistId,
+    },
+  });
+};
+
+export const notifyWhatsappClick = async (params: {
+  actorId?: string | null;
+  contactRequestId: string;
+  psychologistId: string;
+}) => {
+  await notifyOnce({
+    actorId: params.actorId,
+    messageKey: "clique_whatsapp",
+    recipientIds: [params.psychologistId],
+    redirect: professionalAnalyticsRedirect,
+    sourceId: params.contactRequestId,
+    sourceType: "contact_request",
+    props: {
+      contact_request_id: params.contactRequestId,
+      psychologist_id: params.psychologistId,
+    },
+  });
+};
+
+export const notifyNewCommunityPost = async (params: {
+  actorId: string;
+  communityId: string;
+  communitySlug: string;
+  postId: string;
+}) => {
+  const members = await prisma.community_member.findMany({
+    where: {
+      community_id: params.communityId,
+      deleted: false,
+      user_id: {
+        not: params.actorId,
+      },
+    },
+    select: {
+      user_id: true,
+    },
+  });
+
+  await notifyOnce({
+    actorId: params.actorId,
+    messageKey: "novo_post",
+    recipientIds: members.map((member) => member.user_id),
+    redirect: communityPostRedirect(params.communitySlug, params.postId),
+    sourceId: params.postId,
+    sourceType: "community_post",
+    props: {
+      community_id: params.communityId,
+      community_slug: params.communitySlug,
+      post_id: params.postId,
+    },
+  });
+};
+
+export const notifyNewPostReply = async (params: {
+  actorId: string;
+  parentReplyId?: string | null;
+  postId: string;
+  replyId: string;
+}) => {
+  const replyContext = params.parentReplyId
+    ? await prisma.post_reply.findFirst({
+        where: {
+          id: params.parentReplyId,
+          post_id: params.postId,
+          deleted: false,
+        },
+        select: {
+          author_id: true,
+          post: {
+            select: {
+              community: {
+                select: {
+                  slug: true,
+                },
+              },
+            },
+          },
+        },
+      })
+    : await prisma.community_post.findFirst({
+        where: {
+          id: params.postId,
+          deleted: false,
+        },
+        select: {
+          author_id: true,
+          community: {
+            select: {
+              slug: true,
+            },
+          },
+        },
+      });
+
+  if (!replyContext) return;
+
+  const recipientId = replyContext.author_id;
+  const communitySlug =
+    "post" in replyContext ? replyContext.post.community.slug : replyContext.community.slug;
+
+  await notifyOnce({
+    actorId: params.actorId,
+    messageKey: "nova_resposta",
+    recipientIds: [recipientId],
+    redirect: communityPostRedirect(communitySlug, params.postId),
+    sourceId: params.replyId,
+    sourceType: "post_reply",
+    props: {
+      parent_reply_id: params.parentReplyId ?? null,
+      post_id: params.postId,
+      reply_id: params.replyId,
+    },
+  });
+};
+
+export const notifyPostVote = async (params: {
+  actorId: string;
+  postId: string;
+  replyId?: string | null;
+  value: 1 | -1 | null;
+}) => {
+  if (params.value !== 1 && params.value !== -1) return;
+
+  const target = params.replyId
+    ? await prisma.post_reply.findFirst({
+        where: {
+          id: params.replyId,
+          post_id: params.postId,
+          deleted: false,
+        },
+        select: {
+          author_id: true,
+          post: {
+            select: {
+              community: {
+                select: {
+                  slug: true,
+                },
+              },
+            },
+          },
+        },
+      })
+    : await prisma.community_post.findFirst({
+        where: {
+          id: params.postId,
+          deleted: false,
+        },
+        select: {
+          author_id: true,
+          community: {
+            select: {
+              slug: true,
+            },
+          },
+        },
+      });
+
+  if (!target) return;
+
+  const communitySlug = "post" in target ? target.post.community.slug : target.community.slug;
+  const sourceId = opaqueSourceId(
+    `${params.postId}:${params.replyId ?? "post"}:${params.actorId}:${params.value}`,
+  );
+
+  await notifyOnce({
+    actorId: params.actorId,
+    messageKey: params.value === 1 ? "upvote" : "downvote",
+    recipientIds: [target.author_id],
+    redirect: communityPostRedirect(communitySlug, params.postId),
+    sourceId,
+    sourceType: "post_vote",
+    props: {
+      post_id: params.postId,
+      reply_id: params.replyId ?? null,
+      target_type: params.replyId ? "reply" : "post",
+      value: params.value,
+    },
+  });
+};
+
+export const notifyPostSaved = async (params: {
+  actorId: string;
+  postId: string;
+  saveId: string;
+}) => {
+  const post = await prisma.community_post.findFirst({
+    where: {
+      id: params.postId,
+      deleted: false,
+    },
+    select: {
+      author_id: true,
+      community: {
+        select: {
+          slug: true,
+        },
+      },
+    },
+  });
+
+  if (!post) return;
+
+  await notifyOnce({
+    actorId: params.actorId,
+    messageKey: "salvamento",
+    recipientIds: [post.author_id],
+    redirect: communityPostRedirect(post.community.slug, params.postId),
+    sourceId: params.saveId,
+    sourceType: "post_save",
+    props: {
+      post_id: params.postId,
+      save_id: params.saveId,
+    },
+  });
+};

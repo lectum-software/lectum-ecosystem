@@ -168,6 +168,7 @@ export type PostSaveResponse = {
   reply_id: string | null;
   saved: boolean;
   saves_count: number | null;
+  notification_event_id?: string | null;
 };
 
 export type PostReplyMediaUploadResponse = {
