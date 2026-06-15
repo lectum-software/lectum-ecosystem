@@ -2,14 +2,12 @@
 
 import {
   ArrowLeft,
-  Bookmark,
   ChevronLeft,
   ChevronRight,
   FileText,
   MessageCircle,
   PenLine,
   Reply,
-  Search,
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -127,8 +125,11 @@ const FilterTabs = ({
   onChange: (value: UserPostsType) => void;
   value: UserPostsType;
 }) => (
-  <nav aria-label="Filtrar meus posts" className="overflow-x-auto [scrollbar-width:none]">
-    <div className="flex min-w-max gap-2 pb-1">
+  <nav
+    aria-label="Filtrar meus posts"
+    className="overflow-x-auto px-4 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+  >
+    <div className="flex min-w-max gap-2">
       {FILTERS.map((item) => {
         const active = item.value === value;
 
@@ -136,10 +137,10 @@ const FilterTabs = ({
           <button
             aria-pressed={active}
             className={cn(
-              "min-h-10 rounded-full border px-5 text-sm font-black transition disabled:opacity-70",
+              "min-h-9 rounded-full border px-4 text-sm font-extrabold transition disabled:opacity-70",
               active
-                ? "border-primary bg-primary-soft text-primary"
-                : "border-border bg-surface text-muted hover:border-primary/50 hover:text-primary",
+                ? "border-primary/20 bg-primary-soft text-primary"
+                : "border-border bg-surface text-muted hover:border-primary/40 hover:text-foreground",
             )}
             disabled={disabled}
             key={item.value}
@@ -298,96 +299,95 @@ export const MyPostsLogic = () => {
   };
 
   return (
-    <PrivateTemplate
-      contentClassName="bg-background px-0 py-0"
-      navigationTheme="solidWhite"
-      showHeader
-    >
-      <section className="mx-auto grid min-h-screen w-full max-w-[430px] gap-4 px-5 py-4 sm:max-w-2xl lg:max-w-3xl">
-        <header className="grid gap-4">
-          <div className="flex items-center justify-between gap-3">
-            <Button asChild className="h-10 w-10 rounded-full p-0" variant="ghost">
-              <Link href={DEFAULT_COMMUNITY_FEED_HREF} aria-label="Voltar ao feed">
+    <PrivateTemplate contentClassName="bg-background px-0 py-0" showNavigation={false}>
+      <section className="mx-auto min-h-screen w-full max-w-[430px] bg-background sm:max-w-xl lg:max-w-3xl">
+        <header
+          className="sticky top-0 z-30 border-border border-b bg-surface/95 supports-[backdrop-filter]:bg-surface/85"
+          style={{ paddingTop: "env(safe-area-inset-top)" }}
+        >
+          <div className="relative flex h-14 items-center justify-center px-4">
+            <Button
+              asChild
+              className="absolute left-4 top-1/2 h-10 w-10 -translate-y-1/2 rounded-full p-0"
+              variant="ghost"
+            >
+              <Link href="/app/profile" aria-label="Voltar para perfil">
                 <ArrowLeft className="h-5 w-5" aria-hidden="true" />
               </Link>
             </Button>
-            <div className="text-center">
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-primary">
-                {isPsychologist ? "Contribuições profissionais" : "Histórico da comunidade"}
-              </p>
-              <h1 className="text-2xl font-black text-foreground">Meus Posts</h1>
-            </div>
-            <Button asChild className="h-10 w-10 rounded-full p-0" variant="ghost">
-              <Link href={DEFAULT_COMMUNITY_FEED_HREF} aria-label="Buscar no feed">
-                <Search className="h-5 w-5" aria-hidden="true" />
-              </Link>
-            </Button>
+            <h1 className="text-lg font-black text-foreground">Meus Posts</h1>
+            <span className="absolute right-4 h-10 w-10" aria-hidden="true" />
           </div>
 
           <FilterTabs disabled={postsQuery.isFetching} onChange={handleFilterChange} value={type} />
         </header>
 
-        {postsQuery.isLoading || postsQuery.isPending ? (
-          <div className="grid min-h-[45vh] place-items-center rounded-[22px] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
-            <LoadingState label="Carregando seus posts reais" />
-          </div>
-        ) : null}
+        <div className="grid gap-4 px-4 py-6">
+          {postsQuery.isLoading || postsQuery.isPending ? (
+            <div className="grid min-h-[45vh] place-items-center rounded-[22px] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
+              <LoadingState
+                label={isPsychologist ? "Carregando contribuições" : "Carregando seus posts"}
+              />
+            </div>
+          ) : null}
 
-        {errorMessage ? (
-          <InlineAlert title="Não foi possível carregar" variant="error">
-            {errorMessage}
-          </InlineAlert>
-        ) : null}
+          {errorMessage ? (
+            <InlineAlert title="Não foi possível carregar" variant="error">
+              {errorMessage}
+            </InlineAlert>
+          ) : null}
 
-        {shareFeedback ? (
-          <InlineAlert title="Link preparado" variant="success">
-            Link do post copiado ou enviado para compartilhamento.
-          </InlineAlert>
-        ) : null}
+          {shareFeedback ? (
+            <InlineAlert title="Link preparado" variant="success">
+              Link do post copiado ou enviado para compartilhamento.
+            </InlineAlert>
+          ) : null}
 
-        {!postsQuery.isLoading && !postsQuery.isPending && !errorMessage && items.length === 0 ? (
-          <EmptyState
-            action={
-              <Button asChild>
-                <Link href={DEFAULT_COMMUNITY_FEED_HREF}>
-                  <FileText className="h-4 w-4" aria-hidden="true" />
-                  Explorar feed
-                </Link>
-              </Button>
-            }
-            description="Quando você publicar posts ou respostas reais nas comunidades, eles aparecerão aqui."
-            icon={Bookmark}
-            title="Nenhuma publicação sua por enquanto"
+          {!postsQuery.isLoading && !postsQuery.isPending && !errorMessage && items.length === 0 ? (
+            <EmptyState
+              action={
+                <Button asChild className="rounded-full px-5">
+                  <Link href={DEFAULT_COMMUNITY_FEED_HREF}>
+                    <FileText className="h-4 w-4" aria-hidden="true" />
+                    Explorar feed
+                  </Link>
+                </Button>
+              }
+              className="border-solid px-6 py-12 shadow-[var(--lectum-shadow-soft)]"
+              description="Quando você publicar posts ou respostas nas comunidades, eles aparecerão aqui."
+              icon={FileText}
+              title="Nenhuma publicação sua por enquanto"
+            />
+          ) : null}
+
+          {items.length > 0 ? (
+            <div className="grid gap-4">
+              {items.map((item) =>
+                item.type === "reply" ? (
+                  <ReplyItemCard item={item} key={item.id} onShare={sharePost} />
+                ) : (
+                  <CommunityPostCard
+                    key={item.id}
+                    onShare={sharePost}
+                    post={item.post}
+                    statusBadge={<StatusBadge status={item.status} />}
+                  />
+                ),
+              )}
+            </div>
+          ) : null}
+
+          {postsQuery.isFetching && !postsQuery.isLoading ? (
+            <LoadingState label="Atualizando posts" />
+          ) : null}
+
+          <Pagination
+            currentPage={page}
+            disabled={postsQuery.isFetching}
+            onPageChange={setPage}
+            pages={postsQuery.data?.pages ?? 0}
           />
-        ) : null}
-
-        {items.length > 0 ? (
-          <div className="grid gap-4">
-            {items.map((item) =>
-              item.type === "reply" ? (
-                <ReplyItemCard item={item} key={item.id} onShare={sharePost} />
-              ) : (
-                <CommunityPostCard
-                  key={item.id}
-                  onShare={sharePost}
-                  post={item.post}
-                  statusBadge={<StatusBadge status={item.status} />}
-                />
-              ),
-            )}
-          </div>
-        ) : null}
-
-        {postsQuery.isFetching && !postsQuery.isLoading ? (
-          <LoadingState label="Atualizando posts" />
-        ) : null}
-
-        <Pagination
-          currentPage={page}
-          disabled={postsQuery.isFetching}
-          onPageChange={setPage}
-          pages={postsQuery.data?.pages ?? 0}
-        />
+        </div>
       </section>
     </PrivateTemplate>
   );
