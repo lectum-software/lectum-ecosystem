@@ -47,7 +47,7 @@ import {
 import type { PostDetail, PostReply } from "@/api/generator/types/posts";
 import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
 import { MentorBadge } from "@/components/community/mentor-badge";
-import { PostActionButton, PostActionLink } from "@/components/community/post-action-button";
+import { PostActionButton } from "@/components/community/post-action-button";
 import { VoteActionButton } from "@/components/community/vote-action-button";
 import { components } from "@/components/controllers";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
@@ -96,6 +96,7 @@ type ReplyMediaPermission = {
 const DETAIL_INLINE_TEXT_MAX_LINES = 4;
 const DETAIL_INLINE_TEXT_MORE_LABEL = "... ver mais";
 const DETAIL_INLINE_TEXT_LESS_LABEL = "ver menos";
+const COMMENT_GUIDANCE_MESSAGE = "Comente com respeito e empatia, mesmo quando discordar.";
 
 const replyMediaPermissionLabel =
   "Mídia disponível apenas para psicólogos verificados com Plano Profissional ativo.";
@@ -682,6 +683,7 @@ const PostBody = ({ post }: { post: PostDetail }) => {
 const PostVoteBar = ({
   currentVote,
   disabled,
+  onFocusCommentComposer,
   onShare,
   onToggleSave,
   onVote,
@@ -689,6 +691,7 @@ const PostVoteBar = ({
 }: {
   currentVote: 1 | -1 | null;
   disabled?: boolean;
+  onFocusCommentComposer: () => void;
   onShare: () => void;
   onToggleSave: () => void;
   onVote: (value: 1 | -1) => void;
@@ -719,11 +722,11 @@ const PostVoteBar = ({
           value={-1}
         />
       </div>
-      <PostActionLink
+      <PostActionButton
         count={post.replies_count}
-        href="#discussao"
         icon={MessageCircle}
-        label={"Ir para coment\u00e1rios"}
+        label="Comentar no post"
+        onClick={onFocusCommentComposer}
         size="sm"
       />
     </div>
@@ -1058,15 +1061,18 @@ const ReplyComposer = ({
     return Object.values(hook.formState.errors)[0]?.message?.toString() ?? null;
   }, [apiError, hook.formState.errors, hook.formState.isSubmitted]);
   const content = hook.watch("content");
-  const ready = String(content ?? "").trim().length >= 3;
+  const draft = String(content ?? "").trim();
+  const hasDraft = draft.length > 0;
+  const ready = draft.length >= 3;
   const expanded =
     composerActive ||
-    ready ||
+    hasDraft ||
     Boolean(selectedMedia) ||
     (Boolean(replyTarget) && mediaPermission.showControl);
   const FieldComponent = components[formProps.fields[0].field];
   const isInline = variant === "inline";
   const shouldShowMediaControls = mediaPermission.showControl || Boolean(selectedMedia);
+  const shouldShowGuidance = composerActive || hasDraft || isInline || Boolean(selectedMedia);
 
   const handleMediaChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -1087,6 +1093,13 @@ const ReplyComposer = ({
           : "fixed inset-x-0 bottom-0 z-40 border-t pb-[calc(env(safe-area-inset-bottom)+12px)] shadow-[0_-16px_44px_rgba(15,23,42,0.14)] backdrop-blur-md sm:static sm:rounded-[22px] sm:border sm:bg-white sm:pb-3 sm:shadow-[0_10px_24px_rgba(15,23,42,0.05)] sm:backdrop-blur-0 dark:sm:bg-surface",
       )}
       noValidate
+      onBlur={(event) => {
+        const nextTarget = event.relatedTarget;
+        if (nextTarget instanceof Node && event.currentTarget.contains(nextTarget)) return;
+        if (!String(hook.getValues("content") ?? "").trim() && !selectedMedia) {
+          setComposerActive(false);
+        }
+      }}
       onFocus={() => setComposerActive(true)}
       onSubmit={hook.handleSubmit(async (values) => {
         try {
@@ -1100,6 +1113,12 @@ const ReplyComposer = ({
       })}
       ref={formRef}
     >
+      {shouldShowGuidance ? (
+        <p className="rounded-[14px] bg-[#F8FAFC] px-3 py-2 text-xs font-semibold leading-5 text-[#64748B] dark:bg-surface-muted dark:text-muted">
+          {COMMENT_GUIDANCE_MESSAGE}
+        </p>
+      ) : null}
+
       <div className="flex items-end gap-2">
         <div className="min-w-0 flex-1">
           <FieldComponent control={hook.control} {...formProps.fields[0]} />
@@ -1500,6 +1519,17 @@ export const PostDetailLogic = () => {
     }
   };
 
+  const focusMainComposer = () => {
+    setReplyError(null);
+    setReplyTarget(null);
+
+    const composerNode = composerRef.current;
+    const inputNode = composerNode?.querySelector<HTMLTextAreaElement>("textarea");
+
+    composerNode?.scrollIntoView({ behavior: "smooth", block: "center" });
+    inputNode?.focus({ preventScroll: true });
+  };
+
   const handleReplyTarget = (reply: PostReply) => {
     setReplyError(null);
     setReplyTarget({ id: reply.id, name: reply.author.name });
@@ -1578,6 +1608,7 @@ export const PostDetailLogic = () => {
               <PostVoteBar
                 currentVote={post.current_user_vote}
                 disabled={voteMutation.isPending || saveMutation.isPending}
+                onFocusCommentComposer={focusMainComposer}
                 onShare={sharePost}
                 onToggleSave={() => saveMutation.mutate(post.saved)}
                 onVote={(value) => voteMutation.mutate({ value })}
