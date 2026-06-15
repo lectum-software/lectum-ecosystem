@@ -167,11 +167,14 @@ export const CreateCommunityPostLogic = () => {
 
     if (field.name === "community_slug") {
       return (
-        <div className="relative inline-block w-fit max-w-full" key="create-post-community">
+        <div
+          className="relative inline-block w-fit max-w-full align-top"
+          key="create-post-community"
+        >
           <Image
             alt=""
             aria-hidden="true"
-            className="pointer-events-none absolute top-1/2 left-4 z-10 h-4 w-4 -translate-y-1/2"
+            className="pointer-events-none absolute top-5 left-5 z-10 h-4 w-4 -translate-y-1/2"
             height={16}
             src={COMMUNITY_SELECTOR_ICON_SRC}
             width={16}
@@ -179,7 +182,10 @@ export const CreateCommunityPostLogic = () => {
           <Component
             control={hook.control}
             {...field}
-            inputClassName={cn(field.inputClassName, "pl-11 pr-10")}
+            inputClassName={cn(
+              field.inputClassName,
+              "pl-12 pr-10 leading-none [&>span]:leading-none",
+            )}
           />
         </div>
       );
