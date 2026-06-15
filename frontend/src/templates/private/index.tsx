@@ -5,7 +5,6 @@ import {
   ChevronLeft,
   Heart,
   LogIn,
-  type LucideIcon,
   Network,
   Plus,
   UserPlus,
@@ -14,7 +13,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { PropsWithChildren } from "react";
+import type { ComponentType, CSSProperties, PropsWithChildren } from "react";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/api/callers/auth";
 import type { user } from "@/api/generator/types";
@@ -28,7 +27,7 @@ import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import * as userActions from "@/store/modules/user/actions";
-import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
+import { COMMUNITY_FEED_SLUG, DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 
 type PrivateTemplateProps = PropsWithChildren<{
   allowAnonymous?: boolean;
@@ -52,13 +51,45 @@ type PrivateTemplateProps = PropsWithChildren<{
 
 type UserRole = NonNullable<user["role"]>;
 
+type NavigationIconProps = {
+  "aria-hidden"?: boolean | "false" | "true";
+  className?: string;
+};
+
+type NavigationIcon = ComponentType<NavigationIconProps>;
+
 type NavigationItem = {
   href: string;
-  icon: LucideIcon;
+  icon: NavigationIcon;
   label: string;
+  mobileIcon?: NavigationIcon;
   title: string;
-  activePrefixes?: string[];
 };
+
+const COMMUNITY_MOBILE_NAV_ICON_URL =
+  "/svg/communities_24dp_64748B_FILL0_wght400_GRAD-25_opsz24.svg";
+
+const communityMobileNavigationIconStyle: CSSProperties = {
+  WebkitMaskImage: `url("${COMMUNITY_MOBILE_NAV_ICON_URL}")`,
+  WebkitMaskPosition: "center",
+  WebkitMaskRepeat: "no-repeat",
+  WebkitMaskSize: "contain",
+  maskImage: `url("${COMMUNITY_MOBILE_NAV_ICON_URL}")`,
+  maskPosition: "center",
+  maskRepeat: "no-repeat",
+  maskSize: "contain",
+};
+
+const CommunityMobileNavigationIcon = ({
+  "aria-hidden": ariaHidden,
+  className,
+}: NavigationIconProps) => (
+  <span
+    aria-hidden={ariaHidden ?? true}
+    className={cn("inline-block bg-current", className)}
+    style={communityMobileNavigationIconStyle}
+  />
+);
 
 const fallbackNavigation: NavigationItem[] = [
   {
@@ -66,7 +97,6 @@ const fallbackNavigation: NavigationItem[] = [
     icon: UsersRound,
     label: "Psicólogos",
     title: "Encontre seu psicólogo",
-    activePrefixes: ["/app/psychologist"],
   },
   {
     href: "/app/favorites",
@@ -78,15 +108,14 @@ const fallbackNavigation: NavigationItem[] = [
     href: DEFAULT_COMMUNITY_FEED_HREF,
     icon: Network,
     label: "Comunidade",
+    mobileIcon: CommunityMobileNavigationIcon,
     title: "Comunidade",
-    activePrefixes: ["/app/community"],
   },
   {
     href: "/app/notifications",
     icon: Bell,
     label: "Notificações",
     title: "Notificações",
-    activePrefixes: ["/app/settings/notifications"],
   },
   {
     href: "/app/profile",
@@ -103,7 +132,6 @@ const navigationByRole: Record<Extract<UserRole, "paciente" | "psicologo">, Navi
       icon: UsersRound,
       label: "Psicólogos",
       title: "Encontre seu psicólogo",
-      activePrefixes: ["/app/psychologist"],
     },
     {
       href: "/app/favorites",
@@ -115,15 +143,14 @@ const navigationByRole: Record<Extract<UserRole, "paciente" | "psicologo">, Navi
       href: DEFAULT_COMMUNITY_FEED_HREF,
       icon: Network,
       label: "Comunidade",
+      mobileIcon: CommunityMobileNavigationIcon,
       title: "Comunidade",
-      activePrefixes: ["/app/community"],
     },
     {
       href: "/app/notifications",
       icon: Bell,
       label: "Notificações",
       title: "Notificações",
-      activePrefixes: ["/app/settings/notifications"],
     },
     {
       href: "/app/profile",
@@ -138,7 +165,6 @@ const navigationByRole: Record<Extract<UserRole, "paciente" | "psicologo">, Navi
       icon: UsersRound,
       label: "Psicólogos",
       title: "Psicólogos",
-      activePrefixes: ["/app/psychologist"],
     },
     {
       href: "/app/favorites",
@@ -150,15 +176,14 @@ const navigationByRole: Record<Extract<UserRole, "paciente" | "psicologo">, Navi
       href: DEFAULT_COMMUNITY_FEED_HREF,
       icon: Network,
       label: "Comunidade",
+      mobileIcon: CommunityMobileNavigationIcon,
       title: "Comunidade",
-      activePrefixes: ["/app/community"],
     },
     {
       href: "/app/notifications",
       icon: Bell,
       label: "Notificações",
       title: "Notificações",
-      activePrefixes: ["/app/settings/notifications"],
     },
     {
       href: "/app/profile",
@@ -177,12 +202,10 @@ const getNavigation = (role?: user["role"] | null) => {
   return fallbackNavigation;
 };
 
-const isActivePath = (pathname: string, item: NavigationItem) => {
-  return (
-    pathname === item.href ||
-    pathname.startsWith(`${item.href}/`) ||
-    Boolean(item.activePrefixes?.some((prefix) => pathname.startsWith(prefix)))
-  );
+const normalizePathname = (pathname: string) => {
+  if (pathname.length <= 1) return pathname;
+
+  return pathname.replace(/\/+$/, "");
 };
 
 const PRIMARY_DESKTOP_NAVIGATION_PATHS = new Set([
@@ -199,6 +222,45 @@ const isPrimaryDesktopNavigationPath = (pathname: string) => {
 
 const isDesktopActivePath = (pathname: string, item: NavigationItem) => {
   return isPrimaryDesktopNavigationPath(pathname) && pathname === item.href;
+};
+
+const MOBILE_NAVIGATION_ACTIVE_HREF_BY_PATH = new Map<string, string>([
+  ["/app/psychologists", "/app/psychologists"],
+  ["/app/favorites", "/app/favorites"],
+  [DEFAULT_COMMUNITY_FEED_HREF, DEFAULT_COMMUNITY_FEED_HREF],
+  ["/app/notifications", "/app/notifications"],
+  ["/app/profile", "/app/profile"],
+]);
+
+const COMMUNITY_MAIN_ROUTE_RESERVED_SEGMENTS = new Set([
+  COMMUNITY_FEED_SLUG,
+  "post",
+  "suggest",
+  "top-mentors",
+]);
+
+const isCommunityMainMobileNavigationPath = (pathname: string) => {
+  const segments = normalizePathname(pathname).split("/").filter(Boolean);
+
+  return (
+    segments.length === 3 &&
+    segments[0] === "app" &&
+    segments[1] === "community" &&
+    !COMMUNITY_MAIN_ROUTE_RESERVED_SEGMENTS.has(segments[2])
+  );
+};
+
+const shouldShowMobileNavigationForPath = (pathname: string) => {
+  const normalizedPathname = normalizePathname(pathname);
+
+  return (
+    MOBILE_NAVIGATION_ACTIVE_HREF_BY_PATH.has(normalizedPathname) ||
+    isCommunityMainMobileNavigationPath(normalizedPathname)
+  );
+};
+
+const getMobileNavigationActiveHref = (pathname: string) => {
+  return MOBILE_NAVIGATION_ACTIVE_HREF_BY_PATH.get(normalizePathname(pathname)) ?? null;
 };
 
 const DESKTOP_SIDEBAR_STORAGE_KEY_PREFIX = "lectum.desktopSidebar";
@@ -270,11 +332,15 @@ export const PrivateTemplate = ({
   const sessionUser = hasToken ? (hidrate.data ?? storedUser) : null;
   const navigation = useMemo(() => getNavigation(sessionUser?.role), [sessionUser?.role]);
   const shouldShowNavigation = showNavigation ?? showHeader;
-  const shouldRenderMobileNavigation = shouldShowNavigation && showMobileNavigation;
+  const normalizedPathname = normalizePathname(pathname);
+  const shouldRenderMobileNavigation =
+    shouldShowNavigation &&
+    showMobileNavigation &&
+    shouldShowMobileNavigationForPath(normalizedPathname);
   const shouldRenderDesktopSidebar = shouldShowNavigation && desktopNavigation === "sidebar";
   const shouldAutoHideNavigation = shouldShowNavigation && autoHideNavigation;
   const [isNavigationVisible, setIsNavigationVisible] = useState(true);
-  const isMainDesktopNavigationRoute = isPrimaryDesktopNavigationPath(pathname);
+  const isMainDesktopNavigationRoute = isPrimaryDesktopNavigationPath(normalizedPathname);
   const desktopSidebarRouteDefaultCollapsed =
     desktopSidebarDefaultCollapsed ?? !isMainDesktopNavigationRoute;
   const storedDesktopSidebarPreference = useSyncExternalStore(
@@ -286,6 +352,7 @@ export const PrivateTemplate = ({
     storedDesktopSidebarPreference ?? desktopSidebarRouteDefaultCollapsed;
   const isNavigationRenderedVisible = !navigationHidden;
   const isMobileNavigationRenderedVisible = isNavigationVisible && !navigationHidden;
+  const mobileNavigationActiveHref = getMobileNavigationActiveHref(normalizedPathname);
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
   const pageShellClassName = cn(
@@ -368,8 +435,8 @@ export const PrivateTemplate = ({
     >
       <ul className="mx-auto grid w-full max-w-[560px] grid-cols-5">
         {navigation.map((item, index) => {
-          const Icon = item.icon;
-          const isActive = isActivePath(pathname, item);
+          const Icon = item.mobileIcon ?? item.icon;
+          const isActive = item.href === mobileNavigationActiveHref;
 
           if (bottomNavigationCenterAction && index === 2) {
             return (
@@ -399,7 +466,7 @@ export const PrivateTemplate = ({
                 )}
                 href={item.href}
               >
-                <Icon className="h-5 w-5" aria-hidden="true" />
+                <Icon className="h-5 w-5" aria-hidden={true} />
                 <span className="truncate">{item.label}</span>
               </Link>
             </li>
@@ -468,7 +535,7 @@ export const PrivateTemplate = ({
       <nav className="flex flex-1 flex-col gap-1" aria-label="Menu lateral">
         {navigation.map((item) => {
           const Icon = item.icon;
-          const isActive = isDesktopActivePath(pathname, item);
+          const isActive = isDesktopActivePath(normalizedPathname, item);
 
           return (
             <Link
@@ -484,7 +551,7 @@ export const PrivateTemplate = ({
               key={item.href}
               title={isDesktopSidebarCollapsed ? item.label : undefined}
             >
-              <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+              <Icon className="h-5 w-5 shrink-0" aria-hidden={true} />
               <span className={cn("truncate", isDesktopSidebarCollapsed ? "sr-only" : undefined)}>
                 {item.label}
               </span>
