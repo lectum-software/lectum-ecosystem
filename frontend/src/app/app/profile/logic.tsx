@@ -237,7 +237,7 @@ export const ProfileLogic = () => {
     <PrivateTemplate>
       <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-3xl">
         <div className="overflow-hidden rounded-[var(--lectum-card-radius)] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
-          <div className="grid justify-items-center bg-white px-6 py-8 text-center">
+          <div className="grid justify-items-center bg-white px-6 py-8 text-center dark:bg-surface">
             <div className="grid h-28 w-28 place-items-center overflow-hidden rounded-full border-4 border-white bg-primary text-3xl font-bold text-white shadow-[var(--lectum-shadow-soft)]">
               {avatarSrc ? (
                 <Image
