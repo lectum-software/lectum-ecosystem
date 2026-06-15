@@ -47,7 +47,16 @@ export class ReviewRepository implements IReviewRepository {
             select: {
               name: true,
               avatar: true,
-              psychologist_profile: { select: { headline: true } },
+              psychologist_profile: {
+                select: {
+                  headline: true,
+                  subscriptions: {
+                    where: activeProfessionalEntitlementWhere(),
+                    select: { id: true },
+                    take: 1,
+                  },
+                },
+              },
             },
           },
         },
@@ -62,6 +71,8 @@ export class ReviewRepository implements IReviewRepository {
         psychologist_name: item.psychologist.name,
         psychologist_avatar: item.psychologist.avatar,
         psychologist_headline: item.psychologist.psychologist_profile?.headline ?? null,
+        psychologist_verified:
+          (item.psychologist.psychologist_profile?.subscriptions.length || 0) > 0,
         rating: item.rating,
         comment: item.comment,
         response: item.response,

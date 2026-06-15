@@ -15,6 +15,7 @@ export type PatientReviewItem = {
   psychologist_name: string;
   psychologist_avatar: string | null;
   psychologist_headline: string | null;
+  psychologist_verified: boolean;
   rating: number;
   comment: string | null;
   response: string | null;

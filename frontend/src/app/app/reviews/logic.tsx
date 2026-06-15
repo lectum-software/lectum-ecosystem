@@ -1,6 +1,7 @@
 ﻿"use client";
 
-import { ArrowLeft, MessageSquareReply, Star, UserRound } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, MessageSquareReply, Star, UserRound } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { usePatientReviews } from "@/api/callers/reviews";
@@ -8,8 +9,10 @@ import type { PatientReview } from "@/api/generator/types/reviews";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 const LIMIT = 10;
 
@@ -26,22 +29,93 @@ const Stars = ({ rating }: { rating: number }) => (
   </span>
 );
 
+const getInitials = (name: string) =>
+  name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
+
+const formatRating = (rating: number) =>
+  rating.toLocaleString("pt-BR", { maximumFractionDigits: 1, minimumFractionDigits: 0 });
+
+const ReviewPsychologistAvatar = ({ review }: { review: PatientReview }) => {
+  const avatarSrc = resolvePublicMediaUrl(review.psychologist_avatar);
+
+  return (
+    <span className="relative grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-2xl bg-gradient-to-br from-primary-soft via-white to-primary-soft text-sm font-black text-primary ring-1 ring-border dark:via-surface">
+      {avatarSrc ? (
+        <Image
+          alt={review.psychologist_name}
+          className="object-cover"
+          fill
+          sizes="56px"
+          src={avatarSrc}
+          unoptimized={isPublicMediaUrl(review.psychologist_avatar)}
+        />
+      ) : (
+        getInitials(review.psychologist_name)
+      )}
+    </span>
+  );
+};
+
 const ReviewCard = ({ review }: { review: PatientReview }) => (
-  <article className="grid gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
-    <div className="flex items-start justify-between gap-3">
-      <div>
-        <h2 className="text-base font-extrabold text-foreground">{review.psychologist_name}</h2>
-        <Stars rating={review.rating} />
+  <article className="grid gap-4 rounded-[24px] border border-border bg-surface p-4 shadow-[0_14px_34px_rgb(15_23_42_/_6%)] sm:p-5">
+    <div className="flex items-start gap-3">
+      <ReviewPsychologistAvatar review={review} />
+
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5">
+          <h2 className="truncate text-base font-black text-foreground">
+            {review.psychologist_name}
+          </h2>
+          {review.psychologist_verified ? (
+            <VerifiedBadgeIcon className="h-4 w-4" aria-hidden="true" />
+          ) : null}
+        </div>
+        <p className="mt-0.5 truncate text-xs font-semibold text-muted">
+          {review.psychologist_headline || "Psicólogo(a)"}
+        </p>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1 rounded-full bg-warning/10 px-2.5 py-1 text-xs font-black text-warning">
+            <Star className="h-3.5 w-3.5 fill-current" aria-hidden="true" />
+            {formatRating(review.rating)}
+          </span>
+          <Stars rating={review.rating} />
+        </div>
       </div>
-      <time className="shrink-0 text-xs text-subtle" dateTime={review.created_at}>
+
+      <Button asChild className="h-9 w-9 shrink-0 rounded-full p-0 text-muted" variant="ghost">
+        <Link href={`/app/psychologist/${review.psychologist_id}`} aria-label="Abrir perfil">
+          <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+        </Link>
+      </Button>
+    </div>
+
+    {review.comment ? (
+      <p className="rounded-2xl bg-background px-4 py-3 text-sm leading-6 text-muted">
+        “{review.comment}”
+      </p>
+    ) : (
+      <p className="rounded-2xl bg-background px-4 py-3 text-sm text-subtle">
+        Avaliação sem depoimento textual.
+      </p>
+    )}
+
+    <div className="flex items-center justify-between gap-3">
+      <time className="text-xs font-semibold text-subtle" dateTime={review.created_at}>
         {formatDate(review.created_at)}
       </time>
+      <Link
+        className="text-xs font-extrabold text-primary transition hover:text-primary/80"
+        href={`/app/psychologist/${review.psychologist_id}`}
+      >
+        Ver perfil
+      </Link>
     </div>
-    {review.comment ? (
-      <p className="text-sm leading-6 text-muted">{review.comment}</p>
-    ) : (
-      <p className="text-sm text-subtle">Avaliação sem depoimento textual.</p>
-    )}
+
     {review.response ? (
       <div className="rounded-2xl border-l-4 border-primary bg-primary-soft/60 px-4 py-3">
         <p className="flex items-center gap-2 text-xs font-bold uppercase text-primary">
@@ -66,54 +140,70 @@ export const ReviewsLogic = () => {
   const data = reviews.data;
 
   return (
-    <PrivateTemplate>
-      <section className="mx-auto grid w-full max-w-[390px] gap-5 sm:max-w-[430px] lg:max-w-3xl">
-        <header className="flex items-center justify-between border-b border-border bg-surface px-1 pb-4">
-          <Button asChild variant="ghost" className="h-10 w-10 px-0">
-            <Link aria-label="Voltar para perfil" href="/app/profile">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-          </Button>
-          <h1 className="text-lg font-extrabold text-foreground">Avaliações feitas</h1>
-          <span className="h-10 w-10" />
+    <PrivateTemplate contentClassName="bg-background px-0 py-0" showNavigation={false}>
+      <section className="mx-auto min-h-screen w-full max-w-[430px] bg-background sm:max-w-xl">
+        <header
+          className="sticky top-0 z-30 border-border border-b bg-surface/95 supports-[backdrop-filter]:bg-surface/85"
+          style={{ paddingTop: "env(safe-area-inset-top)" }}
+        >
+          <div className="relative flex h-14 items-center justify-center px-4">
+            <Button
+              asChild
+              className="absolute left-4 top-1/2 h-10 w-10 -translate-y-1/2 rounded-full p-0"
+              variant="ghost"
+            >
+              <Link aria-label="Voltar para perfil" href="/app/profile">
+                <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+              </Link>
+            </Button>
+            <h1 className="text-lg font-black text-foreground">Avaliações feitas</h1>
+            <span className="absolute right-4 h-10 w-10" aria-hidden="true" />
+          </div>
         </header>
 
-        {reviews.isLoading ? <LoadingState label="Carregando avaliações" /> : null}
-        {reviews.isError ? (
-          <InlineAlert title="Não foi possível carregar" variant="error">
-            Não foi possível conectar à API agora. Tente novamente em instantes.
-          </InlineAlert>
-        ) : null}
+        <div className="grid gap-4 px-4 py-6">
+          {reviews.isLoading ? (
+            <div className="grid min-h-[45vh] place-items-center rounded-[22px] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
+              <LoadingState label="Carregando avaliações" />
+            </div>
+          ) : null}
+          {reviews.isError ? (
+            <InlineAlert title="Não foi possível carregar" variant="error">
+              Não foi possível conectar à API agora. Tente novamente em instantes.
+            </InlineAlert>
+          ) : null}
 
-        {!reviews.isLoading && !reviews.isError && (data?.data.length || 0) === 0 ? (
-          <EmptyState
-            icon={UserRound}
-            title="Nenhuma avaliação feita"
-            description="Depois de registrar contato real com um psicólogo, você poderá avaliá-lo aqui."
-            action={
-              <Button asChild>
-                <Link href="/app/psychologists">Encontrar psicólogos</Link>
-              </Button>
-            }
-          />
-        ) : null}
+          {!reviews.isLoading && !reviews.isError && (data?.data.length || 0) === 0 ? (
+            <EmptyState
+              icon={UserRound}
+              title="Nenhuma avaliação feita"
+              description="As avaliações que você fizer sobre psicólogos aparecerão aqui."
+              className="border-border bg-surface shadow-[var(--lectum-shadow-soft)]"
+              action={
+                <Button asChild className="rounded-full px-5">
+                  <Link href="/app/psychologists">Encontrar psicólogos</Link>
+                </Button>
+              }
+            />
+          ) : null}
 
-        <div className="grid gap-4">
-          {data?.data.map((review) => (
-            <ReviewCard key={review.id} review={review} />
-          ))}
+          <div className="grid gap-4">
+            {data?.data.map((review) => (
+              <ReviewCard key={review.id} review={review} />
+            ))}
+          </div>
+
+          {(data?.pages || 0) > 1 ? (
+            <Button
+              disabled={reviews.isFetching || page >= (data?.pages || 1)}
+              onClick={() => setPage((current) => current + 1)}
+              type="button"
+              variant="outline"
+            >
+              Carregar mais avaliações
+            </Button>
+          ) : null}
         </div>
-
-        {(data?.pages || 0) > 1 ? (
-          <Button
-            disabled={reviews.isFetching || page >= (data?.pages || 1)}
-            onClick={() => setPage((current) => current + 1)}
-            type="button"
-            variant="outline"
-          >
-            Carregar mais avaliações
-          </Button>
-        ) : null}
       </section>
     </PrivateTemplate>
   );
