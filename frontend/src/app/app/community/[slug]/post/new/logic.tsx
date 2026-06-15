@@ -86,7 +86,6 @@ export const CreateCommunityPostLogic = () => {
         .map((community) => ({
           label: community.name,
           value: community.slug,
-          group: community.category ?? undefined,
         }))
         .sort((a, b) => communityNameCollator.compare(a.label, b.label)),
     [communitiesQuery.data?.data],

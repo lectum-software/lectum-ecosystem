@@ -25,6 +25,7 @@ export function SelectController<FormType extends FieldValues>({
   options = [],
   optionsByField,
   emptyLabel = "Selecione",
+  hideEmptyOption,
   loading,
   searchable,
   searchMode = "input",
@@ -220,7 +221,7 @@ export function SelectController<FormType extends FieldValues>({
                       </div>
                     </div>
 
-                    {emptyOption}
+                    {hideEmptyOption ? null : emptyOption}
                     {renderFilteredOptions()}
                   </div>
                 ) : null}
@@ -285,7 +286,7 @@ export function SelectController<FormType extends FieldValues>({
                     id={listboxId}
                     role="listbox"
                   >
-                    {emptyOption}
+                    {hideEmptyOption ? null : emptyOption}
                     {renderFilteredOptions()}
                   </div>
                 ) : null}

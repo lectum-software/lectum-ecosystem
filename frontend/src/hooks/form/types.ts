@@ -67,6 +67,7 @@ export type Field<FormType extends FieldValues> = {
     emptyLabel?: string;
   };
   emptyLabel?: string;
+  hideEmptyOption?: boolean;
   searchable?: boolean;
   searchMode?: "input" | "dropdown";
   searchPlaceholder?: string;

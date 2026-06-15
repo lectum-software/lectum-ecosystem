@@ -45,6 +45,7 @@ const buildFields = ({
       className: "w-fit gap-0",
       placeholder: "Escolher comunidade",
       emptyLabel: "Escolher comunidade",
+      hideEmptyOption: true,
       options: communityOptions,
       loading: loadingCommunities,
       searchable: true,
