@@ -201,3 +201,10 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Vídeos anexados em respostas usam card 9:16 com largura máxima, alinhado ao padrão do feed/comunidade.
 - ADR criado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
 - Validações executadas: `pnpm --dir backend db:migrate --name add_post_reports`, `pnpm --dir frontend check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm check` e HTTP local `200` na rota do detalhe.
+
+## Execucao complementar: badge TOP Mentor premium no detalhe (2026-06-15)
+
+- O mesmo componente compartilhado `MentorBadge` foi aplicado ao detalhe do post para manter consistencia visual nas respostas/comentarios internos.
+- O ajuste altera somente tipografia, cor e brilho do selo; ranking, conteudo, posicao, dados, comentarios e ordem de exibicao permanecem inalterados.
+- Referencia visual auditavel: `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao.
+- ADR criado: `adrs/0097-top-mentor-badge-premium.md`.

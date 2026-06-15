@@ -127,3 +127,100 @@ a {
     animation: none;
   }
 }
+
+@keyframes top-mentor-badge-shine {
+  0%,
+  46%,
+  100% {
+    transform: translateX(-135%) skewX(-18deg);
+  }
+
+  64% {
+    transform: translateX(135%) skewX(-18deg);
+  }
+}
+
+.top-mentor-badge {
+  --top-mentor-badge-bg: rgb(255 247 219 / 82%);
+  --top-mentor-badge-border: rgb(232 190 82 / 48%);
+  --top-mentor-badge-color: #9a6a05;
+  --top-mentor-badge-shine: rgb(255 255 255 / 70%);
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid var(--top-mentor-badge-border);
+  border-radius: 999px;
+  background: var(--top-mentor-badge-bg);
+  color: var(--top-mentor-badge-color);
+  padding: 0.1875rem 0.4375rem;
+  font-size: 0.66rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.top-mentor-badge::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: -45% -70%;
+  transform: translateX(-135%) skewX(-18deg);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--top-mentor-badge-shine) 48%,
+    transparent 100%
+  );
+  animation: top-mentor-badge-shine 3.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.top-mentor-badge--gold {
+  --top-mentor-badge-bg: linear-gradient(135deg, rgb(255 249 219 / 92%), rgb(248 223 128 / 72%));
+  --top-mentor-badge-border: rgb(224 179 59 / 50%);
+  --top-mentor-badge-color: #936404;
+  --top-mentor-badge-shine: rgb(255 255 255 / 78%);
+}
+
+.top-mentor-badge--silver {
+  --top-mentor-badge-bg: linear-gradient(135deg, rgb(248 250 252 / 92%), rgb(222 229 238 / 78%));
+  --top-mentor-badge-border: rgb(177 188 204 / 52%);
+  --top-mentor-badge-color: #5f6f84;
+  --top-mentor-badge-shine: rgb(255 255 255 / 58%);
+}
+
+.top-mentor-badge--bronze {
+  --top-mentor-badge-bg: linear-gradient(135deg, rgb(255 241 229 / 92%), rgb(231 181 127 / 70%));
+  --top-mentor-badge-border: rgb(190 122 66 / 45%);
+  --top-mentor-badge-color: #8e5528;
+  --top-mentor-badge-shine: rgb(255 239 219 / 62%);
+}
+
+.dark .top-mentor-badge--gold {
+  --top-mentor-badge-bg: linear-gradient(135deg, rgb(105 76 11 / 48%), rgb(71 49 7 / 62%));
+  --top-mentor-badge-border: rgb(234 196 87 / 42%);
+  --top-mentor-badge-color: #f4d36a;
+}
+
+.dark .top-mentor-badge--silver {
+  --top-mentor-badge-bg: linear-gradient(135deg, rgb(71 85 105 / 45%), rgb(42 52 68 / 62%));
+  --top-mentor-badge-border: rgb(203 213 225 / 34%);
+  --top-mentor-badge-color: #cbd5e1;
+}
+
+.dark .top-mentor-badge--bronze {
+  --top-mentor-badge-bg: linear-gradient(135deg, rgb(119 73 36 / 45%), rgb(74 46 27 / 62%));
+  --top-mentor-badge-border: rgb(217 142 83 / 36%);
+  --top-mentor-badge-color: #e6ad74;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .top-mentor-badge::after {
+    animation: none;
+    opacity: 0;
+  }
+}

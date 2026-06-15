@@ -16,6 +16,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { PostListPost, PostProfessionalReply } from "@/api/generator/types/posts";
+import { MentorBadge } from "@/components/community/mentor-badge";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
@@ -136,28 +137,6 @@ const CountAction = ({ active, icon: Icon, label, value }: CountActionProps) => 
     {typeof value === "number" ? value.toLocaleString("pt-BR") : null}
   </span>
 );
-
-const MentorBadge = ({ badge }: { badge?: string | null }) => {
-  if (!badge) return null;
-
-  const colorClassName = badge.includes("#2")
-    ? "text-[#8A8F98]"
-    : badge.includes("#3")
-      ? "text-[#B87333]"
-      : "text-[#D4A017]";
-  const label = badge.replace(/\bMENTOR\b/i, "Mentor");
-
-  return (
-    <span
-      className={cn(
-        "shrink-0 text-[11px] font-medium leading-none tracking-normal opacity-75",
-        colorClassName,
-      )}
-    >
-      {label}
-    </span>
-  );
-};
 
 const MediaBlock = ({
   alt,

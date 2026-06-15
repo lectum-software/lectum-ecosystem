@@ -45,6 +45,7 @@ import {
 } from "@/api/callers/posts";
 import type { PostDetail, PostReply } from "@/api/generator/types/posts";
 import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
+import { MentorBadge } from "@/components/community/mentor-badge";
 import { PostActionButton, PostActionLink } from "@/components/community/post-action-button";
 import { VoteActionButton } from "@/components/community/vote-action-button";
 import { components } from "@/components/controllers";
@@ -187,41 +188,6 @@ const getInitials = (name: string) => {
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
 
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-};
-
-const mentorBadgeClassName = (badge: string) => {
-  if (badge.includes("#1")) {
-    return "text-[#D4A017]";
-  }
-
-  if (badge.includes("#2")) {
-    return "text-[#8A8F98]";
-  }
-
-  if (badge.includes("#3")) {
-    return "text-[#B87333]";
-  }
-
-  return "text-[#D4A017]";
-};
-
-const mentorBadgeLabel = (badge: string) => {
-  return badge.replace(/\bMENTOR\b/i, "Mentor");
-};
-
-const MentorBadge = ({ badge }: { badge?: string | null }) => {
-  if (!badge) return null;
-
-  return (
-    <span
-      className={cn(
-        "shrink-0 text-[11px] font-medium leading-none tracking-normal opacity-75",
-        mentorBadgeClassName(badge),
-      )}
-    >
-      {mentorBadgeLabel(badge)}
-    </span>
-  );
 };
 
 const AuthorAvatar = ({

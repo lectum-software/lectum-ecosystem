@@ -57,6 +57,7 @@ import type {
 } from "@/api/generator/types/community";
 import { CommunityFollowButton } from "@/components/community/community-follow-button";
 import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
+import { MentorBadge } from "@/components/community/mentor-badge";
 import { PostActionButton, PostActionLink } from "@/components/community/post-action-button";
 import { VoteActionButton, type VoteValue } from "@/components/community/vote-action-button";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
@@ -773,42 +774,6 @@ const AuthorAvatar = ({
       ) : (
         getInitials(author.name)
       )}
-    </span>
-  );
-};
-
-const mentorBadgeClassName = (badge: string) => {
-  if (badge.includes("#1")) {
-    return "text-[#D4A017]";
-  }
-
-  if (badge.includes("#2")) {
-    return "text-[#8A8F98]";
-  }
-
-  if (badge.includes("#3")) {
-    return "text-[#B87333]";
-  }
-
-  return "text-[#D4A017]";
-};
-
-const mentorBadgeLabel = (badge: string) => {
-  return badge.replace(/\bMENTOR\b/i, "Mentor");
-};
-
-const MentorBadge = ({ badge, className }: { badge?: string | null; className?: string }) => {
-  if (!badge) return null;
-
-  return (
-    <span
-      className={cn(
-        "shrink-0 text-[11px] font-medium leading-none tracking-normal opacity-75",
-        mentorBadgeClassName(badge),
-        className,
-      )}
-    >
-      {mentorBadgeLabel(badge)}
     </span>
   );
 };

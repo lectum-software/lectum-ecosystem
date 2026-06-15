@@ -323,3 +323,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP local sem cookie autenticado retornou 307 esperado para `/app/community/feed`.
+
+## Execucao complementar: badge TOP Mentor premium (2026-06-15)
+
+- Pedido do usuario: reforcar visualmente o badge `TOP #1 Mentor` em respostas/comentarios de psicologos, com ouro/prata/bronze por posicao e brilho sutil sem alterar ranking, dados ou layout geral.
+- Foi criado o componente compartilhado `frontend/src/components/community/mentor-badge.tsx` para padronizar o selo no feed e nas respostas profissionais.
+- O badge passou a usar tipografia compacta com peso 800, letter-spacing sutil, variacao visual por posicao (`#1` ouro, `#2` prata, `#3` bronze) e brilho horizontal por CSS.
+- A string recebida da API permanece a fonte do conteudo; a aparencia em caixa alta e apenas transformacao visual via CSS.
+- A animacao respeita `prefers-reduced-motion`, ficando estatica para usuarios que reduzem movimento.
+- Nao houve mudanca de backend, Prisma, migrations, endpoints, ranking, ordenacao, dados, posicao do badge ou estrutura dos cards.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; as referencias visuais usadas foram `_product/proto/Feed Comunidade.jpg` e o pedido detalhado do usuario.
+- ADR criado: `adrs/0097-top-mentor-badge-premium.md`.
+- Validacoes executadas nesta execucao: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP local sem cookie autenticado retornou 307 esperado para `/app/community/feed`.
