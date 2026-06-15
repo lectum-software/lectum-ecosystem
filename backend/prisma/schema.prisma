@@ -56,6 +56,7 @@ model user {
   post_reply_saves           post_reply_save[]           @relation("post_reply_save_user")
   post_reports               post_report[]               @relation("post_report_reporter")
   notification_subscriptions notification_subscription[] @relation("notification_subscription_user")
+  visitor_locations          visitor_location[]          @relation("visitor_location_user")
   logs                       log__user[]                 @relation("log__user_user")
   notifications              notification[]              @relation("notifications")
   notification_preference    notification_preference?    @relation("notification_preference_user")
@@ -77,6 +78,29 @@ model notification_preference {
   user      user      @relation("notification_preference_user", fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("notification_preferences")
+}
+
+model visitor_location {
+  id         String    @id @default(cuid())
+  deleted    Boolean   @default(false)
+  deletedAt  DateTime? @map("deleted_at")
+  updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  visitor_id String    @map("visitor_id")
+  session_id String?   @map("session_id")
+  user_id    String?   @map("user_id")
+  city       String?
+  state      String?
+  country    String?
+  source     String    @default("ip")
+  confidence Float?
+  provider   String?
+  user       user?     @relation("visitor_location_user", fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@index([visitor_id, createdAt])
+  @@index([user_id, createdAt])
+  @@index([city, state, country])
+  @@map("visitor_locations")
 }
 
 model user_token {

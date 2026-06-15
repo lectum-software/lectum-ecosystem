@@ -394,6 +394,24 @@ export interface notification_subscription {
   user?: user | null;
 }
 
+export interface visitor_location {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  visitor_id?: string | null;
+  session_id?: string | null;
+  user_id?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
+  source?: string | null;
+  confidence?: number | null;
+  provider?: string | null;
+  user?: user | null;
+}
+
 export interface notification {
   id?: string | null;
   deleted?: boolean | null;
@@ -462,6 +480,7 @@ export interface user {
   post_saves?: post_save[] | null;
   post_reply_saves?: post_reply_save[] | null;
   notification_subscriptions?: notification_subscription[] | null;
+  visitor_locations?: visitor_location[] | null;
   notifications?: notification[] | null;
   notification_preference?: notification_preference | null;
 }

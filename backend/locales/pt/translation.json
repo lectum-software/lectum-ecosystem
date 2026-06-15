@@ -144,7 +144,9 @@
     "google_unlink_success": "Google desconectado da sua conta com sucesso.",
     "account_delete_success": "Conta excluída com sucesso.",
     "post_reply_media_uploaded": "Mídia anexada com sucesso.",
-    "post_report_created": "Denúncia enviada para análise da equipe Lectum."
+    "post_report_created": "Denúncia enviada para análise da equipe Lectum.",
+    "location_capture_success": "Localização aproximada registrada com sucesso.",
+    "location_capture_skipped": "Captura de localização aproximada ignorada por regra de frequência."
   },
   "gender": {
     "o": "o"
@@ -173,7 +175,8 @@
     "post_reply": "resposta",
     "post_vote": "voto",
     "post_save": "publicação salva",
-    "post_report": "denúncia de publicação"
+    "post_report": "denúncia de publicação",
+    "visitor_location": "localização de visitante"
   },
   "property": {
     "email": "email",
@@ -212,7 +215,9 @@
     "anonymous": "postar como anônimo",
     "parentReplyId": "resposta original",
     "replyId": "resposta",
-    "value": "voto"
+    "value": "voto",
+    "visitor_id": "visitante",
+    "session_id": "sessão"
   },
   "notification": {
     "nova_avaliacao": {
