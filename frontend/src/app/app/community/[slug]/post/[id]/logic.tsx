@@ -87,6 +87,10 @@ type ReplyTarget = {
   name: string;
 } | null;
 
+type ReplyTargetItem = NonNullable<ReplyTarget>;
+type ReplyTargetMap = Record<string, ReplyTargetItem>;
+const EMPTY_REPLY_TARGETS: ReplyTargetMap = {};
+
 type ReplyMediaPermission = {
   canAttach: boolean;
   reason: string;
@@ -97,9 +101,26 @@ const DETAIL_INLINE_TEXT_MAX_LINES = 4;
 const DETAIL_INLINE_TEXT_MORE_LABEL = "... ver mais";
 const DETAIL_INLINE_TEXT_LESS_LABEL = "ver menos";
 const COMMENT_GUIDANCE_MESSAGE = "Comente com respeito e empatia, mesmo quando discordar.";
+const POST_DETAIL_MOBILE_QUERY = "(max-width: 639px)";
 
 const replyMediaPermissionLabel =
   "Mídia disponível apenas para psicólogos verificados com Plano Profissional ativo.";
+
+const useIsPostDetailMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(POST_DETAIL_MOBILE_QUERY);
+    const updateMatch = () => setIsMobile(mediaQuery.matches);
+
+    updateMatch();
+    mediaQuery.addEventListener("change", updateMatch);
+
+    return () => mediaQuery.removeEventListener("change", updateMatch);
+  }, []);
+
+  return isMobile;
+};
 
 const InlineExpandableText = ({
   className,
@@ -828,10 +849,10 @@ const ReplyVoteBar = ({
 );
 
 const ReplyCard = ({
-  activeReplyTarget,
   depth = 0,
+  inlineReplyTargets,
   mediaPermission,
-  onCancelReplyTarget,
+  onCancelInlineReplyTarget,
   onReply,
   onShare,
   onSubmitReply,
@@ -843,10 +864,10 @@ const ReplyCard = ({
   replyDisabled,
   votePending,
 }: {
-  activeReplyTarget?: ReplyTarget;
   depth?: number;
+  inlineReplyTargets: ReplyTargetMap;
   mediaPermission: ReplyMediaPermission;
-  onCancelReplyTarget: () => void;
+  onCancelInlineReplyTarget: (replyId: string) => void;
   onReply: (reply: PostReply) => void;
   onShare: (reply: PostReply) => void;
   onSubmitReply: (
@@ -867,7 +888,8 @@ const ReplyCard = ({
   const highlightedProfessionalThread = professionalThread || isVerifiedProfessional;
   const saveReplyMutation = useSaveReply(postId, reply.id);
   const psychologistProfileHref = isProfessional ? `/app/psychologist/${reply.author.id}` : null;
-  const isReplyComposerOpen = activeReplyTarget?.id === reply.id;
+  const inlineReplyTarget = inlineReplyTargets[reply.id] ?? null;
+  const isReplyComposerOpen = Boolean(inlineReplyTarget);
   const [contentExpanded, setContentExpanded] = useState(false);
 
   return (
@@ -983,9 +1005,11 @@ const ReplyCard = ({
           apiError={replyApiError}
           disabled={replyDisabled}
           mediaPermission={mediaPermission}
+          onCancelContext={() => onCancelInlineReplyTarget(reply.id)}
           onSubmit={(values, mediaFile) => onSubmitReply(values, reply.id, mediaFile)}
-          replyTarget={activeReplyTarget ?? null}
+          replyTarget={inlineReplyTarget}
           variant="inline"
+          autoFocus
         />
       ) : null}
 
@@ -999,11 +1023,11 @@ const ReplyCard = ({
         >
           {reply.replies.map((child) => (
             <ReplyCard
-              activeReplyTarget={activeReplyTarget}
               depth={1}
+              inlineReplyTargets={inlineReplyTargets}
               key={child.id}
               mediaPermission={mediaPermission}
-              onCancelReplyTarget={onCancelReplyTarget}
+              onCancelInlineReplyTarget={onCancelInlineReplyTarget}
               onReply={onReply}
               onShare={onShare}
               onSubmitReply={onSubmitReply}
@@ -1032,18 +1056,22 @@ const ReplyCard = ({
 
 const ReplyComposer = ({
   apiError,
+  autoFocus = false,
   disabled,
   formRef,
   mediaPermission,
+  onCancelContext,
   onSubmit,
   replyToName,
   replyTarget,
   variant = "main",
 }: {
   apiError?: string | null;
+  autoFocus?: boolean;
   disabled?: boolean;
   formRef?: RefObject<HTMLFormElement | null>;
   mediaPermission: ReplyMediaPermission;
+  onCancelContext?: () => void;
   onSubmit: (values: ReplyComposerForm, mediaFile?: File | null) => Promise<void> | void;
   replyToName?: string | null;
   replyTarget: ReplyTarget;
@@ -1053,7 +1081,9 @@ const ReplyComposer = ({
   const { formProps, hook } = form;
   const [composerActive, setComposerActive] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<File | null>(null);
+  const localFormRef = useRef<HTMLFormElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const resolvedFormRef = formRef ?? localFormRef;
   const visibleError = useMemo(() => {
     if (apiError) return apiError;
     if (!hook.formState.isSubmitted) return null;
@@ -1063,7 +1093,7 @@ const ReplyComposer = ({
   const content = hook.watch("content");
   const draft = String(content ?? "").trim();
   const hasDraft = draft.length > 0;
-  const ready = draft.length >= 3;
+  const ready = hasDraft;
   const expanded =
     composerActive ||
     hasDraft ||
@@ -1072,7 +1102,20 @@ const ReplyComposer = ({
   const FieldComponent = components[formProps.fields[0].field];
   const isInline = variant === "inline";
   const shouldShowMediaControls = mediaPermission.showControl || Boolean(selectedMedia);
-  const shouldShowGuidance = composerActive || hasDraft || isInline || Boolean(selectedMedia);
+  const shouldShowGuidance = composerActive || hasDraft || Boolean(selectedMedia);
+  const shouldShowReplyContext = !isInline && Boolean(replyTarget);
+  const autoFocusTargetId = replyTarget?.id ?? "main";
+
+  useEffect(() => {
+    if (!autoFocus || !autoFocusTargetId) return;
+
+    const timer = window.setTimeout(() => {
+      const inputNode = resolvedFormRef.current?.querySelector<HTMLTextAreaElement>("textarea");
+      inputNode?.focus({ preventScroll: true });
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [autoFocus, autoFocusTargetId, resolvedFormRef]);
 
   const handleMediaChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -1111,8 +1154,21 @@ const ReplyComposer = ({
           // O estado de erro é tratado pela mutation para manter o campo preenchido.
         }
       })}
-      ref={formRef}
+      ref={resolvedFormRef}
     >
+      {shouldShowReplyContext ? (
+        <div className="flex items-center justify-between gap-3 rounded-[14px] bg-[#EDF6FF] px-3 py-2 text-xs font-bold leading-5 text-[#2579CF] dark:bg-primary/10 dark:text-primary">
+          <span className="min-w-0 truncate">Respondendo {replyTarget?.name}</span>
+          <button
+            className="shrink-0 rounded-full px-2 py-1 text-[11px] font-black text-[#2579CF] transition hover:bg-white/70 dark:hover:bg-primary/10"
+            onClick={onCancelContext}
+            type="button"
+          >
+            Cancelar
+          </button>
+        </div>
+      ) : null}
+
       {shouldShowGuidance ? (
         <p className="rounded-[14px] bg-[#F8FAFC] px-3 py-2 text-xs font-semibold leading-5 text-[#64748B] dark:bg-surface-muted dark:text-muted">
           {COMMENT_GUIDANCE_MESSAGE}
@@ -1353,11 +1409,11 @@ const Pagination = ({
 };
 
 const RepliesList = ({
-  activeReplyTarget,
   errorMessage,
+  inlineReplyTargets,
   loading,
   mediaPermission,
-  onCancelReplyTarget,
+  onCancelInlineReplyTarget,
   onReply,
   onShare,
   onSubmitReply,
@@ -1368,11 +1424,11 @@ const RepliesList = ({
   replyDisabled,
   votePending,
 }: {
-  activeReplyTarget?: ReplyTarget;
   errorMessage?: string | null;
+  inlineReplyTargets: ReplyTargetMap;
   loading?: boolean;
   mediaPermission: ReplyMediaPermission;
-  onCancelReplyTarget: () => void;
+  onCancelInlineReplyTarget: (replyId: string) => void;
   onReply: (reply: PostReply) => void;
   onShare: (reply: PostReply) => void;
   onSubmitReply: (
@@ -1420,10 +1476,10 @@ const RepliesList = ({
         <div className="grid gap-4 border-[#DCEBFF] border-l-2 pl-3">
           {orderedReplies.map((reply) => (
             <ReplyCard
-              activeReplyTarget={activeReplyTarget}
+              inlineReplyTargets={inlineReplyTargets}
               key={reply.id}
               mediaPermission={mediaPermission}
-              onCancelReplyTarget={onCancelReplyTarget}
+              onCancelInlineReplyTarget={onCancelInlineReplyTarget}
               onReply={onReply}
               onShare={onShare}
               onSubmitReply={onSubmitReply}
@@ -1445,8 +1501,10 @@ export const PostDetailLogic = () => {
   const params = useParams<{ slug: string; id: string }>();
   const slug = typeof params.slug === "string" ? params.slug : "";
   const postId = typeof params.id === "string" ? params.id : "";
+  const isMobile = useIsPostDetailMobile();
   const [page, setPage] = useState(1);
-  const [replyTarget, setReplyTarget] = useState<ReplyTarget>(null);
+  const [mobileReplyTarget, setMobileReplyTarget] = useState<ReplyTarget>(null);
+  const [desktopReplyTargets, setDesktopReplyTargets] = useState<ReplyTargetMap>({});
   const [replyError, setReplyError] = useState<string | null>(null);
   const [reportError, setReportError] = useState<string | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
@@ -1462,10 +1520,7 @@ export const PostDetailLogic = () => {
   const voteMutation = useVotePost(postId);
   const saveMutation = useSavePost(postId);
   const createReplyMutation = useCreatePostReply({
-    onSuccess: () => {
-      setReplyError(null);
-      setReplyTarget(null);
-    },
+    onSuccess: () => setReplyError(null),
     onError: (error) => setReplyError(resolveReplyError(error)),
   });
   const uploadReplyMediaMutation = useUploadPostReplyMedia({
@@ -1482,6 +1537,9 @@ export const PostDetailLogic = () => {
   const replies = repliesQuery.data?.data ?? [];
   const postError = postQuery.isError ? resolvePostError(postQuery.error) : null;
   const repliesError = repliesQuery.isError ? resolvePostError(repliesQuery.error) : null;
+  const hasDesktopReplyTargets = !isMobile && Object.keys(desktopReplyTargets).length > 0;
+  const activeMobileReplyTarget = isMobile ? mobileReplyTarget : null;
+  const visibleInlineReplyTargets = isMobile ? EMPTY_REPLY_TARGETS : desktopReplyTargets;
 
   const sharePost = async () => {
     if (!post || typeof window === "undefined") return;
@@ -1521,18 +1579,39 @@ export const PostDetailLogic = () => {
 
   const focusMainComposer = () => {
     setReplyError(null);
-    setReplyTarget(null);
+    setMobileReplyTarget(null);
 
-    const composerNode = composerRef.current;
-    const inputNode = composerNode?.querySelector<HTMLTextAreaElement>("textarea");
+    window.setTimeout(() => {
+      const composerNode = composerRef.current;
+      const inputNode = composerNode?.querySelector<HTMLTextAreaElement>("textarea");
 
-    composerNode?.scrollIntoView({ behavior: "smooth", block: "center" });
-    inputNode?.focus({ preventScroll: true });
+      if (!isMobile) {
+        composerNode?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+
+      inputNode?.focus({ preventScroll: true });
+    }, 0);
   };
 
   const handleReplyTarget = (reply: PostReply) => {
     setReplyError(null);
-    setReplyTarget({ id: reply.id, name: reply.author.name });
+    const target = { id: reply.id, name: reply.author.name };
+
+    if (isMobile) {
+      setMobileReplyTarget(target);
+
+      window.setTimeout(() => {
+        const inputNode = composerRef.current?.querySelector<HTMLTextAreaElement>("textarea");
+        inputNode?.focus({ preventScroll: true });
+      }, 0);
+
+      return;
+    }
+
+    setDesktopReplyTargets((currentTargets) => ({
+      ...currentTargets,
+      [reply.id]: target,
+    }));
   };
 
   const submitReply = async (
@@ -1563,6 +1642,21 @@ export const PostDetailLogic = () => {
           : null,
       ),
     });
+
+    if (parentReplyId) {
+      setDesktopReplyTargets((currentTargets) => {
+        if (!currentTargets[parentReplyId]) return currentTargets;
+
+        const nextTargets = { ...currentTargets };
+        delete nextTargets[parentReplyId];
+        return nextTargets;
+      });
+      setMobileReplyTarget((currentTarget) =>
+        currentTarget?.id === parentReplyId ? null : currentTarget,
+      );
+    } else {
+      setMobileReplyTarget(null);
+    }
   };
 
   return (
@@ -1630,21 +1724,33 @@ export const PostDetailLogic = () => {
               ) : null}
 
               <ReplyComposer
-                apiError={replyTarget ? null : replyError}
+                apiError={!isMobile && hasDesktopReplyTargets ? null : replyError}
+                autoFocus={Boolean(activeMobileReplyTarget)}
                 disabled={createReplyMutation.isPending || uploadReplyMediaMutation.isPending}
                 formRef={composerRef}
                 mediaPermission={mediaPermission}
-                onSubmit={(values, mediaFile) => submitReply(values, null, mediaFile)}
+                onCancelContext={() => setMobileReplyTarget(null)}
+                onSubmit={(values, mediaFile) =>
+                  submitReply(values, activeMobileReplyTarget?.id ?? null, mediaFile)
+                }
                 replyToName={post.author.name}
-                replyTarget={null}
+                replyTarget={activeMobileReplyTarget}
               />
 
               <RepliesList
-                activeReplyTarget={replyTarget}
                 errorMessage={repliesError}
+                inlineReplyTargets={visibleInlineReplyTargets}
                 loading={repliesQuery.isLoading || repliesQuery.isPending}
                 mediaPermission={mediaPermission}
-                onCancelReplyTarget={() => setReplyTarget(null)}
+                onCancelInlineReplyTarget={(replyId) =>
+                  setDesktopReplyTargets((currentTargets) => {
+                    if (!currentTargets[replyId]) return currentTargets;
+
+                    const nextTargets = { ...currentTargets };
+                    delete nextTargets[replyId];
+                    return nextTargets;
+                  })
+                }
                 onReply={handleReplyTarget}
                 onShare={shareReply}
                 onSubmitReply={(values, parentReplyId, mediaFile) =>
