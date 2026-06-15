@@ -129,6 +129,15 @@ const COMMUNITY_POST_SORT_PERIODS: Array<{
 const getCommunityPostSortPeriodLabel = (value: CommunityPostSortPeriod) =>
   COMMUNITY_POST_SORT_PERIODS.find((period) => period.value === value)?.label ?? "Desde sempre";
 
+const communityPostSortChipClassName = (active: boolean) =>
+  cn(
+    "inline-flex h-10 min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-full border px-4 text-sm font-black leading-none transition",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
+    active
+      ? "border-primary/20 bg-primary-soft text-primary"
+      : "border-[#E5EAF0] bg-white text-[#64748B] hover:border-primary/40 hover:bg-[#F8FBFF] hover:text-primary dark:border-border dark:bg-surface dark:text-muted",
+  );
+
 const FEED_SCOPE_OPTIONS: Array<{ label: string; value: CommunityFeedScope }> = [
   { label: "Todas as comunidades", value: "all" },
   { label: "Comunidades que sigo", value: "following" },
@@ -1879,13 +1888,7 @@ const CommunityPeriodSortChip = ({
         aria-expanded={open}
         aria-haspopup="menu"
         aria-pressed={active}
-        className={cn(
-          "inline-flex min-h-10 items-center gap-1.5 rounded-full border px-4 text-sm font-black leading-none transition",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
-          active
-            ? "border-primary/20 bg-primary-soft text-primary"
-            : "border-[#E5EAF0] bg-white text-[#64748B] hover:border-primary/40 hover:bg-[#F8FBFF] hover:text-primary dark:border-border dark:bg-surface dark:text-muted",
-        )}
+        className={communityPostSortChipClassName(active)}
         onClick={toggleMenu}
         ref={buttonRef}
         type="button"
@@ -1984,13 +1987,6 @@ const CommunityPostSortChips = ({
         const active = value === item.value;
         const hasPeriod = "period" in item;
         const periodValue = hasPeriod ? periods[item.value as CommunityPostSortWithPeriod] : null;
-        const chipClassName = cn(
-          "inline-flex min-h-10 items-center gap-1.5 rounded-full border px-4 text-sm font-black leading-none transition",
-          active
-            ? "border-primary/20 bg-primary-soft text-primary"
-            : "border-[#E5EAF0] bg-white text-[#64748B] hover:border-primary/40 hover:bg-[#F8FBFF] hover:text-primary dark:border-border dark:bg-surface dark:text-muted",
-        );
-
         if (hasPeriod && periodValue) {
           return (
             <CommunityPeriodSortChip
@@ -2007,17 +2003,16 @@ const CommunityPostSortChips = ({
         }
 
         return (
-          <div className={chipClassName} key={item.value}>
-            <button
-              aria-pressed={active}
-              className="-mx-4 -my-px inline-flex min-h-10 items-center gap-1.5 px-4"
-              onClick={() => onChange(item.value)}
-              type="button"
-            >
-              <Icon className="h-4 w-4" aria-hidden="true" />
-              {item.label}
-            </button>
-          </div>
+          <button
+            aria-pressed={active}
+            className={communityPostSortChipClassName(active)}
+            key={item.value}
+            onClick={() => onChange(item.value)}
+            type="button"
+          >
+            <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>{item.label}</span>
+          </button>
         );
       })}
     </div>
