@@ -1609,7 +1609,7 @@ const CommunityHeader = ({
         <div className="-mt-8 flex items-start justify-between gap-4">
           <CommunityLogo community={community} palette={palette} />
           <CommunityFollowButton
-            className="mt-10 h-10 px-6 text-sm"
+            className="mt-10"
             disabled={membershipPending}
             following={following}
             onClick={onToggleFollow}
