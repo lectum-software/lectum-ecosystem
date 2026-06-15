@@ -87,7 +87,7 @@ const PAGE_LIMIT = 20;
 
 const DEFAULT_NAV_BAR_HEIGHT = 72;
 const PSYCHOLOGISTS_BACKGROUND_VIDEO_SELECTOR = "video[data-psychologists-background='true']";
-const SWIPE_HINT_STORAGE_KEY = "lectum:psychologists:has-seen-swipe-hint";
+const SWIPE_HINT_STORAGE_KEY = "lectum:psychologists:has-seen-discovery-hint:v2";
 const VIDEO_SINGLE_TAP_DELAY_MS = 260;
 
 const isPsychologistsScrollLockTarget = (target: EventTarget | null) => {
@@ -109,9 +109,6 @@ const LONG_PRESS_MOVE_TOLERANCE_PX = 20;
 const LONG_PRESS_SCROLL_INTENT_THRESHOLD_PX = 32;
 const LONG_PRESS_SIGNIFICANT_DRAG_THRESHOLD_PX = 44;
 const LONG_PRESS_VERTICAL_DOMINANCE_RATIO = 1.15;
-const SWIPE_HINT_INITIAL_DURATION_MS = 3000;
-const SWIPE_HINT_IDLE_DELAY_MS = 5000;
-const SWIPE_HINT_IDLE_DURATION_MS = 2000;
 const SWIPE_HINT_NUDGE_DURATION_MS = 760;
 
 type VideoProgressState = {
@@ -748,10 +745,7 @@ export const PsychologistsLogic = () => {
   const lastVideoProgressStateSyncRef = useRef(0);
   const wasVideoPlayingBeforeProgressScrubRef = useRef(false);
   const videoSeekPreviewRatioRef = useRef<number | null>(null);
-  const swipeHintHideTimeoutRef = useRef<number | null>(null);
-  const swipeHintIdleTimeoutRef = useRef<number | null>(null);
   const swipeHintNudgeTimeoutRef = useRef<number | null>(null);
-  const hasInteractedWithFirstVideoRef = useRef(false);
   const hasShownInitialSwipeHintRef = useRef(false);
   const hasPlayedSwipeNudgeRef = useRef(false);
   const suppressNextTapRef = useRef(false);
@@ -870,64 +864,41 @@ export const PsychologistsLogic = () => {
     (searchSuggestionsDirectory.isFetching || searchSuggestionItems.length > 0);
 
   const clearSwipeHintTimers = useCallback(() => {
-    if (swipeHintHideTimeoutRef.current) {
-      window.clearTimeout(swipeHintHideTimeoutRef.current);
-      swipeHintHideTimeoutRef.current = null;
-    }
-
-    if (swipeHintIdleTimeoutRef.current) {
-      window.clearTimeout(swipeHintIdleTimeoutRef.current);
-      swipeHintIdleTimeoutRef.current = null;
-    }
-
     if (swipeHintNudgeTimeoutRef.current) {
       window.clearTimeout(swipeHintNudgeTimeoutRef.current);
       swipeHintNudgeTimeoutRef.current = null;
     }
   }, []);
 
-  const showSwipeHintTemporarily = useCallback(
-    (duration: number, options?: { nudge?: boolean }) => {
-      if (swipeHintHideTimeoutRef.current) {
-        window.clearTimeout(swipeHintHideTimeoutRef.current);
+  const showSwipeHintUntilNavigation = useCallback((options?: { nudge?: boolean }) => {
+    setShowSwipeHint(true);
+
+    if (options?.nudge && !hasPlayedSwipeNudgeRef.current) {
+      hasPlayedSwipeNudgeRef.current = true;
+      setShouldNudgeSwipeCard(true);
+
+      if (swipeHintNudgeTimeoutRef.current) {
+        window.clearTimeout(swipeHintNudgeTimeoutRef.current);
       }
 
-      setShowSwipeHint(true);
-
-      if (options?.nudge && !hasPlayedSwipeNudgeRef.current) {
-        hasPlayedSwipeNudgeRef.current = true;
-        setShouldNudgeSwipeCard(true);
-
-        if (swipeHintNudgeTimeoutRef.current) {
-          window.clearTimeout(swipeHintNudgeTimeoutRef.current);
-        }
-
-        swipeHintNudgeTimeoutRef.current = window.setTimeout(() => {
-          setShouldNudgeSwipeCard(false);
-          swipeHintNudgeTimeoutRef.current = null;
-        }, SWIPE_HINT_NUDGE_DURATION_MS);
-      }
-
-      swipeHintHideTimeoutRef.current = window.setTimeout(() => {
-        setShowSwipeHint(false);
-        swipeHintHideTimeoutRef.current = null;
-      }, duration);
-    },
-    [],
-  );
+      swipeHintNudgeTimeoutRef.current = window.setTimeout(() => {
+        setShouldNudgeSwipeCard(false);
+        swipeHintNudgeTimeoutRef.current = null;
+      }, SWIPE_HINT_NUDGE_DURATION_MS);
+    }
+  }, []);
 
   const registerSwipeHintInteraction = useCallback(() => {
-    hasInteractedWithFirstVideoRef.current = true;
-
-    if (swipeHintIdleTimeoutRef.current) {
-      window.clearTimeout(swipeHintIdleTimeoutRef.current);
-      swipeHintIdleTimeoutRef.current = null;
+    if (swipeHintNudgeTimeoutRef.current) {
+      window.clearTimeout(swipeHintNudgeTimeoutRef.current);
+      swipeHintNudgeTimeoutRef.current = null;
     }
+
+    setShouldNudgeSwipeCard(false);
   }, []);
 
   const markSwipeHintSeen = useCallback(() => {
     clearSwipeHintTimers();
-    hasInteractedWithFirstVideoRef.current = true;
     setShowSwipeHint(false);
     setShouldNudgeSwipeCard(false);
 
@@ -935,9 +906,9 @@ export const PsychologistsLogic = () => {
       if (current) return current;
 
       try {
-        window.localStorage.setItem(SWIPE_HINT_STORAGE_KEY, "true");
+        window.sessionStorage.setItem(SWIPE_HINT_STORAGE_KEY, "true");
       } catch {
-        // LocalStorage pode estar indisponivel em modos restritos; a sessao atual ainda respeita o estado.
+        // SessionStorage pode estar indisponivel em modos restritos; a sessao atual ainda respeita o estado.
       }
 
       return true;
@@ -1007,7 +978,7 @@ export const PsychologistsLogic = () => {
     let hasSeenStoredHint = false;
 
     try {
-      hasSeenStoredHint = window.localStorage.getItem(SWIPE_HINT_STORAGE_KEY) === "true";
+      hasSeenStoredHint = window.sessionStorage.getItem(SWIPE_HINT_STORAGE_KEY) === "true";
     } catch {
       hasSeenStoredHint = false;
     }
@@ -1035,57 +1006,14 @@ export const PsychologistsLogic = () => {
     }
 
     hasShownInitialSwipeHintRef.current = true;
-    showSwipeHintTemporarily(SWIPE_HINT_INITIAL_DURATION_MS, { nudge: true });
+    showSwipeHintUntilNavigation({ nudge: true });
   }, [
     canSwipeBetweenPsychologists,
     errorMessage,
     hasLoadedSwipeHintPreference,
     hasSeenSwipeHint,
     showInitialLoading,
-    showSwipeHintTemporarily,
-  ]);
-
-  useEffect(() => {
-    if (
-      !hasLoadedSwipeHintPreference ||
-      hasSeenSwipeHint ||
-      !canSwipeBetweenPsychologists ||
-      activePsychologistIndex !== 0 ||
-      isFiltersOpen ||
-      hasInteractedWithFirstVideoRef.current
-    ) {
-      if (swipeHintIdleTimeoutRef.current) {
-        window.clearTimeout(swipeHintIdleTimeoutRef.current);
-        swipeHintIdleTimeoutRef.current = null;
-      }
-      return;
-    }
-
-    if (swipeHintIdleTimeoutRef.current) {
-      window.clearTimeout(swipeHintIdleTimeoutRef.current);
-    }
-
-    swipeHintIdleTimeoutRef.current = window.setTimeout(() => {
-      if (!hasInteractedWithFirstVideoRef.current) {
-        showSwipeHintTemporarily(SWIPE_HINT_IDLE_DURATION_MS);
-      }
-
-      swipeHintIdleTimeoutRef.current = null;
-    }, SWIPE_HINT_IDLE_DELAY_MS);
-
-    return () => {
-      if (swipeHintIdleTimeoutRef.current) {
-        window.clearTimeout(swipeHintIdleTimeoutRef.current);
-        swipeHintIdleTimeoutRef.current = null;
-      }
-    };
-  }, [
-    activePsychologistIndex,
-    canSwipeBetweenPsychologists,
-    hasLoadedSwipeHintPreference,
-    hasSeenSwipeHint,
-    isFiltersOpen,
-    showSwipeHintTemporarily,
+    showSwipeHintUntilNavigation,
   ]);
 
   useEffect(() => {
@@ -1839,7 +1767,9 @@ export const PsychologistsLogic = () => {
       const nextIndex = Math.max(0, Math.min(psychologists.length - 1, index));
       const container = feedContainerRef.current;
 
-      markSwipeHintSeen();
+      if (nextIndex !== activePsychologistIndex) {
+        markSwipeHintSeen();
+      }
       setActivePsychologistIndex(nextIndex);
 
       if (!container) return;
@@ -1853,7 +1783,7 @@ export const PsychologistsLogic = () => {
         top: targetSlide?.offsetTop ?? nextIndex * container.clientHeight,
       });
     },
-    [markSwipeHintSeen, psychologists.length],
+    [activePsychologistIndex, markSwipeHintSeen, psychologists.length],
   );
 
   const navigateToPreviousPsychologist = useCallback(
@@ -2711,6 +2641,17 @@ export const PsychologistsLogic = () => {
             }
           }
 
+          @keyframes psychologists-swipe-hint-enter {
+            0% {
+              opacity: 0;
+              transform: translate3d(-50%, 8px, 0) scale(0.96);
+            }
+            100% {
+              opacity: 1;
+              transform: translate3d(-50%, 0, 0) scale(1);
+            }
+          }
+
           @keyframes psychologists-swipe-card-nudge {
             0%,
             100% {
@@ -2796,7 +2737,9 @@ export const PsychologistsLogic = () => {
           }
 
           .psychologists-swipe-hint {
-            animation: psychologists-swipe-hint-float 1.4s ease-in-out infinite;
+            animation:
+              psychologists-swipe-hint-enter 220ms ease-out both,
+              psychologists-swipe-hint-float 1.4s 220ms ease-in-out infinite;
           }
 
           .psychologists-swipe-nudge {
@@ -4018,13 +3961,14 @@ export const PsychologistsLogic = () => {
             {shouldRenderSwipeHint ? (
               <div
                 aria-live="polite"
-                className="psychologists-swipe-hint pointer-events-none absolute left-1/2 z-50 inline-flex max-w-[calc(100%-2rem)] items-center gap-2 rounded-full border border-white/20 bg-black/32 px-3.5 py-2 text-center text-[12px] font-semibold text-white shadow-[0_12px_30px_rgba(0,0,0,0.18)] backdrop-blur-sm"
+                className="psychologists-swipe-hint pointer-events-none absolute left-1/2 z-50 inline-flex max-w-[calc(100%-2rem)] items-center justify-center rounded-full border border-white/70 bg-white/95 px-4 py-2.5 text-center text-[13px] font-extrabold text-[#0F172A] shadow-[0_24px_70px_rgba(15,23,42,0.22)] ring-1 ring-[#D9E8F8]/80 backdrop-blur-md"
                 style={{
                   bottom: `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom) + 14px)`,
                 }}
               >
-                <ArrowUp className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2.4} />
-                <span>Deslize para descobrir novos psicólogos</span>
+                <span>
+                  <span className="text-[#308CE8]">↑</span> Descubra novos psicólogos
+                </span>
               </div>
             ) : null}
 
