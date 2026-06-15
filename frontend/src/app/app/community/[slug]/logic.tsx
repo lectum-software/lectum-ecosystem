@@ -129,6 +129,9 @@ const FEED_SCOPE_OPTIONS: Array<{ label: string; value: CommunityFeedScope }> = 
 ];
 
 type CommunityVisualPalette = {
+  coverDepthColor: string;
+  coverEndColor: string;
+  coverStartColor: string;
   primaryColor: string;
   primaryDarkColor: string;
   softColor: string;
@@ -137,6 +140,9 @@ type CommunityVisualPalette = {
 };
 
 type CommunityPaletteStyle = CSSProperties & {
+  "--community-cover-depth": string;
+  "--community-cover-end": string;
+  "--community-cover-start": string;
   "--community-gradient-color": string;
   "--community-primary-color": string;
   "--community-primary-dark": string;
@@ -157,11 +163,14 @@ type HslColor = {
 };
 
 const FALLBACK_COMMUNITY_PALETTE: CommunityVisualPalette = {
-  primaryColor: "#308CE8",
-  primaryDarkColor: "#16418F",
-  softColor: "#DFF3FF",
-  textColor: "#1B56B8",
-  gradientColor: "#BFE7FF",
+  coverDepthColor: "#245D9F",
+  coverEndColor: "#183E78",
+  coverStartColor: "#3278C2",
+  primaryColor: "#2F7FD3",
+  primaryDarkColor: "#1E3F7E",
+  softColor: "#E7F1FB",
+  textColor: "#245C9D",
+  gradientColor: "#D6E7F7",
 };
 
 const COMMUNITY_PALETTE_CACHE = new Map<string, CommunityVisualPalette>();
@@ -279,11 +288,29 @@ const hslToRgb = ({ h, l, s }: HslColor): RgbColor => {
 
 const paletteFromRgb = (rgb: RgbColor): CommunityVisualPalette => {
   const hsl = rgbToHsl(rgb);
-  const saturation = clampNumber(hsl.s, 0.5, 0.78);
-  const lightness = clampNumber(hsl.l, 0.4, 0.52);
+  const saturation = clampNumber(hsl.s * 0.82, 0.36, 0.62);
+  const lightness = clampNumber(hsl.l * 0.92, 0.34, 0.46);
   const primary = { h: hsl.h, s: saturation, l: lightness };
+  const coverStart = {
+    ...primary,
+    l: clampNumber(lightness - 0.01, 0.34, 0.43),
+    s: clampNumber(saturation * 0.82, 0.3, 0.5),
+  };
+  const coverDepth = {
+    ...primary,
+    l: clampNumber(lightness - 0.08, 0.28, 0.36),
+    s: clampNumber(saturation * 0.76, 0.28, 0.46),
+  };
+  const coverEnd = {
+    ...primary,
+    l: clampNumber(lightness - 0.16, 0.2, 0.3),
+    s: clampNumber(saturation * 0.7, 0.24, 0.4),
+  };
 
   return {
+    coverDepthColor: rgbToHex(hslToRgb(coverDepth)),
+    coverEndColor: rgbToHex(hslToRgb(coverEnd)),
+    coverStartColor: rgbToHex(hslToRgb(coverStart)),
     primaryColor: rgbToHex(hslToRgb(primary)),
     primaryDarkColor: rgbToHex(
       hslToRgb({ ...primary, l: clampNumber(lightness - 0.16, 0.22, 0.36) }),
@@ -293,7 +320,7 @@ const paletteFromRgb = (rgb: RgbColor): CommunityVisualPalette => {
     ),
     textColor: rgbToHex(hslToRgb({ ...primary, s: clampNumber(saturation, 0.54, 0.82), l: 0.36 })),
     gradientColor: rgbToHex(
-      hslToRgb({ ...primary, s: clampNumber(saturation * 0.72, 0.38, 0.62), l: 0.84 }),
+      hslToRgb({ ...primary, s: clampNumber(saturation * 0.42, 0.24, 0.4), l: 0.88 }),
     ),
   };
 };
@@ -308,6 +335,9 @@ const resolveStoredCommunityPalette = (
   const derivedPalette = derived ? paletteFromRgb(derived) : FALLBACK_COMMUNITY_PALETTE;
 
   return {
+    coverDepthColor: derivedPalette.coverDepthColor,
+    coverEndColor: derivedPalette.coverEndColor,
+    coverStartColor: derivedPalette.coverStartColor,
     primaryColor,
     primaryDarkColor:
       normalizeHexColor(community.visual_primary_dark_color) ?? derivedPalette.primaryDarkColor,
@@ -1554,6 +1584,9 @@ const CommunityHeader = ({
 }) => {
   const palette = useCommunityVisualPalette(community);
   const communityPaletteStyle: CommunityPaletteStyle = {
+    "--community-cover-depth": palette.coverDepthColor,
+    "--community-cover-end": palette.coverEndColor,
+    "--community-cover-start": palette.coverStartColor,
     "--community-gradient-color": palette.gradientColor,
     "--community-primary-color": palette.primaryColor,
     "--community-primary-dark": palette.primaryDarkColor,
@@ -1570,7 +1603,7 @@ const CommunityHeader = ({
         className="relative min-h-[132px] px-5 pt-4 text-white"
         style={{
           background:
-            "radial-gradient(circle at 12% 100%, var(--community-soft-color) 0%, transparent 34%), linear-gradient(135deg, var(--community-primary-color) 0%, var(--community-primary-dark) 100%)",
+            "linear-gradient(115deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 34%, rgba(15,23,42,0.12) 100%), linear-gradient(145deg, var(--community-cover-start) 0%, var(--community-cover-depth) 58%, var(--community-cover-end) 100%)",
         }}
       >
         <div className="relative z-10 flex items-center justify-between">
@@ -1601,8 +1634,10 @@ const CommunityHeader = ({
             </button>
           </div>
         </div>
-        <span className="absolute -right-10 -bottom-16 h-44 w-44 rounded-full bg-white/10 blur-2xl" />
-        <span className="absolute left-10 top-8 h-28 w-28 rounded-full bg-white/10 blur-2xl" />
+        <span
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.05),transparent_44%,rgba(2,6,23,0.08))]"
+          aria-hidden="true"
+        />
       </div>
 
       <div className="relative px-5">
