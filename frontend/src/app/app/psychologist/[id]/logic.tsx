@@ -69,10 +69,15 @@ type ApiError = Error & {
 };
 
 const tabs: Array<{ label: string; value: ProfileTab }> = [
-  { label: "Sobre", value: "geral" },
+  { label: "Geral", value: "geral" },
   { label: "Publicações", value: "publicacoes" },
   { label: "Avaliações", value: "avaliacoes" },
 ];
+
+const PROFILE_CARD_SURFACE =
+  "box-border rounded-[24px] border border-[#E6EAF0] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.035)] dark:border-border dark:bg-surface";
+
+const PROFILE_SUBTLE_SURFACE = "box-border rounded-[14px] border border-[#E2E8F0] bg-[#F8FAFC]";
 
 const modalityLabel: Record<string, string> = {
   online: "Online",
@@ -287,12 +292,7 @@ const ProfileInfoCard = ({
   label: string;
   value: string;
 }) => (
-  <article
-    className={cn(
-      "box-border rounded-[11px] border border-[#E2E8F0] bg-[#F8FAFC]",
-      compact ? "px-2.5 py-2" : "px-3 py-2.5",
-    )}
-  >
+  <article className={cn(PROFILE_SUBTLE_SURFACE, compact ? "px-2.5 py-2" : "px-3 py-2.5")}>
     <div className="flex min-h-0 items-start gap-2">
       <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white text-[#2F8DEB] shadow-[0_4px_12px_rgba(47,141,235,0.08)]">
         <Icon className="h-[14px] w-[14px]" aria-hidden="true" />
@@ -323,12 +323,7 @@ const ProfileSectionCard = ({
   className?: string;
   title: string;
 }) => (
-  <section
-    className={cn(
-      "box-border rounded-[22px] border border-[#E6EAF0] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:border-border dark:bg-surface",
-      className,
-    )}
-  >
+  <section className={cn(PROFILE_CARD_SURFACE, "p-4", className)}>
     <h2 className="text-[1rem] font-black leading-tight tracking-[-0.02em] text-[#182033] dark:text-foreground">
       {title}
     </h2>
@@ -412,7 +407,7 @@ const ProfileAvatar = ({ profile }: { profile: DirectoryPsychologistProfile }) =
 
   return (
     <div
-      className="relative grid h-[76px] w-[76px] shrink-0 place-items-center overflow-hidden rounded-[18px] border-[4px] border-white bg-surface-muted text-2xl font-extrabold text-primary shadow-[0_16px_34px_rgba(15,23,42,0.18)] dark:border-background"
+      className="relative grid h-[76px] w-[76px] shrink-0 place-items-center overflow-hidden rounded-[18px] border-[4px] border-white bg-surface-muted text-2xl font-extrabold text-primary shadow-[0_12px_26px_rgba(15,23,42,0.10)] dark:border-background"
       data-profile-avatar="true"
     >
       {avatarSrc ? (
@@ -440,8 +435,9 @@ const ProfileHeroMedia = ({ profile }: { profile: DirectoryPsychologistProfile }
 
   if (!coverImageSrc || coverImageFailed) {
     return (
-      <div className="relative h-[132px] overflow-hidden bg-gradient-to-br from-[#2F8DEB] to-[#60A5FA]">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_15%,rgba(255,255,255,0.34),transparent_32%),radial-gradient(circle_at_82%_18%,rgba(191,219,254,0.48),transparent_34%),linear-gradient(135deg,#EAF5FF,#D9ECFF_52%,#F8FAFC)] opacity-100" />
+      <div className="relative h-[132px] overflow-hidden bg-[#1F5FAA]">
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,#2F80D9_0%,#235FA9_52%,#173F72_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.10),transparent_38%,rgba(15,23,42,0.10))]" />
       </div>
     );
   }
@@ -490,7 +486,7 @@ const ProfileHero = ({
 
   return (
     <header
-      className="overflow-hidden rounded-b-[28px] bg-white pb-5 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:bg-surface"
+      className="overflow-hidden rounded-b-[28px] border-b border-[#E6EAF0] bg-white pb-5 shadow-none dark:border-border dark:bg-surface"
       data-profile-hero="true"
     >
       <div className="relative text-white">
@@ -670,7 +666,7 @@ const ProfileTabs = ({
         "sticky z-20 px-3 py-2.5 transition-[background-color,border-color,box-shadow] duration-200 sm:px-4",
         isStuck
           ? "border-b border-[rgba(15,23,42,0.06)] bg-[rgba(255,255,255,0.82)] shadow-[0_8px_22px_rgba(15,23,42,0.05)] backdrop-blur-[12px]"
-          : "border-b border-transparent bg-[#F6F8FB] shadow-none dark:bg-background",
+          : "border-b border-transparent bg-white shadow-none dark:bg-background",
       )}
       data-profile-sticky-navigation="true"
       ref={stickyContainerRef}
@@ -735,7 +731,7 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
   return (
     <div className="mt-3 grid gap-2.5">
       <article
-        className="box-border relative mx-auto w-full max-w-[214px] overflow-hidden rounded-[16px] border border-[#E2E8F0] bg-[#e2e8f0] shadow-[0_10px_24px_rgba(15,23,42,0.08)] sm:max-w-[240px]"
+        className="box-border relative mx-auto w-full max-w-[214px] overflow-hidden rounded-[18px] border border-[#E2E8F0] bg-[#e2e8f0] shadow-[0_8px_22px_rgba(15,23,42,0.055)] sm:max-w-[240px]"
         data-presentation-video="true"
       >
         <div className="relative aspect-[9/16] w-full">
@@ -745,7 +741,7 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
               <video
                 aria-label={`Vídeo de apresentação de ${profile.name}`}
                 autoPlay
-                className="h-full w-full bg-black object-cover"
+                className="h-full w-full bg-black object-cover fullscreen:mx-auto fullscreen:h-screen fullscreen:w-auto fullscreen:max-w-[100vw] fullscreen:object-contain"
                 controls
                 onEnded={() => setPlaying(false)}
                 playsInline
@@ -804,7 +800,7 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
         </div>
       </article>
 
-      <article className="box-border rounded-[10px] border border-[#DBEAFE] bg-[#EFF6FF] px-2.5 py-2 text-[9px] text-[#0F172A]">
+      <article className="box-border rounded-[14px] border border-[#DBEAFE] bg-[#F8FBFF] px-3 py-2.5 text-[9px] text-[#0F172A]">
         <p className="font-semibold">Quer falar com o profissional?</p>
         <p className="mt-1 leading-[1.35] text-[#1E293B]">
           O atendimento e os valores são alinhados diretamente no WhatsApp.
@@ -1157,7 +1153,7 @@ const AboutTab = ({
   const modalityText = formatList([formatAttendanceLabel(profile)], "Modalidade não informada.");
 
   return (
-    <div className="grid gap-4 bg-[#F6F8FB] px-3 pt-3 pb-1 sm:px-4 sm:pt-4">
+    <div className="grid gap-4 bg-white px-3 pt-3 pb-1 sm:px-4 sm:pt-4">
       <ProfileSectionCard title="Sobre">
         <ExpandableAboutText text={bioText} />
         <PresentationVideo profile={profile} />
@@ -1210,7 +1206,7 @@ const PostCard = ({ post }: { post: DirectoryPsychologistProfilePost }) => {
   const previewImage = (post as { media_url?: string | null }).media_url;
 
   return (
-    <article className="box-border rounded-[22px] border border-[#E6EAF0] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:border-border dark:bg-surface">
+    <article className={cn(PROFILE_CARD_SURFACE, "p-4")}>
       <div className="flex items-start justify-between gap-3 text-[11px] font-semibold text-[#64748B]">
         <span className="inline-flex items-center gap-1.5">
           <FileText className="h-4 w-4 text-[#64748B]" aria-hidden="true" />
@@ -1284,8 +1280,8 @@ const PostsTab = ({
   total: number;
 }) => {
   return (
-    <div className="grid gap-4 bg-[#F6F8FB] px-3 pb-1 pt-3 sm:px-4 sm:pt-4">
-      <div className="rounded-[22px] border border-[#E6EAF0] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
+    <div className="grid gap-4 bg-white px-3 pb-1 pt-3 sm:px-4 sm:pt-4">
+      <div className={cn(PROFILE_CARD_SURFACE, "p-4")}>
         <p className="text-[14px] font-semibold tracking-[-0.01em] text-[#0F172A]">
           Publicações &gt;
         </p>
@@ -1344,7 +1340,7 @@ const ReviewSummaryCard = ({ summary }: { summary: DirectoryReviewSummary }) => 
   const max = Math.max(1, summary.rating_count);
 
   return (
-    <article className="box-border grid gap-3 rounded-[22px] border border-[#E6EAF0] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
+    <article className={cn(PROFILE_CARD_SURFACE, "grid gap-3 p-4")}>
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-[28px] font-extrabold leading-none text-[#0F172A]">
@@ -1390,7 +1386,7 @@ const ReviewSummaryCard = ({ summary }: { summary: DirectoryReviewSummary }) => 
 
 const ReviewCard = ({ review }: { review: DirectoryPsychologistProfileReview }) => {
   return (
-    <article className="box-border rounded-[22px] border border-[#E6EAF0] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:border-border dark:bg-surface">
+    <article className={cn(PROFILE_CARD_SURFACE, "p-4")}>
       <div className="flex items-start gap-3">
         <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#EAF5FF] text-[11px] font-extrabold text-[#2F8DEB]">
           {review.author.initials}
@@ -1456,7 +1452,7 @@ const ReviewsTab = ({
   summary: DirectoryReviewSummary;
 }) => {
   return (
-    <div className="grid gap-4 bg-[#F6F8FB] px-3 pb-1 pt-3 sm:px-4 sm:pt-4">
+    <div className="grid gap-4 bg-white px-3 pb-1 pt-3 sm:px-4 sm:pt-4">
       <h2 className="text-[14px] font-semibold tracking-[-0.01em] text-[#0F172A]">
         Avaliações &gt;
       </h2>
@@ -1500,27 +1496,49 @@ const WhatsAppCta = ({ profile }: { profile: DirectoryPsychologistProfile }) => 
   }
 
   return (
-    <div
-      className="fixed inset-x-0 bottom-0 z-30 bg-white px-3 pb-2 pt-2 shadow-[0_-6px_18px_rgba(15,23,42,0.12)] sm:px-4"
-      style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
-    >
-      <div className="mx-auto w-full max-w-[430px] lg:max-w-[760px]">
-        <PsychologistWhatsAppRedirectButton
-          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[8px] bg-success text-[13px] font-bold text-white transition hover:bg-success/90"
-          psychologist={{
-            avatar: profile.avatar,
-            crp: profile.crp ? formatCrpNumber(profile.crp) : null,
-            id: profile.id,
-            name: profile.name,
-            typeLabel: getPsychologistTitle(profile.gender),
-            whatsappUrl: profile.whatsapp_url,
-          }}
-        >
-          <WhatsAppIcon className="h-4 w-4" aria-hidden="true" />
-          Chamar no WhatsApp
-        </PsychologistWhatsAppRedirectButton>
+    <>
+      <div
+        className="fixed inset-x-0 bottom-0 z-30 bg-white px-3 pb-2 pt-2 shadow-[0_-6px_18px_rgba(15,23,42,0.12)] sm:px-4 lg:hidden"
+        style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+      >
+        <div className="mx-auto w-full max-w-[430px]">
+          <PsychologistWhatsAppRedirectButton
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[8px] bg-success text-[13px] font-bold text-white transition hover:bg-success/90"
+            psychologist={{
+              avatar: profile.avatar,
+              crp: profile.crp ? formatCrpNumber(profile.crp) : null,
+              id: profile.id,
+              name: profile.name,
+              typeLabel: getPsychologistTitle(profile.gender),
+              whatsappUrl: profile.whatsapp_url,
+            }}
+          >
+            <WhatsAppIcon className="h-4 w-4" aria-hidden="true" />
+            Chamar no WhatsApp
+          </PsychologistWhatsAppRedirectButton>
+        </div>
       </div>
-    </div>
+
+      <PsychologistWhatsAppRedirectButton
+        aria-label={`Chamar ${profile.name} no WhatsApp`}
+        className="group fixed right-5 bottom-10 z-40 hidden h-14 w-14 place-items-center rounded-full border-[5px] border-white bg-[#16A34A] text-white shadow-[0_14px_30px_rgba(22,163,74,0.26)] transition-[transform,background-color,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:bg-[#15803D] hover:shadow-[0_18px_36px_rgba(22,163,74,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] focus-visible:ring-offset-2 focus-visible:ring-offset-white motion-safe:animate-[lectum-desktop-create-float_4.2s_ease-in-out_infinite] lg:grid lg:h-16 lg:w-16 xl:right-20 2xl:right-28"
+        psychologist={{
+          avatar: profile.avatar,
+          crp: profile.crp ? formatCrpNumber(profile.crp) : null,
+          id: profile.id,
+          name: profile.name,
+          typeLabel: getPsychologistTitle(profile.gender),
+          whatsappUrl: profile.whatsapp_url,
+        }}
+        title="Chamar no WhatsApp"
+      >
+        <WhatsAppIcon
+          className="h-7 w-7 transition group-hover:scale-105 lg:h-8 lg:w-8"
+          aria-hidden="true"
+        />
+        <span className="sr-only">Chamar no WhatsApp</span>
+      </PsychologistWhatsAppRedirectButton>
+    </>
   );
 };
 
@@ -1668,14 +1686,14 @@ export const PsychologistProfileLogic = () => {
   return (
     <PrivateTemplate
       allowAnonymous
-      contentClassName="!pt-0 bg-[#F6F8FB] dark:bg-background sm:!pt-0"
+      contentClassName="!pt-0 bg-white dark:bg-background sm:!pt-0"
       desktopSidebarDefaultCollapsed
       showMobileNavigation={false}
       showNavigation
     >
-      <div className="-mx-5 overflow-x-hidden">
-        <section className="mx-auto grid w-screen max-w-[430px] bg-[#F6F8FB] sm:max-w-[430px] lg:max-w-[760px]">
-          <div className="grid gap-0 pb-28">
+      <div className="-mx-5 overflow-x-hidden bg-white dark:bg-background">
+        <section className="mx-auto grid w-screen max-w-[430px] bg-white sm:max-w-[430px] lg:max-w-[760px]">
+          <div className="grid gap-0 pb-28 lg:pb-10">
             {shareFeedback ? (
               <div className="mx-3 pt-3">
                 <InlineAlert title="Link copiado" variant="success">
