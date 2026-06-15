@@ -408,6 +408,9 @@ const PostHeader = ({
 }) => {
   const isPsychologistPost = post.author.role === "psicologo";
   const isAnonymousPatient = !isPsychologistPost && post.anonymous;
+  const psychologistProfileHref = isPsychologistPost
+    ? `/app/psychologist/${post.author.id}`
+    : undefined;
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -471,11 +474,24 @@ const PostHeader = ({
       </div>
 
       <div className="flex items-start gap-3">
-        <AuthorAvatar anonymous={isAnonymousPatient} author={post.author} />
+        <AuthorAvatar
+          anonymous={isAnonymousPatient}
+          author={post.author}
+          href={psychologistProfileHref}
+        />
         <div className="grid min-w-0 flex-1 gap-1">
           <div className="flex min-w-0 items-center gap-x-2">
             <div className="flex min-w-0 items-center gap-[5px]">
-              <h2 className="truncate text-sm font-black text-foreground">{post.author.name}</h2>
+              {psychologistProfileHref ? (
+                <Link
+                  className="truncate text-sm font-black text-foreground no-underline transition hover:text-foreground hover:no-underline"
+                  href={psychologistProfileHref}
+                >
+                  {post.author.name}
+                </Link>
+              ) : (
+                <h2 className="truncate text-sm font-black text-foreground">{post.author.name}</h2>
+              )}
               {post.author.verified ? (
                 <BadgeCheck
                   className="h-4 w-4 shrink-0 fill-[#2da7ff] text-white"
@@ -483,13 +499,24 @@ const PostHeader = ({
                 />
               ) : null}
             </div>
-            <MentorBadge badge={post.author.featured_badge ?? post.featured_badge} />
+            <MentorBadge
+              badge={post.author.featured_badge ?? post.featured_badge}
+              href={psychologistProfileHref}
+            />
           </div>
-          <p className="text-[11px] font-semibold text-muted">
-            {isPsychologistPost
-              ? `${post.author.type_label} • ${formatRelativeTime(post.created_at)}`
-              : formatRelativeTime(post.created_at)}
-          </p>
+          {psychologistProfileHref ? (
+            <Link
+              className="w-fit text-[11px] font-semibold text-muted no-underline transition hover:text-muted hover:no-underline"
+              href={psychologistProfileHref}
+            >
+              {post.author.type_label} <span aria-hidden="true">&bull;</span>{" "}
+              {formatRelativeTime(post.created_at)}
+            </Link>
+          ) : (
+            <p className="text-[11px] font-semibold text-muted">
+              {formatRelativeTime(post.created_at)}
+            </p>
+          )}
         </div>
       </div>
     </header>
@@ -734,7 +761,10 @@ const ReplyCard = ({
                   />
                 ) : null}
               </div>
-              <MentorBadge badge={reply.author.featured_badge} />
+              <MentorBadge
+                badge={reply.author.featured_badge}
+                href={psychologistProfileHref ?? undefined}
+              />
             </div>
             {psychologistProfileHref ? (
               <Link

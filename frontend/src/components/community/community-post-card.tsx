@@ -73,11 +73,13 @@ const postDetailHref = (post: PostListPost) =>
 const AuthorAvatar = ({
   anonymous,
   avatar,
+  href,
   name,
   size = "md",
 }: {
   anonymous?: boolean;
   avatar: string | null;
+  href?: string;
   name: string;
   size?: "md" | "lg";
 }) => {
@@ -99,7 +101,7 @@ const AuthorAvatar = ({
 
   const avatarSrc = resolvePublicMediaUrl(avatar);
 
-  return (
+  const avatarNode = (
     <span
       className={cn(
         "relative grid shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft text-xs font-black text-primary ring-2 ring-background",
@@ -119,6 +121,18 @@ const AuthorAvatar = ({
         getInitials(name)
       )}
     </span>
+  );
+
+  if (!href) return avatarNode;
+
+  return (
+    <Link
+      aria-label={`Abrir perfil de ${name}`}
+      className="shrink-0 cursor-pointer rounded-full no-underline transition hover:brightness-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 active:scale-[0.98]"
+      href={href}
+    >
+      {avatarNode}
+    </Link>
   );
 };
 
@@ -184,29 +198,42 @@ const MediaBlock = ({
 const ProfessionalReplyPreview = ({ reply }: { reply: PostProfessionalReply | null }) => {
   if (!reply) return null;
 
+  const profileHref = `/app/psychologist/${reply.author.id}`;
+
   return (
     <div className="rounded-[18px] border border-success/20 bg-success-soft p-4">
       <p className="mb-3 text-[11px] font-black uppercase tracking-[0.08em] text-success">
         Resposta profissional em destaque
       </p>
       <div className="mb-2 flex items-center gap-2">
-        <AuthorAvatar avatar={reply.author.avatar} name={reply.author.name} size="lg" />
+        <AuthorAvatar
+          avatar={reply.author.avatar}
+          href={profileHref}
+          name={reply.author.name}
+          size="lg"
+        />
         <div className="grid min-w-0 gap-1">
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
             <span className="inline-flex min-w-0 items-center gap-[5px]">
-              <span className="truncate text-sm font-black text-foreground">
+              <Link
+                className="truncate text-sm font-black text-foreground no-underline transition hover:text-foreground hover:no-underline"
+                href={profileHref}
+              >
                 {reply.author.name}
-              </span>
+              </Link>
               {reply.author.verified ? (
                 <BadgeCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
               ) : null}
             </span>
-            <MentorBadge badge={reply.author.featured_badge} />
+            <MentorBadge badge={reply.author.featured_badge} href={profileHref} />
           </div>
-          <p className="text-[11px] font-semibold text-muted">
+          <Link
+            className="w-fit text-[11px] font-semibold text-muted no-underline transition hover:text-muted hover:no-underline"
+            href={profileHref}
+          >
             {reply.author.type_label} • {formatRelativeTime(reply.created_at)} •{" "}
             {reply.upvotes_count.toLocaleString("pt-BR")} upvotes
-          </p>
+          </Link>
         </div>
       </div>
       {reply.title ? (
@@ -250,6 +277,9 @@ export const CommunityPostCard = ({
 }: CommunityPostCardProps) => {
   const isPsychologistPost = post.author.role === "psicologo";
   const isAnonymousPatient = !isPsychologistPost && post.anonymous;
+  const psychologistProfileHref = isPsychologistPost
+    ? `/app/psychologist/${post.author.id}`
+    : undefined;
 
   return (
     <article className="w-full overflow-hidden rounded-[22px] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
@@ -274,23 +304,44 @@ export const CommunityPostCard = ({
         <AuthorAvatar
           anonymous={isAnonymousPatient}
           avatar={post.author.avatar}
+          href={psychologistProfileHref}
           name={post.author.name}
         />
         <div className="grid min-w-0 flex-1 gap-1">
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
             <div className="flex min-w-0 items-center gap-[5px]">
-              <h2 className="truncate text-sm font-black text-foreground">{post.author.name}</h2>
+              {psychologistProfileHref ? (
+                <Link
+                  className="truncate text-sm font-black text-foreground no-underline transition hover:text-foreground hover:no-underline"
+                  href={psychologistProfileHref}
+                >
+                  {post.author.name}
+                </Link>
+              ) : (
+                <h2 className="truncate text-sm font-black text-foreground">{post.author.name}</h2>
+              )}
               {post.author.verified ? (
                 <BadgeCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
               ) : null}
             </div>
-            <MentorBadge badge={post.author.featured_badge ?? post.featured_badge} />
+            <MentorBadge
+              badge={post.author.featured_badge ?? post.featured_badge}
+              href={psychologistProfileHref}
+            />
           </div>
-          <p className="text-[11px] font-semibold text-muted">
-            {isPsychologistPost
-              ? `${post.author.type_label} • ${formatRelativeTime(post.created_at)}`
-              : formatRelativeTime(post.created_at)}
-          </p>
+          {psychologistProfileHref ? (
+            <Link
+              className="w-fit text-[11px] font-semibold text-muted no-underline transition hover:text-muted hover:no-underline"
+              href={psychologistProfileHref}
+            >
+              {post.author.type_label} <span aria-hidden="true">&bull;</span>{" "}
+              {formatRelativeTime(post.created_at)}
+            </Link>
+          ) : (
+            <p className="text-[11px] font-semibold text-muted">
+              {formatRelativeTime(post.created_at)}
+            </p>
+          )}
         </div>
       </div>
 

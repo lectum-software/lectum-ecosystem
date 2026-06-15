@@ -766,10 +766,14 @@ const communityPostDetailHref = (post: CommunityPost) =>
 const AuthorAvatar = ({
   anonymous,
   author,
+  href,
+  onClick,
   size = "md",
 }: {
   anonymous?: boolean;
   author: CommunityPost["author"];
+  href?: string;
+  onClick?: (event: ReactMouseEvent<HTMLAnchorElement>) => void;
   size?: "md" | "lg";
 }) => {
   const sizeClass = size === "lg" ? "h-10 w-10" : "h-9 w-9";
@@ -791,7 +795,7 @@ const AuthorAvatar = ({
   const avatarSrc = resolvePublicMediaUrl(author.avatar);
   const avatarIsPublicMedia = isPublicMediaUrl(author.avatar);
 
-  return (
+  const avatarNode = (
     <span
       className={cn(
         "relative grid shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft text-xs font-black text-primary ring-2 ring-white dark:ring-background",
@@ -811,6 +815,19 @@ const AuthorAvatar = ({
         getInitials(author.name)
       )}
     </span>
+  );
+
+  if (!href) return avatarNode;
+
+  return (
+    <Link
+      aria-label={`Abrir perfil de ${author.name}`}
+      className="pointer-events-auto shrink-0 cursor-pointer rounded-full no-underline transition hover:brightness-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 active:scale-[0.98]"
+      href={href}
+      onClick={onClick}
+    >
+      {avatarNode}
+    </Link>
   );
 };
 
@@ -848,7 +865,7 @@ const AuthorIdentityLine = ({
           aria-label="Psicólogo verificado"
         />
       ) : null}
-      <MentorBadge badge={badge} />
+      <MentorBadge badge={badge} href={href} onClick={onClick} />
     </div>
   );
 };
@@ -1053,7 +1070,12 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
       </div>
       <div className="pointer-events-none relative z-10 min-w-0">
         <div className="flex min-w-0 items-start gap-2.5">
-          <AuthorAvatar author={reply.author} size="lg" />
+          <AuthorAvatar
+            author={reply.author}
+            href={profileHref}
+            onClick={(event) => event.stopPropagation()}
+            size="lg"
+          />
           <div className="grid min-w-0 flex-1 gap-0.5">
             <AuthorIdentityLine
               badge={reply.author.featured_badge}
@@ -1137,6 +1159,9 @@ const PostCard = ({
   const voteMutation = useVotePost(post.id);
   const saveMutation = useSavePost(post.id);
   const postDetailHref = communityPostDetailHref(post);
+  const psychologistProfileHref = isPsychologistPost
+    ? `/app/psychologist/${post.author.id}`
+    : undefined;
 
   const handleVote = (value: 1 | -1) => {
     const previousSnapshot = voteSnapshot;
@@ -1206,18 +1231,31 @@ const PostCard = ({
       ) : null}
 
       <div className="mb-3 flex items-start gap-3">
-        <AuthorAvatar anonymous={isAnonymousPatient} author={post.author} />
+        <AuthorAvatar
+          anonymous={isAnonymousPatient}
+          author={post.author}
+          href={psychologistProfileHref}
+        />
         <div className="grid min-w-0 flex-1 gap-1">
           <AuthorIdentityLine
             badge={post.author.featured_badge ?? post.featured_badge}
+            href={psychologistProfileHref}
             name={post.author.name}
             verified={post.author.verified}
           />
-          <p className="text-[11px] font-semibold text-muted">
-            {isPsychologistPost
-              ? `${post.author.type_label} • ${formatRelativeTime(post.created_at)}`
-              : formatRelativeTime(post.created_at)}
-          </p>
+          {psychologistProfileHref ? (
+            <Link
+              className="w-fit cursor-pointer text-[11px] font-semibold text-muted no-underline transition hover:text-muted hover:no-underline"
+              href={psychologistProfileHref}
+            >
+              {post.author.type_label} <span aria-hidden="true">&bull;</span>{" "}
+              {formatRelativeTime(post.created_at)}
+            </Link>
+          ) : (
+            <p className="text-[11px] font-semibold text-muted">
+              {formatRelativeTime(post.created_at)}
+            </p>
+          )}
         </div>
       </div>
 
