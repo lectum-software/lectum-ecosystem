@@ -1758,6 +1758,7 @@ const CommunityPeriodSortChip = ({
   const menuRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
   const periodLabel = getCommunityPostSortPeriodLabel(period);
+  const showPeriod = active;
 
   const updateMenuPosition = useCallback(() => {
     const button = buttonRef.current;
@@ -1841,10 +1842,10 @@ const CommunityPeriodSortChip = ({
         aria-haspopup="menu"
         aria-pressed={active}
         className={cn(
-          "inline-flex min-h-10 items-center gap-1.5 rounded-full border px-4 text-sm font-black shadow-sm transition",
+          "inline-flex min-h-10 items-center gap-1.5 rounded-full border px-4 text-sm font-black leading-none transition",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
           active
-            ? "border-primary/20 bg-primary-soft text-primary shadow-[0_10px_24px_rgba(47,127,211,0.16)]"
+            ? "border-primary/20 bg-primary-soft text-primary"
             : "border-[#E5EAF0] bg-white text-[#64748B] hover:border-primary/40 hover:bg-[#F8FBFF] hover:text-primary dark:border-border dark:bg-surface dark:text-muted",
         )}
         onClick={toggleMenu}
@@ -1853,12 +1854,14 @@ const CommunityPeriodSortChip = ({
       >
         <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
         <span>{label}</span>
-        <span className={cn("text-current/35", active ? "text-primary/45" : "")} aria-hidden="true">
-          ·
-        </span>
-        <span className={cn("font-extrabold", active ? "text-primary" : "text-[#475569]")}>
-          {periodLabel}
-        </span>
+        {showPeriod ? (
+          <>
+            <span className="text-primary/45" aria-hidden="true">
+              ·
+            </span>
+            <span className="font-black text-primary">{periodLabel}</span>
+          </>
+        ) : null}
         <ChevronDown
           className={cn(
             "h-4 w-4 shrink-0 transition-transform duration-200",
@@ -1944,9 +1947,9 @@ const CommunityPostSortChips = ({
         const hasPeriod = "period" in item;
         const periodValue = hasPeriod ? periods[item.value as CommunityPostSortWithPeriod] : null;
         const chipClassName = cn(
-          "inline-flex min-h-10 items-center gap-1.5 rounded-full border px-4 text-sm font-black shadow-sm transition",
+          "inline-flex min-h-10 items-center gap-1.5 rounded-full border px-4 text-sm font-black leading-none transition",
           active
-            ? "border-primary/20 bg-primary-soft text-primary shadow-[0_10px_24px_rgba(47,127,211,0.16)]"
+            ? "border-primary/20 bg-primary-soft text-primary"
             : "border-[#E5EAF0] bg-white text-[#64748B] hover:border-primary/40 hover:bg-[#F8FBFF] hover:text-primary dark:border-border dark:bg-surface dark:text-muted",
         );
 
