@@ -23,7 +23,7 @@ export const patientGenderOptions = [
 ] satisfies FieldOption[];
 
 export const patientProfileSchema = z.object({
-  name: z.string().trim().min(2, "Informe seu nome completo").max(120),
+  name: z.string().trim().min(2, "Informe seu nome de exibição").max(120),
   gender: z.enum(patientGenders).nullable().optional(),
   goal: z.enum(patientGoals).nullable().optional(),
   birthdate: z
@@ -63,7 +63,9 @@ const fields = [
   {
     name: "name",
     field: "input",
-    label: "Nome completo",
+    label: "Nome de exibição",
+    description:
+      "Não é necessário informar seu nome completo. Use o nome pelo qual deseja ser identificado na comunidade.",
     placeholder: "Ex: Roberto Silva",
     required: true,
     autoComplete: "name",
