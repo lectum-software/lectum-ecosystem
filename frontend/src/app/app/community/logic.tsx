@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import {
+  ArrowLeft,
   ArrowRight,
   ChevronLeft,
   ChevronRight,
@@ -13,6 +14,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useDeferredValue, useMemo, useState } from "react";
 import { useCommunities } from "@/api/callers/community";
 import type { Community } from "@/api/generator/types/community";
@@ -88,7 +90,7 @@ const FeaturedCommunity = ({ community }: { community: Community }) => {
       <CommunityGradient index={0} />
       <div className="relative z-10 flex h-full min-h-[154px] flex-col justify-end gap-4">
         <span className="w-fit rounded-full bg-white/20 px-3 py-1 text-xs font-extrabold uppercase tracking-[0.08em] backdrop-blur">
-          Destaque real
+          Destaque
         </span>
         <div className="grid gap-2">
           <h2 className="text-3xl font-black leading-tight tracking-tight">{community.name}</h2>
@@ -110,10 +112,13 @@ const FeaturedCommunity = ({ community }: { community: Community }) => {
 const CommunityCard = ({ community, index }: { community: Community; index: number }) => {
   return (
     <Link
-      className="group relative grid min-h-[214px] overflow-hidden rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)] transition hover:-translate-y-0.5 hover:shadow-lg"
+      className="group relative flex h-[350px] w-[min(74vw,250px)] shrink-0 snap-start overflow-hidden rounded-3xl border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)] transition hover:-translate-y-0.5 hover:shadow-lg sm:h-[388px] sm:w-72"
       href={`/app/community/${community.slug}`}
     >
       <CommunityGradient index={index + 1} />
+      <span className="absolute left-5 top-5 z-10 grid h-12 w-12 place-items-center rounded-2xl border border-white/25 bg-white/20 text-sm font-black text-white shadow-[0_10px_24px_rgb(15_23_42_/_12%)] backdrop-blur">
+        {community.name.slice(0, 2).toUpperCase()}
+      </span>
       <div className="relative z-10 flex h-full flex-col justify-end gap-4 text-white">
         {community.category ? (
           <span className="w-fit rounded-full bg-white/20 px-3 py-1 text-xs font-bold backdrop-blur">
@@ -131,56 +136,6 @@ const CommunityCard = ({ community, index }: { community: Community; index: numb
         </span>
       </div>
     </Link>
-  );
-};
-
-const CategoryFilter = ({
-  activeCategory,
-  categories,
-  onChange,
-}: {
-  activeCategory: string;
-  categories: string[];
-  onChange: (category: string) => void;
-}) => {
-  if (categories.length === 0) return null;
-
-  return (
-    <div className="-mx-5 overflow-x-auto px-5 pb-1">
-      <div className="flex min-w-max gap-2">
-        <button
-          className={cn(
-            "min-h-10 rounded-full border px-4 text-sm font-bold transition",
-            activeCategory === ""
-              ? "border-primary bg-primary text-white"
-              : "border-border bg-surface text-muted hover:border-primary/50 hover:text-primary",
-          )}
-          onClick={() => onChange("")}
-          type="button"
-        >
-          Explorar
-        </button>
-        {categories.map((category) => {
-          const isActive = activeCategory === category;
-
-          return (
-            <button
-              className={cn(
-                "min-h-10 rounded-full border px-4 text-sm font-bold transition",
-                isActive
-                  ? "border-primary bg-primary text-white"
-                  : "border-border bg-surface text-muted hover:border-primary/50 hover:text-primary",
-              )}
-              key={category}
-              onClick={() => onChange(category)}
-              type="button"
-            >
-              {category}
-            </button>
-          );
-        })}
-      </div>
-    </div>
   );
 };
 
@@ -228,8 +183,9 @@ const Pagination = ({
 };
 
 export const CommunityLogic = () => {
+  const router = useRouter();
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState(() => {
+  const [category] = useState(() => {
     if (typeof window === "undefined") return "";
 
     return new URLSearchParams(window.location.search).get("category") ?? "";
@@ -247,7 +203,6 @@ export const CommunityLogic = () => {
   );
   const communities = useCommunities(query);
   const items = communities.data?.data ?? [];
-  const categories = communities.data?.categories ?? [];
   const featured = !category && !deferredSearch ? items[0] : null;
   const visibleCards = featured ? items.slice(1) : items;
   const errorMessage = communities.isError ? resolveCommunityError(communities.error) : null;
@@ -257,28 +212,34 @@ export const CommunityLogic = () => {
     setPage(1);
   };
 
-  const handleCategoryChange = (value: string) => {
-    setCategory(value);
-    setPage(1);
-  };
-
   return (
-    <PrivateTemplate>
-      <section className="mx-auto grid w-full max-w-[430px] gap-6 sm:max-w-2xl lg:max-w-4xl">
-        <div className="sticky top-0 z-20 -mx-5 border-b border-border bg-background/95 px-5 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/85">
-          <div className="relative">
-            <Search
-              className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
-              aria-hidden="true"
-            />
-            <Input
-              aria-label="Explorar comunidades"
-              className="rounded-full bg-surface-muted pl-11"
-              onChange={(event) => handleSearchChange(event.target.value)}
-              placeholder="Explorar comunidades..."
-              type="search"
-              value={search}
-            />
+    <PrivateTemplate contentClassName="relative overflow-hidden">
+      <div className="pointer-events-none fixed inset-0 z-0 bg-surface" aria-hidden="true" />
+      <section className="relative z-10 mx-auto grid w-full max-w-[430px] gap-6 sm:max-w-2xl lg:max-w-4xl">
+        <div className="sticky top-0 z-20 -mx-5 border-b border-border bg-surface/95 px-5 py-3 backdrop-blur supports-[backdrop-filter]:bg-surface/85">
+          <div className="flex items-center gap-3">
+            <button
+              aria-label="Voltar"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-border bg-surface text-muted shadow-[var(--lectum-shadow-soft)] transition hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+              onClick={() => router.back()}
+              type="button"
+            >
+              <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+            </button>
+            <div className="relative min-w-0 flex-1">
+              <Search
+                className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
+                aria-hidden="true"
+              />
+              <Input
+                aria-label="Explorar comunidades"
+                className="rounded-full bg-surface-muted pl-11"
+                onChange={(event) => handleSearchChange(event.target.value)}
+                placeholder="Explorar comunidades..."
+                type="search"
+                value={search}
+              />
+            </div>
           </div>
         </div>
 
@@ -288,16 +249,9 @@ export const CommunityLogic = () => {
             Encontre seu espaço seguro
           </h1>
           <p className="max-w-xl text-base leading-7 text-muted">
-            Conecte-se com pessoas que compartilham jornadas semelhantes à sua. A lista abaixo vem
-            apenas de comunidades persistidas no backend.
+            Conecte-se com pessoas que compartilham jornadas semelhantes à sua.
           </p>
         </header>
-
-        <CategoryFilter
-          activeCategory={category}
-          categories={categories}
-          onChange={handleCategoryChange}
-        />
 
         {communities.isLoading || communities.isPending ? (
           <div className="grid min-h-52 place-items-center rounded-[var(--lectum-card-radius)] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
@@ -345,10 +299,12 @@ export const CommunityLogic = () => {
                 {featured ? "Mais populares" : "Comunidades"}
               </h2>
             </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {visibleCards.map((community, index) => (
-                <CommunityCard community={community} index={index} key={community.id} />
-              ))}
+            <div className="-mx-5 overflow-x-auto scroll-smooth px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="flex snap-x snap-mandatory gap-4">
+                {visibleCards.map((community, index) => (
+                  <CommunityCard community={community} index={index} key={community.id} />
+                ))}
+              </div>
             </div>
           </section>
         ) : null}
@@ -391,7 +347,8 @@ export const CommunityLogic = () => {
           <div className="grid gap-2">
             <h2 className="text-2xl font-black text-foreground">Sugira uma Comunidade</h2>
             <p className="max-w-sm text-sm leading-6 text-muted">
-              Não encontrou o que procurava? Sua sugestão vira um registro pendente para curadoria.
+              Não encontrou o que procurava? Nossa equipe está pronta para criar novos espaços para
+              você.
             </p>
           </div>
           <Button asChild className="w-full max-w-xs rounded-full">
