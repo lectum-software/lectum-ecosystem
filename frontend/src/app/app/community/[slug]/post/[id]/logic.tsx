@@ -500,8 +500,11 @@ const MediaBlock = ({
   if (!src) return null;
 
   const radius = size === "lg" ? "rounded-[22px]" : "rounded-[18px]";
-  const videoAspect = size === "md" ? "aspect-[9/16]" : "aspect-[4/5]";
   const compactMediaClass = size === "md" ? "mx-auto w-full max-w-[280px] sm:max-w-[320px]" : "";
+  const videoFrameClass =
+    size === "md"
+      ? "mx-auto w-full max-w-[280px] sm:max-w-[320px]"
+      : "mx-auto w-full max-w-[390px] sm:max-w-[420px]";
   const imageSizes =
     size === "lg"
       ? "(max-width: 430px) calc(100vw - 40px), 640px"
@@ -511,16 +514,13 @@ const MediaBlock = ({
     return (
       <div
         className={cn(
-          "relative mt-3 overflow-hidden border border-border bg-black shadow-inner",
+          "relative mt-3 aspect-[9/16] overflow-hidden border border-border bg-black shadow-inner",
           radius,
-          compactMediaClass,
+          videoFrameClass,
         )}
       >
         <video
-          className={cn(
-            videoAspect,
-            "w-full object-cover fullscreen:mx-auto fullscreen:h-screen fullscreen:w-auto fullscreen:max-w-[100vw] fullscreen:bg-black fullscreen:object-contain",
-          )}
+          className="lectum-post-detail-video h-full w-full bg-black object-contain"
           controls
           playsInline
           src={src}
@@ -1792,6 +1792,42 @@ export const PostDetailLogic = () => {
               open={reportOpen}
               postTitle={post.title}
             />
+
+            <style>{`
+              .lectum-post-detail-video:fullscreen {
+                position: fixed !important;
+                inset: 0 !important;
+                width: min(100vw, calc(100vh * 9 / 16)) !important;
+                height: min(100vh, calc(100vw * 16 / 9)) !important;
+                max-width: 100vw !important;
+                max-height: 100vh !important;
+                margin: auto !important;
+                aspect-ratio: 9 / 16 !important;
+                object-fit: contain !important;
+                background: #000 !important;
+              }
+
+              .lectum-post-detail-video:fullscreen::backdrop {
+                background: rgb(0 0 0 / 0.96);
+              }
+
+              .lectum-post-detail-video:-webkit-full-screen {
+                position: fixed !important;
+                inset: 0 !important;
+                width: min(100vw, calc(100vh * 9 / 16)) !important;
+                height: min(100vh, calc(100vw * 16 / 9)) !important;
+                max-width: 100vw !important;
+                max-height: 100vh !important;
+                margin: auto !important;
+                aspect-ratio: 9 / 16 !important;
+                object-fit: contain !important;
+                background: #000 !important;
+              }
+
+              .lectum-post-detail-video:-webkit-full-screen::backdrop {
+                background: rgb(0 0 0 / 0.96);
+              }
+            `}</style>
           </>
         ) : null}
       </section>
