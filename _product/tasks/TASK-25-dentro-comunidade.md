@@ -208,3 +208,22 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Escopo: sem mudanças de backend, Prisma, packages, rotas, lógica de ranking, responsividade ou layout do componente.
 - ADR não atualizado por se tratar apenas de alteração de copy, sem decisão arquitetural, integração, regra de domínio nova ou trade-off relevante.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`; HTTP local sem cookie autenticado retornou 307 esperado para `/app/community/ansiedade-em-equilibrio`.
+
+## Complemento 2026-06-14 - busca contextual dentro da comunidade
+
+- Pedido do usuario: corrigir a lupa da pagina interna de comunidade para abrir busca local, sem redirecionar para o feed global.
+- Frontend: a lupa do `CommunityHeader` em `/app/community/[slug]` deixou de ser um link para `/app/community/feed` e passou a abrir um cabecalho de busca contextual na propria rota da comunidade.
+- O cabecalho exibe `Buscar em {nome da comunidade}`, foca o campo automaticamente e envia o termo para `GET /api/private/community/:slug/posts?search=...`, preservando o contexto do `slug`.
+- O botao voltar da busca fecha o modo de busca local, restaura a pagina anterior da paginacao e reposiciona o scroll na posicao registrada ao abrir a busca. A ordenacao ativa (`Em destaque`, `Novos`, `Mais comentados`, `Mais votados`) e seus periodos permanecem no estado atual.
+- A lupa e o campo de busca do feed global `/app/community/feed` nao foram alterados e continuam usando a busca global do feed.
+- Backend: a funcao `postSearchWhere` tambem passa a considerar `post_reply.title` e `post_reply.content` nao deletados, fazendo a busca da comunidade encontrar posts relacionados a comentarios/respostas persistidos sem sair do recorte da comunidade.
+- Escopo: sem alteracao de Prisma schema, migrations, packages ou criacao de novas rotas; a correcao reutiliza o endpoint e query key existentes de posts por comunidade.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia visual usada foi `_product/proto/Dentro da Comunidade.jpg` e o pedido detalhado do usuario.
+- ADR atualizado: `adrs/0066-pagina-detalhe-comunidade-participacao.md`.
+- Validacoes executadas:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir backend check`
+  - `pnpm --dir frontend build`
+  - `pnpm --dir backend build`
+  - `pnpm check`
+  - HTTP local sem cookie autenticado retornou 307 esperado para `/app/community/ansiedade-em-equilibrio` e `/app/community/feed`.

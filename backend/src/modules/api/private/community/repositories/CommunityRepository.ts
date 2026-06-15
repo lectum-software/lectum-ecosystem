@@ -919,6 +919,27 @@ const postSearchWhere = (search?: string): Prisma.community_postWhereInput["OR"]
       },
     },
     {
+      replies: {
+        some: {
+          deleted: false,
+          OR: [
+            {
+              title: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+            {
+              content: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+          ],
+        },
+      },
+    },
+    {
       AND: [
         {
           OR: [

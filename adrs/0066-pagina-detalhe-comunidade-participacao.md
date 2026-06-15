@@ -117,3 +117,33 @@ A ordenação estilo Reddit/Lectum combina recência, engajamento e participaç�
 - `pnpm --dir backend build`
 - `pnpm check`
 - HTTP local sem cookie autenticado retornou 307 esperado para `http://localhost:3000/app/community/ansiedade-em-equilibrio` e `http://localhost:3000/app/community/feed`, confirmando proteção/roteamento sem erro público.
+
+## Atualizacao 2026-06-14: busca contextual na comunidade
+
+### Contexto
+
+A lupa do cabecalho da pagina interna de comunidade estava apontando para o feed global. Isso fazia o usuario perder o contexto da comunidade ao iniciar uma busca a partir de `/app/community/[slug]`, misturando a busca local com o estado de `/app/community/feed`.
+
+### Decisao
+
+- Manter a busca global do feed em `/app/community/feed`, com estado proprio do `CommunityFeedLogic`.
+- Transformar a lupa do detalhe da comunidade em uma acao local de UI, abrindo um cabecalho de busca contextual dentro da rota `/app/community/[slug]`.
+- Enviar o termo de busca para o endpoint ja existente `GET /api/private/community/:slug/posts`, usando o parametro `search` e preservando o `slug` como fronteira do recorte.
+- O botao voltar da busca contextual fecha apenas o modo de busca, restaura a pagina anterior da paginacao e reposiciona o scroll salvo ao abrir a busca. Ordenacao e periodo ativos permanecem no estado do detalhe.
+- Expandir `postSearchWhere` para considerar tambem `post_reply.title` e `post_reply.content` nao deletados, permitindo que comentarios/respostas persistidos influenciem os posts retornados pela busca local.
+
+### Consequencias
+
+- A busca iniciada em uma comunidade nao redireciona para o feed global nem perde o contexto visual da comunidade.
+- A rota dinamica de comunidade e o feed global mantem estados independentes de busca.
+- O backend continua sem nova rota, schema ou migration; a busca local reutiliza o contrato de posts por comunidade.
+- Comentarios/respostas entram no criterio de busca como meio de encontrar o post relacionado, nao como lista separada de comentarios.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir backend check`
+- `pnpm --dir frontend build`
+- `pnpm --dir backend build`
+- `pnpm check`
+- HTTP local sem cookie autenticado retornou 307 esperado para `http://localhost:3000/app/community/ansiedade-em-equilibrio` e `http://localhost:3000/app/community/feed`.

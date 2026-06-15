@@ -31,6 +31,7 @@ import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import {
   type MouseEvent as ReactMouseEvent,
+  type RefObject,
   useCallback,
   useDeferredValue,
   useEffect,
@@ -1231,12 +1232,14 @@ const CommunityHeader = ({
   community,
   following,
   membershipPending,
+  onSearch,
   onShare,
   onToggleFollow,
 }: {
   community: CommunityDetail;
   following: boolean;
   membershipPending: boolean;
+  onSearch: () => void;
   onShare: () => void;
   onToggleFollow: () => void;
 }) => (
@@ -1251,13 +1254,14 @@ const CommunityHeader = ({
           <ArrowLeft className="h-5 w-5" aria-hidden="true" />
         </Link>
         <div className="flex items-center gap-2">
-          <Link
-            aria-label="Buscar no feed global"
+          <button
+            aria-label={`Buscar em ${community.name}`}
             className="grid h-10 w-10 place-items-center rounded-full bg-black/15 text-white backdrop-blur transition hover:bg-black/25"
-            href={DEFAULT_COMMUNITY_FEED_HREF}
+            onClick={onSearch}
+            type="button"
           >
             <Search className="h-5 w-5" aria-hidden="true" />
-          </Link>
+          </button>
           <button
             aria-label="Compartilhar comunidade"
             className="grid h-10 w-10 place-items-center rounded-full bg-black/15 text-white backdrop-blur transition hover:bg-black/25"
@@ -1309,6 +1313,52 @@ const CommunityHeader = ({
           <Award className="h-3.5 w-3.5" aria-hidden="true" />
           Ver Top 5 mentores da comunidade
         </Link>
+      </div>
+    </div>
+  </header>
+);
+
+const CommunityContextSearchHeader = ({
+  communityName,
+  inputRef,
+  onBack,
+  onSearchChange,
+  search,
+}: {
+  communityName: string;
+  inputRef: RefObject<HTMLInputElement | null>;
+  onBack: () => void;
+  onSearchChange: (value: string) => void;
+  search: string;
+}) => (
+  <header className="sticky top-0 z-30 -mx-5 border-border border-b bg-background/95 px-5 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/90">
+    <div className="mx-auto flex max-w-[430px] items-center gap-3 sm:max-w-2xl lg:max-w-[760px]">
+      <button
+        aria-label={`Voltar para ${communityName}`}
+        className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-border bg-surface text-muted shadow-sm transition hover:bg-surface-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+        onClick={onBack}
+        type="button"
+      >
+        <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+      </button>
+
+      <div className="grid min-w-0 flex-1 gap-2">
+        <h2 className="truncate text-sm font-black text-foreground">Buscar em {communityName}</h2>
+        <div className="relative">
+          <Search
+            className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
+            aria-hidden="true"
+          />
+          <Input
+            aria-label={`Buscar em ${communityName}`}
+            className="h-11 rounded-full bg-surface pl-11 text-sm shadow-sm"
+            onChange={(event) => onSearchChange(event.target.value)}
+            placeholder={`Buscar em ${communityName}`}
+            ref={inputRef}
+            type="search"
+            value={search}
+          />
+        </div>
       </div>
     </div>
   </header>
@@ -1545,6 +1595,11 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
     commented: "week",
     voted: "week",
   });
+  const [communitySearchOpen, setCommunitySearchOpen] = useState(false);
+  const [communitySearch, setCommunitySearch] = useState("");
+  const deferredCommunitySearch = useDeferredValue(communitySearch.trim());
+  const communitySearchInputRef = useRef<HTMLInputElement>(null);
+  const communitySearchReturnStateRef = useRef<{ page: number; scrollY: number } | null>(null);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const [followingOverride, setFollowingOverride] = useState<boolean | null>(null);
   const detail = useCommunityDetail(slug);
@@ -1555,8 +1610,18 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
       sort,
       ...(sort === "commented" ? { period: sortPeriods.commented } : {}),
       ...(sort === "voted" ? { period: sortPeriods.voted } : {}),
+      ...(communitySearchOpen && deferredCommunitySearch
+        ? { search: deferredCommunitySearch }
+        : {}),
     }),
-    [page, sort, sortPeriods.commented, sortPeriods.voted],
+    [
+      communitySearchOpen,
+      deferredCommunitySearch,
+      page,
+      sort,
+      sortPeriods.commented,
+      sortPeriods.voted,
+    ],
   );
   const postsQuery = useCommunityPosts(slug, postsQueryParams, Boolean(detail.data));
   const followMutation = useFollowCommunity();
@@ -1570,6 +1635,45 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
   const postsError = postsQuery.isError ? resolveFeedError(postsQuery.error) : null;
   const membershipPending = followMutation.isPending || unfollowMutation.isPending;
   const following = followingOverride ?? Boolean(community?.following);
+  const hasCommunitySearchTerm = communitySearchOpen && deferredCommunitySearch.length > 0;
+
+  useEffect(() => {
+    if (!communitySearchOpen) return;
+
+    communitySearchInputRef.current?.focus();
+  }, [communitySearchOpen]);
+
+  const openCommunitySearch = () => {
+    communitySearchReturnStateRef.current = {
+      page,
+      scrollY: typeof window === "undefined" ? 0 : window.scrollY,
+    };
+    setCommunitySearch("");
+    setCommunitySearchOpen(true);
+    setPage(1);
+  };
+
+  const closeCommunitySearch = () => {
+    const returnState = communitySearchReturnStateRef.current;
+
+    setCommunitySearch("");
+    setCommunitySearchOpen(false);
+
+    if (returnState) {
+      setPage(returnState.page);
+    }
+
+    if (returnState && typeof window !== "undefined") {
+      const { scrollY } = returnState;
+
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ behavior: "auto", top: scrollY });
+        window.setTimeout(() => window.scrollTo({ behavior: "auto", top: scrollY }), 0);
+      });
+    }
+
+    communitySearchReturnStateRef.current = null;
+  };
 
   const sharePost = async (post: CommunityPost) => {
     if (typeof window === "undefined") return;
@@ -1650,15 +1754,31 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
 
         {community ? (
           <>
-            <CommunityHeader
-              community={community}
-              following={following}
-              membershipPending={membershipPending}
-              onShare={shareCommunity}
-              onToggleFollow={toggleFollow}
-            />
+            {communitySearchOpen ? (
+              <CommunityContextSearchHeader
+                communityName={community.name}
+                inputRef={communitySearchInputRef}
+                onBack={closeCommunitySearch}
+                onSearchChange={(value) => {
+                  setCommunitySearch(value);
+                  setPage(1);
+                }}
+                search={communitySearch}
+              />
+            ) : (
+              <CommunityHeader
+                community={community}
+                following={following}
+                membershipPending={membershipPending}
+                onSearch={openCommunitySearch}
+                onShare={shareCommunity}
+                onToggleFollow={toggleFollow}
+              />
+            )}
 
-            <CommunityRulesCard key={community.slug} communitySlug={community.slug} />
+            {communitySearchOpen ? null : (
+              <CommunityRulesCard key={community.slug} communitySlug={community.slug} />
+            )}
 
             {shareFeedback ? (
               <InlineAlert title="Link preparado" variant="success">
@@ -1703,13 +1823,29 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
             {!postsQuery.isLoading && !postsQuery.isPending && !postsError && posts.length === 0 ? (
               <EmptyState
                 action={
-                  <Button asChild>
-                    <Link href={communityCreatePostHref(community.slug)}>Criar primeiro post</Link>
-                  </Button>
+                  hasCommunitySearchTerm ? (
+                    <Button onClick={() => setCommunitySearch("")} type="button" variant="outline">
+                      Limpar busca
+                    </Button>
+                  ) : (
+                    <Button asChild>
+                      <Link href={communityCreatePostHref(community.slug)}>
+                        Criar primeiro post
+                      </Link>
+                    </Button>
+                  )
                 }
-                description="Ainda não há publicações reais nesta comunidade. Seja a primeira pessoa a iniciar uma conversa."
+                description={
+                  hasCommunitySearchTerm
+                    ? "Nenhum post ou comentário publicado nesta comunidade corresponde ao termo buscado."
+                    : "Ainda não há publicações reais nesta comunidade. Seja a primeira pessoa a iniciar uma conversa."
+                }
                 icon={MessageCircle}
-                title="Comunidade sem posts"
+                title={
+                  hasCommunitySearchTerm
+                    ? "Nenhum resultado nesta comunidade"
+                    : "Comunidade sem posts"
+                }
               />
             ) : null}
 
