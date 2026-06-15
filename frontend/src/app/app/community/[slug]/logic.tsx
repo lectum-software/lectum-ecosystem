@@ -8,6 +8,7 @@ import {
   BadgeCheck,
   Bookmark,
   CalendarDays,
+  Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -16,6 +17,7 @@ import {
   FileText,
   Flame,
   ListChecks,
+  type LucideIcon,
   MessageCircle,
   Play,
   Plus,
@@ -42,6 +44,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import {
   useCommunityDetail,
   useCommunityFeedPosts,
@@ -122,6 +125,9 @@ const COMMUNITY_POST_SORT_PERIODS: Array<{
   { label: "Este ano", value: "year" },
   { label: "Desde sempre", value: "all" },
 ];
+
+const getCommunityPostSortPeriodLabel = (value: CommunityPostSortPeriod) =>
+  COMMUNITY_POST_SORT_PERIODS.find((period) => period.value === value)?.label ?? "Desde sempre";
 
 const FEED_SCOPE_OPTIONS: Array<{ label: string; value: CommunityFeedScope }> = [
   { label: "Todas as comunidades", value: "all" },
@@ -1729,6 +1735,193 @@ const CommunityContextSearchHeader = ({
   </header>
 );
 
+const CommunityPeriodSortChip = ({
+  active,
+  icon: Icon,
+  label,
+  onChange,
+  onPeriodChange,
+  period,
+  value,
+}: {
+  active: boolean;
+  icon: LucideIcon;
+  label: string;
+  onChange: (value: CommunityPostSort) => void;
+  onPeriodChange: (sort: CommunityPostSortWithPeriod, period: CommunityPostSortPeriod) => void;
+  period: CommunityPostSortPeriod;
+  value: CommunityPostSortWithPeriod;
+}) => {
+  const [open, setOpen] = useState(false);
+  const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const menuId = useId();
+  const periodLabel = getCommunityPostSortPeriodLabel(period);
+
+  const updateMenuPosition = useCallback(() => {
+    const button = buttonRef.current;
+    if (!button || typeof window === "undefined") return;
+
+    const rect = button.getBoundingClientRect();
+    const viewportPadding = 12;
+    const desiredWidth = Math.max(rect.width, 232);
+    const availableWidth = Math.max(window.innerWidth - viewportPadding * 2, 160);
+    const width = Math.min(desiredWidth, availableWidth);
+    const left = clampNumber(
+      rect.left,
+      viewportPadding,
+      Math.max(viewportPadding, window.innerWidth - width - viewportPadding),
+    );
+    const estimatedHeight = 198;
+    const preferredTop = rect.bottom + 8;
+    const top =
+      preferredTop + estimatedHeight > window.innerHeight - viewportPadding
+        ? Math.max(viewportPadding, rect.top - estimatedHeight - 8)
+        : preferredTop;
+
+    setMenuStyle({
+      left,
+      maxHeight: "min(16rem, calc(100vh - 1.5rem))",
+      top,
+      width,
+    });
+  }, []);
+
+  const toggleMenu = useCallback(() => {
+    onChange(value);
+    setOpen((current) => !current);
+  }, [onChange, value]);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+
+    updateMenuPosition();
+  }, [open, updateMenuPosition]);
+
+  useEffect(() => {
+    if (!open || typeof window === "undefined") return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+
+      if (buttonRef.current?.contains(target) || menuRef.current?.contains(target)) {
+        return;
+      }
+
+      setOpen(false);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+        buttonRef.current?.focus();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("resize", updateMenuPosition);
+    window.addEventListener("scroll", updateMenuPosition, true);
+    document.addEventListener("pointerdown", handlePointerDown, true);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("resize", updateMenuPosition);
+      window.removeEventListener("scroll", updateMenuPosition, true);
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+    };
+  }, [open, updateMenuPosition]);
+
+  return (
+    <>
+      <button
+        aria-controls={open ? menuId : undefined}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-pressed={active}
+        className={cn(
+          "inline-flex min-h-10 items-center gap-1.5 rounded-full border px-4 text-sm font-black shadow-sm transition",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
+          active
+            ? "border-primary/20 bg-primary-soft text-primary shadow-[0_10px_24px_rgba(47,127,211,0.16)]"
+            : "border-[#E5EAF0] bg-white text-[#64748B] hover:border-primary/40 hover:bg-[#F8FBFF] hover:text-primary dark:border-border dark:bg-surface dark:text-muted",
+        )}
+        onClick={toggleMenu}
+        ref={buttonRef}
+        type="button"
+      >
+        <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+        <span>{label}</span>
+        <span className={cn("text-current/35", active ? "text-primary/45" : "")} aria-hidden="true">
+          ·
+        </span>
+        <span className={cn("font-extrabold", active ? "text-primary" : "text-[#475569]")}>
+          {periodLabel}
+        </span>
+        <ChevronDown
+          className={cn(
+            "h-4 w-4 shrink-0 transition-transform duration-200",
+            open ? "rotate-180" : "",
+          )}
+          aria-hidden="true"
+        />
+      </button>
+
+      {open && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              className="fixed z-[90] overflow-y-auto rounded-2xl border border-[#DCE6F2] bg-white p-1.5 shadow-[0_18px_45px_rgba(15,23,42,0.14)] outline-none animate-in fade-in slide-in-from-top-1 duration-150 dark:border-border dark:bg-surface"
+              id={menuId}
+              ref={menuRef}
+              role="menu"
+              style={menuStyle}
+            >
+              {COMMUNITY_POST_SORT_PERIODS.map((option) => {
+                const selected = option.value === period;
+
+                return (
+                  <button
+                    aria-checked={selected}
+                    className={cn(
+                      "group flex min-h-11 w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-extrabold transition",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
+                      selected
+                        ? "bg-primary-soft text-primary"
+                        : "text-[#475569] hover:bg-[#F8FBFF] hover:text-primary dark:text-muted dark:hover:bg-surface-muted",
+                    )}
+                    key={option.value}
+                    onClick={() => {
+                      onPeriodChange(value, option.value);
+                      setOpen(false);
+                      buttonRef.current?.focus();
+                    }}
+                    role="menuitemradio"
+                    type="button"
+                  >
+                    <span>{option.label}</span>
+                    <span
+                      className={cn(
+                        "grid h-5 w-5 shrink-0 place-items-center rounded-full border transition",
+                        selected
+                          ? "border-primary/20 bg-white/80 text-primary"
+                          : "border-transparent text-transparent group-hover:border-primary/10 group-hover:text-primary/40",
+                      )}
+                      aria-hidden="true"
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                    </span>
+                  </button>
+                );
+              })}
+            </div>,
+            document.body,
+          )
+        : null}
+    </>
+  );
+};
+
 const CommunityPostSortChips = ({
   onChange,
   onPeriodChange,
@@ -1741,7 +1934,7 @@ const CommunityPostSortChips = ({
   value: CommunityPostSort;
 }) => (
   <nav
-    aria-label="Ordenacao dos posts"
+    aria-label="Ordenação dos posts"
     className="-mx-5 overflow-x-auto px-5 [scrollbar-width:none]"
   >
     <div className="flex min-w-max gap-2 pb-1">
@@ -1753,43 +1946,22 @@ const CommunityPostSortChips = ({
         const chipClassName = cn(
           "inline-flex min-h-10 items-center gap-1.5 rounded-full border px-4 text-sm font-black shadow-sm transition",
           active
-            ? "border-primary bg-primary text-white"
-            : "border-[#E5EAF0] bg-white text-[#64748B] hover:border-primary/40 hover:bg-primary-soft hover:text-primary dark:border-border dark:bg-surface dark:text-muted",
+            ? "border-primary/20 bg-primary-soft text-primary shadow-[0_10px_24px_rgba(47,127,211,0.16)]"
+            : "border-[#E5EAF0] bg-white text-[#64748B] hover:border-primary/40 hover:bg-[#F8FBFF] hover:text-primary dark:border-border dark:bg-surface dark:text-muted",
         );
 
         if (hasPeriod && periodValue) {
           return (
-            <label className={cn("relative overflow-hidden", chipClassName)} key={item.value}>
-              <Icon className="h-4 w-4" aria-hidden="true" />
-              <span>{item.label}</span>
-              <ChevronDown
-                className={cn(
-                  "h-4 w-4 shrink-0 transition-transform",
-                  active ? "text-white" : "text-current",
-                )}
-                aria-hidden="true"
-              />
-              <span className="sr-only">Selecionar periodo de {item.label}</span>
-              <select
-                aria-label={`Periodo de ${item.label}`}
-                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                onChange={(event) =>
-                  onPeriodChange(
-                    item.value as CommunityPostSortWithPeriod,
-                    event.target.value as CommunityPostSortPeriod,
-                  )
-                }
-                onFocus={() => onChange(item.value)}
-                onPointerDown={() => onChange(item.value)}
-                value={periodValue}
-              >
-                {COMMUNITY_POST_SORT_PERIODS.map((period) => (
-                  <option className="text-foreground" key={period.value} value={period.value}>
-                    {period.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <CommunityPeriodSortChip
+              active={active}
+              icon={Icon}
+              key={item.value}
+              label={item.label}
+              onChange={onChange}
+              onPeriodChange={onPeriodChange}
+              period={periodValue}
+              value={item.value as CommunityPostSortWithPeriod}
+            />
           );
         }
 
