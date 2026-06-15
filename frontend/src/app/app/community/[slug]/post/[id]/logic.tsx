@@ -118,13 +118,15 @@ const useReplyMediaPermission = (): ReplyMediaPermission => {
   if (user?.role === "psicologo") {
     return {
       canAttach,
-      reason: "Para anexar mídia, confirme o registro CFP e mantenha o Plano Profissional ativo.",
+      reason: activeProfessionalPlan
+        ? "Confirme seu registro CFP para anexar mídia."
+        : replyMediaPermissionLabel,
     };
   }
 
   return {
     canAttach,
-    reason: replyMediaPermissionLabel,
+    reason: "",
   };
 };
 
@@ -193,10 +195,12 @@ const getInitials = (name: string) => {
 const AuthorAvatar = ({
   anonymous,
   author,
+  href,
   size = "md",
 }: {
   anonymous?: boolean;
   author: PostDetail["author"] | PostReply["author"];
+  href?: string;
   size?: "sm" | "md" | "reply";
 }) => {
   const sizeClass = size === "sm" ? "h-8 w-8" : size === "reply" ? "h-9 w-9" : "h-10 w-10";
@@ -218,7 +222,7 @@ const AuthorAvatar = ({
   const avatarSrc = resolvePublicMediaUrl(author.avatar);
   const avatarIsPublicMedia = isPublicMediaUrl(author.avatar);
 
-  return (
+  const avatar = (
     <span
       className={cn(
         "relative grid shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft text-xs font-black text-primary ring-2 ring-white dark:ring-background",
@@ -238,6 +242,18 @@ const AuthorAvatar = ({
         getInitials(author.name)
       )}
     </span>
+  );
+
+  if (!href) return avatar;
+
+  return (
+    <Link
+      aria-label={`Abrir perfil de ${author.name}`}
+      className="shrink-0 cursor-pointer rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+      href={href}
+    >
+      {avatar}
+    </Link>
   );
 };
 
@@ -274,7 +290,15 @@ const MediaBlock = ({
           compactMediaClass,
         )}
       >
-        <video className={cn(videoAspect, "w-full object-cover")} controls playsInline src={src}>
+        <video
+          className={cn(
+            videoAspect,
+            "w-full object-cover fullscreen:mx-auto fullscreen:h-screen fullscreen:w-auto fullscreen:max-w-[100vw] fullscreen:bg-black fullscreen:object-contain",
+          )}
+          controls
+          playsInline
+          src={src}
+        >
           <track kind="captions" label="Português" srcLang="pt-BR" />
         </video>
         <span className="pointer-events-none absolute inset-0 grid place-items-center text-white/70">
@@ -320,8 +344,8 @@ const PostHeader = ({
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="grid gap-4 border-[#EDF1F5] border-b px-5 pt-4 pb-3 dark:border-border">
-      <div className="flex items-center justify-between gap-3">
+    <header className="grid gap-4 px-5 pt-4 pb-3">
+      <div className="-mx-5 flex items-center justify-between gap-3 border-[#EDF1F5] border-b px-5 pb-3 dark:border-border">
         <Button asChild className="h-10 w-10 rounded-full p-0" variant="ghost">
           <Link href={slug ? `/app/community/${slug}` : DEFAULT_COMMUNITY_FEED_HREF}>
             <ArrowLeft className="h-5 w-5" aria-hidden="true" />
@@ -367,7 +391,7 @@ const PostHeader = ({
         <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         <span className="shrink-0">Postado em</span>
         <Link
-          className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-black text-foreground underline-offset-4 hover:text-primary hover:underline"
+          className="block min-w-0 cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap font-bold text-[#64748B] no-underline hover:text-[#64748B] hover:no-underline dark:text-muted dark:hover:text-muted"
           href={`/app/community/${post.community.slug}`}
         >
           {post.community.name}
@@ -563,24 +587,42 @@ const ReplyVoteBar = ({
 );
 
 const ReplyCard = ({
+  activeReplyTarget,
   depth = 0,
+  mediaPermission,
+  onCancelReplyTarget,
   onReply,
   onShare,
+  onSubmitReply,
   onVote,
   postId,
   reply,
+  replyApiError,
+  replyDisabled,
   votePending,
 }: {
+  activeReplyTarget?: ReplyTarget;
   depth?: number;
+  mediaPermission: ReplyMediaPermission;
+  onCancelReplyTarget: () => void;
   onReply: (reply: PostReply) => void;
   onShare: (reply: PostReply) => void;
+  onSubmitReply: (
+    values: ReplyComposerForm,
+    parentReplyId: string,
+    mediaFile?: File | null,
+  ) => Promise<void> | void;
   onVote: (replyId: string, value: 1 | -1) => void;
   postId: string;
   reply: PostReply;
+  replyApiError?: string | null;
+  replyDisabled?: boolean;
   votePending?: boolean;
 }) => {
   const isProfessional = reply.author.role === "psicologo";
   const saveReplyMutation = useSaveReply(postId, reply.id);
+  const psychologistProfileHref = isProfessional ? `/app/psychologist/${reply.author.id}` : null;
+  const isReplyComposerOpen = activeReplyTarget?.id === reply.id;
 
   return (
     <article
@@ -594,13 +636,17 @@ const ReplyCard = ({
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-start gap-3">
-          <AuthorAvatar author={reply.author} size={isProfessional ? "reply" : "sm"} />
+          <AuthorAvatar
+            author={reply.author}
+            href={psychologistProfileHref ?? undefined}
+            size={isProfessional ? "reply" : "sm"}
+          />
           <div className="grid min-w-0 gap-1">
             <div className="flex min-w-0 items-center gap-x-2">
               <div className="flex min-w-0 items-center gap-[5px]">
                 {isProfessional ? (
                   <Link
-                    className="truncate text-sm font-black underline-offset-4 transition hover:text-primary hover:underline"
+                    className="truncate text-sm font-black text-inherit no-underline hover:text-inherit hover:no-underline"
                     href={`/app/psychologist/${reply.author.id}`}
                   >
                     {reply.author.name}
@@ -617,9 +663,18 @@ const ReplyCard = ({
               </div>
               <MentorBadge badge={reply.author.featured_badge} />
             </div>
-            <p className="text-[11px] font-semibold text-muted">
-              {reply.author.type_label} • {formatRelativeTime(reply.created_at)}
-            </p>
+            {psychologistProfileHref ? (
+              <Link
+                className="w-fit cursor-pointer text-[11px] font-semibold text-muted no-underline hover:text-muted hover:no-underline"
+                href={psychologistProfileHref}
+              >
+                {reply.author.type_label} • {formatRelativeTime(reply.created_at)}
+              </Link>
+            ) : (
+              <p className="text-[11px] font-semibold text-muted">
+                {reply.author.type_label} • {formatRelativeTime(reply.created_at)}
+              </p>
+            )}
           </div>
         </div>
         <button
@@ -643,7 +698,7 @@ const ReplyCard = ({
 
       {isProfessional && reply.author.verified && reply.author.whatsapp_url ? (
         <PsychologistWhatsAppRedirectButton
-          className="mt-1 inline-flex h-11 w-full items-center justify-center gap-2 rounded-[14px] border-2 border-success bg-transparent text-success shadow-none transition hover:bg-success hover:text-white"
+          className="mx-auto mt-1 inline-flex h-11 w-full max-w-[280px] items-center justify-center gap-2 rounded-[14px] border-2 border-success bg-transparent text-success shadow-none transition hover:bg-success hover:text-white sm:max-w-[320px]"
           psychologist={{
             avatar: reply.author.avatar,
             crp: reply.author.crp,
@@ -669,17 +724,35 @@ const ReplyCard = ({
         savePending={saveReplyMutation.isPending}
       />
 
+      {isReplyComposerOpen ? (
+        <ReplyComposer
+          apiError={replyApiError}
+          disabled={replyDisabled}
+          mediaPermission={mediaPermission}
+          onCancelTarget={onCancelReplyTarget}
+          onSubmit={(values, mediaFile) => onSubmitReply(values, reply.id, mediaFile)}
+          replyTarget={activeReplyTarget ?? null}
+          variant="inline"
+        />
+      ) : null}
+
       {reply.replies.length > 0 ? (
         <div className="ml-4 grid gap-3 border-[#DCEBFF] border-l-2 pl-4">
           {reply.replies.map((child) => (
             <ReplyCard
+              activeReplyTarget={activeReplyTarget}
               depth={1}
               key={child.id}
+              mediaPermission={mediaPermission}
+              onCancelReplyTarget={onCancelReplyTarget}
               onReply={onReply}
               onShare={onShare}
+              onSubmitReply={onSubmitReply}
               onVote={onVote}
               postId={postId}
               reply={child}
+              replyApiError={replyApiError}
+              replyDisabled={replyDisabled}
               votePending={votePending}
             />
           ))}
@@ -705,14 +778,16 @@ const ReplyComposer = ({
   onCancelTarget,
   onSubmit,
   replyTarget,
+  variant = "main",
 }: {
   apiError?: string | null;
   disabled?: boolean;
-  formRef: RefObject<HTMLFormElement | null>;
+  formRef?: RefObject<HTMLFormElement | null>;
   mediaPermission: ReplyMediaPermission;
   onCancelTarget: () => void;
   onSubmit: (values: ReplyComposerForm, mediaFile?: File | null) => Promise<void> | void;
   replyTarget: ReplyTarget;
+  variant?: "inline" | "main";
 }) => {
   const form = useReplyComposerForm(replyTarget?.name);
   const { formProps, hook } = form;
@@ -729,6 +804,7 @@ const ReplyComposer = ({
   const ready = String(content ?? "").trim().length >= 3;
   const expanded = composerActive || ready || Boolean(replyTarget) || Boolean(selectedMedia);
   const FieldComponent = components[formProps.fields[0].field];
+  const isInline = variant === "inline";
 
   const handleMediaChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -742,7 +818,12 @@ const ReplyComposer = ({
 
   return (
     <form
-      className="fixed inset-x-0 bottom-0 z-40 grid gap-2 border-[#DDE6F0] border-t bg-white/95 p-3 pb-[calc(env(safe-area-inset-bottom)+12px)] shadow-[0_-16px_44px_rgba(15,23,42,0.14)] backdrop-blur-md dark:border-border dark:bg-surface/95 sm:static sm:rounded-[22px] sm:border sm:bg-white sm:p-3 sm:pb-3 sm:shadow-[0_10px_24px_rgba(15,23,42,0.05)] sm:backdrop-blur-0 dark:sm:bg-surface"
+      className={cn(
+        "grid gap-2 border-[#DDE6F0] bg-white/95 p-3 dark:border-border dark:bg-surface/95",
+        isInline
+          ? "mt-3 rounded-[20px] border shadow-none"
+          : "fixed inset-x-0 bottom-0 z-40 border-t pb-[calc(env(safe-area-inset-bottom)+12px)] shadow-[0_-16px_44px_rgba(15,23,42,0.14)] backdrop-blur-md sm:static sm:rounded-[22px] sm:border sm:bg-white sm:pb-3 sm:shadow-[0_10px_24px_rgba(15,23,42,0.05)] sm:backdrop-blur-0 dark:sm:bg-surface",
+      )}
       noValidate
       onFocus={() => setComposerActive(true)}
       onSubmit={hook.handleSubmit(async (values) => {
@@ -777,7 +858,7 @@ const ReplyComposer = ({
         {ready ? (
           <Button
             aria-label="Enviar resposta"
-            className="mb-4 h-11 w-11 shrink-0 rounded-full bg-[#308CE8] p-0 text-white shadow-[0_10px_20px_rgba(48,140,232,0.24)] hover:bg-[#2579CF] disabled:bg-[#DDEEFF] disabled:text-[#7FAFDF] disabled:opacity-100 disabled:shadow-none"
+            className="h-11 w-11 shrink-0 rounded-full bg-[#308CE8] p-0 text-white shadow-[0_10px_20px_rgba(48,140,232,0.24)] hover:bg-[#2579CF] disabled:bg-[#DDEEFF] disabled:text-[#7FAFDF] disabled:opacity-100 disabled:shadow-none"
             disabled={disabled || !ready}
             type="submit"
           >
@@ -816,9 +897,9 @@ const ReplyComposer = ({
               Anexar mídia
             </button>
 
-            {!mediaPermission.canAttach ? (
+            {!mediaPermission.canAttach && mediaPermission.reason ? (
               <span className="max-w-[280px] leading-4 text-[#64748B]">
-                {mediaPermission.reason || replyMediaPermissionLabel}
+                {mediaPermission.reason}
               </span>
             ) : null}
 
@@ -1006,22 +1087,38 @@ const Pagination = ({
 };
 
 const RepliesList = ({
+  activeReplyTarget,
   errorMessage,
   loading,
+  mediaPermission,
+  onCancelReplyTarget,
   onReply,
   onShare,
+  onSubmitReply,
   onVote,
   postId,
   replies,
+  replyApiError,
+  replyDisabled,
   votePending,
 }: {
+  activeReplyTarget?: ReplyTarget;
   errorMessage?: string | null;
   loading?: boolean;
+  mediaPermission: ReplyMediaPermission;
+  onCancelReplyTarget: () => void;
   onReply: (reply: PostReply) => void;
   onShare: (reply: PostReply) => void;
+  onSubmitReply: (
+    values: ReplyComposerForm,
+    parentReplyId: string,
+    mediaFile?: File | null,
+  ) => Promise<void> | void;
   onVote: (replyId: string, value: 1 | -1) => void;
   postId: string;
   replies: PostReply[];
+  replyApiError?: string | null;
+  replyDisabled?: boolean;
   votePending?: boolean;
 }) => (
   <section className="grid gap-3" id="discussao">
@@ -1054,12 +1151,18 @@ const RepliesList = ({
       <div className="grid gap-4 border-[#DCEBFF] border-l-2 pl-3">
         {replies.map((reply) => (
           <ReplyCard
+            activeReplyTarget={activeReplyTarget}
             key={reply.id}
+            mediaPermission={mediaPermission}
+            onCancelReplyTarget={onCancelReplyTarget}
             onReply={onReply}
             onShare={onShare}
+            onSubmitReply={onSubmitReply}
             onVote={onVote}
             postId={postId}
             reply={reply}
+            replyApiError={replyApiError}
+            replyDisabled={replyDisabled}
             votePending={votePending}
           />
         ))}
@@ -1147,12 +1250,38 @@ export const PostDetailLogic = () => {
   };
 
   const handleReplyTarget = (reply: PostReply) => {
-    if (reply.parent_reply_id) return;
-
+    setReplyError(null);
     setReplyTarget({ id: reply.id, name: reply.author.name });
-    window.setTimeout(() => {
-      composerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 50);
+  };
+
+  const submitReply = async (
+    values: ReplyComposerForm,
+    parentReplyId?: string | null,
+    mediaFile?: File | null,
+  ) => {
+    if (!post) return;
+
+    setReplyError(null);
+    const media = mediaFile
+      ? await uploadReplyMediaMutation.mutateAsync({
+          file: mediaFile,
+          id: post.id,
+        })
+      : null;
+
+    await createReplyMutation.mutateAsync({
+      id: post.id,
+      body: toCreatePostReplyPayload(
+        values,
+        parentReplyId,
+        media
+          ? {
+              mediaType: media.media_type,
+              mediaUrl: media.media_url,
+            }
+          : null,
+      ),
+    });
   };
 
   return (
@@ -1219,45 +1348,31 @@ export const PostDetailLogic = () => {
               ) : null}
 
               <ReplyComposer
-                apiError={replyError}
+                apiError={replyTarget ? null : replyError}
                 disabled={createReplyMutation.isPending || uploadReplyMediaMutation.isPending}
                 formRef={composerRef}
                 mediaPermission={mediaPermission}
                 onCancelTarget={() => setReplyTarget(null)}
-                onSubmit={async (values, mediaFile) => {
-                  setReplyError(null);
-                  const media = mediaFile
-                    ? await uploadReplyMediaMutation.mutateAsync({
-                        file: mediaFile,
-                        id: post.id,
-                      })
-                    : null;
-
-                  await createReplyMutation.mutateAsync({
-                    id: post.id,
-                    body: toCreatePostReplyPayload(
-                      values,
-                      replyTarget?.id,
-                      media
-                        ? {
-                            mediaType: media.media_type,
-                            mediaUrl: media.media_url,
-                          }
-                        : null,
-                    ),
-                  });
-                }}
-                replyTarget={replyTarget}
+                onSubmit={(values, mediaFile) => submitReply(values, null, mediaFile)}
+                replyTarget={null}
               />
 
               <RepliesList
+                activeReplyTarget={replyTarget}
                 errorMessage={repliesError}
                 loading={repliesQuery.isLoading || repliesQuery.isPending}
+                mediaPermission={mediaPermission}
+                onCancelReplyTarget={() => setReplyTarget(null)}
                 onReply={handleReplyTarget}
                 onShare={shareReply}
+                onSubmitReply={(values, parentReplyId, mediaFile) =>
+                  submitReply(values, parentReplyId, mediaFile)
+                }
                 onVote={(replyId, value) => voteMutation.mutate({ replyId, value })}
                 postId={post.id}
                 replies={replies}
+                replyApiError={replyError}
+                replyDisabled={createReplyMutation.isPending || uploadReplyMediaMutation.isPending}
                 votePending={voteMutation.isPending}
               />
 
