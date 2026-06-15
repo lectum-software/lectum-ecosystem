@@ -584,26 +584,28 @@ const ProfileHero = ({
             ) : null}
           </h1>
 
-          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold text-muted">
-            {getPsychologistTitle(profile.gender)}
-            <span aria-hidden="true">•</span>
-            <span>{formattedCrp}</span>
-          </p>
+          <div className="grid gap-0.5">
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold text-muted">
+              {getPsychologistTitle(profile.gender)}
+              <span aria-hidden="true">•</span>
+              <span>{formattedCrp}</span>
+            </p>
 
-          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] font-semibold text-[#64748B]">
-            <span className="inline-flex items-center gap-1 text-[#B45309]">
-              <Star className="h-3.5 w-3.5 fill-[#FBBF24] text-[#FBBF24]" aria-hidden="true" />
-              {formatHeroRating(profile.rating_avg)}
-            </span>
-            {experienceLabel ? (
-              <>
-                <span aria-hidden="true" className="text-[#CBD5E1]">
-                  •
-                </span>
-                <span className="text-[#475569]">{experienceLabel}</span>
-              </>
-            ) : null}
-          </p>
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] font-medium text-[#64748B]">
+              <span className="inline-flex items-center gap-1 text-[#B45309]">
+                <Star className="h-3.5 w-3.5 fill-[#FBBF24] text-[#FBBF24]" aria-hidden="true" />
+                {formatHeroRating(profile.rating_avg)}
+              </span>
+              {experienceLabel ? (
+                <>
+                  <span aria-hidden="true" className="text-[#CBD5E1]">
+                    •
+                  </span>
+                  <span className="text-[#475569]">{experienceLabel}</span>
+                </>
+              ) : null}
+            </p>
+          </div>
 
           {profile.available_today ? (
             <span
