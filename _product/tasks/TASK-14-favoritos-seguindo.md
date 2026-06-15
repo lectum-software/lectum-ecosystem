@@ -230,3 +230,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm --dir frontend build`;
   - smoke real de API com paciente e psic?logo tempor?rios: guarda 403 para psic?logo em rota paciente, criar/listar/remover favorito, criar/listar/remover seguindo e refletir `favorited/followed` no diret?rio;
   - browser local headless desktop `1440x1000`: `/app/favorites` com remo??o pelo cora??o e estado vazio; `/app/following` com remo??o pelo bot?o `Seguindo` e estado vazio.
+
+## Complemento 2026-06-15 - refinamento visual do header e cards de favoritos
+
+- Pedido do usuario: ajustar apenas layout, responsividade e hierarquia visual de `/app/favorites`, sem alterar filtros, contagem, rotas, dados, remocao de favorito ou fluxo WhatsApp.
+- Referencia visual ativa: `_product/proto/Favoritos.jpg`; Builder/Quick Copy nao foi acessado diretamente como ferramenta neste ambiente e o fallback auditavel permaneceu nas imagens locais.
+- Header mobile-first: o coracao azul foi deslocado para o canto superior direito, alinhado ao topo de `SUA CURADORIA`, liberando largura util para a descricao.
+- Header desktop: o mesmo icone de coracao azul passou a aparecer tambem no desktop, com descricao usando a largura horizontal disponivel.
+- Cards de favoritos: midia com cantos internos, placeholder premium com gradiente/iniciais, sombra/borda mais suaves, hierarquia de nome/selo/metadados, chips discretos e CTA WhatsApp mais limpo.
+- Escopo: sem mudancas de backend, endpoints, schema Prisma, dados carregados ou logica de filtros/favoritos.
+- ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP local 200 em `/app/favorites`.

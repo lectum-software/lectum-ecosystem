@@ -45,3 +45,28 @@ O Builder/Quick Copy não estava acessível neste ambiente. A referência visual
 ## Pendências
 
 - A renderização headless direta do PDF local não produziu uma captura útil neste ambiente. A implementação seguiu o briefing visual anexado e os padrões já ativos da listagem/descoberta de psicólogos.
+
+## Complemento 2026-06-15 - header amplo e cards marketplace
+
+### Contexto
+
+A tela de Favoritos precisava melhorar a hierarquia visual do header e fazer os cards parecerem menos simples, mantendo integralmente dados, filtros, navegacao para perfil, remocao de favorito e acao de WhatsApp.
+
+### Decisao
+
+- Manter o componente e a logica existente de `PsychologistRelationList`, alterando apenas classes/layout.
+- Posicionar o coracao azul como elemento decorativo absoluto no topo direito do header, visivel em mobile e desktop, sem disputar largura com a descricao.
+- Remover a limitacao estreita da descricao no desktop, permitindo que o texto use a largura util antes de quebrar linha.
+- Refinar os cards com moldura arredondada, midia em inset, placeholder com gradiente e iniciais menores, chips com menor peso visual e CTA de WhatsApp discreto.
+
+### Consequencias
+
+- A tela comunica melhor curadoria/marketplace premium sem alterar contratos de API ou comportamento de favoritos.
+- O grid continua mobile-first com duas colunas quando legivel e passa a usar colunas responsivas por largura minima em telas maiores.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local em `/app/favorites` respondeu `200`.

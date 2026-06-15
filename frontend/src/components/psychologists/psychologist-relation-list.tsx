@@ -97,7 +97,7 @@ const config = {
   favorites: {
     title: "Favoritos",
     eyebrow: "Sua curadoria",
-    description: "Profissionais que você salvou para comparar e chamar no WhatsApp quando quiser.",
+    description: "Profissionais que você salvou para comparar e chamar no WhatsApp.",
     emptyTitle: "Você ainda não possui favoritos",
     emptyDescription:
       "Explore psicólogos, toque no coração dos perfis que combinam com você e eles aparecerão aqui.",
@@ -185,8 +185,13 @@ const FavoriteMedia = ({ psychologist }: { psychologist: PatientRelationPsycholo
 
   if (!mediaSrc) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-primary-soft text-5xl font-black text-primary">
-        {getInitials(psychologist.name)}
+      <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-gradient-to-br from-primary-soft via-surface-muted to-surface">
+        <span className="-top-10 -right-8 absolute h-28 w-28 rounded-full bg-primary/12 blur-2xl" />
+        <span className="-bottom-12 -left-8 absolute h-32 w-32 rounded-full bg-success/10 blur-2xl" />
+        <span className="absolute inset-0 bg-[radial-gradient(circle_at_30%_18%,rgb(255_255_255_/_72%),transparent_34%)] dark:bg-[radial-gradient(circle_at_30%_18%,rgb(255_255_255_/_8%),transparent_34%)]" />
+        <span className="relative grid h-20 w-20 place-items-center rounded-[28px] border border-surface/80 bg-surface/80 text-2xl font-black tracking-[-0.04em] text-primary shadow-[0_18px_36px_rgb(15_23_42_/_12%)] backdrop-blur-xl">
+          {getInitials(psychologist.name)}
+        </span>
       </div>
     );
   }
@@ -256,7 +261,7 @@ const FavoritePsychologistCard = ({
   return (
     <article
       aria-label={`Abrir perfil de ${psychologist.name}`}
-      className="group relative isolate min-w-0 cursor-pointer overflow-hidden rounded-[24px] border border-border bg-surface shadow-[0_14px_34px_rgb(15_23_42_/_10%)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgb(15_23_42_/_14%)]"
+      className="group relative isolate min-w-0 cursor-pointer overflow-hidden rounded-[26px] border border-border/90 bg-surface shadow-[0_14px_34px_rgb(15_23_42_/_8%)] transition duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_22px_48px_rgb(15_23_42_/_13%)]"
     >
       <Link
         aria-label={`Abrir perfil de ${psychologist.name}`}
@@ -264,13 +269,14 @@ const FavoritePsychologistCard = ({
         href={route}
       />
 
-      <div className="relative aspect-[4/5] overflow-hidden bg-primary-soft">
+      <div className="relative m-2 mb-0 aspect-[4/5] overflow-hidden rounded-[22px] bg-primary-soft">
         <FavoriteMedia psychologist={psychologist} />
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-foreground/18 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-foreground/16 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-foreground/18 to-transparent" />
         <button
           aria-label={`Remover ${psychologist.name} dos favoritos`}
           aria-pressed="true"
-          className="absolute right-2 top-2 z-30 grid h-9 w-9 shrink-0 place-items-center rounded-full border border-surface/80 bg-surface/90 text-danger shadow-sm backdrop-blur-xl transition hover:scale-105 disabled:pointer-events-none disabled:opacity-60"
+          className="absolute right-2.5 top-2.5 z-30 grid h-9 w-9 shrink-0 place-items-center rounded-full border border-surface/80 bg-surface/90 text-danger shadow-[0_10px_22px_rgb(15_23_42_/_14%)] backdrop-blur-xl transition hover:scale-105 disabled:pointer-events-none disabled:opacity-60"
           disabled={favoritePending}
           onClick={handleFavoriteClick}
           type="button"
@@ -283,29 +289,29 @@ const FavoritePsychologistCard = ({
         </button>
       </div>
 
-      <div className="pointer-events-none relative z-20 grid gap-2 p-3">
+      <div className="pointer-events-none relative z-20 grid gap-2.5 p-3.5 pt-3">
         <div className="min-w-0">
-          <span className="flex min-w-0 items-start gap-1.5">
-            <span className="line-clamp-2 text-[0.95rem] font-black leading-[1.18] tracking-[-0.02em] text-foreground">
+          <span className="flex min-w-0 items-start gap-1.5 pr-1">
+            <span className="line-clamp-2 text-[0.96rem] font-black leading-[1.18] tracking-[-0.025em] text-foreground">
               {psychologist.name}
             </span>
             {psychologist.verified ? (
-              <VerifiedBadgeIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <VerifiedBadgeIcon className="mt-0.5 h-4 w-4 shrink-0" />
             ) : null}
           </span>
-          <p className="mt-1 line-clamp-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted">
+          <p className="mt-1 line-clamp-1 text-[11px] font-extrabold uppercase tracking-[0.06em] text-muted">
             {metaLine}
           </p>
         </div>
 
-        <div className="flex min-h-6 flex-wrap items-center gap-1.5">
-          <span className="inline-flex items-center gap-1 rounded-full bg-warning/12 px-2 py-1 text-[11px] font-black text-foreground">
+        <div className="flex min-h-6 flex-wrap items-center gap-1.5 text-[11px]">
+          <span className="inline-flex items-center gap-1 rounded-full border border-warning/12 bg-warning/10 px-2 py-1 font-black text-foreground">
             <Star className="h-3 w-3 fill-warning text-warning" aria-hidden="true" />
             {formatRating(psychologist.rating_avg)}
           </span>
 
           {psychologist.available_today ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-1 text-[11px] font-black text-success">
+            <span className="inline-flex items-center gap-1 rounded-full border border-success/15 bg-success/10 px-2 py-1 font-black text-success">
               <span className="h-1.5 w-1.5 rounded-full bg-success motion-safe:animate-pulse" />
               Hoje
             </span>
@@ -319,7 +325,7 @@ const FavoritePsychologistCard = ({
 
               return (
                 <span
-                  className="inline-flex max-w-full items-center gap-1 rounded-full bg-primary-soft px-2 py-1 text-[10px] font-bold text-primary"
+                  className="inline-flex max-w-full items-center gap-1 rounded-full border border-primary/10 bg-primary-soft/70 px-2 py-1 text-[10px] font-bold text-primary"
                   key={tag.label}
                 >
                   <Icon className="h-3 w-3 shrink-0" aria-hidden="true" />
@@ -333,7 +339,7 @@ const FavoritePsychologistCard = ({
         {psychologist.whatsapp_url ? (
           <PsychologistWhatsAppRedirectButton
             aria-label={`Chamar ${psychologist.name} no WhatsApp`}
-            className="pointer-events-auto relative z-30 mt-1 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-full border border-success/25 bg-success/10 px-3 text-xs font-black text-success transition hover:bg-success hover:text-white"
+            className="pointer-events-auto relative z-30 mt-0.5 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-full border border-success/25 bg-surface-muted px-3 text-xs font-black text-success transition hover:border-success hover:bg-success hover:text-white"
             psychologist={{
               avatar: psychologist.avatar,
               crp: psychologist.crp,
@@ -430,24 +436,22 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
   return (
     <PrivateTemplate>
       <section className="mx-auto grid w-full max-w-[430px] gap-5 lg:max-w-[1120px]">
-        <header className="grid gap-4 rounded-[32px] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)] lg:p-7">
-          <div className="grid gap-2">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-primary">
+        <header className="relative grid gap-4 overflow-hidden rounded-[32px] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)] lg:p-7">
+          <span className="pointer-events-none absolute top-0 right-0 h-28 w-28 rounded-bl-[42px] bg-primary-soft/60" />
+          <span className="pointer-events-none absolute top-5 right-5 grid h-12 w-12 place-items-center rounded-2xl border border-primary/10 bg-primary-soft text-primary shadow-[0_12px_28px_rgb(48_140_232_/_16%)] lg:top-7 lg:right-7 lg:h-14 lg:w-14 lg:rounded-[22px]">
+            <Heart className="h-6 w-6 fill-current lg:h-7 lg:w-7" aria-hidden="true" />
+          </span>
+
+          <div className="relative grid min-w-0 gap-2">
+            <p className="pr-16 text-xs font-black uppercase tracking-[0.22em] text-primary lg:pr-20">
               {copy.eyebrow as string}
             </p>
-            <div className="flex items-start justify-between gap-3 lg:block">
-              <div>
-                <h1 className="text-3xl font-black leading-tight text-foreground lg:text-4xl">
-                  {copy.title as string}
-                </h1>
-                <p className="mt-2 max-w-sm text-sm leading-6 text-muted">
-                  {copy.description as string}
-                </p>
-              </div>
-              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary lg:hidden">
-                <Heart className="h-6 w-6 fill-current" aria-hidden="true" />
-              </span>
-            </div>
+            <h1 className="pr-16 text-3xl font-black leading-tight text-foreground lg:pr-20 lg:text-4xl">
+              {copy.title as string}
+            </h1>
+            <p className="max-w-none text-sm leading-6 text-muted lg:text-base">
+              {copy.description as string}
+            </p>
           </div>
 
           <div className="-mx-5 overflow-x-auto scroll-smooth px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:-mx-7 lg:px-7">
@@ -506,7 +510,7 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
               {activeQuery.isFetching ? <LoadingState label="Atualizando" /> : null}
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            <div className="grid grid-cols-1 gap-3.5 min-[360px]:grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(190px,1fr))] lg:gap-4">
               {psychologists.map((psychologist) => (
                 <FavoritePsychologistCard
                   favoritePending={favoritePendingId === psychologist.id}
