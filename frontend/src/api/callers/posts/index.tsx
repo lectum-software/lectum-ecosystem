@@ -8,6 +8,8 @@ import type {
   PostRepliesQuery,
   PostRepliesResponse,
   PostReply,
+  PostReportPayload,
+  PostReportResponse,
   PostSaveResponse,
   PostVotePayload,
   PostVoteResponse,
@@ -158,6 +160,26 @@ export const useCreatePostReply = (callbacks?: {
       queryClient.invalidateQueries({ queryKey: keys.posts.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: ["posts", variables.id, "replies"] });
       queryClient.invalidateQueries({ queryKey: keys.community.root() });
+      callbacks?.onSuccess?.(data);
+    },
+    onError: callbacks?.onError,
+  });
+};
+
+export const useUploadPostReplyMedia = (callbacks?: { onError?: (error: unknown) => void }) => {
+  return useMutation({
+    mutationFn: ({ file, id }: { file: File; id: string }) => api.uploadPostReplyMedia(id, file),
+    onError: callbacks?.onError,
+  });
+};
+
+export const useReportPost = (callbacks?: {
+  onSuccess?: (data: PostReportResponse) => void;
+  onError?: (error: unknown) => void;
+}) => {
+  return useMutation({
+    mutationFn: ({ body, id }: { body: PostReportPayload; id: string }) => api.reportPost(id, body),
+    onSuccess: (data) => {
       callbacks?.onSuccess?.(data);
     },
     onError: callbacks?.onError,

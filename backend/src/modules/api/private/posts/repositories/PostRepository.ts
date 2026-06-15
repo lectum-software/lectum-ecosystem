@@ -6,6 +6,7 @@ import type {
   IPostMineDTO,
   IPostRepliesDTO,
   IPostReplySaveDTO,
+  IPostReportDTO,
   IPostSaveDTO,
   IPostSavedDTO,
   IPostShowDTO,
@@ -21,6 +22,7 @@ import type {
   PostProfessionalReplyDTO,
   PostRepliesResponse,
   PostReplyDTO,
+  PostReportResponse,
   PostSaveResponse,
   PostVoteResponse,
 } from "../DTOs/IPostDTO";
@@ -446,11 +448,53 @@ const findPublishedReply = (postId: string, replyId: string) => {
   });
 };
 
+const normalizeReplyMediaType = (value?: string | null): "image" | "video" | null => {
+  if (value === "image" || value === "video") return value;
+
+  return null;
+};
+
+const isPublicReplyMediaUrl = (value?: string | null) => {
+  if (!value) return false;
+
+  try {
+    return new URL(value).pathname.startsWith("/public/files/posts/media/");
+  } catch (_err) {
+    return value.startsWith("/public/files/posts/media/");
+  }
+};
+
 export class PostRepository implements IPostRepository {
   readonly repository: ORM["community_post"];
 
   constructor() {
     this.repository = prisma.community_post;
+  }
+
+  async exists(id: string): Promise<boolean> {
+    const post = await findPublishedPost(id);
+
+    return Boolean(post);
+  }
+
+  async canAttachReplyMedia(userId: string): Promise<boolean> {
+    const profile = await prisma.psychologist_profile.findFirst({
+      where: {
+        user_id: userId,
+        deleted: false,
+        cfp_verified_at: {
+          not: null,
+        },
+        subscriptions: {
+          some: activeProfessionalEntitlementWhere(),
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    return Boolean(profile);
   }
 
   async mine(data: IPostMineDTO): Promise<PostListResponse> {
@@ -847,6 +891,21 @@ export class PostRepository implements IPostRepository {
     const post = await findPublishedPost(data.p.id);
     if (!post) return { kind: "not_found" };
 
+    const mediaUrl = data.b.mediaUrl?.trim() || null;
+    const mediaType = normalizeReplyMediaType(data.b.mediaType);
+    const hasMedia = Boolean(mediaUrl || data.b.mediaType);
+
+    if (hasMedia) {
+      if (!mediaUrl || !mediaType || !isPublicReplyMediaUrl(mediaUrl)) {
+        return { kind: "invalid_media" };
+      }
+
+      const canAttachMedia = await this.canAttachReplyMedia(data.auth.id!);
+      if (!canAttachMedia) {
+        return { kind: "media_not_allowed" };
+      }
+    }
+
     if (data.b.parentReplyId) {
       const parent = await prisma.post_reply.findFirst({
         where: {
@@ -870,6 +929,8 @@ export class PostRepository implements IPostRepository {
           author_id: data.auth.id!,
           parent_reply_id: data.b.parentReplyId || null,
           content: data.b.content.trim(),
+          media_type: mediaType,
+          media_url: mediaUrl,
         },
         select: replyBaseSelect,
       });
@@ -891,6 +952,53 @@ export class PostRepository implements IPostRepository {
     return {
       kind: "ok",
       data: toReplyResponse(reply, new Map()),
+    };
+  }
+
+  async report(data: IPostReportDTO): Promise<PostMutationResult<PostReportResponse>> {
+    const post = await findPublishedPost(data.p.id);
+    if (!post) return { kind: "not_found" };
+
+    const report = await prisma.post_report.upsert({
+      where: {
+        post_id_reporter_id: {
+          post_id: post.id,
+          reporter_id: data.auth.id!,
+        },
+      },
+      create: {
+        post_id: post.id,
+        reporter_id: data.auth.id!,
+        reason: data.b.reason,
+        description: data.b.description || null,
+      },
+      update: {
+        deleted: false,
+        deletedAt: null,
+        reason: data.b.reason,
+        description: data.b.description || null,
+        status: "pendente",
+      },
+      select: {
+        id: true,
+        post_id: true,
+        reason: true,
+        description: true,
+        status: true,
+        createdAt: true,
+      },
+    });
+
+    return {
+      kind: "ok",
+      data: {
+        id: report.id,
+        post_id: report.post_id,
+        reason: report.reason,
+        description: report.description,
+        status: report.status,
+        created_at: report.createdAt,
+      },
     };
   }
 

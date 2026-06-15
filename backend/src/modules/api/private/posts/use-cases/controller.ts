@@ -1,15 +1,18 @@
-﻿import type { Request, Response } from "express";
+﻿import type { NextFunction, Request, Response } from "express";
 import { error500, send } from "@/helpers/return";
 import {
+  authorizeReplyMediaUpload as authorizeReplyMediaUploadService,
   createReply as createReplyService,
   mine as mineService,
   replies as repliesService,
+  report as reportService,
   saved as savedService,
   saveReply as saveReplyService,
   save as saveService,
   show as showService,
   unsaveReply as unsaveReplyService,
   unsave as unsaveService,
+  uploadReplyMedia as uploadReplyMediaService,
   vote as voteService,
 } from "./services";
 
@@ -62,6 +65,51 @@ export const createReply = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "post_create_reply", err);
+  }
+};
+
+export const authorizeReplyMediaUpload = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const resolve = await authorizeReplyMediaUploadService(
+      req as unknown as Parameters<typeof authorizeReplyMediaUploadService>[0],
+    );
+
+    if (!resolve.success) {
+      return send(res, resolve);
+    }
+
+    return next();
+  } catch (err) {
+    return error500(res, "post_reply_media_authorize", err);
+  }
+};
+
+export const uploadReplyMedia = async (req: Request, res: Response) => {
+  try {
+    const file = req.file as (Express.Multer.File & { key?: string; path?: string }) | undefined;
+    const resolve = await uploadReplyMediaService({
+      auth: req.auth,
+      file,
+      p: req.params as unknown as Parameters<typeof uploadReplyMediaService>[0]["p"],
+    });
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_reply_media_upload", err);
+  }
+};
+
+export const report = async (req: Request, res: Response) => {
+  try {
+    const resolve = await reportService(req as unknown as Parameters<typeof reportService>[0]);
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_report", err);
   }
 };
 

@@ -66,9 +66,9 @@
     "free_service_limit": "O plano gratuito permite selecionar {{limit}} serviço.",
     "free_approach_limit": "O plano gratuito permite selecionar {{limit}} abordagem.",
     "professional_profile_target_audience_required": "Selecione pelo menos um público atendido antes de publicar.",
-    "post_reply_parent_invalid": "A resposta selecionada n?o pode receber uma nova resposta.",
-    "post_vote_invalid_target": "A publica??o ou resposta selecionada n?o est? dispon?vel para voto.",
-    "post_vote_value_invalid": "Informe um voto v?lido para continuar.",
+    "post_reply_parent_invalid": "A resposta selecionada não pode receber uma nova resposta.",
+    "post_vote_invalid_target": "A publicação ou resposta selecionada não está disponível para voto.",
+    "post_vote_value_invalid": "Informe um voto válido para continuar.",
     "account_not_found": "Conta não encontrada.",
     "account_password_login_unavailable": "Esta conta não possui senha cadastrada para confirmar a alteração.",
     "account_current_password_invalid": "A senha atual está incorreta.",
@@ -82,7 +82,10 @@
     "google_link_expired": "A solicitação de vínculo com o Google expirou. Tente novamente.",
     "google_link_email_mismatch": "Use no Google o mesmo e-mail da sua conta Lectum para concluir o vínculo.",
     "account_delete_confirmation_invalid": "Digite EXCLUIR para confirmar a exclusão da conta.",
-    "account_delete_active_subscription": "Não é possível excluir a conta com assinatura paga vinculada ao gateway ou pagamento em aberto. Cancele ou regularize a cobrança antes de continuar."
+    "account_delete_active_subscription": "Não é possível excluir a conta com assinatura paga vinculada ao gateway ou pagamento em aberto. Cancele ou regularize a cobrança antes de continuar.",
+    "post_reply_media_invalid": "A mídia da resposta não é válida. Envie novamente pelo fluxo de anexar mídia.",
+    "post_reply_media_professional_plan": "Envio de mídia em respostas está disponível apenas para psicólogos verificados com Plano Profissional ativo.",
+    "post_report_reason_invalid": "Selecione um motivo válido para denunciar a publicação."
   },
   "message": {
     "store": "dado criado",
@@ -128,8 +131,8 @@
     "community_unfollow_success": "Comunidade removida das suas comunidades seguidas.",
     "post_reply_created": "Resposta publicada com sucesso.",
     "post_vote_updated": "Voto atualizado com sucesso.",
-    "post_saved": "Publica??o salva com sucesso.",
-    "post_unsaved": "Publica??o removida dos salvos.",
+    "post_saved": "Publicação salva com sucesso.",
+    "post_unsaved": "Publicação removida dos salvos.",
     "post_reply_saved": "Resposta salva com sucesso.",
     "post_reply_unsaved": "Resposta removida dos salvos.",
     "account_email_update_success": "E-mail atualizado. Enviamos um código para confirmar o novo endereço.",
@@ -137,7 +140,9 @@
     "google_link_intent_created": "Redirecionando para o Google.",
     "google_link_success": "Conta conectada ao Google com sucesso.",
     "google_unlink_success": "Google desconectado da sua conta com sucesso.",
-    "account_delete_success": "Conta excluída com sucesso."
+    "account_delete_success": "Conta excluída com sucesso.",
+    "post_reply_media_uploaded": "Mídia anexada com sucesso.",
+    "post_report_created": "Denúncia enviada para análise da equipe Lectum."
   },
   "gender": {
     "o": "o"
@@ -165,7 +170,8 @@
     "professional_subscription": "assinatura profissional",
     "post_reply": "resposta",
     "post_vote": "voto",
-    "post_save": "publica??o salva"
+    "post_save": "publicação salva",
+    "post_report": "denúncia de publicação"
   },
   "property": {
     "email": "email",

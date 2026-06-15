@@ -9,25 +9,38 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
+  Flag,
   Loader2,
   MessageCircle,
   MoreVertical,
+  Paperclip,
   Play,
   Reply,
   Send,
   Share2,
   UserX,
+  X,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { type MouseEvent, type RefObject, useMemo, useRef, useState } from "react";
+import {
+  type ChangeEvent,
+  type MouseEvent,
+  type RefObject,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   useCreatePostReply,
   usePostDetail,
   usePostReplies,
+  useReportPost,
   useSavePost,
   useSaveReply,
+  useUploadPostReplyMedia,
   useVotePost,
 } from "@/api/callers/posts";
 import type { PostDetail, PostReply } from "@/api/generator/types/posts";
@@ -40,12 +53,20 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
+import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
-import { type ReplyComposerForm, toCreatePostReplyPayload, useReplyComposerForm } from "./use-form";
+import {
+  type PostReportForm,
+  type ReplyComposerForm,
+  toCreatePostReplyPayload,
+  toPostReportPayload,
+  usePostReportForm,
+  useReplyComposerForm,
+} from "./use-form";
 
 const REPLIES_LIMIT = 8;
 
@@ -63,6 +84,48 @@ type ReplyTarget = {
   id: string;
   name: string;
 } | null;
+
+type ReplyMediaPermission = {
+  canAttach: boolean;
+  reason: string;
+};
+
+const replyMediaPermissionLabel =
+  "Mídia disponível apenas para psicólogos verificados com Plano Profissional ativo.";
+
+const useReplyMediaPermission = (): ReplyMediaPermission => {
+  const user = useAppSelector((state) => state.user);
+  const activeProfessionalPlan = user?.psychologist_profile?.subscriptions?.some(
+    (subscription) =>
+      subscription.status === "ativa" &&
+      subscription.plan?.active !== false &&
+      subscription.plan?.slug !== "gratuito",
+  );
+  const canAttach = Boolean(
+    user?.role === "psicologo" &&
+      user.psychologist_profile?.cfp_verified_at &&
+      activeProfessionalPlan,
+  );
+
+  if (canAttach) {
+    return {
+      canAttach,
+      reason: "",
+    };
+  }
+
+  if (user?.role === "psicologo") {
+    return {
+      canAttach,
+      reason: "Para anexar mídia, confirme o registro CFP e mantenha o Plano Profissional ativo.",
+    };
+  }
+
+  return {
+    canAttach,
+    reason: replyMediaPermissionLabel,
+  };
+};
 
 const resolvePostError = (error: unknown) => {
   const apiError = error as ApiError;
@@ -230,6 +293,7 @@ const MediaBlock = ({
 
   const radius = size === "lg" ? "rounded-[22px]" : "rounded-[18px]";
   const videoAspect = size === "md" ? "aspect-[9/16]" : "aspect-[4/5]";
+  const compactMediaClass = size === "md" ? "mx-auto w-full max-w-[280px] sm:max-w-[320px]" : "";
   const imageSizes =
     size === "lg"
       ? "(max-width: 430px) calc(100vw - 40px), 640px"
@@ -241,6 +305,7 @@ const MediaBlock = ({
         className={cn(
           "relative mt-3 overflow-hidden border border-border bg-black shadow-inner",
           radius,
+          compactMediaClass,
         )}
       >
         <video className={cn(videoAspect, "w-full object-cover")} controls playsInline src={src}>
@@ -260,6 +325,7 @@ const MediaBlock = ({
       className={cn(
         "relative mt-3 aspect-[4/5] overflow-hidden border border-border bg-surface-muted",
         radius,
+        compactMediaClass,
       )}
     >
       <Image
@@ -274,9 +340,18 @@ const MediaBlock = ({
   );
 };
 
-const PostHeader = ({ post, slug }: { post: PostDetail; slug: string }) => {
+const PostHeader = ({
+  onReport,
+  post,
+  slug,
+}: {
+  onReport: () => void;
+  post: PostDetail;
+  slug: string;
+}) => {
   const isPsychologistPost = post.author.role === "psicologo";
   const isAnonymousPatient = !isPsychologistPost && post.anonymous;
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <header className="grid gap-4 border-[#EDF1F5] border-b px-5 pt-4 pb-3 dark:border-border">
@@ -288,13 +363,38 @@ const PostHeader = ({ post, slug }: { post: PostDetail; slug: string }) => {
           </Link>
         </Button>
         <h1 className="text-base font-black text-[#182033] dark:text-foreground">Post</h1>
-        <button
-          aria-label="Mais opções"
-          className="grid h-10 w-10 place-items-center rounded-full text-[#64748B] transition hover:bg-surface-muted"
-          type="button"
-        >
-          <MoreVertical className="h-5 w-5" aria-hidden="true" />
-        </button>
+        <div className="relative">
+          <button
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
+            aria-label="Mais opções"
+            className="grid h-10 w-10 place-items-center rounded-full text-[#64748B] transition hover:bg-surface-muted"
+            onClick={() => setMenuOpen((current) => !current)}
+            type="button"
+          >
+            <MoreVertical className="h-5 w-5" aria-hidden="true" />
+          </button>
+
+          {menuOpen ? (
+            <div
+              className="absolute top-11 right-0 z-20 w-52 overflow-hidden rounded-2xl border border-[#E5EAF0] bg-white p-1.5 text-sm shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:border-border dark:bg-surface"
+              role="menu"
+            >
+              <button
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-[#475569] transition hover:bg-[#F8FAFC] hover:text-[#182033] dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onReport();
+                }}
+                role="menuitem"
+                type="button"
+              >
+                <Flag className="h-4 w-4" aria-hidden="true" />
+                Denunciar post
+              </button>
+            </div>
+          ) : null}
+        </div>
       </div>
 
       <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-muted">
@@ -635,6 +735,7 @@ const ReplyComposer = ({
   apiError,
   disabled,
   formRef,
+  mediaPermission,
   onCancelTarget,
   onSubmit,
   replyTarget,
@@ -642,12 +743,16 @@ const ReplyComposer = ({
   apiError?: string | null;
   disabled?: boolean;
   formRef: RefObject<HTMLFormElement | null>;
+  mediaPermission: ReplyMediaPermission;
   onCancelTarget: () => void;
-  onSubmit: (values: ReplyComposerForm) => void;
+  onSubmit: (values: ReplyComposerForm, mediaFile?: File | null) => Promise<void> | void;
   replyTarget: ReplyTarget;
 }) => {
   const form = useReplyComposerForm(replyTarget?.name);
   const { formProps, hook } = form;
+  const [composerActive, setComposerActive] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const visibleError = useMemo(() => {
     if (apiError) return apiError;
     if (!hook.formState.isSubmitted) return null;
@@ -656,15 +761,33 @@ const ReplyComposer = ({
   }, [apiError, hook.formState.errors, hook.formState.isSubmitted]);
   const content = hook.watch("content");
   const ready = String(content ?? "").trim().length >= 3;
+  const expanded = composerActive || ready || Boolean(replyTarget) || Boolean(selectedMedia);
   const FieldComponent = components[formProps.fields[0].field];
+
+  const handleMediaChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file || !mediaPermission.canAttach) return;
+
+    setSelectedMedia(file);
+    setComposerActive(true);
+  };
 
   return (
     <form
-      className="grid gap-3 rounded-[22px] border border-[#E5EAF0] bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)] dark:border-border dark:bg-surface"
+      className="fixed inset-x-0 bottom-0 z-40 grid gap-2 border-[#DDE6F0] border-t bg-white/95 p-3 pb-[calc(env(safe-area-inset-bottom)+12px)] shadow-[0_-16px_44px_rgba(15,23,42,0.14)] backdrop-blur-md dark:border-border dark:bg-surface/95 sm:static sm:rounded-[22px] sm:border sm:bg-white sm:p-3 sm:pb-3 sm:shadow-[0_10px_24px_rgba(15,23,42,0.05)] sm:backdrop-blur-0 dark:sm:bg-surface"
       noValidate
-      onSubmit={hook.handleSubmit((values) => {
-        onSubmit(values);
-        hook.reset({ content: "" });
+      onFocus={() => setComposerActive(true)}
+      onSubmit={hook.handleSubmit(async (values) => {
+        try {
+          await onSubmit(values, selectedMedia);
+          hook.reset({ content: "" });
+          setSelectedMedia(null);
+          setComposerActive(false);
+        } catch {
+          // O estado de erro é tratado pela mutation para manter o campo preenchido.
+        }
       })}
       ref={formRef}
     >
@@ -681,27 +804,195 @@ const ReplyComposer = ({
         </div>
       ) : null}
 
-      <FieldComponent control={hook.control} {...formProps.fields[0]} />
+      <div className="flex items-end gap-2">
+        <div className="min-w-0 flex-1">
+          <FieldComponent control={hook.control} {...formProps.fields[0]} />
+        </div>
+        {ready ? (
+          <Button
+            aria-label="Enviar resposta"
+            className="mb-4 h-11 w-11 shrink-0 rounded-full bg-[#308CE8] p-0 text-white shadow-[0_10px_20px_rgba(48,140,232,0.24)] hover:bg-[#2579CF] disabled:bg-[#DDEEFF] disabled:text-[#7FAFDF] disabled:opacity-100 disabled:shadow-none"
+            disabled={disabled || !ready}
+            type="submit"
+          >
+            {disabled ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <Send className="h-4 w-4" aria-hidden="true" />
+            )}
+          </Button>
+        ) : null}
+      </div>
+
+      {expanded ? (
+        <div className="flex flex-wrap items-center justify-between gap-2 px-0.5 text-xs text-muted">
+          <input
+            accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime"
+            className="hidden"
+            onChange={handleMediaChange}
+            ref={fileInputRef}
+            type="file"
+          />
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+            <button
+              className={cn(
+                "inline-flex h-8 items-center gap-1.5 rounded-full border px-3 font-bold transition",
+                mediaPermission.canAttach
+                  ? "border-[#D6E3F2] bg-white text-[#475569] hover:border-[#B8D7F5] hover:text-[#308CE8] dark:bg-surface"
+                  : "cursor-not-allowed border-[#E5EAF0] bg-[#F8FAFC] text-[#94A3B8]",
+              )}
+              disabled={!mediaPermission.canAttach || disabled}
+              onClick={() => fileInputRef.current?.click()}
+              title={mediaPermission.canAttach ? "Anexar mídia" : mediaPermission.reason}
+              type="button"
+            >
+              <Paperclip className="h-3.5 w-3.5" aria-hidden="true" />
+              Anexar mídia
+            </button>
+
+            {!mediaPermission.canAttach ? (
+              <span className="max-w-[280px] leading-4 text-[#64748B]">
+                {mediaPermission.reason || replyMediaPermissionLabel}
+              </span>
+            ) : null}
+
+            {selectedMedia ? (
+              <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1 font-bold text-primary">
+                <span className="truncate">{selectedMedia.name}</span>
+                <button
+                  aria-label="Remover mídia anexada"
+                  className="grid h-5 w-5 place-items-center rounded-full hover:bg-white/70"
+                  onClick={() => setSelectedMedia(null)}
+                  type="button"
+                >
+                  <X className="h-3.5 w-3.5" aria-hidden="true" />
+                </button>
+              </span>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
 
       {visibleError ? (
         <InlineAlert title="Não foi possível responder" variant="error">
           {visibleError}
         </InlineAlert>
       ) : null}
-
-      <Button
-        className="h-12 rounded-2xl bg-[#308CE8] text-sm font-black shadow-[0_12px_24px_rgba(48,140,232,0.22)] hover:bg-[#2579CF] disabled:bg-[#DDEEFF] disabled:text-[#7FAFDF] disabled:opacity-100 disabled:shadow-none"
-        disabled={disabled || !ready}
-        type="submit"
-      >
-        {disabled ? (
-          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-        ) : (
-          <Send className="h-4 w-4" aria-hidden="true" />
-        )}
-        Publicar resposta
-      </Button>
     </form>
+  );
+};
+
+const PostReportModal = ({
+  apiError,
+  disabled,
+  onClose,
+  onSubmit,
+  open,
+  postTitle,
+}: {
+  apiError?: string | null;
+  disabled?: boolean;
+  onClose: () => void;
+  onSubmit: (values: PostReportForm) => Promise<void> | void;
+  open: boolean;
+  postTitle: string;
+}) => {
+  const form = usePostReportForm();
+  const { Form: ReportForm, formProps, hook } = form;
+  const resetReportForm = hook.reset;
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose, open]);
+
+  useEffect(() => {
+    if (!open) return;
+    resetReportForm({ description: "", reason: "spam" });
+  }, [open, resetReportForm]);
+
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[120] grid place-items-center bg-[#0F172A]/55 px-4 py-6 backdrop-blur-md"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="post-report-title"
+    >
+      <div className="w-full max-w-[430px] rounded-[28px] border border-white/70 bg-white p-5 shadow-[0_24px_70px_rgba(15,23,42,0.22)] dark:border-border dark:bg-surface">
+        <div className="flex items-start justify-between gap-4">
+          <div className="grid gap-1">
+            <p className="text-xs font-black tracking-[0.12em] text-[#64748B] uppercase">
+              Moderação Lectum
+            </p>
+            <h2
+              className="text-xl font-black tracking-[-0.03em] text-[#182033]"
+              id="post-report-title"
+            >
+              Denunciar post
+            </h2>
+            <p className="line-clamp-2 text-sm leading-5 text-[#64748B]">{postTitle}</p>
+          </div>
+          <button
+            aria-label="Fechar denúncia"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#F8FAFC] text-[#64748B] transition hover:bg-[#EDF4FF] hover:text-[#182033]"
+            onClick={onClose}
+            type="button"
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
+
+        <ReportForm
+          className="mt-5 grid gap-3"
+          fields={formProps.fields}
+          hook={hook}
+          onSubmit={hook.handleSubmit(async (values) => {
+            try {
+              await onSubmit(values);
+            } catch {
+              // A mutation exibe a mensagem no modal sem fechar o fluxo.
+            }
+          })}
+        >
+          {apiError ? (
+            <InlineAlert title="Não foi possível enviar" variant="error">
+              {apiError}
+            </InlineAlert>
+          ) : null}
+
+          <div className="flex justify-end gap-2 pt-1">
+            <Button
+              className="h-10 rounded-full px-4"
+              onClick={onClose}
+              type="button"
+              variant="outline"
+            >
+              Cancelar
+            </Button>
+            <Button
+              className="h-10 rounded-full bg-[#308CE8] px-5 font-black hover:bg-[#2579CF]"
+              disabled={disabled}
+              type="submit"
+            >
+              {disabled ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
+              Enviar denúncia
+            </Button>
+          </div>
+        </ReportForm>
+      </div>
+    </div>
   );
 };
 
@@ -818,8 +1109,11 @@ export const PostDetailLogic = () => {
   const [page, setPage] = useState(1);
   const [replyTarget, setReplyTarget] = useState<ReplyTarget>(null);
   const [replyError, setReplyError] = useState<string | null>(null);
+  const [reportError, setReportError] = useState<string | null>(null);
+  const [reportOpen, setReportOpen] = useState(false);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const composerRef = useRef<HTMLFormElement | null>(null);
+  const mediaPermission = useReplyMediaPermission();
   const postQuery = usePostDetail(postId);
   const repliesQuery = usePostReplies(
     postId,
@@ -834,6 +1128,16 @@ export const PostDetailLogic = () => {
       setReplyTarget(null);
     },
     onError: (error) => setReplyError(resolveReplyError(error)),
+  });
+  const uploadReplyMediaMutation = useUploadPostReplyMedia({
+    onError: (error) => setReplyError(resolveReplyError(error)),
+  });
+  const reportMutation = useReportPost({
+    onSuccess: () => {
+      setReportError(null);
+      setReportOpen(false);
+    },
+    onError: (error) => setReportError(resolveReplyError(error)),
   });
   const post = postQuery.data?.post;
   const replies = repliesQuery.data?.data ?? [];
@@ -916,7 +1220,14 @@ export const PostDetailLogic = () => {
         {post ? (
           <>
             <article className="overflow-hidden bg-white shadow-[0_10px_26px_rgba(15,23,42,0.04)] dark:bg-surface sm:mt-4 sm:rounded-[26px] sm:border sm:border-border">
-              <PostHeader post={post} slug={slug || post.community.slug} />
+              <PostHeader
+                onReport={() => {
+                  setReportError(null);
+                  setReportOpen(true);
+                }}
+                post={post}
+                slug={slug || post.community.slug}
+              />
               <PostBody post={post} />
               <PostVoteBar
                 currentVote={post.current_user_vote}
@@ -928,7 +1239,7 @@ export const PostDetailLogic = () => {
               />
             </article>
 
-            <div className="grid gap-4 px-5 pt-4 sm:px-0">
+            <div className="grid gap-4 px-5 pt-4 pb-36 sm:px-0 sm:pb-6">
               {shareFeedback ? (
                 <InlineAlert title="Link preparado" variant="success">
                   Link copiado ou enviado para compartilhamento.
@@ -943,14 +1254,31 @@ export const PostDetailLogic = () => {
 
               <ReplyComposer
                 apiError={replyError}
-                disabled={createReplyMutation.isPending}
+                disabled={createReplyMutation.isPending || uploadReplyMediaMutation.isPending}
                 formRef={composerRef}
+                mediaPermission={mediaPermission}
                 onCancelTarget={() => setReplyTarget(null)}
-                onSubmit={(values) => {
+                onSubmit={async (values, mediaFile) => {
                   setReplyError(null);
-                  createReplyMutation.mutate({
+                  const media = mediaFile
+                    ? await uploadReplyMediaMutation.mutateAsync({
+                        file: mediaFile,
+                        id: post.id,
+                      })
+                    : null;
+
+                  await createReplyMutation.mutateAsync({
                     id: post.id,
-                    body: toCreatePostReplyPayload(values, replyTarget?.id),
+                    body: toCreatePostReplyPayload(
+                      values,
+                      replyTarget?.id,
+                      media
+                        ? {
+                            mediaType: media.media_type,
+                            mediaUrl: media.media_url,
+                          }
+                        : null,
+                    ),
                   });
                 }}
                 replyTarget={replyTarget}
@@ -978,6 +1306,23 @@ export const PostDetailLogic = () => {
                 pages={repliesQuery.data?.pages ?? 0}
               />
             </div>
+
+            <PostReportModal
+              apiError={reportError}
+              disabled={reportMutation.isPending}
+              onClose={() => setReportOpen(false)}
+              onSubmit={async (values) => {
+                if (!post) return;
+
+                setReportError(null);
+                await reportMutation.mutateAsync({
+                  body: toPostReportPayload(values),
+                  id: post.id,
+                });
+              }}
+              open={reportOpen}
+              postTitle={post.title}
+            />
           </>
         ) : null}
       </section>

@@ -21,7 +21,14 @@ export type PostListQuery = {
 
 export type PostCreateReplyBody = {
   content: string;
+  mediaType?: "image" | "video";
+  mediaUrl?: string;
   parentReplyId?: string;
+};
+
+export type PostReportBody = {
+  description?: string;
+  reason: string;
 };
 
 export type PostVoteBody = {
@@ -163,10 +170,26 @@ export type PostSaveResponse = {
   saves_count: number | null;
 };
 
+export type PostReplyMediaUploadResponse = {
+  media_url: string;
+  media_type: "image" | "video";
+};
+
+export type PostReportResponse = {
+  id: string;
+  post_id: string;
+  reason: string;
+  description: string | null;
+  status: string;
+  created_at: Date;
+};
+
 export type PostMutationResult<T> =
   | { kind: "ok"; data: T }
   | { kind: "not_found" }
   | { kind: "invalid_parent" }
+  | { kind: "invalid_media" }
+  | { kind: "media_not_allowed" }
   | { kind: "invalid_target" };
 
 export type IPostShowDTO = {
@@ -193,6 +216,18 @@ export type IPostSavedDTO = {
 export type IPostCreateReplyDTO = {
   p: PostParams;
   b: PostCreateReplyBody;
+  auth: user;
+};
+
+export type IPostUploadReplyMediaDTO = {
+  p: PostParams;
+  auth: user;
+  file?: Express.Multer.File & { key?: string; path?: string };
+};
+
+export type IPostReportDTO = {
+  p: PostParams;
+  b: PostReportBody;
   auth: user;
 };
 

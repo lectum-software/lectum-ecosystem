@@ -82,6 +82,22 @@ export const createReplySchema: IValidatorRequest = {
       max: 120,
       optional: true,
     },
+    {
+      key: "mediaUrl",
+      coerse: "string",
+      method: "string",
+      min: 1,
+      max: 500,
+      optional: true,
+    },
+    {
+      key: "mediaType",
+      coerse: "string",
+      method: "string",
+      min: 3,
+      max: 16,
+      optional: true,
+    },
   ],
 };
 
@@ -109,6 +125,27 @@ export const replySaveSchema: IValidatorRequest = {
   params: replyIdParams,
 };
 
+export const reportSchema: IValidatorRequest = {
+  params: idParams,
+  body: [
+    {
+      key: "reason",
+      coerse: "string",
+      method: "string",
+      min: 2,
+      max: 60,
+    },
+    {
+      key: "description",
+      coerse: "string",
+      method: "string",
+      min: 1,
+      max: 500,
+      optional: true,
+    },
+  ],
+};
+
 export const showValidator = validator(showSchema);
 export const repliesValidator = validator(repliesSchema);
 export const listValidator = validator(listSchema);
@@ -116,5 +153,6 @@ export const createReplyValidator = validator(createReplySchema);
 export const voteValidator = validator(voteSchema);
 export const saveValidator = validator(showSchema);
 export const replySaveValidator = validator(replySaveSchema);
+export const reportValidator = validator(reportSchema);
 
 export default showValidator;

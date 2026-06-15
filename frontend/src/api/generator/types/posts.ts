@@ -109,7 +109,30 @@ export type UserPostsResponse = {
 
 export type CreatePostReplyPayload = {
   content: string;
+  mediaType?: "image" | "video";
+  mediaUrl?: string;
   parentReplyId?: string;
+};
+
+export type PostReplyMediaUploadResponse = {
+  media_url: string;
+  media_type: "image" | "video";
+};
+
+export type PostReportReason = "spam" | "abuse" | "self_harm" | "privacy" | "other";
+
+export type PostReportPayload = {
+  description?: string;
+  reason: PostReportReason;
+};
+
+export type PostReportResponse = {
+  id: string;
+  post_id: string;
+  reason: PostReportReason | string;
+  description: string | null;
+  status: string;
+  created_at: string;
 };
 
 export type PostVotePayload = {

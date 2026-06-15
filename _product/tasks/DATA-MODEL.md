@@ -374,9 +374,11 @@ Contratos da tela interna do post (TASK-26):
 
 - `GET /api/private/posts/:id` retorna `post`, comunidade, autor mascarado quando `anonymous=true`, voto atual do usuário (`current_user_vote`) e estado salvo (`saved`).
 - `GET /api/private/posts/:id/replies?page&limit` retorna comentários de primeiro nível paginados e até um nível de respostas filhas, com `current_user_vote` por resposta.
-- `POST /api/private/posts/:id/replies` recebe `{ content, parentReplyId? }`; `parentReplyId` só pode apontar para comentário raiz, preservando árvore de 1 nível.
+- `POST /api/private/posts/:id/replies/media` recebe multipart `media` e retorna `{ media_url, media_type }`; permitido apenas para psicólogos com CFP verificado e Plano Profissional ativo.
+- `POST /api/private/posts/:id/replies` recebe `{ content, parentReplyId?, mediaUrl?, mediaType? }`; `parentReplyId` só pode apontar para comentário raiz, preservando árvore de 1 nível, e mídia só é aceita quando originada do upload permitido.
 - `POST /api/private/posts/:id/vote` recebe `{ value: 1|-1, replyId? }`; repetir o mesmo voto remove o voto. Downvotes podem influenciar score interno, mas não devem ser exibidos como número público.
 - `POST /api/private/posts/:id/save` e `DELETE /api/private/posts/:id/save` persistem salvos via `post_save` e mantêm `saves_count`.
+- `POST /api/private/posts/:id/report` registra denúncia reativa com motivo e descrição opcional, sem remoção automática do post.
 
 `post_vote` (PRD §9 regras: 1 voto/usuário, alteração permitida, downvote não público):
 
@@ -387,6 +389,17 @@ Contratos da tela interna do post (TASK-26):
 | `reply_id` | `String?` | …ou reply (exatamente um preenchido) |
 | `value` | `Int` | `1` (upvote) ou `-1` (downvote) |
 | `@@unique([user_id, post_id])`, `@@unique([user_id, reply_id])`, `@@index([post_id])` | | upsert para alterar voto; downvotes nunca expostos individualmente |
+
+`post_report` (denúncias reativas de posts comunitários):
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `post_id` | `String` | post denunciado |
+| `reporter_id` | `String` | usuário autenticado que denunciou |
+| `reason` | `String` | motivo informado pelo fluxo de denúncia |
+| `description` | `String?` | detalhe opcional, limitado pelo backend |
+| `status` | `String @default("pendente")` | reservado para triagem/moderação futura |
+| `@@unique([post_id, reporter_id])`, `@@index([status, createdAt])`, `@@index([reporter_id, createdAt])` | | uma denúncia ativa por usuário/post; reenvio atualiza motivo e descrição |
 
 `post_save` (TASK-28, "Posts Salvos"):
 

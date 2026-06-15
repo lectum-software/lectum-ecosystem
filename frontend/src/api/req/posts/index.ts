@@ -5,6 +5,9 @@ import type {
   PostRepliesQuery,
   PostRepliesResponse,
   PostReply,
+  PostReplyMediaUploadResponse,
+  PostReportPayload,
+  PostReportResponse,
   PostSaveResponse,
   PostVotePayload,
   PostVoteResponse,
@@ -59,6 +62,37 @@ export const createPostReply = async (id: string, body: CreatePostReplyPayload) 
   });
 
   return handleReq<PostReply>({
+    ...handle,
+    showSuccess: true,
+  });
+};
+
+export const uploadPostReplyMedia = async (id: string, file: File) => {
+  const body = new FormData();
+  body.append("media", file);
+
+  const handle = callEndpoint({
+    route: "/api/private/posts/:id/replies/media",
+    method: "POST",
+    params: { id },
+    body,
+  });
+
+  return handleReq<PostReplyMediaUploadResponse>({
+    ...handle,
+    hideError: true,
+  });
+};
+
+export const reportPost = async (id: string, body: PostReportPayload) => {
+  const handle = callEndpoint({
+    route: "/api/private/posts/:id/report",
+    method: "POST",
+    params: { id },
+    body,
+  });
+
+  return handleReq<PostReportResponse>({
     ...handle,
     showSuccess: true,
   });
