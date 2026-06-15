@@ -353,6 +353,12 @@ type FilterFeatureOption = {
 
 const FILTER_FEATURE_OPTIONS: FilterFeatureOption[] = [
   {
+    name: "available_today",
+    label: "Disponível hoje",
+    description: "Psicólogos com disponibilidade para atendimento ainda hoje.",
+    icon: CalendarCheck,
+  },
+  {
     name: "verified",
     label: "Somente verificados",
     description: "Psicólogos com registro verificado junto ao Conselho Federal de Psicologia",
@@ -361,7 +367,7 @@ const FILTER_FEATURE_OPTIONS: FilterFeatureOption[] = [
   {
     name: "more_experienced",
     label: "Mais experientes",
-    description: "Profissionais com mais de 10 anos de experiência clínica.",
+    description: "Psicólogos com mais de 10 anos de experiência.",
     icon: Award,
   },
   {
@@ -373,7 +379,7 @@ const FILTER_FEATURE_OPTIONS: FilterFeatureOption[] = [
   {
     name: "accepts_insurance",
     label: "Aceita convênios",
-    description: "Atendimento disponível para quem possui plano de saúde.",
+    description: "Psicólogos que atendem por planos de saúde.",
     icon: Stethoscope,
   },
   {
@@ -381,12 +387,6 @@ const FILTER_FEATURE_OPTIONS: FilterFeatureOption[] = [
     label: "Valor social",
     description: "Para a população de baixa renda.",
     icon: HandHeart,
-  },
-  {
-    name: "available_today",
-    label: "Disponível hoje",
-    description: "Psicólogos com disponibilidade para atendimento ainda hoje.",
-    icon: CalendarCheck,
   },
 ];
 
