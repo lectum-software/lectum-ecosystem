@@ -865,11 +865,11 @@ const PostCard = ({
   return (
     <article className="overflow-hidden rounded-[22px] border border-[#E6EAF0] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:border-border dark:bg-surface">
       {showCommunityHeader ? (
-        <div className="mb-4 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-muted">
+        <div className="mb-4 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-subtle">
           <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           <span className="shrink-0">Postado em</span>
           <Link
-            className="block min-w-0 cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap font-black text-foreground"
+            className="block min-w-0 cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap font-black text-muted"
             href={communityDetailHref(post.community.slug)}
           >
             {post.community.name}

@@ -308,3 +308,18 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm --dir frontend build`
   - `pnpm check`
   - HTTP local sem cookie autenticado retornou 307 esperado para `/app/community/feed` e `/app/community/ansiedade-em-equilibrio`.
+
+## Execucao complementar: hierarquia visual do contexto de comunidade no feed (2026-06-14)
+
+- Pedido do usuario: reduzir o peso visual do nome da comunidade no cabecalho dos posts do feed, mantendo foco em autor, titulo e conteudo da discussao.
+- Em `PostCard`, o texto auxiliar `Postado em` passou a usar `text-subtle`, ficando mais discreto que o contexto principal.
+- O nome da comunidade manteve o peso `font-black`, tamanho e espacamento, mas passou de `text-foreground` para `text-muted`, preservando legibilidade em tom cinza neutro sem preto ou azul.
+- O chip `Seguindo`, os espacamentos, a fonte e a navegacao para a comunidade nao foram alterados.
+- Nao houve alteracao de backend, Prisma, migrations, packages, schema, contratos de API, dados ou layout estrutural.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a referencia usada foi `_product/proto/Feed Comunidade.jpg` e o pedido detalhado do usuario.
+- ADR nao atualizado porque a mudanca e apenas de hierarquia visual local, sem decisao arquitetural, regra de dominio, integracao ou trade-off relevante.
+- Validacoes executadas nesta execucao:
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP local sem cookie autenticado retornou 307 esperado para `/app/community/feed`.
