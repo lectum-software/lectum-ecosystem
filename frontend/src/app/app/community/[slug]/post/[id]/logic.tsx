@@ -29,6 +29,7 @@ import {
   type MouseEvent,
   type RefObject,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -92,8 +93,144 @@ type ReplyMediaPermission = {
   showControl: boolean;
 };
 
+const DETAIL_INLINE_TEXT_MAX_LINES = 4;
+const DETAIL_INLINE_TEXT_MORE_LABEL = "... ver mais";
+const DETAIL_INLINE_TEXT_LESS_LABEL = "ver menos";
+
 const replyMediaPermissionLabel =
   "Mídia disponível apenas para psicólogos verificados com Plano Profissional ativo.";
+
+const InlineExpandableText = ({
+  className,
+  expanded,
+  onToggle,
+  text,
+}: {
+  className?: string;
+  expanded: boolean;
+  onToggle: (event: MouseEvent<HTMLButtonElement>) => void;
+  text: string;
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const measureRef = useRef<HTMLParagraphElement>(null);
+  const [preview, setPreview] = useState(text);
+  const [truncated, setTruncated] = useState(false);
+
+  useLayoutEffect(() => {
+    const containerNode = containerRef.current;
+    const measureNode = measureRef.current;
+
+    if (!containerNode || !measureNode) return;
+
+    let animationFrame = 0;
+    let cancelled = false;
+
+    const lineHeightPx = () => {
+      const styles = window.getComputedStyle(measureNode);
+      const parsedLineHeight = Number.parseFloat(styles.lineHeight);
+
+      if (Number.isFinite(parsedLineHeight)) return parsedLineHeight;
+
+      const parsedFontSize = Number.parseFloat(styles.fontSize);
+      return Number.isFinite(parsedFontSize) ? parsedFontSize * 1.5 : 24;
+    };
+
+    const fitsWithinMaxLines = (value: string) => {
+      measureNode.textContent = value;
+
+      return measureNode.scrollHeight <= lineHeightPx() * DETAIL_INLINE_TEXT_MAX_LINES + 1;
+    };
+
+    const measure = () => {
+      if (cancelled) return;
+
+      const availableWidth = containerNode.getBoundingClientRect().width;
+      const normalizedText = text.trimEnd();
+
+      if (availableWidth <= 0 || normalizedText.length === 0) {
+        setPreview(text);
+        setTruncated(false);
+        return;
+      }
+
+      measureNode.style.width = `${availableWidth}px`;
+
+      if (fitsWithinMaxLines(normalizedText)) {
+        setPreview(text);
+        setTruncated(false);
+        return;
+      }
+
+      let low = 0;
+      let high = normalizedText.length;
+      let bestPreview = "";
+
+      while (low <= high) {
+        const middle = Math.floor((low + high) / 2);
+        const candidatePreview = normalizedText.slice(0, middle).trimEnd();
+        const candidate = `${candidatePreview} ${DETAIL_INLINE_TEXT_MORE_LABEL}`;
+
+        if (fitsWithinMaxLines(candidate)) {
+          bestPreview = candidatePreview;
+          low = middle + 1;
+        } else {
+          high = middle - 1;
+        }
+      }
+
+      setPreview(bestPreview || normalizedText.slice(0, 1));
+      setTruncated(true);
+    };
+
+    const scheduleMeasure = () => {
+      window.cancelAnimationFrame(animationFrame);
+      animationFrame = window.requestAnimationFrame(measure);
+    };
+
+    scheduleMeasure();
+
+    const resizeObserver = new ResizeObserver(scheduleMeasure);
+    resizeObserver.observe(containerNode);
+
+    if ("fonts" in document) {
+      void document.fonts.ready.then(scheduleMeasure);
+    }
+
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(animationFrame);
+      resizeObserver.disconnect();
+    };
+  }, [text]);
+
+  return (
+    <div className="relative min-w-0 max-w-full" ref={containerRef}>
+      <p className={cn("whitespace-pre-line", className)}>
+        {expanded || !truncated ? text : preview}
+        {truncated ? (
+          <>
+            {" "}
+            <button
+              className="pointer-events-auto inline cursor-pointer rounded-none border-0 bg-transparent p-0 align-baseline font-[inherit] text-[#64748B]/80 [font-size:inherit] [line-height:inherit] dark:text-muted/80"
+              onClick={onToggle}
+              type="button"
+            >
+              {expanded ? DETAIL_INLINE_TEXT_LESS_LABEL : DETAIL_INLINE_TEXT_MORE_LABEL}
+            </button>
+          </>
+        ) : null}
+      </p>
+      <p
+        aria-hidden="true"
+        className={cn(
+          "pointer-events-none invisible absolute inset-x-0 top-0 whitespace-pre-line",
+          className,
+        )}
+        ref={measureRef}
+      />
+    </div>
+  );
+};
 
 const useReplyMediaPermission = (): ReplyMediaPermission => {
   const user = useAppSelector((state) => state.user);
@@ -523,17 +660,24 @@ const PostHeader = ({
   );
 };
 
-const PostBody = ({ post }: { post: PostDetail }) => (
-  <div className="grid gap-3 px-5 py-4">
-    <h2 className="text-[1.45rem] font-black leading-[1.16] tracking-[-0.03em] text-[#182033] dark:text-foreground">
-      {post.title}
-    </h2>
-    <p className="whitespace-pre-line text-sm leading-6 text-[#475569] dark:text-muted">
-      {post.content}
-    </p>
-    <MediaBlock alt={post.title} mediaType={post.media_type} mediaUrl={post.media_url} />
-  </div>
-);
+const PostBody = ({ post }: { post: PostDetail }) => {
+  const [contentExpanded, setContentExpanded] = useState(false);
+
+  return (
+    <div className="grid gap-3 px-5 py-4">
+      <h2 className="text-[1.45rem] font-black leading-[1.16] tracking-[-0.03em] text-[#182033] dark:text-foreground">
+        {post.title}
+      </h2>
+      <InlineExpandableText
+        className="text-sm leading-6 text-[#475569] dark:text-muted"
+        expanded={contentExpanded}
+        onToggle={() => setContentExpanded((current) => !current)}
+        text={post.content}
+      />
+      <MediaBlock alt={post.title} mediaType={post.media_type} mediaUrl={post.media_url} />
+    </div>
+  );
+};
 
 const PostVoteBar = ({
   currentVote,
@@ -721,6 +865,7 @@ const ReplyCard = ({
   const saveReplyMutation = useSaveReply(postId, reply.id);
   const psychologistProfileHref = isProfessional ? `/app/psychologist/${reply.author.id}` : null;
   const isReplyComposerOpen = activeReplyTarget?.id === reply.id;
+  const [contentExpanded, setContentExpanded] = useState(false);
 
   return (
     <article
@@ -789,9 +934,12 @@ const ReplyCard = ({
         </button>
       </div>
 
-      <p className="whitespace-pre-line text-sm leading-6 text-[#475569] dark:text-muted">
-        {reply.content}
-      </p>
+      <InlineExpandableText
+        className="text-sm leading-6 text-[#475569] dark:text-muted"
+        expanded={contentExpanded}
+        onToggle={() => setContentExpanded((current) => !current)}
+        text={reply.content}
+      />
       <MediaBlock
         alt="Mídia da resposta"
         mediaType={reply.media_type}
