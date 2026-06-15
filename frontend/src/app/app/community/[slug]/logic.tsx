@@ -106,7 +106,7 @@ const COMMUNITY_POST_SORTS = [
   { icon: Flame, label: "Em destaque", value: "featured" },
   { icon: Clock, label: "Novos", value: "new" },
   { icon: MessageCircle, label: "Mais comentados", period: true, value: "commented" },
-  { icon: ArrowUp, label: "Mais votados", period: true, value: "voted" },
+  { icon: ArrowUp, label: "Mais úteis", period: true, value: "voted" },
 ] as const;
 
 type CommunityPostSort = (typeof COMMUNITY_POST_SORTS)[number]["value"];
