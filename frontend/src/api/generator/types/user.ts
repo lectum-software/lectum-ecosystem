@@ -62,3 +62,12 @@ export type PatientPrivateProfile = {
   };
   profile: patient_profile;
 };
+
+export type PatientProfileAvatarUpload = {
+  avatar_url: string;
+  profile: PatientPrivateProfile;
+};
+
+export type PatientProfileAvatarRemoval = {
+  profile: PatientPrivateProfile;
+};

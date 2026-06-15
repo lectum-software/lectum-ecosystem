@@ -1,6 +1,8 @@
 import { callEndpoint } from "@/api/generator";
 import type {
   PatientPrivateProfile,
+  PatientProfileAvatarRemoval,
+  PatientProfileAvatarUpload,
   PatientRelationListResponse,
   PatientRelationQuery,
   patient_profile,
@@ -70,6 +72,34 @@ export const updatePatientProfile = async (body: UpdatePatientProfilePayload) =>
   });
 
   return handleReq<PatientPrivateProfile>({
+    ...handle,
+    showSuccess: true,
+  });
+};
+
+export const uploadPatientProfileAvatar = async (file: File) => {
+  const body = new FormData();
+  body.append("avatar", file);
+
+  const handle = callEndpoint({
+    route: "/api/private/patient/profile/avatar",
+    method: "POST",
+    body,
+  });
+
+  return handleReq<PatientProfileAvatarUpload>({
+    ...handle,
+    showSuccess: true,
+  });
+};
+
+export const deletePatientProfileAvatar = async () => {
+  const handle = callEndpoint({
+    route: "/api/private/patient/profile/avatar",
+    method: "DELETE",
+  });
+
+  return handleReq<PatientProfileAvatarRemoval>({
     ...handle,
     showSuccess: true,
   });

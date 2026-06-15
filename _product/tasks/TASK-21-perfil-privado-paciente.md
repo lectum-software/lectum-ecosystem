@@ -164,3 +164,11 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Referências visuais consultadas por imagens locais: `_product/proto/Perfil do paciente.jpg` e `_product/proto/Editar Perfil - Paciente.jpg`. Builder/Quick Copy não ficou exposto como ferramenta no ambiente desta sessão.
 - Avatar por upload permanece pendente de bucket/credenciais Cloudflare R2 públicos definitivos; a UI mantém foto de login existente ou initials, sem mock de storage.
 - ADR criado: `adrs/0031-perfil-privado-paciente.md`.
+
+## Ajuste complementar em 2026-06-15 - upload de foto do paciente
+
+- Corrigido o controle de foto em `/app/profile/edit`: o botao de camera agora abre o seletor real de arquivo, valida PNG/JPG/WebP ate 5MB e envia para o backend.
+- Criados endpoints privados `POST /api/private/patient/profile/avatar` e `DELETE /api/private/patient/profile/avatar`, usando `multer`/R2 e persistindo `user.avatar` sem mocks.
+- O prefixo publico `/public/files/patient/avatar/*` passou a ser permitido para renderizacao via `next/image`, e a store Redux do usuario e atualizada apos upload/remocao.
+- A pendencia anterior de upload do avatar de paciente fica resolvida quando o ambiente possuir as credenciais R2 ja usadas pelo fluxo de midia existente.
+- ADR criado: `adrs/0099-upload-avatar-paciente.md`.

@@ -24,3 +24,21 @@ export type PatientPrivateProfileResponse = {
   };
   profile: patient_profile;
 };
+
+export type PatientProfileAvatarUploadResponse = {
+  avatar_url: string;
+  profile: PatientPrivateProfileResponse;
+};
+
+export type PatientProfileAvatarRemovalResponse = {
+  profile: PatientPrivateProfileResponse;
+};
+
+export interface IUploadAvatarDTO extends IProfileDTO {
+  file?: {
+    path?: string;
+    key?: string;
+    fileUrl?: string;
+    mimetype?: string;
+  };
+}

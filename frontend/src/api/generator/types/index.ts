@@ -78,6 +78,8 @@ export type {
 } from "./psychologist-reviews";
 export type {
   PatientPrivateProfile,
+  PatientProfileAvatarRemoval,
+  PatientProfileAvatarUpload,
   patient_profile,
   psychologist_profile,
   user,

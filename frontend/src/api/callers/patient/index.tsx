@@ -4,6 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import keys from "@/api/cache/keys";
 import type {
   PatientPrivateProfile,
+  PatientProfileAvatarRemoval,
+  PatientProfileAvatarUpload,
   PatientRelationListResponse,
   PatientRelationQuery,
   patient_profile,
@@ -31,6 +33,14 @@ export interface UsePatientProps {
     };
     updateProfile?: {
       onSuccess?: (data: PatientPrivateProfile) => void;
+      onError?: (error: unknown) => void;
+    };
+    avatar?: {
+      onSuccess?: (data: PatientProfileAvatarUpload) => void;
+      onError?: (error: unknown) => void;
+    };
+    deleteAvatar?: {
+      onSuccess?: (data: PatientProfileAvatarRemoval) => void;
       onError?: (error: unknown) => void;
     };
     favoritePsychologist?: {
@@ -226,6 +236,28 @@ export const usePatient = ({
     onError: callbacks?.updateProfile?.onError,
   });
 
+  const uploadAvatar = useMutation({
+    mutationFn: (file: File) => api.uploadPatientProfileAvatar(file),
+    onSuccess: (data) => {
+      queryClient.setQueryData(profileKey, data.profile.profile);
+      queryClient.invalidateQueries({ queryKey: profileKey });
+      queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === "auth_hydrate" });
+      callbacks?.avatar?.onSuccess?.(data);
+    },
+    onError: callbacks?.avatar?.onError,
+  });
+
+  const deleteAvatar = useMutation({
+    mutationFn: () => api.deletePatientProfileAvatar(),
+    onSuccess: (data) => {
+      queryClient.setQueryData(profileKey, data.profile.profile);
+      queryClient.invalidateQueries({ queryKey: profileKey });
+      queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === "auth_hydrate" });
+      callbacks?.deleteAvatar?.onSuccess?.(data);
+    },
+    onError: callbacks?.deleteAvatar?.onError,
+  });
+
   const favoritePsychologist = useMutation({
     mutationFn: (id: string) => api.favoritePsychologist(id),
     onMutate: async (id) => {
@@ -330,6 +362,8 @@ export const usePatient = ({
     follows,
     completeOnboarding,
     updateProfile,
+    uploadAvatar,
+    deleteAvatar,
     favoritePsychologist,
     unfavoritePsychologist,
     followPsychologist,

@@ -4,10 +4,14 @@ import { ArrowLeft, Camera, Loader2, Save, Trash2, UserRound } from "lucide-reac
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { type ChangeEvent, useMemo, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { usePatient } from "@/api/callers/patient";
-import type { PatientPrivateProfile } from "@/api/generator/types";
+import type {
+  PatientPrivateProfile,
+  PatientProfileAvatarRemoval,
+  PatientProfileAvatarUpload,
+} from "@/api/generator/types";
 import { components } from "@/components/controllers";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -27,6 +31,9 @@ type ApiErrorData = {
 type ApiError = Error & {
   data?: ApiErrorData;
 };
+
+const AVATAR_MAX_SIZE_BYTES = 5 * 1024 * 1024;
+const AVATAR_ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"];
 
 const getInitials = (name?: string | null, email?: string | null) => {
   const source = name?.trim() || email?.split("@")[0] || "Lectum";
@@ -60,6 +67,7 @@ export const ProfileEditLogic = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const storedUser = useAppSelector((state) => state.user);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [apiError, setApiError] = useState<string | null>(null);
 
   const handleProfileUpdated = (data: PatientPrivateProfile) => {
@@ -73,10 +81,28 @@ export const ProfileEditLogic = () => {
     router.push("/app/profile");
   };
 
-  const { profile, updateProfile } = usePatient({
+  const handleAvatarUpdated = (data: PatientProfileAvatarUpload | PatientProfileAvatarRemoval) => {
+    setApiError(null);
+    dispatch(
+      userActions.update({
+        ...data.profile.user,
+        patient_profile: data.profile.profile,
+      }),
+    );
+  };
+
+  const { deleteAvatar, profile, updateProfile, uploadAvatar } = usePatient({
     callbacks: {
       updateProfile: {
         onSuccess: handleProfileUpdated,
+        onError: (error) => setApiError(resolvePatientProfileError(error)),
+      },
+      avatar: {
+        onSuccess: handleAvatarUpdated,
+        onError: (error) => setApiError(resolvePatientProfileError(error)),
+      },
+      deleteAvatar: {
+        onSuccess: handleAvatarUpdated,
         onError: (error) => setApiError(resolvePatientProfileError(error)),
       },
     },
@@ -94,11 +120,43 @@ export const ProfileEditLogic = () => {
   const avatarSrc = resolvePublicMediaUrl(storedUser?.avatar);
   const avatarIsPublicMedia = isPublicMediaUrl(storedUser?.avatar);
   const isSaving = updateProfile.isPending;
+  const isSavingAvatar = uploadAvatar.isPending || deleteAvatar.isPending;
 
   const onSubmit = hook.handleSubmit((values) => {
     setApiError(null);
     updateProfile.mutate(toPatientProfilePayload(values, profile.data));
   });
+
+  const openAvatarFilePicker = () => {
+    if (isSavingAvatar || !isPatient) return;
+    avatarInputRef.current?.click();
+  };
+
+  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) return;
+    setApiError(null);
+
+    if (file.size > AVATAR_MAX_SIZE_BYTES) {
+      setApiError("Envie uma foto de perfil de até 5MB.");
+      return;
+    }
+
+    if (!AVATAR_ALLOWED_TYPES.includes(file.type)) {
+      setApiError("Envie uma foto PNG, JPG ou WebP.");
+      return;
+    }
+
+    uploadAvatar.mutate(file);
+  };
+
+  const handleAvatarRemoval = () => {
+    if (isSavingAvatar || !storedUser?.avatar || !isPatient) return;
+    setApiError(null);
+    deleteAvatar.mutate();
+  };
 
   return (
     <PrivateTemplate>
@@ -151,13 +209,40 @@ export const ProfileEditLogic = () => {
                     getInitials(storedUser?.name, storedUser?.email)
                   )}
                 </div>
-                <span className="absolute right-1 bottom-1 z-10 grid h-9 w-9 place-items-center rounded-full bg-primary text-white ring-4 ring-surface shadow-[var(--lectum-shadow-soft)]">
-                  <Camera className="h-4 w-4" aria-hidden="true" />
-                </span>
+                <button
+                  aria-label="Alterar foto de perfil"
+                  className="absolute right-1 bottom-1 z-10 grid h-9 w-9 place-items-center rounded-full bg-primary text-white ring-4 ring-surface shadow-[var(--lectum-shadow-soft)] transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={isSavingAvatar || !isPatient}
+                  onClick={openAvatarFilePicker}
+                  type="button"
+                >
+                  {isSavingAvatar ? (
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Camera className="h-4 w-4" aria-hidden="true" />
+                  )}
+                </button>
               </div>
               <p className="max-w-full whitespace-nowrap text-[11px] leading-5 tracking-[-0.02em] text-muted sm:text-sm sm:tracking-normal">
-                Envie uma foto de perfil PNG, JPG ou WebP de até 50MB
+                Envie uma foto de perfil PNG, JPG ou WebP de até 5MB
               </p>
+              <input
+                accept="image/png,image/jpeg,image/webp"
+                className="sr-only"
+                onChange={handleAvatarChange}
+                ref={avatarInputRef}
+                type="file"
+              />
+              {storedUser?.avatar ? (
+                <button
+                  className="text-xs font-semibold text-danger transition hover:text-danger/80 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={isSavingAvatar || !isPatient}
+                  onClick={handleAvatarRemoval}
+                  type="button"
+                >
+                  Remover foto
+                </button>
+              ) : null}
             </section>
             <section className="grid gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
               <div className="flex items-center gap-2">

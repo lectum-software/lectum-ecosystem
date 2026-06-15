@@ -125,6 +125,8 @@
     "professional_profile_video_cover_uploaded": "Imagem de capa do vídeo atualizada com sucesso.",
     "professional_profile_video_removed": "Vídeo de apresentação removido com sucesso.",
     "patient_profile_updated": "Perfil do paciente atualizado com sucesso.",
+    "patient_profile_avatar_uploaded": "Foto de perfil atualizada com sucesso.",
+    "patient_profile_avatar_removed": "Foto de perfil removida com sucesso.",
     "community_suggestion_created": "Sugestão de comunidade enviada com sucesso.",
     "community_post_created": "Post publicado com sucesso.",
     "community_follow_success": "Comunidade adicionada às suas comunidades seguidas.",

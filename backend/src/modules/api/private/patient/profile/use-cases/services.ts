@@ -1,6 +1,6 @@
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { error, msg } from "@/helpers/translate";
-import type { IProfileDTO, IUpdateProfileDTO } from "../DTOs/IProfileDTO";
+import type { IProfileDTO, IUpdateProfileDTO, IUploadAvatarDTO } from "../DTOs/IProfileDTO";
 import { ProfileRepository } from "../repositories/ProfileRepository";
 
 const normalizeNullableText = (value?: string | null) => {
@@ -18,6 +18,21 @@ const normalizePhone = (value?: string | null) => {
   if (!parsed?.isValid()) return null;
 
   return parsed.number;
+};
+
+const publicFileUrl = (key: string) => {
+  const rawBase = String(process.env.BASE || "").trim();
+  let base = rawBase.replace(/\/$/, "");
+
+  try {
+    base = rawBase ? new URL(rawBase).origin : "";
+  } catch (_err) {
+    base = rawBase.replace(/\/$/, "");
+  }
+
+  const publicPath = `/public/files/${key}`;
+
+  return base ? `${base}${publicPath}` : publicPath;
 };
 
 export const show = async (data: IProfileDTO) => {
@@ -72,6 +87,70 @@ export const update = async (data: IUpdateProfileDTO) => {
     status: 200,
     ...msg("patient_profile_updated", {}),
     data: res,
+  };
+};
+
+export const uploadAvatar = async (data: IUploadAvatarDTO) => {
+  if (data.auth.role !== "paciente") {
+    return {
+      status: 403,
+      ...error("role_not_authorized", {}),
+    };
+  }
+
+  const key = data.file?.path || data.file?.key;
+  if (!key?.startsWith("patient/avatar/")) {
+    return {
+      status: 400,
+      ...error("upload_error", {}),
+    };
+  }
+
+  const repository = new ProfileRepository();
+  const avatarUrl = publicFileUrl(key);
+  const profile = await repository.updateAvatar(data.auth.id!, avatarUrl);
+
+  if (!profile) {
+    return {
+      status: 404,
+      ...error("not_found", { model: "patient_profile" }),
+    };
+  }
+
+  return {
+    status: 200,
+    ...msg("patient_profile_avatar_uploaded", {}),
+    data: {
+      avatar_url: avatarUrl,
+      profile,
+    },
+  };
+};
+
+export const removeAvatar = async (data: IProfileDTO) => {
+  if (data.auth.role !== "paciente") {
+    return {
+      status: 403,
+      ...error("role_not_authorized", {}),
+    };
+  }
+
+  const repository = new ProfileRepository();
+  const profile = await repository.removeAvatar(data.auth.id!);
+
+  if (!profile) {
+    return {
+      status: 404,
+      ...error("not_found", { model: "patient_profile" }),
+    };
+  }
+
+  return {
+    status: 200,
+    ...msg("patient_profile_avatar_removed", {}),
+    data: {
+      profile,
+    },
   };
 };
 

@@ -54,7 +54,8 @@ export const filesRoute = (server: Application) => {
       !file?.startsWith("psychologist/avatar/") &&
       !file?.startsWith("psychologist/cover-image/") &&
       !file?.startsWith("psychologist/video/") &&
-      !file?.startsWith("psychologist/video-cover/")
+      !file?.startsWith("psychologist/video-cover/") &&
+      !file?.startsWith("patient/avatar/")
     ) {
       return send(res, {
         status: 404,
