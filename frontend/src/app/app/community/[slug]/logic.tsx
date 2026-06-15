@@ -2307,6 +2307,11 @@ export const CommunityFeedLogic = () => {
   return (
     <PrivateTemplate
       autoHideNavigation
+      bottomNavigationCenterAction={{
+        ariaLabel: "Criar publicação",
+        href: createPostHref,
+        title: "Criar publicação",
+      }}
       contentClassName="bg-[#F5F7FA] dark:bg-background"
       navigationTheme="solidWhite"
       showHeader

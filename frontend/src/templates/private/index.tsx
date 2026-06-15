@@ -5,7 +5,6 @@ import {
   ChevronLeft,
   Heart,
   LogIn,
-  Network,
   Plus,
   UserPlus,
   UserRound,
@@ -66,28 +65,24 @@ type NavigationItem = {
   title: string;
 };
 
-const COMMUNITY_MOBILE_NAV_ICON_URL =
-  "/svg/communities_24dp_64748B_FILL0_wght400_GRAD-25_opsz24.svg";
+const COMMUNITY_NAV_ICON_URL = "/svg/atr_24dp_64748B_FILL0_wght400_GRAD0_opsz24.svg";
 
-const communityMobileNavigationIconStyle: CSSProperties = {
-  WebkitMaskImage: `url("${COMMUNITY_MOBILE_NAV_ICON_URL}")`,
+const communityNavigationIconStyle: CSSProperties = {
+  WebkitMaskImage: `url("${COMMUNITY_NAV_ICON_URL}")`,
   WebkitMaskPosition: "center",
   WebkitMaskRepeat: "no-repeat",
   WebkitMaskSize: "contain",
-  maskImage: `url("${COMMUNITY_MOBILE_NAV_ICON_URL}")`,
+  maskImage: `url("${COMMUNITY_NAV_ICON_URL}")`,
   maskPosition: "center",
   maskRepeat: "no-repeat",
   maskSize: "contain",
 };
 
-const CommunityMobileNavigationIcon = ({
-  "aria-hidden": ariaHidden,
-  className,
-}: NavigationIconProps) => (
+const CommunityNavigationIcon = ({ "aria-hidden": ariaHidden, className }: NavigationIconProps) => (
   <span
     aria-hidden={ariaHidden ?? true}
     className={cn("inline-block bg-current", className)}
-    style={communityMobileNavigationIconStyle}
+    style={communityNavigationIconStyle}
   />
 );
 
@@ -106,9 +101,8 @@ const fallbackNavigation: NavigationItem[] = [
   },
   {
     href: DEFAULT_COMMUNITY_FEED_HREF,
-    icon: Network,
+    icon: CommunityNavigationIcon,
     label: "Comunidade",
-    mobileIcon: CommunityMobileNavigationIcon,
     title: "Comunidade",
   },
   {
@@ -141,9 +135,8 @@ const navigationByRole: Record<Extract<UserRole, "paciente" | "psicologo">, Navi
     },
     {
       href: DEFAULT_COMMUNITY_FEED_HREF,
-      icon: Network,
+      icon: CommunityNavigationIcon,
       label: "Comunidade",
-      mobileIcon: CommunityMobileNavigationIcon,
       title: "Comunidade",
     },
     {
@@ -174,9 +167,8 @@ const navigationByRole: Record<Extract<UserRole, "paciente" | "psicologo">, Navi
     },
     {
       href: DEFAULT_COMMUNITY_FEED_HREF,
-      icon: Network,
+      icon: CommunityNavigationIcon,
       label: "Comunidade",
-      mobileIcon: CommunityMobileNavigationIcon,
       title: "Comunidade",
     },
     {
