@@ -213,9 +213,45 @@
     "value": "voto"
   },
   "notification": {
-    "test": {
-      "title": "Teste de notificação",
-      "body": "Olá {{name}}. Este é um teste de notificação."
+    "nova_avaliacao": {
+      "title": "Nova avaliação recebida",
+      "body": "{{name}} enviou uma nova avaliação. Clique para ver."
+    },
+    "novo_favorito": {
+      "title": "Perfil favoritado",
+      "body": "Um novo usuário favoritou seu perfil."
+    },
+    "visualizacao_perfil": {
+      "title": "Nova visualização de perfil",
+      "body": "Um novo usuário visualizou seu perfil."
+    },
+    "clique_whatsapp": {
+      "title": "Novo contato pelo WhatsApp",
+      "body": "Alguém clicou no seu botão de WhatsApp."
+    },
+    "novo_post": {
+      "title": "Novo post na comunidade",
+      "body": "Novo post na comunidade. Responda agora e seja visto primeiro."
+    },
+    "nova_resposta": {
+      "title": "Nova resposta no post",
+      "body": "Seu post recebeu uma nova resposta. Clique para ver."
+    },
+    "upvote": {
+      "title": "Novo upvote recebido",
+      "body": "Seu conteúdo recebeu um novo upvote. Clique para ver."
+    },
+    "downvote": {
+      "title": "Novo voto recebido",
+      "body": "Seu conteúdo recebeu uma nova interação."
+    },
+    "compartilhamento": {
+      "title": "Conteúdo compartilhado",
+      "body": "Seu conteúdo foi compartilhado por um novo usuário. Clique para ver."
+    },
+    "salvamento": {
+      "title": "Conteúdo salvo",
+      "body": "Seu conteúdo foi salvo por um novo usuário. Clique para ver."
     }
   },
   "email": {

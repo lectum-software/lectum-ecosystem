@@ -105,7 +105,7 @@ ou cortesia manual.
 | 26 | [TASK-26 - Dentro do post](TASK-26-dentro-post.md) | Completed | 02, 24, 25 |
 | 27 | [TASK-27 - Ranking Top Mentores](TASK-27-ranking-top-mentores.md) | Completed | 03, 23 |
 | 28 | [TASK-28 - Meus posts e posts salvos](TASK-28-meus-posts-posts-salvos.md) | Completed | 24 |
-| 29a | [TASK-29A - Notificações: fundação e recebimento](TASK-29a-notificacoes-fundacao.md) | Pending | 02, 12 |
+| 29a | [TASK-29A - Notificações: fundação e recebimento](TASK-29a-notificacoes-fundacao.md) | Completed | 02, 12 |
 | 29b | [TASK-29B - Notificações: eventos de domínio](TASK-29b-notificacoes-eventos.md) | Pending | 29a |
 | 30 | [TASK-30 - Configurações de conta](TASK-30-configuracoes-conta.md) | Completed | 02, 12 |
 | 31 | [TASK-31 - Planos de assinatura](TASK-31-planos-assinatura.md) | Completed | 03, 18 |
@@ -124,7 +124,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 
 ### 0. Fechar inconsistencias documentais antes de nova feature
 
-1. Revalidar e fechar a [TASK-29A - Notificacoes: fundacao e recebimento](TASK-29a-notificacoes-fundacao.md): a maior parte do codigo ja existe, mas ainda faltam criterios finais no arquivo da task, validacao browser local/migrate e commit de fechamento, se aplicavel.
+1. [TASK-29A - Notificacoes: fundacao e recebimento](TASK-29a-notificacoes-fundacao.md) fechada em 2026-06-15; proxima execucao pode seguir para TASK-29B se as produtoras de eventos do escopo estiverem prontas.
 2. A [TASK-10](TASK-10-consulta-cfp-resultado.md) foi concluida com InfoSimples (`DOCUMENT_TOKEN`). Manter como bloqueadas [TASK-11](TASK-11-envio-confirmacao-crp.md) e [TASK-18](TASK-18-perfil-privado-psicologo.md) para documento CRP/bucket privado. A [TASK-19](TASK-19-avaliacoes-psicologo.md) foi concluida apos decisao de produto que substituiu o upload documental deste fluxo por validacao InfoSimples/cortesia manual e entitlement de Plano Profissional.
 
 ### 1. Trilha executavel agora apos TASK-10

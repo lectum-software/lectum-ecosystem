@@ -1,6 +1,6 @@
 //Libs
 
-import { vapidKeys } from "@/config/webPush";
+import { isWebPushConfigured, vapidKeys } from "@/config/webPush";
 import { msg } from "@/helpers/translate";
 
 export default async () => {
@@ -10,7 +10,7 @@ export default async () => {
       //If you need a custom text
     }),
     data: {
-      key: vapidKeys.publicKey,
+      key: isWebPushConfigured() ? vapidKeys.publicKey : "",
     },
   };
 };

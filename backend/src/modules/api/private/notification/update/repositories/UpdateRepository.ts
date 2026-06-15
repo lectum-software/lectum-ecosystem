@@ -37,6 +37,7 @@ export class UpdateRepository implements IUpdateRepository {
       where: {
         //*
         ...props.p,
+        user_id: props.auth.id!,
         deleted: false,
       },
     });

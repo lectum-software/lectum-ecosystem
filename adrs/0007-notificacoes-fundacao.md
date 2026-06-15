@@ -27,7 +27,7 @@ A forma do `notification` migrada (derivada do sample) usa `read`, `redirect`, `
 
 - Canal de recebimento pronto: in-app (listar/marcar/limpar), push e tempo real, com preferências por categoria.
 - Separação por módulo respeita o padrão e evita acoplar preferências ao CRUD de notificação.
-- Trade-off: a tela de preferências usa estado local simples (toggles), não a fundação completa da TASK-02 — aceitável para settings; pode ser migrada na refinação visual.
+- A tela de preferências foi refinada com React Hook Form, Zod, `useFormList` e `SwitchController`, mantendo toggles por categoria e persistência em `notification_preference`.
 - A produção de notificações depende da TASK-29B ligar o dispatcher aos eventos do PRD §12.
 
 ## Validação
@@ -38,5 +38,13 @@ A forma do `notification` migrada (derivada do sample) usa `read`, `redirect`, `
 ## Pendências
 
 - **VAPID env** (`VAPID_EMAIL`/`VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`) — TASK-03 / `_product/decisions.md`.
-- **Migração precisa ser aplicada em ambiente com banco** (`prisma migrate dev`); o SQL de `notification_preferences` foi adicionado, e a remoção da coluna `modal` de `notifications` exige uma migração de drop a ser gerada no ambiente com DB.
 - TASK-29B: ligar os eventos de domínio ao dispatcher.
+
+## Complemento 2026-06-15
+
+- Revalidacao de fechamento da TASK-29A concluida.
+- VAPID agora degrada de forma segura: o backend nao chama `setVapidDetails` sem as tres envs, `notification_subscription/key` retorna string vazia e o frontend nao solicita permissao do navegador quando nao ha chave publica.
+- Removida a rota de desenvolvimento `/api/private/notification/test`, evitando endpoint simulado no canal de notificacoes.
+- Ownership reforcado em `notification/update`: a busca da notificacao inclui `user_id = req.auth.id`.
+- UI de `/app/notifications` e `/app/settings/notifications` refinada contra as imagens locais de prototipo; Builder/Quick Copy nao estava disponivel no ambiente.
+- `pnpm --dir backend db:migrate` executado em 2026-06-15 e retornou banco em sincronia.

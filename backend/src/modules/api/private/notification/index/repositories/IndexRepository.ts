@@ -36,7 +36,7 @@ export class IndexRepository implements IIndexRepository {
   }
 
   async index(props: IIndexDTO): Promise<PaginationResponse<notification>> {
-    const pages = format(props.q);
+    const pages = format({ limit: 20, ...props.q });
 
     const whereConditions: Prisma.notificationWhereInput = {
       user_id: props.auth.id!,

@@ -1,10 +1,10 @@
-import webPush from "@/config/webPush";
+import webPush, { isWebPushConfigured } from "@/config/webPush";
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import { notification as emitNotification } from "@/main/socket/events/notification";
 import { messages } from "./constants";
 
-const BASE = process.env.BASE;
+const BASE = process.env.BASE || "";
 
 type NotifyMeta = {
   message_key: string;
@@ -64,6 +64,11 @@ export const notify = async (userIds: string[], meta: NotifyMeta) => {
     let sent = 0;
     let failed = 0;
 
+    if (!isWebPushConfigured()) {
+      console.log(`[WEB NOTIFICATION] push "${meta.message_key}" ignorado: VAPID não configurado.`);
+      return;
+    }
+
     for (const user of users) {
       if (!isAllowed(user.notification_preference?.prefs, meta.message_key, "push")) continue;
 
@@ -77,7 +82,7 @@ export const notify = async (userIds: string[], meta: NotifyMeta) => {
             : { title: "Lectum", body: "Você tem uma nova notificação" };
 
           const payload = JSON.stringify({
-            notification: { ...content, icon: `${BASE}/logo.png` },
+            notification: { ...content, icon: BASE ? `${BASE}/logo.png` : "/logo.png" },
             data: { redirect: meta.redirect, message_props: meta.message_props },
           });
 

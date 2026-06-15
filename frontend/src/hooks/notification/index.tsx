@@ -58,15 +58,16 @@ export const NotificationManager = () => {
 
     const subscribe = async () => {
       try {
+        const vapid = await key.mutateAsync();
+        if (!vapid?.key) {
+          return;
+        }
+
         const permission = await window.Notification.requestPermission();
         if (permission !== "granted") {
           return;
         }
 
-        const vapid = await key.mutateAsync();
-        if (!vapid?.key) {
-          throw new Error("VAPID public key indisponível");
-        }
         const applicationServerKey = urlToBase64(vapid.key);
 
         const registration = await navigator.serviceWorker.ready;

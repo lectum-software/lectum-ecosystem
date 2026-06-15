@@ -11,7 +11,6 @@ import apiPrivateCommunity from "@/modules/api/private/community";
 import apiPrivateDirectoryPsychologists from "@/modules/api/private/directory/psychologists";
 import apiPrivateNotificationClean from "@/modules/api/private/notification/clean";
 import apiPrivateNotificationIndex from "@/modules/api/private/notification/index";
-import apiPrivateNotificationTest from "@/modules/api/private/notification/test";
 import apiPrivateNotificationUpdate from "@/modules/api/private/notification/update";
 import apiPrivateNotificationPreferenceShow from "@/modules/api/private/notification_preference/show";
 import apiPrivateNotificationPreferenceUpdate from "@/modules/api/private/notification_preference/update";
@@ -154,11 +153,6 @@ mountRoute("/api/private/notification_preference/show", apiPrivateNotificationPr
 mountRoute("/api/private/notification_preference/update", apiPrivateNotificationPreferenceUpdate);
 mountRoute("/api/private/notification_subscription/key", apiPrivateNotificationSubscriptionKey);
 mountRoute("/api/private/notification_subscription/store", apiPrivateNotificationSubscriptionStore);
-
-// Rota de desenvolvimento (sem auth): dispara notificaÃ§Ã£o de teste para todos.
-if (process.env.NODE_ENV !== "production") {
-  mountRoute("/api/private/notification/test", apiPrivateNotificationTest);
-}
 
 assertPrivateRoleGuards();
 

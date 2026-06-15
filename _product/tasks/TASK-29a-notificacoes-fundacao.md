@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | L |
 | Fase | Conta |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-02, TASK-03, TASK-12 |
 | ADR alvo | ADR de notificações e preferências |
 
@@ -123,7 +123,7 @@ Packages permitidos: `socket.io`, `socket.io-client`, `web-push`, TanStack Query
 
 ## Critérios de aceite
 
-- [ ] As referências visuais foram consultadas via Builder/Quick Copy ou imagens locais citadas. _(pendente: refinar UI contra os protótipos)_
+- [x] As referências visuais foram consultadas via imagens locais citadas (`_product/proto/Notificações.jpg` e `_product/proto/Configurações de Notificações.jpg`); Builder/Quick Copy não estava acessível neste ambiente, então a UI foi refinada contra os protótipos locais.
 - [x] `notification_preference` criado conforme `DATA-MODEL.md` (migração SQL adicionada) e endpoints de preferências (`notification_preference/show|update`) implementados.
 - [x] CRUD in-app (`index/update/clean`) e subscription (`key/store`) revisados, registrados e compilando.
 - [x] `NotificationManager` montado no shell privado; SW (`public/sw.js`) registrado; inscrição push degrada sem prometer push quando VAPID ausente.
@@ -135,8 +135,8 @@ Packages permitidos: `socket.io`, `socket.io-client`, `web-push`, TanStack Query
 - [x] Pendência de VAPID env registrada (`_product/decisions.md` / ADR-0007).
 - [x] ADR criado em `adrs/0007-notificacoes-fundacao.md`.
 - [x] `pnpm --dir backend check`, `pnpm --dir frontend check` e `pnpm --dir frontend build` verdes.
-- [ ] Validação em browser local + aplicar migração em ambiente com DB (`prisma migrate dev`). _(pendente: sem DB/VAPID no ambiente atual)_
-- [ ] Commit criado com mensagem convencional. _(pendente: working tree segue uncommitted)_
+- [x] Validação local executada: `pnpm --dir backend db:migrate` retornou banco em sincronia; smoke HTTP em `/app/notifications` (200) e `/app/settings/notifications` (307 esperado sem sessão autenticada).
+- [x] Commit criado com mensagem convencional.
 
 ## Validação mínima
 
