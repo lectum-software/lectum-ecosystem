@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
   type CSSProperties,
   type MouseEvent as ReactMouseEvent,
@@ -1539,6 +1539,7 @@ const CommunityHeader = ({
   community,
   following,
   membershipPending,
+  onBack,
   onSearch,
   onShare,
   onToggleFollow,
@@ -1546,6 +1547,7 @@ const CommunityHeader = ({
   community: CommunityDetail;
   following: boolean;
   membershipPending: boolean;
+  onBack: () => void;
   onSearch: () => void;
   onShare: () => void;
   onToggleFollow: () => void;
@@ -1572,13 +1574,14 @@ const CommunityHeader = ({
         }}
       >
         <div className="relative z-10 flex items-center justify-between">
-          <Link
-            aria-label="Voltar ao feed da comunidade"
+          <button
+            aria-label="Voltar"
             className="grid h-10 w-10 place-items-center rounded-full bg-black/15 text-white backdrop-blur transition hover:bg-black/25"
-            href={DEFAULT_COMMUNITY_FEED_HREF}
+            onClick={onBack}
+            type="button"
           >
             <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-          </Link>
+          </button>
           <div className="flex items-center gap-2">
             <button
               aria-label={`Buscar em ${community.name}`}
@@ -1920,6 +1923,7 @@ const CommunityPublishOnboarding = ({
 };
 
 const CommunityDetailLogic = ({ slug }: { slug: string }) => {
+  const router = useRouter();
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<CommunityPostSort>("featured");
   const [sortPeriods, setSortPeriods] = useState<
@@ -2103,6 +2107,7 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
                 community={community}
                 following={following}
                 membershipPending={membershipPending}
+                onBack={() => router.back()}
                 onSearch={openCommunitySearch}
                 onShare={shareCommunity}
                 onToggleFollow={toggleFollow}
