@@ -89,6 +89,7 @@ type ReplyTarget = {
 type ReplyMediaPermission = {
   canAttach: boolean;
   reason: string;
+  showControl: boolean;
 };
 
 const replyMediaPermissionLabel =
@@ -112,6 +113,7 @@ const useReplyMediaPermission = (): ReplyMediaPermission => {
     return {
       canAttach,
       reason: "",
+      showControl: true,
     };
   }
 
@@ -121,12 +123,14 @@ const useReplyMediaPermission = (): ReplyMediaPermission => {
       reason: activeProfessionalPlan
         ? "Confirme seu registro CFP para anexar mídia."
         : replyMediaPermissionLabel,
+      showControl: true,
     };
   }
 
   return {
     canAttach,
     reason: "",
+    showControl: false,
   };
 };
 
@@ -798,7 +802,6 @@ const ReplyCard = ({
           apiError={replyApiError}
           disabled={replyDisabled}
           mediaPermission={mediaPermission}
-          onCancelTarget={onCancelReplyTarget}
           onSubmit={(values, mediaFile) => onSubmitReply(values, reply.id, mediaFile)}
           replyTarget={activeReplyTarget ?? null}
           variant="inline"
@@ -851,8 +854,8 @@ const ReplyComposer = ({
   disabled,
   formRef,
   mediaPermission,
-  onCancelTarget,
   onSubmit,
+  replyToName,
   replyTarget,
   variant = "main",
 }: {
@@ -860,12 +863,12 @@ const ReplyComposer = ({
   disabled?: boolean;
   formRef?: RefObject<HTMLFormElement | null>;
   mediaPermission: ReplyMediaPermission;
-  onCancelTarget: () => void;
   onSubmit: (values: ReplyComposerForm, mediaFile?: File | null) => Promise<void> | void;
+  replyToName?: string | null;
   replyTarget: ReplyTarget;
   variant?: "inline" | "main";
 }) => {
-  const form = useReplyComposerForm(replyTarget?.name);
+  const form = useReplyComposerForm(replyTarget?.name ?? replyToName);
   const { formProps, hook } = form;
   const [composerActive, setComposerActive] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<File | null>(null);
@@ -878,9 +881,14 @@ const ReplyComposer = ({
   }, [apiError, hook.formState.errors, hook.formState.isSubmitted]);
   const content = hook.watch("content");
   const ready = String(content ?? "").trim().length >= 3;
-  const expanded = composerActive || ready || Boolean(replyTarget) || Boolean(selectedMedia);
+  const expanded =
+    composerActive ||
+    ready ||
+    Boolean(selectedMedia) ||
+    (Boolean(replyTarget) && mediaPermission.showControl);
   const FieldComponent = components[formProps.fields[0].field];
   const isInline = variant === "inline";
+  const shouldShowMediaControls = mediaPermission.showControl || Boolean(selectedMedia);
 
   const handleMediaChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -914,40 +922,25 @@ const ReplyComposer = ({
       })}
       ref={formRef}
     >
-      {replyTarget ? (
-        <div className="flex items-center justify-between gap-3 rounded-2xl bg-primary-soft px-3 py-2 text-xs font-bold text-primary">
-          Respondendo {replyTarget.name}
-          <button
-            className="rounded-full px-2 py-1 hover:bg-white/70"
-            onClick={onCancelTarget}
-            type="button"
-          >
-            Cancelar
-          </button>
-        </div>
-      ) : null}
-
       <div className="flex items-end gap-2">
         <div className="min-w-0 flex-1">
           <FieldComponent control={hook.control} {...formProps.fields[0]} />
         </div>
-        {ready ? (
-          <Button
-            aria-label="Enviar resposta"
-            className="h-11 w-11 shrink-0 rounded-full bg-[#308CE8] p-0 text-white shadow-[0_10px_20px_rgba(48,140,232,0.24)] hover:bg-[#2579CF] disabled:bg-[#DDEEFF] disabled:text-[#7FAFDF] disabled:opacity-100 disabled:shadow-none"
-            disabled={disabled || !ready}
-            type="submit"
-          >
-            {disabled ? (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <Send className="h-4 w-4" aria-hidden="true" />
-            )}
-          </Button>
-        ) : null}
+        <Button
+          aria-label="Enviar resposta"
+          className="h-11 w-11 shrink-0 rounded-full bg-[#308CE8] p-0 text-white shadow-[0_10px_20px_rgba(48,140,232,0.24)] hover:bg-[#2579CF] disabled:bg-[#EEF5FC] disabled:text-[#94A3B8] disabled:opacity-100 disabled:shadow-none"
+          disabled={disabled || !ready}
+          type="submit"
+        >
+          {disabled && ready ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Send className="h-4 w-4" aria-hidden="true" />
+          )}
+        </Button>
       </div>
 
-      {expanded ? (
+      {expanded && shouldShowMediaControls ? (
         <div className="flex flex-wrap items-center justify-between gap-2 px-0.5 text-xs text-muted">
           <input
             accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime"
@@ -1432,8 +1425,8 @@ export const PostDetailLogic = () => {
                 disabled={createReplyMutation.isPending || uploadReplyMediaMutation.isPending}
                 formRef={composerRef}
                 mediaPermission={mediaPermission}
-                onCancelTarget={() => setReplyTarget(null)}
                 onSubmit={(values, mediaFile) => submitReply(values, null, mediaFile)}
+                replyToName={post.author.name}
                 replyTarget={null}
               />
 
