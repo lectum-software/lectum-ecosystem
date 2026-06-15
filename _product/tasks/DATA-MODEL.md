@@ -315,6 +315,12 @@ autogestão do psicólogo em `/api/private/psychologist/reviews` também exige e
 | `description` | `String?` | |
 | `category` | `String?` | categorias de curadoria; catálogo inicial persistido pela alteração de 2026-06-13: `Ansiedade em equilíbrio`, `Relacionamentos com Propósito`, `Mulheres em Foco`, `Autocuidado em Prática`, `Luto e Ressignificação` |
 | `members_count` | `Int @default(0)` | denormalizado para o card |
+| `avatar_url` | `String?` | imagem/avatar público da comunidade usado para identidade visual; quando ausente, a UI usa iniciais e fallback azul |
+| `visual_primary_color` | `String?` | cor principal cacheável da comunidade em HEX, derivada do avatar quando disponível |
+| `visual_primary_dark_color` | `String?` | variação escura da cor principal para gradiente e contraste |
+| `visual_soft_color` | `String?` | variação clara da cor principal para fundo do avatar/chips |
+| `visual_text_color` | `String?` | cor de texto/initials com contraste sobre `visual_soft_color` |
+| `visual_gradient_color` | `String?` | variação clara usada como apoio radial próximo ao avatar |
 | `@@index([slug])`, `@@index([category, deleted])` | | |
 
 Governança: comunidades são criadas/curadas apenas por administradores da plataforma em fluxo administrativo futuro; usuários finais não têm endpoint de criação direta. Usuários podem apenas registrar `community_suggestion`, que fica pendente para análise da equipe. Moderadores de comunidades também serão administradores da plataforma, não usuários comuns ou mentores.

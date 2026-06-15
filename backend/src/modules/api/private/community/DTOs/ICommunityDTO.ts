@@ -55,6 +55,12 @@ export type CommunityDTO = {
   description: string | null;
   category: string | null;
   members_count: number;
+  avatar_url: string | null;
+  visual_primary_color: string | null;
+  visual_primary_dark_color: string | null;
+  visual_soft_color: string | null;
+  visual_text_color: string | null;
+  visual_gradient_color: string | null;
   created_at: Date;
   following?: boolean;
   membership_created_at?: Date | null;
@@ -304,5 +310,11 @@ export const toCommunityDTO = (item: community & { id: string; name: string; slu
   description: item.description ?? null,
   category: item.category ?? null,
   members_count: item.members_count ?? 0,
+  avatar_url: item.avatar_url ?? null,
+  visual_primary_color: item.visual_primary_color ?? null,
+  visual_primary_dark_color: item.visual_primary_dark_color ?? null,
+  visual_soft_color: item.visual_soft_color ?? null,
+  visual_text_color: item.visual_text_color ?? null,
+  visual_gradient_color: item.visual_gradient_color ?? null,
   created_at: item.createdAt ?? new Date(0),
 });

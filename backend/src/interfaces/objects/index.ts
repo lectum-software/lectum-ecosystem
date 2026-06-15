@@ -297,6 +297,12 @@ export interface community {
   description?: string | null;
   category?: string | null;
   members_count?: number | null;
+  avatar_url?: string | null;
+  visual_primary_color?: string | null;
+  visual_primary_dark_color?: string | null;
+  visual_soft_color?: string | null;
+  visual_text_color?: string | null;
+  visual_gradient_color?: string | null;
   posts?: community_post[] | null;
 }
 

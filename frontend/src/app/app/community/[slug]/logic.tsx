@@ -30,6 +30,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import {
+  type CSSProperties,
   type MouseEvent as ReactMouseEvent,
   type RefObject,
   useCallback,
@@ -146,6 +147,347 @@ const FEED_SCOPE_OPTIONS: Array<{ label: string; value: CommunityFeedScope }> = 
   { label: "Todas as comunidades", value: "all" },
   { label: "Comunidades que sigo", value: "following" },
 ];
+
+type CommunityVisualPalette = {
+  primaryColor: string;
+  primaryDarkColor: string;
+  softColor: string;
+  textColor: string;
+  gradientColor: string;
+};
+
+type CommunityPaletteStyle = CSSProperties & {
+  "--community-gradient-color": string;
+  "--community-primary-color": string;
+  "--community-primary-dark": string;
+  "--community-soft-color": string;
+  "--community-text-color": string;
+};
+
+type RgbColor = {
+  b: number;
+  g: number;
+  r: number;
+};
+
+type HslColor = {
+  h: number;
+  l: number;
+  s: number;
+};
+
+const FALLBACK_COMMUNITY_PALETTE: CommunityVisualPalette = {
+  primaryColor: "#308CE8",
+  primaryDarkColor: "#16418F",
+  softColor: "#DFF3FF",
+  textColor: "#1B56B8",
+  gradientColor: "#BFE7FF",
+};
+
+const COMMUNITY_PALETTE_CACHE = new Map<string, CommunityVisualPalette>();
+
+const clampNumber = (value: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, value));
+
+const normalizeHexColor = (value?: string | null) => {
+  if (!value) return null;
+
+  const trimmed = value.trim();
+  const shortMatch = trimmed.match(/^#?([0-9a-fA-F]{3})$/);
+  if (shortMatch) {
+    return `#${shortMatch[1]
+      .split("")
+      .map((character) => `${character}${character}`)
+      .join("")
+      .toUpperCase()}`;
+  }
+
+  const longMatch = trimmed.match(/^#?([0-9a-fA-F]{6})$/);
+  if (!longMatch) return null;
+
+  return `#${longMatch[1].toUpperCase()}`;
+};
+
+const hexToRgb = (hex: string): RgbColor | null => {
+  const normalized = normalizeHexColor(hex);
+  if (!normalized) return null;
+
+  return {
+    r: Number.parseInt(normalized.slice(1, 3), 16),
+    g: Number.parseInt(normalized.slice(3, 5), 16),
+    b: Number.parseInt(normalized.slice(5, 7), 16),
+  };
+};
+
+const rgbToHex = ({ b, g, r }: RgbColor) => {
+  const toHex = (value: number) =>
+    Math.round(clampNumber(value, 0, 255))
+      .toString(16)
+      .padStart(2, "0")
+      .toUpperCase();
+
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+};
+
+const rgbToHsl = ({ b, g, r }: RgbColor): HslColor => {
+  const red = r / 255;
+  const green = g / 255;
+  const blue = b / 255;
+  const max = Math.max(red, green, blue);
+  const min = Math.min(red, green, blue);
+  const lightness = (max + min) / 2;
+  const delta = max - min;
+
+  if (delta === 0) {
+    return { h: 0, s: 0, l: lightness };
+  }
+
+  const saturation = delta / (1 - Math.abs(2 * lightness - 1));
+  let hue = 0;
+
+  if (max === red) {
+    hue = ((green - blue) / delta) % 6;
+  } else if (max === green) {
+    hue = (blue - red) / delta + 2;
+  } else {
+    hue = (red - green) / delta + 4;
+  }
+
+  return {
+    h: Math.round((hue * 60 + 360) % 360),
+    s: saturation,
+    l: lightness,
+  };
+};
+
+const hslToRgb = ({ h, l, s }: HslColor): RgbColor => {
+  const hue = ((h % 360) + 360) % 360;
+  const chroma = (1 - Math.abs(2 * l - 1)) * s;
+  const x = chroma * (1 - Math.abs(((hue / 60) % 2) - 1));
+  const match = l - chroma / 2;
+
+  let red = 0;
+  let green = 0;
+  let blue = 0;
+
+  if (hue < 60) {
+    red = chroma;
+    green = x;
+  } else if (hue < 120) {
+    red = x;
+    green = chroma;
+  } else if (hue < 180) {
+    green = chroma;
+    blue = x;
+  } else if (hue < 240) {
+    green = x;
+    blue = chroma;
+  } else if (hue < 300) {
+    red = x;
+    blue = chroma;
+  } else {
+    red = chroma;
+    blue = x;
+  }
+
+  return {
+    r: (red + match) * 255,
+    g: (green + match) * 255,
+    b: (blue + match) * 255,
+  };
+};
+
+const paletteFromRgb = (rgb: RgbColor): CommunityVisualPalette => {
+  const hsl = rgbToHsl(rgb);
+  const saturation = clampNumber(hsl.s, 0.5, 0.78);
+  const lightness = clampNumber(hsl.l, 0.4, 0.52);
+  const primary = { h: hsl.h, s: saturation, l: lightness };
+
+  return {
+    primaryColor: rgbToHex(hslToRgb(primary)),
+    primaryDarkColor: rgbToHex(
+      hslToRgb({ ...primary, l: clampNumber(lightness - 0.16, 0.22, 0.36) }),
+    ),
+    softColor: rgbToHex(
+      hslToRgb({ ...primary, s: clampNumber(saturation * 0.55, 0.32, 0.5), l: 0.92 }),
+    ),
+    textColor: rgbToHex(hslToRgb({ ...primary, s: clampNumber(saturation, 0.54, 0.82), l: 0.36 })),
+    gradientColor: rgbToHex(
+      hslToRgb({ ...primary, s: clampNumber(saturation * 0.72, 0.38, 0.62), l: 0.84 }),
+    ),
+  };
+};
+
+const resolveStoredCommunityPalette = (
+  community: CommunityDetail,
+): CommunityVisualPalette | null => {
+  const primaryColor = normalizeHexColor(community.visual_primary_color);
+  if (!primaryColor) return null;
+
+  const derived = hexToRgb(primaryColor);
+  const derivedPalette = derived ? paletteFromRgb(derived) : FALLBACK_COMMUNITY_PALETTE;
+
+  return {
+    primaryColor,
+    primaryDarkColor:
+      normalizeHexColor(community.visual_primary_dark_color) ?? derivedPalette.primaryDarkColor,
+    softColor: normalizeHexColor(community.visual_soft_color) ?? derivedPalette.softColor,
+    textColor: normalizeHexColor(community.visual_text_color) ?? derivedPalette.textColor,
+    gradientColor:
+      normalizeHexColor(community.visual_gradient_color) ?? derivedPalette.gradientColor,
+  };
+};
+
+const extractCommunityPaletteFromImage = (src: string): Promise<CommunityVisualPalette> => {
+  if (typeof window === "undefined") return Promise.resolve(FALLBACK_COMMUNITY_PALETTE);
+
+  return new Promise((resolve, reject) => {
+    const image = new window.Image();
+    const canvas = document.createElement("canvas");
+    const size = 48;
+
+    image.crossOrigin = "anonymous";
+    image.decoding = "async";
+    image.onload = () => {
+      try {
+        canvas.width = size;
+        canvas.height = size;
+
+        const context = canvas.getContext("2d", { willReadFrequently: true });
+        if (!context) {
+          reject(new Error("Canvas indisponível para extrair cor da comunidade."));
+          return;
+        }
+
+        context.drawImage(image, 0, 0, size, size);
+        const { data } = context.getImageData(0, 0, size, size);
+        const buckets = new Map<
+          string,
+          {
+            count: number;
+            hsl: HslColor;
+            r: number;
+            g: number;
+            b: number;
+          }
+        >();
+
+        for (let index = 0; index < data.length; index += 16) {
+          const alpha = data[index + 3];
+          if (alpha < 160) continue;
+
+          const rgb = { r: data[index], g: data[index + 1], b: data[index + 2] };
+          const hsl = rgbToHsl(rgb);
+
+          if (hsl.l < 0.08 || hsl.l > 0.93 || hsl.s < 0.14) continue;
+
+          const bucket = {
+            r: Math.round(rgb.r / 24) * 24,
+            g: Math.round(rgb.g / 24) * 24,
+            b: Math.round(rgb.b / 24) * 24,
+          };
+          const key = `${bucket.r}:${bucket.g}:${bucket.b}`;
+          const current = buckets.get(key);
+
+          if (current) {
+            current.count += 1;
+            current.r += rgb.r;
+            current.g += rgb.g;
+            current.b += rgb.b;
+          } else {
+            buckets.set(key, {
+              count: 1,
+              hsl,
+              r: rgb.r,
+              g: rgb.g,
+              b: rgb.b,
+            });
+          }
+        }
+
+        let best: {
+          count: number;
+          hsl: HslColor;
+          r: number;
+          g: number;
+          b: number;
+          score: number;
+        } | null = null;
+
+        for (const bucket of buckets.values()) {
+          const score =
+            bucket.count *
+            (0.6 + bucket.hsl.s) *
+            (1 - Math.min(0.45, Math.abs(bucket.hsl.l - 0.5)));
+
+          if (!best || score > best.score) {
+            best = { ...bucket, score };
+          }
+        }
+
+        if (!best) {
+          reject(new Error("Nenhuma cor elegível encontrada no avatar da comunidade."));
+          return;
+        }
+
+        resolve(
+          paletteFromRgb({
+            r: best.r / best.count,
+            g: best.g / best.count,
+            b: best.b / best.count,
+          }),
+        );
+      } catch (error) {
+        reject(error);
+      }
+    };
+    image.onerror = reject;
+    image.src = src;
+  });
+};
+
+const useCommunityVisualPalette = (community: CommunityDetail) => {
+  const storedPalette = useMemo(() => resolveStoredCommunityPalette(community), [community]);
+  const avatarSrc = useMemo(
+    () => resolvePublicMediaUrl(community.avatar_url),
+    [community.avatar_url],
+  );
+  const cacheKey = `${community.id}:${community.avatar_url ?? "no-avatar"}`;
+  const cachedPalette = avatarSrc ? COMMUNITY_PALETTE_CACHE.get(cacheKey) : undefined;
+  const [extractedPalette, setExtractedPalette] = useState<{
+    cacheKey: string;
+    palette: CommunityVisualPalette;
+  } | null>(null);
+
+  useEffect(() => {
+    if (storedPalette || !avatarSrc || cachedPalette) return;
+
+    let cancelled = false;
+
+    extractCommunityPaletteFromImage(avatarSrc)
+      .then((nextPalette) => {
+        if (cancelled) return;
+
+        COMMUNITY_PALETTE_CACHE.set(cacheKey, nextPalette);
+        setExtractedPalette({ cacheKey, palette: nextPalette });
+      })
+      .catch(() => {
+        if (!cancelled) setExtractedPalette({ cacheKey, palette: FALLBACK_COMMUNITY_PALETTE });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [avatarSrc, cacheKey, cachedPalette, storedPalette]);
+
+  return (
+    storedPalette ??
+    cachedPalette ??
+    (extractedPalette?.cacheKey === cacheKey
+      ? extractedPalette.palette
+      : FALLBACK_COMMUNITY_PALETTE)
+  );
+};
 
 type ApiErrorData = {
   error?: string;
@@ -1130,11 +1472,39 @@ const sortCommunityPosts = (
   });
 };
 
-const CommunityLogo = ({ community }: { community: CommunityDetail }) => (
-  <span className="grid h-[76px] w-[76px] shrink-0 place-items-center rounded-[18px] border-[4px] border-white bg-gradient-to-br from-[#DFF3FF] via-[#F7FBFF] to-[#BFE7FF] text-center text-lg font-black leading-none text-primary shadow-[0_16px_34px_rgba(15,23,42,0.18)] dark:border-background">
-    {getInitials(community.name)}
-  </span>
-);
+const CommunityLogo = ({
+  community,
+  palette,
+}: {
+  community: CommunityDetail;
+  palette: CommunityVisualPalette;
+}) => {
+  const avatarSrc = resolvePublicMediaUrl(community.avatar_url);
+  const avatarIsPublicMedia = isPublicMediaUrl(community.avatar_url);
+
+  return (
+    <span
+      className="relative grid h-[76px] w-[76px] shrink-0 place-items-center overflow-hidden rounded-[18px] border-[4px] border-white text-center text-lg font-black leading-none shadow-[0_16px_34px_rgba(15,23,42,0.18)] dark:border-background"
+      style={{
+        background: `linear-gradient(135deg, ${palette.softColor} 0%, ${palette.gradientColor} 100%)`,
+        color: palette.textColor,
+      }}
+    >
+      {avatarSrc ? (
+        <Image
+          alt={`Avatar da comunidade ${community.name}`}
+          className="object-cover"
+          fill
+          sizes="76px"
+          src={avatarSrc}
+          unoptimized={avatarIsPublicMedia}
+        />
+      ) : (
+        getInitials(community.name)
+      )}
+    </span>
+  );
+};
 
 const CommunityDetailSkeleton = () => (
   <div className="grid gap-4">
@@ -1242,81 +1612,101 @@ const CommunityHeader = ({
   onSearch: () => void;
   onShare: () => void;
   onToggleFollow: () => void;
-}) => (
-  <header className="-mx-5 overflow-hidden rounded-b-[28px] bg-white pb-5 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:bg-surface">
-    <div className="relative min-h-[132px] bg-[linear-gradient(135deg,#308CE8_0%,#1B56B8_55%,#16418F_100%)] px-5 pt-4 text-white">
-      <div className="relative z-10 flex items-center justify-between">
-        <Link
-          aria-label="Voltar ao feed da comunidade"
-          className="grid h-10 w-10 place-items-center rounded-full bg-black/15 text-white backdrop-blur transition hover:bg-black/25"
-          href={DEFAULT_COMMUNITY_FEED_HREF}
-        >
-          <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-        </Link>
-        <div className="flex items-center gap-2">
-          <button
-            aria-label={`Buscar em ${community.name}`}
+}) => {
+  const palette = useCommunityVisualPalette(community);
+  const communityPaletteStyle: CommunityPaletteStyle = {
+    "--community-gradient-color": palette.gradientColor,
+    "--community-primary-color": palette.primaryColor,
+    "--community-primary-dark": palette.primaryDarkColor,
+    "--community-soft-color": palette.softColor,
+    "--community-text-color": palette.textColor,
+  };
+
+  return (
+    <header
+      className="-mx-5 overflow-hidden rounded-b-[28px] bg-white pb-5 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:bg-surface"
+      style={communityPaletteStyle}
+    >
+      <div
+        className="relative min-h-[132px] px-5 pt-4 text-white"
+        style={{
+          background:
+            "radial-gradient(circle at 12% 100%, var(--community-soft-color) 0%, transparent 34%), linear-gradient(135deg, var(--community-primary-color) 0%, var(--community-primary-dark) 100%)",
+        }}
+      >
+        <div className="relative z-10 flex items-center justify-between">
+          <Link
+            aria-label="Voltar ao feed da comunidade"
             className="grid h-10 w-10 place-items-center rounded-full bg-black/15 text-white backdrop-blur transition hover:bg-black/25"
-            onClick={onSearch}
-            type="button"
+            href={DEFAULT_COMMUNITY_FEED_HREF}
           >
-            <Search className="h-5 w-5" aria-hidden="true" />
-          </button>
-          <button
-            aria-label="Compartilhar comunidade"
-            className="grid h-10 w-10 place-items-center rounded-full bg-black/15 text-white backdrop-blur transition hover:bg-black/25"
-            onClick={onShare}
-            type="button"
+            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              aria-label={`Buscar em ${community.name}`}
+              className="grid h-10 w-10 place-items-center rounded-full bg-black/15 text-white backdrop-blur transition hover:bg-black/25"
+              onClick={onSearch}
+              type="button"
+            >
+              <Search className="h-5 w-5" aria-hidden="true" />
+            </button>
+            <button
+              aria-label="Compartilhar comunidade"
+              className="grid h-10 w-10 place-items-center rounded-full bg-black/15 text-white backdrop-blur transition hover:bg-black/25"
+              onClick={onShare}
+              type="button"
+            >
+              <Share2 className="h-5 w-5" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+        <span className="absolute -right-10 -bottom-16 h-44 w-44 rounded-full bg-white/10 blur-2xl" />
+        <span className="absolute left-10 top-8 h-28 w-28 rounded-full bg-white/10 blur-2xl" />
+      </div>
+
+      <div className="relative px-5">
+        <div className="-mt-8 flex items-start justify-between gap-4">
+          <CommunityLogo community={community} palette={palette} />
+          <CommunityFollowButton
+            className="mt-10 h-10 px-6 text-sm"
+            disabled={membershipPending}
+            following={following}
+            onClick={onToggleFollow}
+            pending={membershipPending}
+          />
+        </div>
+
+        <div className="mt-4 grid gap-2">
+          <h1 className="text-[1.55rem] font-black leading-tight tracking-[-0.03em] text-[#182033] dark:text-foreground">
+            {community.name}
+          </h1>
+          <p className="text-sm font-semibold text-muted">
+            {formatCompactCount(community.members_count, "seguidor", "seguidores")}{" "}
+            <span aria-hidden="true">•</span>{" "}
+            {formatCompactCount(community.posts_count, "post", "posts")}
+          </p>
+          {community.description ? (
+            <p className="max-w-2xl text-sm leading-6 text-[#475569] dark:text-muted">
+              {community.description}
+            </p>
+          ) : (
+            <p className="max-w-2xl text-sm leading-6 text-[#475569] dark:text-muted">
+              Esta comunidade ainda não possui descrição cadastrada pela equipe Lectum.
+            </p>
+          )}
+          <Link
+            className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-[var(--community-soft-color)] px-3 py-1.5 text-xs font-black text-[var(--community-text-color)] transition hover:bg-[var(--community-primary-color)] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--community-primary-color)] focus-visible:ring-offset-2"
+            href={`/app/community/top-mentors?community=${community.slug}`}
           >
-            <Share2 className="h-5 w-5" aria-hidden="true" />
-          </button>
+            <Award className="h-3.5 w-3.5" aria-hidden="true" />
+            Ver Top 5 mentores da comunidade
+          </Link>
         </div>
       </div>
-      <span className="absolute -right-10 -bottom-16 h-44 w-44 rounded-full bg-white/10 blur-2xl" />
-      <span className="absolute left-10 top-8 h-28 w-28 rounded-full bg-white/10 blur-2xl" />
-    </div>
-
-    <div className="relative px-5">
-      <div className="-mt-8 flex items-start justify-between gap-4">
-        <CommunityLogo community={community} />
-        <CommunityFollowButton
-          className="mt-10 h-10 px-6 text-sm"
-          disabled={membershipPending}
-          following={following}
-          onClick={onToggleFollow}
-          pending={membershipPending}
-        />
-      </div>
-
-      <div className="mt-4 grid gap-2">
-        <h1 className="text-[1.55rem] font-black leading-tight tracking-[-0.03em] text-[#182033] dark:text-foreground">
-          {community.name}
-        </h1>
-        <p className="text-sm font-semibold text-muted">
-          {formatCompactCount(community.members_count, "seguidor", "seguidores")}{" "}
-          <span aria-hidden="true">•</span>{" "}
-          {formatCompactCount(community.posts_count, "post", "posts")}
-        </p>
-        {community.description ? (
-          <p className="max-w-2xl text-sm leading-6 text-[#475569] dark:text-muted">
-            {community.description}
-          </p>
-        ) : (
-          <p className="max-w-2xl text-sm leading-6 text-[#475569] dark:text-muted">
-            Esta comunidade ainda não possui descrição cadastrada pela equipe Lectum.
-          </p>
-        )}
-        <Link
-          className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1.5 text-xs font-black text-primary transition hover:bg-primary hover:text-white"
-          href={`/app/community/top-mentors?community=${community.slug}`}
-        >
-          <Award className="h-3.5 w-3.5" aria-hidden="true" />
-          Ver Top 5 mentores da comunidade
-        </Link>
-      </div>
-    </div>
-  </header>
-);
+    </header>
+  );
+};
 
 const CommunityContextSearchHeader = ({
   communityName,

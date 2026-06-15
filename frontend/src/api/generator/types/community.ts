@@ -39,6 +39,12 @@ export type Community = {
   description: string | null;
   category: string | null;
   members_count: number;
+  avatar_url: string | null;
+  visual_primary_color: string | null;
+  visual_primary_dark_color: string | null;
+  visual_soft_color: string | null;
+  visual_text_color: string | null;
+  visual_gradient_color: string | null;
   created_at: string;
   following?: boolean;
   membership_created_at?: string | null;

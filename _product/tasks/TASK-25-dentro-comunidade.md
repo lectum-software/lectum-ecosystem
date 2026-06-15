@@ -227,3 +227,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm --dir backend build`
   - `pnpm check`
   - HTTP local sem cookie autenticado retornou 307 esperado para `/app/community/ansiedade-em-equilibrio` e `/app/community/feed`.
+
+## Complemento 2026-06-15 — identidade visual derivada do avatar
+
+- Pedido do usuário: gerar automaticamente a identidade visual da página interna de comunidade a partir da imagem/avatar da comunidade, mantendo fallback azul quando a imagem não existir ou a extração falhar.
+- Banco/contrato: `community` recebeu campos opcionais `avatar_url`, `visual_primary_color`, `visual_primary_dark_color`, `visual_soft_color`, `visual_text_color` e `visual_gradient_color`, documentados também em `DATA-MODEL.md`.
+- Backend: os campos visuais passaram a ser selecionados e retornados nos DTOs de comunidade sem alterar lógica de participação, posts, ranking ou feed.
+- Frontend: `/app/community/[slug]` agora resolve uma paleta determinística usando primeiro cores salvas, depois extração client-side do avatar via Canvas com cache em memória, ignorando tons muito claros, escuros ou pouco saturados e normalizando saturação/luminosidade antes de aplicar.
+- Layout: a faixa superior usa gradiente com `primaryColor`/`primaryDarkColor`, halo radial com `softColor`, avatar/initials com `softColor`/`textColor` e chip de Top Mentores com a mesma paleta. Quando não há avatar/cor, permanece o azul padrão anterior.
+- Sem packages novos e sem mocks; as colunas são nullable e não inventam imagem para comunidades existentes.
+- Builder/Quick Copy não está exposto como ferramenta direta nesta sessão; a referência visual usada foi `_product/proto/Dentro da Comunidade.jpg`.
+- ADR criado: `adrs/0095-identidade-visual-comunidade-avatar.md`.
+- Validações executadas: `pnpm --dir backend db:migrate --name add_community_visual_identity`, `pnpm --dir backend db:generate`, `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm check` e validação HTTP local com 307 esperado em `/app/community/relacionamentos-com-proposito` sem cookie autenticado.

@@ -45,6 +45,12 @@ const communitySelect = {
   description: true,
   category: true,
   members_count: true,
+  avatar_url: true,
+  visual_primary_color: true,
+  visual_primary_dark_color: true,
+  visual_soft_color: true,
+  visual_text_color: true,
+  visual_gradient_color: true,
   createdAt: true,
 } satisfies Prisma.communitySelect;
 
@@ -511,6 +517,12 @@ const toCommunityResponse = (item: {
   description: string | null;
   category: string | null;
   members_count: number;
+  avatar_url: string | null;
+  visual_primary_color: string | null;
+  visual_primary_dark_color: string | null;
+  visual_soft_color: string | null;
+  visual_text_color: string | null;
+  visual_gradient_color: string | null;
   createdAt: Date;
 }): CommunityDTO => ({
   id: item.id,
@@ -519,6 +531,12 @@ const toCommunityResponse = (item: {
   description: item.description,
   category: item.category,
   members_count: item.members_count,
+  avatar_url: item.avatar_url,
+  visual_primary_color: item.visual_primary_color,
+  visual_primary_dark_color: item.visual_primary_dark_color,
+  visual_soft_color: item.visual_soft_color,
+  visual_text_color: item.visual_text_color,
+  visual_gradient_color: item.visual_gradient_color,
   created_at: item.createdAt,
 });
 

@@ -445,18 +445,24 @@ model professional_review {
 }
 
 model community {
-  id            String             @id @default(cuid())
-  deleted       Boolean            @default(false)
-  deletedAt     DateTime?          @map("deleted_at")
-  updatedAt     DateTime           @default(now()) @updatedAt @map("updated_at")
-  createdAt     DateTime           @default(now()) @map("created_at")
-  name          String
-  slug          String             @unique
-  description   String?
-  category      String?
-  members_count Int                @default(0)
-  members       community_member[] @relation("community_member_community")
-  posts         community_post[]   @relation("community_post_community")
+  id                        String             @id @default(cuid())
+  deleted                   Boolean            @default(false)
+  deletedAt                 DateTime?          @map("deleted_at")
+  updatedAt                 DateTime           @default(now()) @updatedAt @map("updated_at")
+  createdAt                 DateTime           @default(now()) @map("created_at")
+  name                      String
+  slug                      String             @unique
+  description               String?
+  category                  String?
+  members_count             Int                @default(0)
+  avatar_url                String?            @map("avatar_url")
+  visual_primary_color      String?            @map("visual_primary_color")
+  visual_primary_dark_color String?            @map("visual_primary_dark_color")
+  visual_soft_color         String?            @map("visual_soft_color")
+  visual_text_color         String?            @map("visual_text_color")
+  visual_gradient_color     String?            @map("visual_gradient_color")
+  members                   community_member[] @relation("community_member_community")
+  posts                     community_post[]   @relation("community_post_community")
 
   @@index([slug])
   @@index([category, deleted])
@@ -524,11 +530,11 @@ model community_post {
 }
 
 model post_reply {
-  id              String         @id @default(cuid())
-  deleted         Boolean        @default(false)
-  deletedAt       DateTime?      @map("deleted_at")
-  updatedAt       DateTime       @default(now()) @updatedAt @map("updated_at")
-  createdAt       DateTime       @default(now()) @map("created_at")
+  id              String            @id @default(cuid())
+  deleted         Boolean           @default(false)
+  deletedAt       DateTime?         @map("deleted_at")
+  updatedAt       DateTime          @default(now()) @updatedAt @map("updated_at")
+  createdAt       DateTime          @default(now()) @map("created_at")
   post_id         String
   author_id       String
   parent_reply_id String?
@@ -536,12 +542,12 @@ model post_reply {
   content         String
   media_url       String?
   media_type      String?
-  upvotes_count   Int            @default(0)
-  post            community_post @relation("post_reply_post", fields: [post_id], references: [id], onDelete: Cascade)
-  author          user           @relation("post_reply_author", fields: [author_id], references: [id], onDelete: Cascade)
-  parent_reply    post_reply?    @relation("post_reply_thread", fields: [parent_reply_id], references: [id], onDelete: Cascade)
-  replies         post_reply[]   @relation("post_reply_thread")
-  votes           post_vote[]    @relation("post_vote_reply")
+  upvotes_count   Int               @default(0)
+  post            community_post    @relation("post_reply_post", fields: [post_id], references: [id], onDelete: Cascade)
+  author          user              @relation("post_reply_author", fields: [author_id], references: [id], onDelete: Cascade)
+  parent_reply    post_reply?       @relation("post_reply_thread", fields: [parent_reply_id], references: [id], onDelete: Cascade)
+  replies         post_reply[]      @relation("post_reply_thread")
+  votes           post_vote[]       @relation("post_vote_reply")
   saves           post_reply_save[] @relation("post_reply_save_reply")
 
   @@index([post_id, parent_reply_id, createdAt])
