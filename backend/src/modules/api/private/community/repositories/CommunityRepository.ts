@@ -1302,6 +1302,7 @@ export class CommunityRepository implements ICommunityRepository {
         count: 0,
         scope,
         community_slug: communitySlug,
+        following_count: 0,
       };
     }
 
@@ -1326,7 +1327,15 @@ export class CommunityRepository implements ICommunityRepository {
       OR: postSearchWhere(search),
     };
 
-    const [allItems, count] = await Promise.all([
+    const followedMembershipWhere: Prisma.community_memberWhereInput = {
+      user_id: followerUserId || "__missing_user__",
+      deleted: false,
+      community: {
+        deleted: false,
+      },
+    };
+
+    const [allItems, count, followingCount] = await Promise.all([
       prisma.community_post.findMany({
         where,
         orderBy: [
@@ -1339,6 +1348,9 @@ export class CommunityRepository implements ICommunityRepository {
         select: postSelect,
       }),
       prisma.community_post.count({ where }),
+      scope === "following" && followerUserId
+        ? prisma.community_member.count({ where: followedMembershipWhere })
+        : Promise.resolve(0),
     ]);
     const allPostIds = allItems.map((item) => item.id);
     const sortMetricsByPostId = await getCommunityPostSortMetrics(allPostIds);
@@ -1371,6 +1383,7 @@ export class CommunityRepository implements ICommunityRepository {
       count,
       scope,
       community_slug: communitySlug,
+      ...(scope === "following" ? { following_count: followingCount } : {}),
     };
   }
 

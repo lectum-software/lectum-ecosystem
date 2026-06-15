@@ -1926,6 +1926,7 @@ export const CommunityFeedLogic = () => {
   const feed = useCommunityFeedPosts(query);
   const posts = feed.data?.data ?? [];
   const errorMessage = feed.isError ? resolveFeedError(feed.error) : null;
+  const hasNoFollowedCommunities = scope === "following" && (feed.data?.following_count ?? 0) === 0;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -2037,17 +2038,31 @@ export const CommunityFeedLogic = () => {
         {!feed.isLoading && !feed.isPending && !errorMessage && posts.length === 0 ? (
           <EmptyState
             action={
-              <Button asChild variant="outline">
-                <Link href={COMMUNITY_EXPLORE_HREF}>Explorar comunidades</Link>
-              </Button>
+              hasNoFollowedCommunities ? (
+                <Button asChild variant="outline">
+                  <Link href={COMMUNITY_EXPLORE_HREF}>Encontrar comunidades</Link>
+                </Button>
+              ) : scope === "following" ? null : (
+                <Button asChild variant="outline">
+                  <Link href={COMMUNITY_EXPLORE_HREF}>Explorar comunidades</Link>
+                </Button>
+              )
             }
             description={
-              scope === "following"
-                ? "Ainda não há comunidades seguidas vinculadas ao seu usuário. Quando a participação em comunidades for ativada, este filtro exibirá esse recorte persistido."
-                : "Nenhum destaque publicado para este recorte do feed. O feed usa apenas dados persistidos no backend."
+              hasNoFollowedCommunities
+                ? "Siga suas comunidades favoritas para acompanhar conversas, receber apoio e descobrir conteúdos que contribuam para o seu bem-estar."
+                : scope === "following"
+                  ? "As comunidades que você segue ainda não possuem publicações para este filtro."
+                  : "Nenhum destaque publicado para este recorte do feed. O feed usa apenas dados persistidos no backend."
             }
             icon={CalendarDays}
-            title="Nenhum post publicado"
+            title={
+              hasNoFollowedCommunities
+                ? "Você ainda não segue nenhuma comunidade"
+                : scope === "following"
+                  ? "Nenhuma publicação encontrada"
+                  : "Nenhum post publicado"
+            }
           />
         ) : null}
 

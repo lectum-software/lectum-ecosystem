@@ -141,6 +141,7 @@ export type CommunityFeedResponse = {
   count: number;
   scope: CommunityFeedScope;
   community_slug: string | null;
+  following_count?: number;
 };
 
 export type CommunityDetailResponse = {
