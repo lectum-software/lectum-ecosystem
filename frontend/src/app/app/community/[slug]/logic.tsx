@@ -79,7 +79,6 @@ import {
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 const PAGE_LIMIT = 12;
-const COMMUNITY_RULES_SESSION_KEY_PREFIX = "lectum:community-rules";
 const COMMUNITY_PUBLISH_ONBOARDING_STORAGE_KEY = "lectum:community:publish-onboarding:v1";
 
 const hasSeenCommunityPublishOnboarding = () => {
@@ -97,26 +96,6 @@ const writeCommunityPublishOnboardingSeen = () => {
 
   try {
     window.localStorage.setItem(COMMUNITY_PUBLISH_ONBOARDING_STORAGE_KEY, "seen");
-  } catch {
-    return;
-  }
-};
-
-const readCommunityRulesSessionState = (storageKey: string) => {
-  if (typeof window === "undefined") return false;
-
-  try {
-    return window.sessionStorage.getItem(storageKey) === "expanded";
-  } catch {
-    return false;
-  }
-};
-
-const writeCommunityRulesSessionState = (storageKey: string, isExpanded: boolean) => {
-  if (typeof window === "undefined") return;
-
-  try {
-    window.sessionStorage.setItem(storageKey, isExpanded ? "expanded" : "collapsed");
   } catch {
     return;
   }
@@ -1516,19 +1495,12 @@ const CommunityDetailSkeleton = () => (
   </div>
 );
 
-const CommunityRulesCard = ({ communitySlug }: { communitySlug: string }) => {
+const CommunityRulesCard = () => {
   const rulesContentId = useId();
-  const storageKey = `${COMMUNITY_RULES_SESSION_KEY_PREFIX}:${communitySlug}`;
-  const [isExpanded, setIsExpanded] = useState(() => readCommunityRulesSessionState(storageKey));
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const toggleRules = () => {
-    setIsExpanded((current) => {
-      const next = !current;
-
-      writeCommunityRulesSessionState(storageKey, next);
-
-      return next;
-    });
+    setIsExpanded((current) => !current);
   };
 
   return (
@@ -1766,7 +1738,7 @@ const CommunityPostSortChips = ({
   value: CommunityPostSort;
 }) => (
   <nav
-    aria-label="Ordenação dos posts"
+    aria-label="Ordenacao dos posts"
     className="-mx-5 overflow-x-auto px-5 [scrollbar-width:none]"
   >
     <div className="flex min-w-max gap-2 pb-1">
@@ -1775,55 +1747,60 @@ const CommunityPostSortChips = ({
         const active = value === item.value;
         const hasPeriod = "period" in item;
         const periodValue = hasPeriod ? periods[item.value as CommunityPostSortWithPeriod] : null;
+        const chipClassName = cn(
+          "inline-flex min-h-10 items-center gap-1.5 rounded-full border px-4 text-sm font-black shadow-sm transition",
+          active
+            ? "border-primary bg-primary text-white"
+            : "border-[#E5EAF0] bg-white text-[#64748B] hover:border-primary/40 hover:bg-primary-soft hover:text-primary dark:border-border dark:bg-surface dark:text-muted",
+        );
+
+        if (hasPeriod && periodValue) {
+          return (
+            <label className={cn("relative overflow-hidden", chipClassName)} key={item.value}>
+              <Icon className="h-4 w-4" aria-hidden="true" />
+              <span>{item.label}</span>
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 shrink-0 transition-transform",
+                  active ? "text-white" : "text-current",
+                )}
+                aria-hidden="true"
+              />
+              <span className="sr-only">Selecionar periodo de {item.label}</span>
+              <select
+                aria-label={`Periodo de ${item.label}`}
+                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                onChange={(event) =>
+                  onPeriodChange(
+                    item.value as CommunityPostSortWithPeriod,
+                    event.target.value as CommunityPostSortPeriod,
+                  )
+                }
+                onFocus={() => onChange(item.value)}
+                onPointerDown={() => onChange(item.value)}
+                value={periodValue}
+              >
+                {COMMUNITY_POST_SORT_PERIODS.map((period) => (
+                  <option className="text-foreground" key={period.value} value={period.value}>
+                    {period.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          );
+        }
 
         return (
-          <div
-            className={cn(
-              "inline-flex min-h-10 items-center overflow-hidden rounded-full border text-sm font-black shadow-sm transition",
-              active
-                ? "border-primary bg-primary text-white"
-                : "border-[#E5EAF0] bg-white text-[#64748B] hover:border-primary/40 hover:bg-primary-soft hover:text-primary dark:border-border dark:bg-surface dark:text-muted",
-            )}
-            key={item.value}
-          >
+          <div className={chipClassName} key={item.value}>
             <button
               aria-pressed={active}
-              className="inline-flex min-h-10 items-center gap-1.5 px-4"
+              className="-mx-4 -my-px inline-flex min-h-10 items-center gap-1.5 px-4"
               onClick={() => onChange(item.value)}
               type="button"
             >
               <Icon className="h-4 w-4" aria-hidden="true" />
               {item.label}
             </button>
-            {active && hasPeriod && periodValue ? (
-              <>
-                <span className="h-5 w-px bg-white/30" aria-hidden="true" />
-                <label className="sr-only" htmlFor={`community-post-sort-period-${item.value}`}>
-                  Período de {item.label}
-                </label>
-                <select
-                  className="min-h-10 cursor-pointer appearance-none bg-transparent py-0 pl-3 pr-8 text-xs font-black text-current outline-none"
-                  id={`community-post-sort-period-${item.value}`}
-                  onChange={(event) =>
-                    onPeriodChange(
-                      item.value as CommunityPostSortWithPeriod,
-                      event.target.value as CommunityPostSortPeriod,
-                    )
-                  }
-                  value={periodValue}
-                >
-                  {COMMUNITY_POST_SORT_PERIODS.map((period) => (
-                    <option className="text-foreground" key={period.value} value={period.value}>
-                      {period.label}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown
-                  className="-ml-7 mr-3 h-4 w-4 pointer-events-none"
-                  aria-hidden="true"
-                />
-              </>
-            ) : null}
           </div>
         );
       })}
@@ -2167,9 +2144,7 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
               />
             )}
 
-            {communitySearchOpen ? null : (
-              <CommunityRulesCard key={community.slug} communitySlug={community.slug} />
-            )}
+            {communitySearchOpen ? null : <CommunityRulesCard key={community.slug} />}
 
             {shareFeedback ? (
               <InlineAlert title="Link preparado" variant="success">
@@ -2270,11 +2245,14 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
       {community ? (
         <Link
           aria-label="Criar publicação nesta comunidade"
-          className="group fixed right-5 bottom-[var(--lectum-mobile-nav-aware-fab-bottom)] z-40 grid h-14 w-14 place-items-center rounded-full border-[5px] border-white bg-[#308CE8] text-white shadow-[0_14px_30px_rgba(48,140,232,0.28)] transition-[bottom,transform,background-color,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:bg-[#2579CF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F5F7FA] sm:bottom-[var(--lectum-mobile-nav-aware-fab-bottom-sm)] lg:right-10 lg:bottom-10 xl:right-20 2xl:right-28"
+          className="group fixed right-5 bottom-[var(--lectum-mobile-nav-aware-fab-bottom)] z-40 grid h-14 w-14 place-items-center rounded-full border-[5px] border-white bg-[#308CE8] text-white shadow-[0_14px_30px_rgba(48,140,232,0.28)] transition-[bottom,transform,background-color,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:bg-[#2579CF] hover:shadow-[0_18px_36px_rgba(48,140,232,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F5F7FA] motion-safe:animate-[lectum-desktop-create-float_4.2s_ease-in-out_infinite] sm:bottom-[var(--lectum-mobile-nav-aware-fab-bottom-sm)] lg:right-10 lg:bottom-10 lg:h-16 lg:w-16 xl:right-20 2xl:right-28"
           href={communityCreatePostHref(community.slug)}
           title="Criar publicação"
         >
-          <Plus className="h-7 w-7 stroke-[2.4]" aria-hidden="true" />
+          <Plus
+            className="h-8 w-8 stroke-[2.4] transition group-hover:scale-105"
+            aria-hidden="true"
+          />
           <span className="sr-only">Criar publicação</span>
         </Link>
       ) : null}

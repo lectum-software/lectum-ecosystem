@@ -239,3 +239,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Builder/Quick Copy não está exposto como ferramenta direta nesta sessão; a referência visual usada foi `_product/proto/Dentro da Comunidade.jpg`.
 - ADR criado: `adrs/0095-identidade-visual-comunidade-avatar.md`.
 - Validações executadas: `pnpm --dir backend db:migrate --name add_community_visual_identity`, `pnpm --dir backend db:generate`, `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm check` e validação HTTP local com 307 esperado em `/app/community/relacionamentos-com-proposito` sem cookie autenticado.
+
+## Complemento 2026-06-15 — regras sem persistência, filtros integrados e FAB consistente
+
+- Pedido do usuário: ajustar somente o estado/visual da página interna de comunidade, sem alterar lógica de ordenação, textos dos filtros ou ações existentes.
+- Regras da comunidade: removida a persistência via `sessionStorage`; o accordion passa a iniciar sempre fechado ao entrar novamente na página ou remontar o componente.
+- Ordenação: os filtros `Mais comentados` e `Mais votados` passaram a renderizar o seletor de período como controle integrado ao próprio chip, com a seta logo após o texto do botão e sem segmento lateral separado.
+- FAB de publicar: o botão flutuante da página interna de comunidade foi alinhado ao mesmo tamanho/ícone/sombra/animação do botão flutuante do feed geral, preservando rota e ação.
+- Escopo: sem mudanças de backend, Prisma, contratos, packages ou algoritmo de ordenação.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e validação HTTP local com 307 esperado em `/app/community/relacionamentos-com-proposito` sem cookie autenticado.

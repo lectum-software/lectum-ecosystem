@@ -147,3 +147,13 @@ A lupa do cabecalho da pagina interna de comunidade estava apontando para o feed
 - `pnpm --dir backend build`
 - `pnpm check`
 - HTTP local sem cookie autenticado retornou 307 esperado para `http://localhost:3000/app/community/ansiedade-em-equilibrio` e `http://localhost:3000/app/community/feed`.
+
+## Complemento 2026-06-15 — ajustes finos de regras, filtros e publicação
+
+A página interna de comunidade recebeu três refinamentos de UX sem alterar domínio ou dados:
+
+- O accordion `Regras da comunidade` deixou de persistir estado em `sessionStorage`; ele sempre inicia fechado ao entrar na comunidade, reduzindo espaço vertical ocupado por padrão.
+- Os chips `Mais comentados` e `Mais votados` passaram a conter o seletor de período dentro do próprio chip, com seta integrada ao texto, removendo a aparência de aba lateral desconectada.
+- O FAB `Criar publicação` da comunidade passou a usar a mesma escala visual do FAB do feed geral (`h-14/w-14` no mobile e `lg:h-16/lg:w-16` no desktop, ícone `h-8/w-8`, sombra/hover/animação equivalentes).
+
+Não houve alteração de backend, Prisma, contratos de API, algoritmo de ordenação ou textos visíveis dos filtros.
