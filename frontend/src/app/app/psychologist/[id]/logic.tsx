@@ -26,7 +26,16 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type MouseEvent as ReactMouseEvent,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   useDirectoryPsychologist,
   useDirectoryPsychologistPosts,
@@ -79,6 +88,10 @@ const PROFILE_CARD_SURFACE =
 
 const PROFILE_SUBTLE_SURFACE = "box-border rounded-[14px] border border-[#E2E8F0] bg-[#F8FAFC]";
 
+const PROFILE_ABOUT_MAX_LINES = 3;
+const PROFILE_ABOUT_MORE_LABEL = "... ver mais";
+const PROFILE_ABOUT_LESS_LABEL = "ver menos";
+
 const modalityLabel: Record<string, string> = {
   online: "Online",
   presencial: "Presencial",
@@ -129,6 +142,12 @@ const formatHeroRating = (ratingAvg: number) => {
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
   });
+};
+
+const formatExperienceLabel = (years?: number | null) => {
+  if (!years || years <= 0) return null;
+
+  return `${years} ${years === 1 ? "ano" : "anos"} de experiência`;
 };
 
 const getPsychologistTitle = (gender?: string | null) => {
@@ -185,13 +204,6 @@ const buildBenefitTags = (profile: DirectoryPsychologistProfile) => {
     icon: typeof BriefcaseBusiness;
     label: string;
   }> = [];
-
-  if (profile.show_experience_tag !== false && profile.verified && profile.formation_years) {
-    tags.push({
-      icon: BriefcaseBusiness,
-      label: `${profile.formation_years} anos de experiência`,
-    });
-  }
 
   if (profile.accepts_insurance) {
     tags.push({ icon: ShieldCheck, label: "Aceita convênios" });
@@ -483,6 +495,8 @@ const ProfileHero = ({
   const headline = (profile.headline || profile.bio || bioFallback).trim();
   const benefitTags = buildBenefitTags(profile);
   const formattedCrp = formatCrpLabel(profile.crp);
+  const experienceLabel =
+    profile.show_experience_tag !== false ? formatExperienceLabel(profile.formation_years) : null;
 
   return (
     <header
@@ -574,11 +588,21 @@ const ProfileHero = ({
             {getPsychologistTitle(profile.gender)}
             <span aria-hidden="true">•</span>
             <span>{formattedCrp}</span>
-            <span aria-hidden="true">•</span>
+          </p>
+
+          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] font-semibold text-[#64748B]">
             <span className="inline-flex items-center gap-1 text-[#B45309]">
               <Star className="h-3.5 w-3.5 fill-[#FBBF24] text-[#FBBF24]" aria-hidden="true" />
               {formatHeroRating(profile.rating_avg)}
             </span>
+            {experienceLabel ? (
+              <>
+                <span aria-hidden="true" className="text-[#CBD5E1]">
+                  •
+                </span>
+                <span className="text-[#475569]">{experienceLabel}</span>
+              </>
+            ) : null}
           </p>
 
           {profile.available_today ? (
@@ -663,19 +687,31 @@ const ProfileTabs = ({
   return (
     <div
       className={cn(
-        "sticky z-20 px-3 py-2.5 transition-[background-color,border-color,box-shadow] duration-200 sm:px-4",
+        "sticky z-20 px-3 py-2.5 transition-[background-color,border-color,box-shadow] duration-300 sm:px-4",
         isStuck
-          ? "border-b border-[rgba(15,23,42,0.06)] bg-[rgba(255,255,255,0.82)] shadow-[0_8px_22px_rgba(15,23,42,0.05)] backdrop-blur-[12px]"
+          ? "border-b border-transparent bg-transparent"
           : "border-b border-transparent bg-white shadow-none dark:bg-background",
       )}
       data-profile-sticky-navigation="true"
       ref={stickyContainerRef}
       style={{ top: "env(safe-area-inset-top, 0px)" }}
     >
-      <div className={cn("mx-auto grid w-full max-w-[430px] lg:max-w-[760px]", isStuck && "gap-2")}>
+      <div
+        className={cn(
+          "mx-auto grid w-full max-w-[430px] transition-all duration-300 lg:max-w-[760px]",
+          isStuck &&
+            "relative gap-2 overflow-hidden rounded-[28px] border border-white/65 bg-white/70 px-3 py-2 shadow-[0_14px_42px_rgba(15,23,42,0.12),inset_0_1px_0_rgba(255,255,255,0.85)] backdrop-blur-2xl ring-1 ring-[#2F8DEB]/[0.04] lg:rounded-none lg:border-0 lg:bg-transparent lg:px-0 lg:py-0 lg:shadow-none lg:backdrop-blur-none lg:ring-0",
+        )}
+      >
+        {isStuck ? (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-white/95 to-transparent lg:hidden"
+          />
+        ) : null}
         {isStuck ? (
           <div className="flex min-w-0 items-center gap-1.5" data-profile-sticky-name="true">
-            <span className="min-w-0 truncate text-[13px] font-bold leading-[1.25] tracking-[-0.01em] text-[#0F172A]">
+            <span className="min-w-0 truncate text-[13px] font-extrabold leading-[1.25] tracking-[-0.01em] text-[#0F172A]">
               {stickyName}
             </span>
             {profile.verified ? (
@@ -700,10 +736,10 @@ const ProfileTabs = ({
                 <button
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "inline-flex min-h-10 items-center justify-center rounded-full border px-4 text-sm font-black shadow-sm transition",
+                    "inline-flex min-h-9 items-center justify-center rounded-full border px-3.5 text-[13px] font-bold shadow-none transition",
                     active
-                      ? "border-primary bg-primary text-white"
-                      : "border-[#E5EAF0] bg-white text-[#64748B] hover:border-primary/40 hover:bg-primary-soft hover:text-primary dark:border-border dark:bg-surface dark:text-muted",
+                      ? "border-[#BFDBFE] bg-[#EFF6FF] text-[#1D4ED8]"
+                      : "border-[#E5EAF0] bg-white/80 text-[#64748B] hover:border-[#BFDBFE] hover:bg-[#F8FBFF] hover:text-[#1D4ED8] dark:border-border dark:bg-surface dark:text-muted",
                   )}
                   key={tab.value}
                   onClick={() => onTabChange(tab.value)}
@@ -731,7 +767,7 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
   return (
     <div className="mt-3 grid gap-2.5">
       <article
-        className="box-border relative mx-auto w-full max-w-[214px] overflow-hidden rounded-[18px] border border-[#E2E8F0] bg-[#e2e8f0] shadow-[0_8px_22px_rgba(15,23,42,0.055)] sm:max-w-[240px]"
+        className="box-border relative mx-auto w-full max-w-none overflow-hidden rounded-[18px] border border-[#E2E8F0] bg-[#e2e8f0] shadow-[0_8px_22px_rgba(15,23,42,0.055)] sm:max-w-[260px]"
         data-presentation-video="true"
       >
         <div className="relative aspect-[9/16] w-full">
@@ -770,7 +806,7 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
                   aria-hidden="true"
                   className="object-cover"
                   fill
-                  sizes="(min-width: 768px) 240px, 214px"
+                  sizes="(min-width: 640px) 260px, calc(100vw - 64px)"
                   src={videoCoverSrc}
                   unoptimized={videoCoverIsPublicMedia}
                 />
@@ -814,64 +850,131 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
 
 const ExpandableAboutText = ({ text }: { text: string }) => {
   const [expanded, setExpanded] = useState(false);
-  const [canExpand, setCanExpand] = useState(false);
+  const [preview, setPreview] = useState(text.trim());
+  const [truncated, setTruncated] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLParagraphElement>(null);
   const content = text.trim();
 
-  const recalculate = useCallback(() => {
-    const measure = measureRef.current;
+  useLayoutEffect(() => {
+    const containerNode = containerRef.current;
+    const measureNode = measureRef.current;
 
-    if (!measure || typeof window === "undefined") return;
+    if (!containerNode || !measureNode) return;
 
-    const computedLineHeight = parseFloat(getComputedStyle(measure).lineHeight);
-    const maxLinesHeight = (Number.isFinite(computedLineHeight) ? computedLineHeight : 0) * 3;
-    const nextCanExpand = maxLinesHeight > 0 ? measure.scrollHeight > maxLinesHeight + 2 : false;
+    let animationFrame = 0;
+    let cancelled = false;
 
-    setCanExpand((current) => (current === nextCanExpand ? current : nextCanExpand));
+    const lineHeightPx = () => {
+      const styles = window.getComputedStyle(measureNode);
+      const parsedLineHeight = Number.parseFloat(styles.lineHeight);
 
-    if (!nextCanExpand) {
-      setExpanded(false);
+      if (Number.isFinite(parsedLineHeight)) return parsedLineHeight;
+
+      const parsedFontSize = Number.parseFloat(styles.fontSize);
+      return Number.isFinite(parsedFontSize) ? parsedFontSize * 1.6 : 22;
+    };
+
+    const fitsWithinMaxLines = (value: string) => {
+      measureNode.textContent = value;
+
+      return measureNode.scrollHeight <= lineHeightPx() * PROFILE_ABOUT_MAX_LINES + 1;
+    };
+
+    const measure = () => {
+      if (cancelled) return;
+
+      const availableWidth = containerNode.getBoundingClientRect().width;
+      const normalizedText = content.trimEnd();
+
+      if (availableWidth <= 0 || normalizedText.length === 0) {
+        setPreview(content);
+        setTruncated(false);
+        return;
+      }
+
+      const safeAvailableWidth = Math.max(0, availableWidth - 32);
+
+      measureNode.style.width = `${safeAvailableWidth}px`;
+
+      if (fitsWithinMaxLines(normalizedText)) {
+        setPreview(content);
+        setTruncated(false);
+        return;
+      }
+
+      let low = 0;
+      let high = normalizedText.length;
+      let bestPreview = "";
+
+      while (low <= high) {
+        const middle = Math.floor((low + high) / 2);
+        const candidatePreview = normalizedText.slice(0, middle).trimEnd();
+        const candidate = `${candidatePreview} ${PROFILE_ABOUT_MORE_LABEL}  `;
+
+        if (fitsWithinMaxLines(candidate)) {
+          bestPreview = candidatePreview;
+          low = middle + 1;
+        } else {
+          high = middle - 1;
+        }
+      }
+
+      setPreview(bestPreview || normalizedText.slice(0, 1));
+      setTruncated(true);
+    };
+
+    const scheduleMeasure = () => {
+      window.cancelAnimationFrame(animationFrame);
+      animationFrame = window.requestAnimationFrame(measure);
+    };
+
+    scheduleMeasure();
+
+    const resizeObserver = new ResizeObserver(scheduleMeasure);
+    resizeObserver.observe(containerNode);
+
+    if ("fonts" in document) {
+      void document.fonts.ready.then(scheduleMeasure);
     }
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const frame = window.requestAnimationFrame(recalculate);
-    window.addEventListener("resize", recalculate);
 
     return () => {
-      window.cancelAnimationFrame(frame);
-      window.removeEventListener("resize", recalculate);
+      cancelled = true;
+      window.cancelAnimationFrame(animationFrame);
+      resizeObserver.disconnect();
     };
-  }, [recalculate]);
+  }, [content]);
+
+  const toggleExpanded = (event: ReactMouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setExpanded((previous) => !previous);
+  };
 
   return (
-    <div className="relative mt-2.5 grid gap-1.5">
-      <p
-        className={cn(
-          "whitespace-pre-line text-[13px] leading-[1.6] text-[#475569] sm:text-[13.5px]",
-          !expanded && "line-clamp-3",
-        )}
-      >
-        {content}
+    <div className="relative mt-2.5 min-w-0 max-w-full" ref={containerRef}>
+      <p className="whitespace-pre-line text-[13px] leading-[1.6] text-[#475569] sm:text-[13.5px]">
+        {expanded || !truncated ? content : preview}
+        {truncated ? (
+          <>
+            {" "}
+            <button
+              className="pointer-events-auto inline cursor-pointer rounded-none border-0 bg-transparent p-0 align-baseline font-[inherit] text-[#64748B]/85 [font-size:inherit] [line-height:inherit] hover:text-[#1D4ED8]"
+              onClick={toggleExpanded}
+              type="button"
+            >
+              {expanded ? PROFILE_ABOUT_LESS_LABEL : PROFILE_ABOUT_MORE_LABEL}
+            </button>
+          </>
+        ) : null}
       </p>
       <p
         aria-hidden="true"
-        className="pointer-events-none invisible absolute left-0 top-0 h-auto w-full overflow-hidden whitespace-pre-line text-[13px] leading-[1.6] text-[#475569] opacity-0 sm:text-[13.5px]"
+        className="pointer-events-none invisible absolute inset-x-0 top-0 whitespace-pre-line text-[13px] leading-[1.6] text-[#475569] opacity-0 sm:text-[13.5px]"
         ref={measureRef}
       >
         {content}
       </p>
-      {canExpand ? (
-        <button
-          className="w-fit text-[12px] font-semibold text-[#2F8DEB] transition hover:text-[#1d4ed8]"
-          onClick={() => setExpanded((previous) => !previous)}
-          type="button"
-        >
-          {expanded ? "Ver menos" : "Ver mais"}
-        </button>
-      ) : null}
     </div>
   );
 };
