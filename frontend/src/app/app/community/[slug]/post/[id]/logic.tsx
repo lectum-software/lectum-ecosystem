@@ -464,15 +464,21 @@ const isReplyTreeInteractiveTarget = (target: EventTarget | null, currentTarget:
   return Boolean(closestInteractiveTarget && closestInteractiveTarget !== currentTarget);
 };
 
+const stopReplyTreeCollapsePropagation: MouseEventHandler<HTMLElement> = (event) => {
+  event.stopPropagation();
+};
+
 const AuthorAvatar = ({
   anonymous,
   author,
   href,
+  onProfileClick,
   size = "md",
 }: {
   anonymous?: boolean;
   author: PostDetail["author"] | PostReply["author"];
   href?: string;
+  onProfileClick?: MouseEventHandler<HTMLAnchorElement>;
   size?: "sm" | "md" | "reply";
 }) => {
   const sizeClass = size === "sm" ? "h-8 w-8" : size === "reply" ? "h-9 w-9" : "h-10 w-10";
@@ -523,6 +529,7 @@ const AuthorAvatar = ({
       aria-label={`Abrir perfil de ${author.name}`}
       className="shrink-0 cursor-pointer rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
       href={href}
+      onClick={onProfileClick}
     >
       {avatar}
     </Link>
@@ -979,7 +986,7 @@ const ReplyCard = ({
     childrenHiddenByCollapse || visibleChildren.length > 0 || hiddenRepliesCount > 0;
   const avatarSize = isProfessional ? "reply" : "sm";
 
-  const handleRootTreeClick = (event: MouseEvent<HTMLDivElement>) => {
+  const handleRootTreeClick = (event: MouseEvent<HTMLElement>) => {
     if (!canCollapseRootTree || isReplyTreeInteractiveTarget(event.target, event.currentTarget)) {
       return;
     }
@@ -987,7 +994,7 @@ const ReplyCard = ({
     setTreeCollapsed((current) => !current);
   };
 
-  const handleRootTreeKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+  const handleRootTreeKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
     if (!canCollapseRootTree || isReplyTreeInteractiveTarget(event.target, event.currentTarget)) {
       return;
     }
@@ -996,7 +1003,7 @@ const ReplyCard = ({
     event.preventDefault();
     setTreeCollapsed((current) => !current);
   };
-  const rootTreeToggleProps = canCollapseRootTree
+  const rootTreeToggleAreaProps = canCollapseRootTree
     ? {
         "aria-expanded": !treeCollapsed,
         "aria-label": treeCollapsed
@@ -1007,7 +1014,11 @@ const ReplyCard = ({
         role: "button",
         tabIndex: 0,
       }
-    : undefined;
+    : {};
+  const patientRootTreeToggleAreaProps =
+    canCollapseRootTree && !psychologistProfileHref ? rootTreeToggleAreaProps : {};
+  const rootTreeToggleAreaClassName =
+    "cursor-pointer rounded-xl transition-colors hover:bg-[#F8FAFC]/70 active:bg-[#F1F5F9]/75 dark:hover:bg-surface-muted/35";
 
   return (
     <article
@@ -1017,16 +1028,23 @@ const ReplyCard = ({
       <div
         className={cn(
           "grid grid-cols-[2rem_minmax(0,1fr)] gap-x-2.5 rounded-[20px] transition-colors sm:grid-cols-[2.25rem_minmax(0,1fr)]",
-          canCollapseRootTree &&
-            "cursor-pointer hover:bg-[#F8FAFC]/70 active:bg-[#F1F5F9]/75 dark:hover:bg-surface-muted/35",
         )}
-        data-reply-root-toggle={canCollapseRootTree ? "true" : undefined}
-        {...rootTreeToggleProps}
+        data-reply-root-toggle={canCollapseRootTree ? "area-scoped" : undefined}
       >
-        <div className="relative flex justify-center">
+        <div
+          className={cn(
+            "relative flex justify-center",
+            canCollapseRootTree && !psychologistProfileHref && rootTreeToggleAreaClassName,
+          )}
+          data-reply-collapse-area={
+            canCollapseRootTree && !psychologistProfileHref ? "avatar" : undefined
+          }
+          {...patientRootTreeToggleAreaProps}
+        >
           <AuthorAvatar
             author={reply.author}
             href={psychologistProfileHref ?? undefined}
+            onProfileClick={psychologistProfileHref ? stopReplyTreeCollapsePropagation : undefined}
             size={avatarSize}
           />
           {hasTreeContinuation ? (
@@ -1039,13 +1057,24 @@ const ReplyCard = ({
 
         <div className="min-w-0 rounded-[18px] px-0.5 py-0.5">
           <div className="flex items-start justify-between gap-2">
-            <div className="grid min-w-0 gap-1">
+            <div
+              className={cn(
+                "grid min-w-0 gap-1",
+                canCollapseRootTree && !psychologistProfileHref && "-m-1 p-1",
+                canCollapseRootTree && !psychologistProfileHref && rootTreeToggleAreaClassName,
+              )}
+              data-reply-collapse-area={
+                canCollapseRootTree && !psychologistProfileHref ? "header" : undefined
+              }
+              {...patientRootTreeToggleAreaProps}
+            >
               <div className="flex min-w-0 items-center gap-x-2">
                 <div className="flex min-w-0 items-center gap-[5px]">
                   {isProfessional ? (
                     <Link
                       className="truncate text-sm font-black text-inherit no-underline hover:text-inherit hover:no-underline"
                       href={`/app/psychologist/${reply.author.id}`}
+                      onClick={stopReplyTreeCollapsePropagation}
                     >
                       {reply.author.name}
                     </Link>
@@ -1062,12 +1091,14 @@ const ReplyCard = ({
                 <MentorBadge
                   badge={reply.author.featured_badge}
                   href={psychologistProfileHref ?? undefined}
+                  onClick={psychologistProfileHref ? stopReplyTreeCollapsePropagation : undefined}
                 />
               </div>
               {psychologistProfileHref ? (
                 <Link
                   className="w-fit cursor-pointer text-[11px] font-semibold text-muted no-underline hover:text-muted hover:no-underline"
                   href={psychologistProfileHref}
+                  onClick={stopReplyTreeCollapsePropagation}
                 >
                   {formatReplyAuthorMeta(reply.author, reply.created_at)}
                 </Link>
@@ -1084,7 +1115,11 @@ const ReplyCard = ({
                 aria-haspopup="menu"
                 aria-label="Mais opções da resposta"
                 className="grid h-8 w-8 place-items-center rounded-full text-[#64748B] transition hover:bg-surface-muted"
-                onClick={() => setMenuOpen((current) => !current)}
+                data-comment-collapse-ignore="true"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setMenuOpen((current) => !current);
+                }}
                 type="button"
               >
                 <MoreVertical className="h-4 w-4" aria-hidden="true" />
@@ -1093,6 +1128,8 @@ const ReplyCard = ({
               {menuOpen ? (
                 <div
                   className="absolute top-9 right-0 z-20 w-56 overflow-hidden rounded-2xl border border-[#E5EAF0] bg-white p-1.5 text-sm shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:border-border dark:bg-surface"
+                  data-comment-collapse-ignore="true"
+                  onClickCapture={stopReplyTreeCollapsePropagation}
                   role="menu"
                 >
                   {isOwnReply ? (
@@ -1128,22 +1165,38 @@ const ReplyCard = ({
             </div>
           </div>
 
-          <InlineExpandableText
-            className="mt-2 text-sm leading-6 text-[#475569] dark:text-muted"
-            expanded={contentExpanded}
-            onToggle={() => setContentExpanded((current) => !current)}
-            text={reply.content}
-          />
-          <MediaBlock
-            alt="Mídia da resposta"
-            mediaType={reply.media_type}
-            mediaUrl={reply.media_url}
-            size="md"
-          />
+          <div
+            className={cn(
+              canCollapseRootTree && "-mx-1 px-1",
+              canCollapseRootTree && rootTreeToggleAreaClassName,
+            )}
+            data-reply-collapse-area={canCollapseRootTree ? "content" : undefined}
+            {...rootTreeToggleAreaProps}
+          >
+            <InlineExpandableText
+              className="mt-2 text-sm leading-6 text-[#475569] dark:text-muted"
+              expanded={contentExpanded}
+              onToggle={() => setContentExpanded((current) => !current)}
+              text={reply.content}
+            />
+          </div>
+          <div
+            data-comment-collapse-ignore="true"
+            onClickCapture={stopReplyTreeCollapsePropagation}
+          >
+            <MediaBlock
+              alt="Mídia da resposta"
+              mediaType={reply.media_type}
+              mediaUrl={reply.media_url}
+              size="md"
+            />
+          </div>
 
           {isProfessional && reply.author.verified && reply.author.whatsapp_url ? (
             <PsychologistWhatsAppRedirectButton
               className="mx-auto mt-2 inline-flex h-11 w-full max-w-[280px] items-center justify-center gap-2 rounded-[14px] border-2 border-success bg-transparent text-success shadow-none transition hover:bg-success hover:text-white sm:max-w-[320px]"
+              data-comment-collapse-ignore="true"
+              stopPropagation
               psychologist={{
                 avatar: reply.author.avatar,
                 crp: reply.author.crp,
@@ -1158,28 +1211,38 @@ const ReplyCard = ({
             </PsychologistWhatsAppRedirectButton>
           ) : null}
 
-          <ReplyVoteBar
-            currentVote={reply.current_user_vote}
-            disabled={votePending}
-            onReply={() => onReply(reply)}
-            onShare={() => onShare(reply)}
-            onToggleSave={() => saveReplyMutation.mutate(reply.saved)}
-            onVote={(value) => onVote(reply.id, value)}
-            reply={reply}
-            savePending={saveReplyMutation.isPending}
-          />
+          <div
+            data-comment-collapse-ignore="true"
+            onClickCapture={stopReplyTreeCollapsePropagation}
+          >
+            <ReplyVoteBar
+              currentVote={reply.current_user_vote}
+              disabled={votePending}
+              onReply={() => onReply(reply)}
+              onShare={() => onShare(reply)}
+              onToggleSave={() => saveReplyMutation.mutate(reply.saved)}
+              onVote={(value) => onVote(reply.id, value)}
+              reply={reply}
+              savePending={saveReplyMutation.isPending}
+            />
+          </div>
 
           {isReplyComposerOpen ? (
-            <ReplyComposer
-              apiError={replyApiError}
-              disabled={replyDisabled}
-              mediaPermission={mediaPermission}
-              onCancelContext={() => onCancelInlineReplyTarget(reply.id)}
-              onSubmit={(values, mediaFile) => onSubmitReply(values, reply.id, mediaFile)}
-              replyTarget={inlineReplyTarget}
-              variant="inline"
-              autoFocus
-            />
+            <div
+              data-comment-collapse-ignore="true"
+              onClickCapture={stopReplyTreeCollapsePropagation}
+            >
+              <ReplyComposer
+                apiError={replyApiError}
+                disabled={replyDisabled}
+                mediaPermission={mediaPermission}
+                onCancelContext={() => onCancelInlineReplyTarget(reply.id)}
+                onSubmit={(values, mediaFile) => onSubmitReply(values, reply.id, mediaFile)}
+                replyTarget={inlineReplyTarget}
+                variant="inline"
+                autoFocus
+              />
+            </div>
           ) : null}
         </div>
       </div>
@@ -1190,6 +1253,7 @@ const ReplyCard = ({
             <button
               aria-expanded="false"
               className="group inline-flex w-fit items-center gap-2 rounded-full py-1 pr-2 text-[11px] font-black text-primary transition hover:text-primary"
+              data-comment-collapse-ignore="true"
               onClick={(event) => {
                 event.stopPropagation();
                 setTreeCollapsed(false);
@@ -1236,7 +1300,9 @@ const ReplyCard = ({
           {!childrenHiddenByCollapse && hiddenRepliesCount > 0 && threadHref ? (
             <Link
               className="group inline-flex w-fit items-center gap-2 rounded-full py-1 pr-2 text-[11px] font-black text-primary no-underline transition hover:text-primary hover:no-underline"
+              data-comment-collapse-ignore="true"
               href={threadHref}
+              onClick={stopReplyTreeCollapsePropagation}
             >
               <span
                 className="h-px w-5 rounded-full bg-[#CBD5E1] transition group-hover:bg-primary/45 dark:bg-border"

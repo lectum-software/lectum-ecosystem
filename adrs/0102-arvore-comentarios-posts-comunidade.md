@@ -43,3 +43,10 @@ A tela interna de post precisa permitir discussões mais profundas sem poluir a 
 - A composicao usa grid de tres colunas: voltar a esquerda, titulo `Respostas` centralizado e coluna espelho a direita, evitando desalinhamento em mobile.
 - O header usa superficie branca translucida com blur, borda inferior sutil e sombra muito leve para criar continuidade com o post sem parecer um bloco plano ou card solto.
 - A decisao nao altera profundidade, ordenacao, destaque de psicologos verificados, payloads ou persistencia; e apenas refinamento visual da navegacao da thread isolada.
+
+## Atualizacao 2026-06-16 - areas seguras para recolher/expandir
+
+- O recolhimento da arvore deixa de estar preso ao container completo do comentario raiz e passa a existir apenas em regioes explicitamente marcadas como areas de toggle.
+- Para raizes de pacientes, avatar, cabecalho/autor/horario e conteudo textual podem recolher/expandir a arvore; para raizes de psicologos, links de avatar/nome/informacoes/selo preservam prioridade de navegacao ao perfil e nao acionam collapse.
+- A linha de acoes (`upvote`, `downvote`, contador, responder, salvar, compartilhar), menu, midia, WhatsApp, composer e botoes de continuacao bloqueiam propagacao para impedir recolhimento acidental.
+- A decisao preserva o estado local independente de cada arvore, a profundidade visual, a ordenacao e a regra do primeiro comentario de psicologo verificado mais votado.

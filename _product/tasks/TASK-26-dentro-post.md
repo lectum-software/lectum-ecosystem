@@ -326,3 +326,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; referencias auditaveis: `_product/proto/Dentro do Post.jpg`, `_product/proto/Feed Comunidade.jpg`, `_product/proto/Dentro da Comunidade.jpg` e captura enviada pelo usuario.
 - ADR atualizado: `adrs/0103-player-video-vertical-unificado.md`.
 - Validacoes executadas: `pnpm --dir frontend check` e Chrome/CDP mobile 390x844 em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, confirmando video expandido em 390x693px, proporcao 9:16, `object-fit: contain` e restauracao ao sair.
+
+## Execucao complementar: areas seguras para recolher arvore de comentarios (2026-06-16)
+
+- Pedido do usuario: corrigir o recolhimento/expansao para que upvote/downvote e demais controles do primeiro comentario nao disparem collapse indevido.
+- O comportamento de collapse foi removido do container completo da raiz; agora apenas areas permitidas recebem o handler: conteudo textual sempre e, para comentarios raiz de pacientes, tambem avatar/cabecalho/autor/horario.
+- Em comentarios raiz de psicologos, avatar, nome, selo Top Mentor e informacoes profissionais continuam priorizando a navegacao para o perfil e bloqueiam propagacao para o collapse.
+- A linha de acoes, menu, midia, botao WhatsApp, composer inline, `Ver X respostas` e `Ver mais respostas` receberam protecao explicita contra propagacao para preservar voto, resposta, salvar, compartilhar, denuncia e navegacao.
+- Nao houve alteracao de backend, Prisma, migrations, packages, endpoints, payloads, ordenacao de comentarios ou regra de destaque de psicologos verificados.
+- ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile autenticado em 390px no detalhe do post demo, confirmando que upvote nao recolhe, clique no texto recolhe com `Ver 2 respostas`, novo upvote nao expande/recolhe e o botao `Ver 2 respostas` expande novamente.
+
