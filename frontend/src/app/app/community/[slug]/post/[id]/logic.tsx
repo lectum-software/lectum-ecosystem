@@ -23,6 +23,7 @@ import {
   type ChangeEvent,
   type MouseEvent,
   type MouseEventHandler,
+  type PointerEvent as ReactPointerEvent,
   type RefObject,
   useEffect,
   useLayoutEffect,
@@ -104,6 +105,7 @@ const DETAIL_INLINE_TEXT_MORE_LABEL = "... ver mais";
 const DETAIL_INLINE_TEXT_LESS_LABEL = "ver menos";
 const COMMENT_GUIDANCE_MESSAGE = "Comente com respeito e empatia, mesmo quando discordar.";
 const POST_DETAIL_MOBILE_QUERY = "(max-width: 639px)";
+const POST_REPLY_CANCEL_DRAG_THRESHOLD = 56;
 
 const replyMediaPermissionLabel =
   "Mídia disponível apenas para psicólogos verificados com Plano Profissional ativo.";
@@ -1093,9 +1095,17 @@ const ReplyComposer = ({
   const form = useReplyComposerForm(replyTarget?.name ?? replyToName);
   const { formProps, hook } = form;
   const [composerActive, setComposerActive] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [draggingToCancel, setDraggingToCancel] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<File | null>(null);
   const localFormRef = useRef<HTMLFormElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const cancelDragRef = useRef<{
+    dragging: boolean;
+    pointerId: number;
+    startX: number;
+    startY: number;
+  } | null>(null);
   const resolvedFormRef = formRef ?? localFormRef;
   const visibleError = useMemo(() => {
     if (apiError) return apiError;
@@ -1116,8 +1126,37 @@ const ReplyComposer = ({
   const isInline = variant === "inline";
   const shouldShowMediaControls = mediaPermission.showControl || Boolean(selectedMedia);
   const shouldShowGuidance = composerActive || hasDraft || Boolean(selectedMedia);
-  const shouldShowReplyContext = !isInline && Boolean(replyTarget);
   const autoFocusTargetId = replyTarget?.id ?? "main";
+  const shouldShowCancelAction = composerActive;
+  const cancelLabel = replyTarget || replyToName ? "Cancelar resposta" : "Cancelar comentário";
+
+  const resetCancelDrag = () => {
+    cancelDragRef.current = null;
+    setDragOffset(0);
+    setDraggingToCancel(false);
+  };
+
+  const cancelComposer = () => {
+    const activeElement = document.activeElement;
+    const inputNode = resolvedFormRef.current?.querySelector<HTMLTextAreaElement>("textarea");
+
+    inputNode?.blur();
+    if (activeElement instanceof HTMLElement && resolvedFormRef.current?.contains(activeElement)) {
+      activeElement.blur();
+    }
+
+    hook.reset({ content: "" });
+    setSelectedMedia(null);
+    setComposerActive(false);
+    resetCancelDrag();
+    onCancelContext?.();
+  };
+
+  const canUseMobileCancelGesture = () =>
+    composerActive &&
+    !disabled &&
+    typeof window !== "undefined" &&
+    window.matchMedia(POST_DETAIL_MOBILE_QUERY).matches;
 
   useEffect(() => {
     if (!autoFocus || !autoFocusTargetId) return;
@@ -1140,10 +1179,66 @@ const ReplyComposer = ({
     setComposerActive(true);
   };
 
+  const handleCancelPointerDown = (event: ReactPointerEvent<HTMLFormElement>) => {
+    if (event.pointerType !== "touch" || !canUseMobileCancelGesture()) return;
+
+    cancelDragRef.current = {
+      dragging: false,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+    };
+  };
+
+  const handleCancelPointerMove = (event: ReactPointerEvent<HTMLFormElement>) => {
+    const gesture = cancelDragRef.current;
+    if (!gesture || gesture.pointerId !== event.pointerId) return;
+
+    const deltaX = event.clientX - gesture.startX;
+    const deltaY = event.clientY - gesture.startY;
+
+    if (!gesture.dragging) {
+      if (deltaY < 10 || Math.abs(deltaY) < Math.abs(deltaX) * 1.2) return;
+
+      gesture.dragging = true;
+      setDraggingToCancel(true);
+
+      if (!event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }
+    }
+
+    if (gesture.dragging) {
+      event.preventDefault();
+      setDragOffset(Math.min(96, Math.max(0, deltaY * 0.72)));
+    }
+  };
+
+  const handleCancelPointerEnd = (event: ReactPointerEvent<HTMLFormElement>) => {
+    const gesture = cancelDragRef.current;
+    if (!gesture || gesture.pointerId !== event.pointerId) return;
+
+    const shouldCancel =
+      gesture.dragging && event.clientY - gesture.startY >= POST_REPLY_CANCEL_DRAG_THRESHOLD;
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    if (shouldCancel) {
+      cancelComposer();
+      return;
+    }
+
+    resetCancelDrag();
+  };
+
   return (
     <form
       className={cn(
         "grid gap-2 border-[#DDE6F0] bg-white/95 p-3 dark:border-border dark:bg-surface/95",
+        composerActive && "max-sm:touch-none",
+        draggingToCancel ? "transition-none" : "transition-transform duration-200 ease-out",
         isInline
           ? "mt-3 rounded-[20px] border shadow-none"
           : "fixed inset-x-0 bottom-0 z-40 border-t pb-[calc(env(safe-area-inset-bottom)+12px)] shadow-[0_-16px_44px_rgba(15,23,42,0.14)] backdrop-blur-md sm:static sm:rounded-[22px] sm:border sm:bg-white sm:pb-3 sm:shadow-[0_10px_24px_rgba(15,23,42,0.05)] sm:backdrop-blur-0 dark:sm:bg-surface",
@@ -1152,11 +1247,14 @@ const ReplyComposer = ({
       onBlur={(event) => {
         const nextTarget = event.relatedTarget;
         if (nextTarget instanceof Node && event.currentTarget.contains(nextTarget)) return;
-        if (!String(hook.getValues("content") ?? "").trim() && !selectedMedia) {
-          setComposerActive(false);
-        }
+        setComposerActive(false);
+        resetCancelDrag();
       }}
       onFocus={() => setComposerActive(true)}
+      onPointerCancel={handleCancelPointerEnd}
+      onPointerDown={handleCancelPointerDown}
+      onPointerMove={handleCancelPointerMove}
+      onPointerUp={handleCancelPointerEnd}
       onSubmit={hook.handleSubmit(async (values) => {
         try {
           await onSubmit(values, selectedMedia);
@@ -1168,6 +1266,7 @@ const ReplyComposer = ({
         }
       })}
       ref={resolvedFormRef}
+      style={dragOffset > 0 ? { transform: `translate3d(0, ${dragOffset}px, 0)` } : undefined}
     >
       {shouldShowGuidance ? (
         <p className="rounded-[14px] bg-[#F8FAFC] px-3 py-2 text-xs font-semibold leading-5 text-[#64748B] dark:bg-surface-muted dark:text-muted">
@@ -1175,23 +1274,22 @@ const ReplyComposer = ({
         </p>
       ) : null}
 
-      {shouldShowReplyContext ? (
-        <div className="flex min-w-0 items-center justify-between gap-3 px-1 text-[11px] font-semibold leading-4 text-[#64748B] dark:text-muted">
-          <span className="min-w-0 truncate">Respondendo {replyTarget?.name}</span>
-          <button
-            className="shrink-0 rounded-full px-2 py-1 text-[11px] font-bold text-[#308CE8] transition hover:bg-primary-soft"
-            onClick={onCancelContext}
-            type="button"
-          >
-            Cancelar
-          </button>
-        </div>
-      ) : null}
-
       <div className="flex items-end gap-2">
         <div className="min-w-0 flex-1">
           <FieldComponent control={hook.control} {...formProps.fields[0]} />
         </div>
+        {shouldShowCancelAction ? (
+          <Button
+            aria-label={cancelLabel}
+            className="h-9 w-9 shrink-0 rounded-full border border-[#E5EAF0] bg-white p-0 text-[#64748B] shadow-none transition hover:border-[#CBD5E1] hover:bg-[#F8FAFC] hover:text-[#182033] dark:border-border dark:bg-surface dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
+            disabled={disabled}
+            onClick={cancelComposer}
+            type="button"
+            variant="ghost"
+          >
+            <X className="h-3.5 w-3.5" aria-hidden="true" />
+          </Button>
+        ) : null}
         <Button
           aria-label="Enviar resposta"
           className="h-11 w-11 shrink-0 rounded-full bg-[#308CE8] p-0 text-white shadow-[0_10px_20px_rgba(48,140,232,0.24)] hover:bg-[#2579CF] disabled:bg-[#EEF5FC] disabled:text-[#94A3B8] disabled:opacity-100 disabled:shadow-none"
@@ -1781,11 +1879,13 @@ export const PostDetailLogic = () => {
                 disabled={createReplyMutation.isPending || uploadReplyMediaMutation.isPending}
                 formRef={composerRef}
                 mediaPermission={mediaPermission}
-                onCancelContext={() => setMobileReplyTarget(null)}
+                onCancelContext={() => {
+                  setReplyError(null);
+                  setMobileReplyTarget(null);
+                }}
                 onSubmit={(values, mediaFile) =>
                   submitReply(values, activeMobileReplyTarget?.id ?? null, mediaFile)
                 }
-                replyToName={post.author.name}
                 replyTarget={activeMobileReplyTarget}
               />
 
@@ -1796,15 +1896,16 @@ export const PostDetailLogic = () => {
                 inlineReplyTargets={visibleInlineReplyTargets}
                 loading={repliesQuery.isLoading || repliesQuery.isPending}
                 mediaPermission={mediaPermission}
-                onCancelInlineReplyTarget={(replyId) =>
+                onCancelInlineReplyTarget={(replyId) => {
+                  setReplyError(null);
                   setDesktopReplyTargets((currentTargets) => {
                     if (!currentTargets[replyId]) return currentTargets;
 
                     const nextTargets = { ...currentTargets };
                     delete nextTargets[replyId];
                     return nextTargets;
-                  })
-                }
+                  });
+                }}
                 onDeleteReply={(reply) =>
                   deleteReplyMutation.mutate({ postId: post.id, replyId: reply.id })
                 }
@@ -2069,7 +2170,10 @@ export const PostReplyThreadLogic = () => {
               disabled={createReplyMutation.isPending || uploadReplyMediaMutation.isPending}
               formRef={composerRef}
               mediaPermission={mediaPermission}
-              onCancelContext={() => setMobileReplyTarget(null)}
+              onCancelContext={() => {
+                setReplyError(null);
+                setMobileReplyTarget(null);
+              }}
               onSubmit={(values, mediaFile) =>
                 submitReply(values, activeMobileReplyTarget?.id ?? rootReply.id, mediaFile)
               }
@@ -2085,15 +2189,16 @@ export const PostReplyThreadLogic = () => {
               loading={false}
               maxInlineDepth={-1}
               mediaPermission={mediaPermission}
-              onCancelInlineReplyTarget={(targetId) =>
+              onCancelInlineReplyTarget={(targetId) => {
+                setReplyError(null);
                 setDesktopReplyTargets((currentTargets) => {
                   if (!currentTargets[targetId]) return currentTargets;
 
                   const nextTargets = { ...currentTargets };
                   delete nextTargets[targetId];
                   return nextTargets;
-                })
-              }
+                });
+              }}
               onDeleteReply={(reply) =>
                 deleteReplyMutation.mutate({ postId: post.id, replyId: reply.id })
               }

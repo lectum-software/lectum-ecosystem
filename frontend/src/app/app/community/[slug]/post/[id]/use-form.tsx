@@ -33,7 +33,7 @@ const buildFields = (replyingToName?: string | null) =>
       field: "textarea",
       className: "gap-0 [&>span:last-child]:hidden",
       label: undefined,
-      placeholder: replyingToName ? `Responda ${replyingToName}` : "Participe da conversa",
+      placeholder: replyingToName ? `Responder ${replyingToName}` : "Comentar no post",
       required: true,
       rows: 1,
       max: 2000,
