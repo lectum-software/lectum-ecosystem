@@ -140,11 +140,11 @@ const getCommunityPostSortPeriodShortLabel = (value: CommunityPostSortPeriod) =>
 
 const communityPostSortChipClassName = (active: boolean) =>
   cn(
-    "inline-flex h-9 min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-full border px-3.5 text-[13px] font-semibold leading-none tracking-[-0.01em] transition active:scale-[0.99]",
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
+    "inline-flex h-8 min-h-8 shrink-0 items-center justify-center gap-1 rounded-full border px-2.5 text-[12px] font-medium leading-none tracking-[-0.005em] transition active:scale-[0.99]",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/15",
     active
-      ? "border-primary/25 bg-primary-soft/80 text-[#1D4ED8] shadow-[0_8px_18px_rgba(47,141,235,0.08)]"
-      : "border-[#E5EAF0] bg-white text-[#64748B] hover:border-primary/30 hover:bg-[#F8FBFF] hover:text-[#1E3A8A] dark:border-border dark:bg-surface dark:text-muted dark:hover:text-primary",
+      ? "border-transparent bg-[#EAF3FF]/65 font-semibold text-[#123B6D] dark:bg-primary/10 dark:text-[#B8D8FF]"
+      : "border-transparent bg-transparent text-[#475569] hover:bg-white/55 hover:text-[#123B6D] dark:text-muted dark:hover:bg-surface-muted/45 dark:hover:text-foreground",
   );
 
 const FEED_SCOPE_OPTIONS: Array<{ label: string; value: CommunityFeedScope }> = [
@@ -1849,19 +1849,19 @@ const CommunityPeriodSortChip = ({
         ref={buttonRef}
         type="button"
       >
-        <Icon className="h-[15px] w-[15px] shrink-0" aria-hidden="true" strokeWidth={2.2} />
+        <Icon className="h-3 w-3 shrink-0" aria-hidden="true" strokeWidth={2.15} />
         <span>{label}</span>
         {showPeriod ? (
           <>
-            <span className="text-primary/45" aria-hidden="true">
+            <span className="text-[#94A3B8]" aria-hidden="true">
               ·
             </span>
-            <span className="font-semibold text-[#1D4ED8]">{periodLabel}</span>
+            <span className="font-semibold text-[#123B6D] dark:text-[#B8D8FF]">{periodLabel}</span>
           </>
         ) : null}
         <ChevronDown
           className={cn(
-            "h-3.5 w-3.5 shrink-0 transition-transform duration-200",
+            "h-3 w-3 shrink-0 opacity-80 transition-transform duration-200",
             open ? "rotate-180" : "",
           )}
           aria-hidden="true"
@@ -1937,7 +1937,7 @@ const CommunityPostSortChips = ({
     aria-label="Ordenação dos posts"
     className="-mx-5 overflow-x-auto px-5 [scrollbar-width:none]"
   >
-    <div className="flex min-w-max gap-2 pb-1">
+    <div className="flex min-w-max gap-1.5 pb-0.5">
       {COMMUNITY_POST_SORTS.map((item) => {
         const Icon = item.icon;
         const active = value === item.value;
@@ -1967,7 +1967,7 @@ const CommunityPostSortChips = ({
             onClick={() => onChange(item.value)}
             type="button"
           >
-            <Icon className="h-[15px] w-[15px] shrink-0" aria-hidden="true" strokeWidth={2.2} />
+            <Icon className="h-3 w-3 shrink-0" aria-hidden="true" strokeWidth={2.15} />
             <span>{item.label}</span>
           </button>
         );
