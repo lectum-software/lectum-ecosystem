@@ -2,6 +2,8 @@ export type {
   AccountDeletePayload,
   AccountEmailPayload,
   AccountGoogleSecurity,
+  AccountOnboardingTipsPayload,
+  AccountOnboardingTipsResponse,
   AccountPasswordPayload,
   AccountSecurityResponse,
   AccountUserResponse,

@@ -5,6 +5,7 @@
   },
   account: {
     security: () => ["account_security"],
+    tips: (userId?: string | null) => ["account_onboarding_tips", userId ?? "anonymous"],
   },
   notification: {
     index: (filters?: unknown) => ["notification_index", filters],

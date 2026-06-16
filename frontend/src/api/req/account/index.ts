@@ -2,6 +2,8 @@ import { callEndpoint } from "@/api/generator";
 import type {
   AccountDeletePayload,
   AccountEmailPayload,
+  AccountOnboardingTipsPayload,
+  AccountOnboardingTipsResponse,
   AccountPasswordPayload,
   AccountSecurityResponse,
   GoogleLinkIntentResponse,
@@ -9,7 +11,12 @@ import type {
 } from "@/api/generator/types";
 import { handleReq } from "@/api/handle";
 
-export type { AccountDeletePayload, AccountEmailPayload, AccountPasswordPayload };
+export type {
+  AccountDeletePayload,
+  AccountEmailPayload,
+  AccountOnboardingTipsPayload,
+  AccountPasswordPayload,
+};
 
 export const security = async () => {
   const handle = callEndpoint({
@@ -17,6 +24,27 @@ export const security = async () => {
   });
 
   return handleReq<AccountSecurityResponse>(handle);
+};
+
+export const onboardingTips = async () => {
+  const handle = callEndpoint({
+    route: "/api/private/account/tips",
+  });
+
+  return handleReq<AccountOnboardingTipsResponse>(handle);
+};
+
+export const updateOnboardingTips = async (body: AccountOnboardingTipsPayload) => {
+  const handle = callEndpoint({
+    route: "/api/private/account/tips",
+    method: "PUT",
+    body,
+  });
+
+  return handleReq<AccountOnboardingTipsResponse>({
+    ...handle,
+    hideError: true,
+  });
 };
 
 export const updateEmail = async (body: AccountEmailPayload) => {

@@ -42,6 +42,7 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
+import { useAccount } from "@/api/callers/account";
 import {
   useCommunityDetail,
   useCommunityFeedPosts,
@@ -81,27 +82,6 @@ import {
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 const PAGE_LIMIT = 12;
-const COMMUNITY_PUBLISH_ONBOARDING_STORAGE_KEY = "lectum:community:publish-onboarding:v1";
-
-const hasSeenCommunityPublishOnboarding = () => {
-  if (typeof window === "undefined") return true;
-
-  try {
-    return window.localStorage.getItem(COMMUNITY_PUBLISH_ONBOARDING_STORAGE_KEY) === "seen";
-  } catch {
-    return true;
-  }
-};
-
-const writeCommunityPublishOnboardingSeen = () => {
-  if (typeof window === "undefined") return;
-
-  try {
-    window.localStorage.setItem(COMMUNITY_PUBLISH_ONBOARDING_STORAGE_KEY, "seen");
-  } catch {
-    return;
-  }
-};
 
 const COMMUNITY_POST_SORTS = [
   { icon: Flame, label: "Em destaque", value: "featured" },
@@ -1998,21 +1978,100 @@ const CommunityPublishOnboarding = ({
 }: {
   variant: CommunityPublishOnboardingVariant;
 }) => {
+  const accountTips = useAccount({
+    enableSecurity: false,
+    enableTips: true,
+  });
+  const accountTipsUserId = accountTips.userId;
+  const [hasLoadedPreference, setHasLoadedPreference] = useState(false);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
+  const hasSyncedPreferenceRef = useRef(false);
+  const hasPersistedSeenRef = useRef(false);
   const placement = COMMUNITY_PUBLISH_ONBOARDING_PLACEMENT[variant];
 
+  const persistSeen = useCallback(() => {
+    if (
+      hasPersistedSeenRef.current ||
+      accountTips.onboardingTips.data?.has_seen_community_post_tip ||
+      accountTips.updateOnboardingTips.isPending
+    ) {
+      return;
+    }
+
+    hasPersistedSeenRef.current = true;
+    accountTips.updateOnboardingTips.mutate(
+      {
+        has_seen_community_post_tip: true,
+      },
+      {
+        onError: () => {
+          hasPersistedSeenRef.current = false;
+        },
+      },
+    );
+  }, [
+    accountTips.onboardingTips.data?.has_seen_community_post_tip,
+    accountTips.updateOnboardingTips,
+  ]);
+
   const dismiss = useCallback(() => {
-    writeCommunityPublishOnboardingSeen();
+    persistSeen();
+    setHasSeenOnboarding(true);
     setIsVisible(false);
-  }, []);
+  }, [persistSeen]);
 
   useEffect(() => {
-    if (hasSeenCommunityPublishOnboarding()) return;
+    hasSyncedPreferenceRef.current = false;
+    hasPersistedSeenRef.current = false;
 
-    const timeout = window.setTimeout(() => setIsVisible(true), 450);
+    const frame = window.requestAnimationFrame(() => {
+      setHasLoadedPreference(false);
+      setHasSeenOnboarding(true);
+      setIsVisible(false);
+    });
+
+    if (!accountTipsUserId) {
+      return () => window.cancelAnimationFrame(frame);
+    }
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [accountTipsUserId]);
+
+  useEffect(() => {
+    if (hasSyncedPreferenceRef.current) return;
+    if (accountTips.onboardingTips.isPending) return;
+
+    hasSyncedPreferenceRef.current = true;
+
+    const frame = window.requestAnimationFrame(() => {
+      if (!accountTips.onboardingTips.isSuccess) {
+        setHasSeenOnboarding(true);
+        setHasLoadedPreference(true);
+        return;
+      }
+
+      setHasSeenOnboarding(Boolean(accountTips.onboardingTips.data.has_seen_community_post_tip));
+      setHasLoadedPreference(true);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [
+    accountTips.onboardingTips.data,
+    accountTips.onboardingTips.isPending,
+    accountTips.onboardingTips.isSuccess,
+  ]);
+
+  useEffect(() => {
+    if (!hasLoadedPreference || hasSeenOnboarding) return;
+
+    const timeout = window.setTimeout(() => {
+      setIsVisible(true);
+      persistSeen();
+    }, 450);
 
     return () => window.clearTimeout(timeout);
-  }, []);
+  }, [hasLoadedPreference, hasSeenOnboarding, persistSeen]);
 
   useEffect(() => {
     if (!isVisible) return;

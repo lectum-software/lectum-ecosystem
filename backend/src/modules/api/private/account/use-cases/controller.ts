@@ -2,8 +2,10 @@ import type { Request, Response } from "express";
 import { error500, send } from "@/helpers/return";
 import {
   destroy as destroyService,
+  onboardingTips as onboardingTipsService,
   security as securityService,
   updateEmail,
+  updateOnboardingTips,
   updatePassword,
 } from "./services";
 
@@ -34,6 +36,30 @@ export const password = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "account_password_update", err);
+  }
+};
+
+export const onboardingTips = async (req: Request, res: Response) => {
+  try {
+    const resolve = await onboardingTipsService(
+      req as unknown as Parameters<typeof onboardingTipsService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "account_onboarding_tips", err);
+  }
+};
+
+export const updateTips = async (req: Request, res: Response) => {
+  try {
+    const resolve = await updateOnboardingTips(
+      req as unknown as Parameters<typeof updateOnboardingTips>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "account_onboarding_tips_update", err);
   }
 };
 

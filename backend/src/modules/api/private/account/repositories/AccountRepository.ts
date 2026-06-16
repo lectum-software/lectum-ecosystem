@@ -33,6 +33,38 @@ export class AccountRepository implements IAccountRepository {
     });
   }
 
+  async findOnboardingTips(userId: string) {
+    return this.repository.findFirst({
+      where: {
+        id: userId,
+        deleted: false,
+      },
+      select: {
+        has_seen_community_post_tip: true,
+        has_seen_discover_psychologists_tip: true,
+      },
+    });
+  }
+
+  async updateOnboardingTips(
+    userId: string,
+    data: {
+      has_seen_community_post_tip?: boolean;
+      has_seen_discover_psychologists_tip?: boolean;
+    },
+  ) {
+    return this.repository.update({
+      where: {
+        id: userId,
+      },
+      data,
+      select: {
+        has_seen_community_post_tip: true,
+        has_seen_discover_psychologists_tip: true,
+      },
+    });
+  }
+
   async deleteTokens(userId: string): Promise<void> {
     await this.userTokenRepository.deleteMany({
       where: {

@@ -10,10 +10,12 @@ import {
 import { code } from "@/utils/code";
 import { compare, encrypt } from "@/utils/crypt";
 import type {
+  AccountOnboardingTipsResponse,
   AccountSecurityResponse,
   IAccountDeleteDTO,
   IAccountDTO,
   IAccountEmailDTO,
+  IAccountOnboardingTipsDTO,
   IAccountPasswordDTO,
 } from "../DTOs/IAccountDTO";
 import { AccountRepository } from "../repositories/AccountRepository";
@@ -83,6 +85,71 @@ export const security = async (data: IAccountDTO) => {
   return {
     status: 200,
     ...msg("show", {}),
+    data: response,
+  };
+};
+
+export const onboardingTips = async (data: IAccountDTO) => {
+  if (!data.auth.id) {
+    return {
+      status: 404,
+      ...error("account_not_found", {}),
+    };
+  }
+
+  const repository = new AccountRepository();
+  const current = await repository.findOnboardingTips(data.auth.id);
+
+  if (!current) {
+    return {
+      status: 404,
+      ...error("account_not_found", {}),
+    };
+  }
+
+  const response: AccountOnboardingTipsResponse = {
+    has_seen_community_post_tip: Boolean(current.has_seen_community_post_tip),
+    has_seen_discover_psychologists_tip: Boolean(current.has_seen_discover_psychologists_tip),
+  };
+
+  return {
+    status: 200,
+    ...msg("show", {}),
+    data: response,
+  };
+};
+
+export const updateOnboardingTips = async (data: IAccountOnboardingTipsDTO) => {
+  const current = await getCurrentUser(data.auth);
+
+  if (!current?.id) {
+    return {
+      status: 404,
+      ...error("account_not_found", {}),
+    };
+  }
+
+  const next = {
+    ...(typeof data.b.has_seen_community_post_tip === "boolean"
+      ? { has_seen_community_post_tip: data.b.has_seen_community_post_tip }
+      : {}),
+    ...(typeof data.b.has_seen_discover_psychologists_tip === "boolean"
+      ? {
+          has_seen_discover_psychologists_tip: data.b.has_seen_discover_psychologists_tip,
+        }
+      : {}),
+  };
+
+  const repository = new AccountRepository();
+  const updated = await repository.updateOnboardingTips(current.id, next);
+  const response: AccountOnboardingTipsResponse = {
+    has_seen_community_post_tip: Boolean(updated.has_seen_community_post_tip),
+    has_seen_discover_psychologists_tip: Boolean(updated.has_seen_discover_psychologists_tip),
+  };
+
+  return {
+    status: 200,
+    ...msg("update", {}),
     data: response,
   };
 };

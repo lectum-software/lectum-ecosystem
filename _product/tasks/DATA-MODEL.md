@@ -54,6 +54,8 @@ Campos relacionados ao `user` existente:
 | Campo | Tipo | Notas |
 |---|---|---|
 | `role` | `String @default("paciente")` | **Já adicionado na TASK-04**. `"paciente" \| "psicologo"`. `@@index([role, deleted])`. |
+| `has_seen_discover_psychologists_tip` | `Boolean @default(false)` | Preferência persistida por usuário para exibir a dica "Descubra novos psicólogos" apenas uma vez. |
+| `has_seen_community_post_tip` | `Boolean @default(false)` | Preferência persistida por usuário para exibir a dica "Publique sua dúvida ou relato" apenas uma vez. |
 | `patient_profile` | relação 1:1 opcional | A criar na TASK-07. |
 | `psychologist_profile` | relação 1:1 opcional | A criar na TASK-09. |
 
@@ -68,6 +70,7 @@ Resumo dos campos relevantes do `user` atual (fonte: `schema.prisma`):
 - `name`, `email @unique`, `avatar?`, `provider @default("manual")`, `password?`, `password_confirm?`.
 - `active @default(true)`, `need_reset @default(false)`.
 - `confirmed @default(false)`, `confirmed_date?`, `confirm_code?`, `confirm_date?` → verificação de e-mail.
+- `has_seen_discover_psychologists_tip @default(false)`, `has_seen_community_post_tip @default(false)` → dicas/onboarding one-shot por usuário.
 - `recovery_code?`, `recovery_date?` → recuperação de senha.
 
 `user_token` (token JWT por device): `user_id`, `token?`, `device_id?`. **Não tem coluna `type`.** Não tente armazenar tokens tipados (`password_reset`/`email_verification`) aqui — recuperação usa `user.recovery_code`, verificação usa `user.confirm_code`.
@@ -559,6 +562,7 @@ Backend privado — **o prefixo determina o guard** (ver "Camadas de autenticaç
 - **Favoritos de psicólogos**: `/api/private/user/favorites` e `/api/private/user/favorites/:id` → só `_auth`, porque o produto permite favorito para qualquer usuário autenticado.
 - **Autogestão do paciente**: `/api/private/patient/*` (onboarding, avaliar; favoritos/follows legados se mantidos) → `requireRole("paciente")`.
 - **Comunidade/posts** (qualquer autenticado): `/api/private/community`, `/api/private/community/feed/posts`, `/api/private/community/:slug`, `/api/private/community/:slug/members`, `/api/private/community/:slug/posts`, `/api/private/posts/:id`, `/api/private/posts/:id/replies`, `/api/private/posts/:id/vote`, `/api/private/posts/:id/save`. Singular `community`/`posts`.
+- **Conta/preferências compartilhadas** (qualquer autenticado): `/api/private/account/*`, incluindo `GET/PUT /api/private/account/tips` para dicas de onboarding por usuário.
 - Cada task deve usar exatamente esses prefixos; divergência exige atualizar este documento.
 
 ## Contrato padrão de API

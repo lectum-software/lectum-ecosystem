@@ -42,6 +42,7 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
+import { useAccount } from "@/api/callers/account";
 import { useDirectoryPsychologists } from "@/api/callers/directory";
 import { usePatient } from "@/api/callers/patient";
 import type {
@@ -90,7 +91,6 @@ const PAGE_LIMIT = 20;
 
 const DEFAULT_NAV_BAR_HEIGHT = 72;
 const PSYCHOLOGISTS_BACKGROUND_VIDEO_SELECTOR = "video[data-psychologists-background='true']";
-const SWIPE_HINT_STORAGE_KEY = "lectum:psychologists:has-seen-discovery-hint:v2";
 const VIDEO_SINGLE_TAP_DELAY_MS = 260;
 
 const isPsychologistsScrollLockTarget = (target: EventTarget | null) => {
@@ -839,6 +839,8 @@ export const PsychologistsLogic = () => {
   const videoSeekPreviewRatioRef = useRef<number | null>(null);
   const swipeHintNudgeTimeoutRef = useRef<number | null>(null);
   const hasShownInitialSwipeHintRef = useRef(false);
+  const hasSyncedSwipeHintPreferenceRef = useRef(false);
+  const hasPersistedSwipeHintSeenRef = useRef(false);
   const hasPlayedSwipeNudgeRef = useRef(false);
   const suppressNextTapRef = useRef(false);
   const didLongPressRef = useRef(false);
@@ -848,6 +850,11 @@ export const PsychologistsLogic = () => {
   const shouldResumeVideoAfterSearchRef = useRef(false);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
   const desktopTouchStartYRef = useRef<number | null>(null);
+  const accountTips = useAccount({
+    enableSecurity: false,
+    enableTips: true,
+  });
+  const accountTipsUserId = accountTips.userId;
   const { favoritePsychologist, unfavoritePsychologist } = usePatient({
     enableProfile: false,
   });
@@ -1024,23 +1031,38 @@ export const PsychologistsLogic = () => {
     setShouldNudgeSwipeCard(false);
   }, []);
 
+  const persistSwipeHintSeen = useCallback(() => {
+    if (
+      hasPersistedSwipeHintSeenRef.current ||
+      accountTips.onboardingTips.data?.has_seen_discover_psychologists_tip ||
+      accountTips.updateOnboardingTips.isPending
+    ) {
+      return;
+    }
+
+    hasPersistedSwipeHintSeenRef.current = true;
+    accountTips.updateOnboardingTips.mutate(
+      {
+        has_seen_discover_psychologists_tip: true,
+      },
+      {
+        onError: () => {
+          hasPersistedSwipeHintSeenRef.current = false;
+        },
+      },
+    );
+  }, [
+    accountTips.onboardingTips.data?.has_seen_discover_psychologists_tip,
+    accountTips.updateOnboardingTips,
+  ]);
+
   const markSwipeHintSeen = useCallback(() => {
     clearSwipeHintTimers();
     setShowSwipeHint(false);
     setShouldNudgeSwipeCard(false);
-
-    setHasSeenSwipeHint((current) => {
-      if (current) return current;
-
-      try {
-        window.sessionStorage.setItem(SWIPE_HINT_STORAGE_KEY, "true");
-      } catch {
-        // SessionStorage pode estar indisponivel em modos restritos; a sessao atual ainda respeita o estado.
-      }
-
-      return true;
-    });
-  }, [clearSwipeHintTimers]);
+    setHasSeenSwipeHint(true);
+    persistSwipeHintSeen();
+  }, [clearSwipeHintTimers, persistSwipeHintSeen]);
 
   const resetVideoInteractionState = useCallback(() => {
     if (tapTimeoutRef.current) {
@@ -1100,25 +1122,51 @@ export const PsychologistsLogic = () => {
   }, [metrics.isDesktopLayout]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    let hasSeenStoredHint = false;
-
-    try {
-      hasSeenStoredHint = window.sessionStorage.getItem(SWIPE_HINT_STORAGE_KEY) === "true";
-    } catch {
-      hasSeenStoredHint = false;
-    }
+    hasSyncedSwipeHintPreferenceRef.current = false;
+    hasPersistedSwipeHintSeenRef.current = false;
+    hasShownInitialSwipeHintRef.current = false;
+    hasPlayedSwipeNudgeRef.current = false;
+    clearSwipeHintTimers();
 
     const frame = window.requestAnimationFrame(() => {
-      setHasSeenSwipeHint(hasSeenStoredHint);
+      setShowSwipeHint(false);
+      setShouldNudgeSwipeCard(false);
+      setHasSeenSwipeHint(true);
+      setHasLoadedSwipeHintPreference(false);
+    });
+
+    if (!accountTipsUserId) {
+      return () => window.cancelAnimationFrame(frame);
+    }
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [accountTipsUserId, clearSwipeHintTimers]);
+
+  useEffect(() => {
+    if (hasSyncedSwipeHintPreferenceRef.current) return;
+    if (accountTips.onboardingTips.isPending) return;
+
+    hasSyncedSwipeHintPreferenceRef.current = true;
+
+    const frame = window.requestAnimationFrame(() => {
+      if (!accountTips.onboardingTips.isSuccess) {
+        setHasSeenSwipeHint(true);
+        setHasLoadedSwipeHintPreference(true);
+        return;
+      }
+
+      setHasSeenSwipeHint(
+        Boolean(accountTips.onboardingTips.data.has_seen_discover_psychologists_tip),
+      );
       setHasLoadedSwipeHintPreference(true);
     });
 
-    return () => {
-      window.cancelAnimationFrame(frame);
-    };
-  }, []);
+    return () => window.cancelAnimationFrame(frame);
+  }, [
+    accountTips.onboardingTips.data,
+    accountTips.onboardingTips.isPending,
+    accountTips.onboardingTips.isSuccess,
+  ]);
 
   useEffect(() => {
     if (
@@ -1134,11 +1182,13 @@ export const PsychologistsLogic = () => {
 
     hasShownInitialSwipeHintRef.current = true;
     showSwipeHintUntilNavigation({ nudge: true });
+    persistSwipeHintSeen();
   }, [
     canSwipeBetweenPsychologists,
     errorMessage,
     hasLoadedSwipeHintPreference,
     hasSeenSwipeHint,
+    persistSwipeHintSeen,
     showInitialLoading,
     showSwipeHintUntilNavigation,
   ]);

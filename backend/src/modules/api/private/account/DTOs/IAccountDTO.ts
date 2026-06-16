@@ -16,6 +16,16 @@ export type AccountDeleteBody = {
   current_password?: string;
 };
 
+export type AccountOnboardingTipsBody = {
+  has_seen_community_post_tip?: boolean;
+  has_seen_discover_psychologists_tip?: boolean;
+};
+
+export type AccountOnboardingTipsResponse = {
+  has_seen_community_post_tip: boolean;
+  has_seen_discover_psychologists_tip: boolean;
+};
+
 export type AccountGoogleSecurity = {
   available: boolean;
   blocked_reason?: string;
@@ -49,4 +59,8 @@ export interface IAccountPasswordDTO extends IAccountDTO {
 
 export interface IAccountDeleteDTO extends IAccountDTO {
   b: AccountDeleteBody;
+}
+
+export interface IAccountOnboardingTipsDTO extends IAccountDTO {
+  b: AccountOnboardingTipsBody;
 }

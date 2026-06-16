@@ -84,3 +84,4 @@ Formato recomendado:
 - [ADR-0087 - Header interno preso ao card no feed desktop de Psicologos](0087-header-interno-card-psicologos-desktop.md) - Accepted
 - [ADR-0096 - Detalhe de post com composer compacto, denúncia e mídia profissional](0096-detalhe-post-composer-denuncia-midia.md) - Accepted
 - [ADR-0108 - Publicações do perfil como posts reais da comunidade](0108-publicacoes-perfil-como-posts-comunidade.md) - Accepted
+- [ADR-0109 - Dicas de onboarding persistidas por usu�rio](0109-dicas-onboarding-persistidas-por-usuario.md) - Accepted

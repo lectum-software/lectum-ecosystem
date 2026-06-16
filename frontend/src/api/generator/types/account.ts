@@ -17,6 +17,13 @@ export type AccountSecurityResponse = {
   provider: string | null;
 };
 
+export type AccountOnboardingTipsResponse = {
+  has_seen_community_post_tip: boolean;
+  has_seen_discover_psychologists_tip: boolean;
+};
+
+export type AccountOnboardingTipsPayload = Partial<AccountOnboardingTipsResponse>;
+
 export type AccountEmailPayload = {
   current_password: string;
   email: string;

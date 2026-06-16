@@ -67,6 +67,22 @@ export const deleteSchema: IValidatorRequest = {
   ],
 };
 
+export const onboardingTipsSchema: IValidatorRequest = {
+  body: [
+    {
+      key: "has_seen_discover_psychologists_tip",
+      method: "boolean",
+      optional: true,
+    },
+    {
+      key: "has_seen_community_post_tip",
+      method: "boolean",
+      optional: true,
+    },
+  ],
+};
+
 export const deleteValidator = validator(deleteSchema);
 export const emailValidator = validator(emailSchema);
+export const onboardingTipsValidator = validator(onboardingTipsSchema);
 export const passwordValidator = validator(passwordSchema);

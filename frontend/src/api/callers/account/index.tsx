@@ -2,8 +2,9 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import keys from "@/api/cache/keys";
-import type { user } from "@/api/generator/types";
+import type { AccountOnboardingTipsResponse, user } from "@/api/generator/types";
 import * as api from "@/api/req/account";
+import { useAppSelector } from "@/hooks/redux";
 
 export interface UseAccountProps {
   callbacks?: {
@@ -14,6 +15,10 @@ export interface UseAccountProps {
     deleteAccount?: {
       onError?: (error: unknown) => void;
       onSuccess?: (data: boolean) => void;
+    };
+    updateOnboardingTips?: {
+      onError?: (error: unknown) => void;
+      onSuccess?: (data: AccountOnboardingTipsResponse) => void;
     };
     unlinkGoogle?: {
       onError?: (error: unknown) => void;
@@ -29,10 +34,17 @@ export interface UseAccountProps {
     };
   };
   enableSecurity?: boolean;
+  enableTips?: boolean;
 }
 
-export const useAccount = ({ callbacks, enableSecurity = true }: UseAccountProps = {}) => {
+export const useAccount = ({
+  callbacks,
+  enableSecurity = true,
+  enableTips = false,
+}: UseAccountProps = {}) => {
   const queryClient = useQueryClient();
+  const userId = useAppSelector((state) => state.user?.id);
+  const tipsQueryKey = keys.account.tips(userId);
 
   const invalidateAccount = () => {
     queryClient.invalidateQueries({ queryKey: keys.account.security() });
@@ -43,6 +55,14 @@ export const useAccount = ({ callbacks, enableSecurity = true }: UseAccountProps
     queryKey: keys.account.security(),
     queryFn: () => api.security(),
     enabled: enableSecurity,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
+
+  const onboardingTips = useQuery({
+    queryKey: tipsQueryKey,
+    queryFn: () => api.onboardingTips(),
+    enabled: enableTips && Boolean(userId),
     refetchOnWindowFocus: false,
     retry: false,
   });
@@ -63,6 +83,15 @@ export const useAccount = ({ callbacks, enableSecurity = true }: UseAccountProps
       callbacks?.updatePassword?.onSuccess?.(data);
     },
     onError: callbacks?.updatePassword?.onError,
+  });
+
+  const updateOnboardingTips = useMutation({
+    mutationFn: (body: api.AccountOnboardingTipsPayload) => api.updateOnboardingTips(body),
+    onSuccess: (data) => {
+      queryClient.setQueryData(tipsQueryKey, data);
+      callbacks?.updateOnboardingTips?.onSuccess?.(data);
+    },
+    onError: callbacks?.updateOnboardingTips?.onError,
   });
 
   const createGoogleLinkIntent = useMutation({
@@ -89,9 +118,12 @@ export const useAccount = ({ callbacks, enableSecurity = true }: UseAccountProps
   return {
     createGoogleLinkIntent,
     deleteAccount,
+    onboardingTips,
     security,
     unlinkGoogle,
     updateEmail,
+    updateOnboardingTips,
     updatePassword,
+    userId,
   };
 };

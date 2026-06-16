@@ -172,3 +172,11 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - O prefixo publico `/public/files/patient/avatar/*` passou a ser permitido para renderizacao via `next/image`, e a store Redux do usuario e atualizada apos upload/remocao.
 - A pendencia anterior de upload do avatar de paciente fica resolvida quando o ambiente possuir as credenciais R2 ja usadas pelo fluxo de midia existente.
 - ADR criado: `adrs/0099-upload-avatar-paciente.md`.
+
+## Ajuste complementar em 2026-06-16 - dicas de onboarding por usuário
+
+- Corrigida a exibição das dicas "Descubra novos psicólogos" e "Publique sua dúvida ou relato" para depender de preferência persistida por usuário, e não de estado global do navegador.
+- Adicionados campos `has_seen_discover_psychologists_tip` e `has_seen_community_post_tip` em `user`, com `GET/PUT /api/private/account/tips` sob `_auth`.
+- O frontend consulta a preferência antes de renderizar cada dica e marca a dica como vista quando ela é exibida ou dispensada, mantendo as dicas independentes.
+- `sessionStorage`/`localStorage` deixaram de ser fonte de verdade dessas dicas; o cache React Query é escopado pelo `user.id`.
+- ADR criado: `adrs/0109-dicas-onboarding-persistidas-por-usuario.md`.

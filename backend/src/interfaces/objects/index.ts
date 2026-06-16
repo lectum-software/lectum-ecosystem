@@ -454,6 +454,8 @@ export interface user {
   need_reset?: boolean | null;
   confirmed?: boolean | null;
   confirmed_date?: Date | null;
+  has_seen_discover_psychologists_tip?: boolean | null;
+  has_seen_community_post_tip?: boolean | null;
   recovery_code?: string | null;
   recovery_date?: Date | null;
   confirm_code?: string | null;

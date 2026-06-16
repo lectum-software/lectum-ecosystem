@@ -48,6 +48,8 @@ export type user = {
   role?: "paciente" | "psicologo" | null;
   active?: boolean;
   confirmed?: boolean;
+  has_seen_discover_psychologists_tip?: boolean;
+  has_seen_community_post_tip?: boolean;
   provider?: string | null;
   user_tokens?: user_token[];
   patient_profile?: patient_profile | null;
