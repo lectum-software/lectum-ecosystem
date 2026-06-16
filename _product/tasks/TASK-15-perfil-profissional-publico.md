@@ -530,3 +530,23 @@ Validacoes executadas:
 - `pnpm check`
 - Chrome headless/CDP mobile 390px em `/app/psychologist/demo-psychologist-camila-rocha` confirmou a previa da aba Geral com `Respondido em`.
 - Chrome headless/CDP mobile 390px em `/app/psychologist/demo-psychologist-camila-rocha?tab=publicacoes` confirmou cards da aba Publicacoes com `Respondido em` e `Postado em` conforme `contribution_type`.
+
+## Registro de ajuste complementar em 2026-06-16 - navegacao de abas do perfil
+
+- Pedido do usuario: adicionar seta de voltar nas abas completas de `Publicacoes` e `Avaliacoes`, voltando para a aba `Geral`, e remover a barra fixa desktop `Geral/Publicacoes/Avaliacoes`.
+- A aba `Publicacoes` agora usa cabecalho premium com seta a esquerda, titulo e chip numerico lado a lado; a seta chama a mesma navegacao por query params e remove `tab`, voltando para `Geral`.
+- A aba `Avaliacoes` passou a usar a mesma estrutura visual e espacamento de `Publicacoes`, com seta de retorno e chip de quantidade baseado em `summary.rating_count`.
+- A navegacao sticky desktop do perfil foi removida; no desktop permanecem os links diretos `?tab=publicacoes` e `?tab=avaliacoes` e a navegacao contextual por seta nas abas.
+- O comportamento mobile existente foi preservado, mantendo o sticky mobile atual e adicionando apenas a seta de retorno nos cabecalhos das abas completas.
+- Nao houve alteracao de backend, banco, Prisma, contratos, endpoints, packages, favoritos, avaliacoes ou publicacoes.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a referencia auditavel permanece a familia visual local de perfil e a validacao no browser local com dados reais.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write -- 'src/app/app/psychologist/[id]/logic.tsx'`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome headless/CDP mobile 390px em `/app/psychologist/demo-psychologist-camila-rocha?tab=publicacoes` confirmou seta visivel no cabecalho e retorno para `/app/psychologist/demo-psychologist-camila-rocha`.
+- Chrome headless/CDP mobile 390px em `/app/psychologist/demo-psychologist-camila-rocha?tab=avaliacoes` confirmou seta visivel no cabecalho e chip de avaliacoes.
+- Chrome headless/CDP desktop 1440px em `/app/psychologist/demo-psychologist-camila-rocha?tab=publicacoes` confirmou ausencia de `data-profile-sticky-navigation` e de navegacao segmentada fixa visivel, mantendo o cabecalho com seta e chip.

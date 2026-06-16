@@ -57,3 +57,19 @@ Validacao complementar:
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - Chrome headless local em 390px e 1440px na rota `http://localhost:3000/app/psychologist/demo-psychologist-camila-rocha`, confirmando video e botao alinhados/centralizados com a mesma largura util.
+
+## Atualizacao 2026-06-16 - navegacao contextual nas abas completas
+
+- As abas completas `Publicacoes` e `Avaliacoes` passam a ter cabecalho proprio com seta de retorno para `Geral`, titulo e chip numerico na mesma linha.
+- A seta usa a mesma navegacao por query params do perfil: ao voltar para `Geral`, o parametro `tab` e as paginacoes de aba sao removidos, preservando links diretos como `?tab=publicacoes` e `?tab=avaliacoes`.
+- A barra sticky desktop `Geral/Publicacoes/Avaliacoes` foi removida para reduzir persistencia visual no desktop; a navegacao desktop permanece contextual dentro das abas e pelos pontos de entrada da aba Geral.
+- O sticky mobile existente foi preservado, mantendo o comportamento atual no mobile e adicionando apenas o retorno contextual nas abas completas.
+- A alteracao e somente frontend e nao muda backend, banco, Prisma, contratos, ordenacao, avaliacoes, publicacoes, favoritos, WhatsApp ou packages.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome headless/CDP mobile 390px confirmou seta em `Publicacoes`, retorno para `Geral`, seta em `Avaliacoes` e chip de avaliacoes.
+- Chrome headless/CDP desktop 1440px confirmou ausencia de `data-profile-sticky-navigation` e de navegacao segmentada fixa visivel.

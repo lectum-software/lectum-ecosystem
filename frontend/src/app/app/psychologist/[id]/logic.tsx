@@ -369,13 +369,62 @@ const ProfileSectionCard = ({
   </section>
 );
 
-const PublicationCountChip = ({ total }: { total: number }) => (
+const ProfileCountChip = ({
+  pluralLabel,
+  singularLabel,
+  total,
+}: {
+  pluralLabel: string;
+  singularLabel: string;
+  total: number;
+}) => (
   <span
     className="inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full border border-[#D7E8FA] bg-[#F4FAFF] px-2 text-[11px] font-extrabold leading-none text-[#247BD1] shadow-[0_4px_10px_rgba(47,141,235,0.035)]"
-    title={`${total} ${total === 1 ? "publicação" : "publicações"}`}
+    title={`${total} ${total === 1 ? singularLabel : pluralLabel}`}
   >
     {total.toLocaleString("pt-BR")}
   </span>
+);
+
+const PublicationCountChip = ({ total }: { total: number }) => (
+  <ProfileCountChip pluralLabel="publicações" singularLabel="publicação" total={total} />
+);
+
+const ProfileTabHeaderCard = ({
+  count,
+  countLabelPlural,
+  countLabelSingular,
+  onBack,
+  title,
+}: {
+  count: number;
+  countLabelPlural: string;
+  countLabelSingular: string;
+  onBack: () => void;
+  title: string;
+}) => (
+  <div className={cn(PROFILE_CARD_SURFACE, "p-4 sm:p-5")}>
+    <div className="flex min-w-0 items-center gap-2.5">
+      <button
+        aria-label="Voltar para Geral"
+        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#DDE7F2] bg-white text-[#334155] shadow-[0_6px_14px_rgba(15,23,42,0.045)] transition hover:-translate-x-0.5 hover:border-[#C8DDF3] hover:bg-[#F8FBFF] hover:text-[#173F72] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F8DEB]/35 dark:border-border dark:bg-surface dark:text-foreground"
+        onClick={onBack}
+        type="button"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+      </button>
+      <div className="flex min-w-0 items-center gap-2">
+        <h2 className="truncate text-[15px] font-extrabold tracking-[-0.02em] text-[#182033]">
+          {title}
+        </h2>
+        <ProfileCountChip
+          pluralLabel={countLabelPlural}
+          singularLabel={countLabelSingular}
+          total={count}
+        />
+      </div>
+    </div>
+  </div>
 );
 
 const ProfileChipList = ({
@@ -684,118 +733,6 @@ const ProfileHero = ({
         </div>
       </div>
     </header>
-  );
-};
-
-const ProfileTabs = ({
-  activeTab,
-  onTabChange,
-  profile,
-}: {
-  activeTab: ProfileTab;
-  onTabChange: (tab: ProfileTab) => void;
-  profile: DirectoryPsychologistProfile;
-}) => {
-  const stickyName = getHonorificName(profile) || profile.name || "Profissional";
-  const stickyContainerRef = useRef<HTMLDivElement>(null);
-  const [isStuck, setIsStuck] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const updateStickyState = () => {
-      const top =
-        stickyContainerRef.current?.getBoundingClientRect().top ?? Number.POSITIVE_INFINITY;
-      const nextIsStuck = top <= 1;
-
-      setIsStuck((current) => (current === nextIsStuck ? current : nextIsStuck));
-    };
-
-    updateStickyState();
-    window.addEventListener("scroll", updateStickyState, { passive: true });
-    window.addEventListener("resize", updateStickyState);
-
-    return () => {
-      window.removeEventListener("scroll", updateStickyState);
-      window.removeEventListener("resize", updateStickyState);
-    };
-  }, []);
-
-  return (
-    <div
-      className={cn(
-        "sticky z-30 hidden border-[#E5EAF0] border-b backdrop-blur transition-[background-color,border-color,box-shadow,transform,opacity] duration-300 ease-out supports-[backdrop-filter]:bg-[#F5F7FA]/88 dark:border-border lg:block",
-        isStuck
-          ? "bg-[#F5F7FA]/95 shadow-[0_10px_26px_rgba(15,23,42,0.06)] dark:bg-background/90"
-          : "bg-[#F5F7FA] shadow-none dark:bg-background",
-      )}
-      data-profile-sticky-navigation="true"
-      ref={stickyContainerRef}
-      style={{ top: "env(safe-area-inset-top, 0px)" }}
-    >
-      <div
-        className={cn(
-          "mx-auto grid w-full max-w-[430px] px-3 transition-all duration-300 sm:px-4 lg:max-w-[760px]",
-          isStuck && "relative pt-2",
-        )}
-      >
-        {isStuck ? (
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent lg:hidden"
-          />
-        ) : null}
-        {isStuck ? (
-          <div className="flex min-w-0 items-center gap-1.5 pb-1" data-profile-sticky-name="true">
-            <span className="min-w-0 truncate text-[13px] font-extrabold leading-[1.25] tracking-[-0.01em] text-[#1F2937] dark:text-foreground">
-              {stickyName}
-            </span>
-            {profile.verified ? (
-              <VerifiedBadgeIcon
-                aria-label="Perfil verificado"
-                className="h-[14px] w-[14px] shrink-0"
-              />
-            ) : null}
-          </div>
-        ) : null}
-
-        <nav
-          aria-label="Seções do perfil profissional"
-          className="grid grid-cols-3"
-          data-profile-segmented-navigation="true"
-        >
-          {tabs.map((tab) => {
-            const active = tab.value === activeTab;
-
-            return (
-              <button
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "group relative inline-flex h-12 items-center justify-center px-1 text-[13.5px] tracking-[-0.015em] transition-colors duration-200",
-                  active
-                    ? "font-bold text-[#173F72] dark:text-[#93C5FD]"
-                    : "font-semibold text-[#64748B] hover:text-[#1E3A8A] dark:text-muted dark:hover:text-[#BFDBFE]",
-                )}
-                key={tab.value}
-                onClick={() => onTabChange(tab.value)}
-                type="button"
-              >
-                <span className="relative inline-flex h-full items-center">
-                  {tab.label}
-                  <span
-                    className={cn(
-                      "absolute right-0 -bottom-px left-0 h-0.5 rounded-full bg-[#173F72] transition-all duration-300 dark:bg-[#93C5FD]",
-                      active ? "scale-x-100 opacity-100" : "scale-x-0 opacity-0",
-                    )}
-                    aria-hidden="true"
-                  />
-                </span>
-              </button>
-            );
-          })}
-        </nav>
-      </div>
-    </div>
   );
 };
 
@@ -1400,8 +1337,9 @@ const PostsTab = ({
   isError,
   isFetching,
   isLoading,
-  onShare,
+  onBackToOverview,
   onPageChange,
+  onShare,
   pages,
   posts,
   total,
@@ -1412,6 +1350,7 @@ const PostsTab = ({
   isError: boolean;
   isFetching: boolean;
   isLoading: boolean;
+  onBackToOverview: () => void;
   onShare: (post: PostListPost) => void;
   onPageChange: (page: number) => void;
   pages: number;
@@ -1420,14 +1359,13 @@ const PostsTab = ({
 }) => {
   return (
     <div className="grid gap-3.5 bg-[#F5F7FA] px-3 pb-1 pt-3.5 dark:bg-background sm:px-4 sm:pt-4">
-      <div className={cn(PROFILE_CARD_SURFACE, "p-4 sm:p-5")}>
-        <div className="flex items-center gap-2">
-          <p className="text-[15px] font-extrabold tracking-[-0.02em] text-[#182033]">
-            Publicações
-          </p>
-          <PublicationCountChip total={total} />
-        </div>
-      </div>
+      <ProfileTabHeaderCard
+        count={total}
+        countLabelPlural="publicações"
+        countLabelSingular="publicação"
+        onBack={onBackToOverview}
+        title="Publicações"
+      />
 
       {isError ? (
         <InlineAlert title="Não foi possível carregar publicações" variant="error">
@@ -1580,6 +1518,7 @@ const ReviewsTab = ({
   isError,
   isFetching,
   isLoading,
+  onBackToOverview,
   onPageChange,
   pages,
   reviews,
@@ -1590,6 +1529,7 @@ const ReviewsTab = ({
   isError: boolean;
   isFetching: boolean;
   isLoading: boolean;
+  onBackToOverview: () => void;
   onPageChange: (page: number) => void;
   pages: number;
   reviews: DirectoryPsychologistProfileReview[];
@@ -1597,9 +1537,13 @@ const ReviewsTab = ({
 }) => {
   return (
     <div className="grid gap-3.5 bg-[#F5F7FA] px-3 pb-1 pt-3.5 dark:bg-background sm:px-4 sm:pt-4">
-      <h2 className="px-1 text-[15px] font-extrabold tracking-[-0.02em] text-[#182033]">
-        Avaliações
-      </h2>
+      <ProfileTabHeaderCard
+        count={summary.rating_count}
+        countLabelPlural="avaliações"
+        countLabelSingular="avaliação"
+        onBack={onBackToOverview}
+        title="Avaliações"
+      />
       <ReviewSummaryCard summary={summary} />
 
       {isError ? (
@@ -1889,7 +1833,6 @@ export const PsychologistProfileLogic = () => {
                 />
 
                 <div className="grid gap-0" id="profile-content">
-                  <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} profile={profile} />
                   {activeTab === "geral" ? (
                     <AboutTab
                       canInteractPosts={canInteractWithPosts}
@@ -1918,8 +1861,9 @@ export const PsychologistProfileLogic = () => {
                       isError={posts.isError}
                       isFetching={posts.isFetching}
                       isLoading={posts.isLoading}
-                      onShare={sharePost}
+                      onBackToOverview={() => setActiveTab("geral")}
                       onPageChange={setPostsPage}
+                      onShare={sharePost}
                       pages={posts.data?.pages ?? 0}
                       posts={posts.data?.data ?? []}
                       total={posts.data?.count ?? 0}
@@ -1932,6 +1876,7 @@ export const PsychologistProfileLogic = () => {
                       isError={reviews.isError}
                       isFetching={reviews.isFetching}
                       isLoading={reviews.isLoading}
+                      onBackToOverview={() => setActiveTab("geral")}
                       onPageChange={setReviewsPage}
                       pages={reviews.data?.pages ?? 0}
                       reviews={reviews.data?.data ?? []}
