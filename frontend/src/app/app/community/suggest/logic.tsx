@@ -1,13 +1,12 @@
-﻿"use client";
+"use client";
 
-import { ArrowLeft, Loader2, Send, UsersRound } from "lucide-react";
-import Link from "next/link";
+import { ArrowLeft, Loader2, Send } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useSuggestCommunity } from "@/api/callers/community";
 import { components } from "@/components/controllers";
 import { InlineAlert } from "@/components/ui/inline-alert";
-import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { toSuggestCommunityPayload, useSuggestCommunityForm } from "./use-form";
@@ -21,6 +20,8 @@ type ApiErrorData = {
 type ApiError = Error & {
   data?: ApiErrorData;
 };
+
+const COMMUNITY_REQUEST_ILLUSTRATION_SRC = "/images/community-request-illustration.svg";
 
 const resolveSuggestError = (error: unknown) => {
   const apiError = error as ApiError;
@@ -44,19 +45,6 @@ const resolveSuggestError = (error: unknown) => {
 
   return rawMessage || "Não foi possível enviar sua sugestão agora.";
 };
-
-const illustrationPeople = [
-  "acolhimento",
-  "escuta",
-  "apoio",
-  "troca",
-  "grupo",
-  "cuidado",
-  "seguro",
-  "presenca",
-  "dialogo",
-  "comunidade",
-];
 
 export const SuggestCommunityLogic = () => {
   const router = useRouter();
@@ -84,46 +72,52 @@ export const SuggestCommunityLogic = () => {
   });
 
   return (
-    <PrivateTemplate showMobileNavigation={false} desktopSidebarDefaultCollapsed>
-      <section className="mx-auto grid min-h-[calc(100vh-3rem)] w-full max-w-[430px] gap-5 pb-8 sm:max-w-xl lg:max-w-2xl">
-        <header className="sticky top-0 z-20 -mx-5 border-b border-border bg-background/95 px-5 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/85">
-          <div className="flex h-12 items-center gap-3">
-            <Link
+    <PrivateTemplate
+      contentClassName="py-0 sm:py-0"
+      showMobileNavigation={false}
+      desktopSidebarDefaultCollapsed
+    >
+      <section className="mx-auto grid min-h-screen w-full max-w-[430px] content-start gap-5 pb-8 sm:max-w-xl lg:max-w-2xl">
+        <header className="sticky top-0 z-20 -mx-5 border-b border-border bg-background/95 px-5 backdrop-blur supports-[backdrop-filter]:bg-background/85">
+          <div className="grid h-[58px] grid-cols-[44px_1fr_44px] items-center">
+            <button
               aria-label="Voltar para comunidades"
-              className="grid h-10 w-10 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary"
-              href="/app/community"
+              className="grid h-10 w-10 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+              onClick={() => router.back()}
+              type="button"
             >
               <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-            </Link>
-            <h1 className="text-xl font-black text-foreground">Solicitar Nova Comunidade</h1>
+            </button>
+            <h1 className="truncate text-center text-base font-black text-foreground sm:text-lg">
+              Solicitar Nova Comunidade
+            </h1>
+            <span aria-hidden="true" />
           </div>
         </header>
 
-        <section className="grid gap-5 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
-          <div className="relative grid min-h-[194px] place-items-center overflow-hidden rounded-[var(--lectum-card-radius)] bg-primary-soft">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary-soft via-surface-muted to-background" />
-            <div className="relative flex flex-wrap justify-center gap-2 px-8">
-              {illustrationPeople.map((person, index) => (
-                <span
-                  className={cn(
-                    "grid h-12 w-12 place-items-center rounded-full border border-background/70 bg-surface text-primary shadow-[var(--lectum-shadow-soft)]",
-                    index % 3 === 0 && "mt-8",
-                    index % 4 === 0 && "-mt-4",
-                  )}
-                  key={person}
-                >
-                  <UsersRound className="h-5 w-5" aria-hidden="true" />
-                </span>
-              ))}
-            </div>
+        <section className="grid gap-5 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)] sm:p-6">
+          <div className="grid justify-items-center rounded-[24px] border border-border/70 bg-surface-muted/60 px-3 py-4 sm:px-6">
+            <Image
+              alt="Grupo diverso sentado em círculo representando apoio e comunidade"
+              className="h-auto w-full max-w-[358px] object-contain"
+              height={192}
+              priority
+              src={COMMUNITY_REQUEST_ILLUSTRATION_SRC}
+              width={358}
+            />
           </div>
 
-          <p className="px-2 text-center text-base leading-7 text-foreground">
+          <p className="mx-auto max-w-[32rem] text-center text-[0.95rem] leading-6 text-foreground/80 sm:text-base sm:leading-7">
             Sua voz é fundamental. Ajude-nos a criar espaços que acolham suas necessidades e de
             outras pessoas.
           </p>
 
-          <form className="grid gap-4" id="suggest-community-form" noValidate onSubmit={onSubmit}>
+          <form
+            className="grid gap-4 pt-1"
+            id="suggest-community-form"
+            noValidate
+            onSubmit={onSubmit}
+          >
             <div className="grid gap-0.5">
               {formProps.fields.map((field) => {
                 const Component = components[field.field];
