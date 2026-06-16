@@ -6,6 +6,7 @@ import type {
   IPostCreateReplyDTO,
   IPostMineDTO,
   IPostRepliesDTO,
+  IPostReplyDeleteDTO,
   IPostReplySaveDTO,
   IPostReplyThreadDTO,
   IPostReportDTO,
@@ -23,6 +24,7 @@ import type {
   PostMutationResult,
   PostProfessionalReplyDTO,
   PostRepliesResponse,
+  PostReplyDeleteResponse,
   PostReplyDTO,
   PostReportResponse,
   PostSaveResponse,
@@ -551,6 +553,7 @@ const findPublishedPost = (id: string) => {
       community_id: true,
       upvotes_count: true,
       downvotes_count: true,
+      replies_count: true,
       saves_count: true,
     },
   });
@@ -1599,6 +1602,104 @@ export class PostRepository implements IPostRepository {
         reply_id: reply.id,
         saved: false,
         saves_count: null,
+      };
+    });
+
+    return {
+      kind: "ok",
+      data: response,
+    };
+  }
+
+  async deleteReply(
+    data: IPostReplyDeleteDTO,
+  ): Promise<PostMutationResult<PostReplyDeleteResponse>> {
+    const post = await findPublishedPost(data.p.id);
+    if (!post) return { kind: "not_found" };
+
+    const reply = await prisma.post_reply.findFirst({
+      where: {
+        id: data.p.replyId,
+        post_id: post.id,
+        deleted: false,
+      },
+      select: {
+        id: true,
+        author_id: true,
+      },
+    });
+
+    if (!reply) return { kind: "invalid_target" };
+    if (reply.author_id !== data.auth.id) return { kind: "forbidden" };
+
+    const replies = await prisma.post_reply.findMany({
+      where: {
+        post_id: post.id,
+        deleted: false,
+      },
+      select: {
+        id: true,
+        parent_reply_id: true,
+      },
+    });
+    const childrenByParent = new Map<string, string[]>();
+
+    for (const item of replies) {
+      if (!item.parent_reply_id) continue;
+      const children = childrenByParent.get(item.parent_reply_id) ?? [];
+      children.push(item.id);
+      childrenByParent.set(item.parent_reply_id, children);
+    }
+
+    const replyIds = new Set<string>();
+    const stack = [reply.id];
+
+    while (stack.length > 0) {
+      const currentId = stack.pop();
+      if (!currentId || replyIds.has(currentId)) continue;
+
+      replyIds.add(currentId);
+      for (const childId of childrenByParent.get(currentId) ?? []) {
+        stack.push(childId);
+      }
+    }
+
+    const ids = [...replyIds];
+    const now = new Date();
+    const nextRepliesCount = Math.max(0, post.replies_count - ids.length);
+
+    const response = await prisma.$transaction(async (transaction) => {
+      await transaction.post_reply.updateMany({
+        where: {
+          id: {
+            in: ids,
+          },
+          post_id: post.id,
+          deleted: false,
+        },
+        data: {
+          deleted: true,
+          deletedAt: now,
+        },
+      });
+
+      const updatedPost = await transaction.community_post.update({
+        where: {
+          id: post.id,
+        },
+        data: {
+          replies_count: nextRepliesCount,
+        },
+        select: {
+          replies_count: true,
+        },
+      });
+
+      return {
+        post_id: post.id,
+        reply_ids: ids,
+        deleted_count: ids.length,
+        replies_count: updatedPost.replies_count,
       };
     });
 

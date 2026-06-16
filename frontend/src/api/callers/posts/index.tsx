@@ -8,6 +8,7 @@ import type {
   PostRepliesQuery,
   PostRepliesResponse,
   PostReply,
+  PostReplyDeleteResponse,
   PostReportPayload,
   PostReportResponse,
   PostSaveResponse,
@@ -205,6 +206,28 @@ export const useReportReply = (callbacks?: {
     mutationFn: ({ body, id, replyId }: { body: PostReportPayload; id: string; replyId: string }) =>
       api.reportReply(id, replyId, body),
     onSuccess: (data) => {
+      callbacks?.onSuccess?.(data);
+    },
+    onError: callbacks?.onError,
+  });
+};
+
+export const useDeleteReply = (callbacks?: {
+  onSuccess?: (data: PostReplyDeleteResponse) => void;
+  onError?: (error: unknown) => void;
+}) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ postId, replyId }: { postId: string; replyId: string }) =>
+      api.deleteReply(postId, replyId),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: keys.posts.detail(variables.postId) });
+      queryClient.invalidateQueries({ queryKey: ["posts", variables.postId, "replies"] });
+      queryClient.invalidateQueries({ queryKey: ["posts", variables.postId, "reply-thread"] });
+      queryClient.invalidateQueries({ queryKey: keys.posts.mine() });
+      queryClient.invalidateQueries({ queryKey: keys.posts.saved() });
+      queryClient.invalidateQueries({ queryKey: keys.community.root() });
       callbacks?.onSuccess?.(data);
     },
     onError: callbacks?.onError,

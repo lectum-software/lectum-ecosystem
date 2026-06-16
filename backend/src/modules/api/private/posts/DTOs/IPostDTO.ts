@@ -187,13 +187,21 @@ export type PostReportResponse = {
   created_at: Date;
 };
 
+export type PostReplyDeleteResponse = {
+  post_id: string;
+  reply_ids: string[];
+  deleted_count: number;
+  replies_count: number;
+};
+
 export type PostMutationResult<T> =
   | { kind: "ok"; data: T }
   | { kind: "not_found" }
   | { kind: "invalid_parent" }
   | { kind: "invalid_media" }
   | { kind: "media_not_allowed" }
-  | { kind: "invalid_target" };
+  | { kind: "invalid_target" }
+  | { kind: "forbidden" };
 
 export type IPostShowDTO = {
   p: PostParams;
@@ -251,6 +259,11 @@ export type IPostSaveDTO = {
 };
 
 export type IPostReplySaveDTO = {
+  p: PostReplyParams;
+  auth: user;
+};
+
+export type IPostReplyDeleteDTO = {
   p: PostReplyParams;
   auth: user;
 };

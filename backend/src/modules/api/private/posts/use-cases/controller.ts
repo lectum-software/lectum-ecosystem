@@ -3,6 +3,7 @@ import { error500, send } from "@/helpers/return";
 import {
   authorizeReplyMediaUpload as authorizeReplyMediaUploadService,
   createReply as createReplyService,
+  deleteReply as deleteReplyService,
   mine as mineService,
   replies as repliesService,
   replyThread as replyThreadService,
@@ -177,5 +178,17 @@ export const unsaveReply = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "post_reply_unsave", err);
+  }
+};
+
+export const deleteReply = async (req: Request, res: Response) => {
+  try {
+    const resolve = await deleteReplyService(
+      req as unknown as Parameters<typeof deleteReplyService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_reply_delete", err);
   }
 };

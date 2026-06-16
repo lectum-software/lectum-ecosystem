@@ -5,6 +5,7 @@ import type {
   PostRepliesQuery,
   PostRepliesResponse,
   PostReply,
+  PostReplyDeleteResponse,
   PostReplyMediaUploadResponse,
   PostReplyThreadResponse,
   PostReportPayload,
@@ -185,5 +186,18 @@ export const unsaveReply = async (id: string, replyId: string) => {
   return handleReq<PostSaveResponse>({
     ...handle,
     hideError: true,
+  });
+};
+
+export const deleteReply = async (id: string, replyId: string) => {
+  const handle = callEndpoint({
+    route: "/api/private/posts/:id/replies/:replyId",
+    method: "DELETE",
+    params: { id, replyId },
+  });
+
+  return handleReq<PostReplyDeleteResponse>({
+    ...handle,
+    showSuccess: true,
   });
 };

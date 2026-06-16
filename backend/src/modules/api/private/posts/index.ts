@@ -3,6 +3,7 @@ import multer from "@/config/multer";
 import {
   authorizeReplyMediaUpload,
   createReply,
+  deleteReply,
   mine,
   replies,
   replyThread,
@@ -56,6 +57,7 @@ routes.post("/:id/replies", createReplyValidator, createReply);
 routes.post("/:id/replies/:replyId/save", replySaveValidator, saveReply);
 routes.delete("/:id/replies/:replyId/save", replySaveValidator, unsaveReply);
 routes.post("/:id/replies/:replyId/report", replyReportValidator, report);
+routes.delete("/:id/replies/:replyId", replySaveValidator, deleteReply);
 routes.post("/:id/vote", voteValidator, vote);
 routes.post("/:id/save", saveValidator, save);
 routes.delete("/:id/save", saveValidator, unsave);

@@ -12,6 +12,7 @@ import {
   MoreVertical,
   Paperclip,
   Send,
+  Trash2,
   UserX,
   X,
 } from "lucide-react";
@@ -31,6 +32,7 @@ import {
 } from "react";
 import {
   useCreatePostReply,
+  useDeleteReply,
   usePostDetail,
   usePostReplies,
   usePostReplyThread,
@@ -356,6 +358,14 @@ const getInitials = (name: string) => {
 
 const isVerifiedProfessionalReply = (reply: PostReply) =>
   reply.author.role === "psicologo" && reply.author.verified;
+
+const formatReplyAuthorMeta = (author: PostReply["author"], createdAt: string) => {
+  const relativeTime = formatRelativeTime(createdAt);
+
+  if (author.role !== "psicologo") return relativeTime;
+
+  return `${author.type_label} • ${relativeTime}`;
+};
 
 const mentorBadgePosition = (badge?: string | null) => {
   const match = badge?.match(/#(\d+)/);
@@ -771,10 +781,13 @@ const ReplyVoteBar = ({
 );
 
 const ReplyCard = ({
+  currentUserId,
+  deleteReplyPending,
   depth = 0,
   inlineReplyTargets,
   mediaPermission,
   onCancelInlineReplyTarget,
+  onDeleteReply,
   onReply,
   onReportReply,
   onShare,
@@ -789,10 +802,13 @@ const ReplyCard = ({
   threadHrefBase,
   votePending,
 }: {
+  currentUserId?: string | null;
+  deleteReplyPending?: boolean;
   depth?: number;
   inlineReplyTargets: ReplyTargetMap;
   mediaPermission: ReplyMediaPermission;
   onCancelInlineReplyTarget: (replyId: string) => void;
+  onDeleteReply: (reply: PostReply) => void;
   onReply: (reply: PostReply) => void;
   onReportReply: (reply: PostReply) => void;
   onShare: (reply: PostReply) => void;
@@ -813,6 +829,7 @@ const ReplyCard = ({
 }) => {
   const isProfessional = reply.author.role === "psicologo";
   const isVerifiedProfessional = isProfessional && reply.author.verified;
+  const isOwnReply = Boolean(currentUserId && reply.author.id === currentUserId);
   const highlightedProfessionalThread = professionalThread || isVerifiedProfessional;
   const saveReplyMutation = useSaveReply(postId, reply.id);
   const psychologistProfileHref = isProfessional ? `/app/psychologist/${reply.author.id}` : null;
@@ -875,11 +892,11 @@ const ReplyCard = ({
                 className="w-fit cursor-pointer text-[11px] font-semibold text-muted no-underline hover:text-muted hover:no-underline"
                 href={psychologistProfileHref}
               >
-                {reply.author.type_label} • {formatRelativeTime(reply.created_at)}
+                {formatReplyAuthorMeta(reply.author, reply.created_at)}
               </Link>
             ) : (
               <p className="text-[11px] font-semibold text-muted">
-                {reply.author.type_label} • {formatRelativeTime(reply.created_at)}
+                {formatReplyAuthorMeta(reply.author, reply.created_at)}
               </p>
             )}
           </div>
@@ -901,18 +918,34 @@ const ReplyCard = ({
               className="absolute top-9 right-0 z-20 w-56 overflow-hidden rounded-2xl border border-[#E5EAF0] bg-white p-1.5 text-sm shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:border-border dark:bg-surface"
               role="menu"
             >
-              <button
-                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-[#475569] transition hover:bg-[#F8FAFC] hover:text-[#182033] dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
-                onClick={() => {
-                  setMenuOpen(false);
-                  onReportReply(reply);
-                }}
-                role="menuitem"
-                type="button"
-              >
-                <Flag className="h-4 w-4" aria-hidden="true" />
-                Denunciar comentário
-              </button>
+              {isOwnReply ? (
+                <button
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-danger transition hover:bg-danger/10 hover:text-danger disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={deleteReplyPending}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onDeleteReply(reply);
+                  }}
+                  role="menuitem"
+                  type="button"
+                >
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  Excluir comentário
+                </button>
+              ) : (
+                <button
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-[#475569] transition hover:bg-[#F8FAFC] hover:text-[#182033] dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onReportReply(reply);
+                  }}
+                  role="menuitem"
+                  type="button"
+                >
+                  <Flag className="h-4 w-4" aria-hidden="true" />
+                  Denunciar comentário
+                </button>
+              )}
             </div>
           ) : null}
         </div>
@@ -982,12 +1015,15 @@ const ReplyCard = ({
         >
           {visibleChildren.map((child) => (
             <ReplyCard
+              currentUserId={currentUserId}
+              deleteReplyPending={deleteReplyPending}
               depth={depth + 1}
               inlineReplyTargets={inlineReplyTargets}
               key={child.id}
               maxInlineDepth={maxInlineDepth}
               mediaPermission={mediaPermission}
               onCancelInlineReplyTarget={onCancelInlineReplyTarget}
+              onDeleteReply={onDeleteReply}
               onReply={onReply}
               onReportReply={onReportReply}
               onShare={onShare}
@@ -1373,12 +1409,15 @@ const Pagination = ({
 };
 
 const RepliesList = ({
+  currentUserId,
+  deleteReplyPending,
   errorMessage,
   inlineReplyTargets,
   loading,
   maxInlineDepth = 1,
   mediaPermission,
   onCancelInlineReplyTarget,
+  onDeleteReply,
   onReply,
   onReportReply,
   onShare,
@@ -1391,12 +1430,15 @@ const RepliesList = ({
   threadHrefBase,
   votePending,
 }: {
+  currentUserId?: string | null;
+  deleteReplyPending?: boolean;
   errorMessage?: string | null;
   inlineReplyTargets: ReplyTargetMap;
   loading?: boolean;
   maxInlineDepth?: number;
   mediaPermission: ReplyMediaPermission;
   onCancelInlineReplyTarget: (replyId: string) => void;
+  onDeleteReply: (reply: PostReply) => void;
   onReply: (reply: PostReply) => void;
   onReportReply: (reply: PostReply) => void;
   onShare: (reply: PostReply) => void;
@@ -1446,11 +1488,14 @@ const RepliesList = ({
         <div className="grid gap-4 border-[#DCEBFF] border-l-2 pl-3">
           {orderedReplies.map((reply) => (
             <ReplyCard
+              currentUserId={currentUserId}
+              deleteReplyPending={deleteReplyPending}
               inlineReplyTargets={inlineReplyTargets}
               key={reply.id}
               maxInlineDepth={maxInlineDepth}
               mediaPermission={mediaPermission}
               onCancelInlineReplyTarget={onCancelInlineReplyTarget}
+              onDeleteReply={onDeleteReply}
               onReply={onReply}
               onReportReply={onReportReply}
               onShare={onShare}
@@ -1475,10 +1520,12 @@ export const PostDetailLogic = () => {
   const slug = typeof params.slug === "string" ? params.slug : "";
   const postId = typeof params.id === "string" ? params.id : "";
   const isMobile = useIsPostDetailMobile();
+  const currentUserId = useAppSelector((state) => state.user?.id ?? null);
   const [page, setPage] = useState(1);
   const [mobileReplyTarget, setMobileReplyTarget] = useState<ReplyTarget>(null);
   const [desktopReplyTargets, setDesktopReplyTargets] = useState<ReplyTargetMap>({});
   const [replyError, setReplyError] = useState<string | null>(null);
+  const [deleteReplyError, setDeleteReplyError] = useState<string | null>(null);
   const [reportError, setReportError] = useState<string | null>(null);
   const [reportTarget, setReportTarget] = useState<ReportTarget>(null);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
@@ -1512,6 +1559,10 @@ export const PostDetailLogic = () => {
       setReportTarget(null);
     },
     onError: (error) => setReportError(resolveReplyError(error)),
+  });
+  const deleteReplyMutation = useDeleteReply({
+    onSuccess: () => setDeleteReplyError(null),
+    onError: (error) => setDeleteReplyError(resolveReplyError(error)),
   });
   const post = postQuery.data?.post;
   const replies = repliesQuery.data?.data ?? [];
@@ -1703,6 +1754,12 @@ export const PostDetailLogic = () => {
                 </InlineAlert>
               ) : null}
 
+              {deleteReplyError ? (
+                <InlineAlert title="Comentário não excluído" variant="error">
+                  {deleteReplyError}
+                </InlineAlert>
+              ) : null}
+
               <ReplyComposer
                 apiError={!isMobile && hasDesktopReplyTargets ? null : replyError}
                 autoFocus={Boolean(activeMobileReplyTarget)}
@@ -1718,6 +1775,8 @@ export const PostDetailLogic = () => {
               />
 
               <RepliesList
+                currentUserId={currentUserId}
+                deleteReplyPending={deleteReplyMutation.isPending}
                 errorMessage={repliesError}
                 inlineReplyTargets={visibleInlineReplyTargets}
                 loading={repliesQuery.isLoading || repliesQuery.isPending}
@@ -1730,6 +1789,9 @@ export const PostDetailLogic = () => {
                     delete nextTargets[replyId];
                     return nextTargets;
                   })
+                }
+                onDeleteReply={(reply) =>
+                  deleteReplyMutation.mutate({ postId: post.id, replyId: reply.id })
                 }
                 onReply={handleReplyTarget}
                 onReportReply={(reply) => {
@@ -1799,9 +1861,11 @@ export const PostReplyThreadLogic = () => {
   const postId = typeof params.id === "string" ? params.id : "";
   const replyId = typeof params.replyId === "string" ? params.replyId : "";
   const isMobile = useIsPostDetailMobile();
+  const currentUserId = useAppSelector((state) => state.user?.id ?? null);
   const [mobileReplyTarget, setMobileReplyTarget] = useState<ReplyTarget>(null);
   const [desktopReplyTargets, setDesktopReplyTargets] = useState<ReplyTargetMap>({});
   const [replyError, setReplyError] = useState<string | null>(null);
+  const [deleteReplyError, setDeleteReplyError] = useState<string | null>(null);
   const [reportError, setReportError] = useState<string | null>(null);
   const [reportTarget, setReportTarget] = useState<ReportTarget>(null);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
@@ -1823,6 +1887,10 @@ export const PostReplyThreadLogic = () => {
       setReportTarget(null);
     },
     onError: (error) => setReportError(resolveReplyError(error)),
+  });
+  const deleteReplyMutation = useDeleteReply({
+    onSuccess: () => setDeleteReplyError(null),
+    onError: (error) => setDeleteReplyError(resolveReplyError(error)),
   });
   const post = postQuery.data?.post;
   const rootReply = threadQuery.data?.reply;
@@ -1974,6 +2042,12 @@ export const PostReplyThreadLogic = () => {
               </InlineAlert>
             ) : null}
 
+            {deleteReplyError ? (
+              <InlineAlert title="Comentário não excluído" variant="error">
+                {deleteReplyError}
+              </InlineAlert>
+            ) : null}
+
             <ReplyComposer
               apiError={isMobile ? replyError : null}
               autoFocus={Boolean(activeMobileReplyTarget)}
@@ -1989,6 +2063,8 @@ export const PostReplyThreadLogic = () => {
             />
 
             <RepliesList
+              currentUserId={currentUserId}
+              deleteReplyPending={deleteReplyMutation.isPending}
               errorMessage={null}
               inlineReplyTargets={visibleInlineReplyTargets}
               loading={false}
@@ -2002,6 +2078,9 @@ export const PostReplyThreadLogic = () => {
                   delete nextTargets[targetId];
                   return nextTargets;
                 })
+              }
+              onDeleteReply={(reply) =>
+                deleteReplyMutation.mutate({ postId: post.id, replyId: reply.id })
               }
               onReply={handleReplyTarget}
               onReportReply={(reply) => {

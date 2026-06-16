@@ -2,6 +2,7 @@ import type {
   IPostCreateReplyDTO,
   IPostMineDTO,
   IPostRepliesDTO,
+  IPostReplyDeleteDTO,
   IPostReplySaveDTO,
   IPostReplyThreadDTO,
   IPostReportDTO,
@@ -13,6 +14,7 @@ import type {
   PostListResponse,
   PostMutationResult,
   PostRepliesResponse,
+  PostReplyDeleteResponse,
   PostReplyDTO,
   PostReportResponse,
   PostSaveResponse,
@@ -34,4 +36,5 @@ export interface IPostRepository {
   unsave(data: IPostSaveDTO): Promise<PostMutationResult<PostSaveResponse>>;
   saveReply(data: IPostReplySaveDTO): Promise<PostMutationResult<PostSaveResponse>>;
   unsaveReply(data: IPostReplySaveDTO): Promise<PostMutationResult<PostSaveResponse>>;
+  deleteReply(data: IPostReplyDeleteDTO): Promise<PostMutationResult<PostReplyDeleteResponse>>;
 }

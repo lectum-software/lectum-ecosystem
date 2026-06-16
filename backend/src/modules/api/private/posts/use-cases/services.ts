@@ -8,6 +8,7 @@ import type {
   IPostCreateReplyDTO,
   IPostMineDTO,
   IPostRepliesDTO,
+  IPostReplyDeleteDTO,
   IPostReplySaveDTO,
   IPostReplyThreadDTO,
   IPostReportDTO,
@@ -68,6 +69,11 @@ const invalidReportReason = () => ({
   ...error("post_report_reason_invalid", {}),
 });
 
+const replyDeleteForbidden = () => ({
+  status: 403,
+  ...error("post_reply_delete_forbidden", {}),
+});
+
 const publicFileUrl = (key: string) => {
   const rawBase = String(process.env.BASE || "").trim();
   let base = rawBase.replace(/\/$/, "");
@@ -102,6 +108,7 @@ const resolveMutationResult = <T>(
   if (result.kind === "invalid_target") return invalidTarget();
   if (result.kind === "invalid_media") return invalidMedia();
   if (result.kind === "media_not_allowed") return mediaNotAllowed();
+  if (result.kind === "forbidden") return replyDeleteForbidden();
 
   return {
     status: okStatus,
@@ -369,6 +376,16 @@ export const unsaveReply = async (data: IPostReplySaveDTO) => {
   const res = await repository.unsaveReply(data);
 
   return resolveMutationResult(res, 200, "post_reply_unsaved");
+};
+
+export const deleteReply = async (data: IPostReplyDeleteDTO) => {
+  const unauthorized = ensureCommunityActor(data);
+  if (unauthorized) return unauthorized;
+
+  const repository = new PostRepository();
+  const res = await repository.deleteReply(data);
+
+  return resolveMutationResult(res, 200, "post_reply_deleted");
 };
 
 export default show;

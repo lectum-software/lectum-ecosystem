@@ -141,6 +141,13 @@ export type PostReportResponse = {
   created_at: string;
 };
 
+export type PostReplyDeleteResponse = {
+  post_id: string;
+  reply_ids: string[];
+  deleted_count: number;
+  replies_count: number;
+};
+
 export type PostVotePayload = {
   value: 1 | -1;
   replyId?: string;
