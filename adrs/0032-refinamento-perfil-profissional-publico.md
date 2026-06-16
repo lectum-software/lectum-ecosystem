@@ -264,3 +264,24 @@ Validações executadas:
 - `pnpm check`
 - HTTP local 200 em `http://localhost:3002/app/psychologist/demo-psychologist-camila-rocha`.
 - Chrome headless/CDP em 390px confirmando renderização com API local, header mobile fixo após scroll (`top=0`, `opacity=1`, aba ativa `Geral`), seções principais presentes e chips `Ver todas` discretos.
+
+## Ajuste complementar em 2026-06-16 - sticky complementar, menu fixo e cards de atendimento
+
+O perfil público do psicólogo recebeu refinamento visual adicional para corrigir conflito percebido entre o novo sticky mobile e a navegação fixa da aplicação, além de ajustar a hierarquia dos cards internos.
+
+Decisões:
+
+- A rota dinâmica `/app/psychologist/:id` passa a ser reconhecida pela navegação mobile do shell privado, mantendo o menu fixo original disponível durante toda a navegação e destacando `Psicólogos` como origem contextual.
+- O sticky mobile de perfil permanece tardio e complementar: continua aparecendo apenas após scroll, mas usa z-index menor que as camadas principais de navegação para não substituir visualmente o menu fixo.
+- O CTA mobile de WhatsApp deixa de ocupar o rodapé absoluto e passa a usar a variável global de espaçamento da navegação (`--lectum-mobile-nav-aware-fab-bottom`), ficando acima do menu fixo sem sobreposição.
+- O card informativo `Quer falar com o profissional?` foi elevado para a mesma família visual das seções do perfil, com padding maior, título mais legível e texto descritivo em escala compatível.
+- Os cards de Atendimento inverteram a hierarquia visual para `informação -> categoria -> ícone`, removendo fundo circular e sombra azul dos ícones. O ícone agora é apenas apoio visual discreto à direita.
+
+Consequências:
+
+- Mobile preserva o menu fixo da aplicação e adiciona o sticky como camada contextual, sem trocar a navegação principal.
+- O CTA de WhatsApp permanece presente, mas não bloqueia a navegação inferior.
+- Atendimento, Formação, Avaliações, Especialidades, Publicações e o card de contato passam a comunicar uma família visual mais consistente.
+- Não houve alteração de dados, contratos, backend, Prisma, persistência, packages, favoritos, regras de avaliação ou fluxo de WhatsApp.
+
+Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, HTTP 200 local no perfil demo e Chrome headless/CDP em 390px e 1440px validando menu fixo, sticky, CTA, contato e cards de Atendimento.

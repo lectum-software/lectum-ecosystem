@@ -436,3 +436,24 @@ Valida��es executadas:
 - `pnpm check`
 - HTTP local `200` em `http://localhost:3002/app/psychologist/demo-psychologist-camila-rocha`.
 - Chrome headless/CDP em 390px validando dados reais da API local, se��es `Sobre`, `Especialidades`, `Avalia��es`, `Atendimento`, `Forma��o & T�tulos`, `Publica��es`, header mobile fixo ap�s scroll com `top=0`, aba ativa `Geral`, sem estado `Perfil indispon�vel`, e chips `Ver todas` com texto azul e fonte inline de 13px.
+
+## Registro de ajuste complementar em 2026-06-16 - sticky complementar, contato e atendimento
+
+- Ajuste visual solicitado para `/app/psychologist/[id]`, mantendo dados reais, rotas, endpoints, favoritos, contato/WhatsApp e regras de avaliações/publicações sem alteração.
+- O menu fixo mobile original do shell voltou a permanecer disponível na rota de perfil do psicólogo; a rota dinâmica `/app/psychologist/:id` agora participa da navegação mobile com `Psicólogos` como item ativo.
+- O header sticky mobile com nome, selo e abas continua aparecendo apenas após rolagem, mas foi reposicionado como camada complementar, com z-index abaixo do menu fixo da aplicação para evitar substituição visual.
+- O CTA fixo de WhatsApp no mobile passou a respeitar a variável `--lectum-mobile-nav-aware-fab-bottom`, ficando acima do menu fixo sem encobrir a navegação.
+- O card `Quer falar com o profissional?` abaixo do vídeo ganhou padding, escala tipográfica e superfície alinhada à família visual dos demais cards do perfil.
+- Os cards de `Atendimento` foram refinados para priorizar informação, depois categoria e por último ícone: valor em destaque, rótulo abaixo e ícone discreto à direita, sem fundo circular/sombra azul competindo com o texto.
+- Não houve alteração de backend, banco, Prisma, contratos, packages ou persistência.
+- Builder/Quick Copy não está exposto como ferramenta direta neste ambiente; a referência auditável permanece nos protótipos locais de perfil (`_product/proto/Perfil Profissional - Sobre.jpg`, `Publicações.jpg`, `Avaliações.jpg`) e na solicitação do usuário.
+
+Validações executadas:
+
+- `pnpm --dir frontend exec biome check --write -- 'src/app/app/psychologist/[id]/logic.tsx' 'src/templates/private/index.tsx'`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local `200` em `http://localhost:3000/app/psychologist/demo-psychologist-camila-rocha`.
+- Chrome headless/CDP mobile 390px confirmando: menu fixo mobile visível antes e após scroll, sticky mobile com `opacity=1` após rolagem, CTA WhatsApp acima do menu, card de contato com padding/fonte ampliados, ícones de Atendimento sem fundo/sombra e valor antes do rótulo.
+- Chrome headless/CDP desktop 1440px confirmando menu lateral desktop preservado, sticky desktop ativo, card de contato renderizado e bottom nav oculto em `lg`.

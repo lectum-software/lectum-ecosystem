@@ -320,23 +320,23 @@ const ProfileInfoCard = ({
   value: string;
 }) => (
   <article className={cn(PROFILE_SUBTLE_SURFACE, compact ? "px-3.5 py-3" : "px-4 py-3.5")}>
-    <div className="flex min-h-0 items-start gap-3">
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[14px] bg-[#EFF6FF] text-[#247BD1] shadow-[0_7px_16px_rgba(47,141,235,0.10)]">
-        <Icon className="h-[16px] w-[16px]" aria-hidden="true" />
-      </span>
-      <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase leading-none tracking-[0.055em] text-[#64748B]">
-          {label}
-        </p>
+    <div className="flex min-h-0 items-start justify-between gap-3">
+      <div className="min-w-0 flex-1">
         <p
           className={cn(
-            "mt-1 break-words text-[12.75px] font-semibold leading-[1.45] text-[#182033]",
+            "break-words text-[13.25px] font-bold leading-[1.42] tracking-[-0.01em] text-[#182033]",
             compact ? "line-clamp-3" : "line-clamp-4",
           )}
         >
           {value}
         </p>
+        <p className="mt-1.5 text-[9.75px] font-semibold uppercase leading-none tracking-[0.06em] text-[#64748B]">
+          {label}
+        </p>
       </div>
+      <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full text-[#247BD1]/75">
+        <Icon className="h-[15px] w-[15px]" aria-hidden="true" />
+      </span>
     </div>
   </article>
 );
@@ -836,7 +836,7 @@ const ProfileMobileStickyHeader = ({
     <div
       aria-hidden={!visible}
       className={cn(
-        "fixed inset-x-0 top-0 z-50 border-[#E5EAF0] border-b bg-white/92 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-[transform,opacity] duration-300 ease-out supports-[backdrop-filter]:bg-white/82 dark:border-border dark:bg-background/86 lg:hidden",
+        "fixed inset-x-0 top-0 z-30 border-[#E5EAF0] border-b bg-white/92 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-[transform,opacity] duration-300 ease-out supports-[backdrop-filter]:bg-white/82 dark:border-border dark:bg-background/86 lg:hidden",
         visible ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-full opacity-0",
       )}
       data-profile-mobile-sticky-header="true"
@@ -908,9 +908,16 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
         />
       </article>
 
-      <article className="box-border rounded-[14px] border border-[#DBEAFE] bg-[#F8FBFF] px-3 py-2.5 text-[9px] text-[#0F172A]">
-        <p className="font-semibold">Quer falar com o profissional?</p>
-        <p className="mt-1 leading-[1.35] text-[#1E293B]">
+      <article
+        className={cn(
+          PROFILE_SUBTLE_SURFACE,
+          "box-border rounded-[20px] bg-white px-4 py-4 text-[#0F172A] sm:px-5 sm:py-[18px]",
+        )}
+      >
+        <p className="text-[15px] font-extrabold leading-tight tracking-[-0.02em] text-[#182033] sm:text-[16px]">
+          Quer falar com o profissional?
+        </p>
+        <p className="mt-2 text-[13px] font-medium leading-[1.55] text-[#475569] sm:text-[13.5px]">
           O atendimento e os valores são alinhados diretamente no WhatsApp.
           <br />
           Toque no botão verde para iniciar a conversa.
@@ -1682,8 +1689,8 @@ const WhatsAppCta = ({ profile }: { profile: DirectoryPsychologistProfile }) => 
   return (
     <>
       <div
-        className="fixed inset-x-0 bottom-0 z-30 bg-white px-3 pb-2 pt-2 shadow-[0_-6px_18px_rgba(15,23,42,0.12)] sm:px-4 lg:hidden"
-        style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+        className="fixed inset-x-3 z-30 rounded-[18px] border border-[#DDE7F2] bg-white/96 p-2 shadow-[0_-6px_18px_rgba(15,23,42,0.12)] backdrop-blur sm:inset-x-4 lg:hidden"
+        style={{ bottom: "var(--lectum-mobile-nav-aware-fab-bottom)" }}
       >
         <div className="mx-auto w-full max-w-[430px]">
           <PsychologistWhatsAppRedirectButton
@@ -1872,7 +1879,6 @@ export const PsychologistProfileLogic = () => {
       allowAnonymous
       contentClassName="!pt-0 bg-[#F5F7FA] dark:bg-background sm:!pt-0"
       desktopSidebarDefaultCollapsed
-      showMobileNavigation={false}
       showNavigation
     >
       <div className="-mx-5 overflow-x-hidden bg-[#F5F7FA] dark:bg-background">

@@ -242,17 +242,30 @@ const isCommunityMainMobileNavigationPath = (pathname: string) => {
   );
 };
 
+const isPsychologistProfileMobileNavigationPath = (pathname: string) => {
+  const segments = normalizePathname(pathname).split("/").filter(Boolean);
+
+  return segments.length === 3 && segments[0] === "app" && segments[1] === "psychologist";
+};
+
 const shouldShowMobileNavigationForPath = (pathname: string) => {
   const normalizedPathname = normalizePathname(pathname);
 
   return (
     MOBILE_NAVIGATION_ACTIVE_HREF_BY_PATH.has(normalizedPathname) ||
-    isCommunityMainMobileNavigationPath(normalizedPathname)
+    isCommunityMainMobileNavigationPath(normalizedPathname) ||
+    isPsychologistProfileMobileNavigationPath(normalizedPathname)
   );
 };
 
 const getMobileNavigationActiveHref = (pathname: string) => {
-  return MOBILE_NAVIGATION_ACTIVE_HREF_BY_PATH.get(normalizePathname(pathname)) ?? null;
+  const normalizedPathname = normalizePathname(pathname);
+
+  if (isPsychologistProfileMobileNavigationPath(normalizedPathname)) {
+    return "/app/psychologists";
+  }
+
+  return MOBILE_NAVIGATION_ACTIVE_HREF_BY_PATH.get(normalizedPathname) ?? null;
 };
 
 const DESKTOP_SIDEBAR_STORAGE_KEY_PREFIX = "lectum.desktopSidebar";
