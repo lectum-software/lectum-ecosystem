@@ -590,6 +590,11 @@ const ProfileHero = ({
               {getPsychologistTitle(profile.gender)}
               <span aria-hidden="true">•</span>
               <span>{formattedCrp}</span>
+              <span aria-hidden="true">•</span>
+              <span className="inline-flex items-center gap-1 font-extrabold text-[#D97706]">
+                <Star className="h-3.5 w-3.5 fill-[#D97706] text-[#D97706]" aria-hidden="true" />
+                {formatHeroRating(profile.rating_avg)}
+              </span>
             </p>
 
             {profile.available_today ? (
@@ -604,24 +609,15 @@ const ProfileHero = ({
                 Disponível hoje
               </span>
             ) : null}
-
-            <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] font-medium text-[#94A3B8]">
-              <span className="inline-flex items-center gap-1 font-bold text-[#B45309]">
-                <Star className="h-3.5 w-3.5 fill-[#FBBF24] text-[#FBBF24]" aria-hidden="true" />
-                {formatHeroRating(profile.rating_avg)}
-              </span>
-              {experienceLabel ? (
-                <>
-                  <span aria-hidden="true" className="text-[#CBD5E1]">
-                    •
-                  </span>
-                  <span className="text-[12px] font-medium text-[#94A3B8]">{experienceLabel}</span>
-                </>
-              ) : null}
-            </p>
           </div>
 
           <ExpandableAboutText containerClassName="mt-0.5 max-w-2xl" text={headline} />
+
+          {experienceLabel ? (
+            <p className="text-[12.5px] font-semibold leading-5 text-[#64748B] dark:text-muted">
+              {experienceLabel}
+            </p>
+          ) : null}
 
           {benefitTags.length > 0 ? (
             <div className="mt-1.5 flex flex-wrap gap-2" data-profile-benefit-tags="true">
