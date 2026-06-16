@@ -70,3 +70,35 @@ A tela de Favoritos precisava melhorar a hierarquia visual do header e fazer os 
 - `pnpm --dir frontend build`
 - `pnpm check`
 - HTTP local em `/app/favorites` respondeu `200`.
+
+## Complemento 2026-06-16 - cards de favoritos inspirados em sugestões do Instagram
+
+### Contexto
+
+O pedido de produto solicitou refazer completamente os cards de `/app/favorites` com referência visual na seção “Sugestões para você” do Instagram, priorizando foto, proximidade humana e conversão para WhatsApp.
+
+A referência externa anexada pelo usuário foi `c:/Users/tulio/Downloads/WhatsApp Image 2026-06-16 at 09.37.03.jpeg`. A referência visual ativa do produto continua `_product/proto/Favoritos.jpg`; Builder/Quick Copy não está exposto como ferramenta direta nesta sessão.
+
+### Decisão
+
+- Manter dados reais, filtros, paginação, remoção de favorito, navegação para perfil e fluxo seguro de WhatsApp existentes.
+- Redesenhar apenas o card de favorito como card vertical branco, com borda/sombra suaves, largura fixa e `snap` para carrossel horizontal.
+- Tornar o avatar circular o elemento principal do card, usando apenas `avatar` real do psicólogo e fallback de iniciais quando não houver imagem.
+- Exibir coração preenchido ativo no canto superior direito como controle de remoção, sem usar o “X” da referência.
+- Usar o campo real `available_today` para renderizar a bolinha verde pulsante sobre o avatar; não foi criado estado online artificial.
+- Reduzir as informações do card para nome + selo verificado, tipo profissional e CTA “Chamar no WhatsApp”.
+- Remover do card especialidades, abordagens, área, experiência, avaliação, tags comerciais e demais metadados.
+- Transformar o CTA em botão preenchido verde WhatsApp, com ícone à esquerda, largura total, hover suave e press state discreto.
+
+### Consequências
+
+- A tela favorece descoberta, confiança e ação de contato com menor poluição visual.
+- O carrossel horizontal aproxima a interação da referência de Instagram sem alterar contratos de API.
+- A ausência de estado online real fica protegida pela decisão de usar apenas disponibilidade persistida (`available_today`) para o indicador verde.
+
+### Validação
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local em `/app/favorites` respondeu `200`.

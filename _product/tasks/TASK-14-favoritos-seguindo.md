@@ -241,3 +241,18 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Escopo: sem mudancas de backend, endpoints, schema Prisma, dados carregados ou logica de filtros/favoritos.
 - ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP local 200 em `/app/favorites`.
+
+## Complemento 2026-06-16 - cards estilo sugestões do Instagram
+
+- Pedido do usuário: refazer os cards de `/app/favorites` inspirando-se na seção `Sugestões para você` do Instagram, com visual premium Lectum e foco em conversão para WhatsApp.
+- Referências visuais consultadas: imagem anexada `c:/Users/tulio/Downloads/WhatsApp Image 2026-06-16 at 09.37.03.jpeg` e `_product/proto/Favoritos.jpg`. Builder/Quick Copy não está exposto como ferramenta direta nesta sessão.
+- O card passou a ser vertical, branco, com borda/sombra suaves, largura fixa e comportamento de carrossel horizontal com `snap`.
+- A foto circular do psicólogo virou o principal ponto de atenção; quando não há avatar real, o card usa fallback de iniciais, sem mockar imagem.
+- O coração preenchido ativo permanece no canto superior direito como controle discreto de remoção do favorito.
+- A bolinha verde pulsante usa apenas o dado real `available_today`, evitando simular um estado online inexistente na API.
+- As informações do card foram reduzidas para nome + selo verificado, `Psicólogo/Psicóloga` e botão `Chamar no WhatsApp`.
+- Foram removidos do card especialidades, abordagens, área, experiência, avaliações, tags comerciais e demais metadados.
+- O CTA de WhatsApp agora é preenchido em verde, com texto branco e ícone à esquerda, mantendo o fluxo real `PsychologistWhatsAppRedirectButton`.
+- Não houve alteração de backend, Prisma, migrations, packages, endpoints, filtros, paginação, favoritos ou tracking de contato.
+- ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP local `200` em `/app/favorites`.

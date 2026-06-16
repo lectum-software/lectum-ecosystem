@@ -7,7 +7,6 @@ import {
   Loader2,
   ShieldCheck,
   Sparkles,
-  Star,
   TicketPercent,
 } from "lucide-react";
 import Image from "next/image";
@@ -147,49 +146,16 @@ const getContactProfession = (gender?: string | null) => {
   return gender?.toLowerCase() === "feminino" ? "Psic\u00f3loga" : "Psic\u00f3logo";
 };
 
-const formatRating = (ratingAvg: number) => {
-  return (ratingAvg / 100).toFixed(1).replace(".", ",");
-};
-
-const buildMetaLine = (psychologist: PatientRelationPsychologist) => {
-  const parts = [getProfession(psychologist.gender)];
-
-  if (psychologist.show_experience_tag !== false && psychologist.formation_years) {
-    parts.push(`${psychologist.formation_years} anos exp.`);
-  }
-
-  return parts.join(" • ");
-};
-
-const buildBenefitTags = (psychologist: PatientRelationPsychologist) => {
-  const tags: Array<{ label: string; icon: typeof Sparkles }> = [];
-
-  if (psychologist.accepts_insurance) {
-    tags.push({ label: "Aceita convênios", icon: BadgeCheck });
-  }
-
-  if (psychologist.social_value) {
-    tags.push({ label: "Valor social", icon: Banknote });
-  }
-
-  if (psychologist.discount_first_session) {
-    tags.push({ label: "Desconto na 1ª sessão", icon: TicketPercent });
-  }
-
-  return tags;
-};
-
 const FavoriteMedia = ({ psychologist }: { psychologist: PatientRelationPsychologist }) => {
-  const mediaSrc = resolvePublicMediaUrl(psychologist.video_cover_url || psychologist.avatar);
+  const mediaSrc = resolvePublicMediaUrl(psychologist.avatar);
   const mediaIsPublic = isPublicMediaUrl(mediaSrc);
 
   if (!mediaSrc) {
     return (
-      <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-gradient-to-br from-primary-soft via-surface-muted to-surface">
-        <span className="-top-10 -right-8 absolute h-28 w-28 rounded-full bg-primary/12 blur-2xl" />
-        <span className="-bottom-12 -left-8 absolute h-32 w-32 rounded-full bg-success/10 blur-2xl" />
-        <span className="absolute inset-0 bg-[radial-gradient(circle_at_30%_18%,rgb(255_255_255_/_72%),transparent_34%)] dark:bg-[radial-gradient(circle_at_30%_18%,rgb(255_255_255_/_8%),transparent_34%)]" />
-        <span className="relative grid h-20 w-20 place-items-center rounded-[28px] border border-surface/80 bg-surface/80 text-2xl font-black tracking-[-0.04em] text-primary shadow-[0_18px_36px_rgb(15_23_42_/_12%)] backdrop-blur-xl">
+      <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-gradient-to-br from-primary-soft via-white to-surface-muted">
+        <span className="-top-7 -right-7 absolute h-20 w-20 rounded-full bg-primary/10 blur-2xl" />
+        <span className="-bottom-8 -left-7 absolute h-24 w-24 rounded-full bg-success/10 blur-2xl" />
+        <span className="relative grid h-full w-full place-items-center rounded-full border border-white/80 bg-white/76 text-3xl font-black tracking-[-0.05em] text-primary shadow-[0_18px_42px_rgb(15_23_42_/_10%)] backdrop-blur-xl">
           {getInitials(psychologist.name)}
         </span>
       </div>
@@ -202,7 +168,7 @@ const FavoriteMedia = ({ psychologist }: { psychologist: PatientRelationPsycholo
       className="object-cover object-top"
       fill
       priority={false}
-      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 240px"
+      sizes="120px"
       src={mediaSrc}
       unoptimized={mediaIsPublic}
     />
@@ -247,10 +213,8 @@ const FavoritePsychologistCard = ({
   onToggleFavorite: (psychologist: PatientRelationPsychologist) => void;
   psychologist: PatientRelationPsychologist;
 }) => {
-  const tags = buildBenefitTags(psychologist);
-  const metaLine = buildMetaLine(psychologist);
   const route = `/app/psychologist/${psychologist.id}`;
-  const visibleTags = tags.slice(0, 2);
+  const profession = getProfession(psychologist.gender);
 
   const handleFavoriteClick = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
@@ -261,100 +225,74 @@ const FavoritePsychologistCard = ({
   return (
     <article
       aria-label={`Abrir perfil de ${psychologist.name}`}
-      className="group relative isolate min-w-0 cursor-pointer overflow-hidden rounded-[26px] border border-border/90 bg-surface shadow-[0_14px_34px_rgb(15_23_42_/_8%)] transition duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_22px_48px_rgb(15_23_42_/_13%)]"
+      className="group relative isolate flex min-h-[312px] w-[264px] shrink-0 snap-start flex-col overflow-hidden rounded-[26px] border border-[#E7ECF2] bg-white p-4 text-center shadow-[0_14px_34px_rgb(15_23_42_/_7%)] transition duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_22px_48px_rgb(15_23_42_/_11%)] dark:border-border dark:bg-surface"
     >
+      <button
+        aria-label={`Remover ${psychologist.name} dos favoritos`}
+        aria-pressed="true"
+        className="absolute top-3.5 right-3.5 z-20 grid h-8 w-8 shrink-0 place-items-center rounded-full border border-[#EDF1F5] bg-white/92 text-rose-500 shadow-[0_10px_22px_rgb(15_23_42_/_8%)] backdrop-blur-xl transition hover:scale-105 hover:bg-white disabled:pointer-events-none disabled:opacity-60 dark:border-border dark:bg-surface/92"
+        disabled={favoritePending}
+        onClick={handleFavoriteClick}
+        type="button"
+      >
+        {favoritePending ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+        ) : (
+          <Heart className="h-3.5 w-3.5 fill-current" aria-hidden="true" />
+        )}
+      </button>
+
       <Link
         aria-label={`Abrir perfil de ${psychologist.name}`}
-        className="absolute inset-0 z-10"
+        className="grid min-h-0 flex-1 content-start justify-items-center text-center no-underline hover:no-underline"
         href={route}
-      />
-
-      <div className="relative m-2 mb-0 aspect-[4/5] overflow-hidden rounded-[22px] bg-primary-soft">
-        <FavoriteMedia psychologist={psychologist} />
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-foreground/16 to-transparent" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-foreground/18 to-transparent" />
-        <button
-          aria-label={`Remover ${psychologist.name} dos favoritos`}
-          aria-pressed="true"
-          className="absolute right-2.5 top-2.5 z-30 grid h-9 w-9 shrink-0 place-items-center rounded-full border border-surface/80 bg-surface/90 text-danger shadow-[0_10px_22px_rgb(15_23_42_/_14%)] backdrop-blur-xl transition hover:scale-105 disabled:pointer-events-none disabled:opacity-60"
-          disabled={favoritePending}
-          onClick={handleFavoriteClick}
-          type="button"
-        >
-          {favoritePending ? (
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-          ) : (
-            <Heart className="h-4 w-4 fill-current" aria-hidden="true" />
-          )}
-        </button>
-      </div>
-
-      <div className="pointer-events-none relative z-20 grid gap-2.5 p-3.5 pt-3">
-        <div className="min-w-0">
-          <span className="flex min-w-0 items-start gap-1.5 pr-1">
-            <span className="line-clamp-2 text-[0.96rem] font-black leading-[1.18] tracking-[-0.025em] text-foreground">
-              {psychologist.name}
-            </span>
-            {psychologist.verified ? (
-              <VerifiedBadgeIcon className="mt-0.5 h-4 w-4 shrink-0" />
-            ) : null}
-          </span>
-          <p className="mt-1 line-clamp-1 text-[11px] font-extrabold uppercase tracking-[0.06em] text-muted">
-            {metaLine}
-          </p>
-        </div>
-
-        <div className="flex min-h-6 flex-wrap items-center gap-1.5 text-[11px]">
-          <span className="inline-flex items-center gap-1 rounded-full border border-warning/12 bg-warning/10 px-2 py-1 font-black text-foreground">
-            <Star className="h-3 w-3 fill-warning text-warning" aria-hidden="true" />
-            {formatRating(psychologist.rating_avg)}
-          </span>
+      >
+        <div className="relative mt-2 h-[116px] w-[116px] rounded-full bg-primary-soft p-1 shadow-[0_16px_36px_rgb(15_23_42_/_10%)] sm:h-[120px] sm:w-[120px]">
+          <div className="relative h-full w-full overflow-hidden rounded-full bg-surface-muted ring-4 ring-white dark:ring-surface">
+            <FavoriteMedia psychologist={psychologist} />
+          </div>
 
           {psychologist.available_today ? (
-            <span className="inline-flex items-center gap-1 rounded-full border border-success/15 bg-success/10 px-2 py-1 font-black text-success">
-              <span className="h-1.5 w-1.5 rounded-full bg-success motion-safe:animate-pulse" />
-              Hoje
+            <span
+              className="absolute right-2 bottom-2 grid h-5 w-5 place-items-center rounded-full bg-white shadow-[0_8px_18px_rgb(15_23_42_/_12%)] ring-1 ring-success/15 dark:bg-surface"
+              title="Disponível hoje"
+            >
+              <span className="absolute h-3.5 w-3.5 rounded-full bg-success/35 motion-safe:animate-[ping_2.4s_cubic-bezier(0,0,0.2,1)_infinite]" />
+              <span className="relative h-3 w-3 rounded-full bg-success ring-2 ring-white dark:ring-surface" />
+              <span className="sr-only">Disponível hoje</span>
             </span>
           ) : null}
         </div>
 
-        {visibleTags.length > 0 ? (
-          <div className="flex min-h-6 flex-wrap gap-1.5">
-            {visibleTags.map((tag) => {
-              const Icon = tag.icon;
+        <div className="mt-5 grid min-w-0 justify-items-center gap-1.5">
+          <span className="flex max-w-full items-start justify-center gap-1.5">
+            <span className="line-clamp-2 text-[0.98rem] font-bold leading-[1.18] tracking-[-0.02em] text-foreground">
+              {psychologist.name}
+            </span>
+            {psychologist.verified ? (
+              <VerifiedBadgeIcon className="mt-[1px] h-4 w-4 shrink-0" />
+            ) : null}
+          </span>
+          <p className="text-sm font-medium text-muted">{profession}</p>
+        </div>
+      </Link>
 
-              return (
-                <span
-                  className="inline-flex max-w-full items-center gap-1 rounded-full border border-primary/10 bg-primary-soft/70 px-2 py-1 text-[10px] font-bold text-primary"
-                  key={tag.label}
-                >
-                  <Icon className="h-3 w-3 shrink-0" aria-hidden="true" />
-                  <span className="truncate">{tag.label}</span>
-                </span>
-              );
-            })}
-          </div>
-        ) : null}
-
-        {psychologist.whatsapp_url ? (
-          <PsychologistWhatsAppRedirectButton
-            aria-label={`Chamar ${psychologist.name} no WhatsApp`}
-            className="pointer-events-auto relative z-30 mt-0.5 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-full border border-success/25 bg-surface-muted px-3 text-xs font-black text-success transition hover:border-success hover:bg-success hover:text-white"
-            psychologist={{
-              avatar: psychologist.avatar,
-              crp: psychologist.crp,
-              id: psychologist.id,
-              name: psychologist.name,
-              typeLabel: getContactProfession(psychologist.gender),
-              whatsappUrl: psychologist.whatsapp_url,
-            }}
-            stopPropagation
-          >
-            <WhatsAppIcon className="h-3.5 w-3.5" aria-hidden="true" />
-            WhatsApp
-          </PsychologistWhatsAppRedirectButton>
-        ) : null}
-      </div>
+      <PsychologistWhatsAppRedirectButton
+        aria-label={`Chamar ${psychologist.name} no WhatsApp`}
+        className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-[14px] bg-success px-4 text-sm font-black text-white shadow-[0_12px_24px_rgb(34_197_94_/_22%)] transition hover:bg-success/90 hover:shadow-[0_16px_30px_rgb(34_197_94_/_26%)] active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 disabled:shadow-none"
+        psychologist={{
+          avatar: psychologist.avatar,
+          crp: psychologist.crp,
+          id: psychologist.id,
+          name: psychologist.name,
+          typeLabel: getContactProfession(psychologist.gender),
+          whatsappUrl: psychologist.whatsapp_url,
+        }}
+        stopPropagation
+      >
+        <WhatsAppIcon className="h-[18px] w-[18px] text-white" aria-hidden="true" />
+        Chamar no WhatsApp
+      </PsychologistWhatsAppRedirectButton>
     </article>
   );
 };
@@ -510,15 +448,17 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
               {activeQuery.isFetching ? <LoadingState label="Atualizando" /> : null}
             </div>
 
-            <div className="grid grid-cols-1 gap-3.5 min-[360px]:grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(190px,1fr))] lg:gap-4">
-              {psychologists.map((psychologist) => (
-                <FavoritePsychologistCard
-                  favoritePending={favoritePendingId === psychologist.id}
-                  key={psychologist.id}
-                  onToggleFavorite={toggleFavorite}
-                  psychologist={psychologist}
-                />
-              ))}
+            <div className="-mx-5 overflow-x-auto scroll-smooth px-5 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden lg:-mx-1 lg:px-1">
+              <div className="flex w-max snap-x snap-mandatory gap-3.5 lg:gap-4">
+                {psychologists.map((psychologist) => (
+                  <FavoritePsychologistCard
+                    favoritePending={favoritePendingId === psychologist.id}
+                    key={psychologist.id}
+                    onToggleFavorite={toggleFavorite}
+                    psychologist={psychologist}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         ) : null}
