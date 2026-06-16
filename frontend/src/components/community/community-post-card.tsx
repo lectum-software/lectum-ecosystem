@@ -8,7 +8,6 @@ import {
   FileText,
   type LucideIcon,
   MessageCircle,
-  Play,
   Share2,
   UserX,
 } from "lucide-react";
@@ -18,6 +17,7 @@ import type { ReactNode } from "react";
 import type { PostListPost, PostProfessionalReply } from "@/api/generator/types/posts";
 import { MentorBadge } from "@/components/community/mentor-badge";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
+import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
@@ -168,16 +168,11 @@ const MediaBlock = ({
 
   if (mediaType === "video") {
     return (
-      <div className="relative overflow-hidden rounded-[22px] border border-border bg-black shadow-inner">
-        <video className="aspect-[4/5] w-full object-cover" controls playsInline src={resolvedUrl}>
-          <track kind="captions" label="Português" srcLang="pt-BR" />
-        </video>
-        <span className="pointer-events-none absolute inset-0 grid place-items-center text-white/70">
-          <span className="grid h-14 w-14 place-items-center rounded-full bg-black/30 backdrop-blur">
-            <Play className="ml-1 h-6 w-6 fill-white" aria-hidden="true" />
-          </span>
-        </span>
-      </div>
+      <VerticalVideoPlayer
+        className="mx-auto w-full max-w-[390px] rounded-[22px]"
+        src={resolvedUrl}
+        title={alt}
+      />
     );
   }
 

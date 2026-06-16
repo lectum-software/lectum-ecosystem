@@ -14,7 +14,6 @@ import {
   MessageCircle,
   MoreVertical,
   Paperclip,
-  Play,
   Reply,
   Send,
   Share2,
@@ -56,6 +55,7 @@ import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/p
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
@@ -516,27 +516,12 @@ const MediaBlock = ({
 
   if (mediaType === "video") {
     return (
-      <div
-        className={cn(
-          "relative mt-3 aspect-[9/16] overflow-hidden border border-border bg-black shadow-inner",
-          radius,
-          videoFrameClass,
-        )}
-      >
-        <video
-          className="lectum-post-detail-video h-full w-full bg-black object-contain"
-          controls
-          playsInline
-          src={src}
-        >
-          <track kind="captions" label="Português" srcLang="pt-BR" />
-        </video>
-        <span className="pointer-events-none absolute inset-0 grid place-items-center text-white/70">
-          <span className="grid h-14 w-14 place-items-center rounded-full bg-black/30 backdrop-blur">
-            <Play className="ml-1 h-6 w-6 fill-white" aria-hidden="true" />
-          </span>
-        </span>
-      </div>
+      <VerticalVideoPlayer
+        className={cn("mt-3 border-border", radius, videoFrameClass)}
+        fit="contain"
+        src={src}
+        title={alt}
+      />
     );
   }
 
@@ -1869,53 +1854,6 @@ export const PostDetailLogic = () => {
               subject={reportTarget?.type === "reply" ? reportTarget.reply.content : post.title}
               title={reportTarget?.type === "reply" ? "Denunciar comentário" : "Denunciar post"}
             />
-
-            <style>{`
-              .lectum-post-detail-video:fullscreen {
-                position: fixed !important;
-                inset: 0 !important;
-                width: min(100vw, calc(100vh * 9 / 16)) !important;
-                height: min(100vh, calc(100vw * 16 / 9)) !important;
-                max-width: 100vw !important;
-                max-height: 100vh !important;
-                margin: auto !important;
-                aspect-ratio: 9 / 16 !important;
-                object-fit: contain !important;
-                background: #000 !important;
-              }
-
-              .lectum-post-detail-video:fullscreen::backdrop {
-                background: rgb(0 0 0 / 0.96);
-              }
-
-              .lectum-post-detail-video:-webkit-full-screen {
-                position: fixed !important;
-                inset: 0 !important;
-                width: min(100vw, calc(100vh * 9 / 16)) !important;
-                height: min(100vh, calc(100vw * 16 / 9)) !important;
-                max-width: 100vw !important;
-                max-height: 100vh !important;
-                margin: auto !important;
-                aspect-ratio: 9 / 16 !important;
-                object-fit: contain !important;
-                background: #000 !important;
-              }
-
-              .lectum-post-detail-video:-webkit-full-screen::backdrop {
-                background: rgb(0 0 0 / 0.96);
-              }
-
-              @media (max-width: 639px) {
-                .lectum-post-detail-video:fullscreen,
-                .lectum-post-detail-video:-webkit-full-screen {
-                  width: 100vw !important;
-                  height: 100dvh !important;
-                  max-width: 100vw !important;
-                  max-height: 100dvh !important;
-                  object-fit: cover !important;
-                }
-              }
-            `}</style>
           </>
         ) : null}
       </section>

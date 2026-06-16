@@ -44,6 +44,7 @@ import { Container } from "@/components/controllers/container";
 import { describedBy, fieldId } from "@/components/controllers/utils";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -1796,16 +1797,12 @@ export const ProfessionalProfileSetupLogic = () => {
                     </p>
 
                     {videoSrc ? (
-                      // biome-ignore lint/a11y/useMediaCaption: vídeos enviados pelo usuário ainda não têm faixa de legenda no recorte atual.
-                      <video
-                        className="mt-4 aspect-[9/16] w-full rounded-2xl border border-border bg-black object-cover"
-                        controls
+                      <VerticalVideoPlayer
+                        className="mt-4 w-full rounded-2xl"
                         poster={videoCoverSrc || undefined}
-                        preload="metadata"
                         src={videoSrc}
-                      >
-                        Seu navegador não suporta a pré-visualização de vídeo.
-                      </video>
+                        title="Pré-visualização do vídeo de apresentação"
+                      />
                     ) : (
                       <button
                         className="mt-4 grid min-h-32 w-full place-items-center rounded-2xl border border-dashed border-border bg-surface px-4 py-6 text-center transition hover:border-primary hover:bg-primary-soft/40 disabled:cursor-not-allowed disabled:opacity-60"

@@ -19,7 +19,6 @@ import {
   ListChecks,
   type LucideIcon,
   MessageCircle,
-  Play,
   Plus,
   Search,
   Share2,
@@ -67,6 +66,7 @@ import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/p
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
@@ -992,21 +992,11 @@ const PostMedia = ({ post }: { post: CommunityPost }) => {
 
   if (post.media_type === "video") {
     return (
-      <div className="relative overflow-hidden rounded-[22px] border border-border bg-black shadow-inner">
-        <video
-          className="lectum-community-feed-video aspect-[4/5] w-full object-cover"
-          controls
-          playsInline
-          src={mediaUrl}
-        >
-          <track kind="captions" label="Português" srcLang="pt-BR" />
-        </video>
-        <span className="pointer-events-none absolute inset-0 grid place-items-center text-white/70">
-          <span className="grid h-16 w-16 place-items-center rounded-full bg-black/30 backdrop-blur">
-            <Play className="ml-1 h-7 w-7 fill-white" aria-hidden="true" />
-          </span>
-        </span>
-      </div>
+      <VerticalVideoPlayer
+        className="mx-auto w-full max-w-[390px] rounded-[22px]"
+        src={mediaUrl}
+        title={post.title}
+      />
     );
   }
 
@@ -1036,22 +1026,11 @@ const ProfessionalReplyMedia = ({
 
   if (reply.media_type === "video") {
     return (
-      <div className="relative aspect-[9/16] w-full overflow-hidden rounded-[18px] border border-border bg-black shadow-inner">
-        <video
-          className="lectum-community-feed-video h-full w-full object-cover"
-          controls
-          onClick={(event) => event.stopPropagation()}
-          playsInline
-          src={mediaUrl}
-        >
-          <track kind="captions" label="Português" srcLang="pt-BR" />
-        </video>
-        <span className="pointer-events-none absolute inset-0 grid place-items-center text-white/70">
-          <span className="grid h-14 w-14 place-items-center rounded-full bg-black/30 backdrop-blur">
-            <Play className="ml-1 h-6 w-6 fill-white" aria-hidden="true" />
-          </span>
-        </span>
-      </div>
+      <VerticalVideoPlayer
+        className="w-full rounded-[18px]"
+        src={mediaUrl}
+        title="Vídeo da resposta profissional"
+      />
     );
   }
 
@@ -2690,42 +2669,6 @@ export const CommunityFeedLogic = () => {
       <CommunityPublishOnboarding variant="bottomNavigation" />
 
       <style>{`
-        @media (min-width: 1024px) {
-          .lectum-community-feed-video:fullscreen {
-            position: fixed !important;
-            inset: 0 !important;
-            width: min(100vw, calc(100vh * 9 / 16)) !important;
-            height: min(100vh, calc(100vw * 16 / 9)) !important;
-            max-width: 100vw !important;
-            max-height: 100vh !important;
-            margin: auto !important;
-            aspect-ratio: 9 / 16 !important;
-            object-fit: contain !important;
-            background: #000 !important;
-          }
-
-          .lectum-community-feed-video:fullscreen::backdrop {
-            background: rgb(0 0 0 / 0.96);
-          }
-
-          .lectum-community-feed-video:-webkit-full-screen {
-            position: fixed !important;
-            inset: 0 !important;
-            width: min(100vw, calc(100vh * 9 / 16)) !important;
-            height: min(100vh, calc(100vw * 16 / 9)) !important;
-            max-width: 100vw !important;
-            max-height: 100vh !important;
-            margin: auto !important;
-            aspect-ratio: 9 / 16 !important;
-            object-fit: contain !important;
-            background: #000 !important;
-          }
-
-          .lectum-community-feed-video:-webkit-full-screen::backdrop {
-            background: rgb(0 0 0 / 0.96);
-          }
-        }
-
         @keyframes lectum-desktop-create-float {
           0%,
           100% {

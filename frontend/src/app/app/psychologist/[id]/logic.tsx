@@ -54,6 +54,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
+import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
@@ -758,10 +759,8 @@ const ProfileTabs = ({
 };
 
 const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
-  const [playing, setPlaying] = useState(false);
   const videoSrc = resolvePublicMediaUrl(profile.video_url);
   const videoCoverSrc = resolvePublicMediaUrl(profile.video_cover_url);
-  const videoCoverIsPublicMedia = isPublicMediaUrl(profile.video_cover_url);
 
   if (!videoSrc) return null;
 
@@ -771,70 +770,12 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
         className="box-border relative mx-auto w-full max-w-none overflow-hidden rounded-[18px] border border-[#E2E8F0] bg-[#e2e8f0] shadow-[0_8px_22px_rgba(15,23,42,0.055)] sm:max-w-[260px]"
         data-presentation-video="true"
       >
-        <div className="relative aspect-[9/16] w-full">
-          {playing ? (
-            <div className="relative h-full w-full">
-              {/* biome-ignore lint/a11y/useMediaCaption: Vídeos enviados pelos profissionais não possuem legenda no momento do cadastro. */}
-              <video
-                aria-label={`Vídeo de apresentação de ${profile.name}`}
-                autoPlay
-                className="h-full w-full bg-black object-cover fullscreen:mx-auto fullscreen:h-screen fullscreen:w-auto fullscreen:max-w-[100vw] fullscreen:object-contain"
-                controls
-                onEnded={() => setPlaying(false)}
-                playsInline
-                poster={videoCoverSrc || undefined}
-                preload="metadata"
-                src={videoSrc}
-              >
-                Seu navegador não suporta a reprodução de vídeo.
-              </video>
-              <button
-                aria-label="Fechar vídeo"
-                className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-white/75 text-[#0F172A] shadow-sm transition hover:bg-white/90"
-                onClick={() => setPlaying(false)}
-                type="button"
-              >
-                <span aria-hidden="true" className="text-sm font-bold leading-none">
-                  ×
-                </span>
-              </button>
-            </div>
-          ) : (
-            <div className="relative h-full w-full">
-              {videoCoverSrc ? (
-                <Image
-                  alt=""
-                  aria-hidden="true"
-                  className="object-cover"
-                  fill
-                  sizes="(min-width: 640px) 260px, calc(100vw - 64px)"
-                  src={videoCoverSrc}
-                  unoptimized={videoCoverIsPublicMedia}
-                />
-              ) : (
-                <video
-                  aria-hidden="true"
-                  className="absolute inset-0 h-full w-full object-cover"
-                  muted
-                  playsInline
-                  preload="auto"
-                  src={videoSrc}
-                  tabIndex={-1}
-                />
-              )}
-              <button
-                aria-label={`Reproduzir vídeo de apresentação de ${profile.name}`}
-                className="absolute inset-0 grid place-items-center text-white transition hover:bg-foreground/10"
-                onClick={() => setPlaying(true)}
-                type="button"
-              >
-                <span className="grid h-11 w-11 place-items-center rounded-full bg-white/75 text-[#0F172A] shadow-sm">
-                  <Play className="ml-0.5 h-4 w-4" aria-hidden="true" />
-                </span>
-              </button>
-            </div>
-          )}
-        </div>
+        <VerticalVideoPlayer
+          className="rounded-[18px] border-0"
+          poster={videoCoverSrc}
+          src={videoSrc}
+          title={`Vídeo de apresentação de ${profile.name}`}
+        />
       </article>
 
       <article className="box-border rounded-[14px] border border-[#DBEAFE] bg-[#F8FBFF] px-3 py-2.5 text-[9px] text-[#0F172A]">
