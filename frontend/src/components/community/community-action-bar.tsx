@@ -41,11 +41,13 @@ export type CommunityActionBarProps = {
   reply?: {
     label?: string;
     onClick: ActionHandler;
+    textOnly?: boolean;
   };
   save?: SaveAction;
   share?: ShareAction;
   upvotesCount: number;
   voteLabel?: string;
+  showUpvoteText?: boolean;
   onVote?: (value: 1 | -1) => void;
 };
 
@@ -65,6 +67,7 @@ export const CommunityActionBar = ({
   reply,
   save,
   share,
+  showUpvoteText = true,
   upvotesCount,
   voteLabel = "Marcar como útil",
 }: CommunityActionBarProps) => {
@@ -82,6 +85,7 @@ export const CommunityActionBar = ({
               icon={ArrowUp}
               label={voteLabel}
               onVote={onVote}
+              showUpvoteText={showUpvoteText}
               size="sm"
               value={1}
             />
@@ -134,7 +138,15 @@ export const CommunityActionBar = ({
           )
         ) : null}
 
-        {reply ? (
+        {reply?.textOnly ? (
+          <button
+            className="inline-flex h-8 shrink-0 items-center justify-center rounded-full px-2.5 text-[12px] font-semibold leading-none tracking-[-0.01em] text-muted transition-[background-color,color,transform] duration-200 hover:bg-surface-muted hover:text-foreground active:scale-[0.97]"
+            onClick={reply.onClick}
+            type="button"
+          >
+            {reply.label ?? "Responder"}
+          </button>
+        ) : reply ? (
           <PostActionButton
             icon={Reply}
             label={reply.label ?? "Responder"}

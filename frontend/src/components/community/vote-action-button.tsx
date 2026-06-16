@@ -19,6 +19,7 @@ type VoteActionButtonProps = {
   label: string;
   onVote: (value: 1 | -1) => void;
   showPositiveDelta?: boolean;
+  showUpvoteText?: boolean;
   size?: "sm" | "md";
   value: 1 | -1;
 };
@@ -52,6 +53,7 @@ export const VoteActionButton = ({
   label,
   onVote,
   showPositiveDelta = true,
+  showUpvoteText = true,
   size = "md",
   value,
 }: VoteActionButtonProps) => {
@@ -171,7 +173,7 @@ export const VoteActionButton = ({
           strokeWidth={2}
           aria-hidden="true"
         />
-        {isUpvote ? (
+        {isUpvote && showUpvoteText ? (
           <span className="font-semibold leading-none tracking-[-0.01em]">Útil</span>
         ) : null}
         {typeof count === "number" ? (

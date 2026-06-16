@@ -70,6 +70,7 @@ import {
 } from "./use-form";
 
 const REPLIES_LIMIT = 8;
+const MAX_REPLY_TREE_DEPTH = 2;
 
 type ApiErrorData = {
   error?: string;
@@ -764,6 +765,7 @@ const ReplyVoteBar = ({
     reply={{
       label: "Responder",
       onClick: onReply,
+      textOnly: true,
     }}
     save={{
       active: reply.saved,
@@ -775,6 +777,7 @@ const ReplyVoteBar = ({
       label: "Compartilhar resposta",
       onClick: onShare,
     }}
+    showUpvoteText={false}
     upvotesCount={reply.upvotes_count}
     voteLabel="Marcar resposta como útil"
   />
@@ -793,7 +796,7 @@ const ReplyCard = ({
   onShare,
   onSubmitReply,
   onVote,
-  maxInlineDepth = 1,
+  maxInlineDepth = MAX_REPLY_TREE_DEPTH,
   postId,
   professionalThread,
   reply,
@@ -837,182 +840,188 @@ const ReplyCard = ({
   const isReplyComposerOpen = Boolean(inlineReplyTarget);
   const [contentExpanded, setContentExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const canRenderChildren = maxInlineDepth < 0 || depth < maxInlineDepth;
+  const visualMaxDepth =
+    maxInlineDepth < 0 ? MAX_REPLY_TREE_DEPTH : Math.min(maxInlineDepth, MAX_REPLY_TREE_DEPTH);
+  const canRenderChildren = depth < visualMaxDepth;
   const visibleChildren = canRenderChildren ? reply.replies : [];
   const totalRepliesCount = reply.replies_count ?? reply.replies.length;
   const hiddenRepliesCount = Math.max(0, totalRepliesCount - visibleChildren.length);
   const threadHref = threadHrefBase ? `${threadHrefBase}/${reply.id}` : null;
 
+  const hasTreeContinuation = visibleChildren.length > 0 || hiddenRepliesCount > 0;
+  const avatarSize = isProfessional ? "reply" : "sm";
+
   return (
-    <article
-      className={cn(
-        "relative grid gap-2 rounded-[20px] bg-white p-4 text-[#182033] dark:bg-surface dark:text-foreground",
-        depth === 0
-          ? "border border-[#E5EAF0] shadow-[0_10px_24px_rgba(15,23,42,0.05)]"
-          : "border border-[#EDF1F5] shadow-none",
-        highlightedProfessionalThread &&
-          "border-[#D8ECFF] bg-[#F4FAFF] shadow-none dark:border-primary/20 dark:bg-primary/5",
-      )}
-      id={`reply-${reply.id}`}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex min-w-0 items-start gap-3">
+    <article className="relative py-1 text-[#182033] dark:text-foreground" id={`reply-${reply.id}`}>
+      <div className="grid grid-cols-[2.25rem_minmax(0,1fr)] gap-x-3 sm:grid-cols-[2.5rem_minmax(0,1fr)]">
+        <div className="relative flex justify-center">
           <AuthorAvatar
             author={reply.author}
             href={psychologistProfileHref ?? undefined}
-            size={isProfessional ? "reply" : "sm"}
+            size={avatarSize}
           />
-          <div className="grid min-w-0 gap-1">
-            <div className="flex min-w-0 items-center gap-x-2">
-              <div className="flex min-w-0 items-center gap-[5px]">
-                {isProfessional ? (
-                  <Link
-                    className="truncate text-sm font-black text-inherit no-underline hover:text-inherit hover:no-underline"
-                    href={`/app/psychologist/${reply.author.id}`}
-                  >
-                    {reply.author.name}
-                  </Link>
-                ) : (
-                  <h3 className="truncate text-sm font-black">{reply.author.name}</h3>
-                )}
-                {reply.author.verified ? (
-                  <BadgeCheck
-                    className="h-4 w-4 shrink-0 fill-[#2da7ff] text-white"
-                    aria-hidden="true"
-                  />
-                ) : null}
-              </div>
-              <MentorBadge
-                badge={reply.author.featured_badge}
-                href={psychologistProfileHref ?? undefined}
-              />
-            </div>
-            {psychologistProfileHref ? (
-              <Link
-                className="w-fit cursor-pointer text-[11px] font-semibold text-muted no-underline hover:text-muted hover:no-underline"
-                href={psychologistProfileHref}
-              >
-                {formatReplyAuthorMeta(reply.author, reply.created_at)}
-              </Link>
-            ) : (
-              <p className="text-[11px] font-semibold text-muted">
-                {formatReplyAuthorMeta(reply.author, reply.created_at)}
-              </p>
-            )}
-          </div>
+          {hasTreeContinuation ? (
+            <span
+              className="absolute top-10 bottom-[-0.95rem] left-1/2 w-px -translate-x-1/2 bg-[#DCE4EE] dark:bg-border"
+              aria-hidden="true"
+            />
+          ) : null}
         </div>
-        <div className="relative">
-          <button
-            aria-expanded={menuOpen}
-            aria-haspopup="menu"
-            aria-label="Mais opções da resposta"
-            className="grid h-8 w-8 place-items-center rounded-full text-[#64748B] transition hover:bg-surface-muted"
-            onClick={() => setMenuOpen((current) => !current)}
-            type="button"
-          >
-            <MoreVertical className="h-4 w-4" aria-hidden="true" />
-          </button>
 
-          {menuOpen ? (
-            <div
-              className="absolute top-9 right-0 z-20 w-56 overflow-hidden rounded-2xl border border-[#E5EAF0] bg-white p-1.5 text-sm shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:border-border dark:bg-surface"
-              role="menu"
-            >
-              {isOwnReply ? (
-                <button
-                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-danger transition hover:bg-danger/10 hover:text-danger disabled:cursor-not-allowed disabled:opacity-60"
-                  disabled={deleteReplyPending}
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onDeleteReply(reply);
-                  }}
-                  role="menuitem"
-                  type="button"
+        <div
+          className={cn(
+            "min-w-0 rounded-[18px] px-0.5 py-0.5",
+            highlightedProfessionalThread && "bg-[#F8FCFF]/80 dark:bg-primary/5",
+          )}
+        >
+          <div className="flex items-start justify-between gap-2">
+            <div className="grid min-w-0 gap-1">
+              <div className="flex min-w-0 items-center gap-x-2">
+                <div className="flex min-w-0 items-center gap-[5px]">
+                  {isProfessional ? (
+                    <Link
+                      className="truncate text-sm font-black text-inherit no-underline hover:text-inherit hover:no-underline"
+                      href={`/app/psychologist/${reply.author.id}`}
+                    >
+                      {reply.author.name}
+                    </Link>
+                  ) : (
+                    <h3 className="truncate text-sm font-black">{reply.author.name}</h3>
+                  )}
+                  {reply.author.verified ? (
+                    <BadgeCheck
+                      className="h-4 w-4 shrink-0 fill-[#2da7ff] text-white"
+                      aria-hidden="true"
+                    />
+                  ) : null}
+                </div>
+                <MentorBadge
+                  badge={reply.author.featured_badge}
+                  href={psychologistProfileHref ?? undefined}
+                />
+              </div>
+              {psychologistProfileHref ? (
+                <Link
+                  className="w-fit cursor-pointer text-[11px] font-semibold text-muted no-underline hover:text-muted hover:no-underline"
+                  href={psychologistProfileHref}
                 >
-                  <Trash2 className="h-4 w-4" aria-hidden="true" />
-                  Excluir comentário
-                </button>
+                  {formatReplyAuthorMeta(reply.author, reply.created_at)}
+                </Link>
               ) : (
-                <button
-                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-[#475569] transition hover:bg-[#F8FAFC] hover:text-[#182033] dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onReportReply(reply);
-                  }}
-                  role="menuitem"
-                  type="button"
-                >
-                  <Flag className="h-4 w-4" aria-hidden="true" />
-                  Denunciar comentário
-                </button>
+                <p className="text-[11px] font-semibold text-muted">
+                  {formatReplyAuthorMeta(reply.author, reply.created_at)}
+                </p>
               )}
             </div>
+
+            <div className="relative">
+              <button
+                aria-expanded={menuOpen}
+                aria-haspopup="menu"
+                aria-label="Mais opções da resposta"
+                className="grid h-8 w-8 place-items-center rounded-full text-[#64748B] transition hover:bg-surface-muted"
+                onClick={() => setMenuOpen((current) => !current)}
+                type="button"
+              >
+                <MoreVertical className="h-4 w-4" aria-hidden="true" />
+              </button>
+
+              {menuOpen ? (
+                <div
+                  className="absolute top-9 right-0 z-20 w-56 overflow-hidden rounded-2xl border border-[#E5EAF0] bg-white p-1.5 text-sm shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:border-border dark:bg-surface"
+                  role="menu"
+                >
+                  {isOwnReply ? (
+                    <button
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-danger transition hover:bg-danger/10 hover:text-danger disabled:cursor-not-allowed disabled:opacity-60"
+                      disabled={deleteReplyPending}
+                      onClick={() => {
+                        setMenuOpen(false);
+                        onDeleteReply(reply);
+                      }}
+                      role="menuitem"
+                      type="button"
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      Excluir comentário
+                    </button>
+                  ) : (
+                    <button
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-[#475569] transition hover:bg-[#F8FAFC] hover:text-[#182033] dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        onReportReply(reply);
+                      }}
+                      role="menuitem"
+                      type="button"
+                    >
+                      <Flag className="h-4 w-4" aria-hidden="true" />
+                      Denunciar comentário
+                    </button>
+                  )}
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          <InlineExpandableText
+            className="mt-2 text-sm leading-6 text-[#475569] dark:text-muted"
+            expanded={contentExpanded}
+            onToggle={() => setContentExpanded((current) => !current)}
+            text={reply.content}
+          />
+          <MediaBlock
+            alt="Mídia da resposta"
+            mediaType={reply.media_type}
+            mediaUrl={reply.media_url}
+            size="md"
+          />
+
+          {isProfessional && reply.author.verified && reply.author.whatsapp_url ? (
+            <PsychologistWhatsAppRedirectButton
+              className="mx-auto mt-2 inline-flex h-11 w-full max-w-[280px] items-center justify-center gap-2 rounded-[14px] border-2 border-success bg-transparent text-success shadow-none transition hover:bg-success hover:text-white sm:max-w-[320px]"
+              psychologist={{
+                avatar: reply.author.avatar,
+                crp: reply.author.crp,
+                id: reply.author.id,
+                name: reply.author.name,
+                typeLabel: reply.author.type_label,
+                whatsappUrl: reply.author.whatsapp_url,
+              }}
+            >
+              <WhatsAppIcon className="h-5 w-5" aria-hidden="true" />
+              Chamar no WhatsApp
+            </PsychologistWhatsAppRedirectButton>
+          ) : null}
+
+          <ReplyVoteBar
+            currentVote={reply.current_user_vote}
+            disabled={votePending}
+            onReply={() => onReply(reply)}
+            onShare={() => onShare(reply)}
+            onToggleSave={() => saveReplyMutation.mutate(reply.saved)}
+            onVote={(value) => onVote(reply.id, value)}
+            reply={reply}
+            savePending={saveReplyMutation.isPending}
+          />
+
+          {isReplyComposerOpen ? (
+            <ReplyComposer
+              apiError={replyApiError}
+              disabled={replyDisabled}
+              mediaPermission={mediaPermission}
+              onCancelContext={() => onCancelInlineReplyTarget(reply.id)}
+              onSubmit={(values, mediaFile) => onSubmitReply(values, reply.id, mediaFile)}
+              replyTarget={inlineReplyTarget}
+              variant="inline"
+              autoFocus
+            />
           ) : null}
         </div>
       </div>
 
-      <InlineExpandableText
-        className="text-sm leading-6 text-[#475569] dark:text-muted"
-        expanded={contentExpanded}
-        onToggle={() => setContentExpanded((current) => !current)}
-        text={reply.content}
-      />
-      <MediaBlock
-        alt="Mídia da resposta"
-        mediaType={reply.media_type}
-        mediaUrl={reply.media_url}
-        size="md"
-      />
-
-      {isProfessional && reply.author.verified && reply.author.whatsapp_url ? (
-        <PsychologistWhatsAppRedirectButton
-          className="mx-auto mt-1 inline-flex h-11 w-full max-w-[280px] items-center justify-center gap-2 rounded-[14px] border-2 border-success bg-transparent text-success shadow-none transition hover:bg-success hover:text-white sm:max-w-[320px]"
-          psychologist={{
-            avatar: reply.author.avatar,
-            crp: reply.author.crp,
-            id: reply.author.id,
-            name: reply.author.name,
-            typeLabel: reply.author.type_label,
-            whatsappUrl: reply.author.whatsapp_url,
-          }}
-        >
-          <WhatsAppIcon className="h-5 w-5" aria-hidden="true" />
-          Chamar no WhatsApp
-        </PsychologistWhatsAppRedirectButton>
-      ) : null}
-
-      <ReplyVoteBar
-        currentVote={reply.current_user_vote}
-        disabled={votePending}
-        onReply={() => onReply(reply)}
-        onShare={() => onShare(reply)}
-        onToggleSave={() => saveReplyMutation.mutate(reply.saved)}
-        onVote={(value) => onVote(reply.id, value)}
-        reply={reply}
-        savePending={saveReplyMutation.isPending}
-      />
-
-      {isReplyComposerOpen ? (
-        <ReplyComposer
-          apiError={replyApiError}
-          disabled={replyDisabled}
-          mediaPermission={mediaPermission}
-          onCancelContext={() => onCancelInlineReplyTarget(reply.id)}
-          onSubmit={(values, mediaFile) => onSubmitReply(values, reply.id, mediaFile)}
-          replyTarget={inlineReplyTarget}
-          variant="inline"
-          autoFocus
-        />
-      ) : null}
-
       {visibleChildren.length > 0 || hiddenRepliesCount > 0 ? (
-        <div
-          className={cn(
-            "ml-4 grid gap-3 border-[#DCEBFF] border-l-2 pl-4",
-            highlightedProfessionalThread &&
-              "-mr-1 rounded-2xl border-[#BBDFFF] bg-[#F4FAFF]/70 p-3 pl-4 dark:border-primary/25 dark:bg-primary/5",
-          )}
-        >
+        <div className="relative mt-2 ml-[18px] grid gap-3 border-[#DCE4EE] border-l pl-[30px] dark:border-border sm:ml-5 sm:pl-8">
           {visibleChildren.map((child) => (
             <ReplyCard
               currentUserId={currentUserId}
@@ -1040,10 +1049,16 @@ const ReplyCard = ({
           ))}
           {hiddenRepliesCount > 0 && threadHref ? (
             <Link
-              className="w-fit rounded-full px-2 py-1 text-[11px] font-black text-primary no-underline transition hover:bg-primary-soft hover:text-primary hover:no-underline"
+              className="flex w-fit items-center gap-2 rounded-full py-1 pr-2 text-[11px] font-black text-primary no-underline transition hover:text-primary hover:no-underline"
               href={threadHref}
             >
-              Ver mais {hiddenRepliesCount} {hiddenRepliesCount === 1 ? "resposta" : "respostas"}
+              <span
+                className="h-5 w-px rounded-full bg-[#C9D3DF] dark:bg-border"
+                aria-hidden="true"
+              />
+              <span>
+                Ver mais {hiddenRepliesCount} {hiddenRepliesCount === 1 ? "resposta" : "respostas"}
+              </span>
             </Link>
           ) : null}
         </div>
@@ -1414,7 +1429,7 @@ const RepliesList = ({
   errorMessage,
   inlineReplyTargets,
   loading,
-  maxInlineDepth = 1,
+  maxInlineDepth = MAX_REPLY_TREE_DEPTH,
   mediaPermission,
   onCancelInlineReplyTarget,
   onDeleteReply,
@@ -1485,7 +1500,7 @@ const RepliesList = ({
       ) : null}
 
       {orderedReplies.length > 0 ? (
-        <div className="grid gap-4 border-[#DCEBFF] border-l-2 pl-3">
+        <div className="relative grid gap-3 pl-4 before:absolute before:top-0 before:bottom-0 before:left-0 before:w-[2px] before:rounded-full before:bg-[#308CE8] before:content-[''] dark:before:bg-primary">
           {orderedReplies.map((reply) => (
             <ReplyCard
               currentUserId={currentUserId}
