@@ -159,3 +159,43 @@ O produto pediu uma nova rodada de refinamento visual em `/app/favorites`: o hea
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser local Chrome headless autenticado em `/app/favorites`.
+
+## Complemento 2026-06-16 - header limpo alinhado a Notificacoes
+
+### Contexto
+
+Produto pediu nova calibragem visual em `/app/favorites`: o hero gradiente anterior ficou expressivo
+demais para a tela, e o novo padrao secundario de Notificacoes deveria orientar um topo mais limpo,
+integrado ao fundo e com texto em escala mais discreta.
+
+### Decisao
+
+- Remover o hero gradiente, blurs decorativos e bloco grande colorido do topo de Favoritos.
+- Manter o header integrado ao layout da pagina, sem fundo, sombra, borda ou container destacado.
+- Reduzir a escala do titulo para o mesmo campo visual de headers nativos (`text-2xl` no mobile e
+  `text-3xl` em telas maiores), com subtitulo menor e chip `Sua curadoria` mais sutil.
+- Preservar os filtros reais, mas com chips neutros e compactos fora de uma superficie colorida.
+- Aumentar o respiro interno dos cards de psicologo: mais padding, avatar ligeiramente mais solto,
+  maior separacao entre avatar, nome, papel profissional e CTA.
+- Reduzir a tipografia do CTA `WhatsApp` via estilo inline controlado no proprio botao, mantendo o
+  verde preenchido e o icone proporcional.
+- Aumentar a area clicavel e o icone de coracao no card, mantendo o controle elegante e sem impacto
+  na logica de remocao do favorito.
+
+### Consequencias
+
+- Favoritos volta a pertencer visualmente a familia de telas limpas/secondarias, sem perder a sensacao
+  premium.
+- Os cards deixam de parecer apertados na grade de duas colunas, mantendo legibilidade em mobile e
+  desktop.
+- Nenhum contrato de API, rota, ordenacao, filtro, schema, migration, package ou tracking de WhatsApp
+  foi alterado.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome/CDP autenticado em `/app/favorites` validou mobile 390px e desktop 1280px: header sem gradiente
+  ou sombra, titulo em escala controlada, filtros presentes, cards reais renderizados, coracao maior e
+  CTA WhatsApp com fonte de 11px no desktop.

@@ -188,10 +188,10 @@ const FilterChip = ({
     <button
       aria-pressed={active}
       className={cn(
-        "inline-flex h-7 shrink-0 items-center gap-1 rounded-full border px-2.5 text-[11px] font-bold tracking-[-0.01em] shadow-sm backdrop-blur transition",
+        "inline-flex h-7 shrink-0 items-center gap-1 rounded-full border px-2.5 text-[10.5px] font-bold tracking-[-0.01em] transition",
         active
-          ? "border-primary/20 bg-white/92 text-primary shadow-[0_10px_22px_rgb(48_140_232_/_13%)]"
-          : "border-white/70 bg-white/64 text-[#64748B] hover:border-primary/25 hover:bg-white/86 hover:text-primary dark:border-border dark:bg-surface/80 dark:text-muted",
+          ? "border-primary/20 bg-primary-soft text-primary shadow-[0_8px_18px_rgb(48_140_232_/_8%)]"
+          : "border-border/80 bg-surface/80 text-muted hover:border-primary/20 hover:bg-primary-soft/45 hover:text-primary dark:border-border dark:bg-surface dark:text-muted",
       )}
       onClick={onClick}
       type="button"
@@ -223,20 +223,20 @@ const FavoritePsychologistCard = ({
   return (
     <article
       aria-label={`Abrir perfil de ${psychologist.name}`}
-      className="group relative isolate flex min-h-[210px] w-full flex-col overflow-hidden rounded-[22px] border border-[#E7ECF2] bg-white p-2.5 text-center shadow-[0_12px_28px_rgb(15_23_42_/_6%)] transition duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_18px_42px_rgb(15_23_42_/_10%)] dark:border-border dark:bg-surface sm:min-h-[244px] sm:rounded-[26px] sm:p-3.5"
+      className="group relative isolate flex min-h-[226px] w-full flex-col overflow-hidden rounded-[24px] border border-[#E7ECF2] bg-white p-3.5 text-center shadow-[0_12px_28px_rgb(15_23_42_/_6%)] transition duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_18px_42px_rgb(15_23_42_/_10%)] dark:border-border dark:bg-surface sm:min-h-[264px] sm:rounded-[28px] sm:p-4"
     >
       <button
         aria-label={`Remover ${psychologist.name} dos favoritos`}
         aria-pressed="true"
-        className="absolute top-3 right-3 z-20 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-transparent text-rose-500/90 transition hover:scale-105 hover:text-rose-500 disabled:pointer-events-none disabled:opacity-60 sm:top-3.5 sm:right-3.5"
+        className="absolute top-3 right-3 z-20 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-transparent text-rose-500/90 transition hover:scale-105 hover:bg-rose-50/80 hover:text-rose-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/20 disabled:pointer-events-none disabled:opacity-60 sm:top-3.5 sm:right-3.5"
         disabled={favoritePending}
         onClick={handleFavoriteClick}
         type="button"
       >
         {favoritePending ? (
-          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+          <Loader2 className="h-[18px] w-[18px] animate-spin" aria-hidden="true" />
         ) : (
-          <Heart className="h-3.5 w-3.5 fill-current" aria-hidden="true" />
+          <Heart className="h-5 w-5 fill-current" aria-hidden="true" />
         )}
       </button>
 
@@ -245,7 +245,7 @@ const FavoritePsychologistCard = ({
         className="grid min-h-0 content-start justify-items-center text-center no-underline hover:no-underline"
         href={route}
       >
-        <div className="relative mt-1 h-[84px] w-[84px] rounded-full bg-primary-soft p-1 shadow-[0_14px_30px_rgb(15_23_42_/_10%)] sm:h-[106px] sm:w-[106px]">
+        <div className="relative mt-1.5 h-[88px] w-[88px] rounded-full bg-primary-soft p-1 shadow-[0_14px_30px_rgb(15_23_42_/_10%)] sm:mt-2 sm:h-[110px] sm:w-[110px]">
           <div className="relative h-full w-full overflow-hidden rounded-full bg-surface-muted ring-4 ring-white dark:ring-surface">
             <FavoriteMedia psychologist={psychologist} />
           </div>
@@ -262,7 +262,7 @@ const FavoritePsychologistCard = ({
           ) : null}
         </div>
 
-        <div className="mt-3 grid min-w-0 justify-items-center gap-0.5 sm:mt-3.5 sm:gap-1">
+        <div className="mt-4 grid min-w-0 justify-items-center gap-1 sm:mt-[1.125rem] sm:gap-1.5">
           <span className="flex min-w-0 max-w-full items-start justify-center gap-1.5">
             <span className="line-clamp-2 min-w-0 text-[0.88rem] font-bold leading-[1.15] tracking-[-0.02em] text-foreground sm:text-[0.98rem]">
               {psychologist.name}
@@ -271,13 +271,13 @@ const FavoritePsychologistCard = ({
               <VerifiedBadgeIcon className="mt-[1px] h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
             ) : null}
           </span>
-          <p className="text-xs font-medium text-muted sm:text-sm">{profession}</p>
+          <p className="text-xs font-medium text-muted sm:text-[0.82rem]">{profession}</p>
         </div>
       </Link>
 
       <PsychologistWhatsAppRedirectButton
         aria-label={`Chamar ${psychologist.name} no WhatsApp`}
-        className="mt-3 inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-[12px] bg-success px-3 text-xs font-black text-white shadow-[0_10px_20px_rgb(34_197_94_/_20%)] transition hover:bg-success/90 hover:shadow-[0_14px_26px_rgb(34_197_94_/_24%)] active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 disabled:shadow-none sm:mt-3.5 sm:h-9 sm:gap-2 sm:rounded-[14px] sm:text-sm"
+        className="mt-3.5 inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-[12px] bg-success px-2.5 font-black text-white shadow-[0_10px_20px_rgb(34_197_94_/_20%)] transition hover:bg-success/90 hover:shadow-[0_14px_26px_rgb(34_197_94_/_24%)] active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 disabled:shadow-none sm:mt-4 sm:h-[34px] sm:gap-1.5 sm:rounded-[14px]"
         psychologist={{
           avatar: psychologist.avatar,
           crp: psychologist.crp,
@@ -286,9 +286,10 @@ const FavoritePsychologistCard = ({
           typeLabel: getContactProfession(psychologist.gender),
           whatsappUrl: psychologist.whatsapp_url,
         }}
+        style={{ fontSize: "0.6875rem" }}
         stopPropagation
       >
-        <WhatsAppIcon className="h-4 w-4 text-white sm:h-[18px] sm:w-[18px]" aria-hidden="true" />
+        <WhatsAppIcon className="h-3.5 w-3.5 text-white" aria-hidden="true" />
         WhatsApp
       </PsychologistWhatsAppRedirectButton>
     </article>
@@ -372,44 +373,40 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
   return (
     <PrivateTemplate contentClassName="max-w-none px-0 pt-0 pb-8 sm:px-0 sm:py-0">
       <section className="grid w-full gap-4 lg:gap-6">
-        <header className="relative isolate overflow-hidden rounded-b-[34px] border-primary/10 border-b bg-[radial-gradient(circle_at_18%_8%,rgba(48,140,232,0.22),transparent_32%),radial-gradient(circle_at_92%_18%,rgba(34,197,94,0.12),transparent_28%),linear-gradient(135deg,#FFFFFF_0%,#F8FBFF_46%,#EAF5FF_100%)] px-5 pt-[calc(env(safe-area-inset-top)+1.25rem)] pb-5 shadow-[0_24px_54px_rgb(15_23_42_/_10%)] dark:border-border dark:bg-surface sm:px-8 sm:pt-8 sm:pb-7 lg:px-[max(2rem,calc((100vw-1120px)/2))] lg:pt-10 lg:pb-8">
-          <span className="pointer-events-none absolute -top-20 -right-14 h-44 w-44 rounded-full bg-primary/12 blur-3xl" />
-          <span className="pointer-events-none absolute right-6 bottom-0 h-28 w-28 rounded-full bg-success/10 blur-3xl lg:right-[max(2rem,calc((100vw-1120px)/2))]" />
-          <span className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-white/0 to-white/58 dark:to-surface/50" />
-
-          <div className="relative mx-auto grid w-full max-w-[1120px] gap-5">
-            <span className="pointer-events-none absolute top-0 right-0 grid h-12 w-12 place-items-center rounded-[22px] border border-white/70 bg-white/74 text-primary shadow-[0_16px_34px_rgb(48_140_232_/_16%)] backdrop-blur-xl sm:h-14 sm:w-14 lg:h-16 lg:w-16">
-              <Heart
-                className="h-6 w-6 fill-primary/18 stroke-primary sm:h-7 sm:w-7"
-                aria-hidden="true"
-              />
-            </span>
-
-            <div className="relative grid min-w-0 max-w-[720px] gap-3 pr-16 sm:pr-20 lg:pr-24">
-              <p className="inline-flex w-fit items-center rounded-full border border-primary/12 bg-white/66 px-2.5 py-1 text-[0.68rem] font-black uppercase tracking-[0.2em] text-primary shadow-sm backdrop-blur">
+        <header className="mx-auto grid w-full max-w-[1120px] gap-4 px-5 pt-5 sm:px-8 md:pt-8 lg:px-0">
+          <div className="flex items-start justify-between gap-4">
+            <div className="grid min-w-0 gap-2">
+              <p className="inline-flex w-fit items-center rounded-full border border-primary/10 bg-primary/5 px-2.5 py-1 text-[0.64rem] font-black uppercase tracking-[0.18em] text-primary/80">
                 {copy.eyebrow as string}
               </p>
-              <div className="grid gap-2">
-                <h1 className="text-[2.05rem] font-black leading-[0.98] tracking-[-0.055em] text-foreground sm:text-5xl lg:text-[3.45rem]">
+              <div className="grid gap-1.5">
+                <h1 className="text-2xl font-extrabold leading-tight tracking-tight text-foreground sm:text-3xl">
                   {copy.title as string}
                 </h1>
-                <p className="max-w-[36rem] text-sm leading-6 text-[#64748B] sm:text-base lg:text-[1.05rem]">
+                <p className="max-w-[34rem] text-sm leading-5 text-muted sm:text-[0.95rem] sm:leading-6">
                   {copy.description as string}
                 </p>
               </div>
             </div>
 
-            <div className="-mx-5 overflow-x-auto scroll-smooth px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0">
-              <div className="flex w-max flex-nowrap gap-2 whitespace-nowrap">
-                {favoriteFilters.map((filter) => (
-                  <FilterChip
-                    active={activeFilters[filter.key]}
-                    filter={filter}
-                    key={filter.key}
-                    onClick={() => toggleFilter(filter.key)}
-                  />
-                ))}
-              </div>
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-primary sm:h-12 sm:w-12">
+              <Heart
+                className="h-[22px] w-[22px] fill-primary/12 stroke-primary sm:h-6 sm:w-6"
+                aria-hidden="true"
+              />
+            </span>
+          </div>
+
+          <div className="-mx-5 overflow-x-auto scroll-smooth px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0">
+            <div className="flex w-max flex-nowrap gap-2 whitespace-nowrap">
+              {favoriteFilters.map((filter) => (
+                <FilterChip
+                  active={activeFilters[filter.key]}
+                  filter={filter}
+                  key={filter.key}
+                  onClick={() => toggleFilter(filter.key)}
+                />
+              ))}
             </div>
           </div>
         </header>

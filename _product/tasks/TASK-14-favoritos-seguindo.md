@@ -282,3 +282,16 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Não houve alteração de backend, Prisma, migrations, packages, endpoints, filtros, paginação, favoritos ou tracking de contato.
 - ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local Chrome headless autenticado em `/app/favorites`.
+
+## Complemento 2026-06-16 - header limpo e cards com mais respiro
+
+- Pedido do usuario: aproximar o header de `/app/favorites` do modelo limpo de `/app/notifications`, removendo o hero gradiente, reduzindo exageros tipograficos e refinando cards/CTA/coracao.
+- Referencia visual ativa: `_product/proto/Favoritos.jpg` e o header real de `/app/notifications`; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao, mantendo fallback auditavel por imagens locais e browser local.
+- O header deixou de ser um bloco full-bleed com gradiente, blur e sombra; agora fica integrado ao fundo da pagina, sem fundo branco destacado, sem container colorido e com titulo/subtitulo em escala mais discreta.
+- O chip `Sua curadoria` ficou menor, com borda/fundo azul muito sutis; os chips de filtro ficaram neutros/compactos fora do hero colorido.
+- Os cards de favoritos ganharam mais padding e respiro entre avatar, nome, `Psicologo` e CTA, preservando a grade mobile de duas colunas.
+- O CTA `WhatsApp` manteve fundo verde preenchido e icone, mas a tipografia foi reduzida para menor peso visual.
+- O coracao do card foi aumentado e ganhou area clicavel maior, mantendo visual elegante e a mesma logica real de remover favorito.
+- Nao houve alteracao de backend, Prisma, migrations, packages, endpoints, filtros, paginacao, favoritos ou tracking de contato.
+- ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local Chrome/CDP autenticado em mobile 390px e desktop 1280px em `/app/favorites`.
