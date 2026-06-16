@@ -1,11 +1,8 @@
 "use client";
 
 import {
-  ArrowDown,
   ArrowLeft,
-  ArrowUp,
   BadgeCheck,
-  Bookmark,
   ChevronLeft,
   ChevronRight,
   FileText,
@@ -14,9 +11,7 @@ import {
   MessageCircle,
   MoreVertical,
   Paperclip,
-  Reply,
   Send,
-  Share2,
   UserX,
   X,
 } from "lucide-react";
@@ -26,6 +21,7 @@ import { useParams } from "next/navigation";
 import {
   type ChangeEvent,
   type MouseEvent,
+  type MouseEventHandler,
   type RefObject,
   useEffect,
   useLayoutEffect,
@@ -46,10 +42,9 @@ import {
   useVotePost,
 } from "@/api/callers/posts";
 import type { PostDetail, PostReply } from "@/api/generator/types/posts";
+import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
 import { MentorBadge } from "@/components/community/mentor-badge";
-import { PostActionButton } from "@/components/community/post-action-button";
-import { VoteActionButton } from "@/components/community/vote-action-button";
 import { components } from "@/components/controllers";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -707,59 +702,29 @@ const PostVoteBar = ({
   onVote: (value: 1 | -1) => void;
   post: PostDetail;
 }) => (
-  <div className="flex items-center gap-1.5 overflow-x-auto whitespace-nowrap border-[#EDF1F5] border-t px-4 py-2.5 [scrollbar-width:none] dark:border-border sm:justify-between sm:gap-2 sm:overflow-visible sm:py-3">
-    <div className="flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-2">
-      <div className="inline-flex items-center gap-0.5 rounded-full bg-[#F4F6F8] p-0.5 ring-1 ring-[#E7ECF2] dark:bg-surface-muted dark:ring-border">
-        <VoteActionButton
-          count={post.upvotes_count}
-          currentVote={currentVote}
-          disabled={disabled}
-          icon={ArrowUp}
-          label="Marcar como útil"
-          onVote={onVote}
-          size="sm"
-          value={1}
-        />
-        <span className="h-4 w-px bg-[#DDE4EC] dark:bg-border" aria-hidden="true" />
-        <VoteActionButton
-          currentVote={currentVote}
-          disabled={disabled}
-          icon={ArrowDown}
-          label="Dar downvote"
-          onVote={onVote}
-          showPositiveDelta={false}
-          size="sm"
-          value={-1}
-        />
-      </div>
-      <PostActionButton
-        count={post.replies_count}
-        icon={MessageCircle}
-        label="Comentar no post"
-        onClick={onFocusCommentComposer}
-        size="sm"
-      />
-    </div>
-    <div className="ml-auto flex shrink-0 items-center gap-1">
-      <PostActionButton
-        active={post.saved}
-        count={post.saves_count}
-        disabled={disabled}
-        icon={Bookmark}
-        iconClassName={post.saved ? "fill-current" : undefined}
-        label={post.saved ? "Remover dos salvos" : "Salvar post"}
-        onClick={onToggleSave}
-        size="sm"
-      />
-      <PostActionButton
-        className="w-8 px-0"
-        icon={Share2}
-        label={`Compartilhar ${post.title}`}
-        onClick={onShare}
-        size="sm"
-      />
-    </div>
-  </div>
+  <CommunityActionBar
+    className="border-[#EDF1F5] border-t px-4 py-2.5 dark:border-border sm:py-3"
+    comments={{
+      count: post.replies_count,
+      label: "Comentar no post",
+      onClick: onFocusCommentComposer,
+    }}
+    currentVote={currentVote}
+    disabled={disabled}
+    onVote={onVote}
+    save={{
+      active: post.saved,
+      count: post.saves_count,
+      disabled,
+      label: post.saved ? "Remover dos salvos" : "Salvar post",
+      onClick: onToggleSave,
+    }}
+    share={{
+      label: `Compartilhar ${post.title}`,
+      onClick: onShare,
+    }}
+    upvotesCount={post.upvotes_count}
+  />
 );
 
 const ReplyVoteBar = ({
@@ -776,65 +741,33 @@ const ReplyVoteBar = ({
   disabled?: boolean;
   onReply: () => void;
   onShare: () => void;
-  onToggleSave: (event: MouseEvent<HTMLButtonElement>) => void;
+  onToggleSave: MouseEventHandler<HTMLButtonElement>;
   onVote: (value: 1 | -1) => void;
   reply: PostReply;
   savePending?: boolean;
 }) => (
-  <div className="mt-2 flex items-center gap-1.5 overflow-x-auto whitespace-nowrap [scrollbar-width:none] sm:mt-3 sm:justify-between sm:gap-2 sm:overflow-visible">
-    <div className="flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-2">
-      <div className="inline-flex items-center gap-0.5 rounded-full bg-[#F4F6F8] p-0.5 ring-1 ring-[#E7ECF2] dark:bg-surface-muted dark:ring-border">
-        <VoteActionButton
-          count={reply.upvotes_count}
-          currentVote={currentVote}
-          disabled={disabled}
-          icon={ArrowUp}
-          label="Marcar resposta como útil"
-          onVote={onVote}
-          size="sm"
-          value={1}
-        />
-        <span className="h-4 w-px bg-[#DDE4EC] dark:bg-border" aria-hidden="true" />
-        <VoteActionButton
-          currentVote={currentVote}
-          disabled={disabled}
-          icon={ArrowDown}
-          label="Dar downvote na resposta"
-          onVote={onVote}
-          showPositiveDelta={false}
-          size="sm"
-          value={-1}
-        />
-      </div>
-      <button
-        className="inline-flex h-8 shrink-0 items-center justify-center gap-1 rounded-full px-2 text-[11px] font-semibold leading-none tracking-[-0.01em] text-muted transition hover:bg-surface-muted hover:text-foreground active:scale-[0.97] sm:gap-1.5 sm:px-2.5 sm:text-[12px]"
-        onClick={onReply}
-        type="button"
-      >
-        <Reply className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" strokeWidth={2} aria-hidden="true" />
-        Responder
-      </button>
-    </div>
-    <div className="ml-auto flex shrink-0 items-center gap-1">
-      <PostActionButton
-        active={reply.saved}
-        className="h-8 w-8 px-0"
-        disabled={savePending}
-        icon={Bookmark}
-        iconClassName={reply.saved ? "fill-current" : undefined}
-        label={reply.saved ? "Remover resposta dos salvos" : "Salvar resposta"}
-        onClick={onToggleSave}
-        size="sm"
-      />
-      <PostActionButton
-        className="h-8 w-8 px-0"
-        icon={Share2}
-        label="Compartilhar resposta"
-        onClick={onShare}
-        size="sm"
-      />
-    </div>
-  </div>
+  <CommunityActionBar
+    className="mt-2 sm:mt-3"
+    currentVote={currentVote}
+    disabled={disabled}
+    onVote={onVote}
+    reply={{
+      label: "Responder",
+      onClick: onReply,
+    }}
+    save={{
+      active: reply.saved,
+      disabled: savePending,
+      label: reply.saved ? "Remover resposta dos salvos" : "Salvar resposta",
+      onClick: onToggleSave,
+    }}
+    share={{
+      label: "Compartilhar resposta",
+      onClick: onShare,
+    }}
+    upvotesCount={reply.upvotes_count}
+    voteLabel="Marcar resposta como útil"
+  />
 );
 
 const ReplyCard = ({

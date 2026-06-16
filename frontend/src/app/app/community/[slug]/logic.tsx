@@ -1,12 +1,10 @@
 "use client";
 
 import {
-  ArrowDown,
   ArrowLeft,
   ArrowUp,
   Award,
   BadgeCheck,
-  Bookmark,
   CalendarDays,
   Check,
   ChevronDown,
@@ -57,11 +55,11 @@ import type {
   CommunityFeedScope,
   CommunityPost,
 } from "@/api/generator/types/community";
+import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityFollowButton } from "@/components/community/community-follow-button";
 import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
 import { MentorBadge } from "@/components/community/mentor-badge";
-import { PostActionButton, PostActionLink } from "@/components/community/post-action-button";
-import { VoteActionButton, type VoteValue } from "@/components/community/vote-action-button";
+import type { VoteValue } from "@/components/community/vote-action-button";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -1290,58 +1288,29 @@ const PostCard = ({
         <ProfessionalReplyPreview post={post} />
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-[#EDF1F5] border-t pt-3 dark:border-border">
-        <div className="flex min-w-0 items-center gap-2">
-          <div className="inline-flex h-8 items-center overflow-visible rounded-full bg-[#F4F6F8] ring-1 ring-[#E7ECF2] dark:bg-surface-muted dark:ring-border">
-            <VoteActionButton
-              count={voteSnapshot.upvotes}
-              currentVote={voteSnapshot.currentVote}
-              disabled={voteMutation.isPending}
-              icon={ArrowUp}
-              label="Marcar como útil"
-              onVote={handleVote}
-              size="sm"
-              value={1}
-            />
-            <span className="h-4 w-px bg-[#DDE4EC] dark:bg-border" aria-hidden="true" />
-            <VoteActionButton
-              currentVote={voteSnapshot.currentVote}
-              disabled={voteMutation.isPending}
-              icon={ArrowDown}
-              label="Dar downvote"
-              onVote={handleVote}
-              showPositiveDelta={false}
-              size="sm"
-              value={-1}
-            />
-          </div>
-          <PostActionLink
-            count={post.replies_count}
-            href={postDetailHref}
-            icon={MessageCircle}
-            label="Comentar"
-            size="sm"
-          />
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <PostActionButton
-            active={saveSnapshot.saved}
-            count={saveSnapshot.saves}
-            disabled={saveMutation.isPending}
-            icon={Bookmark}
-            iconClassName={saveSnapshot.saved ? "fill-current" : undefined}
-            label={saveSnapshot.saved ? "Remover dos salvos" : "Salvar post"}
-            onClick={handleToggleSave}
-            size="sm"
-          />
-          <PostActionButton
-            icon={Share2}
-            label={`Compartilhar ${post.title}`}
-            onClick={() => onShare(post)}
-            size="sm"
-          />
-        </div>
-      </div>
+      <CommunityActionBar
+        className="mt-4 border-[#EDF1F5] border-t pt-3 dark:border-border"
+        comments={{
+          count: post.replies_count,
+          href: postDetailHref,
+          label: "Comentar",
+        }}
+        currentVote={voteSnapshot.currentVote}
+        disabled={voteMutation.isPending}
+        onVote={handleVote}
+        save={{
+          active: saveSnapshot.saved,
+          count: saveSnapshot.saves,
+          disabled: saveMutation.isPending,
+          label: saveSnapshot.saved ? "Remover dos salvos" : "Salvar post",
+          onClick: handleToggleSave,
+        }}
+        share={{
+          label: `Compartilhar ${post.title}`,
+          onClick: () => onShare(post),
+        }}
+        upvotesCount={voteSnapshot.upvotes}
+      />
     </article>
   );
 };

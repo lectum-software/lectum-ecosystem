@@ -1,20 +1,11 @@
 "use client";
 
-import {
-  ArrowDown,
-  ArrowUp,
-  BadgeCheck,
-  Bookmark,
-  FileText,
-  type LucideIcon,
-  MessageCircle,
-  Share2,
-  UserX,
-} from "lucide-react";
+import { BadgeCheck, FileText, UserX } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { PostListPost, PostProfessionalReply } from "@/api/generator/types/posts";
+import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { MentorBadge } from "@/components/community/mentor-badge";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
@@ -29,13 +20,6 @@ type CommunityPostCardProps = {
   post: PostListPost;
   showCommunityHeader?: boolean;
   statusBadge?: ReactNode;
-};
-
-type CountActionProps = {
-  active?: boolean;
-  icon: LucideIcon;
-  label: string;
-  value?: number;
 };
 
 const formatRelativeTime = (value: string) => {
@@ -135,22 +119,6 @@ const AuthorAvatar = ({
     </Link>
   );
 };
-
-const CountAction = ({ active, icon: Icon, label, value }: CountActionProps) => (
-  <span
-    title={label}
-    className={cn(
-      "inline-flex h-8 items-center justify-center gap-1.5 rounded-full px-2.5 text-[12px] font-semibold leading-none tracking-[-0.01em] text-muted",
-      active && "bg-primary-soft text-primary",
-    )}
-  >
-    <Icon
-      className={cn("h-4 w-4 shrink-0", active && label.includes("Salvar") && "fill-current")}
-      strokeWidth={2}
-    />
-    {typeof value === "number" ? value.toLocaleString("pt-BR") : null}
-  </span>
-);
 
 const MediaBlock = ({
   alt,
@@ -355,33 +323,26 @@ export const CommunityPostCard = ({
         <ProfessionalReplyPreview reply={post.highlighted_professional_reply} />
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-border border-t pt-3">
-        <div className="flex min-w-0 items-center gap-2">
-          <div className="inline-flex items-center gap-0.5 rounded-full bg-[#F4F6F8] p-0.5 ring-1 ring-[#E7ECF2] dark:bg-surface-muted dark:ring-border">
-            <CountAction icon={ArrowUp} label="Upvotes" value={post.upvotes_count} />
-            <span className="h-4 w-px bg-[#DDE4EC] dark:bg-border" aria-hidden="true" />
-            <CountAction icon={ArrowDown} label="Downvotes" />
-          </div>
-          <CountAction icon={MessageCircle} label="Comentários" value={post.replies_count} />
-        </div>
-        <div className="flex shrink-0 items-center gap-1">
-          <CountAction
-            active={post.saved}
-            icon={Bookmark}
-            label="Salvar"
-            value={post.saves_count}
-          />
-          <button
-            aria-label={`Compartilhar ${post.title}`}
-            className="grid h-8 w-8 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary active:scale-[0.97]"
-            onClick={() => onShare(post)}
-            type="button"
-          >
-            <Share2 className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
-          </button>
-          {footerExtra}
-        </div>
-      </div>
+      <CommunityActionBar
+        className="mt-4 border-border border-t pt-3"
+        comments={{
+          count: post.replies_count,
+          href: postDetailHref(post),
+          label: "Comentários",
+        }}
+        currentVote={post.current_user_vote}
+        endSlot={footerExtra}
+        save={{
+          active: post.saved,
+          count: post.saves_count,
+          label: "Salvar",
+        }}
+        share={{
+          label: `Compartilhar ${post.title}`,
+          onClick: () => onShare(post),
+        }}
+        upvotesCount={post.upvotes_count}
+      />
     </article>
   );
 };

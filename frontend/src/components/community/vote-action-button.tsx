@@ -2,6 +2,10 @@
 
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import {
+  POST_ACTION_COUNT_CLASSNAME,
+  POST_ACTION_ICON_CLASSNAME,
+} from "@/components/community/post-action-button";
 import { cn } from "@/lib/utils";
 
 export type VoteValue = 1 | -1 | null;
@@ -22,6 +26,12 @@ type VoteActionButtonProps = {
 const ICON_PULSE_MS = 180;
 const COUNTER_PULSE_MS = 180;
 const POSITIVE_DELTA_MS = 300;
+
+const voteSizeClassName = (size: "sm" | "md", iconOnly: boolean) => {
+  const base = size === "sm" ? "h-8 text-[12px]" : "h-9 text-[12px]";
+
+  return iconOnly ? `${base} w-8 gap-0 px-0` : `${base} min-w-8 gap-1.5 px-2.5`;
+};
 
 const triggerHapticFeedback = () => {
   if (typeof navigator === "undefined") return;
@@ -47,6 +57,7 @@ export const VoteActionButton = ({
 }: VoteActionButtonProps) => {
   const isUpvote = value === 1;
   const isActive = currentVote === value;
+  const iconOnly = !isUpvote && typeof count !== "number";
   const [iconPulsing, setIconPulsing] = useState(false);
   const [counterPulsing, setCounterPulsing] = useState(false);
   const [positiveDeltaVisible, setPositiveDeltaVisible] = useState(false);
@@ -139,7 +150,7 @@ export const VoteActionButton = ({
         className={cn(
           "relative inline-flex items-center justify-center rounded-full text-[12px] font-semibold leading-none tracking-[-0.01em] transition-[background-color,color,transform] duration-200 active:scale-[0.97] disabled:opacity-60",
           "text-muted hover:bg-surface-muted hover:text-foreground",
-          size === "sm" ? "h-8 min-w-8 gap-1.5 px-2.5" : "h-9 min-w-9 gap-1.5 px-2.5",
+          voteSizeClassName(size, iconOnly),
           isActive &&
             (isUpvote
               ? "bg-success/10 text-success hover:bg-success/15 hover:text-success"
@@ -153,18 +164,21 @@ export const VoteActionButton = ({
       >
         <Icon
           className={cn(
-            "shrink-0 transition-transform duration-200 ease-out",
-            "h-4 w-4",
+            POST_ACTION_ICON_CLASSNAME,
+            "transition-transform duration-200 ease-out",
             iconPulsing ? "scale-[1.15]" : "scale-100",
           )}
           strokeWidth={2}
           aria-hidden="true"
         />
-        {isUpvote ? <span className="font-bold leading-none">Útil</span> : null}
+        {isUpvote ? (
+          <span className="font-semibold leading-none tracking-[-0.01em]">Útil</span>
+        ) : null}
         {typeof count === "number" ? (
           <span
             className={cn(
-              "min-w-[1.1ch] text-center font-semibold tabular-nums leading-none transition-all duration-200",
+              POST_ACTION_COUNT_CLASSNAME,
+              "transition-all duration-200",
               counterPulsing ? "scale-105 opacity-90" : "scale-100 opacity-100",
             )}
           >
