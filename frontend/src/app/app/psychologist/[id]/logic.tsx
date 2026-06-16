@@ -584,15 +584,28 @@ const ProfileHero = ({
             ) : null}
           </h1>
 
-          <div className="grid gap-0.5">
+          <div className="grid gap-1">
             <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold text-muted">
               {getPsychologistTitle(profile.gender)}
               <span aria-hidden="true">•</span>
               <span>{formattedCrp}</span>
             </p>
 
-            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] font-medium text-[#64748B]">
-              <span className="inline-flex items-center gap-1 text-[#B45309]">
+            {profile.available_today ? (
+              <span
+                className="inline-flex w-fit items-center gap-2 text-[12px] font-black text-[#16A34A]"
+                data-availability-badge="true"
+              >
+                <span className="relative flex h-2.5 w-2.5" aria-hidden="true">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-[#22C55E] opacity-75 motion-safe:animate-ping" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#16A34A]" />
+                </span>
+                Disponível hoje
+              </span>
+            ) : null}
+
+            <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] font-medium text-[#94A3B8]">
+              <span className="inline-flex items-center gap-1 font-bold text-[#B45309]">
                 <Star className="h-3.5 w-3.5 fill-[#FBBF24] text-[#FBBF24]" aria-hidden="true" />
                 {formatHeroRating(profile.rating_avg)}
               </span>
@@ -601,28 +614,13 @@ const ProfileHero = ({
                   <span aria-hidden="true" className="text-[#CBD5E1]">
                     •
                   </span>
-                  <span className="text-[#475569]">{experienceLabel}</span>
+                  <span className="text-[12px] font-medium text-[#94A3B8]">{experienceLabel}</span>
                 </>
               ) : null}
             </p>
           </div>
 
-          {profile.available_today ? (
-            <span
-              className="mt-0.5 inline-flex w-fit items-center gap-2 text-[12px] font-black text-[#16A34A]"
-              data-availability-badge="true"
-            >
-              <span className="relative flex h-2.5 w-2.5" aria-hidden="true">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-[#22C55E] opacity-75 motion-safe:animate-ping" />
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#16A34A]" />
-              </span>
-              Disponível hoje
-            </span>
-          ) : null}
-
-          <p className="max-w-2xl whitespace-pre-line text-sm leading-6 text-[#475569] dark:text-muted">
-            {headline}
-          </p>
+          <ExpandableAboutText containerClassName="mt-0.5 max-w-2xl" text={headline} />
 
           {benefitTags.length > 0 ? (
             <div className="mt-1.5 flex flex-wrap gap-2" data-profile-benefit-tags="true">
@@ -631,7 +629,7 @@ const ProfileHero = ({
 
                 return (
                   <span
-                    className="inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-full border border-[#DBEAFE] bg-primary-soft px-3 py-1 text-xs font-black leading-none text-primary"
+                    className="inline-flex min-h-7 max-w-full items-center gap-1.5 rounded-full border border-[#BFDBFE] bg-transparent px-2.5 py-1 text-[11.5px] font-semibold leading-none text-[#2563EB] dark:border-primary/35 dark:text-primary"
                     key={tag.label}
                   >
                     <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -684,9 +682,9 @@ const ProfileTabs = ({
   return (
     <div
       className={cn(
-        "sticky z-20 border-[#E2E8F0] border-b transition-[background-color,border-color,box-shadow] duration-300 dark:border-border",
+        "sticky z-30 border-[#E5EAF0] border-b backdrop-blur transition-[background-color,border-color,box-shadow,transform,opacity] duration-300 ease-out supports-[backdrop-filter]:bg-[#F5F7FA]/88 dark:border-border",
         isStuck
-          ? "bg-white/88 shadow-[0_10px_26px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:bg-background/85"
+          ? "bg-[#F5F7FA]/95 shadow-[0_10px_26px_rgba(15,23,42,0.06)] dark:bg-background/90"
           : "bg-[#F5F7FA] shadow-none dark:bg-background",
       )}
       data-profile-sticky-navigation="true"
@@ -851,13 +849,27 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
   );
 };
 
-const ExpandableAboutText = ({ text }: { text: string }) => {
+const ExpandableAboutText = ({
+  containerClassName,
+  moreClassName,
+  text,
+  textClassName,
+}: {
+  containerClassName?: string;
+  moreClassName?: string;
+  text: string;
+  textClassName?: string;
+}) => {
   const [expanded, setExpanded] = useState(false);
   const [preview, setPreview] = useState(text.trim());
   const [truncated, setTruncated] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLParagraphElement>(null);
   const content = text.trim();
+  const paragraphClassName = cn(
+    "whitespace-pre-line text-[14px] font-medium leading-[1.65] text-[#334155] dark:text-foreground/80 sm:text-[14.5px]",
+    textClassName,
+  );
 
   useLayoutEffect(() => {
     const containerNode = containerRef.current;
@@ -955,14 +967,20 @@ const ExpandableAboutText = ({ text }: { text: string }) => {
   };
 
   return (
-    <div className="relative mt-2.5 min-w-0 max-w-full" ref={containerRef}>
-      <p className="whitespace-pre-line text-[13px] leading-[1.6] text-[#475569] sm:text-[13.5px]">
+    <div
+      className={cn("relative mt-2.5 min-w-0 max-w-full", containerClassName)}
+      ref={containerRef}
+    >
+      <p className={paragraphClassName}>
         {expanded || !truncated ? content : preview}
         {truncated ? (
           <>
             {" "}
             <button
-              className="pointer-events-auto inline cursor-pointer rounded-none border-0 bg-transparent p-0 align-baseline font-[inherit] text-[#64748B]/85 [font-size:inherit] [line-height:inherit] hover:text-[#1D4ED8]"
+              className={cn(
+                "pointer-events-auto inline cursor-pointer rounded-none border-0 bg-transparent p-0 align-baseline font-semibold text-[#2563EB]/85 [font-size:inherit] [line-height:inherit] hover:text-[#1D4ED8]",
+                moreClassName,
+              )}
               onClick={toggleExpanded}
               type="button"
             >
@@ -973,7 +991,10 @@ const ExpandableAboutText = ({ text }: { text: string }) => {
       </p>
       <p
         aria-hidden="true"
-        className="pointer-events-none invisible absolute inset-x-0 top-0 whitespace-pre-line text-[13px] leading-[1.6] text-[#475569] opacity-0 sm:text-[13.5px]"
+        className={cn(
+          paragraphClassName,
+          "pointer-events-none invisible absolute inset-x-0 top-0 opacity-0",
+        )}
         ref={measureRef}
       >
         {content}
