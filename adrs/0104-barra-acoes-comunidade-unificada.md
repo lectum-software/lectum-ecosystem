@@ -35,3 +35,16 @@ A barra passa a padronizar:
 - A variante `xs` passa a manter `upvote`, `downvote`, contador, `Responder`, salvar e compartilhar sempre em uma única linha, inclusive nas camadas profundas da árvore de comentários.
 - O texto `Responder` fica em um `span` interno dedicado para preservar a escala compacta apesar do reset global `button { font: inherit; }`, mantendo o botão discreto sem ícone.
 - Salvar e compartilhar permanecem como ações de ícone em todas as camadas de resposta, sem alterar mutations, ordenação, destaque de psicólogos verificados ou contratos de API.
+
+## Atualizacao 2026-06-16 - ajuste fino dos controles de comentarios
+
+- A variante compacta `xs` da `CommunityActionBar` foi refinada para dividir a barra em dois grupos: upvote/downvote/`Responder` a esquerda e salvar/compartilhar a direita.
+- Salvar e compartilhar voltaram a usar `ml-auto` tambem em comentarios, mantendo coluna visual fixa a direita do comentario mesmo em respostas aninhadas.
+- O grupo esquerdo agora pode encolher sem quebrar linha; `Responder` usa `text-[10px] font-semibold`, igual a escala do contador de upvotes, e aplica `truncate`/ellipsis quando o espaco fica insuficiente.
+- A barra continua com `white-space: nowrap`, sem capsula cinza nos votos inline e sem alterar mutations, ordenacao, destaque de psicologos verificados, backend, Prisma, contratos ou packages.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Browser local autenticado via Chrome headless/CDP em 390px na rota do detalhe do post demo, confirmando barras `xs` com `Responder` em `10px`, salvar/compartilhar na direita, `topSpread=0` e `white-space: nowrap`.

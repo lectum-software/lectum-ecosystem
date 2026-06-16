@@ -294,3 +294,13 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm check`
   - HTTP local `200` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video` e `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video/thread/demo-reply-ansiedade-apresentacao-psi-video` com cookie de sessão local.
   - Browser local Chrome headless autenticado nas mesmas rotas, conferindo o detalhe do post e a thread isolada com o post original no topo.
+
+## Execucao complementar: ajuste fino dos controles de comentarios (2026-06-16)
+
+- Pedido do usuario: aumentar `Responder` para a mesma escala visual do numero de upvotes, manter os controles em uma unica linha e fixar salvar/compartilhar a direita em todas as camadas da arvore.
+- `CommunityActionBar` passou a separar a barra compacta em grupo esquerdo flexivel (`upvote`, `downvote`, `Responder`) e grupo direito com `ml-auto` (`salvar`, `compartilhar`).
+- `Responder` em comentarios usa `text-[10px] font-semibold`, igual a escala do contador de upvotes, com `truncate` para ellipsis quando faltar espaco em camadas profundas.
+- Salvar e compartilhar permanecem a direita do comentario independentemente do recuo visual da resposta, sem quebra de linha e sem alterar a logica de voto, salvar, compartilhar, ordenacao ou destaque profissional.
+- Nao houve alteracao de backend, Prisma, migrations, packages, endpoints, payloads ou persistencia.
+- ADR atualizado: `adrs/0104-barra-acoes-comunidade-unificada.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, browser local autenticado via Chrome headless/CDP em 390px na rota do detalhe do post demo confirmando barras `xs` sem quebra, `topSpread=0`, salvar/compartilhar a direita e `Responder` em 10px.

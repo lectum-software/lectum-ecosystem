@@ -44,3 +44,16 @@ No mobile, o perfil também passou a precisar de uma hierarquia mais focada: sem
 ## Pendências
 
 Builder/Quick Copy não esteve disponível como ferramenta direta no ambiente; a validação visual foi feita com browser local e comparação com a família visual de perfil/comunidade já implementada.
+
+## Atualizacao 2026-06-16 - CTA de WhatsApp alinhado ao video do perfil
+
+- A secao de video de apresentacao do perfil passou a agrupar video e CTA inline de WhatsApp no mesmo wrapper centralizado.
+- O botao inline de WhatsApp respeita a mesma largura util do video: largura total no mobile dentro do card e `sm:max-w-[260px]` no desktop, evitando deslocamento lateral.
+- O CTA fixo mobile e o botao flutuante desktop foram preservados para manter a conversao persistente, enquanto o CTA contextual abaixo do video facilita a acao imediata apos assistir.
+- A alteracao e somente frontend e nao muda contato, rastreamento de clique WhatsApp, backend, banco, Prisma, contracts ou packages.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Chrome headless local em 390px e 1440px na rota `http://localhost:3000/app/psychologist/demo-psychologist-camila-rocha`, confirmando video e botao alinhados/centralizados com a mesma largura util.

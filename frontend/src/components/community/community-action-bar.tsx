@@ -86,14 +86,14 @@ const separatorClassName = (size: CommunityActionSize, presentation: VotePresent
 
 const textOnlyReplyClassName = (size: CommunityActionSize) =>
   cn(
-    "inline-flex shrink-0 items-center justify-center rounded-md leading-none tracking-[-0.01em] text-muted transition-[color,transform] duration-200 hover:text-foreground active:scale-[0.97]",
-    size === "xs" ? "h-6 rounded-full px-0.5" : "h-8 px-2",
+    "inline-flex min-w-0 items-center justify-center rounded-md leading-none tracking-[-0.01em] text-muted transition-[color,transform] duration-200 hover:text-foreground active:scale-[0.97]",
+    size === "xs" ? "h-6 max-w-[4.5rem] shrink px-1" : "h-8 shrink-0 px-2",
   );
 
 const textOnlyReplyTextClassName = (size: CommunityActionSize) =>
   cn(
-    "block leading-none tracking-[-0.01em]",
-    size === "xs" ? "text-[9px] font-medium" : "text-[11px] font-medium",
+    "block min-w-0 truncate leading-none tracking-[-0.01em]",
+    size === "xs" ? "text-[10px] font-semibold" : "text-[11px] font-medium",
   );
 
 export const CommunityActionBar = ({
@@ -118,7 +118,7 @@ export const CommunityActionBar = ({
     <div className={cn(actionBarClassName(size), className)} data-community-action-bar={size}>
       <div
         className={cn(
-          "flex min-w-0 shrink-0 flex-nowrap items-center",
+          "flex min-w-0 flex-1 flex-nowrap items-center",
           size === "xs" ? "gap-1" : "gap-1.5 sm:gap-2",
         )}
       >
@@ -211,7 +211,7 @@ export const CommunityActionBar = ({
       <div
         className={cn(
           "flex shrink-0 flex-nowrap items-center",
-          size === "xs" ? "ml-0 gap-0.5" : "ml-auto gap-1",
+          size === "xs" ? "ml-auto gap-0.5 pl-1" : "ml-auto gap-1 pl-2",
         )}
       >
         {save ? (

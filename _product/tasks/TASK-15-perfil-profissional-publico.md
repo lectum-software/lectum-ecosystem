@@ -501,3 +501,13 @@ Validacoes executadas:
 - Chrome headless mobile 390px em `http://localhost:3000/app/psychologist/demo-psychologist-camila-rocha?tab=publicacoes` confirmou chip numerico em `Publicacoes`, ausencia da nav inferior mobile, CTA fixo de WhatsApp e card com nome/selo/Top Mentor na mesma linha.
 - Chrome headless desktop 1440px confirmou layout desktop preservado, titulo `Publicacoes` com chip e publicacao no padrao de card real da comunidade.
 - Chrome headless mobile 390px em `http://localhost:3000/app/psychologist/demo-psychologist-camila-rocha` confirmou `Atendimento` com labels acima dos valores e CTA fixo sem encobrir a leitura.
+
+## Registro de ajuste complementar em 2026-06-16 - WhatsApp alinhado ao video
+
+- Pedido do usuario: alinhar corretamente o botao de WhatsApp abaixo do video de apresentacao, inclusive no desktop, respeitando a mesma largura util e centralizacao do video.
+- A secao `PresentationVideo` passou a agrupar video e CTA inline de WhatsApp em um wrapper unico centralizado, com largura total no mobile e `sm:max-w-[260px]` no desktop.
+- O botao inline usa o mesmo alvo seguro de redirecionamento/rastreamento do `PsychologistWhatsAppRedirectButton`, sem duplicar fluxo de contato nem alterar backend.
+- O CTA fixo mobile e o botao flutuante desktop foram preservados; o novo CTA contextual fica imediatamente abaixo do video com espacamento vertical consistente.
+- Nao houve alteracao de banco, Prisma, contratos, endpoints, packages, favoritos, avaliacoes ou publicacoes.
+- ADR atualizado: `adrs/0110-publicacoes-perfil-mobile-whatsapp-unico.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, Chrome headless local em 390px e 1440px na rota `http://localhost:3000/app/psychologist/demo-psychologist-camila-rocha`, confirmando video e botao alinhados/centralizados com mesma largura util.

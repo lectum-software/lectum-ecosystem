@@ -183,6 +183,15 @@ const formatDate = (value: string | null) => {
   }).format(new Date(value));
 };
 
+const toPsychologistWhatsAppIdentity = (profile: DirectoryPsychologistProfile) => ({
+  avatar: profile.avatar,
+  crp: profile.crp ? formatCrpNumber(profile.crp) : null,
+  id: profile.id,
+  name: profile.name,
+  typeLabel: getPsychologistTitle(profile.gender),
+  whatsappUrl: profile.whatsapp_url,
+});
+
 const scrollProfileContentIntoView = () => {
   if (typeof window === "undefined") return;
 
@@ -906,34 +915,31 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
   if (!videoSrc) return null;
 
   return (
-    <div className="mt-3 grid gap-2.5">
-      <article
-        className="box-border relative mx-auto w-full max-w-none overflow-hidden rounded-[18px] border border-[#E2E8F0] bg-[#e2e8f0] shadow-[0_8px_22px_rgba(15,23,42,0.055)] sm:max-w-[260px]"
-        data-presentation-video="true"
-      >
-        <VerticalVideoPlayer
-          className="rounded-[18px] border-0"
-          poster={videoCoverSrc}
-          src={videoSrc}
-          title={`Vídeo de apresentação de ${profile.name}`}
-        />
-      </article>
+    <div className="mt-3">
+      <div className="mx-auto grid w-full gap-3 sm:max-w-[260px]">
+        <article
+          className="box-border relative w-full overflow-hidden rounded-[18px] border border-[#E2E8F0] bg-[#e2e8f0] shadow-[0_8px_22px_rgba(15,23,42,0.055)]"
+          data-presentation-video="true"
+        >
+          <VerticalVideoPlayer
+            className="rounded-[18px] border-0"
+            poster={videoCoverSrc}
+            src={videoSrc}
+            title={`Vídeo de apresentação de ${profile.name}`}
+          />
+        </article>
 
-      <article
-        className={cn(
-          PROFILE_SUBTLE_SURFACE,
-          "box-border rounded-[20px] bg-white px-4 py-4 text-[#0F172A] sm:px-5 sm:py-[18px]",
-        )}
-      >
-        <p className="text-[15px] font-extrabold leading-tight tracking-[-0.02em] text-[#182033] sm:text-[16px]">
-          Quer falar com o profissional?
-        </p>
-        <p className="mt-2 text-[13px] font-medium leading-[1.55] text-[#475569] sm:text-[13.5px]">
-          O atendimento e os valores são alinhados diretamente no WhatsApp.
-          <br />
-          Toque no botão verde para iniciar a conversa.
-        </p>
-      </article>
+        {profile.whatsapp_url ? (
+          <PsychologistWhatsAppRedirectButton
+            aria-label={`Chamar ${profile.name} no WhatsApp`}
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[14px] bg-success px-4 text-[13px] font-extrabold text-white shadow-[0_10px_24px_rgba(22,163,74,0.18)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-success/90 hover:shadow-[0_14px_28px_rgba(22,163,74,0.22)] active:translate-y-0 active:scale-[0.99]"
+            psychologist={toPsychologistWhatsAppIdentity(profile)}
+          >
+            <WhatsAppIcon className="h-4 w-4" aria-hidden="true" />
+            Chamar no WhatsApp
+          </PsychologistWhatsAppRedirectButton>
+        ) : null}
+      </div>
     </div>
   );
 };
@@ -1642,14 +1648,7 @@ const WhatsAppCta = ({ profile }: { profile: DirectoryPsychologistProfile }) => 
         <div className="mx-auto w-full max-w-[430px]">
           <PsychologistWhatsAppRedirectButton
             className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[8px] bg-success text-[13px] font-bold text-white transition hover:bg-success/90"
-            psychologist={{
-              avatar: profile.avatar,
-              crp: profile.crp ? formatCrpNumber(profile.crp) : null,
-              id: profile.id,
-              name: profile.name,
-              typeLabel: getPsychologistTitle(profile.gender),
-              whatsappUrl: profile.whatsapp_url,
-            }}
+            psychologist={toPsychologistWhatsAppIdentity(profile)}
           >
             <WhatsAppIcon className="h-4 w-4" aria-hidden="true" />
             Chamar no WhatsApp
@@ -1660,14 +1659,7 @@ const WhatsAppCta = ({ profile }: { profile: DirectoryPsychologistProfile }) => 
       <PsychologistWhatsAppRedirectButton
         aria-label={`Chamar ${profile.name} no WhatsApp`}
         className="group fixed right-5 bottom-10 z-40 hidden h-14 w-14 place-items-center rounded-full border-[5px] border-white bg-[#16A34A] text-white shadow-[0_14px_30px_rgba(22,163,74,0.26)] transition-[transform,background-color,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:bg-[#15803D] hover:shadow-[0_18px_36px_rgba(22,163,74,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] focus-visible:ring-offset-2 focus-visible:ring-offset-white motion-safe:animate-[lectum-desktop-create-float_4.2s_ease-in-out_infinite] lg:grid lg:h-16 lg:w-16 xl:right-20 2xl:right-28"
-        psychologist={{
-          avatar: profile.avatar,
-          crp: profile.crp ? formatCrpNumber(profile.crp) : null,
-          id: profile.id,
-          name: profile.name,
-          typeLabel: getPsychologistTitle(profile.gender),
-          whatsappUrl: profile.whatsapp_url,
-        }}
+        psychologist={toPsychologistWhatsAppIdentity(profile)}
         title="Chamar no WhatsApp"
       >
         <WhatsAppIcon
