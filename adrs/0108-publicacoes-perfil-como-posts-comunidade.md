@@ -25,10 +25,13 @@ O endpoint `GET /api/private/directory/psychologists/:id/posts` passa a retornar
 
 No frontend, o perfil reutiliza `CommunityPostCard` tanto na prévia da aba Geral quanto na aba `Publicações`. O componente compartilhado recebeu suporte opcional a ações interativas (`interactiveActions`) para permitir upvote/downvote e salvar no perfil sem mudar os usos existentes em feed/comunidade.
 
+Complemento em 2026-06-16: o mesmo `contribution_type` também é a fonte de verdade visual para o contexto exibido no topo do card. Contribuições do tipo `post` mantêm o ícone de documento e o texto `Postado em {comunidade}`; contribuições do tipo `reply` usam ícone de comentário/resposta e o texto `Respondido em {comunidade}`. Como a aba `Publicações` e a prévia da aba Geral usam o mesmo `CommunityPostCard`, a regra fica centralizada e consistente nos dois locais.
+
 ## Consequências
 
 - O perfil deixa de manter um card resumido paralelo para publicações e passa a seguir a mesma família visual de posts da comunidade.
 - A seção passa a mostrar respostas profissionais no contexto do post original, preservando conteúdo, mídia e ações do post.
+- Posts originais e respostas ficam diferenciados por rótulo e ícone, sem duplicar layout nem criar exceção na prévia da aba Geral.
 - O contrato de `DirectoryPsychologistProfilePost` fica intencionalmente mais rico e dependente do DTO público de comunidade.
 - Novos ajustes visuais de post devem ser feitos no componente compartilhado quando forem aplicáveis a todos os contextos.
 - Não houve alteração de banco, Prisma, migrations ou instalação de packages.
@@ -42,6 +45,8 @@ No frontend, o perfil reutiliza `CommunityPostCard` tanto na prévia da aba Gera
 - `pnpm check`
 - API local `200` em `GET /api/private/directory/psychologists/demo-psychologist-camila-rocha/posts?limit=2`, retornando posts e respostas com `contribution_type`.
 - Chrome/CDP em 390px e 1440px validou no perfil demo o texto `3 publicações deste profissional`, botões `Ver todas` alinhados ao título e card de post real com resposta profissional destacada, vídeo e ações completas.
+- Em 2026-06-16, `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check` validaram o ajuste de rótulo/ícone por `contribution_type`.
+- Chrome/CDP mobile 390px validou a prévia da aba Geral com `Respondido em` e a aba `Publicações` com `Respondido em` e `Postado em`.
 
 ## Pendências
 

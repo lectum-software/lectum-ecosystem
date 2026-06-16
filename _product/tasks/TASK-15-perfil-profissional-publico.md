@@ -511,3 +511,22 @@ Validacoes executadas:
 - Nao houve alteracao de banco, Prisma, contratos, endpoints, packages, favoritos, avaliacoes ou publicacoes.
 - ADR atualizado: `adrs/0110-publicacoes-perfil-mobile-whatsapp-unico.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, Chrome headless local em 390px e 1440px na rota `http://localhost:3000/app/psychologist/demo-psychologist-camila-rocha`, confirmando video e botao alinhados/centralizados com mesma largura util.
+
+## Registro de ajuste complementar em 2026-06-16 - diferenciacao entre post e resposta no perfil
+
+- Pedido do usuario: diferenciar visualmente post original e resposta/comentario nas publicacoes do perfil do psicologo.
+- O componente compartilhado `CommunityPostCard`, ja usado na aba `Publicacoes` e na previa de publicacoes da aba `Geral`, agora usa `contribution_type` para definir o contexto do card.
+- Quando `contribution_type="post"`, o card mantem icone de documento e o texto `Postado em {comunidade}`.
+- Quando `contribution_type="reply"`, o card usa icone de comentario/resposta e o texto `Respondido em {comunidade}`.
+- A comunidade continua exibida como link depois do texto de contexto, sem alterar autoria, conteudo, midia, acoes, ordenacao ou logica de envio/interacao.
+- Nao houve alteracao de backend, banco, Prisma, contratos, packages ou dados persistidos.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a referencia auditavel permanece a familia visual local de perfil/comunidade e a validacao no browser local com dados reais.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write -- 'src/components/community/community-post-card.tsx'`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome headless/CDP mobile 390px em `/app/psychologist/demo-psychologist-camila-rocha` confirmou a previa da aba Geral com `Respondido em`.
+- Chrome headless/CDP mobile 390px em `/app/psychologist/demo-psychologist-camila-rocha?tab=publicacoes` confirmou cards da aba Publicacoes com `Respondido em` e `Postado em` conforme `contribution_type`.

@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeCheck, FileText, UserX } from "lucide-react";
+import { BadgeCheck, FileText, MessageCircle, UserX } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -440,6 +440,9 @@ export const CommunityPostCard = ({
   const displayFeaturedBadge =
     primaryReply?.author.featured_badge ?? displayAuthor.featured_badge ?? post.featured_badge;
   const highlightedProfessionalReply = primaryReply ? null : post.highlighted_professional_reply;
+  const isReplyContribution = contributionType === "reply";
+  const communityContextLabel = isReplyContribution ? "Respondido em" : "Postado em";
+  const CommunityContextIcon = isReplyContribution ? MessageCircle : FileText;
   const isPsychologistPost = displayAuthor.role === "psicologo";
   const isAnonymousPatient = !primaryReply && !isPsychologistPost && post.anonymous;
   const psychologistProfileHref = isPsychologistPost
@@ -531,8 +534,8 @@ export const CommunityPostCard = ({
     <article className="w-full overflow-hidden rounded-[22px] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
       {showCommunityHeader ? (
         <div className="mb-4 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-muted">
-          <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-          <span className="shrink-0">Postado em</span>
+          <CommunityContextIcon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          <span className="shrink-0">{communityContextLabel}</span>
           <Link
             className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-black text-foreground underline-offset-4 hover:text-primary hover:underline"
             href={`/app/community/${post.community.slug}`}
