@@ -428,8 +428,8 @@ export const PrivateTemplate = ({
         "fixed inset-x-0 bottom-0 z-40 transition-[transform,opacity,filter] duration-200 ease-out sm:bottom-4 sm:left-1/2 sm:right-auto sm:w-[min(560px,calc(100vw-2rem))] sm:-translate-x-1/2 sm:rounded-[var(--lectum-card-radius)] lg:hidden",
         navigationDimmed ? "opacity-55 brightness-90 saturate-75" : "opacity-100",
         navigationTheme === "solidWhite"
-          ? "border-t border-[#e5e7eb] bg-white shadow-[0_-10px_30px_rgb(15_23_42_/_8%)]"
-          : "border-t border-border bg-surface/95 shadow-[0_-10px_30px_rgb(15_23_42_/_8%)] backdrop-blur supports-[backdrop-filter]:bg-surface/85 sm:border",
+          ? "border-t border-[#e5e7eb] bg-white text-foreground shadow-[0_-10px_30px_rgb(15_23_42_/_8%)] dark:border-border dark:bg-surface dark:shadow-[0_-14px_34px_rgb(0_0_0_/_28%)]"
+          : "border-t border-border bg-surface/95 text-foreground shadow-[0_-10px_30px_rgb(15_23_42_/_8%)] backdrop-blur supports-[backdrop-filter]:bg-surface/85 sm:border dark:shadow-[0_-14px_34px_rgb(0_0_0_/_28%)]",
       )}
       style={{
         paddingBottom: "env(safe-area-inset-bottom)",
@@ -447,7 +447,7 @@ export const PrivateTemplate = ({
               <li className="relative flex min-h-16 items-center justify-center" key="create-post">
                 <Link
                   aria-label={bottomNavigationCenterAction.ariaLabel}
-                  className="absolute -top-3 grid h-14 w-14 place-items-center rounded-full border-[5px] border-white bg-[#308CE8] text-white shadow-[0_12px_28px_rgba(48,140,232,0.28)] transition hover:-translate-y-px hover:bg-[#2579CF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  className="absolute -top-3 grid h-14 w-14 place-items-center rounded-full border-[5px] border-white bg-primary text-white shadow-[0_12px_28px_rgba(48,140,232,0.28)] transition hover:-translate-y-px hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:border-surface dark:shadow-[0_14px_30px_rgb(0_0_0_/_35%)]"
                   href={bottomNavigationCenterAction.href}
                   title={
                     bottomNavigationCenterAction.title ?? bottomNavigationCenterAction.ariaLabel
