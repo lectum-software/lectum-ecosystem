@@ -729,10 +729,10 @@ const ProfileTabs = ({
               <button
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "group relative inline-flex h-12 items-center justify-center px-1 text-[13px] font-semibold tracking-[-0.01em] transition-colors duration-200",
+                  "group relative inline-flex h-12 items-center justify-center px-1 text-[13.5px] tracking-[-0.015em] transition-colors duration-200",
                   active
-                    ? "text-[#1F2937] dark:text-foreground"
-                    : "text-[#64748B] hover:text-[#334155] dark:text-muted dark:hover:text-foreground",
+                    ? "font-bold text-[#173F72] dark:text-[#93C5FD]"
+                    : "font-semibold text-[#64748B] hover:text-[#1E3A8A] dark:text-muted dark:hover:text-[#BFDBFE]",
                 )}
                 key={tab.value}
                 onClick={() => onTabChange(tab.value)}
@@ -742,7 +742,7 @@ const ProfileTabs = ({
                   {tab.label}
                   <span
                     className={cn(
-                      "absolute right-0 -bottom-px left-0 h-0.5 rounded-full bg-[#1F2937] transition-all duration-300 dark:bg-foreground",
+                      "absolute right-0 -bottom-px left-0 h-0.5 rounded-full bg-[#173F72] transition-all duration-300 dark:bg-[#93C5FD]",
                       active ? "scale-x-100 opacity-100" : "scale-x-0 opacity-0",
                     )}
                     aria-hidden="true"
