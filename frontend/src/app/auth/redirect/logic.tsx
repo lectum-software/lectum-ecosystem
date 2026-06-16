@@ -9,8 +9,10 @@ import { getToken } from "@/hooks/cookies/token";
 import { useUserSet } from "@/hooks/user-set";
 import { CenterTemplate } from "@/templates/center";
 
+const DEFAULT_AUTHENTICATED_REDIRECT = "/app/psychologists";
+
 export const RedirectLogic = () => {
-  const { setter } = useUserSet("/dashboard");
+  const { setter } = useUserSet(DEFAULT_AUTHENTICATED_REDIRECT);
   const { googleMe } = useAuth({
     callbacks: {
       googleMe: {

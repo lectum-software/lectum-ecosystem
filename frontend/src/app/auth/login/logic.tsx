@@ -17,13 +17,14 @@ import { fingerprint } from "@/utils/fingerprint";
 import { type LoginForm, useForm } from "./use-form";
 
 const allowedRoles = ["paciente", "psicologo"] as const;
+const DEFAULT_AUTHENTICATED_REDIRECT = "/app/psychologists";
 
 const resolveErrorMessage = (error: unknown) => {
   return error instanceof Error ? error.message : "Não foi possível entrar. Tente novamente.";
 };
 
 export const AuthLogic = () => {
-  const { setter } = useUserSet("/dashboard");
+  const { setter } = useUserSet(DEFAULT_AUTHENTICATED_REDIRECT);
   const { Form, formProps, hook } = useForm();
   const searchParams = useSearchParams();
   const [apiError, setApiError] = useState<string | null>(null);
@@ -60,10 +61,18 @@ export const AuthLogic = () => {
         `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002"}/api/public/google/login`;
 
       const role = searchParams.get("role");
+      const redirectTo = searchParams.get("redirectTo");
+      const callbackUrl = searchParams.get("callbackUrl");
       const query = new URLSearchParams();
 
       if (role && allowedRoles.includes(role as (typeof allowedRoles)[number])) {
         query.set("role", role);
+      }
+
+      if (redirectTo) {
+        query.set("redirectTo", redirectTo);
+      } else if (callbackUrl) {
+        query.set("callbackUrl", callbackUrl);
       }
 
       const queryString = query.toString();

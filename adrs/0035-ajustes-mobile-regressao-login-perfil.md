@@ -43,3 +43,9 @@ As regras do produto continuam proibindo mocks e métricas simuladas. Também n�
 
 - Métricas de busca, visualizações de perfil, vídeo views e favoritos continuam pendentes de eventos persistidos antes de exibirem números reais.
 - Validação visual autenticada completa depende de uma sessão real reutilizável no browser do ambiente; não foi criado mock de usuário para contornar isso.
+
+## Atualização em 2026-06-16: supersessão do fallback `/app/community`
+
+A decisão de usar `/app/community` como home para usuários já onboardados foi supersedida por novo pedido de produto. O fallback autenticado padrão passa a ser `/app/psychologists`, enquanto a comunidade permanece acessível apenas por navegação manual ou destino explícito (`redirectTo`/`callbackUrl`).
+
+Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, HTTP local e Chrome/CDP em `/auth/login` com sessão ativa confirmando redirecionamento para `/app/psychologists`.

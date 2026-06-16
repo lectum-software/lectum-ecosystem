@@ -79,3 +79,10 @@ Corrigir regressões relatadas pelo usuário em fluxo de autenticação/cadastro
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser/HTTP local nas rotas afetadas, com a limitação de que rotas privadas autenticadas redirecionam sem token real disponível ao agente.
+
+## Ajuste posterior em 2026-06-16: home autenticada padrão em Psicólogos
+
+- O critério histórico desta task que enviava usuários já onboardados para `/app/community` foi supersedido por pedido direto de produto em 2026-06-16.
+- A home autenticada padrão, quando não há `redirectTo`/`callbackUrl`, agora é `/app/psychologists`.
+- O gate de etapas obrigatórias permanece: e-mail não confirmado vai para `/auth/verify-email` e paciente sem onboarding concluído continua em `/patient/welcome`.
+- Validações do ajuste: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, HTTP local e Chrome/CDP confirmando `/auth/login` com sessão ativa para `/app/psychologists`.

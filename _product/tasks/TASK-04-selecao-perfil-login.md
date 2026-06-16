@@ -212,3 +212,19 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Validação local do redirect OAuth em
   `GET /api/public/google/login/:deviceId` confirmando `prompt=select_account` na URL do
   Google.
+
+## Ajuste posterior em 2026-06-16: fallback pós-login para Psicólogos
+
+- Pedido direto de produto: após login bem-sucedido, o usuário não deve mais cair em `/app/community` quando não houver destino explícito.
+- O destino autenticado padrão passa a ser `/app/psychologists` para login por e-mail/senha, retorno do Google OAuth em `/auth/redirect`, acesso direto a rotas `/auth/*` com sessão ativa e fallback da rota `/app`.
+- `redirectTo` passa a ter prioridade como parâmetro explícito de pós-login; `callbackUrl` foi preservado como compatibilidade do gate de rotas privadas já existente.
+- O login Google passa a propagar `redirectTo`/`callbackUrl` no `state` já existente para que o callback preserve o destino explícito.
+- As etapas obrigatórias já existentes continuam preservadas para usuários não confirmados (`/auth/verify-email`) e pacientes com onboarding pendente (`/patient/welcome`), sem criar rota ou auth paralelo.
+
+### Validação do ajuste
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local confirmou que `/auth/login` e `/auth/redirect` com cookie de sessão redirecionam para `/app/psychologists`.
+- Browser local via Chrome/CDP confirmou que abrir `/auth/login` com cookie `lectum.token` navega para `/app/psychologists`.

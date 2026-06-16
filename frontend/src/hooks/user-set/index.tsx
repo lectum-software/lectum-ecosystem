@@ -25,9 +25,10 @@ export const useUserSet = (redirect: RedirectTarget = "/dashboard") => {
 
       dispatch(userActions.create(data));
 
+      const redirectTo = searchParams.get("redirectTo");
       const callbackUrl = searchParams.get("callbackUrl");
       const fallback = typeof redirect === "function" ? redirect(data) : redirect;
-      const target = resolveAuthRedirect(data, callbackUrl, fallback);
+      const target = resolveAuthRedirect(data, redirectTo, fallback, callbackUrl);
 
       if (target) {
         router.replace(target);

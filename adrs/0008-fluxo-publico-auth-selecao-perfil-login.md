@@ -118,3 +118,32 @@ usuario para uso posterior no produto, sem criar autenticacao paralela nem endpo
 - `NODE_OPTIONS=--max-old-space-size=4096 pnpm check`
 - Redirect OAuth local continua incluindo `prompt=select_account`; a persistencia de
   nome/foto foi validada por typecheck/build do callback real, sem mockar perfil Google.
+
+## Atualizacao em 2026-06-16: fallback pós-login em `/app/psychologists`
+
+### Contexto
+
+Após os ajustes de comunidade, o fallback autenticado havia ficado em `/app/community`. O produto passou a exigir que o destino padrão de login volte a ser a descoberta de psicólogos, mantendo a comunidade apenas quando o usuário navegar manualmente ou quando um destino explícito for informado.
+
+### Decisão
+
+- O fallback padrão do fluxo de auth passa a ser `/app/psychologists`.
+- `redirectTo` é tratado como parâmetro explícito prioritário de pós-login.
+- `callbackUrl` permanece aceito como compatibilidade com o proxy que envia usuários desautenticados para login a partir de uma rota privada.
+- O início de login Google copia `redirectTo`/`callbackUrl` para o estado OAuth já existente, permitindo que `/auth/redirect` respeite o destino após hidratar a sessão.
+- O proxy redireciona usuários com token que tentarem abrir rotas públicas de auth diretamente para `/app/psychologists`.
+- A rota `/app` também usa `/app/psychologists` como fallback para paciente e psicólogo; navegação manual para demais rotas não foi alterada.
+
+### Consequências
+
+- Login inicial, retorno de OAuth e retorno a `/auth/login` com sessão ativa ficam consistentes no mesmo destino padrão.
+- Deep links continuam funcionando por `redirectTo` e por `callbackUrl` legado.
+- Rotas manuais como `/app/community`, `/app/profile` e demais páginas privadas permanecem acessíveis quando o usuário navega até elas.
+
+### Validação
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local: `/auth/login` e `/auth/redirect` com cookie `lectum.token` retornaram `307` para `/app/psychologists`.
+- Browser local via Chrome/CDP: abrir `/auth/login` com cookie de sessão navegou para `/app/psychologists`.

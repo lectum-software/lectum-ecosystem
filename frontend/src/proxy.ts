@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 const AUTH_PREFIX = "/auth";
 const APP_PATH = "/app";
+const DEFAULT_AUTHENTICATED_PATH = "/app/psychologists";
 const DASHBOARD_PATH = "/dashboard";
 const TOKEN_COOKIE_NAME = process.env.NEXT_PUBLIC_TOKEN_LOCAL || "lectum.token";
 const USER_COOKIE_NAME = process.env.NEXT_PUBLIC_USER_LOCAL || "lectum.user";
@@ -58,7 +59,7 @@ export function proxy(req: NextRequest) {
   }
 
   if (token && isAuthRoute && !isAuthRequiredRoute) {
-    return NextResponse.redirect(new URL(APP_PATH, req.url));
+    return NextResponse.redirect(new URL(DEFAULT_AUTHENTICATED_PATH, req.url));
   }
 
   if (!token && isAuthRequiredRoute) {

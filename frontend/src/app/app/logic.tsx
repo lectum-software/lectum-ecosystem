@@ -8,7 +8,7 @@ import { PrivateTemplate } from "@/templates/private";
 
 const roleHomePaths = {
   paciente: "/app/psychologists",
-  psicologo: "/app/profile",
+  psicologo: "/app/psychologists",
 } as const;
 
 export const AppHomeLogic = () => {

@@ -2,8 +2,8 @@ import type { user } from "@/api/generator/types";
 import { getPsychologistRegistrationEntryPath } from "./psychologist-onboarding";
 
 export const USER_HOME_PATHS = {
-  paciente: "/app/community",
-  psicologo: "/app/community",
+  paciente: "/app/psychologists",
+  psicologo: "/app/psychologists",
 } as const;
 
 type RedirectFallback = string | null;
@@ -28,14 +28,16 @@ export function resolveAuthRedirect(
     | Partial<Pick<user, "role" | "confirmed" | "patient_profile" | "psychologist_profile">>
     | null
     | undefined,
-  callbackUrl: string | null,
+  explicitRedirect: string | null,
   fallback: RedirectFallback,
+  legacyCallbackUrl?: string | null,
 ) {
   if (data && "confirmed" in data && data.confirmed === false) {
     return "/auth/verify-email";
   }
 
-  if (callbackUrl) return callbackUrl;
+  if (explicitRedirect) return explicitRedirect;
+  if (legacyCallbackUrl) return legacyCallbackUrl;
   if (!fallback) return null;
 
   return getUserHomePath(data, fallback);
