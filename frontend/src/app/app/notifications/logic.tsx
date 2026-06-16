@@ -221,12 +221,9 @@ export const NotificationsLogic = () => {
   return (
     <PrivateTemplate>
       <section className="mx-auto w-full max-w-2xl px-5 py-5 md:py-8">
-        <header className="mb-5 flex items-center justify-between gap-3">
+        <header className="mb-4 flex items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight text-foreground">Notificações</h1>
-            <p className="mt-1 text-sm leading-5 text-muted">
-              Acompanhe interações, respostas e oportunidades recebidas na Lectum.
-            </p>
           </div>
 
           <Button asChild className="h-11 w-11 rounded-full" type="button" variant="ghost">
@@ -260,7 +257,7 @@ export const NotificationsLogic = () => {
           />
         ) : items.length === 0 ? (
           <EmptyState
-            description="Você está em dia. Novas notificações aparecerão aqui quando houver atualizações reais."
+            description="Novas notificações aparecerão aqui."
             icon={Bell}
             title="Nenhuma notificação"
           />
