@@ -257,3 +257,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nao houve alteracao de backend, Prisma, migrations, packages, ordenacao, busca ou layout dos posts.
 - ADR atualizado: `adrs/0103-player-video-vertical-unificado.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`.
+
+## Execução complementar: padronização de controles de interação (2026-06-16)
+
+- Pedido do usuário: padronizar os ícones de upvote/downvote e o texto `Útil` também dentro da comunidade, mantendo a experiência responsiva e sem alterar a listagem dos posts.
+- A página de comunidade herda a atualização do componente compartilhado `CommunityActionBar`, que agora usa as mesmas primitivas de tamanho para ícones, texto e contadores do feed e do detalhe do post.
+- O destaque de resposta profissional nos cards compartilhados deixou de usar fundo esverdeado e passou ao azul claro consistente com o padrão de psicólogo verificado.
+- Não houve alteração de backend, Prisma, migrations, packages, endpoints, payloads, ranking ou filtros da comunidade.
+- ADR atualizado: `adrs/0104-barra-acoes-comunidade-unificada.md`.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP local `200` em `/app/community/ansiedade-em-equilibrio`.

@@ -164,8 +164,8 @@ const ProfessionalReplyPreview = ({ reply }: { reply: PostProfessionalReply | nu
   const profileHref = `/app/psychologist/${reply.author.id}`;
 
   return (
-    <div className="rounded-[18px] border border-success/20 bg-success-soft p-4">
-      <p className="mb-3 text-[11px] font-black uppercase tracking-[0.08em] text-success">
+    <div className="rounded-[18px] border border-[#D8ECFF] bg-[#F4FAFF] p-4 dark:border-primary/20 dark:bg-primary/5">
+      <p className="mb-3 text-[11px] font-black uppercase tracking-[0.08em] text-primary">
         Resposta profissional em destaque
       </p>
       <div className="mb-2 flex items-center gap-2">

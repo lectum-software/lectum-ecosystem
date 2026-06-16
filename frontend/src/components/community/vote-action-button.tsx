@@ -3,8 +3,9 @@
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import {
-  POST_ACTION_COUNT_CLASSNAME,
-  POST_ACTION_ICON_CLASSNAME,
+  postActionCountClassName,
+  postActionIconClassName,
+  postActionTextClassName,
 } from "@/components/community/post-action-button";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +21,7 @@ type VoteActionButtonProps = {
   onVote: (value: 1 | -1) => void;
   showPositiveDelta?: boolean;
   showUpvoteText?: boolean;
-  size?: "sm" | "md";
+  size?: "xs" | "sm" | "md";
   value: 1 | -1;
 };
 
@@ -28,8 +29,13 @@ const ICON_PULSE_MS = 180;
 const COUNTER_PULSE_MS = 180;
 const POSITIVE_DELTA_MS = 300;
 
-const voteSizeClassName = (size: "sm" | "md", iconOnly: boolean) => {
-  const base = size === "sm" ? "h-8 text-[12px]" : "h-9 text-[12px]";
+const voteSizeClassName = (size: "xs" | "sm" | "md", iconOnly: boolean) => {
+  const base =
+    size === "xs" ? "h-7 text-[11px]" : size === "sm" ? "h-8 text-[12px]" : "h-9 text-[12px]";
+
+  if (size === "xs") {
+    return iconOnly ? `${base} w-7 gap-0 px-0` : `${base} min-w-7 gap-1 px-2`;
+  }
 
   return iconOnly ? `${base} w-8 gap-0 px-0` : `${base} min-w-8 gap-1.5 px-2.5`;
 };
@@ -166,7 +172,7 @@ export const VoteActionButton = ({
       >
         <Icon
           className={cn(
-            POST_ACTION_ICON_CLASSNAME,
+            postActionIconClassName(size),
             "transition-transform duration-200 ease-out",
             iconPulsing ? "scale-[1.15]" : "scale-100",
           )}
@@ -174,12 +180,12 @@ export const VoteActionButton = ({
           aria-hidden="true"
         />
         {isUpvote && showUpvoteText ? (
-          <span className="font-semibold leading-none tracking-[-0.01em]">Útil</span>
+          <span className={postActionTextClassName(size)}>Útil</span>
         ) : null}
         {typeof count === "number" ? (
           <span
             className={cn(
-              POST_ACTION_COUNT_CLASSNAME,
+              postActionCountClassName(size),
               "transition-all duration-200",
               counterPulsing ? "scale-105 opacity-90" : "scale-100 opacity-100",
             )}

@@ -780,6 +780,7 @@ const ReplyVoteBar = ({
       onClick: onShare,
     }}
     showUpvoteText={false}
+    size="xs"
     upvotesCount={reply.upvotes_count}
     voteLabel="Marcar resposta como útil"
   />
@@ -835,7 +836,7 @@ const ReplyCard = ({
   const isProfessional = reply.author.role === "psicologo";
   const isVerifiedProfessional = isProfessional && reply.author.verified;
   const isOwnReply = Boolean(currentUserId && reply.author.id === currentUserId);
-  const highlightedProfessionalThread = professionalThread || isVerifiedProfessional;
+  const highlightedProfessionalThread = professionalThread ?? isVerifiedProfessional;
   const saveReplyMutation = useSaveReply(postId, reply.id);
   const psychologistProfileHref = isProfessional ? `/app/psychologist/${reply.author.id}` : null;
   const inlineReplyTarget = inlineReplyTargets[reply.id] ?? null;
@@ -854,8 +855,11 @@ const ReplyCard = ({
   const avatarSize = isProfessional ? "reply" : "sm";
 
   return (
-    <article className="relative py-1 text-[#182033] dark:text-foreground" id={`reply-${reply.id}`}>
-      <div className="grid grid-cols-[2.25rem_minmax(0,1fr)] gap-x-3 sm:grid-cols-[2.5rem_minmax(0,1fr)]">
+    <article
+      className="relative py-0.5 text-[#182033] dark:text-foreground"
+      id={`reply-${reply.id}`}
+    >
+      <div className="grid grid-cols-[2rem_minmax(0,1fr)] gap-x-2.5 sm:grid-cols-[2.25rem_minmax(0,1fr)]">
         <div className="relative flex justify-center">
           <AuthorAvatar
             author={reply.author}
@@ -870,12 +874,7 @@ const ReplyCard = ({
           ) : null}
         </div>
 
-        <div
-          className={cn(
-            "min-w-0 rounded-[18px] px-0.5 py-0.5",
-            highlightedProfessionalThread && "bg-[#F8FCFF]/80 dark:bg-primary/5",
-          )}
-        >
+        <div className="min-w-0 rounded-[18px] px-0.5 py-0.5">
           <div className="flex items-start justify-between gap-2">
             <div className="grid min-w-0 gap-1">
               <div className="flex min-w-0 items-center gap-x-2">
@@ -1023,7 +1022,7 @@ const ReplyCard = ({
       </div>
 
       {visibleChildren.length > 0 || hiddenRepliesCount > 0 ? (
-        <div className="relative mt-2 ml-[18px] grid gap-3 border-[#DCE4EE] border-l pl-[30px] dark:border-border sm:ml-5 sm:pl-8">
+        <div className="relative mt-2 ml-4 grid gap-3 border-[#DCE4EE] border-l pl-4 dark:border-border sm:ml-[18px] sm:pl-5">
           {visibleChildren.map((child) => (
             <ReplyCard
               currentUserId={currentUserId}
@@ -1051,13 +1050,9 @@ const ReplyCard = ({
           ))}
           {hiddenRepliesCount > 0 && threadHref ? (
             <Link
-              className="flex w-fit items-center gap-2 rounded-full py-1 pr-2 text-[11px] font-black text-primary no-underline transition hover:text-primary hover:no-underline"
+              className="flex w-fit items-center rounded-full py-1 pr-2 text-[11px] font-black text-primary no-underline transition hover:text-primary hover:no-underline"
               href={threadHref}
             >
-              <span
-                className="h-5 w-px rounded-full bg-[#C9D3DF] dark:bg-border"
-                aria-hidden="true"
-              />
               <span>
                 Ver mais {hiddenRepliesCount} {hiddenRepliesCount === 1 ? "resposta" : "respostas"}
               </span>
@@ -1571,9 +1566,8 @@ const RepliesList = ({
   const orderedReplies = useMemo(() => orderRepliesForProfessionalPriority(replies), [replies]);
 
   return (
-    <section className="grid gap-3" id="discussao">
-      <div className="flex items-center gap-2 px-1">
-        <span className="h-6 w-1 rounded-full bg-[#308CE8]" />
+    <section className="grid gap-4" id="discussao">
+      <div className="px-0.5">
         <h2 className="text-sm font-black tracking-[0.08em] text-[#64748B] uppercase">Discussão</h2>
       </div>
 
@@ -1598,30 +1592,44 @@ const RepliesList = ({
       ) : null}
 
       {orderedReplies.length > 0 ? (
-        <div className="relative grid gap-3 pl-4 before:absolute before:top-0 before:bottom-0 before:left-0 before:w-[2px] before:rounded-full before:bg-[#308CE8] before:content-[''] dark:before:bg-primary">
-          {orderedReplies.map((reply) => (
-            <ReplyCard
-              currentUserId={currentUserId}
-              deleteReplyPending={deleteReplyPending}
-              inlineReplyTargets={inlineReplyTargets}
-              key={reply.id}
-              maxInlineDepth={maxInlineDepth}
-              mediaPermission={mediaPermission}
-              onCancelInlineReplyTarget={onCancelInlineReplyTarget}
-              onDeleteReply={onDeleteReply}
-              onReply={onReply}
-              onReportReply={onReportReply}
-              onShare={onShare}
-              onSubmitReply={onSubmitReply}
-              onVote={onVote}
-              postId={postId}
-              reply={reply}
-              replyApiError={replyApiError}
-              replyDisabled={replyDisabled}
-              threadHrefBase={threadHrefBase}
-              votePending={votePending}
-            />
-          ))}
+        <div className="grid gap-3">
+          {orderedReplies.map((reply) => {
+            const professionalTree = isVerifiedProfessionalReply(reply);
+
+            return (
+              <div
+                className={cn(
+                  "rounded-[22px] border p-3 shadow-[0_10px_24px_rgba(15,23,42,0.035)]",
+                  professionalTree
+                    ? "border-[#D8ECFF] bg-[#F4FAFF] dark:border-primary/20 dark:bg-primary/5"
+                    : "border-[#EDF1F5] bg-white dark:border-border dark:bg-surface",
+                )}
+                key={reply.id}
+              >
+                <ReplyCard
+                  currentUserId={currentUserId}
+                  deleteReplyPending={deleteReplyPending}
+                  inlineReplyTargets={inlineReplyTargets}
+                  maxInlineDepth={maxInlineDepth}
+                  mediaPermission={mediaPermission}
+                  onCancelInlineReplyTarget={onCancelInlineReplyTarget}
+                  onDeleteReply={onDeleteReply}
+                  onReply={onReply}
+                  onReportReply={onReportReply}
+                  onShare={onShare}
+                  onSubmitReply={onSubmitReply}
+                  onVote={onVote}
+                  postId={postId}
+                  professionalThread={professionalTree}
+                  reply={reply}
+                  replyApiError={replyApiError}
+                  replyDisabled={replyDisabled}
+                  threadHrefBase={threadHrefBase}
+                  votePending={votePending}
+                />
+              </div>
+            );
+          })}
         </div>
       ) : null}
     </section>

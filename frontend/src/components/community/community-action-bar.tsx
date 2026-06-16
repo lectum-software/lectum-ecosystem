@@ -11,6 +11,7 @@ import { VoteActionButton, type VoteValue } from "@/components/community/vote-ac
 import { cn } from "@/lib/utils";
 
 type ActionHandler = MouseEventHandler<HTMLButtonElement>;
+type CommunityActionSize = "xs" | "sm" | "md";
 
 type ActionWithCount = {
   count?: number;
@@ -45,6 +46,7 @@ export type CommunityActionBarProps = {
   };
   save?: SaveAction;
   share?: ShareAction;
+  size?: CommunityActionSize;
   upvotesCount: number;
   voteLabel?: string;
   showUpvoteText?: boolean;
@@ -54,8 +56,20 @@ export type CommunityActionBarProps = {
 const actionBarClassName =
   "flex w-full min-w-0 items-center gap-1.5 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:gap-2 sm:overflow-visible";
 
-const voteClusterClassName =
-  "inline-flex h-8 shrink-0 items-center overflow-visible rounded-full bg-[#F4F6F8] p-0.5 ring-1 ring-[#E7ECF2] dark:bg-surface-muted dark:ring-border";
+const voteClusterClassName = (size: CommunityActionSize) =>
+  cn(
+    "inline-flex shrink-0 items-center overflow-visible rounded-full bg-[#F4F6F8] p-0.5 ring-1 ring-[#E7ECF2] dark:bg-surface-muted dark:ring-border",
+    size === "xs" ? "h-7" : size === "md" ? "h-9" : "h-8",
+  );
+
+const separatorClassName = (size: CommunityActionSize) =>
+  cn("w-px bg-[#DDE4EC] dark:bg-border", size === "xs" ? "h-3.5" : "h-4");
+
+const textOnlyReplyClassName = (size: CommunityActionSize) =>
+  cn(
+    "inline-flex shrink-0 items-center justify-center rounded-full font-semibold leading-none tracking-[-0.01em] text-muted transition-[background-color,color,transform] duration-200 hover:bg-surface-muted hover:text-foreground active:scale-[0.97]",
+    size === "xs" ? "h-7 px-2 text-[11px]" : "h-8 px-2.5 text-[12px]",
+  );
 
 export const CommunityActionBar = ({
   className,
@@ -68,6 +82,7 @@ export const CommunityActionBar = ({
   save,
   share,
   showUpvoteText = true,
+  size = "sm",
   upvotesCount,
   voteLabel = "Marcar como útil",
 }: CommunityActionBarProps) => {
@@ -76,7 +91,7 @@ export const CommunityActionBar = ({
   return (
     <div className={cn(actionBarClassName, className)}>
       <div className="flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-2">
-        <div className={voteClusterClassName}>
+        <div className={voteClusterClassName(size)}>
           {canVote && onVote ? (
             <VoteActionButton
               count={upvotesCount}
@@ -86,15 +101,15 @@ export const CommunityActionBar = ({
               label={voteLabel}
               onVote={onVote}
               showUpvoteText={showUpvoteText}
-              size="sm"
+              size={size}
               value={1}
             />
           ) : (
-            <PostActionMetric count={upvotesCount} icon={ArrowUp} label={voteLabel} size="sm">
+            <PostActionMetric count={upvotesCount} icon={ArrowUp} label={voteLabel} size={size}>
               Útil
             </PostActionMetric>
           )}
-          <span className="h-4 w-px bg-[#DDE4EC] dark:bg-border" aria-hidden="true" />
+          <span className={separatorClassName(size)} aria-hidden="true" />
           {canVote && onVote ? (
             <VoteActionButton
               currentVote={currentVote}
@@ -103,11 +118,11 @@ export const CommunityActionBar = ({
               label="Dar downvote"
               onVote={onVote}
               showPositiveDelta={false}
-              size="sm"
+              size={size}
               value={-1}
             />
           ) : (
-            <PostActionMetric icon={ArrowDown} label="Dar downvote" size="sm" />
+            <PostActionMetric icon={ArrowDown} label="Dar downvote" size={size} />
           )}
         </div>
 
@@ -118,7 +133,7 @@ export const CommunityActionBar = ({
               href={comments.href}
               icon={MessageCircle}
               label={comments.label ?? "Comentar"}
-              size="sm"
+              size={size}
             />
           ) : comments.onClick ? (
             <PostActionButton
@@ -126,24 +141,20 @@ export const CommunityActionBar = ({
               icon={MessageCircle}
               label={comments.label ?? "Comentar"}
               onClick={comments.onClick}
-              size="sm"
+              size={size}
             />
           ) : (
             <PostActionMetric
               count={comments.count}
               icon={MessageCircle}
               label={comments.label ?? "Comentários"}
-              size="sm"
+              size={size}
             />
           )
         ) : null}
 
         {reply?.textOnly ? (
-          <button
-            className="inline-flex h-8 shrink-0 items-center justify-center rounded-full px-2.5 text-[12px] font-semibold leading-none tracking-[-0.01em] text-muted transition-[background-color,color,transform] duration-200 hover:bg-surface-muted hover:text-foreground active:scale-[0.97]"
-            onClick={reply.onClick}
-            type="button"
-          >
+          <button className={textOnlyReplyClassName(size)} onClick={reply.onClick} type="button">
             {reply.label ?? "Responder"}
           </button>
         ) : reply ? (
@@ -151,7 +162,7 @@ export const CommunityActionBar = ({
             icon={Reply}
             label={reply.label ?? "Responder"}
             onClick={reply.onClick}
-            size="sm"
+            size={size}
           >
             Responder
           </PostActionButton>
@@ -169,7 +180,7 @@ export const CommunityActionBar = ({
               iconClassName={save.active ? "fill-current" : undefined}
               label={save.label ?? (save.active ? "Remover dos salvos" : "Salvar")}
               onClick={save.onClick}
-              size="sm"
+              size={size}
             />
           ) : (
             <PostActionMetric
@@ -178,7 +189,7 @@ export const CommunityActionBar = ({
               icon={Bookmark}
               iconClassName={save.active ? "fill-current" : undefined}
               label={save.label ?? "Salvar"}
-              size="sm"
+              size={size}
             />
           )
         ) : null}
@@ -189,10 +200,10 @@ export const CommunityActionBar = ({
               icon={Share2}
               label={share.label ?? "Compartilhar"}
               onClick={share.onClick}
-              size="sm"
+              size={size}
             />
           ) : (
-            <PostActionMetric icon={Share2} label={share.label ?? "Compartilhar"} size="sm" />
+            <PostActionMetric icon={Share2} label={share.label ?? "Compartilhar"} size={size} />
           )
         ) : null}
 

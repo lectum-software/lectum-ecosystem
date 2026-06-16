@@ -240,3 +240,17 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nao houve alteracao de backend, Prisma, migrations, packages, endpoints, payloads ou logica de persistencia/envio.
 - ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e HTTP local `200` na rota do detalhe com cookie de sessao local de validacao.
+
+## Execução complementar: árvore compacta e controles de comentários (2026-06-16)
+
+- Pedido do usuário: ajustar a árvore de comentários e os controles de interação em feed, comunidade e detalhe do post, preservando ordenação, regra do psicólogo verificado mais votado e responsividade mobile.
+- Fonte visual auditável: `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy não está exposto como ferramenta direta nesta sessão, então a execução seguiu as imagens locais/protótipos inventariados.
+- O cabeçalho `Discussão` passou a ser independente, sem a linha azul lateral e sem parecer parte do primeiro comentário.
+- Cada comentário direto ao post agora é uma árvore própria de primeira camada; apenas respostas ficam aninhadas sob o comentário correspondente.
+- O fundo de cada árvore passou a depender do comentário raiz: branco para paciente e azul claro para psicólogo verificado; fundos esverdeados foram removidos dos blocos de destaque compartilhados.
+- A barra azul grossa lateral foi removida; a hierarquia usa apenas linhas finas cinza, com recuos mais compactos e limite visual de três níveis.
+- Nos comentários, `CommunityActionBar` usa `size="xs"`, reduzindo upvote/downvote e `Responder`, que permanece texto sem ícone.
+- O botão `Ver mais resposta(s)` foi alinhado ao nível onde a resposta será expandida.
+- Não houve alteração de backend, Prisma, migrations, packages, endpoints, payloads, ordenação, prioridade de psicólogo verificado ou lógica de envio.
+- ADRs atualizados: `adrs/0102-arvore-comentarios-posts-comunidade.md` e `adrs/0104-barra-acoes-comunidade-unificada.md`.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP local `200` em `/app/community/feed`, `/app/community/ansiedade-em-equilibrio` e `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`.
