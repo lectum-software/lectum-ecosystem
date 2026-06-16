@@ -9,22 +9,20 @@ import {
   Flame,
   PlusCircle,
   Search,
-  Sparkles,
-  TrendingUp,
   UsersRound,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useDeferredValue, useMemo, useState } from "react";
 import { useCommunities } from "@/api/callers/community";
-import type { Community } from "@/api/generator/types/community";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
-import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { Input } from "@/registry/new-york-v4/ui/input";
 import { PrivateTemplate } from "@/templates/private";
+import { buildCommunityExploreCard, type CommunityExploreCard } from "./explore-content";
 
 const PAGE_LIMIT = 10;
 
@@ -63,42 +61,46 @@ const formatMembers = (value: number) => {
   return `${value.toLocaleString("pt-BR")} membros`;
 };
 
-const CommunityGradient = ({ index }: { index: number }) => {
-  const gradients = [
-    "from-primary/90 via-primary/70 to-primary-soft",
-    "from-success/90 via-primary/60 to-primary-soft",
-    "from-warning/90 via-primary/60 to-surface-muted",
-  ];
-
-  return (
-    <div
-      aria-hidden="true"
-      className={cn("absolute inset-0 bg-gradient-to-br", gradients[index % gradients.length])}
-    >
-      <span className="absolute -left-10 top-8 h-32 w-32 rounded-full bg-white/25 blur-2xl" />
-      <span className="absolute -right-12 bottom-2 h-40 w-40 rounded-full bg-background/30 blur-3xl" />
-    </div>
-  );
-};
-
-const FeaturedCommunity = ({ community }: { community: Community }) => {
+const FeaturedCommunity = ({ community }: { community: CommunityExploreCard }) => {
   return (
     <Link
-      className="group relative min-h-[194px] overflow-hidden rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 text-white shadow-[var(--lectum-shadow-soft)] transition hover:-translate-y-0.5 hover:shadow-lg"
+      className="group relative block min-h-[230px] overflow-hidden rounded-[30px] border border-white/70 bg-[#101827] p-5 text-white shadow-[0_18px_45px_rgba(15,23,42,0.16)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_24px_55px_rgba(15,23,42,0.2)] sm:min-h-[280px] sm:p-7"
       href={`/app/community/${community.slug}`}
     >
-      <CommunityGradient index={0} />
-      <div className="relative z-10 flex h-full min-h-[154px] flex-col justify-end gap-4">
-        <span className="w-fit rounded-full bg-white/20 px-3 py-1 text-xs font-extrabold uppercase tracking-[0.08em] backdrop-blur">
-          Destaque
-        </span>
-        <div className="grid gap-2">
-          <h2 className="text-3xl font-black leading-tight tracking-tight">{community.name}</h2>
-          {community.description ? (
-            <p className="line-clamp-2 text-sm font-medium leading-6 text-white/90">
-              {community.description}
-            </p>
+      <Image
+        alt={`Imagem da comunidade ${community.name}`}
+        className="object-cover transition duration-700 ease-out group-hover:scale-[1.04]"
+        fill
+        priority
+        sizes="(min-width: 1024px) 896px, (min-width: 640px) 672px, 100vw"
+        src={community.imageUrl}
+      />
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.08)_0%,rgba(2,6,23,0.44)_42%,rgba(2,6,23,0.9)_100%)]"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 bottom-0 h-2/3 bg-[radial-gradient(ellipse_at_50%_100%,rgba(15,23,42,0.96),rgba(15,23,42,0.52)_52%,transparent_76%)]"
+      />
+      <div className="relative z-10 flex h-full min-h-[190px] flex-col justify-end gap-4 sm:min-h-[224px]">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="w-fit rounded-full bg-white/18 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.1em] text-white shadow-[0_6px_18px_rgba(15,23,42,0.14)] ring-1 ring-white/20 backdrop-blur">
+            {community.growthLabel ?? "Destaque"}
+          </span>
+          {community.category ? (
+            <span className="w-fit rounded-full bg-black/20 px-3 py-1 text-[11px] font-bold text-white/90 ring-1 ring-white/10 backdrop-blur">
+              {community.category}
+            </span>
           ) : null}
+        </div>
+        <div className="grid gap-2">
+          <h2 className="max-w-xl text-[2rem] font-black leading-none tracking-[-0.055em] sm:text-5xl">
+            {community.name}
+          </h2>
+          <p className="line-clamp-2 max-w-2xl text-sm font-semibold leading-6 text-white/88 sm:text-base">
+            {community.description}
+          </p>
         </div>
         <span className="inline-flex w-fit items-center gap-2 rounded-full bg-white px-5 py-2 text-sm font-extrabold text-primary transition group-hover:translate-x-1">
           Explorar
@@ -109,30 +111,40 @@ const FeaturedCommunity = ({ community }: { community: Community }) => {
   );
 };
 
-const CommunityCard = ({ community, index }: { community: Community; index: number }) => {
+const CommunityCard = ({ community }: { community: CommunityExploreCard }) => {
   return (
     <Link
-      className="group relative flex h-[350px] w-[min(74vw,250px)] shrink-0 snap-start overflow-hidden rounded-3xl border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)] transition hover:-translate-y-0.5 hover:shadow-lg sm:h-[388px] sm:w-72"
+      className="group relative flex h-[330px] w-[min(76vw,238px)] shrink-0 snap-start overflow-hidden rounded-[26px] border border-white/70 bg-[#101827] p-4 text-white shadow-[0_14px_34px_rgba(15,23,42,0.14)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(15,23,42,0.18)] sm:h-[384px] sm:w-[270px]"
       href={`/app/community/${community.slug}`}
     >
-      <CommunityGradient index={index + 1} />
-      <span className="absolute left-5 top-5 z-10 grid h-12 w-12 place-items-center rounded-2xl border border-white/25 bg-white/20 text-sm font-black text-white shadow-[0_10px_24px_rgb(15_23_42_/_12%)] backdrop-blur">
-        {community.name.slice(0, 2).toUpperCase()}
+      <Image
+        alt={`Imagem da comunidade ${community.name}`}
+        className="object-cover transition duration-700 ease-out group-hover:scale-[1.05]"
+        fill
+        sizes="(min-width: 640px) 270px, 76vw"
+        src={community.imageUrl}
+      />
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.04)_0%,rgba(2,6,23,0.26)_44%,rgba(2,6,23,0.92)_100%)]"
+      />
+      <span className="absolute left-4 top-4 z-10 w-fit rounded-full bg-white/18 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.08em] text-white ring-1 ring-white/20 backdrop-blur">
+        {community.category ?? "Comunidade"}
       </span>
       <div className="relative z-10 flex h-full flex-col justify-end gap-4 text-white">
-        {community.category ? (
-          <span className="w-fit rounded-full bg-white/20 px-3 py-1 text-xs font-bold backdrop-blur">
-            {community.category}
-          </span>
-        ) : null}
-        <div>
-          <h3 className="line-clamp-2 text-xl font-black leading-tight">{community.name}</h3>
-          <p className="mt-1 text-xs font-semibold text-white/80">
-            {formatMembers(community.members_count)}
+        <div className="grid gap-2">
+          <h3 className="line-clamp-2 text-2xl font-black leading-[0.95] tracking-[-0.045em]">
+            {community.name}
+          </h3>
+          <p className="line-clamp-2 text-xs font-semibold leading-5 text-white/82">
+            {community.description}
+          </p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-white/65">
+            {formatMembers(community.membersCount)}
           </p>
         </div>
-        <span className="inline-flex min-h-11 items-center justify-center rounded-full bg-white px-4 text-sm font-extrabold text-primary transition group-hover:translate-x-1">
-          Abrir feed
+        <span className="inline-flex min-h-10 items-center justify-center rounded-full bg-white px-4 text-sm font-extrabold text-primary transition group-hover:translate-x-1">
+          Explorar
         </span>
       </div>
     </Link>
@@ -202,9 +214,20 @@ export const CommunityLogic = () => {
     [category, deferredSearch, page],
   );
   const communities = useCommunities(query);
-  const items = communities.data?.data ?? [];
-  const featured = !category && !deferredSearch ? items[0] : null;
-  const visibleCards = featured ? items.slice(1) : items;
+  const items = useMemo(() => communities.data?.data ?? [], [communities.data?.data]);
+  const exploreCards = useMemo(
+    () => items.map((community, index) => buildCommunityExploreCard(community, index)),
+    [items],
+  );
+  const featured =
+    !category && !deferredSearch
+      ? (exploreCards.find((community) => community.isFeatured) ?? exploreCards[0] ?? null)
+      : null;
+  const visibleCards = featured
+    ? exploreCards.filter((community) => community.communityId !== featured.communityId)
+    : exploreCards;
+  const popularCards = visibleCards.filter((community) => community.isPopular);
+  const carouselCards = popularCards.length > 0 ? popularCards : visibleCards;
   const errorMessage = communities.isError ? resolveCommunityError(communities.error) : null;
 
   const handleSearchChange = (value: string) => {
@@ -213,14 +236,16 @@ export const CommunityLogic = () => {
   };
 
   return (
-    <PrivateTemplate contentClassName="relative overflow-hidden">
-      <div className="pointer-events-none fixed inset-0 z-0 bg-surface" aria-hidden="true" />
-      <section className="relative z-10 mx-auto grid w-full max-w-[430px] gap-6 sm:max-w-2xl lg:max-w-4xl">
-        <div className="sticky top-0 z-20 -mx-5 border-b border-border bg-surface/95 px-5 py-3 backdrop-blur supports-[backdrop-filter]:bg-surface/85">
+    <PrivateTemplate
+      contentClassName="relative overflow-hidden bg-white"
+      navigationTheme="solidWhite"
+    >
+      <section className="relative z-10 mx-auto grid w-full max-w-[430px] gap-7 px-5 pb-10 sm:max-w-2xl lg:max-w-4xl">
+        <div className="sticky top-0 z-20 -mx-5 border-b border-[#E5EAF1] bg-white/95 px-5 py-3 backdrop-blur supports-[backdrop-filter]:bg-white/86">
           <div className="flex items-center gap-3">
             <button
               aria-label="Voltar"
-              className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-border bg-surface text-muted shadow-[var(--lectum-shadow-soft)] transition hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#E2E8F0] bg-white text-[#64748B] shadow-[0_10px_24px_rgba(15,23,42,0.08)] transition hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
               onClick={() => router.back()}
               type="button"
             >
@@ -233,7 +258,7 @@ export const CommunityLogic = () => {
               />
               <Input
                 aria-label="Explorar comunidades"
-                className="rounded-full bg-surface-muted pl-11"
+                className="h-12 rounded-full border-[#E2E8F0] bg-[#F8FAFC] pl-11 text-[15px] shadow-none placeholder:text-[#94A3B8]"
                 onChange={(event) => handleSearchChange(event.target.value)}
                 placeholder="Explorar comunidades..."
                 type="search"
@@ -243,12 +268,14 @@ export const CommunityLogic = () => {
           </div>
         </div>
 
-        <header className="grid gap-3">
-          <p className="text-sm font-bold text-primary">Comunidades Lectum</p>
-          <h1 className="text-4xl font-black leading-tight tracking-tight text-foreground">
+        <header className="grid gap-3 pt-2">
+          <p className="text-sm font-extrabold uppercase tracking-[0.08em] text-primary">
+            Comunidades Lectum
+          </p>
+          <h1 className="text-[2.55rem] font-black leading-[0.94] tracking-[-0.06em] text-[#111827] sm:text-5xl">
             Encontre seu espaço seguro
           </h1>
-          <p className="max-w-xl text-base leading-7 text-muted">
+          <p className="max-w-xl text-base font-medium leading-7 text-[#64748B]">
             Conecte-se com pessoas que compartilham jornadas semelhantes à sua.
           </p>
         </header>
@@ -285,68 +312,41 @@ export const CommunityLogic = () => {
           <section className="grid gap-4">
             <div className="flex items-center gap-2">
               <Flame className="h-5 w-5 text-warning" aria-hidden="true" />
-              <h2 className="text-xl font-black text-foreground">Tendência hoje</h2>
+              <h2 className="text-xl font-black tracking-[-0.025em] text-[#111827]">
+                Tendência Hoje
+              </h2>
             </div>
             <FeaturedCommunity community={featured} />
           </section>
         ) : null}
 
-        {visibleCards.length > 0 ? (
+        {carouselCards.length > 0 ? (
           <section className="grid gap-4">
             <div className="flex items-center gap-2">
               <UsersRound className="h-5 w-5 text-primary" aria-hidden="true" />
-              <h2 className="text-xl font-black text-foreground">
-                {featured ? "Mais populares" : "Comunidades"}
+              <h2 className="text-xl font-black tracking-[-0.025em] text-[#111827]">
+                {featured ? "Mais Populares" : "Comunidades"}
               </h2>
             </div>
             <div className="-mx-5 overflow-x-auto scroll-smooth px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <div className="flex snap-x snap-mandatory gap-4">
-                {visibleCards.map((community, index) => (
-                  <CommunityCard community={community} index={index} key={community.id} />
+                {carouselCards.map((community) => (
+                  <CommunityCard community={community} key={community.communityId} />
                 ))}
               </div>
             </div>
           </section>
         ) : null}
 
-        {items.length > 0 ? (
-          <section className="grid gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" aria-hidden="true" />
-              <h2 className="text-xl font-black text-foreground">Em ascensão</h2>
-            </div>
-            <div className="grid gap-3">
-              {items.slice(0, 3).map((community) => (
-                <Link
-                  className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-background px-4 py-3 transition hover:border-primary/50 hover:bg-primary-soft/40"
-                  href={`/app/community/${community.slug}`}
-                  key={`rising-${community.id}`}
-                >
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
-                    <Sparkles className="h-5 w-5" aria-hidden="true" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <strong className="block truncate text-sm text-foreground">
-                      {community.name}
-                    </strong>
-                    <span className="text-xs font-semibold text-muted">
-                      {formatMembers(community.members_count)}
-                    </span>
-                  </span>
-                  <ChevronRight className="h-5 w-5 text-subtle" aria-hidden="true" />
-                </Link>
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        <section className="grid justify-items-center gap-4 rounded-[var(--lectum-card-radius)] border border-border bg-surface px-6 py-10 text-center shadow-[var(--lectum-shadow-soft)]">
-          <span className="grid h-14 w-14 place-items-center rounded-2xl bg-primary-soft text-primary">
+        <section className="grid justify-items-center gap-4 rounded-[30px] border border-[#E2E8F0] bg-[#F8FAFC] px-6 py-10 text-center shadow-[0_14px_38px_rgba(15,23,42,0.07)]">
+          <span className="grid h-14 w-14 place-items-center rounded-2xl bg-white text-primary shadow-[0_10px_24px_rgba(48,140,232,0.12)]">
             <PlusCircle className="h-7 w-7" aria-hidden="true" />
           </span>
           <div className="grid gap-2">
-            <h2 className="text-2xl font-black text-foreground">Sugira uma Comunidade</h2>
-            <p className="max-w-sm text-sm leading-6 text-muted">
+            <h2 className="text-2xl font-black tracking-[-0.035em] text-[#111827]">
+              Sugira uma Comunidade
+            </h2>
+            <p className="max-w-sm text-sm font-medium leading-6 text-[#64748B]">
               Não encontrou o que procurava? Nossa equipe está pronta para criar novos espaços para
               você.
             </p>
