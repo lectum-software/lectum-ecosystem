@@ -19,7 +19,8 @@ A barra passa a padronizar:
 - cluster de votação como unidade única (`Útil`, contador e downvote);
 - ações secundárias com altura, área clicável, gap e padding consistentes;
 - comportamento responsivo com linha única e overflow horizontal oculto visualmente quando necessário.
-- variante compacta `xs` para comentários, reduzindo upvote/downvote e o texto “Responder” sem adicionar ícone ao responder;
+- variante compacta `xs` para comentários, reduzindo upvote/downvote e o texto "Responder" sem adicionar ícone ao responder;
+- apresentação `votePresentation="inline"` para comentários, removendo cápsula/fundo cinza do grupo de upvote/downvote e mantendo ações leves com ícones e contador;
 - reutilização das mesmas primitivas de ícone/texto/contador também no `VoteActionButton`, garantindo que “Útil” tenha a mesma escala visual dos demais controles no feed, na comunidade e no post.
 
 ## Consequências
@@ -27,4 +28,4 @@ A barra passa a padronizar:
 - Feed, páginas de comunidade, detalhe do post, comentários, respostas e cards reutilizados devem usar `CommunityActionBar`.
 - Novas ações de posts/comentários devem ser adicionadas ao componente compartilhado ou às primitivas existentes, evitando implementações locais.
 - A alteração é visual/estrutural no frontend e não altera regra de votação, salvamento, compartilhamento ou comentários.
-- Comentários devem solicitar `size="xs"` quando precisarem de uma barra mais discreta, mantendo as barras de posts em `sm` por padrão.
+- Comentários devem solicitar `size="xs"` e, quando precisarem de ações sem cápsula, `votePresentation="inline"`, mantendo as barras de posts em `sm` por padrão.

@@ -61,7 +61,9 @@ export const getPostReplyThread = async (id: string, replyId: string) => {
     params: { id, replyId },
   });
 
-  return handleReq<PostReplyThreadResponse>(handle);
+  const reply = await handleReq<PostReply>(handle);
+
+  return { reply } satisfies PostReplyThreadResponse;
 };
 
 export const createPostReply = async (id: string, body: CreatePostReplyPayload) => {

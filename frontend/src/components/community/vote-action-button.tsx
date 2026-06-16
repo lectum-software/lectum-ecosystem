@@ -23,6 +23,7 @@ type VoteActionButtonProps = {
   showUpvoteText?: boolean;
   size?: "xs" | "sm" | "md";
   value: 1 | -1;
+  variant?: "default" | "ghost";
 };
 
 const ICON_PULSE_MS = 180;
@@ -62,10 +63,12 @@ export const VoteActionButton = ({
   showUpvoteText = true,
   size = "md",
   value,
+  variant = "default",
 }: VoteActionButtonProps) => {
   const isUpvote = value === 1;
   const isActive = currentVote === value;
   const iconOnly = !isUpvote && typeof count !== "number";
+  const ghost = variant === "ghost";
   const [iconPulsing, setIconPulsing] = useState(false);
   const [counterPulsing, setCounterPulsing] = useState(false);
   const [positiveDeltaVisible, setPositiveDeltaVisible] = useState(false);
@@ -157,12 +160,18 @@ export const VoteActionButton = ({
         aria-pressed={isActive}
         className={cn(
           "relative inline-flex items-center justify-center rounded-full text-[12px] font-semibold leading-none tracking-[-0.01em] transition-[background-color,color,transform] duration-200 active:scale-[0.97] disabled:opacity-60",
-          "text-muted hover:bg-surface-muted hover:text-foreground",
+          ghost
+            ? "text-muted hover:bg-transparent hover:text-foreground"
+            : "text-muted hover:bg-surface-muted hover:text-foreground",
           voteSizeClassName(size, iconOnly),
           isActive &&
-            (isUpvote
-              ? "bg-success/10 text-success hover:bg-success/15 hover:text-success"
-              : "bg-danger/10 text-danger hover:bg-danger/15 hover:text-danger"),
+            (ghost
+              ? isUpvote
+                ? "text-success hover:bg-transparent hover:text-success"
+                : "text-danger hover:bg-transparent hover:text-danger"
+              : isUpvote
+                ? "bg-success/10 text-success hover:bg-success/15 hover:text-success"
+                : "bg-danger/10 text-danger hover:bg-danger/15 hover:text-danger"),
           className,
         )}
         disabled={disabled}

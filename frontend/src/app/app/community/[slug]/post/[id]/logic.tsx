@@ -71,7 +71,7 @@ import {
 } from "./use-form";
 
 const REPLIES_LIMIT = 8;
-const MAX_REPLY_TREE_DEPTH = 2;
+const MAX_REPLY_TREE_DEPTH = 4;
 
 type ApiErrorData = {
   error?: string;
@@ -698,6 +698,90 @@ const PostBody = ({ post }: { post: PostDetail }) => {
   );
 };
 
+const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
+  const [contentExpanded, setContentExpanded] = useState(false);
+  const isPsychologistPost = post.author.role === "psicologo";
+  const isAnonymousPatient = !isPsychologistPost && post.anonymous;
+  const psychologistProfileHref = isPsychologistPost
+    ? `/app/psychologist/${post.author.id}`
+    : undefined;
+
+  return (
+    <article className="overflow-hidden rounded-[24px] border border-[#D8ECFF] bg-white shadow-[0_12px_28px_rgba(15,23,42,0.05)] dark:border-border dark:bg-surface">
+      <div className="flex min-w-0 items-center gap-1.5 border-[#EDF1F5] border-b px-4 py-3 text-[11px] font-semibold text-muted dark:border-border">
+        <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        <span className="shrink-0">Post original</span>
+        <span aria-hidden="true">•</span>
+        <Link
+          className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-bold text-[#64748B] no-underline hover:text-[#64748B] hover:no-underline dark:text-muted dark:hover:text-muted"
+          href={`/app/community/${post.community.slug}`}
+        >
+          {post.community.name}
+        </Link>
+      </div>
+
+      <div className="grid gap-3 p-4">
+        <div className="flex items-start gap-3">
+          <AuthorAvatar
+            anonymous={isAnonymousPatient}
+            author={post.author}
+            href={psychologistProfileHref}
+            size="sm"
+          />
+          <div className="grid min-w-0 flex-1 gap-1">
+            <div className="flex min-w-0 items-center gap-x-2">
+              <div className="flex min-w-0 items-center gap-[5px]">
+                {psychologistProfileHref ? (
+                  <Link
+                    className="truncate text-sm font-black text-foreground no-underline transition hover:text-foreground hover:no-underline"
+                    href={psychologistProfileHref}
+                  >
+                    {post.author.name}
+                  </Link>
+                ) : (
+                  <h2 className="truncate text-sm font-black text-foreground">
+                    {post.author.name}
+                  </h2>
+                )}
+                {post.author.verified ? (
+                  <BadgeCheck
+                    className="h-4 w-4 shrink-0 fill-[#2da7ff] text-white"
+                    aria-hidden="true"
+                  />
+                ) : null}
+              </div>
+              <MentorBadge
+                badge={post.author.featured_badge ?? post.featured_badge}
+                href={psychologistProfileHref}
+              />
+            </div>
+            <p className="text-[11px] font-semibold text-muted">
+              {isPsychologistPost && post.author.type_label ? `${post.author.type_label} • ` : ""}
+              {formatRelativeTime(post.created_at)}
+            </p>
+          </div>
+        </div>
+
+        <h2 className="line-clamp-2 text-[1.1rem] font-black leading-[1.18] tracking-[-0.03em] text-[#182033] dark:text-foreground">
+          {post.title}
+        </h2>
+        <InlineExpandableText
+          className="text-sm leading-6 text-[#475569] dark:text-muted"
+          expanded={contentExpanded}
+          onToggle={() => setContentExpanded((current) => !current)}
+          text={post.content}
+        />
+        <MediaBlock
+          alt={post.title}
+          mediaType={post.media_type}
+          mediaUrl={post.media_url}
+          size="md"
+        />
+      </div>
+    </article>
+  );
+};
+
 const PostVoteBar = ({
   currentVote,
   disabled,
@@ -783,6 +867,7 @@ const ReplyVoteBar = ({
     size="xs"
     upvotesCount={reply.upvotes_count}
     voteLabel="Marcar resposta como útil"
+    votePresentation="inline"
   />
 );
 
@@ -1050,9 +1135,13 @@ const ReplyCard = ({
           ))}
           {hiddenRepliesCount > 0 && threadHref ? (
             <Link
-              className="flex w-fit items-center rounded-full py-1 pr-2 text-[11px] font-black text-primary no-underline transition hover:text-primary hover:no-underline"
+              className="group inline-flex w-fit items-center gap-2 rounded-full py-1 pr-2 text-[11px] font-black text-primary no-underline transition hover:text-primary hover:no-underline"
               href={threadHref}
             >
+              <span
+                className="h-px w-5 rounded-full bg-[#CBD5E1] transition group-hover:bg-primary/45 dark:bg-border"
+                aria-hidden="true"
+              />
               <span>
                 Ver mais {hiddenRepliesCount} {hiddenRepliesCount === 1 ? "resposta" : "respostas"}
               </span>
@@ -1535,6 +1624,7 @@ const RepliesList = ({
   replies,
   replyApiError,
   replyDisabled,
+  showSectionTitle = true,
   threadHrefBase,
   votePending,
 }: {
@@ -1560,6 +1650,7 @@ const RepliesList = ({
   replies: PostReply[];
   replyApiError?: string | null;
   replyDisabled?: boolean;
+  showSectionTitle?: boolean;
   threadHrefBase?: string;
   votePending?: boolean;
 }) => {
@@ -1567,9 +1658,13 @@ const RepliesList = ({
 
   return (
     <section className="grid gap-4" id="discussao">
-      <div className="px-0.5">
-        <h2 className="text-sm font-black tracking-[0.08em] text-[#64748B] uppercase">Discussão</h2>
-      </div>
+      {showSectionTitle ? (
+        <div className="px-0.5">
+          <h2 className="text-sm font-black tracking-[0.08em] text-[#64748B] uppercase">
+            Discussão
+          </h2>
+        </div>
+      ) : null}
 
       {loading ? (
         <div className="grid min-h-[220px] place-items-center rounded-[22px] border border-border bg-white shadow-[var(--lectum-shadow-soft)] dark:bg-surface">
@@ -2151,14 +2246,7 @@ export const PostReplyThreadLogic = () => {
 
         {post && rootReply ? (
           <div className="grid gap-4 px-5 pt-4 pb-36 sm:px-0 sm:pb-6">
-            <div className="rounded-[22px] border border-[#D8ECFF] bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)] dark:border-border dark:bg-surface">
-              <p className="text-xs font-bold tracking-[0.08em] text-[#64748B] uppercase">
-                Fio de respostas
-              </p>
-              <h2 className="mt-1 line-clamp-2 text-lg font-black tracking-[-0.03em] text-[#182033] dark:text-foreground">
-                {post.title}
-              </h2>
-            </div>
+            <ThreadOriginalPostCard post={post} />
 
             {shareFeedback ? (
               <InlineAlert title="Link preparado" variant="success">
@@ -2172,30 +2260,12 @@ export const PostReplyThreadLogic = () => {
               </InlineAlert>
             ) : null}
 
-            <ReplyComposer
-              apiError={isMobile ? replyError : null}
-              autoFocus={Boolean(activeMobileReplyTarget)}
-              disabled={createReplyMutation.isPending || uploadReplyMediaMutation.isPending}
-              formRef={composerRef}
-              mediaPermission={mediaPermission}
-              onCancelContext={() => {
-                setReplyError(null);
-                setMobileReplyTarget(null);
-              }}
-              onSubmit={(values, mediaFile) =>
-                submitReply(values, activeMobileReplyTarget?.id ?? rootReply.id, mediaFile)
-              }
-              replyToName={rootReply.author.name}
-              replyTarget={activeMobileReplyTarget}
-            />
-
             <RepliesList
               currentUserId={currentUserId}
               deleteReplyPending={deleteReplyMutation.isPending}
               errorMessage={null}
               inlineReplyTargets={visibleInlineReplyTargets}
               loading={false}
-              maxInlineDepth={-1}
               mediaPermission={mediaPermission}
               onCancelInlineReplyTarget={(targetId) => {
                 setReplyError(null);
@@ -2226,8 +2296,26 @@ export const PostReplyThreadLogic = () => {
               replies={[rootReply]}
               replyApiError={replyError}
               replyDisabled={createReplyMutation.isPending || uploadReplyMediaMutation.isPending}
+              showSectionTitle={false}
               threadHrefBase={`/app/community/${post.community.slug}/post/${post.id}/thread`}
               votePending={voteMutation.isPending}
+            />
+
+            <ReplyComposer
+              apiError={isMobile ? replyError : null}
+              autoFocus={Boolean(activeMobileReplyTarget)}
+              disabled={createReplyMutation.isPending || uploadReplyMediaMutation.isPending}
+              formRef={composerRef}
+              mediaPermission={mediaPermission}
+              onCancelContext={() => {
+                setReplyError(null);
+                setMobileReplyTarget(null);
+              }}
+              onSubmit={(values, mediaFile) =>
+                submitReply(values, activeMobileReplyTarget?.id ?? rootReply.id, mediaFile)
+              }
+              replyToName={rootReply.author.name}
+              replyTarget={activeMobileReplyTarget}
             />
 
             <PostReportModal

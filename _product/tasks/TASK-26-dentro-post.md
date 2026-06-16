@@ -254,3 +254,23 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Não houve alteração de backend, Prisma, migrations, packages, endpoints, payloads, ordenação, prioridade de psicólogo verificado ou lógica de envio.
 - ADRs atualizados: `adrs/0102-arvore-comentarios-posts-comunidade.md` e `adrs/0104-barra-acoes-comunidade-unificada.md`.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP local `200` em `/app/community/feed`, `/app/community/ansiedade-em-equilibrio` e `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`.
+
+## Execução complementar: profundidade 5 e thread isolada (2026-06-16)
+
+- Pedido do usuário: permitir até 5 níveis visuais na árvore de comentários dentro do post, abrir uma tela de thread ao exceder o limite e refinar os controles dos comentários sem alterar ordenação ou destaque de psicólogos verificados.
+- Fonte visual auditável: `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy não está exposto como ferramenta direta nesta sessão, então a validação visual usou a referência local e browser local.
+- A tela principal do post agora renderiza o comentário raiz mais 4 níveis de respostas aninhadas; níveis abaixo disso exibem `Ver mais resposta(s)` alinhado à camada onde a continuação existiria.
+- O backend deixou de usar o `take: 3` de respostas imediatas e passou a hidratar descendentes dos comentários diretos paginados com profundidade limitada por `INLINE_REPLY_DESCENDANT_DEPTH`, preservando comentários diretos como árvores de primeira camada.
+- A rota de thread `/app/community/[slug]/post/[id]/thread/[replyId]` passou a exibir o post original no topo e, abaixo, o comentário raiz do fio selecionado com a continuação da conversa; o composer fica depois da árvore no desktop e permanece fixo no mobile.
+- A resposta da API de thread foi normalizada no client para `{ reply }`, compatibilizando o contrato tipado com o payload real do backend e destravando a tela isolada.
+- Nos comentários, o grupo de upvote/downvote usa `votePresentation="inline"`, sem cápsula/fundo cinza; `Responder` permanece sem ícone, em escala menor e com espaçamento consistente com salvar/compartilhar.
+- Não houve alteração de Prisma schema, migrations, packages, regra de ordenação, prioridade de psicólogo verificado ou lógica de envio.
+- ADRs atualizados: `adrs/0102-arvore-comentarios-posts-comunidade.md` e `adrs/0104-barra-acoes-comunidade-unificada.md`.
+- Validações executadas:
+  - `pnpm --dir backend check`
+  - `pnpm --dir backend build`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - HTTP local `200` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video` e `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video/thread/demo-reply-ansiedade-apresentacao-psi-video` com cookie de sessão local.
+  - Browser local Chrome headless autenticado nas mesmas rotas, conferindo o detalhe do post e a thread isolada com o post original no topo.

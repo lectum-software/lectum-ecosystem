@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 
 type ActionHandler = MouseEventHandler<HTMLButtonElement>;
 type CommunityActionSize = "xs" | "sm" | "md";
+type VotePresentation = "cluster" | "inline";
 
 type ActionWithCount = {
   count?: number;
@@ -49,6 +50,7 @@ export type CommunityActionBarProps = {
   size?: CommunityActionSize;
   upvotesCount: number;
   voteLabel?: string;
+  votePresentation?: VotePresentation;
   showUpvoteText?: boolean;
   onVote?: (value: 1 | -1) => void;
 };
@@ -56,19 +58,31 @@ export type CommunityActionBarProps = {
 const actionBarClassName =
   "flex w-full min-w-0 items-center gap-1.5 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:gap-2 sm:overflow-visible";
 
-const voteClusterClassName = (size: CommunityActionSize) =>
-  cn(
+const voteClusterClassName = (size: CommunityActionSize, presentation: VotePresentation) => {
+  if (presentation === "inline") {
+    return cn(
+      "inline-flex shrink-0 items-center gap-0.5 overflow-visible bg-transparent p-0 ring-0",
+      size === "xs" ? "h-7" : size === "md" ? "h-9" : "h-8",
+    );
+  }
+
+  return cn(
     "inline-flex shrink-0 items-center overflow-visible rounded-full bg-[#F4F6F8] p-0.5 ring-1 ring-[#E7ECF2] dark:bg-surface-muted dark:ring-border",
     size === "xs" ? "h-7" : size === "md" ? "h-9" : "h-8",
   );
+};
 
-const separatorClassName = (size: CommunityActionSize) =>
-  cn("w-px bg-[#DDE4EC] dark:bg-border", size === "xs" ? "h-3.5" : "h-4");
+const separatorClassName = (size: CommunityActionSize, presentation: VotePresentation) =>
+  cn(
+    "w-px bg-[#DDE4EC] dark:bg-border",
+    presentation === "inline" && "hidden",
+    size === "xs" ? "h-3.5" : "h-4",
+  );
 
 const textOnlyReplyClassName = (size: CommunityActionSize) =>
   cn(
-    "inline-flex shrink-0 items-center justify-center rounded-full font-semibold leading-none tracking-[-0.01em] text-muted transition-[background-color,color,transform] duration-200 hover:bg-surface-muted hover:text-foreground active:scale-[0.97]",
-    size === "xs" ? "h-7 px-2 text-[11px]" : "h-8 px-2.5 text-[12px]",
+    "inline-flex shrink-0 items-center justify-center rounded-md font-semibold leading-none tracking-[-0.01em] text-muted transition-[color,transform] duration-200 hover:text-foreground active:scale-[0.97]",
+    size === "xs" ? "h-7 px-1.5 text-[10.5px]" : "h-8 px-2 text-[12px]",
   );
 
 export const CommunityActionBar = ({
@@ -85,13 +99,14 @@ export const CommunityActionBar = ({
   size = "sm",
   upvotesCount,
   voteLabel = "Marcar como útil",
+  votePresentation = "cluster",
 }: CommunityActionBarProps) => {
   const canVote = Boolean(onVote);
 
   return (
     <div className={cn(actionBarClassName, className)}>
       <div className="flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-2">
-        <div className={voteClusterClassName(size)}>
+        <div className={voteClusterClassName(size, votePresentation)}>
           {canVote && onVote ? (
             <VoteActionButton
               count={upvotesCount}
@@ -103,13 +118,14 @@ export const CommunityActionBar = ({
               showUpvoteText={showUpvoteText}
               size={size}
               value={1}
+              variant={votePresentation === "inline" ? "ghost" : "default"}
             />
           ) : (
             <PostActionMetric count={upvotesCount} icon={ArrowUp} label={voteLabel} size={size}>
               Útil
             </PostActionMetric>
           )}
-          <span className={separatorClassName(size)} aria-hidden="true" />
+          <span className={separatorClassName(size, votePresentation)} aria-hidden="true" />
           {canVote && onVote ? (
             <VoteActionButton
               currentVote={currentVote}
@@ -120,6 +136,7 @@ export const CommunityActionBar = ({
               showPositiveDelta={false}
               size={size}
               value={-1}
+              variant={votePresentation === "inline" ? "ghost" : "default"}
             />
           ) : (
             <PostActionMetric icon={ArrowDown} label="Dar downvote" size={size} />

@@ -34,6 +34,7 @@ import type { IPostRepository } from "./interfaces/IPostRepository";
 
 const DEFAULT_LIMIT = 10;
 const MAX_LIMIT = 30;
+const INLINE_REPLY_DESCENDANT_DEPTH = 4;
 
 const CONTACT_MESSAGE =
   "Olá, encontrei sua resposta na comunidade Lectum e gostaria de conversar sobre atendimento.";
@@ -143,24 +144,11 @@ const replyBaseSelect = {
   },
 } satisfies Prisma.post_replySelect;
 
-const replySelect = {
-  ...replyBaseSelect,
-  replies: {
-    where: {
-      deleted: false,
-    },
-    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-    take: 3,
-    select: replyBaseSelect,
-  },
-} satisfies Prisma.post_replySelect;
-
 type PostResult = Prisma.community_postGetPayload<{ select: typeof postSelect }>;
 type ListPostResult = Prisma.community_postGetPayload<{ select: typeof listPostSelect }>;
 type AuthorResult = PostResult["author"];
 type ProfessionalReplyResult = ListPostResult["replies"][number];
 type ReplyBaseResult = Prisma.post_replyGetPayload<{ select: typeof replyBaseSelect }>;
-type ReplyResult = Prisma.post_replyGetPayload<{ select: typeof replySelect }>;
 type ReplyTreeResult = ReplyBaseResult & { replies: ReplyTreeResult[] };
 type CurrentVote = 1 | -1 | null;
 
@@ -382,7 +370,7 @@ const toListPostResponse = (
 });
 
 const toReplyResponse = (
-  item: ReplyResult | ReplyBaseResult | ReplyTreeResult,
+  item: ReplyBaseResult | ReplyTreeResult,
   currentVotes: Map<string, CurrentVote>,
   savedReplyIds?: Set<string>,
 ): PostReplyDTO => {
@@ -405,10 +393,10 @@ const toReplyResponse = (
   };
 };
 
-const collectReplyIds = (items: Array<ReplyResult | ReplyBaseResult | ReplyTreeResult>) => {
+const collectReplyIds = (items: Array<ReplyBaseResult | ReplyTreeResult>) => {
   const ids = new Set<string>();
 
-  const visit = (item: ReplyResult | ReplyBaseResult | ReplyTreeResult) => {
+  const visit = (item: ReplyBaseResult | ReplyTreeResult) => {
     ids.add(item.id);
 
     if ("replies" in item) {
@@ -451,23 +439,70 @@ const buildReplyThread = (rootId: string, replies: ReplyBaseResult[]): ReplyTree
   return root ? build(root) : null;
 };
 
-const replyDirectRepliesCount = (item: ReplyResult | ReplyBaseResult) => {
-  return item._count?.replies ?? ("replies" in item ? item.replies.length : 0);
+const buildReplyTrees = (
+  roots: ReplyBaseResult[],
+  replies: ReplyBaseResult[],
+): ReplyTreeResult[] => {
+  const byParent = new Map<string | null, ReplyBaseResult[]>();
+
+  for (const reply of replies) {
+    const parentId = reply.parent_reply_id ?? null;
+    const current = byParent.get(parentId) ?? [];
+    current.push(reply);
+    byParent.set(parentId, current);
+  }
+
+  const build = (reply: ReplyBaseResult): ReplyTreeResult => ({
+    ...reply,
+    replies: sortNestedReplies(byParent.get(reply.id) ?? []).map(build),
+  });
+
+  return roots.map(build);
 };
 
-const isVerifiedProfessionalReply = (item: ReplyResult | ReplyBaseResult) => {
+const loadReplyDescendants = async (
+  postId: string,
+  parentReplyIds: string[],
+  maxDepth: number,
+): Promise<ReplyBaseResult[]> => {
+  const descendants: ReplyBaseResult[] = [];
+  let currentParentIds = [...new Set(parentReplyIds)];
+
+  for (let depth = 0; depth < maxDepth && currentParentIds.length > 0; depth += 1) {
+    const levelItems = await prisma.post_reply.findMany({
+      where: {
+        post_id: postId,
+        deleted: false,
+        parent_reply_id: {
+          in: currentParentIds,
+        },
+      },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      select: replyBaseSelect,
+    });
+
+    descendants.push(...levelItems);
+    currentParentIds = levelItems.map((reply) => reply.id);
+  }
+
+  return descendants;
+};
+
+const replyDirectRepliesCount = (item: ReplyBaseResult) => item._count.replies;
+
+const isVerifiedProfessionalReply = (item: ReplyBaseResult) => {
   const profile = item.author.psychologist_profile;
 
   return item.author.role === "psicologo" && isProfessionalVerified(profile);
 };
 
 const rankingPositionForReply = (
-  item: ReplyResult | ReplyBaseResult,
+  item: ReplyBaseResult,
   rankingSignals: Awaited<ReturnType<typeof getCommunityMentorRankingSignals>>,
 ) => rankingSignals.get(item.author.id)?.position ?? Number.POSITIVE_INFINITY;
 
 const replyGeneralRelevanceScore = (
-  item: ReplyResult | ReplyBaseResult,
+  item: ReplyBaseResult,
   rankingSignals: Awaited<ReturnType<typeof getCommunityMentorRankingSignals>>,
 ) => {
   const verifiedProfessionalBonus = isVerifiedProfessionalReply(item) ? 6 : 0;
@@ -485,8 +520,8 @@ const replyGeneralRelevanceScore = (
 const newestFirst = (a: Date, b: Date) => b.getTime() - a.getTime();
 
 const compareRepliesBySecondaryRelevance = (
-  a: ReplyResult | ReplyBaseResult,
-  b: ReplyResult | ReplyBaseResult,
+  a: ReplyBaseResult,
+  b: ReplyBaseResult,
   rankingSignals: Awaited<ReturnType<typeof getCommunityMentorRankingSignals>>,
 ) => {
   const scoreDiff =
@@ -506,8 +541,8 @@ const compareRepliesBySecondaryRelevance = (
 };
 
 const compareProfessionalReplies = (
-  a: ReplyResult | ReplyBaseResult,
-  b: ReplyResult | ReplyBaseResult,
+  a: ReplyBaseResult,
+  b: ReplyBaseResult,
   rankingSignals: Awaited<ReturnType<typeof getCommunityMentorRankingSignals>>,
 ) => {
   const upvoteDiff = b.upvotes_count - a.upvotes_count;
@@ -520,7 +555,7 @@ const compareProfessionalReplies = (
   return compareRepliesBySecondaryRelevance(a, b, rankingSignals);
 };
 
-const sortRepliesForDisplay = async (communityId: string, items: ReplyResult[]) => {
+const sortRepliesForDisplay = async (communityId: string, items: ReplyBaseResult[]) => {
   const verifiedProfessionalIds = items
     .filter(isVerifiedProfessionalReply)
     .map((item) => item.author.id);
@@ -960,16 +995,25 @@ export class PostRepository implements IPostRepository {
       deleted: false,
     };
 
-    const [allItems, count] = await Promise.all([
+    const [topLevelItems, count] = await Promise.all([
       prisma.post_reply.findMany({
         where,
         orderBy: [{ upvotes_count: "desc" }, { createdAt: "desc" }, { id: "desc" }],
-        select: replySelect,
+        select: replyBaseSelect,
       }),
       prisma.post_reply.count({ where }),
     ]);
-    const sortedItems = await sortRepliesForDisplay(post.community_id, allItems);
-    const items = sortedItems.slice(pagination.skip, pagination.skip + pagination.limit);
+    const sortedItems = await sortRepliesForDisplay(post.community_id, topLevelItems);
+    const paginatedTopLevelItems = sortedItems.slice(
+      pagination.skip,
+      pagination.skip + pagination.limit,
+    );
+    const descendants = await loadReplyDescendants(
+      post.id,
+      paginatedTopLevelItems.map((reply) => reply.id),
+      INLINE_REPLY_DESCENDANT_DEPTH,
+    );
+    const items = buildReplyTrees(paginatedTopLevelItems, descendants);
 
     const replyIds = collectReplyIds(items);
     const [votes, saves] =
