@@ -221,7 +221,7 @@ const GoogleConnectionPanel = ({
 };
 
 const GoogleOnlyView = ({ email, manageUrl }: { email?: string | null; manageUrl: string }) => (
-  <div className="grid gap-20 px-4 py-14">
+  <div className="grid gap-4 px-4 py-6">
     <Card className="justify-items-center px-8 py-9 text-center">
       <GoogleGlyph />
       <div>
@@ -375,13 +375,18 @@ export const AccountSettingsLogic = () => {
           className="sticky top-0 z-30 border-border border-b bg-surface/95 supports-[backdrop-filter]:bg-surface/85"
           style={{ paddingTop: "env(safe-area-inset-top)" }}
         >
-          <div className="flex h-14 items-center gap-3 px-4">
-            <Button asChild className="h-10 w-10 rounded-full p-0" variant="ghost">
+          <div className="relative flex h-14 items-center justify-center px-4">
+            <Button
+              asChild
+              className="absolute left-4 top-1/2 h-10 w-10 -translate-y-1/2 rounded-full p-0"
+              variant="ghost"
+            >
               <Link href="/app/profile" aria-label="Voltar para meu perfil">
                 <ArrowLeft className="h-5 w-5" aria-hidden="true" />
               </Link>
             </Button>
             <h1 className="text-lg font-black text-foreground">E-mail e Senha</h1>
+            <span className="absolute right-4 h-10 w-10" aria-hidden="true" />
           </div>
         </header>
 
