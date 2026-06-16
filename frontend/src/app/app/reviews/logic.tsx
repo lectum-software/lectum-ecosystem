@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { ArrowLeft, ArrowUpRight, MessageSquareReply, Star, UserRound } from "lucide-react";
+import { ArrowUpRight, MessageSquareReply, Star, UserRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -9,6 +9,7 @@ import type { PatientReview } from "@/api/generator/types/reviews";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { SecondaryPageHeader } from "@/components/ui/secondary-page-header";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -145,27 +146,15 @@ export const ReviewsLogic = () => {
       desktopSidebarDefaultCollapsed
       showMobileNavigation={false}
     >
-      <section className="mx-auto min-h-screen w-full max-w-[430px] bg-background sm:max-w-xl">
-        <header
-          className="sticky top-0 z-30 border-border border-b bg-surface/95 supports-[backdrop-filter]:bg-surface/85"
-          style={{ paddingTop: "env(safe-area-inset-top)" }}
-        >
-          <div className="relative flex h-14 items-center justify-center px-4">
-            <Button
-              asChild
-              className="absolute left-4 top-1/2 h-10 w-10 -translate-y-1/2 rounded-full p-0"
-              variant="ghost"
-            >
-              <Link aria-label="Voltar para perfil" href="/app/profile">
-                <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-              </Link>
-            </Button>
-            <h1 className="text-lg font-black text-foreground">Avaliações feitas</h1>
-            <span className="absolute right-4 h-10 w-10" aria-hidden="true" />
-          </div>
-        </header>
+      <section className="mx-auto min-h-screen w-full max-w-[430px] bg-background px-5 py-5 sm:max-w-xl md:py-8">
+        <SecondaryPageHeader
+          backHref="/app/profile"
+          backLabel="Voltar para perfil"
+          className="mb-4"
+          title="Avaliações feitas"
+        />
 
-        <div className="grid gap-4 px-4 py-6">
+        <div className="grid gap-4 py-2">
           {reviews.isLoading ? (
             <div className="grid min-h-[45vh] place-items-center rounded-[22px] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
               <LoadingState label="Carregando avaliações" />

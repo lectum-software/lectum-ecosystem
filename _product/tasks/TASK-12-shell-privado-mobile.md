@@ -245,6 +245,7 @@ Validacoes do ajuste:
 - HTTP local em `/app/psychologist/cmq5m0vse000ftkuhybmagcn6` respondeu `200`.
 - HTTP local em `/app/psychologists` respondeu `200`.
 
+
 ### Ajuste complementar em 2026-06-14: sidebar desktop orientada por rotas principais
 
 - Produto solicitou que, no desktop, a sidebar seja navegacao principal expandida apenas nas cinco areas centrais: `/app/psychologists`, `/app/favorites`, `/app/community/feed`, `/app/notifications` e `/app/profile`.
@@ -296,3 +297,31 @@ Validacoes do ajuste:
 - `pnpm --dir frontend build`
 - Chrome/CDP autenticado em desktop 1280px nas quatro rotas confirmou sidebar presente, largura 88px e controle `Expandir menu lateral`.
 - Chrome/CDP autenticado em mobile 390px confirmou sidebar oculta e ausencia de bottom navigation adicional nas quatro rotas.
+
+### Ajuste complementar em 2026-06-16: header secundario oficial
+
+- Produto definiu o header de `/app/notifications` como padrao visual oficial para telas secundarias: sem card branco, sem container destacado, titulo forte alinhado a esquerda e melhor aproveitamento horizontal.
+- Foi criado o componente compartilhado `SecondaryPageHeader`, preservando o mesmo modelo do header de Notificacoes e adicionando suporte opcional a acao direita ou botao de voltar a esquerda.
+- As rotas ajustadas foram: `/app/reviews`, `/app/settings/account`, `/app/posts/mine`, `/app/following` e `/app/posts/saved`.
+- Os headers antigos com fundo branco, borda sticky, centralizacao e acoes extras foram removidos dessas telas.
+- O header de `/app/notifications` passou a usar o mesmo componente compartilhado para manter a fonte visual ativa em um unico lugar.
+- Nao houve alteracao de rotas, ordenacao, dados, autenticacao, backend, Prisma, migrations ou packages.
+- Builder/Quick Copy nao estava exposto como ferramenta no ambiente; a referencia ativa foi o proprio header implementado em `/app/notifications`.
+- ADR criado: `adrs/0111-header-secundario-oficial-notificacoes.md`.
+
+Critérios de aceite do ajuste:
+
+- [x] Avaliacoes feitas usa o header secundario oficial com voltar.
+- [x] E-mail e Senha usa o header secundario oficial com voltar.
+- [x] Meus Posts e Respostas usa o header secundario oficial com voltar.
+- [x] Comunidades Seguidas usa o header secundario oficial com voltar.
+- [x] Salvos usa o header secundario oficial com voltar.
+- [x] Os headers antigos em card/container branco foram removidos das telas alvo.
+- [x] O header de Notificacoes permanece com a mesma aparencia e foi convertido para o componente compartilhado.
+
+Validacoes do ajuste:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome/CDP autenticado em mobile 390px e desktop 1280px confirmou titulo, botao de voltar quando aplicavel, ausencia de fundo/sombra/borda de card no header e rota correta em `/app/notifications`, `/app/reviews`, `/app/settings/account`, `/app/posts/mine`, `/app/following` e `/app/posts/saved`.

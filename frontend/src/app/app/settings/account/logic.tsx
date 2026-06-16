@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  ArrowLeft,
   AtSign,
   ExternalLink,
   KeyRound,
@@ -12,7 +11,6 @@ import {
   ShieldCheck,
   Unlink2,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -21,6 +19,7 @@ import { components } from "@/components/controllers";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { SecondaryPageHeader } from "@/components/ui/secondary-page-header";
 import type { Field } from "@/hooks/form";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
@@ -374,34 +373,22 @@ export const AccountSettingsLogic = () => {
       desktopSidebarDefaultCollapsed
       showMobileNavigation={false}
     >
-      <section className="mx-auto min-h-screen w-full max-w-[430px] bg-background sm:max-w-xl">
-        <header
-          className="sticky top-0 z-30 border-border border-b bg-surface/95 supports-[backdrop-filter]:bg-surface/85"
-          style={{ paddingTop: "env(safe-area-inset-top)" }}
-        >
-          <div className="relative flex h-14 items-center justify-center px-4">
-            <Button
-              asChild
-              className="absolute left-4 top-1/2 h-10 w-10 -translate-y-1/2 rounded-full p-0"
-              variant="ghost"
-            >
-              <Link href="/app/profile" aria-label="Voltar para meu perfil">
-                <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-              </Link>
-            </Button>
-            <h1 className="text-lg font-black text-foreground">E-mail e Senha</h1>
-            <span className="absolute right-4 h-10 w-10" aria-hidden="true" />
-          </div>
-        </header>
+      <section className="mx-auto min-h-screen w-full max-w-[430px] bg-background px-5 py-5 sm:max-w-xl md:py-8">
+        <SecondaryPageHeader
+          backHref="/app/profile"
+          backLabel="Voltar para meu perfil"
+          className="mb-4"
+          title="E-mail e Senha"
+        />
 
         {account.security.isLoading || account.security.isPending ? (
-          <div className="grid min-h-[55vh] place-items-center px-4">
+          <div className="grid min-h-[55vh] place-items-center">
             <LoadingState label="Carregando configurações de conta" />
           </div>
         ) : null}
 
         {securityError ? (
-          <div className="px-4 py-6">
+          <div className="py-6">
             <InlineAlert title="Conta indisponível" variant="error">
               {securityError}
             </InlineAlert>
@@ -409,7 +396,7 @@ export const AccountSettingsLogic = () => {
         ) : null}
 
         {!account.security.isLoading && !securityError && !security ? (
-          <div className="px-4 py-6">
+          <div className="py-6">
             <EmptyState
               description="Não encontramos dados reais de conta para editar neste momento."
               icon={ShieldCheck}
@@ -423,7 +410,7 @@ export const AccountSettingsLogic = () => {
         ) : null}
 
         {security && !isGoogleOnly ? (
-          <div className="grid gap-7 px-4 py-6">
+          <div className="grid gap-7 py-2">
             {successMessage ? (
               <InlineAlert title="Alteração salva" variant="success">
                 {successMessage}

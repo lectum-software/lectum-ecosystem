@@ -19,6 +19,7 @@ import { useMemo, useState } from "react";
 import { useNotification } from "@/api/callers/notification";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
+import { SecondaryPageHeader } from "@/components/ui/secondary-page-header";
 import { getToken } from "@/hooks/cookies/token";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
@@ -221,17 +222,17 @@ export const NotificationsLogic = () => {
   return (
     <PrivateTemplate>
       <section className="mx-auto w-full max-w-2xl px-5 py-5 md:py-8">
-        <header className="mb-4 flex items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-foreground">Notificações</h1>
-          </div>
-
-          <Button asChild className="h-11 w-11 rounded-full" type="button" variant="ghost">
-            <Link aria-label="Configurações de notificações" href="/app/settings/notifications">
-              <Settings className="h-5 w-5" aria-hidden={true} />
-            </Link>
-          </Button>
-        </header>
+        <SecondaryPageHeader
+          action={
+            <Button asChild className="h-11 w-11 rounded-full" type="button" variant="ghost">
+              <Link aria-label="Configurações de notificações" href="/app/settings/notifications">
+                <Settings className="h-5 w-5" aria-hidden={true} />
+              </Link>
+            </Button>
+          }
+          className="mb-4"
+          title="Notificações"
+        />
 
         {items.length > 0 ? (
           <div className="mb-4 flex justify-end">

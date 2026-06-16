@@ -1,13 +1,11 @@
 "use client";
 
 import {
-  ArrowLeft,
   Bell,
   ChevronRight,
   Compass,
   Loader2,
   Moon,
-  Search,
   Sparkles,
   UsersRound,
   Waves,
@@ -19,6 +17,7 @@ import type { Community } from "@/api/generator/types/community";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { SecondaryPageHeader } from "@/components/ui/secondary-page-header";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -238,26 +237,6 @@ const RecommendedCard = ({
   </article>
 );
 
-const Header = () => (
-  <header className="sticky top-0 z-20 -mx-5 border-[#DFE5EC] border-b bg-white px-5 py-4">
-    <div className="mx-auto grid max-w-[430px] grid-cols-[40px_1fr_40px] items-center">
-      <Button asChild className="h-10 w-10 rounded-full p-0 text-[#131A2A]" variant="ghost">
-        <Link href="/app/profile" aria-label="Voltar ao perfil">
-          <ArrowLeft className="h-6 w-6" aria-hidden="true" />
-        </Link>
-      </Button>
-      <h1 className="text-center text-2xl font-black tracking-[-0.02em] text-[#131A2A]">
-        Seguindo
-      </h1>
-      <Button asChild className="h-10 w-10 rounded-full p-0 text-[#738198]" variant="ghost">
-        <Link href="/app/community" aria-label="Explorar comunidades">
-          <Search className="h-5 w-5" aria-hidden="true" />
-        </Link>
-      </Button>
-    </div>
-  </header>
-);
-
 export const FollowingCommunitiesLogic = () => {
   const [pendingSlug, setPendingSlug] = useState<string | null>(null);
   const followingQuery = useCommunities({ limit: FOLLOWING_LIMIT, page: 1, scope: "following" });
@@ -305,119 +284,127 @@ export const FollowingCommunitiesLogic = () => {
       navigationTheme="solidWhite"
       showHeader
     >
-      <Header />
-      <main className="mx-auto grid min-h-screen w-full max-w-[430px] gap-8 px-5 py-7 sm:max-w-2xl lg:max-w-3xl">
-        {isInitialLoading ? (
-          <div className="grid min-h-[45vh] place-items-center rounded-[22px] bg-white shadow-[var(--lectum-shadow-soft)]">
-            <LoadingState label="Carregando comunidades seguidas" />
-          </div>
-        ) : null}
+      <main className="mx-auto min-h-screen w-full max-w-[430px] px-5 py-5 sm:max-w-2xl md:py-8 lg:max-w-3xl">
+        <SecondaryPageHeader
+          backHref="/app/profile"
+          backLabel="Voltar ao perfil"
+          className="mb-4"
+          title="Comunidades Seguidas"
+        />
 
-        {errorMessage ? (
-          <InlineAlert title="Não foi possível carregar" variant="error">
-            {errorMessage}
-          </InlineAlert>
-        ) : null}
+        <div className="grid gap-8">
+          {isInitialLoading ? (
+            <div className="grid min-h-[45vh] place-items-center rounded-[22px] bg-white shadow-[var(--lectum-shadow-soft)]">
+              <LoadingState label="Carregando comunidades seguidas" />
+            </div>
+          ) : null}
 
-        {!isInitialLoading && !errorMessage ? (
-          <>
-            <ActivityCard followingCount={followingCount} newPostsToday={newPostsToday} />
+          {errorMessage ? (
+            <InlineAlert title="Não foi possível carregar" variant="error">
+              {errorMessage}
+            </InlineAlert>
+          ) : null}
 
-            {featuredCommunity ? <FeaturedCommunity community={featuredCommunity} /> : null}
+          {!isInitialLoading && !errorMessage ? (
+            <>
+              <ActivityCard followingCount={followingCount} newPostsToday={newPostsToday} />
 
-            <section className="grid gap-5">
-              <SectionTitle>Minhas comunidades</SectionTitle>
-              {followingCommunities.length > 0 ? (
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                  {followingCommunities.map((community) => (
-                    <MyCommunityCard community={community} key={community.id} />
-                  ))}
-                </div>
-              ) : (
-                <EmptyState
-                  action={
-                    <Button asChild className="rounded-full">
-                      <Link href="/app/community">
-                        <Compass className="h-4 w-4" aria-hidden="true" />
-                        Explorar comunidades
-                      </Link>
-                    </Button>
-                  }
-                  description="Quando você participar de comunidades reais, elas aparecerão aqui."
-                  icon={UsersRound}
-                  title="Você ainda não segue comunidades"
-                />
-              )}
-            </section>
+              {featuredCommunity ? <FeaturedCommunity community={featuredCommunity} /> : null}
 
-            <section className="grid gap-5">
-              <div className="flex items-center justify-between gap-3">
-                <SectionTitle>Recomendados para você</SectionTitle>
-                <Link
-                  className="inline-flex items-center gap-1 text-xs font-black text-primary"
-                  href="/app/community"
-                >
-                  Ver todos
-                  <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
-                </Link>
-              </div>
-
-              {recommendedError ? (
-                <InlineAlert title="Recomendações indisponíveis" variant="error">
-                  {recommendedError}
-                </InlineAlert>
-              ) : null}
-
-              {recommendedQuery.isLoading || recommendedQuery.isPending ? (
-                <LoadingState label="Buscando recomendações" />
-              ) : null}
-
-              {recommendedCommunities.length > 0 ? (
-                <div className="-mx-5 overflow-x-auto px-5 pb-2 [scrollbar-width:none]">
-                  <div className="flex min-w-max gap-4">
-                    {recommendedCommunities.map((community) => (
-                      <RecommendedCard
-                        community={community}
-                        disabled={followMutation.isPending}
-                        isPending={pendingSlug === community.slug && followMutation.isPending}
-                        key={community.id}
-                        onFollow={handleFollow}
-                      />
+              <section className="grid gap-5">
+                <SectionTitle>Minhas comunidades</SectionTitle>
+                {followingCommunities.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                    {followingCommunities.map((community) => (
+                      <MyCommunityCard community={community} key={community.id} />
                     ))}
                   </div>
-                </div>
-              ) : null}
-            </section>
+                ) : (
+                  <EmptyState
+                    action={
+                      <Button asChild className="rounded-full">
+                        <Link href="/app/community">
+                          <Compass className="h-4 w-4" aria-hidden="true" />
+                          Explorar comunidades
+                        </Link>
+                      </Button>
+                    }
+                    description="Quando você participar de comunidades reais, elas aparecerão aqui."
+                    icon={UsersRound}
+                    title="Você ainda não segue comunidades"
+                  />
+                )}
+              </section>
 
-            <section className="grid gap-3 rounded-[22px] bg-white p-5 shadow-[0_8px_18px_rgba(15,23,42,0.04)]">
-              <div className="flex items-center gap-3">
-                <span className="grid h-11 w-11 place-items-center rounded-full bg-[#EAF4FF] text-primary">
-                  <Bell className="h-5 w-5" aria-hidden="true" />
-                </span>
-                <div>
-                  <h2 className="text-base font-black text-[#131A2A]">Acompanhe novidades</h2>
-                  <p className="text-sm leading-6 text-[#738198]">
-                    Os contadores usam posts reais publicados hoje nas comunidades que você segue.
-                  </p>
+              <section className="grid gap-5">
+                <div className="flex items-center justify-between gap-3">
+                  <SectionTitle>Recomendados para você</SectionTitle>
+                  <Link
+                    className="inline-flex items-center gap-1 text-xs font-black text-primary"
+                    href="/app/community"
+                  >
+                    Ver todos
+                    <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+                  </Link>
                 </div>
-              </div>
-              <div className="flex flex-wrap gap-2 text-xs font-black text-primary">
-                <span className="rounded-full bg-[#EAF4FF] px-3 py-1.5">
-                  <Sparkles className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
-                  Atualização diária
-                </span>
-                <span className="rounded-full bg-[#EAF4FF] px-3 py-1.5">
-                  <Moon className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
-                  Comunidades seguras
-                </span>
-                <span className="rounded-full bg-[#EAF4FF] px-3 py-1.5">
-                  <Waves className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
-                  Conteúdo real
-                </span>
-              </div>
-            </section>
-          </>
-        ) : null}
+
+                {recommendedError ? (
+                  <InlineAlert title="Recomendações indisponíveis" variant="error">
+                    {recommendedError}
+                  </InlineAlert>
+                ) : null}
+
+                {recommendedQuery.isLoading || recommendedQuery.isPending ? (
+                  <LoadingState label="Buscando recomendações" />
+                ) : null}
+
+                {recommendedCommunities.length > 0 ? (
+                  <div className="-mx-5 overflow-x-auto px-5 pb-2 [scrollbar-width:none]">
+                    <div className="flex min-w-max gap-4">
+                      {recommendedCommunities.map((community) => (
+                        <RecommendedCard
+                          community={community}
+                          disabled={followMutation.isPending}
+                          isPending={pendingSlug === community.slug && followMutation.isPending}
+                          key={community.id}
+                          onFollow={handleFollow}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </section>
+
+              <section className="grid gap-3 rounded-[22px] bg-white p-5 shadow-[0_8px_18px_rgba(15,23,42,0.04)]">
+                <div className="flex items-center gap-3">
+                  <span className="grid h-11 w-11 place-items-center rounded-full bg-[#EAF4FF] text-primary">
+                    <Bell className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <div>
+                    <h2 className="text-base font-black text-[#131A2A]">Acompanhe novidades</h2>
+                    <p className="text-sm leading-6 text-[#738198]">
+                      Os contadores usam posts reais publicados hoje nas comunidades que você segue.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2 text-xs font-black text-primary">
+                  <span className="rounded-full bg-[#EAF4FF] px-3 py-1.5">
+                    <Sparkles className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
+                    Atualização diária
+                  </span>
+                  <span className="rounded-full bg-[#EAF4FF] px-3 py-1.5">
+                    <Moon className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
+                    Comunidades seguras
+                  </span>
+                  <span className="rounded-full bg-[#EAF4FF] px-3 py-1.5">
+                    <Waves className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
+                    Conteúdo real
+                  </span>
+                </div>
+              </section>
+            </>
+          ) : null}
+        </div>
       </main>
     </PrivateTemplate>
   );

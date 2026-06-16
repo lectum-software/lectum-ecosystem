@@ -1,16 +1,7 @@
 "use client";
 
-import {
-  ArrowLeft,
-  ChevronLeft,
-  ChevronRight,
-  FileText,
-  MessageCircle,
-  PenLine,
-  Reply,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, FileText, MessageCircle, PenLine, Reply } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useMyPosts } from "@/api/callers/posts";
 import type { PostListPost, UserPostListItem, UserPostsType } from "@/api/generator/types/posts";
@@ -18,6 +9,7 @@ import { CommunityPostCard } from "@/components/community/community-post-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { SecondaryPageHeader } from "@/components/ui/secondary-page-header";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
@@ -128,7 +120,7 @@ const FilterTabs = ({
 }) => (
   <nav
     aria-label="Filtrar meus posts"
-    className="overflow-x-auto px-4 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    className="overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
   >
     <div className="flex min-w-max gap-2">
       {FILTERS.map((item) => {
@@ -266,7 +258,6 @@ const Pagination = ({
 };
 
 export const MyPostsLogic = () => {
-  const router = useRouter();
   const sessionUser = useAppSelector((state) => state.user);
   const [type, setType] = useState<UserPostsType>("all");
   const [page, setPage] = useState(1);
@@ -300,39 +291,23 @@ export const MyPostsLogic = () => {
     setPage(1);
   };
 
-  const handleBackToProfile = () => {
-    router.replace("/app/profile");
-  };
-
   return (
     <PrivateTemplate
       contentClassName="bg-background px-0 py-0"
       desktopSidebarDefaultCollapsed
       showMobileNavigation={false}
     >
-      <section className="mx-auto min-h-screen w-full max-w-[430px] bg-background sm:max-w-xl lg:max-w-3xl">
-        <header
-          className="sticky top-0 z-30 border-border border-b bg-surface/95 supports-[backdrop-filter]:bg-surface/85"
-          style={{ paddingTop: "env(safe-area-inset-top)" }}
-        >
-          <div className="relative flex h-14 items-center justify-center px-4">
-            <Button
-              className="absolute left-4 top-1/2 h-10 w-10 -translate-y-1/2 rounded-full p-0"
-              onClick={handleBackToProfile}
-              type="button"
-              variant="ghost"
-            >
-              <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-              <span className="sr-only">Voltar para perfil</span>
-            </Button>
-            <h1 className="text-lg font-black text-foreground">Meus Posts</h1>
-            <span className="absolute right-4 h-10 w-10" aria-hidden="true" />
-          </div>
+      <section className="mx-auto min-h-screen w-full max-w-[430px] bg-background px-5 py-5 sm:max-w-xl md:py-8 lg:max-w-3xl">
+        <SecondaryPageHeader
+          backHref="/app/profile"
+          backLabel="Voltar para perfil"
+          className="mb-4"
+          title="Meus Posts e Respostas"
+        />
 
-          <FilterTabs disabled={postsQuery.isFetching} onChange={handleFilterChange} value={type} />
-        </header>
+        <FilterTabs disabled={postsQuery.isFetching} onChange={handleFilterChange} value={type} />
 
-        <div className="grid gap-4 px-4 py-6">
+        <div className="grid gap-4 py-2">
           {postsQuery.isLoading || postsQuery.isPending ? (
             <div className="grid min-h-[45vh] place-items-center rounded-[22px] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
               <LoadingState
