@@ -457,3 +457,26 @@ Validações executadas:
 - HTTP local `200` em `http://localhost:3000/app/psychologist/demo-psychologist-camila-rocha`.
 - Chrome headless/CDP mobile 390px confirmando: menu fixo mobile visível antes e após scroll, sticky mobile com `opacity=1` após rolagem, CTA WhatsApp acima do menu, card de contato com padding/fonte ampliados, ícones de Atendimento sem fundo/sombra e valor antes do rótulo.
 - Chrome headless/CDP desktop 1440px confirmando menu lateral desktop preservado, sticky desktop ativo, card de contato renderizado e bottom nav oculto em `lg`.
+
+## Registro de ajuste complementar em 2026-06-16 - Publicações como posts reais no perfil
+
+- Ajuste solicitado para `/app/psychologist/[id]` nas seções `Avaliações` e `Publicações`, mantendo a experiência mobile-first e sem criar layout paralelo para publicações.
+- Os chips `Ver todas` de `Avaliações` e `Publicações` foram movidos para a mesma linha do título da seção, preservando a variação compacta/premium já usada no perfil.
+- O texto de `Publicações` passou para o formato `X publicações deste profissional`, com espaçamento reduzido em relação ao título para formar um único bloco de informação.
+- A prévia da seção `Publicações` e a aba completa `Publicações` agora reutilizam `CommunityPostCard`, mantendo o mesmo padrão visual de feed/comunidade: comunidade, data, autoria, título, conteúdo, resposta profissional destacada, mídia e ações de upvote, downvote, comentários, salvar e compartilhar.
+- O endpoint `GET /api/private/directory/psychologists/:id/posts` passou a retornar posts originais e respostas do profissional no formato de card de comunidade (`CommunityPostDTO`) com o campo adicional `contribution_type`, sem mocks e sem inventar dados.
+- Para contribuições do tipo resposta, o card mostra o post original e destaca a resposta profissional persistida do psicólogo como `highlighted_professional_reply`, incluindo mídia quando existir.
+- A ordenação permanece por recência da contribuição do profissional, combinando posts e respostas persistidos antes da paginação; regras de comunidade, destaque profissional, votos, salvos e WhatsApp seguem as primitivas existentes.
+- Builder/Quick Copy não está exposto como ferramenta direta neste ambiente; a referência auditável permaneceu a família visual local de perfil/comunidade e a validação no browser local com dados reais.
+- ADR criado: `adrs/0108-publicacoes-perfil-como-posts-comunidade.md`.
+
+Validações executadas:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- API local `200` em `http://localhost:3001/api/private/directory/psychologists/demo-psychologist-camila-rocha/posts?limit=2`, retornando `contribution_type`, comunidade, post original e resposta profissional com mídia.
+- Chrome/CDP mobile 390px em `http://localhost:3000/app/psychologist/demo-psychologist-camila-rocha` confirmou `Avaliações`/`Publicações` com `Ver todas` na linha do título, texto `3 publicações deste profissional` e card real com resposta profissional destacada.
+- Chrome/CDP desktop 1440px confirmou o mesmo card com mídia em vídeo e barra de ações completa.

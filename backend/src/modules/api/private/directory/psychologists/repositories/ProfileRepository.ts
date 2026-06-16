@@ -1,10 +1,17 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import type {
+  CommunityAuthorDTO,
+  CommunityDTO,
+  CommunityPostDTO,
+  CommunityProfessionalReplyDTO,
+} from "@/modules/api/private/community/DTOs/ICommunityDTO";
 import { crpExperienceYears } from "@/utils/professional-experience";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   DirectoryProfileCatalogItem,
   DirectoryPsychologistAcademicFormation,
+  DirectoryPsychologistPost,
   DirectoryPsychologistPostsResponse,
   DirectoryPsychologistProfile,
   DirectoryPsychologistReviewsResponse,
@@ -24,6 +31,116 @@ const catalogSelect = {
   name: true,
   slug: true,
 };
+
+const communityCardSelect = {
+  id: true,
+  name: true,
+  slug: true,
+  description: true,
+  category: true,
+  members_count: true,
+  avatar_url: true,
+  visual_primary_color: true,
+  visual_primary_dark_color: true,
+  visual_soft_color: true,
+  visual_text_color: true,
+  visual_gradient_color: true,
+  createdAt: true,
+} satisfies Prisma.communitySelect;
+
+const professionalProfileSelect = {
+  gender: true,
+  crp: true,
+  whatsapp: true,
+  cfp_verified_at: true,
+  subscriptions: {
+    where: activeProfessionalEntitlementWhere(),
+    select: {
+      id: true,
+    },
+    take: 1,
+  },
+} satisfies Prisma.psychologist_profileSelect;
+
+const postAuthorSelect = {
+  id: true,
+  name: true,
+  avatar: true,
+  role: true,
+  psychologist_profile: {
+    select: professionalProfileSelect,
+  },
+} satisfies Prisma.userSelect;
+
+const profilePostSelect = {
+  id: true,
+  title: true,
+  content: true,
+  anonymous: true,
+  status: true,
+  upvotes_count: true,
+  downvotes_count: true,
+  replies_count: true,
+  saves_count: true,
+  createdAt: true,
+  community: {
+    select: communityCardSelect,
+  },
+  author: {
+    select: postAuthorSelect,
+  },
+  replies: {
+    where: {
+      deleted: false,
+      author: {
+        role: "psicologo",
+        psychologist_profile: {
+          is: {
+            deleted: false,
+            cfp_verified_at: {
+              not: null,
+            },
+          },
+        },
+      },
+    },
+    orderBy: [{ upvotes_count: "desc" }, { createdAt: "desc" }, { id: "desc" }],
+    select: {
+      id: true,
+      title: true,
+      content: true,
+      media_url: true,
+      media_type: true,
+      upvotes_count: true,
+      createdAt: true,
+      author: {
+        select: postAuthorSelect,
+      },
+    },
+  },
+} satisfies Prisma.community_postSelect;
+
+const profileReplySelect = {
+  id: true,
+  title: true,
+  content: true,
+  media_url: true,
+  media_type: true,
+  upvotes_count: true,
+  createdAt: true,
+  post: {
+    select: profilePostSelect,
+  },
+  author: {
+    select: postAuthorSelect,
+  },
+} satisfies Prisma.post_replySelect;
+
+type ProfilePostResult = Prisma.community_postGetPayload<{ select: typeof profilePostSelect }>;
+type ProfileReplyResult = Prisma.post_replyGetPayload<{ select: typeof profileReplySelect }>;
+type ProfileAuthorResult = ProfilePostResult["author"];
+type ProfileProfessionalReplyResult = ProfilePostResult["replies"][number];
+type CurrentVote = 1 | -1 | null;
 
 const normalizeStringArray = (value: unknown): string[] => {
   if (!Array.isArray(value)) return [];
@@ -97,6 +214,70 @@ const buildWhatsappUrl = (value?: string | null) => {
   return `https://wa.me/${digits}?text=${encodeURIComponent(CONTACT_MESSAGE)}`;
 };
 
+const anonymousDisplayNameForPost = (postId: string) => {
+  let hash = 0;
+
+  for (const character of postId) {
+    hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
+  }
+
+  return `Membro Anônimo #${1000 + (hash % 9000)}`;
+};
+
+const isProfessionalVerified = (profile?: { cfp_verified_at: Date | null } | null) => {
+  return Boolean(profile?.cfp_verified_at);
+};
+
+const hasPaidProfessionalEntitlement = (profile?: { subscriptions: { id: string }[] } | null) => {
+  return Boolean(profile?.subscriptions.length);
+};
+
+const buildProfessionalWhatsappUrl = (
+  profile?: {
+    cfp_verified_at: Date | null;
+    subscriptions: { id: string }[];
+    whatsapp: string | null;
+  } | null,
+) => {
+  if (!isProfessionalVerified(profile) || !hasPaidProfessionalEntitlement(profile)) return null;
+
+  return buildWhatsappUrl(profile?.whatsapp);
+};
+
+const mentorBadgeForScore = (
+  profile?: { cfp_verified_at: Date | null; subscriptions: { id: string }[] } | null,
+  score = 0,
+) => {
+  if (!isProfessionalVerified(profile) || !hasPaidProfessionalEntitlement(profile)) return null;
+  if (score >= 80) return "TOP #1 MENTOR";
+  if (score >= 65) return "TOP #2 MENTOR";
+  if (score >= 50) return "TOP #3 MENTOR";
+
+  return null;
+};
+
+const authorTypeLabel = (role?: string | null, gender?: string | null, anonymous = false) => {
+  if (role === "psicologo") {
+    const normalizedGender = String(gender ?? "")
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .toLowerCase();
+
+    if (normalizedGender.includes("feminino")) return "Psicóloga";
+    if (normalizedGender.includes("masculino")) return "Psicólogo";
+
+    return "Psicólogo(a)";
+  }
+
+  return anonymous ? "Membro Anônimo" : "Paciente";
+};
+
+const normalizeVoteValue = (value?: number | null): CurrentVote => {
+  if (value === 1 || value === -1) return value;
+
+  return null;
+};
+
 const normalizePagination = (query: IProfileListDTO["q"] = {}) => {
   const page = Math.max(1, Number(query.page || 1));
   const limit = Math.min(MAX_LIMIT, Math.max(1, Number(query.limit || DEFAULT_LIMIT)));
@@ -134,6 +315,107 @@ const toSafeAuthor = (name: string): DirectoryReviewAuthor => {
   return {
     initials,
     name: [firstName, lastInitial].filter(Boolean).join(" "),
+  };
+};
+
+const toCommunityResponse = (item: ProfilePostResult["community"]): CommunityDTO => ({
+  id: item.id,
+  name: item.name,
+  slug: item.slug,
+  description: item.description,
+  category: item.category,
+  members_count: item.members_count,
+  avatar_url: item.avatar_url,
+  visual_primary_color: item.visual_primary_color,
+  visual_primary_dark_color: item.visual_primary_dark_color,
+  visual_soft_color: item.visual_soft_color,
+  visual_text_color: item.visual_text_color,
+  visual_gradient_color: item.visual_gradient_color,
+  created_at: item.createdAt,
+});
+
+const toPostAuthorResponse = (
+  author: ProfileAuthorResult,
+  mentorScore = 0,
+  anonymous = false,
+  anonymousDisplayName?: string,
+): CommunityAuthorDTO => {
+  const profile = author.psychologist_profile;
+  const isPsychologist = author.role === "psicologo";
+  const shouldMaskAuthor = !isPsychologist && anonymous;
+
+  return {
+    id: author.id,
+    name: shouldMaskAuthor ? (anonymousDisplayName ?? "Membro Anônimo") : author.name,
+    avatar: shouldMaskAuthor ? null : author.avatar,
+    role: author.role,
+    type_label: authorTypeLabel(author.role, profile?.gender, anonymous),
+    crp: isPsychologist ? (profile?.crp ?? null) : null,
+    verified: isPsychologist && isProfessionalVerified(profile),
+    featured_badge: isPsychologist ? mentorBadgeForScore(profile, mentorScore) : null,
+    whatsapp_url: isPsychologist ? buildProfessionalWhatsappUrl(profile) : null,
+  };
+};
+
+const toHighlightedProfessionalReply = (
+  reply?: ProfileProfessionalReplyResult | ProfileReplyResult,
+  savedReplyIds?: Set<string>,
+  requireVerified = true,
+): CommunityProfessionalReplyDTO | null => {
+  if (!reply) return null;
+
+  const author = toPostAuthorResponse(reply.author, reply.upvotes_count);
+  if (requireVerified && !author.verified) return null;
+
+  return {
+    id: reply.id,
+    title: reply.title,
+    content: reply.content,
+    media_url: reply.media_url,
+    media_type: reply.media_type,
+    upvotes_count: reply.upvotes_count,
+    created_at: reply.createdAt,
+    saved: savedReplyIds?.has(reply.id) ?? false,
+    author,
+  };
+};
+
+const toPostResponse = (
+  item: ProfilePostResult,
+  currentUserVote: CurrentVote,
+  saved: boolean,
+  savedReplyIds?: Set<string>,
+  highlightedReply?: ProfileReplyResult,
+): CommunityPostDTO => {
+  const anonymous = item.author.role !== "psicologo" && item.anonymous;
+
+  return {
+    id: item.id,
+    title: item.title,
+    content: item.content,
+    anonymous,
+    status: item.status,
+    upvotes_count: item.upvotes_count,
+    downvotes_count: item.downvotes_count,
+    replies_count: item.replies_count,
+    saves_count: item.saves_count,
+    created_at: item.createdAt,
+    tags: item.community.category ? [item.community.category] : [],
+    featured_badge: toPostAuthorResponse(item.author, item.upvotes_count).featured_badge,
+    media_url: null,
+    media_type: null,
+    current_user_vote: currentUserVote,
+    saved,
+    community: toCommunityResponse(item.community),
+    author: toPostAuthorResponse(
+      item.author,
+      item.upvotes_count,
+      anonymous,
+      anonymous ? anonymousDisplayNameForPost(item.id) : undefined,
+    ),
+    highlighted_professional_reply:
+      toHighlightedProfessionalReply(highlightedReply, savedReplyIds, false) ??
+      toHighlightedProfessionalReply(item.replies[0], savedReplyIds),
   };
 };
 
@@ -324,7 +606,7 @@ export class ProfileRepository implements IProfileRepository {
 
   async posts(data: IProfileListDTO): Promise<DirectoryPsychologistPostsResponse> {
     const pagination = normalizePagination(data.q);
-    const where: Prisma.community_postWhereInput = {
+    const postsWhere: Prisma.community_postWhereInput = {
       author_id: data.p.id,
       deleted: false,
       status: "publicado",
@@ -332,44 +614,129 @@ export class ProfileRepository implements IProfileRepository {
         deleted: false,
       },
     };
+    const repliesWhere: Prisma.post_replyWhereInput = {
+      author_id: data.p.id,
+      deleted: false,
+      post: {
+        deleted: false,
+        status: "publicado",
+        community: {
+          deleted: false,
+        },
+      },
+    };
+    const take = pagination.skip + pagination.limit;
 
-    const [items, count] = await Promise.all([
+    const [posts, postsCount, replies, repliesCount] = await Promise.all([
       prisma.community_post.findMany({
-        where,
-        take: pagination.limit,
-        skip: pagination.skip,
-        orderBy: {
-          createdAt: "desc",
-        },
-        select: {
-          id: true,
-          title: true,
-          content: true,
-          createdAt: true,
-          upvotes_count: true,
-          downvotes_count: true,
-          replies_count: true,
-          saves_count: true,
-          community: {
-            select: catalogSelect,
-          },
-        },
+        where: postsWhere,
+        take,
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        select: profilePostSelect,
       }),
-      prisma.community_post.count({ where }),
+      prisma.community_post.count({ where: postsWhere }),
+      prisma.post_reply.findMany({
+        where: repliesWhere,
+        take,
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        select: profileReplySelect,
+      }),
+      prisma.post_reply.count({ where: repliesWhere }),
     ]);
+    const count = postsCount + repliesCount;
+    const mergedItems = [
+      ...posts.map((post) => ({ createdAt: post.createdAt, kind: "post" as const, post })),
+      ...replies.map((reply) => ({ createdAt: reply.createdAt, kind: "reply" as const, reply })),
+    ]
+      .sort((a, b) => {
+        const byDate = b.createdAt.getTime() - a.createdAt.getTime();
+        if (byDate !== 0) return byDate;
+
+        const aId = a.kind === "post" ? a.post.id : a.reply.id;
+        const bId = b.kind === "post" ? b.post.id : b.reply.id;
+
+        return bId.localeCompare(aId);
+      })
+      .slice(pagination.skip, pagination.skip + pagination.limit);
+    const postIds = Array.from(
+      new Set(
+        mergedItems.map((item) => (item.kind === "post" ? item.post.id : item.reply.post.id)),
+      ),
+    );
+    const replyIds = mergedItems.flatMap((item) => (item.kind === "reply" ? [item.reply.id] : []));
+    const authId = data.auth?.id;
+    const [votes, saves, replySaves] = authId
+      ? await Promise.all([
+          postIds.length
+            ? prisma.post_vote.findMany({
+                where: {
+                  deleted: false,
+                  post_id: { in: postIds },
+                  user_id: authId,
+                },
+                select: {
+                  post_id: true,
+                  value: true,
+                },
+              })
+            : Promise.resolve([]),
+          postIds.length
+            ? prisma.post_save.findMany({
+                where: {
+                  deleted: false,
+                  post_id: { in: postIds },
+                  user_id: authId,
+                },
+                select: {
+                  post_id: true,
+                },
+              })
+            : Promise.resolve([]),
+          replyIds.length
+            ? prisma.post_reply_save.findMany({
+                where: {
+                  deleted: false,
+                  reply_id: { in: replyIds },
+                  user_id: authId,
+                },
+                select: {
+                  reply_id: true,
+                },
+              })
+            : Promise.resolve([]),
+        ])
+      : [[], [], []];
+    const voteByPostId = new Map(
+      votes.map((vote) => [vote.post_id, normalizeVoteValue(vote.value)]),
+    );
+    const savedPostIds = new Set(saves.map((save) => save.post_id));
+    const savedReplyIds = new Set(replySaves.map((save) => save.reply_id));
 
     return {
-      data: items.map((item) => ({
-        id: item.id,
-        title: item.title,
-        content: item.content,
-        created_at: item.createdAt,
-        upvotes_count: item.upvotes_count,
-        downvotes_count: item.downvotes_count,
-        replies_count: item.replies_count,
-        saves_count: item.saves_count,
-        community: item.community,
-      })),
+      data: mergedItems.map<DirectoryPsychologistPost>((item) => {
+        if (item.kind === "post") {
+          return {
+            ...toPostResponse(
+              item.post,
+              voteByPostId.get(item.post.id) ?? null,
+              savedPostIds.has(item.post.id),
+              savedReplyIds,
+            ),
+            contribution_type: "post",
+          };
+        }
+
+        return {
+          ...toPostResponse(
+            item.reply.post,
+            voteByPostId.get(item.reply.post.id) ?? null,
+            savedPostIds.has(item.reply.post.id),
+            savedReplyIds,
+            item.reply,
+          ),
+          contribution_type: "reply",
+        };
+      }),
       page: pagination.page,
       pages: Math.ceil(count / pagination.limit),
       count,

@@ -1,5 +1,6 @@
 import type { user } from "@/interfaces/objects";
 import type { PaginationResponse } from "@/interfaces/pagination";
+import type { CommunityPostDTO } from "@/modules/api/private/community/DTOs/ICommunityDTO";
 
 export type DirectoryProfileCatalogItem = {
   id: string;
@@ -48,16 +49,8 @@ export type DirectoryPsychologistProfile = {
   approaches: DirectoryProfileCatalogItem[];
 };
 
-export type DirectoryPsychologistPost = {
-  id: string;
-  title: string;
-  content: string;
-  created_at: Date;
-  upvotes_count: number;
-  downvotes_count: number;
-  replies_count: number;
-  saves_count: number;
-  community: DirectoryProfileCatalogItem;
+export type DirectoryPsychologistPost = CommunityPostDTO & {
+  contribution_type: "post" | "reply";
 };
 
 export type DirectoryReviewAuthor = {

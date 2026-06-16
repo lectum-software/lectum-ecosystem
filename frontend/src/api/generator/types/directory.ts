@@ -1,4 +1,6 @@
-﻿export type DirectoryCatalogItem = {
+﻿import type { PostListPost } from "./posts";
+
+export type DirectoryCatalogItem = {
   id: string;
   name: string;
   slug: string;
@@ -97,16 +99,8 @@ export type DirectoryPsychologistContactResponse = {
 
 export type DirectoryPsychologistContactClickResponse = DirectoryPsychologistContactResponse;
 
-export type DirectoryPsychologistProfilePost = {
-  id: string;
-  title: string;
-  content: string;
-  created_at: string;
-  upvotes_count: number;
-  downvotes_count: number;
-  replies_count: number;
-  saves_count: number;
-  community: DirectoryCatalogItem;
+export type DirectoryPsychologistProfilePost = PostListPost & {
+  contribution_type: "post" | "reply";
 };
 
 export type DirectoryPsychologistProfilePostsResponse = {

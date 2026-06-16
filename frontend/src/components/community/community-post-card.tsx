@@ -3,7 +3,8 @@
 import { BadgeCheck, FileText, UserX } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
+import { useSavePost, useVotePost } from "@/api/callers/posts";
 import type { PostListPost, PostProfessionalReply } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { MentorBadge } from "@/components/community/mentor-badge";
@@ -16,6 +17,7 @@ import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 type CommunityPostCardProps = {
   footerExtra?: ReactNode;
   headerExtra?: ReactNode;
+  interactiveActions?: boolean;
   onShare: (post: PostListPost) => void;
   post: PostListPost;
   showCommunityHeader?: boolean;
@@ -233,6 +235,7 @@ const ProfessionalReplyPreview = ({ reply }: { reply: PostProfessionalReply | nu
 export const CommunityPostCard = ({
   footerExtra,
   headerExtra,
+  interactiveActions = false,
   onShare,
   post,
   showCommunityHeader = true,
@@ -243,6 +246,86 @@ export const CommunityPostCard = ({
   const psychologistProfileHref = isPsychologistPost
     ? `/app/psychologist/${post.author.id}`
     : undefined;
+  const voteMutation = useVotePost(post.id);
+  const saveMutation = useSavePost(post.id);
+  const [voteOverride, setVoteOverride] = useState<{
+    currentVote: 1 | -1 | null;
+    postId: string;
+    upvotes: number;
+  } | null>(null);
+  const [saveOverride, setSaveOverride] = useState<{
+    postId: string;
+    saved: boolean;
+    saves: number;
+  } | null>(null);
+  const voteSnapshot =
+    voteOverride?.postId === post.id
+      ? voteOverride
+      : {
+          currentVote: post.current_user_vote,
+          upvotes: post.upvotes_count,
+        };
+  const saveSnapshot =
+    saveOverride?.postId === post.id
+      ? saveOverride
+      : {
+          saved: post.saved,
+          saves: post.saves_count,
+        };
+
+  const handleVote = (value: 1 | -1) => {
+    const previousOverride = voteOverride;
+    const nextVote = voteSnapshot.currentVote === value ? null : value;
+    const upDelta = (nextVote === 1 ? 1 : 0) - (voteSnapshot.currentVote === 1 ? 1 : 0);
+    const optimisticSnapshot = {
+      currentVote: nextVote,
+      postId: post.id,
+      upvotes: Math.max(0, voteSnapshot.upvotes + upDelta),
+    };
+
+    setVoteOverride(optimisticSnapshot);
+    voteMutation.mutate(
+      { value },
+      {
+        onError: () => {
+          setVoteOverride(previousOverride);
+        },
+        onSuccess: (data) => {
+          if (data.target_type !== "post") return;
+
+          setVoteOverride({
+            currentVote: data.value,
+            postId: post.id,
+            upvotes: data.upvotes_count,
+          });
+        },
+      },
+    );
+  };
+
+  const handleToggleSave = () => {
+    const previousOverride = saveOverride;
+    const nextSaved = !saveSnapshot.saved;
+    const optimisticSnapshot = {
+      postId: post.id,
+      saved: nextSaved,
+      saves: Math.max(0, saveSnapshot.saves + (nextSaved ? 1 : -1)),
+    };
+
+    setSaveOverride(optimisticSnapshot);
+    saveMutation.mutate(saveSnapshot.saved, {
+      onError: () => {
+        setSaveOverride(previousOverride);
+      },
+      onSuccess: (data) => {
+        setSaveOverride({
+          postId: post.id,
+          saved: data.saved,
+          saves: data.saves_count ?? optimisticSnapshot.saves,
+        });
+      },
+    });
+  };
 
   return (
     <article className="w-full overflow-hidden rounded-[22px] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
@@ -330,18 +413,22 @@ export const CommunityPostCard = ({
           href: postDetailHref(post),
           label: "Comentários",
         }}
-        currentVote={post.current_user_vote}
+        currentVote={voteSnapshot.currentVote}
+        disabled={voteMutation.isPending}
         endSlot={footerExtra}
+        onVote={interactiveActions ? handleVote : undefined}
         save={{
-          active: post.saved,
-          count: post.saves_count,
-          label: "Salvar",
+          active: saveSnapshot.saved,
+          count: saveSnapshot.saves,
+          disabled: saveMutation.isPending,
+          label: saveSnapshot.saved ? "Remover dos salvos" : "Salvar",
+          onClick: interactiveActions ? handleToggleSave : undefined,
         }}
         share={{
           label: `Compartilhar ${post.title}`,
           onClick: () => onShare(post),
         }}
-        upvotesCount={post.upvotes_count}
+        upvotesCount={voteSnapshot.upvotes}
       />
     </article>
   );

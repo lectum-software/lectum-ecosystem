@@ -3,7 +3,6 @@
 import {
   ArrowLeft,
   BadgePercent,
-  Bookmark,
   BriefcaseBusiness,
   ChevronLeft,
   ChevronRight,
@@ -16,11 +15,9 @@ import {
   MapPin,
   MessageSquareText,
   PencilLine,
-  Play,
   Share2,
   ShieldCheck,
   Star,
-  ThumbsUp,
   UsersRound,
 } from "lucide-react";
 import Image from "next/image";
@@ -49,6 +46,8 @@ import type {
   DirectoryPsychologistProfileReview,
   DirectoryReviewSummary,
 } from "@/api/generator/types/directory";
+import type { PostListPost } from "@/api/generator/types/posts";
+import { CommunityPostCard } from "@/components/community/community-post-card";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -184,12 +183,8 @@ const formatDate = (value: string | null) => {
   }).format(new Date(value));
 };
 
-const formatCompactDate = (value: string) => {
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "short",
-  }).format(new Date(value));
-};
+const formatPublicationsCount = (total: number) =>
+  `${total} ${total === 1 ? "publicação" : "publicações"} deste profissional`;
 
 const scrollProfileContentIntoView = () => {
   if (typeof window === "undefined") return;
@@ -342,18 +337,23 @@ const ProfileInfoCard = ({
 );
 
 const ProfileSectionCard = ({
+  action,
   children,
   className,
   title,
 }: {
+  action?: ReactNode;
   children: ReactNode;
   className?: string;
   title: string;
 }) => (
   <section className={cn(PROFILE_CARD_SURFACE, "p-[18px] sm:p-5", className)}>
-    <h2 className="text-[1.08rem] font-extrabold leading-tight tracking-[-0.025em] text-[#182033] dark:text-foreground">
-      {title}
-    </h2>
+    <div className="flex items-center justify-between gap-3">
+      <h2 className="text-[1.08rem] font-extrabold leading-tight tracking-[-0.025em] text-[#182033] dark:text-foreground">
+        {title}
+      </h2>
+      {action}
+    </div>
     {children}
   </section>
 );
@@ -1168,7 +1168,12 @@ const ReviewsPreviewSection = ({
   const hasReviews = summary.rating_count > 0 || reviews.length > 0;
 
   return (
-    <ProfileSectionCard title="Avaliações">
+    <ProfileSectionCard
+      action={
+        hasReviews ? <ViewAllChipButton onClick={onViewAll}>Ver todas</ViewAllChipButton> : null
+      }
+      title="Avaliações"
+    >
       {hasReviews ? (
         <div className="mt-3 flex items-center justify-between gap-3">
           <div>
@@ -1184,8 +1189,6 @@ const ReviewsPreviewSection = ({
               <StarRating rating={summary.rating_avg / 100} />
             </div>
           </div>
-
-          <ViewAllChipButton onClick={onViewAll}>Ver todas</ViewAllChipButton>
         </div>
       ) : null}
 
@@ -1210,70 +1213,42 @@ const ReviewsPreviewSection = ({
   );
 };
 
-const PostPreviewCard = ({ post }: { post: DirectoryPsychologistProfilePost }) => {
-  const previewImage = (post as { media_url?: string | null }).media_url;
-
-  return (
-    <article className="mt-3 box-border rounded-[18px] border border-[#E4EBF3] bg-[#FAFCFF] p-3.5 shadow-[0_7px_18px_rgba(15,23,42,0.025)]">
-      <div className="flex items-start justify-between gap-3 text-[12px] font-semibold text-[#64748B]">
-        <span className="inline-flex min-w-0 items-center gap-1.5">
-          <FileText className="h-4 w-4 shrink-0 text-[#247BD1]" aria-hidden="true" />
-          <span className="truncate">{post.community.name}</span>
+const ProfileCommunityPostCard = ({
+  canInteract,
+  onShare,
+  post,
+}: {
+  canInteract: boolean;
+  onShare: (post: PostListPost) => void;
+  post: DirectoryPsychologistProfilePost;
+}) => (
+  <CommunityPostCard
+    interactiveActions={canInteract}
+    onShare={onShare}
+    post={post}
+    statusBadge={
+      post.contribution_type === "reply" ? (
+        <span className="shrink-0 rounded-full border border-[#D8ECFF] bg-[#F4FAFF] px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.06em] text-primary">
+          Resposta
         </span>
-        <span className="shrink-0">{formatCompactDate(post.created_at)}</span>
-      </div>
-
-      <div className="mt-3 grid grid-cols-[1fr_auto] gap-3">
-        <div className="min-w-0">
-          <h3 className="line-clamp-2 text-[14px] font-extrabold leading-[1.35] tracking-[-0.012em] text-[#182033]">
-            {post.title}
-          </h3>
-          <p className="mt-1.5 line-clamp-3 text-[12.5px] leading-[1.55] text-[#64748B]">
-            {post.content}
-          </p>
-        </div>
-
-        {previewImage ? (
-          <div className="relative h-[78px] w-[62px] shrink-0 overflow-hidden rounded-[14px] bg-[#E2E8F0]">
-            <Image
-              alt="Prévia da publicação"
-              className="object-cover"
-              fill
-              sizes="62px"
-              src={previewImage}
-              unoptimized={isPublicMediaUrl(previewImage)}
-            />
-          </div>
-        ) : null}
-      </div>
-
-      <div className="mt-3 flex flex-wrap items-center gap-2.5 border-[#E2E8F0] border-t pt-3 text-[12px] font-semibold text-[#64748B]">
-        <span className="inline-flex items-center gap-1.5">
-          <ThumbsUp className="h-3.5 w-3.5" aria-hidden="true" />
-          {post.upvotes_count}
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <MessageSquareText className="h-3.5 w-3.5" aria-hidden="true" />
-          {post.replies_count}
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <Bookmark className="h-3.5 w-3.5" aria-hidden="true" />
-          {post.saves_count}
-        </span>
-      </div>
-    </article>
-  );
-};
+      ) : null
+    }
+  />
+);
 
 const PostsPreviewSection = ({
+  canInteract,
   isError,
   isLoading,
+  onShare,
   onViewAll,
   posts,
   total,
 }: {
+  canInteract: boolean;
   isError: boolean;
   isLoading: boolean;
+  onShare: (post: PostListPost) => void;
   onViewAll: () => void;
   posts: DirectoryPsychologistProfilePost[];
   total: number;
@@ -1281,15 +1256,18 @@ const PostsPreviewSection = ({
   const firstPost = posts[0];
 
   return (
-    <ProfileSectionCard title="Publicações">
-      <div className="mt-3 flex items-center justify-between gap-3">
+    <ProfileSectionCard
+      action={
+        total > 0 ? <ViewAllChipButton onClick={onViewAll}>Ver todas</ViewAllChipButton> : null
+      }
+      title="Publicações"
+    >
+      <div className="mt-1.5">
         <p className="text-[13px] leading-[1.6] text-[#64748B]">
           {total > 0
-            ? `${total} publicação${total === 1 ? "" : "ões"} deste profissional.`
+            ? formatPublicationsCount(total)
             : "Este profissional ainda não possui publicações públicas."}
         </p>
-
-        {total > 0 ? <ViewAllChipButton onClick={onViewAll}>Ver todas</ViewAllChipButton> : null}
       </div>
 
       {isError ? (
@@ -1300,18 +1278,26 @@ const PostsPreviewSection = ({
 
       {isLoading ? <LoadingState label="Carregando publicações" /> : null}
 
-      {!isLoading && !isError && firstPost ? <PostPreviewCard post={firstPost} /> : null}
+      {!isLoading && !isError && firstPost ? (
+        <div className="mt-3">
+          <ProfileCommunityPostCard canInteract={canInteract} onShare={onShare} post={firstPost} />
+        </div>
+      ) : null}
     </ProfileSectionCard>
   );
 };
 
 const AboutTab = ({
+  canInteractPosts,
   onTabChange,
+  onSharePost,
   postsPreview,
   profile,
   reviewsPreview,
 }: {
+  canInteractPosts: boolean;
   onTabChange: (tab: ProfileTab) => void;
+  onSharePost: (post: PostListPost) => void;
   postsPreview: {
     isError: boolean;
     isLoading: boolean;
@@ -1385,8 +1371,10 @@ const AboutTab = ({
       <FormationSection profile={profile} />
 
       <PostsPreviewSection
+        canInteract={canInteractPosts}
         isError={postsPreview.isError}
         isLoading={postsPreview.isLoading}
+        onShare={onSharePost}
         onViewAll={() => onTabChange("publicacoes")}
         posts={postsPreview.posts}
         total={postsPreview.total}
@@ -1395,78 +1383,26 @@ const AboutTab = ({
   );
 };
 
-const PostCard = ({ post }: { post: DirectoryPsychologistProfilePost }) => {
-  const previewImage = (post as { media_url?: string | null }).media_url;
-
-  return (
-    <article className={cn(PROFILE_CARD_SURFACE, "p-4 sm:p-5")}>
-      <div className="flex items-start justify-between gap-3 text-[12px] font-semibold text-[#64748B]">
-        <span className="inline-flex items-center gap-1.5">
-          <FileText className="h-4 w-4 text-[#247BD1]" aria-hidden="true" />
-          <span>
-            Postado em <strong className="text-[#0F172A]">{post.community.name}</strong>
-          </span>
-        </span>
-        <span>{formatCompactDate(post.created_at)}</span>
-      </div>
-
-      {previewImage ? (
-        <div className="relative mt-3.5 h-44 w-full overflow-hidden rounded-[18px] bg-[#e2e8f0] shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
-          <Image
-            alt="Prévia da publicação"
-            className="object-cover"
-            fill
-            sizes="(min-width: 768px) 720px, 100vw"
-            src={previewImage}
-            unoptimized={isPublicMediaUrl(previewImage)}
-          />
-          <span className="absolute inset-0 grid place-items-center bg-black/25">
-            <span className="grid h-10 w-10 place-items-center rounded-full bg-white/90">
-              <Play className="h-4 w-4 fill-[#2F8DEB] text-[#2F8DEB]" aria-hidden="true" />
-            </span>
-          </span>
-        </div>
-      ) : null}
-
-      <h2 className="mt-3.5 text-[15px] font-extrabold leading-[1.35] tracking-[-0.012em] text-[#182033]">
-        {post.title}
-      </h2>
-      <p className="mt-2 line-clamp-3 text-[13px] leading-[1.62] text-[#475569]">{post.content}</p>
-
-      <div className="mt-3.5 flex flex-wrap items-center gap-2.5 border-[#E2E8F0] border-t pt-3 text-[12px] font-semibold text-[#64748B]">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F8FAFC] px-2.5 py-1">
-          <ThumbsUp className="h-4 w-4" aria-hidden="true" />
-          {post.upvotes_count}
-        </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F8FAFC] px-2.5 py-1">
-          <MessageSquareText className="h-4 w-4" aria-hidden="true" />
-          {post.replies_count}
-        </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F8FAFC] px-2.5 py-1">
-          <Bookmark className="h-4 w-4" aria-hidden="true" />
-          {post.saves_count}
-        </span>
-      </div>
-    </article>
-  );
-};
-
 const PostsTab = ({
+  canInteract,
   currentPage,
   error,
   isError,
   isFetching,
   isLoading,
+  onShare,
   onPageChange,
   pages,
   posts,
   total,
 }: {
+  canInteract: boolean;
   currentPage: number;
   error: unknown;
   isError: boolean;
   isFetching: boolean;
   isLoading: boolean;
+  onShare: (post: PostListPost) => void;
   onPageChange: (page: number) => void;
   pages: number;
   posts: DirectoryPsychologistProfilePost[];
@@ -1476,8 +1412,8 @@ const PostsTab = ({
     <div className="grid gap-3.5 bg-[#F5F7FA] px-3 pb-1 pt-3.5 dark:bg-background sm:px-4 sm:pt-4">
       <div className={cn(PROFILE_CARD_SURFACE, "p-4 sm:p-5")}>
         <p className="text-[15px] font-extrabold tracking-[-0.02em] text-[#182033]">Publicações</p>
-        <p className="mt-1 text-[13px] font-medium leading-[1.55] text-[#64748B]">
-          {total} publicação{total === 1 ? "" : "ões"} pública{total === 1 ? "" : "s"}.
+        <p className="mt-0.5 text-[13px] font-medium leading-[1.55] text-[#64748B]">
+          {formatPublicationsCount(total)}
         </p>
       </div>
 
@@ -1504,7 +1440,12 @@ const PostsTab = ({
       {!isLoading && !isError && posts.length > 0 ? (
         <div className="grid gap-3.5">
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} />
+            <ProfileCommunityPostCard
+              canInteract={canInteract}
+              key={`${post.contribution_type}-${post.id}-${post.highlighted_professional_reply?.id ?? "post"}`}
+              onShare={onShare}
+              post={post}
+            />
           ))}
         </div>
       ) : null}
@@ -1839,6 +1780,25 @@ export const PsychologistProfileLogic = () => {
     }
   };
 
+  const sharePost = async (post: PostListPost) => {
+    if (typeof window === "undefined") return;
+
+    const url = `${window.location.origin}/app/community/${post.community.slug}/post/${post.id}`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: post.title, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+      }
+
+      setShareFeedback(true);
+      window.setTimeout(() => setShareFeedback(false), 2500);
+    } catch {
+      setShareFeedback(false);
+    }
+  };
+
   const goBack = () => {
     if (typeof window !== "undefined" && window.history.length > 1) {
       router.back();
@@ -1864,6 +1824,7 @@ export const PsychologistProfileLogic = () => {
     : null;
   const canEditProfile =
     currentUser?.role === "psicologo" && Boolean(profile?.id) && currentUser.id === profile?.id;
+  const canInteractWithPosts = Boolean(currentUser?.id);
 
   const emptySummary = useMemo<DirectoryReviewSummary>(
     () => ({
@@ -1932,7 +1893,9 @@ export const PsychologistProfileLogic = () => {
                   <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} profile={profile} />
                   {activeTab === "geral" ? (
                     <AboutTab
+                      canInteractPosts={canInteractWithPosts}
                       onTabChange={setActiveTab}
+                      onSharePost={sharePost}
                       postsPreview={{
                         isError: posts.isError,
                         isLoading: posts.isLoading,
@@ -1950,11 +1913,13 @@ export const PsychologistProfileLogic = () => {
                   ) : null}
                   {activeTab === "publicacoes" ? (
                     <PostsTab
+                      canInteract={canInteractWithPosts}
                       currentPage={postsPage}
                       error={posts.error}
                       isError={posts.isError}
                       isFetching={posts.isFetching}
                       isLoading={posts.isLoading}
+                      onShare={sharePost}
                       onPageChange={setPostsPage}
                       pages={posts.data?.pages ?? 0}
                       posts={posts.data?.data ?? []}
