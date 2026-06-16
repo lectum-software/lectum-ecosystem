@@ -256,3 +256,17 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Não houve alteração de backend, Prisma, migrations, packages, endpoints, filtros, paginação, favoritos ou tracking de contato.
 - ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP local `200` em `/app/favorites`.
+
+## Complemento 2026-06-16 - header nativo mobile e grid 2 colunas
+
+- Pedido do usuário: ajustar `/app/favorites` para remover o carrossel horizontal, transformar o topo mobile em header real sem faixa cinza acima/laterais, reduzir chips e simplificar o CTA dos cards.
+- Referência visual ativa: `_product/proto/Favoritos.jpg`; Builder/Quick Copy não está exposto como ferramenta direta nesta sessão, então a validação visual usou o fallback auditável de imagens locais e browser local.
+- O `PrivateTemplate` da tela passou a usar conteúdo sem padding superior/lateral no mobile, permitindo que o header branco encoste no topo e ocupe toda a largura útil; o card mantém apenas cantos inferiores arredondados no mobile e volta ao card arredondado completo em telas maiores.
+- O coração do header deixou de ter overlay/fundo azul e passou a ser apenas um ícone discreto.
+- Os chips de filtro foram compactados com menor altura, menor padding, fonte menor e borda mais refinada.
+- O carrossel horizontal dos favoritos foi substituído por grid responsivo, com 2 cards por linha no mobile e colunas progressivas em telas maiores.
+- Os cards foram levemente reduzidos, preservando avatar circular central, coração preenchido sem fundo, bolinha verde pulsante baseada em `available_today`, nome + selo, texto `Psicólogo` e CTA verde.
+- O botão principal passou de `Chamar no WhatsApp` para `WhatsApp`, mantendo ícone, fundo verde preenchido e fluxo real `PsychologistWhatsAppRedirectButton`.
+- Não houve alteração de backend, Prisma, migrations, packages, endpoints, filtros, paginação, favoritos ou tracking de contato.
+- ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, HTTP local `200` em `/app/favorites` e browser local Chrome headless autenticado em `/app/favorites`.

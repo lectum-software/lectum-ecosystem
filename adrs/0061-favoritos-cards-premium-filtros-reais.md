@@ -102,3 +102,32 @@ A referência externa anexada pelo usuário foi `c:/Users/tulio/Downloads/WhatsA
 - `pnpm --dir frontend build`
 - `pnpm check`
 - HTTP local em `/app/favorites` respondeu `200`.
+
+## Complemento 2026-06-16 - header nativo mobile e grid de favoritos
+
+### Contexto
+
+Após a versão em carrossel inspirada no Instagram, o produto pediu que `/app/favorites` aproveitasse melhor a largura mobile com grid de dois cards por linha e que o topo parecesse um header nativo, sem faixa cinza acima ou margens laterais.
+
+### Decisão
+
+- Manter a tela no `PrivateTemplate`, mas remover o padding superior/lateral do conteúdo apenas para esta rota no mobile.
+- Renderizar o header mobile como superfície branca full-width, começando no topo da página, com apenas os cantos inferiores arredondados; em breakpoints maiores o header retorna ao comportamento de card arredondado completo.
+- Remover o bloco decorativo azul do coração do header, preservando somente o ícone.
+- Compactar chips de filtro para reduzir peso visual sem alterar query real nem comportamento dos filtros.
+- Substituir o carrossel horizontal por grid responsivo: duas colunas no mobile e progressão para mais colunas no desktop.
+- Manter os cards como sugestões humanas e limpas, mas reduzir proporções para caber em duas colunas; o CTA usa texto curto `WhatsApp`.
+
+### Consequências
+
+- A tela passa a ter sensação mais nativa no mobile e usa melhor a largura disponível sem alterar dados, paginação ou contrato de API.
+- O grid reduz a necessidade de scroll horizontal e torna a comparação entre favoritos mais imediata.
+- A identidade de card estilo Instagram permanece, mas adaptada à densidade mobile pedida.
+
+### Validação
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local em `/app/favorites` respondeu `200` com cookie de sessão local.
+- Browser local Chrome headless autenticado em `/app/favorites` validou header no topo, chips compactos e grid mobile com 2 cards por linha.
