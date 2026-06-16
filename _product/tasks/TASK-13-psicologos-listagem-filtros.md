@@ -1324,3 +1324,11 @@ Validacoes do complemento:
 - `pnpm check`
 - `git diff --check`
 - HTTP local em `/app/psychologists` respondeu `200`.
+
+## Execucao complementar: hierarquia do cabecalho da modal de filtros (2026-06-16)
+
+- Pedido do usuario: reduzir o espaco entre `Filtros de busca` e o subtitulo, trocar `Limpar filtros` por `Limpar` e refinar o alinhamento do cabecalho da modal em `/app/psychologists`.
+- Referencia visual ativa: inventario `_product/tasks/PROTO-INVENTORY.md` e imagem local `_product/proto/Filtros de Psicologos - Servicos Expandidos.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao.
+- O cabecalho passou a usar uma grade compacta com botao de fechar, titulo e acao `Limpar` alinhados verticalmente, subtitulo conectado ao titulo com margem curta e menor altura total.
+- A acao `Limpar` ficou mais discreta, com texto de 13px, peso 500, azul suave e hover secundario, preservando a mesma funcao `clearFilters`.
+- Nao houve alteracao de backend, Prisma, contratos, packages ou funcionalidade dos filtros.

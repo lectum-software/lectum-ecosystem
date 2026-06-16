@@ -4143,42 +4143,34 @@ export const PsychologistsLogic = () => {
                       role="document"
                       tabIndex={-1}
                     >
-                      <div className="shrink-0 border-border border-b bg-surface/95 px-5 py-3 backdrop-blur sm:px-6 sm:py-3.5">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex min-w-0 flex-1 items-start gap-3">
-                            <button
-                              aria-label="Fechar filtros"
-                              className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-background text-muted transition duration-200 ease-out hover:bg-surface-muted hover:text-foreground"
-                              onClick={handleFiltersClose}
-                              type="button"
-                            >
-                              <X className="h-4 w-4" aria-hidden="true" strokeWidth={2.4} />
-                            </button>
-                            <div className="min-w-0">
-                              <h2
-                                className="text-lg font-extrabold leading-6 text-foreground"
-                                id="psychologist-filters-title"
-                              >
-                                Filtros de busca
-                              </h2>
-                            </div>
-                          </div>
+                      <div className="shrink-0 border-border border-b bg-surface/95 px-5 py-2.5 backdrop-blur sm:px-6 sm:py-3">
+                        <div className="grid grid-cols-[2.25rem_minmax(0,1fr)_auto] items-start gap-x-3">
+                          <button
+                            aria-label="Fechar filtros"
+                            className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border bg-background text-muted transition duration-200 ease-out hover:bg-surface-muted hover:text-foreground"
+                            onClick={handleFiltersClose}
+                            type="button"
+                          >
+                            <X className="h-4 w-4" aria-hidden="true" strokeWidth={2.25} />
+                          </button>
+
+                          <h2
+                            className="self-center text-lg font-extrabold leading-5 text-foreground"
+                            id="psychologist-filters-title"
+                          >
+                            Filtros de busca
+                          </h2>
 
                           <button
-                            className="shrink-0 rounded-full px-2 py-1 text-sm font-bold text-primary transition duration-200 ease-out hover:bg-primary-soft"
+                            className="self-center rounded-full px-2 py-1 text-[13px] font-medium text-[#2B7FC9] transition duration-200 ease-out hover:bg-[#EAF5FF] hover:text-[#1E6FB8] dark:text-[#8CCBFF] dark:hover:bg-primary/10"
                             onClick={clearFilters}
                             type="button"
                           >
-                            Limpar filtros
+                            Limpar
                           </button>
-                        </div>
 
-                        <div className="ml-[52px] min-w-0">
-                          <p className="mt-0.5 max-w-[280px] text-[13px] leading-[17px] text-muted sm:max-w-none sm:text-sm sm:leading-5">
-                            Ajuste os critérios para encontrar o
-                            <br className="sm:hidden" />
-                            <span className="sm:hidden">psicólogo ideal para você</span>
-                            <span className="hidden sm:inline"> psicólogo ideal para você</span>
+                          <p className="col-span-2 col-start-2 mt-1 max-w-[292px] text-[13px] leading-[17px] text-muted sm:max-w-none sm:text-sm sm:leading-5">
+                            Ajuste os critérios para encontrar o psicólogo ideal para você
                           </p>
                         </div>
                       </div>
