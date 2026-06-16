@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, Heart, Maximize2, Pause, Play, Share2, VolumeX } from "lucide-react";
+import { ChevronRight, Heart, Pause, Play, Share2, VolumeX } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -16,7 +16,6 @@ import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/p
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
-import { requestVideoFullscreen } from "@/lib/video-fullscreen";
 import { playVideoWithSound } from "@/lib/video-playback";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
@@ -391,35 +390,7 @@ const CardVideo = ({
   };
 
   const handleVideoTap = () => {
-    const currentVideo = videoRef.current;
-    if (!currentVideo) return;
-
-    if (!soundEnabled || currentVideo.muted || currentVideo.volume <= 0) {
-      unmuteVideo();
-      return;
-    }
-
-    if (currentVideo.paused) {
-      userInitiatedPlayRef.current = true;
-      setControlMode("hidden");
-      clearControlsAutoHideTimeout();
-      void playVideoWithSound(currentVideo);
-      return;
-    }
-
-    setControlMode("media");
-    clearControlsAutoHideTimeout();
-    currentVideo.pause();
-  };
-
-  const handleExpandVideo = async (event: MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-
-    clearControlsAutoHideTimeout();
-    await requestVideoFullscreen(videoRef.current, {
-      forceContain: true,
-      temporaryControls: true,
-    });
+    togglePlayback();
   };
 
   const handleVideoPosterExtraction = () => {
@@ -598,17 +569,6 @@ const CardVideo = ({
           )}
         </div>
       )}
-
-      {focused && showPlaybackControls ? (
-        <button
-          aria-label={`Ampliar vídeo de ${name}`}
-          className="absolute top-3 right-3 z-20 grid h-9 w-9 place-items-center rounded-full border border-white/20 bg-black/35 text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)] backdrop-blur transition hover:bg-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
-          onClick={handleExpandVideo}
-          type="button"
-        >
-          <Maximize2 className="h-4 w-4" aria-hidden="true" />
-        </button>
-      ) : null}
     </div>
   );
 };

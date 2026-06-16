@@ -794,7 +794,6 @@ export const PsychologistsLogic = () => {
   const [isVideoPlaybackFailed, setIsVideoPlaybackFailed] = useState(false);
   const [isUiHidden, setIsUiHidden] = useState(false);
   const [isLongPressing, setIsLongPressing] = useState(false);
-  const [showDoubleTapFavoriteFeedback, setShowDoubleTapFavoriteFeedback] = useState(false);
   const [hasLoadedSwipeHintPreference, setHasLoadedSwipeHintPreference] = useState(false);
   const [hasSeenSwipeHint, setHasSeenSwipeHint] = useState(true);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
@@ -831,7 +830,6 @@ export const PsychologistsLogic = () => {
   const lastActiveVideoResetKeyRef = useRef<string | null>(null);
   const tapTimeoutRef = useRef<number | null>(null);
   const longPressTimeoutRef = useRef<number | null>(null);
-  const favoriteFeedbackTimeoutRef = useRef<number | null>(null);
   const progressAnimationFrameRef = useRef<number | null>(null);
   const isVideoProgressSeekingRef = useRef(false);
   const lastVideoProgressStateSyncRef = useRef(0);
@@ -1075,11 +1073,6 @@ export const PsychologistsLogic = () => {
       longPressTimeoutRef.current = null;
     }
 
-    if (favoriteFeedbackTimeoutRef.current) {
-      window.clearTimeout(favoriteFeedbackTimeoutRef.current);
-      favoriteFeedbackTimeoutRef.current = null;
-    }
-
     suppressNextTapRef.current = false;
     didLongPressRef.current = false;
     didMoveDuringPressRef.current = false;
@@ -1091,7 +1084,6 @@ export const PsychologistsLogic = () => {
     setIsUiHidden(false);
     setIsLongPressing(false);
     setIsSearchFocused(false);
-    setShowDoubleTapFavoriteFeedback(false);
     setIsVideoProgressSeeking(false);
     isVideoProgressSeekingRef.current = false;
     wasVideoPlayingBeforeProgressScrubRef.current = false;
@@ -1535,7 +1527,6 @@ export const PsychologistsLogic = () => {
 
     isSearchModeActiveRef.current = true;
     cancelPendingVideoGestureTimers();
-    setShowDoubleTapFavoriteFeedback(false);
 
     if (metrics.isDesktopLayout) {
       shouldResumeVideoAfterSearchRef.current = false;
@@ -2236,75 +2227,35 @@ export const PsychologistsLogic = () => {
     [isSharing],
   );
 
-  const triggerDoubleTapFavorite = useCallback(
-    (psychologist: DirectoryPsychologist) => {
-      toggleFavorite(psychologist);
-      setShowDoubleTapFavoriteFeedback(true);
+  const handleVideoAreaTap = useCallback(() => {
+    if (isSearchFocused) return;
 
-      if (favoriteFeedbackTimeoutRef.current) {
-        window.clearTimeout(favoriteFeedbackTimeoutRef.current);
+    if (suppressNextTapRef.current || didMoveDuringPressRef.current) {
+      suppressNextTapRef.current = false;
+      didMoveDuringPressRef.current = false;
+      return;
+    }
+
+    if (didLongPressRef.current) {
+      didLongPressRef.current = false;
+      return;
+    }
+
+    const currentVideo = backgroundVideoRef.current;
+
+    if (shouldShowVideo && currentVideo) {
+      if (currentVideo.paused || currentVideo.ended) {
+        playCurrentVideo();
+      } else {
+        pauseVideoPlayback();
       }
 
-      favoriteFeedbackTimeoutRef.current = window.setTimeout(() => {
-        setShowDoubleTapFavoriteFeedback(false);
-        favoriteFeedbackTimeoutRef.current = null;
-      }, 520);
-    },
-    [toggleFavorite],
-  );
+      setIsUiHidden(false);
+      return;
+    }
 
-  const handleVideoAreaTap = useCallback(
-    (psychologist: DirectoryPsychologist) => {
-      if (isSearchFocused) return;
-
-      if (suppressNextTapRef.current || didMoveDuringPressRef.current) {
-        suppressNextTapRef.current = false;
-        didMoveDuringPressRef.current = false;
-        return;
-      }
-
-      if (didLongPressRef.current) {
-        didLongPressRef.current = false;
-        return;
-      }
-
-      if (tapTimeoutRef.current) {
-        window.clearTimeout(tapTimeoutRef.current);
-        tapTimeoutRef.current = null;
-        triggerDoubleTapFavorite(psychologist);
-        return;
-      }
-
-      tapTimeoutRef.current = window.setTimeout(() => {
-        tapTimeoutRef.current = null;
-
-        const currentVideo = backgroundVideoRef.current;
-
-        if (
-          shouldShowVideo &&
-          (isVideoMuted ||
-            isVideoPaused ||
-            currentVideo?.paused ||
-            currentVideo?.muted ||
-            (currentVideo?.volume ?? 1) <= 0)
-        ) {
-          playCurrentVideoWithSound();
-          setIsUiHidden(true);
-          return;
-        }
-
-        setIsUiHidden((current) => !current);
-      }, VIDEO_SINGLE_TAP_DELAY_MS);
-    },
-    [
-      isSearchFocused,
-      isVideoMuted,
-      isVideoPaused,
-      playCurrentVideoWithSound,
-      shouldShowVideo,
-      triggerDoubleTapFavorite,
-    ],
-  );
+    setIsUiHidden((current) => !current);
+  }, [isSearchFocused, pauseVideoPlayback, playCurrentVideo, shouldShowVideo]);
 
   const handleLongPressStart = useCallback(
     (event: PointerEvent<HTMLButtonElement>) => {
@@ -3579,9 +3530,7 @@ export const PsychologistsLogic = () => {
                             }
                             className="absolute inset-0 z-10 h-full w-full cursor-default border-0 bg-transparent p-0"
                             onClick={
-                              isActiveSlide
-                                ? () => handleVideoAreaTap(psychologist)
-                                : stopInteractionPropagation
+                              isActiveSlide ? handleVideoAreaTap : stopInteractionPropagation
                             }
                             onPointerCancel={isActiveSlide ? handleLongPressEnd : undefined}
                             onPointerDown={isActiveSlide ? handleLongPressStart : undefined}
@@ -3613,15 +3562,6 @@ export const PsychologistsLogic = () => {
                                 <VolumeX className="h-5 w-5" aria-hidden="true" />
                               ) : null}
                             </button>
-                          ) : null}
-
-                          {isActiveSlide && showDoubleTapFavoriteFeedback ? (
-                            <div
-                              aria-hidden="true"
-                              className="psychologists-double-tap-feedback pointer-events-none absolute top-1/2 left-1/2 z-50 grid h-20 w-20 place-items-center rounded-full bg-black/20 text-[#ef4444] backdrop-blur-[2px]"
-                            >
-                              <Heart className="h-11 w-11 fill-[#ef4444]" strokeWidth={2.2} />
-                            </div>
                           ) : null}
 
                           {slideShouldRenderProgress ? (

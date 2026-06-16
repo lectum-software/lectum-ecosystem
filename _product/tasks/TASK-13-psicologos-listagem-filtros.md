@@ -1342,3 +1342,23 @@ Validacoes do complemento:
 - Nao houve alteracao de backend, Prisma, migrations, packages ou endpoints.
 - ADR atualizado: `adrs/0103-player-video-vertical-unificado.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`.
+
+## Execucao complementar: reproducao de video padronizada (2026-06-16)
+
+- Pedido do usuario: remover o botao duplicado de expandir no canto superior direito dos videos, manter fullscreen nativo/da barra inferior, preservar videos verticais em 9:16 no fullscreen e padronizar clique na area de conteudo para alternar play/pause sem interceptar controles.
+- O `VerticalVideoPlayer` compartilhado deixou de renderizar lightbox/modal proprio e botao superior de expandir; os videos agora mantem apenas controles nativos (`controlsList="nodownload"`) quando o contexto usa player nativo.
+- Foi adicionada uma camada transparente de clique somente sobre a area de conteudo do video, deixando a faixa inferior livre para volume, timeline, velocidade, menu e fullscreen nativos terem prioridade.
+- O fullscreen nativo passou a receber regra global `video:fullscreen`/`video:-webkit-full-screen` com `object-fit: contain`, `object-position: center`, dimensoes de viewport e fundo preto, evitando corte, esticamento ou conversao horizontal de videos verticais.
+- O feed principal de psicologos passou a alternar play/pause pelo estado real do elemento `<video>`, evitando uma primeira interacao perdida quando o video ja iniciou em autoplay.
+- O card reutilizavel de psicologo tambem teve o botao superior de ampliar removido, preservando apenas os controles de reproducao existentes.
+- Nao houve alteracao de backend, Prisma, migrations, packages, endpoints, ordenacao ou dados.
+- ADR atualizado: `adrs/0103-player-video-vertical-unificado.md`.
+
+Validacoes do complemento:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- Browser local via Chrome/CDP em `http://localhost:3000/app/psychologists`: clique na area de conteudo pausou o video ativo e o segundo clique retomou a reproducao.
+- Browser local via Chrome/CDP em `http://localhost:3000/app/psychologist/demo-psychologist-camila-rocha`: videos nativos mantiveram `controls=true`, sem botoes `Ampliar`, clique de conteudo alternou play/pause e a area inferior dos controles permaneceu livre.

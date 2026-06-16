@@ -55,3 +55,28 @@ Os players customizados do feed principal de psicologos e do card de psicologo p
 - Videos do feed principal, feed de comunidades, comunidade interna, detalhe do post, respostas com midia e video de perfil do psicologo podem abrir em tela cheia.
 - Videos verticais continuam verticais no fullscreen, sem conversao para horizontal, esticamento ou corte por `object-cover`.
 - A solucao nao adiciona package, nao altera contratos de API e nao muda a estrutura visual dos cards/perfis fora dos controles de expansao.
+
+## Complemento 2026-06-16 — player nativo sem expandir duplicado
+
+### Contexto
+
+A experiencia anterior ainda exibia um botao customizado de ampliar no canto superior direito dos videos renderizados pelo `VerticalVideoPlayer`. Isso duplicava a acao de fullscreen ja oferecida pelos controles nativos do player e adicionava poluicao visual em feed, comunidade, detalhe de post e perfil publico. Alem disso, cliques no elemento `<video controls>` podiam conflitar com o comportamento padrao do navegador, gerando duplo toggle entre play/pause.
+
+### Decisao
+
+Remover do `VerticalVideoPlayer` o lightbox proprio e o botao superior de ampliar. O componente passa a renderizar:
+
+- o `<video>` com controles nativos quando `controls=true`, mantendo `controlsList="nodownload"`;
+- uma camada transparente de clique apenas sobre a area de conteudo do video;
+- a faixa inferior do player descoberta para que volume, timeline, velocidade, menu e fullscreen nativos tenham prioridade;
+- toggle compartilhado `toggleVideoElementPlayback` para play/pause em cliques de conteudo;
+- regras globais `video:fullscreen` e `video:-webkit-full-screen` com `object-fit: contain`, fundo preto e dimensoes de viewport.
+
+No feed principal de psicologos, o clique/tap na area de video passa a decidir play/pause pelo estado real do `HTMLVideoElement` (`paused`/`ended`), nao por estado React potencialmente defasado apos autoplay. O botao de fullscreen do controle imersivo inferior permanece porque nao e o duplicado superior e usa o helper `requestVideoFullscreen` com `forceContain`.
+
+### Consequencias
+
+- Os pontos que usam `VerticalVideoPlayer` ficam sem botao de expandir duplicado no canto superior direito.
+- Fullscreen nativo preserva videos verticais centralizados, com fundo preto, sem corte nem esticamento.
+- Cliques no conteudo do video alternam play/pause, enquanto a barra inferior nativa continua dona das interacoes de controle.
+- A mudanca e apenas frontend; nao adiciona package, nao altera Prisma, endpoints ou contratos.
