@@ -1,9 +1,10 @@
 "use client";
 
 import { Maximize2, Play, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
+import { needsUserPlayWithSound, playVideoWithSound } from "@/lib/video-playback";
 
 type VideoFit = "contain" | "cover";
 
@@ -39,6 +40,22 @@ export const VerticalVideoLightbox = ({
   src,
   title,
 }: VerticalVideoLightboxProps) => {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [needsActivation, setNeedsActivation] = useState(true);
+
+  const syncVideoState = useCallback(() => {
+    setNeedsActivation(needsUserPlayWithSound(videoRef.current));
+  }, []);
+
+  const handleUserPlayWithSound = useCallback(async () => {
+    const played = await playVideoWithSound(videoRef.current);
+    syncVideoState();
+
+    if (!played) {
+      setNeedsActivation(true);
+    }
+  }, [syncVideoState]);
+
   useEffect(() => {
     if (!open) return;
 
@@ -58,6 +75,14 @@ export const VerticalVideoLightbox = ({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [onClose, open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const timeout = window.setTimeout(syncVideoState, 0);
+
+    return () => window.clearTimeout(timeout);
+  }, [open, syncVideoState]);
 
   if (!open || typeof document === "undefined") return null;
 
@@ -96,13 +121,30 @@ export const VerticalVideoLightbox = ({
           className="h-full w-full bg-black object-contain"
           controls
           controlsList="nodownload nofullscreen"
+          onLoadedMetadata={syncVideoState}
+          onPause={syncVideoState}
+          onPlay={syncVideoState}
+          onVolumeChange={syncVideoState}
           playsInline
           poster={poster || undefined}
           preload="metadata"
+          ref={videoRef}
           src={src}
         >
           Seu navegador não suporta a reprodução de vídeo.
         </video>
+        {needsActivation ? (
+          <button
+            aria-label={`Reproduzir video com som: ${title}`}
+            className="absolute inset-0 z-[1] grid place-items-center bg-black/10 text-white transition hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+            onClick={handleUserPlayWithSound}
+            type="button"
+          >
+            <span className="grid h-16 w-16 place-items-center rounded-full bg-black/38 shadow-[0_14px_34px_rgba(0,0,0,0.32)] backdrop-blur">
+              <Play className="ml-1 h-7 w-7 fill-white" aria-hidden="true" />
+            </span>
+          </button>
+        ) : null}
       </div>
     </div>,
     document.body,
@@ -122,10 +164,26 @@ export const VerticalVideoPlayer = ({
 }: VerticalVideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [expanded, setExpanded] = useState(false);
-  const [playing, setPlaying] = useState(false);
+  const [needsActivation, setNeedsActivation] = useState(true);
+
+  const syncVideoState = useCallback(() => {
+    const currentVideo = videoRef.current;
+
+    setNeedsActivation(needsUserPlayWithSound(currentVideo));
+  }, []);
+
+  const handleUserPlayWithSound = useCallback(async () => {
+    const played = await playVideoWithSound(videoRef.current);
+    syncVideoState();
+
+    if (!played) {
+      setNeedsActivation(true);
+    }
+  }, [syncVideoState]);
 
   const openExpanded = () => {
     videoRef.current?.pause();
+    syncVideoState();
     setExpanded(true);
   };
 
@@ -143,8 +201,10 @@ export const VerticalVideoPlayer = ({
           className={cn("h-full w-full bg-black", fitClassName[fit], videoClassName)}
           controls={controls}
           controlsList="nodownload nofullscreen"
-          onPause={() => setPlaying(false)}
-          onPlay={() => setPlaying(true)}
+          onLoadedMetadata={syncVideoState}
+          onPause={syncVideoState}
+          onPlay={syncVideoState}
+          onVolumeChange={syncVideoState}
           playsInline
           poster={poster || undefined}
           preload={preload}
@@ -154,12 +214,17 @@ export const VerticalVideoPlayer = ({
           Seu navegador não suporta a reprodução de vídeo.
         </video>
 
-        {!playing ? (
-          <span className="pointer-events-none absolute inset-0 grid place-items-center text-white/75">
+        {needsActivation ? (
+          <button
+            aria-label={`Reproduzir video com som: ${title}`}
+            className="absolute inset-0 z-[1] grid place-items-center text-white/80 transition hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+            onClick={handleUserPlayWithSound}
+            type="button"
+          >
             <span className="grid h-14 w-14 place-items-center rounded-full bg-black/32 shadow-[0_12px_28px_rgba(0,0,0,0.2)] backdrop-blur">
               <Play className="ml-1 h-6 w-6 fill-white" aria-hidden="true" />
             </span>
-          </span>
+          </button>
         ) : null}
 
         <button

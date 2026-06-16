@@ -16,6 +16,7 @@ import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/p
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
+import { playVideoWithSound } from "@/lib/video-playback";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
@@ -359,23 +360,18 @@ const CardVideo = ({
   };
 
   const unmuteVideo = () => {
-    if (soundEnabled) return;
-
     const currentVideo = videoRef.current;
     if (!currentVideo) return;
+    if (soundEnabled && !currentVideo.muted && currentVideo.volume > 0) return;
 
-    const shouldAutoplay = currentVideo.paused;
     setControlMode("hidden");
 
     setSoundEnabled(true);
     setGlobalSoundEnabled(true);
     clearControlsAutoHideTimeout();
-    currentVideo.muted = false;
-
-    if (!shouldAutoplay) return;
 
     userInitiatedPlayRef.current = true;
-    void currentVideo.play();
+    void playVideoWithSound(currentVideo);
   };
 
   const togglePlayback = () => {
@@ -386,7 +382,7 @@ const CardVideo = ({
       userInitiatedPlayRef.current = true;
       setControlMode("hidden");
       clearControlsAutoHideTimeout();
-      void currentVideo.play();
+      void playVideoWithSound(currentVideo);
     } else {
       clearControlsAutoHideTimeout();
       currentVideo.pause();
@@ -394,11 +390,10 @@ const CardVideo = ({
   };
 
   const handleVideoTap = () => {
-    if (!focused) return;
     const currentVideo = videoRef.current;
     if (!currentVideo) return;
 
-    if (!soundEnabled) {
+    if (!soundEnabled || currentVideo.muted || currentVideo.volume <= 0) {
       unmuteVideo();
       return;
     }
@@ -407,7 +402,7 @@ const CardVideo = ({
       userInitiatedPlayRef.current = true;
       setControlMode("hidden");
       clearControlsAutoHideTimeout();
-      void currentVideo.play();
+      void playVideoWithSound(currentVideo);
       return;
     }
 
@@ -531,7 +526,7 @@ const CardVideo = ({
     <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-surface-muted">
       <button
         aria-label={`Abrir controles do vídeo de ${name}`}
-        className="absolute inset-0 z-0 h-full w-full cursor-default border-0 bg-transparent p-0"
+        className="absolute inset-0 z-[5] h-full w-full cursor-default border-0 bg-transparent p-0"
         onClick={handleVideoTap}
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") {
@@ -543,7 +538,7 @@ const CardVideo = ({
       />
       <video
         aria-label={`Vídeo de apresentação de ${name}`}
-        className="h-full w-full bg-black object-cover object-top"
+        className="pointer-events-none h-full w-full bg-black object-cover object-top"
         controls={false}
         loop
         muted
@@ -560,7 +555,7 @@ const CardVideo = ({
       />
 
       {focused && showPlaybackControls && (
-        <div className="absolute left-1/2 top-[46%] flex -translate-x-1/2 -translate-y-1/2 items-center gap-4">
+        <div className="absolute left-1/2 top-[46%] z-20 flex -translate-x-1/2 -translate-y-1/2 items-center gap-4">
           {!soundEnabled ? (
             <button
               aria-label={`Desmutar o vídeo de ${name}`}

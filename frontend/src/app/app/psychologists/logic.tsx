@@ -55,6 +55,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
+import { playVideoWithSound } from "@/lib/video-playback";
 import { PrivateTemplate } from "@/templates/private";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { CITY_OPTIONS_BY_STATE } from "../professional/profile/setup/brazil-cities";
@@ -1612,11 +1613,30 @@ export const PsychologistsLogic = () => {
 
     if (currentVideo) {
       currentVideo.muted = false;
+      if (currentVideo.volume <= 0) {
+        currentVideo.volume = 1;
+      }
+      setVideoVolume(currentVideo.volume);
     }
 
     unmuteAllVideos();
     setIsVideoMuted(false);
   }, [unmuteAllVideos]);
+
+  const playCurrentVideoWithSound = useCallback(() => {
+    const currentVideo = backgroundVideoRef.current;
+    if (!currentVideo || !shouldShowVideo) return;
+
+    currentVideo.playbackRate = videoPlaybackRate;
+    unmuteCurrentVideo();
+    setIsVideoPaused(false);
+
+    void playVideoWithSound(currentVideo).then((played) => {
+      if (!played) {
+        setIsVideoPaused(true);
+      }
+    });
+  }, [shouldShowVideo, unmuteCurrentVideo, videoPlaybackRate]);
 
   const setAllVideosMuted = useCallback((muted: boolean) => {
     if (typeof window !== "undefined") {
@@ -2068,9 +2088,17 @@ export const PsychologistsLogic = () => {
       tapTimeoutRef.current = window.setTimeout(() => {
         tapTimeoutRef.current = null;
 
-        if (isVideoMuted && shouldShowVideo) {
-          unmuteCurrentVideo();
-          playCurrentVideo();
+        const currentVideo = backgroundVideoRef.current;
+
+        if (
+          shouldShowVideo &&
+          (isVideoMuted ||
+            isVideoPaused ||
+            currentVideo?.paused ||
+            currentVideo?.muted ||
+            (currentVideo?.volume ?? 1) <= 0)
+        ) {
+          playCurrentVideoWithSound();
           setIsUiHidden(true);
           return;
         }
@@ -2081,10 +2109,10 @@ export const PsychologistsLogic = () => {
     [
       isSearchFocused,
       isVideoMuted,
-      playCurrentVideo,
+      isVideoPaused,
+      playCurrentVideoWithSound,
       shouldShowVideo,
       triggerDoubleTapFavorite,
-      unmuteCurrentVideo,
     ],
   );
 
@@ -2218,21 +2246,23 @@ export const PsychologistsLogic = () => {
       const currentVideo = backgroundVideoRef.current;
       if (!currentVideo || !shouldShowVideo) return;
 
-      if (isVideoMuted) {
-        unmuteCurrentVideo();
-        playCurrentVideo();
+      if (
+        isVideoMuted ||
+        currentVideo.muted ||
+        currentVideo.volume <= 0 ||
+        currentVideo.paused ||
+        isVideoPaused
+      ) {
+        playCurrentVideoWithSound();
         setIsUiHidden(true);
         return;
       }
 
       if (!currentVideo.paused) {
         pauseVideoPlayback();
-        return;
       }
-
-      playCurrentVideo();
     },
-    [isVideoMuted, pauseVideoPlayback, playCurrentVideo, shouldShowVideo, unmuteCurrentVideo],
+    [isVideoMuted, isVideoPaused, pauseVideoPlayback, playCurrentVideoWithSound, shouldShowVideo],
   );
 
   const seekActiveVideoToTime = useCallback(
