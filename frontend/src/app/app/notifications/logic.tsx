@@ -224,9 +224,9 @@ export const NotificationsLogic = () => {
       <section className="mx-auto w-full max-w-2xl px-5 py-5 md:py-8">
         <SecondaryPageHeader
           action={
-            <Button asChild className="h-11 w-11 rounded-full" type="button" variant="ghost">
+            <Button asChild className="h-11 w-11 rounded-full p-0" type="button" variant="ghost">
               <Link aria-label="Configurações de notificações" href="/app/settings/notifications">
-                <Settings className="h-5 w-5" aria-hidden={true} />
+                <Settings className="h-6 w-6" aria-hidden={true} />
               </Link>
             </Button>
           }

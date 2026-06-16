@@ -48,3 +48,7 @@ A forma do `notification` migrada (derivada do sample) usa `read`, `redirect`, `
 - Ownership reforcado em `notification/update`: a busca da notificacao inclui `user_id = req.auth.id`.
 - UI de `/app/notifications` e `/app/settings/notifications` refinada contra as imagens locais de prototipo; Builder/Quick Copy nao estava disponivel no ambiente.
 - `pnpm --dir backend db:migrate` executado em 2026-06-15 e retornou banco em sincronia.
+
+## Complemento 2026-06-16
+
+- O header de `/app/notifications` manteve a composicao limpa de tela secundaria; a acao de configuracoes passou a usar escala visual maior e removeu a compressao causada pelo padding herdado do botao, sem fundo, borda, novo container ou mudanca de alinhamento.
