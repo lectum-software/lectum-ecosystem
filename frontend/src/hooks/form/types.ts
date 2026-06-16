@@ -60,6 +60,7 @@ export type Field<FormType extends FieldValues> = {
   int?: boolean;
   positive?: boolean;
   currency?: string;
+  after?: ReactNode;
   options?: FieldOption[];
   optionsByField?: {
     name: FieldPath<FormType>;

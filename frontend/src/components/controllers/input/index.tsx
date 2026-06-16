@@ -32,6 +32,7 @@ export function InputController<FormType extends FieldValues>({
   showCounter,
   step,
   onChangeCallback,
+  after,
 }: ControllerFieldProps<FormType>) {
   const inputId = fieldId(name, id);
   const [visible, setVisible] = useState(false);
@@ -123,6 +124,8 @@ export function InputController<FormType extends FieldValues>({
                   )}
                 </button>
               ) : null}
+
+              {after}
             </span>
           </Container>
         );

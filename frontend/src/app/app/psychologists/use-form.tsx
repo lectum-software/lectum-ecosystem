@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { type ReactNode, useEffect, useMemo } from "react";
 import { z } from "zod";
 import type { DirectoryPsychologistFilters } from "@/api/generator/types/directory";
 import { type Field, type FieldOption, useFormList } from "@/hooks/form";
@@ -76,6 +76,7 @@ type UsePsychologistsFilterFormProps = {
   filters?: DirectoryPsychologistFilters;
   loading?: boolean;
   onSearchChange?: (value: string) => void;
+  searchSuggestionsSlot?: ReactNode;
   values?: Partial<PsychologistsFilterForm>;
 };
 
@@ -83,6 +84,7 @@ export const usePsychologistsFilterForm = ({
   filters,
   loading = false,
   onSearchChange,
+  searchSuggestionsSlot,
   values,
 }: UsePsychologistsFilterFormProps = {}) => {
   const filterFieldClassName = "col-span-2";
@@ -100,6 +102,7 @@ export const usePsychologistsFilterForm = ({
         placeholder: "Buscar por nome ou CRP",
         leadingIcon: "search",
         onChangeCallback: (value) => onSearchChange?.(String(value ?? "")),
+        after: searchSuggestionsSlot,
         inputClassName:
           "h-12 rounded-2xl border-border/80 bg-surface-muted text-sm shadow-none placeholder:text-subtle",
       },
@@ -263,7 +266,14 @@ export const usePsychologistsFilterForm = ({
         hide: true,
       },
     ],
-    [filters?.approaches, filters?.services, filters?.specialties, loading, onSearchChange],
+    [
+      filters?.approaches,
+      filters?.services,
+      filters?.specialties,
+      loading,
+      onSearchChange,
+      searchSuggestionsSlot,
+    ],
   );
 
   const form = useFormList<PsychologistsFilterForm>({

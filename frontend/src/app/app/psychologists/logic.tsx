@@ -150,12 +150,34 @@ const formatDisplayName = (name: string) => {
   return name;
 };
 
-const normalizeSuggestionText = (value: string) =>
+const normalizePsychologistSearchText = (value: string) =>
   value
     .normalize("NFD")
     .replace(/\p{Diacritic}/gu, "")
     .toLowerCase()
     .trim();
+
+const filterPsychologistsByName = (
+  psychologists: readonly DirectoryPsychologist[] | undefined,
+  query: string,
+  limit = 8,
+) => {
+  const typedName = normalizePsychologistSearchText(query);
+  if (typedName.length < 2) return [];
+
+  const seen = new Set<string>();
+
+  return (psychologists ?? [])
+    .filter((psychologist) =>
+      normalizePsychologistSearchText(psychologist.name).includes(typedName),
+    )
+    .filter((psychologist) => {
+      if (seen.has(psychologist.id)) return false;
+      seen.add(psychologist.id);
+      return true;
+    })
+    .slice(0, limit);
+};
 
 const splitNameForBadge = (name: string) => {
   const words = formatDisplayName(name).trim().split(/\s+/).filter(Boolean);
@@ -227,6 +249,73 @@ const getInitials = (name: string) => {
 
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
+
+const PsychologistFilterSearchSuggestions = ({
+  isLoading,
+  items,
+  onSelect,
+}: {
+  isLoading: boolean;
+  items: DirectoryPsychologist[];
+  onSelect: (psychologist: DirectoryPsychologist) => void;
+}) => (
+  <div
+    aria-label="Sugestões de psicólogos"
+    className="mt-2 overflow-hidden rounded-2xl border border-border/80 bg-surface text-foreground shadow-[0_18px_45px_rgb(15_23_42_/_10%)]"
+    onMouseDown={(event) => event.preventDefault()}
+    role="listbox"
+  >
+    <div className="border-border/70 border-b px-3 py-2 text-[11px] font-extrabold tracking-[0.08em] text-muted uppercase">
+      Profissionais encontrados
+    </div>
+
+    {isLoading ? (
+      <div className="px-3 py-3 text-sm font-medium text-muted">Buscando psicólogos...</div>
+    ) : items.length > 0 ? (
+      <div className="max-h-[292px] overflow-y-auto py-1">
+        {items.map((psychologist) => {
+          const avatarSrc = resolvePublicMediaUrl(psychologist.avatar);
+
+          return (
+            <button
+              aria-label={`Abrir perfil de ${psychologist.name}`}
+              aria-selected={false}
+              className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition duration-150 ease-out hover:bg-primary-soft/55 focus-visible:bg-primary-soft/65 focus-visible:outline-none"
+              key={psychologist.id}
+              onClick={() => onSelect(psychologist)}
+              role="option"
+              type="button"
+            >
+              <span className="relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft text-sm font-extrabold text-primary ring-1 ring-primary/10">
+                {avatarSrc ? (
+                  <Image
+                    alt=""
+                    className="object-cover"
+                    fill
+                    sizes="40px"
+                    src={avatarSrc}
+                    unoptimized={isPublicMediaUrl(psychologist.avatar)}
+                  />
+                ) : (
+                  getInitials(psychologist.name)
+                )}
+              </span>
+
+              <span className="flex min-w-0 flex-1 items-center gap-1.5">
+                <span className="truncate text-sm font-extrabold leading-5 text-foreground">
+                  {psychologist.name}
+                </span>
+                {psychologist.verified ? <VerifiedBadgeIcon className="h-4 w-4 shrink-0" /> : null}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    ) : (
+      <div className="px-3 py-3 text-sm font-medium text-muted">Nenhum psicólogo encontrado</div>
+    )}
+  </div>
+);
 
 const clampNumber = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
@@ -792,6 +881,20 @@ export const PsychologistsLogic = () => {
     suggestionQuery,
     shouldFetchSearchSuggestions,
   );
+  const filterSuggestionSearch = deferredFilterModalSearchDraft.trim();
+  const shouldFetchFilterSuggestions = isFiltersOpen && filterSuggestionSearch.length >= 2;
+  const filterSuggestionQuery = useMemo<DirectoryPsychologistsQuery>(
+    () => ({
+      limit: 8,
+      page: 1,
+      search: filterSuggestionSearch || undefined,
+    }),
+    [filterSuggestionSearch],
+  );
+  const filterSuggestionsDirectory = useDirectoryPsychologists(
+    filterSuggestionQuery,
+    shouldFetchFilterSuggestions,
+  );
   const response = directory.data;
   const psychologists = response?.data ?? [];
   const featuredPsychologist = psychologists[activePsychologistIndex] ?? psychologists[0];
@@ -809,10 +912,42 @@ export const PsychologistsLogic = () => {
     setFilterModalSearchDraft(value);
   }, []);
 
+  const filterSuggestionItems = useMemo(
+    () => filterPsychologistsByName(filterSuggestionsDirectory.data?.data, filterModalSearchDraft),
+    [filterModalSearchDraft, filterSuggestionsDirectory.data?.data],
+  );
+
+  const handleFilterSuggestionSelect = useCallback(
+    (psychologist: DirectoryPsychologist) => {
+      setFilterModalSearchDraft("");
+      setIsFiltersOpen(false);
+      router.push(`/app/psychologist/${psychologist.id}`);
+    },
+    [router],
+  );
+
+  const filterSearchSuggestionsSlot = useMemo(() => {
+    if (filterModalSearchDraft.trim().length < 2) return null;
+
+    return (
+      <PsychologistFilterSearchSuggestions
+        isLoading={filterSuggestionsDirectory.isFetching}
+        items={filterSuggestionItems}
+        onSelect={handleFilterSuggestionSelect}
+      />
+    );
+  }, [
+    filterModalSearchDraft,
+    filterSuggestionItems,
+    filterSuggestionsDirectory.isFetching,
+    handleFilterSuggestionSelect,
+  ]);
+
   const filters = usePsychologistsFilterForm({
     filters: response?.filters,
     loading: directory.isLoading || directory.isFetching,
     onSearchChange: handleFilterSearchChange,
+    searchSuggestionsSlot: filterSearchSuggestionsSlot,
     values: filterValues,
   });
 
@@ -844,21 +979,10 @@ export const PsychologistsLogic = () => {
   const showInitialLoading = directory.isLoading && !response;
   const canSwipeBetweenPsychologists = psychologists.length > 1;
   const infoSectionBottom = `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom) + ${metrics.bioBottomOffset}px)`;
-  const searchSuggestionItems = useMemo(() => {
-    const typedName = normalizeSuggestionText(searchDraft);
-    if (typedName.length < 2) return [];
-
-    const seen = new Set<string>();
-
-    return (searchSuggestionsDirectory.data?.data ?? [])
-      .filter((psychologist) => normalizeSuggestionText(psychologist.name).includes(typedName))
-      .filter((psychologist) => {
-        if (seen.has(psychologist.id)) return false;
-        seen.add(psychologist.id);
-        return true;
-      })
-      .slice(0, 5);
-  }, [searchDraft, searchSuggestionsDirectory.data?.data]);
+  const searchSuggestionItems = useMemo(
+    () => filterPsychologistsByName(searchSuggestionsDirectory.data?.data, searchDraft, 5),
+    [searchDraft, searchSuggestionsDirectory.data?.data],
+  );
   const shouldRenderSearchSuggestions =
     isSearchFocused &&
     searchDraft.trim().length >= 2 &&
@@ -4019,7 +4143,7 @@ export const PsychologistsLogic = () => {
                       role="document"
                       tabIndex={-1}
                     >
-                      <div className="shrink-0 border-border border-b bg-surface/95 px-5 py-4 backdrop-blur sm:px-6">
+                      <div className="shrink-0 border-border border-b bg-surface/95 px-5 py-3 backdrop-blur sm:px-6 sm:py-3.5">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex min-w-0 flex-1 items-start gap-3">
                             <button
@@ -4050,7 +4174,7 @@ export const PsychologistsLogic = () => {
                         </div>
 
                         <div className="ml-[52px] min-w-0">
-                          <p className="mt-1 max-w-[280px] text-[13px] leading-[18px] text-muted sm:max-w-none sm:text-sm sm:leading-5">
+                          <p className="mt-0.5 max-w-[280px] text-[13px] leading-[17px] text-muted sm:max-w-none sm:text-sm sm:leading-5">
                             Ajuste os critérios para encontrar o
                             <br className="sm:hidden" />
                             <span className="sm:hidden">psicólogo ideal para você</span>
