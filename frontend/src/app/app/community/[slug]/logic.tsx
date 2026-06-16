@@ -115,6 +115,9 @@ const COMMUNITY_POST_SORTS = [
 type CommunityPostSort = (typeof COMMUNITY_POST_SORTS)[number]["value"];
 type CommunityPostSortPeriod = "week" | "month" | "year" | "all";
 type CommunityPostSortWithPeriod = Extract<CommunityPostSort, "commented" | "voted">;
+type CommunityPostSelectedPeriods = Partial<
+  Record<CommunityPostSortWithPeriod, CommunityPostSortPeriod>
+>;
 
 const COMMUNITY_POST_SORT_PERIODS: Array<{
   label: string;
@@ -126,16 +129,24 @@ const COMMUNITY_POST_SORT_PERIODS: Array<{
   { label: "Desde sempre", value: "all" },
 ];
 
-const getCommunityPostSortPeriodLabel = (value: CommunityPostSortPeriod) =>
-  COMMUNITY_POST_SORT_PERIODS.find((period) => period.value === value)?.label ?? "Desde sempre";
+const getCommunityPostSortPeriodShortLabel = (value: CommunityPostSortPeriod) => {
+  const labels: Record<CommunityPostSortPeriod, string> = {
+    all: "Sempre",
+    month: "Mês",
+    week: "Semana",
+    year: "Ano",
+  };
+
+  return labels[value];
+};
 
 const communityPostSortChipClassName = (active: boolean) =>
   cn(
-    "inline-flex h-10 min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-full border px-4 text-sm font-black leading-none transition",
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
+    "inline-flex h-9 min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-full border px-3.5 text-[13px] font-semibold leading-none tracking-[-0.01em] transition active:scale-[0.99]",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
     active
-      ? "border-primary/20 bg-primary-soft text-primary"
-      : "border-[#E5EAF0] bg-white text-[#64748B] hover:border-primary/40 hover:bg-[#F8FBFF] hover:text-primary dark:border-border dark:bg-surface dark:text-muted",
+      ? "border-primary/25 bg-primary-soft/80 text-[#1D4ED8] shadow-[0_8px_18px_rgba(47,141,235,0.08)]"
+      : "border-[#E5EAF0] bg-white text-[#64748B] hover:border-primary/30 hover:bg-[#F8FBFF] hover:text-[#1E3A8A] dark:border-border dark:bg-surface dark:text-muted dark:hover:text-primary",
   );
 
 const FEED_SCOPE_OPTIONS: Array<{ label: string; value: CommunityFeedScope }> = [
@@ -1471,7 +1482,7 @@ const sortCommunityPostsByMetric = (
 const sortCommunityPosts = (
   posts: CommunityPost[],
   sort: CommunityPostSort,
-  periods: Record<CommunityPostSortWithPeriod, CommunityPostSortPeriod>,
+  periods: CommunityPostSelectedPeriods,
 ) => {
   const items = posts.filter((post) => post.status !== "removido");
 
@@ -1480,11 +1491,11 @@ const sortCommunityPosts = (
   }
 
   if (sort === "commented") {
-    return sortCommunityPostsByMetric(items, "comments", periods.commented);
+    return sortCommunityPostsByMetric(items, "comments", periods.commented ?? "all");
   }
 
   if (sort === "voted") {
-    return sortCommunityPostsByMetric(items, "upvotes", periods.voted);
+    return sortCommunityPostsByMetric(items, "upvotes", periods.voted ?? "all");
   }
 
   const now = Date.now();
@@ -1786,7 +1797,6 @@ const CommunityPeriodSortChip = ({
   active,
   icon: Icon,
   label,
-  onChange,
   onPeriodChange,
   period,
   value,
@@ -1794,9 +1804,8 @@ const CommunityPeriodSortChip = ({
   active: boolean;
   icon: LucideIcon;
   label: string;
-  onChange: (value: CommunityPostSort) => void;
   onPeriodChange: (sort: CommunityPostSortWithPeriod, period: CommunityPostSortPeriod) => void;
-  period: CommunityPostSortPeriod;
+  period: CommunityPostSortPeriod | null;
   value: CommunityPostSortWithPeriod;
 }) => {
   const [open, setOpen] = useState(false);
@@ -1804,8 +1813,8 @@ const CommunityPeriodSortChip = ({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
-  const periodLabel = getCommunityPostSortPeriodLabel(period);
-  const showPeriod = active;
+  const periodLabel = period ? getCommunityPostSortPeriodShortLabel(period) : null;
+  const showPeriod = active && Boolean(periodLabel);
 
   const updateMenuPosition = useCallback(() => {
     const button = buttonRef.current;
@@ -1837,9 +1846,8 @@ const CommunityPeriodSortChip = ({
   }, []);
 
   const toggleMenu = useCallback(() => {
-    onChange(value);
     setOpen((current) => !current);
-  }, [onChange, value]);
+  }, []);
 
   useLayoutEffect(() => {
     if (!open) return;
@@ -1893,19 +1901,19 @@ const CommunityPeriodSortChip = ({
         ref={buttonRef}
         type="button"
       >
-        <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+        <Icon className="h-[15px] w-[15px] shrink-0" aria-hidden="true" strokeWidth={2.2} />
         <span>{label}</span>
         {showPeriod ? (
           <>
             <span className="text-primary/45" aria-hidden="true">
               ·
             </span>
-            <span className="font-black text-primary">{periodLabel}</span>
+            <span className="font-semibold text-[#1D4ED8]">{periodLabel}</span>
           </>
         ) : null}
         <ChevronDown
           className={cn(
-            "h-4 w-4 shrink-0 transition-transform duration-200",
+            "h-3.5 w-3.5 shrink-0 transition-transform duration-200",
             open ? "rotate-180" : "",
           )}
           aria-hidden="true"
@@ -1928,11 +1936,11 @@ const CommunityPeriodSortChip = ({
                   <button
                     aria-checked={selected}
                     className={cn(
-                      "group flex min-h-11 w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-extrabold transition",
+                      "group flex min-h-11 w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-[13px] font-semibold tracking-[-0.01em] transition",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
                       selected
-                        ? "bg-primary-soft text-primary"
-                        : "text-[#475569] hover:bg-[#F8FBFF] hover:text-primary dark:text-muted dark:hover:bg-surface-muted",
+                        ? "bg-primary-soft/75 text-[#1D4ED8]"
+                        : "text-[#475569] hover:bg-[#F8FBFF] hover:text-[#1E3A8A] dark:text-muted dark:hover:bg-surface-muted",
                     )}
                     key={option.value}
                     onClick={() => {
@@ -1974,7 +1982,7 @@ const CommunityPostSortChips = ({
 }: {
   onChange: (value: CommunityPostSort) => void;
   onPeriodChange: (sort: CommunityPostSortWithPeriod, period: CommunityPostSortPeriod) => void;
-  periods: Record<CommunityPostSortWithPeriod, CommunityPostSortPeriod>;
+  periods: CommunityPostSelectedPeriods;
   value: CommunityPostSort;
 }) => (
   <nav
@@ -1986,15 +1994,16 @@ const CommunityPostSortChips = ({
         const Icon = item.icon;
         const active = value === item.value;
         const hasPeriod = "period" in item;
-        const periodValue = hasPeriod ? periods[item.value as CommunityPostSortWithPeriod] : null;
-        if (hasPeriod && periodValue) {
+        const periodValue = hasPeriod
+          ? (periods[item.value as CommunityPostSortWithPeriod] ?? null)
+          : null;
+        if (hasPeriod) {
           return (
             <CommunityPeriodSortChip
               active={active}
               icon={Icon}
               key={item.value}
               label={item.label}
-              onChange={onChange}
               onPeriodChange={onPeriodChange}
               period={periodValue}
               value={item.value as CommunityPostSortWithPeriod}
@@ -2010,7 +2019,7 @@ const CommunityPostSortChips = ({
             onClick={() => onChange(item.value)}
             type="button"
           >
-            <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <Icon className="h-[15px] w-[15px] shrink-0" aria-hidden="true" strokeWidth={2.2} />
             <span>{item.label}</span>
           </button>
         );
@@ -2169,12 +2178,7 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
   const router = useRouter();
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<CommunityPostSort>("featured");
-  const [sortPeriods, setSortPeriods] = useState<
-    Record<CommunityPostSortWithPeriod, CommunityPostSortPeriod>
-  >({
-    commented: "week",
-    voted: "week",
-  });
+  const [sortPeriods, setSortPeriods] = useState<CommunityPostSelectedPeriods>({});
   const [communitySearchOpen, setCommunitySearchOpen] = useState(false);
   const [communitySearch, setCommunitySearch] = useState("");
   const deferredCommunitySearch = useDeferredValue(communitySearch.trim());
@@ -2188,8 +2192,8 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
       limit: PAGE_LIMIT,
       page,
       sort,
-      ...(sort === "commented" ? { period: sortPeriods.commented } : {}),
-      ...(sort === "voted" ? { period: sortPeriods.voted } : {}),
+      ...(sort === "commented" && sortPeriods.commented ? { period: sortPeriods.commented } : {}),
+      ...(sort === "voted" && sortPeriods.voted ? { period: sortPeriods.voted } : {}),
       ...(communitySearchOpen && deferredCommunitySearch
         ? { search: deferredCommunitySearch }
         : {}),
