@@ -140,11 +140,11 @@ const getCommunityPostSortPeriodShortLabel = (value: CommunityPostSortPeriod) =>
 
 const communityPostSortChipClassName = (active: boolean) =>
   cn(
-    "inline-flex h-8 min-h-8 shrink-0 items-center justify-center gap-1 rounded-full border px-2.5 text-[12px] font-medium leading-none tracking-[-0.005em] transition active:scale-[0.99]",
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/15",
+    "group inline-flex h-8 min-h-8 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[11px] font-semibold leading-none tracking-[-0.01em] shadow-[0_5px_14px_rgba(15,23,42,0.035)] backdrop-blur transition-[background-color,border-color,box-shadow,color,transform] duration-200 active:scale-[0.99]",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8]/20",
     active
-      ? "border-transparent bg-[#EAF3FF]/65 font-semibold text-[#123B6D] dark:bg-primary/10 dark:text-[#B8D8FF]"
-      : "border-transparent bg-transparent text-[#475569] hover:bg-white/55 hover:text-[#123B6D] dark:text-muted dark:hover:bg-surface-muted/45 dark:hover:text-foreground",
+      ? "border-[#9CCCF8]/85 bg-[#EAF5FF] text-[#123B6D] shadow-[0_8px_20px_rgba(48,140,232,0.14)] dark:border-primary/35 dark:bg-primary/15 dark:text-[#D6EAFF]"
+      : "border-[#E2E8F0]/95 bg-white/85 text-[#233B5D] hover:border-[#C8D8EA] hover:bg-white hover:text-[#123B6D] dark:border-border dark:bg-surface/70 dark:text-muted dark:hover:bg-surface-muted/70 dark:hover:text-foreground",
   );
 
 const FEED_SCOPE_OPTIONS: Array<{ label: string; value: CommunityFeedScope }> = [
@@ -1849,29 +1849,26 @@ const CommunityPeriodSortChip = ({
         ref={buttonRef}
         type="button"
       >
-        <Icon className="h-3 w-3 shrink-0" aria-hidden="true" strokeWidth={2.15} />
-        <span>{label}</span>
-        {showPeriod ? (
-          <>
-            <span className="text-[#94A3B8]" aria-hidden="true">
-              ·
-            </span>
-            <span className="font-semibold text-[#123B6D] dark:text-[#B8D8FF]">{periodLabel}</span>
-          </>
-        ) : null}
+        <Icon className="h-3 w-3 shrink-0 opacity-70" aria-hidden="true" strokeWidth={1.9} />
+        <span className="whitespace-nowrap">{label}</span>
         <ChevronDown
           className={cn(
-            "h-3 w-3 shrink-0 opacity-80 transition-transform duration-200",
+            "h-3 w-3 shrink-0 opacity-70 transition-transform duration-200",
             open ? "rotate-180" : "",
           )}
           aria-hidden="true"
         />
+        {showPeriod ? (
+          <span className="ml-0.5 rounded-full border border-[#B7D7F5]/70 bg-white/60 px-1.5 py-0.5 text-[10px] font-bold leading-none text-[#2F5F94] dark:border-primary/25 dark:bg-white/10 dark:text-[#B8D8FF]">
+            {periodLabel}
+          </span>
+        ) : null}
       </button>
 
       {open && typeof document !== "undefined"
         ? createPortal(
             <div
-              className="fixed z-[90] overflow-y-auto rounded-2xl border border-[#DCE6F2] bg-white p-1.5 shadow-[0_18px_45px_rgba(15,23,42,0.14)] outline-none animate-in fade-in slide-in-from-top-1 duration-150 dark:border-border dark:bg-surface"
+              className="fixed z-[90] overflow-y-auto rounded-[18px] border border-[#DCE6F2] bg-white p-1.5 shadow-[0_18px_45px_rgba(15,23,42,0.14)] outline-none animate-in fade-in slide-in-from-top-1 duration-150 dark:border-border dark:bg-surface"
               id={menuId}
               ref={menuRef}
               role="menu"
@@ -1935,9 +1932,9 @@ const CommunityPostSortChips = ({
 }) => (
   <nav
     aria-label="Ordenação dos posts"
-    className="-mx-5 overflow-x-auto px-5 [scrollbar-width:none]"
+    className="w-full overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
   >
-    <div className="flex min-w-max gap-1.5 pb-0.5">
+    <div className="flex min-w-max items-center gap-2 py-0.5 pr-1">
       {COMMUNITY_POST_SORTS.map((item) => {
         const Icon = item.icon;
         const active = value === item.value;
@@ -1967,8 +1964,8 @@ const CommunityPostSortChips = ({
             onClick={() => onChange(item.value)}
             type="button"
           >
-            <Icon className="h-3 w-3 shrink-0" aria-hidden="true" strokeWidth={2.15} />
-            <span>{item.label}</span>
+            <Icon className="h-3 w-3 shrink-0 opacity-70" aria-hidden="true" strokeWidth={1.9} />
+            <span className="whitespace-nowrap">{item.label}</span>
           </button>
         );
       })}

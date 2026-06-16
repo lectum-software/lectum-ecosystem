@@ -179,8 +179,8 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Pedido do usuário: refinar `/app/community/[slug]` para que a faixa azul do cabeçalho comece no topo da área útil, remover o bloco textual de posts e o botão inline de publicar, ajustar a ordenação e esconder a nav inferior no mobile ao rolar para baixo.
 - Layout: o `PrivateTemplate` da página de comunidade recebeu `!pt-0` no conteúdo para remover o respiro superior herdado do `PageShell`; a faixa azul do `CommunityHeader` passa a ser o primeiro elemento visível da área de conteúdo.
 - Área de posts: removidos os textos `Posts da comunidade` e `Dados reais publicados nesta comunidade`, além do botão `+ Publicar`; permanece apenas o botão flutuante de criação.
-- Ordenação: o menu agora possui `Em destaque`, `Novos`, `Mais comentados` e `Mais votados`; `Novos` usa ícone de relógio.
-- Períodos: `Mais comentados` e `Mais votados` exibem dropdown próprio com `Esta semana`, `Este mês`, `Este ano` e `Desde sempre`, mantendo estados independentes para cada ordenação.
+- Ordenação: o menu agora possui `Em destaque`, `Novos`, `Mais comentados` e `Mais úteis`; `Novos` usa ícone de relógio.
+- Períodos: `Mais comentados` e `Mais úteis` exibem dropdown próprio com `Esta semana`, `Este mês`, `Este ano` e `Desde sempre`, mantendo estados independentes para cada ordenação.
 - Como a API atual expõe contadores agregados do post e `created_at`, o período atua na ordenação priorizando posts criados na janela escolhida, sem ocultar posts antigos nem alterar paginação/backend.
 - Nav mobile: `PrivateTemplate` passou a separar visibilidade mobile e desktop; `autoHideNavigation` agora oculta suavemente apenas a bottom nav em telas mobile ao rolar para baixo e mostra ao rolar para cima. A sidebar desktop não é afetada.
 - Escopo: sem mudanças de backend, Prisma, migrations, packages, schema, contratos de API ou conteúdo dos posts.
@@ -194,7 +194,7 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Backend: o endpoint `GET /api/private/community/:slug/posts` passou a aceitar `sort`/`period`, ordenar e paginar os posts da comunidade após calcular `sort_metrics`, com contadores reais por período para comentários/respostas (`post_reply.createdAt`) e upvotes (`post_vote.createdAt` com `value=1`). O endpoint do feed geral não recebe nem usa esses metadados.
 - Ranking `Em destaque`: o frontend da página interna aplica `((upvotes * 3) + (comentarios * 5) + (respostasDePsicologos * 15) + (respostasDeTopMentor * 25) + (compartilhamentos * 4) - penalidades) / (horasDesdePublicacao + 2)^0.5` apenas em `CommunityDetailLogic`.
 - `Novos`: ordena por `created_at DESC` e mantém ícone de relógio.
-- `Mais comentados` e `Mais votados`: usam os contadores reais do período selecionado (`Esta semana`, `Este mês`, `Este ano`, `Desde sempre`) e aplicam o outro contador como desempate, preservando posts existentes e paginação.
+- `Mais comentados` e `Mais úteis`: usam os contadores reais do período selecionado (`Esta semana`, `Este mês`, `Este ano`, `Desde sempre`) e aplicam o outro contador como desempate, preservando posts existentes e paginação.
 - Penalidades: posts removidos continuam excluídos pela query `status = publicado`; campos de denúncia/ocultação/moderação ainda não existem no schema, então `penalty` fica preparado no contrato com valor `0` até haver fonte persistida. Compartilhamentos também ficam em `0` enquanto não existir evento persistido específico.
 - Escopo: não houve alteração no algoritmo, contrato visual ou ordenação do feed geral `/app/community/feed`; a exibição de downvotes ao usuário permanece removida conforme ajustes anteriores.
 - ADR atualizado: `adrs/0066-pagina-detalhe-comunidade-participacao.md`.
@@ -214,7 +214,7 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Pedido do usuario: corrigir a lupa da pagina interna de comunidade para abrir busca local, sem redirecionar para o feed global.
 - Frontend: a lupa do `CommunityHeader` em `/app/community/[slug]` deixou de ser um link para `/app/community/feed` e passou a abrir um cabecalho de busca contextual na propria rota da comunidade.
 - O cabecalho exibe `Buscar em {nome da comunidade}`, foca o campo automaticamente e envia o termo para `GET /api/private/community/:slug/posts?search=...`, preservando o contexto do `slug`.
-- O botao voltar da busca fecha o modo de busca local, restaura a pagina anterior da paginacao e reposiciona o scroll na posicao registrada ao abrir a busca. A ordenacao ativa (`Em destaque`, `Novos`, `Mais comentados`, `Mais votados`) e seus periodos permanecem no estado atual.
+- O botao voltar da busca fecha o modo de busca local, restaura a pagina anterior da paginacao e reposiciona o scroll na posicao registrada ao abrir a busca. A ordenacao ativa (`Em destaque`, `Novos`, `Mais comentados`, `Mais úteis`) e seus periodos permanecem no estado atual.
 - A lupa e o campo de busca do feed global `/app/community/feed` nao foram alterados e continuam usando a busca global do feed.
 - Backend: a funcao `postSearchWhere` tambem passa a considerar `post_reply.title` e `post_reply.content` nao deletados, fazendo a busca da comunidade encontrar posts relacionados a comentarios/respostas persistidos sem sair do recorte da comunidade.
 - Escopo: sem alteracao de Prisma schema, migrations, packages ou criacao de novas rotas; a correcao reutiliza o endpoint e query key existentes de posts por comunidade.
@@ -244,7 +244,7 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 - Pedido do usuário: ajustar somente o estado/visual da página interna de comunidade, sem alterar lógica de ordenação, textos dos filtros ou ações existentes.
 - Regras da comunidade: removida a persistência via `sessionStorage`; o accordion passa a iniciar sempre fechado ao entrar novamente na página ou remontar o componente.
-- Ordenação: os filtros `Mais comentados` e `Mais votados` passaram a renderizar o seletor de período como controle integrado ao próprio chip, com a seta logo após o texto do botão e sem segmento lateral separado.
+- Ordenação: os filtros `Mais comentados` e `Mais úteis` passaram a renderizar o seletor de período como controle integrado ao próprio chip, com a seta logo após o texto do botão e sem segmento lateral separado.
 - FAB de publicar: o botão flutuante da página interna de comunidade foi alinhado ao mesmo tamanho/ícone/sombra/animação do botão flutuante do feed geral, preservando rota e ação.
 - Escopo: sem mudanças de backend, Prisma, contratos, packages ou algoritmo de ordenação.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e validação HTTP local com 307 esperado em `/app/community/relacionamentos-com-proposito` sem cookie autenticado.
