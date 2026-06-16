@@ -248,3 +248,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - FAB de publicar: o botão flutuante da página interna de comunidade foi alinhado ao mesmo tamanho/ícone/sombra/animação do botão flutuante do feed geral, preservando rota e ação.
 - Escopo: sem mudanças de backend, Prisma, contratos, packages ou algoritmo de ordenação.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e validação HTTP local com 307 esperado em `/app/community/relacionamentos-com-proposito` sem cookie autenticado.
+
+## Complemento 2026-06-16 - fullscreen consistente de videos
+
+- Pedido do usuario: corrigir a expansao/tela cheia de videos tambem dentro da comunidade, preservando a proporcao original.
+- A pagina interna reutiliza `VerticalVideoPlayer`, que agora remove o bloqueio nativo de fullscreen e tenta `webkitEnterFullscreen()`/`requestFullscreen()` antes do fallback em lightbox.
+- Videos verticais permanecem verticais, centralizados em fundo preto e sem distorcao durante a tela cheia.
+- Nao houve alteracao de backend, Prisma, migrations, packages, ordenacao, busca ou layout dos posts.
+- ADR atualizado: `adrs/0103-player-video-vertical-unificado.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`.

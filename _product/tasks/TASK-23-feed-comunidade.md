@@ -335,3 +335,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; as referencias visuais usadas foram `_product/proto/Feed Comunidade.jpg` e o pedido detalhado do usuario.
 - ADR criado: `adrs/0097-top-mentor-badge-premium.md`.
 - Validacoes executadas nesta execucao: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP local sem cookie autenticado retornou 307 esperado para `/app/community/feed`.
+
+## Execucao complementar: fullscreen nativo liberado em videos do feed (2026-06-16)
+
+- Pedido do usuario: garantir expansao/tela cheia dos videos tambem no feed de comunidades.
+- O player vertical compartilhado removeu o bloqueio `nofullscreen` de `controlsList` e passa a abrir o video pela Fullscreen API com preservacao de proporcao antes de usar o lightbox como fallback.
+- Videos de posts e respostas do feed continuam usando o mesmo layout embutido, mas podem expandir com fundo preto, controles acessiveis e `object-fit: contain`.
+- Nao houve alteracao de backend, Prisma, migrations, packages, schema, ranking, conteudo textual ou cards.
+- ADR atualizado: `adrs/0103-player-video-vertical-unificado.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`.

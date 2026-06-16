@@ -1332,3 +1332,13 @@ Validacoes do complemento:
 - O cabecalho passou a usar uma grade compacta com botao de fechar, titulo e acao `Limpar` alinhados verticalmente, subtitulo conectado ao titulo com margem curta e menor altura total.
 - A acao `Limpar` ficou mais discreta, com texto de 13px, peso 500, azul suave e hover secundario, preservando a mesma funcao `clearFilters`.
 - Nao houve alteracao de backend, Prisma, contratos, packages ou funcionalidade dos filtros.
+
+## Execucao complementar: fullscreen consistente dos videos (2026-06-16)
+
+- Pedido do usuario: permitir expansao/tela cheia de qualquer video da plataforma, com foco no feed principal e no video de perfil do psicologo, preservando proporcao e sem distorcer videos verticais.
+- Foi criado o helper compartilhado `requestVideoFullscreen`, que usa `webkitEnterFullscreen()` no iOS/Safari e `requestFullscreen()` nos demais navegadores, com controles temporarios quando o player usa controles customizados.
+- No feed principal `/app/psychologists`, os controles imersivos do video passam a oferecer acao de tela cheia usando o mesmo helper, sem alterar dados, rotas, filtros, layout dos cards ou contratos de API.
+- Nos cards reutilizaveis de psicologos, o botao de ampliar do video chama a Fullscreen API e preserva `object-fit: contain` durante a tela cheia.
+- Nao houve alteracao de backend, Prisma, migrations, packages ou endpoints.
+- ADR atualizado: `adrs/0103-player-video-vertical-unificado.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`.

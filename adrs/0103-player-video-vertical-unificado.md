@@ -29,3 +29,29 @@ Os vídeos embutidos continuam respeitando o contexto visual do card/post, mas a
 - CSS local de fullscreen foi removido das telas de comunidade e detalhe de post.
 - O comportamento fica mais previsível no desktop e no mobile.
 - O componente pode ser reutilizado em novos pontos da plataforma que exibam vídeo vertical.
+
+## Complemento 2026-06-16 — fullscreen nativo consistente
+
+### Contexto
+
+A expansao de video ainda ficava inconsistente porque alguns `<video>` usavam `controlsList="nodownload nofullscreen"`, bloqueando o botao nativo de tela cheia, enquanto outros players customizados (`/app/psychologists` e cards de psicologos) renderizavam `controls={false}` sem uma chamada explicita para a Fullscreen API. O video de apresentacao do psicologo no perfil publico era um caso critico por herdar o bloqueio do player vertical compartilhado.
+
+### Decisao
+
+Centralizar a abertura em tela cheia no helper `requestVideoFullscreen` em `frontend/src/lib/video-fullscreen.ts`:
+
+- tentar `webkitEnterFullscreen()` primeiro para compatibilidade com iOS/Safari;
+- usar `HTMLVideoElement.requestFullscreen()` como caminho padrao em Chrome/Android/Desktop;
+- habilitar controles temporariamente quando o player embutido usa controles customizados;
+- aplicar temporariamente `object-fit: contain`, `object-position: center`, dimensoes de viewport e fundo preto durante a tela cheia;
+- restaurar estilos e controles ao sair do fullscreen;
+- remover `nofullscreen` de `controlsList`, mantendo apenas `nodownload`;
+- manter o lightbox existente como fallback apenas quando a Fullscreen API nao abrir.
+
+Os players customizados do feed principal de psicologos e do card de psicologo passam a chamar o mesmo helper para nao depender de controles nativos visiveis no layout embutido.
+
+### Consequencias
+
+- Videos do feed principal, feed de comunidades, comunidade interna, detalhe do post, respostas com midia e video de perfil do psicologo podem abrir em tela cheia.
+- Videos verticais continuam verticais no fullscreen, sem conversao para horizontal, esticamento ou corte por `object-cover`.
+- A solucao nao adiciona package, nao altera contratos de API e nao muda a estrutura visual dos cards/perfis fora dos controles de expansao.

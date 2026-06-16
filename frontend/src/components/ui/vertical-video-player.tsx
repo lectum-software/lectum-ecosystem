@@ -4,6 +4,7 @@ import { Maximize2, Play, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
+import { requestVideoFullscreen } from "@/lib/video-fullscreen";
 import { needsUserPlayWithSound, playVideoWithSound } from "@/lib/video-playback";
 
 type VideoFit = "contain" | "cover";
@@ -42,10 +43,21 @@ export const VerticalVideoLightbox = ({
 }: VerticalVideoLightboxProps) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [needsActivation, setNeedsActivation] = useState(true);
+  const [aspectRatio, setAspectRatio] = useState(9 / 16);
 
   const syncVideoState = useCallback(() => {
     setNeedsActivation(needsUserPlayWithSound(videoRef.current));
   }, []);
+
+  const handleLoadedMetadata = () => {
+    const video = videoRef.current;
+
+    if (video?.videoWidth && video.videoHeight) {
+      setAspectRatio(video.videoWidth / video.videoHeight);
+    }
+
+    syncVideoState();
+  };
 
   const handleUserPlayWithSound = useCallback(async () => {
     const played = await playVideoWithSound(videoRef.current);
@@ -110,8 +122,8 @@ export const VerticalVideoLightbox = ({
       <div
         className="relative isolate aspect-[9/16] overflow-hidden rounded-[22px] bg-black shadow-[0_24px_80px_rgba(0,0,0,0.5)] ring-1 ring-white/10 sm:rounded-[28px]"
         style={{
-          height: "min(calc(100dvh - 32px), calc((100vw - 24px) * 16 / 9))",
-          width: "min(calc(100vw - 24px), calc((100dvh - 32px) * 9 / 16))",
+          height: `min(calc(100dvh - 32px), calc((100vw - 24px) / ${aspectRatio}))`,
+          width: `min(calc(100vw - 24px), calc((100dvh - 32px) * ${aspectRatio}))`,
         }}
       >
         {/* biome-ignore lint/a11y/useMediaCaption: Conteúdos enviados por usuários ainda não possuem legenda persistida. */}
@@ -120,8 +132,8 @@ export const VerticalVideoLightbox = ({
           autoPlay
           className="h-full w-full bg-black object-contain"
           controls
-          controlsList="nodownload nofullscreen"
-          onLoadedMetadata={syncVideoState}
+          controlsList="nodownload"
+          onLoadedMetadata={handleLoadedMetadata}
           onPause={syncVideoState}
           onPlay={syncVideoState}
           onVolumeChange={syncVideoState}
@@ -181,7 +193,16 @@ export const VerticalVideoPlayer = ({
     }
   }, [syncVideoState]);
 
-  const openExpanded = () => {
+  const openExpanded = async () => {
+    const openedNativeFullscreen = await requestVideoFullscreen(videoRef.current, {
+      forceContain: true,
+      temporaryControls: !controls,
+    });
+
+    if (openedNativeFullscreen) {
+      return;
+    }
+
     videoRef.current?.pause();
     syncVideoState();
     setExpanded(true);
@@ -200,7 +221,7 @@ export const VerticalVideoPlayer = ({
           aria-label={title}
           className={cn("h-full w-full bg-black", fitClassName[fit], videoClassName)}
           controls={controls}
-          controlsList="nodownload nofullscreen"
+          controlsList="nodownload"
           onLoadedMetadata={syncVideoState}
           onPause={syncVideoState}
           onPlay={syncVideoState}

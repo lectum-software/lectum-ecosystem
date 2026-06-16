@@ -406,3 +406,12 @@ Validacoes executadas:
 - `pnpm check`
 - HTTP local em `http://localhost:3000/app/psychologist/cmq5m0vse000ftkuhybmagcn6` respondeu `200`.
 - HTTP local em `http://localhost:3000/app/psychologists` respondeu `200`.
+
+## Registro de ajuste complementar em 2026-06-16 - fullscreen do video de apresentacao
+
+- Pedido do usuario: corrigir a expansao do video de apresentacao do psicologo no perfil publico, que estava bloqueada/desabilitada.
+- O player compartilhado `VerticalVideoPlayer` deixou de bloquear fullscreen via `controlsList` e agora tenta abrir o proprio elemento de video pela Fullscreen API antes de recorrer ao lightbox de fallback.
+- Durante a tela cheia, o video usa fundo preto, `object-fit: contain`, `object-position: center` e dimensoes da viewport para preservar videos verticais sem esticar ou converter para horizontal.
+- O comportamento do card de perfil, dados public-safe, abas, WhatsApp, favoritos e layout do perfil nao foi alterado.
+- ADR atualizado: `adrs/0103-player-video-vertical-unificado.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`.

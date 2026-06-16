@@ -10,6 +10,7 @@ import {
   HandHeart,
   Heart,
   type LucideIcon,
+  Maximize2,
   Pause,
   Play,
   Search,
@@ -55,6 +56,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
+import { requestVideoFullscreen } from "@/lib/video-fullscreen";
 import { playVideoWithSound } from "@/lib/video-playback";
 import { PrivateTemplate } from "@/templates/private";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
@@ -1850,6 +1852,20 @@ export const PsychologistsLogic = () => {
       setAllVideosPlaybackRate(getNextPlaybackRate(videoPlaybackRate));
     },
     [setAllVideosPlaybackRate, stopVideoControlInteraction, videoPlaybackRate],
+  );
+
+  const handleImmersiveFullscreen = useCallback(
+    async (event: { preventDefault?: () => void; stopPropagation: () => void }) => {
+      stopVideoControlInteraction(event);
+
+      if (!shouldShowVideo) return;
+
+      await requestVideoFullscreen(backgroundVideoRef.current, {
+        forceContain: true,
+        temporaryControls: true,
+      });
+    },
+    [shouldShowVideo, stopVideoControlInteraction],
   );
 
   const handleFeedScroll = useCallback(
@@ -3721,6 +3737,21 @@ export const PsychologistsLogic = () => {
                                   type="button"
                                 >
                                   {formatPlaybackRate(videoPlaybackRate)}
+                                </button>
+
+                                <span aria-hidden="true" className="h-6 w-px bg-white/18" />
+
+                                <button
+                                  aria-label="Abrir vídeo em tela cheia"
+                                  className="grid h-9 w-9 place-items-center rounded-full text-white transition hover:bg-white/10 active:scale-95"
+                                  onClick={handleImmersiveFullscreen}
+                                  type="button"
+                                >
+                                  <Maximize2
+                                    className="h-5 w-5"
+                                    aria-hidden="true"
+                                    strokeWidth={2.4}
+                                  />
                                 </button>
                               </div>
                             </div>
