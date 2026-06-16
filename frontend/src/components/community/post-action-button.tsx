@@ -14,10 +14,10 @@ export const POST_ACTION_COUNT_CLASSNAME = `${POST_ACTION_TEXT_CLASSNAME} tabula
 
 const sizeClassName = (size: PostActionSize, iconOnly = false) => {
   const base =
-    size === "xs" ? "h-7 text-[11px]" : size === "sm" ? "h-8 text-[12px]" : "h-9 text-[12px]";
+    size === "xs" ? "h-6 text-[10px]" : size === "sm" ? "h-8 text-[12px]" : "h-9 text-[12px]";
 
   if (size === "xs") {
-    return iconOnly ? `${base} w-7 gap-0 px-0` : `${base} min-w-7 gap-1 px-2`;
+    return iconOnly ? `${base} w-6 gap-0 px-0` : `${base} min-w-6 gap-0.5 px-1.5`;
   }
 
   return iconOnly ? `${base} w-8 gap-0 px-0` : `${base} min-w-8 gap-1.5 px-2.5`;
@@ -29,7 +29,7 @@ export const postActionIconClassName = (size: PostActionSize = "md") =>
 export const postActionTextClassName = (size: PostActionSize = "md") =>
   cn(
     "min-w-[1.1ch] text-center font-semibold leading-none tracking-[-0.01em]",
-    size === "xs" ? "text-[11px]" : "text-[12px]",
+    size === "xs" ? "text-[10px]" : "text-[12px]",
   );
 
 export const postActionCountClassName = (size: PostActionSize = "md") =>

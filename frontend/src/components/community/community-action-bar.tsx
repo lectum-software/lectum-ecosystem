@@ -55,14 +55,19 @@ export type CommunityActionBarProps = {
   onVote?: (value: 1 | -1) => void;
 };
 
-const actionBarClassName =
-  "flex w-full min-w-0 items-center gap-1.5 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:gap-2 sm:overflow-visible";
+const actionBarClassName = (size: CommunityActionSize) =>
+  cn(
+    "flex w-full min-w-0 flex-nowrap items-center whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
+    size === "xs"
+      ? "gap-1 overflow-visible"
+      : "gap-1.5 overflow-x-auto sm:gap-2 sm:overflow-visible",
+  );
 
 const voteClusterClassName = (size: CommunityActionSize, presentation: VotePresentation) => {
   if (presentation === "inline") {
     return cn(
       "inline-flex shrink-0 items-center gap-0.5 overflow-visible bg-transparent p-0 ring-0",
-      size === "xs" ? "h-7" : size === "md" ? "h-9" : "h-8",
+      size === "xs" ? "h-6" : size === "md" ? "h-9" : "h-8",
     );
   }
 
@@ -81,8 +86,14 @@ const separatorClassName = (size: CommunityActionSize, presentation: VotePresent
 
 const textOnlyReplyClassName = (size: CommunityActionSize) =>
   cn(
-    "inline-flex shrink-0 items-center justify-center rounded-md font-semibold leading-none tracking-[-0.01em] text-muted transition-[color,transform] duration-200 hover:text-foreground active:scale-[0.97]",
-    size === "xs" ? "h-7 px-1.5 text-[10.5px]" : "h-8 px-2 text-[12px]",
+    "inline-flex shrink-0 items-center justify-center rounded-md leading-none tracking-[-0.01em] text-muted transition-[color,transform] duration-200 hover:text-foreground active:scale-[0.97]",
+    size === "xs" ? "h-6 rounded-full px-0.5" : "h-8 px-2",
+  );
+
+const textOnlyReplyTextClassName = (size: CommunityActionSize) =>
+  cn(
+    "block leading-none tracking-[-0.01em]",
+    size === "xs" ? "text-[9px] font-medium" : "text-[11px] font-medium",
   );
 
 export const CommunityActionBar = ({
@@ -104,8 +115,13 @@ export const CommunityActionBar = ({
   const canVote = Boolean(onVote);
 
   return (
-    <div className={cn(actionBarClassName, className)}>
-      <div className="flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-2">
+    <div className={cn(actionBarClassName(size), className)} data-community-action-bar={size}>
+      <div
+        className={cn(
+          "flex min-w-0 shrink-0 flex-nowrap items-center",
+          size === "xs" ? "gap-1" : "gap-1.5 sm:gap-2",
+        )}
+      >
         <div className={voteClusterClassName(size, votePresentation)}>
           {canVote && onVote ? (
             <VoteActionButton
@@ -171,8 +187,14 @@ export const CommunityActionBar = ({
         ) : null}
 
         {reply?.textOnly ? (
-          <button className={textOnlyReplyClassName(size)} onClick={reply.onClick} type="button">
-            {reply.label ?? "Responder"}
+          <button
+            aria-label={reply.label ?? "Responder"}
+            className={textOnlyReplyClassName(size)}
+            onClick={reply.onClick}
+            title={reply.label ?? "Responder"}
+            type="button"
+          >
+            <span className={textOnlyReplyTextClassName(size)}>{reply.label ?? "Responder"}</span>
           </button>
         ) : reply ? (
           <PostActionButton
@@ -186,7 +208,12 @@ export const CommunityActionBar = ({
         ) : null}
       </div>
 
-      <div className="ml-auto flex shrink-0 items-center gap-1">
+      <div
+        className={cn(
+          "flex shrink-0 flex-nowrap items-center",
+          size === "xs" ? "ml-0 gap-0.5" : "ml-auto gap-1",
+        )}
+      >
         {save ? (
           save.onClick ? (
             <PostActionButton

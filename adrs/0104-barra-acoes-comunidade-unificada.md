@@ -29,3 +29,9 @@ A barra passa a padronizar:
 - Novas ações de posts/comentários devem ser adicionadas ao componente compartilhado ou às primitivas existentes, evitando implementações locais.
 - A alteração é visual/estrutural no frontend e não altera regra de votação, salvamento, compartilhamento ou comentários.
 - Comentários devem solicitar `size="xs"` e, quando precisarem de ações sem cápsula, `votePresentation="inline"`, mantendo as barras de posts em `sm` por padrão.
+
+## Atualização 2026-06-16
+
+- A variante `xs` passa a manter `upvote`, `downvote`, contador, `Responder`, salvar e compartilhar sempre em uma única linha, inclusive nas camadas profundas da árvore de comentários.
+- O texto `Responder` fica em um `span` interno dedicado para preservar a escala compacta apesar do reset global `button { font: inherit; }`, mantendo o botão discreto sem ícone.
+- Salvar e compartilhar permanecem como ações de ícone em todas as camadas de resposta, sem alterar mutations, ordenação, destaque de psicólogos verificados ou contratos de API.
