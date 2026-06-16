@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { ArrowLeft, BadgeCheck, ChevronRight, Medal, Sparkles } from "lucide-react";
+import { ArrowLeft, BadgeCheck, ChevronRight, Medal } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -60,35 +60,39 @@ const getInitials = (name: string) => {
 const rankTone = (position: number) => {
   if (position === 1) {
     return {
-      avatarRing: "ring-[#D9A928]/85 shadow-[0_16px_45px_rgba(217,169,40,0.28)]",
-      badge: "border-[#F8E7AD] bg-[#C99A22] text-white",
-      medal: "text-[#C99A22]",
-      soft: "bg-[#FFF8E5] text-[#B88715]",
+      listRank: "top-mentor-list-medal top-mentor-metal--gold",
+      metal: "top-mentor-metal--gold",
+      name: "text-[#9C7924]",
+      positionMedal: "top-mentor-position-medal top-mentor-metal--gold",
+      soft: "bg-[#FFF8E5] text-[#9C7924]",
     };
   }
 
   if (position === 2) {
     return {
-      avatarRing: "ring-[#BFC7D3]/90 shadow-[0_16px_40px_rgba(148,163,184,0.26)]",
-      badge: "border-[#E5EAF0] bg-[#94A3B8] text-white",
-      medal: "text-[#7C8797]",
+      listRank: "top-mentor-list-medal top-mentor-metal--silver",
+      metal: "top-mentor-metal--silver",
+      name: "text-[#64748B]",
+      positionMedal: "top-mentor-position-medal top-mentor-metal--silver",
       soft: "bg-[#F4F6F8] text-[#64748B]",
     };
   }
 
   if (position === 3) {
     return {
-      avatarRing: "ring-[#C7834A]/85 shadow-[0_16px_40px_rgba(199,131,74,0.24)]",
-      badge: "border-[#F1D0B6] bg-[#B8733E] text-white",
-      medal: "text-[#B8733E]",
-      soft: "bg-[#FFF1E8] text-[#A85F2F]",
+      listRank: "top-mentor-list-medal top-mentor-metal--bronze",
+      metal: "top-mentor-metal--bronze",
+      name: "text-[#A8703A]",
+      positionMedal: "top-mentor-position-medal top-mentor-metal--bronze",
+      soft: "bg-[#FFF1E8] text-[#A8703A]",
     };
   }
 
   return {
-    avatarRing: "ring-[#DCE6F2]",
-    badge: "border-border bg-background text-muted",
-    medal: "text-muted",
+    listRank: "bg-background text-muted",
+    metal: "",
+    name: "text-[#182033] dark:text-foreground",
+    positionMedal: "border border-border bg-background text-muted",
     soft: "bg-background text-muted",
   };
 };
@@ -116,29 +120,45 @@ const Avatar = ({
 }) => {
   const avatarSrc = resolvePublicMediaUrl(mentor.professional.avatar);
   const tone = rankTone(mentor.position);
+  const avatarContent = avatarSrc ? (
+    <Image
+      alt={mentor.professional.name}
+      className="object-cover"
+      fill
+      sizes={`${size}px`}
+      src={avatarSrc}
+      unoptimized={isPublicMediaUrl(mentor.professional.avatar)}
+    />
+  ) : (
+    <span className="relative z-10">{getInitials(mentor.professional.name)}</span>
+  );
+
+  if (ringed && tone.metal) {
+    return (
+      <span
+        className={cn(
+          "top-mentor-metal-ring grid shrink-0 place-items-center p-[5px]",
+          tone.metal,
+          className,
+        )}
+        style={{ height: size, width: size }}
+      >
+        <span className="relative z-10 grid h-full w-full place-items-center overflow-hidden rounded-full border-[3px] border-white bg-primary-soft text-sm font-black text-primary">
+          {avatarContent}
+        </span>
+      </span>
+    );
+  }
 
   return (
     <span
       className={cn(
         "relative grid shrink-0 place-items-center overflow-hidden rounded-full border-4 border-white bg-primary-soft text-sm font-black text-primary shadow-[var(--lectum-shadow-soft)]",
-        ringed && "ring-[5px]",
-        ringed && tone.avatarRing,
         className,
       )}
       style={{ height: size, width: size }}
     >
-      {avatarSrc ? (
-        <Image
-          alt={mentor.professional.name}
-          className="object-cover"
-          fill
-          sizes={`${size}px`}
-          src={avatarSrc}
-          unoptimized={isPublicMediaUrl(mentor.professional.avatar)}
-        />
-      ) : (
-        getInitials(mentor.professional.name)
-      )}
+      {avatarContent}
     </span>
   );
 };
@@ -166,31 +186,25 @@ const PodiumMentor = ({
       href={mentor.professional.profile_url}
     >
       <span
-        className="lectum-top-mentor-float relative grid place-items-center"
+        className="lectum-top-mentor-float relative grid overflow-visible place-items-center"
         style={{ animationDelay: delay }}
       >
-        <span
-          className={cn(
-            "absolute rounded-full opacity-60 blur-2xl",
-            isWinner ? "inset-1 bg-[#FFE8A3]" : "inset-0 bg-white",
-          )}
-          aria-hidden="true"
-        />
         <Avatar mentor={mentor} ringed size={size} />
         <span
           className={cn(
-            "absolute grid place-items-center rounded-full border-2 border-white text-[0.68rem] font-black shadow-[0_8px_18px_rgba(15,23,42,0.16)]",
+            "absolute grid place-items-center rounded-full border-2 border-white text-[0.68rem] font-black",
             isWinner ? "-right-1 top-2 h-9 w-9" : "-right-2 -top-1 h-8 w-8",
-            tone.badge,
+            tone.positionMedal,
           )}
         >
-          {mentor.position}º
+          <span>{mentor.position}º</span>
         </span>
       </span>
       <span
         className={cn(
-          "max-w-full truncate font-black tracking-[-0.02em] transition group-hover:text-primary",
-          isWinner ? "text-lg text-[#B88715]" : "text-xs text-muted",
+          "max-w-full truncate font-black tracking-[-0.02em] transition",
+          isWinner ? "text-lg" : "text-xs",
+          tone.name,
         )}
       >
         {mentor.professional.name}
@@ -211,27 +225,8 @@ const RankingHero = ({
   const third = mentors[2];
 
   return (
-    <section className="relative box-border w-full min-w-0 max-w-full overflow-hidden rounded-[2rem] px-3 pt-8 pb-7 sm:px-6 sm:pt-10">
-      <style>
-        {`
-          @keyframes lectumTopMentorFloat {
-            0%, 100% { transform: translate3d(0, 0, 0); }
-            50% { transform: translate3d(0, -7px, 0); }
-          }
-
-          .lectum-top-mentor-float {
-            animation: lectumTopMentorFloat 5.4s ease-in-out infinite;
-          }
-
-          @media (prefers-reduced-motion: reduce) {
-            .lectum-top-mentor-float {
-              animation: none !important;
-            }
-          }
-        `}
-      </style>
-      <div className="pointer-events-none absolute inset-x-0 top-24 h-56 rounded-full bg-[radial-gradient(circle_at_center,rgba(48,140,232,0.12),transparent_68%)]" />
-      <div className="relative grid w-full min-w-0 justify-items-center gap-8 text-center">
+    <section className="relative box-border w-full min-w-0 max-w-full overflow-visible px-1 pt-5 pb-8 sm:px-6 sm:pt-8">
+      <div className="relative grid w-full min-w-0 justify-items-center gap-9 overflow-visible text-center">
         <div className="grid w-full min-w-0 gap-1.5">
           <h1 className="min-w-0 max-w-full text-2xl font-black leading-tight tracking-[-0.04em] text-[#182033] sm:text-3xl dark:text-foreground">
             Top 5 Mentores em
@@ -242,21 +237,21 @@ const RankingHero = ({
         </div>
 
         {first ? (
-          <div className="flex w-full min-w-0 max-w-full items-end justify-center gap-2 overflow-hidden sm:gap-8">
+          <div className="flex w-full min-w-0 max-w-full items-end justify-center gap-3 overflow-visible sm:gap-10">
             {second ? (
               <PodiumMentor
-                className="mb-7 max-w-[5.8rem] sm:max-w-[7rem]"
+                className="mb-7 max-w-[6.2rem] sm:max-w-[7.5rem]"
                 mentor={second}
-                size={72}
+                size={84}
                 delay="0.35s"
               />
             ) : null}
-            <PodiumMentor className="max-w-[10rem] sm:max-w-[12rem]" mentor={first} size={128} />
+            <PodiumMentor className="max-w-[10.5rem] sm:max-w-[12rem]" mentor={first} size={142} />
             {third ? (
               <PodiumMentor
-                className="mb-7 max-w-[5.8rem] sm:max-w-[7rem]"
+                className="mb-7 max-w-[6.2rem] sm:max-w-[7.5rem]"
                 mentor={third}
-                size={72}
+                size={84}
                 delay="0.7s"
               />
             ) : null}
@@ -267,47 +262,50 @@ const RankingHero = ({
   );
 };
 
-const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => (
-  <Link
-    className="group flex w-full min-w-0 max-w-full items-center gap-3 overflow-hidden rounded-[1.35rem] border border-[#E5EAF0] bg-white px-3.5 py-3.5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_16px_36px_rgba(15,23,42,0.09)] dark:border-border dark:bg-surface"
-    href={mentor.professional.profile_url}
-  >
-    <span
-      className={cn(
-        "grid h-11 w-11 shrink-0 place-items-center gap-0.5 rounded-2xl text-xs font-black",
-        rankTone(mentor.position).soft,
-      )}
+const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
+  const tone = rankTone(mentor.position);
+  const isTopThree = mentor.position <= 3;
+
+  return (
+    <Link
+      className="group flex w-full min-w-0 max-w-full items-center gap-3 overflow-visible rounded-[1.35rem] border border-[#E5EAF0] bg-white px-3.5 py-3.5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_16px_36px_rgba(15,23,42,0.09)] dark:border-border dark:bg-surface"
+      href={mentor.professional.profile_url}
     >
-      {mentor.position <= 3 ? (
-        <Medal className={cn("h-4 w-4", rankTone(mentor.position).medal)} aria-hidden="true" />
-      ) : null}
-      <span>{String(mentor.position).padStart(2, "0")}</span>
-    </span>
-    <Avatar mentor={mentor} ringed={mentor.position <= 3} size={58} />
-    <span className="min-w-0 flex-1">
-      <span className="flex min-w-0 items-center gap-1.5">
-        <strong className="truncate text-base font-black tracking-[-0.02em] text-[#182033] dark:text-foreground">
-          {mentor.professional.name}
-        </strong>
-        <BadgeCheck
-          className="h-4.5 w-4.5 shrink-0 fill-[#2da7ff] text-white"
-          aria-label="Profissional verificado"
-        />
+      <span
+        className={cn(
+          "grid h-12 w-12 shrink-0 place-items-center gap-0.5 rounded-2xl text-xs font-black",
+          isTopThree ? tone.listRank : tone.soft,
+        )}
+      >
+        {isTopThree ? <Medal className="h-4 w-4" aria-hidden="true" /> : null}
+        <span>{String(mentor.position).padStart(2, "0")}</span>
       </span>
-      <span className="mt-0.5 block truncate text-[11px] font-black uppercase tracking-[0.08em] text-[#64748B] dark:text-muted">
-        {professionLabel(mentor)}
+      <Avatar mentor={mentor} ringed={isTopThree} size={62} />
+      <span className="min-w-0 flex-1">
+        <span className="flex min-w-0 items-center gap-1.5">
+          <strong className="truncate text-base font-black tracking-[-0.02em] text-[#182033] dark:text-foreground">
+            {mentor.professional.name}
+          </strong>
+          <BadgeCheck
+            className="h-4.5 w-4.5 shrink-0 fill-[#2da7ff] text-white"
+            aria-label="Profissional verificado"
+          />
+        </span>
+        <span className="mt-0.5 block truncate text-[11px] font-black uppercase tracking-[0.08em] text-[#64748B] dark:text-muted">
+          {professionLabel(mentor)}
+        </span>
       </span>
-    </span>
-    <ChevronRight className="h-5 w-5 shrink-0 text-[#CBD5E1] transition group-hover:translate-x-1 group-hover:text-primary" />
-  </Link>
-);
+      <ChevronRight className="h-5 w-5 shrink-0 text-[#CBD5E1] transition group-hover:translate-x-1 group-hover:text-primary" />
+    </Link>
+  );
+};
 
 export const CommunityTopMentorsLogic = () => {
   const searchParams = useSearchParams();
   const community = searchParams.get("community") || undefined;
   const query = useMemo(() => ({ community, limit: 5, period: "all" as const }), [community]);
   const ranking = useCommunityTopMentors(query);
-  const mentors = ranking.data?.data ?? [];
+  const mentors = (ranking.data?.data ?? []).slice(0, 5);
   const communityName = ranking.data?.community?.name ?? "Comunidades Lectum";
   const errorMessage = ranking.isError ? resolveRankingError(ranking.error) : null;
 
@@ -354,18 +352,13 @@ export const CommunityTopMentorsLogic = () => {
 
         {mentors.length > 0 ? (
           <section className="grid min-w-0 gap-4">
-            <div className="flex min-w-0 items-start justify-between gap-4">
-              <div className="grid min-w-0 gap-1">
-                <p className="text-xs font-medium uppercase tracking-[0.14em] text-[#64748B]">
-                  Classificação geral
-                </p>
-                <h2 className="break-words text-2xl font-black tracking-tight text-foreground [overflow-wrap:anywhere]">
-                  Profissionais que mais acolhem e contribuem com a comunidade
-                </h2>
-              </div>
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
-                <Sparkles className="h-5 w-5" aria-hidden="true" />
-              </span>
+            <div className="grid min-w-0 gap-1.5">
+              <h2 className="text-sm font-black uppercase tracking-[0.16em] text-[#182033] dark:text-foreground">
+                Classificação geral
+              </h2>
+              <p className="max-w-2xl text-sm font-medium leading-relaxed text-[#64748B] dark:text-muted">
+                Profissionais que mais acolhem e contribuem com a comunidade.
+              </p>
             </div>
 
             <div className="grid min-w-0 gap-3">
