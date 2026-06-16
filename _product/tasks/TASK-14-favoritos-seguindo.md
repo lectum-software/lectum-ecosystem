@@ -250,7 +250,7 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - A foto circular do psicólogo virou o principal ponto de atenção; quando não há avatar real, o card usa fallback de iniciais, sem mockar imagem.
 - O coração preenchido ativo permanece no canto superior direito como controle discreto de remoção do favorito.
 - A bolinha verde pulsante usa apenas o dado real `available_today`, evitando simular um estado online inexistente na API.
-- As informações do card foram reduzidas para nome + selo verificado, `Psicólogo/Psicóloga` e botão `Chamar no WhatsApp`.
+- As informações do card foram reduzidas para nome + selo verificado, `Psicólogo` e botão `Chamar no WhatsApp`.
 - Foram removidos do card especialidades, abordagens, área, experiência, avaliações, tags comerciais e demais metadados.
 - O CTA de WhatsApp agora é preenchido em verde, com texto branco e ícone à esquerda, mantendo o fluxo real `PsychologistWhatsAppRedirectButton`.
 - Não houve alteração de backend, Prisma, migrations, packages, endpoints, filtros, paginação, favoritos ou tracking de contato.

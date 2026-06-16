@@ -138,9 +138,7 @@ const getInitials = (name: string) => {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
 
-const getProfession = (gender?: string | null) => {
-  return gender?.toLowerCase() === "feminino" ? "Psicóloga" : "Psicólogo";
-};
+const getProfession = () => "Psicólogo";
 
 const getContactProfession = (gender?: string | null) => {
   return gender?.toLowerCase() === "feminino" ? "Psic\u00f3loga" : "Psic\u00f3logo";
@@ -214,7 +212,7 @@ const FavoritePsychologistCard = ({
   psychologist: PatientRelationPsychologist;
 }) => {
   const route = `/app/psychologist/${psychologist.id}`;
-  const profession = getProfession(psychologist.gender);
+  const profession = getProfession();
 
   const handleFavoriteClick = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();

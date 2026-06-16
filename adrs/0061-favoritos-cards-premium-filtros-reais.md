@@ -86,7 +86,7 @@ A referência externa anexada pelo usuário foi `c:/Users/tulio/Downloads/WhatsA
 - Tornar o avatar circular o elemento principal do card, usando apenas `avatar` real do psicólogo e fallback de iniciais quando não houver imagem.
 - Exibir coração preenchido ativo no canto superior direito como controle de remoção, sem usar o “X” da referência.
 - Usar o campo real `available_today` para renderizar a bolinha verde pulsante sobre o avatar; não foi criado estado online artificial.
-- Reduzir as informações do card para nome + selo verificado, tipo profissional e CTA “Chamar no WhatsApp”.
+- Reduzir as informações do card para nome + selo verificado, tipo profissional fixo `Psicólogo` e CTA “Chamar no WhatsApp”.
 - Remover do card especialidades, abordagens, área, experiência, avaliação, tags comerciais e demais metadados.
 - Transformar o CTA em botão preenchido verde WhatsApp, com ícone à esquerda, largura total, hover suave e press state discreto.
 
