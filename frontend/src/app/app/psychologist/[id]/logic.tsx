@@ -183,9 +183,6 @@ const formatDate = (value: string | null) => {
   }).format(new Date(value));
 };
 
-const formatPublicationsCount = (total: number) =>
-  `${total} ${total === 1 ? "publicação" : "publicações"} deste profissional`;
-
 const scrollProfileContentIntoView = () => {
   if (typeof window === "undefined") return;
 
@@ -315,23 +312,23 @@ const ProfileInfoCard = ({
   value: string;
 }) => (
   <article className={cn(PROFILE_SUBTLE_SURFACE, compact ? "px-3.5 py-3" : "px-4 py-3.5")}>
-    <div className="flex min-h-0 items-start justify-between gap-3">
+    <div className="flex min-h-0 items-start gap-3">
+      <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full text-[#247BD1]/75">
+        <Icon className="h-[15px] w-[15px]" aria-hidden="true" />
+      </span>
       <div className="min-w-0 flex-1">
+        <p className="text-[9.75px] font-semibold uppercase leading-none tracking-[0.06em] text-[#64748B]">
+          {label}
+        </p>
         <p
           className={cn(
-            "break-words text-[13.25px] font-bold leading-[1.42] tracking-[-0.01em] text-[#182033]",
+            "mt-1.5 break-words text-[13.25px] font-bold leading-[1.42] tracking-[-0.01em] text-[#182033]",
             compact ? "line-clamp-3" : "line-clamp-4",
           )}
         >
           {value}
         </p>
-        <p className="mt-1.5 text-[9.75px] font-semibold uppercase leading-none tracking-[0.06em] text-[#64748B]">
-          {label}
-        </p>
       </div>
-      <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full text-[#247BD1]/75">
-        <Icon className="h-[15px] w-[15px]" aria-hidden="true" />
-      </span>
     </div>
   </article>
 );
@@ -341,21 +338,35 @@ const ProfileSectionCard = ({
   children,
   className,
   title,
+  titleAccessory,
 }: {
   action?: ReactNode;
   children: ReactNode;
   className?: string;
   title: string;
+  titleAccessory?: ReactNode;
 }) => (
   <section className={cn(PROFILE_CARD_SURFACE, "p-[18px] sm:p-5", className)}>
     <div className="flex items-center justify-between gap-3">
-      <h2 className="text-[1.08rem] font-extrabold leading-tight tracking-[-0.025em] text-[#182033] dark:text-foreground">
-        {title}
-      </h2>
+      <div className="flex min-w-0 items-center gap-2">
+        <h2 className="text-[1.08rem] font-extrabold leading-tight tracking-[-0.025em] text-[#182033] dark:text-foreground">
+          {title}
+        </h2>
+        {titleAccessory}
+      </div>
       {action}
     </div>
     {children}
   </section>
+);
+
+const PublicationCountChip = ({ total }: { total: number }) => (
+  <span
+    className="inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full border border-[#D7E8FA] bg-[#F4FAFF] px-2 text-[11px] font-extrabold leading-none text-[#247BD1] shadow-[0_4px_10px_rgba(47,141,235,0.035)]"
+    title={`${total} ${total === 1 ? "publicação" : "publicações"}`}
+  >
+    {total.toLocaleString("pt-BR")}
+  </span>
 );
 
 const ProfileChipList = ({
@@ -1226,13 +1237,7 @@ const ProfileCommunityPostCard = ({
     interactiveActions={canInteract}
     onShare={onShare}
     post={post}
-    statusBadge={
-      post.contribution_type === "reply" ? (
-        <span className="shrink-0 rounded-full border border-[#D8ECFF] bg-[#F4FAFF] px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.06em] text-primary">
-          Resposta
-        </span>
-      ) : null
-    }
+    profilePublicationMode
   />
 );
 
@@ -1261,15 +1266,8 @@ const PostsPreviewSection = ({
         total > 0 ? <ViewAllChipButton onClick={onViewAll}>Ver todas</ViewAllChipButton> : null
       }
       title="Publicações"
+      titleAccessory={<PublicationCountChip total={total} />}
     >
-      <div className="mt-1.5">
-        <p className="text-[13px] leading-[1.6] text-[#64748B]">
-          {total > 0
-            ? formatPublicationsCount(total)
-            : "Este profissional ainda não possui publicações públicas."}
-        </p>
-      </div>
-
       {isError ? (
         <p className="mt-3 rounded-[12px] border border-[#FECACA] bg-[#FEF2F2] px-3 py-2 text-[11px] leading-[1.4] text-[#991B1B]">
           Não foi possível carregar a prévia de publicações.
@@ -1282,6 +1280,12 @@ const PostsPreviewSection = ({
         <div className="mt-3">
           <ProfileCommunityPostCard canInteract={canInteract} onShare={onShare} post={firstPost} />
         </div>
+      ) : null}
+
+      {!isLoading && !isError && !firstPost ? (
+        <p className="mt-3 text-[13px] leading-[1.6] text-[#64748B]">
+          Este profissional ainda não possui publicações públicas.
+        </p>
       ) : null}
     </ProfileSectionCard>
   );
@@ -1411,10 +1415,12 @@ const PostsTab = ({
   return (
     <div className="grid gap-3.5 bg-[#F5F7FA] px-3 pb-1 pt-3.5 dark:bg-background sm:px-4 sm:pt-4">
       <div className={cn(PROFILE_CARD_SURFACE, "p-4 sm:p-5")}>
-        <p className="text-[15px] font-extrabold tracking-[-0.02em] text-[#182033]">Publicações</p>
-        <p className="mt-0.5 text-[13px] font-medium leading-[1.55] text-[#64748B]">
-          {formatPublicationsCount(total)}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-[15px] font-extrabold tracking-[-0.02em] text-[#182033]">
+            Publicações
+          </p>
+          <PublicationCountChip total={total} />
+        </div>
       </div>
 
       {isError ? (
@@ -1841,10 +1847,11 @@ export const PsychologistProfileLogic = () => {
       contentClassName="!pt-0 bg-[#F5F7FA] dark:bg-background sm:!pt-0"
       desktopSidebarDefaultCollapsed
       showNavigation
+      showMobileNavigation={false}
     >
       <div className="-mx-5 overflow-x-hidden bg-[#F5F7FA] dark:bg-background">
         <section className="mx-auto grid w-screen max-w-[430px] bg-[#F5F7FA] dark:bg-background sm:max-w-[430px] lg:max-w-[760px]">
-          <div className="grid gap-0 pb-28 lg:pb-10">
+          <div className="grid gap-0 pb-32 lg:pb-10">
             {shareFeedback ? (
               <div className="mx-3 pt-3">
                 <InlineAlert title="Link copiado" variant="success">

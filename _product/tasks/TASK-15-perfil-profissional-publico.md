@@ -480,3 +480,24 @@ Validações executadas:
 - API local `200` em `http://localhost:3001/api/private/directory/psychologists/demo-psychologist-camila-rocha/posts?limit=2`, retornando `contribution_type`, comunidade, post original e resposta profissional com mídia.
 - Chrome/CDP mobile 390px em `http://localhost:3000/app/psychologist/demo-psychologist-camila-rocha` confirmou `Avaliações`/`Publicações` com `Ver todas` na linha do título, texto `3 publicações deste profissional` e card real com resposta profissional destacada.
 - Chrome/CDP desktop 1440px confirmou o mesmo card com mídia em vídeo e barra de ações completa.
+
+## Registro de ajuste complementar em 2026-06-16 - Publicacoes compactas e WhatsApp mobile unico
+
+- Ajuste solicitado para a aba `Publicacoes` do perfil publico e para o comportamento mobile da rota `/app/psychologist/[id]`, sem alterar backend, banco, Prisma, contratos, ordenacao de publicacoes ou regras de destaque.
+- O cabecalho de `Publicacoes` deixou de exibir a frase `X publicacoes deste profissional` e agora usa um chip numerico discreto ao lado do titulo.
+- `CommunityPostCard` ganhou o modo opcional `profilePublicationMode` para reutilizar o card real de comunidade no perfil removendo ruidos especificos: chip `Resposta`, rotulo `Resposta profissional em destaque`, titulo interno de respostas e CTA de WhatsApp dentro do card.
+- Em contribuicoes do tipo resposta, o card passa a priorizar a autoria e o texto real da resposta do psicologo, com selo verificado preenchido e Top Mentor na mesma linha do nome, usando truncamento do nome quando necessario.
+- Textos de posts e respostas no perfil ficaram limitados a duas linhas com acao inline `... ver mais`, mantendo o padrao compacto do feed.
+- No mobile, a navegacao inferior do shell privado foi ocultada apenas no perfil do psicologo; o CTA fixo de WhatsApp permanece como acao principal no rodape e o conteudo recebeu padding inferior extra para evitar sobreposicao.
+- Os cards de `Atendimento` agora colocam a label acima do valor principal, com icone lateral discreto, reforcando a hierarquia `categoria -> informacao`.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a validacao visual foi feita no browser local com dados reais do perfil demo e consistencia com a familia visual de perfil/comunidade.
+- ADR criado: `adrs/0110-publicacoes-perfil-mobile-whatsapp-unico.md`.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome headless mobile 390px em `http://localhost:3000/app/psychologist/demo-psychologist-camila-rocha?tab=publicacoes` confirmou chip numerico em `Publicacoes`, ausencia da nav inferior mobile, CTA fixo de WhatsApp e card com nome/selo/Top Mentor na mesma linha.
+- Chrome headless desktop 1440px confirmou layout desktop preservado, titulo `Publicacoes` com chip e publicacao no padrao de card real da comunidade.
+- Chrome headless mobile 390px em `http://localhost:3000/app/psychologist/demo-psychologist-camila-rocha` confirmou `Atendimento` com labels acima dos valores e CTA fixo sem encobrir a leitura.

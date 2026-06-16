@@ -3,12 +3,19 @@
 import { BadgeCheck, FileText, UserX } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { type ReactNode, useState } from "react";
+import {
+  type MouseEvent as ReactMouseEvent,
+  type ReactNode,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { useSavePost, useVotePost } from "@/api/callers/posts";
 import type { PostListPost, PostProfessionalReply } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { MentorBadge } from "@/components/community/mentor-badge";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
+import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
@@ -20,9 +27,18 @@ type CommunityPostCardProps = {
   interactiveActions?: boolean;
   onShare: (post: PostListPost) => void;
   post: PostListPost;
+  profilePublicationMode?: boolean;
   showCommunityHeader?: boolean;
   statusBadge?: ReactNode;
 };
+
+type ProfileContributionPost = PostListPost & {
+  contribution_type?: "post" | "reply";
+};
+
+const INLINE_TEXT_MAX_LINES = 2;
+const INLINE_TEXT_MORE_LABEL = "... ver mais";
+const INLINE_TEXT_LESS_LABEL = "ver menos";
 
 const formatRelativeTime = (value: string) => {
   const date = new Date(value);
@@ -51,6 +67,138 @@ const getInitials = (name: string) => {
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
 
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+};
+
+const InlineExpandableText = ({
+  className,
+  expanded,
+  onToggle,
+  text,
+}: {
+  className?: string;
+  expanded: boolean;
+  onToggle: (event: ReactMouseEvent<HTMLButtonElement>) => void;
+  text: string;
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const measureRef = useRef<HTMLParagraphElement>(null);
+  const [preview, setPreview] = useState(text);
+  const [truncated, setTruncated] = useState(false);
+
+  useLayoutEffect(() => {
+    const containerNode = containerRef.current;
+    const measureNode = measureRef.current;
+
+    if (!containerNode || !measureNode) return;
+
+    let animationFrame = 0;
+    let cancelled = false;
+
+    const lineHeightPx = () => {
+      const styles = window.getComputedStyle(measureNode);
+      const parsedLineHeight = Number.parseFloat(styles.lineHeight);
+
+      if (Number.isFinite(parsedLineHeight)) return parsedLineHeight;
+
+      const parsedFontSize = Number.parseFloat(styles.fontSize);
+      return Number.isFinite(parsedFontSize) ? parsedFontSize * 1.5 : 24;
+    };
+
+    const fitsWithinMaxLines = (value: string) => {
+      measureNode.textContent = value;
+
+      return measureNode.scrollHeight <= lineHeightPx() * INLINE_TEXT_MAX_LINES + 1;
+    };
+
+    const measure = () => {
+      if (cancelled) return;
+
+      const availableWidth = containerNode.getBoundingClientRect().width;
+      const normalizedText = text.trimEnd();
+
+      if (availableWidth <= 0 || normalizedText.length === 0) {
+        setPreview(text);
+        setTruncated(false);
+        return;
+      }
+
+      measureNode.style.width = `${availableWidth}px`;
+
+      if (fitsWithinMaxLines(normalizedText)) {
+        setPreview(text);
+        setTruncated(false);
+        return;
+      }
+
+      let low = 0;
+      let high = normalizedText.length;
+      let bestPreview = "";
+
+      while (low <= high) {
+        const middle = Math.floor((low + high) / 2);
+        const candidatePreview = normalizedText.slice(0, middle).trimEnd();
+        const candidate = `${candidatePreview} ${INLINE_TEXT_MORE_LABEL}`;
+
+        if (fitsWithinMaxLines(candidate)) {
+          bestPreview = candidatePreview;
+          low = middle + 1;
+        } else {
+          high = middle - 1;
+        }
+      }
+
+      setPreview(bestPreview || normalizedText.slice(0, 1));
+      setTruncated(true);
+    };
+
+    const scheduleMeasure = () => {
+      window.cancelAnimationFrame(animationFrame);
+      animationFrame = window.requestAnimationFrame(measure);
+    };
+
+    scheduleMeasure();
+
+    const resizeObserver = new ResizeObserver(scheduleMeasure);
+    resizeObserver.observe(containerNode);
+
+    if ("fonts" in document) {
+      void document.fonts.ready.then(scheduleMeasure);
+    }
+
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(animationFrame);
+      resizeObserver.disconnect();
+    };
+  }, [text]);
+
+  return (
+    <div className="relative min-w-0 max-w-full" ref={containerRef}>
+      <p className={cn("whitespace-pre-line", className)}>
+        {expanded || !truncated ? text : preview}
+        {truncated ? (
+          <>
+            {" "}
+            <button
+              className="pointer-events-auto inline cursor-pointer rounded-none border-0 bg-transparent p-0 align-baseline font-[inherit] text-[#64748B]/80 [font-size:inherit] [line-height:inherit] dark:text-muted/80"
+              onClick={onToggle}
+              type="button"
+            >
+              {expanded ? INLINE_TEXT_LESS_LABEL : INLINE_TEXT_MORE_LABEL}
+            </button>
+          </>
+        ) : null}
+      </p>
+      <p
+        aria-hidden="true"
+        className={cn(
+          "pointer-events-none invisible absolute inset-x-0 top-0 whitespace-pre-line",
+          className,
+        )}
+        ref={measureRef}
+      />
+    </div>
+  );
 };
 
 const postDetailHref = (post: PostListPost) =>
@@ -160,16 +308,26 @@ const MediaBlock = ({
   );
 };
 
-const ProfessionalReplyPreview = ({ reply }: { reply: PostProfessionalReply | null }) => {
+const ProfessionalReplyPreview = ({
+  profilePublicationMode,
+  reply,
+}: {
+  profilePublicationMode?: boolean;
+  reply: PostProfessionalReply | null;
+}) => {
+  const [contentExpanded, setContentExpanded] = useState(false);
+
   if (!reply) return null;
 
   const profileHref = `/app/psychologist/${reply.author.id}`;
 
   return (
     <div className="rounded-[18px] border border-[#D8ECFF] bg-[#F4FAFF] p-4 dark:border-primary/20 dark:bg-primary/5">
-      <p className="mb-3 text-[11px] font-black uppercase tracking-[0.08em] text-primary">
-        Resposta profissional em destaque
-      </p>
+      {!profilePublicationMode ? (
+        <p className="mb-3 text-[11px] font-black uppercase tracking-[0.08em] text-primary">
+          Resposta profissional em destaque
+        </p>
+      ) : null}
       <div className="mb-2 flex items-center gap-2">
         <AuthorAvatar
           avatar={reply.author.avatar}
@@ -178,19 +336,32 @@ const ProfessionalReplyPreview = ({ reply }: { reply: PostProfessionalReply | nu
           size="lg"
         />
         <div className="grid min-w-0 gap-1">
-          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+          <div
+            className={cn(
+              "flex min-w-0 items-center gap-x-2 gap-y-1",
+              profilePublicationMode ? "flex-nowrap overflow-hidden" : "flex-wrap",
+            )}
+          >
             <span className="inline-flex min-w-0 items-center gap-[5px]">
               <Link
-                className="truncate text-sm font-black text-foreground no-underline transition hover:text-foreground hover:no-underline"
+                className="min-w-0 truncate text-sm font-black text-foreground no-underline transition hover:text-foreground hover:no-underline"
                 href={profileHref}
               >
                 {reply.author.name}
               </Link>
               {reply.author.verified ? (
-                <BadgeCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                profilePublicationMode ? (
+                  <VerifiedBadgeIcon className="h-4 w-4 shrink-0" aria-label="Perfil verificado" />
+                ) : (
+                  <BadgeCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                )
               ) : null}
             </span>
-            <MentorBadge badge={reply.author.featured_badge} href={profileHref} />
+            <MentorBadge
+              badge={reply.author.featured_badge}
+              className={profilePublicationMode ? "max-w-[124px]" : undefined}
+              href={profileHref}
+            />
           </div>
           <Link
             className="w-fit text-[11px] font-semibold text-muted no-underline transition hover:text-muted hover:no-underline"
@@ -201,10 +372,23 @@ const ProfessionalReplyPreview = ({ reply }: { reply: PostProfessionalReply | nu
           </Link>
         </div>
       </div>
-      {reply.title ? (
+      {reply.title && !profilePublicationMode ? (
         <h4 className="mb-1 text-sm font-black text-foreground">{reply.title}</h4>
       ) : null}
-      <p className="text-sm leading-6 text-muted">{reply.content}</p>
+      {profilePublicationMode ? (
+        <InlineExpandableText
+          className="text-sm leading-6 text-muted"
+          expanded={contentExpanded}
+          onToggle={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            setContentExpanded((current) => !current);
+          }}
+          text={reply.content}
+        />
+      ) : (
+        <p className="text-sm leading-6 text-muted">{reply.content}</p>
+      )}
       <div className="mt-3">
         <MediaBlock
           alt={reply.title ?? "Mídia da resposta profissional"}
@@ -212,7 +396,7 @@ const ProfessionalReplyPreview = ({ reply }: { reply: PostProfessionalReply | nu
           mediaUrl={reply.media_url}
         />
       </div>
-      {reply.author.whatsapp_url ? (
+      {reply.author.whatsapp_url && !profilePublicationMode ? (
         <PsychologistWhatsAppRedirectButton
           className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-surface text-sm font-bold text-foreground transition hover:bg-surface-muted"
           psychologist={{
@@ -238,16 +422,32 @@ export const CommunityPostCard = ({
   interactiveActions = false,
   onShare,
   post,
+  profilePublicationMode = false,
   showCommunityHeader = true,
   statusBadge,
 }: CommunityPostCardProps) => {
-  const isPsychologistPost = post.author.role === "psicologo";
-  const isAnonymousPatient = !isPsychologistPost && post.anonymous;
+  const contributionType = (post as ProfileContributionPost).contribution_type;
+  const primaryReply =
+    profilePublicationMode && contributionType === "reply"
+      ? post.highlighted_professional_reply
+      : null;
+  const displayAuthor = primaryReply?.author ?? post.author;
+  const displayCreatedAt = primaryReply?.created_at ?? post.created_at;
+  const displayTitle = primaryReply ? null : post.title;
+  const displayContent = primaryReply?.content ?? post.content;
+  const displayMediaType = primaryReply?.media_type ?? post.media_type;
+  const displayMediaUrl = primaryReply?.media_url ?? post.media_url;
+  const displayFeaturedBadge =
+    primaryReply?.author.featured_badge ?? displayAuthor.featured_badge ?? post.featured_badge;
+  const highlightedProfessionalReply = primaryReply ? null : post.highlighted_professional_reply;
+  const isPsychologistPost = displayAuthor.role === "psicologo";
+  const isAnonymousPatient = !primaryReply && !isPsychologistPost && post.anonymous;
   const psychologistProfileHref = isPsychologistPost
-    ? `/app/psychologist/${post.author.id}`
+    ? `/app/psychologist/${displayAuthor.id}`
     : undefined;
   const voteMutation = useVotePost(post.id);
   const saveMutation = useSavePost(post.id);
+  const [contentExpanded, setContentExpanded] = useState(false);
   const [voteOverride, setVoteOverride] = useState<{
     currentVote: 1 | -1 | null;
     postId: string;
@@ -349,29 +549,41 @@ export const CommunityPostCard = ({
       <div className="mb-3 flex items-start gap-3">
         <AuthorAvatar
           anonymous={isAnonymousPatient}
-          avatar={post.author.avatar}
+          avatar={displayAuthor.avatar}
           href={psychologistProfileHref}
-          name={post.author.name}
+          name={displayAuthor.name}
         />
         <div className="grid min-w-0 flex-1 gap-1">
-          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+          <div
+            className={cn(
+              "flex min-w-0 items-center gap-x-2 gap-y-1",
+              profilePublicationMode ? "flex-nowrap overflow-hidden" : "flex-wrap",
+            )}
+          >
             <div className="flex min-w-0 items-center gap-[5px]">
               {psychologistProfileHref ? (
                 <Link
-                  className="truncate text-sm font-black text-foreground no-underline transition hover:text-foreground hover:no-underline"
+                  className="min-w-0 truncate text-sm font-black text-foreground no-underline transition hover:text-foreground hover:no-underline"
                   href={psychologistProfileHref}
                 >
-                  {post.author.name}
+                  {displayAuthor.name}
                 </Link>
               ) : (
-                <h2 className="truncate text-sm font-black text-foreground">{post.author.name}</h2>
+                <h2 className="min-w-0 truncate text-sm font-black text-foreground">
+                  {displayAuthor.name}
+                </h2>
               )}
-              {post.author.verified ? (
-                <BadgeCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+              {displayAuthor.verified ? (
+                profilePublicationMode ? (
+                  <VerifiedBadgeIcon className="h-4 w-4 shrink-0" aria-label="Perfil verificado" />
+                ) : (
+                  <BadgeCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                )
               ) : null}
             </div>
             <MentorBadge
-              badge={post.author.featured_badge ?? post.featured_badge}
+              badge={displayFeaturedBadge}
+              className={profilePublicationMode ? "max-w-[124px]" : undefined}
               href={psychologistProfileHref}
             />
           </div>
@@ -380,30 +592,55 @@ export const CommunityPostCard = ({
               className="w-fit text-[11px] font-semibold text-muted no-underline transition hover:text-muted hover:no-underline"
               href={psychologistProfileHref}
             >
-              {post.author.type_label} <span aria-hidden="true">&bull;</span>{" "}
-              {formatRelativeTime(post.created_at)}
+              {displayAuthor.type_label} <span aria-hidden="true">&bull;</span>{" "}
+              {formatRelativeTime(displayCreatedAt)}
             </Link>
           ) : (
             <p className="text-[11px] font-semibold text-muted">
-              {formatRelativeTime(post.created_at)}
+              {formatRelativeTime(displayCreatedAt)}
             </p>
           )}
         </div>
       </div>
 
       <div className="grid gap-2">
-        <Link
-          className="text-[1.32rem] font-black leading-[1.18] tracking-[-0.02em] text-foreground underline-offset-4 transition hover:text-primary hover:underline"
-          href={postDetailHref(post)}
-        >
-          {post.title}
-        </Link>
-        <p className="whitespace-pre-line text-sm leading-6 text-muted">{post.content}</p>
+        {displayTitle ? (
+          <Link
+            className={cn(
+              "text-[1.32rem] font-black leading-[1.18] tracking-[-0.02em] text-foreground underline-offset-4 transition hover:text-primary hover:underline",
+              profilePublicationMode && "line-clamp-2 text-[1.08rem] leading-[1.22]",
+            )}
+            href={postDetailHref(post)}
+          >
+            {displayTitle}
+          </Link>
+        ) : null}
+        {profilePublicationMode ? (
+          <InlineExpandableText
+            className="text-sm leading-6 text-muted"
+            expanded={contentExpanded}
+            onToggle={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              setContentExpanded((current) => !current);
+            }}
+            text={displayContent}
+          />
+        ) : (
+          <p className="whitespace-pre-line text-sm leading-6 text-muted">{displayContent}</p>
+        )}
       </div>
 
       <div className="mt-4 grid gap-4">
-        <MediaBlock alt={post.title} mediaType={post.media_type} mediaUrl={post.media_url} />
-        <ProfessionalReplyPreview reply={post.highlighted_professional_reply} />
+        <MediaBlock
+          alt={displayTitle ?? "Mídia da publicação"}
+          mediaType={displayMediaType}
+          mediaUrl={displayMediaUrl}
+        />
+        <ProfessionalReplyPreview
+          profilePublicationMode={profilePublicationMode}
+          reply={highlightedProfessionalReply}
+        />
       </div>
 
       <CommunityActionBar
@@ -425,7 +662,7 @@ export const CommunityPostCard = ({
           onClick: interactiveActions ? handleToggleSave : undefined,
         }}
         share={{
-          label: `Compartilhar ${post.title}`,
+          label: displayTitle ? `Compartilhar ${displayTitle}` : "Compartilhar publicação",
           onClick: () => onShare(post),
         }}
         upvotesCount={voteSnapshot.upvotes}
