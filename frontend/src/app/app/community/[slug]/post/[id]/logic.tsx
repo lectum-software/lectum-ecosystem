@@ -2303,15 +2303,30 @@ export const PostReplyThreadLogic = () => {
       showHeader
     >
       <section className="mx-auto min-h-screen w-full max-w-[430px] bg-[#F5F7FA] pb-6 text-[#182033] dark:bg-background dark:text-foreground sm:max-w-2xl lg:max-w-3xl">
-        <div className="sticky top-0 z-30 flex items-center justify-between border-[#EDF1F5] border-b bg-white/90 px-5 py-3 backdrop-blur dark:border-border dark:bg-surface/90">
-          <Button asChild className="h-10 w-10 rounded-full p-0" variant="ghost">
-            <Link href={post ? `/app/community/${post.community.slug}/post/${post.id}` : "../"}>
-              <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-              <span className="sr-only">Voltar ao post</span>
-            </Link>
-          </Button>
-          <h1 className="text-base font-black text-[#182033] dark:text-foreground">Respostas</h1>
-          <span className="h-10 w-10" aria-hidden="true" />
+        <div className="sticky top-0 z-40 border-[#DDE7F2]/85 border-b bg-white/90 px-3.5 py-2.5 shadow-[0_10px_24px_rgba(15,23,42,0.055)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/80 dark:border-border/80 dark:bg-surface/90 dark:supports-[backdrop-filter]:bg-surface/80 sm:px-4">
+          <div className="grid min-h-12 grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center gap-2">
+            <Button
+              asChild
+              className="h-10 w-10 rounded-full border border-[#E5EAF0] bg-white/80 p-0 text-[#475569] shadow-[0_6px_16px_rgba(15,23,42,0.055)] transition hover:bg-[#F8FAFC] hover:text-[#182033] dark:border-border dark:bg-surface-muted/70 dark:text-muted dark:hover:text-foreground"
+              variant="ghost"
+            >
+              <Link href={post ? `/app/community/${post.community.slug}/post/${post.id}` : "../"}>
+                <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+                <span className="sr-only">Voltar ao post</span>
+              </Link>
+            </Button>
+
+            <div className="grid min-w-0 justify-items-center gap-0.5 text-center">
+              <p className="text-[15px] font-black leading-tight tracking-[-0.02em] text-[#182033] dark:text-foreground">
+                Respostas
+              </p>
+              <p className="max-w-full truncate text-[11px] font-semibold leading-none text-[#64748B] dark:text-muted">
+                Continuação da conversa
+              </p>
+            </div>
+
+            <span className="h-10 w-10" aria-hidden="true" />
+          </div>
         </div>
 
         {postQuery.isLoading || threadQuery.isLoading ? (

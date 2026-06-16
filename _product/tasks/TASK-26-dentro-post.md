@@ -304,3 +304,13 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nao houve alteracao de backend, Prisma, migrations, packages, endpoints, payloads ou persistencia.
 - ADR atualizado: `adrs/0104-barra-acoes-comunidade-unificada.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, browser local autenticado via Chrome headless/CDP em 390px na rota do detalhe do post demo confirmando barras `xs` sem quebra, `topSpread=0`, salvar/compartilhar a direita e `Responder` em 10px.
+
+## Execucao complementar: header premium da thread de respostas (2026-06-16)
+
+- Pedido do usuario: refinar o header da tela aberta por `Ver mais respostas`, mantendo voltar a esquerda, titulo `Respostas` centralizado, fundo branco com blur/transparencia, borda inferior sutil e sombra leve.
+- Fonte visual auditavel: `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao, entao a validacao visual usou browser local e a referencia local inventariada.
+- A tela de thread isolada passou a usar header sticky em grid de tres colunas, garantindo titulo centralizado independentemente do botao de voltar e sem parecer um card solto no mobile.
+- O header ganhou fundo branco translucido com `backdrop-blur`, borda inferior refinada, sombra discreta, spacing mais compacto e subtitulo de contexto `Continuacao da conversa` para elevar a hierarquia visual.
+- Nao houve alteracao de backend, Prisma, migrations, packages, endpoints, payloads, ordenacao, regras de destaque ou logica de comentarios.
+- ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e Chrome/CDP mobile autenticado em 390px confirmando header sticky no topo, largura 390px, botao de voltar, titulo centralizado, blur, borda inferior e sombra leve.
