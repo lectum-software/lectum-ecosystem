@@ -415,3 +415,24 @@ Validacoes executadas:
 - O comportamento do card de perfil, dados public-safe, abas, WhatsApp, favoritos e layout do perfil nao foi alterado.
 - ADR atualizado: `adrs/0103-player-video-vertical-unificado.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`.
+
+## Registro de ajuste complementar em 2026-06-16 - refinamento premium das seções do perfil
+
+- Ajustado o perfil público `/app/psychologist/[id]` conforme solicitação de produto para elevar a leitura mobile/desktop sem alterar dados, rotas, endpoints, favoritos, WhatsApp ou lógica de envio/contato.
+- No mobile, foi criado um header fixo próprio com nome + selo verificado e abas `Geral`, `Publicações` e `Avaliações`, exibido somente após o usuário passar pelo conteúdo inicial do perfil/vídeo. A navegação mantém os mesmos query params e faz scroll suave para o conteúdo.
+- O menu sticky anterior permanece apenas no desktop, evitando uma barra concorrente no topo mobile antes do momento correto de fixação.
+- Seções `Sobre`, `Especialidades`, `Avaliações`, `Atendimento`, `Formação & Títulos` e `Publicações` ganharam superfície, espaçamento, contraste e hierarquia mais premium, preservando a compactação vertical.
+- Cards de Atendimento foram refinados para parecerem linhas informativas premium, com ícones maiores, fundo branco suave, sombra discreta e rótulos menos administrativos.
+- Formação, avaliações e publicações receberam melhor hierarquia entre título, instituição/data, autor, estrelas, comunidade, data, título e conteúdo, sem adicionar dados artificiais.
+- Botões `Ver todas` foram convertidos em chips menores e discretos, com borda azul suave, fundo quase branco, texto azul e hover leve.
+- O vídeo de apresentação permanece no `VerticalVideoPlayer`, mantendo suporte a fullscreen, fundo preto e proporção preservada sem nova alteração funcional neste recorte.
+- A animação flutuante do botão WhatsApp desktop passou a ter keyframe global `lectum-desktop-create-float`, mantendo o uso de `motion-safe` para respeitar `prefers-reduced-motion`.
+- Builder/Quick Copy não está exposto como ferramenta direta neste ambiente; a referência auditável permanece nos protótipos locais de perfil (`_product/proto/Perfil Profissional - Sobre.jpg`, `Publicações.jpg`, `Avaliações.jpg`) e na solicitação anexada.
+
+Validações executadas:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local `200` em `http://localhost:3002/app/psychologist/demo-psychologist-camila-rocha`.
+- Chrome headless/CDP em 390px validando dados reais da API local, seções `Sobre`, `Especialidades`, `Avaliações`, `Atendimento`, `Formação & Títulos`, `Publicações`, header mobile fixo após scroll com `top=0`, aba ativa `Geral`, sem estado `Perfil indisponível`, e chips `Ver todas` com texto azul e fonte inline de 13px.

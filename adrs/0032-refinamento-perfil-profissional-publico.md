@@ -235,3 +235,32 @@ O card principal do perfil publico foi refinado para preservar a composicao prem
 O favorito passa a flutuar no topo do card, o avatar mobile fica mais compacto e o nome usa escala responsiva com `clamp`, mantendo hierarquia forte em telas estreitas. O container mobile tambem passa a evitar overflow horizontal, para que a composicao caiba na viewport sem cortes laterais. Nao houve mudanca de dados, rotas, contratos, backend, Prisma ou packages.
 
 Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP 200 na rota publica local do perfil.
+
+## Ajuste complementar em 2026-06-16 - refinamento premium das seções e sticky mobile tardio
+
+O perfil público do psicólogo recebeu um novo refinamento visual solicitado pelo usuário para separar melhor a experiência mobile da desktop e elevar a leitura das seções internas.
+
+Decisões:
+
+- A navegação sticky mobile passa a ser um header fixo independente, exibido somente depois que o usuário passa pelo conteúdo inicial do perfil/vídeo. Esse header mostra nome + selo verificado e as abas `Geral`, `Publicações` e `Avaliações` em controle segmentado discreto.
+- A navegação sticky anterior fica restrita ao desktop, evitando duplicidade visual no mobile e mantendo o comportamento de abas/query params já existente.
+- A ação das abas no header mobile preserva `router.replace`, não altera a lógica de dados e apenas adiciona scroll suave para o container de conteúdo.
+- As seções de Atendimento, Formação, Avaliações e Publicações foram refinadas por composição, espaçamento, contraste, sombra e hierarquia, sem aumentar excessivamente a altura e sem mudar contrato/API.
+- Os botões `Ver todas` viraram chips discretos com fonte controlada por estilo inline de 13px, porque os estilos globais de `button { font: inherit; }` ficam fora das layers do Tailwind e podem sobrescrever utilitários de texto em botões.
+- O botão flutuante desktop do WhatsApp ganhou keyframe global para a animação já referenciada pela classe Tailwind arbitrária; o próprio uso de `motion-safe` mantém respeito a `prefers-reduced-motion`.
+- O vídeo de apresentação não recebeu nova lógica neste recorte: permanece usando o `VerticalVideoPlayer` compartilhado, que já preserva proporção, fundo preto e fullscreen.
+
+Consequências:
+
+- Mobile fica mais limpo na primeira dobra e só apresenta o header persistente quando ele passa a agregar contexto.
+- Desktop mantém navegação sticky sem regressão funcional.
+- As seções internas ficam mais humanas e premium usando dados reais existentes.
+- Não houve alteração em backend, Prisma, contrato, persistência, packages, favoritos, contato/WhatsApp ou regras de publicação/avaliação.
+
+Validações executadas:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local 200 em `http://localhost:3002/app/psychologist/demo-psychologist-camila-rocha`.
+- Chrome headless/CDP em 390px confirmando renderização com API local, header mobile fixo após scroll (`top=0`, `opacity=1`, aba ativa `Geral`), seções principais presentes e chips `Ver todas` discretos.
