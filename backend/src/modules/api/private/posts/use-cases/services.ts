@@ -129,9 +129,7 @@ export const show = async (data: IPostShowDTO) => {
   return {
     status: 200,
     ...msg("show", {}),
-    data: {
-      reply: res,
-    },
+    data: res,
   };
 };
 
