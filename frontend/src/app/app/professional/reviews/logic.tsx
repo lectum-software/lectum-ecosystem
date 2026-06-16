@@ -231,7 +231,7 @@ export const ProfessionalReviewsLogic = () => {
   const isProfessionalPlanError = Boolean(errorMessage?.includes("Plano Profissional"));
 
   return (
-    <PrivateTemplate showNavigation={false}>
+    <PrivateTemplate desktopSidebarDefaultCollapsed showMobileNavigation={false}>
       <section className="mx-auto my-0 min-h-screen w-full max-w-[430px] bg-[#f5f6f8] pb-10 sm:rounded-[24px] sm:border sm:border-[#e5e7eb] sm:overflow-hidden lg:max-w-[760px]">
         <header className="grid h-[72px] grid-cols-[72px_1fr_72px] items-center border-b border-[#e5e7eb] bg-white">
           <Link

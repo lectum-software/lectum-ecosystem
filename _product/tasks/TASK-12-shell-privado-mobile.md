@@ -280,3 +280,19 @@ Validacoes do ajuste:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - HTTP local em `/app/psychologists` respondeu `200`.
+
+### Ajuste complementar em 2026-06-16: sidebar desktop recolhida em telas de conteudo focado
+
+- Produto solicitou que as telas de Avaliacoes feitas, Minhas Avaliacoes do profissional, E-mail e senha e Meus posts e respostas exibam a sidebar desktop recolhida por padrao para liberar area util do conteudo.
+- As rotas ajustadas foram: `/app/reviews`, `/app/professional/reviews`, `/app/settings/account` e `/app/posts/mine`.
+- Cada tela passou a renderizar o `PrivateTemplate` com `desktopSidebarDefaultCollapsed` e `showMobileNavigation={false}`, mantendo o mobile sem navegacao global como antes e adicionando apenas a sidebar recolhida no desktop.
+- A expansao manual continua disponivel pelo controle do menu lateral e segue a persistencia por rota ja definida para a sidebar desktop.
+- Nao houve alteracao de dados, autenticacao, backend, Prisma, migrations, packages, rotas principais, Feed, Comunidades, Psicologos, Favoritos ou Perfil.
+- ADR atualizado: `adrs/0084-sidebar-desktop-rotas-principais.md`.
+
+Validacoes do ajuste:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Chrome/CDP autenticado em desktop 1280px nas quatro rotas confirmou sidebar presente, largura 88px e controle `Expandir menu lateral`.
+- Chrome/CDP autenticado em mobile 390px confirmou sidebar oculta e ausencia de bottom navigation adicional nas quatro rotas.

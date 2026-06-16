@@ -140,7 +140,11 @@ export const ReviewsLogic = () => {
   const data = reviews.data;
 
   return (
-    <PrivateTemplate contentClassName="bg-background px-0 py-0" showNavigation={false}>
+    <PrivateTemplate
+      contentClassName="bg-background px-0 py-0"
+      desktopSidebarDefaultCollapsed
+      showMobileNavigation={false}
+    >
       <section className="mx-auto min-h-screen w-full max-w-[430px] bg-background sm:max-w-xl">
         <header
           className="sticky top-0 z-30 border-border border-b bg-surface/95 supports-[backdrop-filter]:bg-surface/85"

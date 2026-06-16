@@ -54,3 +54,10 @@ A preferencia manual do usuario deixou de usar uma chave global unica e passou a
 ## Task relacionada
 
 Ajuste complementar de UX desktop do shell privado, relacionado a TASK-12.
+
+## Atualizacao 2026-06-16 - telas de conteudo focado com sidebar recolhida
+
+- Algumas telas secundarias de conteudo focado tinham optado por `showNavigation={false}` para preservar o mobile sem navegacao global, mas isso tambem removia totalmente a sidebar no desktop.
+- Para `/app/reviews`, `/app/professional/reviews`, `/app/settings/account` e `/app/posts/mine`, a decisao passa a ser renderizar a navegacao apenas como sidebar desktop recolhida por padrao, usando `showMobileNavigation={false}` e `desktopSidebarDefaultCollapsed`.
+- O mobile permanece sem bottom navigation nessas telas, preservando o comportamento anterior abaixo de `lg`.
+- A expansao manual e a persistencia por rota continuam valendo; rotas principais como Psicologos, Favoritos, Comunidade/feed, Notificacoes e Perfil nao foram alteradas.
