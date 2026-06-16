@@ -314,3 +314,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nao houve alteracao de backend, Prisma, migrations, packages, endpoints, payloads, ordenacao, regras de destaque ou logica de comentarios.
 - ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e Chrome/CDP mobile autenticado em 390px confirmando header sticky no topo, largura 390px, botao de voltar, titulo centralizado, blur, borda inferior e sombra leve.
+
+## Complemento 2026-06-16 - fullscreen mobile de videos de conteudo
+
+- Pedido do usuario: corrigir somente no mobile o tamanho ocupado pelo video em fullscreen dentro do post, sem alterar fullscreen desktop, controles nativos, play/pause, volume, timeline, botao nativo de fullscreen ou arvore de comentarios.
+- Midias de video do detalhe do post usam `VerticalVideoPlayer` com `fullscreenVariant="content"`.
+- No mobile, o fullscreen nativo recebe estilos temporarios de viewport para ocupar o maximo possivel mantendo 9:16, `object-fit: contain`, centralizacao e fundo preto.
+- Ao sair do fullscreen, os estilos originais do video embutido sao restaurados para nao afetar o card/resposta.
+- O ajuste e restrito a `max-width: 1023px` e a videos de conteudo; o comportamento desktop ja validado permanece intocado.
+- Nao houve alteracao de backend, Prisma, migrations, packages, endpoints, payloads, comentarios, votos ou logica de envio.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; referencias auditaveis: `_product/proto/Dentro do Post.jpg`, `_product/proto/Feed Comunidade.jpg`, `_product/proto/Dentro da Comunidade.jpg` e captura enviada pelo usuario.
+- ADR atualizado: `adrs/0103-player-video-vertical-unificado.md`.
+- Validacoes executadas: `pnpm --dir frontend check` e Chrome/CDP mobile 390x844 em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, confirmando video expandido em 390x693px, proporcao 9:16, `object-fit: contain` e restauracao ao sair.

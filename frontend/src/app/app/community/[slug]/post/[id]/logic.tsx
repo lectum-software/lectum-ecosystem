@@ -561,6 +561,7 @@ const MediaBlock = ({
       <VerticalVideoPlayer
         className={cn("mt-3 border-border", radius, videoFrameClass)}
         fit="contain"
+        fullscreenVariant="content"
         src={src}
         title={alt}
       />

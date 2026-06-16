@@ -80,3 +80,37 @@ No feed principal de psicologos, o clique/tap na area de video passa a decidir p
 - Fullscreen nativo preserva videos verticais centralizados, com fundo preto, sem corte nem esticamento.
 - Cliques no conteudo do video alternam play/pause, enquanto a barra inferior nativa continua dona das interacoes de controle.
 - A mudanca e apenas frontend; nao adiciona package, nao altera Prisma, endpoints ou contratos.
+
+## Complemento 2026-06-16 - fullscreen mobile maximo para videos de conteudo
+
+### Contexto
+
+O fullscreen desktop dos videos verticais ja estava correto, mas no mobile os videos de conteudo em feed, comunidade e detalhe do post mantinham a proporcao 9:16 sem aproveitar toda a area util disponivel. O ajuste precisava ser exclusivamente mobile para nao regredir o comportamento desktop, controles nativos, timeline, volume, fullscreen nativo e clique de play/pause.
+
+### Decisao
+
+Adicionar ao `VerticalVideoPlayer` a variante `fullscreenVariant="content"`, usada somente nos videos de conteudo de comunidade/post. Quando essa variante esta ativa:
+
+- o video recebe `data-lectum-content-video="true"` para escopo visual/auditoria;
+- em telas ate `1023px`, eventos nativos de fullscreen (`fullscreenchange`, `webkitbeginfullscreen` e `webkitendfullscreen`) aplicam estilos temporarios inline ao proprio `<video>`;
+- o tamanho expandido passa a ser calculado por viewport: largura `min(100vw, 100dvh * 9 / 16)` e altura `min(100dvh, 100vw * 16 / 9)`, com fallback para `100vh`;
+- `object-fit: contain`, `object-position: center`, `aspect-ratio: 9 / 16`, fundo preto e centralizacao sao reforcados somente durante o fullscreen mobile;
+- ao sair do fullscreen, todos os estilos anteriores sao restaurados.
+
+A regra global de fullscreen desktop permanece intocada e continua responsavel pelo comportamento ja aprovado em telas maiores.
+
+### Consequencias
+
+- Feed, pagina interna de comunidade e detalhe do post passam a ocupar o maximo de area util no fullscreen mobile sem cortar, distorcer ou transformar videos verticais em horizontais.
+- Desktop nao recebe novos handlers de tamanho porque a variante so aplica estilos quando `matchMedia("(max-width: 1023px)")` e verdadeira.
+- Controles nativos permanecem prioritarios; a mudanca nao intercepta volume, timeline, fullscreen, menu nativo nem clique de play/pause.
+- A solucao nao adiciona package, nao altera backend, Prisma, endpoints, dados ou contratos.
+
+### Validacao
+
+- `pnpm --dir frontend check`.
+- Chrome/CDP mobile 390x844 em:
+  - `/app/community/feed`;
+  - `/app/community/ansiedade-em-equilibrio`;
+  - `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`.
+- Nas tres rotas, a simulacao do evento nativo de fullscreen mobile expandiu o video para 390x693px, proporcao 9:16, `object-fit: contain`, posicao centralizada, e restaurou o tamanho embutido ao sair.

@@ -972,6 +972,7 @@ const PostMedia = ({ post }: { post: CommunityPost }) => {
     return (
       <VerticalVideoPlayer
         className="mx-auto w-full max-w-[390px] rounded-[22px]"
+        fullscreenVariant="content"
         src={mediaUrl}
         title={post.title}
       />
@@ -1006,6 +1007,7 @@ const ProfessionalReplyMedia = ({
     return (
       <VerticalVideoPlayer
         className="w-full rounded-[18px]"
+        fullscreenVariant="content"
         src={mediaUrl}
         title="Vídeo da resposta profissional"
       />

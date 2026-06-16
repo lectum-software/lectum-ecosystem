@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { toggleVideoElementPlayback } from "@/lib/video-interactions";
 
@@ -10,6 +10,7 @@ type VerticalVideoPlayerProps = {
   className?: string;
   controls?: boolean;
   fit?: VideoFit;
+  fullscreenVariant?: "default" | "content";
   poster?: string | null;
   preload?: "auto" | "metadata" | "none";
   src: string;
@@ -22,10 +23,33 @@ const fitClassName: Record<VideoFit, string> = {
   cover: "object-cover",
 };
 
+const MOBILE_FULLSCREEN_MEDIA_QUERY = "(max-width: 1023px)";
+
+const staticMobileContentFullscreenStyles = [
+  ["position", "fixed"],
+  ["inset", "0"],
+  ["display", "block"],
+  ["min-width", "0"],
+  ["min-height", "0"],
+  ["max-width", "100vw"],
+  ["margin", "auto"],
+  ["aspect-ratio", "9 / 16"],
+  ["background", "#000"],
+  ["object-fit", "contain"],
+  ["object-position", "center center"],
+] as const;
+
+type StoredVideoStyle = {
+  name: string;
+  priority: string;
+  value: string;
+};
+
 export const VerticalVideoPlayer = ({
   className,
   controls = true,
   fit = "cover",
+  fullscreenVariant = "default",
   poster,
   preload = "metadata",
   src,
@@ -33,6 +57,73 @@ export const VerticalVideoPlayer = ({
   videoClassName,
 }: VerticalVideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const storedFullscreenStylesRef = useRef<StoredVideoStyle[] | null>(null);
+
+  useEffect(() => {
+    if (fullscreenVariant !== "content" || typeof window === "undefined") return;
+
+    const video = videoRef.current;
+    if (!video) return;
+
+    const restoreMobileContentFullscreenStyles = () => {
+      const storedStyles = storedFullscreenStylesRef.current;
+      if (!storedStyles) return;
+
+      for (const { name, priority, value } of storedStyles) {
+        video.style.setProperty(name, value, priority);
+      }
+
+      storedFullscreenStylesRef.current = null;
+    };
+
+    const applyMobileContentFullscreenStyles = () => {
+      if (!window.matchMedia(MOBILE_FULLSCREEN_MEDIA_QUERY).matches) {
+        restoreMobileContentFullscreenStyles();
+        return;
+      }
+
+      const viewportHeight =
+        typeof CSS !== "undefined" && CSS.supports("height: 100dvh") ? "100dvh" : "100vh";
+      const dynamicStyles = [
+        ["width", `min(100vw, calc(${viewportHeight} * 9 / 16))`],
+        ["height", `min(${viewportHeight}, calc(100vw * 16 / 9))`],
+        ["max-height", viewportHeight],
+      ] as const;
+      const fullscreenStyles = [...staticMobileContentFullscreenStyles, ...dynamicStyles];
+
+      if (!storedFullscreenStylesRef.current) {
+        storedFullscreenStylesRef.current = fullscreenStyles.map(([name]) => ({
+          name,
+          priority: video.style.getPropertyPriority(name),
+          value: video.style.getPropertyValue(name),
+        }));
+      }
+
+      for (const [name, value] of fullscreenStyles) {
+        video.style.setProperty(name, value, "important");
+      }
+    };
+
+    const handleFullscreenChange = () => {
+      if (document.fullscreenElement === video) {
+        applyMobileContentFullscreenStyles();
+        return;
+      }
+
+      restoreMobileContentFullscreenStyles();
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    video.addEventListener("webkitbeginfullscreen", applyMobileContentFullscreenStyles);
+    video.addEventListener("webkitendfullscreen", restoreMobileContentFullscreenStyles);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      video.removeEventListener("webkitbeginfullscreen", applyMobileContentFullscreenStyles);
+      video.removeEventListener("webkitendfullscreen", restoreMobileContentFullscreenStyles);
+      restoreMobileContentFullscreenStyles();
+    };
+  }, [fullscreenVariant]);
 
   const handleContentClick = useCallback(() => {
     void toggleVideoElementPlayback(videoRef.current);
@@ -51,6 +142,7 @@ export const VerticalVideoPlayer = ({
         className={cn("h-full w-full bg-black", fitClassName[fit], videoClassName)}
         controls={controls}
         controlsList="nodownload"
+        data-lectum-content-video={fullscreenVariant === "content" ? "true" : undefined}
         data-lectum-video-player="true"
         playsInline
         poster={poster || undefined}

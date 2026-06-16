@@ -266,3 +266,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Não houve alteração de backend, Prisma, migrations, packages, endpoints, payloads, ranking ou filtros da comunidade.
 - ADR atualizado: `adrs/0104-barra-acoes-comunidade-unificada.md`.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP local `200` em `/app/community/ansiedade-em-equilibrio`.
+
+## Complemento 2026-06-16 - fullscreen mobile de videos de conteudo
+
+- Pedido do usuario: corrigir somente no mobile o tamanho ocupado pelo video em fullscreen dentro da comunidade, sem alterar fullscreen desktop, controles nativos, play/pause, volume, timeline ou centralizacao.
+- A pagina interna de comunidade usa `VerticalVideoPlayer` com `fullscreenVariant="content"` nos videos de post e resposta profissional.
+- No mobile, ao entrar no fullscreen nativo, o player aplica estilos temporarios calculados pela viewport, ocupando o maximo possivel sem distorcer: 9:16, `object-fit: contain`, centralizado e com fundo preto nas sobras.
+- O ajuste e restrito a `max-width: 1023px` e nao altera o comportamento desktop nem o layout embutido dos cards.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, ordenacao, busca, filtros ou controles nativos.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; referencias auditaveis: `_product/proto/Dentro da Comunidade.jpg`, `_product/proto/Feed Comunidade.jpg`, `_product/proto/Dentro do Post.jpg` e captura enviada pelo usuario.
+- ADR atualizado: `adrs/0103-player-video-vertical-unificado.md`.
+- Validacoes executadas: `pnpm --dir frontend check` e Chrome/CDP mobile 390x844 em `/app/community/ansiedade-em-equilibrio`, confirmando video expandido em 390x693px, proporcao 9:16, `object-fit: contain` e restauracao ao sair.

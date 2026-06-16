@@ -353,3 +353,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Não houve alteração de backend, Prisma, migrations, packages, endpoints, payloads, ranking ou diversidade do feed.
 - ADR atualizado: `adrs/0104-barra-acoes-comunidade-unificada.md`.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP local `200` em `/app/community/feed`.
+
+## Complemento 2026-06-16 - fullscreen mobile de videos de conteudo
+
+- Pedido do usuario: corrigir somente no mobile o tamanho ocupado pelo video em fullscreen nos videos de conteudo do feed, sem alterar fullscreen desktop, controles nativos, play/pause, volume, timeline ou centralizacao.
+- O `VerticalVideoPlayer` recebeu a variante `fullscreenVariant="content"` apenas nos videos de conteudo do feed/comunidade, marcando esses videos com `data-lectum-content-video="true"`.
+- No mobile, ao entrar no fullscreen nativo, o player aplica estilos temporarios calculados pela viewport (`min(100vw, 100dvh * 9 / 16)` e `min(100dvh, 100vw * 16 / 9)`), mantendo proporcao 9:16, `object-fit: contain`, centralizacao e fundo preto.
+- Ao sair do fullscreen, todos os estilos temporarios sao restaurados, preservando o player embutido no card.
+- O ajuste e restrito a `max-width: 1023px` e a videos marcados como conteudo; o comportamento desktop ja corrigido nao foi alterado.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, ranking, controles nativos ou logica de interacao.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; referencias auditaveis: `_product/proto/Feed Comunidade.jpg`, `_product/proto/Dentro da Comunidade.jpg`, `_product/proto/Dentro do Post.jpg` e captura enviada pelo usuario.
+- ADR atualizado: `adrs/0103-player-video-vertical-unificado.md`.
+- Validacoes executadas: `pnpm --dir frontend check` e Chrome/CDP mobile 390x844 nas rotas `/app/community/feed`, `/app/community/ansiedade-em-equilibrio` e `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, confirmando expansao para 390x693px, proporcao 9:16, `object-fit: contain`, fundo/viewport centralizado e restauracao do tamanho embutido ao sair.
