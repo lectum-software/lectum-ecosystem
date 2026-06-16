@@ -1,4 +1,4 @@
-﻿import { error, msg } from "@/helpers/translate";
+import { error, msg } from "@/helpers/translate";
 import {
   notifyNewPostReply,
   notifyPostSaved,
@@ -9,6 +9,7 @@ import type {
   IPostMineDTO,
   IPostRepliesDTO,
   IPostReplySaveDTO,
+  IPostReplyThreadDTO,
   IPostReportDTO,
   IPostSaveDTO,
   IPostSavedDTO,
@@ -121,7 +122,9 @@ export const show = async (data: IPostShowDTO) => {
   return {
     status: 200,
     ...msg("show", {}),
-    data: res,
+    data: {
+      reply: res,
+    },
   };
 };
 
@@ -165,6 +168,22 @@ export const replies = async (data: IPostRepliesDTO) => {
   return {
     status: 200,
     ...msg("index", {}),
+    data: res,
+  };
+};
+
+export const replyThread = async (data: IPostReplyThreadDTO) => {
+  const unauthorized = ensureCommunityActor(data);
+  if (unauthorized) return unauthorized;
+
+  const repository = new PostRepository();
+  const res = await repository.replyThread(data);
+
+  if (!res) return notFound();
+
+  return {
+    status: 200,
+    ...msg("show", {}),
     data: res,
   };
 };

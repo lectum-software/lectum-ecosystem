@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import keys from "@/api/cache/keys";
@@ -109,6 +109,16 @@ export const usePostReplies = (id: string, query: PostRepliesQuery = {}, enabled
   });
 };
 
+export const usePostReplyThread = (id: string, replyId: string, enabled = true) => {
+  return useQuery({
+    queryKey: ["posts", id, "reply-thread", replyId],
+    queryFn: () => api.getPostReplyThread(id, replyId),
+    enabled: Boolean(id) && Boolean(replyId) && enabled,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
+};
+
 export const useUnsavePostFromList = (callbacks?: {
   onSuccess?: (data: PostSaveResponse) => void;
   onError?: (error: unknown) => void;
@@ -159,6 +169,7 @@ export const useCreatePostReply = (callbacks?: {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: keys.posts.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: ["posts", variables.id, "replies"] });
+      queryClient.invalidateQueries({ queryKey: ["posts", variables.id, "reply-thread"] });
       queryClient.invalidateQueries({ queryKey: keys.community.root() });
       callbacks?.onSuccess?.(data);
     },
@@ -179,6 +190,20 @@ export const useReportPost = (callbacks?: {
 }) => {
   return useMutation({
     mutationFn: ({ body, id }: { body: PostReportPayload; id: string }) => api.reportPost(id, body),
+    onSuccess: (data) => {
+      callbacks?.onSuccess?.(data);
+    },
+    onError: callbacks?.onError,
+  });
+};
+
+export const useReportReply = (callbacks?: {
+  onSuccess?: (data: PostReportResponse) => void;
+  onError?: (error: unknown) => void;
+}) => {
+  return useMutation({
+    mutationFn: ({ body, id, replyId }: { body: PostReportPayload; id: string; replyId: string }) =>
+      api.reportReply(id, replyId, body),
     onSuccess: (data) => {
       callbacks?.onSuccess?.(data);
     },
@@ -270,6 +295,7 @@ export const useVotePost = (postId: string) => {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: keys.posts.detail(postId) });
       queryClient.invalidateQueries({ queryKey: ["posts", postId, "replies"] });
+      queryClient.invalidateQueries({ queryKey: ["posts", postId, "reply-thread"] });
       queryClient.invalidateQueries({ queryKey: keys.community.root() });
     },
   });
@@ -380,6 +406,7 @@ export const useSaveReply = (postId: string, replyId: string) => {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["posts", postId, "replies"] });
+      queryClient.invalidateQueries({ queryKey: ["posts", postId, "reply-thread"] });
       queryClient.invalidateQueries({ queryKey: keys.posts.saved() });
       queryClient.invalidateQueries({ queryKey: keys.community.root() });
     },

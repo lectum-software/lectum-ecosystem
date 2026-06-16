@@ -5,6 +5,7 @@ import {
   createReply as createReplyService,
   mine as mineService,
   replies as repliesService,
+  replyThread as replyThreadService,
   report as reportService,
   saved as savedService,
   saveReply as saveReplyService,
@@ -53,6 +54,18 @@ export const replies = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "post_replies", err);
+  }
+};
+
+export const replyThread = async (req: Request, res: Response) => {
+  try {
+    const resolve = await replyThreadService(
+      req as unknown as Parameters<typeof replyThreadService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_reply_thread", err);
   }
 };
 

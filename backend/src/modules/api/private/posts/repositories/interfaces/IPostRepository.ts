@@ -1,8 +1,9 @@
-﻿import type {
+import type {
   IPostCreateReplyDTO,
   IPostMineDTO,
   IPostRepliesDTO,
   IPostReplySaveDTO,
+  IPostReplyThreadDTO,
   IPostReportDTO,
   IPostSaveDTO,
   IPostSavedDTO,
@@ -25,6 +26,7 @@ export interface IPostRepository {
   saved(data: IPostSavedDTO): Promise<PostListResponse>;
   show(data: IPostShowDTO): Promise<PostDetailResponse | null>;
   replies(data: IPostRepliesDTO): Promise<PostRepliesResponse | null>;
+  replyThread(data: IPostReplyThreadDTO): Promise<PostReplyDTO | null>;
   createReply(data: IPostCreateReplyDTO): Promise<PostMutationResult<PostReplyDTO>>;
   report(data: IPostReportDTO): Promise<PostMutationResult<PostReportResponse>>;
   vote(data: IPostVoteDTO): Promise<PostMutationResult<PostVoteResponse>>;

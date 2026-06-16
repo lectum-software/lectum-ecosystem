@@ -5,6 +5,7 @@ import {
   createReply,
   mine,
   replies,
+  replyThread,
   report,
   save,
   saved,
@@ -19,6 +20,7 @@ import {
   createReplyValidator,
   listValidator,
   repliesValidator,
+  replyReportValidator,
   replySaveValidator,
   reportValidator,
   saveValidator,
@@ -31,6 +33,7 @@ const routes = Router();
 routes.get("/mine", listValidator, mine);
 routes.get("/saved", listValidator, saved);
 routes.get("/:id/replies", repliesValidator, replies);
+routes.get("/:id/replies/:replyId/thread", replySaveValidator, replyThread);
 routes.post(
   "/:id/replies/media",
   showValidator,
@@ -52,6 +55,7 @@ routes.post(
 routes.post("/:id/replies", createReplyValidator, createReply);
 routes.post("/:id/replies/:replyId/save", replySaveValidator, saveReply);
 routes.delete("/:id/replies/:replyId/save", replySaveValidator, unsaveReply);
+routes.post("/:id/replies/:replyId/report", replyReportValidator, report);
 routes.post("/:id/vote", voteValidator, vote);
 routes.post("/:id/save", saveValidator, save);
 routes.delete("/:id/save", saveValidator, unsave);

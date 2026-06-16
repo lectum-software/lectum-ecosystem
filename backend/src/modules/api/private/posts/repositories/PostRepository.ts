@@ -1,4 +1,4 @@
-﻿import type { Prisma } from "@/external/generated/prisma/client";
+import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
@@ -7,6 +7,7 @@ import type {
   IPostMineDTO,
   IPostRepliesDTO,
   IPostReplySaveDTO,
+  IPostReplyThreadDTO,
   IPostReportDTO,
   IPostSaveDTO,
   IPostSavedDTO,
@@ -158,6 +159,7 @@ type AuthorResult = PostResult["author"];
 type ProfessionalReplyResult = ListPostResult["replies"][number];
 type ReplyBaseResult = Prisma.post_replyGetPayload<{ select: typeof replyBaseSelect }>;
 type ReplyResult = Prisma.post_replyGetPayload<{ select: typeof replySelect }>;
+type ReplyTreeResult = ReplyBaseResult & { replies: ReplyTreeResult[] };
 type CurrentVote = 1 | -1 | null;
 
 const normalizePagination = (query: { page?: number; limit?: number }) => {
@@ -378,7 +380,7 @@ const toListPostResponse = (
 });
 
 const toReplyResponse = (
-  item: ReplyResult | ReplyBaseResult,
+  item: ReplyResult | ReplyBaseResult | ReplyTreeResult,
   currentVotes: Map<string, CurrentVote>,
   savedReplyIds?: Set<string>,
 ): PostReplyDTO => {
@@ -391,6 +393,7 @@ const toReplyResponse = (
     media_url: item.media_url,
     media_type: item.media_type,
     upvotes_count: item.upvotes_count,
+    replies_count: item._count.replies,
     created_at: item.createdAt,
     parent_reply_id: item.parent_reply_id,
     current_user_vote: currentVotes.get(item.id) ?? null,
@@ -400,17 +403,50 @@ const toReplyResponse = (
   };
 };
 
-const collectReplyIds = (items: ReplyResult[]) => {
+const collectReplyIds = (items: Array<ReplyResult | ReplyBaseResult | ReplyTreeResult>) => {
   const ids = new Set<string>();
 
-  for (const item of items) {
+  const visit = (item: ReplyResult | ReplyBaseResult | ReplyTreeResult) => {
     ids.add(item.id);
-    for (const child of item.replies) {
-      ids.add(child.id);
+
+    if ("replies" in item) {
+      for (const child of item.replies) {
+        visit(child);
+      }
     }
-  }
+  };
+
+  for (const item of items) visit(item);
 
   return [...ids];
+};
+
+const sortNestedReplies = <T extends { createdAt: Date; id: string }>(items: T[]) =>
+  [...items].sort((a, b) => {
+    const createdAtDiff = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    if (createdAtDiff !== 0) return createdAtDiff;
+
+    return a.id.localeCompare(b.id);
+  });
+
+const buildReplyThread = (rootId: string, replies: ReplyBaseResult[]): ReplyTreeResult | null => {
+  const byParent = new Map<string | null, ReplyBaseResult[]>();
+
+  for (const reply of replies) {
+    const parentId = reply.parent_reply_id ?? null;
+    const current = byParent.get(parentId) ?? [];
+    current.push(reply);
+    byParent.set(parentId, current);
+  }
+
+  const build = (reply: ReplyBaseResult): ReplyTreeResult => ({
+    ...reply,
+    replies: sortNestedReplies(byParent.get(reply.id) ?? []).map(build),
+  });
+
+  const root = replies.find((reply) => reply.id === rootId);
+
+  return root ? build(root) : null;
 };
 
 const replyDirectRepliesCount = (item: ReplyResult | ReplyBaseResult) => {
@@ -980,6 +1016,64 @@ export class PostRepository implements IPostRepository {
     };
   }
 
+  async replyThread(data: IPostReplyThreadDTO): Promise<PostReplyDTO | null> {
+    const post = await findPublishedPost(data.p.id);
+    if (!post) return null;
+
+    const replies = await prisma.post_reply.findMany({
+      where: {
+        post_id: post.id,
+        deleted: false,
+      },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      select: replyBaseSelect,
+    });
+    const thread = buildReplyThread(data.p.replyId, replies);
+    if (!thread) return null;
+
+    const replyIds = collectReplyIds([thread]);
+    const [votes, saves] =
+      replyIds.length > 0
+        ? await Promise.all([
+            prisma.post_vote.findMany({
+              where: {
+                user_id: data.auth.id!,
+                reply_id: {
+                  in: replyIds,
+                },
+                deleted: false,
+              },
+              select: {
+                reply_id: true,
+                value: true,
+              },
+            }),
+            prisma.post_reply_save.findMany({
+              where: {
+                user_id: data.auth.id!,
+                reply_id: {
+                  in: replyIds,
+                },
+                deleted: false,
+              },
+              select: {
+                reply_id: true,
+              },
+            }),
+          ])
+        : [[], []];
+    const voteMap = new Map<string, CurrentVote>();
+    const savedReplyIds = new Set(saves.map((save) => save.reply_id));
+
+    for (const vote of votes) {
+      if (vote.reply_id) {
+        voteMap.set(vote.reply_id, normalizeVoteValue(vote.value));
+      }
+    }
+
+    return toReplyResponse(thread, voteMap, savedReplyIds);
+  }
+
   async createReply(data: IPostCreateReplyDTO): Promise<PostMutationResult<PostReplyDTO>> {
     const post = await findPublishedPost(data.p.id);
     if (!post) return { kind: "not_found" };
@@ -1004,7 +1098,6 @@ export class PostRepository implements IPostRepository {
         where: {
           id: data.b.parentReplyId,
           post_id: post.id,
-          parent_reply_id: null,
           deleted: false,
         },
         select: {
@@ -1052,41 +1145,81 @@ export class PostRepository implements IPostRepository {
     const post = await findPublishedPost(data.p.id);
     if (!post) return { kind: "not_found" };
 
-    const report = await prisma.post_report.upsert({
-      where: {
-        post_id_reporter_id: {
+    const replyId = data.p.replyId?.trim() || null;
+
+    if (replyId) {
+      const reply = await prisma.post_reply.findFirst({
+        where: {
+          id: replyId,
           post_id: post.id,
-          reporter_id: data.auth.id!,
+          deleted: false,
         },
-      },
-      create: {
+        select: {
+          id: true,
+        },
+      });
+
+      if (!reply) return { kind: "invalid_target" };
+    }
+
+    const existingReport = await prisma.post_report.findFirst({
+      where: {
         post_id: post.id,
+        reply_id: replyId,
         reporter_id: data.auth.id!,
-        reason: data.b.reason,
-        description: data.b.description || null,
-      },
-      update: {
-        deleted: false,
-        deletedAt: null,
-        reason: data.b.reason,
-        description: data.b.description || null,
-        status: "pendente",
       },
       select: {
         id: true,
-        post_id: true,
-        reason: true,
-        description: true,
-        status: true,
-        createdAt: true,
       },
     });
+
+    const report = existingReport
+      ? await prisma.post_report.update({
+          where: {
+            id: existingReport.id,
+          },
+          data: {
+            deleted: false,
+            deletedAt: null,
+            reason: data.b.reason,
+            description: data.b.description || null,
+            status: "pendente",
+          },
+          select: {
+            id: true,
+            post_id: true,
+            reply_id: true,
+            reason: true,
+            description: true,
+            status: true,
+            createdAt: true,
+          },
+        })
+      : await prisma.post_report.create({
+          data: {
+            post_id: post.id,
+            reply_id: replyId,
+            reporter_id: data.auth.id!,
+            reason: data.b.reason,
+            description: data.b.description || null,
+          },
+          select: {
+            id: true,
+            post_id: true,
+            reply_id: true,
+            reason: true,
+            description: true,
+            status: true,
+            createdAt: true,
+          },
+        });
 
     return {
       kind: "ok",
       data: {
         id: report.id,
         post_id: report.post_id,
+        reply_id: report.reply_id,
         reason: report.reason,
         description: report.description,
         status: report.status,

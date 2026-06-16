@@ -575,6 +575,7 @@ model post_reply {
   replies         post_reply[]      @relation("post_reply_thread")
   votes           post_vote[]       @relation("post_vote_reply")
   saves           post_reply_save[] @relation("post_reply_save_reply")
+  reports         post_report[]     @relation("post_report_reply")
 
   @@index([post_id, parent_reply_id, createdAt])
   @@index([author_id])
@@ -643,14 +644,16 @@ model post_report {
   updatedAt   DateTime       @default(now()) @updatedAt @map("updated_at")
   createdAt   DateTime       @default(now()) @map("created_at")
   post_id     String
+  reply_id    String?
   reporter_id String
   reason      String
   description String?
   status      String         @default("pendente")
   post        community_post @relation("post_report_post", fields: [post_id], references: [id], onDelete: Cascade)
+  reply       post_reply?    @relation("post_report_reply", fields: [reply_id], references: [id], onDelete: Cascade)
   reporter    user           @relation("post_report_reporter", fields: [reporter_id], references: [id], onDelete: Cascade)
 
-  @@unique([post_id, reporter_id])
+  @@index([post_id, reply_id, reporter_id])
   @@index([status, createdAt])
   @@index([reporter_id, createdAt])
   @@map("post_reports")

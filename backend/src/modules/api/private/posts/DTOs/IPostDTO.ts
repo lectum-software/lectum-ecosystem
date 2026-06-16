@@ -87,6 +87,7 @@ export type PostReplyDTO = {
   media_url: string | null;
   media_type: string | null;
   upvotes_count: number;
+  replies_count: number;
   created_at: Date;
   parent_reply_id: string | null;
   current_user_vote: 1 | -1 | null;
@@ -179,6 +180,7 @@ export type PostReplyMediaUploadResponse = {
 export type PostReportResponse = {
   id: string;
   post_id: string;
+  reply_id: string | null;
   reason: string;
   description: string | null;
   status: string;
@@ -201,6 +203,11 @@ export type IPostShowDTO = {
 export type IPostRepliesDTO = {
   p: PostParams;
   q: PostRepliesQuery;
+  auth: user;
+};
+
+export type IPostReplyThreadDTO = {
+  p: PostReplyParams;
   auth: user;
 };
 
@@ -227,7 +234,7 @@ export type IPostUploadReplyMediaDTO = {
 };
 
 export type IPostReportDTO = {
-  p: PostParams;
+  p: PostParams & { replyId?: string };
   b: PostReportBody;
   auth: user;
 };

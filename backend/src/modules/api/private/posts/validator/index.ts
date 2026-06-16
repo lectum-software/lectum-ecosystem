@@ -146,6 +146,11 @@ export const reportSchema: IValidatorRequest = {
   ],
 };
 
+export const replyReportSchema: IValidatorRequest = {
+  params: replyIdParams,
+  body: reportSchema.body,
+};
+
 export const showValidator = validator(showSchema);
 export const repliesValidator = validator(repliesSchema);
 export const listValidator = validator(listSchema);
@@ -154,5 +159,6 @@ export const voteValidator = validator(voteSchema);
 export const saveValidator = validator(showSchema);
 export const replySaveValidator = validator(replySaveSchema);
 export const reportValidator = validator(reportSchema);
+export const replyReportValidator = validator(replyReportSchema);
 
 export default showValidator;

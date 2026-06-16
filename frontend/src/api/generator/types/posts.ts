@@ -28,6 +28,7 @@ export type PostReply = {
   media_url: string | null;
   media_type: string | null;
   upvotes_count: number;
+  replies_count: number;
   created_at: string;
   parent_reply_id: string | null;
   current_user_vote: 1 | -1 | null;
@@ -97,6 +98,10 @@ export type PostRepliesResponse = {
   count: number;
 };
 
+export type PostReplyThreadResponse = {
+  reply: PostReply;
+};
+
 export type UserPostsResponse = {
   data: UserPostListItem[];
   items: UserPostListItem[];
@@ -129,6 +134,7 @@ export type PostReportPayload = {
 export type PostReportResponse = {
   id: string;
   post_id: string;
+  reply_id: string | null;
   reason: PostReportReason | string;
   description: string | null;
   status: string;

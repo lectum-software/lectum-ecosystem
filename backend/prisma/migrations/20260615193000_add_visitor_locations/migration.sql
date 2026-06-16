@@ -1,4 +1,4 @@
-﻿-- CreateTable
+-- CreateTable
 CREATE TABLE "visitor_locations" (
     "id" TEXT NOT NULL,
     "deleted" BOOLEAN NOT NULL DEFAULT false,

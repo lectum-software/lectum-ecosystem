@@ -38,7 +38,9 @@ import {
   useCreatePostReply,
   usePostDetail,
   usePostReplies,
+  usePostReplyThread,
   useReportPost,
+  useReportReply,
   useSavePost,
   useSaveReply,
   useUploadPostReplyMedia,
@@ -90,6 +92,8 @@ type ReplyTarget = {
 type ReplyTargetItem = NonNullable<ReplyTarget>;
 type ReplyTargetMap = Record<string, ReplyTargetItem>;
 const EMPTY_REPLY_TARGETS: ReplyTargetMap = {};
+
+type ReportTarget = { type: "post" } | { reply: PostReply; type: "reply" } | null;
 
 type ReplyMediaPermission = {
   canAttach: boolean;
@@ -718,8 +722,8 @@ const PostVoteBar = ({
   onVote: (value: 1 | -1) => void;
   post: PostDetail;
 }) => (
-  <div className="flex flex-wrap items-center justify-between gap-2 border-[#EDF1F5] border-t px-4 py-3 dark:border-border">
-    <div className="flex min-w-0 items-center gap-2">
+  <div className="flex items-center gap-1.5 overflow-x-auto whitespace-nowrap border-[#EDF1F5] border-t px-4 py-2.5 [scrollbar-width:none] dark:border-border sm:justify-between sm:gap-2 sm:overflow-visible sm:py-3">
+    <div className="flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-2">
       <div className="inline-flex items-center gap-0.5 rounded-full bg-[#F4F6F8] p-0.5 ring-1 ring-[#E7ECF2] dark:bg-surface-muted dark:ring-border">
         <VoteActionButton
           count={post.upvotes_count}
@@ -751,7 +755,7 @@ const PostVoteBar = ({
         size="sm"
       />
     </div>
-    <div className="flex shrink-0 items-center gap-1">
+    <div className="ml-auto flex shrink-0 items-center gap-1">
       <PostActionButton
         active={post.saved}
         count={post.saves_count}
@@ -792,8 +796,8 @@ const ReplyVoteBar = ({
   reply: PostReply;
   savePending?: boolean;
 }) => (
-  <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-    <div className="flex min-w-0 items-center gap-2">
+  <div className="mt-2 flex items-center gap-1.5 overflow-x-auto whitespace-nowrap [scrollbar-width:none] sm:mt-3 sm:justify-between sm:gap-2 sm:overflow-visible">
+    <div className="flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-2">
       <div className="inline-flex items-center gap-0.5 rounded-full bg-[#F4F6F8] p-0.5 ring-1 ring-[#E7ECF2] dark:bg-surface-muted dark:ring-border">
         <VoteActionButton
           count={reply.upvotes_count}
@@ -818,15 +822,15 @@ const ReplyVoteBar = ({
         />
       </div>
       <button
-        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-full px-2.5 text-[12px] font-semibold leading-none tracking-[-0.01em] text-muted transition hover:bg-surface-muted hover:text-foreground active:scale-[0.97]"
+        className="inline-flex h-8 shrink-0 items-center justify-center gap-1 rounded-full px-2 text-[11px] font-semibold leading-none tracking-[-0.01em] text-muted transition hover:bg-surface-muted hover:text-foreground active:scale-[0.97] sm:gap-1.5 sm:px-2.5 sm:text-[12px]"
         onClick={onReply}
         type="button"
       >
-        <Reply className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden="true" />
+        <Reply className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" strokeWidth={2} aria-hidden="true" />
         Responder
       </button>
     </div>
-    <div className="flex shrink-0 items-center gap-1">
+    <div className="ml-auto flex shrink-0 items-center gap-1">
       <PostActionButton
         active={reply.saved}
         className="h-8 w-8 px-0"
@@ -854,14 +858,17 @@ const ReplyCard = ({
   mediaPermission,
   onCancelInlineReplyTarget,
   onReply,
+  onReportReply,
   onShare,
   onSubmitReply,
   onVote,
+  maxInlineDepth = 1,
   postId,
   professionalThread,
   reply,
   replyApiError,
   replyDisabled,
+  threadHrefBase,
   votePending,
 }: {
   depth?: number;
@@ -869,18 +876,21 @@ const ReplyCard = ({
   mediaPermission: ReplyMediaPermission;
   onCancelInlineReplyTarget: (replyId: string) => void;
   onReply: (reply: PostReply) => void;
+  onReportReply: (reply: PostReply) => void;
   onShare: (reply: PostReply) => void;
   onSubmitReply: (
     values: ReplyComposerForm,
     parentReplyId: string,
     mediaFile?: File | null,
   ) => Promise<void> | void;
+  maxInlineDepth?: number;
   onVote: (replyId: string, value: 1 | -1) => void;
   postId: string;
   professionalThread?: boolean;
   reply: PostReply;
   replyApiError?: string | null;
   replyDisabled?: boolean;
+  threadHrefBase?: string;
   votePending?: boolean;
 }) => {
   const isProfessional = reply.author.role === "psicologo";
@@ -891,6 +901,12 @@ const ReplyCard = ({
   const inlineReplyTarget = inlineReplyTargets[reply.id] ?? null;
   const isReplyComposerOpen = Boolean(inlineReplyTarget);
   const [contentExpanded, setContentExpanded] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const canRenderChildren = maxInlineDepth < 0 || depth < maxInlineDepth;
+  const visibleChildren = canRenderChildren ? reply.replies : [];
+  const totalRepliesCount = reply.replies_count ?? reply.replies.length;
+  const hiddenRepliesCount = Math.max(0, totalRepliesCount - visibleChildren.length);
+  const threadHref = threadHrefBase ? `${threadHrefBase}/${reply.id}` : null;
 
   return (
     <article
@@ -950,13 +966,38 @@ const ReplyCard = ({
             )}
           </div>
         </div>
-        <button
-          aria-label="Mais opções da resposta"
-          className="grid h-8 w-8 place-items-center rounded-full text-[#64748B] transition hover:bg-surface-muted"
-          type="button"
-        >
-          <MoreVertical className="h-4 w-4" aria-hidden="true" />
-        </button>
+        <div className="relative">
+          <button
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
+            aria-label="Mais opções da resposta"
+            className="grid h-8 w-8 place-items-center rounded-full text-[#64748B] transition hover:bg-surface-muted"
+            onClick={() => setMenuOpen((current) => !current)}
+            type="button"
+          >
+            <MoreVertical className="h-4 w-4" aria-hidden="true" />
+          </button>
+
+          {menuOpen ? (
+            <div
+              className="absolute top-9 right-0 z-20 w-56 overflow-hidden rounded-2xl border border-[#E5EAF0] bg-white p-1.5 text-sm shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:border-border dark:bg-surface"
+              role="menu"
+            >
+              <button
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-[#475569] transition hover:bg-[#F8FAFC] hover:text-[#182033] dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onReportReply(reply);
+                }}
+                role="menuitem"
+                type="button"
+              >
+                <Flag className="h-4 w-4" aria-hidden="true" />
+                Denunciar comentário
+              </button>
+            </div>
+          ) : null}
+        </div>
       </div>
 
       <InlineExpandableText
@@ -1013,7 +1054,7 @@ const ReplyCard = ({
         />
       ) : null}
 
-      {reply.replies.length > 0 ? (
+      {visibleChildren.length > 0 || hiddenRepliesCount > 0 ? (
         <div
           className={cn(
             "ml-4 grid gap-3 border-[#DCEBFF] border-l-2 pl-4",
@@ -1021,14 +1062,16 @@ const ReplyCard = ({
               "-mr-1 rounded-2xl border-[#BBDFFF] bg-[#F4FAFF]/70 p-3 pl-4 dark:border-primary/25 dark:bg-primary/5",
           )}
         >
-          {reply.replies.map((child) => (
+          {visibleChildren.map((child) => (
             <ReplyCard
-              depth={1}
+              depth={depth + 1}
               inlineReplyTargets={inlineReplyTargets}
               key={child.id}
+              maxInlineDepth={maxInlineDepth}
               mediaPermission={mediaPermission}
               onCancelInlineReplyTarget={onCancelInlineReplyTarget}
               onReply={onReply}
+              onReportReply={onReportReply}
               onShare={onShare}
               onSubmitReply={onSubmitReply}
               onVote={onVote}
@@ -1037,16 +1080,17 @@ const ReplyCard = ({
               reply={child}
               replyApiError={replyApiError}
               replyDisabled={replyDisabled}
+              threadHrefBase={threadHrefBase}
               votePending={votePending}
             />
           ))}
-          {reply.replies.length >= 3 ? (
-            <button
-              className="w-fit rounded-full px-2 py-1 text-[11px] font-black text-primary hover:bg-primary-soft"
-              type="button"
+          {hiddenRepliesCount > 0 && threadHref ? (
+            <Link
+              className="w-fit rounded-full px-2 py-1 text-[11px] font-black text-primary no-underline transition hover:bg-primary-soft hover:text-primary hover:no-underline"
+              href={threadHref}
             >
-              Ver mais respostas
-            </button>
+              Ver mais {hiddenRepliesCount} {hiddenRepliesCount === 1 ? "resposta" : "respostas"}
+            </Link>
           ) : null}
         </div>
       ) : null}
@@ -1156,23 +1200,23 @@ const ReplyComposer = ({
       })}
       ref={resolvedFormRef}
     >
+      {shouldShowGuidance ? (
+        <p className="rounded-[14px] bg-[#F8FAFC] px-3 py-2 text-xs font-semibold leading-5 text-[#64748B] dark:bg-surface-muted dark:text-muted">
+          {COMMENT_GUIDANCE_MESSAGE}
+        </p>
+      ) : null}
+
       {shouldShowReplyContext ? (
-        <div className="flex items-center justify-between gap-3 rounded-[14px] bg-[#EDF6FF] px-3 py-2 text-xs font-bold leading-5 text-[#2579CF] dark:bg-primary/10 dark:text-primary">
+        <div className="flex min-w-0 items-center justify-between gap-3 px-1 text-[11px] font-semibold leading-4 text-[#64748B] dark:text-muted">
           <span className="min-w-0 truncate">Respondendo {replyTarget?.name}</span>
           <button
-            className="shrink-0 rounded-full px-2 py-1 text-[11px] font-black text-[#2579CF] transition hover:bg-white/70 dark:hover:bg-primary/10"
+            className="shrink-0 rounded-full px-2 py-1 text-[11px] font-bold text-[#308CE8] transition hover:bg-primary-soft"
             onClick={onCancelContext}
             type="button"
           >
             Cancelar
           </button>
         </div>
-      ) : null}
-
-      {shouldShowGuidance ? (
-        <p className="rounded-[14px] bg-[#F8FAFC] px-3 py-2 text-xs font-semibold leading-5 text-[#64748B] dark:bg-surface-muted dark:text-muted">
-          {COMMENT_GUIDANCE_MESSAGE}
-        </p>
       ) : null}
 
       <div className="flex items-end gap-2">
@@ -1257,14 +1301,16 @@ const PostReportModal = ({
   onClose,
   onSubmit,
   open,
-  postTitle,
+  subject,
+  title,
 }: {
   apiError?: string | null;
   disabled?: boolean;
   onClose: () => void;
   onSubmit: (values: PostReportForm) => Promise<void> | void;
   open: boolean;
-  postTitle: string;
+  subject: string;
+  title: string;
 }) => {
   const form = usePostReportForm();
   const { Form: ReportForm, formProps, hook } = form;
@@ -1309,9 +1355,9 @@ const PostReportModal = ({
               className="text-xl font-black tracking-[-0.03em] text-[#182033]"
               id="post-report-title"
             >
-              Denunciar post
+              {title}
             </h2>
-            <p className="line-clamp-2 text-sm leading-5 text-[#64748B]">{postTitle}</p>
+            <p className="line-clamp-2 text-sm leading-5 text-[#64748B]">{subject}</p>
           </div>
           <button
             aria-label="Fechar denúncia"
@@ -1412,9 +1458,11 @@ const RepliesList = ({
   errorMessage,
   inlineReplyTargets,
   loading,
+  maxInlineDepth = 1,
   mediaPermission,
   onCancelInlineReplyTarget,
   onReply,
+  onReportReply,
   onShare,
   onSubmitReply,
   onVote,
@@ -1422,14 +1470,17 @@ const RepliesList = ({
   replies,
   replyApiError,
   replyDisabled,
+  threadHrefBase,
   votePending,
 }: {
   errorMessage?: string | null;
   inlineReplyTargets: ReplyTargetMap;
   loading?: boolean;
+  maxInlineDepth?: number;
   mediaPermission: ReplyMediaPermission;
   onCancelInlineReplyTarget: (replyId: string) => void;
   onReply: (reply: PostReply) => void;
+  onReportReply: (reply: PostReply) => void;
   onShare: (reply: PostReply) => void;
   onSubmitReply: (
     values: ReplyComposerForm,
@@ -1441,6 +1492,7 @@ const RepliesList = ({
   replies: PostReply[];
   replyApiError?: string | null;
   replyDisabled?: boolean;
+  threadHrefBase?: string;
   votePending?: boolean;
 }) => {
   const orderedReplies = useMemo(() => orderRepliesForProfessionalPriority(replies), [replies]);
@@ -1478,9 +1530,11 @@ const RepliesList = ({
             <ReplyCard
               inlineReplyTargets={inlineReplyTargets}
               key={reply.id}
+              maxInlineDepth={maxInlineDepth}
               mediaPermission={mediaPermission}
               onCancelInlineReplyTarget={onCancelInlineReplyTarget}
               onReply={onReply}
+              onReportReply={onReportReply}
               onShare={onShare}
               onSubmitReply={onSubmitReply}
               onVote={onVote}
@@ -1488,6 +1542,7 @@ const RepliesList = ({
               reply={reply}
               replyApiError={replyApiError}
               replyDisabled={replyDisabled}
+              threadHrefBase={threadHrefBase}
               votePending={votePending}
             />
           ))}
@@ -1507,7 +1562,7 @@ export const PostDetailLogic = () => {
   const [desktopReplyTargets, setDesktopReplyTargets] = useState<ReplyTargetMap>({});
   const [replyError, setReplyError] = useState<string | null>(null);
   const [reportError, setReportError] = useState<string | null>(null);
-  const [reportOpen, setReportOpen] = useState(false);
+  const [reportTarget, setReportTarget] = useState<ReportTarget>(null);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const composerRef = useRef<HTMLFormElement | null>(null);
   const mediaPermission = useReplyMediaPermission();
@@ -1529,7 +1584,14 @@ export const PostDetailLogic = () => {
   const reportMutation = useReportPost({
     onSuccess: () => {
       setReportError(null);
-      setReportOpen(false);
+      setReportTarget(null);
+    },
+    onError: (error) => setReportError(resolveReplyError(error)),
+  });
+  const reportReplyMutation = useReportReply({
+    onSuccess: () => {
+      setReportError(null);
+      setReportTarget(null);
     },
     onError: (error) => setReportError(resolveReplyError(error)),
   });
@@ -1693,7 +1755,7 @@ export const PostDetailLogic = () => {
               <PostHeader
                 onReport={() => {
                   setReportError(null);
-                  setReportOpen(true);
+                  setReportTarget({ type: "post" });
                 }}
                 post={post}
                 slug={slug || post.community.slug}
@@ -1752,6 +1814,10 @@ export const PostDetailLogic = () => {
                   })
                 }
                 onReply={handleReplyTarget}
+                onReportReply={(reply) => {
+                  setReportError(null);
+                  setReportTarget({ reply, type: "reply" });
+                }}
                 onShare={shareReply}
                 onSubmitReply={(values, parentReplyId, mediaFile) =>
                   submitReply(values, parentReplyId, mediaFile)
@@ -1761,6 +1827,7 @@ export const PostDetailLogic = () => {
                 replies={replies}
                 replyApiError={replyError}
                 replyDisabled={createReplyMutation.isPending || uploadReplyMediaMutation.isPending}
+                threadHrefBase={`/app/community/${post.community.slug}/post/${post.id}/thread`}
                 votePending={voteMutation.isPending}
               />
 
@@ -1778,19 +1845,29 @@ export const PostDetailLogic = () => {
 
             <PostReportModal
               apiError={reportError}
-              disabled={reportMutation.isPending}
-              onClose={() => setReportOpen(false)}
+              disabled={reportMutation.isPending || reportReplyMutation.isPending}
+              onClose={() => setReportTarget(null)}
               onSubmit={async (values) => {
                 if (!post) return;
 
                 setReportError(null);
+                if (reportTarget?.type === "reply") {
+                  await reportReplyMutation.mutateAsync({
+                    body: toPostReportPayload(values),
+                    id: post.id,
+                    replyId: reportTarget.reply.id,
+                  });
+                  return;
+                }
+
                 await reportMutation.mutateAsync({
                   body: toPostReportPayload(values),
                   id: post.id,
                 });
               }}
-              open={reportOpen}
-              postTitle={post.title}
+              open={Boolean(reportTarget)}
+              subject={reportTarget?.type === "reply" ? reportTarget.reply.content : post.title}
+              title={reportTarget?.type === "reply" ? "Denunciar comentário" : "Denunciar post"}
             />
 
             <style>{`
@@ -1827,8 +1904,273 @@ export const PostDetailLogic = () => {
               .lectum-post-detail-video:-webkit-full-screen::backdrop {
                 background: rgb(0 0 0 / 0.96);
               }
+
+              @media (max-width: 639px) {
+                .lectum-post-detail-video:fullscreen,
+                .lectum-post-detail-video:-webkit-full-screen {
+                  width: 100vw !important;
+                  height: 100dvh !important;
+                  max-width: 100vw !important;
+                  max-height: 100dvh !important;
+                  object-fit: cover !important;
+                }
+              }
             `}</style>
           </>
+        ) : null}
+      </section>
+    </PrivateTemplate>
+  );
+};
+
+export const PostReplyThreadLogic = () => {
+  const params = useParams<{ id: string; replyId: string; slug: string }>();
+  const postId = typeof params.id === "string" ? params.id : "";
+  const replyId = typeof params.replyId === "string" ? params.replyId : "";
+  const isMobile = useIsPostDetailMobile();
+  const [mobileReplyTarget, setMobileReplyTarget] = useState<ReplyTarget>(null);
+  const [desktopReplyTargets, setDesktopReplyTargets] = useState<ReplyTargetMap>({});
+  const [replyError, setReplyError] = useState<string | null>(null);
+  const [reportError, setReportError] = useState<string | null>(null);
+  const [reportTarget, setReportTarget] = useState<ReportTarget>(null);
+  const [shareFeedback, setShareFeedback] = useState<string | null>(null);
+  const composerRef = useRef<HTMLFormElement | null>(null);
+  const mediaPermission = useReplyMediaPermission();
+  const postQuery = usePostDetail(postId);
+  const threadQuery = usePostReplyThread(postId, replyId, Boolean(postId && replyId));
+  const voteMutation = useVotePost(postId);
+  const createReplyMutation = useCreatePostReply({
+    onSuccess: () => setReplyError(null),
+    onError: (error) => setReplyError(resolveReplyError(error)),
+  });
+  const uploadReplyMediaMutation = useUploadPostReplyMedia({
+    onError: (error) => setReplyError(resolveReplyError(error)),
+  });
+  const reportReplyMutation = useReportReply({
+    onSuccess: () => {
+      setReportError(null);
+      setReportTarget(null);
+    },
+    onError: (error) => setReportError(resolveReplyError(error)),
+  });
+  const post = postQuery.data?.post;
+  const rootReply = threadQuery.data?.reply;
+  const postError = postQuery.isError ? resolvePostError(postQuery.error) : null;
+  const threadError = threadQuery.isError ? resolvePostError(threadQuery.error) : null;
+  const activeMobileReplyTarget = isMobile ? mobileReplyTarget : null;
+  const visibleInlineReplyTargets = isMobile ? EMPTY_REPLY_TARGETS : desktopReplyTargets;
+
+  const shareReply = async (reply: PostReply) => {
+    if (!post || typeof window === "undefined") return;
+
+    const url = `${window.location.origin}/app/community/${post.community.slug}/post/${post.id}#reply-${reply.id}`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: post.title, text: reply.content, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+      }
+      setShareFeedback(reply.id);
+      window.setTimeout(() => setShareFeedback(null), 2400);
+    } catch {
+      setShareFeedback(null);
+    }
+  };
+
+  const handleReplyTarget = (reply: PostReply) => {
+    setReplyError(null);
+    const target = { id: reply.id, name: reply.author.name };
+
+    if (isMobile) {
+      setMobileReplyTarget(target);
+      window.setTimeout(() => {
+        const inputNode = composerRef.current?.querySelector<HTMLTextAreaElement>("textarea");
+        inputNode?.focus({ preventScroll: true });
+      }, 0);
+      return;
+    }
+
+    setDesktopReplyTargets((currentTargets) => ({
+      ...currentTargets,
+      [reply.id]: target,
+    }));
+  };
+
+  const submitReply = async (
+    values: ReplyComposerForm,
+    parentReplyId?: string | null,
+    mediaFile?: File | null,
+  ) => {
+    if (!post || !rootReply) return;
+
+    setReplyError(null);
+    const media = mediaFile
+      ? await uploadReplyMediaMutation.mutateAsync({
+          file: mediaFile,
+          id: post.id,
+        })
+      : null;
+
+    await createReplyMutation.mutateAsync({
+      id: post.id,
+      body: toCreatePostReplyPayload(
+        values,
+        parentReplyId ?? rootReply.id,
+        media
+          ? {
+              mediaType: media.media_type,
+              mediaUrl: media.media_url,
+            }
+          : null,
+      ),
+    });
+
+    if (parentReplyId) {
+      setDesktopReplyTargets((currentTargets) => {
+        if (!currentTargets[parentReplyId]) return currentTargets;
+
+        const nextTargets = { ...currentTargets };
+        delete nextTargets[parentReplyId];
+        return nextTargets;
+      });
+    }
+
+    setMobileReplyTarget(null);
+  };
+
+  return (
+    <PrivateTemplate
+      contentClassName="bg-[#F5F7FA] px-0 py-0 dark:bg-background"
+      navigationTheme="solidWhite"
+      showHeader
+    >
+      <section className="mx-auto min-h-screen w-full max-w-[430px] bg-[#F5F7FA] pb-6 text-[#182033] dark:bg-background dark:text-foreground sm:max-w-2xl lg:max-w-3xl">
+        <div className="sticky top-0 z-30 flex items-center justify-between border-[#EDF1F5] border-b bg-white/90 px-5 py-3 backdrop-blur dark:border-border dark:bg-surface/90">
+          <Button asChild className="h-10 w-10 rounded-full p-0" variant="ghost">
+            <Link href={post ? `/app/community/${post.community.slug}/post/${post.id}` : "../"}>
+              <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+              <span className="sr-only">Voltar ao post</span>
+            </Link>
+          </Button>
+          <h1 className="text-base font-black text-[#182033] dark:text-foreground">Respostas</h1>
+          <span className="h-10 w-10" aria-hidden="true" />
+        </div>
+
+        {postQuery.isLoading || threadQuery.isLoading ? (
+          <div className="grid min-h-[70vh] place-items-center px-5">
+            <LoadingState label="Carregando respostas" />
+          </div>
+        ) : null}
+
+        {postError || threadError ? (
+          <div className="px-5 pt-6">
+            <EmptyState
+              action={
+                <Button asChild variant="outline">
+                  <Link
+                    href={
+                      post
+                        ? `/app/community/${post.community.slug}/post/${post.id}`
+                        : DEFAULT_COMMUNITY_FEED_HREF
+                    }
+                  >
+                    Voltar ao post
+                  </Link>
+                </Button>
+              }
+              description={postError || threadError || "Não foi possível carregar esta árvore."}
+              icon={MessageCircle}
+              title="Árvore indisponível"
+            />
+          </div>
+        ) : null}
+
+        {post && rootReply ? (
+          <div className="grid gap-4 px-5 pt-4 pb-36 sm:px-0 sm:pb-6">
+            <div className="rounded-[22px] border border-[#D8ECFF] bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)] dark:border-border dark:bg-surface">
+              <p className="text-xs font-bold tracking-[0.08em] text-[#64748B] uppercase">
+                Fio de respostas
+              </p>
+              <h2 className="mt-1 line-clamp-2 text-lg font-black tracking-[-0.03em] text-[#182033] dark:text-foreground">
+                {post.title}
+              </h2>
+            </div>
+
+            {shareFeedback ? (
+              <InlineAlert title="Link preparado" variant="success">
+                Link copiado ou enviado para compartilhamento.
+              </InlineAlert>
+            ) : null}
+
+            <ReplyComposer
+              apiError={isMobile ? replyError : null}
+              autoFocus={Boolean(activeMobileReplyTarget)}
+              disabled={createReplyMutation.isPending || uploadReplyMediaMutation.isPending}
+              formRef={composerRef}
+              mediaPermission={mediaPermission}
+              onCancelContext={() => setMobileReplyTarget(null)}
+              onSubmit={(values, mediaFile) =>
+                submitReply(values, activeMobileReplyTarget?.id ?? rootReply.id, mediaFile)
+              }
+              replyToName={rootReply.author.name}
+              replyTarget={activeMobileReplyTarget}
+            />
+
+            <RepliesList
+              errorMessage={null}
+              inlineReplyTargets={visibleInlineReplyTargets}
+              loading={false}
+              maxInlineDepth={-1}
+              mediaPermission={mediaPermission}
+              onCancelInlineReplyTarget={(targetId) =>
+                setDesktopReplyTargets((currentTargets) => {
+                  if (!currentTargets[targetId]) return currentTargets;
+
+                  const nextTargets = { ...currentTargets };
+                  delete nextTargets[targetId];
+                  return nextTargets;
+                })
+              }
+              onReply={handleReplyTarget}
+              onReportReply={(reply) => {
+                setReportError(null);
+                setReportTarget({ reply, type: "reply" });
+              }}
+              onShare={shareReply}
+              onSubmitReply={(values, parentReplyId, mediaFile) =>
+                submitReply(values, parentReplyId, mediaFile)
+              }
+              onVote={(targetReplyId, value) =>
+                voteMutation.mutate({ replyId: targetReplyId, value })
+              }
+              postId={post.id}
+              replies={[rootReply]}
+              replyApiError={replyError}
+              replyDisabled={createReplyMutation.isPending || uploadReplyMediaMutation.isPending}
+              threadHrefBase={`/app/community/${post.community.slug}/post/${post.id}/thread`}
+              votePending={voteMutation.isPending}
+            />
+
+            <PostReportModal
+              apiError={reportError}
+              disabled={reportReplyMutation.isPending}
+              onClose={() => setReportTarget(null)}
+              onSubmit={async (values) => {
+                if (!post || reportTarget?.type !== "reply") return;
+
+                setReportError(null);
+                await reportReplyMutation.mutateAsync({
+                  body: toPostReportPayload(values),
+                  id: post.id,
+                  replyId: reportTarget.reply.id,
+                });
+              }}
+              open={reportTarget?.type === "reply"}
+              subject={reportTarget?.type === "reply" ? reportTarget.reply.content : ""}
+              title="Denunciar comentário"
+            />
+          </div>
         ) : null}
       </section>
     </PrivateTemplate>

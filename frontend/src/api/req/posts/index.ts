@@ -1,4 +1,4 @@
-﻿import { callEndpoint } from "@/api/generator";
+import { callEndpoint } from "@/api/generator";
 import type {
   CreatePostReplyPayload,
   PostDetailResponse,
@@ -6,6 +6,7 @@ import type {
   PostRepliesResponse,
   PostReply,
   PostReplyMediaUploadResponse,
+  PostReplyThreadResponse,
   PostReportPayload,
   PostReportResponse,
   PostSaveResponse,
@@ -53,6 +54,15 @@ export const getPostReplies = async (id: string, query: PostRepliesQuery = {}) =
   return handleReq<PostRepliesResponse>(handle);
 };
 
+export const getPostReplyThread = async (id: string, replyId: string) => {
+  const handle = callEndpoint({
+    route: "/api/private/posts/:id/replies/:replyId/thread",
+    params: { id, replyId },
+  });
+
+  return handleReq<PostReplyThreadResponse>(handle);
+};
+
 export const createPostReply = async (id: string, body: CreatePostReplyPayload) => {
   const handle = callEndpoint({
     route: "/api/private/posts/:id/replies",
@@ -89,6 +99,20 @@ export const reportPost = async (id: string, body: PostReportPayload) => {
     route: "/api/private/posts/:id/report",
     method: "POST",
     params: { id },
+    body,
+  });
+
+  return handleReq<PostReportResponse>({
+    ...handle,
+    showSuccess: true,
+  });
+};
+
+export const reportReply = async (id: string, replyId: string, body: PostReportPayload) => {
+  const handle = callEndpoint({
+    route: "/api/private/posts/:id/replies/:replyId/report",
+    method: "POST",
+    params: { id, replyId },
     body,
   });
 
