@@ -270,3 +270,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Não houve alteração de backend, Prisma, migrations, packages, endpoints, filtros, paginação, favoritos ou tracking de contato.
 - ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, HTTP local `200` em `/app/favorites` e browser local Chrome headless autenticado em `/app/favorites`.
+
+## Complemento 2026-06-16 - hero premium e cards mais compactos
+
+- Pedido do usuário: repensar completamente o header de `/app/favorites`, com mais impacto visual e sem aparência de card comum, e reduzir o espaço morto entre nome, tipo profissional e CTA nos cards.
+- Referência visual ativa: `_product/proto/Favoritos.jpg`; Builder/Quick Copy não está exposto como ferramenta direta nesta sessão, mantendo o fallback auditável por imagens locais e browser local.
+- O header foi redesenhado como hero full-bleed no topo da página, sem faixa cinza superior/lateral, com gradientes suaves, profundidade discreta, coração azul da identidade Lectum e transição mais orgânica para o conteúdo.
+- Os filtros continuam no mesmo contrato real, mas ganharam superfície translúcida/compacta para participar do hero sem parecer bloco de formulário.
+- Os cards de psicólogos foram compactados: menor altura mínima, avatar preservado como foco, bloco de nome/tipo mais próximo do CTA e botão `WhatsApp` sem `mt-auto` para evitar vazio vertical.
+- O nome do psicólogo continua permitindo até duas linhas com `line-clamp-2`, preservando nomes longos sem truncamento agressivo nem quebra da grade.
+- Não houve alteração de backend, Prisma, migrations, packages, endpoints, filtros, paginação, favoritos ou tracking de contato.
+- ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local Chrome headless autenticado em `/app/favorites`.

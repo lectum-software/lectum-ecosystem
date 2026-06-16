@@ -131,3 +131,31 @@ Após a versão em carrossel inspirada no Instagram, o produto pediu que `/app/f
 - `pnpm check`
 - HTTP local em `/app/favorites` respondeu `200` com cookie de sessão local.
 - Browser local Chrome headless autenticado em `/app/favorites` validou header no topo, chips compactos e grid mobile com 2 cards por linha.
+
+## Complemento 2026-06-16 - hero full-bleed e densidade dos cards
+
+### Contexto
+
+O produto pediu uma nova rodada de refinamento visual em `/app/favorites`: o header não deveria continuar preso à aparência de card branco comum e os cards de psicólogos ainda tinham espaço vertical excessivo entre nome, papel profissional e CTA.
+
+### Decisão
+
+- Manter o `PrivateTemplate` e todos os contratos reais de favoritos, filtros, paginação, remoção e WhatsApp.
+- Remover o limite visual do header como card encaixado e transformá-lo em hero full-bleed, ocupando o topo da tela e a largura útil sem faixas cinzas laterais/superiores.
+- Usar gradientes suaves, blur decorativo e coração azul da identidade Lectum para dar personalidade premium sem introduzir nova biblioteca ou imagem decorativa.
+- Preservar os filtros como ações reais, mas com chips compactos translúcidos dentro do hero.
+- Compactar os cards removendo o espaçador automático antes do CTA, reduzindo altura mínima e aproximando nome, `Psicólogo` e botão `WhatsApp`.
+- Manter nomes com até duas linhas por `line-clamp-2`, evitando truncamento agressivo e protegendo a grade responsiva.
+
+### Consequências
+
+- A tela fica mais próxima de um produto premium de consumo, com topo mais expressivo e transição visual mais fluida para o conteúdo.
+- Os cards preservam a hierarquia de avatar, disponibilidade, nome/selo, tipo e WhatsApp com melhor aproveitamento vertical.
+- Nenhum contrato de API, schema, rota ou pacote foi alterado.
+
+### Validação
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local Chrome headless autenticado em `/app/favorites`.
