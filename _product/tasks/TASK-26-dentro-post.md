@@ -251,6 +251,16 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - ADR atualizado: `adrs/0104-barra-acoes-comunidade-unificada.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e Chrome/CDP mobile em 390px confirmando 11 barras de resposta com `topSpread=0`, salvar/compartilhar presentes e sem quebra de linha.
 
+## Execucao complementar: recolher e expandir arvore pelo comentario raiz (2026-06-16)
+
+- Pedido do usuario: permitir recolher/expandir uma arvore ao clicar/tocar no primeiro comentario da arvore, sem afetar acoes internas ou outras arvores.
+- Cada `ReplyCard` de primeira camada controla localmente seu estado recolhido; respostas de segunda camada em diante nao recebem comportamento de recolhimento.
+- Ao recolher, os descendentes daquela arvore deixam de renderizar e aparece a indicacao `Ver X resposta(s)` alinhada a camada onde as respostas ficariam; clicar nessa indicacao expande novamente.
+- Cliques em responder, salvar, compartilhar, upvote/downvote, menu, links, midia e campos de formulario sao ignorados pelo recolhimento.
+- Nao houve alteracao de backend, Prisma, migrations, packages, endpoints, payloads, ordenacao dos comentarios ou regra de destaque de psicologos verificados.
+- ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile em 390px confirmando recolhimento isolado, `Ver 2 respostas`, expansao e preservacao ao clicar no menu.
+
 ## Execução complementar: árvore compacta e controles de comentários (2026-06-16)
 
 - Pedido do usuário: ajustar a árvore de comentários e os controles de interação em feed, comunidade e detalhe do post, preservando ordenação, regra do psicólogo verificado mais votado e responsividade mobile.
