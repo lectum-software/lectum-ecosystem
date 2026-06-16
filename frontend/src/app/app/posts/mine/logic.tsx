@@ -10,6 +10,7 @@ import {
   Reply,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useMyPosts } from "@/api/callers/posts";
 import type { PostListPost, UserPostListItem, UserPostsType } from "@/api/generator/types/posts";
@@ -265,6 +266,7 @@ const Pagination = ({
 };
 
 export const MyPostsLogic = () => {
+  const router = useRouter();
   const sessionUser = useAppSelector((state) => state.user);
   const [type, setType] = useState<UserPostsType>("all");
   const [page, setPage] = useState(1);
@@ -298,6 +300,10 @@ export const MyPostsLogic = () => {
     setPage(1);
   };
 
+  const handleBackToProfile = () => {
+    router.replace("/app/profile");
+  };
+
   return (
     <PrivateTemplate contentClassName="bg-background px-0 py-0" showNavigation={false}>
       <section className="mx-auto min-h-screen w-full max-w-[430px] bg-background sm:max-w-xl lg:max-w-3xl">
@@ -307,13 +313,13 @@ export const MyPostsLogic = () => {
         >
           <div className="relative flex h-14 items-center justify-center px-4">
             <Button
-              asChild
               className="absolute left-4 top-1/2 h-10 w-10 -translate-y-1/2 rounded-full p-0"
+              onClick={handleBackToProfile}
+              type="button"
               variant="ghost"
             >
-              <Link href="/app/profile" aria-label="Voltar para perfil">
-                <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-              </Link>
+              <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+              <span className="sr-only">Voltar para perfil</span>
             </Button>
             <h1 className="text-lg font-black text-foreground">Meus Posts</h1>
             <span className="absolute right-4 h-10 w-10" aria-hidden="true" />
