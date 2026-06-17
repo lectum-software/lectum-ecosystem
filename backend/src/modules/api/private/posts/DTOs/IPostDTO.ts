@@ -117,12 +117,17 @@ export type PostListReplyDTO = {
   id: string;
   title: string | null;
   content: string;
+  media_url: string | null;
+  media_type: string | null;
   upvotes_count: number;
   replies_received_count: number;
   has_verified_professional_reply: boolean;
   created_at: Date;
   parent_reply_id: string | null;
   parent_content: string | null;
+  current_user_vote: 1 | -1 | null;
+  saved: boolean;
+  author: PostAuthorDTO;
 };
 
 export type PostListItemDTO = {

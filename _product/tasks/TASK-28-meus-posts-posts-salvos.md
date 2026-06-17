@@ -206,3 +206,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke local mobile 390x844 em Chrome
   headless validando card direto com titulo do post, link com `focusReplyId` e destaque temporario
   do comentario no detalhe do post.
+
+## Ajuste complementar em 2026-06-17 - padronizacao da tela Salvos
+
+- A rota `/app/posts/saved` passou a renderizar acoes abaixo de posts e respostas salvas com a mesma `CommunityActionBar` usada no feed/comunidade: upvote/downvote, comentarios/respostas, salvar ativo em azul e compartilhar.
+- Foram removidas acoes extras visiveis dos cards salvos, como botoes textuais `Abrir post`, lixeira vermelha e compartilhamento duplicado fora da barra padrao.
+- Posts principais salvos deixaram de incorporar automaticamente a resposta profissional em destaque; respostas salvas continuam aparecendo como itens independentes.
+- Respostas salvas agora recebem do backend autor, midia, voto atual e estado salvo reais para manter WhatsApp profissional, midia e interacoes consistentes sem mock.
+- O CTA `Chamar no WhatsApp` de resposta profissional verificada usa a identidade do feed: fundo transparente, borda verde e texto/icone verdes.
+- Validacao complementar: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e smoke local Chrome headless mobile 390x844 em `/app/posts/saved`, confirmando ausencia de `Abrir post`, ausencia de `Resposta profissional em destaque` dentro de post salvo, barra padrao renderizada e WhatsApp vazado verde.

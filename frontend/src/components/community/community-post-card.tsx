@@ -4,6 +4,7 @@ import { BadgeCheck, FileText, Reply, UserX } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import {
+  type MouseEventHandler,
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
   useCallback,
@@ -31,7 +32,15 @@ type CommunityPostCardProps = {
   onShare: (post: PostListPost) => void;
   post: PostListPost;
   profilePublicationMode?: boolean;
+  saveActionOverride?: {
+    active?: boolean;
+    count?: number;
+    disabled?: boolean;
+    label?: string;
+    onClick?: MouseEventHandler<HTMLButtonElement>;
+  };
   showCommunityHeader?: boolean;
+  showHighlightedProfessionalReply?: boolean;
   statusBadge?: ReactNode;
 };
 
@@ -423,7 +432,7 @@ const ProfessionalReplyPreview = ({
       </div>
       {reply.author.whatsapp_url && !profilePublicationMode ? (
         <PsychologistWhatsAppRedirectButton
-          className="mx-auto mt-3 flex h-11 w-full max-w-[390px] items-center justify-center gap-2 rounded-2xl border border-border bg-surface text-sm font-bold text-foreground transition hover:bg-surface-muted"
+          className="mx-auto mt-3 flex h-11 w-full max-w-[390px] items-center justify-center gap-2 rounded-2xl border border-success bg-transparent text-sm font-bold text-success shadow-none transition hover:bg-success/10 active:scale-[0.99]"
           psychologist={{
             avatar: reply.author.avatar,
             crp: reply.author.crp,
@@ -448,7 +457,9 @@ export const CommunityPostCard = ({
   onShare,
   post,
   profilePublicationMode = false,
+  saveActionOverride,
   showCommunityHeader = true,
+  showHighlightedProfessionalReply = true,
   statusBadge,
 }: CommunityPostCardProps) => {
   const contributionType = (post as ProfileContributionPost).contribution_type;
@@ -464,7 +475,8 @@ export const CommunityPostCard = ({
   const displayMediaUrl = primaryReply?.media_url ?? post.media_url;
   const displayFeaturedBadge =
     primaryReply?.author.featured_badge ?? displayAuthor.featured_badge ?? post.featured_badge;
-  const highlightedProfessionalReply = primaryReply ? null : post.highlighted_professional_reply;
+  const highlightedProfessionalReply =
+    primaryReply || !showHighlightedProfessionalReply ? null : post.highlighted_professional_reply;
   const isReplyContribution = contributionType === "reply";
   const communityContextLabel = isReplyContribution ? "Respondido em" : "Postado em";
   const CommunityContextIcon = isReplyContribution ? Reply : FileText;
@@ -503,7 +515,6 @@ export const CommunityPostCard = ({
           saved: post.saved,
           saves: post.saves_count,
         };
-
   const handleVote = (value: 1 | -1) => {
     const previousOverride = voteOverride;
     const nextVote = voteSnapshot.currentVote === value ? null : value;
@@ -582,6 +593,14 @@ export const CommunityPostCard = ({
 
     window.setTimeout(handleToggleSave, 0);
   }, [conversion, handleToggleSave, post.id, saveSnapshot.saved]);
+
+  const saveAction = saveActionOverride ?? {
+    active: saveSnapshot.saved,
+    count: saveSnapshot.saves,
+    disabled: saveMutation.isPending,
+    label: saveSnapshot.saved ? "Remover dos salvos" : "Salvar",
+    onClick: interactiveActions ? handleToggleSave : undefined,
+  };
 
   return (
     <article className="w-full overflow-hidden rounded-[22px] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
@@ -722,11 +741,11 @@ export const CommunityPostCard = ({
         endSlot={footerExtra}
         onVote={interactiveActions ? handleVote : undefined}
         save={{
-          active: saveSnapshot.saved,
-          count: saveSnapshot.saves,
-          disabled: saveMutation.isPending,
-          label: saveSnapshot.saved ? "Remover dos salvos" : "Salvar",
-          onClick: interactiveActions ? handleToggleSave : undefined,
+          active: saveAction.active,
+          count: saveAction.count,
+          disabled: saveAction.disabled,
+          label: saveAction.label,
+          onClick: saveAction.onClick,
         }}
         share={{
           label: displayTitle ? `Compartilhar ${displayTitle}` : "Compartilhar publicação",

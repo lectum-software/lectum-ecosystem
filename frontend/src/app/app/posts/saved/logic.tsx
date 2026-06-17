@@ -1,27 +1,29 @@
 ﻿"use client";
 
-import {
-  Bookmark,
-  ChevronLeft,
-  ChevronRight,
-  Loader2,
-  MessageCircle,
-  PenLine,
-  Reply,
-  Trash2,
-} from "lucide-react";
+import { Bookmark, ChevronLeft, ChevronRight, Reply } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useSavedPosts, useUnsavePostFromList, useUnsaveReplyFromList } from "@/api/callers/posts";
+import {
+  useSavedPosts,
+  useUnsavePostFromList,
+  useUnsaveReplyFromList,
+  useVotePost,
+} from "@/api/callers/posts";
 import type { PostListPost, UserPostListItem } from "@/api/generator/types/posts";
+import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityPostCard } from "@/components/community/community-post-card";
+import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { SecondaryPageHeader } from "@/components/ui/secondary-page-header";
+import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
+import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 const PAGE_LIMIT = 10;
 
@@ -66,24 +68,45 @@ const formatSavedAt = (value: string | null) => {
   }).format(date)}`;
 };
 
-const formatRelativeTime = (value: string) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "agora";
+const savedReplyHref = (post: PostListPost, replyId: string) =>
+  `/app/community/${post.community.slug}/post/${post.id}?focusReplyId=${replyId}#reply-${replyId}`;
 
-  const diffInSeconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
-  const minutes = Math.floor(diffInSeconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
+const SavedReplyMedia = ({
+  mediaType,
+  mediaUrl,
+  title,
+}: {
+  mediaType: string | null;
+  mediaUrl: string | null;
+  title: string;
+}) => {
+  if (!mediaUrl) return null;
 
-  if (minutes < 1) return "agora";
-  if (minutes < 60) return `há ${minutes} min`;
-  if (hours < 24) return `há ${hours} h`;
-  if (days < 7) return `há ${days} d`;
+  const resolvedUrl = resolvePublicMediaUrl(mediaUrl);
+  if (!resolvedUrl) return null;
 
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "short",
-  }).format(date);
+  if (mediaType === "video") {
+    return (
+      <VerticalVideoPlayer
+        className="mx-auto w-full max-w-[390px] rounded-[22px]"
+        src={resolvedUrl}
+        title={title}
+      />
+    );
+  }
+
+  return (
+    <div className="relative aspect-[4/5] overflow-hidden rounded-[22px] border border-border bg-surface-muted">
+      <Image
+        alt={title}
+        className="object-cover"
+        fill
+        sizes="(max-width: 430px) calc(100vw - 64px), 520px"
+        src={resolvedUrl}
+        unoptimized={isPublicMediaUrl(mediaUrl)}
+      />
+    </div>
+  );
 };
 
 const SavedReplyCard = ({
@@ -94,11 +117,59 @@ const SavedReplyCard = ({
 }: {
   item: UserPostListItem;
   onRemove: (postId: string, replyId: string) => void;
-  onShare: (post: PostListPost) => void;
+  onShare: (post: PostListPost, replyId?: string) => void;
   removePending?: boolean;
 }) => {
   const reply = item.reply;
+  const voteMutation = useVotePost(item.post.id);
+  const [voteOverride, setVoteOverride] = useState<{
+    currentVote: 1 | -1 | null;
+    replyId: string;
+    upvotes: number;
+  } | null>(null);
+
   if (!reply) return null;
+
+  const voteState =
+    voteOverride?.replyId === reply.id
+      ? voteOverride
+      : {
+          currentVote: reply.current_user_vote,
+          upvotes: reply.upvotes_count,
+        };
+
+  const handleVote = (value: 1 | -1) => {
+    const previousVoteOverride = voteOverride;
+    const nextVote = voteState.currentVote === value ? null : value;
+    const upDelta = (nextVote === 1 ? 1 : 0) - (voteState.currentVote === 1 ? 1 : 0);
+
+    setVoteOverride({
+      currentVote: nextVote,
+      replyId: reply.id,
+      upvotes: Math.max(0, voteState.upvotes + upDelta),
+    });
+
+    voteMutation.mutate(
+      { replyId: reply.id, value },
+      {
+        onError: () => {
+          setVoteOverride(previousVoteOverride);
+        },
+        onSuccess: (data) => {
+          if (data.target_type !== "reply" || data.reply_id !== reply.id) return;
+
+          setVoteOverride({
+            currentVote: data.value,
+            replyId: reply.id,
+            upvotes: Math.max(0, data.upvotes_count),
+          });
+        },
+      },
+    );
+  };
+
+  const replyLink = savedReplyHref(item.post, reply.id);
+  const hasProfessionalWhatsapp = Boolean(reply.author.whatsapp_url);
 
   return (
     <article className="grid gap-4 rounded-[22px] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
@@ -122,46 +193,54 @@ const SavedReplyCard = ({
 
       <p className="whitespace-pre-line text-sm leading-6 text-foreground">{reply.content}</p>
 
-      <div className="flex flex-wrap items-center justify-between gap-2 border-border border-t pt-3">
-        <div className="flex items-center gap-2 text-xs font-bold text-muted">
-          <span className="inline-flex h-9 items-center gap-1.5 rounded-full px-2">
-            <PenLine className="h-4 w-4" aria-hidden="true" />
-            {formatRelativeTime(reply.created_at)}
-          </span>
-          <span className="inline-flex h-9 items-center gap-1.5 rounded-full px-2">
-            <MessageCircle className="h-4 w-4" aria-hidden="true" />
-            {reply.upvotes_count.toLocaleString("pt-BR")} upvotes
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button asChild className="h-9 rounded-full px-3 text-xs" variant="outline">
-            <Link href={`/app/community/${item.post.community.slug}/post/${item.post.id}`}>
-              Abrir post
-            </Link>
-          </Button>
-          <Button
-            className="h-9 rounded-full px-3 text-xs"
-            onClick={() => onShare(item.post)}
-            type="button"
-            variant="ghost"
-          >
-            Compartilhar
-          </Button>
-          <button
-            aria-label="Remover resposta dos salvos"
-            className="grid h-9 w-9 place-items-center rounded-full text-danger transition hover:bg-danger/10 disabled:opacity-60"
-            disabled={removePending}
-            onClick={() => onRemove(item.post.id, reply.id)}
-            type="button"
-          >
-            {removePending ? (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <Trash2 className="h-4 w-4" aria-hidden="true" />
-            )}
-          </button>
-        </div>
-      </div>
+      <SavedReplyMedia
+        mediaType={reply.media_type}
+        mediaUrl={reply.media_url}
+        title={reply.title ?? "Mídia da resposta salva"}
+      />
+
+      {hasProfessionalWhatsapp ? (
+        <PsychologistWhatsAppRedirectButton
+          className="mx-auto flex h-11 w-full max-w-[390px] items-center justify-center gap-2 rounded-2xl border border-success bg-transparent text-sm font-bold text-success shadow-none transition hover:bg-success/10 active:scale-[0.99]"
+          psychologist={{
+            avatar: reply.author.avatar,
+            crp: reply.author.crp,
+            id: reply.author.id,
+            name: reply.author.name,
+            typeLabel: reply.author.type_label,
+            whatsappUrl: reply.author.whatsapp_url,
+          }}
+        >
+          <WhatsAppIcon className="h-5 w-5 text-success" aria-hidden="true" />
+          Chamar no WhatsApp
+        </PsychologistWhatsAppRedirectButton>
+      ) : null}
+
+      <CommunityActionBar
+        className="border-border border-t pt-3"
+        comments={{
+          count: reply.replies_received_count,
+          href: replyLink,
+          label: "Respostas",
+        }}
+        currentVote={voteState.currentVote}
+        disabled={voteMutation.isPending}
+        onVote={handleVote}
+        save={{
+          active: true,
+          disabled: removePending,
+          label: "Remover dos salvos",
+          onClick: () => onRemove(item.post.id, reply.id),
+        }}
+        share={{
+          label: "Compartilhar resposta",
+          onClick: () => onShare(item.post, reply.id),
+        }}
+        showUpvoteText={false}
+        upvotesCount={voteState.upvotes}
+        voteLabel="Marcar resposta como útil"
+        votePresentation="inline"
+      />
     </article>
   );
 };
@@ -230,14 +309,17 @@ export const SavedPostsLogic = () => {
   const items = postsQuery.data?.data ?? [];
   const errorMessage = postsQuery.isError ? resolvePostsError(postsQuery.error) : null;
 
-  const sharePost = async (post: PostListPost) => {
+  const sharePost = async (post: PostListPost, replyId?: string) => {
     if (typeof window === "undefined") return;
 
-    const url = `${window.location.origin}/app/community/${post.community.slug}/post/${post.id}`;
+    const relativeUrl = replyId
+      ? savedReplyHref(post, replyId)
+      : `/app/community/${post.community.slug}/post/${post.id}`;
+    const url = `${window.location.origin}${relativeUrl}`;
 
     try {
       if (navigator.share) {
-        await navigator.share({ title: post.title, url });
+        await navigator.share({ title: replyId ? "Resposta salva na Lectum" : post.title, url });
       } else {
         await navigator.clipboard.writeText(url);
       }
@@ -322,29 +404,23 @@ export const SavedPostsLogic = () => {
                   />
                 ) : (
                   <CommunityPostCard
-                    footerExtra={
-                      <button
-                        aria-label={`Remover ${item.post.title} dos salvos`}
-                        className="grid h-9 w-9 place-items-center rounded-full text-danger transition hover:bg-danger/10 disabled:opacity-60"
-                        disabled={unsavePostMutation.isPending}
-                        onClick={() => unsavePostMutation.mutate(item.post.id)}
-                        type="button"
-                      >
-                        {unsavePostMutation.isPending ? (
-                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                        ) : (
-                          <Trash2 className="h-4 w-4" aria-hidden="true" />
-                        )}
-                      </button>
-                    }
                     headerExtra={
                       <span className="ml-auto shrink-0 rounded-full bg-primary-soft px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-primary">
                         {formatSavedAt(item.saved_at)}
                       </span>
                     }
                     key={item.id}
+                    interactiveActions
                     onShare={sharePost}
                     post={item.post}
+                    saveActionOverride={{
+                      active: true,
+                      count: item.post.saves_count,
+                      disabled: unsavePostMutation.isPending,
+                      label: "Remover dos salvos",
+                      onClick: () => unsavePostMutation.mutate(item.post.id),
+                    }}
+                    showHighlightedProfessionalReply={false}
                   />
                 ),
               )}

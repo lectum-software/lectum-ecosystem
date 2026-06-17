@@ -745,9 +745,14 @@ export class PostRepository implements IPostRepository {
               id: true,
               title: true,
               content: true,
+              media_url: true,
+              media_type: true,
               upvotes_count: true,
               createdAt: true,
               parent_reply_id: true,
+              author: {
+                select: authorSelect,
+              },
               _count: {
                 select: {
                   replies: {
@@ -827,12 +832,17 @@ export class PostRepository implements IPostRepository {
         id: reply.id,
         title: reply.title,
         content: reply.content,
+        media_url: reply.media_url,
+        media_type: reply.media_type,
         upvotes_count: reply.upvotes_count,
         replies_received_count: reply._count.replies,
         has_verified_professional_reply: reply.replies.length > 0,
         created_at: reply.createdAt,
         parent_reply_id: reply.parent_reply_id,
         parent_content: reply.parent_reply?.content ?? null,
+        current_user_vote: null,
+        saved: false,
+        author: toAuthorResponse(reply.author, reply.upvotes_count),
       },
     }));
     const merged =
@@ -915,9 +925,14 @@ export class PostRepository implements IPostRepository {
                   id: true,
                   title: true,
                   content: true,
+                  media_url: true,
+                  media_type: true,
                   upvotes_count: true,
                   createdAt: true,
                   parent_reply_id: true,
+                  author: {
+                    select: authorSelect,
+                  },
                   _count: {
                     select: {
                       replies: {
@@ -962,6 +977,56 @@ export class PostRepository implements IPostRepository {
         : Promise.resolve([]),
       shouldLoadReplies ? prisma.post_reply_save.count({ where: replyWhere }) : Promise.resolve(0),
     ]);
+    const postVoteMap = new Map<string, CurrentVote>();
+    const replyVoteMap = new Map<string, CurrentVote>();
+
+    if (postSaves.length > 0 || replySaves.length > 0) {
+      const [postVotes, replyVotes] = await Promise.all([
+        postSaves.length > 0
+          ? prisma.post_vote.findMany({
+              where: {
+                user_id: data.auth.id!,
+                deleted: false,
+                post_id: {
+                  in: postSaves.map((item) => item.post.id),
+                },
+              },
+              select: {
+                post_id: true,
+                value: true,
+              },
+            })
+          : Promise.resolve([]),
+        replySaves.length > 0
+          ? prisma.post_vote.findMany({
+              where: {
+                user_id: data.auth.id!,
+                deleted: false,
+                reply_id: {
+                  in: replySaves.map((item) => item.reply.id),
+                },
+              },
+              select: {
+                reply_id: true,
+                value: true,
+              },
+            })
+          : Promise.resolve([]),
+      ]);
+
+      for (const vote of postVotes) {
+        if (vote.post_id) {
+          postVoteMap.set(vote.post_id, normalizeVoteValue(vote.value));
+        }
+      }
+
+      for (const vote of replyVotes) {
+        if (vote.reply_id) {
+          replyVoteMap.set(vote.reply_id, normalizeVoteValue(vote.value));
+        }
+      }
+    }
+
     const postItems = postSaves.map<PostListItemDTO>((item) => ({
       id: item.id,
       type: "post",
@@ -969,7 +1034,7 @@ export class PostRepository implements IPostRepository {
       saved_at: item.createdAt,
       status: item.post.status,
       saved: true,
-      post: toListPostResponse(item.post, null, true),
+      post: toListPostResponse(item.post, postVoteMap.get(item.post.id) ?? null, true),
       reply: null,
     }));
     const replyItems = replySaves.map<PostListItemDTO>((item) => ({
@@ -984,12 +1049,17 @@ export class PostRepository implements IPostRepository {
         id: item.reply.id,
         title: item.reply.title,
         content: item.reply.content,
+        media_url: item.reply.media_url,
+        media_type: item.reply.media_type,
         upvotes_count: item.reply.upvotes_count,
         replies_received_count: item.reply._count.replies,
         has_verified_professional_reply: item.reply.replies.length > 0,
         created_at: item.reply.createdAt,
         parent_reply_id: item.reply.parent_reply_id,
         parent_content: item.reply.parent_reply?.content ?? null,
+        current_user_vote: replyVoteMap.get(item.reply.id) ?? null,
+        saved: true,
+        author: toAuthorResponse(item.reply.author, item.reply.upvotes_count),
       },
     }));
     const responseItems =

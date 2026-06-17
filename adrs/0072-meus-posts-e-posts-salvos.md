@@ -110,3 +110,41 @@ nao havia `parent_reply`.
 - Comentarios diretos passam a ter contexto claro por titulo de post, enquanto respostas preservam o
   contexto do comentario pai.
 - Nao houve alteracao de schema Prisma nem dependencia nova.
+
+## Complemento 2026-06-17: Salvos com barra de interacao padrao
+
+### Contexto
+
+A tela `/app/posts/saved` havia acumulado acoes paralelas aos componentes de comunidade, como
+botao textual `Abrir post`, lixeira vermelha e compartilhamento fora do padrao. Alem disso, um post
+principal salvo podia carregar automaticamente a resposta profissional em destaque, criando a
+percepcao de que a resposta tambem havia sido salva.
+
+### Decisao
+
+- Reutilizar `CommunityActionBar` em todos os cards salvos, tanto posts quanto respostas, para
+  manter a mesma linguagem de interacao do feed/comunidade: upvote/downvote, comentarios ou
+  respostas, salvar ativo e compartilhar.
+- Transformar a remocao de salvo na propria acao de salvar ativa da barra padrao, sem lixeira ou
+  botao destrutivo paralelo.
+- Adicionar `saveActionOverride` e `showHighlightedProfessionalReply` ao `CommunityPostCard` para
+  permitir que a tela de Salvos remova itens pelo icone de salvar e oculte a resposta destacada sem
+  duplicar card de post.
+- Estender o DTO de respostas em listas de usuario com `author`, `media_url`, `media_type`,
+  `current_user_vote` e `saved`, derivados das tabelas reais `post_reply`, `post_vote` e
+  `post_reply_save`, para que respostas salvas tenham interacoes, midia e WhatsApp profissional
+  consistentes.
+- Padronizar o CTA `Chamar no WhatsApp` de respostas profissionais como outline verde
+  (`bg-transparent`, borda/texto/icone verdes), alinhado ao feed.
+
+### Consequencias
+
+- Salvar um post principal guarda apenas o post; uma resposta profissional so aparece em Salvos se
+  tiver sido salva como item independente.
+- A tela de Salvos deixa de ter acoes duplicadas e passa a depender da mesma barra de interacao das
+  comunidades, reduzindo manutencao visual paralela.
+- Nao houve mudanca de schema Prisma nem dependencia nova; apenas enriquecimento de DTO e ajuste de
+  apresentacao/contrato de resposta existente.
+- A validacao visual foi feita com Chrome headless em 390x844 usando sessao real local com itens
+  salvos, confirmando que nao ha `Abrir post`, lixeira extra ou resposta destacada embutida no post
+  salvo.
