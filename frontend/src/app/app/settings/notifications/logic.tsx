@@ -7,6 +7,7 @@ import {
   Eye,
   Heart,
   MessageSquare,
+  Newspaper,
   Share2,
   Star,
 } from "lucide-react";
@@ -77,7 +78,7 @@ const SECTIONS: { key: string; label: string; categories: NotificationCategory[]
       {
         key: "novo_post",
         label: "Novas postagens",
-        icon: MessageSquare,
+        icon: Newspaper,
       },
       {
         key: "nova_resposta",

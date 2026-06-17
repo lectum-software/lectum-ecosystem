@@ -191,3 +191,11 @@ Esta task deixa o canal de recebimento pronto. **Não** ligue eventos de domíni
 - Para pacientes, `professionals_only` passa a aparecer como `Profissionais`; para psicologos, `patients_only` aparece como `Pacientes`; `Todos` permanece inalterado.
 - Os valores persistidos (`professionals_only`, `patients_only`, `all`) e a regra de segmentacao de notificacoes nao mudaram.
 - A largura do controle foi reduzida para permanecer contida na coluna direita, sem sobrepor o titulo `Novas postagens`.
+
+## Complemento 2026-06-17 - icone de novas postagens
+
+- O item `Novas postagens` em `/app/settings/notifications` passou a usar o icone `Newspaper` do `lucide-react`, representando publicacao/artigo em vez de conversa.
+- A troca diferencia visualmente notificacoes de novos posts das notificacoes de respostas, que continuam usando `MessageSquare`.
+- O circulo de fundo, cor azul, tamanho, peso visual e alinhamento permanecem herdados do componente de linha existente.
+- Nao houve alteracao de backend, Prisma, payload de preferencias, endpoints, validacoes ou packages.
+- Validacoes executadas: `pnpm --dir frontend exec biome check src/app/app/settings/notifications/logic.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile 390px confirmando `lucide-newspaper` no item `Novas postagens`, wrapper `bg-primary-soft text-primary` e ausencia de overflow horizontal.

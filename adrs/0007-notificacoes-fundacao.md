@@ -107,3 +107,10 @@ A forma do `notification` migrada (derivada do sample) usa `read`, `redirect`, `
 - O dropdown customizado de `novo_post__post_author_scope` passa a separar rotulo visual curto de valor de dominio persistido.
 - `professionals_only` e exibido como `Profissionais` para pacientes; `patients_only` e exibido como `Pacientes` para psicologos; `all` continua `Todos`.
 - A decisao evita alargamento do controle no mobile sem alterar payload, backend, preferencias existentes ou a segmentacao implementada em 29B.
+
+## Complemento 2026-06-17 - iconografia de novas postagens
+
+- O item `Novas postagens` em `/app/settings/notifications` passa a usar `Newspaper` como icone visual de publicacao/artigo.
+- A decisao evita reutilizar icone de mensagem/chat para novos posts e deixa `MessageSquare` reservado para respostas/comentarios.
+- A mudanca e exclusivamente visual no frontend: preserva o circulo azul-claro, `text-primary`, dimensoes da linha, contrato `novo_post`, persistencia e regras de segmentacao.
+- Validacoes executadas: Biome no arquivo alterado, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile 390px confirmando o SVG `lucide-newspaper` sem overflow horizontal.
