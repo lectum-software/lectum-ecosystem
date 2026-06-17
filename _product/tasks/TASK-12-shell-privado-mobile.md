@@ -325,3 +325,18 @@ Validacoes do ajuste:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Chrome/CDP autenticado em mobile 390px e desktop 1280px confirmou titulo, botao de voltar quando aplicavel, ausencia de fundo/sombra/borda de card no header e rota correta em `/app/notifications`, `/app/reviews`, `/app/settings/account`, `/app/posts/mine`, `/app/following` e `/app/posts/saved`.
+
+### Ajuste complementar em 2026-06-17: posicao padronizada do bloqueio de acesso anonimo
+
+- Produto solicitou que o card de usuario nao autenticado apareca no mesmo eixo visual em Perfil, Notificacoes e Favoritos.
+- O `PrivateTemplate` passou a separar classes de navegacao/compensacao do shell (`pb` mobile e `pl` desktop) das classes de conteudo especificas de cada rota.
+- O estado de acesso bloqueado agora usa apenas o container compartilhado do shell e nao herda `contentClassName` da pagina, evitando que `/app/favorites` aplique `pt-0`, `px-0` ou `max-w-none` ao card anonimo.
+- Perfil, Notificacoes e Favoritos mantem o mesmo espacamento superior e o mesmo centro horizontal/vertical no mobile e no desktop.
+- Nao houve alteracao de rotas, autenticacao, backend, Prisma, migrations, packages ou conteudo autenticado das telas.
+
+Validacoes do ajuste:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome/CDP sem sessao em mobile 390px e desktop 1280px confirmou `topSpread=0` e `leftSpread=0` para o card bloqueado em `/app/profile`, `/app/notifications` e `/app/favorites`, sem overflow horizontal.

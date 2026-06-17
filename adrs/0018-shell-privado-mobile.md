@@ -163,3 +163,28 @@ Produto solicitou que o menu lateral desktop do shell pudesse ser recolhido/expa
 - `pnpm check`
 - HTTP local em `/app/psychologist/cmq5m0vse000ftkuhybmagcn6` respondeu `200`.
 - HTTP local em `/app/psychologists` respondeu `200`.
+
+## Atualizacao em 2026-06-17: posicao padronizada do bloqueio de acesso anonimo
+
+### Contexto
+
+As rotas publicamente acessiveis que dependem de sessao para mostrar dados privados (`/app/profile`, `/app/notifications` e `/app/favorites`) usam o mesmo card de acesso bloqueado. Como `/app/favorites` customizava o `contentClassName` do shell para remover padding e expandir largura, o card anonimo herdava esse layout e ficava visualmente mais alto/desalinhado que Perfil e Notificacoes.
+
+### Decisao
+
+- Separar no `PrivateTemplate` as classes de compensacao global de navegacao (`navigationAwarePageShellClassName`) das classes especificas de cada pagina (`contentClassName`).
+- O estado de sessao carregando e o estado bloqueado sem token usam somente as classes globais do shell, sem herdar `contentClassName` da rota.
+- O conteudo autenticado continua usando `pageShellClassName`, preservando os layouts customizados de Favoritos e demais telas.
+
+### Consequencias
+
+- O card de usuario nao autenticado fica no mesmo eixo visual em Perfil, Notificacoes e Favoritos no mobile e no desktop.
+- Telas com layout customizado continuam podendo ajustar o conteudo autenticado sem afetar o bloqueio compartilhado.
+- Nao houve mudanca de contrato, rotas, autenticacao, backend, Prisma, persistencia ou packages.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome/CDP sem sessao em mobile 390px e desktop 1280px confirmou `topSpread=0` e `leftSpread=0` para `/app/profile`, `/app/notifications` e `/app/favorites`.

@@ -369,13 +369,13 @@ export const PrivateTemplate = ({
   const mobileNavigationActiveHref = getMobileNavigationActiveHref(normalizedPathname);
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
-  const pageShellClassName = cn(
+  const navigationAwarePageShellClassName = cn(
     shouldRenderMobileNavigation ? "pb-28 sm:pb-32" : undefined,
     shouldRenderDesktopSidebar
       ? cn(isDesktopSidebarCollapsed ? "lg:pl-[88px]" : "lg:pl-[240px]", "lg:pb-8")
       : undefined,
-    contentClassName,
   );
+  const pageShellClassName = cn(navigationAwarePageShellClassName, contentClassName);
   const mobileNavigationAwareFabBottom =
     shouldRenderMobileNavigation && isMobileNavigationRenderedVisible
       ? "calc(4rem + env(safe-area-inset-bottom) + 0.625rem)"
@@ -605,7 +605,10 @@ export const PrivateTemplate = ({
       <>
         <NotificationManager />
         <PageShell
-          contentClassName={cn("grid min-h-[55vh] place-items-center", pageShellClassName)}
+          contentClassName={cn(
+            "grid min-h-[55vh] place-items-center",
+            navigationAwarePageShellClassName,
+          )}
           style={pageShellStyle}
         >
           <LoadingState label="Carregando sua sessão" />
@@ -632,7 +635,10 @@ export const PrivateTemplate = ({
       <>
         <NotificationManager />
         <PageShell
-          contentClassName={cn("grid min-h-[55vh] place-items-center", pageShellClassName)}
+          contentClassName={cn(
+            "grid min-h-[55vh] place-items-center",
+            navigationAwarePageShellClassName,
+          )}
           style={pageShellStyle}
         >
           <section className="w-full max-w-[460px] px-1 text-center">
