@@ -4,7 +4,7 @@ import { UpdateRepository } from "../repositories/UpdateRepository";
 
 export default async (data: IUpdateDTO) => {
   const _PREFERENCE = new UpdateRepository();
-  const res = await _PREFERENCE.upsert(data.auth.id!, data.b.prefs);
+  const res = await _PREFERENCE.upsert(data.auth.id!, data.b.prefs, data.auth.role);
 
   return {
     status: 200,

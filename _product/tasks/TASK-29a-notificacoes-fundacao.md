@@ -138,6 +138,7 @@ Packages permitidos: `socket.io`, `socket.io-client`, `web-push`, TanStack Query
 - [x] Validação local executada: `pnpm --dir backend db:migrate` retornou banco em sincronia; smoke HTTP em `/app/notifications` (200) e `/app/settings/notifications` (307 esperado sem sessão autenticada).
 - [x] Commit criado com mensagem convencional.
 - [x] Ajuste fino 2026-06-16: o ícone de configurações no header de `/app/notifications` foi ampliado sem adicionar fundo, borda ou alterar a estrutura do header.
+- [x] Ajuste 2026-06-16: `/app/settings/notifications` foi simplificada para uma chave por tipo de notificação, seletor segmentado em `novo_post`, header com voltar e rodapé limpo; preferências são normalizadas em `notification_preference.prefs`.
 
 ## Validação mínima
 

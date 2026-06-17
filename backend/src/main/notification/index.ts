@@ -3,6 +3,7 @@ import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import { notification as emitNotification } from "@/main/socket/events/notification";
 import { messages } from "./constants";
+import { isChannelAllowed } from "./preferences";
 
 const BASE = process.env.BASE || "";
 
@@ -12,19 +13,11 @@ type NotifyMeta = {
   redirect?: string;
 };
 
-type ChannelPrefs = { in_app?: boolean; push?: boolean };
-
-// Default: permitir quando não há preferência registrada para a categoria.
-const isAllowed = (prefs: unknown, key: string, channel: keyof ChannelPrefs) => {
-  if (!prefs || typeof prefs !== "object") return true;
-  const entry = (prefs as Record<string, ChannelPrefs>)[key];
-  if (!entry) return true;
-  return entry[channel] !== false;
-};
-
 /**
  * Cria a notificação in-app, emite em tempo real (Socket.IO) e envia push web,
- * respeitando `notification_preference` por canal. Não é ligado a eventos de
+ * respeitando `notification_preference`. No MVP web a preferência visual é
+ * uma chave única por categoria, mas o dispatcher preserva compatibilidade
+ * com registros legados `in_app`/`push`. Não é ligado a eventos de
  * domínio aqui — a produção de eventos é responsabilidade da TASK-29B.
  */
 export const notify = async (userIds: string[], meta: NotifyMeta) => {
@@ -41,7 +34,7 @@ export const notify = async (userIds: string[], meta: NotifyMeta) => {
 
     // 1. Persistir notificações in-app (canal in_app permitido).
     const inAppUsers = users.filter((user) =>
-      isAllowed(user.notification_preference?.prefs, meta.message_key, "in_app"),
+      isChannelAllowed(user.notification_preference?.prefs, meta.message_key, "in_app"),
     );
 
     if (inAppUsers.length > 0) {
@@ -70,7 +63,9 @@ export const notify = async (userIds: string[], meta: NotifyMeta) => {
     }
 
     for (const user of users) {
-      if (!isAllowed(user.notification_preference?.prefs, meta.message_key, "push")) continue;
+      if (!isChannelAllowed(user.notification_preference?.prefs, meta.message_key, "push")) {
+        continue;
+      }
 
       for (const sub of user.notification_subscriptions ?? []) {
         if (!sub.subscription) continue;

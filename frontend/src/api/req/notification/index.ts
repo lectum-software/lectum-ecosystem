@@ -3,7 +3,15 @@ import type { notification } from "@/api/generator/types";
 import { handleReq } from "@/api/handle";
 import type { IndexFilters, Pagination } from "@/api/types";
 
-export type NotificationPrefs = Record<string, { in_app?: boolean; push?: boolean }>;
+export type NotificationPrefs = Record<
+  string,
+  {
+    enabled?: boolean;
+    in_app?: boolean;
+    post_author_scope?: "patients_only" | "professionals_only" | "all";
+    push?: boolean;
+  }
+>;
 
 export type NotificationPreference = {
   id?: string;

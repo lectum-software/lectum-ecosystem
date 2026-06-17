@@ -121,3 +121,12 @@ Pendências registradas sem mock:
 - `compartilhamento`: as ações atuais de compartilhar posts usam apenas `navigator.share`/clipboard no frontend e não possuem modelo/endpoint persistido para gerar evento real.
 
 Decisão documentada em `adrs/0098-notificacoes-eventos-dominio.md`.
+
+## Complemento 2026-06-16
+
+Implementado suporte de segmentação para `novo_post`:
+
+- Preferências de novas postagens agora suportam `post_author_scope`.
+- Para psicólogos: `patients_only` recebe alertas apenas de posts de pacientes; `all` recebe de pacientes e psicólogos.
+- Para pacientes: `professionals_only` recebe alertas apenas de posts de psicólogos; `all` recebe de pacientes e psicólogos.
+- A filtragem acontece no produtor real `community_post`, antes de chamar o dispatcher, sem criar endpoint paralelo ou evento simulado.

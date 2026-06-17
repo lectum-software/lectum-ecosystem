@@ -1,4 +1,4 @@
-﻿# ADR-0098: Eventos reais de notificacao de dominio
+# ADR-0098: Eventos reais de notificacao de dominio
 
 ## Status
 
@@ -42,3 +42,9 @@ Durante a auditoria foram encontrados produtores persistidos para avaliacao, fav
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
 - `pnpm check`
+
+## Complemento 2026-06-16
+
+- O evento real `community_post` agora consulta o papel do autor, o papel do destinatario e `notification_preference.prefs.novo_post.post_author_scope` antes de disparar `novo_post`.
+- Regras aplicadas: psicologos podem receber somente posts de pacientes ou todos; pacientes podem receber somente posts de profissionais ou todos.
+- A segmentacao foi isolada em `main/notification/preferences.ts`, preparando o dispatcher e produtores futuros para novas categorias segmentadas sem criar modelo paralelo.

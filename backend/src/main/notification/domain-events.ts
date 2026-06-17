@@ -1,6 +1,7 @@
-﻿import { createHash } from "node:crypto";
+import { createHash } from "node:crypto";
 import prisma from "@/infra/database/prisma";
 import { notify } from "./index";
+import { shouldReceiveNewPostNotification } from "./preferences";
 
 type MessageKey =
   | "nova_avaliacao"
@@ -158,6 +159,16 @@ export const notifyNewCommunityPost = async (params: {
   communitySlug: string;
   postId: string;
 }) => {
+  const author = await prisma.user.findFirst({
+    where: {
+      id: params.actorId,
+      deleted: false,
+    },
+    select: {
+      role: true,
+    },
+  });
+
   const members = await prisma.community_member.findMany({
     where: {
       community_id: params.communityId,
@@ -168,13 +179,33 @@ export const notifyNewCommunityPost = async (params: {
     },
     select: {
       user_id: true,
+      user: {
+        select: {
+          role: true,
+          notification_preference: {
+            select: {
+              prefs: true,
+            },
+          },
+        },
+      },
     },
   });
+
+  const recipientIds = members
+    .filter((member) =>
+      shouldReceiveNewPostNotification({
+        authorRole: author?.role,
+        prefs: member.user.notification_preference?.prefs,
+        recipientRole: member.user.role,
+      }),
+    )
+    .map((member) => member.user_id);
 
   await notifyOnce({
     actorId: params.actorId,
     messageKey: "novo_post",
-    recipientIds: members.map((member) => member.user_id),
+    recipientIds,
     redirect: communityPostRedirect(params.communitySlug, params.postId),
     sourceId: params.postId,
     sourceType: "community_post",

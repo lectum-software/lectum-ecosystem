@@ -441,7 +441,7 @@ A penalidade de posts removidos e progressiva por comunidade: `30 * removed_post
 | Campo | Tipo | Notas |
 |---|---|---|
 | `user_id` | `String @unique` | |
-| `prefs` | `Json` | mapa `message_key → { in_app: boolean; push: boolean }` por categoria do PRD §12 |
+| `prefs` | `Json` | mapa `message_key → { enabled: boolean }` por categoria do PRD §12 no MVP web; compatível com registros legados `{ in_app, push }`. Para `novo_post`, adicionar `post_author_scope: "patients_only" \| "professionals_only" \| "all"` para segmentar alertas por tipo de autor. |
 | `@@map("notification_preferences")` | | |
 
 Endpoints de notificação (módulos separados, padrão do projeto): `notification/{index,update/:id,clean}`; `notification_preference/{show,update}`; `notification_subscription/{key,store}`. Cada caso é um módulo próprio sob `/api/private/...`.

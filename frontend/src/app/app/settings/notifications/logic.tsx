@@ -3,7 +3,6 @@
 import {
   ArrowLeft,
   ArrowUp,
-  BellRing,
   Bookmark,
   Eye,
   Heart,
@@ -17,14 +16,16 @@ import { useMemo } from "react";
 import { z } from "zod";
 import { useNotificationPreferences } from "@/api/callers/notification";
 import type { NotificationPrefs } from "@/api/req/notification";
-import { SwitchController } from "@/components/controllers";
+import { SelectController, SwitchController } from "@/components/controllers";
 import { LoadingState } from "@/components/ui/loading-state";
 import { type Field, useFormList } from "@/hooks/form";
+import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 
-type Channel = "in_app" | "push";
+type UserRole = "paciente" | "psicologo" | null | undefined;
+type NewPostAuthorScope = "patients_only" | "professionals_only" | "all";
 
 type NotificationCategory = {
   key:
@@ -80,7 +81,7 @@ const SECTIONS: { key: string; label: string; categories: NotificationCategory[]
       {
         key: "novo_post",
         label: "Novas postagens",
-        description: "Posts publicados em comunidades que você acompanha.",
+        description: "Escolha de quem deseja receber alertas nas comunidades que acompanha.",
         icon: MessageSquare,
       },
       {
@@ -111,62 +112,123 @@ const SECTIONS: { key: string; label: string; categories: NotificationCategory[]
   },
 ];
 
-const CHANNELS: { key: Channel; label: string }[] = [
-  { key: "in_app", label: "No app" },
-  { key: "push", label: "Push" },
-];
-
 const CATEGORIES = SECTIONS.flatMap((section) => section.categories);
 type CategoryKey = (typeof CATEGORIES)[number]["key"];
-type PreferenceFieldName = `${CategoryKey}__${Channel}`;
-type NotificationSettingsForm = Record<PreferenceFieldName, boolean>;
+type SwitchCategoryKey = Exclude<CategoryKey, "novo_post">;
+type EnabledFieldName = `${SwitchCategoryKey}__enabled`;
+type NotificationSettingsForm = Record<EnabledFieldName, boolean> & {
+  novo_post__post_author_scope: NewPostAuthorScope;
+};
 
-const getFieldName = (category: CategoryKey, channel: Channel) =>
-  `${category}__${channel}` as PreferenceFieldName;
+const SWITCH_CATEGORIES = CATEGORIES.filter(
+  (category): category is NotificationCategory & { key: SwitchCategoryKey } =>
+    category.key !== "novo_post",
+);
 
-const PREFERENCE_FIELDS = CATEGORIES.flatMap((category) =>
-  CHANNELS.map((channel) => ({
-    name: getFieldName(category.key, channel.key),
+const getEnabledFieldName = (category: SwitchCategoryKey) =>
+  `${category}__enabled` as EnabledFieldName;
+
+const getDefaultNewPostScope = (role: UserRole): NewPostAuthorScope =>
+  role === "psicologo" ? "patients_only" : "professionals_only";
+
+const resolveEnabled = (entry: NotificationPrefs[string] | undefined) => {
+  if (!entry) return true;
+  if (typeof entry.enabled === "boolean") return entry.enabled;
+  if (entry.in_app === false && entry.push === false) return false;
+  return true;
+};
+
+const resolveNewPostScope = (
+  entry: NotificationPrefs[string] | undefined,
+  role: UserRole,
+): NewPostAuthorScope => {
+  if (
+    entry?.post_author_scope === "patients_only" ||
+    entry?.post_author_scope === "professionals_only" ||
+    entry?.post_author_scope === "all"
+  ) {
+    return entry.post_author_scope;
+  }
+
+  return getDefaultNewPostScope(role);
+};
+
+const getNewPostOptions = (role: UserRole) =>
+  role === "psicologo"
+    ? [
+        { label: "Somente pacientes", value: "patients_only" },
+        { label: "Todos", value: "all" },
+      ]
+    : [
+        { label: "Somente profissionais", value: "professionals_only" },
+        { label: "Todos", value: "all" },
+      ];
+
+const PREFERENCE_FIELDS = [
+  ...SWITCH_CATEGORIES.map((category) => ({
+    name: getEnabledFieldName(category.key),
     field: "switch" as const,
-    label: `${category.label} - ${channel.label}`,
+    label: category.label,
   })),
-) satisfies Field<NotificationSettingsForm>[];
+  {
+    name: "novo_post__post_author_scope" as const,
+    field: "select" as const,
+    label: "Novas postagens",
+  },
+] satisfies Field<NotificationSettingsForm>[];
 
-const notificationSettingsSchema = z.object(
-  Object.fromEntries(PREFERENCE_FIELDS.map((field) => [field.name, z.boolean()])) as Record<
-    PreferenceFieldName,
-    z.ZodBoolean
-  >,
-) as z.ZodType<NotificationSettingsForm, NotificationSettingsForm>;
+const notificationSettingsSchema = z.object({
+  nova_avaliacao__enabled: z.boolean(),
+  novo_favorito__enabled: z.boolean(),
+  visualizacao_perfil__enabled: z.boolean(),
+  clique_whatsapp__enabled: z.boolean(),
+  nova_resposta__enabled: z.boolean(),
+  upvote__enabled: z.boolean(),
+  compartilhamento__enabled: z.boolean(),
+  salvamento__enabled: z.boolean(),
+  novo_post__post_author_scope: z.enum(["patients_only", "professionals_only", "all"]),
+}) as z.ZodType<NotificationSettingsForm, NotificationSettingsForm>;
 
-const toFormValues = (prefs: NotificationPrefs = {}) =>
-  Object.fromEntries(
-    CATEGORIES.flatMap((category) =>
-      CHANNELS.map((channel) => [
-        getFieldName(category.key, channel.key),
-        prefs[category.key]?.[channel.key] ?? true,
+const toFormValues = (prefs: NotificationPrefs = {}, role: UserRole): NotificationSettingsForm =>
+  ({
+    ...Object.fromEntries(
+      SWITCH_CATEGORIES.map((category) => [
+        getEnabledFieldName(category.key),
+        resolveEnabled(prefs[category.key]),
       ]),
     ),
-  ) as NotificationSettingsForm;
+    novo_post__post_author_scope: resolveNewPostScope(prefs.novo_post, role),
+  }) as NotificationSettingsForm;
 
-const fromFormValues = (values: NotificationSettingsForm): NotificationPrefs =>
-  CATEGORIES.reduce<NotificationPrefs>((acc, category) => {
-    const channels: { in_app?: boolean; push?: boolean } = {};
-    for (const channel of CHANNELS) {
-      channels[channel.key] = values[getFieldName(category.key, channel.key)];
-    }
-    acc[category.key] = channels;
+const fromFormValues = (values: NotificationSettingsForm): NotificationPrefs => {
+  const prefs = SWITCH_CATEGORIES.reduce<NotificationPrefs>((acc, category) => {
+    acc[category.key] = {
+      enabled: values[getEnabledFieldName(category.key)],
+    };
     return acc;
   }, {});
 
+  prefs.novo_post = {
+    enabled: true,
+    post_author_scope: values.novo_post__post_author_scope,
+  };
+
+  return prefs;
+};
+
 export const NotificationSettingsLogic = () => {
+  const sessionRole = useAppSelector((state) => state.user?.role);
   const { query, update } = useNotificationPreferences();
-  const values = useMemo(() => toFormValues(query.data?.prefs ?? {}), [query.data?.prefs]);
+  const values = useMemo(
+    () => toFormValues(query.data?.prefs ?? {}, sessionRole),
+    [query.data?.prefs, sessionRole],
+  );
+  const newPostOptions = useMemo(() => getNewPostOptions(sessionRole), [sessionRole]);
 
   const form = useFormList<NotificationSettingsForm>({
     fields: PREFERENCE_FIELDS,
     schema: notificationSettingsSchema,
-    defaultValues: toFormValues(),
+    defaultValues: toFormValues({}, sessionRole),
     values,
     resetOptions: { keepDirtyValues: true },
   });
@@ -180,18 +242,23 @@ export const NotificationSettingsLogic = () => {
   return (
     <PrivateTemplate>
       <section className="mx-auto w-full max-w-2xl px-5 py-5 md:py-8">
-        <header className="mb-6 flex items-center gap-3">
-          <Button asChild className="h-10 w-10 rounded-full" type="button" variant="ghost">
+        <header className="mb-6 flex items-start gap-3">
+          <Button
+            asChild
+            className="h-10 w-10 shrink-0 rounded-full p-0"
+            type="button"
+            variant="ghost"
+          >
             <Link aria-label="Voltar para notificações" href="/app/notifications">
               <ArrowLeft className="h-5 w-5" aria-hidden={true} />
             </Link>
           </Button>
-          <div>
+          <div className="min-w-0 pt-1">
             <h1 className="text-xl font-extrabold tracking-tight text-foreground md:text-2xl">
               Configurações de Notificações
             </h1>
             <p className="mt-1 text-sm leading-5 text-muted">
-              Personalize como deseja ser alertado sobre novidades da sua rede profissional.
+              Personalize como deseja ser alertado sobre as novidades da Lectum
             </p>
           </div>
         </header>
@@ -209,11 +276,15 @@ export const NotificationSettingsLogic = () => {
                 <div className="overflow-hidden rounded-3xl border border-border bg-surface shadow-sm">
                   {section.categories.map((category, index) => {
                     const Icon = category.icon;
+                    const isNewPost = category.key === "novo_post";
+                    const enabledFieldName = isNewPost
+                      ? null
+                      : getEnabledFieldName(category.key as SwitchCategoryKey);
 
                     return (
                       <div
                         className={cn(
-                          "grid gap-4 px-4 py-4 md:grid-cols-[1fr_auto] md:items-center md:px-5",
+                          "grid gap-4 px-4 py-4 md:grid-cols-[1fr_minmax(180px,220px)] md:items-center md:px-5",
                           index > 0 && "border-t border-border",
                         )}
                         key={category.key}
@@ -232,18 +303,28 @@ export const NotificationSettingsLogic = () => {
                           </div>
                         </div>
 
-                        <div className="flex items-start gap-4 pl-[52px] md:pl-0">
-                          {CHANNELS.map((channel) => (
+                        <div className="pl-[52px] md:pl-0">
+                          {isNewPost ? (
+                            <SelectController<NotificationSettingsForm>
+                              className="w-full gap-1 text-xs font-bold text-muted"
+                              control={form.hook.control}
+                              field="select"
+                              hideEmptyOption
+                              inputClassName="h-11 rounded-2xl text-sm font-semibold"
+                              label="Receber de"
+                              name="novo_post__post_author_scope"
+                              options={newPostOptions}
+                            />
+                          ) : (
                             <SwitchController<NotificationSettingsForm>
-                              className="gap-1 text-xs font-bold text-muted"
+                              className="items-start gap-1 text-xs font-bold text-muted md:items-end"
                               control={form.hook.control}
                               field="switch"
                               inputClassName="h-7 w-12"
-                              key={channel.key}
-                              label={channel.label}
-                              name={getFieldName(category.key, channel.key)}
+                              label="Receber"
+                              name={enabledFieldName as EnabledFieldName}
                             />
-                          ))}
+                          )}
                         </div>
                       </div>
                     );
@@ -266,15 +347,6 @@ export const NotificationSettingsLogic = () => {
               >
                 {update.isPending ? "Salvando..." : "Salvar preferências"}
               </Button>
-            </div>
-
-            <div className="mx-auto grid max-w-[280px] place-items-center gap-3 py-8 text-center text-muted">
-              <span className="grid h-24 w-24 place-items-center rounded-full bg-primary-soft/70 text-primary/40">
-                <BellRing className="h-10 w-10" aria-hidden={true} />
-              </span>
-              <p className="text-sm leading-5">
-                As preferências ficam salvas no seu perfil e podem ser alteradas a qualquer momento.
-              </p>
             </div>
           </form>
         )}

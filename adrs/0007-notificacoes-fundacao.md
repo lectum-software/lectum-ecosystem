@@ -52,3 +52,5 @@ A forma do `notification` migrada (derivada do sample) usa `read`, `redirect`, `
 ## Complemento 2026-06-16
 
 - O header de `/app/notifications` manteve a composicao limpa de tela secundaria; a acao de configuracoes passou a usar escala visual maior e removeu a compressao causada pelo padding herdado do botao, sem fundo, borda, novo container ou mudanca de alinhamento.
+- As preferencias do MVP web passaram a ser apresentadas como uma chave unica por `message_key`, sem colunas `No app`/`Push`. O backend normaliza `notification_preference.prefs` para `{ enabled }`, mantendo compatibilidade de leitura com registros legados `{ in_app, push }`.
+- `novo_post` deixou de ser controle binario simples e passou a armazenar `post_author_scope`, com defaults por papel do usuario: psicologos recebem de pacientes por padrao; pacientes recebem de profissionais por padrao; `all` habilita ambos.

@@ -1,25 +1,40 @@
 //Client
 
 //Types
-import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 //Objects
 import type { notification_preference } from "@/interfaces/objects";
+import {
+  type NotificationUserRole,
+  normalizeNotificationPrefs,
+  normalizeNotificationPrefsForJson,
+} from "@/main/notification/preferences";
 //Interfaces
 import type { IShowRepository } from "./interfaces/IShowRepository";
 
-const DEFAULT_PREFS: Prisma.InputJsonValue = {};
-
 export class ShowRepository implements IShowRepository {
-  async getOrCreate(userId: string): Promise<notification_preference> {
+  async getOrCreate(userId: string, role: NotificationUserRole): Promise<notification_preference> {
     const existing = await prisma.notification_preference.findUnique({
       where: { user_id: userId },
     });
 
-    if (existing) return existing;
+    if (existing) {
+      const normalized = normalizeNotificationPrefs(existing.prefs, role);
+
+      if (JSON.stringify(existing.prefs) === JSON.stringify(normalized)) {
+        return existing;
+      }
+
+      return prisma.notification_preference.update({
+        where: { user_id: userId },
+        data: {
+          prefs: normalizeNotificationPrefsForJson(existing.prefs, role),
+        },
+      });
+    }
 
     return prisma.notification_preference.create({
-      data: { user_id: userId, prefs: DEFAULT_PREFS },
+      data: { user_id: userId, prefs: normalizeNotificationPrefsForJson({}, role) },
     });
   }
 }

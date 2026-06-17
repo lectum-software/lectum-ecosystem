@@ -5,12 +5,20 @@ import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 //Objects
 import type { notification_preference } from "@/interfaces/objects";
+import {
+  type NotificationUserRole,
+  normalizeNotificationPrefsForJson,
+} from "@/main/notification/preferences";
 //Interfaces
 import type { IUpdateRepository } from "./interfaces/IUpdateRepository";
 
 export class UpdateRepository implements IUpdateRepository {
-  async upsert(userId: string, prefs: unknown): Promise<notification_preference> {
-    const value = (prefs ?? {}) as Prisma.InputJsonValue;
+  async upsert(
+    userId: string,
+    prefs: unknown,
+    role: NotificationUserRole,
+  ): Promise<notification_preference> {
+    const value = normalizeNotificationPrefsForJson(prefs, role) as Prisma.InputJsonValue;
 
     return prisma.notification_preference.upsert({
       where: { user_id: userId },
