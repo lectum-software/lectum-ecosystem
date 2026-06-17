@@ -199,3 +199,11 @@ Esta task deixa o canal de recebimento pronto. **Não** ligue eventos de domíni
 - O circulo de fundo, cor azul, tamanho, peso visual e alinhamento permanecem herdados do componente de linha existente.
 - Nao houve alteracao de backend, Prisma, payload de preferencias, endpoints, validacoes ou packages.
 - Validacoes executadas: `pnpm --dir frontend exec biome check src/app/app/settings/notifications/logic.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile 390px confirmando `lucide-newspaper` no item `Novas postagens`, wrapper `bg-primary-soft text-primary` e ausencia de overflow horizontal.
+
+## Complemento 2026-06-17 - visibilidade por papel na seção Perfil
+
+- A tela `/app/settings/notifications` passou a exibir a seção `Perfil` somente para usuários com papel `psicologo`.
+- Para pacientes, a seção `Perfil` é omitida integralmente, incluindo `Novas avaliações`, `Perfil favoritado`, `Visualizações de perfil` e `Cliques no WhatsApp`.
+- A tela de paciente começa diretamente pela seção `Comunidade`, sem espaço vazio, divisória órfã ou alteração de contrato de preferências.
+- A mudança é apenas de apresentação no frontend; persistência, schema, endpoints e segmentação de notificações permanecem inalterados.
+- Validacoes executadas: `pnpm --dir frontend exec biome check src/app/app/settings/notifications/logic.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile 390px validando paciente com apenas `Comunidade` e psicologo com `Perfil` + `Comunidade`, ambos sem overflow horizontal.

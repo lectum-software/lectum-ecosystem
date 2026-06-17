@@ -114,3 +114,10 @@ A forma do `notification` migrada (derivada do sample) usa `read`, `redirect`, `
 - A decisao evita reutilizar icone de mensagem/chat para novos posts e deixa `MessageSquare` reservado para respostas/comentarios.
 - A mudanca e exclusivamente visual no frontend: preserva o circulo azul-claro, `text-primary`, dimensoes da linha, contrato `novo_post`, persistencia e regras de segmentacao.
 - Validacoes executadas: Biome no arquivo alterado, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile 390px confirmando o SVG `lucide-newspaper` sem overflow horizontal.
+
+## Complemento 2026-06-17 - seção Perfil restrita a psicólogos
+
+- A seção `Perfil` da tela `/app/settings/notifications` passa a ser renderizada somente quando `user.role` é `psicologo`.
+- Pacientes veem apenas preferências de comunidade, porque eventos como avaliação recebida, perfil favoritado, visualização de perfil e clique em WhatsApp são ações do contexto profissional.
+- A decisão preserva o contrato `notification_preference.prefs` e evita regra nova no backend: é um ajuste de UX/papel na apresentação da tela.
+- Validacoes executadas: Biome no arquivo alterado, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile 390px para paciente e psicologo.

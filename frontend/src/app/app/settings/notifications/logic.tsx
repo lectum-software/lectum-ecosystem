@@ -216,6 +216,13 @@ export const NotificationSettingsLogic = () => {
     [query.data?.prefs, sessionRole],
   );
   const newPostOptions = useMemo(() => getNewPostOptions(sessionRole), [sessionRole]);
+  const visibleSections = useMemo(
+    () =>
+      sessionRole === "psicologo"
+        ? SECTIONS
+        : SECTIONS.filter((section) => section.key !== "perfil"),
+    [sessionRole],
+  );
 
   const form = useFormList<NotificationSettingsForm>({
     fields: PREFERENCE_FIELDS,
@@ -259,7 +266,7 @@ export const NotificationSettingsLogic = () => {
           <LoadingState className="py-10" />
         ) : (
           <form className="grid gap-7" onSubmit={handleSubmit}>
-            {SECTIONS.map((section) => (
+            {visibleSections.map((section) => (
               <section className="grid gap-3" key={section.key}>
                 <h2 className="px-1 text-xs font-extrabold tracking-[0.18em] text-muted">
                   {section.label}
