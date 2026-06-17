@@ -638,3 +638,19 @@ Validacoes executadas:
 - `pnpm check`
 - Chrome/CDP mobile 390px em `/app/psychologist/demo-psychologist-camila-rocha?tab=publicacoes`, confirmando secao de resumo, 3 comunidades Top Mentor e metricas `2 Posts` / `1 Respostas`.
 - Chrome/CDP desktop 1440px na mesma rota, confirmando resumo renderizado e distribuicao horizontal das comunidades.
+
+## Registro de ajuste complementar em 2026-06-17 - alinhamento dos badges Top Mentor
+
+- Pedido do usuario: corrigir alinhamento e corte visual dos badges `TOP #1 MENTOR` na secao de Top Mentores da aba `Publicacoes`.
+- Os blocos de comunidade passaram a usar uma largura fixa responsiva e coluna unica centralizada para avatar, selo e nome.
+- O badge deixou de depender de `max-width`, recebeu largura minima maior e permanece em uma unica linha, sem reduzir fonte para mascarar o problema.
+- O avatar, selo e nome foram validados com eixo central unico (`avatarBadgeDelta=0`, `avatarNameDelta=0`) no mobile e desktop.
+- Nao houve alteracao de backend, banco, Prisma, contratos, dados, ranking, ordenacao de publicacoes, packages ou logica de interacao.
+- ADR atualizado: `adrs/0114-resumo-atuacao-publicacoes-perfil.md`.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Chrome/CDP mobile 390px em `/app/psychologist/demo-psychologist-camila-rocha?tab=publicacoes`, confirmando texto completo `TOP #1 MENTOR`, largura do badge de 124px, `textFitsBadge=true` e alinhamento central.
+- Chrome/CDP desktop 1440px na mesma rota, confirmando a mesma regra visual e responsiva.

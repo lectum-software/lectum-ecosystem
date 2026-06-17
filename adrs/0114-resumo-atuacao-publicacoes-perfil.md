@@ -47,6 +47,7 @@ Se não houver comunidade Top 3 e não houver contribuição, a seção não é 
 - `pnpm check`
 - Chrome/CDP mobile 390px em `/app/psychologist/demo-psychologist-camila-rocha?tab=publicacoes` confirmou seção `data-publications-summary`, três comunidades Top Mentor e métricas `2 Posts` / `1 Respostas`.
 - Chrome/CDP desktop 1440px confirmou a mesma seção com largura centralizada no card da aba e três comunidades renderizadas.
+- Complemento em 2026-06-17: Chrome/CDP mobile 390px e desktop 1440px confirmou badges `TOP #1 MENTOR` sem corte, em uma linha, com largura de 124px e eixo central único entre avatar, selo e nome (`avatarBadgeDelta=0`, `avatarNameDelta=0`).
 
 ## Pendências
 
