@@ -175,7 +175,7 @@ export const CreateCommunityPostLogic = () => {
           <Image
             alt=""
             aria-hidden="true"
-            className="pointer-events-none absolute top-5 left-5 z-10 h-4 w-4 -translate-y-1/2"
+            className="pointer-events-none absolute top-[1.375rem] left-5 z-10 h-4 w-4 -translate-y-1/2"
             height={16}
             src={COMMUNITY_SELECTOR_ICON_SRC}
             width={16}
@@ -185,7 +185,7 @@ export const CreateCommunityPostLogic = () => {
             {...field}
             inputClassName={cn(
               field.inputClassName,
-              "pl-12 pr-10 leading-none [&>span]:leading-none",
+              "pl-12 pr-10 leading-[1.35] [&>span]:leading-[1.35]",
             )}
           />
         </div>

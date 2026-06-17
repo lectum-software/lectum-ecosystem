@@ -54,7 +54,7 @@ const buildFields = ({
       emptySearchLabel: "Nenhuma comunidade encontrada",
       required: true,
       inputClassName:
-        "h-10 w-fit max-w-[calc(100vw-36px)] min-w-[236px] rounded-full border-transparent bg-[#F5F7FA] px-4 text-sm font-semibold text-[#111827] shadow-none focus:border-transparent focus:ring-0 dark:bg-surface-muted",
+        "h-11 w-fit max-w-[calc(100vw-36px)] min-w-[236px] overflow-visible rounded-full border-transparent bg-[#F5F7FA] px-4 py-0 text-sm font-semibold leading-[1.35] text-[#111827] shadow-none focus:border-transparent focus:ring-0 dark:bg-surface-muted [&>span]:leading-[1.35]",
     },
     {
       name: "title",

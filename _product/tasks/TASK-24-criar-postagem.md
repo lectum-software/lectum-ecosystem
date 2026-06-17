@@ -184,3 +184,12 @@ Regras anti-recriação específicas:
 ## Notas para executor
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
+
+## Complemento 2026-06-17 - altura do seletor de comunidade
+
+- Pedido do usuario: corrigir corte visual de descendentes (`q`, `g`, `p`, `j`) no texto do pill de comunidade da tela `Criar Post`, observado em `Ansiedade em equilibrio`.
+- Frontend: o seletor de comunidade de `/app/community/[slug]/post/new` recebeu altura levemente maior (`h-11`), line-height mais confortável (`1.35`), padding vertical controlado e `overflow-visible` no botão, preservando largura, radius, ícone, texto e seta.
+- O ícone do seletor foi realinhado ao centro da nova altura do pill, sem alterar a largura útil nem criar componente paralelo ao controller de select existente.
+- Escopo: sem mudanças de backend, Prisma, migrations, endpoint, payload, lógica de criação, anonimato, ordenação de comunidades ou packages.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile em `/app/community/ansiedade-em-equilibrio/post/new`, confirmando botão com `overflow: visible`, texto dentro do pill e ícone/seta centralizados.

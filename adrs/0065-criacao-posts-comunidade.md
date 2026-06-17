@@ -73,3 +73,16 @@ O `DATA-MODEL.md` já prevê `community_post` com `author_id`, `community_id`, `
 - Implementar upload real de imagens/vídeos quando houver credenciais/bucket R2 e schema de anexos aprovado.
 - Criar detalhe real de comunidade e detalhe real do post nas tasks posteriores.
 - Adicionar pré-moderação/IA somente após nova ADR aprovar a regra de negócio e infraestrutura.
+
+## Atualizacao 2026-06-17 - ajuste de line-height do seletor de comunidade
+
+- O seletor de comunidade da tela `Criar Post` permanece usando o `SelectController` compartilhado, mas o caso visual desta tela passa a sobrescrever apenas escala vertical e line-height do pill.
+- A decisao preserva a largura do seletor, a busca interna e a ordenacao real das comunidades, ajustando `h-11`, `line-height: 1.35`, `overflow-visible` e centralizacao do icone para evitar corte de letras descendentes em nomes como `Ansiedade em equilibrio`.
+- A mudanca e estritamente visual e nao altera contratos de API, payload de criacao, validacao de formulario, regras de anonimato, storage de midia, backend, Prisma ou packages.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome/CDP mobile em `http://localhost:3000/app/community/ansiedade-em-equilibrio/post/new`, validando `overflow: visible`, label dentro do botao, respiro vertical para descendentes e alinhamento central de icone/seta.
