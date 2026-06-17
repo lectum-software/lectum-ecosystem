@@ -53,3 +53,11 @@ Implementar o perfil privado do paciente com:
 - As opções continuam limitadas aos valores persistidos de `patient_profile.gender`: `feminino`, `masculino`, `nao_binario` e `prefiro_nao_dizer`, com opção vazia `Selecione seu gênero`.
 - Não houve mudança de contrato, backend, Prisma, persistência, endpoints ou packages.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP local em mobile 390px confirmando ausência de `<select>` nativo visível, borda azul-clara, fundo branco, sombra leve, item selecionado em azul claro e ausência de overflow horizontal.
+
+## Complemento 2026-06-17 - perfil bloqueado para usuário não autenticado
+
+- O estado sem sessão de `/app/profile`, renderizado pelo `PrivateTemplate` para rotas públicas que ainda dependem de usuário autenticado, foi redesenhado como tela de onboarding/autenticação.
+- A decisão mantém o bloqueio funcional e os destinos existentes (`/auth/profile-selection` para criar conta e `/auth/login` via `out` para login), mas substitui o `InlineAlert` por um card central premium com copy mais acolhedora.
+- O card usa ícone `ShieldCheck`, título `Acesse sua conta`, texto orientado a perfil/preferências/continuidade e hierarquia visual clara: `Criar conta` como CTA primária e `Fazer login` como CTA secundária.
+- Não houve mudança de contrato, backend, Prisma, persistência, endpoints ou packages.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP local em mobile 390px confirmando novo conteúdo, ausência da copy antiga, CTAs visíveis e card sem overflow horizontal.

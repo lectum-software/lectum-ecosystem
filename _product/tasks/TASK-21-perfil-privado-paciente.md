@@ -145,6 +145,7 @@ Regras anti-recriação específicas:
 - [x] Checks/builds relevantes foram executados sem erros.
 - [x] Commit criado com mensagem convencional.
 - [x] Ajuste fino 2026-06-17: o campo `Gênero` em `/app/profile/edit` usa dropdown customizado premium, sem select nativo visível, com opções `Selecione seu gênero`, `Feminino`, `Masculino`, `Não binário` e `Prefiro não dizer`.
+- [x] Ajuste fino 2026-06-17: o estado de perfil não autenticado em `/app/profile` foi redesenhado como tela de onboarding/autenticação premium, com card acolhedor, ícone maior, novo texto e hierarquia `Criar conta` / `Fazer login`.
 
 ## Validação mínima
 
@@ -196,4 +197,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - O dropdown recebeu fundo branco, borda azul-clara, radius refinado, sombra leve, chevron alinhado à direita, opções com padding confortável e item selecionado em azul muito claro.
 - As opções permanecem `Selecione seu gênero`, `Feminino`, `Masculino`, `Não binário` e `Prefiro não dizer`.
 - A validação local via Chrome/CDP em viewport mobile 390px confirmou ausência de `<select>` nativo visível, lista alinhada à largura do campo e sem overflow horizontal.
+- Não houve alteração de backend, Prisma, contratos, persistência ou packages.
+
+## Ajuste complementar em 2026-06-17 - perfil bloqueado para usuário não autenticado
+
+- A tela pública `/app/profile` sem sessão manteve a função de bloquear o acesso ao perfil privado, mas deixou de parecer um alerta simples.
+- O estado não autenticado passou a usar card central premium com fundo branco, borda azul-clara, glow sutil, ícone `ShieldCheck` maior, título `Acesse sua conta` e texto acolhedor orientado à continuidade da experiência.
+- A hierarquia de ações foi ajustada: `Criar conta` é a ação primária e `Fazer login` a ação secundária, ambas com ícones alinhados ao texto.
+- A validação local via Chrome/CDP em viewport mobile 390px confirmou novo texto, ausência da copy antiga, botões visíveis, card sem overflow horizontal e proporção adequada.
 - Não houve alteração de backend, Prisma, contratos, persistência ou packages.

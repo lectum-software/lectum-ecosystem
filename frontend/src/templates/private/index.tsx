@@ -6,6 +6,7 @@ import {
   Heart,
   LogIn,
   Plus,
+  ShieldCheck,
   UserPlus,
   UserRound,
   UsersRound,
@@ -23,7 +24,6 @@ import {
 } from "react";
 import { useAuth } from "@/api/callers/auth";
 import type { user } from "@/api/generator/types";
-import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { PageShell } from "@/components/ui/page-shell";
 import { useSignOut } from "@/hooks/cookies/signout";
@@ -635,23 +635,64 @@ export const PrivateTemplate = ({
           contentClassName={cn("grid min-h-[55vh] place-items-center", pageShellClassName)}
           style={pageShellStyle}
         >
-          <div className="grid w-full max-w-[430px] gap-4 text-center">
-            <InlineAlert title="Acesse sua conta" variant="info">
-              Esta área é autenticada. Cadastre-se ou faça login para continuar na Lectum.
-            </InlineAlert>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Button asChild>
-                <Link href="/auth/profile-selection">
-                  <UserPlus className="h-4 w-4" aria-hidden="true" />
-                  Criar conta
-                </Link>
-              </Button>
-              <Button onClick={() => out("/auth/login")} type="button" variant="outline">
-                <LogIn className="h-4 w-4" aria-hidden="true" />
-                Fazer login
-              </Button>
+          <section className="w-full max-w-[460px] px-1 text-center">
+            <div className="relative overflow-hidden rounded-[2rem] border border-[#DCEBFA] bg-white px-6 py-8 shadow-[0_24px_70px_rgba(31,95,159,0.12)] ring-1 ring-white/80 sm:px-8 sm:py-10">
+              <div
+                aria-hidden="true"
+                className="-top-24 -right-20 absolute h-48 w-48 rounded-full bg-primary/10 blur-3xl"
+              />
+              <div
+                aria-hidden="true"
+                className="-bottom-24 -left-20 absolute h-48 w-48 rounded-full bg-[#9DD7FF]/20 blur-3xl"
+              />
+
+              <div className="relative z-10 grid justify-items-center">
+                <div className="relative mb-5 grid h-20 w-20 place-items-center rounded-[1.65rem] bg-gradient-to-br from-primary-soft via-white to-[#E9F5FF] text-primary shadow-[0_16px_34px_rgba(47,141,235,0.16)] ring-1 ring-[#CFE5FB]">
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-2 rounded-[1.3rem] border border-white/80"
+                  />
+                  <ShieldCheck className="h-9 w-9" aria-hidden="true" />
+                </div>
+
+                <p className="mb-3 rounded-full border border-[#CFE5FB] bg-[#F7FBFF] px-3 py-1 text-[11px] font-extrabold tracking-[0.16em] text-primary uppercase">
+                  Perfil protegido
+                </p>
+
+                <h1 className="text-2xl font-extrabold tracking-[-0.04em] text-foreground sm:text-3xl">
+                  Acesse sua conta
+                </h1>
+                <p className="mt-3 max-w-[360px] text-balance text-sm leading-6 text-muted sm:text-base">
+                  Entre ou crie sua conta para acessar seu perfil, salvar preferências e continuar
+                  sua experiência na Lectum.
+                </p>
+
+                <div className="mt-7 grid w-full gap-3 sm:grid-cols-2">
+                  <Button
+                    asChild
+                    className="h-12 rounded-2xl text-sm font-extrabold shadow-[0_14px_30px_rgba(47,141,235,0.22)]"
+                  >
+                    <Link
+                      className="inline-flex items-center justify-center gap-2"
+                      href="/auth/profile-selection"
+                    >
+                      <UserPlus className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      <span>Criar conta</span>
+                    </Link>
+                  </Button>
+                  <Button
+                    className="h-12 rounded-2xl border-[#CFE5FB] bg-white text-sm font-extrabold text-primary shadow-none hover:border-primary/40 hover:bg-primary-soft/50"
+                    onClick={() => out("/auth/login")}
+                    type="button"
+                    variant="outline"
+                  >
+                    <LogIn className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    <span>Fazer login</span>
+                  </Button>
+                </div>
+              </div>
             </div>
-          </div>
+          </section>
         </PageShell>
         {navigationMarkup}
       </>
