@@ -295,3 +295,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nao houve alteracao de backend, Prisma, migrations, packages, endpoints, filtros, paginacao, favoritos ou tracking de contato.
 - ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local Chrome/CDP autenticado em mobile 390px e desktop 1280px em `/app/favorites`.
+
+## Complemento 2026-06-17 - limpeza visual de Comunidades Seguidas
+
+- Pedido do usuario: simplificar `/app/following` para reduzir ruido visual e priorizar descoberta de comunidades.
+- Referencia visual ativa: `_product/proto/Seguindo.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao, mantendo fallback auditavel nas imagens locais.
+- O card `Em destaque` removeu a previa de descricao da comunidade, mantendo apenas badge `Novidade`/`Seguindo`, nome da comunidade e CTA `Explorar`.
+- O layout do destaque foi compactado para nao deixar espacos vazios apos a remocao da descricao.
+- A secao final `Acompanhe novidades` foi removida junto com os chips `Atualizacao diaria`, `Comunidades seguras` e `Conteudo real`.
+- O fim da pagina agora acontece naturalmente apos `Recomendados para voce`, sem bloco informativo adicional.
+- Escopo: sem mudancas de backend, Prisma, migrations, packages, endpoints, participacao em comunidades ou recomendacoes reais.
+- ADR atualizado: `adrs/0073-comunidades-seguidas.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e Chrome/CDP autenticado em mobile 390px na rota `/app/following`, confirmando ausencia da descricao do destaque e da secao/chips de novidades, sem overflow horizontal.

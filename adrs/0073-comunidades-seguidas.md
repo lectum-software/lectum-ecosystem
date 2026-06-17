@@ -46,3 +46,25 @@ forneceu o PDF local `C:\Users\tulio\Downloads\Seguindo.pdf` como referência vi
 - Smoke HTTP local: `GET http://127.0.0.1:3000/app/following` retornou 200.
 - Smoke API sem sessão: `GET http://127.0.0.1:3001/api/private/community?scope=following`
   retornou 401, confirmando proteção por autenticação privada.
+
+## Complemento 2026-06-17: reducao de ruido visual
+
+### Contexto
+
+A tela `/app/following` ja cumpria a funcao de listar comunidades seguidas e recomendacoes, mas o card
+`Em destaque` exibia uma descricao curta e a secao final `Acompanhe novidades` repetia mensagens
+informativas de baixo valor para a jornada atual.
+
+### Decisao
+
+- Remover a descricao do card `Em destaque`, preservando apenas badge de estado, nome da comunidade
+e CTA `Explorar`.
+- Compactar a altura do card de destaque para que a ausencia da descricao nao gere area vazia.
+- Remover a secao `Acompanhe novidades` e seus chips informativos.
+- Manter dados, consultas, recomendacoes e participacao em comunidades inalterados.
+
+### Consequencias
+
+- A pagina fica mais densa e focada nas comunidades seguidas, destaque e recomendacoes.
+- A decisao e estritamente visual: nenhum contrato de API, schema Prisma, endpoint ou regra de
+participacao foi alterado.

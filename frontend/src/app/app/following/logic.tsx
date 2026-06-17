@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  Bell,
-  ChevronRight,
-  Compass,
-  Loader2,
-  Moon,
-  Sparkles,
-  UsersRound,
-  Waves,
-} from "lucide-react";
+import { ChevronRight, Compass, Loader2, UsersRound } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useCommunities, useFollowCommunity } from "@/api/callers/community";
@@ -159,25 +150,18 @@ const FeaturedCommunity = ({ community }: { community: Community }) => (
   <section className="grid gap-5">
     <SectionTitle>Em destaque</SectionTitle>
     <Link
-      className="group relative min-h-[194px] overflow-hidden rounded-[22px] bg-[#101A22] p-6 text-white shadow-[0_14px_30px_rgba(15,23,42,0.12)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_38px_rgba(15,23,42,0.16)]"
+      className="group relative min-h-[168px] overflow-hidden rounded-[22px] bg-[#101A22] p-6 text-white shadow-[0_14px_30px_rgba(15,23,42,0.12)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_38px_rgba(15,23,42,0.16)]"
       href={`/app/community/${community.slug}`}
     >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_58%_28%,rgba(255,255,255,0.28),transparent_18%),linear-gradient(180deg,rgba(120,143,150,0.70)_0%,rgba(24,37,43,0.86)_52%,rgba(6,12,18,0.98)_100%)]" />
       <div className="absolute inset-x-0 bottom-0 h-24 bg-[radial-gradient(ellipse_at_center,rgba(44,67,76,0.95),rgba(5,11,16,0.92)_62%,rgba(0,0,0,0.96))]" />
-      <div className="relative z-10 flex min-h-[146px] flex-col justify-end gap-3">
+      <div className="relative z-10 flex min-h-[120px] flex-col justify-end gap-3">
         <span className="w-fit rounded-full bg-primary px-3 py-1 text-xs font-black uppercase tracking-[0.04em]">
           {community.new_posts_count ? "Novidade" : "Seguindo"}
         </span>
-        <div className="grid gap-1">
-          <h3 className="line-clamp-2 text-[1.7rem] font-black leading-tight tracking-[-0.04em]">
-            {community.name}
-          </h3>
-          {community.description ? (
-            <p className="line-clamp-1 text-sm font-semibold text-white/82">
-              {community.description}
-            </p>
-          ) : null}
-        </div>
+        <h3 className="line-clamp-2 text-[1.7rem] font-black leading-tight tracking-[-0.04em]">
+          {community.name}
+        </h3>
         <span className="inline-flex h-11 w-fit items-center rounded-full bg-white px-5 text-base font-black text-[#131A2A] transition group-hover:translate-x-1">
           Explorar
         </span>
@@ -373,34 +357,6 @@ export const FollowingCommunitiesLogic = () => {
                     </div>
                   </div>
                 ) : null}
-              </section>
-
-              <section className="grid gap-3 rounded-[22px] bg-white p-5 shadow-[0_8px_18px_rgba(15,23,42,0.04)]">
-                <div className="flex items-center gap-3">
-                  <span className="grid h-11 w-11 place-items-center rounded-full bg-[#EAF4FF] text-primary">
-                    <Bell className="h-5 w-5" aria-hidden="true" />
-                  </span>
-                  <div>
-                    <h2 className="text-base font-black text-[#131A2A]">Acompanhe novidades</h2>
-                    <p className="text-sm leading-6 text-[#738198]">
-                      Os contadores usam posts reais publicados hoje nas comunidades que você segue.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-2 text-xs font-black text-primary">
-                  <span className="rounded-full bg-[#EAF4FF] px-3 py-1.5">
-                    <Sparkles className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
-                    Atualização diária
-                  </span>
-                  <span className="rounded-full bg-[#EAF4FF] px-3 py-1.5">
-                    <Moon className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
-                    Comunidades seguras
-                  </span>
-                  <span className="rounded-full bg-[#EAF4FF] px-3 py-1.5">
-                    <Waves className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
-                    Conteúdo real
-                  </span>
-                </div>
               </section>
             </>
           ) : null}
