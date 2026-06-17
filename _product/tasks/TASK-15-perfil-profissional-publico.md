@@ -654,3 +654,18 @@ Validacoes executadas:
 - `pnpm --dir frontend build`
 - Chrome/CDP mobile 390px em `/app/psychologist/demo-psychologist-camila-rocha?tab=publicacoes`, confirmando texto completo `TOP #1 MENTOR`, largura do badge de 124px, `textFitsBadge=true` e alinhamento central.
 - Chrome/CDP desktop 1440px na mesma rota, confirmando a mesma regra visual e responsiva.
+
+## Registro de ajuste complementar em 2026-06-17 - limpeza visual de sombras no perfil
+
+- Pedido do usuario: reduzir efeitos de sombra no perfil do psicologo, especialmente na secao Top Mentores e nos botoes `Ver todas`.
+- Avatares e badges Top Mentor passaram a depender de contorno/borda sutil, sem sombra de flutuacao exagerada.
+- O card de resumo de Publicacoes e os botoes `Ver todas` tiveram sombras removidas para alinhar com Especialidades, Atendimento e Formacao & Titulos.
+- Nao houve alteracao de backend, banco, Prisma, contratos, dados, ranking, ordenacao de publicacoes, packages ou logica de interacao.
+- ADR atualizado: `adrs/0114-resumo-atuacao-publicacoes-perfil.md`.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Chrome/CDP mobile 390px e desktop 1440px em `/app/psychologist/demo-psychologist-camila-rocha?tab=publicacoes`, confirmando sombras removidas/reduzidas nos Top Mentores.
+- Chrome/CDP mobile 390px e desktop 1440px em `/app/psychologist/demo-psychologist-camila-rocha`, confirmando botoes `Ver todas` sem sombra.

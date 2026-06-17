@@ -52,3 +52,18 @@ Se não houver comunidade Top 3 e não houver contribuição, a seção não é 
 ## Pendências
 
 Nenhuma pendência externa. Builder/Quick Copy não esteve disponível como ferramenta direta; a referência visual usada foi a imagem anexada pelo usuário e a validação no browser local com dados reais.
+
+## Complemento em 2026-06-17 - limpeza visual de sombras
+
+Foi aplicado um ajuste visual na secao Top Mentores do perfil do psicologo para reduzir a sensacao de camadas flutuando. Os avatares das comunidades e os badges `TOP #1 MENTOR` deixaram de usar sombras projetadas e passaram a depender de borda/contorno sutil. O card de resumo de Publicacoes tambem ficou sem sombra propria.
+
+Os botoes `Ver todas` das secoes Avaliacoes e Publicacoes passaram a seguir o padrao secundario limpo: fundo branco, borda suave, hover por cor/borda e sem `box-shadow`.
+
+A decisao preserva a hierarquia por espacamento, contraste e tipografia, sem alterar ranking, contratos, APIs, dados reais, Prisma, packages ou logica de interacao.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Chrome/CDP mobile 390px e desktop 1440px em `/app/psychologist/demo-psychologist-camila-rocha?tab=publicacoes`, confirmando `box-shadow: none` no resumo Top Mentores e no badge, com anel sutil preservado no avatar.
+- Chrome/CDP mobile 390px e desktop 1440px em `/app/psychologist/demo-psychologist-camila-rocha`, confirmando `box-shadow: none` nos dois botoes `Ver todas`.

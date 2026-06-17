@@ -475,7 +475,7 @@ const ProfileChipList = ({
 
 const ViewAllChipButton = ({ children, onClick }: { children: ReactNode; onClick: () => void }) => (
   <button
-    className="inline-flex h-8 shrink-0 items-center justify-center rounded-full border border-[#CFE4FA] bg-white/90 px-3.5 text-[13px] font-medium text-[#247BD1] shadow-[0_6px_14px_rgba(48,140,232,0.06)] transition hover:border-[#B9DAF8] hover:bg-[#F8FBFF] hover:text-[#1D65B2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+    className="inline-flex h-8 shrink-0 items-center justify-center rounded-full border border-[#CFE4FA] bg-white px-3.5 text-[13px] font-medium text-[#247BD1] transition hover:border-[#B9DAF8] hover:bg-[#F8FBFF] hover:text-[#1D65B2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
     onClick={onClick}
     style={{ fontSize: 13 }}
     type="button"
@@ -1235,7 +1235,7 @@ const PublicationCommunityAvatar = ({
 
   return (
     <span
-      className="relative grid h-[72px] w-[72px] place-items-center overflow-hidden rounded-full border-[3px] border-white text-[18px] font-extrabold shadow-[0_10px_22px_rgba(15,23,42,0.10)] ring-1 ring-[#DCEBFA]"
+      className="relative grid h-[72px] w-[72px] place-items-center overflow-hidden rounded-full border-[3px] border-white text-[18px] font-extrabold ring-1 ring-[#DCEBFA]"
       data-top-mentor-avatar="true"
       style={{
         background:
@@ -1276,7 +1276,7 @@ const PublicationTopMentorCommunity = ({
       <span className="absolute -bottom-0.5 left-1/2 flex min-w-[124px] -translate-x-1/2 justify-center">
         <MentorBadge
           badge={community.badge}
-          className="min-w-[124px] justify-center whitespace-nowrap px-2.5 py-1 text-[8.5px] shadow-[0_8px_16px_rgba(15,23,42,0.10)]"
+          className="min-w-[124px] justify-center whitespace-nowrap px-2.5 py-1 text-[8.5px]"
         />
       </span>
     </span>
@@ -1320,7 +1320,7 @@ const PublicationsActivitySummary = ({
 
   return (
     <section
-      className="overflow-hidden rounded-[24px] border border-[#E7EEF7] bg-white/95 px-3 py-4 shadow-[0_12px_26px_rgba(15,23,42,0.035)] sm:px-5"
+      className="overflow-hidden rounded-[24px] border border-[#E7EEF7] bg-white/95 px-3 py-4 sm:px-5"
       data-publications-summary="true"
     >
       {hasTopCommunities ? (
