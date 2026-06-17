@@ -169,3 +169,29 @@ A tela `/app/posts/mine` precisava reduzir ruido visual na aba "Comentarios" e v
 - A aba de comentarios passa a compartilhar os mesmos padroes visuais e interativos do feed, do post e de Salvos.
 - Salvar e votar em comentarios listados em "Meus posts e comentarios" usa estado persistido real e feedback otimista local, sem endpoint paralelo.
 - Nao houve alteracao de schema Prisma nem pacote novo; o custo extra da listagem e limitado aos itens paginados exibidos.
+
+## Complemento 2026-06-17: Salvos como biblioteca de conteudo
+
+### Contexto
+
+A tela `/app/posts/saved` ainda exibia respostas salvas com uma caixa azul de referencia do pai e
+posts salvos com chip de data em destaque. Isso fazia a biblioteca competir com o conteudo
+realmente salvo e mantinha diferencas visuais em relacao aos cards do feed e aos comentarios dentro
+do post.
+
+### Decisao
+
+- Respostas salvas exibem apenas o comentario salvo, sem `parent_content` em bloco de referencia.
+- O cabecalho de respostas salvas usa `Respondido em [comunidade]` e preserva `Salvo em ...` como
+  metadado cinza secundario.
+- O card de resposta salva passa a renderizar uma linha de autor equivalente ao comentario no post:
+  avatar, nome, verificado, Top Mentor quando houver, tipo/cargo e data relativa da publicacao.
+- Posts salvos mantem o `CommunityPostCard`, mas a data de salvamento deixa de ser chip azul
+  uppercase e passa a ser texto simples cinza no header.
+
+### Consequencias
+
+- Salvos fica mais proximo de uma biblioteca de conteudo salvo, reduzindo ruido de contexto e
+  destaque visual indevido para a data de salvamento.
+- A mudanca e somente de apresentacao; os endpoints, o DTO enriquecido de respostas salvas, a
+  persistencia e as barras de interacao existentes permanecem inalterados.

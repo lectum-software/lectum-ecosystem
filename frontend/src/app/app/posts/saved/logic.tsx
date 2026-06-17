@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { Bookmark, ChevronLeft, ChevronRight, Reply } from "lucide-react";
+import { BadgeCheck, Bookmark, ChevronLeft, ChevronRight, Reply } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -10,9 +10,11 @@ import {
   useUnsaveReplyFromList,
   useVotePost,
 } from "@/api/callers/posts";
+import type { CommunityAuthor } from "@/api/generator/types/community";
 import type { PostListPost, UserPostListItem } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityPostCard } from "@/components/community/community-post-card";
+import { MentorBadge } from "@/components/community/mentor-badge";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -68,8 +70,126 @@ const formatSavedAt = (value: string | null) => {
   }).format(date)}`;
 };
 
+const formatRelativeTime = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "agora";
+
+  const diffInSeconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+  const minutes = Math.floor(diffInSeconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (minutes < 1) return "agora";
+  if (minutes < 60) return `há ${minutes} min`;
+  if (hours < 24) return `há ${hours} h`;
+  if (days < 7) return `há ${days} d`;
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+  }).format(date);
+};
+
+const getInitials = (name: string) => {
+  const parts = name.split(/\s+/).filter(Boolean);
+
+  if (parts.length === 0) return "L";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+};
+
+const formatAuthorMeta = (author: CommunityAuthor, createdAt: string) => {
+  const relativeTime = formatRelativeTime(createdAt);
+
+  if (!author.type_label) return relativeTime;
+
+  return `${author.type_label} • ${relativeTime}`;
+};
+
 const savedReplyHref = (post: PostListPost, replyId: string) =>
   `/app/community/${post.community.slug}/post/${post.id}?focusReplyId=${replyId}#reply-${replyId}`;
+
+const SavedReplyAuthorAvatar = ({ author, href }: { author: CommunityAuthor; href?: string }) => {
+  const avatarSrc = resolvePublicMediaUrl(author.avatar);
+  const avatarNode = (
+    <span className="relative grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft text-xs font-black text-primary ring-2 ring-background">
+      {avatarSrc ? (
+        <Image
+          alt={author.name}
+          className="object-cover"
+          fill
+          sizes="36px"
+          src={avatarSrc}
+          unoptimized={isPublicMediaUrl(author.avatar)}
+        />
+      ) : (
+        getInitials(author.name)
+      )}
+    </span>
+  );
+
+  if (!href) return avatarNode;
+
+  return (
+    <Link
+      aria-label={`Abrir perfil de ${author.name}`}
+      className="shrink-0 cursor-pointer rounded-full no-underline transition hover:brightness-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 active:scale-[0.98]"
+      href={href}
+    >
+      {avatarNode}
+    </Link>
+  );
+};
+
+const SavedReplyAuthorHeader = ({
+  author,
+  createdAt,
+}: {
+  author: CommunityAuthor;
+  createdAt: string;
+}) => {
+  const isPsychologist = author.role === "psicologo";
+  const profileHref = isPsychologist ? `/app/psychologist/${author.id}` : undefined;
+
+  return (
+    <div className="flex items-start gap-3">
+      <SavedReplyAuthorAvatar author={author} href={profileHref} />
+      <div className="grid min-w-0 flex-1 gap-1">
+        <div className="flex min-w-0 items-center gap-x-2 gap-y-1">
+          <div className="flex min-w-0 items-center gap-[5px]">
+            {profileHref ? (
+              <Link
+                className="min-w-0 truncate text-sm font-black text-foreground no-underline transition hover:text-foreground hover:no-underline"
+                href={profileHref}
+              >
+                {author.name}
+              </Link>
+            ) : (
+              <h2 className="min-w-0 truncate text-sm font-black text-foreground">{author.name}</h2>
+            )}
+            {author.verified ? (
+              <BadgeCheck className="h-4 w-4 shrink-0 fill-[#2da7ff] text-white" aria-hidden />
+            ) : null}
+          </div>
+          <MentorBadge badge={author.featured_badge} href={profileHref} />
+        </div>
+        {profileHref ? (
+          <Link
+            className="w-fit text-[11px] font-semibold text-muted no-underline transition hover:text-muted hover:no-underline"
+            href={profileHref}
+          >
+            <time dateTime={createdAt}>{formatAuthorMeta(author, createdAt)}</time>
+          </Link>
+        ) : (
+          <p className="text-[11px] font-semibold text-muted">
+            <time dateTime={createdAt}>{formatAuthorMeta(author, createdAt)}</time>
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const SavedReplyMedia = ({
   mediaType,
@@ -175,7 +295,7 @@ const SavedReplyCard = ({
     <article className="grid gap-4 rounded-[22px] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
       <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-muted">
         <Reply className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-        <span className="shrink-0">Resposta salva em</span>
+        <span className="shrink-0">Respondido em</span>
         <Link
           className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-black text-foreground underline-offset-4 hover:text-primary hover:underline"
           href={`/app/community/${item.post.community.slug}/post/${item.post.id}`}
@@ -185,11 +305,7 @@ const SavedReplyCard = ({
         <span className="ml-auto shrink-0">{formatSavedAt(item.saved_at)}</span>
       </div>
 
-      {reply.parent_content ? (
-        <blockquote className="rounded-2xl border-primary border-l-4 bg-surface-muted px-4 py-3 text-xs leading-5 text-muted">
-          “{reply.parent_content}”
-        </blockquote>
-      ) : null}
+      <SavedReplyAuthorHeader author={reply.author} createdAt={reply.created_at} />
 
       <p className="whitespace-pre-line text-sm leading-6 text-foreground">{reply.content}</p>
 
@@ -405,7 +521,7 @@ export const SavedPostsLogic = () => {
                 ) : (
                   <CommunityPostCard
                     headerExtra={
-                      <span className="ml-auto shrink-0 rounded-full bg-primary-soft px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-primary">
+                      <span className="ml-auto shrink-0 text-[11px] font-semibold text-muted">
                         {formatSavedAt(item.saved_at)}
                       </span>
                     }

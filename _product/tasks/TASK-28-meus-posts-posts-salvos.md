@@ -226,3 +226,13 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - O backend passou a devolver voto atual e estado salvo dos comentarios em `/api/private/posts/mine`, derivados de `post_vote` e `post_reply_save`, sem schema novo e sem mock.
 - Referencias visuais seguem as imagens locais da TASK-28; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile 390x844 validando ausencia do chip de respostas recebidas, ausencia de `POST ORIGINAL`, seletor sem box-shadow, deep link com `focusReplyId` e seletor compacto de notificacoes sem overflow.
+
+## Ajuste complementar em 2026-06-17 - biblioteca Salvos mais limpa
+
+- A rota `/app/posts/saved` passou a exibir respostas salvas com cabecalho `Respondido em`, removendo o texto antigo `Resposta salva em`.
+- O quadrante azul de referencia de post/comentario pai foi removido dos cards de respostas salvas; a tela passa a destacar apenas o comentario efetivamente salvo.
+- Respostas salvas agora exibem avatar, nome, selo de verificado quando houver, badge de mentor quando existir, tipo/cargo do autor e data relativa da publicacao no mesmo padrao visual dos comentarios dentro do post.
+- Posts salvos deixaram de exibir a data de salvamento como chip azul/uppercase e passam a usar texto simples cinza `Salvo em ...`, preservando a data apenas como metadado secundario.
+- Nao houve alteracao de schema Prisma, endpoints ou nova dependencia; o ajuste reutiliza o DTO de respostas salvas enriquecido anteriormente.
+- Referencias visuais seguem as imagens locais da TASK-28; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile 390x844 em `/app/posts/saved`, confirmando `Respondido em` visivel, ausencia de `Resposta salva em`, ausencia de `SALVO EM`, ausencia de `blockquote` de referencia azul, barras padrao de acao e largura sem overflow horizontal.
