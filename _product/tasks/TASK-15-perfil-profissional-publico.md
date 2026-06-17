@@ -669,3 +669,17 @@ Validacoes executadas:
 - `pnpm --dir frontend build`
 - Chrome/CDP mobile 390px e desktop 1440px em `/app/psychologist/demo-psychologist-camila-rocha?tab=publicacoes`, confirmando sombras removidas/reduzidas nos Top Mentores.
 - Chrome/CDP mobile 390px e desktop 1440px em `/app/psychologist/demo-psychologist-camila-rocha`, confirmando botoes `Ver todas` sem sombra.
+
+## Registro de ajuste complementar em 2026-06-17 - botao Avaliar sem sombra
+
+- Pedido do usuario: remover completamente o `box-shadow` do botao `Avaliar` na aba `Avaliacoes` do perfil do psicologo.
+- O botao manteve fundo branco, borda azul-clara suave, tamanho, tipografia, padding e radius atuais.
+- Os estados de hover/focus continuam discretos por alteracao de cor de fundo/borda, sem glow ou sombra externa.
+- Nao houve alteracao de backend, banco, Prisma, contratos, fluxo de avaliacao, autenticacao, packages ou dados persistidos.
+- ADR atualizado: `adrs/0114-resumo-atuacao-publicacoes-perfil.md`.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Chrome/CDP mobile 390px e desktop 1440px em `/app/psychologist/demo-psychologist-camila-rocha?tab=avaliacoes`, confirmando `box-shadow: none`, fundo branco e borda azul-clara no botao `Avaliar`.

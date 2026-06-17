@@ -67,3 +67,15 @@ Validacao complementar:
 - `pnpm --dir frontend build`
 - Chrome/CDP mobile 390px e desktop 1440px em `/app/psychologist/demo-psychologist-camila-rocha?tab=publicacoes`, confirmando `box-shadow: none` no resumo Top Mentores e no badge, com anel sutil preservado no avatar.
 - Chrome/CDP mobile 390px e desktop 1440px em `/app/psychologist/demo-psychologist-camila-rocha`, confirmando `box-shadow: none` nos dois botoes `Ver todas`.
+
+## Complemento em 2026-06-17 - botao Avaliar sem sombra
+
+O botao `Avaliar` no resumo da aba `Avaliacoes` do perfil do psicologo teve o `box-shadow` removido para seguir o mesmo criterio de limpeza visual aplicado aos botoes secundarios do perfil.
+
+A decisao preserva tamanho, tipografia, espacamento interno, bordas arredondadas e fluxo de avaliacao, mantendo apenas hover/focus por cor de fundo/borda. Nao altera backend, contratos, Prisma, packages ou dados reais.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Chrome/CDP mobile 390px e desktop 1440px em `/app/psychologist/demo-psychologist-camila-rocha?tab=avaliacoes`, confirmando `box-shadow: none`, `background: rgb(255, 255, 255)` e borda `rgb(207, 228, 250)` no botao `Avaliar`.

@@ -1613,7 +1613,7 @@ const ReviewSummaryCard = ({
         </div>
         <Button
           asChild
-          className="h-10 shrink-0 cursor-pointer rounded-full border-[#CFE4FA] bg-white px-4 text-[12.5px] font-extrabold text-[#247BD1] shadow-[0_8px_18px_rgba(47,141,235,0.08)] hover:border-[#B8D9F8] hover:bg-[#F4FAFF] hover:text-[#1769B8] focus-visible:outline-[#2F8DEB] sm:px-[18px] sm:text-[13px]"
+          className="h-10 shrink-0 cursor-pointer rounded-full border-[#CFE4FA] bg-white px-4 text-[12.5px] font-extrabold text-[#247BD1] hover:border-[#B8D9F8] hover:bg-[#F4FAFF] hover:text-[#1769B8] focus-visible:outline-[#2F8DEB] sm:px-[18px] sm:text-[13px]"
           variant="outline"
         >
           <Link href={`/app/reviews/new?psychologist_id=${psychologistId}`}>Avaliar</Link>
