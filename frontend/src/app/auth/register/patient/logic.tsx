@@ -107,20 +107,20 @@ export const RegisterPatientLogic = () => {
   };
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto flex min-h-screen w-full max-w-[390px] flex-col px-4 py-8">
-        <section className="mt-5 overflow-hidden rounded-[var(--lectum-auth-radius)] border border-border bg-surface shadow-[var(--lectum-shadow)]">
-          <div className="border-b border-border px-6 py-8 text-center">
-            <Logo className="mx-auto w-[160px]" priority />
+    <main className="min-h-dvh bg-background text-foreground">
+      <div className="mx-auto flex min-h-dvh w-full max-w-[390px] flex-col px-4 py-5 sm:py-6">
+        <section className="overflow-hidden rounded-[var(--lectum-auth-radius)] border border-border bg-surface shadow-[var(--lectum-shadow)]">
+          <div className="border-b border-border px-5 py-5 text-center sm:px-6">
+            <Logo className="mx-auto w-[148px] sm:w-[156px]" priority />
           </div>
 
-          <div className="px-6 pb-7 pt-6">
-            <h1 className="text-center text-2xl font-bold leading-tight text-foreground">
+          <div className="px-5 pb-6 pt-5 sm:px-6">
+            <h1 className="text-center text-[1.45rem] font-extrabold leading-tight text-foreground">
               Cadastre-se
             </h1>
 
             <Button
-              className="mt-6 h-[52px] w-full rounded-[var(--lectum-control-radius)] text-base"
+              className="mt-5 h-12 w-full rounded-[var(--lectum-control-radius)] text-sm"
               disabled={isPending}
               onClick={handleGoogleRegister}
               type="button"
@@ -129,18 +129,18 @@ export const RegisterPatientLogic = () => {
               {googlePending ? (
                 <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
               ) : (
-                <Image src="/svg/google.svg" alt="Google" width={26} height={26} />
+                <Image src="/svg/google.svg" alt="Google" width={22} height={22} />
               )}
               {googlePending ? "Conectando com Google" : "Continuar com Google"}
             </Button>
 
-            <DividerWithLabel className="my-6">ou e-mail</DividerWithLabel>
+            <DividerWithLabel className="my-5">ou e-mail</DividerWithLabel>
 
             <Form className="grid gap-2" {...formProps} onSubmit={hook.handleSubmit(handleSubmit)}>
               {apiError ? <InlineAlert variant="error">{apiError}</InlineAlert> : null}
 
               <Button
-                className="mt-3 h-14 w-full rounded-[18px] text-base"
+                className="mt-2 h-12 w-full rounded-[var(--lectum-control-radius)] text-sm"
                 disabled={isPending}
                 type="submit"
               >
@@ -155,7 +155,7 @@ export const RegisterPatientLogic = () => {
             </Form>
           </div>
 
-          <div className="border-t border-border bg-surface-muted px-6 py-5 text-center text-sm text-muted">
+          <div className="border-t border-border bg-surface-muted px-5 py-4 text-center text-[13px] leading-5 text-muted sm:px-6 sm:text-sm">
             Já possui uma conta?{" "}
             <Link
               className="font-semibold text-primary hover:text-primary-hover"
@@ -170,19 +170,19 @@ export const RegisterPatientLogic = () => {
           </div>
         </section>
 
-        <div className="grid gap-5 pt-7 text-center text-xs font-medium text-subtle">
+        <div className="grid gap-3 pt-4 text-center text-[11px] font-medium leading-5 text-subtle sm:text-xs">
           <div className="grid grid-cols-2 gap-3">
             <span className="inline-flex items-center justify-center gap-1.5">
-              <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+              <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
               Seguro e Criptografado
             </span>
             <span className="inline-flex items-center justify-center gap-1.5">
-              <Zap className="h-4 w-4" aria-hidden="true" />
+              <Zap className="h-3.5 w-3.5" aria-hidden="true" />
               Configuração em 2 minutos
             </span>
           </div>
           <span className="inline-flex items-center justify-center gap-1.5">
-            <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+            <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
             Perfil paciente protegido
           </span>
         </div>

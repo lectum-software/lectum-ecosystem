@@ -100,19 +100,19 @@ export const AuthLogic = () => {
           </span>
         }
       >
-        <div className="mb-8 grid justify-items-center text-center">
-          <Logo className="w-[200px]" priority />
-          <h1 className="mt-8 text-3xl font-bold leading-tight text-foreground">
+        <div className="mb-6 grid justify-items-center text-center">
+          <Logo className="w-[148px] sm:w-[156px]" priority />
+          <h1 className="mt-5 text-[1.55rem] font-extrabold leading-tight text-foreground sm:text-[1.7rem]">
             Bem-vindo de volta
           </h1>
-          <p className="mt-2 text-base text-muted">Faça o login na sua conta</p>
+          <p className="mt-1.5 text-sm text-muted">Faça o login na sua conta</p>
         </div>
 
-        <Form {...formProps} className="grid gap-2" onSubmit={hook.handleSubmit(handleSubmit)}>
+        <Form {...formProps} className="grid gap-1.5" onSubmit={hook.handleSubmit(handleSubmit)}>
           {apiError ? <InlineAlert variant="error">{apiError}</InlineAlert> : null}
 
           <a
-            className="-mt-2 justify-self-end text-sm font-medium text-primary hover:text-primary-hover"
+            className="-mt-1 justify-self-end text-[13px] font-medium text-primary hover:text-primary-hover"
             href="/auth/recovery"
           >
             Esqueci minha senha
@@ -128,7 +128,7 @@ export const AuthLogic = () => {
           </Button>
         </Form>
 
-        <DividerWithLabel className="my-8">ou</DividerWithLabel>
+        <DividerWithLabel className="my-5 sm:my-6">ou</DividerWithLabel>
 
         <Button
           className="w-full"
@@ -140,7 +140,7 @@ export const AuthLogic = () => {
           {googlePending ? (
             <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
           ) : (
-            <Image src="/svg/google.svg" alt="Google" width={30} height={30} />
+            <Image src="/svg/google.svg" alt="Google" width={22} height={22} />
           )}
           {googlePending ? "Conectando com Google" : "Continuar com Google"}
         </Button>

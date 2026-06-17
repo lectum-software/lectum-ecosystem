@@ -37,8 +37,8 @@ export const RedirectLogic = () => {
 
   return (
     <CenterTemplate>
-      <div className="grid w-full justify-items-center gap-5 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-8 text-center shadow-[var(--lectum-shadow-soft)]">
-        <Logo className="w-[160px]" />
+      <div className="grid w-full justify-items-center gap-4 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-7 text-center shadow-[var(--lectum-shadow-soft)]">
+        <Logo className="w-[148px] sm:w-[156px]" />
         <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
         <div className="grid gap-1.5">
           <h1 className="text-xl font-bold text-foreground">Conectando com o Google</h1>

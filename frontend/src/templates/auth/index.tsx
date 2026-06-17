@@ -2,10 +2,10 @@ import type { PropsWithChildren } from "react";
 
 export const AuthTemplate = ({ children }: PropsWithChildren) => {
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto flex min-h-screen w-full max-w-[390px] flex-col justify-center px-4 py-6 sm:max-w-[var(--lectum-container)]">
-        <section className="flex flex-1 items-center justify-center">{children}</section>
-        <footer className="pt-6 text-center text-xs text-subtle">
+    <main className="min-h-dvh bg-background text-foreground">
+      <div className="mx-auto flex min-h-dvh w-full max-w-[390px] flex-col px-4 py-4 sm:max-w-[var(--lectum-container)] sm:py-5">
+        <section className="flex flex-1 items-center justify-center py-2">{children}</section>
+        <footer className="pb-1 pt-3 text-center text-[11px] leading-5 text-subtle sm:text-xs">
           © 2026 Lectum. Todos os direitos reservados.
         </footer>
       </div>

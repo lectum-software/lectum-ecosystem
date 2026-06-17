@@ -105,22 +105,22 @@ export const ResetPasswordLogic = () => {
 
   if (!code) {
     return (
-      <main className="min-h-screen bg-background text-foreground">
-        <header className="border-b border-border bg-surface px-4 py-4 text-center">
-          <h1 className="text-xl font-bold">Recuperar Senha</h1>
+      <main className="min-h-dvh bg-background text-foreground">
+        <header className="border-b border-border bg-surface px-4 py-3 text-center">
+          <h1 className="text-lg font-extrabold">Recuperar Senha</h1>
         </header>
 
-        <section className="mx-auto flex min-h-[calc(100vh-57px)] w-full max-w-[390px] flex-col justify-center px-4 py-10 text-center">
-          <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-6 py-10 shadow-[var(--lectum-shadow-soft)]">
-            <span className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-danger/10 text-danger">
-              <KeyRound className="h-9 w-9" aria-hidden="true" />
+        <section className="mx-auto flex min-h-[calc(100dvh-49px)] w-full max-w-[390px] flex-col justify-center px-4 py-6 text-center sm:py-8">
+          <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-6 py-8 shadow-[var(--lectum-shadow-soft)]">
+            <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-danger/10 text-danger">
+              <KeyRound className="h-8 w-8" aria-hidden="true" />
             </span>
-            <h2 className="mt-8 text-2xl font-bold">Link inválido</h2>
-            <p className="mt-4 text-base leading-7 text-muted">
+            <h2 className="mt-6 text-xl font-extrabold">Link inválido</h2>
+            <p className="mt-3 text-sm leading-6 text-muted">
               O link de recuperação está incompleto ou não possui código. Solicite um novo e-mail
               para continuar.
             </p>
-            <div className="mt-8 grid gap-3">
+            <div className="mt-6 grid gap-3">
               <Button asChild className="w-full">
                 <Link href="/auth/recovery">
                   <RotateCcw className="h-4 w-4" aria-hidden="true" />
@@ -138,25 +138,25 @@ export const ResetPasswordLogic = () => {
   }
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border bg-surface px-4 py-4 text-center">
-        <h1 className="text-xl font-bold">Recuperar Senha</h1>
+    <main className="min-h-dvh bg-background text-foreground">
+      <header className="border-b border-border bg-surface px-4 py-3 text-center">
+        <h1 className="text-lg font-extrabold">Recuperar Senha</h1>
       </header>
 
-      <section className="mx-auto flex min-h-[calc(100vh-57px)] w-full max-w-[390px] flex-col px-4 py-10">
+      <section className="mx-auto flex min-h-[calc(100dvh-49px)] w-full max-w-[390px] flex-col px-4 py-6 sm:py-8">
         <div className="grid justify-items-center text-center">
-          <span className="grid h-20 w-20 place-items-center rounded-full bg-primary-soft text-primary">
-            <KeyRound className="h-9 w-9" aria-hidden="true" />
+          <span className="grid h-16 w-16 place-items-center rounded-full bg-primary-soft text-primary">
+            <KeyRound className="h-8 w-8" aria-hidden="true" />
           </span>
 
-          <h2 className="mt-10 text-2xl font-bold leading-tight">Criar nova senha</h2>
-          <p className="mt-4 max-w-[330px] text-base leading-6 text-muted">
+          <h2 className="mt-6 text-xl font-extrabold leading-tight">Criar nova senha</h2>
+          <p className="mt-3 max-w-[330px] text-sm leading-6 text-muted">
             Sua nova senha deve ser forte e diferente das senhas utilizadas anteriormente.
           </p>
         </div>
 
         <Form
-          className="mt-10 grid gap-3"
+          className="mt-7 grid gap-2.5"
           {...formProps}
           onSubmit={hook.handleSubmit(handleSubmit)}
         >
@@ -169,12 +169,12 @@ export const ResetPasswordLogic = () => {
             </InlineAlert>
           ) : null}
 
-          <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5">
-            <div className="flex items-center gap-2 border-b border-border pb-4 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+          <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4">
+            <div className="flex items-center gap-2 border-b border-border pb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-muted">
               <ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />
               Requisitos de segurança
             </div>
-            <ul className="mt-4 grid gap-3 text-sm text-muted">
+            <ul className="mt-3 grid gap-2.5 text-[13px] leading-5 text-muted">
               {requirements.map((requirement) => {
                 const Icon = requirement.valid ? CheckCircle2 : Circle;
 
@@ -193,11 +193,7 @@ export const ResetPasswordLogic = () => {
             </ul>
           </div>
 
-          <Button
-            className="mt-4 w-full bg-[#10172f] hover:bg-[#18223f]"
-            disabled={resetPassword.isPending}
-            type="submit"
-          >
+          <Button className="mt-2 w-full" disabled={resetPassword.isPending} type="submit">
             {resetPassword.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
             ) : null}
@@ -205,7 +201,7 @@ export const ResetPasswordLogic = () => {
           </Button>
         </Form>
 
-        <div className="mt-10 border-t border-border pt-6 text-center text-sm text-muted">
+        <div className="mt-7 border-t border-border pt-5 text-center text-[13px] text-muted sm:text-sm">
           Lembrou sua senha?{" "}
           <Link className="font-semibold text-primary hover:text-primary-hover" href="/auth/login">
             Voltar para o Login

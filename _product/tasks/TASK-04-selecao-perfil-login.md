@@ -250,3 +250,24 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - API local sem cookie confirmou leitura publica de comunidade, posts, detalhe de post e replies com estado de usuario neutro.
 - Browser local headless em viewport mobile `390x844` confirmou que `/app/psychologists` nao mostra a modal imediatamente e que, apos 90s virtuais de navegacao, exibe a modal "Crie sua conta gratuita".
 - ADR criado: `adrs/0112-conversao-progressiva-usuarios-anonimos.md`.
+
+## Ajuste posterior em 2026-06-17: refinamento visual do fluxo de autenticação
+
+- Pedido direto de produto: revisar login, cadastro, recuperação, redefinição, confirmação de e-mail e telas auxiliares de auth para padronizar escala, ícones, espaçamentos e proporções com o restante da Lectum.
+- A fonte visual foi validada por imagens locais exportadas (`_product/proto/Login.jpg`, `_product/proto/Recuperar Senha - Inserir Email.jpg` e `_product/proto/Cadastro de Paciente.jpg`). Builder/Quick Copy não estava acessível como ferramenta direta nesta sessão; a limitação foi registrada nesta execução.
+- O template público de autenticação (`AuthTemplate`) passou a usar `min-h-dvh`, padding vertical menor e footer mais compacto para preservar centralização e evitar barra de rolagem desnecessária no desktop.
+- O card base de auth (`AuthCard`) reduziu padding interno e footer sem reduzir legibilidade de campos ou botões.
+- A logo do login foi reduzida de `200px` para `148px` no mobile e `156px` no desktop; os demais fluxos públicos foram alinhados à mesma escala visual.
+- Cadastro de paciente, cadastro de psicólogo, recuperação de senha, redefinição de senha, confirmação de e-mail, erro de auth e retorno Google receberam compactação proporcional de ícones, títulos, CTAs e espaçamentos, preservando rotas, formulários reais, `useUserSet`, Google OAuth e redirecionamentos.
+- Nenhum endpoint, mock, store, pacote ou fluxo paralelo de autenticação foi criado.
+
+### Validação do ajuste
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local via Chrome/CDP:
+  - `/auth/login` desktop `1366x768`: sem scroll vertical, sem overflow horizontal, logo renderizada com `156px`;
+  - `/auth/login`, `/auth/profile-selection`, `/auth/recovery` e `/auth/reset-password?code=invalid-task-auth-ui` em viewport mobile `390x844`: sem overflow horizontal;
+  - `/auth/register/patient` desktop: sem overflow horizontal, mantendo conteúdo rolável quando necessário por quantidade de campos.
+- ADR atualizado: `adrs/0008-fluxo-publico-auth-selecao-perfil-login.md`.

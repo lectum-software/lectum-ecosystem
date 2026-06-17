@@ -37,10 +37,10 @@ export const ProfileSelectionLogic = () => {
 
   return (
     <AuthTemplate>
-      <div className="grid w-full gap-8">
-        <div className="grid justify-items-center gap-8 text-center">
-          <Logo className="w-[230px]" priority />
-          <h1 className="text-xl font-bold text-foreground">Qual o seu perfil?</h1>
+      <div className="grid w-full gap-6">
+        <div className="grid justify-items-center gap-5 text-center">
+          <Logo className="w-[168px] sm:w-[180px]" priority />
+          <h1 className="text-lg font-extrabold text-foreground sm:text-xl">Qual o seu perfil?</h1>
         </div>
 
         <div className="grid gap-4">
@@ -50,18 +50,20 @@ export const ProfileSelectionLogic = () => {
             return (
               <Link
                 className={cn(
-                  "group flex min-h-28 items-center gap-4 rounded-[var(--lectum-card-radius)] border border-border bg-surface px-6 py-5 shadow-[var(--lectum-shadow-soft)] transition",
+                  "group flex min-h-[96px] items-center gap-3.5 rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-4 shadow-[var(--lectum-shadow-soft)] transition",
                   "hover:border-primary/40 hover:bg-primary-soft/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
                 )}
                 href={appendRedirect(option.href)}
                 key={option.href}
               >
-                <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-                  <Icon className="h-7 w-7" aria-hidden="true" />
+                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+                  <Icon className="h-6 w-6" aria-hidden="true" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-base font-bold text-foreground">{option.title}</span>
-                  <span className="mt-1 block text-sm leading-5 text-muted">
+                  <span className="block text-[15px] font-bold leading-5 text-foreground">
+                    {option.title}
+                  </span>
+                  <span className="mt-1 block text-[13px] leading-5 text-muted">
                     {option.description}
                   </span>
                 </span>
@@ -74,7 +76,7 @@ export const ProfileSelectionLogic = () => {
           })}
         </div>
 
-        <p className="text-center text-sm text-muted">
+        <p className="text-center text-[13px] text-muted sm:text-sm">
           Já possui uma conta?{" "}
           <Link
             className="font-semibold text-primary hover:text-primary-hover"

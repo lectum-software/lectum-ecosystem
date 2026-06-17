@@ -107,31 +107,31 @@ export const RegisterPsychologistLogic = () => {
   };
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto flex min-h-screen w-full max-w-[398px] flex-col px-5 py-9 sm:max-w-[420px] sm:py-12">
+    <main className="min-h-dvh bg-background text-foreground">
+      <div className="mx-auto flex min-h-dvh w-full max-w-[398px] flex-col px-4 py-5 sm:max-w-[420px] sm:py-6">
         <section className="overflow-hidden rounded-[var(--lectum-auth-radius)] border border-border bg-surface shadow-[var(--lectum-shadow)]">
-          <div className="border-b border-border px-6 py-7">
+          <div className="border-b border-border px-5 py-5 sm:px-6">
             <div className="flex items-center justify-between gap-3">
-              <Logo className="w-[158px]" priority />
-              <span className="whitespace-nowrap rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary">
+              <Logo className="w-[148px] sm:w-[156px]" priority />
+              <span className="whitespace-nowrap rounded-full bg-primary-soft px-2.5 py-1 text-[11px] font-semibold text-primary">
                 Para Psicólogos
               </span>
             </div>
           </div>
 
-          <div className="px-6 pb-7 pt-7">
+          <div className="px-5 pb-6 pt-5 sm:px-6">
             <div className="grid justify-items-center text-center">
-              <h1 className="max-w-[310px] text-[25px] font-bold leading-[1.18] text-foreground sm:text-[26px]">
+              <h1 className="max-w-[310px] text-[1.35rem] font-extrabold leading-[1.18] text-foreground sm:text-[1.45rem]">
                 Cadastre-se para converter pacientes para o WhatsApp
               </h1>
-              <p className="mt-4 max-w-[310px] text-[15px] leading-6 text-muted">
+              <p className="mt-3 max-w-[310px] text-sm leading-6 text-muted">
                 Todos os dias, milhares de pessoas buscam por psicólogos na internet e nós os
                 conectamos ao seu WhatsApp. Comece agora, gratuitamente.
               </p>
             </div>
 
             <Button
-              className="mt-8 h-[50px] w-full rounded-[var(--lectum-control-radius)] text-base"
+              className="mt-5 h-12 w-full rounded-[var(--lectum-control-radius)] text-sm"
               disabled={isPending}
               onClick={handleGoogleRegister}
               type="button"
@@ -140,18 +140,18 @@ export const RegisterPsychologistLogic = () => {
               {googlePending ? (
                 <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
               ) : (
-                <Image src="/svg/google.svg" alt="Google" width={26} height={26} />
+                <Image src="/svg/google.svg" alt="Google" width={22} height={22} />
               )}
               {googlePending ? "Conectando com Google" : "Continuar com Google"}
             </Button>
 
-            <DividerWithLabel className="my-7">ou e-mail</DividerWithLabel>
+            <DividerWithLabel className="my-5">ou e-mail</DividerWithLabel>
 
             <Form className="grid gap-1" {...formProps} onSubmit={hook.handleSubmit(handleSubmit)}>
               {apiError ? <InlineAlert variant="error">{apiError}</InlineAlert> : null}
 
               <Button
-                className="mt-3 h-14 w-full rounded-[18px] text-base"
+                className="mt-2 h-12 w-full rounded-[var(--lectum-control-radius)] text-sm"
                 disabled={isPending}
                 type="submit"
               >
@@ -166,7 +166,7 @@ export const RegisterPsychologistLogic = () => {
             </Form>
           </div>
 
-          <div className="border-t border-border bg-surface-muted px-6 py-5 text-center text-sm text-muted">
+          <div className="border-t border-border bg-surface-muted px-5 py-4 text-center text-[13px] leading-5 text-muted sm:px-6 sm:text-sm">
             Já possui uma conta?{" "}
             <Link
               className="font-semibold text-primary hover:text-primary-hover"
@@ -181,19 +181,19 @@ export const RegisterPsychologistLogic = () => {
           </div>
         </section>
 
-        <div className="grid gap-5 pt-7 text-center text-xs font-medium text-subtle">
+        <div className="grid gap-3 pt-4 text-center text-[11px] font-medium leading-5 text-subtle sm:text-xs">
           <div className="grid grid-cols-2 gap-3">
             <span className="inline-flex items-center justify-center gap-1.5">
-              <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+              <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
               Seguro e Criptografado
             </span>
             <span className="inline-flex items-center justify-center gap-1.5">
-              <Zap className="h-4 w-4" aria-hidden="true" />
+              <Zap className="h-3.5 w-3.5" aria-hidden="true" />
               Configuração em 2 minutos
             </span>
           </div>
           <span className="inline-flex items-center justify-center gap-1.5">
-            <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+            <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
             Perfil protegido até validação profissional
           </span>
         </div>

@@ -147,3 +147,45 @@ Após os ajustes de comunidade, o fallback autenticado havia ficado em `/app/com
 - `pnpm check`
 - HTTP local: `/auth/login` e `/auth/redirect` com cookie `lectum.token` retornaram `307` para `/app/psychologists`.
 - Browser local via Chrome/CDP: abrir `/auth/login` com cookie de sessão navegou para `/app/psychologists`.
+
+## Atualizacao em 2026-06-17: escala visual unificada do fluxo de auth
+
+### Contexto
+
+O fluxo publico de autenticacao havia acumulado escalas diferentes entre login,
+selecao de perfil, cadastro, recuperacao de senha, redefinicao e confirmacao de e-mail.
+No login, a logo estava visualmente grande e, no desktop, a combinacao de logo, card,
+espacamentos e footer podia deixar a tela com sensacao de excesso vertical em relacao ao
+restante da plataforma.
+
+### Decisao
+
+- Centralizar a compactacao no `AuthTemplate` e no `AuthCard`, usando `min-h-dvh`, menor
+  padding vertical e footer discreto, sem alterar contratos de auth.
+- Reduzir a logo do login para `148px` no mobile e `156px` no desktop, aplicando escala
+  semelhante aos demais fluxos publicos.
+- Ajustar cadastro de paciente, cadastro de psicologo, recuperacao, redefinicao,
+  confirmacao de e-mail, erro de auth e retorno Google com tipografia, icones e
+  espacos mais proximos do restante da Lectum.
+- Preservar a legibilidade dos campos e CTAs principais: a compactacao ficou concentrada
+  em logo, areas de respiro, icones decorativos e footers.
+- Nao criar package, store, endpoint, layout paralelo ou fluxo novo de autenticacao.
+
+### Consequencias
+
+- `/auth/login` cabe em viewport desktop `1366x768` sem scroll vertical, mantendo o card
+  centralizado e a hierarquia premium.
+- As telas publicas de auth passam a usar uma escala mais consistente entre si e com as
+  areas privadas da plataforma.
+- Formulario, React Hook Form/Zod, Google OAuth, recovery/reset reais, `useUserSet` e
+  redirecionamentos existentes nao foram alterados.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local via Chrome/CDP em `/auth/login` desktop `1366x768` confirmou ausencia de
+  scroll vertical e logo com `156px`.
+- Browser local via Chrome/CDP em auth mobile `390x844` confirmou ausencia de overflow
+  horizontal em login, selecao de perfil, recuperacao e redefinicao de senha.

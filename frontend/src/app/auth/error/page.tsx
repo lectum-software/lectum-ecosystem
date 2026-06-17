@@ -16,7 +16,7 @@ export default async function Page({ searchParams }: PageProps) {
 
   return (
     <CenterTemplate>
-      <div className="grid w-full justify-items-center gap-5 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-8 text-center shadow-[var(--lectum-shadow-soft)]">
+      <div className="grid w-full justify-items-center gap-4 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-7 text-center shadow-[var(--lectum-shadow-soft)]">
         <span className="grid h-12 w-12 place-items-center rounded-full bg-danger/10 text-danger">
           <AlertTriangle className="h-6 w-6" aria-hidden="true" />
         </span>

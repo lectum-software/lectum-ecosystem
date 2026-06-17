@@ -15,9 +15,9 @@ export function AuthCard({ children, className, footer }: AuthCardProps) {
         className,
       )}
     >
-      <div className="px-6 py-8 sm:px-8">{children}</div>
+      <div className="px-5 py-6 sm:px-7 sm:py-7">{children}</div>
       {footer ? (
-        <div className="border-t border-border px-6 py-5 text-center text-sm text-muted sm:px-8">
+        <div className="border-t border-border px-5 py-4 text-center text-[13px] leading-5 text-muted sm:px-7 sm:text-sm">
           {footer}
         </div>
       ) : null}

@@ -223,21 +223,21 @@ export const VerifyEmailLogic = () => {
 
   if (isConfirmed) {
     return (
-      <main className="min-h-screen bg-background text-foreground">
-        <header className="border-b border-border bg-surface px-4 py-4 text-center">
-          <h1 className="text-xl font-bold">Confirmação de E-mail</h1>
+      <main className="min-h-dvh bg-background text-foreground">
+        <header className="border-b border-border bg-surface px-4 py-3 text-center">
+          <h1 className="text-lg font-extrabold">Confirmação de E-mail</h1>
         </header>
 
-        <section className="mx-auto flex min-h-[calc(100vh-57px)] w-full max-w-[390px] flex-col justify-center px-4 py-10">
-          <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-6 py-10 text-center shadow-[var(--lectum-shadow-soft)]">
-            <span className="mx-auto grid h-24 w-24 place-items-center rounded-full bg-success/10 text-success">
-              <CheckCircle2 className="h-12 w-12" aria-hidden="true" />
+        <section className="mx-auto flex min-h-[calc(100dvh-49px)] w-full max-w-[390px] flex-col justify-center px-4 py-6 sm:py-8">
+          <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-6 py-8 text-center shadow-[var(--lectum-shadow-soft)]">
+            <span className="mx-auto grid h-[72px] w-[72px] place-items-center rounded-full bg-success/10 text-success">
+              <CheckCircle2 className="h-9 w-9" aria-hidden="true" />
             </span>
-            <h2 className="mt-8 text-2xl font-bold">E-mail confirmado</h2>
-            <p className="mt-4 text-base leading-7 text-muted">
+            <h2 className="mt-6 text-xl font-extrabold">E-mail confirmado</h2>
+            <p className="mt-3 text-sm leading-6 text-muted">
               Sua conta já está verificada. Continue para acessar a Lectum.
             </p>
-            <Button asChild className="mt-8 w-full">
+            <Button asChild className="mt-6 w-full">
               <Link href={continueHref}>
                 Continuar
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -250,38 +250,42 @@ export const VerifyEmailLogic = () => {
   }
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border bg-surface px-4 py-4 text-center">
-        <h1 className="text-xl font-bold">Confirmação de E-mail</h1>
+    <main className="min-h-dvh bg-background text-foreground">
+      <header className="border-b border-border bg-surface px-4 py-3 text-center">
+        <h1 className="text-lg font-extrabold">Confirmação de E-mail</h1>
       </header>
 
-      <section className="mx-auto flex min-h-[calc(100vh-57px)] w-full max-w-[390px] flex-col px-4 py-10">
+      <section className="mx-auto flex min-h-[calc(100dvh-49px)] w-full max-w-[390px] flex-col px-4 py-6 sm:py-8">
         <div className="grid justify-items-center text-center">
-          <div className="relative grid h-32 w-32 place-items-center rounded-full bg-primary-soft text-primary shadow-[var(--lectum-shadow-soft)]">
-            <span className="grid h-20 w-20 place-items-center rounded-full bg-surface shadow-[var(--lectum-shadow-soft)]">
-              <MailCheck className="h-10 w-10" aria-hidden="true" />
+          <div className="relative grid h-24 w-24 place-items-center rounded-full bg-primary-soft text-primary shadow-[var(--lectum-shadow-soft)]">
+            <span className="grid h-16 w-16 place-items-center rounded-full bg-surface shadow-[var(--lectum-shadow-soft)]">
+              <MailCheck className="h-8 w-8" aria-hidden="true" />
             </span>
-            <span className="absolute -right-1 top-4 grid h-10 w-10 place-items-center rounded-full bg-primary text-white shadow-[var(--lectum-shadow-soft)]">
-              <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+            <span className="absolute -right-1 top-3 grid h-8 w-8 place-items-center rounded-full bg-primary text-white shadow-[var(--lectum-shadow-soft)]">
+              <ShieldCheck className="h-4 w-4" aria-hidden="true" />
             </span>
           </div>
 
-          <h2 className="mt-10 text-2xl font-bold leading-tight">Verifique seu e-mail</h2>
-          <p className="mt-4 max-w-[330px] text-base leading-7 text-muted">
+          <h2 className="mt-7 text-xl font-extrabold leading-tight">Verifique seu e-mail</h2>
+          <p className="mt-3 max-w-[330px] text-sm leading-6 text-muted">
             Enviamos um código de {CODE_LENGTH} dígitos para{" "}
             <strong className="font-semibold text-foreground">{currentEmail}</strong>. Digite o
             código para confirmar sua conta.
           </p>
         </div>
 
-        <div className="mt-8" aria-live="polite">
+        <div className="mt-6" aria-live="polite">
           {isHydrating ? <LoadingState label="Atualizando sua sessão" /> : null}
           {!isHydrating && sendConfirmCode.isPending ? (
             <LoadingState label="Enviando código de confirmação" />
           ) : null}
         </div>
 
-        <Form className="mt-8 grid gap-3" {...formProps} onSubmit={hook.handleSubmit(handleSubmit)}>
+        <Form
+          className="mt-6 grid gap-2.5"
+          {...formProps}
+          onSubmit={hook.handleSubmit(handleSubmit)}
+        >
           {apiError ? (
             <InlineAlert variant="error" title="Não foi possível confirmar o e-mail">
               {apiError}
@@ -298,7 +302,7 @@ export const VerifyEmailLogic = () => {
           </Button>
         </Form>
 
-        <div className="mt-8 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 text-center text-sm text-muted shadow-[var(--lectum-shadow-soft)]">
+        <div className="mt-6 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 text-center text-[13px] leading-5 text-muted shadow-[var(--lectum-shadow-soft)]">
           <div className="flex items-center justify-center gap-2">
             <Clock3 className="h-4 w-4 text-primary" aria-hidden="true" />
             <span>Não recebeu o código?</span>
