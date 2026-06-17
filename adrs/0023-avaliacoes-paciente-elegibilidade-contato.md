@@ -60,3 +60,14 @@ A confirmação de avaliação passou a priorizar continuidade de descoberta em 
 - O card de sucesso reutiliza os dados públicos reais retornados pela elegibilidade (`psychologist_name`, `psychologist_gender`, `psychologist_crp`, `psychologist_verified`) para confirmar quem foi avaliado.
 - A ação principal `Finalizar` redireciona para `/app/community/feed`, em vez de retornar ao perfil do psicólogo, reforçando a próxima etapa de engajamento comunitário.
 - Não houve mudança de contrato persistido ou schema; a decisão é de fluxo e apresentação no frontend.
+
+## Atualização - 2026-06-17 - Lista de avaliações feitas
+
+A tela `/app/reviews` foi ajustada para manter a lista de avaliações do paciente mais objetiva e consistente com os dados profissionais usados no fluxo de avaliação:
+
+- O contrato de listagem de avaliações feitas retorna `psychologist_crp` e `psychologist_gender` junto aos dados já existentes do psicólogo.
+- A UI substitui a headline/bio por `Profissão • CRP`, preservando o `psychologist_headline` no contrato apenas por compatibilidade com consumidores existentes.
+- A nota da avaliação é apresentada somente no indicador compacto estrela + número; o cluster de cinco estrelas foi removido da lista para reduzir redundância visual.
+- A ação textual `Ver perfil` foi removida do rodapé, mantendo a setinha superior direita como única ação de navegação ao perfil.
+
+Não houve alteração de banco nem migração: a decisão é de contrato de leitura e apresentação visual usando campos reais já persistidos em `psychologist_profile`.

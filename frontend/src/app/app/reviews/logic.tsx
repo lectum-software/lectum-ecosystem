@@ -13,6 +13,7 @@ import { SecondaryPageHeader } from "@/components/ui/secondary-page-header";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { formatCrpLabel } from "@/utils/crp";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 const LIMIT = 10;
@@ -21,14 +22,6 @@ const formatDate = (value: string) =>
   new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", year: "numeric" }).format(
     new Date(value),
   );
-const STAR_KEYS = [1, 2, 3, 4, 5];
-const Stars = ({ rating }: { rating: number }) => (
-  <span className="inline-flex text-warning" role="img" aria-label={`${rating} de 5 estrelas`}>
-    {STAR_KEYS.map((star) => (
-      <Star key={star} className={`h-4 w-4 ${star <= rating ? "fill-current" : ""}`} aria-hidden />
-    ))}
-  </span>
-);
 
 const getInitials = (name: string) =>
   name
@@ -40,6 +33,15 @@ const getInitials = (name: string) =>
 
 const formatRating = (rating: number) =>
   rating.toLocaleString("pt-BR", { maximumFractionDigits: 1, minimumFractionDigits: 0 });
+
+const getPsychologistTitle = (gender?: string | null) => {
+  const normalized = gender?.toLowerCase();
+
+  return normalized === "feminino" || normalized === "mulher" ? "Psicóloga" : "Psicólogo";
+};
+
+const formatPsychologistCredential = (review: PatientReview) =>
+  `${getPsychologistTitle(review.psychologist_gender)} • ${formatCrpLabel(review.psychologist_crp)}`;
 
 const ReviewPsychologistAvatar = ({ review }: { review: PatientReview }) => {
   const avatarSrc = resolvePublicMediaUrl(review.psychologist_avatar);
@@ -77,14 +79,13 @@ const ReviewCard = ({ review }: { review: PatientReview }) => (
           ) : null}
         </div>
         <p className="mt-0.5 truncate text-xs font-semibold text-muted">
-          {review.psychologist_headline || "Psicólogo(a)"}
+          {formatPsychologistCredential(review)}
         </p>
-        <div className="mt-2 flex flex-wrap items-center gap-2">
+        <div className="mt-2 flex items-center gap-2">
           <span className="inline-flex items-center gap-1 rounded-full bg-warning/10 px-2.5 py-1 text-xs font-black text-warning">
             <Star className="h-3.5 w-3.5 fill-current" aria-hidden="true" />
             {formatRating(review.rating)}
           </span>
-          <Stars rating={review.rating} />
         </div>
       </div>
 
@@ -105,16 +106,10 @@ const ReviewCard = ({ review }: { review: PatientReview }) => (
       </p>
     )}
 
-    <div className="flex items-center justify-between gap-3">
+    <div className="flex items-center gap-3">
       <time className="text-xs font-semibold text-subtle" dateTime={review.created_at}>
         {formatDate(review.created_at)}
       </time>
-      <Link
-        className="text-xs font-extrabold text-primary transition hover:text-primary/80"
-        href={`/app/psychologist/${review.psychologist_id}`}
-      >
-        Ver perfil
-      </Link>
     </div>
 
     {review.response ? (

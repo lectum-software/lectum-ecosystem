@@ -218,3 +218,21 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - Browser local/CDP em `http://localhost:3002/app/reviews/success?psychologist_id=demo-psychologist-marcelo-pires`: sem `Voltar ao perfil`, sem `Registro salvo com segurança`, card com `AVALIAÇÃO CONCLUÍDA`, `Marcelo Pires Demo`, `Psicólogo • CRP DEMO/00002`, selo verificado e `Finalizar` navegando para `/app/community/feed`.
+
+## Execução complementar - 2026-06-17 - Cards de avaliações feitas
+
+- A listagem `/app/reviews` passou a exibir a linha profissional como `Profissão • CRP` nos cards de avaliações feitas, usando `psychologist_gender` e `psychologist_crp` reais da API em vez da bio/headline.
+- O endpoint `GET /api/private/patient/reviews` foi enriquecido com `psychologist_crp` e `psychologist_gender`, sem alterar schema Prisma ou migrations.
+- O card mantém apenas o indicador compacto de nota com estrela + número, remove o conjunto visual de cinco estrelas e remove o link textual `Ver perfil` do rodapé.
+- A navegação para o perfil do psicólogo permanece exclusivamente na setinha do topo direito do card.
+- Sem novos packages, sem mocks e sem alteração de banco; `db:migrate` não se aplicou.
+
+### Validações complementares
+
+- `pnpm --dir backend check`
+- `pnpm --dir frontend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke HTTP real em `GET /api/private/patient/reviews?page=1&limit=3` com sessão real de paciente, confirmando retorno de `psychologist_crp` e `psychologist_gender`.
+- Browser local/CDP mobile 390x844 em `http://localhost:3002/app/reviews` com sessão real de paciente, confirmando `Psicóloga • CRP DEMO/00005`, ausência de `Ver perfil`, apenas 1 ícone de estrela no indicador compacto da primeira avaliação e setinhas de perfil no topo dos cards.
