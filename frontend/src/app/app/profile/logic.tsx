@@ -7,22 +7,16 @@ import {
   ChevronRight,
   Edit3,
   HeartHandshake,
-  Loader2,
   Lock,
   LogOut,
   MessagesSquare,
   Moon,
-  ShieldAlert,
   Star,
-  Trash2,
   UsersRound,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { type ComponentType, useState } from "react";
-import { useAccount } from "@/api/callers/account";
-import { components } from "@/components/controllers";
-import { InlineAlert } from "@/components/ui/inline-alert";
+import type { ComponentType } from "react";
 import { LoadingState } from "@/components/ui/loading-state";
 import { ThemeSwitch } from "@/components/ui/theme-switch";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
@@ -32,7 +26,6 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { formatCrpLabel } from "@/utils/crp";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
-import { useDeleteAccountForm } from "./use-delete-account-form";
 
 type ProfileRow = {
   href?: string;
@@ -117,53 +110,10 @@ const Section = ({ rows, title }: { rows: ProfileRow[]; title: string }) => {
   );
 };
 
-type ApiErrorData = {
-  error?: string;
-  message?: string;
-  status?: number;
-};
-
-type ApiError = Error & {
-  data?: ApiErrorData;
-};
-
-const resolveDeleteAccountError = (error: unknown) => {
-  const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
-  const normalized = rawMessage.toLowerCase();
-
-  if (normalized.includes("assinatura") || normalized.includes("pagamento")) {
-    return "Cancele ou regularize a assinatura paga antes de excluir a conta.";
-  }
-
-  if (normalized.includes("senha atual") || normalized.includes("incorreta")) {
-    return "A senha atual não confere. Revise e tente novamente.";
-  }
-
-  if (normalized.includes("excluir")) {
-    return "Digite EXCLUIR para confirmar a exclusão.";
-  }
-
-  if (normalized.includes("token") || normalized.includes("sess")) {
-    return "Sua sessão precisa estar ativa para excluir a conta.";
-  }
-
-  return rawMessage || "Não foi possível excluir sua conta agora.";
-};
-
 export const ProfileLogic = () => {
   const user = useAppSelector((state) => state.user);
   const { out } = useSignOut();
-  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
-  const [deleteAccountError, setDeleteAccountError] = useState<string | null>(null);
   const isPsychologist = user?.role === "psicologo";
-  const account = useAccount({ enableSecurity: Boolean(isPsychologist && showDeleteAccount) });
-  const deleteAccountHasPassword = account.security.data?.has_password ?? true;
-  const deleteAccountForm = useDeleteAccountForm(deleteAccountHasPassword);
-
   if (!user) {
     return (
       <PrivateTemplate>
@@ -216,22 +166,6 @@ export const ProfileLogic = () => {
     { href: "/app/posts/saved", icon: Bookmark, label: "Salvos" },
     { href: "/app/community", icon: HeartHandshake, label: "Explorar comunidades" },
   ];
-
-  const onDeleteAccountSubmit = deleteAccountForm.hook.handleSubmit((values) => {
-    setDeleteAccountError(null);
-    account.deleteAccount.mutate(
-      {
-        confirmation: values.confirmation.trim(),
-        ...(deleteAccountHasPassword
-          ? { current_password: values.current_password?.trim() || "" }
-          : {}),
-      },
-      {
-        onError: (error) => setDeleteAccountError(resolveDeleteAccountError(error)),
-        onSuccess: () => out("/auth/login"),
-      },
-    );
-  });
 
   return (
     <PrivateTemplate>
@@ -286,106 +220,6 @@ export const ProfileLogic = () => {
         </section>
 
         <Section rows={communityRows} title="Comunidade" />
-
-        {isPsychologist ? (
-          <section className="grid gap-4 rounded-[var(--lectum-card-radius)] border border-danger/25 bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
-            <div className="flex items-start gap-3">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-danger/10 text-danger">
-                <ShieldAlert className="h-5 w-5" aria-hidden="true" />
-              </span>
-              <div className="min-w-0">
-                <h2 className="text-sm font-extrabold text-foreground">Excluir conta</h2>
-                <p className="mt-1 text-sm leading-6 text-muted">
-                  Seu perfil público será ocultado e seus acessos serão encerrados. Contas com
-                  assinatura paga vinculada ao gateway ou pagamento em aberto precisam cancelar ou
-                  regularizar a cobrança antes da exclusão.
-                </p>
-              </div>
-            </div>
-
-            {!showDeleteAccount ? (
-              <Button
-                className="w-full border-danger/40 text-danger hover:bg-danger/10 hover:text-danger"
-                onClick={() => {
-                  setShowDeleteAccount(true);
-                  setDeleteAccountError(null);
-                }}
-                type="button"
-                variant="outline"
-              >
-                <Trash2 className="h-4 w-4" aria-hidden="true" />
-                Excluir minha conta
-              </Button>
-            ) : (
-              <form className="grid gap-3" noValidate onSubmit={onDeleteAccountSubmit}>
-                {account.security.isLoading || account.security.isPending ? (
-                  <LoadingState label="Verificando segurança da conta" />
-                ) : null}
-
-                {account.security.isError ? (
-                  <InlineAlert title="Não foi possível verificar a conta" variant="error">
-                    {resolveDeleteAccountError(account.security.error)}
-                  </InlineAlert>
-                ) : null}
-
-                <InlineAlert title="Atenção antes de continuar" variant="warning">
-                  Esta ação não cancela cobranças externas automaticamente. Se houver assinatura
-                  paga ou inadimplência, a exclusão será bloqueada até a regularização.
-                </InlineAlert>
-
-                <div className="grid gap-1">
-                  {deleteAccountForm.formProps.fields.map((field) => {
-                    if (field.hide) return null;
-
-                    const Component = components[field.field];
-                    if (!Component) return null;
-
-                    return (
-                      <Component
-                        control={deleteAccountForm.hook.control}
-                        key={`delete-account-${String(field.name)}`}
-                        {...field}
-                      />
-                    );
-                  })}
-                </div>
-
-                {deleteAccountError ? (
-                  <InlineAlert title="Exclusão bloqueada" variant="error">
-                    {deleteAccountError}
-                  </InlineAlert>
-                ) : null}
-
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <Button
-                    disabled={account.deleteAccount.isPending}
-                    onClick={() => {
-                      setShowDeleteAccount(false);
-                      setDeleteAccountError(null);
-                      deleteAccountForm.hook.reset();
-                    }}
-                    type="button"
-                    variant="outline"
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    className="bg-danger text-white hover:bg-danger/90"
-                    disabled={account.deleteAccount.isPending || account.security.isLoading}
-                    type="submit"
-                  >
-                    {account.deleteAccount.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                    ) : (
-                      <Trash2 className="h-4 w-4" aria-hidden="true" />
-                    )}
-                    Confirmar exclusão
-                  </Button>
-                </div>
-              </form>
-            )}
-          </section>
-        ) : null}
 
         <Button
           className="w-full"

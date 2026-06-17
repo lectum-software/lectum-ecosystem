@@ -39,6 +39,7 @@ import { Controller, type FieldPath, useFieldArray } from "react-hook-form";
 import { toast } from "sonner";
 import { usePsychologistFreeProfile } from "@/api/callers/psychologist-free-profile";
 import type { FreeProfileCatalogItem } from "@/api/generator/types/free-profile";
+import { AccountDeleteSection } from "@/components/account/account-delete-section";
 import { components } from "@/components/controllers";
 import { Container } from "@/components/controllers/container";
 import { describedBy, fieldId } from "@/components/controllers/utils";
@@ -2114,6 +2115,7 @@ export const ProfessionalProfileSetupLogic = () => {
                 Salvar alterações
               </Button>
             </div>
+            <AccountDeleteSection />
           </Form>
         ) : null}
       </section>

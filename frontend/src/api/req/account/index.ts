@@ -1,5 +1,7 @@
 import { callEndpoint } from "@/api/generator";
 import type {
+  AccountDeleteGoogleIntentPayload,
+  AccountDeleteGoogleIntentResponse,
   AccountDeletePayload,
   AccountEmailPayload,
   AccountOnboardingTipsPayload,
@@ -12,6 +14,7 @@ import type {
 import { handleReq } from "@/api/handle";
 
 export type {
+  AccountDeleteGoogleIntentPayload,
   AccountDeletePayload,
   AccountEmailPayload,
   AccountOnboardingTipsPayload,
@@ -81,6 +84,19 @@ export const deleteAccount = async (body: AccountDeletePayload) => {
   });
 
   return handleReq<boolean>({
+    ...handle,
+    hideError: true,
+  });
+};
+
+export const createDeleteGoogleIntent = async (body: AccountDeleteGoogleIntentPayload) => {
+  const handle = callEndpoint({
+    route: "/api/private/account/delete/google-intent",
+    method: "POST",
+    body,
+  });
+
+  return handleReq<AccountDeleteGoogleIntentResponse>({
     ...handle,
     hideError: true,
   });

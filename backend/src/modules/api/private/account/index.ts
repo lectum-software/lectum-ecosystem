@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  deleteGoogleIntent,
   destroy,
   email,
   onboardingTips,
@@ -8,6 +9,7 @@ import {
   updateTips,
 } from "./use-cases/controller";
 import {
+  deleteGoogleIntentValidator,
   deleteValidator,
   emailValidator,
   onboardingTipsValidator,
@@ -18,6 +20,7 @@ const routes = Router();
 
 routes.get("/security", security);
 routes.get("/tips", onboardingTips);
+routes.post("/delete/google-intent", deleteGoogleIntentValidator, deleteGoogleIntent);
 routes.post("/delete", deleteValidator, destroy);
 routes.put("/email", emailValidator, email);
 routes.put("/password", passwordValidator, password);

@@ -8,6 +8,10 @@ import { useAppSelector } from "@/hooks/redux";
 
 export interface UseAccountProps {
   callbacks?: {
+    createDeleteGoogleIntent?: {
+      onError?: (error: unknown) => void;
+      onSuccess?: (data: Awaited<ReturnType<typeof api.createDeleteGoogleIntent>>) => void;
+    };
     createGoogleLinkIntent?: {
       onError?: (error: unknown) => void;
       onSuccess?: (data: Awaited<ReturnType<typeof api.createGoogleLinkIntent>>) => void;
@@ -100,6 +104,12 @@ export const useAccount = ({
     onError: callbacks?.createGoogleLinkIntent?.onError,
   });
 
+  const createDeleteGoogleIntent = useMutation({
+    mutationFn: (body: api.AccountDeleteGoogleIntentPayload) => api.createDeleteGoogleIntent(body),
+    onSuccess: callbacks?.createDeleteGoogleIntent?.onSuccess,
+    onError: callbacks?.createDeleteGoogleIntent?.onError,
+  });
+
   const deleteAccount = useMutation({
     mutationFn: (body: api.AccountDeletePayload) => api.deleteAccount(body),
     onSuccess: callbacks?.deleteAccount?.onSuccess,
@@ -116,6 +126,7 @@ export const useAccount = ({
   });
 
   return {
+    createDeleteGoogleIntent,
     createGoogleLinkIntent,
     deleteAccount,
     onboardingTips,

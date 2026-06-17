@@ -67,6 +67,19 @@ export const deleteSchema: IValidatorRequest = {
   ],
 };
 
+export const deleteGoogleIntentSchema: IValidatorRequest = {
+  body: [
+    {
+      key: "callback_url",
+      coerse: "string",
+      method: "string",
+      min: 1,
+      max: 256,
+      optional: true,
+    },
+  ],
+};
+
 export const onboardingTipsSchema: IValidatorRequest = {
   body: [
     {
@@ -82,6 +95,7 @@ export const onboardingTipsSchema: IValidatorRequest = {
   ],
 };
 
+export const deleteGoogleIntentValidator = validator(deleteGoogleIntentSchema);
 export const deleteValidator = validator(deleteSchema);
 export const emailValidator = validator(emailSchema);
 export const onboardingTipsValidator = validator(onboardingTipsSchema);

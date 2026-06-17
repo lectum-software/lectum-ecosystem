@@ -9,6 +9,7 @@ import passport from "passport";
 import { Strategy as GoogleStrategy, type Profile } from "passport-google-oauth20";
 import { ExtractJwt, Strategy as JWTStrategy, type VerifiedCallback } from "passport-jwt";
 import { error, msg } from "@/helpers/translate";
+import prisma from "@/infra/database/prisma";
 //Interfaces
 import type { user } from "@/interfaces/objects";
 //Repositories
@@ -29,6 +30,7 @@ type GoogleLinkPayload = JwtPayload & {
   intent?: string;
   user_id?: string;
 };
+type GoogleDeleteAccountPayload = GoogleLinkPayload;
 
 const parseUserRole = (role: unknown): UserRole | undefined => {
   if (typeof role !== "string") return undefined;
@@ -62,6 +64,7 @@ passport.use(
     async (req: Request, _accessToken: string, _refreshToken: string, profile: Profile, done) => {
       try {
         let device_id = req.query.state as string;
+        let deleteToken: string | undefined;
         let intent: string | undefined;
         let linkToken: string | undefined;
         let role: UserRole | undefined;
@@ -83,6 +86,10 @@ passport.use(
             linkToken =
               typeof stateObj.query?.link_token === "string"
                 ? stateObj.query.link_token
+                : undefined;
+            deleteToken =
+              typeof stateObj.query?.delete_token === "string"
+                ? stateObj.query.delete_token
                 : undefined;
           }
         } catch (e) {
@@ -195,6 +202,88 @@ passport.use(
           return done(null, {
             ...msg("google_link_success", {}),
             data: linkedUser,
+          });
+        }
+
+        if (intent === "delete_account") {
+          if (!deleteToken) {
+            return done(null, {
+              status: 400,
+              ...error("account_delete_google_reauth_invalid", {}),
+              type: 3,
+            });
+          }
+
+          let payload: GoogleDeleteAccountPayload;
+
+          try {
+            payload = jwt.verify(
+              deleteToken,
+              process.env.JWT_SECRET_KEY!,
+            ) as GoogleDeleteAccountPayload;
+          } catch {
+            return done(null, {
+              status: 400,
+              ...error("account_delete_google_reauth_expired", {}),
+              type: 3,
+            });
+          }
+
+          if (
+            payload.intent !== "delete_account_google_reauth" ||
+            payload.device_id !== device_id ||
+            !payload.user_id ||
+            !payload.email
+          ) {
+            return done(null, {
+              status: 400,
+              ...error("account_delete_google_reauth_invalid", {}),
+              type: 3,
+            });
+          }
+
+          if (payload.email.toLowerCase() !== email.toLowerCase()) {
+            return done(null, {
+              status: 400,
+              ...error("account_delete_google_reauth_email_mismatch", {}),
+              type: 3,
+            });
+          }
+
+          let reauthUser = await repo.findByEmail({ b: { email: payload.email } });
+
+          if (
+            !reauthUser ||
+            reauthUser.id !== payload.user_id ||
+            reauthUser.provider !== "google"
+          ) {
+            return done(null, {
+              status: 404,
+              ...error("account_not_found", {}),
+              type: 3,
+            });
+          }
+
+          const now = new Date();
+          await prisma.user_background.create({
+            data: {
+              user_id: reauthUser.id!,
+              type: "account_delete_reauth",
+              device_id,
+              data: {
+                email,
+                provider: "google",
+                verified_at: now.toISOString(),
+                expires_at: new Date(now.getTime() + 10 * 60 * 1000).toISOString(),
+              },
+            },
+          });
+
+          reauthUser = await repo.hidrate(reauthUser, device_id);
+
+          return done(null, {
+            ...msg("account_delete_google_reauth_success", {}),
+            data: reauthUser,
           });
         }
 

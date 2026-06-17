@@ -36,7 +36,7 @@ const buildFields = (hasPassword: boolean) =>
       label: "Confirmação",
       placeholder: "Digite EXCLUIR",
       autoComplete: "off",
-      description: "Esta ação desativa sua conta, remove tokens e oculta seu perfil público.",
+      description: "Esta ação é permanente e remove seus dados pessoais da plataforma.",
     },
   ] satisfies Field<DeleteAccountForm>[];
 

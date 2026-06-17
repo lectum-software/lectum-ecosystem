@@ -40,6 +40,14 @@ export type AccountDeletePayload = {
   current_password?: string;
 };
 
+export type AccountDeleteGoogleIntentPayload = {
+  callback_url?: string;
+};
+
+export type AccountDeleteGoogleIntentResponse = {
+  url: string;
+};
+
 export type GoogleLinkIntentResponse = {
   url: string;
 };

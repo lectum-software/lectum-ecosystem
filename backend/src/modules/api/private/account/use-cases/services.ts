@@ -1,3 +1,4 @@
+import jwt from "jsonwebtoken";
 import { error, msg } from "@/helpers/translate";
 import type { user } from "@/interfaces/objects";
 import { confirmEmailSend } from "@/modules/api/config/nodemailer/messages/confirm";
@@ -10,9 +11,11 @@ import {
 import { code } from "@/utils/code";
 import { compare, encrypt } from "@/utils/crypt";
 import type {
+  AccountDeleteGoogleIntentResponse,
   AccountOnboardingTipsResponse,
   AccountSecurityResponse,
   IAccountDeleteDTO,
+  IAccountDeleteGoogleIntentDTO,
   IAccountDTO,
   IAccountEmailDTO,
   IAccountOnboardingTipsDTO,
@@ -20,7 +23,28 @@ import type {
 } from "../DTOs/IAccountDTO";
 import { AccountRepository } from "../repositories/AccountRepository";
 
+const DELETE_GOOGLE_REAUTH_TOKEN_EXPIRES_IN = "10m";
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
+
+const sanitizeDeleteCallbackUrl = (value?: string | null, role?: string | null) => {
+  const fallback =
+    role === "psicologo"
+      ? "/app/professional/profile/setup?deleteReauth=ok"
+      : "/app/profile/edit?deleteReauth=ok";
+  const raw = value?.trim() || fallback;
+
+  if (!raw.startsWith("/app/")) return fallback;
+  if (raw.startsWith("//")) return fallback;
+
+  try {
+    const url = new URL(raw, "https://lectum.local");
+    url.searchParams.set("deleteReauth", "ok");
+
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return fallback;
+  }
+};
 
 const getCurrentUser = async (auth: user) => {
   if (!auth.id) return null;
@@ -259,6 +283,67 @@ export const updatePassword = async (data: IAccountPasswordDTO) => {
   };
 };
 
+export const createDeleteGoogleIntent = async (data: IAccountDeleteGoogleIntentDTO) => {
+  const device = getDevice(data);
+
+  if (device.err) {
+    return {
+      status: 403,
+      ...error(device.err, {}),
+    };
+  }
+
+  if (!isGoogleOAuthConfigured()) {
+    return {
+      status: 403,
+      ...error("google_oauth_not_configured", {}),
+    };
+  }
+
+  const current = await getCurrentUser(data.auth);
+
+  if (!current?.id || !current.email) {
+    return {
+      status: 404,
+      ...error("account_not_found", {}),
+    };
+  }
+
+  if (current.password || current.provider !== "google") {
+    return {
+      status: 400,
+      ...error("account_delete_google_reauth_unavailable", {}),
+    };
+  }
+
+  const token = jwt.sign(
+    {
+      device_id: device.id,
+      email: current.email,
+      intent: "delete_account_google_reauth",
+      user_id: current.id,
+    },
+    process.env.JWT_SECRET_KEY as string,
+    { expiresIn: DELETE_GOOGLE_REAUTH_TOKEN_EXPIRES_IN },
+  );
+
+  const baseUrl = process.env.BASE || "";
+  const url = new URL(`/api/public/google/login/${encodeURIComponent(device.id)}`, baseUrl);
+  url.searchParams.set("intent", "delete_account");
+  url.searchParams.set("delete_token", token);
+  url.searchParams.set("callbackUrl", sanitizeDeleteCallbackUrl(data.b.callback_url, current.role));
+
+  const response: AccountDeleteGoogleIntentResponse = {
+    url: url.toString(),
+  };
+
+  return {
+    status: 200,
+    ...msg("account_delete_google_intent_created", {}),
+    data: response,
+  };
+};
+
 export const destroy = async (data: IAccountDeleteDTO) => {
   const device = getDevice(data);
 
@@ -289,6 +374,23 @@ export const destroy = async (data: IAccountDeleteDTO) => {
   if (current.password) {
     const passwordError = await validateCurrentPassword(current, data.b.current_password || "");
     if (passwordError) return passwordError;
+  } else if (current.provider === "google") {
+    const hasRecentGoogleReauth = await repository.hasRecentGoogleDeleteReauth(
+      current.id,
+      device.id,
+    );
+
+    if (!hasRecentGoogleReauth) {
+      return {
+        status: 403,
+        ...error("account_delete_google_reauth_required", {}),
+      };
+    }
+  } else {
+    return {
+      status: 403,
+      ...error("account_delete_identity_unavailable", {}),
+    };
   }
 
   if (current.role === "psicologo") {

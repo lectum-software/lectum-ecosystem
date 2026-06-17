@@ -12,6 +12,7 @@ import type {
   PatientProfileAvatarRemoval,
   PatientProfileAvatarUpload,
 } from "@/api/generator/types";
+import { AccountDeleteSection } from "@/components/account/account-delete-section";
 import { components } from "@/components/controllers";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -335,18 +336,9 @@ export const ProfileEditLogic = () => {
               )}
               Salvar Alterações
             </Button>
-            <section className="grid justify-items-center gap-3 border-t border-border py-8 text-center">
-              <button
-                className="inline-flex items-center gap-2 text-sm font-semibold text-danger disabled:cursor-not-allowed disabled:opacity-60"
-                disabled
-                type="button"
-              >
-                <Trash2 className="h-4 w-4" aria-hidden="true" />
-                Excluir minha conta
-              </button>
-            </section>
           </form>
         ) : null}
+        {!profile.isLoading && !profile.isPending ? <AccountDeleteSection /> : null}
       </section>
     </PrivateTemplate>
   );

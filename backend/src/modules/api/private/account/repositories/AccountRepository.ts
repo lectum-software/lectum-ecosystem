@@ -1,8 +1,53 @@
-import type { Prisma } from "@/external/generated/prisma/client";
+import { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import type { professional_subscription, user } from "@/interfaces/objects";
 import { loginInclude } from "@/query/login";
+import { log } from "@/utils/logs";
 import type { IAccountRepository } from "./interfaces/IAccountRepository";
+
+const GOOGLE_DELETE_REAUTH_TTL_MS = 10 * 60 * 1000;
+
+const getDeletedAuthorName = (role?: string | null) =>
+  role === "psicologo" ? "Psicólogo Excluído" : "Membro Excluído";
+
+const markDeleted = (now: Date) => ({
+  deleted: true,
+  deletedAt: now,
+});
+
+const recalculatePsychologistRating = async (
+  tx: Prisma.TransactionClient,
+  psychologistId: string,
+) => {
+  const aggregate = await tx.professional_review.aggregate({
+    where: {
+      psychologist_id: psychologistId,
+      deleted: false,
+      status: "publicada",
+      author: {
+        active: true,
+        deleted: false,
+      },
+    },
+    _avg: {
+      rating: true,
+    },
+    _count: {
+      _all: true,
+    },
+  });
+
+  await tx.psychologist_profile.updateMany({
+    where: {
+      user_id: psychologistId,
+      deleted: false,
+    },
+    data: {
+      rating_avg: Math.round((aggregate._avg.rating || 0) * 100),
+      rating_count: aggregate._count._all,
+    },
+  });
+};
 
 export class AccountRepository implements IAccountRepository {
   readonly repository: ORM["user"];
@@ -124,12 +169,84 @@ export class AccountRepository implements IAccountRepository {
     return (blocking as professional_subscription | undefined) ?? null;
   }
 
+  async hasRecentGoogleDeleteReauth(userId: string, deviceId: string): Promise<boolean> {
+    const createdAfter = new Date(Date.now() - GOOGLE_DELETE_REAUTH_TTL_MS);
+
+    const reauth = await prisma.user_background.findFirst({
+      where: {
+        user_id: userId,
+        type: "account_delete_reauth",
+        device_id: deviceId,
+        deleted: false,
+        createdAt: {
+          gte: createdAfter,
+        },
+      },
+      select: {
+        id: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return Boolean(reauth);
+  }
+
   async deleteOwnAccount(user: user): Promise<void> {
     const userId = user.id!;
     const now = new Date();
     const anonymizedEmail = `deleted-${userId}@deleted.lectum.local`;
+    const anonymizedName = getDeletedAuthorName(user.role);
 
     await prisma.$transaction(async (tx) => {
+      const memberships = await tx.community_member.groupBy({
+        by: ["community_id"],
+        where: {
+          user_id: userId,
+          deleted: false,
+        },
+        _count: {
+          _all: true,
+        },
+      });
+      const votes = await tx.post_vote.findMany({
+        where: {
+          user_id: userId,
+          deleted: false,
+        },
+        select: {
+          post_id: true,
+          reply_id: true,
+          value: true,
+        },
+      });
+      const postSaves = await tx.post_save.findMany({
+        where: {
+          user_id: userId,
+          deleted: false,
+        },
+        select: {
+          post_id: true,
+        },
+      });
+      const authoredReviews = await tx.professional_review.findMany({
+        where: {
+          author_id: userId,
+          deleted: false,
+        },
+        select: {
+          psychologist_id: true,
+        },
+      });
+      const affectedPsychologistIds = [
+        ...new Set(
+          authoredReviews
+            .map((review) => review.psychologist_id)
+            .filter((psychologistId) => psychologistId !== userId),
+        ),
+      ];
+
       await tx.user.update({
         where: {
           id: userId,
@@ -144,12 +261,31 @@ export class AccountRepository implements IAccountRepository {
           deleted: true,
           deletedAt: now,
           email: anonymizedEmail,
-          name: "Conta excluída",
+          name: anonymizedName,
           password: null,
           password_confirm: null,
           provider: "deleted",
           recovery_code: null,
           recovery_date: null,
+        },
+      });
+
+      await tx.log__user.create({
+        data: {
+          action: log.destroy,
+          ref_id: userId,
+          old: JSON.stringify({
+            email: user.email,
+            id: userId,
+            provider: user.provider,
+            role: user.role,
+          }),
+          new: JSON.stringify({
+            deleted: true,
+            deletedAt: now.toISOString(),
+            email: anonymizedEmail,
+            name: anonymizedName,
+          }),
         },
       });
 
@@ -164,10 +300,7 @@ export class AccountRepository implements IAccountRepository {
           user_id: userId,
           deleted: false,
         },
-        data: {
-          deleted: true,
-          deletedAt: now,
-        },
+        data: markDeleted(now),
       });
 
       await tx.user_background.updateMany({
@@ -175,10 +308,7 @@ export class AccountRepository implements IAccountRepository {
           user_id: userId,
           deleted: false,
         },
-        data: {
-          deleted: true,
-          deletedAt: now,
-        },
+        data: markDeleted(now),
       });
 
       await tx.notification_preference.updateMany({
@@ -186,10 +316,7 @@ export class AccountRepository implements IAccountRepository {
           user_id: userId,
           deleted: false,
         },
-        data: {
-          deleted: true,
-          deletedAt: now,
-        },
+        data: markDeleted(now),
       });
 
       await tx.notification.updateMany({
@@ -197,10 +324,7 @@ export class AccountRepository implements IAccountRepository {
           user_id: userId,
           deleted: false,
         },
-        data: {
-          deleted: true,
-          deletedAt: now,
-        },
+        data: markDeleted(now),
       });
 
       await tx.phone_verification.updateMany({
@@ -208,10 +332,7 @@ export class AccountRepository implements IAccountRepository {
           user_id: userId,
           deleted: false,
         },
-        data: {
-          deleted: true,
-          deletedAt: now,
-        },
+        data: markDeleted(now),
       });
 
       await tx.patient_profile.updateMany({
@@ -219,10 +340,7 @@ export class AccountRepository implements IAccountRepository {
           user_id: userId,
           deleted: false,
         },
-        data: {
-          deleted: true,
-          deletedAt: now,
-        },
+        data: markDeleted(now),
       });
 
       const psychologistProfile = await tx.psychologist_profile.findUnique({
@@ -235,6 +353,20 @@ export class AccountRepository implements IAccountRepository {
       });
 
       if (psychologistProfile) {
+        await tx.professional_registry_check.updateMany({
+          where: {
+            psychologist_id: psychologistProfile.id,
+            deleted: false,
+          },
+          data: {
+            ...markDeleted(now),
+            cpf: null,
+            raw: Prisma.JsonNull,
+            registro: null,
+            uf: null,
+          },
+        });
+
         await tx.psychologist_profile.update({
           where: {
             id: psychologistProfile.id,
@@ -294,6 +426,207 @@ export class AccountRepository implements IAccountRepository {
           },
         });
       }
+
+      await tx.psychologist_specialty.updateMany({
+        where: {
+          psychologist_id: userId,
+          deleted: false,
+        },
+        data: markDeleted(now),
+      });
+
+      await tx.psychologist_service.updateMany({
+        where: {
+          psychologist_id: userId,
+          deleted: false,
+        },
+        data: markDeleted(now),
+      });
+
+      await tx.psychologist_approach.updateMany({
+        where: {
+          psychologist_id: userId,
+          deleted: false,
+        },
+        data: markDeleted(now),
+      });
+
+      await tx.psychologist_favorite.updateMany({
+        where: {
+          deleted: false,
+          OR: [{ user_id: userId }, { psychologist_id: userId }],
+        },
+        data: markDeleted(now),
+      });
+
+      await tx.psychologist_follow.updateMany({
+        where: {
+          deleted: false,
+          OR: [{ user_id: userId }, { psychologist_id: userId }],
+        },
+        data: markDeleted(now),
+      });
+
+      await tx.contact_request.updateMany({
+        where: {
+          deleted: false,
+          OR: [{ user_id: userId }, { psychologist_id: userId }],
+        },
+        data: markDeleted(now),
+      });
+
+      await tx.professional_review.updateMany({
+        where: {
+          deleted: false,
+          OR: [{ author_id: userId }, { psychologist_id: userId }],
+        },
+        data: {
+          ...markDeleted(now),
+          status: "oculta",
+        },
+      });
+
+      for (const psychologistId of affectedPsychologistIds) {
+        await recalculatePsychologistRating(tx, psychologistId);
+      }
+
+      await tx.community_suggestion.updateMany({
+        where: {
+          user_id: userId,
+          deleted: false,
+        },
+        data: markDeleted(now),
+      });
+
+      await tx.community_member.updateMany({
+        where: {
+          user_id: userId,
+          deleted: false,
+        },
+        data: markDeleted(now),
+      });
+
+      for (const membership of memberships) {
+        await tx.community.updateMany({
+          where: {
+            id: membership.community_id,
+            members_count: {
+              gt: 0,
+            },
+          },
+          data: {
+            members_count: {
+              decrement: membership._count._all,
+            },
+          },
+        });
+      }
+
+      for (const vote of votes) {
+        if (vote.post_id && vote.value === 1) {
+          await tx.community_post.updateMany({
+            where: {
+              id: vote.post_id,
+              upvotes_count: {
+                gt: 0,
+              },
+            },
+            data: {
+              upvotes_count: {
+                decrement: 1,
+              },
+            },
+          });
+        }
+
+        if (vote.post_id && vote.value === -1) {
+          await tx.community_post.updateMany({
+            where: {
+              id: vote.post_id,
+              downvotes_count: {
+                gt: 0,
+              },
+            },
+            data: {
+              downvotes_count: {
+                decrement: 1,
+              },
+            },
+          });
+        }
+
+        if (vote.reply_id && vote.value === 1) {
+          await tx.post_reply.updateMany({
+            where: {
+              id: vote.reply_id,
+              upvotes_count: {
+                gt: 0,
+              },
+            },
+            data: {
+              upvotes_count: {
+                decrement: 1,
+              },
+            },
+          });
+        }
+      }
+
+      await tx.post_vote.updateMany({
+        where: {
+          user_id: userId,
+          deleted: false,
+        },
+        data: markDeleted(now),
+      });
+
+      for (const save of postSaves) {
+        await tx.community_post.updateMany({
+          where: {
+            id: save.post_id,
+            saves_count: {
+              gt: 0,
+            },
+          },
+          data: {
+            saves_count: {
+              decrement: 1,
+            },
+          },
+        });
+      }
+
+      await tx.post_save.updateMany({
+        where: {
+          user_id: userId,
+          deleted: false,
+        },
+        data: markDeleted(now),
+      });
+
+      await tx.post_reply_save.updateMany({
+        where: {
+          user_id: userId,
+          deleted: false,
+        },
+        data: markDeleted(now),
+      });
+
+      await tx.post_report.updateMany({
+        where: {
+          reporter_id: userId,
+          deleted: false,
+        },
+        data: markDeleted(now),
+      });
+
+      await tx.visitor_location.updateMany({
+        where: {
+          user_id: userId,
+          deleted: false,
+        },
+        data: markDeleted(now),
+      });
     });
   }
 }

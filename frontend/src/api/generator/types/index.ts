@@ -1,4 +1,6 @@
 export type {
+  AccountDeleteGoogleIntentPayload,
+  AccountDeleteGoogleIntentResponse,
   AccountDeletePayload,
   AccountEmailPayload,
   AccountGoogleSecurity,

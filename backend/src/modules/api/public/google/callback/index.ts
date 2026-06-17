@@ -49,7 +49,8 @@ routes.get("", passport.authenticate("google", { failureRedirect: "/" }), (_req,
     if (stateObj?.query) {
       const params = new URLSearchParams();
       Object.entries(stateObj.query as Record<string, unknown>).forEach(([key, value]) => {
-        if (key === "link_token" || value === undefined || value === null) return;
+        if (key === "link_token" || key === "delete_token" || value === undefined || value === null)
+          return;
 
         if (Array.isArray(value)) {
           value.forEach((item) => {

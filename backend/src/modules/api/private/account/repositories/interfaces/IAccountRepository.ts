@@ -7,6 +7,7 @@ export interface IAccountRepository {
   findBlockingSubscription: (userId: string) => Promise<professional_subscription | null>;
   findByEmail: (email: string) => Promise<user | null>;
   findById: (id: string) => Promise<user | null>;
+  hasRecentGoogleDeleteReauth: (userId: string, deviceId: string) => Promise<boolean>;
   findOnboardingTips: (userId: string) => Promise<{
     has_seen_community_post_tip: boolean;
     has_seen_discover_psychologists_tip: boolean;

@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { error500, send } from "@/helpers/return";
 import {
+  createDeleteGoogleIntent,
   destroy as destroyService,
   onboardingTips as onboardingTipsService,
   security as securityService,
@@ -60,6 +61,18 @@ export const updateTips = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "account_onboarding_tips_update", err);
+  }
+};
+
+export const deleteGoogleIntent = async (req: Request, res: Response) => {
+  try {
+    const resolve = await createDeleteGoogleIntent(
+      req as unknown as Parameters<typeof createDeleteGoogleIntent>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "account_delete_google_intent", err);
   }
 };
 

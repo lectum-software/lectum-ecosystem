@@ -65,6 +65,7 @@ const professionalProfileSelect = {
 
 const authorSelect = {
   id: true,
+  deleted: true,
   name: true,
   avatar: true,
   role: true,
@@ -280,18 +281,30 @@ const toAuthorResponse = (
 ): PostAuthorDTO => {
   const profile = author.psychologist_profile;
   const isPsychologist = author.role === "psicologo";
+  const isDeletedAuthor = Boolean(author.deleted);
   const shouldMaskAuthor = !isPsychologist && anonymous;
+  const shouldHideIdentity = isDeletedAuthor || shouldMaskAuthor;
+  const deletedName = isPsychologist ? "Psicólogo Excluído" : "Membro Excluído";
 
   return {
     id: author.id,
-    name: shouldMaskAuthor ? (anonymousDisplayName ?? "Membro Anônimo") : author.name,
-    avatar: shouldMaskAuthor ? null : author.avatar,
+    name: isDeletedAuthor
+      ? deletedName
+      : shouldMaskAuthor
+        ? (anonymousDisplayName ?? "Membro Anônimo")
+        : author.name,
+    avatar: shouldHideIdentity ? null : author.avatar,
     role: author.role,
-    type_label: authorTypeLabel(author.role, profile?.gender, anonymous),
-    crp: isPsychologist ? (profile?.crp ?? null) : null,
-    verified: isPsychologist && isProfessionalVerified(profile),
-    featured_badge: isPsychologist ? mentorBadgeForScore(profile, mentorScore) : null,
-    whatsapp_url: isPsychologist ? buildProfessionalWhatsappUrl(profile) : null,
+    type_label: isDeletedAuthor
+      ? isPsychologist
+        ? "Psicólogo"
+        : "Paciente"
+      : authorTypeLabel(author.role, profile?.gender, anonymous),
+    crp: isPsychologist && !isDeletedAuthor ? (profile?.crp ?? null) : null,
+    verified: isPsychologist && !isDeletedAuthor && isProfessionalVerified(profile),
+    featured_badge:
+      isPsychologist && !isDeletedAuthor ? mentorBadgeForScore(profile, mentorScore) : null,
+    whatsapp_url: isPsychologist && !isDeletedAuthor ? buildProfessionalWhatsappUrl(profile) : null,
   };
 };
 
