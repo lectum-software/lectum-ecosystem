@@ -16,7 +16,7 @@ Também foi decidido que:
 
 - `/api/private/patient/reviews*` fica sob `requireRole("paciente")` no mount em `write.ts`, seguindo ADR-0002 e fail-closed.
 - Cada par paciente/psicólogo continua limitado por `@@unique([psychologist_id, author_id])`.
-- `rating` é validado de 1 a 5; `comment` é opcional conforme o modelo.
+- `rating` é validado de 1 a 5; `comment` permanece nullable no modelo histórico, mas a API de criação e a UI exigem depoimento textual para novas avaliações.
 - Critérios visuais da tela (`Acolhimento`, `Clareza`, `Pontualidade`) orientam o depoimento, mas não viram colunas novas porque `DATA-MODEL.md` não define notas por critério.
 - Ao criar avaliação publicada, `psychologist_profile.rating_avg` é recalculado como média x100 e `rating_count` em transação.
 - Moderação futura deve usar `status = "oculta"`, sem apagar o registro real.
@@ -41,3 +41,14 @@ Também foi decidido que:
 - `pnpm check`
 - Smoke HTTP real: elegibilidade, criação, listagem, bloqueio de duplicidade e fail-closed para psicólogo.
 - Browser local headless em `http://localhost:3000/app/reviews` com sessão real de paciente.
+
+
+## Atualização - 2026-06-17
+
+A tela **Avaliar Profissional** foi simplificada para reduzir atrito e aumentar a qualidade das avaliações:
+
+- A nota deixou de usar select e passou a ser controlada exclusivamente por estrelas acessíveis, alimentando diretamente o valor enviado ao backend.
+- A elegibilidade agora retorna dados públicos adicionais do psicólogo (CRP, gênero e status verificado) para montar o card de avaliação sem depender de bio/headline.
+- O depoimento passou a ser obrigatório no frontend e no validador do endpoint de criação, preservando o campo nullable no banco apenas por compatibilidade com registros históricos.
+
+Consequência: novas avaliações seguem com nota 1..5, vínculo real por contato WhatsApp e depoimento obrigatório, sem migração de banco e sem criar campos paralelos.

@@ -31,6 +31,9 @@ export type ReviewEligibilityResponse = {
   psychologist_name: string;
   psychologist_avatar: string | null;
   psychologist_headline: string | null;
+  psychologist_crp: string | null;
+  psychologist_gender: string | null;
+  psychologist_verified: boolean;
   eligible: boolean;
   reason: ReviewEligibilityReason;
   contact_request_id: string | null;
@@ -39,7 +42,7 @@ export type ReviewEligibilityResponse = {
 export type CreatePatientReviewPayload = {
   psychologist_id: string;
   rating: number;
-  comment?: string | null;
+  comment: string;
 };
 export type CreatePatientReviewResponse = {
   review_id: string;

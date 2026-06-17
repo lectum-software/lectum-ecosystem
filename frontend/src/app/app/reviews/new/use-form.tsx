@@ -3,24 +3,25 @@ import { type Field, useFormList } from "@/hooks/form";
 
 export const reviewFormSchema = z.object({
   psychologist_id: z.string().min(1, "Selecione o profissional avaliado."),
-  rating: z.enum(["1", "2", "3", "4", "5"], "Escolha uma nota de 1 a 5."),
-  comment: z.string().max(1000, "Use até 1000 caracteres no depoimento.").optional().nullable(),
+  rating: z
+    .string()
+    .min(1, "Selecione uma nota para o profissional.")
+    .refine((value) => ["1", "2", "3", "4", "5"].includes(value), {
+      message: "Selecione uma nota para o profissional.",
+    }),
+  comment: z
+    .string({ error: "Escreva um depoimento sobre sua experiência." })
+    .max(1000, "Use até 1000 caracteres no depoimento.")
+    .refine((value) => value.trim().length > 0, {
+      message: "Escreva um depoimento sobre sua experiência.",
+    }),
 });
 export type ReviewFormValues = z.infer<typeof reviewFormSchema>;
 
 export const useReviewForm = (psychologistId: string) => {
   const fields: Field<ReviewFormValues>[] = [
     { name: "psychologist_id", field: "input", label: "Profissional", hide: true },
-    {
-      name: "rating",
-      field: "select",
-      label: "Sua nota para o profissional",
-      placeholder: "Toque para avaliar",
-      options: [5, 4, 3, 2, 1].map((value) => ({
-        value: String(value),
-        label: `${value} estrela${value === 1 ? "" : "s"}`,
-      })),
-    },
+    { name: "rating", field: "input", label: "Nota", hide: true },
     {
       name: "comment",
       field: "textarea",
@@ -33,7 +34,7 @@ export const useReviewForm = (psychologistId: string) => {
   return useFormList<ReviewFormValues>({
     fields,
     schema: reviewFormSchema,
-    defaultValues: { psychologist_id: psychologistId, rating: "5", comment: "" },
+    defaultValues: { psychologist_id: psychologistId, rating: "", comment: "" },
     values: { psychologist_id: psychologistId },
   });
 };

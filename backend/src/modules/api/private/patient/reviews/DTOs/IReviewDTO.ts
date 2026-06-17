@@ -29,6 +29,9 @@ export type ReviewEligibilityResponse = {
   psychologist_name: string;
   psychologist_avatar: string | null;
   psychologist_headline: string | null;
+  psychologist_crp: string | null;
+  psychologist_gender: string | null;
+  psychologist_verified: boolean;
   eligible: boolean;
   reason: ReviewEligibilityReason;
   contact_request_id: string | null;
@@ -55,6 +58,6 @@ export interface IReviewEligibilityDTO {
 }
 
 export interface IReviewStoreDTO {
-  b: { psychologist_id: string; rating: number; comment?: string | null };
+  b: { psychologist_id: string; rating: number; comment: string };
   auth: user;
 }

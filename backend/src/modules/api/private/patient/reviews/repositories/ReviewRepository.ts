@@ -102,6 +102,8 @@ export class ReviewRepository implements IReviewRepository {
         psychologist_profile: {
           select: {
             headline: true,
+            crp: true,
+            gender: true,
             subscriptions: {
               where: activeProfessionalEntitlementWhere(),
               select: { id: true },
@@ -117,6 +119,9 @@ export class ReviewRepository implements IReviewRepository {
       psychologist_name: psychologist?.name ?? "Psicólogo",
       psychologist_avatar: psychologist?.avatar ?? null,
       psychologist_headline: psychologist?.psychologist_profile?.headline ?? null,
+      psychologist_crp: psychologist?.psychologist_profile?.crp ?? null,
+      psychologist_gender: psychologist?.psychologist_profile?.gender ?? null,
+      psychologist_verified: (psychologist?.psychologist_profile?.subscriptions.length || 0) > 0,
       contact_request_id: null,
       existing_review_id: null,
     };
@@ -172,7 +177,7 @@ export class ReviewRepository implements IReviewRepository {
           author_id: patientId,
           psychologist_id: psychologistId,
           rating: data.b.rating,
-          comment: data.b.comment?.trim() || null,
+          comment: data.b.comment.trim(),
           status: "publicada",
         },
         select: { id: true },

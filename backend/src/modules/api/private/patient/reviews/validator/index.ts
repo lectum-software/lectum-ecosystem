@@ -36,8 +36,6 @@ export const storeSchema: IValidatorRequest = {
       coerse: "string",
       method: "string",
       max: 1000,
-      optional: true,
-      nullable: true,
     },
   ],
 };

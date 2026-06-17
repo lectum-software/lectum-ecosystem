@@ -186,3 +186,21 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 ## ADR
 
 - `adrs/0023-avaliacoes-paciente-elegibilidade-contato.md`
+
+
+## Execução complementar - 2026-06-17 - Avaliar Profissional por estrelas
+
+- Header da rota `/app/reviews/new` refinado sem fundo/card branco superior, mantendo apenas voltar e título sobre o fundo da página.
+- Card do profissional passou a exibir nome com selo de verificado e a linha `Profissão • CRP`, usando os dados reais retornados pela elegibilidade.
+- Contrato de elegibilidade de avaliações enriquecido com `psychologist_crp`, `psychologist_gender` e `psychologist_verified`, sem alteração de schema Prisma.
+- Select de nota removido: a nota agora é definida somente por estrelas acessíveis (1 a 5) integradas ao React Hook Form/Zod.
+- Depoimento passou a ser obrigatório na UI e no validador da API de criação de avaliação; envio fica desabilitado até nota e depoimento estarem preenchidos.
+- Mensagens amigáveis validadas: `Selecione uma nota para o profissional.` e `Escreva um depoimento sobre sua experiência.`.
+- Sem novos packages e sem alterações em `backend/prisma/schema.prisma` ou migrations; `db:migrate` não se aplicou.
+
+### Validações complementares
+
+- `pnpm check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend build`
+- Browser local/CDP em `http://localhost:3000/app/reviews/new?psychologist_id=demo-psychologist-marcelo-pires` com sessão real de paciente: header transparente, ausência de select, 5 estrelas, selo verificado, `Profissão • CRP`, botão desabilitado antes dos requisitos e habilitado após nota + depoimento.
