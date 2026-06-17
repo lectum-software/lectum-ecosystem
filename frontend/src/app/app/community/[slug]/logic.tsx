@@ -80,6 +80,7 @@ import {
   getCommunityFeedChip,
 } from "@/utils/community";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { navigateBackWithFallback } from "@/utils/navigation-history";
 
 const PAGE_LIMIT = 12;
 
@@ -2360,7 +2361,7 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
                 community={community}
                 following={following}
                 membershipPending={membershipPending}
-                onBack={() => router.back()}
+                onBack={() => navigateBackWithFallback(router)}
                 onSearch={openCommunitySearch}
                 onShare={shareCommunity}
                 onToggleFollow={toggleFollow}

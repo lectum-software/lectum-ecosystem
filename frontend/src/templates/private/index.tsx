@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import * as userActions from "@/store/modules/user/actions";
 import { COMMUNITY_FEED_SLUG, DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
+import { recordAppNavigationPoint } from "@/utils/navigation-history";
 
 type PrivateTemplateProps = PropsWithChildren<{
   allowAnonymous?: boolean;
@@ -381,6 +382,10 @@ export const PrivateTemplate = ({
   } as CSSProperties;
   const isSessionLoading = hasToken && !sessionUser && (hidrate.isLoading || hidrate.isPending);
   const shouldShowSessionError = Boolean(hasToken && hidrate.isError && !sessionUser);
+
+  useEffect(() => {
+    recordAppNavigationPoint(pathname);
+  }, [pathname]);
 
   useEffect(() => {
     if (!shouldAutoHideNavigation) return;

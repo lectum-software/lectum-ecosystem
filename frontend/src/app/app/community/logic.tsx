@@ -22,6 +22,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { Input } from "@/registry/new-york-v4/ui/input";
 import { PrivateTemplate } from "@/templates/private";
+import { navigateBackWithFallback } from "@/utils/navigation-history";
 import { buildCommunityExploreCard, type CommunityExploreCard } from "./explore-content";
 
 const PAGE_LIMIT = 10;
@@ -246,7 +247,7 @@ export const CommunityLogic = () => {
             <button
               aria-label="Voltar"
               className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#E2E8F0] bg-white text-[#64748B] shadow-[0_10px_24px_rgba(15,23,42,0.08)] transition hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-              onClick={() => router.back()}
+              onClick={() => navigateBackWithFallback(router)}
               type="button"
             >
               <ArrowLeft className="h-5 w-5" aria-hidden="true" />

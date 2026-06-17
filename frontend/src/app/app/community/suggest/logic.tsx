@@ -9,6 +9,7 @@ import { components } from "@/components/controllers";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { navigateBackWithFallback } from "@/utils/navigation-history";
 import { toSuggestCommunityPayload, useSuggestCommunityForm } from "./use-form";
 
 type ApiErrorData = {
@@ -83,7 +84,7 @@ export const SuggestCommunityLogic = () => {
             <button
               aria-label="Voltar para comunidades"
               className="grid h-10 w-10 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-              onClick={() => router.back()}
+              onClick={() => navigateBackWithFallback(router)}
               type="button"
             >
               <ArrowLeft className="h-5 w-5" aria-hidden="true" />

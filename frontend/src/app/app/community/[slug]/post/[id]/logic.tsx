@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   type ChangeEvent,
   type MouseEvent,
@@ -62,6 +62,7 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { navigateBackWithFallback } from "@/utils/navigation-history";
 import {
   type PostReportForm,
   type ReplyComposerForm,
@@ -592,13 +593,13 @@ const MediaBlock = ({
 };
 
 const PostHeader = ({
+  onBack,
   onReport,
   post,
-  slug,
 }: {
+  onBack: () => void;
   onReport: () => void;
   post: PostDetail;
-  slug: string;
 }) => {
   const isPsychologistPost = post.author.role === "psicologo";
   const isAnonymousPatient = !isPsychologistPost && post.anonymous;
@@ -610,11 +611,15 @@ const PostHeader = ({
   return (
     <header className="grid gap-4 px-5 pt-4 pb-3">
       <div className="-mx-5 flex items-center justify-between gap-3 border-[#EDF1F5] border-b px-5 pb-3 dark:border-border">
-        <Button asChild className="h-10 w-10 rounded-full p-0" variant="ghost">
-          <Link href={slug ? `/app/community/${slug}` : DEFAULT_COMMUNITY_FEED_HREF}>
-            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-            <span className="sr-only">Voltar</span>
-          </Link>
+        <Button
+          aria-label="Voltar"
+          className="h-10 w-10 rounded-full p-0"
+          onClick={onBack}
+          type="button"
+          variant="ghost"
+        >
+          <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+          <span className="sr-only">Voltar</span>
         </Button>
         <h1 className="text-base font-black text-[#182033] dark:text-foreground">Post</h1>
         <div className="relative">
@@ -1880,8 +1885,8 @@ const RepliesList = ({
 };
 
 export const PostDetailLogic = () => {
-  const params = useParams<{ slug: string; id: string }>();
-  const slug = typeof params.slug === "string" ? params.slug : "";
+  const router = useRouter();
+  const params = useParams<{ id: string }>();
   const postId = typeof params.id === "string" ? params.id : "";
   const isMobile = useIsPostDetailMobile();
   const currentUserId = useAppSelector((state) => state.user?.id ?? null);
@@ -2086,12 +2091,12 @@ export const PostDetailLogic = () => {
           <>
             <article className="overflow-hidden bg-white shadow-[0_10px_26px_rgba(15,23,42,0.04)] dark:bg-surface sm:mt-4 sm:rounded-[26px] sm:border sm:border-border">
               <PostHeader
+                onBack={() => navigateBackWithFallback(router)}
                 onReport={() => {
                   setReportError(null);
                   setReportTarget({ type: "post" });
                 }}
                 post={post}
-                slug={slug || post.community.slug}
               />
               <PostBody post={post} />
               <PostVoteBar
@@ -2224,6 +2229,7 @@ export const PostDetailLogic = () => {
 };
 
 export const PostReplyThreadLogic = () => {
+  const router = useRouter();
   const params = useParams<{ id: string; replyId: string; slug: string }>();
   const postId = typeof params.id === "string" ? params.id : "";
   const replyId = typeof params.replyId === "string" ? params.replyId : "";
@@ -2356,14 +2362,14 @@ export const PostReplyThreadLogic = () => {
         <div className="px-5 pt-4 pb-2 sm:px-0 sm:pt-5 sm:pb-3">
           <div className="grid min-h-[58px] grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center gap-2">
             <Button
-              asChild
+              aria-label="Voltar"
               className="h-10 w-10 rounded-full border border-[#DDE7F2] bg-white/70 p-0 text-[#475569] shadow-[0_6px_16px_rgba(15,23,42,0.045)] transition hover:border-primary/30 hover:bg-white hover:text-[#182033] dark:border-border dark:bg-surface-muted/60 dark:text-muted dark:hover:text-foreground"
+              onClick={() => navigateBackWithFallback(router)}
+              type="button"
               variant="ghost"
             >
-              <Link href={post ? `/app/community/${post.community.slug}/post/${post.id}` : "../"}>
-                <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-                <span className="sr-only">Voltar ao post</span>
-              </Link>
+              <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+              <span className="sr-only">Voltar</span>
             </Button>
 
             <div className="grid min-w-0 justify-items-center gap-1.5 py-1 text-center">

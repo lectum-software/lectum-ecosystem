@@ -277,3 +277,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; referencias auditaveis: `_product/proto/Dentro da Comunidade.jpg`, `_product/proto/Feed Comunidade.jpg`, `_product/proto/Dentro do Post.jpg` e captura enviada pelo usuario.
 - ADR atualizado: `adrs/0103-player-video-vertical-unificado.md`.
 - Validacoes executadas: `pnpm --dir frontend check` e Chrome/CDP mobile 390x844 em `/app/community/ansiedade-em-equilibrio`, confirmando video expandido em 390x693px, proporcao 9:16, `object-fit: contain` e restauracao ao sair.
+
+## Complemento 2026-06-17 - voltar por historico nas telas de comunidade
+
+- Pedido do usuario: corrigir a seta de voltar dentro das comunidades para retornar a tela anterior visitada, preservando o contexto de entrada do usuario.
+- A navegacao de voltar passou a usar `navigateBackWithFallback`, que chama `router.back()` quando existe historico interno valido do app e usa `/app/community` como fallback quando nao ha historico confiavel.
+- O ajuste foi aplicado aos headers de comunidade, detalhe de post, thread de respostas, criacao de post, ranking de Top Mentores, explorar comunidades e solicitar nova comunidade, sem alterar os demais botoes/CTAs de navegacao.
+- O modo de busca contextual dentro da comunidade manteve seu comportamento proprio: a seta apenas fecha a busca local e restaura scroll/paginacao, sem navegar para fora da pagina.
+- Nao houve alteracao de backend, Prisma, migrations, packages, endpoints, payloads, ordenacao, feed ou regras de comunidade.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; referencias auditaveis: `_product/proto/Dentro da Comunidade.jpg` e `_product/proto/Dentro do Post.jpg`.
+- ADR atualizado: `adrs/0066-pagina-detalhe-comunidade-participacao.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local autenticado validando fallback em acesso direto, Comunidades -> Comunidade -> Voltar e Post -> Comunidade -> Voltar.

@@ -3,7 +3,7 @@
 import { ArrowLeft, BadgeCheck, ChevronRight, Medal } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 import { useCommunityTopMentors } from "@/api/callers/community";
 import type { CommunityTopMentor } from "@/api/generator/types/community";
@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { navigateBackWithFallback } from "@/utils/navigation-history";
 
 type ApiErrorData = {
   error?: string;
@@ -301,6 +302,7 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
 };
 
 export const CommunityTopMentorsLogic = () => {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const community = searchParams.get("community") || undefined;
   const query = useMemo(() => ({ community, limit: 5, period: "all" as const }), [community]);
@@ -313,11 +315,14 @@ export const CommunityTopMentorsLogic = () => {
     <PrivateTemplate contentClassName="overflow-x-hidden bg-[#F6F8FB]">
       <section className="mx-auto grid w-full min-w-0 max-w-full gap-6 px-4 py-5 sm:max-w-2xl sm:px-0 lg:max-w-4xl">
         <header className="grid min-w-0 gap-5">
-          <Button asChild className="w-fit rounded-full" variant="ghost">
-            <Link href={community ? `/app/community/${community}` : "/app/community"}>
-              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-              Voltar
-            </Link>
+          <Button
+            className="w-fit rounded-full"
+            onClick={() => navigateBackWithFallback(router)}
+            type="button"
+            variant="ghost"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            Voltar
           </Button>
 
           <RankingHero communityName={communityName} mentors={mentors} />

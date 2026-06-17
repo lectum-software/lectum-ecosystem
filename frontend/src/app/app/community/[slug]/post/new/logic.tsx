@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { COMMUNITY_FEED_SLUG } from "@/utils/community";
+import { navigateBackWithFallback } from "@/utils/navigation-history";
 import { toCreateCommunityPostPayload, useCreateCommunityPostForm } from "./use-form";
 
 type ApiErrorData = {
@@ -207,7 +208,7 @@ export const CreateCommunityPostLogic = () => {
           <button
             aria-label="Fechar criação de post e voltar"
             className="absolute left-2 grid h-10 w-10 place-items-center rounded-full text-[#111827] transition hover:bg-[#F5F7FA] dark:text-foreground dark:hover:bg-surface-muted"
-            onClick={() => router.back()}
+            onClick={() => navigateBackWithFallback(router)}
             type="button"
           >
             <X className="h-5 w-5" aria-hidden="true" />

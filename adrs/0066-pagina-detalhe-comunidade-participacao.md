@@ -157,3 +157,18 @@ A página interna de comunidade recebeu três refinamentos de UX sem alterar dom
 - O FAB `Criar publicação` da comunidade passou a usar a mesma escala visual do FAB do feed geral (`h-14/w-14` no mobile e `lg:h-16/lg:w-16` no desktop, ícone `h-8/w-8`, sombra/hover/animação equivalentes).
 
 Não houve alteração de backend, Prisma, contratos de API, algoritmo de ordenação ou textos visíveis dos filtros.
+
+## Atualizacao 2026-06-17 - voltar por historico em comunidades
+
+- As setas de voltar das telas do modulo de comunidade passam a preservar o contexto real de entrada usando historico do navegador (`router.back()`).
+- Para evitar retorno invalido em acesso direto, a decisao registra o historico de rotas do app em `sessionStorage` via `PrivateTemplate`; como fallback tecnico tambem considera `history.state.idx > 0` ou referrer da mesma origem. Sem historico confiavel, o fallback canonico e `/app/community`.
+- O fallback para `/app/community` substitui rotas fixas locais como retorno padrao de headers, evitando que a comunidade sempre volte ao feed ou que a thread sempre volte a uma rota fixa de post quando o usuario veio de outro fluxo.
+- A busca contextual da comunidade permanece excecao: sua seta fecha o modo de busca e restaura estado local, pois nao representa navegacao de pagina.
+- A decisao e exclusivamente frontend e nao altera dados, contratos, ordenacao, votos, replies, filtros, backend ou persistencia.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local autenticado validando fallback em acesso direto e retorno por historico nos fluxos Comunidades -> Comunidade e Post -> Comunidade -> Voltar.
