@@ -204,3 +204,17 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir backend build`
 - `pnpm --dir frontend build`
 - Browser local/CDP em `http://localhost:3000/app/reviews/new?psychologist_id=demo-psychologist-marcelo-pires` com sessão real de paciente: header transparente, ausência de select, 5 estrelas, selo verificado, `Profissão • CRP`, botão desabilitado antes dos requisitos e habilitado após nota + depoimento.
+
+## Execução complementar - 2026-06-17 - Sucesso da avaliação
+
+- Tela `/app/reviews/success` ajustada para remover o botão `Voltar ao perfil`.
+- Texto descritivo atualizado para reforçar o valor do depoimento para o profissional e outros pacientes.
+- Card de confirmação passou a exibir dados reais do psicólogo avaliado via elegibilidade: nome com selo verificado e `Profissão • CRP`.
+- Ação `Finalizar` redireciona para o feed da comunidade (`/app/community/feed`), preservando a jornada de descoberta após a avaliação.
+- Sem novos packages, sem mocks e sem alteração de schema Prisma/migrations.
+
+### Validações complementares
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Browser local/CDP em `http://localhost:3002/app/reviews/success?psychologist_id=demo-psychologist-marcelo-pires`: sem `Voltar ao perfil`, sem `Registro salvo com segurança`, card com `AVALIAÇÃO CONCLUÍDA`, `Marcelo Pires Demo`, `Psicólogo • CRP DEMO/00002`, selo verificado e `Finalizar` navegando para `/app/community/feed`.

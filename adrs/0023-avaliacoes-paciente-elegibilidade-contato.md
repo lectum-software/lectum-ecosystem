@@ -52,3 +52,11 @@ A tela **Avaliar Profissional** foi simplificada para reduzir atrito e aumentar 
 - O depoimento passou a ser obrigatório no frontend e no validador do endpoint de criação, preservando o campo nullable no banco apenas por compatibilidade com registros históricos.
 
 Consequência: novas avaliações seguem com nota 1..5, vínculo real por contato WhatsApp e depoimento obrigatório, sem migração de banco e sem criar campos paralelos.
+
+## Atualização - 2026-06-17 - Confirmação pós-avaliação
+
+A confirmação de avaliação passou a priorizar continuidade de descoberta em comunidade:
+
+- O card de sucesso reutiliza os dados públicos reais retornados pela elegibilidade (`psychologist_name`, `psychologist_gender`, `psychologist_crp`, `psychologist_verified`) para confirmar quem foi avaliado.
+- A ação principal `Finalizar` redireciona para `/app/community/feed`, em vez de retornar ao perfil do psicólogo, reforçando a próxima etapa de engajamento comunitário.
+- Não houve mudança de contrato persistido ou schema; a decisão é de fluxo e apresentação no frontend.
