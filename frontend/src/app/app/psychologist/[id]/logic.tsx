@@ -1145,6 +1145,7 @@ const ReviewPreviewCard = ({ review }: { review: DirectoryPsychologistProfileRev
 };
 
 const ReviewsPreviewSection = ({
+  highlightedReview,
   isError,
   isLoading,
   onViewAll,
@@ -1154,10 +1155,11 @@ const ReviewsPreviewSection = ({
   isError: boolean;
   isLoading: boolean;
   onViewAll: () => void;
+  highlightedReview?: DirectoryPsychologistProfileReview | null;
   reviews: DirectoryPsychologistProfileReview[];
   summary: DirectoryReviewSummary;
 }) => {
-  const firstReview = reviews[0];
+  const featuredReview = highlightedReview ?? reviews[0];
   const hasReviews = summary.rating_count > 0 || reviews.length > 0;
 
   return (
@@ -1193,9 +1195,11 @@ const ReviewsPreviewSection = ({
 
       {isLoading ? <LoadingState label="Carregando avaliações" /> : null}
 
-      {!isLoading && !isError && firstReview ? <ReviewPreviewCard review={firstReview} /> : null}
+      {!isLoading && !isError && featuredReview ? (
+        <ReviewPreviewCard review={featuredReview} />
+      ) : null}
 
-      {!isLoading && !isError && !firstReview ? (
+      {!isLoading && !isError && !featuredReview ? (
         <div className="mt-3 flex items-center justify-between gap-3">
           <p className="text-[13px] leading-[1.6] text-[#64748B]">
             Este profissional ainda não possui avaliações.
@@ -1349,6 +1353,7 @@ const PublicationsActivitySummary = ({
 
 const PostsPreviewSection = ({
   canInteract,
+  highlightedPublication,
   isError,
   isLoading,
   onShare,
@@ -1357,6 +1362,7 @@ const PostsPreviewSection = ({
   total,
 }: {
   canInteract: boolean;
+  highlightedPublication?: DirectoryPsychologistProfilePost | null;
   isError: boolean;
   isLoading: boolean;
   onShare: (post: PostListPost) => void;
@@ -1364,7 +1370,7 @@ const PostsPreviewSection = ({
   posts: DirectoryPsychologistProfilePost[];
   total: number;
 }) => {
-  const firstPost = posts[0];
+  const featuredPost = highlightedPublication ?? posts[0];
 
   return (
     <ProfileSectionCard
@@ -1382,13 +1388,17 @@ const PostsPreviewSection = ({
 
       {isLoading ? <LoadingState label="Carregando publicações" /> : null}
 
-      {!isLoading && !isError && firstPost ? (
+      {!isLoading && !isError && featuredPost ? (
         <div className="mt-3">
-          <ProfileCommunityPostCard canInteract={canInteract} onShare={onShare} post={firstPost} />
+          <ProfileCommunityPostCard
+            canInteract={canInteract}
+            onShare={onShare}
+            post={featuredPost}
+          />
         </div>
       ) : null}
 
-      {!isLoading && !isError && !firstPost ? (
+      {!isLoading && !isError && !featuredPost ? (
         <p className="mt-3 text-[13px] leading-[1.6] text-[#64748B]">
           Este profissional ainda não possui publicações públicas.
         </p>
@@ -1411,6 +1421,7 @@ const AboutTab = ({
   postsPreview: {
     isError: boolean;
     isLoading: boolean;
+    highlightedPublication?: DirectoryPsychologistProfilePost | null;
     posts: DirectoryPsychologistProfilePost[];
     total: number;
   };
@@ -1418,6 +1429,7 @@ const AboutTab = ({
   reviewsPreview: {
     isError: boolean;
     isLoading: boolean;
+    highlightedReview?: DirectoryPsychologistProfileReview | null;
     reviews: DirectoryPsychologistProfileReview[];
     summary: DirectoryReviewSummary;
   };
@@ -1457,6 +1469,7 @@ const AboutTab = ({
       </ProfileSectionCard>
 
       <ReviewsPreviewSection
+        highlightedReview={reviewsPreview.highlightedReview}
         isError={reviewsPreview.isError}
         isLoading={reviewsPreview.isLoading}
         onViewAll={() => onTabChange("avaliacoes", { scrollToContentTop: true })}
@@ -1483,6 +1496,7 @@ const AboutTab = ({
 
       <PostsPreviewSection
         canInteract={canInteractPosts}
+        highlightedPublication={postsPreview.highlightedPublication}
         isError={postsPreview.isError}
         isLoading={postsPreview.isLoading}
         onShare={onSharePost}
@@ -2088,6 +2102,7 @@ export const PsychologistProfileLogic = () => {
                       postsPreview={{
                         isError: posts.isError,
                         isLoading: posts.isLoading,
+                        highlightedPublication: posts.data?.highlighted_publication ?? null,
                         posts: posts.data?.data ?? [],
                         total: posts.data?.count ?? 0,
                       }}
@@ -2095,6 +2110,7 @@ export const PsychologistProfileLogic = () => {
                       reviewsPreview={{
                         isError: reviews.isError,
                         isLoading: reviews.isLoading,
+                        highlightedReview: reviews.data?.highlighted_review ?? null,
                         reviews: reviews.data?.data ?? [],
                         summary: reviews.data?.summary ?? emptySummary,
                       }}

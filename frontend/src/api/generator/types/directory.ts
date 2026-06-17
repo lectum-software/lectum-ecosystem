@@ -130,6 +130,7 @@ export type DirectoryPsychologistProfilePostsResponse = {
   pages: number;
   count: number;
   summary: DirectoryPsychologistParticipationSummary;
+  highlighted_publication: DirectoryPsychologistProfilePost | null;
 };
 
 export type DirectoryPsychologistReviewAuthor = {
@@ -159,6 +160,7 @@ export type DirectoryPsychologistProfileReviewsResponse = {
   pages: number;
   count: number;
   summary: DirectoryReviewSummary;
+  highlighted_review: DirectoryPsychologistProfileReview | null;
 };
 
 export type DirectoryPsychologistProfileListQuery = {

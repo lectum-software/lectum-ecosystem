@@ -138,11 +138,51 @@ const profileReplySelect = {
   },
 } satisfies Prisma.post_replySelect;
 
+const profileReviewSelect = {
+  id: true,
+  rating: true,
+  comment: true,
+  response: true,
+  responded_at: true,
+  createdAt: true,
+  author: {
+    select: {
+      name: true,
+    },
+  },
+} satisfies Prisma.professional_reviewSelect;
+
 type ProfilePostResult = Prisma.community_postGetPayload<{ select: typeof profilePostSelect }>;
 type ProfileReplyResult = Prisma.post_replyGetPayload<{ select: typeof profileReplySelect }>;
+type ProfileReviewResult = Prisma.professional_reviewGetPayload<{
+  select: typeof profileReviewSelect;
+}>;
 type ProfileAuthorResult = ProfilePostResult["author"];
 type ProfileProfessionalReplyResult = ProfilePostResult["replies"][number];
 type CurrentVote = 1 | -1 | null;
+
+type ProfilePublicationCandidate =
+  | {
+      createdAt: Date;
+      id: string;
+      kind: "post";
+      post: ProfilePostResult;
+      score: number;
+    }
+  | {
+      createdAt: Date;
+      id: string;
+      kind: "reply";
+      reply: ProfileReplyResult;
+      score: number;
+    };
+
+const PROFILE_PUBLICATION_UPVOTE_WEIGHT = 3;
+const PROFILE_PUBLICATION_COMMENT_WEIGHT = 5;
+const PROFILE_PUBLICATION_PSYCHOLOGIST_REPLY_WEIGHT = 15;
+const PROFILE_PUBLICATION_TOP_MENTOR_REPLY_WEIGHT = 25;
+const PROFILE_PUBLICATION_SHARE_WEIGHT = 4;
+const PROFILE_PUBLICATION_SAVE_WEIGHT = 3;
 
 const normalizeStringArray = (value: unknown): string[] => {
   if (!Array.isArray(value)) return [];
@@ -320,6 +360,16 @@ const toSafeAuthor = (name: string): DirectoryReviewAuthor => {
   };
 };
 
+const toReviewResponse = (item: ProfileReviewResult) => ({
+  id: item.id,
+  rating: item.rating,
+  comment: item.comment,
+  response: item.response,
+  responded_at: item.responded_at,
+  created_at: item.createdAt,
+  author: toSafeAuthor(item.author.name),
+});
+
 const toCommunityResponse = (item: ProfilePostResult["community"]): CommunityDTO => ({
   id: item.id,
   name: item.name,
@@ -419,6 +469,95 @@ const toPostResponse = (
       toHighlightedProfessionalReply(highlightedReply, savedReplyIds, false) ??
       toHighlightedProfessionalReply(item.replies[0], savedReplyIds),
   };
+};
+
+const profilePublicationScore = ({
+  comments,
+  psychologistReplies = 0,
+  saves,
+  shares = 0,
+  topMentorReplies = 0,
+  upvotes,
+}: {
+  comments: number;
+  psychologistReplies?: number;
+  saves: number;
+  shares?: number;
+  topMentorReplies?: number;
+  upvotes: number;
+}) =>
+  upvotes * PROFILE_PUBLICATION_UPVOTE_WEIGHT +
+  comments * PROFILE_PUBLICATION_COMMENT_WEIGHT +
+  psychologistReplies * PROFILE_PUBLICATION_PSYCHOLOGIST_REPLY_WEIGHT +
+  topMentorReplies * PROFILE_PUBLICATION_TOP_MENTOR_REPLY_WEIGHT +
+  shares * PROFILE_PUBLICATION_SHARE_WEIGHT +
+  saves * PROFILE_PUBLICATION_SAVE_WEIGHT;
+
+const postEngagementScore = (post: ProfilePostResult) => {
+  const verifiedProfessionalReplies = post.replies.filter((reply) =>
+    isProfessionalVerified(reply.author.psychologist_profile),
+  );
+  const topMentorReplies = verifiedProfessionalReplies.filter((reply) =>
+    mentorBadgeForScore(reply.author.psychologist_profile, reply.upvotes_count),
+  );
+
+  return profilePublicationScore({
+    upvotes: post.upvotes_count,
+    comments: post.replies_count,
+    saves: post.saves_count,
+    psychologistReplies: verifiedProfessionalReplies.length,
+    topMentorReplies: topMentorReplies.length,
+  });
+};
+
+const replyEngagementScore = (
+  reply: ProfileReplyResult,
+  replyChildrenCountById: Map<string, number>,
+  replySavesCountById: Map<string, number>,
+) =>
+  profilePublicationScore({
+    upvotes: reply.upvotes_count,
+    comments: replyChildrenCountById.get(reply.id) ?? 0,
+    saves: replySavesCountById.get(reply.id) ?? 0,
+  });
+
+const compareProfilePublicationCandidates = (
+  a: ProfilePublicationCandidate,
+  b: ProfilePublicationCandidate,
+) => {
+  const scoreDiff = b.score - a.score;
+  if (scoreDiff !== 0) return scoreDiff;
+
+  const dateDiff = b.createdAt.getTime() - a.createdAt.getTime();
+  if (dateDiff !== 0) return dateDiff;
+
+  return b.id.localeCompare(a.id);
+};
+
+const selectHighlightedPublication = (
+  posts: ProfilePostResult[],
+  replies: ProfileReplyResult[],
+  replyChildrenCountById: Map<string, number>,
+  replySavesCountById: Map<string, number>,
+) => {
+  const candidates: ProfilePublicationCandidate[] = [
+    ...posts.map((post) => ({
+      createdAt: post.createdAt,
+      id: post.id,
+      kind: "post" as const,
+      post,
+      score: postEngagementScore(post),
+    })),
+    ...replies.map((reply) => ({
+      createdAt: reply.createdAt,
+      id: reply.id,
+      kind: "reply" as const,
+      reply,
+      score: replyEngagementScore(reply, replyChildrenCountById, replySavesCountById),
+    })),
+  ];
+
+  return candidates.sort(compareProfilePublicationCandidates)[0] ?? null;
 };
 
 const publishedProfileWhere = (psychologistId: string): Prisma.userWhereInput => ({
@@ -739,19 +878,15 @@ export class ProfileRepository implements IProfileRepository {
         },
       },
     };
-    const take = pagination.skip + pagination.limit;
-
     const [posts, postsCount, replies, repliesCount, topMentorCommunities] = await Promise.all([
       prisma.community_post.findMany({
         where: postsWhere,
-        take,
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         select: profilePostSelect,
       }),
       prisma.community_post.count({ where: postsWhere }),
       prisma.post_reply.findMany({
         where: repliesWhere,
-        take,
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         select: profileReplySelect,
       }),
@@ -759,6 +894,49 @@ export class ProfileRepository implements IProfileRepository {
       getProfileTopMentorCommunities(data.p.id),
     ]);
     const count = postsCount + repliesCount;
+    const allReplyIds = replies.map((reply) => reply.id);
+    const [replyChildrenCountRows, replySavesCountRows] = allReplyIds.length
+      ? await Promise.all([
+          prisma.post_reply.groupBy({
+            by: ["parent_reply_id"],
+            where: {
+              deleted: false,
+              parent_reply_id: {
+                in: allReplyIds,
+              },
+            },
+            _count: {
+              parent_reply_id: true,
+            },
+          }),
+          prisma.post_reply_save.groupBy({
+            by: ["reply_id"],
+            where: {
+              deleted: false,
+              reply_id: {
+                in: allReplyIds,
+              },
+            },
+            _count: {
+              reply_id: true,
+            },
+          }),
+        ])
+      : [[], []];
+    const replyChildrenCountById = new Map(
+      replyChildrenCountRows.flatMap((row) =>
+        row.parent_reply_id ? [[row.parent_reply_id, row._count.parent_reply_id]] : [],
+      ),
+    );
+    const replySavesCountById = new Map(
+      replySavesCountRows.map((row) => [row.reply_id, row._count.reply_id]),
+    );
+    const highlightedPublication = selectHighlightedPublication(
+      posts,
+      replies,
+      replyChildrenCountById,
+      replySavesCountById,
+    );
     const mergedItems = [
       ...posts.map((post) => ({ createdAt: post.createdAt, kind: "post" as const, post })),
       ...replies.map((reply) => ({ createdAt: reply.createdAt, kind: "reply" as const, reply })),
@@ -775,10 +953,22 @@ export class ProfileRepository implements IProfileRepository {
       .slice(pagination.skip, pagination.skip + pagination.limit);
     const postIds = Array.from(
       new Set(
-        mergedItems.map((item) => (item.kind === "post" ? item.post.id : item.reply.post.id)),
+        [
+          ...mergedItems.map((item) => (item.kind === "post" ? item.post.id : item.reply.post.id)),
+          highlightedPublication?.kind === "post"
+            ? highlightedPublication.post.id
+            : highlightedPublication?.reply.post.id,
+        ].filter((postId): postId is string => Boolean(postId)),
       ),
     );
-    const replyIds = mergedItems.flatMap((item) => (item.kind === "reply" ? [item.reply.id] : []));
+    const replyIds = Array.from(
+      new Set(
+        [
+          ...mergedItems.flatMap((item) => (item.kind === "reply" ? [item.reply.id] : [])),
+          highlightedPublication?.kind === "reply" ? highlightedPublication.reply.id : null,
+        ].filter((replyId): replyId is string => Boolean(replyId)),
+      ),
+    );
     const authId = data.auth?.id;
     const [votes, saves, replySaves] = authId
       ? await Promise.all([
@@ -826,32 +1016,37 @@ export class ProfileRepository implements IProfileRepository {
     );
     const savedPostIds = new Set(saves.map((save) => save.post_id));
     const savedReplyIds = new Set(replySaves.map((save) => save.reply_id));
-
-    return {
-      data: mergedItems.map<DirectoryPsychologistPost>((item) => {
-        if (item.kind === "post") {
-          return {
-            ...toPostResponse(
-              item.post,
-              voteByPostId.get(item.post.id) ?? null,
-              savedPostIds.has(item.post.id),
-              savedReplyIds,
-            ),
-            contribution_type: "post",
-          };
-        }
-
+    const toDirectoryPublication = (
+      item:
+        | { kind: "post"; post: ProfilePostResult }
+        | { kind: "reply"; reply: ProfileReplyResult },
+    ): DirectoryPsychologistPost => {
+      if (item.kind === "post") {
         return {
           ...toPostResponse(
-            item.reply.post,
-            voteByPostId.get(item.reply.post.id) ?? null,
-            savedPostIds.has(item.reply.post.id),
+            item.post,
+            voteByPostId.get(item.post.id) ?? null,
+            savedPostIds.has(item.post.id),
             savedReplyIds,
-            item.reply,
           ),
-          contribution_type: "reply",
+          contribution_type: "post",
         };
-      }),
+      }
+
+      return {
+        ...toPostResponse(
+          item.reply.post,
+          voteByPostId.get(item.reply.post.id) ?? null,
+          savedPostIds.has(item.reply.post.id),
+          savedReplyIds,
+          item.reply,
+        ),
+        contribution_type: "reply",
+      };
+    };
+
+    return {
+      data: mergedItems.map((item) => toDirectoryPublication(item)),
       page: pagination.page,
       pages: Math.ceil(count / pagination.limit),
       count,
@@ -860,6 +1055,9 @@ export class ProfileRepository implements IProfileRepository {
         replies_count: repliesCount,
         top_mentor_communities: topMentorCommunities,
       },
+      highlighted_publication: highlightedPublication
+        ? toDirectoryPublication(highlightedPublication)
+        : null,
     };
   }
 
@@ -875,27 +1073,13 @@ export class ProfileRepository implements IProfileRepository {
       },
     };
 
-    const [items, count, profile, distributionRows] = await Promise.all([
+    const [items, count, profile, distributionRows, highlightedReview] = await Promise.all([
       prisma.professional_review.findMany({
         where,
         take: pagination.limit,
         skip: pagination.skip,
-        orderBy: {
-          createdAt: "desc",
-        },
-        select: {
-          id: true,
-          rating: true,
-          comment: true,
-          response: true,
-          responded_at: true,
-          createdAt: true,
-          author: {
-            select: {
-              name: true,
-            },
-          },
-        },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        select: profileReviewSelect,
       }),
       prisma.professional_review.count({ where }),
       prisma.psychologist_profile.findFirst({
@@ -916,6 +1100,11 @@ export class ProfileRepository implements IProfileRepository {
           rating: true,
         },
       }),
+      prisma.professional_review.findFirst({
+        where,
+        orderBy: [{ rating: "desc" }, { createdAt: "desc" }, { id: "desc" }],
+        select: profileReviewSelect,
+      }),
     ]);
 
     const distribution = {
@@ -933,20 +1122,13 @@ export class ProfileRepository implements IProfileRepository {
     }
 
     return {
-      data: items.map((item) => ({
-        id: item.id,
-        rating: item.rating,
-        comment: item.comment,
-        response: item.response,
-        responded_at: item.responded_at,
-        created_at: item.createdAt,
-        author: toSafeAuthor(item.author.name),
-      })),
+      data: items.map(toReviewResponse),
       summary: {
         rating_avg: profile?.rating_avg ?? 0,
         rating_count: profile?.rating_count ?? count,
         distribution,
       },
+      highlighted_review: highlightedReview ? toReviewResponse(highlightedReview) : null,
       page: pagination.page,
       pages: Math.ceil(count / pagination.limit),
       count,

@@ -15,6 +15,12 @@ import type {
 } from "@/api/generator/types/community";
 import * as api from "@/api/req/community";
 
+const invalidateDirectoryPsychologistQueries = (queryClient: ReturnType<typeof useQueryClient>) => {
+  queryClient.invalidateQueries({
+    predicate: (query) => query.queryKey[0] === "directory_psychologist",
+  });
+};
+
 export const useCommunities = (query: CommunityListQuery = {}, enabled = true) => {
   return useQuery({
     queryKey: keys.community.list(query),
@@ -132,6 +138,7 @@ export const useCreateCommunityPost = (callbacks?: {
       api.createCommunityPost(slug, body),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: keys.community.root() });
+      invalidateDirectoryPsychologistQueries(queryClient);
       callbacks?.onSuccess?.(data);
     },
     onError: callbacks?.onError,

@@ -683,3 +683,23 @@ Validacoes executadas:
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - Chrome/CDP mobile 390px e desktop 1440px em `/app/psychologist/demo-psychologist-camila-rocha?tab=avaliacoes`, confirmando `box-shadow: none`, fundo branco e borda azul-clara no botao `Avaliar`.
+
+## Registro de ajuste complementar em 2026-06-17 - destaques dinamicos na aba Geral
+
+- Pedido do usuario: a aba `Geral` do perfil do psicologo deve destacar sempre a avaliacao com maior nota recebida e a publicacao/resposta com maior engajamento real, usando recencia apenas como desempate.
+- O endpoint `GET /api/private/directory/psychologists/:id/reviews` passou a retornar `highlighted_review`, calculado no backend com `rating desc`, `createdAt desc` e `id desc`, independente da pagina atual de avaliacoes.
+- O endpoint `GET /api/private/directory/psychologists/:id/posts` passou a retornar `highlighted_publication`, calculado no backend entre posts originais e respostas do psicologo com pesos alinhados ao algoritmo de relevancia das comunidades: upvotes, comentarios/respostas, respostas profissionais/top mentor, salvamentos e campo preparado para compartilhamentos; em empate, vence o item mais recente.
+- A aba `Geral` passou a usar esses campos dedicados para as secoes `Avaliacoes` e `Publicacoes`, sem alterar a ordenacao das abas completas nem a paginacao existente.
+- As mutacoes de criar resposta, votar, salvar/remover salvo e criar post invalidam tambem as queries de perfil publico de psicologos, permitindo recarculo dinamico dos destaques quando houver nova interacao no cliente.
+- Nao houve alteracao de Prisma, migrations, packages, layout dos cards, regras de envio ou dados persistidos.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a validacao visual usou a rota local com dados reais do perfil demo.
+
+Validacoes executadas:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Script real via `ProfileRepository` confirmou que `highlighted_review` corresponde a avaliacao publicada de maior nota de `demo-psychologist-camila-rocha` e que `highlighted_publication` escolhe a publicacao de maior engajamento, mesmo quando ela nao e o primeiro item cronologico da pagina.
+- Chrome headless local em 390px em `/app/psychologist/demo-psychologist-camila-rocha` confirmou a aba `Geral` renderizando o perfil e a publicacao destacada por engajamento (`Autocobranca e saude mental de mulheres`).

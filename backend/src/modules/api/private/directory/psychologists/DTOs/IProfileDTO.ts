@@ -97,11 +97,13 @@ export type DirectoryReviewSummary = {
 
 export type DirectoryPsychologistPostsResponse = PaginationResponse<DirectoryPsychologistPost> & {
   summary: DirectoryPsychologistParticipationSummary;
+  highlighted_publication: DirectoryPsychologistPost | null;
 };
 
 export type DirectoryPsychologistReviewsResponse =
   PaginationResponse<DirectoryPsychologistReview> & {
     summary: DirectoryReviewSummary;
+    highlighted_review: DirectoryPsychologistReview | null;
   };
 
 export interface IProfileShowDTO {

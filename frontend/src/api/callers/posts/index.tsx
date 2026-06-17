@@ -21,6 +21,12 @@ import * as api from "@/api/req/posts";
 
 type VoteValue = 1 | -1 | null;
 
+const invalidateDirectoryPsychologistQueries = (queryClient: ReturnType<typeof useQueryClient>) => {
+  queryClient.invalidateQueries({
+    predicate: (query) => query.queryKey[0] === "directory_psychologist",
+  });
+};
+
 const clampCount = (value: number) => Math.max(0, value);
 
 const getNextVote = (current: VoteValue, value: 1 | -1): VoteValue => {
@@ -155,6 +161,7 @@ export const useUnsavePostFromList = (callbacks?: {
       queryClient.invalidateQueries({ queryKey: keys.posts.saved() });
       queryClient.invalidateQueries({ queryKey: keys.posts.detail(id) });
       queryClient.invalidateQueries({ queryKey: keys.community.root() });
+      invalidateDirectoryPsychologistQueries(queryClient);
       callbacks?.onSuccess?.(data);
     },
     onError: callbacks?.onError,
@@ -175,6 +182,7 @@ export const useUnsaveReplyFromList = (callbacks?: {
       queryClient.invalidateQueries({ queryKey: keys.posts.detail(data.post_id) });
       queryClient.invalidateQueries({ queryKey: keys.posts.replies(data.post_id) });
       queryClient.invalidateQueries({ queryKey: keys.community.root() });
+      invalidateDirectoryPsychologistQueries(queryClient);
       callbacks?.onSuccess?.(data);
     },
     onError: callbacks?.onError,
@@ -195,6 +203,7 @@ export const useCreatePostReply = (callbacks?: {
       queryClient.invalidateQueries({ queryKey: ["posts", variables.id, "replies"] });
       queryClient.invalidateQueries({ queryKey: ["posts", variables.id, "reply-thread"] });
       queryClient.invalidateQueries({ queryKey: keys.community.root() });
+      invalidateDirectoryPsychologistQueries(queryClient);
       callbacks?.onSuccess?.(data);
     },
     onError: callbacks?.onError,
@@ -251,6 +260,7 @@ export const useDeleteReply = (callbacks?: {
       queryClient.invalidateQueries({ queryKey: keys.posts.mine() });
       queryClient.invalidateQueries({ queryKey: keys.posts.saved() });
       queryClient.invalidateQueries({ queryKey: keys.community.root() });
+      invalidateDirectoryPsychologistQueries(queryClient);
       callbacks?.onSuccess?.(data);
     },
     onError: callbacks?.onError,
@@ -390,6 +400,7 @@ export const useVotePost = (postId: string) => {
       queryClient.invalidateQueries({ queryKey: ["posts", postId, "replies"] });
       queryClient.invalidateQueries({ queryKey: ["posts", postId, "reply-thread"] });
       queryClient.invalidateQueries({ queryKey: keys.community.root() });
+      invalidateDirectoryPsychologistQueries(queryClient);
     },
   });
 };
@@ -445,6 +456,7 @@ export const useSavePost = (postId: string) => {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: keys.posts.detail(postId) });
       queryClient.invalidateQueries({ queryKey: keys.community.root() });
+      invalidateDirectoryPsychologistQueries(queryClient);
     },
   });
 };
@@ -533,6 +545,7 @@ export const useSaveReply = (postId: string, replyId: string) => {
       queryClient.invalidateQueries({ queryKey: ["posts", postId, "reply-thread"] });
       queryClient.invalidateQueries({ queryKey: keys.posts.saved() });
       queryClient.invalidateQueries({ queryKey: keys.community.root() });
+      invalidateDirectoryPsychologistQueries(queryClient);
     },
   });
 };
