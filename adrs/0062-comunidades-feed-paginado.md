@@ -66,3 +66,18 @@ O banco de desenvolvimento tinha drift em migration ja aplicada (`20260611140000
 - O catalogo inicial de comunidades foi definido por produto em 2026-06-13; novas comunidades futuras devem continuar passando por curadoria/operacao ou task especifica.
 - Criacao de posts, votos, salvamentos, respostas e detalhe do post continuam nas tasks 24, 26 e 28.
 - Se o feed crescer muito, reavaliar cursor por `createdAt` + `id` e `@tanstack/react-virtual` com ADR proprio.
+
+
+## Atualizacao 2026-06-17 - texto do post como area de navegacao
+
+- O feed passa a tratar o resumo/conteudo textual do post como area de navegacao para o detalhe, alem do titulo ja clicavel.
+- A area clicavel continua limitada ao conteudo textual: o card inteiro nao vira link e botoes de upvote, downvote, comentarios, salvar e compartilhar mantem suas acoes proprias.
+- Quando o texto e truncado, o trecho inline `... ver mais` faz parte do mesmo link para o detalhe do post, alinhando a expectativa de abrir a publicacao completa.
+- A decisao e exclusivamente frontend e nao altera contratos de API, persistencia, votos, salvos, compartilhamentos ou paginacao.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome/CDP autenticado em 390px validando texto clicavel no feed e upvote sem navegacao.

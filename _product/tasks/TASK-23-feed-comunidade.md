@@ -365,3 +365,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; referencias auditaveis: `_product/proto/Feed Comunidade.jpg`, `_product/proto/Dentro da Comunidade.jpg`, `_product/proto/Dentro do Post.jpg` e captura enviada pelo usuario.
 - ADR atualizado: `adrs/0103-player-video-vertical-unificado.md`.
 - Validacoes executadas: `pnpm --dir frontend check` e Chrome/CDP mobile 390x844 nas rotas `/app/community/feed`, `/app/community/ansiedade-em-equilibrio` e `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, confirmando expansao para 390x693px, proporcao 9:16, `object-fit: contain`, fundo/viewport centralizado e restauracao do tamanho embutido ao sair.
+
+
+## Complemento 2026-06-17 - conteudo textual clicavel no feed
+
+- Pedido do usuario: permitir abrir o detalhe do post ao clicar tambem no texto/resumo abaixo do titulo e no trecho `... ver mais`, sem transformar o card inteiro em link.
+- Fonte visual auditavel: `_product/proto/Feed Comunidade.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao, entao a validacao visual usou browser local.
+- No feed geral, a area textual do post agora e um link para `/app/community/[slug]/post/[id]`, incluindo o trecho `... ver mais` quando houver truncagem.
+- O titulo permanece clicavel e as acoes de upvote, downvote, comentarios, salvar e compartilhar seguem fora da area de navegacao.
+- O ajuste tambem foi aplicado ao card compartilhado de posts para manter consistencia nos contextos que reutilizam o mesmo componente visual.
+- Nao houve alteracao de backend, Prisma, migrations, packages, endpoints, payloads, votos, salvamento ou compartilhamento.
+- ADR atualizado: `adrs/0062-comunidades-feed-paginado.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check --write -- 'src/app/app/community/[slug]/logic.tsx' 'src/components/community/community-post-card.tsx'`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado validando no mobile que o texto do feed abre o detalhe e que upvote nao navega.

@@ -288,3 +288,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; referencias auditaveis: `_product/proto/Dentro da Comunidade.jpg` e `_product/proto/Dentro do Post.jpg`.
 - ADR atualizado: `adrs/0066-pagina-detalhe-comunidade-participacao.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local autenticado validando fallback em acesso direto, Comunidades -> Comunidade -> Voltar e Post -> Comunidade -> Voltar.
+
+
+## Complemento 2026-06-17 - conteudo textual clicavel nos posts da comunidade
+
+- Pedido do usuario: dentro da comunidade, permitir abrir o detalhe do post ao clicar no resumo/texto abaixo do titulo e em `... ver mais`.
+- Fonte visual auditavel: `_product/proto/Dentro da Comunidade.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao, entao a validacao visual usou browser local.
+- Na listagem de posts de `/app/community/[slug]`, o conteudo textual agora navega para o detalhe do post, com a mesma rota usada pelo titulo.
+- A area clicavel continua restrita ao titulo/texto/resumo; o card inteiro nao foi transformado em link e os controles de interacao permanecem independentes.
+- Nao houve alteracao de backend, Prisma, migrations, packages, endpoints, payloads, ranking, filtros, votos ou salvamento.
+- ADR atualizado: `adrs/0066-pagina-detalhe-comunidade-participacao.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check --write -- 'src/app/app/community/[slug]/logic.tsx' 'src/components/community/community-post-card.tsx'`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado validando no desktop que o texto dentro da comunidade abre o detalhe e que upvote nao navega.

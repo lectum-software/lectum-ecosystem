@@ -189,3 +189,17 @@ Validacao complementar:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Chrome/CDP autenticado validando: acesso direto ao post com fallback para a comunidade, Comunidade -> Post -> Voltar -> Comunidade, Salvos -> Post -> Voltar -> Salvos, Meus posts/comentarios -> Post -> Voltar -> Meus posts/comentarios e acesso direto a thread com fallback para a comunidade.
+
+
+## Atualizacao 2026-06-17 - resumo clicavel dentro da comunidade
+
+- Os cards da listagem interna de comunidade passam a abrir o detalhe tambem pelo resumo/conteudo textual abaixo do titulo.
+- O titulo, o resumo e o trecho inline `... ver mais` apontam para a mesma rota canonica do post; as acoes de interacao continuam isoladas e nao navegam.
+- O ajuste preserva filtros, ranking, paginacao, busca contextual, votos, salvos e compartilhamento; e apenas um refinamento de area clicavel no frontend.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome/CDP autenticado em desktop validando resumo clicavel dentro da comunidade e upvote sem navegacao.

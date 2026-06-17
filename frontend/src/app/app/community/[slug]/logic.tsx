@@ -533,12 +533,14 @@ const INLINE_TEXT_LESS_LABEL = "ver menos";
 const InlineExpandableText = ({
   className,
   expanded,
+  href,
   onToggle,
   text,
 }: {
   className?: string;
   expanded: boolean;
-  onToggle: (event: ReactMouseEvent<HTMLButtonElement>) => void;
+  href?: string;
+  onToggle?: (event: ReactMouseEvent<HTMLButtonElement>) => void;
   text: string;
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -633,23 +635,40 @@ const InlineExpandableText = ({
     };
   }, [text]);
 
+  const visibleText = expanded || !truncated ? text : preview;
+  const moreLabel = expanded ? INLINE_TEXT_LESS_LABEL : INLINE_TEXT_MORE_LABEL;
+  const moreClassName =
+    "pointer-events-auto inline cursor-pointer rounded-none border-0 bg-transparent p-0 align-baseline font-[inherit] text-[#64748B]/80 [font-size:inherit] [line-height:inherit] dark:text-muted/80";
+  const textContent = (
+    <p className={cn("whitespace-pre-line", className)}>
+      {visibleText}
+      {truncated ? (
+        <>
+          {" "}
+          {href || !onToggle ? (
+            <span className={moreClassName}>{moreLabel}</span>
+          ) : (
+            <button className={moreClassName} onClick={onToggle} type="button">
+              {moreLabel}
+            </button>
+          )}
+        </>
+      ) : null}
+    </p>
+  );
+
   return (
     <div className="relative min-w-0 max-w-full" ref={containerRef}>
-      <p className={cn("whitespace-pre-line", className)}>
-        {expanded || !truncated ? text : preview}
-        {truncated ? (
-          <>
-            {" "}
-            <button
-              className="pointer-events-auto inline cursor-pointer rounded-none border-0 bg-transparent p-0 align-baseline font-[inherit] text-[#64748B]/80 [font-size:inherit] [line-height:inherit] dark:text-muted/80"
-              onClick={onToggle}
-              type="button"
-            >
-              {expanded ? INLINE_TEXT_LESS_LABEL : INLINE_TEXT_MORE_LABEL}
-            </button>
-          </>
-        ) : null}
-      </p>
+      {href ? (
+        <Link
+          className="block rounded-md no-underline transition hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          href={href}
+        >
+          {textContent}
+        </Link>
+      ) : (
+        textContent
+      )}
       <p
         aria-hidden="true"
         className={cn(
@@ -1125,7 +1144,6 @@ const PostCard = ({
 }) => {
   const isPsychologistPost = post.author.role === "psicologo";
   const isAnonymousPatient = !isPsychologistPost && post.anonymous;
-  const [contentExpanded, setContentExpanded] = useState(false);
   const [voteSnapshot, setVoteSnapshot] = useState<VoteSnapshot>({
     currentVote: post.current_user_vote,
     downvotes: post.downvotes_count,
@@ -1246,24 +1264,12 @@ const PostCard = ({
         >
           {post.title}
         </Link>
-        <div className="relative md:cursor-pointer">
-          <Link
-            aria-label={`Abrir post ${post.title}`}
-            className="absolute inset-0 z-0 hidden cursor-pointer rounded-md md:block"
-            href={postDetailHref}
-          />
-          <div className="relative z-10 md:pointer-events-none">
-            <InlineExpandableText
-              className="text-sm leading-6 text-[#64748B] dark:text-muted"
-              expanded={contentExpanded}
-              onToggle={(event) => {
-                event.stopPropagation();
-                setContentExpanded((current) => !current);
-              }}
-              text={post.content}
-            />
-          </div>
-        </div>
+        <InlineExpandableText
+          className="text-sm leading-6 text-[#64748B] dark:text-muted"
+          expanded={false}
+          href={postDetailHref}
+          text={post.content}
+        />
       </div>
 
       <div className="mt-4 grid gap-3">
