@@ -217,3 +217,19 @@ Validacao complementar:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Chrome/CDP em `http://localhost:3000/app/community/ansiedade-em-equilibrio`, validando mobile e desktop: filtros na mesma linha, rolagem horizontal no mobile quando necessario, `Em destaque` ativo azul, `Novos` secundario claro, setas dos dropdowns alinhadas e botao `Seguir` preservando a escala atual da comunidade.
+
+## Atualizacao 2026-06-17 - botao unico de seguir comunidades
+
+- `CommunityFollowButton` passa a concentrar o contrato visual do botao de participacao em comunidades para feed, detalhe, cards de post e cards de comunidade, evitando variacoes locais de altura, padding, radius e sombra.
+- O estado `Seguir` continua aceitando variante primaria/secundaria por contexto (`followVariant`), para preservar a hierarquia local quando a acao ainda e uma chamada de entrada.
+- O estado `Seguindo` deixa de usar azul em qualquer contexto e passa a ser sempre neutro: fundo cinza claro, texto cinza escuro, borda cinza e sem sombra, tornando a acao menos chamativa depois que a relacao ja esta ativa.
+- O card de recomendacao de comunidades em `/app/following` abandona o botao local `Participar` e usa o componente compartilhado com o texto `Seguir`, mantendo a mesma mutacao real de `community_member`.
+- A decisao e visual/frontend; nao altera backend, Prisma, contratos de API, persistencia, regras de permissao, caches de mutacao, ranking ou filtros.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome/CDP autenticado em mobile 390px e desktop 1365px confirmando `Seguindo` com fundo `rgb(241, 245, 249)`, texto `rgb(71, 85, 105)`, altura compacta e sombra transparente.
+- Chrome/CDP anonimo em mobile 390px confirmando `Seguir` compacto, sem sombra visivel e com variante secundaria branca/azul.

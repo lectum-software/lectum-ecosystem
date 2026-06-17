@@ -1,10 +1,11 @@
 "use client";
 
-import { ChevronRight, Compass, Loader2, UsersRound } from "lucide-react";
+import { ChevronRight, Compass, UsersRound } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useCommunities, useFollowCommunity } from "@/api/callers/community";
 import type { Community } from "@/api/generator/types/community";
+import { CommunityFollowButton } from "@/components/community/community-follow-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -208,16 +209,15 @@ const RecommendedCard = ({
         {formatMembers(community.members_count)}
       </p>
     </div>
-    <Button
-      className="h-11 w-full rounded-[14px] border-2 border-[#E0F0FF] bg-white text-base font-black text-primary shadow-none hover:bg-primary hover:text-white"
+    <CommunityFollowButton
+      aria-label={`Seguir ${community.name}`}
+      className="w-full"
       disabled={disabled}
+      following={false}
       onClick={() => onFollow(community)}
+      pending={isPending}
       type="button"
-      variant="outline"
-    >
-      {isPending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
-      Participar
-    </Button>
+    />
   </article>
 );
 

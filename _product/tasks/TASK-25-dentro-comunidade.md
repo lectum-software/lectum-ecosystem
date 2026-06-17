@@ -310,3 +310,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Escopo: sem alteracao de backend, Prisma, migrations, endpoints, ranking, busca, votos, salvos, compartilhamento, textos funcionais dos filtros ou packages.
 - ADR atualizado: `adrs/0066-pagina-detalhe-comunidade-participacao.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP em `http://localhost:3000/app/community/ansiedade-em-equilibrio`, confirmando pills na mesma linha, rolagem horizontal mobile, `Em destaque` ativo azul, `Novos` secundario claro e botao `Seguir` na escala atual.
+
+## Complemento 2026-06-17 - componente unico para Seguir/Seguindo
+
+- Pedido do usuario: padronizar o botao `Seguir/Seguindo` em todos os locais onde ele aparece, incluindo feed da comunidade, pagina interna, cards de post e cards de comunidade.
+- O componente compartilhado `CommunityFollowButton` passou a ser a fonte unica de estilo para o botao de participacao em comunidades, com altura compacta, texto centralizado, radius full, padding horizontal padrao e `shadow-none`.
+- O estado `Seguir` preserva a variante primaria/secundaria do contexto via propriedade `followVariant`, mantendo o visual atual quando o usuario ainda nao segue a comunidade.
+- O estado `Seguindo` agora usa sempre fundo cinza claro, texto cinza escuro, borda neutra e nenhum destaque azul, reduzindo peso visual em linha com o comportamento de aplicativos sociais.
+- O card de comunidades recomendadas em `/app/following` deixou de usar um `Button` local com texto `Participar` e passou a usar o mesmo `CommunityFollowButton`, exibindo `Seguir` com a escala padronizada.
+- Escopo: sem alteracao de backend, Prisma, migrations, endpoints, payloads, persistencia de `community_member`, ranking, filtros, votos, salvos, compartilhamento ou packages.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; referencias auditaveis: `_product/proto/Dentro da Comunidade.jpg` e `_product/proto/Seguindo.jpg`.
+- ADR atualizado: `adrs/0066-pagina-detalhe-comunidade-participacao.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, Chrome/CDP autenticado em mobile 390px e desktop 1365px validando `Seguindo` cinza sem sombra, e Chrome/CDP anonimo em mobile 390px validando `Seguir` compacto sem sombra.

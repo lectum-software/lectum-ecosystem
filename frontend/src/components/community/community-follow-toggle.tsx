@@ -6,12 +6,14 @@ import { CommunityFollowButton } from "@/components/community/community-follow-b
 
 type CommunityFollowToggleProps = {
   className?: string;
+  followVariant?: "primary" | "secondary";
   initialFollowing?: boolean;
   slug: string;
 };
 
 export const CommunityFollowToggle = ({
   className,
+  followVariant,
   initialFollowing = false,
   slug,
 }: CommunityFollowToggleProps) => {
@@ -41,6 +43,7 @@ export const CommunityFollowToggle = ({
   return (
     <CommunityFollowButton
       className={className}
+      followVariant={followVariant}
       following={following}
       onClick={handleToggle}
       pending={pending}
