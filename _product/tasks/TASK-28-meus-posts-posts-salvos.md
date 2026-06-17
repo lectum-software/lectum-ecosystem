@@ -215,3 +215,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Respostas salvas agora recebem do backend autor, midia, voto atual e estado salvo reais para manter WhatsApp profissional, midia e interacoes consistentes sem mock.
 - O CTA `Chamar no WhatsApp` de resposta profissional verificada usa a identidade do feed: fundo transparente, borda verde e texto/icone verdes.
 - Validacao complementar: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e smoke local Chrome headless mobile 390x844 em `/app/posts/saved`, confirmando ausencia de `Abrir post`, ausencia de `Resposta profissional em destaque` dentro de post salvo, barra padrao renderizada e WhatsApp vazado verde.
+
+## Ajuste complementar em 2026-06-17 - comentarios com barra padrao e contexto limpo
+
+- Na aba "Comentarios" de `/app/posts/mine`, o chip `X respostas recebidas` foi removido e substituido pela `CommunityActionBar` compartilhada: upvote, downvote, respostas, salvar e compartilhar.
+- Cards de comentarios diretos ao post exibem apenas o titulo do post no bloco de contexto, sem rotulo `POST ORIGINAL` e sem icone lateral; respostas a comentarios continuam exibindo o trecho do comentario pai.
+- Comentarios continuam navegando para o post original com `?focusReplyId=<replyId>#reply-<replyId>`, preservando scroll automatico e destaque temporario no detalhe do post.
+- Posts da aba "Posts" e contextos de post na aba "Comentarios" exibem a flag premium `Respondido por psicologo verificado` quando o post possui resposta profissional verificada real.
+- O seletor segmentado `Posts / Comentarios` teve o glow/sombra externa removido, mantendo apenas borda, radius e contraste de estado ativo.
+- O backend passou a devolver voto atual e estado salvo dos comentarios em `/api/private/posts/mine`, derivados de `post_vote` e `post_reply_save`, sem schema novo e sem mock.
+- Referencias visuais seguem as imagens locais da TASK-28; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile 390x844 validando ausencia do chip de respostas recebidas, ausencia de `POST ORIGINAL`, seletor sem box-shadow, deep link com `focusReplyId` e seletor compacto de notificacoes sem overflow.

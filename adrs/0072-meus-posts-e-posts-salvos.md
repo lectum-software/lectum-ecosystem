@@ -148,3 +148,24 @@ percepcao de que a resposta tambem havia sido salva.
 - A validacao visual foi feita com Chrome headless em 390x844 usando sessao real local com itens
   salvos, confirmando que nao ha `Abrir post`, lixeira extra ou resposta destacada embutida no post
   salvo.
+
+## Complemento 2026-06-17: Comentarios em Meus posts com barra padrao
+
+### Contexto
+
+A tela `/app/posts/mine` precisava reduzir ruido visual na aba "Comentarios" e voltar a usar os controles padronizados da comunidade. O chip `X respostas recebidas`, o rotulo `POST ORIGINAL` e o glow do seletor segmentado criavam uma linguagem paralela ao feed/post.
+
+### Decisao
+
+- Reutilizar `CommunityActionBar` nos cards de comentarios de `/app/posts/mine`, com upvote, downvote, respostas, salvar e compartilhar.
+- Enriquecer `GET /api/private/posts/mine` com `current_user_vote` e `saved` para replies, consultando `post_vote` e `post_reply_save` reais.
+- Manter a navegacao do card por overlay de `Link`, permitindo que a area inteira do comentario abra o post com `focusReplyId`, enquanto os controles internos continuam independentes.
+- Simplificar o contexto de comentario direto para exibir apenas `community_post.title`; respostas continuam mostrando `parent_reply.content`.
+- Exibir a flag `Respondido por psicologo verificado` a partir de `highlighted_professional_reply` quando o post ja recebeu resposta verificada.
+- Remover box-shadow/glow do seletor `Posts / Comentarios`, preservando o estado ativo azul.
+
+### Consequencias
+
+- A aba de comentarios passa a compartilhar os mesmos padroes visuais e interativos do feed, do post e de Salvos.
+- Salvar e votar em comentarios listados em "Meus posts e comentarios" usa estado persistido real e feedback otimista local, sem endpoint paralelo.
+- Nao houve alteracao de schema Prisma nem pacote novo; o custo extra da listagem e limitado aos itens paginados exibidos.

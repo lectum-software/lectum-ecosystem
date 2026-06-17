@@ -101,3 +101,9 @@ A forma do `notification` migrada (derivada do sample) usa `read`, `redirect`, `
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e Chrome/CDP local em
   mobile 390px confirmando borda azul-clara, fundo branco, sombra leve, item selecionado em azul claro,
   largura alinhada ao card e ausencia de overflow horizontal.
+
+## Complemento 2026-06-17: Rotulos compactos do seletor de novas postagens
+
+- O dropdown customizado de `novo_post__post_author_scope` passa a separar rotulo visual curto de valor de dominio persistido.
+- `professionals_only` e exibido como `Profissionais` para pacientes; `patients_only` e exibido como `Pacientes` para psicologos; `all` continua `Todos`.
+- A decisao evita alargamento do controle no mobile sem alterar payload, backend, preferencias existentes ou a segmentacao implementada em 29B.

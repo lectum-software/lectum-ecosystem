@@ -184,3 +184,10 @@ Packages permitidos: `socket.io`, `socket.io-client`, `web-push`, TanStack Query
 ## Notas para executor
 
 Esta task deixa o canal de recebimento pronto. **Não** ligue eventos de domínio aqui — isso é a 29B. O que foi portado do sample deve ser revisado e adequado ao Lectum antes de marcar concluído. Commit próprio.
+
+## Complemento 2026-06-17 - labels compactas em Novas postagens
+
+- O seletor `Novas postagens` em `/app/settings/notifications` manteve o dropdown customizado premium, mas encurtou os rotulos visiveis para reduzir largura no mobile.
+- Para pacientes, `professionals_only` passa a aparecer como `Profissionais`; para psicologos, `patients_only` aparece como `Pacientes`; `Todos` permanece inalterado.
+- Os valores persistidos (`professionals_only`, `patients_only`, `all`) e a regra de segmentacao de notificacoes nao mudaram.
+- A largura do controle foi reduzida para permanecer contida na coluna direita, sem sobrepor o titulo `Novas postagens`.

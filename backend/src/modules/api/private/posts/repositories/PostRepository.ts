@@ -809,6 +809,99 @@ export class PostRepository implements IPostRepository {
           })
         : Promise.resolve(0),
     ]);
+    const postVoteMap = new Map<string, CurrentVote>();
+    const replyVoteMap = new Map<string, CurrentVote>();
+    const savedPostIds = new Set<string>();
+    const savedReplyIds = new Set<string>();
+    const postIds = posts.map((post) => post.id);
+    const replyIds = replies.map((reply) => reply.id);
+
+    if (postIds.length > 0 || replyIds.length > 0) {
+      const [postVotes, replyVotes, postSaves, replySaves] = await Promise.all([
+        postIds.length > 0
+          ? prisma.post_vote.findMany({
+              where: {
+                user_id: data.auth.id!,
+                deleted: false,
+                post_id: {
+                  in: postIds,
+                },
+              },
+              select: {
+                post_id: true,
+                value: true,
+              },
+            })
+          : Promise.resolve([]),
+        replyIds.length > 0
+          ? prisma.post_vote.findMany({
+              where: {
+                user_id: data.auth.id!,
+                deleted: false,
+                reply_id: {
+                  in: replyIds,
+                },
+              },
+              select: {
+                reply_id: true,
+                value: true,
+              },
+            })
+          : Promise.resolve([]),
+        postIds.length > 0
+          ? prisma.post_save.findMany({
+              where: {
+                user_id: data.auth.id!,
+                deleted: false,
+                post_id: {
+                  in: postIds,
+                },
+              },
+              select: {
+                post_id: true,
+              },
+            })
+          : Promise.resolve([]),
+        replyIds.length > 0
+          ? prisma.post_reply_save.findMany({
+              where: {
+                user_id: data.auth.id!,
+                deleted: false,
+                reply_id: {
+                  in: replyIds,
+                },
+              },
+              select: {
+                reply_id: true,
+              },
+            })
+          : Promise.resolve([]),
+      ]);
+
+      for (const vote of postVotes) {
+        if (vote.post_id) {
+          postVoteMap.set(vote.post_id, normalizeVoteValue(vote.value));
+        }
+      }
+
+      for (const vote of replyVotes) {
+        if (vote.reply_id) {
+          replyVoteMap.set(vote.reply_id, normalizeVoteValue(vote.value));
+        }
+      }
+
+      for (const save of postSaves) {
+        if (save.post_id) {
+          savedPostIds.add(save.post_id);
+        }
+      }
+
+      for (const save of replySaves) {
+        if (save.reply_id) {
+          savedReplyIds.add(save.reply_id);
+        }
+      }
+    }
 
     const postItems = posts.map<PostListItemDTO>((post) => ({
       id: post.id,
@@ -816,8 +909,13 @@ export class PostRepository implements IPostRepository {
       created_at: post.createdAt,
       saved_at: null,
       status: post.status,
-      saved: false,
-      post: toListPostResponse(post, null, false),
+      saved: savedPostIds.has(post.id),
+      post: toListPostResponse(
+        post,
+        postVoteMap.get(post.id) ?? null,
+        savedPostIds.has(post.id),
+        savedReplyIds,
+      ),
       reply: null,
     }));
     const replyItems = replies.map<PostListItemDTO>((reply) => ({
@@ -826,7 +924,7 @@ export class PostRepository implements IPostRepository {
       created_at: reply.createdAt,
       saved_at: null,
       status: "publicado",
-      saved: false,
+      saved: savedReplyIds.has(reply.id),
       post: toListPostResponse(reply.post, null, false),
       reply: {
         id: reply.id,
@@ -840,8 +938,8 @@ export class PostRepository implements IPostRepository {
         created_at: reply.createdAt,
         parent_reply_id: reply.parent_reply_id,
         parent_content: reply.parent_reply?.content ?? null,
-        current_user_vote: null,
-        saved: false,
+        current_user_vote: replyVoteMap.get(reply.id) ?? null,
+        saved: savedReplyIds.has(reply.id),
         author: toAuthorResponse(reply.author, reply.upvotes_count),
       },
     }));

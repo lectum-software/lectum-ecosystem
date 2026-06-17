@@ -3,8 +3,9 @@
 import { BadgeCheck, ChevronLeft, ChevronRight, FileText, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useMyPosts } from "@/api/callers/posts";
+import { useMyPosts, useSaveReply, useVotePost } from "@/api/callers/posts";
 import type { PostListPost, UserPostListItem, UserPostsType } from "@/api/generator/types/posts";
+import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityPostCard } from "@/components/community/community-post-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -85,7 +86,7 @@ const FilterTabs = ({
     aria-label="Filtrar meus posts e comentários"
     className="overflow-x-auto pb-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
   >
-    <div className="inline-flex min-w-max rounded-full border border-border/80 bg-surface/80 p-1.5 shadow-[0_10px_28px_rgb(15_23_42_/_6%)] backdrop-blur">
+    <div className="inline-flex min-w-max rounded-full border border-border/80 bg-surface/80 p-1.5 backdrop-blur">
       {FILTERS.map((item) => {
         const active = item.value === value;
 
@@ -95,7 +96,7 @@ const FilterTabs = ({
             className={cn(
               "min-h-10 rounded-full px-5 text-sm font-extrabold tracking-[-0.01em] transition disabled:opacity-70",
               active
-                ? "bg-primary text-white shadow-[0_10px_24px_rgb(59_130_246_/_20%)]"
+                ? "bg-primary text-white"
                 : "text-muted hover:bg-surface-muted hover:text-foreground",
             )}
             disabled={disabled}
@@ -111,26 +112,112 @@ const FilterTabs = ({
   </nav>
 );
 
-const replyCountLabel = (count: number) => {
-  if (count === 1) return "1 resposta recebida";
+const ProfessionalAnsweredBadge = ({ className }: { className?: string }) => (
+  <span
+    className={cn(
+      "inline-flex min-h-7 shrink-0 items-center gap-1.5 rounded-full border border-primary/10 bg-primary-soft/70 px-2.5 text-[10px] font-black tracking-[-0.01em] text-primary",
+      className,
+    )}
+  >
+    Respondido por psicólogo verificado
+    <BadgeCheck className="h-3.5 w-3.5 fill-primary text-white" aria-hidden="true" />
+  </span>
+);
 
-  return `${count.toLocaleString("pt-BR")} respostas recebidas`;
-};
-
-const ReplyItemCard = ({ item }: { item: UserPostListItem }) => {
+const ReplyItemCard = ({
+  item,
+  onShare,
+}: {
+  item: UserPostListItem;
+  onShare: (post: PostListPost, replyId: string) => void;
+}) => {
   const reply = item.reply;
+  const voteMutation = useVotePost(item.post.id);
+  const saveMutation = useSaveReply(item.post.id, reply?.id ?? "");
+  const [voteOverride, setVoteOverride] = useState<{
+    currentVote: 1 | -1 | null;
+    replyId: string;
+    upvotes: number;
+  } | null>(null);
+  const [saveOverride, setSaveOverride] = useState<{
+    replyId: string;
+    saved: boolean;
+  } | null>(null);
+
   if (!reply) return null;
 
   const replyHref = `/app/community/${item.post.community.slug}/post/${item.post.id}?focusReplyId=${encodeURIComponent(reply.id)}#reply-${reply.id}`;
   const isDirectPostComment = !reply.parent_reply_id;
+  const hasVerifiedProfessionalPostReply = Boolean(
+    item.post.highlighted_professional_reply?.author.verified,
+  );
+  const voteState =
+    voteOverride?.replyId === reply.id
+      ? voteOverride
+      : {
+          currentVote: reply.current_user_vote,
+          upvotes: reply.upvotes_count,
+        };
+  const savedState = saveOverride?.replyId === reply.id ? saveOverride.saved : reply.saved;
+
+  const handleVote = (value: 1 | -1) => {
+    const previousVoteOverride = voteOverride;
+    const nextVote = voteState.currentVote === value ? null : value;
+    const upDelta = (nextVote === 1 ? 1 : 0) - (voteState.currentVote === 1 ? 1 : 0);
+
+    setVoteOverride({
+      currentVote: nextVote,
+      replyId: reply.id,
+      upvotes: Math.max(0, voteState.upvotes + upDelta),
+    });
+
+    voteMutation.mutate(
+      { replyId: reply.id, value },
+      {
+        onError: () => setVoteOverride(previousVoteOverride),
+        onSuccess: (data) => {
+          if (data.target_type !== "reply" || data.reply_id !== reply.id) return;
+
+          setVoteOverride({
+            currentVote: data.value,
+            replyId: reply.id,
+            upvotes: Math.max(0, data.upvotes_count),
+          });
+        },
+      },
+    );
+  };
+
+  const handleToggleSave = () => {
+    const previousSaveOverride = saveOverride;
+    const nextSaved = !savedState;
+
+    setSaveOverride({
+      replyId: reply.id,
+      saved: nextSaved,
+    });
+
+    saveMutation.mutate(savedState, {
+      onError: () => setSaveOverride(previousSaveOverride),
+      onSuccess: (data) => {
+        if (data.target_type !== "reply" || data.reply_id !== reply.id) return;
+
+        setSaveOverride({
+          replyId: reply.id,
+          saved: data.saved,
+        });
+      },
+    });
+  };
 
   return (
-    <Link
-      aria-label={`Abrir comentÃ¡rio em ${item.post.title}`}
-      className="grid cursor-pointer gap-4 rounded-[24px] border border-border/80 bg-surface p-4 text-inherit no-underline shadow-[var(--lectum-shadow-soft)] transition hover:border-primary/18 hover:bg-primary-soft/20 hover:text-inherit hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-      href={replyHref}
-    >
-      <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-muted">
+    <article className="relative grid gap-4 rounded-[24px] border border-border/80 bg-surface p-4 text-inherit shadow-[var(--lectum-shadow-soft)] transition hover:border-primary/18 hover:bg-primary-soft/20">
+      <Link
+        aria-label={`Abrir comentário em ${item.post.title}`}
+        className="absolute inset-0 z-0 rounded-[24px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+        href={replyHref}
+      />
+      <div className="pointer-events-none relative z-10 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-muted">
         <MessageCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         <span className="shrink-0">Comentado em</span>
         <span className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-black text-foreground">
@@ -140,7 +227,7 @@ const ReplyItemCard = ({ item }: { item: UserPostListItem }) => {
       </div>
 
       {reply.parent_content || isDirectPostComment ? (
-        <blockquote className="relative overflow-hidden rounded-[20px] border border-primary/10 bg-[linear-gradient(135deg,rgb(239_246_255_/_78%),rgb(248_250_252_/_92%))] px-4 py-3.5 pl-5 shadow-[inset_0_1px_0_rgb(255_255_255_/_70%)]">
+        <blockquote className="pointer-events-none relative z-10 overflow-hidden rounded-[20px] border border-primary/10 bg-[linear-gradient(135deg,rgb(239_246_255_/_78%),rgb(248_250_252_/_92%))] px-4 py-3.5 pl-5 shadow-[inset_0_1px_0_rgb(255_255_255_/_70%)]">
           <span
             className="absolute top-3 bottom-3 left-2 w-0.5 rounded-full bg-primary/45"
             aria-hidden="true"
@@ -150,39 +237,48 @@ const ReplyItemCard = ({ item }: { item: UserPostListItem }) => {
               &ldquo;{reply.parent_content}&rdquo;
             </p>
           ) : (
-            <div className="flex min-w-0 items-start gap-2">
-              <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
-              <div className="grid min-w-0 gap-0.5">
-                <span className="text-[10px] font-black tracking-[0.1em] text-primary/75 uppercase">
-                  Post original
-                </span>
-                <p className="line-clamp-2 text-xs font-black leading-5 text-foreground">
-                  {item.post.title}
-                </p>
-              </div>
-            </div>
+            <p className="line-clamp-2 text-xs font-black leading-5 text-foreground">
+              {item.post.title}
+            </p>
           )}
         </blockquote>
       ) : null}
 
-      <div className="grid gap-2">
+      {isDirectPostComment && hasVerifiedProfessionalPostReply ? (
+        <ProfessionalAnsweredBadge className="pointer-events-none relative z-10 w-fit" />
+      ) : null}
+
+      <div className="pointer-events-none relative z-10 grid gap-2">
         {reply.title ? <h2 className="text-lg font-black text-foreground">{reply.title}</h2> : null}
         <p className="whitespace-pre-line text-sm leading-6 text-foreground">{reply.content}</p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 border-border/80 border-t pt-3 text-xs font-extrabold text-muted">
-        <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full bg-surface-muted px-3">
-          <MessageCircle className="h-3.5 w-3.5" aria-hidden="true" />
-          {replyCountLabel(reply.replies_received_count)}
-        </span>
-        {reply.has_verified_professional_reply ? (
-          <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-primary/10 bg-primary-soft/70 px-3 text-primary">
-            Respondido por psicólogo
-            <BadgeCheck className="h-3.5 w-3.5 fill-primary text-white" aria-hidden="true" />
-          </span>
-        ) : null}
-      </div>
-    </Link>
+      <CommunityActionBar
+        className="relative z-20 border-border/80 border-t pt-3"
+        comments={{
+          count: reply.replies_received_count,
+          href: replyHref,
+          label: "Respostas",
+        }}
+        currentVote={voteState.currentVote}
+        disabled={voteMutation.isPending}
+        onVote={handleVote}
+        save={{
+          active: savedState,
+          disabled: saveMutation.isPending,
+          label: savedState ? "Remover dos salvos" : "Salvar",
+          onClick: handleToggleSave,
+        }}
+        share={{
+          label: "Compartilhar comentário",
+          onClick: () => onShare(item.post, reply.id),
+        }}
+        showUpvoteText={false}
+        upvotesCount={voteState.upvotes}
+        voteLabel="Marcar comentário como útil"
+        votePresentation="inline"
+      />
+    </article>
   );
 };
 
@@ -240,18 +336,21 @@ export const MyPostsLogic = () => {
   const errorMessage = postsQuery.isError ? resolvePostsError(postsQuery.error) : null;
   const isPsychologist = sessionUser?.role === "psicologo";
 
-  const sharePost = async (post: PostListPost) => {
+  const sharePost = async (post: PostListPost, replyId?: string) => {
     if (typeof window === "undefined") return;
 
-    const url = `${window.location.origin}/app/community/${post.community.slug}/post/${post.id}`;
+    const relativeUrl = replyId
+      ? `/app/community/${post.community.slug}/post/${post.id}?focusReplyId=${encodeURIComponent(replyId)}#reply-${replyId}`
+      : `/app/community/${post.community.slug}/post/${post.id}`;
+    const url = `${window.location.origin}${relativeUrl}`;
 
     try {
       if (navigator.share) {
-        await navigator.share({ title: post.title, url });
+        await navigator.share({ title: replyId ? "Comentário na Lectum" : post.title, url });
       } else {
         await navigator.clipboard.writeText(url);
       }
-      setShareFeedback(post.id);
+      setShareFeedback(replyId ?? post.id);
       window.setTimeout(() => setShareFeedback(null), 2400);
     } catch {
       setShareFeedback(null);
@@ -329,9 +428,18 @@ export const MyPostsLogic = () => {
             <div className="grid gap-4">
               {items.map((item) =>
                 item.type === "reply" ? (
-                  <ReplyItemCard item={item} key={item.id} />
+                  <ReplyItemCard item={item} key={item.id} onShare={sharePost} />
                 ) : (
-                  <CommunityPostCard key={item.id} onShare={sharePost} post={item.post} />
+                  <CommunityPostCard
+                    headerExtra={
+                      item.post.highlighted_professional_reply ? (
+                        <ProfessionalAnsweredBadge className="ml-auto" />
+                      ) : undefined
+                    }
+                    key={item.id}
+                    onShare={sharePost}
+                    post={item.post}
+                  />
                 ),
               )}
             </div>

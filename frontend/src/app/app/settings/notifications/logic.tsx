@@ -147,11 +147,11 @@ const resolveNewPostScope = (
 const getNewPostOptions = (role: UserRole) =>
   role === "psicologo"
     ? [
-        { label: "Somente pacientes", value: "patients_only" },
+        { label: "Pacientes", value: "patients_only" },
         { label: "Todos", value: "all" },
       ]
     : [
-        { label: "Somente profissionais", value: "professionals_only" },
+        { label: "Profissionais", value: "professionals_only" },
         { label: "Todos", value: "all" },
       ];
 
@@ -291,7 +291,7 @@ export const NotificationSettingsLogic = () => {
                         <div className="justify-self-end">
                           {isNewPost ? (
                             <SelectController<NotificationSettingsForm>
-                              className="w-[158px] max-w-[46vw] gap-0 text-xs font-bold text-muted min-[380px]:w-[174px] sm:w-[190px] [&>span:first-child]:sr-only [&_[role=alert]]:hidden"
+                              className="w-[136px] max-w-[42vw] gap-0 text-xs font-bold text-muted min-[380px]:w-[142px] sm:w-[148px] [&>span:first-child]:sr-only [&_[role=alert]]:hidden"
                               control={form.hook.control}
                               emptyLabel="Selecione"
                               field="select"
