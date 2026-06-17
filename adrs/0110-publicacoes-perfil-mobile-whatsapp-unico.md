@@ -109,3 +109,18 @@ Validacao complementar:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Chrome headless/CDP em 390px e 1440px confirmou que `Ver todas` abre `?tab=avaliacoes` e `?tab=publicacoes` e alinha o scroll com `#profile-content` apos a renderizacao da aba.
+
+## Atualizacao 2026-06-17 - video de publicacao centralizado no desktop
+
+- Videos compactados de respostas do psicologo dentro do modo de publicacoes do perfil continuam com limite visual de desktop (`md:max-w-[320px]`), mas passam a ser centralizados no card com `md:mx-auto`.
+- A decisao evita o vazio excessivo a direita no card desktop sem alterar a proporcao vertical, o tamanho mobile, os textos, a barra de acoes ou o comportamento dos videos em outros contextos.
+- A alteracao e somente frontend e nao muda contratos, backend, banco, Prisma, publicacoes, ordenacao, votos, salvos, compartilhamento ou WhatsApp.
+
+Validacao complementar:
+
+- `pnpm --dir frontend exec biome check --write -- 'src/components/community/community-post-card.tsx'`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome/CDP autenticado em desktop 1440px confirmando video de publicacao com largura 318px e centro alinhado ao card (`delta=0`).
+- Chrome/CDP autenticado em mobile 390px confirmando comportamento preservado, video centralizado e sem alteracao de layout textual.

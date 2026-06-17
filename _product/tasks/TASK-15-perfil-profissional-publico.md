@@ -590,3 +590,13 @@ Validacoes executadas:
 - `pnpm check`
 - Chrome headless/CDP mobile 390px em `/app/psychologist/demo-psychologist-camila-rocha`: clicar em `Ver todas` de `Avaliacoes` saiu de `scrollY=2606` para `scrollY=335`, URL `?tab=avaliacoes`, delta 0 para `#profile-content`; clicar em `Ver todas` de `Publicacoes` repetiu o mesmo alinhamento em `?tab=publicacoes`.
 - Chrome headless/CDP desktop 1440px na mesma rota: `Avaliacoes` e `Publicacoes` sairam de `scrollY=2190` para `scrollY=380`, delta 0 para `#profile-content`, confirmando comportamento consistente em desktop.
+
+## Registro de ajuste complementar em 2026-06-17 - videos centralizados em Publicacoes desktop
+
+- Pedido do usuario: centralizar horizontalmente os videos das publicacoes no perfil do psicologo apenas no desktop, sem alterar textos, proporcao ou comportamento mobile.
+- Fonte visual auditavel: `_product/proto/Perfil Profissional - Publicacoes.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao, entao a validacao visual usou browser local com dados reais.
+- `CommunityPostCard`, usado pela aba `Publicacoes` e pela previa da aba `Geral`, manteve o limite desktop de videos de respostas do psicologo em `md:max-w-[320px]`, mas substituiu o alinhamento `md:mx-0` por `md:mx-auto`.
+- A proporcao vertical, `object-fit`, fullscreen, tamanho mobile e layout dos textos/acoes permanecem inalterados.
+- Nao houve alteracao de backend, banco, Prisma, contratos, endpoints, packages, ordenacao, votos, salvos, compartilhamento ou WhatsApp.
+- ADR atualizado: `adrs/0110-publicacoes-perfil-mobile-whatsapp-unico.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check --write -- 'src/components/community/community-post-card.tsx'`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado em `/app/psychologist/demo-psychologist-camila-rocha?tab=publicacoes`, confirmando no desktop video com `delta=0` em relacao ao centro do card e no mobile largura/alinhamento preservados.

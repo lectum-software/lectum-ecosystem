@@ -415,7 +415,7 @@ const ProfessionalReplyPreview = ({
           alt={reply.title ?? "Mídia da resposta profissional"}
           mediaType={reply.media_type}
           mediaUrl={reply.media_url}
-          videoClassName={profilePublicationMode ? "md:mx-0 md:max-w-[320px]" : undefined}
+          videoClassName={profilePublicationMode ? "md:mx-auto md:max-w-[320px]" : undefined}
         />
       </div>
       {reply.author.whatsapp_url && !profilePublicationMode ? (
@@ -671,7 +671,9 @@ export const CommunityPostCard = ({
           alt={displayTitle ?? "Mídia da publicação"}
           mediaType={displayMediaType}
           mediaUrl={displayMediaUrl}
-          videoClassName={shouldCompactProfileReplyMedia ? "md:mx-0 md:max-w-[320px]" : undefined}
+          videoClassName={
+            shouldCompactProfileReplyMedia ? "md:mx-auto md:max-w-[320px]" : undefined
+          }
         />
         <ProfessionalReplyPreview
           profilePublicationMode={profilePublicationMode}
