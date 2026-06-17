@@ -141,6 +141,7 @@ const ReplyItemCard = ({
   } | null>(null);
   const [saveOverride, setSaveOverride] = useState<{
     replyId: string;
+    saves: number;
     saved: boolean;
   } | null>(null);
 
@@ -158,7 +159,14 @@ const ReplyItemCard = ({
           currentVote: reply.current_user_vote,
           upvotes: reply.upvotes_count,
         };
-  const savedState = saveOverride?.replyId === reply.id ? saveOverride.saved : reply.saved;
+  const saveState =
+    saveOverride?.replyId === reply.id
+      ? saveOverride
+      : {
+          replyId: reply.id,
+          saves: reply.saves_count,
+          saved: reply.saved,
+        };
 
   const handleVote = (value: 1 | -1) => {
     const previousVoteOverride = voteOverride;
@@ -190,20 +198,23 @@ const ReplyItemCard = ({
 
   const handleToggleSave = () => {
     const previousSaveOverride = saveOverride;
-    const nextSaved = !savedState;
+    const nextSaved = !saveState.saved;
+    const nextSaves = Math.max(0, saveState.saves + (nextSaved ? 1 : -1));
 
     setSaveOverride({
       replyId: reply.id,
+      saves: nextSaves,
       saved: nextSaved,
     });
 
-    saveMutation.mutate(savedState, {
+    saveMutation.mutate(saveState.saved, {
       onError: () => setSaveOverride(previousSaveOverride),
       onSuccess: (data) => {
         if (data.target_type !== "reply" || data.reply_id !== reply.id) return;
 
         setSaveOverride({
           replyId: reply.id,
+          saves: data.saves_count ?? nextSaves,
           saved: data.saved,
         });
       },
@@ -264,9 +275,10 @@ const ReplyItemCard = ({
         disabled={voteMutation.isPending}
         onVote={handleVote}
         save={{
-          active: savedState,
+          active: saveState.saved,
+          count: saveState.saves,
           disabled: saveMutation.isPending,
-          label: savedState ? "Remover dos salvos" : "Salvar",
+          label: saveState.saved ? "Remover dos salvos" : "Salvar",
           onClick: handleToggleSave,
         }}
         share={{

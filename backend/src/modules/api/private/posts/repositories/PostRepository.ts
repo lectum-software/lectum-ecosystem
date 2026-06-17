@@ -760,6 +760,11 @@ export class PostRepository implements IPostRepository {
                       deleted: false,
                     },
                   },
+                  saves: {
+                    where: {
+                      deleted: false,
+                    },
+                  },
                 },
               },
               replies: {
@@ -933,6 +938,7 @@ export class PostRepository implements IPostRepository {
         media_url: reply.media_url,
         media_type: reply.media_type,
         upvotes_count: reply.upvotes_count,
+        saves_count: reply._count.saves,
         replies_received_count: reply._count.replies,
         has_verified_professional_reply: reply.replies.length > 0,
         created_at: reply.createdAt,
@@ -1034,6 +1040,11 @@ export class PostRepository implements IPostRepository {
                   _count: {
                     select: {
                       replies: {
+                        where: {
+                          deleted: false,
+                        },
+                      },
+                      saves: {
                         where: {
                           deleted: false,
                         },
@@ -1150,6 +1161,7 @@ export class PostRepository implements IPostRepository {
         media_url: item.reply.media_url,
         media_type: item.reply.media_type,
         upvotes_count: item.reply.upvotes_count,
+        saves_count: item.reply._count.saves,
         replies_received_count: item.reply._count.replies,
         has_verified_professional_reply: item.reply.replies.length > 0,
         created_at: item.reply.createdAt,
@@ -1878,12 +1890,19 @@ export class PostRepository implements IPostRepository {
         });
       }
 
+      const savesCount = await transaction.post_reply_save.count({
+        where: {
+          reply_id: reply.id,
+          deleted: false,
+        },
+      });
+
       return {
         target_type: "reply" as const,
         post_id: reply.post_id,
         reply_id: reply.id,
         saved: true,
-        saves_count: null,
+        saves_count: savesCount,
       };
     });
 
@@ -1923,12 +1942,19 @@ export class PostRepository implements IPostRepository {
         });
       }
 
+      const savesCount = await transaction.post_reply_save.count({
+        where: {
+          reply_id: reply.id,
+          deleted: false,
+        },
+      });
+
       return {
         target_type: "reply" as const,
         post_id: reply.post_id,
         reply_id: reply.id,
         saved: false,
-        saves_count: null,
+        saves_count: savesCount,
       };
     });
 

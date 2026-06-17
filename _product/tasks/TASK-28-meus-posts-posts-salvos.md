@@ -236,3 +236,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nao houve alteracao de schema Prisma, endpoints ou nova dependencia; o ajuste reutiliza o DTO de respostas salvas enriquecido anteriormente.
 - Referencias visuais seguem as imagens locais da TASK-28; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile 390x844 em `/app/posts/saved`, confirmando `Respondido em` visivel, ausencia de `Resposta salva em`, ausencia de `SALVO EM`, ausencia de `blockquote` de referencia azul, barras padrao de acao e largura sem overflow horizontal.
+
+## Ajuste complementar em 2026-06-17 - contador de salvamentos em Meus posts
+
+- Na aba "Comentarios" de `/app/posts/mine`, a `CommunityActionBar` passou a exibir a quantidade real de salvamentos de cada comentario ao lado do icone de salvar.
+- O backend de `GET /api/private/posts/mine?type=replies` passou a retornar `saves_count` calculado por `_count` de `post_reply_save` ativo (`deleted=false`), sem alterar schema Prisma.
+- As acoes `POST/DELETE /api/private/posts/:id/replies/:replyId/save` agora devolvem `saves_count` real apos a transacao, permitindo feedback otimista e reconciliacao visual imediata.
+- A aba "Posts" continua reutilizando `CommunityPostCard`, que ja exibe `community_post.saves_count` na mesma barra padrao do feed/post; a alteracao mantem consistencia entre posts e comentarios.
+- Referencias visuais seguem as imagens locais da TASK-28; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, consulta autenticada de `GET /api/private/posts/mine?type=replies`, ciclo real `POST/DELETE /api/private/posts/:id/replies/:replyId/save` confirmando `saves_count`, e Chrome/CDP mobile 390x844 em `/app/posts/mine` validando contador de salvamentos em comentarios e posts sem overflow horizontal.

@@ -195,3 +195,23 @@ do post.
   destaque visual indevido para a data de salvamento.
 - A mudanca e somente de apresentacao; os endpoints, o DTO enriquecido de respostas salvas, a
   persistencia e as barras de interacao existentes permanecem inalterados.
+
+## Complemento 2026-06-17: Contador real de salvamentos em Meus posts
+
+### Contexto
+
+A barra padrao de acoes dos cards de comentarios em `/app/posts/mine` ja permitia salvar e compartilhar, mas o icone de salvar nao exibia a quantidade de salvamentos como ocorre nos posts do feed e nos cards da aba "Posts".
+
+### Decisao
+
+- Estender `PostListReplyDTO`/`UserPostReply` com `saves_count` para listas de comentarios do usuario.
+- Calcular o valor com `_count` filtrado em `post_reply_save.deleted=false`, mantendo a fonte de verdade no banco e sem coluna denormalizada nova.
+- Fazer `saveReply` e `unsaveReply` retornarem a contagem real apos a transacao, igualando o contrato de reconciliacao usado em salvamento de posts.
+- Reusar o `count` nativo de `CommunityActionBar.save`, sem criar componente paralelo para a tela.
+
+### Consequencias
+
+- Comentarios da aba "Comentarios" passam a exibir upvote, downvote, respostas, salvamentos e compartilhar com os mesmos controles do feed/post.
+- O feedback de salvar/desfazer salvo em comentario atualiza a contagem imediatamente e corrige o valor com o retorno real da API.
+- A aba "Posts" permanece consistente por continuar usando `CommunityPostCard` e `community_post.saves_count`.
+- Nao houve alteracao de schema Prisma nem dependencia nova.

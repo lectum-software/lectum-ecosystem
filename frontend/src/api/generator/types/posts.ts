@@ -68,6 +68,7 @@ export type UserPostReply = {
   media_url: string | null;
   media_type: string | null;
   upvotes_count: number;
+  saves_count: number;
   replies_received_count: number;
   has_verified_professional_reply: boolean;
   created_at: string;
