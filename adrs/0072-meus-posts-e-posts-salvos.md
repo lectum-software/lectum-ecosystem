@@ -48,8 +48,10 @@ Nao houve alteracao de schema Prisma nem nova dependencia.
 
 - Meus Posts nunca retorna posts de outros usuarios.
 - Posts Salvos nunca retorna salvos de outro usuario e permite remover o salvo real por soft delete.
-- Posts proprios com status `pendente` ou `removido` aparecem em Meus Posts com selo de status,
-  mas Posts Salvos mostra apenas posts publicados disponiveis.
+- O backend segue retornando `community_post.status` em Meus Posts para compatibilidade e regras de
+  moderacao futuras, mas a tela `/app/posts/mine` nao exibe mais selo visual de status nos cards de
+  post; o contexto principal fica apenas em "Postado em [comunidade]".
+- Posts Salvos mostra apenas posts publicados disponiveis.
 - Respostas do usuario entram em Meus Posts para cumprir a variacao visual das abas "Todos",
   "Posts" e "Respostas", sem criar modelo novo.
 
@@ -70,3 +72,11 @@ Nao houve alteracao de schema Prisma nem nova dependencia.
 - O filtro visual "Todos" foi removido desta tela; "Posts" passa a ser o estado inicial padrao, e "Comentarios" consulta apenas `type=replies`. O contrato legado `type=all` permanece no backend para compatibilidade com outras listas.
 - Comentarios do usuario agora retornam metadados derivados `replies_received_count` e `has_verified_professional_reply`, calculados por dados reais de `post_reply`, para permitir acompanhamento de conversa sem expor upvotes, compartilhar ou CTA de abrir post no card.
 - O indicador profissional so aparece quando ha resposta direta ativa de psicologo com `cfp_verified_at`; nao ha estado negativo quando a conversa ainda nao recebeu resposta profissional.
+
+## Complemento 2026-06-17
+
+- A tela `/app/posts/mine` removeu a badge visual "PUBLICADO" dos cards de post.
+- A decisao reduz ruido visual e preserva apenas a linha de contexto "Postado em [comunidade]" sem
+  criar status substituto.
+- A mudanca e apenas de apresentacao: nenhum endpoint, schema Prisma ou regra de ordenacao foi
+  alterado, e o status permanece disponivel no contrato backend.

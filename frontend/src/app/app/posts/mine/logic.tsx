@@ -72,42 +72,6 @@ const formatRelativeTime = (value: string) => {
   }).format(date);
 };
 
-const statusMeta = (status: string) => {
-  if (status === "pendente") {
-    return {
-      label: "Pendente",
-      className: "border-warning/25 bg-warning/10 text-warning",
-    };
-  }
-
-  if (status === "removido") {
-    return {
-      label: "Removido",
-      className: "border-danger/25 bg-danger/10 text-danger",
-    };
-  }
-
-  return {
-    label: "Publicado",
-    className: "border-success/25 bg-success/10 text-success",
-  };
-};
-
-const StatusBadge = ({ status }: { status: string }) => {
-  const meta = statusMeta(status);
-
-  return (
-    <span
-      className={cn(
-        "ml-auto shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em]",
-        meta.className,
-      )}
-    >
-      {meta.label}
-    </span>
-  );
-};
-
 const FilterTabs = ({
   disabled,
   onChange,
@@ -349,12 +313,7 @@ export const MyPostsLogic = () => {
                 item.type === "reply" ? (
                   <ReplyItemCard item={item} key={item.id} />
                 ) : (
-                  <CommunityPostCard
-                    key={item.id}
-                    onShare={sharePost}
-                    post={item.post}
-                    statusBadge={<StatusBadge status={item.status} />}
-                  />
+                  <CommunityPostCard key={item.id} onShare={sharePost} post={item.post} />
                 ),
               )}
             </div>

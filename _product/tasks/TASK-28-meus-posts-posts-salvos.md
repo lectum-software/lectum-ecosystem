@@ -183,3 +183,10 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Cards de comentarios passaram a usar "Comentado em", removendo rotulos/acoes de engajamento do card e exibindo foco de acompanhamento: respostas recebidas e indicador "Respondido por psicologo" apenas quando ha resposta direta de profissional verificado.
 - O bloco de conteudo original citado foi refinado visualmente com fundo, borda, radius, padding e faixa lateral mais discreta.
 - Backend de `GET /api/private/posts/mine?type=replies` passou a retornar `replies_received_count` e `has_verified_professional_reply` derivados de dados reais, sem mock e sem alteracao de schema.
+
+## Ajuste complementar em 2026-06-17 - limpeza dos cards de posts
+
+- A rota `/app/posts/mine` removeu a badge/chip visual "PUBLICADO" dos cards de post para reduzir ruido visual.
+- Os cards continuam usando o `CommunityPostCard` real e mantendo apenas o contexto "Postado em [comunidade]" na linha superior.
+- O backend continua retornando `community_post.status` para compatibilidade e regras futuras, mas a tela nao exibe um status visual substituto nos cards de post.
+- Referencias visuais da TASK-28 seguem sendo as imagens locais `_product/proto/Meus Posts - Paciente.jpg`, `_product/proto/Meus Posts - Psicologo.jpg` e `_product/proto/Posts Salvos.jpg`; o Builder/Quick Copy ativo nao esta disponivel como ferramenta callable neste ambiente.
