@@ -351,3 +351,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nao houve alteracao de backend, Prisma, migrations, packages, endpoints, payloads, ordenacao dos comentarios ou regra de destaque de psicologos verificados.
 - ADRs atualizados: `adrs/0102-arvore-comentarios-posts-comunidade.md` e `adrs/0104-barra-acoes-comunidade-unificada.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check --write -- ...`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado no detalhe do post demo confirmando collapse em toda area raiz, `Ver 7 respostas`, links de perfil de psicologo sem collapse, upvote/downvote ativos sem recolher a arvore e WhatsApp com `centerDelta=0` em relacao ao video.
+
+## Execucao complementar: ordenacao por relevancia entre irmaos da arvore (2026-06-17)
+
+- Pedido do usuario: ordenar comentarios/respostas dentro de cada arvore por relevancia, sem misturar camadas ou quebrar a hierarquia.
+- A ordenacao passou a ser aplicada apenas entre replies irmaos, ou seja, itens com o mesmo comentario pai; cada nivel da arvore e ordenado de forma independente.
+- A prioridade adotada e: maior quantidade de upvotes, melhor posicao de mentor/psicologo na comunidade quando houver ranking aplicavel, e comentario mais recente.
+- A regra e aplicada tanto na tela principal do post quanto na tela isolada de thread aberta por `Ver mais respostas`.
+- O frontend manteve o mesmo criterio para refletir a reordenacao imediatamente apos optimistic updates de voto, enquanto o backend continua sendo a fonte canonica da ordem retornada pela API.
+- A prioridade especial do primeiro comentario de psicologo verificado mais votado permanece preservada no grupo de comentarios diretos ao post; a nova ordenacao atua nos grupos de irmaos sem achatar a arvore.
+- Nao houve alteracao de Prisma schema, migrations, packages, endpoints, payloads, logica de envio, votos, salvamento ou navegacao.
+- Documentacao de contrato atualizada em `_product/tasks/DATA-MODEL.md` e ADR atualizado em `adrs/0102-arvore-comentarios-posts-comunidade.md`.
+- Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm check` e script local autenticado via repository no post demo confirmando grupos de irmaos sem violacao de ordem por upvotes.

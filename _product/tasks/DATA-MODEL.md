@@ -376,9 +376,9 @@ DTOs do feed: `GET /api/private/community/feed/posts` é o contrato canônico do
 Contratos da tela interna do post (TASK-26):
 
 - `GET /api/private/posts/:id` retorna `post`, comunidade, autor mascarado quando `anonymous=true`, voto atual do usuário (`current_user_vote`) e estado salvo (`saved`).
-- `GET /api/private/posts/:id/replies?page&limit` retorna comentários de primeiro nível paginados e até um nível de respostas filhas, com `current_user_vote` por resposta.
+- `GET /api/private/posts/:id/replies?page&limit` retorna comentarios de primeiro nivel paginados e descendentes hidratados ate a profundidade visual vigente, com `current_user_vote` por resposta. A ordenacao de irmaos dentro de cada arvore segue: maior `upvotes_count`, melhor posicao de mentor/psicologo na comunidade quando houver ranking aplicavel, e comentario mais recente.
 - `POST /api/private/posts/:id/replies/media` recebe multipart `media` e retorna `{ media_url, media_type }`; permitido apenas para psicólogos com CFP verificado e Plano Profissional ativo.
-- `POST /api/private/posts/:id/replies` recebe `{ content, parentReplyId?, mediaUrl?, mediaType? }`; `parentReplyId` só pode apontar para comentário raiz, preservando árvore de 1 nível, e mídia só é aceita quando originada do upload permitido.
+- `POST /api/private/posts/:id/replies` recebe `{ content, parentReplyId?, mediaUrl?, mediaType? }`; `parentReplyId` pode apontar para comentario/resposta ativa do mesmo post, preservando a arvore hierarquica, e midia so e aceita quando originada do upload permitido.
 - `POST /api/private/posts/:id/vote` recebe `{ value: 1|-1, replyId? }`; repetir o mesmo voto remove o voto. Downvotes podem influenciar score interno, mas não devem ser exibidos como número público.
 - `POST /api/private/posts/:id/save` e `DELETE /api/private/posts/:id/save` persistem salvos via `post_save` e mantêm `saves_count`.
 - `POST /api/private/posts/:id/report` registra denúncia reativa com motivo e descrição opcional, sem remoção automática do post.

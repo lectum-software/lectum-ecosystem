@@ -58,3 +58,11 @@ A tela interna de post precisa permitir discussões mais profundas sem poluir a 
 - Upvote, downvote, contador, responder, salvar, compartilhar, menu, midia, WhatsApp, composer, links e botoes de continuacao continuam fora do gesto de collapse por deteccao de alvo interativo e `data-comment-collapse-ignore`.
 - Em comentarios raiz de psicologos, avatar, nome, selo e dados profissionais mantem prioridade de navegacao para o perfil; o collapse permanece disponivel apenas nas areas nao interativas restantes do comentario.
 - Comentarios aninhados nao recebem o handler e cada arvore conserva estado independente, sem alterar profundidade, ordenacao, regra de destaque profissional, backend ou persistencia.
+
+## Atualizacao 2026-06-17 - ordenacao por relevancia entre irmaos
+
+- A ordenacao da arvore de comentarios passa a acontecer por grupo de irmaos, preservando integralmente a hierarquia e sem mover respostas para fora do comentario pai.
+- Cada grupo de respostas com o mesmo `parent_reply_id` e ordenado por: maior quantidade de upvotes, melhor posicao de mentor/psicologo na comunidade quando houver ranking aplicavel, e comentario mais recente.
+- A tela principal do post e a thread isolada usam o mesmo criterio no backend; o frontend replica o criterio para manter reordenacao imediata durante optimistic updates de voto.
+- A regra especial de destacar primeiro o comentario de psicologo verificado mais relevante entre os comentarios diretos ao post permanece como excecao de topo, sem afetar a ordenacao dos descendentes dentro de cada arvore.
+- A decisao nao altera schema, migrations, contratos de payload, profundidade visual, envio de respostas, votos, salvamento ou regra de permissao.

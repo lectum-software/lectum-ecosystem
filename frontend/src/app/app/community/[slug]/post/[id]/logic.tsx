@@ -378,26 +378,20 @@ const mentorBadgePosition = (badge?: string | null) => {
   return Number(match[1]);
 };
 
-const replyGeneralRelevanceScore = (reply: PostReply) => {
-  const professionalBonus = isVerifiedProfessionalReply(reply) ? 6 : 0;
-  const badgePosition = mentorBadgePosition(reply.author.featured_badge);
-  const badgeBonus = Number.isFinite(badgePosition) ? Math.max(0, 6 - badgePosition) : 0;
-
-  return reply.upvotes_count * 3 + reply.replies.length * 2 + professionalBonus + badgeBonus;
-};
-
 const newestReplyFirst = (a: PostReply, b: PostReply) =>
   new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
 
-const compareRepliesByRelevance = (a: PostReply, b: PostReply) => {
-  const scoreDiff = replyGeneralRelevanceScore(b) - replyGeneralRelevanceScore(a);
-  if (scoreDiff !== 0) return scoreDiff;
-
-  const repliesDiff = b.replies.length - a.replies.length;
-  if (repliesDiff !== 0) return repliesDiff;
-
+const compareReplySiblingsByRelevance = (a: PostReply, b: PostReply) => {
   const upvoteDiff = b.upvotes_count - a.upvotes_count;
   if (upvoteDiff !== 0) return upvoteDiff;
+
+  const aBadgePosition = mentorBadgePosition(a.author.featured_badge);
+  const bBadgePosition = mentorBadgePosition(b.author.featured_badge);
+  const hasBadgeTieBreaker = Number.isFinite(aBadgePosition) || Number.isFinite(bBadgePosition);
+
+  if (hasBadgeTieBreaker && aBadgePosition !== bBadgePosition) {
+    return aBadgePosition - bBadgePosition;
+  }
 
   const recencyDiff = newestReplyFirst(a, b);
   if (recencyDiff !== 0) return recencyDiff;
@@ -406,27 +400,29 @@ const compareRepliesByRelevance = (a: PostReply, b: PostReply) => {
 };
 
 const compareProfessionalReplies = (a: PostReply, b: PostReply) => {
-  const upvoteDiff = b.upvotes_count - a.upvotes_count;
-  if (upvoteDiff !== 0) return upvoteDiff;
+  return compareReplySiblingsByRelevance(a, b);
+};
 
-  const badgeDiff =
-    mentorBadgePosition(a.author.featured_badge) - mentorBadgePosition(b.author.featured_badge);
-  if (badgeDiff !== 0) return badgeDiff;
-
-  return compareRepliesByRelevance(a, b);
+const orderReplyChildrenByRelevance = (replies: PostReply[]): PostReply[] => {
+  return replies
+    .map((reply) => ({
+      ...reply,
+      replies: orderReplyChildrenByRelevance(reply.replies),
+    }))
+    .sort(compareReplySiblingsByRelevance);
 };
 
 const orderRepliesForProfessionalPriority = (replies: PostReply[]): PostReply[] => {
   const withOrderedChildren = replies.map((reply) => ({
     ...reply,
-    replies: orderRepliesForProfessionalPriority(reply.replies),
+    replies: orderReplyChildrenByRelevance(reply.replies),
   }));
   const pinnedProfessional = [...withOrderedChildren]
     .filter(isVerifiedProfessionalReply)
     .sort(compareProfessionalReplies)[0];
   const remainingReplies = withOrderedChildren
     .filter((reply) => reply.id !== pinnedProfessional?.id)
-    .sort(compareRepliesByRelevance);
+    .sort(compareReplySiblingsByRelevance);
 
   return pinnedProfessional ? [pinnedProfessional, ...remainingReplies] : remainingReplies;
 };

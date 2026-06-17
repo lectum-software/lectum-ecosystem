@@ -151,6 +151,7 @@ type ProfessionalReplyResult = ListPostResult["replies"][number];
 type ReplyBaseResult = Prisma.post_replyGetPayload<{ select: typeof replyBaseSelect }>;
 type ReplyTreeResult = ReplyBaseResult & { replies: ReplyTreeResult[] };
 type CurrentVote = 1 | -1 | null;
+type MentorRankingSignals = Awaited<ReturnType<typeof getCommunityMentorRankingSignals>>;
 
 const normalizePagination = (query: { page?: number; limit?: number }) => {
   const page = Math.max(1, Number(query.page || 1));
@@ -411,15 +412,44 @@ const collectReplyIds = (items: Array<ReplyBaseResult | ReplyTreeResult>) => {
   return [...ids];
 };
 
-const sortNestedReplies = <T extends { createdAt: Date; id: string }>(items: T[]) =>
-  [...items].sort((a, b) => {
-    const createdAtDiff = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-    if (createdAtDiff !== 0) return createdAtDiff;
+const newestFirst = (a: Date, b: Date) => b.getTime() - a.getTime();
 
-    return a.id.localeCompare(b.id);
-  });
+const rankingPositionForReply = (item: ReplyBaseResult, rankingSignals: MentorRankingSignals) =>
+  rankingSignals.get(item.author.id)?.position ?? Number.POSITIVE_INFINITY;
 
-const buildReplyThread = (rootId: string, replies: ReplyBaseResult[]): ReplyTreeResult | null => {
+const compareReplySiblingsByRelevance = (
+  a: ReplyBaseResult,
+  b: ReplyBaseResult,
+  rankingSignals: MentorRankingSignals,
+) => {
+  const upvoteDiff = b.upvotes_count - a.upvotes_count;
+  if (upvoteDiff !== 0) return upvoteDiff;
+
+  const aRankingPosition = rankingPositionForReply(a, rankingSignals);
+  const bRankingPosition = rankingPositionForReply(b, rankingSignals);
+  const hasRankingTieBreaker =
+    Number.isFinite(aRankingPosition) || Number.isFinite(bRankingPosition);
+
+  if (hasRankingTieBreaker && aRankingPosition !== bRankingPosition) {
+    return aRankingPosition - bRankingPosition;
+  }
+
+  const recencyDiff = newestFirst(a.createdAt, b.createdAt);
+  if (recencyDiff !== 0) return recencyDiff;
+
+  return b.id.localeCompare(a.id);
+};
+
+const sortNestedReplies = <T extends ReplyBaseResult>(
+  items: T[],
+  rankingSignals: MentorRankingSignals,
+) => [...items].sort((a, b) => compareReplySiblingsByRelevance(a, b, rankingSignals));
+
+const buildReplyThread = (
+  rootId: string,
+  replies: ReplyBaseResult[],
+  rankingSignals: MentorRankingSignals,
+): ReplyTreeResult | null => {
   const byParent = new Map<string | null, ReplyBaseResult[]>();
 
   for (const reply of replies) {
@@ -431,7 +461,7 @@ const buildReplyThread = (rootId: string, replies: ReplyBaseResult[]): ReplyTree
 
   const build = (reply: ReplyBaseResult): ReplyTreeResult => ({
     ...reply,
-    replies: sortNestedReplies(byParent.get(reply.id) ?? []).map(build),
+    replies: sortNestedReplies(byParent.get(reply.id) ?? [], rankingSignals).map(build),
   });
 
   const root = replies.find((reply) => reply.id === rootId);
@@ -442,6 +472,7 @@ const buildReplyThread = (rootId: string, replies: ReplyBaseResult[]): ReplyTree
 const buildReplyTrees = (
   roots: ReplyBaseResult[],
   replies: ReplyBaseResult[],
+  rankingSignals: MentorRankingSignals,
 ): ReplyTreeResult[] => {
   const byParent = new Map<string | null, ReplyBaseResult[]>();
 
@@ -454,7 +485,7 @@ const buildReplyTrees = (
 
   const build = (reply: ReplyBaseResult): ReplyTreeResult => ({
     ...reply,
-    replies: sortNestedReplies(byParent.get(reply.id) ?? []).map(build),
+    replies: sortNestedReplies(byParent.get(reply.id) ?? [], rankingSignals).map(build),
   });
 
   return roots.map(build);
@@ -488,72 +519,17 @@ const loadReplyDescendants = async (
   return descendants;
 };
 
-const replyDirectRepliesCount = (item: ReplyBaseResult) => item._count.replies;
-
 const isVerifiedProfessionalReply = (item: ReplyBaseResult) => {
   const profile = item.author.psychologist_profile;
 
   return item.author.role === "psicologo" && isProfessionalVerified(profile);
 };
 
-const rankingPositionForReply = (
-  item: ReplyBaseResult,
-  rankingSignals: Awaited<ReturnType<typeof getCommunityMentorRankingSignals>>,
-) => rankingSignals.get(item.author.id)?.position ?? Number.POSITIVE_INFINITY;
-
-const replyGeneralRelevanceScore = (
-  item: ReplyBaseResult,
-  rankingSignals: Awaited<ReturnType<typeof getCommunityMentorRankingSignals>>,
-) => {
-  const verifiedProfessionalBonus = isVerifiedProfessionalReply(item) ? 6 : 0;
-  const rankingPosition = rankingPositionForReply(item, rankingSignals);
-  const rankingBonus = Number.isFinite(rankingPosition) ? Math.max(0, 6 - rankingPosition) : 0;
-
-  return (
-    item.upvotes_count * 3 +
-    replyDirectRepliesCount(item) * 2 +
-    verifiedProfessionalBonus +
-    rankingBonus
-  );
-};
-
-const newestFirst = (a: Date, b: Date) => b.getTime() - a.getTime();
-
-const compareRepliesBySecondaryRelevance = (
-  a: ReplyBaseResult,
-  b: ReplyBaseResult,
-  rankingSignals: Awaited<ReturnType<typeof getCommunityMentorRankingSignals>>,
-) => {
-  const scoreDiff =
-    replyGeneralRelevanceScore(b, rankingSignals) - replyGeneralRelevanceScore(a, rankingSignals);
-  if (scoreDiff !== 0) return scoreDiff;
-
-  const repliesDiff = replyDirectRepliesCount(b) - replyDirectRepliesCount(a);
-  if (repliesDiff !== 0) return repliesDiff;
-
-  const upvoteDiff = b.upvotes_count - a.upvotes_count;
-  if (upvoteDiff !== 0) return upvoteDiff;
-
-  const recencyDiff = newestFirst(a.createdAt, b.createdAt);
-  if (recencyDiff !== 0) return recencyDiff;
-
-  return b.id.localeCompare(a.id);
-};
-
 const compareProfessionalReplies = (
   a: ReplyBaseResult,
   b: ReplyBaseResult,
-  rankingSignals: Awaited<ReturnType<typeof getCommunityMentorRankingSignals>>,
-) => {
-  const upvoteDiff = b.upvotes_count - a.upvotes_count;
-  if (upvoteDiff !== 0) return upvoteDiff;
-
-  const rankingDiff =
-    rankingPositionForReply(a, rankingSignals) - rankingPositionForReply(b, rankingSignals);
-  if (rankingDiff !== 0) return rankingDiff;
-
-  return compareRepliesBySecondaryRelevance(a, b, rankingSignals);
-};
+  rankingSignals: MentorRankingSignals,
+) => compareReplySiblingsByRelevance(a, b, rankingSignals);
 
 const sortRepliesForDisplay = async (communityId: string, items: ReplyBaseResult[]) => {
   const verifiedProfessionalIds = items
@@ -568,7 +544,7 @@ const sortRepliesForDisplay = async (communityId: string, items: ReplyBaseResult
     .sort((a, b) => compareProfessionalReplies(a, b, rankingSignals))[0];
   const remainingReplies = items
     .filter((item) => item.id !== professionalReply?.id)
-    .sort((a, b) => compareRepliesBySecondaryRelevance(a, b, rankingSignals));
+    .sort((a, b) => compareReplySiblingsByRelevance(a, b, rankingSignals));
 
   return professionalReply ? [professionalReply, ...remainingReplies] : remainingReplies;
 };
@@ -1075,7 +1051,13 @@ export class PostRepository implements IPostRepository {
       paginatedTopLevelItems.map((reply) => reply.id),
       INLINE_REPLY_DESCENDANT_DEPTH,
     );
-    const items = buildReplyTrees(paginatedTopLevelItems, descendants);
+    const treeRankingSignals = await getCommunityMentorRankingSignals(
+      post.community_id,
+      [...paginatedTopLevelItems, ...descendants]
+        .filter((reply) => reply.author.role === "psicologo")
+        .map((reply) => reply.author.id),
+    );
+    const items = buildReplyTrees(paginatedTopLevelItems, descendants, treeRankingSignals);
 
     const replyIds = collectReplyIds(items);
     const [votes, saves] =
@@ -1137,7 +1119,11 @@ export class PostRepository implements IPostRepository {
       orderBy: [{ createdAt: "asc" }, { id: "asc" }],
       select: replyBaseSelect,
     });
-    const thread = buildReplyThread(data.p.replyId, replies);
+    const threadRankingSignals = await getCommunityMentorRankingSignals(
+      post.community_id,
+      replies.filter((reply) => reply.author.role === "psicologo").map((reply) => reply.author.id),
+    );
+    const thread = buildReplyThread(data.p.replyId, replies, threadRankingSignals);
     if (!thread) return null;
 
     const replyIds = collectReplyIds([thread]);
