@@ -484,6 +484,16 @@ const ViewAllChipButton = ({ children, onClick }: { children: ReactNode; onClick
   </button>
 );
 
+const SectionChipLink = ({ children, href }: { children: ReactNode; href: string }) => (
+  <Link
+    className="inline-flex h-8 shrink-0 items-center justify-center rounded-full border border-[#CFE4FA] bg-white px-3.5 text-[13px] font-medium text-[#247BD1] no-underline transition hover:border-[#B9DAF8] hover:bg-[#F8FBFF] hover:text-[#1D65B2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+    href={href}
+    style={{ fontSize: 13 }}
+  >
+    {children}
+  </Link>
+);
+
 const Pagination = ({
   currentPage,
   disabled,
@@ -1146,29 +1156,37 @@ const ReviewPreviewCard = ({ review }: { review: DirectoryPsychologistProfileRev
 
 const ReviewsPreviewSection = ({
   highlightedReview,
+  isVerifiedSubscriber,
   isError,
   isLoading,
   onViewAll,
+  psychologistId,
   reviews,
   summary,
 }: {
+  isVerifiedSubscriber: boolean;
   isError: boolean;
   isLoading: boolean;
   onViewAll: () => void;
+  psychologistId: string;
   highlightedReview?: DirectoryPsychologistProfileReview | null;
   reviews: DirectoryPsychologistProfileReview[];
   summary: DirectoryReviewSummary;
 }) => {
   const featuredReview = highlightedReview ?? reviews[0];
   const hasReviews = summary.rating_count > 0 || reviews.length > 0;
+  const action = isVerifiedSubscriber ? (
+    hasReviews ? (
+      <ViewAllChipButton onClick={onViewAll}>Ver todas</ViewAllChipButton>
+    ) : (
+      <SectionChipLink href={`/app/reviews/new?psychologist_id=${psychologistId}`}>
+        Avaliar
+      </SectionChipLink>
+    )
+  ) : null;
 
   return (
-    <ProfileSectionCard
-      action={
-        hasReviews ? <ViewAllChipButton onClick={onViewAll}>Ver todas</ViewAllChipButton> : null
-      }
-      title="Avaliações"
-    >
+    <ProfileSectionCard action={action} title="Avaliações">
       {hasReviews ? (
         <div className="mt-3 flex items-center justify-between gap-3">
           <div>
@@ -1470,9 +1488,11 @@ const AboutTab = ({
 
       <ReviewsPreviewSection
         highlightedReview={reviewsPreview.highlightedReview}
+        isVerifiedSubscriber={profile.verified}
         isError={reviewsPreview.isError}
         isLoading={reviewsPreview.isLoading}
         onViewAll={() => onTabChange("avaliacoes", { scrollToContentTop: true })}
+        psychologistId={profile.id}
         reviews={reviewsPreview.reviews}
         summary={reviewsPreview.summary}
       />

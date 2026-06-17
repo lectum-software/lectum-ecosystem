@@ -285,3 +285,15 @@ Consequências:
 - Não houve alteração de dados, contratos, backend, Prisma, persistência, packages, favoritos, regras de avaliação ou fluxo de WhatsApp.
 
 Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, HTTP 200 local no perfil demo e Chrome headless/CDP em 390px e 1440px validando menu fixo, sticky, CTA, contato e cards de Atendimento.
+
+## Ajuste complementar em 2026-06-17 - CTA de avaliações condicionado à assinatura
+
+A seção `Avaliações` da aba `Geral` passou a usar a assinatura profissional ativa/cortesia (`profile.verified`) como regra de exposição de CTA:
+
+- assinantes/verificados com avaliações exibem `Ver todas` para navegar à aba completa;
+- assinantes/verificados sem avaliações exibem `Avaliar`, levando diretamente ao fluxo de criação de avaliação daquele psicólogo;
+- perfis gratuitos não exibem botão algum nessa seção, mesmo que tenham avaliações legadas ou nenhum dado, e o header não reserva espaço vazio.
+
+A decisão transforma a coleta de avaliações em benefício perceptível do plano profissional sem alterar a elegibilidade real da TASK-17, que continua sendo validada no fluxo `/app/reviews/new` pelo backend. O ajuste ficou restrito ao frontend do perfil público, sem mudança de contrato, Prisma, persistência, packages, WhatsApp ou navegação das abas completas.
+
+Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile nas rotas demo cobrindo assinante com avaliações, assinante temporário sem avaliações e gratuito sem avaliações. A assinatura temporária criada para validação foi removida ao final.

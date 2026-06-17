@@ -703,3 +703,23 @@ Validacoes executadas:
 - `pnpm check`
 - Script real via `ProfileRepository` confirmou que `highlighted_review` corresponde a avaliacao publicada de maior nota de `demo-psychologist-camila-rocha` e que `highlighted_publication` escolhe a publicacao de maior engajamento, mesmo quando ela nao e o primeiro item cronologico da pagina.
 - Chrome headless local em 390px em `/app/psychologist/demo-psychologist-camila-rocha` confirmou a aba `Geral` renderizando o perfil e a publicacao destacada por engajamento (`Autocobranca e saude mental de mulheres`).
+
+## Registro de ajuste complementar em 2026-06-17 - CTA de avaliacoes por assinatura na aba Geral
+
+- Pedido do usuario: ajustar a secao `Avaliacoes` da aba `Geral` para tratar avaliacoes como beneficio visivel de psicologos assinantes/verificados.
+- Regra aplicada na aba `Geral`:
+  - psicologo assinante/verificado com avaliacoes exibe `Ver todas`;
+  - psicologo assinante/verificado sem avaliacoes exibe `Avaliar`, com link direto para `/app/reviews/new?psychologist_id=:id`;
+  - psicologo gratuito nunca exibe botao na secao, com ou sem avaliacoes, sem reservar espaco vazio no header do card.
+- A regra usa a flag real `profile.verified`, derivada de assinatura profissional ativa/cortesia conforme o contrato publico ja existente do perfil.
+- Nao houve alteracao de backend, banco, Prisma, contratos, packages, regras de elegibilidade de avaliacao ou abas completas.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a validacao visual usou as rotas locais com dados reais do perfil demo e uma assinatura temporaria real criada e removida apenas para validar o caso assinante sem avaliacoes.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome/CDP mobile 390px em `/app/psychologist/demo-psychologist-camila-rocha`, confirmando `Ver todas` para assinante com avaliacoes.
+- Chrome/CDP mobile 390px em `/app/psychologist/demo-psychologist-rafael-costa`, com assinatura temporaria real removida ao final, confirmando `Avaliar` apontando para `/app/reviews/new?psychologist_id=demo-psychologist-rafael-costa` quando assinante sem avaliacoes.
+- Chrome/CDP mobile 390px em `/app/psychologist/demo-psychologist-laura-nascimento`, confirmando ausencia total de acao na secao de avaliacoes para perfil gratuito sem avaliacoes.
