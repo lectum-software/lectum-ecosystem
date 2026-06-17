@@ -139,6 +139,7 @@ Packages permitidos: `socket.io`, `socket.io-client`, `web-push`, TanStack Query
 - [x] Commit criado com mensagem convencional.
 - [x] Ajuste fino 2026-06-16: o ícone de configurações no header de `/app/notifications` foi ampliado sem adicionar fundo, borda ou alterar a estrutura do header.
 - [x] Ajuste 2026-06-16: `/app/settings/notifications` foi simplificada para uma chave por tipo de notificação, seletor segmentado em `novo_post`, header com voltar e rodapé limpo; preferências são normalizadas em `notification_preference.prefs`.
+- [x] Ajuste fino 2026-06-17: itens de `/app/settings/notifications` ficaram compactos em uma linha, sem descrições, sem rótulo visual `Receber`, com controles alinhados à direita e ícone de WhatsApp azul no item `Cliques no WhatsApp`.
 
 ## Validação mínima
 
@@ -150,6 +151,14 @@ Packages permitidos: `socket.io`, `socket.io-client`, `web-push`, TanStack Query
 ## Pendências
 
 - VAPID env (TASK-03 / `_product/decisions.md`) para push efetivo.
+
+## Complemento 2026-06-17 - preferências compactas
+
+- Referências anexadas pelo usuário consultadas: `Configurações de Notificações.pdf` e `Container (2).svg`. Builder/Quick Copy não está exposto como ferramenta direta neste ambiente.
+- A tela `/app/settings/notifications` removeu as descrições abaixo das opções e o texto visual `Receber` acima dos switches.
+- Cada item passou a usar uma linha compacta com ícone à esquerda, título centralizado verticalmente e switch/seletor à direita.
+- O item `Cliques no WhatsApp` passou a usar o componente `WhatsAppIcon`, cujo path SVG corresponde ao anexo, mantendo a cor azul `text-primary` dos demais ícones.
+- Persistência, payload de preferências, seletor `novo_post`, validações e endpoints não foram alterados.
 
 ## Notas para executor
 

@@ -7,17 +7,18 @@ import {
   Eye,
   Heart,
   MessageSquare,
-  MousePointerClick,
   Share2,
   Star,
 } from "lucide-react";
 import Link from "next/link";
+import type { ComponentType } from "react";
 import { useMemo } from "react";
 import { z } from "zod";
 import { useNotificationPreferences } from "@/api/callers/notification";
 import type { NotificationPrefs } from "@/api/req/notification";
 import { SelectController, SwitchController } from "@/components/controllers";
 import { LoadingState } from "@/components/ui/loading-state";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { type Field, useFormList } from "@/hooks/form";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
@@ -39,8 +40,7 @@ type NotificationCategory = {
     | "compartilhamento"
     | "salvamento";
   label: string;
-  description: string;
-  icon: typeof Star;
+  icon: ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
 };
 
 const SECTIONS: { key: string; label: string; categories: NotificationCategory[] }[] = [
@@ -51,26 +51,22 @@ const SECTIONS: { key: string; label: string; categories: NotificationCategory[]
       {
         key: "nova_avaliacao",
         label: "Novas avaliações",
-        description: "Quando um paciente publicar uma avaliação no seu perfil.",
         icon: Star,
       },
       {
         key: "novo_favorito",
         label: "Perfil favoritado",
-        description: "Quando alguém salvar seu perfil para comparar ou chamar depois.",
         icon: Heart,
       },
       {
         key: "visualizacao_perfil",
         label: "Visualizações de perfil",
-        description: "Quando houver nova visualização relevante no seu perfil.",
         icon: Eye,
       },
       {
         key: "clique_whatsapp",
         label: "Cliques no WhatsApp",
-        description: "Quando um usuário iniciar contato pelo botão de WhatsApp.",
-        icon: MousePointerClick,
+        icon: WhatsAppIcon,
       },
     ],
   },
@@ -81,31 +77,26 @@ const SECTIONS: { key: string; label: string; categories: NotificationCategory[]
       {
         key: "novo_post",
         label: "Novas postagens",
-        description: "Escolha de quem deseja receber alertas nas comunidades que acompanha.",
         icon: MessageSquare,
       },
       {
         key: "nova_resposta",
         label: "Respostas em meus posts",
-        description: "Novas respostas nas conversas que você iniciou.",
         icon: MessageSquare,
       },
       {
         key: "upvote",
         label: "Novos upvotes",
-        description: "Upvotes recebidos em posts e respostas.",
         icon: ArrowUp,
       },
       {
         key: "salvamento",
         label: "Novos salvamentos",
-        description: "Quando alguém salvar seus posts ou respostas.",
         icon: Bookmark,
       },
       {
         key: "compartilhamento",
         label: "Novos compartilhamentos",
-        description: "Quando seu conteúdo for compartilhado por um usuário.",
         icon: Share2,
       },
     ],
@@ -284,44 +275,38 @@ export const NotificationSettingsLogic = () => {
                     return (
                       <div
                         className={cn(
-                          "grid gap-4 px-4 py-4 md:grid-cols-[1fr_minmax(180px,220px)] md:items-center md:px-5",
+                          "grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 py-3.5 md:px-5",
                           index > 0 && "border-t border-border",
                         )}
                         key={category.key}
                       >
-                        <div className="flex min-w-0 items-start gap-3">
-                          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
-                            <Icon className="h-5 w-5" aria-hidden={true} />
-                          </span>
-                          <div className="min-w-0">
-                            <h3 className="text-[15px] font-bold leading-5 text-foreground">
-                              {category.label}
-                            </h3>
-                            <p className="mt-1 text-sm leading-5 text-muted">
-                              {category.description}
-                            </p>
-                          </div>
-                        </div>
+                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
+                          <Icon className="h-5 w-5" aria-hidden={true} />
+                        </span>
 
-                        <div className="pl-[52px] md:pl-0">
+                        <h3 className="min-w-0 text-[15px] font-bold leading-5 text-foreground">
+                          {category.label}
+                        </h3>
+
+                        <div className="justify-self-end">
                           {isNewPost ? (
                             <SelectController<NotificationSettingsForm>
-                              className="w-full gap-1 text-xs font-bold text-muted"
+                              className="w-[150px] gap-0 text-xs font-bold text-muted sm:w-[190px] [&>span:first-child]:sr-only [&_[role=alert]]:hidden"
                               control={form.hook.control}
                               field="select"
                               hideEmptyOption
-                              inputClassName="h-11 rounded-2xl text-sm font-semibold"
-                              label="Receber de"
+                              inputClassName="h-10 rounded-2xl px-3 pr-9 text-[13px] font-semibold shadow-none"
+                              label={`Preferência de ${category.label}`}
                               name="novo_post__post_author_scope"
                               options={newPostOptions}
                             />
                           ) : (
                             <SwitchController<NotificationSettingsForm>
-                              className="items-start gap-1 text-xs font-bold text-muted md:items-end"
+                              className="justify-items-end gap-0 text-xs font-bold text-muted [&>span:first-child]:sr-only [&_[role=alert]]:hidden"
                               control={form.hook.control}
                               field="switch"
                               inputClassName="h-7 w-12"
-                              label="Receber"
+                              label={category.label}
                               name={enabledFieldName as EnabledFieldName}
                             />
                           )}

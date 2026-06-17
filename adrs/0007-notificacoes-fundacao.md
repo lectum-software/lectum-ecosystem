@@ -54,3 +54,19 @@ A forma do `notification` migrada (derivada do sample) usa `read`, `redirect`, `
 - O header de `/app/notifications` manteve a composicao limpa de tela secundaria; a acao de configuracoes passou a usar escala visual maior e removeu a compressao causada pelo padding herdado do botao, sem fundo, borda, novo container ou mudanca de alinhamento.
 - As preferencias do MVP web passaram a ser apresentadas como uma chave unica por `message_key`, sem colunas `No app`/`Push`. O backend normaliza `notification_preference.prefs` para `{ enabled }`, mantendo compatibilidade de leitura com registros legados `{ in_app, push }`.
 - `novo_post` deixou de ser controle binario simples e passou a armazenar `post_author_scope`, com defaults por papel do usuario: psicologos recebem de pacientes por padrao; pacientes recebem de profissionais por padrao; `all` habilita ambos.
+
+## Complemento 2026-06-17
+
+- A tela `/app/settings/notifications` adotou linhas compactas para cada preferencia: icone a esquerda,
+  titulo centralizado verticalmente e controle alinhado a direita, seguindo a referencia anexada pelo
+  usuario.
+- As descricoes textuais por opcao e o rotulo visual `Receber` dos switches foram removidos para reduzir
+  altura e ruido visual; a acessibilidade do controle permanece por label oculto via foundation de
+  controllers.
+- O item `Cliques no WhatsApp` usa o componente compartilhado `WhatsAppIcon`, cujo path corresponde ao
+  SVG `Container (2).svg` anexado, com `currentColor` em `text-primary` para manter a mesma cor azul dos
+  demais icones da tela.
+- Nao houve mudanca de contrato, backend, Prisma, persistencia de preferencias, endpoints ou packages.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e Chrome/CDP local em
+  mobile 390px e desktop 1280px confirmando alinhamento dos controles, ausencia dos textos removidos e
+  icone WhatsApp azul no item correto.
