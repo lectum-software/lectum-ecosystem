@@ -160,3 +160,15 @@ Regras anti-recriação específicas:
 ## Notas para executor
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
+
+## Execucao complementar: fundo branco e escala premium da exploracao (2026-06-17)
+
+- Pedido do usuario: ajustar a tela `/app/community` para fundo totalmente branco, sem faixas cinzas laterais, escala mais consistente e seta sutil no carrossel desktop.
+- Fonte visual auditavel: `_product/proto/Explorar Comunidades.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao.
+- O container da tela passou a ocupar a largura util total com fundo branco e sem frame cinza ao redor, mantendo o shell privado e a navegacao existentes.
+- O header, busca, botao de voltar, titulos, chips, CTAs e espacamentos foram reduzidos para uma escala mais proxima das demais telas premium da Lectum.
+- O card `Tendencia Hoje` teve altura, padding, tipografia e sombra reduzidos para manter impacto visual sem dominar a pagina.
+- Os cards de `Mais Populares` foram compactados e o carrossel ganhou uma seta discreta apenas no desktop, exibida somente quando ainda existe conteudo horizontal para rolar.
+- Nao houve alteracao de backend, Prisma, migrations, endpoints, payloads, dados, ordenacao ou packages.
+- ADR atualizado: `adrs/0107-explorar-comunidades-conteudo-centralizado.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check --write -- ...`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local em mobile/desktop validando fundo branco, escala reduzida, card de tendencia menor e seta desktop condicional no carrossel.

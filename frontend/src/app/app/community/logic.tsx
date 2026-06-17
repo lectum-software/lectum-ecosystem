@@ -14,7 +14,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useDeferredValue, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useCommunities } from "@/api/callers/community";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -65,7 +65,7 @@ const formatMembers = (value: number) => {
 const FeaturedCommunity = ({ community }: { community: CommunityExploreCard }) => {
   return (
     <Link
-      className="group relative block min-h-[230px] overflow-hidden rounded-[30px] border border-white/70 bg-[#101827] p-5 text-white shadow-[0_18px_45px_rgba(15,23,42,0.16)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_24px_55px_rgba(15,23,42,0.2)] sm:min-h-[280px] sm:p-7"
+      className="group relative block min-h-[190px] overflow-hidden rounded-[24px] border border-white/70 bg-[#101827] p-4 text-white shadow-[0_14px_34px_rgba(15,23,42,0.13)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_42px_rgba(15,23,42,0.17)] sm:min-h-[224px] sm:p-5"
       href={`/app/community/${community.slug}`}
     >
       <Image
@@ -84,28 +84,28 @@ const FeaturedCommunity = ({ community }: { community: CommunityExploreCard }) =
         aria-hidden="true"
         className="absolute inset-x-0 bottom-0 h-2/3 bg-[radial-gradient(ellipse_at_50%_100%,rgba(15,23,42,0.96),rgba(15,23,42,0.52)_52%,transparent_76%)]"
       />
-      <div className="relative z-10 flex h-full min-h-[190px] flex-col justify-end gap-4 sm:min-h-[224px]">
+      <div className="relative z-10 flex h-full min-h-[154px] flex-col justify-end gap-3 sm:min-h-[184px]">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="w-fit rounded-full bg-white/18 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.1em] text-white shadow-[0_6px_18px_rgba(15,23,42,0.14)] ring-1 ring-white/20 backdrop-blur">
+          <span className="w-fit rounded-full bg-white/18 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.1em] text-white shadow-[0_6px_18px_rgba(15,23,42,0.14)] ring-1 ring-white/20 backdrop-blur">
             {community.growthLabel ?? "Destaque"}
           </span>
           {community.category ? (
-            <span className="w-fit rounded-full bg-black/20 px-3 py-1 text-[11px] font-bold text-white/90 ring-1 ring-white/10 backdrop-blur">
+            <span className="w-fit rounded-full bg-black/20 px-2.5 py-1 text-[10px] font-bold text-white/90 ring-1 ring-white/10 backdrop-blur">
               {community.category}
             </span>
           ) : null}
         </div>
         <div className="grid gap-2">
-          <h2 className="max-w-xl text-[2rem] font-black leading-none tracking-[-0.055em] sm:text-5xl">
+          <h2 className="max-w-xl text-[1.65rem] font-black leading-[0.98] tracking-[-0.05em] sm:text-[2.35rem]">
             {community.name}
           </h2>
-          <p className="line-clamp-2 max-w-2xl text-sm font-semibold leading-6 text-white/88 sm:text-base">
+          <p className="line-clamp-2 max-w-2xl text-[13px] font-semibold leading-5 text-white/88 sm:text-sm sm:leading-6">
             {community.description}
           </p>
         </div>
-        <span className="inline-flex w-fit items-center gap-2 rounded-full bg-white px-5 py-2 text-sm font-extrabold text-primary transition group-hover:translate-x-1">
+        <span className="inline-flex w-fit items-center gap-2 rounded-full bg-white px-4 py-2 text-[13px] font-extrabold text-primary transition group-hover:translate-x-1">
           Explorar
-          <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
         </span>
       </div>
     </Link>
@@ -115,7 +115,7 @@ const FeaturedCommunity = ({ community }: { community: CommunityExploreCard }) =
 const CommunityCard = ({ community }: { community: CommunityExploreCard }) => {
   return (
     <Link
-      className="group relative flex h-[330px] w-[min(76vw,238px)] shrink-0 snap-start overflow-hidden rounded-[26px] border border-white/70 bg-[#101827] p-4 text-white shadow-[0_14px_34px_rgba(15,23,42,0.14)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(15,23,42,0.18)] sm:h-[384px] sm:w-[270px]"
+      className="group relative flex h-[286px] w-[min(72vw,212px)] shrink-0 snap-start overflow-hidden rounded-[22px] border border-white/70 bg-[#101827] p-3.5 text-white shadow-[0_12px_28px_rgba(15,23,42,0.12)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_38px_rgba(15,23,42,0.16)] sm:h-[318px] sm:w-[232px] lg:h-[306px] lg:w-[238px]"
       href={`/app/community/${community.slug}`}
     >
       <Image
@@ -132,9 +132,9 @@ const CommunityCard = ({ community }: { community: CommunityExploreCard }) => {
       <span className="absolute left-4 top-4 z-10 w-fit rounded-full bg-white/18 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.08em] text-white ring-1 ring-white/20 backdrop-blur">
         {community.category ?? "Comunidade"}
       </span>
-      <div className="relative z-10 flex h-full flex-col justify-end gap-4 text-white">
+      <div className="relative z-10 flex h-full flex-col justify-end gap-3 text-white">
         <div className="grid gap-2">
-          <h3 className="line-clamp-2 text-2xl font-black leading-[0.95] tracking-[-0.045em]">
+          <h3 className="line-clamp-2 text-xl font-black leading-[0.98] tracking-[-0.04em] sm:text-[1.35rem]">
             {community.name}
           </h3>
           <p className="line-clamp-2 text-xs font-semibold leading-5 text-white/82">
@@ -144,11 +144,76 @@ const CommunityCard = ({ community }: { community: CommunityExploreCard }) => {
             {formatMembers(community.membersCount)}
           </p>
         </div>
-        <span className="inline-flex min-h-10 items-center justify-center rounded-full bg-white px-4 text-sm font-extrabold text-primary transition group-hover:translate-x-1">
+        <span className="inline-flex min-h-9 items-center justify-center rounded-full bg-white px-4 text-[13px] font-extrabold text-primary transition group-hover:translate-x-1">
           Explorar
         </span>
       </div>
     </Link>
+  );
+};
+
+const PopularCommunitiesCarousel = ({ communities }: { communities: CommunityExploreCard[] }) => {
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [canScrollNext, setCanScrollNext] = useState(false);
+
+  const updateScrollState = useCallback(() => {
+    const node = scrollRef.current;
+    if (!node) return;
+
+    setCanScrollNext(node.scrollLeft + node.clientWidth < node.scrollWidth - 8);
+  }, []);
+
+  useEffect(() => {
+    const node = scrollRef.current;
+    if (!node) return;
+    const frame = window.requestAnimationFrame(updateScrollState);
+
+    node.addEventListener("scroll", updateScrollState, { passive: true });
+    window.addEventListener("resize", updateScrollState);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      node.removeEventListener("scroll", updateScrollState);
+      window.removeEventListener("resize", updateScrollState);
+    };
+  }, [updateScrollState]);
+
+  const scrollNext = () => {
+    const node = scrollRef.current;
+    if (!node) return;
+
+    node.scrollBy({
+      behavior: "smooth",
+      left: Math.min(360, node.clientWidth * 0.72),
+    });
+  };
+
+  return (
+    <div className="relative">
+      <div
+        className="-mx-5 overflow-x-auto scroll-smooth px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        ref={scrollRef}
+      >
+        <div className="flex snap-x snap-mandatory gap-3.5 sm:gap-4">
+          {communities.map((community) => (
+            <CommunityCard community={community} key={community.communityId} />
+          ))}
+        </div>
+      </div>
+
+      {canScrollNext ? (
+        <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-24 items-center justify-end bg-gradient-to-l from-white via-white/85 to-transparent pr-1 lg:flex">
+          <button
+            aria-label="Ver mais comunidades populares"
+            className="pointer-events-auto grid h-10 w-10 place-items-center rounded-full border border-[#DCE7F2] bg-white/92 text-primary shadow-[0_12px_30px_rgba(15,23,42,0.12)] backdrop-blur transition hover:-translate-y-0.5 hover:border-primary/35 hover:bg-white hover:shadow-[0_16px_34px_rgba(48,140,232,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+            onClick={scrollNext}
+            type="button"
+          >
+            <ChevronRight className="h-[18px] w-[18px]" aria-hidden="true" />
+          </button>
+        </div>
+      ) : null}
+    </div>
   );
 };
 
@@ -239,19 +304,19 @@ export const CommunityLogic = () => {
   return (
     <PrivateTemplate
       allowAnonymous
-      contentClassName="relative overflow-hidden bg-white"
+      contentClassName="relative min-h-screen max-w-none overflow-hidden bg-white px-0 pt-0 sm:pt-0"
       navigationTheme="solidWhite"
     >
-      <section className="relative z-10 mx-auto grid w-full max-w-[430px] gap-7 px-5 pb-10 sm:max-w-2xl lg:max-w-4xl">
-        <div className="sticky top-0 z-20 -mx-5 border-b border-[#E5EAF1] bg-white/95 px-5 py-3 backdrop-blur supports-[backdrop-filter]:bg-white/86">
+      <section className="relative z-10 mx-auto grid w-full max-w-[430px] gap-6 px-5 pb-10 sm:max-w-2xl lg:max-w-4xl">
+        <div className="sticky top-0 z-20 -mx-5 border-b border-[#E5EAF1] bg-white/95 px-5 py-2.5 backdrop-blur supports-[backdrop-filter]:bg-white/86">
           <div className="flex items-center gap-3">
             <button
               aria-label="Voltar"
-              className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#E2E8F0] bg-white text-[#64748B] shadow-[0_10px_24px_rgba(15,23,42,0.08)] transition hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#E2E8F0] bg-white text-[#64748B] shadow-[0_8px_20px_rgba(15,23,42,0.07)] transition hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
               onClick={() => navigateBackWithFallback(router)}
               type="button"
             >
-              <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+              <ArrowLeft className="h-[18px] w-[18px]" aria-hidden="true" />
             </button>
             <div className="relative min-w-0 flex-1">
               <Search
@@ -260,7 +325,7 @@ export const CommunityLogic = () => {
               />
               <Input
                 aria-label="Explorar comunidades"
-                className="h-12 rounded-full border-[#E2E8F0] bg-[#F8FAFC] pl-11 text-[15px] shadow-none placeholder:text-[#94A3B8]"
+                className="h-10 rounded-full border-[#E2E8F0] bg-[#F8FAFC] pl-10 text-sm shadow-none placeholder:text-[#94A3B8] sm:h-11"
                 onChange={(event) => handleSearchChange(event.target.value)}
                 placeholder="Explorar comunidades..."
                 type="search"
@@ -271,13 +336,13 @@ export const CommunityLogic = () => {
         </div>
 
         <header className="grid gap-3 pt-2">
-          <p className="text-sm font-extrabold uppercase tracking-[0.08em] text-primary">
+          <p className="text-xs font-extrabold uppercase tracking-[0.08em] text-primary">
             Comunidades Lectum
           </p>
-          <h1 className="text-[2.55rem] font-black leading-[0.94] tracking-[-0.06em] text-[#111827] sm:text-5xl">
+          <h1 className="text-[2.05rem] font-black leading-[0.98] tracking-[-0.055em] text-[#111827] sm:text-[2.8rem]">
             Encontre seu espaço seguro
           </h1>
-          <p className="max-w-xl text-base font-medium leading-7 text-[#64748B]">
+          <p className="max-w-xl text-sm font-medium leading-6 text-[#64748B] sm:text-[15px]">
             Conecte-se com pessoas que compartilham jornadas semelhantes à sua.
           </p>
         </header>
@@ -311,10 +376,10 @@ export const CommunityLogic = () => {
         ) : null}
 
         {featured ? (
-          <section className="grid gap-4">
+          <section className="grid gap-3.5">
             <div className="flex items-center gap-2">
-              <Flame className="h-5 w-5 text-warning" aria-hidden="true" />
-              <h2 className="text-xl font-black tracking-[-0.025em] text-[#111827]">
+              <Flame className="h-[18px] w-[18px] text-warning" aria-hidden="true" />
+              <h2 className="text-lg font-black tracking-[-0.025em] text-[#111827]">
                 Tendência Hoje
               </h2>
             </div>
@@ -323,29 +388,26 @@ export const CommunityLogic = () => {
         ) : null}
 
         {carouselCards.length > 0 ? (
-          <section className="grid gap-4">
+          <section className="grid gap-3.5">
             <div className="flex items-center gap-2">
-              <UsersRound className="h-5 w-5 text-primary" aria-hidden="true" />
-              <h2 className="text-xl font-black tracking-[-0.025em] text-[#111827]">
+              <UsersRound className="h-[18px] w-[18px] text-primary" aria-hidden="true" />
+              <h2 className="text-lg font-black tracking-[-0.025em] text-[#111827]">
                 {featured ? "Mais Populares" : "Comunidades"}
               </h2>
             </div>
-            <div className="-mx-5 overflow-x-auto scroll-smooth px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <div className="flex snap-x snap-mandatory gap-4">
-                {carouselCards.map((community) => (
-                  <CommunityCard community={community} key={community.communityId} />
-                ))}
-              </div>
-            </div>
+            <PopularCommunitiesCarousel
+              communities={carouselCards}
+              key={carouselCards.map((community) => community.communityId).join("|")}
+            />
           </section>
         ) : null}
 
-        <section className="grid justify-items-center gap-4 rounded-[30px] border border-[#E2E8F0] bg-[#F8FAFC] px-6 py-10 text-center shadow-[0_14px_38px_rgba(15,23,42,0.07)]">
-          <span className="grid h-14 w-14 place-items-center rounded-2xl bg-white text-primary shadow-[0_10px_24px_rgba(48,140,232,0.12)]">
-            <PlusCircle className="h-7 w-7" aria-hidden="true" />
+        <section className="grid justify-items-center gap-3.5 rounded-[24px] border border-[#E2E8F0] bg-[#F8FAFC] px-5 py-8 text-center shadow-[0_12px_30px_rgba(15,23,42,0.055)]">
+          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white text-primary shadow-[0_8px_20px_rgba(48,140,232,0.1)]">
+            <PlusCircle className="h-6 w-6" aria-hidden="true" />
           </span>
           <div className="grid gap-2">
-            <h2 className="text-2xl font-black tracking-[-0.035em] text-[#111827]">
+            <h2 className="text-xl font-black tracking-[-0.035em] text-[#111827]">
               Sugira uma Comunidade
             </h2>
             <p className="max-w-sm text-sm font-medium leading-6 text-[#64748B]">
@@ -353,7 +415,7 @@ export const CommunityLogic = () => {
               você.
             </p>
           </div>
-          <Button asChild className="w-full max-w-xs rounded-full">
+          <Button asChild className="h-10 w-full max-w-xs rounded-full text-sm">
             <Link href="/app/community/suggest">Solicitar Nova Comunidade</Link>
           </Button>
         </section>
