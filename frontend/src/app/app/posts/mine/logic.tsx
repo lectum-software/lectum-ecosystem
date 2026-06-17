@@ -149,9 +149,7 @@ const ReplyItemCard = ({
 
   const replyHref = `/app/community/${item.post.community.slug}/post/${item.post.id}?focusReplyId=${encodeURIComponent(reply.id)}#reply-${reply.id}`;
   const isDirectPostComment = !reply.parent_reply_id;
-  const hasVerifiedProfessionalPostReply = Boolean(
-    item.post.highlighted_professional_reply?.author.verified,
-  );
+  const hasVerifiedProfessionalReply = Boolean(reply.has_verified_professional_reply);
   const voteState =
     voteOverride?.replyId === reply.id
       ? voteOverride
@@ -228,10 +226,10 @@ const ReplyItemCard = ({
         className="absolute inset-0 z-0 rounded-[24px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
         href={replyHref}
       />
-      <div className="pointer-events-none relative z-10 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-muted">
-        <MessageCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      <div className="pointer-events-none relative z-10 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold tracking-[-0.01em] text-muted">
+        <MessageCircle className="h-3.5 w-3.5 shrink-0 text-muted/80" aria-hidden="true" />
         <span className="shrink-0">Comentado em</span>
-        <span className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-black text-foreground">
+        <span className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-extrabold text-[#475569] dark:text-muted">
           {item.post.community.name}
         </span>
         <span className="ml-auto shrink-0">{formatRelativeTime(reply.created_at)}</span>
@@ -255,14 +253,14 @@ const ReplyItemCard = ({
         </blockquote>
       ) : null}
 
-      {isDirectPostComment && hasVerifiedProfessionalPostReply ? (
-        <ProfessionalAnsweredBadge className="pointer-events-none relative z-10 w-fit" />
-      ) : null}
-
       <div className="pointer-events-none relative z-10 grid gap-2">
         {reply.title ? <h2 className="text-lg font-black text-foreground">{reply.title}</h2> : null}
         <p className="whitespace-pre-line text-sm leading-6 text-foreground">{reply.content}</p>
       </div>
+
+      {hasVerifiedProfessionalReply ? (
+        <ProfessionalAnsweredBadge className="pointer-events-none relative z-10 w-fit" />
+      ) : null}
 
       <CommunityActionBar
         className="relative z-20 border-border/80 border-t pt-3"

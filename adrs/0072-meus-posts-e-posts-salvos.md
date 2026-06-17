@@ -215,3 +215,32 @@ A barra padrao de acoes dos cards de comentarios em `/app/posts/mine` ja permiti
 - O feedback de salvar/desfazer salvo em comentario atualiza a contagem imediatamente e corrige o valor com o retorno real da API.
 - A aba "Posts" permanece consistente por continuar usando `CommunityPostCard` e `community_post.saves_count`.
 - Nao houve alteracao de schema Prisma nem dependencia nova.
+
+## Complemento 2026-06-17: Flag profissional vinculada ao comentario do usuario
+
+### Contexto
+
+A aba "Comentarios" em `/app/posts/mine` exibia a flag `Respondido por psicologo verificado` a partir de `post.highlighted_professional_reply`. Esse campo pertence ao post principal e pode ser preenchido por uma resposta profissional ao post ou a outro ponto da conversa, criando a impressão incorreta de que o comentário específico do usuário havia recebido atenção profissional.
+
+### Decisao
+
+- A flag de comentário em `/app/posts/mine` passa a usar somente `reply.has_verified_professional_reply`.
+- O backend mantém `has_verified_professional_reply` como metadado do item de comentário, calculado sobre respostas diretas ativas daquele comentário específico feitas por psicólogo verificado.
+- A tag é renderizada abaixo do texto do comentário do usuário e antes da linha padrão de ações, nunca dentro do bloco de contexto do post/comentário pai.
+- A linha `Comentado em [comunidade]` passa a ser tratada visualmente como metadado de contexto: cinza discreto, tipografia compacta e comunidade com destaque leve, sem virar título do card.
+
+### Consequencias
+
+- O indicador profissional passa a representar apenas interação profissional relacionada ao comentário do usuário.
+- Respostas profissionais ao post principal ou a comentários de terceiros não acionam a tag no card do comentário do usuário.
+- A aba "Posts" continua podendo usar `highlighted_professional_reply` para sinalizar posts com resposta profissional, pois ali o escopo é o post principal.
+- Não houve mudança de schema Prisma, endpoint novo ou dependência nova.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`
+- Browser local via Chrome/CDP em `/app/posts/mine` mobile confirmou a composição sem overflow horizontal e a tag fora do bloco de contexto.

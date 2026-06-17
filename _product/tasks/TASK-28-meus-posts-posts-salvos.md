@@ -245,3 +245,21 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - A aba "Posts" continua reutilizando `CommunityPostCard`, que ja exibe `community_post.saves_count` na mesma barra padrao do feed/post; a alteracao mantem consistencia entre posts e comentarios.
 - Referencias visuais seguem as imagens locais da TASK-28; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, consulta autenticada de `GET /api/private/posts/mine?type=replies`, ciclo real `POST/DELETE /api/private/posts/:id/replies/:replyId/save` confirmando `saves_count`, e Chrome/CDP mobile 390x844 em `/app/posts/mine` validando contador de salvamentos em comentarios e posts sem overflow horizontal.
+
+## Ajuste complementar em 2026-06-17 - precisão da flag profissional em comentários
+
+- Pedido direto de produto: na aba "Comentarios" de `/app/posts/mine`, a linha `Comentado em [comunidade]` deve se aproximar do padrão do feed, com metadado cinza discreto e comunidade com destaque leve, sem parecer título principal.
+- A flag `Respondido por psicologo verificado` deixou de usar `post.highlighted_professional_reply`, que representava resposta ao post principal e podia refletir comentários de terceiros.
+- A flag agora usa exclusivamente `reply.has_verified_professional_reply`, derivada do comentário específico do usuário, e é exibida abaixo do texto do comentário, antes da `CommunityActionBar`.
+- O contrato em `_product/tasks/DATA-MODEL.md` foi esclarecido: a flag considera apenas respostas diretas ativas daquele comentário específico feitas por psicólogo verificado, sem considerar o post principal ou outras árvores.
+- Não houve alteração de schema Prisma, migration, pacote, ordenação, navegação, votos, salvamentos ou compartilhamento.
+
+### Validação do ajuste
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`
+- Browser local via Chrome/CDP em `/app/posts/mine` mobile `390x844`, validando a linha `Comentado em` discreta, ausência da tag dentro do bloco de contexto e ausência de overflow horizontal.
+- ADR atualizado: `adrs/0072-meus-posts-e-posts-salvos.md`.
