@@ -5,8 +5,8 @@ import {
   BarChart3,
   Bookmark,
   ChevronRight,
+  Compass,
   Edit3,
-  HeartHandshake,
   Lock,
   LogOut,
   MessagesSquare,
@@ -164,7 +164,7 @@ export const ProfileLogic = () => {
     { href: "/app/posts/mine", icon: MessagesSquare, label: "Meus posts e comentários" },
     { href: "/app/following", icon: UsersRound, label: "Comunidades seguidas" },
     { href: "/app/posts/saved", icon: Bookmark, label: "Salvos" },
-    { href: "/app/community", icon: HeartHandshake, label: "Explorar comunidades" },
+    { href: "/app/community", icon: Compass, label: "Explorar comunidades" },
   ];
 
   return (

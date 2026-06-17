@@ -298,3 +298,10 @@ Validações executadas:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessão, preservando proteção da rota privada.
+
+## Ajuste complementar em 2026-06-17 - ícone de explorar comunidades no menu de perfil
+
+- O menu privado compartilhado em `/app/profile` passou a exibir o item `Explorar comunidades` com o ícone `Compass`, o mesmo usado no botão `Explorar` da navegação de comunidades.
+- A alteração cobre o perfil de psicólogos porque o menu é renderizado pelo mesmo componente de Perfil usado por pacientes e profissionais.
+- Foram preservados tamanho, alinhamento, espaçamento, cores e estados visuais do item existente, sem mudanças de backend, Prisma, rotas, packages ou dados.
+- ADR criado: `adrs/0115-iconografia-explorar-comunidades-perfil.md`.

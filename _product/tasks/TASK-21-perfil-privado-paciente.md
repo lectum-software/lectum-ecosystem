@@ -180,3 +180,10 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - O frontend consulta a preferência antes de renderizar cada dica e marca a dica como vista quando ela é exibida ou dispensada, mantendo as dicas independentes.
 - `sessionStorage`/`localStorage` deixaram de ser fonte de verdade dessas dicas; o cache React Query é escopado pelo `user.id`.
 - ADR criado: `adrs/0109-dicas-onboarding-persistidas-por-usuario.md`.
+
+## Ajuste complementar em 2026-06-17 - ícone de explorar comunidades no perfil
+
+- O item `Explorar comunidades` do menu privado `/app/profile` passou a usar o mesmo ícone `Compass` do botão `Explorar` presente no feed/comunidades.
+- O ajuste reutiliza o menu compartilhado de perfil, portanto vale para pacientes e psicólogos sem duplicar componente.
+- Tamanho, alinhamento, espaçamento, cores e estados de hover/foco do item foram preservados pelo componente `Row` existente.
+- ADR criado: `adrs/0115-iconografia-explorar-comunidades-perfil.md`.
