@@ -19,10 +19,10 @@ export const CommunityFollowButton = ({
   <button
     aria-pressed={following}
     className={cn(
-      "inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-full border px-3 text-[11px] font-black transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-70",
+      "inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-full border px-3 text-[11px] font-black leading-none tracking-[-0.01em] shadow-none transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-70",
       following
-        ? "border-transparent bg-surface-muted text-foreground hover:bg-border/60"
-        : "border-primary/45 bg-surface text-primary hover:bg-primary-soft",
+        ? "border-primary/18 bg-primary-soft/85 text-primary hover:border-primary/25 hover:bg-primary-soft"
+        : "border-primary/45 bg-white text-primary hover:border-primary/60 hover:bg-primary-soft/75 dark:bg-surface",
       className,
     )}
     disabled={disabled || pending}

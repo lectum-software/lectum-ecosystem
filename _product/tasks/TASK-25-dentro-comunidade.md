@@ -299,3 +299,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nao houve alteracao de backend, Prisma, migrations, packages, endpoints, payloads, ranking, filtros, votos ou salvamento.
 - ADR atualizado: `adrs/0066-pagina-detalhe-comunidade-participacao.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check --write -- 'src/app/app/community/[slug]/logic.tsx' 'src/components/community/community-post-card.tsx'`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado validando no desktop que o texto dentro da comunidade abre o detalhe e que upvote nao navega.
+
+## Complemento 2026-06-17 - refinamento de seguir e filtros da comunidade
+
+- Pedido do usuario: aproximar a tela interna de comunidade do PDF anexado `Dentro da Comunidade.pdf`, especificamente no botao `Seguir/Seguindo` e nos filtros `Em destaque`, `Novos`, `Mais comentados` e `Mais uteis`.
+- Fonte visual auditavel: PDF anexado pelo usuario e `_product/proto/Dentro da Comunidade.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao.
+- O botao compartilhado `CommunityFollowButton` manteve a escala atual da tela da comunidade, removeu profundidade visual desnecessaria e passou a usar estados branco/azul suaves, alinhados ao botao usado nos cards do feed.
+- Os filtros da pagina interna agora usam pills mais compactas, com `Em destaque` ativo em azul preenchido, opcoes secundarias em branco com borda azul-clara, tipografia menor aplicada ao label e icones/setas alinhados ao texto.
+- Os filtros continuam em uma unica linha quando ha espaco; no mobile, permanecem em trilho horizontal com rolagem suave e sem quebra do layout.
+- Escopo: sem alteracao de backend, Prisma, migrations, endpoints, ranking, busca, votos, salvos, compartilhamento, textos funcionais dos filtros ou packages.
+- ADR atualizado: `adrs/0066-pagina-detalhe-comunidade-participacao.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP em `http://localhost:3000/app/community/ansiedade-em-equilibrio`, confirmando pills na mesma linha, rolagem horizontal mobile, `Em destaque` ativo azul, `Novos` secundario claro e botao `Seguir` na escala atual.

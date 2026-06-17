@@ -203,3 +203,17 @@ Validacao complementar:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Chrome/CDP autenticado em desktop validando resumo clicavel dentro da comunidade e upvote sem navegacao.
+
+## Atualizacao 2026-06-17 - refinamento visual de seguir e filtros da comunidade
+
+- A pagina interna `/app/community/[slug]` passa a alinhar o botao `Seguir/Seguindo` ao padrao visual ja usado nos pontos de feed, mantendo a escala compacta da comunidade e removendo sombra/profundidade desnecessaria.
+- Os filtros de ordenacao continuam com o mesmo contrato funcional (`featured`, `new`, `commented`, `voted` e dropdown de periodo nos rankings), mas agora usam pills compactas, ativo azul preenchido e opcoes secundarias brancas com borda azul-clara.
+- Para preservar responsividade mobile-first, a lista de filtros permanece em trilho horizontal com `overflow-x-auto`, `scroll-smooth`, sem quebra de linha e com setas dos dropdowns imediatamente apos o texto.
+- A decisao e exclusivamente visual: nao altera backend, Prisma, ordenacao/ranking, busca, votos, salvamento, compartilhamento, endpoints, payloads ou packages.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome/CDP em `http://localhost:3000/app/community/ansiedade-em-equilibrio`, validando mobile e desktop: filtros na mesma linha, rolagem horizontal no mobile quando necessario, `Em destaque` ativo azul, `Novos` secundario claro, setas dos dropdowns alinhadas e botao `Seguir` preservando a escala atual da comunidade.

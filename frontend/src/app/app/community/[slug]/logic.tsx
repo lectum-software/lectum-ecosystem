@@ -122,11 +122,11 @@ const getCommunityPostSortPeriodShortLabel = (value: CommunityPostSortPeriod) =>
 
 const communityPostSortChipClassName = (active: boolean) =>
   cn(
-    "group inline-flex h-8 min-h-8 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[11px] font-semibold leading-none tracking-[-0.01em] shadow-[0_5px_14px_rgba(15,23,42,0.035)] backdrop-blur transition-[background-color,border-color,box-shadow,color,transform] duration-200 active:scale-[0.99]",
+    "group inline-flex h-[30px] min-h-[30px] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[11px] font-bold leading-none tracking-[-0.01em] shadow-none transition-[background-color,border-color,box-shadow,color,transform] duration-200 active:scale-[0.99]",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8]/20",
     active
-      ? "border-[#9CCCF8]/85 bg-[#EAF5FF] text-[#123B6D] shadow-[0_8px_20px_rgba(48,140,232,0.14)] dark:border-primary/35 dark:bg-primary/15 dark:text-[#D6EAFF]"
-      : "border-[#E2E8F0]/95 bg-white/85 text-[#233B5D] hover:border-[#C8D8EA] hover:bg-white hover:text-[#123B6D] dark:border-border dark:bg-surface/70 dark:text-muted dark:hover:bg-surface-muted/70 dark:hover:text-foreground",
+      ? "border-primary bg-primary text-white shadow-[0_7px_18px_rgba(48,140,232,0.16)] hover:bg-primary/95 dark:border-primary dark:bg-primary dark:text-white"
+      : "border-[#DDE8F4] bg-white text-[#5F718A] hover:border-[#BFD8F4] hover:bg-[#F8FBFF] hover:text-[#123B6D] dark:border-border dark:bg-surface/70 dark:text-muted dark:hover:bg-surface-muted/70 dark:hover:text-foreground",
   );
 
 const FEED_SCOPE_OPTIONS: Array<{ label: string; value: CommunityFeedScope }> = [
@@ -1865,11 +1865,11 @@ const CommunityPeriodSortChip = ({
         ref={buttonRef}
         type="button"
       >
-        <Icon className="h-3 w-3 shrink-0 opacity-70" aria-hidden="true" strokeWidth={1.9} />
-        <span className="whitespace-nowrap">{label}</span>
+        <Icon className="h-3.5 w-3.5 shrink-0 opacity-85" aria-hidden="true" strokeWidth={1.9} />
+        <span className="whitespace-nowrap text-[11px] font-bold leading-none">{label}</span>
         <ChevronDown
           className={cn(
-            "h-3 w-3 shrink-0 opacity-70 transition-transform duration-200",
+            "-ml-0.5 h-3.5 w-3.5 shrink-0 opacity-80 transition-transform duration-200",
             open ? "rotate-180" : "",
           )}
           aria-hidden="true"
@@ -1948,9 +1948,9 @@ const CommunityPostSortChips = ({
 }) => (
   <nav
     aria-label="Ordenação dos posts"
-    className="w-full overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    className="w-full max-w-full overflow-x-auto scroll-smooth overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
   >
-    <div className="flex min-w-max items-center gap-2 py-0.5 pr-1">
+    <div className="flex min-w-max items-center gap-1.5 py-1 pr-2">
       {COMMUNITY_POST_SORTS.map((item) => {
         const Icon = item.icon;
         const active = value === item.value;
@@ -1980,8 +1980,14 @@ const CommunityPostSortChips = ({
             onClick={() => onChange(item.value)}
             type="button"
           >
-            <Icon className="h-3 w-3 shrink-0 opacity-70" aria-hidden="true" strokeWidth={1.9} />
-            <span className="whitespace-nowrap">{item.label}</span>
+            <Icon
+              className="h-3.5 w-3.5 shrink-0 opacity-85"
+              aria-hidden="true"
+              strokeWidth={1.9}
+            />
+            <span className="whitespace-nowrap text-[11px] font-bold leading-none">
+              {item.label}
+            </span>
           </button>
         );
       })}
