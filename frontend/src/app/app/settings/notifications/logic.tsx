@@ -134,12 +134,12 @@ const resolveNewPostScope = (
   entry: NotificationPrefs[string] | undefined,
   role: UserRole,
 ): NewPostAuthorScope => {
-  if (
-    entry?.post_author_scope === "patients_only" ||
-    entry?.post_author_scope === "professionals_only" ||
-    entry?.post_author_scope === "all"
-  ) {
-    return entry.post_author_scope;
+  const persistedScope = entry?.post_author_scope;
+  const allowedScopes: NewPostAuthorScope[] =
+    role === "psicologo" ? ["patients_only", "all"] : ["professionals_only", "all"];
+
+  if (persistedScope && allowedScopes.includes(persistedScope)) {
+    return persistedScope;
   }
 
   return getDefaultNewPostScope(role);
@@ -268,9 +268,11 @@ export const NotificationSettingsLogic = () => {
           <form className="grid gap-7" onSubmit={handleSubmit}>
             {visibleSections.map((section) => (
               <section className="grid gap-3" key={section.key}>
-                <h2 className="px-1 text-xs font-extrabold tracking-[0.18em] text-muted">
-                  {section.label}
-                </h2>
+                {sessionRole === "paciente" && section.key === "comunidade" ? null : (
+                  <h2 className="px-1 text-xs font-extrabold tracking-[0.18em] text-muted">
+                    {section.label}
+                  </h2>
+                )}
 
                 <div className="overflow-hidden rounded-3xl border border-border bg-surface shadow-sm">
                   {section.categories.map((category, index) => {
@@ -301,8 +303,8 @@ export const NotificationSettingsLogic = () => {
                             <SelectController<NotificationSettingsForm>
                               className="w-[136px] max-w-[42vw] gap-0 text-xs font-bold text-muted min-[380px]:w-[142px] sm:w-[148px] [&>span:first-child]:sr-only [&_[role=alert]]:hidden"
                               control={form.hook.control}
-                              emptyLabel="Selecione"
                               field="select"
+                              hideEmptyOption
                               inputClassName="h-10 rounded-[1.15rem] border-[#cfe5fb] bg-white px-3.5 pr-9 text-[13px] font-bold text-[#1d5f9f] shadow-[0_8px_22px_rgba(47,141,235,0.08)] hover:border-[#b8daf8] hover:bg-[#f8fbff] focus:border-primary focus:ring-4 focus:ring-primary/15"
                               label={`Preferência de ${category.label}`}
                               name="novo_post__post_author_scope"

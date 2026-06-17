@@ -94,9 +94,9 @@ A forma do `notification` migrada (derivada do sample) usa `read`, `redirect`, `
   compartilhados) e evita criar um dropdown paralelo especifico da tela.
 - O controller ganhou props opt-in para estilizar conteudo, opcoes, item selecionado e chevron; o
   comportamento padrao dos demais selects permanece nativo quando `useCustomSelect` nao e informado.
-- O dropdown exibe `Selecione`, a opcao segmentada por papel (`Somente profissionais` para pacientes ou
+- O dropdown originalmente exibia `Selecione`, a opcao segmentada por papel (`Somente profissionais` para pacientes ou
   `Somente pacientes` para psicologos) e `Todos`, mantendo a regra de dominio de segmentacao de novas
-  postagens.
+  postagens; essa opcao vazia foi removida em complemento posterior para simplificar o MVP.
 - Nao houve mudanca de contrato, backend, Prisma, persistencia de preferencias, endpoints ou packages.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e Chrome/CDP local em
   mobile 390px confirmando borda azul-clara, fundo branco, sombra leve, item selecionado em azul claro,
@@ -121,3 +121,33 @@ A forma do `notification` migrada (derivada do sample) usa `read`, `redirect`, `
 - Pacientes veem apenas preferências de comunidade, porque eventos como avaliação recebida, perfil favoritado, visualização de perfil e clique em WhatsApp são ações do contexto profissional.
 - A decisão preserva o contrato `notification_preference.prefs` e evita regra nova no backend: é um ajuste de UX/papel na apresentação da tela.
 - Validacoes executadas: Biome no arquivo alterado, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile 390px para paciente e psicologo.
+
+
+## Complemento 2026-06-17 - Preferencias sem estado vazio em novas postagens
+
+### Contexto
+
+A configuracao de notificacoes para pacientes ja ocultava a secao profissional `Perfil`, mas ainda mantinha o cabecalho `COMUNIDADE` como unica secao visivel. O seletor `Novas postagens` tambem exibia uma opcao vazia `Selecione`, embora o dominio sempre tenha um default valido por papel.
+
+### Decisao
+
+- Para pacientes, omitir o cabecalho visual `COMUNIDADE` e renderizar diretamente a lista de preferencias comunitarias.
+- Para psicologos, manter `PERFIL` e `COMUNIDADE`, pois ha duas familias de preferencia na tela.
+- Remover a opcao vazia do dropdown customizado usando `hideEmptyOption` no `SelectController`.
+- Manter apenas opcoes validas: `Profissionais`/`Todos` para pacientes e `Pacientes`/`Todos` para psicologos.
+- Preservar `getDefaultNewPostScope` e `resolveNewPostScope` como garantia de valor selecionado por padrao e normalizacao de preferencias antigas/invalidas.
+
+### Consequencias
+
+- A tela de paciente fica mais direta e sem titulo de secao redundante.
+- O filtro de novas postagens deixa de ter estado vazio visual ou selecionavel.
+- Nao ha mudanca no payload persistido, backend, schema Prisma, endpoints ou segmentacao de notificacoes.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`
+- Chrome/CDP mobile 390px confirmou paciente sem heading `COMUNIDADE`, psicologo com os dois headings, opcoes corretas por papel e ausencia de `Selecione`.

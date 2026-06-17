@@ -141,7 +141,7 @@ Packages permitidos: `socket.io`, `socket.io-client`, `web-push`, TanStack Query
 - [x] Ajuste 2026-06-16: `/app/settings/notifications` foi simplificada para uma chave por tipo de notificação, seletor segmentado em `novo_post`, header com voltar e rodapé limpo; preferências são normalizadas em `notification_preference.prefs`.
 - [x] Ajuste fino 2026-06-17: itens de `/app/settings/notifications` ficaram compactos em uma linha, sem descrições, sem rótulo visual `Receber`, com controles alinhados à direita e ícone de WhatsApp azul no item `Cliques no WhatsApp`.
 - [x] Ajuste fino 2026-06-17: `/app/notifications` usa card branco também no mobile, sem fundo azulado nos itens, e a ação `Marcar todas como lidas` ficou alinhada no header ao lado das configurações.
-- [x] Ajuste fino 2026-06-17: o seletor `Novas postagens` em `/app/settings/notifications` abandonou o select nativo visível e passou a usar dropdown customizado premium, com opções `Selecione`, `Somente profissionais`/`Somente pacientes` conforme papel e `Todos`, sem vazar do card no mobile.
+- [x] Ajuste fino 2026-06-17: o seletor `Novas postagens` em `/app/settings/notifications` abandonou o select nativo visivel e passou a usar dropdown customizado premium, com opcoes segmentadas por papel e `Todos`, sem vazar do card no mobile.
 
 ## Validação mínima
 
@@ -177,7 +177,7 @@ Packages permitidos: `socket.io`, `socket.io-client`, `web-push`, TanStack Query
 - A tela `/app/settings/notifications` manteve a referência local `_product/proto/Configurações de Notificações.jpg` como norte auditável; Builder/Quick Copy não está exposto como ferramenta direta neste ambiente.
 - O campo `Novas postagens` passou a usar o modo customizado do `SelectController`, preservando React Hook Form/Zod e removendo o visual nativo do navegador.
 - O dropdown recebeu botão branco com borda azul-clara, radius refinado, sombra muito leve, seta alinhada à direita e lista com item selecionado em azul muito claro.
-- As opções visíveis no perfil de paciente são `Selecione`, `Somente profissionais` e `Todos`; a regra de domínio para psicólogos continua preservada com `Somente pacientes` e `Todos`.
+- As opcoes visiveis no perfil de paciente sao `Profissionais` e `Todos`; a regra de dominio para psicologos continua preservada com `Pacientes` e `Todos`.
 - A validação local via Chrome/CDP em viewport mobile 390px confirmou que a lista não vaza do card, tem largura alinhada ao botão, mostra as três opções esperadas para paciente e destaca a opção selecionada.
 - Não houve alteração de backend, Prisma, persistência, endpoints ou packages.
 
@@ -204,6 +204,25 @@ Esta task deixa o canal de recebimento pronto. **Não** ligue eventos de domíni
 
 - A tela `/app/settings/notifications` passou a exibir a seção `Perfil` somente para usuários com papel `psicologo`.
 - Para pacientes, a seção `Perfil` é omitida integralmente, incluindo `Novas avaliações`, `Perfil favoritado`, `Visualizações de perfil` e `Cliques no WhatsApp`.
-- A tela de paciente começa diretamente pela seção `Comunidade`, sem espaço vazio, divisória órfã ou alteração de contrato de preferências.
+- A tela de paciente comeca diretamente pelos itens de comunidade, sem o cabecalho visual `COMUNIDADE`, sem espaco vazio, divisoria orfa ou alteracao de contrato de preferencias.
 - A mudança é apenas de apresentação no frontend; persistência, schema, endpoints e segmentação de notificações permanecem inalterados.
 - Validacoes executadas: `pnpm --dir frontend exec biome check src/app/app/settings/notifications/logic.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile 390px validando paciente com apenas `Comunidade` e psicologo com `Perfil` + `Comunidade`, ambos sem overflow horizontal.
+
+
+## Complemento 2026-06-17 - simplificacao de comunidade e novas postagens
+
+- Na tela `/app/settings/notifications`, pacientes deixam de ver o cabecalho visual `COMUNIDADE`; a primeira linha de preferencia aparece imediatamente apos o header da pagina.
+- Psicologos mantem os cabecalhos `PERFIL` e `COMUNIDADE`, preservando a separacao visual entre categorias profissionais e comunitarias.
+- O dropdown `Novas postagens` removeu a opcao vazia `Selecione` com `hideEmptyOption` no `SelectController` e passa a expor somente opcoes validas: `Profissionais`/`Todos` para pacientes e `Pacientes`/`Todos` para psicologos.
+- O valor padrao continua derivado do papel do usuario: pacientes iniciam em `professionals_only` e psicologos em `patients_only`; registros persistidos invalidos continuam normalizados para um valor valido.
+- Nao houve alteracao de schema Prisma, backend, endpoint, payload persistido, pacote ou regra de segmentacao.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`
+- Browser local via Chrome/CDP em `/app/settings/notifications` mobile `390x844`, validando paciente sem `COMUNIDADE`, psicologo com `PERFIL` + `COMUNIDADE`, dropdown sem `Selecione`, opcoes corretas por papel e ausencia de overflow horizontal.
+- ADR atualizado: `adrs/0007-notificacoes-fundacao.md`.
