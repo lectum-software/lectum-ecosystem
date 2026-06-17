@@ -73,3 +73,24 @@ Validacao complementar:
 - `pnpm check`
 - Chrome headless/CDP mobile 390px confirmou seta em `Publicacoes`, retorno para `Geral`, seta em `Avaliacoes` e chip de avaliacoes.
 - Chrome headless/CDP desktop 1440px confirmou ausencia de `data-profile-sticky-navigation` e de navegacao segmentada fixa visivel.
+
+
+## Atualizacao 2026-06-16 - Sobre coeso e publicacoes refinadas
+
+- O CTA inline de WhatsApp abaixo do video de apresentacao foi removido para evitar duplicidade com a acao principal fixa do perfil.
+- A orientacao de contato passou a fazer parte do proprio card `Sobre`, logo apos bio/video, como bloco informativo com o titulo `Quer falar com o psicologo?` e a descricao solicitada, sem criar nova secao ou card independente.
+- O CTA fixo de WhatsApp permanece como acao principal do perfil, com texto `Chamar no WhatsApp`, respeitando o rodape e o padding inferior da pagina.
+- `CommunityPostCard` segue sendo reutilizado na aba `Publicacoes` e na previa da aba `Geral`, mas agora usa icone de documento para `Postado em` e icone de resposta/seta para `Respondido em`, sem balao de chat no contexto de resposta do perfil.
+- O nome da comunidade no modo de publicacoes do perfil foi suavizado para cinza, alinhando a leitura ao contexto do feed sem alterar o link nem os demais elementos do card.
+- Videos de respostas do psicologo no modo de publicacoes do perfil receberam limite visual menor apenas em desktop, preservando o comportamento mobile e sem alterar videos de posts originais.
+- Nao houve alteracao de backend, banco, Prisma, contratos, packages, ordenacao, envio, contato ou regras de destaque.
+
+Validacao complementar executada nesta execucao:
+
+- `pnpm --dir frontend exec biome check --write -- 'src/app/app/psychologist/[id]/logic.tsx' 'src/components/community/community-post-card.tsx'`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome headless/CDP mobile 390px em `/app/psychologist/demo-psychologist-camila-rocha`, confirmando bloco de contato dentro do card `Sobre`, apos o video, sem botao de WhatsApp na secao.
+- Chrome headless/CDP mobile 390px em `/app/psychologist/demo-psychologist-camila-rocha?tab=publicacoes`, confirmando icone `Reply` em `Respondido em`, icone `FileText` em `Postado em` e comunidade em cinza `rgb(100, 116, 139)`.
+- Chrome headless/CDP desktop 1440px em `?tab=publicacoes`, confirmando video de resposta com largura aproximada de 318px e sem alterar videos de posts originais.

@@ -865,21 +865,24 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
             title={`Vídeo de apresentação de ${profile.name}`}
           />
         </article>
-
-        {profile.whatsapp_url ? (
-          <PsychologistWhatsAppRedirectButton
-            aria-label={`Chamar ${profile.name} no WhatsApp`}
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[14px] bg-success px-4 text-[13px] font-extrabold text-white shadow-[0_10px_24px_rgba(22,163,74,0.18)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-success/90 hover:shadow-[0_14px_28px_rgba(22,163,74,0.22)] active:translate-y-0 active:scale-[0.99]"
-            psychologist={toPsychologistWhatsAppIdentity(profile)}
-          >
-            <WhatsAppIcon className="h-4 w-4" aria-hidden="true" />
-            Chamar no WhatsApp
-          </PsychologistWhatsAppRedirectButton>
-        ) : null}
       </div>
     </div>
   );
 };
+
+const AboutContactInfoBlock = () => (
+  <div
+    className="mt-4 rounded-[18px] border border-[#D7E8FA] bg-[#F8FBFF]/90 px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.78)]"
+    data-about-contact-block="true"
+  >
+    <p className="text-[13.5px] font-extrabold leading-tight tracking-[-0.015em] text-[#182033]">
+      Quer falar com o psicólogo?
+    </p>
+    <p className="mt-1.5 text-[12.75px] font-medium leading-[1.55] text-[#64748B]">
+      Para consultar agenda, valores e informações do atendimento, chame o psicólogo no WhatsApp.
+    </p>
+  </div>
+);
 
 const ExpandableAboutText = ({
   containerClassName,
@@ -1283,6 +1286,7 @@ const AboutTab = ({
       <ProfileSectionCard title="Sobre">
         <ExpandableAboutText text={bioText} />
         <PresentationVideo profile={profile} />
+        {profile.whatsapp_url ? <AboutContactInfoBlock /> : null}
       </ProfileSectionCard>
 
       <ProfileSectionCard title="Especialidades">

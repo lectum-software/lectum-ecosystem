@@ -550,3 +550,24 @@ Validacoes executadas:
 - Chrome headless/CDP mobile 390px em `/app/psychologist/demo-psychologist-camila-rocha?tab=publicacoes` confirmou seta visivel no cabecalho e retorno para `/app/psychologist/demo-psychologist-camila-rocha`.
 - Chrome headless/CDP mobile 390px em `/app/psychologist/demo-psychologist-camila-rocha?tab=avaliacoes` confirmou seta visivel no cabecalho e chip de avaliacoes.
 - Chrome headless/CDP desktop 1440px em `/app/psychologist/demo-psychologist-camila-rocha?tab=publicacoes` confirmou ausencia de `data-profile-sticky-navigation` e de navegacao segmentada fixa visivel, mantendo o cabecalho com seta e chip.
+
+
+## Registro de ajuste complementar em 2026-06-16 - Sobre coeso e publicacoes refinadas
+
+- Pedido do usuario: remover o botao de WhatsApp abaixo do video de apresentacao, manter apenas a acao principal fixa e incorporar a orientacao de contato dentro do card `Sobre`.
+- A secao `Sobre` agora preserva a continuidade entre bio, video e bloco informativo `Quer falar com o psicologo?`, sem criar nova secao ou card independente.
+- O botao fixo principal de WhatsApp permanece no rodape com o texto `Chamar no WhatsApp` e continua respeitando o espaco inferior da pagina.
+- Na aba `Publicacoes` e na previa da aba `Geral`, o card compartilhado diferencia `Postado em` com icone de documento e `Respondido em` com icone de resposta/seta, sem usar balao de chat para respostas no perfil.
+- O nome da comunidade no modo de perfil usa cinza discreto, mantendo o link e aproximando o contexto visual do feed.
+- Videos de respostas do psicologo foram compactados apenas em desktop dentro do modo de publicacoes do perfil, sem alterar o comportamento mobile nem videos de posts originais.
+- Nao houve alteracao de backend, banco, Prisma, contratos, packages, dados persistidos, ordenacao de publicacoes, WhatsApp ou regras de destaque.
+
+Validacoes desta execucao:
+
+- `pnpm --dir frontend exec biome check --write -- 'src/app/app/psychologist/[id]/logic.tsx' 'src/components/community/community-post-card.tsx'`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome headless/CDP mobile 390px em `/app/psychologist/demo-psychologist-camila-rocha`, confirmando bloco de contato dentro do card `Sobre`, apos o video, sem botao de WhatsApp na secao.
+- Chrome headless/CDP mobile 390px na aba `Publicacoes` e na previa da aba `Geral`, confirmando `Respondido em` com icone de resposta, `Postado em` com icone de documento e comunidade em cinza discreto.
+- Chrome headless/CDP desktop 1440px em `?tab=publicacoes`, confirmando video de resposta com largura aproximada de 318px.

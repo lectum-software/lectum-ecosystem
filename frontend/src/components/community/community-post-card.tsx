@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeCheck, FileText, MessageCircle, UserX } from "lucide-react";
+import { BadgeCheck, FileText, Reply, UserX } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -274,10 +274,12 @@ const MediaBlock = ({
   alt,
   mediaType,
   mediaUrl,
+  videoClassName,
 }: {
   alt: string;
   mediaType: string | null;
   mediaUrl: string | null;
+  videoClassName?: string;
 }) => {
   if (!mediaUrl) return null;
 
@@ -287,7 +289,7 @@ const MediaBlock = ({
   if (mediaType === "video") {
     return (
       <VerticalVideoPlayer
-        className="mx-auto w-full max-w-[390px] rounded-[22px]"
+        className={cn("mx-auto w-full max-w-[390px] rounded-[22px]", videoClassName)}
         src={resolvedUrl}
         title={alt}
       />
@@ -394,6 +396,7 @@ const ProfessionalReplyPreview = ({
           alt={reply.title ?? "Mídia da resposta profissional"}
           mediaType={reply.media_type}
           mediaUrl={reply.media_url}
+          videoClassName={profilePublicationMode ? "md:mx-0 md:max-w-[320px]" : undefined}
         />
       </div>
       {reply.author.whatsapp_url && !profilePublicationMode ? (
@@ -442,7 +445,9 @@ export const CommunityPostCard = ({
   const highlightedProfessionalReply = primaryReply ? null : post.highlighted_professional_reply;
   const isReplyContribution = contributionType === "reply";
   const communityContextLabel = isReplyContribution ? "Respondido em" : "Postado em";
-  const CommunityContextIcon = isReplyContribution ? MessageCircle : FileText;
+  const CommunityContextIcon = isReplyContribution ? Reply : FileText;
+  const shouldCompactProfileReplyMedia =
+    profilePublicationMode && isReplyContribution && Boolean(primaryReply);
   const isPsychologistPost = displayAuthor.role === "psicologo";
   const isAnonymousPatient = !primaryReply && !isPsychologistPost && post.anonymous;
   const psychologistProfileHref = isPsychologistPost
@@ -537,7 +542,10 @@ export const CommunityPostCard = ({
           <CommunityContextIcon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           <span className="shrink-0">{communityContextLabel}</span>
           <Link
-            className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-black text-foreground underline-offset-4 hover:text-primary hover:underline"
+            className={cn(
+              "block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-black underline-offset-4 hover:text-primary hover:underline",
+              profilePublicationMode ? "text-[#64748B]" : "text-foreground",
+            )}
             href={`/app/community/${post.community.slug}`}
           >
             {post.community.name}
@@ -639,6 +647,7 @@ export const CommunityPostCard = ({
           alt={displayTitle ?? "Mídia da publicação"}
           mediaType={displayMediaType}
           mediaUrl={displayMediaUrl}
+          videoClassName={shouldCompactProfileReplyMedia ? "md:mx-0 md:max-w-[320px]" : undefined}
         />
         <ProfessionalReplyPreview
           profilePublicationMode={profilePublicationMode}
