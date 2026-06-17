@@ -47,7 +47,17 @@ export const showSchema: IValidatorRequest = {
 
 export const repliesSchema: IValidatorRequest = {
   params: idParams,
-  query: paginationQuery,
+  query: [
+    ...paginationQuery,
+    {
+      key: "focusReplyId",
+      coerse: "string",
+      method: "string",
+      min: 1,
+      max: 120,
+      optional: true,
+    },
+  ],
 };
 
 export const listSchema: IValidatorRequest = {

@@ -604,6 +604,43 @@ const findPublishedReply = (postId: string, replyId: string) => {
   });
 };
 
+const findRootReplyId = async (postId: string, replyId?: string | null) => {
+  const normalizedReplyId = replyId?.trim();
+  if (!normalizedReplyId) return null;
+
+  const visited = new Set<string>();
+  let current = await prisma.post_reply.findFirst({
+    where: {
+      id: normalizedReplyId,
+      post_id: postId,
+      deleted: false,
+    },
+    select: {
+      id: true,
+      parent_reply_id: true,
+    },
+  });
+
+  while (current?.parent_reply_id) {
+    if (visited.has(current.id)) return null;
+
+    visited.add(current.id);
+    current = await prisma.post_reply.findFirst({
+      where: {
+        id: current.parent_reply_id,
+        post_id: postId,
+        deleted: false,
+      },
+      select: {
+        id: true,
+        parent_reply_id: true,
+      },
+    });
+  }
+
+  return current?.id ?? null;
+};
+
 const normalizeReplyMediaType = (value?: string | null): "image" | "video" | null => {
   if (value === "image" || value === "video") return value;
 
@@ -1062,9 +1099,17 @@ export class PostRepository implements IPostRepository {
       prisma.post_reply.count({ where }),
     ]);
     const sortedItems = await sortRepliesForDisplay(post.community_id, topLevelItems);
+    const focusRootReplyId = await findRootReplyId(post.id, data.q.focusReplyId);
+    const focusRootIndex = focusRootReplyId
+      ? sortedItems.findIndex((reply) => reply.id === focusRootReplyId)
+      : -1;
+    const effectivePage =
+      focusRootIndex >= 0 ? Math.floor(focusRootIndex / pagination.limit) + 1 : pagination.page;
+    const effectiveSkip =
+      focusRootIndex >= 0 ? (effectivePage - 1) * pagination.limit : pagination.skip;
     const paginatedTopLevelItems = sortedItems.slice(
-      pagination.skip,
-      pagination.skip + pagination.limit,
+      effectiveSkip,
+      effectiveSkip + pagination.limit,
     );
     const descendants = await loadReplyDescendants(
       post.id,
@@ -1122,7 +1167,7 @@ export class PostRepository implements IPostRepository {
 
     return {
       data: items.map((item) => toReplyResponse(item, voteMap, savedReplyIds)),
-      page: pagination.page,
+      page: effectivePage,
       pages: Math.ceil(count / pagination.limit),
       count,
     };

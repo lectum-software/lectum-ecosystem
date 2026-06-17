@@ -89,6 +89,7 @@ export type PostDetailResponse = {
 };
 
 export type PostRepliesQuery = {
+  focusReplyId?: string;
   page?: number;
   limit?: number;
 };

@@ -80,3 +80,33 @@ Nao houve alteracao de schema Prisma nem nova dependencia.
   criar status substituto.
 - A mudanca e apenas de apresentacao: nenhum endpoint, schema Prisma ou regra de ordenacao foi
   alterado, e o status permanece disponivel no contrato backend.
+
+## Complemento 2026-06-17: Deep link para comentarios do usuario
+
+### Contexto
+
+Na aba "Comentarios" de `/app/posts/mine`, o paciente precisa voltar diretamente para a conversa em
+que participou. Comentarios diretos no post tambem nao possuíam contexto textual suficiente quando
+nao havia `parent_reply`.
+
+### Decisao
+
+- Adotar o formato de deep link
+  `/app/community/:slug/post/:postId?focusReplyId=:replyId#reply-:replyId` para comentarios listados
+  em "Meus posts e comentarios".
+- Estender `GET /api/private/posts/:id/replies` com o query param opcional `focusReplyId`, sem novo
+  endpoint, para resolver o comentario raiz da participacao e retornar a pagina correta da arvore.
+- Manter a arvore e a ordenacao existentes; o `focusReplyId` altera somente a pagina inicial
+  retornada quando necessario.
+- Aplicar scroll suave e destaque temporario no frontend por `id="reply-:replyId"`, sem persistir
+  estado adicional e sem criar modelo novo.
+- Exibir o titulo real de `community_post` no card quando o comentario for direto no post; respostas
+  continuam usando `post_reply.parent_reply.content`.
+
+### Consequencias
+
+- A navegacao de acompanhamento leva o usuario ao post original e posiciona a tela no comentario
+  especifico, mesmo quando o comentario nao esta na primeira pagina de raizes da discussao.
+- Comentarios diretos passam a ter contexto claro por titulo de post, enquanto respostas preservam o
+  contexto do comentario pai.
+- Nao houve alteracao de schema Prisma nem dependencia nova.

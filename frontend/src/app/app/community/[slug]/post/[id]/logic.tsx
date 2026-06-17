@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
   type ChangeEvent,
   type MouseEvent,
@@ -110,6 +110,10 @@ const DETAIL_INLINE_TEXT_LESS_LABEL = "ver menos";
 const COMMENT_GUIDANCE_MESSAGE = "Comente com respeito e empatia, mesmo quando discordar.";
 const POST_DETAIL_MOBILE_QUERY = "(max-width: 639px)";
 const POST_REPLY_CANCEL_DRAG_THRESHOLD = 56;
+const FOCUSED_REPLY_HIGHLIGHT_CLASSES = [
+  "bg-primary-soft/80",
+  "shadow-[0_0_0_2px_rgb(48_140_232_/_22%),0_14px_34px_rgb(48_140_232_/_12%)]",
+] as const;
 
 const replyMediaPermissionLabel =
   "Mídia disponível apenas para psicólogos verificados com Plano Profissional ativo.";
@@ -1086,7 +1090,7 @@ const ReplyCard = ({
 
   return (
     <article
-      className="relative py-0.5 text-[#182033] dark:text-foreground"
+      className="relative rounded-[20px] py-0.5 text-[#182033] transition-[background-color,box-shadow] duration-500 dark:text-foreground"
       id={`reply-${reply.id}`}
     >
       <div
@@ -1941,12 +1945,15 @@ const RepliesList = ({
 
 export const PostDetailLogic = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const params = useParams<{ id: string }>();
   const postId = typeof params.id === "string" ? params.id : "";
+  const focusReplyIdFromUrl = searchParams.get("focusReplyId")?.trim() || null;
   const isMobile = useIsPostDetailMobile();
   const currentUserId = useAppSelector((state) => state.user?.id ?? null);
   const conversion = useProgressiveConversion();
   const [page, setPage] = useState(1);
+  const [activeFocusReplyId, setActiveFocusReplyId] = useState<string | null>(focusReplyIdFromUrl);
   const [mobileReplyTarget, setMobileReplyTarget] = useState<ReplyTarget>(null);
   const [desktopReplyTargets, setDesktopReplyTargets] = useState<ReplyTargetMap>({});
   const [replyError, setReplyError] = useState<string | null>(null);
@@ -1959,7 +1966,7 @@ export const PostDetailLogic = () => {
   const postQuery = usePostDetail(postId);
   const repliesQuery = usePostReplies(
     postId,
-    { page, limit: REPLIES_LIMIT },
+    { focusReplyId: activeFocusReplyId ?? undefined, page, limit: REPLIES_LIMIT },
     Boolean(postQuery.data),
   );
   const voteMutation = useVotePost(postId);
@@ -1996,6 +2003,23 @@ export const PostDetailLogic = () => {
   const hasDesktopReplyTargets = !isMobile && Object.keys(desktopReplyTargets).length > 0;
   const activeMobileReplyTarget = isMobile ? mobileReplyTarget : null;
   const visibleInlineReplyTargets = isMobile ? EMPTY_REPLY_TARGETS : desktopReplyTargets;
+  const lastFocusedReplyIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!activeFocusReplyId || repliesQuery.isFetching) return;
+    if (lastFocusedReplyIdRef.current === activeFocusReplyId) return;
+
+    const target = document.getElementById(`reply-${activeFocusReplyId}`);
+    if (!target) return;
+
+    lastFocusedReplyIdRef.current = activeFocusReplyId;
+    target.classList.add(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    window.setTimeout(() => {
+      target.classList.remove(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
+    }, 3600);
+  }, [activeFocusReplyId, repliesQuery.isFetching]);
 
   const sharePost = async () => {
     if (!post || typeof window === "undefined") return;
@@ -2341,9 +2365,12 @@ export const PostDetailLogic = () => {
               ) : null}
 
               <Pagination
-                currentPage={page}
+                currentPage={repliesQuery.data?.page ?? page}
                 disabled={repliesQuery.isFetching}
-                onPageChange={setPage}
+                onPageChange={(nextPage) => {
+                  setActiveFocusReplyId(null);
+                  setPage(nextPage);
+                }}
                 pages={repliesQuery.data?.pages ?? 0}
               />
             </div>

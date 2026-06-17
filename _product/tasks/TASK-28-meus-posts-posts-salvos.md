@@ -190,3 +190,19 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Os cards continuam usando o `CommunityPostCard` real e mantendo apenas o contexto "Postado em [comunidade]" na linha superior.
 - O backend continua retornando `community_post.status` para compatibilidade e regras futuras, mas a tela nao exibe um status visual substituto nos cards de post.
 - Referencias visuais da TASK-28 seguem sendo as imagens locais `_product/proto/Meus Posts - Paciente.jpg`, `_product/proto/Meus Posts - Psicologo.jpg` e `_product/proto/Posts Salvos.jpg`; o Builder/Quick Copy ativo nao esta disponivel como ferramenta callable neste ambiente.
+
+## Ajuste complementar em 2026-06-17 - foco em comentarios do usuario
+
+- Na aba "Comentarios" de `/app/posts/mine`, cada card de comentario passou a navegar para o post
+  original com deep link `?focusReplyId=<replyId>#reply-<replyId>`.
+- Comentarios diretos no post agora exibem o bloco de contexto "Post original" com o titulo real do
+  post; respostas a comentarios continuam exibindo o trecho do comentario pai como contexto.
+- O detalhe do post passou a aceitar `focusReplyId` ao carregar a arvore de comentarios, buscando a
+  pagina que contem o comentario raiz daquela participacao e aplicando scroll automatico com
+  destaque temporario no comentario alvo.
+- A implementacao usa dados reais de `post_reply` e `community_post`, sem mock, sem novo package e
+  sem alteracao de schema Prisma.
+- Validacoes complementares executadas: `pnpm --dir backend check`, `pnpm --dir backend build`,
+  `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke local mobile 390x844 em Chrome
+  headless validando card direto com titulo do post, link com `focusReplyId` e destaque temporario
+  do comentario no detalhe do post.

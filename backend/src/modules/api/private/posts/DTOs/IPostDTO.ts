@@ -9,6 +9,7 @@ export type PostReplyParams = PostParams & {
 };
 
 export type PostRepliesQuery = {
+  focusReplyId?: string;
   page?: number;
   limit?: number;
 };

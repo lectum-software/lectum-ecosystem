@@ -121,29 +121,47 @@ const ReplyItemCard = ({ item }: { item: UserPostListItem }) => {
   const reply = item.reply;
   if (!reply) return null;
 
+  const replyHref = `/app/community/${item.post.community.slug}/post/${item.post.id}?focusReplyId=${encodeURIComponent(reply.id)}#reply-${reply.id}`;
+  const isDirectPostComment = !reply.parent_reply_id;
+
   return (
-    <article className="grid gap-4 rounded-[24px] border border-border/80 bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
+    <Link
+      aria-label={`Abrir comentÃ¡rio em ${item.post.title}`}
+      className="grid cursor-pointer gap-4 rounded-[24px] border border-border/80 bg-surface p-4 text-inherit no-underline shadow-[var(--lectum-shadow-soft)] transition hover:border-primary/18 hover:bg-primary-soft/20 hover:text-inherit hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+      href={replyHref}
+    >
       <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-muted">
         <MessageCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         <span className="shrink-0">Comentado em</span>
-        <Link
-          className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-black text-foreground underline-offset-4 hover:text-primary hover:underline"
-          href={`/app/community/${item.post.community.slug}/post/${item.post.id}`}
-        >
+        <span className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-black text-foreground">
           {item.post.community.name}
-        </Link>
+        </span>
         <span className="ml-auto shrink-0">{formatRelativeTime(reply.created_at)}</span>
       </div>
 
-      {reply.parent_content ? (
+      {reply.parent_content || isDirectPostComment ? (
         <blockquote className="relative overflow-hidden rounded-[20px] border border-primary/10 bg-[linear-gradient(135deg,rgb(239_246_255_/_78%),rgb(248_250_252_/_92%))] px-4 py-3.5 pl-5 shadow-[inset_0_1px_0_rgb(255_255_255_/_70%)]">
           <span
             className="absolute top-3 bottom-3 left-2 w-0.5 rounded-full bg-primary/45"
             aria-hidden="true"
           />
-          <p className="line-clamp-2 text-xs font-medium leading-5 text-muted">
-            &ldquo;{reply.parent_content}&rdquo;
-          </p>
+          {reply.parent_content ? (
+            <p className="line-clamp-2 text-xs font-medium leading-5 text-muted">
+              &ldquo;{reply.parent_content}&rdquo;
+            </p>
+          ) : (
+            <div className="flex min-w-0 items-start gap-2">
+              <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
+              <div className="grid min-w-0 gap-0.5">
+                <span className="text-[10px] font-black tracking-[0.1em] text-primary/75 uppercase">
+                  Post original
+                </span>
+                <p className="line-clamp-2 text-xs font-black leading-5 text-foreground">
+                  {item.post.title}
+                </p>
+              </div>
+            </div>
+          )}
         </blockquote>
       ) : null}
 
@@ -164,7 +182,7 @@ const ReplyItemCard = ({ item }: { item: UserPostListItem }) => {
           </span>
         ) : null}
       </div>
-    </article>
+    </Link>
   );
 };
 
