@@ -96,6 +96,12 @@ const PROFILE_SUBTLE_SURFACE =
 const PROFILE_ABOUT_MAX_LINES = 3;
 const PROFILE_ABOUT_MORE_LABEL = "... ver mais";
 const PROFILE_ABOUT_LESS_LABEL = "ver menos";
+const PSYCHOLOGIST_DEFAULT_COVER_BACKGROUND = [
+  "radial-gradient(circle at 18% 18%, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.38) 24%, rgba(255,255,255,0) 48%)",
+  "radial-gradient(circle at 82% 20%, rgba(96,165,250,0.34) 0%, rgba(96,165,250,0.08) 28%, rgba(96,165,250,0) 46%)",
+  "radial-gradient(circle at 58% 104%, rgba(14,165,233,0.28) 0%, rgba(14,165,233,0.08) 34%, rgba(14,165,233,0) 58%)",
+  "linear-gradient(135deg, #F5FBFF 0%, #DDEFFF 44%, #ABD7FF 100%)",
+].join(", ");
 
 const modalityLabel: Record<string, string> = {
   online: "Online",
@@ -546,9 +552,24 @@ const ProfileHeroMedia = ({ profile }: { profile: DirectoryPsychologistProfile }
 
   if (!coverImageSrc || coverImageFailed) {
     return (
-      <div className="relative h-[132px] overflow-hidden bg-[#1F5FAA]">
-        <div className="absolute inset-0 bg-[linear-gradient(135deg,#2F80D9_0%,#235FA9_52%,#173F72_100%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.10),transparent_38%,rgba(15,23,42,0.10))]" />
+      <div
+        className="relative h-[132px] overflow-hidden"
+        data-profile-default-cover="psychologist"
+        style={{ background: PSYCHOLOGIST_DEFAULT_COVER_BACKGROUND }}
+      >
+        <span
+          aria-hidden="true"
+          className="-top-16 -left-10 absolute h-36 w-36 rounded-full bg-white/55 blur-3xl"
+        />
+        <span
+          aria-hidden="true"
+          className="-right-12 absolute top-4 h-32 w-32 rounded-full bg-primary/18 blur-3xl"
+        />
+        <span
+          aria-hidden="true"
+          className="absolute right-1/4 -bottom-16 h-28 w-48 rounded-full bg-primary/14 blur-3xl"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.14)_0%,rgba(15,23,42,0.02)_42%,rgba(255,255,255,0.12)_100%)]" />
       </div>
     );
   }

@@ -600,3 +600,21 @@ Validacoes executadas:
 - Nao houve alteracao de backend, banco, Prisma, contratos, endpoints, packages, ordenacao, votos, salvos, compartilhamento ou WhatsApp.
 - ADR atualizado: `adrs/0110-publicacoes-perfil-mobile-whatsapp-unico.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check --write -- 'src/components/community/community-post-card.tsx'`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado em `/app/psychologist/demo-psychologist-camila-rocha?tab=publicacoes`, confirmando no desktop video com `delta=0` em relacao ao centro do card e no mobile largura/alinhamento preservados.
+
+## Registro de ajuste complementar em 2026-06-17 - capa padrão profissional diferenciada
+
+- Pedido do usuário: diferenciar visualmente o header/capa padrão do perfil do psicólogo das páginas de comunidade, reforçando identidade própria para perfis profissionais.
+- Fonte visual auditável: `_product/proto/Perfil Profissional - Sobre.jpg` e comparação com `_product/proto/Dentro da Comunidade.jpg`; Builder/Quick Copy não está exposto como ferramenta direta neste ambiente, então a validação visual usou imagens locais e browser local.
+- A capa padrão de `/app/psychologist/[id]` quando `cover_image_url` está ausente ou falha passou do bloco azul escuro semelhante ao padrão de comunidade para um degradê exclusivo de psicólogos: azul muito claro para azul médio suave, com radiais orgânicos, ponto de luz branco e glow sutil.
+- A alteração foi aplicada apenas ao fallback padrão; capas personalizadas futuras via `cover_image_url` continuam usando `next/image` e permanecem compatíveis com imagem/vídeo/customizações futuras sem alterar contrato ou persistência.
+- A nova capa recebeu `data-profile-default-cover="psychologist"` para validação visual e não reutiliza vídeo, thumbnail, avatar ou assets temporários.
+- Não houve alteração de backend, banco, Prisma, contratos, endpoints, packages, WhatsApp, publicações, avaliações ou navegação.
+- ADR atualizado: `adrs/0060-capa-independente-perfil-psicologo.md`.
+
+Validações executadas:
+
+- `pnpm --dir frontend exec biome check --write -- 'src/app/app/psychologist/[id]/logic.tsx'`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome headless/CDP em `http://localhost:3002/app/psychologist/demo-psychologist-camila-rocha` confirmou fallback da capa sem imagem customizada, com camadas `radial-gradient` e `linear-gradient`, no mobile 390px (`coverRect=390x132`) e desktop 1440px (`coverRect=760x132`).

@@ -123,3 +123,19 @@ Validações executadas:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessão.
+
+## Ajuste complementar em 2026-06-17 - identidade visual da capa padrão profissional
+
+A capa independente continua sendo a mídia oficial do topo do perfil quando `cover_image_url` existe. Para perfis sem capa ou com erro de carregamento, a decisão foi substituir o fallback azul escuro por uma capa padrão exclusiva de psicólogos, com degradê azul claro, radiais orgânicos e glow sutil.
+
+Essa decisão diferencia imediatamente o perfil profissional das comunidades, que usam uma linguagem de capa mais forte e comunitária. O fallback do psicólogo passa a comunicar confiança, acolhimento e credibilidade, sem concorrer com avatar, nome ou informações profissionais.
+
+A mudança permanece compatível com customizações futuras: qualquer `cover_image_url` persistida continua prevalecendo sobre o fallback e é renderizada com `next/image`; vídeos de capa ou novas mídias poderão substituir essa superfície sem reutilizar o vídeo de apresentação.
+
+Validações executadas:
+
+- `pnpm --dir frontend exec biome check --write -- 'src/app/app/psychologist/[id]/logic.tsx'`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome headless/CDP na rota pública do perfil demo confirmou, em mobile 390px e desktop 1440px, a presença do fallback `data-profile-default-cover="psychologist"`, sem imagem customizada e com camadas de `radial-gradient` + `linear-gradient`.
