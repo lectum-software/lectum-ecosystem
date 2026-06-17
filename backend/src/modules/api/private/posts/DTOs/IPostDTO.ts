@@ -117,6 +117,8 @@ export type PostListReplyDTO = {
   title: string | null;
   content: string;
   upvotes_count: number;
+  replies_received_count: number;
+  has_verified_professional_reply: boolean;
   created_at: Date;
   parent_reply_id: string | null;
   parent_content: string | null;

@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, FileText, MessageCircle, PenLine, Reply } from "lucide-react";
+import { BadgeCheck, ChevronLeft, ChevronRight, FileText, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useMyPosts } from "@/api/callers/posts";
@@ -19,9 +19,8 @@ import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 const PAGE_LIMIT = 10;
 
 const FILTERS: Array<{ label: string; value: UserPostsType }> = [
-  { label: "Todos", value: "all" },
   { label: "Posts", value: "posts" },
-  { label: "Respostas", value: "replies" },
+  { label: "Comentários", value: "replies" },
 ];
 
 type ApiErrorData = {
@@ -119,10 +118,10 @@ const FilterTabs = ({
   value: UserPostsType;
 }) => (
   <nav
-    aria-label="Filtrar meus posts"
-    className="overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    aria-label="Filtrar meus posts e comentários"
+    className="overflow-x-auto pb-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
   >
-    <div className="flex min-w-max gap-2">
+    <div className="inline-flex min-w-max rounded-full border border-border/80 bg-surface/80 p-1.5 shadow-[0_10px_28px_rgb(15_23_42_/_6%)] backdrop-blur">
       {FILTERS.map((item) => {
         const active = item.value === value;
 
@@ -130,10 +129,10 @@ const FilterTabs = ({
           <button
             aria-pressed={active}
             className={cn(
-              "min-h-9 rounded-full border px-4 text-sm font-extrabold transition disabled:opacity-70",
+              "min-h-10 rounded-full px-5 text-sm font-extrabold tracking-[-0.01em] transition disabled:opacity-70",
               active
-                ? "border-primary/20 bg-primary-soft text-primary"
-                : "border-border bg-surface text-muted hover:border-primary/40 hover:text-foreground",
+                ? "bg-primary text-white shadow-[0_10px_24px_rgb(59_130_246_/_20%)]"
+                : "text-muted hover:bg-surface-muted hover:text-foreground",
             )}
             disabled={disabled}
             key={item.value}
@@ -148,21 +147,21 @@ const FilterTabs = ({
   </nav>
 );
 
-const ReplyItemCard = ({
-  item,
-  onShare,
-}: {
-  item: UserPostListItem;
-  onShare: (post: PostListPost) => void;
-}) => {
+const replyCountLabel = (count: number) => {
+  if (count === 1) return "1 resposta recebida";
+
+  return `${count.toLocaleString("pt-BR")} respostas recebidas`;
+};
+
+const ReplyItemCard = ({ item }: { item: UserPostListItem }) => {
   const reply = item.reply;
   if (!reply) return null;
 
   return (
-    <article className="grid gap-4 rounded-[22px] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
+    <article className="grid gap-4 rounded-[24px] border border-border/80 bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
       <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-muted">
-        <Reply className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-        <span className="shrink-0">Respondido em</span>
+        <MessageCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        <span className="shrink-0">Comentado em</span>
         <Link
           className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-black text-foreground underline-offset-4 hover:text-primary hover:underline"
           href={`/app/community/${item.post.community.slug}/post/${item.post.id}`}
@@ -173,8 +172,14 @@ const ReplyItemCard = ({
       </div>
 
       {reply.parent_content ? (
-        <blockquote className="rounded-2xl border-primary border-l-4 bg-surface-muted px-4 py-3 text-xs leading-5 text-muted">
-          “{reply.parent_content}”
+        <blockquote className="relative overflow-hidden rounded-[20px] border border-primary/10 bg-[linear-gradient(135deg,rgb(239_246_255_/_78%),rgb(248_250_252_/_92%))] px-4 py-3.5 pl-5 shadow-[inset_0_1px_0_rgb(255_255_255_/_70%)]">
+          <span
+            className="absolute top-3 bottom-3 left-2 w-0.5 rounded-full bg-primary/45"
+            aria-hidden="true"
+          />
+          <p className="line-clamp-2 text-xs font-medium leading-5 text-muted">
+            &ldquo;{reply.parent_content}&rdquo;
+          </p>
         </blockquote>
       ) : null}
 
@@ -183,32 +188,17 @@ const ReplyItemCard = ({
         <p className="whitespace-pre-line text-sm leading-6 text-foreground">{reply.content}</p>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-2 border-border border-t pt-3">
-        <div className="flex items-center gap-2 text-xs font-bold text-muted">
-          <span className="inline-flex h-9 items-center gap-1.5 rounded-full px-2">
-            <PenLine className="h-4 w-4" aria-hidden="true" />
-            Resposta
+      <div className="flex flex-wrap items-center gap-2 border-border/80 border-t pt-3 text-xs font-extrabold text-muted">
+        <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full bg-surface-muted px-3">
+          <MessageCircle className="h-3.5 w-3.5" aria-hidden="true" />
+          {replyCountLabel(reply.replies_received_count)}
+        </span>
+        {reply.has_verified_professional_reply ? (
+          <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-primary/10 bg-primary-soft/70 px-3 text-primary">
+            Respondido por psicólogo
+            <BadgeCheck className="h-3.5 w-3.5 fill-primary text-white" aria-hidden="true" />
           </span>
-          <span className="inline-flex h-9 items-center gap-1.5 rounded-full px-2">
-            <MessageCircle className="h-4 w-4" aria-hidden="true" />
-            {reply.upvotes_count.toLocaleString("pt-BR")} upvotes
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button asChild className="h-9 rounded-full px-3 text-xs" variant="outline">
-            <Link href={`/app/community/${item.post.community.slug}/post/${item.post.id}`}>
-              Abrir post
-            </Link>
-          </Button>
-          <Button
-            className="h-9 rounded-full px-3 text-xs"
-            onClick={() => onShare(item.post)}
-            type="button"
-            variant="ghost"
-          >
-            Compartilhar
-          </Button>
-        </div>
+        ) : null}
       </div>
     </article>
   );
@@ -259,7 +249,7 @@ const Pagination = ({
 
 export const MyPostsLogic = () => {
   const sessionUser = useAppSelector((state) => state.user);
-  const [type, setType] = useState<UserPostsType>("all");
+  const [type, setType] = useState<UserPostsType>("posts");
   const [page, setPage] = useState(1);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const query = useMemo(() => ({ page, limit: PAGE_LIMIT, type }), [page, type]);
@@ -302,7 +292,7 @@ export const MyPostsLogic = () => {
           backHref="/app/profile"
           backLabel="Voltar para perfil"
           className="mb-4"
-          title="Meus Posts e Respostas"
+          title="Meus posts e comentários"
         />
 
         <FilterTabs disabled={postsQuery.isFetching} onChange={handleFilterChange} value={type} />
@@ -339,9 +329,17 @@ export const MyPostsLogic = () => {
                 </Button>
               }
               className="border-solid px-6 py-12 shadow-[var(--lectum-shadow-soft)]"
-              description="Quando você publicar posts ou respostas nas comunidades, eles aparecerão aqui."
+              description={
+                type === "posts"
+                  ? "Quando você publicar nas comunidades, seus posts aparecerão aqui."
+                  : "Quando você comentar em conversas da comunidade, seus comentários aparecerão aqui."
+              }
               icon={FileText}
-              title="Nenhuma publicação sua por enquanto"
+              title={
+                type === "posts"
+                  ? "Nenhum post seu por enquanto"
+                  : "Nenhum comentário seu por enquanto"
+              }
             />
           ) : null}
 
@@ -349,7 +347,7 @@ export const MyPostsLogic = () => {
             <div className="grid gap-4">
               {items.map((item) =>
                 item.type === "reply" ? (
-                  <ReplyItemCard item={item} key={item.id} onShare={sharePost} />
+                  <ReplyItemCard item={item} key={item.id} />
                 ) : (
                   <CommunityPostCard
                     key={item.id}

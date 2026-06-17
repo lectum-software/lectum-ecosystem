@@ -175,3 +175,11 @@ Regras anti-recriação específicas:
 ## Notas para executor
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
+
+## Ajuste complementar em 2026-06-16 - acompanhamento de comentarios
+
+- A rota `/app/posts/mine` foi renomeada visualmente para "Meus posts e comentarios" no perfil do paciente e no titulo da tela.
+- A tela passou a iniciar em "Posts" e removeu o filtro "Todos", mantendo apenas "Posts" e "Comentarios" com controles premium.
+- Cards de comentarios passaram a usar "Comentado em", removendo rotulos/acoes de engajamento do card e exibindo foco de acompanhamento: respostas recebidas e indicador "Respondido por psicologo" apenas quando ha resposta direta de profissional verificado.
+- O bloco de conteudo original citado foi refinado visualmente com fundo, borda, radius, padding e faixa lateral mais discreta.
+- Backend de `GET /api/private/posts/mine?type=replies` passou a retornar `replies_received_count` e `has_verified_professional_reply` derivados de dados reais, sem mock e sem alteracao de schema.

@@ -39,7 +39,7 @@ No frontend:
   `frontend/src/api/cache/keys.ts`;
 - componente reutilizavel `CommunityPostCard` para manter a apresentacao de posts consistente com
   o feed;
-- acesso pelas opcoes "Meus posts e respostas" e "Salvos" no menu de Comunidade da tela de Perfil;
+- acesso pelas opcoes "Meus posts e comentarios" e "Salvos" no menu de Comunidade da tela de Perfil;
 - estados de loading, erro, vazio, sucesso e feedback de remocao dos salvos em PT-BR.
 
 Nao houve alteracao de schema Prisma nem nova dependencia.
@@ -63,3 +63,10 @@ Nao houve alteracao de schema Prisma nem nova dependencia.
 - Browser local Chrome headless em 390x844 para `/app/posts/mine` e `/app/posts/saved`: sem sessao
   persistida, ambas redirecionaram para login como esperado para rotas privadas, sem overflow
   horizontal (`documentElement.scrollWidth=390`, `body.scrollWidth=390`).
+
+## Complemento 2026-06-16
+
+- A tela `/app/posts/mine` passou a ser a area de acompanhamento "Meus posts e comentarios" para pacientes, mantendo o endpoint existente e sem criar rota paralela.
+- O filtro visual "Todos" foi removido desta tela; "Posts" passa a ser o estado inicial padrao, e "Comentarios" consulta apenas `type=replies`. O contrato legado `type=all` permanece no backend para compatibilidade com outras listas.
+- Comentarios do usuario agora retornam metadados derivados `replies_received_count` e `has_verified_professional_reply`, calculados por dados reais de `post_reply`, para permitir acompanhamento de conversa sem expor upvotes, compartilhar ou CTA de abrir post no card.
+- O indicador profissional so aparece quando ha resposta direta ativa de psicologo com `cfp_verified_at`; nao ha estado negativo quando a conversa ainda nao recebeu resposta profissional.

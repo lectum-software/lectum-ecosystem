@@ -722,6 +722,35 @@ export class PostRepository implements IPostRepository {
               upvotes_count: true,
               createdAt: true,
               parent_reply_id: true,
+              _count: {
+                select: {
+                  replies: {
+                    where: {
+                      deleted: false,
+                    },
+                  },
+                },
+              },
+              replies: {
+                where: {
+                  deleted: false,
+                  author: {
+                    role: "psicologo",
+                    psychologist_profile: {
+                      is: {
+                        deleted: false,
+                        cfp_verified_at: {
+                          not: null,
+                        },
+                      },
+                    },
+                  },
+                },
+                select: {
+                  id: true,
+                },
+                take: 1,
+              },
               parent_reply: {
                 select: {
                   content: true,
@@ -773,6 +802,8 @@ export class PostRepository implements IPostRepository {
         title: reply.title,
         content: reply.content,
         upvotes_count: reply.upvotes_count,
+        replies_received_count: reply._count.replies,
+        has_verified_professional_reply: reply.replies.length > 0,
         created_at: reply.createdAt,
         parent_reply_id: reply.parent_reply_id,
         parent_content: reply.parent_reply?.content ?? null,
@@ -861,6 +892,35 @@ export class PostRepository implements IPostRepository {
                   upvotes_count: true,
                   createdAt: true,
                   parent_reply_id: true,
+                  _count: {
+                    select: {
+                      replies: {
+                        where: {
+                          deleted: false,
+                        },
+                      },
+                    },
+                  },
+                  replies: {
+                    where: {
+                      deleted: false,
+                      author: {
+                        role: "psicologo",
+                        psychologist_profile: {
+                          is: {
+                            deleted: false,
+                            cfp_verified_at: {
+                              not: null,
+                            },
+                          },
+                        },
+                      },
+                    },
+                    select: {
+                      id: true,
+                    },
+                    take: 1,
+                  },
                   parent_reply: {
                     select: {
                       content: true,
@@ -899,6 +959,8 @@ export class PostRepository implements IPostRepository {
         title: item.reply.title,
         content: item.reply.content,
         upvotes_count: item.reply.upvotes_count,
+        replies_received_count: item.reply._count.replies,
+        has_verified_professional_reply: item.reply.replies.length > 0,
         created_at: item.reply.createdAt,
         parent_reply_id: item.reply.parent_reply_id,
         parent_content: item.reply.parent_reply?.content ?? null,

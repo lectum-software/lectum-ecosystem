@@ -383,6 +383,8 @@ Contratos da tela interna do post (TASK-26):
 - `POST /api/private/posts/:id/save` e `DELETE /api/private/posts/:id/save` persistem salvos via `post_save` e mantêm `saves_count`.
 - `POST /api/private/posts/:id/report` registra denúncia reativa com motivo e descrição opcional, sem remoção automática do post.
 
+Acompanhamento de comentarios do paciente em `GET /api/private/posts/mine?type=replies`: cada item de comentario retorna metadados derivados `replies_received_count` e `has_verified_professional_reply`, calculados a partir de respostas ativas diretas ao comentario. Esses campos sustentam a tela "Meus posts e comentarios" sem expor metricas de engajamento no card de comentarios.
+
 `post_vote` (PRD §9 regras: 1 voto/usuário, alteração permitida, downvote não público):
 
 | Campo | Tipo | Notas |
