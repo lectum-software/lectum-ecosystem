@@ -172,3 +172,20 @@ Validacao complementar:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser local autenticado validando fallback em acesso direto e retorno por historico nos fluxos Comunidades -> Comunidade e Post -> Comunidade -> Voltar.
+
+
+## Atualizacao 2026-06-17 - voltar por historico dentro dos posts
+
+- A seta de voltar do detalhe de post tambem passa a seguir o padrao de historico real do app, usando `router.back()` quando a navegacao anterior e confiavel.
+- O detalhe do post nao usa mais fallback generico para comunidade/feed; quando nao ha historico valido, o retorno cai para a comunidade real do post (`/app/community/{community.slug}`), preservando o contexto canonico do conteudo.
+- A tela isolada de thread/respostas usa a mesma decisao: historico real primeiro, fallback para a comunidade do post e, enquanto o post ainda carrega, fallback para o `slug` presente na propria rota.
+- A mudanca preserva os fluxos Feed -> Post, Comunidade -> Post, Perfil -> Post, Notificacao -> Post, Salvos -> Post e Meus posts/comentarios -> Post sem criar rotas fixas de retorno por origem.
+- Nao ha mudanca em backend, contratos, votos, replies, ordenacao, filtros ou persistencia; e uma regra de navegacao frontend baseada no helper compartilhado `navigateBackWithFallback`.
+
+Validacao complementar:
+
+- `pnpm --dir frontend exec biome check --write -- 'src/app/app/community/[slug]/post/[id]/logic.tsx'`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome/CDP autenticado validando: acesso direto ao post com fallback para a comunidade, Comunidade -> Post -> Voltar -> Comunidade, Salvos -> Post -> Voltar -> Salvos, Meus posts/comentarios -> Post -> Voltar -> Meus posts/comentarios e acesso direto a thread com fallback para a comunidade.

@@ -2091,7 +2091,9 @@ export const PostDetailLogic = () => {
           <>
             <article className="overflow-hidden bg-white shadow-[0_10px_26px_rgba(15,23,42,0.04)] dark:bg-surface sm:mt-4 sm:rounded-[26px] sm:border sm:border-border">
               <PostHeader
-                onBack={() => navigateBackWithFallback(router)}
+                onBack={() =>
+                  navigateBackWithFallback(router, `/app/community/${post.community.slug}`)
+                }
                 onReport={() => {
                   setReportError(null);
                   setReportTarget({ type: "post" });
@@ -2233,6 +2235,7 @@ export const PostReplyThreadLogic = () => {
   const params = useParams<{ id: string; replyId: string; slug: string }>();
   const postId = typeof params.id === "string" ? params.id : "";
   const replyId = typeof params.replyId === "string" ? params.replyId : "";
+  const communitySlug = typeof params.slug === "string" ? params.slug : "";
   const isMobile = useIsPostDetailMobile();
   const currentUserId = useAppSelector((state) => state.user?.id ?? null);
   const [mobileReplyTarget, setMobileReplyTarget] = useState<ReplyTarget>(null);
@@ -2267,6 +2270,11 @@ export const PostReplyThreadLogic = () => {
   });
   const post = postQuery.data?.post;
   const rootReply = threadQuery.data?.reply;
+  const threadBackFallbackHref = post
+    ? `/app/community/${post.community.slug}`
+    : communitySlug
+      ? `/app/community/${communitySlug}`
+      : DEFAULT_COMMUNITY_FEED_HREF;
   const postError = postQuery.isError ? resolvePostError(postQuery.error) : null;
   const threadError = threadQuery.isError ? resolvePostError(threadQuery.error) : null;
   const activeMobileReplyTarget = isMobile ? mobileReplyTarget : null;
@@ -2364,7 +2372,7 @@ export const PostReplyThreadLogic = () => {
             <Button
               aria-label="Voltar"
               className="h-10 w-10 rounded-full border border-[#DDE7F2] bg-white/70 p-0 text-[#475569] shadow-[0_6px_16px_rgba(15,23,42,0.045)] transition hover:border-primary/30 hover:bg-white hover:text-[#182033] dark:border-border dark:bg-surface-muted/60 dark:text-muted dark:hover:text-foreground"
-              onClick={() => navigateBackWithFallback(router)}
+              onClick={() => navigateBackWithFallback(router, threadBackFallbackHref)}
               type="button"
               variant="ghost"
             >

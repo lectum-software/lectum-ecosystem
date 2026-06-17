@@ -392,3 +392,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - pnpm --dir frontend build
   - pnpm check
   - Chrome/CDP autenticado em /app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video e /thread/demo-reply-ansiedade-apresentacao-psi-video confirmando 11/11 e 3/3 replies com salvar/compartilhar, toggle persistido, links com #reply e ausencia de collapse ao clicar nas acoes.
+
+
+## Execucao complementar: voltar por historico dentro dos posts (2026-06-17)
+
+- Pedido do usuario: a seta de voltar dentro de posts deve retornar sempre para a ultima tela visitada, incluindo feed, comunidade, perfil do psicologo, notificacoes, salvos e `Meus posts e comentarios`, sem assumir que a origem foi a comunidade.
+- Fonte visual auditavel: `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao, entao a validacao visual usou browser local.
+- A seta do detalhe `/app/community/[slug]/post/[id]` passou a usar o helper compartilhado `navigateBackWithFallback`, preservando `router.back()` quando existe historico valido do app.
+- O fallback em acesso direto ou sem historico confiavel deixou de ser generico e agora usa a comunidade real do post (`/app/community/${post.community.slug}`).
+- A seta da tela isolada de thread/respostas recebeu a mesma regra: historico real primeiro e fallback para a comunidade do post; antes do post carregar, usa o `slug` da propria rota como fallback seguro.
+- Nao houve alteracao de backend, Prisma, migrations, packages, contratos, votos, comentarios, ordenacao, salvos, compartilhamento ou navegacao manual por links.
+- ADR atualizado: `adrs/0066-pagina-detalhe-comunidade-participacao.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check --write -- 'src/app/app/community/[slug]/post/[id]/logic.tsx'`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado validando acesso direto com fallback para a comunidade, Comunidade -> Post -> Voltar -> Comunidade, Salvos -> Post -> Voltar -> Salvos, Meus posts/comentarios -> Post -> Voltar -> Meus posts/comentarios e thread direta -> fallback para a comunidade.
