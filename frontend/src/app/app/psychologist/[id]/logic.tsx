@@ -67,6 +67,10 @@ const PROFILE_TABS = ["geral", "publicacoes", "avaliacoes"] as const;
 
 type ProfileTab = (typeof PROFILE_TABS)[number];
 
+type ProfileTabNavigationOptions = {
+  scrollToContentTop?: boolean;
+};
+
 type ApiErrorData = {
   error?: string;
   message?: string;
@@ -742,7 +746,7 @@ const ProfileMobileStickyHeader = ({
   profile,
 }: {
   activeTab: ProfileTab;
-  onTabChange: (tab: ProfileTab) => void;
+  onTabChange: (tab: ProfileTab, options?: ProfileTabNavigationOptions) => void;
   profile: DirectoryPsychologistProfile;
 }) => {
   const stickyName = getHonorificName(profile) || profile.name || "Profissional";
@@ -1246,7 +1250,7 @@ const AboutTab = ({
   reviewsPreview,
 }: {
   canInteractPosts: boolean;
-  onTabChange: (tab: ProfileTab) => void;
+  onTabChange: (tab: ProfileTab, options?: ProfileTabNavigationOptions) => void;
   onSharePost: (post: PostListPost) => void;
   postsPreview: {
     isError: boolean;
@@ -1299,7 +1303,7 @@ const AboutTab = ({
       <ReviewsPreviewSection
         isError={reviewsPreview.isError}
         isLoading={reviewsPreview.isLoading}
-        onViewAll={() => onTabChange("avaliacoes")}
+        onViewAll={() => onTabChange("avaliacoes", { scrollToContentTop: true })}
         reviews={reviewsPreview.reviews}
         summary={reviewsPreview.summary}
       />
@@ -1326,7 +1330,7 @@ const AboutTab = ({
         isError={postsPreview.isError}
         isLoading={postsPreview.isLoading}
         onShare={onSharePost}
-        onViewAll={() => onTabChange("publicacoes")}
+        onViewAll={() => onTabChange("publicacoes", { scrollToContentTop: true })}
         posts={postsPreview.posts}
         total={postsPreview.total}
       />
@@ -1626,6 +1630,7 @@ export const PsychologistProfileLogic = () => {
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
   const [shareFeedback, setShareFeedback] = useState(false);
+  const [pendingScrollTab, setPendingScrollTab] = useState<ProfileTab | null>(null);
   const currentUser = useAppSelector((state) => state.user);
   const canFavoritePsychologists = Boolean(currentUser?.id);
   const id = params.id;
@@ -1670,7 +1675,13 @@ export const PsychologistProfileLogic = () => {
     [id, router, searchParamsString],
   );
 
-  const setActiveTab = (tab: ProfileTab) => {
+  const setActiveTab = (tab: ProfileTab, options?: ProfileTabNavigationOptions) => {
+    if (options?.scrollToContentTop) {
+      setPendingScrollTab(tab);
+    } else {
+      setPendingScrollTab(null);
+    }
+
     navigateWithParams((next) => {
       if (tab === "geral") next.delete("tab");
       else next.set("tab", tab);
@@ -1694,6 +1705,36 @@ export const PsychologistProfileLogic = () => {
       else next.delete("reviewsPage");
     });
   };
+
+  useEffect(() => {
+    if (!pendingScrollTab) return;
+    if (activeTab !== pendingScrollTab) return;
+    if (typeof window === "undefined") return;
+
+    const targetIsReady =
+      pendingScrollTab === "publicacoes"
+        ? !posts.isLoading
+        : pendingScrollTab === "avaliacoes"
+          ? !reviews.isLoading
+          : true;
+
+    if (!targetIsReady) return;
+
+    let firstFrame = 0;
+    let secondFrame = 0;
+
+    firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => {
+        scrollProfileContentIntoView();
+        setPendingScrollTab(null);
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      window.cancelAnimationFrame(secondFrame);
+    };
+  }, [activeTab, pendingScrollTab, posts.isLoading, reviews.isLoading]);
 
   const toggleFavorite = () => {
     if (!canFavoritePsychologists) return;

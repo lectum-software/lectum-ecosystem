@@ -571,3 +571,22 @@ Validacoes desta execucao:
 - Chrome headless/CDP mobile 390px em `/app/psychologist/demo-psychologist-camila-rocha`, confirmando bloco de contato dentro do card `Sobre`, apos o video, sem botao de WhatsApp na secao.
 - Chrome headless/CDP mobile 390px na aba `Publicacoes` e na previa da aba `Geral`, confirmando `Respondido em` com icone de resposta, `Postado em` com icone de documento e comunidade em cinza discreto.
 - Chrome headless/CDP desktop 1440px em `?tab=publicacoes`, confirmando video de resposta com largura aproximada de 318px.
+
+## Registro de ajuste complementar em 2026-06-17 - scroll apos Ver todas no perfil
+
+- Pedido do usuario: ao clicar em `Ver todas` nas secoes `Avaliacoes` e `Publicacoes` da aba `Geral`, trocar para a aba completa e posicionar o usuario no inicio do conteudo renderizado da nova aba.
+- A navegacao por query params foi preservada (`?tab=avaliacoes` e `?tab=publicacoes`) com `router.replace(..., { scroll: false })`, evitando alterar a semantica atual de URL ou links diretos.
+- Os botoes `Ver todas` agora sinalizam explicitamente a necessidade de scroll para a aba de destino; navegacoes comuns de aba continuam sem esse efeito adicional.
+- O scroll ocorre somente depois que a aba esperada esta ativa e o primeiro estado de carregamento dos dados da aba terminou, usando dois `requestAnimationFrame` para aguardar a pintura do novo conteudo antes do `scrollTo` suave.
+- O destino do scroll reutiliza `#profile-content`, com offset mobile ja existente, para que o usuario veja imediatamente o cabecalho e o inicio do conteudo da aba aberta, sem voltar manualmente pela pagina.
+- Nao houve alteracao de backend, banco, Prisma, contratos, endpoints, packages, conteudo das abas, paginacao, ordenacao, avaliacoes, publicacoes, favoritos ou WhatsApp.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a referencia auditavel permanece nos prototipos locais de perfil e na validacao em browser local com dados reais.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write -- 'src/app/app/psychologist/[id]/logic.tsx'`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome headless/CDP mobile 390px em `/app/psychologist/demo-psychologist-camila-rocha`: clicar em `Ver todas` de `Avaliacoes` saiu de `scrollY=2606` para `scrollY=335`, URL `?tab=avaliacoes`, delta 0 para `#profile-content`; clicar em `Ver todas` de `Publicacoes` repetiu o mesmo alinhamento em `?tab=publicacoes`.
+- Chrome headless/CDP desktop 1440px na mesma rota: `Avaliacoes` e `Publicacoes` sairam de `scrollY=2190` para `scrollY=380`, delta 0 para `#profile-content`, confirmando comportamento consistente em desktop.

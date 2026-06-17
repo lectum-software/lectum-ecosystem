@@ -94,3 +94,18 @@ Validacao complementar executada nesta execucao:
 - Chrome headless/CDP mobile 390px em `/app/psychologist/demo-psychologist-camila-rocha`, confirmando bloco de contato dentro do card `Sobre`, apos o video, sem botao de WhatsApp na secao.
 - Chrome headless/CDP mobile 390px em `/app/psychologist/demo-psychologist-camila-rocha?tab=publicacoes`, confirmando icone `Reply` em `Respondido em`, icone `FileText` em `Postado em` e comunidade em cinza `rgb(100, 116, 139)`.
 - Chrome headless/CDP desktop 1440px em `?tab=publicacoes`, confirmando video de resposta com largura aproximada de 318px e sem alterar videos de posts originais.
+
+## Atualizacao 2026-06-17 - scroll apos Ver todas nas abas completas
+
+- Os pontos de entrada `Ver todas` da aba `Geral` para `Avaliacoes` e `Publicacoes` passam a disparar uma intencao explicita de scroll para o inicio do conteudo da aba de destino.
+- A decisao foi manter a navegacao por query params e o `scroll: false` do Next.js para preservar links diretos e impedir scroll automatico generico; o scroll controlado acontece no efeito do perfil somente quando a aba de destino ja esta ativa.
+- O efeito aguarda o estado de carregamento inicial da aba e mais dois frames de pintura antes de chamar o helper existente `scrollProfileContentIntoView`, que considera o offset mobile do sticky.
+- Navegacoes comuns de aba, seta de retorno para `Geral`, paginacao e links diretos por URL nao recebem scroll adicional.
+- A alteracao e somente frontend e nao muda contratos, backend, banco, Prisma, ordenacao, publicacoes, avaliacoes, favoritos, WhatsApp ou packages.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome headless/CDP em 390px e 1440px confirmou que `Ver todas` abre `?tab=avaliacoes` e `?tab=publicacoes` e alinha o scroll com `#profile-content` apos a renderizacao da aba.
