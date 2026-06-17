@@ -144,6 +144,7 @@ Regras anti-recriação específicas:
 - [x] ADR criado ou atualizado em `adrs/`.
 - [x] Checks/builds relevantes foram executados sem erros.
 - [x] Commit criado com mensagem convencional.
+- [x] Ajuste fino 2026-06-17: o campo `Gênero` em `/app/profile/edit` usa dropdown customizado premium, sem select nativo visível, com opções `Selecione seu gênero`, `Feminino`, `Masculino`, `Não binário` e `Prefiro não dizer`.
 
 ## Validação mínima
 
@@ -187,3 +188,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - O ajuste reutiliza o menu compartilhado de perfil, portanto vale para pacientes e psicólogos sem duplicar componente.
 - Tamanho, alinhamento, espaçamento, cores e estados de hover/foco do item foram preservados pelo componente `Row` existente.
 - ADR criado: `adrs/0115-iconografia-explorar-comunidades-perfil.md`.
+
+## Ajuste complementar em 2026-06-17 - dropdown customizado de gênero
+
+- A tela `/app/profile/edit` manteve a referência local `_product/proto/Editar Perfil - Paciente.jpg` como norte auditável; Builder/Quick Copy não está exposto como ferramenta direta neste ambiente.
+- O campo `Gênero` passou a usar o modo customizado do `SelectController`, preservando React Hook Form, Zod e a fundação da TASK-02.
+- O dropdown recebeu fundo branco, borda azul-clara, radius refinado, sombra leve, chevron alinhado à direita, opções com padding confortável e item selecionado em azul muito claro.
+- As opções permanecem `Selecione seu gênero`, `Feminino`, `Masculino`, `Não binário` e `Prefiro não dizer`.
+- A validação local via Chrome/CDP em viewport mobile 390px confirmou ausência de `<select>` nativo visível, lista alinhada à largura do campo e sem overflow horizontal.
+- Não houve alteração de backend, Prisma, contratos, persistência ou packages.

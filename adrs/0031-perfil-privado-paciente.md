@@ -45,3 +45,11 @@ Implementar o perfil privado do paciente com:
 ## Pendências
 
 - Provisionar bucket/credenciais Cloudflare R2 públicos definitivos para habilitar upload de avatar de paciente em task futura, sem mockar storage.
+
+## Complemento 2026-06-17 - dropdown customizado de gênero
+
+- O campo `gender` da tela `/app/profile/edit` passa a usar o modo customizado do `SelectController` (`useCustomSelect`) em vez do select nativo visível do navegador.
+- A decisão preserva a fundação de formulários da TASK-02 (`useFormList`, React Hook Form, Zod e controllers compartilhados) e evita criar um componente paralelo específico para gênero.
+- As opções continuam limitadas aos valores persistidos de `patient_profile.gender`: `feminino`, `masculino`, `nao_binario` e `prefiro_nao_dizer`, com opção vazia `Selecione seu gênero`.
+- Não houve mudança de contrato, backend, Prisma, persistência, endpoints ou packages.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP local em mobile 390px confirmando ausência de `<select>` nativo visível, borda azul-clara, fundo branco, sombra leve, item selecionado em azul claro e ausência de overflow horizontal.
