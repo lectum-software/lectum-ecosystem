@@ -115,7 +115,7 @@ const FeaturedCommunity = ({ community }: { community: CommunityExploreCard }) =
 const CommunityCard = ({ community }: { community: CommunityExploreCard }) => {
   return (
     <Link
-      className="group relative flex h-[286px] w-[min(72vw,212px)] shrink-0 snap-start overflow-hidden rounded-[22px] border border-white/70 bg-[#101827] p-3.5 text-white shadow-[0_12px_28px_rgba(15,23,42,0.12)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_38px_rgba(15,23,42,0.16)] sm:h-[318px] sm:w-[232px] lg:h-[306px] lg:w-[238px]"
+      className="group relative flex h-[286px] w-[min(calc(100vw-2.5rem),212px)] shrink-0 snap-start overflow-hidden rounded-[22px] border border-white/70 bg-[#101827] p-3.5 text-white shadow-[0_12px_28px_rgba(15,23,42,0.12)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_38px_rgba(15,23,42,0.16)] sm:h-[318px] sm:w-[232px] lg:h-[306px] lg:w-[238px]"
       href={`/app/community/${community.slug}`}
     >
       <Image
@@ -189,12 +189,12 @@ const PopularCommunitiesCarousel = ({ communities }: { communities: CommunityExp
   };
 
   return (
-    <div className="relative">
+    <div className="relative min-w-0 max-w-full overflow-hidden">
       <div
-        className="-mx-5 overflow-x-auto scroll-smooth px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="max-w-full overflow-x-auto overscroll-x-contain scroll-smooth pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         ref={scrollRef}
       >
-        <div className="flex snap-x snap-mandatory gap-3.5 sm:gap-4">
+        <div className="flex w-max max-w-none snap-x snap-mandatory gap-3.5 sm:gap-4">
           {communities.map((community) => (
             <CommunityCard community={community} key={community.communityId} />
           ))}
@@ -304,11 +304,11 @@ export const CommunityLogic = () => {
   return (
     <PrivateTemplate
       allowAnonymous
-      contentClassName="relative min-h-screen max-w-none overflow-hidden bg-white px-0 pt-0 sm:pt-0"
+      contentClassName="relative min-h-screen max-w-none overflow-x-hidden bg-white px-0 pt-0 sm:pt-0"
       navigationTheme="solidWhite"
     >
-      <section className="relative z-10 mx-auto grid w-full max-w-[430px] gap-6 px-5 pb-10 sm:max-w-2xl lg:max-w-4xl">
-        <div className="sticky top-0 z-20 -mx-5 border-b border-[#E5EAF1] bg-white/95 px-5 py-2.5 backdrop-blur supports-[backdrop-filter]:bg-white/86">
+      <section className="relative z-10 mx-auto grid w-full max-w-[430px] min-w-0 gap-6 overflow-x-clip px-5 pb-10 sm:max-w-2xl lg:max-w-4xl">
+        <div className="sticky top-0 z-20 -mx-5 bg-white/95 px-5 py-2.5 backdrop-blur supports-[backdrop-filter]:bg-white/86">
           <div className="flex items-center gap-3">
             <button
               aria-label="Voltar"

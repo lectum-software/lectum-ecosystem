@@ -172,3 +172,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nao houve alteracao de backend, Prisma, migrations, endpoints, payloads, dados, ordenacao ou packages.
 - ADR atualizado: `adrs/0107-explorar-comunidades-conteudo-centralizado.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check --write -- ...`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local em mobile/desktop validando fundo branco, escala reduzida, card de tendencia menor e seta desktop condicional no carrossel.
+
+## Execucao complementar: responsividade mobile da exploracao (2026-06-17)
+
+- Pedido do usuario: corrigir a responsividade de `/app/community` para evitar cards cortados lateralmente no mobile, manter o carrossel `Mais Populares` dentro da largura util e remover o divisor abaixo da busca.
+- Fonte visual auditavel: `_product/proto/Explorar Comunidades.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao.
+- O carrossel de `Mais Populares` deixou de usar largura full-bleed negativa no mobile e passou a rolar dentro da largura util do conteudo, com `overscroll-x-contain`, `max-w-full` e cards dimensionados por `min(calc(100vw - 2.5rem), 212px)`.
+- A pagina manteve fundo branco e passou a bloquear overflow horizontal apenas no wrapper externo, preservando a rolagem horizontal local do carrossel.
+- A busca no topo perdeu a borda inferior/separador visual, ficando integrada ao topo branco da tela, com padding lateral alinhado ao restante das secoes.
+- Nao houve alteracao de backend, Prisma, migrations, endpoints, payloads, dados, ordenacao ou packages.
+- ADR atualizado: `adrs/0107-explorar-comunidades-conteudo-centralizado.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile 390x844 validando `documentWidth=390`, ausencia de overflow horizontal, busca sem borda inferior e primeiro card do carrossel inteiramente dentro do viewport.

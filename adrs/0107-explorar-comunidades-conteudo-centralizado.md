@@ -61,3 +61,17 @@ Validacao complementar:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser local em 390px e desktop validando ausencia de faixas cinzas, card de tendencia menor e seta desktop somente com overflow horizontal.
+
+## Atualizacao 2026-06-17 - responsividade mobile do carrossel
+
+- O carrossel `Mais Populares` passa a respeitar a largura util do conteudo no mobile, removendo o full-bleed lateral que podia causar percepcao de card cortado.
+- Os cards populares usam largura maxima baseada no viewport (`min(calc(100vw - 2.5rem), 212px)`) antes dos breakpoints maiores, garantindo que o card ativo caiba inteiro dentro da tela.
+- A rolagem horizontal fica confinada ao proprio carrossel com `overscroll-x-contain`; o wrapper da pagina usa apenas bloqueio de overflow horizontal indesejado, sem impedir a rolagem local.
+- A barra de busca deixa de ter borda inferior no header sticky, mantendo a tela mais limpa e integrada ao fundo branco.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome/CDP mobile 390x844 em `/app/community`: `documentElement.scrollWidth=390`, `body.scrollWidth=390`, `searchBorderBottom=0px`, carrossel com `clientWidth=353`, `scrollWidth=887` e primeiro card totalmente dentro do viewport.
