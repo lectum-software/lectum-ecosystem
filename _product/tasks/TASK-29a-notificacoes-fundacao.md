@@ -140,6 +140,7 @@ Packages permitidos: `socket.io`, `socket.io-client`, `web-push`, TanStack Query
 - [x] Ajuste fino 2026-06-16: o ícone de configurações no header de `/app/notifications` foi ampliado sem adicionar fundo, borda ou alterar a estrutura do header.
 - [x] Ajuste 2026-06-16: `/app/settings/notifications` foi simplificada para uma chave por tipo de notificação, seletor segmentado em `novo_post`, header com voltar e rodapé limpo; preferências são normalizadas em `notification_preference.prefs`.
 - [x] Ajuste fino 2026-06-17: itens de `/app/settings/notifications` ficaram compactos em uma linha, sem descrições, sem rótulo visual `Receber`, com controles alinhados à direita e ícone de WhatsApp azul no item `Cliques no WhatsApp`.
+- [x] Ajuste fino 2026-06-17: `/app/notifications` usa card branco também no mobile, sem fundo azulado nos itens, e a ação `Marcar todas como lidas` ficou alinhada no header ao lado das configurações.
 
 ## Validação mínima
 
@@ -159,6 +160,16 @@ Packages permitidos: `socket.io`, `socket.io-client`, `web-push`, TanStack Query
 - Cada item passou a usar uma linha compacta com ícone à esquerda, título centralizado verticalmente e switch/seletor à direita.
 - O item `Cliques no WhatsApp` passou a usar o componente `WhatsAppIcon`, cujo path SVG corresponde ao anexo, mantendo a cor azul `text-primary` dos demais ícones.
 - Persistência, payload de preferências, seletor `novo_post`, validações e endpoints não foram alterados.
+
+## Complemento 2026-06-17 - header e lista da central de notificações
+
+- A tela `/app/notifications` manteve a referência local `_product/proto/Notificações.jpg` como norte auditável; Builder/Quick Copy não está exposto como ferramenta direta neste ambiente.
+- No mobile, a lista passou a seguir a mesma família visual do desktop: card branco com borda suave, padding interno e sombra discreta.
+- O destaque azulado nos itens não lidos foi removido; o estado não lido continua indicado pela bolinha azul.
+- A ação `Marcar todas como lidas` foi movida para o header, à esquerda do ícone de configurações.
+- No mobile, o header exibe apenas o ícone de check; ao tocar, abre um menu de confirmação com o texto `Marcar todas como lidas`.
+- No desktop, o botão textual `Marcar todas como lidas` permanece visível no header, alinhado à esquerda do ícone de configurações.
+- Não houve alteração de backend, Prisma, persistência, endpoints ou regras de leitura/limpeza de notificações.
 
 ## Notas para executor
 

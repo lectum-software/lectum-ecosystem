@@ -70,3 +70,18 @@ A forma do `notification` migrada (derivada do sample) usa `read`, `redirect`, `
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e Chrome/CDP local em
   mobile 390px e desktop 1280px confirmando alinhamento dos controles, ausencia dos textos removidos e
   icone WhatsApp azul no item correto.
+
+## Complemento 2026-06-17 - central de notificacoes
+
+- A central `/app/notifications` passa a usar o mesmo card branco da lista no mobile e no desktop,
+  evitando o fundo azulado em itens nao lidos. O estado nao lido continua visivel pela bolinha azul.
+- A acao de limpar/marcar tudo como lido foi movida para o header da tela, imediatamente a esquerda do
+  atalho de configuracoes.
+- Em mobile, a acao aparece como botao icon-only com `CheckCheck`; tocar no icone abre um menu de
+  confirmacao com a opcao `Marcar todas como lidas`. Em desktop, a acao permanece textual e alinhada na
+  mesma linha do header.
+- A decisao preserva o CRUD existente (`notification/clean`) e nao altera backend, Prisma, contratos,
+  persistencia ou preferencias.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e Chrome/CDP local em
+  mobile 390px e desktop 1280px confirmando card branco, ausencia de classe azul nos itens, menu de
+  confirmacao no mobile e botao textual a esquerda das configuracoes no desktop.

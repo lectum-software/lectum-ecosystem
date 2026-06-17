@@ -145,6 +145,82 @@ const groupNotifications = (items: NotificationItem[]) => {
   );
 };
 
+type NotificationsHeaderActionsProps = {
+  hasNotifications: boolean;
+  isMarkingAllRead: boolean;
+  onMarkAllRead: () => void;
+};
+
+const NotificationsHeaderActions = ({
+  hasNotifications,
+  isMarkingAllRead,
+  onMarkAllRead,
+}: NotificationsHeaderActionsProps) => {
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
+  const handleConfirm = () => {
+    setIsConfirmOpen(false);
+    onMarkAllRead();
+  };
+
+  return (
+    <div className="flex items-center gap-1.5 sm:gap-2">
+      {hasNotifications ? (
+        <>
+          <Button
+            className="hidden h-10 rounded-full px-4 text-sm font-semibold shadow-none md:inline-flex"
+            disabled={isMarkingAllRead}
+            onClick={onMarkAllRead}
+            type="button"
+            variant="outline"
+          >
+            <CheckCheck className="h-4 w-4" aria-hidden={true} />
+            Marcar todas como lidas
+          </Button>
+
+          <div className="relative md:hidden">
+            <Button
+              aria-expanded={isConfirmOpen}
+              aria-haspopup="menu"
+              aria-label="Opções para marcar notificações como lidas"
+              className="h-11 w-11 rounded-full p-0"
+              disabled={isMarkingAllRead}
+              onClick={() => setIsConfirmOpen((current) => !current)}
+              type="button"
+              variant="ghost"
+            >
+              <CheckCheck className="h-5 w-5" aria-hidden={true} />
+            </Button>
+
+            {isConfirmOpen ? (
+              <div
+                className="absolute right-0 top-[calc(100%+8px)] z-30 w-56 rounded-2xl border border-border bg-white p-1.5 shadow-[0_18px_45px_rgba(15,23,42,0.14)]"
+                role="menu"
+              >
+                <button
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-foreground transition hover:bg-primary-soft hover:text-primary"
+                  onClick={handleConfirm}
+                  role="menuitem"
+                  type="button"
+                >
+                  <CheckCheck className="h-4 w-4" aria-hidden={true} />
+                  Marcar todas como lidas
+                </button>
+              </div>
+            ) : null}
+          </div>
+        </>
+      ) : null}
+
+      <Button asChild className="h-11 w-11 rounded-full p-0" type="button" variant="ghost">
+        <Link aria-label="Configurações de notificações" href="/app/settings/notifications">
+          <Settings className="h-6 w-6" aria-hidden={true} />
+        </Link>
+      </Button>
+    </div>
+  );
+};
+
 export const NotificationsLogic = () => {
   const [hasAuthToken] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -200,8 +276,7 @@ export const NotificationsLogic = () => {
       </>
     );
     const className = cn(
-      "group flex w-full items-start gap-4 rounded-3xl border border-transparent px-3 py-3 text-left transition hover:bg-surface",
-      !item.read && "bg-primary-soft/40",
+      "group flex w-full items-start gap-4 rounded-3xl border border-transparent px-3 py-3 text-left transition hover:bg-surface-muted/70",
     );
 
     return (
@@ -224,29 +299,15 @@ export const NotificationsLogic = () => {
       <section className="mx-auto w-full max-w-2xl px-5 py-5 md:py-8">
         <SecondaryPageHeader
           action={
-            <Button asChild className="h-11 w-11 rounded-full p-0" type="button" variant="ghost">
-              <Link aria-label="Configurações de notificações" href="/app/settings/notifications">
-                <Settings className="h-6 w-6" aria-hidden={true} />
-              </Link>
-            </Button>
+            <NotificationsHeaderActions
+              hasNotifications={items.length > 0}
+              isMarkingAllRead={clean.isPending}
+              onMarkAllRead={() => clean.mutate()}
+            />
           }
           className="mb-4"
           title="Notificações"
         />
-
-        {items.length > 0 ? (
-          <div className="mb-4 flex justify-end">
-            <Button
-              disabled={clean.isPending}
-              onClick={() => clean.mutate()}
-              type="button"
-              variant="outline"
-            >
-              <CheckCheck className="h-4 w-4" aria-hidden={true} />
-              Marcar todas como lidas
-            </Button>
-          </div>
-        ) : null}
 
         {index.isLoading ? (
           <LoadingState className="py-10" />
@@ -263,7 +324,7 @@ export const NotificationsLogic = () => {
             title="Nenhuma notificação"
           />
         ) : (
-          <div className="grid gap-8 rounded-[2rem] bg-background md:bg-surface md:p-3">
+          <div className="grid gap-8 rounded-[2rem] border border-border bg-surface p-3 shadow-sm">
             {groups.today.length > 0 ? (
               <section aria-labelledby="notifications-today">
                 <h2
