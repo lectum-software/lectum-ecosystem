@@ -1,6 +1,7 @@
 "use client";
 
 import type { LucideIcon } from "lucide-react";
+import type { MouseEventHandler } from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   postActionCountClassName,
@@ -126,7 +127,9 @@ export const VoteActionButton = ({
     }, POSITIVE_DELTA_MS);
   };
 
-  const handleVote = () => {
+  const handleVote: MouseEventHandler<HTMLButtonElement> = (event) => {
+    event.stopPropagation();
+
     if (disabled) return;
 
     setIconPulsing(true);

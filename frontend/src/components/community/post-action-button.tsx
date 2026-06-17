@@ -2,7 +2,7 @@
 
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import type { ButtonHTMLAttributes, MouseEventHandler, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 type PostActionSize = "xs" | "sm" | "md";
@@ -111,12 +111,16 @@ export const PostActionLink = ({
   size = "md",
 }: PostActionLinkProps) => {
   const iconOnly = typeof count !== "number" && !children;
+  const handleClick: MouseEventHandler<HTMLAnchorElement> = (event) => {
+    event.stopPropagation();
+  };
 
   return (
     <Link
       aria-label={label}
       className={cn(baseClassName, sizeClassName(size, iconOnly), className)}
       href={href}
+      onClick={handleClick}
       title={label}
     >
       <Icon className={postActionIconClassName(size)} strokeWidth={2} aria-hidden="true" />

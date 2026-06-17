@@ -404,3 +404,16 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nao houve alteracao de backend, Prisma, migrations, packages, contratos, votos, comentarios, ordenacao, salvos, compartilhamento ou navegacao manual por links.
 - ADR atualizado: `adrs/0066-pagina-detalhe-comunidade-participacao.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check --write -- 'src/app/app/community/[slug]/post/[id]/logic.tsx'`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado validando acesso direto com fallback para a comunidade, Comunidade -> Post -> Voltar -> Comunidade, Salvos -> Post -> Voltar -> Salvos, Meus posts/comentarios -> Post -> Voltar -> Meus posts/comentarios e thread direta -> fallback para a comunidade.
+
+## Execucao complementar: isolamento definitivo dos controles no collapse (2026-06-17)
+
+- Pedido do usuario: corrigir novamente o comportamento de expandir/recolher da arvore para que a linha de opcoes clicaveis nunca acione collapse, mantendo a area ampla do comentario raiz como gatilho.
+- Fonte visual auditavel: `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao.
+- O detector de alvo interativo do comentario raiz agora resolve `Element`/`Node`, cobrindo tambem cliques em `svg`/`path` dentro de botoes e icones.
+- A `CommunityActionBar` marca a linha completa com `data-comment-collapse-ignore="true"` e seus handlers de responder, salvar, compartilhar e comentarios interrompem propagacao antes de executar a acao.
+- `VoteActionButton` e `PostActionLink` tambem interrompem propagacao, preservando upvote/downvote, links e acoes sem recolher/expandir a arvore.
+- O menu de tres pontos e suas opcoes continuam protegidos contra propagacao; composer, botao de envio/cancelamento, `Ver respostas`, midias, WhatsApp e links de perfil seguem fora do gatilho de collapse.
+- Para comentarios raiz de psicologos, avatar/nome/dados continuam abrindo o perfil e nao acionam collapse; o collapse permanece disponivel apenas nas areas nao interativas do bloco.
+- Nao houve alteracao de backend, Prisma, migrations, packages, endpoints, payloads, ordenacao, votos, salvamento ou regra de destaque de psicologos.
+- ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check --write -- ...`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP em 390px no detalhe do post demo confirmando que a linha de acoes e icones internos nao acionam collapse, enquanto a area de conteudo recolhe/expande normalmente.

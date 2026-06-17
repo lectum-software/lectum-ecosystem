@@ -93,3 +93,18 @@ Validacao complementar:
 
 - pnpm check
 - Chrome/CDP autenticado no detalhe do post demo e na thread isolada, confirmando salvar/compartilhar em todos os replies visiveis, toggle de salvo e ausencia de collapse ao clicar nas acoes.
+
+## Atualizacao 2026-06-17 - isolamento definitivo dos controles interativos
+
+- O collapse do comentario raiz permanece amplo no corpo do comentario, mas a linha de acoes inteira passa a ser marcada como area ignorada por `data-comment-collapse-ignore`.
+- A deteccao de alvo interativo passa a aceitar `Element`/`Node`, evitando que cliques em elementos internos de icones (`svg`, `path`) escapem da guarda e acionem collapse indevidamente.
+- Responder, salvar, compartilhar, votos e links interrompem propagacao no proprio handler, alem da guarda do container raiz, para garantir prioridade absoluta das acoes interativas.
+- Menus, itens de menu, composer, botoes de continuacao, midia, WhatsApp e links de perfil de psicologos continuam fora do gesto de collapse.
+- A decisao nao altera profundidade visual, ordenacao por relevancia, destaque de psicologos, persistencia de votos/salvos, backend ou contratos de API.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome/CDP em 390px no detalhe do post demo validando que clique na barra de acoes e em icone SVG nao recolhe, clique no corpo recolhe e botoes continuam funcionais.

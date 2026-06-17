@@ -453,9 +453,12 @@ const findReplyInTree = (replies: PostReply[], replyId: string): PostReply | nul
 };
 
 const isReplyTreeInteractiveTarget = (target: EventTarget | null, currentTarget: HTMLElement) => {
-  if (!(target instanceof HTMLElement)) return false;
+  const targetElement =
+    target instanceof Element ? target : target instanceof Node ? target.parentElement : null;
 
-  const closestInteractiveTarget = target.closest(
+  if (!targetElement) return false;
+
+  const closestInteractiveTarget = targetElement.closest(
     [
       "a",
       "button",
@@ -1186,7 +1189,8 @@ const ReplyCard = ({
                     <button
                       className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-danger transition hover:bg-danger/10 hover:text-danger disabled:cursor-not-allowed disabled:opacity-60"
                       disabled={deleteReplyPending}
-                      onClick={() => {
+                      onClick={(event) => {
+                        event.stopPropagation();
                         setMenuOpen(false);
                         onDeleteReply(reply);
                       }}
@@ -1199,7 +1203,8 @@ const ReplyCard = ({
                   ) : (
                     <button
                       className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-[#475569] transition hover:bg-[#F8FAFC] hover:text-[#182033] dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
-                      onClick={() => {
+                      onClick={(event) => {
+                        event.stopPropagation();
                         setMenuOpen(false);
                         onReportReply(reply);
                       }}

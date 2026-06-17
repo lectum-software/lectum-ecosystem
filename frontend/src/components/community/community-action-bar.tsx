@@ -96,6 +96,13 @@ const textOnlyReplyTextClassName = (size: CommunityActionSize) =>
     size === "xs" ? "text-[10px] font-semibold" : "text-[11px] font-medium",
   );
 
+const stopActionPropagation =
+  (handler?: ActionHandler): ActionHandler =>
+  (event) => {
+    event.stopPropagation();
+    handler?.(event);
+  };
+
 export const CommunityActionBar = ({
   className,
   comments,
@@ -115,7 +122,11 @@ export const CommunityActionBar = ({
   const canVote = Boolean(onVote);
 
   return (
-    <div className={cn(actionBarClassName(size), className)} data-community-action-bar={size}>
+    <div
+      className={cn(actionBarClassName(size), className)}
+      data-comment-collapse-ignore="true"
+      data-community-action-bar={size}
+    >
       <div
         className={cn(
           "flex min-w-0 flex-1 flex-nowrap items-center",
@@ -173,7 +184,7 @@ export const CommunityActionBar = ({
               count={comments.count}
               icon={MessageCircle}
               label={comments.label ?? "Comentar"}
-              onClick={comments.onClick}
+              onClick={stopActionPropagation(comments.onClick)}
               size={size}
             />
           ) : (
@@ -190,7 +201,7 @@ export const CommunityActionBar = ({
           <button
             aria-label={reply.label ?? "Responder"}
             className={textOnlyReplyClassName(size)}
-            onClick={reply.onClick}
+            onClick={stopActionPropagation(reply.onClick)}
             title={reply.label ?? "Responder"}
             type="button"
           >
@@ -200,7 +211,7 @@ export const CommunityActionBar = ({
           <PostActionButton
             icon={Reply}
             label={reply.label ?? "Responder"}
-            onClick={reply.onClick}
+            onClick={stopActionPropagation(reply.onClick)}
             size={size}
           >
             Responder
@@ -223,7 +234,7 @@ export const CommunityActionBar = ({
               icon={Bookmark}
               iconClassName={save.active ? "fill-current" : undefined}
               label={save.label ?? (save.active ? "Remover dos salvos" : "Salvar")}
-              onClick={save.onClick}
+              onClick={stopActionPropagation(save.onClick)}
               size={size}
             />
           ) : (
@@ -243,7 +254,7 @@ export const CommunityActionBar = ({
             <PostActionButton
               icon={Share2}
               label={share.label ?? "Compartilhar"}
-              onClick={share.onClick}
+              onClick={stopActionPropagation(share.onClick)}
               size={size}
             />
           ) : (
