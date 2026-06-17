@@ -1091,7 +1091,7 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
             <ProfessionalReplyMedia reply={reply} />
             {reply.author.whatsapp_url ? (
               <PsychologistWhatsAppRedirectButton
-                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[14px] border-2 border-success bg-transparent text-sm font-black text-success shadow-none transition hover:bg-success hover:text-white"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-[14px] border-2 border-success bg-transparent text-sm font-black text-success shadow-none transition hover:bg-success hover:text-white"
                 psychologist={{
                   avatar: reply.author.avatar,
                   crp: reply.author.crp,

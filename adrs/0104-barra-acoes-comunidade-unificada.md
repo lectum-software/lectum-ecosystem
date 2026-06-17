@@ -48,3 +48,10 @@ Validacao complementar:
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - Browser local autenticado via Chrome headless/CDP em 390px na rota do detalhe do post demo, confirmando barras `xs` com `Responder` em `10px`, salvar/compartilhar na direita, `topSpread=0` e `white-space: nowrap`.
+
+## Atualizacao 2026-06-16 - votos de replies sem conflito com collapse
+
+- Os wrappers da barra de acoes em comentarios deixaram de interromper cliques na fase de captura; isso evita que upvote/downvote, salvar, compartilhar e menu sejam bloqueados antes de seus proprios handlers.
+- A protecao contra recolher/expandir agora ocorre no handler do comentario raiz, que ignora alvos interativos e elementos marcados com `data-comment-collapse-ignore`.
+- A mutation compartilhada de voto passa a atualizar otimisticamente tanto a lista principal de replies quanto as queries da thread isolada; a resposta do servidor tambem e aplicada nos dois caches.
+- Em erro, os caches de detalhe, replies e thread sao restaurados, mantendo estado visual e contagem de votos consistentes em todas as camadas sem alterar contrato de API ou backend.

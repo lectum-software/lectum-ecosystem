@@ -1015,8 +1015,6 @@ const ReplyCard = ({
         tabIndex: 0,
       }
     : {};
-  const patientRootTreeToggleAreaProps =
-    canCollapseRootTree && !psychologistProfileHref ? rootTreeToggleAreaProps : {};
   const rootTreeToggleAreaClassName =
     "cursor-pointer rounded-xl transition-colors hover:bg-[#F8FAFC]/70 active:bg-[#F1F5F9]/75 dark:hover:bg-surface-muted/35";
 
@@ -1028,18 +1026,15 @@ const ReplyCard = ({
       <div
         className={cn(
           "grid grid-cols-[2rem_minmax(0,1fr)] gap-x-2.5 rounded-[20px] transition-colors sm:grid-cols-[2.25rem_minmax(0,1fr)]",
+          canCollapseRootTree && rootTreeToggleAreaClassName,
         )}
-        data-reply-root-toggle={canCollapseRootTree ? "area-scoped" : undefined}
+        data-reply-root-toggle={canCollapseRootTree ? "whole-comment" : undefined}
+        data-reply-collapse-area={canCollapseRootTree ? "root" : undefined}
+        {...rootTreeToggleAreaProps}
       >
         <div
-          className={cn(
-            "relative flex justify-center",
-            canCollapseRootTree && !psychologistProfileHref && rootTreeToggleAreaClassName,
-          )}
-          data-reply-collapse-area={
-            canCollapseRootTree && !psychologistProfileHref ? "avatar" : undefined
-          }
-          {...patientRootTreeToggleAreaProps}
+          className="relative flex justify-center"
+          data-reply-collapse-area={canCollapseRootTree ? "avatar" : undefined}
         >
           <AuthorAvatar
             author={reply.author}
@@ -1058,15 +1053,8 @@ const ReplyCard = ({
         <div className="min-w-0 rounded-[18px] px-0.5 py-0.5">
           <div className="flex items-start justify-between gap-2">
             <div
-              className={cn(
-                "grid min-w-0 gap-1",
-                canCollapseRootTree && !psychologistProfileHref && "-m-1 p-1",
-                canCollapseRootTree && !psychologistProfileHref && rootTreeToggleAreaClassName,
-              )}
-              data-reply-collapse-area={
-                canCollapseRootTree && !psychologistProfileHref ? "header" : undefined
-              }
-              {...patientRootTreeToggleAreaProps}
+              className={cn("grid min-w-0 gap-1", canCollapseRootTree && "-m-1 p-1")}
+              data-reply-collapse-area={canCollapseRootTree ? "header" : undefined}
             >
               <div className="flex min-w-0 items-center gap-x-2">
                 <div className="flex min-w-0 items-center gap-[5px]">
@@ -1129,7 +1117,6 @@ const ReplyCard = ({
                 <div
                   className="absolute top-9 right-0 z-20 w-56 overflow-hidden rounded-2xl border border-[#E5EAF0] bg-white p-1.5 text-sm shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:border-border dark:bg-surface"
                   data-comment-collapse-ignore="true"
-                  onClickCapture={stopReplyTreeCollapsePropagation}
                   role="menu"
                 >
                   {isOwnReply ? (
@@ -1166,12 +1153,8 @@ const ReplyCard = ({
           </div>
 
           <div
-            className={cn(
-              canCollapseRootTree && "-mx-1 px-1",
-              canCollapseRootTree && rootTreeToggleAreaClassName,
-            )}
+            className={cn(canCollapseRootTree && "-mx-1 px-1")}
             data-reply-collapse-area={canCollapseRootTree ? "content" : undefined}
-            {...rootTreeToggleAreaProps}
           >
             <InlineExpandableText
               className="mt-2 text-sm leading-6 text-[#475569] dark:text-muted"
@@ -1180,10 +1163,7 @@ const ReplyCard = ({
               text={reply.content}
             />
           </div>
-          <div
-            data-comment-collapse-ignore="true"
-            onClickCapture={stopReplyTreeCollapsePropagation}
-          >
+          <div data-comment-collapse-ignore="true">
             <MediaBlock
               alt="Mídia da resposta"
               mediaType={reply.media_type}
@@ -1194,7 +1174,7 @@ const ReplyCard = ({
 
           {isProfessional && reply.author.verified && reply.author.whatsapp_url ? (
             <PsychologistWhatsAppRedirectButton
-              className="mx-auto mt-2 inline-flex h-11 w-full max-w-[280px] items-center justify-center gap-2 rounded-[14px] border-2 border-success bg-transparent text-success shadow-none transition hover:bg-success hover:text-white sm:max-w-[320px]"
+              className="mx-auto mt-2 flex h-11 w-full max-w-[280px] items-center justify-center gap-2 rounded-[14px] border-2 border-success bg-transparent text-success shadow-none transition hover:bg-success hover:text-white sm:max-w-[320px]"
               data-comment-collapse-ignore="true"
               stopPropagation
               psychologist={{
@@ -1211,10 +1191,7 @@ const ReplyCard = ({
             </PsychologistWhatsAppRedirectButton>
           ) : null}
 
-          <div
-            data-comment-collapse-ignore="true"
-            onClickCapture={stopReplyTreeCollapsePropagation}
-          >
+          <div data-comment-collapse-ignore="true">
             <ReplyVoteBar
               currentVote={reply.current_user_vote}
               disabled={votePending}
@@ -1228,10 +1205,7 @@ const ReplyCard = ({
           </div>
 
           {isReplyComposerOpen ? (
-            <div
-              data-comment-collapse-ignore="true"
-              onClickCapture={stopReplyTreeCollapsePropagation}
-            >
+            <div data-comment-collapse-ignore="true">
               <ReplyComposer
                 apiError={replyApiError}
                 disabled={replyDisabled}

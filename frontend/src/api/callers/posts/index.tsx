@@ -9,6 +9,7 @@ import type {
   PostRepliesResponse,
   PostReply,
   PostReplyDeleteResponse,
+  PostReplyThreadResponse,
   PostReportPayload,
   PostReportResponse,
   PostSaveResponse,
@@ -60,6 +61,28 @@ const updateReplyVote = (reply: PostReply, replyId: string, value: 1 | -1): Post
     ...reply,
     current_user_vote: next.nextVote,
     upvotes_count: next.upvotes_count,
+    replies: children,
+  };
+};
+
+const updateReplyVoteFromResponse = (
+  reply: PostReply,
+  replyId: string,
+  data: PostVoteResponse,
+): PostReply => {
+  const children = reply.replies.map((child) => updateReplyVoteFromResponse(child, replyId, data));
+
+  if (reply.id !== replyId) {
+    return {
+      ...reply,
+      replies: children,
+    };
+  }
+
+  return {
+    ...reply,
+    current_user_vote: data.value,
+    upvotes_count: clampCount(data.upvotes_count),
     replies: children,
   };
 };
@@ -243,6 +266,7 @@ export const useVotePost = (postId: string) => {
       await Promise.all([
         queryClient.cancelQueries({ queryKey: keys.posts.detail(postId) }),
         queryClient.cancelQueries({ queryKey: ["posts", postId, "replies"] }),
+        queryClient.cancelQueries({ queryKey: ["posts", postId, "reply-thread"] }),
       ]);
 
       const previousDetail = queryClient.getQueryData<PostDetailResponse>(
@@ -250,6 +274,9 @@ export const useVotePost = (postId: string) => {
       );
       const previousReplies = queryClient.getQueriesData<PostRepliesResponse>({
         queryKey: ["posts", postId, "replies"],
+      });
+      const previousThreads = queryClient.getQueriesData<PostReplyThreadResponse>({
+        queryKey: ["posts", postId, "reply-thread"],
       });
 
       if (variables.replyId) {
@@ -263,6 +290,17 @@ export const useVotePost = (postId: string) => {
             return {
               ...old,
               data: old.data.map((reply) => updateReplyVote(reply, replyId, variables.value)),
+            };
+          },
+        );
+        queryClient.setQueriesData<PostReplyThreadResponse>(
+          { queryKey: ["posts", postId, "reply-thread"] },
+          (old) => {
+            if (!old) return old;
+
+            return {
+              ...old,
+              reply: updateReplyVote(old.reply, replyId, variables.value),
             };
           },
         );
@@ -287,7 +325,7 @@ export const useVotePost = (postId: string) => {
         });
       }
 
-      return { previousDetail, previousReplies };
+      return { previousDetail, previousReplies, previousThreads };
     },
     onError: (_error, _variables, context) => {
       if (context?.previousDetail) {
@@ -295,6 +333,10 @@ export const useVotePost = (postId: string) => {
       }
 
       context?.previousReplies?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
+
+      context?.previousThreads?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
     },
@@ -313,6 +355,34 @@ export const useVotePost = (postId: string) => {
             },
           };
         });
+        return;
+      }
+
+      if (data.target_type === "reply" && data.reply_id) {
+        const replyId = data.reply_id;
+
+        queryClient.setQueriesData<PostRepliesResponse>(
+          { queryKey: ["posts", postId, "replies"] },
+          (old) => {
+            if (!old) return old;
+
+            return {
+              ...old,
+              data: old.data.map((reply) => updateReplyVoteFromResponse(reply, replyId, data)),
+            };
+          },
+        );
+        queryClient.setQueriesData<PostReplyThreadResponse>(
+          { queryKey: ["posts", postId, "reply-thread"] },
+          (old) => {
+            if (!old) return old;
+
+            return {
+              ...old,
+              reply: updateReplyVoteFromResponse(old.reply, replyId, data),
+            };
+          },
+        );
       }
     },
     onSettled: () => {

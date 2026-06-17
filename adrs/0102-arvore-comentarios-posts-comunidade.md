@@ -50,3 +50,11 @@ A tela interna de post precisa permitir discussões mais profundas sem poluir a 
 - Para raizes de pacientes, avatar, cabecalho/autor/horario e conteudo textual podem recolher/expandir a arvore; para raizes de psicologos, links de avatar/nome/informacoes/selo preservam prioridade de navegacao ao perfil e nao acionam collapse.
 - A linha de acoes (`upvote`, `downvote`, contador, responder, salvar, compartilhar), menu, midia, WhatsApp, composer e botoes de continuacao bloqueiam propagacao para impedir recolhimento acidental.
 - A decisao preserva o estado local independente de cada arvore, a profundidade visual, a ordenacao e a regra do primeiro comentario de psicologo verificado mais votado.
+
+## Atualizacao 2026-06-16 - area total do comentario raiz
+
+- O primeiro comentario de cada arvore passa a usar todo o bloco superior como area de recolher/expandir: avatar, cabecalho, corpo, conteudo textual e espacos internos.
+- A decisao substitui a marcacao fragmentada por regioes por um handler unico no bloco raiz, mas com guarda explicita para qualquer alvo interativo.
+- Upvote, downvote, contador, responder, salvar, compartilhar, menu, midia, WhatsApp, composer, links e botoes de continuacao continuam fora do gesto de collapse por deteccao de alvo interativo e `data-comment-collapse-ignore`.
+- Em comentarios raiz de psicologos, avatar, nome, selo e dados profissionais mantem prioridade de navegacao para o perfil; o collapse permanece disponivel apenas nas areas nao interativas restantes do comentario.
+- Comentarios aninhados nao recebem o handler e cada arvore conserva estado independente, sem alterar profundidade, ordenacao, regra de destaque profissional, backend ou persistencia.

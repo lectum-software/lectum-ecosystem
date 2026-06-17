@@ -401,7 +401,7 @@ const ProfessionalReplyPreview = ({
       </div>
       {reply.author.whatsapp_url && !profilePublicationMode ? (
         <PsychologistWhatsAppRedirectButton
-          className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-surface text-sm font-bold text-foreground transition hover:bg-surface-muted"
+          className="mx-auto mt-3 flex h-11 w-full max-w-[390px] items-center justify-center gap-2 rounded-2xl border border-border bg-surface text-sm font-bold text-foreground transition hover:bg-surface-muted"
           psychologist={{
             avatar: reply.author.avatar,
             crp: reply.author.crp,

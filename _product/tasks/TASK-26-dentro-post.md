@@ -337,3 +337,17 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile autenticado em 390px no detalhe do post demo, confirmando que upvote nao recolhe, clique no texto recolhe com `Ver 2 respostas`, novo upvote nao expande/recolhe e o botao `Ver 2 respostas` expande novamente.
 
+
+## Execucao complementar: area total do comentario raiz, votos e CTA de video (2026-06-16)
+
+- Pedido do usuario: ampliar a area de recolher/expandir do primeiro comentario da arvore, corrigir upvote/downvote em todas as camadas e alinhar o botao de WhatsApp abaixo de videos no desktop.
+- Fonte visual auditavel: captura enviada pelo usuario `c:/Users/tulio/Downloads/image (14).png` e referencia inventariada `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao.
+- O comentario raiz recolhivel voltou a usar toda a area superior do bloco como gatilho: avatar, cabecalho, corpo, texto e espacos internos; comentarios aninhados continuam sem esse comportamento.
+- Controles interativos continuam protegidos: upvote, downvote, contador, responder, salvar, compartilhar, menu, midia, WhatsApp, composer, links de perfil e botoes de expansao nao recolhem nem expandem a arvore.
+- Para raizes de psicologos, avatar, nome, selo e dados profissionais seguem abrindo o perfil e nao acionam collapse; as demais areas nao interativas do bloco permanecem aptas a recolher/expandir.
+- A protecao dos controles deixou de usar bloqueio em fase de captura no wrapper e passou a depender de deteccao de alvo interativo/`data-comment-collapse-ignore`, preservando o clique real dos botoes internos.
+- A mutation de voto de replies agora atualiza tambem as queries de thread isolada, aplica resposta do servidor em cache e restaura replies/thread em caso de erro, mantendo contagem e estado ativo consistentes em qualquer camada.
+- O CTA de WhatsApp abaixo de videos foi centralizado em relacao ao video e passou a usar largura util equivalente no desktop, sem alterar o comportamento mobile.
+- Nao houve alteracao de backend, Prisma, migrations, packages, endpoints, payloads, ordenacao dos comentarios ou regra de destaque de psicologos verificados.
+- ADRs atualizados: `adrs/0102-arvore-comentarios-posts-comunidade.md` e `adrs/0104-barra-acoes-comunidade-unificada.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check --write -- ...`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado no detalhe do post demo confirmando collapse em toda area raiz, `Ver 7 respostas`, links de perfil de psicologo sem collapse, upvote/downvote ativos sem recolher a arvore e WhatsApp com `centerDelta=0` em relacao ao video.
