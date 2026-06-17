@@ -1331,6 +1331,7 @@ export class CommunityRepository implements ICommunityRepository {
 
     if (!community) return null;
 
+    const userId = data.auth?.id;
     const [postsCount, membership] = await Promise.all([
       prisma.community_post.count({
         where: {
@@ -1339,18 +1340,20 @@ export class CommunityRepository implements ICommunityRepository {
           status: "publicado",
         },
       }),
-      prisma.community_member.findUnique({
-        where: {
-          community_id_user_id: {
-            community_id: community.id,
-            user_id: data.auth.id!,
-          },
-        },
-        select: {
-          createdAt: true,
-          deleted: true,
-        },
-      }),
+      userId
+        ? prisma.community_member.findUnique({
+            where: {
+              community_id_user_id: {
+                community_id: community.id,
+                user_id: userId,
+              },
+            },
+            select: {
+              createdAt: true,
+              deleted: true,
+            },
+          })
+        : Promise.resolve(null),
     ]);
 
     return toCommunityDetailResponse(

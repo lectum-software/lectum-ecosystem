@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 
 import "@/app/globals.css";
 import { LocationCapture } from "@/components/analytics/location-capture";
+import { ProgressiveConversionBoundary } from "@/components/conversion/progressive-conversion-provider";
 import { Progress } from "@/providers/progress";
 import { Provider as Query } from "@/providers/query";
 import { Provider as Redux } from "@/providers/redux";
@@ -42,9 +43,11 @@ export default function RootLayout({
           <Redux>
             <Query>
               <LocationCapture />
-              {children}
-              <Socket />
-              <Toaster richColors position="top-right" />
+              <ProgressiveConversionBoundary>
+                {children}
+                <Socket />
+                <Toaster richColors position="top-right" />
+              </ProgressiveConversionBoundary>
             </Query>
           </Redux>
         </ThemeProvider>

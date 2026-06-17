@@ -3,6 +3,7 @@
 import { ArrowRight, Loader2, ShieldCheck, Zap } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/api/callers/auth";
@@ -39,6 +40,8 @@ const resolveRegisterErrorMessage = (error: unknown) => {
 
 export const RegisterPatientLogic = () => {
   const { setter } = useUserSet("/auth/verify-email");
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirectTo") ?? searchParams.get("callbackUrl");
   const { Form, formProps, hook } = useForm();
   const [apiError, setApiError] = useState<string | null>(null);
   const [googlePending, setGooglePending] = useState(false);
@@ -92,6 +95,9 @@ export const RegisterPatientLogic = () => {
         terms_accepted: "true",
         terms_version: TERMS_VERSION,
       });
+      if (redirectTo) {
+        query.set("redirectTo", redirectTo);
+      }
 
       window.location.href = `${loginUrl}/${currentDeviceId}?${query.toString()}`;
     } catch {
@@ -153,7 +159,11 @@ export const RegisterPatientLogic = () => {
             Já possui uma conta?{" "}
             <Link
               className="font-semibold text-primary hover:text-primary-hover"
-              href="/auth/login"
+              href={
+                redirectTo
+                  ? `/auth/login?redirectTo=${encodeURIComponent(redirectTo)}`
+                  : "/auth/login"
+              }
             >
               Fazer login
             </Link>

@@ -6,6 +6,8 @@ import Link from "next/link";
 import {
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
+  useCallback,
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -14,6 +16,7 @@ import { useSavePost, useVotePost } from "@/api/callers/posts";
 import type { PostListPost, PostProfessionalReply } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { MentorBadge } from "@/components/community/mentor-badge";
+import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
@@ -474,6 +477,7 @@ export const CommunityPostCard = ({
     : undefined;
   const voteMutation = useVotePost(post.id);
   const saveMutation = useSavePost(post.id);
+  const conversion = useProgressiveConversion();
   const [contentExpanded, setContentExpanded] = useState(false);
   const [voteOverride, setVoteOverride] = useState<{
     currentVote: 1 | -1 | null;
@@ -530,7 +534,19 @@ export const CommunityPostCard = ({
     );
   };
 
-  const handleToggleSave = () => {
+  const handleToggleSave = useCallback(() => {
+    if (!conversion.isAuthenticated) {
+      conversion.requestConversion("trigger_salvar", {
+        intent: {
+          payload: {
+            postId: post.id,
+          },
+          type: "save_post",
+        },
+      });
+      return;
+    }
+
     const previousOverride = saveOverride;
     const nextSaved = !saveSnapshot.saved;
     const optimisticSnapshot = {
@@ -552,7 +568,20 @@ export const CommunityPostCard = ({
         });
       },
     });
-  };
+  }, [conversion, post.id, saveMutation, saveOverride, saveSnapshot.saved, saveSnapshot.saves]);
+
+  useEffect(() => {
+    if (!conversion.isAuthenticated || saveSnapshot.saved) return;
+
+    const intent = conversion.consumePendingIntent(
+      (candidate) =>
+        candidate.type === "save_post" && String(candidate.payload?.postId ?? "") === post.id,
+    );
+
+    if (!intent) return;
+
+    window.setTimeout(handleToggleSave, 0);
+  }, [conversion, handleToggleSave, post.id, saveSnapshot.saved]);
 
   return (
     <article className="w-full overflow-hidden rounded-[22px] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">

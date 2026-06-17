@@ -61,6 +61,7 @@ import { CommunityFollowButton } from "@/components/community/community-follow-b
 import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
 import { MentorBadge } from "@/components/community/mentor-badge";
 import type { VoteValue } from "@/components/community/vote-action-button";
+import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -1156,6 +1157,7 @@ const PostCard = ({
   });
   const voteMutation = useVotePost(post.id);
   const saveMutation = useSavePost(post.id);
+  const conversion = useProgressiveConversion();
   const postDetailHref = communityPostDetailHref(post);
   const psychologistProfileHref = isPsychologistPost
     ? `/app/psychologist/${post.author.id}`
@@ -1186,7 +1188,19 @@ const PostCard = ({
     );
   };
 
-  const handleToggleSave = () => {
+  const handleToggleSave = useCallback(() => {
+    if (!conversion.isAuthenticated) {
+      conversion.requestConversion("trigger_salvar", {
+        intent: {
+          payload: {
+            postId: post.id,
+          },
+          type: "save_post",
+        },
+      });
+      return;
+    }
+
     const previousSnapshot = saveSnapshot;
     const nextSaved = !previousSnapshot.saved;
     const optimisticSnapshot = {
@@ -1206,7 +1220,20 @@ const PostCard = ({
         });
       },
     });
-  };
+  }, [conversion, post.id, saveMutation, saveSnapshot]);
+
+  useEffect(() => {
+    if (!conversion.isAuthenticated || saveSnapshot.saved) return;
+
+    const intent = conversion.consumePendingIntent(
+      (candidate) =>
+        candidate.type === "save_post" && String(candidate.payload?.postId ?? "") === post.id,
+    );
+
+    if (!intent) return;
+
+    window.setTimeout(handleToggleSave, 0);
+  }, [conversion, handleToggleSave, post.id, saveSnapshot.saved]);
 
   return (
     <article className="overflow-hidden rounded-[22px] border border-[#E6EAF0] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:border-border dark:bg-surface">
@@ -2189,6 +2216,7 @@ const CommunityPublishOnboarding = ({
 
 const CommunityDetailLogic = ({ slug }: { slug: string }) => {
   const router = useRouter();
+  const conversion = useProgressiveConversion();
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<CommunityPostSort>("featured");
   const [sortPeriods, setSortPeriods] = useState<CommunityPostSelectedPeriods>({});
@@ -2326,8 +2354,21 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
     });
   };
 
+  const handleCreatePostClick = (event: ReactMouseEvent<HTMLAnchorElement>, href: string) => {
+    if (conversion.isAuthenticated) return;
+
+    event.preventDefault();
+    conversion.requestConversion("trigger_comentar", {
+      intent: {
+        returnTo: href,
+        type: "create_post",
+      },
+    });
+  };
+
   return (
     <PrivateTemplate
+      allowAnonymous
       autoHideNavigation
       contentClassName="!pt-0 bg-[#F5F7FA] dark:bg-background sm:!pt-0"
       navigationTheme="solidWhite"
@@ -2425,7 +2466,12 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
                     </Button>
                   ) : (
                     <Button asChild>
-                      <Link href={communityCreatePostHref(community.slug)}>
+                      <Link
+                        href={communityCreatePostHref(community.slug)}
+                        onClick={(event) =>
+                          handleCreatePostClick(event, communityCreatePostHref(community.slug))
+                        }
+                      >
                         Criar primeiro post
                       </Link>
                     </Button>
@@ -2477,6 +2523,7 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
           aria-label="Criar publicação nesta comunidade"
           className="group fixed right-5 bottom-[var(--lectum-mobile-nav-aware-fab-bottom)] z-40 grid h-14 w-14 place-items-center rounded-full border-[5px] border-white bg-[#308CE8] text-white shadow-[0_14px_30px_rgba(48,140,232,0.28)] transition-[bottom,transform,background-color,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:bg-[#2579CF] hover:shadow-[0_18px_36px_rgba(48,140,232,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F5F7FA] motion-safe:animate-[lectum-desktop-create-float_4.2s_ease-in-out_infinite] sm:bottom-[var(--lectum-mobile-nav-aware-fab-bottom-sm)] lg:right-10 lg:bottom-10 lg:h-16 lg:w-16 xl:right-20 2xl:right-28"
           href={communityCreatePostHref(community.slug)}
+          onClick={(event) => handleCreatePostClick(event, communityCreatePostHref(community.slug))}
           title="Criar publicação"
         >
           <Plus
@@ -2495,6 +2542,7 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
 export const CommunityFeedLogic = () => {
   const params = useParams<{ slug: string }>();
   const searchParams = useSearchParams();
+  const conversion = useProgressiveConversion();
   const routeSlug = typeof params.slug === "string" ? params.slug : COMMUNITY_FEED_SLUG;
   const communityFromQuery = getCommunityFeedChip(searchParams.get("community"));
   const communityFromLegacySlug =
@@ -2525,6 +2573,18 @@ export const CommunityFeedLogic = () => {
   const posts = feed.data?.data ?? [];
   const errorMessage = feed.isError ? resolveFeedError(feed.error) : null;
   const hasNoFollowedCommunities = scope === "following" && (feed.data?.following_count ?? 0) === 0;
+
+  const handleCreatePostClick = (event: ReactMouseEvent<HTMLAnchorElement>, href: string) => {
+    if (conversion.isAuthenticated) return;
+
+    event.preventDefault();
+    conversion.requestConversion("trigger_comentar", {
+      intent: {
+        returnTo: href,
+        type: "create_post",
+      },
+    });
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -2566,10 +2626,12 @@ export const CommunityFeedLogic = () => {
 
   return (
     <PrivateTemplate
+      allowAnonymous
       autoHideNavigation
       bottomNavigationCenterAction={{
         ariaLabel: "Criar publicação",
         href: createPostHref,
+        onClick: (event) => handleCreatePostClick(event, createPostHref),
         title: "Criar publicação",
       }}
       contentClassName="bg-[#F5F7FA] dark:bg-background"
@@ -2691,6 +2753,7 @@ export const CommunityFeedLogic = () => {
         aria-label="Criar publicação na comunidade"
         className="group fixed right-5 bottom-[var(--lectum-mobile-nav-aware-fab-bottom)] z-40 hidden h-14 w-14 place-items-center rounded-full border-[5px] border-white bg-[#308CE8] text-white shadow-[0_14px_30px_rgba(48,140,232,0.28)] transition-[bottom,transform,background-color,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:bg-[#2579CF] hover:shadow-[0_18px_36px_rgba(48,140,232,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F5F7FA] motion-safe:animate-[lectum-desktop-create-float_4.2s_ease-in-out_infinite] sm:bottom-[var(--lectum-mobile-nav-aware-fab-bottom-sm)] lg:right-10 lg:bottom-10 lg:grid lg:h-16 lg:w-16 xl:right-20 2xl:right-28"
         href={createPostHref}
+        onClick={(event) => handleCreatePostClick(event, createPostHref)}
         title="Criar publicação"
       >
         <Plus

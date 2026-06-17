@@ -6,6 +6,7 @@ import type { ButtonHTMLAttributes, MouseEvent, ReactNode } from "react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useDirectoryPsychologistContactClick } from "@/api/callers/directory";
+import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { formatCrpLabel } from "@/utils/crp";
@@ -199,6 +200,7 @@ export const PsychologistWhatsAppRedirectButton = ({
   const [redirectUrl, setRedirectUrl] = useState(psychologist.whatsappUrl ?? "");
   const timersRef = useRef<number[]>([]);
   const tracking = useDirectoryPsychologistContactClick(psychologist.id);
+  const conversion = useProgressiveConversion();
 
   useEffect(() => {
     const timers = timersRef.current;
@@ -229,6 +231,11 @@ export const PsychologistWhatsAppRedirectButton = ({
     if (disabled || !psychologist.whatsappUrl) return;
 
     const fallbackUrl = psychologist.whatsappUrl;
+
+    if (!conversion.requestWhatsAppAccess(fallbackUrl)) {
+      return;
+    }
+
     setRedirectUrl(fallbackUrl);
     setManualFallbackVisible(false);
     setIsTransitionOpen(true);

@@ -1,4 +1,4 @@
-﻿import type { user } from "@/interfaces/objects";
+import type { user } from "@/interfaces/objects";
 
 export type PostParams = {
   id: string;
@@ -207,18 +207,18 @@ export type PostMutationResult<T> =
 
 export type IPostShowDTO = {
   p: PostParams;
-  auth: user;
+  auth?: user;
 };
 
 export type IPostRepliesDTO = {
   p: PostParams;
   q: PostRepliesQuery;
-  auth: user;
+  auth?: user;
 };
 
 export type IPostReplyThreadDTO = {
   p: PostReplyParams;
-  auth: user;
+  auth?: user;
 };
 
 export type IPostMineDTO = {

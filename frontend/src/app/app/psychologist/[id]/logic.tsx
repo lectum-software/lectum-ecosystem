@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import {
   ArrowLeft,
@@ -48,6 +48,7 @@ import type {
 } from "@/api/generator/types/directory";
 import type { PostListPost } from "@/api/generator/types/posts";
 import { CommunityPostCard } from "@/components/community/community-post-card";
+import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -1653,7 +1654,8 @@ export const PsychologistProfileLogic = () => {
   const [shareFeedback, setShareFeedback] = useState(false);
   const [pendingScrollTab, setPendingScrollTab] = useState<ProfileTab | null>(null);
   const currentUser = useAppSelector((state) => state.user);
-  const canFavoritePsychologists = Boolean(currentUser?.id);
+  const conversion = useProgressiveConversion();
+  const canFavoritePsychologists = conversion.isAuthenticated;
   const id = params.id;
 
   const urlParams = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
@@ -1758,8 +1760,19 @@ export const PsychologistProfileLogic = () => {
   }, [activeTab, pendingScrollTab, posts.isLoading, reviews.isLoading]);
 
   const toggleFavorite = () => {
-    if (!canFavoritePsychologists) return;
     if (!profile) return;
+    if (!conversion.isAuthenticated) {
+      conversion.requestConversion("trigger_favorito", {
+        intent: {
+          payload: {
+            psychologistId: profile.id,
+          },
+          type: "favorite_psychologist",
+        },
+      });
+      return;
+    }
+    if (!canFavoritePsychologists) return;
 
     if (profile.favorited) {
       unfavoritePsychologist.mutate(profile.id);
@@ -1768,6 +1781,21 @@ export const PsychologistProfileLogic = () => {
 
     favoritePsychologist.mutate(profile.id);
   };
+
+  useEffect(() => {
+    if (!conversion.isAuthenticated || !profile) return;
+
+    const intent = conversion.consumePendingIntent(
+      (candidate) =>
+        candidate.type === "favorite_psychologist" &&
+        String(candidate.payload?.psychologistId ?? "") === profile.id,
+    );
+    const psychologistId = String(intent?.payload?.psychologistId ?? "");
+
+    if (!psychologistId || psychologistId !== profile.id || profile.favorited) return;
+
+    favoritePsychologist.mutate(profile.id);
+  }, [conversion, favoritePsychologist, profile]);
 
   const shareProfile = async () => {
     if (typeof window === "undefined") return;
@@ -1882,7 +1910,7 @@ export const PsychologistProfileLogic = () => {
             {!showInitialLoading && !profileErrorMessage && profile ? (
               <>
                 <ProfileHero
-                  canFavorite={canFavoritePsychologists}
+                  canFavorite
                   canEditProfile={canEditProfile}
                   favoritePending={favoritePendingId === profile.id}
                   onBack={goBack}

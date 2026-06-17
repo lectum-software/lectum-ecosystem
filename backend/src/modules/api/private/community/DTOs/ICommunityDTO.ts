@@ -1,4 +1,4 @@
-﻿import type { community, user } from "@/interfaces/objects";
+import type { community, user } from "@/interfaces/objects";
 
 export type CommunityListQuery = {
   page?: number;
@@ -268,7 +268,7 @@ export type ICommunityIndexDTO = {
 
 export type ICommunityShowDTO = {
   p: CommunityParams;
-  auth: user;
+  auth?: user;
 };
 
 export type ICommunitySuggestionDTO = {

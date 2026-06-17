@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import {
   ArrowDown,
@@ -50,6 +50,7 @@ import type {
   DirectoryPsychologist,
   DirectoryPsychologistsQuery,
 } from "@/api/generator/types/directory";
+import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -779,6 +780,7 @@ const useViewportMetrics = () => {
 export const PsychologistsLogic = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const conversion = useProgressiveConversion();
   const searchParamsString = searchParams.toString();
   const metrics = useViewportMetrics();
   const params = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
@@ -903,7 +905,7 @@ export const PsychologistsLogic = () => {
     shouldFetchFilterSuggestions,
   );
   const response = directory.data;
-  const psychologists = response?.data ?? [];
+  const psychologists = useMemo(() => response?.data ?? [], [response?.data]);
   const featuredPsychologist = psychologists[activePsychologistIndex] ?? psychologists[0];
   const backgroundVideoSrc = resolvePublicMediaUrl(featuredPsychologist?.video_url);
   const shouldShowVideo = Boolean(backgroundVideoSrc) && !isVideoPlaybackFailed;
@@ -2157,6 +2159,19 @@ export const PsychologistsLogic = () => {
       if (isMobileSearchFocusMode) return;
 
       const psychologistId = psychologist.id;
+
+      if (!conversion.isAuthenticated) {
+        conversion.requestConversion("trigger_favorito", {
+          intent: {
+            payload: {
+              psychologistId,
+            },
+            type: "favorite_psychologist",
+          },
+        });
+        return;
+      }
+
       const currentFavorited = favoriteOverrides[psychologistId] ?? Boolean(psychologist.favorited);
       const nextFavorited = !currentFavorited;
       const clearFavoriteOverride = () => {
@@ -2185,8 +2200,32 @@ export const PsychologistsLogic = () => {
         onSuccess: clearFavoriteOverride,
       });
     },
-    [favoriteOverrides, favoritePsychologist, isMobileSearchFocusMode, unfavoritePsychologist],
+    [
+      conversion,
+      favoriteOverrides,
+      favoritePsychologist,
+      isMobileSearchFocusMode,
+      unfavoritePsychologist,
+    ],
   );
+
+  useEffect(() => {
+    if (!conversion.isAuthenticated || psychologists.length === 0) return;
+
+    const intent = conversion.consumePendingIntent(
+      (candidate) =>
+        candidate.type === "favorite_psychologist" &&
+        psychologists.some((item) => item.id === String(candidate.payload?.psychologistId ?? "")),
+    );
+    const psychologistId = String(intent?.payload?.psychologistId ?? "");
+    if (!psychologistId) return;
+
+    const psychologist = psychologists.find((item) => item.id === psychologistId);
+    if (!psychologist) return;
+    if (favoriteOverrides[psychologistId] ?? psychologist.favorited) return;
+
+    window.setTimeout(() => toggleFavorite(psychologist), 0);
+  }, [conversion, favoriteOverrides, psychologists, toggleFavorite]);
 
   const favoritePendingId =
     favoritePsychologist.isPending && typeof favoritePsychologist.variables === "string"

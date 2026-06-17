@@ -17,7 +17,7 @@ const PUBLIC_APP_EXACT_ROUTES = [
   "/app/notifications",
   "/app/profile",
 ];
-const PUBLIC_APP_PREFIXES = ["/app/psychologists/", "/app/psychologist/"];
+const PUBLIC_APP_PREFIXES = ["/app/community/", "/app/psychologists/", "/app/psychologist/"];
 
 const hasPendingEmailConfirmation = (req: NextRequest) => {
   const rawUserCookie = req.cookies.get(USER_COOKIE_NAME)?.value;

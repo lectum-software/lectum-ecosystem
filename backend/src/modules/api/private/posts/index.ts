@@ -1,5 +1,6 @@
 import { Router } from "express";
 import multer from "@/config/multer";
+import privateAuth from "@/modules/api/middlewares/_auth";
 import {
   authorizeReplyMediaUpload,
   createReply,
@@ -31,12 +32,13 @@ import {
 
 const routes = Router();
 
-routes.get("/mine", listValidator, mine);
-routes.get("/saved", listValidator, saved);
+routes.get("/mine", privateAuth, listValidator, mine);
+routes.get("/saved", privateAuth, listValidator, saved);
 routes.get("/:id/replies", repliesValidator, replies);
 routes.get("/:id/replies/:replyId/thread", replySaveValidator, replyThread);
 routes.post(
   "/:id/replies/media",
+  privateAuth,
   showValidator,
   authorizeReplyMediaUpload,
   multer({
@@ -53,15 +55,15 @@ routes.post(
   }),
   uploadReplyMedia,
 );
-routes.post("/:id/replies", createReplyValidator, createReply);
-routes.post("/:id/replies/:replyId/save", replySaveValidator, saveReply);
-routes.delete("/:id/replies/:replyId/save", replySaveValidator, unsaveReply);
-routes.post("/:id/replies/:replyId/report", replyReportValidator, report);
-routes.delete("/:id/replies/:replyId", replySaveValidator, deleteReply);
-routes.post("/:id/vote", voteValidator, vote);
-routes.post("/:id/save", saveValidator, save);
-routes.delete("/:id/save", saveValidator, unsave);
-routes.post("/:id/report", reportValidator, report);
+routes.post("/:id/replies", privateAuth, createReplyValidator, createReply);
+routes.post("/:id/replies/:replyId/save", privateAuth, replySaveValidator, saveReply);
+routes.delete("/:id/replies/:replyId/save", privateAuth, replySaveValidator, unsaveReply);
+routes.post("/:id/replies/:replyId/report", privateAuth, replyReportValidator, report);
+routes.delete("/:id/replies/:replyId", privateAuth, replySaveValidator, deleteReply);
+routes.post("/:id/vote", privateAuth, voteValidator, vote);
+routes.post("/:id/save", privateAuth, saveValidator, save);
+routes.delete("/:id/save", privateAuth, saveValidator, unsave);
+routes.post("/:id/report", privateAuth, reportValidator, report);
 routes.get("/:id", showValidator, show);
 
 export default routes;

@@ -1,5 +1,6 @@
 import { type RequestHandler, Router } from "express";
 import privateAuth from "@/modules/api/middlewares/_auth";
+import optionalAuth from "@/modules/api/middlewares/optional-auth";
 import { requireRole } from "@/modules/api/middlewares/require-role";
 import apiPrivateAccount from "@/modules/api/private/account";
 import apiPrivateAuthCode from "@/modules/api/private/auth/code";
@@ -94,8 +95,8 @@ mountRoute("/api/private/auth/hidrate", apiPrivateAuthHidrate);
 mountRoute("/api/private/auth/need_reset", apiPrivateAuthNeedReset);
 mountRoute("/api/private/auth/reset", apiPrivateAuthReset);
 mountRoute("/api/private/account", privateAuth, apiPrivateAccount);
-mountRoute("/api/private/community", privateAuth, apiPrivateCommunity);
-mountRoute("/api/private/posts", privateAuth, apiPrivatePosts);
+mountRoute("/api/private/community", optionalAuth, apiPrivateCommunity);
+mountRoute("/api/private/posts", optionalAuth, apiPrivatePosts);
 mountRoute("/api/public/analytics/location-capture", apiPublicAnalyticsLocationCapture);
 mountRoute("/api/public/auth/login", apiPublicAuthLogin);
 mountRoute("/api/public/auth/recovery", apiPublicAuthRecovery);

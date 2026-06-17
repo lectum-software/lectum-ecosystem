@@ -2,6 +2,7 @@
 
 import { BriefcaseBusiness, ChevronRight, UserRound } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Logo } from "@/components/ui/logo";
 import { cn } from "@/lib/utils";
 import { AuthTemplate } from "@/templates/auth";
@@ -22,6 +23,18 @@ const profileOptions = [
 ];
 
 export const ProfileSelectionLogic = () => {
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirectTo") ?? searchParams.get("callbackUrl");
+  const appendRedirect = (href: string) => {
+    if (!redirectTo) return href;
+
+    const params = new URLSearchParams({
+      redirectTo,
+    });
+
+    return `${href}?${params.toString()}`;
+  };
+
   return (
     <AuthTemplate>
       <div className="grid w-full gap-8">
@@ -40,7 +53,7 @@ export const ProfileSelectionLogic = () => {
                   "group flex min-h-28 items-center gap-4 rounded-[var(--lectum-card-radius)] border border-border bg-surface px-6 py-5 shadow-[var(--lectum-shadow-soft)] transition",
                   "hover:border-primary/40 hover:bg-primary-soft/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
                 )}
-                href={option.href}
+                href={appendRedirect(option.href)}
                 key={option.href}
               >
                 <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
@@ -63,7 +76,10 @@ export const ProfileSelectionLogic = () => {
 
         <p className="text-center text-sm text-muted">
           Já possui uma conta?{" "}
-          <Link className="font-semibold text-primary hover:text-primary-hover" href="/auth/login">
+          <Link
+            className="font-semibold text-primary hover:text-primary-hover"
+            href={appendRedirect("/auth/login")}
+          >
             Fazer login
           </Link>
         </p>

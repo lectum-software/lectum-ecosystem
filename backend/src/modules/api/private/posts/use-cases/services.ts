@@ -59,6 +59,8 @@ const mediaNotAllowed = () => ({
   ...error("post_reply_media_professional_plan", {}),
 });
 
+type AuthenticatedPostShowDTO = IPostShowDTO & { auth: NonNullable<IPostShowDTO["auth"]> };
+
 const invalidVoteValue = () => ({
   status: 422,
   ...error("post_vote_value_invalid", {}),
@@ -118,9 +120,6 @@ const resolveMutationResult = <T>(
 };
 
 export const show = async (data: IPostShowDTO) => {
-  const unauthorized = ensureCommunityActor(data);
-  if (unauthorized) return unauthorized;
-
   const repository = new PostRepository();
   const res = await repository.show(data);
 
@@ -162,9 +161,6 @@ export const saved = async (data: IPostSavedDTO) => {
 };
 
 export const replies = async (data: IPostRepliesDTO) => {
-  const unauthorized = ensureCommunityActor(data);
-  if (unauthorized) return unauthorized;
-
   const repository = new PostRepository();
   const res = await repository.replies(data);
 
@@ -178,9 +174,6 @@ export const replies = async (data: IPostRepliesDTO) => {
 };
 
 export const replyThread = async (data: IPostReplyThreadDTO) => {
-  const unauthorized = ensureCommunityActor(data);
-  if (unauthorized) return unauthorized;
-
   const repository = new PostRepository();
   const res = await repository.replyThread(data);
 
@@ -220,7 +213,7 @@ export const createReply = async (data: IPostCreateReplyDTO) => {
   return resolveMutationResult(res, 201, "post_reply_created");
 };
 
-export const authorizeReplyMediaUpload = async (data: IPostShowDTO) => {
+export const authorizeReplyMediaUpload = async (data: AuthenticatedPostShowDTO) => {
   const unauthorized = ensureCommunityActor(data);
   if (unauthorized) return unauthorized;
 

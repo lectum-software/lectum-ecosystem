@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import {
   ArrowLeft,
@@ -238,6 +238,7 @@ export const CommunityLogic = () => {
 
   return (
     <PrivateTemplate
+      allowAnonymous
       contentClassName="relative overflow-hidden bg-white"
       navigationTheme="solidWhite"
     >

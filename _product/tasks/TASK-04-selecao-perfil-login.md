@@ -228,3 +228,25 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm check`
 - HTTP local confirmou que `/auth/login` e `/auth/redirect` com cookie de sessão redirecionam para `/app/psychologists`.
 - Browser local via Chrome/CDP confirmou que abrir `/auth/login` com cookie `lectum.token` navega para `/app/psychologists`.
+
+## Ajuste posterior em 2026-06-17: conversao progressiva para usuarios anonimos
+
+- Pedido direto de produto: manter descoberta aberta para visitantes, mas solicitar cadastro apenas apos sinais reais de interesse.
+- Foi criado o provider global de conversao progressiva em `frontend/src/components/conversion/progressive-conversion-provider.tsx`, com modal premium, blur leve, CTA "Criar conta gratis" e acao secundaria "Continuar explorando".
+- A modal nao aparece na entrada inicial. Ela usa `sessionStorage` para `modal_exibida_na_sessao`, contadores anonimos por sessao e eventos de analytics com os triggers: `trigger_tempo`, `trigger_psicologos`, `trigger_comunidade`, `trigger_scroll`, `trigger_favorito`, `trigger_salvar`, `trigger_comentar` e `trigger_whatsapp`.
+- Os gatilhos progressivos implementados foram: 90s acumulados em rotas `/app`, 3 perfis de psicologos diferentes, 3 posts diferentes, 60s em comunidade e 75% de scroll em post/comunidade.
+- Intencoes fortes de favorito, salvar, comentar/responder/criar post e WhatsApp (somente no segundo clique anonimo) gravam uma intencao pendente quando exibem a modal, preservam `redirectTo` e reexecutam a acao apos login quando aplicavel.
+- As leituras de comunidade/post passaram a aceitar autenticacao opcional no backend; mutacoes continuam protegidas por `privateAuth`, sem mocks ou bypass de permissao.
+- O fluxo de selecao de perfil e cadastro preserva `redirectTo`/`callbackUrl` para retornar o usuario ao contexto que disparou a conversao.
+- Nenhum pacote novo foi instalado e nenhuma migration/schema Prisma foi alterado.
+
+### Validacao do ajuste
+
+- `pnpm --dir backend check`
+- `pnpm --dir frontend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- API local sem cookie confirmou leitura publica de comunidade, posts, detalhe de post e replies com estado de usuario neutro.
+- Browser local headless em viewport mobile `390x844` confirmou que `/app/psychologists` nao mostra a modal imediatamente e que, apos 90s virtuais de navegacao, exibe a modal "Crie sua conta gratuita".
+- ADR criado: `adrs/0112-conversao-progressiva-usuarios-anonimos.md`.

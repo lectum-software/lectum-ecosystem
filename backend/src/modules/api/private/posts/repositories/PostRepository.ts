@@ -975,41 +975,48 @@ export class PostRepository implements IPostRepository {
 
     if (!post) return null;
 
+    const userId = data.auth?.id;
     const [vote, save, membership] = await Promise.all([
-      prisma.post_vote.findUnique({
-        where: {
-          user_id_post_id: {
-            user_id: data.auth.id!,
-            post_id: post.id,
-          },
-        },
-        select: {
-          deleted: true,
-          value: true,
-        },
-      }),
-      prisma.post_save.findUnique({
-        where: {
-          user_id_post_id: {
-            user_id: data.auth.id!,
-            post_id: post.id,
-          },
-        },
-        select: {
-          deleted: true,
-        },
-      }),
-      prisma.community_member.findUnique({
-        where: {
-          community_id_user_id: {
-            community_id: post.community.id,
-            user_id: data.auth.id!,
-          },
-        },
-        select: {
-          deleted: true,
-        },
-      }),
+      userId
+        ? prisma.post_vote.findUnique({
+            where: {
+              user_id_post_id: {
+                user_id: userId,
+                post_id: post.id,
+              },
+            },
+            select: {
+              deleted: true,
+              value: true,
+            },
+          })
+        : Promise.resolve(null),
+      userId
+        ? prisma.post_save.findUnique({
+            where: {
+              user_id_post_id: {
+                user_id: userId,
+                post_id: post.id,
+              },
+            },
+            select: {
+              deleted: true,
+            },
+          })
+        : Promise.resolve(null),
+      userId
+        ? prisma.community_member.findUnique({
+            where: {
+              community_id_user_id: {
+                community_id: post.community.id,
+                user_id: userId,
+              },
+            },
+            select: {
+              deleted: true,
+            },
+          })
+        : Promise.resolve(null),
     ]);
 
     return {
@@ -1060,12 +1067,13 @@ export class PostRepository implements IPostRepository {
     const items = buildReplyTrees(paginatedTopLevelItems, descendants, treeRankingSignals);
 
     const replyIds = collectReplyIds(items);
+    const userId = data.auth?.id;
     const [votes, saves] =
-      replyIds.length > 0
+      replyIds.length > 0 && userId
         ? await Promise.all([
             prisma.post_vote.findMany({
               where: {
-                user_id: data.auth.id!,
+                user_id: userId,
                 reply_id: {
                   in: replyIds,
                 },
@@ -1078,7 +1086,7 @@ export class PostRepository implements IPostRepository {
             }),
             prisma.post_reply_save.findMany({
               where: {
-                user_id: data.auth.id!,
+                user_id: userId,
                 reply_id: {
                   in: replyIds,
                 },
@@ -1127,12 +1135,13 @@ export class PostRepository implements IPostRepository {
     if (!thread) return null;
 
     const replyIds = collectReplyIds([thread]);
+    const userId = data.auth?.id;
     const [votes, saves] =
-      replyIds.length > 0
+      replyIds.length > 0 && userId
         ? await Promise.all([
             prisma.post_vote.findMany({
               where: {
-                user_id: data.auth.id!,
+                user_id: userId,
                 reply_id: {
                   in: replyIds,
                 },
@@ -1145,7 +1154,7 @@ export class PostRepository implements IPostRepository {
             }),
             prisma.post_reply_save.findMany({
               where: {
-                user_id: data.auth.id!,
+                user_id: userId,
                 reply_id: {
                   in: replyIds,
                 },

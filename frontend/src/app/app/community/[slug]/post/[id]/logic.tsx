@@ -26,6 +26,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
   type RefObject,
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -50,6 +51,7 @@ import { CommunityActionBar } from "@/components/community/community-action-bar"
 import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
 import { MentorBadge } from "@/components/community/mentor-badge";
 import { components } from "@/components/controllers";
+import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -437,6 +439,17 @@ const countReplyTreeDescendants = (reply: PostReply): number => {
   const notHydratedDirectReplies = Math.max(0, expectedDirectReplies - reply.replies.length);
 
   return loadedDescendants + notHydratedDirectReplies;
+};
+
+const findReplyInTree = (replies: PostReply[], replyId: string): PostReply | null => {
+  for (const reply of replies) {
+    if (reply.id === replyId) return reply;
+
+    const child = findReplyInTree(reply.replies, replyId);
+    if (child) return child;
+  }
+
+  return null;
 };
 
 const isReplyTreeInteractiveTarget = (target: EventTarget | null, currentTarget: HTMLElement) => {
@@ -978,6 +991,7 @@ const ReplyCard = ({
   const isOwnReply = Boolean(currentUserId && reply.author.id === currentUserId);
   const highlightedProfessionalThread = professionalThread ?? isVerifiedProfessional;
   const saveReplyMutation = useSaveReply(postId, reply.id);
+  const conversion = useProgressiveConversion();
   const psychologistProfileHref = isProfessional ? `/app/psychologist/${reply.author.id}` : null;
   const inlineReplyTarget = inlineReplyTargets[reply.id] ?? null;
   const isReplyComposerOpen = Boolean(inlineReplyTarget);
@@ -1016,6 +1030,42 @@ const ReplyCard = ({
     event.preventDefault();
     setTreeCollapsed((current) => !current);
   };
+
+  const toggleSaveReply: MouseEventHandler<HTMLButtonElement> = (event) => {
+    event.stopPropagation();
+
+    if (!conversion.isAuthenticated) {
+      event.preventDefault();
+      conversion.requestConversion("trigger_salvar", {
+        intent: {
+          payload: {
+            postId,
+            replyId: reply.id,
+          },
+          type: "save_reply",
+        },
+      });
+      return;
+    }
+
+    saveReplyMutation.mutate(reply.saved);
+  };
+
+  useEffect(() => {
+    if (!conversion.isAuthenticated || reply.saved) return;
+
+    const intent = conversion.consumePendingIntent(
+      (candidate) =>
+        candidate.type === "save_reply" &&
+        String(candidate.payload?.postId ?? "") === postId &&
+        String(candidate.payload?.replyId ?? "") === reply.id,
+    );
+
+    if (!intent) return;
+
+    saveReplyMutation.mutate(reply.saved);
+  }, [conversion, postId, reply.id, reply.saved, saveReplyMutation]);
+
   const rootTreeToggleAreaProps = canCollapseRootTree
     ? {
         "aria-expanded": !treeCollapsed,
@@ -1210,7 +1260,7 @@ const ReplyCard = ({
               disabled={votePending}
               onReply={() => onReply(reply)}
               onShare={() => onShare(reply)}
-              onToggleSave={() => saveReplyMutation.mutate(reply.saved)}
+              onToggleSave={toggleSaveReply}
               onVote={(value) => onVote(reply.id, value)}
               reply={reply}
               savePending={saveReplyMutation.isPending}
@@ -1890,6 +1940,7 @@ export const PostDetailLogic = () => {
   const postId = typeof params.id === "string" ? params.id : "";
   const isMobile = useIsPostDetailMobile();
   const currentUserId = useAppSelector((state) => state.user?.id ?? null);
+  const conversion = useProgressiveConversion();
   const [page, setPage] = useState(1);
   const [mobileReplyTarget, setMobileReplyTarget] = useState<ReplyTarget>(null);
   const [desktopReplyTargets, setDesktopReplyTargets] = useState<ReplyTargetMap>({});
@@ -1934,7 +1985,7 @@ export const PostDetailLogic = () => {
     onError: (error) => setDeleteReplyError(resolveReplyError(error)),
   });
   const post = postQuery.data?.post;
-  const replies = repliesQuery.data?.data ?? [];
+  const replies = useMemo(() => repliesQuery.data?.data ?? [], [repliesQuery.data?.data]);
   const postError = postQuery.isError ? resolvePostError(postQuery.error) : null;
   const repliesError = repliesQuery.isError ? resolvePostError(repliesQuery.error) : null;
   const hasDesktopReplyTargets = !isMobile && Object.keys(desktopReplyTargets).length > 0;
@@ -1977,8 +2028,20 @@ export const PostDetailLogic = () => {
     }
   };
 
-  const focusMainComposer = () => {
+  const focusMainComposer = useCallback(() => {
     setReplyError(null);
+    if (!conversion.isAuthenticated) {
+      conversion.requestConversion("trigger_comentar", {
+        intent: {
+          payload: {
+            postId,
+          },
+          type: "comment_post",
+        },
+      });
+      return;
+    }
+
     setMobileReplyTarget(null);
 
     window.setTimeout(() => {
@@ -1991,28 +2054,44 @@ export const PostDetailLogic = () => {
 
       inputNode?.focus({ preventScroll: true });
     }, 0);
-  };
+  }, [conversion, isMobile, postId]);
 
-  const handleReplyTarget = (reply: PostReply) => {
-    setReplyError(null);
-    const target = { id: reply.id, name: reply.author.name };
+  const handleReplyTarget = useCallback(
+    (reply: PostReply) => {
+      setReplyError(null);
+      if (!conversion.isAuthenticated) {
+        conversion.requestConversion("trigger_comentar", {
+          intent: {
+            payload: {
+              postId,
+              replyId: reply.id,
+            },
+            type: "reply_comment",
+          },
+        });
+        return;
+      }
 
-    if (isMobile) {
-      setMobileReplyTarget(target);
+      const target = { id: reply.id, name: reply.author.name };
 
-      window.setTimeout(() => {
-        const inputNode = composerRef.current?.querySelector<HTMLTextAreaElement>("textarea");
-        inputNode?.focus({ preventScroll: true });
-      }, 0);
+      if (isMobile) {
+        setMobileReplyTarget(target);
 
-      return;
-    }
+        window.setTimeout(() => {
+          const inputNode = composerRef.current?.querySelector<HTMLTextAreaElement>("textarea");
+          inputNode?.focus({ preventScroll: true });
+        }, 0);
 
-    setDesktopReplyTargets((currentTargets) => ({
-      ...currentTargets,
-      [reply.id]: target,
-    }));
-  };
+        return;
+      }
+
+      setDesktopReplyTargets((currentTargets) => ({
+        ...currentTargets,
+        [reply.id]: target,
+      }));
+    },
+    [conversion, isMobile, postId],
+  );
 
   const submitReply = async (
     values: ReplyComposerForm,
@@ -2020,6 +2099,18 @@ export const PostDetailLogic = () => {
     mediaFile?: File | null,
   ) => {
     if (!post) return;
+    if (!conversion.isAuthenticated) {
+      conversion.requestConversion("trigger_comentar", {
+        intent: {
+          payload: {
+            postId: post.id,
+            replyId: parentReplyId ?? null,
+          },
+          type: parentReplyId ? "reply_comment" : "comment_post",
+        },
+      });
+      return;
+    }
 
     setReplyError(null);
     const media = mediaFile
@@ -2059,8 +2150,63 @@ export const PostDetailLogic = () => {
     }
   };
 
+  const handleTogglePostSave = () => {
+    if (!post) return;
+
+    if (!conversion.isAuthenticated) {
+      conversion.requestConversion("trigger_salvar", {
+        intent: {
+          payload: {
+            postId: post.id,
+          },
+          type: "save_post",
+        },
+      });
+      return;
+    }
+
+    saveMutation.mutate(post.saved);
+  };
+
+  useEffect(() => {
+    if (!conversion.isAuthenticated || !post) return;
+
+    const intent = conversion.consumePendingIntent((candidate) => {
+      if (String(candidate.payload?.postId ?? "") !== post.id) return false;
+      if (candidate.type === "comment_post") return true;
+      if (candidate.type === "save_post" && !post.saved) return true;
+      if (candidate.type !== "reply_comment") return false;
+
+      const replyId = String(candidate.payload?.replyId ?? "");
+
+      return Boolean(replyId && findReplyInTree(replies, replyId));
+    });
+
+    if (!intent) return;
+
+    if (intent.type === "comment_post") {
+      window.setTimeout(focusMainComposer, 0);
+      return;
+    }
+
+    if (intent.type === "save_post") {
+      saveMutation.mutate(post.saved);
+      return;
+    }
+
+    if (intent.type === "reply_comment") {
+      const replyId = String(intent.payload?.replyId ?? "");
+      const reply = findReplyInTree(replies, replyId);
+
+      if (reply) {
+        window.setTimeout(() => handleReplyTarget(reply), 0);
+      }
+    }
+  }, [conversion, focusMainComposer, handleReplyTarget, post, replies, saveMutation]);
+
   return (
     <PrivateTemplate
+      allowAnonymous
       contentClassName="bg-[#F5F7FA] px-0 py-0 dark:bg-background"
       navigationTheme="solidWhite"
       showHeader
@@ -2106,7 +2252,7 @@ export const PostDetailLogic = () => {
                 disabled={voteMutation.isPending || saveMutation.isPending}
                 onFocusCommentComposer={focusMainComposer}
                 onShare={sharePost}
-                onToggleSave={() => saveMutation.mutate(post.saved)}
+                onToggleSave={handleTogglePostSave}
                 onVote={(value) => voteMutation.mutate({ value })}
                 post={post}
               />
@@ -2238,6 +2384,7 @@ export const PostReplyThreadLogic = () => {
   const communitySlug = typeof params.slug === "string" ? params.slug : "";
   const isMobile = useIsPostDetailMobile();
   const currentUserId = useAppSelector((state) => state.user?.id ?? null);
+  const conversion = useProgressiveConversion();
   const [mobileReplyTarget, setMobileReplyTarget] = useState<ReplyTarget>(null);
   const [desktopReplyTargets, setDesktopReplyTargets] = useState<ReplyTargetMap>({});
   const [replyError, setReplyError] = useState<string | null>(null);
@@ -2299,24 +2446,40 @@ export const PostReplyThreadLogic = () => {
     }
   };
 
-  const handleReplyTarget = (reply: PostReply) => {
-    setReplyError(null);
-    const target = { id: reply.id, name: reply.author.name };
+  const handleReplyTarget = useCallback(
+    (reply: PostReply) => {
+      setReplyError(null);
+      if (!conversion.isAuthenticated) {
+        conversion.requestConversion("trigger_comentar", {
+          intent: {
+            payload: {
+              postId,
+              replyId: reply.id,
+            },
+            type: "reply_comment",
+          },
+        });
+        return;
+      }
 
-    if (isMobile) {
-      setMobileReplyTarget(target);
-      window.setTimeout(() => {
-        const inputNode = composerRef.current?.querySelector<HTMLTextAreaElement>("textarea");
-        inputNode?.focus({ preventScroll: true });
-      }, 0);
-      return;
-    }
+      const target = { id: reply.id, name: reply.author.name };
 
-    setDesktopReplyTargets((currentTargets) => ({
-      ...currentTargets,
-      [reply.id]: target,
-    }));
-  };
+      if (isMobile) {
+        setMobileReplyTarget(target);
+        window.setTimeout(() => {
+          const inputNode = composerRef.current?.querySelector<HTMLTextAreaElement>("textarea");
+          inputNode?.focus({ preventScroll: true });
+        }, 0);
+        return;
+      }
+
+      setDesktopReplyTargets((currentTargets) => ({
+        ...currentTargets,
+        [reply.id]: target,
+      }));
+    },
+    [conversion, isMobile, postId],
+  );
 
   const submitReply = async (
     values: ReplyComposerForm,
@@ -2324,6 +2487,18 @@ export const PostReplyThreadLogic = () => {
     mediaFile?: File | null,
   ) => {
     if (!post || !rootReply) return;
+    if (!conversion.isAuthenticated) {
+      conversion.requestConversion("trigger_comentar", {
+        intent: {
+          payload: {
+            postId: post.id,
+            replyId: parentReplyId ?? rootReply.id,
+          },
+          type: "reply_comment",
+        },
+      });
+      return;
+    }
 
     setReplyError(null);
     const media = mediaFile
@@ -2360,8 +2535,31 @@ export const PostReplyThreadLogic = () => {
     setMobileReplyTarget(null);
   };
 
+  useEffect(() => {
+    if (!conversion.isAuthenticated || !post || !rootReply) return;
+
+    const intent = conversion.consumePendingIntent((candidate) => {
+      if (candidate.type !== "reply_comment") return false;
+      if (String(candidate.payload?.postId ?? "") !== post.id) return false;
+
+      const targetReplyId = String(candidate.payload?.replyId ?? "");
+
+      return Boolean(targetReplyId && findReplyInTree([rootReply], targetReplyId));
+    });
+
+    if (!intent) return;
+
+    const targetReplyId = String(intent.payload?.replyId ?? "");
+    const reply = findReplyInTree([rootReply], targetReplyId);
+
+    if (reply) {
+      window.setTimeout(() => handleReplyTarget(reply), 0);
+    }
+  }, [conversion, handleReplyTarget, post, rootReply]);
+
   return (
     <PrivateTemplate
+      allowAnonymous
       contentClassName="bg-[#F5F7FA] px-0 py-0 dark:bg-background"
       navigationTheme="solidWhite"
       showHeader

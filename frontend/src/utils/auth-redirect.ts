@@ -33,6 +33,12 @@ export function resolveAuthRedirect(
   legacyCallbackUrl?: string | null,
 ) {
   if (data && "confirmed" in data && data.confirmed === false) {
+    const pendingRedirect = explicitRedirect ?? legacyCallbackUrl;
+
+    if (pendingRedirect) {
+      return `/auth/verify-email?redirectTo=${encodeURIComponent(pendingRedirect)}`;
+    }
+
     return "/auth/verify-email";
   }
 
