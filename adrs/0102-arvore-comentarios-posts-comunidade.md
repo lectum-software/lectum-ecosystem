@@ -66,3 +66,17 @@ A tela interna de post precisa permitir discussões mais profundas sem poluir a 
 - A tela principal do post e a thread isolada usam o mesmo criterio no backend; o frontend replica o criterio para manter reordenacao imediata durante optimistic updates de voto.
 - A regra especial de destacar primeiro o comentario de psicologo verificado mais relevante entre os comentarios diretos ao post permanece como excecao de topo, sem afetar a ordenacao dos descendentes dentro de cada arvore.
 - A decisao nao altera schema, migrations, contratos de payload, profundidade visual, envio de respostas, votos, salvamento ou regra de permissao.
+
+## Atualizacao 2026-06-17 - header leve na thread de respostas
+
+- O header da tela isolada de thread/respostas deixou de ser sticky e deixou de usar superficie branca com blur, borda e sombra.
+- A decisao foi transformar o header em uma area estatica integrada ao fundo da pagina, preservando a navegacao de voltar e a centralizacao do titulo `Respostas`.
+- O subtitulo `Continuacao da conversa` recebeu line-height e espacamento vertical maiores para evitar corte visual na base das letras.
+- A mudanca e exclusivamente visual/frontend; nao altera contratos, backend, banco, votos, ordenacao, arvore, composer ou navegacao da thread.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome/CDP autenticado em 390px e 1440px validando `position: static`, fundo transparente, ausencia de borda/sombra e deslocamento do header junto com o scroll.

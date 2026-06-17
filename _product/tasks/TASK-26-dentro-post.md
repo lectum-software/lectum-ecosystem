@@ -363,3 +363,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nao houve alteracao de Prisma schema, migrations, packages, endpoints, payloads, logica de envio, votos, salvamento ou navegacao.
 - Documentacao de contrato atualizada em `_product/tasks/DATA-MODEL.md` e ADR atualizado em `adrs/0102-arvore-comentarios-posts-comunidade.md`.
 - Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm check` e script local autenticado via repository no post demo confirmando grupos de irmaos sem violacao de ordem por upvotes.
+
+## Execucao complementar: header leve da thread de respostas (2026-06-17)
+
+- Pedido do usuario: remover o fundo branco e o comportamento sticky/fixo do header da tela de continuacao de respostas, mantendo voltar e titulo `Respostas`.
+- Fonte visual auditavel: `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao, entao a validacao visual usou a referencia local e browser local.
+- O header de `/app/community/[slug]/post/[id]/thread/[replyId]` deixou de usar `sticky`, fundo branco translucido, borda inferior, blur e sombra; agora e um bloco estatico integrado ao fundo da pagina e rola junto com o conteudo.
+- O botao de voltar foi preservado na coluna esquerda e o titulo `Respostas` continua centralizado pela grade de tres colunas.
+- O subtitulo `Continuacao da conversa` ganhou line-height maior, espacamento vertical e remocao de `leading-none`/truncate, evitando corte na base das letras.
+- Nao houve alteracao de backend, Prisma, migrations, packages, endpoints, payloads, votos, replies, ordenacao ou regras de destaque.
+- ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check --write -- 'src/app/app/community/[slug]/post/[id]/logic.tsx'`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado em 390px e 1440px confirmando header `position: static`, sem fundo/borda/sombra, rolando com a pagina e subtitulo com line-height de ~16px.
