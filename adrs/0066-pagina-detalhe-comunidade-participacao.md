@@ -233,3 +233,18 @@ Validacao complementar:
 - `pnpm check`
 - Chrome/CDP autenticado em mobile 390px e desktop 1365px confirmando `Seguindo` com fundo `rgb(241, 245, 249)`, texto `rgb(71, 85, 105)`, altura compacta e sombra transparente.
 - Chrome/CDP anonimo em mobile 390px confirmando `Seguir` compacto, sem sombra visivel e com variante secundaria branca/azul.
+
+## Atualizacao 2026-06-17 - filtros ativos sem profundidade visual
+
+- Os chips de ordenacao da pagina interna de comunidade (`Em destaque`, `Novos`, `Mais comentados`, `Mais uteis`) deixam de aplicar sombra/glow no estado ativo.
+- A diferenciacao ativa passa a depender somente de cor de fundo, texto e icone, mantendo radius, altura, borda e layout compactos ja definidos.
+- A transicao dos chips tambem deixa de incluir `box-shadow`, evitando halos durante mudanca de estado.
+- Os dropdowns de periodo continuam sendo controles independentes nos chips `Mais comentados` e `Mais uteis`; a decisao nao altera opcoes, estado de periodo, posicionamento do menu, ordenacao nem parametros enviados ao endpoint.
+- A mudanca e exclusivamente frontend/visual e nao altera backend, Prisma, contratos, persistencia, ranking, paginacao, votos ou salvos.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome/CDP em mobile 390px e desktop 1365px confirmando `box-shadow` transparente no chip ativo inicial `Em destaque` e no fluxo de dropdown de `Mais comentados`.

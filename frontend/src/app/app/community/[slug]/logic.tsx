@@ -122,10 +122,10 @@ const getCommunityPostSortPeriodShortLabel = (value: CommunityPostSortPeriod) =>
 
 const communityPostSortChipClassName = (active: boolean) =>
   cn(
-    "group inline-flex h-[30px] min-h-[30px] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[11px] font-bold leading-none tracking-[-0.01em] shadow-none transition-[background-color,border-color,box-shadow,color,transform] duration-200 active:scale-[0.99]",
+    "group inline-flex h-[30px] min-h-[30px] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[11px] font-bold leading-none tracking-[-0.01em] shadow-none transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.99]",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8]/20",
     active
-      ? "border-primary bg-primary text-white shadow-[0_7px_18px_rgba(48,140,232,0.16)] hover:bg-primary/95 dark:border-primary dark:bg-primary dark:text-white"
+      ? "border-primary bg-primary text-white hover:bg-primary/95 dark:border-primary dark:bg-primary dark:text-white"
       : "border-[#DDE8F4] bg-white text-[#5F718A] hover:border-[#BFD8F4] hover:bg-[#F8FBFF] hover:text-[#123B6D] dark:border-border dark:bg-surface/70 dark:text-muted dark:hover:bg-surface-muted/70 dark:hover:text-foreground",
   );
 

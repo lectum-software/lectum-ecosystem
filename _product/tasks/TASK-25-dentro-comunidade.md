@@ -322,3 +322,13 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; referencias auditaveis: `_product/proto/Dentro da Comunidade.jpg` e `_product/proto/Seguindo.jpg`.
 - ADR atualizado: `adrs/0066-pagina-detalhe-comunidade-participacao.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, Chrome/CDP autenticado em mobile 390px e desktop 1365px validando `Seguindo` cinza sem sombra, e Chrome/CDP anonimo em mobile 390px validando `Seguir` compacto sem sombra.
+
+## Complemento 2026-06-17 - filtros da comunidade sem glow ativo
+
+- Pedido do usuario: remover completamente o sombreamento/glow do item ativo nos filtros `Em destaque`, `Novos`, `Mais comentados` e `Mais uteis`.
+- O helper compartilhado dos chips de ordenacao da comunidade removeu a transicao de `box-shadow` e deixou o estado ativo diferenciado apenas por cor de fundo, texto e icone.
+- Os dropdowns de `Mais comentados` e `Mais uteis` preservam o mesmo comportamento, posicionamento e opcoes; apenas a profundidade visual do chip ativo foi removida.
+- Escopo: sem alteracao de backend, Prisma, migrations, endpoints, payloads, ranking, periodos, filtros funcionais, votos, salvos, compartilhamento ou packages.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; referencia auditavel: `_product/proto/Dentro da Comunidade.jpg`.
+- ADR atualizado: `adrs/0066-pagina-detalhe-comunidade-participacao.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP em mobile 390px e desktop 1365px validando `box-shadow` transparente no chip ativo e abertura/selecionamento do dropdown `Mais comentados`.
