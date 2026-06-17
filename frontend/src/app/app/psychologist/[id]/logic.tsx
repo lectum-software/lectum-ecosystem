@@ -6,6 +6,7 @@ import {
   BriefcaseBusiness,
   ChevronLeft,
   ChevronRight,
+  CornerUpLeft,
   FileText,
   GraduationCap,
   Heart,
@@ -41,13 +42,16 @@ import {
 import { usePatient } from "@/api/callers/patient";
 import type {
   DirectoryCatalogItem,
+  DirectoryPsychologistParticipationSummary,
   DirectoryPsychologistProfile,
   DirectoryPsychologistProfilePost,
   DirectoryPsychologistProfileReview,
+  DirectoryPsychologistTopMentorCommunity,
   DirectoryReviewSummary,
 } from "@/api/generator/types/directory";
 import type { PostListPost } from "@/api/generator/types/posts";
 import { CommunityPostCard } from "@/components/community/community-post-card";
+import { MentorBadge } from "@/components/community/mentor-badge";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -93,6 +97,12 @@ const PROFILE_CARD_SURFACE =
 
 const PROFILE_SUBTLE_SURFACE =
   "box-border rounded-[18px] border border-[#E4EBF3] bg-white/88 shadow-[0_8px_20px_rgba(15,23,42,0.035)]";
+
+const EMPTY_PUBLICATIONS_SUMMARY: DirectoryPsychologistParticipationSummary = {
+  posts_count: 0,
+  replies_count: 0,
+  top_mentor_communities: [],
+};
 
 const PROFILE_ABOUT_MAX_LINES = 3;
 const PROFILE_ABOUT_MORE_LABEL = "... ver mais";
@@ -1213,6 +1223,123 @@ const ProfileCommunityPostCard = ({
   />
 );
 
+const formatPublicationMetric = (value: number) => value.toLocaleString("pt-BR");
+
+const PublicationCommunityAvatar = ({
+  community,
+}: {
+  community: DirectoryPsychologistTopMentorCommunity;
+}) => {
+  const avatarSrc = resolvePublicMediaUrl(community.avatar_url);
+  const avatarIsPublicMedia = isPublicMediaUrl(community.avatar_url);
+
+  return (
+    <span
+      className="relative grid h-[72px] w-[72px] place-items-center overflow-hidden rounded-full border-[3px] border-white text-[18px] font-extrabold shadow-[0_10px_22px_rgba(15,23,42,0.10)] ring-1 ring-[#DCEBFA]"
+      style={{
+        background:
+          community.visual_soft_color ||
+          community.visual_gradient_color ||
+          "linear-gradient(135deg, #EAF5FF 0%, #D7ECFF 100%)",
+        color: community.visual_text_color || community.visual_primary_dark_color || "#1D65B2",
+      }}
+    >
+      {avatarSrc ? (
+        <Image
+          alt={`Comunidade ${community.name}`}
+          className="object-cover"
+          fill
+          sizes="72px"
+          src={avatarSrc}
+          unoptimized={avatarIsPublicMedia}
+        />
+      ) : (
+        getInitials(community.name)
+      )}
+    </span>
+  );
+};
+
+const PublicationTopMentorCommunity = ({
+  community,
+}: {
+  community: DirectoryPsychologistTopMentorCommunity;
+}) => (
+  <Link
+    className="group flex min-w-[104px] snap-start flex-col items-center rounded-[18px] px-2 py-1.5 text-center no-underline transition hover:bg-[#F8FBFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 sm:min-w-[118px]"
+    href={`/app/community/${community.slug}`}
+  >
+    <span className="relative pb-3">
+      <PublicationCommunityAvatar community={community} />
+      <MentorBadge
+        badge={community.badge}
+        className="absolute -bottom-0.5 left-1/2 max-w-[98px] -translate-x-1/2 whitespace-nowrap px-2 py-1 text-[8.5px] shadow-[0_8px_16px_rgba(15,23,42,0.10)]"
+      />
+    </span>
+    <span className="mt-1.5 line-clamp-2 max-w-[112px] text-[12.5px] font-extrabold leading-[1.18] tracking-[-0.02em] text-[#475569] transition group-hover:text-[#182033]">
+      {community.name}
+    </span>
+  </Link>
+);
+
+const PublicationMetric = ({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: number;
+}) => (
+  <span className="inline-flex min-w-0 items-center gap-2 text-[13px] font-bold leading-none text-[#64748B]">
+    <Icon className="h-4 w-4 shrink-0 text-[#64748B]" aria-hidden="true" />
+    <span className="whitespace-nowrap">
+      <strong className="font-extrabold text-[#182033]">{formatPublicationMetric(value)}</strong>{" "}
+      {label}
+    </span>
+  </span>
+);
+
+const PublicationsActivitySummary = ({
+  summary,
+}: {
+  summary: DirectoryPsychologistParticipationSummary;
+}) => {
+  const topCommunities = summary.top_mentor_communities.slice(0, 3);
+  const hasTopCommunities = topCommunities.length > 0;
+  const hasMetrics = summary.posts_count > 0 || summary.replies_count > 0;
+
+  if (!hasTopCommunities && !hasMetrics) return null;
+
+  return (
+    <section
+      className="overflow-hidden rounded-[24px] border border-[#E7EEF7] bg-white/95 px-3 py-4 shadow-[0_12px_26px_rgba(15,23,42,0.035)] sm:px-5"
+      data-publications-summary="true"
+    >
+      {hasTopCommunities ? (
+        <div className="flex snap-x gap-2.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:justify-center sm:gap-4">
+          {topCommunities.map((community) => (
+            <PublicationTopMentorCommunity community={community} key={community.id} />
+          ))}
+        </div>
+      ) : null}
+
+      {hasMetrics ? (
+        <div
+          className={cn(
+            "flex flex-wrap items-center justify-center gap-x-5 gap-y-2.5",
+            hasTopCommunities && "mt-3.5 border-[#EEF3F8] border-t pt-3.5",
+          )}
+        >
+          <PublicationMetric icon={FileText} label="Posts" value={summary.posts_count} />
+          <span className="hidden h-5 w-px bg-[#E5ECF3] sm:block" aria-hidden="true" />
+          <PublicationMetric icon={CornerUpLeft} label="Respostas" value={summary.replies_count} />
+        </div>
+      ) : null}
+    </section>
+  );
+};
+
 const PostsPreviewSection = ({
   canInteract,
   isError,
@@ -1372,6 +1499,7 @@ const PostsTab = ({
   onShare,
   pages,
   posts,
+  summary,
   total,
 }: {
   canInteract: boolean;
@@ -1385,6 +1513,7 @@ const PostsTab = ({
   onPageChange: (page: number) => void;
   pages: number;
   posts: DirectoryPsychologistProfilePost[];
+  summary: DirectoryPsychologistParticipationSummary;
   total: number;
 }) => {
   return (
@@ -1396,6 +1525,8 @@ const PostsTab = ({
         onBack={onBackToOverview}
         title="Publicações"
       />
+
+      <PublicationsActivitySummary summary={summary} />
 
       {isError ? (
         <InlineAlert title="Não foi possível carregar publicações" variant="error">
@@ -1975,6 +2106,7 @@ export const PsychologistProfileLogic = () => {
                       onShare={sharePost}
                       pages={posts.data?.pages ?? 0}
                       posts={posts.data?.data ?? []}
+                      summary={posts.data?.summary ?? EMPTY_PUBLICATIONS_SUMMARY}
                       total={posts.data?.count ?? 0}
                     />
                   ) : null}

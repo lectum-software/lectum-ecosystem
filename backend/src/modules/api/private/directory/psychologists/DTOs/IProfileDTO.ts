@@ -53,6 +53,27 @@ export type DirectoryPsychologistPost = CommunityPostDTO & {
   contribution_type: "post" | "reply";
 };
 
+export type DirectoryPsychologistTopMentorCommunity = {
+  id: string;
+  name: string;
+  slug: string;
+  avatar_url: string | null;
+  visual_primary_color: string | null;
+  visual_primary_dark_color: string | null;
+  visual_soft_color: string | null;
+  visual_text_color: string | null;
+  visual_gradient_color: string | null;
+  position: 1 | 2 | 3;
+  badge: string;
+  score: number;
+};
+
+export type DirectoryPsychologistParticipationSummary = {
+  posts_count: number;
+  replies_count: number;
+  top_mentor_communities: DirectoryPsychologistTopMentorCommunity[];
+};
+
 export type DirectoryReviewAuthor = {
   initials: string;
   name: string;
@@ -74,7 +95,9 @@ export type DirectoryReviewSummary = {
   distribution: Record<1 | 2 | 3 | 4 | 5, number>;
 };
 
-export type DirectoryPsychologistPostsResponse = PaginationResponse<DirectoryPsychologistPost>;
+export type DirectoryPsychologistPostsResponse = PaginationResponse<DirectoryPsychologistPost> & {
+  summary: DirectoryPsychologistParticipationSummary;
+};
 
 export type DirectoryPsychologistReviewsResponse =
   PaginationResponse<DirectoryPsychologistReview> & {

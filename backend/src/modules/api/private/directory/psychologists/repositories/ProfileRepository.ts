@@ -6,6 +6,7 @@ import type {
   CommunityPostDTO,
   CommunityProfessionalReplyDTO,
 } from "@/modules/api/private/community/DTOs/ICommunityDTO";
+import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
 import { crpExperienceYears } from "@/utils/professional-experience";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
@@ -15,6 +16,7 @@ import type {
   DirectoryPsychologistPostsResponse,
   DirectoryPsychologistProfile,
   DirectoryPsychologistReviewsResponse,
+  DirectoryPsychologistTopMentorCommunity,
   DirectoryReviewAuthor,
   IProfileListDTO,
   IProfileShowDTO,
@@ -432,6 +434,118 @@ const publishedProfileWhere = (psychologistId: string): Prisma.userWhereInput =>
   },
 });
 
+const topMentorBadgeForPosition = (position: 1 | 2 | 3) => `TOP #${position} MENTOR`;
+
+const topMentorEligiblePsychologistWhere = (): Prisma.userWhereInput => ({
+  deleted: false,
+  active: true,
+  role: "psicologo",
+  psychologist_profile: {
+    is: {
+      deleted: false,
+      published: true,
+      cfp_verified_at: {
+        not: null,
+      },
+      subscriptions: {
+        some: activeProfessionalEntitlementWhere(),
+      },
+    },
+  },
+});
+
+const getProfileTopMentorCommunities = async (
+  psychologistId: string,
+): Promise<DirectoryPsychologistTopMentorCommunity[]> => {
+  const [eligibleMentors, candidateCommunities] = await Promise.all([
+    prisma.user.findMany({
+      where: topMentorEligiblePsychologistWhere(),
+      select: {
+        id: true,
+      },
+    }),
+    prisma.community.findMany({
+      where: {
+        deleted: false,
+        OR: [
+          {
+            posts: {
+              some: {
+                author_id: psychologistId,
+                deleted: false,
+                status: "publicado",
+              },
+            },
+          },
+          {
+            posts: {
+              some: {
+                deleted: false,
+                status: "publicado",
+                replies: {
+                  some: {
+                    author_id: psychologistId,
+                    deleted: false,
+                  },
+                },
+              },
+            },
+          },
+        ],
+      },
+      orderBy: [{ name: "asc" }, { id: "asc" }],
+      select: communityCardSelect,
+    }),
+  ]);
+  const eligibleMentorIds = eligibleMentors.map((mentor) => mentor.id);
+
+  if (!eligibleMentorIds.includes(psychologistId) || candidateCommunities.length === 0) {
+    return [];
+  }
+
+  const rankedCommunities = await Promise.all(
+    candidateCommunities.map(async (community) => {
+      const ranking = await getCommunityMentorRankingSignals(community.id, eligibleMentorIds);
+      const signal = ranking.get(psychologistId);
+
+      if (!signal || signal.position > 3) return null;
+
+      const position = signal.position as 1 | 2 | 3;
+
+      return {
+        id: community.id,
+        name: community.name,
+        slug: community.slug,
+        avatar_url: community.avatar_url,
+        visual_primary_color: community.visual_primary_color,
+        visual_primary_dark_color: community.visual_primary_dark_color,
+        visual_soft_color: community.visual_soft_color,
+        visual_text_color: community.visual_text_color,
+        visual_gradient_color: community.visual_gradient_color,
+        position,
+        badge: topMentorBadgeForPosition(position),
+        score: signal.score,
+      };
+    }),
+  );
+
+  return rankedCommunities
+    .filter((community): community is DirectoryPsychologistTopMentorCommunity => community !== null)
+    .sort((a, b) => {
+      const positionDiff = a.position - b.position;
+      if (positionDiff !== 0) return positionDiff;
+
+      const scoreDiff = b.score - a.score;
+      if (scoreDiff !== 0) return scoreDiff;
+
+      const nameDiff = a.name.localeCompare(b.name, "pt-BR");
+      if (nameDiff !== 0) return nameDiff;
+
+      return a.id.localeCompare(b.id);
+    })
+    .slice(0, 3);
+};
+
 export class ProfileRepository implements IProfileRepository {
   async hasPublishedProfile(psychologistId: string): Promise<boolean> {
     const profile = await prisma.user.findFirst({
@@ -627,7 +741,7 @@ export class ProfileRepository implements IProfileRepository {
     };
     const take = pagination.skip + pagination.limit;
 
-    const [posts, postsCount, replies, repliesCount] = await Promise.all([
+    const [posts, postsCount, replies, repliesCount, topMentorCommunities] = await Promise.all([
       prisma.community_post.findMany({
         where: postsWhere,
         take,
@@ -642,6 +756,7 @@ export class ProfileRepository implements IProfileRepository {
         select: profileReplySelect,
       }),
       prisma.post_reply.count({ where: repliesWhere }),
+      getProfileTopMentorCommunities(data.p.id),
     ]);
     const count = postsCount + repliesCount;
     const mergedItems = [
@@ -740,6 +855,11 @@ export class ProfileRepository implements IProfileRepository {
       page: pagination.page,
       pages: Math.ceil(count / pagination.limit),
       count,
+      summary: {
+        posts_count: postsCount,
+        replies_count: repliesCount,
+        top_mentor_communities: topMentorCommunities,
+      },
     };
   }
 

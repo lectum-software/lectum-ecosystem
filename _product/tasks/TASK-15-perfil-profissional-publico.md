@@ -618,3 +618,23 @@ Validações executadas:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Chrome headless/CDP em `http://localhost:3002/app/psychologist/demo-psychologist-camila-rocha` confirmou fallback da capa sem imagem customizada, com camadas `radial-gradient` e `linear-gradient`, no mobile 390px (`coverRect=390x132`) e desktop 1440px (`coverRect=760x132`).
+
+## Registro de ajuste complementar em 2026-06-17 - resumo de atuacao nas Publicacoes
+
+- Pedido do usuario: adicionar, na aba `Publicacoes` do perfil do psicologo, um resumo compacto de comunidades onde ele e Top Mentor e metricas reais de participacao antes da listagem de posts/respostas.
+- O endpoint `GET /api/private/directory/psychologists/:id/posts` passou a retornar `summary` com `posts_count`, `replies_count` e ate 3 `top_mentor_communities`.
+- As comunidades Top Mentor sao calculadas com o helper oficial `getCommunityMentorRankingSignals`, mantendo a formula existente do ranking e exibindo apenas posicoes Top #1, Top #2 e Top #3 quando houver dados reais.
+- A UI da aba `Publicacoes` recebeu uma secao compacta `data-publications-summary` com avatars de comunidade, badge `TOP #N MENTOR`, nome da comunidade e metricas `Posts`/`Respostas`, sem criar card pesado nem layout paralelo.
+- Se o psicologo nao tiver comunidades Top 3 nem contribuicoes em comunidades, a secao nao e exibida.
+- Nao houve alteracao de Prisma, migrations, packages, ordenacao das publicacoes, cards de post, votos, salvos, compartilhamento ou WhatsApp.
+- ADR criado: `adrs/0114-resumo-atuacao-publicacoes-perfil.md`.
+
+Validacoes executadas:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome/CDP mobile 390px em `/app/psychologist/demo-psychologist-camila-rocha?tab=publicacoes`, confirmando secao de resumo, 3 comunidades Top Mentor e metricas `2 Posts` / `1 Respostas`.
+- Chrome/CDP desktop 1440px na mesma rota, confirmando resumo renderizado e distribuicao horizontal das comunidades.
