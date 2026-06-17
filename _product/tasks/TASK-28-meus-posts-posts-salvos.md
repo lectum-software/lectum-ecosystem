@@ -263,3 +263,22 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm check`
 - Browser local via Chrome/CDP em `/app/posts/mine` mobile `390x844`, validando a linha `Comentado em` discreta, ausência da tag dentro do bloco de contexto e ausência de overflow horizontal.
 - ADR atualizado: `adrs/0072-meus-posts-e-posts-salvos.md`.
+
+
+## Ajuste complementar em 2026-06-17 - padronizacao final dos cards salvos
+
+- Pedido direto de produto: em `/app/posts/saved`, os cards nao devem exibir mais o texto `Salvo em ...`; o header passa a manter apenas o contexto do conteudo: `Postado em [comunidade]` para posts e `Respondido em [comunidade]` para comentarios/respostas.
+- Respostas salvas seguem a mesma estrutura visual dos cards de post: header de comunidade, metadados do autor, conteudo, midia/WhatsApp quando houver e `CommunityActionBar` ao final.
+- Quando o autor da resposta salva e paciente, a linha de metadados exibe somente o tempo da publicacao; quando e psicologo, mantem `Psicologo • tempo` conforme o padrao dos comentarios no post.
+- A `CommunityActionBar` de respostas salvas passou a usar a mesma apresentacao do feed, incluindo cluster de up/downvote, contador de respostas, contador de salvamentos ativo em azul e compartilhar. Posts salvos continuam usando `CommunityPostCard`, agora sem data de salvamento no header e com contexto visual discreto.
+- Nao houve alteracao de schema Prisma, endpoint, pacote, ordenacao ou persistencia; a mudanca e de apresentacao e reutiliza contadores reais ja expostos no DTO.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`
+- Browser local via Chrome/CDP em `/app/posts/saved` mobile `390x844`, validando ausencia de `Salvo em`, contexto `Postado em`/`Respondido em`, ausencia de bloco de referencia azul, contador de salvamentos na barra padrao e ausencia de overflow horizontal.
+- ADR atualizado: `adrs/0072-meus-posts-e-posts-salvos.md`.

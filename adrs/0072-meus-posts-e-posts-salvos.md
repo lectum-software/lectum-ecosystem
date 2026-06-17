@@ -244,3 +244,34 @@ A aba "Comentarios" em `/app/posts/mine` exibia a flag `Respondido por psicologo
 - `pnpm --dir backend build`
 - `pnpm check`
 - Browser local via Chrome/CDP em `/app/posts/mine` mobile confirmou a composição sem overflow horizontal e a tag fora do bloco de contexto.
+
+
+## Complemento 2026-06-17: Salvos sem data de salvamento nos cards
+
+### Contexto
+
+A tela `/app/posts/saved` ainda mantinha a data de salvamento no header dos cards. Mesmo como texto cinza, esse metadado competia com o contexto real do conteudo e mantinha diferencas entre posts e respostas salvas. Alem disso, respostas salvas usavam uma barra de acoes mais compacta que os posts, gerando inconsistencia no conjunto de up/downvotes e salvamentos.
+
+### Decisao
+
+- Remover completamente a data `Salvo em ...` dos cards salvos.
+- Manter no header apenas o contexto do conteudo: `Postado em [comunidade]` para posts e `Respondido em [comunidade]` para respostas.
+- Renderizar respostas salvas com a mesma cadencia visual de `CommunityPostCard`: contexto, autor, conteudo, midia/CTA opcional e barra padrao no rodape.
+- Para autores pacientes em respostas salvas, ocultar o tipo `Paciente` e exibir apenas o tempo; para psicologos, manter `Psicologo • tempo`.
+- Usar a apresentacao padrao da `CommunityActionBar` tambem em respostas salvas, incluindo cluster de voto, respostas, contador de salvamentos ativo e compartilhar.
+- Adicionar um tom de contexto discreto ao `CommunityPostCard` para uso em Salvos sem alterar o padrao das demais telas.
+
+### Consequencias
+
+- A unica diferenca relevante entre post salvo e comentario salvo passa a ser o conteudo exibido.
+- A tela Salvos deixa de destacar o ato de salvar e prioriza o material guardado pelo usuario.
+- A alteracao nao muda contratos de API, schema Prisma, endpoints ou regras de persistencia.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`
+- Browser local via Chrome/CDP em `/app/posts/saved` mobile confirmou cards sem `Salvo em`, sem contexto azul e sem overflow horizontal.

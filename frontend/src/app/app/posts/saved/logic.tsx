@@ -58,18 +58,6 @@ const resolvePostsError = (error: unknown) => {
   return rawMessage || "Não foi possível carregar seus itens salvos agora.";
 };
 
-const formatSavedAt = (value: string | null) => {
-  if (!value) return "Salvo";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Salvo";
-
-  return `Salvo em ${new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "short",
-  }).format(date)}`;
-};
-
 const formatRelativeTime = (value: string) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "agora";
@@ -102,7 +90,7 @@ const getInitials = (name: string) => {
 const formatAuthorMeta = (author: CommunityAuthor, createdAt: string) => {
   const relativeTime = formatRelativeTime(createdAt);
 
-  if (!author.type_label) return relativeTime;
+  if (author.role !== "psicologo" || !author.type_label) return relativeTime;
 
   return `${author.type_label} • ${relativeTime}`;
 };
@@ -292,48 +280,53 @@ const SavedReplyCard = ({
   const hasProfessionalWhatsapp = Boolean(reply.author.whatsapp_url);
 
   return (
-    <article className="grid gap-4 rounded-[22px] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
-      <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-muted">
-        <Reply className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+    <article className="w-full overflow-hidden rounded-[22px] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
+      <div className="mb-4 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold tracking-[-0.01em] text-muted">
+        <Reply className="h-3.5 w-3.5 shrink-0 text-muted/80" aria-hidden="true" />
         <span className="shrink-0">Respondido em</span>
         <Link
-          className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-black text-foreground underline-offset-4 hover:text-primary hover:underline"
+          className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-extrabold text-[#475569] underline-offset-4 hover:text-primary hover:underline dark:text-muted"
           href={`/app/community/${item.post.community.slug}/post/${item.post.id}`}
         >
           {item.post.community.name}
         </Link>
-        <span className="ml-auto shrink-0">{formatSavedAt(item.saved_at)}</span>
       </div>
 
-      <SavedReplyAuthorHeader author={reply.author} createdAt={reply.created_at} />
+      <div className="mb-3">
+        <SavedReplyAuthorHeader author={reply.author} createdAt={reply.created_at} />
+      </div>
 
-      <p className="whitespace-pre-line text-sm leading-6 text-foreground">{reply.content}</p>
+      <div className="grid gap-2">
+        <p className="whitespace-pre-line text-sm leading-6 text-foreground">{reply.content}</p>
+      </div>
 
-      <SavedReplyMedia
-        mediaType={reply.media_type}
-        mediaUrl={reply.media_url}
-        title={reply.title ?? "Mídia da resposta salva"}
-      />
+      <div className="mt-4 grid gap-4">
+        <SavedReplyMedia
+          mediaType={reply.media_type}
+          mediaUrl={reply.media_url}
+          title={reply.title ?? "Mídia da resposta salva"}
+        />
 
-      {hasProfessionalWhatsapp ? (
-        <PsychologistWhatsAppRedirectButton
-          className="mx-auto flex h-11 w-full max-w-[390px] items-center justify-center gap-2 rounded-2xl border border-success bg-transparent text-sm font-bold text-success shadow-none transition hover:bg-success/10 active:scale-[0.99]"
-          psychologist={{
-            avatar: reply.author.avatar,
-            crp: reply.author.crp,
-            id: reply.author.id,
-            name: reply.author.name,
-            typeLabel: reply.author.type_label,
-            whatsappUrl: reply.author.whatsapp_url,
-          }}
-        >
-          <WhatsAppIcon className="h-5 w-5 text-success" aria-hidden="true" />
-          Chamar no WhatsApp
-        </PsychologistWhatsAppRedirectButton>
-      ) : null}
+        {hasProfessionalWhatsapp ? (
+          <PsychologistWhatsAppRedirectButton
+            className="mx-auto flex h-11 w-full max-w-[390px] items-center justify-center gap-2 rounded-2xl border border-success bg-transparent text-sm font-bold text-success shadow-none transition hover:bg-success/10 active:scale-[0.99]"
+            psychologist={{
+              avatar: reply.author.avatar,
+              crp: reply.author.crp,
+              id: reply.author.id,
+              name: reply.author.name,
+              typeLabel: reply.author.type_label,
+              whatsappUrl: reply.author.whatsapp_url,
+            }}
+          >
+            <WhatsAppIcon className="h-5 w-5 text-success" aria-hidden="true" />
+            Chamar no WhatsApp
+          </PsychologistWhatsAppRedirectButton>
+        ) : null}
+      </div>
 
       <CommunityActionBar
-        className="border-border border-t pt-3"
+        className="mt-4 border-border border-t pt-3"
         comments={{
           count: reply.replies_received_count,
           href: replyLink,
@@ -346,16 +339,15 @@ const SavedReplyCard = ({
           active: true,
           disabled: removePending,
           label: "Remover dos salvos",
+          count: reply.saves_count,
           onClick: () => onRemove(item.post.id, reply.id),
         }}
         share={{
           label: "Compartilhar resposta",
           onClick: () => onShare(item.post, reply.id),
         }}
-        showUpvoteText={false}
         upvotesCount={voteState.upvotes}
         voteLabel="Marcar resposta como útil"
-        votePresentation="inline"
       />
     </article>
   );
@@ -520,11 +512,7 @@ export const SavedPostsLogic = () => {
                   />
                 ) : (
                   <CommunityPostCard
-                    headerExtra={
-                      <span className="ml-auto shrink-0 text-[11px] font-semibold text-muted">
-                        {formatSavedAt(item.saved_at)}
-                      </span>
-                    }
+                    communityContextTone="muted"
                     key={item.id}
                     interactiveActions
                     onShare={sharePost}

@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 type CommunityPostCardProps = {
+  communityContextTone?: "default" | "muted";
   footerExtra?: ReactNode;
   headerExtra?: ReactNode;
   interactiveActions?: boolean;
@@ -451,6 +452,7 @@ const ProfessionalReplyPreview = ({
 };
 
 export const CommunityPostCard = ({
+  communityContextTone = "default",
   footerExtra,
   headerExtra,
   interactiveActions = false,
@@ -480,6 +482,7 @@ export const CommunityPostCard = ({
   const isReplyContribution = contributionType === "reply";
   const communityContextLabel = isReplyContribution ? "Respondido em" : "Postado em";
   const CommunityContextIcon = isReplyContribution ? Reply : FileText;
+  const usesMutedCommunityContext = communityContextTone === "muted";
   const shouldCompactProfileReplyMedia =
     profilePublicationMode && isReplyContribution && Boolean(primaryReply);
   const isPsychologistPost = displayAuthor.role === "psicologo";
@@ -605,13 +608,18 @@ export const CommunityPostCard = ({
   return (
     <article className="w-full overflow-hidden rounded-[22px] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
       {showCommunityHeader ? (
-        <div className="mb-4 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-muted">
-          <CommunityContextIcon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        <div className="mb-4 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold tracking-[-0.01em] text-muted">
+          <CommunityContextIcon
+            className={cn("h-3.5 w-3.5 shrink-0", usesMutedCommunityContext && "text-muted/80")}
+            aria-hidden="true"
+          />
           <span className="shrink-0">{communityContextLabel}</span>
           <Link
             className={cn(
               "block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-black underline-offset-4 hover:text-primary hover:underline",
-              profilePublicationMode ? "text-[#64748B]" : "text-foreground",
+              profilePublicationMode || usesMutedCommunityContext
+                ? "text-[#64748B] dark:text-muted"
+                : "text-foreground",
             )}
             href={`/app/community/${post.community.slug}`}
           >
