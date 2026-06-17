@@ -188,15 +188,15 @@ const FilterChip = ({
     <button
       aria-pressed={active}
       className={cn(
-        "inline-flex h-7 shrink-0 items-center gap-1 rounded-full border px-2.5 text-[10.5px] font-bold tracking-[-0.01em] transition",
+        "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[0.68rem] font-bold tracking-[-0.01em] transition-[background-color,border-color,color,transform]",
         active
-          ? "border-primary/20 bg-primary-soft text-primary shadow-[0_8px_18px_rgb(48_140_232_/_8%)]"
-          : "border-border/80 bg-surface/80 text-muted hover:border-primary/20 hover:bg-primary-soft/45 hover:text-primary dark:border-border dark:bg-surface dark:text-muted",
+          ? "border-primary/20 bg-primary-soft text-primary"
+          : "border-primary/10 bg-surface text-muted hover:border-primary/20 hover:bg-primary-soft/45 hover:text-primary dark:border-border dark:bg-surface dark:text-muted",
       )}
       onClick={onClick}
       type="button"
     >
-      <Icon className="h-3 w-3" aria-hidden="true" />
+      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
       {filter.shortLabel}
     </button>
   );
@@ -223,7 +223,7 @@ const FavoritePsychologistCard = ({
   return (
     <article
       aria-label={`Abrir perfil de ${psychologist.name}`}
-      className="group relative isolate flex min-h-[226px] w-full flex-col overflow-hidden rounded-[24px] border border-[#E7ECF2] bg-white p-3.5 text-center shadow-[0_12px_28px_rgb(15_23_42_/_6%)] transition duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_18px_42px_rgb(15_23_42_/_10%)] dark:border-border dark:bg-surface sm:min-h-[264px] sm:rounded-[28px] sm:p-4"
+      className="group relative isolate flex min-h-[252px] w-full flex-col overflow-hidden rounded-[24px] border border-[#E7ECF2] bg-white p-4 text-center shadow-[0_12px_28px_rgb(15_23_42_/_6%)] transition duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_18px_42px_rgb(15_23_42_/_10%)] dark:border-border dark:bg-surface sm:min-h-[292px] sm:rounded-[28px] sm:p-5"
     >
       <button
         aria-label={`Remover ${psychologist.name} dos favoritos`}
@@ -245,7 +245,7 @@ const FavoritePsychologistCard = ({
         className="grid min-h-0 content-start justify-items-center text-center no-underline hover:no-underline"
         href={route}
       >
-        <div className="relative mt-1.5 h-[88px] w-[88px] rounded-full bg-primary-soft p-1 shadow-[0_14px_30px_rgb(15_23_42_/_10%)] sm:mt-2 sm:h-[110px] sm:w-[110px]">
+        <div className="relative mt-2 h-[94px] w-[94px] rounded-full bg-primary-soft p-1 shadow-[0_14px_30px_rgb(15_23_42_/_10%)] sm:mt-2.5 sm:h-[116px] sm:w-[116px]">
           <div className="relative h-full w-full overflow-hidden rounded-full bg-surface-muted ring-4 ring-white dark:ring-surface">
             <FavoriteMedia psychologist={psychologist} />
           </div>
@@ -262,7 +262,7 @@ const FavoritePsychologistCard = ({
           ) : null}
         </div>
 
-        <div className="mt-4 grid min-w-0 justify-items-center gap-1 sm:mt-[1.125rem] sm:gap-1.5">
+        <div className="mt-5 grid min-w-0 justify-items-center gap-1.5 sm:mt-6 sm:gap-2">
           <span className="flex min-w-0 max-w-full items-start justify-center gap-1.5">
             <span className="line-clamp-2 min-w-0 text-[0.88rem] font-bold leading-[1.15] tracking-[-0.02em] text-foreground sm:text-[0.98rem]">
               {psychologist.name}
@@ -277,7 +277,7 @@ const FavoritePsychologistCard = ({
 
       <PsychologistWhatsAppRedirectButton
         aria-label={`Chamar ${psychologist.name} no WhatsApp`}
-        className="mt-3.5 inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-[12px] bg-success px-2.5 font-black text-white shadow-[0_10px_20px_rgb(34_197_94_/_20%)] transition hover:bg-success/90 hover:shadow-[0_14px_26px_rgb(34_197_94_/_24%)] active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 disabled:shadow-none sm:mt-4 sm:h-[34px] sm:gap-1.5 sm:rounded-[14px]"
+        className="mt-auto inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-[12px] bg-success px-2.5 font-black text-white shadow-[0_10px_20px_rgb(34_197_94_/_20%)] transition hover:bg-success/90 hover:shadow-[0_14px_26px_rgb(34_197_94_/_24%)] active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 disabled:shadow-none sm:h-[34px] sm:gap-1.5 sm:rounded-[14px]"
         psychologist={{
           avatar: psychologist.avatar,
           crp: psychologist.crp,
@@ -373,7 +373,7 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
   return (
     <PrivateTemplate contentClassName="max-w-none px-0 pt-0 pb-8 sm:px-0 sm:py-0">
       <section className="grid w-full gap-4 lg:gap-6">
-        <header className="mx-auto grid w-full max-w-[1120px] gap-4 px-5 pt-5 sm:px-8 md:pt-8 lg:px-0">
+        <header className="mx-auto grid w-full max-w-[1120px] gap-4 rounded-b-[30px] border-b border-border/70 bg-surface px-5 pt-5 pb-5 sm:rounded-[32px] sm:border sm:px-8 sm:py-6 md:mt-6 lg:px-8">
           <div className="flex items-start justify-between gap-4">
             <div className="grid min-w-0 gap-2">
               <p className="inline-flex w-fit items-center rounded-full border border-primary/10 bg-primary/5 px-2.5 py-1 text-[0.64rem] font-black uppercase tracking-[0.18em] text-primary/80">

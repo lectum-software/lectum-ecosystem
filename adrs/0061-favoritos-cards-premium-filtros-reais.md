@@ -199,3 +199,40 @@ integrado ao fundo e com texto em escala mais discreta.
 - Chrome/CDP autenticado em `/app/favorites` validou mobile 390px e desktop 1280px: header sem gradiente
   ou sombra, titulo em escala controlada, filtros presentes, cards reais renderizados, coracao maior e
   CTA WhatsApp com fonte de 11px no desktop.
+
+## Complemento 2026-06-17 - header surface e filtros sem glow
+
+### Contexto
+
+Produto pediu uma calibragem fina em `/app/favorites`: manter o topo limpo, mas com fundo branco/surface
+envolvendo badge, titulo, descricao e filtros; refinar os chips de filtro para parecerem mais premium; e
+alongar os cards de psicologos favoritos para reduzir a sensacao de compressao visual.
+
+### Decisao
+
+- Manter o componente compartilhado `PsychologistRelationList` e todos os contratos reais de favoritos,
+  filtros, paginação, remoção de favorito e WhatsApp.
+- Adicionar uma superficie `bg-surface` ao header, com borda discreta e cantos arredondados, sem voltar a
+  usar hero colorido ou glow.
+- Remover o `box-shadow` dos chips ativos e diferenciar filtros apenas por fundo azul muito claro, borda
+  sutil, texto e icone em azul.
+- Ajustar padding, altura e escala dos chips para preservar legibilidade e alinhamento em mobile.
+- Aumentar a altura minima e o padding dos cards, com avatar ligeiramente maior e CTA ancorado ao fim do
+  card para dar mais respiro entre avatar, nome, profissao e botao `WhatsApp`.
+
+### Consequencias
+
+- A tela fica mais consistente com a linguagem premium atual, com hierarquia por superficie, borda,
+  tipografia e espaco, evitando sombras fortes nos filtros.
+- Os cards ficam menos comprimidos em duas colunas no mobile e mantem a mesma logica real de favoritos e
+  contato.
+- Nenhum contrato de API, rota, schema, migration, package ou tracking de WhatsApp foi alterado.
+
+### Validacao
+
+- `pnpm --dir frontend exec biome check src/components/psychologists/psychologist-relation-list.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome/CDP autenticado em `/app/favorites` com desktop 1280px e mobile 390px, confirmando header branco,
+  chips `Disponivel hoje`, `Verificados` e `Convenios` sem `box-shadow` e cards renderizados com maior altura.

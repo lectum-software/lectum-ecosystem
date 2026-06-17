@@ -307,3 +307,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Escopo: sem mudancas de backend, Prisma, migrations, packages, endpoints, participacao em comunidades ou recomendacoes reais.
 - ADR atualizado: `adrs/0073-comunidades-seguidas.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e Chrome/CDP autenticado em mobile 390px na rota `/app/following`, confirmando ausencia da descricao do destaque e da secao/chips de novidades, sem overflow horizontal.
+
+## Complemento 2026-06-17 - header branco e filtros premium em Favoritos
+
+- Pedido do usuario: refinar `/app/favorites` com header em fundo branco envolvendo `Sua curadoria`, titulo, descricao e filtros, chips mais premium e cards de psicologos favoritos menos comprimidos verticalmente.
+- Referencia visual ativa: `_product/proto/Favoritos.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao, mantendo fallback auditavel nas imagens locais e validacao em browser local.
+- O header voltou a ter uma superficie branca/surface propria, com borda sutil e sem bloco colorido, envolvendo o badge, titulo, descricao e a linha de chips de filtro.
+- Os chips `Disponivel hoje`, `Verificados`, `Convenios` e demais filtros mantiveram a logica real existente, mas foram refinados com altura compacta, tipografia menor, icones alinhados, borda azul-clara sutil e sem glow/sombra no estado ativo.
+- Os cards dos psicologos favoritos ganharam altura minima maior, padding interno ampliado, avatar levemente maior e mais respiro entre avatar, nome, profissao e CTA `WhatsApp`.
+- Escopo: sem mudancas de backend, Prisma, migrations, packages, endpoints, filtros, paginacao, favoritos ou tracking de contato.
+- ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check src/components/psychologists/psychologist-relation-list.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado em desktop 1280px e mobile 390px na rota `/app/favorites`, confirmando header branco, chips sem `box-shadow`, alinhamento central e cards reais mais altos.
