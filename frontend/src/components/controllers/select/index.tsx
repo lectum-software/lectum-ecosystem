@@ -31,6 +31,11 @@ export function SelectController<FormType extends FieldValues>({
   searchMode = "input",
   searchPlaceholder,
   emptySearchLabel = "Nenhuma opção encontrada.",
+  useCustomSelect,
+  selectContentClassName,
+  selectOptionClassName,
+  selectOptionSelectedClassName,
+  selectChevronClassName,
   onChangeCallback,
 }: ControllerFieldProps<FormType>) {
   const inputId = fieldId(name, id);
@@ -99,6 +104,8 @@ export function SelectController<FormType extends FieldValues>({
                   className={cn(
                     "flex w-full items-center rounded-xl px-3 py-2 text-left text-foreground transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50",
                     String(field.value) === optionValue && "bg-primary-soft text-primary",
+                    selectOptionClassName,
+                    String(field.value) === optionValue && selectOptionSelectedClassName,
                   )}
                   disabled={option.disabled}
                   aria-selected={String(field.value) === optionValue}
@@ -125,6 +132,9 @@ export function SelectController<FormType extends FieldValues>({
               "flex w-full items-center rounded-xl px-3 py-2 text-left text-muted transition hover:bg-surface-muted hover:text-foreground",
               (field.value === null || field.value === undefined || field.value === "") &&
                 "bg-primary-soft text-primary",
+              selectOptionClassName,
+              (field.value === null || field.value === undefined || field.value === "") &&
+                selectOptionSelectedClassName,
             )}
             onMouseDown={(event) => {
               event.preventDefault();
@@ -195,12 +205,18 @@ export function SelectController<FormType extends FieldValues>({
                 </button>
                 <ChevronDown
                   aria-hidden="true"
-                  className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
+                  className={cn(
+                    "pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted",
+                    selectChevronClassName,
+                  )}
                 />
 
                 {isOpen && !resolvedDisabled && !readOnly && !loading ? (
                   <div
-                    className="absolute left-0 right-0 top-[calc(100%+6px)] z-30 max-h-72 overflow-y-auto rounded-2xl border border-border bg-white p-1.5 text-sm shadow-[0_18px_45px_rgb(15_23_42_/_16%)]"
+                    className={cn(
+                      "absolute left-0 right-0 top-[calc(100%+6px)] z-30 max-h-72 overflow-y-auto rounded-2xl border border-border bg-white p-1.5 text-sm shadow-[0_18px_45px_rgb(15_23_42_/_16%)]",
+                      selectContentClassName,
+                    )}
                     id={listboxId}
                     role="listbox"
                   >
@@ -277,12 +293,18 @@ export function SelectController<FormType extends FieldValues>({
                 />
                 <ChevronDown
                   aria-hidden="true"
-                  className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
+                  className={cn(
+                    "pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted",
+                    selectChevronClassName,
+                  )}
                 />
 
                 {isOpen && !resolvedDisabled && !readOnly && !loading ? (
                   <div
-                    className="absolute left-0 right-0 top-[calc(100%+6px)] z-30 max-h-64 overflow-y-auto rounded-2xl border border-border bg-white p-1.5 text-sm shadow-[0_18px_45px_rgb(15_23_42_/_16%)]"
+                    className={cn(
+                      "absolute left-0 right-0 top-[calc(100%+6px)] z-30 max-h-64 overflow-y-auto rounded-2xl border border-border bg-white p-1.5 text-sm shadow-[0_18px_45px_rgb(15_23_42_/_16%)]",
+                      selectContentClassName,
+                    )}
                     id={listboxId}
                     role="listbox"
                   >
@@ -291,6 +313,67 @@ export function SelectController<FormType extends FieldValues>({
                   </div>
                 ) : null}
               </div>
+            ) : useCustomSelect ? (
+              <fieldset
+                className="relative min-w-0 border-0 p-0"
+                onBlur={(event) => {
+                  const nextTarget = event.relatedTarget;
+                  if (nextTarget && event.currentTarget.contains(nextTarget)) return;
+
+                  setIsOpen(false);
+                  field.onBlur();
+                }}
+              >
+                <button
+                  aria-controls={listboxId}
+                  aria-describedby={describedBy({ id: inputId, description, error })}
+                  aria-expanded={isOpen}
+                  aria-invalid={Boolean(error)}
+                  className={cn(
+                    "flex h-12 w-full items-center rounded-[var(--lectum-control-radius)] border border-border bg-surface px-4 pr-10 text-left text-sm text-foreground shadow-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted",
+                    error && "border-danger focus:border-danger focus:ring-danger/10",
+                    inputClassName,
+                  )}
+                  disabled={resolvedDisabled || readOnly || loading}
+                  id={inputId}
+                  onClick={() => setIsOpen((current) => !current)}
+                  role="combobox"
+                  tabIndex={tabIndex}
+                  type="button"
+                >
+                  <span
+                    className={cn(
+                      "block min-w-0 flex-1 truncate",
+                      !selectedOption && "text-subtle",
+                    )}
+                  >
+                    {loading
+                      ? "Carregando..."
+                      : (selectedOption?.label ?? placeholder ?? resolvedEmptyLabel)}
+                  </span>
+                </button>
+                <ChevronDown
+                  aria-hidden="true"
+                  className={cn(
+                    "pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted",
+                    selectChevronClassName,
+                  )}
+                />
+
+                {isOpen && !resolvedDisabled && !readOnly && !loading ? (
+                  <div
+                    className={cn(
+                      "absolute left-0 right-0 top-[calc(100%+6px)] z-30 max-h-64 overflow-y-auto rounded-2xl border border-border bg-white p-1.5 text-sm shadow-[0_18px_45px_rgb(15_23_42_/_16%)]",
+                      selectContentClassName,
+                    )}
+                    id={listboxId}
+                    role="listbox"
+                  >
+                    {hideEmptyOption ? null : emptyOption}
+                    {renderFilteredOptions()}
+                  </div>
+                ) : null}
+              </fieldset>
             ) : (
               <div className="relative">
                 <select
@@ -336,7 +419,10 @@ export function SelectController<FormType extends FieldValues>({
                 </select>
                 <ChevronDown
                   aria-hidden="true"
-                  className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
+                  className={cn(
+                    "pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted",
+                    selectChevronClassName,
+                  )}
                 />
               </div>
             )}

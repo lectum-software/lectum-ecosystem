@@ -141,6 +141,7 @@ Packages permitidos: `socket.io`, `socket.io-client`, `web-push`, TanStack Query
 - [x] Ajuste 2026-06-16: `/app/settings/notifications` foi simplificada para uma chave por tipo de notificação, seletor segmentado em `novo_post`, header com voltar e rodapé limpo; preferências são normalizadas em `notification_preference.prefs`.
 - [x] Ajuste fino 2026-06-17: itens de `/app/settings/notifications` ficaram compactos em uma linha, sem descrições, sem rótulo visual `Receber`, com controles alinhados à direita e ícone de WhatsApp azul no item `Cliques no WhatsApp`.
 - [x] Ajuste fino 2026-06-17: `/app/notifications` usa card branco também no mobile, sem fundo azulado nos itens, e a ação `Marcar todas como lidas` ficou alinhada no header ao lado das configurações.
+- [x] Ajuste fino 2026-06-17: o seletor `Novas postagens` em `/app/settings/notifications` abandonou o select nativo visível e passou a usar dropdown customizado premium, com opções `Selecione`, `Somente profissionais`/`Somente pacientes` conforme papel e `Todos`, sem vazar do card no mobile.
 
 ## Validação mínima
 
@@ -170,6 +171,15 @@ Packages permitidos: `socket.io`, `socket.io-client`, `web-push`, TanStack Query
 - No mobile, o header exibe apenas o ícone de check; ao tocar, abre um menu de confirmação com o texto `Marcar todas como lidas`.
 - No desktop, o botão textual `Marcar todas como lidas` permanece visível no header, alinhado à esquerda do ícone de configurações.
 - Não houve alteração de backend, Prisma, persistência, endpoints ou regras de leitura/limpeza de notificações.
+
+## Complemento 2026-06-17 - dropdown customizado de novas postagens
+
+- A tela `/app/settings/notifications` manteve a referência local `_product/proto/Configurações de Notificações.jpg` como norte auditável; Builder/Quick Copy não está exposto como ferramenta direta neste ambiente.
+- O campo `Novas postagens` passou a usar o modo customizado do `SelectController`, preservando React Hook Form/Zod e removendo o visual nativo do navegador.
+- O dropdown recebeu botão branco com borda azul-clara, radius refinado, sombra muito leve, seta alinhada à direita e lista com item selecionado em azul muito claro.
+- As opções visíveis no perfil de paciente são `Selecione`, `Somente profissionais` e `Todos`; a regra de domínio para psicólogos continua preservada com `Somente pacientes` e `Todos`.
+- A validação local via Chrome/CDP em viewport mobile 390px confirmou que a lista não vaza do card, tem largura alinhada ao botão, mostra as três opções esperadas para paciente e destaca a opção selecionada.
+- Não houve alteração de backend, Prisma, persistência, endpoints ou packages.
 
 ## Notas para executor
 

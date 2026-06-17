@@ -85,3 +85,19 @@ A forma do `notification` migrada (derivada do sample) usa `read`, `redirect`, `
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e Chrome/CDP local em
   mobile 390px e desktop 1280px confirmando card branco, ausencia de classe azul nos itens, menu de
   confirmacao no mobile e botao textual a esquerda das configuracoes no desktop.
+
+## Complemento 2026-06-17 - dropdown customizado de novas postagens
+
+- O seletor `novo_post__post_author_scope` em `/app/settings/notifications` passa a usar um modo
+  customizado do `SelectController` (`useCustomSelect`) em vez do select nativo visivel do navegador.
+- A decisao preserva a fundacao de formularios (`useFormList`, React Hook Form, Zod e controllers
+  compartilhados) e evita criar um dropdown paralelo especifico da tela.
+- O controller ganhou props opt-in para estilizar conteudo, opcoes, item selecionado e chevron; o
+  comportamento padrao dos demais selects permanece nativo quando `useCustomSelect` nao e informado.
+- O dropdown exibe `Selecione`, a opcao segmentada por papel (`Somente profissionais` para pacientes ou
+  `Somente pacientes` para psicologos) e `Todos`, mantendo a regra de dominio de segmentacao de novas
+  postagens.
+- Nao houve mudanca de contrato, backend, Prisma, persistencia de preferencias, endpoints ou packages.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e Chrome/CDP local em
+  mobile 390px confirmando borda azul-clara, fundo branco, sombra leve, item selecionado em azul claro,
+  largura alinhada ao card e ausencia de overflow horizontal.

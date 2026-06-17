@@ -73,6 +73,11 @@ export type Field<FormType extends FieldValues> = {
   searchMode?: "input" | "dropdown";
   searchPlaceholder?: string;
   emptySearchLabel?: string;
+  useCustomSelect?: boolean;
+  selectContentClassName?: string;
+  selectOptionClassName?: string;
+  selectOptionSelectedClassName?: string;
+  selectChevronClassName?: string;
   onChangeCallback?: (value: unknown) => void;
 };
 
