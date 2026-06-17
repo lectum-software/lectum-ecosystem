@@ -55,3 +55,18 @@ Validacao complementar:
 - A protecao contra recolher/expandir agora ocorre no handler do comentario raiz, que ignora alvos interativos e elementos marcados com `data-comment-collapse-ignore`.
 - A mutation compartilhada de voto passa a atualizar otimisticamente tanto a lista principal de replies quanto as queries da thread isolada; a resposta do servidor tambem e aplicada nos dois caches.
 - Em erro, os caches de detalhe, replies e thread sao restaurados, mantendo estado visual e contagem de votos consistentes em todas as camadas sem alterar contrato de API ou backend.
+
+## Atualizacao 2026-06-17 - acoes persistentes de replies em post e thread
+
+- A barra compacta xs de comentarios passa a ligar explicitamente as acoes de salvar e compartilhar em todas as instancias de ReplyCard, incluindo comentarios raiz, respostas aninhadas e thread isolada.
+- useSaveReply atualiza de forma otimista tanto as queries de replies do post quanto as queries de reply-thread, com rollback dos dois grupos de cache em erro e reconciliacao pelo payload retornado pela API.
+- A area de Salvos continua sendo invalidada apos o toggle, permitindo que comentarios/respostas salvos aparecam na tela de Salvos conforme a regra ja existente de persistencia.
+- O compartilhamento preserva o padrao da plataforma: post principal com ancora #reply-{id} e thread isolada com /thread/{rootReplyId}#reply-{id}.
+- A mudanca nao altera upvote/downvote, responder, ordenacao, layout base da barra, contratos de API ou backend.
+
+Validacao complementar:
+
+- pnpm --dir frontend check
+- pnpm --dir frontend build
+- pnpm check
+- Chrome/CDP autenticado validando 11 barras no post e 3 barras na thread, todas com salvar/compartilhar, toggle visual de salvo e link copiado com ancora de reply.

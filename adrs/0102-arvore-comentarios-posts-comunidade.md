@@ -80,3 +80,16 @@ Validacao complementar:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Chrome/CDP autenticado em 390px e 1440px validando `position: static`, fundo transparente, ausencia de borda/sombra e deslocamento do header junto com o scroll.
+
+## Atualizacao 2026-06-17 - salvar/compartilhar sem acionar collapse
+
+- Salvar e compartilhar passam a ser tratados como controles interativos formais da arvore de comentarios, em todas as camadas visiveis e tambem na tela isolada de thread.
+- O handler de collapse do comentario raiz continua sendo responsavel por ignorar alvos interativos; adicionalmente, as acoes de salvar/compartilhar interrompem propagacao antes de executar suas funcoes.
+- A decisao garante que o usuario possa salvar ou compartilhar qualquer comentario/resposta sem recolher ou expandir a arvore acidentalmente.
+- Os links de compartilhamento usam ancoras #reply-{id}; na thread isolada, a URL inclui o reply raiz do fio antes da ancora para manter contexto de continuacao.
+- Nao ha mudanca na profundidade visual, ordenacao por relevancia, regra de destaque de psicologos, backend, schema, votos ou criacao de respostas.
+
+Validacao complementar:
+
+- pnpm check
+- Chrome/CDP autenticado no detalhe do post demo e na thread isolada, confirmando salvar/compartilhar em todos os replies visiveis, toggle de salvo e ausencia de collapse ao clicar nas acoes.

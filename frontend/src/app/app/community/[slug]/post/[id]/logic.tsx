@@ -880,34 +880,46 @@ const ReplyVoteBar = ({
   onVote: (value: 1 | -1) => void;
   reply: PostReply;
   savePending?: boolean;
-}) => (
-  <CommunityActionBar
-    className="mt-2 sm:mt-3"
-    currentVote={currentVote}
-    disabled={disabled}
-    onVote={onVote}
-    reply={{
-      label: "Responder",
-      onClick: onReply,
-      textOnly: true,
-    }}
-    save={{
-      active: reply.saved,
-      disabled: savePending,
-      label: reply.saved ? "Remover resposta dos salvos" : "Salvar resposta",
-      onClick: onToggleSave,
-    }}
-    share={{
-      label: "Compartilhar resposta",
-      onClick: onShare,
-    }}
-    showUpvoteText={false}
-    size="xs"
-    upvotesCount={reply.upvotes_count}
-    voteLabel="Marcar resposta como útil"
-    votePresentation="inline"
-  />
-);
+}) => {
+  const handleToggleSave: MouseEventHandler<HTMLButtonElement> = (event) => {
+    event.stopPropagation();
+    onToggleSave(event);
+  };
+
+  const handleShare: MouseEventHandler<HTMLButtonElement> = (event) => {
+    event.stopPropagation();
+    onShare();
+  };
+
+  return (
+    <CommunityActionBar
+      className="mt-2 sm:mt-3"
+      currentVote={currentVote}
+      disabled={disabled}
+      onVote={onVote}
+      reply={{
+        label: "Responder",
+        onClick: onReply,
+        textOnly: true,
+      }}
+      save={{
+        active: reply.saved,
+        disabled: savePending,
+        label: reply.saved ? "Remover resposta dos salvos" : "Salvar resposta",
+        onClick: handleToggleSave,
+      }}
+      share={{
+        label: "Compartilhar resposta",
+        onClick: handleShare,
+      }}
+      showUpvoteText={false}
+      size="xs"
+      upvotesCount={reply.upvotes_count}
+      voteLabel="Marcar resposta como útil"
+      votePresentation="inline"
+    />
+  );
+};
 
 const ReplyCard = ({
   currentUserId,
@@ -2257,7 +2269,8 @@ export const PostReplyThreadLogic = () => {
   const shareReply = async (reply: PostReply) => {
     if (!post || typeof window === "undefined") return;
 
-    const url = `${window.location.origin}/app/community/${post.community.slug}/post/${post.id}#reply-${reply.id}`;
+    const threadRootId = rootReply?.id ?? reply.id;
+    const url = `${window.location.origin}/app/community/${post.community.slug}/post/${post.id}/thread/${threadRootId}#reply-${reply.id}`;
 
     try {
       if (navigator.share) {

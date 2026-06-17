@@ -457,8 +457,12 @@ export const useSaveReply = (postId: string, replyId: string) => {
       saved ? api.unsaveReply(postId, replyId) : api.saveReply(postId, replyId),
     onMutate: async (saved) => {
       await queryClient.cancelQueries({ queryKey: ["posts", postId, "replies"] });
+      await queryClient.cancelQueries({ queryKey: ["posts", postId, "reply-thread"] });
       const previousReplies = queryClient.getQueriesData<PostRepliesResponse>({
         queryKey: ["posts", postId, "replies"],
+      });
+      const previousThreads = queryClient.getQueriesData<PostReplyThreadResponse>({
+        queryKey: ["posts", postId, "reply-thread"],
       });
       const nextSaved = !saved;
 
@@ -474,10 +478,26 @@ export const useSaveReply = (postId: string, replyId: string) => {
         },
       );
 
-      return { previousReplies };
+      queryClient.setQueriesData<PostReplyThreadResponse>(
+        { queryKey: ["posts", postId, "reply-thread"] },
+        (old) => {
+          if (!old) return old;
+
+          return {
+            ...old,
+            reply: updateReplySaved(old.reply, replyId, nextSaved),
+          };
+        },
+      );
+
+      return { previousReplies, previousThreads };
     },
     onError: (_error, _variables, context) => {
       context?.previousReplies?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
+
+      context?.previousThreads?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
     },
@@ -493,6 +513,17 @@ export const useSaveReply = (postId: string, replyId: string) => {
           return {
             ...old,
             data: old.data.map((reply) => updateReplySaved(reply, replyId, data.saved)),
+          };
+        },
+      );
+      queryClient.setQueriesData<PostReplyThreadResponse>(
+        { queryKey: ["posts", postId, "reply-thread"] },
+        (old) => {
+          if (!old) return old;
+
+          return {
+            ...old,
+            reply: updateReplySaved(old.reply, replyId, data.saved),
           };
         },
       );

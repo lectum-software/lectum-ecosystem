@@ -374,3 +374,21 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nao houve alteracao de backend, Prisma, migrations, packages, endpoints, payloads, votos, replies, ordenacao ou regras de destaque.
 - ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check --write -- 'src/app/app/community/[slug]/post/[id]/logic.tsx'`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado em 390px e 1440px confirmando header `position: static`, sem fundo/borda/sombra, rolando com a pagina e subtitulo com line-height de ~16px.
+
+## Execucao complementar: salvar e compartilhar em toda a arvore de comentarios (2026-06-17)
+
+- Pedido do usuario: habilitar salvar e compartilhar em comentarios e respostas de todas as camadas visiveis, incluindo a tela isolada de thread/respostas.
+- Fonte visual auditavel: _product/proto/Dentro do Post.jpg; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao, entao a validacao visual usou browser local autenticado.
+- A barra compacta de replies continua usando o componente compartilhado CommunityActionBar, agora com handlers explicitos de salvar e compartilhar protegidos contra propagacao para o collapse da arvore.
+- Salvar resposta usa a persistencia existente de post_reply_save e a mutation useSaveReply passou a atualizar otimisticamente tambem as queries de reply-thread, alem da lista principal de replies.
+- O estado salvo alterna imediatamente na tela principal e na thread isolada, invalida a area de Salvos e preserva rollback dos caches em caso de erro.
+- Compartilhar respostas na tela principal usa deep link do post com #reply-{id}; na thread isolada usa /thread/{replyRootId}#reply-{id}, mantendo referencia direta ao comentario quando possivel.
+- Clicar em salvar ou compartilhar nao recolhe nem expande a arvore; upvote/downvote, responder, ordenacao e profundidade visual nao foram alterados.
+- Nao houve alteracao de backend, Prisma, migrations, packages, endpoints, payloads ou regras de ordenacao/destaque.
+- ADRs atualizados: adrs/0102-arvore-comentarios-posts-comunidade.md e adrs/0104-barra-acoes-comunidade-unificada.md.
+- Validacoes executadas:
+  - pnpm --dir frontend exec biome check --write -- 'src/api/callers/posts/index.tsx' 'src/app/app/community/[slug]/post/[id]/logic.tsx'
+  - pnpm --dir frontend check
+  - pnpm --dir frontend build
+  - pnpm check
+  - Chrome/CDP autenticado em /app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video e /thread/demo-reply-ansiedade-apresentacao-psi-video confirmando 11/11 e 3/3 replies com salvar/compartilhar, toggle persistido, links com #reply e ausencia de collapse ao clicar nas acoes.
