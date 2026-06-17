@@ -40,3 +40,35 @@ especialmente porque o menu de Perfil é compartilhado por pacientes e psicólog
 ## Pendências
 
 - Nenhuma.
+
+## Complemento 2026-06-17 - Ordem da seção Comunidade
+
+### Contexto
+
+A seção `Comunidade` do menu de Perfil é compartilhada por pacientes e psicólogos. A ordem anterior
+colocava `Comunidades seguidas` antes de `Salvos`, enquanto a jornada de acompanhamento e biblioteca
+de conteúdo pede que os itens pessoais apareçam antes das áreas de descoberta/seguimento.
+
+### Decisão
+
+- Reordenar apenas o array `communityRows` em `/app/profile`.
+- Manter os mesmos ícones, `hrefs`, divisórias, setas e classes do componente `Row`.
+- Definir a ordem oficial da seção como:
+  1. `Meus posts e comentários`;
+  2. `Salvos`;
+  3. `Comunidades seguidas`;
+  4. `Explorar comunidades`.
+
+### Consequências
+
+- A mudança vale simultaneamente para pacientes e psicólogos por usar o menu compartilhado.
+- Não há alteração de backend, schema Prisma, rotas ou comportamento de navegação.
+
+### Validação
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome/CDP mobile 390x844 em `/app/profile` confirmou, para paciente e psicólogo, a ordem dos
+  `hrefs`: `/app/posts/mine`, `/app/posts/saved`, `/app/following`, `/app/community`, sem overflow
+  horizontal.

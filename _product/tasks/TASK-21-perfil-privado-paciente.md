@@ -206,3 +206,11 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - A hierarquia de ações foi ajustada: `Criar conta` é a ação primária e `Fazer login` a ação secundária, ambas com ícones alinhados ao texto.
 - A validação local via Chrome/CDP em viewport mobile 390px confirmou novo texto, ausência da copy antiga, botões visíveis, card sem overflow horizontal e proporção adequada.
 - Não houve alteração de backend, Prisma, contratos, persistência ou packages.
+
+## Ajuste complementar em 2026-06-17 - ordem da seção Comunidade no perfil
+
+- A seção `Comunidade` do menu compartilhado de `/app/profile` foi reordenada para pacientes e psicólogos.
+- A ordem passa a ser: `Meus posts e comentários`, `Salvos`, `Comunidades seguidas` e `Explorar comunidades`.
+- O ajuste preserva os mesmos ícones, `hrefs`, divisórias, setas, espaçamentos, hover/foco e comportamento de navegação do componente `Row`.
+- Não houve alteração de backend, Prisma, contratos, persistência ou packages.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile 390x844 em `/app/profile`, confirmando a ordem dos `hrefs` para paciente e psicólogo sem overflow horizontal.

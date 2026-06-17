@@ -162,8 +162,8 @@ export const ProfileLogic = () => {
 
   const communityRows: ProfileRow[] = [
     { href: "/app/posts/mine", icon: MessagesSquare, label: "Meus posts e comentários" },
-    { href: "/app/following", icon: UsersRound, label: "Comunidades seguidas" },
     { href: "/app/posts/saved", icon: Bookmark, label: "Salvos" },
+    { href: "/app/following", icon: UsersRound, label: "Comunidades seguidas" },
     { href: "/app/community", icon: Compass, label: "Explorar comunidades" },
   ];
 
