@@ -1440,7 +1440,13 @@ const PostsTab = ({
   );
 };
 
-const ReviewSummaryCard = ({ summary }: { summary: DirectoryReviewSummary }) => {
+const ReviewSummaryCard = ({
+  psychologistId,
+  summary,
+}: {
+  psychologistId: string;
+  summary: DirectoryReviewSummary;
+}) => {
   if (summary.rating_count <= 0) {
     return (
       <article className={cn(PROFILE_CARD_SURFACE, "p-4 sm:p-5")}>
@@ -1467,6 +1473,13 @@ const ReviewSummaryCard = ({ summary }: { summary: DirectoryReviewSummary }) => 
             {summary.rating_count} avaliações
           </p>
         </div>
+        <Button
+          asChild
+          className="h-10 shrink-0 cursor-pointer rounded-full border-[#CFE4FA] bg-white px-4 text-[12.5px] font-extrabold text-[#247BD1] shadow-[0_8px_18px_rgba(47,141,235,0.08)] hover:border-[#B8D9F8] hover:bg-[#F4FAFF] hover:text-[#1769B8] focus-visible:outline-[#2F8DEB] sm:px-[18px] sm:text-[13px]"
+          variant="outline"
+        >
+          <Link href={`/app/reviews/new?psychologist_id=${psychologistId}`}>Avaliar</Link>
+        </Button>
       </div>
 
       <div className="grid gap-2.5">
@@ -1551,6 +1564,7 @@ const ReviewsTab = ({
   onBackToOverview,
   onPageChange,
   pages,
+  profileId,
   reviews,
   summary,
 }: {
@@ -1562,6 +1576,7 @@ const ReviewsTab = ({
   onBackToOverview: () => void;
   onPageChange: (page: number) => void;
   pages: number;
+  profileId: string;
   reviews: DirectoryPsychologistProfileReview[];
   summary: DirectoryReviewSummary;
 }) => {
@@ -1574,7 +1589,7 @@ const ReviewsTab = ({
         onBack={onBackToOverview}
         title="Avaliações"
       />
-      <ReviewSummaryCard summary={summary} />
+      <ReviewSummaryCard psychologistId={profileId} summary={summary} />
 
       {isError ? (
         <InlineAlert title="Não foi possível carregar avaliações" variant="error">
@@ -1973,6 +1988,7 @@ export const PsychologistProfileLogic = () => {
                       onBackToOverview={() => setActiveTab("geral")}
                       onPageChange={setReviewsPage}
                       pages={reviews.data?.pages ?? 0}
+                      profileId={profile.id}
                       reviews={reviews.data?.data ?? []}
                       summary={reviews.data?.summary ?? emptySummary}
                     />
