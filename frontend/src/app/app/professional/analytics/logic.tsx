@@ -69,7 +69,6 @@ const getDefaultCustomRange = () => {
 };
 
 type AnalyticsCardView = {
-  description: string;
   icon: LucideIcon;
   id: string;
   isUnavailable?: boolean;
@@ -148,7 +147,6 @@ const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCardView[] 
     value: "—",
     source: "untracked",
     isUnavailable: true,
-    description: "Quando houver rastreio de busca, o desempenho aparecerá aqui.",
   },
   {
     id: "profile_views",
@@ -157,16 +155,6 @@ const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCardView[] 
     value: "—",
     source: "untracked",
     isUnavailable: true,
-    description: "Visualizações reais do perfil serão exibidas após o evento persistido.",
-  },
-  {
-    id: "video_views",
-    icon: PlayCircle,
-    label: "Video views",
-    value: "—",
-    source: "untracked",
-    isUnavailable: true,
-    description: "Engajamento do vídeo profissional quando a captura estiver disponível.",
   },
   {
     id: "whatsapp_clicks",
@@ -174,7 +162,6 @@ const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCardView[] 
     label: "Conversões WhatsApp",
     value: toCount(data?.metrics.whatsapp_clicks),
     source: "contact_request",
-    description: "Cliques reais no contato profissional dentro do período.",
   },
   {
     id: "reviews_received",
@@ -182,7 +169,6 @@ const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCardView[] 
     label: "Avaliações",
     value: toCount(data?.metrics.reviews_received),
     source: "professional_review",
-    description: "Avaliações publicadas que fortalecem sua reputação.",
   },
   {
     id: "favorited",
@@ -191,7 +177,6 @@ const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCardView[] 
     value: "—",
     source: "untracked",
     isUnavailable: true,
-    description: "Sinais de interesse serão conectados a fontes reais futuras.",
   },
 ];
 
@@ -322,9 +307,8 @@ const MetricCard = ({ locked, metric }: { locked?: boolean; metric: AnalyticsCar
       </div>
 
       <h2 className="mt-4 text-base font-extrabold leading-6 text-foreground">{metric.label}</h2>
-      <p className="mt-1 min-h-10 text-sm leading-5 text-muted">{metric.description}</p>
 
-      <div className="mt-4 inline-flex max-w-full items-center gap-2 rounded-full border border-primary/10 bg-primary-soft/70 px-3 py-2">
+      <div className="mt-5 inline-flex max-w-full items-center gap-2 rounded-full border border-primary/10 bg-primary-soft/70 px-3 py-2">
         <span
           className={cn(
             "min-w-0 text-2xl font-extrabold leading-none tracking-[-0.04em] text-foreground",
@@ -357,12 +341,10 @@ const PresentationVideoMetricCard = ({
       <span className="grid h-10 w-10 place-items-center rounded-full bg-primary-soft text-primary">
         <Icon className="h-5 w-5" aria-hidden />
       </span>
-      <h3 className="mt-4 min-h-10 text-sm font-extrabold leading-5 text-foreground">
-        {metric.label}
-      </h3>
+      <h3 className="mt-4 min-h-10 text-sm font-extrabold leading-5 text-muted">{metric.label}</h3>
       <p
         className={cn(
-          "mt-3 text-2xl font-black tracking-[-0.04em] text-foreground",
+          "mt-3 text-[1.75rem] font-black leading-none tracking-[-0.05em] text-foreground",
           locked && "select-none blur-[5px]",
         )}
       >
@@ -450,6 +432,13 @@ const RetentionChart = ({
     ...safePoints,
   ];
   const smoothPath = buildSmoothRetentionPath(chartPoints);
+  const firstChartPoint = chartPoints[0] ?? { milestone: 0, rate: 0 };
+  const lastChartPoint = chartPoints[chartPoints.length - 1] ?? { milestone: 100, rate: 0 };
+  const firstAreaPoint = toChartPoint(firstChartPoint.milestone, firstChartPoint.rate);
+  const lastAreaPoint = toChartPoint(lastChartPoint.milestone, lastChartPoint.rate);
+  const areaPath = smoothPath
+    ? `${smoothPath} L ${lastAreaPoint.x.toFixed(2)} ${RETENTION_CHART_BOTTOM} L ${firstAreaPoint.x.toFixed(2)} ${RETENTION_CHART_BOTTOM} Z`
+    : "";
   const currentPercent = durationSeconds
     ? clampPercent((Math.max(0, currentTimeSeconds) / durationSeconds) * 100)
     : 0;
@@ -476,8 +465,8 @@ const RetentionChart = ({
       <button
         aria-label="Selecionar trecho no gráfico de retenção"
         className={cn(
-          "relative w-full overflow-hidden rounded-[22px] border border-border/70 bg-surface p-3 text-left shadow-inner transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
-          canSeek && "cursor-pointer hover:border-primary/20",
+          "relative w-full overflow-hidden rounded-[22px] bg-transparent px-1 py-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
+          canSeek && "cursor-pointer",
           locked && "blur-[4px]",
         )}
         disabled={!canSeek}
@@ -486,8 +475,8 @@ const RetentionChart = ({
       >
         <svg
           aria-label="Curva estimada de retenção do vídeo"
-          className="h-40 w-full text-subtle"
-          preserveAspectRatio="none"
+          className="mx-auto h-36 w-full max-w-[320px] overflow-visible text-subtle"
+          preserveAspectRatio="xMidYMid meet"
           role="img"
           viewBox="0 0 300 130"
         >
@@ -496,6 +485,10 @@ const RetentionChart = ({
             <linearGradient id="presentation-video-retention-gradient" x1="0" x2="1" y1="0" y2="0">
               <stop offset="0%" stopColor="rgb(46, 143, 230)" />
               <stop offset="100%" stopColor="rgb(14, 116, 211)" />
+            </linearGradient>
+            <linearGradient id="presentation-video-retention-fill" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor="rgb(46, 143, 230)" stopOpacity="0.16" />
+              <stop offset="100%" stopColor="rgb(46, 143, 230)" stopOpacity="0" />
             </linearGradient>
             <filter
               colorInterpolationFilters="sRGB"
@@ -509,15 +502,17 @@ const RetentionChart = ({
                 dx="0"
                 dy="2"
                 floodColor="rgb(46, 143, 230)"
-                floodOpacity="0.18"
-                stdDeviation="2"
+                floodOpacity="0.14"
+                stdDeviation="1.4"
               />
             </filter>
           </defs>
           <line
             stroke="currentColor"
-            strokeDasharray="4 5"
-            strokeOpacity="0.5"
+            strokeDasharray="3 6"
+            strokeOpacity="0.42"
+            strokeWidth="0.8"
+            vectorEffect="non-scaling-stroke"
             x1={RETENTION_CHART_LEFT_PADDING}
             x2={RETENTION_CHART_WIDTH - RETENTION_CHART_RIGHT_PADDING + 4}
             y1="12"
@@ -525,13 +520,16 @@ const RetentionChart = ({
           />
           <line
             stroke="currentColor"
-            strokeDasharray="4 5"
-            strokeOpacity="0.5"
+            strokeDasharray="3 6"
+            strokeOpacity="0.42"
+            strokeWidth="0.8"
+            vectorEffect="non-scaling-stroke"
             x1={RETENTION_CHART_LEFT_PADDING}
             x2={RETENTION_CHART_WIDTH - RETENTION_CHART_RIGHT_PADDING + 4}
             y1="64"
             y2="64"
           />
+          {areaPath ? <path d={areaPath} fill="url(#presentation-video-retention-fill)" /> : null}
           <path
             d={smoothPath}
             fill="none"
@@ -539,13 +537,15 @@ const RetentionChart = ({
             stroke="url(#presentation-video-retention-gradient)"
             strokeLinecap="round"
             strokeLinejoin="round"
-            strokeWidth="3.5"
+            strokeWidth="2.4"
+            vectorEffect="non-scaling-stroke"
           />
           {durationSeconds && durationSeconds > 0 ? (
             <line
               stroke="rgb(46, 143, 230)"
-              strokeOpacity="0.55"
-              strokeWidth="1.5"
+              strokeOpacity="0.45"
+              strokeWidth="1.1"
+              vectorEffect="non-scaling-stroke"
               x1={currentPoint.x}
               x2={currentPoint.x}
               y1="12"
@@ -555,7 +555,8 @@ const RetentionChart = ({
           <line
             stroke="rgb(226, 232, 240)"
             strokeLinecap="round"
-            strokeWidth="5"
+            strokeWidth="3.4"
+            vectorEffect="non-scaling-stroke"
             x1={RETENTION_CHART_LEFT_PADDING}
             x2={RETENTION_CHART_WIDTH - RETENTION_CHART_RIGHT_PADDING + 4}
             y1="122"
@@ -564,7 +565,8 @@ const RetentionChart = ({
           <line
             stroke="rgb(15, 23, 42)"
             strokeLinecap="round"
-            strokeWidth="5"
+            strokeWidth="3.4"
+            vectorEffect="non-scaling-stroke"
             x1={RETENTION_CHART_LEFT_PADDING}
             x2={
               durationSeconds && durationSeconds > 0 ? currentPoint.x : RETENTION_CHART_LEFT_PADDING
@@ -578,9 +580,10 @@ const RetentionChart = ({
             }
             cy="122"
             fill="white"
-            r="8"
+            r="6.5"
             stroke="rgb(226, 232, 240)"
             strokeWidth="1.5"
+            vectorEffect="non-scaling-stroke"
           />
         </svg>
         <span className="pointer-events-none absolute right-5 top-4 rounded-full bg-surface/95 px-1.5 py-0.5 text-[0.65rem] font-extrabold leading-none text-subtle shadow-sm">
@@ -714,8 +717,8 @@ const PresentationVideoAnalyticsSection = ({
               Métricas principais do vídeo
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-              Acompanhe como visitantes assistem seu vídeo e identifique pontos de retenção antes de
-              ajustar sua apresentação profissional.
+              Acompanhe como os visitantes assistem seu vídeo de apresentação e identifique pontos
+              de aprimoramento.
             </p>
           </div>
         </div>
