@@ -224,3 +224,11 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 - Migration aplicada com `pnpm --dir backend exec prisma migrate dev --name add_profile_video_watch_sessions` após tentativa inicial de `pnpm --dir backend db:migrate` ficar presa aguardando lock/prompt e ser encerrada sem criar migration.
 - Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `Invoke-WebRequest` em `/app/professional/analytics` e POST de validação 404 em `/api/private/directory/psychologists/non-existent/video-watch`.
+
+## Refinamento de retenção sincronizada em 2026-06-18
+
+- A retenção do vídeo passou a persistir buckets internos de 5% em `profile_video_watch_session.retention_buckets`, calculados pelo backend a partir da maior posição alcançada e duração real do player.
+- O endpoint `GET /api/private/psychologist/analytics` agora agrega uma curva de 5% em 5%, mantém os cards de 25/50/75/100% como resumo e identifica o maior trecho estimado de abandono com tempo inicial/final.
+- O gráfico de retenção na tela `/app/professional/analytics` ficou sincronizado com o player: ao reproduzir o vídeo, a linha do playhead avança; ao clicar na curva, nos marcos ou no destaque de maior abandono, o player busca o trecho correspondente.
+- A estratégia evita eventos por segundo e mantém no máximo 20 buckets por sessão, preservando performance e armazenamento previsível sem mockar dados.
+- Migration aplicada com `pnpm --dir backend db:migrate -- --name add_profile_video_retention_buckets`.

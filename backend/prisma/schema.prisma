@@ -470,6 +470,7 @@ model profile_video_watch_session {
   milestone_50         Boolean   @default(false)
   milestone_75         Boolean   @default(false)
   milestone_100        Boolean   @default(false)
+  retention_buckets    Json?     @map("retention_buckets")
   last_event_at        DateTime  @default(now()) @map("last_event_at")
   psychologist         user      @relation("profile_video_watch_session_psychologist", fields: [psychologist_id], references: [id], onDelete: Cascade)
   viewer               user?     @relation("profile_video_watch_session_viewer", fields: [viewer_id], references: [id], onDelete: SetNull)

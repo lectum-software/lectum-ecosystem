@@ -979,6 +979,11 @@ const createVideoSessionKey = (profileId: string) => {
   }
 };
 
+const PRESENTATION_VIDEO_RETENTION_BUCKETS = Array.from(
+  { length: 20 },
+  (_, index) => (index + 1) * 5,
+);
+
 const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
   const currentUser = useAppSelector((state) => state.user);
   const { mutate: trackVideoWatch } = useDirectoryPsychologistVideoWatch(profile.id);
@@ -995,6 +1000,7 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
     milestone_100: false,
   });
   const replayCountRef = useRef(0);
+  const retentionBucketsRef = useRef<Set<number>>(new Set());
   const sessionKeyRef = useRef<string | null>(null);
   const watchedSecondsRef = useRef<Set<number>>(new Set());
   const videoSrc = resolvePublicMediaUrl(profile.video_url);
@@ -1066,6 +1072,24 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
         );
       };
 
+      const updateRetentionBuckets = () => {
+        if (!Number.isFinite(video.duration) || video.duration <= 0) return false;
+
+        const reachedPercent = Math.min(
+          100,
+          Math.max(0, (maxPositionRef.current / video.duration) * 100),
+        );
+        const previousCount = retentionBucketsRef.current.size;
+
+        for (const bucket of PRESENTATION_VIDEO_RETENTION_BUCKETS) {
+          if (reachedPercent >= bucket || (bucket === 100 && completedRef.current)) {
+            retentionBucketsRef.current.add(bucket);
+          }
+        }
+
+        return previousCount !== retentionBucketsRef.current.size;
+      };
+
       const addWatchedRange = (from: number, to: number) => {
         const start = Math.max(0, Math.floor(Math.min(from, to)));
         const end = Math.max(0, Math.ceil(Math.max(from, to)));
@@ -1104,7 +1128,8 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
         lastPlaybackPositionRef.current = currentTime;
 
         const milestoneChanged = updateMilestones();
-        flushVideoAnalytics(video, false, milestoneChanged);
+        const bucketChanged = updateRetentionBuckets();
+        flushVideoAnalytics(video, false, milestoneChanged || bucketChanged);
       };
 
       const handleEnded = () => {
@@ -1115,6 +1140,7 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
 
         completedRef.current = true;
         updateMilestones();
+        updateRetentionBuckets();
         flushVideoAnalytics(video, true, true);
       };
 

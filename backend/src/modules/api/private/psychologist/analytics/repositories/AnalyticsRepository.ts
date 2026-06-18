@@ -21,6 +21,8 @@ const unavailableProfileViews: PsychologistAnalyticsUnavailableMetric = {
     "Visualizações de perfil ainda não possuem evento persistido. A métrica fica ausente para evitar simulação.",
 };
 
+const RETENTION_BUCKETS = Array.from({ length: 20 }, (_, index) => (index + 1) * 5);
+
 const toCards = (
   metrics: PsychologistAnalyticsResponse["metrics"],
 ): PsychologistAnalyticsMetric[] => [
@@ -70,6 +72,29 @@ const percentage = (value: number, total: number) => {
   if (total <= 0) return 0;
 
   return Math.round((value / total) * 100);
+};
+
+const normalizeRetentionBuckets = (value: unknown): number[] => {
+  if (!Array.isArray(value)) return [];
+
+  return Array.from(
+    new Set(
+      value.map((bucket) => Number(bucket)).filter((bucket) => RETENTION_BUCKETS.includes(bucket)),
+    ),
+  ).sort((a, b) => a - b);
+};
+
+const deriveRetentionBucketsFromPosition = (
+  maxPositionSeconds: number,
+  durationSeconds: number,
+  completed: boolean,
+): number[] => {
+  if (completed) return RETENTION_BUCKETS;
+  if (durationSeconds <= 0) return [];
+
+  const reachedPercent = Math.min(100, Math.max(0, (maxPositionSeconds / durationSeconds) * 100));
+
+  return RETENTION_BUCKETS.filter((bucket) => reachedPercent >= bucket);
 };
 
 const toPresentationVideoCards = (
@@ -204,12 +229,15 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
           },
           select: {
             watched_seconds: true,
+            duration_seconds: true,
+            max_position_seconds: true,
             completed: true,
             replay_count: true,
             milestone_25: true,
             milestone_50: true,
             milestone_75: true,
             milestone_100: true,
+            retention_buckets: true,
             last_event_at: true,
           },
         }),
@@ -232,47 +260,77 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
       (sum, session) => sum + session.watched_seconds,
       0,
     );
-    const completedViews = presentationVideoSessions.filter(
-      (session) => session.completed || session.milestone_100,
-    ).length;
+    const sessionRetentionBuckets = presentationVideoSessions.map((session) => {
+      const persistedBuckets = normalizeRetentionBuckets(session.retention_buckets);
+      const derivedBuckets = deriveRetentionBucketsFromPosition(
+        session.max_position_seconds,
+        session.duration_seconds,
+        session.completed || session.milestone_100,
+      );
+      const legacyMilestones = [
+        session.milestone_25 ? 25 : null,
+        session.milestone_50 ? 50 : null,
+        session.milestone_75 ? 75 : null,
+        session.milestone_100 ? 100 : null,
+      ].filter((bucket): bucket is number => typeof bucket === "number");
+
+      return new Set([...persistedBuckets, ...derivedBuckets, ...legacyMilestones]);
+    });
+    const completedViews = sessionRetentionBuckets.filter((buckets) => buckets.has(100)).length;
     const replayedViews = presentationVideoSessions.filter(
       (session) => session.replay_count > 0,
     ).length;
+    const durationSeconds =
+      presentationVideoSessions.reduce(
+        (max, session) => Math.max(max, session.duration_seconds),
+        0,
+      ) || null;
     const latestVideoEventAt =
       presentationVideoSessions
         .map((session) => session.last_event_at)
         .sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
-    const retentionPoints: PsychologistAnalyticsPresentationVideoRetentionPoint[] = [
+    const retentionPoints: PsychologistAnalyticsPresentationVideoRetentionPoint[] =
+      RETENTION_BUCKETS.map((bucket) => {
+        const viewers = sessionRetentionBuckets.filter((buckets) => buckets.has(bucket)).length;
+
+        return {
+          milestone: bucket,
+          viewers,
+          rate: percentage(viewers, videoViews),
+        };
+      });
+    const retentionTimeline: PsychologistAnalyticsPresentationVideoRetentionPoint[] = [
       {
-        milestone: 25,
-        viewers: presentationVideoSessions.filter((session) => session.milestone_25).length,
-        rate: percentage(
-          presentationVideoSessions.filter((session) => session.milestone_25).length,
-          videoViews,
-        ),
+        milestone: 0,
+        viewers: videoViews,
+        rate: videoViews > 0 ? 100 : 0,
       },
-      {
-        milestone: 50,
-        viewers: presentationVideoSessions.filter((session) => session.milestone_50).length,
-        rate: percentage(
-          presentationVideoSessions.filter((session) => session.milestone_50).length,
-          videoViews,
-        ),
-      },
-      {
-        milestone: 75,
-        viewers: presentationVideoSessions.filter((session) => session.milestone_75).length,
-        rate: percentage(
-          presentationVideoSessions.filter((session) => session.milestone_75).length,
-          videoViews,
-        ),
-      },
-      {
-        milestone: 100,
-        viewers: completedViews,
-        rate: percentage(completedViews, videoViews),
-      },
+      ...retentionPoints,
     ];
+    let retentionDropoff: PsychologistAnalyticsPresentationVideo["retention"]["dropoff"] = null;
+
+    for (let index = 1; index < retentionTimeline.length; index += 1) {
+      const previous = retentionTimeline[index - 1]!;
+      const current = retentionTimeline[index]!;
+      const rateDrop = Math.max(0, previous.rate - current.rate);
+
+      if (rateDrop > (retentionDropoff?.rate_drop ?? 0)) {
+        retentionDropoff = {
+          from_milestone: previous.milestone,
+          to_milestone: current.milestone,
+          rate_drop: rateDrop,
+          from_seconds: durationSeconds
+            ? Math.round((durationSeconds * previous.milestone) / 100)
+            : 0,
+          to_seconds: durationSeconds ? Math.round((durationSeconds * current.milestone) / 100) : 0,
+        };
+      }
+    }
+
+    if (!retentionDropoff || retentionDropoff.rate_drop <= 0) {
+      retentionDropoff = null;
+    }
+
     const presentationVideoMetrics = {
       views: videoViews,
       average_watch_seconds: videoViews > 0 ? Math.round(totalWatchedSeconds / videoViews) : 0,
@@ -284,6 +342,7 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
       updated_at: latestVideoEventAt,
       video_url: profile?.video_url ?? null,
       video_cover_url: profile?.video_cover_url ?? null,
+      duration_seconds: durationSeconds,
       metrics: presentationVideoMetrics,
       cards: toPresentationVideoCards(presentationVideoMetrics),
       retention: {
@@ -294,7 +353,9 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
                   retentionPoints.length,
               )
             : 0,
+        dropoff: retentionDropoff,
         points: retentionPoints,
+        source: "bucket_5_percent",
       },
     };
 

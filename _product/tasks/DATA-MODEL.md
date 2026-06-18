@@ -296,6 +296,7 @@ Especialidade, serviço e abordagem são filtros da busca (TASK-13) e seções d
 | `replay_count` | `Int @default(0)` | quantidade de retornos/replays detectados na mesma sessão |
 | `completed` | `Boolean @default(false)` | verdadeiro quando o usuário chega ao fim ou ao marco equivalente de 100% |
 | `milestone_25`, `milestone_50`, `milestone_75`, `milestone_100` | `Boolean @default(false)` | retenção por marcos, suficiente para gráfico agregado sem capturar cada segundo |
+| `retention_buckets` | `Json?` | lista de buckets internos de 5% alcançados (`[5,10,...,100]`), calculada pelo backend a partir da maior posição/duração para gerar curva estimada sem registrar evento por segundo |
 | `last_event_at` | `DateTime @default(now())` | última atualização recebida para exibir recência dos dados |
 | `@@index([psychologist_id, createdAt])`, `@@index([psychologist_id, last_event_at])`, `@@index([viewer_id, createdAt])` | | consultas de analytics por período e auditoria |
 

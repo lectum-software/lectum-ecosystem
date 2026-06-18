@@ -70,15 +70,24 @@ export type PsychologistAnalyticsPresentationVideoMetric = {
 };
 
 export type PsychologistAnalyticsPresentationVideoRetentionPoint = {
-  milestone: 25 | 50 | 75 | 100;
+  milestone: number;
   rate: number;
   viewers: number;
+};
+
+export type PsychologistAnalyticsPresentationVideoRetentionDropoff = {
+  from_milestone: number;
+  to_milestone: number;
+  rate_drop: number;
+  from_seconds: number;
+  to_seconds: number;
 };
 
 export type PsychologistAnalyticsPresentationVideo = {
   updated_at: string | null;
   video_url: string | null;
   video_cover_url: string | null;
+  duration_seconds: number | null;
   metrics: {
     views: number;
     average_watch_seconds: number;
@@ -89,7 +98,9 @@ export type PsychologistAnalyticsPresentationVideo = {
   cards: PsychologistAnalyticsPresentationVideoMetric[];
   retention: {
     average_retention_rate: number;
+    dropoff: PsychologistAnalyticsPresentationVideoRetentionDropoff | null;
     points: PsychologistAnalyticsPresentationVideoRetentionPoint[];
+    source: "bucket_5_percent";
   };
 };
 
