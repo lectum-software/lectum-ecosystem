@@ -10,6 +10,7 @@ import {
   Copy,
   Eye,
   Heart,
+  Lightbulb,
   Link2,
   type LucideIcon,
   MessageSquare,
@@ -821,6 +822,17 @@ const PresentationVideoAnalyticsSection = ({
           />
         </div>
       </article>
+
+      <div className="flex min-w-0 items-start gap-3 rounded-[22px] border border-primary/10 bg-primary-soft/40 px-4 py-3 text-sm leading-6 text-muted">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface text-primary shadow-[var(--lectum-shadow-soft)]">
+          <Lightbulb className="h-4 w-4" aria-hidden />
+        </span>
+        <p className="min-w-0">
+          <span className="font-extrabold text-foreground">Insight: </span>
+          Vídeos de apresentação com alto engajamento geram mais conversões para o WhatsApp. Faça
+          testes e descubra o que funciona melhor para você.
+        </p>
+      </div>
     </section>
   );
 };

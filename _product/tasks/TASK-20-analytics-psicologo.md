@@ -250,3 +250,11 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - A UI foi preparada para dados reais futuros: desktop com layout tabular premium ordenado por visualizacoes e mobile em lista com barras de progresso e acordeao por origem.
 - Nenhum schema Prisma, migration, package novo, seed, dado fake ou endpoint simulado foi criado.
 - ADR complementar: `adrs/0126-analytics-origem-trafego-zerada.md`.
+
+## Refinamento contextual da dica de video em Analytics (2026-06-18)
+
+- Pedido do usuario: remover a dica isolada do final da pagina e integrar a recomendacao ao contexto da secao `Video de apresentacao`.
+- A dica passou a aparecer dentro do card principal de video, logo apos o bloco de retencao, com icone de lampada, fundo azul suave e altura compacta.
+- Texto atualizado: `Videos de apresentacao com alto engajamento geram mais conversoes para o WhatsApp. Faca testes e descubra o que funciona melhor para voce.`
+- A ordem da tela permanece: indicadores principais, video de apresentacao, origem do trafego e link da pagina de avaliacoes.
+- Nenhum schema Prisma, migration, package novo, mock, seed ou evento simulado foi criado.
