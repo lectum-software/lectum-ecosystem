@@ -353,14 +353,16 @@ const PresentationVideoMetricCard = ({
   const Icon = videoMetricIcons[metric.id];
 
   return (
-    <article className="min-w-0 rounded-[22px] border border-primary/10 bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
+    <article className="flex min-h-[150px] min-w-0 flex-col rounded-[22px] border border-primary/10 bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
       <span className="grid h-10 w-10 place-items-center rounded-full bg-primary-soft text-primary">
         <Icon className="h-5 w-5" aria-hidden />
       </span>
-      <h3 className="mt-3 text-sm font-extrabold leading-5 text-foreground">{metric.label}</h3>
+      <h3 className="mt-4 min-h-10 text-sm font-extrabold leading-5 text-foreground">
+        {metric.label}
+      </h3>
       <p
         className={cn(
-          "mt-2 text-2xl font-black tracking-[-0.04em] text-foreground",
+          "mt-3 text-2xl font-black tracking-[-0.04em] text-foreground",
           locked && "select-none blur-[5px]",
         )}
       >
@@ -430,7 +432,6 @@ const RetentionChart = ({
   points,
   views = 0,
 }: RetentionChartProps) => {
-  const pointMap = new Map(points.map((point) => [point.milestone, point]));
   const fallbackPoints = Array.from({ length: 20 }, (_, index) => {
     const milestone = (index + 1) * 5;
 
@@ -449,14 +450,6 @@ const RetentionChart = ({
     },
     ...safePoints,
   ];
-  const summaryPoints = RETENTION_SUMMARY_MILESTONES.map(
-    (milestone) =>
-      pointMap.get(milestone) ?? {
-        milestone,
-        rate: 0,
-        viewers: 0,
-      },
-  );
   const smoothPath = buildSmoothRetentionPath(chartPoints);
   const currentPercent = durationSeconds
     ? clampPercent((Math.max(0, currentTimeSeconds) / durationSeconds) * 100)
@@ -480,12 +473,12 @@ const RetentionChart = ({
   };
 
   return (
-    <div className="min-w-0 rounded-[22px] border border-border bg-surface-muted p-4">
+    <div className="min-w-0">
       <button
         aria-label="Selecionar trecho no gráfico de retenção"
         className={cn(
-          "relative w-full overflow-hidden rounded-2xl bg-surface p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
-          canSeek && "cursor-pointer hover:bg-primary-soft/20",
+          "relative w-full overflow-hidden rounded-[22px] bg-primary-soft/35 p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
+          canSeek && "cursor-pointer hover:bg-primary-soft/50",
           locked && "blur-[4px]",
         )}
         disabled={!canSeek}
@@ -556,32 +549,13 @@ const RetentionChart = ({
             </>
           ) : null}
         </svg>
-        <span className="pointer-events-none absolute right-4 top-3 rounded-full bg-surface/95 px-1.5 py-0.5 text-[0.65rem] font-extrabold leading-none text-subtle shadow-sm">
+        <span className="pointer-events-none absolute right-5 top-4 rounded-full bg-surface/95 px-1.5 py-0.5 text-[0.65rem] font-extrabold leading-none text-subtle shadow-sm">
           100%
         </span>
-        <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-surface/95 px-1.5 py-0.5 text-[0.65rem] font-extrabold leading-none text-subtle shadow-sm">
+        <span className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 rounded-full bg-surface/95 px-1.5 py-0.5 text-[0.65rem] font-extrabold leading-none text-subtle shadow-sm">
           50%
         </span>
       </button>
-
-      <div className="mt-3 grid grid-cols-4 gap-2">
-        {summaryPoints.map((point) => (
-          <div
-            className="rounded-2xl border border-border bg-surface px-2 py-2 text-center"
-            key={point.milestone}
-          >
-            <p className="text-[0.68rem] font-black text-subtle">{point.milestone}%</p>
-            <p
-              className={cn(
-                "mt-1 text-sm font-extrabold text-foreground",
-                locked && "select-none blur-[4px]",
-              )}
-            >
-              {point.rate}%
-            </p>
-          </div>
-        ))}
-      </div>
 
       {dropoff ? (
         <button
@@ -744,7 +718,7 @@ const PresentationVideoAnalyticsSection = ({
           ) : null}
         </div>
 
-        <div className="grid min-w-0 gap-4 md:grid-cols-[minmax(130px,190px)_1fr] md:items-center">
+        <div className="grid min-w-0 gap-4 rounded-[26px] border border-primary/10 bg-surface/90 p-3 shadow-[var(--lectum-shadow-soft)] md:grid-cols-[minmax(130px,190px)_1fr] md:items-center md:p-4">
           {videoSrc ? (
             <VerticalVideoPlayer
               className="mx-auto w-full max-w-[190px] rounded-[22px] border-0 shadow-[var(--lectum-shadow-soft)]"
