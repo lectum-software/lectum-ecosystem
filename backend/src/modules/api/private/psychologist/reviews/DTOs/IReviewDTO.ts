@@ -25,6 +25,10 @@ export type PsychologistReviewSummary = {
 };
 
 export type PsychologistReviewsResponse = PaginationResponse<PsychologistReviewItem> & {
+  access: {
+    can_receive_reviews: boolean;
+    mode: "full" | "preview";
+  };
   summary: PsychologistReviewSummary;
 };
 

@@ -1,6 +1,15 @@
 ﻿"use client";
 
-import { ArrowLeft, MessageSquareReply, RefreshCcw, Star, UserRound } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Award,
+  CheckCircle2,
+  MessageSquareReply,
+  RefreshCcw,
+  Star,
+  UserRound,
+} from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
@@ -109,6 +118,50 @@ const RatingSummary = ({ summary }: { summary?: PsychologistReviewSummary }) => 
     </section>
   );
 };
+
+const premiumReviewBenefits = [
+  "Receba avaliações de pacientes",
+  "Exiba depoimentos no seu perfil",
+  "Fortaleça sua reputação profissional",
+  "Aumente sua credibilidade na plataforma",
+];
+
+const PremiumReviewsState = () => (
+  <section className="rounded-[var(--lectum-card-radius)] border border-primary/20 bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
+    <div className="grid justify-items-center text-center">
+      <span className="grid h-14 w-14 place-items-center rounded-2xl bg-primary-soft text-primary shadow-[var(--lectum-shadow-soft)]">
+        <Award className="h-7 w-7" aria-hidden />
+      </span>
+      <p className="mt-4 text-xs font-black uppercase tracking-[0.16em] text-primary">
+        Recurso profissional
+      </p>
+      <h2 className="mt-2 text-xl font-extrabold leading-7 text-foreground">
+        Desbloqueie avaliações de pacientes
+      </h2>
+      <p className="mt-3 text-sm leading-6 text-muted">
+        Ao fazer upgrade para o Plano Profissional, seus pacientes poderão registrar avaliações e
+        depoimentos sobre seus atendimentos. As avaliações recebidas aparecerão aqui e ajudarão a
+        fortalecer sua credibilidade na Lectum.
+      </p>
+    </div>
+
+    <ul className="mt-5 grid gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface-muted p-4">
+      {premiumReviewBenefits.map((benefit) => (
+        <li className="flex items-start gap-2.5 text-sm leading-5 text-muted" key={benefit}>
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden />
+          <span>{benefit}</span>
+        </li>
+      ))}
+    </ul>
+
+    <Button asChild className="mt-5 h-12 w-full rounded-full text-base">
+      <Link href="/app/professional/billing/subscription">
+        Fazer upgrade
+        <ArrowRight className="h-4 w-4" aria-hidden />
+      </Link>
+    </Button>
+  </section>
+);
 
 const ReviewResponseForm = ({
   defaultOpen,
@@ -225,10 +278,13 @@ export const ProfessionalReviewsLogic = () => {
   const reviews = usePsychologistReviews(query);
   const data = reviews.data;
   const items = data?.data ?? [];
-  const firstUnansweredId = items.find((review) => !review.response)?.id;
-
   const errorMessage = reviews.isError ? resolveApiError(reviews.error) : null;
   const isProfessionalPlanError = Boolean(errorMessage?.includes("Plano Profissional"));
+  const shouldShowError = Boolean(errorMessage && !isProfessionalPlanError);
+  const isReviewsPreview = data?.access.mode === "preview" || isProfessionalPlanError;
+  const canReceiveReviews = !isReviewsPreview && (data?.access.can_receive_reviews ?? true);
+  const displayItems = canReceiveReviews ? items : [];
+  const firstUnansweredId = displayItems.find((review) => !review.response)?.id;
 
   return (
     <PrivateTemplate desktopSidebarDefaultCollapsed showMobileNavigation={false}>
@@ -247,30 +303,27 @@ export const ProfessionalReviewsLogic = () => {
           <span />
         </header>
 
-        <div className="grid gap-[27px] px-4 pt-[17px]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-[27px] px-4 pt-[17px]">
           {reviews.isLoading && limit === INITIAL_LIMIT ? (
             <LoadingState label="Carregando avaliações" />
           ) : null}
 
-          {errorMessage ? (
-            <InlineAlert
-              title="Não foi possível carregar"
-              variant={isProfessionalPlanError ? "warning" : "error"}
-            >
-              <div className="grid gap-3">
-                <p>{errorMessage}</p>
-                {isProfessionalPlanError ? (
-                  <Button asChild className="h-10 rounded-full px-4" variant="outline">
-                    <Link href="/app/professional/billing/subscription">Ver assinatura</Link>
-                  </Button>
-                ) : null}
-              </div>
+          {shouldShowError ? (
+            <InlineAlert title="Erro ao consultar avaliações" variant="error">
+              <p>{errorMessage}</p>
             </InlineAlert>
           ) : null}
 
-          {!reviews.isError ? <RatingSummary summary={data?.summary} /> : null}
+          {!shouldShowError && canReceiveReviews ? <RatingSummary summary={data?.summary} /> : null}
 
-          {!reviews.isLoading && !reviews.isError && items.length === 0 ? (
+          {!reviews.isLoading && !shouldShowError && !canReceiveReviews ? (
+            <PremiumReviewsState />
+          ) : null}
+
+          {!reviews.isLoading &&
+          !shouldShowError &&
+          canReceiveReviews &&
+          displayItems.length === 0 ? (
             <EmptyState
               className="rounded-[22px] bg-white"
               icon={UserRound}
@@ -279,7 +332,7 @@ export const ProfessionalReviewsLogic = () => {
             />
           ) : null}
 
-          {items.length > 0 ? (
+          {displayItems.length > 0 ? (
             <section className="grid gap-[17px]" aria-labelledby="professional-reviews-list-title">
               <h2
                 id="professional-reviews-list-title"
@@ -288,7 +341,7 @@ export const ProfessionalReviewsLogic = () => {
                 Depoimentos Recentes
               </h2>
 
-              {items.map((review) => (
+              {displayItems.map((review) => (
                 <ReviewCard
                   defaultOpenResponse={review.id === firstUnansweredId}
                   key={review.id}
@@ -298,7 +351,7 @@ export const ProfessionalReviewsLogic = () => {
             </section>
           ) : null}
 
-          {(data?.count || 0) > items.length ? (
+          {canReceiveReviews && (data?.count || 0) > displayItems.length ? (
             <button
               className="h-[54px] rounded-[22px] border border-dashed border-[#bddaf3] bg-white text-[15px] font-extrabold text-[#308ce8] transition hover:bg-[#f8fbff] disabled:opacity-60"
               disabled={reviews.isFetching}
@@ -313,7 +366,7 @@ export const ProfessionalReviewsLogic = () => {
             <LoadingState label="Atualizando avaliações" />
           ) : null}
 
-          {!reviews.isError && items.length > 0 ? (
+          {!shouldShowError && displayItems.length > 0 ? (
             <button
               className="mx-auto hidden items-center gap-2 text-sm font-semibold text-[#64748b]"
               onClick={() => reviews.refetch()}

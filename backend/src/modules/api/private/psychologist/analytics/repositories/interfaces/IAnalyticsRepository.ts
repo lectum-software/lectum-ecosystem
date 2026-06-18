@@ -9,5 +9,6 @@ export interface IPsychologistAnalyticsRepository {
   index(
     data: IPsychologistAnalyticsIndexDTO,
     period: PsychologistAnalyticsPeriod,
+    hasProfessionalEntitlement: boolean,
   ): Promise<PsychologistAnalyticsResponse>;
 }

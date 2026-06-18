@@ -84,6 +84,7 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
   async index(
     data: IPsychologistAnalyticsIndexDTO,
     period: PsychologistAnalyticsPeriod,
+    hasProfessionalEntitlement: boolean,
   ): Promise<PsychologistAnalyticsResponse> {
     const userId = data.auth.id!;
     const createdAtWindow = {
@@ -147,6 +148,10 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
     };
 
     return {
+      access: {
+        has_professional_entitlement: hasProfessionalEntitlement,
+        mode: hasProfessionalEntitlement ? "full" : "preview",
+      },
       period,
       metrics,
       cards: toCards(metrics),

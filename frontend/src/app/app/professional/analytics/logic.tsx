@@ -2,6 +2,7 @@
 
 import {
   ArrowLeft,
+  ArrowRight,
   BarChart3,
   Copy,
   Eye,
@@ -178,6 +179,31 @@ const PeriodTabs = ({
   </div>
 );
 
+const PremiumAnalyticsBanner = () => (
+  <section className="rounded-[var(--lectum-card-radius)] border border-primary/20 bg-primary-soft p-5 shadow-[var(--lectum-shadow-soft)]">
+    <div className="flex gap-3">
+      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-surface text-primary shadow-[var(--lectum-shadow-soft)]">
+        <BarChart3 className="h-5 w-5" aria-hidden />
+      </span>
+      <div className="min-w-0">
+        <h2 className="text-base font-extrabold leading-6 text-foreground">
+          Desbloqueie seus Analytics
+        </h2>
+        <p className="mt-2 text-sm leading-6 text-muted">
+          Assine o plano profissional para acompanhar visualizações, cliques, desempenho do perfil e
+          evolução dos seus resultados na Lectum.
+        </p>
+        <Button asChild className="mt-4 h-11 rounded-full px-5">
+          <Link href="/app/professional/billing/subscription">
+            Fazer upgrade
+            <ArrowRight className="h-4 w-4" aria-hidden />
+          </Link>
+        </Button>
+      </div>
+    </div>
+  </section>
+);
+
 const CustomPeriodFields = ({
   disabled,
   endAt,
@@ -215,7 +241,7 @@ const CustomPeriodFields = ({
   </div>
 );
 
-const MetricCard = ({ metric }: { metric: AnalyticsCardView }) => {
+const MetricCard = ({ locked, metric }: { locked?: boolean; metric: AnalyticsCardView }) => {
   const Icon = metric.icon;
 
   return (
@@ -227,19 +253,33 @@ const MetricCard = ({ metric }: { metric: AnalyticsCardView }) => {
         </h2>
       </div>
       <div className="mt-3 flex min-w-0 items-end gap-1">
-        <p className="min-w-0 text-[19px] font-extrabold leading-none tracking-[-0.03em] text-[#111827]">
+        <p
+          className={cn(
+            "min-w-0 text-[19px] font-extrabold leading-none tracking-[-0.03em] text-[#111827]",
+            locked && "select-none blur-[4px]",
+          )}
+        >
           {metric.value}
         </p>
         {metric.isUnavailable ? (
-          <span className="pb-0.5 text-[8.5px] font-semibold text-[#94a3b8]">sem evento</span>
+          <span
+            className={cn(
+              "pb-0.5 text-[8.5px] font-semibold text-[#94a3b8]",
+              locked && "select-none blur-[3px]",
+            )}
+          >
+            sem evento
+          </span>
         ) : null}
       </div>
     </article>
   );
 };
 
-const ReviewsLinkCard = ({ link }: { link: string }) => {
+const ReviewsLinkCard = ({ link, locked }: { link: string; locked?: boolean }) => {
   const copyLink = async () => {
+    if (locked) return;
+
     try {
       await navigator.clipboard.writeText(link);
       toast.success("Link copiado.");
@@ -254,10 +294,18 @@ const ReviewsLinkCard = ({ link }: { link: string }) => {
         Link da minha página de avaliações
       </h2>
       <div className="mt-4 flex h-[50px] items-center gap-3 rounded-[14px] border border-[#e5e7eb] bg-[#fbfcfe] px-4">
-        <p className="min-w-0 flex-1 truncate text-[12px] font-medium text-[#64748b]">{link}</p>
+        <p
+          className={cn(
+            "min-w-0 flex-1 truncate text-[12px] font-medium text-[#64748b]",
+            locked && "select-none blur-[4px]",
+          )}
+        >
+          {link}
+        </p>
         <button
           aria-label="Copiar link de avaliações"
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[#308ce8] transition hover:bg-[#eaf5ff]"
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[#308ce8] transition hover:bg-[#eaf5ff] disabled:opacity-50"
+          disabled={locked}
           onClick={copyLink}
           type="button"
         >
@@ -311,6 +359,8 @@ export const ProfessionalAnalyticsLogic = () => {
   const data = analytics.data;
   const errorMessage = analytics.isError ? resolveApiError(analytics.error) : null;
   const isProfessionalPlanError = Boolean(errorMessage?.includes("Plano Profissional"));
+  const shouldShowError = Boolean(errorMessage && !isProfessionalPlanError);
+  const isAnalyticsPreview = data?.access.mode === "preview" || isProfessionalPlanError;
   const hasEvents = hasAnyRealEvent(data);
   const reviewLink =
     typeof window === "undefined"
@@ -344,37 +394,29 @@ export const ProfessionalAnalyticsLogic = () => {
           />
         ) : null}
 
-        <div className="grid min-w-0 gap-3 px-3 pt-3">
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 px-3 pt-3">
           {analytics.isLoading ? <LoadingState label="Carregando analytics reais" /> : null}
 
-          {errorMessage ? (
-            <InlineAlert
-              title="Não foi possível carregar os analytics"
-              variant={isProfessionalPlanError ? "warning" : "error"}
-            >
-              <div className="grid gap-3">
-                <p>{errorMessage}</p>
-                {isProfessionalPlanError ? (
-                  <Button asChild className="h-10 rounded-full px-4" variant="outline">
-                    <Link href="/app/professional/billing/subscription">Ver assinatura</Link>
-                  </Button>
-                ) : null}
-              </div>
+          {shouldShowError ? (
+            <InlineAlert title="Erro ao consultar dados" variant="error">
+              <p>{errorMessage}</p>
             </InlineAlert>
           ) : null}
 
-          {!analytics.isError ? (
+          {isAnalyticsPreview ? <PremiumAnalyticsBanner /> : null}
+
+          {!shouldShowError ? (
             <section
               className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2"
               aria-label="Cards de analytics"
             >
               {metricCards(data).map((metric) => (
-                <MetricCard key={metric.id} metric={metric} />
+                <MetricCard key={metric.id} locked={isAnalyticsPreview} metric={metric} />
               ))}
             </section>
           ) : null}
 
-          {data && !analytics.isError && !hasEvents ? (
+          {data && !isAnalyticsPreview && !analytics.isError && !hasEvents ? (
             <EmptyState
               className="rounded-[22px] bg-white"
               icon={BarChart3}
@@ -383,9 +425,11 @@ export const ProfessionalAnalyticsLogic = () => {
             />
           ) : null}
 
-          {!analytics.isError ? <ReviewsLinkCard link={reviewLink} /> : null}
-          {!analytics.isError ? <SpecialtySearchCard /> : null}
-          {!analytics.isError ? <ProTipCard /> : null}
+          {!shouldShowError ? (
+            <ReviewsLinkCard link={reviewLink} locked={isAnalyticsPreview} />
+          ) : null}
+          {!shouldShowError ? <SpecialtySearchCard /> : null}
+          {!shouldShowError ? <ProTipCard /> : null}
         </div>
       </section>
     </PrivateTemplate>

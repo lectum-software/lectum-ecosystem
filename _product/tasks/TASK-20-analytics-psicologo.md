@@ -192,3 +192,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Conversões WhatsApp e avaliações seguem usando os dados persistidos retornados pelo endpoint da TASK-20.
 - Validações do ajuste: `pnpm --dir frontend check`, `pnpm check`, `pnpm --dir frontend exec next build --turbo`, `pnpm --dir frontend build` e browser local em `/app/professional/analytics` (sem sessão autenticada, validando resposta da rota e gate de login).
 - ADR complementar: ADR-0034.
+
+## Ajuste de demonstração premium em 2026-06-18
+
+- Decisão de produto: psicólogos no Plano Gratuito não devem mais encontrar bloqueio/erro ao abrir `/app/professional/analytics`; a tela passa a demonstrar valor mantendo a estrutura visual disponível.
+- `GET /api/private/psychologist/analytics` agora retorna `200` para psicólogos autenticados sem Plano Profissional/cortesia, preservando dados reais agregados e adicionando `access.has_professional_entitlement=false` e `access.mode="preview"`.
+- Frontend ajustado para exibir banner premium `Desbloqueie seus Analytics`, CTA `Fazer upgrade` para `/app/professional/billing/subscription`, abas de período, cards e demais seções já existentes, com valores/dados sensíveis desfocados e labels legíveis.
+- Erros técnicos reais continuam usando estado de erro em PT-BR; a mensagem antiga de bloqueio por plano deixou de ser exibida no fluxo normal do Plano Gratuito.
+- O layout recebeu ajuste mobile-first (`grid-cols-[minmax(0,1fr)]` nos wrappers principais) para evitar trilhas implícitas maiores que a viewport e cortes laterais em 390px.
+- Builder/Quick Copy não esteve acessível como ferramenta direta neste ambiente; validação visual usou `_product/proto/Meus Analytics - Psicólogo.jpg`, tela de assinatura e browser local/headless.
+- Nenhum schema Prisma, migration, package novo, mock, seed ou métrica simulada foi criado. Métricas sem evento persistido continuam ausentes/zeradas com tratamento honesto.
+- ADR complementar: ADR-0118.
+- Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, API real com psicólogo temporário gratuito e browser local/headless 390x844 em `/app/professional/analytics`.

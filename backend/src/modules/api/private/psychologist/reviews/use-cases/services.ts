@@ -23,6 +23,31 @@ const ensureProfessionalEntitlement = async (
   return repository.hasProfessionalEntitlement(userId);
 };
 
+const emptyDistribution = () =>
+  ({
+    1: 0,
+    2: 0,
+    3: 0,
+    4: 0,
+    5: 0,
+  }) satisfies Record<1 | 2 | 3 | 4 | 5, number>;
+
+const buildPreviewResponse = (query: IPsychologistReviewIndexDTO["q"]) => ({
+  access: {
+    can_receive_reviews: false,
+    mode: "preview" as const,
+  },
+  data: [],
+  summary: {
+    rating_avg: 0,
+    rating_count: 0,
+    distribution: emptyDistribution(),
+  },
+  page: Math.max(1, Number(query.page || 1)),
+  pages: 0,
+  count: 0,
+});
+
 export const index = async (data: IPsychologistReviewIndexDTO) => {
   const unauthorized = ensurePsychologist(data);
   if (unauthorized) return unauthorized;
@@ -31,10 +56,7 @@ export const index = async (data: IPsychologistReviewIndexDTO) => {
   const canReceiveReviews = await ensureProfessionalEntitlement(repository, data.auth.id);
 
   if (!canReceiveReviews) {
-    return {
-      status: 403,
-      ...error("professional_reviews_professional_plan", {}),
-    };
+    return { status: 200, ...msg("index", {}), data: buildPreviewResponse(data.q) };
   }
 
   const res = await repository.index(data);

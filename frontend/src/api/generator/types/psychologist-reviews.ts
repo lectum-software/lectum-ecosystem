@@ -27,6 +27,10 @@ export type PsychologistReviewSummary = {
 };
 
 export type PsychologistReviewsResponse = {
+  access: {
+    can_receive_reviews: boolean;
+    mode: "full" | "preview";
+  };
   data: PsychologistReview[];
   page: number;
   pages: number;

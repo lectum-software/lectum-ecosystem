@@ -195,6 +195,10 @@ export class PsychologistReviewRepository implements IPsychologistReviewReposito
     ]);
 
     return {
+      access: {
+        can_receive_reviews: true,
+        mode: "full",
+      },
       data: items.map(toReviewItem),
       summary: {
         rating_avg: profile?.rating_avg ?? 0,

@@ -53,6 +53,10 @@ export type PsychologistAnalyticsMetrics = {
 };
 
 export type PsychologistAnalyticsResponse = {
+  access: {
+    has_professional_entitlement: boolean;
+    mode: "full" | "preview";
+  };
   period: PsychologistAnalyticsPeriod;
   metrics: PsychologistAnalyticsMetrics;
   cards: PsychologistAnalyticsMetric[];

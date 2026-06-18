@@ -183,3 +183,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - O formulário de resposta continua usando React Hook Form/Zod via fundação de `frontend/src/hooks/form`.
 - Validações do ajuste: `pnpm --dir frontend check`, `pnpm check`, `pnpm --dir frontend exec next build --turbo`, `pnpm --dir frontend build` e browser local em `/app/professional/reviews` (sem sessão autenticada, validando resposta da rota e gate de login).
 - ADR complementar: ADR-0034.
+
+## Ajuste de demonstração premium em 2026-06-18
+
+- Decisão de produto: psicólogos no Plano Gratuito não devem mais encontrar bloqueio/erro ao abrir `/app/professional/reviews`; a tela permanece acessível e comunica o benefício desbloqueado pelo upgrade.
+- `GET /api/private/psychologist/reviews` agora retorna `200` em modo `preview` para quem não possui Plano Profissional/cortesia, com `access.can_receive_reviews=false`, lista vazia e resumo zerado, sem criar avaliação fictícia.
+- `POST /api/private/psychologist/reviews/:id/response` continua exigindo entitlement profissional, pois só deve operar sobre avaliações reais elegíveis.
+- Frontend ajustado para exibir o estado premium `Desbloqueie avaliações de pacientes`, benefícios solicitados com checkmarks e CTA `Fazer upgrade` para `/app/professional/billing/subscription`.
+- O estado vazio genérico continua disponível para profissionais elegíveis que ainda não receberam avaliações reais; o Plano Gratuito usa o estado premium explicativo.
+- Builder/Quick Copy não esteve acessível como ferramenta direta neste ambiente; validação visual usou `_product/proto/Minhas Avaliações - Psicólogo.jpg`, tela de assinatura e browser local/headless.
+- Nenhum schema Prisma, migration, package novo, mock, seed ou avaliação simulada foi criado.
+- ADR complementar: ADR-0118.
+- Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, API real com psicólogo temporário gratuito e browser local/headless 390x844 em `/app/professional/reviews`.
