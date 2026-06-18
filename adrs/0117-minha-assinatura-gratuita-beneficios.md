@@ -31,6 +31,8 @@ Em refinamento posterior no mesmo dia, a descrição gratuita foi compactada par
 
 Em novo refinamento visual, o container completo de informações do plano gratuito também deixou de ser renderizado. Assim, a seção `O que você desbloqueia com a Assinatura Profissional` passa a vir imediatamente após a descrição do plano. O resumo com `Plano atual` e data continua disponível apenas para cenários não gratuitos, como a cortesia profissional, onde a data de expiração tem valor operacional.
 
+Em outro refinamento, o CTA `Fazer upgrade` deixou de ficar no fim do card e passou a ser renderizado em uma área fixa/flutuante no rodapé da viewport. A área usa superfície translúcida, blur, sombra e safe area para manter o CTA sempre acessível no mobile; em desktop, fica limitada à mesma largura do card central. O conteúdo da página ganhou padding inferior para não deixar o card final escondido atrás do CTA.
+
 O fluxo de cortesia continua separado: profissionais com `source="admin_grant"` mantêm a mensagem de cortesia e o CTA para checkout real/bloqueado da TASK-32. Nenhuma regra de cobrança, persistência, entitlement, gateway ou preço foi alterada.
 
 ## Consequências
@@ -39,6 +41,7 @@ O fluxo de cortesia continua separado: profissionais com `source="admin_grant"` 
 - O cabeçalho passa a ser a única fonte visual do estado `Plano Gratuito`, reduzindo duplicidade e altura vazia no mobile.
 - A Assinatura Profissional fica mais clara sem expor preço fora da tela de planos.
 - O card permanece responsivo em 390px sem overflow horizontal.
+- O CTA de conversão fica persistente sem exigir que o profissional role até o final da tela.
 - A decisão mantém a segurança do checkout: não há coleta de cartão fora do Mercado Pago real.
 
 ## Validação
@@ -47,7 +50,8 @@ O fluxo de cortesia continua separado: profissionais com `source="admin_grant"` 
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser headless local em `http://localhost:3000/app/professional/billing/subscription`, viewport 390x844, com usuário psicólogo temporário criado por endpoints reais, Plano Gratuito selecionado via API real e removido do banco ao final.
-- Validação visual confirmou `Plano Gratuito`, `SEU PLANO ATUAL`, seção de benefícios imediatamente após a descrição, card `Amplie sua presença profissional na Lectum`, CTA `Fazer upgrade`, ausência do texto técnico antigo, ausência de `Plano atual`/`Expiração` no Plano Gratuito e `scrollWidth=390`/`innerWidth=390`.
+- Validação visual confirmou `Plano Gratuito`, `SEU PLANO ATUAL`, seção de benefícios imediatamente após a descrição, card `Amplie sua presença profissional na Lectum`, CTA fixo `Fazer upgrade`, ausência do texto técnico antigo, ausência de `Plano atual`/`Expiração` no Plano Gratuito e `scrollWidth=390`/`innerWidth=390`.
+- A validação browser também confirmou o CTA fixo antes/depois da rolagem em 390x844, padding inferior de `105px`, último card não coberto, e painel desktop 1024x768 alinhado à largura do card central.
 
 ## Pendências
 

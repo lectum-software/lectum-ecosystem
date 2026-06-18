@@ -112,6 +112,7 @@ export const ProfessionalBillingSubscriptionLogic = () => {
   const shouldShowPlanDetails = Boolean(subscription) && !isFreePlan;
   const shouldShowExpiration =
     shouldShowPlanDetails && (isCourtesy || Boolean(subscription?.current_period_end));
+  const shouldShowUpgradeCta = !current.isLoading && !current.isError && !isCourtesy;
   const heroTitle = isCourtesy ? "Plano Profissional de cortesia" : planName;
   const heroDescription = isCourtesy
     ? "Você está com todos os benefícios de um psicólogo assinante liberados durante o período da cortesia."
@@ -121,7 +122,11 @@ export const ProfessionalBillingSubscriptionLogic = () => {
 
   return (
     <PrivateTemplate showHeader={false}>
-      <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-3xl">
+      <section
+        className={`mx-auto grid w-full max-w-[430px] gap-5 md:max-w-3xl ${
+          shouldShowUpgradeCta ? "pb-28 md:pb-32" : ""
+        }`}
+      >
         <Link
           className="inline-flex items-center gap-2 text-sm font-semibold text-muted"
           href="/app/profile"
@@ -247,18 +252,24 @@ export const ProfessionalBillingSubscriptionLogic = () => {
                     </div>
                   </div>
                 </div>
-
-                <Button asChild className="mt-6 h-12 w-full rounded-full text-base">
-                  <Link href="/app/professional/billing/plans">
-                    Fazer upgrade
-                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                  </Link>
-                </Button>
               </>
             )}
           </div>
         ) : null}
       </section>
+
+      {shouldShowUpgradeCta ? (
+        <div className="fixed inset-x-0 bottom-0 z-50 px-4 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:px-6">
+          <div className="mx-auto w-full max-w-[430px] rounded-[var(--lectum-card-radius)] border border-border/80 bg-surface/95 p-2 shadow-[var(--lectum-shadow)] backdrop-blur supports-[backdrop-filter]:bg-surface/90 md:max-w-3xl">
+            <Button asChild className="h-12 w-full rounded-full text-base">
+              <Link href="/app/professional/billing/plans">
+                Fazer upgrade
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </PrivateTemplate>
   );
 };

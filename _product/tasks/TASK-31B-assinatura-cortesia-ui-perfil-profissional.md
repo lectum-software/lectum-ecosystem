@@ -125,3 +125,18 @@ Psicólogos com `professional_subscription.source="admin_grant"` recebem todos o
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser headless local em viewport 390x844 na rota `/app/professional/billing/subscription`, com usuário psicólogo temporário criado por endpoints reais, Plano Gratuito selecionado via API real e removido do banco ao final, confirmou `planAtualCount=0`, `expiraCount=0`, `scrollWidth=390`, `innerWidth=390`, CTA `Fazer upgrade` e a presença da seção de benefícios sem o container redundante.
+
+## Refinamento visual em 2026-06-18: CTA fixo de upgrade
+
+- Pedido direto de produto: transformar o botão `Fazer upgrade` da tela `Minha assinatura` em CTA fixo/flutuante no rodapé da viewport.
+- O CTA foi retirado do fluxo final do card e passou para uma área inferior fixa com fundo `bg-surface` translúcido, blur, borda suave, sombra e padding com `env(safe-area-inset-bottom)`.
+- No mobile, o botão permanece sempre visível durante a rolagem, ocupa a largura disponível dentro da área flutuante e mantém a seta à direita.
+- No desktop, a área flutuante fica centralizada e limitada à mesma largura do card principal, sem ocupar toda a tela.
+- O conteúdo da página recebeu padding inferior adicional para impedir que o último card fique coberto pelo CTA fixo.
+
+### Validação do CTA fixo
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser headless local em viewport mobile 390x844 e desktop 1024x768, com usuário psicólogo temporário criado por endpoints reais, Plano Gratuito selecionado via API real e removido do banco ao final, confirmou CTA fixo antes/depois da rolagem, `scrollWidth=390` no mobile, padding inferior de `105px`, último card não coberto, e painel desktop alinhado à largura do card central.
