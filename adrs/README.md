@@ -86,3 +86,4 @@ Formato recomendado:
 - [ADR-0108 - Publicações do perfil como posts reais da comunidade](0108-publicacoes-perfil-como-posts-comunidade.md) - Accepted
 - [ADR-0109 - Dicas de onboarding persistidas por usu�rio](0109-dicas-onboarding-persistidas-por-usuario.md) - Accepted
 - [ADR-0110 - Publicacoes compactas no perfil e WhatsApp como acao mobile unica](0110-publicacoes-perfil-mobile-whatsapp-unico.md) - Accepted
+- [ADR-0119 - Header secundário premium compartilhado](0119-header-secundario-premium-compartilhado.md) - Accepted

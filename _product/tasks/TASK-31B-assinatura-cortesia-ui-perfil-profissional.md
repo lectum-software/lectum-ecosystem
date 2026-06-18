@@ -140,3 +140,12 @@ Psicólogos com `professional_subscription.source="admin_grant"` recebem todos o
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser headless local em viewport mobile 390x844 e desktop 1024x768, com usuário psicólogo temporário criado por endpoints reais, Plano Gratuito selecionado via API real e removido do banco ao final, confirmou CTA fixo antes/depois da rolagem, `scrollWidth=390` no mobile, padding inferior de `105px`, último card não coberto, e painel desktop alinhado à largura do card central.
+
+## Refinamento visual em 2026-06-18: header secundário premium compartilhado
+
+- Pedido direto de produto: padronizar o header de `Minha assinatura` com o mesmo layout visual já aplicado em `Meus Analytics` e `Minhas Avaliações`.
+- A rota `/app/professional/billing/subscription` passou a usar o componente compartilhado `AppPageHeader`, com botão de voltar à esquerda, título `Minha assinatura` centralizado, superfície branca, borda suave e sombra discreta.
+- O link textual `Voltar ao perfil` foi removido do topo para evitar variação visual e manter a navegação secundária consistente com a família premium da área profissional.
+- Escopo: sem alteração de API, gateway, entitlement, CTA fixo, schema Prisma, packages ou regras de cobrança.
+- ADR criado: `adrs/0119-header-secundario-premium-compartilhado.md`.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado em mobile 390x844 e desktop 1024x768 confirmando título centralizado, header sem overflow e largura alinhada ao conteúdo.

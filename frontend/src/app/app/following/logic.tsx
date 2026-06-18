@@ -6,10 +6,10 @@ import { useMemo, useState } from "react";
 import { useCommunities, useFollowCommunity } from "@/api/callers/community";
 import type { Community } from "@/api/generator/types/community";
 import { CommunityFollowButton } from "@/components/community/community-follow-button";
+import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
-import { SecondaryPageHeader } from "@/components/ui/secondary-page-header";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -269,11 +269,11 @@ export const FollowingCommunitiesLogic = () => {
       showHeader
     >
       <main className="mx-auto min-h-screen w-full max-w-[430px] px-5 py-5 sm:max-w-2xl md:py-8 lg:max-w-3xl">
-        <SecondaryPageHeader
+        <AppPageHeader
           backHref="/app/profile"
           backLabel="Voltar ao perfil"
           className="mb-4"
-          title="Comunidades Seguidas"
+          title="Comunidades seguidas"
         />
 
         <div className="grid gap-8">

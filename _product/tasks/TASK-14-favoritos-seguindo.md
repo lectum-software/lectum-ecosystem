@@ -329,3 +329,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Escopo: sem mudanças de backend, Prisma, migrations, packages, endpoints, filtros, paginação, favoritos ou tracking de contato.
 - ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
 - Validações executadas: `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado em `/app/favorites`.
+
+## Complemento 2026-06-18 - header secundário premium compartilhado em Comunidades seguidas
+
+- Pedido direto de produto: padronizar `Comunidades seguidas` com o mesmo header visual de `Meus Analytics` e `Minhas Avaliações`.
+- A rota `/app/following` passou a usar `AppPageHeader`, com botão de voltar à esquerda, título centralizado, fundo branco, borda suave, sombra discreta e sem textos auxiliares no header.
+- O título visual foi normalizado para `Comunidades seguidas`, mantendo a nomenclatura solicitada e a navegação para `/app/profile`.
+- Escopo: sem alteração de dados, APIs de comunidades, recomendações, participação em comunidades, schema Prisma ou packages.
+- ADR criado: `adrs/0119-header-secundario-premium-compartilhado.md`.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado em mobile 390x844 e desktop 1024x768, sem overflow horizontal.

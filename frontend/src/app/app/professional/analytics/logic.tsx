@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import {
-  ArrowLeft,
   ArrowRight,
   BarChart3,
   Copy,
@@ -25,6 +24,7 @@ import type {
   PsychologistAnalyticsPeriodKey,
   PsychologistAnalyticsResponse,
 } from "@/api/generator/types/psychologist-analytics";
+import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -148,22 +148,6 @@ const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCardView[] 
     description: "Sinais de interesse serão conectados a fontes reais futuras.",
   },
 ];
-
-const ProfessionalPageHeader = ({ title }: { title: string }) => (
-  <header className="grid h-14 grid-cols-[44px_1fr_44px] items-center rounded-[var(--lectum-card-radius)] border border-border bg-surface px-2 shadow-[var(--lectum-shadow-soft)]">
-    <Link
-      aria-label="Voltar para perfil"
-      className="grid h-10 w-10 place-items-center rounded-full bg-primary-soft text-primary transition hover:bg-primary-soft/80"
-      href="/app/profile"
-    >
-      <ArrowLeft className="h-5 w-5" aria-hidden />
-    </Link>
-    <h1 className="min-w-0 text-center text-base font-extrabold tracking-[-0.02em] text-foreground">
-      {title}
-    </h1>
-    <span aria-hidden />
-  </header>
-);
 
 const PeriodTabs = ({
   current,
@@ -430,7 +414,7 @@ export const ProfessionalAnalyticsLogic = () => {
   return (
     <PrivateTemplate showNavigation={false}>
       <section className="mx-auto grid w-full max-w-[430px] grid-cols-[minmax(0,1fr)] gap-4 md:max-w-3xl">
-        <ProfessionalPageHeader title="Meus Analytics" />
+        <AppPageHeader backLabel="Voltar para perfil" title="Meus Analytics" />
 
         <PeriodTabs current={period} disabled={analytics.isFetching} onChange={setPeriod} />
         {period === "custom" ? (

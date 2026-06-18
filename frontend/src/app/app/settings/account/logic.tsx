@@ -16,10 +16,10 @@ import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useAccount } from "@/api/callers/account";
 import { components } from "@/components/controllers";
+import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
-import { SecondaryPageHeader } from "@/components/ui/secondary-page-header";
 import type { Field } from "@/hooks/form";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
@@ -374,11 +374,11 @@ export const AccountSettingsLogic = () => {
       showMobileNavigation={false}
     >
       <section className="mx-auto min-h-screen w-full max-w-[430px] bg-background px-5 py-5 sm:max-w-xl md:py-8">
-        <SecondaryPageHeader
+        <AppPageHeader
           backHref="/app/profile"
           backLabel="Voltar para meu perfil"
           className="mb-4"
-          title="E-mail e Senha"
+          title="Email e senha"
         />
 
         {account.security.isLoading || account.security.isPending ? (

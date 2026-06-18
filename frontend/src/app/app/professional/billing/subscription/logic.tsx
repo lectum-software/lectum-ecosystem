@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  ArrowLeft,
   ArrowRight,
   Award,
   BadgeCheck,
@@ -18,6 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
+import { AppPageHeader } from "@/components/ui/app-page-header";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { Button } from "@/registry/new-york-v4/ui/button";
@@ -127,13 +127,11 @@ export const ProfessionalBillingSubscriptionLogic = () => {
           shouldShowUpgradeCta ? "pb-28 md:pb-32" : ""
         }`}
       >
-        <Link
-          className="inline-flex items-center gap-2 text-sm font-semibold text-muted"
-          href="/app/profile"
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Voltar ao perfil
-        </Link>
+        <AppPageHeader
+          backHref="/app/profile"
+          backLabel="Voltar ao perfil"
+          title="Minha assinatura"
+        />
 
         {current.isLoading ? <LoadingState label="Carregando sua assinatura" /> : null}
 

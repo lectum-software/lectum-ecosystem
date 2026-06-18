@@ -298,3 +298,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm check`
 - Browser local via Chrome/CDP em `/app/posts/mine` mobile `390x844`, validando card de post sem avatar/nome, contexto com tempo na mesma linha e barra de acoes no padrao de comentarios.
 - ADR atualizado: `adrs/0072-meus-posts-e-posts-salvos.md`.
+
+## Ajuste complementar em 2026-06-18 - header secundário premium compartilhado
+
+- Pedido direto de produto: padronizar `Meus posts e comentários` e `Salvos` com o mesmo header visual de `Meus Analytics` e `Minhas Avaliações`.
+- As rotas `/app/posts/mine` e `/app/posts/saved` passaram a usar `AppPageHeader`, preservando botão de voltar à esquerda, título centralizado, fundo branco, borda suave, sombra discreta e sem textos auxiliares no header.
+- A alteração substitui apenas a superfície de navegação secundária; filtros, cards, paginação, ações reais, salvamentos, votos, compartilhamento e estados de API permanecem inalterados.
+- Escopo: sem alteração de backend, endpoints, DTOs, schema Prisma, packages ou dados.
+- ADR criado: `adrs/0119-header-secundario-premium-compartilhado.md`.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado em mobile 390x844 e desktop 1024x768 confirmando header centralizado e ausência de overflow horizontal.
