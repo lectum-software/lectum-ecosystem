@@ -227,3 +227,23 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - A selecao do plano gratuito segue para `/app/professional/whatsapp/verify`; a confirmacao de WhatsApp salvo segue para `/app/professional/profile/setup`.
 - A API CFP/CRP continua reservada aos fluxos que exigirem verificacao real, sem mock ou preenchimento artificial de cfp_verified_at.
 
+## Ajuste de conversao em 2026-06-18: planos orientados a beneficios
+
+- Pedido direto de produto: tornar a tela `/app/professional/billing/plans` mais voltada a beneficios reais, autoridade, reputacao e conversao do psicologo.
+- Referencia visual ativa continua sendo a imagem local `_product/proto/Planos de Assinatura.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente.
+- Removido da UI o bloco tecnico que explicava as jornadas `Gratuito: plano -> WhatsApp -> perfil` e `Assinatura: plano -> pagamento -> confirmacao -> endereco -> telefone -> CRP -> perfil`.
+- A descricao passou a usar a proposta de valor: `Mais visibilidade. Mais autoridade. Mais oportunidades.` e o texto explicativo solicitado pelo produto.
+- O preco continua vindo de `subscription_plan.price_cents`; apenas a formatacao da UI foi ajustada para exibir centavos, garantindo `R$ 9,90` no Plano Profissional.
+- Beneficios dos planos foram reorganizados conforme a estrategia comercial atual:
+  - Plano Gratuito destaca presenca inicial, WhatsApp, ate 3 especialidades e 1 servico profissional.
+  - Plano Profissional destaca verificacao, avaliacoes, prioridade na busca, respostas destacadas, elegibilidade ao Top Mentor, ate 10 especialidades, servicos ilimitados, estatisticas e suporte prioritario.
+- Removida a mencao a video de apresentacao no perfil dos beneficios da tela.
+- Nenhuma regra de checkout, assinatura, gateway, persistencia de plano ou endpoint foi alterada neste ajuste visual/copy.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local em `/app/professional/billing/plans` com sessao real de psicologo validou a presenca da nova proposta de valor, `R$ 9,90`, beneficios solicitados e ausencia do bloco tecnico e dos textos removidos.
+

@@ -183,3 +183,33 @@ Produto solicitou dois ajustes no onboarding do psicólogo depois da tela de pla
 
 Por decisao de produto, psicologos no plano gratuito nao precisam validar CRP pela API antes de editar/configurar o perfil. A escolha do plano gratuito persiste a assinatura gratuita real e redireciona para `/app/professional/whatsapp/verify` antes de `/app/professional/profile/setup`. A validacao CFP/CRP automatica permanece apenas para fluxos que exigirem selo/assinatura profissional, sem mock ou preenchimento artificial de cfp_verified_at.
 
+## Atualizacao em 2026-06-18: comunicacao de planos orientada a beneficios
+
+### Contexto
+
+Produto solicitou que a tela de Planos de Assinatura deixasse de explicar a
+jornada tecnica de onboarding e passasse a vender beneficios percebidos pelo
+psicologo: visibilidade, autoridade, reputacao e oportunidades.
+
+### Decisao
+
+- Manter `subscription_plan.price_cents` como unica fonte de verdade para preco.
+- Ajustar somente a formatacao da UI para exibir duas casas decimais, evitando
+  `R$ 9,9` e preservando o valor real `990` centavos como `R$ 9,90`.
+- Remover da interface o bloco operacional sobre as etapas gratuitas e pagas,
+  sem remover a documentacao tecnica nem alterar o fluxo real de checkout,
+  WhatsApp, endereco, CRP ou perfil.
+- Tratar os beneficios exibidos na tela como copy comercial da pagina de planos,
+  alinhada aos slugs reais `gratuito` e `profissional`, incluindo
+  `Elegivel ao Top Mentor` e a nova nomenclatura de prioridade, comunidades,
+  avaliacoes, estatisticas e servicos profissionais ilimitados.
+
+### Consequencias
+
+- A pagina fica mais orientada a conversao sem simular pagamento, assinatura ou
+  entitlement.
+- Alteracoes futuras de valor continuam dependendo do banco/API; a UI apenas
+  formata o preco recebido.
+- A explicacao detalhada da jornada continua nos documentos de task/ADR, mas nao
+  compete com a decisao comercial do psicologo na tela.
+

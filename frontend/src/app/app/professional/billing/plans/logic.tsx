@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
-import type { SubscriptionPlan, SubscriptionPlanFeatures } from "@/api/generator/types/billing";
+import type { SubscriptionPlan } from "@/api/generator/types/billing";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -35,7 +35,7 @@ const planTones: Record<string, { eyebrow: string; popular?: boolean }> = {
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
-  minimumFractionDigits: 0,
+  minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
 
@@ -48,61 +48,101 @@ const getErrorMessage = (error: unknown) => {
 };
 
 const getFeatureRows = (plan: SubscriptionPlan): FeatureRow[] => {
-  const features = (plan.features || {}) as SubscriptionPlanFeatures;
-  const specialtiesLimit = features.specialties_limit || 0;
-  const servicesLimit = features.services_limit;
+  if (plan.slug === "gratuito") {
+    return [
+      {
+        included: true,
+        label: "Crie seu perfil e apareça para pacientes interessados",
+      },
+      {
+        included: true,
+        label: "Botão de conversão para seu WhatsApp",
+      },
+      {
+        included: true,
+        label: "Até 3 especialidades",
+      },
+      {
+        included: true,
+        label: "1 serviço profissional",
+      },
+      {
+        included: false,
+        label: "Perfil profissional verificado",
+      },
+      {
+        included: false,
+        label: "Receba avaliações e depoimentos",
+      },
+      {
+        included: false,
+        label: "Prioridade na busca de pacientes",
+      },
+      {
+        included: false,
+        label: "Respostas destacadas nas comunidades",
+      },
+      {
+        included: false,
+        label: "Elegível ao Top Mentor",
+      },
+      {
+        included: false,
+        label: "Serviços profissionais ilimitados",
+      },
+      {
+        included: false,
+        label: "Estatísticas de perfil",
+      },
+      {
+        included: false,
+        label: "Suporte prioritário via WhatsApp",
+      },
+    ];
+  }
 
-  return [
-    {
-      included: true,
-      label: "Crie seu perfil e apareça para pacientes interessados",
-    },
-    {
-      included: Boolean(features.whatsapp_conversion),
-      label: "Botão de conversão para o seu WhatsApp",
-    },
-    {
-      included: specialtiesLimit > 0,
-      label: specialtiesLimit
-        ? `Até ${specialtiesLimit} especialidades`
-        : "Especialidades profissionais",
-    },
-    {
-      included: Boolean(servicesLimit),
-      label:
-        servicesLimit === "all"
-          ? "Ofereça todos os serviços disponíveis"
-          : `Ofereça ${servicesLimit || 1} serviço profissional`,
-    },
-    {
-      included: Boolean(features.verified_badge),
-      label: "Selo de verificado no perfil",
-    },
-    {
-      included: Boolean(features.search_priority),
-      label: "Apareça nos primeiros resultados de busca",
-    },
-    {
-      included: Boolean(features.professional_community),
-      label: "Participe da comunidade como Profissional",
-    },
-    {
-      included: true,
-      label: "Upload de vídeo de apresentação",
-    },
-    {
-      included: Boolean(features.analytics),
-      label: "Acesso aos Analytics",
-    },
-    {
-      included: Boolean(features.patient_testimonials),
-      label: "Receba depoimentos de pacientes",
-    },
-    {
-      included: Boolean(features.priority_support),
-      label: "Suporte prioritário via WhatsApp",
-    },
-  ];
+  if (plan.slug === "profissional") {
+    return [
+      {
+        included: true,
+        label: "Perfil profissional verificado",
+      },
+      {
+        included: true,
+        label: "Receba avaliações e depoimentos",
+      },
+      {
+        included: true,
+        label: "Prioridade na busca de pacientes",
+      },
+      {
+        included: true,
+        label: "Respostas destacadas nas comunidades",
+      },
+      {
+        included: true,
+        label: "Elegível ao Top Mentor",
+      },
+      {
+        included: true,
+        label: "Até 10 especialidades",
+      },
+      {
+        included: true,
+        label: "Serviços profissionais ilimitados",
+      },
+      {
+        included: true,
+        label: "Estatísticas de perfil",
+      },
+      {
+        included: true,
+        label: "Suporte prioritário via WhatsApp",
+      },
+    ];
+  }
+
+  return [];
 };
 
 const PlanCard = ({
@@ -231,21 +271,16 @@ export const PsychologistBillingPlansLogic = () => {
             <h1 className="mt-3 text-3xl font-bold leading-tight text-foreground md:text-4xl">
               Escolha o plano ideal para sua carreira
             </h1>
-            <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-muted">
-              O plano gratuito segue para WhatsApp e configuração de perfil, sem validação de CRP
-              pela API. A assinatura passa pelo pagamento real, coleta endereço de faturamento após
-              a confirmação e só então segue para o WhatsApp profissional.
-            </p>
-          </div>
-        </div>
-
-        <div className="grid gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface-muted p-4 text-sm text-muted md:grid-cols-2">
-          <div>
-            <strong className="text-foreground">Gratuito:</strong> plano → WhatsApp → perfil.
-          </div>
-          <div>
-            <strong className="text-foreground">Assinatura:</strong> plano → pagamento → confirmação
-            do pagamento → endereço → telefone → CRP → perfil.
+            <div className="mx-auto mt-4 grid max-w-2xl gap-3 text-base leading-7 text-muted">
+              <p className="text-lg font-black tracking-[-0.02em] text-foreground">
+                Mais visibilidade. Mais autoridade. Mais oportunidades.
+              </p>
+              <p>
+                Escolha entre começar gratuitamente ou acessar todas as ferramentas profissionais da
+                Lectum para fortalecer sua presença, construir reputação e ampliar suas
+                oportunidades de atendimento.
+              </p>
+            </div>
           </div>
         </div>
 
