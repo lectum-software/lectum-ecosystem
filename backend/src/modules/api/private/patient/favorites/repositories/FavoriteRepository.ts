@@ -88,6 +88,14 @@ export class FavoriteRepository implements IFavoriteRepository {
     const profileWhere: Prisma.psychologist_profileWhereInput = {
       published: true,
       deleted: false,
+      video_url: {
+        not: null,
+      },
+      NOT: [
+        {
+          video_url: "",
+        },
+      ],
       available_days: data.q.available_today
         ? {
             array_contains: [currentWeekdayValue()],
@@ -356,6 +364,14 @@ export class FavoriteRepository implements IFavoriteRepository {
           is: {
             published: true,
             deleted: false,
+            video_url: {
+              not: null,
+            },
+            NOT: [
+              {
+                video_url: "",
+              },
+            ],
           },
         },
       },

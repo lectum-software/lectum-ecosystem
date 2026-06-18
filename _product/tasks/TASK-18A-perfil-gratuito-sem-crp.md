@@ -86,6 +86,7 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
 - [x] Ajuste visual de 2026-06-08 aplicado: Especialidades e Abordagens usam campo compacto com tags removiveis, placeholder e lista suspensa como no print anexado pelo usuario, mantendo limites reais do plano gratuito.
 - [x] Ajuste de midias de 2026-06-08 aplicado: foto de perfil abre modal de enquadramento antes do upload real, video de apresentacao usa um unico menu "Editar" para trocar/remover e expor a acao futura de capa, Especialidades remove texto de limite do titulo e Formacao Academica reduz o espaco vertical entre campos.
 - [x] Ajuste de 2026-06-09 aplicado: Selos e Facilidades ganhou a opcao "Exibir tempo de experiencia" marcada por padrao, menu de conta ganhou "Ver meu perfil publico" antes de Editar perfil, e capa de video passou a ter upload real no backend/frontend.
+- [x] Ajuste de 2026-06-18 aplicado: video de apresentacao passou a ser obrigatorio para publicacao/exibicao publica do perfil, enquanto Bio e Apresentacao de texto deixaram de ser obrigatorias; o idioma Portugues padrao continua suficiente quando enviado pelo formulario.
 
 ## Validação executada
 
@@ -322,3 +323,22 @@ Validações executadas:
 - O ajuste reduz ruído visual no conteúdo e preserva a navegação para o perfil público sem alterar formulário, endpoints, dados persistidos, Prisma ou packages.
 - ADR atualizado: `adrs/0119-header-secundario-premium-compartilhado.md`.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP em `/app/professional/profile/setup` com usuário psicólogo temporário real removido do banco ao final, nos viewports mobile 390x844 e desktop 1024x768, confirmando ausência do botão textual, título centralizado, botões laterais equivalentes, ausência de overflow horizontal e clique do ícone abrindo `/app/psychologist/:id`.
+
+## Ajuste complementar em 2026-06-18 - video obrigatorio para perfil publico
+
+- A publicacao do perfil profissional em `/api/private/psychologist/free-profile` passou a exigir `psychologist_profile.video_url` preenchido, alem dos demais dados estruturais obrigatorios.
+- `headline` (campo visual `Bio`) e `bio` (campo visual `Apresentacao de texto`) deixaram de ser obrigatorios para publicar/exibir o perfil, permanecendo opcionais e com validacao de tamanho quando preenchidos.
+- As rotas de exibicao publica/relacional de psicologos agora consideram apenas perfis publicados com video: detalhe, contato, avaliacao por paciente, favoritos, seguindo e elegibilidade de Top Mentor.
+- A tela `/app/professional/profile/setup` removeu o indicador obrigatorio de Bio/Apresentacao de texto, marcou `Video de Apresentacao` como obrigatorio e impede publicacao local sem video antes de chamar a API.
+- O idioma `Portugues` continua sendo o valor padrao de `Idiomas` no formulario e e enviado como lista real ao salvar, sem mock.
+- ADR criado: `adrs/0120-video-obrigatorio-perfil-publico-bio-opcional.md`.
+
+Validacoes executadas:
+
+- `pnpm --dir backend check`
+- `pnpm --dir frontend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- API local real em `http://localhost:3001` com psicologos temporarios removidos ao final: publicacao sem video `400`, publicacao com video `200`, detalhe publico com video `200`, perfil forcado publicado sem video `404`, mantendo `headline=null`, `bio=null` e `languages[0]="Portugues"` no payload salvo.
+- Browser local via Chrome/CDP em `/app/professional/profile/setup` com usuario psicologo temporario removido ao final, nos viewports mobile 390x844 e desktop 1024x768: sem overflow horizontal, Bio/Apresentacao de texto sem indicador obrigatorio e Video de Apresentacao marcado como obrigatorio com texto explicativo.

@@ -61,6 +61,14 @@ export class FollowRepository implements IFollowRepository {
           is: {
             published: true,
             deleted: false,
+            video_url: {
+              not: null,
+            },
+            NOT: [
+              {
+                video_url: "",
+              },
+            ],
           },
         },
       },
@@ -220,6 +228,14 @@ export class FollowRepository implements IFollowRepository {
           is: {
             published: true,
             deleted: false,
+            video_url: {
+              not: null,
+            },
+            NOT: [
+              {
+                video_url: "",
+              },
+            ],
           },
         },
       },

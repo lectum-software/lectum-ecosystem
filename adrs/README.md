@@ -87,3 +87,4 @@ Formato recomendado:
 - [ADR-0109 - Dicas de onboarding persistidas por usu·rio](0109-dicas-onboarding-persistidas-por-usuario.md) - Accepted
 - [ADR-0110 - Publicacoes compactas no perfil e WhatsApp como acao mobile unica](0110-publicacoes-perfil-mobile-whatsapp-unico.md) - Accepted
 - [ADR-0119 - Header secund√°rio premium compartilhado](0119-header-secundario-premium-compartilhado.md) - Accepted
+- [ADR-0120 - Video obrigatorio para perfil publico e Bio opcional](0120-video-obrigatorio-perfil-publico-bio-opcional.md) - Accepted

@@ -97,7 +97,20 @@ export class ReviewRepository implements IReviewRepository {
         role: "psicologo",
         active: true,
         deleted: false,
-        psychologist_profile: { is: { published: true, deleted: false } },
+        psychologist_profile: {
+          is: {
+            published: true,
+            deleted: false,
+            video_url: {
+              not: null,
+            },
+            NOT: [
+              {
+                video_url: "",
+              },
+            ],
+          },
+        },
       },
       select: {
         id: true,

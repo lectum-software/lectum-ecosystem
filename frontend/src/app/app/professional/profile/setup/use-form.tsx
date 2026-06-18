@@ -102,13 +102,17 @@ export const freeProfileSchema = z
     headline: z
       .string()
       .trim()
-      .min(3, "Informe uma bio curta")
-      .max(120, "A bio curta deve ter no máximo 120 caracteres"),
+      .max(120, "A bio curta deve ter no máximo 120 caracteres")
+      .refine((value) => value.length === 0 || value.length >= 3, {
+        message: "Informe uma bio com pelo menos 3 caracteres",
+      }),
     bio: z
       .string()
       .trim()
-      .min(20, "Escreva uma apresentação com pelo menos 20 caracteres")
-      .max(2000),
+      .max(2000)
+      .refine((value) => value.length === 0 || value.length >= 20, {
+        message: "Escreva uma apresentação com pelo menos 20 caracteres",
+      }),
     modality: z.enum(["online", "presencial", "hibrido", ""], {
       message: "Selecione a modalidade",
     }),
@@ -222,14 +226,12 @@ export const fields = [
     description: "Escreva brevemente a sua proposta de valor",
     max: 120,
     showCounter: true,
-    required: true,
   },
   {
     name: "bio",
     field: "textarea",
     label: "Apresentação de texto",
     placeholder: "Conte sobre sua trajetória, experiência e como você ajuda seus pacientes.",
-    required: true,
     rows: 6,
   },
   {

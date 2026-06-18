@@ -1288,6 +1288,11 @@ export const ProfessionalProfileSetupLogic = () => {
   };
 
   const submit = form.hook.handleSubmit((values) => {
+    if (values.published && !videoSrc) {
+      toast.error("Adicione um vídeo de apresentação antes de publicar seu perfil.");
+      return;
+    }
+
     update.mutate({
       name: values.name,
       cpf: values.cpf || null,
@@ -1712,7 +1717,7 @@ export const ProfessionalProfileSetupLogic = () => {
                         </span>
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-bold leading-5 text-foreground">
-                            Vídeo de Apresentação
+                            Vídeo de Apresentação <span className="text-danger">*</span>
                           </p>
                         </div>
                       </div>
@@ -1785,8 +1790,8 @@ export const ProfessionalProfileSetupLogic = () => {
                     </div>
 
                     <p className="mt-3 w-full text-xs leading-5 text-muted">
-                      Envie um vídeo vertical de até 50MB para aparecer na listagem de
-                      profissionais. O vídeo está disponível em todos os planos.
+                      Envie um vídeo vertical de até 50MB. Ele é obrigatório para publicar o perfil
+                      e aparecer na área pública da Lectum.
                     </p>
 
                     {videoSrc ? (
@@ -1841,7 +1846,9 @@ export const ProfessionalProfileSetupLogic = () => {
                 ) : (
                   <div className="rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-center opacity-80">
                     <FileVideo className="mx-auto h-8 w-8 text-muted" aria-hidden="true" />
-                    <p className="mt-2 text-sm font-bold text-foreground">Vídeo de Apresentação</p>
+                    <p className="mt-2 text-sm font-bold text-foreground">
+                      Vídeo de Apresentação <span className="text-danger">*</span>
+                    </p>
                     <p className="mt-1 text-xs leading-5 text-muted">
                       Upload de vídeo deve estar disponível para todos os planos. Recarregue a
                       página se esta opção não aparecer.

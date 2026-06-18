@@ -145,6 +145,9 @@ export const usePsychologistFreeProfile = ({ callbacks }: UsePsychologistFreePro
   const uploadVideo = useMutation({
     mutationFn: (file: File) => api.uploadPsychologistFreeProfileVideo(file),
     onSuccess: (data) => {
+      if (data.profile) {
+        queryClient.setQueryData(keys.psychologistFreeProfile.root(), data.profile);
+      }
       queryClient.invalidateQueries({ queryKey: keys.psychologistFreeProfile.root() });
       queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === "auth_hydrate" });
       queryClient.invalidateQueries({ queryKey: keys.directory.psychologistsRoot() });
@@ -161,6 +164,9 @@ export const usePsychologistFreeProfile = ({ callbacks }: UsePsychologistFreePro
   const uploadVideoCover = useMutation({
     mutationFn: (file: File) => api.uploadPsychologistFreeProfileVideoCover(file),
     onSuccess: (data) => {
+      if (data.profile) {
+        queryClient.setQueryData(keys.psychologistFreeProfile.root(), data.profile);
+      }
       queryClient.invalidateQueries({ queryKey: keys.psychologistFreeProfile.root() });
       queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === "auth_hydrate" });
       queryClient.invalidateQueries({ queryKey: keys.directory.psychologistsRoot() });
@@ -177,6 +183,9 @@ export const usePsychologistFreeProfile = ({ callbacks }: UsePsychologistFreePro
   const deleteVideo = useMutation({
     mutationFn: () => api.deletePsychologistFreeProfileVideo(),
     onSuccess: (data) => {
+      if (data.profile) {
+        queryClient.setQueryData(keys.psychologistFreeProfile.root(), data.profile);
+      }
       queryClient.invalidateQueries({ queryKey: keys.psychologistFreeProfile.root() });
       queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === "auth_hydrate" });
       queryClient.invalidateQueries({ queryKey: keys.directory.psychologistsRoot() });

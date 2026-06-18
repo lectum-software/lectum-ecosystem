@@ -49,6 +49,14 @@ export class ContactRepository implements IContactRepository {
           is: {
             published: true,
             deleted: false,
+            video_url: {
+              not: null,
+            },
+            NOT: [
+              {
+                video_url: "",
+              },
+            ],
           },
         },
       },
@@ -128,6 +136,14 @@ export class ContactRepository implements IContactRepository {
           is: {
             published: true,
             deleted: false,
+            video_url: {
+              not: null,
+            },
+            NOT: [
+              {
+                video_url: "",
+              },
+            ],
           },
         },
       },

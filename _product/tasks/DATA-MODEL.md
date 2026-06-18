@@ -161,10 +161,10 @@ Quando construído: módulo de audiência próprio (ex.: `backend/src/modules/ma
 | Campo | Tipo | Notas |
 |---|---|---|
 | `user_id` | `String @unique` | FK `user`, cascade |
-| `headline` | `String?` | chamada curta exibida no card/perfil |
-| `bio` | `String?` | "Sobre"/experiência (texto longo) |
+| `headline` | `String?` | bio curta exibida no card/perfil; opcional para publicação pública |
+| `bio` | `String?` | texto de apresentação/"Sobre"/experiência; opcional para publicação pública |
 | `cover_image_url` | `String?` | imagem pública independente de capa do perfil; não reutiliza thumbnail/frame de vídeo |
-| `video_url` | `String?` | vídeo de apresentação público permitido para todos os psicólogos, inclusive Plano Gratuito; obrigatório para elegibilidade na listagem `/app/psychologists` |
+| `video_url` | `String?` | vídeo de apresentação público permitido para todos os psicólogos, inclusive Plano Gratuito; obrigatório para publicação/exibição pública do perfil e elegibilidade na listagem `/app/psychologists` |
 | `video_cover_url` | `String?` | imagem pública opcional de capa do vídeo de apresentação; deve ser limpa junto ao vídeo |
 | `cpf` | `String?` | usado na consulta CFP; dado sensível (LGPD) |
 | `crp` | `String?` | registro profissional exibido no cabeçalho |

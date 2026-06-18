@@ -21,6 +21,12 @@ const trimToNull = (value?: string | null) => {
   return normalized || null;
 };
 
+const emptyTextToNull = (value: unknown) => {
+  if (typeof value !== "string") return value;
+
+  return value.trim() ? value : null;
+};
+
 const onlyDigits = (value?: string | null) => String(value ?? "").replace(/\D/g, "");
 
 const normalizeCpf = (value?: string | null) => {
@@ -103,8 +109,8 @@ const updateSchema = z.object({
   crp_region: z.string().trim().max(20).nullable().optional(),
   crp_number: z.string().trim().max(40).nullable().optional(),
   whatsapp: z.string().nullable().optional(),
-  headline: z.string().trim().min(3).max(120).nullable().optional(),
-  bio: z.string().trim().min(20).max(2000).nullable().optional(),
+  headline: z.preprocess(emptyTextToNull, z.string().trim().min(3).max(120).nullable().optional()),
+  bio: z.preprocess(emptyTextToNull, z.string().trim().min(20).max(2000).nullable().optional()),
   modality: z.enum(["online", "presencial", "hibrido"]).nullable().optional(),
   languages: z.array(z.string().trim().min(2).max(40)).max(8).optional(),
   target_audience: z.array(z.string().trim().min(2).max(40)).max(8).optional(),
@@ -122,11 +128,15 @@ const updateSchema = z.object({
   published: z.boolean().optional(),
 });
 
-const hasRequiredPublishingFields = (body: Required<FreeProfessionalProfileUpdateBody>) => {
+const hasPresentationVideo = (value?: string | null) => Boolean(value?.trim());
+
+const hasRequiredPublishingFields = (
+  body: Required<FreeProfessionalProfileUpdateBody>,
+  profile: { video_url?: string | null },
+) => {
   return Boolean(
     body.name &&
-      body.headline &&
-      body.bio &&
+      hasPresentationVideo(profile.video_url) &&
       body.modality &&
       body.languages.length > 0 &&
       body.specialty_ids.length > 0 &&
@@ -331,7 +341,7 @@ export const update = async (data: IFreeProfessionalProfileUpdateDTO) => {
   );
   if (approachError) return { status: 400, ...approachError };
 
-  if (body.published && !hasRequiredPublishingFields(body)) {
+  if (body.published && !hasRequiredPublishingFields(body, current.profile)) {
     return {
       status: 400,
       ...error("free_profile_publish_requirements", {}),

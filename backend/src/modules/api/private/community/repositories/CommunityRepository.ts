@@ -1506,6 +1506,14 @@ export class CommunityRepository implements ICommunityRepository {
           is: {
             deleted: false,
             published: true,
+            video_url: {
+              not: null,
+            },
+            NOT: [
+              {
+                video_url: "",
+              },
+            ],
             cfp_verified_at: {
               not: null,
             },

@@ -569,6 +569,14 @@ const publishedProfileWhere = (psychologistId: string): Prisma.userWhereInput =>
     is: {
       published: true,
       deleted: false,
+      video_url: {
+        not: null,
+      },
+      NOT: [
+        {
+          video_url: "",
+        },
+      ],
     },
   },
 });
@@ -583,6 +591,14 @@ const topMentorEligiblePsychologistWhere = (): Prisma.userWhereInput => ({
     is: {
       deleted: false,
       published: true,
+      video_url: {
+        not: null,
+      },
+      NOT: [
+        {
+          video_url: "",
+        },
+      ],
       cfp_verified_at: {
         not: null,
       },
@@ -1087,6 +1103,14 @@ export class ProfileRepository implements IProfileRepository {
           user_id: data.p.id,
           deleted: false,
           published: true,
+          video_url: {
+            not: null,
+          },
+          NOT: [
+            {
+              video_url: "",
+            },
+          ],
         },
         select: {
           rating_avg: true,
