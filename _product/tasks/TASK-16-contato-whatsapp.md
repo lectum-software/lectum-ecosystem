@@ -278,8 +278,30 @@ Validacoes do complemento:
 - Validacoes executadas nesta execucao:
   - `pnpm --dir frontend biome:fix`
   - `pnpm --dir frontend check`
-  - `pnpm --dir frontend build`
-  - `pnpm check`
-  - `git diff --check`
-  - Smoke do formatter: `CRP DEMO/00005` e `CRP CRP DEMO/00005` renderizam como `CRP DEMO/00005`.
-  - HTTP local com cookie de sessao de desenvolvimento em `/app/psychologists`, `/app/favorites`, `/app/community/feed`, `/app/community/top-mentors`, `/app/profile` e `/app/psychologist/demo` respondeu `200`.
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- Smoke do formatter: `CRP DEMO/00005` e `CRP CRP DEMO/00005` renderizam como `CRP DEMO/00005`.
+- HTTP local com cookie de sessao de desenvolvimento em `/app/psychologists`, `/app/favorites`, `/app/community/feed`, `/app/community/top-mentors`, `/app/profile` e `/app/psychologist/demo` respondeu `200`.
+
+## Ajuste visual da tela WhatsApp profissional em 2026-06-18
+
+- Pedido direto de produto: refinar a tela `/app/professional/whatsapp/verify` para reduzir ruido visual e alinhar a iconografia ao WhatsApp usado nos CTAs da plataforma.
+- Referencia visual ativa consultada: `_product/proto/Confirmação de WhatsApp - Inserir Número.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente.
+- O icone azul generico foi substituido pelo componente compartilhado `WhatsAppIcon`, mantendo a cor azul da Lectum.
+- Removido o texto azul superior `WhatsApp profissional` abaixo do icone; o titulo principal passa a conduzir a tela.
+- Texto descritivo atualizado para: `Usaremos este número para gerar o link de contato para o seu WhatsApp. Altere quando quiser.`
+- Removido o texto auxiliar abaixo do label do campo de telefone.
+- O seletor de codigo do pais passou a usar seta customizada com `appearance-none` e espacamento a direita, evitando que a seta fique colada na divisoria do campo.
+- O link superior da configuracao inicial passou de `Voltar para perfil` para `Voltar para planos`, apontando para `/app/professional/billing/plans`.
+- No estado de sucesso (`WhatsApp salvo`), o retorno passou a ser `Voltar para configuração de WhatsApp`, limpando o estado de sucesso e voltando ao formulário sem sair da rota.
+- O card de proxima etapa passou a destacar `Vídeo de apresentação e perfil profissional` e a orientar o envio de video vertical para ativar a exibicao na pagina de psicologos.
+- Removidos da configuração inicial o alerta verde `WhatsApp atual` e o CTA `Configurar perfil`, deixando a etapa focada somente na edição/salvamento do número.
+- Nao houve alteracao de backend, Prisma, migrations, packages, endpoint ou regra de salvamento do WhatsApp.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local em `/app/professional/whatsapp/verify`, com sessao real de psicologo, validou a nova copy, ausencia dos textos removidos, ausencia do alerta `WhatsApp atual` e do CTA inicial `Configurar perfil`, link inicial `Voltar para planos`, estado de sucesso com `Voltar para configuração de WhatsApp`, novo card de etapa final, icone WhatsApp no cabecalho, seta com respiro no seletor de pais e ausencia de overflow horizontal mobile.

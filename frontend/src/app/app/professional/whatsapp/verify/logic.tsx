@@ -1,12 +1,13 @@
 "use client";
 
-import { ArrowLeft, CheckCircle2, Loader2, MessageSquareText, UserRound } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2, UserRound } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { usePsychologistWhatsappVerification } from "@/api/callers/psychologist-whatsapp-verification";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { useAppSelector } from "@/hooks/redux";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -53,17 +54,13 @@ const formatDisplayPhone = (phone?: string | null) => {
 const FormHeader = () => (
   <header className="text-center">
     <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-primary-soft text-primary">
-      <MessageSquareText className="h-10 w-10" aria-hidden="true" />
+      <WhatsAppIcon className="h-10 w-10" aria-hidden="true" />
     </div>
-    <p className="mt-6 text-xs font-bold uppercase tracking-[0.18em] text-primary">
-      WhatsApp profissional
-    </p>
-    <h1 className="mt-3 text-2xl font-bold leading-tight text-foreground">
+    <h1 className="mt-6 text-2xl font-bold leading-tight text-foreground">
       Informe seu WhatsApp profissional
     </h1>
     <p className="mt-3 text-base leading-7 text-muted">
-      A Lectum salva este número e gera internamente o link de contato para redirecionar pacientes
-      ao WhatsApp.
+      Usaremos este número para gerar o link de contato para o seu WhatsApp. Altere quando quiser.
     </p>
   </header>
 );
@@ -89,10 +86,13 @@ const SavedConfirmation = ({ phone }: { phone: string }) => (
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
               Última etapa
             </p>
-            <h2 className="mt-1 text-xl font-bold text-foreground">Configuração de Perfil</h2>
+            <h2 className="mt-1 text-xl font-bold text-foreground">
+              Vídeo de apresentação e perfil profissional
+            </h2>
             <p className="mt-3 text-sm leading-6 text-muted">
-              Para finalizar, basta configurar seu perfil. Uma bio completa com foto e vídeo
-              profissionais aumenta sua conversão.
+              Envie um vídeo vertical de apresentação para ativar sua exibição na página de
+              psicólogos. Aproveite para completar seu perfil e gerar mais oportunidades de
+              atendimento.
             </p>
           </div>
         </div>
@@ -115,12 +115,7 @@ export const WhatsappVerificationLogic = () => {
   const phoneForm = usePhoneForm(user?.psychologist_profile?.whatsapp);
   const PhoneForm = phoneForm.Form;
 
-  const initialPhone = user?.psychologist_profile?.whatsapp;
   const isPsychologist = user?.role === "psicologo";
-  const savedLabel = useMemo(
-    () => (savedPhone || initialPhone ? formatDisplayPhone(savedPhone || initialPhone) : null),
-    [savedPhone, initialPhone],
-  );
 
   const { request } = usePsychologistWhatsappVerification({
     callbacks: {
@@ -155,13 +150,24 @@ export const WhatsappVerificationLogic = () => {
   return (
     <PrivateTemplate showHeader={false}>
       <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-2xl">
-        <Link
-          className="inline-flex items-center gap-2 text-sm font-semibold text-muted"
-          href="/app/profile"
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Voltar para perfil
-        </Link>
+        {savedPhone ? (
+          <button
+            className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-muted transition hover:text-foreground"
+            onClick={() => setSavedPhone(null)}
+            type="button"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            Voltar para configuração de WhatsApp
+          </button>
+        ) : (
+          <Link
+            className="inline-flex items-center gap-2 text-sm font-semibold text-muted"
+            href="/app/professional/billing/plans"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            Voltar para planos
+          </Link>
+        )}
 
         <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-7 shadow-[var(--lectum-shadow-soft)]">
           {savedPhone ? (
@@ -174,18 +180,6 @@ export const WhatsappVerificationLogic = () => {
                 <InlineAlert className="mt-6" title="Perfil não autorizado" variant="warning">
                   Este campo é exclusivo para psicólogos cadastrados na Lectum.
                 </InlineAlert>
-              ) : null}
-
-              {savedLabel ? (
-                <div className="mt-6 grid gap-3">
-                  <InlineAlert title="WhatsApp atual" variant="success">
-                    O número {savedLabel} já está salvo como contato profissional. Você pode
-                    configurar o perfil ou informar outro WhatsApp.
-                  </InlineAlert>
-                  <Button asChild className="h-12 rounded-full">
-                    <Link href={PROFILE_SETUP_HREF}>Configurar perfil</Link>
-                  </Button>
-                </div>
               ) : null}
 
               {apiError ? (

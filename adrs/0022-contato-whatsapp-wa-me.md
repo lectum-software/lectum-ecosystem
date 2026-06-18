@@ -141,3 +141,44 @@ Por decisão de produto, o cadastro do WhatsApp profissional deixou de exigir au
 - Não há custo ou dependência operacional de Twilio para cadastrar o WhatsApp profissional.
 - O risco aceito é não validar posse do número antes de gerar o link interno de contato.
 - O telefone segue fora do perfil público; ele só é embutido no `wa.me` após intenção de contato e consentimento.
+
+## Atualização em 2026-06-18: refinamento visual da etapa de WhatsApp profissional
+
+### Contexto
+
+Produto solicitou que a etapa `/app/professional/whatsapp/verify` ficasse mais
+direta e consistente com os CTAs de WhatsApp da plataforma, sem rótulos
+redundantes nem textos auxiliares repetidos no campo.
+
+### Decisão
+
+- Reutilizar o componente compartilhado `WhatsAppIcon` no cabeçalho da etapa,
+  preservando a cor azul da Lectum.
+- Remover o eyebrow `WhatsApp profissional` abaixo do ícone e concentrar o
+  contexto no título e na descrição.
+- Manter o formulário real e a mesma mutation de salvamento do número; a mudança
+  é apenas visual/copy.
+- Ajustar o `PhoneController` para renderizar a seta do seletor de país como
+  ícone próprio com `appearance-none`, criando respiro à direita sem depender do
+  visual nativo do navegador.
+- Direcionar o link de retorno da configuração inicial para
+  `/app/professional/billing/plans`, com o texto `Voltar para planos`.
+- No estado de sucesso, trocar o retorno para `Voltar para configuração de
+  WhatsApp`, limpando o estado local de sucesso e voltando ao formulário.
+- Atualizar o card de próxima etapa para `Vídeo de apresentação e perfil
+  profissional`, orientando vídeo vertical e complemento do perfil para gerar
+  mais oportunidades de atendimento.
+- Remover da configuração inicial o alerta verde de WhatsApp já salvo e o botão
+  `Configurar perfil`, porque ambos competiam com a ação principal de editar e
+  salvar o número.
+
+### Consequências
+
+- A tela fica mais alinhada ao fluxo de planos -> WhatsApp -> perfil, sem mudar
+  contratos de API ou persistência.
+- A etapa inicial fica mais direta para atualização do telefone, mesmo quando já
+  existe um WhatsApp persistido no perfil.
+- Todos os usos do `PhoneController` com seletor de país herdam uma seta mais
+  consistente e menos colada à borda.
+- Não há alteração em validação de posse do número, Twilio, `wa.me`,
+  `contact_request` ou `whatsapp_verified_at`.

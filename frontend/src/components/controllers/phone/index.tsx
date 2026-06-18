@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronDown } from "lucide-react";
 import { Controller, type FieldValues } from "react-hook-form";
 import { Container } from "@/components/controllers/container";
 import { describedBy, fieldId, formatPhone, onlyDigits } from "@/components/controllers/utils";
@@ -54,29 +55,35 @@ export function PhoneController<FormType extends FieldValues>({
                   control={control}
                   name={countryCodeName}
                   render={({ field: countryField }) => (
-                    <select
-                      aria-label="Código do país"
-                      className={cn(
-                        "h-12 w-32 shrink-0 rounded-l-[var(--lectum-control-radius)] border border-border bg-surface px-3 text-sm font-semibold text-muted shadow-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted",
-                        countryCodeClassName,
-                      )}
-                      disabled={disabled || readOnly}
-                      name={countryField.name}
-                      onBlur={countryField.onBlur}
-                      onChange={(event) => countryField.onChange(event.target.value)}
-                      ref={countryField.ref}
-                      tabIndex={tabIndex}
-                      value={String(countryField.value || "")}
-                    >
-                      {countryCodeOptions.map((option) => (
-                        <option
-                          key={option.key ?? `${option.label}-${String(option.value)}`}
-                          value={String(option.value)}
-                        >
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative shrink-0">
+                      <select
+                        aria-label="Código do país"
+                        className={cn(
+                          "h-12 w-32 shrink-0 appearance-none rounded-l-[var(--lectum-control-radius)] border border-border bg-surface px-3 pr-9 text-sm font-semibold text-muted shadow-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted",
+                          countryCodeClassName,
+                        )}
+                        disabled={disabled || readOnly}
+                        name={countryField.name}
+                        onBlur={countryField.onBlur}
+                        onChange={(event) => countryField.onChange(event.target.value)}
+                        ref={countryField.ref}
+                        tabIndex={tabIndex}
+                        value={String(countryField.value || "")}
+                      >
+                        {countryCodeOptions.map((option) => (
+                          <option
+                            key={option.key ?? `${option.label}-${String(option.value)}`}
+                            value={String(option.value)}
+                          >
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown
+                        aria-hidden="true"
+                        className="-translate-y-1/2 pointer-events-none absolute top-1/2 right-2.5 h-4 w-4 text-muted"
+                      />
+                    </div>
                   )}
                 />
               ) : null}
