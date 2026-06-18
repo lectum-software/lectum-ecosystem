@@ -52,8 +52,24 @@ const resolveApiError = (error: unknown) => {
 
 const firstName = (name: string) => name.split(/\s+/).filter(Boolean)[0] || "paciente";
 
+const ProfessionalPageHeader = ({ title }: { title: string }) => (
+  <header className="grid h-14 grid-cols-[44px_1fr_44px] items-center rounded-[var(--lectum-card-radius)] border border-border bg-surface px-2 shadow-[var(--lectum-shadow-soft)]">
+    <Link
+      aria-label="Voltar para perfil"
+      className="grid h-10 w-10 place-items-center rounded-full bg-primary-soft text-primary transition hover:bg-primary-soft/80"
+      href="/app/profile"
+    >
+      <ArrowLeft className="h-5 w-5" aria-hidden />
+    </Link>
+    <h1 className="min-w-0 text-center text-base font-extrabold tracking-[-0.02em] text-foreground">
+      {title}
+    </h1>
+    <span aria-hidden />
+  </header>
+);
+
 const Stars = ({ rating, size = "sm" }: { rating: number; size?: "sm" | "lg" }) => (
-  <span className="inline-flex text-[#f7c51e]" role="img" aria-label={`${rating} de 5 estrelas`}>
+  <span className="inline-flex text-warning" role="img" aria-label={`${rating} de 5 estrelas`}>
     {STAR_KEYS.map((star) => (
       <Star
         key={star}
@@ -85,32 +101,27 @@ const RatingSummary = ({ summary }: { summary?: PsychologistReviewSummary }) => 
   const total = summaryTotal(summary);
 
   return (
-    <section className="rounded-[22px] border border-[#e5e7eb] bg-white px-5 py-[30px] shadow-[0_2px_8px_rgb(15_23_42_/_5%)]">
-      <p className="text-[48px] font-extrabold leading-none tracking-[-0.05em] text-[#111827]">
+    <section className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-7 shadow-[var(--lectum-shadow-soft)]">
+      <p className="text-5xl font-extrabold leading-none tracking-[-0.05em] text-foreground">
         {averageLabel(summary)}
       </p>
       <div className="mt-3">
         <Stars rating={Math.round((summary?.rating_avg || 0) / 100)} size="lg" />
       </div>
-      <p className="mt-2 text-[15px] text-[#64748b]">
-        Total de {total.toLocaleString("pt-BR")} avaliações
-      </p>
+      <p className="mt-2 text-sm text-muted">Total de {total.toLocaleString("pt-BR")} avaliações</p>
 
-      <div className="mt-[29px] grid gap-[13px]">
+      <div className="mt-7 grid gap-3">
         {[5, 4, 3, 2, 1].map((rating) => {
           const count = summary?.distribution[rating as 1 | 2 | 3 | 4 | 5] || 0;
           const percent = total > 0 ? Math.round((count / total) * 100) : 0;
 
           return (
-            <div className="grid grid-cols-[12px_1fr_34px] items-center gap-[13px]" key={rating}>
-              <span className="text-[12px] font-semibold text-[#334155]">{rating}</span>
-              <div className="h-[7px] overflow-hidden rounded-full bg-[#eef2f7]">
-                <div
-                  className="h-full rounded-full bg-[#308ce8]"
-                  style={{ width: `${percent}%` }}
-                />
+            <div className="grid grid-cols-[12px_1fr_34px] items-center gap-3" key={rating}>
+              <span className="text-xs font-semibold text-foreground">{rating}</span>
+              <div className="h-2 overflow-hidden rounded-full bg-surface-muted">
+                <div className="h-full rounded-full bg-primary" style={{ width: `${percent}%` }} />
               </div>
-              <span className="text-right text-[12px] font-medium text-[#64748b]">{percent}%</span>
+              <span className="text-right text-xs font-medium text-muted">{percent}%</span>
             </div>
           );
         })}
@@ -127,34 +138,49 @@ const premiumReviewBenefits = [
 ];
 
 const PremiumReviewsState = () => (
-  <section className="rounded-[var(--lectum-card-radius)] border border-primary/20 bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
-    <div className="grid justify-items-center text-center">
-      <span className="grid h-14 w-14 place-items-center rounded-2xl bg-primary-soft text-primary shadow-[var(--lectum-shadow-soft)]">
-        <Award className="h-7 w-7" aria-hidden />
+  <section className="relative overflow-hidden rounded-[var(--lectum-card-radius)] border border-primary/20 bg-surface p-5 shadow-[var(--lectum-shadow-soft)] md:p-7">
+    <div aria-hidden className="absolute inset-x-0 top-0 h-44 bg-primary-soft" />
+    <div
+      aria-hidden
+      className="-right-10 -top-14 absolute h-36 w-36 rounded-full bg-surface/70 blur-3xl"
+    />
+
+    <div className="relative grid justify-items-center text-center">
+      <span className="relative grid h-[72px] w-[72px] place-items-center rounded-3xl bg-surface text-primary shadow-[var(--lectum-shadow-soft)]">
+        <Award className="h-8 w-8" aria-hidden />
+        <span className="absolute -right-1 -top-1 grid h-7 w-7 place-items-center rounded-full border border-primary/20 bg-surface text-primary">
+          <CheckCircle2 className="h-4 w-4" aria-hidden />
+        </span>
       </span>
-      <p className="mt-4 text-xs font-black uppercase tracking-[0.16em] text-primary">
+      <p className="mt-5 text-xs font-black uppercase tracking-[0.18em] text-primary">
         Recurso profissional
       </p>
-      <h2 className="mt-2 text-xl font-extrabold leading-7 text-foreground">
+      <h2 className="mt-2 text-2xl font-extrabold leading-tight text-foreground">
         Desbloqueie avaliações de pacientes
       </h2>
-      <p className="mt-3 text-sm leading-6 text-muted">
+      <p className="mt-3 max-w-2xl text-sm leading-6 text-muted md:text-base md:leading-7">
         Ao fazer upgrade para o Plano Profissional, seus pacientes poderão registrar avaliações e
         depoimentos sobre seus atendimentos. As avaliações recebidas aparecerão aqui e ajudarão a
         fortalecer sua credibilidade na Lectum.
       </p>
     </div>
 
-    <ul className="mt-5 grid gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface-muted p-4">
+    <div className="relative mt-6 grid gap-3 md:grid-cols-2">
       {premiumReviewBenefits.map((benefit) => (
-        <li className="flex items-start gap-2.5 text-sm leading-5 text-muted" key={benefit}>
+        <div
+          className="flex min-w-0 items-start gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4"
+          key={benefit}
+        >
           <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden />
-          <span>{benefit}</span>
-        </li>
+          <span className="min-w-0 text-sm font-semibold leading-5 text-muted">{benefit}</span>
+        </div>
       ))}
-    </ul>
+    </div>
 
-    <Button asChild className="mt-5 h-12 w-full rounded-full text-base">
+    <Button
+      asChild
+      className="relative mt-6 h-12 w-full rounded-full text-base md:mx-auto md:w-auto md:px-8"
+    >
       <Link href="/app/professional/billing/subscription">
         Fazer upgrade
         <ArrowRight className="h-4 w-4" aria-hidden />
@@ -185,14 +211,14 @@ const ReviewResponseForm = ({
 
   if (review.response && !isEditing) {
     return (
-      <div className="mt-2 rounded-[16px] border-l-[4px] border-[#308ce8] bg-[#f2f7ff] px-4 py-[14px]">
-        <p className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#308ce8]">
-          <MessageSquareReply className="h-[13px] w-[13px]" aria-hidden />
+      <div className="mt-2 rounded-[var(--lectum-control-radius)] border-l-[4px] border-primary bg-primary-soft px-4 py-3.5">
+        <p className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.08em] text-primary">
+          <MessageSquareReply className="h-3.5 w-3.5" aria-hidden />
           Sua resposta
         </p>
-        <p className="mt-3 text-[14px] leading-[21px] text-[#334155]">“{review.response}”</p>
+        <p className="mt-3 text-sm leading-6 text-muted">“{review.response}”</p>
         <button
-          className="mt-3 text-[13px] font-bold text-[#308ce8] hover:text-[#247bd1]"
+          className="mt-3 text-sm font-bold text-primary hover:text-primary-hover"
           onClick={() => setIsEditing(true)}
           type="button"
         >
@@ -205,9 +231,9 @@ const ReviewResponseForm = ({
   if (!isEditing) {
     return (
       <div className="mt-2 flex items-center justify-between gap-3">
-        <p className="text-[13px] text-[#94a3b8]">Aguardando sua resposta</p>
+        <p className="text-sm text-subtle">Aguardando sua resposta</p>
         <button
-          className="inline-flex h-9 items-center justify-center gap-1 rounded-full border border-[#e2e8f0] bg-white px-4 text-[14px] font-extrabold text-[#308ce8] shadow-sm transition hover:bg-[#f8fbff]"
+          className="inline-flex h-9 items-center justify-center gap-1 rounded-full border border-border bg-surface px-4 text-sm font-extrabold text-primary shadow-sm transition hover:bg-primary-soft"
           onClick={() => setIsEditing(true)}
           type="button"
         >
@@ -227,7 +253,7 @@ const ReviewResponseForm = ({
     >
       <div className="flex justify-end">
         <Button
-          className="h-9 rounded-full bg-[#308ce8] px-5 text-[14px] font-extrabold shadow-none hover:bg-[#247bd1]"
+          className="h-9 rounded-full px-5 text-sm font-extrabold"
           disabled={mutation.isPending}
           type="submit"
         >
@@ -245,28 +271,28 @@ const ReviewCard = ({
   defaultOpenResponse: boolean;
   review: PsychologistReview;
 }) => (
-  <article className="rounded-[22px] border border-[#eef2f7] bg-white px-5 py-[18px] shadow-[0_2px_8px_rgb(15_23_42_/_4%)]">
+  <article className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-4 shadow-[var(--lectum-shadow-soft)]">
     <div className="flex items-start justify-between gap-3">
       <div className="min-w-0">
-        <h2 className="truncate text-[16px] font-extrabold tracking-[-0.01em] text-[#111827]">
+        <h2 className="truncate text-base font-extrabold tracking-[-0.01em] text-foreground">
           {review.author.name}
         </h2>
-        <div className="mt-0.5">
+        <div className="mt-1">
           <Stars rating={review.rating} />
         </div>
       </div>
-      <time className="shrink-0 text-[12px] text-[#94a3b8]" dateTime={review.created_at}>
+      <time className="shrink-0 text-xs text-subtle" dateTime={review.created_at}>
         {formatDate(review.created_at)}
       </time>
     </div>
 
     {review.comment ? (
-      <p className="mt-[18px] text-[14px] leading-[24px] text-[#374151]">{review.comment}</p>
+      <p className="mt-4 text-sm leading-6 text-muted">{review.comment}</p>
     ) : (
-      <p className="mt-[18px] text-[14px] text-[#94a3b8]">Avaliação sem depoimento textual.</p>
+      <p className="mt-4 text-sm text-subtle">Avaliação sem depoimento textual.</p>
     )}
 
-    <div className="mt-[22px]">
+    <div className="mt-5">
       <ReviewResponseForm defaultOpen={defaultOpenResponse} review={review} />
     </div>
   </article>
@@ -288,95 +314,81 @@ export const ProfessionalReviewsLogic = () => {
 
   return (
     <PrivateTemplate desktopSidebarDefaultCollapsed showMobileNavigation={false}>
-      <section className="mx-auto my-0 min-h-screen w-full max-w-[430px] bg-[#f5f6f8] pb-10 sm:rounded-[24px] sm:border sm:border-[#e5e7eb] sm:overflow-hidden lg:max-w-[760px]">
-        <header className="grid h-[72px] grid-cols-[72px_1fr_72px] items-center border-b border-[#e5e7eb] bg-white">
-          <Link
-            aria-label="Voltar para perfil"
-            className="grid h-full place-items-center text-[#308ce8]"
-            href="/app/profile"
+      <section className="mx-auto grid w-full max-w-[430px] grid-cols-[minmax(0,1fr)] gap-4 md:max-w-3xl">
+        <ProfessionalPageHeader title="Minhas Avaliações" />
+
+        {reviews.isLoading && limit === INITIAL_LIMIT ? (
+          <LoadingState label="Carregando avaliações" />
+        ) : null}
+
+        {shouldShowError ? (
+          <InlineAlert title="Erro ao consultar avaliações" variant="error">
+            <p>{errorMessage}</p>
+          </InlineAlert>
+        ) : null}
+
+        {!shouldShowError && canReceiveReviews ? <RatingSummary summary={data?.summary} /> : null}
+
+        {!reviews.isLoading && !shouldShowError && !canReceiveReviews ? (
+          <PremiumReviewsState />
+        ) : null}
+
+        {!reviews.isLoading &&
+        !shouldShowError &&
+        canReceiveReviews &&
+        displayItems.length === 0 ? (
+          <EmptyState
+            className="rounded-[var(--lectum-card-radius)] bg-surface"
+            icon={UserRound}
+            title="Nenhuma avaliação recebida"
+            description="Quando pacientes com contato registrado avaliarem seu perfil, os depoimentos aparecerão aqui."
+          />
+        ) : null}
+
+        {displayItems.length > 0 ? (
+          <section className="grid gap-4" aria-labelledby="professional-reviews-list-title">
+            <h2
+              id="professional-reviews-list-title"
+              className="text-lg font-extrabold tracking-[-0.02em] text-foreground"
+            >
+              Depoimentos Recentes
+            </h2>
+
+            {displayItems.map((review) => (
+              <ReviewCard
+                defaultOpenResponse={review.id === firstUnansweredId}
+                key={review.id}
+                review={review}
+              />
+            ))}
+          </section>
+        ) : null}
+
+        {canReceiveReviews && (data?.count || 0) > displayItems.length ? (
+          <button
+            className="h-12 rounded-[var(--lectum-card-radius)] border border-dashed border-primary/30 bg-surface text-sm font-extrabold text-primary transition hover:bg-primary-soft disabled:opacity-60"
+            disabled={reviews.isFetching}
+            onClick={() => setLimit((current) => current + LOAD_STEP)}
+            type="button"
           >
-            <ArrowLeft className="h-[22px] w-[22px]" aria-hidden />
-          </Link>
-          <h1 className="text-center text-[18px] font-extrabold tracking-[-0.02em] text-[#111827]">
-            Minhas Avaliações
-          </h1>
-          <span />
-        </header>
+            {reviews.isFetching ? "Carregando..." : "Carregar avaliações anteriores"}
+          </button>
+        ) : null}
 
-        <div className="grid grid-cols-[minmax(0,1fr)] gap-[27px] px-4 pt-[17px]">
-          {reviews.isLoading && limit === INITIAL_LIMIT ? (
-            <LoadingState label="Carregando avaliações" />
-          ) : null}
+        {reviews.isFetching && limit > INITIAL_LIMIT ? (
+          <LoadingState label="Atualizando avaliações" />
+        ) : null}
 
-          {shouldShowError ? (
-            <InlineAlert title="Erro ao consultar avaliações" variant="error">
-              <p>{errorMessage}</p>
-            </InlineAlert>
-          ) : null}
-
-          {!shouldShowError && canReceiveReviews ? <RatingSummary summary={data?.summary} /> : null}
-
-          {!reviews.isLoading && !shouldShowError && !canReceiveReviews ? (
-            <PremiumReviewsState />
-          ) : null}
-
-          {!reviews.isLoading &&
-          !shouldShowError &&
-          canReceiveReviews &&
-          displayItems.length === 0 ? (
-            <EmptyState
-              className="rounded-[22px] bg-white"
-              icon={UserRound}
-              title="Nenhuma avaliação recebida"
-              description="Quando pacientes com contato registrado avaliarem seu perfil, os depoimentos aparecerão aqui."
-            />
-          ) : null}
-
-          {displayItems.length > 0 ? (
-            <section className="grid gap-[17px]" aria-labelledby="professional-reviews-list-title">
-              <h2
-                id="professional-reviews-list-title"
-                className="text-[19px] font-extrabold tracking-[-0.02em] text-[#111827]"
-              >
-                Depoimentos Recentes
-              </h2>
-
-              {displayItems.map((review) => (
-                <ReviewCard
-                  defaultOpenResponse={review.id === firstUnansweredId}
-                  key={review.id}
-                  review={review}
-                />
-              ))}
-            </section>
-          ) : null}
-
-          {canReceiveReviews && (data?.count || 0) > displayItems.length ? (
-            <button
-              className="h-[54px] rounded-[22px] border border-dashed border-[#bddaf3] bg-white text-[15px] font-extrabold text-[#308ce8] transition hover:bg-[#f8fbff] disabled:opacity-60"
-              disabled={reviews.isFetching}
-              onClick={() => setLimit((current) => current + LOAD_STEP)}
-              type="button"
-            >
-              {reviews.isFetching ? "Carregando..." : "Carregar avaliações anteriores"}
-            </button>
-          ) : null}
-
-          {reviews.isFetching && limit > INITIAL_LIMIT ? (
-            <LoadingState label="Atualizando avaliações" />
-          ) : null}
-
-          {!shouldShowError && displayItems.length > 0 ? (
-            <button
-              className="mx-auto hidden items-center gap-2 text-sm font-semibold text-[#64748b]"
-              onClick={() => reviews.refetch()}
-              type="button"
-            >
-              <RefreshCcw className="h-4 w-4" aria-hidden />
-              Atualizar
-            </button>
-          ) : null}
-        </div>
+        {!shouldShowError && displayItems.length > 0 ? (
+          <button
+            className="mx-auto hidden items-center gap-2 text-sm font-semibold text-muted"
+            onClick={() => reviews.refetch()}
+            type="button"
+          >
+            <RefreshCcw className="h-4 w-4" aria-hidden />
+            Atualizar
+          </button>
+        ) : null}
       </section>
     </PrivateTemplate>
   );

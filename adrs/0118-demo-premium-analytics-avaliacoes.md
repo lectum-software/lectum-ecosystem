@@ -72,3 +72,13 @@ As duas telas mantêm layout mobile-first. O wrapper de conteúdo passou a forç
 
 - Eventos ainda não persistidos continuam sem número real em Analytics, conforme decisão anterior da TASK-20. A UI não simula percentuais ou séries históricas.
 - A conversão real do CTA continua dependendo do fluxo de checkout/planos das tasks de billing.
+
+## Refinamento visual premium em 2026-06-18
+
+Após a adoção do modo `preview`, as telas foram refinadas visualmente para parecerem uma continuação natural da jornada de upgrade iniciada em `Minha assinatura`:
+
+- `Meus Analytics` usa header em card, tabs de período em pílulas, banner premium azul-claro, CTA primário consistente e cards de métricas com ícones em círculos azul-claro.
+- O preview gratuito dos números de Analytics usa blur dentro de cápsulas visuais, com selo `Prévia`, para comunicar recurso premium de forma intencional e não como erro visual.
+- `Minhas Avaliações` usa um estado premium centralizado com ícone, selo, texto de valor, benefícios em cards e CTA para `/app/professional/billing/subscription`.
+- A responsividade foi revisada mobile-first: métricas ficam em uma coluna em 390px e em duas colunas quando há espaço; tabs cabem no mobile; cards e CTAs respeitam a largura útil.
+- A validação local confirmou ausência de overflow horizontal real em 390x844 e alinhamento central em 1024x768.

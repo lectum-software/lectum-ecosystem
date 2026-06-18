@@ -204,3 +204,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nenhum schema Prisma, migration, package novo, mock, seed ou métrica simulada foi criado. Métricas sem evento persistido continuam ausentes/zeradas com tratamento honesto.
 - ADR complementar: ADR-0118.
 - Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, API real com psicólogo temporário gratuito e browser local/headless 390x844 em `/app/professional/analytics`.
+
+## Refinamento visual premium em 2026-06-18
+
+- As telas `/app/professional/analytics` e `/app/professional/reviews` foram refinadas para compartilhar a linguagem visual da tela `/app/professional/billing/subscription`.
+- Analytics recebeu header em card, tabs em pílulas, banner premium azul-claro, métricas em cards de uma coluna no mobile e duas colunas em desktop, valores desfocados com tratamento intencional de prévia premium e card de link de avaliações no mesmo padrão visual.
+- Minhas Avaliações recebeu header consistente e estado premium central com ícone, selo, benefícios em cards e CTA `Fazer upgrade` para `/app/professional/billing/subscription`.
+- Responsividade revisada em 390x844 e 1024x768: sem overflow horizontal real (`scrollWidth` igual à largura da viewport), tabs cabendo no mobile, métricas em uma coluna no mobile e duas colunas no desktop.
+- Nenhum mock, dado fake, schema, migration ou package novo foi criado.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, API real com psicólogo temporário gratuito e browser local/headless em `/app/professional/analytics` e `/app/professional/reviews`.

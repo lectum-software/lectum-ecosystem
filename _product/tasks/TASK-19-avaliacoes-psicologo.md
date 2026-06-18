@@ -195,3 +195,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nenhum schema Prisma, migration, package novo, mock, seed ou avaliação simulada foi criado.
 - ADR complementar: ADR-0118.
 - Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, API real com psicólogo temporário gratuito e browser local/headless 390x844 em `/app/professional/reviews`.
+
+## Refinamento visual premium em 2026-06-18
+
+- As telas `/app/professional/reviews` e `/app/professional/analytics` foram refinadas para compartilhar a linguagem visual da tela `/app/professional/billing/subscription`.
+- Minhas Avaliações mantém acesso liberado ao Plano Gratuito e passa a exibir um estado premium mais aspiracional, com card central, fundo azul-claro, ícone de credibilidade, benefícios com checkmarks e CTA `Fazer upgrade` para `/app/professional/billing/subscription`.
+- Header, espaçamentos, bordas, sombras e responsividade foram ajustados para evitar aparência de painel administrativo genérico.
+- Responsividade revisada em 390x844 e 1024x768: card premium ocupa a largura útil, benefícios quebram corretamente, CTA respeita o card e não há overflow horizontal real.
+- Nenhum mock, avaliação fictícia, schema, migration ou package novo foi criado.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, API real com psicólogo temporário gratuito e browser local/headless em `/app/professional/reviews` e `/app/professional/analytics`.

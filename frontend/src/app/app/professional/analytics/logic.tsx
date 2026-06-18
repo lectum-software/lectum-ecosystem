@@ -9,9 +9,11 @@ import {
   Heart,
   Info,
   Lightbulb,
+  type LucideIcon,
   MessageSquare,
   PlayCircle,
   Search,
+  Sparkles,
   Star,
 } from "lucide-react";
 import Link from "next/link";
@@ -59,8 +61,8 @@ const getDefaultCustomRange = () => {
 };
 
 type AnalyticsCardView = {
-  description?: string;
-  icon: typeof BarChart3;
+  description: string;
+  icon: LucideIcon;
   id: string;
   isUnavailable?: boolean;
   label: string;
@@ -96,54 +98,72 @@ const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCardView[] 
   {
     id: "search_results",
     icon: Search,
-    label: "RESULTADOS\nDE BUSCA",
+    label: "Resultados de busca",
     value: "—",
     source: "untracked",
     isUnavailable: true,
-    description: "Busca ainda não possui evento persistido.",
+    description: "Quando houver rastreio de busca, o desempenho aparecerá aqui.",
   },
   {
     id: "profile_views",
     icon: Eye,
-    label: "ABERTURA DE\nPERFIL",
+    label: "Aberturas de perfil",
     value: "—",
     source: "untracked",
     isUnavailable: true,
-    description: "Visualização de perfil aguarda profile_view_event.",
+    description: "Visualizações reais do perfil serão exibidas após o evento persistido.",
   },
   {
     id: "video_views",
     icon: PlayCircle,
-    label: "VIDEO VIEWS",
+    label: "Video views",
     value: "—",
     source: "untracked",
     isUnavailable: true,
-    description: "Views do vídeo ainda não são rastreadas.",
+    description: "Engajamento do vídeo profissional quando a captura estiver disponível.",
   },
   {
     id: "whatsapp_clicks",
     icon: MessageSquare,
-    label: "CONVERSÕES\nWHATSAPP",
+    label: "Conversões WhatsApp",
     value: toCount(data?.metrics.whatsapp_clicks),
     source: "contact_request",
+    description: "Cliques reais no contato profissional dentro do período.",
   },
   {
     id: "reviews_received",
     icon: Star,
-    label: "AVALIAÇÕES",
+    label: "Avaliações",
     value: toCount(data?.metrics.reviews_received),
     source: "professional_review",
+    description: "Avaliações publicadas que fortalecem sua reputação.",
   },
   {
     id: "favorited",
     icon: Heart,
-    label: "FAVORITADO",
+    label: "Favoritado",
     value: "—",
     source: "untracked",
     isUnavailable: true,
-    description: "Favoritos não fazem parte do contrato real desta tela.",
+    description: "Sinais de interesse serão conectados a fontes reais futuras.",
   },
 ];
+
+const ProfessionalPageHeader = ({ title }: { title: string }) => (
+  <header className="grid h-14 grid-cols-[44px_1fr_44px] items-center rounded-[var(--lectum-card-radius)] border border-border bg-surface px-2 shadow-[var(--lectum-shadow-soft)]">
+    <Link
+      aria-label="Voltar para perfil"
+      className="grid h-10 w-10 place-items-center rounded-full bg-primary-soft text-primary transition hover:bg-primary-soft/80"
+      href="/app/profile"
+    >
+      <ArrowLeft className="h-5 w-5" aria-hidden />
+    </Link>
+    <h1 className="min-w-0 text-center text-base font-extrabold tracking-[-0.02em] text-foreground">
+      {title}
+    </h1>
+    <span aria-hidden />
+  </header>
+);
 
 const PeriodTabs = ({
   current,
@@ -154,52 +174,65 @@ const PeriodTabs = ({
   disabled?: boolean;
   onChange: (period: PsychologistAnalyticsPeriodKey) => void;
 }) => (
-  <div className="grid h-[46px] grid-cols-5 border-b border-[#e5e7eb] bg-white" role="tablist">
-    {PERIOD_OPTIONS.map((option) => {
-      const active = option.value === current;
+  <div
+    className="-mx-1 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    role="tablist"
+  >
+    <div className="flex min-w-max gap-1 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-1 shadow-[var(--lectum-shadow-soft)] sm:gap-2 md:min-w-0 md:justify-between">
+      {PERIOD_OPTIONS.map((option) => {
+        const active = option.value === current;
 
-      return (
-        <button
-          aria-selected={active}
-          className={cn(
-            "relative px-0.5 text-[10.5px] font-bold transition disabled:opacity-60",
-            active ? "text-[#308ce8]" : "text-[#64748b] hover:text-[#111827]",
-          )}
-          disabled={disabled}
-          key={option.value}
-          onClick={() => onChange(option.value)}
-          role="tab"
-          type="button"
-        >
-          {option.label}
-          {active ? <span className="absolute inset-x-3 bottom-0 h-0.5 bg-[#308ce8]" /> : null}
-        </button>
-      );
-    })}
+        return (
+          <button
+            aria-selected={active}
+            className={cn(
+              "h-9 whitespace-nowrap rounded-full px-2 text-[0.78rem] font-extrabold transition disabled:opacity-60 sm:h-10 sm:px-3 sm:text-sm md:flex-1",
+              active
+                ? "bg-primary text-surface shadow-[var(--lectum-shadow-soft)]"
+                : "text-muted hover:bg-primary-soft/70 hover:text-primary",
+            )}
+            disabled={disabled}
+            key={option.value}
+            onClick={() => onChange(option.value)}
+            role="tab"
+            type="button"
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
   </div>
 );
 
 const PremiumAnalyticsBanner = () => (
-  <section className="rounded-[var(--lectum-card-radius)] border border-primary/20 bg-primary-soft p-5 shadow-[var(--lectum-shadow-soft)]">
-    <div className="flex gap-3">
-      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-surface text-primary shadow-[var(--lectum-shadow-soft)]">
-        <BarChart3 className="h-5 w-5" aria-hidden />
+  <section className="relative overflow-hidden rounded-[var(--lectum-card-radius)] border border-primary/20 bg-primary-soft p-5 shadow-[var(--lectum-shadow-soft)] md:p-6">
+    <div
+      aria-hidden
+      className="-right-10 -top-12 absolute h-32 w-32 rounded-full bg-surface/70 blur-3xl"
+    />
+    <div className="relative grid gap-4 md:grid-cols-[auto_1fr_auto] md:items-center">
+      <span className="grid h-14 w-14 place-items-center rounded-2xl bg-surface text-primary shadow-[var(--lectum-shadow-soft)] md:h-16 md:w-16">
+        <BarChart3 className="h-7 w-7" aria-hidden />
       </span>
       <div className="min-w-0">
-        <h2 className="text-base font-extrabold leading-6 text-foreground">
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">
+          Recurso profissional
+        </p>
+        <h2 className="mt-2 text-xl font-extrabold leading-7 text-foreground">
           Desbloqueie seus Analytics
         </h2>
-        <p className="mt-2 text-sm leading-6 text-muted">
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted md:text-base md:leading-7">
           Assine o plano profissional para acompanhar visualizações, cliques, desempenho do perfil e
           evolução dos seus resultados na Lectum.
         </p>
-        <Button asChild className="mt-4 h-11 rounded-full px-5">
-          <Link href="/app/professional/billing/subscription">
-            Fazer upgrade
-            <ArrowRight className="h-4 w-4" aria-hidden />
-          </Link>
-        </Button>
       </div>
+      <Button asChild className="h-12 w-full rounded-full px-6 text-base md:w-auto">
+        <Link href="/app/professional/billing/subscription">
+          Fazer upgrade
+          <ArrowRight className="h-4 w-4" aria-hidden />
+        </Link>
+      </Button>
     </div>
   </section>
 );
@@ -215,11 +248,11 @@ const CustomPeriodFields = ({
   onChange: (range: { end_at: string; start_at: string }) => void;
   startAt: string;
 }) => (
-  <div className="grid grid-cols-2 gap-2 border-b border-[#e5e7eb] bg-white px-3 py-3">
-    <label className="grid gap-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#94a3b8]">
+  <div className="grid gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-3 shadow-[var(--lectum-shadow-soft)] sm:grid-cols-2">
+    <label className="grid gap-1.5 text-xs font-extrabold uppercase tracking-[0.12em] text-subtle">
       Início
       <input
-        className="h-10 min-w-0 rounded-[12px] border border-[#e2e8f0] bg-[#fbfcfe] px-2 text-[11px] font-bold text-[#111827] outline-none focus:border-[#308ce8] disabled:opacity-60"
+        className="h-11 min-w-0 rounded-[var(--lectum-control-radius)] border border-border bg-surface-muted px-3 text-sm font-bold text-foreground outline-none transition focus:border-primary disabled:opacity-60"
         disabled={disabled}
         max={endAt || undefined}
         onChange={(event) => onChange({ start_at: event.target.value, end_at: endAt })}
@@ -227,10 +260,10 @@ const CustomPeriodFields = ({
         value={startAt}
       />
     </label>
-    <label className="grid gap-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#94a3b8]">
+    <label className="grid gap-1.5 text-xs font-extrabold uppercase tracking-[0.12em] text-subtle">
       Fim
       <input
-        className="h-10 min-w-0 rounded-[12px] border border-[#e2e8f0] bg-[#fbfcfe] px-2 text-[11px] font-bold text-[#111827] outline-none focus:border-[#308ce8] disabled:opacity-60"
+        className="h-11 min-w-0 rounded-[var(--lectum-control-radius)] border border-border bg-surface-muted px-3 text-sm font-bold text-foreground outline-none transition focus:border-primary disabled:opacity-60"
         disabled={disabled}
         min={startAt || undefined}
         onChange={(event) => onChange({ start_at: startAt, end_at: event.target.value })}
@@ -245,29 +278,33 @@ const MetricCard = ({ locked, metric }: { locked?: boolean; metric: AnalyticsCar
   const Icon = metric.icon;
 
   return (
-    <article className="min-w-0 rounded-[16px] border border-[#e2e8f0] bg-white px-2.5 py-3.5 shadow-[0_2px_8px_rgb(15_23_42_/_5%)]">
-      <div className="flex min-w-0 items-start gap-2">
-        <Icon className="mt-0.5 h-[14px] w-[14px] shrink-0 text-[#6f7f95]" aria-hidden />
-        <h2 className="min-w-0 whitespace-pre-line text-[8.8px] font-bold uppercase leading-[11px] tracking-[0.03em] text-[#6f7f95]">
-          {metric.label}
-        </h2>
+    <article className="min-w-0 overflow-hidden rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
+      <div className="flex items-start justify-between gap-3">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+          <Icon className="h-5 w-5" aria-hidden />
+        </span>
+        {locked ? (
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/10 bg-primary-soft px-2 py-1 text-[0.65rem] font-black uppercase tracking-[0.08em] text-primary">
+            <Sparkles className="h-3 w-3" aria-hidden />
+            Prévia
+          </span>
+        ) : null}
       </div>
-      <div className="mt-3 flex min-w-0 items-end gap-1">
-        <p
+
+      <h2 className="mt-4 text-base font-extrabold leading-6 text-foreground">{metric.label}</h2>
+      <p className="mt-1 min-h-10 text-sm leading-5 text-muted">{metric.description}</p>
+
+      <div className="mt-4 inline-flex max-w-full items-center gap-2 rounded-full border border-primary/10 bg-primary-soft/70 px-3 py-2">
+        <span
           className={cn(
-            "min-w-0 text-[19px] font-extrabold leading-none tracking-[-0.03em] text-[#111827]",
-            locked && "select-none blur-[4px]",
+            "min-w-0 text-2xl font-extrabold leading-none tracking-[-0.04em] text-foreground",
+            locked && "select-none blur-[5px]",
           )}
         >
           {metric.value}
-        </p>
+        </span>
         {metric.isUnavailable ? (
-          <span
-            className={cn(
-              "pb-0.5 text-[8.5px] font-semibold text-[#94a3b8]",
-              locked && "select-none blur-[3px]",
-            )}
-          >
+          <span className={cn("text-xs font-bold text-muted", locked && "select-none blur-[4px]")}>
             sem evento
           </span>
         ) : null}
@@ -289,45 +326,66 @@ const ReviewsLinkCard = ({ link, locked }: { link: string; locked?: boolean }) =
   };
 
   return (
-    <section className="rounded-[20px] border border-[#e2e8f0] bg-white p-4 shadow-[0_2px_8px_rgb(15_23_42_/_5%)]">
-      <h2 className="text-[16px] font-semibold text-[#111827]">
-        Link da minha página de avaliações
-      </h2>
-      <div className="mt-4 flex h-[50px] items-center gap-3 rounded-[14px] border border-[#e5e7eb] bg-[#fbfcfe] px-4">
+    <section className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
+      <div className="flex items-start gap-3">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+          <Star className="h-5 w-5" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <h2 className="text-base font-extrabold leading-6 text-foreground">
+            Link da minha página de avaliações
+          </h2>
+          <p className="mt-1 text-sm leading-5 text-muted">
+            Compartilhe com pacientes e fortaleça sua autoridade com depoimentos reais.
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 flex h-12 min-w-0 items-center gap-3 rounded-[var(--lectum-control-radius)] border border-border bg-surface-muted px-3">
         <p
           className={cn(
-            "min-w-0 flex-1 truncate text-[12px] font-medium text-[#64748b]",
-            locked && "select-none blur-[4px]",
+            "min-w-0 flex-1 truncate text-sm font-semibold text-muted",
+            locked && "select-none blur-[5px]",
           )}
         >
           {link}
         </p>
         <button
           aria-label="Copiar link de avaliações"
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[#308ce8] transition hover:bg-[#eaf5ff] disabled:opacity-50"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-primary/10 bg-surface text-primary transition hover:bg-primary-soft disabled:opacity-50"
           disabled={locked}
           onClick={copyLink}
           type="button"
         >
-          <Copy className="h-[18px] w-[18px]" aria-hidden />
+          <Copy className="h-4 w-4" aria-hidden />
         </button>
       </div>
-      <p className="mt-3 text-[12px] leading-[17px] text-[#64748b]">
-        Incentive os pacientes a te avaliarem para aparecer nos primeiros resultados de busca
+      <p className="mt-3 text-xs leading-5 text-muted">
+        {locked
+          ? "O link e a coleta de avaliações ficam totalmente liberados após o upgrade."
+          : "Incentive os pacientes a te avaliarem para aparecer nos primeiros resultados de busca."}
       </p>
     </section>
   );
 };
 
 const SpecialtySearchCard = () => (
-  <section className="rounded-[20px] border border-[#e2e8f0] bg-white p-4 shadow-[0_2px_8px_rgb(15_23_42_/_5%)]">
-    <div className="flex items-center justify-between gap-3">
-      <h2 className="text-[19px] font-extrabold tracking-[-0.02em] text-[#111827]">
-        Busca por especialidades
-      </h2>
-      <Info className="h-5 w-5 text-[#94a3b8]" aria-hidden />
+  <section className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
+    <div className="flex items-start gap-3">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+        <Search className="h-5 w-5" aria-hidden />
+      </span>
+      <div className="min-w-0">
+        <h2 className="text-lg font-extrabold tracking-[-0.02em] text-foreground">
+          Busca por especialidades
+        </h2>
+        <p className="mt-1 text-sm leading-6 text-muted">
+          Entenda como sua presença aparece nas buscas por temas e especialidades.
+        </p>
+      </div>
+      <Info className="ml-auto h-5 w-5 shrink-0 text-subtle" aria-hidden />
     </div>
-    <div className="mt-5 rounded-[16px] border border-dashed border-[#cfe1f5] bg-[#f8fbff] p-4 text-[13px] leading-5 text-[#64748b]">
+    <div className="mt-4 rounded-[var(--lectum-control-radius)] border border-dashed border-primary/20 bg-primary-soft/40 p-4 text-sm leading-6 text-muted">
       Esta seção seguirá o layout do protótipo quando houver evento persistido de busca por
       especialidade. Nenhum percentual é simulado.
     </div>
@@ -335,11 +393,13 @@ const SpecialtySearchCard = () => (
 );
 
 const ProTipCard = () => (
-  <section className="flex gap-3 rounded-[20px] border border-[#c9dff6] bg-[#eaf5ff] px-4 py-4 text-[#1f5f97]">
-    <Lightbulb className="mt-0.5 h-5 w-5 shrink-0 text-[#308ce8]" aria-hidden />
-    <div>
-      <h2 className="text-[14px] font-extrabold text-[#308ce8]">Dica Pro</h2>
-      <p className="mt-1 text-[14px] leading-[22px] text-[#40546a]">
+  <section className="flex gap-3 rounded-[var(--lectum-card-radius)] border border-primary/20 bg-primary-soft p-5 text-muted shadow-[var(--lectum-shadow-soft)]">
+    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-primary">
+      <Lightbulb className="h-5 w-5" aria-hidden />
+    </span>
+    <div className="min-w-0">
+      <h2 className="text-base font-extrabold text-foreground">Dica Pro</h2>
+      <p className="mt-1 text-sm leading-6 text-muted">
         Vídeos de apresentação com alto engajamento geram até 3x mais conversões para o WhatsApp.
         Faça testes e descubra o que funciona melhor para você!
       </p>
@@ -369,20 +429,8 @@ export const ProfessionalAnalyticsLogic = () => {
 
   return (
     <PrivateTemplate showNavigation={false}>
-      <section className="mx-auto my-0 min-h-screen w-full max-w-[430px] overflow-x-hidden bg-[#f5f6f8] pb-8 sm:rounded-[24px] sm:border sm:border-[#e5e7eb] sm:overflow-hidden lg:max-w-[760px]">
-        <header className="grid h-[58px] grid-cols-[52px_1fr_52px] items-center border-b border-[#e5e7eb] bg-white">
-          <Link
-            aria-label="Voltar para perfil"
-            className="grid h-full place-items-center text-[#64748b]"
-            href="/app/profile"
-          >
-            <ArrowLeft className="h-[22px] w-[22px]" aria-hidden />
-          </Link>
-          <h1 className="text-center text-[15px] font-extrabold tracking-[-0.02em] text-[#111827]">
-            Meus Analytics
-          </h1>
-          <span />
-        </header>
+      <section className="mx-auto grid w-full max-w-[430px] grid-cols-[minmax(0,1fr)] gap-4 md:max-w-3xl">
+        <ProfessionalPageHeader title="Meus Analytics" />
 
         <PeriodTabs current={period} disabled={analytics.isFetching} onChange={setPeriod} />
         {period === "custom" ? (
@@ -394,43 +442,41 @@ export const ProfessionalAnalyticsLogic = () => {
           />
         ) : null}
 
-        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 px-3 pt-3">
-          {analytics.isLoading ? <LoadingState label="Carregando analytics reais" /> : null}
+        {analytics.isLoading ? <LoadingState label="Carregando analytics reais" /> : null}
 
-          {shouldShowError ? (
-            <InlineAlert title="Erro ao consultar dados" variant="error">
-              <p>{errorMessage}</p>
-            </InlineAlert>
-          ) : null}
+        {shouldShowError ? (
+          <InlineAlert title="Erro ao consultar dados" variant="error">
+            <p>{errorMessage}</p>
+          </InlineAlert>
+        ) : null}
 
-          {isAnalyticsPreview ? <PremiumAnalyticsBanner /> : null}
+        {isAnalyticsPreview ? <PremiumAnalyticsBanner /> : null}
 
-          {!shouldShowError ? (
-            <section
-              className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2"
-              aria-label="Cards de analytics"
-            >
-              {metricCards(data).map((metric) => (
-                <MetricCard key={metric.id} locked={isAnalyticsPreview} metric={metric} />
-              ))}
-            </section>
-          ) : null}
+        {!shouldShowError ? (
+          <section
+            className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2"
+            aria-label="Cards de analytics"
+          >
+            {metricCards(data).map((metric) => (
+              <MetricCard key={metric.id} locked={isAnalyticsPreview} metric={metric} />
+            ))}
+          </section>
+        ) : null}
 
-          {data && !isAnalyticsPreview && !analytics.isError && !hasEvents ? (
-            <EmptyState
-              className="rounded-[22px] bg-white"
-              icon={BarChart3}
-              title="Ainda não há eventos reais neste período"
-              description="Contatos por WhatsApp, avaliações e posts aparecerão aqui sem dados simulados."
-            />
-          ) : null}
+        {data && !isAnalyticsPreview && !analytics.isError && !hasEvents ? (
+          <EmptyState
+            className="rounded-[var(--lectum-card-radius)] bg-surface"
+            icon={BarChart3}
+            title="Ainda não há eventos reais neste período"
+            description="Contatos por WhatsApp, avaliações e posts aparecerão aqui sem dados simulados."
+          />
+        ) : null}
 
-          {!shouldShowError ? (
-            <ReviewsLinkCard link={reviewLink} locked={isAnalyticsPreview} />
-          ) : null}
-          {!shouldShowError ? <SpecialtySearchCard /> : null}
-          {!shouldShowError ? <ProTipCard /> : null}
-        </div>
+        {!shouldShowError ? (
+          <ReviewsLinkCard link={reviewLink} locked={isAnalyticsPreview} />
+        ) : null}
+        {!shouldShowError ? <SpecialtySearchCard /> : null}
+        {!shouldShowError ? <ProTipCard /> : null}
       </section>
     </PrivateTemplate>
   );
