@@ -318,3 +318,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Escopo: sem mudancas de backend, Prisma, migrations, packages, endpoints, filtros, paginacao, favoritos ou tracking de contato.
 - ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check src/components/psychologists/psychologist-relation-list.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado em desktop 1280px e mobile 390px na rota `/app/favorites`, confirmando header branco, chips sem `box-shadow`, alinhamento central e cards reais mais altos.
+
+## Complemento 2026-06-18 - filtros independentes em Favoritos
+
+- Pedido do usuário: mover os chips `Disponível hoje`, `Verificados`, `Convênios` e demais filtros para fora do header branco de `/app/favorites`, deixando o header apenas com badge `Sua curadoria`, título, descrição e ícone de coração.
+- Referência visual ativa: `_product/proto/Favoritos.jpg`; Builder/Quick Copy não está exposto como ferramenta direta nesta sessão, mantendo fallback auditável pelas imagens locais e validação em browser local.
+- A linha de filtros passou a ser uma faixa independente logo abaixo do header, com rolagem horizontal suave no mobile e alinhamento ao conteúdo da página.
+- Os chips mantêm a lógica real de filtros/paginação, mas foram refinados com fundo branco ou azul muito claro, borda azul-clara sutil, tipografia menor, ícones alinhados, padding equilibrado e sem sombras/glow.
+- O header branco agora contém somente a curadoria da tela: eyebrow, título, descrição e coração da identidade Lectum.
+- Escopo: sem mudanças de backend, Prisma, migrations, packages, endpoints, filtros, paginação, favoritos ou tracking de contato.
+- ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
+- Validações executadas: `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado em `/app/favorites`.

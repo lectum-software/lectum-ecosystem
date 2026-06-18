@@ -188,15 +188,15 @@ const FilterChip = ({
     <button
       aria-pressed={active}
       className={cn(
-        "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[0.68rem] font-bold tracking-[-0.01em] transition-[background-color,border-color,color,transform]",
+        "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[0.66rem] font-extrabold tracking-[-0.01em] shadow-none outline-none transition-[background-color,border-color,color] focus-visible:border-primary/35 focus-visible:bg-primary-soft/55 focus-visible:text-primary focus-visible:ring-0",
         active
-          ? "border-primary/20 bg-primary-soft text-primary"
-          : "border-primary/10 bg-surface text-muted hover:border-primary/20 hover:bg-primary-soft/45 hover:text-primary dark:border-border dark:bg-surface dark:text-muted",
+          ? "border-primary/20 bg-primary-soft/90 text-primary"
+          : "border-primary/15 bg-surface text-muted hover:border-primary/25 hover:bg-primary-soft/40 hover:text-primary dark:border-border dark:bg-surface dark:text-muted",
       )}
       onClick={onClick}
       type="button"
     >
-      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+      <Icon className="h-3.5 w-3.5 shrink-0 stroke-[2]" aria-hidden="true" />
       {filter.shortLabel}
     </button>
   );
@@ -373,7 +373,7 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
   return (
     <PrivateTemplate contentClassName="max-w-none px-0 pt-0 pb-8 sm:px-0 sm:py-0">
       <section className="grid w-full gap-4 lg:gap-6">
-        <header className="mx-auto grid w-full max-w-[1120px] gap-4 rounded-b-[30px] border-b border-border/70 bg-surface px-5 pt-5 pb-5 sm:rounded-[32px] sm:border sm:px-8 sm:py-6 md:mt-6 lg:px-8">
+        <header className="mx-auto w-full max-w-[1120px] rounded-b-[30px] border-b border-border/70 bg-surface px-5 pt-5 pb-5 sm:rounded-[32px] sm:border sm:px-8 sm:py-6 md:mt-6 lg:px-8">
           <div className="flex items-start justify-between gap-4">
             <div className="grid min-w-0 gap-2">
               <p className="inline-flex w-fit items-center rounded-full border border-primary/10 bg-primary/5 px-2.5 py-1 text-[0.64rem] font-black uppercase tracking-[0.18em] text-primary/80">
@@ -396,8 +396,10 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
               />
             </span>
           </div>
+        </header>
 
-          <div className="-mx-5 overflow-x-auto scroll-smooth px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0">
+        <div className="mx-auto w-full max-w-[1120px] px-4 sm:px-8 lg:px-0">
+          <div className="overflow-x-auto scroll-smooth pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <div className="flex w-max flex-nowrap gap-2 whitespace-nowrap">
               {favoriteFilters.map((filter) => (
                 <FilterChip
@@ -409,7 +411,7 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
               ))}
             </div>
           </div>
-        </header>
+        </div>
 
         <div className="mx-auto grid w-full max-w-[1120px] gap-4 px-4 sm:px-8 lg:px-0">
           {errorMessage ? (

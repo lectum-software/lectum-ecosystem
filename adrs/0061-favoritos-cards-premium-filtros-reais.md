@@ -236,3 +236,30 @@ alongar os cards de psicologos favoritos para reduzir a sensacao de compressao v
 - `pnpm check`
 - Chrome/CDP autenticado em `/app/favorites` com desktop 1280px e mobile 390px, confirmando header branco,
   chips `Disponivel hoje`, `Verificados` e `Convenios` sem `box-shadow` e cards renderizados com maior altura.
+
+## Complemento 2026-06-18 - filtros fora do header branco
+
+### Contexto
+
+Produto pediu uma nova calibragem em `/app/favorites`: o header branco deveria ficar mais editorial e conter apenas `Sua curadoria`, título, descrição e ícone de coração, enquanto os filtros deveriam funcionar como uma linha independente logo abaixo.
+
+### Decisão
+
+- Manter `PsychologistRelationList` como componente da tela de Favoritos e preservar todos os contratos reais de filtros, paginação, remoção de favorito e WhatsApp.
+- Remover a linha de filtros de dentro do header branco e renderizá-la em um container próprio imediatamente abaixo do header.
+- Manter a rolagem horizontal dos filtros no mobile para evitar quebra de layout e preservar a densidade visual.
+- Refinar `FilterChip` sem adicionar dependências: fundo branco/azul muito claro, borda azul-clara sutil, tipografia menor, ícones alinhados e ausência explícita de sombra/glow.
+
+### Consequências
+
+- O header fica menos carregado e passa a comunicar apenas o contexto da curadoria de favoritos.
+- Os filtros continuam acessíveis e funcionais, mas com hierarquia de controles independentes.
+- A alteração é puramente visual/estrutural no frontend, sem mudanças de API, schema, migration, package ou tracking.
+
+### Validação
+
+- `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome/CDP autenticado em `/app/favorites` para confirmar header sem chips internos, filtros independentes abaixo do header, ausência de `box-shadow` nos chips e sem overflow horizontal no mobile.
