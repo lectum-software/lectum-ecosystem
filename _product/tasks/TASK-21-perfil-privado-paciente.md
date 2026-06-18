@@ -214,3 +214,11 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - O ajuste preserva os mesmos ícones, `hrefs`, divisórias, setas, espaçamentos, hover/foco e comportamento de navegação do componente `Row`.
 - Não houve alteração de backend, Prisma, contratos, persistência ou packages.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile 390x844 em `/app/profile`, confirmando a ordem dos `hrefs` para paciente e psicólogo sem overflow horizontal.
+
+## Ajuste complementar em 2026-06-18 - header secundário premium em Editar perfil
+
+- A tela `/app/profile/edit` passou a usar o componente compartilhado `AppPageHeader`, alinhando `Editar perfil` ao mesmo header premium de `Meus Analytics`, `Minhas Avaliações`, `Minha assinatura`, `Email e senha`, `Meus posts e comentários`, `Salvos` e `Comunidades seguidas`.
+- O header mantém botão de voltar à esquerda para `/app/profile`, título centralizado, fundo branco, borda suave, sombra discreta, altura e paddings consistentes.
+- O ajuste remove a variação anterior de link textual `Voltar` sem alterar formulário, validações, upload/remoção de avatar, endpoints, dados persistidos, Prisma ou packages.
+- ADR atualizado: `adrs/0119-header-secundario-premium-compartilhado.md`.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP em `/app/profile/edit` com usuário paciente temporário real removido do banco ao final, nos viewports mobile 390x844 e desktop 1024x768, confirmando centralização do título e ausência de overflow horizontal.

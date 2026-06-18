@@ -305,3 +305,12 @@ Validações executadas:
 - A alteração cobre o perfil de psicólogos porque o menu é renderizado pelo mesmo componente de Perfil usado por pacientes e profissionais.
 - Foram preservados tamanho, alinhamento, espaçamento, cores e estados visuais do item existente, sem mudanças de backend, Prisma, rotas, packages ou dados.
 - ADR criado: `adrs/0115-iconografia-explorar-comunidades-perfil.md`.
+
+## Ajuste complementar em 2026-06-18 - header secundário premium em Editar perfil profissional
+
+- A tela `/app/professional/profile/setup` passou a usar o componente compartilhado `AppPageHeader`, alinhando `Editar perfil` ao mesmo header premium de `Meus Analytics`, `Minhas Avaliações`, `Minha assinatura`, `Email e senha`, `Meus posts e comentários`, `Salvos` e `Comunidades seguidas`.
+- O header mantém botão de voltar à esquerda para `/app/profile`, título centralizado, fundo branco, borda suave, sombra discreta, altura e paddings consistentes.
+- A ação `Ver perfil público` foi preservada fora do header, em uma linha própria, para manter o header sem ações auxiliares e visualmente idêntico às demais telas padronizadas.
+- O ajuste não altera formulário, validações, upload/remoção de mídias, endpoints, dados persistidos, Prisma ou packages.
+- ADR atualizado: `adrs/0119-header-secundario-premium-compartilhado.md`.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP em `/app/professional/profile/setup` com usuário psicólogo temporário real removido do banco ao final, nos viewports mobile 390x844 e desktop 1024x768, confirmando centralização do título e ausência de overflow horizontal.

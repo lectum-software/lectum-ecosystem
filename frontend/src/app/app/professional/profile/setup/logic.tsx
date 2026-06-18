@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import {
-  ArrowLeft,
   ArrowRight,
   Award,
   BadgeCheck,
@@ -43,6 +42,7 @@ import { AccountDeleteSection } from "@/components/account/account-delete-sectio
 import { components } from "@/components/controllers";
 import { Container } from "@/components/controllers/container";
 import { describedBy, fieldId } from "@/components/controllers/utils";
+import { AppPageHeader } from "@/components/ui/app-page-header";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
@@ -1551,20 +1551,20 @@ export const ProfessionalProfileSetupLogic = () => {
   return (
     <PrivateTemplate showHeader={false}>
       <section className="mx-auto grid w-full max-w-[394px] gap-4 md:max-w-3xl">
-        <div className="flex items-center justify-between gap-3">
-          <Link
-            className="inline-flex items-center gap-2 text-sm font-semibold text-muted transition hover:text-foreground"
-            href={PROFESSIONAL_PROFILE_MENU_HREF}
-          >
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Voltar ao perfil
-          </Link>
+        <AppPageHeader
+          backHref={PROFESSIONAL_PROFILE_MENU_HREF}
+          backLabel="Voltar ao perfil"
+          title="Editar perfil"
+        />
+
+        <div className="flex justify-end">
           <Link
             aria-label="Ver perfil público"
-            className="grid h-9 w-9 place-items-center rounded-full text-primary transition hover:bg-primary-soft"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-primary/15 bg-surface px-4 text-sm font-extrabold text-primary shadow-[var(--lectum-shadow-soft)] transition hover:bg-primary-soft"
             href={publicProfileHref}
           >
-            <Eye className="h-5 w-5" aria-hidden="true" />
+            Ver perfil público
+            <Eye className="h-4 w-4" aria-hidden="true" />
           </Link>
         </div>
 
