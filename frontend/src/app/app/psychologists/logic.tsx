@@ -43,12 +43,16 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { useAccount } from "@/api/callers/account";
-import { useDirectoryPsychologists } from "@/api/callers/directory";
+import {
+  useDirectoryPsychologists,
+  useDirectoryPsychologistVideoWatch,
+} from "@/api/callers/directory";
 import { usePatient } from "@/api/callers/patient";
 import type {
   DirectoryCatalogItem,
   DirectoryPsychologist,
   DirectoryPsychologistsQuery,
+  DirectoryPsychologistVideoWatchPayload,
 } from "@/api/generator/types/directory";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
@@ -93,6 +97,11 @@ const PAGE_LIMIT = 20;
 const DEFAULT_NAV_BAR_HEIGHT = 72;
 const PSYCHOLOGISTS_BACKGROUND_VIDEO_SELECTOR = "video[data-psychologists-background='true']";
 const VIDEO_SINGLE_TAP_DELAY_MS = 260;
+const VIDEO_ANALYTICS_HEARTBEAT_MS = 5000;
+const PRESENTATION_VIDEO_RETENTION_BUCKETS = Array.from(
+  { length: 20 },
+  (_, index) => (index + 1) * 5,
+);
 
 const isPsychologistsScrollLockTarget = (target: EventTarget | null) => {
   const element =
@@ -118,6 +127,75 @@ const SWIPE_HINT_NUDGE_DURATION_MS = 760;
 type VideoProgressState = {
   currentTime: number;
   duration: number;
+};
+
+type FeedVideoAnalyticsState = {
+  completed: boolean;
+  lastPosition: number;
+  lastSentAt: number;
+  maxPosition: number;
+  milestones: {
+    milestone_25: boolean;
+    milestone_50: boolean;
+    milestone_75: boolean;
+    milestone_100: boolean;
+  };
+  profileId: string | null;
+  replayCount: number;
+  retentionBuckets: Set<number>;
+  sessionKey: string | null;
+  videoUrl: string | null;
+  watchedSeconds: Set<number>;
+};
+
+const createEmptyFeedVideoAnalyticsState = (): FeedVideoAnalyticsState => ({
+  completed: false,
+  lastPosition: 0,
+  lastSentAt: 0,
+  maxPosition: 0,
+  milestones: {
+    milestone_25: false,
+    milestone_50: false,
+    milestone_75: false,
+    milestone_100: false,
+  },
+  profileId: null,
+  replayCount: 0,
+  retentionBuckets: new Set(),
+  sessionKey: null,
+  videoUrl: null,
+  watchedSeconds: new Set(),
+});
+
+const hashVideoSessionStorageKey = (value: string) => {
+  let hash = 2166136261;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return (hash >>> 0).toString(36);
+};
+
+const createVideoSessionKey = (profileId: string, videoUrl: string) => {
+  const storageKey = `lectum:presentation-video-session:${profileId}:${hashVideoSessionStorageKey(videoUrl)}`;
+
+  try {
+    const stored = window.sessionStorage.getItem(storageKey);
+    if (stored) return stored;
+
+    const generated =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    window.sessionStorage.setItem(storageKey, generated);
+
+    return generated;
+  } catch {
+    return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  }
 };
 
 const formatRating = (ratingAvg: number, ratingCount: number) => {
@@ -828,6 +906,9 @@ export const PsychologistsLogic = () => {
     currentTime: 0,
     duration: 0,
   });
+  const feedVideoAnalyticsRef = useRef<FeedVideoAnalyticsState>(
+    createEmptyFeedVideoAnalyticsState(),
+  );
   const lastSearchParamsStringRef = useRef(searchParamsString);
   const lastActiveVideoResetKeyRef = useRef<string | null>(null);
   const tapTimeoutRef = useRef<number | null>(null);
@@ -916,6 +997,9 @@ export const PsychologistsLogic = () => {
   const activeVideoResetKey = featuredPsychologistId
     ? `${featuredPsychologistId}:${activeVideoSource ?? ""}`
     : null;
+  const { mutate: trackFeaturedVideoWatch } = useDirectoryPsychologistVideoWatch(
+    featuredPsychologistId ?? "",
+  );
 
   const handleFilterSearchChange = useCallback((value: string) => {
     setFilterModalSearchDraft(value);
@@ -1299,6 +1383,122 @@ export const PsychologistsLogic = () => {
     [applyVideoProgressRatio],
   );
 
+  const ensureFeedVideoAnalyticsState = useCallback((profileId: string, videoUrl: string) => {
+    const current = feedVideoAnalyticsRef.current;
+
+    if (current.profileId === profileId && current.videoUrl === videoUrl) {
+      if (!current.sessionKey) {
+        current.sessionKey = createVideoSessionKey(profileId, videoUrl);
+      }
+
+      return current;
+    }
+
+    const next = createEmptyFeedVideoAnalyticsState();
+    next.profileId = profileId;
+    next.videoUrl = videoUrl;
+    next.sessionKey = createVideoSessionKey(profileId, videoUrl);
+    feedVideoAnalyticsRef.current = next;
+
+    return next;
+  }, []);
+
+  const recordFeedVideoAnalyticsProgress = useCallback(
+    (video: HTMLVideoElement) => {
+      if (!featuredPsychologistId || !activeVideoSource) return null;
+
+      const state = ensureFeedVideoAnalyticsState(featuredPsychologistId, activeVideoSource);
+      const durationSeconds = Number.isFinite(video.duration)
+        ? Math.max(0, Math.round(video.duration))
+        : 0;
+      const currentTime = Math.max(0, video.currentTime || 0);
+
+      if (state.lastPosition > 2 && currentTime + 1 < state.lastPosition) {
+        state.replayCount += 1;
+      }
+
+      state.lastPosition = currentTime;
+      state.maxPosition = Math.max(state.maxPosition, currentTime);
+
+      if (durationSeconds > 0) {
+        const watchedSecond = Math.min(durationSeconds, Math.max(0, Math.floor(currentTime)));
+        state.watchedSeconds.add(watchedSecond);
+
+        const reachedPercent = Math.min(
+          100,
+          Math.max(0, (state.maxPosition / durationSeconds) * 100),
+        );
+
+        for (const bucket of PRESENTATION_VIDEO_RETENTION_BUCKETS) {
+          if (reachedPercent >= bucket) {
+            state.retentionBuckets.add(bucket);
+          }
+        }
+
+        state.milestones.milestone_25 ||= reachedPercent >= 25;
+        state.milestones.milestone_50 ||= reachedPercent >= 50;
+        state.milestones.milestone_75 ||= reachedPercent >= 75;
+        state.milestones.milestone_100 ||= reachedPercent >= 98;
+        state.completed ||= reachedPercent >= 98;
+      }
+
+      return state;
+    },
+    [activeVideoSource, ensureFeedVideoAnalyticsState, featuredPsychologistId],
+  );
+
+  const flushFeedVideoAnalytics = useCallback(
+    (video: HTMLVideoElement | null, options?: { completed?: boolean; force?: boolean }) => {
+      if (!video || !featuredPsychologistId || !activeVideoSource) return;
+      if (accountTipsUserId && accountTipsUserId === featuredPsychologistId) return;
+
+      const state = recordFeedVideoAnalyticsProgress(video);
+      if (!state?.sessionKey) return;
+
+      const now = Date.now();
+      if (!options?.force && now - state.lastSentAt < VIDEO_ANALYTICS_HEARTBEAT_MS) return;
+
+      if (options?.completed) {
+        state.completed = true;
+        state.milestones.milestone_100 = true;
+        for (const bucket of PRESENTATION_VIDEO_RETENTION_BUCKETS) {
+          state.retentionBuckets.add(bucket);
+        }
+      }
+
+      const durationSeconds = Number.isFinite(video.duration)
+        ? Math.max(0, Math.round(video.duration))
+        : 0;
+      const payload: DirectoryPsychologistVideoWatchPayload = {
+        session_key: state.sessionKey,
+        duration_seconds: durationSeconds,
+        watched_seconds: Math.max(0, state.watchedSeconds.size),
+        max_position_seconds: Math.max(0, Math.round(state.maxPosition)),
+        replay_count: state.replayCount,
+        completed: state.completed,
+        ...state.milestones,
+      };
+
+      if (
+        payload.watched_seconds === 0 &&
+        payload.max_position_seconds === 0 &&
+        !payload.completed
+      ) {
+        return;
+      }
+
+      state.lastSentAt = now;
+      trackFeaturedVideoWatch(payload);
+    },
+    [
+      accountTipsUserId,
+      activeVideoSource,
+      featuredPsychologistId,
+      recordFeedVideoAnalyticsProgress,
+      trackFeaturedVideoWatch,
+    ],
+  );
+
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -1382,6 +1582,7 @@ export const PsychologistsLogic = () => {
       isVideoProgressSeekingRef.current = false;
       wasVideoPlayingBeforeProgressScrubRef.current = false;
       videoSeekPreviewRatioRef.current = null;
+      feedVideoAnalyticsRef.current = createEmptyFeedVideoAnalyticsState();
     }
 
     lastActiveVideoResetKeyRef.current = activeVideoResetKey;
@@ -3493,11 +3694,14 @@ export const PsychologistsLogic = () => {
                               onLoadedMetadata={(event) => {
                                 if (isActiveSlide) syncActiveVideoProgress(event.currentTarget);
                               }}
-                              onPause={() => {
+                              onPause={(event) => {
                                 if (!isActiveSlide) return;
 
                                 setIsVideoPaused(true);
                                 syncActiveVideoProgress();
+                                flushFeedVideoAnalytics(event.currentTarget, {
+                                  force: true,
+                                });
                               }}
                               onPlay={() => {
                                 if (!isActiveSlide) return;
@@ -3511,7 +3715,10 @@ export const PsychologistsLogic = () => {
                                 setVideoPlaybackRate(event.currentTarget.playbackRate);
                               }}
                               onTimeUpdate={(event) => {
-                                if (isActiveSlide) syncActiveVideoProgress(event.currentTarget);
+                                if (!isActiveSlide) return;
+
+                                syncActiveVideoProgress(event.currentTarget);
+                                flushFeedVideoAnalytics(event.currentTarget);
                               }}
                               onVolumeChange={(event) => {
                                 if (!isActiveSlide) return;

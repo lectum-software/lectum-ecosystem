@@ -1362,3 +1362,15 @@ Validacoes do complemento:
 - `git diff --check`
 - Browser local via Chrome/CDP em `http://localhost:3000/app/psychologists`: clique na area de conteudo pausou o video ativo e o segundo clique retomou a reproducao.
 - Browser local via Chrome/CDP em `http://localhost:3000/app/psychologist/demo-psychologist-camila-rocha`: videos nativos mantiveram `controls=true`, sem botoes `Ampliar`, clique de conteudo alternou play/pause e a area inferior dos controles permaneceu livre.
+
+## Execucao complementar: algoritmo de ranqueamento por valor e aprendizado de video (2026-06-18)
+
+- Pedido do usuario: implementar o algoritmo do PDF local `C:\Users\tulio\Desktop\Lectum\Algoritmo Ranqueamento Psicologos.pdf` para ordenar a pagina de psicologos.
+- A listagem `GET /api/private/directory/psychologists` manteve os filtros reais, a obrigatoriedade de video ativo e o contrato de resposta existente, mas passou a ordenar candidatos por camada de verificacao e score.
+- A camada de verificacao segue a semantica publica atual da Lectum: assinatura profissional/cortesia ativa via `activeProfessionalEntitlementWhere()`; psicologos verificados aparecem antes dos nao verificados.
+- Dentro de cada camada, o score combina retencao do video, taxa de WhatsApp por visualizacoes qualificadas, favoritos, quantidade de avaliacoes, nota ponderada, completude e recencia/atividade, com pesos do PDF.
+- A troca de video recebeu janela de aprendizado: o video atual ganha peso progressivo ate 30 visualizacoes qualificadas, preservando parte do historico anterior para evitar queda brusca e incentivar testes.
+- O feed de psicologos tambem passou a registrar sessoes reais de reproducao do video ativo, usando o endpoint existente de analytics de video, para alimentar o componente de retencao do ranking sem criar eventos simulados.
+- A diversificacao usa randomizacao controlada deterministica por usuario/dia/psicologo, sem ultrapassar a prioridade de verificados.
+- Penalizacoes por repeticao de impressao/skip continuam pendentes de fonte persistida real de impressao do feed; nao foram simuladas.
+- ADR criado: `adrs/0125-ranking-psicologos-video-learning.md`.

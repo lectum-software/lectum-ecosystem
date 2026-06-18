@@ -232,3 +232,11 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - O gráfico de retenção na tela `/app/professional/analytics` ficou sincronizado com o player: ao reproduzir o vídeo, a linha do playhead avança; ao clicar na curva, nos marcos ou no destaque de maior abandono, o player busca o trecho correspondente.
 - A estratégia evita eventos por segundo e mantém no máximo 20 buckets por sessão, preservando performance e armazenamento previsível sem mockar dados.
 - Migration aplicada com `pnpm --dir backend db:migrate -- --name add_profile_video_retention_buckets`.
+
+## Execucao complementar: isolamento de versoes do video no analytics (2026-06-18)
+
+- Para apoiar testes de diferentes videos de apresentacao, as sessoes de analytics passaram a usar `session_key` por perfil e versao do video, derivada da URL atual do video.
+- A agregacao da secao `presentation_video` em `GET /api/private/psychologist/analytics` agora considera apenas sessoes cujo `video_url` corresponde ao video atual do perfil.
+- Sessoes de videos anteriores permanecem preservadas para historico interno e janela de aprendizado do ranking, mas nao contaminam as metricas exibidas do video atual.
+- Nao houve schema, migration, package novo, mock, seed ou evento simulado.
+- ADR criado: `adrs/0125-ranking-psicologos-video-learning.md`.

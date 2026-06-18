@@ -959,8 +959,19 @@ const ProfileMobileStickyHeader = ({
   );
 };
 
-const createVideoSessionKey = (profileId: string) => {
-  const storageKey = `lectum:presentation-video-session:${profileId}`;
+const hashVideoSessionStorageKey = (value: string) => {
+  let hash = 2166136261;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return (hash >>> 0).toString(36);
+};
+
+const createVideoSessionKey = (profileId: string, videoUrl: string) => {
+  const storageKey = `lectum:presentation-video-session:${profileId}:${hashVideoSessionStorageKey(videoUrl)}`;
 
   try {
     const stored = window.sessionStorage.getItem(storageKey);
@@ -1009,7 +1020,7 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
 
   const flushVideoAnalytics = useCallback(
     (video: HTMLVideoElement | null, completed = false, force = false) => {
-      if (!shouldTrack || !video) return;
+      if (!shouldTrack || !video || !videoSrc) return;
 
       const now = Date.now();
       if (!force && now - lastSentAtRef.current < 5000) return;
@@ -1022,7 +1033,7 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
 
       if (watchedSeconds === 0 && maxPositionSeconds === 0 && !completed) return;
 
-      sessionKeyRef.current ??= createVideoSessionKey(profile.id);
+      sessionKeyRef.current ??= createVideoSessionKey(profile.id, videoSrc);
 
       if (completed) {
         completedRef.current = true;
@@ -1042,7 +1053,7 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
       lastSentAtRef.current = now;
       trackVideoWatch(body);
     },
-    [profile.id, shouldTrack, trackVideoWatch],
+    [profile.id, shouldTrack, trackVideoWatch, videoSrc],
   );
 
   const handleVideoReady = useCallback(

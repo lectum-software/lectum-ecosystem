@@ -228,6 +228,7 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
             ],
           },
           select: {
+            video_url: true,
             watched_seconds: true,
             duration_seconds: true,
             max_position_seconds: true,
@@ -242,6 +243,9 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
           },
         }),
       ]);
+    const currentPresentationVideoSessions = profile?.video_url
+      ? presentationVideoSessions.filter((session) => session.video_url === profile.video_url)
+      : [];
 
     const postUpvotes = postsAggregate._sum.upvotes_count || 0;
     const postReplies = postsAggregate._sum.replies_count || 0;
@@ -255,12 +259,12 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
       post_upvotes: postUpvotes,
       post_replies: postReplies,
     };
-    const videoViews = presentationVideoSessions.length;
-    const totalWatchedSeconds = presentationVideoSessions.reduce(
+    const videoViews = currentPresentationVideoSessions.length;
+    const totalWatchedSeconds = currentPresentationVideoSessions.reduce(
       (sum, session) => sum + session.watched_seconds,
       0,
     );
-    const sessionRetentionBuckets = presentationVideoSessions.map((session) => {
+    const sessionRetentionBuckets = currentPresentationVideoSessions.map((session) => {
       const persistedBuckets = normalizeRetentionBuckets(session.retention_buckets);
       const derivedBuckets = deriveRetentionBucketsFromPosition(
         session.max_position_seconds,
@@ -277,16 +281,16 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
       return new Set([...persistedBuckets, ...derivedBuckets, ...legacyMilestones]);
     });
     const completedViews = sessionRetentionBuckets.filter((buckets) => buckets.has(100)).length;
-    const replayedViews = presentationVideoSessions.filter(
+    const replayedViews = currentPresentationVideoSessions.filter(
       (session) => session.replay_count > 0,
     ).length;
     const durationSeconds =
-      presentationVideoSessions.reduce(
+      currentPresentationVideoSessions.reduce(
         (max, session) => Math.max(max, session.duration_seconds),
         0,
       ) || null;
     const latestVideoEventAt =
-      presentationVideoSessions
+      currentPresentationVideoSessions
         .map((session) => session.last_event_at)
         .sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
     const retentionPoints: PsychologistAnalyticsPresentationVideoRetentionPoint[] =
