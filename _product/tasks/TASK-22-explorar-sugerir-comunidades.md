@@ -183,3 +183,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nao houve alteracao de backend, Prisma, migrations, endpoints, payloads, dados, ordenacao ou packages.
 - ADR atualizado: `adrs/0107-explorar-comunidades-conteudo-centralizado.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile 390x844 validando `documentWidth=390`, ausencia de overflow horizontal, busca sem borda inferior e primeiro card do carrossel inteiramente dentro do viewport.
+
+## Execucao complementar: limpeza de profundidade visual em Explorar Comunidades (2026-06-17)
+
+- Pedido do usuario: remover sombras excessivas de `/app/community`, especialmente nos cards de `Tendencia Hoje`, cards de `Mais Populares` e containers auxiliares.
+- Fonte visual auditavel: `_product/proto/Explorar Comunidades.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao.
+- Os cards de comunidades preservam bordas arredondadas, overlays de imagem, contraste e bordas sutis, mas deixam de usar `box-shadow` e hover de flutuacao.
+- Badges sobre as imagens passaram a usar borda sutil em vez de `ring`, evitando que o navegador compute esses contornos como sombra.
+- O botao de retorno, a seta do carrossel, o loading e o bloco `Sugira uma Comunidade` tambem tiveram sombras removidas para manter a pagina integrada ao fundo branco.
+- Nao houve alteracao de backend, Prisma, migrations, endpoints, payloads, dados, ordenacao ou packages.
+- ADR atualizado: `adrs/0107-explorar-comunidades-conteudo-centralizado.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check --write src/app/app/community/logic.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile/desktop validando `box-shadow` sem profundidade real nos elementos ajustados e ausencia de overflow horizontal.

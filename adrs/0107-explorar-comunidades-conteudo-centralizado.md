@@ -75,3 +75,18 @@ Validacao complementar:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Chrome/CDP mobile 390x844 em `/app/community`: `documentElement.scrollWidth=390`, `body.scrollWidth=390`, `searchBorderBottom=0px`, carrossel com `clientWidth=353`, `scrollWidth=887` e primeiro card totalmente dentro do viewport.
+
+## Atualizacao 2026-06-17 - limpeza de profundidade visual
+
+- Os cards de `Tendencia Hoje` e `Mais Populares` deixam de usar sombras e hover de flutuacao; a hierarquia visual passa a vir de imagem de capa, overlay, contraste, tipografia e espacamento.
+- Badges sobre as imagens usam `border` translucida em vez de `ring`, mantendo contorno sutil sem gerar `box-shadow` computado.
+- O botao de voltar, a seta desktop do carrossel, o estado de loading e o bloco `Sugira uma Comunidade` tambem foram alinhados ao mesmo criterio: borda/radius e contraste, sem efeito de cartao flutuante.
+- A decisao permanece exclusivamente visual/frontend e nao altera listagem, filtros, ordenacao, APIs, dados, persistencia, Prisma ou packages.
+
+Validacao complementar:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/community/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome/CDP em `/app/community` com viewport mobile 390x844 e desktop 1440x900 validando ausencia de overflow horizontal e `box-shadow` sem profundidade real nos cards, containers auxiliares, botao de voltar e seta do carrossel.
