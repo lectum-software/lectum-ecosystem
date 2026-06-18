@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import {
-  ArrowRight,
   Award,
   BadgeCheck,
   BookOpen,
@@ -1680,24 +1679,6 @@ export const ProfessionalProfileSetupLogic = () => {
             id="free-profile-form"
             onSubmit={submit}
           >
-            {profile.data.plan.is_free ? (
-              <Link
-                className="flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary-soft p-4 text-primary"
-                href="/app/professional/billing/plans"
-              >
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-primary shadow-sm">
-                  <BadgeCheck className="h-5 w-5" aria-hidden="true" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-bold">Upgrade para o Plano Profissional</span>
-                  <span className="mt-1 block text-xs leading-5">
-                    Aumente limites, inclua mais recursos e ganhe visibilidade.
-                  </span>
-                </span>
-                <ArrowRight className="h-5 w-5 shrink-0" aria-hidden="true" />
-              </Link>
-            ) : null}
-
             <SectionCard icon={UserRound} title="Informações básicas">
               <div className="grid gap-4">
                 {renderFields([

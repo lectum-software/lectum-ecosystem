@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ArrowRight,
   BadgeCheck,
   BarChart3,
   Bookmark,
@@ -114,6 +115,39 @@ const Section = ({ rows, title }: { rows: ProfileRow[]; title: string }) => {
   );
 };
 
+const ProfessionalUpgradeCard = () => (
+  <Link
+    className="group relative isolate overflow-hidden rounded-[var(--lectum-card-radius)] border border-primary/15 bg-primary-soft/85 p-4 text-primary shadow-[var(--lectum-shadow-soft)] transition hover:-translate-y-0.5 hover:border-primary/25 hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+    href="/app/professional/billing/subscription"
+  >
+    <span
+      aria-hidden="true"
+      className="-top-10 -right-8 absolute h-24 w-24 rounded-full bg-primary/10 blur-2xl transition group-hover:bg-primary/15"
+    />
+    <span
+      aria-hidden="true"
+      className="-bottom-12 -left-10 absolute h-28 w-28 rounded-full bg-white/70 blur-2xl dark:bg-white/5"
+    />
+    <span className="relative flex min-w-0 items-center gap-3">
+      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-surface/95 text-primary shadow-sm ring-1 ring-primary/10">
+        <BadgeCheck className="h-5 w-5" aria-hidden="true" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-extrabold leading-5 tracking-[-0.01em] text-foreground">
+          Upgrade para o Plano Profissional
+        </span>
+        <span className="mt-1 block text-xs leading-5 text-muted">
+          Receba avaliações, aumente sua visibilidade nas buscas e desbloqueie recursos exclusivos
+          para fortalecer sua presença na Lectum.
+        </span>
+      </span>
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface/90 text-primary shadow-sm transition group-hover:translate-x-0.5 group-hover:bg-white dark:bg-surface">
+        <ArrowRight className="h-4 w-4" aria-hidden="true" />
+      </span>
+    </span>
+  </Link>
+);
+
 export const ProfileLogic = () => {
   const user = useAppSelector((state) => state.user);
   const { out } = useSignOut();
@@ -144,6 +178,9 @@ export const ProfileLogic = () => {
     user.psychologist_profile?.subscriptions?.some(
       (subscription) => subscription.status === "ativa" && subscription.plan?.slug !== "gratuito",
     ),
+  );
+  const showProfessionalUpgradeCard = Boolean(
+    isPsychologist && (psychologistProfile.profile.data?.plan.is_free ?? !hasVerifiedBadge),
   );
   const subtitle = isPsychologist
     ? `${getPsychologistGenderTitle(profileGender)}${formattedCrp ? ` • ${formattedCrp}` : ""}`
@@ -224,6 +261,8 @@ export const ProfileLogic = () => {
             ) : null}
           </div>
         </div>
+
+        {showProfessionalUpgradeCard ? <ProfessionalUpgradeCard /> : null}
 
         <Section rows={accountRows} title="Conta" />
 
