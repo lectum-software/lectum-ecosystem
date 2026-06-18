@@ -366,7 +366,6 @@ const PresentationVideoMetricCard = ({
       >
         {formatVideoMetricValue(metric)}
       </p>
-      <p className="mt-2 text-xs leading-5 text-muted">{metric.description}</p>
     </article>
   );
 };
@@ -485,7 +484,7 @@ const RetentionChart = ({
       <button
         aria-label="Selecionar trecho no gráfico de retenção"
         className={cn(
-          "w-full overflow-hidden rounded-2xl bg-surface p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
+          "relative w-full overflow-hidden rounded-2xl bg-surface p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
           canSeek && "cursor-pointer hover:bg-primary-soft/20",
           locked && "blur-[4px]",
         )}
@@ -556,25 +555,20 @@ const RetentionChart = ({
               <circle cx={currentPoint.x} cy="120" fill="rgb(46, 143, 230)" r="4" />
             </>
           ) : null}
-          <rect fill="white" height="18" opacity="0.94" rx="8" width="42" x="254" y="2" />
-          <rect fill="white" height="18" opacity="0.94" rx="8" width="42" x="254" y="54" />
-          <text fill="currentColor" fontSize="10" fontWeight="700" x="261" y="15">
-            100%
-          </text>
-          <text fill="currentColor" fontSize="10" fontWeight="700" x="266" y="67">
-            50%
-          </text>
         </svg>
+        <span className="pointer-events-none absolute right-4 top-3 rounded-full bg-surface/95 px-1.5 py-0.5 text-[0.65rem] font-extrabold leading-none text-subtle shadow-sm">
+          100%
+        </span>
+        <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-surface/95 px-1.5 py-0.5 text-[0.65rem] font-extrabold leading-none text-subtle shadow-sm">
+          50%
+        </span>
       </button>
 
       <div className="mt-3 grid grid-cols-4 gap-2">
         {summaryPoints.map((point) => (
-          <button
-            className="rounded-2xl border border-border bg-surface px-2 py-2 text-center transition hover:border-primary/25 hover:bg-primary-soft/30 disabled:hover:border-border disabled:hover:bg-surface"
-            disabled={!canSeek}
+          <div
+            className="rounded-2xl border border-border bg-surface px-2 py-2 text-center"
             key={point.milestone}
-            onClick={() => handleSummarySeek(point.milestone)}
-            type="button"
           >
             <p className="text-[0.68rem] font-black text-subtle">{point.milestone}%</p>
             <p
@@ -585,7 +579,7 @@ const RetentionChart = ({
             >
               {point.rate}%
             </p>
-          </button>
+          </div>
         ))}
       </div>
 
@@ -604,12 +598,6 @@ const RetentionChart = ({
             <span className="mt-1 block font-extrabold text-primary">Ver trecho</span>
           ) : null}
         </button>
-      ) : null}
-
-      {canSeek ? (
-        <p className="mt-3 text-xs leading-5 text-muted">
-          Clique na curva ou nos marcos para mover o player para o trecho correspondente.
-        </p>
       ) : null}
     </div>
   );
