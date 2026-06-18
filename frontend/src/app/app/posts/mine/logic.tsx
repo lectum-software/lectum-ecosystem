@@ -441,14 +441,21 @@ export const MyPostsLogic = () => {
                   <ReplyItemCard item={item} key={item.id} onShare={sharePost} />
                 ) : (
                   <CommunityPostCard
+                    actionBarShowUpvoteText={false}
+                    actionBarVoteLabel="Marcar post como útil"
+                    actionBarVotePresentation="inline"
+                    communityContextTone="muted"
+                    communityHeaderIncludesTime
                     headerExtra={
                       item.post.highlighted_professional_reply ? (
                         <ProfessionalAnsweredBadge className="ml-auto" />
                       ) : undefined
                     }
+                    interactiveActions
                     key={item.id}
                     onShare={sharePost}
                     post={item.post}
+                    showAuthorHeader={false}
                   />
                 ),
               )}

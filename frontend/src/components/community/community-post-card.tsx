@@ -26,7 +26,11 @@ import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 type CommunityPostCardProps = {
+  actionBarShowUpvoteText?: boolean;
+  actionBarVoteLabel?: string;
+  actionBarVotePresentation?: "cluster" | "inline";
   communityContextTone?: "default" | "muted";
+  communityHeaderIncludesTime?: boolean;
   footerExtra?: ReactNode;
   headerExtra?: ReactNode;
   interactiveActions?: boolean;
@@ -40,6 +44,7 @@ type CommunityPostCardProps = {
     label?: string;
     onClick?: MouseEventHandler<HTMLButtonElement>;
   };
+  showAuthorHeader?: boolean;
   showCommunityHeader?: boolean;
   showHighlightedProfessionalReply?: boolean;
   statusBadge?: ReactNode;
@@ -452,7 +457,11 @@ const ProfessionalReplyPreview = ({
 };
 
 export const CommunityPostCard = ({
+  actionBarShowUpvoteText = true,
+  actionBarVoteLabel = "Marcar como útil",
+  actionBarVotePresentation = "cluster",
   communityContextTone = "default",
+  communityHeaderIncludesTime = false,
   footerExtra,
   headerExtra,
   interactiveActions = false,
@@ -460,6 +469,7 @@ export const CommunityPostCard = ({
   post,
   profilePublicationMode = false,
   saveActionOverride,
+  showAuthorHeader = true,
   showCommunityHeader = true,
   showHighlightedProfessionalReply = true,
   statusBadge,
@@ -625,6 +635,14 @@ export const CommunityPostCard = ({
           >
             {post.community.name}
           </Link>
+          {communityHeaderIncludesTime ? (
+            <>
+              <span className="shrink-0 text-muted/70" aria-hidden="true">
+                &bull;
+              </span>
+              <span className="shrink-0 text-muted">{formatRelativeTime(displayCreatedAt)}</span>
+            </>
+          ) : null}
           {statusBadge}
           {headerExtra}
         </div>
@@ -632,62 +650,67 @@ export const CommunityPostCard = ({
         <div className="mb-3 flex justify-end">{statusBadge}</div>
       )}
 
-      <div className="mb-3 flex items-start gap-3">
-        <AuthorAvatar
-          anonymous={isAnonymousPatient}
-          avatar={displayAuthor.avatar}
-          href={psychologistProfileHref}
-          name={displayAuthor.name}
-        />
-        <div className="grid min-w-0 flex-1 gap-1">
-          <div
-            className={cn(
-              "flex min-w-0 items-center gap-x-2 gap-y-1",
-              profilePublicationMode ? "flex-nowrap overflow-hidden" : "flex-wrap",
-            )}
-          >
-            <div className="flex min-w-0 items-center gap-[5px]">
-              {psychologistProfileHref ? (
-                <Link
-                  className="min-w-0 truncate text-sm font-black text-foreground no-underline transition hover:text-foreground hover:no-underline"
-                  href={psychologistProfileHref}
-                >
-                  {displayAuthor.name}
-                </Link>
-              ) : (
-                <h2 className="min-w-0 truncate text-sm font-black text-foreground">
-                  {displayAuthor.name}
-                </h2>
+      {showAuthorHeader ? (
+        <div className="mb-3 flex items-start gap-3">
+          <AuthorAvatar
+            anonymous={isAnonymousPatient}
+            avatar={displayAuthor.avatar}
+            href={psychologistProfileHref}
+            name={displayAuthor.name}
+          />
+          <div className="grid min-w-0 flex-1 gap-1">
+            <div
+              className={cn(
+                "flex min-w-0 items-center gap-x-2 gap-y-1",
+                profilePublicationMode ? "flex-nowrap overflow-hidden" : "flex-wrap",
               )}
-              {displayAuthor.verified ? (
-                profilePublicationMode ? (
-                  <VerifiedBadgeIcon className="h-4 w-4 shrink-0" aria-label="Perfil verificado" />
-                ) : (
-                  <BadgeCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-                )
-              ) : null}
-            </div>
-            <MentorBadge
-              badge={displayFeaturedBadge}
-              className={profilePublicationMode ? "max-w-[124px]" : undefined}
-              href={psychologistProfileHref}
-            />
-          </div>
-          {psychologistProfileHref ? (
-            <Link
-              className="w-fit text-[11px] font-semibold text-muted no-underline transition hover:text-muted hover:no-underline"
-              href={psychologistProfileHref}
             >
-              {displayAuthor.type_label} <span aria-hidden="true">&bull;</span>{" "}
-              {formatRelativeTime(displayCreatedAt)}
-            </Link>
-          ) : (
-            <p className="text-[11px] font-semibold text-muted">
-              {formatRelativeTime(displayCreatedAt)}
-            </p>
-          )}
+              <div className="flex min-w-0 items-center gap-[5px]">
+                {psychologistProfileHref ? (
+                  <Link
+                    className="min-w-0 truncate text-sm font-black text-foreground no-underline transition hover:text-foreground hover:no-underline"
+                    href={psychologistProfileHref}
+                  >
+                    {displayAuthor.name}
+                  </Link>
+                ) : (
+                  <h2 className="min-w-0 truncate text-sm font-black text-foreground">
+                    {displayAuthor.name}
+                  </h2>
+                )}
+                {displayAuthor.verified ? (
+                  profilePublicationMode ? (
+                    <VerifiedBadgeIcon
+                      className="h-4 w-4 shrink-0"
+                      aria-label="Perfil verificado"
+                    />
+                  ) : (
+                    <BadgeCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                  )
+                ) : null}
+              </div>
+              <MentorBadge
+                badge={displayFeaturedBadge}
+                className={profilePublicationMode ? "max-w-[124px]" : undefined}
+                href={psychologistProfileHref}
+              />
+            </div>
+            {psychologistProfileHref ? (
+              <Link
+                className="w-fit text-[11px] font-semibold text-muted no-underline transition hover:text-muted hover:no-underline"
+                href={psychologistProfileHref}
+              >
+                {displayAuthor.type_label} <span aria-hidden="true">&bull;</span>{" "}
+                {formatRelativeTime(displayCreatedAt)}
+              </Link>
+            ) : (
+              <p className="text-[11px] font-semibold text-muted">
+                {formatRelativeTime(displayCreatedAt)}
+              </p>
+            )}
+          </div>
         </div>
-      </div>
+      ) : null}
 
       <div className="grid gap-2">
         {displayTitle ? (
@@ -759,7 +782,10 @@ export const CommunityPostCard = ({
           label: displayTitle ? `Compartilhar ${displayTitle}` : "Compartilhar publicação",
           onClick: () => onShare(post),
         }}
+        showUpvoteText={actionBarShowUpvoteText}
         upvotesCount={voteSnapshot.upvotes}
+        voteLabel={actionBarVoteLabel}
+        votePresentation={actionBarVotePresentation}
       />
     </article>
   );

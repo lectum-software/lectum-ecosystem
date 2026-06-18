@@ -282,3 +282,19 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm check`
 - Browser local via Chrome/CDP em `/app/posts/saved` mobile `390x844`, validando ausencia de `Salvo em`, contexto `Postado em`/`Respondido em`, ausencia de bloco de referencia azul, contador de salvamentos na barra padrao e ausencia de overflow horizontal.
 - ADR atualizado: `adrs/0072-meus-posts-e-posts-salvos.md`.
+
+## Ajuste complementar em 2026-06-17 - posts alinhados aos cards de comentarios
+
+- Na aba "Posts" de `/app/posts/mine`, os cards deixam de exibir avatar, nome e metadados do autor, mantendo apenas a linha de contexto `Postado em [comunidade] � [tempo]` no topo.
+- A linha `Postado em` passa a usar o mesmo tom discreto dos cards de comentarios, com comunidade em destaque leve e tempo na mesma linha.
+- O `CommunityPostCard` recebeu props opt-in para ocultar o header de autor, mostrar tempo na linha de comunidade e trocar a `CommunityActionBar` para a apresentacao inline usada em comentarios.
+- A aba "Posts" passa a usar a mesma barra padrao da aba "Comentarios": upvote/downvote inline, comentarios, salvamentos e compartilhar, sem alterar endpoints, schema Prisma ou ordenacao.
+- Referencias visuais seguem as imagens locais da TASK-28; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local via Chrome/CDP em `/app/posts/mine` mobile `390x844`, validando card de post sem avatar/nome, contexto com tempo na mesma linha e barra de acoes no padrao de comentarios.
+- ADR atualizado: `adrs/0072-meus-posts-e-posts-salvos.md`.

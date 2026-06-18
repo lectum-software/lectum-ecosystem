@@ -275,3 +275,29 @@ A tela `/app/posts/saved` ainda mantinha a data de salvamento no header dos card
 - `pnpm --dir backend build`
 - `pnpm check`
 - Browser local via Chrome/CDP em `/app/posts/saved` mobile confirmou cards sem `Salvo em`, sem contexto azul e sem overflow horizontal.
+
+## Complemento 2026-06-17: Cards de posts alinhados aos comentarios em Meus posts
+
+### Contexto
+
+A aba "Posts" em `/app/posts/mine` ainda reutilizava o card completo do feed, com avatar, nome do autor e metadados em uma segunda linha. Como a tela e uma area de acompanhamento do proprio usuario, essa repeticao deixava a aba visualmente diferente da aba "Comentarios" e aumentava a altura dos cards sem acrescentar contexto util.
+
+### Decisao
+
+- Adicionar props opt-in ao `CommunityPostCard` para ocultar o header de autor, incluir o tempo de publicacao na linha de comunidade e escolher a apresentacao da `CommunityActionBar`.
+- Usar essas props apenas em `/app/posts/mine` na aba "Posts", preservando o comportamento padrao do feed, comunidade, perfil e salvos.
+- Manter a linha de contexto como `Postado em [comunidade] • [tempo]`, com label em cinza discreto e comunidade em destaque leve, seguindo o tratamento visual da linha `Comentado em`.
+- Padronizar a barra de acoes dos posts da tela com a apresentacao inline ja usada nos comentarios: upvote, downvote, comentarios, salvamentos e compartilhar.
+
+### Consequencias
+
+- Posts e comentarios em `/app/posts/mine` passam a parecer da mesma familia visual, diferenciando apenas o conteudo.
+- O componente compartilhado continua com defaults retrocompativeis, sem impacto visual em outros contextos.
+- Nao houve alteracao de API, schema Prisma, persistencia, ordenacao ou pacote.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local via Chrome/CDP em `/app/posts/mine` mobile confirmou ausencia de avatar/nome nos posts, contexto com tempo na linha superior e ausencia de overflow horizontal.
