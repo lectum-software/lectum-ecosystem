@@ -18,6 +18,7 @@ import {
   PencilLine,
   Plus,
   Trash2,
+  TriangleAlert,
   UploadCloud,
   UserRound,
   X,
@@ -327,6 +328,23 @@ const SectionCard = ({
     {description ? <p className="mt-2 text-xs leading-5 text-muted">{description}</p> : null}
     <div className="mt-5">{children}</div>
   </section>
+);
+
+const ProfileInactiveBanner = () => (
+  <div className="rounded-[var(--lectum-card-radius)] border border-danger/25 bg-danger/10 px-4 py-4 shadow-[0_14px_34px_rgb(239_68_68_/_8%)]">
+    <div className="flex items-start gap-3">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/80 text-danger shadow-sm">
+        <TriangleAlert className="h-5 w-5" aria-hidden="true" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-sm font-extrabold tracking-[-0.01em] text-danger">Perfil não ativo</p>
+        <p className="mt-1 text-sm leading-6 text-foreground/80">
+          Seu perfil ainda não está sendo exibido publicamente porque existem informações
+          obrigatórias pendentes.
+        </p>
+      </div>
+    </div>
+  </div>
 );
 
 const CatalogPicker = ({
@@ -924,6 +942,9 @@ export const ProfessionalProfileSetupLogic = () => {
   const videoSrc = resolvePublicMediaUrl(profile.data?.profile.video_url);
   const videoCoverSrc = resolvePublicMediaUrl(profile.data?.profile.video_cover_url);
   const canUploadVideo = Boolean(profile.data?.plan.can_upload_video);
+  const showInactiveProfileBanner = Boolean(
+    profile.data?.activation && !profile.data.activation.active,
+  );
   const isSavingMedia =
     uploadAvatar.isPending ||
     deleteAvatar.isPending ||
@@ -1564,6 +1585,8 @@ export const ProfessionalProfileSetupLogic = () => {
           rightActionLabel="Visualizar perfil público"
           title="Editar perfil"
         />
+
+        {showInactiveProfileBanner ? <ProfileInactiveBanner /> : null}
 
         {renderProfileImagesPreview()}
 

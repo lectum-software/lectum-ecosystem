@@ -190,10 +190,52 @@ const normalizeStringArray = (value: unknown): string[] => {
   return value.filter((item): item is string => typeof item === "string");
 };
 
+const normalizeLanguages = (value: unknown): string[] => {
+  const languages = normalizeStringArray(value);
+
+  return languages.length > 0 ? languages : ["Português"];
+};
+
 const trimToNull = (value: unknown) => {
   if (typeof value !== "string") return null;
 
   return value.trim() || null;
+};
+
+const hasRelationItems = (value?: unknown[] | null) => Array.isArray(value) && value.length > 0;
+
+const hasPublishedProfileRequirements = (
+  item: {
+    name?: string | null;
+    psychologist_approaches?: unknown[] | null;
+    psychologist_services?: unknown[] | null;
+    psychologist_specialties?: unknown[] | null;
+  },
+  profile: {
+    cpf?: string | null;
+    crp?: string | null;
+    gender?: string | null;
+    modality?: string | null;
+    professional_address_city?: string | null;
+    professional_address_state?: string | null;
+    target_audience?: unknown;
+    video_url?: string | null;
+  },
+) => {
+  return Boolean(
+    trimToNull(item.name) &&
+      trimToNull(profile.video_url) &&
+      trimToNull(profile.modality) &&
+      trimToNull(profile.gender) &&
+      trimToNull(profile.cpf) &&
+      trimToNull(profile.crp) &&
+      trimToNull(profile.professional_address_city) &&
+      trimToNull(profile.professional_address_state) &&
+      normalizeStringArray(profile.target_audience).length > 0 &&
+      hasRelationItems(item.psychologist_specialties) &&
+      hasRelationItems(item.psychologist_services) &&
+      hasRelationItems(item.psychologist_approaches),
+  );
 };
 
 const hasAcademicContent = (item: DirectoryPsychologistAcademicFormation) => {
@@ -565,6 +607,33 @@ const publishedProfileWhere = (psychologistId: string): Prisma.userWhereInput =>
   role: "psicologo",
   active: true,
   deleted: false,
+  psychologist_specialties: {
+    some: {
+      deleted: false,
+      specialty: {
+        active: true,
+        deleted: false,
+      },
+    },
+  },
+  psychologist_services: {
+    some: {
+      deleted: false,
+      service: {
+        active: true,
+        deleted: false,
+      },
+    },
+  },
+  psychologist_approaches: {
+    some: {
+      deleted: false,
+      approach: {
+        active: true,
+        deleted: false,
+      },
+    },
+  },
   psychologist_profile: {
     is: {
       published: true,
@@ -572,9 +641,48 @@ const publishedProfileWhere = (psychologistId: string): Prisma.userWhereInput =>
       video_url: {
         not: null,
       },
+      modality: {
+        not: null,
+      },
+      gender: {
+        not: null,
+      },
+      cpf: {
+        not: null,
+      },
+      crp: {
+        not: null,
+      },
+      professional_address_city: {
+        not: null,
+      },
+      professional_address_state: {
+        not: null,
+      },
+      target_audience: {
+        not: [],
+      },
       NOT: [
         {
           video_url: "",
+        },
+        {
+          modality: "",
+        },
+        {
+          gender: "",
+        },
+        {
+          cpf: "",
+        },
+        {
+          crp: "",
+        },
+        {
+          professional_address_city: "",
+        },
+        {
+          professional_address_state: "",
         },
       ],
     },
@@ -703,14 +811,44 @@ const getProfileTopMentorCommunities = async (
 
 export class ProfileRepository implements IProfileRepository {
   async hasPublishedProfile(psychologistId: string): Promise<boolean> {
-    const profile = await prisma.user.findFirst({
+    const item = await prisma.user.findFirst({
       where: publishedProfileWhere(psychologistId),
       select: {
-        id: true,
+        name: true,
+        psychologist_profile: {
+          select: {
+            video_url: true,
+            modality: true,
+            gender: true,
+            cpf: true,
+            crp: true,
+            target_audience: true,
+            professional_address_city: true,
+            professional_address_state: true,
+          },
+        },
+        psychologist_specialties: {
+          where: { deleted: false, specialty: { active: true, deleted: false } },
+          select: { id: true },
+          take: 1,
+        },
+        psychologist_services: {
+          where: { deleted: false, service: { active: true, deleted: false } },
+          select: { id: true },
+          take: 1,
+        },
+        psychologist_approaches: {
+          where: { deleted: false, approach: { active: true, deleted: false } },
+          select: { id: true },
+          take: 1,
+        },
       },
     });
 
-    return Boolean(profile);
+    return Boolean(
+      item?.psychologist_profile &&
+        hasPublishedProfileRequirements(item, item.psychologist_profile),
+    );
   }
 
   async show(data: IProfileShowDTO): Promise<DirectoryPsychologistProfile | null> {
@@ -828,6 +966,7 @@ export class ProfileRepository implements IProfileRepository {
 
     const profile = item?.psychologist_profile;
     if (!item || !profile) return null;
+    if (!hasPublishedProfileRequirements(item, profile)) return null;
 
     return {
       id: item.id,
@@ -841,7 +980,7 @@ export class ProfileRepository implements IProfileRepository {
       crp: profile.crp,
       gender: profile.gender,
       modality: profile.modality,
-      languages: normalizeStringArray(profile.languages),
+      languages: normalizeLanguages(profile.languages),
       target_audience: normalizeStringArray(profile.target_audience),
       address_city: profile.professional_address_city,
       address_state: profile.professional_address_state,

@@ -19,6 +19,7 @@ import {
   Share2,
   ShieldCheck,
   Star,
+  TriangleAlert,
   UsersRound,
 } from "lucide-react";
 import Image from "next/image";
@@ -40,6 +41,7 @@ import {
   useDirectoryPsychologistReviews,
 } from "@/api/callers/directory";
 import { usePatient } from "@/api/callers/patient";
+import { usePsychologistFreeProfile } from "@/api/callers/psychologist-free-profile";
 import type {
   DirectoryCatalogItem,
   DirectoryPsychologistParticipationSummary,
@@ -49,6 +51,7 @@ import type {
   DirectoryPsychologistTopMentorCommunity,
   DirectoryReviewSummary,
 } from "@/api/generator/types/directory";
+import type { FreeProfessionalProfileActivationPendingField } from "@/api/generator/types/free-profile";
 import type { PostListPost } from "@/api/generator/types/posts";
 import { CommunityPostCard } from "@/components/community/community-post-card";
 import { MentorBadge } from "@/components/community/mentor-badge";
@@ -302,6 +305,66 @@ const resolveErrorMessage = (error: unknown, fallback: string) => {
   }
 
   return rawMessage || fallback;
+};
+
+const InactivePublicProfileState = ({
+  pendingFields,
+}: {
+  pendingFields: FreeProfessionalProfileActivationPendingField[];
+}) => {
+  const visiblePendingFields =
+    pendingFields.length > 0
+      ? pendingFields
+      : [{ key: "profile_visibility", label: "Visibilidade pública" }];
+
+  return (
+    <div className="grid min-h-[calc(100vh-160px)] place-items-center bg-[#F5F7FA] px-3 py-8 dark:bg-background">
+      <article className="w-full max-w-[430px] rounded-[30px] border border-[#E4EBF3] bg-white p-5 text-center shadow-[0_20px_50px_rgba(15,23,42,0.08)] dark:border-border dark:bg-surface sm:p-6">
+        <div className="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-danger/10 text-danger shadow-[0_14px_34px_rgba(239,68,68,0.10)]">
+          <TriangleAlert className="h-7 w-7" aria-hidden="true" />
+        </div>
+        <p className="mt-5 text-[11px] font-extrabold uppercase tracking-[0.18em] text-primary">
+          Ativação do perfil
+        </p>
+        <h1 className="mt-2 text-2xl font-extrabold tracking-[-0.035em] text-[#0F172A] dark:text-foreground">
+          Seu perfil ainda não está ativo
+        </h1>
+        <p className="mx-auto mt-3 max-w-[350px] text-sm leading-6 text-[#536176] dark:text-muted">
+          Para exibir seu perfil publicamente na Lectum, complete as informações obrigatórias do seu
+          perfil profissional.
+        </p>
+
+        <div className="mt-5 rounded-[22px] border border-[#E4EBF3] bg-[#F8FBFF] p-4 text-left dark:border-border dark:bg-surface-muted">
+          <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[#334155] dark:text-foreground">
+            Pendências para publicação
+          </p>
+          <ul className="mt-3 grid gap-2.5">
+            {visiblePendingFields.map((field) => (
+              <li
+                className="flex min-w-0 items-start gap-2.5 text-sm font-semibold leading-5 text-[#475569] dark:text-muted"
+                key={field.key}
+              >
+                <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-danger" aria-hidden="true" />
+                <span className="min-w-0 break-words">{field.label}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="mt-5 grid gap-2.5">
+          <Button
+            asChild
+            className="h-12 rounded-full bg-primary text-sm font-extrabold text-white shadow-[0_14px_30px_rgba(47,141,235,0.22)] hover:bg-primary/90"
+          >
+            <Link href="/app/professional/profile/setup">Completar perfil</Link>
+          </Button>
+          <Button asChild className="h-11 rounded-full" variant="outline">
+            <Link href="/app/profile">Voltar ao perfil</Link>
+          </Button>
+        </div>
+      </article>
+    </div>
+  );
 };
 
 const StarRating = ({ rating }: { rating: number }) => {
@@ -1844,6 +1907,10 @@ export const PsychologistProfileLogic = () => {
   const conversion = useProgressiveConversion();
   const canFavoritePsychologists = conversion.isAuthenticated;
   const id = params.id;
+  const canInspectInactiveOwnProfile = currentUser?.role === "psicologo" && currentUser.id === id;
+  const ownFreeProfile = usePsychologistFreeProfile({
+    enabled: Boolean(canInspectInactiveOwnProfile),
+  });
 
   const urlParams = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
   const activeTab = useMemo(() => normalizeTab(urlParams.get("tab")), [urlParams]);
@@ -2041,10 +2108,21 @@ export const PsychologistProfileLogic = () => {
       : unfavoritePsychologist.isPending && typeof unfavoritePsychologist.variables === "string"
         ? unfavoritePsychologist.variables
         : null;
-  const showInitialLoading = profileQuery.isLoading && !profile;
-  const profileErrorMessage = profileQuery.isError
-    ? resolveErrorMessage(profileQuery.error, "Não foi possível carregar o perfil profissional.")
-    : null;
+  const isCheckingInactiveOwnProfile =
+    profileQuery.isError &&
+    Boolean(canInspectInactiveOwnProfile) &&
+    ownFreeProfile.profile.isLoading;
+  const showInactiveOwnProfileState = Boolean(
+    profileQuery.isError &&
+      canInspectInactiveOwnProfile &&
+      ownFreeProfile.profile.data &&
+      !ownFreeProfile.profile.data.activation.active,
+  );
+  const showInitialLoading = (profileQuery.isLoading && !profile) || isCheckingInactiveOwnProfile;
+  const profileErrorMessage =
+    profileQuery.isError && !showInactiveOwnProfileState
+      ? resolveErrorMessage(profileQuery.error, "Não foi possível carregar o perfil profissional.")
+      : null;
   const canEditProfile =
     currentUser?.role === "psicologo" && Boolean(profile?.id) && currentUser.id === profile?.id;
   const canInteractWithPosts = Boolean(currentUser?.id);
@@ -2083,7 +2161,13 @@ export const PsychologistProfileLogic = () => {
               </div>
             ) : null}
 
-            {!showInitialLoading && profileErrorMessage ? (
+            {!showInitialLoading && showInactiveOwnProfileState ? (
+              <InactivePublicProfileState
+                pendingFields={ownFreeProfile.profile.data?.activation.pending_fields ?? []}
+              />
+            ) : null}
+
+            {!showInitialLoading && !showInactiveOwnProfileState && profileErrorMessage ? (
               <div className="mx-3 grid gap-4 bg-background px-0 py-8">
                 <InlineAlert title="Perfil indisponível" variant="error">
                   {profileErrorMessage}
@@ -2094,7 +2178,10 @@ export const PsychologistProfileLogic = () => {
               </div>
             ) : null}
 
-            {!showInitialLoading && !profileErrorMessage && profile ? (
+            {!showInitialLoading &&
+            !showInactiveOwnProfileState &&
+            !profileErrorMessage &&
+            profile ? (
               <>
                 <ProfileHero
                   canFavorite

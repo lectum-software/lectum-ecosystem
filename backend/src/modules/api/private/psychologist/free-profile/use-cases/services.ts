@@ -138,7 +138,6 @@ const hasRequiredPublishingFields = (
     body.name &&
       hasPresentationVideo(profile.video_url) &&
       body.modality &&
-      body.languages.length > 0 &&
       body.specialty_ids.length > 0 &&
       body.service_ids.length > 0 &&
       body.approach_ids.length > 0 &&

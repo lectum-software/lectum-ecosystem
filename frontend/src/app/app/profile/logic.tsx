@@ -12,11 +12,13 @@ import {
   MessagesSquare,
   Moon,
   Star,
+  TriangleAlert,
   UsersRound,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import type { ComponentType } from "react";
+import type { ComponentType, ReactNode } from "react";
+import { usePsychologistFreeProfile } from "@/api/callers/psychologist-free-profile";
 import { LoadingState } from "@/components/ui/loading-state";
 import { ThemeSwitch } from "@/components/ui/theme-switch";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
@@ -31,6 +33,7 @@ type ProfileRow = {
   href?: string;
   icon: ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
   label: string;
+  trailing?: ReactNode;
 };
 
 const getPsychologistGenderTitle = (gender?: string | null) => {
@@ -63,13 +66,14 @@ const getInitials = (name?: string | null, email?: string | null) => {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
 
-const Row = ({ href, icon: Icon, label }: ProfileRow) => {
+const Row = ({ href, icon: Icon, label, trailing }: ProfileRow) => {
   const content = (
     <>
       <span className="grid h-10 w-10 place-items-center rounded-full bg-primary-soft text-primary">
         <Icon className="h-5 w-5" aria-hidden />
       </span>
       <span className="flex-1 text-sm font-semibold text-foreground">{label}</span>
+      {trailing}
       <ChevronRight className="h-5 w-5 text-subtle" aria-hidden="true" />
     </>
   );
@@ -114,6 +118,13 @@ export const ProfileLogic = () => {
   const user = useAppSelector((state) => state.user);
   const { out } = useSignOut();
   const isPsychologist = user?.role === "psicologo";
+  const psychologistProfile = usePsychologistFreeProfile({ enabled: Boolean(isPsychologist) });
+  const showProfileActivationAlert = Boolean(
+    isPsychologist &&
+      psychologistProfile.profile.data?.activation &&
+      !psychologistProfile.profile.data.activation.active,
+  );
+
   if (!user) {
     return (
       <PrivateTemplate>
@@ -145,6 +156,15 @@ export const ProfileLogic = () => {
       href: isPsychologist ? "/app/professional/profile/setup" : "/app/profile/edit",
       icon: Edit3,
       label: "Editar perfil",
+      trailing: showProfileActivationAlert ? (
+        <span
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-danger/10 text-danger"
+          title="Perfil não ativo"
+        >
+          <TriangleAlert className="h-4 w-4" aria-hidden="true" />
+          <span className="sr-only">Perfil não ativo</span>
+        </span>
+      ) : null,
     },
     ...(isPsychologist
       ? [

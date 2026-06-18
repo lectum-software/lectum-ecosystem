@@ -20,6 +20,16 @@ export type FreeProfessionalProfileAcademic = {
   graduation_year: string | null;
 };
 
+export type FreeProfessionalProfileActivationPendingField = {
+  key: string;
+  label: string;
+};
+
+export type FreeProfessionalProfileActivation = {
+  active: boolean;
+  pending_fields: FreeProfessionalProfileActivationPendingField[];
+};
+
 export type FreeProfessionalProfile = {
   user: {
     id: string;
@@ -73,6 +83,7 @@ export type FreeProfessionalProfile = {
     services: FreeProfileCatalogItem[];
     approaches: FreeProfileCatalogItem[];
   };
+  activation: FreeProfessionalProfileActivation;
   catalogs: {
     specialties: FreeProfileCatalogItem[];
     services: FreeProfileCatalogItem[];

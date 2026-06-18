@@ -30,6 +30,12 @@ const normalizeStringArray = (value: unknown): string[] => {
   return value.filter((item): item is string => typeof item === "string");
 };
 
+const normalizeLanguages = (value: unknown): string[] => {
+  const languages = normalizeStringArray(value);
+
+  return languages.length > 0 ? languages : ["Português"];
+};
+
 const currentWeekdayValue = () => {
   const weekday = new Intl.DateTimeFormat("pt-BR", {
     timeZone: "America/Sao_Paulo",
@@ -105,9 +111,31 @@ export class IndexRepository implements IIndexRepository {
       video_url: {
         not: null,
       },
+      modality: props.q.modality || { not: null },
+      gender: props.q.gender || { not: null },
+      cpf: { not: null },
+      crp: { not: null },
       NOT: [
         {
           video_url: "",
+        },
+        {
+          modality: "",
+        },
+        {
+          gender: "",
+        },
+        {
+          cpf: "",
+        },
+        {
+          crp: "",
+        },
+        {
+          professional_address_city: "",
+        },
+        {
+          professional_address_state: "",
         },
       ],
       crp_registration_date: props.q.more_experienced
@@ -125,21 +153,19 @@ export class IndexRepository implements IIndexRepository {
         ? {
             array_contains: [props.q.target_audience],
           }
-        : undefined,
+        : { not: [] },
       professional_address_state: props.q.state
         ? {
             equals: props.q.state,
             mode: "insensitive",
           }
-        : undefined,
+        : { not: null },
       professional_address_city: props.q.city
         ? {
             equals: props.q.city,
             mode: "insensitive",
           }
-        : undefined,
-      gender: props.q.gender || undefined,
-      modality: props.q.modality || undefined,
+        : { not: null },
       race_color: props.q.race_color || undefined,
       religion: props.q.religion || undefined,
       languages: props.q.language
@@ -158,42 +184,36 @@ export class IndexRepository implements IIndexRepository {
       user: {
         active: true,
         deleted: false,
-        psychologist_specialties: props.q.specialty
-          ? {
-              some: {
-                deleted: false,
-                specialty: {
-                  slug: props.q.specialty,
-                  active: true,
-                  deleted: false,
-                },
-              },
-            }
-          : undefined,
-        psychologist_services: props.q.service
-          ? {
-              some: {
-                deleted: false,
-                service: {
-                  slug: props.q.service,
-                  active: true,
-                  deleted: false,
-                },
-              },
-            }
-          : undefined,
-        psychologist_approaches: props.q.approach
-          ? {
-              some: {
-                deleted: false,
-                approach: {
-                  slug: props.q.approach,
-                  active: true,
-                  deleted: false,
-                },
-              },
-            }
-          : undefined,
+        psychologist_specialties: {
+          some: {
+            deleted: false,
+            specialty: {
+              slug: props.q.specialty || undefined,
+              active: true,
+              deleted: false,
+            },
+          },
+        },
+        psychologist_services: {
+          some: {
+            deleted: false,
+            service: {
+              slug: props.q.service || undefined,
+              active: true,
+              deleted: false,
+            },
+          },
+        },
+        psychologist_approaches: {
+          some: {
+            deleted: false,
+            approach: {
+              slug: props.q.approach || undefined,
+              active: true,
+              deleted: false,
+            },
+          },
+        },
       },
       OR: search
         ? [
@@ -344,7 +364,7 @@ export class IndexRepository implements IIndexRepository {
         crp: item.crp,
         gender: item.gender,
         modality: item.modality,
-        languages: normalizeStringArray(item.languages),
+        languages: normalizeLanguages(item.languages),
         rating_avg: item.rating_avg,
         rating_count: item.rating_count,
         verified: item.subscriptions.length > 0,

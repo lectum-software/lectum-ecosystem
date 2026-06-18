@@ -16,6 +16,7 @@ import type {
 import * as api from "@/api/req/psychologist-free-profile";
 
 export interface UsePsychologistFreeProfileProps {
+  enabled?: boolean;
   callbacks?: {
     update?: {
       onSuccess?: (data: FreeProfessionalProfile) => void;
@@ -52,12 +53,16 @@ export interface UsePsychologistFreeProfileProps {
   };
 }
 
-export const usePsychologistFreeProfile = ({ callbacks }: UsePsychologistFreeProfileProps = {}) => {
+export const usePsychologistFreeProfile = ({
+  callbacks,
+  enabled = true,
+}: UsePsychologistFreeProfileProps = {}) => {
   const queryClient = useQueryClient();
 
   const profile = useQuery({
     queryKey: keys.psychologistFreeProfile.root(),
     queryFn: () => api.getPsychologistFreeProfile(),
+    enabled,
     refetchOnWindowFocus: false,
     retry: false,
   });

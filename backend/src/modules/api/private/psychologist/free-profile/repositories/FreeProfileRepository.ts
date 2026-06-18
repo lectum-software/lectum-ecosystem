@@ -4,6 +4,7 @@ import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import { activeSubscriptionPeriodWhere } from "@/utils/subscription-entitlement";
 import type {
+  FreeProfessionalProfileActivationPendingField,
   FreeProfessionalProfileResponse,
   FreeProfessionalProfileUpdateBody,
   FreeProfileCatalogItem,
@@ -81,6 +82,58 @@ const buildCrp = (region?: string | null, number?: string | null) => {
 
   if (normalizedRegion && normalizedNumber) return `${normalizedRegion}/${normalizedNumber}`;
   return normalizedRegion || normalizedNumber || null;
+};
+
+const hasText = (value?: string | null) => Boolean(value?.trim());
+
+const buildActivationPendingFields = ({
+  address,
+  approaches,
+  crp,
+  languages,
+  name,
+  profile,
+  services,
+  specialties,
+  targetAudience,
+}: {
+  address: { city?: string | null; state?: string | null };
+  approaches: FreeProfileCatalogItem[];
+  crp: { crp_region: string | null; crp_number: string | null };
+  languages: string[];
+  name?: string | null;
+  profile: NonNullable<UserWithProfile["psychologist_profile"]>;
+  services: FreeProfileCatalogItem[];
+  specialties: FreeProfileCatalogItem[];
+  targetAudience: string[];
+}): FreeProfessionalProfileActivationPendingField[] => {
+  const pending: FreeProfessionalProfileActivationPendingField[] = [];
+
+  if (!hasText(name)) pending.push({ key: "name", label: "Nome profissional" });
+  if (!hasText(profile.video_url)) {
+    pending.push({ key: "video", label: "Vídeo de apresentação" });
+  }
+  if (!hasText(profile.modality)) pending.push({ key: "modality", label: "Modalidade" });
+  if (languages.length === 0) pending.push({ key: "languages", label: "Idiomas" });
+  if (specialties.length === 0) pending.push({ key: "specialties", label: "Especialidades" });
+  if (services.length === 0) pending.push({ key: "services", label: "Serviços" });
+  if (approaches.length === 0) pending.push({ key: "approaches", label: "Abordagens" });
+  if (targetAudience.length === 0) {
+    pending.push({ key: "target_audience", label: "Público atendido" });
+  }
+  if (!hasText(profile.gender)) pending.push({ key: "gender", label: "Gênero" });
+  if (!hasText(profile.cpf)) pending.push({ key: "cpf", label: "CPF" });
+  if (!hasText(crp.crp_region) || !hasText(crp.crp_number)) {
+    pending.push({ key: "crp", label: "CRP" });
+  }
+  if (!hasText(address.state) || !hasText(address.city)) {
+    pending.push({ key: "address", label: "Estado e cidade" });
+  }
+  if (!profile.published) {
+    pending.push({ key: "published", label: "Visibilidade pública" });
+  }
+
+  return pending;
 };
 
 const publicProfileMediaKeyFromUrl = (value?: string | null) => {
@@ -242,6 +295,37 @@ const toResponse = async (
     institution: profile.academic_institution,
     graduation_year: profile.academic_graduation_year,
   };
+  const storedLanguages = normalizeStringArray(profile.languages);
+  const languages = storedLanguages.length > 0 ? storedLanguages : ["Português"];
+  const targetAudience = normalizeStringArray(profile.target_audience);
+  const academicFormations = normalizeAcademicFormations(profile.academic_formations, academic);
+  const address = {
+    street: profile.professional_address_street,
+    number: profile.professional_address_number,
+    complement: profile.professional_address_complement,
+    district: profile.professional_address_district,
+    zip: profile.professional_address_zip,
+    city: profile.professional_address_city,
+    state: profile.professional_address_state,
+  };
+  const selected = {
+    specialties: item.psychologist_specialties
+      .map(({ specialty }) => specialty)
+      .filter(isCatalogItem),
+    services: item.psychologist_services.map(({ service }) => service).filter(isCatalogItem),
+    approaches: item.psychologist_approaches.map(({ approach }) => approach).filter(isCatalogItem),
+  };
+  const pendingFields = buildActivationPendingFields({
+    address,
+    approaches: selected.approaches,
+    crp,
+    languages,
+    name: item.name,
+    profile,
+    services: selected.services,
+    specialties: selected.specialties,
+    targetAudience,
+  });
 
   return {
     user: {
@@ -254,7 +338,7 @@ const toResponse = async (
       headline: profile.headline,
       bio: profile.bio,
       modality: profile.modality,
-      languages: normalizeStringArray(profile.languages),
+      languages,
       cpf: profile.cpf,
       gender: profile.gender,
       race_color: profile.race_color,
@@ -264,23 +348,15 @@ const toResponse = async (
       cover_image_url: profile.cover_image_url,
       video_url: profile.video_url,
       video_cover_url: profile.video_cover_url,
-      target_audience: normalizeStringArray(profile.target_audience),
+      target_audience: targetAudience,
       discount_first_session: profile.discount_first_session,
       social_value: profile.social_value,
       accepts_insurance: profile.accepts_insurance,
       show_experience_tag: profile.show_experience_tag,
       academic,
-      academic_formations: normalizeAcademicFormations(profile.academic_formations, academic),
+      academic_formations: academicFormations,
       available_days: normalizeStringArray(profile.available_days),
-      address: {
-        street: profile.professional_address_street,
-        number: profile.professional_address_number,
-        complement: profile.professional_address_complement,
-        district: profile.professional_address_district,
-        zip: profile.professional_address_zip,
-        city: profile.professional_address_city,
-        state: profile.professional_address_state,
-      },
+      address,
       published: profile.published,
       crp: profile.crp,
       crp_region: crp.crp_region,
@@ -299,14 +375,10 @@ const toResponse = async (
       source: current?.source ?? null,
       specialty_limit: specialtyLimit,
     },
-    selected: {
-      specialties: item.psychologist_specialties
-        .map(({ specialty }) => specialty)
-        .filter(isCatalogItem),
-      services: item.psychologist_services.map(({ service }) => service).filter(isCatalogItem),
-      approaches: item.psychologist_approaches
-        .map(({ approach }) => approach)
-        .filter(isCatalogItem),
+    selected,
+    activation: {
+      active: pendingFields.length === 0,
+      pending_fields: pendingFields,
     },
     catalogs,
   };
