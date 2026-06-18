@@ -15,7 +15,6 @@ import {
   PlayCircle,
   Repeat2,
   Search,
-  Sparkles,
   Star,
   TrendingDown,
 } from "lucide-react";
@@ -70,7 +69,6 @@ const getDefaultCustomRange = () => {
 type AnalyticsCardView = {
   icon: LucideIcon;
   id: string;
-  isUnavailable?: boolean;
   label: string;
   source?: PsychologistAnalyticsMetric["source"] | "untracked";
   value: string;
@@ -130,17 +128,15 @@ const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCardView[] 
     id: "search_results",
     icon: Search,
     label: "Resultados de busca",
-    value: "—",
+    value: "0",
     source: "untracked",
-    isUnavailable: true,
   },
   {
     id: "profile_views",
     icon: Eye,
     label: "Aberturas de perfil",
-    value: "—",
+    value: "0",
     source: "untracked",
-    isUnavailable: true,
   },
   {
     id: "whatsapp_clicks",
@@ -160,9 +156,8 @@ const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCardView[] 
     id: "favorited",
     icon: Heart,
     label: "Favoritado",
-    value: "—",
+    value: "0",
     source: "untracked",
-    isUnavailable: true,
   },
 ];
 
@@ -279,43 +274,23 @@ const MetricCard = ({ locked, metric }: { locked?: boolean; metric: AnalyticsCar
   const Icon = metric.icon;
 
   return (
-    <article className="flex min-h-[132px] min-w-0 flex-col overflow-hidden rounded-[20px] border border-border bg-surface p-3 shadow-[var(--lectum-shadow-soft)] sm:min-h-[150px] sm:rounded-[var(--lectum-card-radius)] sm:p-4">
-      <div className="flex items-start justify-between gap-3">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary sm:h-10 sm:w-10">
-          <Icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" aria-hidden />
-        </span>
-        {locked ? (
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/10 bg-primary-soft px-2 py-1 text-[0.6rem] font-black uppercase tracking-[0.08em] text-primary sm:text-[0.65rem]">
-            <Sparkles className="h-3 w-3" aria-hidden />
-            Prévia
-          </span>
-        ) : null}
-      </div>
+    <article className="flex min-h-[132px] min-w-0 flex-col overflow-hidden rounded-[20px] border border-primary/10 bg-surface p-3 shadow-[var(--lectum-shadow-soft)] sm:min-h-[150px] sm:rounded-[22px] sm:p-4">
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary sm:h-10 sm:w-10">
+        <Icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" aria-hidden />
+      </span>
 
-      <h2 className="mt-3 min-h-10 break-words text-[0.82rem] font-extrabold leading-5 text-foreground sm:mt-4 sm:text-base sm:leading-6">
+      <h2 className="mt-3 min-h-10 break-words text-[0.78rem] font-extrabold leading-5 text-muted sm:mt-4 sm:text-sm">
         {metric.label}
       </h2>
 
-      <div className="mt-auto inline-flex max-w-full items-center gap-1.5 rounded-full border border-primary/10 bg-primary-soft/70 px-2.5 py-2 sm:gap-2 sm:px-3">
-        <span
-          className={cn(
-            "min-w-0 text-2xl font-extrabold leading-none tracking-[-0.04em] text-foreground",
-            locked && "select-none blur-[5px]",
-          )}
-        >
-          {metric.value}
-        </span>
-        {metric.isUnavailable ? (
-          <span
-            className={cn(
-              "min-w-0 text-[0.68rem] font-bold leading-none text-muted sm:text-xs",
-              locked && "select-none blur-[4px]",
-            )}
-          >
-            sem evento
-          </span>
-        ) : null}
-      </div>
+      <p
+        className={cn(
+          "mt-auto pt-2 text-2xl font-black leading-none tracking-[-0.05em] text-foreground sm:text-[1.75rem]",
+          locked && "select-none blur-[5px]",
+        )}
+      >
+        {metric.value}
+      </p>
     </article>
   );
 };
