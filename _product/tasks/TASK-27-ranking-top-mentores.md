@@ -163,3 +163,16 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Formula do ranking ajustada conforme `C:\Users\tulio\Desktop\Lectum\Sistema de Ranking de Mentores.pdf` e ADR-0070.
 - Componentes sem fonte persistida atual (`shares_received` e `community_whatsapp_clicks`) permanecem zerados ate existir rastreamento real por comunidade; nao usar mocks.
 - Responsividade mobile da tela Top Mentores corrigida conforme ADR-0071 para evitar corte/overflow horizontal em 390px.
+
+## Complemento 2026-06-18 - limpeza visual da tela Top 5 Mentores
+
+- Pedido do usuário: limpar o fundo da tela `/app/community/top-mentors`, centralizar o pódio no mobile, simplificar a posição da `Classificação geral`, refinar o título e reduzir a largura visual da lista no desktop.
+- Referência visual ativa: `_product/proto/Top 5 Mentores da comunidade.jpg`; Builder/Quick Copy não está exposto como ferramenta direta nesta sessão, mantendo fallback auditável pela imagem local e validação em browser local.
+- O fundo da tela passou a usar o background uniforme da aplicação, removendo a superfície cinza específica da rota e evitando variações decorativas ao redor do conteúdo.
+- O pódio foi reestruturado em grid simétrico com colunas laterais equivalentes, mantendo Top 1 centralizado e distâncias equilibradas para Top 2 e Top 3 no mobile.
+- A posição na `Classificação geral` deixou de usar bloco/fundo metálico; agora exibe apenas medalha/ícone e número, sem card colorido atrás da posição.
+- O título foi refinado como composição hierárquica com `Top 5 mentores em` em apoio e nome da comunidade como elemento principal.
+- No desktop, a lista de classificação recebeu largura máxima própria para ficar mais próxima do eixo visual do pódio e evitar cards excessivamente largos.
+- Escopo: sem mudanças de backend, Prisma, migrations, packages, endpoint, fórmula, ordenação ou dados do ranking.
+- ADR atualizado: `adrs/0105-top-mentores-identidade-metalica.md`.
+- Validações executadas: `pnpm --dir frontend exec biome check --write src/app/app/community/top-mentors/logic.tsx src/app/globals.css`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado em `/app/community/top-mentors?community=luto-e-ressignificacao`.

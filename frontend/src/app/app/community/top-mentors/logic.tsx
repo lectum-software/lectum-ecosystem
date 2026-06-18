@@ -61,40 +61,36 @@ const getInitials = (name: string) => {
 const rankTone = (position: number) => {
   if (position === 1) {
     return {
-      listRank: "top-mentor-list-medal top-mentor-metal--gold",
+      listAccent: "text-[#9C7924]",
       metal: "top-mentor-metal--gold",
       name: "text-[#9C7924]",
       positionMedal: "top-mentor-position-medal top-mentor-metal--gold",
-      soft: "bg-[#FFF8E5] text-[#9C7924]",
     };
   }
 
   if (position === 2) {
     return {
-      listRank: "top-mentor-list-medal top-mentor-metal--silver",
+      listAccent: "text-[#64748B]",
       metal: "top-mentor-metal--silver",
       name: "text-[#64748B]",
       positionMedal: "top-mentor-position-medal top-mentor-metal--silver",
-      soft: "bg-[#F4F6F8] text-[#64748B]",
     };
   }
 
   if (position === 3) {
     return {
-      listRank: "top-mentor-list-medal top-mentor-metal--bronze",
+      listAccent: "text-[#A8703A]",
       metal: "top-mentor-metal--bronze",
       name: "text-[#A8703A]",
       positionMedal: "top-mentor-position-medal top-mentor-metal--bronze",
-      soft: "bg-[#FFF1E8] text-[#A8703A]",
     };
   }
 
   return {
-    listRank: "bg-background text-muted",
+    listAccent: "text-[#94A3B8]",
     metal: "",
     name: "text-[#182033] dark:text-foreground",
     positionMedal: "border border-border bg-background text-muted",
-    soft: "bg-background text-muted",
   };
 };
 
@@ -227,35 +223,44 @@ const RankingHero = ({
 
   return (
     <section className="relative box-border w-full min-w-0 max-w-full overflow-visible px-1 pt-5 pb-8 sm:px-6 sm:pt-8">
-      <div className="relative grid w-full min-w-0 justify-items-center gap-9 overflow-visible text-center">
-        <div className="grid w-full min-w-0 gap-1.5">
-          <h1 className="min-w-0 max-w-full text-2xl font-black leading-tight tracking-[-0.04em] text-[#182033] sm:text-3xl dark:text-foreground">
-            Top 5 Mentores em
-          </h1>
-          <p className="max-w-full break-words font-serif text-3xl font-bold italic leading-tight text-primary [overflow-wrap:anywhere] sm:text-4xl">
+      <div className="relative grid w-full min-w-0 justify-items-center gap-8 overflow-visible text-center sm:gap-10">
+        <h1
+          aria-label={`Top 5 mentores em ${communityName}`}
+          className="grid w-full min-w-0 max-w-[24rem] gap-2 sm:max-w-2xl"
+        >
+          <span className="text-[0.72rem] font-black uppercase leading-none tracking-[0.22em] text-[#64748B] dark:text-muted">
+            Top 5 mentores em
+          </span>
+          <span className="max-w-full break-words text-balance text-3xl font-black leading-[1.02] tracking-[-0.045em] text-[#182033] [overflow-wrap:anywhere] sm:text-5xl dark:text-foreground">
             {communityName}
-          </p>
-        </div>
+          </span>
+        </h1>
 
         {first ? (
-          <div className="flex w-full min-w-0 max-w-full items-end justify-center gap-3 overflow-visible sm:gap-10">
-            {second ? (
-              <PodiumMentor
-                className="mb-7 max-w-[6.2rem] sm:max-w-[7.5rem]"
-                mentor={second}
-                size={84}
-                delay="0.35s"
-              />
-            ) : null}
-            <PodiumMentor className="max-w-[10.5rem] sm:max-w-[12rem]" mentor={first} size={142} />
-            {third ? (
-              <PodiumMentor
-                className="mb-7 max-w-[6.2rem] sm:max-w-[7.5rem]"
-                mentor={third}
-                size={84}
-                delay="0.7s"
-              />
-            ) : null}
+          <div className="grid w-[340px] max-w-full grid-cols-[86px_144px_86px] items-end justify-center gap-3 overflow-visible sm:w-[420px] sm:grid-cols-[96px_156px_96px] sm:gap-9">
+            <div className="flex min-w-0 justify-center overflow-visible">
+              {second ? (
+                <PodiumMentor
+                  className="mb-7 max-w-[6.4rem] sm:max-w-[7.5rem]"
+                  mentor={second}
+                  size={86}
+                  delay="0.35s"
+                />
+              ) : null}
+            </div>
+            <div className="flex min-w-0 justify-center overflow-visible">
+              <PodiumMentor className="max-w-[10rem] sm:max-w-[12rem]" mentor={first} size={144} />
+            </div>
+            <div className="flex min-w-0 justify-center overflow-visible">
+              {third ? (
+                <PodiumMentor
+                  className="mb-7 max-w-[6.4rem] sm:max-w-[7.5rem]"
+                  mentor={third}
+                  size={86}
+                  delay="0.7s"
+                />
+              ) : null}
+            </div>
           </div>
         ) : null}
       </div>
@@ -269,16 +274,19 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
 
   return (
     <Link
-      className="group flex w-full min-w-0 max-w-full items-center gap-3 overflow-visible rounded-[1.35rem] border border-[#E5EAF0] bg-white px-3.5 py-3.5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_16px_36px_rgba(15,23,42,0.09)] dark:border-border dark:bg-surface"
+      className="group flex w-full min-w-0 max-w-full items-center gap-3 overflow-visible rounded-[1.35rem] border border-[#E5EAF0] bg-white px-3.5 py-3.5 shadow-none transition hover:-translate-y-0.5 hover:border-primary/30 dark:border-border dark:bg-surface"
       href={mentor.professional.profile_url}
     >
       <span
         className={cn(
-          "grid h-12 w-12 shrink-0 place-items-center gap-0.5 rounded-2xl text-xs font-black",
-          isTopThree ? tone.listRank : tone.soft,
+          "flex w-11 shrink-0 items-center justify-center gap-1 text-sm font-black tabular-nums",
+          tone.listAccent,
         )}
       >
-        {isTopThree ? <Medal className="h-4 w-4" aria-hidden="true" /> : null}
+        <Medal
+          className={cn("h-4 w-4", isTopThree ? tone.listAccent : "text-[#CBD5E1]")}
+          aria-hidden="true"
+        />
         <span>{String(mentor.position).padStart(2, "0")}</span>
       </span>
       <Avatar mentor={mentor} ringed={isTopThree} size={62} />
@@ -312,8 +320,8 @@ export const CommunityTopMentorsLogic = () => {
   const errorMessage = ranking.isError ? resolveRankingError(ranking.error) : null;
 
   return (
-    <PrivateTemplate contentClassName="overflow-x-hidden bg-[#F6F8FB]">
-      <section className="mx-auto grid w-full min-w-0 max-w-full gap-6 px-4 py-5 sm:max-w-2xl sm:px-0 lg:max-w-4xl">
+    <PrivateTemplate contentClassName="max-w-none overflow-x-hidden bg-background px-0">
+      <section className="mx-auto grid w-full min-w-0 max-w-full gap-6 px-4 py-5 sm:max-w-2xl sm:px-0 lg:max-w-3xl">
         <header className="grid min-w-0 gap-5">
           <Button
             className="w-fit rounded-full"
@@ -356,7 +364,7 @@ export const CommunityTopMentorsLogic = () => {
         ) : null}
 
         {mentors.length > 0 ? (
-          <section className="grid min-w-0 gap-4">
+          <section className="mx-auto grid w-full min-w-0 max-w-[680px] gap-4">
             <div className="grid min-w-0 gap-1.5">
               <h2 className="text-sm font-black uppercase tracking-[0.16em] text-[#182033] dark:text-foreground">
                 Classificação geral
