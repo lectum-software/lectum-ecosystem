@@ -312,10 +312,7 @@ const InactivePublicProfileState = ({
 }: {
   pendingFields: FreeProfessionalProfileActivationPendingField[];
 }) => {
-  const visiblePendingFields =
-    pendingFields.length > 0
-      ? pendingFields
-      : [{ key: "profile_visibility", label: "Visibilidade pública" }];
+  const hasPendingFields = pendingFields.length > 0;
 
   return (
     <div className="grid min-h-[calc(100vh-160px)] place-items-center bg-[#F5F7FA] px-3 py-8 dark:bg-background">
@@ -330,26 +327,32 @@ const InactivePublicProfileState = ({
           Seu perfil ainda não está ativo
         </h1>
         <p className="mx-auto mt-3 max-w-[350px] text-sm leading-6 text-[#536176] dark:text-muted">
-          Para exibir seu perfil publicamente na Lectum, complete as informações obrigatórias do seu
-          perfil profissional.
+          {hasPendingFields
+            ? "Para exibir seu perfil publicamente na Lectum, complete as informações obrigatórias do seu perfil profissional."
+            : "Seu perfil não possui campos obrigatórios pendentes, mas ainda não está disponível publicamente. Revise a publicação na tela de edição."}
         </p>
 
-        <div className="mt-5 rounded-[22px] border border-[#E4EBF3] bg-[#F8FBFF] p-4 text-left dark:border-border dark:bg-surface-muted">
-          <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[#334155] dark:text-foreground">
-            Pendências para publicação
-          </p>
-          <ul className="mt-3 grid gap-2.5">
-            {visiblePendingFields.map((field) => (
-              <li
-                className="flex min-w-0 items-start gap-2.5 text-sm font-semibold leading-5 text-[#475569] dark:text-muted"
-                key={field.key}
-              >
-                <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-danger" aria-hidden="true" />
-                <span className="min-w-0 break-words">{field.label}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        {hasPendingFields ? (
+          <div className="mt-5 rounded-[22px] border border-[#E4EBF3] bg-[#F8FBFF] p-4 text-left dark:border-border dark:bg-surface-muted">
+            <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[#334155] dark:text-foreground">
+              Pendências para publicação
+            </p>
+            <ul className="mt-3 grid gap-2.5">
+              {pendingFields.map((field) => (
+                <li
+                  className="flex min-w-0 items-start gap-2.5 text-sm font-semibold leading-5 text-[#475569] dark:text-muted"
+                  key={field.key}
+                >
+                  <TriangleAlert
+                    className="mt-0.5 h-4 w-4 shrink-0 text-danger"
+                    aria-hidden="true"
+                  />
+                  <span className="min-w-0 break-words">{field.label}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
         <div className="mt-5 grid gap-2.5">
           <Button

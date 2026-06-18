@@ -31,3 +31,7 @@ Também havia uma decisão recente de produto: a Bio e o texto de apresentação
 - Bio (`headline`) e Apresentação de texto (`bio`) permanecem opcionais para publicação.
 - Perfis antigos que já estavam marcados como publicados, mas não têm requisitos mínimos, deixam de aparecer no detalhe público até serem completados.
 - A validação de publicação e os estados de UI passam a compartilhar a mesma intenção de domínio, ainda que o backend público preserve a privacidade para visitantes que não são donos do perfil.
+
+## Ajuste em 2026-06-18
+
+A lista pública de pendências deixa de incluir a chave de publicação/visibilidade. Ela deve mostrar apenas campos do perfil que o psicólogo precisa preencher ou editar, evitando confundir um controle de publicação com dado obrigatório.

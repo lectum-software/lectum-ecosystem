@@ -129,10 +129,6 @@ const buildActivationPendingFields = ({
   if (!hasText(address.state) || !hasText(address.city)) {
     pending.push({ key: "address", label: "Estado e cidade" });
   }
-  if (!profile.published) {
-    pending.push({ key: "published", label: "Visibilidade pública" });
-  }
-
   return pending;
 };
 
@@ -377,7 +373,7 @@ const toResponse = async (
     },
     selected,
     activation: {
-      active: pendingFields.length === 0,
+      active: profile.published && pendingFields.length === 0,
       pending_fields: pendingFields,
     },
     catalogs,
