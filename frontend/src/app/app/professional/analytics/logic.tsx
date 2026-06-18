@@ -337,14 +337,16 @@ const PresentationVideoMetricCard = ({
   const Icon = videoMetricIcons[metric.id];
 
   return (
-    <article className="flex min-h-[150px] min-w-0 flex-col rounded-[22px] border border-primary/10 bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
-      <span className="grid h-10 w-10 place-items-center rounded-full bg-primary-soft text-primary">
-        <Icon className="h-5 w-5" aria-hidden />
+    <article className="flex min-h-[132px] min-w-0 flex-col rounded-[20px] border border-primary/10 bg-surface p-3 shadow-[var(--lectum-shadow-soft)] sm:min-h-[150px] sm:rounded-[22px] sm:p-4">
+      <span className="grid h-9 w-9 place-items-center rounded-full bg-primary-soft text-primary sm:h-10 sm:w-10">
+        <Icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" aria-hidden />
       </span>
-      <h3 className="mt-4 min-h-10 text-sm font-extrabold leading-5 text-muted">{metric.label}</h3>
+      <h3 className="mt-3 min-h-10 break-words text-[0.78rem] font-extrabold leading-5 text-muted sm:mt-4 sm:text-sm">
+        {metric.label}
+      </h3>
       <p
         className={cn(
-          "mt-3 text-[1.75rem] font-black leading-none tracking-[-0.05em] text-foreground",
+          "mt-auto pt-2 text-2xl font-black leading-none tracking-[-0.05em] text-foreground sm:text-[1.75rem]",
           locked && "select-none blur-[5px]",
         )}
       >
@@ -727,7 +729,7 @@ const PresentationVideoAnalyticsSection = ({
         </span>
       </div>
 
-      <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid min-w-0 grid-cols-2 gap-3 lg:grid-cols-5">
         {(video?.cards ?? []).map((metric) => (
           <PresentationVideoMetricCard key={metric.id} locked={locked} metric={metric} />
         ))}
