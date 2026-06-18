@@ -111,3 +111,17 @@ Psicólogos com `professional_subscription.source="admin_grant"` recebem todos o
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - Browser headless local em viewport 390x844 confirmou descrição nova, CTA `Fazer upgrade`, ausência de `Expiração`, ausência de `Ver planos e benefícios`, ausência de `dentro da Lectum` e `scrollWidth=390`/`innerWidth=390`.
+
+## Refinamento visual em 2026-06-18: remoção do card redundante do Plano Gratuito
+
+- Pedido direto de produto: remover completamente o container `Plano atual` exibido logo abaixo da descrição do Plano Gratuito, porque o cabeçalho já comunica `SEU PLANO ATUAL` e `Plano Gratuito`.
+- A renderização do resumo de plano abaixo do cabeçalho passou a ocorrer somente para planos não gratuitos, preservando a cortesia profissional com data de expiração e CTA de cartão.
+- No Plano Gratuito, a seção `O que você desbloqueia com a Assinatura Profissional` sobe imediatamente após a descrição do plano, eliminando o fundo cinza claro, o card interno, o ícone e a duplicação do texto `Plano Gratuito`.
+- Os espaçamentos mobile-first foram revisados no próprio fluxo: card principal centralizado, benefícios sem corte lateral em 390px e CTA `Fazer upgrade` mantido como ação principal.
+
+### Validação da remoção
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser headless local em viewport 390x844 na rota `/app/professional/billing/subscription`, com usuário psicólogo temporário criado por endpoints reais, Plano Gratuito selecionado via API real e removido do banco ao final, confirmou `planAtualCount=0`, `expiraCount=0`, `scrollWidth=390`, `innerWidth=390`, CTA `Fazer upgrade` e a presença da seção de benefícios sem o container redundante.

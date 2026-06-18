@@ -109,8 +109,9 @@ export const ProfessionalBillingSubscriptionLogic = () => {
   const isFreePlan = subscription?.plan?.slug === "gratuito";
   const planName = subscription?.plan?.name || "Plano não encontrado";
   const expirationLabel = formatDate(subscription?.current_period_end);
+  const shouldShowPlanDetails = Boolean(subscription) && !isFreePlan;
   const shouldShowExpiration =
-    isCourtesy || (!isFreePlan && Boolean(subscription?.current_period_end));
+    shouldShowPlanDetails && (isCourtesy || Boolean(subscription?.current_period_end));
   const heroTitle = isCourtesy ? "Plano Profissional de cortesia" : planName;
   const heroDescription = isCourtesy
     ? "Você está com todos os benefícios de um psicólogo assinante liberados durante o período da cortesia."
@@ -157,36 +158,38 @@ export const ProfessionalBillingSubscriptionLogic = () => {
               <p className="mt-3 max-w-xl text-base leading-7 text-muted">{heroDescription}</p>
             </div>
 
-            <div
-              className={
-                shouldShowExpiration
-                  ? "mt-6 grid gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface-muted p-3 md:grid-cols-2"
-                  : "mt-6 rounded-[var(--lectum-card-radius)] border border-border bg-surface-muted p-3"
-              }
-            >
-              <div className="flex items-center gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 md:p-5">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-                  <BadgeCheck className="h-5 w-5" aria-hidden="true" />
-                </span>
-                <div>
-                  <p className="text-sm font-bold text-foreground">Plano atual</p>
-                  <p className="mt-1 text-sm text-muted">{planName}</p>
-                </div>
-              </div>
-              {shouldShowExpiration ? (
+            {shouldShowPlanDetails ? (
+              <div
+                className={
+                  shouldShowExpiration
+                    ? "mt-6 grid gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface-muted p-3 md:grid-cols-2"
+                    : "mt-6 rounded-[var(--lectum-card-radius)] border border-border bg-surface-muted p-3"
+                }
+              >
                 <div className="flex items-center gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 md:p-5">
                   <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-                    <CalendarClock className="h-5 w-5" aria-hidden="true" />
+                    <BadgeCheck className="h-5 w-5" aria-hidden="true" />
                   </span>
                   <div>
-                    <p className="text-sm font-bold text-foreground">
-                      {isCourtesy ? "Expiração da cortesia" : "Expiração"}
-                    </p>
-                    <p className="mt-1 text-sm text-muted">{expirationLabel}</p>
+                    <p className="text-sm font-bold text-foreground">Plano atual</p>
+                    <p className="mt-1 text-sm text-muted">{planName}</p>
                   </div>
                 </div>
-              ) : null}
-            </div>
+                {shouldShowExpiration ? (
+                  <div className="flex items-center gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 md:p-5">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+                      <CalendarClock className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                    <div>
+                      <p className="text-sm font-bold text-foreground">
+                        {isCourtesy ? "Expiração da cortesia" : "Expiração"}
+                      </p>
+                      <p className="mt-1 text-sm text-muted">{expirationLabel}</p>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
 
             {isCourtesy ? (
               <>
