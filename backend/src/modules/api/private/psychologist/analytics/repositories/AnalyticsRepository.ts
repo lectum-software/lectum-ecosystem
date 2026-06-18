@@ -37,7 +37,7 @@ const trafficSourceDefinitions: Array<
     id: "search_filters",
     label: "Busca e filtros",
     description:
-      "Acessos originados por pesquisas de nome, especialidade, abordagem, convênio, valor e demais filtros.",
+      "Acessos originados por pesquisas de nome, especialidades, abordagem, convênio e demais filtros.",
   },
   {
     id: "communities",
@@ -54,7 +54,7 @@ const trafficSourceDefinitions: Array<
     id: "favorites",
     label: "Favoritos",
     description:
-      "Acessos originados a partir da área de psicólogos favoritados ou de psicólogos previamente favoritados pelo paciente.",
+      "Acessos originados a partir da área de psicólogos favoritos, retorno de usuários que já favoritaram seu perfil antes.",
   },
 ];
 

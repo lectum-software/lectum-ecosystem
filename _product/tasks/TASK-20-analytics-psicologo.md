@@ -268,3 +268,10 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nenhum schema Prisma, migration, package novo, mock, seed ou evento simulado foi criado.
 - ADR complementar: `adrs/0128-analytics-video-player-controles-essenciais.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e rota local `/app/professional/analytics` via `Invoke-WebRequest` sem sessao autenticada retornando `307` para o fluxo privado.
+
+## Ajuste de copy em Origem do trafego (2026-06-18)
+
+- Pedido do usuario: ajustar as descricoes das origens `Busca e filtros` e `Favoritos` na secao `Origem do trafego`.
+- Textos atualizados no contrato real do backend e no fallback visual do frontend, sem alterar metricas, schema, migration, package ou regra de agregacao.
+- ADR novo nao foi necessario por se tratar apenas de copy de produto sem decisao arquitetural.
+- Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e rota local `/app/professional/analytics` via `Invoke-WebRequest` sem sessao autenticada retornando `307` para o fluxo privado.
