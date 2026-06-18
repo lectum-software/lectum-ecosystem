@@ -179,3 +179,11 @@ O seletor `Novas postagens` ja tinha opcoes compactas por papel (`Profissionais`
 - `pnpm --dir backend build`
 - `pnpm check`
 - Chrome/CDP mobile 390px confirmou opcoes por papel, `Desativado` como ultimo item, ausencia de overflow horizontal e persistencia do valor apos reload.
+
+## Complemento 2026-06-18 - Dropdown sem profundidade visual
+
+- O seletor customizado `Novas postagens` deixa de usar sombra no trigger e na lista aberta.
+- O estado de foco passa a ser comunicado por borda/cor, sem ring/halo azul, alinhado a diretriz recente de reduzir elementos flutuantes na Lectum.
+- Estados de hover, item selecionado, opcoes por papel e contrato `novo_post` permanecem inalterados.
+
+Validacao: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile 390px confirmando `box-shadow: none` no botao e no dropdown aberto.

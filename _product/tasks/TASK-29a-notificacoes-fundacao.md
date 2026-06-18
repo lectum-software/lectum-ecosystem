@@ -245,3 +245,17 @@ Esta task deixa o canal de recebimento pronto. **Não** ligue eventos de domíni
 - Smoke de dominio via `tsx` confirmou que `novo_post.enabled = false` bloqueia apenas notificacoes de novas postagens e mantem outras chaves habilitadas.
 - Browser local via Chrome/CDP em `/app/settings/notifications` mobile `390x844`, validando as opcoes `Profissionais/Todos/Desativado` para paciente, `Pacientes/Todos/Desativado` para psicologo, ausencia de overflow horizontal e persistencia de `Desativado` apos reload.
 - ADR atualizado: `adrs/0007-notificacoes-fundacao.md`.
+
+## Complemento 2026-06-18 - seletor sem sombra
+
+- O dropdown customizado `Novas postagens` removeu `box-shadow`/glow tanto no botao fechado quanto na lista aberta.
+- O seletor manteve fundo branco, borda azul-clara, texto, seta e estados existentes por cor/borda, sem halo de foco ou profundidade visual.
+- O ajuste vale para pacientes e psicologos, sem alterar opcoes, payload, persistencia ou segmentacao.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local via Chrome/CDP em `/app/settings/notifications` mobile `390x844`, validando `box-shadow: none` no botao fechado, `box-shadow: none` na lista aberta e ausencia de overflow horizontal.
+- ADR atualizado: `adrs/0007-notificacoes-fundacao.md`.

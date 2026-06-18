@@ -315,12 +315,12 @@ export const NotificationSettingsLogic = () => {
                               control={form.hook.control}
                               field="select"
                               hideEmptyOption
-                              inputClassName="h-10 rounded-[1.15rem] border-[#cfe5fb] bg-white px-3.5 pr-9 text-[13px] font-bold text-[#1d5f9f] shadow-[0_8px_22px_rgba(47,141,235,0.08)] hover:border-[#b8daf8] hover:bg-[#f8fbff] focus:border-primary focus:ring-4 focus:ring-primary/15"
+                              inputClassName="h-10 rounded-[1.15rem] border-[#cfe5fb] bg-white px-3.5 pr-9 text-[13px] font-bold text-[#1d5f9f] shadow-none hover:border-[#b8daf8] hover:bg-[#f8fbff] focus:border-primary focus:ring-0"
                               label={`Preferência de ${category.label}`}
                               name="novo_post__post_author_scope"
                               options={newPostOptions}
                               selectChevronClassName="right-3.5 h-4 w-4 text-primary/75"
-                              selectContentClassName="top-[calc(100%+8px)] max-h-60 rounded-[1.15rem] border-[#cfe5fb] bg-white p-1.5 text-[13px] font-semibold text-foreground shadow-[0_18px_40px_rgba(15,23,42,0.12)]"
+                              selectContentClassName="top-[calc(100%+8px)] max-h-60 rounded-[1.15rem] border-[#cfe5fb] bg-white p-1.5 text-[13px] font-semibold text-foreground shadow-none"
                               selectOptionClassName="rounded-[0.9rem] px-3 py-2.5 text-[13px] leading-5 text-foreground hover:bg-[#f3f8ff] hover:text-primary active:bg-[#eaf4ff]"
                               selectOptionSelectedClassName="bg-[#eaf4ff] text-primary"
                               useCustomSelect
