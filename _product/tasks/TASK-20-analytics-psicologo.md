@@ -258,3 +258,13 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Texto atualizado: `Videos de apresentacao com alto engajamento geram mais conversoes para o WhatsApp. Faca testes e descubra o que funciona melhor para voce.`
 - A ordem da tela permanece: indicadores principais, video de apresentacao, origem do trafego e link da pagina de avaliacoes.
 - Nenhum schema Prisma, migration, package novo, mock, seed ou evento simulado foi criado.
+
+## Refinamento do player de video em Analytics (2026-06-18)
+
+- Pedido do usuario: remover o menu nativo de tres pontinhos do video exibido na secao `Video de apresentacao` em `/app/professional/analytics`.
+- `VerticalVideoPlayer` recebeu a variante opt-in `controlsVariant="minimal"`, com controles proprios apenas para play/pause e barra de progresso.
+- A tela de Analytics passou a usar essa variante somente na previa analitica do video, mantendo os players publicos/posts com comportamento nativo existente.
+- A variante minimal desativa controles nativos, aplica `controlsList` com restricoes, bloqueia Picture-in-Picture/remote playback e impede o menu de contexto do navegador para evitar velocidade, PiP, tela cheia e opcoes avancadas.
+- Nenhum schema Prisma, migration, package novo, mock, seed ou evento simulado foi criado.
+- ADR complementar: `adrs/0128-analytics-video-player-controles-essenciais.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e rota local `/app/professional/analytics` via `Invoke-WebRequest` sem sessao autenticada retornando `307` para o fluxo privado.

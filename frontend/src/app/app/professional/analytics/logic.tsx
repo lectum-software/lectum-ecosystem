@@ -801,6 +801,7 @@ const PresentationVideoAnalyticsSection = ({
           {videoSrc ? (
             <VerticalVideoPlayer
               className="mx-auto w-full max-w-[190px] rounded-[22px] border-0 shadow-[var(--lectum-shadow-soft)]"
+              controlsVariant="minimal"
               onVideoElementReady={handleVideoElementReady}
               poster={videoCoverSrc}
               src={videoSrc}
