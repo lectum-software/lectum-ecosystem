@@ -65,4 +65,4 @@ A tela de notificações e outras telas que precisam de ações no header contin
   - confirmou título centralizado, ausência de overflow horizontal, fundo branco, altura/padding consistentes e largura alinhada ao conteúdo central.
 - Browser local via Chrome/CDP com usuário psicólogo temporário real, removido do banco ao final:
   - mobile 390x844 e desktop 1024x768 em `/app/professional/profile/setup`;
-  - confirmou dois links no header (`Voltar ao perfil` e `Ver perfil público`), ausência do botão textual `Ver perfil público`, `titleCenterDelta=0`, tamanhos equivalentes entre os botões laterais, ausência de overflow horizontal e navegação do ícone para `/app/psychologist/:id`.
+  - confirmou dois links no header (`Voltar ao perfil` e `Visualizar perfil público`), ausência do botão textual `Ver perfil público`, `titleCenterDelta=0`, tamanhos equivalentes entre os botões laterais, ausência de overflow horizontal e navegação do ícone para `/app/psychologist/:id`.

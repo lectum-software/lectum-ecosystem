@@ -1556,7 +1556,7 @@ export const ProfessionalProfileSetupLogic = () => {
           backLabel="Voltar ao perfil"
           rightActionHref={publicProfileHref}
           rightActionIcon={<Eye className="h-5 w-5" aria-hidden="true" />}
-          rightActionLabel="Ver perfil público"
+          rightActionLabel="Visualizar perfil público"
           title="Editar perfil"
         />
 
