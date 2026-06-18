@@ -8,6 +8,8 @@ import type {
   PsychologistAnalyticsPresentationVideoMetric,
   PsychologistAnalyticsPresentationVideoRetentionPoint,
   PsychologistAnalyticsResponse,
+  PsychologistAnalyticsTrafficSource,
+  PsychologistAnalyticsTrafficSources,
   PsychologistAnalyticsUnavailableMetric,
 } from "../DTOs/IAnalyticsDTO";
 import type { IPsychologistAnalyticsRepository } from "./interfaces/IAnalyticsRepository";
@@ -22,6 +24,56 @@ const unavailableProfileViews: PsychologistAnalyticsUnavailableMetric = {
 };
 
 const RETENTION_BUCKETS = Array.from({ length: 20 }, (_, index) => (index + 1) * 5);
+
+const trafficSourceDefinitions: Array<
+  Pick<PsychologistAnalyticsTrafficSource, "description" | "id" | "label">
+> = [
+  {
+    id: "explore",
+    label: "Explorar",
+    description: "Acessos originados pela página de psicólogos e navegação pelos vídeos.",
+  },
+  {
+    id: "search_filters",
+    label: "Busca e filtros",
+    description:
+      "Acessos originados por pesquisas de nome, especialidade, abordagem, convênio, valor e demais filtros.",
+  },
+  {
+    id: "communities",
+    label: "Comunidades",
+    description:
+      "Acessos originados por posts, comentários, respostas, ranking Top Mentor e demais interações dentro das comunidades.",
+  },
+  {
+    id: "direct_link",
+    label: "Link direto",
+    description: "Acessos originados por links compartilhados externamente.",
+  },
+  {
+    id: "favorites",
+    label: "Favoritos",
+    description:
+      "Acessos originados a partir da área de psicólogos favoritados ou de psicólogos previamente favoritados pelo paciente.",
+  },
+];
+
+const toTrafficSources = (): PsychologistAnalyticsTrafficSources => {
+  const sources = trafficSourceDefinitions.map((source) => ({
+    ...source,
+    profile_views: 0,
+    whatsapp_clicks: 0,
+    conversion_rate: 0,
+    badge: null,
+  }));
+
+  return {
+    updated_at: null,
+    description: "Entenda quais canais mais levam pacientes ao seu perfil e ao WhatsApp.",
+    source: "traffic_origin_events",
+    sources,
+  };
+};
 
 const toCards = (
   metrics: PsychologistAnalyticsResponse["metrics"],
@@ -371,6 +423,7 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
       metrics,
       cards: toCards(metrics),
       presentation_video: presentationVideo,
+      traffic_sources: toTrafficSources(),
       unavailable: [unavailableProfileViews],
     };
   }

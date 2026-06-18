@@ -240,3 +240,13 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Sessoes de videos anteriores permanecem preservadas para historico interno e janela de aprendizado do ranking, mas nao contaminam as metricas exibidas do video atual.
 - Nao houve schema, migration, package novo, mock, seed ou evento simulado.
 - ADR criado: `adrs/0125-ranking-psicologos-video-learning.md`.
+
+## Execucao complementar: origem do trafego em Analytics (2026-06-18)
+
+- Pedido do usuario: remover a secao `Busca por especialidades` e inserir `Origem do trafego` imediatamente antes de `Link da minha pagina de avaliacoes`.
+- A ordem da tela `/app/professional/analytics` ficou: indicadores principais, video de apresentacao, origem do trafego e link da pagina de avaliacoes.
+- O backend passou a expor `traffic_sources` no contrato de `GET /api/private/psychologist/analytics`, com as origens Explorar, Busca e filtros, Comunidades, Link direto e Favoritos.
+- Como ainda nao existe fonte persistida de visualizacao de perfil com origem nem origem em `contact_request`, os valores por origem permanecem zerados de forma honesta, sem numeros ficticios ou distribuicao simulada.
+- A UI foi preparada para dados reais futuros: desktop com layout tabular premium ordenado por visualizacoes e mobile em lista com barras de progresso e acordeao por origem.
+- Nenhum schema Prisma, migration, package novo, seed, dado fake ou endpoint simulado foi criado.
+- ADR complementar: `adrs/0126-analytics-origem-trafego-zerada.md`.

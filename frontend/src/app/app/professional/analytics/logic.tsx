@@ -4,12 +4,13 @@ import {
   ArrowRight,
   BarChart3,
   CheckCircle2,
+  ChevronDown,
   Clock3,
+  Compass,
   Copy,
   Eye,
   Heart,
-  Info,
-  Lightbulb,
+  Link2,
   type LucideIcon,
   MessageSquare,
   PlayCircle,
@@ -17,6 +18,7 @@ import {
   Search,
   Star,
   TrendingDown,
+  UsersRound,
 } from "lucide-react";
 import Link from "next/link";
 import { type MouseEvent as ReactMouseEvent, useCallback, useMemo, useRef, useState } from "react";
@@ -28,6 +30,8 @@ import type {
   PsychologistAnalyticsPresentationVideo,
   PsychologistAnalyticsPresentationVideoMetric,
   PsychologistAnalyticsResponse,
+  PsychologistAnalyticsTrafficSource,
+  PsychologistAnalyticsTrafficSources,
 } from "@/api/generator/types/psychologist-analytics";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -160,6 +164,73 @@ const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCardView[] 
     source: "untracked",
   },
 ];
+
+const trafficSourceIcons: Record<PsychologistAnalyticsTrafficSource["id"], LucideIcon> = {
+  communities: UsersRound,
+  direct_link: Link2,
+  explore: Compass,
+  favorites: Heart,
+  search_filters: Search,
+};
+
+const fallbackTrafficSources: PsychologistAnalyticsTrafficSources = {
+  updated_at: null,
+  description: "Entenda quais canais mais levam pacientes ao seu perfil e ao WhatsApp.",
+  source: "traffic_origin_events",
+  sources: [
+    {
+      id: "explore",
+      label: "Explorar",
+      description: "Acessos originados pela página de psicólogos e navegação pelos vídeos.",
+      profile_views: 0,
+      whatsapp_clicks: 0,
+      conversion_rate: 0,
+      badge: null,
+    },
+    {
+      id: "search_filters",
+      label: "Busca e filtros",
+      description:
+        "Acessos originados por pesquisas de nome, especialidade, abordagem, convênio, valor e demais filtros.",
+      profile_views: 0,
+      whatsapp_clicks: 0,
+      conversion_rate: 0,
+      badge: null,
+    },
+    {
+      id: "communities",
+      label: "Comunidades",
+      description:
+        "Acessos originados por posts, comentários, respostas, ranking Top Mentor e demais interações dentro das comunidades.",
+      profile_views: 0,
+      whatsapp_clicks: 0,
+      conversion_rate: 0,
+      badge: null,
+    },
+    {
+      id: "direct_link",
+      label: "Link direto",
+      description: "Acessos originados por links compartilhados externamente.",
+      profile_views: 0,
+      whatsapp_clicks: 0,
+      conversion_rate: 0,
+      badge: null,
+    },
+    {
+      id: "favorites",
+      label: "Favoritos",
+      description:
+        "Acessos originados a partir da área de psicólogos favoritados ou de psicólogos previamente favoritados pelo paciente.",
+      profile_views: 0,
+      whatsapp_clicks: 0,
+      conversion_rate: 0,
+      badge: null,
+    },
+  ],
+};
+
+const getTrafficSources = (data?: PsychologistAnalyticsResponse) =>
+  data?.traffic_sources ?? fallbackTrafficSources;
 
 const PeriodTabs = ({
   current,
@@ -754,6 +825,248 @@ const PresentationVideoAnalyticsSection = ({
   );
 };
 
+type TrafficSourceWithDisplay = PsychologistAnalyticsTrafficSource & {
+  displayBadge: "best_conversion" | "primary_source" | null;
+  progress: number;
+};
+
+const TRAFFIC_SOURCE_ORDER: Record<PsychologistAnalyticsTrafficSource["id"], number> = {
+  explore: 0,
+  search_filters: 1,
+  communities: 2,
+  direct_link: 3,
+  favorites: 4,
+};
+
+const toTrafficSourceDisplay = (
+  sources: PsychologistAnalyticsTrafficSource[],
+): TrafficSourceWithDisplay[] => {
+  const baseSources = sources.length ? sources : fallbackTrafficSources.sources;
+  const orderedSources = [...baseSources].sort(
+    (a, b) =>
+      b.profile_views - a.profile_views || TRAFFIC_SOURCE_ORDER[a.id] - TRAFFIC_SOURCE_ORDER[b.id],
+  );
+  const highestConversion = Math.max(...orderedSources.map((source) => source.conversion_rate));
+  const highestViews = Math.max(...orderedSources.map((source) => source.profile_views));
+  const bestConversion = orderedSources.find(
+    (source) => source.profile_views > 0 && source.conversion_rate === highestConversion,
+  );
+  const primarySource = orderedSources.find(
+    (source) => source.profile_views > 0 && source.profile_views === highestViews,
+  );
+
+  return orderedSources.map((source) => {
+    const hasPositiveConversion = Boolean(bestConversion && bestConversion.conversion_rate > 0);
+    const displayBadge =
+      hasPositiveConversion && source.id === bestConversion?.id
+        ? "best_conversion"
+        : !hasPositiveConversion && primarySource && source.id === primarySource.id
+          ? "primary_source"
+          : source.badge;
+
+    return {
+      ...source,
+      displayBadge,
+      progress: clampPercent(source.conversion_rate),
+    };
+  });
+};
+
+const TrafficBadge = ({ type }: { type: TrafficSourceWithDisplay["displayBadge"] }) => {
+  if (!type) return null;
+
+  return (
+    <span className="inline-flex items-center rounded-full border border-primary/10 bg-primary-soft px-2 py-1 text-[0.68rem] font-extrabold uppercase tracking-[0.08em] text-primary">
+      {type === "best_conversion" ? "Melhor conversão" : "Principal origem"}
+    </span>
+  );
+};
+
+const TrafficSourceSection = ({
+  locked,
+  traffic,
+}: {
+  locked?: boolean;
+  traffic: PsychologistAnalyticsTrafficSources;
+}) => {
+  const [expandedSourceId, setExpandedSourceId] = useState<
+    PsychologistAnalyticsTrafficSource["id"] | null
+  >(null);
+  const sources = useMemo(() => toTrafficSourceDisplay(traffic.sources), [traffic.sources]);
+
+  return (
+    <section className="grid min-w-0 gap-4 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)] md:p-6">
+      <div className="flex min-w-0 items-start gap-3">
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
+          <BarChart3 className="h-6 w-6" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">
+            Origem do tráfego
+          </p>
+          <h2 className="mt-2 text-xl font-extrabold tracking-[-0.03em] text-foreground">
+            Canais que levam pacientes até você
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">{traffic.description}</p>
+        </div>
+      </div>
+
+      <div className="hidden overflow-hidden rounded-[22px] border border-primary/10 bg-surface md:block">
+        <div className="grid grid-cols-[minmax(0,1.25fr)_minmax(92px,0.8fr)_minmax(92px,0.75fr)_minmax(86px,0.7fr)] gap-3 border-border border-b bg-surface-muted px-4 py-3 text-[0.7rem] font-black uppercase tracking-[0.1em] text-subtle">
+          <span>Fonte</span>
+          <span>Visualizações de perfil</span>
+          <span>WhatsApp</span>
+          <span>Conversão</span>
+        </div>
+        <div className="divide-y divide-border">
+          {sources.map((source) => {
+            const Icon = trafficSourceIcons[source.id];
+
+            return (
+              <div
+                className="grid grid-cols-[minmax(0,1.25fr)_minmax(92px,0.8fr)_minmax(92px,0.75fr)_minmax(86px,0.7fr)] items-center gap-3 px-4 py-4"
+                key={source.id}
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+                    <Icon className="h-4 w-4" aria-hidden />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <p className="truncate text-sm font-extrabold text-foreground">
+                        {source.label}
+                      </p>
+                      <TrafficBadge type={source.displayBadge} />
+                    </div>
+                    <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
+                      {source.description}
+                    </p>
+                  </div>
+                </div>
+                <p
+                  className={cn(
+                    "text-lg font-black tracking-[-0.04em] text-foreground",
+                    locked && "select-none blur-[5px]",
+                  )}
+                >
+                  {toCount(source.profile_views)}
+                </p>
+                <p
+                  className={cn(
+                    "text-lg font-black tracking-[-0.04em] text-foreground",
+                    locked && "select-none blur-[5px]",
+                  )}
+                >
+                  {toCount(source.whatsapp_clicks)}
+                </p>
+                <p
+                  className={cn(
+                    "text-lg font-black tracking-[-0.04em] text-foreground",
+                    locked && "select-none blur-[5px]",
+                  )}
+                >
+                  {source.conversion_rate}%
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="grid gap-3 md:hidden">
+        {sources.map((source) => {
+          const Icon = trafficSourceIcons[source.id];
+          const expanded = expandedSourceId === source.id;
+
+          return (
+            <article
+              className={cn(
+                "overflow-hidden rounded-[22px] border border-primary/10 bg-surface-muted shadow-[var(--lectum-shadow-soft)]",
+                source.displayBadge && "border-primary/25 bg-primary-soft/35",
+              )}
+              key={source.id}
+            >
+              <button
+                aria-expanded={expanded}
+                className="w-full p-4 text-left"
+                onClick={() => setExpandedSourceId(expanded ? null : source.id)}
+                type="button"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-primary">
+                    <Icon className="h-5 w-5" aria-hidden />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-extrabold text-foreground">
+                          {source.label}
+                        </p>
+                        <div className="mt-1">
+                          <TrafficBadge type={source.displayBadge} />
+                        </div>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <span
+                          className={cn(
+                            "text-base font-black text-foreground",
+                            locked && "select-none blur-[5px]",
+                          )}
+                        >
+                          {source.conversion_rate}%
+                        </span>
+                        <ChevronDown
+                          className={cn("h-4 w-4 text-subtle transition", expanded && "rotate-180")}
+                          aria-hidden
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface">
+                      <div
+                        className={cn(
+                          "h-full rounded-full bg-primary transition-all",
+                          locked && "blur-[3px]",
+                        )}
+                        style={{ width: `${source.progress}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </button>
+
+              {expanded ? (
+                <div className="grid gap-2 border-border border-t px-4 py-4 text-sm text-muted">
+                  <p className="font-semibold leading-5 text-muted">{source.description}</p>
+                  <div className="grid gap-2 rounded-2xl bg-surface p-3">
+                    <p className={cn(locked && "select-none blur-[5px]")}>
+                      <span className="font-extrabold text-foreground">
+                        {toCount(source.profile_views)}
+                      </span>{" "}
+                      visualizações de perfil
+                    </p>
+                    <p className={cn(locked && "select-none blur-[5px]")}>
+                      <span className="font-extrabold text-foreground">
+                        {toCount(source.whatsapp_clicks)}
+                      </span>{" "}
+                      cliques no WhatsApp
+                    </p>
+                    <p className={cn(locked && "select-none blur-[5px]")}>
+                      <span className="font-extrabold text-foreground">
+                        {source.conversion_rate}%
+                      </span>{" "}
+                      conversão
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+};
+
 const ReviewsLinkCard = ({ link, locked }: { link: string; locked?: boolean }) => {
   const copyLink = async () => {
     if (locked) return;
@@ -809,44 +1122,6 @@ const ReviewsLinkCard = ({ link, locked }: { link: string; locked?: boolean }) =
     </section>
   );
 };
-
-const SpecialtySearchCard = () => (
-  <section className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
-    <div className="flex items-start gap-3">
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-        <Search className="h-5 w-5" aria-hidden />
-      </span>
-      <div className="min-w-0">
-        <h2 className="text-lg font-extrabold tracking-[-0.02em] text-foreground">
-          Busca por especialidades
-        </h2>
-        <p className="mt-1 text-sm leading-6 text-muted">
-          Entenda como sua presença aparece nas buscas por temas e especialidades.
-        </p>
-      </div>
-      <Info className="ml-auto h-5 w-5 shrink-0 text-subtle" aria-hidden />
-    </div>
-    <div className="mt-4 rounded-[var(--lectum-control-radius)] border border-dashed border-primary/20 bg-primary-soft/40 p-4 text-sm leading-6 text-muted">
-      Esta seção seguirá o layout do protótipo quando houver evento persistido de busca por
-      especialidade. Nenhum percentual é simulado.
-    </div>
-  </section>
-);
-
-const ProTipCard = () => (
-  <section className="flex gap-3 rounded-[var(--lectum-card-radius)] border border-primary/20 bg-primary-soft p-5 text-muted shadow-[var(--lectum-shadow-soft)]">
-    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-primary">
-      <Lightbulb className="h-5 w-5" aria-hidden />
-    </span>
-    <div className="min-w-0">
-      <h2 className="text-base font-extrabold text-foreground">Dica Pro</h2>
-      <p className="mt-1 text-sm leading-6 text-muted">
-        Vídeos de apresentação com alto engajamento geram até 3x mais conversões para o WhatsApp.
-        Faça testes e descubra o que funciona melhor para você!
-      </p>
-    </div>
-  </section>
-);
 
 export const ProfessionalAnalyticsLogic = () => {
   const [period, setPeriod] = useState<PsychologistAnalyticsPeriodKey>("30d");
@@ -911,10 +1186,12 @@ export const ProfessionalAnalyticsLogic = () => {
         ) : null}
 
         {!shouldShowError ? (
+          <TrafficSourceSection locked={isAnalyticsPreview} traffic={getTrafficSources(data)} />
+        ) : null}
+
+        {!shouldShowError ? (
           <ReviewsLinkCard link={reviewLink} locked={isAnalyticsPreview} />
         ) : null}
-        {!shouldShowError ? <SpecialtySearchCard /> : null}
-        {!shouldShowError ? <ProTipCard /> : null}
       </section>
     </PrivateTemplate>
   );

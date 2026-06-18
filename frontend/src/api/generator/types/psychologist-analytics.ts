@@ -104,6 +104,30 @@ export type PsychologistAnalyticsPresentationVideo = {
   };
 };
 
+export type PsychologistAnalyticsTrafficSourceId =
+  | "explore"
+  | "search_filters"
+  | "communities"
+  | "direct_link"
+  | "favorites";
+
+export type PsychologistAnalyticsTrafficSource = {
+  id: PsychologistAnalyticsTrafficSourceId;
+  label: string;
+  description: string;
+  profile_views: number;
+  whatsapp_clicks: number;
+  conversion_rate: number;
+  badge: "best_conversion" | "primary_source" | null;
+};
+
+export type PsychologistAnalyticsTrafficSources = {
+  updated_at: string | null;
+  description: string;
+  source: "traffic_origin_events";
+  sources: PsychologistAnalyticsTrafficSource[];
+};
+
 export type PsychologistAnalyticsResponse = {
   access: {
     has_professional_entitlement: boolean;
@@ -113,5 +137,6 @@ export type PsychologistAnalyticsResponse = {
   metrics: PsychologistAnalyticsMetrics;
   cards: PsychologistAnalyticsMetric[];
   presentation_video: PsychologistAnalyticsPresentationVideo;
+  traffic_sources: PsychologistAnalyticsTrafficSources;
   unavailable: PsychologistAnalyticsUnavailableMetric[];
 };
