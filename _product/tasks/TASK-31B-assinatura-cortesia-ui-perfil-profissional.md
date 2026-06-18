@@ -77,3 +77,22 @@ Psicólogos com `professional_subscription.source="admin_grant"` recebem todos o
 - `pnpm --dir frontend build`
 - `pnpm check`
 - HTTP local sem sessão em `/app/profile`, `/app/professional/profile/setup` e `/app/professional/billing/subscription` respondeu `307`, confirmando proteção por redirect/login; validação visual autenticada real fica dependente da sessão do usuário no navegador.
+
+## Ajuste visual em 2026-06-18: Plano Gratuito persuasivo em Minha Assinatura
+
+- Pedido direto de produto: tornar `/app/professional/billing/subscription` mais persuasiva para profissionais no Plano Gratuito, sem transformar a tela em tabela comparativa e sem exibir preço nesta etapa.
+- Referência visual consultada: `_product/proto/Minhas Assinatura - Psicólogo.jpg` e print enviado pelo usuário; Builder/Quick Copy não está exposto como ferramenta direta neste ambiente.
+- O cabeçalho gratuito passou a usar `SEU PLANO ATUAL`, `Plano Gratuito` e copy de valor sobre comunidades, avaliações e perfil ativo.
+- O card do plano atual manteve `Plano atual: Plano Gratuito` e `Expiração: Sem data definida`, agora com ícones discretos, bordas suaves e espaçamento mobile-first.
+- O aviso técnico `A Lectum não coleta cartão fora do gateway real...` foi removido da experiência gratuita.
+- A tela passou a exibir a seção `O que você desbloqueia com a Assinatura Profissional`, agrupando benefícios por credibilidade, visibilidade, recursos de perfil e atendimento prioritário.
+- Adicionado card azul claro `Amplie sua presença profissional na Lectum` e CTA primário `Ver planos e benefícios`.
+- A tela de cortesia (`source="admin_grant"`) foi preservada com CTA para checkout real/bloqueado, sem alterar regras de gateway, cobrança, entitlement, API ou preço.
+- ADR criado: `adrs/0117-minha-assinatura-gratuita-beneficios.md`.
+
+### Validação do ajuste
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser headless local em viewport 390x844 na rota `/app/professional/billing/subscription`, com usuário psicólogo temporário criado por endpoints reais, Plano Gratuito selecionado via API real e removido do banco ao final, confirmou os textos novos, a ausência do aviso técnico antigo e `scrollWidth=390`/`innerWidth=390`.

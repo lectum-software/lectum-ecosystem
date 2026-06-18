@@ -2,12 +2,19 @@
 
 import {
   ArrowLeft,
+  ArrowRight,
+  Award,
   BadgeCheck,
+  BarChart3,
   CalendarClock,
+  CheckCircle2,
   CreditCard,
   Gift,
-  Loader2,
-  ShieldAlert,
+  HeartHandshake,
+  type LucideIcon,
+  Search,
+  ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
@@ -35,6 +42,63 @@ const getErrorMessage = (error: unknown) => {
   return error instanceof Error ? error.message : "Não foi possível carregar sua assinatura agora.";
 };
 
+type BenefitGroup = {
+  icon: LucideIcon;
+  items: string[];
+  title: string;
+};
+
+const professionalBenefitGroups: BenefitGroup[] = [
+  {
+    icon: ShieldCheck,
+    title: "Mais credibilidade",
+    items: ["Perfil profissional verificado", "Receba avaliações e depoimentos"],
+  },
+  {
+    icon: Search,
+    title: "Mais visibilidade",
+    items: [
+      "Prioridade na busca de pacientes",
+      "Respostas destacadas nas comunidades",
+      "Elegível ao Top Mentor",
+    ],
+  },
+  {
+    icon: BarChart3,
+    title: "Mais recursos para seu perfil",
+    items: ["Até 10 especialidades", "Serviços profissionais ilimitados", "Estatísticas de perfil"],
+  },
+  {
+    icon: HeartHandshake,
+    title: "Atendimento prioritário",
+    items: ["Suporte prioritário via WhatsApp"],
+  },
+];
+
+const BenefitGroupCard = ({ group }: { group: BenefitGroup }) => {
+  const Icon = group.icon;
+
+  return (
+    <article className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4">
+      <div className="flex items-center gap-3">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+          <Icon className="h-4 w-4" aria-hidden="true" />
+        </span>
+        <h3 className="text-sm font-extrabold text-foreground">{group.title}</h3>
+      </div>
+
+      <ul className="mt-3 grid gap-2.5">
+        {group.items.map((item) => (
+          <li className="flex gap-2.5 text-sm leading-5 text-muted" key={item}>
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    </article>
+  );
+};
+
 export const ProfessionalBillingSubscriptionLogic = () => {
   const { current } = usePsychologistBilling();
   const subscription = current.data?.current || null;
@@ -42,12 +106,19 @@ export const ProfessionalBillingSubscriptionLogic = () => {
     subscription?.source === "admin_grant" &&
     subscription.status === "ativa" &&
     subscription.plan?.slug === "profissional";
+  const isFreePlan = subscription?.plan?.slug === "gratuito";
   const planName = subscription?.plan?.name || "Plano não encontrado";
   const expirationLabel = formatDate(subscription?.current_period_end);
+  const heroTitle = isCourtesy ? "Plano Profissional de cortesia" : planName;
+  const heroDescription = isCourtesy
+    ? "Você está com todos os benefícios de um psicólogo assinante liberados durante o período da cortesia."
+    : isFreePlan
+      ? "Você já pode participar das comunidades, receber avaliações e manter seu perfil profissional ativo na Lectum."
+      : "Veja o plano ativo no seu perfil profissional.";
 
   return (
     <PrivateTemplate showHeader={false}>
-      <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-2xl">
+      <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-3xl">
         <Link
           className="inline-flex items-center gap-2 text-sm font-semibold text-muted"
           href="/app/profile"
@@ -65,43 +136,43 @@ export const ProfessionalBillingSubscriptionLogic = () => {
         ) : null}
 
         {!current.isLoading && !current.isError ? (
-          <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-8 shadow-[var(--lectum-shadow-soft)]">
+          <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-7 shadow-[var(--lectum-shadow-soft)] md:px-7">
             <div className="grid justify-items-center text-center">
-              <span className="grid h-20 w-20 place-items-center rounded-full bg-primary-soft text-primary">
+              <span className="relative grid h-20 w-20 place-items-center rounded-3xl bg-primary-soft text-primary shadow-[var(--lectum-shadow-soft)]">
                 {isCourtesy ? (
-                  <Gift className="h-10 w-10" aria-hidden="true" />
+                  <Gift className="h-9 w-9" aria-hidden="true" />
                 ) : (
-                  <BadgeCheck className="h-10 w-10" aria-hidden="true" />
+                  <ShieldCheck className="h-9 w-9" aria-hidden="true" />
                 )}
+                <span className="absolute -right-1 -top-1 grid h-7 w-7 place-items-center rounded-full border border-primary/20 bg-surface text-primary">
+                  <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                </span>
               </span>
-              <p className="mt-6 text-xs font-bold uppercase tracking-[0.18em] text-primary">
-                Minha assinatura
+              <p className="mt-6 text-xs font-black uppercase tracking-[0.18em] text-primary">
+                {isCourtesy ? "Sua cortesia ativa" : "Seu plano atual"}
               </p>
-              <h1 className="mt-3 text-2xl font-bold leading-tight text-foreground">
-                {isCourtesy ? "Plano Profissional de cortesia" : planName}
-              </h1>
-              <p className="mt-3 text-base leading-7 text-muted">
-                {isCourtesy
-                  ? "Você está com todos os benefícios de um psicólogo assinante liberados durante o período da cortesia."
-                  : "Veja o plano ativo no seu perfil profissional."}
-              </p>
+              <h1 className="mt-3 text-2xl font-bold leading-tight text-foreground">{heroTitle}</h1>
+              <p className="mt-3 max-w-xl text-base leading-7 text-muted">{heroDescription}</p>
             </div>
 
-            <div className="mt-7 grid gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface-muted p-4">
-              <div className="flex items-start gap-3">
-                <BadgeCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+            <div className="mt-7 grid gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface-muted p-3 md:grid-cols-2">
+              <div className="flex items-start gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+                  <BadgeCheck className="h-5 w-5" aria-hidden="true" />
+                </span>
                 <div>
                   <p className="text-sm font-bold text-foreground">Plano atual</p>
                   <p className="mt-1 text-sm text-muted">{planName}</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <CalendarClock
-                  className="mt-0.5 h-5 w-5 shrink-0 text-primary"
-                  aria-hidden="true"
-                />
+              <div className="flex items-start gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+                  <CalendarClock className="h-5 w-5" aria-hidden="true" />
+                </span>
                 <div>
-                  <p className="text-sm font-bold text-foreground">Expiração da cortesia</p>
+                  <p className="text-sm font-bold text-foreground">
+                    {isCourtesy ? "Expiração da cortesia" : "Expiração"}
+                  </p>
                   <p className="mt-1 text-sm text-muted">{expirationLabel}</p>
                 </div>
               </div>
@@ -122,25 +193,56 @@ export const ProfessionalBillingSubscriptionLogic = () => {
                 </Button>
               </>
             ) : (
-              <Button asChild className="mt-6 h-12 w-full rounded-full" variant="outline">
-                <Link href="/app/professional/billing/plans">Ver planos disponíveis</Link>
-              </Button>
-            )}
+              <>
+                <section className="mt-7">
+                  <div className="flex items-start gap-3">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+                      <Award className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                    <div>
+                      <h2 className="text-base font-extrabold leading-6 text-foreground">
+                        O que você desbloqueia com a Assinatura Profissional
+                      </h2>
+                      <p className="mt-1 text-sm leading-6 text-muted">
+                        Benefícios pensados para fortalecer sua autoridade e ampliar sua presença
+                        dentro da Lectum.
+                      </p>
+                    </div>
+                  </div>
 
-            <div className="mt-6 flex gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface-muted p-4 text-sm leading-6 text-muted">
-              {current.isFetching ? (
-                <Loader2
-                  className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-primary"
-                  aria-hidden="true"
-                />
-              ) : (
-                <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-              )}
-              <span>
-                A Lectum não coleta cartão fora do gateway real. Se o checkout ainda estiver
-                bloqueado, a tela de pagamento mostrará a pendência externa sem simular cobrança.
-              </span>
-            </div>
+                  <div className="mt-4 grid gap-3 md:grid-cols-2">
+                    {professionalBenefitGroups.map((group) => (
+                      <BenefitGroupCard group={group} key={group.title} />
+                    ))}
+                  </div>
+                </section>
+
+                <div className="mt-6 rounded-[var(--lectum-card-radius)] border border-primary/20 bg-primary-soft p-5">
+                  <div className="flex gap-3">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-primary">
+                      <Sparkles className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                    <div>
+                      <h2 className="text-base font-extrabold leading-6 text-foreground">
+                        Amplie sua presença profissional na Lectum
+                      </h2>
+                      <p className="mt-2 text-sm leading-6 text-muted">
+                        Profissionais assinantes recebem mais destaque dentro da plataforma,
+                        fortalecem sua autoridade nas comunidades e aumentam suas oportunidades de
+                        atendimento.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <Button asChild className="mt-6 h-12 w-full rounded-full text-base">
+                  <Link href="/app/professional/billing/plans">
+                    Ver planos e benefícios
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
         ) : null}
       </section>
