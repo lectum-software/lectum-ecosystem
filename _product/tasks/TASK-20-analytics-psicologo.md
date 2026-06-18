@@ -213,3 +213,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Responsividade revisada em 390x844 e 1024x768: sem overflow horizontal real (`scrollWidth` igual à largura da viewport), tabs cabendo no mobile, métricas em uma coluna no mobile e duas colunas no desktop.
 - Nenhum mock, dado fake, schema, migration ou package novo foi criado.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, API real com psicólogo temporário gratuito e browser local/headless em `/app/professional/analytics` e `/app/professional/reviews`.
+
+## Extensão de analytics do vídeo de apresentação em 2026-06-18
+
+- Adicionado tracking real do vídeo de apresentação público por sessão (`profile_video_watch_session`), consolidando heartbeats por `session_key` sem criar visualizações duplicadas.
+- O player público do perfil profissional envia métricas reais de reprodução: visualização, tempo único assistido, maior posição, conclusão, replays e marcos 25/50/75/100%.
+- O endpoint `GET /api/private/psychologist/analytics` passou a agregar `presentation_video` com data de atualização, métricas principais e retenção por marcos; valores continuam desfocados no modo prévia para Plano Gratuito.
+- A tela `/app/professional/analytics` recebeu seção exclusiva do vídeo antes do card `Link da minha página de avaliações`, com cards de métricas e bloco de retenção alinhando reprodução do vídeo e gráfico por marcos.
+- A referência visual adicional usada foi a imagem fornecida pelo usuário `c:/Users/tulio/Downloads/WhatsApp Image 2026-06-18 at 15.04.58.jpeg`, inspirada em analytics de retenção de vídeo; não houve uso de mock ou dados simulados.
+
+- Migration aplicada com `pnpm --dir backend exec prisma migrate dev --name add_profile_video_watch_sessions` após tentativa inicial de `pnpm --dir backend db:migrate` ficar presa aguardando lock/prompt e ser encerrada sem criar migration.
+- Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `Invoke-WebRequest` em `/app/professional/analytics` e POST de validação 404 em `/api/private/directory/psychologists/non-existent/video-watch`.

@@ -54,6 +54,45 @@ export type PsychologistAnalyticsMetrics = {
   post_replies: number;
 };
 
+export type PsychologistAnalyticsVideoMetricId =
+  | "views"
+  | "average_watch_seconds"
+  | "completion_rate"
+  | "replay_rate"
+  | "abandonment_rate";
+
+export type PsychologistAnalyticsPresentationVideoMetric = {
+  id: PsychologistAnalyticsVideoMetricId;
+  label: string;
+  value: number;
+  unit: "count" | "percent" | "seconds";
+  description: string;
+};
+
+export type PsychologistAnalyticsPresentationVideoRetentionPoint = {
+  milestone: 25 | 50 | 75 | 100;
+  rate: number;
+  viewers: number;
+};
+
+export type PsychologistAnalyticsPresentationVideo = {
+  updated_at: string | null;
+  video_url: string | null;
+  video_cover_url: string | null;
+  metrics: {
+    views: number;
+    average_watch_seconds: number;
+    completion_rate: number;
+    replay_rate: number;
+    abandonment_rate: number;
+  };
+  cards: PsychologistAnalyticsPresentationVideoMetric[];
+  retention: {
+    average_retention_rate: number;
+    points: PsychologistAnalyticsPresentationVideoRetentionPoint[];
+  };
+};
+
 export type PsychologistAnalyticsResponse = {
   access: {
     has_professional_entitlement: boolean;
@@ -62,5 +101,6 @@ export type PsychologistAnalyticsResponse = {
   period: PsychologistAnalyticsPeriod;
   metrics: PsychologistAnalyticsMetrics;
   cards: PsychologistAnalyticsMetric[];
+  presentation_video: PsychologistAnalyticsPresentationVideo;
   unavailable: PsychologistAnalyticsUnavailableMetric[];
 };

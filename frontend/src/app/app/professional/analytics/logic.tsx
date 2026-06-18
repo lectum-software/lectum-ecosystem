@@ -3,6 +3,8 @@
 import {
   ArrowRight,
   BarChart3,
+  CheckCircle2,
+  Clock3,
   Copy,
   Eye,
   Heart,
@@ -11,9 +13,11 @@ import {
   type LucideIcon,
   MessageSquare,
   PlayCircle,
+  Repeat2,
   Search,
   Sparkles,
   Star,
+  TrendingDown,
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -22,16 +26,20 @@ import { usePsychologistAnalytics } from "@/api/callers/psychologist-analytics";
 import type {
   PsychologistAnalyticsMetric,
   PsychologistAnalyticsPeriodKey,
+  PsychologistAnalyticsPresentationVideo,
+  PsychologistAnalyticsPresentationVideoMetric,
   PsychologistAnalyticsResponse,
 } from "@/api/generator/types/psychologist-analytics";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { resolvePublicMediaUrl } from "@/utils/media";
 
 const PERIOD_OPTIONS: Array<{ label: string; value: PsychologistAnalyticsPeriodKey }> = [
   { label: "7 dias", value: "7d" },
@@ -82,6 +90,41 @@ const resolveApiError = (error: unknown) => {
 
 const toCount = (value?: number) => (value ?? 0).toLocaleString("pt-BR");
 
+const formatSeconds = (value?: number) => {
+  const totalSeconds = Math.max(0, Math.round(value ?? 0));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = String(totalSeconds % 60).padStart(2, "0");
+
+  return `${minutes}:${seconds}`;
+};
+
+const formatVideoMetricValue = (metric: PsychologistAnalyticsPresentationVideoMetric) => {
+  if (metric.unit === "seconds") return formatSeconds(metric.value);
+  if (metric.unit === "percent") return `${Math.round(metric.value)}%`;
+
+  return toCount(metric.value);
+};
+
+const formatUpdatedAt = (value?: string | null) => {
+  if (!value) return "Aguardando primeiras visualizações";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Aguardando primeiras visualizações";
+
+  return `Atualizado em ${new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(date)}`;
+};
+
+const videoMetricIcons: Record<PsychologistAnalyticsPresentationVideoMetric["id"], LucideIcon> = {
+  abandonment_rate: TrendingDown,
+  average_watch_seconds: Clock3,
+  completion_rate: CheckCircle2,
+  replay_rate: Repeat2,
+  views: PlayCircle,
+};
+
 const hasAnyRealEvent = (data?: PsychologistAnalyticsResponse) => {
   if (!data) return false;
 
@@ -90,7 +133,8 @@ const hasAnyRealEvent = (data?: PsychologistAnalyticsResponse) => {
     data.metrics.reviews_received > 0 ||
     data.metrics.posts_published > 0 ||
     data.metrics.post_engagement > 0 ||
-    data.metrics.rating_count_total > 0
+    data.metrics.rating_count_total > 0 ||
+    data.presentation_video.metrics.views > 0
   );
 };
 
@@ -297,6 +341,222 @@ const MetricCard = ({ locked, metric }: { locked?: boolean; metric: AnalyticsCar
   );
 };
 
+const PresentationVideoMetricCard = ({
+  locked,
+  metric,
+}: {
+  locked?: boolean;
+  metric: PsychologistAnalyticsPresentationVideoMetric;
+}) => {
+  const Icon = videoMetricIcons[metric.id];
+
+  return (
+    <article className="min-w-0 rounded-[22px] border border-primary/10 bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
+      <span className="grid h-10 w-10 place-items-center rounded-full bg-primary-soft text-primary">
+        <Icon className="h-5 w-5" aria-hidden />
+      </span>
+      <h3 className="mt-3 text-sm font-extrabold leading-5 text-foreground">{metric.label}</h3>
+      <p
+        className={cn(
+          "mt-2 text-2xl font-black tracking-[-0.04em] text-foreground",
+          locked && "select-none blur-[5px]",
+        )}
+      >
+        {formatVideoMetricValue(metric)}
+      </p>
+      <p className="mt-2 text-xs leading-5 text-muted">{metric.description}</p>
+    </article>
+  );
+};
+
+const RetentionChart = ({
+  locked,
+  points,
+}: {
+  locked?: boolean;
+  points: PsychologistAnalyticsPresentationVideo["retention"]["points"];
+}) => {
+  const safePoints = points.length
+    ? points
+    : ([
+        { milestone: 25, rate: 0, viewers: 0 },
+        { milestone: 50, rate: 0, viewers: 0 },
+        { milestone: 75, rate: 0, viewers: 0 },
+        { milestone: 100, rate: 0, viewers: 0 },
+      ] satisfies PsychologistAnalyticsPresentationVideo["retention"]["points"]);
+  const svgPoints = safePoints
+    .map((point, index) => {
+      const x = 18 + index * 84;
+      const y = 108 - Math.min(100, Math.max(0, point.rate));
+
+      return `${x},${y}`;
+    })
+    .join(" ");
+
+  return (
+    <div className="min-w-0 rounded-[22px] border border-border bg-surface-muted p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="text-base font-extrabold text-foreground">Retenção por marcos</h3>
+          <p className="mt-1 text-sm leading-5 text-muted">
+            Percentual de pessoas que alcançaram 25%, 50%, 75% e 100% do vídeo.
+          </p>
+        </div>
+        <Info className="h-5 w-5 shrink-0 text-subtle" aria-hidden />
+      </div>
+
+      <div
+        className={cn("mt-4 overflow-hidden rounded-2xl bg-surface p-3", locked && "blur-[4px]")}
+      >
+        <svg
+          aria-label="Gráfico de retenção por marcos do vídeo"
+          className="h-40 w-full"
+          preserveAspectRatio="none"
+          role="img"
+          viewBox="0 0 300 130"
+        >
+          <title>Retenção do vídeo por marcos</title>
+          <line stroke="currentColor" strokeDasharray="4 5" x1="0" x2="300" y1="8" y2="8" />
+          <line stroke="currentColor" strokeDasharray="4 5" x1="0" x2="300" y1="58" y2="58" />
+          <polyline
+            fill="none"
+            points={svgPoints}
+            stroke="rgb(46, 143, 230)"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="4"
+          />
+          {safePoints.map((point, index) => {
+            const x = 18 + index * 84;
+            const y = 108 - Math.min(100, Math.max(0, point.rate));
+
+            return (
+              <circle
+                cx={x}
+                cy={y}
+                fill="white"
+                key={point.milestone}
+                r="5"
+                stroke="rgb(46, 143, 230)"
+                strokeWidth="3"
+              />
+            );
+          })}
+          <text fill="currentColor" fontSize="10" x="268" y="12">
+            100%
+          </text>
+          <text fill="currentColor" fontSize="10" x="274" y="62">
+            50%
+          </text>
+        </svg>
+      </div>
+
+      <div className="mt-3 grid grid-cols-4 gap-2">
+        {safePoints.map((point) => (
+          <div
+            className="rounded-2xl border border-border bg-surface px-2 py-2 text-center"
+            key={point.milestone}
+          >
+            <p className="text-[0.68rem] font-black text-subtle">{point.milestone}%</p>
+            <p
+              className={cn(
+                "mt-1 text-sm font-extrabold text-foreground",
+                locked && "select-none blur-[4px]",
+              )}
+            >
+              {point.rate}%
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const PresentationVideoAnalyticsSection = ({
+  locked,
+  video,
+}: {
+  locked?: boolean;
+  video?: PsychologistAnalyticsPresentationVideo;
+}) => {
+  const videoSrc = resolvePublicMediaUrl(video?.video_url ?? null);
+  const videoCoverSrc = resolvePublicMediaUrl(video?.video_cover_url ?? null);
+  const averageRetention = video?.retention.average_retention_rate ?? 0;
+
+  return (
+    <section className="grid min-w-0 gap-4 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)] md:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
+            <PlayCircle className="h-6 w-6" aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">
+              Vídeo de apresentação
+            </p>
+            <h2 className="mt-2 text-xl font-extrabold tracking-[-0.03em] text-foreground">
+              Métricas principais do vídeo
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
+              Acompanhe como visitantes assistem seu vídeo e identifique pontos de retenção antes de
+              ajustar sua apresentação profissional.
+            </p>
+          </div>
+        </div>
+        <span className="rounded-full border border-primary/10 bg-primary-soft px-3 py-2 text-xs font-extrabold text-primary">
+          {formatUpdatedAt(video?.updated_at)}
+        </span>
+      </div>
+
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        {(video?.cards ?? []).map((metric) => (
+          <PresentationVideoMetricCard key={metric.id} locked={locked} metric={metric} />
+        ))}
+      </div>
+
+      <article className="grid min-w-0 gap-4 rounded-[26px] border border-primary/10 bg-primary-soft/55 p-4 md:grid-cols-[minmax(160px,220px)_1fr] md:items-center md:p-5">
+        <div className="min-w-0">
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-primary">
+            Retenção do vídeo
+          </p>
+          <h3 className="mt-2 text-lg font-extrabold text-foreground">
+            Onde seu público permanece
+          </h3>
+          <p className="mt-2 text-sm leading-6 text-muted">
+            Em média, visitantes assistiram{" "}
+            <span className={cn("font-extrabold text-foreground", locked && "blur-[4px]")}>
+              {averageRetention}%
+            </span>{" "}
+            dos marcos do seu vídeo.
+          </p>
+          {!videoSrc ? (
+            <p className="mt-3 rounded-2xl border border-primary/10 bg-surface px-3 py-2 text-xs font-semibold leading-5 text-muted">
+              Envie um vídeo de apresentação para ativar a análise de retenção.
+            </p>
+          ) : null}
+        </div>
+
+        <div className="grid min-w-0 gap-4 md:grid-cols-[minmax(130px,190px)_1fr] md:items-center">
+          {videoSrc ? (
+            <VerticalVideoPlayer
+              className="mx-auto w-full max-w-[190px] rounded-[22px] border-0 shadow-[var(--lectum-shadow-soft)]"
+              poster={videoCoverSrc}
+              src={videoSrc}
+              title="Vídeo de apresentação"
+            />
+          ) : (
+            <div className="mx-auto grid aspect-[9/16] w-full max-w-[190px] place-items-center rounded-[22px] border border-dashed border-primary/20 bg-surface text-center text-sm font-bold text-muted">
+              Sem vídeo
+            </div>
+          )}
+          <RetentionChart locked={locked} points={video?.retention.points ?? []} />
+        </div>
+      </article>
+    </section>
+  );
+};
+
 const ReviewsLinkCard = ({ link, locked }: { link: string; locked?: boolean }) => {
   const copyLink = async () => {
     if (locked) return;
@@ -453,6 +713,13 @@ export const ProfessionalAnalyticsLogic = () => {
             icon={BarChart3}
             title="Ainda não há eventos reais neste período"
             description="Contatos por WhatsApp, avaliações e posts aparecerão aqui sem dados simulados."
+          />
+        ) : null}
+
+        {!shouldShowError ? (
+          <PresentationVideoAnalyticsSection
+            locked={isAnalyticsPreview}
+            video={data?.presentation_video}
           />
         ) : null}
 

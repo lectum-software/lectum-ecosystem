@@ -11,6 +11,7 @@ type VerticalVideoPlayerProps = {
   controls?: boolean;
   fit?: VideoFit;
   fullscreenVariant?: "default" | "content";
+  onVideoElementReady?: (video: HTMLVideoElement | null) => void;
   poster?: string | null;
   preload?: "auto" | "metadata" | "none";
   src: string;
@@ -50,6 +51,7 @@ export const VerticalVideoPlayer = ({
   controls = true,
   fit = "cover",
   fullscreenVariant = "default",
+  onVideoElementReady,
   poster,
   preload = "metadata",
   src,
@@ -58,6 +60,12 @@ export const VerticalVideoPlayer = ({
 }: VerticalVideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const storedFullscreenStylesRef = useRef<StoredVideoStyle[] | null>(null);
+
+  useEffect(() => {
+    onVideoElementReady?.(videoRef.current);
+
+    return () => onVideoElementReady?.(null);
+  }, [onVideoElementReady]);
 
   useEffect(() => {
     if (fullscreenVariant !== "content" || typeof window === "undefined") return;

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   ArrowLeft,
@@ -39,6 +39,7 @@ import {
   useDirectoryPsychologist,
   useDirectoryPsychologistPosts,
   useDirectoryPsychologistReviews,
+  useDirectoryPsychologistVideoWatch,
 } from "@/api/callers/directory";
 import { usePatient } from "@/api/callers/patient";
 import { usePsychologistFreeProfile } from "@/api/callers/psychologist-free-profile";
@@ -49,6 +50,7 @@ import type {
   DirectoryPsychologistProfilePost,
   DirectoryPsychologistProfileReview,
   DirectoryPsychologistTopMentorCommunity,
+  DirectoryPsychologistVideoWatchPayload,
   DirectoryReviewSummary,
 } from "@/api/generator/types/directory";
 import type { FreeProfessionalProfileActivationPendingField } from "@/api/generator/types/free-profile";
@@ -91,8 +93,8 @@ type ApiError = Error & {
 
 const tabs: Array<{ label: string; value: ProfileTab }> = [
   { label: "Geral", value: "geral" },
-  { label: "Publicações", value: "publicacoes" },
-  { label: "Avaliações", value: "avaliacoes" },
+  { label: "PublicaÃ§Ãµes", value: "publicacoes" },
+  { label: "AvaliaÃ§Ãµes", value: "avaliacoes" },
 ];
 
 const PROFILE_CARD_SURFACE =
@@ -124,20 +126,20 @@ const modalityLabel: Record<string, string> = {
 };
 
 const languageLabel: Record<string, string> = {
-  pt: "Português",
-  "pt-br": "Português",
-  en: "Inglês",
+  pt: "PortuguÃªs",
+  "pt-br": "PortuguÃªs",
+  en: "InglÃªs",
   es: "Espanhol",
-  fr: "Francês",
+  fr: "FrancÃªs",
 };
 
 const targetAudienceLabel: Record<string, string> = {
   adolescentes: "Adolescentes (12-17)",
   adultos: "Adultos (18-59)",
-  criancas: "Crianças (até 11)",
+  criancas: "CrianÃ§as (atÃ© 11)",
   idosos: "Idosos (60+)",
   casais: "Casais",
-  familias: "Famílias",
+  familias: "FamÃ­lias",
   lgbtqia_plus: "LGBTQIA+",
 };
 
@@ -172,13 +174,13 @@ const formatHeroRating = (ratingAvg: number) => {
 const formatExperienceLabel = (years?: number | null) => {
   if (!years || years <= 0) return null;
 
-  return `${years} ${years === 1 ? "ano" : "anos"} de experiência`;
+  return `${years} ${years === 1 ? "ano" : "anos"} de experiÃªncia`;
 };
 
 const getPsychologistTitle = (gender?: string | null) => {
   const normalized = gender?.toLowerCase();
 
-  return normalized === "feminino" ? "Psicóloga" : "Psicólogo";
+  return normalized === "feminino" ? "PsicÃ³loga" : "PsicÃ³logo";
 };
 
 const getHonorificName = (profile: DirectoryPsychologistProfile) => {
@@ -198,7 +200,7 @@ const formatRatingNumber = (ratingAvg: number, ratingCount: number) => {
 };
 
 const formatDate = (value: string | null) => {
-  if (!value) return "Data não informada";
+  if (!value) return "Data nÃ£o informada";
 
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
@@ -246,7 +248,7 @@ const buildBenefitTags = (profile: DirectoryPsychologistProfile) => {
   }> = [];
 
   if (profile.accepts_insurance) {
-    tags.push({ icon: ShieldCheck, label: "Aceita convênios" });
+    tags.push({ icon: ShieldCheck, label: "Aceita convÃªnios" });
   }
 
   if (profile.social_value) {
@@ -254,7 +256,7 @@ const buildBenefitTags = (profile: DirectoryPsychologistProfile) => {
   }
 
   if (profile.discount_first_session) {
-    tags.push({ icon: BadgePercent, label: "Desconto 1ª sessão" });
+    tags.push({ icon: BadgePercent, label: "Desconto 1Âª sessÃ£o" });
   }
 
   return tags;
@@ -279,7 +281,7 @@ const formatAttendanceLabel = (profile: DirectoryPsychologistProfile) => {
     return "Online e Presencial";
   }
 
-  if (!profile.modality) return "Modalidade não informada";
+  if (!profile.modality) return "Modalidade nÃ£o informada";
 
   return modalityLabel[profile.modality] || profile.modality;
 };
@@ -292,16 +294,16 @@ const resolveErrorMessage = (error: unknown, fallback: string) => {
     (error instanceof Error ? error.message : "");
   const normalized = rawMessage.toLowerCase();
 
-  if (apiError?.data?.status === 404 || normalized.includes("não encontrado")) {
-    return "Este perfil não está publicado ou não está disponível para visualização.";
+  if (apiError?.data?.status === 404 || normalized.includes("nÃ£o encontrado")) {
+    return "Este perfil nÃ£o estÃ¡ publicado ou nÃ£o estÃ¡ disponÃ­vel para visualizaÃ§Ã£o.";
   }
 
   if (normalized.includes("token") || normalized.includes("sess")) {
-    return "Sua sessão precisa estar ativa para visualizar este perfil.";
+    return "Sua sessÃ£o precisa estar ativa para visualizar este perfil.";
   }
 
   if (normalized.includes("network") || normalized.includes("conex")) {
-    return "Não foi possível conectar à API agora. Tente novamente em alguns instantes.";
+    return "NÃ£o foi possÃ­vel conectar Ã  API agora. Tente novamente em alguns instantes.";
   }
 
   return rawMessage || fallback;
@@ -321,21 +323,21 @@ const InactivePublicProfileState = ({
           <TriangleAlert className="h-7 w-7" aria-hidden="true" />
         </div>
         <p className="mt-5 text-[11px] font-extrabold uppercase tracking-[0.18em] text-primary">
-          Ativação do perfil
+          AtivaÃ§Ã£o do perfil
         </p>
         <h1 className="mt-2 text-2xl font-extrabold tracking-[-0.035em] text-[#0F172A] dark:text-foreground">
-          Seu perfil ainda não está ativo
+          Seu perfil ainda nÃ£o estÃ¡ ativo
         </h1>
         <p className="mx-auto mt-3 max-w-[350px] text-sm leading-6 text-[#536176] dark:text-muted">
           {hasPendingFields
-            ? "Para exibir seu perfil publicamente na Lectum, complete as informações obrigatórias do seu perfil profissional."
-            : "Seu perfil não possui campos obrigatórios pendentes, mas ainda não está disponível publicamente. Revise a publicação na tela de edição."}
+            ? "Para exibir seu perfil publicamente na Lectum, complete as informaÃ§Ãµes obrigatÃ³rias do seu perfil profissional."
+            : "Seu perfil nÃ£o possui campos obrigatÃ³rios pendentes, mas ainda nÃ£o estÃ¡ disponÃ­vel publicamente. Revise a publicaÃ§Ã£o na tela de ediÃ§Ã£o."}
         </p>
 
         {hasPendingFields ? (
           <div className="mt-5 rounded-[22px] border border-[#E4EBF3] bg-[#F8FBFF] p-4 text-left dark:border-border dark:bg-surface-muted">
             <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[#334155] dark:text-foreground">
-              Pendências para publicação
+              PendÃªncias para publicaÃ§Ã£o
             </p>
             <ul className="mt-3 grid gap-2.5">
               {pendingFields.map((field) => (
@@ -390,7 +392,7 @@ const StarRating = ({ rating }: { rating: number }) => {
   );
 };
 
-const formatList = (items: string[], empty = "Não informado") => {
+const formatList = (items: string[], empty = "NÃ£o informado") => {
   const visibleItems = items.map((item) => item.trim()).filter(Boolean);
 
   return visibleItems.length > 0 ? visibleItems.join(", ") : empty;
@@ -474,7 +476,7 @@ const ProfileCountChip = ({
 );
 
 const PublicationCountChip = ({ total }: { total: number }) => (
-  <ProfileCountChip pluralLabel="publicações" singularLabel="publicação" total={total} />
+  <ProfileCountChip pluralLabel="publicaÃ§Ãµes" singularLabel="publicaÃ§Ã£o" total={total} />
 );
 
 const ProfileTabHeaderCard = ({
@@ -575,7 +577,7 @@ const Pagination = ({
 
   return (
     <nav
-      aria-label="Paginação"
+      aria-label="PaginaÃ§Ã£o"
       className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-3"
     >
       <Button
@@ -589,7 +591,7 @@ const Pagination = ({
       </Button>
 
       <span className="text-sm font-semibold text-muted">
-        Página {currentPage} de {pages}
+        PÃ¡gina {currentPage} de {pages}
       </span>
 
       <Button
@@ -598,7 +600,7 @@ const Pagination = ({
         type="button"
         variant="outline"
       >
-        Próxima
+        PrÃ³xima
         <ChevronRight className="h-4 w-4" aria-hidden="true" />
       </Button>
     </nav>
@@ -697,7 +699,7 @@ const ProfileHero = ({
   onToggleFavorite: () => void;
   profile: DirectoryPsychologistProfile;
 }) => {
-  const bioFallback = "Perfil profissional publicado na Lectum com dados públicos persistidos.";
+  const bioFallback = "Perfil profissional publicado na Lectum com dados pÃºblicos persistidos.";
   const displayName = getHonorificName(profile) || profile.name || "Profissional";
   const headline = (profile.headline || profile.bio || bioFallback).trim();
   const benefitTags = buildBenefitTags(profile);
@@ -754,7 +756,7 @@ const ProfileHero = ({
           <button
             aria-label={
               !canFavorite
-                ? "Favoritos disponíveis apenas para usuários autenticados"
+                ? "Favoritos disponÃ­veis apenas para usuÃ¡rios autenticados"
                 : profile.favorited
                   ? `Remover ${profile.name} dos favoritos`
                   : `Favoritar ${profile.name}`
@@ -769,7 +771,7 @@ const ProfileHero = ({
             disabled={favoritePending || !canFavorite}
             onClick={onToggleFavorite}
             title={
-              !canFavorite ? "Favoritos disponíveis apenas para usuários autenticados" : undefined
+              !canFavorite ? "Favoritos disponÃ­veis apenas para usuÃ¡rios autenticados" : undefined
             }
             type="button"
           >
@@ -794,9 +796,9 @@ const ProfileHero = ({
           <div className="grid gap-1">
             <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold text-muted">
               {getPsychologistTitle(profile.gender)}
-              <span aria-hidden="true">•</span>
+              <span aria-hidden="true">â€¢</span>
               <span>{formattedCrp}</span>
-              <span aria-hidden="true">•</span>
+              <span aria-hidden="true">â€¢</span>
               <span className="inline-flex items-center gap-1 font-extrabold text-[#D97706]">
                 <Star className="h-3.5 w-3.5 fill-[#D97706] text-[#D97706]" aria-hidden="true" />
                 {formatHeroRating(profile.rating_avg)}
@@ -812,7 +814,7 @@ const ProfileHero = ({
                   <span className="absolute inline-flex h-full w-full rounded-full bg-[#22C55E] opacity-75 motion-safe:animate-ping" />
                   <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#16A34A]" />
                 </span>
-                Disponível hoje
+                DisponÃ­vel hoje
               </span>
             ) : null}
           </div>
@@ -927,7 +929,7 @@ const ProfileMobileStickyHeader = ({
         </div>
 
         <nav
-          aria-label="Seções do perfil profissional"
+          aria-label="SeÃ§Ãµes do perfil profissional"
           className="grid grid-cols-3 gap-1 rounded-full border border-[#E5EAF0] bg-white/72 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.86)]"
         >
           {tabs.map((tab) => {
@@ -957,9 +959,184 @@ const ProfileMobileStickyHeader = ({
   );
 };
 
+const createVideoSessionKey = (profileId: string) => {
+  const storageKey = `lectum:presentation-video-session:${profileId}`;
+
+  try {
+    const stored = window.sessionStorage.getItem(storageKey);
+    if (stored) return stored;
+
+    const generated =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    window.sessionStorage.setItem(storageKey, generated);
+
+    return generated;
+  } catch {
+    return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  }
+};
+
 const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
+  const currentUser = useAppSelector((state) => state.user);
+  const { mutate: trackVideoWatch } = useDirectoryPsychologistVideoWatch(profile.id);
+  const cleanupTrackingRef = useRef<(() => void) | null>(null);
+  const completedRef = useRef(false);
+  const hasStartedRef = useRef(false);
+  const lastPlaybackPositionRef = useRef(0);
+  const lastSentAtRef = useRef(0);
+  const maxPositionRef = useRef(0);
+  const milestonesRef = useRef({
+    milestone_25: false,
+    milestone_50: false,
+    milestone_75: false,
+    milestone_100: false,
+  });
+  const replayCountRef = useRef(0);
+  const sessionKeyRef = useRef<string | null>(null);
+  const watchedSecondsRef = useRef<Set<number>>(new Set());
   const videoSrc = resolvePublicMediaUrl(profile.video_url);
   const videoCoverSrc = resolvePublicMediaUrl(profile.video_cover_url);
+  const shouldTrack = Boolean(videoSrc && currentUser?.id !== profile.id);
+
+  const flushVideoAnalytics = useCallback(
+    (video: HTMLVideoElement | null, completed = false, force = false) => {
+      if (!shouldTrack || !video) return;
+
+      const now = Date.now();
+      if (!force && now - lastSentAtRef.current < 5000) return;
+
+      const durationSeconds = Number.isFinite(video.duration)
+        ? Math.max(0, Math.round(video.duration))
+        : 0;
+      const maxPositionSeconds = Math.max(0, Math.round(maxPositionRef.current));
+      const watchedSeconds = Math.max(0, watchedSecondsRef.current.size);
+
+      if (watchedSeconds === 0 && maxPositionSeconds === 0 && !completed) return;
+
+      sessionKeyRef.current ??= createVideoSessionKey(profile.id);
+
+      if (completed) {
+        completedRef.current = true;
+        milestonesRef.current.milestone_100 = true;
+      }
+
+      const body: DirectoryPsychologistVideoWatchPayload = {
+        session_key: sessionKeyRef.current,
+        duration_seconds: durationSeconds,
+        watched_seconds: watchedSeconds,
+        max_position_seconds: maxPositionSeconds,
+        replay_count: replayCountRef.current,
+        completed: completedRef.current,
+        ...milestonesRef.current,
+      };
+
+      lastSentAtRef.current = now;
+      trackVideoWatch(body);
+    },
+    [profile.id, shouldTrack, trackVideoWatch],
+  );
+
+  const handleVideoReady = useCallback(
+    (video: HTMLVideoElement | null) => {
+      cleanupTrackingRef.current?.();
+      cleanupTrackingRef.current = null;
+
+      if (!video || !shouldTrack) return;
+
+      const updateMilestones = () => {
+        if (!Number.isFinite(video.duration) || video.duration <= 0) return false;
+
+        const retention = maxPositionRef.current / video.duration;
+        const previous = { ...milestonesRef.current };
+        milestonesRef.current = {
+          milestone_25: previous.milestone_25 || retention >= 0.25,
+          milestone_50: previous.milestone_50 || retention >= 0.5,
+          milestone_75: previous.milestone_75 || retention >= 0.75,
+          milestone_100: previous.milestone_100 || retention >= 0.98 || completedRef.current,
+        };
+
+        return (
+          previous.milestone_25 !== milestonesRef.current.milestone_25 ||
+          previous.milestone_50 !== milestonesRef.current.milestone_50 ||
+          previous.milestone_75 !== milestonesRef.current.milestone_75 ||
+          previous.milestone_100 !== milestonesRef.current.milestone_100
+        );
+      };
+
+      const addWatchedRange = (from: number, to: number) => {
+        const start = Math.max(0, Math.floor(Math.min(from, to)));
+        const end = Math.max(0, Math.ceil(Math.max(from, to)));
+
+        for (let second = start; second <= end; second += 1) {
+          watchedSecondsRef.current.add(second);
+        }
+      };
+
+      const handlePlay = () => {
+        if (hasStartedRef.current && completedRef.current && video.currentTime < 1.5) {
+          replayCountRef.current += 1;
+          completedRef.current = false;
+        }
+
+        hasStartedRef.current = true;
+        lastPlaybackPositionRef.current = video.currentTime;
+      };
+
+      const handleTimeUpdate = () => {
+        const currentTime = video.currentTime || 0;
+        const previousTime = lastPlaybackPositionRef.current || 0;
+
+        if (currentTime + 1 < previousTime && previousTime > 2 && currentTime < 1.5) {
+          replayCountRef.current += 1;
+          completedRef.current = false;
+        }
+
+        if (!video.paused && currentTime >= previousTime) {
+          addWatchedRange(previousTime, currentTime);
+        } else {
+          watchedSecondsRef.current.add(Math.max(0, Math.floor(currentTime)));
+        }
+
+        maxPositionRef.current = Math.max(maxPositionRef.current, currentTime);
+        lastPlaybackPositionRef.current = currentTime;
+
+        const milestoneChanged = updateMilestones();
+        flushVideoAnalytics(video, false, milestoneChanged);
+      };
+
+      const handleEnded = () => {
+        if (Number.isFinite(video.duration) && video.duration > 0) {
+          addWatchedRange(lastPlaybackPositionRef.current, video.duration);
+          maxPositionRef.current = Math.max(maxPositionRef.current, video.duration);
+        }
+
+        completedRef.current = true;
+        updateMilestones();
+        flushVideoAnalytics(video, true, true);
+      };
+
+      const handlePause = () => flushVideoAnalytics(video, false, true);
+      const handlePageHide = () => flushVideoAnalytics(video, false, true);
+
+      video.addEventListener("play", handlePlay);
+      video.addEventListener("timeupdate", handleTimeUpdate);
+      video.addEventListener("ended", handleEnded);
+      video.addEventListener("pause", handlePause);
+      window.addEventListener("pagehide", handlePageHide);
+
+      cleanupTrackingRef.current = () => {
+        video.removeEventListener("play", handlePlay);
+        video.removeEventListener("timeupdate", handleTimeUpdate);
+        video.removeEventListener("ended", handleEnded);
+        video.removeEventListener("pause", handlePause);
+        window.removeEventListener("pagehide", handlePageHide);
+      };
+    },
+    [flushVideoAnalytics, shouldTrack],
+  );
 
   if (!videoSrc) return null;
 
@@ -972,6 +1149,7 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
         >
           <VerticalVideoPlayer
             className="rounded-[18px] border-0"
+            onVideoElementReady={handleVideoReady}
             poster={videoCoverSrc}
             src={videoSrc}
             title={`Vídeo de apresentação de ${profile.name}`}
@@ -981,17 +1159,16 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
     </div>
   );
 };
-
 const AboutContactInfoBlock = () => (
   <div
     className="mt-4 rounded-[18px] border border-[#D7E8FA] bg-[#F8FBFF]/90 px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.78)]"
     data-about-contact-block="true"
   >
     <p className="text-[13.5px] font-extrabold leading-tight tracking-[-0.015em] text-[#182033]">
-      Quer falar com o psicólogo?
+      Quer falar com o psicÃ³logo?
     </p>
     <p className="mt-1.5 text-[12.75px] font-medium leading-[1.55] text-[#64748B]">
-      Para consultar agenda, valores e informações do atendimento, chame o psicólogo no WhatsApp.
+      Para consultar agenda, valores e informaÃ§Ãµes do atendimento, chame o psicÃ³logo no WhatsApp.
     </p>
   </div>
 );
@@ -1155,13 +1332,13 @@ const FormationSection = ({ profile }: { profile: DirectoryPsychologistProfile }
   const hasAnyFormation = formations.length > 0;
 
   return (
-    <ProfileSectionCard title="Formação & Títulos">
+    <ProfileSectionCard title="FormaÃ§Ã£o & TÃ­tulos">
       {hasAnyFormation ? (
         <div className="mt-3 grid gap-2.5">
           {formations.map((formation, index) => {
             const institutionLine = formatList(
               [formation.institution || "", formation.graduation_year || ""],
-              "Instituição e data não informadas",
+              "InstituiÃ§Ã£o e data nÃ£o informadas",
             );
 
             return (
@@ -1174,7 +1351,7 @@ const FormationSection = ({ profile }: { profile: DirectoryPsychologistProfile }
                 </span>
                 <div className="min-w-0">
                   <p className="text-[13.5px] font-extrabold leading-[1.35] tracking-[-0.01em] text-[#182033]">
-                    {formation.title || "Título não informado"}
+                    {formation.title || "TÃ­tulo nÃ£o informado"}
                   </p>
                   <p className="mt-1 text-[12.5px] font-medium leading-[1.45] text-[#64748B]">
                     {institutionLine}
@@ -1186,7 +1363,7 @@ const FormationSection = ({ profile }: { profile: DirectoryPsychologistProfile }
         </div>
       ) : (
         <p className="mt-2.5 text-[13px] leading-[1.6] text-[#64748B]">
-          Este profissional ainda não cadastrou formação e títulos.
+          Este profissional ainda nÃ£o cadastrou formaÃ§Ã£o e tÃ­tulos.
         </p>
       )}
     </ProfileSectionCard>
@@ -1212,7 +1389,7 @@ const ReviewPreviewCard = ({ review }: { review: DirectoryPsychologistProfileRev
           </div>
 
           <p className="mt-2.5 line-clamp-3 text-[13px] leading-[1.6] text-[#475569]">
-            &ldquo;{review.comment || "Avaliação publicada sem comentário textual."}&rdquo;
+            &ldquo;{review.comment || "AvaliaÃ§Ã£o publicada sem comentÃ¡rio textual."}&rdquo;
           </p>
         </div>
       </div>
@@ -1252,7 +1429,7 @@ const ReviewsPreviewSection = ({
   ) : null;
 
   return (
-    <ProfileSectionCard action={action} title="Avaliações">
+    <ProfileSectionCard action={action} title="AvaliaÃ§Ãµes">
       {hasReviews ? (
         <div className="mt-3 flex items-center justify-between gap-3">
           <div>
@@ -1261,7 +1438,7 @@ const ReviewsPreviewSection = ({
                 {formatRatingNumber(summary.rating_avg, summary.rating_count)}
               </p>
               <p className="pb-0.5 text-[13px] font-medium text-[#64748B]">
-                {summary.rating_count} avaliações
+                {summary.rating_count} avaliaÃ§Ãµes
               </p>
             </div>
             <div className="mt-1.5">
@@ -1273,11 +1450,11 @@ const ReviewsPreviewSection = ({
 
       {isError ? (
         <p className="mt-3 rounded-[12px] border border-[#FECACA] bg-[#FEF2F2] px-3 py-2 text-[11px] leading-[1.4] text-[#991B1B]">
-          Não foi possível carregar a prévia de avaliações.
+          NÃ£o foi possÃ­vel carregar a prÃ©via de avaliaÃ§Ãµes.
         </p>
       ) : null}
 
-      {isLoading ? <LoadingState label="Carregando avaliações" /> : null}
+      {isLoading ? <LoadingState label="Carregando avaliaÃ§Ãµes" /> : null}
 
       {!isLoading && !isError && featuredReview ? (
         <ReviewPreviewCard review={featuredReview} />
@@ -1286,7 +1463,7 @@ const ReviewsPreviewSection = ({
       {!isLoading && !isError && !featuredReview ? (
         <div className="mt-3 flex items-center justify-between gap-3">
           <p className="text-[13px] leading-[1.6] text-[#64748B]">
-            Este profissional ainda não possui avaliações.
+            Este profissional ainda nÃ£o possui avaliaÃ§Ãµes.
           </p>
         </div>
       ) : null}
@@ -1461,16 +1638,16 @@ const PostsPreviewSection = ({
       action={
         total > 0 ? <ViewAllChipButton onClick={onViewAll}>Ver todas</ViewAllChipButton> : null
       }
-      title="Publicações"
+      title="PublicaÃ§Ãµes"
       titleAccessory={<PublicationCountChip total={total} />}
     >
       {isError ? (
         <p className="mt-3 rounded-[12px] border border-[#FECACA] bg-[#FEF2F2] px-3 py-2 text-[11px] leading-[1.4] text-[#991B1B]">
-          Não foi possível carregar a prévia de publicações.
+          NÃ£o foi possÃ­vel carregar a prÃ©via de publicaÃ§Ãµes.
         </p>
       ) : null}
 
-      {isLoading ? <LoadingState label="Carregando publicações" /> : null}
+      {isLoading ? <LoadingState label="Carregando publicaÃ§Ãµes" /> : null}
 
       {!isLoading && !isError && featuredPost ? (
         <div className="mt-3">
@@ -1484,7 +1661,7 @@ const PostsPreviewSection = ({
 
       {!isLoading && !isError && !featuredPost ? (
         <p className="mt-3 text-[13px] leading-[1.6] text-[#64748B]">
-          Este profissional ainda não possui publicações públicas.
+          Este profissional ainda nÃ£o possui publicaÃ§Ãµes pÃºblicas.
         </p>
       ) : null}
     </ProfileSectionCard>
@@ -1518,24 +1695,24 @@ const AboutTab = ({
     summary: DirectoryReviewSummary;
   };
 }) => {
-  const bioText = profile.bio || "Este profissional ainda não informou uma biografia pública.";
+  const bioText = profile.bio || "Este profissional ainda nÃ£o informou uma biografia pÃºblica.";
   const serviceText = formatList(
     profile.services.map((item) => item.name),
-    "Serviços não informados.",
+    "ServiÃ§os nÃ£o informados.",
   );
   const approachText = formatList(
     profile.approaches.map((item) => item.name),
-    "Abordagens não informadas.",
+    "Abordagens nÃ£o informadas.",
   );
   const targetText = formatList(
     (profile.target_audience ?? []).map(translateTargetAudience),
-    "Público atendido não informado.",
+    "PÃºblico atendido nÃ£o informado.",
   );
   const languageText = formatList(
     profile.languages.map(translateLanguage),
-    "Idiomas não informados.",
+    "Idiomas nÃ£o informados.",
   );
-  const modalityText = formatList([formatAttendanceLabel(profile)], "Modalidade não informada.");
+  const modalityText = formatList([formatAttendanceLabel(profile)], "Modalidade nÃ£o informada.");
 
   return (
     <div className="grid gap-3.5 bg-[#F5F7FA] px-3 pt-3.5 pb-1 dark:bg-background sm:px-4 sm:pt-4">
@@ -1547,7 +1724,7 @@ const AboutTab = ({
 
       <ProfileSectionCard title="Especialidades">
         <ProfileChipList
-          emptyMessage="Este profissional ainda não informou especialidades públicas."
+          emptyMessage="Este profissional ainda nÃ£o informou especialidades pÃºblicas."
           items={profile.specialties}
         />
       </ProfileSectionCard>
@@ -1572,8 +1749,8 @@ const AboutTab = ({
             label="Abordagens"
             value={approachText}
           />
-          <ProfileInfoCard compact icon={BriefcaseBusiness} label="Serviços" value={serviceText} />
-          <ProfileInfoCard compact icon={UsersRound} label="Público atendido" value={targetText} />
+          <ProfileInfoCard compact icon={BriefcaseBusiness} label="ServiÃ§os" value={serviceText} />
+          <ProfileInfoCard compact icon={UsersRound} label="PÃºblico atendido" value={targetText} />
           <ProfileInfoCard compact icon={Languages} label="Idiomas" value={languageText} />
         </div>
       </ProfileSectionCard>
@@ -1627,31 +1804,31 @@ const PostsTab = ({
     <div className="grid gap-3.5 bg-[#F5F7FA] px-3 pb-1 pt-3.5 dark:bg-background sm:px-4 sm:pt-4">
       <ProfileTabHeaderCard
         count={total}
-        countLabelPlural="publicações"
-        countLabelSingular="publicação"
+        countLabelPlural="publicaÃ§Ãµes"
+        countLabelSingular="publicaÃ§Ã£o"
         onBack={onBackToOverview}
-        title="Publicações"
+        title="PublicaÃ§Ãµes"
       />
 
       <PublicationsActivitySummary summary={summary} />
 
       {isError ? (
-        <InlineAlert title="Não foi possível carregar publicações" variant="error">
-          {resolveErrorMessage(error, "Não foi possível carregar as publicações deste perfil.")}
+        <InlineAlert title="NÃ£o foi possÃ­vel carregar publicaÃ§Ãµes" variant="error">
+          {resolveErrorMessage(error, "NÃ£o foi possÃ­vel carregar as publicaÃ§Ãµes deste perfil.")}
         </InlineAlert>
       ) : null}
 
       {isLoading ? (
         <div className="box-border grid min-h-[30vh] place-items-center rounded-[22px] border border-[#E6EAF0] bg-white">
-          <LoadingState label="Carregando publicações" />
+          <LoadingState label="Carregando publicaÃ§Ãµes" />
         </div>
       ) : null}
 
       {!isLoading && !isError && posts.length === 0 ? (
         <EmptyState
-          description="Este profissional ainda não possui publicações persistidas e publicadas."
+          description="Este profissional ainda nÃ£o possui publicaÃ§Ãµes persistidas e publicadas."
           icon={FileText}
-          title="Nenhuma publicação pública"
+          title="Nenhuma publicaÃ§Ã£o pÃºblica"
         />
       ) : null}
 
@@ -1689,7 +1866,7 @@ const ReviewSummaryCard = ({
     return (
       <article className={cn(PROFILE_CARD_SURFACE, "p-4 sm:p-5")}>
         <p className="text-[13px] leading-[1.6] text-[#64748B]">
-          Este profissional ainda não possui avaliações.
+          Este profissional ainda nÃ£o possui avaliaÃ§Ãµes.
         </p>
       </article>
     );
@@ -1708,7 +1885,7 @@ const ReviewSummaryCard = ({
             <StarRating rating={summary.rating_avg / 100} />
           </div>
           <p className="mt-1.5 text-[13px] font-medium text-[#64748B]">
-            {summary.rating_count} avaliações
+            {summary.rating_count} avaliaÃ§Ãµes
           </p>
         </div>
         <Button
@@ -1769,7 +1946,7 @@ const ReviewCard = ({ review }: { review: DirectoryPsychologistProfileReview }) 
             </p>
           ) : (
             <p className="mt-3 text-[13px] leading-[1.62] text-[#64748B]">
-              Avaliação publicada sem comentário textual.
+              AvaliaÃ§Ã£o publicada sem comentÃ¡rio textual.
             </p>
           )}
           {review.response ? (
@@ -1822,22 +1999,22 @@ const ReviewsTab = ({
     <div className="grid gap-3.5 bg-[#F5F7FA] px-3 pb-1 pt-3.5 dark:bg-background sm:px-4 sm:pt-4">
       <ProfileTabHeaderCard
         count={summary.rating_count}
-        countLabelPlural="avaliações"
-        countLabelSingular="avaliação"
+        countLabelPlural="avaliaÃ§Ãµes"
+        countLabelSingular="avaliaÃ§Ã£o"
         onBack={onBackToOverview}
-        title="Avaliações"
+        title="AvaliaÃ§Ãµes"
       />
       <ReviewSummaryCard psychologistId={profileId} summary={summary} />
 
       {isError ? (
-        <InlineAlert title="Não foi possível carregar avaliações" variant="error">
-          {resolveErrorMessage(error, "Não foi possível carregar as avaliações deste perfil.")}
+        <InlineAlert title="NÃ£o foi possÃ­vel carregar avaliaÃ§Ãµes" variant="error">
+          {resolveErrorMessage(error, "NÃ£o foi possÃ­vel carregar as avaliaÃ§Ãµes deste perfil.")}
         </InlineAlert>
       ) : null}
 
       {isLoading ? (
         <div className="box-border grid min-h-[30vh] place-items-center rounded-[22px] border border-[#E6EAF0] bg-white">
-          <LoadingState label="Carregando avaliações" />
+          <LoadingState label="Carregando avaliaÃ§Ãµes" />
         </div>
       ) : null}
 
@@ -1849,7 +2026,7 @@ const ReviewsTab = ({
         </div>
       ) : null}
 
-      {isFetching && !isLoading ? <LoadingState label="Atualizando avaliações" /> : null}
+      {isFetching && !isLoading ? <LoadingState label="Atualizando avaliaÃ§Ãµes" /> : null}
 
       <Pagination
         currentPage={currentPage}
@@ -2124,7 +2301,10 @@ export const PsychologistProfileLogic = () => {
   const showInitialLoading = (profileQuery.isLoading && !profile) || isCheckingInactiveOwnProfile;
   const profileErrorMessage =
     profileQuery.isError && !showInactiveOwnProfileState
-      ? resolveErrorMessage(profileQuery.error, "Não foi possível carregar o perfil profissional.")
+      ? resolveErrorMessage(
+          profileQuery.error,
+          "NÃ£o foi possÃ­vel carregar o perfil profissional.",
+        )
       : null;
   const canEditProfile =
     currentUser?.role === "psicologo" && Boolean(profile?.id) && currentUser.id === profile?.id;
@@ -2153,7 +2333,7 @@ export const PsychologistProfileLogic = () => {
             {shareFeedback ? (
               <div className="mx-3 pt-3">
                 <InlineAlert title="Link copiado" variant="success">
-                  Compartilhamento preparado com o link público seguro deste perfil.
+                  Compartilhamento preparado com o link pÃºblico seguro deste perfil.
                 </InlineAlert>
               </div>
             ) : null}
@@ -2172,7 +2352,7 @@ export const PsychologistProfileLogic = () => {
 
             {!showInitialLoading && !showInactiveOwnProfileState && profileErrorMessage ? (
               <div className="mx-3 grid gap-4 bg-background px-0 py-8">
-                <InlineAlert title="Perfil indisponível" variant="error">
+                <InlineAlert title="Perfil indisponÃ­vel" variant="error">
                   {profileErrorMessage}
                 </InlineAlert>
                 <Button asChild variant="outline">

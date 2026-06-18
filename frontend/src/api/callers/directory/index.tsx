@@ -8,6 +8,8 @@ import type {
   DirectoryPsychologistContactResponse,
   DirectoryPsychologistProfileListQuery,
   DirectoryPsychologistsQuery,
+  DirectoryPsychologistVideoWatchPayload,
+  DirectoryPsychologistVideoWatchResponse,
 } from "@/api/generator/types/directory";
 import * as api from "@/api/req/directory";
 
@@ -102,3 +104,17 @@ export const useDirectoryPsychologistContactClick = (
     onError: callbacks?.onError,
   });
 };
+
+export const useDirectoryPsychologistVideoWatch = (
+  id: string,
+  callbacks?: {
+    onError?: (error: unknown) => void;
+    onSuccess?: (data: DirectoryPsychologistVideoWatchResponse) => void;
+  },
+) =>
+  useMutation({
+    mutationFn: (body: DirectoryPsychologistVideoWatchPayload) =>
+      api.trackDirectoryPsychologistVideoWatch(id, body),
+    onError: callbacks?.onError,
+    onSuccess: callbacks?.onSuccess,
+  });

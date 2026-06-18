@@ -99,6 +99,23 @@ export type DirectoryPsychologistContactResponse = {
 
 export type DirectoryPsychologistContactClickResponse = DirectoryPsychologistContactResponse;
 
+export type DirectoryPsychologistVideoWatchPayload = {
+  completed?: boolean;
+  duration_seconds?: number;
+  max_position_seconds?: number;
+  milestone_25?: boolean;
+  milestone_50?: boolean;
+  milestone_75?: boolean;
+  milestone_100?: boolean;
+  replay_count?: number;
+  session_key: string;
+  watched_seconds?: number;
+};
+
+export type DirectoryPsychologistVideoWatchResponse = {
+  tracked: boolean;
+};
+
 export type DirectoryPsychologistProfilePost = PostListPost & {
   contribution_type: "post" | "reply";
 };

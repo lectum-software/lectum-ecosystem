@@ -11,57 +11,59 @@ datasource db {
 }
 
 model user {
-  id                                  String                      @id @default(cuid())
-  deleted                             Boolean                     @default(false)
-  deletedAt                           DateTime?                   @map("deleted_at")
-  updatedAt                           DateTime                    @default(now()) @updatedAt @map("updated_at")
-  createdAt                           DateTime                    @default(now()) @map("created_at")
-  name                                String
-  avatar                              String?
-  provider                            String                      @default("manual")
-  role                                String                      @default("paciente")
-  email                               String                      @unique
-  password                            String?
-  password_confirm                    String?
-  active                              Boolean                     @default(true)
-  need_reset                          Boolean                     @default(false)
-  confirmed                           Boolean                     @default(false)
-  confirmed_date                      DateTime?
-  has_seen_discover_psychologists_tip Boolean                     @default(false)
-  has_seen_community_post_tip         Boolean                     @default(false)
-  recovery_code                       String?
-  recovery_date                       DateTime?
-  confirm_code                        String?
-  confirm_date                        DateTime?
-  user_tokens                         user_token[]                @relation("user_token_user")
-  user_backgrounds                    user_background[]           @relation("user_background_user")
-  phone_verifications                 phone_verification[]        @relation("phone_verification_user")
-  patient_profile                     patient_profile?            @relation("patient_profile_user")
-  psychologist_profile                psychologist_profile?       @relation("psychologist_profile_user")
-  psychologist_specialties            psychologist_specialty[]    @relation("psychologist_specialty_psychologist")
-  psychologist_services               psychologist_service[]      @relation("psychologist_service_psychologist")
-  psychologist_approaches             psychologist_approach[]     @relation("psychologist_approach_psychologist")
-  favorite_psychologists              psychologist_favorite[]     @relation("psychologist_favorite_user")
-  favorited_by_patients               psychologist_favorite[]     @relation("psychologist_favorite_psychologist")
-  followed_psychologists              psychologist_follow[]       @relation("psychologist_follow_user")
-  followed_by_patients                psychologist_follow[]       @relation("psychologist_follow_psychologist")
-  contact_requests                    contact_request[]           @relation("contact_request_user")
-  received_contact_requests           contact_request[]           @relation("contact_request_psychologist")
-  professional_reviews                professional_review[]       @relation("professional_review_author")
-  received_reviews                    professional_review[]       @relation("professional_review_psychologist")
-  community_suggestions               community_suggestion[]      @relation("community_suggestion_user")
-  community_members                   community_member[]          @relation("community_member_user")
-  community_posts                     community_post[]            @relation("community_post_author")
-  post_replies                        post_reply[]                @relation("post_reply_author")
-  post_votes                          post_vote[]                 @relation("post_vote_user")
-  post_saves                          post_save[]                 @relation("post_save_user")
-  post_reply_saves                    post_reply_save[]           @relation("post_reply_save_user")
-  post_reports                        post_report[]               @relation("post_report_reporter")
-  notification_subscriptions          notification_subscription[] @relation("notification_subscription_user")
-  visitor_locations                   visitor_location[]          @relation("visitor_location_user")
-  logs                                log__user[]                 @relation("log__user_user")
-  notifications                       notification[]              @relation("notifications")
-  notification_preference             notification_preference?    @relation("notification_preference_user")
+  id                                    String                        @id @default(cuid())
+  deleted                               Boolean                       @default(false)
+  deletedAt                             DateTime?                     @map("deleted_at")
+  updatedAt                             DateTime                      @default(now()) @updatedAt @map("updated_at")
+  createdAt                             DateTime                      @default(now()) @map("created_at")
+  name                                  String
+  avatar                                String?
+  provider                              String                        @default("manual")
+  role                                  String                        @default("paciente")
+  email                                 String                        @unique
+  password                              String?
+  password_confirm                      String?
+  active                                Boolean                       @default(true)
+  need_reset                            Boolean                       @default(false)
+  confirmed                             Boolean                       @default(false)
+  confirmed_date                        DateTime?
+  has_seen_discover_psychologists_tip   Boolean                       @default(false)
+  has_seen_community_post_tip           Boolean                       @default(false)
+  recovery_code                         String?
+  recovery_date                         DateTime?
+  confirm_code                          String?
+  confirm_date                          DateTime?
+  user_tokens                           user_token[]                  @relation("user_token_user")
+  user_backgrounds                      user_background[]             @relation("user_background_user")
+  phone_verifications                   phone_verification[]          @relation("phone_verification_user")
+  patient_profile                       patient_profile?              @relation("patient_profile_user")
+  psychologist_profile                  psychologist_profile?         @relation("psychologist_profile_user")
+  psychologist_specialties              psychologist_specialty[]      @relation("psychologist_specialty_psychologist")
+  psychologist_services                 psychologist_service[]        @relation("psychologist_service_psychologist")
+  psychologist_approaches               psychologist_approach[]       @relation("psychologist_approach_psychologist")
+  favorite_psychologists                psychologist_favorite[]       @relation("psychologist_favorite_user")
+  favorited_by_patients                 psychologist_favorite[]       @relation("psychologist_favorite_psychologist")
+  followed_psychologists                psychologist_follow[]         @relation("psychologist_follow_user")
+  followed_by_patients                  psychologist_follow[]         @relation("psychologist_follow_psychologist")
+  contact_requests                      contact_request[]             @relation("contact_request_user")
+  received_contact_requests             contact_request[]             @relation("contact_request_psychologist")
+  profile_video_watch_sessions          profile_video_watch_session[] @relation("profile_video_watch_session_viewer")
+  received_profile_video_watch_sessions profile_video_watch_session[] @relation("profile_video_watch_session_psychologist")
+  professional_reviews                  professional_review[]         @relation("professional_review_author")
+  received_reviews                      professional_review[]         @relation("professional_review_psychologist")
+  community_suggestions                 community_suggestion[]        @relation("community_suggestion_user")
+  community_members                     community_member[]            @relation("community_member_user")
+  community_posts                       community_post[]              @relation("community_post_author")
+  post_replies                          post_reply[]                  @relation("post_reply_author")
+  post_votes                            post_vote[]                   @relation("post_vote_user")
+  post_saves                            post_save[]                   @relation("post_save_user")
+  post_reply_saves                      post_reply_save[]             @relation("post_reply_save_user")
+  post_reports                          post_report[]                 @relation("post_report_reporter")
+  notification_subscriptions            notification_subscription[]   @relation("notification_subscription_user")
+  visitor_locations                     visitor_location[]            @relation("visitor_location_user")
+  logs                                  log__user[]                   @relation("log__user_user")
+  notifications                         notification[]                @relation("notifications")
+  notification_preference               notification_preference?      @relation("notification_preference_user")
 
   @@index([email, deleted])
   @@index([active, deleted])
@@ -447,6 +449,36 @@ model contact_request {
   @@index([user_id])
   @@index([psychologist_id, createdAt])
   @@map("contact_requests")
+}
+
+model profile_video_watch_session {
+  id                   String    @id @default(cuid())
+  deleted              Boolean   @default(false)
+  deletedAt            DateTime? @map("deleted_at")
+  updatedAt            DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  psychologist_id      String
+  viewer_id            String?
+  session_key          String
+  video_url            String?
+  duration_seconds     Int       @default(0)
+  watched_seconds      Int       @default(0)
+  max_position_seconds Int       @default(0)
+  replay_count         Int       @default(0)
+  completed            Boolean   @default(false)
+  milestone_25         Boolean   @default(false)
+  milestone_50         Boolean   @default(false)
+  milestone_75         Boolean   @default(false)
+  milestone_100        Boolean   @default(false)
+  last_event_at        DateTime  @default(now()) @map("last_event_at")
+  psychologist         user      @relation("profile_video_watch_session_psychologist", fields: [psychologist_id], references: [id], onDelete: Cascade)
+  viewer               user?     @relation("profile_video_watch_session_viewer", fields: [viewer_id], references: [id], onDelete: SetNull)
+
+  @@unique([psychologist_id, session_key])
+  @@index([psychologist_id, createdAt])
+  @@index([psychologist_id, last_event_at])
+  @@index([viewer_id, createdAt])
+  @@map("profile_video_watch_sessions")
 }
 
 model professional_review {

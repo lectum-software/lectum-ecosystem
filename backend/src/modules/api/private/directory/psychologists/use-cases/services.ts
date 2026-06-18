@@ -3,9 +3,11 @@ import { notifyWhatsappClick } from "@/main/notification/domain-events";
 import type { IContactClickDTO, IContactDTO } from "../DTOs/IContactDTO";
 import type { IIndexDTO } from "../DTOs/IIndexDTO";
 import type { IProfileListDTO, IProfileShowDTO } from "../DTOs/IProfileDTO";
+import type { IProfileVideoWatchDTO } from "../DTOs/IProfileVideoWatchDTO";
 import { ContactRepository } from "../repositories/ContactRepository";
 import { IndexRepository } from "../repositories/IndexRepository";
 import { ProfileRepository } from "../repositories/ProfileRepository";
+import { ProfileVideoWatchRepository } from "../repositories/ProfileVideoWatchRepository";
 
 export default async (data: IIndexDTO) => {
   const repository = new IndexRepository();
@@ -154,5 +156,27 @@ export const contactClick = async (data: IContactClickDTO) => {
     status: 200,
     ...msg("contact_success", {}),
     data: res.data,
+  };
+};
+
+export const videoWatch = async (data: IProfileVideoWatchDTO) => {
+  const repository = new ProfileVideoWatchRepository();
+  const res = await repository.track(data);
+
+  if (!res.tracked && res.reason === "not_found") {
+    return {
+      status: 404,
+      ...error("not_found", {
+        model: "psychologist_profile",
+      }),
+    };
+  }
+
+  return {
+    status: 200,
+    ...msg("store", {}),
+    data: {
+      tracked: res.tracked,
+    },
   };
 };

@@ -202,6 +202,81 @@ export const contactSchema: IValidatorRequest = {
   ],
 };
 
+export const profileVideoWatchSchema: IValidatorRequest = {
+  ...profileShowSchema,
+  body: [
+    {
+      key: "session_key",
+      coerse: "string",
+      method: "string",
+      max: 120,
+    },
+    {
+      key: "duration_seconds",
+      coerse: "number",
+      method: "numeric",
+      int: true,
+      min: 0,
+      optional: true,
+    },
+    {
+      key: "watched_seconds",
+      coerse: "number",
+      method: "numeric",
+      int: true,
+      min: 0,
+      optional: true,
+    },
+    {
+      key: "max_position_seconds",
+      coerse: "number",
+      method: "numeric",
+      int: true,
+      min: 0,
+      optional: true,
+    },
+    {
+      key: "replay_count",
+      coerse: "number",
+      method: "numeric",
+      int: true,
+      min: 0,
+      optional: true,
+    },
+    {
+      key: "completed",
+      coerse: "boolean",
+      method: "boolean",
+      optional: true,
+    },
+    {
+      key: "milestone_25",
+      coerse: "boolean",
+      method: "boolean",
+      optional: true,
+    },
+    {
+      key: "milestone_50",
+      coerse: "boolean",
+      method: "boolean",
+      optional: true,
+    },
+    {
+      key: "milestone_75",
+      coerse: "boolean",
+      method: "boolean",
+      optional: true,
+    },
+    {
+      key: "milestone_100",
+      coerse: "boolean",
+      method: "boolean",
+      optional: true,
+    },
+  ],
+};
+
 export const profileShowValidator = validator(profileShowSchema);
 export const profileListValidator = validator(profileListSchema);
 export const contactValidator = validator(contactSchema);
+export const profileVideoWatchValidator = validator(profileVideoWatchSchema);

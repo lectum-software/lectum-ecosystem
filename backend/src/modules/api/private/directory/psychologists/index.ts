@@ -1,10 +1,19 @@
 import { type RequestHandler, Router } from "express";
 import middlewares from "../../../middlewares/_auth";
-import { contact, contactClick, index, posts, reviews, show } from "./use-cases/controller";
+import {
+  contact,
+  contactClick,
+  index,
+  posts,
+  reviews,
+  show,
+  videoWatch,
+} from "./use-cases/controller";
 import validator, {
   contactValidator,
   profileListValidator,
   profileShowValidator,
+  profileVideoWatchValidator,
 } from "./validator";
 
 const routes = Router();
@@ -26,6 +35,7 @@ routes.get(
 );
 routes.post("/:id/contact", middlewares, contactValidator, contact);
 routes.post("/:id/contact-click", middlewares, profileShowValidator, contactClick);
+routes.post("/:id/video-watch", optionalAuth, profileVideoWatchValidator, videoWatch);
 routes.get("/:id/posts", optionalAuth, profileListValidator, posts);
 routes.get("/:id/reviews", optionalAuth, profileListValidator, reviews);
 routes.get("/:id", optionalAuth, profileShowValidator, show);

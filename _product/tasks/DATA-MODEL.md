@@ -282,6 +282,23 @@ Especialidade, serviço e abordagem são filtros da busca (TASK-13) e seções d
 | `viewer_id` | `String?` | |
 | `@@index([psychologist_id, createdAt])` | | só criar se a métrica de visualizações entrar no escopo; senão, omitir métrica honestamente |
 
+`profile_video_watch_session` (analytics do vídeo de apresentação, extensão da TASK-20):
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `psychologist_id` | `String` | FK `user.id` do psicólogo dono do perfil; ownership no analytics por `req.auth.id` |
+| `viewer_id` | `String?` | usuário autenticado que assistiu, quando existir; anônimos ficam nulos |
+| `session_key` | `String` | identificador efêmero por sessão do navegador; `@@unique([psychologist_id, session_key])` consolida heartbeats sem duplicar visualização |
+| `video_url` | `String?` | URL do vídeo vigente no momento do evento para auditoria básica; não substitui `psychologist_profile.video_url` |
+| `duration_seconds` | `Int @default(0)` | duração arredondada informada pelo player |
+| `watched_seconds` | `Int @default(0)` | segundos únicos assistidos na sessão, sem simular tempo não reproduzido |
+| `max_position_seconds` | `Int @default(0)` | maior posição alcançada no vídeo |
+| `replay_count` | `Int @default(0)` | quantidade de retornos/replays detectados na mesma sessão |
+| `completed` | `Boolean @default(false)` | verdadeiro quando o usuário chega ao fim ou ao marco equivalente de 100% |
+| `milestone_25`, `milestone_50`, `milestone_75`, `milestone_100` | `Boolean @default(false)` | retenção por marcos, suficiente para gráfico agregado sem capturar cada segundo |
+| `last_event_at` | `DateTime @default(now())` | última atualização recebida para exibir recência dos dados |
+| `@@index([psychologist_id, createdAt])`, `@@index([psychologist_id, last_event_at])`, `@@index([viewer_id, createdAt])` | | consultas de analytics por período e auditoria |
+
 ---
 
 ## Avaliações
