@@ -293,22 +293,24 @@ const MetricCard = ({ locked, metric }: { locked?: boolean; metric: AnalyticsCar
   const Icon = metric.icon;
 
   return (
-    <article className="min-w-0 overflow-hidden rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
+    <article className="flex min-h-[132px] min-w-0 flex-col overflow-hidden rounded-[20px] border border-border bg-surface p-3 shadow-[var(--lectum-shadow-soft)] sm:min-h-[150px] sm:rounded-[var(--lectum-card-radius)] sm:p-4">
       <div className="flex items-start justify-between gap-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-          <Icon className="h-5 w-5" aria-hidden />
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary sm:h-10 sm:w-10">
+          <Icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" aria-hidden />
         </span>
         {locked ? (
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/10 bg-primary-soft px-2 py-1 text-[0.65rem] font-black uppercase tracking-[0.08em] text-primary">
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/10 bg-primary-soft px-2 py-1 text-[0.6rem] font-black uppercase tracking-[0.08em] text-primary sm:text-[0.65rem]">
             <Sparkles className="h-3 w-3" aria-hidden />
             Prévia
           </span>
         ) : null}
       </div>
 
-      <h2 className="mt-4 text-base font-extrabold leading-6 text-foreground">{metric.label}</h2>
+      <h2 className="mt-3 min-h-10 break-words text-[0.82rem] font-extrabold leading-5 text-foreground sm:mt-4 sm:text-base sm:leading-6">
+        {metric.label}
+      </h2>
 
-      <div className="mt-5 inline-flex max-w-full items-center gap-2 rounded-full border border-primary/10 bg-primary-soft/70 px-3 py-2">
+      <div className="mt-auto inline-flex max-w-full items-center gap-1.5 rounded-full border border-primary/10 bg-primary-soft/70 px-2.5 py-2 sm:gap-2 sm:px-3">
         <span
           className={cn(
             "min-w-0 text-2xl font-extrabold leading-none tracking-[-0.04em] text-foreground",
@@ -318,7 +320,12 @@ const MetricCard = ({ locked, metric }: { locked?: boolean; metric: AnalyticsCar
           {metric.value}
         </span>
         {metric.isUnavailable ? (
-          <span className={cn("text-xs font-bold text-muted", locked && "select-none blur-[4px]")}>
+          <span
+            className={cn(
+              "min-w-0 text-[0.68rem] font-bold leading-none text-muted sm:text-xs",
+              locked && "select-none blur-[4px]",
+            )}
+          >
             sem evento
           </span>
         ) : null}
@@ -927,7 +934,7 @@ export const ProfessionalAnalyticsLogic = () => {
 
         {!shouldShowError ? (
           <section
-            className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2"
+            className="grid min-w-0 grid-cols-2 items-stretch gap-3"
             aria-label="Cards de analytics"
           >
             {metricCards(data).map((metric) => (
