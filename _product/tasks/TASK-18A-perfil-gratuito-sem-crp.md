@@ -314,3 +314,11 @@ Validações executadas:
 - O ajuste não altera formulário, validações, upload/remoção de mídias, endpoints, dados persistidos, Prisma ou packages.
 - ADR atualizado: `adrs/0119-header-secundario-premium-compartilhado.md`.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP em `/app/professional/profile/setup` com usuário psicólogo temporário real removido do banco ao final, nos viewports mobile 390x844 e desktop 1024x768, confirmando centralização do título e ausência de overflow horizontal.
+## Ajuste complementar em 2026-06-18 - ação de visualizar perfil público no header
+
+- A tela `/app/professional/profile/setup` deixou de exibir o botão textual `Ver perfil público` abaixo do header.
+- O header `Editar perfil` agora usa o slot direito opcional do `AppPageHeader` com ícone `Eye`, no mesmo tamanho, cor, radius e interação do botão de voltar.
+- O título permanece centralizado porque o header mantém grid `44px 1fr 44px`; o ícone da direita aponta para `/app/psychologist/:id` quando os dados reais do perfil carregam.
+- O ajuste reduz ruído visual no conteúdo e preserva a navegação para o perfil público sem alterar formulário, endpoints, dados persistidos, Prisma ou packages.
+- ADR atualizado: `adrs/0119-header-secundario-premium-compartilhado.md`.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP em `/app/professional/profile/setup` com usuário psicólogo temporário real removido do banco ao final, nos viewports mobile 390x844 e desktop 1024x768, confirmando ausência do botão textual, título centralizado, botões laterais equivalentes, ausência de overflow horizontal e clique do ícone abrindo `/app/psychologist/:id`.

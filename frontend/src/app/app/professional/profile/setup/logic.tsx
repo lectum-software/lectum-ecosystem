@@ -935,7 +935,7 @@ export const ProfessionalProfileSetupLogic = () => {
   const isSubmitting = update.isPending || isSavingMedia;
   const publicProfileHref = profile.data?.user.id
     ? `/app/psychologist/${profile.data.user.id}`
-    : PROFESSIONAL_PROFILE_MENU_HREF;
+    : undefined;
   const addressState = form.hook.watch("address_state");
   const addressCity = form.hook.watch("address_city");
   const baseCityOptions = useMemo(() => CITY_OPTIONS_BY_STATE[addressState] || [], [addressState]);
@@ -1554,19 +1554,11 @@ export const ProfessionalProfileSetupLogic = () => {
         <AppPageHeader
           backHref={PROFESSIONAL_PROFILE_MENU_HREF}
           backLabel="Voltar ao perfil"
+          rightActionHref={publicProfileHref}
+          rightActionIcon={<Eye className="h-5 w-5" aria-hidden="true" />}
+          rightActionLabel="Ver perfil público"
           title="Editar perfil"
         />
-
-        <div className="flex justify-end">
-          <Link
-            aria-label="Ver perfil público"
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-primary/15 bg-surface px-4 text-sm font-extrabold text-primary shadow-[var(--lectum-shadow-soft)] transition hover:bg-primary-soft"
-            href={publicProfileHref}
-          >
-            Ver perfil público
-            <Eye className="h-4 w-4" aria-hidden="true" />
-          </Link>
-        </div>
 
         {renderProfileImagesPreview()}
 
