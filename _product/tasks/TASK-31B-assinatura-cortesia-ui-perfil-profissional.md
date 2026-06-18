@@ -82,11 +82,11 @@ Psicólogos com `professional_subscription.source="admin_grant"` recebem todos o
 
 - Pedido direto de produto: tornar `/app/professional/billing/subscription` mais persuasiva para profissionais no Plano Gratuito, sem transformar a tela em tabela comparativa e sem exibir preço nesta etapa.
 - Referência visual consultada: `_product/proto/Minhas Assinatura - Psicólogo.jpg` e print enviado pelo usuário; Builder/Quick Copy não está exposto como ferramenta direta neste ambiente.
-- O cabeçalho gratuito passou a usar `SEU PLANO ATUAL`, `Plano Gratuito` e copy de valor sobre comunidades, avaliações e perfil ativo.
-- O card do plano atual manteve `Plano atual: Plano Gratuito` e `Expiração: Sem data definida`, agora com ícones discretos, bordas suaves e espaçamento mobile-first.
+- O cabeçalho gratuito passou a usar `SEU PLANO ATUAL`, `Plano Gratuito` e copy compacta de valor sobre comunidades e perfil ativo.
+- O card do plano atual manteve apenas `Plano atual: Plano Gratuito`; a expiração deixou de aparecer no Plano Gratuito e o card foi reequilibrado em largura única com ícone discreto, bordas suaves e espaçamento mobile-first.
 - O aviso técnico `A Lectum não coleta cartão fora do gateway real...` foi removido da experiência gratuita.
 - A tela passou a exibir a seção `O que você desbloqueia com a Assinatura Profissional`, agrupando benefícios por credibilidade, visibilidade, recursos de perfil e atendimento prioritário.
-- Adicionado card azul claro `Amplie sua presença profissional na Lectum` e CTA primário `Ver planos e benefícios`.
+- Adicionado card azul claro `Amplie sua presença profissional na Lectum` e CTA primário `Fazer upgrade`.
 - A tela de cortesia (`source="admin_grant"`) foi preservada com CTA para checkout real/bloqueado, sem alterar regras de gateway, cobrança, entitlement, API ou preço.
 - ADR criado: `adrs/0117-minha-assinatura-gratuita-beneficios.md`.
 
@@ -95,4 +95,19 @@ Psicólogos com `professional_subscription.source="admin_grant"` recebem todos o
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
-- Browser headless local em viewport 390x844 na rota `/app/professional/billing/subscription`, com usuário psicólogo temporário criado por endpoints reais, Plano Gratuito selecionado via API real e removido do banco ao final, confirmou os textos novos, a ausência do aviso técnico antigo e `scrollWidth=390`/`innerWidth=390`.
+- Browser headless local em viewport 390x844 na rota `/app/professional/billing/subscription`, com usuário psicólogo temporário criado por endpoints reais, Plano Gratuito selecionado via API real e removido do banco ao final, confirmou os textos novos, a ausência do aviso técnico antigo, a remoção de `Expiração` no Plano Gratuito e `scrollWidth=390`/`innerWidth=390`.
+
+## Refinamento visual em 2026-06-18: CTA direto de upgrade
+
+- Pedido direto de produto: compactar a tela gratuita de "Minha assinatura" após remover a expiração e tornar o CTA mais direto.
+- A descrição do Plano Gratuito passou para `Você já pode participar das comunidades e manter seu perfil ativo na Lectum.`
+- O card de informações do Plano Gratuito passou a renderizar somente `Plano atual` e `Plano Gratuito`, sem bloco de expiração.
+- O texto auxiliar da seção de benefícios passou para `Benefícios pensados para fortalecer sua autoridade e ampliar sua presença na Lectum.`
+- O CTA principal passou de `Ver planos e benefícios` para `Fazer upgrade`, preservando estilo primário.
+- Espaçamentos verticais, altura do ícone superior e distância entre seções foram reduzidos para uma composição mais compacta no mobile.
+
+### Validação do refinamento
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Browser headless local em viewport 390x844 confirmou descrição nova, CTA `Fazer upgrade`, ausência de `Expiração`, ausência de `Ver planos e benefícios`, ausência de `dentro da Lectum` e `scrollWidth=390`/`innerWidth=390`.

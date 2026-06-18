@@ -109,11 +109,13 @@ export const ProfessionalBillingSubscriptionLogic = () => {
   const isFreePlan = subscription?.plan?.slug === "gratuito";
   const planName = subscription?.plan?.name || "Plano não encontrado";
   const expirationLabel = formatDate(subscription?.current_period_end);
+  const shouldShowExpiration =
+    isCourtesy || (!isFreePlan && Boolean(subscription?.current_period_end));
   const heroTitle = isCourtesy ? "Plano Profissional de cortesia" : planName;
   const heroDescription = isCourtesy
     ? "Você está com todos os benefícios de um psicólogo assinante liberados durante o período da cortesia."
     : isFreePlan
-      ? "Você já pode participar das comunidades, receber avaliações e manter seu perfil profissional ativo na Lectum."
+      ? "Você já pode participar das comunidades e manter seu perfil ativo na Lectum."
       : "Veja o plano ativo no seu perfil profissional.";
 
   return (
@@ -136,27 +138,33 @@ export const ProfessionalBillingSubscriptionLogic = () => {
         ) : null}
 
         {!current.isLoading && !current.isError ? (
-          <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-7 shadow-[var(--lectum-shadow-soft)] md:px-7">
+          <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-6 shadow-[var(--lectum-shadow-soft)] md:px-7 md:py-7">
             <div className="grid justify-items-center text-center">
-              <span className="relative grid h-20 w-20 place-items-center rounded-3xl bg-primary-soft text-primary shadow-[var(--lectum-shadow-soft)]">
+              <span className="relative grid h-[72px] w-[72px] place-items-center rounded-3xl bg-primary-soft text-primary shadow-[var(--lectum-shadow-soft)]">
                 {isCourtesy ? (
-                  <Gift className="h-9 w-9" aria-hidden="true" />
+                  <Gift className="h-8 w-8" aria-hidden="true" />
                 ) : (
-                  <ShieldCheck className="h-9 w-9" aria-hidden="true" />
+                  <ShieldCheck className="h-8 w-8" aria-hidden="true" />
                 )}
                 <span className="absolute -right-1 -top-1 grid h-7 w-7 place-items-center rounded-full border border-primary/20 bg-surface text-primary">
                   <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
                 </span>
               </span>
-              <p className="mt-6 text-xs font-black uppercase tracking-[0.18em] text-primary">
+              <p className="mt-5 text-xs font-black uppercase tracking-[0.18em] text-primary">
                 {isCourtesy ? "Sua cortesia ativa" : "Seu plano atual"}
               </p>
-              <h1 className="mt-3 text-2xl font-bold leading-tight text-foreground">{heroTitle}</h1>
+              <h1 className="mt-2 text-2xl font-bold leading-tight text-foreground">{heroTitle}</h1>
               <p className="mt-3 max-w-xl text-base leading-7 text-muted">{heroDescription}</p>
             </div>
 
-            <div className="mt-7 grid gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface-muted p-3 md:grid-cols-2">
-              <div className="flex items-start gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4">
+            <div
+              className={
+                shouldShowExpiration
+                  ? "mt-6 grid gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface-muted p-3 md:grid-cols-2"
+                  : "mt-6 rounded-[var(--lectum-card-radius)] border border-border bg-surface-muted p-3"
+              }
+            >
+              <div className="flex items-center gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 md:p-5">
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
                   <BadgeCheck className="h-5 w-5" aria-hidden="true" />
                 </span>
@@ -165,17 +173,19 @@ export const ProfessionalBillingSubscriptionLogic = () => {
                   <p className="mt-1 text-sm text-muted">{planName}</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-                  <CalendarClock className="h-5 w-5" aria-hidden="true" />
-                </span>
-                <div>
-                  <p className="text-sm font-bold text-foreground">
-                    {isCourtesy ? "Expiração da cortesia" : "Expiração"}
-                  </p>
-                  <p className="mt-1 text-sm text-muted">{expirationLabel}</p>
+              {shouldShowExpiration ? (
+                <div className="flex items-center gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 md:p-5">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+                    <CalendarClock className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-bold text-foreground">
+                      {isCourtesy ? "Expiração da cortesia" : "Expiração"}
+                    </p>
+                    <p className="mt-1 text-sm text-muted">{expirationLabel}</p>
+                  </div>
                 </div>
-              </div>
+              ) : null}
             </div>
 
             {isCourtesy ? (
@@ -194,7 +204,7 @@ export const ProfessionalBillingSubscriptionLogic = () => {
               </>
             ) : (
               <>
-                <section className="mt-7">
+                <section className="mt-6">
                   <div className="flex items-start gap-3">
                     <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
                       <Award className="h-5 w-5" aria-hidden="true" />
@@ -204,8 +214,8 @@ export const ProfessionalBillingSubscriptionLogic = () => {
                         O que você desbloqueia com a Assinatura Profissional
                       </h2>
                       <p className="mt-1 text-sm leading-6 text-muted">
-                        Benefícios pensados para fortalecer sua autoridade e ampliar sua presença
-                        dentro da Lectum.
+                        Benefícios pensados para fortalecer sua autoridade e ampliar sua presença na
+                        Lectum.
                       </p>
                     </div>
                   </div>
@@ -237,7 +247,7 @@ export const ProfessionalBillingSubscriptionLogic = () => {
 
                 <Button asChild className="mt-6 h-12 w-full rounded-full text-base">
                   <Link href="/app/professional/billing/plans">
-                    Ver planos e benefícios
+                    Fazer upgrade
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </Link>
                 </Button>

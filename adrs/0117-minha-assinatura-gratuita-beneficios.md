@@ -20,12 +20,14 @@ Manter a tela como card centralizado, mobile-first e sem tabela comparativa, mas
 
 Para o Plano Gratuito:
 
-- o cabeçalho passa a usar o selo `SEU PLANO ATUAL`, título `Plano Gratuito` e copy de valor sobre comunidades, avaliações e perfil ativo;
-- o card de plano atual mantém `Plano atual` e `Expiração`, com ícones discretos e bordas suaves;
+- o cabeçalho passa a usar o selo `SEU PLANO ATUAL`, título `Plano Gratuito` e copy de valor sobre comunidades e perfil ativo;
+- o card de plano atual mantém apenas `Plano atual` e `Plano Gratuito`, com ícone discreto, bordas suaves e largura reequilibrada;
 - o aviso técnico sobre cartão/gateway sai da experiência gratuita;
 - os benefícios da Assinatura Profissional entram agrupados por credibilidade, visibilidade, recursos de perfil e atendimento prioritário;
 - o card azul de destaque resume o ganho de presença profissional;
-- o CTA principal vira `Ver planos e benefícios`, usando o botão primário.
+- o CTA principal vira `Fazer upgrade`, usando o botão primário.
+
+Em refinamento posterior no mesmo dia, a descrição gratuita foi compactada para `Você já pode participar das comunidades e manter seu perfil ativo na Lectum.`, o texto auxiliar da seção de benefícios passou a `Benefícios pensados para fortalecer sua autoridade e ampliar sua presença na Lectum.` e o bloco `Expiração` deixou de ser renderizado para o Plano Gratuito.
 
 O fluxo de cortesia continua separado: profissionais com `source="admin_grant"` mantêm a mensagem de cortesia e o CTA para checkout real/bloqueado da TASK-32. Nenhuma regra de cobrança, persistência, entitlement, gateway ou preço foi alterada.
 
@@ -42,7 +44,7 @@ O fluxo de cortesia continua separado: profissionais com `source="admin_grant"` 
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser headless local em `http://localhost:3000/app/professional/billing/subscription`, viewport 390x844, com usuário psicólogo temporário criado por endpoints reais, Plano Gratuito selecionado via API real e removido do banco ao final.
-- Validação visual confirmou `Plano Gratuito`, `SEU PLANO ATUAL`, seção de benefícios, card `Amplie sua presença profissional na Lectum`, CTA `Ver planos e benefícios`, ausência do texto técnico antigo e `scrollWidth=390`/`innerWidth=390`.
+- Validação visual confirmou `Plano Gratuito`, `SEU PLANO ATUAL`, seção de benefícios, card `Amplie sua presença profissional na Lectum`, CTA `Fazer upgrade`, ausência do texto técnico antigo, ausência de `Expiração` no Plano Gratuito e `scrollWidth=390`/`innerWidth=390`.
 
 ## Pendências
 
