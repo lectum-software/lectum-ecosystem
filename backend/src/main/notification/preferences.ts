@@ -41,6 +41,10 @@ const normalizeEnabled = (entry: Record<string, unknown> | undefined) => {
   return true;
 };
 
+const isNewPostDisabledByScope = (
+  entry: { author_scope?: unknown; post_author_scope?: unknown } | undefined,
+) => (entry?.post_author_scope ?? entry?.author_scope) === "disabled";
+
 const normalizeNewPostAuthorScope = (
   value: unknown,
   role: NotificationUserRole,
@@ -68,7 +72,7 @@ export const normalizeNotificationPrefs = (
 
   const newPostEntry = isRecord(source.novo_post) ? source.novo_post : undefined;
   normalized.novo_post = {
-    enabled: normalizeEnabled(newPostEntry),
+    enabled: isNewPostDisabledByScope(newPostEntry) ? false : normalizeEnabled(newPostEntry),
     post_author_scope: normalizeNewPostAuthorScope(
       newPostEntry?.post_author_scope ?? newPostEntry?.author_scope,
       role,
@@ -93,6 +97,8 @@ export const isChannelAllowed = (
   const entry = isRecord(prefs[key]) ? (prefs[key] as NotificationPreferenceEntry) : undefined;
   if (!entry) return true;
 
+  if (key === "novo_post" && isNewPostDisabledByScope(entry)) return false;
+
   if (typeof entry.enabled === "boolean") return entry.enabled;
 
   return entry[channel] !== false;
@@ -103,6 +109,8 @@ export const isNotificationEnabled = (prefs: unknown, key: string) => {
 
   const entry = isRecord(prefs[key]) ? (prefs[key] as NotificationPreferenceEntry) : undefined;
   if (!entry) return true;
+
+  if (key === "novo_post" && isNewPostDisabledByScope(entry)) return false;
 
   return normalizeEnabled(entry);
 };

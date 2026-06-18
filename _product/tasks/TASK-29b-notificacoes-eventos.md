@@ -130,3 +130,20 @@ Implementado suporte de segmentação para `novo_post`:
 - Para psicólogos: `patients_only` recebe alertas apenas de posts de pacientes; `all` recebe de pacientes e psicólogos.
 - Para pacientes: `professionals_only` recebe alertas apenas de posts de psicólogos; `all` recebe de pacientes e psicólogos.
 - A filtragem acontece no produtor real `community_post`, antes de chamar o dispatcher, sem criar endpoint paralelo ou evento simulado.
+
+## Complemento 2026-06-18
+
+Implementado suporte de desativacao total para `novo_post`:
+
+- A preferencia visual `Desativado` salva `novo_post.enabled = false`, sem criar uma nova categoria e sem desligar `nova_resposta`, `upvote`, `salvamento`, `compartilhamento` ou demais notificacoes.
+- O produtor real `community_post` continua chamando `shouldReceiveNewPostNotification`, que primeiro respeita `enabled = false` e so entao avalia `post_author_scope`.
+- A normalizacao foi endurecida para tambem tratar um eventual legado/manual `post_author_scope: "disabled"` como `enabled = false`.
+- A segmentacao existente por `patients_only`, `professionals_only` e `all` segue inalterada quando a categoria esta ativa.
+
+Validacao:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`
+- Smoke via `pnpm --dir backend exec tsx` validou que `novo_post.enabled = false` impede `novo_post`, preserva outra chave habilitada e trata `post_author_scope: "disabled"` como desligado.
+- ADR atualizado: `adrs/0098-notificacoes-eventos-dominio.md`.

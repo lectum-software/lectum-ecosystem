@@ -48,3 +48,12 @@ Durante a auditoria foram encontrados produtores persistidos para avaliacao, fav
 - O evento real `community_post` agora consulta o papel do autor, o papel do destinatario e `notification_preference.prefs.novo_post.post_author_scope` antes de disparar `novo_post`.
 - Regras aplicadas: psicologos podem receber somente posts de pacientes ou todos; pacientes podem receber somente posts de profissionais ou todos.
 - A segmentacao foi isolada em `main/notification/preferences.ts`, preparando o dispatcher e produtores futuros para novas categorias segmentadas sem criar modelo paralelo.
+
+## Complemento 2026-06-18
+
+- A opcao visual `Desativado` de `Novas postagens` e representada no dominio como `notification_preference.prefs.novo_post.enabled = false`.
+- `shouldReceiveNewPostNotification` preserva a ordem de decisao: primeiro respeita `enabled = false`; se a categoria estiver ativa, aplica a segmentacao por `post_author_scope`.
+- A normalizacao em `main/notification/preferences.ts` tambem interpreta um eventual `post_author_scope: "disabled"` legado/manual como categoria desligada, sem tornar `disabled` um escopo de autor oficial.
+- O desligamento afeta somente `novo_post`; respostas, votos, salvamentos, compartilhamentos e demais notificacoes continuam governados pelas suas proprias chaves.
+
+Validacao: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` e smoke via `tsx` cobrindo `enabled = false`, outras chaves habilitadas e `post_author_scope: "disabled"`.

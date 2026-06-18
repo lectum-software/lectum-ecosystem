@@ -226,3 +226,22 @@ Esta task deixa o canal de recebimento pronto. **Não** ligue eventos de domíni
 - `pnpm check`
 - Browser local via Chrome/CDP em `/app/settings/notifications` mobile `390x844`, validando paciente sem `COMUNIDADE`, psicologo com `PERFIL` + `COMUNIDADE`, dropdown sem `Selecione`, opcoes corretas por papel e ausencia de overflow horizontal.
 - ADR atualizado: `adrs/0007-notificacoes-fundacao.md`.
+
+## Complemento 2026-06-18 - Desativado em Novas postagens
+
+- O dropdown customizado `Novas postagens` passou a exibir uma terceira opcao final `Desativado`.
+- Pacientes veem `Profissionais`, `Todos` e `Desativado`; psicologos veem `Pacientes`, `Todos` e `Desativado`.
+- A opcao visual `Desativado` nao e persistida como novo escopo de autor: o payload segue usando `post_author_scope` valido por papel e salva `novo_post.enabled = false`.
+- Ao recarregar a tela, `novo_post.enabled = false` volta a selecionar `Desativado`, mantendo as demais preferencias independentes.
+- O layout premium do seletor foi preservado e a largura continua contida na coluna direita no mobile.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend check`
+- `pnpm --dir backend check`
+- `pnpm --dir frontend build`
+- `pnpm --dir backend build`
+- `pnpm check`
+- Smoke de dominio via `tsx` confirmou que `novo_post.enabled = false` bloqueia apenas notificacoes de novas postagens e mantem outras chaves habilitadas.
+- Browser local via Chrome/CDP em `/app/settings/notifications` mobile `390x844`, validando as opcoes `Profissionais/Todos/Desativado` para paciente, `Pacientes/Todos/Desativado` para psicologo, ausencia de overflow horizontal e persistencia de `Desativado` apos reload.
+- ADR atualizado: `adrs/0007-notificacoes-fundacao.md`.

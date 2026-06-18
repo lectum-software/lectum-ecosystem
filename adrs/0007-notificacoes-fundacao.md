@@ -151,3 +151,31 @@ A configuracao de notificacoes para pacientes ja ocultava a secao profissional `
 - `pnpm --dir backend build`
 - `pnpm check`
 - Chrome/CDP mobile 390px confirmou paciente sem heading `COMUNIDADE`, psicologo com os dois headings, opcoes corretas por papel e ausencia de `Selecione`.
+
+## Complemento 2026-06-18 - Desativado em novas postagens
+
+### Contexto
+
+O seletor `Novas postagens` ja tinha opcoes compactas por papel (`Profissionais`/`Pacientes`) e `Todos`, mas ainda nao permitia desligar apenas essa categoria sem afetar respostas, votos, salvamentos ou compartilhamentos.
+
+### Decisao
+
+- Adicionar a opcao visual `Desativado` como ultimo item do dropdown customizado.
+- Manter os rotulos curtos por papel: pacientes veem `Profissionais`, `Todos`, `Desativado`; psicologos veem `Pacientes`, `Todos`, `Desativado`.
+- Persistir `Desativado` como `novo_post.enabled = false`, preservando `post_author_scope` com um valor valido por papel em vez de criar novo escopo de autor.
+- Ao carregar preferencias com `novo_post.enabled = false`, selecionar `Desativado` no formulario.
+
+### Consequencias
+
+- O usuario pode desligar apenas alertas de novas postagens.
+- As demais categorias continuam independentes e habilitadas/desabilitadas pelos seus proprios switches.
+- O contrato JSON permanece compativel com o modelo de preferencias ja usado no MVP web.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir backend check`
+- `pnpm --dir frontend build`
+- `pnpm --dir backend build`
+- `pnpm check`
+- Chrome/CDP mobile 390px confirmou opcoes por papel, `Desativado` como ultimo item, ausencia de overflow horizontal e persistencia do valor apos reload.

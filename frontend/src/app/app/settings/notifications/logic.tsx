@@ -28,6 +28,7 @@ import { PrivateTemplate } from "@/templates/private";
 
 type UserRole = "paciente" | "psicologo" | null | undefined;
 type NewPostAuthorScope = "patients_only" | "professionals_only" | "all";
+type NewPostPreferenceValue = NewPostAuthorScope | "disabled";
 
 type NotificationCategory = {
   key:
@@ -109,7 +110,7 @@ type CategoryKey = (typeof CATEGORIES)[number]["key"];
 type SwitchCategoryKey = Exclude<CategoryKey, "novo_post">;
 type EnabledFieldName = `${SwitchCategoryKey}__enabled`;
 type NotificationSettingsForm = Record<EnabledFieldName, boolean> & {
-  novo_post__post_author_scope: NewPostAuthorScope;
+  novo_post__post_author_scope: NewPostPreferenceValue;
 };
 
 const SWITCH_CATEGORIES = CATEGORIES.filter(
@@ -133,7 +134,11 @@ const resolveEnabled = (entry: NotificationPrefs[string] | undefined) => {
 const resolveNewPostScope = (
   entry: NotificationPrefs[string] | undefined,
   role: UserRole,
-): NewPostAuthorScope => {
+): NewPostPreferenceValue => {
+  if (entry && !resolveEnabled(entry)) {
+    return "disabled";
+  }
+
   const persistedScope = entry?.post_author_scope;
   const allowedScopes: NewPostAuthorScope[] =
     role === "psicologo" ? ["patients_only", "all"] : ["professionals_only", "all"];
@@ -150,10 +155,12 @@ const getNewPostOptions = (role: UserRole) =>
     ? [
         { label: "Pacientes", value: "patients_only" },
         { label: "Todos", value: "all" },
+        { label: "Desativado", value: "disabled" },
       ]
     : [
         { label: "Profissionais", value: "professionals_only" },
         { label: "Todos", value: "all" },
+        { label: "Desativado", value: "disabled" },
       ];
 
 const PREFERENCE_FIELDS = [
@@ -178,7 +185,7 @@ const notificationSettingsSchema = z.object({
   upvote__enabled: z.boolean(),
   compartilhamento__enabled: z.boolean(),
   salvamento__enabled: z.boolean(),
-  novo_post__post_author_scope: z.enum(["patients_only", "professionals_only", "all"]),
+  novo_post__post_author_scope: z.enum(["patients_only", "professionals_only", "all", "disabled"]),
 }) as z.ZodType<NotificationSettingsForm, NotificationSettingsForm>;
 
 const toFormValues = (prefs: NotificationPrefs = {}, role: UserRole): NotificationSettingsForm =>
@@ -192,7 +199,7 @@ const toFormValues = (prefs: NotificationPrefs = {}, role: UserRole): Notificati
     novo_post__post_author_scope: resolveNewPostScope(prefs.novo_post, role),
   }) as NotificationSettingsForm;
 
-const fromFormValues = (values: NotificationSettingsForm): NotificationPrefs => {
+const fromFormValues = (values: NotificationSettingsForm, role: UserRole): NotificationPrefs => {
   const prefs = SWITCH_CATEGORIES.reduce<NotificationPrefs>((acc, category) => {
     acc[category.key] = {
       enabled: values[getEnabledFieldName(category.key)],
@@ -200,9 +207,12 @@ const fromFormValues = (values: NotificationSettingsForm): NotificationPrefs => 
     return acc;
   }, {});
 
+  const newPostScope = values.novo_post__post_author_scope;
+  const isNewPostDisabled = newPostScope === "disabled";
+
   prefs.novo_post = {
-    enabled: true,
-    post_author_scope: values.novo_post__post_author_scope,
+    enabled: !isNewPostDisabled,
+    post_author_scope: isNewPostDisabled ? getDefaultNewPostScope(role) : newPostScope,
   };
 
   return prefs;
@@ -233,7 +243,7 @@ export const NotificationSettingsLogic = () => {
   });
 
   const handleSubmit = form.hook.handleSubmit((formValues) => {
-    update.mutate(fromFormValues(formValues), {
+    update.mutate(fromFormValues(formValues, sessionRole), {
       onSuccess: () => form.hook.reset(formValues),
     });
   });
