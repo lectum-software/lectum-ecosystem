@@ -739,11 +739,11 @@ const PresentationVideoAnalyticsSection = ({
             Onde seu público permanece
           </h3>
           <p className="mt-2 text-sm leading-6 text-muted">
-            Em média, visitantes assistiram{" "}
+            Em média, os visitantes assistiram{" "}
             <span className={cn("font-extrabold text-foreground", locked && "blur-[4px]")}>
               {averageRetention}%
             </span>{" "}
-            dos marcos do seu vídeo.
+            do seu vídeo.
           </p>
           {!videoSrc ? (
             <p className="mt-3 rounded-2xl border border-primary/10 bg-surface px-3 py-2 text-xs font-semibold leading-5 text-muted">

@@ -331,9 +331,14 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
       retentionDropoff = null;
     }
 
+    const averageWatchSeconds = videoViews > 0 ? Math.round(totalWatchedSeconds / videoViews) : 0;
+    const averageWatchPercent =
+      videoViews > 0 && durationSeconds
+        ? percentage(Math.min(averageWatchSeconds, durationSeconds), durationSeconds)
+        : 0;
     const presentationVideoMetrics = {
       views: videoViews,
-      average_watch_seconds: videoViews > 0 ? Math.round(totalWatchedSeconds / videoViews) : 0,
+      average_watch_seconds: averageWatchSeconds,
       completion_rate: percentage(completedViews, videoViews),
       replay_rate: percentage(replayedViews, videoViews),
       abandonment_rate: videoViews > 0 ? percentage(videoViews - completedViews, videoViews) : 0,
@@ -346,13 +351,7 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
       metrics: presentationVideoMetrics,
       cards: toPresentationVideoCards(presentationVideoMetrics),
       retention: {
-        average_retention_rate:
-          retentionPoints.length > 0
-            ? Math.round(
-                retentionPoints.reduce((sum, point) => sum + point.rate, 0) /
-                  retentionPoints.length,
-              )
-            : 0,
+        average_retention_rate: averageWatchPercent,
         dropoff: retentionDropoff,
         points: retentionPoints,
         source: "bucket_5_percent",
