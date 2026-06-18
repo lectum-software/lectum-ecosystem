@@ -382,7 +382,6 @@ type RetentionChartProps = {
   views?: number;
 };
 
-const RETENTION_SUMMARY_MILESTONES = [25, 50, 75, 100];
 const RETENTION_CHART_WIDTH = 300;
 const RETENTION_CHART_TOP = 12;
 const RETENTION_CHART_BOTTOM = 116;
@@ -477,8 +476,8 @@ const RetentionChart = ({
       <button
         aria-label="Selecionar trecho no gráfico de retenção"
         className={cn(
-          "relative w-full overflow-hidden rounded-[22px] bg-primary-soft/35 p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
-          canSeek && "cursor-pointer hover:bg-primary-soft/50",
+          "relative w-full overflow-hidden rounded-[22px] border border-border/70 bg-surface p-3 text-left shadow-inner transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
+          canSeek && "cursor-pointer hover:border-primary/20",
           locked && "blur-[4px]",
         )}
         disabled={!canSeek}
@@ -493,9 +492,32 @@ const RetentionChart = ({
           viewBox="0 0 300 130"
         >
           <title>Curva estimada de retenção por marcos de 5%</title>
+          <defs>
+            <linearGradient id="presentation-video-retention-gradient" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0%" stopColor="rgb(46, 143, 230)" />
+              <stop offset="100%" stopColor="rgb(14, 116, 211)" />
+            </linearGradient>
+            <filter
+              colorInterpolationFilters="sRGB"
+              height="160%"
+              id="presentation-video-retention-shadow"
+              width="160%"
+              x="-30%"
+              y="-30%"
+            >
+              <feDropShadow
+                dx="0"
+                dy="2"
+                floodColor="rgb(46, 143, 230)"
+                floodOpacity="0.18"
+                stdDeviation="2"
+              />
+            </filter>
+          </defs>
           <line
             stroke="currentColor"
             strokeDasharray="4 5"
+            strokeOpacity="0.5"
             x1={RETENTION_CHART_LEFT_PADDING}
             x2={RETENTION_CHART_WIDTH - RETENTION_CHART_RIGHT_PADDING + 4}
             y1="12"
@@ -504,6 +526,7 @@ const RetentionChart = ({
           <line
             stroke="currentColor"
             strokeDasharray="4 5"
+            strokeOpacity="0.5"
             x1={RETENTION_CHART_LEFT_PADDING}
             x2={RETENTION_CHART_WIDTH - RETENTION_CHART_RIGHT_PADDING + 4}
             y1="64"
@@ -512,42 +535,53 @@ const RetentionChart = ({
           <path
             d={smoothPath}
             fill="none"
-            stroke="rgb(46, 143, 230)"
+            filter="url(#presentation-video-retention-shadow)"
+            stroke="url(#presentation-video-retention-gradient)"
             strokeLinecap="round"
             strokeLinejoin="round"
-            strokeWidth="4"
+            strokeWidth="3.5"
           />
-          {safePoints
-            .filter((point) => RETENTION_SUMMARY_MILESTONES.includes(point.milestone))
-            .map((point) => {
-              const { x, y } = toChartPoint(point.milestone, point.rate);
-
-              return (
-                <circle
-                  cx={x}
-                  cy={y}
-                  fill="white"
-                  key={point.milestone}
-                  r="5"
-                  stroke="rgb(46, 143, 230)"
-                  strokeWidth="3"
-                />
-              );
-            })}
           {durationSeconds && durationSeconds > 0 ? (
-            <>
-              <line
-                stroke="rgb(15, 23, 42)"
-                strokeDasharray="3 4"
-                strokeWidth="2"
-                x1={currentPoint.x}
-                x2={currentPoint.x}
-                y1="10"
-                y2="120"
-              />
-              <circle cx={currentPoint.x} cy="120" fill="rgb(46, 143, 230)" r="4" />
-            </>
+            <line
+              stroke="rgb(46, 143, 230)"
+              strokeOpacity="0.55"
+              strokeWidth="1.5"
+              x1={currentPoint.x}
+              x2={currentPoint.x}
+              y1="12"
+              y2="122"
+            />
           ) : null}
+          <line
+            stroke="rgb(226, 232, 240)"
+            strokeLinecap="round"
+            strokeWidth="5"
+            x1={RETENTION_CHART_LEFT_PADDING}
+            x2={RETENTION_CHART_WIDTH - RETENTION_CHART_RIGHT_PADDING + 4}
+            y1="122"
+            y2="122"
+          />
+          <line
+            stroke="rgb(15, 23, 42)"
+            strokeLinecap="round"
+            strokeWidth="5"
+            x1={RETENTION_CHART_LEFT_PADDING}
+            x2={
+              durationSeconds && durationSeconds > 0 ? currentPoint.x : RETENTION_CHART_LEFT_PADDING
+            }
+            y1="122"
+            y2="122"
+          />
+          <circle
+            cx={
+              durationSeconds && durationSeconds > 0 ? currentPoint.x : RETENTION_CHART_LEFT_PADDING
+            }
+            cy="122"
+            fill="white"
+            r="8"
+            stroke="rgb(226, 232, 240)"
+            strokeWidth="1.5"
+          />
         </svg>
         <span className="pointer-events-none absolute right-5 top-4 rounded-full bg-surface/95 px-1.5 py-0.5 text-[0.65rem] font-extrabold leading-none text-subtle shadow-sm">
           100%
