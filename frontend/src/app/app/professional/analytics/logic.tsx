@@ -31,7 +31,6 @@ import type {
   PsychologistAnalyticsResponse,
 } from "@/api/generator/types/psychologist-analytics";
 import { AppPageHeader } from "@/components/ui/app-page-header";
-import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
@@ -124,19 +123,6 @@ const videoMetricIcons: Record<PsychologistAnalyticsPresentationVideoMetric["id"
   completion_rate: CheckCircle2,
   replay_rate: Repeat2,
   views: PlayCircle,
-};
-
-const hasAnyRealEvent = (data?: PsychologistAnalyticsResponse) => {
-  if (!data) return false;
-
-  return (
-    data.metrics.whatsapp_clicks > 0 ||
-    data.metrics.reviews_received > 0 ||
-    data.metrics.posts_published > 0 ||
-    data.metrics.post_engagement > 0 ||
-    data.metrics.rating_count_total > 0 ||
-    data.presentation_video.metrics.views > 0
-  );
 };
 
 const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCardView[] => [
@@ -901,7 +887,6 @@ export const ProfessionalAnalyticsLogic = () => {
   const isProfessionalPlanError = Boolean(errorMessage?.includes("Plano Profissional"));
   const shouldShowError = Boolean(errorMessage && !isProfessionalPlanError);
   const isAnalyticsPreview = data?.access.mode === "preview" || isProfessionalPlanError;
-  const hasEvents = hasAnyRealEvent(data);
   const reviewLink =
     typeof window === "undefined"
       ? "lectum.com.br/app/reviews/new"
@@ -941,15 +926,6 @@ export const ProfessionalAnalyticsLogic = () => {
               <MetricCard key={metric.id} locked={isAnalyticsPreview} metric={metric} />
             ))}
           </section>
-        ) : null}
-
-        {data && !isAnalyticsPreview && !analytics.isError && !hasEvents ? (
-          <EmptyState
-            className="rounded-[var(--lectum-card-radius)] bg-surface"
-            icon={BarChart3}
-            title="Ainda não há eventos reais neste período"
-            description="Contatos por WhatsApp, avaliações e posts aparecerão aqui sem dados simulados."
-          />
         ) : null}
 
         {!shouldShowError ? (
