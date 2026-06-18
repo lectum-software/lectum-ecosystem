@@ -385,13 +385,14 @@ const RETENTION_SUMMARY_MILESTONES = [25, 50, 75, 100];
 const RETENTION_CHART_WIDTH = 300;
 const RETENTION_CHART_TOP = 12;
 const RETENTION_CHART_BOTTOM = 116;
-const RETENTION_CHART_HORIZONTAL_PADDING = 16;
+const RETENTION_CHART_LEFT_PADDING = 18;
+const RETENTION_CHART_RIGHT_PADDING = 58;
 
 const toChartPoint = (milestone: number, rate: number) => {
   const x =
-    RETENTION_CHART_HORIZONTAL_PADDING +
+    RETENTION_CHART_LEFT_PADDING +
     (clampPercent(milestone) / 100) *
-      (RETENTION_CHART_WIDTH - RETENTION_CHART_HORIZONTAL_PADDING * 2);
+      (RETENTION_CHART_WIDTH - RETENTION_CHART_LEFT_PADDING - RETENTION_CHART_RIGHT_PADDING);
   const y =
     RETENTION_CHART_TOP +
     ((100 - clampPercent(rate)) / 100) * (RETENTION_CHART_BOTTOM - RETENTION_CHART_TOP);
@@ -481,21 +482,10 @@ const RetentionChart = ({
 
   return (
     <div className="min-w-0 rounded-[22px] border border-border bg-surface-muted p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="text-base font-extrabold text-foreground">Retenção por marcos</h3>
-          <p className="mt-1 text-sm leading-5 text-muted">
-            A Lectum calcula marcos internos de 5% e traça uma curva estimada para você comparar
-            quedas com o momento do vídeo.
-          </p>
-        </div>
-        <Info className="h-5 w-5 shrink-0 text-subtle" aria-hidden />
-      </div>
-
       <button
         aria-label="Selecionar trecho no gráfico de retenção"
         className={cn(
-          "mt-4 w-full overflow-hidden rounded-2xl bg-surface p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
+          "w-full overflow-hidden rounded-2xl bg-surface p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
           canSeek && "cursor-pointer hover:bg-primary-soft/20",
           locked && "blur-[4px]",
         )}
@@ -511,8 +501,22 @@ const RetentionChart = ({
           viewBox="0 0 300 130"
         >
           <title>Curva estimada de retenção por marcos de 5%</title>
-          <line stroke="currentColor" strokeDasharray="4 5" x1="0" x2="300" y1="12" y2="12" />
-          <line stroke="currentColor" strokeDasharray="4 5" x1="0" x2="300" y1="64" y2="64" />
+          <line
+            stroke="currentColor"
+            strokeDasharray="4 5"
+            x1={RETENTION_CHART_LEFT_PADDING}
+            x2={RETENTION_CHART_WIDTH - RETENTION_CHART_RIGHT_PADDING + 4}
+            y1="12"
+            y2="12"
+          />
+          <line
+            stroke="currentColor"
+            strokeDasharray="4 5"
+            x1={RETENTION_CHART_LEFT_PADDING}
+            x2={RETENTION_CHART_WIDTH - RETENTION_CHART_RIGHT_PADDING + 4}
+            y1="64"
+            y2="64"
+          />
           <path
             d={smoothPath}
             fill="none"
@@ -552,10 +556,12 @@ const RetentionChart = ({
               <circle cx={currentPoint.x} cy="120" fill="rgb(46, 143, 230)" r="4" />
             </>
           ) : null}
-          <text fill="currentColor" fontSize="10" x="268" y="12">
+          <rect fill="white" height="18" opacity="0.94" rx="8" width="42" x="254" y="2" />
+          <rect fill="white" height="18" opacity="0.94" rx="8" width="42" x="254" y="54" />
+          <text fill="currentColor" fontSize="10" fontWeight="700" x="261" y="15">
             100%
           </text>
-          <text fill="currentColor" fontSize="10" x="274" y="66">
+          <text fill="currentColor" fontSize="10" fontWeight="700" x="266" y="67">
             50%
           </text>
         </svg>
@@ -657,10 +663,42 @@ const PresentationVideoAnalyticsSection = ({
       const videoElement = videoElementRef.current;
       if (!videoElement || !durationSeconds || durationSeconds <= 0) return;
 
-      const nextTime = (durationSeconds * clampPercent(milestone)) / 100;
-      videoElement.currentTime = Math.min(durationSeconds, Math.max(0, nextTime));
-      setCurrentVideoTime(videoElement.currentTime);
-      void videoElement.play().catch(() => undefined);
+      const performSeek = () => {
+        const actualDuration =
+          Number.isFinite(videoElement.duration) && videoElement.duration > 0
+            ? videoElement.duration
+            : durationSeconds;
+        const seekPercent = clampPercent(milestone);
+        const targetTime =
+          seekPercent >= 99
+            ? Math.max(0, actualDuration - 0.2)
+            : (actualDuration * seekPercent) / 100;
+        const nextTime = Math.min(actualDuration, Math.max(0, targetTime));
+        const shouldResume = !videoElement.paused && !videoElement.ended;
+        const seekableVideo = videoElement as HTMLVideoElement & {
+          fastSeek?: (time: number) => void;
+        };
+
+        if (typeof seekableVideo.fastSeek === "function") {
+          seekableVideo.fastSeek(nextTime);
+        } else {
+          videoElement.currentTime = nextTime;
+        }
+
+        setCurrentVideoTime(nextTime);
+
+        if (shouldResume) {
+          void videoElement.play().catch(() => undefined);
+        }
+      };
+
+      if (!Number.isFinite(videoElement.duration) || videoElement.duration <= 0) {
+        videoElement.addEventListener("loadedmetadata", performSeek, { once: true });
+        videoElement.load();
+        return;
+      }
+
+      performSeek();
     },
     [durationSeconds],
   );
