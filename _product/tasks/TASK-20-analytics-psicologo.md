@@ -275,3 +275,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Textos atualizados no contrato real do backend e no fallback visual do frontend, sem alterar metricas, schema, migration, package ou regra de agregacao.
 - ADR novo nao foi necessario por se tratar apenas de copy de produto sem decisao arquitetural.
 - Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e rota local `/app/professional/analytics` via `Invoke-WebRequest` sem sessao autenticada retornando `307` para o fluxo privado.
+
+## Refinamento do filtro de periodo personalizado em Analytics (2026-06-19)
+
+- Pedido do usuario: ao clicar em `Periodo`, os campos `Inicio` e `Fim` nao devem mais criar uma secao fixa abaixo das tabs.
+- O filtro personalizado agora abre como popover/balao contextual ancorado ao controle de periodo, com fundo branco, borda suave, sombra discreta, cantos arredondados e CTA `Aplicar periodo`.
+- O popover fecha ao clicar fora, mantem o botao `Periodo` ativo enquanto esta aberto e nao empurra os cards de metricas para baixo.
+- Mobile-first: no mobile o popover ocupa quase toda a largura util; no desktop mantem largura compacta.
+- Nenhum schema, migration, package novo, mock, seed ou endpoint simulado foi criado.
+- Builder/Quick Copy nao estava disponivel como ferramenta direta; a referencia visual consultada foi `_product/proto/Meus Analytics - Psicologo.jpg`.
+- ADR criado: `adrs/0131-analytics-periodo-personalizado-popover.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e rota local `/app/professional/analytics` via `Invoke-WebRequest` sem sessao autenticada retornando `307` para o fluxo privado.

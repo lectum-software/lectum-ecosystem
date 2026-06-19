@@ -22,7 +22,14 @@ import {
   UsersRound,
 } from "lucide-react";
 import Link from "next/link";
-import { type MouseEvent as ReactMouseEvent, useCallback, useMemo, useRef, useState } from "react";
+import {
+  type MouseEvent as ReactMouseEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { toast } from "sonner";
 import { usePsychologistAnalytics } from "@/api/callers/psychologist-analytics";
 import type {
@@ -234,44 +241,158 @@ const getTrafficSources = (data?: PsychologistAnalyticsResponse) =>
   data?.traffic_sources ?? fallbackTrafficSources;
 
 const PeriodTabs = ({
+  customPopoverOpen,
+  customRange,
   current,
   disabled,
   onChange,
+  onCustomPopoverOpenChange,
+  onCustomRangeApply,
 }: {
+  customPopoverOpen: boolean;
+  customRange: { end_at: string; start_at: string };
   current: PsychologistAnalyticsPeriodKey;
   disabled?: boolean;
   onChange: (period: PsychologistAnalyticsPeriodKey) => void;
-}) => (
-  <div
-    className="-mx-1 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-    role="tablist"
-  >
-    <div className="flex min-w-max gap-1 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-1 shadow-[var(--lectum-shadow-soft)] sm:gap-2 md:min-w-0 md:justify-between">
-      {PERIOD_OPTIONS.map((option) => {
-        const active = option.value === current;
+  onCustomPopoverOpenChange: (open: boolean) => void;
+  onCustomRangeApply: (range: { end_at: string; start_at: string }) => void;
+}) => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [draftRange, setDraftRange] = useState(customRange);
 
-        return (
-          <button
-            aria-selected={active}
-            className={cn(
-              "h-9 whitespace-nowrap rounded-full px-2 text-[0.78rem] font-extrabold transition disabled:opacity-60 sm:h-10 sm:px-3 sm:text-sm md:flex-1",
-              active
-                ? "bg-primary text-surface shadow-[var(--lectum-shadow-soft)]"
-                : "text-muted hover:bg-primary-soft/70 hover:text-primary",
-            )}
+  useEffect(() => {
+    if (!customPopoverOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (containerRef.current?.contains(event.target as Node)) return;
+
+      onCustomPopoverOpenChange(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [customPopoverOpen, onCustomPopoverOpenChange]);
+
+  const handlePeriodClick = (nextPeriod: PsychologistAnalyticsPeriodKey) => {
+    if (nextPeriod === "custom") {
+      setDraftRange(customRange);
+      onChange(nextPeriod);
+      onCustomPopoverOpenChange(true);
+      return;
+    }
+
+    onCustomPopoverOpenChange(false);
+    onChange(nextPeriod);
+  };
+
+  const applyCustomRange = () => {
+    onCustomRangeApply(draftRange);
+    onCustomPopoverOpenChange(false);
+  };
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <div
+        className="-mx-1 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        role="tablist"
+      >
+        <div className="flex min-w-max gap-1 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-1 shadow-[var(--lectum-shadow-soft)] sm:gap-2 md:min-w-0 md:justify-between">
+          {PERIOD_OPTIONS.map((option) => {
+            const active = option.value === current;
+            const customActive = option.value === "custom" && customPopoverOpen;
+
+            return (
+              <button
+                aria-expanded={option.value === "custom" ? customPopoverOpen : undefined}
+                aria-haspopup={option.value === "custom" ? "dialog" : undefined}
+                aria-selected={active || customActive}
+                className={cn(
+                  "h-9 whitespace-nowrap rounded-full px-2 text-[0.78rem] font-extrabold transition disabled:opacity-60 sm:h-10 sm:px-3 sm:text-sm md:flex-1",
+                  active || customActive
+                    ? "bg-primary text-surface shadow-[var(--lectum-shadow-soft)]"
+                    : "text-muted hover:bg-primary-soft/70 hover:text-primary",
+                )}
+                disabled={disabled}
+                key={option.value}
+                onClick={() => handlePeriodClick(option.value)}
+                role="tab"
+                type="button"
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {customPopoverOpen ? (
+        <div
+          aria-label="Selecionar período personalizado"
+          className="absolute top-[calc(100%+0.65rem)] right-1 left-1 z-30 rounded-[24px] border border-primary/10 bg-surface p-4 shadow-[0_24px_70px_rgba(15,23,42,0.16)] sm:left-auto sm:w-[22rem]"
+          role="dialog"
+        >
+          <div className="mb-3 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs font-black uppercase tracking-[0.14em] text-primary">
+                Período personalizado
+              </p>
+              <p className="mt-1 text-xs leading-5 text-muted">
+                Escolha o intervalo para recalcular seus analytics.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="grid gap-1.5 text-xs font-extrabold uppercase tracking-[0.12em] text-subtle">
+              Início
+              <input
+                className="h-11 min-w-0 rounded-[var(--lectum-control-radius)] border border-border bg-surface-muted px-3 text-sm font-bold text-foreground outline-none transition focus:border-primary disabled:opacity-60"
+                disabled={disabled}
+                max={draftRange.end_at || undefined}
+                onChange={(event) =>
+                  setDraftRange((currentRange) => ({
+                    ...currentRange,
+                    start_at: event.target.value,
+                  }))
+                }
+                type="date"
+                value={draftRange.start_at}
+              />
+            </label>
+            <label className="grid gap-1.5 text-xs font-extrabold uppercase tracking-[0.12em] text-subtle">
+              Fim
+              <input
+                className="h-11 min-w-0 rounded-[var(--lectum-control-radius)] border border-border bg-surface-muted px-3 text-sm font-bold text-foreground outline-none transition focus:border-primary disabled:opacity-60"
+                disabled={disabled}
+                min={draftRange.start_at || undefined}
+                onChange={(event) =>
+                  setDraftRange((currentRange) => ({
+                    ...currentRange,
+                    end_at: event.target.value,
+                  }))
+                }
+                type="date"
+                value={draftRange.end_at}
+              />
+            </label>
+          </div>
+
+          <Button
+            className="mt-4 h-11 w-full rounded-full text-sm font-extrabold"
             disabled={disabled}
-            key={option.value}
-            onClick={() => onChange(option.value)}
-            role="tab"
+            onClick={applyCustomRange}
             type="button"
           >
-            {option.label}
-          </button>
-        );
-      })}
+            Aplicar período
+          </Button>
+        </div>
+      ) : null}
     </div>
-  </div>
-);
+  );
+};
 
 const PremiumAnalyticsBanner = () => (
   <section className="relative overflow-hidden rounded-[var(--lectum-card-radius)] border border-primary/20 bg-primary-soft p-5 shadow-[var(--lectum-shadow-soft)] md:p-6">
@@ -303,43 +424,6 @@ const PremiumAnalyticsBanner = () => (
       </Button>
     </div>
   </section>
-);
-
-const CustomPeriodFields = ({
-  disabled,
-  endAt,
-  onChange,
-  startAt,
-}: {
-  disabled?: boolean;
-  endAt: string;
-  onChange: (range: { end_at: string; start_at: string }) => void;
-  startAt: string;
-}) => (
-  <div className="grid gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-3 shadow-[var(--lectum-shadow-soft)] sm:grid-cols-2">
-    <label className="grid gap-1.5 text-xs font-extrabold uppercase tracking-[0.12em] text-subtle">
-      Início
-      <input
-        className="h-11 min-w-0 rounded-[var(--lectum-control-radius)] border border-border bg-surface-muted px-3 text-sm font-bold text-foreground outline-none transition focus:border-primary disabled:opacity-60"
-        disabled={disabled}
-        max={endAt || undefined}
-        onChange={(event) => onChange({ start_at: event.target.value, end_at: endAt })}
-        type="date"
-        value={startAt}
-      />
-    </label>
-    <label className="grid gap-1.5 text-xs font-extrabold uppercase tracking-[0.12em] text-subtle">
-      Fim
-      <input
-        className="h-11 min-w-0 rounded-[var(--lectum-control-radius)] border border-border bg-surface-muted px-3 text-sm font-bold text-foreground outline-none transition focus:border-primary disabled:opacity-60"
-        disabled={disabled}
-        min={startAt || undefined}
-        onChange={(event) => onChange({ start_at: startAt, end_at: event.target.value })}
-        type="date"
-        value={endAt}
-      />
-    </label>
-  </div>
 );
 
 const MetricCard = ({ locked, metric }: { locked?: boolean; metric: AnalyticsCardView }) => {
@@ -1139,6 +1223,7 @@ const ReviewsLinkCard = ({ link, locked }: { link: string; locked?: boolean }) =
 export const ProfessionalAnalyticsLogic = () => {
   const [period, setPeriod] = useState<PsychologistAnalyticsPeriodKey>("30d");
   const [customRange, setCustomRange] = useState(getDefaultCustomRange);
+  const [customPopoverOpen, setCustomPopoverOpen] = useState(false);
   const user = useAppSelector((state) => state.user);
   const query = useMemo(
     () => (period === "custom" ? { period, ...customRange } : { period }),
@@ -1160,15 +1245,15 @@ export const ProfessionalAnalyticsLogic = () => {
       <section className="mx-auto grid w-full max-w-[430px] grid-cols-[minmax(0,1fr)] gap-4 md:max-w-3xl">
         <AppPageHeader backLabel="Voltar para perfil" title="Meus Analytics" />
 
-        <PeriodTabs current={period} disabled={analytics.isFetching} onChange={setPeriod} />
-        {period === "custom" ? (
-          <CustomPeriodFields
-            disabled={analytics.isFetching}
-            endAt={customRange.end_at}
-            onChange={setCustomRange}
-            startAt={customRange.start_at}
-          />
-        ) : null}
+        <PeriodTabs
+          current={period}
+          customPopoverOpen={customPopoverOpen}
+          customRange={customRange}
+          disabled={analytics.isFetching}
+          onChange={setPeriod}
+          onCustomPopoverOpenChange={setCustomPopoverOpen}
+          onCustomRangeApply={setCustomRange}
+        />
 
         {analytics.isLoading ? <LoadingState label="Carregando analytics reais" /> : null}
 
