@@ -181,6 +181,16 @@ export const notifyNewCommunityPost = async (params: {
       user_id: true,
       user: {
         select: {
+          favorite_psychologists: {
+            where: {
+              deleted: false,
+              psychologist_id: params.actorId,
+            },
+            select: {
+              id: true,
+            },
+            take: 1,
+          },
           role: true,
           notification_preference: {
             select: {
@@ -196,6 +206,7 @@ export const notifyNewCommunityPost = async (params: {
     .filter((member) =>
       shouldReceiveNewPostNotification({
         authorRole: author?.role,
+        isFavoritePsychologistAuthor: member.user.favorite_psychologists.length > 0,
         prefs: member.user.notification_preference?.prefs,
         recipientRole: member.user.role,
       }),

@@ -8,7 +8,7 @@ export type NotificationPrefs = Record<
   {
     enabled?: boolean;
     in_app?: boolean;
-    post_author_scope?: "patients_only" | "professionals_only" | "all";
+    post_author_scope?: "patients_only" | "professionals_only" | "all" | "favorites";
     push?: boolean;
   }
 >;

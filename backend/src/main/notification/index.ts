@@ -13,6 +13,9 @@ type NotifyMeta = {
   redirect?: string;
 };
 
+const shouldSuppressImmediatePush = (params: { messageKey: string; role?: string | null }) =>
+  params.role === "paciente" && params.messageKey === "novo_post";
+
 /**
  * Cria a notificação in-app, emite em tempo real (Socket.IO) e envia push web,
  * respeitando `notification_preference`. No MVP web a preferência visual é
@@ -63,6 +66,10 @@ export const notify = async (userIds: string[], meta: NotifyMeta) => {
     }
 
     for (const user of users) {
+      if (shouldSuppressImmediatePush({ messageKey: meta.message_key, role: user.role })) {
+        continue;
+      }
+
       if (!isChannelAllowed(user.notification_preference?.prefs, meta.message_key, "push")) {
         continue;
       }

@@ -27,7 +27,7 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 
 type UserRole = "paciente" | "psicologo" | null | undefined;
-type NewPostAuthorScope = "patients_only" | "professionals_only" | "all";
+type NewPostAuthorScope = "patients_only" | "professionals_only" | "all" | "favorites";
 type NewPostPreferenceValue = NewPostAuthorScope | "disabled";
 
 type NotificationCategory = {
@@ -122,7 +122,7 @@ const getEnabledFieldName = (category: SwitchCategoryKey) =>
   `${category}__enabled` as EnabledFieldName;
 
 const getDefaultNewPostScope = (role: UserRole): NewPostAuthorScope =>
-  role === "psicologo" ? "patients_only" : "professionals_only";
+  role === "psicologo" ? "patients_only" : "all";
 
 const resolveEnabled = (entry: NotificationPrefs[string] | undefined) => {
   if (!entry) return true;
@@ -141,7 +141,7 @@ const resolveNewPostScope = (
 
   const persistedScope = entry?.post_author_scope;
   const allowedScopes: NewPostAuthorScope[] =
-    role === "psicologo" ? ["patients_only", "all"] : ["professionals_only", "all"];
+    role === "psicologo" ? ["patients_only", "all"] : ["all", "favorites"];
 
   if (persistedScope && allowedScopes.includes(persistedScope)) {
     return persistedScope;
@@ -158,8 +158,8 @@ const getNewPostOptions = (role: UserRole) =>
         { label: "Desativado", value: "disabled" },
       ]
     : [
-        { label: "Profissionais", value: "professionals_only" },
         { label: "Todos", value: "all" },
+        { label: "Favoritos", value: "favorites" },
         { label: "Desativado", value: "disabled" },
       ];
 
@@ -185,7 +185,13 @@ const notificationSettingsSchema = z.object({
   upvote__enabled: z.boolean(),
   compartilhamento__enabled: z.boolean(),
   salvamento__enabled: z.boolean(),
-  novo_post__post_author_scope: z.enum(["patients_only", "professionals_only", "all", "disabled"]),
+  novo_post__post_author_scope: z.enum([
+    "patients_only",
+    "professionals_only",
+    "all",
+    "favorites",
+    "disabled",
+  ]),
 }) as z.ZodType<NotificationSettingsForm, NotificationSettingsForm>;
 
 const toFormValues = (prefs: NotificationPrefs = {}, role: UserRole): NotificationSettingsForm =>

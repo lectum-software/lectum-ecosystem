@@ -461,8 +461,14 @@ A penalidade de posts removidos e progressiva por comunidade: `30 * removed_post
 | Campo | Tipo | Notas |
 |---|---|---|
 | `user_id` | `String @unique` | |
-| `prefs` | `Json` | mapa `message_key → { enabled: boolean }` por categoria do PRD §12 no MVP web; compatível com registros legados `{ in_app, push }`. Para `novo_post`, usar `post_author_scope: "patients_only" \| "professionals_only" \| "all"` para segmentar alertas por tipo de autor e `enabled: false` para a opção visual `Desativado`. |
+| `prefs` | `Json` | mapa `message_key → { enabled: boolean }` por categoria do PRD §12 no MVP web; compatível com registros legados `{ in_app, push }`. Para `novo_post`, usar `post_author_scope: "patients_only" \| "professionals_only" \| "all" \| "favorites"` para segmentar alertas por tipo de autor. O padrão de pacientes é `"all"` (curadoria de psicólogos relevantes da plataforma, com favoritos priorizados); pacientes também podem escolher `"favorites"`. `enabled: false` representa a opção visual `Desativado`. |
 | `@@map("notification_preferences")` | | |
+
+`user_background` com `type="notification_digest_state"` guarda, sem novo modelo Prisma, o controle anti-duplicidade dos digests push de conteúdo para pacientes:
+
+- `favorites_lunch_digest`: janela do almoço para atividade de psicólogos, priorizando favoritos, depois comunidades seguidas, Top Mentors e relevância geral.
+- `community_evening_digest`: janela noturna para resumo de comunidades, priorizando comunidades seguidas, depois categorias relacionadas e conteúdo geral relevante.
+- Cada chave armazena `last_checked_at`, `last_sent_at` e `last_sent_date` para evitar reenvio no mesmo dia e calcular a próxima janela temporal.
 
 Endpoints de notificação (módulos separados, padrão do projeto): `notification/{index,update/:id,clean}`; `notification_preference/{show,update}`; `notification_subscription/{key,store}`. Cada caso é um módulo próprio sob `/api/private/...`.
 

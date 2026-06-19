@@ -147,3 +147,42 @@ Validacao:
 - `pnpm check`
 - Smoke via `pnpm --dir backend exec tsx` validou que `novo_post.enabled = false` impede `novo_post`, preserva outra chave habilitada e trata `post_author_scope: "disabled"` como desligado.
 - ADR atualizado: `adrs/0098-notificacoes-eventos-dominio.md`.
+
+## Complemento 2026-06-18 - digests push de conteudo para pacientes
+
+Implementada a regra de baixo volume para push de conteudo:
+
+- A preferencia de pacientes em `novo_post` passa a usar `Todos` como padrao, com opcoes visuais `Todos`, `Favoritos` e `Desativado`.
+- `Todos` para pacientes representa curadoria de psicologos relevantes, nao disparo imediato para todo evento.
+- Psicologos favoritos tem prioridade sobre Top Mentors no digest, por representarem confianca explicita do paciente.
+- Push imediato de `novo_post` para pacientes foi suprimido; a notificacao in-app e realtime continuam pelo dispatcher real.
+- Foi criado scheduler backend de digests reais, sem mock:
+  - almoco (`12:15` a `13:15`, `America/Sao_Paulo`): no maximo 1 push diario de atividade de psicologos;
+  - noite (`19:30` a `21:00`, `America/Sao_Paulo`): no maximo 1 push diario de comunidades.
+- O digest de psicologos considera preferencias:
+  - `Favoritos`: apenas psicologos favoritados;
+  - `Todos`: favoritos, comunidades seguidas, Top Mentors e relevancia real da plataforma;
+  - `Desativado`: nao envia digest de conteudo.
+- O digest de comunidades e regra interna do sistema, mas respeita `Desativado` em `novo_post` por cautela de consentimento:
+  - prioriza comunidades seguidas;
+  - depois categorias relacionadas;
+  - depois conteudo geral relevante quando nao houver conteudo nas comunidades/categorias seguidas.
+- O estado anti-duplicidade usa `user_background.type = "notification_digest_state"` com `last_checked_at`, `last_sent_at` e `last_sent_date` por janela (`favorites_lunch_digest` e `community_evening_digest`), sem alterar schema/migrations.
+- Se nao houver conteudo, o sistema atualiza `last_checked_at` e nao envia push.
+- Lookback usa ultimo envio da mesma janela; quando ausente/antigo, limita a 24h por padrao e 48h no maximo.
+
+Pendencias sem mock:
+
+- Nao existe fonte persistida de conteudo ja visualizado/lido pelo paciente; por isso o digest ainda nao exclui itens ja vistos.
+- Nao existe modelo explicito de interesses do paciente alem de comunidades seguidas; o fallback relacionado usa categorias das comunidades seguidas e depois relevancia geral.
+
+Validacao:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke via `pnpm --dir backend exec tsx` validou default `Todos`, normalizacao legada `professionals_only -> all` para pacientes e filtro `Favoritos`.
+
+ADR criado: `adrs/0129-push-digest-paciente-favoritos-comunidades.md`.

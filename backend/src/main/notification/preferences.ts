@@ -15,7 +15,7 @@ export const NOTIFICATION_MESSAGE_KEYS = [
 
 export type NotificationMessageKey = (typeof NOTIFICATION_MESSAGE_KEYS)[number];
 export type NotificationUserRole = "paciente" | "psicologo" | string | null | undefined;
-export type NewPostAuthorScope = "patients_only" | "professionals_only" | "all";
+export type NewPostAuthorScope = "patients_only" | "professionals_only" | "all" | "favorites";
 
 export type NotificationPreferenceEntry = {
   enabled?: boolean;
@@ -32,7 +32,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   Boolean(value && typeof value === "object" && !Array.isArray(value));
 
 export const defaultNewPostAuthorScope = (role: NotificationUserRole): NewPostAuthorScope =>
-  role === "psicologo" ? "patients_only" : "professionals_only";
+  role === "psicologo" ? "patients_only" : "all";
 
 const normalizeEnabled = (entry: Record<string, unknown> | undefined) => {
   if (!entry) return true;
@@ -49,7 +49,25 @@ const normalizeNewPostAuthorScope = (
   value: unknown,
   role: NotificationUserRole,
 ): NewPostAuthorScope => {
-  if (value === "patients_only" || value === "professionals_only" || value === "all") {
+  if (role === "paciente") {
+    if (value === "favorites") return "favorites";
+    if (value === "all" || value === "professionals_only") return "all";
+
+    return defaultNewPostAuthorScope(role);
+  }
+
+  if (role === "psicologo") {
+    if (value === "patients_only" || value === "all") return value;
+
+    return defaultNewPostAuthorScope(role);
+  }
+
+  if (
+    value === "patients_only" ||
+    value === "professionals_only" ||
+    value === "all" ||
+    value === "favorites"
+  ) {
     return value;
   }
 
@@ -130,13 +148,20 @@ export const getNewPostAuthorScope = (
 
 export const shouldReceiveNewPostNotification = (params: {
   authorRole: NotificationUserRole;
+  isFavoritePsychologistAuthor?: boolean;
   prefs: unknown;
   recipientRole: NotificationUserRole;
 }) => {
   if (!isNotificationEnabled(params.prefs, "novo_post")) return false;
 
   const scope = getNewPostAuthorScope(params.prefs, params.recipientRole);
-  if (scope === "all") return true;
+  if (scope === "favorites") {
+    return params.authorRole === "psicologo" && params.isFavoritePsychologistAuthor === true;
+  }
+
+  if (scope === "all") {
+    return params.recipientRole === "paciente" ? params.authorRole === "psicologo" : true;
+  }
   if (scope === "patients_only") return params.authorRole === "paciente";
   if (scope === "professionals_only") return params.authorRole === "psicologo";
 
