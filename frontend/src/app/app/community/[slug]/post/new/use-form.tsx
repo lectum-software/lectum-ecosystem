@@ -62,12 +62,12 @@ const buildFields = ({
       required: true,
       max: 140,
       autoFocus: true,
-      rows: 2,
+      rows: 1,
       autoGrow: true,
       className:
         "gap-0 [&>span:first-child]:sr-only [&>span:last-child]:min-h-3 [&>span:last-child]:leading-3",
       inputClassName:
-        "create-post-title-input min-h-16 resize-none overflow-hidden rounded-none border-0 border-transparent bg-transparent px-0 py-2 shadow-none focus:border-transparent focus:ring-0",
+        "create-post-title-input min-h-9 resize-none overflow-hidden rounded-none border-0 border-transparent bg-transparent px-0 pt-1 pb-0 shadow-none focus:border-transparent focus:ring-0",
     },
     {
       name: "content",
@@ -81,7 +81,7 @@ const buildFields = ({
       autoGrow: false,
       className: "min-h-0 flex flex-1 flex-col gap-0 [&>span:first-child]:sr-only",
       inputClassName:
-        "create-post-content-input min-h-0 flex-1 resize-none overflow-y-auto rounded-none border-0 border-transparent bg-transparent px-0 py-2 shadow-none focus:border-transparent focus:ring-0",
+        "create-post-content-input min-h-0 flex-1 resize-none overflow-y-auto rounded-none border-0 border-transparent bg-transparent px-0 pt-0 pb-2 shadow-none focus:border-transparent focus:ring-0",
     },
     {
       name: "anonymous",

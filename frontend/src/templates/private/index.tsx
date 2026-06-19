@@ -210,6 +210,27 @@ const normalizePathname = (pathname: string) => {
   return pathname.replace(/\/+$/, "");
 };
 
+const getNavigationContextPathname = (pathname: string) => {
+  const normalizedPathname = normalizePathname(pathname);
+  const segments = normalizedPathname.split("/").filter(Boolean);
+
+  if (
+    segments.length === 5 &&
+    segments[0] === "app" &&
+    segments[1] === "community" &&
+    segments[3] === "post" &&
+    segments[4] === "new"
+  ) {
+    if (segments[2] === COMMUNITY_FEED_SLUG) {
+      return DEFAULT_COMMUNITY_FEED_HREF;
+    }
+
+    return `/app/community/${segments[2]}`;
+  }
+
+  return normalizedPathname;
+};
+
 const PRIMARY_DESKTOP_NAVIGATION_PATHS = new Set([
   "/app/psychologists",
   "/app/favorites",
@@ -348,26 +369,27 @@ export const PrivateTemplate = ({
   const navigation = useMemo(() => getNavigation(sessionUser?.role), [sessionUser?.role]);
   const shouldShowNavigation = showNavigation ?? showHeader;
   const normalizedPathname = normalizePathname(pathname);
+  const navigationContextPathname = getNavigationContextPathname(normalizedPathname);
   const shouldRenderMobileNavigation =
     shouldShowNavigation &&
     showMobileNavigation &&
-    shouldShowMobileNavigationForPath(normalizedPathname);
+    shouldShowMobileNavigationForPath(navigationContextPathname);
   const shouldRenderDesktopSidebar = shouldShowNavigation && desktopNavigation === "sidebar";
   const shouldAutoHideNavigation = shouldShowNavigation && autoHideNavigation;
   const [isNavigationVisible, setIsNavigationVisible] = useState(true);
-  const isMainDesktopNavigationRoute = isPrimaryDesktopNavigationPath(normalizedPathname);
+  const isMainDesktopNavigationRoute = isPrimaryDesktopNavigationPath(navigationContextPathname);
   const desktopSidebarRouteDefaultCollapsed =
     desktopSidebarDefaultCollapsed ?? !isMainDesktopNavigationRoute;
   const storedDesktopSidebarPreference = useSyncExternalStore(
     subscribeDesktopSidebarPreference,
-    () => readDesktopSidebarPreference(pathname),
+    () => readDesktopSidebarPreference(navigationContextPathname),
     () => null,
   );
   const isDesktopSidebarCollapsed =
     storedDesktopSidebarPreference ?? desktopSidebarRouteDefaultCollapsed;
   const isNavigationRenderedVisible = !navigationHidden;
   const isMobileNavigationRenderedVisible = isNavigationVisible && !navigationHidden;
-  const mobileNavigationActiveHref = getMobileNavigationActiveHref(normalizedPathname);
+  const mobileNavigationActiveHref = getMobileNavigationActiveHref(navigationContextPathname);
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
   const navigationAwarePageShellClassName = cn(
@@ -441,7 +463,7 @@ export const PrivateTemplate = ({
 
     if (typeof window !== "undefined") {
       window.localStorage.setItem(
-        getDesktopSidebarStorageKey(pathname),
+        getDesktopSidebarStorageKey(navigationContextPathname),
         nextValue ? "collapsed" : "expanded",
       );
       window.dispatchEvent(new Event(DESKTOP_SIDEBAR_STORAGE_EVENT));
@@ -568,7 +590,7 @@ export const PrivateTemplate = ({
       <nav className="flex flex-1 flex-col gap-1" aria-label="Menu lateral">
         {navigation.map((item) => {
           const Icon = item.icon;
-          const isActive = isDesktopActivePath(normalizedPathname, item);
+          const isActive = isDesktopActivePath(navigationContextPathname, item);
 
           return (
             <Link

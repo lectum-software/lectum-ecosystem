@@ -218,3 +218,27 @@ Validação complementar:
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
 - Chrome headless local em `http://127.0.0.1:3011/app/community/feed`: sucesso ao abrir o CTA de criação para `/app/community/feed/post/new`, renderizar o dialog `Criar Post`, manter o fundo do feed em estado real de erro de conexão quando a API local `localhost:3001` não estava ativa, confirmar distância reduzida entre título e conteúdo e ausência do card `Não foi possível postar`; erros inline de título/conteúdo permaneceram visíveis após submit inválido.
+
+## Atualização 2026-06-19 - sidebar desktop não reage à modal contextual
+
+O refinamento posterior do editor interceptado tratou duas regressões visuais observadas em desktop: espaçamento ainda excessivo entre título e corpo e recolhimento indevido da sidebar ao abrir a modal pelo feed.
+
+Decisões complementares:
+
+- O `PrivateTemplate` passa a derivar um `navigationContextPathname` para rotas de criação em `/app/community/[slug]/post/new`. Quando o slug é `feed`, o shell usa `/app/community/feed` para calcular item ativo, default de colapso e chave de persistência da sidebar.
+- A rota visual continua sendo `/app/community/feed/post/new`, e a modal continua no slot interceptado; a mudança é limitada ao estado do shell para que a sobreposição não altere o menu lateral.
+- Para slugs de comunidade, o contexto de navegação vira `/app/community/[slug]`, preservando o comportamento contextual sem marcar a criação como rota primária nova.
+- O campo de título mantém React Hook Form/Zod/controller da TASK-02, mas reduz `rows`, altura mínima e padding; o conteúdo remove padding superior extra para que título e corpo pareçam partes do mesmo post.
+
+Consequências:
+
+- Abrir ou fechar a modal de `Criar Post` no feed desktop não muda a largura do menu lateral nem a preferência salva do usuário.
+- O editor fica mais compacto e premium sem trocar componente, sem criar formulário paralelo e sem alterar validações, payload, backend, schema ou packages.
+
+Validação complementar:
+
+- `pnpm --dir frontend biome:fix`: sucesso.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- Chrome headless local no `next start` em `http://localhost:3011/app/community/feed`: sucesso ao abrir o CTA de criação para `/app/community/feed/post/new`; a sidebar permaneceu com 240px antes/depois, o dialog `Criar Post` abriu no slot modal, o título mediu 36px de altura, o gap até o conteúdo ficou em 12px e o card `Não foi possível postar` não apareceu.

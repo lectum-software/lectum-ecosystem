@@ -265,3 +265,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Builder/Quick Copy segue indisponível como ferramenta neste ambiente; a validação visual usou os protótipos locais, a tela existente e Chrome headless local.
 - ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`; Chrome headless local em `http://127.0.0.1:3011/app/community/feed` confirmou rota interceptada `/app/community/feed/post/new` com dialog `Criar Post`, ausência da faixa `Não foi possível postar` e erro inline de título/conteúdo. A API local em `localhost:3001` não estava ativa durante o smoke visual, então o feed permaneceu em estado real de erro de conexão, sem uso de mock.
+
+## Complemento 2026-06-19 - refinamento premium e menu desktop estável
+
+- Pedido do usuário: reduzir ainda mais a distância visual entre o campo de título e o texto principal e impedir que o menu lateral desktop recolha ao abrir a modal pelo feed.
+- Frontend: o campo de título continua usando o controller de textarea da fundação da TASK-02, mas agora inicia com uma linha, altura mínima menor e padding vertical mais compacto; o conteúdo começa sem padding superior extra, deixando os dois campos com aparência de um único post.
+- Shell desktop: o `PrivateTemplate` passou a calcular um pathname de contexto para navegação quando a rota atual é `/app/community/[slug]/post/new`; no feed, esse contexto permanece `/app/community/feed`, então a preferência e o default do menu lateral não mudam enquanto a modal está aberta.
+- A decisão preserva a rota real e o slot interceptado da modal; apenas impede que o shell trate a URL contextual de criação como uma página secundária que deveria recolher a sidebar.
+- Escopo: sem mudanças de backend, Prisma, migrations, endpoint, payload, regras de anonimato, permissões de mídia ou packages.
+- Builder/Quick Copy segue indisponível como ferramenta neste ambiente; a validação visual usou a tela local existente, os protótipos locais e o screenshot anexado pelo usuário.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+- Validações executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`; Chrome headless local no `next start` em `http://localhost:3011/app/community/feed` confirmou sidebar expandida em 240px antes e depois de abrir `/app/community/feed/post/new`, dialog `Criar Post`, altura do título em 36px, gap de 12px até o conteúdo e ausência do card `Não foi possível postar`.
