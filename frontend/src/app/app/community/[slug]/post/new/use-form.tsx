@@ -4,7 +4,7 @@ import type { CreateCommunityPostPayload } from "@/api/generator/types/community
 import { type Field, type FieldOption, useFormList } from "@/hooks/form";
 
 export const createCommunityPostSchema = z.object({
-  community_slug: z.string().min(1, "Escolha uma comunidade para publicar"),
+  community_slug: z.string().min(1, "Escolha uma comunidade para postar"),
   title: z
     .string()
     .trim()
@@ -28,7 +28,7 @@ type UseCreateCommunityPostFormParams = {
 };
 
 const contentGuidancePlaceholder =
-  "Conte o que aconteceu, como você se sente e o que já tentou fazer até agora. Dê o máximo de contexto possível para os psicólogos.";
+  "Conte aos psicólogos o que aconteceu, como você está se sentindo e o que já tentou fazer até agora.";
 
 const buildFields = ({
   communityOptions,
@@ -43,8 +43,8 @@ const buildFields = ({
       name: "community_slug",
       field: "select",
       className: "w-fit gap-0",
-      placeholder: "Escolher comunidade",
-      emptyLabel: "Escolher comunidade",
+      placeholder: "Comunidade",
+      emptyLabel: "Comunidade",
       hideEmptyOption: true,
       options: communityOptions,
       loading: loadingCommunities,
@@ -54,36 +54,39 @@ const buildFields = ({
       emptySearchLabel: "Nenhuma comunidade encontrada",
       required: true,
       inputClassName:
-        "h-11 w-fit max-w-[calc(100vw-36px)] min-w-[236px] overflow-visible rounded-full border-transparent bg-[#F5F7FA] px-4 py-0 text-sm font-semibold leading-[1.35] text-[#111827] shadow-none focus:border-transparent focus:ring-0 dark:bg-surface-muted [&>span]:leading-[1.35]",
+        "h-10 w-fit max-w-[calc(100vw-40px)] min-w-[188px] overflow-visible rounded-full border-transparent bg-surface-muted px-4 py-0 text-sm font-bold leading-[1.35] text-foreground shadow-none focus:border-transparent focus:ring-0 [&>span]:leading-[1.35]",
     },
     {
       name: "title",
       field: "input",
-      label: "TÍTULO",
-      placeholder: isPsychologist
-        ? "Assunto do seu post..."
-        : "Diga o assunto ou faça uma pergunta...",
+      id: "create-post-title",
+      label: "Título do post",
+      placeholder: "Título (Diga o assunto ou faça uma pergunta)",
       required: true,
       max: 140,
+      autoFocus: true,
+      className: "gap-0 [&>span:first-child]:sr-only",
       inputClassName:
-        "h-[56px] rounded-2xl border-[#E5E7EB] bg-white px-4 text-base shadow-none placeholder:text-[#8A94A6] focus:border-[#308CE8] focus:ring-[#308CE8]/10 dark:bg-surface",
+        "h-auto rounded-none border-0 border-transparent bg-transparent px-0 py-2 text-[1.35rem] font-extrabold leading-tight tracking-[-0.03em] text-foreground shadow-none placeholder:text-muted focus:border-transparent focus:ring-0",
     },
     {
       name: "content",
       field: "textarea",
-      label: "O QUE VOCÊ ESTÁ PENSANDO?",
+      id: "create-post-content",
+      label: "Conteúdo do post",
       placeholder: contentGuidancePlaceholder,
       required: true,
-      rows: 7,
+      rows: isPsychologist ? 11 : 12,
       max: 2000,
-      autoGrow: true,
+      autoGrow: false,
+      className: "min-h-0 gap-0 [&>span:first-child]:sr-only",
       inputClassName:
-        "min-h-[184px] rounded-2xl border-[#E5E7EB] bg-white px-4 py-4 text-base leading-6 shadow-none placeholder:text-[#8A94A6]/85 focus:border-[#308CE8] focus:ring-[#308CE8]/10 dark:bg-surface",
+        "min-h-[44dvh] resize-none overflow-y-auto rounded-none border-0 border-transparent bg-transparent px-0 py-2 text-[1rem] leading-7 text-foreground shadow-none placeholder:text-muted/80 focus:border-transparent focus:ring-0 sm:min-h-[22rem]",
     },
     {
       name: "anonymous",
       field: "switch",
-      label: "Postar como anônimo",
+      label: "Deseja publicar anonimamente?",
       className: "hidden",
     },
   ] satisfies Field<CreateCommunityPostForm>[];

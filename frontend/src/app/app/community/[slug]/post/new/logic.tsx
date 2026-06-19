@@ -1,10 +1,17 @@
 "use client";
 
-import { Camera, Info, Loader2, UserRoundX, Video, X } from "lucide-react";
+import { FileVideo, Info, Loader2, X } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import {
+  type PointerEvent as ReactPointerEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Controller } from "react-hook-form";
+import { toast } from "sonner";
 import { useCommunities, useCreateCommunityPost } from "@/api/callers/community";
 import { components } from "@/components/controllers";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -41,7 +48,7 @@ const resolveCreatePostError = (error: unknown) => {
   const normalized = rawMessage.toLowerCase();
 
   if (normalized.includes("comunidade") || normalized.includes("community")) {
-    return "Escolha uma comunidade válida para publicar.";
+    return "Escolha uma comunidade válida para postar.";
   }
 
   if (normalized.includes("título") || normalized.includes("titulo")) {
@@ -49,26 +56,30 @@ const resolveCreatePostError = (error: unknown) => {
   }
 
   if (normalized.includes("conteúdo") || normalized.includes("conteudo")) {
-    return "Escreva o texto da publicação para continuar.";
+    return "Escreva o texto do post para continuar.";
   }
 
   if (normalized.includes("sess") || normalized.includes("token")) {
-    return "Sua sessão precisa estar ativa para criar uma publicação.";
+    return "Sua sessão precisa estar ativa para criar um post.";
   }
 
   if (normalized.includes("network") || normalized.includes("conex")) {
     return "Não foi possível conectar à API agora. Tente novamente em instantes.";
   }
 
-  return rawMessage || "Não foi possível publicar agora. Tente novamente em instantes.";
+  return rawMessage || "Não foi possível postar agora. Tente novamente em instantes.";
 };
 
 const guidanceText =
   "Lembre-se de ser respeitoso com os outros membros. Conteúdos ofensivos ou que violem as diretrizes serão removidos pela moderação.";
+const anonymousTipText =
+  "Publicar com seu nome ajuda a tornar as conversas mais pessoais e acolhedoras.\n\nPara preservar sua privacidade, você também pode utilizar apenas seu primeiro nome ou um apelido.";
 const COMMUNITY_SELECTOR_ICON_SRC = "/svg/public_24dp_64748B_FILL0_wght400_GRAD0_opsz24.svg";
 const communityNameCollator = new Intl.Collator("pt-BR", {
   sensitivity: "base",
 });
+const SHEET_CLOSE_DELAY_MS = 220;
+const EDITOR_FIELD_IDS = new Set(["create-post-title", "create-post-content"]);
 
 export const CreateCommunityPostLogic = () => {
   const router = useRouter();
@@ -79,6 +90,10 @@ export const CreateCommunityPostLogic = () => {
   const storedUser = useAppSelector((state) => state.user);
   const isPsychologist = storedUser?.role === "psicologo";
   const [apiError, setApiError] = useState<string | null>(null);
+  const [isGuidanceOpen, setIsGuidanceOpen] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const closeTimerRef = useRef<number | null>(null);
+  const lastFocusedEditorIdRef = useRef("create-post-title");
 
   const communitiesQuery = useCommunities({ limit: 50 });
   const communityOptions = useMemo(
@@ -109,6 +124,19 @@ export const CreateCommunityPostLogic = () => {
     },
     onError: (error) => setApiError(resolveCreatePostError(error)),
   });
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setIsSheetOpen(true));
+    const focusTimer = window.setTimeout(() => {
+      document.getElementById("create-post-title")?.focus({ preventScroll: true });
+    }, 280);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(focusTimer);
+      if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!defaultCommunitySlug || communityOptions.length === 0) return;
@@ -150,8 +178,33 @@ export const CreateCommunityPostLogic = () => {
       String(watchedContent ?? "").trim().length >= 10,
   );
   const hasNoCommunities = communitiesQuery.isSuccess && communityOptions.length === 0;
-  const isSubmitDisabled =
-    mutation.isPending || communitiesQuery.isLoading || hasNoCommunities || !requiredFieldsReady;
+  const isSubmitDisabled = mutation.isPending || communitiesQuery.isLoading || hasNoCommunities;
+
+  const focusLastEditor = () => {
+    window.setTimeout(() => {
+      const target = document.getElementById(lastFocusedEditorIdRef.current) as
+        | HTMLInputElement
+        | HTMLTextAreaElement
+        | null;
+      target?.focus({ preventScroll: true });
+    }, 0);
+  };
+
+  const preserveEditorFocusFromBlankTap = (event: ReactPointerEvent<HTMLElement>) => {
+    if (event.target !== event.currentTarget) return;
+
+    event.preventDefault();
+    focusLastEditor();
+  };
+
+  const handleClose = () => {
+    setIsSheetOpen(false);
+    if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
+
+    closeTimerRef.current = window.setTimeout(() => {
+      navigateBackWithFallback(router);
+    }, SHEET_CLOSE_DELAY_MS);
+  };
 
   const onSubmit = hook.handleSubmit((values) => {
     setApiError(null);
@@ -175,7 +228,7 @@ export const CreateCommunityPostLogic = () => {
           <Image
             alt=""
             aria-hidden="true"
-            className="pointer-events-none absolute top-[1.375rem] left-5 z-10 h-4 w-4 -translate-y-1/2"
+            className="pointer-events-none absolute top-5 left-4 z-10 h-4 w-4 -translate-y-1/2 text-muted"
             height={16}
             src={COMMUNITY_SELECTOR_ICON_SRC}
             width={16}
@@ -185,7 +238,7 @@ export const CreateCommunityPostLogic = () => {
             {...field}
             inputClassName={cn(
               field.inputClassName,
-              "pl-12 pr-10 leading-[1.35] [&>span]:leading-[1.35]",
+              "pl-11 pr-10 leading-[1.35] [&>span]:leading-[1.35]",
             )}
           />
         </div>
@@ -197,140 +250,213 @@ export const CreateCommunityPostLogic = () => {
     );
   };
 
+  const renderAnonymousControls = () => (
+    <Controller
+      control={hook.control}
+      name="anonymous"
+      render={({ field }) => {
+        const checked = Boolean(field.value);
+
+        return (
+          <div className="relative min-w-0 flex-1">
+            {checked ? (
+              <div className="absolute bottom-[calc(100%+0.75rem)] left-0 z-20 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-primary/20 bg-surface px-4 py-3 text-xs leading-5 text-muted shadow-[var(--lectum-shadow-soft)]">
+                {anonymousTipText.split("\n\n").map((paragraph, index) => (
+                  <p className={cn(index > 0 && "mt-2")} key={paragraph}>
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            ) : null}
+
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span className="min-w-0 text-[0.78rem] font-bold leading-4 text-muted sm:text-sm">
+                Deseja publicar anonimamente?
+              </span>
+              <button
+                aria-checked={checked}
+                aria-label="Deseja publicar anonimamente?"
+                className={cn(
+                  "relative h-7 w-12 shrink-0 rounded-full bg-surface-muted ring-1 ring-border transition focus:outline-none focus:ring-4 focus:ring-primary/15",
+                  checked && "bg-primary ring-primary/20",
+                )}
+                onBlur={field.onBlur}
+                onClick={() => {
+                  field.onChange(!checked);
+                  focusLastEditor();
+                }}
+                onMouseDown={(event) => event.preventDefault()}
+                role="switch"
+                tabIndex={-1}
+                type="button"
+              >
+                <span
+                  className={cn(
+                    "absolute top-1 left-1 h-5 w-5 rounded-full bg-surface shadow-[var(--lectum-shadow-soft)] transition",
+                    checked && "translate-x-5",
+                  )}
+                />
+              </button>
+            </div>
+          </div>
+        );
+      }}
+    />
+  );
+
+  const renderPsychologistMediaButton = () => (
+    <button
+      aria-label="Adicionar mídia ao post"
+      className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full border border-border bg-surface-muted px-3.5 text-sm font-bold text-muted transition hover:border-primary/30 hover:bg-primary-soft hover:text-primary focus:outline-none focus:ring-4 focus:ring-primary/15"
+      onClick={() => {
+        toast.info("Upload de mídia para posts depende do storage R2 real configurado.");
+        focusLastEditor();
+      }}
+      onMouseDown={(event) => event.preventDefault()}
+      tabIndex={-1}
+      type="button"
+    >
+      <FileVideo className="h-5 w-5" aria-hidden="true" />
+      <span className="hidden sm:inline">Mídia</span>
+    </button>
+  );
+
   return (
     <PrivateTemplate
-      contentClassName="max-w-none bg-white px-0 py-0 dark:bg-background"
+      contentClassName="max-w-none bg-background px-0 py-0"
       showMobileNavigation={false}
       showNavigation={false}
     >
-      <section className="mx-auto min-h-screen w-full max-w-[430px] bg-white text-[#111827] dark:bg-background dark:text-foreground">
-        <header className="relative flex h-[58px] items-center justify-center border-[#EEF0F3] border-b px-4">
-          <button
-            aria-label="Fechar criação de post e voltar"
-            className="absolute left-2 grid h-10 w-10 place-items-center rounded-full text-[#111827] transition hover:bg-[#F5F7FA] dark:text-foreground dark:hover:bg-surface-muted"
-            onClick={() => navigateBackWithFallback(router)}
-            type="button"
-          >
-            <X className="h-5 w-5" aria-hidden="true" />
-          </button>
-          <h1 className="text-[20px] font-extrabold tracking-[-0.02em]">Criar Post</h1>
-        </header>
-
-        <form className="grid gap-5 px-[18px] pt-5 pb-8" noValidate onSubmit={onSubmit}>
-          <div className="grid gap-4">
-            {formProps.fields
-              .filter((field) => field.name === "community_slug")
-              .map(renderFormField)}
-
-            {!isPsychologist ? (
-              <Controller
-                control={hook.control}
-                name="anonymous"
-                render={({ field }) => {
-                  const checked = Boolean(field.value);
-
-                  return (
-                    <div className="rounded-2xl border border-[#E8EDF3] bg-white/70 px-3.5 py-2.5 dark:border-border dark:bg-surface/70">
-                      <div className="flex min-h-7 items-center justify-between gap-3">
-                        <span className="inline-flex items-center gap-2 text-[13px] font-semibold text-[#64748B]">
-                          <UserRoundX className="h-4 w-4" aria-hidden="true" />
-                          Postar como anônimo
-                        </span>
-                        <button
-                          aria-checked={checked}
-                          aria-label="Postar como anônimo"
-                          className={cn(
-                            "relative h-6 w-10 rounded-full bg-[#EDF1F7] transition focus:outline-none focus:ring-4 focus:ring-[#308CE8]/15",
-                            checked && "bg-[#308CE8]",
-                          )}
-                          onBlur={field.onBlur}
-                          onClick={() => field.onChange(!checked)}
-                          role="switch"
-                          type="button"
-                        >
-                          <span
-                            className={cn(
-                              "absolute top-1 left-1 h-4 w-4 rounded-full bg-white shadow-sm transition",
-                              checked && "translate-x-4",
-                            )}
-                          />
-                        </button>
-                      </div>
-                      {checked ? (
-                        <p className="mt-2 text-[11.5px] leading-4 text-[#8A94A6]">
-                          💡 Publicar com seu nome ajuda a tornar as conversas mais pessoais e
-                          acolhedoras.
-                        </p>
-                      ) : null}
-                    </div>
-                  );
+      <div
+        className={cn(
+          "fixed inset-0 z-[70] flex items-end justify-center bg-foreground/15 transition-opacity duration-200 ease-out",
+          isSheetOpen ? "opacity-100" : "opacity-0",
+        )}
+      >
+        <section
+          aria-labelledby="create-post-title-heading"
+          aria-modal="true"
+          className={cn(
+            "flex h-[calc(100dvh_-_env(safe-area-inset-top)_-_0.75rem)] w-full max-w-[min(100vw,44rem)] flex-col overflow-hidden rounded-t-[2rem] border border-border bg-surface text-foreground shadow-[var(--lectum-shadow)] transition-transform duration-300 ease-out sm:mb-6 sm:h-[min(86dvh,760px)] sm:rounded-[2rem]",
+            isSheetOpen ? "translate-y-0" : "translate-y-full",
+          )}
+          role="dialog"
+        >
+          <header className="relative flex h-16 shrink-0 items-center justify-center border-border/70 border-b px-4">
+            <button
+              aria-label="Fechar criação de post e voltar"
+              className="absolute left-3 grid h-10 w-10 place-items-center rounded-full text-foreground transition hover:bg-surface-muted focus:outline-none focus:ring-4 focus:ring-primary/15"
+              onClick={handleClose}
+              type="button"
+            >
+              <X className="h-5 w-5" aria-hidden="true" />
+            </button>
+            <h1
+              className="text-[1.2rem] font-black tracking-[-0.03em]"
+              id="create-post-title-heading"
+            >
+              Criar Post
+            </h1>
+            <div className="absolute right-3">
+              <button
+                aria-expanded={isGuidanceOpen}
+                aria-label="Ver diretrizes do post"
+                className="grid h-10 w-10 place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15"
+                onClick={() => {
+                  setIsGuidanceOpen((current) => !current);
+                  focusLastEditor();
                 }}
-              />
-            ) : null}
+                onMouseDown={(event) => event.preventDefault()}
+                tabIndex={-1}
+                type="button"
+              >
+                <Info className="h-5 w-5" aria-hidden="true" />
+              </button>
+              {isGuidanceOpen ? (
+                <div className="absolute top-12 right-0 z-30 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-border bg-surface px-4 py-3 text-xs leading-5 text-muted shadow-[var(--lectum-shadow-soft)]">
+                  {guidanceText}
+                </div>
+              ) : null}
+            </div>
+          </header>
 
-            {formProps.fields
-              .filter((field) => field.name !== "community_slug" && field.name !== "anonymous")
-              .map(renderFormField)}
-          </div>
+          <form
+            className="flex min-h-0 flex-1 flex-col"
+            noValidate
+            onFocusCapture={(event) => {
+              const target = event.target as HTMLElement;
+              if (EDITOR_FIELD_IDS.has(target.id)) {
+                lastFocusedEditorIdRef.current = target.id;
+              }
+            }}
+            onSubmit={onSubmit}
+          >
+            <div
+              className="min-h-0 flex-1 overflow-y-auto px-5 pt-4 pb-4"
+              onPointerDown={preserveEditorFocusFromBlankTap}
+            >
+              <div className="grid min-h-full grid-rows-[auto_auto_1fr_auto] gap-3">
+                <div className="flex items-start justify-between gap-3">
+                  {formProps.fields
+                    .filter((field) => field.name === "community_slug")
+                    .map(renderFormField)}
+                </div>
 
-          {isPsychologist ? (
-            <section className="grid gap-3">
-              <p className="text-xs font-extrabold tracking-[0.08em] text-[#64748B] uppercase">
-                Adicionar mídia
-              </p>
-              <div className="grid min-h-[128px] place-items-center rounded-2xl border border-[#DDE3EA] border-dashed px-5 py-5 text-center text-[#64748B]">
-                <div className="grid gap-2">
-                  <div className="flex items-center justify-center gap-4 text-[#64748B]">
-                    <Camera className="h-7 w-7" aria-hidden="true" />
-                    <Video className="h-7 w-7" aria-hidden="true" />
-                  </div>
-                  <p className="text-sm font-semibold text-[#111827] dark:text-foreground">
-                    Toque para carregar fotos ou vídeos
-                  </p>
-                  <p className="text-xs">PNG, JPG ou MP4 (Máx. 50MB)</p>
-                  <p className="text-[11px] leading-4 text-[#8A94A6]">
-                    Upload será ativado quando o storage R2 estiver configurado.
-                  </p>
+                <div onPointerDown={preserveEditorFocusFromBlankTap}>
+                  {formProps.fields.filter((field) => field.name === "title").map(renderFormField)}
+                </div>
+
+                <div className="min-h-0" onPointerDown={preserveEditorFocusFromBlankTap}>
+                  {formProps.fields
+                    .filter((field) => field.name === "content")
+                    .map(renderFormField)}
+                </div>
+
+                <div className="grid gap-3 pb-2">
+                  {communitiesQuery.isError ? (
+                    <InlineAlert title="Não foi possível carregar comunidades" variant="error">
+                      Verifique sua conexão e tente novamente.
+                    </InlineAlert>
+                  ) : null}
+
+                  {hasNoCommunities ? (
+                    <InlineAlert title="Nenhuma comunidade disponível" variant="info">
+                      Ainda não há comunidades publicadas para receber posts.
+                    </InlineAlert>
+                  ) : null}
+
+                  {visibleError ? (
+                    <InlineAlert title="Não foi possível postar" variant="error">
+                      {visibleError}
+                    </InlineAlert>
+                  ) : null}
                 </div>
               </div>
-            </section>
-          ) : null}
+            </div>
 
-          <div className="flex gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-sm leading-6 text-[#64748B] dark:border-border dark:bg-surface dark:text-muted">
-            <Info className="mt-1 h-5 w-5 shrink-0" aria-hidden="true" />
-            <p>{guidanceText}</p>
-          </div>
+            <footer className="relative shrink-0 border-border/70 border-t bg-surface/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur supports-[backdrop-filter]:bg-surface/90">
+              <div className="flex min-h-12 items-center justify-between gap-3">
+                {isPsychologist ? renderPsychologistMediaButton() : renderAnonymousControls()}
 
-          {communitiesQuery.isError ? (
-            <InlineAlert title="Não foi possível carregar comunidades" variant="error">
-              Verifique sua conexão e tente novamente.
-            </InlineAlert>
-          ) : null}
-
-          {hasNoCommunities ? (
-            <InlineAlert title="Nenhuma comunidade disponível" variant="info">
-              Ainda não há comunidades publicadas para receber posts.
-            </InlineAlert>
-          ) : null}
-
-          {visibleError ? (
-            <InlineAlert title="Não foi possível publicar" variant="error">
-              {visibleError}
-            </InlineAlert>
-          ) : null}
-
-          <Button
-            className="mt-2 h-[60px] w-full rounded-2xl bg-[#308CE8] text-base font-black shadow-[0_14px_28px_rgba(48,140,232,0.24)] hover:bg-[#2579CF] disabled:bg-[#DDEEFF] disabled:text-[#7FAFDF] disabled:opacity-100 disabled:shadow-none"
-            disabled={isSubmitDisabled}
-            type="submit"
-          >
-            {mutation.isPending ? (
-              <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
-            ) : null}
-            Postar
-          </Button>
-        </form>
-      </section>
+                <Button
+                  className={cn(
+                    "h-12 min-w-[6.5rem] shrink-0 rounded-full px-6 text-base font-black shadow-[var(--lectum-shadow-soft)] disabled:bg-surface-muted disabled:text-muted disabled:opacity-100 disabled:shadow-none",
+                    !requiredFieldsReady &&
+                      "bg-surface-muted text-muted shadow-none hover:bg-surface-muted",
+                  )}
+                  disabled={isSubmitDisabled}
+                  type="submit"
+                >
+                  {mutation.isPending ? (
+                    <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+                  ) : null}
+                  Postar
+                </Button>
+              </div>
+            </footer>
+          </form>
+        </section>
+      </div>
     </PrivateTemplate>
   );
 };

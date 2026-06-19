@@ -193,3 +193,22 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Escopo: sem mudanças de backend, Prisma, migrations, endpoint, payload, lógica de criação, anonimato, ordenação de comunidades ou packages.
 - ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile em `/app/community/ansiedade-em-equilibrio/post/new`, confirmando botão com `overflow: visible`, texto dentro do pill e ícone/seta centralizados.
+
+## Complemento 2026-06-19 - editor leve em sheet
+
+- Pedido do usuário: refatorar completamente a tela `Criar Post` para parecer menos formulário e mais editor livre de comunidade, inspirado em Threads/Reddit/LinkedIn, usando também as imagens anexadas de referência.
+- Frontend: `/app/community/[slug]/post/new` passou a renderizar como sheet/modal mobile-first que entra de baixo, com cantos superiores arredondados, header `X | Criar Post | i` e fechamento com transição suave.
+- O card fixo de regras saiu do rodapé e virou popover discreto no ícone de informação, preservando a copy de respeito/moderação.
+- O seletor de comunidade permanece logo abaixo do header, compacto, real e pré-selecionado quando a rota/contexto fornece slug.
+- Título e conteúdo continuam usando React Hook Form/Zod + controllers da TASK-02, mas agora com estilo borderless, integrado ao editor, título obrigatório e placeholder orientativo definido pelo brief.
+- O textarea deixou de crescer com a digitação; ele usa área interna rolável para textos longos sem redimensionar a interface.
+- A barra inferior agora fica fixa no rodapé visual da sheet, acima do teclado quando o viewport mobile redimensiona:
+  - pacientes: texto permanente `Deseja publicar anonimamente?`, switch e botão `Postar` na mesma linha;
+  - psicólogos: botão compacto de mídia à esquerda e `Postar` à direita, sem a seção grande `Adicionar mídia`.
+- A tip de anonimato aparece somente quando o paciente ativa o switch, acima da barra, com tom informativo e acolhedor.
+- Foram adicionadas tentativas de preservação de foco/teclado no mobile: autofoco no título, refoco do último campo ativo ao tocar em áreas vazias e botões auxiliares que evitam tomar foco do editor.
+- O upload real de mídia para post segue pendente pelo mesmo bloqueio de storage/schema já registrado; o botão compacto apenas informa a dependência real, sem simular upload.
+- Builder/Quick Copy não está exposto como ferramenta neste ambiente; a validação visual usou `_product/proto/Criar Nova Postagem - Pacientes.jpg`, `_product/proto/Criar Nova Postagem - Psicólogo.jpg` e os screenshots anexados pelo usuário.
+- Escopo: sem mudanças de backend, Prisma, migrations, endpoint, payload, regras de anonimato, ordenação de comunidades ou packages.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`; Chrome headless local confirmou carregamento da rota no servidor dev existente, mas a captura autenticada da sheet ficou limitada porque a sessão local disponível não aceitou token gerado fora do servidor em execução.

@@ -86,3 +86,31 @@ Validacao complementar:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Chrome/CDP mobile em `http://localhost:3000/app/community/ansiedade-em-equilibrio/post/new`, validando `overflow: visible`, label dentro do botao, respiro vertical para descendentes e alinhamento central de icone/seta.
+
+## Atualização 2026-06-19 - editor em sheet para criação espontânea
+
+A tela de criação de posts deixou de tratar a experiência como formulário de página inteira e passou a operar como um editor leve em sheet/modal, preservando o contrato real de criação de `community_post`.
+
+Decisões complementares:
+
+- Manter a rota canônica `/app/community/[slug]/post/new`, mas renderizá-la visualmente como sheet mobile-first com transição vertical de entrada/saída. Isso evita criar uma arquitetura paralela de modal route/intercepting route neste momento e preserva compatibilidade com CTAs existentes.
+- Continuar usando a fundação da TASK-02 (`useFormList`, React Hook Form, Zod e controllers) para comunidade, título e conteúdo, porém com estilos borderless e integrados ao editor para reduzir a aparência de formulário.
+- Manter título obrigatório por organização do feed, busca futura e qualidade das respostas, com placeholder orientado a pergunta/assunto.
+- Transformar a regra fixa de convivência em popover no ícone de informação, removendo o card fixo do rodapé para reduzir peso visual.
+- Fixar a barra inferior dentro da sheet: pacientes recebem texto permanente de anonimato + switch + `Postar`; psicólogos recebem botão compacto de mídia + `Postar`. A seção grande de mídia foi removida.
+- Não implementar upload simulado. Enquanto storage/schema de anexos de posts não estiverem aprovados e configurados, o botão de mídia apenas informa a dependência real.
+- Para reduzir perda de teclado em mobile, a UI tenta manter foco no último campo editável em toques sobre áreas vazias e em botões auxiliares. O fechamento explícito da sheet continua encerrando a edição.
+- Builder/Quick Copy não estava disponível como ferramenta nesta execução; a decisão visual foi baseada nos protótipos locais da TASK-24 e nos screenshots anexados pelo usuário.
+
+Consequências:
+
+- A criação de posts fica mais próxima de um editor social leve sem alterar backend, payload, schema, anonimato ou permissões.
+- A validação continua client-side por Zod e server-side pelo endpoint real; o botão pode parecer inativo quando título/conteúdo/comunidade ainda não estão prontos, mas continua permitindo submit para exibir feedback de campos obrigatórios.
+- Uma implementação futura com modal routes/intercepting routes pode preservar a tela anterior real atrás da sheet; por ora a compatibilidade de rota foi priorizada.
+
+Validação complementar:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome headless local em `http://localhost:3000/app/community/feed/post/new` confirmou carregamento da rota no servidor dev existente; captura autenticada da sheet ficou limitada pela sessão local disponível não aceitar token gerado fora do servidor em execução.
