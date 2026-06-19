@@ -286,3 +286,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Builder/Quick Copy nao estava disponivel como ferramenta direta; a referencia visual consultada foi `_product/proto/Meus Analytics - Psicologo.jpg`.
 - ADR criado: `adrs/0131-analytics-periodo-personalizado-popover.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e rota local `/app/professional/analytics` via `Invoke-WebRequest` sem sessao autenticada retornando `307` para o fluxo privado.
+
+## Refinamento do player analitico sem progresso sobreposto (2026-06-19)
+
+- Pedido do usuario: remover a barra de progresso azul sobreposta ao video na secao `Video de apresentacao` de `/app/professional/analytics`.
+- A variante minimal do `VerticalVideoPlayer` agora exibe somente o botao play/pause sobre a imagem do video.
+- O grafico de retencao permanece como referencia visual de progresso/analise abaixo do video; nao ha mais controle de seek sobreposto ao video.
+- Players nativos usados em posts, perfil publico e demais telas permanecem inalterados; a mudanca segue restrita ao `controlsVariant="minimal"` dos Analytics.
+- Nenhum schema Prisma, migration, package novo, mock, seed ou endpoint simulado foi criado.
+- Builder/Quick Copy nao estava disponivel como ferramenta direta; a validacao visual usou a captura enviada pelo usuario e a referencia local `_product/proto/Meus Analytics - Psicologo.jpg`.
+- ADR criado: `adrs/0132-analytics-video-player-sem-progresso-overlay.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e rota local `/app/professional/analytics` via `Invoke-WebRequest` sem sessao autenticada retornando `307` para o fluxo privado.
