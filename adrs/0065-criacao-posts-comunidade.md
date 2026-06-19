@@ -114,3 +114,31 @@ Validação complementar:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Chrome headless local em `http://localhost:3000/app/community/feed/post/new` confirmou carregamento da rota no servidor dev existente; captura autenticada da sheet ficou limitada pela sessão local disponível não aceitar token gerado fora do servidor em execução.
+
+## Atualizacao 2026-06-19 - ajustes finos de hierarquia e validacao do editor
+
+O editor em sheet de `Criar Post` foi refinado sem alterar contrato de API, payload de criacao, schema, anonimato ou permissoes de midia.
+
+Decisoes complementares:
+
+- O switch de paciente mantem a regra de anonimato, mas passa a usar a copy curta `Publicar anonimamente?` para reduzir ruido na barra fixa.
+- A dica de anonimato continua vinculada ao switch ligado, porem pode ser dispensada por um `X` interno que fecha somente a tip. Essa dispensa e estado local de UI e nao altera o valor enviado no formulario.
+- A tip recebeu icone de lampada e texto acolhedor para sugerir primeiro nome/apelido no perfil como alternativa de privacidade, sem desencorajar anonimato quando necessario.
+- A hierarquia tipografica do campo de titulo foi alinhada ao padrao visual dos titulos dos posts no feed: texto digitado maior, escuro e `font-black`; placeholder separado por cor mais clara e peso menor para nao parecer conteudo ja preenchido.
+- O conteudo mantem tipografia de corpo, com placeholder ainda mais discreto, preservando o modelo de editor livre em vez de voltar ao formulario tradicional.
+- O backdrop do sheet usa menor opacidade para evitar a aparencia de tela desligada no desktop; a rota segue renderizando como sheet por compatibilidade, sem introduzir modal route/intercepting route.
+- Os erros de validacao sao tratados como estados transitorios: ao corrigir comunidade, titulo ou conteudo, o erro especifico e o alerta geral derivado deixam de ser exibidos imediatamente.
+- O erro do seletor de comunidade e posicionado em slot reservado abaixo do pill para nao alterar largura, padding nem alinhamento interno do dropdown.
+
+Consequencias:
+
+- A percepcao de estrutura do post melhora sem mudar as regras obrigatorias de titulo e conteudo.
+- A validacao fica menos pegajosa apos tentativa invalida, evitando mensagens antigas quando o usuario ja corrigiu o campo.
+- O fechamento da tip de anonimato passa a ser independente do switch, preservando controle e previsibilidade para pacientes.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- Chrome headless local em `http://localhost:3000/app/community/feed/post/new`, com sessao real recente de paciente, validou: erro de comunidade removido apos selecao, sem alerta geral ativo apos correcao, titulo digitado em 24.32px/900, copy `Publicar anonimamente?`, tip com texto atualizado e fechamento por `X` mantendo `aria-checked=true` no switch.

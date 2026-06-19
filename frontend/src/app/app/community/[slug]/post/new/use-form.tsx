@@ -42,7 +42,8 @@ const buildFields = ({
     {
       name: "community_slug",
       field: "select",
-      className: "w-fit gap-0",
+      className:
+        "relative w-fit max-w-full gap-0 pb-5 [&>span:last-child]:absolute [&>span:last-child]:top-11 [&>span:last-child]:left-0 [&>span:last-child]:w-max [&>span:last-child]:max-w-[calc(100vw-2.5rem)] [&>span:last-child]:pl-0",
       placeholder: "Comunidade",
       emptyLabel: "Comunidade",
       hideEmptyOption: true,
@@ -67,7 +68,7 @@ const buildFields = ({
       autoFocus: true,
       className: "gap-0 [&>span:first-child]:sr-only",
       inputClassName:
-        "h-auto rounded-none border-0 border-transparent bg-transparent px-0 py-2 text-[1.35rem] font-extrabold leading-tight tracking-[-0.03em] text-foreground shadow-none placeholder:text-muted focus:border-transparent focus:ring-0",
+        "create-post-title-input h-auto rounded-none border-0 border-transparent bg-transparent px-0 py-2 shadow-none focus:border-transparent focus:ring-0",
     },
     {
       name: "content",
@@ -81,12 +82,12 @@ const buildFields = ({
       autoGrow: false,
       className: "min-h-0 gap-0 [&>span:first-child]:sr-only",
       inputClassName:
-        "min-h-[44dvh] resize-none overflow-y-auto rounded-none border-0 border-transparent bg-transparent px-0 py-2 text-[1rem] leading-7 text-foreground shadow-none placeholder:text-muted/80 focus:border-transparent focus:ring-0 sm:min-h-[22rem]",
+        "create-post-content-input min-h-[44dvh] resize-none overflow-y-auto rounded-none border-0 border-transparent bg-transparent px-0 py-2 shadow-none focus:border-transparent focus:ring-0 sm:min-h-[22rem]",
     },
     {
       name: "anonymous",
       field: "switch",
-      label: "Deseja publicar anonimamente?",
+      label: "Publicar anonimamente?",
       className: "hidden",
     },
   ] satisfies Field<CreateCommunityPostForm>[];

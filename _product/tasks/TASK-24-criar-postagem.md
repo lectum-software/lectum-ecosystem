@@ -212,3 +212,18 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Escopo: sem mudanças de backend, Prisma, migrations, endpoint, payload, regras de anonimato, ordenação de comunidades ou packages.
 - ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`; Chrome headless local confirmou carregamento da rota no servidor dev existente, mas a captura autenticada da sheet ficou limitada porque a sessão local disponível não aceitou token gerado fora do servidor em execução.
+
+## Complemento 2026-06-19 - ajustes finos do editor em sheet
+
+- Pedido do usuario: refinar a nova tela `Criar Post` apos validacao visual em desktop, mantendo o modelo de editor livre em sheet.
+- Frontend: o microtexto do switch de anonimato foi reduzido para `Publicar anonimamente?`.
+- A tip de anonimato ganhou icone de lampada, botao `X` proprio e fechamento independente do estado do switch; desligar o switch continua escondendo a tip e reativa-lo volta a exibi-la.
+- A copy da tip foi atualizada para orientar o uso de primeiro nome ou apelido no perfil, sem tom de julgamento contra o anonimato.
+- Placeholders de titulo e conteudo receberam menor contraste/peso; o titulo digitado passou a usar hierarquia semelhante aos cards do feed (`font-black`, cor mais escura e tamanho maior), enquanto o conteudo permanece como texto normal.
+- O backdrop da sheet ficou mais leve (`bg-foreground/[0.06]`), preservando a sensacao de modal sem deixar o fundo com aparencia desligada.
+- Validacoes client-side agora limpam imediatamente erros corrigidos de comunidade, titulo e descricao; o alerta geral `Nao foi possivel postar` deixa de aparecer quando nao ha erros ativos ou quando a mensagem de API ficou obsoleta apos edicao.
+- O erro do seletor de comunidade foi isolado abaixo do pill em slot absoluto/reservado, sem alterar altura, padding, alinhamento interno ou largura do dropdown.
+- Escopo: sem mudancas de backend, Prisma, migrations, endpoint, payload, regras de anonimato, permissoes de midia ou packages.
+- Builder/Quick Copy segue indisponivel como ferramenta neste ambiente; a validacao visual usa os prototipos locais e os screenshots anexados pelo usuario.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome headless local em `http://localhost:3000/app/community/feed/post/new` com sessao real recente, validando hierarquia do titulo (24.32px/900), limpeza dos erros corrigidos, copy curta do switch, tip com X independente e backdrop mais leve.

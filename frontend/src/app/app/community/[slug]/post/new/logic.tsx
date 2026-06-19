@@ -1,6 +1,6 @@
 "use client";
 
-import { FileVideo, Info, Loader2, X } from "lucide-react";
+import { FileVideo, Info, Lightbulb, Loader2, X } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -73,7 +73,7 @@ const resolveCreatePostError = (error: unknown) => {
 const guidanceText =
   "Lembre-se de ser respeitoso com os outros membros. Conteúdos ofensivos ou que violem as diretrizes serão removidos pela moderação.";
 const anonymousTipText =
-  "Publicar com seu nome ajuda a tornar as conversas mais pessoais e acolhedoras.\n\nPara preservar sua privacidade, você também pode utilizar apenas seu primeiro nome ou um apelido.";
+  "Publicar com seu nome ajuda a tornar as conversas mais pessoais e acolhedoras.\n\nPara preservar sua privacidade, você também pode utilizar no perfil apenas seu primeiro nome ou um apelido.";
 const COMMUNITY_SELECTOR_ICON_SRC = "/svg/public_24dp_64748B_FILL0_wght400_GRAD0_opsz24.svg";
 const communityNameCollator = new Intl.Collator("pt-BR", {
   sensitivity: "base",
@@ -91,8 +91,10 @@ export const CreateCommunityPostLogic = () => {
   const isPsychologist = storedUser?.role === "psicologo";
   const [apiError, setApiError] = useState<string | null>(null);
   const [isGuidanceOpen, setIsGuidanceOpen] = useState(false);
+  const [isAnonymousTipDismissed, setIsAnonymousTipDismissed] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const closeTimerRef = useRef<number | null>(null);
+  const lastEditedValuesRef = useRef({ community: "", content: "", title: "" });
   const lastFocusedEditorIdRef = useRef("create-post-title");
 
   const communitiesQuery = useCommunities({ limit: 50 });
@@ -159,26 +161,68 @@ export const CreateCommunityPostLogic = () => {
     }
   }, [communityOptions, defaultCommunitySlug, hook]);
 
-  const visibleError = useMemo(() => {
-    if (apiError) return apiError;
-    if (!hook.formState.isSubmitted) return null;
-
-    return Object.values(hook.formState.errors)[0]?.message?.toString() ?? null;
-  }, [apiError, hook.formState.errors, hook.formState.isSubmitted]);
-
   const watchedCommunitySlug = hook.watch("community_slug");
   const watchedTitle = hook.watch("title");
   const watchedContent = hook.watch("content");
   const selectedCommunityIsValid = communityOptions.some(
     (option) => option.value === watchedCommunitySlug,
   );
+  const titleMeetsMinimum = String(watchedTitle ?? "").trim().length >= 3;
+  const contentMeetsMinimum = String(watchedContent ?? "").trim().length >= 10;
   const requiredFieldsReady = Boolean(
-    selectedCommunityIsValid &&
-      String(watchedTitle ?? "").trim().length >= 3 &&
-      String(watchedContent ?? "").trim().length >= 10,
+    selectedCommunityIsValid && titleMeetsMinimum && contentMeetsMinimum,
   );
+  const activeFormErrorMessages = useMemo(
+    () =>
+      Object.values(hook.formState.errors)
+        .map((error) => error?.message?.toString())
+        .filter(Boolean),
+    [hook.formState.errors],
+  );
+  const visibleError = useMemo(() => {
+    if (apiError) return apiError;
+    if (!hook.formState.isSubmitted) return null;
+
+    return activeFormErrorMessages[0] ?? null;
+  }, [activeFormErrorMessages, apiError, hook.formState.isSubmitted]);
   const hasNoCommunities = communitiesQuery.isSuccess && communityOptions.length === 0;
   const isSubmitDisabled = mutation.isPending || communitiesQuery.isLoading || hasNoCommunities;
+
+  useEffect(() => {
+    if (selectedCommunityIsValid && hook.formState.errors.community_slug) {
+      hook.clearErrors("community_slug");
+    }
+  }, [hook, hook.formState.errors.community_slug, selectedCommunityIsValid]);
+
+  useEffect(() => {
+    if (titleMeetsMinimum && hook.formState.errors.title) {
+      hook.clearErrors("title");
+    }
+  }, [hook, hook.formState.errors.title, titleMeetsMinimum]);
+
+  useEffect(() => {
+    if (contentMeetsMinimum && hook.formState.errors.content) {
+      hook.clearErrors("content");
+    }
+  }, [contentMeetsMinimum, hook, hook.formState.errors.content]);
+
+  useEffect(() => {
+    const nextValues = {
+      community: String(watchedCommunitySlug ?? ""),
+      content: String(watchedContent ?? ""),
+      title: String(watchedTitle ?? ""),
+    };
+    const hasEdited =
+      nextValues.community !== lastEditedValuesRef.current.community ||
+      nextValues.content !== lastEditedValuesRef.current.content ||
+      nextValues.title !== lastEditedValuesRef.current.title;
+
+    lastEditedValuesRef.current = nextValues;
+
+    if (hasEdited && apiError) {
+      setApiError(null);
+    }
+  }, [apiError, watchedCommunitySlug, watchedContent, watchedTitle]);
 
   const focusLastEditor = () => {
     window.setTimeout(() => {
@@ -214,6 +258,33 @@ export const CreateCommunityPostLogic = () => {
     });
   });
 
+  const clearCorrectedFormErrorsSoon = () => {
+    window.setTimeout(() => {
+      const values = hook.getValues();
+      const hasValidCommunity = communityOptions.some(
+        (option) => option.value === values.community_slug,
+      );
+      const hasValidTitle = String(values.title ?? "").trim().length >= 3;
+      const hasValidContent = String(values.content ?? "").trim().length >= 10;
+
+      if (hasValidCommunity) {
+        hook.clearErrors("community_slug");
+      }
+
+      if (hasValidTitle) {
+        hook.clearErrors("title");
+      }
+
+      if (hasValidContent) {
+        hook.clearErrors("content");
+      }
+
+      if (hasValidCommunity && hasValidTitle && hasValidContent) {
+        hook.clearErrors();
+      }
+    }, 0);
+  };
+
   const renderFormField = (field: (typeof formProps.fields)[number]) => {
     const Component = components[field.field];
 
@@ -240,8 +311,50 @@ export const CreateCommunityPostLogic = () => {
               field.inputClassName,
               "pl-11 pr-10 leading-[1.35] [&>span]:leading-[1.35]",
             )}
+            onChangeCallback={(value) => {
+              field.onChangeCallback?.(value);
+              hook.clearErrors("community_slug");
+              clearCorrectedFormErrorsSoon();
+              setApiError(null);
+            }}
           />
         </div>
+      );
+    }
+
+    if (field.name === "title") {
+      return (
+        <Component
+          control={hook.control}
+          key={`create-post-${String(field.name)}`}
+          {...field}
+          onChangeCallback={(value) => {
+            field.onChangeCallback?.(value);
+            if (String(value ?? "").trim().length >= 3) {
+              hook.clearErrors("title");
+            }
+            clearCorrectedFormErrorsSoon();
+            setApiError(null);
+          }}
+        />
+      );
+    }
+
+    if (field.name === "content") {
+      return (
+        <Component
+          control={hook.control}
+          key={`create-post-${String(field.name)}`}
+          {...field}
+          onChangeCallback={(value) => {
+            field.onChangeCallback?.(value);
+            if (String(value ?? "").trim().length >= 10) {
+              hook.clearErrors("content");
+            }
+            clearCorrectedFormErrorsSoon();
+            setApiError(null);
+          }}
+        />
       );
     }
 
@@ -259,30 +372,55 @@ export const CreateCommunityPostLogic = () => {
 
         return (
           <div className="relative min-w-0 flex-1">
-            {checked ? (
-              <div className="absolute bottom-[calc(100%+0.75rem)] left-0 z-20 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-primary/20 bg-surface px-4 py-3 text-xs leading-5 text-muted shadow-[var(--lectum-shadow-soft)]">
-                {anonymousTipText.split("\n\n").map((paragraph, index) => (
-                  <p className={cn(index > 0 && "mt-2")} key={paragraph}>
-                    {paragraph}
-                  </p>
-                ))}
+            {checked && !isAnonymousTipDismissed ? (
+              <div className="absolute bottom-[calc(100%+0.75rem)] left-0 z-20 w-[min(21rem,calc(100vw-2rem))] rounded-2xl border border-primary/15 bg-surface px-4 py-3 pr-9 text-xs leading-5 text-muted shadow-[var(--lectum-shadow-soft)]">
+                <button
+                  aria-label="Fechar dica sobre anonimato"
+                  className="absolute top-2.5 right-2.5 grid h-7 w-7 place-items-center rounded-full text-subtle transition hover:bg-surface-muted hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15"
+                  onClick={() => {
+                    setIsAnonymousTipDismissed(true);
+                    focusLastEditor();
+                  }}
+                  onMouseDown={(event) => event.preventDefault()}
+                  tabIndex={-1}
+                  type="button"
+                >
+                  <X className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <div className="flex items-start gap-2.5">
+                  <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+                    <Lightbulb className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  <div className="min-w-0">
+                    {anonymousTipText.split("\n\n").map((paragraph, index) => (
+                      <p className={cn(index > 0 && "mt-2")} key={paragraph}>
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
+                </div>
               </div>
             ) : null}
 
             <div className="flex min-w-0 items-center gap-2.5">
               <span className="min-w-0 text-[0.78rem] font-bold leading-4 text-muted sm:text-sm">
-                Deseja publicar anonimamente?
+                Publicar anonimamente?
               </span>
               <button
                 aria-checked={checked}
-                aria-label="Deseja publicar anonimamente?"
+                aria-label="Publicar anonimamente?"
                 className={cn(
                   "relative h-7 w-12 shrink-0 rounded-full bg-surface-muted ring-1 ring-border transition focus:outline-none focus:ring-4 focus:ring-primary/15",
                   checked && "bg-primary ring-primary/20",
                 )}
                 onBlur={field.onBlur}
                 onClick={() => {
-                  field.onChange(!checked);
+                  const nextChecked = !checked;
+
+                  field.onChange(nextChecked);
+                  if (!nextChecked) {
+                    setIsAnonymousTipDismissed(false);
+                  }
                   focusLastEditor();
                 }}
                 onMouseDown={(event) => event.preventDefault()}
@@ -329,7 +467,7 @@ export const CreateCommunityPostLogic = () => {
     >
       <div
         className={cn(
-          "fixed inset-0 z-[70] flex items-end justify-center bg-foreground/15 transition-opacity duration-200 ease-out",
+          "fixed inset-0 z-[70] flex items-end justify-center bg-foreground/[0.06] transition-opacity duration-200 ease-out",
           isSheetOpen ? "opacity-100" : "opacity-0",
         )}
       >
