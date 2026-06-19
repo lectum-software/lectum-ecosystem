@@ -71,3 +71,26 @@ A tela `/app/reviews` foi ajustada para manter a lista de avaliações do pacien
 - A ação textual `Ver perfil` foi removida do rodapé, mantendo a setinha superior direita como única ação de navegação ao perfil.
 
 Não houve alteração de banco nem migração: a decisão é de contrato de leitura e apresentação visual usando campos reais já persistidos em `psychologist_profile`.
+
+## Atualização - 2026-06-19 - Header compartilhado em Avaliações feitas
+
+A tela `/app/reviews` passou a reutilizar o `AppPageHeader`, mesmo componente usado em `/app/posts/saved` e `/app/posts/mine`, para alinhar a família de telas secundárias do perfil.
+
+Decisão:
+
+- Substituir o `SecondaryPageHeader` por `AppPageHeader` apenas em `Avaliações feitas`.
+- Preservar o texto do título, a rota de retorno para `/app/profile` e todo o conteúdo dos cards de avaliação.
+- Não criar novo componente nem fork visual: a padronização deve usar o componente compartilhado já existente.
+
+Consequência:
+
+- O header passa a ter card branco/surface arredondado, borda, sombra suave, botão de voltar em círculo azul-claro e título centralizado, igual a `Salvos` e `Meus posts e comentários`.
+- Não há impacto em API, regra de elegibilidade, contrato de listagem, schema Prisma, migrations ou packages.
+
+Validação complementar:
+
+- `pnpm --dir frontend biome:fix`: sucesso.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- Chrome headless local no `next start` em `/app/reviews`: sucesso, validando header em grid/card surface branco, botão circular azul-claro de voltar para `/app/profile` e título `Avaliações feitas`. A listagem exibiu erro real de conexão/API com token de smoke, sem uso de mock.

@@ -6,10 +6,10 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { usePatientReviews } from "@/api/callers/reviews";
 import type { PatientReview } from "@/api/generator/types/reviews";
+import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
-import { SecondaryPageHeader } from "@/components/ui/secondary-page-header";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -142,7 +142,7 @@ export const ReviewsLogic = () => {
       showMobileNavigation={false}
     >
       <section className="mx-auto min-h-screen w-full max-w-[430px] bg-background px-5 py-5 sm:max-w-xl md:py-8">
-        <SecondaryPageHeader
+        <AppPageHeader
           backHref="/app/profile"
           backLabel="Voltar para perfil"
           className="mb-4"

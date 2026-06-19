@@ -236,3 +236,13 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm check`
 - Smoke HTTP real em `GET /api/private/patient/reviews?page=1&limit=3` com sessão real de paciente, confirmando retorno de `psychologist_crp` e `psychologist_gender`.
 - Browser local/CDP mobile 390x844 em `http://localhost:3002/app/reviews` com sessão real de paciente, confirmando `Psicóloga • CRP DEMO/00005`, ausência de `Ver perfil`, apenas 1 ícone de estrela no indicador compacto da primeira avaliação e setinhas de perfil no topo dos cards.
+
+## Execução complementar - 2026-06-19 - Header premium de avaliações feitas
+
+- Pedido do usuário: padronizar o header de `/app/reviews` com o mesmo padrão visual das telas da família `Salvos` e `Meus posts e comentários`.
+- Frontend: a tela `Avaliações feitas` deixou de usar `SecondaryPageHeader` e passou a reutilizar `AppPageHeader`, o mesmo componente aplicado em `/app/posts/saved` e `/app/posts/mine`.
+- O header agora fica em card branco/surface com cantos arredondados, borda suave, sombra discreta, botão de voltar em círculo azul-claro à esquerda e título `Avaliações feitas` centralizado.
+- Escopo restrito ao header: nenhum card de avaliação, conteúdo, query, endpoint, DTO, schema Prisma, migration ou package foi alterado.
+- Builder/Quick Copy segue indisponível como ferramenta callable neste ambiente; a validação visual usou a tela local e as referências locais `_product/proto/Avaliações Feitas - Paciente.jpg`, `_product/proto/Posts Salvos.jpg` e `_product/proto/Meus Posts - Paciente.jpg`.
+- ADR atualizado: `adrs/0023-avaliacoes-paciente-elegibilidade-contato.md`.
+- Validações executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome headless local no `next start` em `/app/reviews`, confirmando o header em grid/card surface branco, botão circular azul-claro de voltar para `/app/profile` e título preservado. A API exibiu erro real de conexão/listagem com token de smoke, sem uso de mock.
