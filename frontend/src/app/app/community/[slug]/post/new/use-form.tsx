@@ -32,12 +32,8 @@ const contentGuidancePlaceholder =
 
 const buildFields = ({
   communityOptions,
-  isPsychologist,
   loadingCommunities,
-}: Pick<
-  UseCreateCommunityPostFormParams,
-  "communityOptions" | "isPsychologist" | "loadingCommunities"
->) =>
+}: Pick<UseCreateCommunityPostFormParams, "communityOptions" | "loadingCommunities">) =>
   [
     {
       name: "community_slug",
@@ -59,16 +55,18 @@ const buildFields = ({
     },
     {
       name: "title",
-      field: "input",
+      field: "textarea",
       id: "create-post-title",
       label: "Título do post",
       placeholder: "Título (Diga o assunto ou faça uma pergunta)",
       required: true,
       max: 140,
       autoFocus: true,
+      rows: 2,
+      autoGrow: true,
       className: "gap-0 [&>span:first-child]:sr-only",
       inputClassName:
-        "create-post-title-input h-auto rounded-none border-0 border-transparent bg-transparent px-0 py-2 shadow-none focus:border-transparent focus:ring-0",
+        "create-post-title-input min-h-16 resize-none overflow-hidden rounded-none border-0 border-transparent bg-transparent px-0 py-2 shadow-none focus:border-transparent focus:ring-0",
     },
     {
       name: "content",
@@ -77,17 +75,17 @@ const buildFields = ({
       label: "Conteúdo do post",
       placeholder: contentGuidancePlaceholder,
       required: true,
-      rows: isPsychologist ? 11 : 12,
+      rows: 5,
       max: 2000,
       autoGrow: false,
-      className: "min-h-0 gap-0 [&>span:first-child]:sr-only",
+      className: "min-h-0 flex flex-1 flex-col gap-0 [&>span:first-child]:sr-only",
       inputClassName:
-        "create-post-content-input min-h-[44dvh] resize-none overflow-y-auto rounded-none border-0 border-transparent bg-transparent px-0 py-2 shadow-none focus:border-transparent focus:ring-0 sm:min-h-[22rem]",
+        "create-post-content-input min-h-0 flex-1 resize-none overflow-y-auto rounded-none border-0 border-transparent bg-transparent px-0 py-2 shadow-none focus:border-transparent focus:ring-0",
     },
     {
       name: "anonymous",
       field: "switch",
-      label: "Publicar anonimamente?",
+      label: "Publicar anonimamente",
       className: "hidden",
     },
   ] satisfies Field<CreateCommunityPostForm>[];
@@ -104,12 +102,11 @@ export const toCreateCommunityPostPayload = (
 export const useCreateCommunityPostForm = ({
   communityOptions,
   defaultCommunitySlug,
-  isPsychologist,
   loadingCommunities,
 }: UseCreateCommunityPostFormParams) => {
   const fields = useMemo(
-    () => buildFields({ communityOptions, isPsychologist, loadingCommunities }),
-    [communityOptions, isPsychologist, loadingCommunities],
+    () => buildFields({ communityOptions, loadingCommunities }),
+    [communityOptions, loadingCommunities],
   );
 
   return useFormList<CreateCommunityPostForm>({

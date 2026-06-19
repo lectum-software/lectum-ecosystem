@@ -404,11 +404,11 @@ export const CreateCommunityPostLogic = () => {
 
             <div className="flex min-w-0 items-center gap-2.5">
               <span className="min-w-0 text-[0.78rem] font-bold leading-4 text-muted sm:text-sm">
-                Publicar anonimamente?
+                Publicar anonimamente
               </span>
               <button
                 aria-checked={checked}
-                aria-label="Publicar anonimamente?"
+                aria-label="Publicar anonimamente"
                 className={cn(
                   "relative h-7 w-12 shrink-0 rounded-full bg-surface-muted ring-1 ring-border transition focus:outline-none focus:ring-4 focus:ring-primary/15",
                   checked && "bg-primary ring-primary/20",
@@ -467,7 +467,7 @@ export const CreateCommunityPostLogic = () => {
     >
       <div
         className={cn(
-          "fixed inset-0 z-[70] flex items-end justify-center bg-foreground/[0.06] transition-opacity duration-200 ease-out",
+          "fixed inset-0 z-[70] flex items-end justify-center bg-slate-950/[0.025] transition-opacity duration-200 ease-out sm:bg-slate-950/[0.018]",
           isSheetOpen ? "opacity-100" : "opacity-0",
         )}
       >
@@ -530,10 +530,10 @@ export const CreateCommunityPostLogic = () => {
             onSubmit={onSubmit}
           >
             <div
-              className="min-h-0 flex-1 overflow-y-auto px-5 pt-4 pb-4"
+              className="flex min-h-0 flex-1 flex-col overflow-hidden px-5 pt-4 pb-4"
               onPointerDown={preserveEditorFocusFromBlankTap}
             >
-              <div className="grid min-h-full grid-rows-[auto_auto_1fr_auto] gap-3">
+              <div className="flex min-h-0 flex-1 flex-col gap-3">
                 <div className="flex items-start justify-between gap-3">
                   {formProps.fields
                     .filter((field) => field.name === "community_slug")
@@ -544,7 +544,7 @@ export const CreateCommunityPostLogic = () => {
                   {formProps.fields.filter((field) => field.name === "title").map(renderFormField)}
                 </div>
 
-                <div className="min-h-0" onPointerDown={preserveEditorFocusFromBlankTap}>
+                <div className="min-h-0 flex-1" onPointerDown={preserveEditorFocusFromBlankTap}>
                   {formProps.fields
                     .filter((field) => field.name === "content")
                     .map(renderFormField)}

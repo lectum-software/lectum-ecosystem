@@ -112,10 +112,11 @@ a {
 }
 
 .create-post-title-input::placeholder {
-  color: #9aa8ba;
-  font-size: 1.18rem;
-  font-weight: 600;
-  letter-spacing: -0.015em;
+  color: #a3afbf;
+  font-size: 1.08rem;
+  font-weight: 500;
+  line-height: 1.32;
+  letter-spacing: -0.012em;
   opacity: 1;
 }
 
@@ -145,6 +146,10 @@ a {
 @media (min-width: 640px) {
   .create-post-title-input {
     font-size: 1.52rem;
+  }
+
+  .create-post-title-input::placeholder {
+    font-size: 1.16rem;
   }
 }
 

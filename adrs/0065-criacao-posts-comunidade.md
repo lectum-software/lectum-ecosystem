@@ -142,3 +142,28 @@ Validacao complementar:
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
 - Chrome headless local em `http://localhost:3000/app/community/feed/post/new`, com sessao real recente de paciente, validou: erro de comunidade removido apos selecao, sem alerta geral ativo apos correcao, titulo digitado em 24.32px/900, copy `Publicar anonimamente?`, tip com texto atualizado e fechamento por `X` mantendo `aria-checked=true` no switch.
+
+## Atualizacao 2026-06-19 - placeholder responsivo, scroll interno e backdrop leve
+
+O editor em sheet de `Criar Post` recebeu novo refinamento visual e de comportamento sem alterar API, schema, payload, anonimato ou regras de publicacao.
+
+Decisoes complementares:
+
+- O texto visivel e acessivel do switch de paciente passa a ser `Publicar anonimamente`, removendo o ponto de interrogacao para soar como opcao direta.
+- O titulo deixa de usar input de linha unica e passa a usar o controller de textarea da fundacao de formularios, permitindo que o placeholder quebre linha quando necessario sem truncar nem espremer a copy.
+- O placeholder do titulo mantem hierarquia acima do corpo, mas com cor, peso e tamanho mais leves do que o texto real digitado.
+- A area principal da sheet usa layout flex sem scroll externo inicial; a rolagem fica no textarea de conteudo via `overflow-y: auto`, aparecendo apenas quando o texto ultrapassa a altura disponivel.
+- O backdrop foi reduzido para opacidade quase transparente, especialmente no desktop, para manter o efeito de modal moderna sem transformar o fundo em uma tela cinza desligada.
+
+Consequencias:
+
+- O editor preserva o comportamento mobile-first e a sensacao de composicao livre, mas o placeholder do titulo passa a caber melhor em telas estreitas.
+- A barra de rolagem deixa de aparecer em estado vazio por excesso de altura estatica e continua disponivel quando o usuario escreve conteudos longos.
+- O desktop fica visualmente menos pesado sem trocar a arquitetura de rota ou introduzir route interception.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- Chrome headless local em `http://localhost:3000/app/community/feed/post/new`, com sessao real recente de paciente, validou: titulo renderizado como `TEXTAREA`, placeholder claro e responsivo, texto real do titulo em 24.32px/900, switch sem interrogacao, `content` com `overflow-y: auto`, area externa sem scroll inicial (`scrollHeight == clientHeight`) e backdrop em opacidade baixa.

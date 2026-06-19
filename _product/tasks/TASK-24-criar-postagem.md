@@ -227,3 +227,16 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Builder/Quick Copy segue indisponivel como ferramenta neste ambiente; a validacao visual usa os prototipos locais e os screenshots anexados pelo usuario.
 - ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome headless local em `http://localhost:3000/app/community/feed/post/new` com sessao real recente, validando hierarquia do titulo (24.32px/900), limpeza dos erros corrigidos, copy curta do switch, tip com X independente e backdrop mais leve.
+
+## Complemento 2026-06-19 - placeholder, rolagem e overlay do editor em sheet
+
+- Pedido do usuario: novos ajustes finos na tela `Criar Post`, mantendo o editor livre em sheet.
+- Frontend: o microtexto do switch foi alterado para `Publicar anonimamente`, sem ponto de interrogacao, incluindo o `aria-label`.
+- O campo de titulo passou a usar o controller de textarea da fundacao da TASK-02 para permitir quebra de linha do placeholder, mantendo estilo borderless, hierarquia de titulo e texto digitado forte.
+- O placeholder do titulo foi suavizado com menor contraste, menor peso e tamanho controlado para caber em duas linhas quando necessario sem parecer conteudo digitado.
+- A area de edicao foi reorganizada em flex para nao criar rolagem externa quando o conteudo vazio cabe no espaco util; o textarea de conteudo permanece com `overflow-y-auto` e so rola quando o texto exceder sua propria altura.
+- O backdrop da sheet foi reduzido para opacidade muito baixa (`bg-slate-950/[0.025]` no mobile e `[0.018]` no desktop), preservando a modalidade sem deixar o fundo com aparencia de tela cinza apagada.
+- Escopo: sem mudancas de backend, Prisma, migrations, endpoint, payload, regras de anonimato, validacoes de dominio ou packages.
+- Builder/Quick Copy segue indisponivel como ferramenta neste ambiente; a validacao visual usou os prototipos locais, os screenshots anexados e Chrome headless local.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome headless local em `http://localhost:3000/app/community/feed/post/new` com sessao real recente, validando titulo como `TEXTAREA`, placeholder claro em 18.56px, texto digitado em 24.32px/900, switch sem `?`, conteudo com `overflow-y: auto`, area externa sem scroll inicial e overlay em baixa opacidade.
