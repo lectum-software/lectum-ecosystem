@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
   type PointerEvent as ReactPointerEvent,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -19,7 +20,7 @@ import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
-import { COMMUNITY_FEED_SLUG } from "@/utils/community";
+import { COMMUNITY_FEED_SLUG, DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
 import { toCreateCommunityPostPayload, useCreateCommunityPostForm } from "./use-form";
 
@@ -81,7 +82,13 @@ const communityNameCollator = new Intl.Collator("pt-BR", {
 const SHEET_CLOSE_DELAY_MS = 220;
 const EDITOR_FIELD_IDS = new Set(["create-post-title", "create-post-content"]);
 
-export const CreateCommunityPostLogic = () => {
+type CreateCommunityPostLogicProps = {
+  asModalSlot?: boolean;
+};
+
+export const CreateCommunityPostLogic = ({
+  asModalSlot = false,
+}: CreateCommunityPostLogicProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = useParams<{ slug?: string | string[] }>();
@@ -126,19 +133,6 @@ export const CreateCommunityPostLogic = () => {
     },
     onError: (error) => setApiError(resolveCreatePostError(error)),
   });
-
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => setIsSheetOpen(true));
-    const focusTimer = window.setTimeout(() => {
-      document.getElementById("create-post-title")?.focus({ preventScroll: true });
-    }, 280);
-
-    return () => {
-      window.cancelAnimationFrame(frame);
-      window.clearTimeout(focusTimer);
-      if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
-    };
-  }, []);
 
   useEffect(() => {
     if (!defaultCommunitySlug || communityOptions.length === 0) return;
@@ -241,14 +235,47 @@ export const CreateCommunityPostLogic = () => {
     focusLastEditor();
   };
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsSheetOpen(false);
     if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
 
     closeTimerRef.current = window.setTimeout(() => {
-      navigateBackWithFallback(router);
+      const fallbackHref =
+        routeSlug && routeSlug !== COMMUNITY_FEED_SLUG
+          ? `/app/community/${routeSlug}`
+          : DEFAULT_COMMUNITY_FEED_HREF;
+
+      navigateBackWithFallback(router, fallbackHref);
     }, SHEET_CLOSE_DELAY_MS);
-  };
+  }, [routeSlug, router]);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setIsSheetOpen(true));
+    const focusTimer = window.setTimeout(() => {
+      document.getElementById("create-post-title")?.focus({ preventScroll: true });
+    }, 280);
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousDocumentOverflow = document.documentElement.style.overflow;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        handleClose();
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(focusTimer);
+      if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousDocumentOverflow;
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [handleClose]);
 
   const onSubmit = hook.handleSubmit((values) => {
     setApiError(null);
@@ -459,142 +486,151 @@ export const CreateCommunityPostLogic = () => {
     </button>
   );
 
+  const sheet = (
+    <div
+      className={cn(
+        "fixed inset-0 z-[70] flex items-end justify-center transition-opacity duration-200 ease-out",
+        asModalSlot
+          ? "bg-slate-950/5 backdrop-blur-[6px] supports-[backdrop-filter]:bg-white/10"
+          : "bg-background",
+        isSheetOpen ? "opacity-100" : "opacity-0",
+      )}
+    >
+      <section
+        aria-labelledby="create-post-title-heading"
+        aria-modal="true"
+        className={cn(
+          "flex h-[calc(100dvh_-_env(safe-area-inset-top)_-_0.75rem)] w-full max-w-[min(100vw,44rem)] flex-col overflow-hidden rounded-t-[2rem] border border-border bg-surface text-foreground shadow-[var(--lectum-shadow)] transition-transform duration-300 ease-out sm:mb-6 sm:h-[min(86dvh,760px)] sm:rounded-[2rem]",
+          isSheetOpen ? "translate-y-0" : "translate-y-full",
+        )}
+        role="dialog"
+      >
+        <header className="relative flex h-16 shrink-0 items-center justify-center border-border/70 border-b px-4">
+          <button
+            aria-label="Fechar criação de post e voltar"
+            className="absolute left-3 grid h-10 w-10 place-items-center rounded-full text-foreground transition hover:bg-surface-muted focus:outline-none focus:ring-4 focus:ring-primary/15"
+            onClick={handleClose}
+            type="button"
+          >
+            <X className="h-5 w-5" aria-hidden="true" />
+          </button>
+          <h1
+            className="text-[1.2rem] font-black tracking-[-0.03em]"
+            id="create-post-title-heading"
+          >
+            Criar Post
+          </h1>
+          <div className="absolute right-3">
+            <button
+              aria-expanded={isGuidanceOpen}
+              aria-label="Ver diretrizes do post"
+              className="grid h-10 w-10 place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15"
+              onClick={() => {
+                setIsGuidanceOpen((current) => !current);
+                focusLastEditor();
+              }}
+              onMouseDown={(event) => event.preventDefault()}
+              tabIndex={-1}
+              type="button"
+            >
+              <Info className="h-5 w-5" aria-hidden="true" />
+            </button>
+            {isGuidanceOpen ? (
+              <div className="absolute top-12 right-0 z-30 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-border bg-surface px-4 py-3 text-xs leading-5 text-muted shadow-[var(--lectum-shadow-soft)]">
+                {guidanceText}
+              </div>
+            ) : null}
+          </div>
+        </header>
+
+        <form
+          className="flex min-h-0 flex-1 flex-col"
+          noValidate
+          onFocusCapture={(event) => {
+            const target = event.target as HTMLElement;
+            if (EDITOR_FIELD_IDS.has(target.id)) {
+              lastFocusedEditorIdRef.current = target.id;
+            }
+          }}
+          onSubmit={onSubmit}
+        >
+          <div
+            className="flex min-h-0 flex-1 flex-col overflow-hidden px-5 pt-4 pb-4"
+            onPointerDown={preserveEditorFocusFromBlankTap}
+          >
+            <div className="flex min-h-0 flex-1 flex-col gap-3">
+              <div className="flex items-start justify-between gap-3">
+                {formProps.fields
+                  .filter((field) => field.name === "community_slug")
+                  .map(renderFormField)}
+              </div>
+
+              <div onPointerDown={preserveEditorFocusFromBlankTap}>
+                {formProps.fields.filter((field) => field.name === "title").map(renderFormField)}
+              </div>
+
+              <div className="min-h-0 flex-1" onPointerDown={preserveEditorFocusFromBlankTap}>
+                {formProps.fields.filter((field) => field.name === "content").map(renderFormField)}
+              </div>
+
+              <div className="grid gap-3 pb-2">
+                {communitiesQuery.isError ? (
+                  <InlineAlert title="Não foi possível carregar comunidades" variant="error">
+                    Verifique sua conexão e tente novamente.
+                  </InlineAlert>
+                ) : null}
+
+                {hasNoCommunities ? (
+                  <InlineAlert title="Nenhuma comunidade disponível" variant="info">
+                    Ainda não há comunidades publicadas para receber posts.
+                  </InlineAlert>
+                ) : null}
+
+                {visibleError ? (
+                  <InlineAlert title="Não foi possível postar" variant="error">
+                    {visibleError}
+                  </InlineAlert>
+                ) : null}
+              </div>
+            </div>
+          </div>
+
+          <footer className="relative shrink-0 border-border/70 border-t bg-surface/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur supports-[backdrop-filter]:bg-surface/90">
+            <div className="flex min-h-12 items-center justify-between gap-3">
+              {isPsychologist ? renderPsychologistMediaButton() : renderAnonymousControls()}
+
+              <Button
+                className={cn(
+                  "h-12 min-w-[6.5rem] shrink-0 rounded-full px-6 text-base font-black shadow-[var(--lectum-shadow-soft)] disabled:bg-surface-muted disabled:text-muted disabled:opacity-100 disabled:shadow-none",
+                  !requiredFieldsReady &&
+                    "bg-surface-muted text-muted shadow-none hover:bg-surface-muted",
+                )}
+                disabled={isSubmitDisabled}
+                type="submit"
+              >
+                {mutation.isPending ? (
+                  <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+                ) : null}
+                Postar
+              </Button>
+            </div>
+          </footer>
+        </form>
+      </section>
+    </div>
+  );
+
+  if (asModalSlot) {
+    return sheet;
+  }
+
   return (
     <PrivateTemplate
       contentClassName="max-w-none bg-background px-0 py-0"
       showMobileNavigation={false}
       showNavigation={false}
     >
-      <div
-        className={cn(
-          "fixed inset-0 z-[70] flex items-end justify-center bg-slate-950/[0.025] transition-opacity duration-200 ease-out sm:bg-slate-950/[0.018]",
-          isSheetOpen ? "opacity-100" : "opacity-0",
-        )}
-      >
-        <section
-          aria-labelledby="create-post-title-heading"
-          aria-modal="true"
-          className={cn(
-            "flex h-[calc(100dvh_-_env(safe-area-inset-top)_-_0.75rem)] w-full max-w-[min(100vw,44rem)] flex-col overflow-hidden rounded-t-[2rem] border border-border bg-surface text-foreground shadow-[var(--lectum-shadow)] transition-transform duration-300 ease-out sm:mb-6 sm:h-[min(86dvh,760px)] sm:rounded-[2rem]",
-            isSheetOpen ? "translate-y-0" : "translate-y-full",
-          )}
-          role="dialog"
-        >
-          <header className="relative flex h-16 shrink-0 items-center justify-center border-border/70 border-b px-4">
-            <button
-              aria-label="Fechar criação de post e voltar"
-              className="absolute left-3 grid h-10 w-10 place-items-center rounded-full text-foreground transition hover:bg-surface-muted focus:outline-none focus:ring-4 focus:ring-primary/15"
-              onClick={handleClose}
-              type="button"
-            >
-              <X className="h-5 w-5" aria-hidden="true" />
-            </button>
-            <h1
-              className="text-[1.2rem] font-black tracking-[-0.03em]"
-              id="create-post-title-heading"
-            >
-              Criar Post
-            </h1>
-            <div className="absolute right-3">
-              <button
-                aria-expanded={isGuidanceOpen}
-                aria-label="Ver diretrizes do post"
-                className="grid h-10 w-10 place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15"
-                onClick={() => {
-                  setIsGuidanceOpen((current) => !current);
-                  focusLastEditor();
-                }}
-                onMouseDown={(event) => event.preventDefault()}
-                tabIndex={-1}
-                type="button"
-              >
-                <Info className="h-5 w-5" aria-hidden="true" />
-              </button>
-              {isGuidanceOpen ? (
-                <div className="absolute top-12 right-0 z-30 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-border bg-surface px-4 py-3 text-xs leading-5 text-muted shadow-[var(--lectum-shadow-soft)]">
-                  {guidanceText}
-                </div>
-              ) : null}
-            </div>
-          </header>
-
-          <form
-            className="flex min-h-0 flex-1 flex-col"
-            noValidate
-            onFocusCapture={(event) => {
-              const target = event.target as HTMLElement;
-              if (EDITOR_FIELD_IDS.has(target.id)) {
-                lastFocusedEditorIdRef.current = target.id;
-              }
-            }}
-            onSubmit={onSubmit}
-          >
-            <div
-              className="flex min-h-0 flex-1 flex-col overflow-hidden px-5 pt-4 pb-4"
-              onPointerDown={preserveEditorFocusFromBlankTap}
-            >
-              <div className="flex min-h-0 flex-1 flex-col gap-3">
-                <div className="flex items-start justify-between gap-3">
-                  {formProps.fields
-                    .filter((field) => field.name === "community_slug")
-                    .map(renderFormField)}
-                </div>
-
-                <div onPointerDown={preserveEditorFocusFromBlankTap}>
-                  {formProps.fields.filter((field) => field.name === "title").map(renderFormField)}
-                </div>
-
-                <div className="min-h-0 flex-1" onPointerDown={preserveEditorFocusFromBlankTap}>
-                  {formProps.fields
-                    .filter((field) => field.name === "content")
-                    .map(renderFormField)}
-                </div>
-
-                <div className="grid gap-3 pb-2">
-                  {communitiesQuery.isError ? (
-                    <InlineAlert title="Não foi possível carregar comunidades" variant="error">
-                      Verifique sua conexão e tente novamente.
-                    </InlineAlert>
-                  ) : null}
-
-                  {hasNoCommunities ? (
-                    <InlineAlert title="Nenhuma comunidade disponível" variant="info">
-                      Ainda não há comunidades publicadas para receber posts.
-                    </InlineAlert>
-                  ) : null}
-
-                  {visibleError ? (
-                    <InlineAlert title="Não foi possível postar" variant="error">
-                      {visibleError}
-                    </InlineAlert>
-                  ) : null}
-                </div>
-              </div>
-            </div>
-
-            <footer className="relative shrink-0 border-border/70 border-t bg-surface/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur supports-[backdrop-filter]:bg-surface/90">
-              <div className="flex min-h-12 items-center justify-between gap-3">
-                {isPsychologist ? renderPsychologistMediaButton() : renderAnonymousControls()}
-
-                <Button
-                  className={cn(
-                    "h-12 min-w-[6.5rem] shrink-0 rounded-full px-6 text-base font-black shadow-[var(--lectum-shadow-soft)] disabled:bg-surface-muted disabled:text-muted disabled:opacity-100 disabled:shadow-none",
-                    !requiredFieldsReady &&
-                      "bg-surface-muted text-muted shadow-none hover:bg-surface-muted",
-                  )}
-                  disabled={isSubmitDisabled}
-                  type="submit"
-                >
-                  {mutation.isPending ? (
-                    <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
-                  ) : null}
-                  Postar
-                </Button>
-              </div>
-            </footer>
-          </form>
-        </section>
-      </div>
+      {sheet}
     </PrivateTemplate>
   );
 };

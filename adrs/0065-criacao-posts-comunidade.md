@@ -167,3 +167,29 @@ Validacao complementar:
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
 - Chrome headless local em `http://localhost:3000/app/community/feed/post/new`, com sessao real recente de paciente, validou: titulo renderizado como `TEXTAREA`, placeholder claro e responsivo, texto real do titulo em 24.32px/900, switch sem interrogacao, `content` com `overflow-y: auto`, area externa sem scroll inicial (`scrollHeight == clientHeight`) e backdrop em opacidade baixa.
+
+## Atualizacao 2026-06-19 - modal route interceptada para Criar Post
+
+A experiencia de criacao de post passou de uma sheet em rota dedicada para uma modal route interceptada quando aberta a partir do feed ou do detalhe de comunidade.
+
+Decisoes complementares:
+
+- Adicionar um `layout.tsx` em `/app/community/[slug]` com slot paralelo `@modal`, mantendo `children` para a tela de origem e `modal` para sobreposicoes contextuais.
+- Criar `@modal/(.)post/new/page.tsx` para interceptar a navegacao client-side para `/app/community/[slug]/post/new` e renderizar `CreateCommunityPostLogic` em modo `asModalSlot`.
+- Manter `/app/community/[slug]/post/new/page.tsx` como fallback direto, para reload, compartilhamento de URL e acessos sem estado anterior de navegacao.
+- Separar comportamento visual por contexto: no slot interceptado, o overlay e transparente com blur; no acesso direto, a pagina continua usando fundo de aplicacao porque nao ha conteudo anterior confiavel para desfocar.
+- Ajustar os CTAs do feed filtrado para permanecerem sob `/app/community/feed/post/new?community=slug`, evitando trocar o `children` de fundo para uma rota de detalhe e preservando a pre-selecao da comunidade por query string.
+- Bloquear o scroll do documento e permitir fechamento por `Esc` enquanto a modal esta aberta, alem do fechamento explicito pelo `X`.
+
+Consequencias:
+
+- Em navegacao interna, o feed/detalhe permanece como contexto visual atras da criacao de post, resolvendo a limitacao anterior em que uma rota de pagina inteira nao tinha conteudo real para desfocar.
+- URLs diretas continuam funcionais e semanticamente canonicas, mas nao prometem blur sobre feed porque nao carregam uma origem anterior.
+- A mudanca fica restrita ao frontend e a roteamento Next, sem alterar API, payload, schema, regras de anonimato ou packages.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- Chrome headless local em `http://127.0.0.1:3010/app/community/feed`: sucesso ao clicar no CTA de criar post com cookie de smoke local, navegando para `/app/community/feed/post/new`, renderizando o dialog `Criar Post` pelo slot interceptado e expondo overlay com `backdrop-filter: blur(6px)` e fundo translucido.
+- `pnpm check`: sucesso.

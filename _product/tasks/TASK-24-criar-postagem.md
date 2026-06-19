@@ -240,3 +240,16 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Builder/Quick Copy segue indisponivel como ferramenta neste ambiente; a validacao visual usou os prototipos locais, os screenshots anexados e Chrome headless local.
 - ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome headless local em `http://localhost:3000/app/community/feed/post/new` com sessao real recente, validando titulo como `TEXTAREA`, placeholder claro em 18.56px, texto digitado em 24.32px/900, switch sem `?`, conteudo com `overflow-y: auto`, area externa sem scroll inicial e overlay em baixa opacidade.
+
+## Complemento 2026-06-19 - modal real sobre o feed
+
+- Pedido do usuario: transformar a experiencia de `Criar Post` em uma modal real, mantendo o feed visivel/desfocado atras quando a criacao nasce do feed ou do detalhe de comunidade.
+- Frontend: foi adicionada uma parallel route `@modal` em `/app/community/[slug]` com rota interceptada `@modal/(.)post/new`, para que a navegacao interna para `/app/community/[slug]/post/new` renderize o editor no slot de modal sem desmontar a rota de origem.
+- A logica compartilhada `CreateCommunityPostLogic` agora aceita `asModalSlot`; nesse modo ela renderiza apenas a sheet/modal, sem criar outro `PrivateTemplate`, evitando tela inteira cinza e permitindo o backdrop real sobre o conteudo anterior.
+- A rota direta canonica `/app/community/[slug]/post/new` continua existindo como fallback de acesso direto/reload, preservando compatibilidade e evitando dependencia exclusiva de historico client-side.
+- Links do feed filtrado por comunidade passaram a usar `/app/community/feed/post/new?community=slug`, preservando a rota de fundo `feed` e mantendo a pre-selecao real da comunidade por query string.
+- O overlay do slot modal usa opacidade muito baixa e `backdrop-blur-[6px]`, com fechamento por `X`, `Esc` e bloqueio temporario do scroll do documento enquanto a modal esta aberta.
+- Escopo: sem mudancas de backend, Prisma, migrations, endpoint, payload, regras de anonimato, validacoes de dominio ou packages.
+- Builder/Quick Copy segue indisponivel como ferramenta neste ambiente; a validacao visual usou os prototipos locais, os screenshots anexados e Chrome headless local.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`; Chrome headless local em `http://127.0.0.1:3010/app/community/feed` confirmou navegacao interna para `/app/community/feed/post/new` via rota interceptada, dialog `Criar Post` no slot modal e overlay com `backdrop-filter: blur(6px)`/fundo translucido. `pnpm check` executado na raiz nesta mesma alteracao.

@@ -2563,7 +2563,7 @@ export const CommunityFeedLogic = () => {
   const deferredSearch = useDeferredValue(search.trim());
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const createPostHref = selectedCommunitySlug
-    ? communityCreatePostHref(selectedCommunitySlug)
+    ? `${COMMUNITY_CREATE_POST_HREF}?community=${encodeURIComponent(selectedCommunitySlug)}`
     : COMMUNITY_CREATE_POST_HREF;
   const query = useMemo(
     () => ({
