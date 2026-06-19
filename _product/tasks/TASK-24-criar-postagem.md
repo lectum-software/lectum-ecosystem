@@ -253,3 +253,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Builder/Quick Copy segue indisponivel como ferramenta neste ambiente; a validacao visual usou os prototipos locais, os screenshots anexados e Chrome headless local.
 - ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`; Chrome headless local em `http://127.0.0.1:3010/app/community/feed` confirmou navegacao interna para `/app/community/feed/post/new` via rota interceptada, dialog `Criar Post` no slot modal e overlay com `backdrop-filter: blur(6px)`/fundo translucido. `pnpm check` executado na raiz nesta mesma alteracao.
+
+## Complemento 2026-06-19 - ajustes de contexto, espaçamento e erros inline
+
+- Pedido do usuário: garantir que `Criar Post` abra como sobreposição contextual sobre o feed ou comunidade atual, aproximar título e conteúdo e remover a faixa geral vermelha `Não foi possível postar`.
+- Frontend: os CTAs de criação do feed e do detalhe de comunidade agora navegam com `scroll={false}`; o `PrivateTemplate` passou a aceitar essa opção no botão central mobile para não reposicionar a tela de fundo ao abrir a rota interceptada.
+- Fechamento: o fallback do `X` preserva o recorte do feed quando a criação veio de `/app/community/feed/post/new?community=slug`, evitando retorno para outro contexto quando não houver histórico confiável.
+- Formulário: título e conteúdo foram agrupados em um bloco contínuo, sem gap extra entre eles, e o slot reservado de erro do título ficou menor para que os campos pareçam partes do mesmo post.
+- Validação: o alerta/card geral `Não foi possível postar` foi removido; erros conhecidos de API continuam mapeados para os campos reais (`community_slug`, `title`, `content`) e erros inesperados aparecem via toast, sem faixa vermelha geral no editor.
+- Escopo: sem mudanças de backend, Prisma, migrations, endpoints, payload, regras de anonimato, permissões de mídia ou packages.
+- Builder/Quick Copy segue indisponível como ferramenta neste ambiente; a validação visual usou os protótipos locais, a tela existente e Chrome headless local.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`; Chrome headless local em `http://127.0.0.1:3011/app/community/feed` confirmou rota interceptada `/app/community/feed/post/new` com dialog `Criar Post`, ausência da faixa `Não foi possível postar` e erro inline de título/conteúdo. A API local em `localhost:3001` não estava ativa durante o smoke visual, então o feed permaneceu em estado real de erro de conexão, sem uso de mock.

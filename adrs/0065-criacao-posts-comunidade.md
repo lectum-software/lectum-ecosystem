@@ -193,3 +193,28 @@ Validacao complementar:
 - `pnpm --dir frontend build`: sucesso.
 - Chrome headless local em `http://127.0.0.1:3010/app/community/feed`: sucesso ao clicar no CTA de criar post com cookie de smoke local, navegando para `/app/community/feed/post/new`, renderizando o dialog `Criar Post` pelo slot interceptado e expondo overlay com `backdrop-filter: blur(6px)` e fundo translucido.
 - `pnpm check`: sucesso.
+
+## Atualização 2026-06-19 - preservação de contexto e erros inline no editor
+
+O editor interceptado de `Criar Post` foi ajustado para reforçar que a criação é uma sobreposição contextual, não uma troca visual de página.
+
+Decisões complementares:
+
+- Todos os CTAs de criação vindos do feed e do detalhe de comunidade usam navegação client-side com `scroll={false}`. O objetivo é preservar posição, rota de fundo e contexto visual enquanto o slot `@modal` renderiza o editor.
+- O `PrivateTemplate` passa a aceitar a opção `scroll` no `bottomNavigationCenterAction`, evitando que o botão central mobile do feed tenha comportamento diferente do FAB desktop.
+- O fallback de fechamento da modal preserva a query `?community=slug` quando a criação nasceu do feed filtrado, para não devolver o usuário a outro contexto se o histórico de navegação não estiver disponível.
+- Título e conteúdo ficam em um bloco visual contínuo, com o gap entre campos removido e o slot de erro do título reduzido. A decisão mantém a fundação de formulários da TASK-02 e apenas ajusta classes específicas do editor.
+- O card geral `Não foi possível postar` foi removido do editor. Erros conhecidos vindos da API são direcionados aos campos reais (`community_slug`, `title`, `content`); falhas inesperadas continuam usando toast, sem reintroduzir uma faixa vermelha global.
+
+Consequências:
+
+- O fundo do feed ou da comunidade permanece como referência visual ao abrir a modal por navegação interna, inclusive em CTAs mobile.
+- A validação fica mais localizada: a correção de cada campo remove seu erro inline sem depender de um alerta geral obsoleto.
+- O fluxo continua sem mudança de backend, payload, schema, anonimato, mídia ou packages.
+
+Validação complementar:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- Chrome headless local em `http://127.0.0.1:3011/app/community/feed`: sucesso ao abrir o CTA de criação para `/app/community/feed/post/new`, renderizar o dialog `Criar Post`, manter o fundo do feed em estado real de erro de conexão quando a API local `localhost:3001` não estava ativa, confirmar distância reduzida entre título e conteúdo e ausência do card `Não foi possível postar`; erros inline de título/conteúdo permaneceram visíveis após submit inválido.

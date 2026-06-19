@@ -64,7 +64,8 @@ const buildFields = ({
       autoFocus: true,
       rows: 2,
       autoGrow: true,
-      className: "gap-0 [&>span:first-child]:sr-only",
+      className:
+        "gap-0 [&>span:first-child]:sr-only [&>span:last-child]:min-h-3 [&>span:last-child]:leading-3",
       inputClassName:
         "create-post-title-input min-h-16 resize-none overflow-hidden rounded-none border-0 border-transparent bg-transparent px-0 py-2 shadow-none focus:border-transparent focus:ring-0",
     },

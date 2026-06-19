@@ -22,7 +22,11 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { COMMUNITY_FEED_SLUG, DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
-import { toCreateCommunityPostPayload, useCreateCommunityPostForm } from "./use-form";
+import {
+  type CreateCommunityPostForm,
+  toCreateCommunityPostPayload,
+  useCreateCommunityPostForm,
+} from "./use-form";
 
 type ApiErrorData = {
   error?: string;
@@ -34,13 +38,18 @@ type ApiError = Error & {
   data?: ApiErrorData;
 };
 
+type CreatePostErrorResolution = {
+  field?: keyof CreateCommunityPostForm;
+  message: string;
+};
+
 const normalizeParam = (value: string | string[] | undefined) => {
   if (Array.isArray(value)) return value[0];
 
   return value;
 };
 
-const resolveCreatePostError = (error: unknown) => {
+const resolveCreatePostError = (error: unknown): CreatePostErrorResolution => {
   const apiError = error as ApiError;
   const rawMessage =
     apiError?.data?.error ||
@@ -49,28 +58,42 @@ const resolveCreatePostError = (error: unknown) => {
   const normalized = rawMessage.toLowerCase();
 
   if (normalized.includes("comunidade") || normalized.includes("community")) {
-    return "Escolha uma comunidade válida para postar.";
+    return {
+      field: "community_slug",
+      message: "Escolha uma comunidade para postar",
+    };
   }
 
   if (normalized.includes("título") || normalized.includes("titulo")) {
-    return "Informe um título para continuar.";
+    return {
+      field: "title",
+      message: "Escreva um título com pelo menos 3 caracteres",
+    };
   }
 
-  if (normalized.includes("conteúdo") || normalized.includes("conteudo")) {
-    return "Escreva o texto do post para continuar.";
+  if (
+    normalized.includes("conteúdo") ||
+    normalized.includes("conteudo") ||
+    normalized.includes("descri")
+  ) {
+    return {
+      field: "content",
+      message: "Escreva uma descrição com pelo menos 10 caracteres",
+    };
   }
 
   if (normalized.includes("sess") || normalized.includes("token")) {
-    return "Sua sessão precisa estar ativa para criar um post.";
+    return { message: "Sua sessão precisa estar ativa para criar um post." };
   }
 
   if (normalized.includes("network") || normalized.includes("conex")) {
-    return "Não foi possível conectar à API agora. Tente novamente em instantes.";
+    return { message: "Não foi possível conectar à API agora. Tente novamente em instantes." };
   }
 
-  return rawMessage || "Não foi possível postar agora. Tente novamente em instantes.";
+  return {
+    message: rawMessage || "Não foi possível publicar agora. Tente novamente em instantes.",
+  };
 };
-
 const guidanceText =
   "Lembre-se de ser respeitoso com os outros membros. Conteúdos ofensivos ou que violem as diretrizes serão removidos pela moderação.";
 const anonymousTipText =
@@ -96,12 +119,10 @@ export const CreateCommunityPostLogic = ({
   const communitySlugFromQuery = searchParams.get("community")?.trim() || null;
   const storedUser = useAppSelector((state) => state.user);
   const isPsychologist = storedUser?.role === "psicologo";
-  const [apiError, setApiError] = useState<string | null>(null);
   const [isGuidanceOpen, setIsGuidanceOpen] = useState(false);
   const [isAnonymousTipDismissed, setIsAnonymousTipDismissed] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const closeTimerRef = useRef<number | null>(null);
-  const lastEditedValuesRef = useRef({ community: "", content: "", title: "" });
   const lastFocusedEditorIdRef = useRef("create-post-title");
 
   const communitiesQuery = useCommunities({ limit: 50 });
@@ -128,10 +149,25 @@ export const CreateCommunityPostLogic = ({
 
   const mutation = useCreateCommunityPost({
     onSuccess: (post) => {
-      setApiError(null);
       router.push(`/app/community/${post.community.slug}/post/success?postId=${post.id}`);
     },
-    onError: (error) => setApiError(resolveCreatePostError(error)),
+    onError: (error) => {
+      const resolvedError = resolveCreatePostError(error);
+
+      if (resolvedError.field) {
+        hook.setError(
+          resolvedError.field,
+          {
+            message: resolvedError.message,
+            type: "server",
+          },
+          { shouldFocus: true },
+        );
+        return;
+      }
+
+      toast.error(resolvedError.message);
+    },
   });
 
   useEffect(() => {
@@ -166,19 +202,6 @@ export const CreateCommunityPostLogic = ({
   const requiredFieldsReady = Boolean(
     selectedCommunityIsValid && titleMeetsMinimum && contentMeetsMinimum,
   );
-  const activeFormErrorMessages = useMemo(
-    () =>
-      Object.values(hook.formState.errors)
-        .map((error) => error?.message?.toString())
-        .filter(Boolean),
-    [hook.formState.errors],
-  );
-  const visibleError = useMemo(() => {
-    if (apiError) return apiError;
-    if (!hook.formState.isSubmitted) return null;
-
-    return activeFormErrorMessages[0] ?? null;
-  }, [activeFormErrorMessages, apiError, hook.formState.isSubmitted]);
   const hasNoCommunities = communitiesQuery.isSuccess && communityOptions.length === 0;
   const isSubmitDisabled = mutation.isPending || communitiesQuery.isLoading || hasNoCommunities;
 
@@ -199,24 +222,6 @@ export const CreateCommunityPostLogic = ({
       hook.clearErrors("content");
     }
   }, [contentMeetsMinimum, hook, hook.formState.errors.content]);
-
-  useEffect(() => {
-    const nextValues = {
-      community: String(watchedCommunitySlug ?? ""),
-      content: String(watchedContent ?? ""),
-      title: String(watchedTitle ?? ""),
-    };
-    const hasEdited =
-      nextValues.community !== lastEditedValuesRef.current.community ||
-      nextValues.content !== lastEditedValuesRef.current.content ||
-      nextValues.title !== lastEditedValuesRef.current.title;
-
-    lastEditedValuesRef.current = nextValues;
-
-    if (hasEdited && apiError) {
-      setApiError(null);
-    }
-  }, [apiError, watchedCommunitySlug, watchedContent, watchedTitle]);
 
   const focusLastEditor = () => {
     window.setTimeout(() => {
@@ -243,11 +248,13 @@ export const CreateCommunityPostLogic = ({
       const fallbackHref =
         routeSlug && routeSlug !== COMMUNITY_FEED_SLUG
           ? `/app/community/${routeSlug}`
-          : DEFAULT_COMMUNITY_FEED_HREF;
+          : communitySlugFromQuery
+            ? `${DEFAULT_COMMUNITY_FEED_HREF}?community=${encodeURIComponent(communitySlugFromQuery)}`
+            : DEFAULT_COMMUNITY_FEED_HREF;
 
       navigateBackWithFallback(router, fallbackHref);
     }, SHEET_CLOSE_DELAY_MS);
-  }, [routeSlug, router]);
+  }, [communitySlugFromQuery, routeSlug, router]);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => setIsSheetOpen(true));
@@ -278,7 +285,6 @@ export const CreateCommunityPostLogic = ({
   }, [handleClose]);
 
   const onSubmit = hook.handleSubmit((values) => {
-    setApiError(null);
     mutation.mutate({
       slug: values.community_slug,
       body: toCreateCommunityPostPayload(values, isPsychologist),
@@ -342,7 +348,6 @@ export const CreateCommunityPostLogic = ({
               field.onChangeCallback?.(value);
               hook.clearErrors("community_slug");
               clearCorrectedFormErrorsSoon();
-              setApiError(null);
             }}
           />
         </div>
@@ -361,7 +366,6 @@ export const CreateCommunityPostLogic = ({
               hook.clearErrors("title");
             }
             clearCorrectedFormErrorsSoon();
-            setApiError(null);
           }}
         />
       );
@@ -379,7 +383,6 @@ export const CreateCommunityPostLogic = ({
               hook.clearErrors("content");
             }
             clearCorrectedFormErrorsSoon();
-            setApiError(null);
           }}
         />
       );
@@ -565,12 +568,16 @@ export const CreateCommunityPostLogic = ({
                   .map(renderFormField)}
               </div>
 
-              <div onPointerDown={preserveEditorFocusFromBlankTap}>
-                {formProps.fields.filter((field) => field.name === "title").map(renderFormField)}
-              </div>
+              <div className="flex min-h-0 flex-1 flex-col gap-0">
+                <div onPointerDown={preserveEditorFocusFromBlankTap}>
+                  {formProps.fields.filter((field) => field.name === "title").map(renderFormField)}
+                </div>
 
-              <div className="min-h-0 flex-1" onPointerDown={preserveEditorFocusFromBlankTap}>
-                {formProps.fields.filter((field) => field.name === "content").map(renderFormField)}
+                <div className="min-h-0 flex-1" onPointerDown={preserveEditorFocusFromBlankTap}>
+                  {formProps.fields
+                    .filter((field) => field.name === "content")
+                    .map(renderFormField)}
+                </div>
               </div>
 
               <div className="grid gap-3 pb-2">
@@ -583,12 +590,6 @@ export const CreateCommunityPostLogic = ({
                 {hasNoCommunities ? (
                   <InlineAlert title="Nenhuma comunidade disponível" variant="info">
                     Ainda não há comunidades publicadas para receber posts.
-                  </InlineAlert>
-                ) : null}
-
-                {visibleError ? (
-                  <InlineAlert title="Não foi possível postar" variant="error">
-                    {visibleError}
                   </InlineAlert>
                 ) : null}
               </div>

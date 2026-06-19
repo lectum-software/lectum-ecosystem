@@ -43,6 +43,7 @@ type PrivateTemplateProps = PropsWithChildren<{
     ariaLabel: string;
     href: string;
     onClick?: (event: ReactMouseEvent<HTMLAnchorElement>) => void;
+    scroll?: boolean;
     title?: string;
   };
   contentClassName?: string;
@@ -476,6 +477,7 @@ export const PrivateTemplate = ({
                   className="absolute -top-3 grid h-14 w-14 place-items-center rounded-full border-[5px] border-white bg-primary text-white shadow-[0_12px_28px_rgba(48,140,232,0.28)] transition hover:-translate-y-px hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:border-surface dark:shadow-[0_14px_30px_rgb(0_0_0_/_35%)]"
                   href={bottomNavigationCenterAction.href}
                   onClick={bottomNavigationCenterAction.onClick}
+                  scroll={bottomNavigationCenterAction.scroll}
                   title={
                     bottomNavigationCenterAction.title ?? bottomNavigationCenterAction.ariaLabel
                   }
