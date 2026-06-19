@@ -2,7 +2,7 @@ import webPush, { isWebPushConfigured } from "@/config/webPush";
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
-import { getNewPostAuthorScope, isNotificationEnabled } from "./preferences";
+import { getNewPostAuthorScope, isChannelAllowed, isNotificationEnabled } from "./preferences";
 
 const BASE = process.env.BASE || "";
 const DIGEST_STATE_TYPE = "notification_digest_state";
@@ -12,7 +12,10 @@ const MAX_LOOKBACK_MS = 48 * 60 * 60 * 1000;
 const DEFAULT_DIGEST_INTERVAL_MS = 10 * 60 * 1000;
 const TOP_MENTOR_MAX_POSITION = 5;
 
-type DigestKind = "favorites_lunch_digest" | "community_evening_digest";
+type DigestKind =
+  | "favorites_lunch_digest"
+  | "community_evening_digest"
+  | "professional_daily_digest";
 
 type DigestWindowState = {
   last_checked_at?: string;
@@ -50,6 +53,17 @@ type CommunityDigestCandidate = {
   postId: string;
 };
 
+const PROFESSIONAL_DAILY_KEYS = [
+  "clique_whatsapp",
+  "nova_avaliacao",
+  "novo_favorito",
+  "nova_resposta",
+  "upvote",
+  "salvamento",
+] as const;
+
+type ProfessionalDailyKey = (typeof PROFESSIONAL_DAILY_KEYS)[number];
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   Boolean(value && typeof value === "object" && !Array.isArray(value));
 
@@ -59,7 +73,11 @@ const parseDigestState = (value: unknown): DigestState => {
   if (!isRecord(value)) return {};
 
   const state: DigestState = {};
-  for (const key of ["favorites_lunch_digest", "community_evening_digest"] as const) {
+  for (const key of [
+    "favorites_lunch_digest",
+    "community_evening_digest",
+    "professional_daily_digest",
+  ] as const) {
     const entry = value[key];
     if (!isRecord(entry)) continue;
 
@@ -170,7 +188,7 @@ const saveDigestState = async (
   });
 };
 
-async function listDigestTargetUsers() {
+async function listDigestTargetUsers(role: "paciente" | "psicologo") {
   const users = await prisma.user.findMany({
     select: {
       id: true,
@@ -193,7 +211,7 @@ async function listDigestTargetUsers() {
     where: {
       active: true,
       deleted: false,
-      role: "paciente",
+      role,
     },
   });
 
@@ -710,24 +728,146 @@ const processEveningDigest = async (user: DigestTargetUser, now: Date, dateKey: 
   await saveDigestState(user.id, recordId, state);
 };
 
+const createProfessionalDailyCounts = (): Record<ProfessionalDailyKey, number> => ({
+  clique_whatsapp: 0,
+  nova_avaliacao: 0,
+  nova_resposta: 0,
+  novo_favorito: 0,
+  salvamento: 0,
+  upvote: 0,
+});
+
+const getProfessionalDailyCounts = async (user: DigestTargetUser, since: Date, now: Date) => {
+  const allowedKeys = PROFESSIONAL_DAILY_KEYS.filter((key) =>
+    isChannelAllowed(user.notification_preference?.prefs, key, "push"),
+  );
+  const counts = createProfessionalDailyCounts();
+
+  if (allowedKeys.length === 0) return counts;
+
+  const notifications = await prisma.notification.findMany({
+    select: {
+      message_key: true,
+    },
+    where: {
+      createdAt: {
+        gte: since,
+        lte: now,
+      },
+      deleted: false,
+      message_key: {
+        in: allowedKeys,
+      },
+      user_id: user.id,
+    },
+  });
+
+  for (const notification of notifications) {
+    if (!PROFESSIONAL_DAILY_KEYS.includes(notification.message_key as ProfessionalDailyKey)) {
+      continue;
+    }
+
+    counts[notification.message_key as ProfessionalDailyKey]++;
+  }
+
+  return counts;
+};
+
+const hasProfessionalDailyActivity = (counts: Record<ProfessionalDailyKey, number>) =>
+  Object.values(counts).some((count) => count > 0);
+
+const formatCount = (value: number, singular: string, plural: string) =>
+  `${value} ${value === 1 ? singular : plural}`;
+
+const buildProfessionalDailyDigestContent = (counts: Record<ProfessionalDailyKey, number>) => {
+  if (counts.clique_whatsapp > 0) {
+    const whatsapp = formatCount(
+      counts.clique_whatsapp,
+      "clique no WhatsApp",
+      "cliques no WhatsApp",
+    );
+    const complements = counts.nova_avaliacao + counts.novo_favorito + counts.nova_resposta;
+
+    return {
+      body:
+        complements > 0
+          ? `Você recebeu ${whatsapp} e novas interações no seu perfil hoje.`
+          : `Você recebeu ${whatsapp} no seu perfil hoje.`,
+      title: "Seu desempenho hoje na Lectum",
+    };
+  }
+
+  if (counts.nova_avaliacao + counts.novo_favorito > 0) {
+    return {
+      body: "Seu perfil recebeu novos sinais de confiança hoje.",
+      title: "Seu desempenho hoje na Lectum",
+    };
+  }
+
+  return {
+    body: "Suas respostas e publicações tiveram novas interações hoje.",
+    title: "Seu desempenho hoje na Lectum",
+  };
+};
+
+const processProfessionalDailyDigest = async (
+  user: DigestTargetUser,
+  now: Date,
+  dateKey: string,
+) => {
+  const { recordId, state } = await getDigestState(user.id);
+  const current = state.professional_daily_digest;
+  if (current?.last_sent_date === dateKey) return;
+
+  const counts = await getProfessionalDailyCounts(user, getDigestSince(now, current), now);
+  if (!hasProfessionalDailyActivity(counts)) {
+    markDigestChecked(state, "professional_daily_digest", now, dateKey, false);
+    await saveDigestState(user.id, recordId, state);
+    return;
+  }
+
+  const content = buildProfessionalDailyDigestContent(counts);
+  const sent = await sendDigestPush(user, {
+    ...content,
+    redirect: "/app/professional/analytics",
+    type: "professional_daily_digest",
+  });
+
+  markDigestChecked(state, "professional_daily_digest", now, dateKey, sent);
+  await saveDigestState(user.id, recordId, state);
+};
+
 export const runNotificationDigestScheduler = async (now = new Date()) => {
   if (!isWebPushConfigured()) return;
 
   const parts = getZonedDateParts(now);
   const shouldRunLunchDigest = isInsideWindow(parts, 12, 15, 13, 15);
   const shouldRunEveningDigest = isInsideWindow(parts, 19, 30, 21, 0);
+  const shouldRunProfessionalDailyDigest = isInsideWindow(parts, 18, 30, 19, 30);
 
-  if (!shouldRunLunchDigest && !shouldRunEveningDigest) return;
+  if (!shouldRunLunchDigest && !shouldRunEveningDigest && !shouldRunProfessionalDailyDigest) {
+    return;
+  }
 
-  const users = await listDigestTargetUsers();
+  if (shouldRunLunchDigest || shouldRunEveningDigest) {
+    const users = await listDigestTargetUsers("paciente");
 
-  for (const user of users) {
-    if (shouldRunLunchDigest) {
-      await processLunchDigest(user, now, parts.dateKey);
+    for (const user of users) {
+      if (shouldRunLunchDigest) {
+        await processLunchDigest(user, now, parts.dateKey);
+      }
+
+      if (shouldRunEveningDigest) {
+        await processEveningDigest(user, now, parts.dateKey);
+      }
     }
+  }
 
-    if (shouldRunEveningDigest) {
-      await processEveningDigest(user, now, parts.dateKey);
+  if (shouldRunProfessionalDailyDigest) {
+    const users = await listDigestTargetUsers("psicologo");
+
+    for (const user of users) {
+      await processProfessionalDailyDigest(user, now, parts.dateKey);
     }
   }
 };

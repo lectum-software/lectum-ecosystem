@@ -186,3 +186,42 @@ Validacao:
 - Smoke via `pnpm --dir backend exec tsx` validou default `Todos`, normalizacao legada `professionals_only -> all` para pacientes e filtro `Favoritos`.
 
 ADR criado: `adrs/0129-push-digest-paciente-favoritos-comunidades.md`.
+
+## Complemento 2026-06-18 - politica de push para psicologos
+
+Implementada a regra de prioridade para reduzir ruído sem perder sinais de conversão:
+
+- Push imediato para psicólogos permanece ativo para eventos de alto valor:
+  - `clique_whatsapp`;
+  - `nova_avaliacao`;
+  - `nova_resposta`;
+  - `novo_post` de paciente conforme preferencia vigente de `novo_post`.
+- `novo_favorito` continua gerando notificação in-app, mas o push imediato é agrupado por janela de 1 hora para evitar repetição excessiva.
+- `clique_whatsapp` recebeu `actor_id` em `message_props` para agrupar push repetido do mesmo paciente em até 1 hora, mantendo a notificação in-app real.
+- Push imediato foi suprimido para sinais de menor urgência enviados a psicólogos:
+  - `upvote`;
+  - `downvote`;
+  - `salvamento`.
+- Esses sinais entram no digest profissional diário, sem gerar interrupções a cada interação.
+- Foi criado digest push para psicólogos, no mesmo scheduler real de notificações:
+  - janela `18:30` a `19:30`, `America/Sao_Paulo`;
+  - no máximo 1 push por dia;
+  - base em eventos reais já persistidos em `notification`, sem mock;
+  - considera `clique_whatsapp`, `nova_avaliacao`, `novo_favorito`, `nova_resposta`, `upvote` e `salvamento`;
+  - respeita `notification_preference` por canal `push` antes de contar/enviar;
+  - `downvote` não entra no resumo para não reforçar sinal negativo não público.
+- O estado anti-duplicidade reutiliza `user_background.type = "notification_digest_state"` com a chave `professional_daily_digest`, sem alterar schema/migrations.
+
+Pendências sem mock:
+
+- A aba/filtro `Oportunidades` para psicólogos em comunidades foi decidida em produto, mas ainda não foi implementada nesta execução.
+- A estratégia futura de ondas para posts de pacientes pode ser conectada ao mesmo eixo de oportunidade; hoje o push imediato de `novo_post` para psicólogos segue a regra real já existente de preferência/segmentação.
+- Notificações de marcos de ranking, assinatura e perfil incompleto dependem de eventos/produtores específicos ainda não existentes.
+
+Validação:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`
+
+ADR criado: `adrs/0130-psicologos-push-prioridade-digest.md`.

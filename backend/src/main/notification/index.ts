@@ -6,6 +6,7 @@ import { messages } from "./constants";
 import { isChannelAllowed } from "./preferences";
 
 const BASE = process.env.BASE || "";
+const ONE_HOUR_MS = 60 * 60 * 1000;
 
 type NotifyMeta = {
   message_key: string;
@@ -13,8 +14,97 @@ type NotifyMeta = {
   redirect?: string;
 };
 
-const shouldSuppressImmediatePush = (params: { messageKey: string; role?: string | null }) =>
-  params.role === "paciente" && params.messageKey === "novo_post";
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value && typeof value === "object" && !Array.isArray(value));
+
+const getStringProp = (value: unknown, key: string) => {
+  if (!isRecord(value)) return undefined;
+
+  const prop = value[key];
+  return typeof prop === "string" ? prop : undefined;
+};
+
+const hasRecentNotificationWithProp = async (params: {
+  excludeSourceId?: string;
+  key: string;
+  prop?: {
+    key: string;
+    value?: string;
+  };
+  userId: string;
+  windowMs: number;
+}) => {
+  const recentNotifications = await prisma.notification.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+    select: {
+      message_props: true,
+    },
+    take: 20,
+    where: {
+      createdAt: {
+        gte: new Date(Date.now() - params.windowMs),
+      },
+      deleted: false,
+      message_key: params.key,
+      user_id: params.userId,
+    },
+  });
+
+  return recentNotifications.some((notification) => {
+    const sourceId = getStringProp(notification.message_props, "source_id");
+    if (sourceId && sourceId === params.excludeSourceId) return false;
+
+    if (!params.prop) return true;
+    if (!params.prop.value) return false;
+
+    return getStringProp(notification.message_props, params.prop.key) === params.prop.value;
+  });
+};
+
+const shouldSuppressImmediatePush = async (params: {
+  messageKey: string;
+  messageProps?: Record<string, unknown>;
+  role?: string | null;
+  userId: string;
+}) => {
+  if (params.role === "paciente" && params.messageKey === "novo_post") {
+    return true;
+  }
+
+  if (params.role !== "psicologo") return false;
+
+  if (["upvote", "downvote", "salvamento"].includes(params.messageKey)) {
+    return true;
+  }
+
+  if (params.messageKey === "novo_favorito") {
+    return hasRecentNotificationWithProp({
+      excludeSourceId: getStringProp(params.messageProps, "source_id"),
+      key: params.messageKey,
+      userId: params.userId,
+      windowMs: ONE_HOUR_MS,
+    });
+  }
+
+  if (params.messageKey === "clique_whatsapp") {
+    const actorId = getStringProp(params.messageProps, "actor_id");
+
+    return hasRecentNotificationWithProp({
+      excludeSourceId: getStringProp(params.messageProps, "source_id"),
+      key: params.messageKey,
+      prop: {
+        key: "actor_id",
+        value: actorId,
+      },
+      userId: params.userId,
+      windowMs: ONE_HOUR_MS,
+    });
+  }
+
+  return false;
+};
 
 /**
  * Cria a notificação in-app, emite em tempo real (Socket.IO) e envia push web,
@@ -66,7 +156,14 @@ export const notify = async (userIds: string[], meta: NotifyMeta) => {
     }
 
     for (const user of users) {
-      if (shouldSuppressImmediatePush({ messageKey: meta.message_key, role: user.role })) {
+      if (
+        await shouldSuppressImmediatePush({
+          messageKey: meta.message_key,
+          messageProps: meta.message_props,
+          role: user.role,
+          userId: user.id,
+        })
+      ) {
         continue;
       }
 

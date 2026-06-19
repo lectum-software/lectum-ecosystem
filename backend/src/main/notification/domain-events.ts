@@ -147,6 +147,7 @@ export const notifyWhatsappClick = async (params: {
     sourceId: params.contactRequestId,
     sourceType: "contact_request",
     props: {
+      actor_id: params.actorId ?? null,
       contact_request_id: params.contactRequestId,
       psychologist_id: params.psychologistId,
     },
