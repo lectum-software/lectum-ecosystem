@@ -59,7 +59,6 @@ import { CommunityFollowButton } from "@/components/community/community-follow-b
 import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
 import { MentorBadge } from "@/components/community/mentor-badge";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
-import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
 import type { VoteValue } from "@/components/community/vote-action-button";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
@@ -1238,24 +1237,23 @@ const PostCard = ({
   return (
     <article className="overflow-hidden rounded-[22px] border border-[#E6EAF0] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:border-border dark:bg-surface">
       {showCommunityHeader ? (
-        <div className="mb-4 flex min-w-0 items-center gap-2 text-[11px] font-semibold text-subtle">
+        <div className="mb-4 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-subtle">
+          <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          <span className="shrink-0">Postado em</span>
           <div className="flex min-w-0 flex-1 items-center gap-1.5">
-            <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            <span className="shrink-0">Postado em</span>
             <Link
-              className="block min-w-0 flex-1 cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap font-black text-muted"
+              className="block min-w-0 cursor-pointer truncate font-black text-muted"
               href={communityDetailHref(post.community.slug)}
             >
               {post.community.name}
             </Link>
+            <CommunityFollowToggle
+              className="shrink-0"
+              initialFollowing={Boolean(post.community.following)}
+              slug={post.community.slug}
+            />
           </div>
-          <CommunityFollowToggle
-            className="shrink-0"
-            initialFollowing={Boolean(post.community.following)}
-            slug={post.community.slug}
-          />
           {post.muted_by_current_user ? <PostMutedBadge className="shrink-0" /> : null}
-          <PostOwnerActionMenu className="shrink-0" post={post} />
         </div>
       ) : null}
 
@@ -1286,10 +1284,9 @@ const PostCard = ({
             </p>
           )}
         </div>
-        {!showCommunityHeader ? (
+        {!showCommunityHeader && post.muted_by_current_user ? (
           <div className="ml-auto flex shrink-0 items-center justify-end gap-2">
-            {post.muted_by_current_user ? <PostMutedBadge /> : null}
-            <PostOwnerActionMenu post={post} />
+            <PostMutedBadge />
           </div>
         ) : null}
       </div>

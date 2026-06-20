@@ -114,3 +114,28 @@ No mobile, cards do feed podiam quebrar a linha do botao `Seguir` ou do menu `..
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - Validacao HTTP local das rotas `/app/community/feed` e `/app/community/autocuidado-em-pratica`.
+
+
+## Atualizacao 2026-06-20 - acoes do card de feed
+
+### Contexto
+
+O botao `Seguir` nos cards do feed precisava permanecer junto ao nome da comunidade, dentro da linha `Postado em [Comunidade]`, e o menu `...` nao deveria aparecer nos cards de lista.
+
+### Decisao
+
+- O botao `Seguir` foi movido para o mesmo grupo flex do nome da comunidade.
+- Quando falta espaco, somente o nome da comunidade trunca com ellipsis; `Seguir` permanece visivel e adjacente ao contexto da comunidade.
+- O menu `...` foi removido dos cards de feed/lista; as acoes de dono do post ficam restritas a pagina interna do post.
+
+### Consequencias
+
+- O cabecalho do card fica menos disperso e mais previsivel no mobile.
+- Acoes destrutivas ou de silenciar continuam acessiveis no contexto de detalhe do post, evitando menus redundantes nas listas.
+- Nao ha alteracao em backend, Prisma, contratos HTTP, filtros, ordenacao ou persistencia.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Validacao HTTP local das rotas `/app/community/feed`, `/app/community/autocuidado-em-pratica` e de uma pagina interna de post.

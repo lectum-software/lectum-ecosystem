@@ -20,7 +20,6 @@ import type { PostListPost, PostProfessionalReply } from "@/api/generator/types/
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { MentorBadge } from "@/components/community/mentor-badge";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
-import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
@@ -526,6 +525,7 @@ export const CommunityPostCard = ({
   const communityContextLabel = isReplyContribution ? "Respondido em" : "Postado em";
   const CommunityContextIcon = isReplyContribution ? Reply : FileText;
   const usesMutedCommunityContext = communityContextTone === "muted";
+  const hasSecondaryHeaderActions = Boolean(post.muted_by_current_user || statusBadge);
   const shouldCompactProfileReplyMedia =
     profilePublicationMode && isReplyContribution && Boolean(primaryReply);
   const isPsychologistPost = displayAuthor.role === "psicologo";
@@ -707,15 +707,13 @@ export const CommunityPostCard = ({
           {post.muted_by_current_user ? <PostMutedBadge className="shrink-0" /> : null}
           {statusBadge}
           {headerExtra}
-          <PostOwnerActionMenu className="shrink-0" post={post} />
         </div>
-      ) : (
+      ) : hasSecondaryHeaderActions ? (
         <div className="mb-3 flex items-center justify-end gap-2">
           {post.muted_by_current_user ? <PostMutedBadge /> : null}
           {statusBadge}
-          <PostOwnerActionMenu post={post} />
         </div>
-      )}
+      ) : null}
 
       {showAuthorHeader ? (
         <div className="mb-3 flex items-start gap-3">
