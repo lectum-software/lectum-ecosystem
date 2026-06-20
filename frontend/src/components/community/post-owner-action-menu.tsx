@@ -151,8 +151,11 @@ export const PostOwnerActionMenu = ({ className, onDeleted, post }: PostOwnerAct
   const muteMutation = useMutePost();
   const deleteMutation = useDeletePost();
   const isOwnPost = Boolean(currentUserId && post.author.id === currentUserId);
-  const deleteDescription =
-    post.replies_count > 0
+  const isPsychologistPost = post.author.role === "psicologo";
+  const deleteTitle = isPsychologistPost ? "Excluir publicação?" : "Excluir post?";
+  const deleteDescription = isPsychologistPost
+    ? "Esta publicação e todas as respostas associadas serão removidas.\n\nEsta ação não poderá ser desfeita."
+    : post.replies_count > 0
       ? "Este post já possui respostas de outros membros.\n\nAo excluir o post, todas as respostas associadas também serão removidas.\n\nEsta ação não poderá ser desfeita."
       : "Esta ação não poderá ser desfeita.";
 
@@ -182,7 +185,7 @@ export const PostOwnerActionMenu = ({ className, onDeleted, post }: PostOwnerAct
     setActionError(null);
     setMenuOpen(false);
 
-    if (post.has_psychologist_reply) {
+    if (!isPsychologistPost && post.has_psychologist_reply) {
       setBlockedModalOpen(true);
       return;
     }
@@ -289,7 +292,7 @@ export const PostOwnerActionMenu = ({ className, onDeleted, post }: PostOwnerAct
           setActionError(null);
         }}
         open={deleteModalOpen}
-        title="Excluir post?"
+        title={deleteTitle}
         variant="destructive"
       >
         {actionError ? (

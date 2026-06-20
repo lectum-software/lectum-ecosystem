@@ -594,6 +594,11 @@ const findPublishedPost = (id: string) => {
     select: {
       id: true,
       author_id: true,
+      author: {
+        select: {
+          role: true,
+        },
+      },
       community_id: true,
       upvotes_count: true,
       downvotes_count: true,
@@ -2012,17 +2017,20 @@ export class PostRepository implements IPostRepository {
 
     const now = new Date();
     const response = await prisma.$transaction(async (transaction) => {
-      const professionalRepliesCount = await transaction.post_reply.count({
-        where: {
-          post_id: post.id,
-          deleted: false,
-          author: {
-            role: "psicologo",
-          },
-        },
-      });
+      const shouldBlockProfessionalReplies = post.author.role !== "psicologo";
+      const professionalRepliesCount = shouldBlockProfessionalReplies
+        ? await transaction.post_reply.count({
+            where: {
+              post_id: post.id,
+              deleted: false,
+              author: {
+                role: "psicologo",
+              },
+            },
+          })
+        : 0;
 
-      if (professionalRepliesCount > 0) {
+      if (shouldBlockProfessionalReplies && professionalRepliesCount > 0) {
         return null;
       }
 
