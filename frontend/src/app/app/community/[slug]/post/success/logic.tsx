@@ -47,7 +47,7 @@ export const CommunityPostSuccessLogic = ({
   });
 
   const handleViewPublication = () => {
-    window.location.assign(publicationHref);
+    window.location.replace(publicationHref);
   };
 
   const modal = (

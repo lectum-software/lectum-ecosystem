@@ -40,11 +40,15 @@ O inventário visual ativo foi consultado e contém a referência `_product/prot
 ## Complemento 2026-06-20 - navegação de saída da modal
 
 O CTA "Ver minha publicação" deixou de usar navegação client-side via `Link` e passou a executar
-uma navegação de documento com `window.location.assign(publicationHref)`. A rota de sucesso é
+uma navegação de documento com `window.location.replace(publicationHref)`. A rota de sucesso é
 interceptada pelo slot `@modal`; em transições client-side dentro do mesmo layout, o estado do slot
 paralelo pode permanecer ativo mesmo quando o fundo muda para o post ou para a comunidade. A
 navegação de documento reinicializa a árvore de rotas, desmonta o slot modal e abre diretamente a
-publicação criada.
+publicação criada sem manter a confirmação na pilha do histórico.
+
+Além disso, a criação do post passou a navegar de `/post/new` para `/post/success` com
+`router.replace`, não `router.push`. Assim, o histórico do navegador não mantém nem a modal de
+criação nem a modal de sucesso como destino do botão voltar depois que o usuário abre a publicação.
 
 O href da publicação também passou a ser congelado na montagem da modal, evitando que ele seja
 recalculado para a comunidade caso a URL de fundo mude enquanto a modal ainda estiver aberta.
@@ -54,6 +58,6 @@ Validação adicional:
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - Smoke HTTP local:
-  - `http://localhost:3000/app/community/autocuidado-em-pratica/post/success?postId=cmqmuef6x000w9ouhnn0yay9h&communitySlug=autocuidado-em-pratica` retornou 200.
-  - `http://localhost:3000/app/community/autocuidado-em-pratica/post/cmqmuef6x000w9ouhnn0yay9h` retornou 200.
+  - `http://localhost:3000/app/community/autocuidado-em-pratica/post/success?postId=cmqmv53g400119ouhslp91yi6&communitySlug=autocuidado-em-pratica` retornou 200.
+  - `http://localhost:3000/app/community/autocuidado-em-pratica/post/cmqmv53g400119ouhslp91yi6` retornou 200.
   - `http://localhost:3000/app/community/autocuidado-em-pratica/post/new` retornou 200.

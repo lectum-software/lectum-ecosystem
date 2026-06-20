@@ -155,7 +155,7 @@ export const CreateCommunityPostLogic = ({
       const publicationHref = `/app/community/${post.community.slug}/post/${post.id}`;
 
       window.sessionStorage.setItem(LAST_CREATED_POST_HREF_KEY, publicationHref);
-      router.push(
+      router.replace(
         `/app/community/${post.community.slug}/post/success?postId=${post.id}&communitySlug=${encodeURIComponent(post.community.slug)}`,
       );
     },
