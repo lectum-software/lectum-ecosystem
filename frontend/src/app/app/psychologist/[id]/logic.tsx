@@ -134,10 +134,10 @@ const languageLabel: Record<string, string> = {
 };
 
 const targetAudienceLabel: Record<string, string> = {
-  adolescentes: "Adolescentes (12-17)",
-  adultos: "Adultos (18-59)",
-  criancas: "Crianças (até 11)",
-  idosos: "Idosos (60+)",
+  adolescentes: "Adolescentes",
+  adultos: "Adultos",
+  criancas: "Crianças",
+  idosos: "Idosos",
   casais: "Casais",
   familias: "Famílias",
   lgbtqia_plus: "LGBTQIA+",

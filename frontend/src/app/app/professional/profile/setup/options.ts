@@ -67,10 +67,10 @@ export const LANGUAGE_OPTIONS = [
 ] satisfies FieldOption[];
 
 export const PUBLIC_TARGET_OPTIONS = [
-  { label: "Crianças (até 11)", value: "criancas" },
-  { label: "Adolescentes (12-17)", value: "adolescentes" },
-  { label: "Adultos (18-59)", value: "adultos" },
-  { label: "Idosos (60+)", value: "idosos" },
+  { label: "Crianças", value: "criancas" },
+  { label: "Adolescentes", value: "adolescentes" },
+  { label: "Adultos", value: "adultos" },
+  { label: "Idosos", value: "idosos" },
   { label: "Casais", value: "casais" },
   { label: "Famílias", value: "familias" },
   { label: "LGBTQIA+", value: "lgbtqia_plus" },
