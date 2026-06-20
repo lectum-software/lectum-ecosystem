@@ -1372,7 +1372,14 @@ export const ProfessionalProfileSetupLogic = () => {
       </div>
 
       <div className="relative pb-12">
-        <div className="relative block aspect-[16/6] w-full overflow-hidden rounded-[24px] border border-border/70 bg-gradient-to-br from-primary-soft/70 via-surface to-surface-muted text-left shadow-inner">
+        <button
+          aria-label="Selecionar imagem de capa do perfil"
+          className="relative block aspect-[16/6] w-full overflow-hidden rounded-[24px] border border-border/70 bg-gradient-to-br from-primary-soft/70 via-surface to-surface-muted p-0 text-left shadow-inner transition hover:border-primary/40 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-80"
+          disabled={!profile.data || uploadCoverImage.isPending || deleteCoverImage.isPending}
+          onClick={openCoverImageFilePicker}
+          title="Selecionar imagem de capa"
+          type="button"
+        >
           {visibleCoverImageSrc ? (
             <Image
               alt="Pré-visualização da imagem de capa do perfil"
@@ -1400,7 +1407,7 @@ export const ProfessionalProfileSetupLogic = () => {
               </span>
             </span>
           )}
-        </div>
+        </button>
 
         <div className="absolute right-3 top-3">
           <button
@@ -1454,11 +1461,16 @@ export const ProfessionalProfileSetupLogic = () => {
 
         <div className="absolute left-4 -bottom-1 flex items-end gap-3 sm:left-6">
           <div className="relative h-24 w-24 shrink-0">
-            <div
+            <button
+              aria-label="Selecionar foto profissional"
               className={cn(
-                "relative grid h-24 w-24 place-items-center overflow-hidden rounded-full border-4 border-surface bg-primary text-2xl font-bold text-white shadow-[var(--lectum-shadow-soft)]",
+                "relative grid h-24 w-24 place-items-center overflow-hidden rounded-full border-4 border-surface bg-primary p-0 text-2xl font-bold text-white shadow-[var(--lectum-shadow-soft)] transition hover:ring-4 hover:ring-primary/15 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-80",
                 avatarDraft && "ring-4 ring-primary/20",
               )}
+              disabled={isSavingMedia}
+              onClick={openAvatarFilePicker}
+              title="Selecionar foto profissional"
+              type="button"
             >
               {visibleAvatarSrc ? (
                 <Image
@@ -1479,7 +1491,7 @@ export const ProfessionalProfileSetupLogic = () => {
                   <UserRound className="h-9 w-9" aria-hidden="true" />
                 </span>
               )}
-            </div>
+            </button>
             <button
               aria-expanded={avatarActionsOpen}
               aria-haspopup="menu"
