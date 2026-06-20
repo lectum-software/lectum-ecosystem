@@ -166,6 +166,8 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - 2026-06-13: Validações executadas: `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm check` e smoke local em `http://localhost:3000/app/settings/account`.
 - 2026-06-17: Extensão complementar implementou exclusão de conta para pacientes e psicólogos dentro de Editar perfil/setup profissional, com modal destrutiva, senha atual ou reautenticação Google, limpeza persistente de dados pessoais/preferências/notificações/favoritos e anonimização de publicações/comentários como `Membro Excluído` ou `Psicólogo Excluído`.
 - 2026-06-17: ADR `adrs/0113-exclusao-conta-usuarios-anonimizacao-google.md` registra a decisão de preservar conteúdo público anonimizado e usar `user_background` como prova temporária de reautenticação Google.
+- 2026-06-20: Corrigida regressão do callback Google para exclusão de conta: `intent=delete_account` agora retorna diretamente para a rota interna com `deleteReauth=ok`, evitando cair no redirecionamento padrão de login.
+- 2026-06-20: Validações da correção executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
 - 2026-06-17: Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e smoke local via Chrome headless em `/app/profile/edit` e `/app/professional/profile/setup`.
 
 ## Ajuste complementar em 2026-06-18 - header secundário premium compartilhado

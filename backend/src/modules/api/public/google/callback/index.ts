@@ -10,16 +10,98 @@ const routes = Router();
 
 session(routes);
 
+type GoogleCallbackQuery = Record<string, string | string[] | undefined>;
+type GoogleCallbackUser = {
+  success?: boolean;
+  error?: string;
+  data?: {
+    role?: string | null;
+    user_tokens?: { token?: string }[];
+  };
+};
+
+const DELETE_ACCOUNT_PATIENT_CALLBACK = "/app/profile/edit?deleteReauth=ok";
+const DELETE_ACCOUNT_PSYCHOLOGIST_CALLBACK = "/app/professional/profile/setup?deleteReauth=ok";
+
+const getFrontendOrigin = () => {
+  const callbackUrl = process.env.CALLBACK_URL_API_USER || "/";
+
+  try {
+    return new URL(callbackUrl).origin;
+  } catch {
+    return "";
+  }
+};
+
+const sanitizeAppCallbackUrl = (value: unknown, fallback: string) => {
+  const raw = typeof value === "string" ? value.trim() : "";
+
+  if (!raw?.startsWith("/app/") || raw.startsWith("//")) return fallback;
+
+  try {
+    const url = new URL(raw, "https://lectum.local");
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return fallback;
+  }
+};
+
+const resolveDeleteAccountCallbackUrl = (query: GoogleCallbackQuery, user: GoogleCallbackUser) => {
+  const fallback =
+    user.data?.role === "psicologo"
+      ? DELETE_ACCOUNT_PSYCHOLOGIST_CALLBACK
+      : DELETE_ACCOUNT_PATIENT_CALLBACK;
+  const path = sanitizeAppCallbackUrl(query.callbackUrl, fallback);
+  const url = new URL(path, "https://lectum.local");
+  url.searchParams.set("deleteReauth", "ok");
+
+  const frontendOrigin = getFrontendOrigin();
+  if (!frontendOrigin) return `${url.pathname}${url.search}${url.hash}`;
+
+  return new URL(`${url.pathname}${url.search}${url.hash}`, frontendOrigin).toString();
+};
+
+const parseGoogleStateQuery = (state: unknown) => {
+  const query: GoogleCallbackQuery = {};
+  const params = new URLSearchParams();
+
+  try {
+    const stateObj = JSON.parse(typeof state === "string" ? state : "{}");
+    if (stateObj?.query) {
+      Object.entries(stateObj.query as Record<string, unknown>).forEach(([key, value]) => {
+        if (key === "link_token" || key === "delete_token" || value === undefined || value === null)
+          return;
+
+        if (Array.isArray(value)) {
+          query[key] = value.map((item) => String(item));
+          value.forEach((item) => {
+            params.append(key, String(item));
+          });
+          return;
+        }
+
+        query[key] = String(value);
+        params.set(key, String(value));
+      });
+    }
+  } catch (e) {
+    console.log(e);
+  }
+
+  return {
+    query,
+    queryString: params.toString(),
+  };
+};
+
 //Routes
 routes.get("", passport.authenticate("google", { failureRedirect: "/" }), (_req, res) => {
   //
 
   const failPath = process.env.CALLBACK_FAIL_URL_API_USER;
-  const user = _req?.user as {
-    success?: boolean;
-    error?: string;
-    data?: { user_tokens?: { token?: string }[] };
-  };
+  const user = _req?.user as GoogleCallbackUser;
+  const state = _req.query.state as string;
+  const { query: originalQuery, queryString: originalQueryStr } = parseGoogleStateQuery(state);
 
   if (!user?.success) {
     const fallbackPath = failPath || process.env.CALLBACK_URL_API_USER || "/";
@@ -31,6 +113,10 @@ routes.get("", passport.authenticate("google", { failureRedirect: "/" }), (_req,
     );
   }
 
+  if (originalQuery.intent === "delete_account") {
+    return res.redirect(resolveDeleteAccountCallbackUrl(originalQuery, user));
+  }
+
   const token = user?.data?.user_tokens?.[0].token;
   const isProduction = process.env.NODE_ENV?.includes("prod");
 
@@ -40,32 +126,6 @@ routes.get("", passport.authenticate("google", { failureRedirect: "/" }), (_req,
     sameSite: isProduction ? "none" : "lax",
     maxAge: 1000 * 60 * 1, // 1 minuto
   });
-
-  const state = _req.query.state as string;
-
-  let originalQueryStr = "";
-  try {
-    const stateObj = JSON.parse(state || "{}");
-    if (stateObj?.query) {
-      const params = new URLSearchParams();
-      Object.entries(stateObj.query as Record<string, unknown>).forEach(([key, value]) => {
-        if (key === "link_token" || key === "delete_token" || value === undefined || value === null)
-          return;
-
-        if (Array.isArray(value)) {
-          value.forEach((item) => {
-            params.append(key, String(item));
-          });
-          return;
-        }
-
-        params.set(key, String(value));
-      });
-      originalQueryStr = params.toString();
-    }
-  } catch (e) {
-    console.log(e);
-  }
 
   const baseUrl = process.env.CALLBACK_URL_API_USER!;
   const separator = baseUrl.includes("?") ? "&" : "?";
