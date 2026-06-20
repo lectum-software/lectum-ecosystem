@@ -1,7 +1,6 @@
 "use client";
 
 import { Check } from "lucide-react";
-import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -29,17 +28,27 @@ export const CommunityPostSuccessLogic = ({
   const slug = normalizeParam(params?.slug);
   const postId = searchParams.get("postId")?.trim() || null;
   const communitySlug = searchParams.get("communitySlug")?.trim() || null;
-  const [storedPublicationHref] = useState(() =>
-    typeof window === "undefined"
-      ? null
-      : window.sessionStorage.getItem(LAST_CREATED_POST_HREF_KEY),
-  );
-  const publicationSlug = communitySlug || (slug && slug !== COMMUNITY_FEED_SLUG ? slug : null);
-  const publicationHref = publicationSlug
-    ? postId
-      ? `/app/community/${publicationSlug}/post/${postId}`
-      : `/app/community/${publicationSlug}`
-    : storedPublicationHref || DEFAULT_COMMUNITY_FEED_HREF;
+  const [publicationHref] = useState(() => {
+    const storedPublicationHref =
+      typeof window === "undefined"
+        ? null
+        : window.sessionStorage.getItem(LAST_CREATED_POST_HREF_KEY);
+    const publicationSlug = communitySlug || (slug && slug !== COMMUNITY_FEED_SLUG ? slug : null);
+
+    if (publicationSlug && postId) {
+      return `/app/community/${publicationSlug}/post/${postId}`;
+    }
+
+    if (storedPublicationHref) {
+      return storedPublicationHref;
+    }
+
+    return publicationSlug ? `/app/community/${publicationSlug}` : DEFAULT_COMMUNITY_FEED_HREF;
+  });
+
+  const handleViewPublication = () => {
+    window.location.assign(publicationHref);
+  };
 
   const modal = (
     <div
@@ -70,14 +79,15 @@ export const CommunityPostSuccessLogic = ({
           Post publicado!
         </h1>
         <p className="mx-auto max-w-[300px] text-base leading-6 text-[#64748B]">
-          Seu post foi compartilhado e logo poderá receber interações!
+          {"Seu post foi compartilhado e logo poder\u00e1 receber intera\u00e7\u00f5es!"}
         </p>
 
         <Button
-          asChild
           className="mt-8 h-[54px] w-full rounded-full bg-[#308CE8] text-base font-semibold shadow-[0_12px_24px_rgba(48,140,232,0.2)] hover:bg-[#2579CF]"
+          onClick={handleViewPublication}
+          type="button"
         >
-          <Link href={publicationHref}>Ver minha publicação</Link>
+          Ver minha publicação
         </Button>
       </section>
     </div>
