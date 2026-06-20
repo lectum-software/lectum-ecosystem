@@ -20,7 +20,7 @@ A referência visual ativa segue sendo Builder Quick Copy `vcp://quickcopy/vcp-2
 - Aumentar as áreas clicáveis dos botões de ação para 28px no tamanho `xs`, 36px no `sm` e 40px no `md`, preservando a aparência compacta.
 - Manter no mobile o grupo `Salvar`/`Compartilhar` alinhado à direita com `ml-auto`, garantindo a separação visual solicitada.
 - Aproximar no desktop o grupo `Salvar`/`Compartilhar` do grupo de interação removendo o afastamento automático a partir do breakpoint `sm`.
-- Manter `Responder` como ação textual com `font-weight: 500`, preservando a fonte e melhorando a leitura.
+- Manter `Responder` como ação textual, elevando sua escala para 12px e `font-weight: 600` para equilibrar melhor com os ícones de 18px–20px.
 - Preservar os componentes compartilhados (`CommunityActionBar`, `PostActionButton`, `VoteActionButton`) para que o ajuste alcance posts e todos os níveis da árvore de comentários/respostas.
 - Manter ícones de menu de card em escala própria, ajustando o menu de respostas para 20px.
 

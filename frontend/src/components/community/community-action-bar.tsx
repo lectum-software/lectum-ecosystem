@@ -95,7 +95,7 @@ const textOnlyReplyClassName = (size: CommunityActionSize) =>
   );
 
 const textOnlyReplyTextClassName =
-  "block min-w-0 truncate text-[11px] font-medium leading-none tracking-[-0.01em]";
+  "block min-w-0 truncate text-[12px] font-semibold leading-none tracking-[-0.01em]";
 
 const stopActionPropagation =
   (handler?: ActionHandler): ActionHandler =>
