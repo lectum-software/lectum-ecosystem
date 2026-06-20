@@ -122,14 +122,8 @@ const premiumReviewBenefits = [
 ];
 
 const PremiumReviewsState = () => (
-  <section className="relative overflow-hidden rounded-[var(--lectum-card-radius)] border border-primary/20 bg-surface p-5 shadow-[var(--lectum-shadow-soft)] md:p-7">
-    <div aria-hidden className="absolute inset-x-0 top-0 h-44 bg-primary-soft" />
-    <div
-      aria-hidden
-      className="-right-10 -top-14 absolute h-36 w-36 rounded-full bg-surface/70 blur-3xl"
-    />
-
-    <div className="relative grid justify-items-center text-center">
+  <section className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-7 shadow-[var(--lectum-shadow-soft)] md:px-8 md:py-9">
+    <div className="mx-auto grid max-w-2xl justify-items-center text-center">
       <span className="relative grid h-[72px] w-[72px] place-items-center rounded-3xl bg-surface text-primary shadow-[var(--lectum-shadow-soft)]">
         <Award className="h-8 w-8" aria-hidden />
         <span className="absolute -right-1 -top-1 grid h-7 w-7 place-items-center rounded-full border border-primary/20 bg-surface text-primary">
@@ -149,7 +143,7 @@ const PremiumReviewsState = () => (
       </p>
     </div>
 
-    <div className="relative mt-6 grid gap-3 md:grid-cols-2">
+    <div className="mt-7 grid gap-3 md:grid-cols-2">
       {premiumReviewBenefits.map((benefit) => (
         <div
           className="flex min-w-0 items-start gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4"
@@ -161,15 +155,14 @@ const PremiumReviewsState = () => (
       ))}
     </div>
 
-    <Button
-      asChild
-      className="relative mt-6 h-12 w-full rounded-full text-base md:mx-auto md:w-auto md:px-8"
-    >
-      <Link href="/app/professional/billing/subscription">
-        Fazer upgrade
-        <ArrowRight className="h-4 w-4" aria-hidden />
-      </Link>
-    </Button>
+    <div className="mt-7 flex justify-center">
+      <Button asChild className="h-12 w-full rounded-full text-base sm:w-auto sm:px-8">
+        <Link href="/app/professional/billing/subscription">
+          Fazer upgrade
+          <ArrowRight className="h-4 w-4" aria-hidden />
+        </Link>
+      </Button>
+    </div>
   </section>
 );
 
