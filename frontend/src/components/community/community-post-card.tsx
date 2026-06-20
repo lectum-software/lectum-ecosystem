@@ -19,6 +19,7 @@ import { useSavePost, useVotePost } from "@/api/callers/posts";
 import type { PostListPost, PostProfessionalReply } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { MentorBadge } from "@/components/community/mentor-badge";
+import { PostMutedBadge } from "@/components/community/post-muted-badge";
 import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
@@ -672,7 +673,7 @@ export const CommunityPostCard = ({
       tabIndex={openPostOnCardClick ? -1 : undefined}
     >
       {showCommunityHeader ? (
-        <div className="mb-4 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold tracking-[-0.01em] text-muted">
+        <div className="mb-4 flex min-w-0 flex-wrap items-center gap-1.5 gap-y-2 text-[11px] font-semibold tracking-[-0.01em] text-muted">
           <CommunityContextIcon
             className={cn("h-3.5 w-3.5 shrink-0", usesMutedCommunityContext && "text-muted/80")}
             aria-hidden="true"
@@ -701,12 +702,14 @@ export const CommunityPostCard = ({
               <span className="shrink-0 text-muted">{formatRelativeTime(displayCreatedAt)}</span>
             </>
           ) : null}
+          {post.muted_by_current_user ? <PostMutedBadge className="ml-1" /> : null}
           {statusBadge}
           {headerExtra}
           <PostOwnerActionMenu className="ml-auto" post={post} />
         </div>
       ) : (
-        <div className="mb-3 flex justify-end gap-2">
+        <div className="mb-3 flex flex-wrap justify-end gap-2">
+          {post.muted_by_current_user ? <PostMutedBadge /> : null}
           {statusBadge}
           <PostOwnerActionMenu post={post} />
         </div>

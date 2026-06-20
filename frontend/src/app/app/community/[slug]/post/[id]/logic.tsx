@@ -53,6 +53,7 @@ import type { PostDetail, PostReply } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
 import { MentorBadge } from "@/components/community/mentor-badge";
+import { PostMutedBadge } from "@/components/community/post-muted-badge";
 import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
 import { components } from "@/components/controllers";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
@@ -656,7 +657,7 @@ const PostHeader = ({
         )}
       </div>
 
-      <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-muted">
+      <div className="flex min-w-0 flex-wrap items-center gap-1.5 gap-y-2 text-[11px] font-semibold text-muted">
         <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         <span className="shrink-0">Postado em</span>
         <Link
@@ -670,6 +671,7 @@ const PostHeader = ({
           initialFollowing={Boolean(post.community.following)}
           slug={post.community.slug}
         />
+        {post.muted_by_current_user ? <PostMutedBadge className="ml-1" /> : null}
       </div>
 
       <div className="flex items-start gap-3">

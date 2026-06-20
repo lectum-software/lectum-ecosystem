@@ -63,3 +63,20 @@ Validação adicional:
   - `http://localhost:3000/app/community` retornou 200.
   - `http://localhost:3000/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video` retornou 200.
   - `http://localhost:3000/app/posts/mine` retornou 200.
+
+## Complemento 2026-06-20 - estado visual de post silenciado
+
+A interface passou a exibir o selo "Post silenciado" quando o DTO do post informa
+`muted_by_current_user = true`. O selo é renderizado apenas a partir desse campo
+escopado ao usuário autenticado, portanto o estado fica visível somente para quem
+silenciou o próprio post e não altera a apresentação pública do conteúdo para os
+demais membros.
+
+Validação adicional:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke HTTP local:
+  - `http://localhost:3000/app/posts/mine` retornou 307.
+  - `http://localhost:3000/app/community/feed` retornou 200.
+  - `http://localhost:3000/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video` retornou 200.

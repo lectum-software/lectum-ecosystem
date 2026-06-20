@@ -60,6 +60,7 @@ import { CommunityActionBar } from "@/components/community/community-action-bar"
 import { CommunityFollowButton } from "@/components/community/community-follow-button";
 import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
 import { MentorBadge } from "@/components/community/mentor-badge";
+import { PostMutedBadge } from "@/components/community/post-muted-badge";
 import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
 import type { VoteValue } from "@/components/community/vote-action-button";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
@@ -1239,7 +1240,7 @@ const PostCard = ({
   return (
     <article className="overflow-hidden rounded-[22px] border border-[#E6EAF0] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:border-border dark:bg-surface">
       {showCommunityHeader ? (
-        <div className="mb-4 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-subtle">
+        <div className="mb-4 flex min-w-0 flex-wrap items-center gap-1.5 gap-y-2 text-[11px] font-semibold text-subtle">
           <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           <span className="shrink-0">Postado em</span>
           <Link
@@ -1253,6 +1254,7 @@ const PostCard = ({
             initialFollowing={Boolean(post.community.following)}
             slug={post.community.slug}
           />
+          {post.muted_by_current_user ? <PostMutedBadge className="ml-1" /> : null}
           <PostOwnerActionMenu className="ml-auto" post={post} />
         </div>
       ) : null}
@@ -1284,7 +1286,12 @@ const PostCard = ({
             </p>
           )}
         </div>
-        {!showCommunityHeader ? <PostOwnerActionMenu className="ml-auto" post={post} /> : null}
+        {!showCommunityHeader ? (
+          <div className="ml-auto flex shrink-0 flex-wrap justify-end gap-2">
+            {post.muted_by_current_user ? <PostMutedBadge /> : null}
+            <PostOwnerActionMenu post={post} />
+          </div>
+        ) : null}
       </div>
 
       <div className="grid gap-2">
