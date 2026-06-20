@@ -1627,7 +1627,7 @@ const ReplyComposer = ({
             </button>
 
             {!mediaPermission.canAttach && mediaPermission.reason ? (
-              <span className="max-w-[280px] leading-4 text-[#64748B]">
+              <span className="min-w-0 flex-1 basis-56 whitespace-normal break-words leading-4 text-[#64748B]">
                 {mediaPermission.reason}
               </span>
             ) : null}
