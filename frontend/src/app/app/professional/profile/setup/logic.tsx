@@ -296,20 +296,21 @@ const toggleValue = (values: string[], id: string) => {
 };
 
 const profileSetupSelectableChip =
-  "inline-flex h-auto min-h-8 items-center justify-center rounded-xl border border-border bg-surface px-3 py-1.5 text-xs font-semibold leading-4 text-foreground transition hover:border-primary/40 hover:bg-primary-soft hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20";
+  "inline-flex h-auto min-h-9 items-center justify-center rounded-[14px] border border-border/90 bg-white px-3.5 py-2 text-xs font-semibold leading-4 text-foreground shadow-[0_1px_2px_rgb(15_23_42_/_4%)] transition hover:border-primary/45 hover:bg-primary-soft/70 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 dark:border-border dark:bg-surface";
 
 const profileSetupSelectableChipStyle: CSSProperties = {
   fontSize: "12px",
   lineHeight: "16px",
   fontWeight: 600,
-  padding: "6px 12px",
-  minHeight: "32px",
+  padding: "8px 14px",
+  minHeight: "36px",
   height: "auto",
-  borderRadius: "12px",
+  borderRadius: "14px",
+  borderWidth: "1.25px",
 };
 
-const profileSetupButtonGroupControl =
-  "m-0 flex min-h-12 w-full min-w-0 flex-wrap items-center gap-2 rounded-[var(--lectum-control-radius)] border border-border bg-surface px-3 py-2 shadow-sm transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10";
+const profileSetupButtonGroup =
+  "m-0 flex w-full min-w-0 flex-wrap items-center gap-2 border-0 bg-transparent p-0";
 
 const SectionCard = ({
   children,
@@ -400,10 +401,8 @@ const CatalogPicker = ({
 
       <fieldset
         aria-label={title}
-        className={cn(
-          profileSetupButtonGroupControl,
-          error && "border-danger focus-within:border-danger focus-within:ring-danger/10",
-        )}
+        aria-invalid={Boolean(error)}
+        className={profileSetupButtonGroup}
       >
         {items.map((item) => {
           const checked = selected.includes(item.id);
@@ -415,7 +414,7 @@ const CatalogPicker = ({
               className={cn(
                 profileSetupSelectableChip,
                 checked &&
-                  "border-primary bg-primary text-white shadow-sm hover:bg-primary hover:text-white",
+                  "border-primary bg-primary text-white shadow-[0_8px_18px_rgb(48_140_232_/_20%)] ring-1 ring-primary/20 hover:border-primary hover:bg-primary hover:text-white",
                 disabled && "cursor-not-allowed opacity-50",
               )}
               style={profileSetupSelectableChipStyle}
@@ -631,13 +630,7 @@ const ChipPicker = ({
     required={required}
     skipHtmlFor
   >
-    <fieldset
-      aria-label={label}
-      className={cn(
-        profileSetupButtonGroupControl,
-        error && "border-danger focus-within:border-danger focus-within:ring-danger/10",
-      )}
-    >
+    <fieldset aria-label={label} aria-invalid={Boolean(error)} className={profileSetupButtonGroup}>
       {items.map((item) => {
         const checked = selected.includes(item.value);
         return (
@@ -646,7 +639,7 @@ const ChipPicker = ({
             className={cn(
               profileSetupSelectableChip,
               checked &&
-                "border-primary bg-primary text-white shadow-sm hover:bg-primary hover:text-white",
+                "border-primary bg-primary text-white shadow-[0_8px_18px_rgb(48_140_232_/_20%)] ring-1 ring-primary/20 hover:border-primary hover:bg-primary hover:text-white",
             )}
             style={profileSetupSelectableChipStyle}
             key={item.value}
