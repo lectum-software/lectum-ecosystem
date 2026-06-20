@@ -8,6 +8,7 @@ type CommunityFollowToggleProps = {
   className?: string;
   followVariant?: "primary" | "secondary";
   initialFollowing?: boolean;
+  size?: "compact" | "hero";
   slug: string;
 };
 
@@ -15,6 +16,7 @@ export const CommunityFollowToggle = ({
   className,
   followVariant,
   initialFollowing = false,
+  size,
   slug,
 }: CommunityFollowToggleProps) => {
   const [following, setFollowing] = useState(initialFollowing);
@@ -47,6 +49,7 @@ export const CommunityFollowToggle = ({
       following={following}
       onClick={handleToggle}
       pending={pending}
+      size={size}
     />
   );
 };
