@@ -45,3 +45,17 @@ Validação adicional:
 - Smoke HTTP local:
   - `http://localhost:3000/app/community/feed/post/new` retornou 200.
   - `http://localhost:3000/app/community/ansiedade-em-equilibrio/post/new` retornou 200.
+
+## Atualização 2026-06-20 - Copy curta de mídia bloqueada
+
+O texto compartilhado de mídia bloqueada foi simplificado para `Mídia disponível apenas para psicólogos verificados.` nas superfícies de novo post e comentários/respostas. A regra de permissão permanece centralizada em `frontend/src/utils/community-media-permission.ts` e não altera o entitlement real de upload.
+
+Validação adicional:
+
+- `pnpm --dir frontend exec biome check --write "src/utils/community-media-permission.ts"`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke HTTP local:
+  - `http://localhost:3000/app/community/feed/post/new` retornou 200.
+  - `http://localhost:3000/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video` retornou 200.

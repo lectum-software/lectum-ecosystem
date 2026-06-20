@@ -7,7 +7,7 @@ export type CommunityMediaPermission = {
 };
 
 export const PROFESSIONAL_MEDIA_PERMISSION_LABEL =
-  "Mídia disponível apenas para psicólogos verificados com Plano Profissional ativo.";
+  "Mídia disponível apenas para psicólogos verificados.";
 
 export const hasActiveProfessionalMediaPlan = (userData?: user | null) =>
   Boolean(
@@ -38,9 +38,7 @@ export const getCommunityMediaPermission = (userData?: user | null): CommunityMe
   if (userData?.role === "psicologo") {
     return {
       canAttach,
-      reason: activeProfessionalPlan
-        ? "Confirme seu registro CFP para anexar mídia."
-        : PROFESSIONAL_MEDIA_PERMISSION_LABEL,
+      reason: PROFESSIONAL_MEDIA_PERMISSION_LABEL,
       showControl: true,
     };
   }
