@@ -21,6 +21,9 @@ A referência visual ativa continua sendo Builder Quick Copy `vcp://quickcopy/vc
 - Árvores recolhidas com o comentário salvo como descendente deixam de esconder o alvo enquanto o foco está ativo, permitindo o scroll automático e o destaque temporário.
 - O destaque visual usa a paleta azul suave existente (`primary-soft` e sombra azul sutil), sem criar novo token.
 - Na tela Salvos, os textos clicáveis dos cards em desktop preservam a cor tipográfica padrão e removem aparência de link tradicional; a interatividade fica no cursor e nos hovers discretos já alinhados ao design system.
+- Posts salvos passam a poder usar o mesmo padrão de cartão clicável das respostas salvas: hover no card inteiro e navegação para o post original ao clicar em qualquer área não-interativa do card.
+- O comportamento é opt-in no `CommunityPostCard` por `openPostOnCardClick`, preservando os demais usos do card em feed, perfil e comunidade.
+- Interações internas (`a`, `button`, campos, mídia e menus) continuam bloqueando a navegação do card para manter links de perfil, comunidade e ações da barra funcionando de forma independente.
 
 ## Consequências
 
@@ -36,6 +39,7 @@ A referência visual ativa continua sendo Builder Quick Copy `vcp://quickcopy/vc
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Smoke local: `Invoke-WebRequest http://localhost:3000/app/posts/saved` retornou HTTP 200.
+- Smoke local: `Invoke-WebRequest http://localhost:3000/app/community` retornou HTTP 200.
 
 ## Pendências
 

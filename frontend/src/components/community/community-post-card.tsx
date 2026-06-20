@@ -3,8 +3,10 @@
 import { BadgeCheck, FileText, Reply, UserX } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   type MouseEventHandler,
+  type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
   useCallback,
@@ -36,6 +38,7 @@ type CommunityPostCardProps = {
   headerExtra?: ReactNode;
   interactiveActions?: boolean;
   onShare: (post: PostListPost) => void;
+  openPostOnCardClick?: boolean;
   post: PostListPost;
   profilePublicationMode?: boolean;
   saveActionOverride?: {
@@ -241,6 +244,30 @@ const InlineExpandableText = ({
 
 const postDetailHref = (post: PostListPost) =>
   `/app/community/${post.community.slug}/post/${post.id}`;
+
+const isPostCardInteractiveTarget = (target: EventTarget | null) => {
+  const targetElement =
+    target instanceof Element ? target : target instanceof Node ? target.parentElement : null;
+
+  if (!targetElement) return false;
+
+  return Boolean(
+    targetElement.closest(
+      [
+        "a",
+        "button",
+        "input",
+        "textarea",
+        "select",
+        "video",
+        "audio",
+        "[role='button']",
+        "[role='menu']",
+        "[role='menuitem']",
+      ].join(","),
+    ),
+  );
+};
 
 const AuthorAvatar = ({
   anonymous,
@@ -468,6 +495,7 @@ export const CommunityPostCard = ({
   headerExtra,
   interactiveActions = false,
   onShare,
+  openPostOnCardClick = false,
   post,
   profilePublicationMode = false,
   saveActionOverride,
@@ -476,6 +504,7 @@ export const CommunityPostCard = ({
   showHighlightedProfessionalReply = true,
   statusBadge,
 }: CommunityPostCardProps) => {
+  const router = useRouter();
   const contributionType = (post as ProfileContributionPost).contribution_type;
   const primaryReply =
     profilePublicationMode && contributionType === "reply"
@@ -616,9 +645,31 @@ export const CommunityPostCard = ({
     label: saveSnapshot.saved ? "Remover dos salvos" : "Salvar",
     onClick: interactiveActions ? handleToggleSave : undefined,
   };
+  const postHref = postDetailHref(post);
+  const handleCardClick = (event: ReactMouseEvent<HTMLElement>) => {
+    if (!openPostOnCardClick || isPostCardInteractiveTarget(event.target)) return;
+
+    router.push(postHref);
+  };
+  const handleCardKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
+    if (!openPostOnCardClick || isPostCardInteractiveTarget(event.target)) return;
+    if (event.key !== "Enter" && event.key !== " ") return;
+
+    event.preventDefault();
+    router.push(postHref);
+  };
 
   return (
-    <article className="w-full overflow-hidden rounded-[22px] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
+    <article
+      className={cn(
+        "w-full overflow-hidden rounded-[22px] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)]",
+        openPostOnCardClick &&
+          "transition hover:border-primary/20 hover:bg-primary-soft/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 md:cursor-pointer",
+      )}
+      onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
+      tabIndex={openPostOnCardClick ? -1 : undefined}
+    >
       {showCommunityHeader ? (
         <div className="mb-4 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold tracking-[-0.01em] text-muted">
           <CommunityContextIcon
@@ -726,7 +777,7 @@ export const CommunityPostCard = ({
               profilePublicationMode && "line-clamp-2 text-[1.08rem] leading-[1.22]",
               desktopPlainLinks && "md:no-underline md:hover:text-foreground md:hover:no-underline",
             )}
-            href={postDetailHref(post)}
+            href={postHref}
           >
             {displayTitle}
           </Link>
@@ -746,7 +797,7 @@ export const CommunityPostCard = ({
           <InlineExpandableText
             className="text-sm leading-6 text-muted"
             expanded={false}
-            href={postDetailHref(post)}
+            href={postHref}
             text={displayContent}
           />
         )}
@@ -771,7 +822,7 @@ export const CommunityPostCard = ({
         className="mt-4 border-border border-t pt-3"
         comments={{
           count: post.replies_count,
-          href: postDetailHref(post),
+          href: postHref,
           label: "Comentários",
         }}
         currentVote={voteSnapshot.currentVote}

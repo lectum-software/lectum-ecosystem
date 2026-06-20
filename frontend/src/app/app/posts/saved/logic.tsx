@@ -566,6 +566,7 @@ export const SavedPostsLogic = () => {
                     key={item.id}
                     interactiveActions
                     onShare={sharePost}
+                    openPostOnCardClick
                     post={item.post}
                     saveActionOverride={{
                       active: true,
