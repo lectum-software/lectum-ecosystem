@@ -13,7 +13,6 @@ import {
   Lightbulb,
   Link2,
   type LucideIcon,
-  MessageSquare,
   PlayCircle,
   Repeat2,
   Search,
@@ -45,6 +44,7 @@ import { AppPageHeader } from "@/components/ui/app-page-header";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
@@ -78,8 +78,10 @@ const getDefaultCustomRange = () => {
   };
 };
 
+type AnalyticsCardIcon = LucideIcon | typeof WhatsAppIcon;
+
 type AnalyticsCardView = {
-  icon: LucideIcon;
+  icon: AnalyticsCardIcon;
   id: string;
   label: string;
   source?: PsychologistAnalyticsMetric["source"] | "untracked";
@@ -152,7 +154,7 @@ const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCardView[] 
   },
   {
     id: "whatsapp_clicks",
-    icon: MessageSquare,
+    icon: WhatsAppIcon,
     label: "Conversões WhatsApp",
     value: toCount(data?.metrics.whatsapp_clicks),
     source: "contact_request",
