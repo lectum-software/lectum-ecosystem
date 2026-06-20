@@ -3,6 +3,7 @@
 import { Check } from "lucide-react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -13,6 +14,8 @@ const normalizeParam = (value: string | string[] | undefined) => {
 
   return value;
 };
+
+const LAST_CREATED_POST_HREF_KEY = "lectum:last-created-post-href";
 
 type CommunityPostSuccessLogicProps = {
   asModalSlot?: boolean;
@@ -25,12 +28,18 @@ export const CommunityPostSuccessLogic = ({
   const searchParams = useSearchParams();
   const slug = normalizeParam(params?.slug);
   const postId = searchParams.get("postId")?.trim() || null;
-  const publicationHref =
-    slug && slug !== COMMUNITY_FEED_SLUG
-      ? postId
-        ? `/app/community/${slug}/post/${postId}`
-        : `/app/community/${slug}`
-      : DEFAULT_COMMUNITY_FEED_HREF;
+  const communitySlug = searchParams.get("communitySlug")?.trim() || null;
+  const [storedPublicationHref] = useState(() =>
+    typeof window === "undefined"
+      ? null
+      : window.sessionStorage.getItem(LAST_CREATED_POST_HREF_KEY),
+  );
+  const publicationSlug = communitySlug || (slug && slug !== COMMUNITY_FEED_SLUG ? slug : null);
+  const publicationHref = publicationSlug
+    ? postId
+      ? `/app/community/${publicationSlug}/post/${postId}`
+      : `/app/community/${publicationSlug}`
+    : storedPublicationHref || DEFAULT_COMMUNITY_FEED_HREF;
 
   const modal = (
     <div

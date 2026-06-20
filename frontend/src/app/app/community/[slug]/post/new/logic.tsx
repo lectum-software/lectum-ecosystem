@@ -105,6 +105,7 @@ const communityNameCollator = new Intl.Collator("pt-BR", {
 });
 const SHEET_CLOSE_DELAY_MS = 220;
 const EDITOR_FIELD_IDS = new Set(["create-post-title", "create-post-content"]);
+const LAST_CREATED_POST_HREF_KEY = "lectum:last-created-post-href";
 
 type CreateCommunityPostLogicProps = {
   asModalSlot?: boolean;
@@ -151,7 +152,12 @@ export const CreateCommunityPostLogic = ({
 
   const mutation = useCreateCommunityPost({
     onSuccess: (post) => {
-      router.push(`/app/community/${post.community.slug}/post/success?postId=${post.id}`);
+      const publicationHref = `/app/community/${post.community.slug}/post/${post.id}`;
+
+      window.sessionStorage.setItem(LAST_CREATED_POST_HREF_KEY, publicationHref);
+      router.push(
+        `/app/community/${post.community.slug}/post/success?postId=${post.id}&communitySlug=${encodeURIComponent(post.community.slug)}`,
+      );
     },
     onError: (error) => {
       const resolvedError = resolveCreatePostError(error);
