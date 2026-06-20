@@ -673,42 +673,44 @@ export const CommunityPostCard = ({
       tabIndex={openPostOnCardClick ? -1 : undefined}
     >
       {showCommunityHeader ? (
-        <div className="mb-4 flex min-w-0 flex-wrap items-center gap-1.5 gap-y-2 text-[11px] font-semibold tracking-[-0.01em] text-muted">
-          <CommunityContextIcon
-            className={cn("h-3.5 w-3.5 shrink-0", usesMutedCommunityContext && "text-muted/80")}
-            aria-hidden="true"
-          />
-          <span className="shrink-0">{communityContextLabel}</span>
-          <Link
-            className={cn(
-              "block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-black underline-offset-4 hover:text-primary hover:underline",
-              profilePublicationMode || usesMutedCommunityContext
-                ? "text-[#64748B] dark:text-muted"
-                : "text-foreground",
-              desktopPlainLinks &&
-                (profilePublicationMode || usesMutedCommunityContext
-                  ? "md:no-underline md:hover:text-[#64748B] md:hover:no-underline dark:md:hover:text-muted"
-                  : "md:no-underline md:hover:text-foreground md:hover:no-underline"),
-            )}
-            href={`/app/community/${post.community.slug}`}
-          >
-            {post.community.name}
-          </Link>
-          {communityHeaderIncludesTime ? (
-            <>
-              <span className="shrink-0 text-muted/70" aria-hidden="true">
-                &bull;
-              </span>
-              <span className="shrink-0 text-muted">{formatRelativeTime(displayCreatedAt)}</span>
-            </>
-          ) : null}
-          {post.muted_by_current_user ? <PostMutedBadge className="ml-1" /> : null}
+        <div className="mb-4 flex min-w-0 items-center gap-2 text-[11px] font-semibold tracking-[-0.01em] text-muted">
+          <div className="flex min-w-0 flex-1 items-center gap-1.5">
+            <CommunityContextIcon
+              className={cn("h-3.5 w-3.5 shrink-0", usesMutedCommunityContext && "text-muted/80")}
+              aria-hidden="true"
+            />
+            <span className="shrink-0">{communityContextLabel}</span>
+            <Link
+              className={cn(
+                "block min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap font-black underline-offset-4 hover:text-primary hover:underline",
+                profilePublicationMode || usesMutedCommunityContext
+                  ? "text-[#64748B] dark:text-muted"
+                  : "text-foreground",
+                desktopPlainLinks &&
+                  (profilePublicationMode || usesMutedCommunityContext
+                    ? "md:no-underline md:hover:text-[#64748B] md:hover:no-underline dark:md:hover:text-muted"
+                    : "md:no-underline md:hover:text-foreground md:hover:no-underline"),
+              )}
+              href={`/app/community/${post.community.slug}`}
+            >
+              {post.community.name}
+            </Link>
+            {communityHeaderIncludesTime ? (
+              <>
+                <span className="shrink-0 text-muted/70" aria-hidden="true">
+                  &bull;
+                </span>
+                <span className="shrink-0 text-muted">{formatRelativeTime(displayCreatedAt)}</span>
+              </>
+            ) : null}
+          </div>
+          {post.muted_by_current_user ? <PostMutedBadge className="shrink-0" /> : null}
           {statusBadge}
           {headerExtra}
-          <PostOwnerActionMenu className="ml-auto" post={post} />
+          <PostOwnerActionMenu className="shrink-0" post={post} />
         </div>
       ) : (
-        <div className="mb-3 flex flex-wrap justify-end gap-2">
+        <div className="mb-3 flex items-center justify-end gap-2">
           {post.muted_by_current_user ? <PostMutedBadge /> : null}
           {statusBadge}
           <PostOwnerActionMenu post={post} />

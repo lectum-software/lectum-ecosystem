@@ -8,8 +8,6 @@ import {
   CalendarDays,
   Check,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   Clock,
   Compass,
   FileText,
@@ -45,9 +43,9 @@ import { createPortal } from "react-dom";
 import { useAccount } from "@/api/callers/account";
 import {
   useCommunityDetail,
-  useCommunityFeedPosts,
-  useCommunityPosts,
   useFollowCommunity,
+  useInfiniteCommunityFeedPosts,
+  useInfiniteCommunityPosts,
   useUnfollowCommunity,
 } from "@/api/callers/community";
 import { useSavePost, useVotePost } from "@/api/callers/posts";
@@ -1240,22 +1238,24 @@ const PostCard = ({
   return (
     <article className="overflow-hidden rounded-[22px] border border-[#E6EAF0] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:border-border dark:bg-surface">
       {showCommunityHeader ? (
-        <div className="mb-4 flex min-w-0 flex-wrap items-center gap-1.5 gap-y-2 text-[11px] font-semibold text-subtle">
-          <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-          <span className="shrink-0">Postado em</span>
-          <Link
-            className="block min-w-0 cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap font-black text-muted"
-            href={communityDetailHref(post.community.slug)}
-          >
-            {post.community.name}
-          </Link>
+        <div className="mb-4 flex min-w-0 items-center gap-2 text-[11px] font-semibold text-subtle">
+          <div className="flex min-w-0 flex-1 items-center gap-1.5">
+            <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span className="shrink-0">Postado em</span>
+            <Link
+              className="block min-w-0 flex-1 cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap font-black text-muted"
+              href={communityDetailHref(post.community.slug)}
+            >
+              {post.community.name}
+            </Link>
+          </div>
           <CommunityFollowToggle
-            className="ml-1"
+            className="shrink-0"
             initialFollowing={Boolean(post.community.following)}
             slug={post.community.slug}
           />
-          {post.muted_by_current_user ? <PostMutedBadge className="ml-1" /> : null}
-          <PostOwnerActionMenu className="ml-auto" post={post} />
+          {post.muted_by_current_user ? <PostMutedBadge className="shrink-0" /> : null}
+          <PostOwnerActionMenu className="shrink-0" post={post} />
         </div>
       ) : null}
 
@@ -1287,7 +1287,7 @@ const PostCard = ({
           )}
         </div>
         {!showCommunityHeader ? (
-          <div className="ml-auto flex shrink-0 flex-wrap justify-end gap-2">
+          <div className="ml-auto flex shrink-0 items-center justify-end gap-2">
             {post.muted_by_current_user ? <PostMutedBadge /> : null}
             <PostOwnerActionMenu post={post} />
           </div>
@@ -1341,46 +1341,65 @@ const PostCard = ({
   );
 };
 
-const Pagination = ({
-  currentPage,
-  disabled,
-  onPageChange,
-  pages,
+const flattenCommunityPostPages = (pages?: Array<{ data: CommunityPost[] }>) => {
+  const seen = new Set<string>();
+  const posts: CommunityPost[] = [];
+
+  for (const page of pages ?? []) {
+    for (const post of page.data) {
+      if (seen.has(post.id)) continue;
+
+      seen.add(post.id);
+      posts.push(post);
+    }
+  }
+
+  return posts;
+};
+
+const InfinitePostLoader = ({
+  hasNextPage,
+  isLoading,
+  label,
+  onLoadMore,
 }: {
-  currentPage: number;
-  disabled?: boolean;
-  onPageChange: (page: number) => void;
-  pages: number;
+  hasNextPage: boolean;
+  isLoading: boolean;
+  label: string;
+  onLoadMore: () => void;
 }) => {
-  if (pages <= 1) return null;
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!hasNextPage || isLoading) return;
+
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          onLoadMore();
+        }
+      },
+      { rootMargin: "520px 0px" },
+    );
+
+    observer.observe(sentinel);
+
+    return () => observer.disconnect();
+  }, [hasNextPage, isLoading, onLoadMore]);
+
+  if (!hasNextPage && !isLoading) return null;
 
   return (
-    <nav
-      aria-label="Paginação do feed"
-      className="flex items-center justify-between gap-3 rounded-[22px] border border-border bg-surface p-3"
-    >
-      <Button
-        disabled={currentPage <= 1 || disabled}
-        onClick={() => onPageChange(currentPage - 1)}
-        type="button"
-        variant="outline"
-      >
-        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-        Anterior
-      </Button>
-      <span className="text-sm font-bold text-muted">
-        {currentPage} de {pages}
-      </span>
-      <Button
-        disabled={currentPage >= pages || disabled}
-        onClick={() => onPageChange(currentPage + 1)}
-        type="button"
-        variant="outline"
-      >
-        Próxima
-        <ChevronRight className="h-4 w-4" aria-hidden="true" />
-      </Button>
-    </nav>
+    <div className="grid min-h-10 place-items-center py-2" ref={sentinelRef}>
+      {isLoading ? (
+        <LoadingState label={label} />
+      ) : (
+        <span className="sr-only">Carregar mais posts automaticamente</span>
+      )}
+    </div>
   );
 };
 
@@ -2233,21 +2252,19 @@ const CommunityPublishOnboarding = ({
 const CommunityDetailLogic = ({ slug }: { slug: string }) => {
   const router = useRouter();
   const conversion = useProgressiveConversion();
-  const [page, setPage] = useState(1);
   const [sort, setSort] = useState<CommunityPostSort>("featured");
   const [sortPeriods, setSortPeriods] = useState<CommunityPostSelectedPeriods>({});
   const [communitySearchOpen, setCommunitySearchOpen] = useState(false);
   const [communitySearch, setCommunitySearch] = useState("");
   const deferredCommunitySearch = useDeferredValue(communitySearch.trim());
   const communitySearchInputRef = useRef<HTMLInputElement>(null);
-  const communitySearchReturnStateRef = useRef<{ page: number; scrollY: number } | null>(null);
+  const communitySearchReturnStateRef = useRef<{ scrollY: number } | null>(null);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const [followingOverride, setFollowingOverride] = useState<boolean | null>(null);
   const detail = useCommunityDetail(slug);
   const postsQueryParams = useMemo(
     () => ({
       limit: PAGE_LIMIT,
-      page,
       sort,
       ...(sort === "commented" && sortPeriods.commented ? { period: sortPeriods.commented } : {}),
       ...(sort === "voted" && sortPeriods.voted ? { period: sortPeriods.voted } : {}),
@@ -2255,28 +2272,49 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
         ? { search: deferredCommunitySearch }
         : {}),
     }),
-    [
-      communitySearchOpen,
-      deferredCommunitySearch,
-      page,
-      sort,
-      sortPeriods.commented,
-      sortPeriods.voted,
-    ],
+    [communitySearchOpen, deferredCommunitySearch, sort, sortPeriods.commented, sortPeriods.voted],
   );
-  const postsQuery = useCommunityPosts(slug, postsQueryParams, Boolean(detail.data));
+  const postsQuery = useInfiniteCommunityPosts(slug, postsQueryParams, Boolean(detail.data));
   const followMutation = useFollowCommunity();
   const unfollowMutation = useUnfollowCommunity();
   const community = detail.data?.community;
+  const loadedPosts = useMemo(
+    () => flattenCommunityPostPages(postsQuery.data?.pages),
+    [postsQuery.data?.pages],
+  );
   const posts = useMemo(
-    () => sortCommunityPosts(postsQuery.data?.data ?? [], sort, sortPeriods),
-    [postsQuery.data?.data, sort, sortPeriods],
+    () => sortCommunityPosts(loadedPosts, sort, sortPeriods),
+    [loadedPosts, sort, sortPeriods],
   );
   const detailError = detail.isError ? resolveCommunityDetailError(detail.error) : null;
   const postsError = postsQuery.isError ? resolveFeedError(postsQuery.error) : null;
   const membershipPending = followMutation.isPending || unfollowMutation.isPending;
   const following = followingOverride ?? Boolean(community?.following);
   const hasCommunitySearchTerm = communitySearchOpen && deferredCommunitySearch.length > 0;
+  const isInitialPostsLoading =
+    (postsQuery.isLoading || postsQuery.isPending) && posts.length === 0;
+  const {
+    fetchNextPage: fetchNextCommunityPostsPage,
+    hasNextPage: hasNextCommunityPostsPage,
+    isFetching: isFetchingCommunityPosts,
+    isFetchingNextPage: isFetchingNextCommunityPostsPage,
+  } = postsQuery;
+  const loadMoreCommunityPosts = useCallback(() => {
+    if (
+      !hasNextCommunityPostsPage ||
+      isFetchingCommunityPosts ||
+      isFetchingNextCommunityPostsPage
+    ) {
+      return;
+    }
+
+    void fetchNextCommunityPostsPage();
+  }, [
+    fetchNextCommunityPostsPage,
+    hasNextCommunityPostsPage,
+    isFetchingCommunityPosts,
+    isFetchingNextCommunityPostsPage,
+  ]);
 
   useEffect(() => {
     if (!communitySearchOpen) return;
@@ -2286,12 +2324,10 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
 
   const openCommunitySearch = () => {
     communitySearchReturnStateRef.current = {
-      page,
       scrollY: typeof window === "undefined" ? 0 : window.scrollY,
     };
     setCommunitySearch("");
     setCommunitySearchOpen(true);
-    setPage(1);
   };
 
   const closeCommunitySearch = () => {
@@ -2299,10 +2335,6 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
 
     setCommunitySearch("");
     setCommunitySearchOpen(false);
-
-    if (returnState) {
-      setPage(returnState.page);
-    }
 
     if (returnState && typeof window !== "undefined") {
       const { scrollY } = returnState;
@@ -2413,10 +2445,7 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
                 communityName={community.name}
                 inputRef={communitySearchInputRef}
                 onBack={closeCommunitySearch}
-                onSearchChange={(value) => {
-                  setCommunitySearch(value);
-                  setPage(1);
-                }}
+                onSearchChange={setCommunitySearch}
                 search={communitySearch}
               />
             ) : (
@@ -2447,21 +2476,17 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
 
             <div className="grid gap-3">
               <CommunityPostSortChips
-                onChange={(value) => {
-                  setSort(value);
-                  setPage(1);
-                }}
+                onChange={setSort}
                 onPeriodChange={(value, period) => {
                   setSort(value);
                   setSortPeriods((current) => ({ ...current, [value]: period }));
-                  setPage(1);
                 }}
                 periods={sortPeriods}
                 value={sort}
               />
             </div>
 
-            {postsQuery.isLoading || postsQuery.isPending ? (
+            {isInitialPostsLoading ? (
               <div className="grid min-h-[220px] place-items-center rounded-[22px] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
                 <LoadingState label="Carregando posts da comunidade" />
               </div>
@@ -2473,7 +2498,7 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
               </InlineAlert>
             ) : null}
 
-            {!postsQuery.isLoading && !postsQuery.isPending && !postsError && posts.length === 0 ? (
+            {!isInitialPostsLoading && !postsError && posts.length === 0 ? (
               <EmptyState
                 action={
                   hasCommunitySearchTerm ? (
@@ -2521,15 +2546,15 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
               </div>
             ) : null}
 
-            {postsQuery.isFetching && !postsQuery.isLoading ? (
+            {postsQuery.isFetching && !postsQuery.isFetchingNextPage && !isInitialPostsLoading ? (
               <LoadingState label="Atualizando posts" />
             ) : null}
 
-            <Pagination
-              currentPage={page}
-              disabled={postsQuery.isFetching}
-              onPageChange={setPage}
-              pages={postsQuery.data?.pages ?? 0}
+            <InfinitePostLoader
+              hasNextPage={Boolean(hasNextCommunityPostsPage)}
+              isLoading={isFetchingNextCommunityPostsPage}
+              label="Carregando mais posts"
+              onLoadMore={loadMoreCommunityPosts}
             />
           </>
         ) : null}
@@ -2566,7 +2591,6 @@ export const CommunityFeedLogic = () => {
   const communityFromLegacySlug =
     routeSlug !== COMMUNITY_FEED_SLUG ? getCommunityFeedChip(routeSlug) : null;
   const selectedCommunitySlug = communityFromQuery?.slug ?? communityFromLegacySlug?.slug ?? null;
-  const [page, setPage] = useState(1);
   const [scope, setScope] = useState<CommunityFeedScope>("all");
   const [filterOpen, setFilterOpen] = useState(false);
   const [headerHidden, setHeaderHidden] = useState(false);
@@ -2579,18 +2603,31 @@ export const CommunityFeedLogic = () => {
     : COMMUNITY_CREATE_POST_HREF;
   const query = useMemo(
     () => ({
-      page,
       limit: PAGE_LIMIT,
       scope,
       ...(deferredSearch ? { search: deferredSearch } : {}),
       ...(selectedCommunitySlug ? { community: selectedCommunitySlug } : {}),
     }),
-    [deferredSearch, page, scope, selectedCommunitySlug],
+    [deferredSearch, scope, selectedCommunitySlug],
   );
-  const feed = useCommunityFeedPosts(query);
-  const posts = feed.data?.data ?? [];
+  const feed = useInfiniteCommunityFeedPosts(query);
+  const posts = useMemo(() => flattenCommunityPostPages(feed.data?.pages), [feed.data?.pages]);
   const errorMessage = feed.isError ? resolveFeedError(feed.error) : null;
-  const hasNoFollowedCommunities = scope === "following" && (feed.data?.following_count ?? 0) === 0;
+  const firstFeedPage = feed.data?.pages[0];
+  const hasNoFollowedCommunities =
+    scope === "following" && (firstFeedPage?.following_count ?? 0) === 0;
+  const isInitialFeedLoading = (feed.isLoading || feed.isPending) && posts.length === 0;
+  const {
+    fetchNextPage: fetchNextFeedPage,
+    hasNextPage: hasNextFeedPage,
+    isFetching: isFetchingFeed,
+    isFetchingNextPage: isFetchingNextFeedPage,
+  } = feed;
+  const loadMoreFeedPosts = useCallback(() => {
+    if (!hasNextFeedPage || isFetchingFeed || isFetchingNextFeedPage) return;
+
+    void fetchNextFeedPage();
+  }, [fetchNextFeedPage, hasNextFeedPage, isFetchingFeed, isFetchingNextFeedPage]);
 
   const handleCreatePostClick = (event: ReactMouseEvent<HTMLAnchorElement>, href: string) => {
     if (conversion.isAuthenticated) return;
@@ -2676,10 +2713,7 @@ export const CommunityFeedLogic = () => {
                 <Input
                   aria-label="Buscar no feed"
                   className="h-12 rounded-full border-[#DFE5EC] bg-white pl-11 text-sm shadow-sm dark:bg-surface"
-                  onChange={(event) => {
-                    setSearch(event.target.value);
-                    setPage(1);
-                  }}
+                  onChange={(event) => setSearch(event.target.value)}
                   placeholder="Buscar no feed"
                   type="search"
                   value={search}
@@ -2687,21 +2721,18 @@ export const CommunityFeedLogic = () => {
               </div>
 
               <FilterMenu
-                onScopeChange={(value) => {
-                  setScope(value);
-                  setPage(1);
-                }}
+                onScopeChange={setScope}
                 open={filterOpen}
                 scope={scope}
                 setOpen={setFilterOpen}
               />
             </div>
 
-            <CommunityChips activeSlug={selectedCommunitySlug} onNavigate={() => setPage(1)} />
+            <CommunityChips activeSlug={selectedCommunitySlug} onNavigate={() => undefined} />
           </div>
         </header>
 
-        {feed.isLoading || feed.isPending ? (
+        {isInitialFeedLoading ? (
           <div className="grid min-h-[45vh] place-items-center rounded-[22px] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
             <LoadingState label="Carregando feed da comunidade" />
           </div>
@@ -2719,7 +2750,7 @@ export const CommunityFeedLogic = () => {
           </InlineAlert>
         ) : null}
 
-        {!feed.isLoading && !feed.isPending && !errorMessage && posts.length === 0 ? (
+        {!isInitialFeedLoading && !errorMessage && posts.length === 0 ? (
           <EmptyState
             action={
               hasNoFollowedCommunities ? (
@@ -2758,13 +2789,15 @@ export const CommunityFeedLogic = () => {
           </div>
         ) : null}
 
-        {feed.isFetching && !feed.isLoading ? <LoadingState label="Atualizando feed" /> : null}
+        {feed.isFetching && !feed.isFetchingNextPage && !isInitialFeedLoading ? (
+          <LoadingState label="Atualizando feed" />
+        ) : null}
 
-        <Pagination
-          currentPage={page}
-          disabled={feed.isFetching}
-          onPageChange={setPage}
-          pages={feed.data?.pages ?? 0}
+        <InfinitePostLoader
+          hasNextPage={Boolean(hasNextFeedPage)}
+          isLoading={isFetchingNextFeedPage}
+          label="Carregando mais posts"
+          onLoadMore={loadMoreFeedPosts}
         />
       </section>
 

@@ -87,3 +87,30 @@ As páginas de detalhe por comunidade serão criadas depois. Até lá, chips e n
 - Criar páginas de detalhe de comunidade e post.
 - Implementar votos, salvamentos e compartilhamentos persistidos quando suas tasks entrarem em execução.
 - Criar schema persistido para mídia de posts quando anexos/vídeos de comunidade entrarem no escopo.
+
+
+## Atualizacao 2026-06-20 - header sem quebra e rolagem infinita
+
+### Contexto
+
+No mobile, cards do feed podiam quebrar a linha do botao `Seguir` ou do menu `...` quando o nome da comunidade era longo. A paginacao visivel `Anterior / Proxima` tambem interrompia a leitura do feed e da pagina interna de comunidade, apesar do comportamento esperado ser de rede social com carregamento progressivo.
+
+### Decisao
+
+- A linha de contexto dos cards passa a ser uma unica linha flex sem quebra: `Postado em`, nome da comunidade, `Seguir` e `...` permanecem alinhados.
+- Quando faltar espaco, apenas o nome da comunidade trunca com ellipsis, preservando botoes e menus como elementos `shrink-0`.
+- O feed global e a pagina interna de comunidade deixam de renderizar controles manuais de paginacao.
+- As leituras continuam usando os endpoints paginados reais (`page`/`limit`), mas o frontend passa a carregar a proxima pagina com `useInfiniteQuery` e `IntersectionObserver` ao aproximar o usuario do fim da lista.
+- O card compartilhado de publicacoes tambem recebe o mesmo tratamento de header sem quebra para manter consistencia em Salvos, Meus posts e perfil.
+
+### Consequencias
+
+- Nao ha alteracao de backend, Prisma, contrato HTTP, ordenacao, filtros, votos, salvos ou ranking.
+- A experiencia de leitura fica mais fluida e nao mostra paginacao visual ao usuario final.
+- O comportamento preserva dados reais e apenas compoe multiplas paginas retornadas pela API existente.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Validacao HTTP local das rotas `/app/community/feed` e `/app/community/autocuidado-em-pratica`.

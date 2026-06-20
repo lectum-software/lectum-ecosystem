@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import keys from "@/api/cache/keys";
 import type {
   CommunityFeedQuery,
@@ -35,6 +35,19 @@ export const useCommunityFeedPosts = (query: CommunityFeedQuery = {}, enabled = 
   return useQuery({
     queryKey: keys.community.feed(query),
     queryFn: () => api.getCommunityFeedPosts(query),
+    enabled,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
+};
+
+export const useInfiniteCommunityFeedPosts = (query: CommunityFeedQuery = {}, enabled = true) => {
+  return useInfiniteQuery({
+    queryKey: keys.community.feed({ ...query, mode: "infinite" }),
+    queryFn: ({ pageParam }) => api.getCommunityFeedPosts({ ...query, page: pageParam as number }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.pages ? lastPage.page + 1 : undefined,
     enabled,
     refetchOnWindowFocus: false,
     retry: false,
@@ -121,6 +134,24 @@ export const useCommunityPosts = (
   return useQuery({
     queryKey: keys.community.posts(slug, query),
     queryFn: () => api.getCommunityPosts(slug, query),
+    enabled: Boolean(slug) && enabled,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
+};
+
+export const useInfiniteCommunityPosts = (
+  slug: string,
+  query: CommunityPostsQuery = {},
+  enabled = true,
+) => {
+  return useInfiniteQuery({
+    queryKey: keys.community.posts(slug, { ...query, mode: "infinite" }),
+    queryFn: ({ pageParam }) =>
+      api.getCommunityPosts(slug, { ...query, page: pageParam as number }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.pages ? lastPage.page + 1 : undefined,
     enabled: Boolean(slug) && enabled,
     refetchOnWindowFocus: false,
     retry: false,
