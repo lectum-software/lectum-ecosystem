@@ -23,6 +23,9 @@ A referência visual ativa segue sendo Builder Quick Copy `vcp://quickcopy/vcp-2
 - Manter `Responder` como ação textual, elevando sua escala para 12px e `font-weight: 600` para equilibrar melhor com os ícones de 18px–20px.
 - Preservar os componentes compartilhados (`CommunityActionBar`, `PostActionButton`, `VoteActionButton`) para que o ajuste alcance posts e todos os níveis da árvore de comentários/respostas.
 - Manter ícones de menu de card em escala própria, ajustando o menu de respostas para 20px.
+- Para comentários/respostas no detalhe do post, mover ações secundárias (`Salvar`, `Compartilhar`, `Denunciar`/`Excluir`) para um menu `...` na linha de ações, inspirado no padrão do Reddit.
+- Manter `Responder` sempre visível na linha de ações e remover o truncamento em mobile, priorizando a ação principal até a última camada visual de respostas.
+- Preservar a barra do post principal com `Salvar` e `Compartilhar` visíveis, pois há mais espaço e essas ações têm maior relevância no conteúdo principal.
 
 ## Consequências
 
@@ -39,6 +42,7 @@ A referência visual ativa segue sendo Builder Quick Copy `vcp://quickcopy/vcp-2
 - `pnpm check`
 - Smoke local: `http://localhost:3000/app/community` retornou HTTP 200.
 - Smoke local: `http://localhost:3000/app/posts/saved` retornou HTTP 200.
+- Smoke local: `http://localhost:3000/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video` retornou HTTP 200.
 
 ## Pendências
 

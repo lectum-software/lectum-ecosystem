@@ -3,15 +3,18 @@
 import {
   ArrowLeft,
   BadgeCheck,
+  Bookmark,
   ChevronLeft,
   ChevronRight,
   FileText,
   Flag,
   Loader2,
   MessageCircle,
+  MoreHorizontal,
   MoreVertical,
   Paperclip,
   Send,
+  Share2,
   Trash2,
   UserX,
   X,
@@ -887,10 +890,126 @@ const PostVoteBar = ({
   />
 );
 
+type ReplyOverflowMenuProps = {
+  deletePending?: boolean;
+  isOwnReply: boolean;
+  onDelete: () => void;
+  onReport: () => void;
+  onShare: () => void;
+  onToggleSave: MouseEventHandler<HTMLButtonElement>;
+  reply: PostReply;
+  savePending?: boolean;
+};
+
+const ReplyOverflowMenu = ({
+  deletePending,
+  isOwnReply,
+  onDelete,
+  onReport,
+  onShare,
+  onToggleSave,
+  reply,
+  savePending,
+}: ReplyOverflowMenuProps) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  return (
+    <div className="relative shrink-0" data-comment-collapse-ignore="true">
+      <button
+        aria-expanded={menuOpen}
+        aria-haspopup="menu"
+        aria-label="Mais ações da resposta"
+        className="grid h-7 w-7 place-items-center rounded-full text-[#64748B] transition hover:bg-surface-muted hover:text-[#182033] active:scale-[0.97] dark:text-muted dark:hover:text-foreground"
+        onClick={(event) => {
+          event.stopPropagation();
+          setMenuOpen((current) => !current);
+        }}
+        type="button"
+      >
+        <MoreHorizontal className="h-[18px] w-[18px]" aria-hidden="true" />
+      </button>
+
+      {menuOpen ? (
+        <div
+          className="absolute top-8 right-0 z-30 w-56 overflow-hidden rounded-2xl border border-[#E5EAF0] bg-white p-1.5 text-sm shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:border-border dark:bg-surface"
+          role="menu"
+        >
+          <button
+            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-[#475569] transition hover:bg-[#F8FAFC] hover:text-[#182033] disabled:cursor-not-allowed disabled:opacity-60 dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
+            disabled={savePending}
+            onClick={(event) => {
+              event.stopPropagation();
+              setMenuOpen(false);
+              onToggleSave(event);
+            }}
+            role="menuitem"
+            type="button"
+          >
+            <Bookmark
+              className={cn("h-4 w-4", reply.saved && "fill-current text-primary")}
+              aria-hidden="true"
+            />
+            {reply.saved ? "Remover dos salvos" : "Salvar resposta"}
+          </button>
+
+          <button
+            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-[#475569] transition hover:bg-[#F8FAFC] hover:text-[#182033] dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
+            onClick={(event) => {
+              event.stopPropagation();
+              setMenuOpen(false);
+              onShare();
+            }}
+            role="menuitem"
+            type="button"
+          >
+            <Share2 className="h-4 w-4" aria-hidden="true" />
+            Compartilhar resposta
+          </button>
+
+          {isOwnReply ? (
+            <button
+              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-danger transition hover:bg-danger/10 hover:text-danger disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={deletePending}
+              onClick={(event) => {
+                event.stopPropagation();
+                setMenuOpen(false);
+                onDelete();
+              }}
+              role="menuitem"
+              type="button"
+            >
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+              Excluir comentário
+            </button>
+          ) : (
+            <button
+              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-[#475569] transition hover:bg-[#F8FAFC] hover:text-[#182033] dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
+              onClick={(event) => {
+                event.stopPropagation();
+                setMenuOpen(false);
+                onReport();
+              }}
+              role="menuitem"
+              type="button"
+            >
+              <Flag className="h-4 w-4" aria-hidden="true" />
+              Denunciar comentário
+            </button>
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
 const ReplyVoteBar = ({
   currentVote,
+  deletePending,
   disabled,
+  isOwnReply,
+  onDelete,
   onReply,
+  onReport,
   onShare,
   onToggleSave,
   onVote,
@@ -898,8 +1017,12 @@ const ReplyVoteBar = ({
   savePending,
 }: {
   currentVote: 1 | -1 | null;
+  deletePending?: boolean;
   disabled?: boolean;
+  isOwnReply: boolean;
+  onDelete: () => void;
   onReply: () => void;
+  onReport: () => void;
   onShare: () => void;
   onToggleSave: MouseEventHandler<HTMLButtonElement>;
   onVote: (value: 1 | -1) => void;
@@ -911,8 +1034,7 @@ const ReplyVoteBar = ({
     onToggleSave(event);
   };
 
-  const handleShare: MouseEventHandler<HTMLButtonElement> = (event) => {
-    event.stopPropagation();
+  const handleShare = () => {
     onShare();
   };
 
@@ -927,16 +1049,18 @@ const ReplyVoteBar = ({
         onClick: onReply,
         textOnly: true,
       }}
-      save={{
-        active: reply.saved,
-        disabled: savePending,
-        label: reply.saved ? "Remover resposta dos salvos" : "Salvar resposta",
-        onClick: handleToggleSave,
-      }}
-      share={{
-        label: "Compartilhar resposta",
-        onClick: handleShare,
-      }}
+      endSlot={
+        <ReplyOverflowMenu
+          deletePending={deletePending}
+          isOwnReply={isOwnReply}
+          onDelete={onDelete}
+          onReport={onReport}
+          onShare={handleShare}
+          onToggleSave={handleToggleSave}
+          reply={reply}
+          savePending={savePending}
+        />
+      }
       showUpvoteText={false}
       size="xs"
       upvotesCount={reply.upvotes_count}
@@ -1005,7 +1129,6 @@ const ReplyCard = ({
   const inlineReplyTarget = inlineReplyTargets[reply.id] ?? null;
   const isReplyComposerOpen = Boolean(inlineReplyTarget);
   const [contentExpanded, setContentExpanded] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [treeCollapsed, setTreeCollapsed] = useState(false);
   const visualMaxDepth =
     maxInlineDepth < 0 ? MAX_REPLY_TREE_DEPTH : Math.min(maxInlineDepth, MAX_REPLY_TREE_DEPTH);
@@ -1171,62 +1294,6 @@ const ReplyCard = ({
                 </p>
               )}
             </div>
-
-            <div className="relative">
-              <button
-                aria-expanded={menuOpen}
-                aria-haspopup="menu"
-                aria-label="Mais opções da resposta"
-                className="grid h-8 w-8 place-items-center rounded-full text-[#64748B] transition hover:bg-surface-muted"
-                data-comment-collapse-ignore="true"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setMenuOpen((current) => !current);
-                }}
-                type="button"
-              >
-                <MoreVertical className="h-5 w-5" aria-hidden="true" />
-              </button>
-
-              {menuOpen ? (
-                <div
-                  className="absolute top-9 right-0 z-20 w-56 overflow-hidden rounded-2xl border border-[#E5EAF0] bg-white p-1.5 text-sm shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:border-border dark:bg-surface"
-                  data-comment-collapse-ignore="true"
-                  role="menu"
-                >
-                  {isOwnReply ? (
-                    <button
-                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-danger transition hover:bg-danger/10 hover:text-danger disabled:cursor-not-allowed disabled:opacity-60"
-                      disabled={deleteReplyPending}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setMenuOpen(false);
-                        onDeleteReply(reply);
-                      }}
-                      role="menuitem"
-                      type="button"
-                    >
-                      <Trash2 className="h-4 w-4" aria-hidden="true" />
-                      Excluir comentário
-                    </button>
-                  ) : (
-                    <button
-                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-[#475569] transition hover:bg-[#F8FAFC] hover:text-[#182033] dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setMenuOpen(false);
-                        onReportReply(reply);
-                      }}
-                      role="menuitem"
-                      type="button"
-                    >
-                      <Flag className="h-4 w-4" aria-hidden="true" />
-                      Denunciar comentário
-                    </button>
-                  )}
-                </div>
-              ) : null}
-            </div>
           </div>
 
           <div
@@ -1271,8 +1338,12 @@ const ReplyCard = ({
           <div data-comment-collapse-ignore="true">
             <ReplyVoteBar
               currentVote={reply.current_user_vote}
+              deletePending={deleteReplyPending}
               disabled={votePending}
+              isOwnReply={isOwnReply}
+              onDelete={() => onDeleteReply(reply)}
               onReply={() => onReply(reply)}
+              onReport={() => onReportReply(reply)}
               onShare={() => onShare(reply)}
               onToggleSave={toggleSaveReply}
               onVote={(value) => onVote(reply.id, value)}
