@@ -59,3 +59,17 @@ Validação adicional:
 - Smoke HTTP local:
   - `http://localhost:3000/app/community/feed/post/new` retornou 200.
   - `http://localhost:3000/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video` retornou 200.
+
+## Atualização 2026-06-20 - Placeholders profissionais no novo post
+
+A tela de criação de post passou a diferenciar os placeholders por tipo de usuário. Para psicólogos, o título usa `Dê um título ao seu conteúdo` e o conteúdo usa `Compartilhe com a comunidade uma orientação, reflexão ou conteúdo baseado na sua experiência profissional.`. Pacientes permanecem com a copy voltada a pergunta/relato pessoal. A decisão reaproveita o `isPsychologist` já recebido pelo hook de formulário, sem alterar validação, payload ou layout.
+
+Validação adicional:
+
+- `pnpm --dir frontend exec biome check --write "src/app/app/community/[slug]/post/new/use-form.tsx"`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke HTTP local:
+  - `http://localhost:3000/app/community/feed/post/new` retornou 200.
+  - `http://localhost:3000/app/community/ansiedade-em-equilibrio/post/new` retornou 200.

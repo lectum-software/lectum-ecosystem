@@ -29,11 +29,18 @@ type UseCreateCommunityPostFormParams = {
 
 const contentGuidancePlaceholder =
   "Conte aos psicólogos o que aconteceu, como você está se sentindo e o que já tentou fazer até agora.";
+const psychologistTitlePlaceholder = "Dê um título ao seu conteúdo";
+const psychologistContentPlaceholder =
+  "Compartilhe com a comunidade uma orientação, reflexão ou conteúdo baseado na sua experiência profissional.";
 
 const buildFields = ({
   communityOptions,
+  isPsychologist,
   loadingCommunities,
-}: Pick<UseCreateCommunityPostFormParams, "communityOptions" | "loadingCommunities">) =>
+}: Pick<
+  UseCreateCommunityPostFormParams,
+  "communityOptions" | "isPsychologist" | "loadingCommunities"
+>) =>
   [
     {
       name: "community_slug",
@@ -58,7 +65,9 @@ const buildFields = ({
       field: "textarea",
       id: "create-post-title",
       label: "Título do post",
-      placeholder: "Título (Diga o assunto ou faça uma pergunta)",
+      placeholder: isPsychologist
+        ? psychologistTitlePlaceholder
+        : "Título (Diga o assunto ou faça uma pergunta)",
       required: true,
       max: 140,
       autoFocus: true,
@@ -74,7 +83,7 @@ const buildFields = ({
       field: "textarea",
       id: "create-post-content",
       label: "Conteúdo do post",
-      placeholder: contentGuidancePlaceholder,
+      placeholder: isPsychologist ? psychologistContentPlaceholder : contentGuidancePlaceholder,
       required: true,
       rows: 5,
       max: 2000,
@@ -104,11 +113,12 @@ export const toCreateCommunityPostPayload = (
 export const useCreateCommunityPostForm = ({
   communityOptions,
   defaultCommunitySlug,
+  isPsychologist,
   loadingCommunities,
 }: UseCreateCommunityPostFormParams) => {
   const fields = useMemo(
-    () => buildFields({ communityOptions, loadingCommunities }),
-    [communityOptions, loadingCommunities],
+    () => buildFields({ communityOptions, isPsychologist, loadingCommunities }),
+    [communityOptions, isPsychologist, loadingCommunities],
   );
 
   return useFormList<CreateCommunityPostForm>({
