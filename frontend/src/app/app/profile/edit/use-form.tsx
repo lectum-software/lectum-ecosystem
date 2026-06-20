@@ -61,14 +61,13 @@ type UsePatientProfileFormProps = {
 
 const genderSelectStyles = {
   emptyLabel: "Selecione seu gênero",
-  inputClassName:
-    "h-12 rounded-[1.15rem] border-[#cfe5fb] bg-white px-4 pr-11 text-sm font-semibold text-foreground shadow-[0_8px_22px_rgba(47,141,235,0.08)] hover:border-[#b8daf8] hover:bg-[#f8fbff] focus:border-primary focus:ring-4 focus:ring-primary/15",
-  selectChevronClassName: "right-4 h-4 w-4 text-primary/75",
+  inputClassName: "pr-11",
+  selectChevronClassName: "right-4",
   selectContentClassName:
-    "top-[calc(100%+8px)] max-h-64 rounded-[1.15rem] border-[#cfe5fb] bg-white p-1.5 text-sm font-semibold text-foreground shadow-[0_18px_40px_rgba(15,23,42,0.12)]",
+    "top-[calc(100%+6px)] max-h-64 rounded-[var(--lectum-control-radius)] border-border bg-white p-1.5 text-sm text-foreground shadow-[var(--lectum-shadow-soft)]",
   selectOptionClassName:
-    "rounded-[0.9rem] px-3.5 py-2.5 text-sm leading-5 text-foreground hover:bg-[#f3f8ff] hover:text-primary active:bg-[#eaf4ff]",
-  selectOptionSelectedClassName: "bg-[#eaf4ff] text-primary",
+    "rounded-xl px-3 py-2 text-sm leading-5 text-foreground hover:bg-surface-muted hover:text-foreground active:bg-primary-soft",
+  selectOptionSelectedClassName: "bg-primary-soft text-primary",
   useCustomSelect: true,
 } satisfies Partial<Field<PatientProfileForm>>;
 

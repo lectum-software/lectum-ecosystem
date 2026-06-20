@@ -61,3 +61,11 @@ Implementar o perfil privado do paciente com:
 - O card usa ícone `ShieldCheck`, título `Acesse sua conta`, texto orientado a perfil/preferências/continuidade e hierarquia visual clara: `Criar conta` como CTA primária e `Fazer login` como CTA secundária.
 - Não houve mudança de contrato, backend, Prisma, persistência, endpoints ou packages.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP local em mobile 390px confirmando novo conteúdo, ausência da copy antiga, CTAs visíveis e card sem overflow horizontal.
+
+## Complemento 2026-06-19 - consistência visual dos campos básicos
+
+- O seletor `Gênero` em `/app/profile/edit` permanece no `SelectController` customizado para preservar acessibilidade, React Hook Form, Zod e a fundação da TASK-02.
+- A decisão deste ajuste é remover o estilo local que deixava o seletor com borda azul específica, radius próprio, peso de fonte mais forte e sombra azul, adotando o mesmo padrão visual do campo `Nome de exibição` para a superfície fechada.
+- O dropdown preserva as mesmas opções e o mesmo valor persistido em `patient_profile.gender`; apenas a camada visual do controle foi padronizada.
+- Não houve mudança de contrato, backend, Prisma, persistência, endpoints ou packages.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile 390x844 em `/app/profile/edit`, confirmando consistência visual do seletor fechado com o input de nome.

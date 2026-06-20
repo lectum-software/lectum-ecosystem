@@ -222,3 +222,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - O ajuste remove a variação anterior de link textual `Voltar` sem alterar formulário, validações, upload/remoção de avatar, endpoints, dados persistidos, Prisma ou packages.
 - ADR atualizado: `adrs/0119-header-secundario-premium-compartilhado.md`.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP em `/app/profile/edit` com usuário paciente temporário real removido do banco ao final, nos viewports mobile 390x844 e desktop 1024x768, confirmando centralização do título e ausência de overflow horizontal.
+
+## Ajuste complementar em 2026-06-19 - consistência visual do seletor de gênero
+
+- A seção `Informações Básicas` de `/app/profile/edit` manteve a referência local `_product/proto/Editar Perfil - Paciente.jpg` como norte auditável; Builder/Quick Copy não está exposto como ferramenta direta nesta sessão.
+- O seletor `Gênero` continua usando o `SelectController` customizado da fundação da TASK-02, sem criar componente paralelo.
+- A aparência fechada do seletor foi alinhada ao campo `Nome de exibição`: mesma altura, mesmo `border-radius`, mesma borda, mesmo padding base, mesma hierarquia de placeholder e sem o sombreamento azul customizado anterior.
+- A única diferença visual funcional preservada é a seta do dropdown, mantendo o comportamento de seleção e as opções existentes.
+- Não houve alteração de backend, Prisma, contratos, persistência ou packages.
+- Validações executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check` e Chrome/CDP mobile 390x844 em `/app/profile/edit`, confirmando altura, radius, borda, padding esquerdo, sombra e fundo iguais ao campo `Nome de exibição`, chevron preservado e ausência de overflow horizontal.
