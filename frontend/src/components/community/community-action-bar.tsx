@@ -202,6 +202,7 @@ export const CommunityActionBar = ({
           <button
             aria-label={reply.label ?? "Responder"}
             className={textOnlyReplyClassName(size)}
+            data-reply-open-trigger="true"
             onClick={stopActionPropagation(reply.onClick)}
             title={reply.label ?? "Responder"}
             type="button"

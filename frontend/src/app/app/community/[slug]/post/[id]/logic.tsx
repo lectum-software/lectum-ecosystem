@@ -118,6 +118,10 @@ const FOCUSED_REPLY_HIGHLIGHT_CLASSES = [
   "bg-primary-soft/80",
   "shadow-[0_0_0_2px_rgb(48_140_232_/_22%),0_14px_34px_rgb(48_140_232_/_12%)]",
 ] as const;
+const REPLY_DRAFT_DISCARD_CONFIRMATION = "Você tem uma resposta em rascunho. Deseja descartá-la?";
+
+const confirmDiscardReplyDraft = () =>
+  typeof window === "undefined" || window.confirm(REPLY_DRAFT_DISCARD_CONFIRMATION);
 
 const useIsPostDetailMobile = () => {
   const [isMobile, setIsMobile] = useState(false);
@@ -1036,12 +1040,14 @@ const ReplyVoteBar = ({
 };
 
 const ReplyCard = ({
+  activeInlineReplyFormRef,
   currentUserId,
   deleteReplyPending,
   depth = 0,
   inlineReplyTargets,
   mediaPermission,
   onCancelInlineReplyTarget,
+  onInlineReplyDraftChange,
   onDeleteReply,
   onReply,
   onReportReply,
@@ -1058,12 +1064,14 @@ const ReplyCard = ({
   threadHrefBase,
   votePending,
 }: {
+  activeInlineReplyFormRef?: RefObject<HTMLFormElement | null>;
   currentUserId?: string | null;
   deleteReplyPending?: boolean;
   depth?: number;
   inlineReplyTargets: ReplyTargetMap;
   mediaPermission: ReplyMediaPermission;
   onCancelInlineReplyTarget: (replyId: string) => void;
+  onInlineReplyDraftChange?: (hasDraft: boolean) => void;
   onDeleteReply: (reply: PostReply) => void;
   onReply: (reply: PostReply) => void;
   onReportReply: (reply: PostReply) => void;
@@ -1322,8 +1330,10 @@ const ReplyCard = ({
               <ReplyComposer
                 apiError={replyApiError}
                 disabled={replyDisabled}
+                formRef={activeInlineReplyFormRef}
                 mediaPermission={mediaPermission}
                 onCancelContext={() => onCancelInlineReplyTarget(reply.id)}
+                onDraftStateChange={onInlineReplyDraftChange}
                 onSubmit={(values, mediaFile) => onSubmitReply(values, reply.id, mediaFile)}
                 replyTarget={inlineReplyTarget}
                 variant="inline"
@@ -1360,6 +1370,7 @@ const ReplyCard = ({
           {!childrenHiddenByCollapse
             ? visibleChildren.map((child) => (
                 <ReplyCard
+                  activeInlineReplyFormRef={activeInlineReplyFormRef}
                   currentUserId={currentUserId}
                   deleteReplyPending={deleteReplyPending}
                   depth={depth + 1}
@@ -1369,6 +1380,7 @@ const ReplyCard = ({
                   maxInlineDepth={maxInlineDepth}
                   mediaPermission={mediaPermission}
                   onCancelInlineReplyTarget={onCancelInlineReplyTarget}
+                  onInlineReplyDraftChange={onInlineReplyDraftChange}
                   onDeleteReply={onDeleteReply}
                   onReply={onReply}
                   onReportReply={onReportReply}
@@ -1414,6 +1426,7 @@ const ReplyComposer = ({
   formRef,
   mediaPermission,
   onCancelContext,
+  onDraftStateChange,
   onSubmit,
   replyToName,
   replyTarget,
@@ -1425,6 +1438,7 @@ const ReplyComposer = ({
   formRef?: RefObject<HTMLFormElement | null>;
   mediaPermission: ReplyMediaPermission;
   onCancelContext?: () => void;
+  onDraftStateChange?: (hasDraft: boolean) => void;
   onSubmit: (values: ReplyComposerForm, mediaFile?: File | null) => Promise<void> | void;
   replyToName?: string | null;
   replyTarget: ReplyTarget;
@@ -1454,6 +1468,7 @@ const ReplyComposer = ({
   const content = hook.watch("content");
   const draft = String(content ?? "").trim();
   const hasDraft = draft.length > 0;
+  const hasDiscardableDraft = hasDraft || Boolean(selectedMedia);
   const ready = hasDraft;
   const expanded =
     composerActive ||
@@ -1475,6 +1490,8 @@ const ReplyComposer = ({
   };
 
   const cancelComposer = () => {
+    if (hasDiscardableDraft && !confirmDiscardReplyDraft()) return;
+
     const activeElement = document.activeElement;
     const inputNode = resolvedFormRef.current?.querySelector<HTMLTextAreaElement>("textarea");
 
@@ -1487,6 +1504,7 @@ const ReplyComposer = ({
     setSelectedMedia(null);
     setComposerActive(false);
     resetCancelDrag();
+    onDraftStateChange?.(false);
     onCancelContext?.();
   };
 
@@ -1506,6 +1524,10 @@ const ReplyComposer = ({
 
     return () => window.clearTimeout(timer);
   }, [autoFocus, autoFocusTargetId, resolvedFormRef]);
+
+  useEffect(() => {
+    onDraftStateChange?.(hasDiscardableDraft);
+  }, [hasDiscardableDraft, onDraftStateChange]);
 
   const handleMediaChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -1599,6 +1621,7 @@ const ReplyComposer = ({
           hook.reset({ content: "" });
           setSelectedMedia(null);
           setComposerActive(false);
+          onDraftStateChange?.(false);
         } catch {
           // O estado de erro é tratado pela mutation para manter o campo preenchido.
         }
@@ -1860,6 +1883,7 @@ const Pagination = ({
 };
 
 const RepliesList = ({
+  activeInlineReplyFormRef,
   currentUserId,
   deleteReplyPending,
   errorMessage,
@@ -1868,6 +1892,7 @@ const RepliesList = ({
   maxInlineDepth = MAX_REPLY_TREE_DEPTH,
   mediaPermission,
   onCancelInlineReplyTarget,
+  onInlineReplyDraftChange,
   onDeleteReply,
   onReply,
   onReportReply,
@@ -1883,6 +1908,7 @@ const RepliesList = ({
   threadHrefBase,
   votePending,
 }: {
+  activeInlineReplyFormRef?: RefObject<HTMLFormElement | null>;
   currentUserId?: string | null;
   deleteReplyPending?: boolean;
   errorMessage?: string | null;
@@ -1891,6 +1917,7 @@ const RepliesList = ({
   maxInlineDepth?: number;
   mediaPermission: ReplyMediaPermission;
   onCancelInlineReplyTarget: (replyId: string) => void;
+  onInlineReplyDraftChange?: (hasDraft: boolean) => void;
   onDeleteReply: (reply: PostReply) => void;
   onReply: (reply: PostReply) => void;
   onReportReply: (reply: PostReply) => void;
@@ -1958,6 +1985,7 @@ const RepliesList = ({
                 key={reply.id}
               >
                 <ReplyCard
+                  activeInlineReplyFormRef={activeInlineReplyFormRef}
                   currentUserId={currentUserId}
                   deleteReplyPending={deleteReplyPending}
                   focusReplyId={focusReplyId}
@@ -1965,6 +1993,7 @@ const RepliesList = ({
                   maxInlineDepth={maxInlineDepth}
                   mediaPermission={mediaPermission}
                   onCancelInlineReplyTarget={onCancelInlineReplyTarget}
+                  onInlineReplyDraftChange={onInlineReplyDraftChange}
                   onDeleteReply={onDeleteReply}
                   onReply={onReply}
                   onReportReply={onReportReply}
@@ -2007,6 +2036,8 @@ export const PostDetailLogic = () => {
   const [reportTarget, setReportTarget] = useState<ReportTarget>(null);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const composerRef = useRef<HTMLFormElement | null>(null);
+  const inlineReplyFormRef = useRef<HTMLFormElement | null>(null);
+  const inlineReplyHasDraftRef = useRef(false);
   const mediaPermission = useReplyMediaPermission();
   const postQuery = usePostDetail(postId);
   const repliesQuery = usePostReplies(
@@ -2130,6 +2161,24 @@ export const PostDetailLogic = () => {
     }
   };
 
+  const setInlineReplyDraftState = useCallback((hasDraft: boolean) => {
+    inlineReplyHasDraftRef.current = hasDraft;
+  }, []);
+
+  const closeDesktopReplyTarget = useCallback(() => {
+    inlineReplyHasDraftRef.current = false;
+    setReplyError(null);
+    setDesktopReplyTargets({});
+  }, []);
+
+  const requestCloseDesktopReplyTarget = useCallback(() => {
+    if (isMobile || Object.keys(desktopReplyTargets).length === 0) return true;
+    if (inlineReplyHasDraftRef.current && !confirmDiscardReplyDraft()) return false;
+
+    closeDesktopReplyTarget();
+    return true;
+  }, [closeDesktopReplyTarget, desktopReplyTargets, isMobile]);
+
   const focusMainComposer = useCallback(() => {
     setReplyError(null);
     if (!conversion.isAuthenticated) {
@@ -2187,12 +2236,21 @@ export const PostDetailLogic = () => {
         return;
       }
 
-      setDesktopReplyTargets((currentTargets) => ({
-        ...currentTargets,
-        [reply.id]: target,
-      }));
+      if (desktopReplyTargets[reply.id]) {
+        window.setTimeout(() => {
+          const inputNode =
+            inlineReplyFormRef.current?.querySelector<HTMLTextAreaElement>("textarea");
+          inputNode?.focus({ preventScroll: true });
+        }, 0);
+        return;
+      }
+
+      if (!requestCloseDesktopReplyTarget()) return;
+
+      inlineReplyHasDraftRef.current = false;
+      setDesktopReplyTargets({ [reply.id]: target });
     },
-    [conversion, isMobile, postId],
+    [conversion, desktopReplyTargets, isMobile, postId, requestCloseDesktopReplyTarget],
   );
 
   const submitReply = async (
@@ -2237,13 +2295,7 @@ export const PostDetailLogic = () => {
     });
 
     if (parentReplyId) {
-      setDesktopReplyTargets((currentTargets) => {
-        if (!currentTargets[parentReplyId]) return currentTargets;
-
-        const nextTargets = { ...currentTargets };
-        delete nextTargets[parentReplyId];
-        return nextTargets;
-      });
+      closeDesktopReplyTarget();
       setMobileReplyTarget((currentTarget) =>
         currentTarget?.id === parentReplyId ? null : currentTarget,
       );
@@ -2251,6 +2303,25 @@ export const PostDetailLogic = () => {
       setMobileReplyTarget(null);
     }
   };
+
+  useEffect(() => {
+    if (isMobile || Object.keys(desktopReplyTargets).length === 0) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (inlineReplyFormRef.current?.contains(target)) return;
+      if (target instanceof Element && target.closest('[data-reply-open-trigger="true"]')) {
+        return;
+      }
+
+      requestCloseDesktopReplyTarget();
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [desktopReplyTargets, isMobile, requestCloseDesktopReplyTarget]);
 
   const handleTogglePostSave = () => {
     if (!post) return;
@@ -2396,6 +2467,7 @@ export const PostDetailLogic = () => {
               />
 
               <RepliesList
+                activeInlineReplyFormRef={inlineReplyFormRef}
                 currentUserId={currentUserId}
                 deleteReplyPending={deleteReplyMutation.isPending}
                 errorMessage={repliesError}
@@ -2403,16 +2475,8 @@ export const PostDetailLogic = () => {
                 inlineReplyTargets={visibleInlineReplyTargets}
                 loading={repliesQuery.isLoading || repliesQuery.isPending}
                 mediaPermission={mediaPermission}
-                onCancelInlineReplyTarget={(replyId) => {
-                  setReplyError(null);
-                  setDesktopReplyTargets((currentTargets) => {
-                    if (!currentTargets[replyId]) return currentTargets;
-
-                    const nextTargets = { ...currentTargets };
-                    delete nextTargets[replyId];
-                    return nextTargets;
-                  });
-                }}
+                onCancelInlineReplyTarget={closeDesktopReplyTarget}
+                onInlineReplyDraftChange={setInlineReplyDraftState}
                 onDeleteReply={(reply) =>
                   deleteReplyMutation.mutate({ postId: post.id, replyId: reply.id })
                 }
@@ -2499,6 +2563,8 @@ export const PostReplyThreadLogic = () => {
   const [reportTarget, setReportTarget] = useState<ReportTarget>(null);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const composerRef = useRef<HTMLFormElement | null>(null);
+  const inlineReplyFormRef = useRef<HTMLFormElement | null>(null);
+  const inlineReplyHasDraftRef = useRef(false);
   const mediaPermission = useReplyMediaPermission();
   const postQuery = usePostDetail(postId);
   const threadQuery = usePostReplyThread(postId, replyId, Boolean(postId && replyId));
@@ -2552,6 +2618,24 @@ export const PostReplyThreadLogic = () => {
     }
   };
 
+  const setInlineReplyDraftState = useCallback((hasDraft: boolean) => {
+    inlineReplyHasDraftRef.current = hasDraft;
+  }, []);
+
+  const closeDesktopReplyTarget = useCallback(() => {
+    inlineReplyHasDraftRef.current = false;
+    setReplyError(null);
+    setDesktopReplyTargets({});
+  }, []);
+
+  const requestCloseDesktopReplyTarget = useCallback(() => {
+    if (isMobile || Object.keys(desktopReplyTargets).length === 0) return true;
+    if (inlineReplyHasDraftRef.current && !confirmDiscardReplyDraft()) return false;
+
+    closeDesktopReplyTarget();
+    return true;
+  }, [closeDesktopReplyTarget, desktopReplyTargets, isMobile]);
+
   const handleReplyTarget = useCallback(
     (reply: PostReply) => {
       setReplyError(null);
@@ -2579,12 +2663,21 @@ export const PostReplyThreadLogic = () => {
         return;
       }
 
-      setDesktopReplyTargets((currentTargets) => ({
-        ...currentTargets,
-        [reply.id]: target,
-      }));
+      if (desktopReplyTargets[reply.id]) {
+        window.setTimeout(() => {
+          const inputNode =
+            inlineReplyFormRef.current?.querySelector<HTMLTextAreaElement>("textarea");
+          inputNode?.focus({ preventScroll: true });
+        }, 0);
+        return;
+      }
+
+      if (!requestCloseDesktopReplyTarget()) return;
+
+      inlineReplyHasDraftRef.current = false;
+      setDesktopReplyTargets({ [reply.id]: target });
     },
-    [conversion, isMobile, postId],
+    [conversion, desktopReplyTargets, isMobile, postId, requestCloseDesktopReplyTarget],
   );
 
   const submitReply = async (
@@ -2629,17 +2722,30 @@ export const PostReplyThreadLogic = () => {
     });
 
     if (parentReplyId) {
-      setDesktopReplyTargets((currentTargets) => {
-        if (!currentTargets[parentReplyId]) return currentTargets;
-
-        const nextTargets = { ...currentTargets };
-        delete nextTargets[parentReplyId];
-        return nextTargets;
-      });
+      closeDesktopReplyTarget();
     }
 
     setMobileReplyTarget(null);
   };
+
+  useEffect(() => {
+    if (isMobile || Object.keys(desktopReplyTargets).length === 0) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (inlineReplyFormRef.current?.contains(target)) return;
+      if (target instanceof Element && target.closest('[data-reply-open-trigger="true"]')) {
+        return;
+      }
+
+      requestCloseDesktopReplyTarget();
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [desktopReplyTargets, isMobile, requestCloseDesktopReplyTarget]);
 
   useEffect(() => {
     if (!conversion.isAuthenticated || !post || !rootReply) return;
@@ -2743,22 +2849,15 @@ export const PostReplyThreadLogic = () => {
             ) : null}
 
             <RepliesList
+              activeInlineReplyFormRef={inlineReplyFormRef}
               currentUserId={currentUserId}
               deleteReplyPending={deleteReplyMutation.isPending}
               errorMessage={null}
               inlineReplyTargets={visibleInlineReplyTargets}
               loading={false}
               mediaPermission={mediaPermission}
-              onCancelInlineReplyTarget={(targetId) => {
-                setReplyError(null);
-                setDesktopReplyTargets((currentTargets) => {
-                  if (!currentTargets[targetId]) return currentTargets;
-
-                  const nextTargets = { ...currentTargets };
-                  delete nextTargets[targetId];
-                  return nextTargets;
-                });
-              }}
+              onCancelInlineReplyTarget={closeDesktopReplyTarget}
+              onInlineReplyDraftChange={setInlineReplyDraftState}
               onDeleteReply={(reply) =>
                 deleteReplyMutation.mutate({ postId: post.id, replyId: reply.id })
               }
