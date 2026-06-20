@@ -61,3 +61,25 @@ Validação adicional:
   - `http://localhost:3000/app/community/autocuidado-em-pratica/post/success?postId=cmqmv53g400119ouhslp91yi6&communitySlug=autocuidado-em-pratica` retornou 200.
   - `http://localhost:3000/app/community/autocuidado-em-pratica/post/cmqmv53g400119ouhslp91yi6` retornou 200.
   - `http://localhost:3000/app/community/autocuidado-em-pratica/post/new` retornou 200.
+
+## Complemento 2026-06-20 - confirmação como estado interno da criação
+
+Para deixar o fluxo mais fluido, a criação de post deixou de navegar para a rota
+`/post/success` após o submit. A confirmação "Post publicado!" passou a ser um
+estado interno da própria modal de criação em `/post/new`, preservando a URL
+dedicada de novo post, mas evitando uma transição intermediária no App Router.
+
+Ao receber o post criado, a modal armazena o href final, faz `router.prefetch` da
+publicação e troca o conteúdo do formulário pelo card de sucesso. O CTA "Ver
+minha publicação" agora usa `router.replace(publicationHref)`, sem recarregar a
+página e sem manter a confirmação no histórico. A rota `/post/success` permanece
+como fallback direto/legado, mas não é mais usada pelo fluxo principal de criação.
+
+Validação adicional:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke HTTP local:
+  - `http://localhost:3000/app/community/autocuidado-em-pratica/post/new` retornou 200.
+  - `http://localhost:3000/app/community/autocuidado-em-pratica/post/cmqmv53g400119ouhslp91yi6` retornou 200.
+  - `http://localhost:3000/app/community/autocuidado-em-pratica` retornou 200.

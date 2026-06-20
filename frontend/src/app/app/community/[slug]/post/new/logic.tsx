@@ -1,8 +1,8 @@
 "use client";
 
-import { Info, Lightbulb, Loader2, Paperclip, X } from "lucide-react";
+import { Check, Info, Lightbulb, Loader2, Paperclip, X } from "lucide-react";
 import Image from "next/image";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   type PointerEvent as ReactPointerEvent,
   useCallback,
@@ -115,6 +115,7 @@ export const CreateCommunityPostLogic = ({
   asModalSlot = false,
 }: CreateCommunityPostLogicProps) => {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const params = useParams<{ slug?: string | string[] }>();
   const routeSlug = normalizeParam(params?.slug);
@@ -125,8 +126,12 @@ export const CreateCommunityPostLogic = ({
   const [isGuidanceOpen, setIsGuidanceOpen] = useState(false);
   const [isAnonymousTipDismissed, setIsAnonymousTipDismissed] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [createdPublicationHref, setCreatedPublicationHref] = useState<string | null>(null);
+  const [isNavigatingToPublication, setIsNavigatingToPublication] = useState(false);
   const closeTimerRef = useRef<number | null>(null);
   const lastFocusedEditorIdRef = useRef("create-post-title");
+  const previousBodyOverflowRef = useRef<string | null>(null);
+  const previousDocumentOverflowRef = useRef<string | null>(null);
 
   const communitiesQuery = useCommunities({ limit: 50 });
   const communityOptions = useMemo(
@@ -150,14 +155,25 @@ export const CreateCommunityPostLogic = ({
   });
   const { formProps, hook } = form;
 
+  const releaseScrollLock = useCallback(() => {
+    if (previousBodyOverflowRef.current !== null) {
+      document.body.style.overflow = previousBodyOverflowRef.current;
+      previousBodyOverflowRef.current = null;
+    }
+
+    if (previousDocumentOverflowRef.current !== null) {
+      document.documentElement.style.overflow = previousDocumentOverflowRef.current;
+      previousDocumentOverflowRef.current = null;
+    }
+  }, []);
+
   const mutation = useCreateCommunityPost({
     onSuccess: (post) => {
       const publicationHref = `/app/community/${post.community.slug}/post/${post.id}`;
 
       window.sessionStorage.setItem(LAST_CREATED_POST_HREF_KEY, publicationHref);
-      router.replace(
-        `/app/community/${post.community.slug}/post/success?postId=${post.id}&communitySlug=${encodeURIComponent(post.community.slug)}`,
-      );
+      setCreatedPublicationHref(publicationHref);
+      router.prefetch(publicationHref);
     },
     onError: (error) => {
       const resolvedError = resolveCreatePostError(error);
@@ -177,6 +193,17 @@ export const CreateCommunityPostLogic = ({
       toast.error(resolvedError.message);
     },
   });
+
+  useEffect(() => {
+    if (!pathname.endsWith("/post/new")) return;
+
+    const resetFrame = window.requestAnimationFrame(() => {
+      setCreatedPublicationHref(null);
+      setIsNavigatingToPublication(false);
+    });
+
+    return () => window.cancelAnimationFrame(resetFrame);
+  }, [pathname]);
 
   useEffect(() => {
     if (!defaultCommunitySlug || communityOptions.length === 0) return;
@@ -265,18 +292,26 @@ export const CreateCommunityPostLogic = ({
   }, [communitySlugFromQuery, routeSlug, router]);
 
   useEffect(() => {
+    if (isNavigatingToPublication) return;
+
     const frame = window.requestAnimationFrame(() => setIsSheetOpen(true));
     const focusTimer = window.setTimeout(() => {
       document.getElementById("create-post-title")?.focus({ preventScroll: true });
     }, 280);
-    const previousBodyOverflow = document.body.style.overflow;
-    const previousDocumentOverflow = document.documentElement.style.overflow;
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
         handleClose();
       }
     };
+
+    if (previousBodyOverflowRef.current === null) {
+      previousBodyOverflowRef.current = document.body.style.overflow;
+    }
+
+    if (previousDocumentOverflowRef.current === null) {
+      previousDocumentOverflowRef.current = document.documentElement.style.overflow;
+    }
 
     document.body.style.overflow = "hidden";
     document.documentElement.style.overflow = "hidden";
@@ -286,11 +321,25 @@ export const CreateCommunityPostLogic = ({
       window.cancelAnimationFrame(frame);
       window.clearTimeout(focusTimer);
       if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
-      document.body.style.overflow = previousBodyOverflow;
-      document.documentElement.style.overflow = previousDocumentOverflow;
+      releaseScrollLock();
       window.removeEventListener("keydown", handleEscape);
     };
-  }, [handleClose]);
+  }, [handleClose, isNavigatingToPublication, releaseScrollLock]);
+
+  useEffect(() => {
+    if (!isNavigatingToPublication) return;
+
+    releaseScrollLock();
+  }, [isNavigatingToPublication, releaseScrollLock]);
+
+  const handleViewPublication = () => {
+    if (!createdPublicationHref) return;
+
+    setIsSheetOpen(false);
+    setIsNavigatingToPublication(true);
+    releaseScrollLock();
+    router.replace(createdPublicationHref);
+  };
 
   const onSubmit = hook.handleSubmit((values) => {
     mutation.mutate({
@@ -512,137 +561,184 @@ export const CreateCommunityPostLogic = ({
     </div>
   );
 
+  const showSuccessState = Boolean(createdPublicationHref);
+
   const sheet = (
     <div
       className={cn(
-        "fixed inset-0 z-[70] flex items-end justify-center transition-opacity duration-200 ease-out",
+        "fixed inset-0 z-[70] flex justify-center transition-opacity duration-200 ease-out",
+        showSuccessState ? "items-center px-5 py-8" : "items-end",
         asModalSlot
           ? "bg-slate-950/35 backdrop-blur-[8px] supports-[backdrop-filter]:bg-slate-950/35"
           : "bg-background",
-        isSheetOpen ? "opacity-100" : "opacity-0",
+        isSheetOpen && !isNavigatingToPublication ? "opacity-100" : "opacity-0",
       )}
     >
       <section
-        aria-labelledby="create-post-title-heading"
+        aria-labelledby={showSuccessState ? "post-success-title" : "create-post-title-heading"}
         aria-modal="true"
         className={cn(
-          "flex h-[calc(100dvh_-_env(safe-area-inset-top)_-_0.75rem)] w-full max-w-[min(100vw,44rem)] flex-col overflow-hidden rounded-t-[2rem] border border-border bg-surface text-foreground shadow-[var(--lectum-shadow)] transition-transform duration-300 ease-out sm:mb-6 sm:h-[min(86dvh,760px)] sm:rounded-[2rem]",
-          isSheetOpen ? "translate-y-0" : "translate-y-full",
+          showSuccessState
+            ? "w-full max-w-[390px] rounded-[32px] border border-border/80 bg-surface px-6 pt-10 pb-6 text-center text-foreground shadow-[0_28px_80px_rgba(15,23,42,0.22)] transition duration-200 ease-out"
+            : "flex h-[calc(100dvh_-_env(safe-area-inset-top)_-_0.75rem)] w-full max-w-[min(100vw,44rem)] flex-col overflow-hidden rounded-t-[2rem] border border-border bg-surface text-foreground shadow-[var(--lectum-shadow)] transition-transform duration-300 ease-out sm:mb-6 sm:h-[min(86dvh,760px)] sm:rounded-[2rem]",
+          showSuccessState
+            ? isSheetOpen && !isNavigatingToPublication
+              ? "scale-100 opacity-100"
+              : "scale-95 opacity-0"
+            : isSheetOpen && !isNavigatingToPublication
+              ? "translate-y-0"
+              : "translate-y-full",
         )}
         role="dialog"
       >
-        <header className="relative flex h-16 shrink-0 items-center justify-center border-border/70 border-b px-4">
-          <button
-            aria-label="Fechar criação de post e voltar"
-            className="absolute left-3 grid h-10 w-10 place-items-center rounded-full text-foreground transition hover:bg-surface-muted focus:outline-none focus:ring-4 focus:ring-primary/15"
-            onClick={handleClose}
-            type="button"
-          >
-            <X className="h-5 w-5" aria-hidden="true" />
-          </button>
-          <h1
-            className="text-[1.2rem] font-black tracking-[-0.03em]"
-            id="create-post-title-heading"
-          >
-            Criar Post
-          </h1>
-          <div className="absolute right-3">
-            <button
-              aria-expanded={isGuidanceOpen}
-              aria-label="Ver diretrizes do post"
-              className="grid h-10 w-10 place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15"
-              onClick={() => {
-                setIsGuidanceOpen((current) => !current);
-                focusLastEditor();
-              }}
-              onMouseDown={(event) => event.preventDefault()}
-              tabIndex={-1}
+        {showSuccessState ? (
+          <>
+            <div className="mx-auto mb-7 grid justify-items-center">
+              <div className="relative grid h-[104px] w-[104px] place-items-center rounded-full bg-[#EAF4FF]">
+                <span className="absolute top-3 -right-1 h-4 w-4 rounded-full bg-[#EAF4FF]" />
+                <span className="absolute bottom-7 -left-4 h-7 w-7 rounded-full bg-[#F1F7FF]" />
+                <span className="grid h-[76px] w-[76px] place-items-center rounded-full bg-[#308CE8] text-white shadow-[0_18px_32px_rgba(48,140,232,0.24)]">
+                  <Check className="h-9 w-9 stroke-[2.8]" aria-hidden="true" />
+                </span>
+              </div>
+            </div>
+
+            <h2
+              className="mb-4 text-[22px] font-extrabold tracking-[-0.02em]"
+              id="post-success-title"
+            >
+              Post publicado!
+            </h2>
+            <p className="mx-auto max-w-[300px] text-base leading-6 text-[#64748B]">
+              {"Seu post foi compartilhado e logo poder\u00e1 receber intera\u00e7\u00f5es!"}
+            </p>
+
+            <Button
+              className="mt-8 h-[54px] w-full rounded-full bg-[#308CE8] text-base font-semibold shadow-[0_12px_24px_rgba(48,140,232,0.2)] hover:bg-[#2579CF]"
+              onClick={handleViewPublication}
               type="button"
             >
-              <Info className="h-5 w-5" aria-hidden="true" />
-            </button>
-            {isGuidanceOpen ? (
-              <div className="absolute top-12 right-0 z-30 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-border bg-surface px-4 py-3 text-xs leading-5 text-muted shadow-[var(--lectum-shadow-soft)]">
-                {guidanceText}
-              </div>
-            ) : null}
-          </div>
-        </header>
-
-        <form
-          className="flex min-h-0 flex-1 flex-col"
-          noValidate
-          onFocusCapture={(event) => {
-            const target = event.target as HTMLElement;
-            if (EDITOR_FIELD_IDS.has(target.id)) {
-              lastFocusedEditorIdRef.current = target.id;
-            }
-          }}
-          onSubmit={onSubmit}
-        >
-          <div
-            className="flex min-h-0 flex-1 flex-col overflow-hidden px-5 pt-4 pb-4"
-            onPointerDown={preserveEditorFocusFromBlankTap}
-          >
-            <div className="flex min-h-0 flex-1 flex-col gap-3">
-              <div className="flex items-start justify-between gap-3">
-                {formProps.fields
-                  .filter((field) => field.name === "community_slug")
-                  .map(renderFormField)}
-              </div>
-
-              <div className="flex min-h-0 flex-1 flex-col gap-0">
-                <div onPointerDown={preserveEditorFocusFromBlankTap}>
-                  {formProps.fields.filter((field) => field.name === "title").map(renderFormField)}
-                </div>
-
-                <div
-                  className="flex min-h-0 flex-1 flex-col"
-                  onPointerDown={preserveEditorFocusFromBlankTap}
-                >
-                  {formProps.fields
-                    .filter((field) => field.name === "content")
-                    .map(renderFormField)}
-                </div>
-              </div>
-
-              <div className="grid gap-3 pb-2">
-                {communitiesQuery.isError ? (
-                  <InlineAlert title="Não foi possível carregar comunidades" variant="error">
-                    Verifique sua conexão e tente novamente.
-                  </InlineAlert>
-                ) : null}
-
-                {hasNoCommunities ? (
-                  <InlineAlert title="Nenhuma comunidade disponível" variant="info">
-                    Ainda não há comunidades publicadas para receber posts.
-                  </InlineAlert>
-                ) : null}
-              </div>
-            </div>
-          </div>
-
-          <footer className="relative shrink-0 border-border/70 border-t bg-surface/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur supports-[backdrop-filter]:bg-surface/90">
-            <div className="flex min-h-12 items-center justify-between gap-3">
-              {isPsychologist ? renderPsychologistMediaButton() : renderAnonymousControls()}
-
-              <Button
-                className={cn(
-                  "h-12 min-w-[6.5rem] shrink-0 rounded-full px-6 text-base font-black shadow-[var(--lectum-shadow-soft)] disabled:bg-surface-muted disabled:text-muted disabled:opacity-100 disabled:shadow-none",
-                  !requiredFieldsReady &&
-                    "bg-surface-muted text-muted shadow-none hover:bg-surface-muted",
-                )}
-                disabled={isSubmitDisabled}
-                type="submit"
+              Ver minha publicação
+            </Button>
+          </>
+        ) : (
+          <>
+            <header className="relative flex h-16 shrink-0 items-center justify-center border-border/70 border-b px-4">
+              <button
+                aria-label="Fechar criação de post e voltar"
+                className="absolute left-3 grid h-10 w-10 place-items-center rounded-full text-foreground transition hover:bg-surface-muted focus:outline-none focus:ring-4 focus:ring-primary/15"
+                onClick={handleClose}
+                type="button"
               >
-                {mutation.isPending ? (
-                  <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+                <X className="h-5 w-5" aria-hidden="true" />
+              </button>
+              <h1
+                className="text-[1.2rem] font-black tracking-[-0.03em]"
+                id="create-post-title-heading"
+              >
+                Criar Post
+              </h1>
+              <div className="absolute right-3">
+                <button
+                  aria-expanded={isGuidanceOpen}
+                  aria-label="Ver diretrizes do post"
+                  className="grid h-10 w-10 place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15"
+                  onClick={() => {
+                    setIsGuidanceOpen((current) => !current);
+                    focusLastEditor();
+                  }}
+                  onMouseDown={(event) => event.preventDefault()}
+                  tabIndex={-1}
+                  type="button"
+                >
+                  <Info className="h-5 w-5" aria-hidden="true" />
+                </button>
+                {isGuidanceOpen ? (
+                  <div className="absolute top-12 right-0 z-30 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-border bg-surface px-4 py-3 text-xs leading-5 text-muted shadow-[var(--lectum-shadow-soft)]">
+                    {guidanceText}
+                  </div>
                 ) : null}
-                Postar
-              </Button>
-            </div>
-          </footer>
-        </form>
+              </div>
+            </header>
+
+            <form
+              className="flex min-h-0 flex-1 flex-col"
+              noValidate
+              onFocusCapture={(event) => {
+                const target = event.target as HTMLElement;
+                if (EDITOR_FIELD_IDS.has(target.id)) {
+                  lastFocusedEditorIdRef.current = target.id;
+                }
+              }}
+              onSubmit={onSubmit}
+            >
+              <div
+                className="flex min-h-0 flex-1 flex-col overflow-hidden px-5 pt-4 pb-4"
+                onPointerDown={preserveEditorFocusFromBlankTap}
+              >
+                <div className="flex min-h-0 flex-1 flex-col gap-3">
+                  <div className="flex items-start justify-between gap-3">
+                    {formProps.fields
+                      .filter((field) => field.name === "community_slug")
+                      .map(renderFormField)}
+                  </div>
+
+                  <div className="flex min-h-0 flex-1 flex-col gap-0">
+                    <div onPointerDown={preserveEditorFocusFromBlankTap}>
+                      {formProps.fields
+                        .filter((field) => field.name === "title")
+                        .map(renderFormField)}
+                    </div>
+
+                    <div
+                      className="flex min-h-0 flex-1 flex-col"
+                      onPointerDown={preserveEditorFocusFromBlankTap}
+                    >
+                      {formProps.fields
+                        .filter((field) => field.name === "content")
+                        .map(renderFormField)}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 pb-2">
+                    {communitiesQuery.isError ? (
+                      <InlineAlert title="Não foi possível carregar comunidades" variant="error">
+                        Verifique sua conexão e tente novamente.
+                      </InlineAlert>
+                    ) : null}
+
+                    {hasNoCommunities ? (
+                      <InlineAlert title="Nenhuma comunidade disponível" variant="info">
+                        Ainda não há comunidades publicadas para receber posts.
+                      </InlineAlert>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+
+              <footer className="relative shrink-0 border-border/70 border-t bg-surface/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur supports-[backdrop-filter]:bg-surface/90">
+                <div className="flex min-h-12 items-center justify-between gap-3">
+                  {isPsychologist ? renderPsychologistMediaButton() : renderAnonymousControls()}
+
+                  <Button
+                    className={cn(
+                      "h-12 min-w-[6.5rem] shrink-0 rounded-full px-6 text-base font-black shadow-[var(--lectum-shadow-soft)] disabled:bg-surface-muted disabled:text-muted disabled:opacity-100 disabled:shadow-none",
+                      !requiredFieldsReady &&
+                        "bg-surface-muted text-muted shadow-none hover:bg-surface-muted",
+                    )}
+                    disabled={isSubmitDisabled}
+                    type="submit"
+                  >
+                    {mutation.isPending ? (
+                      <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+                    ) : null}
+                    Postar
+                  </Button>
+                </div>
+              </footer>
+            </form>
+          </>
+        )}
       </section>
     </div>
   );
