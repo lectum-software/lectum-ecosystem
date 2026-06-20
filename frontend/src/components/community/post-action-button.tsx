@@ -7,24 +7,28 @@ import { cn } from "@/lib/utils";
 
 type PostActionSize = "xs" | "sm" | "md";
 
-export const POST_ACTION_ICON_CLASSNAME = "h-4 w-4 shrink-0";
+export const POST_ACTION_ICON_CLASSNAME = "h-[18px] w-[18px] shrink-0";
 export const POST_ACTION_TEXT_CLASSNAME =
   "min-w-[1.1ch] text-center text-[12px] font-semibold leading-none tracking-[-0.01em]";
 export const POST_ACTION_COUNT_CLASSNAME = `${POST_ACTION_TEXT_CLASSNAME} tabular-nums`;
 
 const sizeClassName = (size: PostActionSize, iconOnly = false) => {
   const base =
-    size === "xs" ? "h-6 text-[10px]" : size === "sm" ? "h-8 text-[12px]" : "h-9 text-[12px]";
+    size === "xs" ? "h-7 text-[10px]" : size === "sm" ? "h-9 text-[12px]" : "h-10 text-[12px]";
 
   if (size === "xs") {
-    return iconOnly ? `${base} w-6 gap-0 px-0` : `${base} min-w-6 gap-0.5 px-1.5`;
+    return iconOnly ? `${base} w-7 gap-0 px-0` : `${base} min-w-7 gap-1 px-1.5`;
   }
 
-  return iconOnly ? `${base} w-8 gap-0 px-0` : `${base} min-w-8 gap-1.5 px-2.5`;
+  if (size === "sm") {
+    return iconOnly ? `${base} w-9 gap-0 px-0` : `${base} min-w-9 gap-1.5 px-2.5`;
+  }
+
+  return iconOnly ? `${base} w-10 gap-0 px-0` : `${base} min-w-10 gap-2 px-3`;
 };
 
 export const postActionIconClassName = (size: PostActionSize = "md") =>
-  size === "xs" ? "h-3.5 w-3.5 shrink-0" : POST_ACTION_ICON_CLASSNAME;
+  size === "md" ? "h-5 w-5 shrink-0" : POST_ACTION_ICON_CLASSNAME;
 
 export const postActionTextClassName = (size: PostActionSize = "md") =>
   cn(

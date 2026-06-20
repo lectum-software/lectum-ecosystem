@@ -1,0 +1,45 @@
+# ADR-0136: Barra de ações de posts e respostas
+
+## Status
+
+Accepted
+
+## Task relacionada
+
+Ajuste pós-task — comunidade, posts e comentários/respostas
+
+## Contexto
+
+As barras de ações de posts e respostas precisavam melhorar legibilidade e área de toque, principalmente no mobile, sem perder a separação visual entre ações de interação (`upvote`, `downvote`, `Responder`) e ações do conteúdo (`Salvar`, `Compartilhar`). No desktop, o espaçamento entre esses grupos estava amplo demais, fazendo a barra parecer espalhada em vez de um conjunto único.
+
+A referência visual ativa segue sendo Builder Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a`; como não há ferramenta Builder callable nesta sessão, foram consultadas as imagens locais `_product/proto/Feed Comunidade.jpg` e `_product/proto/Dentro do Post.jpg`.
+
+## Decisão
+
+- Padronizar os ícones de interação e conteúdo nos componentes compartilhados da comunidade com tamanho visual entre 18px e 20px.
+- Aumentar as áreas clicáveis dos botões de ação para 28px no tamanho `xs`, 36px no `sm` e 40px no `md`, preservando a aparência compacta.
+- Manter no mobile o grupo `Salvar`/`Compartilhar` alinhado à direita com `ml-auto`, garantindo a separação visual solicitada.
+- Aproximar no desktop o grupo `Salvar`/`Compartilhar` do grupo de interação removendo o afastamento automático a partir do breakpoint `sm`.
+- Manter `Responder` como ação textual com `font-weight: 500`, preservando a fonte e melhorando a leitura.
+- Preservar os componentes compartilhados (`CommunityActionBar`, `PostActionButton`, `VoteActionButton`) para que o ajuste alcance posts e todos os níveis da árvore de comentários/respostas.
+- Manter ícones de menu de card em escala própria, ajustando o menu de respostas para 20px.
+
+## Consequências
+
+- A barra fica mais tocável e consistente no mobile sem misturar as ações secundárias com as de interação.
+- No desktop, as ações passam a formar um conjunto mais coeso e menos espalhado horizontalmente.
+- Como o ajuste ocorre em componentes compartilhados, posts, comentários e respostas aninhadas herdam a mesma escala visual.
+- Não há alteração de backend, Prisma, endpoints, packages ou persistência.
+
+## Validação
+
+- `pnpm --dir frontend exec biome check --write "src/components/community/community-action-bar.tsx" "src/components/community/post-action-button.tsx" "src/components/community/vote-action-button.tsx" "src/app/app/community/[slug]/post/[id]/logic.tsx"`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke local: `http://localhost:3000/app/community` retornou HTTP 200.
+- Smoke local: `http://localhost:3000/app/posts/saved` retornou HTTP 200.
+
+## Pendências
+
+- Push remoto depende de credenciais GitHub disponíveis no ambiente.

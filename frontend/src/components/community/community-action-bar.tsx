@@ -60,20 +60,20 @@ const actionBarClassName = (size: CommunityActionSize) =>
     "flex w-full min-w-0 flex-nowrap items-center whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
     size === "xs"
       ? "gap-1 overflow-visible"
-      : "gap-1.5 overflow-x-auto sm:gap-2 sm:overflow-visible",
+      : "gap-1.5 overflow-x-auto sm:gap-1.5 sm:overflow-visible",
   );
 
 const voteClusterClassName = (size: CommunityActionSize, presentation: VotePresentation) => {
   if (presentation === "inline") {
     return cn(
       "inline-flex shrink-0 items-center gap-0.5 overflow-visible bg-transparent p-0 ring-0",
-      size === "xs" ? "h-6" : size === "md" ? "h-9" : "h-8",
+      size === "xs" ? "h-7" : size === "md" ? "h-10" : "h-9",
     );
   }
 
   return cn(
     "inline-flex shrink-0 items-center overflow-visible rounded-full bg-[#F4F6F8] p-0.5 ring-1 ring-[#E7ECF2] dark:bg-surface-muted dark:ring-border",
-    size === "xs" ? "h-7" : size === "md" ? "h-9" : "h-8",
+    size === "xs" ? "min-h-8" : size === "md" ? "min-h-11" : "min-h-10",
   );
 };
 
@@ -81,20 +81,21 @@ const separatorClassName = (size: CommunityActionSize, presentation: VotePresent
   cn(
     "w-px bg-[#DDE4EC] dark:bg-border",
     presentation === "inline" && "hidden",
-    size === "xs" ? "h-3.5" : "h-4",
+    size === "xs" ? "h-4" : "h-5",
   );
 
 const textOnlyReplyClassName = (size: CommunityActionSize) =>
   cn(
     "inline-flex min-w-0 items-center justify-center rounded-md leading-none tracking-[-0.01em] text-muted transition-[color,transform] duration-200 hover:text-foreground active:scale-[0.97]",
-    size === "xs" ? "h-6 max-w-[4.5rem] shrink px-1" : "h-8 shrink-0 px-2",
+    size === "xs"
+      ? "h-7 max-w-[4.75rem] shrink px-1.5"
+      : size === "md"
+        ? "h-10 shrink-0 px-3"
+        : "h-9 shrink-0 px-2.5",
   );
 
-const textOnlyReplyTextClassName = (size: CommunityActionSize) =>
-  cn(
-    "block min-w-0 truncate leading-none tracking-[-0.01em]",
-    size === "xs" ? "text-[10px] font-semibold" : "text-[11px] font-medium",
-  );
+const textOnlyReplyTextClassName =
+  "block min-w-0 truncate text-[11px] font-medium leading-none tracking-[-0.01em]";
 
 const stopActionPropagation =
   (handler?: ActionHandler): ActionHandler =>
@@ -129,8 +130,8 @@ export const CommunityActionBar = ({
     >
       <div
         className={cn(
-          "flex min-w-0 flex-1 flex-nowrap items-center",
-          size === "xs" ? "gap-1" : "gap-1.5 sm:gap-2",
+          "flex min-w-0 flex-1 flex-nowrap items-center sm:flex-none",
+          size === "xs" ? "gap-1 sm:gap-1.5" : "gap-1.5",
         )}
       >
         <div className={voteClusterClassName(size, votePresentation)}>
@@ -205,7 +206,7 @@ export const CommunityActionBar = ({
             title={reply.label ?? "Responder"}
             type="button"
           >
-            <span className={textOnlyReplyTextClassName(size)}>{reply.label ?? "Responder"}</span>
+            <span className={textOnlyReplyTextClassName}>{reply.label ?? "Responder"}</span>
           </button>
         ) : reply ? (
           <PostActionButton
@@ -222,7 +223,9 @@ export const CommunityActionBar = ({
       <div
         className={cn(
           "flex shrink-0 flex-nowrap items-center",
-          size === "xs" ? "ml-auto gap-0.5 pl-1" : "ml-auto gap-1 pl-2",
+          size === "xs"
+            ? "ml-auto gap-0.5 pl-1 sm:ml-0 sm:gap-1 sm:pl-1"
+            : "ml-auto gap-1 pl-2 sm:ml-0 sm:gap-1 sm:pl-1",
         )}
       >
         {save ? (

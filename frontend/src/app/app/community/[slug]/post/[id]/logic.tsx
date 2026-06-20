@@ -1185,7 +1185,7 @@ const ReplyCard = ({
                 }}
                 type="button"
               >
-                <MoreVertical className="h-4 w-4" aria-hidden="true" />
+                <MoreVertical className="h-5 w-5" aria-hidden="true" />
               </button>
 
               {menuOpen ? (
