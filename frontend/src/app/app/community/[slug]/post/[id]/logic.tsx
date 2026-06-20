@@ -949,7 +949,7 @@ const ReplyOverflowMenu = ({
               className={cn("h-4 w-4", reply.saved && "fill-current text-primary")}
               aria-hidden="true"
             />
-            {reply.saved ? "Remover dos salvos" : "Salvar resposta"}
+            {reply.saved ? "Remover dos salvos" : "Salvar"}
           </button>
 
           <button
@@ -963,7 +963,7 @@ const ReplyOverflowMenu = ({
             type="button"
           >
             <Share2 className="h-4 w-4" aria-hidden="true" />
-            Compartilhar resposta
+            Compartilhar
           </button>
 
           {isOwnReply ? (
@@ -979,7 +979,7 @@ const ReplyOverflowMenu = ({
               type="button"
             >
               <Trash2 className="h-4 w-4" aria-hidden="true" />
-              Excluir comentário
+              Excluir
             </button>
           ) : (
             <button
@@ -993,7 +993,7 @@ const ReplyOverflowMenu = ({
               type="button"
             >
               <Flag className="h-4 w-4" aria-hidden="true" />
-              Denunciar comentário
+              Denunciar
             </button>
           )}
         </div>
@@ -1061,6 +1061,7 @@ const ReplyVoteBar = ({
           savePending={savePending}
         />
       }
+      endSlotAlignment="inline"
       showUpvoteText={false}
       size="xs"
       upvotesCount={reply.upvotes_count}

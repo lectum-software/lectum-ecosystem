@@ -26,6 +26,8 @@ A referência visual ativa segue sendo Builder Quick Copy `vcp://quickcopy/vcp-2
 - Para comentários/respostas no detalhe do post, mover ações secundárias (`Salvar`, `Compartilhar`, `Denunciar`/`Excluir`) para um menu `...` na linha de ações, inspirado no padrão do Reddit.
 - Manter `Responder` sempre visível na linha de ações e remover o truncamento em mobile, priorizando a ação principal até a última camada visual de respostas.
 - Preservar a barra do post principal com `Salvar` e `Compartilhar` visíveis, pois há mais espaço e essas ações têm maior relevância no conteúdo principal.
+- Permitir que slots finais secundários fiquem alinhados inline com o grupo principal quando necessário, sem `ml-auto`, mantendo o alinhamento à direita como comportamento padrão das barras de post.
+- Simplificar os rótulos do menu de respostas para `Salvar`, `Compartilhar`, `Denunciar` e `Excluir`, removendo sufixos como `resposta` ou `comentário`.
 
 ## Consequências
 

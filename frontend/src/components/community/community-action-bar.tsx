@@ -39,6 +39,7 @@ export type CommunityActionBarProps = {
   comments?: ActionWithCount;
   currentVote?: VoteValue;
   disabled?: boolean;
+  endSlotAlignment?: "trailing" | "inline";
   endSlot?: ReactNode;
   reply?: {
     label?: string;
@@ -105,6 +106,7 @@ export const CommunityActionBar = ({
   comments,
   currentVote = null,
   disabled,
+  endSlotAlignment = "trailing",
   endSlot,
   onVote,
   reply,
@@ -117,6 +119,7 @@ export const CommunityActionBar = ({
   votePresentation = "cluster",
 }: CommunityActionBarProps) => {
   const canVote = Boolean(onVote);
+  const inlineEndSlot = endSlotAlignment === "inline";
 
   return (
     <div
@@ -126,7 +129,8 @@ export const CommunityActionBar = ({
     >
       <div
         className={cn(
-          "flex min-w-0 flex-1 flex-nowrap items-center sm:flex-none",
+          "flex min-w-0 flex-nowrap items-center sm:flex-none",
+          inlineEndSlot ? "flex-none" : "flex-1",
           size === "xs" ? "gap-1 sm:gap-1.5" : "gap-1.5",
         )}
       >
@@ -219,9 +223,13 @@ export const CommunityActionBar = ({
       <div
         className={cn(
           "flex shrink-0 flex-nowrap items-center",
-          size === "xs"
-            ? "ml-auto gap-0.5 pl-1 sm:ml-0 sm:gap-1 sm:pl-1"
-            : "ml-auto gap-1 pl-2 sm:ml-0 sm:gap-1 sm:pl-1",
+          inlineEndSlot
+            ? size === "xs"
+              ? "gap-0.5 pl-0.5"
+              : "gap-1 pl-1"
+            : size === "xs"
+              ? "ml-auto gap-0.5 pl-1 sm:ml-0 sm:gap-1 sm:pl-1"
+              : "ml-auto gap-1 pl-2 sm:ml-0 sm:gap-1 sm:pl-1",
         )}
       >
         {save ? (
