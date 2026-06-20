@@ -19,10 +19,50 @@ import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 
 const PAGE_LIMIT = 10;
 
-const FILTERS: Array<{ label: string; value: UserPostsType }> = [
-  { label: "Posts", value: "posts" },
-  { label: "Comentários", value: "replies" },
-];
+type InteractionCopy = {
+  contextLabel: string;
+  emptyDescription: string;
+  emptyTitle: string;
+  filterAriaLabel: string;
+  loadingLabel: string;
+  plural: string;
+  screenTitle: string;
+  shareLinkSubject: string;
+  singular: string;
+  singularTitle: string;
+  updatingLabel: string;
+};
+
+const getInteractionCopy = (isPsychologist: boolean): InteractionCopy =>
+  isPsychologist
+    ? {
+        contextLabel: "Respondido em",
+        emptyDescription:
+          "Quando você responder em conversas da comunidade, suas respostas aparecerão aqui.",
+        emptyTitle: "Nenhuma resposta sua por enquanto",
+        filterAriaLabel: "Filtrar meus posts e respostas",
+        loadingLabel: "Carregando seus posts e respostas",
+        plural: "Respostas",
+        screenTitle: "Meus posts e respostas",
+        shareLinkSubject: "da resposta",
+        singular: "resposta",
+        singularTitle: "Resposta",
+        updatingLabel: "Atualizando suas respostas",
+      }
+    : {
+        contextLabel: "Comentado em",
+        emptyDescription:
+          "Quando você comentar em conversas da comunidade, seus comentários aparecerão aqui.",
+        emptyTitle: "Nenhum comentário seu por enquanto",
+        filterAriaLabel: "Filtrar meus posts e comentários",
+        loadingLabel: "Carregando seus posts e comentários",
+        plural: "Comentários",
+        screenTitle: "Meus posts e comentários",
+        shareLinkSubject: "do comentário",
+        singular: "comentário",
+        singularTitle: "Comentário",
+        updatingLabel: "Atualizando seus comentários",
+      };
 
 type ApiErrorData = {
   error?: string;
@@ -75,19 +115,24 @@ const formatRelativeTime = (value: string) => {
 
 const FilterTabs = ({
   disabled,
+  interactionCopy,
   onChange,
   value,
 }: {
   disabled?: boolean;
+  interactionCopy: InteractionCopy;
   onChange: (value: UserPostsType) => void;
   value: UserPostsType;
 }) => (
   <nav
-    aria-label="Filtrar meus posts e comentários"
+    aria-label={interactionCopy.filterAriaLabel}
     className="overflow-x-auto pb-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
   >
     <div className="inline-flex min-w-max rounded-full border border-border/80 bg-surface/80 p-1.5 backdrop-blur">
-      {FILTERS.map((item) => {
+      {[
+        { label: "Posts", value: "posts" as const },
+        { label: interactionCopy.plural, value: "replies" as const },
+      ].map((item) => {
         const active = item.value === value;
 
         return (
@@ -125,9 +170,11 @@ const ProfessionalAnsweredBadge = ({ className }: { className?: string }) => (
 );
 
 const ReplyItemCard = ({
+  interactionCopy,
   item,
   onShare,
 }: {
+  interactionCopy: InteractionCopy;
   item: UserPostListItem;
   onShare: (post: PostListPost, replyId: string) => void;
 }) => {
@@ -222,13 +269,13 @@ const ReplyItemCard = ({
   return (
     <article className="relative grid gap-4 rounded-[24px] border border-border/80 bg-surface p-4 text-inherit shadow-[var(--lectum-shadow-soft)] transition hover:border-primary/18 hover:bg-primary-soft/20">
       <Link
-        aria-label={`Abrir comentário em ${item.post.title}`}
+        aria-label={`Abrir ${interactionCopy.singular} em ${item.post.title}`}
         className="absolute inset-0 z-0 rounded-[24px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
         href={replyHref}
       />
       <div className="pointer-events-none relative z-10 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold tracking-[-0.01em] text-muted">
         <MessageCircle className="h-3.5 w-3.5 shrink-0 text-muted/80" aria-hidden="true" />
-        <span className="shrink-0">Comentado em</span>
+        <span className="shrink-0">{interactionCopy.contextLabel}</span>
         <span className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-extrabold text-[#475569] dark:text-muted">
           {item.post.community.name}
         </span>
@@ -267,7 +314,7 @@ const ReplyItemCard = ({
         comments={{
           count: reply.replies_received_count,
           href: replyHref,
-          label: "Respostas",
+          label: interactionCopy.plural,
         }}
         currentVote={voteState.currentVote}
         disabled={voteMutation.isPending}
@@ -280,12 +327,12 @@ const ReplyItemCard = ({
           onClick: handleToggleSave,
         }}
         share={{
-          label: "Compartilhar comentário",
+          label: `Compartilhar ${interactionCopy.singular}`,
           onClick: () => onShare(item.post, reply.id),
         }}
         showUpvoteText={false}
         upvotesCount={voteState.upvotes}
-        voteLabel="Marcar comentário como útil"
+        voteLabel={`Marcar ${interactionCopy.singular} como útil`}
         votePresentation="inline"
       />
     </article>
@@ -293,11 +340,13 @@ const ReplyItemCard = ({
 };
 
 const Pagination = ({
+  ariaLabel,
   currentPage,
   disabled,
   onPageChange,
   pages,
 }: {
+  ariaLabel: string;
   currentPage: number;
   disabled?: boolean;
   onPageChange: (page: number) => void;
@@ -307,7 +356,7 @@ const Pagination = ({
 
   return (
     <nav
-      aria-label="Paginação dos meus posts"
+      aria-label={ariaLabel}
       className="flex items-center justify-between gap-3 rounded-[22px] border border-border bg-surface p-3"
     >
       <Button
@@ -339,12 +388,13 @@ export const MyPostsLogic = () => {
   const sessionUser = useAppSelector((state) => state.user);
   const [type, setType] = useState<UserPostsType>("posts");
   const [page, setPage] = useState(1);
-  const [shareFeedback, setShareFeedback] = useState<string | null>(null);
+  const [shareFeedback, setShareFeedback] = useState<"interaction" | "post" | null>(null);
   const query = useMemo(() => ({ page, limit: PAGE_LIMIT, type }), [page, type]);
   const postsQuery = useMyPosts(query);
   const items = postsQuery.data?.data ?? [];
   const errorMessage = postsQuery.isError ? resolvePostsError(postsQuery.error) : null;
   const isPsychologist = sessionUser?.role === "psicologo";
+  const interactionCopy = getInteractionCopy(isPsychologist);
 
   const sharePost = async (post: PostListPost, replyId?: string) => {
     if (typeof window === "undefined") return;
@@ -356,11 +406,14 @@ export const MyPostsLogic = () => {
 
     try {
       if (navigator.share) {
-        await navigator.share({ title: replyId ? "Comentário na Lectum" : post.title, url });
+        await navigator.share({
+          title: replyId ? `${interactionCopy.singularTitle} na Lectum` : post.title,
+          url,
+        });
       } else {
         await navigator.clipboard.writeText(url);
       }
-      setShareFeedback(replyId ?? post.id);
+      setShareFeedback(replyId ? "interaction" : "post");
       window.setTimeout(() => setShareFeedback(null), 2400);
     } catch {
       setShareFeedback(null);
@@ -383,16 +436,21 @@ export const MyPostsLogic = () => {
           backHref="/app/profile"
           backLabel="Voltar para perfil"
           className="mb-4"
-          title="Meus posts e comentários"
+          title={interactionCopy.screenTitle}
         />
 
-        <FilterTabs disabled={postsQuery.isFetching} onChange={handleFilterChange} value={type} />
+        <FilterTabs
+          disabled={postsQuery.isFetching}
+          interactionCopy={interactionCopy}
+          onChange={handleFilterChange}
+          value={type}
+        />
 
         <div className="grid gap-4 py-2">
           {postsQuery.isLoading || postsQuery.isPending ? (
             <div className="grid min-h-[45vh] place-items-center rounded-[22px] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
               <LoadingState
-                label={isPsychologist ? "Carregando contribuições" : "Carregando seus posts"}
+                label={type === "posts" ? "Carregando seus posts" : interactionCopy.loadingLabel}
               />
             </div>
           ) : null}
@@ -405,7 +463,8 @@ export const MyPostsLogic = () => {
 
           {shareFeedback ? (
             <InlineAlert title="Link preparado" variant="success">
-              Link do post copiado ou enviado para compartilhamento.
+              Link {shareFeedback === "interaction" ? interactionCopy.shareLinkSubject : "do post"}{" "}
+              copiado ou enviado para compartilhamento.
             </InlineAlert>
           ) : null}
 
@@ -423,14 +482,10 @@ export const MyPostsLogic = () => {
               description={
                 type === "posts"
                   ? "Quando você publicar nas comunidades, seus posts aparecerão aqui."
-                  : "Quando você comentar em conversas da comunidade, seus comentários aparecerão aqui."
+                  : interactionCopy.emptyDescription
               }
               icon={FileText}
-              title={
-                type === "posts"
-                  ? "Nenhum post seu por enquanto"
-                  : "Nenhum comentário seu por enquanto"
-              }
+              title={type === "posts" ? "Nenhum post seu por enquanto" : interactionCopy.emptyTitle}
             />
           ) : null}
 
@@ -438,7 +493,12 @@ export const MyPostsLogic = () => {
             <div className="grid gap-4">
               {items.map((item) =>
                 item.type === "reply" ? (
-                  <ReplyItemCard item={item} key={item.id} onShare={sharePost} />
+                  <ReplyItemCard
+                    interactionCopy={interactionCopy}
+                    item={item}
+                    key={item.id}
+                    onShare={sharePost}
+                  />
                 ) : (
                   <CommunityPostCard
                     actionBarShowUpvoteText={false}
@@ -463,10 +523,13 @@ export const MyPostsLogic = () => {
           ) : null}
 
           {postsQuery.isFetching && !postsQuery.isLoading ? (
-            <LoadingState label="Atualizando posts" />
+            <LoadingState
+              label={type === "posts" ? "Atualizando seus posts" : interactionCopy.updatingLabel}
+            />
           ) : null}
 
           <Pagination
+            ariaLabel={`Paginação de ${interactionCopy.screenTitle.toLowerCase()}`}
             currentPage={page}
             disabled={postsQuery.isFetching}
             onPageChange={setPage}
