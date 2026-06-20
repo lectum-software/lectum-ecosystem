@@ -296,17 +296,20 @@ const toggleValue = (values: string[], id: string) => {
 };
 
 const profileSetupSelectableChip =
-  "inline-flex items-center justify-center rounded-full border border-border bg-surface-muted px-[10px] py-[6px] text-[12px] leading-[16px] font-medium text-foreground transition h-auto min-h-[28px]";
+  "inline-flex h-auto min-h-8 items-center justify-center rounded-xl border border-border bg-surface px-3 py-1.5 text-xs font-semibold leading-4 text-foreground transition hover:border-primary/40 hover:bg-primary-soft hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20";
 
 const profileSetupSelectableChipStyle: CSSProperties = {
   fontSize: "12px",
   lineHeight: "16px",
-  fontWeight: 500,
-  padding: "6px 10px",
-  minHeight: "28px",
+  fontWeight: 600,
+  padding: "6px 12px",
+  minHeight: "32px",
   height: "auto",
-  borderRadius: "999px",
+  borderRadius: "12px",
 };
+
+const profileSetupButtonGroupControl =
+  "m-0 flex min-h-12 w-full min-w-0 flex-wrap items-center gap-2 rounded-[var(--lectum-control-radius)] border border-border bg-surface px-3 py-2 shadow-sm transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10";
 
 const SectionCard = ({
   children,
@@ -348,6 +351,7 @@ const ProfileInactiveBanner = () => (
 
 const CatalogPicker = ({
   description,
+  error,
   items,
   limit,
   name,
@@ -358,6 +362,7 @@ const CatalogPicker = ({
   onChange,
 }: {
   description?: string;
+  error?: string;
   items: FreeProfileCatalogItem[];
   limit?: number;
   name: keyof Pick<FreeProfileForm, "specialty_ids" | "service_ids" | "approach_ids">;
@@ -373,38 +378,44 @@ const CatalogPicker = ({
   const isEmpty = items.length === 0;
 
   return (
-    <div className="grid gap-3">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="flex items-center gap-1 text-sm font-bold text-foreground">
-            <span>{title}</span>
-            {required ? <span className="text-danger">*</span> : null}
-          </h3>
-          {description ? <p className="mt-1 text-xs leading-5 text-muted">{description}</p> : null}
-        </div>
-        {limit && showLimitCounter ? (
-          <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-semibold text-muted">
-            {selected.length}/{limit}
-          </span>
-        ) : null}
-      </div>
-
+    <Container
+      description={description}
+      error={error}
+      label={title}
+      name={String(name)}
+      required={required}
+      skipHtmlFor
+    >
       {isEmpty ? (
         <InlineAlert title="Catálogo vazio" variant="warning">
           Nenhuma opção ativa foi encontrada no backend para esta seção.
         </InlineAlert>
       ) : null}
 
-      <div className="flex flex-wrap gap-2">
+      {limit && showLimitCounter ? (
+        <span className="-mt-1 w-fit rounded-full bg-surface-muted px-2.5 py-1 text-xs font-semibold text-muted">
+          {selected.length}/{limit}
+        </span>
+      ) : null}
+
+      <fieldset
+        aria-label={title}
+        className={cn(
+          profileSetupButtonGroupControl,
+          error && "border-danger focus-within:border-danger focus-within:ring-danger/10",
+        )}
+      >
         {items.map((item) => {
           const checked = selected.includes(item.id);
           const disabled = Boolean(limit && !checked && selected.length >= limit);
 
           return (
             <button
+              aria-pressed={checked}
               className={cn(
                 profileSetupSelectableChip,
-                checked && "border-primary bg-primary text-white shadow-sm",
+                checked &&
+                  "border-primary bg-primary text-white shadow-sm hover:bg-primary hover:text-white",
                 disabled && "cursor-not-allowed opacity-50",
               )}
               style={profileSetupSelectableChipStyle}
@@ -417,8 +428,8 @@ const CatalogPicker = ({
             </button>
           );
         })}
-      </div>
-    </div>
+      </fieldset>
+    </Container>
   );
 };
 
@@ -594,33 +605,60 @@ const CatalogTagField = ({
 };
 
 const ChipPicker = ({
+  description,
+  error,
   items,
+  label,
+  name,
+  required,
   selected,
   onChange,
 }: {
+  description?: string;
+  error?: string;
   items: { label: string; value: string }[];
+  label: string;
+  name: keyof Pick<FreeProfileForm, "target_audience" | "available_days">;
+  required?: boolean;
   selected: string[];
   onChange: (value: string[]) => void;
 }) => (
-  <div className="flex flex-wrap gap-2">
-    {items.map((item) => {
-      const checked = selected.includes(item.value);
-      return (
-        <button
-          className={cn(
-            profileSetupSelectableChip,
-            checked && "border-primary bg-primary text-white shadow-sm",
-          )}
-          style={profileSetupSelectableChipStyle}
-          key={item.value}
-          onClick={() => onChange(toggleValue(selected, item.value))}
-          type="button"
-        >
-          {item.label}
-        </button>
-      );
-    })}
-  </div>
+  <Container
+    description={description}
+    error={error}
+    label={label}
+    name={String(name)}
+    required={required}
+    skipHtmlFor
+  >
+    <fieldset
+      aria-label={label}
+      className={cn(
+        profileSetupButtonGroupControl,
+        error && "border-danger focus-within:border-danger focus-within:ring-danger/10",
+      )}
+    >
+      {items.map((item) => {
+        const checked = selected.includes(item.value);
+        return (
+          <button
+            aria-pressed={checked}
+            className={cn(
+              profileSetupSelectableChip,
+              checked &&
+                "border-primary bg-primary text-white shadow-sm hover:bg-primary hover:text-white",
+            )}
+            style={profileSetupSelectableChipStyle}
+            key={item.value}
+            onClick={() => onChange(toggleValue(selected, item.value))}
+            type="button"
+          >
+            {item.label}
+          </button>
+        );
+      })}
+    </fieldset>
+  </Container>
 );
 
 const BooleanBenefit = ({
@@ -963,7 +1001,9 @@ export const ProfessionalProfileSetupLogic = () => {
     addressCity && !baseCityOptions.some((item) => item.value === addressCity)
       ? [{ label: addressCity, value: addressCity }, ...baseCityOptions]
       : baseCityOptions;
+  const serviceIdsError = form.hook.formState.errors.service_ids?.message;
   const targetAudienceError = form.hook.formState.errors.target_audience?.message;
+  const availableDaysError = form.hook.formState.errors.available_days?.message;
   const orderedApproachOptions = useMemo(
     () =>
       [...(profile.data?.catalogs.approaches || [])].sort((a, b) =>
@@ -1923,6 +1963,7 @@ export const ProfessionalProfileSetupLogic = () => {
                       ? "Selecione 1 opção. Faça o upgrade para adicionar todos os serviços."
                       : "Selecione todos os serviços que você oferece."
                   }
+                  error={serviceIdsError}
                   items={orderedServiceOptions}
                   limit={profile.data.plan.service_limit}
                   name="service_ids"
@@ -1932,20 +1973,15 @@ export const ProfessionalProfileSetupLogic = () => {
                   showLimitCounter={false}
                   title="Serviços"
                 />
-                <div className="grid gap-3">
-                  <h3 className="flex items-center gap-1 text-sm font-bold text-foreground">
-                    <span>Público</span>
-                    <span className="text-danger">*</span>
-                  </h3>
-                  <ChipPicker
-                    items={PUBLIC_TARGET_OPTIONS}
-                    onChange={(value) => setArrayValue("target_audience", value)}
-                    selected={selectedTargets}
-                  />
-                  <span className="block min-h-4 text-xs font-medium leading-4 text-danger">
-                    {targetAudienceError}
-                  </span>
-                </div>
+                <ChipPicker
+                  error={targetAudienceError}
+                  items={PUBLIC_TARGET_OPTIONS}
+                  label="Público"
+                  name="target_audience"
+                  onChange={(value) => setArrayValue("target_audience", value)}
+                  required
+                  selected={selectedTargets}
+                />
                 <div className="grid gap-3">
                   <h3 className="text-sm font-bold text-foreground">Selos e Facilidades</h3>
                   <BooleanBenefit
@@ -2059,16 +2095,14 @@ export const ProfessionalProfileSetupLogic = () => {
             <SectionCard icon={MapPin} title="Atendimento">
               <div className="grid gap-5">
                 {renderField("modality")}
-                <div className="grid gap-3">
-                  <h3 className="text-sm font-bold text-foreground">
-                    Dias com horários disponíveis
-                  </h3>
-                  <ChipPicker
-                    items={WEEKDAY_OPTIONS}
-                    onChange={(value) => setArrayValue("available_days", value)}
-                    selected={selectedDays}
-                  />
-                </div>
+                <ChipPicker
+                  error={availableDaysError}
+                  items={WEEKDAY_OPTIONS}
+                  label="Dias com horários disponíveis"
+                  name="available_days"
+                  onChange={(value) => setArrayValue("available_days", value)}
+                  selected={selectedDays}
+                />
               </div>
             </SectionCard>
 
