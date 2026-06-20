@@ -959,6 +959,7 @@ const ReplyCard = ({
   onShare,
   onSubmitReply,
   onVote,
+  focusReplyId,
   maxInlineDepth = MAX_REPLY_TREE_DEPTH,
   postId,
   professionalThread,
@@ -983,6 +984,7 @@ const ReplyCard = ({
     parentReplyId: string,
     mediaFile?: File | null,
   ) => Promise<void> | void;
+  focusReplyId?: string | null;
   maxInlineDepth?: number;
   onVote: (replyId: string, value: 1 | -1) => void;
   postId: string;
@@ -1013,8 +1015,11 @@ const ReplyCard = ({
   const hiddenRepliesCount = Math.max(0, totalRepliesCount - visibleChildren.length);
   const collapsedRepliesCount = useMemo(() => countReplyTreeDescendants(reply), [reply]);
   const canCollapseRootTree = depth === 0 && collapsedRepliesCount > 0;
-  const childrenHiddenByCollapse = canCollapseRootTree && treeCollapsed;
   const threadHref = threadHrefBase ? `${threadHrefBase}/${reply.id}` : null;
+  const hasFocusedDescendant = Boolean(
+    focusReplyId && focusReplyId !== reply.id && findReplyInTree(reply.replies, focusReplyId),
+  );
+  const childrenHiddenByCollapse = canCollapseRootTree && treeCollapsed && !hasFocusedDescendant;
 
   const hasTreeContinuation =
     childrenHiddenByCollapse || visibleChildren.length > 0 || hiddenRepliesCount > 0;
@@ -1025,7 +1030,7 @@ const ReplyCard = ({
       return;
     }
 
-    setTreeCollapsed((current) => !current);
+    setTreeCollapsed((current) => (hasFocusedDescendant ? false : !current));
   };
 
   const handleRootTreeKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
@@ -1035,7 +1040,7 @@ const ReplyCard = ({
     if (event.key !== "Enter" && event.key !== " ") return;
 
     event.preventDefault();
-    setTreeCollapsed((current) => !current);
+    setTreeCollapsed((current) => (hasFocusedDescendant ? false : !current));
   };
 
   const toggleSaveReply: MouseEventHandler<HTMLButtonElement> = (event) => {
@@ -1075,8 +1080,8 @@ const ReplyCard = ({
 
   const rootTreeToggleAreaProps = canCollapseRootTree
     ? {
-        "aria-expanded": !treeCollapsed,
-        "aria-label": treeCollapsed
+        "aria-expanded": !childrenHiddenByCollapse,
+        "aria-label": childrenHiddenByCollapse
           ? "Expandir respostas desta conversa"
           : "Recolher respostas desta conversa",
         onClick: handleRootTreeClick,
@@ -1324,6 +1329,7 @@ const ReplyCard = ({
                   depth={depth + 1}
                   inlineReplyTargets={inlineReplyTargets}
                   key={child.id}
+                  focusReplyId={focusReplyId}
                   maxInlineDepth={maxInlineDepth}
                   mediaPermission={mediaPermission}
                   onCancelInlineReplyTarget={onCancelInlineReplyTarget}
@@ -1832,6 +1838,7 @@ const RepliesList = ({
   onShare,
   onSubmitReply,
   onVote,
+  focusReplyId,
   postId,
   replies,
   replyApiError,
@@ -1858,6 +1865,7 @@ const RepliesList = ({
     mediaFile?: File | null,
   ) => Promise<void> | void;
   onVote: (replyId: string, value: 1 | -1) => void;
+  focusReplyId?: string | null;
   postId: string;
   replies: PostReply[];
   replyApiError?: string | null;
@@ -1916,6 +1924,7 @@ const RepliesList = ({
                 <ReplyCard
                   currentUserId={currentUserId}
                   deleteReplyPending={deleteReplyPending}
+                  focusReplyId={focusReplyId}
                   inlineReplyTargets={inlineReplyTargets}
                   maxInlineDepth={maxInlineDepth}
                   mediaPermission={mediaPermission}
@@ -2004,21 +2013,49 @@ export const PostDetailLogic = () => {
   const activeMobileReplyTarget = isMobile ? mobileReplyTarget : null;
   const visibleInlineReplyTargets = isMobile ? EMPTY_REPLY_TARGETS : desktopReplyTargets;
   const lastFocusedReplyIdRef = useRef<string | null>(null);
+  const syncedFocusReplyIdRef = useRef<string | null>(focusReplyIdFromUrl);
+
+  useEffect(() => {
+    if (focusReplyIdFromUrl === syncedFocusReplyIdRef.current) return;
+
+    syncedFocusReplyIdRef.current = focusReplyIdFromUrl;
+    lastFocusedReplyIdRef.current = null;
+    setActiveFocusReplyId(focusReplyIdFromUrl);
+  }, [focusReplyIdFromUrl]);
 
   useEffect(() => {
     if (!activeFocusReplyId || repliesQuery.isFetching) return;
     if (lastFocusedReplyIdRef.current === activeFocusReplyId) return;
 
-    const target = document.getElementById(`reply-${activeFocusReplyId}`);
-    if (!target) return;
+    let retryTimer: number | null = null;
+    let highlightTimer: number | null = null;
+    let attempts = 0;
 
-    lastFocusedReplyIdRef.current = activeFocusReplyId;
-    target.classList.add(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
-    target.scrollIntoView({ behavior: "smooth", block: "center" });
+    const focusReply = () => {
+      const target = document.getElementById(`reply-${activeFocusReplyId}`);
+      if (!target) {
+        if (attempts < 10) {
+          attempts += 1;
+          retryTimer = window.setTimeout(focusReply, 80);
+        }
+        return;
+      }
 
-    window.setTimeout(() => {
-      target.classList.remove(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
-    }, 3600);
+      lastFocusedReplyIdRef.current = activeFocusReplyId;
+      target.classList.add(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      highlightTimer = window.setTimeout(() => {
+        target.classList.remove(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
+      }, 3600);
+    };
+
+    focusReply();
+
+    return () => {
+      if (retryTimer) window.clearTimeout(retryTimer);
+      if (highlightTimer) window.clearTimeout(highlightTimer);
+    };
   }, [activeFocusReplyId, repliesQuery.isFetching]);
 
   const sharePost = async () => {
@@ -2326,6 +2363,7 @@ export const PostDetailLogic = () => {
                 currentUserId={currentUserId}
                 deleteReplyPending={deleteReplyMutation.isPending}
                 errorMessage={repliesError}
+                focusReplyId={activeFocusReplyId}
                 inlineReplyTargets={visibleInlineReplyTargets}
                 loading={repliesQuery.isLoading || repliesQuery.isPending}
                 mediaPermission={mediaPermission}

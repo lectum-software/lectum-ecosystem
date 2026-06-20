@@ -3,7 +3,13 @@
 import { BadgeCheck, Bookmark, ChevronLeft, ChevronRight, Reply } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
+  useMemo,
+  useState,
+} from "react";
 import {
   useSavedPosts,
   useUnsavePostFromList,
@@ -96,7 +102,31 @@ const formatAuthorMeta = (author: CommunityAuthor, createdAt: string) => {
 };
 
 const savedReplyHref = (post: PostListPost, replyId: string) =>
-  `/app/community/${post.community.slug}/post/${post.id}?focusReplyId=${replyId}#reply-${replyId}`;
+  `/app/community/${post.community.slug}/post/${post.id}?focusReplyId=${encodeURIComponent(replyId)}#reply-${replyId}`;
+
+const isSavedCardInteractiveTarget = (target: EventTarget | null) => {
+  const targetElement =
+    target instanceof Element ? target : target instanceof Node ? target.parentElement : null;
+
+  if (!targetElement) return false;
+
+  return Boolean(
+    targetElement.closest(
+      [
+        "a",
+        "button",
+        "input",
+        "textarea",
+        "select",
+        "video",
+        "audio",
+        "[role='button']",
+        "[role='menu']",
+        "[role='menuitem']",
+      ].join(","),
+    ),
+  );
+};
 
 const SavedReplyAuthorAvatar = ({ author, href }: { author: CommunityAuthor; href?: string }) => {
   const avatarSrc = resolvePublicMediaUrl(author.avatar);
@@ -228,6 +258,7 @@ const SavedReplyCard = ({
   onShare: (post: PostListPost, replyId?: string) => void;
   removePending?: boolean;
 }) => {
+  const router = useRouter();
   const reply = item.reply;
   const voteMutation = useVotePost(item.post.id);
   const [voteOverride, setVoteOverride] = useState<{
@@ -278,15 +309,33 @@ const SavedReplyCard = ({
 
   const replyLink = savedReplyHref(item.post, reply.id);
   const hasProfessionalWhatsapp = Boolean(reply.author.whatsapp_url);
+  const openSavedReply = () => router.push(replyLink);
+  const handleCardClick = (event: ReactMouseEvent<HTMLElement>) => {
+    if (isSavedCardInteractiveTarget(event.target)) return;
+
+    openSavedReply();
+  };
+  const handleCardKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
+    if (isSavedCardInteractiveTarget(event.target)) return;
+    if (event.key !== "Enter" && event.key !== " ") return;
+
+    event.preventDefault();
+    openSavedReply();
+  };
 
   return (
-    <article className="w-full overflow-hidden rounded-[22px] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
+    <article
+      className="w-full overflow-hidden rounded-[22px] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)] transition hover:border-primary/20 hover:bg-primary-soft/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 md:cursor-pointer"
+      onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
+      tabIndex={-1}
+    >
       <div className="mb-4 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold tracking-[-0.01em] text-muted">
         <Reply className="h-3.5 w-3.5 shrink-0 text-muted/80" aria-hidden="true" />
         <span className="shrink-0">Respondido em</span>
         <Link
-          className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-extrabold text-[#475569] underline-offset-4 hover:text-primary hover:underline dark:text-muted"
-          href={`/app/community/${item.post.community.slug}/post/${item.post.id}`}
+          className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-extrabold text-[#475569] underline-offset-4 hover:text-primary hover:underline dark:text-muted md:no-underline md:hover:text-[#475569] md:hover:no-underline dark:md:hover:text-muted"
+          href={replyLink}
         >
           {item.post.community.name}
         </Link>
@@ -513,6 +562,7 @@ export const SavedPostsLogic = () => {
                 ) : (
                   <CommunityPostCard
                     communityContextTone="muted"
+                    desktopPlainLinks
                     key={item.id}
                     interactiveActions
                     onShare={sharePost}

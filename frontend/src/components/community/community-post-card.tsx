@@ -31,6 +31,7 @@ type CommunityPostCardProps = {
   actionBarVotePresentation?: "cluster" | "inline";
   communityContextTone?: "default" | "muted";
   communityHeaderIncludesTime?: boolean;
+  desktopPlainLinks?: boolean;
   footerExtra?: ReactNode;
   headerExtra?: ReactNode;
   interactiveActions?: boolean;
@@ -462,6 +463,7 @@ export const CommunityPostCard = ({
   actionBarVotePresentation = "cluster",
   communityContextTone = "default",
   communityHeaderIncludesTime = false,
+  desktopPlainLinks = false,
   footerExtra,
   headerExtra,
   interactiveActions = false,
@@ -630,6 +632,10 @@ export const CommunityPostCard = ({
               profilePublicationMode || usesMutedCommunityContext
                 ? "text-[#64748B] dark:text-muted"
                 : "text-foreground",
+              desktopPlainLinks &&
+                (profilePublicationMode || usesMutedCommunityContext
+                  ? "md:no-underline md:hover:text-[#64748B] md:hover:no-underline dark:md:hover:text-muted"
+                  : "md:no-underline md:hover:text-foreground md:hover:no-underline"),
             )}
             href={`/app/community/${post.community.slug}`}
           >
@@ -718,6 +724,7 @@ export const CommunityPostCard = ({
             className={cn(
               "text-[1.32rem] font-black leading-[1.18] tracking-[-0.02em] text-foreground underline-offset-4 transition hover:text-primary hover:underline",
               profilePublicationMode && "line-clamp-2 text-[1.08rem] leading-[1.22]",
+              desktopPlainLinks && "md:no-underline md:hover:text-foreground md:hover:no-underline",
             )}
             href={postDetailHref(post)}
           >
