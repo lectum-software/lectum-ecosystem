@@ -32,3 +32,16 @@ O Builder/Quick Copy não está acessível como ferramenta executável neste amb
 - Smoke HTTP local:
   - `http://localhost:3000/app/community/ansiedade-em-equilibrio/post/new` retornou 200.
   - `http://localhost:3000/app/community/ansiedade-em-equilibrio` retornou 200.
+
+## Atualização 2026-06-20 - Altura útil do editor
+
+A área de conteúdo da modal de criação de post passou a preencher toda a coluna flexível disponível entre o título e o footer de ações. O wrapper do campo de conteúdo agora também é um flex container, permitindo que o textarea com `flex-1` ocupe a altura restante até a linha superior da barra de mídia/postar, em vez de ficar limitado pela altura intrínseca do campo.
+
+Validação adicional:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke HTTP local:
+  - `http://localhost:3000/app/community/feed/post/new` retornou 200.
+  - `http://localhost:3000/app/community/ansiedade-em-equilibrio/post/new` retornou 200.

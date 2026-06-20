@@ -590,7 +590,10 @@ export const CreateCommunityPostLogic = ({
                   {formProps.fields.filter((field) => field.name === "title").map(renderFormField)}
                 </div>
 
-                <div className="min-h-0 flex-1" onPointerDown={preserveEditorFocusFromBlankTap}>
+                <div
+                  className="flex min-h-0 flex-1 flex-col"
+                  onPointerDown={preserveEditorFocusFromBlankTap}
+                >
                   {formProps.fields
                     .filter((field) => field.name === "content")
                     .map(renderFormField)}

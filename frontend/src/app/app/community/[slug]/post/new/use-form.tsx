@@ -79,9 +79,10 @@ const buildFields = ({
       rows: 5,
       max: 2000,
       autoGrow: false,
-      className: "min-h-0 flex flex-1 flex-col gap-0 [&>span:first-child]:sr-only",
+      className:
+        "min-h-0 flex h-full flex-1 flex-col gap-0 [&>span:first-child]:sr-only [&>span:last-child]:shrink-0",
       inputClassName:
-        "create-post-content-input min-h-0 flex-1 resize-none overflow-y-auto rounded-none border-0 border-transparent bg-transparent px-0 pt-0 pb-2 shadow-none focus:border-transparent focus:ring-0",
+        "create-post-content-input h-full min-h-0 flex-1 resize-none overflow-y-auto rounded-none border-0 border-transparent bg-transparent px-0 pt-0 pb-2 shadow-none focus:border-transparent focus:ring-0",
     },
     {
       name: "anonymous",
