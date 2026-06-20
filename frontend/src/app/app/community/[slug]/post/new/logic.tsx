@@ -1,6 +1,6 @@
 "use client";
 
-import { FileVideo, Info, Lightbulb, Loader2, X } from "lucide-react";
+import { Info, Lightbulb, Loader2, Paperclip, X } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { COMMUNITY_FEED_SLUG, DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
+import { getCommunityMediaPermission } from "@/utils/community-media-permission";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
 import {
   type CreateCommunityPostForm,
@@ -119,6 +120,7 @@ export const CreateCommunityPostLogic = ({
   const communitySlugFromQuery = searchParams.get("community")?.trim() || null;
   const storedUser = useAppSelector((state) => state.user);
   const isPsychologist = storedUser?.role === "psicologo";
+  const mediaPermission = getCommunityMediaPermission(storedUser);
   const [isGuidanceOpen, setIsGuidanceOpen] = useState(false);
   const [isAnonymousTipDismissed, setIsAnonymousTipDismissed] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -473,20 +475,35 @@ export const CreateCommunityPostLogic = ({
   );
 
   const renderPsychologistMediaButton = () => (
-    <button
-      aria-label="Adicionar mídia ao post"
-      className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full border border-border bg-surface-muted px-3.5 text-sm font-bold text-muted transition hover:border-primary/30 hover:bg-primary-soft hover:text-primary focus:outline-none focus:ring-4 focus:ring-primary/15"
-      onClick={() => {
-        toast.info("Upload de mídia para posts depende do storage R2 real configurado.");
-        focusLastEditor();
-      }}
-      onMouseDown={(event) => event.preventDefault()}
-      tabIndex={-1}
-      type="button"
-    >
-      <FileVideo className="h-5 w-5" aria-hidden="true" />
-      <span className="hidden sm:inline">Mídia</span>
-    </button>
+    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+      <button
+        aria-label="Adicionar mídia ao post"
+        className={cn(
+          "inline-flex h-11 shrink-0 items-center gap-2 rounded-full border px-3.5 text-sm font-bold transition focus:outline-none focus:ring-4 focus:ring-primary/15",
+          mediaPermission.canAttach
+            ? "border-border bg-surface-muted text-muted hover:border-primary/30 hover:bg-primary-soft hover:text-primary"
+            : "cursor-not-allowed border-[#E5EAF0] bg-[#F8FAFC] text-[#94A3B8] hover:border-[#E5EAF0] hover:bg-[#F8FAFC] hover:text-[#94A3B8]",
+        )}
+        disabled={!mediaPermission.canAttach}
+        onClick={() => {
+          toast.info("Upload de mídia para posts depende do storage R2 real configurado.");
+          focusLastEditor();
+        }}
+        onMouseDown={(event) => event.preventDefault()}
+        tabIndex={-1}
+        title={mediaPermission.canAttach ? "Adicionar mídia" : mediaPermission.reason}
+        type="button"
+      >
+        <Paperclip className="h-5 w-5" aria-hidden="true" />
+        <span className="hidden sm:inline">Mídia</span>
+      </button>
+
+      {!mediaPermission.canAttach && mediaPermission.reason ? (
+        <span className="min-w-0 flex-1 basis-52 whitespace-normal text-xs font-semibold leading-4 text-[#64748B]">
+          {mediaPermission.reason}
+        </span>
+      ) : null}
+    </div>
   );
 
   const sheet = (
@@ -494,7 +511,7 @@ export const CreateCommunityPostLogic = ({
       className={cn(
         "fixed inset-0 z-[70] flex items-end justify-center transition-opacity duration-200 ease-out",
         asModalSlot
-          ? "bg-slate-950/5 backdrop-blur-[6px] supports-[backdrop-filter]:bg-white/10"
+          ? "bg-slate-950/35 backdrop-blur-[8px] supports-[backdrop-filter]:bg-slate-950/35"
           : "bg-background",
         isSheetOpen ? "opacity-100" : "opacity-0",
       )}

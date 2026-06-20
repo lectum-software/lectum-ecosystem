@@ -66,6 +66,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
+import { getCommunityMediaPermission } from "@/utils/community-media-permission";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
 import {
@@ -117,9 +118,6 @@ const FOCUSED_REPLY_HIGHLIGHT_CLASSES = [
   "bg-primary-soft/80",
   "shadow-[0_0_0_2px_rgb(48_140_232_/_22%),0_14px_34px_rgb(48_140_232_/_12%)]",
 ] as const;
-
-const replyMediaPermissionLabel =
-  "Mídia disponível apenas para psicólogos verificados com Plano Profissional ativo.";
 
 const useIsPostDetailMobile = () => {
   const [isMobile, setIsMobile] = useState(false);
@@ -271,41 +269,7 @@ const InlineExpandableText = ({
 
 const useReplyMediaPermission = (): ReplyMediaPermission => {
   const user = useAppSelector((state) => state.user);
-  const activeProfessionalPlan = user?.psychologist_profile?.subscriptions?.some(
-    (subscription) =>
-      subscription.status === "ativa" &&
-      subscription.plan?.active !== false &&
-      subscription.plan?.slug !== "gratuito",
-  );
-  const canAttach = Boolean(
-    user?.role === "psicologo" &&
-      user.psychologist_profile?.cfp_verified_at &&
-      activeProfessionalPlan,
-  );
-
-  if (canAttach) {
-    return {
-      canAttach,
-      reason: "",
-      showControl: true,
-    };
-  }
-
-  if (user?.role === "psicologo") {
-    return {
-      canAttach,
-      reason: activeProfessionalPlan
-        ? "Confirme seu registro CFP para anexar mídia."
-        : replyMediaPermissionLabel,
-      showControl: true,
-    };
-  }
-
-  return {
-    canAttach,
-    reason: "",
-    showControl: false,
-  };
+  return getCommunityMediaPermission(user);
 };
 
 const resolvePostError = (error: unknown) => {
