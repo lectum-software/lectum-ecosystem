@@ -6,6 +6,10 @@ import { log } from "@/utils/logs";
 import type { IAccountRepository } from "./interfaces/IAccountRepository";
 
 const GOOGLE_DELETE_REAUTH_TTL_MS = 10 * 60 * 1000;
+const ACCOUNT_DELETE_TRANSACTION_TIMEOUT_MS = 30 * 1000;
+const ACCOUNT_DELETE_TRANSACTION_OPTIONS = {
+  timeout: ACCOUNT_DELETE_TRANSACTION_TIMEOUT_MS,
+} as const;
 
 const getDeletedAuthorName = (role?: string | null) =>
   role === "psicologo" ? "Psicólogo Excluído" : "Membro Excluído";
@@ -627,6 +631,6 @@ export class AccountRepository implements IAccountRepository {
         },
         data: markDeleted(now),
       });
-    });
+    }, ACCOUNT_DELETE_TRANSACTION_OPTIONS);
   }
 }

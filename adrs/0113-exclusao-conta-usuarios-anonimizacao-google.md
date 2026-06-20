@@ -19,6 +19,7 @@ Também existem contas sem senha local, autenticadas somente via Google. Para es
 - Reusar o OAuth Google existente com `intent="delete_account"` e token JWT curto, registrando a prova temporária em `user_background` com `type="account_delete_reauth"` e `device_id`.
 - No callback OAuth do `intent="delete_account"`, retornar diretamente para a rota interna de exclusão com `deleteReauth=ok`, em vez de cair no fluxo genérico de login em `/auth/redirect`.
 - Realizar a operação em transação Prisma, com soft delete/anomização do `user`, remoção de tokens e soft delete de preferências, notificações, favoritos, follows, contatos, avaliações, memberships, saves, votes e dados privados de perfil.
+- A transação Prisma de exclusão usa timeout ampliado, pois a anonimização limpa preferências, notificações, comunidades, votos, saves, avaliações e perfil em uma única unidade atômica.
 - Preservar publicações e comentários públicos para não quebrar conversas, mas exibir autores deletados como `Membro Excluído` ou `Psicólogo Excluído`.
 - Para psicólogos, cancelar assinaturas locais/free/cortesia na transação e manter bloqueio quando existir cobrança externa vinculada a gateway ou inadimplência.
 - Expor uma seção reutilizável de “Excluir minha conta” em Editar perfil de paciente e setup de perfil profissional, com modal destrutiva, confirmação e suporte ao fluxo Google.

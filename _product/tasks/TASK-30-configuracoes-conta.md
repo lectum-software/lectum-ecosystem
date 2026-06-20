@@ -168,6 +168,8 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - 2026-06-17: ADR `adrs/0113-exclusao-conta-usuarios-anonimizacao-google.md` registra a decisão de preservar conteúdo público anonimizado e usar `user_background` como prova temporária de reautenticação Google.
 - 2026-06-20: Corrigida regressão do callback Google para exclusão de conta: `intent=delete_account` agora retorna diretamente para a rota interna com `deleteReauth=ok`, evitando cair no redirecionamento padrão de login.
 - 2026-06-20: Validações da correção executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
+- 2026-06-20: Diagnosticado que a exclusão Google-only autenticada falhava com `Internal Server Error` por timeout da transação Prisma padrão durante a limpeza/anomização de múltiplas tabelas; a transação de exclusão passou a usar timeout ampliado.
+- 2026-06-20: Validações do timeout de exclusão executadas: dry-run transacional com rollback, `pnpm --dir backend check`, `pnpm --dir backend build` e `pnpm check`.
 - 2026-06-17: Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e smoke local via Chrome headless em `/app/profile/edit` e `/app/professional/profile/setup`.
 
 ## Ajuste complementar em 2026-06-18 - header secundário premium compartilhado
