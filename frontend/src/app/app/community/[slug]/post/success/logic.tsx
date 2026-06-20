@@ -2,7 +2,8 @@
 
 import { Check } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
+import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { COMMUNITY_FEED_SLUG, DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
@@ -13,42 +14,77 @@ const normalizeParam = (value: string | string[] | undefined) => {
   return value;
 };
 
-export const CommunityPostSuccessLogic = () => {
+type CommunityPostSuccessLogicProps = {
+  asModalSlot?: boolean;
+};
+
+export const CommunityPostSuccessLogic = ({
+  asModalSlot = false,
+}: CommunityPostSuccessLogicProps) => {
   const params = useParams<{ slug?: string | string[] }>();
+  const searchParams = useSearchParams();
   const slug = normalizeParam(params?.slug);
+  const postId = searchParams.get("postId")?.trim() || null;
   const publicationHref =
-    slug && slug !== COMMUNITY_FEED_SLUG ? `/app/community/${slug}` : DEFAULT_COMMUNITY_FEED_HREF;
+    slug && slug !== COMMUNITY_FEED_SLUG
+      ? postId
+        ? `/app/community/${slug}/post/${postId}`
+        : `/app/community/${slug}`
+      : DEFAULT_COMMUNITY_FEED_HREF;
+
+  const modal = (
+    <div
+      className={cn(
+        "fixed inset-0 z-[80] flex items-center justify-center px-5 py-8 text-center text-[#111827] transition-opacity duration-200 ease-out dark:text-foreground",
+        asModalSlot
+          ? "bg-slate-950/35 backdrop-blur-[8px] supports-[backdrop-filter]:bg-slate-950/35"
+          : "bg-[#F5F7FA] dark:bg-background",
+      )}
+    >
+      <section
+        aria-labelledby="post-success-title"
+        aria-modal="true"
+        className="w-full max-w-[390px] rounded-[32px] border border-border/80 bg-white px-6 pt-10 pb-6 shadow-[0_28px_80px_rgba(15,23,42,0.22)] dark:bg-surface"
+        role="dialog"
+      >
+        <div className="mx-auto mb-7 grid justify-items-center">
+          <div className="relative grid h-[104px] w-[104px] place-items-center rounded-full bg-[#EAF4FF]">
+            <span className="absolute -right-1 top-3 h-4 w-4 rounded-full bg-[#EAF4FF]" />
+            <span className="absolute -left-4 bottom-7 h-7 w-7 rounded-full bg-[#F1F7FF]" />
+            <span className="grid h-[76px] w-[76px] place-items-center rounded-full bg-[#308CE8] text-white shadow-[0_18px_32px_rgba(48,140,232,0.24)]">
+              <Check className="h-9 w-9 stroke-[2.8]" aria-hidden="true" />
+            </span>
+          </div>
+        </div>
+
+        <h1 className="mb-4 text-[22px] font-extrabold tracking-[-0.02em]" id="post-success-title">
+          Post publicado!
+        </h1>
+        <p className="mx-auto max-w-[300px] text-base leading-6 text-[#64748B]">
+          Seu post foi compartilhado e logo poderá receber interações!
+        </p>
+
+        <Button
+          asChild
+          className="mt-8 h-[54px] w-full rounded-full bg-[#308CE8] text-base font-semibold shadow-[0_12px_24px_rgba(48,140,232,0.2)] hover:bg-[#2579CF]"
+        >
+          <Link href={publicationHref}>Ver minha publicação</Link>
+        </Button>
+      </section>
+    </div>
+  );
+
+  if (asModalSlot) {
+    return modal;
+  }
 
   return (
     <PrivateTemplate
-      contentClassName="max-w-none bg-white px-0 py-0 dark:bg-background"
+      contentClassName="max-w-none bg-[#F5F7FA] px-0 py-0 dark:bg-background"
       showMobileNavigation={false}
       showNavigation={false}
     >
-      <section className="mx-auto flex min-h-screen w-full max-w-[430px] flex-col bg-white px-[18px] text-center text-[#111827] dark:bg-background dark:text-foreground">
-        <div className="flex flex-1 flex-col items-center justify-center pt-12 pb-28">
-          <div className="relative mb-9 grid h-[112px] w-[112px] place-items-center rounded-full bg-[#EAF4FF]">
-            <span className="absolute -right-2 top-3 h-4 w-4 rounded-full bg-[#EAF4FF]" />
-            <span className="absolute -left-5 bottom-7 h-7 w-7 rounded-full bg-[#F1F7FF]" />
-            <span className="grid h-[80px] w-[80px] place-items-center rounded-full bg-[#308CE8] text-white shadow-[0_18px_32px_rgba(48,140,232,0.24)]">
-              <Check className="h-10 w-10 stroke-[2.8]" aria-hidden="true" />
-            </span>
-          </div>
-          <h1 className="mb-5 text-[22px] font-extrabold tracking-[-0.02em]">Post publicado!</h1>
-          <p className="max-w-[310px] text-base leading-6 text-[#64748B]">
-            Seu post foi compartilhado e logo poderá receber interações!
-          </p>
-        </div>
-
-        <div className="fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-[430px] bg-white px-[18px] pt-3 pb-[max(18px,env(safe-area-inset-bottom))] dark:bg-background">
-          <Button
-            asChild
-            className="h-[56px] w-full rounded-full bg-[#308CE8] text-base font-semibold shadow-[0_12px_24px_rgba(48,140,232,0.2)] hover:bg-[#2579CF]"
-          >
-            <Link href={publicationHref}>Ver minha publicação</Link>
-          </Button>
-        </div>
-      </section>
+      {modal}
     </PrivateTemplate>
   );
 };

@@ -104,8 +104,5 @@ export const createCommunityPost = async (slug: string, body: CreateCommunityPos
     body,
   });
 
-  return handleReq<CommunityPost>({
-    ...handle,
-    showSuccess: true,
-  });
+  return handleReq<CommunityPost>(handle);
 };
