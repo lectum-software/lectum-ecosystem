@@ -58,6 +58,7 @@ model user {
   post_votes                            post_vote[]                   @relation("post_vote_user")
   post_saves                            post_save[]                   @relation("post_save_user")
   post_reply_saves                      post_reply_save[]             @relation("post_reply_save_user")
+  post_notification_mutes               post_notification_mute[]      @relation("post_notification_mute_user")
   post_reports                          post_report[]                 @relation("post_report_reporter")
   notification_subscriptions            notification_subscription[]   @relation("notification_subscription_user")
   visitor_locations                     visitor_location[]            @relation("visitor_location_user")
@@ -562,27 +563,28 @@ model community_suggestion {
 }
 
 model community_post {
-  id              String        @id @default(cuid())
-  deleted         Boolean       @default(false)
-  deletedAt       DateTime?     @map("deleted_at")
-  updatedAt       DateTime      @default(now()) @updatedAt @map("updated_at")
-  createdAt       DateTime      @default(now()) @map("created_at")
-  community_id    String
-  author_id       String
-  title           String
-  content         String
-  anonymous       Boolean       @default(true)
-  status          String        @default("publicado")
-  upvotes_count   Int           @default(0)
-  downvotes_count Int           @default(0)
-  replies_count   Int           @default(0)
-  saves_count     Int           @default(0)
-  community       community     @relation("community_post_community", fields: [community_id], references: [id], onDelete: Cascade)
-  author          user          @relation("community_post_author", fields: [author_id], references: [id], onDelete: Cascade)
-  replies         post_reply[]  @relation("post_reply_post")
-  votes           post_vote[]   @relation("post_vote_post")
-  saves           post_save[]   @relation("post_save_post")
-  reports         post_report[] @relation("post_report_post")
+  id                 String                   @id @default(cuid())
+  deleted            Boolean                  @default(false)
+  deletedAt          DateTime?                @map("deleted_at")
+  updatedAt          DateTime                 @default(now()) @updatedAt @map("updated_at")
+  createdAt          DateTime                 @default(now()) @map("created_at")
+  community_id       String
+  author_id          String
+  title              String
+  content            String
+  anonymous          Boolean                  @default(true)
+  status             String                   @default("publicado")
+  upvotes_count      Int                      @default(0)
+  downvotes_count    Int                      @default(0)
+  replies_count      Int                      @default(0)
+  saves_count        Int                      @default(0)
+  community          community                @relation("community_post_community", fields: [community_id], references: [id], onDelete: Cascade)
+  author             user                     @relation("community_post_author", fields: [author_id], references: [id], onDelete: Cascade)
+  replies            post_reply[]             @relation("post_reply_post")
+  votes              post_vote[]              @relation("post_vote_post")
+  saves              post_save[]              @relation("post_save_post")
+  notification_mutes post_notification_mute[] @relation("post_notification_mute_post")
+  reports            post_report[]            @relation("post_report_post")
 
   @@index([community_id, status, createdAt])
   @@index([author_id])
@@ -670,6 +672,22 @@ model post_reply_save {
   @@index([user_id, createdAt])
   @@index([reply_id])
   @@map("post_reply_saves")
+}
+
+model post_notification_mute {
+  id        String         @id @default(cuid())
+  deleted   Boolean        @default(false)
+  deletedAt DateTime?      @map("deleted_at")
+  updatedAt DateTime       @default(now()) @updatedAt @map("updated_at")
+  createdAt DateTime       @default(now()) @map("created_at")
+  user_id   String
+  post_id   String
+  user      user           @relation("post_notification_mute_user", fields: [user_id], references: [id], onDelete: Cascade)
+  post      community_post @relation("post_notification_mute_post", fields: [post_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, post_id])
+  @@index([post_id])
+  @@map("post_notification_mutes")
 }
 
 model post_report {

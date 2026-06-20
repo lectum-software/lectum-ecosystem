@@ -131,6 +131,8 @@ export type CommunityPostDTO = {
   media_type: string | null;
   current_user_vote: 1 | -1 | null;
   saved: boolean;
+  muted_by_current_user: boolean;
+  has_psychologist_reply: boolean;
   community: CommunityDTO;
   author: CommunityAuthorDTO;
   highlighted_professional_reply: CommunityProfessionalReplyDTO | null;

@@ -17,6 +17,8 @@ export type PostDetail = {
   media_type: string | null;
   current_user_vote: 1 | -1 | null;
   saved: boolean;
+  muted_by_current_user: boolean;
+  has_psychologist_reply: boolean;
   community: Community;
   author: CommunityAuthor;
 };
@@ -155,6 +157,17 @@ export type PostReplyDeleteResponse = {
   reply_ids: string[];
   deleted_count: number;
   replies_count: number;
+};
+
+export type PostDeleteResponse = {
+  post_id: string;
+  deleted: boolean;
+  replies_deleted_count: number;
+};
+
+export type PostMuteResponse = {
+  post_id: string;
+  muted: boolean;
 };
 
 export type PostVotePayload = {

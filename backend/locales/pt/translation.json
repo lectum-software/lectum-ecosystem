@@ -92,7 +92,9 @@
     "account_delete_google_reauth_unavailable": "Esta conta não usa login Google como método principal para confirmar a exclusão.",
     "account_delete_google_reauth_invalid": "Não foi possível validar a confirmação com o Google. Tente novamente.",
     "account_delete_google_reauth_expired": "A confirmação com o Google expirou. Tente novamente.",
-    "account_delete_google_reauth_email_mismatch": "Use no Google o mesmo e-mail da sua conta Lectum para confirmar a exclusão."
+    "account_delete_google_reauth_email_mismatch": "Use no Google o mesmo e-mail da sua conta Lectum para confirmar a exclusão.",
+    "post_owner_action_forbidden": "Você só pode gerenciar posts publicados pela sua conta.",
+    "post_delete_professional_replies_blocked": "Este post já recebeu contribuições de psicólogos da comunidade e não pode ser excluído."
   },
   "message": {
     "store": "dado criado",
@@ -156,7 +158,10 @@
     "location_capture_skipped": "Captura de localização aproximada ignorada por regra de frequência.",
     "post_reply_deleted": "Comentário excluído com sucesso.",
     "account_delete_google_intent_created": "Redirecionando para confirmar sua identidade com o Google.",
-    "account_delete_google_reauth_success": "Identidade confirmada com o Google. Você já pode excluir a conta."
+    "account_delete_google_reauth_success": "Identidade confirmada com o Google. Você já pode excluir a conta.",
+    "post_muted": "Notificações deste post foram silenciadas.",
+    "post_unmuted": "Notificações deste post foram reativadas.",
+    "post_deleted": "Post excluído com sucesso."
   },
   "gender": {
     "o": "o"

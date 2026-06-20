@@ -1,10 +1,14 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
+import { getPostIdsWithPsychologistReplies } from "@/utils/community-post-replies";
+import { getMutedPostIds } from "@/utils/post-notification-mute";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   IPostCreateReplyDTO,
+  IPostDeleteDTO,
   IPostMineDTO,
+  IPostMuteDTO,
   IPostRepliesDTO,
   IPostReplyDeleteDTO,
   IPostReplySaveDTO,
@@ -16,12 +20,14 @@ import type {
   IPostVoteDTO,
   PostAuthorDTO,
   PostCommunityDTO,
+  PostDeleteResponse,
   PostDetailDTO,
   PostDetailResponse,
   PostListItemDTO,
   PostListPostDTO,
   PostListResponse,
   PostMutationResult,
+  PostMuteResponse,
   PostProfessionalReplyDTO,
   PostRepliesResponse,
   PostReplyDeleteResponse,
@@ -319,6 +325,8 @@ const toPostResponse = (
   currentUserVote: CurrentVote,
   saved: boolean,
   communityFollowing?: boolean,
+  mutedByCurrentUser = false,
+  hasPsychologistReply = false,
 ): PostDetailDTO => {
   const responseCommunity = toCommunityResponse(item.community, communityFollowing);
   const anonymous = item.author.role !== "psicologo" && item.anonymous;
@@ -346,6 +354,8 @@ const toPostResponse = (
     media_type: null,
     current_user_vote: currentUserVote,
     saved,
+    muted_by_current_user: mutedByCurrentUser,
+    has_psychologist_reply: hasPsychologistReply,
     community: responseCommunity,
     author,
   };
@@ -378,8 +388,17 @@ const toListPostResponse = (
   currentUserVote: CurrentVote,
   saved: boolean,
   savedReplyIds?: Set<string>,
+  mutedByCurrentUser = false,
+  hasPsychologistReply = false,
 ): PostListPostDTO => ({
-  ...toPostResponse(item, currentUserVote, saved),
+  ...toPostResponse(
+    item,
+    currentUserVote,
+    saved,
+    undefined,
+    mutedByCurrentUser,
+    hasPsychologistReply,
+  ),
   highlighted_professional_reply: toHighlightedProfessionalReply(item.replies[0], savedReplyIds),
 });
 
@@ -574,6 +593,7 @@ const findPublishedPost = (id: string) => {
     },
     select: {
       id: true,
+      author_id: true,
       community_id: true,
       upvotes_count: true,
       downvotes_count: true,
@@ -820,6 +840,7 @@ export class PostRepository implements IPostRepository {
     const savedReplyIds = new Set<string>();
     const postIds = posts.map((post) => post.id);
     const replyIds = replies.map((reply) => reply.id);
+    const contextPostIds = [...new Set([...postIds, ...replies.map((reply) => reply.post.id)])];
 
     if (postIds.length > 0 || replyIds.length > 0) {
       const [postVotes, replyVotes, postSaves, replySaves] = await Promise.all([
@@ -908,6 +929,11 @@ export class PostRepository implements IPostRepository {
       }
     }
 
+    const [mutedPostIds, postsWithPsychologistReplies] = await Promise.all([
+      getMutedPostIds(data.auth.id!, contextPostIds),
+      getPostIdsWithPsychologistReplies(contextPostIds),
+    ]);
+
     const postItems = posts.map<PostListItemDTO>((post) => ({
       id: post.id,
       type: "post",
@@ -920,6 +946,8 @@ export class PostRepository implements IPostRepository {
         postVoteMap.get(post.id) ?? null,
         savedPostIds.has(post.id),
         savedReplyIds,
+        mutedPostIds.has(post.id),
+        postsWithPsychologistReplies.has(post.id),
       ),
       reply: null,
     }));
@@ -930,7 +958,14 @@ export class PostRepository implements IPostRepository {
       saved_at: null,
       status: "publicado",
       saved: savedReplyIds.has(reply.id),
-      post: toListPostResponse(reply.post, null, false),
+      post: toListPostResponse(
+        reply.post,
+        null,
+        false,
+        undefined,
+        mutedPostIds.has(reply.post.id),
+        postsWithPsychologistReplies.has(reply.post.id),
+      ),
       reply: {
         id: reply.id,
         title: reply.title,
@@ -1136,6 +1171,17 @@ export class PostRepository implements IPostRepository {
       }
     }
 
+    const contextPostIds = [
+      ...new Set([
+        ...postSaves.map((item) => item.post.id),
+        ...replySaves.map((item) => item.reply.post.id),
+      ]),
+    ];
+    const [mutedPostIds, postsWithPsychologistReplies] = await Promise.all([
+      getMutedPostIds(data.auth.id!, contextPostIds),
+      getPostIdsWithPsychologistReplies(contextPostIds),
+    ]);
+
     const postItems = postSaves.map<PostListItemDTO>((item) => ({
       id: item.id,
       type: "post",
@@ -1143,7 +1189,14 @@ export class PostRepository implements IPostRepository {
       saved_at: item.createdAt,
       status: item.post.status,
       saved: true,
-      post: toListPostResponse(item.post, postVoteMap.get(item.post.id) ?? null, true),
+      post: toListPostResponse(
+        item.post,
+        postVoteMap.get(item.post.id) ?? null,
+        true,
+        undefined,
+        mutedPostIds.has(item.post.id),
+        postsWithPsychologistReplies.has(item.post.id),
+      ),
       reply: null,
     }));
     const replyItems = replySaves.map<PostListItemDTO>((item) => ({
@@ -1153,7 +1206,14 @@ export class PostRepository implements IPostRepository {
       saved_at: item.createdAt,
       status: "publicado",
       saved: true,
-      post: toListPostResponse(item.reply.post, null, false),
+      post: toListPostResponse(
+        item.reply.post,
+        null,
+        false,
+        undefined,
+        mutedPostIds.has(item.reply.post.id),
+        postsWithPsychologistReplies.has(item.reply.post.id),
+      ),
       reply: {
         id: item.reply.id,
         title: item.reply.title,
@@ -1206,7 +1266,7 @@ export class PostRepository implements IPostRepository {
     if (!post) return null;
 
     const userId = data.auth?.id;
-    const [vote, save, membership] = await Promise.all([
+    const [vote, save, membership, mutedPostIds, postsWithPsychologistReplies] = await Promise.all([
       userId
         ? prisma.post_vote.findUnique({
             where: {
@@ -1247,6 +1307,8 @@ export class PostRepository implements IPostRepository {
             },
           })
         : Promise.resolve(null),
+      getMutedPostIds(userId ?? undefined, [post.id]),
+      getPostIdsWithPsychologistReplies([post.id]),
     ]);
 
     return {
@@ -1255,6 +1317,8 @@ export class PostRepository implements IPostRepository {
         vote && !vote.deleted ? normalizeVoteValue(vote.value) : null,
         Boolean(save && !save.deleted),
         Boolean(membership && !membership.deleted),
+        mutedPostIds.has(post.id),
+        postsWithPsychologistReplies.has(post.id),
       ),
     };
   }
@@ -1844,6 +1908,154 @@ export class PostRepository implements IPostRepository {
         saves_count: updatedPost.saves_count,
       };
     });
+
+    return {
+      kind: "ok",
+      data: response,
+    };
+  }
+
+  async mute(data: IPostMuteDTO): Promise<PostMutationResult<PostMuteResponse>> {
+    const post = await findPublishedPost(data.p.id);
+    if (!post) return { kind: "not_found" };
+    if (post.author_id !== data.auth.id) return { kind: "forbidden" };
+
+    await prisma.$transaction(async (transaction) => {
+      const existing = await transaction.post_notification_mute.findUnique({
+        where: {
+          user_id_post_id: {
+            user_id: data.auth.id!,
+            post_id: post.id,
+          },
+        },
+        select: {
+          id: true,
+          deleted: true,
+        },
+      });
+
+      if (existing) {
+        if (existing.deleted) {
+          await transaction.post_notification_mute.update({
+            where: {
+              id: existing.id,
+            },
+            data: {
+              deleted: false,
+              deletedAt: null,
+            },
+          });
+        }
+        return;
+      }
+
+      await transaction.post_notification_mute.create({
+        data: {
+          user_id: data.auth.id!,
+          post_id: post.id,
+        },
+      });
+    });
+
+    return {
+      kind: "ok",
+      data: {
+        post_id: post.id,
+        muted: true,
+      },
+    };
+  }
+
+  async unmute(data: IPostMuteDTO): Promise<PostMutationResult<PostMuteResponse>> {
+    const post = await findPublishedPost(data.p.id);
+    if (!post) return { kind: "not_found" };
+    if (post.author_id !== data.auth.id) return { kind: "forbidden" };
+
+    const existing = await prisma.post_notification_mute.findUnique({
+      where: {
+        user_id_post_id: {
+          user_id: data.auth.id!,
+          post_id: post.id,
+        },
+      },
+      select: {
+        id: true,
+        deleted: true,
+      },
+    });
+
+    if (existing && !existing.deleted) {
+      await prisma.post_notification_mute.update({
+        where: {
+          id: existing.id,
+        },
+        data: {
+          deleted: true,
+          deletedAt: new Date(),
+        },
+      });
+    }
+
+    return {
+      kind: "ok",
+      data: {
+        post_id: post.id,
+        muted: false,
+      },
+    };
+  }
+
+  async deletePost(data: IPostDeleteDTO): Promise<PostMutationResult<PostDeleteResponse>> {
+    const post = await findPublishedPost(data.p.id);
+    if (!post) return { kind: "not_found" };
+    if (post.author_id !== data.auth.id) return { kind: "forbidden" };
+
+    const now = new Date();
+    const response = await prisma.$transaction(async (transaction) => {
+      const professionalRepliesCount = await transaction.post_reply.count({
+        where: {
+          post_id: post.id,
+          deleted: false,
+          author: {
+            role: "psicologo",
+          },
+        },
+      });
+
+      if (professionalRepliesCount > 0) {
+        return null;
+      }
+
+      const deletedReplies = await transaction.post_reply.updateMany({
+        where: {
+          post_id: post.id,
+          deleted: false,
+        },
+        data: {
+          deleted: true,
+          deletedAt: now,
+        },
+      });
+
+      await transaction.community_post.update({
+        where: {
+          id: post.id,
+        },
+        data: {
+          deleted: true,
+          deletedAt: now,
+          status: "removido",
+        },
+      });
+
+      return {
+        post_id: post.id,
+        deleted: true,
+        replies_deleted_count: deletedReplies.count,
+      };
+    });
+
+    if (!response) return { kind: "professional_replies_block" };
 
     return {
       kind: "ok",

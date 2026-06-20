@@ -6,7 +6,9 @@ import {
 } from "@/main/notification/domain-events";
 import type {
   IPostCreateReplyDTO,
+  IPostDeleteDTO,
   IPostMineDTO,
+  IPostMuteDTO,
   IPostRepliesDTO,
   IPostReplyDeleteDTO,
   IPostReplySaveDTO,
@@ -76,6 +78,16 @@ const replyDeleteForbidden = () => ({
   ...error("post_reply_delete_forbidden", {}),
 });
 
+const postActionForbidden = () => ({
+  status: 403,
+  ...error("post_owner_action_forbidden", {}),
+});
+
+const postDeleteBlockedByProfessionalReplies = () => ({
+  status: 409,
+  ...error("post_delete_professional_replies_blocked", {}),
+});
+
 const publicFileUrl = (key: string) => {
   const rawBase = String(process.env.BASE || "").trim();
   let base = rawBase.replace(/\/$/, "");
@@ -111,6 +123,24 @@ const resolveMutationResult = <T>(
   if (result.kind === "invalid_media") return invalidMedia();
   if (result.kind === "media_not_allowed") return mediaNotAllowed();
   if (result.kind === "forbidden") return replyDeleteForbidden();
+  if (result.kind === "professional_replies_block") return postDeleteBlockedByProfessionalReplies();
+
+  return {
+    status: okStatus,
+    ...msg(message, {}),
+    data: result.data,
+  };
+};
+
+const resolveOwnerPostMutationResult = <T>(
+  result: PostMutationResult<T>,
+  okStatus: number,
+  message: string,
+) => {
+  if (result.kind === "not_found") return notFound();
+  if (result.kind === "forbidden") return postActionForbidden();
+  if (result.kind === "professional_replies_block") return postDeleteBlockedByProfessionalReplies();
+  if (result.kind !== "ok") return postActionForbidden();
 
   return {
     status: okStatus,
@@ -347,6 +377,36 @@ export const unsave = async (data: IPostSaveDTO) => {
   const res = await repository.unsave(data);
 
   return resolveMutationResult(res, 200, "post_unsaved");
+};
+
+export const mute = async (data: IPostMuteDTO) => {
+  const unauthorized = ensureCommunityActor(data);
+  if (unauthorized) return unauthorized;
+
+  const repository = new PostRepository();
+  const res = await repository.mute(data);
+
+  return resolveOwnerPostMutationResult(res, 200, "post_muted");
+};
+
+export const unmute = async (data: IPostMuteDTO) => {
+  const unauthorized = ensureCommunityActor(data);
+  if (unauthorized) return unauthorized;
+
+  const repository = new PostRepository();
+  const res = await repository.unmute(data);
+
+  return resolveOwnerPostMutationResult(res, 200, "post_unmuted");
+};
+
+export const deletePost = async (data: IPostDeleteDTO) => {
+  const unauthorized = ensureCommunityActor(data);
+  if (unauthorized) return unauthorized;
+
+  const repository = new PostRepository();
+  const res = await repository.deletePost(data);
+
+  return resolveOwnerPostMutationResult(res, 200, "post_deleted");
 };
 
 export const saveReply = async (data: IPostReplySaveDTO) => {

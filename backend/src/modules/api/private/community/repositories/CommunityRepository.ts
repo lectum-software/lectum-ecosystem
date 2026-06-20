@@ -1,6 +1,8 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
+import { getPostIdsWithPsychologistReplies } from "@/utils/community-post-replies";
+import { getMutedPostIds } from "@/utils/post-notification-mute";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   CommunityAuthorDTO,
@@ -1101,6 +1103,8 @@ const toPostResponse = (
   savedReplyIds?: Set<string>,
   sortMetrics?: CommunityPostSortMetricsDTO,
   highlightedProfessionalReply?: ProfessionalReplyResult | null,
+  mutedByCurrentUser = false,
+  hasPsychologistReply = false,
 ): CommunityPostDTO => {
   const responseCommunity = {
     ...toCommunityResponse(item.community),
@@ -1135,6 +1139,8 @@ const toPostResponse = (
     media_type: null,
     current_user_vote: currentUserVote,
     saved,
+    muted_by_current_user: mutedByCurrentUser,
+    has_psychologist_reply: hasPsychologistReply,
     community: responseCommunity,
     author,
     highlighted_professional_reply: highlightedReply,
@@ -1451,11 +1457,20 @@ export class CommunityRepository implements ICommunityRepository {
     const postIds = items.map((item) => item.id);
     const communityIds = [...new Set(items.map((item) => item.community.id))];
     const replyIds = [...highlightedRepliesByPostId.values()].map((reply) => reply.id);
-    const [currentVotes, savedPostIds, savedReplyIds, followedCommunityIds] = await Promise.all([
+    const [
+      currentVotes,
+      savedPostIds,
+      savedReplyIds,
+      followedCommunityIds,
+      mutedPostIds,
+      postsWithPsychologistReplies,
+    ] = await Promise.all([
       getPostCurrentVotes(data.auth?.id ?? undefined, postIds),
       getSavedPostIds(data.auth?.id ?? undefined, postIds),
       getSavedReplyIds(data.auth?.id ?? undefined, replyIds),
       getFollowedCommunityIds(data.auth?.id ?? undefined, communityIds),
+      getMutedPostIds(data.auth?.id ?? undefined, postIds),
+      getPostIdsWithPsychologistReplies(postIds),
     ]);
 
     return {
@@ -1468,6 +1483,8 @@ export class CommunityRepository implements ICommunityRepository {
           savedReplyIds,
           undefined,
           highlightedRepliesByPostId.get(item.id) ?? null,
+          mutedPostIds.has(item.id),
+          postsWithPsychologistReplies.has(item.id),
         ),
       ),
       page: pagination.page,
@@ -1981,11 +1998,20 @@ export class CommunityRepository implements ICommunityRepository {
     const highlightedRepliesByPostId = await selectHighlightedProfessionalReplies(items);
     const postIds = items.map((item) => item.id);
     const replyIds = [...highlightedRepliesByPostId.values()].map((reply) => reply.id);
-    const [currentVotes, savedPostIds, savedReplyIds, followedCommunityIds] = await Promise.all([
+    const [
+      currentVotes,
+      savedPostIds,
+      savedReplyIds,
+      followedCommunityIds,
+      mutedPostIds,
+      postsWithPsychologistReplies,
+    ] = await Promise.all([
       getPostCurrentVotes(data.auth?.id ?? undefined, postIds),
       getSavedPostIds(data.auth?.id ?? undefined, postIds),
       getSavedReplyIds(data.auth?.id ?? undefined, replyIds),
       getFollowedCommunityIds(data.auth?.id ?? undefined, [community.id]),
+      getMutedPostIds(data.auth?.id ?? undefined, postIds),
+      getPostIdsWithPsychologistReplies(postIds),
     ]);
 
     return {
@@ -2002,6 +2028,8 @@ export class CommunityRepository implements ICommunityRepository {
           savedReplyIds,
           sortMetricsByPostId.get(item.id),
           highlightedRepliesByPostId.get(item.id) ?? null,
+          mutedPostIds.has(item.id),
+          postsWithPsychologistReplies.has(item.id),
         ),
       ),
       page: pagination.page,

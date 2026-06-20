@@ -1,7 +1,9 @@
 import { callEndpoint } from "@/api/generator";
 import type {
   CreatePostReplyPayload,
+  PostDeleteResponse,
   PostDetailResponse,
+  PostMuteResponse,
   PostRepliesQuery,
   PostRepliesResponse,
   PostReply,
@@ -162,6 +164,46 @@ export const unsavePost = async (id: string) => {
   return handleReq<PostSaveResponse>({
     ...handle,
     hideError: true,
+  });
+};
+
+export const mutePost = async (id: string) => {
+  const handle = callEndpoint({
+    route: "/api/private/posts/:id/mute",
+    method: "POST",
+    params: { id },
+  });
+
+  return handleReq<PostMuteResponse>({
+    ...handle,
+    showSuccess: true,
+  });
+};
+
+export const unmutePost = async (id: string) => {
+  const handle = callEndpoint({
+    route: "/api/private/posts/:id/mute",
+    method: "DELETE",
+    params: { id },
+  });
+
+  return handleReq<PostMuteResponse>({
+    ...handle,
+    showSuccess: true,
+  });
+};
+
+export const deletePost = async (id: string) => {
+  const handle = callEndpoint({
+    route: "/api/private/posts/:id",
+    method: "DELETE",
+    params: { id },
+  });
+
+  return handleReq<PostDeleteResponse>({
+    ...handle,
+    hideError: true,
+    showSuccess: true,
   });
 };
 

@@ -19,6 +19,7 @@ import { useSavePost, useVotePost } from "@/api/callers/posts";
 import type { PostListPost, PostProfessionalReply } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { MentorBadge } from "@/components/community/mentor-badge";
+import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
@@ -702,9 +703,13 @@ export const CommunityPostCard = ({
           ) : null}
           {statusBadge}
           {headerExtra}
+          <PostOwnerActionMenu className="ml-auto" post={post} />
         </div>
       ) : (
-        <div className="mb-3 flex justify-end">{statusBadge}</div>
+        <div className="mb-3 flex justify-end gap-2">
+          {statusBadge}
+          <PostOwnerActionMenu post={post} />
+        </div>
       )}
 
       {showAuthorHeader ? (

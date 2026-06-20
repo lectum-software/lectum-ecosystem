@@ -77,6 +77,8 @@ export type PostDetailDTO = {
   media_type: string | null;
   current_user_vote: 1 | -1 | null;
   saved: boolean;
+  muted_by_current_user: boolean;
+  has_psychologist_reply: boolean;
   community: PostCommunityDTO;
   author: PostAuthorDTO;
 };
@@ -203,6 +205,17 @@ export type PostReplyDeleteResponse = {
   replies_count: number;
 };
 
+export type PostDeleteResponse = {
+  post_id: string;
+  deleted: boolean;
+  replies_deleted_count: number;
+};
+
+export type PostMuteResponse = {
+  post_id: string;
+  muted: boolean;
+};
+
 export type PostMutationResult<T> =
   | { kind: "ok"; data: T }
   | { kind: "not_found" }
@@ -210,7 +223,8 @@ export type PostMutationResult<T> =
   | { kind: "invalid_media" }
   | { kind: "media_not_allowed" }
   | { kind: "invalid_target" }
-  | { kind: "forbidden" };
+  | { kind: "forbidden" }
+  | { kind: "professional_replies_block" };
 
 export type IPostShowDTO = {
   p: PostParams;
@@ -263,6 +277,16 @@ export type IPostVoteDTO = {
 };
 
 export type IPostSaveDTO = {
+  p: PostParams;
+  auth: user;
+};
+
+export type IPostDeleteDTO = {
+  p: PostParams;
+  auth: user;
+};
+
+export type IPostMuteDTO = {
   p: PostParams;
   auth: user;
 };

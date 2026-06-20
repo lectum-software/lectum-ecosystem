@@ -4,8 +4,10 @@ import privateAuth from "@/modules/api/middlewares/_auth";
 import {
   authorizeReplyMediaUpload,
   createReply,
+  deletePost,
   deleteReply,
   mine,
+  mute,
   replies,
   replyThread,
   report,
@@ -13,6 +15,7 @@ import {
   saved,
   saveReply,
   show,
+  unmute,
   unsave,
   unsaveReply,
   uploadReplyMedia,
@@ -63,7 +66,10 @@ routes.delete("/:id/replies/:replyId", privateAuth, replySaveValidator, deleteRe
 routes.post("/:id/vote", privateAuth, voteValidator, vote);
 routes.post("/:id/save", privateAuth, saveValidator, save);
 routes.delete("/:id/save", privateAuth, saveValidator, unsave);
+routes.post("/:id/mute", privateAuth, showValidator, mute);
+routes.delete("/:id/mute", privateAuth, showValidator, unmute);
 routes.post("/:id/report", privateAuth, reportValidator, report);
+routes.delete("/:id", privateAuth, showValidator, deletePost);
 routes.get("/:id", showValidator, show);
 
 export default routes;

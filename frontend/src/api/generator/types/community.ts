@@ -115,6 +115,8 @@ export type CommunityPost = {
   media_type: string | null;
   current_user_vote: 1 | -1 | null;
   saved: boolean;
+  muted_by_current_user: boolean;
+  has_psychologist_reply: boolean;
   community: Community;
   author: CommunityAuthor;
   highlighted_professional_reply: CommunityProfessionalReply | null;

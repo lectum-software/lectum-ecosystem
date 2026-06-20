@@ -3,8 +3,10 @@ import { error500, send } from "@/helpers/return";
 import {
   authorizeReplyMediaUpload as authorizeReplyMediaUploadService,
   createReply as createReplyService,
+  deletePost as deletePostService,
   deleteReply as deleteReplyService,
   mine as mineService,
+  mute as muteService,
   replies as repliesService,
   replyThread as replyThreadService,
   report as reportService,
@@ -12,6 +14,7 @@ import {
   saveReply as saveReplyService,
   save as saveService,
   show as showService,
+  unmute as unmuteService,
   unsaveReply as unsaveReplyService,
   unsave as unsaveService,
   uploadReplyMedia as uploadReplyMediaService,
@@ -154,6 +157,38 @@ export const unsave = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "post_unsave", err);
+  }
+};
+
+export const mute = async (req: Request, res: Response) => {
+  try {
+    const resolve = await muteService(req as unknown as Parameters<typeof muteService>[0]);
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_mute", err);
+  }
+};
+
+export const unmute = async (req: Request, res: Response) => {
+  try {
+    const resolve = await unmuteService(req as unknown as Parameters<typeof unmuteService>[0]);
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_unmute", err);
+  }
+};
+
+export const deletePost = async (req: Request, res: Response) => {
+  try {
+    const resolve = await deletePostService(
+      req as unknown as Parameters<typeof deletePostService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_delete", err);
   }
 };
 

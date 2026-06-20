@@ -53,6 +53,7 @@ import type { PostDetail, PostReply } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
 import { MentorBadge } from "@/components/community/mentor-badge";
+import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
 import { components } from "@/components/controllers";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
@@ -585,10 +586,12 @@ const MediaBlock = ({
 
 const PostHeader = ({
   onBack,
+  onDeleted,
   onReport,
   post,
 }: {
   onBack: () => void;
+  onDeleted: () => void;
   onReport: () => void;
   post: PostDetail;
 }) => {
@@ -597,6 +600,8 @@ const PostHeader = ({
   const psychologistProfileHref = isPsychologistPost
     ? `/app/psychologist/${post.author.id}`
     : undefined;
+  const currentUserId = useAppSelector((state) => state.user?.id);
+  const isOwnPost = Boolean(currentUserId && post.author.id === currentUserId);
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -613,38 +618,42 @@ const PostHeader = ({
           <span className="sr-only">Voltar</span>
         </Button>
         <h1 className="text-base font-black text-[#182033] dark:text-foreground">Post</h1>
-        <div className="relative">
-          <button
-            aria-expanded={menuOpen}
-            aria-haspopup="menu"
-            aria-label="Mais opções"
-            className="grid h-10 w-10 place-items-center rounded-full text-[#64748B] transition hover:bg-surface-muted"
-            onClick={() => setMenuOpen((current) => !current)}
-            type="button"
-          >
-            <MoreVertical className="h-5 w-5" aria-hidden="true" />
-          </button>
-
-          {menuOpen ? (
-            <div
-              className="absolute top-11 right-0 z-20 w-52 overflow-hidden rounded-2xl border border-[#E5EAF0] bg-white p-1.5 text-sm shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:border-border dark:bg-surface"
-              role="menu"
+        {isOwnPost ? (
+          <PostOwnerActionMenu onDeleted={onDeleted} post={post} />
+        ) : (
+          <div className="relative">
+            <button
+              aria-expanded={menuOpen}
+              aria-haspopup="menu"
+              aria-label="Mais opções"
+              className="grid h-10 w-10 place-items-center rounded-full text-[#64748B] transition hover:bg-surface-muted"
+              onClick={() => setMenuOpen((current) => !current)}
+              type="button"
             >
-              <button
-                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-[#475569] transition hover:bg-[#F8FAFC] hover:text-[#182033] dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
-                onClick={() => {
-                  setMenuOpen(false);
-                  onReport();
-                }}
-                role="menuitem"
-                type="button"
+              <MoreVertical className="h-5 w-5" aria-hidden="true" />
+            </button>
+
+            {menuOpen ? (
+              <div
+                className="absolute top-11 right-0 z-20 w-52 overflow-hidden rounded-2xl border border-[#E5EAF0] bg-white p-1.5 text-sm shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:border-border dark:bg-surface"
+                role="menu"
               >
-                <Flag className="h-4 w-4" aria-hidden="true" />
-                Denunciar post
-              </button>
-            </div>
-          ) : null}
-        </div>
+                <button
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-[#475569] transition hover:bg-[#F8FAFC] hover:text-[#182033] dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onReport();
+                  }}
+                  role="menuitem"
+                  type="button"
+                >
+                  <Flag className="h-4 w-4" aria-hidden="true" />
+                  Denunciar post
+                </button>
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
 
       <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-muted">
@@ -2413,6 +2422,7 @@ export const PostDetailLogic = () => {
                 onBack={() =>
                   navigateBackWithFallback(router, `/app/community/${post.community.slug}`)
                 }
+                onDeleted={() => router.replace(`/app/community/${post.community.slug}`)}
                 onReport={() => {
                   setReportError(null);
                   setReportTarget({ type: "post" });

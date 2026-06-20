@@ -4,7 +4,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import keys from "@/api/cache/keys";
 import type {
   CreatePostReplyPayload,
+  PostDeleteResponse,
   PostDetailResponse,
+  PostMuteResponse,
   PostRepliesQuery,
   PostRepliesResponse,
   PostReply,
@@ -458,6 +460,47 @@ export const useSavePost = (postId: string) => {
       queryClient.invalidateQueries({ queryKey: keys.community.root() });
       invalidateDirectoryPsychologistQueries(queryClient);
     },
+  });
+};
+
+export const useMutePost = (callbacks?: {
+  onSuccess?: (data: PostMuteResponse) => void;
+  onError?: (error: unknown) => void;
+}) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ muted, postId }: { muted: boolean; postId: string }) =>
+      muted ? api.unmutePost(postId) : api.mutePost(postId),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: keys.posts.detail(data.post_id) });
+      queryClient.invalidateQueries({ queryKey: keys.posts.mine() });
+      queryClient.invalidateQueries({ queryKey: keys.posts.saved() });
+      queryClient.invalidateQueries({ queryKey: keys.community.root() });
+      invalidateDirectoryPsychologistQueries(queryClient);
+      callbacks?.onSuccess?.(data);
+    },
+    onError: callbacks?.onError,
+  });
+};
+
+export const useDeletePost = (callbacks?: {
+  onSuccess?: (data: PostDeleteResponse) => void;
+  onError?: (error: unknown) => void;
+}) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (postId: string) => api.deletePost(postId),
+    onSuccess: (data) => {
+      queryClient.removeQueries({ queryKey: keys.posts.detail(data.post_id) });
+      queryClient.invalidateQueries({ queryKey: keys.posts.mine() });
+      queryClient.invalidateQueries({ queryKey: keys.posts.saved() });
+      queryClient.invalidateQueries({ queryKey: keys.community.root() });
+      invalidateDirectoryPsychologistQueries(queryClient);
+      callbacks?.onSuccess?.(data);
+    },
+    onError: callbacks?.onError,
   });
 };
 

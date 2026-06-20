@@ -335,6 +335,7 @@ export interface community_post {
   saves_count?: number | null;
   community?: community | null;
   author?: user | null;
+  notification_mutes?: post_notification_mute[] | null;
 }
 
 export interface post_reply {
@@ -380,6 +381,18 @@ export interface post_reply_save {
   reply_id?: string | null;
   user?: user | null;
   reply?: post_reply | null;
+}
+
+export interface post_notification_mute {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  user_id?: string | null;
+  post_id?: string | null;
+  user?: user | null;
+  post?: community_post | null;
 }
 
 export interface notification_subscription {
@@ -481,6 +494,7 @@ export interface user {
   post_replies?: post_reply[] | null;
   post_saves?: post_save[] | null;
   post_reply_saves?: post_reply_save[] | null;
+  post_notification_mutes?: post_notification_mute[] | null;
   notification_subscriptions?: notification_subscription[] | null;
   visitor_locations?: visitor_location[] | null;
   notifications?: notification[] | null;

@@ -60,6 +60,7 @@ import { CommunityActionBar } from "@/components/community/community-action-bar"
 import { CommunityFollowButton } from "@/components/community/community-follow-button";
 import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
 import { MentorBadge } from "@/components/community/mentor-badge";
+import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
 import type { VoteValue } from "@/components/community/vote-action-button";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
@@ -1252,6 +1253,7 @@ const PostCard = ({
             initialFollowing={Boolean(post.community.following)}
             slug={post.community.slug}
           />
+          <PostOwnerActionMenu className="ml-auto" post={post} />
         </div>
       ) : null}
 
@@ -1282,6 +1284,7 @@ const PostCard = ({
             </p>
           )}
         </div>
+        {!showCommunityHeader ? <PostOwnerActionMenu className="ml-auto" post={post} /> : null}
       </div>
 
       <div className="grid gap-2">

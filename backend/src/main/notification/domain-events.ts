@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import prisma from "@/infra/database/prisma";
+import { filterPostMutedRecipients } from "@/utils/post-notification-mute";
 import { notify } from "./index";
 import { shouldReceiveNewPostNotification } from "./preferences";
 
@@ -276,10 +277,12 @@ export const notifyNewPostReply = async (params: {
   const communitySlug =
     "post" in replyContext ? replyContext.post.community.slug : replyContext.community.slug;
 
+  const recipientIds = await filterPostMutedRecipients(params.postId, [recipientId]);
+
   await notifyOnce({
     actorId: params.actorId,
     messageKey: "nova_resposta",
-    recipientIds: [recipientId],
+    recipientIds,
     redirect: communityPostRedirect(communitySlug, params.postId),
     sourceId: params.replyId,
     sourceType: "post_reply",
@@ -341,10 +344,12 @@ export const notifyPostVote = async (params: {
     `${params.postId}:${params.replyId ?? "post"}:${params.actorId}:${params.value}`,
   );
 
+  const recipientIds = await filterPostMutedRecipients(params.postId, [target.author_id]);
+
   await notifyOnce({
     actorId: params.actorId,
     messageKey: params.value === 1 ? "upvote" : "downvote",
-    recipientIds: [target.author_id],
+    recipientIds,
     redirect: communityPostRedirect(communitySlug, params.postId),
     sourceId,
     sourceType: "post_vote",
@@ -379,10 +384,12 @@ export const notifyPostSaved = async (params: {
 
   if (!post) return;
 
+  const recipientIds = await filterPostMutedRecipients(params.postId, [post.author_id]);
+
   await notifyOnce({
     actorId: params.actorId,
     messageKey: "salvamento",
-    recipientIds: [post.author_id],
+    recipientIds,
     redirect: communityPostRedirect(post.community.slug, params.postId),
     sourceId: params.saveId,
     sourceType: "post_save",

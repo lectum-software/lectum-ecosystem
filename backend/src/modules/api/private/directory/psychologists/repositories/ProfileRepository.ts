@@ -7,6 +7,8 @@ import type {
   CommunityProfessionalReplyDTO,
 } from "@/modules/api/private/community/DTOs/ICommunityDTO";
 import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
+import { getPostIdsWithPsychologistReplies } from "@/utils/community-post-replies";
+import { getMutedPostIds } from "@/utils/post-notification-mute";
 import { crpExperienceYears } from "@/utils/professional-experience";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
@@ -480,6 +482,8 @@ const toPostResponse = (
   saved: boolean,
   savedReplyIds?: Set<string>,
   highlightedReply?: ProfileReplyResult,
+  mutedByCurrentUser = false,
+  hasPsychologistReply = false,
 ): CommunityPostDTO => {
   const anonymous = item.author.role !== "psicologo" && item.anonymous;
 
@@ -500,6 +504,8 @@ const toPostResponse = (
     media_type: null,
     current_user_vote: currentUserVote,
     saved,
+    muted_by_current_user: mutedByCurrentUser,
+    has_psychologist_reply: hasPsychologistReply,
     community: toCommunityResponse(item.community),
     author: toPostAuthorResponse(
       item.author,
@@ -1171,6 +1177,10 @@ export class ProfileRepository implements IProfileRepository {
     );
     const savedPostIds = new Set(saves.map((save) => save.post_id));
     const savedReplyIds = new Set(replySaves.map((save) => save.reply_id));
+    const [mutedPostIds, postsWithPsychologistReplies] = await Promise.all([
+      getMutedPostIds(authId ?? undefined, postIds),
+      getPostIdsWithPsychologistReplies(postIds),
+    ]);
     const toDirectoryPublication = (
       item:
         | { kind: "post"; post: ProfilePostResult }
@@ -1183,6 +1193,9 @@ export class ProfileRepository implements IProfileRepository {
             voteByPostId.get(item.post.id) ?? null,
             savedPostIds.has(item.post.id),
             savedReplyIds,
+            undefined,
+            mutedPostIds.has(item.post.id),
+            postsWithPsychologistReplies.has(item.post.id),
           ),
           contribution_type: "post",
         };
@@ -1195,6 +1208,8 @@ export class ProfileRepository implements IProfileRepository {
           savedPostIds.has(item.reply.post.id),
           savedReplyIds,
           item.reply,
+          mutedPostIds.has(item.reply.post.id),
+          postsWithPsychologistReplies.has(item.reply.post.id),
         ),
         contribution_type: "reply",
       };
