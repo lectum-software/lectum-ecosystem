@@ -13,6 +13,7 @@ import { useMyPosts, useSaveReply, useVotePost } from "@/api/callers/posts";
 import type { PostListPost, UserPostListItem, UserPostsType } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityPostCard } from "@/components/community/community-post-card";
+import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -205,10 +206,12 @@ const ProfessionalAnsweredBadge = ({ className }: { className?: string }) => (
 const ReplyItemCard = ({
   interactionCopy,
   item,
+  onPostDeleted,
   onShare,
 }: {
   interactionCopy: InteractionCopy;
   item: UserPostListItem;
+  onPostDeleted?: () => void;
   onShare: (post: PostListPost, replyId: string) => void;
 }) => {
   const router = useRouter();
@@ -321,13 +324,19 @@ const ReplyItemCard = ({
       onKeyDown={handleCardKeyDown}
       tabIndex={-1}
     >
-      <div className="relative z-10 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold tracking-[-0.01em] text-muted">
-        <Reply className="h-3.5 w-3.5 shrink-0 text-muted/80" aria-hidden="true" />
-        <span className="shrink-0">{interactionCopy.contextLabel}</span>
-        <span className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-extrabold text-[#475569] dark:text-muted">
-          {item.post.community.name}
-        </span>
-        <span className="ml-auto shrink-0">{formatRelativeTime(reply.created_at)}</span>
+      <div className="relative z-20 flex min-w-0 items-center gap-2 text-[11px] font-semibold tracking-[-0.01em] text-muted">
+        <div className="flex min-w-0 flex-1 items-center gap-1.5">
+          <Reply className="h-3.5 w-3.5 shrink-0 text-muted/80" aria-hidden="true" />
+          <span className="shrink-0">{interactionCopy.contextLabel}</span>
+          <span className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-extrabold text-[#475569] dark:text-muted">
+            {item.post.community.name}
+          </span>
+          <span className="shrink-0 text-muted" aria-hidden="true">
+            &bull;
+          </span>
+          <span className="shrink-0 text-muted">{formatRelativeTime(reply.created_at)}</span>
+        </div>
+        <PostOwnerActionMenu className="-mr-1" onDeleted={onPostDeleted} post={item.post} />
       </div>
 
       {reply.parent_content || isDirectPostComment ? (
@@ -473,6 +482,10 @@ export const MyPostsLogic = () => {
     setPage(1);
   };
 
+  const handlePostDeleted = () => {
+    void postsQuery.refetch();
+  };
+
   return (
     <PrivateTemplate
       contentClassName="bg-background px-0 py-0"
@@ -545,6 +558,7 @@ export const MyPostsLogic = () => {
                     interactionCopy={interactionCopy}
                     item={item}
                     key={item.id}
+                    onPostDeleted={handlePostDeleted}
                     onShare={sharePost}
                   />
                 ) : (
@@ -555,9 +569,16 @@ export const MyPostsLogic = () => {
                     communityContextTone="muted"
                     communityHeaderIncludesTime
                     headerExtra={
-                      item.post.highlighted_professional_reply ? (
-                        <ProfessionalAnsweredBadge className="ml-auto" />
-                      ) : undefined
+                      <div className="flex shrink-0 items-center gap-2">
+                        {item.post.highlighted_professional_reply ? (
+                          <ProfessionalAnsweredBadge className="hidden sm:inline-flex" />
+                        ) : null}
+                        <PostOwnerActionMenu
+                          className="-mr-1"
+                          onDeleted={handlePostDeleted}
+                          post={item.post}
+                        />
+                      </div>
                     }
                     interactiveActions
                     key={item.id}

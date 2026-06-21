@@ -682,7 +682,8 @@ export const CommunityPostCard = ({
             <span className="shrink-0">{communityContextLabel}</span>
             <Link
               className={cn(
-                "block min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap font-black underline-offset-4 hover:text-primary hover:underline",
+                "block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-black underline-offset-4 hover:text-primary hover:underline",
+                !communityHeaderIncludesTime && "flex-1",
                 profilePublicationMode || usesMutedCommunityContext
                   ? "text-[#64748B] dark:text-muted"
                   : "text-foreground",
@@ -696,7 +697,12 @@ export const CommunityPostCard = ({
               {post.community.name}
             </Link>
             {communityHeaderIncludesTime ? (
-              <span className="shrink-0 text-muted">{formatRelativeTime(displayCreatedAt)}</span>
+              <>
+                <span className="shrink-0 text-muted" aria-hidden="true">
+                  &bull;
+                </span>
+                <span className="shrink-0 text-muted">{formatRelativeTime(displayCreatedAt)}</span>
+              </>
             ) : null}
           </div>
           {post.muted_by_current_user ? <PostMutedBadge className="shrink-0" /> : null}

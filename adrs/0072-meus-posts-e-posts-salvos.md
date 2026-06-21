@@ -329,3 +329,29 @@ O fluxo de abrir uma resposta salva usa `focusReplyId` para carregar a árvore co
   - `http://127.0.0.1:3000/app/posts/saved` retornou 200.
   - `http://127.0.0.1:3000/app/posts/mine` retornou 200.
   - `http://127.0.0.1:3000/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video?focusReplyId=cmqfzkzn90000g8uh3n4dn24i#reply-cmqfzkzn90000g8uh3n4dn24i` retornou 200.
+
+## Complemento 2026-06-21: topo e menu de cards em Meus posts
+
+### Contexto
+
+As abas `Posts` e `Respostas` em `/app/posts/mine` ainda apresentavam diferencas no topo dos cards: respostas mantinham o horario solto no canto direito e posts nao exibiam o menu de acoes do proprio post no card. O objetivo era aproximar a area pessoal do padrao ja usado no detalhe do post, sem criar regras paralelas de exclusao.
+
+### Decisao
+
+- Padronizar a linha superior como `Postado em [comunidade] - [tempo]` para posts e `Respondido em [comunidade] - [tempo]` para respostas de psicologos, usando o separador visual de bullet na UI.
+- Manter o nome da comunidade truncavel no mobile e reservar o lado direito do header para o menu de tres pontos.
+- Reutilizar `PostOwnerActionMenu` nos cards, preservando as regras existentes de propriedade, silenciamento e bloqueio de exclusao quando aplicavel.
+- Em respostas, aplicar o mesmo menu ao post original quando o usuario logado for dono desse post; caso contrario, a regra de permissao existente impede exibir a acao de dono.
+
+### Consequencias
+
+- O horario deixa de competir visualmente no canto direito e passa a compor o contexto do conteudo.
+- As acoes `Silenciar post` e `Excluir post` reaproveitam o mesmo modal e as mesmas validacoes do detalhe do post.
+- Nao houve alteracao de backend, schema Prisma, endpoints, pacotes, votos, salvos ou contratos HTTP.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke HTTP local: `http://127.0.0.1:3000/app/posts/mine` retornou 200.
+- `pnpm check`
