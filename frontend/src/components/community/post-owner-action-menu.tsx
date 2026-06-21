@@ -21,6 +21,7 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 
 type OwnerActionPost = Pick<
   PostDetail,
+  | "anonymous"
   | "author"
   | "content"
   | "community"

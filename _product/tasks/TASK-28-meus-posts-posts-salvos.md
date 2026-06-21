@@ -339,3 +339,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Não houve novo package, mock, seed artificial, migration ou alteração de storage.
 - ADR criado: `adrs/0146-acoes-respostas-usuario.md`.
 - Validações executadas: `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile 390x844 em `/app/posts/mine`, confirmando menu `Editar/Silenciar/Excluir` nas respostas e abertura do modal de edição sem submeter alterações.
+
+
+## Ajuste complementar em 2026-06-21 - modal de edição igual à criação
+
+- Pedido direto de produto: a modal de edição de post deve usar a mesma superfície visual da criação de post, sem uma tela/layout paralelo.
+- `PostEditModal` passou a reutilizar o padrão mobile-first do sheet de criação: cabeçalho com fechar/título/ajuda, área editorial branca com campos sem bordas pesadas, miniatura de mídia dentro da área em branco e rodapé fixo com ação primária.
+- A faixa azul de `Dados fixos` foi removida; os dados que não podem mudar ficam como controles inativos no próprio fluxo: comunidade em seletor desabilitado e anonimato em switch desabilitado quando aplicável.
+- A regra de edição continua preservando o domínio: somente título, conteúdo e mídia são enviados ao endpoint `PUT /api/private/posts/:id`; comunidade, autoria, anonimato e status seguem imutáveis.
+- Não houve alteração de schema Prisma, endpoint, package, mock ou storage.
+- Referência visual aplicada a partir da modal de criação já implementada e das imagens locais da TASK-28; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0145-edicao-post-publicado.md`.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile `390x844` em `/app/posts/mine`, confirmando abertura da modal `Editar Post`, ausência de `Dados fixos`, ausência de `Cancelar`, seletor de comunidade inativo, campos editoriais sem bordas pesadas e rodapé com `Mídia`/`Salvar`.
