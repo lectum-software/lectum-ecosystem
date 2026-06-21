@@ -1223,7 +1223,6 @@ const ExpandableAboutText = ({
   textClassName?: string;
 }) => {
   const [expanded, setExpanded] = useState(false);
-  const [preview, setPreview] = useState(text.trim());
   const [truncated, setTruncated] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLParagraphElement>(null);
@@ -1252,12 +1251,6 @@ const ExpandableAboutText = ({
       return Number.isFinite(parsedFontSize) ? parsedFontSize * 1.6 : 22;
     };
 
-    const fitsWithinMaxLines = (value: string) => {
-      measureNode.textContent = value;
-
-      return measureNode.scrollHeight <= lineHeightPx() * PROFILE_ABOUT_MAX_LINES + 1;
-    };
-
     const measure = () => {
       if (cancelled) return;
 
@@ -1265,38 +1258,14 @@ const ExpandableAboutText = ({
       const normalizedText = content.trimEnd();
 
       if (availableWidth <= 0 || normalizedText.length === 0) {
-        setPreview(content);
         setTruncated(false);
         return;
       }
 
       measureNode.style.width = `${availableWidth}px`;
+      measureNode.textContent = normalizedText;
 
-      if (fitsWithinMaxLines(normalizedText)) {
-        setPreview(content);
-        setTruncated(false);
-        return;
-      }
-
-      let low = 0;
-      let high = normalizedText.length;
-      let bestPreview = "";
-
-      while (low <= high) {
-        const middle = Math.floor((low + high) / 2);
-        const candidatePreview = normalizedText.slice(0, middle).trimEnd();
-        const candidate = `${candidatePreview} ${PROFILE_ABOUT_MORE_LABEL}`;
-
-        if (fitsWithinMaxLines(candidate)) {
-          bestPreview = candidatePreview;
-          low = middle + 1;
-        } else {
-          high = middle - 1;
-        }
-      }
-
-      setPreview(bestPreview || normalizedText.slice(0, 1));
-      setTruncated(true);
+      setTruncated(measureNode.scrollHeight > lineHeightPx() * PROFILE_ABOUT_MAX_LINES + 1);
     };
 
     const scheduleMeasure = () => {
@@ -1325,18 +1294,28 @@ const ExpandableAboutText = ({
     event.stopPropagation();
     setExpanded((previous) => !previous);
   };
+  const collapsedTextStyle =
+    truncated && !expanded
+      ? {
+          WebkitBoxOrient: "vertical" as const,
+          WebkitLineClamp: PROFILE_ABOUT_MAX_LINES,
+          display: "-webkit-box",
+          overflow: "hidden",
+        }
+      : undefined;
 
   return (
     <div
       className={cn("relative mt-2.5 min-w-0 max-w-full", containerClassName)}
       ref={containerRef}
     >
-      <p className={paragraphClassName}>
-        {expanded || !truncated ? content : preview}
-        {truncated ? (
+      <p className={paragraphClassName} style={collapsedTextStyle}>
+        {content}
+        {truncated && expanded ? (
           <>
             {" "}
             <button
+              aria-expanded={expanded}
               className={cn(
                 "pointer-events-auto inline cursor-pointer rounded-none border-0 bg-transparent p-0 align-baseline font-semibold text-[#2563EB]/85 [font-size:inherit] [line-height:inherit] hover:text-[#1D4ED8]",
                 moreClassName,
@@ -1344,11 +1323,24 @@ const ExpandableAboutText = ({
               onClick={toggleExpanded}
               type="button"
             >
-              {expanded ? PROFILE_ABOUT_LESS_LABEL : PROFILE_ABOUT_MORE_LABEL}
+              {PROFILE_ABOUT_LESS_LABEL}
             </button>
           </>
         ) : null}
       </p>
+      {truncated && !expanded ? (
+        <button
+          aria-expanded={expanded}
+          className={cn(
+            "absolute right-0 bottom-0 cursor-pointer rounded-none border-0 bg-white py-0 pr-0 pl-1 align-baseline font-semibold text-[#2563EB]/85 [font-size:inherit] [line-height:inherit] hover:text-[#1D4ED8] dark:bg-surface",
+            moreClassName,
+          )}
+          onClick={toggleExpanded}
+          type="button"
+        >
+          {PROFILE_ABOUT_MORE_LABEL}
+        </button>
+      ) : null}
       <p
         aria-hidden="true"
         className={cn(

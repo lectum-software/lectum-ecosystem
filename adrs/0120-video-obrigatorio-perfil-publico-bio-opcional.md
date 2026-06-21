@@ -141,6 +141,30 @@ Com Bio curta e Apresentacao de texto opcionais, o perfil publico ainda preenchi
 - `pnpm --dir frontend build`
 - Smoke HTTP local `GET http://127.0.0.1:3000/app/psychologist/cmqmg35850000asuheq2ucwd0` retornou `200`.
 
+## Atualizacao 2026-06-20 - CTA de expansao fixado no fim da linha
+
+### Contexto
+
+Mesmo usando a largura real do container, o truncamento por busca binaria cortava o texto antes do fim visual da terceira linha em alguns tamanhos mobile, porque precisava encaixar o texto do CTA dentro da medicao textual.
+
+### Decisao
+
+- Trocar o preview recortado manualmente por `-webkit-line-clamp` visual de tres linhas.
+- Posicionar o CTA `... ver mais` de forma absoluta no canto inferior direito do texto colapsado.
+- Manter medicao apenas para decidir se o texto precisa do CTA, nao para definir o ultimo caractere visivel.
+
+### Consequencias
+
+- A terceira linha passa a usar a largura visual disponivel, com `... ver mais` no final da linha.
+- O comportamento de expandir/recolher permanece igual para o usuario.
+- Nao houve alteracao de backend, schema, DTO, endpoint, dados ou packages.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke HTTP local `GET http://127.0.0.1:3000/app/psychologist/cmqmg35850000asuheq2ucwd0` retornou `200`.
+
 ## Atualizacao 2026-06-20 - truncamento ocupa largura util do Sobre
 
 ### Contexto
