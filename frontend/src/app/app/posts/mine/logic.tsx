@@ -14,7 +14,6 @@ import type { PostListPost, UserPostListItem, UserPostsType } from "@/api/genera
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityPostCard } from "@/components/community/community-post-card";
 import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
-import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -173,9 +172,9 @@ const FilterTabs = ({
 }) => (
   <nav
     aria-label={interactionCopy.filterAriaLabel}
-    className="overflow-x-auto pb-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    className="mt-3 overflow-x-auto border-border/75 border-b [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
   >
-    <div className="inline-flex min-w-max rounded-full border border-border/80 bg-surface/80 p-1.5 backdrop-blur">
+    <div className="flex min-w-max items-end gap-7 sm:gap-8" role="tablist">
       {[
         { label: "Posts", value: "posts" as const },
         { label: interactionCopy.plural, value: "replies" as const },
@@ -186,23 +185,24 @@ const FilterTabs = ({
 
         return (
           <button
-            aria-pressed={active}
+            aria-selected={active}
             className={cn(
-              "inline-flex min-h-10 items-center gap-2 rounded-full px-5 text-sm font-extrabold tracking-[-0.01em] transition disabled:opacity-70",
+              "-mb-px inline-flex h-10 items-center gap-1.5 border-b-2 px-0 text-[14px] font-semibold tracking-[-0.018em] transition-[border-color,color,opacity] duration-200 disabled:opacity-65 sm:text-[14.5px]",
               active
-                ? "bg-primary text-white"
-                : "text-muted hover:bg-surface-muted hover:text-foreground",
+                ? "border-primary font-extrabold text-primary"
+                : "border-transparent text-muted hover:text-foreground",
             )}
             disabled={disabled}
             key={item.value}
             onClick={() => onChange(item.value)}
+            role="tab"
             type="button"
           >
             <span>{item.label}</span>
             <span
               className={cn(
-                "inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-[11px] font-black leading-none tracking-[-0.01em]",
-                active ? "bg-white/20 text-white" : "bg-primary-soft text-primary",
+                "text-[12px] font-extrabold leading-none tracking-[-0.02em] transition-colors sm:text-[12.5px]",
+                active ? "text-primary/80" : "text-muted/75",
               )}
             >
               {formattedCount}
@@ -212,6 +212,44 @@ const FilterTabs = ({
       })}
     </div>
   </nav>
+);
+
+const MyPostsHeader = ({
+  counts,
+  disabled,
+  interactionCopy,
+  onChange,
+  value,
+}: {
+  counts?: FilterTabCounts;
+  disabled?: boolean;
+  interactionCopy: InteractionCopy;
+  onChange: (value: UserPostsType) => void;
+  value: UserPostsType;
+}) => (
+  <header className="rounded-[26px] border border-[#E6EAF0] bg-white px-4 pt-3.5 pb-0 shadow-[0_14px_34px_rgba(15,23,42,0.045)] dark:border-border dark:bg-surface sm:px-5 sm:pt-4">
+    <div className="grid min-h-9 grid-cols-[36px_1fr_36px] items-center gap-2">
+      <Link
+        aria-label="Voltar para perfil"
+        className="inline-flex h-9 w-9 items-center justify-center justify-self-start rounded-full border border-[#DDE7F2] bg-white text-[#334155] shadow-[0_6px_14px_rgba(15,23,42,0.045)] transition hover:-translate-x-0.5 hover:border-[#C8DDF3] hover:bg-[#F8FBFF] hover:text-[#173F72] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F8DEB]/35 dark:border-border dark:bg-surface dark:text-foreground"
+        href="/app/profile"
+      >
+        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+      </Link>
+      <h1 className="min-w-0 truncate text-center text-[16px] font-extrabold leading-tight tracking-[-0.025em] text-[#182033] dark:text-foreground sm:text-[17px]">
+        {interactionCopy.screenTitle}
+      </h1>
+      <span aria-hidden="true" />
+    </div>
+
+    <FilterTabs
+      counts={counts}
+      disabled={disabled}
+      interactionCopy={interactionCopy}
+      onChange={onChange}
+      value={value}
+    />
+  </header>
 );
 
 const ProfessionalAnsweredBadge = ({ className }: { className?: string }) => (
@@ -549,14 +587,7 @@ export const MyPostsLogic = () => {
       showMobileNavigation={false}
     >
       <section className="mx-auto min-h-screen w-full max-w-[430px] bg-background px-5 py-5 sm:max-w-xl md:py-8 lg:max-w-3xl">
-        <AppPageHeader
-          backHref="/app/profile"
-          backLabel="Voltar para perfil"
-          className="mb-4"
-          title={interactionCopy.screenTitle}
-        />
-
-        <FilterTabs
+        <MyPostsHeader
           counts={tabCounts}
           disabled={postsQuery.isFetching}
           interactionCopy={interactionCopy}
@@ -564,7 +595,7 @@ export const MyPostsLogic = () => {
           value={type}
         />
 
-        <div className="grid gap-4 py-2">
+        <div className="grid gap-4 pt-4">
           {postsQuery.isLoading || postsQuery.isPending ? (
             <div className="grid min-h-[45vh] place-items-center rounded-[22px] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
               <LoadingState
