@@ -27,6 +27,13 @@ export type PostCreateReplyBody = {
   parentReplyId?: string;
 };
 
+export type PostUpdateBody = {
+  title: string;
+  content: string;
+  mediaType?: "image" | "video" | null;
+  mediaUrl?: string | null;
+};
+
 export type PostReportBody = {
   description?: string;
   reason: string;
@@ -71,6 +78,7 @@ export type PostDetailDTO = {
   replies_count: number;
   saves_count: number;
   created_at: Date;
+  edited_at: Date | null;
   tags: string[];
   featured_badge: string | null;
   media_url: string | null;
@@ -255,6 +263,12 @@ export type IPostSavedDTO = {
 export type IPostCreateReplyDTO = {
   p: PostParams;
   b: PostCreateReplyBody;
+  auth: user;
+};
+
+export type IPostUpdateDTO = {
+  p: PostParams;
+  b: PostUpdateBody;
   auth: user;
 };
 

@@ -164,7 +164,8 @@
     "post_muted": "Notificações deste post foram silenciadas.",
     "post_unmuted": "Notificações deste post foram reativadas.",
     "post_deleted": "Post excluído com sucesso.",
-    "community_post_media_uploaded": "Mídia anexada com sucesso."
+    "community_post_media_uploaded": "Mídia anexada com sucesso.",
+    "post_updated": "Post atualizado com sucesso."
   },
   "gender": {
     "o": "o"

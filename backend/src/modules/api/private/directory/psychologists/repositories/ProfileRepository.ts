@@ -89,6 +89,7 @@ const profilePostSelect = {
   replies_count: true,
   saves_count: true,
   createdAt: true,
+  edited_at: true,
   community: {
     select: communityCardSelect,
   },
@@ -500,6 +501,7 @@ const toPostResponse = (
     replies_count: item.replies_count,
     saves_count: item.saves_count,
     created_at: item.createdAt,
+    edited_at: item.edited_at,
     tags: item.community.category ? [item.community.category] : [],
     featured_badge: toPostAuthorResponse(item.author, item.upvotes_count).featured_badge,
     media_url: item.media_url,

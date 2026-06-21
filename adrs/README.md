@@ -90,3 +90,4 @@ Formato recomendado:
 - [ADR-0120 - Video obrigatorio para perfil publico e Bio opcional](0120-video-obrigatorio-perfil-publico-bio-opcional.md) - Accepted
 - [ADR-0121 - Experiencia premium para perfil profissional incompleto](0121-perfil-incompleto-ativacao-premium.md) - Accepted
 - [ADR-0122 - Card de upgrade no menu principal de perfil](0122-card-upgrade-menu-perfil.md) - Accepted
+- [ADR-0145 - Edição de post publicado](0145-edicao-post-publicado.md) - Accepted

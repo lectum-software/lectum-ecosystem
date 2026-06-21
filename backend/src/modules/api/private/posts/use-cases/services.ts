@@ -17,6 +17,7 @@ import type {
   IPostSaveDTO,
   IPostSavedDTO,
   IPostShowDTO,
+  IPostUpdateDTO,
   IPostUploadReplyMediaDTO,
   IPostVoteDTO,
   PostMutationResult,
@@ -59,6 +60,16 @@ const invalidMedia = () => ({
 const mediaNotAllowed = () => ({
   status: 403,
   ...error("post_reply_media_professional_plan", {}),
+});
+
+const invalidPostMedia = () => ({
+  status: 422,
+  ...error("community_post_media_invalid", {}),
+});
+
+const postMediaNotAllowed = () => ({
+  status: 403,
+  ...error("community_post_media_professional_plan", {}),
 });
 
 type AuthenticatedPostShowDTO = IPostShowDTO & { auth: NonNullable<IPostShowDTO["auth"]> };
@@ -109,6 +120,24 @@ const mediaTypeFromMime = (mimetype?: string | null): "image" | "video" | null =
 
   return null;
 };
+
+const normalizePostMediaType = (value?: string | null): "image" | "video" | null => {
+  if (value === "image" || value === "video") return value;
+
+  return null;
+};
+
+const isPublicPostMediaUrl = (value?: string | null) => {
+  if (!value) return false;
+
+  try {
+    return new URL(value).pathname.startsWith("/public/files/posts/media/");
+  } catch (_err) {
+    return value.startsWith("/public/files/posts/media/");
+  }
+};
+
+const hasOwnBodyKey = (body: object, key: string) => Object.hasOwn(body, key);
 
 const reportReasons = new Set(["spam", "abuse", "self_harm", "privacy", "other"]);
 
@@ -241,6 +270,54 @@ export const createReply = async (data: IPostCreateReplyDTO) => {
   }
 
   return resolveMutationResult(res, 201, "post_reply_created");
+};
+
+export const updatePost = async (data: IPostUpdateDTO) => {
+  const unauthorized = ensureCommunityActor(data);
+  if (unauthorized) return unauthorized;
+
+  const repository = new PostRepository();
+  const title = data.b.title.trim();
+  const content = data.b.content.trim();
+  const mediaChangeRequested =
+    hasOwnBodyKey(data.b, "mediaUrl") || hasOwnBodyKey(data.b, "mediaType");
+  const body: IPostUpdateDTO["b"] = {
+    content,
+    title,
+  };
+
+  if (mediaChangeRequested) {
+    const mediaUrl = data.b.mediaUrl === null ? null : data.b.mediaUrl?.trim();
+    const mediaType = data.b.mediaType === null ? null : normalizePostMediaType(data.b.mediaType);
+    const clearingMedia = mediaUrl === null && mediaType === null;
+    const replacingMedia =
+      typeof mediaUrl === "string" &&
+      Boolean(mediaUrl) &&
+      Boolean(mediaType) &&
+      isPublicPostMediaUrl(mediaUrl);
+
+    if (!clearingMedia && !replacingMedia) return invalidPostMedia();
+
+    if (replacingMedia) {
+      const canAttachMedia = await repository.canAttachReplyMedia(data.auth.id!);
+      if (!canAttachMedia) return postMediaNotAllowed();
+    }
+
+    if (clearingMedia) {
+      body.mediaUrl = null;
+      body.mediaType = null;
+    } else {
+      body.mediaUrl = mediaUrl as string;
+      body.mediaType = mediaType as "image" | "video";
+    }
+  }
+
+  const res = await repository.updatePost({
+    ...data,
+    b: body,
+  });
+
+  return resolveOwnerPostMutationResult(res, 200, "post_updated");
 };
 
 export const authorizeReplyMediaUpload = async (data: AuthenticatedPostShowDTO) => {

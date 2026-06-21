@@ -15,8 +15,10 @@ import type {
   PostReportPayload,
   PostReportResponse,
   PostSaveResponse,
+  PostUpdateResponse,
   PostVotePayload,
   PostVoteResponse,
+  UpdatePostPayload,
   UserPostsQuery,
 } from "@/api/generator/types/posts";
 import * as api from "@/api/req/posts";
@@ -215,6 +217,34 @@ export const useCreatePostReply = (callbacks?: {
 export const useUploadPostReplyMedia = (callbacks?: { onError?: (error: unknown) => void }) => {
   return useMutation({
     mutationFn: ({ file, id }: { file: File; id: string }) => api.uploadPostReplyMedia(id, file),
+    onError: callbacks?.onError,
+  });
+};
+
+export const useUpdatePost = (callbacks?: {
+  onSuccess?: (data: PostUpdateResponse) => void;
+  onError?: (error: unknown) => void;
+}) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ body, id }: { body: UpdatePostPayload; id: string }) => api.updatePost(id, body),
+    onSuccess: (data) => {
+      queryClient.setQueryData<PostDetailResponse>(keys.posts.detail(data.id), (old) => {
+        if (!old) return { post: data };
+
+        return {
+          ...old,
+          post: data,
+        };
+      });
+      queryClient.invalidateQueries({ queryKey: keys.posts.detail(data.id) });
+      queryClient.invalidateQueries({ queryKey: keys.posts.mine() });
+      queryClient.invalidateQueries({ queryKey: keys.posts.saved() });
+      queryClient.invalidateQueries({ queryKey: keys.community.root() });
+      invalidateDirectoryPsychologistQueries(queryClient);
+      callbacks?.onSuccess?.(data);
+    },
     onError: callbacks?.onError,
   });
 };

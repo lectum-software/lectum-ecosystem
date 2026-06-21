@@ -109,6 +109,7 @@ export type CommunityPost = {
   replies_count: number;
   saves_count: number;
   created_at: string;
+  edited_at: string | null;
   tags: string[];
   featured_badge: string | null;
   media_url: string | null;

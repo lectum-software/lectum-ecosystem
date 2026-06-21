@@ -374,6 +374,7 @@ Governança: comunidades são criadas/curadas apenas por administradores da plat
 | `media_url` / `media_type` | `String?` | midia opcional em posts de psicologos aptos; `media_type` inicialmente `"video"` ou `"image"` e a URL deve vir do upload R2 em `/public/files/posts/media/` |
 | `anonymous` | `Boolean @default(true)` | aplicável a posts de pacientes; `true` preserva o comportamento seguro legado de mascarar o autor como `Membro Anônimo #1234` com sufixo determinístico por post, `false` permite mostrar nome/avatar do paciente |
 | `status` | `String @default("publicado")` | `"publicado" \| "pendente" \| "removido"`. Regra de auto-publicar vs moderar: **decisão de TASK-24** (registrar em ADR; default sugerido `publicado` com moderação reativa, pois PRD §16 lista moderação por IA só em V3) |
+| `edited_at` | `DateTime?` | preenchido quando o autor edita título, conteúdo ou mídia após publicação; usado apenas como metadado público `editado`, sem histórico completo no MVP |
 | `upvotes_count` / `downvotes_count` / `replies_count` / `saves_count` | `Int @default(0)` | denormalizados para o feed |
 | `@@index([community_id, status, createdAt])`, `@@index([author_id])` | | feed por comunidade ordenado por data |
 
@@ -394,7 +395,8 @@ DTOs do feed: `GET /api/private/community/feed/posts` é o contrato canônico do
 
 Contratos da tela interna do post (TASK-26):
 
-- `GET /api/private/posts/:id` retorna `post`, comunidade, autor mascarado quando `anonymous=true`, voto atual do usuário (`current_user_vote`) e estado salvo (`saved`).
+- `GET /api/private/posts/:id` retorna `post`, comunidade, autor mascarado quando `anonymous=true`, voto atual do usuário (`current_user_vote`), estado salvo (`saved`) e metadado `edited_at` quando houver edição posterior.
+- `PUT /api/private/posts/:id` recebe `{ title, content, mediaUrl?, mediaType? }`, exige autor autenticado do post, atualiza somente título/conteúdo/mídia e preenche `edited_at`; comunidade, autoria, anonimato e status são imutáveis pelo fluxo de edição. Mídia nova só é aceita quando a URL vem do upload R2 permitido; remoção usa `mediaUrl:null` e `mediaType:null`.
 - `GET /api/private/posts/:id/replies?page&limit` retorna comentarios de primeiro nivel paginados e descendentes hidratados ate a profundidade visual vigente, com `current_user_vote` por resposta. A ordenacao de irmaos dentro de cada arvore segue: maior `upvotes_count`, melhor posicao de mentor/psicologo na comunidade quando houver ranking aplicavel, e comentario mais recente.
 - `POST /api/private/posts/:id/replies/media` recebe multipart `media` e retorna `{ media_url, media_type }`; permitido apenas para psicologos com CFP verificado e Plano Profissional ativo, ou psicologos com cortesia administrativa ativa (`professional_subscription.source="admin_grant"`).
 - `POST /api/private/posts/:id/replies` recebe `{ content, parentReplyId?, mediaUrl?, mediaType? }`; `parentReplyId` pode apontar para comentario/resposta ativa do mesmo post, preservando a arvore hierarquica, e midia so e aceita quando originada do upload permitido.
@@ -589,7 +591,7 @@ Backend privado — **o prefixo determina o guard** (ver "Camadas de autenticaç
 - **Autogestão do psicólogo**: `/api/private/psychologist/*` (perfil, CRP, CFP, analytics, assinatura) → `requireRole("psicologo")`.
 - **Favoritos de psicólogos**: `/api/private/user/favorites` e `/api/private/user/favorites/:id` → só `_auth`, porque o produto permite favorito para qualquer usuário autenticado.
 - **Autogestão do paciente**: `/api/private/patient/*` (onboarding, avaliar; favoritos/follows legados se mantidos) → `requireRole("paciente")`.
-- **Comunidade/posts** (qualquer autenticado): `/api/private/community`, `/api/private/community/feed/posts`, `/api/private/community/:slug`, `/api/private/community/:slug/members`, `/api/private/community/:slug/posts`, `/api/private/posts/:id`, `/api/private/posts/:id/replies`, `/api/private/posts/:id/vote`, `/api/private/posts/:id/save`. Singular `community`/`posts`.
+- **Comunidade/posts** (qualquer autenticado): `/api/private/community`, `/api/private/community/feed/posts`, `/api/private/community/:slug`, `/api/private/community/:slug/members`, `/api/private/community/:slug/posts`, `/api/private/posts/:id` (`GET`, `PUT`, `DELETE` conforme permissão), `/api/private/posts/:id/replies`, `/api/private/posts/:id/vote`, `/api/private/posts/:id/save`. Singular `community`/`posts`.
 - **Conta/preferências compartilhadas** (qualquer autenticado): `/api/private/account/*`, incluindo `GET/PUT /api/private/account/tips` para dicas de onboarding por usuário.
 - Cada task deve usar exatamente esses prefixos; divergência exige atualizar este documento.
 

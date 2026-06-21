@@ -84,6 +84,12 @@ const formatRelativeTime = (value: string) => {
   }).format(date);
 };
 
+const formatPostTimeLabel = (createdAt: string, editedAt?: string | null) => {
+  const relativeTime = formatRelativeTime(createdAt);
+
+  return editedAt ? `${relativeTime} · editado` : relativeTime;
+};
+
 const getInitials = (name: string) => {
   const parts = name.split(/\s+/).filter(Boolean);
 
@@ -527,6 +533,8 @@ export const CommunityPostCard = ({
       : null;
   const displayAuthor = primaryReply?.author ?? post.author;
   const displayCreatedAt = primaryReply?.created_at ?? post.created_at;
+  const displayEditedAt = primaryReply ? null : post.edited_at;
+  const displayTimeLabel = formatPostTimeLabel(displayCreatedAt, displayEditedAt);
   const displayTitle = primaryReply ? null : post.title;
   const displayContent = primaryReply?.content ?? post.content;
   const displayMediaType = primaryReply?.media_type ?? post.media_type;
@@ -737,7 +745,7 @@ export const CommunityPostCard = ({
                 <span className="shrink-0 text-muted" aria-hidden="true">
                   &bull;
                 </span>
-                <span className="shrink-0 text-muted">{formatRelativeTime(displayCreatedAt)}</span>
+                <span className="shrink-0 text-muted">{displayTimeLabel}</span>
               </>
             ) : null}
           </div>
@@ -802,13 +810,10 @@ export const CommunityPostCard = ({
                 className="w-fit text-[11px] font-semibold text-muted no-underline transition hover:text-muted hover:no-underline"
                 href={psychologistProfileHref}
               >
-                {displayAuthor.type_label} <span aria-hidden="true">&bull;</span>{" "}
-                {formatRelativeTime(displayCreatedAt)}
+                {displayAuthor.type_label} <span aria-hidden="true">&bull;</span> {displayTimeLabel}
               </Link>
             ) : (
-              <p className="text-[11px] font-semibold text-muted">
-                {formatRelativeTime(displayCreatedAt)}
-              </p>
+              <p className="text-[11px] font-semibold text-muted">{displayTimeLabel}</p>
             )}
           </div>
         </div>

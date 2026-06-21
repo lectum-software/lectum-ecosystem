@@ -1,9 +1,19 @@
 "use client";
 
-import { AlertTriangle, Bell, BellOff, Loader2, MoreHorizontal, Trash2, X } from "lucide-react";
+import {
+  AlertTriangle,
+  Bell,
+  BellOff,
+  Loader2,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  X,
+} from "lucide-react";
 import { type MouseEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import { useDeletePost, useMutePost } from "@/api/callers/posts";
 import type { PostDetail } from "@/api/generator/types/posts";
+import { PostEditModal } from "@/components/community/post-edit-modal";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
@@ -12,9 +22,12 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 type OwnerActionPost = Pick<
   PostDetail,
   | "author"
+  | "content"
   | "community"
   | "has_psychologist_reply"
   | "id"
+  | "media_type"
+  | "media_url"
   | "muted_by_current_user"
   | "replies_count"
   | "title"
@@ -23,6 +36,7 @@ type OwnerActionPost = Pick<
 type PostOwnerActionMenuProps = {
   className?: string;
   onDeleted?: () => void;
+  onUpdated?: () => void;
   post: OwnerActionPost;
 };
 
@@ -141,11 +155,17 @@ const PostActionModal = ({
   );
 };
 
-export const PostOwnerActionMenu = ({ className, onDeleted, post }: PostOwnerActionMenuProps) => {
+export const PostOwnerActionMenu = ({
+  className,
+  onDeleted,
+  onUpdated,
+  post,
+}: PostOwnerActionMenuProps) => {
   const currentUserId = useAppSelector((state) => state.user?.id);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [blockedModalOpen, setBlockedModalOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const muteMutation = useMutePost();
@@ -254,6 +274,21 @@ export const PostOwnerActionMenu = ({ className, onDeleted, post }: PostOwnerAct
           <button
             className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-muted transition hover:bg-surface-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
             disabled={busy}
+            onClick={(event) => {
+              event.stopPropagation();
+              setMenuOpen(false);
+              setActionError(null);
+              setEditModalOpen(true);
+            }}
+            role="menuitem"
+            type="button"
+          >
+            <Pencil className="h-4 w-4" aria-hidden="true" />
+            Editar post
+          </button>
+          <button
+            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-muted transition hover:bg-surface-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={busy}
             onClick={handleMuteToggle}
             role="menuitem"
             type="button"
@@ -279,6 +314,15 @@ export const PostOwnerActionMenu = ({ className, onDeleted, post }: PostOwnerAct
             Excluir post
           </button>
         </div>
+      ) : null}
+
+      {editModalOpen ? (
+        <PostEditModal
+          onClose={() => setEditModalOpen(false)}
+          onUpdated={() => onUpdated?.()}
+          open={editModalOpen}
+          post={post}
+        />
       ) : null}
 
       <PostActionModal

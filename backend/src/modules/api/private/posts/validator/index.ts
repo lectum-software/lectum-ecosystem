@@ -111,6 +111,43 @@ export const createReplySchema: IValidatorRequest = {
   ],
 };
 
+export const updatePostSchema: IValidatorRequest = {
+  params: idParams,
+  body: [
+    {
+      key: "title",
+      coerse: "string",
+      method: "string",
+      min: 3,
+      max: 140,
+    },
+    {
+      key: "content",
+      coerse: "string",
+      method: "string",
+      min: 10,
+      max: 2000,
+    },
+    {
+      key: "mediaUrl",
+      coerse: "string",
+      method: "string",
+      min: 1,
+      max: 500,
+      optional: true,
+      nullable: true,
+    },
+    {
+      key: "mediaType",
+      coerse: "string",
+      method: "enumeric",
+      values: ["image", "video"],
+      optional: true,
+      nullable: true,
+    },
+  ],
+};
+
 export const voteSchema: IValidatorRequest = {
   params: idParams,
   body: [
@@ -165,6 +202,7 @@ export const showValidator = validator(showSchema);
 export const repliesValidator = validator(repliesSchema);
 export const listValidator = validator(listSchema);
 export const createReplyValidator = validator(createReplySchema);
+export const updatePostValidator = validator(updatePostSchema);
 export const voteValidator = validator(voteSchema);
 export const saveValidator = validator(showSchema);
 export const replySaveValidator = validator(replySaveSchema);

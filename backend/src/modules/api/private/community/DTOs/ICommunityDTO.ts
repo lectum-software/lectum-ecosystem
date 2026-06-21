@@ -132,6 +132,7 @@ export type CommunityPostDTO = {
   replies_count: number;
   saves_count: number;
   created_at: Date;
+  edited_at: Date | null;
   tags: string[];
   featured_badge: string | null;
   media_url: string | null;

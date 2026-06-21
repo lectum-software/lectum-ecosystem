@@ -13,8 +13,10 @@ import type {
   PostReportPayload,
   PostReportResponse,
   PostSaveResponse,
+  PostUpdateResponse,
   PostVotePayload,
   PostVoteResponse,
+  UpdatePostPayload,
   UserPostsQuery,
   UserPostsResponse,
 } from "@/api/generator/types/posts";
@@ -78,6 +80,21 @@ export const createPostReply = async (id: string, body: CreatePostReplyPayload) 
 
   return handleReq<PostReply>({
     ...handle,
+    showSuccess: true,
+  });
+};
+
+export const updatePost = async (id: string, body: UpdatePostPayload) => {
+  const handle = callEndpoint({
+    route: "/api/private/posts/:id",
+    method: "PUT",
+    params: { id },
+    body,
+  });
+
+  return handleReq<PostUpdateResponse>({
+    ...handle,
+    hideError: true,
     showSuccess: true,
   });
 };

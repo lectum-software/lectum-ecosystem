@@ -298,3 +298,16 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Fonte visual auditavel: `_product/proto/Criar Nova Postagem - Psicologo.jpg` via inventario local e screenshots do usuario; Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente.
 - ADRs atualizados: `adrs/0065-criacao-posts-comunidade.md` e `adrs/0138-create-post-media-permission-modal.md`.
 - Validacoes executadas: `pnpm --dir backend db:migrate -- --name add_community_post_media`, `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm check`, smoke real do endpoint de upload com R2 em `posts/media/` e limpeza do objeto, e Chrome/CDP autenticado em `/app/community/ansiedade-em-equilibrio/post/new` confirmando botao `Midia` habilitado, accept com `video/mp4` e ausencia da copy antiga de storage.
+
+
+## Complemento 2026-06-21 - edição de post publicado
+
+- Pedido direto de produto: permitir que o autor edite um post depois de publicado, a partir do menu de ações do próprio post.
+- Backend: foi adicionado `community_post.edited_at` via migration Prisma e o endpoint `PUT /api/private/posts/:id`, restrito ao autor autenticado, para atualizar título, conteúdo e mídia sem alterar comunidade, autoria, anonimato ou status.
+- Regras de domínio: anexar/substituir mídia continua dependendo do upload R2 real em `/public/files/posts/media/` e do mesmo entitlement de mídia de posts; remover mídia usa `mediaUrl:null` e `mediaType:null`.
+- Frontend: o menu do dono ganhou a opção `Editar post`, abrindo modal mobile-first com React Hook Form/Zod e controllers da TASK-02; o modal alerta quando já existem respostas para preservar o contexto da conversa.
+- Feed, detalhe do post, perfil do psicólogo, Meus posts e Salvos passam a receber/exibir `edited_at` como metadado discreto `editado` quando aplicável, sem criar histórico completo no MVP.
+- Referências visuais seguem os padrões já implementados para `Criar Post`, `Dentro do Post`, `Meus posts` e publicações do perfil; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente, então a validação visual usa a aplicação local e protótipos exportados.
+- DATA-MODEL atualizado com o campo `edited_at` e contrato `PUT /api/private/posts/:id`.
+- ADR criado: `adrs/0145-edicao-post-publicado.md`.
+- Validações executadas: `pnpm --dir backend db:migrate -- --name add_community_post_edited_at`, `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP local autenticado em `http://localhost:3000/app/posts/mine`, confirmando menu `Editar post` e modal preenchido com alerta de dados fixos.

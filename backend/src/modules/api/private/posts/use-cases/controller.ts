@@ -17,6 +17,7 @@ import {
   unmute as unmuteService,
   unsaveReply as unsaveReplyService,
   unsave as unsaveService,
+  updatePost as updatePostService,
   uploadReplyMedia as uploadReplyMediaService,
   vote as voteService,
 } from "./services";
@@ -82,6 +83,18 @@ export const createReply = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "post_create_reply", err);
+  }
+};
+
+export const updatePost = async (req: Request, res: Response) => {
+  try {
+    const resolve = await updatePostService(
+      req as unknown as Parameters<typeof updatePostService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_update", err);
   }
 };
 

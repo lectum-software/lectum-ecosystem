@@ -18,6 +18,7 @@ import type {
   IPostSaveDTO,
   IPostSavedDTO,
   IPostShowDTO,
+  IPostUpdateDTO,
   IPostVoteDTO,
   PostAuthorDTO,
   PostCommunityDTO,
@@ -94,6 +95,7 @@ const postSelect = {
   replies_count: true,
   saves_count: true,
   createdAt: true,
+  edited_at: true,
   community: {
     select: communitySelect,
   },
@@ -351,6 +353,7 @@ const toPostResponse = (
     replies_count: item.replies_count,
     saves_count: item.saves_count,
     created_at: item.createdAt,
+    edited_at: item.edited_at,
     tags: responseCommunity.category ? [responseCommunity.category] : [],
     featured_badge: author.featured_badge,
     media_url: item.media_url,
@@ -759,6 +762,44 @@ export class PostRepository implements IPostRepository {
 
   async canAttachReplyMedia(userId: string): Promise<boolean> {
     return canAttachCommunityMedia(userId);
+  }
+
+  async updatePost(data: IPostUpdateDTO): Promise<PostMutationResult<PostDetailResponse["post"]>> {
+    const post = await findPublishedPost(data.p.id);
+    if (!post) return { kind: "not_found" };
+    if (post.author_id !== data.auth.id) return { kind: "forbidden" };
+
+    const mediaChangeRequested =
+      Object.hasOwn(data.b, "mediaUrl") || Object.hasOwn(data.b, "mediaType");
+    const updateData: Prisma.community_postUpdateInput = {
+      content: data.b.content,
+      edited_at: new Date(),
+      title: data.b.title,
+    };
+
+    if (mediaChangeRequested) {
+      updateData.media_url = data.b.mediaUrl ?? null;
+      updateData.media_type = data.b.mediaType ?? null;
+    }
+
+    await this.repository.update({
+      where: {
+        id: post.id,
+      },
+      data: updateData,
+    });
+
+    const updated = await this.show({
+      auth: data.auth,
+      p: data.p,
+    });
+
+    if (!updated) return { kind: "not_found" };
+
+    return {
+      kind: "ok",
+      data: updated.post,
+    };
   }
 
   async mine(data: IPostMineDTO): Promise<PostListResponse> {

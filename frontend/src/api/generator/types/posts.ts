@@ -11,6 +11,7 @@ export type PostDetail = {
   replies_count: number;
   saves_count: number;
   created_at: string;
+  edited_at: string | null;
   tags: string[];
   featured_badge: string | null;
   media_url: string | null;
@@ -129,6 +130,15 @@ export type CreatePostReplyPayload = {
   mediaUrl?: string;
   parentReplyId?: string;
 };
+
+export type UpdatePostPayload = {
+  title: string;
+  content: string;
+  mediaType?: "image" | "video" | null;
+  mediaUrl?: string | null;
+};
+
+export type PostUpdateResponse = PostDetail;
 
 export type PostReplyMediaUploadResponse = {
   media_url: string;

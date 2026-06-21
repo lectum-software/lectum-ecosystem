@@ -568,6 +568,7 @@ model community_post {
   deletedAt          DateTime?                @map("deleted_at")
   updatedAt          DateTime                 @default(now()) @updatedAt @map("updated_at")
   createdAt          DateTime                 @default(now()) @map("created_at")
+  edited_at          DateTime?
   community_id       String
   author_id          String
   title              String

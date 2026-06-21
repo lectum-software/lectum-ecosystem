@@ -329,6 +329,12 @@ const formatRelativeTime = (value: string) => {
   }).format(date);
 };
 
+const formatPostTimeLabel = (createdAt: string, editedAt?: string | null) => {
+  const relativeTime = formatRelativeTime(createdAt);
+
+  return editedAt ? `${relativeTime} · editado` : relativeTime;
+};
+
 const getInitials = (name: string) => {
   const parts = name.split(/\s+/).filter(Boolean);
 
@@ -715,11 +721,11 @@ const PostHeader = ({
               href={psychologistProfileHref}
             >
               {post.author.type_label} <span aria-hidden="true">&bull;</span>{" "}
-              {formatRelativeTime(post.created_at)}
+              {formatPostTimeLabel(post.created_at, post.edited_at)}
             </Link>
           ) : (
             <p className="text-[11px] font-semibold text-muted">
-              {formatRelativeTime(post.created_at)}
+              {formatPostTimeLabel(post.created_at, post.edited_at)}
             </p>
           )}
         </div>
@@ -837,7 +843,7 @@ const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
             </div>
             <p className="text-[11px] font-semibold text-muted">
               {isPsychologistPost && post.author.type_label ? `${post.author.type_label} • ` : ""}
-              {formatRelativeTime(post.created_at)}
+              {formatPostTimeLabel(post.created_at, post.edited_at)}
             </p>
           </div>
         </div>
