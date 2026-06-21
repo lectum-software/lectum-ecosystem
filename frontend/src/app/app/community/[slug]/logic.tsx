@@ -1285,7 +1285,7 @@ const PostCard = ({
 
   return (
     <article
-      className="cursor-pointer overflow-hidden rounded-[22px] border border-[#E6EAF0] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:border-border dark:bg-surface"
+      className="cursor-pointer overflow-hidden rounded-[22px] border border-[#E6EAF0] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] transition hover:border-primary/20 hover:bg-primary-soft/20 dark:border-border dark:bg-surface"
       onClick={handleCardClick}
       onKeyDown={handleCardKeyDown}
     >

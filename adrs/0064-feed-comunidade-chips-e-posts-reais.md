@@ -142,3 +142,27 @@ O botao `Seguir` nos cards do feed precisava permanecer junto ao nome da comunid
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - Validacao HTTP local das rotas `/app/community/feed`, `/app/community/autocuidado-em-pratica` e de uma pagina interna de post.
+
+
+## Atualizacao 2026-06-20 - hover unificado dos cards de posts
+
+### Contexto
+
+O estado de hover com leve sombreamento azul ja estava presente em alguns cards de posts, mas ainda nao estava uniforme no feed, dentro da comunidade, em Meus posts, Salvos e publicacoes de perfil.
+
+### Decisao
+
+- Aplicar o mesmo tratamento visual de hover aos cards de posts reutilizados pela plataforma: `hover:border-primary/20` e `hover:bg-primary-soft/20`.
+- Manter a indicacao de cursor apenas onde o card inteiro possui navegacao por areas neutras.
+- Preservar os controles internos independentes, sem transformar botoes, links ou acoes em gatilhos redundantes de navegacao.
+
+### Consequencias
+
+- Cards de posts passam a ter feedback visual consistente no desktop em todas as superficies principais.
+- Nao ha alteracao de dados, API, filtros, ordenacao, persistencia ou comportamento dos controles internos.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Validacao HTTP local de feed, comunidade, Salvos, Meus posts e perfil publico.

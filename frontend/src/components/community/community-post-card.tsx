@@ -664,9 +664,9 @@ export const CommunityPostCard = ({
   return (
     <article
       className={cn(
-        "w-full overflow-hidden rounded-[22px] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)]",
+        "w-full overflow-hidden rounded-[22px] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)] transition hover:border-primary/20 hover:bg-primary-soft/20",
         openPostOnCardClick &&
-          "transition hover:border-primary/20 hover:bg-primary-soft/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 md:cursor-pointer",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 md:cursor-pointer",
       )}
       onClick={handleCardClick}
       onKeyDown={handleCardKeyDown}
