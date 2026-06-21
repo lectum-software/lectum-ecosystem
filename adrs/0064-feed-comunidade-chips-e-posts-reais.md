@@ -127,11 +127,14 @@ O botao `Seguir` nos cards do feed precisava permanecer junto ao nome da comunid
 - O botao `Seguir` foi movido para o mesmo grupo flex do nome da comunidade.
 - Quando falta espaco, somente o nome da comunidade trunca com ellipsis; `Seguir` permanece visivel e adjacente ao contexto da comunidade.
 - O menu `...` foi removido dos cards de feed/lista; as acoes de dono do post ficam restritas a pagina interna do post.
+- Os cards do feed e da pagina de comunidade passam a navegar para o detalhe do post quando o clique ocorre em areas neutras do card.
+- Elementos interativos mantem comportamento proprio e nao disparam navegacao do card: links, botoes, inputs, midias interativas e menus.
 
 ### Consequencias
 
 - O cabecalho do card fica menos disperso e mais previsivel no mobile.
 - Acoes destrutivas ou de silenciar continuam acessiveis no contexto de detalhe do post, evitando menus redundantes nas listas.
+- O corpo do card fica mais facil de abrir sem transformar controles como `Seguir`, votos, comentarios, salvar e compartilhar em gatilhos redundantes.
 - Nao ha alteracao em backend, Prisma, contratos HTTP, filtros, ordenacao ou persistencia.
 
 ### Validacao

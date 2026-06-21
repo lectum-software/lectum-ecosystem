@@ -28,6 +28,7 @@ import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
   type CSSProperties,
+  type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
   type RefObject,
   useCallback,
@@ -781,6 +782,30 @@ const communityCreatePostHref = (communitySlug: string) =>
 const communityPostDetailHref = (post: CommunityPost) =>
   `/app/community/${post.community.slug}/post/${post.id}`;
 
+const isPostCardInteractiveTarget = (target: EventTarget | null) => {
+  const targetElement =
+    target instanceof Element ? target : target instanceof Node ? target.parentElement : null;
+
+  if (!targetElement) return false;
+
+  return Boolean(
+    targetElement.closest(
+      [
+        "a",
+        "button",
+        "input",
+        "textarea",
+        "select",
+        "video",
+        "audio",
+        "[role='button']",
+        "[role='menu']",
+        "[role='menuitem']",
+      ].join(","),
+    ),
+  );
+};
+
 const AuthorAvatar = ({
   anonymous,
   author,
@@ -1142,6 +1167,7 @@ const PostCard = ({
   onShare: (post: CommunityPost) => void;
   showCommunityHeader?: boolean;
 }) => {
+  const router = useRouter();
   const isPsychologistPost = post.author.role === "psicologo";
   const isAnonymousPatient = !isPsychologistPost && post.anonymous;
   const [voteSnapshot, setVoteSnapshot] = useState<VoteSnapshot>({
@@ -1234,8 +1260,35 @@ const PostCard = ({
     window.setTimeout(handleToggleSave, 0);
   }, [conversion, handleToggleSave, post.id, saveSnapshot.saved]);
 
+  const handleCardClick = (event: ReactMouseEvent<HTMLElement>) => {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      isPostCardInteractiveTarget(event.target)
+    ) {
+      return;
+    }
+
+    router.push(postDetailHref);
+  };
+  const handleCardKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
+    if (event.defaultPrevented || isPostCardInteractiveTarget(event.target)) return;
+    if (event.key !== "Enter" && event.key !== " ") return;
+
+    event.preventDefault();
+    router.push(postDetailHref);
+  };
+
   return (
-    <article className="overflow-hidden rounded-[22px] border border-[#E6EAF0] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:border-border dark:bg-surface">
+    <article
+      className="cursor-pointer overflow-hidden rounded-[22px] border border-[#E6EAF0] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:border-border dark:bg-surface"
+      onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
+    >
       {showCommunityHeader ? (
         <div className="mb-4 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-subtle">
           <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
