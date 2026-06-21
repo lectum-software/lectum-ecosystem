@@ -307,3 +307,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Escopo: sem alteração de backend, endpoints, DTOs, schema Prisma, packages ou dados.
 - ADR criado: `adrs/0119-header-secundario-premium-compartilhado.md`.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado em mobile 390x844 e desktop 1024x768 confirmando header centralizado e ausência de overflow horizontal.
+
+
+## Ajuste complementar em 2026-06-21 - foco robusto em respostas profundas
+
+- Pedido direto de produto: ao clicar em uma resposta na aba `Respostas` de `/app/posts/mine`, a navegacao deve repetir o comportamento de respostas salvas, abrindo o post original no comentario/resposta exata e aplicando foco contextual.
+- O card de resposta de `Meus posts e respostas` ja usa o deep link `?focusReplyId=<replyId>#reply-<replyId>`; o ajuste fortaleceu o destino para respostas em arvores profundas.
+- O backend de `GET /api/private/posts/:id/replies` agora, quando recebe `focusReplyId`, carrega tambem o caminho real de ancestrais ate a resposta focada, mesmo quando ela passa da profundidade inline padrao. A paginacao continua ancorada no comentario raiz correto.
+- O detalhe do post passa a renderizar a trilha focada alem do limite visual padrao apenas para esse caminho, sem expandir a arvore inteira, e aplica foco DOM temporario junto ao pulso visual azul.
+- Nao houve alteracao de schema Prisma, migration, package, endpoint paralelo, mock ou dados artificiais.
+- Referencias visuais seguem `_product/proto/Meus Posts - Paciente.jpg`, `_product/proto/Meus Posts - Psicologo.jpg`, `_product/proto/Posts Salvos.jpg` e `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0143-post-cards-clique-unificado.md`.
+- Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, smoke API com `focusReplyId` profundo confirmando o alvo no payload e Chrome/CDP mobile 390x844 no detalhe do post confirmando elemento `reply-<id>` renderizado, focado, com `lectum-reply-focus-pulse` e scroll centralizado.

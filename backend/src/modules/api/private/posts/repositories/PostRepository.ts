@@ -551,6 +551,65 @@ const loadReplyDescendants = async (
   return descendants;
 };
 
+const loadFocusedReplyPath = async (
+  postId: string,
+  rootReplyId: string | null,
+  focusReplyId?: string | null,
+): Promise<ReplyBaseResult[]> => {
+  const normalizedFocusReplyId = focusReplyId?.trim();
+  if (!normalizedFocusReplyId || !rootReplyId || normalizedFocusReplyId === rootReplyId) {
+    return [];
+  }
+
+  const path: ReplyBaseResult[] = [];
+  const visited = new Set<string>();
+  let current = await prisma.post_reply.findFirst({
+    where: {
+      id: normalizedFocusReplyId,
+      post_id: postId,
+      deleted: false,
+    },
+    select: replyBaseSelect,
+  });
+
+  while (current) {
+    if (visited.has(current.id)) return [];
+
+    visited.add(current.id);
+    path.push(current);
+
+    if (current.id === rootReplyId) break;
+    if (!current.parent_reply_id) return [];
+
+    current = await prisma.post_reply.findFirst({
+      where: {
+        id: current.parent_reply_id,
+        post_id: postId,
+        deleted: false,
+      },
+      select: replyBaseSelect,
+    });
+  }
+
+  if (!path.some((reply) => reply.id === rootReplyId)) return [];
+
+  return path.filter((reply) => reply.id !== rootReplyId);
+};
+
+const mergeRepliesById = (base: ReplyBaseResult[], extra: ReplyBaseResult[]) => {
+  if (extra.length === 0) return base;
+
+  const byId = new Map(base.map((reply) => [reply.id, reply]));
+
+  for (const reply of extra) {
+    if (!byId.has(reply.id)) {
+      byId.set(reply.id, reply);
+    }
+  }
+
+  return [...byId.values()];
+};
+
 const isVerifiedProfessionalReply = (item: ReplyBaseResult) => {
   const profile = item.author.psychologist_profile;
 
@@ -1360,11 +1419,17 @@ export class PostRepository implements IPostRepository {
       effectiveSkip,
       effectiveSkip + pagination.limit,
     );
-    const descendants = await loadReplyDescendants(
+    const baseDescendants = await loadReplyDescendants(
       post.id,
       paginatedTopLevelItems.map((reply) => reply.id),
       INLINE_REPLY_DESCENDANT_DEPTH,
     );
+    const focusedReplyPath = await loadFocusedReplyPath(
+      post.id,
+      focusRootReplyId,
+      data.q.focusReplyId,
+    );
+    const descendants = mergeRepliesById(baseDescendants, focusedReplyPath);
     const treeRankingSignals = await getCommunityMentorRankingSignals(
       post.community_id,
       [...paginatedTopLevelItems, ...descendants]

@@ -1151,16 +1151,16 @@ const ReplyCard = ({
   const [treeCollapsed, setTreeCollapsed] = useState(false);
   const visualMaxDepth =
     maxInlineDepth < 0 ? MAX_REPLY_TREE_DEPTH : Math.min(maxInlineDepth, MAX_REPLY_TREE_DEPTH);
-  const canRenderChildren = depth < visualMaxDepth;
-  const visibleChildren = canRenderChildren ? reply.replies : [];
   const totalRepliesCount = reply.replies_count ?? reply.replies.length;
+  const hasFocusedDescendant = Boolean(
+    focusReplyId && focusReplyId !== reply.id && findReplyInTree(reply.replies, focusReplyId),
+  );
+  const canRenderChildren = depth < visualMaxDepth || hasFocusedDescendant;
+  const visibleChildren = canRenderChildren ? reply.replies : [];
   const hiddenRepliesCount = Math.max(0, totalRepliesCount - visibleChildren.length);
   const collapsedRepliesCount = useMemo(() => countReplyTreeDescendants(reply), [reply]);
   const canCollapseRootTree = depth === 0 && collapsedRepliesCount > 0;
   const threadHref = threadHrefBase ? `${threadHrefBase}/${reply.id}` : null;
-  const hasFocusedDescendant = Boolean(
-    focusReplyId && focusReplyId !== reply.id && findReplyInTree(reply.replies, focusReplyId),
-  );
   const childrenHiddenByCollapse = canCollapseRootTree && treeCollapsed && !hasFocusedDescendant;
 
   const hasTreeContinuation =
@@ -2143,6 +2143,7 @@ export const PostDetailLogic = () => {
     let retryTimer: number | null = null;
     let highlightTimer: number | null = null;
     let highlightedTarget: HTMLElement | null = null;
+    let previousTargetTabIndex: string | null = null;
     let attempts = 0;
 
     const focusReply = () => {
@@ -2157,13 +2158,23 @@ export const PostDetailLogic = () => {
 
       lastFocusedReplyIdRef.current = activeFocusReplyId;
       highlightedTarget = target;
+      previousTargetTabIndex = target.getAttribute("tabindex");
+      if (previousTargetTabIndex === null) {
+        target.setAttribute("tabindex", "-1");
+      }
       target.classList.remove(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
       void target.offsetWidth;
       target.classList.add(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
+      target.focus({ preventScroll: true });
       target.scrollIntoView({ behavior: "smooth", block: "center" });
 
       highlightTimer = window.setTimeout(() => {
         target.classList.remove(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
+        if (previousTargetTabIndex === null) {
+          target.removeAttribute("tabindex");
+        } else {
+          target.setAttribute("tabindex", previousTargetTabIndex);
+        }
         highlightedTarget = null;
       }, FOCUSED_REPLY_HIGHLIGHT_DURATION_MS);
     };
@@ -2173,7 +2184,14 @@ export const PostDetailLogic = () => {
     return () => {
       if (retryTimer) window.clearTimeout(retryTimer);
       if (highlightTimer) window.clearTimeout(highlightTimer);
-      highlightedTarget?.classList.remove(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
+      if (highlightedTarget) {
+        highlightedTarget.classList.remove(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
+        if (previousTargetTabIndex === null) {
+          highlightedTarget.removeAttribute("tabindex");
+        } else {
+          highlightedTarget.setAttribute("tabindex", previousTargetTabIndex);
+        }
+      }
     };
   }, [activeFocusReplyId, repliesQuery.isFetching]);
 

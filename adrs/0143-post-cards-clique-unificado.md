@@ -28,3 +28,20 @@ Builder/Quick Copy não ficou acessível neste ambiente; a implementação foi g
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - Smoke HTTP local em rotas representativas: `/app/community/feed`, `/app/posts/saved`, `/app/posts/mine`, `/app/community/ansiedade-em-equilibrio` e `/app/psychologist/cmqg35850000asuheq2ucwd0?tab=publicacoes`.
+
+
+## Atualizacao 2026-06-21 - foco em respostas profundas
+
+- O destino do deep link `?focusReplyId=<replyId>#reply-<replyId>` passa a carregar o caminho real de ancestrais da resposta focada quando ela estiver alem da profundidade inline padrao do detalhe do post.
+- A tela do post renderiza essa trilha focada alem do limite visual apenas para permitir o foco, sem expandir a arvore completa nem alterar a paginacao de comentarios.
+- O alvo focado tambem recebe foco DOM temporario (`tabindex="-1"` apenas durante o destaque), alem do pulso visual, melhorando acessibilidade para navegacao vinda de `Meus posts e respostas` e de `Salvos`.
+
+## Validacao complementar 2026-06-21
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke API com `focusReplyId` profundo confirmou o alvo no payload de respostas.
+- Chrome/CDP mobile 390x844 no detalhe do post confirmou elemento `reply-<id>` renderizado, focado, com `lectum-reply-focus-pulse` e scroll centralizado.
