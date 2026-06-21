@@ -73,3 +73,21 @@ Validação adicional:
 - Smoke HTTP local:
   - `http://localhost:3000/app/community/feed/post/new` retornou 200.
   - `http://localhost:3000/app/community/ansiedade-em-equilibrio/post/new` retornou 200.
+
+## Atualizacao 2026-06-21 - Cortesia ativa libera midia profissional
+
+Psicologos com cortesia ativa (`professional_subscription.source = "admin_grant"`) passam a ser tratados como aptos para o entitlement de midia profissional mesmo quando `cfp_verified_at` ainda esta nulo. A regra compartilhada do frontend agora permite anexos quando ha plano profissional ativo e identidade CFP verificada **ou** concessao administrativa ativa. A autorizacao backend de upload de midia em respostas segue a mesma decisao com `activeProfessionalCourtesyEntitlementWhere()`.
+
+O upload de midia em post raiz continua sem persistencia propria porque `community_post` ainda nao possui campos de midia; o ajuste libera o controle visual/entitlement para cortesia e o upload real ja existente de midia em respostas.
+
+Validacao adicional:
+
+- `pnpm --dir frontend exec biome check --write src/utils/community-media-permission.ts`
+- `pnpm --dir backend exec biome check --write src/utils/subscription-entitlement.ts src/modules/api/private/posts/repositories/PostRepository.ts`
+- `pnpm --dir frontend check`
+- `pnpm --dir backend check`
+- `pnpm --dir frontend build`
+- `pnpm --dir backend build`
+- Script local confirmou `canAttachReplyMedia=true` para `tuliosrezende@gmail.com` com `source="admin_grant"` e `cfp_verified_at=null`.
+- Service real `authorizeReplyMediaUpload` retornou `status=200` para o mesmo usuario.
+- Chrome/CDP local em 390x844 em `http://localhost:3000/app/community/feed/post/new` confirmou botao `Adicionar midia ao post` presente, habilitado e sem copy bloqueada.

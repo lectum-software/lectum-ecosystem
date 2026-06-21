@@ -417,3 +417,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nao houve alteracao de backend, Prisma, migrations, packages, endpoints, payloads, ordenacao, votos, salvamento ou regra de destaque de psicologos.
 - ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check --write -- ...`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP em 390px no detalhe do post demo confirmando que a linha de acoes e icones internos nao acionam collapse, enquanto a area de conteudo recolhe/expande normalmente.
+
+## Execucao complementar: cortesia ativa para upload de midia (2026-06-21)
+
+- Pedido do usuario: psicologos com cortesia devem ter os mesmos recursos de psicologos assinantes verificados, incluindo upload de midia.
+- Backend: `PostRepository.canAttachReplyMedia` deixou de depender exclusivamente de `cfp_verified_at` quando existe assinatura profissional ativa concedida por administrador (`source="admin_grant"`).
+- A regra preserva a exigencia de plano profissional ativo e continua bloqueando plano gratuito; o helper `activeProfessionalCourtesyEntitlementWhere()` centraliza a consulta da cortesia administrativa.
+- Nao houve alteracao de Prisma schema, migrations, storage, endpoints, payload de respostas, limites de arquivo, ordenacao, votos ou regras de denuncia.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+- Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, script local confirmando `canAttachReplyMedia=true` para `tuliosrezende@gmail.com` com `cfp_verified_at=null` e `admin_grant` ativo, e service real `authorizeReplyMediaUpload` retornando `status=200` para post publicado existente.

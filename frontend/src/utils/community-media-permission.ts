@@ -19,12 +19,25 @@ export const hasActiveProfessionalMediaPlan = (userData?: user | null) =>
     ),
   );
 
+export const hasActiveProfessionalCourtesyGrant = (userData?: user | null) =>
+  Boolean(
+    userData?.psychologist_profile?.subscriptions?.some(
+      (subscription) =>
+        subscription.status === "ativa" &&
+        subscription.source === "admin_grant" &&
+        subscription.plan?.active !== false &&
+        subscription.plan?.slug !== "gratuito",
+    ),
+  );
+
 export const getCommunityMediaPermission = (userData?: user | null): CommunityMediaPermission => {
   const activeProfessionalPlan = hasActiveProfessionalMediaPlan(userData);
+  const hasVerifiedIdentity = Boolean(userData?.psychologist_profile?.cfp_verified_at);
+  const hasCourtesyGrant = hasActiveProfessionalCourtesyGrant(userData);
   const canAttach = Boolean(
     userData?.role === "psicologo" &&
-      userData.psychologist_profile?.cfp_verified_at &&
-      activeProfessionalPlan,
+      activeProfessionalPlan &&
+      (hasVerifiedIdentity || hasCourtesyGrant),
   );
 
   if (canAttach) {

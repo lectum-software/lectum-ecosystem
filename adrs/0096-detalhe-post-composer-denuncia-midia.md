@@ -40,3 +40,20 @@ Também havia uma regra nova para mídia em respostas: somente psicólogos verif
 - Complemento 2026-06-16: `pnpm --dir frontend check`.
 - Complemento 2026-06-16: `pnpm --dir frontend build`.
 - Complemento 2026-06-16: HTTP local em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video` respondeu `200` com cookie de sessão local de validação.
+
+## Atualizacao 2026-06-21 - Cortesia como entitlement de midia em respostas
+
+A regra backend de midia em respostas passou a aceitar duas formas de aptidao profissional:
+
+- `cfp_verified_at` preenchido com plano profissional ativo; ou
+- plano profissional ativo concedido pelo administrador (`source = "admin_grant"`), mesmo com `cfp_verified_at` nulo.
+
+Essa excecao e limitada ao entitlement de recurso para psicologos com cortesia. Ela nao altera schema, storage, contratos de resposta, limites de arquivo, fluxo de denuncia ou demais criterios publicos de verificacao.
+
+Validacao adicional:
+
+- `pnpm --dir backend exec biome check --write src/utils/subscription-entitlement.ts src/modules/api/private/posts/repositories/PostRepository.ts`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- Script local confirmou `canAttachReplyMedia=true` para `tuliosrezende@gmail.com` com assinatura `admin_grant` ativa e `cfp_verified_at=null`.
+- Service real `authorizeReplyMediaUpload` retornou `status=200` para um post publicado existente, sem criar midia fake.

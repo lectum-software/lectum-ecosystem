@@ -276,3 +276,13 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Builder/Quick Copy segue indisponível como ferramenta neste ambiente; a validação visual usou a tela local existente, os protótipos locais e o screenshot anexado pelo usuário.
 - ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
 - Validações executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`; Chrome headless local no `next start` em `http://localhost:3011/app/community/feed` confirmou sidebar expandida em 240px antes e depois de abrir `/app/community/feed/post/new`, dialog `Criar Post`, altura do título em 36px, gap de 12px até o conteúdo e ausência do card `Não foi possível postar`.
+
+## Complemento 2026-06-21 - cortesia ativa no controle de midia
+
+- Pedido do usuario: psicologos com cortesia devem ter 100% dos recursos de psicologos assinantes verificados; o usuario `tuliosrezende@gmail.com` estava sem acesso ao controle de midia na modal `Criar Post`.
+- Frontend: `frontend/src/utils/community-media-permission.ts` passou a liberar o controle para psicologos com plano profissional ativo e `source="admin_grant"`, mesmo com `cfp_verified_at` nulo.
+- Backend: a autorizacao real de midia em respostas tambem passou a aceitar cortesia administrativa ativa, preservando o bloqueio para plano gratuito.
+- O upload de midia em post raiz permanece sem persistencia propria por ausencia de campos de midia em `community_post`; nao foi criado mock, schema paralelo ou endpoint simulado.
+- Fonte visual auditavel: `_product/proto/Criar Nova Postagem - Psicologo.jpg` via inventario local e screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente.
+- ADRs atualizados: `adrs/0138-create-post-media-permission-modal.md` e `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir backend check`, `pnpm --dir frontend build`, `pnpm --dir backend build`, scripts locais de permissao backend e Chrome/CDP mobile em `http://localhost:3000/app/community/feed/post/new` confirmando botao de midia habilitado e ausencia da copy bloqueada.

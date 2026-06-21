@@ -17,3 +17,9 @@ export const activeProfessionalEntitlementWhere =
       },
     },
   });
+
+export const activeProfessionalCourtesyEntitlementWhere =
+  (): Prisma.professional_subscriptionWhereInput => ({
+    ...activeProfessionalEntitlementWhere(),
+    source: "admin_grant",
+  });

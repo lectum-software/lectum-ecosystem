@@ -3,7 +3,10 @@ import prisma, { type ORM } from "@/infra/database/prisma";
 import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
 import { getPostIdsWithPsychologistReplies } from "@/utils/community-post-replies";
 import { getMutedPostIds } from "@/utils/post-notification-mute";
-import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
+import {
+  activeProfessionalCourtesyEntitlementWhere,
+  activeProfessionalEntitlementWhere,
+} from "@/utils/subscription-entitlement";
 import type {
   IPostCreateReplyDTO,
   IPostDeleteDTO,
@@ -759,12 +762,21 @@ export class PostRepository implements IPostRepository {
       where: {
         user_id: userId,
         deleted: false,
-        cfp_verified_at: {
-          not: null,
-        },
         subscriptions: {
           some: activeProfessionalEntitlementWhere(),
         },
+        OR: [
+          {
+            cfp_verified_at: {
+              not: null,
+            },
+          },
+          {
+            subscriptions: {
+              some: activeProfessionalCourtesyEntitlementWhere(),
+            },
+          },
+        ],
       },
       select: {
         id: true,
