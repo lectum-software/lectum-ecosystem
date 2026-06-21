@@ -273,3 +273,28 @@ Validacao complementar:
 - `pnpm check`
 - Smoke real do endpoint `POST /api/private/community/ansiedade-em-equilibrio/posts/media` com token temporario para `tuliosrezende@gmail.com`, upload em R2 no prefixo `posts/media/` e remocao do objeto ao final.
 - Chrome/CDP autenticado em `/app/community/ansiedade-em-equilibrio/post/new` validou botao `Midia` habilitado, input aceitando `video/mp4` e ausencia da copy antiga de R2 pendente.
+
+## Atualização 2026-06-21 - miniatura local de mídia no editor
+
+A criação de post passa a mostrar uma prévia visual da mídia selecionada dentro da própria área de composição, antes do envio definitivo para o R2.
+
+Decisões complementares:
+
+- Manter o upload real em duas etapas: seleção local no editor, upload R2 somente no submit e persistência de `media_url`/`media_type` depois do retorno do endpoint real.
+- Guardar a mídia selecionada como `File` + `previewUrl` local (`URL.createObjectURL`) + tipo normalizado, revogando a URL ao remover, substituir ou desmontar a modal para evitar vazamento de objeto local.
+- Renderizar a miniatura no espaço em branco logo após o texto do post, aproximando a experiência de composição visual pedida pelo produto.
+- Usar `next/image` para previews de imagem com `blob:` local e `unoptimized`; usar `<video>` apenas para miniatura de vídeo local, mantendo a proibição de `<img>` cru.
+- Não alterar backend, schema, payload, entitlement, validação de storage, endpoint de upload ou packages.
+
+Consequências:
+
+- O usuário recebe confirmação visual imediata de que a mídia foi selecionada, sem precisar publicar o post primeiro.
+- A remoção/substituição continua local até o submit, preservando o rascunho e evitando uploads desnecessários.
+- A lógica de persistência e autorização permanece concentrada nos contratos reais já existentes.
+
+Validação complementar:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- Chrome/CDP autenticado em `http://localhost:3000/app/community/ansiedade-em-equilibrio/post/new`: sucesso ao injetar `preview-validacao.png` no input de mídia e confirmar preview com `blob:` local, figura dimensionada dentro do editor e legenda do arquivo visível.

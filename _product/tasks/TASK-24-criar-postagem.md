@@ -311,3 +311,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - DATA-MODEL atualizado com o campo `edited_at` e contrato `PUT /api/private/posts/:id`.
 - ADR criado: `adrs/0145-edicao-post-publicado.md`.
 - Validações executadas: `pnpm --dir backend db:migrate -- --name add_community_post_edited_at`, `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP local autenticado em `http://localhost:3000/app/posts/mine`, confirmando menu `Editar post` e modal preenchido com alerta de dados fixos.
+
+## Complemento 2026-06-21 - miniatura de mídia no editor
+
+- Pedido do usuário: ao selecionar/uploadar mídia na criação de post, exibir uma miniatura na área em branco após o texto do editor.
+- Frontend: o estado de mídia selecionada passou a guardar `File`, tipo normalizado (`image`/`video`) e URL local via `URL.createObjectURL`, com revogação explícita ao remover/substituir mídia ou desmontar a modal.
+- A miniatura é renderizada dentro da área de composição, logo abaixo do campo de conteúdo: imagens usam `next/image` com `unoptimized` para `blob:` local, vídeos usam `<video>` apenas como preview visual; não foi usado `<img>` cru no código.
+- O botão de mídia no rodapé permanece como ação compacta; o nome do arquivo continua visível de forma discreta e a remoção principal fica sobre a própria miniatura.
+- Escopo: sem mudanças de backend, Prisma, migrations, endpoints, payload, entitlement de mídia ou packages.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a validação visual usou `_product/proto/Criar Nova Postagem - Psicólogo.jpg`, o screenshot anexado pelo usuário e Chrome/CDP local.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado em `http://localhost:3000/app/community/ansiedade-em-equilibrio/post/new`, injetando um `File` real no input de mídia e confirmando a miniatura com `blob:` local, `figure` dimensionado e legenda do arquivo no editor.

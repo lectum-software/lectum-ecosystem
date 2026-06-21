@@ -142,6 +142,12 @@ const LAST_CREATED_POST_HREF_KEY = "lectum:last-created-post-href";
 const COMMUNITY_POST_MEDIA_ACCEPT =
   "image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime";
 
+type SelectedPostMedia = {
+  file: File;
+  previewUrl: string;
+  type: "image" | "video";
+};
+
 type CreateCommunityPostLogicProps = {
   asModalSlot?: boolean;
 };
@@ -160,10 +166,11 @@ export const CreateCommunityPostLogic = ({
   const [isGuidanceOpen, setIsGuidanceOpen] = useState(false);
   const [isAnonymousTipDismissed, setIsAnonymousTipDismissed] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [selectedMedia, setSelectedMedia] = useState<File | null>(null);
+  const [selectedMedia, setSelectedMedia] = useState<SelectedPostMedia | null>(null);
   const closeTimerRef = useRef<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const lastFocusedEditorIdRef = useRef("create-post-title");
+  const selectedMediaPreviewUrlRef = useRef<string | null>(null);
 
   const communitiesQuery = useCommunities({ limit: 50 });
   const communityOptions = useMemo(
@@ -291,6 +298,18 @@ export const CreateCommunityPostLogic = ({
     focusLastEditor();
   };
 
+  const revokeSelectedMediaPreview = useCallback(() => {
+    if (!selectedMediaPreviewUrlRef.current) return;
+
+    URL.revokeObjectURL(selectedMediaPreviewUrlRef.current);
+    selectedMediaPreviewUrlRef.current = null;
+  }, []);
+
+  const clearSelectedMedia = useCallback(() => {
+    revokeSelectedMediaPreview();
+    setSelectedMedia(null);
+  }, [revokeSelectedMediaPreview]);
+
   const handleClose = useCallback(() => {
     setIsSheetOpen(false);
     if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
@@ -335,6 +354,10 @@ export const CreateCommunityPostLogic = ({
     };
   }, [handleClose]);
 
+  useEffect(() => {
+    return () => revokeSelectedMediaPreview();
+  }, [revokeSelectedMediaPreview]);
+
   const handleMediaChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
     event.currentTarget.value = "";
@@ -350,13 +373,20 @@ export const CreateCommunityPostLogic = ({
       return;
     }
 
-    setSelectedMedia(file);
+    revokeSelectedMediaPreview();
+    const previewUrl = URL.createObjectURL(file);
+    selectedMediaPreviewUrlRef.current = previewUrl;
+    setSelectedMedia({
+      file,
+      previewUrl,
+      type: file.type.startsWith("image/") ? "image" : "video",
+    });
     focusLastEditor();
   };
 
   const onSubmit = hook.handleSubmit(async (values) => {
     try {
-      const mediaFile = mediaPermission.canAttach ? selectedMedia : null;
+      const mediaFile = mediaPermission.canAttach ? selectedMedia?.file : null;
       const media = mediaFile
         ? await uploadMutation.mutateAsync({
             file: mediaFile,
@@ -562,6 +592,60 @@ export const CreateCommunityPostLogic = ({
     />
   );
 
+  const renderSelectedMediaPreview = () => {
+    if (!mediaPermission.canAttach || !selectedMedia) return null;
+
+    return (
+      <div className="mt-3 flex shrink-0 justify-start">
+        <figure className="relative w-[min(9.5rem,48vw)] overflow-hidden rounded-[1.4rem] border border-border bg-surface-muted shadow-[var(--lectum-shadow-soft)]">
+          <div className="relative aspect-[9/14] w-full overflow-hidden bg-surface-muted">
+            {selectedMedia.type === "image" ? (
+              <Image
+                alt="Miniatura da mídia selecionada"
+                className="object-cover"
+                fill
+                sizes="152px"
+                src={selectedMedia.previewUrl}
+                unoptimized
+              />
+            ) : (
+              <video
+                aria-label="Miniatura do vídeo selecionado"
+                className="h-full w-full object-cover"
+                muted
+                playsInline
+                preload="metadata"
+                src={selectedMedia.previewUrl}
+              />
+            )}
+
+            <span className="absolute right-2 bottom-2 grid h-8 w-8 place-items-center rounded-full bg-surface/90 text-primary shadow-[var(--lectum-shadow-soft)] backdrop-blur">
+              <Video className="h-4 w-4" aria-hidden="true" />
+            </span>
+
+            <button
+              aria-label="Remover mídia anexada"
+              className="absolute top-2 right-2 grid h-8 w-8 place-items-center rounded-full bg-surface/90 text-muted shadow-[var(--lectum-shadow-soft)] transition hover:bg-surface hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15"
+              disabled={isSubmitting}
+              onClick={() => {
+                clearSelectedMedia();
+                focusLastEditor();
+              }}
+              onMouseDown={(event) => event.preventDefault()}
+              tabIndex={-1}
+              type="button"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+          <figcaption className="truncate px-3 py-2 text-[0.72rem] font-bold text-muted">
+            {selectedMedia.file.name}
+          </figcaption>
+        </figure>
+      </div>
+    );
+  };
+
   const renderPsychologistMediaButton = () => (
     <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
       <input
@@ -600,26 +684,6 @@ export const CreateCommunityPostLogic = ({
       {!mediaPermission.canAttach && mediaPermission.reason ? (
         <span className="min-w-0 flex-1 basis-52 whitespace-normal text-xs font-semibold leading-4 text-[#64748B]">
           {mediaPermission.reason}
-        </span>
-      ) : null}
-
-      {mediaPermission.canAttach && selectedMedia ? (
-        <span className="inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-bold text-primary">
-          <span className="truncate">{selectedMedia.name}</span>
-          <button
-            aria-label="Remover midia anexada"
-            className="grid h-5 w-5 shrink-0 place-items-center rounded-full hover:bg-white/70"
-            disabled={isSubmitting}
-            onClick={() => {
-              setSelectedMedia(null);
-              focusLastEditor();
-            }}
-            onMouseDown={(event) => event.preventDefault()}
-            tabIndex={-1}
-            type="button"
-          >
-            <X className="h-3.5 w-3.5" aria-hidden="true" />
-          </button>
         </span>
       ) : null}
     </div>
@@ -716,6 +780,7 @@ export const CreateCommunityPostLogic = ({
                   {formProps.fields
                     .filter((field) => field.name === "content")
                     .map(renderFormField)}
+                  {renderSelectedMediaPreview()}
                 </div>
               </div>
 
