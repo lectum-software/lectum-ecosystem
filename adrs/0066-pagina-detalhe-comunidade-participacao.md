@@ -248,3 +248,20 @@ Validacao complementar:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Chrome/CDP em mobile 390px e desktop 1365px confirmando `box-shadow` transparente no chip ativo inicial `Em destaque` e no fluxo de dropdown de `Mais comentados`.
+
+## Atualização 2026-06-20: alinhamento do botão Seguir no header da comunidade
+
+### Contexto
+
+No header da página interna de comunidade, o botão `Seguir`/`Seguindo` estava centralizado verticalmente em relação ao avatar da comunidade. Isso deixava a base do botão mais alta que a base da foto/avatar, criando desalinhamento visual no bloco superior.
+
+### Decisão
+
+- Alinhar o grupo superior do avatar e do botão pela base (`items-end`), mantendo o avatar sobreposto à capa e preservando o tamanho, variante e comportamento do `CommunityFollowButton`.
+- Não alterar dados, contratos, persistência de participação, CTA de busca/compartilhamento ou responsividade do header.
+
+### Validação
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke HTTP local: `http://127.0.0.1:3000/app/community/ansiedade-em-equilibrio` retornou 200.

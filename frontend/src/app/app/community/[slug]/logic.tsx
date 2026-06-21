@@ -1748,7 +1748,7 @@ const CommunityHeader = ({
       </div>
 
       <div className="relative px-5">
-        <div className="-mt-8 flex items-center justify-between gap-4">
+        <div className="-mt-8 flex items-end justify-between gap-4">
           <CommunityLogo community={community} palette={palette} />
           <CommunityFollowButton
             disabled={membershipPending}
