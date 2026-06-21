@@ -1,28 +1,30 @@
-# ADR-0144: Abas integradas em Meus posts e respostas
+# ADR-0144: Abas centralizadas fora do header em Meus posts e respostas
 
 Data: 2026-06-21
 
 ## Contexto
 
-A tela "Meus posts e respostas" usava um controle em formato de cápsula para alternar entre posts e respostas/comentários. Esse padrão ocupava mais altura e ficava visualmente solto em relação ao header, enquanto o perfil público do psicólogo já vinha consolidando uma navegação mais integrada em cards de seção.
+A tela `Meus posts e respostas` chegou a integrar as abas `Posts` e `Respostas` dentro do card de header. Em revisao visual do produto, o comportamento desejado mudou: o header deve ficar limpo, apenas com voltar e titulo centralizado, enquanto a escolha entre posts e respostas deve aparecer abaixo, centralizada e com o mesmo layout compacto usado no bloco de publicacoes do perfil do psicologo.
 
-Builder/Quick Copy não ficou acessível neste ambiente; a decisão foi guiada pelo padrão visual já implementado no perfil do psicólogo e pelas telas locais em execução.
+Builder/Quick Copy nao ficou acessivel como ferramenta callable neste ambiente. A referencia visual aplicada foi o padrao ja implementado em `frontend/src/app/app/psychologist/[id]/logic.tsx`, no resumo de publicacoes do perfil do psicologo, e a validacao ocorreu no browser local.
 
-## Decisão
+## Decisao
 
-- Substituir a cápsula de alternância por abas textuais integradas ao card de header da tela.
-- Manter o botão de voltar, título e abas dentro da mesma superfície visual.
-- Indicar a aba ativa por texto mais forte e underline azul da Lectum.
-- Manter abas inativas sem fundo preenchido, apenas com tipografia discreta.
-- Exibir contadores inline ao lado dos rótulos, sem chips preenchidos.
+- Remover `Posts` e `Respostas` de dentro do header de `/app/posts/mine`.
+- Manter o header como superficie exclusiva para botao de voltar e titulo centralizado.
+- Renderizar o filtro em um card separado logo abaixo do header, com linha centralizada, icones, contador antes do rotulo e divisor vertical entre opcoes em telas `sm+`.
+- Reutilizar a linguagem visual da aba de publicacoes do perfil do psicologo: `FileText` para posts, seta de resposta para respostas/comentarios, texto forte e azul na opcao ativa, fundo branco e borda suave.
+- Preservar a semantica de abas (`role="tablist"`, `role="tab"`, `aria-selected`) e o comportamento funcional de paginacao/filtro existente.
 
-## Consequências
+## Consequencias
 
-- A navegação ocupa menos altura e fica mais próxima do padrão de seções do perfil do psicólogo.
-- A tela reduz a sensação de componente isolado entre header e conteúdo.
-- O comportamento funcional de troca entre posts e respostas permanece o mesmo, sem alteração de API, paginação ou regras de domínio.
+- O header fica visualmente mais simples e alinhado aos headers secundarios premium ja usados no app.
+- A navegacao entre posts e respostas passa a conversar diretamente com o padrao de metricas/publicacoes do perfil do psicologo.
+- Nao ha alteracao de backend, DTO, endpoint, schema Prisma, packages, ordenacao, persistencia ou regra de dominio.
 
-## Validação
+## Validacao
 
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome/CDP local em `/app/posts/mine` com viewport mobile `390x844`, autenticado com usuario real de desenvolvimento, confirmando header sem abas (`headerContainsFilter=false`), filtro fora do header, centralizado (`filterCenterDelta=0`) e botoes `2 Posts` / `1 Respostas` no padrao de publicacoes.

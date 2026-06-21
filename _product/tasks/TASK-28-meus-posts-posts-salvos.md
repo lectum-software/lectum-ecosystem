@@ -319,3 +319,13 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Referencias visuais seguem `_product/proto/Meus Posts - Paciente.jpg`, `_product/proto/Meus Posts - Psicologo.jpg`, `_product/proto/Posts Salvos.jpg` e `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0143-post-cards-clique-unificado.md`.
 - Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, smoke API com `focusReplyId` profundo confirmando o alvo no payload e Chrome/CDP mobile 390x844 no detalhe do post confirmando elemento `reply-<id>` renderizado, focado, com `lectum-reply-focus-pulse` e scroll centralizado.
+
+## Ajuste complementar em 2026-06-21 - abas fora do header em Meus posts e respostas
+
+- Pedido direto de produto: em `/app/posts/mine`, as opcoes `Posts` e `Respostas` nao devem ficar dentro do header da tela.
+- O header passa a exibir somente o botao de voltar e o titulo centralizado `Meus posts e respostas` / `Meus posts e comentarios`.
+- O filtro entre posts e respostas foi movido para um card separado logo abaixo do header, centralizado e com o mesmo padrao visual do resumo de publicacoes do perfil do psicologo: icone, contador antes do rotulo e divisor vertical entre opcoes em telas maiores.
+- A semantica de abas e o comportamento funcional de filtro, contadores reais, paginacao e carregamento foram preservados, sem alteracao de endpoint, DTO, schema Prisma, packages ou dados.
+- Referencia visual aplicada a partir do padrao ja implementado no perfil do psicologo; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0144-meus-posts-abas-integradas.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP local em `/app/posts/mine` mobile `390x844`, confirmando filtro fora do header, centralizado e com botoes `2 Posts` / `1 Respostas`.

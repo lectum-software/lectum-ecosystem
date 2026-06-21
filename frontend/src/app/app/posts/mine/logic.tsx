@@ -1,9 +1,10 @@
 "use client";
 
-import { BadgeCheck, ChevronLeft, ChevronRight, FileText, Reply } from "lucide-react";
+import { BadgeCheck, ChevronLeft, ChevronRight, CornerUpLeft, FileText, Reply } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  Fragment,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
   useMemo,
@@ -169,65 +170,74 @@ const FilterTabs = ({
   interactionCopy: InteractionCopy;
   onChange: (value: UserPostsType) => void;
   value: UserPostsType;
-}) => (
-  <nav
-    aria-label={interactionCopy.filterAriaLabel}
-    className="mt-3 overflow-x-auto border-border/75 border-b [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-  >
-    <div className="flex min-w-max items-end gap-7 sm:gap-8" role="tablist">
-      {[
-        { label: "Posts", value: "posts" as const },
-        { label: interactionCopy.plural, value: "replies" as const },
-      ].map((item) => {
-        const active = item.value === value;
-        const count = counts?.[item.value];
-        const formattedCount = typeof count === "number" ? count.toLocaleString("pt-BR") : "...";
+}) => {
+  const tabs = [
+    { icon: FileText, label: "Posts", value: "posts" as const },
+    { icon: CornerUpLeft, label: interactionCopy.plural, value: "replies" as const },
+  ];
 
-        return (
-          <button
-            aria-selected={active}
-            className={cn(
-              "-mb-px inline-flex h-10 items-center gap-1.5 border-b-2 px-0 text-[14px] font-semibold tracking-[-0.018em] transition-[border-color,color,opacity] duration-200 disabled:opacity-65 sm:text-[14.5px]",
-              active
-                ? "border-primary font-extrabold text-primary"
-                : "border-transparent text-muted hover:text-foreground",
-            )}
-            disabled={disabled}
-            key={item.value}
-            onClick={() => onChange(item.value)}
-            role="tab"
-            type="button"
-          >
-            <span>{item.label}</span>
-            <span
-              className={cn(
-                "text-[12px] font-extrabold leading-none tracking-[-0.02em] transition-colors sm:text-[12.5px]",
-                active ? "text-primary/80" : "text-muted/75",
-              )}
-            >
-              {formattedCount}
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  </nav>
-);
+  return (
+    <nav
+      aria-label={interactionCopy.filterAriaLabel}
+      className="overflow-hidden rounded-[24px] border border-[#E7EEF7] bg-white/95 px-3 py-4 dark:border-border dark:bg-surface sm:px-5"
+    >
+      <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2.5" role="tablist">
+        {tabs.map((item, index) => {
+          const active = item.value === value;
+          const count = counts?.[item.value];
+          const formattedCount = typeof count === "number" ? count.toLocaleString("pt-BR") : "...";
+          const Icon = item.icon;
 
-const MyPostsHeader = ({
-  counts,
-  disabled,
-  interactionCopy,
-  onChange,
-  value,
-}: {
-  counts?: FilterTabCounts;
-  disabled?: boolean;
-  interactionCopy: InteractionCopy;
-  onChange: (value: UserPostsType) => void;
-  value: UserPostsType;
-}) => (
-  <header className="rounded-[26px] border border-[#E6EAF0] bg-white px-4 pt-3.5 pb-0 shadow-[0_14px_34px_rgba(15,23,42,0.045)] dark:border-border dark:bg-surface sm:px-5 sm:pt-4">
+          return (
+            <Fragment key={item.value}>
+              {index > 0 ? (
+                <span
+                  className="hidden h-5 w-px bg-[#E5ECF3] dark:bg-border sm:block"
+                  aria-hidden="true"
+                />
+              ) : null}
+              <button
+                aria-selected={active}
+                className={cn(
+                  "inline-flex min-w-0 items-center gap-2 rounded-full px-2 py-1.5 text-[13px] font-bold leading-none transition-[background-color,color,opacity] disabled:opacity-65",
+                  active
+                    ? "text-primary"
+                    : "text-[#64748B] hover:bg-[#F8FBFF] hover:text-[#182033] dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground",
+                )}
+                disabled={disabled}
+                onClick={() => onChange(item.value)}
+                role="tab"
+                type="button"
+              >
+                <Icon
+                  className={cn(
+                    "h-4 w-4 shrink-0",
+                    active ? "text-primary" : "text-[#64748B] dark:text-muted",
+                  )}
+                  aria-hidden="true"
+                />
+                <span className="whitespace-nowrap">
+                  <strong
+                    className={cn(
+                      "font-extrabold",
+                      active ? "text-primary" : "text-[#182033] dark:text-foreground",
+                    )}
+                  >
+                    {formattedCount}
+                  </strong>{" "}
+                  {item.label}
+                </span>
+              </button>
+            </Fragment>
+          );
+        })}
+      </div>
+    </nav>
+  );
+};
+
+const MyPostsHeader = ({ interactionCopy }: { interactionCopy: InteractionCopy }) => (
+  <header className="rounded-[26px] border border-[#E6EAF0] bg-white px-4 py-3.5 shadow-[0_14px_34px_rgba(15,23,42,0.045)] dark:border-border dark:bg-surface sm:px-5 sm:py-4">
     <div className="grid min-h-9 grid-cols-[36px_1fr_36px] items-center gap-2">
       <Link
         aria-label="Voltar para perfil"
@@ -241,14 +251,6 @@ const MyPostsHeader = ({
       </h1>
       <span aria-hidden="true" />
     </div>
-
-    <FilterTabs
-      counts={counts}
-      disabled={disabled}
-      interactionCopy={interactionCopy}
-      onChange={onChange}
-      value={value}
-    />
   </header>
 );
 
@@ -587,15 +589,17 @@ export const MyPostsLogic = () => {
       showMobileNavigation={false}
     >
       <section className="mx-auto min-h-screen w-full max-w-[430px] bg-background px-5 py-5 sm:max-w-xl md:py-8 lg:max-w-3xl">
-        <MyPostsHeader
-          counts={tabCounts}
-          disabled={postsQuery.isFetching}
-          interactionCopy={interactionCopy}
-          onChange={handleFilterChange}
-          value={type}
-        />
+        <MyPostsHeader interactionCopy={interactionCopy} />
 
         <div className="grid gap-4 pt-4">
+          <FilterTabs
+            counts={tabCounts}
+            disabled={postsQuery.isFetching}
+            interactionCopy={interactionCopy}
+            onChange={handleFilterChange}
+            value={type}
+          />
+
           {postsQuery.isLoading || postsQuery.isPending ? (
             <div className="grid min-h-[45vh] place-items-center rounded-[22px] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
               <LoadingState
