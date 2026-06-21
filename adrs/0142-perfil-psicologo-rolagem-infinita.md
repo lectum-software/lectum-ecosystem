@@ -16,6 +16,7 @@ A alteração é visual e de experiência de navegação no frontend. Não alter
 - Usar um sentinel com `IntersectionObserver` para buscar a próxima página automaticamente quando o usuário se aproxima do fim da lista.
 - Deduplicar itens carregados entre páginas antes de renderizar, evitando repetição visual em caso de revalidação/cache.
 - Tornar os cards de publicações do perfil navegáveis pelas áreas neutras do corpo do card, reutilizando a proteção existente contra propagação em links, botões, menus e controles inferiores.
+- Manter o nome da comunidade como link independente, mas sem mudança para azul nem sublinhado no hover desktop dentro dos cards de publicações do perfil; a indicação de interatividade fica apenas pelo cursor.
 
 ## Consequências
 
@@ -24,6 +25,7 @@ A alteração é visual e de experiência de navegação no frontend. Não alter
 - A URL deixa de depender de `postsPage`/`reviewsPage` para avançar nessas abas; parâmetros legados são ignorados pela nova experiência.
 - A página inicial da aba `Sobre` continua usando apenas a primeira página para preservar o comportamento de preview e reduzir carga inicial.
 - O clique em título, texto e espaços vazios dos cards de publicações abre a página de detalhes do post, enquanto nome da comunidade, ações de voto, comentários, salvar, compartilhar e demais controles permanecem independentes.
+- O hover desktop do nome da comunidade fica visualmente neutro no perfil público, alinhado ao comportamento premium definido para links internos de cards.
 
 ## Validação
 
@@ -34,6 +36,10 @@ A alteração é visual e de experiência de navegação no frontend. Não alter
   - `http://127.0.0.1:3000/app/psychologist/cmqmg35850000asuheq2ucwd0?tab=avaliacoes` retornou 200.
 - Complemento de navegação por áreas neutras:
   - `pnpm check`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - Smoke HTTP local: `http://127.0.0.1:3000/app/psychologist/cmqmg35850000asuheq2ucwd0?tab=publicacoes` retornou 200.
+- Complemento de hover neutro no link da comunidade:
   - `pnpm --dir frontend check`
   - `pnpm --dir frontend build`
   - Smoke HTTP local: `http://127.0.0.1:3000/app/psychologist/cmqmg35850000asuheq2ucwd0?tab=publicacoes` retornou 200.

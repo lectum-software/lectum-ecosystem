@@ -1541,6 +1541,7 @@ const ProfileCommunityPostCard = ({
   post: DirectoryPsychologistProfilePost;
 }) => (
   <CommunityPostCard
+    desktopPlainLinks
     interactiveActions={canInteract}
     onShare={onShare}
     openPostOnCardClick
