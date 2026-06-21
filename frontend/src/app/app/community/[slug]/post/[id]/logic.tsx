@@ -2107,6 +2107,7 @@ export const PostDetailLogic = () => {
 
     let retryTimer: number | null = null;
     let highlightTimer: number | null = null;
+    let highlightedTarget: HTMLElement | null = null;
     let attempts = 0;
 
     const focusReply = () => {
@@ -2120,12 +2121,14 @@ export const PostDetailLogic = () => {
       }
 
       lastFocusedReplyIdRef.current = activeFocusReplyId;
+      highlightedTarget = target;
       target.classList.add(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
       target.scrollIntoView({ behavior: "smooth", block: "center" });
 
       highlightTimer = window.setTimeout(() => {
         target.classList.remove(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
-      }, 3600);
+        highlightedTarget = null;
+      }, 2200);
     };
 
     focusReply();
@@ -2133,6 +2136,7 @@ export const PostDetailLogic = () => {
     return () => {
       if (retryTimer) window.clearTimeout(retryTimer);
       if (highlightTimer) window.clearTimeout(highlightTimer);
+      highlightedTarget?.classList.remove(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
     };
   }, [activeFocusReplyId, repliesQuery.isFetching]);
 

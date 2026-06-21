@@ -301,3 +301,31 @@ A aba "Posts" em `/app/posts/mine` ainda reutilizava o card completo do feed, co
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser local via Chrome/CDP em `/app/posts/mine` mobile confirmou ausencia de avatar/nome nos posts, contexto com tempo na linha superior e ausencia de overflow horizontal.
+
+## Complemento 2026-06-20: foco temporário em respostas e navegação consistente
+
+### Contexto
+
+O fluxo de abrir uma resposta salva usa `focusReplyId` para carregar a árvore correta, rolar até o comentário e aplicar um destaque azul temporário. Em revalidações do TanStack Query, o efeito podia ser desmontado antes do timeout de remoção e deixar as classes de destaque presas no comentário. Além disso, os cards de respostas/comentários em `/app/posts/mine` ainda dependiam de um overlay de `Link`, enquanto Salvos já usava navegação programática com proteção explícita para controles internos.
+
+### Decisão
+
+- Remover as classes de destaque também no cleanup do efeito de foco, garantindo que o fundo azul pisque e desapareça mesmo se houver re-fetch durante o timer.
+- Reduzir o tempo visual do destaque para 2,2s, mantendo o scroll suave e a busca por `reply-:id`.
+- Em `/app/posts/mine`, abrir respostas/comentários por clique nas áreas neutras do card via `router.push` para a mesma URL com `focusReplyId` e `#reply-:id`.
+- Preservar independentes os controles internos da barra de ações por detecção de alvo interativo (`a`, `button`, campos, mídia, menu e roles interativas).
+
+### Consequências
+
+- Respostas vindas de Salvos e de Meus posts/comentários mantêm o mesmo destino e foco no detalhe do post.
+- O destaque azul deixa de ficar fixo após navegação para comentário salvo ou próprio.
+- Não houve alteração de backend, schema Prisma, persistência, votos, salvos ou contratos HTTP.
+
+### Validação
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke HTTP local:
+  - `http://127.0.0.1:3000/app/posts/saved` retornou 200.
+  - `http://127.0.0.1:3000/app/posts/mine` retornou 200.
+  - `http://127.0.0.1:3000/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video?focusReplyId=cmqfzkzn90000g8uh3n4dn24i#reply-cmqfzkzn90000g8uh3n4dn24i` retornou 200.

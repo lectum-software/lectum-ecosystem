@@ -2,7 +2,13 @@
 
 import { BadgeCheck, ChevronLeft, ChevronRight, FileText, Reply } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
+  useMemo,
+  useState,
+} from "react";
 import { useMyPosts, useSaveReply, useVotePost } from "@/api/callers/posts";
 import type { PostListPost, UserPostListItem, UserPostsType } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
@@ -18,6 +24,33 @@ import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 
 const PAGE_LIMIT = 10;
+
+const focusedReplyHref = (post: PostListPost, replyId: string) =>
+  `/app/community/${post.community.slug}/post/${post.id}?focusReplyId=${encodeURIComponent(replyId)}#reply-${replyId}`;
+
+const isReplyCardInteractiveTarget = (target: EventTarget | null) => {
+  const targetElement =
+    target instanceof Element ? target : target instanceof Node ? target.parentElement : null;
+
+  if (!targetElement) return false;
+
+  return Boolean(
+    targetElement.closest(
+      [
+        "a",
+        "button",
+        "input",
+        "textarea",
+        "select",
+        "video",
+        "audio",
+        "[role='button']",
+        "[role='menu']",
+        "[role='menuitem']",
+      ].join(","),
+    ),
+  );
+};
 
 type InteractionCopy = {
   contextLabel: string;
@@ -178,6 +211,7 @@ const ReplyItemCard = ({
   item: UserPostListItem;
   onShare: (post: PostListPost, replyId: string) => void;
 }) => {
+  const router = useRouter();
   const reply = item.reply;
   const voteMutation = useVotePost(item.post.id);
   const saveMutation = useSaveReply(item.post.id, reply?.id ?? "");
@@ -194,7 +228,7 @@ const ReplyItemCard = ({
 
   if (!reply) return null;
 
-  const replyHref = `/app/community/${item.post.community.slug}/post/${item.post.id}?focusReplyId=${encodeURIComponent(reply.id)}#reply-${reply.id}`;
+  const replyHref = focusedReplyHref(item.post, reply.id);
   const isDirectPostComment = !reply.parent_reply_id;
   const hasVerifiedProfessionalReply = Boolean(reply.has_verified_professional_reply);
   const voteState =
@@ -265,15 +299,29 @@ const ReplyItemCard = ({
       },
     });
   };
+  const openReply = () => router.push(replyHref);
+  const handleCardClick = (event: ReactMouseEvent<HTMLElement>) => {
+    if (isReplyCardInteractiveTarget(event.target)) return;
+
+    openReply();
+  };
+  const handleCardKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
+    if (isReplyCardInteractiveTarget(event.target)) return;
+    if (event.key !== "Enter" && event.key !== " ") return;
+
+    event.preventDefault();
+    openReply();
+  };
 
   return (
-    <article className="relative grid gap-4 rounded-[24px] border border-border/80 bg-surface p-4 text-inherit shadow-[var(--lectum-shadow-soft)] transition hover:border-primary/18 hover:bg-primary-soft/20">
-      <Link
-        aria-label={`Abrir ${interactionCopy.singular} em ${item.post.title}`}
-        className="absolute inset-0 z-0 rounded-[24px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-        href={replyHref}
-      />
-      <div className="pointer-events-none relative z-10 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold tracking-[-0.01em] text-muted">
+    <article
+      aria-label={`Abrir ${interactionCopy.singular} em ${item.post.title}`}
+      className="relative grid gap-4 rounded-[24px] border border-border/80 bg-surface p-4 text-inherit shadow-[var(--lectum-shadow-soft)] transition hover:border-primary/18 hover:bg-primary-soft/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 md:cursor-pointer"
+      onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
+      tabIndex={-1}
+    >
+      <div className="relative z-10 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold tracking-[-0.01em] text-muted">
         <Reply className="h-3.5 w-3.5 shrink-0 text-muted/80" aria-hidden="true" />
         <span className="shrink-0">{interactionCopy.contextLabel}</span>
         <span className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-extrabold text-[#475569] dark:text-muted">
@@ -283,7 +331,7 @@ const ReplyItemCard = ({
       </div>
 
       {reply.parent_content || isDirectPostComment ? (
-        <blockquote className="pointer-events-none relative z-10 overflow-hidden rounded-[20px] border border-primary/10 bg-[linear-gradient(135deg,rgb(239_246_255_/_78%),rgb(248_250_252_/_92%))] px-4 py-3.5 pl-5 shadow-[inset_0_1px_0_rgb(255_255_255_/_70%)]">
+        <blockquote className="relative z-10 overflow-hidden rounded-[20px] border border-primary/10 bg-[linear-gradient(135deg,rgb(239_246_255_/_78%),rgb(248_250_252_/_92%))] px-4 py-3.5 pl-5 shadow-[inset_0_1px_0_rgb(255_255_255_/_70%)]">
           <span
             className="absolute top-3 bottom-3 left-2 w-0.5 rounded-full bg-primary/45"
             aria-hidden="true"
@@ -300,13 +348,13 @@ const ReplyItemCard = ({
         </blockquote>
       ) : null}
 
-      <div className="pointer-events-none relative z-10 grid gap-2">
+      <div className="relative z-10 grid gap-2">
         {reply.title ? <h2 className="text-lg font-black text-foreground">{reply.title}</h2> : null}
         <p className="whitespace-pre-line text-sm leading-6 text-foreground">{reply.content}</p>
       </div>
 
       {hasVerifiedProfessionalReply ? (
-        <ProfessionalAnsweredBadge className="pointer-events-none relative z-10 w-fit" />
+        <ProfessionalAnsweredBadge className="relative z-10 w-fit" />
       ) : null}
 
       <CommunityActionBar
@@ -400,7 +448,7 @@ export const MyPostsLogic = () => {
     if (typeof window === "undefined") return;
 
     const relativeUrl = replyId
-      ? `/app/community/${post.community.slug}/post/${post.id}?focusReplyId=${encodeURIComponent(replyId)}#reply-${replyId}`
+      ? focusedReplyHref(post, replyId)
       : `/app/community/${post.community.slug}/post/${post.id}`;
     const url = `${window.location.origin}${relativeUrl}`;
 
