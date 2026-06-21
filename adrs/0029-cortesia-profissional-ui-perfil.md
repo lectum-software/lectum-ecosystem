@@ -65,14 +65,15 @@ A opção "Minha Assinatura" no menu do perfil agora abre `/app/professional/bil
 
 ## Atualizacao em 2026-06-21: bloqueio de CPF/CRP em cortesia verificada
 
-Perfis em cortesia administrativa podem carregar uma identidade profissional aprovada pela operacao ou pela consulta CFP/InfoSimples. Para evitar que o proprio psicologo sobrescreva dados sensiveis ja verificados, a edicao de `CPF`, `Regional do CRP` e `Nº Registro CRP` fica bloqueada quando:
+Perfis em cortesia administrativa podem carregar CPF/CRP ja preenchidos antes de existir o painel administrativo definitivo. Para evitar que o proprio psicologo sobrescreva dados sensiveis vinculados a uma cortesia ativa, a edicao de `CPF`, `Regional do CRP` e `No. Registro CRP` fica bloqueada quando:
 
 - a assinatura ativa vem de `professional_subscription.source="admin_grant"`;
 - o plano ativo nao e gratuito;
-- o perfil possui identidade aprovada (`crp_status="aprovado"` ou `cfp_verified_at`);
 - os campos persistidos de CPF, regional e numero CRP estao completos.
 
-A UI desabilita os campos e exibe aviso contextual. O backend nao confia apenas na UI: antes de salvar, recalcula a regra a partir do perfil atual e preserva `psychologist_profile.cpf`/`crp`, ignorando alteracoes enviadas no payload. Se uma cortesia administrativa ainda estiver pendente ou sem CPF/CRP completo, os campos permanecem editaveis para permitir saneamento operacional.
+A UI desabilita os campos e exibe aviso contextual. O backend nao confia apenas na UI: antes de salvar, recalcula a regra a partir do perfil atual e preserva `psychologist_profile.cpf`/`crp`, ignorando alteracoes enviadas no payload. Se uma cortesia administrativa ainda estiver sem CPF/CRP completo, os campos permanecem editaveis para permitir saneamento operacional.
+
+Decisao de produto para o futuro painel administrativo: a concessao de cortesia deve partir do CPF informado pelo administrador, chamar a API CFP/InfoSimples no backend, apresentar o resultado para conferencia e, ao confirmar, gravar CPF, CRP, status/data de verificacao e data de inscricao CRP antes de criar/renovar `professional_subscription.source="admin_grant"`. Esse fluxo futuro nao foi implementado neste ajuste porque o painel admin ainda nao existe no escopo atual.
 
 ### Validacao adicional
 
@@ -81,5 +82,5 @@ A UI desabilita os campos e exibe aviso contextual. O backend nao confia apenas 
 - `pnpm --dir backend build`
 - `pnpm --dir frontend build`
 - `pnpm check`
-- Validacao de servico backend com psicologo temporario real removido ao final confirmou que tentativa de alterar CPF/CRP em cortesia aprovada preserva resposta e banco.
-- Chrome/CDP headless local em 390x844 confirmou campos disabled, valores visiveis, aviso de bloqueio e ausencia de overflow horizontal.
+- Validacao de servico backend com psicologo temporario real removido ao final confirmou que tentativa de alterar CPF/CRP em cortesia com CPF/CRP completos preserva resposta e banco mesmo com `crp_status="pendente"`.
+- Chrome/CDP headless local em 390x844 com `tuliosrezende@gmail.com` confirmou campos disabled, valores visiveis, aviso de bloqueio e ausencia de overflow horizontal.

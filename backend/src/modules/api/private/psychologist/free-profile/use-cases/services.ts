@@ -50,7 +50,6 @@ const normalizeList = (value?: string[]) => {
 const hasLockedCourtesyIdentityFields = (profile: FreeProfessionalProfileResponse) =>
   profile.plan.is_courtesy &&
   !profile.plan.is_free &&
-  (profile.profile.crp_status === "aprovado" || Boolean(profile.profile.cfp_verified_at)) &&
   normalizeCpf(profile.profile.cpf)?.length === 11 &&
   Boolean(trimToNull(profile.profile.crp_region) && trimToNull(profile.profile.crp_number));
 

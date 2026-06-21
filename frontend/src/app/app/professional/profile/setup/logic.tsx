@@ -972,9 +972,6 @@ export const ProfessionalProfileSetupLogic = () => {
   const videoSrc = resolvePublicMediaUrl(profile.data?.profile.video_url);
   const videoCoverSrc = resolvePublicMediaUrl(profile.data?.profile.video_cover_url);
   const canUploadVideo = Boolean(profile.data?.plan.can_upload_video);
-  const hasApprovedCourtesyIdentity = Boolean(
-    profile.data?.profile.crp_status === "aprovado" || profile.data?.profile.cfp_verified_at,
-  );
   const storedCourtesyCpfDigits = profile.data?.profile.cpf?.replace(/\D/g, "") || "";
   const hasCompleteCourtesyIdentity = Boolean(
     storedCourtesyCpfDigits.length === 11 &&
@@ -982,10 +979,7 @@ export const ProfessionalProfileSetupLogic = () => {
       profile.data.profile.crp_number,
   );
   const shouldLockCourtesyIdentityFields = Boolean(
-    profile.data?.plan.is_courtesy &&
-      !profile.data.plan.is_free &&
-      hasApprovedCourtesyIdentity &&
-      hasCompleteCourtesyIdentity,
+    profile.data?.plan.is_courtesy && !profile.data.plan.is_free && hasCompleteCourtesyIdentity,
   );
   const lockedIdentityFieldProps: Partial<(typeof renderedFields)[number]> =
     shouldLockCourtesyIdentityFields ? { disabled: true } : {};

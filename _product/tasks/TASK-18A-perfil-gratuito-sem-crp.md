@@ -361,8 +361,8 @@ Validacoes executadas:
 
 ## Ajuste complementar em 2026-06-21 - identidade profissional bloqueada em cortesia verificada
 
-- Pedido do usuario: em `/app/professional/profile/setup`, bloquear edicao de `CPF`, `Regional do CRP` e `Nº Registro CRP` para psicologos com cortesia profissional e identidade aprovada.
-- A UI agora desabilita os tres campos quando o perfil possui `plan.is_courtesy=true`, plano nao gratuito, `crp_status="aprovado"` ou `cfp_verified_at`, e valores persistidos de CPF/CRP completos.
+- Pedido do usuario: em `/app/professional/profile/setup`, bloquear edicao de `CPF`, `Regional do CRP` e `No. Registro CRP` para psicologos com cortesia profissional e CPF/CRP completos.
+- A UI agora desabilita os tres campos quando o perfil possui `plan.is_courtesy=true`, plano nao gratuito e valores persistidos completos de CPF/CRP. Esta e a regra transitoria enquanto o painel administrativo com busca CFP ainda nao existe.
 - A tela mostra um aviso curto explicando que CPF/CRP ficam bloqueados porque o perfil verificado recebeu cortesia profissional.
 - O select de `Regional do CRP` injeta o valor persistido como opcao somente quando ele nao existe mais na lista padrao, evitando campo bloqueado visualmente vazio em dados legados.
 - O submit do frontend preserva os valores persistidos de CPF/CRP quando a identidade esta bloqueada, mesmo que o estado local seja alterado por inspecao manual.
@@ -378,6 +378,6 @@ Validacoes executadas:
 - `pnpm --dir backend build`
 - `pnpm --dir frontend build`
 - `pnpm check`
-- Validacao de servico backend com psicologo temporario real removido ao final: tentativa de alterar `cpf`, `crp_region` e `crp_number` em perfil `admin_grant` aprovado retornou `200`, preservou os valores originais na resposta e manteve `psychologist_profile.cpf/crp` inalterados no banco.
-- Chrome/CDP headless local em `/app/professional/profile/setup`, viewport 390x844, com psicologo temporario real de cortesia aprovado removido ao final: `cpf`, `crp_region` e `crp_number` ficaram `disabled`, os valores persistidos foram exibidos, a mensagem de bloqueio apareceu e `scrollWidth=390`.
+- Validacao de servico backend com psicologo temporario real removido ao final: tentativa de alterar `cpf`, `crp_region` e `crp_number` em perfil `admin_grant` com CPF/CRP completos e `crp_status="pendente"` retornou `200`, preservou os valores originais na resposta e manteve `psychologist_profile.cpf/crp` inalterados no banco.
+- Chrome/CDP headless local em `/app/professional/profile/setup`, viewport 390x844, com `tuliosrezende@gmail.com`: `cpf`, `crp_region` e `crp_number` ficaram `disabled`, os valores persistidos foram exibidos, a mensagem de bloqueio apareceu e `scrollWidth=390`; token temporario removido ao final.
 - Verificacao estatica confirmou a regra de bloqueio no frontend/backend e o `undefined` seletivo no repository para impedir overwrite de CPF/CRP bloqueados.
