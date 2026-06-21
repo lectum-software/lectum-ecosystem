@@ -335,7 +335,7 @@ const ReplyItemCard = ({
   return (
     <article
       aria-label={`Abrir ${interactionCopy.singular} em ${item.post.title}`}
-      className="relative grid gap-4 rounded-[24px] border border-border/80 bg-surface p-4 text-inherit shadow-[var(--lectum-shadow-soft)] transition hover:border-primary/18 hover:bg-primary-soft/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 md:cursor-pointer"
+      className="relative grid gap-4 rounded-[24px] border border-border/80 bg-surface p-4 text-inherit shadow-[var(--lectum-shadow-soft)] transition hover:border-border/90 hover:bg-surface-muted/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 md:cursor-pointer"
       onClick={handleCardClick}
       onKeyDown={handleCardKeyDown}
       tabIndex={-1}
@@ -605,6 +605,7 @@ export const MyPostsLogic = () => {
                     actionBarVotePresentation="inline"
                     communityContextTone="muted"
                     communityHeaderIncludesTime
+                    desktopPlainLinks
                     headerExtra={
                       <div className="flex shrink-0 items-center gap-2">
                         {item.post.highlighted_professional_reply ? (
@@ -617,6 +618,7 @@ export const MyPostsLogic = () => {
                         />
                       </div>
                     }
+                    hoverTone="neutral"
                     interactiveActions
                     key={item.id}
                     onShare={sharePost}

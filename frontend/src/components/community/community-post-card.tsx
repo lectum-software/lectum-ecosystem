@@ -34,6 +34,7 @@ type CommunityPostCardProps = {
   actionBarVotePresentation?: "cluster" | "inline";
   communityContextTone?: "default" | "muted";
   communityHeaderIncludesTime?: boolean;
+  hoverTone?: "primary" | "neutral";
   desktopPlainLinks?: boolean;
   footerExtra?: ReactNode;
   headerExtra?: ReactNode;
@@ -494,6 +495,7 @@ export const CommunityPostCard = ({
   desktopPlainLinks = false,
   footerExtra,
   headerExtra,
+  hoverTone = "primary",
   interactiveActions = false,
   onShare,
   openPostOnCardClick = false,
@@ -664,7 +666,10 @@ export const CommunityPostCard = ({
   return (
     <article
       className={cn(
-        "w-full overflow-hidden rounded-[22px] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)] transition hover:border-primary/20 hover:bg-primary-soft/20",
+        "w-full overflow-hidden rounded-[22px] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)] transition",
+        hoverTone === "primary"
+          ? "hover:border-primary/20 hover:bg-primary-soft/20"
+          : "hover:border-border/90 hover:bg-surface-muted/45",
         openPostOnCardClick &&
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 md:cursor-pointer",
       )}

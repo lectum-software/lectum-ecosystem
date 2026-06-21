@@ -379,3 +379,25 @@ O switch de `/app/posts/mine` mostrava apenas os rotulos `Posts` e `Respostas`/`
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - Smoke HTTP local: `http://127.0.0.1:3000/app/posts/mine` retornou 200.
+
+## Complemento 2026-06-21: hover neutro em Meus posts
+
+A tela `/app/posts/mine` estava herdando o hover azul dos cards compartilhados de comunidade. No desktop, isso fazia o card e o nome da comunidade parecerem um link tradicional quando o mouse passava por cima.
+
+Decisao:
+
+- Manter os cards de `Meus posts e respostas` clicaveis nas areas neutras, mas trocar o hover azul por um hover neutro baseado em `surface-muted` e borda cinza.
+- Adicionar uma variacao `hoverTone="neutral"` ao `CommunityPostCard` para permitir essa excecao sem alterar o comportamento padrao do feed, comunidade, salvos e perfil.
+- Usar `desktopPlainLinks` nos cards de posts dessa tela para que o nome da comunidade mantenha a cor tipografica no hover, sem azul nem sublinhado, exibindo apenas o cursor de interacao.
+
+Impacto:
+
+- A mudanca e apenas visual no frontend.
+- Nao altera backend, Prisma, endpoints, votos, salvos, notificacoes, paginacao ou contratos HTTP.
+- Builder/Quick Copy nao foi acessado diretamente neste ambiente; a referencia visual usada foi a tela local apontada pelo usuario e os prototipos registrados em `_product/tasks/PROTO-INVENTORY.md`.
+
+Validacao:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke HTTP local: `http://127.0.0.1:3000/app/posts/mine` retornou 200.
