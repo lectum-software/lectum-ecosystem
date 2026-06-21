@@ -575,6 +575,23 @@ const flattenProfilePublicationPages = (
   return posts;
 };
 
+const getProfilePublicationReplyId = (post: PostListPost) => {
+  const profilePublication = post as DirectoryPsychologistProfilePost;
+
+  if (profilePublication.contribution_type !== "reply") return null;
+
+  return profilePublication.highlighted_professional_reply?.id ?? null;
+};
+
+const profilePublicationHref = (post: PostListPost) => {
+  const baseHref = `/app/community/${post.community.slug}/post/${post.id}`;
+  const replyId = getProfilePublicationReplyId(post);
+
+  if (!replyId) return baseHref;
+
+  return `${baseHref}?focusReplyId=${encodeURIComponent(replyId)}#reply-${replyId}`;
+};
+
 const flattenProfileReviewPages = (
   pages?: Array<{ data: DirectoryPsychologistProfileReview[] }>,
 ) => {
@@ -2348,7 +2365,7 @@ export const PsychologistProfileLogic = () => {
   const sharePost = async (post: PostListPost) => {
     if (typeof window === "undefined") return;
 
-    const url = `${window.location.origin}/app/community/${post.community.slug}/post/${post.id}`;
+    const url = `${window.location.origin}${profilePublicationHref(post)}`;
 
     try {
       if (navigator.share) {

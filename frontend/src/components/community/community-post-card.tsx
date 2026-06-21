@@ -244,8 +244,13 @@ const InlineExpandableText = ({
   );
 };
 
-const postDetailHref = (post: PostListPost) =>
-  `/app/community/${post.community.slug}/post/${post.id}`;
+const postDetailHref = (post: PostListPost, focusReplyId?: string) => {
+  const baseHref = `/app/community/${post.community.slug}/post/${post.id}`;
+
+  if (!focusReplyId) return baseHref;
+
+  return `${baseHref}?focusReplyId=${encodeURIComponent(focusReplyId)}#reply-${focusReplyId}`;
+};
 
 const isPostCardInteractiveTarget = (target: EventTarget | null) => {
   const targetElement =
@@ -531,6 +536,8 @@ export const CommunityPostCard = ({
   const highlightedProfessionalReply =
     primaryReply || !showHighlightedProfessionalReply ? null : post.highlighted_professional_reply;
   const isReplyContribution = contributionType === "reply";
+  const focusedReplyId =
+    profilePublicationMode && isReplyContribution ? (primaryReply?.id ?? undefined) : undefined;
   const communityContextLabel = isReplyContribution ? "Respondido em" : "Postado em";
   const CommunityContextIcon = isReplyContribution ? Reply : FileText;
   const usesMutedCommunityContext = communityContextTone === "muted";
@@ -656,7 +663,7 @@ export const CommunityPostCard = ({
     label: saveSnapshot.saved ? "Remover dos salvos" : "Salvar",
     onClick: interactiveActions ? handleToggleSave : undefined,
   };
-  const postHref = postDetailHref(post);
+  const postHref = postDetailHref(post, focusedReplyId);
   const handleCardClick = (event: ReactMouseEvent<HTMLElement>) => {
     if (
       !openPostOnCardClick ||

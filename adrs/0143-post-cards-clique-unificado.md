@@ -45,3 +45,16 @@ Builder/Quick Copy não ficou acessível neste ambiente; a implementação foi g
 - `pnpm check`
 - Smoke API com `focusReplyId` profundo confirmou o alvo no payload de respostas.
 - Chrome/CDP mobile 390x844 no detalhe do post confirmou elemento `reply-<id>` renderizado, focado, com `lectum-reply-focus-pulse` e scroll centralizado.
+
+## Atualizacao 2026-06-21 - respostas no perfil do psicologo
+
+- As publicacoes do perfil do psicologo que representam respostas (`contribution_type = reply`) passam a montar o mesmo deep link usado por Salvos e Meus posts/respostas: `?focusReplyId=<replyId>#reply-<replyId>`.
+- A URL usa o id da `highlighted_professional_reply` retornada pelo contrato real do perfil, mantendo o post original como destino e a resposta como alvo focado.
+- O compartilhamento de uma resposta do perfil tambem usa a URL focavel para preservar o contexto fora da navegacao interna.
+- A decisao evita novo endpoint ou estado local especifico do perfil e reaproveita o carregamento de ancestrais ja centralizado no detalhe do post.
+
+## Validacao complementar 2026-06-21 - perfil do psicologo
+
+- `pnpm check`
+- `pnpm --dir frontend build`
+- Chrome/CDP mobile 390px em `/app/psychologist/cmqmg35850000asuheq2ucwd0?tab=publicacoes`, clicando em resposta profunda e confirmando URL com `focusReplyId`, alvo renderizado em viewport, foco DOM em `reply-cmqmlrlbk00067cuhl9sop6e2` e classe `lectum-reply-focus-pulse`.

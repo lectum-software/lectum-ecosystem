@@ -723,3 +723,19 @@ Validacoes executadas:
 - Chrome/CDP mobile 390px em `/app/psychologist/demo-psychologist-camila-rocha`, confirmando `Ver todas` para assinante com avaliacoes.
 - Chrome/CDP mobile 390px em `/app/psychologist/demo-psychologist-rafael-costa`, com assinatura temporaria real removida ao final, confirmando `Avaliar` apontando para `/app/reviews/new?psychologist_id=demo-psychologist-rafael-costa` quando assinante sem avaliacoes.
 - Chrome/CDP mobile 390px em `/app/psychologist/demo-psychologist-laura-nascimento`, confirmando ausencia total de acao na secao de avaliacoes para perfil gratuito sem avaliacoes.
+
+## Registro de ajuste complementar em 2026-06-21 - foco em respostas no perfil do psicologo
+
+- Pedido do usuario: respostas exibidas na aba `Publicacoes` do perfil do psicologo devem ter o mesmo comportamento de `Itens salvos` ao clicar no card.
+- Cards de contribuicao do tipo `reply` agora navegam para o post original com `?focusReplyId=<replyId>#reply-<replyId>`, preservando a resposta real destacada pelo perfil.
+- O destino reaproveita o carregamento de ancestrais do detalhe do post para encontrar a resposta mesmo quando ela estiver em arvore profunda, fazer scroll ate o alvo e aplicar o pulso/foco visual ja usado por salvos e meus posts/respostas.
+- O compartilhamento de uma resposta no perfil tambem usa a URL focavel, para manter consistencia quando o link for aberto diretamente.
+- Nao houve alteracao de backend, banco, Prisma, contratos de API, packages ou persistencia; a mudanca ficou restrita a navegacao e montagem de URL no frontend.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a validacao visual usou rota local e dados reais.
+- ADR atualizado: `adrs/0143-post-cards-clique-unificado.md`.
+
+Validacoes executadas:
+
+- `pnpm check`
+- `pnpm --dir frontend build`
+- Chrome/CDP mobile 390px em `/app/psychologist/cmqmg35850000asuheq2ucwd0?tab=publicacoes`, clicando na resposta profunda `cmqmlrlbk00067cuhl9sop6e2` e confirmando destino `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video?focusReplyId=cmqmlrlbk00067cuhl9sop6e2#reply-cmqmlrlbk00067cuhl9sop6e2`, elemento `reply-cmqmlrlbk00067cuhl9sop6e2` em viewport, foco DOM ativo e classe `lectum-reply-focus-pulse`.
