@@ -15,6 +15,7 @@ A alteração é visual e de experiência de navegação no frontend. Não alter
 - Criar hooks específicos para listas infinitas de publicações e avaliações do perfil, preservando os hooks paginados existentes para os previews da aba `Sobre`.
 - Usar um sentinel com `IntersectionObserver` para buscar a próxima página automaticamente quando o usuário se aproxima do fim da lista.
 - Deduplicar itens carregados entre páginas antes de renderizar, evitando repetição visual em caso de revalidação/cache.
+- Tornar os cards de publicações do perfil navegáveis pelas áreas neutras do corpo do card, reutilizando a proteção existente contra propagação em links, botões, menus e controles inferiores.
 
 ## Consequências
 
@@ -22,6 +23,7 @@ A alteração é visual e de experiência de navegação no frontend. Não alter
 - O backend permanece simples e compatível com paginação `page/limit` atual.
 - A URL deixa de depender de `postsPage`/`reviewsPage` para avançar nessas abas; parâmetros legados são ignorados pela nova experiência.
 - A página inicial da aba `Sobre` continua usando apenas a primeira página para preservar o comportamento de preview e reduzir carga inicial.
+- O clique em título, texto e espaços vazios dos cards de publicações abre a página de detalhes do post, enquanto nome da comunidade, ações de voto, comentários, salvar, compartilhar e demais controles permanecem independentes.
 
 ## Validação
 
@@ -30,6 +32,11 @@ A alteração é visual e de experiência de navegação no frontend. Não alter
 - Smoke HTTP local:
   - `http://127.0.0.1:3000/app/psychologist/cmqmg35850000asuheq2ucwd0?tab=publicacoes` retornou 200.
   - `http://127.0.0.1:3000/app/psychologist/cmqmg35850000asuheq2ucwd0?tab=avaliacoes` retornou 200.
+- Complemento de navegação por áreas neutras:
+  - `pnpm check`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - Smoke HTTP local: `http://127.0.0.1:3000/app/psychologist/cmqmg35850000asuheq2ucwd0?tab=publicacoes` retornou 200.
 
 ## Pendências
 

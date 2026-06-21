@@ -1543,6 +1543,7 @@ const ProfileCommunityPostCard = ({
   <CommunityPostCard
     interactiveActions={canInteract}
     onShare={onShare}
+    openPostOnCardClick
     post={post}
     profilePublicationMode
   />
