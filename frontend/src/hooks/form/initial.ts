@@ -13,7 +13,7 @@ export function getInitialValueForField<FormType extends FieldValues>(
     case "otp":
       return "";
     case "textarea":
-      return undefined;
+      return "";
     case "numeric":
     case "money":
     case "percentage":
@@ -37,8 +37,6 @@ export function normalizeEmptyValue<FormType extends FieldValues>(
   }
 
   switch (field.field) {
-    case "textarea":
-      return undefined;
     case "numeric":
     case "money":
     case "percentage":

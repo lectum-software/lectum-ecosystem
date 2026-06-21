@@ -64,7 +64,7 @@ export function TextareaController<FormType extends FieldValues>({
               name={field.name}
               onBlur={field.onBlur}
               onChange={(event) => {
-                const nextValue = event.target.value === "" ? undefined : event.target.value;
+                const nextValue = event.target.value;
                 field.onChange(nextValue);
                 resizeTextarea(event.currentTarget);
                 onChangeCallback?.(nextValue);

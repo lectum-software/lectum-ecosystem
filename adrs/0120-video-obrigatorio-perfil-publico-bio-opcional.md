@@ -92,3 +92,27 @@ Raça/cor e religiao ja nao fazem parte dos requisitos de publicacao do backend 
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - Smoke HTTP local `GET http://localhost:3000/app/professional/profile/setup` retornou `200`.
+
+## Atualizacao 2026-06-20 - textarea vazio nao bloqueia apresentacao opcional
+
+### Contexto
+
+A Apresentacao de texto ja era opcional na regra de dominio, mas a fundacao de formularios convertia textarea vazio para `undefined`. Como o schema local do perfil ainda tipava `bio` como `string`, o campo vazio gerava `Invalid input` antes do submit e bloqueava o salvamento.
+
+### Decisao
+
+- Manter textareas vazios como string vazia (`""`) na fundacao `useFormList` e no `TextareaController`.
+- Preservar a regra local da apresentacao: vazio e valido; se houver texto, deve respeitar tamanho minimo e maximo.
+- Continuar enviando `null` ao backend quando `bio` estiver vazia.
+
+### Consequencias
+
+- A Apresentacao de texto deixa de bloquear salvamento/publicacao quando nao preenchida.
+- Campos textarea obrigatorios continuam bloqueando vazio por suas regras `min`/`refine`.
+- Textareas opcionais continuam podendo virar `undefined`/`null` no payload final quando cada formulario normaliza o envio.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke HTTP local `GET http://127.0.0.1:3000/app/professional/profile/setup` retornou `200`.
