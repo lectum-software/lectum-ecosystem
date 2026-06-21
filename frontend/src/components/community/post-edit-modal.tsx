@@ -524,14 +524,14 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
 
     return (
       <div className="mt-3 flex shrink-0 justify-start">
-        <figure className="relative w-[min(9.5rem,48vw)] overflow-hidden rounded-[1.4rem] border border-border bg-surface-muted shadow-[var(--lectum-shadow-soft)]">
+        <figure className="relative w-[min(9.5rem,48vw)] overflow-hidden rounded-[1.4rem] border border-border bg-surface-muted shadow-[var(--lectum-shadow-soft)] sm:w-28">
           <div className="relative aspect-[9/14] w-full overflow-hidden bg-surface-muted">
             {activeMedia.type === "image" ? (
               <Image
                 alt="Miniatura da mídia do post"
                 className="object-cover"
                 fill
-                sizes="152px"
+                sizes="(min-width: 640px) 112px, 152px"
                 src={activeMedia.src}
                 unoptimized
               />
@@ -545,10 +545,6 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
                 src={activeMedia.src}
               />
             )}
-
-            <span className="absolute right-2 bottom-2 grid h-8 w-8 place-items-center rounded-full bg-surface/90 text-primary shadow-[var(--lectum-shadow-soft)] backdrop-blur">
-              <Video className="h-4 w-4" aria-hidden="true" />
-            </span>
 
             {canManageMedia ? (
               <button
@@ -572,9 +568,6 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
               </button>
             ) : null}
           </div>
-          <figcaption className="truncate px-3 py-2 text-[0.72rem] font-bold text-muted">
-            {activeMedia.caption}
-          </figcaption>
         </figure>
       </div>
     );

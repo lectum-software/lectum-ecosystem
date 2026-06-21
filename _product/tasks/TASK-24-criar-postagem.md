@@ -322,3 +322,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a validação visual usou `_product/proto/Criar Nova Postagem - Psicólogo.jpg`, o screenshot anexado pelo usuário e Chrome/CDP local.
 - ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado em `http://localhost:3000/app/community/ansiedade-em-equilibrio/post/new`, injetando um `File` real no input de mídia e confirmando a miniatura com `blob:` local, `figure` dimensionado e legenda do arquivo no editor.
+
+## Complemento 2026-06-21 - miniatura de midia mais limpa
+
+- Pedido do usuario: remover a linha com o nome do video e o icone de video sobreposto na base da miniatura; em desktop, reduzir a miniatura para nao roubar espaco do texto do editor.
+- Frontend: a previa local da midia na criacao de post deixou de renderizar `figcaption` com o nome do arquivo e removeu o badge/icone sobreposto na parte inferior da miniatura.
+- Desktop: a miniatura passa a usar largura menor a partir de `sm`, preservando a versao mobile e reduzindo a altura consumida dentro da area branca de composicao.
+- O mesmo refinamento foi aplicado a modal de edicao de post, porque ela reutiliza o padrao visual da criacao e tambem pode exibir/substituir midia.
+- Escopo: sem mudanca de backend, Prisma, endpoints, payload, entitlement de midia, storage ou packages.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia visual usada foi o screenshot do usuario e a modal local existente.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP desktop `1280x900` em `/app/community/feed/post/new`, injetando um `File` de video real no input de midia e confirmando miniatura com `video`, sem texto `YTDown_Shorts`, sem `figcaption`, sem icone `lucide-video` sobreposto e largura desktop de 112px.

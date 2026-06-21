@@ -298,3 +298,26 @@ Validação complementar:
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
 - Chrome/CDP autenticado em `http://localhost:3000/app/community/ansiedade-em-equilibrio/post/new`: sucesso ao injetar `preview-validacao.png` no input de mídia e confirmar preview com `blob:` local, figura dimensionada dentro do editor e legenda do arquivo visível.
+
+## Atualizacao 2026-06-21 - miniatura de midia sem legenda e menor no desktop
+
+O refinamento visual posterior da previa local de midia remove ruidos que competiam com o conteudo do post.
+
+Decisoes complementares:
+
+- Nao exibir o nome do arquivo selecionado dentro do card de miniatura.
+- Nao sobrepor o icone de video no canto inferior da miniatura; o tipo de acao ja e comunicado pelo botao de midia do rodape e pelo proprio preview.
+- Reduzir a largura da miniatura em breakpoints desktop (`sm`) para preservar area de leitura/escrita do texto acima, mantendo o comportamento mobile-first.
+- Aplicar a mesma regra a edicao de post, pois ela usa a mesma superficie visual da criacao.
+
+Consequencias:
+
+- A confirmacao visual de midia permanece imediata, mas com menos poluicao visual.
+- O editor desktop conserva mais espaco util para titulo e conteudo, sem alterar upload, persistencia, storage ou autorizacao.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- Chrome/CDP desktop `1280x900` em `/app/community/feed/post/new`: sucesso ao injetar `YTDown_Shorts_NA_validacao.mp4` no input de midia e confirmar preview com `<video>`, sem nome do arquivo, sem `figcaption`, sem icone de video sobreposto e miniatura com largura de 112px.

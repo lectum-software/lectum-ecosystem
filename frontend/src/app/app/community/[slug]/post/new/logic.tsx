@@ -597,14 +597,14 @@ export const CreateCommunityPostLogic = ({
 
     return (
       <div className="mt-3 flex shrink-0 justify-start">
-        <figure className="relative w-[min(9.5rem,48vw)] overflow-hidden rounded-[1.4rem] border border-border bg-surface-muted shadow-[var(--lectum-shadow-soft)]">
+        <figure className="relative w-[min(9.5rem,48vw)] overflow-hidden rounded-[1.4rem] border border-border bg-surface-muted shadow-[var(--lectum-shadow-soft)] sm:w-28">
           <div className="relative aspect-[9/14] w-full overflow-hidden bg-surface-muted">
             {selectedMedia.type === "image" ? (
               <Image
                 alt="Miniatura da mídia selecionada"
                 className="object-cover"
                 fill
-                sizes="152px"
+                sizes="(min-width: 640px) 112px, 152px"
                 src={selectedMedia.previewUrl}
                 unoptimized
               />
@@ -618,10 +618,6 @@ export const CreateCommunityPostLogic = ({
                 src={selectedMedia.previewUrl}
               />
             )}
-
-            <span className="absolute right-2 bottom-2 grid h-8 w-8 place-items-center rounded-full bg-surface/90 text-primary shadow-[var(--lectum-shadow-soft)] backdrop-blur">
-              <Video className="h-4 w-4" aria-hidden="true" />
-            </span>
 
             <button
               aria-label="Remover mídia anexada"
@@ -638,9 +634,6 @@ export const CreateCommunityPostLogic = ({
               <X className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
-          <figcaption className="truncate px-3 py-2 text-[0.72rem] font-bold text-muted">
-            {selectedMedia.file.name}
-          </figcaption>
         </figure>
       </div>
     );
