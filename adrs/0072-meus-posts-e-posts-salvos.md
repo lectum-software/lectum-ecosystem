@@ -355,3 +355,27 @@ As abas `Posts` e `Respostas` em `/app/posts/mine` ainda apresentavam diferencas
 - `pnpm --dir frontend build`
 - Smoke HTTP local: `http://127.0.0.1:3000/app/posts/mine` retornou 200.
 - `pnpm check`
+
+## Complemento 2026-06-21: contadores no switch de Meus posts
+
+### Contexto
+
+O switch de `/app/posts/mine` mostrava apenas os rotulos `Posts` e `Respostas`/`Comentarios`, obrigando o usuario a alternar abas para entender o volume de cada tipo de contribuicao.
+
+### Decisao
+
+- Exibir a quantidade real de itens ao lado de cada opcao do switch.
+- Usar consultas leves ao endpoint existente `/api/private/posts/mine` com `limit=1` para obter apenas o `count` de `posts` e `replies`, sem criar endpoint paralelo nem mockar dados.
+- Reaproveitar a contagem da aba ativa a partir da consulta principal quando disponivel, evitando depender de dados locais inventados.
+- Manter o layout em pill dentro do switch, com contraste diferente para estado ativo e inativo.
+
+### Consequencias
+
+- O usuario entende imediatamente quantos posts e respostas/comentarios possui em cada aba.
+- A alteracao nao muda backend, schema Prisma, contratos HTTP, paginacao, ordenacao ou persistencia.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke HTTP local: `http://127.0.0.1:3000/app/posts/mine` retornou 200.

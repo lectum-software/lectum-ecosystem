@@ -26,6 +26,10 @@ import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 
 const PAGE_LIMIT = 10;
 
+type FilterTabValue = Extract<UserPostsType, "posts" | "replies">;
+
+type FilterTabCounts = Partial<Record<FilterTabValue, number>>;
+
 const focusedReplyHref = (post: PostListPost, replyId: string) =>
   `/app/community/${post.community.slug}/post/${post.id}?focusReplyId=${encodeURIComponent(replyId)}#reply-${replyId}`;
 
@@ -148,11 +152,13 @@ const formatRelativeTime = (value: string) => {
 };
 
 const FilterTabs = ({
+  counts,
   disabled,
   interactionCopy,
   onChange,
   value,
 }: {
+  counts?: FilterTabCounts;
   disabled?: boolean;
   interactionCopy: InteractionCopy;
   onChange: (value: UserPostsType) => void;
@@ -168,12 +174,14 @@ const FilterTabs = ({
         { label: interactionCopy.plural, value: "replies" as const },
       ].map((item) => {
         const active = item.value === value;
+        const count = counts?.[item.value];
+        const formattedCount = typeof count === "number" ? count.toLocaleString("pt-BR") : "...";
 
         return (
           <button
             aria-pressed={active}
             className={cn(
-              "min-h-10 rounded-full px-5 text-sm font-extrabold tracking-[-0.01em] transition disabled:opacity-70",
+              "inline-flex min-h-10 items-center gap-2 rounded-full px-5 text-sm font-extrabold tracking-[-0.01em] transition disabled:opacity-70",
               active
                 ? "bg-primary text-white"
                 : "text-muted hover:bg-surface-muted hover:text-foreground",
@@ -183,7 +191,15 @@ const FilterTabs = ({
             onClick={() => onChange(item.value)}
             type="button"
           >
-            {item.label}
+            <span>{item.label}</span>
+            <span
+              className={cn(
+                "inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-[11px] font-black leading-none tracking-[-0.01em]",
+                active ? "bg-white/20 text-white" : "bg-primary-soft text-primary",
+              )}
+            >
+              {formattedCount}
+            </span>
           </button>
         );
       })}
@@ -447,11 +463,31 @@ export const MyPostsLogic = () => {
   const [page, setPage] = useState(1);
   const [shareFeedback, setShareFeedback] = useState<"interaction" | "post" | null>(null);
   const query = useMemo(() => ({ page, limit: PAGE_LIMIT, type }), [page, type]);
+  const postsCountQueryParams = useMemo(() => ({ limit: 1, page: 1, type: "posts" as const }), []);
+  const repliesCountQueryParams = useMemo(
+    () => ({ limit: 1, page: 1, type: "replies" as const }),
+    [],
+  );
   const postsQuery = useMyPosts(query);
+  const postsCountQuery = useMyPosts(postsCountQueryParams, type !== "posts");
+  const repliesCountQuery = useMyPosts(repliesCountQueryParams, type !== "replies");
   const items = postsQuery.data?.data ?? [];
   const errorMessage = postsQuery.isError ? resolvePostsError(postsQuery.error) : null;
   const isPsychologist = sessionUser?.role === "psicologo";
   const interactionCopy = getInteractionCopy(isPsychologist);
+  const tabCounts = useMemo<FilterTabCounts>(
+    () => ({
+      posts:
+        type === "posts"
+          ? (postsQuery.data?.count ?? postsCountQuery.data?.count)
+          : postsCountQuery.data?.count,
+      replies:
+        type === "replies"
+          ? (postsQuery.data?.count ?? repliesCountQuery.data?.count)
+          : repliesCountQuery.data?.count,
+    }),
+    [postsCountQuery.data?.count, postsQuery.data?.count, repliesCountQuery.data?.count, type],
+  );
 
   const sharePost = async (post: PostListPost, replyId?: string) => {
     if (typeof window === "undefined") return;
@@ -501,6 +537,7 @@ export const MyPostsLogic = () => {
         />
 
         <FilterTabs
+          counts={tabCounts}
           disabled={postsQuery.isFetching}
           interactionCopy={interactionCopy}
           onChange={handleFilterChange}
