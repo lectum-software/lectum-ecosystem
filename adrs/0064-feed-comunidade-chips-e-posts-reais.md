@@ -166,3 +166,28 @@ O estado de hover com leve sombreamento azul ja estava presente em alguns cards 
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - Validacao HTTP local de feed, comunidade, Salvos, Meus posts e perfil publico.
+
+
+## Atualizacao 2026-06-20 - refinamento de titulos e contexto em Meus posts
+
+### Contexto
+
+Na aba `Posts` de `Meus posts`, o hover do titulo ficava azul e sublinhado no desktop, destoando do comportamento premium esperado para cards. A linha de contexto tambem exibia separador `•` antes do tempo relativo, e a aba de respostas usava icone de comentario para o contexto `Respondido em`.
+
+### Decisao
+
+- Titulos de cards de posts mantem apenas `cursor: pointer` no hover, sem alterar cor nem aplicar sublinhado.
+- Quando o header do card inclui tempo relativo, remover o separador `•` e manter apenas textos como `ha 1 h`.
+- Trocar o icone de `Respondido em` na area pessoal pela seta de resposta ja usada em outros contextos da plataforma.
+
+### Consequencias
+
+- A interacao do card fica visualmente mais discreta no desktop, preservando a navegacao.
+- O contexto dos posts fica mais limpo e consistente com a leitura da area pessoal.
+- Nao ha alteracao de API, persistencia, filtros, ordenacao ou metricas.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Validacao HTTP local de `/app/posts/mine` e `/app/posts/saved`.

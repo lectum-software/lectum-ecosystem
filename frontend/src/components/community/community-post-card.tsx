@@ -696,12 +696,7 @@ export const CommunityPostCard = ({
               {post.community.name}
             </Link>
             {communityHeaderIncludesTime ? (
-              <>
-                <span className="shrink-0 text-muted/70" aria-hidden="true">
-                  &bull;
-                </span>
-                <span className="shrink-0 text-muted">{formatRelativeTime(displayCreatedAt)}</span>
-              </>
+              <span className="shrink-0 text-muted">{formatRelativeTime(displayCreatedAt)}</span>
             ) : null}
           </div>
           {post.muted_by_current_user ? <PostMutedBadge className="shrink-0" /> : null}
@@ -781,7 +776,7 @@ export const CommunityPostCard = ({
         {displayTitle ? (
           <Link
             className={cn(
-              "text-[1.32rem] font-black leading-[1.18] tracking-[-0.02em] text-foreground underline-offset-4 transition hover:text-primary hover:underline",
+              "cursor-pointer text-[1.32rem] font-black leading-[1.18] tracking-[-0.02em] text-foreground no-underline transition hover:text-foreground hover:no-underline",
               profilePublicationMode && "line-clamp-2 text-[1.08rem] leading-[1.22]",
               desktopPlainLinks && "md:no-underline md:hover:text-foreground md:hover:no-underline",
             )}

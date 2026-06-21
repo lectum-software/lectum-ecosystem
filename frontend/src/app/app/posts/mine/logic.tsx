@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeCheck, ChevronLeft, ChevronRight, FileText, MessageCircle } from "lucide-react";
+import { BadgeCheck, ChevronLeft, ChevronRight, FileText, Reply } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useMyPosts, useSaveReply, useVotePost } from "@/api/callers/posts";
@@ -274,7 +274,7 @@ const ReplyItemCard = ({
         href={replyHref}
       />
       <div className="pointer-events-none relative z-10 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold tracking-[-0.01em] text-muted">
-        <MessageCircle className="h-3.5 w-3.5 shrink-0 text-muted/80" aria-hidden="true" />
+        <Reply className="h-3.5 w-3.5 shrink-0 text-muted/80" aria-hidden="true" />
         <span className="shrink-0">{interactionCopy.contextLabel}</span>
         <span className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-extrabold text-[#475569] dark:text-muted">
           {item.post.community.name}
