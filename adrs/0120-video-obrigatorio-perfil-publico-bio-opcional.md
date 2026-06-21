@@ -68,3 +68,27 @@ O detalhe publico do perfil (`GET /api/private/directory/psychologists/:id`) reu
 
 - Smoke local via repository confirmou `hasPublishedProfile=true`, detalhe existente e ausencia de `cpf` na resposta.
 - Smoke HTTP local `GET http://localhost:3001/api/private/directory/psychologists/demo-psychologist-marcelo-pires` retornou `200` sem campo `cpf`.
+
+## Atualizacao 2026-06-20 - campos sensiveis opcionais no formulario
+
+### Contexto
+
+Raça/cor e religiao ja nao fazem parte dos requisitos de publicacao do backend nem da lista de pendencias do perfil, mas o `SelectController` normaliza a opcao vazia de selects para `null`. O schema local do editor aceitava apenas `string` para esses dois campos, gerando `Invalid input` e bloqueando o salvamento antes da chamada de API.
+
+### Decisao
+
+- Tipar `race_color` e `religion` no formulario como `string | null`.
+- Aceitar `null` no schema local desses campos, mantendo apenas o limite maximo quando houver valor preenchido.
+- Preservar o envio como `null` para o backend quando o psicologo nao quiser informar dados sensiveis.
+
+### Consequencias
+
+- O psicologo consegue salvar e publicar o perfil sem preencher raça/cor ou religiao.
+- Os campos continuam disponiveis para preenchimento opcional e continuam sujeitos a validacao de tamanho quando informados.
+- Nao houve alteracao de schema Prisma, migration, endpoint, DTO ou regra de exibicao publica.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke HTTP local `GET http://localhost:3000/app/professional/profile/setup` retornou `200`.

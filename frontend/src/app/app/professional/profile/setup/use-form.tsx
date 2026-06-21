@@ -26,8 +26,8 @@ export type AcademicFormationForm = {
 export type FreeProfileForm = {
   name: string;
   gender: string;
-  race_color: string;
-  religion: string;
+  race_color: string | null;
+  religion: string | null;
   cpf: string;
   crp_region: string;
   crp_number: string;
@@ -84,8 +84,8 @@ export const freeProfileSchema = z
   .object({
     name: z.string().trim().min(2, "Informe seu nome profissional").max(120),
     gender: z.string().trim().min(1, "Selecione seu gênero").max(40),
-    race_color: z.string().trim().max(40),
-    religion: z.string().trim().max(80),
+    race_color: z.string().trim().max(40).nullable(),
+    religion: z.string().trim().max(80).nullable(),
     cpf: z.string().refine((value) => onlyDigits(value).length === 11, "Informe um CPF válido"),
     crp_region: z
       .string()
