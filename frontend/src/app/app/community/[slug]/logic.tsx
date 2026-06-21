@@ -2094,6 +2094,9 @@ const COMMUNITY_PUBLISH_ONBOARDING_PLACEMENT: Record<
   },
 };
 
+const COMMUNITY_FLOATING_CREATE_POST_CLASSNAME =
+  "group fixed right-5 bottom-[var(--lectum-mobile-nav-aware-fab-bottom)] z-40 grid h-14 w-14 place-items-center rounded-full border-[5px] border-white bg-[#308CE8] text-white shadow-[0_14px_30px_rgba(48,140,232,0.28)] transition-[bottom,transform,background-color,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:bg-[#2579CF] hover:shadow-[0_18px_36px_rgba(48,140,232,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F5F7FA] motion-safe:animate-[lectum-desktop-create-float_4.2s_ease-in-out_infinite] sm:bottom-[var(--lectum-mobile-nav-aware-fab-bottom-sm)] lg:right-10 lg:bottom-10 lg:h-16 lg:w-16 xl:right-20 2xl:right-28";
+
 const CommunityPublishOnboarding = ({
   variant,
 }: {
@@ -2613,7 +2616,7 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
       {community ? (
         <Link
           aria-label="Criar publicação nesta comunidade"
-          className="group fixed right-5 bottom-[var(--lectum-mobile-nav-aware-fab-bottom)] z-40 grid h-14 w-14 place-items-center rounded-full border-[5px] border-white bg-[#308CE8] text-white shadow-[0_14px_30px_rgba(48,140,232,0.28)] transition-[bottom,transform,background-color,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:bg-[#2579CF] hover:shadow-[0_18px_36px_rgba(48,140,232,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F5F7FA] motion-safe:animate-[lectum-desktop-create-float_4.2s_ease-in-out_infinite] sm:bottom-[var(--lectum-mobile-nav-aware-fab-bottom-sm)] lg:right-10 lg:bottom-10 lg:h-16 lg:w-16 xl:right-20 2xl:right-28"
+          className={COMMUNITY_FLOATING_CREATE_POST_CLASSNAME}
           href={communityCreatePostHref(community.slug)}
           scroll={false}
           onClick={(event) => handleCreatePostClick(event, communityCreatePostHref(community.slug))}
@@ -2733,13 +2736,6 @@ export const CommunityFeedLogic = () => {
     <PrivateTemplate
       allowAnonymous
       autoHideNavigation
-      bottomNavigationCenterAction={{
-        ariaLabel: "Criar publicação",
-        href: createPostHref,
-        onClick: (event) => handleCreatePostClick(event, createPostHref),
-        scroll: false,
-        title: "Criar publicação",
-      }}
       contentClassName="bg-[#F5F7FA] dark:bg-background"
       navigationTheme="solidWhite"
       showHeader
@@ -2853,7 +2849,7 @@ export const CommunityFeedLogic = () => {
 
       <Link
         aria-label="Criar publicação na comunidade"
-        className="group fixed right-5 bottom-[var(--lectum-mobile-nav-aware-fab-bottom)] z-40 hidden h-14 w-14 place-items-center rounded-full border-[5px] border-white bg-[#308CE8] text-white shadow-[0_14px_30px_rgba(48,140,232,0.28)] transition-[bottom,transform,background-color,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:bg-[#2579CF] hover:shadow-[0_18px_36px_rgba(48,140,232,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F5F7FA] motion-safe:animate-[lectum-desktop-create-float_4.2s_ease-in-out_infinite] sm:bottom-[var(--lectum-mobile-nav-aware-fab-bottom-sm)] lg:right-10 lg:bottom-10 lg:grid lg:h-16 lg:w-16 xl:right-20 2xl:right-28"
+        className={COMMUNITY_FLOATING_CREATE_POST_CLASSNAME}
         href={createPostHref}
         onClick={(event) => handleCreatePostClick(event, createPostHref)}
         scroll={false}
@@ -2866,7 +2862,7 @@ export const CommunityFeedLogic = () => {
         <span className="sr-only">Criar publicação</span>
       </Link>
 
-      <CommunityPublishOnboarding variant="bottomNavigation" />
+      <CommunityPublishOnboarding variant="floating" />
 
       <style>{`
         @keyframes lectum-desktop-create-float {

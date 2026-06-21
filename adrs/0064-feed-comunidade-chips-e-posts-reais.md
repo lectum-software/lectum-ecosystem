@@ -191,3 +191,30 @@ Na aba `Posts` de `Meus posts`, o hover do titulo ficava azul e sublinhado no de
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - Validacao HTTP local de `/app/posts/mine` e `/app/posts/saved`.
+
+
+## Atualizacao 2026-06-20 - FAB fixo e navegacao inferior unificada no Feed
+
+### Contexto
+
+A pagina de Feed ja usava a navegacao inferior com auto-hide, mas o botao `+` de criar post ainda era acoplado como acao central da navbar no mobile. Nas paginas de comunidade, o `+` permanece como botao flutuante independente, sempre visivel, enquanto a navbar inferior entra e sai com a rolagem.
+
+### Decisao
+
+- Manter `autoHideNavigation` no Feed para reutilizar a mesma logica de ocultacao/exibicao da navbar inferior usada nas comunidades.
+- Remover o `bottomNavigationCenterAction` do Feed, evitando que o botao de criar post participe da animacao da navbar.
+- Reutilizar a mesma classe compartilhada do FAB flutuante nas paginas de Feed e Comunidade, preservando tamanho, posicao, espacamento, sombra, borda, animacao e variaveis safe-area/mobile.
+- Alinhar o onboarding de publicacao do Feed ao posicionamento `floating`, igual ao da comunidade.
+
+### Consequencias
+
+- Feed e Comunidade passam a ter o mesmo comportamento de leitura: navbar inferior some ao rolar para baixo e reaparece ao rolar para cima, enquanto o `+` continua acessivel.
+- O CTA de criacao de post nao depende mais do estado visual da navbar no Feed.
+- Nao ha alteracao de API, backend, Prisma, filtros, ordenacao, persistencia ou contratos de dados.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Validacao HTTP local de `/app/community/feed` e `/app/community/ansiedade-em-equilibrio`.
