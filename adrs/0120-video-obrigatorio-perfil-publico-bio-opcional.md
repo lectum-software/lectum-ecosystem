@@ -140,3 +140,27 @@ Com Bio curta e Apresentacao de texto opcionais, o perfil publico ainda preenchi
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - Smoke HTTP local `GET http://127.0.0.1:3000/app/psychologist/cmqmg35850000asuheq2ucwd0` retornou `200`.
+
+## Atualizacao 2026-06-20 - truncamento ocupa largura util do Sobre
+
+### Contexto
+
+O texto expansivel da apresentacao no perfil publico reservava 32px artificiais durante a medicao do preview. Na pratica, isso antecipava o corte e fazia o link `... ver mais` aparecer antes do fim da terceira linha, desperdicando largura util.
+
+### Decisao
+
+- Medir o texto expansivel usando 100% da largura real do container.
+- Remover espacos extras do sufixo usado na medicao de `... ver mais`.
+- Manter a regra de tres linhas e o comportamento atual de expandir/recolher.
+
+### Consequencias
+
+- O preview da apresentacao usa melhor a terceira linha antes do `... ver mais`.
+- A mesma melhoria se aplica aos blocos expansives do hero e da secao `Sobre`.
+- Nao houve alteracao de backend, schema, DTO, endpoint, dados ou packages.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke HTTP local `GET http://127.0.0.1:3000/app/psychologist/cmqmg35850000asuheq2ucwd0` retornou `200`.

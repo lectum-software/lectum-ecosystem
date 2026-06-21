@@ -1270,9 +1270,7 @@ const ExpandableAboutText = ({
         return;
       }
 
-      const safeAvailableWidth = Math.max(0, availableWidth - 32);
-
-      measureNode.style.width = `${safeAvailableWidth}px`;
+      measureNode.style.width = `${availableWidth}px`;
 
       if (fitsWithinMaxLines(normalizedText)) {
         setPreview(content);
@@ -1287,7 +1285,7 @@ const ExpandableAboutText = ({
       while (low <= high) {
         const middle = Math.floor((low + high) / 2);
         const candidatePreview = normalizedText.slice(0, middle).trimEnd();
-        const candidate = `${candidatePreview} ${PROFILE_ABOUT_MORE_LABEL}  `;
+        const candidate = `${candidatePreview} ${PROFILE_ABOUT_MORE_LABEL}`;
 
         if (fitsWithinMaxLines(candidate)) {
           bestPreview = candidatePreview;
