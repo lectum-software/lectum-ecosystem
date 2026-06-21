@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import keys from "@/api/cache/keys";
 import type {
   DirectoryPsychologistContactClickResponse,
@@ -50,6 +50,24 @@ export const useDirectoryPsychologistPosts = (
   });
 };
 
+export const useInfiniteDirectoryPsychologistPosts = (
+  id: string,
+  query: DirectoryPsychologistProfileListQuery = {},
+  enabled = true,
+) => {
+  return useInfiniteQuery({
+    queryKey: keys.directory.psychologistPosts(id, { ...query, mode: "infinite" }),
+    queryFn: ({ pageParam }) =>
+      api.getDirectoryPsychologistPosts(id, { ...query, page: pageParam as number }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.pages ? lastPage.page + 1 : undefined,
+    enabled: Boolean(id) && enabled,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
+};
+
 export const useDirectoryPsychologistReviews = (
   id: string,
   query: DirectoryPsychologistProfileListQuery = {},
@@ -58,6 +76,24 @@ export const useDirectoryPsychologistReviews = (
   return useQuery({
     queryKey: keys.directory.psychologistReviews(id, query),
     queryFn: () => api.getDirectoryPsychologistReviews(id, query),
+    enabled: Boolean(id) && enabled,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
+};
+
+export const useInfiniteDirectoryPsychologistReviews = (
+  id: string,
+  query: DirectoryPsychologistProfileListQuery = {},
+  enabled = true,
+) => {
+  return useInfiniteQuery({
+    queryKey: keys.directory.psychologistReviews(id, { ...query, mode: "infinite" }),
+    queryFn: ({ pageParam }) =>
+      api.getDirectoryPsychologistReviews(id, { ...query, page: pageParam as number }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.pages ? lastPage.page + 1 : undefined,
     enabled: Boolean(id) && enabled,
     refetchOnWindowFocus: false,
     retry: false,

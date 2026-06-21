@@ -4,8 +4,6 @@ import {
   ArrowLeft,
   BadgePercent,
   BriefcaseBusiness,
-  ChevronLeft,
-  ChevronRight,
   CornerUpLeft,
   FileText,
   GraduationCap,
@@ -40,6 +38,8 @@ import {
   useDirectoryPsychologistPosts,
   useDirectoryPsychologistReviews,
   useDirectoryPsychologistVideoWatch,
+  useInfiniteDirectoryPsychologistPosts,
+  useInfiniteDirectoryPsychologistReviews,
 } from "@/api/callers/directory";
 import { usePatient } from "@/api/callers/patient";
 import { usePsychologistFreeProfile } from "@/api/callers/psychologist-free-profile";
@@ -147,12 +147,6 @@ const normalizeTab = (value: string | null): ProfileTab => {
   if (value === "sobre") return "geral";
 
   return PROFILE_TABS.includes(value as ProfileTab) ? (value as ProfileTab) : "geral";
-};
-
-const getPageFromParams = (params: URLSearchParams, key: string) => {
-  const parsed = Number(params.get(key) || "1");
-
-  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 1;
 };
 
 const getInitials = (name: string) => {
@@ -562,48 +556,86 @@ const SectionChipLink = ({ children, href }: { children: ReactNode; href: string
   </Link>
 );
 
-const Pagination = ({
-  currentPage,
-  disabled,
-  onPageChange,
-  pages,
+const flattenProfilePublicationPages = (
+  pages?: Array<{ data: DirectoryPsychologistProfilePost[] }>,
+) => {
+  const seen = new Set<string>();
+  const posts: DirectoryPsychologistProfilePost[] = [];
+
+  for (const page of pages ?? []) {
+    for (const post of page.data) {
+      const key = `${post.contribution_type}-${post.id}-${post.highlighted_professional_reply?.id ?? "post"}`;
+      if (seen.has(key)) continue;
+
+      seen.add(key);
+      posts.push(post);
+    }
+  }
+
+  return posts;
+};
+
+const flattenProfileReviewPages = (
+  pages?: Array<{ data: DirectoryPsychologistProfileReview[] }>,
+) => {
+  const seen = new Set<string>();
+  const reviews: DirectoryPsychologistProfileReview[] = [];
+
+  for (const page of pages ?? []) {
+    for (const review of page.data) {
+      if (seen.has(review.id)) continue;
+
+      seen.add(review.id);
+      reviews.push(review);
+    }
+  }
+
+  return reviews;
+};
+
+const InfiniteProfileListLoader = ({
+  hasNextPage,
+  isLoading,
+  label,
+  onLoadMore,
 }: {
-  currentPage: number;
-  disabled?: boolean;
-  onPageChange: (page: number) => void;
-  pages: number;
+  hasNextPage: boolean;
+  isLoading: boolean;
+  label: string;
+  onLoadMore: () => void;
 }) => {
-  if (pages <= 1) return null;
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!hasNextPage || isLoading) return;
+
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          onLoadMore();
+        }
+      },
+      { rootMargin: "520px 0px" },
+    );
+
+    observer.observe(sentinel);
+
+    return () => observer.disconnect();
+  }, [hasNextPage, isLoading, onLoadMore]);
+
+  if (!hasNextPage && !isLoading) return null;
 
   return (
-    <nav
-      aria-label="Paginação"
-      className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-3"
-    >
-      <Button
-        disabled={currentPage <= 1 || disabled}
-        onClick={() => onPageChange(currentPage - 1)}
-        type="button"
-        variant="outline"
-      >
-        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-        Anterior
-      </Button>
-
-      <span className="text-sm font-semibold text-muted">
-        Página {currentPage} de {pages}
-      </span>
-
-      <Button
-        disabled={currentPage >= pages || disabled}
-        onClick={() => onPageChange(currentPage + 1)}
-        type="button"
-        variant="outline"
-      >
-        Próxima
-        <ChevronRight className="h-4 w-4" aria-hidden="true" />
-      </Button>
-    </nav>
+    <div className="grid min-h-10 place-items-center py-2" ref={sentinelRef}>
+      {isLoading ? (
+        <LoadingState label={label} />
+      ) : (
+        <span className="sr-only">Carregar mais resultados automaticamente</span>
+      )}
+    </div>
   );
 };
 
@@ -1801,29 +1833,29 @@ const AboutTab = ({
 
 const PostsTab = ({
   canInteract,
-  currentPage,
   error,
+  hasNextPage,
   isError,
   isFetching,
+  isFetchingNextPage,
   isLoading,
   onBackToOverview,
-  onPageChange,
+  onLoadMore,
   onShare,
-  pages,
   posts,
   summary,
   total,
 }: {
   canInteract: boolean;
-  currentPage: number;
   error: unknown;
+  hasNextPage: boolean;
   isError: boolean;
   isFetching: boolean;
+  isFetchingNextPage: boolean;
   isLoading: boolean;
   onBackToOverview: () => void;
+  onLoadMore: () => void;
   onShare: (post: PostListPost) => void;
-  onPageChange: (page: number) => void;
-  pages: number;
   posts: DirectoryPsychologistProfilePost[];
   summary: DirectoryPsychologistParticipationSummary;
   total: number;
@@ -1873,11 +1905,15 @@ const PostsTab = ({
         </div>
       ) : null}
 
-      <Pagination
-        currentPage={currentPage}
-        disabled={isFetching}
-        onPageChange={onPageChange}
-        pages={pages}
+      {isFetching && !isFetchingNextPage && !isLoading ? (
+        <LoadingState label="Atualizando publicações" />
+      ) : null}
+
+      <InfiniteProfileListLoader
+        hasNextPage={hasNextPage}
+        isLoading={isFetchingNextPage}
+        label="Carregando mais publicações"
+        onLoadMore={onLoadMore}
       />
     </div>
   );
@@ -1999,26 +2035,26 @@ const ReviewCard = ({ review }: { review: DirectoryPsychologistProfileReview }) 
 };
 
 const ReviewsTab = ({
-  currentPage,
   error,
+  hasNextPage,
   isError,
   isFetching,
+  isFetchingNextPage,
   isLoading,
   onBackToOverview,
-  onPageChange,
-  pages,
+  onLoadMore,
   profileId,
   reviews,
   summary,
 }: {
-  currentPage: number;
   error: unknown;
+  hasNextPage: boolean;
   isError: boolean;
   isFetching: boolean;
+  isFetchingNextPage: boolean;
   isLoading: boolean;
   onBackToOverview: () => void;
-  onPageChange: (page: number) => void;
-  pages: number;
+  onLoadMore: () => void;
   profileId: string;
   reviews: DirectoryPsychologistProfileReview[];
   summary: DirectoryReviewSummary;
@@ -2054,13 +2090,15 @@ const ReviewsTab = ({
         </div>
       ) : null}
 
-      {isFetching && !isLoading ? <LoadingState label="Atualizando avaliações" /> : null}
+      {isFetching && !isFetchingNextPage && !isLoading ? (
+        <LoadingState label="Atualizando avaliações" />
+      ) : null}
 
-      <Pagination
-        currentPage={currentPage}
-        disabled={isFetching}
-        onPageChange={onPageChange}
-        pages={pages}
+      <InfiniteProfileListLoader
+        hasNextPage={hasNextPage}
+        isLoading={isFetchingNextPage}
+        label="Carregando mais avaliações"
+        onLoadMore={onLoadMore}
       />
     </div>
   );
@@ -2122,30 +2160,73 @@ export const PsychologistProfileLogic = () => {
 
   const urlParams = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
   const activeTab = useMemo(() => normalizeTab(urlParams.get("tab")), [urlParams]);
-  const postsPage = useMemo(() => getPageFromParams(urlParams, "postsPage"), [urlParams]);
-  const reviewsPage = useMemo(() => getPageFromParams(urlParams, "reviewsPage"), [urlParams]);
-  const postsQuery = useMemo(
-    () => ({ page: activeTab === "geral" ? 1 : postsPage, limit: PAGE_LIMIT }),
-    [activeTab, postsPage],
-  );
-  const reviewsQuery = useMemo(
-    () => ({ page: activeTab === "geral" ? 1 : reviewsPage, limit: PAGE_LIMIT }),
-    [activeTab, reviewsPage],
-  );
+  const previewListQuery = useMemo(() => ({ page: 1, limit: PAGE_LIMIT }), []);
+  const infiniteListQuery = useMemo(() => ({ limit: PAGE_LIMIT }), []);
 
   const profileQuery = useDirectoryPsychologist(id);
   const profile = profileQuery.data;
-  const posts = useDirectoryPsychologistPosts(
+  const postsPreview = useDirectoryPsychologistPosts(
     id,
-    postsQuery,
-    (activeTab === "publicacoes" || activeTab === "geral") && Boolean(profile),
+    previewListQuery,
+    activeTab === "geral" && Boolean(profile),
   );
-  const reviews = useDirectoryPsychologistReviews(
+  const reviewsPreview = useDirectoryPsychologistReviews(
     id,
-    reviewsQuery,
-    (activeTab === "avaliacoes" || activeTab === "geral") && Boolean(profile),
+    previewListQuery,
+    activeTab === "geral" && Boolean(profile),
+  );
+  const publications = useInfiniteDirectoryPsychologistPosts(
+    id,
+    infiniteListQuery,
+    activeTab === "publicacoes" && Boolean(profile),
+  );
+  const profileReviews = useInfiniteDirectoryPsychologistReviews(
+    id,
+    infiniteListQuery,
+    activeTab === "avaliacoes" && Boolean(profile),
   );
   const { favoritePsychologist, unfavoritePsychologist } = usePatient({ enableProfile: false });
+  const publicationItems = useMemo(
+    () => flattenProfilePublicationPages(publications.data?.pages),
+    [publications.data?.pages],
+  );
+  const reviewItems = useMemo(
+    () => flattenProfileReviewPages(profileReviews.data?.pages),
+    [profileReviews.data?.pages],
+  );
+  const firstPublicationPage = publications.data?.pages[0];
+  const firstReviewPage = profileReviews.data?.pages[0];
+  const {
+    fetchNextPage: fetchNextPublicationsPage,
+    hasNextPage: hasNextPublicationsPage,
+    isFetching: isFetchingPublications,
+    isFetchingNextPage: isFetchingNextPublicationsPage,
+  } = publications;
+  const {
+    fetchNextPage: fetchNextReviewsPage,
+    hasNextPage: hasNextReviewsPage,
+    isFetching: isFetchingReviews,
+    isFetchingNextPage: isFetchingNextReviewsPage,
+  } = profileReviews;
+  const loadMorePublications = useCallback(() => {
+    if (!hasNextPublicationsPage || isFetchingPublications || isFetchingNextPublicationsPage) {
+      return;
+    }
+
+    void fetchNextPublicationsPage();
+  }, [
+    fetchNextPublicationsPage,
+    hasNextPublicationsPage,
+    isFetchingNextPublicationsPage,
+    isFetchingPublications,
+  ]);
+  const loadMoreReviews = useCallback(() => {
+    if (!hasNextReviewsPage || isFetchingReviews || isFetchingNextReviewsPage) {
+      return;
+    }
+
+    void fetchNextReviewsPage();
+  }, [fetchNextReviewsPage, hasNextReviewsPage, isFetchingNextReviewsPage, isFetchingReviews]);
 
   const navigateWithParams = useCallback(
     (mutate: (next: URLSearchParams) => void) => {
@@ -2175,22 +2256,6 @@ export const PsychologistProfileLogic = () => {
     });
   };
 
-  const setPostsPage = (page: number) => {
-    navigateWithParams((next) => {
-      next.set("tab", "publicacoes");
-      if (page > 1) next.set("postsPage", String(page));
-      else next.delete("postsPage");
-    });
-  };
-
-  const setReviewsPage = (page: number) => {
-    navigateWithParams((next) => {
-      next.set("tab", "avaliacoes");
-      if (page > 1) next.set("reviewsPage", String(page));
-      else next.delete("reviewsPage");
-    });
-  };
-
   useEffect(() => {
     if (!pendingScrollTab) return;
     if (activeTab !== pendingScrollTab) return;
@@ -2198,9 +2263,9 @@ export const PsychologistProfileLogic = () => {
 
     const targetIsReady =
       pendingScrollTab === "publicacoes"
-        ? !posts.isLoading
+        ? !publications.isLoading
         : pendingScrollTab === "avaliacoes"
-          ? !reviews.isLoading
+          ? !profileReviews.isLoading
           : true;
 
     if (!targetIsReady) return;
@@ -2219,7 +2284,7 @@ export const PsychologistProfileLogic = () => {
       window.cancelAnimationFrame(firstFrame);
       window.cancelAnimationFrame(secondFrame);
     };
-  }, [activeTab, pendingScrollTab, posts.isLoading, reviews.isLoading]);
+  }, [activeTab, pendingScrollTab, profileReviews.isLoading, publications.isLoading]);
 
   const toggleFavorite = () => {
     if (!profile) return;
@@ -2415,52 +2480,52 @@ export const PsychologistProfileLogic = () => {
                       onTabChange={setActiveTab}
                       onSharePost={sharePost}
                       postsPreview={{
-                        isError: posts.isError,
-                        isLoading: posts.isLoading,
-                        highlightedPublication: posts.data?.highlighted_publication ?? null,
-                        posts: posts.data?.data ?? [],
-                        total: posts.data?.count ?? 0,
+                        isError: postsPreview.isError,
+                        isLoading: postsPreview.isLoading,
+                        highlightedPublication: postsPreview.data?.highlighted_publication ?? null,
+                        posts: postsPreview.data?.data ?? [],
+                        total: postsPreview.data?.count ?? 0,
                       }}
                       profile={profile}
                       reviewsPreview={{
-                        isError: reviews.isError,
-                        isLoading: reviews.isLoading,
-                        highlightedReview: reviews.data?.highlighted_review ?? null,
-                        reviews: reviews.data?.data ?? [],
-                        summary: reviews.data?.summary ?? emptySummary,
+                        isError: reviewsPreview.isError,
+                        isLoading: reviewsPreview.isLoading,
+                        highlightedReview: reviewsPreview.data?.highlighted_review ?? null,
+                        reviews: reviewsPreview.data?.data ?? [],
+                        summary: reviewsPreview.data?.summary ?? emptySummary,
                       }}
                     />
                   ) : null}
                   {activeTab === "publicacoes" ? (
                     <PostsTab
                       canInteract={canInteractWithPosts}
-                      currentPage={postsPage}
-                      error={posts.error}
-                      isError={posts.isError}
-                      isFetching={posts.isFetching}
-                      isLoading={posts.isLoading}
+                      error={publications.error}
+                      hasNextPage={Boolean(publications.hasNextPage)}
+                      isError={publications.isError}
+                      isFetching={publications.isFetching}
+                      isFetchingNextPage={publications.isFetchingNextPage}
+                      isLoading={publications.isLoading}
                       onBackToOverview={() => setActiveTab("geral")}
-                      onPageChange={setPostsPage}
+                      onLoadMore={loadMorePublications}
                       onShare={sharePost}
-                      pages={posts.data?.pages ?? 0}
-                      posts={posts.data?.data ?? []}
-                      summary={posts.data?.summary ?? EMPTY_PUBLICATIONS_SUMMARY}
-                      total={posts.data?.count ?? 0}
+                      posts={publicationItems}
+                      summary={firstPublicationPage?.summary ?? EMPTY_PUBLICATIONS_SUMMARY}
+                      total={firstPublicationPage?.count ?? 0}
                     />
                   ) : null}
                   {activeTab === "avaliacoes" ? (
                     <ReviewsTab
-                      currentPage={reviewsPage}
-                      error={reviews.error}
-                      isError={reviews.isError}
-                      isFetching={reviews.isFetching}
-                      isLoading={reviews.isLoading}
+                      error={profileReviews.error}
+                      hasNextPage={Boolean(profileReviews.hasNextPage)}
+                      isError={profileReviews.isError}
+                      isFetching={profileReviews.isFetching}
+                      isFetchingNextPage={profileReviews.isFetchingNextPage}
+                      isLoading={profileReviews.isLoading}
                       onBackToOverview={() => setActiveTab("geral")}
-                      onPageChange={setReviewsPage}
-                      pages={reviews.data?.pages ?? 0}
+                      onLoadMore={loadMoreReviews}
                       profileId={profile.id}
-                      reviews={reviews.data?.data ?? []}
-                      summary={reviews.data?.summary ?? emptySummary}
+                      reviews={reviewItems}
+                      summary={firstReviewPage?.summary ?? emptySummary}
                     />
                   ) : null}
                 </div>
