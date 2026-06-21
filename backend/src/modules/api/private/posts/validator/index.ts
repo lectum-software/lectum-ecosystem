@@ -148,6 +148,19 @@ export const updatePostSchema: IValidatorRequest = {
   ],
 };
 
+export const updateReplySchema: IValidatorRequest = {
+  params: replyIdParams,
+  body: [
+    {
+      key: "content",
+      coerse: "string",
+      method: "string",
+      min: 3,
+      max: 2000,
+    },
+  ],
+};
+
 export const voteSchema: IValidatorRequest = {
   params: idParams,
   body: [
@@ -203,6 +216,7 @@ export const repliesValidator = validator(repliesSchema);
 export const listValidator = validator(listSchema);
 export const createReplyValidator = validator(createReplySchema);
 export const updatePostValidator = validator(updatePostSchema);
+export const updateReplyValidator = validator(updateReplySchema);
 export const voteValidator = validator(voteSchema);
 export const saveValidator = validator(showSchema);
 export const replySaveValidator = validator(replySaveSchema);

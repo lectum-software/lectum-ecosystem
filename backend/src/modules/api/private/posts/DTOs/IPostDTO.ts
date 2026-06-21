@@ -27,6 +27,10 @@ export type PostCreateReplyBody = {
   parentReplyId?: string;
 };
 
+export type PostUpdateReplyBody = {
+  content: string;
+};
+
 export type PostUpdateBody = {
   title: string;
   content: string;
@@ -269,6 +273,12 @@ export type IPostCreateReplyDTO = {
 export type IPostUpdateDTO = {
   p: PostParams;
   b: PostUpdateBody;
+  auth: user;
+};
+
+export type IPostUpdateReplyDTO = {
+  p: PostReplyParams;
+  b: PostUpdateReplyBody;
   auth: user;
 };
 

@@ -12,6 +12,7 @@ import type {
   IPostSavedDTO,
   IPostShowDTO,
   IPostUpdateDTO,
+  IPostUpdateReplyDTO,
   IPostVoteDTO,
   PostDeleteResponse,
   PostDetailResponse,
@@ -36,6 +37,7 @@ export interface IPostRepository {
   replyThread(data: IPostReplyThreadDTO): Promise<PostReplyDTO | null>;
   createReply(data: IPostCreateReplyDTO): Promise<PostMutationResult<PostReplyDTO>>;
   updatePost(data: IPostUpdateDTO): Promise<PostMutationResult<PostDetailResponse["post"]>>;
+  updateReply(data: IPostUpdateReplyDTO): Promise<PostMutationResult<PostReplyDTO>>;
   report(data: IPostReportDTO): Promise<PostMutationResult<PostReportResponse>>;
   vote(data: IPostVoteDTO): Promise<PostMutationResult<PostVoteResponse>>;
   save(data: IPostSaveDTO): Promise<PostMutationResult<PostSaveResponse>>;

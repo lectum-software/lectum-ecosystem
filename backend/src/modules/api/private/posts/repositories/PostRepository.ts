@@ -19,6 +19,7 @@ import type {
   IPostSavedDTO,
   IPostShowDTO,
   IPostUpdateDTO,
+  IPostUpdateReplyDTO,
   IPostVoteDTO,
   PostAuthorDTO,
   PostCommunityDTO,
@@ -1645,6 +1646,78 @@ export class PostRepository implements IPostRepository {
     };
   }
 
+  async updateReply(data: IPostUpdateReplyDTO): Promise<PostMutationResult<PostReplyDTO>> {
+    const post = await findPublishedPost(data.p.id);
+    if (!post) return { kind: "not_found" };
+
+    const reply = await prisma.post_reply.findFirst({
+      where: {
+        id: data.p.replyId,
+        post_id: post.id,
+        deleted: false,
+      },
+      select: {
+        id: true,
+        author_id: true,
+        author: {
+          select: {
+            role: true,
+          },
+        },
+      },
+    });
+
+    if (!reply) return { kind: "invalid_target" };
+    if (reply.author_id !== data.auth.id) return { kind: "forbidden" };
+
+    const updated = await prisma.post_reply.update({
+      where: {
+        id: reply.id,
+      },
+      data: {
+        content: data.b.content,
+      },
+      select: replyBaseSelect,
+    });
+
+    const [currentVote, currentSave] = await Promise.all([
+      prisma.post_vote.findFirst({
+        where: {
+          user_id: data.auth.id!,
+          reply_id: updated.id,
+          deleted: false,
+        },
+        select: {
+          value: true,
+        },
+      }),
+      prisma.post_reply_save.findUnique({
+        where: {
+          user_id_reply_id: {
+            user_id: data.auth.id!,
+            reply_id: updated.id,
+          },
+        },
+        select: {
+          deleted: true,
+        },
+      }),
+    ]);
+    const voteMap = new Map<string, CurrentVote>([
+      [updated.id, normalizeVoteValue(currentVote?.value)],
+    ]);
+    const savedReplyIds = new Set<string>();
+
+    if (currentSave && !currentSave.deleted) {
+      savedReplyIds.add(updated.id);
+    }
+
+    return {
+      kind: "ok",
+      data: toReplyResponse(updated, voteMap, savedReplyIds),
+    };
+  }
+
   async report(data: IPostReportDTO): Promise<PostMutationResult<PostReportResponse>> {
     const post = await findPublishedPost(data.p.id);
     if (!post) return { kind: "not_found" };
@@ -2292,6 +2365,11 @@ export class PostRepository implements IPostRepository {
       select: {
         id: true,
         author_id: true,
+        author: {
+          select: {
+            role: true,
+          },
+        },
       },
     });
 
@@ -2306,6 +2384,11 @@ export class PostRepository implements IPostRepository {
       select: {
         id: true,
         parent_reply_id: true,
+        author: {
+          select: {
+            role: true,
+          },
+        },
       },
     });
     const childrenByParent = new Map<string, string[]>();
@@ -2331,6 +2414,17 @@ export class PostRepository implements IPostRepository {
     }
 
     const ids = [...replyIds];
+    const shouldBlockProfessionalReplies = reply.author.role !== "psicologo";
+    const hasProfessionalDescendant =
+      shouldBlockProfessionalReplies &&
+      replies.some(
+        (item) => item.id !== reply.id && replyIds.has(item.id) && item.author.role === "psicologo",
+      );
+
+    if (hasProfessionalDescendant) {
+      return { kind: "professional_replies_block" };
+    }
+
     const now = new Date();
     const nextRepliesCount = Math.max(0, post.replies_count - ids.length);
 

@@ -12,6 +12,7 @@ import type {
   PostReply,
   PostReplyDeleteResponse,
   PostReplyThreadResponse,
+  PostReplyUpdateResponse,
   PostReportPayload,
   PostReportResponse,
   PostSaveResponse,
@@ -19,6 +20,7 @@ import type {
   PostVotePayload,
   PostVoteResponse,
   UpdatePostPayload,
+  UpdatePostReplyPayload,
   UserPostsQuery,
 } from "@/api/generator/types/posts";
 import * as api from "@/api/req/posts";
@@ -102,6 +104,23 @@ const updateReplySaved = (reply: PostReply, replyId: string, saved: boolean): Po
   saved: reply.id === replyId ? saved : reply.saved,
   replies: reply.replies.map((child) => updateReplySaved(child, replyId, saved)),
 });
+
+const updateReplyFromResponse = (reply: PostReply, updated: PostReply): PostReply => {
+  const children = reply.replies.map((child) => updateReplyFromResponse(child, updated));
+
+  if (reply.id !== updated.id) {
+    return {
+      ...reply,
+      replies: children,
+    };
+  }
+
+  return {
+    ...reply,
+    ...updated,
+    replies: children.length > 0 ? children : updated.replies,
+  };
+};
 
 export const usePostDetail = (id: string, enabled = true) => {
   return useQuery({
@@ -239,6 +258,58 @@ export const useUpdatePost = (callbacks?: {
         };
       });
       queryClient.invalidateQueries({ queryKey: keys.posts.detail(data.id) });
+      queryClient.invalidateQueries({ queryKey: keys.posts.mine() });
+      queryClient.invalidateQueries({ queryKey: keys.posts.saved() });
+      queryClient.invalidateQueries({ queryKey: keys.community.root() });
+      invalidateDirectoryPsychologistQueries(queryClient);
+      callbacks?.onSuccess?.(data);
+    },
+    onError: callbacks?.onError,
+  });
+};
+
+export const useUpdatePostReply = (callbacks?: {
+  onSuccess?: (data: PostReplyUpdateResponse) => void;
+  onError?: (error: unknown) => void;
+}) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      body,
+      postId,
+      replyId,
+    }: {
+      body: UpdatePostReplyPayload;
+      postId: string;
+      replyId: string;
+    }) => api.updatePostReply(postId, replyId, body),
+    onSuccess: (data, variables) => {
+      queryClient.setQueriesData<PostRepliesResponse>(
+        { queryKey: ["posts", variables.postId, "replies"] },
+        (old) => {
+          if (!old) return old;
+
+          return {
+            ...old,
+            data: old.data.map((reply) => updateReplyFromResponse(reply, data)),
+          };
+        },
+      );
+      queryClient.setQueriesData<PostReplyThreadResponse>(
+        { queryKey: ["posts", variables.postId, "reply-thread"] },
+        (old) => {
+          if (!old) return old;
+
+          return {
+            ...old,
+            reply: updateReplyFromResponse(old.reply, data),
+          };
+        },
+      );
+      queryClient.invalidateQueries({ queryKey: keys.posts.detail(variables.postId) });
+      queryClient.invalidateQueries({ queryKey: ["posts", variables.postId, "replies"] });
+      queryClient.invalidateQueries({ queryKey: ["posts", variables.postId, "reply-thread"] });
       queryClient.invalidateQueries({ queryKey: keys.posts.mine() });
       queryClient.invalidateQueries({ queryKey: keys.posts.saved() });
       queryClient.invalidateQueries({ queryKey: keys.community.root() });

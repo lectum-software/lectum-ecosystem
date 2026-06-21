@@ -285,7 +285,7 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 ## Ajuste complementar em 2026-06-17 - posts alinhados aos cards de comentarios
 
-- Na aba "Posts" de `/app/posts/mine`, os cards deixam de exibir avatar, nome e metadados do autor, mantendo apenas a linha de contexto `Postado em [comunidade] � [tempo]` no topo.
+- Na aba "Posts" de `/app/posts/mine`, os cards deixam de exibir avatar, nome e metadados do autor, mantendo apenas a linha de contexto `Postado em [comunidade] � [tempo]` no topo.
 - A linha `Postado em` passa a usar o mesmo tom discreto dos cards de comentarios, com comunidade em destaque leve e tempo na mesma linha.
 - O `CommunityPostCard` recebeu props opt-in para ocultar o header de autor, mostrar tempo na linha de comunidade e trocar a `CommunityActionBar` para a apresentacao inline usada em comentarios.
 - A aba "Posts" passa a usar a mesma barra padrao da aba "Comentarios": upvote/downvote inline, comentarios, salvamentos e compartilhar, sem alterar endpoints, schema Prisma ou ordenacao.
@@ -329,3 +329,13 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Referencia visual aplicada a partir do padrao ja implementado no perfil do psicologo; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0144-meus-posts-abas-integradas.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP local em `/app/posts/mine` mobile `390x844`, confirmando filtro fora do header, centralizado e com botoes `2 Posts` / `1 Respostas`.
+## Ajuste complementar em 2026-06-21 - ações de respostas do usuário
+
+- Pedido direto de produto: na aba `Respostas` de `/app/posts/mine`, respostas/comentários do usuário devem ter menu próprio com `Editar`, `Silenciar` e `Excluir`, equivalente ao menu de posts do usuário.
+- Backend: foi adicionado `PUT /api/private/posts/:id/replies/:replyId` para edição owner-only do conteúdo de `post_reply`, usando validação real e sem alterar schema Prisma.
+- A exclusão `DELETE /api/private/posts/:id/replies/:replyId` manteve remoção em cascata da subárvore, mas passou a aplicar a mesma regra de preservação dos posts: autores psicólogos podem excluir a qualquer momento; autores não psicólogos são bloqueados quando a subárvore já contém contribuição de psicólogo.
+- Frontend: o menu de respostas usa o estado real do autor, abre modal de edição com React Hook Form/Zod/TASK-02, confirma exclusão e, quando a exclusão é bloqueada, oferece silenciar a conversa via mute real do post.
+- `Silenciar` em comentário/resposta reaproveita o mute persistido do post porque as notificações de respostas pertencem à conversa do post; não foi criado modelo paralelo de mute por reply.
+- Não houve novo package, mock, seed artificial, migration ou alteração de storage.
+- ADR criado: `adrs/0146-acoes-respostas-usuario.md`.
+- Validações executadas: `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile 390x844 em `/app/posts/mine`, confirmando menu `Editar/Silenciar/Excluir` nas respostas e abertura do modal de edição sem submeter alterações.

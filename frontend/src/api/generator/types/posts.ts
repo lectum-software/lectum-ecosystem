@@ -140,6 +140,12 @@ export type UpdatePostPayload = {
 
 export type PostUpdateResponse = PostDetail;
 
+export type UpdatePostReplyPayload = {
+  content: string;
+};
+
+export type PostReplyUpdateResponse = PostReply;
+
 export type PostReplyMediaUploadResponse = {
   media_url: string;
   media_type: "image" | "video";

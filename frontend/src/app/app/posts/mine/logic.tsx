@@ -15,6 +15,7 @@ import type { PostListPost, UserPostListItem, UserPostsType } from "@/api/genera
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityPostCard } from "@/components/community/community-post-card";
 import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
+import { ReplyOwnerActionMenu } from "@/components/community/reply-owner-action-menu";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -269,12 +270,12 @@ const ProfessionalAnsweredBadge = ({ className }: { className?: string }) => (
 const ReplyItemCard = ({
   interactionCopy,
   item,
-  onPostDeleted,
+  onChanged,
   onShare,
 }: {
   interactionCopy: InteractionCopy;
   item: UserPostListItem;
-  onPostDeleted?: () => void;
+  onChanged?: () => void;
   onShare: (post: PostListPost, replyId: string) => void;
 }) => {
   const router = useRouter();
@@ -412,7 +413,13 @@ const ReplyItemCard = ({
           </span>
           <span className="shrink-0 text-muted">{formatRelativeTime(reply.created_at)}</span>
         </div>
-        <PostOwnerActionMenu className="-mr-1" onDeleted={onPostDeleted} post={item.post} />
+        <ReplyOwnerActionMenu
+          className="-mr-1"
+          onDeleted={onChanged}
+          onUpdated={onChanged}
+          post={item.post}
+          reply={reply}
+        />
       </div>
 
       {reply.parent_content || isDirectPostComment ? (
@@ -582,6 +589,10 @@ export const MyPostsLogic = () => {
     void postsQuery.refetch();
   };
 
+  const handleReplyChanged = () => {
+    void postsQuery.refetch();
+  };
+
   return (
     <PrivateTemplate
       contentClassName="bg-background px-0 py-0"
@@ -650,7 +661,7 @@ export const MyPostsLogic = () => {
                     interactionCopy={interactionCopy}
                     item={item}
                     key={item.id}
-                    onPostDeleted={handlePostDeleted}
+                    onChanged={handleReplyChanged}
                     onShare={sharePost}
                   />
                 ) : (

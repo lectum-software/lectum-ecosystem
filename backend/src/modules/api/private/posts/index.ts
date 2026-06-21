@@ -19,6 +19,7 @@ import {
   unsave,
   unsaveReply,
   updatePost,
+  updateReply,
   uploadReplyMedia,
   vote,
 } from "./use-cases/controller";
@@ -32,6 +33,7 @@ import {
   saveValidator,
   showValidator,
   updatePostValidator,
+  updateReplyValidator,
   voteValidator,
 } from "./validator";
 
@@ -64,6 +66,7 @@ routes.post("/:id/replies", privateAuth, createReplyValidator, createReply);
 routes.post("/:id/replies/:replyId/save", privateAuth, replySaveValidator, saveReply);
 routes.delete("/:id/replies/:replyId/save", privateAuth, replySaveValidator, unsaveReply);
 routes.post("/:id/replies/:replyId/report", privateAuth, replyReportValidator, report);
+routes.put("/:id/replies/:replyId", privateAuth, updateReplyValidator, updateReply);
 routes.delete("/:id/replies/:replyId", privateAuth, replySaveValidator, deleteReply);
 routes.post("/:id/vote", privateAuth, voteValidator, vote);
 routes.post("/:id/save", privateAuth, saveValidator, save);

@@ -10,6 +10,7 @@ import type {
   PostReplyDeleteResponse,
   PostReplyMediaUploadResponse,
   PostReplyThreadResponse,
+  PostReplyUpdateResponse,
   PostReportPayload,
   PostReportResponse,
   PostSaveResponse,
@@ -17,6 +18,7 @@ import type {
   PostVotePayload,
   PostVoteResponse,
   UpdatePostPayload,
+  UpdatePostReplyPayload,
   UserPostsQuery,
   UserPostsResponse,
 } from "@/api/generator/types/posts";
@@ -93,6 +95,25 @@ export const updatePost = async (id: string, body: UpdatePostPayload) => {
   });
 
   return handleReq<PostUpdateResponse>({
+    ...handle,
+    hideError: true,
+    showSuccess: true,
+  });
+};
+
+export const updatePostReply = async (
+  id: string,
+  replyId: string,
+  body: UpdatePostReplyPayload,
+) => {
+  const handle = callEndpoint({
+    route: "/api/private/posts/:id/replies/:replyId",
+    method: "PUT",
+    params: { id, replyId },
+    body,
+  });
+
+  return handleReq<PostReplyUpdateResponse>({
     ...handle,
     hideError: true,
     showSuccess: true,
@@ -259,6 +280,7 @@ export const deleteReply = async (id: string, replyId: string) => {
 
   return handleReq<PostReplyDeleteResponse>({
     ...handle,
+    hideError: true,
     showSuccess: true,
   });
 };

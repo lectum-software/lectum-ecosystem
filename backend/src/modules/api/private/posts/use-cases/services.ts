@@ -18,6 +18,7 @@ import type {
   IPostSavedDTO,
   IPostShowDTO,
   IPostUpdateDTO,
+  IPostUpdateReplyDTO,
   IPostUploadReplyMediaDTO,
   IPostVoteDTO,
   PostMutationResult,
@@ -99,6 +100,11 @@ const postDeleteBlockedByProfessionalReplies = () => ({
   ...error("post_delete_professional_replies_blocked", {}),
 });
 
+const replyDeleteBlockedByProfessionalReplies = () => ({
+  status: 409,
+  ...error("post_reply_delete_professional_replies_blocked", {}),
+});
+
 const publicFileUrl = (key: string) => {
   const rawBase = String(process.env.BASE || "").trim();
   let base = rawBase.replace(/\/$/, "");
@@ -152,7 +158,8 @@ const resolveMutationResult = <T>(
   if (result.kind === "invalid_media") return invalidMedia();
   if (result.kind === "media_not_allowed") return mediaNotAllowed();
   if (result.kind === "forbidden") return replyDeleteForbidden();
-  if (result.kind === "professional_replies_block") return postDeleteBlockedByProfessionalReplies();
+  if (result.kind === "professional_replies_block")
+    return replyDeleteBlockedByProfessionalReplies();
 
   return {
     status: okStatus,
@@ -318,6 +325,21 @@ export const updatePost = async (data: IPostUpdateDTO) => {
   });
 
   return resolveOwnerPostMutationResult(res, 200, "post_updated");
+};
+
+export const updateReply = async (data: IPostUpdateReplyDTO) => {
+  const unauthorized = ensureCommunityActor(data);
+  if (unauthorized) return unauthorized;
+
+  const repository = new PostRepository();
+  const res = await repository.updateReply({
+    ...data,
+    b: {
+      content: data.b.content.trim(),
+    },
+  });
+
+  return resolveMutationResult(res, 200, "post_reply_updated");
 };
 
 export const authorizeReplyMediaUpload = async (data: AuthenticatedPostShowDTO) => {

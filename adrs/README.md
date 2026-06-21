@@ -84,10 +84,11 @@ Formato recomendado:
 - [ADR-0087 - Header interno preso ao card no feed desktop de Psicologos](0087-header-interno-card-psicologos-desktop.md) - Accepted
 - [ADR-0096 - Detalhe de post com composer compacto, denúncia e mídia profissional](0096-detalhe-post-composer-denuncia-midia.md) - Accepted
 - [ADR-0108 - Publicações do perfil como posts reais da comunidade](0108-publicacoes-perfil-como-posts-comunidade.md) - Accepted
-- [ADR-0109 - Dicas de onboarding persistidas por usu�rio](0109-dicas-onboarding-persistidas-por-usuario.md) - Accepted
+- [ADR-0109 - Dicas de onboarding persistidas por usu�rio](0109-dicas-onboarding-persistidas-por-usuario.md) - Accepted
 - [ADR-0110 - Publicacoes compactas no perfil e WhatsApp como acao mobile unica](0110-publicacoes-perfil-mobile-whatsapp-unico.md) - Accepted
 - [ADR-0119 - Header secundário premium compartilhado](0119-header-secundario-premium-compartilhado.md) - Accepted
 - [ADR-0120 - Video obrigatorio para perfil publico e Bio opcional](0120-video-obrigatorio-perfil-publico-bio-opcional.md) - Accepted
 - [ADR-0121 - Experiencia premium para perfil profissional incompleto](0121-perfil-incompleto-ativacao-premium.md) - Accepted
 - [ADR-0122 - Card de upgrade no menu principal de perfil](0122-card-upgrade-menu-perfil.md) - Accepted
 - [ADR-0145 - Edição de post publicado](0145-edicao-post-publicado.md) - Accepted
+- [ADR-0146 - Ações de respostas do usuário](0146-acoes-respostas-usuario.md) - Accepted
