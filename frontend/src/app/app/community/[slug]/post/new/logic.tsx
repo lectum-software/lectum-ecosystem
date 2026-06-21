@@ -1,9 +1,10 @@
 "use client";
 
-import { Info, Lightbulb, Loader2, Paperclip, X } from "lucide-react";
+import { Info, Lightbulb, Loader2, Video, X } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
+  type ChangeEvent,
   type PointerEvent as ReactPointerEvent,
   useCallback,
   useEffect,
@@ -13,7 +14,11 @@ import {
 } from "react";
 import { Controller } from "react-hook-form";
 import { toast } from "sonner";
-import { useCommunities, useCreateCommunityPost } from "@/api/callers/community";
+import {
+  useCommunities,
+  useCreateCommunityPost,
+  useUploadCommunityPostMedia,
+} from "@/api/callers/community";
 import { components } from "@/components/controllers";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { useAppSelector } from "@/hooks/redux";
@@ -95,6 +100,34 @@ const resolveCreatePostError = (error: unknown): CreatePostErrorResolution => {
     message: rawMessage || "Não foi possível publicar agora. Tente novamente em instantes.",
   };
 };
+
+const resolveMediaUploadError = (error: unknown) => {
+  const apiError = error as ApiError;
+  const rawMessage =
+    apiError?.data?.error ||
+    apiError?.data?.message ||
+    (error instanceof Error ? error.message : "");
+  const normalized = rawMessage.toLowerCase();
+
+  if (
+    normalized.includes("tamanho") ||
+    normalized.includes("limite") ||
+    normalized.includes("50")
+  ) {
+    return "A m\u00eddia precisa ter at\u00e9 50MB.";
+  }
+
+  if (normalized.includes("tipo") || normalized.includes("permit")) {
+    return "Envie uma imagem ou v\u00eddeo em formato permitido.";
+  }
+
+  if (normalized.includes("plano") || normalized.includes("verific")) {
+    return "M\u00eddia dispon\u00edvel apenas para psic\u00f3logos verificados.";
+  }
+
+  return rawMessage || "N\u00e3o foi poss\u00edvel anexar a m\u00eddia agora. Tente novamente.";
+};
+
 const guidanceText =
   "Lembre-se de ser respeitoso com os outros membros. Conteúdos ofensivos ou que violem as diretrizes serão removidos pela moderação.";
 const anonymousTipText =
@@ -106,6 +139,8 @@ const communityNameCollator = new Intl.Collator("pt-BR", {
 const SHEET_CLOSE_DELAY_MS = 220;
 const EDITOR_FIELD_IDS = new Set(["create-post-title", "create-post-content"]);
 const LAST_CREATED_POST_HREF_KEY = "lectum:last-created-post-href";
+const COMMUNITY_POST_MEDIA_ACCEPT =
+  "image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime";
 
 type CreateCommunityPostLogicProps = {
   asModalSlot?: boolean;
@@ -125,7 +160,9 @@ export const CreateCommunityPostLogic = ({
   const [isGuidanceOpen, setIsGuidanceOpen] = useState(false);
   const [isAnonymousTipDismissed, setIsAnonymousTipDismissed] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState<File | null>(null);
   const closeTimerRef = useRef<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const lastFocusedEditorIdRef = useRef("create-post-title");
 
   const communitiesQuery = useCommunities({ limit: 50 });
@@ -177,6 +214,11 @@ export const CreateCommunityPostLogic = ({
       toast.error(resolvedError.message);
     },
   });
+  const uploadMutation = useUploadCommunityPostMedia({
+    onError: (error) => {
+      toast.error(resolveMediaUploadError(error));
+    },
+  });
 
   useEffect(() => {
     if (!defaultCommunitySlug || communityOptions.length === 0) return;
@@ -211,7 +253,8 @@ export const CreateCommunityPostLogic = ({
     selectedCommunityIsValid && titleMeetsMinimum && contentMeetsMinimum,
   );
   const hasNoCommunities = communitiesQuery.isSuccess && communityOptions.length === 0;
-  const isSubmitDisabled = mutation.isPending || communitiesQuery.isLoading || hasNoCommunities;
+  const isSubmitting = mutation.isPending || uploadMutation.isPending;
+  const isSubmitDisabled = isSubmitting || communitiesQuery.isLoading || hasNoCommunities;
 
   useEffect(() => {
     if (selectedCommunityIsValid && hook.formState.errors.community_slug) {
@@ -292,11 +335,50 @@ export const CreateCommunityPostLogic = ({
     };
   }, [handleClose]);
 
-  const onSubmit = hook.handleSubmit((values) => {
-    mutation.mutate({
-      slug: values.community_slug,
-      body: toCreateCommunityPostPayload(values, isPsychologist),
-    });
+  const handleMediaChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    event.currentTarget.value = "";
+
+    if (!file) return;
+
+    if (!mediaPermission.canAttach) {
+      toast.error(
+        mediaPermission.reason ||
+          "M\u00eddia dispon\u00edvel apenas para psic\u00f3logos verificados.",
+      );
+      focusLastEditor();
+      return;
+    }
+
+    setSelectedMedia(file);
+    focusLastEditor();
+  };
+
+  const onSubmit = hook.handleSubmit(async (values) => {
+    try {
+      const mediaFile = mediaPermission.canAttach ? selectedMedia : null;
+      const media = mediaFile
+        ? await uploadMutation.mutateAsync({
+            file: mediaFile,
+            slug: values.community_slug,
+          })
+        : null;
+
+      await mutation.mutateAsync({
+        slug: values.community_slug,
+        body: {
+          ...toCreateCommunityPostPayload(values, isPsychologist),
+          ...(media
+            ? {
+                mediaType: media.media_type,
+                mediaUrl: media.media_url,
+              }
+            : {}),
+        },
+      });
+    } catch {
+      // O feedback fica centralizado nas mutations para preservar o rascunho do post.
+    }
   });
 
   const clearCorrectedFormErrorsSoon = () => {
@@ -482,31 +564,62 @@ export const CreateCommunityPostLogic = ({
 
   const renderPsychologistMediaButton = () => (
     <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+      <input
+        accept={COMMUNITY_POST_MEDIA_ACCEPT}
+        className="hidden"
+        onChange={handleMediaChange}
+        ref={fileInputRef}
+        type="file"
+      />
       <button
-        aria-label="Adicionar mídia ao post"
+        aria-label="Adicionar midia ao post"
         className={cn(
           "inline-flex h-11 shrink-0 items-center gap-2 rounded-full border px-3.5 text-sm font-bold transition focus:outline-none focus:ring-4 focus:ring-primary/15",
           mediaPermission.canAttach
             ? "border-border bg-surface-muted text-muted hover:border-primary/30 hover:bg-primary-soft hover:text-primary"
             : "cursor-not-allowed border-[#E5EAF0] bg-[#F8FAFC] text-[#94A3B8] hover:border-[#E5EAF0] hover:bg-[#F8FAFC] hover:text-[#94A3B8]",
         )}
-        disabled={!mediaPermission.canAttach}
+        disabled={!mediaPermission.canAttach || isSubmitting}
         onClick={() => {
-          toast.info("Upload de mídia para posts depende do storage R2 real configurado.");
+          fileInputRef.current?.click();
           focusLastEditor();
         }}
         onMouseDown={(event) => event.preventDefault()}
         tabIndex={-1}
-        title={mediaPermission.canAttach ? "Adicionar mídia" : mediaPermission.reason}
+        title={mediaPermission.canAttach ? "Adicionar midia" : mediaPermission.reason}
         type="button"
       >
-        <Paperclip className="h-5 w-5" aria-hidden="true" />
-        <span className="hidden sm:inline">Mídia</span>
+        {uploadMutation.isPending ? (
+          <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+        ) : (
+          <Video className="h-5 w-5" aria-hidden="true" />
+        )}
+        <span className="hidden sm:inline">{"M\u00eddia"}</span>
       </button>
 
       {!mediaPermission.canAttach && mediaPermission.reason ? (
         <span className="min-w-0 flex-1 basis-52 whitespace-normal text-xs font-semibold leading-4 text-[#64748B]">
           {mediaPermission.reason}
+        </span>
+      ) : null}
+
+      {mediaPermission.canAttach && selectedMedia ? (
+        <span className="inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-bold text-primary">
+          <span className="truncate">{selectedMedia.name}</span>
+          <button
+            aria-label="Remover midia anexada"
+            className="grid h-5 w-5 shrink-0 place-items-center rounded-full hover:bg-white/70"
+            disabled={isSubmitting}
+            onClick={() => {
+              setSelectedMedia(null);
+              focusLastEditor();
+            }}
+            onMouseDown={(event) => event.preventDefault()}
+            tabIndex={-1}
+            type="button"
+          >
+            <X className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
         </span>
       ) : null}
     </div>
@@ -635,7 +748,7 @@ export const CreateCommunityPostLogic = ({
                 disabled={isSubmitDisabled}
                 type="submit"
               >
-                {mutation.isPending ? (
+                {isSubmitting ? (
                   <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
                 ) : null}
                 Postar

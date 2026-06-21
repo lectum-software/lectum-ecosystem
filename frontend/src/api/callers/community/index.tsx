@@ -7,6 +7,7 @@ import type {
   CommunityListQuery,
   CommunityMembershipResponse,
   CommunityPost,
+  CommunityPostMediaUploadResponse,
   CommunityPostsQuery,
   CommunitySuggestion,
   CommunityTopMentorsQuery,
@@ -173,5 +174,17 @@ export const useCreateCommunityPost = (callbacks?: {
       callbacks?.onSuccess?.(data);
     },
     onError: callbacks?.onError,
+  });
+};
+
+export const useUploadCommunityPostMedia = (callbacks?: {
+  onError?: (error: unknown) => void;
+  onSuccess?: (data: CommunityPostMediaUploadResponse) => void;
+}) => {
+  return useMutation({
+    mutationFn: ({ file, slug }: { file: File; slug: string }) =>
+      api.uploadCommunityPostMedia(slug, file),
+    onError: callbacks?.onError,
+    onSuccess: callbacks?.onSuccess,
   });
 };

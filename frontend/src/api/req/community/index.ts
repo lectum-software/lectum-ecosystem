@@ -7,6 +7,7 @@ import type {
   CommunityListResponse,
   CommunityMembershipResponse,
   CommunityPost,
+  CommunityPostMediaUploadResponse,
   CommunityPostsQuery,
   CommunityPostsResponse,
   CommunitySuggestion,
@@ -105,4 +106,21 @@ export const createCommunityPost = async (slug: string, body: CreateCommunityPos
   });
 
   return handleReq<CommunityPost>(handle);
+};
+
+export const uploadCommunityPostMedia = async (slug: string, file: File) => {
+  const body = new FormData();
+  body.append("media", file);
+
+  const handle = callEndpoint({
+    route: "/api/private/community/:slug/posts/media",
+    method: "POST",
+    params: { slug },
+    body,
+  });
+
+  return handleReq<CommunityPostMediaUploadResponse>({
+    ...handle,
+    hideError: true,
+  });
 };

@@ -8,8 +8,8 @@ import type { Option } from "./types";
 export default (mode: Option) => (req: Request, res: Response, next: NextFunction) => {
   req.allowed = mode.allowed || [];
   req.public = mode.public || false;
+  (req as Request & { uploadFeature?: string }).uploadFeature = mode.feature;
   let middleware: any;
-  const [type, options] = Object.entries(mode)[0];
   const max = mode.size ? mode.size * 1024 * 1024 : undefined;
   const config = multer({
     storage,
@@ -17,16 +17,14 @@ export default (mode: Option) => (req: Request, res: Response, next: NextFunctio
     limits: { fileSize: max },
   });
   try {
-    switch (type) {
-      case "fields":
-        middleware = config.fields(options);
-        break;
-      case "array":
-        middleware = config.array(options);
-        break;
-      default:
-        middleware = config.single(options);
-        break;
+    if ("fields" in mode && mode.fields) {
+      middleware = config.fields(mode.fields);
+    } else if ("array" in mode && mode.array) {
+      middleware = config.array(mode.array);
+    } else if ("single" in mode && mode.single) {
+      middleware = config.single(mode.single);
+    } else {
+      throw new Error(resolve("error.upload_config_error"));
     }
     middleware(req, res, (err: any) => {
       if (err instanceof multer.MulterError) {

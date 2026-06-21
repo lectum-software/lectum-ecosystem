@@ -91,3 +91,26 @@ Validacao adicional:
 - Script local confirmou `canAttachReplyMedia=true` para `tuliosrezende@gmail.com` com `source="admin_grant"` e `cfp_verified_at=null`.
 - Service real `authorizeReplyMediaUpload` retornou `status=200` para o mesmo usuario.
 - Chrome/CDP local em 390x844 em `http://localhost:3000/app/community/feed/post/new` confirmou botao `Adicionar midia ao post` presente, habilitado e sem copy bloqueada.
+
+## Atualizacao 2026-06-21 - upload real e icone de video
+
+A decisao anterior que mantinha o upload de midia em posts como pendencia foi superada nesta execucao porque o storage R2 real esta configurado e o schema de posts recebeu persistencia propria.
+
+Decisoes complementares:
+
+- A modal `Criar Post` passa a usar upload real em `POST /api/private/community/:slug/posts/media` antes de chamar a criacao do post.
+- O payload de criacao inclui `mediaUrl`/`mediaType` somente apos resposta valida do upload.
+- O botao de midia da modal deixa de exibir a mensagem de dependencia de R2 e passa a abrir um input real de arquivo.
+- O icone do botao de midia da modal e do composer de comentarios/respostas passa a ser `Video`, substituindo `Paperclip` para comunicar melhor o uso principal de videos profissionais.
+- A permissao visual continua usando `community-media-permission`, agora alinhada ao helper backend compartilhado para CFP verificado ou cortesia administrativa ativa.
+
+Validacao adicional:
+
+- `pnpm --dir backend db:migrate -- --name add_community_post_media`
+- `pnpm --dir backend check`
+- `pnpm --dir frontend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke real de upload em R2 via endpoint de post, com limpeza do objeto criado.
+- Chrome/CDP autenticado confirmou `Midia` habilitado na criacao de post, `accept` contendo `video/mp4`, ausencia da copy antiga de R2 e `Anexar midia` habilitado no detalhe do post.

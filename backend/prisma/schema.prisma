@@ -572,6 +572,8 @@ model community_post {
   author_id          String
   title              String
   content            String
+  media_url          String?
+  media_type         String?
   anonymous          Boolean                  @default(true)
   status             String                   @default("publicado")
   upvotes_count      Int                      @default(0)

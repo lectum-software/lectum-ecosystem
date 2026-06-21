@@ -46,6 +46,13 @@ export type CommunityCreatePostBody = {
   title: string;
   content: string;
   anonymous?: boolean;
+  mediaType?: "image" | "video";
+  mediaUrl?: string;
+};
+
+export type CommunityPostMediaUploadResponse = {
+  media_url: string;
+  media_type: "image" | "video";
 };
 
 export type CommunityDTO = {
@@ -287,6 +294,12 @@ export type ICommunityCreatePostDTO = {
   p: CommunityParams;
   b: CommunityCreatePostBody;
   auth: user;
+};
+
+export type ICommunityUploadPostMediaDTO = {
+  p: CommunityParams;
+  auth: user;
+  file?: Express.Multer.File & { key?: string; path?: string };
 };
 
 export type ICommunityPostsDTO = {

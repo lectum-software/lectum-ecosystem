@@ -1,12 +1,10 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
+import { canAttachCommunityMedia } from "@/utils/community-media-entitlement";
 import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
 import { getPostIdsWithPsychologistReplies } from "@/utils/community-post-replies";
 import { getMutedPostIds } from "@/utils/post-notification-mute";
-import {
-  activeProfessionalCourtesyEntitlementWhere,
-  activeProfessionalEntitlementWhere,
-} from "@/utils/subscription-entitlement";
+import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   IPostCreateReplyDTO,
   IPostDeleteDTO,
@@ -87,6 +85,8 @@ const postSelect = {
   id: true,
   title: true,
   content: true,
+  media_url: true,
+  media_type: true,
   anonymous: true,
   status: true,
   upvotes_count: true,
@@ -353,8 +353,8 @@ const toPostResponse = (
     created_at: item.createdAt,
     tags: responseCommunity.category ? [responseCommunity.category] : [],
     featured_badge: author.featured_badge,
-    media_url: null,
-    media_type: null,
+    media_url: item.media_url,
+    media_type: item.media_type,
     current_user_vote: currentUserVote,
     saved,
     muted_by_current_user: mutedByCurrentUser,
@@ -758,32 +758,7 @@ export class PostRepository implements IPostRepository {
   }
 
   async canAttachReplyMedia(userId: string): Promise<boolean> {
-    const profile = await prisma.psychologist_profile.findFirst({
-      where: {
-        user_id: userId,
-        deleted: false,
-        subscriptions: {
-          some: activeProfessionalEntitlementWhere(),
-        },
-        OR: [
-          {
-            cfp_verified_at: {
-              not: null,
-            },
-          },
-          {
-            subscriptions: {
-              some: activeProfessionalCourtesyEntitlementWhere(),
-            },
-          },
-        ],
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    return Boolean(profile);
+    return canAttachCommunityMedia(userId);
   }
 
   async mine(data: IPostMineDTO): Promise<PostListResponse> {

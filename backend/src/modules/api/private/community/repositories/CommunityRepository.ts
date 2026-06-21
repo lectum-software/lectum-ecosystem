@@ -100,6 +100,8 @@ const postSelect = {
   id: true,
   title: true,
   content: true,
+  media_url: true,
+  media_type: true,
   anonymous: true,
   status: true,
   upvotes_count: true,
@@ -1135,8 +1137,8 @@ const toPostResponse = (
     created_at: item.createdAt,
     tags: responseCommunity.category ? [responseCommunity.category] : [],
     featured_badge: author.featured_badge,
-    media_url: null,
-    media_type: null,
+    media_url: item.media_url,
+    media_type: item.media_type,
     current_user_vote: currentUserVote,
     saved,
     muted_by_current_user: mutedByCurrentUser,
@@ -1153,6 +1155,20 @@ export class CommunityRepository implements ICommunityRepository {
 
   constructor() {
     this.repository = prisma.community;
+  }
+
+  async existsBySlug(slug: string): Promise<boolean> {
+    const community = await this.repository.findFirst({
+      where: {
+        slug,
+        deleted: false,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    return Boolean(community);
   }
 
   async index(data: ICommunityIndexDTO): Promise<CommunityIndexResponse> {
@@ -2058,6 +2074,8 @@ export class CommunityRepository implements ICommunityRepository {
         author_id: data.auth.id!,
         title: data.b.title.trim(),
         content: data.b.content.trim(),
+        media_url: data.b.mediaUrl?.trim() || null,
+        media_type: data.b.mediaType || null,
         anonymous: isPsychologist ? false : data.b.anonymous === true,
         status: "publicado",
       },

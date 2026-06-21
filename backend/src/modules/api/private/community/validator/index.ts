@@ -200,6 +200,21 @@ export const createPostSchema: IValidatorRequest = {
       method: "boolean",
       optional: true,
     },
+    {
+      key: "mediaUrl",
+      coerse: "string",
+      method: "string",
+      min: 1,
+      max: 500,
+      optional: true,
+    },
+    {
+      key: "mediaType",
+      coerse: "string",
+      method: "enumeric",
+      values: ["image", "video"],
+      optional: true,
+    },
   ],
 };
 

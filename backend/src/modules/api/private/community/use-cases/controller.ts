@@ -1,6 +1,7 @@
-﻿import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { error500, send } from "@/helpers/return";
 import {
+  authorizePostMediaUpload as authorizePostMediaUploadService,
   createPost as createPostService,
   feed as feedService,
   follow as followService,
@@ -10,6 +11,7 @@ import {
   suggest as suggestService,
   topMentors as topMentorsService,
   unfollow as unfollowService,
+  uploadPostMedia as uploadPostMediaService,
 } from "./services";
 
 export const index = async (req: Request, res: Response) => {
@@ -103,5 +105,31 @@ export const createPost = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "community_create_post", err);
+  }
+};
+
+export const authorizePostMediaUpload = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const resolve = await authorizePostMediaUploadService(
+      req as unknown as Parameters<typeof authorizePostMediaUploadService>[0],
+    );
+
+    if (resolve.status && resolve.status >= 400) return send(res, resolve);
+
+    return next();
+  } catch (err) {
+    return error500(res, "community_authorize_post_media_upload", err);
+  }
+};
+
+export const uploadPostMedia = async (req: Request, res: Response) => {
+  try {
+    const resolve = await uploadPostMediaService(
+      req as unknown as Parameters<typeof uploadPostMediaService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "community_upload_post_media", err);
   }
 };

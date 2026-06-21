@@ -7,11 +7,11 @@ import { streamToBuffer } from "./buffer";
 
 export const storage = {
   _handleFile: async (
-    req: Request & { medias?: any; uploads?: any },
+    req: Request & { medias?: any; uploadFeature?: string; uploads?: any },
     file: Express.Multer.File & { stream: NodeJS.ReadableStream },
     cb: (error: any, info?: any) => void,
   ) => {
-    const feature = req.baseUrl.split("/")[3];
+    const feature = req.uploadFeature || req.baseUrl.split("/")[3];
 
     try {
       const originalname = Buffer.from(file.originalname, "latin1")

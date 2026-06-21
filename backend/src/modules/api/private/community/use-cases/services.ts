@@ -1,5 +1,6 @@
-﻿import { error, msg } from "@/helpers/translate";
+import { error, msg } from "@/helpers/translate";
 import { notifyNewCommunityPost } from "@/main/notification/domain-events";
+import { canAttachCommunityMedia } from "@/utils/community-media-entitlement";
 import type {
   ICommunityCreatePostDTO,
   ICommunityFeedDTO,
@@ -9,6 +10,7 @@ import type {
   ICommunityShowDTO,
   ICommunitySuggestionDTO,
   ICommunityTopMentorsDTO,
+  ICommunityUploadPostMediaDTO,
 } from "../DTOs/ICommunityDTO";
 import { CommunityRepository } from "../repositories/CommunityRepository";
 
@@ -101,6 +103,54 @@ const ensureCommunityMemberAuth = (data: ICommunityMembershipDTO) => {
   };
 };
 
+const publicFileUrl = (key: string) => {
+  const rawBase = String(process.env.BASE || "").trim();
+  let base = rawBase.replace(/\/$/, "");
+
+  try {
+    base = rawBase ? new URL(rawBase).origin : "";
+  } catch (_err) {
+    base = rawBase.replace(/\/$/, "");
+  }
+
+  const publicPath = `/public/files/${key}`;
+
+  return base ? `${base}${publicPath}` : publicPath;
+};
+
+const mediaTypeFromMime = (mimetype?: string | null): "image" | "video" | null => {
+  if (mimetype?.startsWith("image/")) return "image";
+  if (mimetype?.startsWith("video/")) return "video";
+
+  return null;
+};
+
+const normalizePostMediaType = (value?: string | null): "image" | "video" | null => {
+  if (value === "image" || value === "video") return value;
+
+  return null;
+};
+
+const isPublicPostMediaUrl = (value?: string | null) => {
+  if (!value) return false;
+
+  try {
+    return new URL(value).pathname.startsWith("/public/files/posts/media/");
+  } catch (_err) {
+    return value.startsWith("/public/files/posts/media/");
+  }
+};
+
+const invalidPostMedia = () => ({
+  status: 422,
+  ...error("community_post_media_invalid", {}),
+});
+
+const postMediaNotAllowed = () => ({
+  status: 403,
+  ...error("community_post_media_professional_plan", {}),
+});
+
 export const follow = async (data: ICommunityMembershipDTO) => {
   const unauthorized = ensureCommunityMemberAuth(data);
   if (unauthorized) return unauthorized;
@@ -177,12 +227,27 @@ export const createPost = async (data: ICommunityCreatePostDTO) => {
     };
   }
 
+  const mediaUrl = data.b.mediaUrl?.trim() || undefined;
+  const mediaType = normalizePostMediaType(data.b.mediaType);
+  const hasMedia = Boolean(mediaUrl || data.b.mediaType);
+
+  if (hasMedia) {
+    if (!mediaUrl || !mediaType || !isPublicPostMediaUrl(mediaUrl)) {
+      return invalidPostMedia();
+    }
+
+    const canAttachMedia = await canAttachCommunityMedia(data.auth.id!);
+    if (!canAttachMedia) return postMediaNotAllowed();
+  }
+
   const repository = new CommunityRepository();
   const res = await repository.createPost({
     ...data,
     b: {
       title: data.b.title.trim(),
       content: data.b.content.trim(),
+      mediaType: mediaType ?? undefined,
+      mediaUrl,
       anonymous: data.auth.role === "paciente" ? data.b.anonymous === true : false,
     },
   });
@@ -207,6 +272,74 @@ export const createPost = async (data: ICommunityCreatePostDTO) => {
     status: 201,
     ...msg("community_post_created", {}),
     data: res,
+  };
+};
+
+export const authorizePostMediaUpload = async (data: ICommunityUploadPostMediaDTO) => {
+  const unauthorized = ensureCommunityMemberAuth(data);
+  if (unauthorized) return unauthorized;
+
+  const repository = new CommunityRepository();
+  const [communityExists, canAttach] = await Promise.all([
+    repository.existsBySlug(data.p.slug),
+    canAttachCommunityMedia(data.auth.id!),
+  ]);
+
+  if (!communityExists) {
+    return {
+      status: 404,
+      ...error("not_found", {
+        model: "community",
+      }),
+    };
+  }
+
+  if (!canAttach) return postMediaNotAllowed();
+
+  return {
+    status: 200,
+    success: true,
+  };
+};
+
+export const uploadPostMedia = async (data: ICommunityUploadPostMediaDTO) => {
+  const unauthorized = ensureCommunityMemberAuth(data);
+  if (unauthorized) return unauthorized;
+
+  const repository = new CommunityRepository();
+  const [communityExists, canAttach] = await Promise.all([
+    repository.existsBySlug(data.p.slug),
+    canAttachCommunityMedia(data.auth.id!),
+  ]);
+
+  if (!communityExists) {
+    return {
+      status: 404,
+      ...error("not_found", {
+        model: "community",
+      }),
+    };
+  }
+
+  if (!canAttach) return postMediaNotAllowed();
+
+  const key = data.file?.path || data.file?.key;
+  const mediaType = mediaTypeFromMime(data.file?.mimetype);
+
+  if (!key?.startsWith("posts/media/") || !mediaType) {
+    return {
+      status: 400,
+      ...error("upload_error", {}),
+    };
+  }
+
+  return {
+    status: 200,
+    ...msg("community_post_media_uploaded", {}),
+    data: {
+      media_type: mediaType,
+      media_url: publicFileUrl(key),
+    },
   };
 };
 

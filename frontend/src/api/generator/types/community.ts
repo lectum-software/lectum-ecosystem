@@ -244,6 +244,13 @@ export type CreateCommunityPostPayload = {
   title: string;
   content: string;
   anonymous?: boolean;
+  mediaType?: "image" | "video";
+  mediaUrl?: string;
+};
+
+export type CommunityPostMediaUploadResponse = {
+  media_url: string;
+  media_type: "image" | "video";
 };
 
 export type SuggestCommunityPayload = {

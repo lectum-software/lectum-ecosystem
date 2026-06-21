@@ -242,3 +242,34 @@ Validação complementar:
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
 - Chrome headless local no `next start` em `http://localhost:3011/app/community/feed`: sucesso ao abrir o CTA de criação para `/app/community/feed/post/new`; a sidebar permaneceu com 240px antes/depois, o dialog `Criar Post` abriu no slot modal, o título mediu 36px de altura, o gap até o conteúdo ficou em 12px e o card `Não foi possível postar` não apareceu.
+
+## Atualizacao 2026-06-21 - storage real para midia de posts raiz
+
+O bloqueio anterior de midia na criacao de post foi encerrado para o ambiente atual: o storage R2 real esta configurado e o schema de `community_post` agora persiste `media_url` e `media_type`.
+
+Decisoes complementares:
+
+- Adicionar migration `20260621185539_add_community_post_media` com os campos opcionais `community_post.media_url` e `community_post.media_type`.
+- Criar `POST /api/private/community/:slug/posts/media` como etapa de upload anterior a criacao do post, usando `multer`, R2 publico e prefixo `posts/media/`.
+- Fazer `POST /api/private/community/:slug/posts` aceitar somente URLs publicas geradas pelo proprio fluxo (`/public/files/posts/media/`) e `mediaType` normalizado para `image` ou `video`.
+- Reutilizar o entitlement profissional real de midia: psicologo com plano profissional ativo e CFP verificado ou cortesia administrativa ativa pode anexar; pacientes e psicologos sem direito sao bloqueados no backend.
+- Manter upload e criacao em duas etapas. Se a criacao falhar depois do upload, pode existir objeto publico orfao ate uma rotina futura de limpeza; isso evita criar transacao falsa com storage externo.
+- Publicar arquivos de `posts/media/` pela rota publica de arquivos ja existente.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta execucao; a validacao visual usou os prototipos locais e screenshots do usuario.
+
+Consequencias:
+
+- O feed, detalhe de post e perfil do psicologo passam a receber `media_url`/`media_type` reais de posts raiz.
+- A pendencia historica de storage para a modal `Criar Post` fica substituida por contrato real de upload.
+- O mesmo helper de entitlement evita divergencia entre midia de post raiz e midia de respostas.
+
+Validacao complementar:
+
+- `pnpm --dir backend db:migrate -- --name add_community_post_media`
+- `pnpm --dir backend check`
+- `pnpm --dir frontend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke real do endpoint `POST /api/private/community/ansiedade-em-equilibrio/posts/media` com token temporario para `tuliosrezende@gmail.com`, upload em R2 no prefixo `posts/media/` e remocao do objeto ao final.
+- Chrome/CDP autenticado em `/app/community/ansiedade-em-equilibrio/post/new` validou botao `Midia` habilitado, input aceitando `video/mp4` e ausencia da copy antiga de R2 pendente.

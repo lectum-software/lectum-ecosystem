@@ -57,3 +57,16 @@ Validacao adicional:
 - `pnpm --dir backend build`
 - Script local confirmou `canAttachReplyMedia=true` para `tuliosrezende@gmail.com` com assinatura `admin_grant` ativa e `cfp_verified_at=null`.
 - Service real `authorizeReplyMediaUpload` retornou `status=200` para um post publicado existente, sem criar midia fake.
+
+## Atualizacao 2026-06-21 - icone de video no composer de respostas
+
+O composer de comentarios/respostas manteve o mesmo contrato real de upload `POST /api/private/posts/:id/replies/media`, mas o controle visual de anexo passou a usar o icone `Video` em vez de `Paperclip`, em paridade com a nova modal de criacao de posts.
+
+A alteracao e somente visual no fluxo de respostas: nao muda endpoint, payload, storage, validacao backend, limites de arquivo, ordenacao da arvore, votos, salvar/compartilhar ou denuncia. A permissao continua usando o entitlement profissional compartilhado, incluindo cortesia administrativa ativa quando houver plano profissional ativo.
+
+Validacao adicional:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome/CDP autenticado em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video` confirmou o botao `Anexar midia` habilitado com SVG no novo controle.

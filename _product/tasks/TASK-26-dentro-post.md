@@ -426,3 +426,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nao houve alteracao de Prisma schema, migrations, storage, endpoints, payload de respostas, limites de arquivo, ordenacao, votos ou regras de denuncia.
 - ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
 - Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, script local confirmando `canAttachReplyMedia=true` para `tuliosrezende@gmail.com` com `cfp_verified_at=null` e `admin_grant` ativo, e service real `authorizeReplyMediaUpload` retornando `status=200` para post publicado existente.
+
+## Execucao complementar: icone de video no anexo de comentarios (2026-06-21)
+
+- Pedido do usuario: trocar o icone de anexar midia nos comentarios para um icone de video, mantendo o upload real ja existente de respostas.
+- Frontend: o composer de comentarios/respostas no detalhe do post passou de `Paperclip` para `Video`, sem alterar endpoint, payload, regras de permissao, limites de arquivo, ordem da arvore ou persistencia de replies.
+- A regra de entitlement segue centralizada e compartilhada com o fluxo de criacao de post; psicologos com cortesia administrativa ativa continuam liberados quando possuem plano profissional ativo.
+- Fonte visual auditavel: `_product/proto/Dentro do Post.jpg` via inventario local e screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente.
+- ADRs atualizados: `adrs/0096-detalhe-post-composer-denuncia-midia.md` e `adrs/0138-create-post-media-permission-modal.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, confirmando botao `Anexar midia` habilitado com SVG do novo controle.

@@ -12,11 +12,11 @@ import {
   MessageCircle,
   MoreHorizontal,
   MoreVertical,
-  Paperclip,
   Send,
   Share2,
   Trash2,
   UserX,
+  Video,
   X,
 } from "lucide-react";
 import Image from "next/image";
@@ -1733,7 +1733,7 @@ const ReplyComposer = ({
               title={mediaPermission.canAttach ? "Anexar mídia" : mediaPermission.reason}
               type="button"
             >
-              <Paperclip className="h-3.5 w-3.5" aria-hidden="true" />
+              <Video className="h-3.5 w-3.5" aria-hidden="true" />
               Anexar mídia
             </button>
 

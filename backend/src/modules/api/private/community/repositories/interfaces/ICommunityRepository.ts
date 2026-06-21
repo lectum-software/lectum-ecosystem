@@ -18,6 +18,7 @@
 } from "../../DTOs/ICommunityDTO";
 
 export interface ICommunityRepository {
+  existsBySlug(slug: string): Promise<boolean>;
   index(data: ICommunityIndexDTO): Promise<CommunityIndexResponse>;
   show(data: ICommunityShowDTO): Promise<CommunityDetailResponse | null>;
   feed(data: ICommunityFeedDTO): Promise<CommunityFeedResponse>;

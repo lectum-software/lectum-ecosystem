@@ -37,6 +37,7 @@ export type {
   CommunityListQuery,
   CommunityListResponse,
   CommunityPost,
+  CommunityPostMediaUploadResponse,
   CommunityPostsQuery,
   CommunityPostsResponse,
   CommunityProfessionalReply,

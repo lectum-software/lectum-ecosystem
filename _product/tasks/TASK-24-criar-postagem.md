@@ -286,3 +286,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Fonte visual auditavel: `_product/proto/Criar Nova Postagem - Psicologo.jpg` via inventario local e screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente.
 - ADRs atualizados: `adrs/0138-create-post-media-permission-modal.md` e `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir backend check`, `pnpm --dir frontend build`, `pnpm --dir backend build`, scripts locais de permissao backend e Chrome/CDP mobile em `http://localhost:3000/app/community/feed/post/new` confirmando botao de midia habilitado e ausencia da copy bloqueada.
+
+## Complemento 2026-06-21 - storage real para midia de posts
+
+- Pedido do usuario: configurar storage para upload de midia na criacao do post e trocar o icone de anexar midia para um icone de video.
+- Backend: `community_post` recebeu `media_url` e `media_type`, com migration `20260621185539_add_community_post_media` aplicada via `pnpm --dir backend db:migrate -- --name add_community_post_media`.
+- Backend: foi criado o endpoint real `POST /api/private/community/:slug/posts/media`, usando o middleware de upload existente, Cloudflare R2 publico e prefixo `posts/media/`; `POST /api/private/community/:slug/posts` passou a aceitar `mediaUrl`/`mediaType` ja validados.
+- Regra de dominio: a autorizacao de midia de post raiz reutiliza o entitlement profissional real, liberando psicologos com plano profissional ativo e CFP verificado ou cortesia administrativa ativa (`source="admin_grant"`). Pacientes e psicologos sem entitlement continuam bloqueados.
+- Frontend: a modal `Criar Post` passou a selecionar arquivo real, enviar primeiro para o endpoint de upload, anexar `mediaUrl`/`mediaType` no payload de criacao e preservar o rascunho em caso de erro.
+- Frontend: o botao de midia da criacao de post usa icone `Video`, aceita imagens e videos permitidos e remove a copy antiga de pendencia de R2.
+- Fonte visual auditavel: `_product/proto/Criar Nova Postagem - Psicologo.jpg` via inventario local e screenshots do usuario; Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente.
+- ADRs atualizados: `adrs/0065-criacao-posts-comunidade.md` e `adrs/0138-create-post-media-permission-modal.md`.
+- Validacoes executadas: `pnpm --dir backend db:migrate -- --name add_community_post_media`, `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm check`, smoke real do endpoint de upload com R2 em `posts/media/` e limpeza do objeto, e Chrome/CDP autenticado em `/app/community/ansiedade-em-equilibrio/post/new` confirmando botao `Midia` habilitado, accept com `video/mp4` e ausencia da copy antiga de storage.
