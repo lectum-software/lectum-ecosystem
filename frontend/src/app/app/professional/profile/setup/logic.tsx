@@ -972,6 +972,35 @@ export const ProfessionalProfileSetupLogic = () => {
   const videoSrc = resolvePublicMediaUrl(profile.data?.profile.video_url);
   const videoCoverSrc = resolvePublicMediaUrl(profile.data?.profile.video_cover_url);
   const canUploadVideo = Boolean(profile.data?.plan.can_upload_video);
+  const hasApprovedCourtesyIdentity = Boolean(
+    profile.data?.profile.crp_status === "aprovado" || profile.data?.profile.cfp_verified_at,
+  );
+  const storedCourtesyCpfDigits = profile.data?.profile.cpf?.replace(/\D/g, "") || "";
+  const hasCompleteCourtesyIdentity = Boolean(
+    storedCourtesyCpfDigits.length === 11 &&
+      profile.data?.profile.crp_region &&
+      profile.data.profile.crp_number,
+  );
+  const shouldLockCourtesyIdentityFields = Boolean(
+    profile.data?.plan.is_courtesy &&
+      !profile.data.plan.is_free &&
+      hasApprovedCourtesyIdentity &&
+      hasCompleteCourtesyIdentity,
+  );
+  const lockedIdentityFieldProps: Partial<(typeof renderedFields)[number]> =
+    shouldLockCourtesyIdentityFields ? { disabled: true } : {};
+  const crpRegionValue = profile.data?.profile.crp_region;
+  const crpRegionOptions =
+    renderedFields.find((field) => field.name === "crp_region")?.options || [];
+  const lockedCrpRegionFieldProps: Partial<(typeof renderedFields)[number]> =
+    shouldLockCourtesyIdentityFields &&
+    crpRegionValue &&
+    !crpRegionOptions.some((option) => String(option.value) === String(crpRegionValue))
+      ? {
+          ...lockedIdentityFieldProps,
+          options: [{ label: crpRegionValue, value: crpRegionValue }, ...crpRegionOptions],
+        }
+      : lockedIdentityFieldProps;
   const showInactiveProfileBanner = Boolean(
     profile.data?.activation && !profile.data.activation.active,
   );
@@ -1101,10 +1130,6 @@ export const ProfessionalProfileSetupLogic = () => {
 
     return <Component control={form.hook.control} key={String(name)} {...field} {...override} />;
   };
-
-  const renderFields = (names: (keyof FreeProfileForm)[]) => (
-    <div className="grid gap-3">{names.map((name) => renderField(name))}</div>
-  );
 
   const renderAcademicField = (
     index: number,
@@ -1346,14 +1371,20 @@ export const ProfessionalProfileSetupLogic = () => {
       return;
     }
 
+    const lockedIdentityProfile = shouldLockCourtesyIdentityFields ? profile.data?.profile : null;
+
     update.mutate({
       name: values.name,
-      cpf: values.cpf || null,
+      cpf: lockedIdentityProfile ? lockedIdentityProfile.cpf : values.cpf || null,
       gender: values.gender || null,
       race_color: values.race_color || null,
       religion: values.religion || null,
-      crp_region: values.crp_region || null,
-      crp_number: values.crp_number || null,
+      crp_region: lockedIdentityProfile
+        ? lockedIdentityProfile.crp_region
+        : values.crp_region || null,
+      crp_number: lockedIdentityProfile
+        ? lockedIdentityProfile.crp_number
+        : values.crp_number || null,
       whatsapp: toWhatsappPhoneE164(values.whatsapp, values.countryCode),
       headline: values.headline || null,
       bio: values.bio || null,
@@ -1726,15 +1757,21 @@ export const ProfessionalProfileSetupLogic = () => {
           >
             <SectionCard icon={UserRound} title="Informações básicas">
               <div className="grid gap-4">
-                {renderFields([
-                  "name",
-                  "cpf",
-                  "gender",
-                  "race_color",
-                  "religion",
-                  "crp_region",
-                  "crp_number",
-                ])}
+                <div className="grid gap-3">
+                  {renderField("name")}
+                  {renderField("cpf", lockedIdentityFieldProps)}
+                  {renderField("gender")}
+                  {renderField("race_color")}
+                  {renderField("religion")}
+                  {renderField("crp_region", lockedCrpRegionFieldProps)}
+                  {renderField("crp_number", lockedIdentityFieldProps)}
+                </div>
+                {shouldLockCourtesyIdentityFields ? (
+                  <p className="rounded-2xl border border-primary/15 bg-primary-soft/50 px-4 py-3 text-xs leading-relaxed text-muted">
+                    CPF, Regional do CRP e Nº Registro CRP ficam bloqueados porque este perfil
+                    verificado recebeu cortesia profissional.
+                  </p>
+                ) : null}
                 <div className="flex items-start gap-2">
                   <div className="min-w-0 flex-1">{renderField("whatsapp")}</div>
                   <a

@@ -390,7 +390,7 @@ export class FreeProfileRepository implements IFreeProfileRepository {
   async update(
     userId: string,
     body: Required<FreeProfessionalProfileUpdateBody>,
-    options: { canUploadVideo: boolean },
+    options: { canUploadVideo: boolean; lockIdentityFields?: boolean },
   ): Promise<FreeProfessionalProfileResponse | null> {
     const existing = await getUserWithProfile(userId);
     const profile = existing?.psychologist_profile;
@@ -408,11 +408,11 @@ export class FreeProfileRepository implements IFreeProfileRepository {
           headline: body.headline,
           bio: body.bio,
           modality: body.modality,
-          cpf: body.cpf,
+          cpf: options.lockIdentityFields ? undefined : body.cpf,
           gender: body.gender,
           race_color: body.race_color,
           religion: body.religion,
-          crp: buildCrp(body.crp_region, body.crp_number),
+          crp: options.lockIdentityFields ? undefined : buildCrp(body.crp_region, body.crp_number),
           whatsapp: body.whatsapp,
           languages: body.languages as Prisma.InputJsonValue,
           video_url: options.canUploadVideo ? undefined : null,

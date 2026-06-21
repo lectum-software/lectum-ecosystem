@@ -3,6 +3,7 @@ import { error, msg } from "@/helpers/translate";
 import type {
   FreeProfessionalProfileAcademic,
   FreeProfessionalProfileAddress,
+  FreeProfessionalProfileResponse,
   FreeProfessionalProfileUpdateBody,
   IFreeProfessionalProfileRemoveAvatarDTO,
   IFreeProfessionalProfileRemoveCoverImageDTO,
@@ -45,6 +46,13 @@ const normalizeList = (value?: string[]) => {
 
   return Array.from(new Set(value.map((item) => item.trim()).filter(Boolean)));
 };
+
+const hasLockedCourtesyIdentityFields = (profile: FreeProfessionalProfileResponse) =>
+  profile.plan.is_courtesy &&
+  !profile.plan.is_free &&
+  (profile.profile.crp_status === "aprovado" || Boolean(profile.profile.cfp_verified_at)) &&
+  normalizeCpf(profile.profile.cpf)?.length === 11 &&
+  Boolean(trimToNull(profile.profile.crp_region) && trimToNull(profile.profile.crp_number));
 
 const academicFormationSchema = z.object({
   title: z.string().trim().max(160).nullable().optional(),
@@ -234,7 +242,10 @@ export const update = async (data: IFreeProfessionalProfileUpdateDTO) => {
     };
   }
 
-  const cpf = normalizeCpf(parsed.data.cpf);
+  const lockIdentityFields = hasLockedCourtesyIdentityFields(current);
+  const cpf = lockIdentityFields
+    ? normalizeCpf(current.profile.cpf)
+    : normalizeCpf(parsed.data.cpf);
   if (cpf?.length !== 11) {
     return {
       status: 400,
@@ -267,8 +278,12 @@ export const update = async (data: IFreeProfessionalProfileUpdateDTO) => {
     gender: trimToNull(parsed.data.gender),
     race_color: trimToNull(parsed.data.race_color),
     religion: trimToNull(parsed.data.religion),
-    crp_region: trimToNull(parsed.data.crp_region),
-    crp_number: trimToNull(parsed.data.crp_number),
+    crp_region: lockIdentityFields
+      ? trimToNull(current.profile.crp_region)
+      : trimToNull(parsed.data.crp_region),
+    crp_number: lockIdentityFields
+      ? trimToNull(current.profile.crp_number)
+      : trimToNull(parsed.data.crp_number),
     whatsapp,
     headline: trimToNull(parsed.data.headline),
     bio: trimToNull(parsed.data.bio),
@@ -349,6 +364,7 @@ export const update = async (data: IFreeProfessionalProfileUpdateDTO) => {
 
   const updated = await repository.update(data.auth.id!, body, {
     canUploadVideo: current.plan.can_upload_video,
+    lockIdentityFields,
   });
 
   return {

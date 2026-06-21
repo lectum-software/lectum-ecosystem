@@ -62,3 +62,24 @@ A opção "Minha Assinatura" no menu do perfil agora abre `/app/professional/bil
 
 - TASK-32: implementar checkout/cartão real Mercado Pago.
 - Futuro: suporte a legenda/transcrição para vídeos enviados por profissionais.
+
+## Atualizacao em 2026-06-21: bloqueio de CPF/CRP em cortesia verificada
+
+Perfis em cortesia administrativa podem carregar uma identidade profissional aprovada pela operacao ou pela consulta CFP/InfoSimples. Para evitar que o proprio psicologo sobrescreva dados sensiveis ja verificados, a edicao de `CPF`, `Regional do CRP` e `Nº Registro CRP` fica bloqueada quando:
+
+- a assinatura ativa vem de `professional_subscription.source="admin_grant"`;
+- o plano ativo nao e gratuito;
+- o perfil possui identidade aprovada (`crp_status="aprovado"` ou `cfp_verified_at`);
+- os campos persistidos de CPF, regional e numero CRP estao completos.
+
+A UI desabilita os campos e exibe aviso contextual. O backend nao confia apenas na UI: antes de salvar, recalcula a regra a partir do perfil atual e preserva `psychologist_profile.cpf`/`crp`, ignorando alteracoes enviadas no payload. Se uma cortesia administrativa ainda estiver pendente ou sem CPF/CRP completo, os campos permanecem editaveis para permitir saneamento operacional.
+
+### Validacao adicional
+
+- `pnpm --dir backend check`
+- `pnpm --dir frontend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Validacao de servico backend com psicologo temporario real removido ao final confirmou que tentativa de alterar CPF/CRP em cortesia aprovada preserva resposta e banco.
+- Chrome/CDP headless local em 390x844 confirmou campos disabled, valores visiveis, aviso de bloqueio e ausencia de overflow horizontal.
