@@ -116,3 +116,27 @@ A Apresentacao de texto ja era opcional na regra de dominio, mas a fundacao de f
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - Smoke HTTP local `GET http://127.0.0.1:3000/app/professional/profile/setup` retornou `200`.
+
+## Atualizacao 2026-06-20 - perfil publico sem textos fallback editoriais
+
+### Contexto
+
+Com Bio curta e Apresentacao de texto opcionais, o perfil publico ainda preenchia lacunas com textos genericos (`Perfil profissional publicado na Lectum...` e `Este profissional ainda nao informou uma biografia publica.`). Isso fazia campos deixados em branco pelo psicologo aparecerem como conteudo editorial artificial no perfil.
+
+### Decisao
+
+- Remover os textos fallback do hero e da secao `Sobre` no detalhe publico do psicologo.
+- Renderizar a Bio curta/apresentacao apenas quando houver texto real persistido.
+- Preservar a secao `Sobre` para continuar exibindo video de apresentacao e informacoes de contato quando existirem.
+
+### Consequencias
+
+- Quando Bio e Apresentacao estiverem vazias, o perfil publico fica visualmente em branco nesses pontos.
+- O produto deixa de apresentar texto generico como se fosse informacao fornecida pelo profissional.
+- Nao houve alteracao de backend, schema, DTO, endpoint ou regras de publicacao.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke HTTP local `GET http://127.0.0.1:3000/app/psychologist/cmqmg35850000asuheq2ucwd0` retornou `200`.

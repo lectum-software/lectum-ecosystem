@@ -699,9 +699,8 @@ const ProfileHero = ({
   onToggleFavorite: () => void;
   profile: DirectoryPsychologistProfile;
 }) => {
-  const bioFallback = "Perfil profissional publicado na Lectum com dados públicos persistidos.";
   const displayName = getHonorificName(profile) || profile.name || "Profissional";
-  const headline = (profile.headline || profile.bio || bioFallback).trim();
+  const headline = (profile.headline?.trim() || profile.bio?.trim() || "").trim();
   const benefitTags = buildBenefitTags(profile);
   const formattedCrp = formatCrpLabel(profile.crp);
   const experienceLabel =
@@ -819,7 +818,9 @@ const ProfileHero = ({
             ) : null}
           </div>
 
-          <ExpandableAboutText containerClassName="mt-0.5 max-w-2xl" text={headline} />
+          {headline ? (
+            <ExpandableAboutText containerClassName="mt-0.5 max-w-2xl" text={headline} />
+          ) : null}
 
           {experienceLabel ? (
             <p className="text-[12.5px] font-semibold leading-5 text-[#64748B] dark:text-muted">
@@ -1732,7 +1733,7 @@ const AboutTab = ({
     summary: DirectoryReviewSummary;
   };
 }) => {
-  const bioText = profile.bio || "Este profissional ainda não informou uma biografia pública.";
+  const bioText = profile.bio?.trim() ?? "";
   const serviceText = formatList(
     profile.services.map((item) => item.name),
     "Serviços não informados.",
@@ -1754,7 +1755,7 @@ const AboutTab = ({
   return (
     <div className="grid gap-3.5 bg-[#F5F7FA] px-3 pt-3.5 pb-1 dark:bg-background sm:px-4 sm:pt-4">
       <ProfileSectionCard title="Sobre">
-        <ExpandableAboutText text={bioText} />
+        {bioText ? <ExpandableAboutText text={bioText} /> : null}
         <PresentationVideo profile={profile} />
         {profile.whatsapp_url ? <AboutContactInfoBlock /> : null}
       </ProfileSectionCard>
