@@ -896,6 +896,7 @@ export class ProfileRepository implements IProfileRepository {
             video_url: true,
             video_cover_url: true,
             crp: true,
+            cpf: true,
             crp_registration_date: true,
             cfp_verified_at: true,
             gender: true,
