@@ -266,6 +266,13 @@ const isPostCardInteractiveTarget = (target: EventTarget | null) => {
         "[role='button']",
         "[role='menu']",
         "[role='menuitem']",
+        "[role='dialog']",
+        "[aria-modal='true']",
+        "[data-comment-collapse-ignore='true']",
+        "[data-community-action-bar]",
+        "[data-post-card-ignore-click]",
+        "[data-post-card-menu]",
+        "[data-reply-open-trigger]",
       ].join(","),
     ),
   );
@@ -498,7 +505,7 @@ export const CommunityPostCard = ({
   hoverTone = "primary",
   interactiveActions = false,
   onShare,
-  openPostOnCardClick = false,
+  openPostOnCardClick = true,
   post,
   profilePublicationMode = false,
   saveActionOverride,
@@ -651,12 +658,29 @@ export const CommunityPostCard = ({
   };
   const postHref = postDetailHref(post);
   const handleCardClick = (event: ReactMouseEvent<HTMLElement>) => {
-    if (!openPostOnCardClick || isPostCardInteractiveTarget(event.target)) return;
+    if (
+      !openPostOnCardClick ||
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      isPostCardInteractiveTarget(event.target)
+    ) {
+      return;
+    }
 
     router.push(postHref);
   };
   const handleCardKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
-    if (!openPostOnCardClick || isPostCardInteractiveTarget(event.target)) return;
+    if (
+      !openPostOnCardClick ||
+      event.defaultPrevented ||
+      isPostCardInteractiveTarget(event.target)
+    ) {
+      return;
+    }
     if (event.key !== "Enter" && event.key !== " ") return;
 
     event.preventDefault();

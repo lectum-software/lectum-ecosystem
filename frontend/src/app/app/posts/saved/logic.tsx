@@ -123,6 +123,13 @@ const isSavedCardInteractiveTarget = (target: EventTarget | null) => {
         "[role='button']",
         "[role='menu']",
         "[role='menuitem']",
+        "[role='dialog']",
+        "[aria-modal='true']",
+        "[data-comment-collapse-ignore='true']",
+        "[data-community-action-bar]",
+        "[data-post-card-ignore-click]",
+        "[data-post-card-menu]",
+        "[data-reply-open-trigger]",
       ].join(","),
     ),
   );
@@ -311,12 +318,22 @@ const SavedReplyCard = ({
   const hasProfessionalWhatsapp = Boolean(reply.author.whatsapp_url);
   const openSavedReply = () => router.push(replyLink);
   const handleCardClick = (event: ReactMouseEvent<HTMLElement>) => {
-    if (isSavedCardInteractiveTarget(event.target)) return;
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      isSavedCardInteractiveTarget(event.target)
+    ) {
+      return;
+    }
 
     openSavedReply();
   };
   const handleCardKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
-    if (isSavedCardInteractiveTarget(event.target)) return;
+    if (event.defaultPrevented || isSavedCardInteractiveTarget(event.target)) return;
     if (event.key !== "Enter" && event.key !== " ") return;
 
     event.preventDefault();
@@ -335,7 +352,7 @@ const SavedReplyCard = ({
         <span className="shrink-0">Respondido em</span>
         <Link
           className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-extrabold text-[#475569] underline-offset-4 hover:text-primary hover:underline dark:text-muted md:no-underline md:hover:text-[#475569] md:hover:no-underline dark:md:hover:text-muted"
-          href={replyLink}
+          href={`/app/community/${item.post.community.slug}`}
         >
           {item.post.community.name}
         </Link>

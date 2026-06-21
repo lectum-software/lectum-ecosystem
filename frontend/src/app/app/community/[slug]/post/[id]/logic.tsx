@@ -116,10 +116,8 @@ const DETAIL_INLINE_TEXT_LESS_LABEL = "ver menos";
 const COMMENT_GUIDANCE_MESSAGE = "Comente com respeito e empatia, mesmo quando discordar.";
 const POST_DETAIL_MOBILE_QUERY = "(max-width: 639px)";
 const POST_REPLY_CANCEL_DRAG_THRESHOLD = 56;
-const FOCUSED_REPLY_HIGHLIGHT_CLASSES = [
-  "bg-primary-soft/80",
-  "shadow-[0_0_0_2px_rgb(48_140_232_/_22%),0_14px_34px_rgb(48_140_232_/_12%)]",
-] as const;
+const FOCUSED_REPLY_HIGHLIGHT_CLASSES = ["lectum-reply-focus-pulse"] as const;
+const FOCUSED_REPLY_HIGHLIGHT_DURATION_MS = 3200;
 const REPLY_DRAFT_DISCARD_CONFIRMATION = "Você tem uma resposta em rascunho. Deseja descartá-la?";
 
 const confirmDiscardReplyDraft = () =>
@@ -447,7 +445,13 @@ const isReplyTreeInteractiveTarget = (target: EventTarget | null, currentTarget:
       "[role='button']",
       "[role='menu']",
       "[role='menuitem']",
+      "[role='dialog']",
+      "[aria-modal='true']",
       "[data-comment-collapse-ignore='true']",
+      "[data-community-action-bar]",
+      "[data-post-card-ignore-click]",
+      "[data-post-card-menu]",
+      "[data-reply-open-trigger]",
     ].join(","),
   );
 
@@ -744,15 +748,46 @@ const PostBody = ({ post }: { post: PostDetail }) => {
 };
 
 const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
+  const router = useRouter();
   const [contentExpanded, setContentExpanded] = useState(false);
   const isPsychologistPost = post.author.role === "psicologo";
   const isAnonymousPatient = !isPsychologistPost && post.anonymous;
   const psychologistProfileHref = isPsychologistPost
     ? `/app/psychologist/${post.author.id}`
     : undefined;
+  const postHref = `/app/community/${post.community.slug}/post/${post.id}`;
+  const handleCardClick = (event: MouseEvent<HTMLElement>) => {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      isReplyTreeInteractiveTarget(event.target, event.currentTarget)
+    ) {
+      return;
+    }
+
+    router.push(postHref);
+  };
+  const handleCardKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
+    if (event.defaultPrevented || isReplyTreeInteractiveTarget(event.target, event.currentTarget)) {
+      return;
+    }
+    if (event.key !== "Enter" && event.key !== " ") return;
+
+    event.preventDefault();
+    router.push(postHref);
+  };
 
   return (
-    <article className="overflow-hidden rounded-[24px] border border-[#D8ECFF] bg-white shadow-[0_12px_28px_rgba(15,23,42,0.05)] dark:border-border dark:bg-surface">
+    <article
+      className="overflow-hidden rounded-[24px] border border-[#D8ECFF] bg-white shadow-[0_12px_28px_rgba(15,23,42,0.05)] transition hover:border-primary/20 hover:bg-primary-soft/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 dark:border-border dark:bg-surface md:cursor-pointer"
+      onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
+      tabIndex={-1}
+    >
       <div className="flex min-w-0 items-center gap-1.5 border-[#EDF1F5] border-b px-4 py-3 text-[11px] font-semibold text-muted dark:border-border">
         <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         <span className="shrink-0">Post original</span>
@@ -2122,13 +2157,15 @@ export const PostDetailLogic = () => {
 
       lastFocusedReplyIdRef.current = activeFocusReplyId;
       highlightedTarget = target;
+      target.classList.remove(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
+      void target.offsetWidth;
       target.classList.add(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
       target.scrollIntoView({ behavior: "smooth", block: "center" });
 
       highlightTimer = window.setTimeout(() => {
         target.classList.remove(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
         highlightedTarget = null;
-      }, 2200);
+      }, FOCUSED_REPLY_HIGHLIGHT_DURATION_MS);
     };
 
     focusReply();

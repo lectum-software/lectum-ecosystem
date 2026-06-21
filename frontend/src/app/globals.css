@@ -346,6 +346,42 @@ video::backdrop {
   --top-mentor-metal-label: #5f2f0f;
 }
 
+@keyframes lectum-reply-focus-pulse {
+  0% {
+    background-color: transparent;
+    box-shadow: none;
+  }
+
+  12% {
+    background-color: rgb(48 140 232 / 14%);
+    box-shadow:
+      0 0 0 2px rgb(48 140 232 / 22%),
+      0 14px 34px rgb(48 140 232 / 12%);
+  }
+
+  55% {
+    background-color: rgb(48 140 232 / 10%);
+    box-shadow:
+      0 0 0 2px rgb(48 140 232 / 16%),
+      0 10px 24px rgb(48 140 232 / 8%);
+  }
+
+  100% {
+    background-color: transparent;
+    box-shadow: none;
+  }
+}
+
+.lectum-reply-focus-pulse {
+  animation: lectum-reply-focus-pulse 3.2s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lectum-reply-focus-pulse {
+    animation-duration: 1ms;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .lectum-top-mentor-float,
   .top-mentor-metal-ring::after,

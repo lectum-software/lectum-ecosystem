@@ -801,6 +801,13 @@ const isPostCardInteractiveTarget = (target: EventTarget | null) => {
         "[role='button']",
         "[role='menu']",
         "[role='menuitem']",
+        "[role='dialog']",
+        "[aria-modal='true']",
+        "[data-comment-collapse-ignore='true']",
+        "[data-community-action-bar]",
+        "[data-post-card-ignore-click]",
+        "[data-post-card-menu]",
+        "[data-reply-open-trigger]",
       ].join(","),
     ),
   );

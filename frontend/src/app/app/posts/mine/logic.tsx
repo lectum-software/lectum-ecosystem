@@ -52,6 +52,13 @@ const isReplyCardInteractiveTarget = (target: EventTarget | null) => {
         "[role='button']",
         "[role='menu']",
         "[role='menuitem']",
+        "[role='dialog']",
+        "[aria-modal='true']",
+        "[data-comment-collapse-ignore='true']",
+        "[data-community-action-bar]",
+        "[data-post-card-ignore-click]",
+        "[data-post-card-menu]",
+        "[data-reply-open-trigger]",
       ].join(","),
     ),
   );
@@ -320,12 +327,22 @@ const ReplyItemCard = ({
   };
   const openReply = () => router.push(replyHref);
   const handleCardClick = (event: ReactMouseEvent<HTMLElement>) => {
-    if (isReplyCardInteractiveTarget(event.target)) return;
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      isReplyCardInteractiveTarget(event.target)
+    ) {
+      return;
+    }
 
     openReply();
   };
   const handleCardKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
-    if (isReplyCardInteractiveTarget(event.target)) return;
+    if (event.defaultPrevented || isReplyCardInteractiveTarget(event.target)) return;
     if (event.key !== "Enter" && event.key !== " ") return;
 
     event.preventDefault();
@@ -344,9 +361,12 @@ const ReplyItemCard = ({
         <div className="flex min-w-0 flex-1 items-center gap-1.5">
           <Reply className="h-3.5 w-3.5 shrink-0 text-muted/80" aria-hidden="true" />
           <span className="shrink-0">{interactionCopy.contextLabel}</span>
-          <span className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-extrabold text-[#475569] dark:text-muted">
+          <Link
+            className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-extrabold text-[#475569] no-underline hover:text-[#475569] hover:no-underline dark:text-muted dark:hover:text-muted"
+            href={`/app/community/${item.post.community.slug}`}
+          >
             {item.post.community.name}
-          </span>
+          </Link>
           <span className="shrink-0 text-muted" aria-hidden="true">
             &bull;
           </span>
@@ -622,6 +642,7 @@ export const MyPostsLogic = () => {
                     interactiveActions
                     key={item.id}
                     onShare={sharePost}
+                    openPostOnCardClick
                     post={item.post}
                     showAuthorHeader={false}
                   />

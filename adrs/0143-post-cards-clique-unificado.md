@@ -1,0 +1,30 @@
+# ADR-0143: Clique unificado em cards de posts e respostas
+
+Data: 2026-06-21
+
+## Contexto
+
+A Lectum exibia cards de posts e respostas em vários pontos da área autenticada: feed, comunidades, salvos, meus posts/respostas e publicações no perfil do psicólogo. O comportamento de clique não era totalmente uniforme: alguns cards só navegavam ao clicar no título/texto, alguns cards de respostas focavam o comentário correto, e ações internas precisavam continuar isoladas para não abrir o post por propagação de evento.
+
+Builder/Quick Copy não ficou acessível neste ambiente; a implementação foi guiada pelos padrões já existentes no frontend e pelas telas locais em execução.
+
+## Decisão
+
+- Padronizar cards de post para abrir a página de detalhes ao clicar no corpo, área neutra, título ou conteúdo.
+- Manter o nome da comunidade como link independente para a comunidade.
+- Manter controles inferiores, botão Seguir, menus, modais, mídia, botões e links de autor como alvos interativos que não propagam navegação para o card.
+- Usar o mesmo contrato de foco para cards de respostas/comentários: navegar para o post original com `focusReplyId` e hash `#reply-{id}`.
+- Trocar o destaque fixo do comentário focado por uma animação de pulso azul temporária, com desaparecimento gradual e fallback para `prefers-reduced-motion`.
+
+## Consequências
+
+- A experiência fica previsível entre Feed, Comunidades, Meus posts e respostas, Perfil do psicólogo e Salvos.
+- Cards de respostas em Salvos e Meus posts/respostas agora também preservam a regra de clique no nome da comunidade para abrir a comunidade, enquanto o restante do card foca a resposta no post original.
+- O componente compartilhado `CommunityPostCard` passa a ter navegação por card habilitada por padrão, com opt-out via `openPostOnCardClick={false}` caso surja um uso futuro não navegável.
+- Menus e modais renderizados dentro do DOM do card foram explicitamente tratados como áreas interativas para evitar navegação acidental ao confirmar/cancelar ações.
+
+## Validação
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke HTTP local em rotas representativas: `/app/community/feed`, `/app/posts/saved`, `/app/posts/mine`, `/app/community/ansiedade-em-equilibrio` e `/app/psychologist/cmqg35850000asuheq2ucwd0?tab=publicacoes`.
