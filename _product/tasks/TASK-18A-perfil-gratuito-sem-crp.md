@@ -342,3 +342,19 @@ Validacoes executadas:
 - `pnpm check`
 - API local real em `http://localhost:3001` com psicologos temporarios removidos ao final: publicacao sem video `400`, publicacao com video `200`, detalhe publico com video `200`, perfil forcado publicado sem video `404`, mantendo `headline=null`, `bio=null` e `languages[0]="Portugues"` no payload salvo.
 - Browser local via Chrome/CDP em `/app/professional/profile/setup` com usuario psicologo temporario removido ao final, nos viewports mobile 390x844 e desktop 1024x768: sem overflow horizontal, Bio/Apresentacao de texto sem indicador obrigatorio e Video de Apresentacao marcado como obrigatorio com texto explicativo.
+
+## Ajuste complementar em 2026-06-21 - chips marcados sem sombra
+
+- Pedido do usuario: remover o sombreamento das opcoes marcadas em `Dias com horarios disponiveis`, `Servicos` e `Publico` na tela `/app/professional/profile/setup`.
+- Os chips selecionados desses grupos mantem fundo azul, texto branco, borda primaria e estados de hover/foco, mas agora usam `shadow-none`, sem a sombra projetada azul anterior.
+- A alteracao foi feita no componente compartilhado de chips da propria tela, que atende exatamente `Servicos`, `Publico` e `Dias com horarios disponiveis`, sem alterar backend, Prisma, contratos, dados persistidos ou packages.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a referencia visual usada foi o print do usuario e o prototipo local `_product/proto/Editar Perfil - Psicologo.jpg`.
+- ADR atualizado: `adrs/0027-perfil-gratuito-sem-crp.md`.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local autenticado com token real em `/app/professional/profile/setup` respondeu `200`.
+- Verificacao estatica confirmou que o estado `checked` dos chips usa `shadow-none` e nao possui mais `shadow-[0_8px_18px_rgb(48_140_232_/_20%)]` nem `ring-1 ring-primary/20`.

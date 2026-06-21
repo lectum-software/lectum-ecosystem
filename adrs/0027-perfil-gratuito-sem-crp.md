@@ -145,3 +145,22 @@ Validações:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessão.
+
+## Ajuste complementar em 2026-06-21 - chips selecionados sem sombra
+
+A tela de edicao profissional (`/app/professional/profile/setup`) removeu a sombra projetada dos chips selecionados nos grupos `Servicos`, `Publico` e `Dias com horarios disponiveis`.
+
+Decisao:
+
+- manter o contraste do estado selecionado por cor de fundo, texto e borda primaria;
+- remover a sombra azul e o anel persistente do estado marcado, usando `shadow-none`;
+- preservar os estados de foco acessiveis via `focus-visible` herdados do chip base;
+- nao alterar contratos, backend, dados persistidos, limites de plano ou catalogos reais.
+
+Validacao:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local autenticado em `/app/professional/profile/setup` respondeu `200`.
+- Conferencia estatica confirmou os chips marcados sem `shadow-[0_8px_18px_rgb(48_140_232_/_20%)]` e sem `ring-1 ring-primary/20`.

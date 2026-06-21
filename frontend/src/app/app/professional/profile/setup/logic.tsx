@@ -414,7 +414,7 @@ const CatalogPicker = ({
               className={cn(
                 profileSetupSelectableChip,
                 checked &&
-                  "border-primary bg-primary text-white shadow-[0_8px_18px_rgb(48_140_232_/_20%)] ring-1 ring-primary/20 hover:border-primary hover:bg-primary hover:text-white",
+                  "border-primary bg-primary text-white shadow-none hover:border-primary hover:bg-primary hover:text-white",
                 disabled && "cursor-not-allowed opacity-50",
               )}
               style={profileSetupSelectableChipStyle}
@@ -639,7 +639,7 @@ const ChipPicker = ({
             className={cn(
               profileSetupSelectableChip,
               checked &&
-                "border-primary bg-primary text-white shadow-[0_8px_18px_rgb(48_140_232_/_20%)] ring-1 ring-primary/20 hover:border-primary hover:bg-primary hover:text-white",
+                "border-primary bg-primary text-white shadow-none hover:border-primary hover:bg-primary hover:text-white",
             )}
             style={profileSetupSelectableChipStyle}
             key={item.value}
