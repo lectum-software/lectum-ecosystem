@@ -12,6 +12,7 @@ import {
   MessageCircle,
   MoreHorizontal,
   MoreVertical,
+  Pencil,
   Send,
   Share2,
   Trash2,
@@ -55,6 +56,7 @@ import { CommunityFollowToggle } from "@/components/community/community-follow-t
 import { MentorBadge } from "@/components/community/mentor-badge";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
 import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
+import { ReplyEditModal } from "@/components/community/reply-edit-modal";
 import { components } from "@/components/controllers";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
@@ -914,6 +916,7 @@ type ReplyOverflowMenuProps = {
   deletePending?: boolean;
   isOwnReply: boolean;
   onDelete: () => void;
+  onEdit: () => void;
   onReport: () => void;
   onShare: () => void;
   onToggleSave: MouseEventHandler<HTMLButtonElement>;
@@ -925,6 +928,7 @@ const ReplyOverflowMenu = ({
   deletePending,
   isOwnReply,
   onDelete,
+  onEdit,
   onReport,
   onShare,
   onToggleSave,
@@ -954,6 +958,22 @@ const ReplyOverflowMenu = ({
           className="absolute top-8 right-0 z-30 w-56 overflow-hidden rounded-2xl border border-[#E5EAF0] bg-white p-1.5 text-sm shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:border-border dark:bg-surface"
           role="menu"
         >
+          {isOwnReply ? (
+            <button
+              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-[#475569] transition hover:bg-[#F8FAFC] hover:text-[#182033] dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
+              onClick={(event) => {
+                event.stopPropagation();
+                setMenuOpen(false);
+                onEdit();
+              }}
+              role="menuitem"
+              type="button"
+            >
+              <Pencil className="h-4 w-4" aria-hidden="true" />
+              Editar
+            </button>
+          ) : null}
+
           <button
             className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-[#475569] transition hover:bg-[#F8FAFC] hover:text-[#182033] disabled:cursor-not-allowed disabled:opacity-60 dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
             disabled={savePending}
@@ -1028,6 +1048,7 @@ const ReplyVoteBar = ({
   disabled,
   isOwnReply,
   onDelete,
+  onEdit,
   onReply,
   onReport,
   onShare,
@@ -1041,6 +1062,7 @@ const ReplyVoteBar = ({
   disabled?: boolean;
   isOwnReply: boolean;
   onDelete: () => void;
+  onEdit: () => void;
   onReply: () => void;
   onReport: () => void;
   onShare: () => void;
@@ -1074,6 +1096,7 @@ const ReplyVoteBar = ({
           deletePending={deletePending}
           isOwnReply={isOwnReply}
           onDelete={onDelete}
+          onEdit={onEdit}
           onReport={onReport}
           onShare={handleShare}
           onToggleSave={handleToggleSave}
@@ -1154,6 +1177,7 @@ const ReplyCard = ({
   const inlineReplyTarget = inlineReplyTargets[reply.id] ?? null;
   const isReplyComposerOpen = Boolean(inlineReplyTarget);
   const [contentExpanded, setContentExpanded] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [treeCollapsed, setTreeCollapsed] = useState(false);
   const visualMaxDepth =
     maxInlineDepth < 0 ? MAX_REPLY_TREE_DEPTH : Math.min(maxInlineDepth, MAX_REPLY_TREE_DEPTH);
@@ -1367,6 +1391,7 @@ const ReplyCard = ({
               disabled={votePending}
               isOwnReply={isOwnReply}
               onDelete={() => onDeleteReply(reply)}
+              onEdit={() => setEditModalOpen(true)}
               onReply={() => onReply(reply)}
               onReport={() => onReportReply(reply)}
               onShare={() => onShare(reply)}
@@ -1376,6 +1401,15 @@ const ReplyCard = ({
               savePending={saveReplyMutation.isPending}
             />
           </div>
+
+          {isOwnReply && editModalOpen ? (
+            <ReplyEditModal
+              onClose={() => setEditModalOpen(false)}
+              open={editModalOpen}
+              postId={postId}
+              reply={reply}
+            />
+          ) : null}
 
           {isReplyComposerOpen ? (
             <div data-comment-collapse-ignore="true">

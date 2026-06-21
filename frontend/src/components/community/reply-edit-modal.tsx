@@ -21,10 +21,10 @@ const replyEditSchema = z.object({
 
 type ReplyEditForm = z.infer<typeof replyEditSchema>;
 
-type EditableReply = Pick<
-  UserPostReply,
-  "content" | "id" | "parent_reply_id" | "replies_received_count"
->;
+type EditableReply = Pick<UserPostReply, "content" | "id" | "parent_reply_id"> & {
+  replies_count?: number;
+  replies_received_count?: number;
+};
 
 type ApiErrorData = {
   error?: string;
@@ -77,6 +77,7 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
     [reply.parent_reply_id],
   );
   const replyKindLabel = replyKind === "resposta" ? "Resposta" : "Comentário";
+  const repliesReceivedCount = reply.replies_received_count ?? reply.replies_count ?? 0;
   const form = useFormList<ReplyEditForm>({
     fields,
     schema: replyEditSchema,
@@ -170,7 +171,7 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
 
         <form className="flex min-h-0 flex-1 flex-col" noValidate onSubmit={handleSubmit}>
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5">
-            {reply.replies_received_count > 0 ? (
+            {repliesReceivedCount > 0 ? (
               <InlineAlert title={`Este ${replyKind} já tem respostas`} variant="warning">
                 Edite com cuidado para preservar o contexto da conversa já publicada.
               </InlineAlert>

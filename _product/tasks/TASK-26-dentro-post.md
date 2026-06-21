@@ -435,3 +435,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Fonte visual auditavel: `_product/proto/Dentro do Post.jpg` via inventario local e screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente.
 - ADRs atualizados: `adrs/0096-detalhe-post-composer-denuncia-midia.md` e `adrs/0138-create-post-media-permission-modal.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, confirmando botao `Anexar midia` habilitado com SVG do novo controle.
+
+## Execucao complementar: editar comentario proprio na arvore do post (2026-06-21)
+
+- Pedido do usuario: quando o comentario/resposta for do proprio usuario, a arvore de comentarios dentro do post deve oferecer a opcao `Editar` no menu de tres pontos.
+- Frontend: `ReplyOverflowMenu` passou a exibir `Editar` antes de `Salvar`, `Compartilhar` e `Excluir` quando `reply.author.id` corresponde ao usuario autenticado.
+- O clique abre a `ReplyEditModal` existente, reaproveitando React Hook Form, Zod, controllers da TASK-02 e a mutation real `PUT /api/private/posts/:id/replies/:replyId`.
+- A mudanca vale tanto para a tela principal do post quanto para threads isoladas, porque `ReplyCard` e compartilhado entre os dois fluxos.
+- Comentarios de terceiros continuam exibindo `Salvar`, `Compartilhar` e `Denunciar`; nao ha alteracao nas regras de exclusao, votos, salvamentos, compartilhamento, collapse, midia, backend, Prisma, endpoint ou packages.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia visual usada foi o screenshot do usuario e a tela local do post.
+- ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile `390x844` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video?focusReplyId=cmqnag8iv0024g8uhognhksz3#reply-cmqnag8iv0024g8uhognhksz3`, confirmando menu `Editar/Salvar/Compartilhar/Excluir` em comentario proprio e abertura da modal `Editar comentario` com o texto atual preenchido.

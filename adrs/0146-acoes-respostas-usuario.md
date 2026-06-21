@@ -31,3 +31,26 @@ A tela `/app/posts/mine` passou a separar posts e respostas/comentários do usu�
 - `pnpm --dir backend check`
 - `pnpm --dir frontend check`
 - Validações finais de build, `pnpm check` e browser local registradas na execução do complemento.
+
+## Complemento 2026-06-21 - editar comentario proprio no detalhe do post
+
+O menu de comentarios/respostas dentro da propria arvore do post deve ter paridade minima com as acoes do usuario em `Meus posts e respostas`.
+
+Decisao complementar:
+
+- Exibir `Editar` no menu de tres pontos de `ReplyCard` somente quando `reply.author.id` for o usuario autenticado.
+- Reutilizar a `ReplyEditModal` existente e o endpoint real `PUT /api/private/posts/:id/replies/:replyId`, sem criar fluxo paralelo ou mock.
+- Manter `Salvar`, `Compartilhar` e `Excluir` no mesmo menu para comentarios proprios; comentarios de terceiros continuam com `Salvar`, `Compartilhar` e `Denunciar`.
+- Preservar o bloqueio de propagacao/collapse da arvore porque o menu continua dentro de `data-comment-collapse-ignore`.
+
+Consequencias:
+
+- O usuario consegue corrigir um comentario direto no contexto da conversa, sem voltar para `/app/posts/mine`.
+- A regra de dominio permanece centralizada no backend e nos hooks ja existentes; nao houve novo schema, endpoint, package, storage ou alteracao de permissao.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- Chrome/CDP mobile `390x844` no detalhe do post demo: sucesso ao abrir o menu do comentario proprio `cmqnag8iv0024g8uhognhksz3`, confirmar ordem `Editar/Salvar/Compartilhar/Excluir` e abrir a modal `Editar comentario` preenchida.
