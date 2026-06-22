@@ -27,6 +27,7 @@ type OwnerActionPost = Pick<
   | "community"
   | "has_psychologist_reply"
   | "id"
+  | "media_items"
   | "media_type"
   | "media_url"
   | "muted_by_current_user"

@@ -150,6 +150,21 @@ const isPublicPostMediaUrl = (value?: string | null) => {
 
 const hasOwnBodyKey = (body: object, key: string) => Object.hasOwn(body, key);
 
+const MAX_POST_CAROUSEL_IMAGES = 10;
+
+type PostMediaItemInput = {
+  mediaType?: string | null;
+  mediaUrl?: string | null;
+  position?: number | null;
+};
+
+const normalizePostMediaItems = (items?: PostMediaItemInput[] | null) =>
+  (items ?? []).slice(0, MAX_POST_CAROUSEL_IMAGES).map((item, index) => ({
+    mediaType: item.mediaType,
+    mediaUrl: item.mediaUrl?.trim() || "",
+    position: typeof item.position === "number" ? item.position : index,
+  }));
+
 const reportReasons = new Set(["spam", "abuse", "self_harm", "privacy", "other"]);
 
 const resolveMutationResult = <T>(
@@ -292,36 +307,74 @@ export const updatePost = async (data: IPostUpdateDTO) => {
   const repository = new PostRepository();
   const title = data.b.title.trim();
   const content = data.b.content.trim();
+  const mediaItemsChangeRequested = hasOwnBodyKey(data.b, "mediaItems");
   const mediaChangeRequested =
-    hasOwnBodyKey(data.b, "mediaUrl") || hasOwnBodyKey(data.b, "mediaType");
+    hasOwnBodyKey(data.b, "mediaUrl") ||
+    hasOwnBodyKey(data.b, "mediaType") ||
+    mediaItemsChangeRequested;
   const body: IPostUpdateDTO["b"] = {
     content,
     title,
   };
 
   if (mediaChangeRequested) {
+    const mediaItemsClearing = mediaItemsChangeRequested && data.b.mediaItems === null;
+    const rawRequestedMediaItems = Array.isArray(data.b.mediaItems) ? data.b.mediaItems : [];
+    if (rawRequestedMediaItems.length > MAX_POST_CAROUSEL_IMAGES) {
+      return invalidPostMedia();
+    }
+
+    const requestedMediaItems = normalizePostMediaItems(rawRequestedMediaItems);
+    const hasMediaItems = requestedMediaItems.length > 0;
     const mediaUrl = data.b.mediaUrl === null ? null : data.b.mediaUrl?.trim();
     const mediaType = data.b.mediaType === null ? null : normalizePostMediaType(data.b.mediaType);
-    const clearingMedia = mediaUrl === null && mediaType === null;
-    const replacingMedia =
+    const clearingMedia = mediaItemsClearing || (mediaUrl === null && mediaType === null);
+    let replacingMedia =
       typeof mediaUrl === "string" &&
       Boolean(mediaUrl) &&
       Boolean(mediaType) &&
       isPublicPostMediaUrl(mediaUrl);
 
-    if (!clearingMedia && !replacingMedia) return invalidPostMedia();
+    if (hasMediaItems) {
+      const invalidItems = requestedMediaItems.some(
+        (item) =>
+          item.mediaType !== "image" || !item.mediaUrl || !isPublicPostMediaUrl(item.mediaUrl),
+      );
+
+      if (invalidItems || requestedMediaItems.length > MAX_POST_CAROUSEL_IMAGES) {
+        return invalidPostMedia();
+      }
+
+      if (mediaType && mediaType !== "image") {
+        return invalidPostMedia();
+      }
+
+      replacingMedia = true;
+      body.mediaUrl = requestedMediaItems[0]?.mediaUrl;
+      body.mediaType = "image";
+      body.mediaItems = requestedMediaItems.map((item) => ({
+        mediaType: "image",
+        mediaUrl: item.mediaUrl,
+        position: item.position,
+      }));
+    } else if (clearingMedia) {
+      body.mediaUrl = null;
+      body.mediaType = null;
+      body.mediaItems = [];
+    } else if (replacingMedia) {
+      body.mediaUrl = mediaUrl as string;
+      body.mediaType = mediaType as "image" | "video";
+      body.mediaItems =
+        mediaType === "image"
+          ? [{ mediaType: "image", mediaUrl: mediaUrl as string, position: 0 }]
+          : [];
+    } else {
+      return invalidPostMedia();
+    }
 
     if (replacingMedia) {
       const canAttachMedia = await repository.canAttachReplyMedia(data.auth.id!);
       if (!canAttachMedia) return postMediaNotAllowed();
-    }
-
-    if (clearingMedia) {
-      body.mediaUrl = null;
-      body.mediaType = null;
-    } else {
-      body.mediaUrl = mediaUrl as string;
-      body.mediaType = mediaType as "image" | "video";
     }
   }
 

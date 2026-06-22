@@ -83,6 +83,13 @@ export type CommunityProfessionalReply = {
   author: CommunityAuthor;
 };
 
+export type CommunityPostMediaItem = {
+  id: string | null;
+  media_url: string;
+  media_type: "image" | "video";
+  position: number;
+};
+
 export type CommunitySortPeriodMetrics = {
   week: number;
   month: number;
@@ -115,6 +122,7 @@ export type CommunityPost = {
   featured_badge: string | null;
   media_url: string | null;
   media_type: string | null;
+  media_items: CommunityPostMediaItem[];
   current_user_vote: 1 | -1 | null;
   saved: boolean;
   muted_by_current_user: boolean;
@@ -248,6 +256,11 @@ export type CreateCommunityPostPayload = {
   anonymous?: boolean;
   mediaType?: "image" | "video";
   mediaUrl?: string;
+  mediaItems?: Array<{
+    mediaType: "image";
+    mediaUrl: string;
+    position?: number;
+  }>;
 };
 
 export type CommunityPostMediaUploadResponse = {

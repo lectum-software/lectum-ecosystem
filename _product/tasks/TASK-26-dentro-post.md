@@ -665,3 +665,13 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: screenshot do usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0148-imagens-horizontais-16-9-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP desktop `1440x900` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, confirmando imagem horizontal com `ratio=1.7777`, `w-full` e `widthGap=0` em relacao a largura util da coluna do comentario.
+
+## Execucao complementar: video horizontal em largura util total (2026-06-22)
+
+- Pedido do usuario: quando o video anexado em comentarios/respostas for horizontal, exibi-lo horizontalmente com maximo aproveitamento da largura util e proporcao `16:9`.
+- Frontend: o `MediaBlock` do detalhe do post agora detecta a orientacao real de videos por metadados e aplica `aspect-video`, `w-full` e `max-w-none` quando o video e horizontal.
+- Frontend: o `MediaBlock` compartilhado dos cards de comunidade recebeu a mesma deteccao para manter consistencia em listas, perfil e contribuicoes que reutilizam o card.
+- Videos verticais continuam com enquadramento compacto e centralizado; imagens, upload, edicao, permissao de midia, CTA WhatsApp, votos, salvos e ordenacao nao foram alterados neste ajuste.
+- Fonte visual auditavel: screenshot do usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0148-imagens-horizontais-16-9-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `pnpm --dir backend db:migrate` e `pnpm --dir backend build`.

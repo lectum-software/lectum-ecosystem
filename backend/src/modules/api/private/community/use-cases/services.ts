@@ -151,6 +151,21 @@ const postMediaNotAllowed = () => ({
   ...error("community_post_media_professional_plan", {}),
 });
 
+const MAX_POST_CAROUSEL_IMAGES = 10;
+
+type PostMediaItemInput = {
+  mediaType?: string | null;
+  mediaUrl?: string | null;
+  position?: number | null;
+};
+
+const normalizePostMediaItems = (items?: PostMediaItemInput[] | null) =>
+  (items ?? []).slice(0, MAX_POST_CAROUSEL_IMAGES).map((item, index) => ({
+    mediaType: item.mediaType,
+    mediaUrl: item.mediaUrl?.trim() || "",
+    position: typeof item.position === "number" ? item.position : index,
+  }));
+
 export const follow = async (data: ICommunityMembershipDTO) => {
   const unauthorized = ensureCommunityMemberAuth(data);
   if (unauthorized) return unauthorized;
@@ -229,13 +244,50 @@ export const createPost = async (data: ICommunityCreatePostDTO) => {
 
   const mediaUrl = data.b.mediaUrl?.trim() || undefined;
   const mediaType = normalizePostMediaType(data.b.mediaType);
-  const hasMedia = Boolean(mediaUrl || data.b.mediaType);
+  const rawRequestedMediaItems = data.b.mediaItems ?? [];
+  if (rawRequestedMediaItems.length > MAX_POST_CAROUSEL_IMAGES) {
+    return invalidPostMedia();
+  }
 
-  if (hasMedia) {
+  const requestedMediaItems = normalizePostMediaItems(rawRequestedMediaItems);
+  const hasMediaItems = requestedMediaItems.length > 0;
+  const hasLegacyMedia = Boolean(mediaUrl || data.b.mediaType);
+  const hasMedia = hasLegacyMedia || hasMediaItems;
+  let normalizedMediaItems: { mediaType: "image"; mediaUrl: string; position: number }[] = [];
+  let nextMediaUrl = mediaUrl;
+  let nextMediaType = mediaType;
+
+  if (hasMediaItems) {
+    const invalidItems = requestedMediaItems.some(
+      (item) =>
+        item.mediaType !== "image" || !item.mediaUrl || !isPublicPostMediaUrl(item.mediaUrl),
+    );
+
+    if (invalidItems || requestedMediaItems.length > MAX_POST_CAROUSEL_IMAGES) {
+      return invalidPostMedia();
+    }
+
+    if (hasLegacyMedia && mediaType && mediaType !== "image") {
+      return invalidPostMedia();
+    }
+
+    normalizedMediaItems = requestedMediaItems.map((item) => ({
+      mediaType: "image",
+      mediaUrl: item.mediaUrl,
+      position: item.position,
+    }));
+    nextMediaUrl = requestedMediaItems[0]?.mediaUrl;
+    nextMediaType = "image";
+  } else if (hasLegacyMedia) {
     if (!mediaUrl || !mediaType || !isPublicPostMediaUrl(mediaUrl)) {
       return invalidPostMedia();
     }
 
+    normalizedMediaItems =
+      mediaType === "image" ? [{ mediaType: "image", mediaUrl, position: 0 }] : [];
+  }
+
+  if (hasMedia) {
     const canAttachMedia = await canAttachCommunityMedia(data.auth.id!);
     if (!canAttachMedia) return postMediaNotAllowed();
   }
@@ -246,8 +298,9 @@ export const createPost = async (data: ICommunityCreatePostDTO) => {
     b: {
       title: data.b.title.trim(),
       content: data.b.content.trim(),
-      mediaType: mediaType ?? undefined,
-      mediaUrl,
+      mediaType: nextMediaType ?? undefined,
+      mediaUrl: nextMediaUrl,
+      mediaItems: normalizedMediaItems,
       anonymous: data.auth.role === "paciente" ? data.b.anonymous === true : false,
     },
   });

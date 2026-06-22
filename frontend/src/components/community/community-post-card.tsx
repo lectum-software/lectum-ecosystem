@@ -19,7 +19,9 @@ import { useSavePost, useVotePost } from "@/api/callers/posts";
 import type { PostListPost, PostProfessionalReply } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { MentorBadge } from "@/components/community/mentor-badge";
+import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
+import { detectReplyMediaOrientation } from "@/components/community/reply-media-attachment-control";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import {
   PsychologistWhatsAppButtonContent,
@@ -105,6 +107,7 @@ const getInitials = (name: string) => {
 const LANDSCAPE_MEDIA_RATIO = 1.12;
 
 type ImageMediaOrientation = "default" | "landscape";
+type VideoMediaOrientation = "default" | "landscape";
 
 const InlineExpandableText = ({
   className,
@@ -377,17 +380,46 @@ const MediaBlock = ({
     mediaUrl: string | null;
     orientation: ImageMediaOrientation;
   }>({ mediaUrl: null, orientation: "default" });
+  const [videoMedia, setVideoMedia] = useState<{
+    mediaUrl: string | null;
+    orientation: VideoMediaOrientation;
+  }>({ mediaUrl: null, orientation: "default" });
   const imageOrientation = imageMedia.mediaUrl === mediaUrl ? imageMedia.orientation : "default";
+  const videoOrientation = videoMedia.mediaUrl === mediaUrl ? videoMedia.orientation : "default";
+  const resolvedUrl = mediaUrl ? resolvePublicMediaUrl(mediaUrl) : null;
 
-  if (!mediaUrl) return null;
+  useEffect(() => {
+    if (!resolvedUrl || mediaType !== "video" || !mediaUrl) return;
 
-  const resolvedUrl = resolvePublicMediaUrl(mediaUrl);
-  if (!resolvedUrl) return null;
+    let isMounted = true;
+
+    detectReplyMediaOrientation(resolvedUrl, "video").then((orientation) => {
+      if (!isMounted) return;
+
+      setVideoMedia({
+        mediaUrl,
+        orientation: orientation === "landscape" ? "landscape" : "default",
+      });
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [mediaType, mediaUrl, resolvedUrl]);
+
+  if (!mediaUrl || !resolvedUrl) return null;
+
+  const isLandscapeVideo = videoOrientation === "landscape";
 
   if (mediaType === "video") {
     return (
       <VerticalVideoPlayer
-        className={cn("mx-auto w-full max-w-[390px] rounded-[22px]", videoClassName)}
+        className={cn(
+          "mx-auto w-full rounded-[22px]",
+          isLandscapeVideo ? "max-w-none aspect-video" : "max-w-[390px]",
+          videoClassName,
+        )}
+        fit={isLandscapeVideo ? "cover" : "contain"}
         src={resolvedUrl}
         title={alt}
       />
@@ -571,8 +603,15 @@ export const CommunityPostCard = ({
   const displayWasEdited = Boolean(displayEditedAt);
   const displayTitle = primaryReply ? null : post.title;
   const displayContent = primaryReply?.content ?? post.content;
-  const displayMediaType = primaryReply?.media_type ?? post.media_type;
-  const displayMediaUrl = primaryReply?.media_url ?? post.media_url;
+  const postImageMediaItems = primaryReply
+    ? []
+    : (post.media_items ?? []).filter((item) => item.media_type === "image");
+  const singlePostMediaItem = postImageMediaItems.length === 1 ? postImageMediaItems[0] : null;
+  const displayMediaType =
+    primaryReply?.media_type ?? singlePostMediaItem?.media_type ?? post.media_type;
+  const displayMediaUrl =
+    primaryReply?.media_url ?? singlePostMediaItem?.media_url ?? post.media_url;
+  const shouldShowPostCarousel = !primaryReply && postImageMediaItems.length > 1;
   const displayFeaturedBadge =
     primaryReply?.author.featured_badge ?? displayAuthor.featured_badge ?? post.featured_badge;
   const highlightedProfessionalReply =
@@ -896,14 +935,21 @@ export const CommunityPostCard = ({
       </div>
 
       <div className="mt-4 grid gap-4">
-        <MediaBlock
-          alt={displayTitle ?? "Mídia da publicação"}
-          mediaType={displayMediaType}
-          mediaUrl={displayMediaUrl}
-          videoClassName={
-            shouldCompactProfileReplyMedia ? "md:mx-auto md:max-w-[320px]" : undefined
-          }
-        />
+        {shouldShowPostCarousel ? (
+          <PostMediaCarousel
+            alt={displayTitle ?? "Mídia da publicação"}
+            items={postImageMediaItems}
+          />
+        ) : (
+          <MediaBlock
+            alt={displayTitle ?? "Mídia da publicação"}
+            mediaType={displayMediaType}
+            mediaUrl={displayMediaUrl}
+            videoClassName={
+              shouldCompactProfileReplyMedia ? "md:mx-auto md:max-w-[320px]" : undefined
+            }
+          />
+        )}
         <ProfessionalReplyPreview
           profilePublicationMode={profilePublicationMode}
           reply={highlightedProfessionalReply}

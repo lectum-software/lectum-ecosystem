@@ -105,6 +105,18 @@ const postSelect = {
   content: true,
   media_url: true,
   media_type: true,
+  media_items: {
+    where: {
+      deleted: false,
+    },
+    orderBy: [{ position: "asc" }, { createdAt: "asc" }, { id: "asc" }],
+    select: {
+      id: true,
+      media_url: true,
+      media_type: true,
+      position: true,
+    },
+  },
   anonymous: true,
   status: true,
   upvotes_count: true,
@@ -1118,6 +1130,36 @@ const toHighlightedProfessionalReply = (
   };
 };
 
+const toPostMediaItemsResponse = (
+  item: Pick<PostResult, "media_items" | "media_type" | "media_url">,
+): CommunityPostDTO["media_items"] => {
+  const storedItems = item.media_items
+    .filter((mediaItem) => mediaItem.media_url && mediaItem.media_type)
+    .map((mediaItem) => {
+      const mediaType: "image" | "video" = mediaItem.media_type === "video" ? "video" : "image";
+
+      return {
+        id: mediaItem.id,
+        media_url: mediaItem.media_url,
+        media_type: mediaType,
+        position: mediaItem.position,
+      };
+    });
+
+  if (storedItems.length > 0) return storedItems;
+
+  if (!item.media_url || (item.media_type !== "image" && item.media_type !== "video")) return [];
+
+  return [
+    {
+      id: null,
+      media_url: item.media_url,
+      media_type: item.media_type,
+      position: 0,
+    },
+  ];
+};
+
 const toPostResponse = (
   item: PostResult,
   currentUserVote: CurrentVote = null,
@@ -1161,6 +1203,7 @@ const toPostResponse = (
     featured_badge: author.featured_badge,
     media_url: item.media_url,
     media_type: item.media_type,
+    media_items: toPostMediaItemsResponse(item),
     current_user_vote: currentUserVote,
     saved,
     muted_by_current_user: mutedByCurrentUser,
@@ -2099,14 +2142,26 @@ export class CommunityRepository implements ICommunityRepository {
     if (!community) return null;
 
     const isPsychologist = data.auth.role === "psicologo";
+    const mediaItems = data.b.mediaItems ?? [];
+    const firstMediaItem = mediaItems[0];
     const post = await prisma.community_post.create({
       data: {
         community_id: community.id,
         author_id: data.auth.id!,
         title: data.b.title.trim(),
         content: data.b.content.trim(),
-        media_url: data.b.mediaUrl?.trim() || null,
-        media_type: data.b.mediaType || null,
+        media_url: firstMediaItem?.mediaUrl.trim() || data.b.mediaUrl?.trim() || null,
+        media_type: firstMediaItem ? "image" : data.b.mediaType || null,
+        media_items:
+          mediaItems.length > 0
+            ? {
+                create: mediaItems.map((mediaItem, index) => ({
+                  media_url: mediaItem.mediaUrl.trim(),
+                  media_type: "image",
+                  position: typeof mediaItem.position === "number" ? mediaItem.position : index,
+                })),
+              }
+            : undefined,
         anonymous: isPsychologist ? false : data.b.anonymous === true,
         status: "publicado",
       },

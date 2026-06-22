@@ -38,6 +38,7 @@ export type PostUpdateBody = {
   content: string;
   mediaType?: "image" | "video" | null;
   mediaUrl?: string | null;
+  mediaItems?: PostMediaItemInput[] | null;
 };
 
 export type PostReportBody = {
@@ -89,12 +90,26 @@ export type PostDetailDTO = {
   featured_badge: string | null;
   media_url: string | null;
   media_type: string | null;
+  media_items: PostMediaItemDTO[];
   current_user_vote: 1 | -1 | null;
   saved: boolean;
   muted_by_current_user: boolean;
   has_psychologist_reply: boolean;
   community: PostCommunityDTO;
   author: PostAuthorDTO;
+};
+
+export type PostMediaItemInput = {
+  mediaType: "image";
+  mediaUrl: string;
+  position?: number;
+};
+
+export type PostMediaItemDTO = {
+  id: string | null;
+  media_url: string;
+  media_type: "image" | "video";
+  position: number;
 };
 
 export type PostReplyDTO = {

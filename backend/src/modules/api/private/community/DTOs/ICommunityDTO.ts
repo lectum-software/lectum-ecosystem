@@ -48,6 +48,13 @@ export type CommunityCreatePostBody = {
   anonymous?: boolean;
   mediaType?: "image" | "video";
   mediaUrl?: string;
+  mediaItems?: CommunityPostMediaItemInput[];
+};
+
+export type CommunityPostMediaItemInput = {
+  mediaType: "image";
+  mediaUrl: string;
+  position?: number;
 };
 
 export type CommunityPostMediaUploadResponse = {
@@ -122,6 +129,13 @@ export type CommunityPostSortMetricsDTO = {
   penalty: number;
 };
 
+export type CommunityPostMediaItemDTO = {
+  id: string | null;
+  media_url: string;
+  media_type: "image" | "video";
+  position: number;
+};
+
 export type CommunityPostDTO = {
   id: string;
   title: string;
@@ -138,6 +152,7 @@ export type CommunityPostDTO = {
   featured_badge: string | null;
   media_url: string | null;
   media_type: string | null;
+  media_items: CommunityPostMediaItemDTO[];
   current_user_vote: 1 | -1 | null;
   saved: boolean;
   muted_by_current_user: boolean;

@@ -54,6 +54,7 @@ import type { PostDetail, PostReply } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
 import { MentorBadge } from "@/components/community/mentor-badge";
+import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
 import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
 import { ReplyEditModal } from "@/components/community/reply-edit-modal";
@@ -427,6 +428,7 @@ const getInitials = (name: string) => {
 const LANDSCAPE_MEDIA_RATIO = 1.12;
 
 type ImageMediaOrientation = "default" | "landscape";
+type VideoMediaOrientation = "default" | "landscape";
 
 const isVerifiedProfessionalReply = (reply: PostReply) =>
   reply.author.role === "psicologo" && reply.author.verified;
@@ -640,21 +642,45 @@ const MediaBlock = ({
     mediaUrl: string | null;
     orientation: ImageMediaOrientation;
   }>({ mediaUrl: null, orientation: "default" });
+  const [videoMedia, setVideoMedia] = useState<{
+    mediaUrl: string | null;
+    orientation: VideoMediaOrientation;
+  }>({ mediaUrl: null, orientation: "default" });
   const imageOrientation = imageMedia.mediaUrl === mediaUrl ? imageMedia.orientation : "default";
+  const videoOrientation = videoMedia.mediaUrl === mediaUrl ? videoMedia.orientation : "default";
+  const src = mediaUrl ? resolvePublicMediaUrl(mediaUrl) : null;
 
-  if (!mediaUrl) return null;
+  useEffect(() => {
+    if (!src || mediaType !== "video" || !mediaUrl) return;
 
-  const src = resolvePublicMediaUrl(mediaUrl);
-  if (!src) return null;
+    let isMounted = true;
+
+    detectReplyMediaOrientation(src, "video").then((orientation) => {
+      if (!isMounted) return;
+
+      setVideoMedia({
+        mediaUrl,
+        orientation: orientation === "landscape" ? "landscape" : "default",
+      });
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [mediaType, mediaUrl, src]);
+
+  if (!mediaUrl || !src) return null;
 
   const radius = size === "lg" ? "rounded-[22px]" : "rounded-[18px]";
+  const isLandscapeVideo = videoOrientation === "landscape";
   const imageAspectClass = imageOrientation === "landscape" ? "aspect-video" : "aspect-[4/5]";
   const imageFrameClass =
     size === "md" && imageOrientation !== "landscape"
       ? "mx-auto w-full max-w-[280px] sm:max-w-[320px]"
       : "w-full";
-  const videoFrameClass =
-    size === "md"
+  const videoFrameClass = isLandscapeVideo
+    ? "w-full max-w-none aspect-video"
+    : size === "md"
       ? "mx-auto w-full max-w-[280px] sm:max-w-[320px]"
       : "mx-auto w-full max-w-[390px] sm:max-w-[420px]";
   const imageSizes =
@@ -666,7 +692,7 @@ const MediaBlock = ({
     return (
       <VerticalVideoPlayer
         className={cn("mt-3 border-border", radius, videoFrameClass)}
-        fit="contain"
+        fit={isLandscapeVideo ? "cover" : "contain"}
         fullscreenVariant="content"
         src={src}
         title={alt}
@@ -847,6 +873,13 @@ const PostHeader = ({
 const PostBody = ({ post }: { post: PostDetail }) => {
   const [contentExpanded, setContentExpanded] = useState(false);
   const showAuthorWhatsapp = post.author.role === "psicologo" && Boolean(post.author.whatsapp_url);
+  const postImageMediaItems = (post.media_items ?? []).filter(
+    (item) => item.media_type === "image",
+  );
+  const singlePostMediaItem = postImageMediaItems.length === 1 ? postImageMediaItems[0] : null;
+  const displayMediaType = singlePostMediaItem?.media_type ?? post.media_type;
+  const displayMediaUrl = singlePostMediaItem?.media_url ?? post.media_url;
+  const shouldShowPostCarousel = postImageMediaItems.length > 1;
 
   return (
     <div className="grid gap-3 px-5 py-4">
@@ -859,7 +892,11 @@ const PostBody = ({ post }: { post: PostDetail }) => {
         onToggle={() => setContentExpanded((current) => !current)}
         text={post.content}
       />
-      <MediaBlock alt={post.title} mediaType={post.media_type} mediaUrl={post.media_url} />
+      {shouldShowPostCarousel ? (
+        <PostMediaCarousel alt={post.title} items={postImageMediaItems} />
+      ) : (
+        <MediaBlock alt={post.title} mediaType={displayMediaType} mediaUrl={displayMediaUrl} />
+      )}
       {showAuthorWhatsapp ? (
         <PsychologistWhatsAppRedirectButton
           className="mx-auto flex h-11 w-full min-w-0 max-w-[320px] items-center justify-center gap-2 rounded-[14px] border-2 border-success bg-transparent px-3 text-success shadow-none transition hover:bg-success hover:text-white"
@@ -888,6 +925,13 @@ const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
     ? `/app/psychologist/${post.author.id}`
     : undefined;
   const postHref = `/app/community/${post.community.slug}/post/${post.id}`;
+  const postImageMediaItems = (post.media_items ?? []).filter(
+    (item) => item.media_type === "image",
+  );
+  const singlePostMediaItem = postImageMediaItems.length === 1 ? postImageMediaItems[0] : null;
+  const displayMediaType = singlePostMediaItem?.media_type ?? post.media_type;
+  const displayMediaUrl = singlePostMediaItem?.media_url ?? post.media_url;
+  const shouldShowPostCarousel = postImageMediaItems.length > 1;
   const handleCardClick = (event: MouseEvent<HTMLElement>) => {
     if (
       event.defaultPrevented ||
@@ -983,12 +1027,20 @@ const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
           onToggle={() => setContentExpanded((current) => !current)}
           text={post.content}
         />
-        <MediaBlock
-          alt={post.title}
-          mediaType={post.media_type}
-          mediaUrl={post.media_url}
-          size="md"
-        />
+        {shouldShowPostCarousel ? (
+          <PostMediaCarousel
+            alt={post.title}
+            items={postImageMediaItems}
+            roundedClassName="rounded-[18px]"
+          />
+        ) : (
+          <MediaBlock
+            alt={post.title}
+            mediaType={displayMediaType}
+            mediaUrl={displayMediaUrl}
+            size="md"
+          />
+        )}
       </div>
     </article>
   );

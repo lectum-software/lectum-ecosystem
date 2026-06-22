@@ -1,4 +1,4 @@
-﻿import type { Community, CommunityAuthor } from "./community";
+﻿import type { Community, CommunityAuthor, CommunityPostMediaItem } from "./community";
 
 export type PostDetail = {
   id: string;
@@ -16,6 +16,7 @@ export type PostDetail = {
   featured_badge: string | null;
   media_url: string | null;
   media_type: string | null;
+  media_items: CommunityPostMediaItem[];
   current_user_vote: 1 | -1 | null;
   saved: boolean;
   muted_by_current_user: boolean;
@@ -139,6 +140,11 @@ export type UpdatePostPayload = {
   content: string;
   mediaType?: "image" | "video" | null;
   mediaUrl?: string | null;
+  mediaItems?: Array<{
+    mediaType: "image";
+    mediaUrl: string;
+    position?: number;
+  }> | null;
 };
 
 export type PostUpdateResponse = PostDetail;

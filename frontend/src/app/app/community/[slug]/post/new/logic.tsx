@@ -1,6 +1,6 @@
 "use client";
 
-import { Info, Lightbulb, Loader2, Video, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Info, Lightbulb, Loader2, Video, X } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -141,12 +141,18 @@ const EDITOR_FIELD_IDS = new Set(["create-post-title", "create-post-content"]);
 const LAST_CREATED_POST_HREF_KEY = "lectum:last-created-post-href";
 const COMMUNITY_POST_MEDIA_ACCEPT =
   "image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime";
+const MAX_POST_CAROUSEL_IMAGES = 10;
 
 type SelectedPostMedia = {
   file: File;
+  id: string;
+  orientation?: "landscape" | "portrait";
   previewUrl: string;
   type: "image" | "video";
 };
+
+const createSelectedMediaId = () =>
+  globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 type CreateCommunityPostLogicProps = {
   asModalSlot?: boolean;
@@ -166,11 +172,12 @@ export const CreateCommunityPostLogic = ({
   const [isGuidanceOpen, setIsGuidanceOpen] = useState(false);
   const [isAnonymousTipDismissed, setIsAnonymousTipDismissed] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [selectedMedia, setSelectedMedia] = useState<SelectedPostMedia | null>(null);
+  const [selectedMediaItems, setSelectedMediaItems] = useState<SelectedPostMedia[]>([]);
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const closeTimerRef = useRef<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const lastFocusedEditorIdRef = useRef("create-post-title");
-  const selectedMediaPreviewUrlRef = useRef<string | null>(null);
+  const selectedMediaPreviewUrlsRef = useRef<string[]>([]);
 
   const communitiesQuery = useCommunities({ limit: 50 });
   const communityOptions = useMemo(
@@ -299,16 +306,45 @@ export const CreateCommunityPostLogic = ({
   };
 
   const revokeSelectedMediaPreview = useCallback(() => {
-    if (!selectedMediaPreviewUrlRef.current) return;
-
-    URL.revokeObjectURL(selectedMediaPreviewUrlRef.current);
-    selectedMediaPreviewUrlRef.current = null;
+    selectedMediaPreviewUrlsRef.current.forEach((previewUrl) => {
+      URL.revokeObjectURL(previewUrl);
+    });
+    selectedMediaPreviewUrlsRef.current = [];
   }, []);
 
   const clearSelectedMedia = useCallback(() => {
     revokeSelectedMediaPreview();
-    setSelectedMedia(null);
+    setSelectedMediaItems([]);
+    setActiveMediaIndex(0);
   }, [revokeSelectedMediaPreview]);
+
+  const removeSelectedMediaAt = useCallback((index: number) => {
+    setSelectedMediaItems((currentItems) => {
+      const removedItem = currentItems[index];
+      if (!removedItem) return currentItems;
+
+      URL.revokeObjectURL(removedItem.previewUrl);
+      selectedMediaPreviewUrlsRef.current = selectedMediaPreviewUrlsRef.current.filter(
+        (previewUrl) => previewUrl !== removedItem.previewUrl,
+      );
+
+      const nextItems = currentItems.filter((_, currentIndex) => currentIndex !== index);
+      setActiveMediaIndex((currentIndex) =>
+        nextItems.length === 0 ? 0 : Math.min(currentIndex, nextItems.length - 1),
+      );
+
+      return nextItems;
+    });
+  }, []);
+
+  const updateSelectedMediaOrientation = useCallback(
+    (id: string, orientation: SelectedPostMedia["orientation"]) => {
+      setSelectedMediaItems((currentItems) =>
+        currentItems.map((item) => (item.id === id ? { ...item, orientation } : item)),
+      );
+    },
+    [],
+  );
 
   const handleClose = useCallback(() => {
     setIsSheetOpen(false);
@@ -359,51 +395,125 @@ export const CreateCommunityPostLogic = ({
   }, [revokeSelectedMediaPreview]);
 
   const handleMediaChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] ?? null;
+    const files = Array.from(event.target.files ?? []);
     event.currentTarget.value = "";
 
-    if (!file) return;
+    if (files.length === 0) return;
 
     if (!mediaPermission.canAttach) {
-      toast.error(
-        mediaPermission.reason ||
-          "M\u00eddia dispon\u00edvel apenas para psic\u00f3logos verificados.",
-      );
+      toast.error(mediaPermission.reason || "Mídia disponível apenas para psicólogos verificados.");
       focusLastEditor();
       return;
     }
 
-    revokeSelectedMediaPreview();
-    const previewUrl = URL.createObjectURL(file);
-    selectedMediaPreviewUrlRef.current = previewUrl;
-    setSelectedMedia({
-      file,
-      previewUrl,
-      type: file.type.startsWith("image/") ? "image" : "video",
+    const videoFiles = files.filter((file) => file.type.startsWith("video/"));
+    const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+
+    if (videoFiles.length > 0) {
+      if (files.length > 1 || imageFiles.length > 0) {
+        toast.error(
+          "Vídeos devem ser anexados individualmente. Para carrossel, selecione apenas imagens.",
+        );
+        focusLastEditor();
+        return;
+      }
+
+      clearSelectedMedia();
+      const previewUrl = URL.createObjectURL(videoFiles[0]);
+      selectedMediaPreviewUrlsRef.current = [previewUrl];
+      setSelectedMediaItems([
+        {
+          file: videoFiles[0],
+          id: createSelectedMediaId(),
+          previewUrl,
+          type: "video",
+        },
+      ]);
+      setActiveMediaIndex(0);
+      focusLastEditor();
+      return;
+    }
+
+    if (imageFiles.length === 0) {
+      toast.error("Envie uma imagem ou vídeo em formato permitido.");
+      focusLastEditor();
+      return;
+    }
+
+    const replacingVideo = selectedMediaItems.some((item) => item.type === "video");
+    const baseItems = replacingVideo
+      ? []
+      : selectedMediaItems.filter((item) => item.type === "image");
+    const availableSlots = MAX_POST_CAROUSEL_IMAGES - baseItems.length;
+
+    if (availableSlots <= 0) {
+      toast.error(`Você pode anexar até ${MAX_POST_CAROUSEL_IMAGES} imagens por post.`);
+      focusLastEditor();
+      return;
+    }
+
+    if (replacingVideo) {
+      clearSelectedMedia();
+    }
+
+    const filesToAttach = imageFiles.slice(0, availableSlots);
+    if (imageFiles.length > availableSlots) {
+      toast.error(
+        `Só foi possível anexar ${availableSlots} imagem(ns). O limite é ${MAX_POST_CAROUSEL_IMAGES}.`,
+      );
+    }
+
+    const nextItems = filesToAttach.map((file) => {
+      const previewUrl = URL.createObjectURL(file);
+      selectedMediaPreviewUrlsRef.current.push(previewUrl);
+
+      return {
+        file,
+        id: createSelectedMediaId(),
+        previewUrl,
+        type: "image" as const,
+      };
     });
+
+    setSelectedMediaItems([...baseItems, ...nextItems]);
+    setActiveMediaIndex(baseItems.length);
     focusLastEditor();
   };
 
   const onSubmit = hook.handleSubmit(async (values) => {
     try {
-      const mediaFile = mediaPermission.canAttach ? selectedMedia?.file : null;
-      const media = mediaFile
-        ? await uploadMutation.mutateAsync({
-            file: mediaFile,
-            slug: values.community_slug,
-          })
-        : null;
+      const mediaFiles = mediaPermission.canAttach ? selectedMediaItems : [];
+      const uploadedMedia =
+        mediaFiles.length > 0
+          ? await Promise.all(
+              mediaFiles.map((mediaItem) =>
+                uploadMutation.mutateAsync({
+                  file: mediaItem.file,
+                  slug: values.community_slug,
+                }),
+              ),
+            )
+          : [];
+      const firstMedia = uploadedMedia[0] ?? null;
+      const imageMediaItems = uploadedMedia
+        .filter((media) => media.media_type === "image")
+        .map((media, index) => ({
+          mediaType: "image" as const,
+          mediaUrl: media.media_url,
+          position: index,
+        }));
 
       await mutation.mutateAsync({
         slug: values.community_slug,
         body: {
           ...toCreateCommunityPostPayload(values, isPsychologist),
-          ...(media
+          ...(firstMedia
             ? {
-                mediaType: media.media_type,
-                mediaUrl: media.media_url,
+                mediaType: firstMedia.media_type,
+                mediaUrl: firstMedia.media_url,
               }
             : {}),
+          ...(imageMediaItems.length > 0 ? { mediaItems: imageMediaItems } : {}),
         },
       });
     } catch {
@@ -593,19 +703,57 @@ export const CreateCommunityPostLogic = ({
   );
 
   const renderSelectedMediaPreview = () => {
-    if (!mediaPermission.canAttach || !selectedMedia) return null;
+    if (!mediaPermission.canAttach || selectedMediaItems.length === 0) return null;
+
+    const activeIndex = Math.min(activeMediaIndex, selectedMediaItems.length - 1);
+    const activeMedia = selectedMediaItems[activeIndex];
+    if (!activeMedia) return null;
+
+    const hasMultipleImages =
+      selectedMediaItems.length > 1 && selectedMediaItems.every((item) => item.type === "image");
+    const isLandscapePreview = hasMultipleImages || activeMedia.orientation === "landscape";
+    const frameClassName = isLandscapePreview
+      ? "w-full max-w-[min(100%,28rem)]"
+      : "w-[min(9.5rem,48vw)] sm:w-28";
 
     return (
       <div className="mt-3 flex shrink-0 justify-start">
-        <figure className="relative w-[min(9.5rem,48vw)] overflow-hidden rounded-[1.4rem] border border-border bg-surface-muted shadow-[var(--lectum-shadow-soft)] sm:w-28">
-          <div className="relative aspect-[9/14] w-full overflow-hidden bg-surface-muted">
-            {selectedMedia.type === "image" ? (
+        <figure
+          className={cn(
+            "relative overflow-hidden rounded-[1.4rem] border border-border bg-surface-muted shadow-[var(--lectum-shadow-soft)]",
+            frameClassName,
+          )}
+        >
+          <div
+            className={cn(
+              "relative w-full overflow-hidden bg-surface-muted",
+              isLandscapePreview ? "aspect-video" : "aspect-[9/14]",
+            )}
+          >
+            {activeMedia.type === "image" ? (
               <Image
-                alt="Miniatura da mídia selecionada"
+                alt={
+                  hasMultipleImages
+                    ? `Miniatura da imagem ${activeIndex + 1} de ${selectedMediaItems.length}`
+                    : "Miniatura da mídia selecionada"
+                }
                 className="object-cover"
                 fill
-                sizes="(min-width: 640px) 112px, 152px"
-                src={selectedMedia.previewUrl}
+                onLoad={(event) => {
+                  const { naturalHeight, naturalWidth } = event.currentTarget;
+                  updateSelectedMediaOrientation(
+                    activeMedia.id,
+                    naturalWidth && naturalHeight && naturalWidth / naturalHeight >= 1.12
+                      ? "landscape"
+                      : "portrait",
+                  );
+                }}
+                sizes={
+                  isLandscapePreview
+                    ? "(max-width: 640px) calc(100vw - 40px), 448px"
+                    : "(min-width: 640px) 112px, 152px"
+                }
+                src={activeMedia.previewUrl}
                 unoptimized
               />
             ) : (
@@ -613,9 +761,18 @@ export const CreateCommunityPostLogic = ({
                 aria-label="Miniatura do vídeo selecionado"
                 className="h-full w-full object-cover"
                 muted
+                onLoadedMetadata={(event) => {
+                  const { videoHeight, videoWidth } = event.currentTarget;
+                  updateSelectedMediaOrientation(
+                    activeMedia.id,
+                    videoWidth && videoHeight && videoWidth / videoHeight >= 1.12
+                      ? "landscape"
+                      : "portrait",
+                  );
+                }}
                 playsInline
                 preload="metadata"
-                src={selectedMedia.previewUrl}
+                src={activeMedia.previewUrl}
               />
             )}
 
@@ -624,7 +781,7 @@ export const CreateCommunityPostLogic = ({
               className="absolute top-2 right-2 grid h-8 w-8 place-items-center rounded-full bg-surface/90 text-muted shadow-[var(--lectum-shadow-soft)] transition hover:bg-surface hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15"
               disabled={isSubmitting}
               onClick={() => {
-                clearSelectedMedia();
+                removeSelectedMediaAt(activeIndex);
                 focusLastEditor();
               }}
               onMouseDown={(event) => event.preventDefault()}
@@ -633,6 +790,63 @@ export const CreateCommunityPostLogic = ({
             >
               <X className="h-4 w-4" aria-hidden="true" />
             </button>
+
+            {hasMultipleImages ? (
+              <>
+                <button
+                  aria-label="Imagem anterior"
+                  className="absolute top-1/2 left-2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-slate-950/45 text-white backdrop-blur transition hover:bg-slate-950/65 focus:outline-none focus:ring-2 focus:ring-white/70"
+                  disabled={isSubmitting}
+                  onClick={() => {
+                    setActiveMediaIndex((current) =>
+                      current <= 0 ? selectedMediaItems.length - 1 : current - 1,
+                    );
+                    focusLastEditor();
+                  }}
+                  onMouseDown={(event) => event.preventDefault()}
+                  tabIndex={-1}
+                  type="button"
+                >
+                  <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <button
+                  aria-label="Proxima imagem"
+                  className="absolute top-1/2 right-12 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-slate-950/45 text-white backdrop-blur transition hover:bg-slate-950/65 focus:outline-none focus:ring-2 focus:ring-white/70"
+                  disabled={isSubmitting}
+                  onClick={() => {
+                    setActiveMediaIndex((current) =>
+                      current >= selectedMediaItems.length - 1 ? 0 : current + 1,
+                    );
+                    focusLastEditor();
+                  }}
+                  onMouseDown={(event) => event.preventDefault()}
+                  tabIndex={-1}
+                  type="button"
+                >
+                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <div className="absolute inset-x-0 bottom-2 flex justify-center gap-1">
+                  {selectedMediaItems.map((item, index) => (
+                    <button
+                      aria-label={`Mostrar imagem ${index + 1}`}
+                      className={cn(
+                        "h-1.5 rounded-full bg-white/65 transition-all",
+                        index === activeIndex ? "w-4 bg-white" : "w-1.5",
+                      )}
+                      disabled={isSubmitting}
+                      key={item.id}
+                      onClick={() => {
+                        setActiveMediaIndex(index);
+                        focusLastEditor();
+                      }}
+                      onMouseDown={(event) => event.preventDefault()}
+                      tabIndex={-1}
+                      type="button"
+                    />
+                  ))}
+                </div>
+              </>
+            ) : null}
           </div>
         </figure>
       </div>
@@ -644,12 +858,13 @@ export const CreateCommunityPostLogic = ({
       <input
         accept={COMMUNITY_POST_MEDIA_ACCEPT}
         className="hidden"
+        multiple
         onChange={handleMediaChange}
         ref={fileInputRef}
         type="file"
       />
       <button
-        aria-label="Adicionar midia ao post"
+        aria-label="Adicionar mídia ao post"
         className={cn(
           "inline-flex h-11 shrink-0 items-center gap-2 rounded-full border px-3.5 text-sm font-bold transition focus:outline-none focus:ring-4 focus:ring-primary/15",
           mediaPermission.canAttach
@@ -663,7 +878,7 @@ export const CreateCommunityPostLogic = ({
         }}
         onMouseDown={(event) => event.preventDefault()}
         tabIndex={-1}
-        title={mediaPermission.canAttach ? "Adicionar midia" : mediaPermission.reason}
+        title={mediaPermission.canAttach ? "Adicionar mídia" : mediaPermission.reason}
         type="button"
       >
         {uploadMutation.isPending ? (

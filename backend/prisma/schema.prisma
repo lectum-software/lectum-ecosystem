@@ -583,6 +583,7 @@ model community_post {
   saves_count        Int                      @default(0)
   community          community                @relation("community_post_community", fields: [community_id], references: [id], onDelete: Cascade)
   author             user                     @relation("community_post_author", fields: [author_id], references: [id], onDelete: Cascade)
+  media_items        community_post_media[]   @relation("community_post_media_post")
   replies            post_reply[]             @relation("post_reply_post")
   votes              post_vote[]              @relation("post_vote_post")
   saves              post_save[]              @relation("post_save_post")
@@ -593,6 +594,22 @@ model community_post {
   @@index([author_id])
   @@index([author_id, status, createdAt])
   @@map("community_posts")
+}
+
+model community_post_media {
+  id         String         @id @default(cuid())
+  deleted   Boolean        @default(false)
+  deletedAt DateTime?      @map("deleted_at")
+  updatedAt DateTime       @default(now()) @updatedAt @map("updated_at")
+  createdAt DateTime       @default(now()) @map("created_at")
+  post_id   String
+  media_url String
+  media_type String
+  position  Int            @default(0)
+  post      community_post @relation("community_post_media_post", fields: [post_id], references: [id], onDelete: Cascade)
+
+  @@index([post_id, position])
+  @@map("community_post_media")
 }
 
 model post_reply {

@@ -333,3 +333,30 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia visual usada foi o screenshot do usuario e a modal local existente.
 - ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP desktop `1280x900` em `/app/community/feed/post/new`, injetando um `File` de video real no input de midia e confirmando miniatura com `video`, sem texto `YTDown_Shorts`, sem `figcaption`, sem icone `lucide-video` sobreposto e largura desktop de 112px.
+
+## Complemento 2026-06-22 - carrossel de imagens em posts
+
+- Pedido do usuario: permitir upload de multiplas imagens para carrossel, no padrao de navegacao visual semelhante ao Reddit.
+- Backend: criado `community_post_media` com migration `20260622210218_add_community_post_media_carousel`, relacao cascade com `community_post`, ordenacao por `position` e soft delete para substituicao em edicao.
+- Backend: `POST /api/private/community/:slug/posts` e `PUT /api/private/posts/:id` agora aceitam `mediaItems` com ate 10 imagens reais ja enviadas para o storage R2 publico; videos continuam como midia unica.
+- Compatibilidade: `community_post.media_url`/`media_type` continuam refletindo a primeira midia ativa para telas/contratos legados, enquanto os DTOs retornam `media_items` ordenado.
+- Frontend: a modal `Criar Post` aceita selecao multipla de imagens, envia todos os arquivos pelo endpoint real de upload, exibe previa com setas/dots quando houver mais de uma imagem e preserva o fluxo de video unico.
+- Frontend: cards do feed, detalhe do post e publicacoes do perfil renderizam `PostMediaCarousel` quando houver multiplas imagens, com viewport 16:9, setas laterais e indicadores.
+- Frontend: a modal `Editar Post` tambem permite substituir a midia por carrossel de imagens, preservando a regra de entitlement de midia para psicologos verificados/cortesia.
+- Fonte visual: Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia visual complementar foi o screenshot do Reddit enviado pelo usuario, aplicado sem copiar arquitetura externa.
+- Criterios deste complemento:
+  - [x] Upload multiplo de imagens sem mocks e usando storage real existente.
+  - [x] Limite de ate 10 imagens validado no frontend e no backend.
+  - [x] Videos continuam como anexo unico, sem misturar video e carrossel.
+  - [x] Carrossel exibido no feed, detalhe do post, perfil e listas que reutilizam o card de post.
+  - [x] Contrato e modelo documentados em `DATA-MODEL.md`.
+- ADR criado: `adrs/0149-carrossel-imagens-posts-comunidade.md`.
+
+Validacoes finais deste complemento:
+
+- `pnpm --dir backend db:migrate` confirmou schema em sincronia apos a migration `20260622210218_add_community_post_media_carousel`.
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`

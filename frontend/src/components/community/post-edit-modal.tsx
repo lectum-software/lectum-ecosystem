@@ -1,6 +1,6 @@
 "use client";
 
-import { Info, Loader2, Video, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Info, Loader2, Video, X } from "lucide-react";
 import Image from "next/image";
 import {
   type ChangeEvent,
@@ -27,6 +27,7 @@ import { getCommunityMediaPermission } from "@/utils/community-media-permission"
 const COMMUNITY_SELECTOR_ICON_SRC = "/svg/public_24dp_64748B_FILL0_wght400_GRAD0_opsz24.svg";
 const COMMUNITY_POST_MEDIA_ACCEPT =
   "image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime";
+const MAX_POST_CAROUSEL_IMAGES = 10;
 const EDITOR_FIELD_IDS = new Set(["edit-post-title", "edit-post-content"]);
 const guidanceText =
   "Lembre-se de ser respeitoso com os outros membros. Conteúdos ofensivos ou que violem as diretrizes serão removidos pela moderação.";
@@ -55,6 +56,7 @@ type EditablePost = Pick<
   | "community"
   | "content"
   | "id"
+  | "media_items"
   | "media_type"
   | "media_url"
   | "replies_count"
@@ -73,9 +75,22 @@ type ApiError = Error & {
 
 type SelectedPostMedia = {
   file: File;
+  id: string;
+  orientation?: "landscape" | "portrait";
   previewUrl: string;
   type: "image" | "video";
 };
+
+type PostMediaPreviewItem = {
+  caption: string;
+  id: string;
+  orientation?: "landscape" | "portrait";
+  src: string;
+  type: "image" | "video";
+};
+
+const createSelectedMediaId = () =>
+  globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 type PostEditModalProps = {
   onClose: () => void;
@@ -200,9 +215,10 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
   const mediaPermission = getCommunityMediaPermission(storedUser);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const lastFocusedEditorIdRef = useRef("edit-post-title");
-  const selectedMediaPreviewUrlRef = useRef<string | null>(null);
+  const selectedMediaPreviewUrlsRef = useRef<string[]>([]);
   const [isGuidanceOpen, setIsGuidanceOpen] = useState(false);
-  const [selectedMedia, setSelectedMedia] = useState<SelectedPostMedia | null>(null);
+  const [selectedMediaItems, setSelectedMediaItems] = useState<SelectedPostMedia[]>([]);
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const [removeMedia, setRemoveMedia] = useState(false);
   const isPsychologistPost = post.author.role === "psicologo";
   const fields = useMemo(
@@ -244,21 +260,49 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
   const canShowMediaControls = isPsychologistPost || Boolean(post.media_url);
   const isSubmitting = uploadMutation.isPending || updateMutation.isPending;
   const normalizedPostMediaType = normalizeMediaType(post.media_type);
-  const activeMedia = selectedMedia
-    ? {
-        caption: selectedMedia.file.name,
-        src: selectedMedia.previewUrl,
-        type: selectedMedia.type,
-      }
-    : !removeMedia && post.media_url && normalizedPostMediaType
-      ? {
-          caption:
-            normalizedPostMediaType === "video" ? "Vídeo atual anexado" : "Imagem atual anexada",
-          src: post.media_url,
-          type: normalizedPostMediaType,
-        }
-      : null;
+  const storedMediaItems = useMemo<PostMediaPreviewItem[]>(() => {
+    const mediaItems = (post.media_items ?? [])
+      .filter(
+        (item) =>
+          Boolean(item.media_url) && (item.media_type === "image" || item.media_type === "video"),
+      )
+      .sort((a, b) => a.position - b.position)
+      .map((item, index) => ({
+        caption:
+          item.media_type === "video" ? "Vídeo atual anexado" : `Imagem atual anexada ${index + 1}`,
+        id: item.id ?? `${item.media_url}-${item.position}`,
+        src: item.media_url,
+        type: item.media_type,
+      }));
 
+    if (mediaItems.length > 0) return mediaItems;
+
+    if (!post.media_url || !normalizedPostMediaType) return [];
+
+    return [
+      {
+        caption:
+          normalizedPostMediaType === "video" ? "Vídeo atual anexado" : "Imagem atual anexada",
+        id: "legacy-media",
+        src: post.media_url,
+        type: normalizedPostMediaType,
+      },
+    ];
+  }, [normalizedPostMediaType, post.media_items, post.media_url]);
+  const activeMediaItems: PostMediaPreviewItem[] =
+    selectedMediaItems.length > 0
+      ? selectedMediaItems.map((item) => ({
+          caption: item.file.name,
+          id: item.id,
+          orientation: item.orientation,
+          src: item.previewUrl,
+          type: item.type,
+        }))
+      : removeMedia
+        ? []
+        : storedMediaItems;
+  const activeMediaSafeIndex = Math.min(activeMediaIndex, Math.max(0, activeMediaItems.length - 1));
+  const activeMedia = activeMediaItems[activeMediaSafeIndex] ?? null;
   const focusLastEditor = () => {
     window.setTimeout(() => {
       const target = document.getElementById(lastFocusedEditorIdRef.current) as
@@ -277,16 +321,45 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
   };
 
   const revokeSelectedMediaPreview = useCallback(() => {
-    if (!selectedMediaPreviewUrlRef.current) return;
-
-    URL.revokeObjectURL(selectedMediaPreviewUrlRef.current);
-    selectedMediaPreviewUrlRef.current = null;
+    selectedMediaPreviewUrlsRef.current.forEach((previewUrl) => {
+      URL.revokeObjectURL(previewUrl);
+    });
+    selectedMediaPreviewUrlsRef.current = [];
   }, []);
 
   const clearSelectedMedia = useCallback(() => {
     revokeSelectedMediaPreview();
-    setSelectedMedia(null);
+    setSelectedMediaItems([]);
+    setActiveMediaIndex(0);
   }, [revokeSelectedMediaPreview]);
+
+  const removeSelectedMediaAt = useCallback((index: number) => {
+    setSelectedMediaItems((currentItems) => {
+      const removedItem = currentItems[index];
+      if (!removedItem) return currentItems;
+
+      URL.revokeObjectURL(removedItem.previewUrl);
+      selectedMediaPreviewUrlsRef.current = selectedMediaPreviewUrlsRef.current.filter(
+        (previewUrl) => previewUrl !== removedItem.previewUrl,
+      );
+
+      const nextItems = currentItems.filter((_, currentIndex) => currentIndex !== index);
+      setActiveMediaIndex((currentIndex) =>
+        nextItems.length === 0 ? 0 : Math.min(currentIndex, nextItems.length - 1),
+      );
+
+      return nextItems;
+    });
+  }, []);
+
+  const updateSelectedMediaOrientation = useCallback(
+    (id: string, orientation: SelectedPostMedia["orientation"]) => {
+      setSelectedMediaItems((currentItems) =>
+        currentItems.map((item) => (item.id === id ? { ...item, orientation } : item)),
+      );
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -317,10 +390,10 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
   }, [revokeSelectedMediaPreview]);
 
   const handleMediaChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] ?? null;
+    const files = Array.from(event.target.files ?? []);
     event.currentTarget.value = "";
 
-    if (!file) return;
+    if (files.length === 0) return;
 
     if (!canManageMedia) {
       toast.error(mediaPermission.reason || "Mídia disponível apenas para psicólogos verificados.");
@@ -328,39 +401,120 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
       return;
     }
 
-    revokeSelectedMediaPreview();
-    const previewUrl = URL.createObjectURL(file);
-    selectedMediaPreviewUrlRef.current = previewUrl;
-    setSelectedMedia({
-      file,
-      previewUrl,
-      type: file.type.startsWith("image/") ? "image" : "video",
+    const videoFiles = files.filter((file) => file.type.startsWith("video/"));
+    const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+
+    if (videoFiles.length > 0) {
+      if (files.length > 1 || imageFiles.length > 0) {
+        toast.error(
+          "Vídeos devem ser anexados individualmente. Para carrossel, selecione apenas imagens.",
+        );
+        focusLastEditor();
+        return;
+      }
+
+      clearSelectedMedia();
+      const previewUrl = URL.createObjectURL(videoFiles[0]);
+      selectedMediaPreviewUrlsRef.current = [previewUrl];
+      setSelectedMediaItems([
+        {
+          file: videoFiles[0],
+          id: createSelectedMediaId(),
+          previewUrl,
+          type: "video",
+        },
+      ]);
+      setActiveMediaIndex(0);
+      setRemoveMedia(false);
+      focusLastEditor();
+      return;
+    }
+
+    if (imageFiles.length === 0) {
+      toast.error("Envie uma imagem ou vídeo em formato permitido.");
+      focusLastEditor();
+      return;
+    }
+
+    const replacingExistingMedia = selectedMediaItems.length === 0 && storedMediaItems.length > 0;
+    const replacingVideo =
+      replacingExistingMedia || selectedMediaItems.some((item) => item.type === "video");
+    const baseItems = replacingVideo
+      ? []
+      : selectedMediaItems.filter((item) => item.type === "image");
+    const availableSlots = MAX_POST_CAROUSEL_IMAGES - baseItems.length;
+
+    if (availableSlots <= 0) {
+      toast.error(`Você pode anexar até ${MAX_POST_CAROUSEL_IMAGES} imagens por post.`);
+      focusLastEditor();
+      return;
+    }
+
+    if (replacingVideo) {
+      clearSelectedMedia();
+    }
+
+    const filesToAttach = imageFiles.slice(0, availableSlots);
+    if (imageFiles.length > availableSlots) {
+      toast.error(
+        `Só foi possível anexar ${availableSlots} imagem(ns). O limite é ${MAX_POST_CAROUSEL_IMAGES}.`,
+      );
+    }
+
+    const nextItems = filesToAttach.map((file) => {
+      const previewUrl = URL.createObjectURL(file);
+      selectedMediaPreviewUrlsRef.current.push(previewUrl);
+
+      return {
+        file,
+        id: createSelectedMediaId(),
+        previewUrl,
+        type: "image" as const,
+      };
     });
+
+    setSelectedMediaItems([...baseItems, ...nextItems]);
+    setActiveMediaIndex(baseItems.length);
     setRemoveMedia(false);
     focusLastEditor();
   };
 
   const handleSubmit = hook.handleSubmit(async (values) => {
     try {
-      const media = selectedMedia
-        ? await uploadMutation.mutateAsync({
-            file: selectedMedia.file,
-            slug: post.community.slug,
-          })
-        : null;
+      const uploadedMedia =
+        selectedMediaItems.length > 0
+          ? await Promise.all(
+              selectedMediaItems.map((mediaItem) =>
+                uploadMutation.mutateAsync({
+                  file: mediaItem.file,
+                  slug: post.community.slug,
+                }),
+              ),
+            )
+          : [];
+      const firstMedia = uploadedMedia[0] ?? null;
+      const imageMediaItems = uploadedMedia
+        .filter((media) => media.media_type === "image")
+        .map((media, index) => ({
+          mediaType: "image" as const,
+          mediaUrl: media.media_url,
+          position: index,
+        }));
 
       await updateMutation.mutateAsync({
         id: post.id,
         body: {
           content: values.content.trim(),
           title: values.title.trim(),
-          ...(media
+          ...(firstMedia
             ? {
-                mediaType: media.media_type,
-                mediaUrl: media.media_url,
+                mediaType: firstMedia.media_type,
+                mediaUrl: firstMedia.media_url,
+                ...(imageMediaItems.length > 0 ? { mediaItems: imageMediaItems } : {}),
               }
             : removeMedia
               ? {
+                  mediaItems: null,
                   mediaType: null,
                   mediaUrl: null,
                 }
@@ -371,7 +525,6 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
       // Feedback fica nas mutations para preservar o conteúdo editado.
     }
   });
-
   const clearCorrectedFormErrorsSoon = () => {
     window.setTimeout(() => {
       const values = hook.getValues();
@@ -522,16 +675,44 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
       );
     }
 
+    const hasMultipleImages =
+      activeMediaItems.length > 1 && activeMediaItems.every((item) => item.type === "image");
+    const activePreviewRatio =
+      activeMedia.orientation === "landscape" || hasMultipleImages
+        ? "aspect-video"
+        : "aspect-[9/14]";
+    const previewWidth =
+      activeMedia.orientation === "landscape" || hasMultipleImages
+        ? "w-[min(18rem,72vw)] sm:w-64"
+        : "w-[min(9.5rem,48vw)] sm:w-28";
+
     return (
       <div className="mt-3 flex shrink-0 justify-start">
-        <figure className="relative w-[min(9.5rem,48vw)] overflow-hidden rounded-[1.4rem] border border-border bg-surface-muted shadow-[var(--lectum-shadow-soft)] sm:w-28">
-          <div className="relative aspect-[9/14] w-full overflow-hidden bg-surface-muted">
+        <figure
+          className={cn(
+            "relative overflow-hidden rounded-[1.4rem] border border-border bg-surface-muted shadow-[var(--lectum-shadow-soft)]",
+            previewWidth,
+          )}
+        >
+          <div
+            className={cn("relative w-full overflow-hidden bg-surface-muted", activePreviewRatio)}
+          >
             {activeMedia.type === "image" ? (
               <Image
                 alt="Miniatura da mídia do post"
                 className="object-cover"
                 fill
-                sizes="(min-width: 640px) 112px, 152px"
+                onLoad={(event) => {
+                  if (selectedMediaItems.length === 0) return;
+                  const { naturalHeight, naturalWidth } = event.currentTarget;
+                  updateSelectedMediaOrientation(
+                    activeMedia.id,
+                    naturalWidth && naturalHeight && naturalWidth / naturalHeight >= 1.12
+                      ? "landscape"
+                      : "portrait",
+                  );
+                }}
+                sizes="(min-width: 640px) 256px, 288px"
                 src={activeMedia.src}
                 unoptimized
               />
@@ -540,6 +721,16 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
                 aria-label="Miniatura do vídeo do post"
                 className="h-full w-full object-cover"
                 muted
+                onLoadedMetadata={(event) => {
+                  if (selectedMediaItems.length === 0) return;
+                  const { videoHeight, videoWidth } = event.currentTarget;
+                  updateSelectedMediaOrientation(
+                    activeMedia.id,
+                    videoWidth && videoHeight && videoWidth / videoHeight >= 1.12
+                      ? "landscape"
+                      : "portrait",
+                  );
+                }}
                 playsInline
                 preload="metadata"
                 src={activeMedia.src}
@@ -552,11 +743,12 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
                 className="absolute top-2 right-2 grid h-8 w-8 place-items-center rounded-full bg-surface/90 text-muted shadow-[var(--lectum-shadow-soft)] transition hover:bg-surface hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15"
                 disabled={isSubmitting}
                 onClick={() => {
-                  if (selectedMedia) {
-                    clearSelectedMedia();
+                  if (selectedMediaItems.length > 0) {
+                    removeSelectedMediaAt(activeMediaSafeIndex);
                     setRemoveMedia(false);
                   } else {
                     setRemoveMedia(true);
+                    setActiveMediaIndex(0);
                   }
                   focusLastEditor();
                 }}
@@ -567,17 +759,74 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
                 <X className="h-4 w-4" aria-hidden="true" />
               </button>
             ) : null}
+
+            {hasMultipleImages ? (
+              <>
+                <button
+                  aria-label="Imagem anterior"
+                  className="absolute top-1/2 left-2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-slate-950/45 text-white backdrop-blur transition hover:bg-slate-950/65 focus:outline-none focus:ring-2 focus:ring-white/70"
+                  disabled={isSubmitting}
+                  onClick={() => {
+                    setActiveMediaIndex((current) =>
+                      current <= 0 ? activeMediaItems.length - 1 : current - 1,
+                    );
+                    focusLastEditor();
+                  }}
+                  onMouseDown={(event) => event.preventDefault()}
+                  tabIndex={-1}
+                  type="button"
+                >
+                  <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <button
+                  aria-label="Próxima imagem"
+                  className="absolute top-1/2 right-12 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-slate-950/45 text-white backdrop-blur transition hover:bg-slate-950/65 focus:outline-none focus:ring-2 focus:ring-white/70"
+                  disabled={isSubmitting}
+                  onClick={() => {
+                    setActiveMediaIndex((current) =>
+                      current >= activeMediaItems.length - 1 ? 0 : current + 1,
+                    );
+                    focusLastEditor();
+                  }}
+                  onMouseDown={(event) => event.preventDefault()}
+                  tabIndex={-1}
+                  type="button"
+                >
+                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <div className="absolute inset-x-0 bottom-2 flex justify-center gap-1">
+                  {activeMediaItems.map((item, index) => (
+                    <button
+                      aria-label={`Mostrar imagem ${index + 1}`}
+                      className={cn(
+                        "h-1.5 rounded-full bg-white/65 transition-all",
+                        index === activeMediaSafeIndex ? "w-4 bg-white" : "w-1.5",
+                      )}
+                      disabled={isSubmitting}
+                      key={item.id}
+                      onClick={() => {
+                        setActiveMediaIndex(index);
+                        focusLastEditor();
+                      }}
+                      onMouseDown={(event) => event.preventDefault()}
+                      tabIndex={-1}
+                      type="button"
+                    />
+                  ))}
+                </div>
+              </>
+            ) : null}
           </div>
         </figure>
       </div>
     );
   };
-
   const renderPsychologistMediaButton = () => (
     <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
       <input
         accept={COMMUNITY_POST_MEDIA_ACCEPT}
         className="hidden"
+        multiple
         onChange={handleMediaChange}
         ref={fileInputRef}
         type="file"

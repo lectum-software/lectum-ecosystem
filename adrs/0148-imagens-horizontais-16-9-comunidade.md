@@ -55,3 +55,30 @@ Validacao complementar:
 - `pnpm check`: sucesso apos reexecucao com timeout maior.
 - Chrome/CDP desktop `1440x900`: sucesso na rota `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, validando resposta real com imagem horizontal e confirmando `ratio=1.7777`, `w-full` e `widthGap=0` contra a largura util da coluna.
 
+
+## Complemento 2026-06-22 - videos horizontais em respostas
+
+Depois da regra de imagens horizontais, videos horizontais anexados a comentarios/respostas ainda eram renderizados no player vertical, causando barras pretas e perda de largura util.
+
+Decisao complementar:
+
+- Reutilizar a deteccao de orientacao por metadados reais de video ja existente no controle de anexos de respostas.
+- Quando o video renderizado em comentario/resposta for horizontal, aplicar container `aspect-video`, `w-full` e `max-w-none`, usando a largura util disponivel da coluna.
+- Manter videos verticais no enquadramento compacto/centralizado existente.
+- Aplicar a decisao tanto no detalhe do post quanto no card compartilhado de comunidade, para que listas e contribuicoes reutilizadas nao regridam.
+- Nao alterar schema, storage, upload, payloads, permissoes, player fullscreen, votos, salvos ou ordenacao.
+
+Consequencias:
+
+- Videos horizontais em comentarios passam a se comportar como midia horizontal real, preservando `16:9` e reduzindo barras pretas causadas por container vertical.
+- Videos verticais continuam adequados ao consumo mobile e nao passam a ocupar largura excessiva.
+- A orientacao continua sendo derivada no cliente, evitando nova coluna persistida somente para metadados visuais.
+
+Validacao complementar:
+
+- `pnpm --dir frontend biome:fix`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `pnpm --dir backend db:migrate`
+- `pnpm --dir backend build`

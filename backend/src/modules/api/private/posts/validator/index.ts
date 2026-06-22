@@ -1,4 +1,5 @@
-﻿import { type IValidatorRequest, validator } from "@/utils/validator";
+﻿import { z } from "zod";
+import { type IValidatorRequest, validator } from "@/utils/validator";
 
 const idParams = [
   {
@@ -145,6 +146,22 @@ export const updatePostSchema: IValidatorRequest = {
       values: ["image", "video"],
       optional: true,
       nullable: true,
+    },
+    {
+      key: "mediaItems",
+      custom: z
+        .array(
+          z
+            .object({
+              mediaUrl: z.string().min(1).max(500),
+              mediaType: z.literal("image"),
+              position: z.number().int().min(0).max(9).optional(),
+            })
+            .strict(),
+        )
+        .max(10)
+        .optional()
+        .nullable(),
     },
   ],
 };

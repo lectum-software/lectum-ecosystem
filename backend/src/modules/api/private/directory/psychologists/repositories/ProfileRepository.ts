@@ -82,6 +82,18 @@ const profilePostSelect = {
   content: true,
   media_url: true,
   media_type: true,
+  media_items: {
+    where: {
+      deleted: false,
+    },
+    orderBy: [{ position: "asc" }, { createdAt: "asc" }, { id: "asc" }],
+    select: {
+      id: true,
+      media_url: true,
+      media_type: true,
+      position: true,
+    },
+  },
   anonymous: true,
   status: true,
   upvotes_count: true,
@@ -482,6 +494,38 @@ const toHighlightedProfessionalReply = (
   };
 };
 
+const toPostMediaItemsResponse = (
+  item: Pick<ProfilePostResult, "media_items" | "media_type" | "media_url">,
+): CommunityPostDTO["media_items"] => {
+  if (item.media_items.length > 0) {
+    return item.media_items
+      .filter((mediaItem) => mediaItem.media_type === "image" || mediaItem.media_type === "video")
+      .map((mediaItem) => {
+        const mediaType: "image" | "video" = mediaItem.media_type === "video" ? "video" : "image";
+
+        return {
+          id: mediaItem.id,
+          media_url: mediaItem.media_url,
+          media_type: mediaType,
+          position: mediaItem.position,
+        };
+      });
+  }
+
+  if (!item.media_url || (item.media_type !== "image" && item.media_type !== "video")) {
+    return [];
+  }
+
+  return [
+    {
+      id: null,
+      media_url: item.media_url,
+      media_type: item.media_type,
+      position: 0,
+    },
+  ];
+};
+
 const toPostResponse = (
   item: ProfilePostResult,
   currentUserVote: CurrentVote,
@@ -509,6 +553,7 @@ const toPostResponse = (
     featured_badge: toPostAuthorResponse(item.author, item.upvotes_count).featured_badge,
     media_url: item.media_url,
     media_type: item.media_type,
+    media_items: toPostMediaItemsResponse(item),
     current_user_vote: currentUserVote,
     saved,
     muted_by_current_user: mutedByCurrentUser,

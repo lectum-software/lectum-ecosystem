@@ -92,6 +92,18 @@ const postSelect = {
   content: true,
   media_url: true,
   media_type: true,
+  media_items: {
+    where: {
+      deleted: false,
+    },
+    orderBy: [{ position: "asc" }, { createdAt: "asc" }, { id: "asc" }],
+    select: {
+      id: true,
+      media_url: true,
+      media_type: true,
+      position: true,
+    },
+  },
   anonymous: true,
   status: true,
   upvotes_count: true,
@@ -346,6 +358,36 @@ const normalizeVoteValue = (value?: number | null): CurrentVote => {
   return null;
 };
 
+const toPostMediaItemsResponse = (
+  item: Pick<PostResult, "media_items" | "media_type" | "media_url">,
+): PostDetailDTO["media_items"] => {
+  const storedItems = item.media_items
+    .filter((mediaItem) => mediaItem.media_url && mediaItem.media_type)
+    .map((mediaItem) => {
+      const mediaType: "image" | "video" = mediaItem.media_type === "video" ? "video" : "image";
+
+      return {
+        id: mediaItem.id,
+        media_url: mediaItem.media_url,
+        media_type: mediaType,
+        position: mediaItem.position,
+      };
+    });
+
+  if (storedItems.length > 0) return storedItems;
+
+  if (!item.media_url || (item.media_type !== "image" && item.media_type !== "video")) return [];
+
+  return [
+    {
+      id: null,
+      media_url: item.media_url,
+      media_type: item.media_type,
+      position: 0,
+    },
+  ];
+};
+
 const toPostResponse = (
   item: PostResult,
   currentUserVote: CurrentVote,
@@ -379,6 +421,7 @@ const toPostResponse = (
     featured_badge: author.featured_badge,
     media_url: item.media_url,
     media_type: item.media_type,
+    media_items: toPostMediaItemsResponse(item),
     current_user_vote: currentUserVote,
     saved,
     muted_by_current_user: mutedByCurrentUser,
@@ -792,8 +835,11 @@ export class PostRepository implements IPostRepository {
     if (!post) return { kind: "not_found" };
     if (post.author_id !== data.auth.id) return { kind: "forbidden" };
 
+    const mediaItemsChangeRequested = Object.hasOwn(data.b, "mediaItems");
     const mediaChangeRequested =
-      Object.hasOwn(data.b, "mediaUrl") || Object.hasOwn(data.b, "mediaType");
+      Object.hasOwn(data.b, "mediaUrl") ||
+      Object.hasOwn(data.b, "mediaType") ||
+      mediaItemsChangeRequested;
     const updateData: Prisma.community_postUpdateInput = {
       content: data.b.content,
       edited_at: new Date(),
@@ -805,12 +851,45 @@ export class PostRepository implements IPostRepository {
       updateData.media_type = data.b.mediaType ?? null;
     }
 
-    await this.repository.update({
-      where: {
-        id: post.id,
-      },
-      data: updateData,
-    });
+    if (mediaItemsChangeRequested) {
+      const mediaItems = data.b.mediaItems ?? [];
+      await prisma.$transaction(async (transaction) => {
+        await transaction.community_post.update({
+          where: {
+            id: post.id,
+          },
+          data: updateData,
+        });
+        await transaction.community_post_media.updateMany({
+          data: {
+            deleted: true,
+            deletedAt: new Date(),
+          },
+          where: {
+            deleted: false,
+            post_id: post.id,
+          },
+        });
+
+        if (mediaItems.length > 0) {
+          await transaction.community_post_media.createMany({
+            data: mediaItems.map((mediaItem, index) => ({
+              media_url: mediaItem.mediaUrl.trim(),
+              media_type: "image",
+              position: typeof mediaItem.position === "number" ? mediaItem.position : index,
+              post_id: post.id,
+            })),
+          });
+        }
+      });
+    } else {
+      await this.repository.update({
+        where: {
+          id: post.id,
+        },
+        data: updateData,
+      });
+    }
 
     const updated = await this.show({
       auth: data.auth,
