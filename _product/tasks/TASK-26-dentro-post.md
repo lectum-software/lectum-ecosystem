@@ -643,3 +643,14 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: screenshot do usuario e browser local desktop; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP desktop `1440x900` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, confirmando corpo da modal com `overflow-y: hidden`, textarea com `overflow-y: auto`, `scrollHeight > clientHeight` e midia visivel acima do rodape.
+
+
+## Execucao complementar: botao Midia sem sombreamento (2026-06-22)
+
+- Pedido do usuario: remover o sombreamento visual do botao `Midia` na modal `Editar comentario`.
+- Frontend: o botao `Midia` do modo editor em `ReplyMediaAttachmentControl` passou a usar `shadow-none`, mantendo borda, gradiente leve, hover/focus e estados desabilitados existentes.
+- O ajuste e exclusivamente visual; miniatura, permissao de midia, remocao/substituicao, upload, envio somente com midia e validacoes de dominio permanecem inalterados.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, permissoes, votos, salvos ou regras de composicao texto/midia.
+- Fonte visual auditavel: screenshot do usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP desktop `1440x900` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, abrindo `Editar comentario` e confirmando que o botao `Midia` nao possui sombra visivel.

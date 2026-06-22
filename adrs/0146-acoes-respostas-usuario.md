@@ -230,3 +230,26 @@ Validacao complementar:
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
 - Chrome/CDP desktop `1440x900`: sucesso, em comentario proprio com texto longo e video, confirmando corpo da modal sem scroll externo, textarea com scroll interno e midia visivel acima do rodape.
+
+
+## Complemento 2026-06-22 - botao de midia sem sombra na edicao
+
+O botao textual `Midia` da modal `Editar comentario` mantinha uma sombra leve herdada do refinamento premium anterior. A solicitacao atual pede uma aparencia ainda mais limpa, sem sombreamento visual.
+
+Decisao complementar:
+
+- Remover a sombra do botao `Midia` no modo editor do `ReplyMediaAttachmentControl` usando `shadow-none`.
+- Preservar a borda suave, o gradiente claro, os estados de hover/focus/active/disabled e o comportamento de permissao/upload existentes.
+- Manter inalterado o modo composer, a miniatura quando existe anexo e o fluxo remover/anexar para substituicao.
+
+Consequencias:
+
+- A modal de edicao de comentario fica visualmente mais limpa, com menos peso no controle secundario de midia.
+- Nao ha mudanca em contratos de API, storage, schema, permissoes, validacao de conteudo, upload ou regras de exibicao por perfil.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- Chrome/CDP desktop `1440x900`: sucesso, abrindo `Editar comentario` em resposta propria sem midia e confirmando botao `Midia` sem sombra visivel.

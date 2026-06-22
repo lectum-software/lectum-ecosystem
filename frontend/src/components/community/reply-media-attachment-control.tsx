@@ -380,7 +380,7 @@ export function ReplyMediaAttachmentControl({
         {!activeMedia ? (
           <button
             aria-label={actionTitle}
-            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-[#D7E7F7] bg-gradient-to-b from-white to-[#F8FBFF] px-4 text-sm font-extrabold text-[#526B86] shadow-[0_8px_20px_rgba(47,141,235,0.06)] transition hover:border-primary/35 hover:bg-primary-soft/70 hover:text-primary focus:outline-none focus:ring-4 focus:ring-primary/15 active:scale-[0.98] disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-muted disabled:bg-none disabled:text-muted disabled:opacity-60 disabled:shadow-none dark:border-border dark:from-surface dark:to-surface-muted/40 dark:text-muted"
+            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-[#D7E7F7] bg-gradient-to-b from-white to-[#F8FBFF] px-4 text-sm font-extrabold text-[#526B86] shadow-none transition hover:border-primary/35 hover:bg-primary-soft/70 hover:text-primary focus:outline-none focus:ring-4 focus:ring-primary/15 active:scale-[0.98] disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-muted disabled:bg-none disabled:text-muted disabled:opacity-60 dark:border-border dark:from-surface dark:to-surface-muted/40 dark:text-muted"
             disabled={!mediaPermission.canAttach || disabled}
             onClick={openFileDialog}
             onMouseDown={(event) => event.preventDefault()}
