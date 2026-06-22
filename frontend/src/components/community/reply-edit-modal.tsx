@@ -62,11 +62,11 @@ const fields = [
     id: "edit-reply-content",
     placeholder: "Edite seu comentário",
     max: 2000,
-    rows: 9,
-    autoGrow: false,
+    rows: 2,
+    autoGrow: true,
     className: "[&>span:last-child]:min-h-4",
     inputClassName:
-      "min-h-[13.5rem] resize-y rounded-[1.35rem] border-border bg-surface px-4 py-4 text-[0.95rem] leading-6 shadow-none sm:min-h-[15rem]",
+      "max-h-[16rem] min-h-[5rem] resize-none rounded-[1.35rem] border-border bg-surface px-4 py-3.5 text-[0.95rem] leading-6 shadow-none sm:max-h-[18rem]",
   },
 ] satisfies Field<ReplyEditForm>[];
 

@@ -28,8 +28,17 @@ export function TextareaController<FormType extends FieldValues>({
   const resizeTextarea = (element: HTMLTextAreaElement | null) => {
     if (!autoGrow || !element) return;
 
+    const computedStyle = window.getComputedStyle(element);
+    const maxHeight = Number.parseFloat(computedStyle.maxHeight);
+    const hasMaxHeight = Number.isFinite(maxHeight) && maxHeight > 0;
+
     element.style.height = "auto";
-    element.style.height = `${element.scrollHeight}px`;
+    const nextHeight = hasMaxHeight
+      ? Math.min(element.scrollHeight, maxHeight)
+      : element.scrollHeight;
+
+    element.style.height = `${nextHeight}px`;
+    element.style.overflowY = hasMaxHeight && element.scrollHeight > maxHeight ? "auto" : "hidden";
   };
 
   return (

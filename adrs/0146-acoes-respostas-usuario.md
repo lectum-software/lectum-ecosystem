@@ -82,3 +82,26 @@ Validacao complementar:
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
 - Chrome/CDP mobile `390x844` em `/app/posts/mine`: sucesso ao abrir `Editar comentario`, confirmar modal centralizada, `z-index=1000`, body travado, 1 textarea, ausencia de metadados/controles do card e opcao `Adicionar midia` para psicologo autorizado.
+
+## Complemento 2026-06-21 - textarea compacto e botao de midia refinado
+
+A modal limpa de edicao de comentarios precisava evitar que comentarios curtos ocupassem uma area editorial grande demais, sem perder conforto para textos longos. O controle de midia tambem precisava ficar mais discreto e alinhado ao design system.
+
+Decisao complementar:
+
+- O textarea da `ReplyEditModal` inicia com aproximadamente duas linhas, usa auto-resize e respeita altura maxima responsiva; ao atingir o limite, passa a usar rolagem interna.
+- O controller compartilhado de textarea passa a considerar `max-height` computado durante o auto-resize, mantendo `overflow-y` automatico apenas quando necessario.
+- No modo editor, o `ReplyMediaAttachmentControl` exibe o texto visivel `Midia`, preservando `aria-label`/`title` contextuais para adicionar ou substituir.
+- O botao de midia do editor recebeu visual mais leve, borda azul suave, gradiente sutil, sombra discreta, icone menor e estados de hover/focus/active/disabled.
+- A regra de exibicao nao mudou: o controle continua visivel apenas para psicologos com permissao real de anexar midia.
+
+Consequencias:
+
+- Comentarios curtos deixam a modal mais compacta em mobile e desktop.
+- Comentarios longos continuam editaveis sem estourar a altura da modal.
+- Nao houve mudanca de endpoint, schema, storage, payload, regra de permissao, exclusao, votos ou salvos.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`: sucesso.
+- Validacoes finais de build, `pnpm check` e browser local ficam registradas na execucao do complemento.

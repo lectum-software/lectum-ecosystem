@@ -472,3 +472,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Fonte visual auditavel: screenshots enviados pelo usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR criado: `adrs/0147-cortesia-verificada-whatsapp-comunidade.md`.
 - Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, smoke real de API em `/api/private/community/feed/posts?search=teste%20novo&limit=20` confirmando `verified=true`, `whatsapp_url` e `edited_at` para `tuliosrezende@gmail.com`, e Chrome/CDP autenticado em `/app/community/feed` confirmando selo verificado, texto `editado`, botao `Chamar no WhatsApp` no card `teste novo` e botao de WhatsApp em resposta profissional destacada.
+
+## Execucao complementar: textarea compacto e botao Midia na edicao de comentario (2026-06-21)
+
+- Pedido do usuario: na modal `Editar comentario`, o campo de texto deve iniciar com cerca de 2 linhas, crescer automaticamente ate uma altura maxima e depois rolar internamente; o botao `Adicionar midia` deve virar `Midia` com visual mais premium.
+- Frontend: `ReplyEditModal` passou a usar textarea com `rows=2`, `autoGrow=true`, altura minima compacta e `max-height` responsivo, evitando ocupacao excessiva quando o comentario e curto.
+- Frontend: o controller compartilhado de textarea agora respeita `max-height` computado durante auto-resize e alterna rolagem interna somente quando o conteudo excede o limite.
+- Frontend: `ReplyMediaAttachmentControl` no modo editor passou a exibir `Midia`, com icone menor, borda suave, gradiente leve, sombra discreta e estados de hover/focus/active/disabled.
+- A exibicao do botao de midia continua restrita a psicologos com permissao real de anexar midia; pacientes e psicologos gratuitos seguem sem o controle.
+- Nao houve alteracao de backend, Prisma, migrations, packages, storage, endpoints, payloads, votos, salvos, exclusao ou regras de collapse.
+- Fonte visual auditavel: screenshots enviados pelo usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado em `/app/posts/mine`, confirmando modal `Editar comentario` com textarea compacto, crescimento ate limite/scroll interno e botao `Midia` visivel apenas para psicologo autorizado.
