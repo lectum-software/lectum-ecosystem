@@ -142,6 +142,8 @@ export type PostUpdateResponse = PostDetail;
 
 export type UpdatePostReplyPayload = {
   content: string;
+  mediaType?: "image" | "video" | null;
+  mediaUrl?: string | null;
 };
 
 export type PostReplyUpdateResponse = PostReply;

@@ -1670,13 +1670,22 @@ export class PostRepository implements IPostRepository {
     if (!reply) return { kind: "invalid_target" };
     if (reply.author_id !== data.auth.id) return { kind: "forbidden" };
 
+    const mediaChangeRequested =
+      Object.hasOwn(data.b, "mediaUrl") || Object.hasOwn(data.b, "mediaType");
+    const updateData: Prisma.post_replyUpdateInput = {
+      content: data.b.content,
+    };
+
+    if (mediaChangeRequested) {
+      updateData.media_url = data.b.mediaUrl ?? null;
+      updateData.media_type = data.b.mediaType ?? null;
+    }
+
     const updated = await prisma.post_reply.update({
       where: {
         id: reply.id,
       },
-      data: {
-        content: data.b.content,
-      },
+      data: updateData,
       select: replyBaseSelect,
     });
 

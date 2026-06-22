@@ -25,6 +25,8 @@ type OwnerActionReply = Pick<
   | "content"
   | "has_verified_professional_reply"
   | "id"
+  | "media_type"
+  | "media_url"
   | "parent_reply_id"
   | "replies_received_count"
 >;

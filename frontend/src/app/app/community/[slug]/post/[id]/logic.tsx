@@ -17,7 +17,6 @@ import {
   Share2,
   Trash2,
   UserX,
-  Video,
   X,
 } from "lucide-react";
 import Image from "next/image";
@@ -25,6 +24,7 @@ import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
   type ChangeEvent,
+  type FormEvent,
   type MouseEvent,
   type MouseEventHandler,
   type KeyboardEvent as ReactKeyboardEvent,
@@ -57,6 +57,11 @@ import { MentorBadge } from "@/components/community/mentor-badge";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
 import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
 import { ReplyEditModal } from "@/components/community/reply-edit-modal";
+import {
+  mediaTypeFromFile,
+  ReplyMediaAttachmentControl,
+  type SelectedReplyMedia,
+} from "@/components/community/reply-media-attachment-control";
 import { components } from "@/components/controllers";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
@@ -1535,9 +1540,10 @@ const ReplyComposer = ({
   const [composerActive, setComposerActive] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const [draggingToCancel, setDraggingToCancel] = useState(false);
-  const [selectedMedia, setSelectedMedia] = useState<File | null>(null);
+  const [selectedMedia, setSelectedMedia] = useState<SelectedReplyMedia | null>(null);
   const localFormRef = useRef<HTMLFormElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const selectedMediaPreviewUrlRef = useRef<string | null>(null);
   const cancelDragRef = useRef<{
     dragging: boolean;
     pointerId: number;
@@ -1569,6 +1575,18 @@ const ReplyComposer = ({
   const shouldShowCancelAction = composerActive;
   const cancelLabel = replyTarget || replyToName ? "Cancelar resposta" : "Cancelar comentário";
 
+  const revokeSelectedMediaPreview = useCallback(() => {
+    if (!selectedMediaPreviewUrlRef.current) return;
+
+    URL.revokeObjectURL(selectedMediaPreviewUrlRef.current);
+    selectedMediaPreviewUrlRef.current = null;
+  }, []);
+
+  const clearSelectedMedia = useCallback(() => {
+    revokeSelectedMediaPreview();
+    setSelectedMedia(null);
+  }, [revokeSelectedMediaPreview]);
+
   const resetCancelDrag = () => {
     cancelDragRef.current = null;
     setDragOffset(0);
@@ -1587,7 +1605,7 @@ const ReplyComposer = ({
     }
 
     hook.reset({ content: "" });
-    setSelectedMedia(null);
+    clearSelectedMedia();
     setComposerActive(false);
     resetCancelDrag();
     onDraftStateChange?.(false);
@@ -1615,13 +1633,24 @@ const ReplyComposer = ({
     onDraftStateChange?.(hasDiscardableDraft);
   }, [hasDiscardableDraft, onDraftStateChange]);
 
+  useEffect(() => {
+    return () => revokeSelectedMediaPreview();
+  }, [revokeSelectedMediaPreview]);
+
   const handleMediaChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
 
     if (!file || !mediaPermission.canAttach) return;
 
-    setSelectedMedia(file);
+    revokeSelectedMediaPreview();
+    const previewUrl = URL.createObjectURL(file);
+    selectedMediaPreviewUrlRef.current = previewUrl;
+    setSelectedMedia({
+      file,
+      previewUrl,
+      type: mediaTypeFromFile(file),
+    });
     setComposerActive(true);
   };
 
@@ -1679,6 +1708,20 @@ const ReplyComposer = ({
     resetCancelDrag();
   };
 
+  const handleComposerSubmit = (event: FormEvent<HTMLFormElement>) => {
+    void hook.handleSubmit(async (values) => {
+      try {
+        await onSubmit(values, selectedMedia?.file ?? null);
+        hook.reset({ content: "" });
+        clearSelectedMedia();
+        setComposerActive(false);
+        onDraftStateChange?.(false);
+      } catch {
+        // O estado de erro é tratado pela mutation para manter o campo preenchido.
+      }
+    })(event);
+  };
+
   return (
     <form
       className={cn(
@@ -1701,17 +1744,7 @@ const ReplyComposer = ({
       onPointerDown={handleCancelPointerDown}
       onPointerMove={handleCancelPointerMove}
       onPointerUp={handleCancelPointerEnd}
-      onSubmit={hook.handleSubmit(async (values) => {
-        try {
-          await onSubmit(values, selectedMedia);
-          hook.reset({ content: "" });
-          setSelectedMedia(null);
-          setComposerActive(false);
-          onDraftStateChange?.(false);
-        } catch {
-          // O estado de erro é tratado pela mutation para manter o campo preenchido.
-        }
-      })}
+      onSubmit={handleComposerSubmit}
       ref={resolvedFormRef}
       style={dragOffset > 0 ? { transform: `translate3d(0, ${dragOffset}px, 0)` } : undefined}
     >
@@ -1752,52 +1785,15 @@ const ReplyComposer = ({
       </div>
 
       {expanded && shouldShowMediaControls ? (
-        <div className="flex flex-wrap items-center justify-between gap-2 px-0.5 text-xs text-muted">
-          <input
-            accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime"
-            className="hidden"
-            onChange={handleMediaChange}
-            ref={fileInputRef}
-            type="file"
-          />
-          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-            <button
-              className={cn(
-                "inline-flex h-8 items-center gap-1.5 rounded-full border px-3 font-bold transition",
-                mediaPermission.canAttach
-                  ? "border-[#D6E3F2] bg-white text-[#475569] hover:border-[#B8D7F5] hover:text-[#308CE8] dark:bg-surface"
-                  : "cursor-not-allowed border-[#E5EAF0] bg-[#F8FAFC] text-[#94A3B8]",
-              )}
-              disabled={!mediaPermission.canAttach || disabled}
-              onClick={() => fileInputRef.current?.click()}
-              title={mediaPermission.canAttach ? "Anexar mídia" : mediaPermission.reason}
-              type="button"
-            >
-              <Video className="h-3.5 w-3.5" aria-hidden="true" />
-              Anexar mídia
-            </button>
-
-            {!mediaPermission.canAttach && mediaPermission.reason ? (
-              <span className="min-w-0 flex-1 basis-56 whitespace-normal break-words leading-4 text-[#64748B]">
-                {mediaPermission.reason}
-              </span>
-            ) : null}
-
-            {selectedMedia ? (
-              <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1 font-bold text-primary">
-                <span className="truncate">{selectedMedia.name}</span>
-                <button
-                  aria-label="Remover mídia anexada"
-                  className="grid h-5 w-5 place-items-center rounded-full hover:bg-white/70"
-                  onClick={() => setSelectedMedia(null)}
-                  type="button"
-                >
-                  <X className="h-3.5 w-3.5" aria-hidden="true" />
-                </button>
-              </span>
-            ) : null}
-          </div>
-        </div>
+        <ReplyMediaAttachmentControl
+          disabled={disabled}
+          fileInputRef={fileInputRef}
+          isUploading={disabled && Boolean(selectedMedia)}
+          mediaPermission={mediaPermission}
+          onMediaChange={handleMediaChange}
+          onRemoveSelected={clearSelectedMedia}
+          selectedMedia={selectedMedia}
+        />
       ) : null}
 
       {visibleError ? (

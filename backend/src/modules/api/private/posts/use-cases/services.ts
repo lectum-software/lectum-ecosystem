@@ -332,11 +332,41 @@ export const updateReply = async (data: IPostUpdateReplyDTO) => {
   if (unauthorized) return unauthorized;
 
   const repository = new PostRepository();
+  const mediaChangeRequested =
+    hasOwnBodyKey(data.b, "mediaUrl") || hasOwnBodyKey(data.b, "mediaType");
+  const body: IPostUpdateReplyDTO["b"] = {
+    content: data.b.content.trim(),
+  };
+
+  if (mediaChangeRequested) {
+    const mediaUrl = data.b.mediaUrl === null ? null : data.b.mediaUrl?.trim();
+    const mediaType = data.b.mediaType === null ? null : normalizePostMediaType(data.b.mediaType);
+    const clearingMedia = mediaUrl === null && mediaType === null;
+    const replacingMedia =
+      typeof mediaUrl === "string" &&
+      Boolean(mediaUrl) &&
+      Boolean(mediaType) &&
+      isPublicPostMediaUrl(mediaUrl);
+
+    if (!clearingMedia && !replacingMedia) return invalidMedia();
+
+    if (replacingMedia) {
+      const canAttachMedia = await repository.canAttachReplyMedia(data.auth.id!);
+      if (!canAttachMedia) return mediaNotAllowed();
+    }
+
+    if (clearingMedia) {
+      body.mediaUrl = null;
+      body.mediaType = null;
+    } else {
+      body.mediaUrl = mediaUrl as string;
+      body.mediaType = mediaType as "image" | "video";
+    }
+  }
+
   const res = await repository.updateReply({
     ...data,
-    b: {
-      content: data.b.content.trim(),
-    },
+    b: body,
   });
 
   return resolveMutationResult(res, 200, "post_reply_updated");

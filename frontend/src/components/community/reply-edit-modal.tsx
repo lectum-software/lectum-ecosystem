@@ -1,15 +1,23 @@
 "use client";
 
 import { Loader2, Save, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { type ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { z } from "zod";
-import { useUpdatePostReply } from "@/api/callers/posts";
+import { useUpdatePostReply, useUploadPostReplyMedia } from "@/api/callers/posts";
 import type { PostReply, UserPostReply } from "@/api/generator/types/posts";
+import {
+  mediaTypeFromFile,
+  ReplyMediaAttachmentControl,
+  type SelectedReplyMedia,
+} from "@/components/community/reply-media-attachment-control";
 import { components } from "@/components/controllers";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { type Field, useFormList } from "@/hooks/form";
+import { useAppSelector } from "@/hooks/redux";
 import { Button } from "@/registry/new-york-v4/ui/button";
+import { getCommunityMediaPermission } from "@/utils/community-media-permission";
 
 const replyEditSchema = z.object({
   content: z
@@ -21,7 +29,10 @@ const replyEditSchema = z.object({
 
 type ReplyEditForm = z.infer<typeof replyEditSchema>;
 
-type EditableReply = Pick<UserPostReply, "content" | "id" | "parent_reply_id"> & {
+type EditableReply = Pick<
+  UserPostReply,
+  "author" | "content" | "id" | "media_type" | "media_url" | "parent_reply_id"
+> & {
   replies_count?: number;
   replies_received_count?: number;
 };
@@ -49,14 +60,13 @@ const fields = [
     name: "content",
     field: "textarea",
     id: "edit-reply-content",
-    label: "Texto",
-    placeholder: "Atualize o texto mantendo o contexto da conversa",
-    required: true,
+    placeholder: "Edite seu comentário",
     max: 2000,
-    rows: 8,
+    rows: 9,
     autoGrow: false,
     className: "[&>span:last-child]:min-h-4",
-    inputClassName: "min-h-44 resize-y rounded-2xl border-border bg-surface px-4 py-3",
+    inputClassName:
+      "min-h-[13.5rem] resize-y rounded-[1.35rem] border-border bg-surface px-4 py-4 text-[0.95rem] leading-6 shadow-none sm:min-h-[15rem]",
   },
 ] satisfies Field<ReplyEditForm>[];
 
@@ -70,14 +80,38 @@ const errorMessageFromUnknown = (error: unknown) => {
   return rawMessage || "Não foi possível salvar as alterações agora. Tente novamente.";
 };
 
+const resolveMediaUploadError = (error: unknown) => {
+  const rawMessage = errorMessageFromUnknown(error);
+  const normalized = rawMessage.toLowerCase();
+
+  if (
+    normalized.includes("tamanho") ||
+    normalized.includes("limite") ||
+    normalized.includes("50")
+  ) {
+    return "A mídia precisa ter até 50MB.";
+  }
+
+  if (normalized.includes("tipo") || normalized.includes("permit")) {
+    return "Envie uma imagem ou vídeo em formato permitido.";
+  }
+
+  if (normalized.includes("plano") || normalized.includes("verific")) {
+    return "Mídia disponível apenas para psicólogos verificados.";
+  }
+
+  return rawMessage || "Não foi possível anexar a mídia agora. Tente novamente.";
+};
+
 export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: ReplyEditModalProps) {
+  const storedUser = useAppSelector((state) => state.user);
+  const mediaPermission = getCommunityMediaPermission(storedUser);
+  const canManageMedia = mediaPermission.canAttach && reply.author.role === "psicologo";
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const selectedMediaPreviewUrlRef = useRef<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const replyKind = useMemo(
-    () => (reply.parent_reply_id ? "resposta" : "comentário"),
-    [reply.parent_reply_id],
-  );
-  const replyKindLabel = replyKind === "resposta" ? "Resposta" : "Comentário";
-  const repliesReceivedCount = reply.replies_received_count ?? reply.replies_count ?? 0;
+  const [selectedMedia, setSelectedMedia] = useState<SelectedReplyMedia | null>(null);
+  const [removeMedia, setRemoveMedia] = useState(false);
   const form = useFormList<ReplyEditForm>({
     fields,
     schema: replyEditSchema,
@@ -86,9 +120,14 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
     },
   });
   const { formProps, hook } = form;
+  const uploadMutation = useUploadPostReplyMedia({
+    onError: (error) => {
+      setActionError(resolveMediaUploadError(error));
+    },
+  });
   const updateMutation = useUpdatePostReply({
     onSuccess: (updatedReply) => {
-      toast.success(`${replyKindLabel} atualizado!`);
+      toast.success("Comentário atualizado!");
       onUpdated?.(updatedReply);
       onClose();
     },
@@ -96,14 +135,34 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
       setActionError(errorMessageFromUnknown(error));
     },
   });
-  const isSubmitting = updateMutation.isPending;
+  const isSubmitting = uploadMutation.isPending || updateMutation.isPending;
+
+  const focusEditor = useCallback(() => {
+    window.setTimeout(() => {
+      document.getElementById("edit-reply-content")?.focus({ preventScroll: true });
+    }, 0);
+  }, []);
+
+  const revokeSelectedMediaPreview = useCallback(() => {
+    if (!selectedMediaPreviewUrlRef.current) return;
+
+    URL.revokeObjectURL(selectedMediaPreviewUrlRef.current);
+    selectedMediaPreviewUrlRef.current = null;
+  }, []);
+
+  const clearSelectedMedia = useCallback(() => {
+    revokeSelectedMediaPreview();
+    setSelectedMedia(null);
+  }, [revokeSelectedMediaPreview]);
 
   useEffect(() => {
     if (!open) return;
 
     const focusTimer = window.setTimeout(() => {
-      document.getElementById("edit-reply-content")?.focus({ preventScroll: true });
-    }, 80);
+      if (window.matchMedia("(min-width: 640px)").matches) {
+        document.getElementById("edit-reply-content")?.focus({ preventScroll: true });
+      }
+    }, 120);
     const previousBodyOverflow = document.body.style.overflow;
     const previousDocumentOverflow = document.documentElement.style.overflow;
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -122,39 +181,90 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
     };
   }, [onClose, open]);
 
+  useEffect(() => {
+    return () => revokeSelectedMediaPreview();
+  }, [revokeSelectedMediaPreview]);
+
+  const handleMediaChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    event.currentTarget.value = "";
+
+    if (!file) return;
+
+    if (!canManageMedia) {
+      setActionError(
+        mediaPermission.reason || "Mídia disponível apenas para psicólogos verificados.",
+      );
+      focusEditor();
+      return;
+    }
+
+    revokeSelectedMediaPreview();
+    const previewUrl = URL.createObjectURL(file);
+    selectedMediaPreviewUrlRef.current = previewUrl;
+    setSelectedMedia({
+      file,
+      previewUrl,
+      type: mediaTypeFromFile(file),
+    });
+    setRemoveMedia(false);
+    setActionError(null);
+    focusEditor();
+  };
+
   const handleSubmit = hook.handleSubmit(async (values) => {
     setActionError(null);
 
     try {
+      const uploadedMedia = selectedMedia
+        ? await uploadMutation.mutateAsync({
+            file: selectedMedia.file,
+            id: postId,
+          })
+        : null;
+
       await updateMutation.mutateAsync({
         body: {
           content: values.content.trim(),
+          ...(uploadedMedia
+            ? {
+                mediaType: uploadedMedia.media_type,
+                mediaUrl: uploadedMedia.media_url,
+              }
+            : removeMedia
+              ? {
+                  mediaType: null,
+                  mediaUrl: null,
+                }
+              : {}),
         },
         postId,
         replyId: reply.id,
       });
     } catch {
-      // Feedback fica na mutation para preservar o texto editado.
+      // Feedback fica nas mutations para preservar o texto e a mídia escolhida.
     }
   });
 
-  if (!open) return null;
+  if (!open || typeof document === "undefined") return null;
 
-  return (
+  const FieldComponent = components[formProps.fields[0].field];
+
+  return createPortal(
     <div
       aria-labelledby="edit-reply-title-heading"
       aria-modal="true"
-      className="fixed inset-0 z-[150] flex items-end justify-center bg-slate-950/45 px-0 pt-8 text-foreground backdrop-blur-md sm:items-center sm:px-4 sm:py-8"
+      className="fixed inset-0 z-[1000] flex pointer-events-auto items-center justify-center overflow-y-auto bg-slate-950/55 px-4 py-[max(1rem,env(safe-area-inset-top))] text-foreground backdrop-blur-md animate-in fade-in duration-200"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
       role="dialog"
     >
-      <section className="flex max-h-[calc(100dvh-1rem)] w-full max-w-[min(100vw,38rem)] flex-col overflow-hidden rounded-t-[2rem] border border-border bg-surface shadow-[var(--lectum-shadow)] sm:max-h-[min(90dvh,680px)] sm:rounded-[2rem]">
+      <section className="pointer-events-auto flex max-h-[min(88dvh,44rem)] w-full max-w-[38rem] flex-col overflow-hidden rounded-[2rem] border border-border bg-surface shadow-[0_28px_90px_rgba(15,23,42,0.28)] animate-in zoom-in-95 slide-in-from-bottom-2 duration-200 dark:shadow-[var(--lectum-shadow)]">
         <header className="relative flex h-16 shrink-0 items-center justify-center border-border/70 border-b px-4">
           <button
-            aria-label={`Fechar edição de ${replyKind}`}
-            className="absolute left-3 grid h-10 w-10 place-items-center rounded-full text-foreground transition hover:bg-surface-muted focus:outline-none focus:ring-4 focus:ring-primary/15"
+            aria-label="Fechar edição de comentário"
+            className="absolute left-3 grid h-10 w-10 place-items-center rounded-full text-foreground transition hover:bg-surface-muted focus:outline-none focus:ring-4 focus:ring-primary/15 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60"
             disabled={isSubmitting}
             onClick={onClose}
             type="button"
@@ -165,44 +275,53 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
             className="text-[1.15rem] font-black tracking-[-0.03em]"
             id="edit-reply-title-heading"
           >
-            Editar {replyKind}
+            Editar comentário
           </h2>
         </header>
 
         <form className="flex min-h-0 flex-1 flex-col" noValidate onSubmit={handleSubmit}>
-          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5">
-            {repliesReceivedCount > 0 ? (
-              <InlineAlert title={`Este ${replyKind} já tem respostas`} variant="warning">
-                Edite com cuidado para preservar o contexto da conversa já publicada.
-              </InlineAlert>
-            ) : null}
-
-            {actionError ? (
-              <InlineAlert title="Não foi possível salvar" variant="error">
-                {actionError}
-              </InlineAlert>
-            ) : null}
-
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
             <div className="grid gap-4">
-              {formProps.fields.map((field) => {
-                const Component = components[field.field];
-                if (!Component) return null;
+              {FieldComponent ? (
+                <FieldComponent control={hook.control} {...formProps.fields[0]} />
+              ) : null}
 
-                return (
-                  <Component
-                    control={hook.control}
-                    key={`edit-reply-${String(field.name)}`}
-                    {...field}
-                  />
-                );
-              })}
+              {canManageMedia ? (
+                <ReplyMediaAttachmentControl
+                  currentMedia={{ mediaType: reply.media_type, mediaUrl: reply.media_url }}
+                  disabled={isSubmitting}
+                  fileInputRef={fileInputRef}
+                  isUploading={uploadMutation.isPending}
+                  mediaPermission={mediaPermission}
+                  onAfterAction={focusEditor}
+                  onMediaChange={handleMediaChange}
+                  onRemoveCurrent={() => {
+                    clearSelectedMedia();
+                    setRemoveMedia(true);
+                  }}
+                  onRemoveSelected={() => {
+                    clearSelectedMedia();
+                    setRemoveMedia(false);
+                  }}
+                  onUndoRemove={() => setRemoveMedia(false)}
+                  removeCurrent={removeMedia}
+                  selectedMedia={selectedMedia}
+                  variant="editor"
+                />
+              ) : null}
+
+              {actionError ? (
+                <InlineAlert title="Não foi possível salvar" variant="error">
+                  {actionError}
+                </InlineAlert>
+              ) : null}
             </div>
           </div>
 
-          <footer className="shrink-0 border-border/70 border-t bg-surface/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur">
-            <div className="flex justify-end gap-2">
+          <footer className="shrink-0 border-border/70 border-t bg-surface/95 px-4 pt-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] backdrop-blur supports-[backdrop-filter]:bg-surface/90 sm:px-5">
+            <div className="grid gap-2 sm:flex sm:justify-end">
               <Button
-                className="h-12 rounded-full px-5"
+                className="h-12 rounded-full border-border bg-surface px-6 font-bold text-muted shadow-none hover:border-primary/25 hover:bg-primary-soft hover:text-foreground focus-visible:outline-primary active:scale-[0.98] disabled:opacity-60"
                 disabled={isSubmitting}
                 onClick={onClose}
                 type="button"
@@ -211,7 +330,7 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
                 Cancelar
               </Button>
               <Button
-                className="h-12 rounded-full px-5 font-black"
+                className="h-12 rounded-full bg-primary px-6 font-black text-white shadow-[0_14px_30px_rgba(48,140,232,0.26)] hover:bg-primary-hover focus-visible:outline-primary active:scale-[0.98] disabled:bg-surface-muted disabled:text-muted disabled:opacity-100 disabled:shadow-none"
                 disabled={isSubmitting}
                 type="submit"
               >
@@ -226,6 +345,7 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
           </footer>
         </form>
       </section>
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -158,6 +158,23 @@ export const updateReplySchema: IValidatorRequest = {
       min: 3,
       max: 2000,
     },
+    {
+      key: "mediaUrl",
+      coerse: "string",
+      method: "string",
+      min: 1,
+      max: 500,
+      optional: true,
+      nullable: true,
+    },
+    {
+      key: "mediaType",
+      coerse: "string",
+      method: "enumeric",
+      values: ["image", "video"],
+      optional: true,
+      nullable: true,
+    },
   ],
 };
 

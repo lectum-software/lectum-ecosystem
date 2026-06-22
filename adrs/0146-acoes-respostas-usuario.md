@@ -54,3 +54,31 @@ Validacao complementar:
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
 - Chrome/CDP mobile `390x844` no detalhe do post demo: sucesso ao abrir o menu do comentario proprio `cmqnag8iv0024g8uhognhksz3`, confirmar ordem `Editar/Salvar/Compartilhar/Excluir` e abrir a modal `Editar comentario` preenchida.
+
+## Complemento 2026-06-21 - modal isolada de editar comentario e midia
+
+A edicao de comentarios precisa ser uma experiencia isolada da arvore/card original, especialmente no mobile, e tambem deve permitir gestao de midia quando a resposta pertence a um psicologo com direito real ao recurso.
+
+Decisao complementar:
+
+- Renderizar a `ReplyEditModal` por portal em `document.body`, com overlay fixo acima da pagina, bloqueio de scroll global e scroll interno do conteudo.
+- Manter a modal centralizada em mobile e desktop, em vez de bottom sheet, usando altura maxima responsiva e margens de seguranca para preservar textarea e rodape.
+- A modal nao renderiza nenhum fragmento visual do `ReplyCard`: sem metadados, sem linha `Respondido em`, sem controles de upvote/downvote/salvar/compartilhar, sem divisorias herdadas e sem label redundante.
+- Reutilizar `ReplyMediaAttachmentControl` para criar e editar midia de respostas, evitando componentes paralelos; o modo editor permite visualizar, substituir, remover e desfazer remocao da midia atual.
+- Estender o contrato owner-only `PUT /api/private/posts/:id/replies/:replyId` para aceitar `mediaUrl`/`mediaType` opcionais, validando que substituicoes venham do upload publico permitido e que remocao seja representada por ambos os campos `null`.
+- Exibir o controle de midia apenas para psicologos com entitlement real (`canAttach`) e esconder de pacientes ou psicologos gratuitos; o backend continua sendo a fonte final da permissao.
+
+Consequencias:
+
+- A experiencia de edicao fica limpa, focada e livre de vazamentos de stacking context do card original.
+- O fluxo de midia de comentarios permanece reaproveitando o storage/upload ja configurado para respostas, sem novo bucket, package, modelo ou endpoint de upload.
+- Autoria, post, hierarquia, regras de exclusao, votos, salvos e collapse continuam inalterados.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir backend check`: sucesso.
+- `pnpm --dir backend build`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- Chrome/CDP mobile `390x844` em `/app/posts/mine`: sucesso ao abrir `Editar comentario`, confirmar modal centralizada, `z-index=1000`, body travado, 1 textarea, ausencia de metadados/controles do card e opcao `Adicionar midia` para psicologo autorizado.

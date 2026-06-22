@@ -446,3 +446,17 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia visual usada foi o screenshot do usuario e a tela local do post.
 - ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile `390x844` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video?focusReplyId=cmqnag8iv0024g8uhognhksz3#reply-cmqnag8iv0024g8uhognhksz3`, confirmando menu `Editar/Salvar/Compartilhar/Excluir` em comentario proprio e abertura da modal `Editar comentario` com o texto atual preenchido.
+
+## Execucao complementar: modal limpa de editar comentario e midia (2026-06-21)
+
+- Pedido do usuario: isolar completamente a modal `Editar comentario`, remover qualquer vazamento visual do card original, manter centralizacao mobile/desktop e permitir gestao de midia quando o autor da resposta e psicologo verificado com direito a midia.
+- Frontend: `ReplyEditModal` passou a renderizar por `createPortal(document.body)`, com overlay fixo `z-[1000]`, `overflow` interno e bloqueio do scroll do documento para eliminar stacking context, rodape/controles/metadados herdados e comportamento de bottom sheet.
+- A modal ficou focada apenas em titulo, textarea e rodape de acoes; foram removidos label `Texto *`, linha `Respondido em`, divisorias e controles de upvote/downvote/salvar/compartilhar do card original.
+- Os botoes `Cancelar` e `Salvar alteracoes` receberam hierarquia visual mais clara, estados de hover/focus/active/disabled e preservam a acao primaria destacada em mobile e desktop.
+- Foi criado `ReplyMediaAttachmentControl` para reutilizar o mesmo controle de midia no composer e na edicao de comentarios, com preview de imagem/video, substituicao, remocao e desfazer remocao no modo editor.
+- A edicao de comentario so exibe midia para psicologos com permissao real de anexar midia; pacientes e psicologos gratuitos nao veem o controle.
+- Backend: `PUT /api/private/posts/:id/replies/:replyId` passou a aceitar `mediaUrl`/`mediaType` opcionais, mantendo autoria/post/hierarquia imutaveis e validando substituicao apenas por URL publica originada do upload permitido. Enviar ambos como `null` remove a midia atual.
+- Nao houve alteracao de Prisma schema, migrations, packages, ordenacao, votos, salvos, exclusao ou regras de collapse da arvore.
+- Fonte visual auditavel: screenshots enviados pelo usuario e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile autenticado `390x844` em `/app/posts/mine`, confirmando modal centralizada, `z-index=1000`, body com `overflow=hidden`, apenas 1 textarea, sem `Texto`, sem `Respondido em`, sem `Compartilhar` e com controle `Adicionar midia` para psicologo autorizado.

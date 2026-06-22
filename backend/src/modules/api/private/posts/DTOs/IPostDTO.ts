@@ -29,6 +29,8 @@ export type PostCreateReplyBody = {
 
 export type PostUpdateReplyBody = {
   content: string;
+  mediaType?: "image" | "video" | null;
+  mediaUrl?: string | null;
 };
 
 export type PostUpdateBody = {
