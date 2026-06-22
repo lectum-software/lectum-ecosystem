@@ -631,3 +631,15 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: screenshot do usuario e browser local desktop; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0147-cortesia-verificada-whatsapp-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP desktop `1440x900` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, confirmando CTA centralizado sob video de resposta com diferenca de centro de 0.01px.
+
+
+## Execucao complementar: rolagem interna do texto na edicao com midia (2026-06-22)
+
+- Pedido do usuario: quando o texto do comentario for muito grande na modal `Editar comentario`, reduzir a area do texto e manter a rolagem apenas dentro do textarea, sem barra de rolagem externa envolvendo a midia.
+- Frontend: `ReplyEditModal` passou a remover a rolagem do corpo da modal e limitar dinamicamente a altura do textarea; quando ha midia efetiva, o campo usa limite menor e rolagem interna propria.
+- A midia permanece visivel abaixo do texto e acima do rodape, sem depender de scroll externo da modal.
+- Quando nao ha midia, o textarea preserva um limite maior, ainda com rolagem interna para textos longos.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, permissoes, upload, votos, salvos ou regras de composicao texto/midia.
+- Fonte visual auditavel: screenshot do usuario e browser local desktop; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP desktop `1440x900` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, confirmando corpo da modal com `overflow-y: hidden`, textarea com `overflow-y: auto`, `scrollHeight > clientHeight` e midia visivel acima do rodape.

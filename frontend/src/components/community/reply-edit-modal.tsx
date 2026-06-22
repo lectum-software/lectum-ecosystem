@@ -16,6 +16,7 @@ import { components } from "@/components/controllers";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { type Field, useFormList } from "@/hooks/form";
 import { useAppSelector } from "@/hooks/redux";
+import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
 
@@ -62,7 +63,7 @@ const fields = [
     autoGrow: true,
     className: "[&>span:last-child]:min-h-4",
     inputClassName:
-      "max-h-[16rem] min-h-[5rem] resize-none rounded-[1.35rem] border-border bg-surface px-4 py-3.5 text-[0.95rem] leading-6 shadow-none sm:max-h-[18rem]",
+      "min-h-[5rem] resize-none rounded-[1.35rem] border-border bg-surface px-4 py-3.5 text-[0.95rem] leading-6 shadow-none",
   },
 ] satisfies Field<ReplyEditForm>[];
 
@@ -257,6 +258,15 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
   if (!open || typeof document === "undefined") return null;
 
   const FieldComponent = components[formProps.fields[0].field];
+  const contentField = {
+    ...formProps.fields[0],
+    inputClassName: cn(
+      formProps.fields[0].inputClassName,
+      hasEffectiveMedia
+        ? "max-h-[min(8.5rem,24dvh)] sm:max-h-[min(10rem,28dvh)]"
+        : "max-h-[min(16rem,40dvh)] sm:max-h-[min(18rem,46dvh)]",
+    ),
+  };
 
   return createPortal(
     <div
@@ -288,11 +298,9 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
         </header>
 
         <form className="flex min-h-0 flex-1 flex-col" noValidate onSubmit={handleSubmit}>
-          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
+          <div className="min-h-0 flex-1 overflow-hidden px-5 py-5 sm:px-6">
             <div className="grid gap-4">
-              {FieldComponent ? (
-                <FieldComponent control={hook.control} {...formProps.fields[0]} />
-              ) : null}
+              {FieldComponent ? <FieldComponent control={hook.control} {...contentField} /> : null}
 
               {canManageMedia ? (
                 <ReplyMediaAttachmentControl

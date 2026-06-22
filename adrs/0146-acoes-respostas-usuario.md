@@ -205,3 +205,28 @@ Validacao complementar:
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
 - Chrome/CDP mobile `390x844` no detalhe do post demo: sucesso, abrindo `Editar comentario` em resposta propria com imagem horizontal e em resposta propria com video horizontal, confirmando frame `16:9`, miniatura renderizada, botao textual `Midia` ausente e `X` de remover presente.
+
+
+## Complemento 2026-06-22 - rolagem interna do texto com midia na edicao
+
+A modal `Editar comentario` ja isolava o card original, mas comentarios longos com midia ainda podiam gerar uma segunda barra de rolagem no corpo da modal. Isso fazia texto, midia e rodape disputarem uma area rolavel externa, contrariando a experiencia focada de edicao.
+
+Decisao complementar:
+
+- O corpo da modal de edicao deixa de ter rolagem propria e passa a ocultar overflow externo.
+- O textarea continua com auto-grow, mas recebe limite dinamico: menor quando ha midia efetiva e maior quando nao ha midia.
+- Textos longos passam a rolar dentro do proprio textarea, mantendo a midia posicionada abaixo do campo e acima do rodape.
+- A regra de composicao continua igual: texto + midia, somente texto ou somente midia permanecem validos conforme backend.
+
+Consequencias:
+
+- A modal deixa de exibir barra de rolagem externa ao editar comentarios longos com midia.
+- A midia fica visualmente estavel, sem ser empurrada para fora por textos extensos.
+- Nao ha mudanca em schema, endpoints, upload, storage, permissoes ou contrato de edicao.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- Chrome/CDP desktop `1440x900`: sucesso, em comentario proprio com texto longo e video, confirmando corpo da modal sem scroll externo, textarea com scroll interno e midia visivel acima do rodape.
