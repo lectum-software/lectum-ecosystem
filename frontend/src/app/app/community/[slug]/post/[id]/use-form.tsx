@@ -8,11 +8,7 @@ import type {
 import { type Field, useFormList } from "@/hooks/form";
 
 export const replyComposerSchema = z.object({
-  content: z
-    .string()
-    .trim()
-    .min(3, "Escreva uma resposta com pelo menos 3 caracteres")
-    .max(2000, "Use no máximo 2000 caracteres na resposta"),
+  content: z.string().trim().max(2000, "Use no máximo 2000 caracteres na resposta"),
 });
 
 export type ReplyComposerForm = z.infer<typeof replyComposerSchema>;
@@ -34,7 +30,7 @@ const buildFields = (replyingToName?: string | null) =>
       className: "gap-0 [&>span:last-child]:hidden",
       label: undefined,
       placeholder: replyingToName ? `Responder ${replyingToName}` : "Comentar no post",
-      required: true,
+      required: false,
       rows: 1,
       max: 2000,
       autoGrow: true,

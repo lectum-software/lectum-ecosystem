@@ -97,7 +97,8 @@
     "post_delete_professional_replies_blocked": "Este post já recebeu contribuições de psicólogos da comunidade e não pode ser excluído.",
     "community_post_media_invalid": "A mídia do post não é válida. Envie novamente pelo fluxo de anexar mídia.",
     "community_post_media_professional_plan": "Envio de mídia em posts está disponível apenas para psicólogos verificados com Plano Profissional ativo.",
-    "post_reply_delete_professional_replies_blocked": "Este comentário já recebeu contribuições de psicólogos da comunidade e não pode ser excluído."
+    "post_reply_delete_professional_replies_blocked": "Este comentário já recebeu contribuições de psicólogos da comunidade e não pode ser excluído.",
+    "post_reply_content_required": "Escreva um comentário ou anexe uma mídia para publicar."
   },
   "message": {
     "store": "dado criado",

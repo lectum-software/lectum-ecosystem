@@ -21,14 +21,14 @@ export type PostListQuery = {
 };
 
 export type PostCreateReplyBody = {
-  content: string;
+  content?: string | null;
   mediaType?: "image" | "video";
   mediaUrl?: string;
   parentReplyId?: string;
 };
 
 export type PostUpdateReplyBody = {
-  content: string;
+  content?: string | null;
   mediaType?: "image" | "video" | null;
   mediaUrl?: string | null;
 };
@@ -238,6 +238,7 @@ export type PostMutationResult<T> =
   | { kind: "not_found" }
   | { kind: "invalid_parent" }
   | { kind: "invalid_media" }
+  | { kind: "invalid_content" }
   | { kind: "media_not_allowed" }
   | { kind: "invalid_target" }
   | { kind: "forbidden" }

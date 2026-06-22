@@ -1583,7 +1583,7 @@ const ReplyComposer = ({
   const draft = String(content ?? "").trim();
   const hasDraft = draft.length > 0;
   const hasDiscardableDraft = hasDraft || Boolean(selectedMedia);
-  const ready = hasDraft;
+  const ready = hasDraft || Boolean(selectedMedia);
   const expanded =
     composerActive ||
     hasDraft ||
@@ -1673,6 +1673,7 @@ const ReplyComposer = ({
       previewUrl,
       type: mediaTypeFromFile(file),
     });
+    hook.clearErrors("content");
     setComposerActive(true);
   };
 
@@ -1732,6 +1733,14 @@ const ReplyComposer = ({
 
   const handleComposerSubmit = (event: FormEvent<HTMLFormElement>) => {
     void hook.handleSubmit(async (values) => {
+      if (!String(values.content ?? "").trim() && !selectedMedia) {
+        hook.setError("content", {
+          message: "Escreva um comentário ou anexe uma mídia.",
+          type: "manual",
+        });
+        return;
+      }
+
       try {
         await onSubmit(values, selectedMedia?.file ?? null);
         hook.reset({ content: "" });

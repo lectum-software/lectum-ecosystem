@@ -1627,9 +1627,14 @@ export class PostRepository implements IPostRepository {
     const post = await findPublishedPost(data.p.id);
     if (!post) return { kind: "not_found" };
 
+    const content = String(data.b.content ?? "").trim();
     const mediaUrl = data.b.mediaUrl?.trim() || null;
     const mediaType = normalizeReplyMediaType(data.b.mediaType);
     const hasMedia = Boolean(mediaUrl || data.b.mediaType);
+
+    if (!content && !hasMedia) {
+      return { kind: "invalid_content" };
+    }
 
     if (hasMedia) {
       if (!mediaUrl || !mediaType || !isPublicReplyMediaUrl(mediaUrl)) {
@@ -1663,7 +1668,7 @@ export class PostRepository implements IPostRepository {
           post_id: post.id,
           author_id: data.auth.id!,
           parent_reply_id: data.b.parentReplyId || null,
-          content: data.b.content.trim(),
+          content,
           media_type: mediaType,
           media_url: mediaUrl,
         },
@@ -1703,6 +1708,9 @@ export class PostRepository implements IPostRepository {
       select: {
         id: true,
         author_id: true,
+        content: true,
+        media_type: true,
+        media_url: true,
         author: {
           select: {
             role: true,
@@ -1716,8 +1724,19 @@ export class PostRepository implements IPostRepository {
 
     const mediaChangeRequested =
       Object.hasOwn(data.b, "mediaUrl") || Object.hasOwn(data.b, "mediaType");
+    const contentChangeRequested = Object.hasOwn(data.b, "content");
+    const content = contentChangeRequested
+      ? String(data.b.content ?? "").trim()
+      : reply.content.trim();
+    const nextMediaUrl = mediaChangeRequested ? (data.b.mediaUrl ?? null) : reply.media_url;
+    const nextMediaType = mediaChangeRequested ? (data.b.mediaType ?? null) : reply.media_type;
+
+    if (!content && !nextMediaUrl && !nextMediaType) {
+      return { kind: "invalid_content" };
+    }
+
     const updateData: Prisma.post_replyUpdateInput = {
-      content: data.b.content,
+      content,
       edited_at: new Date(),
     };
 

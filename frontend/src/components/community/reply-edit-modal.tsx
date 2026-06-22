@@ -20,11 +20,7 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
 
 const replyEditSchema = z.object({
-  content: z
-    .string()
-    .trim()
-    .min(3, "Escreva um texto com pelo menos 3 caracteres")
-    .max(2000, "Use no máximo 2000 caracteres no texto"),
+  content: z.string().trim().max(2000, "Use no máximo 2000 caracteres no texto"),
 });
 
 type ReplyEditForm = z.infer<typeof replyEditSchema>;
@@ -136,6 +132,9 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
     },
   });
   const isSubmitting = uploadMutation.isPending || updateMutation.isPending;
+  const contentDraft = String(hook.watch("content") ?? "").trim();
+  const hasEffectiveMedia = Boolean(selectedMedia || (!removeMedia && reply.media_url));
+  const canSubmit = Boolean(contentDraft || hasEffectiveMedia);
 
   const focusEditor = useCallback(() => {
     window.setTimeout(() => {
@@ -209,11 +208,20 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
     });
     setRemoveMedia(false);
     setActionError(null);
+    hook.clearErrors("content");
     focusEditor();
   };
 
   const handleSubmit = hook.handleSubmit(async (values) => {
     setActionError(null);
+
+    if (!String(values.content ?? "").trim() && !hasEffectiveMedia) {
+      hook.setError("content", {
+        message: "Escreva um comentario ou mantenha/anexe uma midia.",
+        type: "manual",
+      });
+      return;
+    }
 
     try {
       const uploadedMedia = selectedMedia
@@ -331,7 +339,7 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
               </Button>
               <Button
                 className="h-12 rounded-full bg-primary px-6 font-black text-white shadow-[0_14px_30px_rgba(48,140,232,0.26)] hover:bg-primary-hover focus-visible:outline-primary active:scale-[0.98] disabled:bg-surface-muted disabled:text-muted disabled:opacity-100 disabled:shadow-none"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !canSubmit}
                 type="submit"
               >
                 {isSubmitting ? (

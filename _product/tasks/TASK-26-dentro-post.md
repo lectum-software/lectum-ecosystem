@@ -497,3 +497,15 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: screenshot do usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.
 - Validacoes executadas: `pnpm --dir backend db:migrate -- --name add_post_reply_edited_at`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile `390x844` no detalhe do post demo, confirmando `Psic?logo ? h? 1 d ? editado` no comentario editado.
+
+## Complemento 2026-06-22 - comentarios com texto ou midia
+
+- Pedido do usuario: comentarios/respostas nao devem exigir texto quando ha midia; o conteudo pode ser texto + midia, somente texto ou somente midia.
+- Backend: validadores de `POST /api/private/posts/:id/replies` e `PUT /api/private/posts/:id/replies/:replyId` passaram a aceitar `content` ausente/vazio, mantendo limite maximo de 2000 caracteres.
+- Backend: a regra de dominio agora valida a composicao final do comentario/resposta: sem texto e sem midia valida continua bloqueado; com texto, com midia, ou com ambos e permitido.
+- Backend: na edicao, a regra considera a midia atual quando ela nao esta sendo removida; apagar texto e manter midia e permitido, mas remover texto e midia ao mesmo tempo e bloqueado.
+- Frontend: composer e modal `Editar comentario` removem a obrigatoriedade textual, liberam envio/salvamento quando existe midia selecionada/atual e mantem erro apenas quando nao ha texto nem midia.
+- Nao houve alteracao de Prisma schema, migrations, storage, permissao de midia, limites de arquivo, autoria, votos, salvos, exclusao, notificacoes ou marcador `editado`.
+- Fonte visual auditavel: screenshot do usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.
+- Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, smoke real de API criando resposta somente com midia sem `content`, validando bloqueio de composicao vazia e bloqueio ao remover texto + midia, e Chrome/CDP autenticado em `/app/community/ansiedade-em-equilibrio/post/cmqogqcxa0000kcuh7mvngnsl`, confirmando modal `Editar comentario` com textarea vazio, midia atual visivel, sem erro de texto minimo e botao `Salvar alteracoes` habilitado.

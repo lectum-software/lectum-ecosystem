@@ -58,6 +58,11 @@ const invalidMedia = () => ({
   ...error("post_reply_media_invalid", {}),
 });
 
+const invalidReplyContent = () => ({
+  status: 422,
+  ...error("post_reply_content_required", {}),
+});
+
 const mediaNotAllowed = () => ({
   status: 403,
   ...error("post_reply_media_professional_plan", {}),
@@ -156,6 +161,7 @@ const resolveMutationResult = <T>(
   if (result.kind === "invalid_parent") return invalidParent();
   if (result.kind === "invalid_target") return invalidTarget();
   if (result.kind === "invalid_media") return invalidMedia();
+  if (result.kind === "invalid_content") return invalidReplyContent();
   if (result.kind === "media_not_allowed") return mediaNotAllowed();
   if (result.kind === "forbidden") return replyDeleteForbidden();
   if (result.kind === "professional_replies_block")
@@ -260,7 +266,7 @@ export const createReply = async (data: IPostCreateReplyDTO) => {
   const res = await repository.createReply({
     ...data,
     b: {
-      content: data.b.content.trim(),
+      content: String(data.b.content ?? "").trim(),
       mediaType: data.b.mediaType,
       mediaUrl: data.b.mediaUrl?.trim() || undefined,
       parentReplyId: data.b.parentReplyId?.trim() || undefined,
@@ -334,9 +340,12 @@ export const updateReply = async (data: IPostUpdateReplyDTO) => {
   const repository = new PostRepository();
   const mediaChangeRequested =
     hasOwnBodyKey(data.b, "mediaUrl") || hasOwnBodyKey(data.b, "mediaType");
-  const body: IPostUpdateReplyDTO["b"] = {
-    content: data.b.content.trim(),
-  };
+  const contentChangeRequested = hasOwnBodyKey(data.b, "content");
+  const body: IPostUpdateReplyDTO["b"] = {};
+
+  if (contentChangeRequested) {
+    body.content = String(data.b.content ?? "").trim();
+  }
 
   if (mediaChangeRequested) {
     const mediaUrl = data.b.mediaUrl === null ? null : data.b.mediaUrl?.trim();

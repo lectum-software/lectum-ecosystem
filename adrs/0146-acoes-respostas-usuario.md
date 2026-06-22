@@ -132,3 +132,30 @@ Validacao complementar:
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
 - Chrome/CDP mobile `390x844` no detalhe do post demo: sucesso, confirmando `Psic?logo ? h? 1 d ? editado` no comentario editado.
+
+## Complemento 2026-06-22 - comentarios com texto ou midia
+
+A edicao/criacao de comentarios deve aceitar tres composicoes validas: texto + midia, somente texto ou somente midia. A obrigatoriedade deixa de ser textual e passa a ser de conteudo final nao vazio.
+
+Decisao complementar:
+
+- Remover o `min(3)` de texto nos validadores de comentarios/respostas e aceitar `content` ausente ou vazio, preservando `max(2000)`.
+- Manter `post_reply.content` como `String` nao nula, persistindo string vazia para respostas somente com midia, evitando nova migration.
+- Validar no dominio que a composicao final tem texto ou midia valida: criacao sem ambos falha; edicao sem ambos falha; edicao com midia atual preservada e texto vazio e permitida.
+- Reaproveitar o mesmo controle de midia e as mesmas permissoes existentes; pacientes e psicologos sem entitlement continuam sem anexar midia.
+
+Consequencias:
+
+- Psicologos verificados/cortesia podem publicar ou editar uma resposta usando apenas midia.
+- Comentarios somente texto continuam funcionando, inclusive com textos curtos.
+- O backend segue como fonte final da regra e impede registros vazios sem texto e sem midia.
+
+Validacao complementar:
+
+- `pnpm --dir backend check`: sucesso.
+- `pnpm --dir backend build`: sucesso.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- Smoke real de API: sucesso, criando resposta somente com midia sem `content`, bloqueando composicao vazia e bloqueando remocao simultanea de texto + midia.
+- Chrome/CDP autenticado: sucesso, confirmando modal `Editar comentario` com textarea vazio, midia atual visivel, sem erro de texto minimo e `Salvar alteracoes` habilitado.

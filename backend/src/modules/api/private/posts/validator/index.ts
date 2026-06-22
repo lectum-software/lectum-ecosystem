@@ -81,8 +81,9 @@ export const createReplySchema: IValidatorRequest = {
       key: "content",
       coerse: "string",
       method: "string",
-      min: 3,
       max: 2000,
+      optional: true,
+      nullable: true,
     },
     {
       key: "parentReplyId",
@@ -155,8 +156,9 @@ export const updateReplySchema: IValidatorRequest = {
       key: "content",
       coerse: "string",
       method: "string",
-      min: 3,
       max: 2000,
+      optional: true,
+      nullable: true,
     },
     {
       key: "mediaUrl",
