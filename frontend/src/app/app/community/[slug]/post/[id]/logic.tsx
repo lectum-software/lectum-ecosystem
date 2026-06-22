@@ -743,6 +743,7 @@ const PostHeader = ({
 
 const PostBody = ({ post }: { post: PostDetail }) => {
   const [contentExpanded, setContentExpanded] = useState(false);
+  const showAuthorWhatsapp = post.author.role === "psicologo" && Boolean(post.author.whatsapp_url);
 
   return (
     <div className="grid gap-3 px-5 py-4">
@@ -756,6 +757,22 @@ const PostBody = ({ post }: { post: PostDetail }) => {
         text={post.content}
       />
       <MediaBlock alt={post.title} mediaType={post.media_type} mediaUrl={post.media_url} />
+      {showAuthorWhatsapp ? (
+        <PsychologistWhatsAppRedirectButton
+          className="mx-auto flex h-11 w-full max-w-[320px] items-center justify-center gap-2 rounded-[14px] border-2 border-success bg-transparent text-success shadow-none transition hover:bg-success hover:text-white"
+          psychologist={{
+            avatar: post.author.avatar,
+            crp: post.author.crp,
+            id: post.author.id,
+            name: post.author.name,
+            typeLabel: post.author.type_label,
+            whatsappUrl: post.author.whatsapp_url,
+          }}
+        >
+          <WhatsAppIcon className="h-5 w-5" aria-hidden="true" />
+          Chamar no WhatsApp
+        </PsychologistWhatsAppRedirectButton>
+      ) : null}
     </div>
   );
 };
@@ -1370,7 +1387,7 @@ const ReplyCard = ({
             />
           </div>
 
-          {isProfessional && reply.author.verified && reply.author.whatsapp_url ? (
+          {isProfessional && reply.author.whatsapp_url ? (
             <PsychologistWhatsAppRedirectButton
               className="mx-auto mt-2 flex h-11 w-full max-w-[280px] items-center justify-center gap-2 rounded-[14px] border-2 border-success bg-transparent text-success shadow-none transition hover:bg-success hover:text-white sm:max-w-[320px]"
               data-comment-collapse-ignore="true"

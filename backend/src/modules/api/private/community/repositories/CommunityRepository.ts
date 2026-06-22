@@ -3,7 +3,10 @@ import prisma, { type ORM } from "@/infra/database/prisma";
 import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
 import { getPostIdsWithPsychologistReplies } from "@/utils/community-post-replies";
 import { getMutedPostIds } from "@/utils/post-notification-mute";
-import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
+import {
+  activeProfessionalCourtesyEntitlementWhere,
+  activeProfessionalEntitlementWhere,
+} from "@/utils/subscription-entitlement";
 import type {
   CommunityAuthorDTO,
   CommunityDetailResponse,
@@ -66,8 +69,8 @@ const professionalProfileSelect = {
     where: activeProfessionalEntitlementWhere(),
     select: {
       id: true,
+      source: true,
     },
-    take: 1,
   },
 } satisfies Prisma.psychologist_profileSelect;
 
@@ -124,9 +127,18 @@ const postSelect = {
         psychologist_profile: {
           is: {
             deleted: false,
-            cfp_verified_at: {
-              not: null,
-            },
+            OR: [
+              {
+                cfp_verified_at: {
+                  not: null,
+                },
+              },
+              {
+                subscriptions: {
+                  some: activeProfessionalCourtesyEntitlementWhere(),
+                },
+              },
+            ],
           },
         },
       },
@@ -586,8 +598,13 @@ const anonymousDisplayNameForPost = (postId: string) => {
   return `Membro Anônimo #${1000 + (hash % 9000)}`;
 };
 
-const isProfessionalVerified = (profile?: { cfp_verified_at: Date | null } | null) => {
-  return Boolean(profile?.cfp_verified_at);
+const isProfessionalVerified = (
+  profile?: { cfp_verified_at: Date | null; subscriptions: { source?: string | null }[] } | null,
+) => {
+  return Boolean(
+    profile?.cfp_verified_at ||
+      profile?.subscriptions.some((subscription) => subscription.source === "admin_grant"),
+  );
 };
 
 const hasPaidProfessionalEntitlement = (profile?: { subscriptions: { id: string }[] } | null) => {
@@ -597,17 +614,18 @@ const hasPaidProfessionalEntitlement = (profile?: { subscriptions: { id: string 
 const buildProfessionalWhatsappUrl = (
   profile?: {
     cfp_verified_at: Date | null;
-    subscriptions: { id: string }[];
+    subscriptions: { id: string; source?: string | null }[];
     whatsapp: string | null;
   } | null,
 ) => {
-  if (!isProfessionalVerified(profile) || !hasPaidProfessionalEntitlement(profile)) return null;
-
   return buildWhatsappUrl(profile?.whatsapp);
 };
 
 const mentorBadgeForScore = (
-  profile?: { cfp_verified_at: Date | null; subscriptions: { id: string }[] } | null,
+  profile?: {
+    cfp_verified_at: Date | null;
+    subscriptions: { id: string; source?: string | null }[];
+  } | null,
   score = 0,
 ) => {
   if (!isProfessionalVerified(profile) || !hasPaidProfessionalEntitlement(profile)) return null;
@@ -1549,12 +1567,21 @@ export class CommunityRepository implements ICommunityRepository {
                 video_url: "",
               },
             ],
-            cfp_verified_at: {
-              not: null,
-            },
             subscriptions: {
               some: activeProfessionalEntitlementWhere(),
             },
+            OR: [
+              {
+                cfp_verified_at: {
+                  not: null,
+                },
+              },
+              {
+                subscriptions: {
+                  some: activeProfessionalCourtesyEntitlementWhere(),
+                },
+              },
+            ],
           },
         },
       },

@@ -460,3 +460,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Fonte visual auditavel: screenshots enviados pelo usuario e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile autenticado `390x844` em `/app/posts/mine`, confirmando modal centralizada, `z-index=1000`, body com `overflow=hidden`, apenas 1 textarea, sem `Texto`, sem `Respondido em`, sem `Compartilhar` e com controle `Adicionar midia` para psicologo autorizado.
+
+## Execucao complementar: cortesia verificada e WhatsApp em posts/respostas (2026-06-21)
+
+- Pedido do usuario: psicologo com cortesia administrativa deve aparecer como verificado na comunidade, posts editados devem exibir `editado`, e posts/respostas de qualquer psicologo com WhatsApp cadastrado devem mostrar o botao de WhatsApp, inclusive gratuitos.
+- Backend: `CommunityRepository` e `PostRepository` passaram a derivar `author.verified` por `cfp_verified_at` preenchido ou assinatura profissional ativa concedida por administrador (`source="admin_grant"`).
+- Backend: `author.whatsapp_url` deixou de depender de selo/assinatura e passa a ser derivado para qualquer psicologo nao excluido com WhatsApp publico cadastrado.
+- Backend: respostas profissionais destacadas e flags de resposta profissional verificada tambem consideram cortesia administrativa ativa como equivalencia publica de verificado.
+- Frontend: os cards do feed/comunidade, o card compartilhado de publicacoes e o detalhe do post exibem `editado` quando `edited_at` existe e renderizam CTA `Chamar no WhatsApp` para posts/respostas de psicologos com URL publica.
+- Nao houve alteracao de Prisma schema, migrations, packages, storage, payload de criacao/edicao, votos, salvamentos, ordenacao ou denuncia.
+- Fonte visual auditavel: screenshots enviados pelo usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR criado: `adrs/0147-cortesia-verificada-whatsapp-comunidade.md`.
+- Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, smoke real de API em `/api/private/community/feed/posts?search=teste%20novo&limit=20` confirmando `verified=true`, `whatsapp_url` e `edited_at` para `tuliosrezende@gmail.com`, e Chrome/CDP autenticado em `/app/community/feed` confirmando selo verificado, texto `editado`, botao `Chamar no WhatsApp` no card `teste novo` e botao de WhatsApp em resposta profissional destacada.

@@ -748,6 +748,12 @@ const formatRelativeTime = (value: string) => {
   }).format(date);
 };
 
+const formatPostTimeLabel = (createdAt: string, editedAt?: string | null) => {
+  const relativeTime = formatRelativeTime(createdAt);
+
+  return editedAt ? `${relativeTime} · editado` : relativeTime;
+};
+
 const formatCompactCount = (value: number, singular: string, plural: string) => {
   const label = value === 1 ? singular : plural;
 
@@ -1336,11 +1342,11 @@ const PostCard = ({
               href={psychologistProfileHref}
             >
               {post.author.type_label} <span aria-hidden="true">&bull;</span>{" "}
-              {formatRelativeTime(post.created_at)}
+              {formatPostTimeLabel(post.created_at, post.edited_at)}
             </Link>
           ) : (
             <p className="text-[11px] font-semibold text-muted">
-              {formatRelativeTime(post.created_at)}
+              {formatPostTimeLabel(post.created_at, post.edited_at)}
             </p>
           )}
         </div>
@@ -1369,6 +1375,23 @@ const PostCard = ({
       <div className="mt-4 grid gap-3">
         <PostMedia post={post} />
         <ProfessionalReplyPreview post={post} />
+        {isPsychologistPost && post.author.whatsapp_url ? (
+          <PsychologistWhatsAppRedirectButton
+            className="mx-auto flex h-11 w-full max-w-[390px] items-center justify-center gap-2 rounded-2xl border border-success bg-transparent text-sm font-bold text-success shadow-none transition hover:bg-success/10 active:scale-[0.99]"
+            psychologist={{
+              avatar: post.author.avatar,
+              crp: post.author.crp,
+              id: post.author.id,
+              name: post.author.name,
+              typeLabel: post.author.type_label,
+              whatsappUrl: post.author.whatsapp_url,
+            }}
+            stopPropagation
+          >
+            <WhatsAppIcon className="h-5 w-5 text-success" aria-hidden="true" />
+            Chamar no WhatsApp
+          </PsychologistWhatsAppRedirectButton>
+        ) : null}
       </div>
 
       <CommunityActionBar

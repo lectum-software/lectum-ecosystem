@@ -92,3 +92,4 @@ Formato recomendado:
 - [ADR-0122 - Card de upgrade no menu principal de perfil](0122-card-upgrade-menu-perfil.md) - Accepted
 - [ADR-0145 - Edição de post publicado](0145-edicao-post-publicado.md) - Accepted
 - [ADR-0146 - Ações de respostas do usuário](0146-acoes-respostas-usuario.md) - Accepted
+- [ADR-0147 - Cortesia verificada e WhatsApp na comunidade](0147-cortesia-verificada-whatsapp-comunidade.md) - Accepted

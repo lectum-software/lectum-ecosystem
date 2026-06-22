@@ -484,7 +484,7 @@ const ProfessionalReplyPreview = ({
           videoClassName={profilePublicationMode ? "md:mx-auto md:max-w-[320px]" : undefined}
         />
       </div>
-      {reply.author.whatsapp_url && !profilePublicationMode ? (
+      {reply.author.whatsapp_url ? (
         <PsychologistWhatsAppRedirectButton
           className="mx-auto mt-3 flex h-11 w-full max-w-[390px] items-center justify-center gap-2 rounded-2xl border border-success bg-transparent text-sm font-bold text-success shadow-none transition hover:bg-success/10 active:scale-[0.99]"
           psychologist={{
@@ -535,6 +535,8 @@ export const CommunityPostCard = ({
   const displayCreatedAt = primaryReply?.created_at ?? post.created_at;
   const displayEditedAt = primaryReply ? null : post.edited_at;
   const displayTimeLabel = formatPostTimeLabel(displayCreatedAt, displayEditedAt);
+  const displayRelativeTime = formatRelativeTime(displayCreatedAt);
+  const displayWasEdited = Boolean(displayEditedAt);
   const displayTitle = primaryReply ? null : post.title;
   const displayContent = primaryReply?.content ?? post.content;
   const displayMediaType = primaryReply?.media_type ?? post.media_type;
@@ -810,7 +812,15 @@ export const CommunityPostCard = ({
                 className="w-fit text-[11px] font-semibold text-muted no-underline transition hover:text-muted hover:no-underline"
                 href={psychologistProfileHref}
               >
-                {displayAuthor.type_label} <span aria-hidden="true">&bull;</span> {displayTimeLabel}
+                {displayAuthor.type_label} <span aria-hidden="true">&bull;</span>{" "}
+                {displayRelativeTime}
+                {displayWasEdited ? (
+                  <>
+                    {" "}
+                    <span aria-hidden="true">&bull;</span>{" "}
+                    <span className="font-extrabold text-muted">editado</span>
+                  </>
+                ) : null}
               </Link>
             ) : (
               <p className="text-[11px] font-semibold text-muted">{displayTimeLabel}</p>
@@ -866,6 +876,22 @@ export const CommunityPostCard = ({
           profilePublicationMode={profilePublicationMode}
           reply={highlightedProfessionalReply}
         />
+        {isPsychologistPost && displayAuthor.whatsapp_url ? (
+          <PsychologistWhatsAppRedirectButton
+            className="mx-auto flex h-11 w-full max-w-[390px] items-center justify-center gap-2 rounded-2xl border border-success bg-transparent text-sm font-bold text-success shadow-none transition hover:bg-success/10 active:scale-[0.99]"
+            psychologist={{
+              avatar: displayAuthor.avatar,
+              crp: displayAuthor.crp,
+              id: displayAuthor.id,
+              name: displayAuthor.name,
+              typeLabel: displayAuthor.type_label,
+              whatsappUrl: displayAuthor.whatsapp_url,
+            }}
+          >
+            <WhatsAppIcon className="h-5 w-5 text-success" aria-hidden="true" />
+            Chamar no WhatsApp
+          </PsychologistWhatsAppRedirectButton>
+        ) : null}
       </div>
 
       <CommunityActionBar
