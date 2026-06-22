@@ -129,3 +129,22 @@ Validacao adicional:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Chrome/CDP mobile autenticado no detalhe do post demo confirmou ausencia de `Substituir midia anexada`, miniatura renderizada, botao `Remover midia anexada` presente, preview sem label sobreposto e envio habilitado com textarea vazio.
+
+## Atualizacao 2026-06-22 - botao de midia escondido no repouso mobile
+
+O composer fixo de comentarios no mobile precisa economizar altura no estado de repouso. A mensagem de conduta e a acao de anexo de midia passam a formar um estado expandido acionado por foco, rascunho ou midia selecionada.
+
+Decisao complementar:
+
+- Ocultar o bloco de midia apenas em breakpoints mobile quando o composer nao esta ativo, nao possui rascunho e nao possui midia selecionada.
+- Manter o comportamento desktop com o botao de midia sempre disponivel para psicologos com permissao, preservando o fluxo ja validado.
+- Manter a midia visivel quando ja existir anexo selecionado, mesmo no mobile, para permitir remover ou publicar somente a midia.
+- Implementar a regra por composicao de classes no `ReplyMediaAttachmentControl`, sem duplicar componente, endpoint ou regra de permissao.
+- Usar `onFocusCapture` no composer para garantir expansao assim que qualquer controle interno receber foco.
+
+Validacao adicional:
+
+- Chrome/CDP mobile autenticado `390x844` confirmou `Anexar midia` e `Comente com respeito e empatia...` invisiveis em repouso e visiveis apos foco do textarea.
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`

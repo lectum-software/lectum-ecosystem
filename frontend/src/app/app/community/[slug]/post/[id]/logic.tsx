@@ -1849,7 +1849,7 @@ const ReplyComposer = ({
         setComposerActive(false);
         resetCancelDrag();
       }}
-      onFocus={() => setComposerActive(true)}
+      onFocusCapture={() => setComposerActive(true)}
       onPointerCancel={handleCancelPointerEnd}
       onPointerDown={handleCancelPointerDown}
       onPointerMove={handleCancelPointerMove}
@@ -1896,6 +1896,7 @@ const ReplyComposer = ({
 
       {expanded && shouldShowMediaControls ? (
         <ReplyMediaAttachmentControl
+          className={!shouldShowGuidance ? "max-sm:hidden" : undefined}
           disabled={disabled}
           fileInputRef={fileInputRef}
           isUploading={disabled && Boolean(selectedMedia)}

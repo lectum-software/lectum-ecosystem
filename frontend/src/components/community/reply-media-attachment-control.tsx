@@ -30,6 +30,7 @@ type CurrentReplyMedia = {
 };
 
 type ReplyMediaAttachmentControlProps = {
+  className?: string;
   currentMedia?: CurrentReplyMedia;
   disabled?: boolean;
   fileInputRef: RefObject<HTMLInputElement | null>;
@@ -108,6 +109,7 @@ const composerPreviewSizeClassName = (orientation?: ReplyMediaOrientation) => {
 };
 
 export function ReplyMediaAttachmentControl({
+  className,
   currentMedia,
   disabled,
   fileInputRef,
@@ -164,7 +166,12 @@ export function ReplyMediaAttachmentControl({
 
   if (!isEditor) {
     return (
-      <div className="flex flex-wrap items-center justify-between gap-2 px-0.5 text-xs text-muted">
+      <div
+        className={cn(
+          "flex flex-wrap items-center justify-between gap-2 px-0.5 text-xs text-muted",
+          className,
+        )}
+      >
         {mediaInput}
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
           {activeMedia ? (

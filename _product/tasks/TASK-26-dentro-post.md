@@ -564,3 +564,14 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: `_product/proto/Dentro do Post.jpg`, screenshot do usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0068-respostas-votos-salvos-post.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile autenticado em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, criando e removendo comentario real de validacao; confirmado comentario criado com foco ativo, classe `lectum-reply-focus-pulse` e posicao visivel na viewport apos scroll suave.
+
+## Complemento 2026-06-22 - repouso mobile do composer de comentarios
+
+- Pedido do usuario: no estado de repouso do comentario no mobile, o botao `Anexar midia` deve permanecer escondido e aparecer somente quando o composer estiver focado, junto com a mensagem `Comente com respeito e empatia...`.
+- Frontend: o controle compartilhado `ReplyMediaAttachmentControl` passou a aceitar `className`, permitindo ocultar apenas o bloco de midia no repouso mobile sem alterar o comportamento desktop.
+- Frontend: o `ReplyComposer` agora mantem o controle de midia escondido em `max-sm` enquanto nao ha foco, rascunho ou midia selecionada; ao focar, a mensagem de orientacao e o botao de midia aparecem juntos.
+- Se ja houver texto ou midia selecionada, o composer continua expandido para preservar a composicao do usuario e permitir remocao/envio da midia.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, storage, endpoints, limites de midia, permissao profissional, votos, salvos, denuncia ou ordenacao.
+- Fonte visual auditavel: screenshot do usuario e browser local em 390x844; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+- Validacoes executadas: Chrome/CDP mobile autenticado em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, confirmando `Anexar midia` e orientacao escondidos em repouso e visiveis apos foco; `pnpm --dir frontend check`; `pnpm --dir frontend build`; `pnpm check`.
