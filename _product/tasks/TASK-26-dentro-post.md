@@ -569,7 +569,7 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 
 - Pedido do usuario: no estado de repouso do comentario no mobile, o botao `Anexar midia` deve permanecer escondido e aparecer somente quando o composer estiver focado, junto com a mensagem `Comente com respeito e empatia...`.
 - Frontend: o controle compartilhado `ReplyMediaAttachmentControl` passou a aceitar `className`, permitindo ocultar apenas o bloco de midia no repouso mobile sem alterar o comportamento desktop.
-- Frontend: o `ReplyComposer` agora mantem o controle de midia escondido em `max-sm` enquanto nao ha foco, rascunho ou midia selecionada; ao focar, a mensagem de orientacao e o botao de midia aparecem juntos.
+- Frontend: o `ReplyComposer` agora aplica `hidden sm:flex` ao controle de midia enquanto nao ha foco, rascunho ou midia selecionada, garantindo ocultacao real no mobile e preservando o botao no desktop; ao focar, a mensagem de orientacao e o botao de midia aparecem juntos.
 - Se ja houver texto ou midia selecionada, o composer continua expandido para preservar a composicao do usuario e permitir remocao/envio da midia.
 - Nao houve alteracao de backend, Prisma schema, migrations, packages, storage, endpoints, limites de midia, permissao profissional, votos, salvos, denuncia ou ordenacao.
 - Fonte visual auditavel: screenshot do usuario e browser local em 390x844; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.

@@ -136,7 +136,7 @@ O composer fixo de comentarios no mobile precisa economizar altura no estado de 
 
 Decisao complementar:
 
-- Ocultar o bloco de midia apenas em breakpoints mobile quando o composer nao esta ativo, nao possui rascunho e nao possui midia selecionada.
+- Ocultar o bloco de midia apenas em breakpoints mobile quando o composer nao esta ativo, nao possui rascunho e nao possui midia selecionada, usando `hidden sm:flex` para evitar dependencia de variante `max-sm` no build.
 - Manter o comportamento desktop com o botao de midia sempre disponivel para psicologos com permissao, preservando o fluxo ja validado.
 - Manter a midia visivel quando ja existir anexo selecionado, mesmo no mobile, para permitir remover ou publicar somente a midia.
 - Implementar a regra por composicao de classes no `ReplyMediaAttachmentControl`, sem duplicar componente, endpoint ou regra de permissao.

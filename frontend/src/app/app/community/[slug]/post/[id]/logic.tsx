@@ -1896,7 +1896,7 @@ const ReplyComposer = ({
 
       {expanded && shouldShowMediaControls ? (
         <ReplyMediaAttachmentControl
-          className={!shouldShowGuidance ? "max-sm:hidden" : undefined}
+          className={!shouldShowGuidance ? "hidden sm:flex" : undefined}
           disabled={disabled}
           fileInputRef={fileInputRef}
           isUploading={disabled && Boolean(selectedMedia)}
