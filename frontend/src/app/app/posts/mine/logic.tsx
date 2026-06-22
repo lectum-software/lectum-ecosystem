@@ -691,6 +691,7 @@ export const MyPostsLogic = () => {
                     openPostOnCardClick
                     post={item.post}
                     showAuthorHeader={false}
+                    showWhatsappCta={false}
                   />
                 ),
               )}

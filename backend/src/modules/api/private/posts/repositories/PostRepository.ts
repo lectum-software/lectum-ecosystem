@@ -906,6 +906,9 @@ export class PostRepository implements IPostRepository {
               replies: {
                 where: {
                   deleted: false,
+                  author_id: {
+                    not: data.auth.id!,
+                  },
                   author: {
                     role: "psicologo",
                     psychologist_profile: {

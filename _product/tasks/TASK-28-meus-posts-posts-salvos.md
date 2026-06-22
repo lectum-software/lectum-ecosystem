@@ -351,3 +351,13 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Referência visual aplicada a partir da modal de criação já implementada e das imagens locais da TASK-28; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0145-edicao-post-publicado.md`.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile `390x844` em `/app/posts/mine`, confirmando abertura da modal `Editar Post`, ausência de `Dados fixos`, ausência de `Cancelar`, seletor de comunidade inativo, campos editoriais sem bordas pesadas e rodapé com `Mídia`/`Salvar`.
+
+## Ajuste complementar em 2026-06-22 - sem WhatsApp proprio e flag profissional externa
+
+- Pedido direto de produto: em `/app/posts/mine`, nao exibir o CTA de WhatsApp em conteudos do proprio psicologo e nao mostrar `Respondido por psicologo verificado` quando a resposta profissional direta foi criada pelo proprio autor.
+- Frontend: `CommunityPostCard` recebeu prop opt-in para ocultar CTAs de WhatsApp sem alterar o padrao publico do feed, salvos e perfil; `/app/posts/mine` usa essa prop para posts e respostas destacadas proprias.
+- Backend: a flag `has_verified_professional_reply` em `GET /api/private/posts/mine?type=replies` passou a considerar apenas respostas diretas de outros psicologos verificados, preservando o indicador quando outro profissional responder.
+- Nao houve alteracao de schema Prisma, migrations, packages, endpoints novos, regras de WhatsApp publico fora da area pessoal, votos, salvos, edicao, exclusao ou notificacoes.
+- Referencias visuais seguem as imagens locais `_product/proto/Meus Posts - Paciente.jpg`, `_product/proto/Meus Posts - Psicologo.jpg` e o screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0072-meus-posts-e-posts-salvos.md`.
+- Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`; smoke API real criando e removendo uma resposta direta propria do psicologo confirmou `replies_received_count=1` com `has_verified_professional_reply=false`; Chrome/CDP mobile `390x844` em `/app/posts/mine` confirmou ausencia de `Chamar no WhatsApp` e ausencia de `Respondido por psicologo verificado` no card da resposta propria com filho criado pelo mesmo psicologo.

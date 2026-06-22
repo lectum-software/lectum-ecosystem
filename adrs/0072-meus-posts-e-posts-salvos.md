@@ -401,3 +401,32 @@ Validacao:
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - Smoke HTTP local: `http://127.0.0.1:3000/app/posts/mine` retornou 200.
+
+## Complemento 2026-06-22: sem WhatsApp proprio e flag profissional externa
+
+### Contexto
+
+Em `Meus posts e respostas`, o conteudo listado pertence ao proprio usuario autenticado. Para psicologos, exibir `Chamar no WhatsApp` no proprio conteudo gera uma acao redundante. Alem disso, a flag `Respondido por psicologo verificado` deve representar resposta de outro profissional, nao uma resposta direta criada pelo proprio psicologo autor.
+
+### Decisao
+
+- Criar uma prop opt-in em `CommunityPostCard` para ocultar CTAs de WhatsApp em contextos pessoais, mantendo o default publico inalterado para feed, salvos, perfil e detalhe.
+- Usar essa prop apenas em `/app/posts/mine`, onde o objetivo e gestao/acompanhamento do proprio conteudo.
+- Ajustar o backend de `GET /api/private/posts/mine?type=replies` para calcular `has_verified_professional_reply` apenas com respostas diretas de outros psicologos verificados.
+
+### Consequencias
+
+- Psicologos nao veem botao para chamar o proprio WhatsApp na area pessoal.
+- Comentarios/respostas do proprio psicologo nao ganham a flag profissional por causa de respostas dele mesmo.
+- A experiencia publica continua exibindo WhatsApp para psicologos com numero cadastrado e continua mostrando respostas profissionais de terceiros quando aplicavel.
+- Nao houve mudanca de schema, endpoints, packages, votos, salvos, exclusao, edicao ou notificacoes.
+
+### Validacao
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke API real em `GET /api/private/posts/mine?type=replies`: criou uma resposta propria e uma resposta filha propria do psicologo `tuliosrezende@gmail.com`, confirmou `replies_received_count=1` e `has_verified_professional_reply=false`, e removeu os registros temporarios ao final.
+- Chrome/CDP mobile `390x844` em `/app/posts/mine`: confirmou ausencia de `Chamar no WhatsApp` em conteudo proprio e ausencia de `Respondido por psicologo verificado` no card da resposta propria com filho criado pelo mesmo psicologo.

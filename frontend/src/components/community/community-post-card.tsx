@@ -53,6 +53,7 @@ type CommunityPostCardProps = {
   showAuthorHeader?: boolean;
   showCommunityHeader?: boolean;
   showHighlightedProfessionalReply?: boolean;
+  showWhatsappCta?: boolean;
   statusBadge?: ReactNode;
 };
 
@@ -398,9 +399,11 @@ const MediaBlock = ({
 const ProfessionalReplyPreview = ({
   profilePublicationMode,
   reply,
+  showWhatsappCta = true,
 }: {
   profilePublicationMode?: boolean;
   reply: PostProfessionalReply | null;
+  showWhatsappCta?: boolean;
 }) => {
   const [contentExpanded, setContentExpanded] = useState(false);
 
@@ -484,7 +487,7 @@ const ProfessionalReplyPreview = ({
           videoClassName={profilePublicationMode ? "md:mx-auto md:max-w-[320px]" : undefined}
         />
       </div>
-      {reply.author.whatsapp_url ? (
+      {showWhatsappCta && reply.author.whatsapp_url ? (
         <PsychologistWhatsAppRedirectButton
           className="mx-auto mt-3 flex h-11 w-full max-w-[390px] items-center justify-center gap-2 rounded-2xl border border-success bg-transparent text-sm font-bold text-success shadow-none transition hover:bg-success/10 active:scale-[0.99]"
           psychologist={{
@@ -523,6 +526,7 @@ export const CommunityPostCard = ({
   showAuthorHeader = true,
   showCommunityHeader = true,
   showHighlightedProfessionalReply = true,
+  showWhatsappCta = true,
   statusBadge,
 }: CommunityPostCardProps) => {
   const router = useRouter();
@@ -875,8 +879,9 @@ export const CommunityPostCard = ({
         <ProfessionalReplyPreview
           profilePublicationMode={profilePublicationMode}
           reply={highlightedProfessionalReply}
+          showWhatsappCta={showWhatsappCta}
         />
-        {isPsychologistPost && displayAuthor.whatsapp_url ? (
+        {showWhatsappCta && isPsychologistPost && displayAuthor.whatsapp_url ? (
           <PsychologistWhatsAppRedirectButton
             className="mx-auto flex h-11 w-full max-w-[390px] items-center justify-center gap-2 rounded-2xl border border-success bg-transparent text-sm font-bold text-success shadow-none transition hover:bg-success/10 active:scale-[0.99]"
             psychologist={{
