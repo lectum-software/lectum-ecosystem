@@ -358,10 +358,10 @@ export function ReplyMediaAttachmentControl({
           </div>
         </figure>
       ) : removeCurrent ? (
-        <span className="inline-flex w-fit items-center gap-2 rounded-full bg-danger/10 px-3 py-1.5 text-danger text-xs font-bold">
+        <span className="inline-flex w-fit items-center gap-2 rounded-full bg-surface-muted px-3 py-1.5 text-muted text-xs font-bold">
           Mídia atual será removida
           <button
-            className="text-danger transition hover:text-danger/80 focus:outline-none focus:ring-2 focus:ring-danger/20"
+            className="text-muted transition hover:text-foreground focus:outline-none focus:ring-2 focus:ring-border"
             disabled={disabled}
             onClick={() => {
               onUndoRemove?.();

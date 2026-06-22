@@ -655,10 +655,10 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
 
       return (
         <div className="mt-3 flex shrink-0 justify-start">
-          <span className="inline-flex items-center gap-2 rounded-full bg-danger/10 px-3 py-1.5 text-danger text-xs font-bold">
+          <span className="inline-flex items-center gap-2 rounded-full bg-surface-muted px-3 py-1.5 text-muted text-xs font-bold">
             Mídia atual será removida
             <button
-              className="text-danger transition hover:text-danger/80"
+              className="text-muted transition hover:text-foreground"
               disabled={isSubmitting}
               onClick={() => {
                 setRemoveMedia(false);
