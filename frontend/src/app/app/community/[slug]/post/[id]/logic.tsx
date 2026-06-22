@@ -424,6 +424,10 @@ const getInitials = (name: string) => {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
 
+const LANDSCAPE_MEDIA_RATIO = 1.12;
+
+type ImageMediaOrientation = "default" | "landscape";
+
 const isVerifiedProfessionalReply = (reply: PostReply) =>
   reply.author.role === "psicologo" && reply.author.verified;
 
@@ -632,6 +636,12 @@ const MediaBlock = ({
   mediaUrl: string | null;
   size?: "lg" | "md";
 }) => {
+  const [imageMedia, setImageMedia] = useState<{
+    mediaUrl: string | null;
+    orientation: ImageMediaOrientation;
+  }>({ mediaUrl: null, orientation: "default" });
+  const imageOrientation = imageMedia.mediaUrl === mediaUrl ? imageMedia.orientation : "default";
+
   if (!mediaUrl) return null;
 
   const src = resolvePublicMediaUrl(mediaUrl);
@@ -647,6 +657,7 @@ const MediaBlock = ({
     size === "lg"
       ? "(max-width: 430px) calc(100vw - 40px), 640px"
       : "(max-width: 430px) calc(100vw - 64px), 540px";
+  const imageAspectClass = imageOrientation === "landscape" ? "aspect-video" : "aspect-[4/5]";
 
   if (mediaType === "video") {
     return (
@@ -663,7 +674,8 @@ const MediaBlock = ({
   return (
     <div
       className={cn(
-        "relative mt-3 aspect-[4/5] overflow-hidden border border-border bg-surface-muted",
+        "relative mt-3 overflow-hidden border border-border bg-surface-muted",
+        imageAspectClass,
         radius,
         compactMediaClass,
       )}
@@ -672,6 +684,16 @@ const MediaBlock = ({
         alt={alt}
         className="object-cover"
         fill
+        onLoad={(event) => {
+          const { naturalHeight, naturalWidth } = event.currentTarget;
+          setImageMedia({
+            mediaUrl,
+            orientation:
+              naturalWidth && naturalHeight && naturalWidth / naturalHeight >= LANDSCAPE_MEDIA_RATIO
+                ? "landscape"
+                : "default",
+          });
+        }}
         sizes={imageSizes}
         src={src}
         unoptimized={isPublicMediaUrl(mediaUrl)}

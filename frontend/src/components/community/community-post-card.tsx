@@ -102,6 +102,10 @@ const getInitials = (name: string) => {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
 
+const LANDSCAPE_MEDIA_RATIO = 1.12;
+
+type ImageMediaOrientation = "default" | "landscape";
+
 const InlineExpandableText = ({
   className,
   expanded,
@@ -369,6 +373,12 @@ const MediaBlock = ({
   mediaUrl: string | null;
   videoClassName?: string;
 }) => {
+  const [imageMedia, setImageMedia] = useState<{
+    mediaUrl: string | null;
+    orientation: ImageMediaOrientation;
+  }>({ mediaUrl: null, orientation: "default" });
+  const imageOrientation = imageMedia.mediaUrl === mediaUrl ? imageMedia.orientation : "default";
+
   if (!mediaUrl) return null;
 
   const resolvedUrl = resolvePublicMediaUrl(mediaUrl);
@@ -384,12 +394,29 @@ const MediaBlock = ({
     );
   }
 
+  const imageAspectClass = imageOrientation === "landscape" ? "aspect-video" : "aspect-[4/5]";
+
   return (
-    <div className="relative aspect-[4/5] overflow-hidden rounded-[22px] border border-border bg-surface-muted">
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-[22px] border border-border bg-surface-muted",
+        imageAspectClass,
+      )}
+    >
       <Image
         alt={alt}
         className="object-cover"
         fill
+        onLoad={(event) => {
+          const { naturalHeight, naturalWidth } = event.currentTarget;
+          setImageMedia({
+            mediaUrl,
+            orientation:
+              naturalWidth && naturalHeight && naturalWidth / naturalHeight >= LANDSCAPE_MEDIA_RATIO
+                ? "landscape"
+                : "default",
+          });
+        }}
         sizes="(max-width: 430px) calc(100vw - 64px), 520px"
         src={resolvedUrl}
         unoptimized={isPublicMediaUrl(mediaUrl)}

@@ -586,3 +586,14 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: screenshots do usuario e browser local mobile 390x844; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0147-cortesia-verificada-whatsapp-comunidade.md`.
 - Validacoes executadas: Chrome/CDP mobile autenticado em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, confirmando CTA de comentario com `inline-flex`, largura compacta, altura reduzida, `white-space: nowrap` e icone visivel; `pnpm --dir frontend check`; `pnpm --dir frontend build`; `pnpm check`.
+
+
+## Execucao complementar: proporcao 16:9 para imagens horizontais (2026-06-22)
+
+- Pedido do usuario: quando uma imagem horizontal for postada/anexada em comentarios ou respostas, manter a proporcao visual 16:9 em vez de forcar o card vertical.
+- O `MediaBlock` do detalhe do post e o `MediaBlock` compartilhado dos cards de comunidade agora detectam `naturalWidth`/`naturalHeight` no `Image` e alternam para `aspect-video` quando a imagem e horizontal.
+- Imagens verticais/quadradas continuam com o padrao `4:5`; videos permanecem nas regras existentes.
+- Nao houve alteracao de backend, Prisma, migrations, endpoints, storage, permissoes de upload, payloads ou packages.
+- Builder/Quick Copy nao estava disponivel como ferramenta direta; a validacao usou browser local e dados reais temporarios com cleanup.
+- ADR criado: `adrs/0148-imagens-horizontais-16-9-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local headless/CDP em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, com resposta temporaria contendo imagem horizontal real anexada via endpoint de upload; a resposta e o objeto R2 foram removidos apos validar proporcao 16:9.
