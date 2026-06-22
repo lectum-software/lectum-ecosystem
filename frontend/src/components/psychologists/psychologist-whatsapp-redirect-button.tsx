@@ -8,6 +8,7 @@ import { createPortal } from "react-dom";
 import { useDirectoryPsychologistContactClick } from "@/api/callers/directory";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
+import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { formatCrpLabel } from "@/utils/crp";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
@@ -32,6 +33,12 @@ type PsychologistWhatsAppRedirectButtonProps = Omit<
   children: ReactNode;
   psychologist: PsychologistWhatsAppIdentity;
   stopPropagation?: boolean;
+};
+
+type PsychologistWhatsAppButtonContentProps = {
+  iconClassName?: string;
+  label?: string;
+  labelClassName?: string;
 };
 
 type PsychologistWhatsAppRedirectModalProps = {
@@ -63,6 +70,21 @@ const professionalLabel = (psychologist: PsychologistWhatsAppIdentity) => {
 export const openPsychologistWhatsApp = (url: string) => {
   window.location.assign(url);
 };
+
+export const PsychologistWhatsAppButtonContent = ({
+  iconClassName,
+  label = "Chamar no WhatsApp",
+  labelClassName,
+}: PsychologistWhatsAppButtonContentProps) => (
+  <>
+    <WhatsAppIcon className={cn("h-5 w-5 shrink-0", iconClassName)} aria-hidden="true" />
+    <span
+      className={cn("min-w-0 truncate whitespace-nowrap text-center leading-none", labelClassName)}
+    >
+      {label}
+    </span>
+  </>
+);
 
 export const PsychologistWhatsAppRedirectModal = ({
   isOpen,
@@ -267,7 +289,10 @@ export const PsychologistWhatsAppRedirectButton = ({
   return (
     <>
       <button
-        className={className}
+        className={cn(
+          "inline-flex min-w-0 max-w-full items-center justify-center gap-2 whitespace-nowrap",
+          className,
+        )}
         disabled={disabled || !psychologist.whatsappUrl}
         onClick={handleClick}
         type="button"

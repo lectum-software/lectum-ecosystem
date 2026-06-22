@@ -21,13 +21,15 @@ import type { PostListPost, UserPostListItem } from "@/api/generator/types/posts
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityPostCard } from "@/components/community/community-post-card";
 import { MentorBadge } from "@/components/community/mentor-badge";
-import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
+import {
+  PsychologistWhatsAppButtonContent,
+  PsychologistWhatsAppRedirectButton,
+} from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
-import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
@@ -375,7 +377,7 @@ const SavedReplyCard = ({
 
         {hasProfessionalWhatsapp ? (
           <PsychologistWhatsAppRedirectButton
-            className="mx-auto flex h-11 w-full max-w-[390px] items-center justify-center gap-2 rounded-2xl border border-success bg-transparent text-sm font-bold text-success shadow-none transition hover:bg-success/10 active:scale-[0.99]"
+            className="mx-auto flex h-11 w-full min-w-0 max-w-[390px] items-center justify-center gap-2 rounded-2xl border border-success bg-transparent px-3 text-sm font-bold text-success shadow-none transition hover:bg-success/10 active:scale-[0.99]"
             psychologist={{
               avatar: reply.author.avatar,
               crp: reply.author.crp,
@@ -385,8 +387,7 @@ const SavedReplyCard = ({
               whatsappUrl: reply.author.whatsapp_url,
             }}
           >
-            <WhatsAppIcon className="h-5 w-5 text-success" aria-hidden="true" />
-            Chamar no WhatsApp
+            <PsychologistWhatsAppButtonContent />
           </PsychologistWhatsAppRedirectButton>
         ) : null}
       </div>

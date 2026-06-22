@@ -509,3 +509,14 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: screenshot do usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.
 - Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, smoke real de API criando resposta somente com midia sem `content`, validando bloqueio de composicao vazia e bloqueio ao remover texto + midia, e Chrome/CDP autenticado em `/app/community/ansiedade-em-equilibrio/post/cmqogqcxa0000kcuh7mvngnsl`, confirmando modal `Editar comentario` com textarea vazio, midia atual visivel, sem erro de texto minimo e botao `Salvar alteracoes` habilitado.
+
+## Complemento 2026-06-22 - CTA WhatsApp sem quebra em respostas
+
+- Pedido direto de produto: o botao `Chamar no WhatsApp` em respostas de psicologos nao pode quebrar texto em multiplas linhas, especialmente em comentarios aninhados com largura menor.
+- Fonte visual auditavel: `_product/proto/Dentro do Post.jpg` e screenshot enviado pelo usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente, entao a validacao visual usou imagem local e browser local.
+- Frontend: `PsychologistWhatsAppRedirectButton` passou a aplicar base `inline-flex`, `min-w-0`, `max-w-full` e `whitespace-nowrap`, e foi criado `PsychologistWhatsAppButtonContent` com icone `shrink-0` e rotulo `truncate`.
+- Os CTAs de WhatsApp em posts, respostas destacadas, respostas aninhadas, salvos, cards de psicologos e perfil publico passaram a usar o conteudo compartilhado e padding/min-width consistente.
+- Em largura reduzida, o texto trunca com reticencias e o icone permanece visivel; a altura do botao segue fixa pelas classes `h-*` existentes e nao cresce por causa do texto.
+- Nao houve alteracao de backend, Prisma, migrations, packages, endpoints, tracking de clique, regras de WhatsApp publico, votos, salvos ou ordenacao.
+- ADR atualizado: `adrs/0147-cortesia-verificada-whatsapp-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP local em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, validando mobile `390x844` e desktop `1440x900` com `white-space: nowrap`, label com `text-overflow: ellipsis`, icone `flex-shrink: 0` visivel e altura fixa dos botoes.

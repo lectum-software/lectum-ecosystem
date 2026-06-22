@@ -12,7 +12,10 @@ import {
   useRef,
   useState,
 } from "react";
-import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
+import {
+  PsychologistWhatsAppButtonContent,
+  PsychologistWhatsAppRedirectButton,
+} from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
@@ -856,7 +859,7 @@ export function PsychologistCard({
           >
             {psychologist.whatsapp_url ? (
               <PsychologistWhatsAppRedirectButton
-                className="pointer-events-auto h-[clamp(44px,12vw,52px)] min-h-[clamp(44px,12vw,52px)] w-full rounded-[999px] bg-[#22C55E] px-4 text-[15px] font-medium leading-none text-white hover:bg-[#22C55E]/90"
+                className="pointer-events-auto h-[clamp(44px,12vw,52px)] min-h-[clamp(44px,12vw,52px)] w-full min-w-0 rounded-[999px] bg-[#22C55E] px-4 text-[15px] font-medium leading-none text-white hover:bg-[#22C55E]/90"
                 psychologist={{
                   avatar: psychologist.avatar,
                   crp: psychologist.crp,
@@ -866,10 +869,7 @@ export function PsychologistCard({
                   whatsappUrl: psychologist.whatsapp_url,
                 }}
               >
-                <span className="inline-flex h-full w-full items-center justify-center gap-2">
-                  <WhatsAppIcon className="h-5 w-5 text-white" aria-hidden="true" />
-                  Chamar no WhatsApp
-                </span>
+                <PsychologistWhatsAppButtonContent />
               </PsychologistWhatsAppRedirectButton>
             ) : (
               <Button
@@ -877,9 +877,11 @@ export function PsychologistCard({
                 disabled
                 type="button"
               >
-                <span className="inline-flex w-full items-center justify-center gap-2">
-                  <WhatsAppIcon className="h-5 w-5 text-white" aria-hidden="true" />
-                  WhatsApp indisponível
+                <span className="inline-flex min-w-0 max-w-full items-center justify-center gap-2 whitespace-nowrap">
+                  <WhatsAppIcon className="h-5 w-5 shrink-0 text-white" aria-hidden="true" />
+                  <span className="min-w-0 truncate whitespace-nowrap text-center leading-none">
+                    WhatsApp indisponível
+                  </span>
                 </span>
               </Button>
             )}

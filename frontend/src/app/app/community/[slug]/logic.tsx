@@ -62,12 +62,14 @@ import { MentorBadge } from "@/components/community/mentor-badge";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
 import type { VoteValue } from "@/components/community/vote-action-button";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
-import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
+import {
+  PsychologistWhatsAppButtonContent,
+  PsychologistWhatsAppRedirectButton,
+} from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
-import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { Input } from "@/registry/new-york-v4/ui/input";
@@ -1151,7 +1153,7 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
             <ProfessionalReplyMedia reply={reply} />
             {reply.author.whatsapp_url ? (
               <PsychologistWhatsAppRedirectButton
-                className="flex h-11 w-full items-center justify-center gap-2 rounded-[14px] border-2 border-success bg-transparent text-sm font-black text-success shadow-none transition hover:bg-success hover:text-white"
+                className="flex h-11 w-full min-w-0 items-center justify-center gap-2 rounded-[14px] border-2 border-success bg-transparent px-3 text-sm font-black text-success shadow-none transition hover:bg-success hover:text-white"
                 psychologist={{
                   avatar: reply.author.avatar,
                   crp: reply.author.crp,
@@ -1162,8 +1164,7 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
                 }}
                 stopPropagation
               >
-                <WhatsAppIcon className="h-5 w-5" aria-hidden="true" />
-                Chamar no WhatsApp
+                <PsychologistWhatsAppButtonContent />
               </PsychologistWhatsAppRedirectButton>
             ) : null}
           </div>
@@ -1379,7 +1380,7 @@ const PostCard = ({
         <ProfessionalReplyPreview post={post} />
         {isPsychologistPost && post.author.whatsapp_url ? (
           <PsychologistWhatsAppRedirectButton
-            className="mx-auto flex h-11 w-full max-w-[390px] items-center justify-center gap-2 rounded-2xl border border-success bg-transparent text-sm font-bold text-success shadow-none transition hover:bg-success/10 active:scale-[0.99]"
+            className="mx-auto flex h-11 w-full min-w-0 max-w-[390px] items-center justify-center gap-2 rounded-2xl border border-success bg-transparent px-3 text-sm font-bold text-success shadow-none transition hover:bg-success/10 active:scale-[0.99]"
             psychologist={{
               avatar: post.author.avatar,
               crp: post.author.crp,
@@ -1390,8 +1391,7 @@ const PostCard = ({
             }}
             stopPropagation
           >
-            <WhatsAppIcon className="h-5 w-5 text-success" aria-hidden="true" />
-            Chamar no WhatsApp
+            <PsychologistWhatsAppButtonContent />
           </PsychologistWhatsAppRedirectButton>
         ) : null}
       </div>

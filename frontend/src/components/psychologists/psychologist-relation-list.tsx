@@ -15,12 +15,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { type MouseEvent, useMemo, useState } from "react";
 import { usePatient } from "@/api/callers/patient";
 import type { PatientRelationPsychologist, PatientRelationQuery } from "@/api/generator/types";
-import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
+import {
+  PsychologistWhatsAppButtonContent,
+  PsychologistWhatsAppRedirectButton,
+} from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
-import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { getToken } from "@/hooks/cookies/token";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
@@ -277,7 +279,7 @@ const FavoritePsychologistCard = ({
 
       <PsychologistWhatsAppRedirectButton
         aria-label={`Chamar ${psychologist.name} no WhatsApp`}
-        className="mt-auto inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-[12px] bg-success px-2.5 font-black text-white shadow-[0_10px_20px_rgb(34_197_94_/_20%)] transition hover:bg-success/90 hover:shadow-[0_14px_26px_rgb(34_197_94_/_24%)] active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 disabled:shadow-none sm:h-[34px] sm:gap-1.5 sm:rounded-[14px]"
+        className="mt-auto inline-flex h-8 w-full min-w-0 items-center justify-center gap-1.5 rounded-[12px] bg-success px-2.5 font-black text-white shadow-[0_10px_20px_rgb(34_197_94_/_20%)] transition hover:bg-success/90 hover:shadow-[0_14px_26px_rgb(34_197_94_/_24%)] active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 disabled:shadow-none sm:h-[34px] sm:gap-1.5 sm:rounded-[14px]"
         psychologist={{
           avatar: psychologist.avatar,
           crp: psychologist.crp,
@@ -289,8 +291,7 @@ const FavoritePsychologistCard = ({
         style={{ fontSize: "0.6875rem" }}
         stopPropagation
       >
-        <WhatsAppIcon className="h-3.5 w-3.5 text-white" aria-hidden="true" />
-        WhatsApp
+        <PsychologistWhatsAppButtonContent iconClassName="h-3.5 w-3.5" label="WhatsApp" />
       </PsychologistWhatsAppRedirectButton>
     </article>
   );

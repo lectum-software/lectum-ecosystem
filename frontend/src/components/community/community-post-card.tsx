@@ -21,10 +21,12 @@ import { CommunityActionBar } from "@/components/community/community-action-bar"
 import { MentorBadge } from "@/components/community/mentor-badge";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
-import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
+import {
+  PsychologistWhatsAppButtonContent,
+  PsychologistWhatsAppRedirectButton,
+} from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
-import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
@@ -489,7 +491,7 @@ const ProfessionalReplyPreview = ({
       </div>
       {showWhatsappCta && reply.author.whatsapp_url ? (
         <PsychologistWhatsAppRedirectButton
-          className="mx-auto mt-3 flex h-11 w-full max-w-[390px] items-center justify-center gap-2 rounded-2xl border border-success bg-transparent text-sm font-bold text-success shadow-none transition hover:bg-success/10 active:scale-[0.99]"
+          className="mx-auto mt-3 flex h-11 w-full min-w-0 max-w-[390px] items-center justify-center gap-2 rounded-2xl border border-success bg-transparent px-3 text-sm font-bold text-success shadow-none transition hover:bg-success/10 active:scale-[0.99]"
           psychologist={{
             avatar: reply.author.avatar,
             crp: reply.author.crp,
@@ -499,8 +501,7 @@ const ProfessionalReplyPreview = ({
             whatsappUrl: reply.author.whatsapp_url,
           }}
         >
-          <WhatsAppIcon className="h-5 w-5 text-success" aria-hidden="true" />
-          Chamar no WhatsApp
+          <PsychologistWhatsAppButtonContent />
         </PsychologistWhatsAppRedirectButton>
       ) : null}
     </div>
@@ -883,7 +884,7 @@ export const CommunityPostCard = ({
         />
         {showWhatsappCta && isPsychologistPost && displayAuthor.whatsapp_url ? (
           <PsychologistWhatsAppRedirectButton
-            className="mx-auto flex h-11 w-full max-w-[390px] items-center justify-center gap-2 rounded-2xl border border-success bg-transparent text-sm font-bold text-success shadow-none transition hover:bg-success/10 active:scale-[0.99]"
+            className="mx-auto flex h-11 w-full min-w-0 max-w-[390px] items-center justify-center gap-2 rounded-2xl border border-success bg-transparent px-3 text-sm font-bold text-success shadow-none transition hover:bg-success/10 active:scale-[0.99]"
             psychologist={{
               avatar: displayAuthor.avatar,
               crp: displayAuthor.crp,
@@ -893,8 +894,7 @@ export const CommunityPostCard = ({
               whatsappUrl: displayAuthor.whatsapp_url,
             }}
           >
-            <WhatsAppIcon className="h-5 w-5 text-success" aria-hidden="true" />
-            Chamar no WhatsApp
+            <PsychologistWhatsAppButtonContent />
           </PsychologistWhatsAppRedirectButton>
         ) : null}
       </div>

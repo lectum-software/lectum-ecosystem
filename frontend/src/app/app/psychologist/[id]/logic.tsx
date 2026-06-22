@@ -58,7 +58,10 @@ import type { PostListPost } from "@/api/generator/types/posts";
 import { CommunityPostCard } from "@/components/community/community-post-card";
 import { MentorBadge } from "@/components/community/mentor-badge";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
-import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
+import {
+  PsychologistWhatsAppButtonContent,
+  PsychologistWhatsAppRedirectButton,
+} from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -2136,11 +2139,10 @@ const WhatsAppCta = ({ profile }: { profile: DirectoryPsychologistProfile }) => 
       >
         <div className="mx-auto w-full max-w-[430px]">
           <PsychologistWhatsAppRedirectButton
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[8px] bg-success text-[13px] font-bold text-white transition hover:bg-success/90"
+            className="inline-flex h-11 w-full min-w-0 items-center justify-center gap-2 rounded-[8px] bg-success px-3 text-[13px] font-bold text-white transition hover:bg-success/90"
             psychologist={toPsychologistWhatsAppIdentity(profile)}
           >
-            <WhatsAppIcon className="h-4 w-4" aria-hidden="true" />
-            Chamar no WhatsApp
+            <PsychologistWhatsAppButtonContent iconClassName="h-4 w-4" />
           </PsychologistWhatsAppRedirectButton>
         </div>
       </div>

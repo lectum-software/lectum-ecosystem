@@ -64,12 +64,14 @@ import {
 } from "@/components/community/reply-media-attachment-control";
 import { components } from "@/components/controllers";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
-import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
+import {
+  PsychologistWhatsAppButtonContent,
+  PsychologistWhatsAppRedirectButton,
+} from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
-import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
@@ -764,7 +766,7 @@ const PostBody = ({ post }: { post: PostDetail }) => {
       <MediaBlock alt={post.title} mediaType={post.media_type} mediaUrl={post.media_url} />
       {showAuthorWhatsapp ? (
         <PsychologistWhatsAppRedirectButton
-          className="mx-auto flex h-11 w-full max-w-[320px] items-center justify-center gap-2 rounded-[14px] border-2 border-success bg-transparent text-success shadow-none transition hover:bg-success hover:text-white"
+          className="mx-auto flex h-11 w-full min-w-0 max-w-[320px] items-center justify-center gap-2 rounded-[14px] border-2 border-success bg-transparent px-3 text-success shadow-none transition hover:bg-success hover:text-white"
           psychologist={{
             avatar: post.author.avatar,
             crp: post.author.crp,
@@ -774,8 +776,7 @@ const PostBody = ({ post }: { post: PostDetail }) => {
             whatsappUrl: post.author.whatsapp_url,
           }}
         >
-          <WhatsAppIcon className="h-5 w-5" aria-hidden="true" />
-          Chamar no WhatsApp
+          <PsychologistWhatsAppButtonContent />
         </PsychologistWhatsAppRedirectButton>
       ) : null}
     </div>
@@ -1394,7 +1395,7 @@ const ReplyCard = ({
 
           {isProfessional && reply.author.whatsapp_url ? (
             <PsychologistWhatsAppRedirectButton
-              className="mx-auto mt-2 flex h-11 w-full max-w-[280px] items-center justify-center gap-2 rounded-[14px] border-2 border-success bg-transparent text-success shadow-none transition hover:bg-success hover:text-white sm:max-w-[320px]"
+              className="mx-auto mt-2 flex h-11 w-full min-w-0 max-w-[280px] items-center justify-center gap-2 rounded-[14px] border-2 border-success bg-transparent px-3 text-success shadow-none transition hover:bg-success hover:text-white sm:max-w-[320px]"
               data-comment-collapse-ignore="true"
               stopPropagation
               psychologist={{
@@ -1406,8 +1407,7 @@ const ReplyCard = ({
                 whatsappUrl: reply.author.whatsapp_url,
               }}
             >
-              <WhatsAppIcon className="h-5 w-5" aria-hidden="true" />
-              Chamar no WhatsApp
+              <PsychologistWhatsAppButtonContent />
             </PsychologistWhatsAppRedirectButton>
           ) : null}
 
