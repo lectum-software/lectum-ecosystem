@@ -597,3 +597,14 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Builder/Quick Copy nao estava disponivel como ferramenta direta; a validacao usou browser local e dados reais temporarios com cleanup.
 - ADR criado: `adrs/0148-imagens-horizontais-16-9-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local headless/CDP em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, com resposta temporaria contendo imagem horizontal real anexada via endpoint de upload; a resposta e o objeto R2 foram removidos apos validar proporcao 16:9.
+
+
+## Execucao complementar: ocultar botao Midia quando comentario ja possui anexo (2026-06-22)
+
+- Pedido do usuario: quando ja houver uma midia na modal de editar comentario, remover o botao `Midia`.
+- O modo editor do `ReplyMediaAttachmentControl` agora exibe apenas a miniatura e o `X` de remocao enquanto ha midia ativa.
+- O botao `Midia` volta a aparecer somente apos remover/marcar a midia atual para remocao, permitindo anexar uma substituta sem duplicar acoes.
+- O modo composer nao foi alterado; permissoes, upload, storage, endpoints, payloads e validacoes de dominio permanecem iguais.
+- Builder/Quick Copy nao estava disponivel como ferramenta direta; a validacao usou browser local mobile com dados reais existentes.
+- ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, abrindo `Editar comentario` em comentario proprio com midia e confirmando miniatura presente sem botao textual `Midia`.

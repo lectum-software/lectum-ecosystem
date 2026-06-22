@@ -159,3 +159,24 @@ Validacao complementar:
 - `pnpm check`: sucesso.
 - Smoke real de API: sucesso, criando resposta somente com midia sem `content`, bloqueando composicao vazia e bloqueando remocao simultanea de texto + midia.
 - Chrome/CDP autenticado: sucesso, confirmando modal `Editar comentario` com textarea vazio, midia atual visivel, sem erro de texto minimo e `Salvar alteracoes` habilitado.
+
+## Complemento 2026-06-22 - ocultar botao de midia quando ja ha anexo
+
+A modal de edicao de comentario ainda mostrava o botao `Midia` mesmo quando a resposta ja possuia uma midia anexada, gerando duplicidade visual ao lado da miniatura e do botao de remover.
+
+Decisao complementar:
+
+- No modo editor do `ReplyMediaAttachmentControl`, manter a miniatura da midia atual/selecionada e o botao `X` de remocao como unica acao visivel enquanto houver anexo ativo.
+- Ocultar o botao `Midia` enquanto `activeMedia` existir.
+- Reexibir o botao `Midia` apenas depois que a midia for removida/marcada para remocao, permitindo anexar uma substituta sem manter duas acoes concorrentes.
+- O modo composer permanece inalterado: quando ha anexo, o botao ja se transforma em miniatura.
+
+Consequencias:
+
+- A edicao de comentarios fica mais limpa em mobile e desktop.
+- A substituicao de midia continua possivel pelo fluxo remover e anexar novamente, sem novo endpoint, payload, storage, schema ou permissao.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`: sucesso.
+- Chrome/CDP mobile `390x844` no detalhe do post demo: sucesso, abrindo `Editar comentario` em comentario proprio com midia atual, confirmando miniatura presente e zero botoes textuais `Midia` na modal.
