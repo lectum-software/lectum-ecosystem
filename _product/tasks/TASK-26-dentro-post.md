@@ -520,3 +520,14 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Nao houve alteracao de backend, Prisma, migrations, packages, endpoints, tracking de clique, regras de WhatsApp publico, votos, salvos ou ordenacao.
 - ADR atualizado: `adrs/0147-cortesia-verificada-whatsapp-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP local em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, validando mobile `390x844` e desktop `1440x900` com `white-space: nowrap`, label com `text-overflow: ellipsis`, icone `flex-shrink: 0` visivel e altura fixa dos botoes.
+
+## Complemento 2026-06-22 - miniatura no composer de respostas com midia
+
+- Pedido do usuario: ao anexar midia no campo de resposta/comentario, o botao `Anexar midia` deve se transformar em uma miniatura da midia anexada, no mesmo espaco visual do botao, e deve ser possivel enviar somente a midia sem texto.
+- Frontend: `ReplyMediaAttachmentControl` no modo composer agora troca o botao por uma miniatura compacta em formato pill (`Substituir midia anexada`), com preview de imagem/video, overlay discreto, acao para substituir e botao interno para remover.
+- A linha separada com o nome do arquivo selecionado foi removida do composer; a midia anexada passa a ser representada apenas pela miniatura.
+- A regra de envio somente com midia foi preservada no `ReplyComposer` e no backend existente: composicao vazia continua bloqueada, mas `content` vazio com `mediaUrl`/`mediaType` valido e permitido.
+- Nao houve alteracao de Prisma schema, migrations, packages, storage, endpoints, limites de arquivo, permissao de midia, votos, salvos, exclusao ou ordenacao.
+- Fonte visual auditavel: `_product/proto/Dentro do Post.jpg`, screenshot do usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, smoke real de API criando e excluindo resposta somente com midia (`content: ""`) e Chrome/CDP mobile em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, confirmando miniatura no lugar do botao, preview renderizado, sem `Anexar midia` visivel no composer ativo, textarea vazio e botao `Enviar resposta` habilitado.

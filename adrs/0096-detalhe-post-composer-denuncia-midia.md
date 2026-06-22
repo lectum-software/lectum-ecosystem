@@ -70,3 +70,23 @@ Validacao adicional:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Chrome/CDP autenticado em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video` confirmou o botao `Anexar midia` habilitado com SVG no novo controle.
+
+## Atualizacao 2026-06-22 - miniatura compacta no anexo de respostas
+
+O composer de comentarios/respostas deve comunicar que a midia ja foi escolhida sem ocupar uma linha extra com nome de arquivo. A decisao complementar e transformar o proprio controle `Anexar midia` em uma miniatura compacta quando existe arquivo selecionado.
+
+Decisao:
+
+- Reutilizar `ReplyMediaAttachmentControl` e manter a diferenca por variante: no modo composer, arquivo selecionado vira um botao de miniatura em formato pill com preview de imagem/video; no modo editor, permanece o preview maior ja usado na modal de edicao.
+- Remover do composer a chip separada com o nome do arquivo, reduzindo ruido visual e mantendo a altura do bloco de resposta mais estavel.
+- Manter a miniatura clicavel para substituir a midia e expor uma acao pequena de remocao no proprio controle.
+- Preservar o contrato real existente: texto e midia, somente texto ou somente midia sao validos; somente composicao vazia continua bloqueada.
+- Nao alterar endpoint, storage, limites de arquivo, permissao profissional, schema, migrations, votos, salvos, denuncia ou ordenacao da arvore.
+
+Validacao adicional:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke real de API criando e excluindo resposta somente com midia e `content: ""`.
+- Chrome/CDP mobile autenticado no detalhe do post demo confirmou miniatura `Substituir midia anexada`, preview renderizado, botao `Anexar midia` removido do composer ativo, textarea vazio e envio habilitado.
