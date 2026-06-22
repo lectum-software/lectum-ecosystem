@@ -1760,12 +1760,6 @@ export const ProfessionalProfileSetupLogic = () => {
                   {renderField("crp_region", lockedCrpRegionFieldProps)}
                   {renderField("crp_number", lockedIdentityFieldProps)}
                 </div>
-                {shouldLockCourtesyIdentityFields ? (
-                  <p className="rounded-2xl border border-primary/15 bg-primary-soft/50 px-4 py-3 text-xs leading-relaxed text-muted">
-                    CPF, Regional do CRP e Nº Registro CRP ficam bloqueados porque este perfil
-                    verificado recebeu cortesia profissional.
-                  </p>
-                ) : null}
                 <div className="flex items-start gap-2">
                   <div className="min-w-0 flex-1">{renderField("whatsapp")}</div>
                   <a
