@@ -62,3 +62,22 @@ Validacao complementar:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Chrome/CDP local em mobile `390x844` e desktop `1440x900`, confirmando `white-space: nowrap`, texto com `text-overflow: ellipsis`, icone `flex-shrink: 0` visivel e altura fixa nos botoes de WhatsApp.
+
+## Atualizacao 2026-06-22 - CTA compacto na arvore de comentarios
+
+O WhatsApp segue sendo a conversao principal da Lectum, inclusive quando o CTA aparece em comentarios. Entretanto, dentro de arvores profundas o botao nao deve ocupar a largura completa do comentario, para nao dominar a leitura e as acoes da thread.
+
+Decisao complementar:
+
+- Manter o CTA forte em comentarios: verde, borda destacada, icone do WhatsApp e label `Chamar no WhatsApp`.
+- Reduzir somente a apresentacao do CTA na arvore do detalhe do post, usando pill `inline-flex`/`w-fit`, altura menor, largura maxima do container e fonte destacada.
+- Remover a centralizacao/faixa full-width nesse contexto, mantendo o botao alinhado ao fluxo do comentario e proporcional a respostas aninhadas.
+- Preservar os CTAs maiores em post principal, resposta profissional destacada, perfil publico e cards de psicologos, onde a acao ocupa papel de CTA principal do bloco.
+- Nao alterar tracking de clique, modal de redirecionamento, backend, schema, endpoints ou regra de exposicao de `author.whatsapp_url`.
+
+Validacao complementar:
+
+- Chrome/CDP mobile autenticado `390x844` confirmou botoes de comentario com `inline-flex`, largura entre 150px e 230px, altura compacta, `white-space: nowrap`, label sem quebra e icone visivel.
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`

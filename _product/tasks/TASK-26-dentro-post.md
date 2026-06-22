@@ -575,3 +575,14 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: screenshot do usuario e browser local em 390x844; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
 - Validacoes executadas: Chrome/CDP mobile autenticado em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, confirmando `Anexar midia` e orientacao escondidos em repouso e visiveis apos foco; `pnpm --dir frontend check`; `pnpm --dir frontend build`; `pnpm check`.
+
+## Complemento 2026-06-22 - CTA WhatsApp compacto em comentarios
+
+- Pedido do usuario: o botao de WhatsApp continua sendo o CTA independente e prioritario da Lectum, mas estava grande demais dentro da arvore de comentarios.
+- Frontend: no detalhe do post, o CTA de WhatsApp renderizado em comentarios/respostas de psicologos passou de faixa larga centralizada para pill compacto, com `w-fit`, `max-w-full`, altura menor, borda verde forte, fonte destacada e icone preservado.
+- O texto `Chamar no WhatsApp` foi mantido para preservar clareza de conversao; em largura reduzida, o label segue truncando sem quebrar linha e o icone permanece visivel.
+- CTAs de post principal, respostas destacadas, salvos, cards de psicologos e perfil publico nao foram reduzidos neste ajuste, pois esses contextos continuam tratando WhatsApp como acao principal de bloco.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, tracking de clique, modal de redirecionamento, regras de exposicao de WhatsApp, votos, salvos, denuncia ou ordenacao.
+- Fonte visual auditavel: screenshots do usuario e browser local mobile 390x844; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0147-cortesia-verificada-whatsapp-comunidade.md`.
+- Validacoes executadas: Chrome/CDP mobile autenticado em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, confirmando CTA de comentario com `inline-flex`, largura compacta, altura reduzida, `white-space: nowrap` e icone visivel; `pnpm --dir frontend check`; `pnpm --dir frontend build`; `pnpm check`.

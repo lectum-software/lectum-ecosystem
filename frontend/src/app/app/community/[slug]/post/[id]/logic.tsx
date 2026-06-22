@@ -1466,7 +1466,7 @@ const ReplyCard = ({
 
           {isProfessional && reply.author.whatsapp_url ? (
             <PsychologistWhatsAppRedirectButton
-              className="mx-auto mt-2 flex h-11 w-full min-w-0 max-w-[280px] items-center justify-center gap-2 rounded-[14px] border-2 border-success bg-transparent px-3 text-success shadow-none transition hover:bg-success hover:text-white sm:max-w-[320px]"
+              className="mt-2 inline-flex h-10 w-fit min-w-[10.5rem] max-w-full items-center justify-center gap-2 rounded-full border-2 border-success bg-transparent px-3.5 text-[13px] font-extrabold text-success shadow-none transition hover:bg-success hover:text-white active:scale-[0.99]"
               data-comment-collapse-ignore="true"
               stopPropagation
               psychologist={{
@@ -1478,7 +1478,7 @@ const ReplyCard = ({
                 whatsappUrl: reply.author.whatsapp_url,
               }}
             >
-              <PsychologistWhatsAppButtonContent />
+              <PsychologistWhatsAppButtonContent iconClassName="h-4 w-4" />
             </PsychologistWhatsAppRedirectButton>
           ) : null}
 
