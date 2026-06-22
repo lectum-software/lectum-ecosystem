@@ -543,3 +543,13 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: `_product/proto/Dentro do Post.jpg`, screenshot do usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, upload real de midia de resposta com criacao/exclusao de comentario somente com midia, e Chrome/CDP mobile em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, confirmando anexo visivel no comentario principal, miniatura vertical compacta para imagem vertical, textarea vazio e envio habilitado.
+
+## Complemento 2026-06-22 - miniatura sem acao de substituir
+
+- Pedido do usuario: ao anexar midia no comentario/resposta, a miniatura nao deve exibir botao/acao de alterar a midia anexada; deve permanecer apenas o `X` de remover.
+- Frontend: `ReplyMediaAttachmentControl` no modo composer deixou de renderizar a miniatura como botao clicavel de substituicao e removeu o overlay inferior `Midia` sobre o preview.
+- O usuario continua podendo trocar a midia removendo a anexada pelo `X` e anexando outra em seguida; o modo editor preserva o controle dedicado `Midia` da modal de edicao.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, storage, endpoints, limites de arquivo, permissao profissional, envio somente com midia, votos, salvos, denuncia ou ordenacao.
+- Fonte visual auditavel: `_product/proto/Dentro do Post.jpg`, screenshot do usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile autenticado em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, confirmando `replaceButtons=0`, miniatura renderizada, `X` de remover presente, sem texto/overlay `Midia` sobre a miniatura e envio habilitado sem texto.

@@ -110,3 +110,22 @@ Validacao adicional:
 - `pnpm check`
 - Upload real via `POST /api/private/posts/:id/replies/media`, criacao de comentario com `content: ""` e exclusao em seguida.
 - Chrome/CDP mobile autenticado confirmou controle `Anexar midia` disponivel no comentario principal, previa vertical compacta para arquivo vertical, `Enviar resposta` habilitado sem texto e substituicao visual do botao pela miniatura.
+
+## Atualizacao 2026-06-22 - miniatura anexada sem substituir direto
+
+A miniatura compacta do composer passa a ser apenas uma representacao visual da midia selecionada. A acao de substituicao direta sobre a miniatura foi removida para reduzir ambiguidade de toque/click e evitar controles sobrepostos no preview compacto.
+
+Decisao complementar:
+
+- No modo composer, renderizar a miniatura como elemento visual nao clicavel, mantendo somente o botao `X` para remover a midia anexada.
+- Remover o overlay inferior com icone/texto `Midia` sobre a miniatura ativa.
+- Para trocar o arquivo, o usuario remove a midia atual e usa novamente o controle de anexo exibido apos a remocao.
+- Manter o modo editor com o botao dedicado `Midia`, pois a modal tem espaco e contexto para substituicao explicita.
+- Preservar o contrato real de upload e criacao: texto + midia, somente texto ou somente midia continuam validos; composicao vazia segue bloqueada.
+
+Validacao adicional:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome/CDP mobile autenticado no detalhe do post demo confirmou ausencia de `Substituir midia anexada`, miniatura renderizada, botao `Remover midia anexada` presente, preview sem label sobreposto e envio habilitado com textarea vazio.

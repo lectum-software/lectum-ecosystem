@@ -174,25 +174,15 @@ export function ReplyMediaAttachmentControl({
                 composerPreviewSizeClassName(activeMedia.orientation),
               )}
             >
-              <button
-                aria-label="Substituir mídia anexada"
-                className={cn(
-                  "group relative h-full w-full overflow-hidden rounded-[inherit] border border-primary/20 bg-surface-muted shadow-[0_8px_18px_rgba(47,141,235,0.14)] transition focus:outline-none focus:ring-4 focus:ring-primary/15",
-                  mediaPermission.canAttach && !disabled
-                    ? "hover:border-primary/35 hover:shadow-[0_10px_24px_rgba(47,141,235,0.2)] active:scale-[0.99]"
-                    : "cursor-not-allowed opacity-70",
-                )}
-                disabled={!mediaPermission.canAttach || disabled}
-                onClick={openFileDialog}
-                title={
-                  mediaPermission.canAttach ? "Substituir mídia anexada" : mediaPermission.reason
-                }
-                type="button"
+              <div
+                aria-label={activeMedia.alt}
+                className="relative h-full w-full overflow-hidden rounded-[inherit] border border-primary/20 bg-surface-muted shadow-[0_8px_18px_rgba(47,141,235,0.14)]"
+                role="img"
               >
                 {activeMedia.type === "image" ? (
                   <Image
                     alt={activeMedia.alt}
-                    className="object-cover transition duration-200 group-hover:scale-[1.03]"
+                    className="object-cover"
                     fill
                     sizes="136px"
                     src={activeMedia.src}
@@ -201,28 +191,14 @@ export function ReplyMediaAttachmentControl({
                 ) : (
                   <video
                     aria-label={activeMedia.alt}
-                    className="h-full w-full object-cover transition duration-200 group-hover:scale-[1.03]"
+                    className="h-full w-full object-cover"
                     muted
                     playsInline
                     preload="metadata"
                     src={activeMedia.src}
                   />
                 )}
-                <span
-                  aria-hidden="true"
-                  className="absolute inset-0 bg-gradient-to-r from-[#0F172A]/35 via-[#0F172A]/10 to-[#0F172A]/35"
-                />
-                <span className="absolute inset-x-1 bottom-1 flex items-center justify-center">
-                  <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-surface/90 px-1.5 py-0.5 font-extrabold text-foreground text-[0.62rem] shadow-sm backdrop-blur-sm">
-                    {isUploading ? (
-                      <Loader2 className="h-3 w-3 shrink-0 animate-spin" aria-hidden="true" />
-                    ) : (
-                      <Video className="h-3 w-3 shrink-0 text-primary" aria-hidden="true" />
-                    )}
-                    <span className="truncate">Mídia</span>
-                  </span>
-                </span>
-              </button>
+              </div>
               <button
                 aria-label="Remover mídia anexada"
                 className="absolute -top-1 -right-1 z-10 grid h-5 w-5 place-items-center rounded-full border border-border bg-surface text-muted shadow-[var(--lectum-shadow-soft)] transition hover:bg-surface-muted hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
