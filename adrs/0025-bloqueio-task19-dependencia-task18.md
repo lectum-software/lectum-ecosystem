@@ -48,3 +48,28 @@ Os endpoints ficam sob `/api/private/psychologist/*` e continuam protegidos por 
 - Revisao de `_product/tasks/README.md`, `_product/tasks/TASK-19-avaliacoes-psicologo.md`, `_product/tasks/DATA-MODEL.md` e do recorte `_product/tasks/TASK-18A-perfil-gratuito-sem-crp.md`.
 - Revisao visual local de `_product/proto/Minhas Avaliacoes - Psicologo.jpg`.
 - Validacoes executadas na task: `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm check` e Chrome headless local em `/app/professional/reviews` (sem sessao autenticada, validando protecao/redirect para login).
+
+## Complemento 2026-06-22: link publico de avaliacoes na tela de reputacao
+
+### Contexto
+
+A secao `Link da minha pagina de avaliacoes` estava em `/app/professional/analytics`, embora seu objetivo seja reputacao, coleta de depoimentos e gestao de avaliacoes. Isso dispersava funcionalidades de avaliacoes entre Analytics e Minhas Avaliacoes.
+
+### Decisao
+
+- Mover o card de link/copia de avaliacoes para `/app/professional/reviews`, imediatamente abaixo do header `Minhas Avaliacoes`.
+- Manter a mesma regra de geracao da URL publica, incluindo `psychologist_id` do usuario autenticado quando disponivel.
+- Manter o mesmo comportamento de copia via clipboard e estado bloqueado no modo preview.
+- Remover completamente o card de `/app/professional/analytics`, deixando analytics focado em metricas, video e origem do trafego.
+
+### Consequencias
+
+- Psicologos encontram link, nota media, distribuicao, estado vazio/premium e depoimentos em uma unica tela de avaliacoes.
+- A secao aparece antes do resumo de nota e tambem permanece visivel quando ainda nao ha avaliacoes reais.
+- Nao houve mudanca de API, schema, migrations, packages, elegibilidade, criacao ou resposta de avaliacoes.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Chrome/CDP autenticado mobile `390x844`: `/app/professional/analytics` nao contem `Link da minha pagina de avaliacoes`; `/app/professional/reviews` contem a secao logo apos o header, botao `Copiar link de avaliacoes`, URL com `psychologist_id` e ordem antes dos blocos de resumo/estado vazio.

@@ -204,3 +204,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Responsividade revisada em 390x844 e 1024x768: card premium ocupa a largura útil, benefícios quebram corretamente, CTA respeita o card e não há overflow horizontal real.
 - Nenhum mock, avaliação fictícia, schema, migration ou package novo foi criado.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, API real com psicólogo temporário gratuito e browser local/headless em `/app/professional/reviews` e `/app/professional/analytics`.
+
+## Ajuste complementar em 2026-06-22 - link de avaliações na tela de avaliações
+
+- Pedido de produto: concentrar tudo relacionado a avaliações em `/app/professional/reviews`, movendo a seção `Link da minha página de avaliações` para logo abaixo do header `Minhas Avaliações`.
+- A seção mantém o campo com a URL pública de avaliação, botão de copiar, mensagens de sucesso/erro do clipboard e geração da URL com `psychologist_id` do usuário autenticado.
+- A seção passou a ficar antes do bloco de nota média, estrelas, distribuição, estado vazio, estado premium e lista de depoimentos.
+- A tela `/app/professional/analytics` deixou de renderizar essa seção; analytics permanece focada em métricas, vídeo e origem de tráfego.
+- Nenhum endpoint, schema, migration, package, mock, seed ou dado simulado foi criado.
+- Builder/Quick Copy não estava disponível como ferramenta direta; validação visual usou browser local/headless mobile `390x844`.
+- ADR atualizado: `adrs/0025-bloqueio-task19-dependencia-task18.md`.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e Chrome/CDP autenticado confirmando ausência da seção em `/app/professional/analytics`, presença em `/app/professional/reviews`, botão de copiar, URL com `psychologist_id` e ordem antes dos blocos de avaliações/estado vazio.

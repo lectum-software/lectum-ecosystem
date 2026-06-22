@@ -297,3 +297,11 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Builder/Quick Copy nao estava disponivel como ferramenta direta; a validacao visual usou a captura enviada pelo usuario e a referencia local `_product/proto/Meus Analytics - Psicologo.jpg`.
 - ADR criado: `adrs/0132-analytics-video-player-sem-progresso-overlay.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e rota local `/app/professional/analytics` via `Invoke-WebRequest` sem sessao autenticada retornando `307` para o fluxo privado.
+
+## Ajuste complementar em 2026-06-22 - remocao do link de avaliacoes dos Analytics
+
+- Pedido de produto: a secao `Link da minha pagina de avaliacoes` pertence ao contexto de reputacao/depoimentos e foi movida para `/app/professional/reviews`.
+- `/app/professional/analytics` nao renderiza mais o card de link/copia de avaliacoes; a tela permanece focada em indicadores, video de apresentacao e origem do trafego.
+- Nenhum contrato de analytics, endpoint, schema, migration, package, mock, seed ou dado simulado foi alterado.
+- ADR relacionado atualizado: `adrs/0025-bloqueio-task19-dependencia-task18.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e Chrome/CDP autenticado confirmando ausencia da secao em `/app/professional/analytics`.

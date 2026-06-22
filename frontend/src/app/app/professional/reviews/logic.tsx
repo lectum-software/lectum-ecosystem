@@ -4,6 +4,7 @@ import {
   ArrowRight,
   Award,
   CheckCircle2,
+  Copy,
   MessageSquareReply,
   RefreshCcw,
   Star,
@@ -11,6 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import {
   usePsychologistReviews,
   useRespondPsychologistReview,
@@ -23,6 +25,7 @@ import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -166,6 +169,62 @@ const PremiumReviewsState = () => (
   </section>
 );
 
+const ReviewsLinkCard = ({ link, locked }: { link: string; locked?: boolean }) => {
+  const copyLink = async () => {
+    if (locked) return;
+
+    try {
+      await navigator.clipboard.writeText(link);
+      toast.success("Link copiado.");
+    } catch {
+      toast.error("Não foi possível copiar o link agora.");
+    }
+  };
+
+  return (
+    <section className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
+      <div className="flex items-start gap-3">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+          <Star className="h-5 w-5" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <h2 className="text-base font-extrabold leading-6 text-foreground">
+            Link da minha página de avaliações
+          </h2>
+          <p className="mt-1 text-sm leading-5 text-muted">
+            Compartilhe com pacientes e fortaleça sua autoridade com depoimentos reais.
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 flex h-12 min-w-0 items-center gap-3 rounded-[var(--lectum-control-radius)] border border-border bg-surface-muted px-3">
+        <p
+          className={cn(
+            "min-w-0 flex-1 truncate text-sm font-semibold text-muted",
+            locked && "select-none blur-[5px]",
+          )}
+        >
+          {link}
+        </p>
+        <button
+          aria-label="Copiar link de avaliações"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-primary/10 bg-surface text-primary transition hover:bg-primary-soft disabled:opacity-50"
+          disabled={locked}
+          onClick={copyLink}
+          type="button"
+        >
+          <Copy className="h-4 w-4" aria-hidden />
+        </button>
+      </div>
+      <p className="mt-3 text-xs leading-5 text-muted">
+        {locked
+          ? "O link e a coleta de avaliações ficam totalmente liberados após o upgrade."
+          : "Incentive os pacientes a te avaliarem para aparecer nos primeiros resultados de busca."}
+      </p>
+    </section>
+  );
+};
+
 const ReviewResponseForm = ({
   defaultOpen,
   review,
@@ -277,6 +336,7 @@ const ReviewCard = ({
 
 export const ProfessionalReviewsLogic = () => {
   const [limit, setLimit] = useState(INITIAL_LIMIT);
+  const user = useAppSelector((state) => state.user);
   const query = useMemo(() => ({ page: 1, limit, period: "all" as const }), [limit]);
   const reviews = usePsychologistReviews(query);
   const data = reviews.data;
@@ -288,11 +348,17 @@ export const ProfessionalReviewsLogic = () => {
   const canReceiveReviews = !isReviewsPreview && (data?.access.can_receive_reviews ?? true);
   const displayItems = canReceiveReviews ? items : [];
   const firstUnansweredId = displayItems.find((review) => !review.response)?.id;
+  const reviewLink =
+    typeof window === "undefined"
+      ? "lectum.com.br/app/reviews/new"
+      : `${window.location.origin}/app/reviews/new${user?.id ? `?psychologist_id=${user.id}` : ""}`;
 
   return (
     <PrivateTemplate desktopSidebarDefaultCollapsed showMobileNavigation={false}>
       <section className="mx-auto grid w-full max-w-[430px] grid-cols-[minmax(0,1fr)] gap-4 md:max-w-3xl">
         <AppPageHeader backLabel="Voltar para perfil" title="Minhas Avaliações" />
+
+        {!shouldShowError ? <ReviewsLinkCard link={reviewLink} locked={isReviewsPreview} /> : null}
 
         {reviews.isLoading && limit === INITIAL_LIMIT ? (
           <LoadingState label="Carregando avaliações" />
