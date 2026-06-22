@@ -608,3 +608,15 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Builder/Quick Copy nao estava disponivel como ferramenta direta; a validacao usou browser local mobile com dados reais existentes.
 - ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, abrindo `Editar comentario` em comentario proprio com midia e confirmando miniatura presente sem botao textual `Midia`.
+
+
+## Execucao complementar: previa horizontal no editor de comentario (2026-06-22)
+
+- Pedido do usuario: quando a midia atual ou selecionada for imagem ou video horizontal, a previa exibida na modal `Editar comentario` tambem deve ficar horizontal.
+- Frontend: `ReplyMediaAttachmentControl` no modo editor passou a detectar a orientacao de midias atuais por metadados reais de imagem/video, alem de reaproveitar a orientacao ja detectada para arquivos selecionados.
+- Frontend: a miniatura do editor agora alterna entre paisagem `aspect-video`, quadrado `aspect-square` e retrato `aspect-[9/14]`, mantendo o tamanho compacto e o botao `X` de remover como unica acao quando ha midia ativa.
+- O botao textual `Midia` continua oculto enquanto ja houver anexo ativo; ele so reaparece apos remover/marcar a midia para remocao.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, storage, endpoints, permissoes, limites de arquivo, votos, salvos ou regras de composicao texto/midia.
+- Fonte visual auditavel: screenshots do usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile `390x844` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, confirmando no editor de comentario previa horizontal para imagem e video, proporcao aproximada 16:9, ausencia do botao textual `Midia` e presenca do `X` de remover.

@@ -180,3 +180,28 @@ Validacao complementar:
 
 - `pnpm --dir frontend check`: sucesso.
 - Chrome/CDP mobile `390x844` no detalhe do post demo: sucesso, abrindo `Editar comentario` em comentario proprio com midia atual, confirmando miniatura presente e zero botoes textuais `Midia` na modal.
+
+
+## Complemento 2026-06-22 - previa horizontal no editor de comentarios
+
+A modal `Editar comentario` precisava respeitar a orientacao real da midia anexada tambem durante a edicao. Antes, a miniatura do editor usava sempre um enquadramento vertical, mesmo para imagens ou videos horizontais.
+
+Decisao complementar:
+
+- Detectar a orientacao da midia atual do comentario por metadados reais de imagem/video quando a modal abre.
+- Reaproveitar a orientacao ja detectada para arquivos selecionados localmente antes do upload.
+- No modo editor do `ReplyMediaAttachmentControl`, alternar a previa entre `aspect-video` para paisagem, `aspect-square` para midia quadrada e `aspect-[9/14]` para retrato.
+- Manter a previa compacta e isolada, preservando apenas o `X` de remocao quando ha midia ativa e mantendo o botao textual `Midia` oculto ate a remocao do anexo.
+
+Consequencias:
+
+- A edicao de comentarios fica consistente com o formato real da imagem ou do video anexado.
+- Videos e imagens horizontais deixam de parecer cortados em card vertical na modal.
+- Nao ha novo endpoint, schema, storage, package, permissao ou limite de upload; a mudanca e exclusivamente visual no componente compartilhado.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- Chrome/CDP mobile `390x844` no detalhe do post demo: sucesso, abrindo `Editar comentario` em resposta propria com imagem horizontal e em resposta propria com video horizontal, confirmando frame `16:9`, miniatura renderizada, botao textual `Midia` ausente e `X` de remover presente.
