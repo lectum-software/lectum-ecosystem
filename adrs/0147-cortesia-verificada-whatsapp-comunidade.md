@@ -81,3 +81,28 @@ Validacao complementar:
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
+
+
+## Atualizacao 2026-06-22 - CTA compacto centralizado sob midia no desktop
+
+O CTA compacto de WhatsApp dentro da arvore de comentarios continuou correto para comentarios sem midia, mas em desktop ficava visualmente desalinhado quando aparecia logo abaixo de uma imagem ou video centralizado.
+
+Decisao complementar:
+
+- Manter o CTA de comentarios como pill compacto, sem voltar ao formato full-width.
+- Quando a resposta/comentario tiver `media_url`, centralizar apenas em breakpoints desktop/tablet (`sm:`) usando wrapper flex com `justify-center`.
+- No mobile, preservar o comportamento compacto alinhado ao fluxo do comentario para evitar perda de largura util em arvores profundas.
+- Em comentarios sem midia, preservar o alinhamento anterior.
+
+Consequencias:
+
+- Em desktop, video/imagem e CTA compartilham o mesmo eixo visual, reforcando a acao principal sem criar faixa grande.
+- A arvore profunda continua compacta no mobile e em respostas sem midia.
+- Nao ha mudanca no tracking, regra de exibicao de WhatsApp, backend, endpoints, schema ou storage.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- Chrome/CDP desktop `1440x900`: sucesso, em resposta com video e WhatsApp, media center `779.50` e botao center `779.49`.

@@ -620,3 +620,14 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: screenshots do usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile `390x844` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, confirmando no editor de comentario previa horizontal para imagem e video, proporcao aproximada 16:9, ausencia do botao textual `Midia` e presenca do `X` de remover.
+
+
+## Execucao complementar: centralizar CTA WhatsApp abaixo de midia no desktop (2026-06-22)
+
+- Pedido do usuario: no desktop, quando o comentario/resposta tiver midia, centralizar o botao `Chamar no WhatsApp` abaixo da midia.
+- Frontend: na arvore do detalhe do post, o CTA compacto de WhatsApp continua alinhado ao fluxo no mobile, mas passa a usar wrapper `sm:flex sm:justify-center` quando a resposta possui `media_url`.
+- Em respostas sem midia, o CTA permanece no alinhamento compacto anterior, preservando a leitura da arvore profunda.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, tracking de clique, modal de redirecionamento, regra de exposicao de WhatsApp, votos, salvos, midia ou ordenacao.
+- Fonte visual auditavel: screenshot do usuario e browser local desktop; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0147-cortesia-verificada-whatsapp-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP desktop `1440x900` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, confirmando CTA centralizado sob video de resposta com diferenca de centro de 0.01px.

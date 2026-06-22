@@ -1317,6 +1317,7 @@ const ReplyCard = ({
   const hasTreeContinuation =
     childrenHiddenByCollapse || visibleChildren.length > 0 || hiddenRepliesCount > 0;
   const avatarSize = isProfessional ? "reply" : "sm";
+  const hasReplyMedia = Boolean(reply.media_url);
 
   const handleRootTreeClick = (event: MouseEvent<HTMLElement>) => {
     if (!canCollapseRootTree || isReplyTreeInteractiveTarget(event.target, event.currentTarget)) {
@@ -1487,21 +1488,25 @@ const ReplyCard = ({
           </div>
 
           {isProfessional && reply.author.whatsapp_url ? (
-            <PsychologistWhatsAppRedirectButton
-              className="mt-2 inline-flex h-10 w-fit min-w-[10.5rem] max-w-full items-center justify-center gap-2 rounded-full border-2 border-success bg-transparent px-3.5 text-[13px] font-extrabold text-success shadow-none transition hover:bg-success hover:text-white active:scale-[0.99]"
+            <div
+              className={cn("mt-2", hasReplyMedia && "sm:flex sm:justify-center")}
               data-comment-collapse-ignore="true"
-              stopPropagation
-              psychologist={{
-                avatar: reply.author.avatar,
-                crp: reply.author.crp,
-                id: reply.author.id,
-                name: reply.author.name,
-                typeLabel: reply.author.type_label,
-                whatsappUrl: reply.author.whatsapp_url,
-              }}
             >
-              <PsychologistWhatsAppButtonContent iconClassName="h-4 w-4" />
-            </PsychologistWhatsAppRedirectButton>
+              <PsychologistWhatsAppRedirectButton
+                className="inline-flex h-10 w-fit min-w-[10.5rem] max-w-full items-center justify-center gap-2 rounded-full border-2 border-success bg-transparent px-3.5 text-[13px] font-extrabold text-success shadow-none transition hover:bg-success hover:text-white active:scale-[0.99]"
+                stopPropagation
+                psychologist={{
+                  avatar: reply.author.avatar,
+                  crp: reply.author.crp,
+                  id: reply.author.id,
+                  name: reply.author.name,
+                  typeLabel: reply.author.type_label,
+                  whatsappUrl: reply.author.whatsapp_url,
+                }}
+              >
+                <PsychologistWhatsAppButtonContent iconClassName="h-4 w-4" />
+              </PsychologistWhatsAppRedirectButton>
+            </div>
           ) : null}
 
           <div data-comment-collapse-ignore="true">
