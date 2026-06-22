@@ -33,6 +33,7 @@ export type PostReply = {
   upvotes_count: number;
   replies_count: number;
   created_at: string;
+  edited_at: string | null;
   parent_reply_id: string | null;
   current_user_vote: 1 | -1 | null;
   saved: boolean;
@@ -56,6 +57,7 @@ export type PostProfessionalReply = {
   media_type: string | null;
   upvotes_count: number;
   created_at: string;
+  edited_at: string | null;
   saved: boolean;
   author: CommunityAuthor;
 };
@@ -75,6 +77,7 @@ export type UserPostReply = {
   replies_received_count: number;
   has_verified_professional_reply: boolean;
   created_at: string;
+  edited_at: string | null;
   parent_reply_id: string | null;
   parent_content: string | null;
   current_user_vote: 1 | -1 | null;

@@ -101,6 +101,7 @@ export type CommunityProfessionalReplyDTO = {
   media_type: string | null;
   upvotes_count: number;
   created_at: Date;
+  edited_at: Date | null;
   saved: boolean;
   author: CommunityAuthorDTO;
 };

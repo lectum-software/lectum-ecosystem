@@ -106,6 +106,7 @@ export type PostReplyDTO = {
   upvotes_count: number;
   replies_count: number;
   created_at: Date;
+  edited_at: Date | null;
   parent_reply_id: string | null;
   current_user_vote: 1 | -1 | null;
   saved: boolean;
@@ -121,6 +122,7 @@ export type PostProfessionalReplyDTO = {
   media_type: string | null;
   upvotes_count: number;
   created_at: Date;
+  edited_at: Date | null;
   saved: boolean;
   author: PostAuthorDTO;
 };
@@ -140,6 +142,7 @@ export type PostListReplyDTO = {
   replies_received_count: number;
   has_verified_professional_reply: boolean;
   created_at: Date;
+  edited_at: Date | null;
   parent_reply_id: string | null;
   parent_content: string | null;
   current_user_vote: 1 | -1 | null;

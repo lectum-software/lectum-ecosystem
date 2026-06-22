@@ -484,3 +484,16 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Fonte visual auditavel: screenshots enviados pelo usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado em `/app/posts/mine`, confirmando modal `Editar comentario` com textarea compacto, crescimento ate limite/scroll interno e botao `Midia` visivel apenas para psicologo autorizado.
+
+## Complemento 2026-06-22 - marcador editado em comentarios
+
+Comentarios e respostas editados agora persistem `post_reply.edited_at` e retornam esse metadado nos contratos de detalhe do post, thread, `Meus posts e respostas`, salvos e previa de resposta profissional. A UI mobile-first exibe `editado` ao lado do tempo relativo na arvore de comentarios, em cards de resposta e em respostas profissionais destacadas, usando a mesma semantica publica ja aplicada a posts editados.
+
+- Backend: `PUT /api/private/posts/:id/replies/:replyId` grava `edited_at` a cada edicao owner-only de texto ou midia.
+- Backend: DTOs e selects de `PostRepository` e `CommunityRepository` expoem `edited_at` para `PostReplyDTO`, `PostProfessionalReplyDTO`, `PostListReplyDTO` e `CommunityProfessionalReplyDTO`.
+- Frontend: a arvore do post, os cards de publicacoes/perfil e as previas profissionais formatam `ha X ... editado` quando o metadado existe.
+- Data model: `post_reply.edited_at DateTime?` foi documentado e migrado em `20260622013737_add_post_reply_edited_at`.
+- Nao houve alteracao nas regras de autoria, exclusao, notificacoes, votos, salvos, ordenacao, storage, permissao de midia ou historico de edicoes.
+- Fonte visual auditavel: screenshot do usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.
+- Validacoes executadas: `pnpm --dir backend db:migrate -- --name add_post_reply_edited_at`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile `390x844` no detalhe do post demo, confirmando `Psic?logo ? h? 1 d ? editado` no comentario editado.

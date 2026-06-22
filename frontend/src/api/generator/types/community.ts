@@ -78,6 +78,7 @@ export type CommunityProfessionalReply = {
   media_type: string | null;
   upvotes_count: number;
   created_at: string;
+  edited_at: string | null;
   saved: boolean;
   author: CommunityAuthor;
 };

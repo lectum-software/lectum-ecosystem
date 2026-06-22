@@ -392,6 +392,7 @@ Complemento 2026-06-21: na comunidade, `author.verified` para psicologos conside
 | `title` | `String?` | título opcional para resposta profissional em destaque |
 | `content` | `String` | |
 | `media_url` / `media_type` | `String?` | mídia opcional em respostas; `media_type` inicialmente `"video"` ou `"image"` |
+| `edited_at` | `DateTime?` | preenchido quando o autor edita texto ou midia do comentario/resposta; usado como metadado publico `editado`, sem historico completo no MVP |
 | `upvotes_count` | `Int @default(0)` | denormalizado para ranking de respostas e prévia profissional |
 | `@@index([post_id, parent_reply_id, createdAt])`, `@@index([author_id])` | | paginação por âncora (TASK-26) e seleção por autor |
 

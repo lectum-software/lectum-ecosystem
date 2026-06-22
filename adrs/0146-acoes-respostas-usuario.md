@@ -105,3 +105,30 @@ Validacao complementar:
 
 - `pnpm --dir frontend check`: sucesso.
 - Validacoes finais de build, `pnpm check` e browser local ficam registradas na execucao do complemento.
+
+## Complemento 2026-06-22 - marcador editado em comentarios
+
+Comentarios e respostas precisam comunicar ao leitor quando foram alterados depois da publicacao, com a mesma transparencia ja aplicada a posts editados.
+
+Decisao complementar:
+
+- Adicionar `post_reply.edited_at DateTime?` como metadado publico simples, sem historico completo de versoes no MVP.
+- Preencher `edited_at` no endpoint owner-only `PUT /api/private/posts/:id/replies/:replyId` sempre que o autor salva uma edicao de texto ou midia.
+- Expor `edited_at` nos DTOs de detalhe/thread, listas do usuario/salvos e respostas profissionais destacadas de comunidade/perfil.
+- Renderizar `editado` junto do tempo relativo na arvore de comentarios, nas contribuicoes de resposta em cards compartilhados e nas previas profissionais.
+
+Consequencias:
+
+- O leitor reconhece comentarios e respostas alterados sem precisar de historico completo.
+- O contrato fica consistente com `community_post.edited_at`, mantendo a mesma decisao de transparencia simples para o MVP.
+- A migration `20260622013737_add_post_reply_edited_at` adiciona uma coluna anulavel, sem backfill obrigatorio e sem mudar autoria, hierarquia, votos, salvos, exclusao ou permissoes de midia.
+
+Validacao complementar:
+
+- `pnpm --dir backend db:migrate -- --name add_post_reply_edited_at`: sucesso.
+- `pnpm --dir backend check`: sucesso.
+- `pnpm --dir backend build`: sucesso.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- Chrome/CDP mobile `390x844` no detalhe do post demo: sucesso, confirmando `Psic?logo ? h? 1 d ? editado` no comentario editado.

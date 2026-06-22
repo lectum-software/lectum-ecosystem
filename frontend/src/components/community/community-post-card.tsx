@@ -454,7 +454,7 @@ const ProfessionalReplyPreview = ({
             className="w-fit text-[11px] font-semibold text-muted no-underline transition hover:text-muted hover:no-underline"
             href={profileHref}
           >
-            {reply.author.type_label} • {formatRelativeTime(reply.created_at)} •{" "}
+            {reply.author.type_label} • {formatPostTimeLabel(reply.created_at, reply.edited_at)} •{" "}
             {reply.upvotes_count.toLocaleString("pt-BR")} upvotes
           </Link>
         </div>
@@ -533,7 +533,7 @@ export const CommunityPostCard = ({
       : null;
   const displayAuthor = primaryReply?.author ?? post.author;
   const displayCreatedAt = primaryReply?.created_at ?? post.created_at;
-  const displayEditedAt = primaryReply ? null : post.edited_at;
+  const displayEditedAt = primaryReply ? primaryReply.edited_at : post.edited_at;
   const displayTimeLabel = formatPostTimeLabel(displayCreatedAt, displayEditedAt);
   const displayRelativeTime = formatRelativeTime(displayCreatedAt);
   const displayWasEdited = Boolean(displayEditedAt);

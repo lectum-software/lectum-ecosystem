@@ -354,12 +354,17 @@ const getInitials = (name: string) => {
 const isVerifiedProfessionalReply = (reply: PostReply) =>
   reply.author.role === "psicologo" && reply.author.verified;
 
-const formatReplyAuthorMeta = (author: PostReply["author"], createdAt: string) => {
+const formatReplyAuthorMeta = (
+  author: PostReply["author"],
+  createdAt: string,
+  editedAt?: string | null,
+) => {
   const relativeTime = formatRelativeTime(createdAt);
+  const timeLabel = editedAt ? `${relativeTime} · editado` : relativeTime;
 
-  if (author.role !== "psicologo") return relativeTime;
+  if (author.role !== "psicologo") return timeLabel;
 
-  return `${author.type_label} • ${relativeTime}`;
+  return `${author.type_label} • ${timeLabel}`;
 };
 
 const mentorBadgePosition = (badge?: string | null) => {
@@ -1357,11 +1362,11 @@ const ReplyCard = ({
                   href={psychologistProfileHref}
                   onClick={stopReplyTreeCollapsePropagation}
                 >
-                  {formatReplyAuthorMeta(reply.author, reply.created_at)}
+                  {formatReplyAuthorMeta(reply.author, reply.created_at, reply.edited_at)}
                 </Link>
               ) : (
                 <p className="text-[11px] font-semibold text-muted">
-                  {formatReplyAuthorMeta(reply.author, reply.created_at)}
+                  {formatReplyAuthorMeta(reply.author, reply.created_at, reply.edited_at)}
                 </p>
               )}
             </div>

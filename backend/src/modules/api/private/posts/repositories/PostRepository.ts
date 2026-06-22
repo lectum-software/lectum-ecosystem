@@ -143,6 +143,7 @@ const listPostSelect = {
       media_type: true,
       upvotes_count: true,
       createdAt: true,
+      edited_at: true,
       author: {
         select: authorSelect,
       },
@@ -158,6 +159,7 @@ const replyBaseSelect = {
   media_type: true,
   upvotes_count: true,
   createdAt: true,
+  edited_at: true,
   parent_reply_id: true,
   author: {
     select: authorSelect,
@@ -403,6 +405,7 @@ const toHighlightedProfessionalReply = (
     media_type: reply.media_type,
     upvotes_count: reply.upvotes_count,
     created_at: reply.createdAt,
+    edited_at: reply.edited_at,
     saved: savedReplyIds?.has(reply.id) ?? false,
     author,
   };
@@ -443,6 +446,7 @@ const toReplyResponse = (
     upvotes_count: item.upvotes_count,
     replies_count: item._count.replies,
     created_at: item.createdAt,
+    edited_at: item.edited_at,
     parent_reply_id: item.parent_reply_id,
     current_user_vote: currentVotes.get(item.id) ?? null,
     saved: savedReplyIds?.has(item.id) ?? false,
@@ -880,6 +884,7 @@ export class PostRepository implements IPostRepository {
               media_type: true,
               upvotes_count: true,
               createdAt: true,
+              edited_at: true,
               parent_reply_id: true,
               author: {
                 select: authorSelect,
@@ -1097,6 +1102,7 @@ export class PostRepository implements IPostRepository {
         replies_received_count: reply._count.replies,
         has_verified_professional_reply: reply.replies.length > 0,
         created_at: reply.createdAt,
+        edited_at: reply.edited_at,
         parent_reply_id: reply.parent_reply_id,
         parent_content: reply.parent_reply?.content ?? null,
         current_user_vote: replyVoteMap.get(reply.id) ?? null,
@@ -1188,6 +1194,7 @@ export class PostRepository implements IPostRepository {
                   media_type: true,
                   upvotes_count: true,
                   createdAt: true,
+                  edited_at: true,
                   parent_reply_id: true,
                   author: {
                     select: authorSelect,
@@ -1354,6 +1361,7 @@ export class PostRepository implements IPostRepository {
         replies_received_count: item.reply._count.replies,
         has_verified_professional_reply: item.reply.replies.length > 0,
         created_at: item.reply.createdAt,
+        edited_at: item.reply.edited_at,
         parent_reply_id: item.reply.parent_reply_id,
         parent_content: item.reply.parent_reply?.content ?? null,
         current_user_vote: replyVoteMap.get(item.reply.id) ?? null,
@@ -1710,6 +1718,7 @@ export class PostRepository implements IPostRepository {
       Object.hasOwn(data.b, "mediaUrl") || Object.hasOwn(data.b, "mediaType");
     const updateData: Prisma.post_replyUpdateInput = {
       content: data.b.content,
+      edited_at: new Date(),
     };
 
     if (mediaChangeRequested) {

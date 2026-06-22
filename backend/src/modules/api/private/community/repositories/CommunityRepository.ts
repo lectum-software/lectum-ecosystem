@@ -152,6 +152,7 @@ const postSelect = {
       media_type: true,
       upvotes_count: true,
       createdAt: true,
+      edited_at: true,
       author: {
         select: authorSelect,
       },
@@ -1111,6 +1112,7 @@ const toHighlightedProfessionalReply = (
     media_type: reply.media_type,
     upvotes_count: reply.upvotes_count,
     created_at: reply.createdAt,
+    edited_at: reply.edited_at,
     saved: savedReplyIds?.has(reply.id) ?? false,
     author,
   };
