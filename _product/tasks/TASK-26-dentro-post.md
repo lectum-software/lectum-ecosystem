@@ -553,3 +553,14 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: `_product/proto/Dentro do Post.jpg`, screenshot do usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile autenticado em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, confirmando `replaceButtons=0`, miniatura renderizada, `X` de remover presente, sem texto/overlay `Midia` sobre a miniatura e envio habilitado sem texto.
+
+## Complemento 2026-06-22 - foco apos publicar comentario ou resposta
+
+- Pedido do usuario: depois de publicar um comentario ou resposta, a tela deve rolar ate o conteudo recem-criado e aplicar foco/destaque no comentario do proprio usuario.
+- Frontend: o foco/destaque existente de `focusReplyId` foi extraido para `useReplyFocusHighlight` e reutilizado tanto no detalhe do post quanto na tela de thread de respostas.
+- Ao receber o `PostReply` real retornado por `POST /api/private/posts/:id/replies`, a tela passa a definir o novo `reply.id` como foco ativo; a listagem refaz a consulta quando necessario e expande a arvore profunda ate encontrar o comentario criado.
+- O destaque usa a mesma animacao `.lectum-reply-focus-pulse`, `tabindex` temporario e `scrollIntoView({ block: "center" })`, preservando o comportamento ja usado em Salvos/Meus posts/notificacoes.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, limites de midia, votos, salvos, exclusao, denuncia ou ordenacao.
+- Fonte visual auditavel: `_product/proto/Dentro do Post.jpg`, screenshot do usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0068-respostas-votos-salvos-post.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile autenticado em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, criando e removendo comentario real de validacao; confirmado comentario criado com foco ativo, classe `lectum-reply-focus-pulse` e posicao visivel na viewport apos scroll suave.

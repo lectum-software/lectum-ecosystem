@@ -128,6 +128,7 @@ const POST_DETAIL_MOBILE_QUERY = "(max-width: 639px)";
 const POST_REPLY_CANCEL_DRAG_THRESHOLD = 56;
 const FOCUSED_REPLY_HIGHLIGHT_CLASSES = ["lectum-reply-focus-pulse"] as const;
 const FOCUSED_REPLY_HIGHLIGHT_DURATION_MS = 3200;
+const FOCUSED_REPLY_RETRY_ATTEMPTS = 30;
 const REPLY_DRAFT_DISCARD_CONFIRMATION = "Você tem uma resposta em rascunho. Deseja descartá-la?";
 
 const confirmDiscardReplyDraft = () =>
@@ -284,6 +285,75 @@ const InlineExpandableText = ({
 const useReplyMediaPermission = (): ReplyMediaPermission => {
   const user = useAppSelector((state) => state.user);
   return getCommunityMediaPermission(user);
+};
+
+const useReplyFocusHighlight = (replyId?: string | null, pending = false) => {
+  const lastFocusedReplyIdRef = useRef<string | null>(null);
+
+  const resetReplyFocusHighlight = useCallback(() => {
+    lastFocusedReplyIdRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    if (!replyId || pending) return;
+    if (lastFocusedReplyIdRef.current === replyId) return;
+
+    let retryTimer: number | null = null;
+    let highlightTimer: number | null = null;
+    let highlightedTarget: HTMLElement | null = null;
+    let previousTargetTabIndex: string | null = null;
+    let attempts = 0;
+
+    const focusReply = () => {
+      const target = document.getElementById(`reply-${replyId}`);
+      if (!target) {
+        if (attempts < FOCUSED_REPLY_RETRY_ATTEMPTS) {
+          attempts += 1;
+          retryTimer = window.setTimeout(focusReply, 100);
+        }
+        return;
+      }
+
+      lastFocusedReplyIdRef.current = replyId;
+      highlightedTarget = target;
+      previousTargetTabIndex = target.getAttribute("tabindex");
+      if (previousTargetTabIndex === null) {
+        target.setAttribute("tabindex", "-1");
+      }
+      target.classList.remove(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
+      void target.offsetWidth;
+      target.classList.add(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
+      target.focus({ preventScroll: true });
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      highlightTimer = window.setTimeout(() => {
+        target.classList.remove(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
+        if (previousTargetTabIndex === null) {
+          target.removeAttribute("tabindex");
+        } else {
+          target.setAttribute("tabindex", previousTargetTabIndex);
+        }
+        highlightedTarget = null;
+      }, FOCUSED_REPLY_HIGHLIGHT_DURATION_MS);
+    };
+
+    focusReply();
+
+    return () => {
+      if (retryTimer) window.clearTimeout(retryTimer);
+      if (highlightTimer) window.clearTimeout(highlightTimer);
+      if (highlightedTarget) {
+        highlightedTarget.classList.remove(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
+        if (previousTargetTabIndex === null) {
+          highlightedTarget.removeAttribute("tabindex");
+        } else {
+          highlightedTarget.setAttribute("tabindex", previousTargetTabIndex);
+        }
+      }
+    };
+  }, [pending, replyId]);
+
+  return resetReplyFocusHighlight;
 };
 
 const resolvePostError = (error: unknown) => {
@@ -2201,75 +2271,19 @@ export const PostDetailLogic = () => {
   const hasDesktopReplyTargets = !isMobile && Object.keys(desktopReplyTargets).length > 0;
   const activeMobileReplyTarget = isMobile ? mobileReplyTarget : null;
   const visibleInlineReplyTargets = isMobile ? EMPTY_REPLY_TARGETS : desktopReplyTargets;
-  const lastFocusedReplyIdRef = useRef<string | null>(null);
   const syncedFocusReplyIdRef = useRef<string | null>(focusReplyIdFromUrl);
+  const resetReplyFocusHighlight = useReplyFocusHighlight(
+    activeFocusReplyId,
+    repliesQuery.isFetching,
+  );
 
   useEffect(() => {
     if (focusReplyIdFromUrl === syncedFocusReplyIdRef.current) return;
 
     syncedFocusReplyIdRef.current = focusReplyIdFromUrl;
-    lastFocusedReplyIdRef.current = null;
+    resetReplyFocusHighlight();
     setActiveFocusReplyId(focusReplyIdFromUrl);
-  }, [focusReplyIdFromUrl]);
-
-  useEffect(() => {
-    if (!activeFocusReplyId || repliesQuery.isFetching) return;
-    if (lastFocusedReplyIdRef.current === activeFocusReplyId) return;
-
-    let retryTimer: number | null = null;
-    let highlightTimer: number | null = null;
-    let highlightedTarget: HTMLElement | null = null;
-    let previousTargetTabIndex: string | null = null;
-    let attempts = 0;
-
-    const focusReply = () => {
-      const target = document.getElementById(`reply-${activeFocusReplyId}`);
-      if (!target) {
-        if (attempts < 10) {
-          attempts += 1;
-          retryTimer = window.setTimeout(focusReply, 80);
-        }
-        return;
-      }
-
-      lastFocusedReplyIdRef.current = activeFocusReplyId;
-      highlightedTarget = target;
-      previousTargetTabIndex = target.getAttribute("tabindex");
-      if (previousTargetTabIndex === null) {
-        target.setAttribute("tabindex", "-1");
-      }
-      target.classList.remove(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
-      void target.offsetWidth;
-      target.classList.add(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
-      target.focus({ preventScroll: true });
-      target.scrollIntoView({ behavior: "smooth", block: "center" });
-
-      highlightTimer = window.setTimeout(() => {
-        target.classList.remove(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
-        if (previousTargetTabIndex === null) {
-          target.removeAttribute("tabindex");
-        } else {
-          target.setAttribute("tabindex", previousTargetTabIndex);
-        }
-        highlightedTarget = null;
-      }, FOCUSED_REPLY_HIGHLIGHT_DURATION_MS);
-    };
-
-    focusReply();
-
-    return () => {
-      if (retryTimer) window.clearTimeout(retryTimer);
-      if (highlightTimer) window.clearTimeout(highlightTimer);
-      if (highlightedTarget) {
-        highlightedTarget.classList.remove(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
-        if (previousTargetTabIndex === null) {
-          highlightedTarget.removeAttribute("tabindex");
-        } else {
-          highlightedTarget.setAttribute("tabindex", previousTargetTabIndex);
-        }
-      }
-    };
-  }, [activeFocusReplyId, repliesQuery.isFetching]);
+  }, [focusReplyIdFromUrl, resetReplyFocusHighlight]);
 
   const sharePost = async () => {
     if (!post || typeof window === "undefined") return;
@@ -2426,7 +2440,7 @@ export const PostDetailLogic = () => {
         })
       : null;
 
-    await createReplyMutation.mutateAsync({
+    const createdReply = await createReplyMutation.mutateAsync({
       id: post.id,
       body: toCreatePostReplyPayload(
         values,
@@ -2439,6 +2453,9 @@ export const PostDetailLogic = () => {
           : null,
       ),
     });
+
+    resetReplyFocusHighlight();
+    setActiveFocusReplyId(createdReply.id);
 
     if (parentReplyId) {
       closeDesktopReplyTarget();
@@ -2702,6 +2719,7 @@ export const PostReplyThreadLogic = () => {
   const isMobile = useIsPostDetailMobile();
   const currentUserId = useAppSelector((state) => state.user?.id ?? null);
   const conversion = useProgressiveConversion();
+  const [activeFocusReplyId, setActiveFocusReplyId] = useState<string | null>(null);
   const [mobileReplyTarget, setMobileReplyTarget] = useState<ReplyTarget>(null);
   const [desktopReplyTargets, setDesktopReplyTargets] = useState<ReplyTargetMap>({});
   const [replyError, setReplyError] = useState<string | null>(null);
@@ -2745,6 +2763,10 @@ export const PostReplyThreadLogic = () => {
   const threadError = threadQuery.isError ? resolvePostError(threadQuery.error) : null;
   const activeMobileReplyTarget = isMobile ? mobileReplyTarget : null;
   const visibleInlineReplyTargets = isMobile ? EMPTY_REPLY_TARGETS : desktopReplyTargets;
+  const resetReplyFocusHighlight = useReplyFocusHighlight(
+    activeFocusReplyId,
+    threadQuery.isFetching,
+  );
 
   const shareReply = async (reply: PostReply) => {
     if (!post || typeof window === "undefined") return;
@@ -2854,7 +2876,7 @@ export const PostReplyThreadLogic = () => {
         })
       : null;
 
-    await createReplyMutation.mutateAsync({
+    const createdReply = await createReplyMutation.mutateAsync({
       id: post.id,
       body: toCreatePostReplyPayload(
         values,
@@ -2867,6 +2889,9 @@ export const PostReplyThreadLogic = () => {
           : null,
       ),
     });
+
+    resetReplyFocusHighlight();
+    setActiveFocusReplyId(createdReply.id);
 
     if (parentReplyId) {
       closeDesktopReplyTarget();
@@ -3000,6 +3025,7 @@ export const PostReplyThreadLogic = () => {
               currentUserId={currentUserId}
               deleteReplyPending={deleteReplyMutation.isPending}
               errorMessage={null}
+              focusReplyId={activeFocusReplyId}
               inlineReplyTargets={visibleInlineReplyTargets}
               loading={false}
               mediaPermission={mediaPermission}
