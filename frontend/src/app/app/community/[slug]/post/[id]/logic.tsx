@@ -58,6 +58,7 @@ import { PostMutedBadge } from "@/components/community/post-muted-badge";
 import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
 import { ReplyEditModal } from "@/components/community/reply-edit-modal";
 import {
+  detectReplyMediaOrientation,
   mediaTypeFromFile,
   ReplyMediaAttachmentControl,
   type SelectedReplyMedia,
@@ -1588,6 +1589,7 @@ const ReplyComposer = ({
     composerActive ||
     hasDraft ||
     Boolean(selectedMedia) ||
+    mediaPermission.canAttach ||
     (Boolean(replyTarget) && mediaPermission.showControl);
   const FieldComponent = components[formProps.fields[0].field];
   const isInline = variant === "inline";
@@ -1667,11 +1669,18 @@ const ReplyComposer = ({
 
     revokeSelectedMediaPreview();
     const previewUrl = URL.createObjectURL(file);
+    const type = mediaTypeFromFile(file);
     selectedMediaPreviewUrlRef.current = previewUrl;
     setSelectedMedia({
       file,
+      orientation: undefined,
       previewUrl,
-      type: mediaTypeFromFile(file),
+      type,
+    });
+    void detectReplyMediaOrientation(previewUrl, type).then((orientation) => {
+      setSelectedMedia((current) =>
+        current?.previewUrl === previewUrl ? { ...current, orientation } : current,
+      );
     });
     hook.clearErrors("content");
     setComposerActive(true);

@@ -90,3 +90,23 @@ Validacao adicional:
 - `pnpm check`
 - Smoke real de API criando e excluindo resposta somente com midia e `content: ""`.
 - Chrome/CDP mobile autenticado no detalhe do post demo confirmou miniatura `Substituir midia anexada`, preview renderizado, botao `Anexar midia` removido do composer ativo, textarea vazio e envio habilitado.
+
+## Atualizacao 2026-06-22 - orientacao real da miniatura no composer
+
+A miniatura compacta do anexo no composer de comentarios/respostas nao deve forcar todo arquivo para o mesmo formato visual. Imagens e videos selecionados localmente passam a ter seus metadados lidos antes do upload para classificar a previa como paisagem, retrato ou quadrada.
+
+Decisao complementar:
+
+- Estender `SelectedReplyMedia` com `orientation` opcional, derivado de `naturalWidth/naturalHeight` em imagens e `videoWidth/videoHeight` em videos.
+- Aplicar tamanhos maximos pequenos por orientacao no modo composer, evitando previews grandes e mantendo a leitura da orientacao real da midia.
+- Manter o modo editor com a previa maior existente, pois ele e uma modal dedicada de edicao e nao o composer compacto.
+- Exibir o controle de midia tambem no comentario principal do post para psicologos com permissao, sem exigir texto ou resposta aninhada para acessar o upload.
+- Preservar o contrato backend atual: texto + midia, somente texto ou somente midia sao validos; somente texto vazio sem midia valida continua bloqueado.
+
+Validacao adicional:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Upload real via `POST /api/private/posts/:id/replies/media`, criacao de comentario com `content: ""` e exclusao em seguida.
+- Chrome/CDP mobile autenticado confirmou controle `Anexar midia` disponivel no comentario principal, previa vertical compacta para arquivo vertical, `Enviar resposta` habilitado sem texto e substituicao visual do botao pela miniatura.

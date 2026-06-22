@@ -10,9 +10,11 @@ export const REPLY_MEDIA_ACCEPT =
   "image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime";
 
 export type ReplyMediaType = "image" | "video";
+export type ReplyMediaOrientation = "landscape" | "portrait" | "square";
 
 export type SelectedReplyMedia = {
   file: File;
+  orientation?: ReplyMediaOrientation;
   previewUrl: string;
   type: ReplyMediaType;
 };
@@ -49,8 +51,61 @@ const normalizeMediaType = (value?: string | null): ReplyMediaType | null => {
   return null;
 };
 
+const mediaOrientationFromDimensions = (
+  width?: number | null,
+  height?: number | null,
+): ReplyMediaOrientation => {
+  if (!width || !height) return "landscape";
+
+  const ratio = width / height;
+  if (ratio > 1.12) return "landscape";
+  if (ratio < 0.88) return "portrait";
+
+  return "square";
+};
+
+export const detectReplyMediaOrientation = (
+  previewUrl: string,
+  type: ReplyMediaType,
+): Promise<ReplyMediaOrientation> => {
+  if (typeof window === "undefined") {
+    return Promise.resolve("landscape");
+  }
+
+  return new Promise((resolve) => {
+    if (type === "image") {
+      const image = new window.Image();
+      image.onload = () =>
+        resolve(mediaOrientationFromDimensions(image.naturalWidth, image.naturalHeight));
+      image.onerror = () => resolve("landscape");
+      image.src = previewUrl;
+      return;
+    }
+
+    const video = document.createElement("video");
+    video.preload = "metadata";
+    video.muted = true;
+    video.playsInline = true;
+    video.onloadedmetadata = () => {
+      resolve(mediaOrientationFromDimensions(video.videoWidth, video.videoHeight));
+      video.removeAttribute("src");
+      video.load();
+    };
+    video.onerror = () => resolve("landscape");
+    video.src = previewUrl;
+    video.load();
+  });
+};
+
 export const mediaTypeFromFile = (file: File): ReplyMediaType =>
   file.type.startsWith("image/") ? "image" : "video";
+
+const composerPreviewSizeClassName = (orientation?: ReplyMediaOrientation) => {
+  if (orientation === "portrait") return "h-20 w-14 rounded-[1.15rem]";
+  if (orientation === "square") return "h-16 w-16 rounded-[1.15rem]";
+
+  return "h-14 w-24 rounded-[1.15rem]";
+};
 
 export function ReplyMediaAttachmentControl({
   currentMedia,
@@ -73,6 +128,7 @@ export function ReplyMediaAttachmentControl({
   const activeMedia = selectedMedia
     ? {
         alt: "Miniatura da mídia selecionada",
+        orientation: selectedMedia.orientation,
         src: selectedMedia.previewUrl,
         type: selectedMedia.type,
         unoptimized: true,
@@ -80,6 +136,7 @@ export function ReplyMediaAttachmentControl({
     : !removeCurrent && currentSrc && currentType
       ? {
           alt: currentType === "video" ? "Vídeo atual anexado" : "Imagem atual anexada",
+          orientation: undefined,
           src: currentSrc,
           type: currentType,
           unoptimized: isPublicMediaUrl(currentMedia?.mediaUrl),
@@ -111,11 +168,16 @@ export function ReplyMediaAttachmentControl({
         {mediaInput}
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
           {activeMedia ? (
-            <div className="relative h-8 w-[8.5rem] shrink-0 overflow-visible rounded-full">
+            <div
+              className={cn(
+                "relative shrink-0 overflow-visible",
+                composerPreviewSizeClassName(activeMedia.orientation),
+              )}
+            >
               <button
                 aria-label="Substituir mídia anexada"
                 className={cn(
-                  "group relative h-8 w-full overflow-hidden rounded-full border border-primary/20 bg-surface-muted shadow-[0_8px_18px_rgba(47,141,235,0.14)] transition focus:outline-none focus:ring-4 focus:ring-primary/15",
+                  "group relative h-full w-full overflow-hidden rounded-[inherit] border border-primary/20 bg-surface-muted shadow-[0_8px_18px_rgba(47,141,235,0.14)] transition focus:outline-none focus:ring-4 focus:ring-primary/15",
                   mediaPermission.canAttach && !disabled
                     ? "hover:border-primary/35 hover:shadow-[0_10px_24px_rgba(47,141,235,0.2)] active:scale-[0.99]"
                     : "cursor-not-allowed opacity-70",
@@ -150,12 +212,12 @@ export function ReplyMediaAttachmentControl({
                   aria-hidden="true"
                   className="absolute inset-0 bg-gradient-to-r from-[#0F172A]/35 via-[#0F172A]/10 to-[#0F172A]/35"
                 />
-                <span className="absolute inset-0 flex items-center justify-center px-3">
-                  <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-surface/90 px-2 py-0.5 font-extrabold text-foreground text-[0.68rem] shadow-sm backdrop-blur-sm">
+                <span className="absolute inset-x-1 bottom-1 flex items-center justify-center">
+                  <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-surface/90 px-1.5 py-0.5 font-extrabold text-foreground text-[0.62rem] shadow-sm backdrop-blur-sm">
                     {isUploading ? (
-                      <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" aria-hidden="true" />
+                      <Loader2 className="h-3 w-3 shrink-0 animate-spin" aria-hidden="true" />
                     ) : (
-                      <Video className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
+                      <Video className="h-3 w-3 shrink-0 text-primary" aria-hidden="true" />
                     )}
                     <span className="truncate">Mídia</span>
                   </span>

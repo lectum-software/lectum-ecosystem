@@ -531,3 +531,15 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: `_product/proto/Dentro do Post.jpg`, screenshot do usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, smoke real de API criando e excluindo resposta somente com midia (`content: ""`) e Chrome/CDP mobile em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, confirmando miniatura no lugar do botao, preview renderizado, sem `Anexar midia` visivel no composer ativo, textarea vazio e botao `Enviar resposta` habilitado.
+
+## Complemento 2026-06-22 - orientacao da miniatura e anexo no comentario principal
+
+- Pedido do usuario: a previa da midia anexada em respostas deve respeitar o formato real da midia, horizontal ou vertical, sem gerar uma previa grande; e o anexo de midia no comentario direto do post principal precisa funcionar.
+- Frontend: `SelectedReplyMedia` passou a guardar orientacao detectada por metadados reais da imagem/video local antes do upload.
+- Frontend: `ReplyMediaAttachmentControl` no modo composer agora escolhe tamanho compacto por orientacao: paisagem, retrato ou quadrado, preservando preview pequeno, acao de substituir e botao de remover.
+- Frontend: o composer principal do post passou a manter o controle de midia disponivel para psicologos com permissao mesmo antes de digitar/focar, igualando o comentario direto ao fluxo de resposta aninhada.
+- O envio somente com midia continua usando o upload real de replies e a criacao real da resposta; composicao vazia sem texto e sem midia permanece bloqueada.
+- Nao houve alteracao de Prisma schema, migrations, packages, storage, endpoints, limites de arquivo, permissao profissional, votos, salvos, exclusao ou ordenacao.
+- Fonte visual auditavel: `_product/proto/Dentro do Post.jpg`, screenshot do usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, upload real de midia de resposta com criacao/exclusao de comentario somente com midia, e Chrome/CDP mobile em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, confirmando anexo visivel no comentario principal, miniatura vertical compacta para imagem vertical, textarea vazio e envio habilitado.
