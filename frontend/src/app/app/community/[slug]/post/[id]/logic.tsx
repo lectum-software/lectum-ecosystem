@@ -648,16 +648,19 @@ const MediaBlock = ({
   if (!src) return null;
 
   const radius = size === "lg" ? "rounded-[22px]" : "rounded-[18px]";
-  const compactMediaClass = size === "md" ? "mx-auto w-full max-w-[280px] sm:max-w-[320px]" : "";
+  const imageAspectClass = imageOrientation === "landscape" ? "aspect-video" : "aspect-[4/5]";
+  const imageFrameClass =
+    size === "md" && imageOrientation !== "landscape"
+      ? "mx-auto w-full max-w-[280px] sm:max-w-[320px]"
+      : "w-full";
   const videoFrameClass =
     size === "md"
       ? "mx-auto w-full max-w-[280px] sm:max-w-[320px]"
       : "mx-auto w-full max-w-[390px] sm:max-w-[420px]";
   const imageSizes =
-    size === "lg"
-      ? "(max-width: 430px) calc(100vw - 40px), 640px"
+    size === "lg" || imageOrientation === "landscape"
+      ? "(max-width: 430px) calc(100vw - 40px), (max-width: 1024px) calc(100vw - 160px), 860px"
       : "(max-width: 430px) calc(100vw - 64px), 540px";
-  const imageAspectClass = imageOrientation === "landscape" ? "aspect-video" : "aspect-[4/5]";
 
   if (mediaType === "video") {
     return (
@@ -677,7 +680,7 @@ const MediaBlock = ({
         "relative mt-3 overflow-hidden border border-border bg-surface-muted",
         imageAspectClass,
         radius,
-        compactMediaClass,
+        imageFrameClass,
       )}
     >
       <Image

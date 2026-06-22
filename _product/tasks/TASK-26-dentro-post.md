@@ -654,3 +654,14 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: screenshot do usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP desktop `1440x900` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, abrindo `Editar comentario` e confirmando que o botao `Midia` nao possui sombra visivel.
+
+
+## Execucao complementar: imagem horizontal em largura util total (2026-06-22)
+
+- Pedido do usuario: quando a midia for uma imagem horizontal, aproveitar 100% da largura util mantendo a proporcao `16:9`.
+- Frontend: o `MediaBlock` do detalhe do post passou a manter imagens horizontais de respostas/comentarios com `aspect-video` e `w-full`, removendo o limite compacto `max-w` usado apenas para imagens verticais/quadradas em respostas.
+- Imagens verticais e quadradas continuam compactas em respostas; a regra de videos, CTA de WhatsApp, upload, edicao e envio somente com midia nao foi alterada.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, permissoes, votos, salvos ou regras de composicao texto/midia.
+- Fonte visual auditavel: screenshot do usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0148-imagens-horizontais-16-9-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP desktop `1440x900` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, confirmando imagem horizontal com `ratio=1.7777`, `w-full` e `widthGap=0` em relacao a largura util da coluna do comentario.

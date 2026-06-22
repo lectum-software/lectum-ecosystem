@@ -31,3 +31,27 @@ Detectar a orientacao da imagem no carregamento do componente `Image` usando `na
 - `pnpm check`
 - Browser local via Chrome headless/CDP na rota `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, com resposta temporaria usando imagem horizontal real anexada via endpoint de upload, validando `parentRatio = 1.7777`; a resposta temporaria e o objeto R2 foram removidos no cleanup.
 
+
+## Complemento 2026-06-22 - largura util total para imagens horizontais em respostas
+
+Depois do ajuste inicial para `16:9`, imagens horizontais em respostas ainda podiam usar a largura compacta herdada do enquadramento vertical. Isso mantinha espaco lateral ocioso no card e reduzia a leitura da midia.
+
+Decisao complementar:
+
+- Em `MediaBlock` do detalhe do post, quando uma imagem de resposta/comentario for detectada como horizontal, usar `w-full` e remover o `max-w` compacto.
+- Manter `max-w` compacto apenas para imagens verticais/quadradas em respostas, preservando a densidade da arvore.
+- Atualizar o atributo `sizes` para imagens horizontais considerar uma largura maior no desktop.
+- Nao alterar videos, storage, upload, schema, permissao, payloads ou regras de composicao texto/midia.
+
+Consequencias:
+
+- Imagens horizontais em respostas aproveitam toda a largura util da coluna do comentario mantendo `16:9`.
+- Imagens verticais continuam visualmente controladas e nao passam a ocupar largura excessiva.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso apos reexecucao com timeout maior.
+- Chrome/CDP desktop `1440x900`: sucesso na rota `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`, validando resposta real com imagem horizontal e confirmando `ratio=1.7777`, `w-full` e `widthGap=0` contra a largura util da coluna.
+
