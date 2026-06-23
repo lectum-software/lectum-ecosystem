@@ -9,14 +9,25 @@ import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 export type CommunityMediaFrameVariant = "post" | "detail" | "reply";
 export type CommunityMediaOrientation = "landscape" | "portrait" | "square";
 export type CommunityMediaType = "image" | "video";
+type CommunityMediaMetadata = {
+  height?: number | null;
+  orientation: CommunityMediaOrientation;
+  width?: number | null;
+};
 
 const MEDIA_ORIENTATION_LANDSCAPE_RATIO = 1.12;
 const MEDIA_ORIENTATION_PORTRAIT_RATIO = 0.88;
 
-const mediaFrameAspectClassName: Record<CommunityMediaOrientation, string> = {
+const imageMediaFrameAspectClassName: Record<CommunityMediaOrientation, string> = {
   landscape: "aspect-video",
   portrait: "aspect-[4/5]",
   square: "aspect-square",
+};
+
+const videoMediaFrameAspectClassName: Record<CommunityMediaOrientation, string> = {
+  landscape: "aspect-video",
+  portrait: "aspect-[9/16]",
+  square: "aspect-video",
 };
 
 const mediaFrameWidthClassName: Record<
@@ -80,20 +91,36 @@ export const communityMediaOrientationFromDimensions = (
   return "square";
 };
 
-export const detectCommunityMediaOrientation = (
+const communityVideoOrientationFromDimensions = (
+  width?: number | null,
+  height?: number | null,
+): CommunityMediaOrientation => {
+  if (!width || !height) return "landscape";
+
+  return width >= height ? "landscape" : "portrait";
+};
+
+export const detectCommunityMediaMetadata = (
   src: string,
   mediaType: CommunityMediaType,
-): Promise<CommunityMediaOrientation> => {
+): Promise<CommunityMediaMetadata> => {
   if (typeof window === "undefined") {
-    return Promise.resolve("landscape");
+    return Promise.resolve({ orientation: "landscape" });
   }
 
   return new Promise((resolve) => {
     if (mediaType === "image") {
       const image = new window.Image();
       image.onload = () =>
-        resolve(communityMediaOrientationFromDimensions(image.naturalWidth, image.naturalHeight));
-      image.onerror = () => resolve("landscape");
+        resolve({
+          height: image.naturalHeight,
+          orientation: communityMediaOrientationFromDimensions(
+            image.naturalWidth,
+            image.naturalHeight,
+          ),
+          width: image.naturalWidth,
+        });
+      image.onerror = () => resolve({ orientation: "landscape" });
       image.src = src;
       return;
     }
@@ -103,15 +130,25 @@ export const detectCommunityMediaOrientation = (
     video.muted = true;
     video.playsInline = true;
     video.onloadedmetadata = () => {
-      resolve(communityMediaOrientationFromDimensions(video.videoWidth, video.videoHeight));
+      resolve({
+        height: video.videoHeight,
+        orientation: communityVideoOrientationFromDimensions(video.videoWidth, video.videoHeight),
+        width: video.videoWidth,
+      });
       video.removeAttribute("src");
       video.load();
     };
-    video.onerror = () => resolve("landscape");
+    video.onerror = () => resolve({ orientation: "landscape" });
     video.src = src;
     video.load();
   });
 };
+
+export const detectCommunityMediaOrientation = async (
+  src: string,
+  mediaType: CommunityMediaType,
+): Promise<CommunityMediaOrientation> =>
+  (await detectCommunityMediaMetadata(src, mediaType)).orientation;
 
 export const resolveCarouselMediaOrientation = (
   orientations: CommunityMediaOrientation[],
@@ -140,10 +177,13 @@ export const getCommunityMediaViewportClassName = (
   orientation: CommunityMediaOrientation,
   roundedClassName: string,
   className?: string,
+  mediaType: CommunityMediaType = "image",
 ) =>
   cn(
     "relative w-full overflow-hidden border border-border bg-surface-muted",
-    mediaFrameAspectClassName[orientation],
+    mediaType === "video"
+      ? videoMediaFrameAspectClassName[orientation]
+      : imageMediaFrameAspectClassName[orientation],
     roundedClassName,
     className,
   );
@@ -183,9 +223,11 @@ export const CommunityMediaBlock = ({
   const normalizedMediaType = normalizeCommunityMediaType(mediaType);
   const resolvedUrl = mediaUrl ? resolvePublicMediaUrl(mediaUrl) : null;
   const [detectedMedia, setDetectedMedia] = useState<{
+    height?: number | null;
     orientation: CommunityMediaOrientation;
     src: string;
     type: CommunityMediaType;
+    width?: number | null;
   } | null>(null);
 
   useEffect(() => {
@@ -195,13 +237,15 @@ export const CommunityMediaBlock = ({
 
     let isMounted = true;
 
-    detectCommunityMediaOrientation(resolvedUrl, normalizedMediaType).then((orientation) => {
+    detectCommunityMediaMetadata(resolvedUrl, normalizedMediaType).then((metadata) => {
       if (!isMounted) return;
 
       setDetectedMedia({
-        orientation,
+        height: metadata.height,
+        orientation: metadata.orientation,
         src: resolvedUrl,
         type: normalizedMediaType,
+        width: metadata.width,
       });
     });
 
@@ -223,6 +267,14 @@ export const CommunityMediaBlock = ({
     viewportClassName,
   );
   const resolvedSizes = sizes ?? getCommunityMediaSizes(variant, orientation);
+  const videoAspectRatio =
+    normalizedMediaType === "video" &&
+    detectedMedia?.src === resolvedUrl &&
+    detectedMedia.type === normalizedMediaType &&
+    detectedMedia.width &&
+    detectedMedia.height
+      ? `${detectedMedia.width} / ${detectedMedia.height}`
+      : undefined;
 
   if (normalizedMediaType === "video") {
     return (
@@ -230,14 +282,15 @@ export const CommunityMediaBlock = ({
         <VerticalVideoPlayer
           className={cn(
             "w-full border-border shadow-none",
-            mediaFrameAspectClassName[orientation],
+            videoMediaFrameAspectClassName[orientation],
             roundedClassName,
             viewportClassName,
             videoClassName,
           )}
-          fit={orientation === "landscape" ? "cover" : "contain"}
+          fit="contain"
           fullscreenVariant="content"
           src={resolvedUrl}
+          style={videoAspectRatio ? { aspectRatio: videoAspectRatio } : undefined}
           title={alt}
         />
         {footer}

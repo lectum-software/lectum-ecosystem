@@ -1,7 +1,14 @@
 "use client";
 
 import { Pause, Play } from "lucide-react";
-import { type MouseEvent, useCallback, useEffect, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  type MouseEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { cn } from "@/lib/utils";
 import { toggleVideoElementPlayback } from "@/lib/video-interactions";
 
@@ -18,6 +25,7 @@ type VerticalVideoPlayerProps = {
   poster?: string | null;
   preload?: "auto" | "metadata" | "none";
   src: string;
+  style?: CSSProperties;
   title: string;
   videoClassName?: string;
 };
@@ -59,6 +67,7 @@ export const VerticalVideoPlayer = ({
   poster,
   preload = "metadata",
   src,
+  style,
   title,
   videoClassName,
 }: VerticalVideoPlayerProps) => {
@@ -183,6 +192,7 @@ export const VerticalVideoPlayer = ({
         "relative aspect-[9/16] overflow-hidden rounded-[22px] border border-border bg-black shadow-inner",
         className,
       )}
+      style={style}
     >
       {/* biome-ignore lint/a11y/useMediaCaption: Conteúdos enviados por usuários ainda não possuem legenda persistida. */}
       <video

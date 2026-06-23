@@ -784,3 +784,15 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - O ajuste vale para comentario principal e respostas inline sem alterar o fluxo de enviar somente midia.
 - Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissoes, votos, salvos, ranking, midia publicada ou tracking de WhatsApp.
 - ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.
+
+## Execucao complementar: videos em 9:16 ou 16:9 sem crop automatico (2026-06-23)
+
+- Pedido do usuario: alterar a regra dos videos para remover margens pretas laterais sem cortar videos verticais gravados corretamente em 9:16.
+- Frontend: `CommunityMediaBlock` passou a separar metadados de videos e imagens; videos sao classificados apenas como horizontais ou verticais.
+- Frontend: videos verticais usam frame `9:16`, videos horizontais usam `16:9`, e o player preserva o conteudo com `object-contain` em vez de crop automatico.
+- Frontend: quando `videoWidth/videoHeight` estao disponiveis, o player recebe `aspect-ratio` exato para eliminar barras geradas por pequenas variacoes de proporcao do arquivo.
+- Imagens e carrosseis de imagens continuam com a regra anterior (`16:9`, `1:1`, `4:5`) e nao foram alterados.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissoes, votos, salvos, ranking ou tracking de WhatsApp.
+- Fonte visual auditavel: screenshots do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0151-padronizacao-frames-midia-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.

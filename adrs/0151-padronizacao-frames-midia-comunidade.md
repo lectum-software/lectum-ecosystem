@@ -46,3 +46,30 @@ Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a
 ## Pendências
 
 - Reavaliar com dados reais após novo ciclo de QA visual no navegador do usuário, especialmente carrosséis mistos com imagens verticais, quadradas e horizontais em perfil público de psicólogo.
+
+## Complemento 2026-06-23 - videos em proporcao real sem faixa preta lateral
+
+A padronizacao anterior aplicava os mesmos agrupamentos de orientacao para imagens e videos. Isso fazia videos verticais reais serem exibidos em frame `4:5`, produzindo barras pretas laterais quando o player preservava o conteudo sem corte.
+
+Decisao complementar:
+
+- Separar a regra de orientacao de videos da regra de imagens.
+- Imagens continuam usando as familias visualmente padronizadas `16:9`, `1:1` e `4:5`.
+- Videos passam a usar apenas orientacao horizontal ou vertical: horizontal em `16:9`, vertical em `9:16`.
+- O player de video publicado passa a usar `object-contain` em frame correspondente a proporcao real, para preservar o conteudo sem crop automatico.
+- Quando os metadados reais do video estiverem disponiveis, o frame recebe `aspect-ratio` exato a partir de `videoWidth/videoHeight`, reduzindo barras pretas causadas por pequenas variacoes de proporcao.
+
+Consequencias:
+
+- Videos verticais gravados em 9:16 deixam de aparecer dentro de um frame 4:5 com margem preta lateral.
+- Videos horizontais continuam em 16:9 sem corte.
+- Se a faixa preta ja estiver gravada dentro do proprio arquivo, a interface preserva o video original e nao faz crop destrutivo para remove-la.
+- A regra permanece centralizada em `CommunityMediaBlock`, afetando feed, comunidade, perfil, salvos e detalhe do post sem mudancas de backend.
+
+Validacao complementar:
+
+- `pnpm --dir frontend biome:fix`: sucesso.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- `git diff --check`: sucesso.
