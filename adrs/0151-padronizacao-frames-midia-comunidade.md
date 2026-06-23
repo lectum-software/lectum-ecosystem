@@ -149,3 +149,30 @@ Validação complementar:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - `git diff --check`
+
+## Complemento 2026-06-23 - mídia menor no desktop inspirada no Threads
+
+A QA visual do feed em desktop mostrou que os frames ainda ocupavam área excessiva, fazendo o usuário precisar rolar para ver o card completo. A referência acordada foi aproximar o comportamento do Threads: mídia mais compacta, alinhada à esquerda e com maior chance de exibir o post inteiro ou quase inteiro na viewport.
+
+Decisão complementar:
+
+- Manter a largura mobile inalterada para preservar o aproveitamento da tela pequena.
+- Reduzir apenas os limites `md:max-w` dos frames de mídia publicados:
+  - post/detalhe: horizontal `460px`, quadrado `380px`, vertical `300px`;
+  - respostas/comentários: horizontal `420px`, quadrado `340px`, vertical `260px`.
+- Atualizar os valores de `sizes` do `next/image` para refletir esses novos limites no desktop.
+- Manter a regra de proporção (`16:9`, `1:1`, `9:16`) e o alinhamento à esquerda já definidos.
+
+Consequências:
+
+- O desktop fica mais próximo do Threads, com menos dominância visual da mídia no card.
+- Posts com texto, CTA e ações têm maior chance de aparecer inteiros ou quase inteiros na tela sem rolagem.
+- Mobile não muda: continua usando largura útil quase total para manter legibilidade e toque confortável.
+
+Validação complementar:
+
+- `pnpm --dir frontend biome:fix`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`

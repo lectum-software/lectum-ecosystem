@@ -36,19 +36,19 @@ const mediaFrameWidthClassName: Record<
   Record<CommunityMediaOrientation, string>
 > = {
   detail: {
-    landscape: "w-full md:max-w-[560px]",
-    portrait: "w-full md:max-w-[380px]",
-    square: "w-full md:max-w-[480px]",
+    landscape: "w-full md:max-w-[460px]",
+    portrait: "w-full md:max-w-[300px]",
+    square: "w-full md:max-w-[380px]",
   },
   post: {
-    landscape: "w-full md:max-w-[560px]",
-    portrait: "w-full md:max-w-[380px]",
-    square: "w-full md:max-w-[480px]",
+    landscape: "w-full md:max-w-[460px]",
+    portrait: "w-full md:max-w-[300px]",
+    square: "w-full md:max-w-[380px]",
   },
   reply: {
-    landscape: "w-full md:max-w-[480px]",
-    portrait: "w-full md:max-w-[340px]",
-    square: "w-full md:max-w-[400px]",
+    landscape: "w-full md:max-w-[420px]",
+    portrait: "w-full md:max-w-[260px]",
+    square: "w-full md:max-w-[340px]",
   },
 };
 
@@ -57,19 +57,19 @@ const mediaFrameSizes: Record<
   Record<CommunityMediaOrientation, string>
 > = {
   detail: {
-    landscape: "(max-width: 430px) calc(100vw - 40px), 560px",
-    portrait: "(max-width: 430px) calc(100vw - 40px), 380px",
-    square: "(max-width: 430px) calc(100vw - 40px), 480px",
+    landscape: "(max-width: 430px) calc(100vw - 40px), 460px",
+    portrait: "(max-width: 430px) calc(100vw - 40px), 300px",
+    square: "(max-width: 430px) calc(100vw - 40px), 380px",
   },
   post: {
-    landscape: "(max-width: 430px) calc(100vw - 64px), 560px",
-    portrait: "(max-width: 430px) calc(100vw - 64px), 380px",
-    square: "(max-width: 430px) calc(100vw - 64px), 480px",
+    landscape: "(max-width: 430px) calc(100vw - 64px), 460px",
+    portrait: "(max-width: 430px) calc(100vw - 64px), 300px",
+    square: "(max-width: 430px) calc(100vw - 64px), 380px",
   },
   reply: {
-    landscape: "(max-width: 430px) calc(100vw - 96px), 480px",
-    portrait: "(max-width: 430px) calc(100vw - 96px), 340px",
-    square: "(max-width: 430px) calc(100vw - 96px), 400px",
+    landscape: "(max-width: 430px) calc(100vw - 96px), 420px",
+    portrait: "(max-width: 430px) calc(100vw - 96px), 260px",
+    square: "(max-width: 430px) calc(100vw - 96px), 340px",
   },
 };
 

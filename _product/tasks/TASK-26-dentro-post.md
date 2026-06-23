@@ -828,3 +828,14 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0151-padronizacao-frames-midia-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
+
+## Execucao complementar: mídias menores apenas no desktop (2026-06-23)
+
+- Pedido do usuario: no desktop, diminuir as midias para ficar mais parecido com o Threads e permitir ver todo ou quase todo o post sem rolagem.
+- Frontend: os limites `md:max-w` dos frames compartilhados foram reduzidos para post/detalhe e respostas/comentarios, sem alterar a largura mobile.
+- Frontend: os `sizes` usados pelo `next/image` foram atualizados para refletir os novos limites desktop.
+- As proporcoes padronizadas (`16:9`, `1:1`, `9:16`), alinhamento a esquerda, carrossel e CTA de WhatsApp foram preservados.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissoes, votos, salvos, ranking ou tracking de WhatsApp.
+- Fonte visual auditavel: screenshots do usuario comparando Lectum e Threads; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0151-padronizacao-frames-midia-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
