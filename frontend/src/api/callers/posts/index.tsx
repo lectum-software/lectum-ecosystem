@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import keys from "@/api/cache/keys";
 import type {
   CreatePostReplyPayload,
@@ -139,6 +139,19 @@ export const useMyPosts = (query: UserPostsQuery = {}, enabled = true) => {
   return useQuery({
     queryKey: keys.posts.mine(query),
     queryFn: () => api.getMyPosts(query),
+    enabled,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
+};
+
+export const useInfiniteMyPosts = (query: UserPostsQuery = {}, enabled = true) => {
+  return useInfiniteQuery({
+    queryKey: keys.posts.mine({ ...query, mode: "infinite" }),
+    queryFn: ({ pageParam }) => api.getMyPosts({ ...query, page: pageParam as number }),
+    initialPageParam: query.page ?? 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.pages ? lastPage.page + 1 : undefined,
     enabled,
     refetchOnWindowFocus: false,
     retry: false,

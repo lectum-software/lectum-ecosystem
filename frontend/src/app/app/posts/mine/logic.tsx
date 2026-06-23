@@ -1,16 +1,19 @@
 "use client";
 
-import { BadgeCheck, ChevronLeft, ChevronRight, CornerUpLeft, FileText, Reply } from "lucide-react";
+import { BadgeCheck, ChevronLeft, CornerUpLeft, FileText, Reply } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Fragment,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
+  useCallback,
+  useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
-import { useMyPosts, useSaveReply, useVotePost } from "@/api/callers/posts";
+import { useInfiniteMyPosts, useMyPosts, useSaveReply, useVotePost } from "@/api/callers/posts";
 import type { PostListPost, UserPostListItem, UserPostsType } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityPostCard } from "@/components/community/community-post-card";
@@ -479,66 +482,87 @@ const ReplyItemCard = ({
   );
 };
 
-const Pagination = ({
-  ariaLabel,
-  currentPage,
-  disabled,
-  onPageChange,
-  pages,
+const flattenUserPostPages = (pages?: Array<{ data: UserPostListItem[] }>) => {
+  const seen = new Set<string>();
+  const items: UserPostListItem[] = [];
+
+  for (const page of pages ?? []) {
+    for (const item of page.data) {
+      if (seen.has(item.id)) continue;
+
+      seen.add(item.id);
+      items.push(item);
+    }
+  }
+
+  return items;
+};
+
+const InfiniteMyPostsLoader = ({
+  hasNextPage,
+  isLoading,
+  label,
+  onLoadMore,
 }: {
-  ariaLabel: string;
-  currentPage: number;
-  disabled?: boolean;
-  onPageChange: (page: number) => void;
-  pages: number;
+  hasNextPage: boolean;
+  isLoading: boolean;
+  label: string;
+  onLoadMore: () => void;
 }) => {
-  if (pages <= 1) return null;
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!hasNextPage || isLoading) return;
+
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          onLoadMore();
+        }
+      },
+      { rootMargin: "520px 0px" },
+    );
+
+    observer.observe(sentinel);
+
+    return () => observer.disconnect();
+  }, [hasNextPage, isLoading, onLoadMore]);
+
+  if (!hasNextPage && !isLoading) return null;
 
   return (
-    <nav
-      aria-label={ariaLabel}
-      className="flex items-center justify-between gap-3 rounded-[22px] border border-border bg-surface p-3"
-    >
-      <Button
-        disabled={currentPage <= 1 || disabled}
-        onClick={() => onPageChange(currentPage - 1)}
-        type="button"
-        variant="outline"
-      >
-        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-        Anterior
-      </Button>
-      <span className="text-sm font-bold text-muted">
-        {currentPage} de {pages}
-      </span>
-      <Button
-        disabled={currentPage >= pages || disabled}
-        onClick={() => onPageChange(currentPage + 1)}
-        type="button"
-        variant="outline"
-      >
-        Próxima
-        <ChevronRight className="h-4 w-4" aria-hidden="true" />
-      </Button>
-    </nav>
+    <div className="grid min-h-10 place-items-center py-2" ref={sentinelRef}>
+      {isLoading ? (
+        <LoadingState label={label} />
+      ) : (
+        <span className="sr-only">Carregar mais automaticamente</span>
+      )}
+    </div>
   );
 };
 
 export const MyPostsLogic = () => {
   const sessionUser = useAppSelector((state) => state.user);
   const [type, setType] = useState<UserPostsType>("posts");
-  const [page, setPage] = useState(1);
   const [shareFeedback, setShareFeedback] = useState<"interaction" | "post" | null>(null);
-  const query = useMemo(() => ({ page, limit: PAGE_LIMIT, type }), [page, type]);
+  const query = useMemo(() => ({ limit: PAGE_LIMIT, type }), [type]);
   const postsCountQueryParams = useMemo(() => ({ limit: 1, page: 1, type: "posts" as const }), []);
   const repliesCountQueryParams = useMemo(
     () => ({ limit: 1, page: 1, type: "replies" as const }),
     [],
   );
-  const postsQuery = useMyPosts(query);
+  const postsQuery = useInfiniteMyPosts(query);
+  const { fetchNextPage } = postsQuery;
   const postsCountQuery = useMyPosts(postsCountQueryParams, type !== "posts");
   const repliesCountQuery = useMyPosts(repliesCountQueryParams, type !== "replies");
-  const items = postsQuery.data?.data ?? [];
+  const items = useMemo(
+    () => flattenUserPostPages(postsQuery.data?.pages),
+    [postsQuery.data?.pages],
+  );
+  const firstPage = postsQuery.data?.pages[0];
   const errorMessage = postsQuery.isError ? resolvePostsError(postsQuery.error) : null;
   const isPsychologist = sessionUser?.role === "psicologo";
   const interactionCopy = getInteractionCopy(isPsychologist);
@@ -546,14 +570,14 @@ export const MyPostsLogic = () => {
     () => ({
       posts:
         type === "posts"
-          ? (postsQuery.data?.count ?? postsCountQuery.data?.count)
+          ? (firstPage?.count ?? postsCountQuery.data?.count)
           : postsCountQuery.data?.count,
       replies:
         type === "replies"
-          ? (postsQuery.data?.count ?? repliesCountQuery.data?.count)
+          ? (firstPage?.count ?? repliesCountQuery.data?.count)
           : repliesCountQuery.data?.count,
     }),
-    [postsCountQuery.data?.count, postsQuery.data?.count, repliesCountQuery.data?.count, type],
+    [firstPage?.count, postsCountQuery.data?.count, repliesCountQuery.data?.count, type],
   );
 
   const sharePost = async (post: PostListPost, replyId?: string) => {
@@ -582,7 +606,6 @@ export const MyPostsLogic = () => {
 
   const handleFilterChange = (value: UserPostsType) => {
     setType(value);
-    setPage(1);
   };
 
   const handlePostDeleted = () => {
@@ -592,6 +615,10 @@ export const MyPostsLogic = () => {
   const handleReplyChanged = () => {
     void postsQuery.refetch();
   };
+
+  const loadMoreItems = useCallback(() => {
+    void fetchNextPage();
+  }, [fetchNextPage]);
 
   return (
     <PrivateTemplate
@@ -698,18 +725,21 @@ export const MyPostsLogic = () => {
             </div>
           ) : null}
 
-          {postsQuery.isFetching && !postsQuery.isLoading ? (
+          {postsQuery.isFetching && !postsQuery.isFetchingNextPage && !postsQuery.isLoading ? (
             <LoadingState
               label={type === "posts" ? "Atualizando seus posts" : interactionCopy.updatingLabel}
             />
           ) : null}
 
-          <Pagination
-            ariaLabel={`Paginação de ${interactionCopy.screenTitle.toLowerCase()}`}
-            currentPage={page}
-            disabled={postsQuery.isFetching}
-            onPageChange={setPage}
-            pages={postsQuery.data?.pages ?? 0}
+          <InfiniteMyPostsLoader
+            hasNextPage={Boolean(postsQuery.hasNextPage)}
+            isLoading={postsQuery.isFetchingNextPage}
+            label={
+              type === "posts"
+                ? "Carregando mais posts"
+                : `Carregando mais ${interactionCopy.plural.toLowerCase()}`
+            }
+            onLoadMore={loadMoreItems}
           />
         </div>
       </section>

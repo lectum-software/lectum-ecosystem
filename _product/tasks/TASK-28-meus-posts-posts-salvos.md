@@ -361,3 +361,10 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Referencias visuais seguem as imagens locais `_product/proto/Meus Posts - Paciente.jpg`, `_product/proto/Meus Posts - Psicologo.jpg` e o screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0072-meus-posts-e-posts-salvos.md`.
 - Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`; smoke API real criando e removendo uma resposta direta propria do psicologo confirmou `replies_received_count=1` com `has_verified_professional_reply=false`; Chrome/CDP mobile `390x844` em `/app/posts/mine` confirmou ausencia de `Chamar no WhatsApp` e ausencia de `Respondido por psicologo verificado` no card da resposta propria com filho criado pelo mesmo psicologo.
+## Ajuste complementar em 2026-06-23 - scroll infinito em Meus posts e respostas
+
+- A rota `/app/posts/mine` deixou de exibir a barra visual de paginação nas abas `Posts` e `Respostas/Comentários`.
+- A lista passou a usar React Query infinito com o contrato paginado real de `GET /api/private/posts/mine`, carregando novas páginas automaticamente por `IntersectionObserver` ao rolar para o fim.
+- As contagens das abas continuam usando dados reais do endpoint ativo ou consultas leves de contagem para a aba inativa.
+- Estados de loading inicial, atualização, erro, vazio e carregamento incremental foram preservados sem mock, sem novo package e sem alteração de schema Prisma.
+- Builder/Quick Copy não está disponível como ferramenta callable neste ambiente; a validação visual segue o layout atual e o screenshot do usuário.
