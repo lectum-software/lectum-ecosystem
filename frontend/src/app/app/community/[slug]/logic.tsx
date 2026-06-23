@@ -1295,7 +1295,7 @@ const PostCard = ({
       onKeyDown={handleCardKeyDown}
     >
       {showCommunityHeader ? (
-        <div className="mb-4 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-subtle">
+        <div className="mb-3 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-subtle">
           <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           <span className="shrink-0">Postado em</span>
           <div className="flex min-w-0 flex-1 items-center gap-1.5">
@@ -1313,6 +1313,10 @@ const PostCard = ({
           </div>
           {post.muted_by_current_user ? <PostMutedBadge className="shrink-0" /> : null}
         </div>
+      ) : null}
+
+      {showCommunityHeader ? (
+        <div className="mb-3 h-px w-full bg-[#E7EEF6] dark:bg-border/70" aria-hidden="true" />
       ) : null}
 
       <div className="mb-3 flex items-start gap-3">

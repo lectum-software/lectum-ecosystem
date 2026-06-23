@@ -752,3 +752,15 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: screenshots e decisoes do usuario neste thread; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR criado: `adrs/0151-padronizacao-frames-midia-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
+
+## Execucao complementar: divisor entre contexto e autor nos cards (2026-06-23)
+
+- Pedido do usuario: nos cards de conteudo, em todos os contextos exceto no detalhe do post, adicionar uma linha fina entre o cabeçalho `Postado em` e o nome do psicologo.
+- Frontend: `CommunityPostCard` passou a renderizar um divisor sutil quando o card exibe simultaneamente contexto da comunidade (`Postado em`/`Respondido em`) e autoria.
+- Frontend: a listagem interna de comunidade recebeu o mesmo divisor no `PostCard` local quando o cabeçalho `Postado em` esta visivel.
+- Frontend: os cards de respostas salvas tambem receberam o divisor entre `Respondido em` e o cabeçalho do autor, mantendo consistencia nas listas fora do detalhe do post.
+- O detalhe do post nao foi alterado, conforme excecao definida pelo usuario.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, upload, votos, salvos, ranking, midia ou tracking de WhatsApp.
+- Fonte visual auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR criado: `adrs/0152-divisor-contexto-autor-cards-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.

@@ -698,7 +698,7 @@ export const CommunityPostCard = ({
       tabIndex={openPostOnCardClick ? -1 : undefined}
     >
       {showCommunityHeader ? (
-        <div className="mb-4 flex min-w-0 items-center gap-2 text-[11px] font-semibold tracking-[-0.01em] text-muted">
+        <div className="mb-3 flex min-w-0 items-center gap-2 text-[11px] font-semibold tracking-[-0.01em] text-muted">
           <div className="flex min-w-0 flex-1 items-center gap-1.5">
             <CommunityContextIcon
               className={cn("h-3.5 w-3.5 shrink-0", usesMutedCommunityContext && "text-muted/80")}
@@ -739,6 +739,10 @@ export const CommunityPostCard = ({
           {post.muted_by_current_user ? <PostMutedBadge /> : null}
           {statusBadge}
         </div>
+      ) : null}
+
+      {showCommunityHeader && showAuthorHeader ? (
+        <div className="mb-3 h-px w-full bg-[#E7EEF6] dark:bg-border/70" aria-hidden="true" />
       ) : null}
 
       {showAuthorHeader ? (

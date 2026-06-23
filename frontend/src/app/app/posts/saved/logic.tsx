@@ -343,7 +343,7 @@ const SavedReplyCard = ({
       onKeyDown={handleCardKeyDown}
       tabIndex={-1}
     >
-      <div className="mb-4 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold tracking-[-0.01em] text-muted">
+      <div className="mb-3 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold tracking-[-0.01em] text-muted">
         <Reply className="h-3.5 w-3.5 shrink-0 text-muted/80" aria-hidden="true" />
         <span className="shrink-0">Respondido em</span>
         <Link
@@ -353,6 +353,8 @@ const SavedReplyCard = ({
           {item.post.community.name}
         </Link>
       </div>
+
+      <div className="mb-3 h-px w-full bg-[#E7EEF6] dark:bg-border/70" aria-hidden="true" />
 
       <div className="mb-3">
         <SavedReplyAuthorHeader author={reply.author} createdAt={reply.created_at} />
