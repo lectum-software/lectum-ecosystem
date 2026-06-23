@@ -16,6 +16,7 @@ import {
 import { useInfiniteMyPosts, useMyPosts, useSaveReply, useVotePost } from "@/api/callers/posts";
 import type { PostListPost, UserPostListItem, UserPostsType } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
+import { CommunityMediaBlock } from "@/components/community/community-media-frame";
 import { CommunityPostCard } from "@/components/community/community-post-card";
 import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
 import { ReplyOwnerActionMenu } from "@/components/community/reply-owner-action-menu";
@@ -300,6 +301,8 @@ const ReplyItemCard = ({
 
   const replyHref = focusedReplyHref(item.post, reply.id);
   const isDirectPostComment = !reply.parent_reply_id;
+  const hasReplyMedia = Boolean(reply.media_url && reply.media_type);
+  const hasReplyText = Boolean(reply.content.trim());
   const hasVerifiedProfessionalReply = Boolean(reply.has_verified_professional_reply);
   const voteState =
     voteOverride?.replyId === reply.id
@@ -445,7 +448,21 @@ const ReplyItemCard = ({
 
       <div className="relative z-10 grid gap-2">
         {reply.title ? <h2 className="text-lg font-black text-foreground">{reply.title}</h2> : null}
-        <p className="whitespace-pre-line text-sm leading-6 text-foreground">{reply.content}</p>
+        {hasReplyText ? (
+          <p className="whitespace-pre-line text-sm leading-6 text-foreground">{reply.content}</p>
+        ) : null}
+        {hasReplyMedia ? (
+          <div data-post-card-ignore-click="true">
+            <CommunityMediaBlock
+              alt={reply.title ?? `Mídia da ${interactionCopy.singular}`}
+              className={cn(hasReplyText ? "mt-1" : undefined)}
+              mediaType={reply.media_type}
+              mediaUrl={reply.media_url}
+              roundedClassName="rounded-[18px]"
+              variant="reply"
+            />
+          </div>
+        ) : null}
       </div>
 
       {hasVerifiedProfessionalReply ? (

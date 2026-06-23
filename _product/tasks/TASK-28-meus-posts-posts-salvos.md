@@ -368,3 +368,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - As contagens das abas continuam usando dados reais do endpoint ativo ou consultas leves de contagem para a aba inativa.
 - Estados de loading inicial, atualização, erro, vazio e carregamento incremental foram preservados sem mock, sem novo package e sem alteração de schema Prisma.
 - Builder/Quick Copy não está disponível como ferramenta callable neste ambiente; a validação visual segue o layout atual e o screenshot do usuário.
+
+## Ajuste complementar em 2026-06-23 - midia em minhas respostas
+
+- Pedido direto de produto: na aba `Respostas/Comentarios` de `/app/posts/mine`, respostas que tenham midia anexada tambem devem exibir essa midia no card da lista.
+- Frontend: `ReplyItemCard` passou a renderizar `media_url`/`media_type` reais da resposta usando `CommunityMediaBlock`, com variante `reply` e sem CTA de WhatsApp, preservando a regra de conteudo proprio.
+- Respostas somente com midia continuam validas visualmente: o texto e renderizado apenas quando houver conteudo, sem criar bloco vazio.
+- A midia fica marcada como alvo interativo para nao quebrar controles de video/imagem nem o deep link do card para a resposta dentro do post.
+- Nao houve alteracao de endpoint, schema Prisma, storage, package, mock ou dados artificiais; o endpoint `/api/private/posts/mine` ja entregava os campos de midia da resposta.
+- Builder/Quick Copy nao esta disponivel como ferramenta callable neste ambiente; a referencia foi o screenshot do usuario e os componentes de midia ja existentes na comunidade.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
+- ADR criado: `adrs/0155-midia-respostas-meus-posts.md`.
