@@ -775,3 +775,12 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.
 - Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
+
+## Execucao complementar: remover fallback desktop do botao Anexar midia (2026-06-23)
+
+- Pedido reforcado pelo usuario: `Anexar midia` so deve aparecer quando o campo de comentarios estiver em foco.
+- Frontend: removido o fallback responsivo `sm:flex` e a condicao auxiliar `expanded` da renderizacao do controle de midia no `ReplyComposer`.
+- Agora o controle so e renderizado quando o composer esta ativo/focado ou quando ja existe uma midia selecionada para envio.
+- O ajuste vale para comentario principal e respostas inline sem alterar o fluxo de enviar somente midia.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissoes, votos, salvos, ranking, midia publicada ou tracking de WhatsApp.
+- ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.

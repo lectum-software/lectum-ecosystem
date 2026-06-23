@@ -303,3 +303,19 @@ Validacao complementar:
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
 - `git diff --check`: sucesso.
+
+## Complemento 2026-06-23 - remocao do fallback desktop do botao de midia
+
+Apos a primeira restricao do botao `Anexar midia`, ainda existia um fallback visual no desktop (`sm:flex`) herdado do comportamento anterior. Para garantir que o controle nao apareca em repouso em nenhum viewport, a renderizacao agora depende exclusivamente do composer ativo/focado ou de uma midia ja selecionada.
+
+Decisao complementar:
+
+- Remover o fallback responsivo que permitia exibir o controle no desktop sem guidance/foco.
+- Remover a condicao auxiliar `expanded` da renderizacao do controle de midia, evitando que contexto de resposta ou permissao de midia mantenha o botao visivel por si so.
+- Manter a miniatura renderizada quando houver midia selecionada, mesmo sem foco, para preservar envio somente com midia.
+
+Consequencias:
+
+- `Anexar midia` fica oculto em repouso em desktop e mobile.
+- O botao aparece ao focar/interagir com o campo e desaparece quando o composer perde foco sem anexo.
+- Nao ha mudanca em backend, schema, endpoints, storage, upload, permissoes ou validacao de conteudo.

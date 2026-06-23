@@ -1636,11 +1636,6 @@ const ReplyComposer = ({
   const hasDraft = draft.length > 0;
   const hasDiscardableDraft = hasDraft || Boolean(selectedMedia);
   const ready = hasDraft || Boolean(selectedMedia);
-  const expanded =
-    composerActive ||
-    hasDraft ||
-    Boolean(selectedMedia) ||
-    (Boolean(replyTarget) && mediaPermission.showControl);
   const FieldComponent = components[formProps.fields[0].field];
   const isInline = variant === "inline";
   const shouldShowMediaControls =
@@ -1875,9 +1870,8 @@ const ReplyComposer = ({
         </Button>
       </div>
 
-      {expanded && shouldShowMediaControls ? (
+      {shouldShowMediaControls ? (
         <ReplyMediaAttachmentControl
-          className={!shouldShowGuidance ? "hidden sm:flex" : undefined}
           disabled={disabled}
           fileInputRef={fileInputRef}
           isUploading={disabled && Boolean(selectedMedia)}
