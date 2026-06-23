@@ -280,6 +280,17 @@ Validacao complementar:
 - `pnpm check`: sucesso.
 - `git diff --check`: sucesso.
 
+## Complemento 2026-06-23 - copy compacta no menu de comentarios
+
+O menu de tres pontos de comentarios e respostas passou a usar acoes curtas:
+`Editar`, `Silenciar` e `Excluir`. A decisao remove a repeticao de
+`comentario`/`resposta` do dropdown, deixando a interface mais limpa no mobile,
+sem alterar permissoes, endpoints, regra de exclusao, silenciamento ou edicao.
+
+O fluxo de bloqueio de exclusao/silenciamento tambem passou a usar a copy
+compacta no botao de acao (`Silenciar`/`Silenciada`), mantendo as descricoes
+explicativas para preservar clareza da regra de dominio.
+
 ## Complemento 2026-06-23 - anexar midia apenas com composer em foco
 
 O botao `Anexar midia` no composer de comentarios aparecia em repouso para psicologos com permissao de midia, deixando o card mais carregado antes de qualquer intencao de comentar.
