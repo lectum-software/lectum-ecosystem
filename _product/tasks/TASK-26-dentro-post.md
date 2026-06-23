@@ -839,3 +839,14 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: screenshots do usuario comparando Lectum e Threads; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0151-padronizacao-frames-midia-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
+
+## Execucao complementar: fundo branco dentro do post (2026-06-23)
+
+- Pedido do usuario: dentro do post, remover o fundo azulado dos posts/respostas de psicologos e usar fundo branco mesmo para psicologos.
+- Frontend: o card do post original no detalhe permanece branco tambem no hover, sem fundo azulado.
+- Frontend: as arvores/cards de respostas de psicologos verificados dentro do detalhe do post nao usam mais `bg-[#F4FAFF]`; todos os cards usam fundo branco e borda neutra.
+- Selos de verificado, badges de mentor, CTA de WhatsApp, ordenacao de respostas de psicologos, midias, carrossel, foco/scroll e acoes de comentarios foram preservados.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissoes, votos, salvos, ranking ou tracking de WhatsApp.
+- Fonte visual auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR criado: `adrs/0153-fundo-branco-posts-psicologos-dentro-post.md`.
+- Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.

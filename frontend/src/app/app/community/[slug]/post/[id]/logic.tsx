@@ -860,7 +860,7 @@ const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
 
   return (
     <article
-      className="overflow-hidden rounded-[24px] border border-[#D8ECFF] bg-white shadow-[0_12px_28px_rgba(15,23,42,0.05)] transition hover:border-primary/20 hover:bg-primary-soft/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 dark:border-border dark:bg-surface md:cursor-pointer"
+      className="overflow-hidden rounded-[24px] border border-[#EDF1F5] bg-white shadow-[0_12px_28px_rgba(15,23,42,0.05)] transition hover:border-primary/20 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 dark:border-border dark:bg-surface dark:hover:bg-surface md:cursor-pointer"
       onClick={handleCardClick}
       onKeyDown={handleCardKeyDown}
       tabIndex={-1}
@@ -2144,12 +2144,7 @@ const RepliesList = ({
 
             return (
               <div
-                className={cn(
-                  "rounded-[22px] border p-3 shadow-[0_10px_24px_rgba(15,23,42,0.035)]",
-                  professionalTree
-                    ? "border-[#D8ECFF] bg-[#F4FAFF] dark:border-primary/20 dark:bg-primary/5"
-                    : "border-[#EDF1F5] bg-white dark:border-border dark:bg-surface",
-                )}
+                className="rounded-[22px] border border-[#EDF1F5] bg-white p-3 shadow-[0_10px_24px_rgba(15,23,42,0.035)] dark:border-border dark:bg-surface"
                 key={reply.id}
               >
                 <ReplyCard
