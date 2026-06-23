@@ -64,6 +64,7 @@ import {
   toCommunityWhatsAppIdentity,
 } from "@/components/community/community-whatsapp-cta";
 import { MentorBadge } from "@/components/community/mentor-badge";
+import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
 import type { VoteValue } from "@/components/community/vote-action-button";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
@@ -1024,12 +1025,28 @@ const CommunityChips = ({
 );
 
 const PostMedia = ({ footer, post }: { footer?: ReactNode; post: CommunityPost }) => {
-  if (!post.media_url) return null;
+  const imageMediaItems = (post.media_items ?? []).filter((item) => item.media_type === "image");
+  const shouldShowCarousel = imageMediaItems.length > 1;
 
-  const mediaUrl = resolvePublicMediaUrl(post.media_url);
+  if (shouldShowCarousel) {
+    return (
+      <div className="grid w-full gap-2">
+        <PostMediaCarousel alt={post.title} items={imageMediaItems} />
+        {footer}
+      </div>
+    );
+  }
+
+  const singleMediaItem = imageMediaItems.length === 1 ? imageMediaItems[0] : null;
+  const displayMediaUrl = singleMediaItem?.media_url ?? post.media_url;
+  const displayMediaType = singleMediaItem?.media_type ?? post.media_type;
+
+  if (!displayMediaUrl) return null;
+
+  const mediaUrl = resolvePublicMediaUrl(displayMediaUrl);
   if (!mediaUrl) return null;
 
-  if (post.media_type === "video") {
+  if (displayMediaType === "video") {
     return (
       <div className="mx-auto grid w-full max-w-[390px] gap-2">
         <VerticalVideoPlayer
@@ -1052,7 +1069,7 @@ const PostMedia = ({ footer, post }: { footer?: ReactNode; post: CommunityPost }
           fill
           sizes="(max-width: 430px) calc(100vw - 64px), 520px"
           src={mediaUrl}
-          unoptimized={isPublicMediaUrl(post.media_url)}
+          unoptimized={isPublicMediaUrl(displayMediaUrl)}
         />
       </div>
       {footer}
@@ -1198,13 +1215,14 @@ const PostCard = ({
   const saveMutation = useSavePost(post.id);
   const conversion = useProgressiveConversion();
   const postDetailHref = communityPostDetailHref(post);
+  const hasPostMedia = Boolean(post.media_url || (post.media_items ?? []).length > 0);
   const psychologistProfileHref = isPsychologistPost
     ? `/app/psychologist/${post.author.id}`
     : undefined;
   const authorWhatsappCta =
     isPsychologistPost && post.author.whatsapp_url ? (
       <CommunityWhatsAppCta
-        attached={Boolean(post.media_url)}
+        attached={hasPostMedia}
         psychologist={toCommunityWhatsAppIdentity(post.author)}
         stopPropagation
       />
@@ -1382,9 +1400,9 @@ const PostCard = ({
       </div>
 
       <div className="mt-4 grid gap-3">
-        <PostMedia footer={post.media_url ? authorWhatsappCta : undefined} post={post} />
+        <PostMedia footer={hasPostMedia ? authorWhatsappCta : undefined} post={post} />
         <ProfessionalReplyPreview post={post} />
-        {post.media_url ? null : authorWhatsappCta}
+        {hasPostMedia ? null : authorWhatsappCta}
       </div>
 
       <CommunityActionBar

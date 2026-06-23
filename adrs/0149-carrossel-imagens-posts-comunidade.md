@@ -100,3 +100,26 @@ Validacao complementar:
 - `git diff --check`: sucesso.
 
 
+## Complemento 2026-06-22 - carrossel na listagem interna da comunidade
+
+A tela interna de comunidade (`/app/community/[slug]`) possuia um `PostMedia` local que ainda renderizava apenas `media_url`/`media_type` legado. Assim, posts com `media_items` reais apareciam como midia unica e nao exibiam as setas persistentes do `PostMediaCarousel`.
+
+Decisao complementar:
+
+- A listagem interna da comunidade passa a derivar `imageMediaItems` de `post.media_items` e usar `PostMediaCarousel` quando houver mais de uma imagem.
+- O fallback legado de `media_url`/`media_type` permanece para posts antigos ou midia unica.
+- O CTA de WhatsApp passa a considerar `media_items` alem de `media_url` ao decidir se fica anexado a midia.
+- A correcao e local ao frontend e nao altera contrato de API, schema, storage, upload, limites ou regra de carrossel apenas com imagens.
+
+Consequencias:
+
+- Posts com varias imagens exibem as setas laterais tambem dentro da pagina da comunidade e no feed dinamico que reutiliza essa tela.
+- A navegacao do carrossel permanece centralizada no componente compartilhado `PostMediaCarousel`, evitando duplicacao de controles.
+
+Validacao complementar:
+
+- `pnpm --dir frontend biome:fix`: sucesso.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- `git diff --check`: sucesso.

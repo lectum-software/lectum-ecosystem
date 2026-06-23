@@ -730,3 +730,14 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: screenshot de referencia do Threads enviado pelo usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0147-cortesia-verificada-whatsapp-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
+
+## Execucao complementar: setas do carrossel na listagem interna da comunidade (2026-06-22)
+
+- Pedido do usuario: o post com varias imagens dentro da comunidade continuava exibindo apenas uma imagem, sem as setas laterais do carrossel.
+- Frontend: o `PostMedia` local de `/app/community/[slug]` passou a ler `post.media_items` e renderizar `PostMediaCarousel` quando houver mais de uma imagem.
+- O fallback legado por `media_url`/`media_type` foi mantido para posts antigos e midia unica.
+- O CTA de WhatsApp agora considera tambem `media_items` para manter o botao anexado ao bloco de midia quando houver carrossel.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, storage, endpoints, upload, limites de arquivo, votos, salvos ou ranking.
+- Fonte visual auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0149-carrossel-imagens-posts-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
