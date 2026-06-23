@@ -6,12 +6,12 @@ import { type ReactNode, useEffect, useMemo, useState } from "react";
 import type { CommunityPostMediaItem } from "@/api/generator/types/community";
 import {
   type CommunityMediaFrameVariant,
-  type CommunityMediaOrientation,
-  detectCommunityMediaOrientation,
+  type CommunityMediaMetadata,
+  detectCommunityMediaMetadata,
   getCommunityMediaFrameClassName,
   getCommunityMediaSizes,
   getCommunityMediaViewportClassName,
-  resolveCarouselMediaOrientation,
+  resolveCarouselMediaOrientationFromMetadata,
 } from "@/components/community/community-media-frame";
 import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
@@ -65,16 +65,19 @@ export const PostMediaCarousel = ({
     [items],
   );
   const [activeIndex, setActiveIndex] = useState(0);
-  const [orientationByItemKey, setOrientationByItemKey] = useState<
-    Record<string, CommunityMediaOrientation>
+  const [mediaMetadataByItemKey, setMediaMetadataByItemKey] = useState<
+    Record<string, CommunityMediaMetadata>
   >({});
   const hasMultiple = carouselItems.length > 1;
   const safeActiveIndex = Math.min(activeIndex, Math.max(0, carouselItems.length - 1));
   const activeItem = carouselItems[safeActiveIndex] ?? null;
-  const detectedOrientations = carouselItems
-    .map((item) => orientationByItemKey[item.itemKey])
-    .filter((orientation): orientation is CommunityMediaOrientation => Boolean(orientation));
-  const frameOrientation = resolveCarouselMediaOrientation(detectedOrientations);
+  const detectedMediaMetadata = carouselItems
+    .map((item) => mediaMetadataByItemKey[item.itemKey])
+    .filter((metadata): metadata is CommunityMediaMetadata => Boolean(metadata));
+  const frameOrientation = resolveCarouselMediaOrientationFromMetadata(
+    detectedMediaMetadata,
+    carouselItems.length,
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -84,14 +87,14 @@ export const PostMediaCarousel = ({
     Promise.all(
       carouselItems.map(async (item) => ({
         key: item.itemKey,
-        orientation: await detectCommunityMediaOrientation(item.resolvedUrl, "image"),
+        metadata: await detectCommunityMediaMetadata(item.resolvedUrl, "image"),
       })),
     ).then((results) => {
       if (!isMounted) return;
 
-      setOrientationByItemKey(
-        results.reduce<Record<string, CommunityMediaOrientation>>((acc, item) => {
-          acc[item.key] = item.orientation;
+      setMediaMetadataByItemKey(
+        results.reduce<Record<string, CommunityMediaMetadata>>((acc, item) => {
+          acc[item.key] = item.metadata;
           return acc;
         }, {}),
       );

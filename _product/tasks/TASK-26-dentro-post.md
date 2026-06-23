@@ -755,10 +755,10 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 
 ## Execucao complementar: divisor entre contexto e autor nos cards (2026-06-23)
 
-- Pedido do usuario: nos cards de conteudo, em todos os contextos exceto no detalhe do post, adicionar uma linha fina entre o cabeçalho `Postado em` e o nome do psicologo.
+- Pedido do usuario: nos cards de conteudo, em todos os contextos exceto no detalhe do post, adicionar uma linha fina entre o cabeï¿½alho `Postado em` e o nome do psicologo.
 - Frontend: `CommunityPostCard` passou a renderizar um divisor sutil quando o card exibe simultaneamente contexto da comunidade (`Postado em`/`Respondido em`) e autoria.
-- Frontend: a listagem interna de comunidade recebeu o mesmo divisor no `PostCard` local quando o cabeçalho `Postado em` esta visivel.
-- Frontend: os cards de respostas salvas tambem receberam o divisor entre `Respondido em` e o cabeçalho do autor, mantendo consistencia nas listas fora do detalhe do post.
+- Frontend: a listagem interna de comunidade recebeu o mesmo divisor no `PostCard` local quando o cabeï¿½alho `Postado em` esta visivel.
+- Frontend: os cards de respostas salvas tambem receberam o divisor entre `Respondido em` e o cabeï¿½alho do autor, mantendo consistencia nas listas fora do detalhe do post.
 - O detalhe do post nao foi alterado, conforme excecao definida pelo usuario.
 - Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, upload, votos, salvos, ranking, midia ou tracking de WhatsApp.
 - Fonte visual auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
@@ -817,3 +817,14 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: decisao do usuario neste thread; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0151-padronizacao-frames-midia-comunidade.md`.
 - Validacoes executadas: pnpm --dir frontend biome:fix, pnpm --dir frontend check, pnpm --dir frontend build, pnpm check e git diff --check.
+
+## Execucao complementar: carrossel com fallback quadrado e formatos canÃ´nicos (2026-06-23)
+
+- Pedido do usuario: o carrossel continuava vertical no feed mesmo apos a regra de carrossel misto.
+- Frontend: `PostMediaCarousel` passou a resolver o frame a partir dos metadados reais de largura/altura de todas as imagens do carrossel.
+- Frontend: enquanto os metadados de um carrossel multiplo nao estiverem completos, o fallback agora e `1:1`, evitando renderizacao vertical por deteccao parcial.
+- Frontend: verticais intermediarias como `4:5` e `3:4` passam a ser tratadas como formato quadrado em carrossel; somente verticais canonicas proximas de `9:16` mantem frame vertical quando todo o conjunto tambem for canonico vertical.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissoes, votos, salvos, ranking ou tracking de WhatsApp.
+- Fonte visual auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0151-padronizacao-frames-midia-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.

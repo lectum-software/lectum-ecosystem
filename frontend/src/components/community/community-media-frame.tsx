@@ -9,7 +9,7 @@ import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 export type CommunityMediaFrameVariant = "post" | "detail" | "reply";
 export type CommunityMediaOrientation = "landscape" | "portrait" | "square";
 export type CommunityMediaType = "image" | "video";
-type CommunityMediaMetadata = {
+export type CommunityMediaMetadata = {
   height?: number | null;
   orientation: CommunityMediaOrientation;
   width?: number | null;
@@ -17,6 +17,7 @@ type CommunityMediaMetadata = {
 
 const MEDIA_ORIENTATION_LANDSCAPE_RATIO = 1.12;
 const MEDIA_ORIENTATION_PORTRAIT_RATIO = 0.88;
+const CAROUSEL_VERTICAL_CANONICAL_MAX_RATIO = 0.7;
 
 const imageMediaFrameAspectClassName: Record<CommunityMediaOrientation, string> = {
   landscape: "aspect-video",
@@ -150,16 +151,41 @@ export const detectCommunityMediaOrientation = async (
 ): Promise<CommunityMediaOrientation> =>
   (await detectCommunityMediaMetadata(src, mediaType)).orientation;
 
+const communityCarouselMediaOrientationFromMetadata = ({
+  height,
+  orientation,
+  width,
+}: CommunityMediaMetadata): CommunityMediaOrientation => {
+  if (!width || !height) return orientation;
+
+  const ratio = width / height;
+  if (ratio > MEDIA_ORIENTATION_LANDSCAPE_RATIO) return "landscape";
+  if (ratio < CAROUSEL_VERTICAL_CANONICAL_MAX_RATIO) return "portrait";
+
+  return "square";
+};
+
 export const resolveCarouselMediaOrientation = (
   orientations: CommunityMediaOrientation[],
+  totalItems = orientations.length,
 ): CommunityMediaOrientation => {
-  if (orientations.length === 0) return "landscape";
+  if (totalItems > 1 && orientations.length < totalItems) return "square";
+  if (orientations.length === 0) return totalItems > 1 ? "square" : "landscape";
   if (orientations.every((orientation) => orientation === "landscape")) return "landscape";
   if (orientations.every((orientation) => orientation === "square")) return "square";
   if (orientations.every((orientation) => orientation === "portrait")) return "portrait";
 
   return "square";
 };
+
+export const resolveCarouselMediaOrientationFromMetadata = (
+  mediaMetadata: CommunityMediaMetadata[],
+  totalItems = mediaMetadata.length,
+): CommunityMediaOrientation =>
+  resolveCarouselMediaOrientation(
+    mediaMetadata.map(communityCarouselMediaOrientationFromMetadata),
+    totalItems,
+  );
 
 export const getCommunityMediaFrameClassName = (
   variant: CommunityMediaFrameVariant,

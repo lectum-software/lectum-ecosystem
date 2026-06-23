@@ -124,3 +124,28 @@ Validacao complementar:
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
 - `git diff --check`: sucesso.
+
+## Complemento 2026-06-23 - carrossel usa formatos canônicos e fallback quadrado
+
+A QA visual mostrou que alguns carrosseis continuavam assumindo frame vertical mesmo quando o conjunto não deveria ocupar a altura de `9:16`. O motivo era a decisão baseada apenas na orientação detectada, sem considerar se a imagem vertical realmente era um formato canônico de mídia vertical.
+
+Decisão complementar:
+
+- O carrossel agora calcula o frame a partir dos metadados completos de cada imagem, não apenas do rótulo `portrait`/`landscape`.
+- Enquanto os metadados de todos os itens de um carrossel múltiplo não estiverem disponíveis, o fallback é `1:1`, evitando que uma detecção parcial deixe o card vertical.
+- Verticais intermediárias como `4:5` ou `3:4` passam a cair no frame quadrado em carrosséis; somente verticais canônicas próximas de `9:16` mantêm o carrossel em `9:16` quando todos os itens compartilham esse formato.
+- Carrosséis horizontais homogêneos continuam em `16:9`; quadrados homogêneos continuam em `1:1`; combinações diferentes continuam em `1:1`.
+
+Consequências:
+
+- O feed mobile deixa de ficar com carrosséis altos quando o conjunto contém imagens verticais não canônicas.
+- O carrossel continua estável, sem alternar altura entre slides, e mantém `object-contain` para evitar corte entre imagens de formatos diferentes.
+- A regra permanece centralizada em `CommunityMediaBlock`/`PostMediaCarousel`, afetando feed, dentro da comunidade, perfil do psicólogo e demais cards que reutilizam a fundação.
+
+Validação complementar:
+
+- `pnpm --dir frontend biome:fix`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
