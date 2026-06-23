@@ -279,3 +279,27 @@ Validacao complementar:
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
 - `git diff --check`: sucesso.
+
+## Complemento 2026-06-23 - anexar midia apenas com composer em foco
+
+O botao `Anexar midia` no composer de comentarios aparecia em repouso para psicologos com permissao de midia, deixando o card mais carregado antes de qualquer intencao de comentar.
+
+Decisao complementar:
+
+- O controle de midia do composer passa a ser exibido somente quando o campo de comentario/resposta esta ativo, ou quando ja existe uma midia selecionada para envio.
+- A miniatura de midia selecionada continua visivel mesmo se o campo perder foco, para evitar perda de contexto antes do envio.
+- Psicologos gratuitos continuam vendo o estado bloqueado/motivo apenas quando interagem com o composer; pacientes continuam sem visualizar essa funcionalidade.
+
+Consequencias:
+
+- O estado de repouso do campo de comentario fica mais limpo em desktop e mobile.
+- O fluxo de envio somente com midia permanece valido, pois a miniatura selecionada mantem o composer pronto para envio.
+- Nao ha mudanca em backend, schema, storage, validacoes de formato/tamanho, permissao por perfil ou contrato de envio.
+
+Validacao complementar:
+
+- `pnpm --dir frontend biome:fix`: sucesso.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- `git diff --check`: sucesso.

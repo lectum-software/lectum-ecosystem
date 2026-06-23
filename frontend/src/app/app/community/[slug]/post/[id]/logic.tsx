@@ -1640,11 +1640,11 @@ const ReplyComposer = ({
     composerActive ||
     hasDraft ||
     Boolean(selectedMedia) ||
-    mediaPermission.canAttach ||
     (Boolean(replyTarget) && mediaPermission.showControl);
   const FieldComponent = components[formProps.fields[0].field];
   const isInline = variant === "inline";
-  const shouldShowMediaControls = mediaPermission.showControl || Boolean(selectedMedia);
+  const shouldShowMediaControls =
+    Boolean(selectedMedia) || (composerActive && mediaPermission.showControl);
   const shouldShowGuidance = composerActive || hasDraft || Boolean(selectedMedia);
   const autoFocusTargetId = replyTarget?.id ?? "main";
   const shouldShowCancelAction = composerActive;

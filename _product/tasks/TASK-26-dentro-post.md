@@ -764,3 +764,14 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR criado: `adrs/0152-divisor-contexto-autor-cards-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
+
+## Execucao complementar: botao Anexar midia apenas com comentario em foco (2026-06-23)
+
+- Pedido do usuario: `Anexar midia` so deve aparecer quando o campo de comentarios estiver em foco.
+- Frontend: `ReplyComposer` passou a renderizar o controle de midia apenas quando o composer esta ativo/focado ou quando ja existe uma midia selecionada.
+- A miniatura da midia selecionada continua visivel apos perda de foco, preservando o fluxo de enviar somente midia sem texto.
+- O ajuste vale para o comentario principal do post e para respostas inline, pois ambos reutilizam o mesmo composer.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissoes, votos, salvos, ranking, midia publicada ou tracking de WhatsApp.
+- Fonte visual auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.
+- Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
