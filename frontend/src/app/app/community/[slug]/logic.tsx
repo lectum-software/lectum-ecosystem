@@ -30,6 +30,7 @@ import {
   type CSSProperties,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
+  type ReactNode,
   type RefObject,
   useCallback,
   useDeferredValue,
@@ -58,14 +59,14 @@ import type {
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityFollowButton } from "@/components/community/community-follow-button";
 import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
+import {
+  CommunityWhatsAppCta,
+  toCommunityWhatsAppIdentity,
+} from "@/components/community/community-whatsapp-cta";
 import { MentorBadge } from "@/components/community/mentor-badge";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
 import type { VoteValue } from "@/components/community/vote-action-button";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
-import {
-  PsychologistWhatsAppButtonContent,
-  PsychologistWhatsAppRedirectButton,
-} from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -1022,7 +1023,7 @@ const CommunityChips = ({
   </nav>
 );
 
-const PostMedia = ({ post }: { post: CommunityPost }) => {
+const PostMedia = ({ footer, post }: { footer?: ReactNode; post: CommunityPost }) => {
   if (!post.media_url) return null;
 
   const mediaUrl = resolvePublicMediaUrl(post.media_url);
@@ -1030,25 +1031,31 @@ const PostMedia = ({ post }: { post: CommunityPost }) => {
 
   if (post.media_type === "video") {
     return (
-      <VerticalVideoPlayer
-        className="mx-auto w-full max-w-[390px] rounded-[22px]"
-        fullscreenVariant="content"
-        src={mediaUrl}
-        title={post.title}
-      />
+      <div className="mx-auto grid w-full max-w-[390px] gap-2">
+        <VerticalVideoPlayer
+          className="w-full rounded-[22px]"
+          fullscreenVariant="content"
+          src={mediaUrl}
+          title={post.title}
+        />
+        {footer}
+      </div>
     );
   }
 
   return (
-    <div className="relative aspect-[4/5] overflow-hidden rounded-[22px] border border-border bg-surface-muted">
-      <Image
-        alt={post.title}
-        className="object-cover"
-        fill
-        sizes="(max-width: 430px) calc(100vw - 64px), 520px"
-        src={mediaUrl}
-        unoptimized={isPublicMediaUrl(post.media_url)}
-      />
+    <div className="grid w-full gap-2">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-[22px] border border-border bg-surface-muted">
+        <Image
+          alt={post.title}
+          className="object-cover"
+          fill
+          sizes="(max-width: 430px) calc(100vw - 64px), 520px"
+          src={mediaUrl}
+          unoptimized={isPublicMediaUrl(post.media_url)}
+        />
+      </div>
+      {footer}
     </div>
   );
 };
@@ -1152,20 +1159,11 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
           <div className="pointer-events-auto mt-3 grid w-full gap-3 sm:mx-auto sm:max-w-[320px]">
             <ProfessionalReplyMedia reply={reply} />
             {reply.author.whatsapp_url ? (
-              <PsychologistWhatsAppRedirectButton
-                className="flex h-11 w-full min-w-0 items-center justify-center gap-2 rounded-[14px] border-2 border-success bg-transparent px-3 text-sm font-black text-success shadow-none transition hover:bg-success hover:text-white"
-                psychologist={{
-                  avatar: reply.author.avatar,
-                  crp: reply.author.crp,
-                  id: reply.author.id,
-                  name: reply.author.name,
-                  typeLabel: reply.author.type_label,
-                  whatsappUrl: reply.author.whatsapp_url,
-                }}
+              <CommunityWhatsAppCta
+                attached={Boolean(reply.media_url)}
+                psychologist={toCommunityWhatsAppIdentity(reply.author)}
                 stopPropagation
-              >
-                <PsychologistWhatsAppButtonContent />
-              </PsychologistWhatsAppRedirectButton>
+              />
             ) : null}
           </div>
         ) : null}
@@ -1203,6 +1201,14 @@ const PostCard = ({
   const psychologistProfileHref = isPsychologistPost
     ? `/app/psychologist/${post.author.id}`
     : undefined;
+  const authorWhatsappCta =
+    isPsychologistPost && post.author.whatsapp_url ? (
+      <CommunityWhatsAppCta
+        attached={Boolean(post.media_url)}
+        psychologist={toCommunityWhatsAppIdentity(post.author)}
+        stopPropagation
+      />
+    ) : null;
 
   const handleVote = (value: 1 | -1) => {
     const previousSnapshot = voteSnapshot;
@@ -1376,24 +1382,9 @@ const PostCard = ({
       </div>
 
       <div className="mt-4 grid gap-3">
-        <PostMedia post={post} />
+        <PostMedia footer={post.media_url ? authorWhatsappCta : undefined} post={post} />
         <ProfessionalReplyPreview post={post} />
-        {isPsychologistPost && post.author.whatsapp_url ? (
-          <PsychologistWhatsAppRedirectButton
-            className="mx-auto flex h-11 w-full min-w-0 max-w-[390px] items-center justify-center gap-2 rounded-2xl border border-success bg-transparent px-3 text-sm font-bold text-success shadow-none transition hover:bg-success/10 active:scale-[0.99]"
-            psychologist={{
-              avatar: post.author.avatar,
-              crp: post.author.crp,
-              id: post.author.id,
-              name: post.author.name,
-              typeLabel: post.author.type_label,
-              whatsappUrl: post.author.whatsapp_url,
-            }}
-            stopPropagation
-          >
-            <PsychologistWhatsAppButtonContent />
-          </PsychologistWhatsAppRedirectButton>
-        ) : null}
+        {post.media_url ? null : authorWhatsappCta}
       </div>
 
       <CommunityActionBar

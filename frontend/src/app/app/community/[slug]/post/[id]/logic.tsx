@@ -28,6 +28,7 @@ import {
   type MouseEvent,
   type MouseEventHandler,
   type KeyboardEvent as ReactKeyboardEvent,
+  type ReactNode,
   type PointerEvent as ReactPointerEvent,
   type RefObject,
   useCallback,
@@ -53,6 +54,10 @@ import {
 import type { PostDetail, PostReply } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
+import {
+  CommunityWhatsAppCta,
+  toCommunityWhatsAppIdentity,
+} from "@/components/community/community-whatsapp-cta";
 import { MentorBadge } from "@/components/community/mentor-badge";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
@@ -66,10 +71,6 @@ import {
 } from "@/components/community/reply-media-attachment-control";
 import { components } from "@/components/controllers";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
-import {
-  PsychologistWhatsAppButtonContent,
-  PsychologistWhatsAppRedirectButton,
-} from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -634,11 +635,13 @@ const AuthorAvatar = ({
 
 const MediaBlock = ({
   alt,
+  footer,
   mediaType,
   mediaUrl,
   size = "lg",
 }: {
   alt: string;
+  footer?: ReactNode;
   mediaType: string | null;
   mediaUrl: string | null;
   size?: "lg" | "md";
@@ -684,7 +687,7 @@ const MediaBlock = ({
       ? "mx-auto w-full max-w-[280px] sm:max-w-[320px]"
       : "w-full";
   const videoFrameClass = isLandscapeVideo
-    ? "w-full max-w-none aspect-video"
+    ? "w-full max-w-none"
     : size === "md"
       ? "mx-auto w-full max-w-[280px] sm:max-w-[320px]"
       : "mx-auto w-full max-w-[390px] sm:max-w-[420px]";
@@ -695,43 +698,51 @@ const MediaBlock = ({
 
   if (mediaType === "video") {
     return (
-      <VerticalVideoPlayer
-        className={cn("mt-3 border-border", radius, videoFrameClass)}
-        fit={isLandscapeVideo ? "cover" : "contain"}
-        fullscreenVariant="content"
-        src={src}
-        title={alt}
-      />
+      <div className={cn("mt-3 grid gap-2", videoFrameClass)}>
+        <VerticalVideoPlayer
+          className={cn("w-full border-border", radius, isLandscapeVideo && "aspect-video")}
+          fit={isLandscapeVideo ? "cover" : "contain"}
+          fullscreenVariant="content"
+          src={src}
+          title={alt}
+        />
+        {footer}
+      </div>
     );
   }
 
   return (
-    <div
-      className={cn(
-        "relative mt-3 overflow-hidden border border-border bg-surface-muted",
-        imageAspectClass,
-        radius,
-        imageFrameClass,
-      )}
-    >
-      <Image
-        alt={alt}
-        className="object-cover"
-        fill
-        onLoad={(event) => {
-          const { naturalHeight, naturalWidth } = event.currentTarget;
-          setImageMedia({
-            mediaUrl,
-            orientation:
-              naturalWidth && naturalHeight && naturalWidth / naturalHeight >= LANDSCAPE_MEDIA_RATIO
-                ? "landscape"
-                : "default",
-          });
-        }}
-        sizes={imageSizes}
-        src={src}
-        unoptimized={isPublicMediaUrl(mediaUrl)}
-      />
+    <div className={cn("mt-3 grid gap-2", imageFrameClass)}>
+      <div
+        className={cn(
+          "relative overflow-hidden border border-border bg-surface-muted",
+          imageAspectClass,
+          radius,
+          "w-full",
+        )}
+      >
+        <Image
+          alt={alt}
+          className="object-cover"
+          fill
+          onLoad={(event) => {
+            const { naturalHeight, naturalWidth } = event.currentTarget;
+            setImageMedia({
+              mediaUrl,
+              orientation:
+                naturalWidth &&
+                naturalHeight &&
+                naturalWidth / naturalHeight >= LANDSCAPE_MEDIA_RATIO
+                  ? "landscape"
+                  : "default",
+            });
+          }}
+          sizes={imageSizes}
+          src={src}
+          unoptimized={isPublicMediaUrl(mediaUrl)}
+        />
+      </div>
+      {footer}
     </div>
   );
 };
@@ -885,6 +896,13 @@ const PostBody = ({ post }: { post: PostDetail }) => {
   const displayMediaType = singlePostMediaItem?.media_type ?? post.media_type;
   const displayMediaUrl = singlePostMediaItem?.media_url ?? post.media_url;
   const shouldShowPostCarousel = postImageMediaItems.length > 1;
+  const authorWhatsappCta = showAuthorWhatsapp ? (
+    <CommunityWhatsAppCta
+      attached={Boolean(shouldShowPostCarousel || displayMediaUrl)}
+      psychologist={toCommunityWhatsAppIdentity(post.author)}
+      stopPropagation
+    />
+  ) : null;
 
   return (
     <div className="grid gap-3 px-5 py-4">
@@ -898,25 +916,19 @@ const PostBody = ({ post }: { post: PostDetail }) => {
         text={post.content}
       />
       {shouldShowPostCarousel ? (
-        <PostMediaCarousel alt={post.title} items={postImageMediaItems} />
+        <div className="grid w-full gap-2">
+          <PostMediaCarousel alt={post.title} items={postImageMediaItems} />
+          {authorWhatsappCta}
+        </div>
       ) : (
-        <MediaBlock alt={post.title} mediaType={displayMediaType} mediaUrl={displayMediaUrl} />
+        <MediaBlock
+          alt={post.title}
+          footer={authorWhatsappCta && displayMediaUrl ? authorWhatsappCta : undefined}
+          mediaType={displayMediaType}
+          mediaUrl={displayMediaUrl}
+        />
       )}
-      {showAuthorWhatsapp ? (
-        <PsychologistWhatsAppRedirectButton
-          className="mx-auto flex h-11 w-full min-w-0 max-w-[320px] items-center justify-center gap-2 rounded-[14px] border-2 border-success bg-transparent px-3 text-success shadow-none transition hover:bg-success hover:text-white"
-          psychologist={{
-            avatar: post.author.avatar,
-            crp: post.author.crp,
-            id: post.author.id,
-            name: post.author.name,
-            typeLabel: post.author.type_label,
-            whatsappUrl: post.author.whatsapp_url,
-          }}
-        >
-          <PsychologistWhatsAppButtonContent />
-        </PsychologistWhatsAppRedirectButton>
-      ) : null}
+      {shouldShowPostCarousel || displayMediaUrl ? null : authorWhatsappCta}
     </div>
   );
 };
@@ -1446,6 +1458,14 @@ const ReplyCard = ({
     : {};
   const rootTreeToggleAreaClassName =
     "cursor-pointer rounded-xl transition-colors hover:bg-[#F8FAFC]/70 active:bg-[#F1F5F9]/75 dark:hover:bg-surface-muted/35";
+  const replyWhatsappCta =
+    isProfessional && reply.author.whatsapp_url ? (
+      <CommunityWhatsAppCta
+        attached={hasReplyMedia}
+        psychologist={toCommunityWhatsAppIdentity(reply.author)}
+        stopPropagation
+      />
+    ) : null;
 
   return (
     <article
@@ -1541,31 +1561,16 @@ const ReplyCard = ({
           <div data-comment-collapse-ignore="true">
             <MediaBlock
               alt="Mídia da resposta"
+              footer={hasReplyMedia ? replyWhatsappCta : undefined}
               mediaType={reply.media_type}
               mediaUrl={reply.media_url}
               size="md"
             />
           </div>
 
-          {isProfessional && reply.author.whatsapp_url ? (
-            <div
-              className={cn("mt-2", hasReplyMedia && "sm:flex sm:justify-center")}
-              data-comment-collapse-ignore="true"
-            >
-              <PsychologistWhatsAppRedirectButton
-                className="inline-flex h-10 w-fit min-w-[10.5rem] max-w-full items-center justify-center gap-2 rounded-full border-2 border-success bg-transparent px-3.5 text-[13px] font-extrabold text-success shadow-none transition hover:bg-success hover:text-white active:scale-[0.99]"
-                stopPropagation
-                psychologist={{
-                  avatar: reply.author.avatar,
-                  crp: reply.author.crp,
-                  id: reply.author.id,
-                  name: reply.author.name,
-                  typeLabel: reply.author.type_label,
-                  whatsappUrl: reply.author.whatsapp_url,
-                }}
-              >
-                <PsychologistWhatsAppButtonContent iconClassName="h-4 w-4" />
-              </PsychologistWhatsAppRedirectButton>
+          {replyWhatsappCta && !hasReplyMedia ? (
+            <div className="mt-2" data-comment-collapse-ignore="true">
+              {replyWhatsappCta}
             </div>
           ) : null}
 

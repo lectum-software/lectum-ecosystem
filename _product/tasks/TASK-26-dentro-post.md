@@ -709,3 +709,14 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0149-carrossel-imagens-posts-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
+
+## Execucao complementar: CTA WhatsApp anexado a midia e visual neutro (2026-06-22)
+
+- Pedido do usuario: aproximar o CTA de WhatsApp dos posts/respostas com midia ao padrao de cards de anuncio, usando nome do psicologo acima e `Chamar no WhatsApp` abaixo, com visual neutro/cinza em vez de verde dominante.
+- Frontend: foi criado o componente compartilhado `CommunityWhatsAppCta`, que preserva o fluxo real de tracking/redirecionamento de `PsychologistWhatsAppRedirectButton`, mas padroniza a apresentacao em card retangular de borda suave, sem sombra e com icone discreto.
+- O CTA agora acompanha a largura da midia: em carrosseis e midias horizontais usa a largura util total; em videos verticais e midias compactas fica dentro do mesmo wrapper de largura da midia.
+- Quando nao ha midia, o CTA usa o mesmo formato retangular arredondado, porem em `w-fit`, mantendo consistencia visual sem ocupar uma faixa grande.
+- A regra foi aplicada nos cards compartilhados de comunidade/feed/meus posts, no detalhe do post, na tela da comunidade e em respostas salvas, sem alterar tracking, modal de redirecionamento, backend, endpoints, storage, votos, salvos ou regras de exibicao de `author.whatsapp_url`.
+- Fonte visual auditavel: screenshots de referencia do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0147-cortesia-verificada-whatsapp-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.

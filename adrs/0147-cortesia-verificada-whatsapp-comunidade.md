@@ -106,3 +106,30 @@ Validacao complementar:
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
 - Chrome/CDP desktop `1440x900`: sucesso, em resposta com video e WhatsApp, media center `779.50` e botao center `779.49`.
+
+## Atualizacao 2026-06-22 - CTA WhatsApp anexado a midia e neutro
+
+O produto decidiu manter o WhatsApp como CTA principal de conversao, mas reduzir o peso visual verde em posts e comentarios com midia. A referencia aprovada foi um card anexado a midia, com nome do anunciante/autor acima e acao abaixo.
+
+Decisao complementar:
+
+- Criar `CommunityWhatsAppCta` como camada visual compartilhada para contextos de comunidade, preservando `PsychologistWhatsAppRedirectButton` para tracking, modal intermediaria e redirecionamento seguro.
+- Renderizar o nome do psicologo na primeira linha e `Chamar no WhatsApp` na segunda, com icone discreto e paleta neutra/cinza; o verde fica reservado ao simbolo/associacao do WhatsApp, nao ao bloco inteiro.
+- Quando houver midia, renderizar o CTA dentro do mesmo wrapper da midia, para herdar a largura: full-width em carrossel/midia horizontal e largura compacta em videos verticais.
+- Quando nao houver midia, usar o mesmo formato retangular arredondado em `w-fit`, evitando voltar ao pill verde ou a faixa full-width.
+- Aplicar o padrao nos cards compartilhados, detalhe do post, tela da comunidade e respostas salvas; preservar cards de diretorio/perfil fora da comunidade.
+- Nao alterar backend, DTOs, tracking, modal de redirecionamento, storage, regras de permissao, schema ou endpoints.
+
+Consequencias:
+
+- A chamada para WhatsApp fica visualmente integrada a fotos/videos sem competir com a midia ou com a leitura do comentario.
+- O mesmo componente reduz divergencias entre feed, comunidade, detalhe, salvos e contribuicoes reutilizadas.
+- A acao continua clara e rastreavel, mas com linguagem visual mais premium e menos agressiva.
+
+Validacao complementar:
+
+- `pnpm --dir frontend biome:fix`: sucesso.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- `git diff --check`: sucesso.

@@ -18,15 +18,15 @@ import {
 import { useSavePost, useVotePost } from "@/api/callers/posts";
 import type { PostListPost, PostProfessionalReply } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
+import {
+  CommunityWhatsAppCta,
+  toCommunityWhatsAppIdentity,
+} from "@/components/community/community-whatsapp-cta";
 import { MentorBadge } from "@/components/community/mentor-badge";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
 import { detectReplyMediaOrientation } from "@/components/community/reply-media-attachment-control";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
-import {
-  PsychologistWhatsAppButtonContent,
-  PsychologistWhatsAppRedirectButton,
-} from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { cn } from "@/lib/utils";
@@ -367,11 +367,13 @@ const AuthorAvatar = ({
 
 const MediaBlock = ({
   alt,
+  footer,
   mediaType,
   mediaUrl,
   videoClassName,
 }: {
   alt: string;
+  footer?: ReactNode;
   mediaType: string | null;
   mediaUrl: string | null;
   videoClassName?: string;
@@ -412,47 +414,57 @@ const MediaBlock = ({
   const isLandscapeVideo = videoOrientation === "landscape";
 
   if (mediaType === "video") {
+    const videoFrameClass = cn(
+      "mx-auto grid w-full gap-2",
+      isLandscapeVideo ? "max-w-none" : "max-w-[390px]",
+      videoClassName,
+    );
+
     return (
-      <VerticalVideoPlayer
-        className={cn(
-          "mx-auto w-full rounded-[22px]",
-          isLandscapeVideo ? "max-w-none aspect-video" : "max-w-[390px]",
-          videoClassName,
-        )}
-        fit={isLandscapeVideo ? "cover" : "contain"}
-        src={resolvedUrl}
-        title={alt}
-      />
+      <div className={videoFrameClass}>
+        <VerticalVideoPlayer
+          className={cn("w-full rounded-[22px]", isLandscapeVideo && "aspect-video")}
+          fit={isLandscapeVideo ? "cover" : "contain"}
+          src={resolvedUrl}
+          title={alt}
+        />
+        {footer}
+      </div>
     );
   }
 
   const imageAspectClass = imageOrientation === "landscape" ? "aspect-video" : "aspect-[4/5]";
 
   return (
-    <div
-      className={cn(
-        "relative overflow-hidden rounded-[22px] border border-border bg-surface-muted",
-        imageAspectClass,
-      )}
-    >
-      <Image
-        alt={alt}
-        className="object-cover"
-        fill
-        onLoad={(event) => {
-          const { naturalHeight, naturalWidth } = event.currentTarget;
-          setImageMedia({
-            mediaUrl,
-            orientation:
-              naturalWidth && naturalHeight && naturalWidth / naturalHeight >= LANDSCAPE_MEDIA_RATIO
-                ? "landscape"
-                : "default",
-          });
-        }}
-        sizes="(max-width: 430px) calc(100vw - 64px), 520px"
-        src={resolvedUrl}
-        unoptimized={isPublicMediaUrl(mediaUrl)}
-      />
+    <div className="grid w-full gap-2">
+      <div
+        className={cn(
+          "relative overflow-hidden rounded-[22px] border border-border bg-surface-muted",
+          imageAspectClass,
+        )}
+      >
+        <Image
+          alt={alt}
+          className="object-cover"
+          fill
+          onLoad={(event) => {
+            const { naturalHeight, naturalWidth } = event.currentTarget;
+            setImageMedia({
+              mediaUrl,
+              orientation:
+                naturalWidth &&
+                naturalHeight &&
+                naturalWidth / naturalHeight >= LANDSCAPE_MEDIA_RATIO
+                  ? "landscape"
+                  : "default",
+            });
+          }}
+          sizes="(max-width: 430px) calc(100vw - 64px), 520px"
+          src={resolvedUrl}
+          unoptimized={isPublicMediaUrl(mediaUrl)}
+        />
+      </div>
+      {footer}
     </div>
   );
 };
@@ -471,6 +483,14 @@ const ProfessionalReplyPreview = ({
   if (!reply) return null;
 
   const profileHref = `/app/psychologist/${reply.author.id}`;
+  const whatsappCta =
+    showWhatsappCta && reply.author.whatsapp_url ? (
+      <CommunityWhatsAppCta
+        attached={Boolean(reply.media_url)}
+        className={cn(!reply.media_url && "mt-3")}
+        psychologist={toCommunityWhatsAppIdentity(reply.author)}
+      />
+    ) : null;
 
   return (
     <div className="rounded-[18px] border border-[#D8ECFF] bg-[#F4FAFF] p-4 dark:border-primary/20 dark:bg-primary/5">
@@ -540,29 +560,19 @@ const ProfessionalReplyPreview = ({
       ) : (
         <p className="text-sm leading-6 text-muted">{reply.content}</p>
       )}
-      <div className="mt-3">
-        <MediaBlock
-          alt={reply.title ?? "Mídia da resposta profissional"}
-          mediaType={reply.media_type}
-          mediaUrl={reply.media_url}
-          videoClassName={profilePublicationMode ? "md:mx-auto md:max-w-[320px]" : undefined}
-        />
-      </div>
-      {showWhatsappCta && reply.author.whatsapp_url ? (
-        <PsychologistWhatsAppRedirectButton
-          className="mx-auto mt-3 flex h-11 w-full min-w-0 max-w-[390px] items-center justify-center gap-2 rounded-2xl border border-success bg-transparent px-3 text-sm font-bold text-success shadow-none transition hover:bg-success/10 active:scale-[0.99]"
-          psychologist={{
-            avatar: reply.author.avatar,
-            crp: reply.author.crp,
-            id: reply.author.id,
-            name: reply.author.name,
-            typeLabel: reply.author.type_label,
-            whatsappUrl: reply.author.whatsapp_url,
-          }}
-        >
-          <PsychologistWhatsAppButtonContent />
-        </PsychologistWhatsAppRedirectButton>
-      ) : null}
+      {reply.media_url ? (
+        <div className="mt-3">
+          <MediaBlock
+            alt={reply.title ?? "Mídia da resposta profissional"}
+            footer={whatsappCta}
+            mediaType={reply.media_type}
+            mediaUrl={reply.media_url}
+            videoClassName={profilePublicationMode ? "md:mx-auto md:max-w-[320px]" : undefined}
+          />
+        </div>
+      ) : (
+        whatsappCta
+      )}
     </div>
   );
 };
@@ -630,6 +640,14 @@ export const CommunityPostCard = ({
   const psychologistProfileHref = isPsychologistPost
     ? `/app/psychologist/${displayAuthor.id}`
     : undefined;
+  const authorWhatsappCta =
+    showWhatsappCta && isPsychologistPost && displayAuthor.whatsapp_url ? (
+      <CommunityWhatsAppCta
+        attached={Boolean(shouldShowPostCarousel || displayMediaUrl)}
+        psychologist={toCommunityWhatsAppIdentity(displayAuthor)}
+        stopPropagation
+      />
+    ) : null;
   const voteMutation = useVotePost(post.id);
   const saveMutation = useSavePost(post.id);
   const conversion = useProgressiveConversion();
@@ -936,13 +954,17 @@ export const CommunityPostCard = ({
 
       <div className="mt-4 grid gap-4">
         {shouldShowPostCarousel ? (
-          <PostMediaCarousel
-            alt={displayTitle ?? "Mídia da publicação"}
-            items={postImageMediaItems}
-          />
+          <div className="grid w-full gap-2">
+            <PostMediaCarousel
+              alt={displayTitle ?? "Mídia da publicação"}
+              items={postImageMediaItems}
+            />
+            {authorWhatsappCta}
+          </div>
         ) : (
           <MediaBlock
             alt={displayTitle ?? "Mídia da publicação"}
+            footer={authorWhatsappCta && displayMediaUrl ? authorWhatsappCta : undefined}
             mediaType={displayMediaType}
             mediaUrl={displayMediaUrl}
             videoClassName={
@@ -955,21 +977,7 @@ export const CommunityPostCard = ({
           reply={highlightedProfessionalReply}
           showWhatsappCta={showWhatsappCta}
         />
-        {showWhatsappCta && isPsychologistPost && displayAuthor.whatsapp_url ? (
-          <PsychologistWhatsAppRedirectButton
-            className="mx-auto flex h-11 w-full min-w-0 max-w-[390px] items-center justify-center gap-2 rounded-2xl border border-success bg-transparent px-3 text-sm font-bold text-success shadow-none transition hover:bg-success/10 active:scale-[0.99]"
-            psychologist={{
-              avatar: displayAuthor.avatar,
-              crp: displayAuthor.crp,
-              id: displayAuthor.id,
-              name: displayAuthor.name,
-              typeLabel: displayAuthor.type_label,
-              whatsappUrl: displayAuthor.whatsapp_url,
-            }}
-          >
-            <PsychologistWhatsAppButtonContent />
-          </PsychologistWhatsAppRedirectButton>
-        ) : null}
+        {shouldShowPostCarousel || displayMediaUrl ? null : authorWhatsappCta}
       </div>
 
       <CommunityActionBar

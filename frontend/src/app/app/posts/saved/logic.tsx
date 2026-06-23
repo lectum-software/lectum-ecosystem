@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
+  type ReactNode,
   useMemo,
   useState,
 } from "react";
@@ -20,11 +21,11 @@ import type { CommunityAuthor } from "@/api/generator/types/community";
 import type { PostListPost, UserPostListItem } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityPostCard } from "@/components/community/community-post-card";
-import { MentorBadge } from "@/components/community/mentor-badge";
 import {
-  PsychologistWhatsAppButtonContent,
-  PsychologistWhatsAppRedirectButton,
-} from "@/components/psychologists/psychologist-whatsapp-redirect-button";
+  CommunityWhatsAppCta,
+  toCommunityWhatsAppIdentity,
+} from "@/components/community/community-whatsapp-cta";
+import { MentorBadge } from "@/components/community/mentor-badge";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -219,10 +220,12 @@ const SavedReplyAuthorHeader = ({
 };
 
 const SavedReplyMedia = ({
+  footer,
   mediaType,
   mediaUrl,
   title,
 }: {
+  footer?: ReactNode;
   mediaType: string | null;
   mediaUrl: string | null;
   title: string;
@@ -234,24 +237,26 @@ const SavedReplyMedia = ({
 
   if (mediaType === "video") {
     return (
-      <VerticalVideoPlayer
-        className="mx-auto w-full max-w-[390px] rounded-[22px]"
-        src={resolvedUrl}
-        title={title}
-      />
+      <div className="mx-auto grid w-full max-w-[390px] gap-2">
+        <VerticalVideoPlayer className="w-full rounded-[22px]" src={resolvedUrl} title={title} />
+        {footer}
+      </div>
     );
   }
 
   return (
-    <div className="relative aspect-[4/5] overflow-hidden rounded-[22px] border border-border bg-surface-muted">
-      <Image
-        alt={title}
-        className="object-cover"
-        fill
-        sizes="(max-width: 430px) calc(100vw - 64px), 520px"
-        src={resolvedUrl}
-        unoptimized={isPublicMediaUrl(mediaUrl)}
-      />
+    <div className="grid w-full gap-2">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-[22px] border border-border bg-surface-muted">
+        <Image
+          alt={title}
+          className="object-cover"
+          fill
+          sizes="(max-width: 430px) calc(100vw - 64px), 520px"
+          src={resolvedUrl}
+          unoptimized={isPublicMediaUrl(mediaUrl)}
+        />
+      </div>
+      {footer}
     </div>
   );
 };
@@ -318,6 +323,13 @@ const SavedReplyCard = ({
 
   const replyLink = savedReplyHref(item.post, reply.id);
   const hasProfessionalWhatsapp = Boolean(reply.author.whatsapp_url);
+  const professionalWhatsappCta = hasProfessionalWhatsapp ? (
+    <CommunityWhatsAppCta
+      attached={Boolean(reply.media_url)}
+      psychologist={toCommunityWhatsAppIdentity(reply.author)}
+      stopPropagation
+    />
+  ) : null;
   const openSavedReply = () => router.push(replyLink);
   const handleCardClick = (event: ReactMouseEvent<HTMLElement>) => {
     if (
@@ -370,26 +382,13 @@ const SavedReplyCard = ({
 
       <div className="mt-4 grid gap-4">
         <SavedReplyMedia
+          footer={reply.media_url ? professionalWhatsappCta : undefined}
           mediaType={reply.media_type}
           mediaUrl={reply.media_url}
           title={reply.title ?? "Mídia da resposta salva"}
         />
 
-        {hasProfessionalWhatsapp ? (
-          <PsychologistWhatsAppRedirectButton
-            className="mx-auto flex h-11 w-full min-w-0 max-w-[390px] items-center justify-center gap-2 rounded-2xl border border-success bg-transparent px-3 text-sm font-bold text-success shadow-none transition hover:bg-success/10 active:scale-[0.99]"
-            psychologist={{
-              avatar: reply.author.avatar,
-              crp: reply.author.crp,
-              id: reply.author.id,
-              name: reply.author.name,
-              typeLabel: reply.author.type_label,
-              whatsappUrl: reply.author.whatsapp_url,
-            }}
-          >
-            <PsychologistWhatsAppButtonContent />
-          </PsychologistWhatsAppRedirectButton>
-        ) : null}
+        {reply.media_url ? null : professionalWhatsappCta}
       </div>
 
       <CommunityActionBar
