@@ -43,6 +43,7 @@ const TOP_MENTOR_POST_WEIGHT = 1;
 const TOP_MENTOR_REPLY_WEIGHT = 1;
 const TOP_MENTOR_ACTIVE_DAY_WEIGHT = 1;
 const TOP_MENTOR_REMOVED_POST_PENALTY_STEP = 30;
+const COMMUNITY_DOWNVOTE_RANKING_WEIGHT = 0.6;
 
 const communitySelect = {
   id: true,
@@ -163,6 +164,7 @@ const postSelect = {
       media_url: true,
       media_type: true,
       upvotes_count: true,
+      downvotes_count: true,
       createdAt: true,
       edited_at: true,
       author: {
@@ -287,6 +289,18 @@ const communityPostMetrics = (
   metricsByPostId: Map<string, CommunityPostSortMetricsDTO>,
 ) => metricsByPostId.get(postId) ?? emptyCommunityPostSortMetrics();
 
+const communityVoteRankingScore = ({
+  downvotes_count,
+  upvotes_count,
+}: Pick<PostResult, "downvotes_count" | "upvotes_count">) =>
+  upvotes_count - downvotes_count * COMMUNITY_DOWNVOTE_RANKING_WEIGHT;
+
+const professionalReplyVoteRankingScore = ({
+  downvotes_count,
+  upvotes_count,
+}: Pick<ProfessionalReplyResult, "downvotes_count" | "upvotes_count">) =>
+  upvotes_count - downvotes_count * COMMUNITY_DOWNVOTE_RANKING_WEIGHT;
+
 const communityPostFeaturedScore = (
   post: PostResult,
   metricsByPostId: Map<string, CommunityPostSortMetricsDTO>,
@@ -300,7 +314,8 @@ const communityPostFeaturedScore = (
     metrics.psychologist_replies_count * 15 +
     metrics.top_mentor_replies_count * 25 +
     metrics.shares_count * 4 -
-    metrics.penalty;
+    metrics.penalty -
+    post.downvotes_count * COMMUNITY_DOWNVOTE_RANKING_WEIGHT;
 
   return highlightScore / (hoursSincePublication + 2) ** 0.5;
 };
@@ -329,6 +344,9 @@ const sortCommunityPostResults = (
 
       const secondaryDiff = bMetrics[secondaryMetric][period] - aMetrics[secondaryMetric][period];
       if (secondaryDiff !== 0) return secondaryDiff;
+
+      const voteScoreDiff = communityVoteRankingScore(b) - communityVoteRankingScore(a);
+      if (voteScoreDiff !== 0) return voteScoreDiff;
 
       return compareCommunityPostDates(a, b);
     });
@@ -363,7 +381,7 @@ const generalFeedPostHotScore = (
   metricsByPostId: Map<string, CommunityPostSortMetricsDTO>,
 ) => {
   const metrics = communityPostMetrics(post.id, metricsByPostId);
-  const downvotePenalty = post.downvotes_count * 0.5;
+  const downvotePenalty = post.downvotes_count * COMMUNITY_DOWNVOTE_RANKING_WEIGHT;
 
   return (
     metrics.upvotes.all * 3 +
@@ -747,8 +765,8 @@ const compareProfessionalRepliesForHighlight = (
   b: ProfessionalReplyResult,
   rankingSignals: Awaited<ReturnType<typeof getCommunityMentorRankingSignals>>,
 ) => {
-  const upvoteDiff = b.upvotes_count - a.upvotes_count;
-  if (upvoteDiff !== 0) return upvoteDiff;
+  const voteScoreDiff = professionalReplyVoteRankingScore(b) - professionalReplyVoteRankingScore(a);
+  if (voteScoreDiff !== 0) return voteScoreDiff;
 
   const rankingDiff =
     professionalReplyRankingPosition(a, rankingSignals) -

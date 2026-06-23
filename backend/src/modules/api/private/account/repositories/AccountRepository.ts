@@ -574,6 +574,22 @@ export class AccountRepository implements IAccountRepository {
             },
           });
         }
+
+        if (vote.reply_id && vote.value === -1) {
+          await tx.post_reply.updateMany({
+            where: {
+              id: vote.reply_id,
+              downvotes_count: {
+                gt: 0,
+              },
+            },
+            data: {
+              downvotes_count: {
+                decrement: 1,
+              },
+            },
+          });
+        }
       }
 
       await tx.post_vote.updateMany({

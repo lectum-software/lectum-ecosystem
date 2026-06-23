@@ -627,6 +627,7 @@ model post_reply {
   media_url       String?
   media_type      String?
   upvotes_count   Int               @default(0)
+  downvotes_count Int               @default(0)
   post            community_post    @relation("post_reply_post", fields: [post_id], references: [id], onDelete: Cascade)
   author          user              @relation("post_reply_author", fields: [author_id], references: [id], onDelete: Cascade)
   parent_reply    post_reply?       @relation("post_reply_thread", fields: [parent_reply_id], references: [id], onDelete: Cascade)

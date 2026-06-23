@@ -456,9 +456,14 @@ const mentorBadgePosition = (badge?: string | null) => {
 const newestReplyFirst = (a: PostReply, b: PostReply) =>
   new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
 
+const REPLY_DOWNVOTE_RANKING_WEIGHT = 0.6;
+
+const replyVoteRankingScore = (reply: PostReply) =>
+  reply.upvotes_count - reply.downvotes_count * REPLY_DOWNVOTE_RANKING_WEIGHT;
+
 const compareReplySiblingsByRelevance = (a: PostReply, b: PostReply) => {
-  const upvoteDiff = b.upvotes_count - a.upvotes_count;
-  if (upvoteDiff !== 0) return upvoteDiff;
+  const voteScoreDiff = replyVoteRankingScore(b) - replyVoteRankingScore(a);
+  if (voteScoreDiff !== 0) return voteScoreDiff;
 
   const aBadgePosition = mentorBadgePosition(a.author.featured_badge);
   const bBadgePosition = mentorBadgePosition(b.author.featured_badge);

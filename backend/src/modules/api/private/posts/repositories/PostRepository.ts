@@ -47,6 +47,7 @@ import type { IPostRepository } from "./interfaces/IPostRepository";
 const DEFAULT_LIMIT = 10;
 const MAX_LIMIT = 30;
 const INLINE_REPLY_DESCENDANT_DEPTH = 4;
+const REPLY_DOWNVOTE_RANKING_WEIGHT = 0.6;
 
 const CONTACT_MESSAGE =
   "Olá, encontrei sua resposta na comunidade Lectum e gostaria de conversar sobre atendimento.";
@@ -154,6 +155,7 @@ const listPostSelect = {
       media_url: true,
       media_type: true,
       upvotes_count: true,
+      downvotes_count: true,
       createdAt: true,
       edited_at: true,
       author: {
@@ -170,6 +172,7 @@ const replyBaseSelect = {
   media_url: true,
   media_type: true,
   upvotes_count: true,
+  downvotes_count: true,
   createdAt: true,
   edited_at: true,
   parent_reply_id: true,
@@ -454,6 +457,23 @@ const toHighlightedProfessionalReply = (
   };
 };
 
+const professionalReplyPreviewScore = ({
+  downvotes_count,
+  upvotes_count,
+}: Pick<ProfessionalReplyResult, "downvotes_count" | "upvotes_count">) =>
+  upvotes_count - downvotes_count * REPLY_DOWNVOTE_RANKING_WEIGHT;
+
+const selectHighlightedListProfessionalReply = (replies: ProfessionalReplyResult[]) =>
+  [...replies].sort((a, b) => {
+    const scoreDiff = professionalReplyPreviewScore(b) - professionalReplyPreviewScore(a);
+    if (scoreDiff !== 0) return scoreDiff;
+
+    const dateDiff = b.createdAt.getTime() - a.createdAt.getTime();
+    if (dateDiff !== 0) return dateDiff;
+
+    return b.id.localeCompare(a.id);
+  })[0];
+
 const toListPostResponse = (
   item: ListPostResult,
   currentUserVote: CurrentVote,
@@ -470,7 +490,10 @@ const toListPostResponse = (
     mutedByCurrentUser,
     hasPsychologistReply,
   ),
-  highlighted_professional_reply: toHighlightedProfessionalReply(item.replies[0], savedReplyIds),
+  highlighted_professional_reply: toHighlightedProfessionalReply(
+    selectHighlightedListProfessionalReply(item.replies),
+    savedReplyIds,
+  ),
 });
 
 const toReplyResponse = (
@@ -487,6 +510,7 @@ const toReplyResponse = (
     media_url: item.media_url,
     media_type: item.media_type,
     upvotes_count: item.upvotes_count,
+    downvotes_count: item.downvotes_count,
     replies_count: item._count.replies,
     created_at: item.createdAt,
     edited_at: item.edited_at,
@@ -521,13 +545,19 @@ const newestFirst = (a: Date, b: Date) => b.getTime() - a.getTime();
 const rankingPositionForReply = (item: ReplyBaseResult, rankingSignals: MentorRankingSignals) =>
   rankingSignals.get(item.author.id)?.position ?? Number.POSITIVE_INFINITY;
 
+const replyVoteRankingScore = ({
+  downvotes_count,
+  upvotes_count,
+}: Pick<ReplyBaseResult, "downvotes_count" | "upvotes_count">) =>
+  upvotes_count - downvotes_count * REPLY_DOWNVOTE_RANKING_WEIGHT;
+
 const compareReplySiblingsByRelevance = (
   a: ReplyBaseResult,
   b: ReplyBaseResult,
   rankingSignals: MentorRankingSignals,
 ) => {
-  const upvoteDiff = b.upvotes_count - a.upvotes_count;
-  if (upvoteDiff !== 0) return upvoteDiff;
+  const voteScoreDiff = replyVoteRankingScore(b) - replyVoteRankingScore(a);
+  if (voteScoreDiff !== 0) return voteScoreDiff;
 
   const aRankingPosition = rankingPositionForReply(a, rankingSignals);
   const bRankingPosition = rankingPositionForReply(b, rankingSignals);
@@ -962,6 +992,7 @@ export class PostRepository implements IPostRepository {
               media_url: true,
               media_type: true,
               upvotes_count: true,
+              downvotes_count: true,
               createdAt: true,
               edited_at: true,
               parent_reply_id: true,
@@ -1180,6 +1211,7 @@ export class PostRepository implements IPostRepository {
         media_url: reply.media_url,
         media_type: reply.media_type,
         upvotes_count: reply.upvotes_count,
+        downvotes_count: reply.downvotes_count,
         saves_count: reply._count.saves,
         replies_received_count: reply._count.replies,
         has_verified_professional_reply: reply.replies.length > 0,
@@ -1275,6 +1307,7 @@ export class PostRepository implements IPostRepository {
                   media_url: true,
                   media_type: true,
                   upvotes_count: true,
+                  downvotes_count: true,
                   createdAt: true,
                   edited_at: true,
                   parent_reply_id: true,
@@ -1439,6 +1472,7 @@ export class PostRepository implements IPostRepository {
         media_url: item.reply.media_url,
         media_type: item.reply.media_type,
         upvotes_count: item.reply.upvotes_count,
+        downvotes_count: item.reply.downvotes_count,
         saves_count: item.reply._count.saves,
         replies_received_count: item.reply._count.replies,
         has_verified_professional_reply: item.reply.replies.length > 0,
@@ -2047,9 +2081,13 @@ export class PostRepository implements IPostRepository {
             upvotes_count: {
               increment: upDelta,
             },
+            downvotes_count: {
+              increment: downDelta,
+            },
           },
           select: {
             upvotes_count: true,
+            downvotes_count: true,
           },
         });
 
@@ -2059,7 +2097,7 @@ export class PostRepository implements IPostRepository {
           reply_id: replyId,
           value: nextValue,
           upvotes_count: updatedReply.upvotes_count,
-          downvotes_count: null,
+          downvotes_count: updatedReply.downvotes_count,
         };
       }
 

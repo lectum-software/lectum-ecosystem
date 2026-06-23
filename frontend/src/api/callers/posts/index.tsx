@@ -67,12 +67,14 @@ const updateReplyVote = (reply: PostReply, replyId: string, value: 1 | -1): Post
 
   const next = applyVoteToCounts(reply.current_user_vote, value, {
     upvotes_count: reply.upvotes_count,
+    downvotes_count: reply.downvotes_count,
   });
 
   return {
     ...reply,
     current_user_vote: next.nextVote,
     upvotes_count: next.upvotes_count,
+    downvotes_count: next.downvotes_count,
     replies: children,
   };
 };
@@ -95,6 +97,7 @@ const updateReplyVoteFromResponse = (
     ...reply,
     current_user_vote: data.value,
     upvotes_count: clampCount(data.upvotes_count),
+    downvotes_count: clampCount(data.downvotes_count ?? reply.downvotes_count),
     replies: children,
   };
 };

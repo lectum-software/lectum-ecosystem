@@ -352,6 +352,7 @@ export interface post_reply {
   media_url?: string | null;
   media_type?: string | null;
   upvotes_count?: number | null;
+  downvotes_count?: number | null;
   post?: community_post | null;
   author?: user | null;
   parent_reply?: post_reply | null;

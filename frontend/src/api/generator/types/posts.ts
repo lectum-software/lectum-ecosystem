@@ -32,6 +32,7 @@ export type PostReply = {
   media_url: string | null;
   media_type: string | null;
   upvotes_count: number;
+  downvotes_count: number;
   replies_count: number;
   created_at: string;
   edited_at: string | null;
@@ -74,6 +75,7 @@ export type UserPostReply = {
   media_url: string | null;
   media_type: string | null;
   upvotes_count: number;
+  downvotes_count: number;
   saves_count: number;
   replies_received_count: number;
   has_verified_professional_reply: boolean;

@@ -675,3 +675,14 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: screenshot do usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0148-imagens-horizontais-16-9-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `pnpm --dir backend db:migrate` e `pnpm --dir backend build`.
+
+## Execucao complementar: penalidade leve de downvote no ranking (2026-06-22)
+
+- Pedido do usuario: garantir que conteudo com 1 downvote fique abaixo de conteudo neutro (`0` upvotes e `0` downvotes) no ranqueamento de posts e comentarios, sem aplicar rebaixamento agressivo.
+- Backend: posts da comunidade, feed geral, previas de respostas profissionais e publicacoes do perfil passaram a usar score de votos com penalidade leve (`upvotes_count - downvotes_count * 0,6`) antes dos desempates de recencia.
+- Backend: `post_reply` ganhou contador denormalizado `downvotes_count`, atualizado pela mutation real de voto e usado na ordenacao de comentarios/respostas em qualquer profundidade da arvore.
+- Frontend: a ordenacao client-side da arvore do detalhe do post passou a usar o mesmo score de votos, evitando que reordenacoes otimistas ignorem downvotes.
+- A contagem de downvotes continua nao exibida como numero publico; o valor serve para consistencia interna de ranking e retorno de mutation.
+- Data model: `post_reply.downvotes_count Int @default(0)` foi documentado e migrado em `20260622223000_add_post_reply_downvotes_count`, com backfill a partir de votos ativos existentes.
+- ADR criado: `adrs/0150-penalidade-leve-downvotes-ranking-comunidade.md`.
+- Validacoes executadas: pnpm --dir backend db:migrate (primeira tentativa falhou por BOM na migration SQL, migration regravada sem BOM e comando reexecutado com sucesso), pnpm --dir backend biome:fix, pnpm --dir frontend biome:fix, pnpm --dir backend check, pnpm --dir frontend check, pnpm --dir backend build, pnpm --dir frontend build, pnpm check e git diff --check.

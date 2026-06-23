@@ -131,6 +131,7 @@ const profilePostSelect = {
       media_url: true,
       media_type: true,
       upvotes_count: true,
+      downvotes_count: true,
       createdAt: true,
       edited_at: true,
       author: {
@@ -147,6 +148,7 @@ const profileReplySelect = {
   media_url: true,
   media_type: true,
   upvotes_count: true,
+  downvotes_count: true,
   createdAt: true,
   edited_at: true,
   post: {
@@ -197,11 +199,26 @@ type ProfilePublicationCandidate =
     };
 
 const PROFILE_PUBLICATION_UPVOTE_WEIGHT = 3;
+const PROFILE_PUBLICATION_DOWNVOTE_WEIGHT = 0.6;
 const PROFILE_PUBLICATION_COMMENT_WEIGHT = 5;
 const PROFILE_PUBLICATION_PSYCHOLOGIST_REPLY_WEIGHT = 15;
 const PROFILE_PUBLICATION_TOP_MENTOR_REPLY_WEIGHT = 25;
 const PROFILE_PUBLICATION_SHARE_WEIGHT = 4;
 const PROFILE_PUBLICATION_SAVE_WEIGHT = 3;
+
+const selectHighlightedProfileReplyPreview = (replies: ProfileProfessionalReplyResult[]) =>
+  [...replies].sort((a, b) => {
+    const scoreDiff =
+      b.upvotes_count -
+      b.downvotes_count * PROFILE_PUBLICATION_DOWNVOTE_WEIGHT -
+      (a.upvotes_count - a.downvotes_count * PROFILE_PUBLICATION_DOWNVOTE_WEIGHT);
+    if (scoreDiff !== 0) return scoreDiff;
+
+    const dateDiff = b.createdAt.getTime() - a.createdAt.getTime();
+    if (dateDiff !== 0) return dateDiff;
+
+    return b.id.localeCompare(a.id);
+  })[0];
 
 const normalizeStringArray = (value: unknown): string[] => {
   if (!Array.isArray(value)) return [];
@@ -567,12 +584,16 @@ const toPostResponse = (
     ),
     highlighted_professional_reply:
       toHighlightedProfessionalReply(highlightedReply, savedReplyIds, false) ??
-      toHighlightedProfessionalReply(item.replies[0], savedReplyIds),
+      toHighlightedProfessionalReply(
+        selectHighlightedProfileReplyPreview(item.replies),
+        savedReplyIds,
+      ),
   };
 };
 
 const profilePublicationScore = ({
   comments,
+  downvotes = 0,
   psychologistReplies = 0,
   saves,
   shares = 0,
@@ -580,6 +601,7 @@ const profilePublicationScore = ({
   upvotes,
 }: {
   comments: number;
+  downvotes?: number;
   psychologistReplies?: number;
   saves: number;
   shares?: number;
@@ -591,7 +613,8 @@ const profilePublicationScore = ({
   psychologistReplies * PROFILE_PUBLICATION_PSYCHOLOGIST_REPLY_WEIGHT +
   topMentorReplies * PROFILE_PUBLICATION_TOP_MENTOR_REPLY_WEIGHT +
   shares * PROFILE_PUBLICATION_SHARE_WEIGHT +
-  saves * PROFILE_PUBLICATION_SAVE_WEIGHT;
+  saves * PROFILE_PUBLICATION_SAVE_WEIGHT -
+  downvotes * PROFILE_PUBLICATION_DOWNVOTE_WEIGHT;
 
 const postEngagementScore = (post: ProfilePostResult) => {
   const verifiedProfessionalReplies = post.replies.filter((reply) =>
@@ -603,6 +626,7 @@ const postEngagementScore = (post: ProfilePostResult) => {
 
   return profilePublicationScore({
     upvotes: post.upvotes_count,
+    downvotes: post.downvotes_count,
     comments: post.replies_count,
     saves: post.saves_count,
     psychologistReplies: verifiedProfessionalReplies.length,
@@ -617,6 +641,7 @@ const replyEngagementScore = (
 ) =>
   profilePublicationScore({
     upvotes: reply.upvotes_count,
+    downvotes: reply.downvotes_count,
     comments: replyChildrenCountById.get(reply.id) ?? 0,
     saves: replySavesCountById.get(reply.id) ?? 0,
   });
