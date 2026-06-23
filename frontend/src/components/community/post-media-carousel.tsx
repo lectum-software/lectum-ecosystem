@@ -2,8 +2,17 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import type { CommunityPostMediaItem } from "@/api/generator/types/community";
+import {
+  type CommunityMediaFrameVariant,
+  type CommunityMediaOrientation,
+  detectCommunityMediaOrientation,
+  getCommunityMediaFrameClassName,
+  getCommunityMediaSizes,
+  getCommunityMediaViewportClassName,
+  resolveCarouselMediaOrientation,
+} from "@/components/community/community-media-frame";
 import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
@@ -15,6 +24,8 @@ type PostMediaCarouselItem = Pick<
 type PostMediaCarouselProps = {
   alt: string;
   className?: string;
+  footer?: ReactNode;
+  frameVariant?: CommunityMediaFrameVariant;
   imageClassName?: string;
   items: PostMediaCarouselItem[];
   roundedClassName?: string;
@@ -25,10 +36,12 @@ type PostMediaCarouselProps = {
 export const PostMediaCarousel = ({
   alt,
   className,
+  footer,
+  frameVariant = "post",
   imageClassName,
   items,
   roundedClassName = "rounded-[22px]",
-  sizes = "(max-width: 430px) calc(100vw - 40px), (max-width: 1024px) calc(100vw - 160px), 860px",
+  sizes,
   viewportClassName,
 }: PostMediaCarouselProps) => {
   const carouselItems = useMemo(
@@ -37,18 +50,57 @@ export const PostMediaCarousel = ({
         .filter((item) => item.media_type === "image" && Boolean(item.media_url))
         .map((item) => ({
           ...item,
+          itemKey: `${item.id ?? "legacy"}-${item.position}-${item.media_url}`,
           resolvedUrl: resolvePublicMediaUrl(item.media_url),
         }))
-        .filter((item): item is PostMediaCarouselItem & { resolvedUrl: string } =>
-          Boolean(item.resolvedUrl),
+        .filter(
+          (
+            item,
+          ): item is PostMediaCarouselItem & {
+            itemKey: string;
+            resolvedUrl: string;
+          } => Boolean(item.resolvedUrl),
         )
         .sort((a, b) => a.position - b.position),
     [items],
   );
   const [activeIndex, setActiveIndex] = useState(0);
+  const [orientationByItemKey, setOrientationByItemKey] = useState<
+    Record<string, CommunityMediaOrientation>
+  >({});
   const hasMultiple = carouselItems.length > 1;
   const safeActiveIndex = Math.min(activeIndex, Math.max(0, carouselItems.length - 1));
   const activeItem = carouselItems[safeActiveIndex] ?? null;
+  const detectedOrientations = carouselItems
+    .map((item) => orientationByItemKey[item.itemKey])
+    .filter((orientation): orientation is CommunityMediaOrientation => Boolean(orientation));
+  const frameOrientation = resolveCarouselMediaOrientation(detectedOrientations);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (carouselItems.length === 0) return;
+
+    Promise.all(
+      carouselItems.map(async (item) => ({
+        key: item.itemKey,
+        orientation: await detectCommunityMediaOrientation(item.resolvedUrl, "image"),
+      })),
+    ).then((results) => {
+      if (!isMounted) return;
+
+      setOrientationByItemKey(
+        results.reduce<Record<string, CommunityMediaOrientation>>((acc, item) => {
+          acc[item.key] = item.orientation;
+          return acc;
+        }, {}),
+      );
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [carouselItems]);
 
   if (!activeItem) return null;
 
@@ -66,10 +118,13 @@ export const PostMediaCarousel = ({
   };
 
   return (
-    <figure className={cn("relative w-full", className)} data-post-card-ignore-click="true">
+    <figure
+      className={getCommunityMediaFrameClassName(frameVariant, frameOrientation, className)}
+      data-post-card-ignore-click="true"
+    >
       <div
-        className={cn(
-          "relative aspect-video w-full overflow-hidden border border-border bg-surface-muted",
+        className={getCommunityMediaViewportClassName(
+          frameOrientation,
           roundedClassName,
           viewportClassName,
         )}
@@ -78,10 +133,10 @@ export const PostMediaCarousel = ({
           alt={
             hasMultiple ? `${alt} — imagem ${safeActiveIndex + 1} de ${carouselItems.length}` : alt
           }
-          className={cn("object-cover", imageClassName)}
+          className={cn("object-contain", imageClassName)}
           fill
           priority={false}
-          sizes={sizes}
+          sizes={sizes ?? getCommunityMediaSizes(frameVariant, frameOrientation)}
           src={activeItem.resolvedUrl}
           unoptimized={isPublicMediaUrl(activeItem.media_url)}
         />
@@ -132,7 +187,7 @@ export const PostMediaCarousel = ({
                     index === safeActiveIndex ? "w-5 bg-white" : "w-2",
                   )}
                   data-post-card-ignore-click="true"
-                  key={item.id ?? `${item.media_url}-${item.position}`}
+                  key={item.itemKey}
                   onClick={(event) => {
                     event.preventDefault();
                     event.stopPropagation();
@@ -145,6 +200,7 @@ export const PostMediaCarousel = ({
           </>
         ) : null}
       </div>
+      {footer}
     </figure>
   );
 };

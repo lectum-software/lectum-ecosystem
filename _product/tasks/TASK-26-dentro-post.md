@@ -741,3 +741,14 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0149-carrossel-imagens-posts-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
+
+## Execucao complementar: padronizacao de frames de midia (2026-06-23)
+
+- Pedido do usuario: implementar as regras de formatacao de midia padronizadas definidas na conversa para feed, comunidade, detalhe do post, respostas e publicacoes no perfil do psicologo.
+- Frontend: foi criada a fundacao compartilhada `CommunityMediaBlock`/helpers de orientacao para aplicar frames horizontais `16:9`, quadrados `1:1` e verticais `4:5` com limites responsivos por contexto.
+- Frontend: `PostMediaCarousel` passou a escolher um frame unico pelo conjunto de imagens, manter altura estavel, usar `object-contain` para nao cortar carrosseis mistos e aceitar footer para o CTA de WhatsApp acompanhar a largura da midia.
+- Frontend: cards compartilhados, listagem interna de comunidade, detalhe do post, respostas em arvore e itens salvos passaram a usar a fundacao comum, deixando o desktop mais proximo do Threads: midias menores e alinhadas a esquerda, preservando largura util no mobile.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, storage, upload, limites de arquivo, DTOs, votos, salvos, ranking ou tracking de WhatsApp.
+- Fonte visual auditavel: screenshots e decisoes do usuario neste thread; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR criado: `adrs/0151-padronizacao-frames-midia-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.

@@ -20,6 +20,7 @@ import {
 import type { CommunityAuthor } from "@/api/generator/types/community";
 import type { PostListPost, UserPostListItem } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
+import { CommunityMediaBlock } from "@/components/community/community-media-frame";
 import { CommunityPostCard } from "@/components/community/community-post-card";
 import {
   CommunityWhatsAppCta,
@@ -30,7 +31,6 @@ import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
-import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
@@ -232,32 +232,14 @@ const SavedReplyMedia = ({
 }) => {
   if (!mediaUrl) return null;
 
-  const resolvedUrl = resolvePublicMediaUrl(mediaUrl);
-  if (!resolvedUrl) return null;
-
-  if (mediaType === "video") {
-    return (
-      <div className="mx-auto grid w-full max-w-[390px] gap-2">
-        <VerticalVideoPlayer className="w-full rounded-[22px]" src={resolvedUrl} title={title} />
-        {footer}
-      </div>
-    );
-  }
-
   return (
-    <div className="grid w-full gap-2">
-      <div className="relative aspect-[4/5] overflow-hidden rounded-[22px] border border-border bg-surface-muted">
-        <Image
-          alt={title}
-          className="object-cover"
-          fill
-          sizes="(max-width: 430px) calc(100vw - 64px), 520px"
-          src={resolvedUrl}
-          unoptimized={isPublicMediaUrl(mediaUrl)}
-        />
-      </div>
-      {footer}
-    </div>
+    <CommunityMediaBlock
+      alt={title}
+      footer={footer}
+      mediaType={mediaType}
+      mediaUrl={mediaUrl}
+      variant="reply"
+    />
   );
 };
 

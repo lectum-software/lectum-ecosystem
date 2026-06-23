@@ -28,7 +28,6 @@ import {
   type MouseEvent,
   type MouseEventHandler,
   type KeyboardEvent as ReactKeyboardEvent,
-  type ReactNode,
   type PointerEvent as ReactPointerEvent,
   type RefObject,
   useCallback,
@@ -54,6 +53,7 @@ import {
 import type { PostDetail, PostReply } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
+import { CommunityMediaBlock } from "@/components/community/community-media-frame";
 import {
   CommunityWhatsAppCta,
   toCommunityWhatsAppIdentity,
@@ -74,7 +74,6 @@ import { useProgressiveConversion } from "@/components/conversion/progressive-co
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
-import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
@@ -426,11 +425,6 @@ const getInitials = (name: string) => {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
 
-const LANDSCAPE_MEDIA_RATIO = 1.12;
-
-type ImageMediaOrientation = "default" | "landscape";
-type VideoMediaOrientation = "default" | "landscape";
-
 const isVerifiedProfessionalReply = (reply: PostReply) =>
   reply.author.role === "psicologo" && reply.author.verified;
 
@@ -633,120 +627,6 @@ const AuthorAvatar = ({
   );
 };
 
-const MediaBlock = ({
-  alt,
-  footer,
-  mediaType,
-  mediaUrl,
-  size = "lg",
-}: {
-  alt: string;
-  footer?: ReactNode;
-  mediaType: string | null;
-  mediaUrl: string | null;
-  size?: "lg" | "md";
-}) => {
-  const [imageMedia, setImageMedia] = useState<{
-    mediaUrl: string | null;
-    orientation: ImageMediaOrientation;
-  }>({ mediaUrl: null, orientation: "default" });
-  const [videoMedia, setVideoMedia] = useState<{
-    mediaUrl: string | null;
-    orientation: VideoMediaOrientation;
-  }>({ mediaUrl: null, orientation: "default" });
-  const imageOrientation = imageMedia.mediaUrl === mediaUrl ? imageMedia.orientation : "default";
-  const videoOrientation = videoMedia.mediaUrl === mediaUrl ? videoMedia.orientation : "default";
-  const src = mediaUrl ? resolvePublicMediaUrl(mediaUrl) : null;
-
-  useEffect(() => {
-    if (!src || mediaType !== "video" || !mediaUrl) return;
-
-    let isMounted = true;
-
-    detectReplyMediaOrientation(src, "video").then((orientation) => {
-      if (!isMounted) return;
-
-      setVideoMedia({
-        mediaUrl,
-        orientation: orientation === "landscape" ? "landscape" : "default",
-      });
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [mediaType, mediaUrl, src]);
-
-  if (!mediaUrl || !src) return null;
-
-  const radius = size === "lg" ? "rounded-[22px]" : "rounded-[18px]";
-  const isLandscapeVideo = videoOrientation === "landscape";
-  const imageAspectClass = imageOrientation === "landscape" ? "aspect-video" : "aspect-[4/5]";
-  const imageFrameClass =
-    size === "md" && imageOrientation !== "landscape"
-      ? "mx-auto w-full max-w-[280px] sm:max-w-[320px]"
-      : "w-full";
-  const videoFrameClass = isLandscapeVideo
-    ? "w-full max-w-none"
-    : size === "md"
-      ? "mx-auto w-full max-w-[280px] sm:max-w-[320px]"
-      : "mx-auto w-full max-w-[390px] sm:max-w-[420px]";
-  const imageSizes =
-    size === "lg" || imageOrientation === "landscape"
-      ? "(max-width: 430px) calc(100vw - 40px), (max-width: 1024px) calc(100vw - 160px), 860px"
-      : "(max-width: 430px) calc(100vw - 64px), 540px";
-
-  if (mediaType === "video") {
-    return (
-      <div className={cn("mt-3 grid gap-2", videoFrameClass)}>
-        <VerticalVideoPlayer
-          className={cn("w-full border-border", radius, isLandscapeVideo && "aspect-video")}
-          fit={isLandscapeVideo ? "cover" : "contain"}
-          fullscreenVariant="content"
-          src={src}
-          title={alt}
-        />
-        {footer}
-      </div>
-    );
-  }
-
-  return (
-    <div className={cn("mt-3 grid gap-2", imageFrameClass)}>
-      <div
-        className={cn(
-          "relative overflow-hidden border border-border bg-surface-muted",
-          imageAspectClass,
-          radius,
-          "w-full",
-        )}
-      >
-        <Image
-          alt={alt}
-          className="object-cover"
-          fill
-          onLoad={(event) => {
-            const { naturalHeight, naturalWidth } = event.currentTarget;
-            setImageMedia({
-              mediaUrl,
-              orientation:
-                naturalWidth &&
-                naturalHeight &&
-                naturalWidth / naturalHeight >= LANDSCAPE_MEDIA_RATIO
-                  ? "landscape"
-                  : "default",
-            });
-          }}
-          sizes={imageSizes}
-          src={src}
-          unoptimized={isPublicMediaUrl(mediaUrl)}
-        />
-      </div>
-      {footer}
-    </div>
-  );
-};
-
 const PostHeader = ({
   onBack,
   onDeleted,
@@ -916,16 +796,20 @@ const PostBody = ({ post }: { post: PostDetail }) => {
         text={post.content}
       />
       {shouldShowPostCarousel ? (
-        <div className="grid w-full gap-2">
-          <PostMediaCarousel alt={post.title} items={postImageMediaItems} />
-          {authorWhatsappCta}
-        </div>
-      ) : (
-        <MediaBlock
+        <PostMediaCarousel
           alt={post.title}
+          footer={authorWhatsappCta}
+          frameVariant="detail"
+          items={postImageMediaItems}
+        />
+      ) : (
+        <CommunityMediaBlock
+          alt={post.title}
+          className="mt-3"
           footer={authorWhatsappCta && displayMediaUrl ? authorWhatsappCta : undefined}
           mediaType={displayMediaType}
           mediaUrl={displayMediaUrl}
+          variant="detail"
         />
       )}
       {shouldShowPostCarousel || displayMediaUrl ? null : authorWhatsappCta}
@@ -1047,15 +931,18 @@ const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
         {shouldShowPostCarousel ? (
           <PostMediaCarousel
             alt={post.title}
+            frameVariant="reply"
             items={postImageMediaItems}
             roundedClassName="rounded-[18px]"
           />
         ) : (
-          <MediaBlock
+          <CommunityMediaBlock
             alt={post.title}
+            className="mt-3"
             mediaType={displayMediaType}
             mediaUrl={displayMediaUrl}
-            size="md"
+            roundedClassName="rounded-[18px]"
+            variant="reply"
           />
         )}
       </div>
@@ -1559,12 +1446,14 @@ const ReplyCard = ({
             />
           </div>
           <div data-comment-collapse-ignore="true">
-            <MediaBlock
+            <CommunityMediaBlock
               alt="Mídia da resposta"
+              className="mt-3"
               footer={hasReplyMedia ? replyWhatsappCta : undefined}
               mediaType={reply.media_type}
               mediaUrl={reply.media_url}
-              size="md"
+              roundedClassName="rounded-[18px]"
+              variant="reply"
             />
           </div>
 

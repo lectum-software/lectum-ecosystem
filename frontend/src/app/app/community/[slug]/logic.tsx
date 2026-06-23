@@ -59,6 +59,7 @@ import type {
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityFollowButton } from "@/components/community/community-follow-button";
 import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
+import { CommunityMediaBlock } from "@/components/community/community-media-frame";
 import {
   CommunityWhatsAppCta,
   toCommunityWhatsAppIdentity,
@@ -71,7 +72,6 @@ import { useProgressiveConversion } from "@/components/conversion/progressive-co
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
-import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { Input } from "@/registry/new-york-v4/ui/input";
@@ -1030,10 +1030,12 @@ const PostMedia = ({ footer, post }: { footer?: ReactNode; post: CommunityPost }
 
   if (shouldShowCarousel) {
     return (
-      <div className="grid w-full gap-2">
-        <PostMediaCarousel alt={post.title} items={imageMediaItems} />
-        {footer}
-      </div>
+      <PostMediaCarousel
+        alt={post.title}
+        footer={footer}
+        frameVariant="post"
+        items={imageMediaItems}
+      />
     );
   }
 
@@ -1041,74 +1043,35 @@ const PostMedia = ({ footer, post }: { footer?: ReactNode; post: CommunityPost }
   const displayMediaUrl = singleMediaItem?.media_url ?? post.media_url;
   const displayMediaType = singleMediaItem?.media_type ?? post.media_type;
 
-  if (!displayMediaUrl) return null;
-
-  const mediaUrl = resolvePublicMediaUrl(displayMediaUrl);
-  if (!mediaUrl) return null;
-
-  if (displayMediaType === "video") {
-    return (
-      <div className="mx-auto grid w-full max-w-[390px] gap-2">
-        <VerticalVideoPlayer
-          className="w-full rounded-[22px]"
-          fullscreenVariant="content"
-          src={mediaUrl}
-          title={post.title}
-        />
-        {footer}
-      </div>
-    );
-  }
-
   return (
-    <div className="grid w-full gap-2">
-      <div className="relative aspect-[4/5] overflow-hidden rounded-[22px] border border-border bg-surface-muted">
-        <Image
-          alt={post.title}
-          className="object-cover"
-          fill
-          sizes="(max-width: 430px) calc(100vw - 64px), 520px"
-          src={mediaUrl}
-          unoptimized={isPublicMediaUrl(displayMediaUrl)}
-        />
-      </div>
-      {footer}
-    </div>
+    <CommunityMediaBlock
+      alt={post.title}
+      footer={footer}
+      mediaType={displayMediaType}
+      mediaUrl={displayMediaUrl}
+      variant="post"
+    />
   );
 };
 
 const ProfessionalReplyMedia = ({
+  footer,
   reply,
 }: {
+  footer?: ReactNode;
   reply: NonNullable<CommunityPost["highlighted_professional_reply"]>;
 }) => {
   if (!reply.media_url) return null;
 
-  const mediaUrl = resolvePublicMediaUrl(reply.media_url);
-  if (!mediaUrl) return null;
-
-  if (reply.media_type === "video") {
-    return (
-      <VerticalVideoPlayer
-        className="w-full rounded-[18px]"
-        fullscreenVariant="content"
-        src={mediaUrl}
-        title="Vídeo da resposta profissional"
-      />
-    );
-  }
-
   return (
-    <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[18px] border border-border bg-surface-muted">
-      <Image
-        alt="Mídia da resposta profissional"
-        className="object-cover"
-        fill
-        sizes="(max-width: 430px) calc(100vw - 96px), 480px"
-        src={mediaUrl}
-        unoptimized={isPublicMediaUrl(reply.media_url)}
-      />
-    </div>
+    <CommunityMediaBlock
+      alt="Mídia da resposta profissional"
+      footer={footer}
+      mediaType={reply.media_type}
+      mediaUrl={reply.media_url}
+      roundedClassName="rounded-[18px]"
+      variant="reply"
+    />
   );
 };
 
@@ -1120,6 +1083,13 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
   if (!reply) return null;
 
   const profileHref = `/app/psychologist/${reply.author.id}`;
+  const replyWhatsappCta = reply.author.whatsapp_url ? (
+    <CommunityWhatsAppCta
+      attached={Boolean(reply.media_url)}
+      psychologist={toCommunityWhatsAppIdentity(reply.author)}
+      stopPropagation
+    />
+  ) : null;
 
   return (
     <div className="relative grid min-w-0 cursor-pointer grid-cols-[18px_minmax(0,1fr)] gap-2 rounded-2xl border border-[#D8ECFF] bg-[#F4FAFF] p-3 dark:border-primary/20 dark:bg-primary/5">
@@ -1172,17 +1142,12 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
             text={reply.content}
           />
         </div>
-        {reply.media_url || reply.author.whatsapp_url ? (
-          <div className="pointer-events-auto mt-3 grid w-full gap-3 sm:mx-auto sm:max-w-[320px]">
-            <ProfessionalReplyMedia reply={reply} />
-            {reply.author.whatsapp_url ? (
-              <CommunityWhatsAppCta
-                attached={Boolean(reply.media_url)}
-                psychologist={toCommunityWhatsAppIdentity(reply.author)}
-                stopPropagation
-              />
-            ) : null}
+        {reply.media_url ? (
+          <div className="pointer-events-auto mt-3">
+            <ProfessionalReplyMedia footer={replyWhatsappCta} reply={reply} />
           </div>
+        ) : replyWhatsappCta ? (
+          <div className="pointer-events-auto mt-3">{replyWhatsappCta}</div>
         ) : null}
       </div>
     </div>

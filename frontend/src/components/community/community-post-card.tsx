@@ -18,6 +18,7 @@ import {
 import { useSavePost, useVotePost } from "@/api/callers/posts";
 import type { PostListPost, PostProfessionalReply } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
+import { CommunityMediaBlock } from "@/components/community/community-media-frame";
 import {
   CommunityWhatsAppCta,
   toCommunityWhatsAppIdentity,
@@ -25,10 +26,8 @@ import {
 import { MentorBadge } from "@/components/community/mentor-badge";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
-import { detectReplyMediaOrientation } from "@/components/community/reply-media-attachment-control";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
-import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
@@ -103,11 +102,6 @@ const getInitials = (name: string) => {
 
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
-
-const LANDSCAPE_MEDIA_RATIO = 1.12;
-
-type ImageMediaOrientation = "default" | "landscape";
-type VideoMediaOrientation = "default" | "landscape";
 
 const InlineExpandableText = ({
   className,
@@ -365,110 +359,6 @@ const AuthorAvatar = ({
   );
 };
 
-const MediaBlock = ({
-  alt,
-  footer,
-  mediaType,
-  mediaUrl,
-  videoClassName,
-}: {
-  alt: string;
-  footer?: ReactNode;
-  mediaType: string | null;
-  mediaUrl: string | null;
-  videoClassName?: string;
-}) => {
-  const [imageMedia, setImageMedia] = useState<{
-    mediaUrl: string | null;
-    orientation: ImageMediaOrientation;
-  }>({ mediaUrl: null, orientation: "default" });
-  const [videoMedia, setVideoMedia] = useState<{
-    mediaUrl: string | null;
-    orientation: VideoMediaOrientation;
-  }>({ mediaUrl: null, orientation: "default" });
-  const imageOrientation = imageMedia.mediaUrl === mediaUrl ? imageMedia.orientation : "default";
-  const videoOrientation = videoMedia.mediaUrl === mediaUrl ? videoMedia.orientation : "default";
-  const resolvedUrl = mediaUrl ? resolvePublicMediaUrl(mediaUrl) : null;
-
-  useEffect(() => {
-    if (!resolvedUrl || mediaType !== "video" || !mediaUrl) return;
-
-    let isMounted = true;
-
-    detectReplyMediaOrientation(resolvedUrl, "video").then((orientation) => {
-      if (!isMounted) return;
-
-      setVideoMedia({
-        mediaUrl,
-        orientation: orientation === "landscape" ? "landscape" : "default",
-      });
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [mediaType, mediaUrl, resolvedUrl]);
-
-  if (!mediaUrl || !resolvedUrl) return null;
-
-  const isLandscapeVideo = videoOrientation === "landscape";
-
-  if (mediaType === "video") {
-    const videoFrameClass = cn(
-      "mx-auto grid w-full gap-2",
-      isLandscapeVideo ? "max-w-none" : "max-w-[390px]",
-      videoClassName,
-    );
-
-    return (
-      <div className={videoFrameClass}>
-        <VerticalVideoPlayer
-          className={cn("w-full rounded-[22px]", isLandscapeVideo && "aspect-video")}
-          fit={isLandscapeVideo ? "cover" : "contain"}
-          src={resolvedUrl}
-          title={alt}
-        />
-        {footer}
-      </div>
-    );
-  }
-
-  const imageAspectClass = imageOrientation === "landscape" ? "aspect-video" : "aspect-[4/5]";
-
-  return (
-    <div className="grid w-full gap-2">
-      <div
-        className={cn(
-          "relative overflow-hidden rounded-[22px] border border-border bg-surface-muted",
-          imageAspectClass,
-        )}
-      >
-        <Image
-          alt={alt}
-          className="object-cover"
-          fill
-          onLoad={(event) => {
-            const { naturalHeight, naturalWidth } = event.currentTarget;
-            setImageMedia({
-              mediaUrl,
-              orientation:
-                naturalWidth &&
-                naturalHeight &&
-                naturalWidth / naturalHeight >= LANDSCAPE_MEDIA_RATIO
-                  ? "landscape"
-                  : "default",
-            });
-          }}
-          sizes="(max-width: 430px) calc(100vw - 64px), 520px"
-          src={resolvedUrl}
-          unoptimized={isPublicMediaUrl(mediaUrl)}
-        />
-      </div>
-      {footer}
-    </div>
-  );
-};
-
 const ProfessionalReplyPreview = ({
   profilePublicationMode,
   reply,
@@ -561,15 +451,15 @@ const ProfessionalReplyPreview = ({
         <p className="text-sm leading-6 text-muted">{reply.content}</p>
       )}
       {reply.media_url ? (
-        <div className="mt-3">
-          <MediaBlock
-            alt={reply.title ?? "Mídia da resposta profissional"}
-            footer={whatsappCta}
-            mediaType={reply.media_type}
-            mediaUrl={reply.media_url}
-            videoClassName={profilePublicationMode ? "md:mx-auto md:max-w-[320px]" : undefined}
-          />
-        </div>
+        <CommunityMediaBlock
+          alt={reply.title ?? "Mídia da resposta profissional"}
+          className="mt-3"
+          footer={whatsappCta}
+          mediaType={reply.media_type}
+          mediaUrl={reply.media_url}
+          roundedClassName="rounded-[18px]"
+          variant="reply"
+        />
       ) : (
         whatsappCta
       )}
@@ -954,22 +844,18 @@ export const CommunityPostCard = ({
 
       <div className="mt-4 grid gap-4">
         {shouldShowPostCarousel ? (
-          <div className="grid w-full gap-2">
-            <PostMediaCarousel
-              alt={displayTitle ?? "Mídia da publicação"}
-              items={postImageMediaItems}
-            />
-            {authorWhatsappCta}
-          </div>
+          <PostMediaCarousel
+            alt={displayTitle ?? "Mídia da publicação"}
+            footer={authorWhatsappCta}
+            items={postImageMediaItems}
+          />
         ) : (
-          <MediaBlock
+          <CommunityMediaBlock
             alt={displayTitle ?? "Mídia da publicação"}
             footer={authorWhatsappCta && displayMediaUrl ? authorWhatsappCta : undefined}
             mediaType={displayMediaType}
             mediaUrl={displayMediaUrl}
-            videoClassName={
-              shouldCompactProfileReplyMedia ? "md:mx-auto md:max-w-[320px]" : undefined
-            }
+            variant={shouldCompactProfileReplyMedia ? "reply" : "post"}
           />
         )}
         <ProfessionalReplyPreview
