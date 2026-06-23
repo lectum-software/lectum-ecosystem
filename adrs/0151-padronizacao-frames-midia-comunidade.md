@@ -15,12 +15,12 @@ As publicações e respostas da comunidade passaram a aceitar imagens, vídeos e
 ## Decisão
 
 - Criar uma fundação compartilhada de frame de mídia em `CommunityMediaBlock` e helpers de orientação.
-- Padronizar orientações em três famílias: horizontal `16:9`, quadrada `1:1` e vertical `4:5`.
+- Padronizar orientações em três famílias: horizontal `16:9`, quadrada `1:1` e vertical `9:16`.
 - Definir limites responsivos por contexto:
   - post/feed/detalhe: horizontal até `560px`, quadrado até `480px`, vertical até `380px` no desktop;
   - comentários/respostas: horizontal até `480px`, quadrado até `400px`, vertical até `340px` no desktop.
 - Manter largura quase total no mobile e alinhar à esquerda no desktop.
-- Para carrossel, usar frame fixo escolhido pelo conjunto de mídias: todas horizontais `16:9`, todas quadradas `1:1`, todas verticais `4:5`, horizontal+quadrada `1:1`, qualquer mistura com vertical `4:5`.
+- Para carrossel, usar frame fixo escolhido pelo conjunto de mídias: todas horizontais `16:9`, todas quadradas `1:1`, todas verticais `9:16`, horizontal+quadrada `1:1`, qualquer mistura com vertical `9:16`.
 - Em carrossel, renderizar cada imagem com `object-contain` dentro do frame, evitando corte quando houver formatos diferentes.
 - Em mídia única, renderizar dentro do frame padronizado com preenchimento do espaço visual.
 - Permitir que o CTA de WhatsApp fique como footer do mesmo frame de mídia/carrossel para acompanhar sua largura.
@@ -54,7 +54,7 @@ A padronizacao anterior aplicava os mesmos agrupamentos de orientacao para image
 Decisao complementar:
 
 - Separar a regra de orientacao de videos da regra de imagens.
-- Imagens continuam usando as familias visualmente padronizadas `16:9`, `1:1` e `4:5`.
+- Imagens continuavam usando as familias visualmente padronizadas `16:9`, `1:1` e `4:5` até o complemento abaixo; vídeos seguem usando `16:9` ou `9:16`.
 - Videos passam a usar apenas orientacao horizontal ou vertical: horizontal em `16:9`, vertical em `9:16`.
 - O player de video publicado passa a usar `object-contain` em frame correspondente a proporcao real, para preservar o conteudo sem crop automatico.
 - Quando os metadados reais do video estiverem disponiveis, o frame recebe `aspect-ratio` exato a partir de `videoWidth/videoHeight`, reduzindo barras pretas causadas por pequenas variacoes de proporcao.
@@ -65,6 +65,31 @@ Consequencias:
 - Videos horizontais continuam em 16:9 sem corte.
 - Se a faixa preta ja estiver gravada dentro do proprio arquivo, a interface preserva o video original e nao faz crop destrutivo para remove-la.
 - A regra permanece centralizada em `CommunityMediaBlock`, afetando feed, comunidade, perfil, salvos e detalhe do post sem mudancas de backend.
+
+Validacao complementar:
+
+- `pnpm --dir frontend biome:fix`: sucesso.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- `git diff --check`: sucesso.
+
+## Complemento 2026-06-23 - imagens verticais em 9:16
+
+O usuario decidiu que imagens verticais publicadas devem seguir o mesmo frame vertical dos videos, usando `9:16` em vez de `4:5`.
+
+Decisao complementar:
+
+- Alterar o frame padronizado de imagens verticais de `4:5` para `9:16`.
+- Manter imagens horizontais em `16:9` e imagens quadradas em `1:1`.
+- Manter a deteccao por metadados reais da imagem apenas para classificar a orientacao; o frame final continua padronizado.
+- Manter os limites responsivos por contexto ja definidos, para que imagens verticais nao ocupem largura excessiva no desktop.
+
+Consequencias:
+
+- Imagens verticais passam a ficar mais proximas do formato real de stories/reels sem usar o tamanho original arbitrario.
+- Carrosseis com qualquer imagem vertical passam a usar frame vertical `9:16`, preservando altura estavel.
+- O ajuste e centralizado em `CommunityMediaBlock`/helpers e se propaga para feed, comunidade, detalhe do post, respostas, salvos e publicacoes do perfil que reutilizam a fundacao.
 
 Validacao complementar:
 

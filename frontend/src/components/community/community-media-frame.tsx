@@ -20,7 +20,7 @@ const MEDIA_ORIENTATION_PORTRAIT_RATIO = 0.88;
 
 const imageMediaFrameAspectClassName: Record<CommunityMediaOrientation, string> = {
   landscape: "aspect-video",
-  portrait: "aspect-[4/5]",
+  portrait: "aspect-[9/16]",
   square: "aspect-square",
 };
 

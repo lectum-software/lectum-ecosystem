@@ -796,3 +796,14 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: screenshots do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0151-padronizacao-frames-midia-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
+
+## Execucao complementar: imagens verticais em 9:16 (2026-06-23)
+
+- Pedido do usuario: para imagens verticais, usar frame `9:16` em vez de `4:5`.
+- Frontend: a fundacao compartilhada `CommunityMediaBlock` passou a aplicar `aspect-[9/16]` para imagens classificadas como verticais.
+- Imagens horizontais continuam em `16:9` e quadradas em `1:1`; videos continuam com a regra separada `16:9`/`9:16` sem crop automatico.
+- Carrosseis com qualquer imagem vertical passam a herdar o frame vertical `9:16` pelo helper centralizado de orientacao.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissoes, votos, salvos, ranking ou tracking de WhatsApp.
+- Fonte visual auditavel: decisao do usuario neste thread; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0151-padronizacao-frames-midia-comunidade.md`.
+- Validacoes executadas: pnpm --dir frontend biome:fix, pnpm --dir frontend check, pnpm --dir frontend build, pnpm check e git diff --check.
