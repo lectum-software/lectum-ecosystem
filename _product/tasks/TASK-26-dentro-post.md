@@ -686,3 +686,15 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Data model: `post_reply.downvotes_count Int @default(0)` foi documentado e migrado em `20260622223000_add_post_reply_downvotes_count`, com backfill a partir de votos ativos existentes.
 - ADR criado: `adrs/0150-penalidade-leve-downvotes-ranking-comunidade.md`.
 - Validacoes executadas: pnpm --dir backend db:migrate (primeira tentativa falhou por BOM na migration SQL, migration regravada sem BOM e comando reexecutado com sucesso), pnpm --dir backend biome:fix, pnpm --dir frontend biome:fix, pnpm --dir backend check, pnpm --dir frontend check, pnpm --dir backend build, pnpm --dir frontend build, pnpm check e git diff --check.
+
+## Execucao complementar: miniaturas individuais na criacao e edicao segura de midia (2026-06-22)
+
+- Pedido do usuario: dentro da modal `Criar Post`, quando houver varias midias anexadas, nao agrupa-las em um carrossel/container grande; exibir miniatura por miniatura com exclusao individual e sem esconder o campo de texto.
+- Frontend: a previa de midias selecionadas na criacao de post deixou de usar estado ativo, setas e dots; agora renderiza uma faixa compacta de figuras independentes, cada uma com seu proprio `X`.
+- As miniaturas respeitam orientacao aproximada (paisagem/retrato/quadrado), ficam limitadas em altura e usam rolagem horizontal apenas quando necessario, preservando area util para titulo e conteudo.
+- Frontend: no modo editor de comentario, o botao de midia voltou a aparecer como `Editar midia` quando ja existe anexo; sua acao apenas abre a galeria, sem marcar a midia atual para remocao.
+- A remocao da midia existente continua exclusiva do botao `X`; selecionar uma nova midia substitui o anexo somente ao salvar, preservando cancelamento seguro.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, storage, limites de arquivo, permissoes de upload, votos, salvos ou regras de composicao texto/midia.
+- Fonte visual auditavel: screenshots do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADRs atualizados: `adrs/0149-carrossel-imagens-posts-comunidade.md` e `adrs/0146-acoes-respostas-usuario.md`.
+- Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.

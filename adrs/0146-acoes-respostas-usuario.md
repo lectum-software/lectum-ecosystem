@@ -53,6 +53,7 @@ Validacao complementar:
 - `pnpm --dir frontend check`: sucesso.
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
+- `git diff --check`: sucesso.
 - Chrome/CDP mobile `390x844` no detalhe do post demo: sucesso ao abrir o menu do comentario proprio `cmqnag8iv0024g8uhognhksz3`, confirmar ordem `Editar/Salvar/Compartilhar/Excluir` e abrir a modal `Editar comentario` preenchida.
 
 ## Complemento 2026-06-21 - modal isolada de editar comentario e midia
@@ -253,3 +254,28 @@ Validacao complementar:
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
 - Chrome/CDP desktop `1440x900`: sucesso, abrindo `Editar comentario` em resposta propria sem midia e confirmando botao `Midia` sem sombra visivel.
+
+## Complemento 2026-06-22 - editar midia sem remover anexo atual
+
+A modal `Editar comentario` precisa permitir que psicologos verificados troquem a midia do comentario sem que a simples acao de abrir a galeria seja tratada como remocao do anexo existente.
+
+Decisao complementar:
+
+- Quando existe midia ativa no editor, o controle textual volta a aparecer como `Editar midia`.
+- O botao `Editar midia` apenas abre o seletor de arquivos; ele nao chama a acao de remover midia atual.
+- O `X` segue sendo a unica acao explicita para marcar a midia atual para remocao.
+- Ao selecionar nova midia, a substituicao so e enviada no payload ao salvar; cancelar a modal preserva o anexo atual.
+
+Consequencias:
+
+- Reduz risco de perda acidental de midia durante a edicao.
+- Mantem o fluxo claro: `Editar midia` para escolher arquivo, `X` para remover.
+- Nao altera backend, schema, storage, validacoes de formato/tamanho, permissao por perfil ou limite atual de uma midia por comentario.
+
+Validacao complementar:
+
+- `pnpm --dir frontend biome:fix`: sucesso.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- `git diff --check`: sucesso.
