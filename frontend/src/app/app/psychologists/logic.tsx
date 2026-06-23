@@ -4633,7 +4633,7 @@ export const PsychologistsLogic = () => {
                       aria-label={`Favoritar ${desktopActionPsychologist.name}`}
                       aria-busy={desktopActionIsFavoritePending}
                       aria-pressed={desktopActionIsFavorited}
-                      className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#334155] shadow-[0_10px_28px_rgba(15,23,42,0.14)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
+                      className="grid h-12 w-12 place-items-center rounded-full border border-[#e2e8f0] bg-white text-[#334155] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
                       disabled={isDesktopActionRailHidden}
                       onClick={(event) => {
                         event.stopPropagation();
@@ -4657,7 +4657,7 @@ export const PsychologistsLogic = () => {
                   <div className="grid w-[76px] justify-items-center gap-1.5 text-center">
                     <button
                       aria-label={`Compartilhar perfil de ${desktopActionPsychologist.name}`}
-                      className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#334155] shadow-[0_10px_28px_rgba(15,23,42,0.14)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
+                      className="grid h-12 w-12 place-items-center rounded-full border border-[#e2e8f0] bg-white text-[#334155] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
                       disabled={isDesktopActionRailHidden}
                       onClick={(event) => {
                         event.stopPropagation();
@@ -4675,7 +4675,7 @@ export const PsychologistsLogic = () => {
                     {desktopActionPsychologist.whatsapp_url ? (
                       <PsychologistWhatsAppRedirectButton
                         aria-label={`Chamar ${desktopActionPsychologist.name} no WhatsApp`}
-                        className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#22C55E] shadow-[0_10px_28px_rgba(15,23,42,0.14)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
+                        className="grid h-12 w-12 place-items-center rounded-full border border-[#e2e8f0] bg-white text-[#22C55E] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
                         onClick={stopInteractionPropagation}
                         psychologist={{
                           avatar: desktopActionPsychologist.avatar,
@@ -4702,7 +4702,7 @@ export const PsychologistsLogic = () => {
                       <button
                         aria-disabled="true"
                         aria-label={`WhatsApp indisponível para ${desktopActionPsychologist.name}`}
-                        className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#22C55E] opacity-55 shadow-[0_10px_28px_rgba(15,23,42,0.14)]"
+                        className="grid h-12 w-12 place-items-center rounded-full border border-[#e2e8f0] bg-white text-[#22C55E] opacity-55"
                         disabled={isDesktopActionRailHidden}
                         onClick={stopInteractionPropagation}
                         tabIndex={isDesktopActionRailHidden ? -1 : undefined}
@@ -4721,7 +4721,7 @@ export const PsychologistsLogic = () => {
                   <div className="grid w-[76px] justify-items-center gap-1.5 text-center">
                     <button
                       aria-label={`Ver perfil de ${desktopActionPsychologist.name}`}
-                      className="grid h-12 w-12 place-items-center overflow-hidden rounded-full bg-white p-0.5 text-[#0f172a] shadow-[0_10px_28px_rgba(15,23,42,0.14)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
+                      className="grid h-12 w-12 place-items-center overflow-hidden rounded-full border border-[#e2e8f0] bg-white p-0.5 text-[#0f172a] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
                       disabled={isDesktopActionRailHidden}
                       onClick={(event) =>
                         navigateToPublicPsychologistProfile(desktopActionPsychologist.id, event)

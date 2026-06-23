@@ -939,6 +939,22 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm --dir frontend build`
 - [x] `pnpm check`
 - [x] `git diff --check`
+
+## Execucao complementar: acoes desktop sem sombra na descoberta de psicologos (2026-06-23)
+
+- Pedido do usuario: no desktop, remover o sombreamento atras das opcoes `Favoritar`, `Compartilhar`, `WhatsApp` e `Perfil` na descoberta de psicologos.
+- Frontend: a rail desktop de acoes em `PsychologistsLogic` deixou de aplicar sombra nos botoes circulares dessas quatro opcoes.
+- Frontend: os botoes mantem fundo branco, borda sutil, icones, labels e estados de hover/active, sem alterar controles mobile, busca, filtros ou navegacao entre psicologos.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, upload, permissoes, ranking, posts, comentarios ou tracking de WhatsApp.
+- Fonte visual auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR criado: `adrs/0159-remocao-sombra-acoes-desktop-psicologos.md`.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
 ## Execução complementar: chips sem sombra no perfil do psicólogo (2026-06-23)
 
 - Pedido do usuário: remover o sombreamento atrás dos chips de especialidades, atendimento (`Modalidade`, `Abordagens`, `Serviços`, `Público atendido`, `Idiomas`) e `Formação & Títulos` no perfil público do psicólogo.
