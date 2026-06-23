@@ -15,6 +15,6 @@ export const PostMutedBadge = ({ className }: PostMutedBadgeProps) => (
     )}
   >
     <BellOff className="h-3.5 w-3.5" aria-hidden="true" />
-    Post silenciado
+    Silenciado
   </span>
 );

@@ -257,7 +257,7 @@ export const PostOwnerActionMenu = ({
       <button
         aria-expanded={menuOpen}
         aria-haspopup="menu"
-        aria-label="Mais ações do post"
+        aria-label="Mais ações"
         className="grid h-8 w-8 place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-foreground active:scale-[0.97]"
         onClick={(event) => {
           event.stopPropagation();
@@ -286,7 +286,7 @@ export const PostOwnerActionMenu = ({
             type="button"
           >
             <Pencil className="h-4 w-4" aria-hidden="true" />
-            Editar post
+            Editar
           </button>
           <button
             className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-muted transition hover:bg-surface-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
@@ -300,7 +300,7 @@ export const PostOwnerActionMenu = ({
             ) : (
               <BellOff className="h-4 w-4" aria-hidden="true" />
             )}
-            {post.muted_by_current_user ? "Reativar notificações" : "Silenciar post"}
+            {post.muted_by_current_user ? "Reativar notificações" : "Silenciar"}
           </button>
           <button
             className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-danger transition hover:bg-danger/10 hover:text-danger disabled:cursor-not-allowed disabled:opacity-60"
@@ -313,7 +313,7 @@ export const PostOwnerActionMenu = ({
             type="button"
           >
             <Trash2 className="h-4 w-4" aria-hidden="true" />
-            Excluir post
+            Excluir
           </button>
         </div>
       ) : null}
@@ -349,7 +349,7 @@ export const PostOwnerActionMenu = ({
       </PostActionModal>
 
       <PostActionModal
-        action={post.muted_by_current_user ? "Post silenciado" : "Silenciar post"}
+        action={post.muted_by_current_user ? "Silenciado" : "Silenciar"}
         description={
           "Este post já recebeu contribuições de psicólogos da comunidade.\n\nPara preservar o conteúdo compartilhado pelos profissionais, posts que já receberam respostas de psicólogos não podem ser excluídos.\n\nVocê pode silenciar este post para parar de receber novas notificações."
         }

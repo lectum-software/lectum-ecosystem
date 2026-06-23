@@ -861,3 +861,13 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.
 - Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
+
+## Execucao complementar: copy compacta no menu de acoes do post (2026-06-23)
+
+- Pedido do usuario: alterar as opcoes do menu do post para `Editar`, `Silenciar` e `Excluir`, removendo o sufixo `post`.
+- Frontend: `PostOwnerActionMenu` passou a exibir os rótulos compactos no dropdown de tres pontos e no fluxo de bloqueio para silenciar.
+- Frontend: o selo de post silenciado foi simplificado para `Silenciado`, mantendo o estado e a regra de notificacoes inalterados.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissoes, votos, salvos, ranking, midia publicada ou tracking de WhatsApp.
+- Fonte visual auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0141-post-owner-actions-mute-delete.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.

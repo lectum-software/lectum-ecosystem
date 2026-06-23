@@ -80,3 +80,13 @@ Validação adicional:
   - `http://localhost:3000/app/posts/mine` retornou 307.
   - `http://localhost:3000/app/community/feed` retornou 200.
   - `http://localhost:3000/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video` retornou 200.
+
+## Complemento 2026-06-23 - copy compacta no menu de ações
+
+O menu de três pontos dos posts do próprio usuário passou a usar ações curtas:
+"Editar", "Silenciar" e "Excluir". A decisão reduz repetição visual no card,
+especialmente no mobile, sem alterar permissões, endpoints ou regras de domínio.
+
+O estado visual de silenciamento também foi simplificado de "Post silenciado"
+para "Silenciado", mantendo o mesmo campo `muted_by_current_user` como fonte de
+verdade do estado.
