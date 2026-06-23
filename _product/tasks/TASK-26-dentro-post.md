@@ -902,3 +902,13 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0151-padronizacao-frames-midia-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
+
+## Execução complementar: botão de mídia na edição de comentário (2026-06-23)
+
+- Pedido do usuário: quando já houver mídia no comentário, remover o botão `Editar mídia` da modal de editar comentário e exibir novamente somente se a mídia for removida; se o comentário não tiver mídia, o botão deve aparecer.
+- Frontend: `ReplyMediaAttachmentControl` agora mantém o input de arquivo disponível, mas só renderiza o botão `Mídia` no modo editor quando não existe mídia efetiva atual ou selecionada.
+- Frontend: quando há mídia atual ou recém-selecionada, a modal exibe apenas a miniatura com o botão `X` de remover; ao remover a mídia, o botão `Mídia` volta para permitir anexar uma nova.
+- Não houve alteração de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissões, votos, salvos, ranking ou tracking de WhatsApp.
+- Fonte visual auditável: screenshot do usuário; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
+- ADR criado: `adrs/0156-botao-midia-edicao-comentario.md`.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.

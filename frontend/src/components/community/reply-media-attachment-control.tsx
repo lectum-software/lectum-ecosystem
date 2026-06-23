@@ -201,8 +201,6 @@ export function ReplyMediaAttachmentControl({
         }
       : null;
   const isEditor = variant === "editor";
-  const actionTitle = activeMedia ? "Editar mídia" : "Adicionar mídia";
-  const actionLabel = activeMedia ? "Editar mídia" : "Mídia";
   const editorPreview = editorPreviewClassNames(activeMedia?.orientation);
 
   const openFileDialog = () => {
@@ -383,22 +381,24 @@ export function ReplyMediaAttachmentControl({
 
       <div className="flex min-w-0 flex-wrap items-center gap-2">
         {mediaInput}
-        <button
-          aria-label={actionTitle}
-          className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-[#D7E7F7] bg-gradient-to-b from-white to-[#F8FBFF] px-4 text-sm font-extrabold text-[#526B86] shadow-none transition hover:border-primary/35 hover:bg-primary-soft/70 hover:text-primary focus:outline-none focus:ring-4 focus:ring-primary/15 active:scale-[0.98] disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-muted disabled:bg-none disabled:text-muted disabled:opacity-60 dark:border-border dark:from-surface dark:to-surface-muted/40 dark:text-muted"
-          disabled={!mediaPermission.canAttach || disabled}
-          onClick={openFileDialog}
-          onMouseDown={(event) => event.preventDefault()}
-          title={mediaPermission.canAttach ? actionTitle : mediaPermission.reason}
-          type="button"
-        >
-          {isUploading ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-          ) : (
-            <AnimatedImagesIcon className="h-3.5 w-3.5" aria-hidden="true" />
-          )}
-          {actionLabel}
-        </button>
+        {activeMedia ? null : (
+          <button
+            aria-label="Adicionar mídia"
+            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-[#D7E7F7] bg-gradient-to-b from-white to-[#F8FBFF] px-4 text-sm font-extrabold text-[#526B86] shadow-none transition hover:border-primary/35 hover:bg-primary-soft/70 hover:text-primary focus:outline-none focus:ring-4 focus:ring-primary/15 active:scale-[0.98] disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-muted disabled:bg-none disabled:text-muted disabled:opacity-60 dark:border-border dark:from-surface dark:to-surface-muted/40 dark:text-muted"
+            disabled={!mediaPermission.canAttach || disabled}
+            onClick={openFileDialog}
+            onMouseDown={(event) => event.preventDefault()}
+            title={mediaPermission.canAttach ? "Adicionar mídia" : mediaPermission.reason}
+            type="button"
+          >
+            {isUploading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+            ) : (
+              <AnimatedImagesIcon className="h-3.5 w-3.5" aria-hidden="true" />
+            )}
+            Mídia
+          </button>
+        )}
       </div>
     </div>
   );
