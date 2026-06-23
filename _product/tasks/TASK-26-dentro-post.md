@@ -939,3 +939,18 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm --dir frontend build`
 - [x] `pnpm check`
 - [x] `git diff --check`
+## Execução complementar: chips sem sombra no perfil do psicólogo (2026-06-23)
+
+- Pedido do usuário: remover o sombreamento atrás dos chips de especialidades, atendimento (`Modalidade`, `Abordagens`, `Serviços`, `Público atendido`, `Idiomas`) e `Formação & Títulos` no perfil público do psicólogo.
+- Frontend: `ProfileChipList`, `ProfileInfoCard` e os itens de `FormationSection` deixaram de aplicar sombras nos chips/cards internos, mantendo borda, radius e espaçamentos.
+- As sombras dos cards principais do perfil foram preservadas para não achatar toda a página e manter a separação entre seções.
+- Não houve alteração de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissões, votos, salvos, ranking, posts, comentários ou tracking de WhatsApp.
+- Fonte visual auditável: screenshots do usuário; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
+- ADR criado: `adrs/0158-remocao-sombra-chips-perfil-psicologo.md`.
+
+### Validações
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`

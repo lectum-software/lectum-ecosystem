@@ -103,8 +103,7 @@ const tabs: Array<{ label: string; value: ProfileTab }> = [
 const PROFILE_CARD_SURFACE =
   "box-border rounded-[26px] border border-[#E6EAF0] bg-white shadow-[0_14px_34px_rgba(15,23,42,0.045)] dark:border-border dark:bg-surface";
 
-const PROFILE_SUBTLE_SURFACE =
-  "box-border rounded-[18px] border border-[#E4EBF3] bg-white/88 shadow-[0_8px_20px_rgba(15,23,42,0.035)]";
+const PROFILE_SUBTLE_SURFACE = "box-border rounded-[18px] border border-[#E4EBF3] bg-white/88";
 
 const EMPTY_PUBLICATIONS_SUMMARY: DirectoryPsychologistParticipationSummary = {
   posts_count: 0,
@@ -528,7 +527,7 @@ const ProfileChipList = ({
     <div className="mt-3 flex flex-wrap gap-2">
       {items.map((item) => (
         <span
-          className="inline-flex min-h-8 items-center rounded-full border border-[#D7E8FA] bg-[#F8FBFF] px-3 text-[12px] font-semibold leading-none text-[#1E4F8F] shadow-[0_4px_10px_rgba(47,141,235,0.035)]"
+          className="inline-flex min-h-8 items-center rounded-full border border-[#D7E8FA] bg-[#F8FBFF] px-3 text-[12px] font-semibold leading-none text-[#1E4F8F]"
           key={item.id}
         >
           {item.name}
@@ -1423,10 +1422,10 @@ const FormationSection = ({ profile }: { profile: DirectoryPsychologistProfile }
 
             return (
               <article
-                className="box-border flex items-start gap-3 rounded-[16px] border border-[#E4EBF3] bg-[#FAFCFF] px-3.5 py-3 shadow-[0_5px_16px_rgba(15,23,42,0.025)]"
+                className="box-border flex items-start gap-3 rounded-[16px] border border-[#E4EBF3] bg-[#FAFCFF] px-3.5 py-3"
                 key={`${formation.title || "formacao"}-${formation.institution || index}`}
               >
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[14px] bg-white text-[#247BD1] shadow-[0_7px_18px_rgba(47,141,235,0.10)]">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[14px] bg-white text-[#247BD1]">
                   <GraduationCap className="h-[17px] w-[17px]" aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
