@@ -73,4 +73,30 @@ Validacao complementar:
 - `pnpm check`: sucesso.
 - `git diff --check`: sucesso.
 
+## Complemento 2026-06-22 - setas persistentes no carrossel publicado
+
+Embora o carrossel de posts ja tivesse dots para navegação direta, o consumo no feed mobile nao deixava claro que havia mais imagens. A navegacao precisa ser obvia em qualquer ponto onde o carrossel publicado aparece.
+
+Decisao complementar:
+
+- Centralizar a solucao no `PostMediaCarousel`, componente compartilhado por feed geral, paginas de comunidade, detalhe do post e cards reutilizados.
+- Exibir botoes persistentes de anterior/proximo sempre que houver mais de uma imagem.
+- Usar botoes nativos com `z-index` explicito, fundo escuro translúcido, borda clara e blur para garantir contraste sobre imagens claras/escuras.
+- Adicionar gradientes laterais sutis para reforcar a descoberta dos controles sem transformar a midia em um container pesado.
+- Fazer setas e dots chamarem `preventDefault`/`stopPropagation`, evitando abrir o card/post ao navegar pelo carrossel.
+
+Consequencias:
+
+- Todos os locais que renderizam carrossel publicado recebem as setas sem duplicar implementacao.
+- A descoberta de multiplas imagens melhora no mobile e desktop.
+- Nao altera contrato de API, schema, storage, limite de 10 imagens, upload, edicao ou a regra atual de carrossel apenas com imagens.
+
+Validacao complementar:
+
+- `pnpm --dir frontend biome:fix`: sucesso.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- `git diff --check`: sucesso.
+
 

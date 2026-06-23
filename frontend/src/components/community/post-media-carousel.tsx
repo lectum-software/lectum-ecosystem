@@ -5,7 +5,6 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import type { CommunityPostMediaItem } from "@/api/generator/types/community";
 import { cn } from "@/lib/utils";
-import { Button } from "@/registry/new-york-v4/ui/button";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 type PostMediaCarouselItem = Pick<
@@ -89,26 +88,42 @@ export const PostMediaCarousel = ({
 
         {hasMultiple ? (
           <>
-            <Button
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-slate-950/25 to-transparent"
+            />
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-slate-950/25 to-transparent"
+            />
+            <button
               aria-label="Imagem anterior"
-              className="absolute top-1/2 left-3 h-9 w-9 -translate-y-1/2 rounded-full border border-white/35 bg-slate-950/45 p-0 text-white shadow-none backdrop-blur transition hover:bg-slate-950/65 focus-visible:ring-white/40"
-              onClick={goToPrevious}
+              className="absolute top-1/2 left-2 z-20 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-white/45 bg-slate-950/65 p-0 text-white shadow-none backdrop-blur-md transition hover:bg-slate-950/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 active:scale-95 sm:left-3 sm:h-10 sm:w-10"
+              data-post-card-ignore-click="true"
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                goToPrevious();
+              }}
               type="button"
-              variant="ghost"
             >
-              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-            </Button>
-            <Button
+              <ChevronLeft className="h-5 w-5" aria-hidden="true" strokeWidth={2.4} />
+            </button>
+            <button
               aria-label="Próxima imagem"
-              className="absolute top-1/2 right-3 h-9 w-9 -translate-y-1/2 rounded-full border border-white/35 bg-slate-950/45 p-0 text-white shadow-none backdrop-blur transition hover:bg-slate-950/65 focus-visible:ring-white/40"
-              onClick={goToNext}
+              className="absolute top-1/2 right-2 z-20 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-white/45 bg-slate-950/65 p-0 text-white shadow-none backdrop-blur-md transition hover:bg-slate-950/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 active:scale-95 sm:right-3 sm:h-10 sm:w-10"
+              data-post-card-ignore-click="true"
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                goToNext();
+              }}
               type="button"
-              variant="ghost"
             >
-              <ChevronRight className="h-5 w-5" aria-hidden="true" />
-            </Button>
+              <ChevronRight className="h-5 w-5" aria-hidden="true" strokeWidth={2.4} />
+            </button>
 
-            <div className="absolute inset-x-0 bottom-3 flex justify-center gap-1.5">
+            <div className="absolute inset-x-0 bottom-3 z-20 flex justify-center gap-1.5">
               {carouselItems.map((item, index) => (
                 <button
                   aria-label={`Mostrar imagem ${index + 1}`}
@@ -116,8 +131,13 @@ export const PostMediaCarousel = ({
                     "h-2 rounded-full bg-white/65 transition-all hover:bg-white focus:outline-none focus:ring-2 focus:ring-white/70",
                     index === safeActiveIndex ? "w-5 bg-white" : "w-2",
                   )}
+                  data-post-card-ignore-click="true"
                   key={item.id ?? `${item.media_url}-${item.position}`}
-                  onClick={() => setActiveIndex(index)}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setActiveIndex(index);
+                  }}
                   type="button"
                 />
               ))}

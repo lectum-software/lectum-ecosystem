@@ -698,3 +698,14 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: screenshots do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADRs atualizados: `adrs/0149-carrossel-imagens-posts-comunidade.md` e `adrs/0146-acoes-respostas-usuario.md`.
 - Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
+
+## Execucao complementar: setas persistentes no carrossel publicado (2026-06-22)
+
+- Pedido do usuario: quando houver carrossel de midias, inserir setas de avancar e voltar nas midias no feed, dentro da comunidade e em todos os locais onde o carrossel aparecer.
+- Frontend: o componente compartilhado `PostMediaCarousel` recebeu botoes nativos de navegacao anterior/proxima com `z-index` alto, fundo escuro translúcido, blur e gradientes laterais para manter contraste sobre imagens claras ou escuras.
+- Como o feed geral, a tela da comunidade, o detalhe do post e os cards reutilizados ja consomem `PostMediaCarousel`, o ajuste se aplica de forma centralizada a todos os locais de exibicao do carrossel publicado.
+- Os dots continuam disponiveis para salto direto entre imagens; setas e dots agora interrompem propagacao de clique para nao abrir o card/post acidentalmente.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, storage, limites de arquivo, upload, DTOs ou regra de carrossel apenas com imagens.
+- Fonte visual auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0149-carrossel-imagens-posts-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
