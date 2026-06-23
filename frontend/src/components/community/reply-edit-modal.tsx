@@ -8,6 +8,7 @@ import { z } from "zod";
 import { useUpdatePostReply, useUploadPostReplyMedia } from "@/api/callers/posts";
 import type { PostReply, UserPostReply } from "@/api/generator/types/posts";
 import {
+  detectReplyMediaOrientation,
   mediaTypeFromFile,
   ReplyMediaAttachmentControl,
   type SelectedReplyMedia,
@@ -201,11 +202,18 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
 
     revokeSelectedMediaPreview();
     const previewUrl = URL.createObjectURL(file);
+    const type = mediaTypeFromFile(file);
     selectedMediaPreviewUrlRef.current = previewUrl;
     setSelectedMedia({
       file,
+      orientation: undefined,
       previewUrl,
-      type: mediaTypeFromFile(file),
+      type,
+    });
+    void detectReplyMediaOrientation(previewUrl, type).then((orientation) => {
+      setSelectedMedia((current) =>
+        current?.previewUrl === previewUrl ? { ...current, orientation } : current,
+      );
     });
     setRemoveMedia(false);
     setActionError(null);

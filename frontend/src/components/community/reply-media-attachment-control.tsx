@@ -111,7 +111,9 @@ const composerPreviewSizeClassName = (orientation?: ReplyMediaOrientation) => {
 };
 
 const editorPreviewClassNames = (orientation?: ReplyMediaOrientation) => {
-  if (orientation === "landscape") {
+  const resolvedOrientation = orientation ?? "landscape";
+
+  if (resolvedOrientation === "landscape") {
     return {
       figure: "w-[min(15.5rem,76vw)] rounded-[1.35rem] sm:w-56",
       frame: "aspect-video",
@@ -119,7 +121,7 @@ const editorPreviewClassNames = (orientation?: ReplyMediaOrientation) => {
     };
   }
 
-  if (orientation === "square") {
+  if (resolvedOrientation === "square") {
     return {
       figure: "w-[min(9rem,48vw)] rounded-[1.35rem] sm:w-32",
       frame: "aspect-square",

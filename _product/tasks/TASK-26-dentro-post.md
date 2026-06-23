@@ -912,3 +912,12 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditável: screenshot do usuário; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
 - ADR criado: `adrs/0156-botao-midia-edicao-comentario.md`.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
+## Execução complementar: miniatura horizontal na edição de comentário (2026-06-23)
+
+- Pedido do usuário: na modal de editar comentário, se a mídia for horizontal, a miniatura também deve aparecer horizontal.
+- Frontend: `ReplyMediaAttachmentControl` passou a usar `landscape` como orientação visual padrão no modo editor enquanto a detecção assíncrona de dimensões da mídia atual ainda não terminou.
+- Frontend: `ReplyEditModal` passou a detectar a orientação de novas mídias selecionadas na edição, reaproveitando `detectReplyMediaOrientation` para manter imagens/vídeos horizontais em moldura horizontal.
+- Não houve alteração de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissões, votos, salvos, ranking ou tracking de WhatsApp.
+- Fonte visual auditável: screenshot do usuário; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0156-botao-midia-edicao-comentario.md`.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.

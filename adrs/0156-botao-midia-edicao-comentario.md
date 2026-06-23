@@ -28,3 +28,8 @@ O controle `ReplyMediaAttachmentControl` no modo `editor` passa a renderizar o b
 - `pnpm --dir frontend build`
 - `pnpm check`
 - `git diff --check`
+## Atualização: orientação da miniatura na edição de comentário (2026-06-23)
+
+A miniatura exibida na modal de edição de comentário passa a tratar orientação indefinida como `landscape` até a detecção assíncrona de dimensões concluir. A modal também passa a detectar a orientação de novas mídias selecionadas no fluxo de edição, usando a mesma função compartilhada já utilizada no composer de comentários.
+
+Essa decisão evita que imagens ou vídeos horizontais apareçam inicialmente em moldura vertical/narrow quando o navegador ainda não carregou os metadados da mídia, sem alterar formatos aceitos, limites de upload, storage, permissões ou backend.
