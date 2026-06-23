@@ -720,3 +720,13 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: screenshots de referencia do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0147-cortesia-verificada-whatsapp-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
+
+## Execucao complementar: refinamento Threads do CTA WhatsApp (2026-06-22)
+
+- Pedido do usuario: refinar o CTA de WhatsApp para ficar mais proximo da referencia visual do Threads, aumentando o respiro entre as linhas e reduzindo o peso da fonte do nome do psicologo.
+- Frontend: `CommunityWhatsAppCta` ganhou maior espacamento vertical interno e gap entre nome/acao; o nome passou de peso extra-bold para medium, preservando a hierarquia da acao `Chamar no WhatsApp`.
+- O ajuste e exclusivamente visual e reutiliza o mesmo componente compartilhado ja aplicado em feed, comunidade, detalhe do post, salvos e contribuicoes.
+- Nao houve alteracao de backend, Prisma schema, migrations, endpoints, tracking, modal de redirecionamento, storage, votos, salvos ou regras de exibicao de WhatsApp.
+- Fonte visual auditavel: screenshot de referencia do Threads enviado pelo usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0147-cortesia-verificada-whatsapp-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.

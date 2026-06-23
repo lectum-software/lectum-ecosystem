@@ -133,3 +133,27 @@ Validacao complementar:
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
 - `git diff --check`: sucesso.
+
+## Atualizacao 2026-06-22 - Refinamento Threads do CTA WhatsApp
+
+Apos a padronizacao neutra do CTA, a referencia do Threads indicou que o bloco deveria respirar mais entre a linha de identidade e a linha de acao, com o nome menos pesado para lembrar a area de link/anuncio da referencia.
+
+Decisao complementar:
+
+- Aumentar o gap interno entre nome do psicologo e `Chamar no WhatsApp` em `CommunityWhatsAppCta`.
+- Aumentar levemente o padding vertical do bloco para reforcar a leitura de card anexado a midia.
+- Reduzir o nome do psicologo de `font-extrabold` para `font-medium`, mantendo a acao como elemento mais forte do CTA.
+- Preservar a paleta neutra, dimensao vinculada a midia, tracking, modal de redirecionamento e regras de exibicao.
+
+Consequencias:
+
+- O CTA se aproxima mais da referencia visual do Threads sem parecer um botao verde tradicional.
+- A hierarquia fica mais clara: identidade como contexto, WhatsApp como acao principal.
+
+Validacao complementar:
+
+- `pnpm --dir frontend biome:fix`: sucesso.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- `git diff --check`: sucesso.
