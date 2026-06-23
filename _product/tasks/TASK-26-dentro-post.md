@@ -921,3 +921,21 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditável: screenshot do usuário; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0156-botao-midia-edicao-comentario.md`.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
+
+## Execução complementar: fundo branco no feed da comunidade (2026-06-23)
+
+- Pedido do usuário: fazer o background do feed branco.
+- Frontend: `CommunityFeedLogic` agora usa fundo branco no `PrivateTemplate` e no header sticky de busca/filtros.
+- Frontend: `CommunityDetailLogic` também usa fundo branco para manter a timeline dentro da comunidade consistente com o feed.
+- Ajuste visual: o offset de foco do FAB de criação foi alinhado ao fundo branco.
+- Dark mode preservado com `dark:bg-background`.
+- Não houve alteração de backend, Prisma, storage ou packages.
+- ADR criado: `adrs/0157-fundo-branco-feed-comunidade.md`.
+- Fonte visual: pedido e screenshot do usuário; Builder/Quick Copy não está acessível neste ambiente.
+
+### Validações
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`

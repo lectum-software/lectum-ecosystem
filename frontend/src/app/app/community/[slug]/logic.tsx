@@ -2105,7 +2105,7 @@ const COMMUNITY_PUBLISH_ONBOARDING_PLACEMENT: Record<
 };
 
 const COMMUNITY_FLOATING_CREATE_POST_CLASSNAME =
-  "group fixed right-5 bottom-[var(--lectum-mobile-nav-aware-fab-bottom)] z-40 grid h-14 w-14 place-items-center rounded-full border-[5px] border-white bg-[#308CE8] text-white shadow-[0_14px_30px_rgba(48,140,232,0.28)] transition-[bottom,transform,background-color,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:bg-[#2579CF] hover:shadow-[0_18px_36px_rgba(48,140,232,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F5F7FA] motion-safe:animate-[lectum-desktop-create-float_4.2s_ease-in-out_infinite] sm:bottom-[var(--lectum-mobile-nav-aware-fab-bottom-sm)] lg:right-10 lg:bottom-10 lg:h-16 lg:w-16 xl:right-20 2xl:right-28";
+  "group fixed right-5 bottom-[var(--lectum-mobile-nav-aware-fab-bottom)] z-40 grid h-14 w-14 place-items-center rounded-full border-[5px] border-white bg-[#308CE8] text-white shadow-[0_14px_30px_rgba(48,140,232,0.28)] transition-[bottom,transform,background-color,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:bg-[#2579CF] hover:shadow-[0_18px_36px_rgba(48,140,232,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8] focus-visible:ring-offset-2 focus-visible:ring-offset-white motion-safe:animate-[lectum-desktop-create-float_4.2s_ease-in-out_infinite] sm:bottom-[var(--lectum-mobile-nav-aware-fab-bottom-sm)] lg:right-10 lg:bottom-10 lg:h-16 lg:w-16 xl:right-20 2xl:right-28";
 
 const CommunityPublishOnboarding = ({
   variant,
@@ -2481,7 +2481,7 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
     <PrivateTemplate
       allowAnonymous
       autoHideNavigation
-      contentClassName="!pt-0 bg-[#F5F7FA] dark:bg-background sm:!pt-0"
+      contentClassName="!pt-0 bg-white dark:bg-background sm:!pt-0"
       navigationTheme="solidWhite"
       showHeader
     >
@@ -2746,14 +2746,14 @@ export const CommunityFeedLogic = () => {
     <PrivateTemplate
       allowAnonymous
       autoHideNavigation
-      contentClassName="bg-[#F5F7FA] dark:bg-background"
+      contentClassName="bg-white dark:bg-background"
       navigationTheme="solidWhite"
       showHeader
     >
       <section className="mx-auto grid w-full max-w-[430px] gap-4 sm:max-w-2xl lg:max-w-[760px]">
         <header
           className={cn(
-            "sticky top-0 z-20 -mx-5 border-[#E5EAF0] border-b bg-[#F5F7FA]/95 px-5 pb-3 pt-2 backdrop-blur transition-[transform,opacity] duration-300 ease-out supports-[backdrop-filter]:bg-[#F5F7FA]/88 dark:border-border dark:bg-background/90",
+            "sticky top-0 z-20 -mx-5 border-[#E5EAF0] border-b bg-white/95 px-5 pb-3 pt-2 backdrop-blur transition-[transform,opacity] duration-300 ease-out supports-[backdrop-filter]:bg-white/88 dark:border-border dark:bg-background/90",
             headerHidden
               ? "pointer-events-none -translate-y-[calc(100%+8px)] opacity-0"
               : "translate-y-0 opacity-100",
