@@ -20,7 +20,7 @@ As publicações e respostas da comunidade passaram a aceitar imagens, vídeos e
   - post/feed/detalhe: horizontal até `560px`, quadrado até `480px`, vertical até `380px` no desktop;
   - comentários/respostas: horizontal até `480px`, quadrado até `400px`, vertical até `340px` no desktop.
 - Manter largura quase total no mobile e alinhar à esquerda no desktop.
-- Para carrossel, usar frame fixo escolhido pelo conjunto de mídias: todas horizontais `16:9`, todas quadradas `1:1`, todas verticais `9:16`, horizontal+quadrada `1:1`, qualquer mistura com vertical `9:16`.
+- Para carrossel, usar frame fixo escolhido pelo conjunto de mídias: todas horizontais `16:9`, todas quadradas `1:1`, todas verticais `9:16`; qualquer mistura de formatos diferentes usa frame `1:1`.
 - Em carrossel, renderizar cada imagem com `object-contain` dentro do frame, evitando corte quando houver formatos diferentes.
 - Em mídia única, renderizar dentro do frame padronizado com preenchimento do espaço visual.
 - Permitir que o CTA de WhatsApp fique como footer do mesmo frame de mídia/carrossel para acompanhar sua largura.
@@ -88,8 +88,34 @@ Decisao complementar:
 Consequencias:
 
 - Imagens verticais passam a ficar mais proximas do formato real de stories/reels sem usar o tamanho original arbitrario.
-- Carrosseis com qualquer imagem vertical passam a usar frame vertical `9:16`, preservando altura estavel.
+- Carrosseis compostos exclusivamente por imagens verticais passam a usar frame vertical `9:16`; carrosseis mistos continuam com frame unico quadrado `1:1`, preservando altura estavel sem transformar todo conjunto em vertical.
 - O ajuste e centralizado em `CommunityMediaBlock`/helpers e se propaga para feed, comunidade, detalhe do post, respostas, salvos e publicacoes do perfil que reutilizam a fundacao.
+
+Validacao complementar:
+
+- `pnpm --dir frontend biome:fix`: sucesso.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- `git diff --check`: sucesso.
+
+## Complemento 2026-06-23 - carrossel misto em frame quadrado
+
+O usuario definiu que a situacao simples do carrossel deve preservar o formato quando todas as midias compartilham a mesma orientacao, mas que misturas de formatos devem evitar saltos e excesso de altura.
+
+Decisao complementar:
+
+- Carrossel homogeneo horizontal permanece em `16:9`.
+- Carrossel homogeneo vertical permanece em `9:16`.
+- Carrossel homogeneo quadrado permanece em `1:1`.
+- Qualquer carrossel misto entre horizontal, vertical e/ou quadrado passa a usar frame unico `1:1`.
+- As imagens dentro do carrossel continuam com `object-contain`, evitando corte quando o frame escolhido nao coincide com o formato da imagem ativa.
+
+Consequencias:
+
+- Cards com carrossel misto deixam de crescer para `9:16` apenas por conter uma imagem vertical.
+- O feed fica mais estavel e previsivel, especialmente no mobile.
+- O detalhe/fullscreen futuro pode continuar exibindo cada midia em formato mais especifico, mas o card de feed usa um frame unico para nao deslocar a interface.
 
 Validacao complementar:
 

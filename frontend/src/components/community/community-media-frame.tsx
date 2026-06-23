@@ -157,7 +157,6 @@ export const resolveCarouselMediaOrientation = (
   if (orientations.every((orientation) => orientation === "landscape")) return "landscape";
   if (orientations.every((orientation) => orientation === "square")) return "square";
   if (orientations.every((orientation) => orientation === "portrait")) return "portrait";
-  if (orientations.includes("portrait")) return "portrait";
 
   return "square";
 };

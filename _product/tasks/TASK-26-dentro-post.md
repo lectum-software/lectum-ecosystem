@@ -807,3 +807,13 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: decisao do usuario neste thread; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0151-padronizacao-frames-midia-comunidade.md`.
 - Validacoes executadas: pnpm --dir frontend biome:fix, pnpm --dir frontend check, pnpm --dir frontend build, pnpm check e git diff --check.
+
+## Execucao complementar: carrossel misto em frame 1:1 (2026-06-23)
+
+- Pedido do usuario: quando o carrossel tiver midias em formatos diferentes, usar um frame unico quadrado `1:1`; quando todas tiverem o mesmo formato, preservar `16:9`, `9:16` ou `1:1` conforme a orientacao.
+- Frontend: `resolveCarouselMediaOrientation` passou a retornar `square` para qualquer mistura de orientacoes, mantendo `landscape`, `portrait` ou `square` apenas quando todos os itens detectados forem homogeneos.
+- O carrossel continua usando `object-contain`, evitando corte de imagens horizontais, verticais ou quadradas dentro do frame misto.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissoes, votos, salvos, ranking ou tracking de WhatsApp.
+- Fonte visual auditavel: decisao do usuario neste thread; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0151-padronizacao-frames-midia-comunidade.md`.
+- Validacoes executadas: pnpm --dir frontend biome:fix, pnpm --dir frontend check, pnpm --dir frontend build, pnpm check e git diff --check.
