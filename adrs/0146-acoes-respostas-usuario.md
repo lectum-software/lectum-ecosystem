@@ -319,3 +319,28 @@ Consequencias:
 - `Anexar midia` fica oculto em repouso em desktop e mobile.
 - O botao aparece ao focar/interagir com o campo e desaparece quando o composer perde foco sem anexo.
 - Nao ha mudanca em backend, schema, endpoints, storage, upload, permissoes ou validacao de conteudo.
+
+## Complemento 2026-06-23 - manter controle de midia durante seletor nativo
+
+O botao `Anexar midia` abre o seletor nativo de arquivos. Como o seletor tira foco do textarea antes do evento `change`, o composer podia esconder o controle e desmontar o input de arquivo antes da midia selecionada ser aplicada.
+
+Decisao complementar:
+
+- Registrar uma interacao temporaria de media picker antes de chamar `input.click()`.
+- Enquanto o seletor nativo esta aberto, manter o controle de midia montado mesmo que o textarea dispare blur.
+- Ao selecionar arquivo, aplicar a miniatura, liberar o estado temporario e refocar o campo do comentario.
+- Ao retornar do seletor sem arquivo, liberar o estado temporario e refocar o composer, preservando a regra de que o controle aparece apenas com o campo em foco ou com midia selecionada.
+
+Consequencias:
+
+- O clique em `Anexar midia` deixa de perder a selecao por desmontagem do input.
+- O fluxo de enviar somente midia continua valido.
+- Nao ha mudanca em backend, schema, endpoints, storage, upload, permissoes, formatos aceitos ou validacao de conteudo.
+
+Validacao complementar:
+
+- `pnpm --dir frontend biome:fix`: sucesso.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- `git diff --check`: sucesso.

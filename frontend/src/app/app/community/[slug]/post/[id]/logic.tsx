@@ -1614,10 +1614,12 @@ const ReplyComposer = ({
   const [composerActive, setComposerActive] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const [draggingToCancel, setDraggingToCancel] = useState(false);
+  const [mediaPickerActive, setMediaPickerActive] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<SelectedReplyMedia | null>(null);
   const localFormRef = useRef<HTMLFormElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const selectedMediaPreviewUrlRef = useRef<string | null>(null);
+  const mediaPickerActiveRef = useRef(false);
   const cancelDragRef = useRef<{
     dragging: boolean;
     pointerId: number;
@@ -1639,8 +1641,9 @@ const ReplyComposer = ({
   const FieldComponent = components[formProps.fields[0].field];
   const isInline = variant === "inline";
   const shouldShowMediaControls =
-    Boolean(selectedMedia) || (composerActive && mediaPermission.showControl);
-  const shouldShowGuidance = composerActive || hasDraft || Boolean(selectedMedia);
+    Boolean(selectedMedia) || mediaPickerActive || (composerActive && mediaPermission.showControl);
+  const shouldShowGuidance =
+    composerActive || hasDraft || Boolean(selectedMedia) || mediaPickerActive;
   const autoFocusTargetId = replyTarget?.id ?? "main";
   const shouldShowCancelAction = composerActive;
   const cancelLabel = replyTarget || replyToName ? "Cancelar resposta" : "Cancelar comentário";
@@ -1656,6 +1659,24 @@ const ReplyComposer = ({
     revokeSelectedMediaPreview();
     setSelectedMedia(null);
   }, [revokeSelectedMediaPreview]);
+
+  const beginMediaPickerInteraction = useCallback(() => {
+    mediaPickerActiveRef.current = true;
+    setMediaPickerActive(true);
+    setComposerActive(true);
+  }, []);
+
+  const endMediaPickerInteraction = useCallback(() => {
+    mediaPickerActiveRef.current = false;
+    setMediaPickerActive(false);
+  }, []);
+
+  const focusComposerInput = useCallback(() => {
+    window.setTimeout(() => {
+      const inputNode = resolvedFormRef.current?.querySelector<HTMLTextAreaElement>("textarea");
+      inputNode?.focus({ preventScroll: true });
+    }, 0);
+  }, [resolvedFormRef]);
 
   const resetCancelDrag = () => {
     cancelDragRef.current = null;
@@ -1676,6 +1697,7 @@ const ReplyComposer = ({
 
     hook.reset({ content: "" });
     clearSelectedMedia();
+    endMediaPickerInteraction();
     setComposerActive(false);
     resetCancelDrag();
     onDraftStateChange?.(false);
@@ -1707,11 +1729,29 @@ const ReplyComposer = ({
     return () => revokeSelectedMediaPreview();
   }, [revokeSelectedMediaPreview]);
 
+  useEffect(() => {
+    if (!mediaPickerActive) return;
+
+    const handleWindowFocus = () => {
+      window.setTimeout(() => {
+        endMediaPickerInteraction();
+        focusComposerInput();
+      }, 250);
+    };
+
+    window.addEventListener("focus", handleWindowFocus);
+
+    return () => window.removeEventListener("focus", handleWindowFocus);
+  }, [endMediaPickerInteraction, focusComposerInput, mediaPickerActive]);
+
   const handleMediaChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
 
-    if (!file || !mediaPermission.canAttach) return;
+    if (!file || !mediaPermission.canAttach) {
+      endMediaPickerInteraction();
+      return;
+    }
 
     revokeSelectedMediaPreview();
     const previewUrl = URL.createObjectURL(file);
@@ -1729,7 +1769,9 @@ const ReplyComposer = ({
       );
     });
     hook.clearErrors("content");
+    endMediaPickerInteraction();
     setComposerActive(true);
+    focusComposerInput();
   };
 
   const handleCancelPointerDown = (event: ReactPointerEvent<HTMLFormElement>) => {
@@ -1800,6 +1842,7 @@ const ReplyComposer = ({
         await onSubmit(values, selectedMedia?.file ?? null);
         hook.reset({ content: "" });
         clearSelectedMedia();
+        endMediaPickerInteraction();
         setComposerActive(false);
         onDraftStateChange?.(false);
       } catch {
@@ -1822,6 +1865,7 @@ const ReplyComposer = ({
       onBlur={(event) => {
         const nextTarget = event.relatedTarget;
         if (nextTarget instanceof Node && event.currentTarget.contains(nextTarget)) return;
+        if (mediaPickerActiveRef.current) return;
         setComposerActive(false);
         resetCancelDrag();
       }}
@@ -1876,7 +1920,9 @@ const ReplyComposer = ({
           fileInputRef={fileInputRef}
           isUploading={disabled && Boolean(selectedMedia)}
           mediaPermission={mediaPermission}
+          onAfterAction={() => setComposerActive(true)}
           onMediaChange={handleMediaChange}
+          onOpenDialog={beginMediaPickerInteraction}
           onRemoveSelected={clearSelectedMedia}
           selectedMedia={selectedMedia}
         />

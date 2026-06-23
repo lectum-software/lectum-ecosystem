@@ -850,3 +850,14 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR criado: `adrs/0153-fundo-branco-posts-psicologos-dentro-post.md`.
 - Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
+
+## Execucao complementar: corrigir anexo de midia no composer de comentarios (2026-06-23)
+
+- Pedido do usuario: o clique em `Anexar midia` abria a galeria, mas ao perder foco o comentario escondia o controle e a midia nao aparecia anexada.
+- Frontend: `ReplyComposer` passou a manter um estado temporario de selecao nativa de arquivo (`mediaPickerActive`) para nao desmontar o input enquanto a galeria/seletor esta aberta.
+- Frontend: `ReplyMediaAttachmentControl` passou a avisar o composer antes de abrir o seletor de arquivo e a prevenir que o botao roube o foco do textarea no clique.
+- Ao selecionar uma midia, a miniatura fica anexada ao campo e o comentario pode ser enviado somente com midia; ao cancelar a galeria, o composer e refocado sem manter anexo falso.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissoes, votos, salvos, ranking ou tracking de WhatsApp.
+- Fonte visual auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.
+- Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.

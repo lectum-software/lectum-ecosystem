@@ -37,6 +37,7 @@ type ReplyMediaAttachmentControlProps = {
   isUploading?: boolean;
   mediaPermission: ReplyMediaPermissionLike;
   onAfterAction?: () => void;
+  onOpenDialog?: () => void;
   onMediaChange: (event: ChangeEvent<HTMLInputElement>) => void;
   onRemoveCurrent?: () => void;
   onRemoveSelected: () => void;
@@ -140,6 +141,7 @@ export function ReplyMediaAttachmentControl({
   isUploading,
   mediaPermission,
   onAfterAction,
+  onOpenDialog,
   onMediaChange,
   onRemoveCurrent,
   onRemoveSelected,
@@ -205,6 +207,7 @@ export function ReplyMediaAttachmentControl({
   const openFileDialog = () => {
     if (!mediaPermission.canAttach || disabled) return;
 
+    onOpenDialog?.();
     fileInputRef.current?.click();
     onAfterAction?.();
   };
@@ -285,6 +288,7 @@ export function ReplyMediaAttachmentControl({
               )}
               disabled={!mediaPermission.canAttach || disabled}
               onClick={openFileDialog}
+              onMouseDown={(event) => event.preventDefault()}
               title={mediaPermission.canAttach ? "Anexar mídia" : mediaPermission.reason}
               type="button"
             >
