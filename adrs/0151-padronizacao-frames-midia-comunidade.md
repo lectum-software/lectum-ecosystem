@@ -1,4 +1,4 @@
-﻿# ADR-0151: Frames padronizados de mídia na comunidade
+# ADR-0151: Frames padronizados de mídia na comunidade
 
 ## Status
 
@@ -176,3 +176,26 @@ Validação complementar:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - `git diff --check`
+
+## Complemento 2026-06-23 - icone unico para anexar midia
+
+O affordance de anexar midia em posts, comentarios e respostas passa a usar o SVG `animated_images` fornecido pelo usuario. A decisao centraliza o desenho em `AnimatedImagesIcon`, com preenchimento por `currentColor`, para que o icone herde os estados visuais ja definidos pelos botoes da Lectum.
+
+Decisao complementar:
+
+- Substituir o icone `Video` do `lucide-react` no botao de midia da criacao/edicao de post.
+- Substituir o mesmo icone no controle compartilhado de midia de comentarios e respostas.
+- Manter textos, permissoes, validacoes, upload, preview, carrossel e limites de arquivo inalterados.
+
+Consequencias:
+
+- A acao de anexar midia passa a comunicar melhor que pode receber imagens e videos, nao apenas video.
+- O componente continua leve, sem novo pacote e sem dependencia de asset externo em runtime.
+- Nao ha mudanca em backend, schema, endpoints, storage ou regras de permissao.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- `git diff --check`: sucesso.

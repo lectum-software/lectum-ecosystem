@@ -881,3 +881,13 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
+
+## Execucao complementar: icone unico de anexar midia (2026-06-23)
+
+- Pedido do usuario: substituir o icone dos botoes de anexar midia na modal de criacao do post e nos comentarios pelo SVG anexado `animated_images_24dp_64748B_FILL0_wght400_GRAD0_opsz24.svg`.
+- Frontend: criado `AnimatedImagesIcon` a partir do SVG fornecido, usando `currentColor` para herdar cor, hover, foco e estados desabilitados do design system.
+- Frontend: o novo icone foi aplicado ao botao `Midia` da criacao/edicao de post e ao controle compartilhado `Anexar midia`/`Midia` de comentarios e respostas.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissoes, votos, salvos, ranking, midia publicada ou tracking de WhatsApp.
+- Fonte visual auditavel: SVG anexado pelo usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0151-padronizacao-frames-midia-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.

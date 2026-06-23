@@ -1,8 +1,9 @@
 "use client";
 
-import { Loader2, Video, X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import Image from "next/image";
 import { type ChangeEvent, type RefObject, useEffect, useState } from "react";
+import { AnimatedImagesIcon } from "@/components/ui/animated-images-icon";
 import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
@@ -295,7 +296,7 @@ export function ReplyMediaAttachmentControl({
               {isUploading ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
               ) : (
-                <Video className="h-3.5 w-3.5" aria-hidden="true" />
+                <AnimatedImagesIcon className="h-3.5 w-3.5" aria-hidden="true" />
               )}
               Anexar mídia
             </button>
@@ -394,7 +395,7 @@ export function ReplyMediaAttachmentControl({
           {isUploading ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
           ) : (
-            <Video className="h-3.5 w-3.5" aria-hidden="true" />
+            <AnimatedImagesIcon className="h-3.5 w-3.5" aria-hidden="true" />
           )}
           {actionLabel}
         </button>

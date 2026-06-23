@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Info, Loader2, Video, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Info, Loader2, X } from "lucide-react";
 import Image from "next/image";
 import {
   type ChangeEvent,
@@ -18,6 +18,7 @@ import { useUploadCommunityPostMedia } from "@/api/callers/community";
 import { useUpdatePost } from "@/api/callers/posts";
 import type { PostDetail } from "@/api/generator/types/posts";
 import { components } from "@/components/controllers";
+import { AnimatedImagesIcon } from "@/components/ui/animated-images-icon";
 import { type Field, useFormList } from "@/hooks/form";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
@@ -852,7 +853,7 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
         {uploadMutation.isPending ? (
           <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
         ) : (
-          <Video className="h-5 w-5" aria-hidden="true" />
+          <AnimatedImagesIcon className="h-5 w-5" aria-hidden="true" />
         )}
         <span className="hidden sm:inline">Mídia</span>
       </button>

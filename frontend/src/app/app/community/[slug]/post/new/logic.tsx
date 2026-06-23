@@ -1,6 +1,6 @@
 "use client";
 
-import { Info, Lightbulb, Loader2, Video, X } from "lucide-react";
+import { Info, Lightbulb, Loader2, X } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -20,6 +20,7 @@ import {
   useUploadCommunityPostMedia,
 } from "@/api/callers/community";
 import { components } from "@/components/controllers";
+import { AnimatedImagesIcon } from "@/components/ui/animated-images-icon";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
@@ -807,7 +808,7 @@ export const CreateCommunityPostLogic = ({
         {uploadMutation.isPending ? (
           <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
         ) : (
-          <Video className="h-5 w-5" aria-hidden="true" />
+          <AnimatedImagesIcon className="h-5 w-5" aria-hidden="true" />
         )}
         <span className="hidden sm:inline">{"M\u00eddia"}</span>
       </button>
