@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Info, Loader2, X } from "lucide-react";
+import { Info, Loader2, X } from "lucide-react";
 import Image from "next/image";
 import {
   type ChangeEvent,
@@ -88,6 +88,11 @@ type PostMediaPreviewItem = {
   orientation?: "landscape" | "portrait";
   src: string;
   type: "image" | "video";
+};
+
+type EditablePostMediaPreviewItem = PostMediaPreviewItem & {
+  selectedIndex?: number;
+  source: "selected" | "stored";
 };
 
 const createSelectedMediaId = () =>
@@ -219,8 +224,10 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
   const selectedMediaPreviewUrlsRef = useRef<string[]>([]);
   const [isGuidanceOpen, setIsGuidanceOpen] = useState(false);
   const [selectedMediaItems, setSelectedMediaItems] = useState<SelectedPostMedia[]>([]);
-  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
-  const [removeMedia, setRemoveMedia] = useState(false);
+  const [removedStoredMediaIds, setRemovedStoredMediaIds] = useState<string[]>([]);
+  const [storedMediaOrientations, setStoredMediaOrientations] = useState<
+    Record<string, SelectedPostMedia["orientation"]>
+  >({});
   const isPsychologistPost = post.author.role === "psicologo";
   const fields = useMemo(
     () =>
@@ -258,7 +265,6 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
     },
   });
   const canManageMedia = mediaPermission.canAttach && isPsychologistPost;
-  const canShowMediaControls = isPsychologistPost || Boolean(post.media_url);
   const isSubmitting = uploadMutation.isPending || updateMutation.isPending;
   const normalizedPostMediaType = normalizeMediaType(post.media_type);
   const storedMediaItems = useMemo<PostMediaPreviewItem[]>(() => {
@@ -290,20 +296,35 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
       },
     ];
   }, [normalizedPostMediaType, post.media_items, post.media_url]);
-  const activeMediaItems: PostMediaPreviewItem[] =
-    selectedMediaItems.length > 0
-      ? selectedMediaItems.map((item) => ({
-          caption: item.file.name,
-          id: item.id,
-          orientation: item.orientation,
-          src: item.previewUrl,
-          type: item.type,
-        }))
-      : removeMedia
-        ? []
-        : storedMediaItems;
-  const activeMediaSafeIndex = Math.min(activeMediaIndex, Math.max(0, activeMediaItems.length - 1));
-  const activeMedia = activeMediaItems[activeMediaSafeIndex] ?? null;
+  const canShowMediaControls = isPsychologistPost || storedMediaItems.length > 0;
+  const visibleStoredMediaItems = useMemo<EditablePostMediaPreviewItem[]>(
+    () =>
+      storedMediaItems
+        .filter((item) => !removedStoredMediaIds.includes(item.id))
+        .map((item) => ({
+          ...item,
+          orientation: storedMediaOrientations[item.id] ?? item.orientation,
+          source: "stored" as const,
+        })),
+    [removedStoredMediaIds, storedMediaItems, storedMediaOrientations],
+  );
+  const selectedMediaPreviewItems = useMemo<EditablePostMediaPreviewItem[]>(
+    () =>
+      selectedMediaItems.map((item, index) => ({
+        caption: item.file.name,
+        id: item.id,
+        orientation: item.orientation,
+        selectedIndex: index,
+        source: "selected" as const,
+        src: item.previewUrl,
+        type: item.type,
+      })),
+    [selectedMediaItems],
+  );
+  const editableMediaItems = useMemo<EditablePostMediaPreviewItem[]>(
+    () => [...visibleStoredMediaItems, ...selectedMediaPreviewItems],
+    [selectedMediaPreviewItems, visibleStoredMediaItems],
+  );
   const focusLastEditor = () => {
     window.setTimeout(() => {
       const target = document.getElementById(lastFocusedEditorIdRef.current) as
@@ -328,12 +349,6 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
     selectedMediaPreviewUrlsRef.current = [];
   }, []);
 
-  const clearSelectedMedia = useCallback(() => {
-    revokeSelectedMediaPreview();
-    setSelectedMediaItems([]);
-    setActiveMediaIndex(0);
-  }, [revokeSelectedMediaPreview]);
-
   const removeSelectedMediaAt = useCallback((index: number) => {
     setSelectedMediaItems((currentItems) => {
       const removedItem = currentItems[index];
@@ -344,19 +359,31 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
         (previewUrl) => previewUrl !== removedItem.previewUrl,
       );
 
-      const nextItems = currentItems.filter((_, currentIndex) => currentIndex !== index);
-      setActiveMediaIndex((currentIndex) =>
-        nextItems.length === 0 ? 0 : Math.min(currentIndex, nextItems.length - 1),
-      );
-
-      return nextItems;
+      return currentItems.filter((_, currentIndex) => currentIndex !== index);
     });
+  }, []);
+
+  const removeStoredMedia = useCallback((id: string) => {
+    setRemovedStoredMediaIds((currentIds) =>
+      currentIds.includes(id) ? currentIds : [...currentIds, id],
+    );
   }, []);
 
   const updateSelectedMediaOrientation = useCallback(
     (id: string, orientation: SelectedPostMedia["orientation"]) => {
       setSelectedMediaItems((currentItems) =>
         currentItems.map((item) => (item.id === id ? { ...item, orientation } : item)),
+      );
+    },
+    [],
+  );
+
+  const updateStoredMediaOrientation = useCallback(
+    (id: string, orientation: SelectedPostMedia["orientation"]) => {
+      setStoredMediaOrientations((currentOrientations) =>
+        currentOrientations[id] === orientation
+          ? currentOrientations
+          : { ...currentOrientations, [id]: orientation },
       );
     },
     [],
@@ -404,6 +431,8 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
 
     const videoFiles = files.filter((file) => file.type.startsWith("video/"));
     const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+    const hasAttachedMedia = editableMediaItems.length > 0;
+    const hasAttachedVideo = editableMediaItems.some((item) => item.type === "video");
 
     if (videoFiles.length > 0) {
       if (files.length > 1 || imageFiles.length > 0) {
@@ -414,9 +443,18 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
         return;
       }
 
-      clearSelectedMedia();
+      if (hasAttachedMedia) {
+        toast.error(
+          hasAttachedVideo
+            ? "Remova o vídeo atual antes de anexar outro vídeo."
+            : "Remova as imagens atuais antes de anexar um vídeo.",
+        );
+        focusLastEditor();
+        return;
+      }
+
       const previewUrl = URL.createObjectURL(videoFiles[0]);
-      selectedMediaPreviewUrlsRef.current = [previewUrl];
+      selectedMediaPreviewUrlsRef.current.push(previewUrl);
       setSelectedMediaItems([
         {
           file: videoFiles[0],
@@ -425,8 +463,6 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
           type: "video",
         },
       ]);
-      setActiveMediaIndex(0);
-      setRemoveMedia(false);
       focusLastEditor();
       return;
     }
@@ -437,22 +473,19 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
       return;
     }
 
-    const replacingExistingMedia = selectedMediaItems.length === 0 && storedMediaItems.length > 0;
-    const replacingVideo =
-      replacingExistingMedia || selectedMediaItems.some((item) => item.type === "video");
-    const baseItems = replacingVideo
-      ? []
-      : selectedMediaItems.filter((item) => item.type === "image");
-    const availableSlots = MAX_POST_CAROUSEL_IMAGES - baseItems.length;
+    if (hasAttachedVideo) {
+      toast.error("Remova o vídeo atual antes de anexar imagens.");
+      focusLastEditor();
+      return;
+    }
+
+    const currentImageCount = editableMediaItems.filter((item) => item.type === "image").length;
+    const availableSlots = MAX_POST_CAROUSEL_IMAGES - currentImageCount;
 
     if (availableSlots <= 0) {
       toast.error(`Você pode anexar até ${MAX_POST_CAROUSEL_IMAGES} imagens por post.`);
       focusLastEditor();
       return;
-    }
-
-    if (replacingVideo) {
-      clearSelectedMedia();
     }
 
     const filesToAttach = imageFiles.slice(0, availableSlots);
@@ -474,9 +507,7 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
       };
     });
 
-    setSelectedMediaItems([...baseItems, ...nextItems]);
-    setActiveMediaIndex(baseItems.length);
-    setRemoveMedia(false);
+    setSelectedMediaItems((currentItems) => [...currentItems, ...nextItems]);
     focusLastEditor();
   };
 
@@ -493,33 +524,60 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
               ),
             )
           : [];
-      const firstMedia = uploadedMedia[0] ?? null;
-      const imageMediaItems = uploadedMedia
+      const uploadedVideo = uploadedMedia.find((media) => media.media_type === "video") ?? null;
+      const uploadedImageMediaItems = uploadedMedia
         .filter((media) => media.media_type === "image")
         .map((media, index) => ({
           mediaType: "image" as const,
           mediaUrl: media.media_url,
           position: index,
         }));
+      const retainedImageMediaItems = visibleStoredMediaItems
+        .filter((media) => media.type === "image")
+        .map((media, index) => ({
+          mediaType: "image" as const,
+          mediaUrl: media.src,
+          position: index,
+        }));
+      const retainedVideoMedia = visibleStoredMediaItems.find((media) => media.type === "video");
+      const mediaChangeRequested =
+        removedStoredMediaIds.length > 0 || selectedMediaItems.length > 0;
+      const nextImageMediaItems = [...retainedImageMediaItems, ...uploadedImageMediaItems].map(
+        (media, index) => ({
+          ...media,
+          position: index,
+        }),
+      );
+      const mediaPayload = mediaChangeRequested
+        ? uploadedVideo
+          ? {
+              mediaType: "video" as const,
+              mediaUrl: uploadedVideo.media_url,
+            }
+          : retainedVideoMedia
+            ? {
+                mediaType: "video" as const,
+                mediaUrl: retainedVideoMedia.src,
+              }
+            : nextImageMediaItems.length > 0
+              ? {
+                  mediaItems: nextImageMediaItems,
+                  mediaType: "image" as const,
+                  mediaUrl: nextImageMediaItems[0]?.mediaUrl ?? "",
+                }
+              : {
+                  mediaItems: null,
+                  mediaType: null,
+                  mediaUrl: null,
+                }
+        : {};
 
       await updateMutation.mutateAsync({
         id: post.id,
         body: {
           content: values.content.trim(),
           title: values.title.trim(),
-          ...(firstMedia
-            ? {
-                mediaType: firstMedia.media_type,
-                mediaUrl: firstMedia.media_url,
-                ...(imageMediaItems.length > 0 ? { mediaItems: imageMediaItems } : {}),
-              }
-            : removeMedia
-              ? {
-                  mediaItems: null,
-                  mediaType: null,
-                  mediaUrl: null,
-                }
-              : {}),
+          ...mediaPayload,
         },
       });
     } catch {
@@ -651,175 +709,101 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
   );
 
   const renderSelectedMediaPreview = () => {
-    if (!activeMedia) {
-      if (!removeMedia) return null;
-
-      return (
-        <div className="mt-3 flex shrink-0 justify-start">
-          <span className="inline-flex items-center gap-2 rounded-full bg-surface-muted px-3 py-1.5 text-muted text-xs font-bold">
-            Mídia atual será removida
-            <button
-              className="text-muted transition hover:text-foreground"
-              disabled={isSubmitting}
-              onClick={() => {
-                setRemoveMedia(false);
-                focusLastEditor();
-              }}
-              onMouseDown={(event) => event.preventDefault()}
-              tabIndex={-1}
-              type="button"
-            >
-              Desfazer
-            </button>
-          </span>
-        </div>
-      );
-    }
-
-    const hasMultipleImages =
-      activeMediaItems.length > 1 && activeMediaItems.every((item) => item.type === "image");
-    const activePreviewRatio =
-      activeMedia.orientation === "landscape" || hasMultipleImages
-        ? "aspect-video"
-        : "aspect-[9/14]";
-    const previewWidth =
-      activeMedia.orientation === "landscape" || hasMultipleImages
-        ? "w-[min(18rem,72vw)] sm:w-64"
-        : "w-[min(9.5rem,48vw)] sm:w-28";
+    if (editableMediaItems.length === 0) return null;
 
     return (
-      <div className="mt-3 flex shrink-0 justify-start">
-        <figure
-          className={cn(
-            "relative overflow-hidden rounded-[1.4rem] border border-border bg-surface-muted shadow-[var(--lectum-shadow-soft)]",
-            previewWidth,
-          )}
-        >
-          <div
-            className={cn("relative w-full overflow-hidden bg-surface-muted", activePreviewRatio)}
-          >
-            {activeMedia.type === "image" ? (
-              <Image
-                alt="Miniatura da mídia do post"
-                className="object-cover"
-                fill
-                onLoad={(event) => {
-                  if (selectedMediaItems.length === 0) return;
-                  const { naturalHeight, naturalWidth } = event.currentTarget;
-                  updateSelectedMediaOrientation(
-                    activeMedia.id,
-                    naturalWidth && naturalHeight && naturalWidth / naturalHeight >= 1.12
-                      ? "landscape"
-                      : "portrait",
-                  );
-                }}
-                sizes="(min-width: 640px) 256px, 288px"
-                src={activeMedia.src}
-                unoptimized
-              />
-            ) : (
-              <video
-                aria-label="Miniatura do vídeo do post"
-                className="h-full w-full object-cover"
-                muted
-                onLoadedMetadata={(event) => {
-                  if (selectedMediaItems.length === 0) return;
-                  const { videoHeight, videoWidth } = event.currentTarget;
-                  updateSelectedMediaOrientation(
-                    activeMedia.id,
-                    videoWidth && videoHeight && videoWidth / videoHeight >= 1.12
-                      ? "landscape"
-                      : "portrait",
-                  );
-                }}
-                playsInline
-                preload="metadata"
-                src={activeMedia.src}
-              />
-            )}
+      <ul
+        aria-label="Mídias anexadas ao post"
+        className="mt-2 flex max-h-28 shrink-0 gap-2 overflow-x-auto overflow-y-hidden pb-1"
+      >
+        {editableMediaItems.map((mediaItem, index) => {
+          const frameClassName =
+            mediaItem.orientation === "landscape"
+              ? "h-20 w-32 sm:h-[5.5rem] sm:w-[9.75rem]"
+              : mediaItem.orientation === "portrait"
+                ? "h-24 w-[4.4rem] sm:h-28 sm:w-20"
+                : "h-20 w-20 sm:h-[5.5rem] sm:w-[5.5rem]";
 
-            {canManageMedia ? (
-              <button
-                aria-label="Remover mídia anexada"
-                className="absolute top-2 right-2 grid h-8 w-8 place-items-center rounded-full bg-surface/90 text-muted shadow-[var(--lectum-shadow-soft)] transition hover:bg-surface hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15"
-                disabled={isSubmitting}
-                onClick={() => {
-                  if (selectedMediaItems.length > 0) {
-                    removeSelectedMediaAt(activeMediaSafeIndex);
-                    setRemoveMedia(false);
-                  } else {
-                    setRemoveMedia(true);
-                    setActiveMediaIndex(0);
-                  }
-                  focusLastEditor();
-                }}
-                onMouseDown={(event) => event.preventDefault()}
-                tabIndex={-1}
-                type="button"
-              >
-                <X className="h-4 w-4" aria-hidden="true" />
-              </button>
-            ) : null}
+          return (
+            <li
+              className={cn(
+                "relative shrink-0 overflow-hidden rounded-[1.05rem] border border-border bg-surface-muted shadow-none",
+                frameClassName,
+              )}
+              key={`${mediaItem.source}-${mediaItem.id}`}
+            >
+              {mediaItem.type === "image" ? (
+                <Image
+                  alt={`Miniatura da imagem anexada ${index + 1}`}
+                  className="object-cover"
+                  fill
+                  onLoad={(event) => {
+                    const { naturalHeight, naturalWidth } = event.currentTarget;
+                    const orientation =
+                      naturalWidth && naturalHeight && naturalWidth / naturalHeight >= 1.12
+                        ? "landscape"
+                        : "portrait";
 
-            {hasMultipleImages ? (
-              <>
+                    if (mediaItem.source === "selected") {
+                      updateSelectedMediaOrientation(mediaItem.id, orientation);
+                      return;
+                    }
+
+                    updateStoredMediaOrientation(mediaItem.id, orientation);
+                  }}
+                  sizes="160px"
+                  src={mediaItem.src}
+                  unoptimized
+                />
+              ) : (
+                <video
+                  aria-label="Miniatura do vídeo anexado"
+                  className="h-full w-full object-cover"
+                  muted
+                  onLoadedMetadata={(event) => {
+                    const { videoHeight, videoWidth } = event.currentTarget;
+                    const orientation =
+                      videoWidth && videoHeight && videoWidth / videoHeight >= 1.12
+                        ? "landscape"
+                        : "portrait";
+
+                    if (mediaItem.source === "selected") {
+                      updateSelectedMediaOrientation(mediaItem.id, orientation);
+                      return;
+                    }
+
+                    updateStoredMediaOrientation(mediaItem.id, orientation);
+                  }}
+                  playsInline
+                  preload="metadata"
+                  src={mediaItem.src}
+                />
+              )}
+
+              {canManageMedia ? (
                 <button
-                  aria-label="Imagem anterior"
-                  className="absolute top-1/2 left-2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-slate-950/45 text-white backdrop-blur transition hover:bg-slate-950/65 focus:outline-none focus:ring-2 focus:ring-white/70"
+                  aria-label={`Remover mídia anexada ${index + 1}`}
+                  className="absolute top-1.5 right-1.5 grid h-7 w-7 place-items-center rounded-full bg-surface/92 text-muted shadow-none ring-1 ring-border/70 transition hover:bg-surface hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15"
                   disabled={isSubmitting}
                   onClick={() => {
-                    setActiveMediaIndex((current) =>
-                      current <= 0 ? activeMediaItems.length - 1 : current - 1,
-                    );
+                    if (mediaItem.source === "selected") {
+                      removeSelectedMediaAt(mediaItem.selectedIndex ?? 0);
+                    } else {
+                      removeStoredMedia(mediaItem.id);
+                    }
                     focusLastEditor();
                   }}
                   onMouseDown={(event) => event.preventDefault()}
                   tabIndex={-1}
                   type="button"
                 >
-                  <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+                  <X className="h-3.5 w-3.5" aria-hidden="true" />
                 </button>
-                <button
-                  aria-label="Próxima imagem"
-                  className="absolute top-1/2 right-12 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-slate-950/45 text-white backdrop-blur transition hover:bg-slate-950/65 focus:outline-none focus:ring-2 focus:ring-white/70"
-                  disabled={isSubmitting}
-                  onClick={() => {
-                    setActiveMediaIndex((current) =>
-                      current >= activeMediaItems.length - 1 ? 0 : current + 1,
-                    );
-                    focusLastEditor();
-                  }}
-                  onMouseDown={(event) => event.preventDefault()}
-                  tabIndex={-1}
-                  type="button"
-                >
-                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
-                </button>
-                <div className="absolute inset-x-0 bottom-2 flex justify-center gap-1">
-                  {activeMediaItems.map((item, index) => (
-                    <button
-                      aria-label={`Mostrar imagem ${index + 1}`}
-                      className={cn(
-                        "h-1.5 rounded-full bg-white/65 transition-all",
-                        index === activeMediaSafeIndex ? "w-4 bg-white" : "w-1.5",
-                      )}
-                      disabled={isSubmitting}
-                      key={item.id}
-                      onClick={() => {
-                        setActiveMediaIndex(index);
-                        focusLastEditor();
-                      }}
-                      onMouseDown={(event) => event.preventDefault()}
-                      tabIndex={-1}
-                      type="button"
-                    />
-                  ))}
-                </div>
-              </>
-            ) : null}
-          </div>
-        </figure>
-      </div>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
     );
   };
   const renderPsychologistMediaButton = () => (

@@ -891,3 +891,14 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual auditavel: SVG anexado pelo usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0151-padronizacao-frames-midia-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
+
+## Execucao complementar: miniaturas separadas na edicao de post (2026-06-23)
+
+- Pedido do usuario: na edicao do post, exibir as midias em miniaturas separadas e garantir que o botao `Midia` apenas abra a galeria para anexar novas midias, sem remover as ja existentes.
+- Frontend: `PostEditModal` deixou de usar o carrossel grande dentro da modal de edicao e passou a renderizar cada midia atual/selecionada como miniatura independente com acao individual de remover.
+- Frontend: o botao `Midia` agora preserva as midias existentes; novas imagens sao anexadas ao conjunto atual ate o limite de carrossel, e videos continuam sendo tratados como anexo unico sem misturar com imagens.
+- Frontend: ao salvar, a payload preserva as midias armazenadas que nao foram removidas, reindexa as imagens mantidas/novas e envia remocao somente quando o usuario remove explicitamente todos os anexos.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissoes, votos, salvos, ranking ou tracking de WhatsApp.
+- Fonte visual auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0151-padronizacao-frames-midia-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.

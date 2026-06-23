@@ -199,3 +199,28 @@ Validacao complementar:
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
 - `git diff --check`: sucesso.
+
+## Complemento 2026-06-23 - miniaturas separadas na edicao de post
+
+A edicao de post precisava seguir a mesma intencao da criacao: manter o campo de texto como foco principal e permitir gerenciar anexos sem transformar a midia em um carrossel grande dentro da modal. Tambem havia um risco de perda acidental porque o botao `Midia` substituia/removia midias existentes ao abrir a galeria.
+
+Decisao complementar:
+
+- Renderizar as midias atuais e as novas midias selecionadas como miniaturas independentes na modal de edicao de post.
+- Permitir remocao individual por miniatura, sem acao implicita de substituir o conjunto inteiro.
+- Fazer o botao `Midia` apenas abrir o seletor de arquivos e anexar novas imagens ao conjunto atual, respeitando o limite de carrossel.
+- Manter videos como anexo unico: para trocar de video ou alternar entre video e imagens, o usuario precisa remover explicitamente a midia atual antes de anexar outra.
+- Ao salvar, preservar as midias armazenadas que nao foram removidas, anexar as novas imagens ao final e reindexar a ordem enviada ao backend.
+
+Consequencias:
+
+- A edicao fica mais previsivel e reduz exclusoes/substituicoes acidentais de midia.
+- A modal deixa de ocupar grande area com um carrossel interno e preserva melhor a area de texto.
+- Nao ha mudanca em schema, endpoints, storage ou limites de upload; a decisao atua apenas na composicao da payload e na UI da modal.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- `git diff --check`: sucesso.
