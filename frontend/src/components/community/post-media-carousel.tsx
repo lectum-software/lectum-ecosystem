@@ -107,6 +107,9 @@ export const PostMediaCarousel = ({
 
   if (!activeItem) return null;
 
+  const hasFooter = Boolean(footer);
+  const mediaRoundedClassName = cn(roundedClassName, hasFooter && "rounded-b-none");
+
   const goToPrevious = () => {
     setActiveIndex((current) => {
       const safeCurrent = Math.min(current, Math.max(0, carouselItems.length - 1));
@@ -122,13 +125,16 @@ export const PostMediaCarousel = ({
 
   return (
     <figure
-      className={getCommunityMediaFrameClassName(frameVariant, frameOrientation, className)}
+      className={cn(
+        getCommunityMediaFrameClassName(frameVariant, frameOrientation, className),
+        hasFooter && "gap-0",
+      )}
       data-post-card-ignore-click="true"
     >
       <div
         className={getCommunityMediaViewportClassName(
           frameOrientation,
-          roundedClassName,
+          mediaRoundedClassName,
           viewportClassName,
         )}
       >

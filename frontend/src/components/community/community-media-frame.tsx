@@ -285,11 +285,17 @@ export const CommunityMediaBlock = ({
     detectedMedia?.src === resolvedUrl && detectedMedia.type === normalizedMediaType
       ? detectedMedia.orientation
       : "landscape";
-  const frameClassName = getCommunityMediaFrameClassName(variant, orientation, className);
+  const hasFooter = Boolean(footer);
+  const frameClassName = cn(
+    getCommunityMediaFrameClassName(variant, orientation, className),
+    hasFooter && "gap-0",
+  );
+  const mediaRoundedClassName = cn(roundedClassName, hasFooter && "rounded-b-none");
   const viewportClasses = getCommunityMediaViewportClassName(
     orientation,
-    roundedClassName,
+    mediaRoundedClassName,
     viewportClassName,
+    normalizedMediaType,
   );
   const resolvedSizes = sizes ?? getCommunityMediaSizes(variant, orientation);
   const videoAspectRatio =
@@ -308,7 +314,7 @@ export const CommunityMediaBlock = ({
           className={cn(
             "w-full border-border shadow-none",
             videoMediaFrameAspectClassName[orientation],
-            roundedClassName,
+            mediaRoundedClassName,
             viewportClassName,
             videoClassName,
           )}

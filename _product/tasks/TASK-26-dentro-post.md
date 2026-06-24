@@ -1020,3 +1020,19 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm --dir frontend build`
 - [x] `pnpm check`
 - [x] `git diff --check`
+
+## Execucao complementar: CTA WhatsApp conectado a midia (2026-06-24)
+
+- Pedido do usuario: refinar o botao `Chamar no WhatsApp` dentro de posts e respostas/comentarios com midia para parecer conectado ao video/imagem, e nao um card separado.
+- Frontend: `CommunityWhatsAppCta` passa a exibir `WhatsApp` na primeira linha e `Falar com {primeiro nome}` na segunda quando estiver anexado a uma midia.
+- Frontend: `CommunityMediaBlock` e `PostMediaCarousel` removem o gap entre midia e CTA e eliminam o arredondamento inferior do frame quando existe footer, mantendo o CTA com topo conectado e cantos inferiores arredondados.
+- CTAs sem midia permanecem como botao independente.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, upload, permissoes, votos, salvos, ranking ou tracking de WhatsApp.
+- Fonte visual/auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR criado: `adrs/0164-cta-whatsapp-conectado-midias-comunidade.md`.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `git diff --check`
