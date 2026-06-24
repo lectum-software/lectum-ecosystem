@@ -381,3 +381,18 @@ Validacoes executadas:
 - Validacao de servico backend com psicologo temporario real removido ao final: tentativa de alterar `cpf`, `crp_region` e `crp_number` em perfil `admin_grant` com CPF/CRP completos e `crp_status="pendente"` retornou `200`, preservou os valores originais na resposta e manteve `psychologist_profile.cpf/crp` inalterados no banco.
 - Chrome/CDP headless local em `/app/professional/profile/setup`, viewport 390x844, com `tuliosrezende@gmail.com`: `cpf`, `crp_region` e `crp_number` ficaram `disabled`, os valores persistidos foram exibidos, a mensagem de bloqueio apareceu e `scrollWidth=390`; token temporario removido ao final.
 - Verificacao estatica confirmou a regra de bloqueio no frontend/backend e o `undefined` seletivo no repository para impedir overwrite de CPF/CRP bloqueados.
+
+## Ajuste complementar em 2026-06-24 - confirmacao antes de excluir video de apresentacao
+
+- Ao clicar em `Excluir video`, a tela `/app/professional/profile/setup` agora abre uma modal de confirmacao antes de executar a remocao.
+- A mensagem informa explicitamente que excluir o video remove o perfil da pagina de psicologos ate que um novo video de apresentacao seja enviado.
+- A exclusao so e executada apos confirmacao explicita em `Excluir video`; durante a mutation pendente, fechamento e confirmacao ficam bloqueados para evitar estado ambiguo.
+- Nao houve alteracao de backend, Prisma, rotas, storage, dados persistidos, contratos ou packages.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a referencia auditavel foi o prototipo local `_product/proto/Editar Perfil - Psicologo.jpg` e o pedido direto do usuario.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessao, preservando a protecao da rota privada.

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import {
   Award,
@@ -349,6 +349,92 @@ const ProfileInactiveBanner = () => (
     </div>
   </div>
 );
+
+const VideoRemovalConfirmationModal = ({
+  disabled = false,
+  onClose,
+  onConfirm,
+  open,
+}: {
+  disabled?: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  open: boolean;
+}) => {
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !disabled) {
+        onClose();
+      }
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [disabled, onClose, open]);
+
+  if (!open) return null;
+
+  return (
+    <div
+      aria-labelledby="video-removal-confirmation-title"
+      aria-modal="true"
+      className="fixed inset-0 z-[150] grid place-items-center bg-foreground/55 px-4 py-6 text-foreground backdrop-blur-md dark:bg-background/75"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !disabled) {
+          onClose();
+        }
+      }}
+      role="dialog"
+    >
+      <section className="w-full max-w-[430px] rounded-[28px] border border-danger/20 bg-surface p-5 shadow-[var(--lectum-shadow)]">
+        <div className="flex items-start gap-3">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-danger/10 text-danger">
+            <TriangleAlert className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <h2
+              className="text-lg font-extrabold tracking-[-0.02em] text-foreground"
+              id="video-removal-confirmation-title"
+            >
+              Excluir vídeo de apresentação?
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-muted">
+              Se você excluir o vídeo, seu perfil será removido da página de psicólogos até que um
+              novo vídeo de apresentação seja enviado.
+            </p>
+            <p className="mt-2 text-sm font-semibold leading-6 text-foreground">
+              Tem certeza que deseja excluir?
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-3 sm:grid-cols-[1fr_auto]">
+          <Button disabled={disabled} onClick={onClose} type="button" variant="outline">
+            Manter vídeo
+          </Button>
+          <Button
+            className="min-w-36"
+            disabled={disabled}
+            onClick={onConfirm}
+            type="button"
+            variant="destructive"
+          >
+            {disabled ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
+            Excluir vídeo
+          </Button>
+        </div>
+      </section>
+    </div>
+  );
+};
 
 const CatalogPicker = ({
   description,
@@ -891,6 +977,7 @@ export const ProfessionalProfileSetupLogic = () => {
   const [avatarActionsOpen, setAvatarActionsOpen] = useState(false);
   const [coverImageActionsOpen, setCoverImageActionsOpen] = useState(false);
   const [videoActionsOpen, setVideoActionsOpen] = useState(false);
+  const [videoRemovalConfirmOpen, setVideoRemovalConfirmOpen] = useState(false);
   const {
     deleteAvatar,
     deleteCoverImage,
@@ -941,7 +1028,10 @@ export const ProfessionalProfileSetupLogic = () => {
         onError: (error) => toast.error(resolveApiError(error)),
       },
       deleteVideo: {
-        onSuccess: () => toast.success("Vídeo de apresentação removido"),
+        onSuccess: () => {
+          setVideoRemovalConfirmOpen(false);
+          toast.success("Vídeo de apresentação removido");
+        },
         onError: (error) => toast.error(resolveApiError(error)),
       },
     },
@@ -1352,6 +1442,11 @@ export const ProfessionalProfileSetupLogic = () => {
   const handleVideoRemoval = () => {
     if (!profile.data?.profile.video_url) return;
     setVideoActionsOpen(false);
+    setVideoRemovalConfirmOpen(true);
+  };
+
+  const confirmVideoRemoval = () => {
+    if (!profile.data?.profile.video_url || deleteVideo.isPending) return;
     deleteVideo.mutate();
   };
 
@@ -1645,6 +1740,12 @@ export const ProfessionalProfileSetupLogic = () => {
 
   return (
     <PrivateTemplate showHeader={false}>
+      <VideoRemovalConfirmationModal
+        disabled={deleteVideo.isPending}
+        onClose={() => setVideoRemovalConfirmOpen(false)}
+        onConfirm={confirmVideoRemoval}
+        open={videoRemovalConfirmOpen}
+      />
       <section className="mx-auto grid w-full max-w-[394px] gap-4 md:max-w-3xl">
         <AppPageHeader
           backHref={PROFESSIONAL_PROFILE_MENU_HREF}
