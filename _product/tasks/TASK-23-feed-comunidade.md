@@ -377,3 +377,22 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nao houve alteracao de backend, Prisma, migrations, packages, endpoints, payloads, votos, salvamento ou compartilhamento.
 - ADR atualizado: `adrs/0062-comunidades-feed-paginado.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check --write -- 'src/app/app/community/[slug]/logic.tsx' 'src/components/community/community-post-card.tsx'`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado validando no mobile que o texto do feed abre o detalhe e que upvote nao navega.
+
+## Execucao complementar: background uniforme no feed de comunidades (2026-06-23)
+
+- Pedido do usuario: padronizar o background de `Comunidades / Feed` para a mesma sensacao visual das telas `Psicologos`, `Favoritos`, `Notificacoes` e `Perfil`.
+- Frontend: `/app/community/feed` e `/app/community/[slug]` passaram a usar o token global `bg-background` no `PrivateTemplate`, removendo o hardcode `#F5F7FA` do fundo principal.
+- Frontend: os headers sticky de busca/filtros agora usam `bg-background` solido, sem transparencias, blur ou `supports-[backdrop-filter]`, evitando faixas ou manchas sutis no topo.
+- Frontend: `/app/community` tambem passou a usar `bg-background` e removeu o fade lateral em gradiente do carrossel de comunidades, mantendo a hierarquia somente por cards, bordas e componentes.
+- Frontend: o offset de foco do FAB de publicar passou a usar `ring-offset-background`, evitando divergencia tonal em estados de foco.
+- Estados de loading/vazio continuam como superficies/cards sobre o fundo uniforme, sem alterar contratos de API, dados, rankings, posts, comentarios, midias, storage ou permissoes.
+- Nao houve alteracao de backend, Prisma schema, migrations ou packages.
+- Fonte visual auditavel: screenshots do usuario e telas locais existentes; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR criado: `adrs/0160-background-uniforme-comunidades-feed.md`.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`

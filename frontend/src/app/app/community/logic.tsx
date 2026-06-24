@@ -202,7 +202,7 @@ const PopularCommunitiesCarousel = ({ communities }: { communities: CommunityExp
       </div>
 
       {canScrollNext ? (
-        <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-24 items-center justify-end bg-gradient-to-l from-white via-white/85 to-transparent pr-1 lg:flex">
+        <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-24 items-center justify-end pr-1 lg:flex">
           <button
             aria-label="Ver mais comunidades populares"
             className="pointer-events-auto grid h-10 w-10 place-items-center rounded-full border border-[#DCE7F2] bg-white/92 text-primary backdrop-blur transition hover:border-primary/35 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
@@ -304,11 +304,11 @@ export const CommunityLogic = () => {
   return (
     <PrivateTemplate
       allowAnonymous
-      contentClassName="relative min-h-screen max-w-none overflow-x-hidden bg-white px-0 pt-0 sm:pt-0"
+      contentClassName="relative min-h-screen max-w-none overflow-x-hidden bg-background px-0 pt-0 sm:pt-0"
       navigationTheme="solidWhite"
     >
       <section className="relative z-10 mx-auto grid w-full max-w-[430px] min-w-0 gap-6 overflow-x-clip px-5 pb-10 sm:max-w-2xl lg:max-w-4xl">
-        <div className="sticky top-0 z-20 -mx-5 bg-white/95 px-5 py-2.5 backdrop-blur supports-[backdrop-filter]:bg-white/86">
+        <div className="sticky top-0 z-20 -mx-5 bg-background px-5 py-2.5">
           <div className="flex items-center gap-3">
             <button
               aria-label="Voltar"
