@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
+import { toast } from "sonner";
 import { usePatient } from "@/api/callers/patient";
 import type {
   PatientPrivateProfile,
@@ -55,7 +56,7 @@ const resolvePatientProfileError = (error: unknown) => {
 
   if (normalized.includes("telefone")) return "Informe um telefone válido ou deixe o campo vazio.";
   if (normalized.includes("perfil") || normalized.includes("autoriz")) {
-    return "A edição deste perfil é exclusiva para pacientes.";
+    return "A edição deste perfil é exclusiva para perfis pessoais.";
   }
   if (normalized.includes("token") || normalized.includes("sess")) {
     return "Sua sessão precisa estar ativa para editar o perfil.";
@@ -80,6 +81,7 @@ export const ProfileEditLogic = () => {
         patient_profile: data.profile,
       }),
     );
+    toast.success("Perfil atualizado com sucesso");
     router.push("/app/profile");
   };
 
@@ -186,15 +188,15 @@ export const ProfileEditLogic = () => {
         <AppPageHeader backHref="/app/profile" backLabel="Voltar ao perfil" title="Editar perfil" />
 
         {!isPatient ? (
-          <InlineAlert title="Perfil de paciente" variant="warning">
-            Esta tela edita apenas dados do paciente. Psicólogos devem usar a tela de perfil
+          <InlineAlert title="Perfil pessoal" variant="warning">
+            Esta tela edita apenas dados do perfil pessoal. Psicólogos devem usar a tela de perfil
             profissional.
           </InlineAlert>
         ) : null}
 
         {profile.isLoading || profile.isPending ? (
           <div className="grid min-h-48 place-items-center rounded-[var(--lectum-card-radius)] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
-            <LoadingState label="Carregando dados do paciente" />
+            <LoadingState label="Carregando seus dados" />
           </div>
         ) : null}
 
@@ -211,7 +213,7 @@ export const ProfileEditLogic = () => {
                 <div className="grid h-32 w-32 place-items-center overflow-hidden rounded-full bg-surface-muted text-3xl font-extrabold text-primary ring-4 ring-primary-soft">
                   {avatarSrc ? (
                     <Image
-                      alt={storedUser?.name || "Foto do paciente"}
+                      alt={storedUser?.name || "Foto do perfil"}
                       className="h-full w-full object-cover"
                       height={128}
                       src={avatarSrc}
