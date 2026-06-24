@@ -288,6 +288,7 @@ const ReplyItemCard = ({
   const saveMutation = useSaveReply(item.post.id, reply?.id ?? "");
   const [voteOverride, setVoteOverride] = useState<{
     currentVote: 1 | -1 | null;
+    downvotes: number;
     replyId: string;
     upvotes: number;
   } | null>(null);
@@ -304,11 +305,13 @@ const ReplyItemCard = ({
   const hasReplyMedia = Boolean(reply.media_url && reply.media_type);
   const hasReplyText = Boolean(reply.content.trim());
   const hasVerifiedProfessionalReply = Boolean(reply.has_verified_professional_reply);
+  const isPsychologistReply = reply.author.role === "psicologo";
   const voteState =
     voteOverride?.replyId === reply.id
       ? voteOverride
       : {
           currentVote: reply.current_user_vote,
+          downvotes: reply.downvotes_count,
           upvotes: reply.upvotes_count,
         };
   const saveState =
@@ -324,9 +327,11 @@ const ReplyItemCard = ({
     const previousVoteOverride = voteOverride;
     const nextVote = voteState.currentVote === value ? null : value;
     const upDelta = (nextVote === 1 ? 1 : 0) - (voteState.currentVote === 1 ? 1 : 0);
+    const downDelta = (nextVote === -1 ? 1 : 0) - (voteState.currentVote === -1 ? 1 : 0);
 
     setVoteOverride({
       currentVote: nextVote,
+      downvotes: Math.max(0, voteState.downvotes + downDelta),
       replyId: reply.id,
       upvotes: Math.max(0, voteState.upvotes + upDelta),
     });
@@ -340,6 +345,7 @@ const ReplyItemCard = ({
 
           setVoteOverride({
             currentVote: data.value,
+            downvotes: Math.max(0, data.downvotes_count ?? voteState.downvotes + downDelta),
             replyId: reply.id,
             upvotes: Math.max(0, data.upvotes_count),
           });
@@ -478,6 +484,7 @@ const ReplyItemCard = ({
         }}
         currentVote={voteState.currentVote}
         disabled={voteMutation.isPending}
+        downvotesCount={isPsychologistReply ? voteState.downvotes : undefined}
         onVote={handleVote}
         save={{
           active: saveState.saved,
@@ -487,6 +494,7 @@ const ReplyItemCard = ({
           onClick: handleToggleSave,
         }}
         share={{
+          count: isPsychologistReply ? 0 : undefined,
           label: `Compartilhar ${interactionCopy.singular}`,
           onClick: () => onShare(item.post, reply.id),
         }}
@@ -735,6 +743,7 @@ export const MyPostsLogic = () => {
                     openPostOnCardClick
                     post={item.post}
                     showAuthorHeader={false}
+                    showProfessionalEngagementCounters
                     showWhatsappCta={false}
                   />
                 ),

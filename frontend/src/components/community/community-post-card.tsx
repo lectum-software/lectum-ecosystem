@@ -56,12 +56,19 @@ type CommunityPostCardProps = {
   showAuthorHeader?: boolean;
   showCommunityHeader?: boolean;
   showHighlightedProfessionalReply?: boolean;
+  showProfessionalEngagementCounters?: boolean;
   showWhatsappCta?: boolean;
   statusBadge?: ReactNode;
 };
 
 type ProfileContributionPost = PostListPost & {
   contribution_type?: "post" | "reply";
+};
+
+type PostWithOptionalSortMetrics = PostListPost & {
+  sort_metrics?: {
+    shares_count?: number | null;
+  };
 };
 
 const INLINE_TEXT_MAX_LINES = 2;
@@ -486,6 +493,7 @@ export const CommunityPostCard = ({
   showAuthorHeader = true,
   showCommunityHeader = true,
   showHighlightedProfessionalReply = true,
+  showProfessionalEngagementCounters = false,
   showWhatsappCta = true,
   statusBadge,
 }: CommunityPostCardProps) => {
@@ -544,6 +552,7 @@ export const CommunityPostCard = ({
   const [contentExpanded, setContentExpanded] = useState(false);
   const [voteOverride, setVoteOverride] = useState<{
     currentVote: 1 | -1 | null;
+    downvotes: number;
     postId: string;
     upvotes: number;
   } | null>(null);
@@ -557,6 +566,7 @@ export const CommunityPostCard = ({
       ? voteOverride
       : {
           currentVote: post.current_user_vote,
+          downvotes: post.downvotes_count,
           upvotes: post.upvotes_count,
         };
   const saveSnapshot =
@@ -570,8 +580,10 @@ export const CommunityPostCard = ({
     const previousOverride = voteOverride;
     const nextVote = voteSnapshot.currentVote === value ? null : value;
     const upDelta = (nextVote === 1 ? 1 : 0) - (voteSnapshot.currentVote === 1 ? 1 : 0);
+    const downDelta = (nextVote === -1 ? 1 : 0) - (voteSnapshot.currentVote === -1 ? 1 : 0);
     const optimisticSnapshot = {
       currentVote: nextVote,
+      downvotes: Math.max(0, voteSnapshot.downvotes + downDelta),
       postId: post.id,
       upvotes: Math.max(0, voteSnapshot.upvotes + upDelta),
     };
@@ -588,6 +600,7 @@ export const CommunityPostCard = ({
 
           setVoteOverride({
             currentVote: data.value,
+            downvotes: Math.max(0, data.downvotes_count ?? optimisticSnapshot.downvotes),
             postId: post.id,
             upvotes: data.upvotes_count,
           });
@@ -652,6 +665,11 @@ export const CommunityPostCard = ({
     label: saveSnapshot.saved ? "Remover dos salvos" : "Salvar",
     onClick: interactiveActions ? handleToggleSave : undefined,
   };
+  const shouldShowProfessionalEngagementCounters =
+    showProfessionalEngagementCounters && isPsychologistPost;
+  const shareCount = shouldShowProfessionalEngagementCounters
+    ? ((post as PostWithOptionalSortMetrics).sort_metrics?.shares_count ?? 0)
+    : undefined;
   const postHref = postDetailHref(post, focusedReplyId);
   const handleCardClick = (event: ReactMouseEvent<HTMLElement>) => {
     if (
@@ -879,6 +897,9 @@ export const CommunityPostCard = ({
         }}
         currentVote={voteSnapshot.currentVote}
         disabled={voteMutation.isPending}
+        downvotesCount={
+          shouldShowProfessionalEngagementCounters ? voteSnapshot.downvotes : undefined
+        }
         endSlot={footerExtra}
         onVote={interactiveActions ? handleVote : undefined}
         save={{
@@ -889,6 +910,7 @@ export const CommunityPostCard = ({
           onClick: saveAction.onClick,
         }}
         share={{
+          count: shareCount,
           label: displayTitle ? `Compartilhar ${displayTitle}` : "Compartilhar publicação",
           onClick: () => onShare(post),
         }}

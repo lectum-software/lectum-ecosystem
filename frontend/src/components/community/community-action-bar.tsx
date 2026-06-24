@@ -30,6 +30,7 @@ type SaveAction = {
 };
 
 type ShareAction = {
+  count?: number;
   label?: string;
   onClick?: ActionHandler;
 };
@@ -49,6 +50,7 @@ export type CommunityActionBarProps = {
   save?: SaveAction;
   share?: ShareAction;
   size?: CommunityActionSize;
+  downvotesCount?: number;
   upvotesCount: number;
   voteLabel?: string;
   votePresentation?: VotePresentation;
@@ -114,6 +116,7 @@ export const CommunityActionBar = ({
   share,
   showUpvoteText = true,
   size = "sm",
+  downvotesCount,
   upvotesCount,
   voteLabel = "Marcar como útil",
   votePresentation = "cluster",
@@ -156,6 +159,7 @@ export const CommunityActionBar = ({
           <span className={separatorClassName(size, votePresentation)} aria-hidden="true" />
           {canVote && onVote ? (
             <VoteActionButton
+              count={downvotesCount}
               currentVote={currentVote}
               disabled={disabled}
               icon={ArrowDown}
@@ -167,7 +171,12 @@ export const CommunityActionBar = ({
               variant={votePresentation === "inline" ? "ghost" : "default"}
             />
           ) : (
-            <PostActionMetric icon={ArrowDown} label="Dar downvote" size={size} />
+            <PostActionMetric
+              count={downvotesCount}
+              icon={ArrowDown}
+              label="Dar downvote"
+              size={size}
+            />
           )}
         </div>
 
@@ -260,13 +269,19 @@ export const CommunityActionBar = ({
         {share ? (
           share.onClick ? (
             <PostActionButton
+              count={share.count}
               icon={Share2}
               label={share.label ?? "Compartilhar"}
               onClick={stopActionPropagation(share.onClick)}
               size={size}
             />
           ) : (
-            <PostActionMetric icon={Share2} label={share.label ?? "Compartilhar"} size={size} />
+            <PostActionMetric
+              count={share.count}
+              icon={Share2}
+              label={share.label ?? "Compartilhar"}
+              size={size}
+            />
           )
         ) : null}
 
