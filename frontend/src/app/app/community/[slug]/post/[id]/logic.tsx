@@ -2560,11 +2560,11 @@ export const PostDetailLogic = () => {
   return (
     <PrivateTemplate
       allowAnonymous
-      contentClassName="bg-[#F5F7FA] px-0 py-0 dark:bg-background"
+      contentClassName="bg-background px-0 py-0"
       navigationTheme="solidWhite"
       showHeader
     >
-      <section className="mx-auto min-h-screen w-full max-w-[430px] bg-[#F5F7FA] pb-6 text-[#182033] dark:bg-background dark:text-foreground sm:max-w-2xl lg:max-w-3xl">
+      <section className="mx-auto min-h-screen w-full max-w-[430px] bg-background pb-6 text-[#182033] dark:text-foreground sm:max-w-2xl lg:max-w-3xl">
         {postQuery.isLoading || postQuery.isPending ? (
           <div className="grid min-h-[70vh] place-items-center px-5">
             <LoadingState label="Carregando post" />
@@ -2961,11 +2961,11 @@ export const PostReplyThreadLogic = () => {
   return (
     <PrivateTemplate
       allowAnonymous
-      contentClassName="bg-[#F5F7FA] px-0 py-0 dark:bg-background"
+      contentClassName="bg-background px-0 py-0"
       navigationTheme="solidWhite"
       showHeader
     >
-      <section className="mx-auto min-h-screen w-full max-w-[430px] bg-[#F5F7FA] pb-6 text-[#182033] dark:bg-background dark:text-foreground sm:max-w-2xl lg:max-w-3xl">
+      <section className="mx-auto min-h-screen w-full max-w-[430px] bg-background pb-6 text-[#182033] dark:text-foreground sm:max-w-2xl lg:max-w-3xl">
         <div className="px-5 pt-4 pb-2 sm:px-0 sm:pt-5 sm:pb-3">
           <div className="grid min-h-[58px] grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center gap-2">
             <Button
