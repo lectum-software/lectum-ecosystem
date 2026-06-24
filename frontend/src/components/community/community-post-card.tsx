@@ -522,8 +522,11 @@ export const CommunityPostCard = ({
   const shouldShowPostCarousel = !primaryReply && postImageMediaItems.length > 1;
   const displayFeaturedBadge =
     primaryReply?.author.featured_badge ?? displayAuthor.featured_badge ?? post.featured_badge;
+  const isOriginalPostByPatient = post.author.role === "paciente";
   const highlightedProfessionalReply =
-    primaryReply || !showHighlightedProfessionalReply ? null : post.highlighted_professional_reply;
+    primaryReply || !showHighlightedProfessionalReply || !isOriginalPostByPatient
+      ? null
+      : post.highlighted_professional_reply;
   const isReplyContribution = contributionType === "reply";
   const focusedReplyId =
     profilePublicationMode && isReplyContribution ? (primaryReply?.id ?? undefined) : undefined;

@@ -1079,8 +1079,9 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
   const reply = post.highlighted_professional_reply;
   const [replyExpanded, setReplyExpanded] = useState(false);
   const postHref = communityPostDetailHref(post);
+  const isPatientAuthoredPost = post.author.role === "paciente";
 
-  if (!reply) return null;
+  if (!reply || !isPatientAuthoredPost) return null;
 
   const profileHref = `/app/psychologist/${reply.author.id}`;
   const replyWhatsappCta = reply.author.whatsapp_url ? (

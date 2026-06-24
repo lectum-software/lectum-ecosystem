@@ -1004,3 +1004,19 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm --dir frontend build`
 - [x] `pnpm check`
 - [x] `git diff --check`
+
+## Execucao complementar: previa profissional apenas em posts de pacientes (2026-06-24)
+
+- Pedido do usuario: a previa de resposta profissional em destaque no feed e dentro da comunidade deve aparecer exclusivamente em posts de pacientes, nunca em posts de psicologos gratuitos ou assinantes.
+- Frontend: `CommunityPostCard` agora renderiza `highlighted_professional_reply` apenas quando o autor original do post tem `role="paciente"`, preservando os cards em que a propria resposta e o conteudo principal exibido.
+- Frontend: a lista de posts dentro da comunidade aplica a mesma regra para a previa profissional local.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, permissoes, ranking, midia, votos, salvos ou tracking de WhatsApp.
+- Fonte visual/auditavel: pedido e screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR criado: `adrs/0162-previa-profissional-apenas-posts-pacientes.md`.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
