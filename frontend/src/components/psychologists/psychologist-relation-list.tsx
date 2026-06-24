@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  BadgeCheck,
-  Banknote,
-  Heart,
-  Loader2,
-  ShieldCheck,
-  Sparkles,
-  TicketPercent,
-} from "lucide-react";
+import { Heart, Loader2, Sparkles } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -22,9 +14,9 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { SecondaryPageHeader } from "@/components/ui/secondary-page-header";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { getToken } from "@/hooks/cookies/token";
-import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
@@ -47,58 +39,9 @@ type ApiError = Error & {
   data?: ApiErrorData;
 };
 
-type FilterKey =
-  | "available_today"
-  | "verified"
-  | "accepts_insurance"
-  | "social_value"
-  | "discount_first_session";
-
-type FavoriteFilter = {
-  key: FilterKey;
-  label: string;
-  shortLabel: string;
-  icon: typeof Sparkles;
-};
-
-const favoriteFilters: FavoriteFilter[] = [
-  {
-    key: "available_today",
-    label: "Disponível hoje",
-    shortLabel: "Disponível hoje",
-    icon: Sparkles,
-  },
-  {
-    key: "verified",
-    label: "Verificados",
-    shortLabel: "Verificados",
-    icon: ShieldCheck,
-  },
-  {
-    key: "accepts_insurance",
-    label: "Aceita convênios",
-    shortLabel: "Convênios",
-    icon: BadgeCheck,
-  },
-  {
-    key: "social_value",
-    label: "Valor social",
-    shortLabel: "Valor social",
-    icon: Banknote,
-  },
-  {
-    key: "discount_first_session",
-    label: "Desconto na 1ª sessão",
-    shortLabel: "1ª sessão",
-    icon: TicketPercent,
-  },
-];
-
 const config = {
   favorites: {
     title: "Favoritos",
-    eyebrow: "Sua curadoria",
-    description: "Profissionais que você salvou para comparar e chamar no WhatsApp.",
     emptyTitle: "Você ainda não possui favoritos",
     emptyDescription:
       "Explore psicólogos, toque no coração dos perfis que combinam com você e eles aparecerão aqui.",
@@ -172,35 +115,6 @@ const FavoriteMedia = ({ psychologist }: { psychologist: PatientRelationPsycholo
       src={mediaSrc}
       unoptimized={mediaIsPublic}
     />
-  );
-};
-
-const FilterChip = ({
-  active,
-  filter,
-  onClick,
-}: {
-  active: boolean;
-  filter: FavoriteFilter;
-  onClick: () => void;
-}) => {
-  const Icon = filter.icon;
-
-  return (
-    <button
-      aria-pressed={active}
-      className={cn(
-        "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[0.66rem] font-extrabold tracking-[-0.01em] shadow-none outline-none transition-[background-color,border-color,color] focus-visible:border-primary/35 focus-visible:bg-primary-soft/55 focus-visible:text-primary focus-visible:ring-0",
-        active
-          ? "border-primary/20 bg-primary-soft/90 text-primary"
-          : "border-primary/15 bg-surface text-muted hover:border-primary/25 hover:bg-primary-soft/40 hover:text-primary dark:border-border dark:bg-surface dark:text-muted",
-      )}
-      onClick={onClick}
-      type="button"
-    >
-      <Icon className="h-3.5 w-3.5 shrink-0 stroke-[2]" aria-hidden="true" />
-      {filter.shortLabel}
-    </button>
   );
 };
 
@@ -300,27 +214,18 @@ const FavoritePsychologistCard = ({
 export function PsychologistRelationList({ mode }: PsychologistRelationListProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeFilters, setActiveFilters] = useState<Record<FilterKey, boolean>>({
-    available_today: false,
-    verified: false,
-    accepts_insurance: false,
-    social_value: false,
-    discount_first_session: false,
-  });
   const [hasAuthToken] = useState(() => {
     if (typeof window === "undefined") return false;
 
     return Boolean(getToken());
   });
   const currentPage = useMemo(() => getPageFromParams(searchParams), [searchParams]);
-  const activeFilterCount = favoriteFilters.filter((item) => activeFilters[item.key]).length;
   const query = useMemo<PatientRelationQuery>(
     () => ({
       page: currentPage,
       limit: PAGE_LIMIT,
-      ...activeFilters,
     }),
-    [activeFilters, currentPage],
+    [currentPage],
   );
   const copy = config[mode];
   const { favoritePsychologist, favorites, unfavoritePsychologist } = usePatient({
@@ -349,11 +254,6 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
     });
   };
 
-  const toggleFilter = (key: FilterKey) => {
-    setActiveFilters((current) => ({ ...current, [key]: !current[key] }));
-    goToPage(1);
-  };
-
   const toggleFavorite = (psychologist: PatientRelationPsychologist) => {
     if (psychologist.favorited) {
       unfavoritePsychologist.mutate(psychologist.id);
@@ -369,136 +269,91 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
       : unfavoritePsychologist.isPending && typeof unfavoritePsychologist.variables === "string"
         ? unfavoritePsychologist.variables
         : null;
-  const hasAnyFilter = activeFilterCount > 0;
 
   return (
-    <PrivateTemplate contentClassName="max-w-none px-0 pt-0 pb-8 sm:px-0 sm:py-0">
-      <section className="grid w-full gap-4 lg:gap-6">
-        <header className="mx-auto w-full max-w-[1120px] rounded-b-[30px] border-b border-border/70 bg-surface px-5 pt-5 pb-5 sm:rounded-[32px] sm:border sm:px-8 sm:py-6 md:mt-6 lg:px-8">
-          <div className="flex items-start justify-between gap-4">
-            <div className="grid min-w-0 gap-2">
-              <p className="inline-flex w-fit items-center rounded-full border border-primary/10 bg-primary/5 px-2.5 py-1 text-[0.64rem] font-black uppercase tracking-[0.18em] text-primary/80">
-                {copy.eyebrow as string}
-              </p>
-              <div className="grid gap-1.5">
-                <h1 className="text-2xl font-extrabold leading-tight tracking-tight text-foreground sm:text-3xl">
-                  {copy.title as string}
-                </h1>
-                <p className="max-w-[34rem] text-sm leading-5 text-muted sm:text-[0.95rem] sm:leading-6">
-                  {copy.description as string}
-                </p>
-              </div>
+    <PrivateTemplate>
+      <section className="mx-auto grid w-full max-w-2xl gap-4 px-5 py-5 md:py-8">
+        <SecondaryPageHeader className="mb-4" title={copy.title as string} />
+
+        {errorMessage ? (
+          <InlineAlert title="Não foi possível carregar" variant="error">
+            {errorMessage}
+          </InlineAlert>
+        ) : null}
+
+        {showInitialLoading ? (
+          <div className="grid min-h-[50vh] w-full place-items-center rounded-[28px] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
+            <LoadingState label="Carregando favoritos" />
+          </div>
+        ) : null}
+
+        {!showInitialLoading && !errorMessage && psychologists.length === 0 ? (
+          <EmptyState
+            action={
+              <Button asChild className="rounded-full">
+                <Link href="/app/psychologists">
+                  <Sparkles className="h-4 w-4" aria-hidden="true" />
+                  Explorar psicólogos
+                </Link>
+              </Button>
+            }
+            className="min-h-[48vh] w-full max-w-full rounded-[32px] border-border bg-surface px-4 sm:px-6"
+            description={copy.emptyDescription as string}
+            icon={Icon}
+            title={copy.emptyTitle as string}
+          />
+        ) : null}
+
+        {!showInitialLoading && !errorMessage && psychologists.length > 0 ? (
+          <div className="grid gap-4">
+            <div className="flex min-w-0 items-center justify-between gap-3 px-1 text-sm text-muted">
+              <span className="min-w-0 font-bold">
+                {total} {total === 1 ? "perfil salvo" : "perfis salvos"}
+              </span>
+              {activeQuery.isFetching ? <LoadingState label="Atualizando" /> : null}
             </div>
 
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-primary sm:h-12 sm:w-12">
-              <Heart
-                className="h-[22px] w-[22px] fill-primary/12 stroke-primary sm:h-6 sm:w-6"
-                aria-hidden="true"
-              />
-            </span>
-          </div>
-        </header>
-
-        <div className="mx-auto w-full max-w-[1120px] px-4 sm:px-8 lg:px-0">
-          <div className="overflow-x-auto scroll-smooth pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <div className="flex w-max flex-nowrap gap-2 whitespace-nowrap">
-              {favoriteFilters.map((filter) => (
-                <FilterChip
-                  active={activeFilters[filter.key]}
-                  filter={filter}
-                  key={filter.key}
-                  onClick={() => toggleFilter(filter.key)}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+              {psychologists.map((psychologist) => (
+                <FavoritePsychologistCard
+                  favoritePending={favoritePendingId === psychologist.id}
+                  key={psychologist.id}
+                  onToggleFavorite={toggleFavorite}
+                  psychologist={psychologist}
                 />
               ))}
             </div>
           </div>
-        </div>
+        ) : null}
 
-        <div className="mx-auto grid w-full max-w-[1120px] gap-4 px-4 sm:px-8 lg:px-0">
-          {errorMessage ? (
-            <InlineAlert title="Não foi possível carregar" variant="error">
-              {errorMessage}
-            </InlineAlert>
-          ) : null}
-
-          {showInitialLoading ? (
-            <div className="grid min-h-[50vh] place-items-center rounded-[28px] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
-              <LoadingState label="Carregando favoritos" />
-            </div>
-          ) : null}
-
-          {!showInitialLoading && !errorMessage && psychologists.length === 0 ? (
-            <EmptyState
-              action={
-                <Button asChild className="rounded-full">
-                  <Link href="/app/psychologists">
-                    <Sparkles className="h-4 w-4" aria-hidden="true" />
-                    Explorar psicólogos
-                  </Link>
-                </Button>
-              }
-              className="min-h-[48vh] rounded-[32px] border-border bg-surface"
-              description={
-                hasAnyFilter
-                  ? "Nenhum favorito corresponde aos filtros aplicados."
-                  : (copy.emptyDescription as string)
-              }
-              icon={hasAnyFilter ? Sparkles : Icon}
-              title={hasAnyFilter ? "Nenhum favorito encontrado" : (copy.emptyTitle as string)}
-            />
-          ) : null}
-
-          {!showInitialLoading && !errorMessage && psychologists.length > 0 ? (
-            <div className="grid gap-4">
-              <div className="flex items-center justify-between gap-3 px-1 text-sm text-muted">
-                <span className="font-bold">
-                  {total} {total === 1 ? "perfil salvo" : "perfis salvos"}
-                </span>
-                {activeQuery.isFetching ? <LoadingState label="Atualizando" /> : null}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
-                {psychologists.map((psychologist) => (
-                  <FavoritePsychologistCard
-                    favoritePending={favoritePendingId === psychologist.id}
-                    key={psychologist.id}
-                    onToggleFavorite={toggleFavorite}
-                    psychologist={psychologist}
-                  />
-                ))}
-              </div>
-            </div>
-          ) : null}
-
-          {pages > 1 ? (
-            <nav
-              aria-label={`Paginação de ${copy.title as string}`}
-              className="flex items-center justify-between gap-3 rounded-[24px] border border-border bg-surface p-3 shadow-[var(--lectum-shadow-soft)]"
+        {pages > 1 ? (
+          <nav
+            aria-label={`Paginação de ${copy.title as string}`}
+            className="flex w-full items-center justify-between gap-2 rounded-[24px] border border-border bg-surface p-3 shadow-[var(--lectum-shadow-soft)]"
+          >
+            <Button
+              disabled={currentPage <= 1 || activeQuery.isFetching}
+              onClick={() => goToPage(currentPage - 1)}
+              type="button"
+              variant="outline"
             >
-              <Button
-                disabled={currentPage <= 1 || activeQuery.isFetching}
-                onClick={() => goToPage(currentPage - 1)}
-                type="button"
-                variant="outline"
-              >
-                Anterior
-              </Button>
+              Anterior
+            </Button>
 
-              <span className="text-sm font-semibold text-muted">
-                Página {currentPage} de {pages}
-              </span>
+            <span className="shrink-0 text-sm font-semibold text-muted">
+              Página {currentPage} de {pages}
+            </span>
 
-              <Button
-                disabled={currentPage >= pages || activeQuery.isFetching}
-                onClick={() => goToPage(currentPage + 1)}
-                type="button"
-                variant="outline"
-              >
-                Próxima
-              </Button>
-            </nav>
-          ) : null}
-        </div>
+            <Button
+              disabled={currentPage >= pages || activeQuery.isFetching}
+              onClick={() => goToPage(currentPage + 1)}
+              type="button"
+              variant="outline"
+            >
+              Próxima
+            </Button>
+          </nav>
+        ) : null}
       </section>
     </PrivateTemplate>
   );

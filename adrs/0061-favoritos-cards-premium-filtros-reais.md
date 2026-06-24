@@ -263,3 +263,30 @@ Produto pediu uma nova calibragem em `/app/favorites`: o header branco deveria f
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Chrome/CDP autenticado em `/app/favorites` para confirmar header sem chips internos, filtros independentes abaixo do header, ausência de `box-shadow` nos chips e sem overflow horizontal no mobile.
+
+## Complemento 2026-06-24 - Favoritos sem filtros e header simples
+
+### Contexto
+
+Produto pediu que `/app/favorites` deixasse de ter curadoria/filtros/header branco e ficasse padronizado com `/app/notifications`.
+
+### Decisão
+
+- Remover a apresentação editorial de Favoritos: `Sua curadoria`, descrição, coração decorativo e surface branca do header.
+- Remover os chips de filtro da UI da tela de Favoritos.
+- Usar apenas o título `Favoritos`, com o mesmo padrão visual simples de Notificações.
+- Centralizar o conteúdo em uma coluna responsiva com padding mobile seguro para eliminar overflow horizontal.
+- Manter dados reais, paginação, remoção de favorito, cards e CTA WhatsApp.
+
+### Consequências
+
+- A tela fica mais coesa com Notificações e reduz ruído visual.
+- A API de favoritos não muda; apenas a UI deixa de enviar filtros nesta tela.
+- A responsividade mobile fica protegida por largura máxima e padding consistente.
+
+### Validação
+
+- `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`

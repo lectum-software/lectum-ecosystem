@@ -338,3 +338,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Escopo: sem alteração de dados, APIs de comunidades, recomendações, participação em comunidades, schema Prisma ou packages.
 - ADR criado: `adrs/0119-header-secundario-premium-compartilhado.md`.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado em mobile 390x844 e desktop 1024x768, sem overflow horizontal.
+
+## Complemento 2026-06-24 - Favoritos padronizado com Notificações
+
+- Pedido: alinhar a tela de Favoritos à composição de Notificações, mantendo apenas o título "Favoritos" acima do estado vazio/lista.
+- Builder/Quick Copy: não exposto como ferramenta direta neste ambiente; validação visual feita por comparação com a tela existente de Notificações e fallback auditável em `_product/proto/Favoritos.jpg`.
+- Implementação: removidos tag "Sua curadoria", descrição, ícone de coração do header, superfície branca do header e chips de filtro.
+- A tela agora usa o header secundário simples compartilhado, exibindo apenas o título "Favoritos" antes do conteúdo central.
+- Responsividade: conteúdo centralizado em coluna responsiva com padding mobile seguro, `w-full/max-w-full` e grid sem larguras fixas que poderiam ultrapassar a viewport.
+- Escopo: sem mudanças de backend, Prisma, migrations, packages, endpoints, dados de favoritos ou tracking de WhatsApp.
+- ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
+- Valida??es executadas: `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`.
