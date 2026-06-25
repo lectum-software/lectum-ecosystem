@@ -1,4 +1,8 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const PUBLIC_MEDIA_PATH_PREFIXES = ["/public/files/", "/community/icons/"];
+
+const isPublicMediaPath = (pathname: string) =>
+  PUBLIC_MEDIA_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
 export const resolvePublicMediaUrl = (value?: string | null) => {
   if (!value) return null;
@@ -8,14 +12,16 @@ export const resolvePublicMediaUrl = (value?: string | null) => {
   try {
     const parsed = new URL(value, apiBase);
 
-    if (parsed.pathname.startsWith("/public/files/")) {
+    if (isPublicMediaPath(parsed.pathname)) {
       return `${apiBase}${parsed.pathname}${parsed.search}`;
     }
 
     if (value.startsWith("http")) return value;
     return `${apiBase}${value.startsWith("/") ? value : `/${value}`}`;
   } catch {
-    if (value.startsWith("/public/files/")) return `${apiBase}${value}`;
+    if (PUBLIC_MEDIA_PATH_PREFIXES.some((prefix) => value.startsWith(prefix))) {
+      return `${apiBase}${value}`;
+    }
     return value.startsWith("http") ? value : null;
   }
 };
@@ -25,8 +31,10 @@ export const isPublicMediaUrl = (value?: string | null) => {
   if (!resolved) return false;
 
   try {
-    return new URL(resolved).pathname.startsWith("/public/files/");
+    return isPublicMediaPath(new URL(resolved).pathname);
   } catch {
-    return resolved.startsWith("/public/files/") || resolved.includes("/public/files/");
+    return PUBLIC_MEDIA_PATH_PREFIXES.some(
+      (prefix) => resolved.startsWith(prefix) || resolved.includes(prefix),
+    );
   }
 };

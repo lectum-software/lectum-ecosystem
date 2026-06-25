@@ -332,3 +332,13 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; referencia auditavel: `_product/proto/Dentro da Comunidade.jpg`.
 - ADR atualizado: `adrs/0066-pagina-detalhe-comunidade-participacao.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP em mobile 390px e desktop 1365px validando `box-shadow` transparente no chip ativo e abertura/selecionamento do dropdown `Mais comentados`.
+
+## Complemento 2026-06-25 - exibicao do avatar da comunidade
+
+- Pedido do usuario: corrigir a exibicao do avatar da comunidade na pagina `/app/community/[slug]`, onde o alt text aparecia no lugar da imagem.
+- Diagnostico: os avatares do catalogo curado usam arquivos publicos do backend em `/community/icons/*.png`. Como esse caminho nao era tratado como midia publica pelo frontend, o `Image` podia passar pelo otimizador do Next e falhar em ambiente local ao apontar para `localhost:3001`.
+- Frontend: `isPublicMediaUrl`/`resolvePublicMediaUrl` agora reconhecem `/community/icons/` como caminho publico de midia, mantendo o uso de `next/image` com `unoptimized` nos avatares de comunidade servidos pelo backend e evitando a passagem pelo otimizador local do Next.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, dados de comunidade, filtros, posts, votos ou membership.
+- Fonte visual/auditavel: screenshot do usuario e referencia local `_product/proto/Dentro da Comunidade.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0095-identidade-visual-comunidade-avatar.md`.
+- Validacoes executadas: `pnpm.cmd --dir frontend exec biome check --write src/utils/media.ts`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, HTTP local `200` em `/app/community/ansiedade-em-equilibrio` e HTTP local `200 image/png` para `http://127.0.0.1:3001/community/icons/ansiedade.png`.

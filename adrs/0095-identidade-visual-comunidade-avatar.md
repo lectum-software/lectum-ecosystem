@@ -51,3 +51,18 @@ O Builder Quick Copy ativo (`vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser local via `next start` em `/app/community/relacionamentos-com-proposito` retornou HTTP 307 sem cookie autenticado, esperado para rota privada.
+
+## Atualizacao 2026-06-25 — avatares publicos do catalogo
+
+Os avatares curados das comunidades ficam em `backend/public/community/icons/*.png` e sao retornados pela API como `/community/icons/*.png`. Esse caminho passa a ser reconhecido pelo frontend como midia publica, junto com `/public/files/`, para que componentes `Image` possam renderizar esses assets diretamente quando necessario, sem exibir o alt text por falha do otimizador local.
+
+A decisao preserva a arquitetura atual: o backend continua servindo os assets publicos e o frontend continua usando `next/image` com `unoptimized` apenas para caminhos publicos conhecidos, sem `<img>` cru e sem criar novo pipeline de assets.
+
+### Validacao desta atualizacao
+
+- `pnpm.cmd --dir frontend exec biome check --write src/utils/media.ts`
+- `pnpm.cmd --dir frontend check`
+- `pnpm.cmd --dir frontend build`
+- `pnpm.cmd check`
+- HTTP local `200` em `http://127.0.0.1:3002/app/community/ansiedade-em-equilibrio` via `next start` temporario
+- HTTP local `200 image/png` em `http://127.0.0.1:3001/community/icons/ansiedade.png`
