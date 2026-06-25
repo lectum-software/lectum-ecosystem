@@ -450,3 +450,11 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Frontend: as chips de `/app/favorites` agora exibem a quantidade em um badge circular/oval separado, sem parenteses, com borda azul-clara, fundo azul muito claro e tipografia azul em destaque; no chip ativo o contador usa superficie branca para contraste.
 - Cards: o CTA voltou a exibir `WhatsApp`, mantendo a proporcao atual entre icone, texto, altura e padding.
 - Escopo: sem mudancas no perfil do psicologo, backend, Prisma, migrations, packages, endpoint, filtros reais, paginacao, favoritos ou tracking de WhatsApp.
+
+## Complemento 2026-06-25 - compactacao visual dos cards mobile
+
+- Pedido do usuario: os cards de Favoritos no mobile estavam com espacamento excessivo/desconfigurado e o texto `WhatsApp` do CTA estava truncando.
+- Analise visual: a composicao mobile estava herdando a escala espacada do desktop; com duas colunas em 390px, o avatar de 112px, padding de 20px e respiros grandes deixavam pouco espaco util para texto e CTA.
+- Frontend: somente o card mobile de `/app/favorites` foi recalibrado com altura, padding, raio, avatar, gap e tipografia menores; os tamanhos desktop permanecem aplicados a partir de `sm:` para preservar a disposicao mais aberta em telas maiores.
+- WhatsApp: o CTA mobile ganhou largura util maior por reducao de padding interno do card, fonte/icone compactos e label sem truncamento, garantindo que `WhatsApp` caiba inteiro no botao.
+- Escopo: sem mudancas no perfil do psicologo, pagina de Comunidade, backend, Prisma, migrations, packages, endpoints, filtros reais, paginacao, favoritos ou tracking de WhatsApp.

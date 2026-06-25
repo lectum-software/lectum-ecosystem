@@ -531,3 +531,23 @@ Produto pediu que as quantidades das chips de Favoritos deixassem o formato text
 - A linha de filtros fica mais refinada e legivel, removendo a aparencia tecnica de parenteses.
 - O CTA volta a nomear diretamente o canal de contato, como esperado pelo usuario.
 - A mudanca e visual/local em Favoritos e nao altera dados, contratos, backend, perfil do psicologo ou persistencia.
+
+## Complemento 2026-06-25 - densidade mobile dos cards de Favoritos
+
+### Contexto
+
+Ao validar `/app/favorites` em largura mobile (~390px), a grade de duas colunas passou a ficar visualmente pesada porque os cards usavam a mesma escala espacada definida para desktop: avatar grande, padding alto e respiros internos amplos. Isso fazia o CTA perder area util e o label `WhatsApp` aparecer truncado.
+
+### Decisao
+
+- Definir uma escala mobile propria para o card de Favoritos: altura minima menor, raio menor, padding de 14px, avatar de 88px e gaps internos mais curtos.
+- Manter a escala desktop via classes `sm:` para preservar a leitura mais aberta em telas maiores.
+- Manter o nome do psicologo em uma linha com selo verificado fixo e truncamento apenas do nome quando necessario.
+- No CTA de WhatsApp, usar fonte/icone compactos e impedir truncamento do label `WhatsApp` no contexto mobile.
+- Nao alterar cards de Comunidade, perfil do psicologo, filtros reais ou contratos de API.
+
+### Consequencias
+
+- A grade mobile de duas colunas fica mais equilibrada, com menos vazio interno e melhor proporcao entre avatar, nome, profissao e CTA.
+- O texto `WhatsApp` passa a caber inteiro no botao sem perder a associacao com o icone.
+- Desktop e mobile mantem escalas diferentes por necessidade de densidade visual, sem criar novo componente ou pacote.

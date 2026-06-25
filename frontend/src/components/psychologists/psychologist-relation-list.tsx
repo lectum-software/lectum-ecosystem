@@ -302,20 +302,20 @@ const FavoritePsychologistCard = ({
   return (
     <article
       aria-label={`Abrir perfil de ${psychologist.name}`}
-      className="group relative isolate mx-auto flex min-h-[296px] w-full max-w-[188px] flex-col overflow-hidden rounded-[28px] border border-[#E7ECF2] bg-white p-5 text-center shadow-[0_12px_28px_rgb(15_23_42_/_6%)] transition duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_18px_42px_rgb(15_23_42_/_10%)] dark:border-border dark:bg-surface sm:max-w-[214px]"
+      className="group relative isolate mx-auto flex min-h-[252px] w-full max-w-[166px] flex-col overflow-hidden rounded-[22px] border border-[#E7ECF2] bg-white p-3.5 text-center shadow-[0_10px_24px_rgb(15_23_42_/_5%)] transition duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_18px_42px_rgb(15_23_42_/_10%)] dark:border-border dark:bg-surface sm:min-h-[296px] sm:max-w-[214px] sm:rounded-[28px] sm:p-5 sm:shadow-[0_12px_28px_rgb(15_23_42_/_6%)]"
     >
       <button
         aria-label={`Remover ${psychologist.name} dos favoritos`}
         aria-pressed="true"
-        className="absolute top-3 right-3 z-20 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-transparent text-rose-500/90 transition hover:scale-105 hover:bg-rose-50/80 hover:text-rose-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/20 disabled:pointer-events-none disabled:opacity-60 sm:top-3.5 sm:right-3.5"
+        className="absolute top-2 right-2 z-20 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-transparent text-rose-500/90 transition hover:scale-105 hover:bg-rose-50/80 hover:text-rose-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/20 disabled:pointer-events-none disabled:opacity-60 sm:top-3.5 sm:right-3.5 sm:h-9 sm:w-9"
         disabled={favoritePending}
         onClick={handleFavoriteClick}
         type="button"
       >
         {favoritePending ? (
-          <Loader2 className="h-[18px] w-[18px] animate-spin" aria-hidden="true" />
+          <Loader2 className="h-4 w-4 animate-spin sm:h-[18px] sm:w-[18px]" aria-hidden="true" />
         ) : (
-          <Heart className="h-5 w-5 fill-current" aria-hidden="true" />
+          <Heart className="h-[18px] w-[18px] fill-current sm:h-5 sm:w-5" aria-hidden="true" />
         )}
       </button>
 
@@ -324,37 +324,39 @@ const FavoritePsychologistCard = ({
         className="grid min-h-0 content-start justify-items-center text-center no-underline hover:no-underline"
         href={route}
       >
-        <div className="relative mt-3.5 h-[112px] w-[112px] rounded-full">
+        <div className="relative mt-2.5 h-[88px] w-[88px] rounded-full sm:mt-3.5 sm:h-[112px] sm:w-[112px]">
           <div className="relative h-full w-full overflow-hidden rounded-full bg-surface-muted ring-1 ring-[#DDE7F2] dark:ring-border">
             <FavoriteMedia psychologist={psychologist} />
           </div>
 
           {psychologist.available_today ? (
             <span
-              className="absolute right-2 bottom-2 grid h-4 w-4 place-items-center rounded-full"
+              className="absolute right-1 bottom-1 grid h-3.5 w-3.5 place-items-center rounded-full sm:right-2 sm:bottom-2 sm:h-4 sm:w-4"
               title="Disponível hoje"
             >
-              <span className="absolute h-3.5 w-3.5 rounded-full bg-success/35 motion-safe:animate-[ping_2.4s_cubic-bezier(0,0,0.2,1)_infinite]" />
-              <span className="relative h-3 w-3 rounded-full bg-success" />
+              <span className="absolute h-3 w-3 rounded-full bg-success/35 motion-safe:animate-[ping_2.4s_cubic-bezier(0,0,0.2,1)_infinite] sm:h-3.5 sm:w-3.5" />
+              <span className="relative h-2.5 w-2.5 rounded-full bg-success sm:h-3 sm:w-3" />
               <span className="sr-only">Disponível hoje</span>
             </span>
           ) : null}
         </div>
 
-        <div className="mt-7 grid min-w-0 justify-items-center gap-2.5">
-          <span className="flex w-full min-w-0 max-w-full items-center justify-center gap-1 text-center text-[0.88rem] font-bold leading-[1.15] tracking-[-0.02em] text-foreground sm:text-[0.98rem]">
+        <div className="mt-4 grid min-w-0 justify-items-center gap-1.5 sm:mt-7 sm:gap-2.5">
+          <span className="flex w-full min-w-0 max-w-full items-center justify-center gap-1 text-center text-[0.76rem] font-bold leading-[1.15] tracking-[-0.02em] text-foreground sm:text-[0.98rem]">
             <span className="min-w-0 max-w-full truncate">{psychologist.name}</span>
             {psychologist.verified ? (
-              <VerifiedBadgeIcon className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+              <VerifiedBadgeIcon className="h-3 w-3 shrink-0 sm:h-4 sm:w-4" />
             ) : null}
           </span>
-          <p className="text-xs font-medium text-muted sm:text-[0.82rem]">{profession}</p>
+          <p className="text-[0.68rem] font-medium leading-none text-muted sm:text-[0.82rem] sm:leading-normal">
+            {profession}
+          </p>
         </div>
       </Link>
 
       <PsychologistWhatsAppRedirectButton
         aria-label={`Chamar ${psychologist.name} no WhatsApp`}
-        className="mt-auto inline-flex min-h-9 w-full min-w-0 items-center justify-center gap-1.5 rounded-[14px] bg-success px-3 py-2 text-[0.72rem] font-black leading-[1.25] text-white transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45"
+        className="mt-auto inline-flex min-h-8 w-full min-w-0 items-center justify-center gap-1 rounded-[12px] bg-success px-2 py-1.5 text-[0.66rem] font-black leading-[1.25] text-white transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 sm:min-h-9 sm:gap-1.5 sm:rounded-[14px] sm:px-3 sm:py-2 sm:text-[0.72rem]"
         psychologist={{
           avatar: psychologist.avatar,
           crp: psychologist.crp,
@@ -366,9 +368,9 @@ const FavoritePsychologistCard = ({
         stopPropagation
       >
         <PsychologistWhatsAppButtonContent
-          iconClassName="h-3.5 w-3.5"
+          iconClassName="h-3 w-3 sm:h-3.5 sm:w-3.5"
           label="WhatsApp"
-          labelClassName="leading-[1.25]"
+          labelClassName="min-w-max shrink-0 !overflow-visible !text-clip leading-[1.25]"
         />
       </PsychologistWhatsAppRedirectButton>
     </article>
