@@ -406,3 +406,13 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Busca e configurações viraram botões premium padronizados, com superfície, borda, foco, sombra sutil e popovers compactos sem alterar dados, ranking, rotas ou contratos da API.
 - ADR criado: `adrs/0166-header-feed-comunidades-premium.md`.
 - Validações executadas: `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check` e HTTP local `200` em `/app/community/feed` e `/app/community/ansiedade-em-equilibrio`.
+
+## Execucao complementar: header transparente no feed de comunidades (2026-06-25)
+
+- Pedido do usuario: remover o fundo branco atras do header compacto do feed, mantendo apenas os controles visiveis sobre o fundo da pagina.
+- O container sticky de `/app/community/feed` teve removidos `bg-background` e a borda inferior, preservando comportamento sticky/auto-hide, padding e transicao.
+- O wrapper visual interno que agrupava busca, seletor e configuracoes teve removidos fundo, borda, raio e sombra, mantendo somente layout, largura, gap e padding para nao alterar o espacamento dos controles.
+- Os componentes internos do header mantiveram suas classes de superficie, borda, sombra, foco e estados ativos.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados, rotas, ranking ou contratos de API.
+- ADR atualizado: `adrs/0166-header-feed-comunidades-premium.md`.
+- Validacoes executadas nesta execucao: `pnpm.cmd --dir frontend exec biome check --write "src/app/app/community/[slug]/logic.tsx"`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check` e HTTP local `200` em `/app/community/feed` e `/app/community/ansiedade-em-equilibrio`.

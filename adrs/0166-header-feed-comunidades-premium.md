@@ -40,3 +40,23 @@ A referência visual auditável da task continua `_product/proto/Feed Comunidade
 ## Pendências
 
 - `git push` depende de credenciais GitHub/interatividade do ambiente, como já observado nas execuções anteriores.
+
+## Atualizacao em 2026-06-25: header sem fundo proprio
+
+O refinamento posterior removeu a superficie visual do wrapper do header do feed, conforme pedido de produto para que a linha `[buscar] [selecionar comunidade] [configuracoes]` se integre ao fundo da pagina como nas demais telas. A decisao foi:
+
+- manter o comportamento `sticky`/auto-hide do header, padding e transicao;
+- remover `bg-background` e borda inferior do container sticky para que ele seja transparente;
+- remover fundo, borda, raio e sombra do wrapper que agrupava os tres controles;
+- preservar sombras, bordas, superficies e estados dos controles internos, pois esses sao os elementos visiveis do header.
+
+Nao houve mudanca de rotas, dados, backend, Prisma, packages ou contrato de API.
+
+### Validacao desta atualizacao
+
+- `pnpm.cmd --dir frontend exec biome check --write "src/app/app/community/[slug]/logic.tsx"`
+- `pnpm.cmd --dir frontend check`
+- `pnpm.cmd --dir frontend build`
+- `pnpm.cmd check`
+- HTTP local `200` em `http://127.0.0.1:3000/app/community/feed`
+- HTTP local `200` em `http://127.0.0.1:3000/app/community/ansiedade-em-equilibrio`

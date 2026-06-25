@@ -2886,13 +2886,13 @@ export const CommunityFeedLogic = () => {
       <section className="mx-auto grid w-full max-w-[430px] gap-4 sm:max-w-2xl lg:max-w-[760px]">
         <header
           className={cn(
-            "sticky top-0 z-30 -mx-5 border-border border-b bg-background px-5 py-2.5 transition-[transform,opacity] duration-300 ease-out",
+            "sticky top-0 z-30 -mx-5 px-5 py-2.5 transition-[transform,opacity] duration-300 ease-out",
             headerHidden
               ? "pointer-events-none -translate-y-[calc(100%+8px)] opacity-0"
               : "translate-y-0 opacity-100",
           )}
         >
-          <div className="mx-auto flex max-w-[430px] items-center gap-2 rounded-[24px] border border-border bg-surface p-1.5 shadow-[0_16px_44px_rgba(15,23,42,0.08)] sm:max-w-2xl lg:max-w-[760px]">
+          <div className="mx-auto flex max-w-[430px] items-center gap-2 p-1.5 sm:max-w-2xl lg:max-w-[760px]">
             <FeedSearchMenu
               onOpenChange={handleSearchOpenChange}
               onSearchChange={setSearch}
