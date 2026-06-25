@@ -387,3 +387,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Cards: o card ganhou largura maxima explicita e a grid passou a usar `auto-fit` centralizado para impedir que um unico favorito estique exageradamente no desktop.
 - Avatar: manteve a linha fina sem sombra, com tamanho um pouco mais controlado para recuperar proporcao.
 - Escopo: sem mudancas de backend, Prisma, migrations, packages, filtros reais, paginacao, favoritos ou tracking de WhatsApp.
+
+
+## Complemento 2026-06-25 - grade 2x e chips alinhados a Comunidade
+
+- Pedido do usuario: em `/app/favorites`, cada linha deve ter dois cards, o texto do botao `WhatsApp` deve ganhar fonte/padding para nao cortar a base das letras e os chips devem seguir o mesmo layout dos chips `Em destaque`, `Novos` e `Mais comentados` da pagina de comunidade.
+- Frontend: a grade da lista passou a usar duas colunas fixas responsivas, mantendo cards de favoritos reais e sem alterar a pagina de comunidade.
+- Chips: somente os chips de Favoritos foram recalibrados para pills compactas com altura, borda, tipografia e estados equivalentes aos filtros da comunidade; os chips de `/app/community/[slug]` nao foram alterados.
+- WhatsApp: o CTA dos cards ganhou `min-height`, padding vertical/horizontal, fonte maior, icone maior e `line-height` mais folgado para evitar corte visual em `WhatsApp`.
+- Escopo: sem mudancas de backend, Prisma, migrations, packages, endpoint, filtros reais, paginacao, favoritos, pagina de Comunidade ou tracking de WhatsApp.
+- ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check` e HTTP local `200` em `/app/favorites`.

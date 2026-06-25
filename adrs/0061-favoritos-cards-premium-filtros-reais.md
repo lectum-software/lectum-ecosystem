@@ -385,3 +385,25 @@ A versão com setas e cards mais altos apresentou regressão visual no desktop: 
 - A página deixa de criar scroll horizontal global no desktop.
 - Um único favorito volta a parecer um card compacto, sem perder respiro interno.
 - A alteração permanece visual e não muda backend, schema, pacotes ou regras de domínio.
+
+
+## Complemento 2026-06-25 - grade dupla e chips equivalentes aos filtros de Comunidade
+
+### Contexto
+
+A tela de Favoritos tinha voltado a apresentar um card por linha no viewport mobile de referencia, o CTA de WhatsApp parecia apertado/cortando a base de `WhatsApp` e os chips estavam visualmente diferentes dos filtros compactos ja aprovados na pagina de Comunidade.
+
+### Decisao
+
+- Usar duas colunas fixas na grade de `/app/favorites`, preservando os cards reais e a largura maxima do card para nao esticar no desktop.
+- Reaplicar em Favoritos a mesma linguagem dos chips de comunidade: pills de 30px, borda sutil, texto de 11px, ativo preenchido em azul Lectum e inativo branco com borda azul-acinzentada.
+- Remover a affordance de setas da faixa de Favoritos neste refinamento para que o layout corresponda ao padrao visual dos chips `Em destaque`, `Novos` e `Mais comentados`; a rolagem horizontal segue contida no proprio trilho.
+- Aumentar `min-height`, padding, fonte, icone e `line-height` do CTA de WhatsApp no card de Favoritos.
+- Nao alterar a implementacao dos chips da pagina de Comunidade, usando-a apenas como referencia visual local.
+
+### Consequencias
+
+- O mobile volta a exibir dois cards por linha e a lista fica mais densa sem retornar ao card comprimido.
+- A linguagem dos filtros fica consistente com Comunidade sem criar componente compartilhado prematuramente.
+- O CTA de WhatsApp melhora a legibilidade e reduz risco de corte de descendentes em letras como `p`.
+- Nao ha impacto em backend, contratos, schema, pacotes, favoritos reais ou tracking.

@@ -1,11 +1,11 @@
 "use client";
 
 import { useQueries } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Heart, Loader2, Sparkles } from "lucide-react";
+import { Heart, Loader2, Sparkles } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { type MouseEvent, useMemo, useRef, useState } from "react";
+import { type MouseEvent, useMemo, useState } from "react";
 import keys from "@/api/cache/keys";
 import { usePatient } from "@/api/callers/patient";
 import type { PatientRelationPsychologist, PatientRelationQuery } from "@/api/generator/types";
@@ -199,65 +199,31 @@ const FavoriteFilterChips = ({
   counts: Partial<Record<FavoriteFilterKey, number>>;
   onSelect: (filter: FavoriteFilterKey) => void;
 }) => {
-  const chipsScrollRef = useRef<HTMLDivElement | null>(null);
-
-  const scrollChips = (direction: "left" | "right") => {
-    chipsScrollRef.current?.scrollBy({
-      behavior: "smooth",
-      left: direction === "left" ? -260 : 260,
-    });
-  };
-
   return (
-    <div className="min-w-0 max-w-full overflow-hidden pb-1">
-      <div className="flex min-w-0 max-w-full items-center gap-2">
-        <button
-          aria-label="Voltar filtros"
-          className="hidden h-8 w-8 shrink-0 place-items-center rounded-full border border-[#D6E2F0] bg-white text-[#64748B] transition-colors hover:border-primary/25 hover:bg-[#F8FBFF] hover:text-primary active:scale-[0.98] md:grid dark:border-border dark:bg-surface dark:text-muted"
-          onClick={() => scrollChips("left")}
-          type="button"
-        >
-          <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-        </button>
+    <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex min-w-max items-center gap-1.5 sm:gap-2">
+        {FAVORITE_FILTER_CHIPS.map((chip) => {
+          const active = activeFilter === chip.key;
 
-        <div
-          className="min-w-0 max-w-full flex-1 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          ref={chipsScrollRef}
-        >
-          <div className="flex min-w-max items-center gap-2.5">
-            {FAVORITE_FILTER_CHIPS.map((chip) => {
-              const active = activeFilter === chip.key;
-
-              return (
-                <button
-                  aria-pressed={active}
-                  className={
-                    active
-                      ? "inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-[12px] border border-[#B9D9FB] bg-[#EAF3FF] px-4 text-[0.76rem] font-extrabold tracking-[-0.01em] text-primary transition-colors active:scale-[0.98] dark:border-primary/25 dark:bg-primary/15 dark:text-primary"
-                      : "inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-[12px] border border-[#D6E2F0] bg-white px-4 text-[0.76rem] font-extrabold tracking-[-0.01em] text-[#172033] transition-colors hover:border-[#B9D1EC] hover:bg-[#F8FBFF] hover:text-foreground active:scale-[0.98] dark:border-border dark:bg-surface dark:text-foreground/82 dark:hover:bg-surface-muted"
-                  }
-                  key={chip.key}
-                  onClick={() => onSelect(chip.key)}
-                  type="button"
-                >
-                  <span>{chip.label}</span>
-                  <span className={active ? "text-primary/68" : "text-[#66758A]"}>
-                    ({formatFavoriteChipCount(counts[chip.key])})
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <button
-          aria-label="Avançar filtros"
-          className="hidden h-8 w-8 shrink-0 place-items-center rounded-full border border-[#D6E2F0] bg-white text-[#64748B] transition-colors hover:border-primary/25 hover:bg-[#F8FBFF] hover:text-primary active:scale-[0.98] md:grid dark:border-border dark:bg-surface dark:text-muted"
-          onClick={() => scrollChips("right")}
-          type="button"
-        >
-          <ChevronRight className="h-4 w-4" aria-hidden="true" />
-        </button>
+          return (
+            <button
+              aria-pressed={active}
+              className={
+                active
+                  ? "group inline-flex h-[30px] min-h-[30px] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-primary bg-primary px-3 text-[11px] font-bold leading-none tracking-[-0.01em] text-white shadow-none transition-[background-color,border-color,color,transform] duration-200 hover:bg-primary/95 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8]/20 dark:border-primary dark:bg-primary dark:text-white"
+                  : "group inline-flex h-[30px] min-h-[30px] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-[#DDE8F4] bg-white px-3 text-[11px] font-bold leading-none tracking-[-0.01em] text-[#5F718A] shadow-none transition-[background-color,border-color,color,transform] duration-200 hover:border-[#BFD8F4] hover:bg-[#F8FBFF] hover:text-[#123B6D] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8]/20 dark:border-border dark:bg-surface/70 dark:text-muted dark:hover:bg-surface-muted/70 dark:hover:text-foreground"
+              }
+              key={chip.key}
+              onClick={() => onSelect(chip.key)}
+              type="button"
+            >
+              <span>{chip.label}</span>
+              <span className={active ? "text-white/82" : "text-[#7B8CA3]"}>
+                ({formatFavoriteChipCount(counts[chip.key])})
+              </span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -369,7 +335,7 @@ const FavoritePsychologistCard = ({
 
       <PsychologistWhatsAppRedirectButton
         aria-label={`Chamar ${psychologist.name} no WhatsApp`}
-        className="mt-auto inline-flex h-8 w-full min-w-0 items-center justify-center gap-1.5 rounded-[12px] bg-success px-2.5 font-black text-white transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 sm:h-[34px] sm:gap-1.5 sm:rounded-[14px]"
+        className="mt-auto inline-flex min-h-9 w-full min-w-0 items-center justify-center gap-1.5 rounded-[13px] bg-success px-3 py-2 text-[0.78rem] font-black leading-[1.15] text-white transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 sm:min-h-10 sm:gap-2 sm:rounded-[14px] sm:px-3.5 sm:py-2.5 sm:text-[0.82rem]"
         psychologist={{
           avatar: psychologist.avatar,
           crp: psychologist.crp,
@@ -378,10 +344,13 @@ const FavoritePsychologistCard = ({
           typeLabel: getContactProfession(psychologist.gender),
           whatsappUrl: psychologist.whatsapp_url,
         }}
-        style={{ fontSize: "0.6875rem" }}
         stopPropagation
       >
-        <PsychologistWhatsAppButtonContent iconClassName="h-3.5 w-3.5" label="WhatsApp" />
+        <PsychologistWhatsAppButtonContent
+          iconClassName="h-4 w-4"
+          label="WhatsApp"
+          labelClassName="leading-[1.2]"
+        />
       </PsychologistWhatsAppRedirectButton>
     </article>
   );
@@ -540,7 +509,7 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
               </span>
             ) : null}
 
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,188px))] justify-center gap-3 sm:grid-cols-[repeat(auto-fit,minmax(180px,214px))] sm:gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
               {psychologists.map((psychologist) => (
                 <FavoritePsychologistCard
                   favoritePending={favoritePendingId === psychologist.id}
