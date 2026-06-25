@@ -442,3 +442,11 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Cards: a base mobile passou a usar a mesma composicao espacada do desktop, com card mais alto, padding maior, cantos maiores, avatar de 112px, maior respiro entre avatar/nome/profissao e CTA.
 - WhatsApp: o CTA passou a usar o texto em portugues `Conversar`, com icone maior e proporcao mais equilibrada entre icone e texto, mantendo a acao/aria-label de WhatsApp.
 - Escopo: sem mudancas de backend, Prisma, migrations, packages, endpoints, filtros reais, paginacao, favoritos, pagina de Comunidade ou tracking de WhatsApp.
+
+
+## Complemento 2026-06-25 - contador em badge nas chips de Favoritos
+
+- Pedido do usuario: trocar o contador textual entre parenteses das chips de Favoritos por um layout mais moderno, inspirado no contador da secao Publicacoes do perfil do psicologo, sem alterar nada no perfil; e voltar o texto do CTA dos cards para `WhatsApp`.
+- Frontend: as chips de `/app/favorites` agora exibem a quantidade em um badge circular/oval separado, sem parenteses, com borda azul-clara, fundo azul muito claro e tipografia azul em destaque; no chip ativo o contador usa superficie branca para contraste.
+- Cards: o CTA voltou a exibir `WhatsApp`, mantendo a proporcao atual entre icone, texto, altura e padding.
+- Escopo: sem mudancas no perfil do psicologo, backend, Prisma, migrations, packages, endpoint, filtros reais, paginacao, favoritos ou tracking de WhatsApp.

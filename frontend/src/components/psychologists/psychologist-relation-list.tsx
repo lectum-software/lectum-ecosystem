@@ -135,6 +135,14 @@ const favoriteFilterChipClassName = (active: boolean) =>
       : "border-[#DDE8F4] bg-white text-[#5F718A] hover:border-[#BFD8F4] hover:bg-[#F8FBFF] hover:text-[#123B6D] dark:border-border dark:bg-surface/70 dark:text-muted dark:hover:bg-surface-muted/70 dark:hover:text-foreground",
   );
 
+const favoriteFilterCountClassName = (active: boolean) =>
+  cn(
+    "inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full px-2 text-[11px] font-extrabold leading-none shadow-[0_4px_10px_rgba(47,141,235,0.035)]",
+    active
+      ? "border border-white/70 bg-white text-[#247BD1]"
+      : "border border-[#D7E8FA] bg-[#F4FAFF] text-[#247BD1]",
+  );
+
 const config = {
   favorites: {
     title: "Favoritos",
@@ -233,8 +241,8 @@ const FavoriteFilterChips = ({
               <span className="whitespace-nowrap text-[11px] font-bold leading-none">
                 {chip.label}
               </span>
-              <span className="whitespace-nowrap text-[11px] font-bold leading-none">
-                ({formatFavoriteChipCount(counts[chip.key])})
+              <span className={favoriteFilterCountClassName(active)}>
+                {formatFavoriteChipCount(counts[chip.key])}
               </span>
             </button>
           );
@@ -359,7 +367,7 @@ const FavoritePsychologistCard = ({
       >
         <PsychologistWhatsAppButtonContent
           iconClassName="h-3.5 w-3.5"
-          label="Conversar"
+          label="WhatsApp"
           labelClassName="leading-[1.25]"
         />
       </PsychologistWhatsAppRedirectButton>

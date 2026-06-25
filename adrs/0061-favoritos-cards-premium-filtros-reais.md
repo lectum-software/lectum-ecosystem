@@ -510,3 +510,24 @@ Na tela de Favoritos, o header apresentava mojibake no texto `voc?`, o CTA de Wh
 - O CTA continua claramente associado ao WhatsApp pelo icone, mas com copy mais natural para o usuario.
 - Mobile e desktop ficam mais consistentes na hierarquia interna dos cards, com menos sensacao de elementos comprimidos.
 - Nao ha alteracao em dados, contratos, backend, schema, filtros ou tracking.
+
+
+## Complemento 2026-06-25 - contador das chips como badge separado
+
+### Contexto
+
+Produto pediu que as quantidades das chips de Favoritos deixassem o formato textual `(3)` e passassem a usar uma composicao mais moderna, similar ao contador da secao `Publicacoes` do perfil do psicologo, sem alterar o perfil. Tambem pediu que o CTA dos cards voltasse de `Conversar` para `WhatsApp`.
+
+### Decisao
+
+- Manter as chips de Favoritos no padrao visual alinhado a Comunidade, mas renderizar a quantidade como um badge interno independente.
+- Usar no contador uma superficie clara com borda azul-clara e texto azul, inspirada no contador de Publicacoes do perfil.
+- No estado ativo, usar contador branco com texto azul para preservar contraste sobre o chip azul.
+- Voltar o label visivel do CTA dos cards para `WhatsApp`, sem alterar a acao real ou tracking.
+- Nao alterar a tela/perfil do psicologo.
+
+### Consequencias
+
+- A linha de filtros fica mais refinada e legivel, removendo a aparencia tecnica de parenteses.
+- O CTA volta a nomear diretamente o canal de contato, como esperado pelo usuario.
+- A mudanca e visual/local em Favoritos e nao altera dados, contratos, backend, perfil do psicologo ou persistencia.
