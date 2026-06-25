@@ -489,3 +489,24 @@ Produto decidiu evoluir a tela de Favoritos para um modelo mais contextual, insp
 - A tela ganha contexto e hierarquia visual mais premium sem alterar filtros, dados ou persistencia.
 - O header branco aproxima Favoritos da linguagem dos blocos informativos da Comunidade.
 - A decisao segue visual/local e nao impacta contratos de API, backend, schema ou pacotes.
+
+
+## Complemento 2026-06-25 - CTA em portugues e paridade mobile/desktop dos cards
+
+### Contexto
+
+Na tela de Favoritos, o header apresentava mojibake no texto `voc?`, o CTA de WhatsApp precisava de melhor proporcao visual entre icone e label, e os cards no mobile estavam mais comprimidos que no desktop.
+
+### Decisao
+
+- Usar escape Unicode para garantir que `voc?` renderize corretamente no header.
+- Alterar o label visivel do CTA de `WhatsApp` para `Conversar`, mantendo o icone de WhatsApp e a acao real de contato.
+- Ajustar a proporcao do CTA com icone de 14px, texto de 0.72rem, altura minima de 36px, padding horizontal maior e gap equilibrado.
+- Aplicar a disposicao visual do desktop como base mobile: card de 296px, padding 20px, raio 28px, avatar 112px e respiro vertical maior.
+
+### Consequencias
+
+- O texto fica correto em PT-BR no browser.
+- O CTA continua claramente associado ao WhatsApp pelo icone, mas com copy mais natural para o usuario.
+- Mobile e desktop ficam mais consistentes na hierarquia interna dos cards, com menos sensacao de elementos comprimidos.
+- Nao ha alteracao em dados, contratos, backend, schema, filtros ou tracking.

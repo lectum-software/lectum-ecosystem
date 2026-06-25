@@ -433,3 +433,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Frontend: o `SecondaryPageHeader` simples foi substituido por um header local de Favoritos com superficie branca, borda suave, sombra discreta, icone de coracao, titulo e descricao.
 - As chips permanecem fora do header, imediatamente abaixo, preservando o padrao visual alinhado as chips da Comunidade e a rolagem horizontal mobile-first.
 - Escopo: sem mudancas de backend, Prisma, migrations, packages, endpoint, filtros reais, paginacao, favoritos, pagina de Comunidade ou tracking de WhatsApp.
+
+
+## Complemento 2026-06-25 - texto PT-BR e proporcao mobile dos cards
+
+- Pedido do usuario: corrigir o texto em portugues, ajustar a proporcao entre icone e texto no botao de WhatsApp e replicar no mobile a disposicao mais espacada dos cards que ficou melhor no desktop.
+- Frontend: a descricao do header de Favoritos foi normalizada para renderizar corretamente `voc?` no browser.
+- Cards: a base mobile passou a usar a mesma composicao espacada do desktop, com card mais alto, padding maior, cantos maiores, avatar de 112px, maior respiro entre avatar/nome/profissao e CTA.
+- WhatsApp: o CTA passou a usar o texto em portugues `Conversar`, com icone maior e proporcao mais equilibrada entre icone e texto, mantendo a acao/aria-label de WhatsApp.
+- Escopo: sem mudancas de backend, Prisma, migrations, packages, endpoints, filtros reais, paginacao, favoritos, pagina de Comunidade ou tracking de WhatsApp.

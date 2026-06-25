@@ -26,7 +26,7 @@ import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 const PAGE_LIMIT = 20;
 const FAVORITES_HEADER_DESCRIPTION =
-  "Profissionais que vocÃª salvou para comparar e conversar quando quiser.";
+  "Profissionais que voc\u00ea salvou para comparar e conversar quando quiser.";
 
 type RelationMode = "favorites";
 
@@ -294,7 +294,7 @@ const FavoritePsychologistCard = ({
   return (
     <article
       aria-label={`Abrir perfil de ${psychologist.name}`}
-      className="group relative isolate mx-auto flex min-h-[272px] w-full max-w-[188px] flex-col overflow-hidden rounded-[24px] border border-[#E7ECF2] bg-white p-4 text-center shadow-[0_12px_28px_rgb(15_23_42_/_6%)] transition duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_18px_42px_rgb(15_23_42_/_10%)] dark:border-border dark:bg-surface sm:min-h-[296px] sm:max-w-[214px] sm:rounded-[28px] sm:p-5"
+      className="group relative isolate mx-auto flex min-h-[296px] w-full max-w-[188px] flex-col overflow-hidden rounded-[28px] border border-[#E7ECF2] bg-white p-5 text-center shadow-[0_12px_28px_rgb(15_23_42_/_6%)] transition duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_18px_42px_rgb(15_23_42_/_10%)] dark:border-border dark:bg-surface sm:max-w-[214px]"
     >
       <button
         aria-label={`Remover ${psychologist.name} dos favoritos`}
@@ -316,7 +316,7 @@ const FavoritePsychologistCard = ({
         className="grid min-h-0 content-start justify-items-center text-center no-underline hover:no-underline"
         href={route}
       >
-        <div className="relative mt-3 h-[102px] w-[102px] rounded-full sm:mt-3.5 sm:h-[112px] sm:w-[112px]">
+        <div className="relative mt-3.5 h-[112px] w-[112px] rounded-full">
           <div className="relative h-full w-full overflow-hidden rounded-full bg-surface-muted ring-1 ring-[#DDE7F2] dark:ring-border">
             <FavoriteMedia psychologist={psychologist} />
           </div>
@@ -333,7 +333,7 @@ const FavoritePsychologistCard = ({
           ) : null}
         </div>
 
-        <div className="mt-6 grid min-w-0 justify-items-center gap-2 sm:mt-7 sm:gap-2.5">
+        <div className="mt-7 grid min-w-0 justify-items-center gap-2.5">
           <span className="flex w-full min-w-0 max-w-full items-center justify-center gap-1 text-center text-[0.88rem] font-bold leading-[1.15] tracking-[-0.02em] text-foreground sm:text-[0.98rem]">
             <span className="min-w-0 max-w-full truncate">{psychologist.name}</span>
             {psychologist.verified ? (
@@ -346,7 +346,7 @@ const FavoritePsychologistCard = ({
 
       <PsychologistWhatsAppRedirectButton
         aria-label={`Chamar ${psychologist.name} no WhatsApp`}
-        className="mt-auto inline-flex min-h-[34px] w-full min-w-0 items-center justify-center gap-1.5 rounded-[13px] bg-success px-2.5 py-2 text-[0.68rem] font-black leading-[1.25] text-white transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 sm:min-h-9 sm:rounded-[14px] sm:px-3 sm:text-[0.72rem]"
+        className="mt-auto inline-flex min-h-9 w-full min-w-0 items-center justify-center gap-1.5 rounded-[14px] bg-success px-3 py-2 text-[0.72rem] font-black leading-[1.25] text-white transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45"
         psychologist={{
           avatar: psychologist.avatar,
           crp: psychologist.crp,
@@ -358,8 +358,8 @@ const FavoritePsychologistCard = ({
         stopPropagation
       >
         <PsychologistWhatsAppButtonContent
-          iconClassName="h-3 w-3"
-          label="WhatsApp"
+          iconClassName="h-3.5 w-3.5"
+          label="Conversar"
           labelClassName="leading-[1.25]"
         />
       </PsychologistWhatsAppRedirectButton>
