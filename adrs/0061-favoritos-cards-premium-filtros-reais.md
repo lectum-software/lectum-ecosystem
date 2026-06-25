@@ -468,3 +468,24 @@ Produto reforcou que as chips de Favoritos ainda nao estavam suficientemente ali
 - Favoritos passa a ter o mesmo padrao visual operacional das chips de Comunidade sem alterar a origem visual existente.
 - Mantem-se baixo risco de regressao na Comunidade.
 - A duplicacao e aceita neste refinamento por evitar acoplamento prematuro entre contextos com semanticas diferentes.
+
+
+## Complemento 2026-06-25 - header contextual branco em Favoritos
+
+### Contexto
+
+Produto decidiu evoluir a tela de Favoritos para um modelo mais contextual, inspirado no bloco de regras/filtros da Comunidade: um card branco com icone, titulo e descricao, seguido pelas chips em trilho independente.
+
+### Decisao
+
+- Substituir o header secundario simples por um header local de Favoritos.
+- Manter o titulo `Favoritos` e adicionar a descricao `Profissionais que voce salvou para comparar e conversar quando quiser.`.
+- Usar um icone de coracao a esquerda, dentro de uma superficie circular azul suave.
+- Manter as chips fora do header, logo abaixo, para preservar a hierarquia: contexto primeiro, filtros depois.
+- Nao alterar a pagina de Comunidade nem compartilhar componente neste momento.
+
+### Consequencias
+
+- A tela ganha contexto e hierarquia visual mais premium sem alterar filtros, dados ou persistencia.
+- O header branco aproxima Favoritos da linguagem dos blocos informativos da Comunidade.
+- A decisao segue visual/local e nao impacta contratos de API, backend, schema ou pacotes.

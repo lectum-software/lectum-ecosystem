@@ -17,7 +17,6 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
-import { SecondaryPageHeader } from "@/components/ui/secondary-page-header";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { getToken } from "@/hooks/cookies/token";
 import { cn } from "@/lib/utils";
@@ -26,6 +25,8 @@ import { PrivateTemplate } from "@/templates/private";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 const PAGE_LIMIT = 20;
+const FAVORITES_HEADER_DESCRIPTION =
+  "Profissionais que vocÃª salvou para comparar e conversar quando quiser.";
 
 type RelationMode = "favorites";
 
@@ -183,6 +184,25 @@ const getProfession = () => "Psicólogo";
 const getContactProfession = (gender?: string | null) => {
   return gender?.toLowerCase() === "feminino" ? "Psic\u00f3loga" : "Psic\u00f3logo";
 };
+
+const FavoritePageHeader = () => (
+  <header className="rounded-[26px] border border-[#E2EAF3] bg-white px-4 py-4 shadow-[0_14px_38px_rgba(15,23,42,0.06)] dark:border-border dark:bg-surface sm:rounded-[30px] sm:px-5 sm:py-[18px]">
+    <div className="flex min-w-0 items-center gap-3">
+      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary-soft text-primary ring-1 ring-primary/10 dark:bg-primary/15">
+        <Heart className="h-5 w-5" aria-hidden="true" strokeWidth={1.9} />
+      </span>
+
+      <div className="min-w-0">
+        <h1 className="text-xl font-black leading-tight tracking-[-0.035em] text-foreground sm:text-2xl">
+          Favoritos
+        </h1>
+        <p className="mt-1 line-clamp-2 text-[0.8rem] font-semibold leading-5 text-muted sm:text-sm">
+          {FAVORITES_HEADER_DESCRIPTION}
+        </p>
+      </div>
+    </div>
+  </header>
+);
 
 const FavoriteFilterChips = ({
   activeFilter,
@@ -453,7 +473,7 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
   return (
     <PrivateTemplate>
       <section className="mx-auto grid min-w-0 w-full max-w-2xl gap-4 overflow-hidden px-5 py-5 md:py-8">
-        <SecondaryPageHeader title={copy.title as string} />
+        <FavoritePageHeader />
 
         {!errorMessage ? (
           <FavoriteFilterChips

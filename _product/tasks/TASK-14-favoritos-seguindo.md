@@ -425,3 +425,11 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - A faixa de filtros de Favoritos tambem passou para `nav` com rolagem horizontal, `scroll-smooth`, `gap-1.5`, `py-1` e `pr-2`, alinhada ao trilho das chips de ordenacao da Comunidade.
 - O arquivo de Comunidade nao foi alterado; o padrao foi apenas replicado localmente em Favoritos para evitar acoplamento prematuro.
 - Escopo: sem mudancas de backend, Prisma, migrations, packages, endpoint, filtros reais, paginacao, favoritos, pagina de Comunidade ou tracking de WhatsApp.
+
+
+## Complemento 2026-06-25 - header branco de Favoritos com chips abaixo
+
+- Pedido do usuario: replicar em `/app/favorites` o modelo visual com titulo `Favoritos`, descricao `Profissionais que voce salvou para comparar e conversar quando quiser.`, header com fundo branco, icone de coracao a esquerda e chips logo abaixo do header.
+- Frontend: o `SecondaryPageHeader` simples foi substituido por um header local de Favoritos com superficie branca, borda suave, sombra discreta, icone de coracao, titulo e descricao.
+- As chips permanecem fora do header, imediatamente abaixo, preservando o padrao visual alinhado as chips da Comunidade e a rolagem horizontal mobile-first.
+- Escopo: sem mudancas de backend, Prisma, migrations, packages, endpoint, filtros reais, paginacao, favoritos, pagina de Comunidade ou tracking de WhatsApp.
