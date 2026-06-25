@@ -1058,3 +1058,15 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual/auditavel: pedido do usuario e referencias locais `_product/proto/Feed Comunidade.jpg`, `_product/proto/Dentro da Comunidade.jpg` e `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0164-cta-whatsapp-conectado-midias-comunidade.md`.
 - Validacoes executadas nesta execucao: `pnpm.cmd --dir frontend exec biome check --write "src/components/community/community-whatsapp-cta.tsx"`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, HTTP local `200` em `/app/community/feed` e `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`.
+
+## Complemento 2026-06-25 - controle explicito para ocultar respostas
+
+- Pedido do usuario: substituir o recolhimento da arvore por clique na parte superior do primeiro comentario, pois esse gesto conflitava com interacoes como `ver mais` do texto e podia recolher a conversa sem querer.
+- Frontend: o comentario raiz deixou de receber `onClick`/`role=button` no bloco inteiro para recolher/expandir a arvore.
+- Frontend: o controle passou a ser um botao explicito e secundario logo abaixo da barra de acoes do comentario raiz, alternando entre `Ocultar respostas` e `Ver respostas (N)` com chevron discreto.
+- A lista de respostas filhas so renderiza quando a arvore esta expandida; ao recolher, a linha visual de hierarquia tambem deixa de ser desenhada para evitar indicar continuacao vazia.
+- Deep links com `focusReplyId` continuam preservando a arvore aberta para manter o comentario focado visivel.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, payloads, votos, salvos, ordenacao, profundidade visual ou criacao de respostas.
+- Fonte visual/auditavel: decisao conversada com o usuario e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
+- Validacoes executadas: `pnpm.cmd --dir frontend exec biome check --write "src/app/app/community/[slug]/post/[id]/logic.tsx"`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, `git diff --check` e HTTP local `200` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`.

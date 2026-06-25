@@ -108,3 +108,23 @@ Validacao complementar:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Chrome/CDP em 390px no detalhe do post demo validando que clique na barra de acoes e em icone SVG nao recolhe, clique no corpo recolhe e botoes continuam funcionais.
+
+## Atualizacao 2026-06-25 - controle explicito de recolhimento
+
+O recolhimento da arvore deixa de ser acionado pelo clique no bloco superior do comentario raiz. Essa area competia com a leitura do comentario e com interacoes internas, especialmente o `ver mais` do texto expandivel, aumentando o risco de recolhimento acidental.
+
+A arvore agora usa um botao explicito, secundario e posicionado logo abaixo da barra de acoes do primeiro comentario da arvore:
+
+- expandida: `Ocultar respostas` com chevron para cima;
+- recolhida: `Ver respostas (N)` com chevron para baixo.
+
+O controle permanece menos importante visualmente que a barra de acoes, por ser uma acao de organizacao/navegacao da conversa, nao uma acao social. Quando recolhida, a arvore nao renderiza os descendentes nem a linha lateral de continuacao; deep links com comentario focado continuam mantendo a arvore aberta para preservar o alvo visivel.
+
+### Validacao desta atualizacao
+
+- `pnpm.cmd --dir frontend exec biome check --write "src/app/app/community/[slug]/post/[id]/logic.tsx"`
+- `pnpm.cmd --dir frontend check`
+- `pnpm.cmd --dir frontend build`
+- `pnpm.cmd check`
+- `git diff --check`
+- HTTP local `200` em `http://127.0.0.1:3000/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`

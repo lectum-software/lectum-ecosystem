@@ -4,8 +4,10 @@ import {
   ArrowLeft,
   BadgeCheck,
   Bookmark,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   FileText,
   Flag,
   Loader2,
@@ -1270,30 +1272,17 @@ const ReplyCard = ({
   const hiddenRepliesCount = Math.max(0, totalRepliesCount - visibleChildren.length);
   const collapsedRepliesCount = useMemo(() => countReplyTreeDescendants(reply), [reply]);
   const canCollapseRootTree = depth === 0 && collapsedRepliesCount > 0;
+  const canToggleRootTree = canCollapseRootTree && !hasFocusedDescendant;
   const threadHref = threadHrefBase ? `${threadHrefBase}/${reply.id}` : null;
   const childrenHiddenByCollapse = canCollapseRootTree && treeCollapsed && !hasFocusedDescendant;
 
   const hasTreeContinuation =
-    childrenHiddenByCollapse || visibleChildren.length > 0 || hiddenRepliesCount > 0;
+    !childrenHiddenByCollapse && (visibleChildren.length > 0 || hiddenRepliesCount > 0);
   const avatarSize = isProfessional ? "reply" : "sm";
   const hasReplyMedia = Boolean(reply.media_url);
 
-  const handleRootTreeClick = (event: MouseEvent<HTMLElement>) => {
-    if (!canCollapseRootTree || isReplyTreeInteractiveTarget(event.target, event.currentTarget)) {
-      return;
-    }
-
-    setTreeCollapsed((current) => (hasFocusedDescendant ? false : !current));
-  };
-
-  const handleRootTreeKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
-    if (!canCollapseRootTree || isReplyTreeInteractiveTarget(event.target, event.currentTarget)) {
-      return;
-    }
-    if (event.key !== "Enter" && event.key !== " ") return;
-
-    event.preventDefault();
-    setTreeCollapsed((current) => (hasFocusedDescendant ? false : !current));
+  const toggleRootTreeCollapse = () => {
+    setTreeCollapsed((current) => !current);
   };
 
   const toggleSaveReply: MouseEventHandler<HTMLButtonElement> = (event) => {
@@ -1331,20 +1320,6 @@ const ReplyCard = ({
     saveReplyMutation.mutate(reply.saved);
   }, [conversion, postId, reply.id, reply.saved, saveReplyMutation]);
 
-  const rootTreeToggleAreaProps = canCollapseRootTree
-    ? {
-        "aria-expanded": !childrenHiddenByCollapse,
-        "aria-label": childrenHiddenByCollapse
-          ? "Expandir respostas desta conversa"
-          : "Recolher respostas desta conversa",
-        onClick: handleRootTreeClick,
-        onKeyDown: handleRootTreeKeyDown,
-        role: "button",
-        tabIndex: 0,
-      }
-    : {};
-  const rootTreeToggleAreaClassName =
-    "cursor-pointer rounded-xl transition-colors hover:bg-[#F8FAFC]/70 active:bg-[#F1F5F9]/75 dark:hover:bg-surface-muted/35";
   const replyWhatsappCta =
     isProfessional && reply.author.whatsapp_url ? (
       <CommunityWhatsAppCta
@@ -1359,19 +1334,8 @@ const ReplyCard = ({
       className="relative rounded-[20px] py-0.5 text-[#182033] transition-[background-color,box-shadow] duration-500 dark:text-foreground"
       id={`reply-${reply.id}`}
     >
-      <div
-        className={cn(
-          "grid grid-cols-[2rem_minmax(0,1fr)] gap-x-2.5 rounded-[20px] transition-colors sm:grid-cols-[2.25rem_minmax(0,1fr)]",
-          canCollapseRootTree && rootTreeToggleAreaClassName,
-        )}
-        data-reply-root-toggle={canCollapseRootTree ? "whole-comment" : undefined}
-        data-reply-collapse-area={canCollapseRootTree ? "root" : undefined}
-        {...rootTreeToggleAreaProps}
-      >
-        <div
-          className="relative flex justify-center"
-          data-reply-collapse-area={canCollapseRootTree ? "avatar" : undefined}
-        >
+      <div className="grid grid-cols-[2rem_minmax(0,1fr)] gap-x-2.5 rounded-[20px] transition-colors sm:grid-cols-[2.25rem_minmax(0,1fr)]">
+        <div className="relative flex justify-center">
           <AuthorAvatar
             author={reply.author}
             href={psychologistProfileHref ?? undefined}
@@ -1388,10 +1352,7 @@ const ReplyCard = ({
 
         <div className="min-w-0 rounded-[18px] px-0.5 py-0.5">
           <div className="flex items-start justify-between gap-2">
-            <div
-              className={cn("grid min-w-0 gap-1", canCollapseRootTree && "-m-1 p-1")}
-              data-reply-collapse-area={canCollapseRootTree ? "header" : undefined}
-            >
+            <div className="grid min-w-0 gap-1">
               <div className="flex min-w-0 items-center gap-x-2">
                 <div className="flex min-w-0 items-center gap-[5px]">
                   {isProfessional ? (
@@ -1434,10 +1395,7 @@ const ReplyCard = ({
             </div>
           </div>
 
-          <div
-            className={cn(canCollapseRootTree && "-mx-1 px-1")}
-            data-reply-collapse-area={canCollapseRootTree ? "content" : undefined}
-          >
+          <div>
             <InlineExpandableText
               className="mt-2 text-sm leading-6 text-[#475569] dark:text-muted"
               expanded={contentExpanded}
@@ -1481,6 +1439,39 @@ const ReplyCard = ({
             />
           </div>
 
+          {canToggleRootTree ? (
+            <div className="mt-1.5" data-comment-collapse-ignore="true">
+              <button
+                aria-controls={hasTreeContinuation ? `reply-children-${reply.id}` : undefined}
+                aria-expanded={!childrenHiddenByCollapse}
+                aria-label={
+                  childrenHiddenByCollapse
+                    ? `Ver ${collapsedRepliesCount} ${
+                        collapsedRepliesCount === 1 ? "resposta" : "respostas"
+                      } desta conversa`
+                    : "Ocultar respostas desta conversa"
+                }
+                className="inline-flex w-fit items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-bold text-[#64748B] transition hover:bg-[#F1F5F9] hover:text-[#334155] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 active:scale-[0.98] dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  toggleRootTreeCollapse();
+                }}
+                type="button"
+              >
+                {childrenHiddenByCollapse ? (
+                  <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+                ) : (
+                  <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
+                )}
+                <span>
+                  {childrenHiddenByCollapse
+                    ? `Ver respostas (${collapsedRepliesCount})`
+                    : "Ocultar respostas"}
+                </span>
+              </button>
+            </div>
+          ) : null}
+
           {isOwnReply && editModalOpen ? (
             <ReplyEditModal
               onClose={() => setEditModalOpen(false)}
@@ -1510,59 +1501,39 @@ const ReplyCard = ({
       </div>
 
       {hasTreeContinuation ? (
-        <div className="relative mt-2 ml-4 grid gap-3 border-[#DCE4EE] border-l pl-4 dark:border-border sm:ml-[18px] sm:pl-5">
-          {childrenHiddenByCollapse ? (
-            <button
-              aria-expanded="false"
-              className="group inline-flex w-fit items-center gap-2 rounded-full py-1 pr-2 text-[11px] font-black text-primary transition hover:text-primary"
-              data-comment-collapse-ignore="true"
-              onClick={(event) => {
-                event.stopPropagation();
-                setTreeCollapsed(false);
-              }}
-              type="button"
-            >
-              <span
-                className="h-px w-5 rounded-full bg-[#CBD5E1] transition group-hover:bg-primary/45 dark:bg-border"
-                aria-hidden="true"
-              />
-              <span>
-                Ver {collapsedRepliesCount} {collapsedRepliesCount === 1 ? "resposta" : "respostas"}
-              </span>
-            </button>
-          ) : null}
-
-          {!childrenHiddenByCollapse
-            ? visibleChildren.map((child) => (
-                <ReplyCard
-                  activeInlineReplyFormRef={activeInlineReplyFormRef}
-                  currentUserId={currentUserId}
-                  deleteReplyPending={deleteReplyPending}
-                  depth={depth + 1}
-                  inlineReplyTargets={inlineReplyTargets}
-                  key={child.id}
-                  focusReplyId={focusReplyId}
-                  maxInlineDepth={maxInlineDepth}
-                  mediaPermission={mediaPermission}
-                  onCancelInlineReplyTarget={onCancelInlineReplyTarget}
-                  onInlineReplyDraftChange={onInlineReplyDraftChange}
-                  onDeleteReply={onDeleteReply}
-                  onReply={onReply}
-                  onReportReply={onReportReply}
-                  onShare={onShare}
-                  onSubmitReply={onSubmitReply}
-                  onVote={onVote}
-                  postId={postId}
-                  professionalThread={highlightedProfessionalThread}
-                  reply={child}
-                  replyApiError={replyApiError}
-                  replyDisabled={replyDisabled}
-                  threadHrefBase={threadHrefBase}
-                  votePending={votePending}
-                />
-              ))
-            : null}
-          {!childrenHiddenByCollapse && hiddenRepliesCount > 0 && threadHref ? (
+        <div
+          className="relative mt-2 ml-4 grid gap-3 border-[#DCE4EE] border-l pl-4 dark:border-border sm:ml-[18px] sm:pl-5"
+          id={`reply-children-${reply.id}`}
+        >
+          {visibleChildren.map((child) => (
+            <ReplyCard
+              activeInlineReplyFormRef={activeInlineReplyFormRef}
+              currentUserId={currentUserId}
+              deleteReplyPending={deleteReplyPending}
+              depth={depth + 1}
+              inlineReplyTargets={inlineReplyTargets}
+              key={child.id}
+              focusReplyId={focusReplyId}
+              maxInlineDepth={maxInlineDepth}
+              mediaPermission={mediaPermission}
+              onCancelInlineReplyTarget={onCancelInlineReplyTarget}
+              onInlineReplyDraftChange={onInlineReplyDraftChange}
+              onDeleteReply={onDeleteReply}
+              onReply={onReply}
+              onReportReply={onReportReply}
+              onShare={onShare}
+              onSubmitReply={onSubmitReply}
+              onVote={onVote}
+              postId={postId}
+              professionalThread={highlightedProfessionalThread}
+              reply={child}
+              replyApiError={replyApiError}
+              replyDisabled={replyDisabled}
+              threadHrefBase={threadHrefBase}
+              votePending={votePending}
+            />
+          ))}
+          {hiddenRepliesCount > 0 && threadHref ? (
             <Link
               className="group inline-flex w-fit items-center gap-2 rounded-full py-1 pr-2 text-[11px] font-black text-primary no-underline transition hover:text-primary hover:no-underline"
               data-comment-collapse-ignore="true"
