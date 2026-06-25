@@ -396,3 +396,13 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - [x] `pnpm --dir frontend build`
 - [x] `pnpm check`
 - [x] `git diff --check`
+
+## Execução complementar: header compacto premium do feed (2026-06-25)
+
+- Pedido do usuário: transformar o header do feed em uma única linha `[buscar] [selecionar comunidade] [configurações]`, com seletor de comunidades e primeira opção `Todas as comunidades` levando para explorar comunidades.
+- Fonte visual auditável: `_product/proto/Feed Comunidade.jpg`; Builder/Quick Copy não está exposto como ferramenta callable nesta sessão.
+- O header de `/app/community/feed` e compatibilidade `/app/community/[slug]` deixou de usar chips em segunda linha e passou a usar um dropdown central de comunidades.
+- A primeira opção do dropdown é `Todas as comunidades`, com ícone de explorar e seta ao final do texto, apontando para `/app/community`.
+- Busca e configurações viraram botões premium padronizados, com superfície, borda, foco, sombra sutil e popovers compactos sem alterar dados, ranking, rotas ou contratos da API.
+- ADR criado: `adrs/0166-header-feed-comunidades-premium.md`.
+- Validações executadas: `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check` e HTTP local `200` em `/app/community/feed` e `/app/community/ansiedade-em-equilibrio`.

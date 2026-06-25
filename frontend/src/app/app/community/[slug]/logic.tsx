@@ -2,6 +2,7 @@
 
 import {
   ArrowLeft,
+  ArrowRight,
   ArrowUp,
   Award,
   BadgeCheck,
@@ -17,9 +18,9 @@ import {
   MessageCircle,
   Plus,
   Search,
+  Settings,
   Share2,
   ShieldCheck,
-  SlidersHorizontal,
   UsersRound,
   UserX,
 } from "lucide-react";
@@ -137,6 +138,26 @@ const FEED_SCOPE_OPTIONS: Array<{ label: string; value: CommunityFeedScope }> = 
   { label: "Todas as comunidades", value: "all" },
   { label: "Comunidades que sigo", value: "following" },
 ];
+
+const feedHeaderControlClassName = (active: boolean) =>
+  cn(
+    "group inline-flex h-11 w-11 items-center justify-center rounded-[18px] border shadow-[0_10px_26px_rgba(15,23,42,0.07)] transition-[background-color,border-color,color,box-shadow,transform] duration-200 active:scale-[0.98]",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+    active
+      ? "border-primary/45 bg-primary-soft text-primary shadow-[0_14px_32px_rgba(48,140,232,0.14)]"
+      : "border-border bg-background text-muted hover:border-primary/35 hover:bg-primary-soft/60 hover:text-primary",
+  );
+
+const feedHeaderDropdownPanelClassName =
+  "absolute top-[3.625rem] z-40 overflow-hidden rounded-[22px] border border-border bg-surface p-1.5 shadow-[0_24px_60px_rgba(15,23,42,0.16)] dark:bg-surface";
+
+const feedHeaderMenuItemClassName = (active?: boolean) =>
+  cn(
+    "flex w-full items-center justify-between gap-2 rounded-[17px] px-3 py-2.5 text-left text-sm transition-[background-color,color] duration-200",
+    active
+      ? "bg-primary-soft text-primary"
+      : "text-muted hover:bg-surface-muted hover:text-foreground",
+  );
 
 type CommunityVisualPalette = {
   coverDepthColor: string;
@@ -945,27 +966,22 @@ const FilterMenu = ({
     <button
       aria-expanded={open}
       aria-label="Filtrar feed"
-      className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-[#DFE5EC] bg-white text-[#64748B] shadow-sm transition hover:border-primary/50 hover:bg-primary-soft hover:text-primary dark:border-border dark:bg-surface dark:text-muted"
+      aria-haspopup="menu"
+      className={feedHeaderControlClassName(open || scope === "following")}
       onClick={() => setOpen(!open)}
       type="button"
     >
-      <SlidersHorizontal className="h-5 w-5" aria-hidden="true" />
+      <Settings className="h-[18px] w-[18px] stroke-[2.4]" aria-hidden="true" />
     </button>
 
     {open ? (
-      <div className="absolute right-0 top-14 z-30 w-64 overflow-hidden rounded-[18px] border border-border bg-white p-1.5 shadow-[0_18px_45px_rgba(15,23,42,0.16)] dark:bg-surface">
+      <div className={cn(feedHeaderDropdownPanelClassName, "right-0 w-64")}>
         {FEED_SCOPE_OPTIONS.map((item) => {
           const selected = item.value === scope;
 
           return (
             <button
-              aria-pressed={selected}
-              className={cn(
-                "flex w-full items-center justify-between rounded-[14px] px-3 py-2.5 text-left text-sm font-bold transition",
-                selected
-                  ? "bg-primary-soft text-primary"
-                  : "text-[#475569] hover:bg-surface-muted dark:text-muted",
-              )}
+              className={cn(feedHeaderMenuItemClassName(selected), "font-bold")}
               key={item.value}
               onClick={() => {
                 onScopeChange(item.value);
@@ -974,7 +990,7 @@ const FilterMenu = ({
               type="button"
             >
               {item.label}
-              {selected ? <span className="h-2 w-2 rounded-full bg-primary" /> : null}
+              {selected ? <Check className="h-4 w-4 shrink-0" aria-hidden="true" /> : null}
             </button>
           );
         })}
@@ -983,46 +999,136 @@ const FilterMenu = ({
   </div>
 );
 
-const CommunityChips = ({
+const FeedSearchMenu = ({
+  onOpenChange,
+  onSearchChange,
+  open,
+  search,
+}: {
+  onOpenChange: (value: boolean) => void;
+  onSearchChange: (value: string) => void;
+  open: boolean;
+  search: string;
+}) => {
+  const active = open || search.trim().length > 0;
+
+  return (
+    <div className="relative shrink-0">
+      <button
+        aria-expanded={open}
+        aria-label="Buscar no feed"
+        aria-haspopup="dialog"
+        className={feedHeaderControlClassName(active)}
+        onClick={() => onOpenChange(!open)}
+        type="button"
+      >
+        <Search className="h-[18px] w-[18px] stroke-[2.4]" aria-hidden="true" />
+      </button>
+
+      {open ? (
+        <div className={cn(feedHeaderDropdownPanelClassName, "left-0 w-[min(82vw,320px)] p-2")}>
+          <div className="relative">
+            <Search
+              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
+              aria-hidden="true"
+            />
+            <Input
+              aria-label="Buscar no feed"
+              autoFocus
+              className="h-10 rounded-[16px] border-border bg-background pl-10 text-sm font-semibold shadow-none"
+              onChange={(event) => onSearchChange(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") onOpenChange(false);
+              }}
+              placeholder="Buscar no feed"
+              type="search"
+              value={search}
+            />
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+const FeedCommunitySelect = ({
   activeSlug,
-  onNavigate,
+  onOpenChange,
+  open,
 }: {
   activeSlug: string | null;
-  onNavigate: () => void;
-}) => (
-  <nav aria-label="Comunidades" className="-mx-5 overflow-x-auto px-5 [scrollbar-width:none]">
-    <div className="flex min-w-max gap-2 pb-1">
-      <Link
-        className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white px-4 py-2 text-sm font-black text-[#475569] shadow-sm transition hover:border-primary/40 hover:bg-primary-soft hover:text-primary dark:bg-surface dark:text-muted"
-        href={COMMUNITY_EXPLORE_HREF}
-        onClick={onNavigate}
-      >
-        <Compass className="h-4 w-4" aria-hidden="true" />
-        Explorar
-      </Link>
-      {COMMUNITY_FEED_CHIPS.map((item) => {
-        const isActive = item.slug === activeSlug;
+  onOpenChange: (value: boolean) => void;
+  open: boolean;
+}) => {
+  const activeCommunity = getCommunityFeedChip(activeSlug);
 
-        return (
+  return (
+    <div className="relative min-w-0 flex-1">
+      <button
+        aria-expanded={open}
+        aria-label="Selecionar comunidade"
+        aria-haspopup="listbox"
+        className={cn(
+          "flex h-11 w-full min-w-0 items-center justify-between gap-2 rounded-[18px] border bg-background px-3.5 text-left text-sm font-black shadow-[0_10px_26px_rgba(15,23,42,0.07)] transition-[background-color,border-color,color,box-shadow,transform] duration-200 active:scale-[0.99]",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+          open
+            ? "border-primary/45 bg-primary-soft text-primary shadow-[0_14px_32px_rgba(48,140,232,0.14)]"
+            : "border-border text-foreground hover:border-primary/35 hover:bg-primary-soft/60 hover:text-primary",
+        )}
+        onClick={() => onOpenChange(!open)}
+        type="button"
+      >
+        <span className="min-w-0 truncate">
+          {activeCommunity?.label ?? "Selecione uma comunidade"}
+        </span>
+        <ChevronDown
+          className={cn("h-4 w-4 shrink-0 transition", open ? "rotate-180" : "rotate-0")}
+          aria-hidden="true"
+        />
+      </button>
+
+      {open ? (
+        <div
+          className={cn(
+            feedHeaderDropdownPanelClassName,
+            "left-0 right-0 max-h-[70vh] overflow-y-auto",
+          )}
+        >
           <Link
-            aria-current={isActive ? "page" : undefined}
-            className={cn(
-              "rounded-full border px-3.5 py-2 text-[13px] font-semibold shadow-sm transition",
-              isActive
-                ? "border-primary bg-primary text-white shadow-primary/20"
-                : "border-border bg-white text-[#475569] hover:border-primary/40 hover:bg-primary-soft hover:text-primary dark:bg-surface dark:text-muted",
-            )}
-            href={communityDetailHref(item.slug)}
-            key={item.slug}
-            onClick={onNavigate}
+            className={cn(feedHeaderMenuItemClassName(false), "font-black hover:text-primary")}
+            href={COMMUNITY_EXPLORE_HREF}
+            onClick={() => onOpenChange(false)}
           >
-            {item.label}
+            <span className="flex min-w-0 items-center gap-2">
+              <Compass className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+              <span className="min-w-0 truncate">Todas as comunidades</span>
+            </span>
+            <ArrowRight className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
           </Link>
-        );
-      })}
+
+          <div className="my-1 h-px bg-border" />
+
+          {COMMUNITY_FEED_CHIPS.map((item) => {
+            const isActive = item.slug === activeSlug;
+
+            return (
+              <Link
+                aria-current={isActive ? "page" : undefined}
+                className={cn(feedHeaderMenuItemClassName(isActive), "font-bold")}
+                href={communityDetailHref(item.slug)}
+                key={item.slug}
+                onClick={() => onOpenChange(false)}
+              >
+                <span className="min-w-0 truncate">{item.label}</span>
+                {isActive ? <Check className="h-4 w-4 shrink-0" aria-hidden="true" /> : null}
+              </Link>
+            );
+          })}
+        </div>
+      ) : null}
     </div>
-  </nav>
-);
+  );
+};
 
 const PostMedia = ({ footer, post }: { footer?: ReactNode; post: CommunityPost }) => {
   const imageMediaItems = (post.media_items ?? []).filter((item) => item.media_type === "image");
@@ -2657,6 +2763,8 @@ export const CommunityFeedLogic = () => {
   const selectedCommunitySlug = communityFromQuery?.slug ?? communityFromLegacySlug?.slug ?? null;
   const [scope, setScope] = useState<CommunityFeedScope>("all");
   const [filterOpen, setFilterOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [communityMenuOpen, setCommunityMenuOpen] = useState(false);
   const [headerHidden, setHeaderHidden] = useState(false);
   const lastScrollY = useRef(0);
   const [search, setSearch] = useState("");
@@ -2703,6 +2811,30 @@ export const CommunityFeedLogic = () => {
         type: "create_post",
       },
     });
+  };
+
+  const handleSearchOpenChange = (open: boolean) => {
+    setSearchOpen(open);
+    if (open) {
+      setCommunityMenuOpen(false);
+      setFilterOpen(false);
+    }
+  };
+
+  const handleCommunityMenuOpenChange = (open: boolean) => {
+    setCommunityMenuOpen(open);
+    if (open) {
+      setSearchOpen(false);
+      setFilterOpen(false);
+    }
+  };
+
+  const handleFilterOpenChange = (open: boolean) => {
+    setFilterOpen(open);
+    if (open) {
+      setSearchOpen(false);
+      setCommunityMenuOpen(false);
+    }
   };
 
   useEffect(() => {
@@ -2754,38 +2886,32 @@ export const CommunityFeedLogic = () => {
       <section className="mx-auto grid w-full max-w-[430px] gap-4 sm:max-w-2xl lg:max-w-[760px]">
         <header
           className={cn(
-            "sticky top-0 z-30 -mx-5 border-[#E5EAF0] border-b bg-background px-5 pb-3 pt-2 transition-[transform,opacity] duration-300 ease-out dark:border-border",
+            "sticky top-0 z-30 -mx-5 border-border border-b bg-background px-5 py-2.5 transition-[transform,opacity] duration-300 ease-out",
             headerHidden
               ? "pointer-events-none -translate-y-[calc(100%+8px)] opacity-0"
               : "translate-y-0 opacity-100",
           )}
         >
-          <div className="mx-auto grid max-w-[430px] gap-3 sm:max-w-2xl lg:max-w-[760px]">
-            <div className="flex items-center gap-2">
-              <div className="relative min-w-0 flex-1">
-                <Search
-                  className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
-                  aria-hidden="true"
-                />
-                <Input
-                  aria-label="Buscar no feed"
-                  className="h-12 rounded-full border-[#DFE5EC] bg-white pl-11 text-sm shadow-sm dark:bg-surface"
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Buscar no feed"
-                  type="search"
-                  value={search}
-                />
-              </div>
+          <div className="mx-auto flex max-w-[430px] items-center gap-2 rounded-[24px] border border-border bg-surface p-1.5 shadow-[0_16px_44px_rgba(15,23,42,0.08)] sm:max-w-2xl lg:max-w-[760px]">
+            <FeedSearchMenu
+              onOpenChange={handleSearchOpenChange}
+              onSearchChange={setSearch}
+              open={searchOpen}
+              search={search}
+            />
 
-              <FilterMenu
-                onScopeChange={setScope}
-                open={filterOpen}
-                scope={scope}
-                setOpen={setFilterOpen}
-              />
-            </div>
+            <FeedCommunitySelect
+              activeSlug={selectedCommunitySlug}
+              onOpenChange={handleCommunityMenuOpenChange}
+              open={communityMenuOpen}
+            />
 
-            <CommunityChips activeSlug={selectedCommunitySlug} onNavigate={() => undefined} />
+            <FilterMenu
+              onScopeChange={setScope}
+              open={filterOpen}
+              scope={scope}
+              setOpen={handleFilterOpenChange}
+            />
           </div>
         </header>
 
