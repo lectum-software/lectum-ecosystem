@@ -344,3 +344,24 @@ A primeira versao dos chips com contagem em `/app/favorites` ficou visualmente p
 - O topo de Favoritos fica mais proximo de um padrao mobile premium e menos chamativo.
 - Os cards ficam mais limpos, com menos halos/sombras concorrendo com avatar e CTA.
 - Nenhuma regra de dominio, endpoint, schema, pacote ou tracking foi alterado.
+
+## Complemento 2026-06-25 - chips destacados e card com mais respiro
+
+### Contexto
+
+Produto observou que os chips inativos de `/app/favorites` ainda se misturavam ao fundo da pagina e que, no desktop, a faixa horizontal precisava de uma affordance de navegacao. Tambem foram apontados problemas de micro-hierarquia no card: selo verificado podendo ficar sozinho, card baixo, pouco respiro e avatar com sombra excessiva.
+
+### Decisao
+
+- Manter os chips sem sombra, mas aumentar contraste dos inativos com fundo branco e borda azul-acinzentada visivel.
+- Preservar ativo em azul claro Lectum, com borda suave e sem efeito pesado.
+- Adicionar setas laterais apenas em desktop para rolar a faixa horizontal de chips; no mobile a rolagem continua por gesto.
+- Aumentar altura minima e espaçamento vertical dos cards de favoritos.
+- Remover sombra da area de foto/avatar, substituindo por uma linha fina (`ring-1`) para separar imagem e fundo do card.
+- Agrupar o ultimo termo do nome com o selo verificado em `whitespace-nowrap`, evitando selo isolado na segunda linha.
+
+### Consequencias
+
+- Os filtros ficam mais legiveis contra o background sem voltar a usar sombra.
+- A navegacao horizontal fica mais clara em desktop, onde gestos de scroll sao menos obvios.
+- O card passa a ter mais presenca e leitura mais respirada, sem alterar dados, endpoint ou fluxo de contato.

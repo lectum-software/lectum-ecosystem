@@ -369,3 +369,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Frontend: os chips passaram a usar superficies planas, sem `box-shadow`, com estado ativo em azul suave e inativos em cinza claro, mantendo contagens reais e rolagem horizontal mobile-first.
 - Cards: o selo verificado agora fica inline junto ao nome, a bolinha verde de disponibilidade perdeu o invólucro branco/ring/sombra e o CTA `WhatsApp` perdeu a sombra traseira.
 - Escopo: sem mudancas de backend, Prisma, migrations, packages, endpoint, filtros reais, paginacao, favoritos ou tracking de WhatsApp.
+
+## Complemento 2026-06-25 - hierarquia dos chips e respiro dos cards
+
+- Pedido do usuario: destacar melhor chips nao selecionados, inserir navegacao horizontal por setas no desktop, impedir que o selo verificado fique sozinho na segunda linha, aumentar altura/respiro dos cards e remover sombreamento da foto de perfil mantendo apenas uma linha fina de limite.
+- Frontend: chips inativos passaram a ter fundo branco e borda visivel sem sombra, mantendo o chip ativo em azul claro Lectum e as contagens reais do endpoint.
+- Desktop: a faixa de chips ganhou botoes laterais de navegacao horizontal, preservando rolagem horizontal natural no mobile.
+- Cards: altura minima e espaçamentos internos aumentados; avatar/foto perdeu sombra e ring branco espesso, ficando apenas com linha fina; fallback de iniciais tambem perdeu sombra.
+- Nome/selo: o selo verificado passou a ficar preso ao ultimo termo do nome em um bloco sem quebra, evitando que apareça isolado em uma segunda linha.
+- Escopo: sem mudancas de backend, Prisma, migrations, packages, filtros reais, paginacao, favoritos ou tracking de WhatsApp.
