@@ -51,6 +51,12 @@ export const indexSchema: IValidatorRequest = {
       optional: true,
     },
     {
+      key: "more_experienced",
+      coerse: "boolean",
+      method: "boolean",
+      optional: true,
+    },
+    {
       key: "verified",
       coerse: "boolean",
       method: "boolean",

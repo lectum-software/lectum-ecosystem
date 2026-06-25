@@ -290,3 +290,37 @@ Produto pediu que `/app/favorites` deixasse de ter curadoria/filtros/header bran
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
+
+## Complemento 2026-06-25 - chips com contagens reais no header simples
+
+### Contexto
+
+Produto pediu que a tela `/app/favorites`, apos ser simplificada para o padrao de Notificacoes, deixasse de exibir o contador textual solto (`1 perfil salvo`) e trouxesse chips logo abaixo do titulo com filtros relevantes e suas quantidades: `Tudo`, `Disponivel hoje`, `Convenio`, `Desconto 1ª Sessao`, `Valor social` e `Mais experientes`.
+
+A restricao principal era nao transformar os numeros em copy fixa/mockada, porque a lista de favoritos e paginada e depende da API autenticada.
+
+### Decisao
+
+- Manter o `SecondaryPageHeader` simples com o titulo `Favoritos`.
+- Renderizar uma linha horizontal mobile-first de chips imediatamente abaixo do titulo, com visual premium discreto da Lectum.
+- Remover o contador textual acima da grade, evitando redundancia visual.
+- Usar os chips como filtros reais sincronizados pela URL, resetando `page` ao trocar o filtro.
+- Calcular as quantidades por consultas reais ao endpoint de favoritos com `limit=1`, aproveitando o `count` da paginacao em vez de contar apenas a pagina carregada.
+- Adicionar suporte backend a `more_experienced=true` no endpoint de favoritos com a mesma regra ja usada no diretorio: CRP com 10+ anos e `show_experience_tag=true`.
+
+### Consequencias
+
+- A tela ganha filtros de alta intencao sem voltar ao header editorial antigo.
+- As quantidades permanecem consistentes com a API e com a paginacao real.
+- A busca por `Mais experientes` fica consistente entre descoberta de psicologos e favoritos.
+- A solucao aumenta o numero de queries leves de contagem na tela, mas evita endpoint novo e nao altera schema, migrations ou contratos de favoritar/desfavoritar.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir backend check`
+- `pnpm --dir frontend build`
+- `pnpm --dir backend build`
+- `pnpm check`
+- `git diff --check`
+- HTTP local `200` em `/app/favorites`.

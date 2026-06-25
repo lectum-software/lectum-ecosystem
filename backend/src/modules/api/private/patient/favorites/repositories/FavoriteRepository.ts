@@ -62,6 +62,13 @@ const hasAvailableToday = (value: unknown) => {
   return normalizeStringArray(value).includes(currentWeekdayValue());
 };
 
+const moreExperiencedCutoffDate = () => {
+  const date = new Date();
+  date.setFullYear(date.getFullYear() - 10);
+
+  return date;
+};
+
 const buildWhatsappUrl = (value?: string | null) => {
   const digits = String(value ?? "").replace(/\D/g, "");
   if (digits.length < 8) return null;
@@ -104,6 +111,12 @@ export class FavoriteRepository implements IFavoriteRepository {
       discount_first_session: data.q.discount_first_session ? true : undefined,
       accepts_insurance: data.q.accepts_insurance ? true : undefined,
       social_value: data.q.social_value ? true : undefined,
+      crp_registration_date: data.q.more_experienced
+        ? {
+            lt: moreExperiencedCutoffDate(),
+          }
+        : undefined,
+      show_experience_tag: data.q.more_experienced ? true : undefined,
       subscriptions: data.q.verified
         ? {
             some: activeProfessionalEntitlementWhere(),

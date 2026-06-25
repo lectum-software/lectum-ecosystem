@@ -349,3 +349,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Escopo: sem mudanças de backend, Prisma, migrations, packages, endpoints, dados de favoritos ou tracking de WhatsApp.
 - ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
 - Valida??es executadas: `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`.
+
+## Complemento 2026-06-25 - chips de filtro com contagens em Favoritos
+
+- Pedido do usuario: remover o texto de contagem solto `1 perfil salvo`/`perfis salvos` e colocar, logo abaixo do titulo `Favoritos`, chips de filtros importantes com quantidade: `Tudo`, `Disponivel hoje`, `Convenio`, `Desconto 1ª Sessao`, `Valor social` e `Mais experientes`.
+- Referencia visual ativa: `_product/proto/Favoritos.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao, entao a validacao visual usou o fallback auditavel e a rota local `/app/favorites`.
+- Frontend: `/app/favorites` voltou a exibir uma linha horizontal mobile-first de chips abaixo do `SecondaryPageHeader`, sem o contador textual anterior acima da grade.
+- Os chips sao botoes reais de filtro, sincronizados com a URL e com a paginacao resetada ao trocar o filtro.
+- As quantidades dos chips nao sao mockadas: cada chip consulta o endpoint real de favoritos com `limit=1` e usa o `count` retornado pela API autenticada.
+- Backend: o endpoint real de favoritos passou a aceitar `more_experienced=true`, com a mesma regra de `Mais experientes` da descoberta de psicologos: inscricao CRP anterior a 10 anos e `show_experience_tag=true`.
+- Escopo: sem alteracao de Prisma, migrations, packages, dados persistidos, fluxo de favoritar/desfavoritar ou tracking de WhatsApp.
+- ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx src/api/generator/types/patient-relations.ts`, `pnpm --dir backend exec biome check --write src/modules/api/private/patient/favorites/validator/index.ts src/modules/api/private/patient/favorites/DTOs/IFavoriteDTO.ts src/modules/api/private/patient/favorites/repositories/FavoriteRepository.ts`, `pnpm --dir frontend check`, `pnpm --dir backend check`, `pnpm --dir frontend build`, `pnpm --dir backend build`, `pnpm check`, `git diff --check` e HTTP local `200` em `/app/favorites`.

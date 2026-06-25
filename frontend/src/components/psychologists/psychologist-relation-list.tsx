@@ -1,12 +1,15 @@
 "use client";
 
+import { useQueries } from "@tanstack/react-query";
 import { Heart, Loader2, Sparkles } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type MouseEvent, useMemo, useState } from "react";
+import keys from "@/api/cache/keys";
 import { usePatient } from "@/api/callers/patient";
 import type { PatientRelationPsychologist, PatientRelationQuery } from "@/api/generator/types";
+import { getFavoritePsychologists } from "@/api/req/patient";
 import {
   PsychologistWhatsAppButtonContent,
   PsychologistWhatsAppRedirectButton,
@@ -37,6 +40,88 @@ type ApiErrorData = {
 
 type ApiError = Error & {
   data?: ApiErrorData;
+};
+
+type FavoriteFilterKey =
+  | "all"
+  | "available_today"
+  | "accepts_insurance"
+  | "discount_first_session"
+  | "social_value"
+  | "more_experienced";
+
+type FavoriteFilterQuery = Partial<
+  Pick<
+    PatientRelationQuery,
+    | "available_today"
+    | "accepts_insurance"
+    | "discount_first_session"
+    | "social_value"
+    | "more_experienced"
+  >
+>;
+
+const FAVORITE_FILTER_PARAM_KEYS: Exclude<FavoriteFilterKey, "all">[] = [
+  "available_today",
+  "accepts_insurance",
+  "discount_first_session",
+  "social_value",
+  "more_experienced",
+];
+
+const FAVORITE_FILTER_CHIPS = [
+  {
+    key: "all",
+    label: "Tudo",
+  },
+  {
+    key: "available_today",
+    label: "Disponível hoje",
+  },
+  {
+    key: "accepts_insurance",
+    label: "Convênio",
+  },
+  {
+    key: "discount_first_session",
+    label: "Desconto 1ª Sessão",
+  },
+  {
+    key: "social_value",
+    label: "Valor social",
+  },
+  {
+    key: "more_experienced",
+    label: "Mais experientes",
+  },
+] satisfies { key: FavoriteFilterKey; label: string }[];
+
+const getActiveFavoriteFilter = (params: URLSearchParams): FavoriteFilterKey => {
+  for (const key of FAVORITE_FILTER_PARAM_KEYS) {
+    if (params.get(key) === "true") return key;
+  }
+
+  return "all";
+};
+
+const favoriteFilterQuery = (key: FavoriteFilterKey): FavoriteFilterQuery => {
+  if (key === "all") return {};
+
+  return {
+    [key]: true,
+  };
+};
+
+const favoriteCountQuery = (key: FavoriteFilterKey): PatientRelationQuery => ({
+  page: 1,
+  limit: 1,
+  ...favoriteFilterQuery(key),
+});
+
+const formatFavoriteChipCount = (count?: number) => {
+  if (typeof count !== "number") return "…";
+
+  return String(count);
 };
 
 const config = {
@@ -87,6 +172,45 @@ const getProfession = () => "Psicólogo";
 
 const getContactProfession = (gender?: string | null) => {
   return gender?.toLowerCase() === "feminino" ? "Psic\u00f3loga" : "Psic\u00f3logo";
+};
+
+const FavoriteFilterChips = ({
+  activeFilter,
+  counts,
+  onSelect,
+}: {
+  activeFilter: FavoriteFilterKey;
+  counts: Partial<Record<FavoriteFilterKey, number>>;
+  onSelect: (filter: FavoriteFilterKey) => void;
+}) => {
+  return (
+    <div className="-mx-5 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex w-max min-w-full items-center gap-2">
+        {FAVORITE_FILTER_CHIPS.map((chip) => {
+          const active = activeFilter === chip.key;
+
+          return (
+            <button
+              aria-pressed={active}
+              className={
+                active
+                  ? "inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-full border border-primary/15 bg-primary px-3.5 text-[0.72rem] font-black tracking-[-0.01em] text-white shadow-[0_10px_22px_rgb(47_139_235_/_18%)] transition active:scale-[0.98]"
+                  : "inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#D9E7F7] bg-white px-3.5 text-[0.72rem] font-extrabold tracking-[-0.01em] text-[#475569] transition hover:border-primary/30 hover:bg-primary-soft/55 hover:text-primary active:scale-[0.98] dark:border-border dark:bg-surface dark:text-muted dark:hover:text-primary"
+              }
+              key={chip.key}
+              onClick={() => onSelect(chip.key)}
+              type="button"
+            >
+              <span>{chip.label}</span>
+              <span className={active ? "text-white/82" : "text-[#7A8CA3]"}>
+                ({formatFavoriteChipCount(counts[chip.key])})
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 };
 
 const FavoriteMedia = ({ psychologist }: { psychologist: PatientRelationPsychologist }) => {
@@ -220,13 +344,42 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
     return Boolean(getToken());
   });
   const currentPage = useMemo(() => getPageFromParams(searchParams), [searchParams]);
+  const activeFavoriteFilter = useMemo(() => getActiveFavoriteFilter(searchParams), [searchParams]);
   const query = useMemo<PatientRelationQuery>(
     () => ({
       page: currentPage,
       limit: PAGE_LIMIT,
+      ...favoriteFilterQuery(activeFavoriteFilter),
     }),
-    [currentPage],
+    [activeFavoriteFilter, currentPage],
   );
+  const favoriteFilterCountQueries = useQueries({
+    queries: FAVORITE_FILTER_CHIPS.map((chip) => {
+      const countQuery = favoriteCountQuery(chip.key);
+
+      return {
+        enabled: hasAuthToken,
+        queryFn: () => getFavoritePsychologists(countQuery),
+        queryKey: keys.patient.favorites(countQuery),
+        refetchOnWindowFocus: false,
+        retry: false,
+        staleTime: 30_000,
+      };
+    }),
+  });
+  const favoriteFilterCounts = useMemo(() => {
+    return FAVORITE_FILTER_CHIPS.reduce<Partial<Record<FavoriteFilterKey, number>>>(
+      (accumulator, chip, index) => {
+        const count = favoriteFilterCountQueries[index]?.data?.count;
+        if (typeof count === "number") {
+          accumulator[chip.key] = count;
+        }
+
+        return accumulator;
+      },
+      {},
+    );
+  }, [favoriteFilterCountQueries]);
   const copy = config[mode];
   const { favoritePsychologist, favorites, unfavoritePsychologist } = usePatient({
     enableFavorites: hasAuthToken,
@@ -238,11 +391,26 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
   const activeQuery = favorites;
   const response = activeQuery.data;
   const psychologists: PatientRelationPsychologist[] = response?.data ?? [];
-  const total = response?.count ?? 0;
   const pages = response?.pages ?? 0;
   const errorMessage = activeQuery.isError ? resolveRelationErrorMessage(activeQuery.error) : null;
   const showInitialLoading = activeQuery.isLoading && !response;
   const Icon = copy.icon as typeof Heart;
+
+  const handleSelectFavoriteFilter = (filter: FavoriteFilterKey) => {
+    const next = new URLSearchParams(searchParams.toString());
+    for (const key of FAVORITE_FILTER_PARAM_KEYS) {
+      next.delete(key);
+    }
+    next.delete("page");
+
+    if (filter !== "all") {
+      next.set(filter, "true");
+    }
+
+    router.replace(`/app/favorites${next.toString() ? `?${next}` : ""}`, {
+      scroll: false,
+    });
+  };
 
   const goToPage = (page: number) => {
     const next = new URLSearchParams(searchParams.toString());
@@ -273,7 +441,15 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
   return (
     <PrivateTemplate>
       <section className="mx-auto grid w-full max-w-2xl gap-4 px-5 py-5 md:py-8">
-        <SecondaryPageHeader className="mb-4" title={copy.title as string} />
+        <SecondaryPageHeader title={copy.title as string} />
+
+        {!errorMessage ? (
+          <FavoriteFilterChips
+            activeFilter={activeFavoriteFilter}
+            counts={favoriteFilterCounts}
+            onSelect={handleSelectFavoriteFilter}
+          />
+        ) : null}
 
         {errorMessage ? (
           <InlineAlert title="Não foi possível carregar" variant="error">
@@ -306,12 +482,11 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
 
         {!showInitialLoading && !errorMessage && psychologists.length > 0 ? (
           <div className="grid gap-4">
-            <div className="flex min-w-0 items-center justify-between gap-3 px-1 text-sm text-muted">
-              <span className="min-w-0 font-bold">
-                {total} {total === 1 ? "perfil salvo" : "perfis salvos"}
+            {activeQuery.isFetching ? (
+              <span className="sr-only" aria-live="polite">
+                Atualizando favoritos
               </span>
-              {activeQuery.isFetching ? <LoadingState label="Atualizando" /> : null}
-            </div>
+            ) : null}
 
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
               {psychologists.map((psychologist) => (

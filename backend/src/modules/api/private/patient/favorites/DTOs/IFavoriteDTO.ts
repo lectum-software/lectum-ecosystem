@@ -55,6 +55,7 @@ export interface IFavoriteIndexDTO {
     accepts_insurance?: boolean;
     social_value?: boolean;
     discount_first_session?: boolean;
+    more_experienced?: boolean;
     verified?: boolean;
   };
   auth: user;
