@@ -39,3 +39,18 @@ A largura do CTA continua seguindo a largura do frame de imagem/video por estar 
 - HTTP local `200` em `http://127.0.0.1:3000/app/community/feed`
 - HTTP local `200` em `http://127.0.0.1:3000/app/community/ansiedade-em-equilibrio`
 - HTTP local `200` em `http://127.0.0.1:3000/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`
+
+## Atualizacao 2026-06-25 — CTA sem mídia padronizado
+
+O CTA independente exibido em posts e respostas sem mídia passa a usar os mesmos elementos textuais da variante anexada: `WhatsApp` na primeira linha e `Falar com {primeiro nome} →` na segunda. A diferença permanece apenas no contêiner visual: sem mídia, o botão continua independente, com largura ajustada ao conteúdo e cantos completos; com mídia, segue conectado ao frame.
+
+A decisão evita duas hierarquias concorrentes para a mesma ação de conversão e mantém a implementação centralizada em `CommunityWhatsAppCta`, reaproveitando `PsychologistWhatsAppRedirectButton` e `PsychologistWhatsAppButtonContent`.
+
+### Validacao desta atualizacao
+
+- `pnpm.cmd --dir frontend exec biome check --write "src/components/community/community-whatsapp-cta.tsx"`
+- `pnpm.cmd --dir frontend check`
+- `pnpm.cmd --dir frontend build`
+- `pnpm.cmd check`
+- HTTP local `200` em `http://127.0.0.1:3000/app/community/feed`
+- HTTP local `200` em `http://127.0.0.1:3000/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`

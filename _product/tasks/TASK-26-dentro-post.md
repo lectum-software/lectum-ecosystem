@@ -1047,3 +1047,14 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual/auditavel: pedido do usuario e referencias locais `_product/proto/Feed Comunidade.jpg`, `_product/proto/Dentro da Comunidade.jpg` e `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0164-cta-whatsapp-conectado-midias-comunidade.md`.
 - Validacoes executadas nesta execucao: `pnpm.cmd --dir frontend exec biome check --write "src/components/community/community-whatsapp-cta.tsx"`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, HTTP local `200` em `/app/community/feed`, `/app/community/ansiedade-em-equilibrio` e `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`.
+
+## Complemento 2026-06-25 - CTA WhatsApp sem midia padronizado
+
+- Pedido do usuario: padronizar os elementos do botao de WhatsApp em posts e respostas sem midia.
+- Frontend: `CommunityWhatsAppCta` passou a usar a mesma hierarquia textual em todas as variantes: `WhatsApp` na primeira linha e `Falar com {primeiro nome} →` na segunda linha.
+- A variante sem midia permanece como botao independente (`w-fit`, cantos arredondados completos), enquanto a variante com midia continua conectada ao frame de imagem/video.
+- A alteracao reaproveita `PsychologistWhatsAppRedirectButton` e `PsychologistWhatsAppButtonContent`, preservando abertura do WhatsApp, tracking, icone, estados de hover/focus e bloqueio de propagacao dos cards.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, permissoes, votos, salvos, ranking ou tracking de WhatsApp.
+- Fonte visual/auditavel: pedido do usuario e referencias locais `_product/proto/Feed Comunidade.jpg`, `_product/proto/Dentro da Comunidade.jpg` e `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0164-cta-whatsapp-conectado-midias-comunidade.md`.
+- Validacoes executadas nesta execucao: `pnpm.cmd --dir frontend exec biome check --write "src/components/community/community-whatsapp-cta.tsx"`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, HTTP local `200` em `/app/community/feed` e `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`.

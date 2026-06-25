@@ -42,8 +42,8 @@ export const CommunityWhatsAppCta = ({
   psychologist,
   stopPropagation = false,
 }: CommunityWhatsAppCtaProps) => {
-  const headingLabel = attached ? "WhatsApp" : psychologist.name;
-  const actionLabel = attached ? `Falar com ${getFirstName(psychologist.name)} →` : undefined;
+  const headingLabel = "WhatsApp";
+  const actionLabel = `Falar com ${getFirstName(psychologist.name)} →`;
 
   return (
     <PsychologistWhatsAppRedirectButton
