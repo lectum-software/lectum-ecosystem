@@ -194,3 +194,16 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nao houve alteracao de backend, Prisma, migrations, endpoints, payloads, dados, ordenacao ou packages.
 - ADR atualizado: `adrs/0107-explorar-comunidades-conteudo-centralizado.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check --write src/app/app/community/logic.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile/desktop validando `box-shadow` sem profundidade real nos elementos ajustados e ausencia de overflow horizontal.
+
+## Execução complementar: catálogo ativo com Depressão e TDAH (2026-06-25)
+
+- Pedido do usuário: manter comunidades Ansiedade, Relacionamentos e Autocuidado; remover Mulheres e Luto; adicionar Depressão e TDAH; associar as imagens anexadas a cada comunidade.
+- Fonte visual auditável: `_product/proto/Explorar Comunidades.jpg`, `_product/proto/Feed Comunidade.jpg` e assets anexados pelo usuário (`Ansiedade.png`, `Relacionamentos.png`, `Autocuidado.png`, `Depressão.png`, `TDAH.png`). Builder/Quick Copy não está exposto como ferramenta callable nesta sessão.
+- Frontend: `COMMUNITY_FEED_CHIPS` agora lista apenas Ansiedade, Relacionamentos, Autocuidado, Depressão e TDAH, preservando slugs consistentes para chips/rotas do feed.
+- Frontend: os cards/carrosséis de `/app/community` passaram a usar os novos assets em `frontend/public/images/community/explore/*.png`, mantendo o padrão visual atual dos cards.
+- Backend: migration `20260625143000_update_community_catalog_depressao_tdah` faz upsert das 5 comunidades ativas com `avatar_url`/paleta e remove `mulheres-em-foco` e `luto-e-ressignificacao` por soft delete.
+- Backend: os ícones usados pelo detalhe de comunidade foram adicionados em `backend/public/community/icons/*.png` para servir as URLs persistidas no banco.
+- `DATA-MODEL.md` foi atualizado com o catálogo vigente. `TASK-23` foi atualizada para refletir os chips ativos do feed.
+- Não houve mudança de schema Prisma, endpoints, packages, mocks ou dados artificiais de posts.
+- ADR criado: `adrs/0165-catalogo-comunidades-depressao-tdah.md`.
+- Validações executadas: `pnpm --dir backend db:migrate`, consulta Prisma do catálogo, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check` e HTTP local `200` para `/app/community`, asset frontend de Depressão e ícone backend de Depressão.

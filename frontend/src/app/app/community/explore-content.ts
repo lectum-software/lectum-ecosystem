@@ -17,23 +17,43 @@ export type CommunityExploreCard = CommunityExploreContent & {
   membersCount: number;
 };
 
-const DEFAULT_COMMUNITY_IMAGE = "/images/community/explore/mindfulness-self-care.png";
+const DEFAULT_COMMUNITY_IMAGE = "/images/community/explore/autocuidado.png";
 
 const COMMUNITY_EXPLORE_CONTENT_BY_SLUG: Record<string, CommunityExploreContent> = {
   "ansiedade-em-equilibrio": {
     id: "explore-ansiedade-em-equilibrio",
-    name: "Ansiedade em equilíbrio",
-    imageUrl: "/images/community/explore/anxiety-support.png",
+    name: "Ansiedade em Equilíbrio",
+    imageUrl: "/images/community/explore/ansiedade.png",
     description:
       "Acolhimento para conversar sobre ansiedade, rotina e estratégias de regulação emocional.",
-    category: "Saúde emocional",
+    category: "Ansiedade",
     isPopular: true,
     growthLabel: "Destaque",
   },
+  depressao: {
+    id: "explore-depressao",
+    name: "Depressão",
+    imageUrl: "/images/community/explore/depressao.png",
+    description:
+      "Apoio para falar sobre desânimo, isolamento, recaídas e caminhos possíveis de cuidado.",
+    category: "Depressão",
+    isPopular: true,
+    growthLabel: "Nova",
+  },
+  tdah: {
+    id: "explore-tdah",
+    name: "TDAH",
+    imageUrl: "/images/community/explore/tdah.png",
+    description:
+      "Trocas sobre foco, organização, impulsividade e rotina com acolhimento e informação.",
+    category: "TDAH",
+    isPopular: true,
+    growthLabel: "Nova",
+  },
   "autocuidado-em-pratica": {
     id: "explore-autocuidado-em-pratica",
-    name: "Autocuidado em prática",
-    imageUrl: "/images/community/explore/mindfulness-self-care.png",
+    name: "Autocuidado em Prática",
+    imageUrl: "/images/community/explore/autocuidado.png",
     description:
       "Práticas realistas para cuidar de si, criar pequenos hábitos e sustentar bem-estar.",
     category: "Autocuidado",
@@ -41,27 +61,10 @@ const COMMUNITY_EXPLORE_CONTENT_BY_SLUG: Record<string, CommunityExploreContent>
     isPopular: true,
     growthLabel: "Destaque",
   },
-  "luto-e-ressignificacao": {
-    id: "explore-luto-e-ressignificacao",
-    name: "Luto e Ressignificação",
-    imageUrl: "/images/community/explore/grief-support.png",
-    description: "Um espaço seguro para falar sobre perdas, saudade e reconstrução de sentido.",
-    category: "Luto",
-    isPopular: true,
-  },
-  "mulheres-em-foco": {
-    id: "explore-mulheres-em-foco",
-    name: "Mulheres em Foco",
-    imageUrl: "/images/community/explore/anxiety-support.png",
-    description:
-      "Conversas sobre saúde mental de mulheres, autoestima, carreira, família e rede de apoio.",
-    category: "Mulheres",
-    isPopular: true,
-  },
   "relacionamentos-com-proposito": {
     id: "explore-relacionamentos-com-proposito",
     name: "Relacionamentos com Propósito",
-    imageUrl: "/images/community/explore/relationships-purpose.png",
+    imageUrl: "/images/community/explore/relacionamentos.png",
     description:
       "Reflexões sobre vínculos, comunicação, limites saudáveis e relações mais conscientes.",
     category: "Relacionamentos",
@@ -70,10 +73,11 @@ const COMMUNITY_EXPLORE_CONTENT_BY_SLUG: Record<string, CommunityExploreContent>
 };
 
 const fallbackImageByIndex = [
-  "/images/community/explore/anxiety-support.png",
-  "/images/community/explore/relationships-purpose.png",
-  "/images/community/explore/grief-support.png",
+  "/images/community/explore/ansiedade.png",
+  "/images/community/explore/relacionamentos.png",
   DEFAULT_COMMUNITY_IMAGE,
+  "/images/community/explore/depressao.png",
+  "/images/community/explore/tdah.png",
 ];
 
 export const buildCommunityExploreCard = (

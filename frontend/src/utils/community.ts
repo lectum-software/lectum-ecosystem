@@ -10,19 +10,19 @@ export const COMMUNITY_FEED_CHIPS = [
     slug: "relacionamentos-com-proposito",
   },
   {
-    label: "Mulheres",
-    name: "Mulheres em Foco",
-    slug: "mulheres-em-foco",
-  },
-  {
     label: "Autocuidado",
     name: "Autocuidado em Prática",
     slug: "autocuidado-em-pratica",
   },
   {
-    label: "Luto",
-    name: "Luto e Ressignificação",
-    slug: "luto-e-ressignificacao",
+    label: "Depressão",
+    name: "Depressão",
+    slug: "depressao",
+  },
+  {
+    label: "TDAH",
+    name: "TDAH",
+    slug: "tdah",
   },
 ] as const;
 

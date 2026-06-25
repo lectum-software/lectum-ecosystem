@@ -70,7 +70,7 @@ Implementação esperada:
 
 - Criar feed agregado com infinite scroll ou paginação.
 - Exibir comunidade, autor, tags, contadores, CTA de WhatsApp quando houver psicólogo e ações de post.
-- Exibir busca, filtro "Todas as comunidades"/"Apenas comunidades que o usuário segue" e chips: Explorar, Ansiedade, Relacionamentos, Mulheres, Autocuidado e Luto.
+- Exibir busca, filtro "Todas as comunidades"/"Apenas comunidades que o usuário segue" e chips ativos do catálogo curado: Explorar, Ansiedade, Relacionamentos, Autocuidado, Depressão e TDAH.
 - Filtrar por comunidade/categoria quando disponível sem transformar o feed agregado em página de detalhe.
 - Estados loading, erro e vazio.
 - Não usar array local de posts.
