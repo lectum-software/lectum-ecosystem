@@ -185,7 +185,7 @@ const FavoriteFilterChips = ({
 }) => {
   return (
     <div className="-mx-5 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <div className="flex w-max min-w-full items-center gap-2">
+      <div className="flex w-max min-w-full items-center gap-2.5">
         {FAVORITE_FILTER_CHIPS.map((chip) => {
           const active = activeFilter === chip.key;
 
@@ -194,15 +194,15 @@ const FavoriteFilterChips = ({
               aria-pressed={active}
               className={
                 active
-                  ? "inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-full border border-primary/15 bg-primary px-3.5 text-[0.72rem] font-black tracking-[-0.01em] text-white shadow-[0_10px_22px_rgb(47_139_235_/_18%)] transition active:scale-[0.98]"
-                  : "inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#D9E7F7] bg-white px-3.5 text-[0.72rem] font-extrabold tracking-[-0.01em] text-[#475569] transition hover:border-primary/30 hover:bg-primary-soft/55 hover:text-primary active:scale-[0.98] dark:border-border dark:bg-surface dark:text-muted dark:hover:text-primary"
+                  ? "inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-[12px] border border-transparent bg-[#EAF3FF] px-4 text-[0.76rem] font-extrabold tracking-[-0.01em] text-primary transition-colors active:scale-[0.98] dark:bg-primary/15 dark:text-primary"
+                  : "inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-[12px] border border-transparent bg-[#F3F4F6] px-4 text-[0.76rem] font-extrabold tracking-[-0.01em] text-[#111827] transition-colors hover:bg-[#E8EBEF] hover:text-foreground active:scale-[0.98] dark:bg-surface-muted dark:text-foreground/82 dark:hover:bg-surface"
               }
               key={chip.key}
               onClick={() => onSelect(chip.key)}
               type="button"
             >
               <span>{chip.label}</span>
-              <span className={active ? "text-white/82" : "text-[#7A8CA3]"}>
+              <span className={active ? "text-primary/68" : "text-[#6B7280]"}>
                 ({formatFavoriteChipCount(counts[chip.key])})
               </span>
             </button>
@@ -292,23 +292,21 @@ const FavoritePsychologistCard = ({
 
           {psychologist.available_today ? (
             <span
-              className="absolute right-1.5 bottom-1.5 grid h-5 w-5 place-items-center rounded-full bg-white shadow-[0_8px_18px_rgb(15_23_42_/_12%)] ring-1 ring-success/15 dark:bg-surface"
+              className="absolute right-2 bottom-2 grid h-4 w-4 place-items-center rounded-full"
               title="Disponível hoje"
             >
               <span className="absolute h-3.5 w-3.5 rounded-full bg-success/35 motion-safe:animate-[ping_2.4s_cubic-bezier(0,0,0.2,1)_infinite]" />
-              <span className="relative h-3 w-3 rounded-full bg-success ring-2 ring-white dark:ring-surface" />
+              <span className="relative h-3 w-3 rounded-full bg-success" />
               <span className="sr-only">Disponível hoje</span>
             </span>
           ) : null}
         </div>
 
         <div className="mt-5 grid min-w-0 justify-items-center gap-1.5 sm:mt-6 sm:gap-2">
-          <span className="flex min-w-0 max-w-full items-start justify-center gap-1.5">
-            <span className="line-clamp-2 min-w-0 text-[0.88rem] font-bold leading-[1.15] tracking-[-0.02em] text-foreground sm:text-[0.98rem]">
-              {psychologist.name}
-            </span>
+          <span className="line-clamp-2 min-w-0 max-w-full text-center text-[0.88rem] font-bold leading-[1.15] tracking-[-0.02em] text-foreground sm:text-[0.98rem]">
+            {psychologist.name}
             {psychologist.verified ? (
-              <VerifiedBadgeIcon className="mt-[1px] h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+              <VerifiedBadgeIcon className="ml-1 inline-block h-3.5 w-3.5 align-[-2px] sm:h-4 sm:w-4" />
             ) : null}
           </span>
           <p className="text-xs font-medium text-muted sm:text-[0.82rem]">{profession}</p>
@@ -317,7 +315,7 @@ const FavoritePsychologistCard = ({
 
       <PsychologistWhatsAppRedirectButton
         aria-label={`Chamar ${psychologist.name} no WhatsApp`}
-        className="mt-auto inline-flex h-8 w-full min-w-0 items-center justify-center gap-1.5 rounded-[12px] bg-success px-2.5 font-black text-white shadow-[0_10px_20px_rgb(34_197_94_/_20%)] transition hover:bg-success/90 hover:shadow-[0_14px_26px_rgb(34_197_94_/_24%)] active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 disabled:shadow-none sm:h-[34px] sm:gap-1.5 sm:rounded-[14px]"
+        className="mt-auto inline-flex h-8 w-full min-w-0 items-center justify-center gap-1.5 rounded-[12px] bg-success px-2.5 font-black text-white transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 sm:h-[34px] sm:gap-1.5 sm:rounded-[14px]"
         psychologist={{
           avatar: psychologist.avatar,
           crp: psychologist.crp,

@@ -324,3 +324,23 @@ A restricao principal era nao transformar os numeros em copy fixa/mockada, porqu
 - `pnpm check`
 - `git diff --check`
 - HTTP local `200` em `/app/favorites`.
+
+## Complemento 2026-06-25 - calibragem visual Instagram-like dos chips
+
+### Contexto
+
+A primeira versao dos chips com contagem em `/app/favorites` ficou visualmente pesada, com azul preenchido e sombra. Produto pediu uma calibragem mais moderna e sofisticada, sem sombra, tomando como inspiracao os chips de notificacoes do Instagram, alem de pequenos ajustes nos cards de favoritos.
+
+### Decisao
+
+- Trocar os chips preenchidos/sombreados por pills planas: ativo em azul muito claro com texto azul Lectum, inativos em cinza claro com texto escuro.
+- Manter as contagens e o comportamento real de filtro sem alterar contratos de API.
+- Renderizar o selo verificado inline junto ao nome do psicologo para evitar que pareca desconectado do texto.
+- Remover o invólucro branco, ring e sombra da bolinha verde de disponibilidade.
+- Remover sombras do CTA de WhatsApp, preservando fundo verde, largura e acao real.
+
+### Consequencias
+
+- O topo de Favoritos fica mais proximo de um padrao mobile premium e menos chamativo.
+- Os cards ficam mais limpos, com menos halos/sombras concorrendo com avatar e CTA.
+- Nenhuma regra de dominio, endpoint, schema, pacote ou tracking foi alterado.

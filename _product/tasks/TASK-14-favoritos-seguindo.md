@@ -361,3 +361,11 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Escopo: sem alteracao de Prisma, migrations, packages, dados persistidos, fluxo de favoritar/desfavoritar ou tracking de WhatsApp.
 - ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx src/api/generator/types/patient-relations.ts`, `pnpm --dir backend exec biome check --write src/modules/api/private/patient/favorites/validator/index.ts src/modules/api/private/patient/favorites/DTOs/IFavoriteDTO.ts src/modules/api/private/patient/favorites/repositories/FavoriteRepository.ts`, `pnpm --dir frontend check`, `pnpm --dir backend check`, `pnpm --dir frontend build`, `pnpm --dir backend build`, `pnpm check`, `git diff --check` e HTTP local `200` em `/app/favorites`.
+
+## Complemento 2026-06-25 - refinamento visual dos chips e cards de Favoritos
+
+- Pedido do usuario: refinar os chips de `/app/favorites` para ficarem mais modernos, sofisticados e sem sombra, inspirados nos chips de notificacoes do Instagram; ajustar detalhes dos cards mantendo o selo junto ao nome, removendo a borda branca da bolinha verde e removendo o sombreamento do botao de WhatsApp.
+- Referencia visual adicional: imagem anexada pelo usuario `c:/Users/tulio/Downloads/WhatsApp Image 2026-06-25 at 17.00.02.jpeg`; referencia ativa do produto segue `_product/proto/Favoritos.jpg`. Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente.
+- Frontend: os chips passaram a usar superficies planas, sem `box-shadow`, com estado ativo em azul suave e inativos em cinza claro, mantendo contagens reais e rolagem horizontal mobile-first.
+- Cards: o selo verificado agora fica inline junto ao nome, a bolinha verde de disponibilidade perdeu o invólucro branco/ring/sombra e o CTA `WhatsApp` perdeu a sombra traseira.
+- Escopo: sem mudancas de backend, Prisma, migrations, packages, endpoint, filtros reais, paginacao, favoritos ou tracking de WhatsApp.
