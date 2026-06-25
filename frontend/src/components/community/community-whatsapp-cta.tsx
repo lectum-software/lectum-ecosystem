@@ -43,14 +43,14 @@ export const CommunityWhatsAppCta = ({
   stopPropagation = false,
 }: CommunityWhatsAppCtaProps) => {
   const headingLabel = attached ? "WhatsApp" : psychologist.name;
-  const actionLabel = attached ? `Falar com ${getFirstName(psychologist.name)}` : undefined;
+  const actionLabel = attached ? `Falar com ${getFirstName(psychologist.name)} →` : undefined;
 
   return (
     <PsychologistWhatsAppRedirectButton
       className={cn(
         "grid min-w-0 max-w-full grid-cols-1 content-center justify-items-start border border-[#D7DEE8] bg-white text-left text-[#1F2A3D] shadow-none transition hover:border-[#BFC9D7] hover:bg-[#F8FAFC] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 active:scale-[0.995] dark:border-border dark:bg-surface dark:text-foreground dark:hover:bg-surface-muted",
         attached
-          ? "-mt-px w-full gap-1 rounded-t-none rounded-b-[15px] border-t-0 px-3.5 pt-2.5 pb-3"
+          ? "-mt-px w-full gap-1.5 rounded-t-none rounded-b-[15px] border-t-0 px-3.5 pt-3.5 pb-4"
           : "w-fit gap-1.5 rounded-[15px] px-3.5 py-3",
         className,
       )}
@@ -58,14 +58,14 @@ export const CommunityWhatsAppCta = ({
       psychologist={psychologist}
       stopPropagation={stopPropagation}
     >
-      <span className="min-w-0 max-w-full truncate text-[12px] font-medium leading-none text-[#64748B] dark:text-muted">
+      <span className="min-w-0 max-w-full overflow-visible whitespace-nowrap text-[12px] font-medium leading-[1.35] text-[#64748B] dark:text-muted">
         {headingLabel}
       </span>
-      <span className="inline-flex min-w-0 max-w-full items-center gap-1.5 text-[13px] font-semibold leading-none text-[#1F2A3D] dark:text-foreground">
+      <span className="inline-flex min-w-0 max-w-full items-center gap-1.5 overflow-visible text-[13px] font-semibold leading-[1.35] text-[#1F2A3D] dark:text-foreground">
         <PsychologistWhatsAppButtonContent
           iconClassName="h-4 w-4 text-[#64748B] dark:text-muted"
           label={actionLabel}
-          labelClassName="text-left text-current"
+          labelClassName="text-left leading-[1.35] text-current"
         />
       </span>
     </PsychologistWhatsAppRedirectButton>

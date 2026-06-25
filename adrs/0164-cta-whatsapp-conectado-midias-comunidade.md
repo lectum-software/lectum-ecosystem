@@ -18,3 +18,24 @@ CTAs sem mídia permanecem como botões independentes para preservar legibilidad
 - O CTA mantém destaque, mas deixa de parecer um card separado.
 - A solução é reaproveitada em mídia única e carrossel.
 - A lógica de clique, tracking e abertura do WhatsApp permanece centralizada em `PsychologistWhatsAppRedirectButton`.
+
+## Atualizacao 2026-06-25 — respiro e legibilidade do CTA
+
+O CTA anexado a midia foi refinado para evitar aparencia de texto espremido/cortado:
+
+- a variante anexada recebeu mais padding vertical e gap entre as duas linhas;
+- as linhas do CTA passaram de `leading-none` para `leading-[1.35]`;
+- a linha `WhatsApp` deixou de depender de `truncate`/`overflow-hidden`, usando `overflow-visible` e mantendo `whitespace-nowrap`;
+- a segunda linha passou a exibir `Falar com {primeiro nome} →`, com seta discreta no texto.
+
+A largura do CTA continua seguindo a largura do frame de imagem/video por estar renderizado como footer do mesmo bloco de midia. A logica de clique, tracking e abertura do WhatsApp permanece centralizada em `PsychologistWhatsAppRedirectButton`.
+
+### Validacao desta atualizacao
+
+- `pnpm.cmd --dir frontend exec biome check --write "src/components/community/community-whatsapp-cta.tsx"`
+- `pnpm.cmd --dir frontend check`
+- `pnpm.cmd --dir frontend build`
+- `pnpm.cmd check`
+- HTTP local `200` em `http://127.0.0.1:3000/app/community/feed`
+- HTTP local `200` em `http://127.0.0.1:3000/app/community/ansiedade-em-equilibrio`
+- HTTP local `200` em `http://127.0.0.1:3000/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`

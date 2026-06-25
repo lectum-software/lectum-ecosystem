@@ -1036,3 +1036,14 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm --dir frontend check`
 - [x] `pnpm --dir frontend build`
 - [x] `git diff --check`
+
+## Complemento 2026-06-25 - respiro vertical do CTA WhatsApp anexado a midia
+
+- Pedido do usuario: ajustar o CTA de WhatsApp integrado a videos/imagens de posts e respostas da comunidade para que o texto nao pareca cortado, especialmente os descendentes de `WhatsApp`, e adicionar seta discreta em `Falar com {nome}`.
+- Frontend: `CommunityWhatsAppCta` aumentou o padding vertical da variante anexada a midia, ampliou o gap entre linhas e trocou `leading-none` por `leading-[1.35]` nas duas linhas do CTA.
+- Frontend: a linha `WhatsApp` deixou de usar `truncate`/`overflow-hidden`, mantendo `overflow-visible` e `whitespace-nowrap` para evitar corte visual da base das letras.
+- Frontend: a segunda linha agora exibe `Falar com {primeiro nome} →`, preservando o icone de WhatsApp e a largura conectada ao frame de video/imagem.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, permissoes, votos, salvos, ranking ou tracking de WhatsApp.
+- Fonte visual/auditavel: pedido do usuario e referencias locais `_product/proto/Feed Comunidade.jpg`, `_product/proto/Dentro da Comunidade.jpg` e `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0164-cta-whatsapp-conectado-midias-comunidade.md`.
+- Validacoes executadas nesta execucao: `pnpm.cmd --dir frontend exec biome check --write "src/components/community/community-whatsapp-cta.tsx"`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, HTTP local `200` em `/app/community/feed`, `/app/community/ansiedade-em-equilibrio` e `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`.
