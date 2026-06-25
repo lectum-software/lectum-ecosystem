@@ -181,6 +181,7 @@ type ProfileReviewResult = Prisma.professional_reviewGetPayload<{
 type ProfileAuthorResult = ProfilePostResult["author"];
 type ProfileProfessionalReplyResult = ProfilePostResult["replies"][number];
 type CurrentVote = 1 | -1 | null;
+type MentorBadgeByCommunityId = Map<string, string>;
 
 type ProfilePublicationCandidate =
   | {
@@ -469,10 +470,16 @@ const toPostAuthorResponse = (
   mentorScore = 0,
   anonymous = false,
   anonymousDisplayName?: string,
+  featuredBadgeOverride?: string | null,
+  forceFeaturedBadgeOverride = false,
 ): CommunityAuthorDTO => {
   const profile = author.psychologist_profile;
   const isPsychologist = author.role === "psicologo";
   const shouldMaskAuthor = !isPsychologist && anonymous;
+  const featuredBadge =
+    (forceFeaturedBadgeOverride
+      ? featuredBadgeOverride
+      : (featuredBadgeOverride ?? mentorBadgeForScore(profile, mentorScore))) ?? null;
 
   return {
     id: author.id,
@@ -482,7 +489,7 @@ const toPostAuthorResponse = (
     type_label: authorTypeLabel(author.role, profile?.gender, anonymous),
     crp: isPsychologist ? (profile?.crp ?? null) : null,
     verified: isPsychologist && isProfessionalVerified(profile),
-    featured_badge: isPsychologist ? mentorBadgeForScore(profile, mentorScore) : null,
+    featured_badge: isPsychologist ? featuredBadge : null,
     whatsapp_url: isPsychologist ? buildProfessionalWhatsappUrl(profile) : null,
   };
 };
@@ -491,10 +498,19 @@ const toHighlightedProfessionalReply = (
   reply?: ProfileProfessionalReplyResult | ProfileReplyResult,
   savedReplyIds?: Set<string>,
   requireVerified = true,
+  featuredBadgeOverride?: string | null,
+  forceFeaturedBadgeOverride = false,
 ): CommunityProfessionalReplyDTO | null => {
   if (!reply) return null;
 
-  const author = toPostAuthorResponse(reply.author, reply.upvotes_count);
+  const author = toPostAuthorResponse(
+    reply.author,
+    reply.upvotes_count,
+    false,
+    undefined,
+    featuredBadgeOverride,
+    forceFeaturedBadgeOverride,
+  );
   if (requireVerified && !author.verified) return null;
 
   return {
@@ -543,6 +559,32 @@ const toPostMediaItemsResponse = (
   ];
 };
 
+const rankedMentorBadgeForAuthor = (
+  authorId: string,
+  profilePsychologistId?: string,
+  communityId?: string,
+  mentorBadgeByCommunityId?: MentorBadgeByCommunityId,
+) => {
+  if (!profilePsychologistId || !communityId || !mentorBadgeByCommunityId) {
+    return {
+      badge: undefined,
+      force: false,
+    };
+  }
+
+  if (authorId !== profilePsychologistId) {
+    return {
+      badge: undefined,
+      force: false,
+    };
+  }
+
+  return {
+    badge: mentorBadgeByCommunityId.get(communityId) ?? null,
+    force: true,
+  };
+};
+
 const toPostResponse = (
   item: ProfilePostResult,
   currentUserVote: CurrentVote,
@@ -551,8 +593,35 @@ const toPostResponse = (
   highlightedReply?: ProfileReplyResult,
   mutedByCurrentUser = false,
   hasPsychologistReply = false,
+  profilePsychologistId?: string,
+  mentorBadgeByCommunityId?: MentorBadgeByCommunityId,
 ): CommunityPostDTO => {
   const anonymous = item.author.role !== "psicologo" && item.anonymous;
+  const authorRankedBadge = rankedMentorBadgeForAuthor(
+    item.author.id,
+    profilePsychologistId,
+    item.community.id,
+    mentorBadgeByCommunityId,
+  );
+  const highlightedReplyRankedBadge = highlightedReply
+    ? rankedMentorBadgeForAuthor(
+        highlightedReply.author.id,
+        profilePsychologistId,
+        item.community.id,
+        mentorBadgeByCommunityId,
+      )
+    : {
+        badge: undefined,
+        force: false,
+      };
+  const author = toPostAuthorResponse(
+    item.author,
+    item.upvotes_count,
+    anonymous,
+    anonymous ? anonymousDisplayNameForPost(item.id) : undefined,
+    authorRankedBadge.badge,
+    authorRankedBadge.force,
+  );
 
   return {
     id: item.id,
@@ -567,7 +636,7 @@ const toPostResponse = (
     created_at: item.createdAt,
     edited_at: item.edited_at,
     tags: item.community.category ? [item.community.category] : [],
-    featured_badge: toPostAuthorResponse(item.author, item.upvotes_count).featured_badge,
+    featured_badge: author.featured_badge,
     media_url: item.media_url,
     media_type: item.media_type,
     media_items: toPostMediaItemsResponse(item),
@@ -576,14 +645,15 @@ const toPostResponse = (
     muted_by_current_user: mutedByCurrentUser,
     has_psychologist_reply: hasPsychologistReply,
     community: toCommunityResponse(item.community),
-    author: toPostAuthorResponse(
-      item.author,
-      item.upvotes_count,
-      anonymous,
-      anonymous ? anonymousDisplayNameForPost(item.id) : undefined,
-    ),
+    author,
     highlighted_professional_reply:
-      toHighlightedProfessionalReply(highlightedReply, savedReplyIds, false) ??
+      toHighlightedProfessionalReply(
+        highlightedReply,
+        savedReplyIds,
+        false,
+        highlightedReplyRankedBadge.badge,
+        highlightedReplyRankedBadge.force,
+      ) ??
       toHighlightedProfessionalReply(
         selectHighlightedProfileReplyPreview(item.replies),
         savedReplyIds,
@@ -888,8 +958,7 @@ const getProfileTopMentorCommunities = async (
       if (nameDiff !== 0) return nameDiff;
 
       return a.id.localeCompare(b.id);
-    })
-    .slice(0, 3);
+    });
 };
 
 export class ProfileRepository implements IProfileRepository {
@@ -1132,6 +1201,9 @@ export class ProfileRepository implements IProfileRepository {
       prisma.post_reply.count({ where: repliesWhere }),
       getProfileTopMentorCommunities(data.p.id),
     ]);
+    const mentorBadgeByCommunityId: MentorBadgeByCommunityId = new Map(
+      topMentorCommunities.map((community) => [community.id, community.badge]),
+    );
     const count = postsCount + repliesCount;
     const allReplyIds = replies.map((reply) => reply.id);
     const [replyChildrenCountRows, replySavesCountRows] = allReplyIds.length
@@ -1274,6 +1346,8 @@ export class ProfileRepository implements IProfileRepository {
             undefined,
             mutedPostIds.has(item.post.id),
             postsWithPsychologistReplies.has(item.post.id),
+            data.p.id,
+            mentorBadgeByCommunityId,
           ),
           contribution_type: "post",
         };
@@ -1288,6 +1362,8 @@ export class ProfileRepository implements IProfileRepository {
           item.reply,
           mutedPostIds.has(item.reply.post.id),
           postsWithPsychologistReplies.has(item.reply.post.id),
+          data.p.id,
+          mentorBadgeByCommunityId,
         ),
         contribution_type: "reply",
       };
@@ -1301,7 +1377,7 @@ export class ProfileRepository implements IProfileRepository {
       summary: {
         posts_count: postsCount,
         replies_count: repliesCount,
-        top_mentor_communities: topMentorCommunities,
+        top_mentor_communities: topMentorCommunities.slice(0, 3),
       },
       highlighted_publication: highlightedPublication
         ? toDirectoryPublication(highlightedPublication)

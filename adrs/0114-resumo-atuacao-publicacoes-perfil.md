@@ -79,3 +79,23 @@ Validacao complementar:
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - Chrome/CDP mobile 390px e desktop 1440px em `/app/psychologist/demo-psychologist-camila-rocha?tab=avaliacoes`, confirmando `box-shadow: none`, `background: rgb(255, 255, 255)` e borda `rgb(207, 228, 250)` no botao `Avaliar`.
+
+
+## Complemento em 2026-06-25 - consistencia entre resumo Top Mentor e cards de publicacao
+
+### Contexto
+
+Na aba `Publicacoes` do perfil publico, o resumo de atuacao usava o ranking real da comunidade para indicar a posicao Top Mentor. Os cards de posts, porem, ainda podiam derivar `featured_badge` por uma faixa local baseada em score/upvotes do post, gerando casos em que a mesma pessoa aparecia como `TOP #1 MENTOR` no resumo e `TOP #3 MENTOR` no card da mesma comunidade.
+
+### Decisao
+
+- Para publicacoes do perfil, o badge do autor quando ele e o psicologo do perfil passa a vir da posicao real em `getCommunityMentorRankingSignals` por comunidade.
+- O score/faixa local continua como fallback apenas para autores que nao sao o psicologo do perfil ou contextos sem override de ranking.
+- O backend monta um mapa interno de `communityId -> TOP #N MENTOR` para todas as comunidades candidatas do perfil.
+- O contrato publico do resumo permanece limitado a ate tres comunidades em `summary.top_mentor_communities`; o mapa completo e apenas detalhe interno para consistencia dos cards.
+
+### Consequencias
+
+- Um psicologo nao aparece com dois rankings diferentes na mesma comunidade dentro do perfil publico.
+- Os cards da aba `Publicacoes` ficam alinhados ao ranking oficial aprovado, reduzindo dependencia de faixas arbitrarias por post.
+- A mudanca nao altera formula de ranking, banco, Prisma, contratos publicos, packages, dados persistidos ou frontend.

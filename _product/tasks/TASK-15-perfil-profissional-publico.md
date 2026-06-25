@@ -739,3 +739,13 @@ Validacoes executadas:
 - `pnpm check`
 - `pnpm --dir frontend build`
 - Chrome/CDP mobile 390px em `/app/psychologist/cmqmg35850000asuheq2ucwd0?tab=publicacoes`, clicando na resposta profunda `cmqmlrlbk00067cuhl9sop6e2` e confirmando destino `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video?focusReplyId=cmqmlrlbk00067cuhl9sop6e2#reply-cmqmlrlbk00067cuhl9sop6e2`, elemento `reply-cmqmlrlbk00067cuhl9sop6e2` em viewport, foco DOM ativo e classe `lectum-reply-focus-pulse`.
+
+
+## Registro de ajuste complementar em 2026-06-25 - consistencia do selo Top Mentor nas publicacoes
+
+- Pedido do usuario: corrigir a inconsistencia em que o resumo da aba `Publicacoes` indicava `TOP #1 MENTOR` em `Relacionamentos com Proposito`, mas o card de post do mesmo psicologo/comunidade exibia `TOP #3 MENTOR`.
+- Backend: o endpoint `GET /api/private/directory/psychologists/:id/posts` passou a usar a posicao real calculada por `getCommunityMentorRankingSignals` para o selo do proprio psicologo nos cards de publicacao/resposta do perfil.
+- O selo por score local/faixa de upvotes deixou de prevalecer para o autor do perfil quando ha ranking comunitario calculado, evitando divergencia entre resumo e cards.
+- O calculo interno considera todas as comunidades candidatas para montar o mapa de badges, mas o contrato publico de `summary.top_mentor_communities` continua limitado a ate 3 comunidades.
+- Escopo: sem mudancas de Prisma, migrations, packages, frontend, layout, formula do ranking, paginacao, votos ou dados persistidos.
+- ADR atualizado: `adrs/0114-resumo-atuacao-publicacoes-perfil.md`.
