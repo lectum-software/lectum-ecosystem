@@ -573,3 +573,25 @@ Produto avaliou que o card de Favoritos ainda parecia vazio e pediu uma composic
 - A tela ganha mais densidade visual e diferenciação entre profissionais sem depender de dados mockados.
 - O endpoint atual continua suficiente; nao ha mudanca de contrato, schema, migration ou pacote.
 - A composicao mobile segue duas colunas compactas, enquanto desktop preserva tres cards por linha.
+
+## Complemento 2026-06-25 - alinhamento espacial com Perfil
+
+### Contexto
+
+A pagina de Perfil usa um layout mais amplo e imersivo: o header branco ocupa mais largura e altura, começa mais perto do topo util e tem margens laterais menores. Favoritos ainda estava visualmente mais estreito, com header compacto e cards comprimidos no centro.
+
+### Decisao
+
+- Alterar apenas `/app/favorites`, sem tocar na implementacao da pagina de Perfil.
+- Ampliar o container de Favoritos para `max-w-[960px]`, aproximando a largura do bloco principal visto no Perfil.
+- Reduzir padding superior/lateral mobile-first do container para diminuir a sensacao de margem excessiva.
+- Recriar o header de Favoritos como um bloco maior e centralizado, com icone de coracao em escala semelhante ao avatar do Perfil, mantendo a descricao existente.
+- Fazer chips e grade acompanharem a nova largura: filtros continuam em trilho horizontal e os cards passam a preencher as colunas disponiveis.
+- Preservar 2 colunas no mobile e 3 no desktop, sem mudar contratos, filtros, dados ou tracking.
+
+### Consequencias
+
+- Favoritos passa a ter hierarquia espacial mais consistente com Perfil.
+- O header ganha protagonismo sem criar dependencia entre as paginas.
+- Os cards ficam proporcionais ao novo container, reduzindo a sensacao de conteudo estreito/centralizado demais.
+- A mudanca e visual/local e nao altera backend, schema, endpoints ou pacotes.

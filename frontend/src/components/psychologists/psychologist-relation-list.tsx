@@ -208,17 +208,17 @@ const getFavoriteBio = (psychologist: PatientRelationPsychologist) => {
 };
 
 const FavoritePageHeader = () => (
-  <header className="rounded-[26px] border border-[#E2EAF3] bg-white px-4 py-4 shadow-[0_14px_38px_rgba(15,23,42,0.06)] dark:border-border dark:bg-surface sm:rounded-[30px] sm:px-5 sm:py-[18px]">
-    <div className="flex min-w-0 items-center gap-3">
-      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary-soft text-primary ring-1 ring-primary/10 dark:bg-primary/15">
-        <Heart className="h-5 w-5" aria-hidden="true" strokeWidth={1.9} />
+  <header className="min-h-[188px] rounded-[12px] border border-[#E2EAF3] bg-white px-5 py-8 shadow-[0_14px_38px_rgba(15,23,42,0.04)] dark:border-border dark:bg-surface sm:min-h-[260px] sm:rounded-[16px] sm:px-8 sm:py-10">
+    <div className="grid h-full min-w-0 place-items-center text-center">
+      <span className="grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary ring-4 ring-white shadow-[0_12px_30px_rgba(48,140,232,0.12)] dark:bg-primary/15 dark:ring-surface sm:h-24 sm:w-24">
+        <Heart className="h-8 w-8 sm:h-10 sm:w-10" aria-hidden="true" strokeWidth={1.9} />
       </span>
 
-      <div className="min-w-0">
-        <h1 className="text-xl font-black leading-tight tracking-[-0.035em] text-foreground sm:text-2xl">
+      <div className="mt-4 min-w-0 sm:mt-5">
+        <h1 className="text-2xl font-black leading-tight tracking-[-0.04em] text-foreground sm:text-3xl">
           Favoritos
         </h1>
-        <p className="mt-1 line-clamp-2 text-[0.8rem] font-semibold leading-5 text-muted sm:text-sm">
+        <p className="mx-auto mt-1.5 max-w-[34rem] text-[0.82rem] font-semibold leading-5 text-muted sm:mt-2 sm:text-base sm:leading-6">
           {FAVORITES_HEADER_DESCRIPTION}
         </p>
       </div>
@@ -286,7 +286,7 @@ const FavoriteCoverMedia = ({ psychologist }: { psychologist: PatientRelationPsy
       className="object-cover object-center"
       fill
       priority={false}
-      sizes="(min-width: 640px) 214px, 166px"
+      sizes="(min-width: 640px) 310px, 50vw"
       src={coverSrc}
       unoptimized={coverIsPublic}
     />
@@ -315,7 +315,7 @@ const FavoriteMedia = ({ psychologist }: { psychologist: PatientRelationPsycholo
       className="object-cover object-top"
       fill
       priority={false}
-      sizes="120px"
+      sizes="(min-width: 640px) 108px, 76px"
       src={mediaSrc}
       unoptimized={mediaIsPublic}
     />
@@ -343,9 +343,9 @@ const FavoritePsychologistCard = ({
   return (
     <article
       aria-label={`Abrir perfil de ${psychologist.name}`}
-      className="group relative isolate mx-auto flex min-h-[238px] w-full max-w-[166px] flex-col overflow-hidden rounded-[22px] border border-[#E2EAF3] bg-white text-center shadow-[0_10px_24px_rgb(15_23_42_/_5%)] transition duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_18px_42px_rgb(15_23_42_/_10%)] dark:border-border dark:bg-surface sm:min-h-[288px] sm:max-w-[214px] sm:rounded-[26px] sm:shadow-[0_12px_28px_rgb(15_23_42_/_6%)]"
+      className="group relative isolate mx-auto flex min-h-[238px] w-full max-w-none flex-col overflow-hidden rounded-[22px] border border-[#E2EAF3] bg-white text-center shadow-[0_10px_24px_rgb(15_23_42_/_5%)] transition duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_18px_42px_rgb(15_23_42_/_10%)] dark:border-border dark:bg-surface sm:min-h-[308px] sm:rounded-[24px] sm:shadow-[0_12px_28px_rgb(15_23_42_/_6%)]"
     >
-      <div className="relative h-[58px] w-full overflow-hidden bg-primary-soft sm:h-[72px]">
+      <div className="relative h-[58px] w-full overflow-hidden bg-primary-soft sm:h-[86px]">
         <FavoriteCoverMedia psychologist={psychologist} />
         <span
           className="absolute inset-0 bg-gradient-to-b from-black/5 to-black/10"
@@ -367,13 +367,13 @@ const FavoritePsychologistCard = ({
         </button>
       </div>
 
-      <div className="flex flex-1 flex-col px-3 pb-3 sm:px-4 sm:pb-4">
+      <div className="flex flex-1 flex-col px-3 pb-3 sm:px-5 sm:pb-5">
         <Link
           aria-label={`Abrir perfil de ${psychologist.name}`}
           className="grid min-h-0 content-start justify-items-center text-center no-underline hover:no-underline"
           href={route}
         >
-          <div className="relative -mt-8 h-[76px] w-[76px] rounded-full sm:-mt-10 sm:h-[100px] sm:w-[100px]">
+          <div className="relative -mt-8 h-[76px] w-[76px] rounded-full sm:-mt-12 sm:h-[108px] sm:w-[108px]">
             <div className="relative h-full w-full overflow-hidden rounded-full border-2 border-white bg-surface-muted ring-1 ring-[#DDE7F2] dark:border-surface dark:ring-border">
               <FavoriteMedia psychologist={psychologist} />
             </div>
@@ -390,14 +390,14 @@ const FavoritePsychologistCard = ({
             ) : null}
           </div>
 
-          <div className="mt-3 grid min-w-0 justify-items-center gap-1.5 sm:mt-4 sm:gap-2">
-            <span className="flex w-full min-w-0 max-w-full items-center justify-center gap-1 text-center text-[0.78rem] font-black leading-[1.12] tracking-[-0.025em] text-foreground sm:text-[0.98rem]">
+          <div className="mt-3 grid min-w-0 justify-items-center gap-1.5 sm:mt-5 sm:gap-2">
+            <span className="flex w-full min-w-0 max-w-full items-center justify-center gap-1 text-center text-[0.78rem] font-black leading-[1.12] tracking-[-0.025em] text-foreground sm:text-[1.05rem]">
               <span className="min-w-0 max-w-full truncate">{psychologist.name}</span>
               {psychologist.verified ? (
                 <VerifiedBadgeIcon className="h-3 w-3 shrink-0 sm:h-4 sm:w-4" />
               ) : null}
             </span>
-            <p className="line-clamp-2 min-h-[2rem] text-[0.68rem] font-semibold leading-4 text-muted sm:min-h-[2.5rem] sm:text-[0.8rem] sm:leading-5">
+            <p className="line-clamp-2 min-h-[2rem] text-[0.68rem] font-semibold leading-4 text-muted sm:min-h-[2.5rem] sm:text-[0.82rem] sm:leading-5">
               {favoriteBio}
             </p>
           </div>
@@ -405,7 +405,7 @@ const FavoritePsychologistCard = ({
 
         <PsychologistWhatsAppRedirectButton
           aria-label={`Chamar ${psychologist.name} no WhatsApp`}
-          className="mt-auto inline-flex min-h-8 w-full min-w-0 items-center justify-center gap-1 rounded-[12px] bg-success px-2 py-1.5 text-[0.66rem] font-black leading-[1.25] text-white transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 sm:min-h-9 sm:gap-1.5 sm:rounded-[14px] sm:px-3 sm:py-2 sm:text-[0.72rem]"
+          className="mt-auto inline-flex min-h-8 w-full min-w-0 items-center justify-center gap-1 rounded-[12px] bg-success px-2 py-1.5 text-[0.66rem] font-black leading-[1.25] text-white transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 sm:min-h-10 sm:gap-1.5 sm:rounded-[15px] sm:px-3 sm:py-2 sm:text-[0.76rem]"
           psychologist={{
             avatar: psychologist.avatar,
             crp: psychologist.crp,
@@ -532,7 +532,7 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
 
   return (
     <PrivateTemplate>
-      <section className="mx-auto grid min-w-0 w-full max-w-2xl gap-4 overflow-hidden px-5 py-5 md:py-8">
+      <section className="mx-auto grid min-w-0 w-full max-w-[960px] gap-3 overflow-hidden px-4 py-3 sm:gap-4 sm:px-5 md:py-6">
         <FavoritePageHeader />
 
         {!errorMessage ? (
@@ -573,14 +573,14 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
         ) : null}
 
         {!showInitialLoading && !errorMessage && psychologists.length > 0 ? (
-          <div className="grid gap-4">
+          <div className="grid gap-4 sm:gap-5">
             {activeQuery.isFetching ? (
               <span className="sr-only" aria-live="polite">
                 Atualizando favoritos
               </span>
             ) : null}
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5">
               {psychologists.map((psychologist) => (
                 <FavoritePsychologistCard
                   favoritePending={favoritePendingId === psychologist.id}

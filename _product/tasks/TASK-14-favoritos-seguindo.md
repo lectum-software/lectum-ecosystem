@@ -468,3 +468,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Acao: o coracao preenchido permanece como controle de remover dos favoritos e o CTA principal continua abrindo o fluxo de WhatsApp com o label `WhatsApp` sem truncamento.
 - Responsivo: a composicao foi ajustada mobile-first para duas colunas compactas e preserva tres cards por linha a partir de `sm:`.
 - Escopo: sem mocks, sem novos packages, sem alteracao de Comunidade, perfil do psicologo, backend, Prisma, migrations, endpoints, filtros reais, paginacao, favoritos ou tracking de WhatsApp.
+
+## Complemento 2026-06-25 - Favoritos alinhado ao layout amplo do Perfil
+
+- Pedido do usuario: fazer a tela de Favoritos seguir o padrao espacial da pagina de Perfil, onde o header ocupa mais largura/altura e tem menos margem no topo e laterais, ajustando tambem chips e cards para acompanhar o novo layout.
+- Frontend: somente `/app/favorites` teve o container principal ampliado de `max-w-2xl` para `max-w-[960px]`, com padding mobile-first menor no topo/laterais para aproximar a densidade visual do Perfil.
+- Header: o bloco de Favoritos ficou maior, centralizado, com icone de coracao em destaque e altura mais proxima do header do Perfil, preservando titulo e descricao.
+- Chips: a faixa de filtros agora acompanha a mesma largura do container maior, mantendo rolagem horizontal e estados existentes.
+- Cards: a grade e os cards passaram a ocupar a largura disponivel do novo container, mantendo 2 colunas no mobile e 3 no desktop, com capa/avatar/bio/WhatsApp ajustados para a escala ampliada.
+- Escopo: nenhuma alteracao na pagina de Perfil, Comunidade, backend, Prisma, migrations, endpoints, filtros reais, paginacao, favoritos ou tracking de WhatsApp.
