@@ -458,3 +458,13 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Frontend: somente o card mobile de `/app/favorites` foi recalibrado com altura, padding, raio, avatar, gap e tipografia menores; os tamanhos desktop permanecem aplicados a partir de `sm:` para preservar a disposicao mais aberta em telas maiores.
 - WhatsApp: o CTA mobile ganhou largura util maior por reducao de padding interno do card, fonte/icone compactos e label sem truncamento, garantindo que `WhatsApp` caiba inteiro no botao.
 - Escopo: sem mudancas no perfil do psicologo, pagina de Comunidade, backend, Prisma, migrations, packages, endpoints, filtros reais, paginacao, favoritos ou tracking de WhatsApp.
+
+## Complemento 2026-06-25 - card de Favoritos com capa e bio
+
+- Pedido do usuario: transformar os cards de Favoritos no modelo de perfil salvo inspirado na referencia visual, com imagem de capa, avatar sobreposto, coracao no lugar do `X`, bio no lugar de `Psicologo` e botao `WhatsApp` no lugar de `Conectar`.
+- Frontend: o card de `/app/favorites` ganhou uma area de capa no topo usando `video_cover_url` quando disponivel e fallback visual Lectum quando nao houver capa real.
+- Avatar: a foto/iniciais passou a sobrepor a capa, preservando `next/image`, borda fina e indicador de disponibilidade quando existir.
+- Conteudo: o subtitulo agora usa `headline`, depois `bio`, depois especialidades reais como fallback; somente em ausencia desses dados usa o tipo profissional derivado do genero.
+- Acao: o coracao preenchido permanece como controle de remover dos favoritos e o CTA principal continua abrindo o fluxo de WhatsApp com o label `WhatsApp` sem truncamento.
+- Responsivo: a composicao foi ajustada mobile-first para duas colunas compactas e preserva tres cards por linha a partir de `sm:`.
+- Escopo: sem mocks, sem novos packages, sem alteracao de Comunidade, perfil do psicologo, backend, Prisma, migrations, endpoints, filtros reais, paginacao, favoritos ou tracking de WhatsApp.

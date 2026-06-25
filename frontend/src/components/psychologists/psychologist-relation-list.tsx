@@ -187,10 +187,24 @@ const getInitials = (name: string) => {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
 
-const getProfession = () => "Psicólogo";
-
 const getContactProfession = (gender?: string | null) => {
   return gender?.toLowerCase() === "feminino" ? "Psic\u00f3loga" : "Psic\u00f3logo";
+};
+
+const getFavoriteBio = (psychologist: PatientRelationPsychologist) => {
+  const headline = psychologist.headline?.trim();
+  if (headline) return headline;
+
+  const bio = psychologist.bio?.trim().replace(/\s+/g, " ");
+  if (bio) return bio;
+
+  const specialties = psychologist.specialties
+    .map((specialty) => specialty.name.trim())
+    .filter(Boolean)
+    .slice(0, 2)
+    .join(" • ");
+
+  return specialties || getContactProfession(psychologist.gender);
 };
 
 const FavoritePageHeader = () => (
@@ -252,6 +266,33 @@ const FavoriteFilterChips = ({
   );
 };
 
+const FavoriteCoverMedia = ({ psychologist }: { psychologist: PatientRelationPsychologist }) => {
+  const coverSrc = resolvePublicMediaUrl(psychologist.video_cover_url);
+  const coverIsPublic = isPublicMediaUrl(coverSrc);
+
+  if (!coverSrc) {
+    return (
+      <div
+        aria-hidden="true"
+        className="h-full w-full bg-gradient-to-br from-primary-soft via-white to-[#EAF7F0]"
+      />
+    );
+  }
+
+  return (
+    <Image
+      alt=""
+      aria-hidden="true"
+      className="object-cover object-center"
+      fill
+      priority={false}
+      sizes="(min-width: 640px) 214px, 166px"
+      src={coverSrc}
+      unoptimized={coverIsPublic}
+    />
+  );
+};
+
 const FavoriteMedia = ({ psychologist }: { psychologist: PatientRelationPsychologist }) => {
   const mediaSrc = resolvePublicMediaUrl(psychologist.avatar);
   const mediaIsPublic = isPublicMediaUrl(mediaSrc);
@@ -261,7 +302,7 @@ const FavoriteMedia = ({ psychologist }: { psychologist: PatientRelationPsycholo
       <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-gradient-to-br from-primary-soft via-white to-surface-muted">
         <span className="-top-7 -right-7 absolute h-20 w-20 rounded-full bg-primary/10 blur-2xl" />
         <span className="-bottom-8 -left-7 absolute h-24 w-24 rounded-full bg-success/10 blur-2xl" />
-        <span className="relative grid h-full w-full place-items-center rounded-full border border-[#DDE7F2] bg-white/76 text-3xl font-black tracking-[-0.05em] text-primary backdrop-blur-xl">
+        <span className="relative grid h-full w-full place-items-center rounded-full border border-[#DDE7F2] bg-white/76 text-2xl font-black tracking-[-0.05em] text-primary backdrop-blur-xl sm:text-3xl">
           {getInitials(psychologist.name)}
         </span>
       </div>
@@ -291,7 +332,7 @@ const FavoritePsychologistCard = ({
   psychologist: PatientRelationPsychologist;
 }) => {
   const route = `/app/psychologist/${psychologist.id}`;
-  const profession = getProfession();
+  const favoriteBio = getFavoriteBio(psychologist);
 
   const handleFavoriteClick = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
@@ -302,77 +343,86 @@ const FavoritePsychologistCard = ({
   return (
     <article
       aria-label={`Abrir perfil de ${psychologist.name}`}
-      className="group relative isolate mx-auto flex min-h-[252px] w-full max-w-[166px] flex-col overflow-hidden rounded-[22px] border border-[#E7ECF2] bg-white p-3.5 text-center shadow-[0_10px_24px_rgb(15_23_42_/_5%)] transition duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_18px_42px_rgb(15_23_42_/_10%)] dark:border-border dark:bg-surface sm:min-h-[296px] sm:max-w-[214px] sm:rounded-[28px] sm:p-5 sm:shadow-[0_12px_28px_rgb(15_23_42_/_6%)]"
+      className="group relative isolate mx-auto flex min-h-[238px] w-full max-w-[166px] flex-col overflow-hidden rounded-[22px] border border-[#E2EAF3] bg-white text-center shadow-[0_10px_24px_rgb(15_23_42_/_5%)] transition duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_18px_42px_rgb(15_23_42_/_10%)] dark:border-border dark:bg-surface sm:min-h-[288px] sm:max-w-[214px] sm:rounded-[26px] sm:shadow-[0_12px_28px_rgb(15_23_42_/_6%)]"
     >
-      <button
-        aria-label={`Remover ${psychologist.name} dos favoritos`}
-        aria-pressed="true"
-        className="absolute top-2 right-2 z-20 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-transparent text-rose-500/90 transition hover:scale-105 hover:bg-rose-50/80 hover:text-rose-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/20 disabled:pointer-events-none disabled:opacity-60 sm:top-3.5 sm:right-3.5 sm:h-9 sm:w-9"
-        disabled={favoritePending}
-        onClick={handleFavoriteClick}
-        type="button"
-      >
-        {favoritePending ? (
-          <Loader2 className="h-4 w-4 animate-spin sm:h-[18px] sm:w-[18px]" aria-hidden="true" />
-        ) : (
-          <Heart className="h-[18px] w-[18px] fill-current sm:h-5 sm:w-5" aria-hidden="true" />
-        )}
-      </button>
+      <div className="relative h-[58px] w-full overflow-hidden bg-primary-soft sm:h-[72px]">
+        <FavoriteCoverMedia psychologist={psychologist} />
+        <span
+          className="absolute inset-0 bg-gradient-to-b from-black/5 to-black/10"
+          aria-hidden="true"
+        />
+        <button
+          aria-label={`Remover ${psychologist.name} dos favoritos`}
+          aria-pressed="true"
+          className="absolute top-2 right-2 z-20 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/90 text-rose-500 shadow-[0_8px_18px_rgba(15,23,42,0.12)] backdrop-blur transition hover:scale-105 hover:bg-white hover:text-rose-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/20 disabled:pointer-events-none disabled:opacity-60 sm:h-9 sm:w-9"
+          disabled={favoritePending}
+          onClick={handleFavoriteClick}
+          type="button"
+        >
+          {favoritePending ? (
+            <Loader2 className="h-4 w-4 animate-spin sm:h-[18px] sm:w-[18px]" aria-hidden="true" />
+          ) : (
+            <Heart className="h-[18px] w-[18px] fill-current sm:h-5 sm:w-5" aria-hidden="true" />
+          )}
+        </button>
+      </div>
 
-      <Link
-        aria-label={`Abrir perfil de ${psychologist.name}`}
-        className="grid min-h-0 content-start justify-items-center text-center no-underline hover:no-underline"
-        href={route}
-      >
-        <div className="relative mt-2.5 h-[88px] w-[88px] rounded-full sm:mt-3.5 sm:h-[112px] sm:w-[112px]">
-          <div className="relative h-full w-full overflow-hidden rounded-full bg-surface-muted ring-1 ring-[#DDE7F2] dark:ring-border">
-            <FavoriteMedia psychologist={psychologist} />
+      <div className="flex flex-1 flex-col px-3 pb-3 sm:px-4 sm:pb-4">
+        <Link
+          aria-label={`Abrir perfil de ${psychologist.name}`}
+          className="grid min-h-0 content-start justify-items-center text-center no-underline hover:no-underline"
+          href={route}
+        >
+          <div className="relative -mt-8 h-[76px] w-[76px] rounded-full sm:-mt-10 sm:h-[100px] sm:w-[100px]">
+            <div className="relative h-full w-full overflow-hidden rounded-full border-2 border-white bg-surface-muted ring-1 ring-[#DDE7F2] dark:border-surface dark:ring-border">
+              <FavoriteMedia psychologist={psychologist} />
+            </div>
+
+            {psychologist.available_today ? (
+              <span
+                className="absolute right-0.5 bottom-1 grid h-3.5 w-3.5 place-items-center rounded-full sm:right-1 sm:bottom-1.5 sm:h-4 sm:w-4"
+                title="Disponível hoje"
+              >
+                <span className="absolute h-3 w-3 rounded-full bg-success/35 motion-safe:animate-[ping_2.4s_cubic-bezier(0,0,0.2,1)_infinite] sm:h-3.5 sm:w-3.5" />
+                <span className="relative h-2.5 w-2.5 rounded-full bg-success sm:h-3 sm:w-3" />
+                <span className="sr-only">Disponível hoje</span>
+              </span>
+            ) : null}
           </div>
 
-          {psychologist.available_today ? (
-            <span
-              className="absolute right-1 bottom-1 grid h-3.5 w-3.5 place-items-center rounded-full sm:right-2 sm:bottom-2 sm:h-4 sm:w-4"
-              title="Disponível hoje"
-            >
-              <span className="absolute h-3 w-3 rounded-full bg-success/35 motion-safe:animate-[ping_2.4s_cubic-bezier(0,0,0.2,1)_infinite] sm:h-3.5 sm:w-3.5" />
-              <span className="relative h-2.5 w-2.5 rounded-full bg-success sm:h-3 sm:w-3" />
-              <span className="sr-only">Disponível hoje</span>
+          <div className="mt-3 grid min-w-0 justify-items-center gap-1.5 sm:mt-4 sm:gap-2">
+            <span className="flex w-full min-w-0 max-w-full items-center justify-center gap-1 text-center text-[0.78rem] font-black leading-[1.12] tracking-[-0.025em] text-foreground sm:text-[0.98rem]">
+              <span className="min-w-0 max-w-full truncate">{psychologist.name}</span>
+              {psychologist.verified ? (
+                <VerifiedBadgeIcon className="h-3 w-3 shrink-0 sm:h-4 sm:w-4" />
+              ) : null}
             </span>
-          ) : null}
-        </div>
+            <p className="line-clamp-2 min-h-[2rem] text-[0.68rem] font-semibold leading-4 text-muted sm:min-h-[2.5rem] sm:text-[0.8rem] sm:leading-5">
+              {favoriteBio}
+            </p>
+          </div>
+        </Link>
 
-        <div className="mt-4 grid min-w-0 justify-items-center gap-1.5 sm:mt-7 sm:gap-2.5">
-          <span className="flex w-full min-w-0 max-w-full items-center justify-center gap-1 text-center text-[0.76rem] font-bold leading-[1.15] tracking-[-0.02em] text-foreground sm:text-[0.98rem]">
-            <span className="min-w-0 max-w-full truncate">{psychologist.name}</span>
-            {psychologist.verified ? (
-              <VerifiedBadgeIcon className="h-3 w-3 shrink-0 sm:h-4 sm:w-4" />
-            ) : null}
-          </span>
-          <p className="text-[0.68rem] font-medium leading-none text-muted sm:text-[0.82rem] sm:leading-normal">
-            {profession}
-          </p>
-        </div>
-      </Link>
-
-      <PsychologistWhatsAppRedirectButton
-        aria-label={`Chamar ${psychologist.name} no WhatsApp`}
-        className="mt-auto inline-flex min-h-8 w-full min-w-0 items-center justify-center gap-1 rounded-[12px] bg-success px-2 py-1.5 text-[0.66rem] font-black leading-[1.25] text-white transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 sm:min-h-9 sm:gap-1.5 sm:rounded-[14px] sm:px-3 sm:py-2 sm:text-[0.72rem]"
-        psychologist={{
-          avatar: psychologist.avatar,
-          crp: psychologist.crp,
-          id: psychologist.id,
-          name: psychologist.name,
-          typeLabel: getContactProfession(psychologist.gender),
-          whatsappUrl: psychologist.whatsapp_url,
-        }}
-        stopPropagation
-      >
-        <PsychologistWhatsAppButtonContent
-          iconClassName="h-3 w-3 sm:h-3.5 sm:w-3.5"
-          label="WhatsApp"
-          labelClassName="min-w-max shrink-0 !overflow-visible !text-clip leading-[1.25]"
-        />
-      </PsychologistWhatsAppRedirectButton>
+        <PsychologistWhatsAppRedirectButton
+          aria-label={`Chamar ${psychologist.name} no WhatsApp`}
+          className="mt-auto inline-flex min-h-8 w-full min-w-0 items-center justify-center gap-1 rounded-[12px] bg-success px-2 py-1.5 text-[0.66rem] font-black leading-[1.25] text-white transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 sm:min-h-9 sm:gap-1.5 sm:rounded-[14px] sm:px-3 sm:py-2 sm:text-[0.72rem]"
+          psychologist={{
+            avatar: psychologist.avatar,
+            crp: psychologist.crp,
+            id: psychologist.id,
+            name: psychologist.name,
+            typeLabel: getContactProfession(psychologist.gender),
+            whatsappUrl: psychologist.whatsapp_url,
+          }}
+          stopPropagation
+        >
+          <PsychologistWhatsAppButtonContent
+            iconClassName="h-3 w-3 sm:h-3.5 sm:w-3.5"
+            label="WhatsApp"
+            labelClassName="min-w-max shrink-0 !overflow-visible !text-clip leading-[1.25]"
+          />
+        </PsychologistWhatsAppRedirectButton>
+      </div>
     </article>
   );
 };

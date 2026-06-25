@@ -551,3 +551,25 @@ Ao validar `/app/favorites` em largura mobile (~390px), a grade de duas colunas 
 - A grade mobile de duas colunas fica mais equilibrada, com menos vazio interno e melhor proporcao entre avatar, nome, profissao e CTA.
 - O texto `WhatsApp` passa a caber inteiro no botao sem perder a associacao com o icone.
 - Desktop e mobile mantem escalas diferentes por necessidade de densidade visual, sem criar novo componente ou pacote.
+
+## Complemento 2026-06-25 - modelo de perfil salvo para Favoritos
+
+### Contexto
+
+Produto avaliou que o card de Favoritos ainda parecia vazio e pediu uma composicao inspirada em cards de sugestao de rede: capa, avatar sobreposto, acao de remover no canto, bio curta e CTA direto para WhatsApp.
+
+### Decisao
+
+- Evoluir apenas o card de `/app/favorites` para uma estrutura de perfil salvo com capa no topo.
+- Usar `video_cover_url` como fonte de capa quando o endpoint de favoritos já entregar esse dado; quando ausente, usar uma superficie visual neutra da Lectum, sem inventar dados.
+- Manter a imagem de perfil/iniciais como avatar principal sobreposto à capa, usando `next/image` para midia real.
+- Substituir o subtitulo fixo `Psicologo` por uma bio curta derivada de dados reais na seguinte prioridade: `headline`, `bio`, especialidades e, por ultimo, tipo profissional.
+- Manter o coracao preenchido como acao de remover favorito, pois comunica melhor o estado salvo que um `X`.
+- Manter o CTA `WhatsApp` como acao principal do card e preservar o fluxo/tracking existente.
+
+### Consequencias
+
+- Favoritos passa a comunicar melhor quem e o profissional salvo antes do contato.
+- A tela ganha mais densidade visual e diferenciação entre profissionais sem depender de dados mockados.
+- O endpoint atual continua suficiente; nao ha mudanca de contrato, schema, migration ou pacote.
+- A composicao mobile segue duas colunas compactas, enquanto desktop preserva tres cards por linha.
