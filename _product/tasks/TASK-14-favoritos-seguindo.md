@@ -407,3 +407,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Chips: somente os chips de Favoritos tiveram altura, padding e fonte reduzidos, mantendo o layout em pill sem alterar os chips de Comunidade.
 - WhatsApp: o CTA dos cards manteve respiro vertical para nao cortar a base do texto, mas voltou para escala tipografica menor e icone mais discreto.
 - Escopo: sem mudancas de backend, Prisma, migrations, packages, endpoint, filtros reais, paginacao, favoritos, pagina de Comunidade ou tracking de WhatsApp.
+
+
+## Complemento 2026-06-25 - microtipografia e nome em linha unica
+
+- Pedido do usuario: diminuir novamente as fontes dos textos das chips e do botao `WhatsApp`; no card, exibir o nome do psicologo em uma unica linha, truncando com `...` quando necessario e mantendo o selo verificado sempre visivel.
+- Frontend: as chips de Favoritos tiveram fonte reduzida para 9.5px e gap menor, sem alterar as chips da pagina de Comunidade.
+- Card: o nome passou de `line-clamp-2` para uma linha unica com `truncate`; o selo verificado fica como item fixo `shrink-0` ao lado do nome quando existir.
+- WhatsApp: o CTA teve fonte e icone reduzidos, preservando `min-height`, padding e `line-height` para evitar corte visual dos descendentes do texto.
+- Escopo: sem mudancas de backend, Prisma, migrations, packages, endpoint, filtros reais, paginacao, favoritos, pagina de Comunidade ou tracking de WhatsApp.

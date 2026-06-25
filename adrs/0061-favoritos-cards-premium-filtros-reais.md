@@ -428,3 +428,23 @@ A calibragem anterior de `/app/favorites` resolveu a densidade mobile, mas no de
 - Mobile continua com duas colunas.
 - A interface fica menos pesada visualmente sem reintroduzir o corte no texto do WhatsApp.
 - Nenhuma regra de dominio, endpoint, schema ou pacote foi alterado.
+
+
+## Complemento 2026-06-25 - truncamento de nome com selo preservado
+
+### Contexto
+
+Produto apontou que a microtipografia dos chips de Favoritos e do CTA `WhatsApp` ainda estava grande. Tambem pediu que o nome do psicologo no card ocupasse apenas uma linha, truncando com reticencias quando necessario, mas sem esconder o selo de verificado.
+
+### Decisao
+
+- Reduzir a fonte das chips de Favoritos para 9.5px, mantendo altura e superficie ja aprovadas.
+- Reduzir o CTA `WhatsApp` para 0.68rem no mobile e 0.72rem em telas maiores, com icone de 12px.
+- Trocar a composicao do nome de duas linhas por um container flex em linha unica.
+- Colocar o texto do nome em `truncate` e o selo verificado em `shrink-0`, garantindo que o selo permane?a visivel mesmo quando o nome precisar de reticencias.
+
+### Consequencias
+
+- Cards ficam mais consistentes e menos carregados visualmente em 2 colunas mobile e 3 colunas desktop.
+- O selo verificado deixa de depender do espaco restante do texto e permanece sempre visivel.
+- A mudanca e estritamente visual e nao altera contratos, dados, filtros, tracking ou persistencia.

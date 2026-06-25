@@ -168,22 +168,6 @@ const getInitials = (name: string) => {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
 
-const getNamePartsForBadge = (name: string) => {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-
-  if (parts.length <= 1) {
-    return {
-      prefix: "",
-      suffix: parts[0] ?? name,
-    };
-  }
-
-  return {
-    prefix: parts.slice(0, -1).join(" "),
-    suffix: parts[parts.length - 1],
-  };
-};
-
 const getProfession = () => "Psicólogo";
 
 const getContactProfession = (gender?: string | null) => {
@@ -210,8 +194,8 @@ const FavoriteFilterChips = ({
               aria-pressed={active}
               className={
                 active
-                  ? "group inline-flex h-7 min-h-7 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-primary bg-primary px-2.5 text-[10px] font-bold leading-none tracking-[-0.01em] text-white shadow-none transition-[background-color,border-color,color,transform] duration-200 hover:bg-primary/95 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8]/20 dark:border-primary dark:bg-primary dark:text-white"
-                  : "group inline-flex h-7 min-h-7 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-[#DDE8F4] bg-white px-2.5 text-[10px] font-bold leading-none tracking-[-0.01em] text-[#5F718A] shadow-none transition-[background-color,border-color,color,transform] duration-200 hover:border-[#BFD8F4] hover:bg-[#F8FBFF] hover:text-[#123B6D] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8]/20 dark:border-border dark:bg-surface/70 dark:text-muted dark:hover:bg-surface-muted/70 dark:hover:text-foreground"
+                  ? "group inline-flex h-7 min-h-7 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full border border-primary bg-primary px-2.5 text-[9.5px] font-bold leading-none tracking-[-0.01em] text-white shadow-none transition-[background-color,border-color,color,transform] duration-200 hover:bg-primary/95 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8]/20 dark:border-primary dark:bg-primary dark:text-white"
+                  : "group inline-flex h-7 min-h-7 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full border border-[#DDE8F4] bg-white px-2.5 text-[9.5px] font-bold leading-none tracking-[-0.01em] text-[#5F718A] shadow-none transition-[background-color,border-color,color,transform] duration-200 hover:border-[#BFD8F4] hover:bg-[#F8FBFF] hover:text-[#123B6D] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8]/20 dark:border-border dark:bg-surface/70 dark:text-muted dark:hover:bg-surface-muted/70 dark:hover:text-foreground"
               }
               key={chip.key}
               onClick={() => onSelect(chip.key)}
@@ -269,7 +253,6 @@ const FavoritePsychologistCard = ({
 }) => {
   const route = `/app/psychologist/${psychologist.id}`;
   const profession = getProfession();
-  const nameParts = getNamePartsForBadge(psychologist.name);
 
   const handleFavoriteClick = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
@@ -320,14 +303,11 @@ const FavoritePsychologistCard = ({
         </div>
 
         <div className="mt-6 grid min-w-0 justify-items-center gap-2 sm:mt-7 sm:gap-2.5">
-          <span className="line-clamp-2 min-w-0 max-w-full text-center text-[0.88rem] font-bold leading-[1.15] tracking-[-0.02em] text-foreground sm:text-[0.98rem]">
-            {nameParts.prefix ? `${nameParts.prefix} ` : null}
-            <span className="inline-flex whitespace-nowrap">
-              {nameParts.suffix}
-              {psychologist.verified ? (
-                <VerifiedBadgeIcon className="ml-1 inline-block h-3.5 w-3.5 align-[-2px] sm:h-4 sm:w-4" />
-              ) : null}
-            </span>
+          <span className="flex w-full min-w-0 max-w-full items-center justify-center gap-1 text-center text-[0.88rem] font-bold leading-[1.15] tracking-[-0.02em] text-foreground sm:text-[0.98rem]">
+            <span className="min-w-0 max-w-full truncate">{psychologist.name}</span>
+            {psychologist.verified ? (
+              <VerifiedBadgeIcon className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+            ) : null}
           </span>
           <p className="text-xs font-medium text-muted sm:text-[0.82rem]">{profession}</p>
         </div>
@@ -335,7 +315,7 @@ const FavoritePsychologistCard = ({
 
       <PsychologistWhatsAppRedirectButton
         aria-label={`Chamar ${psychologist.name} no WhatsApp`}
-        className="mt-auto inline-flex min-h-[34px] w-full min-w-0 items-center justify-center gap-1.5 rounded-[13px] bg-success px-2.5 py-2 text-[0.72rem] font-black leading-[1.2] text-white transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 sm:min-h-9 sm:rounded-[14px] sm:px-3 sm:text-[0.76rem]"
+        className="mt-auto inline-flex min-h-[34px] w-full min-w-0 items-center justify-center gap-1.5 rounded-[13px] bg-success px-2.5 py-2 text-[0.68rem] font-black leading-[1.25] text-white transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 sm:min-h-9 sm:rounded-[14px] sm:px-3 sm:text-[0.72rem]"
         psychologist={{
           avatar: psychologist.avatar,
           crp: psychologist.crp,
@@ -347,7 +327,7 @@ const FavoritePsychologistCard = ({
         stopPropagation
       >
         <PsychologistWhatsAppButtonContent
-          iconClassName="h-3.5 w-3.5"
+          iconClassName="h-3 w-3"
           label="WhatsApp"
           labelClassName="leading-[1.25]"
         />
