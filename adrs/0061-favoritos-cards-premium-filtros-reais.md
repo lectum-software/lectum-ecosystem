@@ -448,3 +448,23 @@ Produto apontou que a microtipografia dos chips de Favoritos e do CTA `WhatsApp`
 - Cards ficam mais consistentes e menos carregados visualmente em 2 colunas mobile e 3 colunas desktop.
 - O selo verificado deixa de depender do espaco restante do texto e permanece sempre visivel.
 - A mudanca e estritamente visual e nao altera contratos, dados, filtros, tracking ou persistencia.
+
+
+## Complemento 2026-06-25 - replica local do padrao das chips de Comunidade
+
+### Contexto
+
+Produto reforcou que as chips de Favoritos ainda nao estavam suficientemente alinhadas ao padrao visual das chips da Comunidade, mas pediu explicitamente para nao alterar a pagina de Comunidade.
+
+### Decisao
+
+- Criar em Favoritos o helper local `favoriteFilterChipClassName` replicando a composicao visual de `communityPostSortChipClassName`.
+- Usar a mesma altura, padding, tipografia, bordas, foco, transicoes e estados ativo/inativo das chips de Comunidade.
+- Ajustar o wrapper de Favoritos para `nav` rolavel com classes equivalentes ao trilho de ordenacao da Comunidade.
+- Nao extrair componente compartilhado neste momento, pois o pedido e um ajuste visual pontual e a Comunidade nao deve ser tocada.
+
+### Consequencias
+
+- Favoritos passa a ter o mesmo padrao visual operacional das chips de Comunidade sem alterar a origem visual existente.
+- Mantem-se baixo risco de regressao na Comunidade.
+- A duplicacao e aceita neste refinamento por evitar acoplamento prematuro entre contextos com semanticas diferentes.

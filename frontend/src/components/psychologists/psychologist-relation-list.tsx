@@ -20,6 +20,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { SecondaryPageHeader } from "@/components/ui/secondary-page-header";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { getToken } from "@/hooks/cookies/token";
+import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
@@ -124,6 +125,15 @@ const formatFavoriteChipCount = (count?: number) => {
   return String(count);
 };
 
+const favoriteFilterChipClassName = (active: boolean) =>
+  cn(
+    "group inline-flex h-[30px] min-h-[30px] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[11px] font-bold leading-none tracking-[-0.01em] shadow-none transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.99]",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8]/20",
+    active
+      ? "border-primary bg-primary text-white hover:bg-primary/95 dark:border-primary dark:bg-primary dark:text-white"
+      : "border-[#DDE8F4] bg-white text-[#5F718A] hover:border-[#BFD8F4] hover:bg-[#F8FBFF] hover:text-[#123B6D] dark:border-border dark:bg-surface/70 dark:text-muted dark:hover:bg-surface-muted/70 dark:hover:text-foreground",
+  );
+
 const config = {
   favorites: {
     title: "Favoritos",
@@ -184,32 +194,33 @@ const FavoriteFilterChips = ({
   onSelect: (filter: FavoriteFilterKey) => void;
 }) => {
   return (
-    <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <div className="flex min-w-max items-center gap-1.5 sm:gap-2">
+    <nav
+      aria-label="Filtros dos favoritos"
+      className="w-full max-w-full overflow-x-auto scroll-smooth overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    >
+      <div className="flex min-w-max items-center gap-1.5 py-1 pr-2">
         {FAVORITE_FILTER_CHIPS.map((chip) => {
           const active = activeFilter === chip.key;
 
           return (
             <button
               aria-pressed={active}
-              className={
-                active
-                  ? "group inline-flex h-7 min-h-7 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full border border-primary bg-primary px-2.5 text-[9.5px] font-bold leading-none tracking-[-0.01em] text-white shadow-none transition-[background-color,border-color,color,transform] duration-200 hover:bg-primary/95 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8]/20 dark:border-primary dark:bg-primary dark:text-white"
-                  : "group inline-flex h-7 min-h-7 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full border border-[#DDE8F4] bg-white px-2.5 text-[9.5px] font-bold leading-none tracking-[-0.01em] text-[#5F718A] shadow-none transition-[background-color,border-color,color,transform] duration-200 hover:border-[#BFD8F4] hover:bg-[#F8FBFF] hover:text-[#123B6D] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8]/20 dark:border-border dark:bg-surface/70 dark:text-muted dark:hover:bg-surface-muted/70 dark:hover:text-foreground"
-              }
+              className={favoriteFilterChipClassName(active)}
               key={chip.key}
               onClick={() => onSelect(chip.key)}
               type="button"
             >
-              <span>{chip.label}</span>
-              <span className={active ? "text-white/82" : "text-[#7B8CA3]"}>
+              <span className="whitespace-nowrap text-[11px] font-bold leading-none">
+                {chip.label}
+              </span>
+              <span className="whitespace-nowrap text-[11px] font-bold leading-none">
                 ({formatFavoriteChipCount(counts[chip.key])})
               </span>
             </button>
           );
         })}
       </div>
-    </div>
+    </nav>
   );
 };
 

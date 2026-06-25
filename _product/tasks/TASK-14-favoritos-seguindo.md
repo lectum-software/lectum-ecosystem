@@ -416,3 +416,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Card: o nome passou de `line-clamp-2` para uma linha unica com `truncate`; o selo verificado fica como item fixo `shrink-0` ao lado do nome quando existir.
 - WhatsApp: o CTA teve fonte e icone reduzidos, preservando `min-height`, padding e `line-height` para evitar corte visual dos descendentes do texto.
 - Escopo: sem mudancas de backend, Prisma, migrations, packages, endpoint, filtros reais, paginacao, favoritos, pagina de Comunidade ou tracking de WhatsApp.
+
+
+## Complemento 2026-06-25 - chips de Favoritos iguais ao padrao de Comunidade
+
+- Pedido do usuario: as chips de Favoritos ainda nao seguiam o mesmo padrao das chips da Comunidade; alterar apenas Favoritos e nao mexer nas chips de Comunidade.
+- Frontend: as chips de `/app/favorites` passaram a usar helper proprio com a mesma composicao visual de `communityPostSortChipClassName`: `h-[30px]`, `min-h-[30px]`, borda, `px-3`, `text-[11px]`, `font-bold`, `leading-none`, `shadow-none`, transicoes e estados ativo/inativo equivalentes.
+- A faixa de filtros de Favoritos tambem passou para `nav` com rolagem horizontal, `scroll-smooth`, `gap-1.5`, `py-1` e `pr-2`, alinhada ao trilho das chips de ordenacao da Comunidade.
+- O arquivo de Comunidade nao foi alterado; o padrao foi apenas replicado localmente em Favoritos para evitar acoplamento prematuro.
+- Escopo: sem mudancas de backend, Prisma, migrations, packages, endpoint, filtros reais, paginacao, favoritos, pagina de Comunidade ou tracking de WhatsApp.
