@@ -209,11 +209,11 @@ const FavoriteFilterChips = ({
   };
 
   return (
-    <div className="-mx-5 px-5 pb-1">
-      <div className="flex min-w-0 items-center gap-2">
+    <div className="min-w-0 max-w-full overflow-hidden pb-1">
+      <div className="flex min-w-0 max-w-full items-center gap-2">
         <button
           aria-label="Voltar filtros"
-          className="hidden h-9 w-9 shrink-0 place-items-center rounded-full border border-[#D6E2F0] bg-white text-[#475569] transition-colors hover:border-primary/25 hover:bg-[#F8FBFF] hover:text-primary active:scale-[0.98] md:grid dark:border-border dark:bg-surface dark:text-muted"
+          className="hidden h-8 w-8 shrink-0 place-items-center rounded-full border border-[#D6E2F0] bg-white text-[#64748B] transition-colors hover:border-primary/25 hover:bg-[#F8FBFF] hover:text-primary active:scale-[0.98] md:grid dark:border-border dark:bg-surface dark:text-muted"
           onClick={() => scrollChips("left")}
           type="button"
         >
@@ -221,10 +221,10 @@ const FavoriteFilterChips = ({
         </button>
 
         <div
-          className="min-w-0 flex-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="min-w-0 max-w-full flex-1 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           ref={chipsScrollRef}
         >
-          <div className="flex w-max min-w-full items-center gap-2.5">
+          <div className="flex min-w-max items-center gap-2.5">
             {FAVORITE_FILTER_CHIPS.map((chip) => {
               const active = activeFilter === chip.key;
 
@@ -252,7 +252,7 @@ const FavoriteFilterChips = ({
 
         <button
           aria-label="Avançar filtros"
-          className="hidden h-9 w-9 shrink-0 place-items-center rounded-full border border-[#D6E2F0] bg-white text-[#475569] transition-colors hover:border-primary/25 hover:bg-[#F8FBFF] hover:text-primary active:scale-[0.98] md:grid dark:border-border dark:bg-surface dark:text-muted"
+          className="hidden h-8 w-8 shrink-0 place-items-center rounded-full border border-[#D6E2F0] bg-white text-[#64748B] transition-colors hover:border-primary/25 hover:bg-[#F8FBFF] hover:text-primary active:scale-[0.98] md:grid dark:border-border dark:bg-surface dark:text-muted"
           onClick={() => scrollChips("right")}
           type="button"
         >
@@ -314,7 +314,7 @@ const FavoritePsychologistCard = ({
   return (
     <article
       aria-label={`Abrir perfil de ${psychologist.name}`}
-      className="group relative isolate flex min-h-[282px] w-full flex-col overflow-hidden rounded-[24px] border border-[#E7ECF2] bg-white p-[18px] text-center shadow-[0_12px_28px_rgb(15_23_42_/_6%)] transition duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_18px_42px_rgb(15_23_42_/_10%)] dark:border-border dark:bg-surface sm:min-h-[320px] sm:rounded-[28px] sm:p-5"
+      className="group relative isolate mx-auto flex min-h-[272px] w-full max-w-[188px] flex-col overflow-hidden rounded-[24px] border border-[#E7ECF2] bg-white p-4 text-center shadow-[0_12px_28px_rgb(15_23_42_/_6%)] transition duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_18px_42px_rgb(15_23_42_/_10%)] dark:border-border dark:bg-surface sm:min-h-[296px] sm:max-w-[214px] sm:rounded-[28px] sm:p-5"
     >
       <button
         aria-label={`Remover ${psychologist.name} dos favoritos`}
@@ -336,7 +336,7 @@ const FavoritePsychologistCard = ({
         className="grid min-h-0 content-start justify-items-center text-center no-underline hover:no-underline"
         href={route}
       >
-        <div className="relative mt-3 h-[104px] w-[104px] rounded-full sm:mt-3.5 sm:h-[122px] sm:w-[122px]">
+        <div className="relative mt-3 h-[102px] w-[102px] rounded-full sm:mt-3.5 sm:h-[112px] sm:w-[112px]">
           <div className="relative h-full w-full overflow-hidden rounded-full bg-surface-muted ring-1 ring-[#DDE7F2] dark:ring-border">
             <FavoriteMedia psychologist={psychologist} />
           </div>
@@ -492,7 +492,7 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
 
   return (
     <PrivateTemplate>
-      <section className="mx-auto grid w-full max-w-2xl gap-4 px-5 py-5 md:py-8">
+      <section className="mx-auto grid min-w-0 w-full max-w-2xl gap-4 overflow-hidden px-5 py-5 md:py-8">
         <SecondaryPageHeader title={copy.title as string} />
 
         {!errorMessage ? (
@@ -540,7 +540,7 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
               </span>
             ) : null}
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,188px))] justify-center gap-3 sm:grid-cols-[repeat(auto-fit,minmax(180px,214px))] sm:gap-4">
               {psychologists.map((psychologist) => (
                 <FavoritePsychologistCard
                   favoritePending={favoritePendingId === psychologist.id}

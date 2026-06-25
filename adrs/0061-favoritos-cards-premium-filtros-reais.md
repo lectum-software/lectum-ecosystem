@@ -365,3 +365,23 @@ Produto observou que os chips inativos de `/app/favorites` ainda se misturavam a
 - Os filtros ficam mais legiveis contra o background sem voltar a usar sombra.
 - A navegacao horizontal fica mais clara em desktop, onde gestos de scroll sao menos obvios.
 - O card passa a ter mais presenca e leitura mais respirada, sem alterar dados, endpoint ou fluxo de contato.
+
+## Complemento 2026-06-25 - contenção de overflow e proporção do card
+
+### Contexto
+
+A versão com setas e cards mais altos apresentou regressão visual no desktop: a faixa de chips expandia a largura da página, gerando scroll horizontal global, e o card de um único favorito ficava grande demais e desproporcional.
+
+### Decisão
+
+- Conter a faixa de chips em `max-w-full`/`overflow-hidden`, deixando o overflow apenas no container rolável interno.
+- Reduzir os botões de navegação desktop para 32px e preservar rolagem suave sem alterar filtros ou contagens reais.
+- Remover `w-max min-w-full` como causa de expansão da grid/section, usando `min-w-max` dentro do scroll container.
+- Limitar explicitamente a largura máxima do card e usar grid `auto-fit` centralizado para evitar stretch quando há poucos favoritos.
+- Manter o avatar sem sombra, mas com tamanho mais controlado e linha fina de delimitação.
+
+### Consequências
+
+- A página deixa de criar scroll horizontal global no desktop.
+- Um único favorito volta a parecer um card compacto, sem perder respiro interno.
+- A alteração permanece visual e não muda backend, schema, pacotes ou regras de domínio.

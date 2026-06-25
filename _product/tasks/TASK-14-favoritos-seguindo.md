@@ -378,3 +378,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Cards: altura minima e espaçamentos internos aumentados; avatar/foto perdeu sombra e ring branco espesso, ficando apenas com linha fina; fallback de iniciais tambem perdeu sombra.
 - Nome/selo: o selo verificado passou a ficar preso ao ultimo termo do nome em um bloco sem quebra, evitando que apareça isolado em uma segunda linha.
 - Escopo: sem mudancas de backend, Prisma, migrations, packages, filtros reais, paginacao, favoritos ou tracking de WhatsApp.
+
+## Complemento 2026-06-25 - correção de overflow e proporção em Favoritos
+
+- Pedido do usuario: a versao anterior nao ficou boa; a faixa de chips gerava composicao ruim/overflow no desktop e o card ficou grande demais.
+- Frontend: o wrapper dos chips foi limitado com `min-w-0`, `max-w-full` e `overflow-hidden`, removendo a causa de scroll horizontal da pagina; a rolagem agora fica contida apenas dentro da faixa de filtros.
+- Chips: os botoes de navegacao desktop foram reduzidos e a faixa interna usa `min-w-max` dentro do container rolavel, evitando expandir a largura da pagina.
+- Cards: o card ganhou largura maxima explicita e a grid passou a usar `auto-fit` centralizado para impedir que um unico favorito estique exageradamente no desktop.
+- Avatar: manteve a linha fina sem sombra, com tamanho um pouco mais controlado para recuperar proporcao.
+- Escopo: sem mudancas de backend, Prisma, migrations, packages, filtros reais, paginacao, favoritos ou tracking de WhatsApp.
