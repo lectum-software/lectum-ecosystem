@@ -210,8 +210,8 @@ const FavoriteFilterChips = ({
               aria-pressed={active}
               className={
                 active
-                  ? "group inline-flex h-[30px] min-h-[30px] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-primary bg-primary px-3 text-[11px] font-bold leading-none tracking-[-0.01em] text-white shadow-none transition-[background-color,border-color,color,transform] duration-200 hover:bg-primary/95 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8]/20 dark:border-primary dark:bg-primary dark:text-white"
-                  : "group inline-flex h-[30px] min-h-[30px] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-[#DDE8F4] bg-white px-3 text-[11px] font-bold leading-none tracking-[-0.01em] text-[#5F718A] shadow-none transition-[background-color,border-color,color,transform] duration-200 hover:border-[#BFD8F4] hover:bg-[#F8FBFF] hover:text-[#123B6D] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8]/20 dark:border-border dark:bg-surface/70 dark:text-muted dark:hover:bg-surface-muted/70 dark:hover:text-foreground"
+                  ? "group inline-flex h-7 min-h-7 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-primary bg-primary px-2.5 text-[10px] font-bold leading-none tracking-[-0.01em] text-white shadow-none transition-[background-color,border-color,color,transform] duration-200 hover:bg-primary/95 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8]/20 dark:border-primary dark:bg-primary dark:text-white"
+                  : "group inline-flex h-7 min-h-7 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-[#DDE8F4] bg-white px-2.5 text-[10px] font-bold leading-none tracking-[-0.01em] text-[#5F718A] shadow-none transition-[background-color,border-color,color,transform] duration-200 hover:border-[#BFD8F4] hover:bg-[#F8FBFF] hover:text-[#123B6D] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8]/20 dark:border-border dark:bg-surface/70 dark:text-muted dark:hover:bg-surface-muted/70 dark:hover:text-foreground"
               }
               key={chip.key}
               onClick={() => onSelect(chip.key)}
@@ -335,7 +335,7 @@ const FavoritePsychologistCard = ({
 
       <PsychologistWhatsAppRedirectButton
         aria-label={`Chamar ${psychologist.name} no WhatsApp`}
-        className="mt-auto inline-flex min-h-9 w-full min-w-0 items-center justify-center gap-1.5 rounded-[13px] bg-success px-3 py-2 text-[0.78rem] font-black leading-[1.15] text-white transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 sm:min-h-10 sm:gap-2 sm:rounded-[14px] sm:px-3.5 sm:py-2.5 sm:text-[0.82rem]"
+        className="mt-auto inline-flex min-h-[34px] w-full min-w-0 items-center justify-center gap-1.5 rounded-[13px] bg-success px-2.5 py-2 text-[0.72rem] font-black leading-[1.2] text-white transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 sm:min-h-9 sm:rounded-[14px] sm:px-3 sm:text-[0.76rem]"
         psychologist={{
           avatar: psychologist.avatar,
           crp: psychologist.crp,
@@ -347,9 +347,9 @@ const FavoritePsychologistCard = ({
         stopPropagation
       >
         <PsychologistWhatsAppButtonContent
-          iconClassName="h-4 w-4"
+          iconClassName="h-3.5 w-3.5"
           label="WhatsApp"
-          labelClassName="leading-[1.2]"
+          labelClassName="leading-[1.25]"
         />
       </PsychologistWhatsAppRedirectButton>
     </article>
@@ -509,7 +509,7 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
               </span>
             ) : null}
 
-            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
               {psychologists.map((psychologist) => (
                 <FavoritePsychologistCard
                   favoritePending={favoritePendingId === psychologist.id}

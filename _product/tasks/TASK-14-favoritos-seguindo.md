@@ -398,3 +398,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Escopo: sem mudancas de backend, Prisma, migrations, packages, endpoint, filtros reais, paginacao, favoritos, pagina de Comunidade ou tracking de WhatsApp.
 - ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check` e HTTP local `200` em `/app/favorites`.
+
+
+## Complemento 2026-06-25 - desktop com 3 cards e escala tipografica menor
+
+- Pedido do usuario: manter 2 cards por linha no mobile, mas exibir 3 cards por linha no desktop; reduzir a escala visual das fontes do WhatsApp e dos chips, que ficaram grandes demais.
+- Frontend: a grade de `/app/favorites` passou a usar `grid-cols-2` no mobile e `sm:grid-cols-3` em telas maiores, preservando o limite de largura dos cards.
+- Chips: somente os chips de Favoritos tiveram altura, padding e fonte reduzidos, mantendo o layout em pill sem alterar os chips de Comunidade.
+- WhatsApp: o CTA dos cards manteve respiro vertical para nao cortar a base do texto, mas voltou para escala tipografica menor e icone mais discreto.
+- Escopo: sem mudancas de backend, Prisma, migrations, packages, endpoint, filtros reais, paginacao, favoritos, pagina de Comunidade ou tracking de WhatsApp.

@@ -407,3 +407,24 @@ A tela de Favoritos tinha voltado a apresentar um card por linha no viewport mob
 - A linguagem dos filtros fica consistente com Comunidade sem criar componente compartilhado prematuramente.
 - O CTA de WhatsApp melhora a legibilidade e reduz risco de corte de descendentes em letras como `p`.
 - Nao ha impacto em backend, contratos, schema, pacotes, favoritos reais ou tracking.
+
+
+## Complemento 2026-06-25 - breakpoint de 3 colunas e escala menor
+
+### Contexto
+
+A calibragem anterior de `/app/favorites` resolveu a densidade mobile, mas no desktop a grade ainda exibia apenas duas colunas. Produto tambem apontou que a fonte dos chips e do CTA `WhatsApp` ficou grande demais.
+
+### Decisao
+
+- Manter duas colunas como base mobile e usar tres colunas a partir do breakpoint `sm`.
+- Preservar a largura maxima dos cards para evitar stretch no desktop.
+- Reduzir os chips de Favoritos para pills de 28px e texto de 10px, mantendo borda/estado ativo do padrao aprovado.
+- Reduzir o CTA `WhatsApp` para texto de 0.72rem/0.76rem e icone de 14px, mantendo `min-height`, padding e `line-height` suficientes para evitar corte visual.
+
+### Consequencias
+
+- Desktop ganha uma grade mais eficiente com tres cards por linha.
+- Mobile continua com duas colunas.
+- A interface fica menos pesada visualmente sem reintroduzir o corte no texto do WhatsApp.
+- Nenhuma regra de dominio, endpoint, schema ou pacote foi alterado.
