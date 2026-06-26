@@ -379,3 +379,21 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Builder/Quick Copy nao esta disponivel como ferramenta callable neste ambiente; a referencia foi o screenshot do usuario e os componentes de midia ja existentes na comunidade.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
 - ADR criado: `adrs/0155-midia-respostas-meus-posts.md`.
+
+## Ajuste complementar em 2026-06-26 - modal de exclusao acima do card
+
+- Pedido direto de produto: a modal de excluir em `/app/posts/mine` nao pode deixar icones/textos do card de fundo sobrepostos ao conteudo da confirmacao, e os botoes `Cancelar` e `Excluir` precisam ter tipografia mais legivel.
+- Frontend: as modais de confirmacao de acoes do dono (`PostOwnerActionMenu` e `ReplyOwnerActionMenu`) passaram a ser renderizadas via portal no `document.body`, com overlay isolado em `z-[1000]` e card interno acima do restante da tela.
+- Os botoes do rodape dessas modais receberam `text-base` e peso `font-extrabold`, preservando altura, variantes `outline`/`destructive`, estados disabled/loading e comportamento de teclado/escape.
+- Nao houve alteracao de backend, schema Prisma, endpoints, packages, dados, permissoes, exclusao, silenciamento, edicao, votos ou salvos.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia visual usada foi o screenshot do usuario e as imagens locais da TASK-28 em `_product/proto`.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend exec biome check --write src/components/community/reply-owner-action-menu.tsx src/components/community/post-owner-action-menu.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke HTTP local: `http://127.0.0.1:3000/app/posts/mine` retornou 200.
+- `git diff --check`
+- ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.

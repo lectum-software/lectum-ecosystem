@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { type MouseEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useDeleteReply, useMutePost } from "@/api/callers/posts";
 import type { PostListPost, UserPostReply } from "@/api/generator/types/posts";
 import { ReplyEditModal } from "@/components/community/reply-edit-modal";
@@ -104,19 +105,19 @@ const ReplyActionModal = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose, open]);
 
-  if (!open) return null;
+  if (!open || typeof document === "undefined") return null;
 
-  return (
+  const modal = (
     <div
       aria-labelledby="reply-owner-action-title"
       aria-modal="true"
-      className="fixed inset-0 z-[130] grid place-items-center bg-foreground/55 px-4 py-6 text-foreground backdrop-blur-md dark:bg-background/75"
+      className="fixed inset-0 isolate z-[1000] grid place-items-center overflow-y-auto bg-foreground/55 px-4 py-6 text-foreground backdrop-blur-md dark:bg-background/75"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
       role="dialog"
     >
-      <section className="w-full max-w-[430px] rounded-[28px] border border-border bg-surface p-5 shadow-[var(--lectum-shadow)]">
+      <section className="relative z-[1001] w-full max-w-[430px] rounded-[28px] border border-border bg-surface p-5 shadow-[var(--lectum-shadow)]">
         <div className="flex items-start justify-between gap-4">
           <div className="flex min-w-0 gap-3">
             <span
@@ -152,10 +153,17 @@ const ReplyActionModal = ({
         {children ? <div className="mt-4">{children}</div> : null}
 
         <div className="mt-5 grid gap-2 sm:grid-cols-2">
-          <Button disabled={disabled} onClick={onClose} type="button" variant="outline">
+          <Button
+            className="h-11 text-base font-extrabold tracking-[-0.02em]"
+            disabled={disabled}
+            onClick={onClose}
+            type="button"
+            variant="outline"
+          >
             Cancelar
           </Button>
           <Button
+            className="h-11 text-base font-extrabold tracking-[-0.02em]"
             disabled={disabled}
             onClick={onAction}
             type="button"
@@ -168,6 +176,8 @@ const ReplyActionModal = ({
       </section>
     </div>
   );
+
+  return createPortal(modal, document.body);
 };
 
 export const ReplyOwnerActionMenu = ({

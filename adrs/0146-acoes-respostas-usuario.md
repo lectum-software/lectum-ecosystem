@@ -355,3 +355,29 @@ Validacao complementar:
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
 - `git diff --check`: sucesso.
+
+## Complemento 2026-06-26 - modal de exclusao isolada em portal
+
+A modal de confirmacao de exclusao aberta em `Meus posts e respostas` podia ficar visualmente sobreposta por icones e textos da barra de acoes do card ao fundo. Como o menu de dono fica aninhado dentro dos cards e da `CommunityActionBar`, a confirmacao precisa sair desse contexto de empilhamento para se comportar como superficie modal global.
+
+Decisao complementar:
+
+- Renderizar `PostActionModal` e `ReplyActionModal` via `createPortal` para `document.body`, mantendo o componente client-side e sem criar nova dependencia.
+- Elevar o overlay para `z-[1000]`, usar `isolate` e manter o card da modal em `z-[1001]`, evitando competicao com z-index de cards, barras de acao, menus e midias.
+- Aumentar a tipografia dos botoes de rodape para `text-base font-extrabold`, deixando `Cancelar` e a acao destrutiva mais proporcionais no mobile.
+- Preservar as regras de dominio: autoria, bloqueio de exclusao quando aplicavel, silenciamento, edicao, votos, salvos e feedback de erro continuam inalterados.
+
+Consequencias:
+
+- A confirmacao de exclusao passa a aparecer como camada global, sem elementos de fundo atravessando o card.
+- A mesma correcao protege exclusoes de posts e de comentarios/respostas, mantendo paridade entre as acoes do usuario.
+- Nao houve alteracao de backend, schema Prisma, endpoints, storage, packages ou contratos HTTP.
+
+Validacao complementar:
+
+- `pnpm --dir frontend exec biome check --write src/components/community/reply-owner-action-menu.tsx src/components/community/post-owner-action-menu.tsx`: sucesso.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- Smoke HTTP local em `/app/posts/mine`: 200.
+- `git diff --check`: sucesso.
