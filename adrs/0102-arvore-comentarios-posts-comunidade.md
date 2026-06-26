@@ -195,3 +195,31 @@ Mesmo apos reduzir o controle explicito `Ocultar respostas`/`Ver respostas`, o t
 - `git diff --check`
 - HTTP local `200` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`
 - Chrome/CDP local em viewport mobile validando o label com `font-size: 9px`, `font-weight: 500` e `line-height: 9px`.
+
+## Atualizacao 2026-06-26 - controle de respostas no mesmo tamanho de Responder
+
+### Contexto
+
+O ajuste anterior deixou `Ver respostas`/`Ocultar respostas` ultracompacto. A captura do usuario mostrou que o controle passou a ficar pequeno demais quando comparado a acao `Responder`, prejudicando a leitura e a consistencia da barra de comentarios.
+
+### Decisao
+
+- Padronizar a tipografia do label do controle de respostas com a acao `Responder` text-only usada na `CommunityActionBar`: `text-[12px]`, `font-semibold`, `leading-none` e `tracking-[-0.01em]`.
+- Manter as classes de fonte no `span` interno do label, nao no `button`, para preservar o tamanho real apesar dos resets/base de botoes.
+- Ajustar chevrons, gap e padding para acompanhar o label sem alterar semantica, acessibilidade ou posicao do controle.
+
+### Consequencias
+
+- `Ver respostas` e `Ocultar respostas` voltam a ter a mesma escala textual de `Responder`, melhorando consistencia visual.
+- O controle segue secundario por posicao e tratamento de hover, sem competir com votos/responder/salvar/compartilhar.
+- A alteracao permanece puramente visual/frontend: nao modifica dados, APIs, backend, Prisma, packages, votos, salvos, ordenacao ou criacao de respostas.
+
+### Validacao
+
+- `pnpm.cmd --dir frontend exec biome check --write "src/app/app/community/[slug]/post/[id]/logic.tsx"`
+- `pnpm.cmd --dir frontend check`
+- `pnpm.cmd --dir frontend build`
+- `pnpm.cmd check`
+- `git diff --check`
+- HTTP local `200` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`
+- Validacao local de DOM/CSS confirmou o label com `font-size: 12px`, `font-weight: 600` e `line-height: 12px`.

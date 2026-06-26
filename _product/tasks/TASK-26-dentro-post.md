@@ -1108,3 +1108,15 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual/auditavel: screenshot do usuario na rota `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video` e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check --write "src/app/app/community/[slug]/post/[id]/logic.tsx"`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check`, HTTP local `200` na rota do post demo e Chrome/CDP local em viewport mobile validando label com `font-size: 9px`, `font-weight: 500` e `line-height: 9px`.
+
+## Complemento 2026-06-26 - controle de respostas alinhado ao Responder
+
+- Pedido do usuario: `Ver respostas`/`Ocultar respostas` ficou pequeno demais apos o ajuste ultracompacto e deve seguir o mesmo tamanho visual de `Responder`.
+- Frontend: o label do botao explicito da arvore voltou para `text-[12px]`, `font-semibold`, `leading-none` e `tracking-[-0.01em]`, mesma base tipografica do `Responder` text-only da `CommunityActionBar`.
+- Frontend: chevrons, gap e padding foram ajustados para acompanhar a escala do texto sem voltar a transformar o controle em acao principal.
+- A tipografia continua aplicada no `span` interno do label para evitar regressao por reset/base de `button`.
+- O controle permanece abaixo da barra de acoes do comentario raiz, com `aria-label`, `aria-expanded`, `aria-controls`, contagem ao recolher, deep links e conectores da arvore preservados.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, votos, salvos, ordenacao, permissao ou criacao de respostas.
+- Fonte visual/auditavel: screenshot do usuario na rota `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video` e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
+- Validacoes executadas: `pnpm.cmd --dir frontend exec biome check --write "src/app/app/community/[slug]/post/[id]/logic.tsx"`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, `git diff --check`, HTTP local `200` na rota do post demo e validacao local de DOM/CSS confirmando label com `font-size: 12px`, `font-weight: 600` e `line-height: 12px`.
