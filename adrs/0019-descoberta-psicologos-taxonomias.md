@@ -1,4 +1,4 @@
-﻿# ADR-0019: Descoberta real de psicólogos com filtros por taxonomia
+# ADR-0019: Descoberta real de psicólogos com filtros por taxonomia
 
 ## Status
 
@@ -186,6 +186,24 @@ o header interno `Explorar / Minha Busca`, mantendo as chips em uma única linha
     (`y=744.5`) e em uma única linha.
   - HTTP local em `/app/psychologists` respondeu `200`.
 
+## Complemento 2026-06-26 - animacao de entrada da modal de filtros
+
+### Contexto
+
+A modal de criar post ja possuia o padrao de entrada mobile-first tipo bottom sheet, movendo de `translate-y-full` para `translate-y-0`. O produto pediu a mesma percepcao de movimento para a modal de filtros da descoberta de psicologos, que antes aparecia diretamente sem transicao de deslocamento.
+
+### Decisao
+
+- Manter o portal atual da modal de filtros em `document.body`, sem instalar pacote novo e sem trocar a arquitetura da tela.
+- Separar estado de montagem (`isFiltersOpen`) e estado visual (`isFilterSheetOpen`) para permitir animacao de entrada e saida.
+- Aplicar fade no backdrop e `transition-transform duration-300 ease-out` no painel, iniciando em `translate-y-full` e finalizando em `translate-y-0`, seguindo o mesmo principio usado na criacao de post.
+- Preservar foco, fechamento por Escape/backdrop, formulario React Hook Form, filtros reais e query live da busca dentro da modal.
+
+### Consequencias
+
+- A modal de filtros ganha continuidade visual com a modal de criar post e passa a subir na tela em vez de surgir estaticamente.
+- O fechamento fica mais suave, com desmontagem apos o tempo da transicao.
+- Nenhum contrato de API, schema, endpoint, pacote ou regra de dominio foi alterado.
 ## Pendências
 
 - Curadoria ou ingestão real dos catálogos `specialty`, `service` e `approach`.

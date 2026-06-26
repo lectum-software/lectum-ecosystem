@@ -97,6 +97,7 @@ const DEFAULT_NAV_BAR_HEIGHT = 72;
 const PSYCHOLOGISTS_BACKGROUND_VIDEO_SELECTOR = "video[data-psychologists-background='true']";
 const VIDEO_SINGLE_TAP_DELAY_MS = 260;
 const VIDEO_ANALYTICS_HEARTBEAT_MS = 5000;
+const FILTER_DIALOG_CLOSE_DELAY_MS = 300;
 const PRESENTATION_VIDEO_RETENTION_BUCKETS = Array.from(
   { length: 20 },
   (_, index) => (index + 1) * 5,
@@ -856,6 +857,7 @@ export const PsychologistsLogic = () => {
   const filterValues = useMemo(() => readFiltersFromParams(params), [params]);
   const currentPage = useMemo(() => getPageFromParams(params), [params]);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const [shareFeedback, setShareFeedback] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [isVideoMuted, setIsVideoMuted] = useState(true);
@@ -884,6 +886,8 @@ export const PsychologistsLogic = () => {
   const [activePsychologistIndex, setActivePsychologistIndex] = useState(0);
 
   const filterDialogRef = useRef<HTMLDivElement | null>(null);
+  const filterDialogCloseTimerRef = useRef<number | null>(null);
+  const filterDialogOpenFrameRef = useRef<number | null>(null);
   const feedContainerRef = useRef<HTMLDivElement | null>(null);
   const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
@@ -1002,13 +1006,50 @@ export const PsychologistsLogic = () => {
     [filterModalSearchDraft, filterSuggestionsDirectory.data?.data],
   );
 
+  const openFilterDialogWithMotion = useCallback(() => {
+    if (filterDialogCloseTimerRef.current) {
+      window.clearTimeout(filterDialogCloseTimerRef.current);
+      filterDialogCloseTimerRef.current = null;
+    }
+
+    if (filterDialogOpenFrameRef.current) {
+      window.cancelAnimationFrame(filterDialogOpenFrameRef.current);
+    }
+
+    setIsFilterSheetOpen(false);
+    setIsFiltersOpen(true);
+
+    filterDialogOpenFrameRef.current = window.requestAnimationFrame(() => {
+      setIsFilterSheetOpen(true);
+      filterDialogOpenFrameRef.current = null;
+    });
+  }, []);
+
+  const closeFilterDialogWithMotion = useCallback(() => {
+    if (filterDialogOpenFrameRef.current) {
+      window.cancelAnimationFrame(filterDialogOpenFrameRef.current);
+      filterDialogOpenFrameRef.current = null;
+    }
+
+    setIsFilterSheetOpen(false);
+
+    if (filterDialogCloseTimerRef.current) {
+      window.clearTimeout(filterDialogCloseTimerRef.current);
+    }
+
+    filterDialogCloseTimerRef.current = window.setTimeout(() => {
+      setIsFiltersOpen(false);
+      filterDialogCloseTimerRef.current = null;
+    }, FILTER_DIALOG_CLOSE_DELAY_MS);
+  }, []);
+
   const handleFilterSuggestionSelect = useCallback(
     (psychologist: DirectoryPsychologist) => {
       setFilterModalSearchDraft("");
-      setIsFiltersOpen(false);
+      closeFilterDialogWithMotion();
       router.push(`/app/psychologist/${psychologist.id}`);
     },
-    [router],
+    [closeFilterDialogWithMotion, router],
   );
 
   const filterSearchSuggestionsSlot = useMemo(() => {
@@ -1170,6 +1211,14 @@ export const PsychologistsLogic = () => {
 
   useEffect(() => {
     return () => {
+      if (filterDialogCloseTimerRef.current) {
+        window.clearTimeout(filterDialogCloseTimerRef.current);
+      }
+
+      if (filterDialogOpenFrameRef.current) {
+        window.cancelAnimationFrame(filterDialogOpenFrameRef.current);
+      }
+
       resetVideoInteractionState();
       clearSwipeHintTimers();
     };
@@ -1768,17 +1817,22 @@ export const PsychologistsLogic = () => {
     [shouldShowVideo],
   );
 
-  const handleSubmitFilters = filters.hook.handleSubmit((values) => {
-    const nextValues = normalizeFormValues({
-      ...filterValues,
-      ...values,
-    });
+  const handleSubmitFilters = useCallback(
+    (event: FormEvent<HTMLFormElement>) => {
+      void filters.hook.handleSubmit((values) => {
+        const nextValues = normalizeFormValues({
+          ...filterValues,
+          ...values,
+        });
 
-    setSearchDraft(nextValues.search || "");
-    setFilterModalSearchDraft(nextValues.search || "");
-    applyFilterValues(nextValues);
-    setIsFiltersOpen(false);
-  });
+        setSearchDraft(nextValues.search || "");
+        setFilterModalSearchDraft(nextValues.search || "");
+        applyFilterValues(nextValues);
+        closeFilterDialogWithMotion();
+      })(event);
+    },
+    [applyFilterValues, closeFilterDialogWithMotion, filterValues, filters.hook],
+  );
 
   const clearFilters = useCallback(() => {
     filters.hook.reset(defaultPsychologistsFilterValues);
@@ -1786,8 +1840,8 @@ export const PsychologistsLogic = () => {
     setFilterModalSearchDraft("");
     exitSearchMode();
     applyFilterValues(defaultPsychologistsFilterValues);
-    setIsFiltersOpen(false);
-  }, [applyFilterValues, exitSearchMode, filters.hook]);
+    closeFilterDialogWithMotion();
+  }, [applyFilterValues, closeFilterDialogWithMotion, exitSearchMode, filters.hook]);
 
   const toggleFilterFeature = useCallback(
     (name: FilterFeatureKey) => {
@@ -1842,14 +1896,14 @@ export const PsychologistsLogic = () => {
 
     filters.hook.reset(filterValues);
     setFilterModalSearchDraft(filterValues.search || "");
-    setIsFiltersOpen(true);
-  }, [exitSearchMode, filterValues, filters.hook, shouldShowVideo]);
+    openFilterDialogWithMotion();
+  }, [exitSearchMode, filterValues, filters.hook, openFilterDialogWithMotion, shouldShowVideo]);
 
   const handleFiltersClose = useCallback(() => {
     filters.hook.reset(filterValues);
     setFilterModalSearchDraft(filterValues.search || "");
-    setIsFiltersOpen(false);
-  }, [filterValues, filters.hook]);
+    closeFilterDialogWithMotion();
+  }, [closeFilterDialogWithMotion, filterValues, filters.hook]);
 
   const handleExploreModeClick = useCallback(
     (event: { stopPropagation: () => void }) => {
@@ -2279,7 +2333,7 @@ export const PsychologistsLogic = () => {
 
     const timer = window.setTimeout(() => {
       filterDialogRef.current?.focus();
-    }, 0);
+    }, 280);
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -4330,13 +4384,19 @@ export const PsychologistsLogic = () => {
                   <div
                     aria-labelledby="psychologist-filters-title"
                     aria-modal="true"
-                    className="fixed inset-0 z-[140] flex items-end justify-center bg-foreground/55 p-0 text-foreground backdrop-blur-sm sm:items-center sm:p-6"
+                    className={cn(
+                      "fixed inset-0 z-[140] flex items-end justify-center bg-foreground/55 p-0 text-foreground backdrop-blur-sm transition-opacity duration-200 ease-out sm:items-center sm:p-6",
+                      isFilterSheetOpen ? "opacity-100" : "opacity-0",
+                    )}
                     data-psychologists-scroll-lock="true"
                     onMouseDown={handleFiltersClose}
                     role="dialog"
                   >
                     <div
-                      className="flex h-[100dvh] w-full flex-col overflow-hidden rounded-none border-border bg-surface shadow-[0_24px_70px_rgb(15_23_42_/_26%)] sm:h-auto sm:max-h-[min(880px,calc(100dvh-2rem))] sm:max-w-[560px] sm:rounded-[32px] sm:border"
+                      className={cn(
+                        "flex h-[100dvh] w-full flex-col overflow-hidden rounded-none border-border bg-surface text-foreground shadow-[0_24px_70px_rgb(15_23_42_/_26%)] transition-transform duration-300 ease-out motion-reduce:transition-none sm:h-auto sm:max-h-[min(880px,calc(100dvh-2rem))] sm:max-w-[560px] sm:rounded-[32px] sm:border",
+                        isFilterSheetOpen ? "translate-y-0" : "translate-y-full",
+                      )}
                       onMouseDown={(event) => event.stopPropagation()}
                       ref={filterDialogRef}
                       role="document"

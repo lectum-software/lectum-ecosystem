@@ -1400,3 +1400,21 @@ Validacoes do complemento:
 - `git diff --check`
 - Browser local via Chrome/CDP em `http://localhost:3000/app/psychologists` com viewport mobile `390x844`: as chips `Desconto 1ª sessão`, `Valor social` e `Aceita convênios` renderizaram abaixo da bio no mesmo eixo vertical (`y=744.5`) e em uma unica linha.
 - HTTP local em `/app/psychologists` respondeu `200`.
+
+## Execucao complementar: animacao slide-up na modal de filtros (2026-06-26)
+
+- Pedido do usuario: replicar na modal de filtros de `/app/psychologists` o movimento de entrada da modal de criar novo post, subindo de baixo para cima.
+- Referencia visual/auditavel: modal de criacao de post em `frontend/src/app/app/community/[slug]/post/new/logic.tsx`, screenshots do usuario em `/app/psychologists` e referencia local `_product/proto/Filtros de Psicólogos - Serviços Expandidos.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: a modal de filtros passou a manter estado visual separado (`isFilterSheetOpen`) para animar `translate-y-full` -> `translate-y-0` com `transition-transform duration-300 ease-out`, enquanto o backdrop faz fade-in suave.
+- Frontend: o fechamento por Escape, backdrop, Limpar e Aplicar filtros preserva o comportamento anterior, mas agora aguarda o tempo da transicao antes de desmontar a modal.
+- Escopo: sem mudancas de backend, Prisma, migrations, packages, dados, endpoints, filtros reais, paginacao, ranking ou rotas.
+- ADR atualizado: `adrs/0019-descoberta-psicologos-taxonomias.md`.
+
+Validacoes do complemento:
+
+- `pnpm.cmd --dir frontend exec biome check --write src/app/app/psychologists/logic.tsx`
+- `pnpm.cmd --dir frontend check`
+- `pnpm.cmd --dir frontend build`
+- `pnpm.cmd check`
+- `git diff --check`
+- HTTP local em `/app/psychologists` respondeu `200`.
