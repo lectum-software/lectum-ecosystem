@@ -32,11 +32,11 @@ As referências visuais são norte de produto e layout. Elas não autorizam recr
 
 ## Contexto
 
-Avaliações são sensíveis para reputação. Não podem ser criadas sem usuário real nem com profissional fake. A elegibilidade deve estar ligada a contato/interação persistida.
+Avaliações são sensíveis para reputação. Não podem ser criadas sem usuário real nem com profissional fake. Regra vigente de 2026-06-26: qualquer usuário autenticado pode avaliar psicólogo real/publicado, sem exigir contato WhatsApp/`contact_request` ou Plano Profissional.
 
 ## Objetivo
 
-Permitir que pacientes avaliem psicólogos com regra de elegibilidade real e lista de avaliações feitas.
+Permitir que qualquer usuário autenticado avalie psicólogos com regra mínima real e lista de avaliações feitas.
 
 ## Pré-requisitos e bloqueios
 
@@ -56,33 +56,32 @@ Implementação esperada:
 
 - Criar formulário de avaliação com nota, texto e critérios.
 - Criar confirmação pós-envio.
-- Criar lista de avaliações feitas pelo paciente.
+- Criar lista de avaliações feitas pelo usuário.
 - Usar mutations e queries React Query.
-- Bloquear UI quando usuário não for elegível.
+- Bloquear UI apenas quando a API indicar impedimento real (alvo inexistente, autoavaliação ou duplicidade).
 
 ## Escopo backend
 
-**Guarda de papel:** estes endpoints são exclusivos de paciente, vivem sob `/api/private/patient/*` e são protegidos por `requireRole("paciente")` (criado na TASK-12), aplicado no mount em `write.ts`, **fail-closed** (papel divergente → `403`). O escopo de ownership usa `req.auth.id` (autor da avaliação). O **alvo** da avaliação é um psicólogo (`:id` = `user.id`), mas a ação é executada **pelo** paciente sob `/api/private/patient/...`. Ver `DATA-MODEL.md` "Camadas de autenticação e autorização" e `adrs/0002-arquitetura-auth-roles.md`.
+**Guarda/autorização vigente (2026-06-26):** a rota canônica de avaliações vive sob `/api/private/user/reviews*` e usa apenas `_auth`, permitindo qualquer usuário autenticado. A rota legada `/api/private/patient/reviews*` pode continuar montada com `requireRole("paciente")` para compatibilidade, mas o frontend deve consumir o namespace neutro. O escopo de ownership usa `req.auth.id` (autor da avaliação). O alvo da avaliação é um psicólogo (`:id` = `user.id`). Ver `DATA-MODEL.md` "Camadas de autenticação e autorização" e `adrs/0002-arquitetura-auth-roles.md`.
 
 Implementação esperada:
 
-- Criar a avaliação usando o modelo `professional_review` (ver `DATA-MODEL.md`): `rating Int` validado na faixa 1..5, `comment String?`, `status @default("publicada")` (`"publicada" | "oculta"`), `@@unique([psychologist_id, author_id])` (1 avaliação por par paciente/psicólogo).
-- Validar elegibilidade antes de permitir avaliar. A regra de elegibilidade (quem pode avaliar — ex.: exigir `contact_request` prévio) é **decisão de ADR desta task**; o modelo `professional_review` apenas armazena o resultado. Registrar a regra escolhida no ADR e referenciar a forma do schema em `DATA-MODEL.md`.
-- Endpoints para criar/listar avaliações do paciente.
+- Criar a avaliação usando o modelo `professional_review` (ver `DATA-MODEL.md`): `rating Int` validado na faixa 1..5, `comment String?`, `status @default("publicada")` (`"publicada" | "oculta"`), `@@unique([psychologist_id, author_id])` (1 avaliação por par usuário/psicólogo).
+- Validar elegibilidade mínima antes de permitir avaliar: psicólogo alvo existe/publicado, autor não avalia o próprio perfil e ainda não existe avaliação ativa do mesmo par. Não exigir `contact_request`, contato por WhatsApp, Plano Profissional ou cortesia manual.
+- Endpoints para criar/listar avaliações do usuário autenticado.
 - Recalcular `psychologist_profile.rating_avg`/`rating_count` (ver `DATA-MODEL.md`: `rating_avg` é a média ×100) de forma transacional após criar avaliação aprovada; o recálculo detalhado é coberto na TASK-19.
 - Moderar conteúdo via `status` (`"oculta"`) sem apagar o registro real (soft-only).
 
 Modelos/tabelas envolvidos (ver `DATA-MODEL.md`):
 
 - `professional_review`
-- `contact_request` (insumo de elegibilidade, conforme ADR)
 - `psychologist_profile` (agregados `rating_avg`/`rating_count`)
 
-Endpoints esperados (privados, sob `/api/private/patient`):
+Endpoints esperados (privados, canônicos sob `/api/private/user`):
 
-- POST `/api/private/patient/reviews` (alvo: psicólogo `:id` = `user.id` no body)
-- GET `/api/private/patient/reviews` (avaliações feitas pelo paciente autenticado)
-- GET `/api/private/patient/reviews/eligibility/:id` (`:id` = `user.id` do psicólogo alvo)
+- POST `/api/private/user/reviews` (alvo: psicólogo `:id` = `user.id` no body)
+- GET `/api/private/user/reviews` (avaliações feitas pelo usuário autenticado)
+- GET `/api/private/user/reviews/eligibility/:id` (`:id` = `user.id` do psicólogo alvo)
 
 ## Contrato técnico detalhado
 
@@ -168,8 +167,8 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 - Dependencias confirmadas: TASK-02, TASK-15 e TASK-16 estavam concluidas.
 - Builder Quick Copy ativo (`vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a`) nao foi usado nesta sessao por indisponibilidade operacional; a validacao visual usou as imagens locais obrigatorias `_product/proto/Avaliar do Psicologo.jpg`, `_product/proto/Confirmacao de Avaliacao.jpg` e `_product/proto/Avaliacoes Feitas - Paciente.jpg`.
-- Regra de elegibilidade registrada na ADR-0023: paciente so avalia psicologo publicado apos `contact_request` real de WhatsApp persistido pela TASK-16.
-- Backend criado em `/api/private/patient/reviews`, protegido no mount por `requireRole("paciente")`, com listagem, elegibilidade e criacao transacional.
+- Regra original registrada na ADR-0023 exigia `contact_request`; essa decisão foi superada em 2026-06-26 pela regra vigente sem contato WhatsApp obrigatório.
+- Backend originalmente criado em `/api/private/patient/reviews`; a rota canônica vigente é `/api/private/user/reviews*`, com apenas `_auth`, mantendo a rota antiga como compatibilidade protegida por `requireRole("paciente")`.
 - Frontend criado nas rotas `/app/reviews/new`, `/app/reviews/success` e `/app/reviews`, mobile-first, usando React Query, `api/req`, `api/callers`, query keys e fundacao de formulario da TASK-02.
 - Nao houve alteracao em `backend/prisma/schema.prisma` nem em migrations; `db:migrate` nao se aplicou nesta task.
 
@@ -246,3 +245,22 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Builder/Quick Copy segue indisponível como ferramenta callable neste ambiente; a validação visual usou a tela local e as referências locais `_product/proto/Avaliações Feitas - Paciente.jpg`, `_product/proto/Posts Salvos.jpg` e `_product/proto/Meus Posts - Paciente.jpg`.
 - ADR atualizado: `adrs/0023-avaliacoes-paciente-elegibilidade-contato.md`.
 - Validações executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome headless local no `next start` em `/app/reviews`, confirmando o header em grid/card surface branco, botão circular azul-claro de voltar para `/app/profile` e título preservado. A API exibiu erro real de conexão/listagem com token de smoke, sem uso de mock.
+
+
+## Execução complementar - 2026-06-26 - Avaliações abertas para qualquer usuário
+
+- Pedido do usuário: qualquer usuário deve poder avaliar o psicólogo, sem critérios de elegibilidade por contato e sem necessidade de contato pelo WhatsApp.
+- Backend: rota canônica adicionada em `/api/private/user/reviews*` com apenas `_auth`; a rota legada `/api/private/patient/reviews*` permanece montada com `requireRole("paciente")` para compatibilidade/fail-closed.
+- Regra de criação atualizada: não consulta `contact_request`, não exige Plano Profissional/cortesia do alvo e permite autores de qualquer role autenticado. Mantém alvo real/publicado, bloqueio de autoavaliação e 1 avaliação por par `author_id`/`psychologist_id`.
+- Frontend: chamadas de avaliações migradas para `/api/private/user/reviews*`; tela `/app/reviews/new` deixa de comunicar necessidade de contato WhatsApp e carrega o formulário quando a API confirma o alvo.
+- Documentação atualizada em `DATA-MODEL.md` e ADR-0023; sem novos packages, sem mocks e sem alteração em `backend/prisma/schema.prisma` ou migrations.
+
+### Validações complementares
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke HTTP real em `GET /api/private/user/reviews/eligibility/cmqmg35850000asuheq2ucwd0` com usuário autenticado de role `psicologo`, retornando `eligible=true` e `contact_request_id=null`.
+- Browser local em `/app/reviews/new?psychologist_id=cmqmg35850000asuheq2ucwd0`, validando que a tela não exibe bloqueio por WhatsApp e renderiza o formulário quando autenticada.

@@ -9,19 +9,19 @@ import type {
 import { handleReq } from "@/api/handle";
 
 export const getPatientReviews = async (query: PatientReviewsQuery = {}) => {
-  const handle = callEndpoint({ route: "/api/private/patient/reviews", query });
+  const handle = callEndpoint({ route: "/api/private/user/reviews", query });
   return handleReq<PatientReviewsResponse>(handle);
 };
 
 export const getReviewEligibility = async (id: string) => {
   const handle = callEndpoint({
-    route: "/api/private/patient/reviews/eligibility/:id",
+    route: "/api/private/user/reviews/eligibility/:id",
     params: { id },
   });
   return handleReq<ReviewEligibilityResponse>(handle);
 };
 
 export const createPatientReview = async (body: CreatePatientReviewPayload) => {
-  const handle = callEndpoint({ route: "/api/private/patient/reviews", method: "POST", body });
+  const handle = callEndpoint({ route: "/api/private/user/reviews", method: "POST", body });
   return handleReq<CreatePatientReviewResponse>({ ...handle, showSuccess: true });
 };

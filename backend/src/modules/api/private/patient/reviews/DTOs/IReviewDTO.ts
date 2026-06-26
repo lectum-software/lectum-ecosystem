@@ -1,13 +1,7 @@
 ﻿import type { user } from "@/interfaces/objects";
 import type { PaginationResponse } from "@/interfaces/pagination";
 
-export type ReviewEligibilityReason =
-  | "eligible"
-  | "not_found"
-  | "contact_required"
-  | "already_reviewed"
-  | "own_profile"
-  | "professional_plan_required";
+export type ReviewEligibilityReason = "eligible" | "not_found" | "already_reviewed" | "own_profile";
 
 export type PatientReviewItem = {
   id: string;

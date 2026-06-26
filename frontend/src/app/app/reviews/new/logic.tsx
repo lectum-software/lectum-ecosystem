@@ -18,16 +18,11 @@ import { useReviewForm } from "./use-form";
 const criteria = ["Acolhimento", "Clareza", "Pontualidade"];
 
 const reasonText = (reason?: string) => {
-  if (reason === "contact_required")
-    return "Você precisa registrar um contato pelo WhatsApp com este profissional antes de avaliar.";
   if (reason === "already_reviewed")
     return "Você já avaliou este profissional. Consulte sua lista de avaliações feitas.";
   if (reason === "own_profile") return "Não é possível avaliar o próprio perfil.";
-  if (reason === "professional_plan_required")
-    return "Este psicólogo precisa ter Plano Profissional ativo ou cortesia manual para receber avaliações.";
-  return "Não foi possível liberar a avaliação para este profissional.";
+  return "Não foi possível encontrar este profissional para avaliação.";
 };
-
 const getPsychologistTitle = (gender?: string | null) => {
   const normalized = gender?.toLowerCase();
 
@@ -95,7 +90,7 @@ export const ReviewsNewLogic = () => {
         <EmptyState
           icon={UserRound}
           title="Escolha um psicólogo para avaliar"
-          description="A avaliação precisa estar vinculada a um profissional real com quem você já registrou contato."
+          description="A avaliação precisa estar vinculada a um profissional real da Lectum."
           action={
             <Button asChild>
               <Link href="/app/psychologists">Buscar psicólogos</Link>
@@ -119,7 +114,7 @@ export const ReviewsNewLogic = () => {
           <span className="h-10 w-10" />
         </header>
 
-        {eligibility.isLoading ? <LoadingState label="Verificando elegibilidade" /> : null}
+        {eligibility.isLoading ? <LoadingState label="Carregando profissional" /> : null}
         {eligibility.isError ? (
           <InlineAlert title="Não foi possível verificar" variant="error">
             Não foi possível conectar à API agora. Tente novamente em instantes.

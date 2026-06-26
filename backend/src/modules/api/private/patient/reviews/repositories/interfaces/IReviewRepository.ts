@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   CreateReviewResponse,
   IReviewIndexDTO,
   IReviewStoreDTO,
@@ -8,6 +8,6 @@
 
 export interface IReviewRepository {
   index(data: IReviewIndexDTO): Promise<PatientReviewsResponse>;
-  eligibility(patientId: string, psychologistId: string): Promise<ReviewEligibilityResponse>;
+  eligibility(authorId: string, psychologistId: string): Promise<ReviewEligibilityResponse>;
   create(data: IReviewStoreDTO): Promise<CreateReviewResponse | ReviewEligibilityResponse>;
 }

@@ -32,7 +32,6 @@
     "patient_phone_invalid": "Informe um número de WhatsApp válido para continuar",
     "whatsapp_unavailable": "Este perfil ainda não possui WhatsApp disponível para contato",
     "whatsapp_not_verified": "Este perfil ainda não possui WhatsApp verificado",
-    "review_contact_required": "Você precisa registrar contato com este profissional pelo WhatsApp antes de avaliar.",
     "review_already_exists": "Você já avaliou este profissional.",
     "review_own_profile": "Você não pode avaliar o próprio perfil.",
     "professional_reviews_professional_plan": "Somente psicólogos com Plano Profissional ativo ou cortesia manual podem receber avaliações.",

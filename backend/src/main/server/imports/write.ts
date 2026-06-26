@@ -107,6 +107,7 @@ mountRoute("/api/public/google/login", apiPublicGoogleLogin);
 mountRoute("/api/public/google/me", apiPublicGoogleMe);
 mountRoute("/api/public/user", apiPublicUser);
 mountRoute("/api/private/user/favorites", privateAuth, apiPrivatePatientFavorites);
+mountRoute("/api/private/user/reviews", privateAuth, apiPrivatePatientReviews);
 mountRoleGuardedRoute("/api/private/patient/favorites", "paciente", apiPrivatePatientFavorites);
 mountRoleGuardedRoute("/api/private/patient/follows", "paciente", apiPrivatePatientFollows);
 mountRoleGuardedRoute("/api/private/patient/profile", "paciente", apiPrivatePatientProfile);

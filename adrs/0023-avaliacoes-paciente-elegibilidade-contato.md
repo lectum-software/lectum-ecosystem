@@ -1,16 +1,16 @@
-﻿# ADR-0023 - Avaliações de profissionais por contato prévio
+﻿# ADR-0023 - Avaliações de profissionais
 
 ## Status
 
-Accepted
+Accepted (atualizada em 2026-06-26)
 
 ## Contexto
 
 A TASK-17 exige que pacientes avaliem psicólogos sem mocks e com elegibilidade real. O modelo `professional_review` já existia conforme `DATA-MODEL.md`, mas a regra de quem pode avaliar precisava ser decidida antes de liberar o formulário.
 
-## Decisão
+## Decisão original - 2026-06-09 (superada pela atualização de 2026-06-26)
 
-A avaliação de um profissional por paciente exige um `contact_request` real, não deletado, do paciente autenticado (`req.auth.id`) para o psicólogo alvo, com `channel = "whatsapp"`. Essa intenção de contato é persistida pela TASK-16 antes de abrir o `wa.me`, então ela é o melhor insumo disponível no MVP para indicar interação real sem depender de integração clínica externa ainda inexistente.
+A decisão original exigia `contact_request` real, não deletado, do paciente autenticado (`req.auth.id`) para o psicólogo alvo, com `channel = "whatsapp"`. Essa regra foi usada no MVP inicial, mas não é mais a regra vigente desde 2026-06-26.
 
 Também foi decidido que:
 
@@ -21,9 +21,9 @@ Também foi decidido que:
 - Ao criar avaliação publicada, `psychologist_profile.rating_avg` é recalculado como média x100 e `rating_count` em transação.
 - Moderação futura deve usar `status = "oculta"`, sem apagar o registro real.
 
-## Consequências
+## Consequências originais (históricas)
 
-- Pacientes sem contato WhatsApp prévio recebem bloqueio de elegibilidade em PT-BR.
+- Pacientes sem contato WhatsApp prévio recebiam bloqueio de elegibilidade em PT-BR.
 - A UI pode exibir o formulário somente quando a API privada confirma `eligible = true`.
 - A regra evita avaliações de usuários sem relação persistida e mantém o schema de avaliações alinhado ao `DATA-MODEL.md`.
 - A verificação não prova atendimento clínico concluído; é uma regra MVP baseada na interação persistida disponível.
@@ -51,7 +51,7 @@ A tela **Avaliar Profissional** foi simplificada para reduzir atrito e aumentar 
 - A elegibilidade agora retorna dados públicos adicionais do psicólogo (CRP, gênero e status verificado) para montar o card de avaliação sem depender de bio/headline.
 - O depoimento passou a ser obrigatório no frontend e no validador do endpoint de criação, preservando o campo nullable no banco apenas por compatibilidade com registros históricos.
 
-Consequência: novas avaliações seguem com nota 1..5, vínculo real por contato WhatsApp e depoimento obrigatório, sem migração de banco e sem criar campos paralelos.
+Consequência histórica: novas avaliações seguiam com nota 1..5, vínculo real por contato WhatsApp e depoimento obrigatório, sem migração de banco e sem criar campos paralelos. A exigência de contato foi superada em 2026-06-26.
 
 ## Atualização - 2026-06-17 - Confirmação pós-avaliação
 
@@ -94,3 +94,31 @@ Validação complementar:
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
 - Chrome headless local no `next start` em `/app/reviews`: sucesso, validando header em grid/card surface branco, botão circular azul-claro de voltar para `/app/profile` e título `Avaliações feitas`. A listagem exibiu erro real de conexão/API com token de smoke, sem uso de mock.
+
+## Atualização - 2026-06-26 - Avaliações abertas a qualquer usuário
+
+A decisão original de exigir contato WhatsApp fica superada pela regra de produto vigente: qualquer usuário autenticado pode avaliar um psicólogo público real, sem critérios de elegibilidade por contato e sem necessidade de clicar/registrar contato pelo WhatsApp.
+
+Decisão:
+
+- A rota canônica passa a ser `/api/private/user/reviews*`, protegida apenas por `_auth`, para aceitar autores de qualquer `role` autenticado.
+- A rota legada `/api/private/patient/reviews*` permanece sob `requireRole("paciente")` para compatibilidade e para manter o namespace antigo fail-closed; o frontend deve usar o namespace neutro.
+- A elegibilidade de criação não consulta mais `contact_request`, não exige contato WhatsApp e não exige Plano Profissional/cortesia manual do psicólogo alvo.
+- Permanecem as travas reais: psicólogo alvo existente/publicado com vídeo público, bloqueio de autoavaliação, `@@unique([psychologist_id, author_id])`, nota 1..5 e depoimento obrigatório nas novas criações.
+- `contact_request` continua existindo para analytics/KPI de WhatsApp, mas não é mais insumo de avaliação.
+
+Consequências:
+
+- Usuários sem contato WhatsApp prévio deixam de receber "Avaliação indisponível" por esse motivo.
+- Psicólogos autenticados podem avaliar outros psicólogos, mas não o próprio perfil.
+- O histórico de avaliações segue auditável por `author_id`; não houve mudança de schema ou migração.
+
+Validação complementar planejada/executada na task:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke HTTP real em `GET /api/private/user/reviews/eligibility/cmqmg35850000asuheq2ucwd0` com usuário autenticado de role `psicologo`, retornando `eligible=true` e `contact_request_id=null`.
+- Browser local em `/app/reviews/new?psychologist_id=cmqmg35850000asuheq2ucwd0`, confirmando ausência do bloqueio por WhatsApp.

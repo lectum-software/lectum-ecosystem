@@ -90,7 +90,7 @@ export class ReviewRepository implements IReviewRepository {
     };
   }
 
-  async eligibility(patientId: string, psychologistId: string): Promise<ReviewEligibilityResponse> {
+  async eligibility(authorId: string, psychologistId: string): Promise<ReviewEligibilityResponse> {
     const psychologist = await prisma.user.findFirst({
       where: {
         id: psychologistId,
@@ -144,14 +144,11 @@ export class ReviewRepository implements IReviewRepository {
     };
 
     if (!psychologist) return { ...base, eligible: false, reason: "not_found" };
-    if (patientId === psychologistId) return { ...base, eligible: false, reason: "own_profile" };
-    if ((psychologist.psychologist_profile?.subscriptions.length || 0) === 0) {
-      return { ...base, eligible: false, reason: "professional_plan_required" };
-    }
+    if (authorId === psychologistId) return { ...base, eligible: false, reason: "own_profile" };
 
     const existing = await prisma.professional_review.findUnique({
       where: {
-        psychologist_id_author_id: { psychologist_id: psychologistId, author_id: patientId },
+        psychologist_id_author_id: { psychologist_id: psychologistId, author_id: authorId },
       },
       select: { id: true, deleted: true },
     });
@@ -165,33 +162,20 @@ export class ReviewRepository implements IReviewRepository {
       };
     }
 
-    const contact = await prisma.contact_request.findFirst({
-      where: {
-        user_id: patientId,
-        psychologist_id: psychologistId,
-        channel: "whatsapp",
-        deleted: false,
-      },
-      orderBy: { createdAt: "desc" },
-      select: { id: true },
-    });
-
-    if (!contact) return { ...base, eligible: false, reason: "contact_required" };
-
-    return { ...base, eligible: true, reason: "eligible", contact_request_id: contact.id };
+    return { ...base, eligible: true, reason: "eligible", contact_request_id: null };
   }
 
   async create(data: IReviewStoreDTO): Promise<CreateReviewResponse | ReviewEligibilityResponse> {
-    const patientId = data.auth.id!;
+    const authorId = data.auth.id!;
     const psychologistId = data.b.psychologist_id;
-    const eligible = await this.eligibility(patientId, psychologistId);
+    const eligible = await this.eligibility(authorId, psychologistId);
 
     if (!eligible.eligible) return eligible;
 
     return prisma.$transaction(async (tx) => {
       const review = await tx.professional_review.create({
         data: {
-          author_id: patientId,
+          author_id: authorId,
           psychologist_id: psychologistId,
           rating: data.b.rating,
           comment: data.b.comment.trim(),

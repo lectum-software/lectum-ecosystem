@@ -109,8 +109,8 @@ Convenção `requireRole(...)` — middleware fino aplicado **depois** do `_auth
 | Namespace backend | Guard | Audiência/papel | Tasks |
 |---|---|---|---|
 | `/api/private/psychologist/*` | `requireRole("psicologo")` | psicólogo autogestão (perfil, CRP/CFP, analytics, assinatura) | 10, 11, 18, 19, 20, 31, 32, 33 |
-| `/api/private/patient/*` | `requireRole("paciente")` | paciente autogestão (onboarding, avaliar) e rotas legadas de favoritos/follows quando mantidas | 08, 14, 17, 21 |
-| `/api/private/user/favorites/*` | só `_auth` | favoritos de psicólogos de qualquer usuário autenticado | 14 |
+| `/api/private/patient/*` | `requireRole("paciente")` | paciente autogestão (onboarding) e rotas legadas de favoritos/follows/avaliações quando mantidas | 08, 14, 17, 21 |
+| `/api/private/user/favorites/*`, `/api/private/user/reviews*` | só `_auth` | favoritos e avaliações de psicólogos por qualquer usuário autenticado | 14, 17 |
 | `/api/private/directory/*` | só `_auth` | qualquer autenticado (descoberta/leitura de psicólogos) | 13, 15, 16 |
 | `/api/private/community/*`, `/api/private/posts/*` | só `_auth` | qualquer autenticado | 22-28 |
 | `/api/private/notification/*`, conta | só `_auth` | qualquer autenticado | 29, 30 |
@@ -309,19 +309,16 @@ Especialidade, serviço e abordagem são filtros da busca (TASK-13) e seções d
 | Campo | Tipo | Notas |
 |---|---|---|
 | `psychologist_id` | `String` | alvo |
-| `author_id` | `String` | paciente autor |
+| `author_id` | `String` | usuário autor |
 | `rating` | `Int` | 1..5 (validar faixa) |
 | `comment` | `String?` | |
 | `response` | `String?` | resposta do psicólogo (PRD: "Resposta do profissional") |
 | `responded_at` | `DateTime?` | |
 | `status` | `String @default("publicada")` | `"publicada" \| "oculta"` (moderação/fraude — PRD §18 risco) |
-| `@@unique([psychologist_id, author_id])` | | 1 avaliação por par; elegibilidade (ex.: exigir contato prévio) decidida em ADR da TASK-17 |
+| `@@unique([psychologist_id, author_id])` | | 1 avaliação por par usuário/psicólogo; não exige contato prévio nem Plano Profissional |
 | `@@index([psychologist_id, status])` | | agregação alimenta `psychologist_profile.rating_avg/count` (TASK-19) |
 
-Regra vigente revalidada em 2026-06-09: somente psicólogos com entitlement profissional ativo
-(`professional_subscription.status="ativa"` em plano não gratuito, incluindo cortesia manual `admin_grant`)
-podem receber novas avaliações. A criação pelo paciente deve barrar perfis sem Plano Profissional; a
-autogestão do psicólogo em `/api/private/psychologist/reviews` também exige esse entitlement.
+Regra vigente revalidada em 2026-06-26: qualquer usuário autenticado pode criar avaliação para um psicólogo público real pela rota canônica `/api/private/user/reviews*`, sem exigir contato WhatsApp/`contact_request` e sem exigir Plano Profissional ou cortesia manual do alvo. Mantêm-se: psicólogo alvo existente/publicado, bloqueio de autoavaliação, 1 avaliação por par usuário/psicólogo e validação de nota/depoimento. A autogestão do psicólogo em `/api/private/psychologist/reviews` continua própria do psicólogo e pode manter regras específicas de produto/entitlement quando documentadas na respectiva task.
 
 ---
 
@@ -603,8 +600,8 @@ Backend privado — **o prefixo determina o guard** (ver "Camadas de autenticaç
 
 - **Descoberta/leitura de psicólogos** (chamada por pacientes): `/api/private/directory/psychologists`, `/api/private/directory/psychologists/:id` → só `_auth`. **Não** usar `/api/private/psychologists` para descoberta — esse namespace é confundível com autogestão.
 - **Autogestão do psicólogo**: `/api/private/psychologist/*` (perfil, CRP, CFP, analytics, assinatura) → `requireRole("psicologo")`.
-- **Favoritos de psicólogos**: `/api/private/user/favorites` e `/api/private/user/favorites/:id` → só `_auth`, porque o produto permite favorito para qualquer usuário autenticado.
-- **Autogestão do paciente**: `/api/private/patient/*` (onboarding, avaliar; favoritos/follows legados se mantidos) → `requireRole("paciente")`.
+- **Relacionamentos/avaliações de psicólogos por usuário**: `/api/private/user/favorites`, `/api/private/user/favorites/:id`, `/api/private/user/reviews` e `/api/private/user/reviews/eligibility/:id` → só `_auth`, porque o produto permite favorito e avaliação para qualquer usuário autenticado.
+- **Autogestão do paciente**: `/api/private/patient/*` (onboarding; favoritos/follows/avaliações legados se mantidos) → `requireRole("paciente")`.
 - **Comunidade/posts** (qualquer autenticado): `/api/private/community`, `/api/private/community/feed/posts`, `/api/private/community/:slug`, `/api/private/community/:slug/members`, `/api/private/community/:slug/posts`, `/api/private/posts/:id` (`GET`, `PUT`, `DELETE` conforme permissão), `/api/private/posts/:id/replies`, `/api/private/posts/:id/vote`, `/api/private/posts/:id/save`. Singular `community`/`posts`.
 - **Conta/preferências compartilhadas** (qualquer autenticado): `/api/private/account/*`, incluindo `GET/PUT /api/private/account/tips` para dicas de onboarding por usuário.
 - Cada task deve usar exatamente esses prefixos; divergência exige atualizar este documento.
