@@ -545,3 +545,10 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Escopo: sem mudanças de backend, Prisma, migrations, packages, endpoint, filtros reais, paginação, favoritos persistidos ou tracking de WhatsApp.
 - ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
 - Validações executadas: `pnpm.cmd --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `git diff --check` e HTTP local `200` em `/app/favorites`.
+## Complemento 2026-06-26 - contador sem alterar layout das chips
+
+- Pedido do usuario: replicar as configuracoes de layout das chips da Comunidade em Favoritos, alterando somente a largura necessaria para incluir os contadores, sem alterar tamanhos nem fontes.
+- Frontend: `favoriteFilterChipClassName` permanece com a mesma classe-base de `communityPostSortChipClassName` (`h-8`, `min-h-8`, `gap-1.5`, `px-3`, `text-xs`, `font-bold`, `leading-none`, estados e foco equivalentes).
+- Frontend: o contador deixou de ser badge com tamanho/fonte propria e passou a ser um `span` simples com `whitespace-nowrap text-xs font-bold leading-none`, igual ao texto da chip; assim a unica diferenca e a largura natural adicional para o numero real.
+- Escopo: sem mudancas de backend, Prisma, migrations, packages, endpoint, filtros reais, paginacao, favoritos persistidos ou tracking de WhatsApp.
+- ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.

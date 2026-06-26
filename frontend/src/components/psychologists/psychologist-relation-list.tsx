@@ -135,14 +135,6 @@ const favoriteFilterChipClassName = (active: boolean) =>
       : "border-[#DDE8F4] bg-white text-[#5F718A] hover:border-[#BFD8F4] hover:bg-[#F8FBFF] hover:text-[#123B6D] dark:border-border dark:bg-surface/70 dark:text-muted dark:hover:bg-surface-muted/70 dark:hover:text-foreground",
   );
 
-const favoriteFilterCountClassName = (active: boolean) =>
-  cn(
-    "inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full px-1 text-[9px] font-extrabold leading-none shadow-none",
-    active
-      ? "border border-white/70 bg-white text-[#247BD1]"
-      : "border border-[#D7E8FA] bg-[#F4FAFF] text-[#247BD1]",
-  );
-
 const config = {
   favorites: {
     title: "Favoritos",
@@ -250,8 +242,8 @@ const FavoriteFilterChips = ({
               onClick={() => onSelect(chip.key)}
               type="button"
             >
-              <span className="whitespace-nowrap font-bold leading-none">{chip.label}</span>
-              <span className={favoriteFilterCountClassName(active)}>
+              <span className="whitespace-nowrap text-xs font-bold leading-none">{chip.label}</span>
+              <span className="whitespace-nowrap text-xs font-bold leading-none">
                 {formatFavoriteChipCount(counts[chip.key])}
               </span>
             </button>

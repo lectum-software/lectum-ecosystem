@@ -734,3 +734,20 @@ O produto apontou corretamente que os ajustes anteriores continuaram criando var
 - Favoritos passa a usar a mesma configuração operacional das chips da Comunidade, com a única diferença visual necessária sendo o badge de contagem real.
 - A duplicação local reduz risco de regressão na Comunidade e deixa explícito o vínculo visual pedido pelo produto.
 - Nenhum contrato de API, schema, endpoint, pacote ou regra de domínio foi alterado.
+## Complemento 2026-06-26 - contador sem badge nas chips de Favoritos
+
+### Contexto
+
+O produto pediu que as chips de Favoritos replicassem as configuracoes de layout das chips da Comunidade, alterando somente a largura necessaria para comportar os contadores. A presenca de badge proprio nos contadores alterava a leitura de tamanho/fonte mesmo quando a classe-base da chip era equivalente.
+
+### Decisao
+
+- Manter `favoriteFilterChipClassName` com a mesma classe-base de `communityPostSortChipClassName`.
+- Remover o badge proprio de contador em Favoritos.
+- Renderizar o contador real como texto simples com `whitespace-nowrap text-xs font-bold leading-none`, igual ao label da chip.
+- Preservar a contagem real do endpoint e a rolagem horizontal existente.
+
+### Consequencias
+
+- A chip de Favoritos passa a diferir da Comunidade apenas pela largura natural necessaria para exibir o numero.
+- A altura, fonte, peso, gap, padding e estados visuais permanecem equivalentes ao padrao da Comunidade.
