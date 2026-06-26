@@ -223,3 +223,34 @@ O ajuste anterior deixou `Ver respostas`/`Ocultar respostas` ultracompacto. A ca
 - `git diff --check`
 - HTTP local `200` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`
 - Validacao local de DOM/CSS confirmou o label com `font-size: 12px`, `font-weight: 600` e `line-height: 12px`.
+
+## Atualizacao 2026-06-26 - rolagem infinita no detalhe do post
+
+### Contexto
+
+A navegacao por paginas no fim do detalhe do post interrompia a leitura da conversa no mobile e obrigava o usuario a alternar entre paginas (`Anterior`/`Proxima`) dentro de uma tela que visualmente funciona como thread continua.
+
+### Decisao
+
+- Remover a navegacao visual de paginacao da tela principal do post.
+- Manter o contrato paginado existente do backend (`page`/`limit`) para evitar mudanca de API, schema ou migracao.
+- No frontend, assinar as paginas carregadas com queries finitas independentes via `usePostRepliesPages`, mantendo a familia de cache `posts/:id/replies` usada pelas mutations existentes.
+- Acumular as paginas ja carregadas em uma lista unica e deduplicada, carregando a proxima pagina por `IntersectionObserver` quando o sentinel no fim da discussao entra perto da viewport.
+- Preservar o fluxo de `focusReplyId` com uma consulta auxiliar: primeiro descobre-se a pagina real do comentario focado e depois carregam-se as paginas ate esse ponto para manter scroll/highlight sem voltar a exibir paginacao.
+
+### Consequencias
+
+- A experiencia passa a ser de leitura continua/infinita na mesma tela, alinhada ao comportamento esperado para uma thread longa.
+- O backend continua paginando respostas diretas ao post, evitando render gigante e mantendo o limite operacional da TASK-26.
+- As mutations de voto, salvar, editar/excluir e invalidacao continuam compativeis, porque cada pagina carregada permanece no formato `PostRepliesResponse` do cache existente, sem introduzir `InfiniteData` em uma chave usada por optimistic updates antigos.
+- A alteracao e apenas frontend/API caller; nao modifica dados, Prisma, endpoints, packages, ordenacao, profundidade visual ou regras de permissao.
+
+### Validacao
+
+- `pnpm.cmd --dir frontend exec biome check --write "src/api/callers/posts/index.tsx" "src/app/app/community/[slug]/post/[id]/logic.tsx"`
+- `pnpm.cmd --dir frontend check`
+- `pnpm.cmd --dir frontend build`
+- `pnpm.cmd check`
+- `git diff --check`
+- HTTP local `200` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`
+- Chrome headless local em viewport mobile 390x844 validando ausencia de `Anterior`, `Proxima` e contador de paginas no DOM renderizado.

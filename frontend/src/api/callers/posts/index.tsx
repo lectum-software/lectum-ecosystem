@@ -1,6 +1,12 @@
 "use client";
 
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import keys from "@/api/cache/keys";
 import type {
   CreatePostReplyPayload,
@@ -175,6 +181,22 @@ export const usePostReplies = (id: string, query: PostRepliesQuery = {}, enabled
     enabled: Boolean(id) && enabled,
     refetchOnWindowFocus: false,
     retry: false,
+  });
+};
+
+export const usePostRepliesPages = (
+  id: string,
+  queries: PostRepliesQuery[] = [],
+  enabled = true,
+) => {
+  return useQueries({
+    queries: queries.map((query) => ({
+      queryKey: keys.posts.replies(id, query),
+      queryFn: () => api.getPostReplies(id, query),
+      enabled: Boolean(id) && enabled,
+      refetchOnWindowFocus: false,
+      retry: false,
+    })),
   });
 };
 

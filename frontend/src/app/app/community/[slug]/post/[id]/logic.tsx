@@ -5,8 +5,6 @@ import {
   BadgeCheck,
   Bookmark,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   ChevronUp,
   FileText,
   Flag,
@@ -44,6 +42,7 @@ import {
   useDeleteReply,
   usePostDetail,
   usePostReplies,
+  usePostRepliesPages,
   usePostReplyThread,
   useReportPost,
   useReportReply,
@@ -95,6 +94,9 @@ import {
 
 const REPLIES_LIMIT = 8;
 const MAX_REPLY_TREE_DEPTH = 4;
+
+const createReplyPageRange = (page: number) =>
+  Array.from({ length: Math.max(1, page) }, (_, index) => index + 1);
 
 type ApiErrorData = {
   error?: string;
@@ -2029,49 +2031,6 @@ const PostReportModal = ({
   );
 };
 
-const Pagination = ({
-  currentPage,
-  disabled,
-  onPageChange,
-  pages,
-}: {
-  currentPage: number;
-  disabled?: boolean;
-  onPageChange: (page: number) => void;
-  pages: number;
-}) => {
-  if (pages <= 1) return null;
-
-  return (
-    <nav
-      aria-label="Paginação de respostas"
-      className="flex items-center justify-between gap-3 rounded-[22px] border border-border bg-white p-3 shadow-[var(--lectum-shadow-soft)] dark:bg-surface"
-    >
-      <Button
-        disabled={currentPage <= 1 || disabled}
-        onClick={() => onPageChange(currentPage - 1)}
-        type="button"
-        variant="outline"
-      >
-        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-        Anterior
-      </Button>
-      <span className="text-sm font-bold text-muted">
-        {currentPage} de {pages}
-      </span>
-      <Button
-        disabled={currentPage >= pages || disabled}
-        onClick={() => onPageChange(currentPage + 1)}
-        type="button"
-        variant="outline"
-      >
-        Próxima
-        <ChevronRight className="h-4 w-4" aria-hidden="true" />
-      </Button>
-    </nav>
-  );
-};
-
 const RepliesList = ({
   activeInlineReplyFormRef,
   currentUserId,
@@ -2211,8 +2170,9 @@ export const PostDetailLogic = () => {
   const isMobile = useIsPostDetailMobile();
   const currentUserId = useAppSelector((state) => state.user?.id ?? null);
   const conversion = useProgressiveConversion();
-  const [page, setPage] = useState(1);
+  const [loadedReplyPages, setLoadedReplyPages] = useState(() => createReplyPageRange(1));
   const [activeFocusReplyId, setActiveFocusReplyId] = useState<string | null>(focusReplyIdFromUrl);
+  const [focusLookupReplyId, setFocusLookupReplyId] = useState<string | null>(focusReplyIdFromUrl);
   const [mobileReplyTarget, setMobileReplyTarget] = useState<ReplyTarget>(null);
   const [desktopReplyTargets, setDesktopReplyTargets] = useState<ReplyTargetMap>({});
   const [replyError, setReplyError] = useState<string | null>(null);
@@ -2223,12 +2183,18 @@ export const PostDetailLogic = () => {
   const composerRef = useRef<HTMLFormElement | null>(null);
   const inlineReplyFormRef = useRef<HTMLFormElement | null>(null);
   const inlineReplyHasDraftRef = useRef(false);
+  const loadMoreRepliesRef = useRef<HTMLDivElement | null>(null);
   const mediaPermission = useReplyMediaPermission();
   const postQuery = usePostDetail(postId);
-  const repliesQuery = usePostReplies(
+  const replyPageQueries = usePostRepliesPages(
     postId,
-    { focusReplyId: activeFocusReplyId ?? undefined, page, limit: REPLIES_LIMIT },
+    loadedReplyPages.map((page) => ({ page, limit: REPLIES_LIMIT })),
     Boolean(postQuery.data),
+  );
+  const focusReplyLookupQuery = usePostReplies(
+    postId,
+    { focusReplyId: focusLookupReplyId ?? undefined, page: 1, limit: REPLIES_LIMIT },
+    Boolean(postQuery.data && focusLookupReplyId),
   );
   const voteMutation = useVotePost(postId);
   const saveMutation = useSavePost(postId);
@@ -2258,25 +2224,108 @@ export const PostDetailLogic = () => {
     onError: (error) => setDeleteReplyError(resolveReplyError(error)),
   });
   const post = postQuery.data?.post;
-  const replies = useMemo(() => repliesQuery.data?.data ?? [], [repliesQuery.data?.data]);
+  const replies = useMemo(() => {
+    const seenReplyIds = new Set<string>();
+    const loadedReplies: PostReply[] = [];
+
+    for (const query of replyPageQueries) {
+      for (const reply of query.data?.data ?? []) {
+        if (seenReplyIds.has(reply.id)) continue;
+
+        seenReplyIds.add(reply.id);
+        loadedReplies.push(reply);
+      }
+    }
+
+    return loadedReplies;
+  }, [replyPageQueries]);
+  const totalReplyPages = Math.max(
+    0,
+    focusReplyLookupQuery.data?.pages ?? 0,
+    ...replyPageQueries.map((query) => query.data?.pages ?? 0),
+  );
+  const highestLoadedReplyPage = loadedReplyPages[loadedReplyPages.length - 1] ?? 1;
+  const isRepliesFetching =
+    focusReplyLookupQuery.isFetching || replyPageQueries.some((query) => query.isFetching);
+  const isInitialRepliesLoading =
+    replies.length === 0 && replyPageQueries.some((query) => query.isLoading || query.isPending);
+  const hasMoreReplies = totalReplyPages > 0 && highestLoadedReplyPage < totalReplyPages;
+  const canLoadMoreReplies = hasMoreReplies && !isRepliesFetching;
+  const isLoadingMoreReplies = replies.length > 0 && isRepliesFetching;
+  const repliesQueryError = replyPageQueries.find((query) => query.isError)?.error;
   const postError = postQuery.isError ? resolvePostError(postQuery.error) : null;
-  const repliesError = repliesQuery.isError ? resolvePostError(repliesQuery.error) : null;
+  const repliesError = repliesQueryError ? resolvePostError(repliesQueryError) : null;
   const hasDesktopReplyTargets = !isMobile && Object.keys(desktopReplyTargets).length > 0;
   const activeMobileReplyTarget = isMobile ? mobileReplyTarget : null;
   const visibleInlineReplyTargets = isMobile ? EMPTY_REPLY_TARGETS : desktopReplyTargets;
-  const syncedFocusReplyIdRef = useRef<string | null>(focusReplyIdFromUrl);
   const resetReplyFocusHighlight = useReplyFocusHighlight(
     activeFocusReplyId,
-    repliesQuery.isFetching,
+    isRepliesFetching || Boolean(focusLookupReplyId),
   );
 
   useEffect(() => {
-    if (focusReplyIdFromUrl === syncedFocusReplyIdRef.current) return;
+    if (!postId) return;
 
-    syncedFocusReplyIdRef.current = focusReplyIdFromUrl;
-    resetReplyFocusHighlight();
-    setActiveFocusReplyId(focusReplyIdFromUrl);
-  }, [focusReplyIdFromUrl, resetReplyFocusHighlight]);
+    const syncTimer = window.setTimeout(() => {
+      resetReplyFocusHighlight();
+      setLoadedReplyPages(createReplyPageRange(1));
+      setFocusLookupReplyId(focusReplyIdFromUrl);
+      setActiveFocusReplyId(focusReplyIdFromUrl);
+    }, 0);
+
+    return () => window.clearTimeout(syncTimer);
+  }, [focusReplyIdFromUrl, postId, resetReplyFocusHighlight]);
+
+  useEffect(() => {
+    if (!focusLookupReplyId || !focusReplyLookupQuery.data?.page) return;
+
+    const focusPage = focusReplyLookupQuery.data.page;
+    const syncTimer = window.setTimeout(() => {
+      setLoadedReplyPages((currentPages) => {
+        if (focusPage <= (currentPages[currentPages.length - 1] ?? 1)) {
+          return currentPages;
+        }
+
+        return createReplyPageRange(focusPage);
+      });
+      setFocusLookupReplyId(null);
+    }, 0);
+
+    return () => window.clearTimeout(syncTimer);
+  }, [focusLookupReplyId, focusReplyLookupQuery.data?.page]);
+
+  const requestNextRepliesPage = useCallback(() => {
+    setLoadedReplyPages((currentPages) => {
+      const currentLastPage = currentPages[currentPages.length - 1] ?? 1;
+      if (totalReplyPages > 0 && currentLastPage >= totalReplyPages) return currentPages;
+
+      const nextPage = currentLastPage + 1;
+      if (currentPages.includes(nextPage)) return currentPages;
+
+      return [...currentPages, nextPage];
+    });
+  }, [totalReplyPages]);
+
+  useEffect(() => {
+    const target = loadMoreRepliesRef.current;
+    if (!target || !canLoadMoreReplies) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+
+        requestNextRepliesPage();
+      },
+      {
+        rootMargin: "360px 0px 520px",
+        threshold: 0.01,
+      },
+    );
+
+    observer.observe(target);
+
+    return () => observer.disconnect();
+  }, [canLoadMoreReplies, requestNextRepliesPage]);
 
   const sharePost = async () => {
     if (!post || typeof window === "undefined") return;
@@ -2449,6 +2498,7 @@ export const PostDetailLogic = () => {
 
     resetReplyFocusHighlight();
     setActiveFocusReplyId(createdReply.id);
+    setFocusLookupReplyId(createdReply.id);
 
     if (parentReplyId) {
       closeDesktopReplyTarget();
@@ -2630,7 +2680,7 @@ export const PostDetailLogic = () => {
                 errorMessage={repliesError}
                 focusReplyId={activeFocusReplyId}
                 inlineReplyTargets={visibleInlineReplyTargets}
-                loading={repliesQuery.isLoading || repliesQuery.isPending}
+                loading={isInitialRepliesLoading}
                 mediaPermission={mediaPermission}
                 onCancelInlineReplyTarget={closeDesktopReplyTarget}
                 onInlineReplyDraftChange={setInlineReplyDraftState}
@@ -2655,19 +2705,22 @@ export const PostDetailLogic = () => {
                 votePending={voteMutation.isPending}
               />
 
-              {repliesQuery.isFetching && !repliesQuery.isLoading ? (
-                <LoadingState label="Atualizando respostas" />
+              {hasMoreReplies || isLoadingMoreReplies ? (
+                <div
+                  aria-live="polite"
+                  className="grid min-h-10 place-items-center px-4 py-2 text-xs font-semibold text-muted"
+                  ref={loadMoreRepliesRef}
+                >
+                  {isLoadingMoreReplies ? (
+                    <span className="inline-flex items-center gap-2">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                      Carregando mais respostas
+                    </span>
+                  ) : (
+                    <span className="sr-only">Continue rolando para carregar mais respostas.</span>
+                  )}
+                </div>
               ) : null}
-
-              <Pagination
-                currentPage={repliesQuery.data?.page ?? page}
-                disabled={repliesQuery.isFetching}
-                onPageChange={(nextPage) => {
-                  setActiveFocusReplyId(null);
-                  setPage(nextPage);
-                }}
-                pages={repliesQuery.data?.pages ?? 0}
-              />
             </div>
 
             <PostReportModal

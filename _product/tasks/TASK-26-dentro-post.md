@@ -1120,3 +1120,15 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual/auditavel: screenshot do usuario na rota `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video` e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
 - Validacoes executadas: `pnpm.cmd --dir frontend exec biome check --write "src/app/app/community/[slug]/post/[id]/logic.tsx"`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, `git diff --check`, HTTP local `200` na rota do post demo e validacao local de DOM/CSS confirmando label com `font-size: 12px`, `font-weight: 600` e `line-height: 12px`.
+
+## Complemento 2026-06-26 - rolagem infinita no detalhe do post
+
+- Pedido do usuario: dentro do post, nao exibir navegacao por paginacao e carregar mais comentarios/respostas na mesma tela conforme o usuario rola para baixo.
+- Frontend: `/app/community/[slug]/post/[id]` removeu o componente visual de paginacao (`Anterior`, contador `N de N` e `Proxima`) do fim da discussao.
+- Frontend: as respostas diretas ao post agora usam paginas reais do endpoint existente, mas sao assinadas em paralelo via TanStack Query (`usePostRepliesPages`) e acumuladas em uma unica lista, preservando cache, invalidacoes e optimistic update de votos/salvos em cada pagina carregada.
+- Frontend: um sentinel com `IntersectionObserver` carrega a proxima pagina automaticamente quando o usuario se aproxima do fim da lista; durante a busca, o rodape exibe apenas `Carregando mais respostas`.
+- Deep links e respostas recem-criadas continuam usando `focusReplyId`: a tela descobre a pagina real do comentario focado, carrega as paginas ate esse ponto e preserva o destaque/scroll para o item.
+- Nao houve alteracao de backend, Prisma schema, migrations, endpoints, payloads, packages, votos, salvos, ordenacao ou regras de permissao.
+- Fonte visual/auditavel: pedido do usuario e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
+- Validacoes executadas nesta execucao: `pnpm.cmd --dir frontend exec biome check --write "src/api/callers/posts/index.tsx" "src/app/app/community/[slug]/post/[id]/logic.tsx"`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, `git diff --check`, HTTP local `200` na rota do post demo e Chrome headless mobile 390x844 confirmando ausencia de `Anterior`, `Proxima` e contador de paginas no DOM renderizado.
