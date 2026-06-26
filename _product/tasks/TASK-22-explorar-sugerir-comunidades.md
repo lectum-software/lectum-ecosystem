@@ -207,3 +207,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Não houve mudança de schema Prisma, endpoints, packages, mocks ou dados artificiais de posts.
 - ADR criado: `adrs/0165-catalogo-comunidades-depressao-tdah.md`.
 - Validações executadas: `pnpm --dir backend db:migrate`, consulta Prisma do catálogo, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check` e HTTP local `200` para `/app/community`, asset frontend de Depressão e ícone backend de Depressão.
+
+## Execucao complementar: fundo branco restaurado em Explorar Comunidades (2026-06-26)
+
+- Pedido do usuario: alterar o background da pagina `/app/community` para branco, removendo a aparencia cinza do fundo estrutural.
+- Frontend: o `PrivateTemplate` da tela passou de `bg-background` para `bg-surface`, que resolve para branco no tema claro e preserva a semantica de tema no modo escuro.
+- Frontend: o header sticky da busca tambem passou para `bg-surface`, evitando uma faixa cinza durante a rolagem no topo da pagina.
+- O ajuste preserva shell privado, sidebar, navegacao mobile, busca, cards, carrossel, filtros, dados reais, links e estados de loading/erro/vazio.
+- Nao houve alteracao de backend, Prisma schema, migrations, endpoints, payloads, dados, ordenacao ou packages.
+- Fonte visual/auditavel: screenshot do usuario em `/app/community` e referencia local `_product/proto/Explorar Comunidades.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0107-explorar-comunidades-conteudo-centralizado.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check --write "src/app/app/community/logic.tsx"`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check`, HTTP local `200` em `/app/community` e Chrome/CDP local validando `contentBackground` e `stickyBackground` como `rgb(255, 255, 255)`.

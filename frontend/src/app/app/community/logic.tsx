@@ -304,11 +304,11 @@ export const CommunityLogic = () => {
   return (
     <PrivateTemplate
       allowAnonymous
-      contentClassName="relative min-h-screen max-w-none overflow-x-hidden bg-background px-0 pt-0 sm:pt-0"
+      contentClassName="relative min-h-screen max-w-none overflow-x-hidden bg-surface px-0 pt-0 sm:pt-0"
       navigationTheme="solidWhite"
     >
       <section className="relative z-10 mx-auto grid w-full max-w-[430px] min-w-0 gap-6 overflow-x-clip px-5 pb-10 sm:max-w-2xl lg:max-w-4xl">
-        <div className="sticky top-0 z-20 -mx-5 bg-background px-5 py-2.5">
+        <div className="sticky top-0 z-20 -mx-5 bg-surface px-5 py-2.5">
           <div className="flex items-center gap-3">
             <button
               aria-label="Voltar"

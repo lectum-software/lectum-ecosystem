@@ -90,3 +90,31 @@ Validacao complementar:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Chrome/CDP em `/app/community` com viewport mobile 390x844 e desktop 1440x900 validando ausencia de overflow horizontal e `box-shadow` sem profundidade real nos cards, containers auxiliares, botao de voltar e seta do carrossel.
+
+## Atualizacao 2026-06-26 - background branco restaurado
+
+### Contexto
+
+A rota `/app/community` voltou a exibir o fundo estrutural cinza do token `bg-background`, contrariando a decisao anterior de deixar a exploracao de comunidades integrada a uma pagina branca. O usuario pediu explicitamente que o background desta pagina fosse branco.
+
+### Decisao
+
+- Usar `bg-surface` no wrapper de conteudo da tela, em vez de `bg-background`, para obter branco no tema claro sem hardcode de cor e mantendo compatibilidade com tema escuro.
+- Aplicar o mesmo token `bg-surface` no header sticky da busca para que o topo nao forme uma faixa cinza durante a rolagem.
+- Nao alterar componentes internos, cards, carrossel, dados, chamadas de API ou navegacao.
+
+### Consequencias
+
+- A tela `/app/community` volta a parecer uma superficie branca unica no tema claro, alinhada ao refinamento visual aprovado em 2026-06-17.
+- A mudanca permanece puramente visual/frontend e nao afeta backend, Prisma, endpoints, payloads, dados, ordenacao ou packages.
+- O uso de token preserva suporte a dark mode sem introduzir valor hardcoded de branco.
+
+### Validacao
+
+- `pnpm --dir frontend exec biome check --write "src/app/app/community/logic.tsx"`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- HTTP local `200` em `/app/community`
+- Chrome/CDP local validando `contentBackground` e `stickyBackground` como `rgb(255, 255, 255)`.
