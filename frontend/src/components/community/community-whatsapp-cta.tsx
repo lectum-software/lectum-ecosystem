@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {
   PsychologistWhatsAppButtonContent,
   type PsychologistWhatsAppIdentity,
@@ -23,6 +24,9 @@ type CommunityWhatsAppCtaProps = {
   stopPropagation?: boolean;
 };
 
+const WHATSAPP_CTA_FORWARD_ICON_SRC =
+  "/svg/arrow_forward_24dp_64748B_FILL0_wght400_GRAD0_opsz24.svg";
+
 export const toCommunityWhatsAppIdentity = (
   author: CommunityWhatsAppAuthor,
 ): PsychologistWhatsAppIdentity => ({
@@ -43,7 +47,7 @@ export const CommunityWhatsAppCta = ({
   stopPropagation = false,
 }: CommunityWhatsAppCtaProps) => {
   const headingLabel = "WhatsApp";
-  const actionLabel = `Falar com ${getFirstName(psychologist.name)} →`;
+  const actionLabel = `Falar com ${getFirstName(psychologist.name)}`;
 
   return (
     <PsychologistWhatsAppRedirectButton
@@ -66,6 +70,14 @@ export const CommunityWhatsAppCta = ({
           iconClassName="h-4 w-4 text-[#64748B] dark:text-muted"
           label={actionLabel}
           labelClassName="text-left leading-[1.35] text-current"
+        />
+        <Image
+          alt=""
+          aria-hidden="true"
+          className="h-3.5 w-3.5 shrink-0"
+          height={14}
+          src={WHATSAPP_CTA_FORWARD_ICON_SRC}
+          width={14}
         />
       </span>
     </PsychologistWhatsAppRedirectButton>

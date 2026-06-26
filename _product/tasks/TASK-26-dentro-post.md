@@ -1087,3 +1087,13 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Frontend: o botao explicito de expandir/recolher respostas foi reduzido de escala, com menor margem superior, `text-[10px]`, `font-semibold`, `leading-none`, padding menor e chevrons de 12px.
 - O controle continua abaixo da barra de acoes do comentario raiz e preserva aria-label, aria-expanded, contagem, collapse/expand, deep links e a arvore visual com conectores.
 - Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, votos, salvos, ordenacao ou criacao de respostas.
+
+
+## Complemento 2026-06-25 - icone SVG no CTA WhatsApp
+
+- Pedido do usuario: no botao de WhatsApp, substituir a seta textual de `Falar com {nome}` pelo SVG fornecido `arrow_forward_24dp_64748B_FILL0_wght400_GRAD0_opsz24.svg`.
+- Frontend: o asset foi versionado em `frontend/public/svg/arrow_forward_24dp_64748B_FILL0_wght400_GRAD0_opsz24.svg` e renderizado com `next/image` em `CommunityWhatsAppCta`, preservando a regra do projeto de nao usar `<img>`.
+- Frontend: o texto permanece `Falar com {primeiro nome}` e o icone SVG decorativo aparece ao final da linha, mantendo hierarquia, espacamento, tracking, abertura do WhatsApp e bloqueio de propagacao dos cards.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, permissoes, votos, salvos, ranking ou dados persistidos.
+- Fonte visual/auditavel: pedido do usuario e asset local vinculado; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Validacoes executadas nesta execucao: `pnpm --dir frontend exec biome check --write "src/components/community/community-whatsapp-cta.tsx"`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check` e HTTP local `200` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`.

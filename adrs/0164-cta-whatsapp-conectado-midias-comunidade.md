@@ -54,3 +54,23 @@ A decisão evita duas hierarquias concorrentes para a mesma ação de conversão
 - `pnpm.cmd check`
 - HTTP local `200` em `http://127.0.0.1:3000/app/community/feed`
 - HTTP local `200` em `http://127.0.0.1:3000/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`
+
+
+## Atualizacao 2026-06-25 - seta do CTA como asset SVG
+
+O CTA de WhatsApp deixa de depender da seta textual no label `Falar com {primeiro nome}` e passa a renderizar o SVG fornecido pelo usuario como asset local versionado. A decisao mantem a copy `Falar com {primeiro nome}` no componente compartilhado e adiciona um icone decorativo ao final da linha via `next/image`, sem `<img>`.
+
+### Consequencias
+
+- O icone fica consistente com o asset solicitado e preserva o tom discreto `#64748B`.
+- A abertura do WhatsApp, tracking e modal de transicao continuam centralizados em `PsychologistWhatsAppRedirectButton`.
+- CTAs anexados a midia e CTAs independentes seguem usando a mesma composicao textual.
+
+### Validacao desta atualizacao
+
+- `pnpm --dir frontend exec biome check --write "src/components/community/community-whatsapp-cta.tsx"`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- HTTP local `200` em `http://127.0.0.1:3000/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`
