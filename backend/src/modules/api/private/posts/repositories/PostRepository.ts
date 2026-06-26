@@ -256,10 +256,10 @@ const buildWhatsappUrl = (value?: string | null) => {
   return `https://wa.me/${digits}?text=${encodeURIComponent(CONTACT_MESSAGE)}`;
 };
 
-const anonymousDisplayNameForPost = (postId: string) => {
+const anonymousDisplayNameForAuthor = (authorId: string) => {
   let hash = 0;
 
-  for (const character of postId) {
+  for (const character of authorId) {
     hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
   }
 
@@ -405,7 +405,7 @@ const toPostResponse = (
     item.author,
     item.upvotes_count,
     anonymous,
-    anonymous ? anonymousDisplayNameForPost(item.id) : undefined,
+    anonymous ? anonymousDisplayNameForAuthor(item.author.id) : undefined,
   );
 
   return {

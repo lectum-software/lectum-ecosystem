@@ -1132,3 +1132,11 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual/auditavel: pedido do usuario e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
 - Validacoes executadas nesta execucao: `pnpm.cmd --dir frontend exec biome check --write "src/api/callers/posts/index.tsx" "src/app/app/community/[slug]/post/[id]/logic.tsx"`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, `git diff --check`, HTTP local `200` na rota do post demo e Chrome headless mobile 390x844 confirmando ausencia de `Anterior`, `Proxima` e contador de paginas no DOM renderizado.
+
+## Complemento 2026-06-26 - alias anônimo estável no detalhe do post
+
+- Pedido do usuário: manter o mesmo identificador anônimo para um membro em posts anônimos diferentes, para preservar contexto comunitário e apoiar respostas dos psicólogos sem expor a identidade real.
+- Backend: o detalhe do post e as listas relacionadas passaram a receber o mesmo alias `Membro Anônimo #XXXX` derivado de `author.id`, em vez de um número derivado do post.
+- O comportamento preserva anonimato visual: nome real, avatar e perfil do paciente continuam mascarados quando `anonymous=true`.
+- Escopo: sem mudança de schema Prisma, migrations, packages, endpoints, payloads, frontend, votos, salvos, árvore de comentários ou criação de respostas.
+- ADR criado: `adrs/0167-alias-anonimo-estavel-por-usuario.md`.

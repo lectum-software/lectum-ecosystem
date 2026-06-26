@@ -434,3 +434,11 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Fonte visual/auditavel: screenshot do usuario em `/app/community/feed` e `_product/proto/Feed Comunidade.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0166-header-feed-comunidades-premium.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check --write -- "src/app/app/community/[slug]/logic.tsx" "src/utils/community.ts"`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check`, HTTP local `200` em `/app/community/feed` e HTTP local `200` em `/app/community/ansiedade-em-equilibrio`.
+
+## Complemento 2026-06-26 - alias anônimo estável por usuário
+
+- Pedido do usuário: posts anônimos devem manter o mesmo identificador para o mesmo membro, permitindo que psicólogos reconheçam continuidade entre publicações sem revelar identidade real.
+- Backend: o alias `Membro Anônimo #XXXX` deixou de ser calculado a partir do `post.id` e passou a ser calculado a partir do `author.id`, mantendo o mesmo número para todos os posts anônimos daquele usuário em qualquer comunidade.
+- A anonimização continua ocultando nome real, avatar e link de identidade do paciente; psicólogos continuam exibidos normalmente e não usam alias anônimo.
+- Escopo: sem mudança de schema Prisma, migrations, packages, endpoints, payloads, frontend, permissões, ranking, votos, salvos ou respostas.
+- ADR criado: `adrs/0167-alias-anonimo-estavel-por-usuario.md`.
