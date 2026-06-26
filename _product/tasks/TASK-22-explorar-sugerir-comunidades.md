@@ -218,3 +218,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Fonte visual/auditavel: screenshot do usuario em `/app/community` e referencia local `_product/proto/Explorar Comunidades.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0107-explorar-comunidades-conteudo-centralizado.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check --write "src/app/app/community/logic.tsx"`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check`, HTTP local `200` em `/app/community` e Chrome/CDP local validando `contentBackground` e `stickyBackground` como `rgb(255, 255, 255)`.
+
+## Execucao complementar: imagem topo full-width e erro sem faixa vermelha (2026-06-26)
+
+- Pedido do usuario: em `/app/community/suggest`, fazer a imagem do topo preencher todo o container horizontal e remover a faixa vermelha `Nao foi possivel enviar` exibida abaixo do campo.
+- Frontend: a ilustracao `community-request-illustration.svg` deixou de usar largura maxima centralizada e padding no container; agora o `next/image` usa `w-full` dentro do frame, preenchendo a largura disponivel do card.
+- Frontend: o `InlineAlert` de erro geral foi removido do formulario. Erros de validacao de campo continuam aparecendo no proprio controller da `TASK-02`, evitando duplicidade visual.
+- Frontend: erros reais de API/rede continuam acessiveis via texto simples com `role="alert"`, sem o card/faixa vermelha e sem o titulo `Nao foi possivel enviar`.
+- O ajuste preserva rota, shell privado, formulario React Hook Form/Zod, submit real, estado de pending, redirecionamento de sucesso, endpoint e payload.
+- Nao houve alteracao de backend, Prisma schema, migrations, endpoints, dados, permissao ou packages.
+- Fonte visual/auditavel: screenshot do usuario em `/app/community/suggest` e referencia local `_product/proto/Sugerir Comunidade.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0106-ilustracao-solicitacao-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check --write "src/app/app/community/suggest/logic.tsx"`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check` e HTTP local `200` em `/app/community/suggest`. Observacao de browser: a rota renderiza guard de perfil protegido em perfil headless sem sessao; a validacao visual autenticada foi baseada no screenshot do usuario e no codigo renderizado da tela protegida.

@@ -3,10 +3,9 @@
 import { ArrowLeft, Loader2, Send } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useSuggestCommunity } from "@/api/callers/community";
 import { components } from "@/components/controllers";
-import { InlineAlert } from "@/components/ui/inline-alert";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
@@ -60,13 +59,6 @@ export const SuggestCommunityLogic = () => {
     onError: (error) => setApiError(resolveSuggestError(error)),
   });
 
-  const visibleError = useMemo(() => {
-    if (apiError) return apiError;
-    if (!hook.formState.isSubmitted) return null;
-
-    return Object.values(hook.formState.errors)[0]?.message?.toString() ?? null;
-  }, [apiError, hook.formState.errors, hook.formState.isSubmitted]);
-
   const onSubmit = hook.handleSubmit((values) => {
     setApiError(null);
     mutation.mutate(toSuggestCommunityPayload(values));
@@ -97,10 +89,10 @@ export const SuggestCommunityLogic = () => {
         </header>
 
         <section className="grid gap-5 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)] sm:p-6">
-          <div className="grid justify-items-center rounded-[24px] border border-border/70 bg-surface-muted/60 px-3 py-4 sm:px-6">
+          <div className="overflow-hidden rounded-[24px] border border-border/70 bg-surface-muted/60">
             <Image
               alt="Grupo diverso sentado em círculo representando apoio e comunidade"
-              className="h-auto w-full max-w-[358px] object-contain"
+              className="h-auto w-full object-cover"
               height={192}
               priority
               src={COMMUNITY_REQUEST_ILLUSTRATION_SRC}
@@ -135,10 +127,10 @@ export const SuggestCommunityLogic = () => {
               })}
             </div>
 
-            {visibleError ? (
-              <InlineAlert title="Não foi possível enviar" variant="error">
-                {visibleError}
-              </InlineAlert>
+            {apiError ? (
+              <p className="px-1 text-danger text-sm font-medium leading-5" role="alert">
+                {apiError}
+              </p>
             ) : null}
 
             <Button
