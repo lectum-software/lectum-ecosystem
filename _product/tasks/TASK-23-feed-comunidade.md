@@ -416,3 +416,10 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nao houve alteracao de backend, Prisma, migrations, packages, dados, rotas, ranking ou contratos de API.
 - ADR atualizado: `adrs/0166-header-feed-comunidades-premium.md`.
 - Validacoes executadas nesta execucao: `pnpm.cmd --dir frontend exec biome check --write "src/app/app/community/[slug]/logic.tsx"`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check` e HTTP local `200` em `/app/community/feed` e `/app/community/ansiedade-em-equilibrio`.
+
+## Complemento 2026-06-25 - chips de ordenacao com escala do CTA Top Mentores
+
+- Pedido do usuario: manter cor azul na chip ativa, inativas brancas e layout atual, alterando somente o tamanho das chips `Em destaque`, `Novos`, `Mais comentados` e `Mais uteis` para aproximar da chip `Ver Top 5 mentores da comunidade`.
+- Frontend: somente as chips de ordenacao de `/app/community/[slug]` foram recalibradas para `h-8/min-h-8` e tipografia `text-xs`, preservando cores, bordas, icones, raio, rolagem horizontal, dropdown de periodo e comportamento atual.
+- O CTA `Ver Top 5 mentores da comunidade` nao foi alterado; ele foi usado apenas como referencia de escala.
+- Escopo: sem alteracao de backend, Prisma, migrations, packages, ranking, filtros reais, posts, rotas, Favoritos ou Perfil.

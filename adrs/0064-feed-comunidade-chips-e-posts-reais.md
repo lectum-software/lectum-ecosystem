@@ -218,3 +218,22 @@ A pagina de Feed ja usava a navegacao inferior com auto-hide, mas o botao `+` de
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Validacao HTTP local de `/app/community/feed` e `/app/community/ansiedade-em-equilibrio`.
+
+## Atualizacao 2026-06-25 - escala das chips de ordenacao da comunidade
+
+### Contexto
+
+As chips de ordenacao da pagina da comunidade (`Em destaque`, `Novos`, `Mais comentados`, `Mais uteis`) estavam visualmente menores que o CTA `Ver Top 5 mentores da comunidade`, embora devessem manter a mesma hierarquia de filtros e apenas se aproximar da escala fisica desse CTA.
+
+### Decisao
+
+- Alterar somente a escala das chips de ordenacao da comunidade.
+- Manter chip ativa azul, inativas brancas, bordas, raio, icones, estados, dropdown de periodo e layout horizontal existentes.
+- Usar `h-8/min-h-8` e `text-xs` para aproximar altura e leitura do CTA Top Mentores sem aplicar a cor laranja ou o peso de CTA.
+- Nao alterar o CTA Top Mentores nem outras telas como Favoritos ou Perfil.
+
+### Consequencias
+
+- As chips ficam mais confortaveis para toque e leitura, especialmente no mobile.
+- A hierarquia permanece clara: filtros continuam como controles de ordenacao, e Top Mentores continua como CTA contextual.
+- Nao ha impacto em dados, APIs, ranking, paginacao, Prisma, pacotes ou tracking.

@@ -127,7 +127,7 @@ const getCommunityPostSortPeriodShortLabel = (value: CommunityPostSortPeriod) =>
 
 const communityPostSortChipClassName = (active: boolean) =>
   cn(
-    "group inline-flex h-[30px] min-h-[30px] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[11px] font-bold leading-none tracking-[-0.01em] shadow-none transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.99]",
+    "group inline-flex h-8 min-h-8 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-xs font-bold leading-none tracking-[-0.01em] shadow-none transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.99]",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8]/20",
     active
       ? "border-primary bg-primary text-white hover:bg-primary/95 dark:border-primary dark:bg-primary dark:text-white"
@@ -2062,7 +2062,7 @@ const CommunityPeriodSortChip = ({
         type="button"
       >
         <Icon className="h-3.5 w-3.5 shrink-0 opacity-85" aria-hidden="true" strokeWidth={1.9} />
-        <span className="whitespace-nowrap text-[11px] font-bold leading-none">{label}</span>
+        <span className="whitespace-nowrap text-xs font-bold leading-none">{label}</span>
         <ChevronDown
           className={cn(
             "-ml-0.5 h-3.5 w-3.5 shrink-0 opacity-80 transition-transform duration-200",
@@ -2071,7 +2071,7 @@ const CommunityPeriodSortChip = ({
           aria-hidden="true"
         />
         {showPeriod ? (
-          <span className="ml-0.5 rounded-full border border-[#B7D7F5]/70 bg-white/60 px-1.5 py-0.5 text-[10px] font-bold leading-none text-[#2F5F94] dark:border-primary/25 dark:bg-white/10 dark:text-[#B8D8FF]">
+          <span className="ml-0.5 rounded-full border border-[#B7D7F5]/70 bg-white/60 px-1.5 py-0.5 text-[11px] font-bold leading-none text-[#2F5F94] dark:border-primary/25 dark:bg-white/10 dark:text-[#B8D8FF]">
             {periodLabel}
           </span>
         ) : null}
@@ -2181,9 +2181,7 @@ const CommunityPostSortChips = ({
               aria-hidden="true"
               strokeWidth={1.9}
             />
-            <span className="whitespace-nowrap text-[11px] font-bold leading-none">
-              {item.label}
-            </span>
+            <span className="whitespace-nowrap text-xs font-bold leading-none">{item.label}</span>
           </button>
         );
       })}
