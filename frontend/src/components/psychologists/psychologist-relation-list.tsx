@@ -265,7 +265,9 @@ const FavoriteFilterChips = ({
 };
 
 const FavoriteCoverMedia = ({ psychologist }: { psychologist: PatientRelationPsychologist }) => {
-  const coverSrc = resolvePublicMediaUrl(psychologist.video_cover_url);
+  const coverSrc = resolvePublicMediaUrl(
+    psychologist.cover_image_url || psychologist.video_cover_url || psychologist.avatar,
+  );
   const coverIsPublic = isPublicMediaUrl(coverSrc);
 
   if (!coverSrc) {
@@ -395,31 +397,33 @@ const FavoritePsychologistCard = ({
                 <VerifiedBadgeIcon className="h-3 w-3 shrink-0 sm:h-4 sm:w-4" />
               ) : null}
             </span>
-            <p className="line-clamp-2 min-h-[2rem] text-[0.68rem] font-semibold leading-4 text-muted sm:min-h-[2.5rem] sm:text-[0.82rem] sm:leading-5">
+            <p className="line-clamp-2 min-h-[2rem] text-[0.68rem] font-medium leading-4 text-muted/90 sm:min-h-[2.5rem] sm:text-[0.82rem] sm:leading-5">
               {favoriteBio}
             </p>
           </div>
         </Link>
 
-        <PsychologistWhatsAppRedirectButton
-          aria-label={`Chamar ${psychologist.name} no WhatsApp`}
-          className="mt-auto inline-flex min-h-8 w-full min-w-0 items-center justify-center gap-1 rounded-[12px] bg-success px-2 py-1.5 text-[0.66rem] font-black leading-[1.25] text-white transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 sm:min-h-10 sm:gap-1.5 sm:rounded-[15px] sm:px-3 sm:py-2 sm:text-[0.76rem]"
-          psychologist={{
-            avatar: psychologist.avatar,
-            crp: psychologist.crp,
-            id: psychologist.id,
-            name: psychologist.name,
-            typeLabel: getContactProfession(psychologist.gender),
-            whatsappUrl: psychologist.whatsapp_url,
-          }}
-          stopPropagation
-        >
-          <PsychologistWhatsAppButtonContent
-            iconClassName="h-3 w-3 sm:h-3.5 sm:w-3.5"
-            label="WhatsApp"
-            labelClassName="min-w-max shrink-0 !overflow-visible !text-clip leading-[1.25]"
-          />
-        </PsychologistWhatsAppRedirectButton>
+        <div className="mt-auto pt-4 sm:pt-5">
+          <PsychologistWhatsAppRedirectButton
+            aria-label={`Chamar ${psychologist.name} no WhatsApp`}
+            className="inline-flex min-h-8 w-full min-w-0 items-center justify-center gap-1 rounded-[12px] bg-success px-2 py-1.5 text-[0.66rem] font-black leading-[1.25] text-white transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 sm:min-h-10 sm:gap-1.5 sm:rounded-[15px] sm:px-3 sm:py-2 sm:text-[0.76rem]"
+            psychologist={{
+              avatar: psychologist.avatar,
+              crp: psychologist.crp,
+              id: psychologist.id,
+              name: psychologist.name,
+              typeLabel: getContactProfession(psychologist.gender),
+              whatsappUrl: psychologist.whatsapp_url,
+            }}
+            stopPropagation
+          >
+            <PsychologistWhatsAppButtonContent
+              iconClassName="h-3 w-3 sm:h-3.5 sm:w-3.5"
+              label="WhatsApp"
+              labelClassName="min-w-max shrink-0 !overflow-visible !text-clip leading-[1.25]"
+            />
+          </PsychologistWhatsAppRedirectButton>
+        </div>
       </div>
     </article>
   );

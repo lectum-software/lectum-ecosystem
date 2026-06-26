@@ -615,3 +615,25 @@ Produto indicou que Favoritos ainda tinha proporcoes diferentes de Perfil. A ref
 - Favoritos fica proporcionalmente alinhado ao Perfil sem criar dependencia ou modificar Perfil.
 - A diferenca visual entre as paginas passa a ser de conteudo, nao de escala/layout base.
 - O ajuste permanece local e visual, sem impacto em backend, schema, endpoints, pacotes ou tracking.
+
+## Complemento 2026-06-25 - origem real da capa e hierarquia da bio
+
+### Contexto
+
+Na tela de Favoritos, a area de capa dos cards estava exibindo apenas fallback visual. A investigacao mostrou que o endpoint de Favoritos retornava `video_cover_url`, mas nao retornava `cover_image_url`, que e o campo de capa do perfil profissional no modelo Prisma. Alem disso, a bio estava visualmente pesada e muito proxima do CTA de WhatsApp.
+
+### Decisao
+
+- Incluir `cover_image_url` na resposta do endpoint de Favoritos, selecionando o campo existente em `psychologist_profile` e adicionando-o ao DTO `PatientRelationPsychologist`.
+- Atualizar o tipo correspondente no frontend.
+- Na capa do card, priorizar `cover_image_url`, depois `video_cover_url`, e usar `avatar` como fallback real quando nao houver capa dedicada.
+- Manter fallback gradiente apenas quando nenhum asset real existir.
+- Reduzir o peso da bio para `font-medium` e `text-muted/90`.
+- Criar respiro explicito entre bio e CTA com wrapper `pt-4 sm:pt-5`, sem perder o alinhamento inferior do botao.
+
+### Consequencias
+
+- Cards passam a exibir capas reais sempre que o perfil tiver `cover_image_url` ou `video_cover_url`, sem depender de mock.
+- Perfis sem capa ainda mantem composicao visual consistente usando avatar real ou fallback Lectum.
+- A hierarquia do card fica mais leve e respirada.
+- Nao ha mudanca em schema, migrations, pacotes ou tracking.

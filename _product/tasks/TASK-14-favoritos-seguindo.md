@@ -485,3 +485,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Layout: o container principal de Favoritos voltou ao mesmo envelope responsivo do Perfil (`max-w-[430px]` no mobile e `md:max-w-3xl`), para manter margens, largura e ritmo semelhantes.
 - Chips e cards: continuam abaixo do header e acompanham a largura do novo envelope; a grade preserva 2 colunas no mobile e 3 no desktop com cards preenchendo a coluna disponivel.
 - Escopo: nenhuma alteracao na pagina de Perfil, Comunidade, backend, Prisma, migrations, endpoints, filtros reais, paginacao, favoritos ou tracking de WhatsApp.
+
+## Complemento 2026-06-25 - bio mais leve e capa real nos cards
+
+- Pedido do usuario: deixar o texto da bio do card mais leve, aumentar o respiro entre bio e CTA de WhatsApp e corrigir a imagem de capa que nao estava aparecendo.
+- Backend: o endpoint de Favoritos passou a retornar `cover_image_url` do perfil profissional, alem de manter `video_cover_url`; nao houve alteracao de schema/migration.
+- Frontend: o card passou a priorizar `cover_image_url`, depois `video_cover_url` e, como fallback real, `avatar` para compor a area de capa, sem usar mock.
+- Bio: a tipografia da bio foi reduzida de peso visual (`font-medium` e `text-muted/90`) para ficar menos pesada no card.
+- WhatsApp: o CTA foi colocado em um wrapper com `pt-4 sm:pt-5`, preservando alinhamento inferior e criando mais respiro entre a bio e o botao.
+- Escopo: sem alteracao na pagina de Perfil, Comunidade, Prisma schema, migrations, packages, filtros reais, paginacao, favoritos ou tracking de WhatsApp.

@@ -243,6 +243,7 @@ export class FavoriteRepository implements IFavoriteRepository {
                 select: {
                   headline: true,
                   bio: true,
+                  cover_image_url: true,
                   video_url: true,
                   video_cover_url: true,
                   crp: true,
@@ -330,6 +331,7 @@ export class FavoriteRepository implements IFavoriteRepository {
             avatar: item.psychologist.avatar,
             headline: profile.headline,
             bio: profile.bio,
+            cover_image_url: profile.cover_image_url,
             video_url: profile.video_url,
             video_cover_url: profile.video_cover_url,
             crp: profile.crp,
