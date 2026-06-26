@@ -194,9 +194,9 @@ type HslColor = {
 };
 
 const FALLBACK_COMMUNITY_PALETTE: CommunityVisualPalette = {
-  coverDepthColor: "#245D9F",
-  coverEndColor: "#183E78",
-  coverStartColor: "#3278C2",
+  coverDepthColor: "#A7CDF0",
+  coverEndColor: "#7EB4E7",
+  coverStartColor: "#D7E9F8",
   primaryColor: "#2F7FD3",
   primaryDarkColor: "#1E3F7E",
   softColor: "#E7F1FB",
@@ -321,21 +321,22 @@ const paletteFromRgb = (rgb: RgbColor): CommunityVisualPalette => {
   const hsl = rgbToHsl(rgb);
   const saturation = clampNumber(hsl.s * 0.82, 0.36, 0.62);
   const lightness = clampNumber(hsl.l * 0.92, 0.34, 0.46);
+  const coverSaturation = clampNumber(hsl.s * 0.78, 0.46, 0.78);
   const primary = { h: hsl.h, s: saturation, l: lightness };
   const coverStart = {
-    ...primary,
-    l: clampNumber(lightness - 0.01, 0.34, 0.43),
-    s: clampNumber(saturation * 0.82, 0.3, 0.5),
+    h: hsl.h,
+    l: 0.84,
+    s: clampNumber(coverSaturation * 0.78, 0.38, 0.62),
   };
   const coverDepth = {
-    ...primary,
-    l: clampNumber(lightness - 0.08, 0.28, 0.36),
-    s: clampNumber(saturation * 0.76, 0.28, 0.46),
+    h: hsl.h,
+    l: 0.75,
+    s: clampNumber(coverSaturation * 0.92, 0.42, 0.72),
   };
   const coverEnd = {
-    ...primary,
-    l: clampNumber(lightness - 0.16, 0.2, 0.3),
-    s: clampNumber(saturation * 0.7, 0.24, 0.4),
+    h: hsl.h,
+    l: 0.66,
+    s: coverSaturation,
   };
 
   return {
@@ -1827,7 +1828,7 @@ const CommunityHeader = ({
         className="relative min-h-[132px] px-5 pt-4 text-white"
         style={{
           background:
-            "linear-gradient(115deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 34%, rgba(15,23,42,0.12) 100%), linear-gradient(145deg, var(--community-cover-start) 0%, var(--community-cover-depth) 58%, var(--community-cover-end) 100%)",
+            "radial-gradient(circle at 18% 18%, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.18) 38%, transparent 62%), linear-gradient(145deg, var(--community-cover-start) 0%, var(--community-cover-depth) 56%, var(--community-cover-end) 100%)",
         }}
       >
         <div className="relative z-10 flex items-center justify-between">
@@ -1859,7 +1860,7 @@ const CommunityHeader = ({
           </div>
         </div>
         <span
-          className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.05),transparent_44%,rgba(2,6,23,0.08))]"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.16),transparent_46%,rgba(255,255,255,0.06))]"
           aria-hidden="true"
         />
       </div>

@@ -66,3 +66,18 @@ A decisao preserva a arquitetura atual: o backend continua servindo os assets pu
 - `pnpm.cmd check`
 - HTTP local `200` em `http://127.0.0.1:3002/app/community/ansiedade-em-equilibrio` via `next start` temporario
 - HTTP local `200 image/png` em `http://127.0.0.1:3001/community/icons/ansiedade.png`
+
+## Atualizacao 2026-06-26 - faixa superior em tons suaves
+
+A faixa superior de `/app/community/[slug]` passa a usar uma derivacao especifica para capa, separada da cor primaria de acao. A cor primaria continua forte o suficiente para chips, links e CTA, mas os tokens `coverStart`, `coverDepth` e `coverEnd` agora sobem luminosidade e reduzem profundidade para evitar que laranja, vermelho, rosa, azul ou roxo se transformem em marrons/tons pesados.
+
+Tambem removemos overlays escuros do gradiente da faixa, mantendo apenas uma luz branca sutil. A decisao preserva a identidade por comunidade, nao altera dados persistidos e evita criar overrides por slug.
+
+### Validacao desta atualizacao
+
+- `pnpm --dir frontend exec biome check --write -- "src/app/app/community/[slug]/logic.tsx"`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- HTTP local `200` em `http://127.0.0.1:3000/app/community/ansiedade-em-equilibrio`

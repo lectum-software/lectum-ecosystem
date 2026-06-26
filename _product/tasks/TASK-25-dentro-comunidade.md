@@ -342,3 +342,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Fonte visual/auditavel: screenshot do usuario e referencia local `_product/proto/Dentro da Comunidade.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0095-identidade-visual-comunidade-avatar.md`.
 - Validacoes executadas: `pnpm.cmd --dir frontend exec biome check --write src/utils/media.ts`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, HTTP local `200` em `/app/community/ansiedade-em-equilibrio` e HTTP local `200 image/png` para `http://127.0.0.1:3001/community/icons/ansiedade.png`.
+
+## Complemento 2026-06-26 - faixa superior suave nas comunidades
+
+- Pedido do usuario: a faixa do topo da comunidade estava escura demais; no caso de Ansiedade, o laranja suave derivado do icone ficou marrom.
+- Frontend: a derivacao de paleta da capa deixou de escurecer a cor primaria para tons profundos e passou a gerar tons pastel/suaves para `coverStart`, `coverDepth` e `coverEnd`.
+- Frontend: o gradiente da faixa superior removeu overlays escuros e passou a usar apenas luz/radial branco sutil sobre a paleta da comunidade.
+- O ajuste vale para todas as comunidades que usam `visual_primary_color` ou paleta extraida do avatar, mantendo `primaryColor`, `softColor`, textos, chips e botao de seguir sem mudanca funcional.
+- Escopo: sem alteracao de backend, Prisma schema, migrations, endpoints, dados, filtros, posts, respostas, membership ou packages.
+- Fonte visual/auditavel: screenshot do usuario em `/app/community/ansiedade-em-equilibrio`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0095-identidade-visual-comunidade-avatar.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check --write -- "src/app/app/community/[slug]/logic.tsx"`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check` e HTTP local `200` em `/app/community/ansiedade-em-equilibrio`.
