@@ -166,3 +166,32 @@ Apos tornar o recolhimento da arvore uma acao explicita, o botao `Ver respostas`
 - O controle volta a parecer uma acao secundaria de organizacao da conversa.
 - A barra de acoes e o conteudo do comentario recuperam prioridade visual.
 - A alteracao permanece puramente visual/frontend, sem impacto em APIs, backend ou persistencia.
+
+## Atualizacao 2026-06-26 - label ultracompacto do controle de respostas
+
+### Contexto
+
+Mesmo apos reduzir o controle explicito `Ocultar respostas`/`Ver respostas`, o texto continuava parecendo grande na arvore de comentarios. A validacao local tambem mostrou que aplicar tamanho de fonte diretamente no `button` podia ser neutralizado pelo reset/base de botoes, mantendo o texto maior que o pretendido.
+
+### Decisao
+
+- Manter o controle explicito como botao acessivel e secundario, abaixo da barra de acoes do comentario raiz.
+- Aplicar as classes tipograficas no `span` do label (`text-[9px]`, `font-medium`, `leading-none`, `whitespace-nowrap`) em vez de depender da fonte do `button`.
+- Reduzir gap/padding e chevrons para reforcar que a acao e apenas organizacional da conversa.
+- Preservar `aria-expanded`, `aria-controls`, `aria-label`, contagem de respostas ao recolher, deep links e conectores em L.
+
+### Consequencias
+
+- O label fica realmente ultracompacto e deixa de competir visualmente com o conteudo do comentario e a barra de acoes.
+- A alteracao continua puramente visual/frontend: nao modifica dados, APIs, backend, Prisma, packages, votos, salvos, ordenacao ou criacao de respostas.
+- A tipografia interna no `span` evita regressao causada por resets de `button` em futuras alteracoes de CSS base.
+
+### Validacao
+
+- `pnpm --dir frontend exec biome check --write "src/app/app/community/[slug]/post/[id]/logic.tsx"`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- HTTP local `200` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`
+- Chrome/CDP local em viewport mobile validando o label com `font-size: 9px`, `font-weight: 500` e `line-height: 9px`.

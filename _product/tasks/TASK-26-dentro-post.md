@@ -1097,3 +1097,14 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, permissoes, votos, salvos, ranking ou dados persistidos.
 - Fonte visual/auditavel: pedido do usuario e asset local vinculado; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - Validacoes executadas nesta execucao: `pnpm --dir frontend exec biome check --write "src/components/community/community-whatsapp-cta.tsx"`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check` e HTTP local `200` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`.
+
+## Complemento 2026-06-26 - controle de respostas ultracompacto
+
+- Pedido do usuario: o texto `Ocultar respostas` na arvore de comentarios ainda estava grande visualmente.
+- Frontend: o botao explicito de expandir/recolher respostas ficou ainda menor: gap/padding reduzidos, chevrons de 10px e label em `text-[9px]`, `font-medium`, `leading-none` e `whitespace-nowrap`.
+- Frontend: a tipografia do label foi aplicada no `span` interno, e nao diretamente no `button`, porque o reset/base de botoes pode sobrescrever propriedades de fonte no elemento interativo e impedir que o tamanho visual reduza de fato.
+- O controle permanece abaixo da barra de acoes do comentario raiz, com `aria-label`, `aria-expanded`, `aria-controls`, contagem ao recolher, deep links e conectores da arvore preservados.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, votos, salvos, ordenacao, permissao ou criacao de respostas.
+- Fonte visual/auditavel: screenshot do usuario na rota `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video` e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check --write "src/app/app/community/[slug]/post/[id]/logic.tsx"`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check`, HTTP local `200` na rota do post demo e Chrome/CDP local em viewport mobile validando label com `font-size: 9px`, `font-weight: 500` e `line-height: 9px`.

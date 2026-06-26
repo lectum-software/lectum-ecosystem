@@ -1451,7 +1451,7 @@ const ReplyCard = ({
                       } desta conversa`
                     : "Ocultar respostas desta conversa"
                 }
-                className="inline-flex w-fit items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none text-[#64748B] transition hover:bg-[#F1F5F9] hover:text-[#334155] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 active:scale-[0.98] dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
+                className="inline-flex w-fit items-center gap-0.5 rounded-full px-1 py-px text-[#64748B]/80 transition hover:bg-[#F1F5F9] hover:text-[#334155] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 active:scale-[0.98] dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
                 onClick={(event) => {
                   event.stopPropagation();
                   toggleRootTreeCollapse();
@@ -1459,11 +1459,11 @@ const ReplyCard = ({
                 type="button"
               >
                 {childrenHiddenByCollapse ? (
-                  <ChevronDown className="h-3 w-3" aria-hidden="true" />
+                  <ChevronDown className="h-2.5 w-2.5" aria-hidden="true" />
                 ) : (
-                  <ChevronUp className="h-3 w-3" aria-hidden="true" />
+                  <ChevronUp className="h-2.5 w-2.5" aria-hidden="true" />
                 )}
-                <span>
+                <span className="whitespace-nowrap text-[9px] font-medium leading-none">
                   {childrenHiddenByCollapse
                     ? `Ver respostas (${collapsedRepliesCount})`
                     : "Ocultar respostas"}
