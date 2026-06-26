@@ -697,3 +697,22 @@ Depois de aumentar os filtros e ajustar a tela de Favoritos, o produto decidiu a
 - As contagens reais continuam visíveis, mas em escala compatível com o padrão compacto dos filtros.
 - O status verde comunica disponibilidade com melhor encaixe visual no avatar.
 - O CTA mantém a mesma função e rastreamento real, com proporção mais discreta dentro do card.
+
+## Complemento 2026-06-26 - correção de escala após feedback visual
+
+### Contexto
+
+A rodada anterior ainda deixou as chips de Favoritos com volume maior que o esperado para a comparação com Comunidade. O indicador verde também foi levado para dentro da imagem, quando a intenção era posicioná-lo sobre a moldura do avatar. No mobile, o texto do CTA `WhatsApp` continuava desalinhado em relação ao ícone.
+
+### Decisão
+
+- Reduzir as chips de Favoritos abaixo da composição anterior: `h-7`, `text-[11px]`, `px-2.5` e `gap-1`, mantendo o mesmo estado ativo/inativo e a mesma semântica de botão dos filtros.
+- Reduzir o badge de contagem para 20px, preservando a contagem real do endpoint sem aumentar a altura da chip.
+- Posicionar o indicador verde com offsets próximos da borda (`right/bottom` externos ao centro interno), adicionando ring de superfície no ponto para comunicar encaixe na moldura.
+- Ajustar o conteúdo do CTA de WhatsApp no mobile com ícone de 12px e label `inline-flex` com altura fixa, evitando desalinhamento óptico entre texto e ícone.
+
+### Consequências
+
+- As chips ficam mais próximas da escala compacta dos filtros da Comunidade, mesmo mantendo badge de contagem próprio de Favoritos.
+- O status verde passa a ocupar a borda/moldura do avatar, sem parecer um elemento solto nem totalmente dentro da foto.
+- O CTA preserva a ação e tracking reais, com alinhamento mais estável em cards de duas colunas no mobile.

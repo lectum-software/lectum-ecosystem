@@ -524,3 +524,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Escopo: sem mudanças de backend, Prisma, migrations, packages, endpoint, filtros reais, paginação, favoritos persistidos ou tracking de WhatsApp.
 - ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
 - Validações executadas: `pnpm.cmd --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, `git diff --check` e HTTP local `200` em `/app/favorites`.
+
+## Complemento 2026-06-26 - correção fina dos chips, moldura e CTA mobile
+
+- Pedido do usuário: corrigir a rodada anterior porque as chips ainda estavam grandes, a bolinha verde ficou dentro da imagem em vez de sobre a moldura e, no mobile, o texto do botão `WhatsApp` continuava desalinhado com o ícone.
+- Referência visual/auditável: screenshots do usuário em `/app/favorites`, comparação com os chips de `/app/community/[slug]` e referência local `_product/proto/Favoritos.jpg`; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
+- Frontend: as chips de Favoritos foram reduzidas para altura de 28px, label de 11px, padding menor e badge de contagem de 20px, aproximando o volume visual dos filtros compactos da Comunidade sem alterar filtros reais ou contagens.
+- Frontend: o indicador `available_today` passou a ficar centrado sobre a moldura do avatar, com offset de borda e ring de superfície para parecer encaixado na foto em vez de dentro dela.
+- Frontend: o CTA `WhatsApp` foi recalibrado no mobile com altura menor, ícone de 12px, label em `inline-flex` com altura fixa e alinhamento vertical pelo próprio conteúdo.
+- Escopo: sem mudanças de backend, Prisma, migrations, packages, endpoint, filtros reais, paginação, favoritos persistidos ou tracking de WhatsApp.
+- ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
+- Validações executadas: `pnpm.cmd --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, `git diff --check` e HTTP local `200` em `/app/favorites`.
