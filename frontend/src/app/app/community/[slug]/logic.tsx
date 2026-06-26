@@ -1052,6 +1052,58 @@ const FeedSearchMenu = ({
   );
 };
 
+type FeedCommunityChip = (typeof COMMUNITY_FEED_CHIPS)[number];
+
+const FeedCommunitySelectorAvatar = ({
+  community,
+  variant = "button",
+}: {
+  community: FeedCommunityChip | null;
+  variant?: "button" | "menu";
+}) => {
+  const sizeClassName = variant === "button" ? "h-7 w-7 rounded-[10px]" : "h-6 w-6 rounded-[9px]";
+  const iconClassName = variant === "button" ? "h-3.5 w-3.5" : "h-3 w-3";
+
+  if (!community) {
+    return (
+      <span
+        className={cn(
+          "grid shrink-0 place-items-center border border-primary/15 bg-primary-soft text-primary",
+          sizeClassName,
+        )}
+        aria-hidden="true"
+      >
+        <Compass className={cn("stroke-[2.3]", iconClassName)} />
+      </span>
+    );
+  }
+
+  const avatarSrc = resolvePublicMediaUrl(community.iconUrl);
+
+  return (
+    <span
+      className={cn(
+        "relative grid shrink-0 place-items-center overflow-hidden border border-border bg-surface-muted text-[0.68rem] font-black text-primary",
+        sizeClassName,
+      )}
+      aria-hidden="true"
+    >
+      {avatarSrc ? (
+        <Image
+          alt=""
+          className="object-cover"
+          fill
+          sizes={variant === "button" ? "28px" : "24px"}
+          src={avatarSrc}
+          unoptimized={isPublicMediaUrl(community.iconUrl)}
+        />
+      ) : (
+        getInitials(community.label)
+      )}
+    </span>
+  );
+};
+
 const FeedCommunitySelect = ({
   activeSlug,
   onOpenChange,
@@ -1070,7 +1122,7 @@ const FeedCommunitySelect = ({
         aria-label="Selecionar comunidade"
         aria-haspopup="listbox"
         className={cn(
-          "flex h-11 w-full min-w-0 items-center justify-between gap-2 rounded-[18px] border bg-background px-3.5 text-left text-sm font-black shadow-[0_10px_26px_rgba(15,23,42,0.07)] transition-[background-color,border-color,color,box-shadow,transform] duration-200 active:scale-[0.99]",
+          "group flex h-11 w-full min-w-0 items-center justify-between gap-2 rounded-[18px] border bg-background px-3 text-left text-[0.95rem] font-semibold leading-none tracking-[-0.025em] shadow-[0_10px_26px_rgba(15,23,42,0.07)] transition-[background-color,border-color,color,box-shadow,transform] duration-200 active:scale-[0.99]",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
           open
             ? "border-primary/45 bg-primary-soft text-primary shadow-[0_14px_32px_rgba(48,140,232,0.14)]"
@@ -1079,8 +1131,11 @@ const FeedCommunitySelect = ({
         onClick={() => onOpenChange(!open)}
         type="button"
       >
-        <span className="min-w-0 truncate">
-          {activeCommunity?.label ?? "Selecione uma comunidade"}
+        <span className="flex min-w-0 items-center gap-2.5">
+          <FeedCommunitySelectorAvatar community={activeCommunity} />
+          <span className="min-w-0 truncate">
+            {activeCommunity?.label ?? "Escolher comunidade"}
+          </span>
         </span>
         <ChevronDown
           className={cn("h-4 w-4 shrink-0 transition", open ? "rotate-180" : "rotate-0")}
@@ -1120,7 +1175,10 @@ const FeedCommunitySelect = ({
                 key={item.slug}
                 onClick={() => onOpenChange(false)}
               >
-                <span className="min-w-0 truncate">{item.label}</span>
+                <span className="flex min-w-0 items-center gap-2">
+                  <FeedCommunitySelectorAvatar community={item} variant="menu" />
+                  <span className="min-w-0 truncate">{item.label}</span>
+                </span>
                 {isActive ? <Check className="h-4 w-4 shrink-0" aria-hidden="true" /> : null}
               </Link>
             );

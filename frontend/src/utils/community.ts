@@ -1,25 +1,30 @@
 export const COMMUNITY_FEED_CHIPS = [
   {
+    iconUrl: "/community/icons/ansiedade.png",
     label: "Ansiedade",
     name: "Ansiedade em Equilíbrio",
     slug: "ansiedade-em-equilibrio",
   },
   {
+    iconUrl: "/community/icons/relacionamentos.png",
     label: "Relacionamentos",
     name: "Relacionamentos com Propósito",
     slug: "relacionamentos-com-proposito",
   },
   {
+    iconUrl: "/community/icons/autocuidado.png",
     label: "Autocuidado",
     name: "Autocuidado em Prática",
     slug: "autocuidado-em-pratica",
   },
   {
+    iconUrl: "/community/icons/depressao.png",
     label: "Depressão",
     name: "Depressão",
     slug: "depressao",
   },
   {
+    iconUrl: "/community/icons/tdah.png",
     label: "TDAH",
     name: "TDAH",
     slug: "tdah",

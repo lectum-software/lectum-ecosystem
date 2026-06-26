@@ -423,3 +423,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Frontend: somente as chips de ordenacao de `/app/community/[slug]` foram recalibradas para `h-8/min-h-8` e tipografia `text-xs`, preservando cores, bordas, icones, raio, rolagem horizontal, dropdown de periodo e comportamento atual.
 - O CTA `Ver Top 5 mentores da comunidade` nao foi alterado; ele foi usado apenas como referencia de escala.
 - Escopo: sem alteracao de backend, Prisma, migrations, packages, ranking, filtros reais, posts, rotas, Favoritos ou Perfil.
+
+## Complemento 2026-06-26 - seletor do header com copy e avatar
+
+- Pedido do usuario: no header premium do feed, trocar o placeholder `Selecione uma comunidade` por `Escolher comunidade`, refinar a fonte do texto e exibir avatar da comunidade no seletor.
+- Frontend: o catalogo `COMMUNITY_FEED_CHIPS` passou a carregar `iconUrl` dos assets publicos curados em `/community/icons/*.png`, sem alterar slugs, nomes, rotas ou dados de API.
+- Frontend: o seletor central do feed agora usa tipografia mais leve/premium (`font-semibold`, tracking negativo sutil) e exibe o avatar quando ha comunidade ativa; no estado geral, exibe icone discreto de explorar ao lado de `Escolher comunidade`.
+- O dropdown tambem exibe os avatares das comunidades nas opcoes individuais, mantendo `Todas as comunidades` como primeira acao de navegacao para `/app/community` com seta ao final.
+- Escopo: sem alteracao de backend, Prisma schema, migrations, endpoints, ranking, posts, respostas, filtros reais, Favoritos, Perfil ou packages.
+- Fonte visual/auditavel: screenshot do usuario em `/app/community/feed` e `_product/proto/Feed Comunidade.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0166-header-feed-comunidades-premium.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check --write -- "src/app/app/community/[slug]/logic.tsx" "src/utils/community.ts"`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check`, HTTP local `200` em `/app/community/feed` e HTTP local `200` em `/app/community/ansiedade-em-equilibrio`.

@@ -60,3 +60,23 @@ Nao houve mudanca de rotas, dados, backend, Prisma, packages ou contrato de API.
 - `pnpm.cmd check`
 - HTTP local `200` em `http://127.0.0.1:3000/app/community/feed`
 - HTTP local `200` em `http://127.0.0.1:3000/app/community/ansiedade-em-equilibrio`
+
+## Atualizacao em 2026-06-26: seletor com copy curta e avatar
+
+O placeholder do seletor central do header deixa de ser `Selecione uma comunidade` e passa a ser `Escolher comunidade`, evitando conflito semantico com a opcao `Todas as comunidades`, que continua sendo uma acao de navegacao para explorar comunidades.
+
+Para reforcar identidade visual e reduzir a sensacao de campo generico, o catalogo local `COMMUNITY_FEED_CHIPS` agora inclui `iconUrl` dos assets publicos oficiais de cada comunidade. O seletor exibe o avatar da comunidade ativa; quando o feed esta no estado geral, usa um icone neutro de explorar. O dropdown preserva `Todas as comunidades ->` como primeira opcao e adiciona os avatares nas demais opcoes.
+
+A tipografia do texto do seletor foi suavizada para `font-semibold` com tracking negativo discreto, mantendo a fonte global da Lectum e sem criar nova familia tipografica.
+
+Nao houve mudanca de backend, schema Prisma, migrations, endpoints, ranking, rotas ou packages.
+
+### Validacao desta atualizacao
+
+- `pnpm --dir frontend exec biome check --write -- "src/app/app/community/[slug]/logic.tsx" "src/utils/community.ts"`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- HTTP local `200` em `http://127.0.0.1:3000/app/community/feed`
+- HTTP local `200` em `http://127.0.0.1:3000/app/community/ansiedade-em-equilibrio`
