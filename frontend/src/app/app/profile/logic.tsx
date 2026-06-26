@@ -34,6 +34,7 @@ type ProfileRow = {
   href?: string;
   icon: ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
   label: string;
+  hideChevron?: boolean;
   trailing?: ReactNode;
 };
 
@@ -67,7 +68,7 @@ const getInitials = (name?: string | null, email?: string | null) => {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
 
-const Row = ({ href, icon: Icon, label, trailing }: ProfileRow) => {
+const Row = ({ href, hideChevron = false, icon: Icon, label, trailing }: ProfileRow) => {
   const content = (
     <>
       <span className="grid h-10 w-10 place-items-center rounded-full bg-primary-soft text-primary">
@@ -75,7 +76,7 @@ const Row = ({ href, icon: Icon, label, trailing }: ProfileRow) => {
       </span>
       <span className="flex-1 text-sm font-semibold text-foreground">{label}</span>
       {trailing}
-      <ChevronRight className="h-5 w-5 text-subtle" aria-hidden="true" />
+      {hideChevron ? null : <ChevronRight className="h-5 w-5 text-subtle" aria-hidden="true" />}
     </>
   );
 
@@ -91,10 +92,7 @@ const Row = ({ href, icon: Icon, label, trailing }: ProfileRow) => {
   }
 
   return (
-    <div
-      aria-disabled="true"
-      className="flex min-h-14 items-center gap-3 border-b border-border px-4 opacity-75 last:border-b-0"
-    >
+    <div className="flex min-h-14 items-center gap-3 border-b border-border px-4 last:border-b-0">
       {content}
     </div>
   );
@@ -215,6 +213,12 @@ export const ProfileLogic = () => {
         ]
       : [{ href: "/app/reviews", icon: Star, label: "Avaliações" }]),
     { href: "/app/settings/account", icon: Lock, label: "E-mail e senha" },
+    {
+      hideChevron: true,
+      icon: Moon,
+      label: "Ativar modo escuro",
+      trailing: <ThemeSwitch />,
+    },
   ];
 
   const communityRows: ProfileRow[] = [
@@ -268,21 +272,9 @@ export const ProfileLogic = () => {
 
         {showProfessionalUpgradeCard ? <ProfessionalUpgradeCard /> : null}
 
-        <Section rows={accountRows} title="Conta" />
-
-        <section className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-4 py-3 shadow-[var(--lectum-shadow-soft)]">
-          <div className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-full bg-primary-soft text-primary">
-              <Moon className="h-5 w-5" aria-hidden="true" />
-            </span>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-foreground">Ativar modo escuro</p>
-            </div>
-            <ThemeSwitch />
-          </div>
-        </section>
-
         <Section rows={communityRows} title="Comunidade" />
+
+        <Section rows={accountRows} title="Conta" />
 
         <Button
           className="w-full"

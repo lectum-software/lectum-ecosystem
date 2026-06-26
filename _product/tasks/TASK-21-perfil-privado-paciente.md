@@ -231,3 +231,18 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - A única diferença visual funcional preservada é a seta do dropdown, mantendo o comportamento de seleção e as opções existentes.
 - Não houve alteração de backend, Prisma, contratos, persistência ou packages.
 - Validações executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check` e Chrome/CDP mobile 390x844 em `/app/profile/edit`, confirmando altura, radius, borda, padding esquerdo, sombra e fundo iguais ao campo `Nome de exibição`, chevron preservado e ausência de overflow horizontal.
+
+## Ajuste complementar em 2026-06-26 - ordem dos menus e modo escuro em Conta
+
+- Pedido do usuário: no perfil compartilhado de pacientes e psicólogos, exibir primeiro o menu `Comunidade`, depois o menu `Conta`, e por fim `Sair da conta`.
+- A ação `Ativar modo escuro` deixou de ser um card solto e passou a ser uma linha dentro da seção `Conta`, preservando o `ThemeSwitch` existente e sem criar componente paralelo.
+- O componente compartilhado `Row` ganhou suporte a linha sem chevron para comportar controles inline, mantendo os mesmos espaçamentos, divisórias, ícone circular e tokens de cor do menu.
+- A mudança vale para paciente e psicólogo porque a rota `/app/profile` usa o mesmo `ProfileLogic` para ambos.
+- Sem alteração de backend, Prisma, contratos, persistência ou packages; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente, então a referência visual foi o print do usuário e os protótipos locais `_product/proto/Perfil do paciente.jpg` e `_product/proto/Perfil - Psicólogo.jpg`.
+
+### Validações complementares
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local/CDP em `/app/profile`, validando a ordem visual `Comunidade` → `Conta` → `Sair da conta` e a linha `Ativar modo escuro` dentro de `Conta`.

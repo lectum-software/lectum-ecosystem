@@ -72,3 +72,28 @@ de conteúdo pede que os itens pessoais apareçam antes das áreas de descoberta
 - Chrome/CDP mobile 390x844 em `/app/profile` confirmou, para paciente e psicólogo, a ordem dos
   `hrefs`: `/app/posts/mine`, `/app/posts/saved`, `/app/following`, `/app/community`, sem overflow
   horizontal.
+
+## Complemento 2026-06-26 - Ordem dos blocos do perfil e modo escuro em Conta
+
+### Contexto
+
+O menu privado de Perfil é compartilhado por pacientes e psicólogos. Produto solicitou que a jornada de comunidade fique acima da gestão de conta e que o switch de tema deixe de aparecer como card isolado.
+
+### Decisão
+
+- Renderizar a seção `Comunidade` antes da seção `Conta` em `/app/profile`.
+- Incorporar `Ativar modo escuro` como última linha de `Conta`, reutilizando `ThemeSwitch`.
+- Permitir que `Row` oculte o chevron em linhas com controle inline, sem alterar as linhas navegáveis existentes.
+
+### Consequências
+
+- A ordem final do perfil fica: `Comunidade`, `Conta`, `Sair da conta`.
+- O ajuste cobre pacientes e psicólogos por reaproveitar o componente compartilhado.
+- Não há alteração de backend, schema Prisma, rotas, persistência ou packages.
+
+### Validação
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome/CDP em `/app/profile` confirmou a ordem `Comunidade` → `Conta` → `Sair da conta` e o switch de modo escuro dentro do card `Conta`.
