@@ -23,9 +23,9 @@ Durante a auditoria foram encontrados produtores persistidos para avaliacao, fav
   - `contact_request` -> `clique_whatsapp` para o psicologo contatado.
   - `community_post` -> `novo_post` para seguidores da comunidade, exceto autor.
   - `post_reply` -> `nova_resposta` para autor do post ou comentario pai.
-  - `post_vote` -> `upvote`/`downvote` para autor do post/reply quando o voto fica ativo.
+  - `post_vote` -> `upvote` para autor do post/reply quando o voto positivo fica ativo.
   - `post_save` -> `salvamento` para autor do post quando o save e criado/restaurado.
-- Para votos, usar um `source_id` opaco por hash SHA-256 truncado, evitando expor o votante em `message_props`, especialmente para downvote.
+- Para votos positivos, usar um `source_id` opaco por hash SHA-256 truncado, evitando expor o votante em `message_props`.
 - Manter `visualizacao_perfil` e `compartilhamento` como pendencias documentadas ate existirem produtores persistidos reais (`profile_view_event` e evento/modelo de share).
 
 ## Consequencias
@@ -34,7 +34,7 @@ Durante a auditoria foram encontrados produtores persistidos para avaliacao, fav
 - Preferencias seguem centralizadas no dispatcher da 29A.
 - O historico in-app passa a ter `redirect`, `source_id` e `source_type` para abrir conteudo relacionado e deduplicar.
 - Re-favoritar ou re-salvar sem mudanca real nao gera nova notificacao.
-- Downvote notifica o autor sem revelar o votante nos props.
+- Downvote permanece como sinal interno de ranking/moderacao, mas nao deve gerar nem aparecer na central de notificacoes.
 - A task permanece bloqueada para os eventos sem fonte persistida real; conclui-se apenas a ligacao dos produtores existentes.
 
 ## Validacao
@@ -57,3 +57,9 @@ Durante a auditoria foram encontrados produtores persistidos para avaliacao, fav
 - O desligamento afeta somente `novo_post`; respostas, votos, salvamentos, compartilhamentos e demais notificacoes continuam governados pelas suas proprias chaves.
 
 Validacao: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` e smoke via `tsx` cobrindo `enabled = false`, outras chaves habilitadas e `post_author_scope: "disabled"`.
+
+## Complemento 2026-06-26
+
+- Downvotes deixam de emitir notificacao in-app/tempo real/push pelo produtor real `post_vote`.
+- A listagem da central de notificacoes tambem exclui registros legados com `message_key = "downvote"`, evitando que notificacoes antigas continuem visiveis.
+- A chave `downvote` permanece no contrato historico para compatibilidade com dados ja persistidos e com regras internas de reputacao/ranking, mas nao e mais exposta na central.

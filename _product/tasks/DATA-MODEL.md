@@ -411,7 +411,7 @@ Contratos da tela interna do post (TASK-26):
 - `POST /api/private/posts/:id/replies` recebe `{ content?, parentReplyId?, mediaUrl?, mediaType? }` e exige pelo menos texto ou midia valida; `parentReplyId` pode apontar para comentario/resposta ativa do mesmo post, preservando a arvore hierarquica, e midia so e aceita quando originada do upload permitido.
 - `PUT /api/private/posts/:id/replies/:replyId` recebe `{ content?, mediaUrl?, mediaType? }`, exige autor autenticado da resposta/comentario e atualiza texto e/ou midia; deve permanecer pelo menos texto ou midia valida apos a edicao; autoria, post e hierarquia permanecem imutaveis. Quando `mediaUrl` e `mediaType` sao enviados com URL publica originada do upload permitido (`/public/files/posts/media/`), substitui a midia da resposta; quando ambos sao `null`, remove a midia atual.
 - `DELETE /api/private/posts/:id/replies/:replyId` exige autor autenticado e remove a resposta/comentario e sua subarvore. Se o autor for psicologo, pode excluir a qualquer momento; se o autor nao for psicologo, a exclusao e bloqueada quando a subarvore ativa ja contem contribuicao de psicologo, preservando a mesma regra de protecao usada em posts de pacientes com respostas profissionais.
-- `POST /api/private/posts/:id/vote` recebe `{ value: 1|-1, replyId? }`; repetir o mesmo voto remove o voto. Downvotes atualizam contadores denormalizados de posts e comentarios para ranking interno, mas não devem ser exibidos como número público.
+- `POST /api/private/posts/:id/vote` recebe `{ value: 1|-1, replyId? }`; repetir o mesmo voto remove o voto. Downvotes atualizam contadores denormalizados de posts e comentarios para ranking interno, mas não devem ser exibidos como número público nem gerar item na central de notificações.
 - `POST /api/private/posts/:id/save` e `DELETE /api/private/posts/:id/save` persistem salvos via `post_save` e mantêm `saves_count`.
 - `POST /api/private/posts/:id/report` registra denúncia reativa com motivo e descrição opcional, sem remoção automática do post.
 
@@ -469,6 +469,8 @@ A penalidade de posts removidos e progressiva por comunidade: `30 * removed_post
 | `message_key` | `String` | **tipo/chave do evento (PRD §12)** e chave de i18n: `"nova_avaliacao" \| "novo_favorito" \| "visualizacao_perfil" \| "clique_whatsapp" \| "novo_post" \| "nova_resposta" \| "upvote" \| "downvote" \| "compartilhamento" \| "salvamento"` |
 | `message_props` | `Json?` | payload (ids de post/perfil/etc.) para render e "Abrir Conteúdo Relacionado" |
 | `redirect` | `String?` | rota/deep-link do conteúdo relacionado |
+
+Complemento 2026-06-26: `downvote` permanece como chave histórica/compatível no contrato, mas o produtor real `post_vote` não deve emitir nova notificação para votos negativos e a listagem da central deve ocultar registros legados com essa chave.
 
 `notification_preference` (TASK-29A, "Configurações de Notificações"):
 

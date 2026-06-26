@@ -53,7 +53,7 @@ Ligar o dispatcher em cada evento, com o `type` correto (enum do PRD §12) e o d
 | Novo post | `novo_post` | TASK-24 (criar post) | seguidores da comunidade |
 | Nova resposta | `nova_resposta` | TASK-26 (`post_reply`) | autor do post/comentário |
 | Upvote | `upvote` | TASK-26 (`post_vote`) | autor do post/reply |
-| Downvote | `downvote` | TASK-26 (`post_vote`) | (não público — ver PRD §9; tratar com cautela) |
+| Downvote | `downvote` | TASK-26 (`post_vote`) | não exibido na central; sinal interno não público |
 | Compartilhamento | `compartilhamento` | TASK-26/feed | autor do conteúdo |
 | Salvamento | `salvamento` | TASK-28 (`post_save`) | autor do post |
 
@@ -112,7 +112,7 @@ Implementado:
 - `clique_whatsapp` a partir de `contact_request` criado.
 - `novo_post` a partir de `community_post` criado, notificando seguidores da comunidade exceto o autor.
 - `nova_resposta` a partir de `post_reply` criado, notificando autor do post ou comentário pai.
-- `upvote` e `downvote` a partir de `post_vote`, sem expor votante no downvote.
+- `upvote` a partir de `post_vote`; downvote permanece como sinal interno e não é exibido na central.
 - `salvamento` a partir de `post_save` criado/restaurado.
 
 Pendências registradas sem mock:
@@ -225,3 +225,19 @@ Validação:
 - `pnpm check`
 
 ADR criado: `adrs/0130-psicologos-push-prioridade-digest.md`.
+
+## Complemento 2026-06-26 - downvotes fora da central
+
+Implementada a regra de produto para não exibir downvotes na página de notificações:
+
+- O produtor real `post_vote` não chama mais o dispatcher para `value = -1`; apenas upvotes geram `notification`.
+- A listagem `/api/private/notification` filtra registros legados com `message_key = "downvote"`, para que downvotes antigos também não apareçam na central.
+- Downvotes continuam existindo como voto/reputação interna de posts e comentários, sem exposição pública e sem notificação ao autor.
+
+Validação:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`
+
+ADR atualizado: `adrs/0098-notificacoes-eventos-dominio.md`.

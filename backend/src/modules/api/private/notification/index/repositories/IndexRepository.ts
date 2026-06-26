@@ -41,6 +41,9 @@ export class IndexRepository implements IIndexRepository {
     const whereConditions: Prisma.notificationWhereInput = {
       user_id: props.auth.id!,
       deleted: false,
+      message_key: {
+        not: "downvote",
+      },
       read: props.q.search === "unread" ? false : undefined,
       createdAt: {
         gte: props.q.startDate ? startOfDay(props.q.startDate) : undefined,

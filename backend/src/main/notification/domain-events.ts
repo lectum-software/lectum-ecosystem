@@ -300,7 +300,7 @@ export const notifyPostVote = async (params: {
   replyId?: string | null;
   value: 1 | -1 | null;
 }) => {
-  if (params.value !== 1 && params.value !== -1) return;
+  if (params.value !== 1) return;
 
   const target = params.replyId
     ? await prisma.post_reply.findFirst({
@@ -348,7 +348,7 @@ export const notifyPostVote = async (params: {
 
   await notifyOnce({
     actorId: params.actorId,
-    messageKey: params.value === 1 ? "upvote" : "downvote",
+    messageKey: "upvote",
     recipientIds,
     redirect: communityPostRedirect(communitySlug, params.postId),
     sourceId,
