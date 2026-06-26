@@ -42,3 +42,27 @@ Builder/Quick Copy não está disponível como ferramenta callable neste ambient
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Chrome/CDP mobile 390x844 em `/app/posts/mine`, confirmando modal de edição sem faixa `Dados fixos`, com comunidade inativa e layout igual ao sheet de criação.
+
+## Complemento 2026-06-26 - botao Salvar mais legivel
+
+Na revisao visual da modal `Editar Post`, o texto do botao primario `Salvar` no rodape ficou pequeno em relacao ao peso visual do CTA arredondado no mobile.
+
+Decisao complementar:
+
+- Aumentar apenas a tipografia do botao `Salvar` de `text-base` para `text-lg` em `PostEditModal`.
+- Manter `font-black`, altura `h-12`, largura minima, sombra, estado disabled/loading e comportamento de submit inalterados.
+- Preservar a arquitetura do formulario existente: React Hook Form/Zod/TASK-02, endpoint real de edicao e regras de campos imutaveis.
+
+Consequencias:
+
+- O CTA principal da edicao ganha melhor leitura em 390px sem aumentar a altura do rodape.
+- A mudanca nao altera backend, schema Prisma, endpoints, pacotes, midia, anonimato, comunidade, permissao, salvamento ou validacao de conteudo.
+
+Validacao complementar:
+
+- `pnpm --dir frontend exec biome check --write src/components/community/post-edit-modal.tsx`: sucesso.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- Smoke HTTP local em `/app/posts/mine`: 200.
+- `git diff --check`: sucesso.

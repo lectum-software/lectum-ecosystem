@@ -397,3 +397,20 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Smoke HTTP local: `http://127.0.0.1:3000/app/posts/mine` retornou 200.
 - `git diff --check`
 - ADR atualizado: `adrs/0146-acoes-respostas-usuario.md`.
+
+## Ajuste complementar em 2026-06-26 - fonte do Salvar na edicao de post
+
+- Pedido direto de produto: na modal `Editar Post`, aumentar a fonte do texto do botao primario `Salvar` no rodape fixo.
+- Frontend: `PostEditModal` passou o botao `Salvar` de `text-base` para `text-lg`, mantendo `font-black`, altura `h-12`, formato arredondado, estado disabled/loading e a hierarquia visual do rodape da edicao.
+- A mudanca e exclusivamente visual/mobile-first; nao altera submit, validacao, React Hook Form/Zod, endpoint `PUT /api/private/posts/:id`, schema Prisma, packages, midia, anonimato, comunidade, permissao ou dados.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia visual usada foi o screenshot do usuario e as imagens locais da TASK-28 em `_product/proto`.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend exec biome check --write src/components/community/post-edit-modal.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke HTTP local: `http://127.0.0.1:3000/app/posts/mine` retornou 200.
+- `git diff --check`
+- ADR atualizado: `adrs/0145-edicao-post-publicado.md`.

@@ -941,7 +941,7 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
               {canShowMediaControls ? renderPsychologistMediaButton() : renderAnonymousControls()}
 
               <Button
-                className="h-12 min-w-[6.5rem] shrink-0 rounded-full px-6 text-base font-black shadow-[var(--lectum-shadow-soft)] disabled:bg-surface-muted disabled:text-muted disabled:opacity-100 disabled:shadow-none"
+                className="h-12 min-w-[6.5rem] shrink-0 rounded-full px-6 text-lg font-black tracking-[-0.02em] shadow-[var(--lectum-shadow-soft)] disabled:bg-surface-muted disabled:text-muted disabled:opacity-100 disabled:shadow-none"
                 disabled={isSubmitting}
                 type="submit"
               >
