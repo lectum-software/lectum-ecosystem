@@ -513,3 +513,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Fonte visual/auditavel: screenshots do usuario em `/app/favorites` e referencia local `_product/proto/Favoritos.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
 - Validacoes executadas: `pnpm.cmd --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, `git diff --check`, HTTP local `200` em `/app/favorites` e Chrome headless local em viewport 390x844 renderizando a rota.
+
+## Complemento 2026-06-26 - chips no padrão Comunidade e microajustes dos cards
+
+- Pedido do usuário: aplicar em `/app/favorites` as alterações guardadas: chips no mesmo padrão visual dos filtros da Comunidade, bolinha verde pulsante mais alinhada/sobreposta ao avatar e CTA `WhatsApp` com ícone/texto mais proporcionais.
+- Referência visual/auditável: screenshots do usuário em `/app/favorites`, referência local `_product/proto/Favoritos.jpg` e comparação com os chips `Em destaque`, `Novos` e `Mais comentados` de `/app/community/[slug]`; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
+- Frontend: as chips de Favoritos voltaram à composição visual do helper de Comunidade (`h-8`, `text-xs`, `px-3`, borda, estados ativo/inativo e transições equivalentes), preservando o badge de contagem real dentro de cada chip.
+- Frontend: o indicador `available_today` foi reposicionado para dentro do círculo do avatar, mantendo o pulso verde baseado somente em dado real e sem simular presença online.
+- Frontend: o CTA `WhatsApp` teve altura, peso, ícone e label recalibrados para reduzir a sensação de desproporção, preservando `PsychologistWhatsAppRedirectButton`, tracking e URL real de contato.
+- Escopo: sem mudanças de backend, Prisma, migrations, packages, endpoint, filtros reais, paginação, favoritos persistidos ou tracking de WhatsApp.
+- ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
+- Validações executadas: `pnpm.cmd --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, `git diff --check` e HTTP local `200` em `/app/favorites`.

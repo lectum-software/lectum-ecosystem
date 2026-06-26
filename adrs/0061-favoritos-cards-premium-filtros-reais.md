@@ -677,3 +677,23 @@ A tela de Favoritos ja usava o card com capa/avatar e os filtros com contagem re
 - O status verde passa a parecer sobreposto ao avatar em vez de pendurado fora da foto.
 - O CTA continua legivel e acionando o mesmo fluxo real de WhatsApp, mas com melhor relacao visual entre icone e texto.
 - A mudanca e local ao frontend de Favoritos e nao altera backend, schema, endpoints, packages, favoritos persistidos, filtros reais ou tracking.
+
+## Complemento 2026-06-26 - chips alinhados à Comunidade e CTA proporcional
+
+### Contexto
+
+Depois de aumentar os filtros e ajustar a tela de Favoritos, o produto decidiu aproximar as chips de `/app/favorites` do padrão visual já aprovado nos filtros da Comunidade (`Em destaque`, `Novos`, `Mais comentados`). A captura também mostrou que o ponto verde de disponibilidade ainda parecia deslocado em relação ao avatar e que o CTA de WhatsApp precisava de uma relação mais equilibrada entre ícone, texto e altura.
+
+### Decisão
+
+- Reaplicar em Favoritos a mesma base visual das chips de Comunidade: altura `h-8`, texto `text-xs`, padding `px-3`, borda sutil, estado ativo preenchido em azul Lectum, inativo branco e transições/foco equivalentes.
+- Preservar o badge de contagem em Favoritos, pois os números vêm de queries reais do endpoint de favoritos; apenas reduzir o badge para caber na nova escala de chip.
+- Reposicionar o indicador `available_today` com offsets internos no avatar, para que o ponto verde fique sobreposto ao círculo da imagem em vez de parecer fora da borda.
+- Ajustar somente o CTA de WhatsApp do card de Favoritos, reduzindo o ícone e controlando peso/altura do label sem alterar o componente de redirect, tracking ou contrato de contato.
+
+### Consequências
+
+- Favoritos fica visualmente consistente com Comunidade nos controles de filtro sem extrair componente compartilhado prematuramente.
+- As contagens reais continuam visíveis, mas em escala compatível com o padrão compacto dos filtros.
+- O status verde comunica disponibilidade com melhor encaixe visual no avatar.
+- O CTA mantém a mesma função e rastreamento real, com proporção mais discreta dentro do card.

@@ -128,7 +128,7 @@ const formatFavoriteChipCount = (count?: number) => {
 
 const favoriteFilterChipClassName = (active: boolean) =>
   cn(
-    "group inline-flex h-[38px] min-h-[38px] shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full border px-3.5 text-[12px] font-bold leading-none tracking-[-0.01em] shadow-none transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.99] sm:h-[40px] sm:min-h-[40px] sm:px-4 sm:text-[13px]",
+    "group inline-flex h-8 min-h-8 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-xs font-bold leading-none tracking-[-0.01em] shadow-none transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.99]",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8]/20",
     active
       ? "border-primary bg-primary text-white hover:bg-primary/95 dark:border-primary dark:bg-primary dark:text-white"
@@ -137,7 +137,7 @@ const favoriteFilterChipClassName = (active: boolean) =>
 
 const favoriteFilterCountClassName = (active: boolean) =>
   cn(
-    "inline-flex h-[26px] min-w-[26px] shrink-0 items-center justify-center rounded-full px-2 text-[12px] font-extrabold leading-none shadow-[0_4px_10px_rgba(47,141,235,0.035)] sm:h-[28px] sm:min-w-[28px] sm:text-[13px]",
+    "inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-extrabold leading-none shadow-none",
     active
       ? "border border-white/70 bg-white text-[#247BD1]"
       : "border border-[#D7E8FA] bg-[#F4FAFF] text-[#247BD1]",
@@ -250,9 +250,7 @@ const FavoriteFilterChips = ({
               onClick={() => onSelect(chip.key)}
               type="button"
             >
-              <span className="whitespace-nowrap text-[12px] font-bold leading-none sm:text-[13px]">
-                {chip.label}
-              </span>
+              <span className="whitespace-nowrap font-bold leading-none">{chip.label}</span>
               <span className={favoriteFilterCountClassName(active)}>
                 {formatFavoriteChipCount(counts[chip.key])}
               </span>
@@ -382,7 +380,7 @@ const FavoritePsychologistCard = ({
 
             {psychologist.available_today ? (
               <span
-                className="absolute right-2 bottom-2 grid h-3.5 w-3.5 place-items-center rounded-full sm:right-2.5 sm:bottom-2.5 sm:h-4 sm:w-4"
+                className="absolute right-[13px] bottom-[13px] grid h-3.5 w-3.5 place-items-center rounded-full sm:right-[18px] sm:bottom-[18px] sm:h-4 sm:w-4"
                 title="Disponível hoje"
               >
                 <span className="absolute h-3 w-3 rounded-full bg-success/35 motion-safe:animate-[ping_2.4s_cubic-bezier(0,0,0.2,1)_infinite] sm:h-3.5 sm:w-3.5" />
@@ -408,7 +406,7 @@ const FavoritePsychologistCard = ({
         <div className="mt-auto pt-4 sm:pt-5">
           <PsychologistWhatsAppRedirectButton
             aria-label={`Chamar ${psychologist.name} no WhatsApp`}
-            className="inline-flex min-h-[32px] w-full min-w-0 items-center justify-center gap-1 rounded-[12px] bg-success px-2 py-1.5 text-[10px] font-black leading-[1.25] text-white transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 sm:min-h-[40px] sm:gap-1.5 sm:rounded-[15px] sm:px-3 sm:py-2 sm:text-[11px]"
+            className="inline-flex min-h-[31px] w-full min-w-0 items-center justify-center gap-1 rounded-[12px] bg-success px-2 py-1.5 text-[10px] font-extrabold leading-none text-white transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 sm:min-h-[36px] sm:gap-1.5 sm:rounded-[14px] sm:px-2.5 sm:py-2 sm:text-[12px]"
             psychologist={{
               avatar: psychologist.avatar,
               crp: psychologist.crp,
@@ -420,9 +418,9 @@ const FavoritePsychologistCard = ({
             stopPropagation
           >
             <PsychologistWhatsAppButtonContent
-              iconClassName="h-[14px] w-[14px] sm:h-[16px] sm:w-[16px]"
+              iconClassName="h-[13px] w-[13px] sm:h-[14px] sm:w-[14px]"
               label="WhatsApp"
-              labelClassName="min-w-max shrink-0 !overflow-visible !text-clip text-[10px] leading-[1.25] sm:text-[11px]"
+              labelClassName="min-w-max shrink-0 !overflow-visible !text-clip text-[10px] font-extrabold leading-none sm:text-[12px]"
             />
           </PsychologistWhatsAppRedirectButton>
         </div>
