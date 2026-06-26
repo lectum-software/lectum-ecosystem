@@ -1,4 +1,4 @@
-# TASK-23: Feed de comunidade
+﻿# TASK-23: Feed de comunidade
 
 ## Metadata
 
@@ -6,13 +6,13 @@
 |---|---|
 | ID | TASK-23 |
 | Prioridade | P0 |
-| Esforço | L |
+| EsforÃ§o | L |
 | Fase | Comunidades |
 | Status | Completed |
-| Dependências | TASK-22 |
+| DependÃªncias | TASK-22 |
 | ADR alvo | ADR de feed de comunidade |
 
-## Referências obrigatórias
+## ReferÃªncias obrigatÃ³rias
 
 - `_product/tasks/ARCHITECTURE.md`
 - `_product/tasks/PACKAGES.md`
@@ -20,148 +20,148 @@
 - `_product/tasks/PROTO-INVENTORY.md`
 - `_product/tasks/ROADMAP-REVALIDADO.md`
 
-## Referências visuais
+## ReferÃªncias visuais
 
 | Imagem local | Artefato Builder |
 |---|---|
 | `_product/proto/Feed Comunidade.jpg` | `figma-design-frame-3-Feed-Comunidade.html` |
 
-As referências visuais são norte de produto e layout. Elas não autorizam recriar arquitetura, aceitar código gerado sem revisão, usar mock ou ignorar os padrões atuais do projeto.
+As referÃªncias visuais sÃ£o norte de produto e layout. Elas nÃ£o autorizam recriar arquitetura, aceitar cÃ³digo gerado sem revisÃ£o, usar mock ou ignorar os padrÃµes atuais do projeto.
 
 ## Contexto
 
-O feed é longo e precisa ser eficiente. Deve listar posts reais, com contadores vindos do backend. Refinamento de 2026-06-13: a tela principal é o Feed da Comunidade agregado, reunindo destaques de todas as comunidades; detalhes por comunidade serão criados em task futura.
+O feed Ã© longo e precisa ser eficiente. Deve listar posts reais, com contadores vindos do backend. Refinamento de 2026-06-13: a tela principal Ã© o Feed da Comunidade agregado, reunindo destaques de todas as comunidades; detalhes por comunidade serÃ£o criados em task futura.
 
 ## Objetivo
 
-Criar feed real agregado de posts de comunidades com paginação, filtros, chips de comunidade e ações básicas.
+Criar feed real agregado de posts de comunidades com paginaÃ§Ã£o, filtros, chips de comunidade e aÃ§Ãµes bÃ¡sicas.
 
 ## Refinamento vigente do Feed Global
 
-- A tela principal é o Feed da Comunidade global, não detalhe de comunidade.
-- Comunidades individuais terão telas próprias em task futura; chips e nomes de comunidade já apontam para as rotas futuras.
-- Usuários finais não criam comunidades diretamente: usam "Solicitar nova comunidade" para análise da equipe.
-- Criação, curadoria e moderação de comunidades pertencem à plataforma/administração, não a usuários comuns.
-- O selo `TOP MENTOR`/`TOP #1 MENTOR` é apenas destaque visual e não concede permissão especial. A UI deve suportar `TOP #1 MENTOR` (ouro), `TOP #2 MENTOR` (prata) e `TOP #3 MENTOR` (bronze), usando os gradientes definidos no Figma e posicionados acima do nome do psicólogo.
-- Posts de pacientes exigem título, texto/descrição e comunidade relacionada.
-- A publicação anônima de paciente usa avatar com ícone anônimo e nome `Membro Anônimo #1234`, com sufixo determinístico por post; a publicação identificada mostra nome/avatar reais do paciente.
-- A prévia profissional no card só aparece quando houver resposta/comentário de psicólogo com `cfp_verified_at`; entre várias respostas verificadas, vence a de maior `upvotes_count`.
-- Comentários de usuários comuns e respostas de psicólogos não verificados não entram na prévia profissional.
-- WhatsApp aparece somente em respostas de psicólogos verificados com entitlement profissional pago ativo.
-- O header do feed esconde ao rolar para baixo e reaparece ao rolar para cima, com transição suave.
-- A navegação inferior do Feed da Comunidade substitui o item central `Comunidade` por um CTA circular azul com ícone `+`, sem texto abaixo, apontando para a rota futura de criação de post; a navbar mantém a mesma altura/estrutura das demais telas e apenas o botão central usa proporção visual do mockup.
+- A tela principal Ã© o Feed da Comunidade global, nÃ£o detalhe de comunidade.
+- Comunidades individuais terÃ£o telas prÃ³prias em task futura; chips e nomes de comunidade jÃ¡ apontam para as rotas futuras.
+- UsuÃ¡rios finais nÃ£o criam comunidades diretamente: usam "Solicitar nova comunidade" para anÃ¡lise da equipe.
+- CriaÃ§Ã£o, curadoria e moderaÃ§Ã£o de comunidades pertencem Ã  plataforma/administraÃ§Ã£o, nÃ£o a usuÃ¡rios comuns.
+- O selo `TOP MENTOR`/`TOP #1 MENTOR` Ã© apenas destaque visual e nÃ£o concede permissÃ£o especial. A UI deve suportar `TOP #1 MENTOR` (ouro), `TOP #2 MENTOR` (prata) e `TOP #3 MENTOR` (bronze), usando os gradientes definidos no Figma e posicionados acima do nome do psicÃ³logo.
+- Posts de pacientes exigem tÃ­tulo, texto/descriÃ§Ã£o e comunidade relacionada.
+- A publicaÃ§Ã£o anÃ´nima de paciente usa avatar com Ã­cone anÃ´nimo e nome `Membro AnÃ´nimo #1234`, com sufixo determinÃ­stico por post; a publicaÃ§Ã£o identificada mostra nome/avatar reais do paciente.
+- A prÃ©via profissional no card sÃ³ aparece quando houver resposta/comentÃ¡rio de psicÃ³logo com `cfp_verified_at`; entre vÃ¡rias respostas verificadas, vence a de maior `upvotes_count`.
+- ComentÃ¡rios de usuÃ¡rios comuns e respostas de psicÃ³logos nÃ£o verificados nÃ£o entram na prÃ©via profissional.
+- WhatsApp aparece somente em respostas de psicÃ³logos verificados com entitlement profissional pago ativo.
+- O header do feed esconde ao rolar para baixo e reaparece ao rolar para cima, com transiÃ§Ã£o suave.
+- A navegaÃ§Ã£o inferior do Feed da Comunidade substitui o item central `Comunidade` por um CTA circular azul com Ã­cone `+`, sem texto abaixo, apontando para a rota futura de criaÃ§Ã£o de post; a navbar mantÃ©m a mesma altura/estrutura das demais telas e apenas o botÃ£o central usa proporÃ§Ã£o visual do mockup.
 
-## Pré-requisitos e bloqueios
+## PrÃ©-requisitos e bloqueios
 
 - Depende de comunidades reais ou estado vazio honesto.
 
-Se qualquer bloqueio obrigatório estiver ativo, pare a implementação, registre ADR/pendência e não marque a task como concluída.
+Se qualquer bloqueio obrigatÃ³rio estiver ativo, pare a implementaÃ§Ã£o, registre ADR/pendÃªncia e nÃ£o marque a task como concluÃ­da.
 
 ## Escopo frontend
 
-Rotas esperadas (convenção canônica de `DATA-MODEL.md`):
+Rotas esperadas (convenÃ§Ã£o canÃ´nica de `DATA-MODEL.md`):
 
-- `/app/community` exibe a lista/exploração de comunidades.
-- `/app/community/feed` é a rota canônica do Feed da Comunidade agregado.
-- `/app/community/[slug]` fica reservado para detalhe futuro; enquanto o detalhe não existir, pode servir apenas como compatibilidade/filtro do feed.
-- `/app/community/post/new` é a rota preparada para criação futura de posts de pacientes e psicólogos.
+- `/app/community` exibe a lista/exploraÃ§Ã£o de comunidades.
+- `/app/community/feed` Ã© a rota canÃ´nica do Feed da Comunidade agregado.
+- `/app/community/[slug]` fica reservado para detalhe futuro; enquanto o detalhe nÃ£o existir, pode servir apenas como compatibilidade/filtro do feed.
+- `/app/community/post/new` Ã© a rota preparada para criaÃ§Ã£o futura de posts de pacientes e psicÃ³logos.
 
-Implementação esperada:
+ImplementaÃ§Ã£o esperada:
 
-- Criar feed agregado com infinite scroll ou paginação.
-- Exibir comunidade, autor, tags, contadores, CTA de WhatsApp quando houver psicólogo e ações de post.
-- Exibir busca, filtro "Todas as comunidades"/"Apenas comunidades que o usuário segue" e chips ativos do catálogo curado: Explorar, Ansiedade, Relacionamentos, Autocuidado, Depressão e TDAH.
-- Filtrar por comunidade/categoria quando disponível sem transformar o feed agregado em página de detalhe.
+- Criar feed agregado com infinite scroll ou paginaÃ§Ã£o.
+- Exibir comunidade, autor, tags, contadores, CTA de WhatsApp quando houver psicÃ³logo e aÃ§Ãµes de post.
+- Exibir busca, filtro "Todas as comunidades"/"Apenas comunidades que o usuÃ¡rio segue" e chips ativos do catÃ¡logo curado: Explorar, Ansiedade, Relacionamentos, Autocuidado, DepressÃ£o e TDAH.
+- Filtrar por comunidade/categoria quando disponÃ­vel sem transformar o feed agregado em pÃ¡gina de detalhe.
 - Estados loading, erro e vazio.
-- Não usar array local de posts.
+- NÃ£o usar array local de posts.
 
 ## Escopo backend
 
-Implementação esperada:
+ImplementaÃ§Ã£o esperada:
 
 - Endpoint de feed agregado paginado, com filtro opcional por comunidade para chips/compatibilidade.
 - Retornar apenas posts com `community_post.status = "publicado"`.
-- Usar os contadores denormalizados de `community_post` (`upvotes_count`, `downvotes_count`, `replies_count`, `saves_count`) — não recalcular por agregação a cada request.
-- Índices conforme `DATA-MODEL.md` (`@@index([community_id, status, createdAt])`).
-- Não expor dados privados de autores; downvote nunca exposto individualmente.
+- Usar os contadores denormalizados de `community_post` (`upvotes_count`, `downvotes_count`, `replies_count`, `saves_count`) â€” nÃ£o recalcular por agregaÃ§Ã£o a cada request.
+- Ãndices conforme `DATA-MODEL.md` (`@@index([community_id, status, createdAt])`).
+- NÃ£o expor dados privados de autores; downvote nunca exposto individualmente.
 
 Modelos/tabelas envolvidos (ver `DATA-MODEL.md`):
 
 - `community_post` (contadores denormalizados)
 - `community`
 
-Endpoints esperados (convenção canônica de `DATA-MODEL.md`):
+Endpoints esperados (convenÃ§Ã£o canÃ´nica de `DATA-MODEL.md`):
 
 - GET `/api/private/community/feed/posts`
 - GET `/api/private/community/:slug/posts` (compatibilidade/detalhe futuro)
 
-Request/response: seguir o "Contrato padrão de API" de `DATA-MODEL.md` — paginação `page`/`limit` (default 20, máx 50), busca `search`, filtro opcional `community` e `scope="all"|"following"`. Para feed muito longo avaliar cursor por `createdAt`+`id` e `@tanstack/react-virtual` (registrar em ADR).
+Request/response: seguir o "Contrato padrÃ£o de API" de `DATA-MODEL.md` â€” paginaÃ§Ã£o `page`/`limit` (default 20, mÃ¡x 50), busca `search`, filtro opcional `community` e `scope="all"|"following"`. Para feed muito longo avaliar cursor por `createdAt`+`id` e `@tanstack/react-virtual` (registrar em ADR).
 
-## Contrato técnico detalhado
+## Contrato tÃ©cnico detalhado
 
-Arquitetura frontend obrigatória:
+Arquitetura frontend obrigatÃ³ria:
 
-- Telas em `frontend/src/app/{rota}/page.tsx`, `logic.tsx` e `use-form.tsx` quando houver formulário.
+- Telas em `frontend/src/app/{rota}/page.tsx`, `logic.tsx` e `use-form.tsx` quando houver formulÃ¡rio.
 - Chamadas HTTP em `frontend/src/api/req/{dominio}/index.ts` usando `callEndpoint` e `handleReq`.
 - Hooks React Query em `frontend/src/api/callers/{dominio}/index.tsx`.
 - Query keys em `frontend/src/api/cache/keys.ts`.
 - Shells/templates em `frontend/src/templates`.
 - Componentes existentes em `frontend/src/registry/new-york-v4/ui` e `frontend/src/components/ui` devem ser reutilizados antes de criar novos.
-- Quando houver formulário ou campo, usar `frontend/src/hooks/form`, `frontend/src/components/controllers`, React Hook Form e Zod conforme `TASK-02`.
+- Quando houver formulÃ¡rio ou campo, usar `frontend/src/hooks/form`, `frontend/src/components/controllers`, React Hook Form e Zod conforme `TASK-02`.
 
-Arquitetura backend obrigatória:
+Arquitetura backend obrigatÃ³ria:
 
 - Novas APIs em `backend/src/modules/api/{public|private}/{dominio}/{caso}`.
 - Rotas registradas em `backend/src/main/server/imports/write.ts`.
-- Validadores em `validator/index.ts` usando os helpers/pacote local de validação.
-- Services e repositories separados quando houver regra de domínio ou persistência.
-- Respostas usando `send`, `error500`, `error` e traduções em `backend/locales/pt/translation.json`.
-- Prisma com nomes e padrões já definidos em `ARCHITECTURE.md`.
+- Validadores em `validator/index.ts` usando os helpers/pacote local de validaÃ§Ã£o.
+- Services e repositories separados quando houver regra de domÃ­nio ou persistÃªncia.
+- Respostas usando `send`, `error500`, `error` e traduÃ§Ãµes em `backend/locales/pt/translation.json`.
+- Prisma com nomes e padrÃµes jÃ¡ definidos em `ARCHITECTURE.md`.
 
 Packages permitidos nesta task:
 
 - TanStack Query
 - Prisma
 
-Regras anti-recriação específicas:
+Regras anti-recriaÃ§Ã£o especÃ­ficas:
 
 - Procurar componente, helper, model, endpoint e query key equivalente antes de criar estrutura nova.
-- Não criar client HTTP paralelo, store paralela, autenticação paralela, validator paralelo ou design system paralelo.
-- Não usar `sample/` como referência direta de implementação futura.
-- Não instalar package novo sem consultar `PACKAGES.md` e registrar ADR.
+- NÃ£o criar client HTTP paralelo, store paralela, autenticaÃ§Ã£o paralela, validator paralelo ou design system paralelo.
+- NÃ£o usar `sample/` como referÃªncia direta de implementaÃ§Ã£o futura.
+- NÃ£o instalar package novo sem consultar `PACKAGES.md` e registrar ADR.
 
-## Estados obrigatórios
+## Estados obrigatÃ³rios
 
 - Loading inicial.
 - Erro de rede/API em PT-BR.
-- Estado vazio quando não houver dado real.
+- Estado vazio quando nÃ£o houver dado real.
 - Sucesso com feedback visual discreto.
 - Responsividade mobile-first baseada nas imagens exportadas.
 
 ## Fora do escopo
 
 - Criar dados fake, seed artificial ou mock para preencher tela.
-- Concluir integração externa ausente.
-- Refatorar módulos não relacionados à task.
+- Concluir integraÃ§Ã£o externa ausente.
+- Refatorar mÃ³dulos nÃ£o relacionados Ã  task.
 - Trocar package manager ou stack base.
 
-## Critérios de aceite
+## CritÃ©rios de aceite
 
-- [x] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
+- [x] As referÃªncias visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
 - [x] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
-- [x] Rotas seguem a convenção canônica do `DATA-MODEL.md`.
+- [x] Rotas seguem a convenÃ§Ã£o canÃ´nica do `DATA-MODEL.md`.
 - [x] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
-- [x] Backend implementado nos endpoints/modelos esperados quando aplicável.
-- [x] Todos os estados obrigatórios existem e usam textos em PT-BR.
-- [x] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
+- [x] Backend implementado nos endpoints/modelos esperados quando aplicÃ¡vel.
+- [x] Todos os estados obrigatÃ³rios existem e usam textos em PT-BR.
+- [x] FormulÃ¡rios e campos usam a fundaÃ§Ã£o da `TASK-02` quando aplicÃ¡vel.
 - [x] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
-- [x] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
+- [x] Nenhum cÃ³digo gerado por Builder foi aceito sem revisÃ£o e adequaÃ§Ã£o Ã  arquitetura.
 - [x] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
 - [x] ADR criado ou atualizado em `adrs/`.
 - [x] Checks/builds relevantes foram executados sem erros.
 - [x] Commit criado com mensagem convencional.
 
-## Validação mínima
+## ValidaÃ§Ã£o mÃ­nima
 
 - `pnpm --dir frontend check` quando frontend mudar.
 - `pnpm --dir frontend build` quando mudar rota ou UI.
@@ -172,7 +172,7 @@ Regras anti-recriação específicas:
 
 ## Notas para executor
 
-Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
+Esta task deve ser concluÃ­da em um commit prÃ³prio. Se houver bloqueio externo, registre claramente o bloqueio e nÃ£o avance para a prÃ³xima task.
 
 ## Execucao complementar: refinamento visual do feed e follow silencioso (2026-06-14)
 
@@ -345,14 +345,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - ADR atualizado: `adrs/0103-player-video-vertical-unificado.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`.
 
-## Execução complementar: padronização de controles de interação (2026-06-16)
+## ExecuÃ§Ã£o complementar: padronizaÃ§Ã£o de controles de interaÃ§Ã£o (2026-06-16)
 
-- Pedido do usuário: padronizar os ícones de upvote/downvote e o texto `Útil` no feed, alinhando o tamanho visual aos demais controles relacionados.
-- O feed herda a atualização do componente compartilhado `CommunityActionBar`, que agora usa as mesmas primitivas de tamanho para ícones, texto e contadores em upvote, downvote, comentários, salvar e compartilhar.
-- O destaque de resposta profissional nos cards compartilhados deixou de usar fundo esverdeado e passou ao azul claro consistente com o padrão de psicólogo verificado.
-- Não houve alteração de backend, Prisma, migrations, packages, endpoints, payloads, ranking ou diversidade do feed.
+- Pedido do usuÃ¡rio: padronizar os Ã­cones de upvote/downvote e o texto `Ãštil` no feed, alinhando o tamanho visual aos demais controles relacionados.
+- O feed herda a atualizaÃ§Ã£o do componente compartilhado `CommunityActionBar`, que agora usa as mesmas primitivas de tamanho para Ã­cones, texto e contadores em upvote, downvote, comentÃ¡rios, salvar e compartilhar.
+- O destaque de resposta profissional nos cards compartilhados deixou de usar fundo esverdeado e passou ao azul claro consistente com o padrÃ£o de psicÃ³logo verificado.
+- NÃ£o houve alteraÃ§Ã£o de backend, Prisma, migrations, packages, endpoints, payloads, ranking ou diversidade do feed.
 - ADR atualizado: `adrs/0104-barra-acoes-comunidade-unificada.md`.
-- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP local `200` em `/app/community/feed`.
+- ValidaÃ§Ãµes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP local `200` em `/app/community/feed`.
 
 ## Complemento 2026-06-16 - fullscreen mobile de videos de conteudo
 
@@ -397,15 +397,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - [x] `pnpm check`
 - [x] `git diff --check`
 
-## Execução complementar: header compacto premium do feed (2026-06-25)
+## ExecuÃ§Ã£o complementar: header compacto premium do feed (2026-06-25)
 
-- Pedido do usuário: transformar o header do feed em uma única linha `[buscar] [selecionar comunidade] [configurações]`, com seletor de comunidades e primeira opção `Todas as comunidades` levando para explorar comunidades.
-- Fonte visual auditável: `_product/proto/Feed Comunidade.jpg`; Builder/Quick Copy não está exposto como ferramenta callable nesta sessão.
+- Pedido do usuÃ¡rio: transformar o header do feed em uma Ãºnica linha `[buscar] [selecionar comunidade] [configuraÃ§Ãµes]`, com seletor de comunidades e primeira opÃ§Ã£o `Todas as comunidades` levando para explorar comunidades.
+- Fonte visual auditÃ¡vel: `_product/proto/Feed Comunidade.jpg`; Builder/Quick Copy nÃ£o estÃ¡ exposto como ferramenta callable nesta sessÃ£o.
 - O header de `/app/community/feed` e compatibilidade `/app/community/[slug]` deixou de usar chips em segunda linha e passou a usar um dropdown central de comunidades.
-- A primeira opção do dropdown é `Todas as comunidades`, com ícone de explorar e seta ao final do texto, apontando para `/app/community`.
-- Busca e configurações viraram botões premium padronizados, com superfície, borda, foco, sombra sutil e popovers compactos sem alterar dados, ranking, rotas ou contratos da API.
+- A primeira opÃ§Ã£o do dropdown Ã© `Todas as comunidades`, com Ã­cone de explorar e seta ao final do texto, apontando para `/app/community`.
+- Busca e configuraÃ§Ãµes viraram botÃµes premium padronizados, com superfÃ­cie, borda, foco, sombra sutil e popovers compactos sem alterar dados, ranking, rotas ou contratos da API.
 - ADR criado: `adrs/0166-header-feed-comunidades-premium.md`.
-- Validações executadas: `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check` e HTTP local `200` em `/app/community/feed` e `/app/community/ansiedade-em-equilibrio`.
+- ValidaÃ§Ãµes executadas: `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check` e HTTP local `200` em `/app/community/feed` e `/app/community/ansiedade-em-equilibrio`.
 
 ## Execucao complementar: header transparente no feed de comunidades (2026-06-25)
 
@@ -435,10 +435,18 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - ADR atualizado: `adrs/0166-header-feed-comunidades-premium.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check --write -- "src/app/app/community/[slug]/logic.tsx" "src/utils/community.ts"`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check`, HTTP local `200` em `/app/community/feed` e HTTP local `200` em `/app/community/ansiedade-em-equilibrio`.
 
-## Complemento 2026-06-26 - alias anônimo estável por usuário
+## Complemento 2026-06-26 - alias anÃ´nimo estÃ¡vel por usuÃ¡rio
 
-- Pedido do usuário: posts anônimos devem manter o mesmo identificador para o mesmo membro, permitindo que psicólogos reconheçam continuidade entre publicações sem revelar identidade real.
-- Backend: o alias `Membro Anônimo #XXXX` deixou de ser calculado a partir do `post.id` e passou a ser calculado a partir do `author.id`, mantendo o mesmo número para todos os posts anônimos daquele usuário em qualquer comunidade.
-- A anonimização continua ocultando nome real, avatar e link de identidade do paciente; psicólogos continuam exibidos normalmente e não usam alias anônimo.
-- Escopo: sem mudança de schema Prisma, migrations, packages, endpoints, payloads, frontend, permissões, ranking, votos, salvos ou respostas.
+- Pedido do usuÃ¡rio: posts anÃ´nimos devem manter o mesmo identificador para o mesmo membro, permitindo que psicÃ³logos reconheÃ§am continuidade entre publicaÃ§Ãµes sem revelar identidade real.
+- Backend: o alias `Membro AnÃ´nimo #XXXX` deixou de ser calculado a partir do `post.id` e passou a ser calculado a partir do `author.id`, mantendo o mesmo nÃºmero para todos os posts anÃ´nimos daquele usuÃ¡rio em qualquer comunidade.
+- A anonimizaÃ§Ã£o continua ocultando nome real, avatar e link de identidade do paciente; psicÃ³logos continuam exibidos normalmente e nÃ£o usam alias anÃ´nimo.
+- Escopo: sem mudanÃ§a de schema Prisma, migrations, packages, endpoints, payloads, frontend, permissÃµes, ranking, votos, salvos ou respostas.
 - ADR criado: `adrs/0167-alias-anonimo-estavel-por-usuario.md`.
+
+## Complemento 2026-06-26 - mensagem WhatsApp com primeiro nome
+
+- Pedido do usuÃ¡rio: a mensagem pronta do WhatsApp em posts de comunidade deve incluir o primeiro nome do psicÃ³logo, por exemplo `OlÃ¡ Camila, encontrei seu post na Lectum e gostaria de conversar sobre atendimento.`
+- Backend: a geraÃ§Ã£o de `author.whatsapp_url` passou a usar utilitÃ¡rio compartilhado que inclui o primeiro nome do psicÃ³logo e escolhe a copy pelo contexto (`perfil`, `post de comunidade` ou `resposta de comunidade`).
+- Frontend: a transiÃ§Ã£o compartilhada para WhatsApp preserva o texto contextual vindo do card/post, mesmo quando o endpoint de tracking retorna uma URL de contato atualizada.
+- Escopo: sem mudanÃ§a de schema Prisma, migrations, endpoints, permissÃµes, ranking, votos, salvos, mÃ­dia ou packages.
+- ADR atualizado: `adrs/0022-contato-whatsapp-wa-me.md`.

@@ -630,3 +630,9 @@ Para evitar referência a tabela inexistente, criar nesta ordem (cada uma com su
 4. comunidade: `community` → `community_member`/`community_suggestion` → `community_post` → `post_reply`/`post_vote`/`post_save` (TASK-22..28).
 5. `notification`/`notification_preference` (TASK-29A).
 6. `subscription_plan`/`professional_subscription`/`billing_address`/`payment_method`/`payment_event` (TASK-31..33) — após TASK-03.
+
+## Complemento 2026-06-26 - mensagens `wa.me` personalizadas
+
+- Links `author.whatsapp_url` e `whatsapp_url` de perfil/listagem/contato passam a incluir mensagem pronta com o primeiro nome do psicólogo quando disponível.
+- O texto do `wa.me` é contextual: perfil (`encontrei seu perfil na Lectum`), post profissional (`encontrei seu post na Lectum`) e resposta/comentário profissional (`encontrei sua resposta na Lectum`).
+- O contrato permanece uma string URL pública; não há exposição do telefone bruto fora do link de intenção nem mudança de schema.

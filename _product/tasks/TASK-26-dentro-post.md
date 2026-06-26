@@ -1,4 +1,4 @@
-# TASK-26: Dentro do post
+﻿# TASK-26: Dentro do post
 
 ## Metadata
 
@@ -6,13 +6,13 @@
 |---|---|
 | ID | TASK-26 |
 | Prioridade | P0 |
-| EsforÃƒÂ§o | L |
+| EsforÃƒÆ’Ã‚Â§o | L |
 | Fase | Comunidades |
 | Status | Completed |
-| DependÃƒÂªncias | TASK-02, TASK-24, TASK-25 |
+| DependÃƒÆ’Ã‚Âªncias | TASK-02, TASK-24, TASK-25 |
 | ADR alvo | ADR de respostas e votos em posts |
 
-## ReferÃƒÂªncias obrigatÃƒÂ³rias
+## ReferÃƒÆ’Ã‚Âªncias obrigatÃƒÆ’Ã‚Â³rias
 
 - `_product/tasks/ARCHITECTURE.md`
 - `_product/tasks/PACKAGES.md`
@@ -20,99 +20,99 @@
 - `_product/tasks/PROTO-INVENTORY.md`
 - `_product/tasks/ROADMAP-REVALIDADO.md`
 
-## ReferÃƒÂªncias visuais
+## ReferÃƒÆ’Ã‚Âªncias visuais
 
 | Imagem local | Artefato Builder |
 |---|---|
 | `_product/proto/Dentro do Post.jpg` | `figma-design-frame-2-Dentro-do-Post.html` |
 
-As referÃƒÂªncias visuais sÃƒÂ£o norte de produto e layout. Elas nÃƒÂ£o autorizam recriar arquitetura, aceitar cÃƒÂ³digo gerado sem revisÃƒÂ£o, usar mock ou ignorar os padrÃƒÂµes atuais do projeto.
+As referÃƒÆ’Ã‚Âªncias visuais sÃƒÆ’Ã‚Â£o norte de produto e layout. Elas nÃƒÆ’Ã‚Â£o autorizam recriar arquitetura, aceitar cÃƒÆ’Ã‚Â³digo gerado sem revisÃƒÆ’Ã‚Â£o, usar mock ou ignorar os padrÃƒÆ’Ã‚Âµes atuais do projeto.
 
-ExecuÃƒÂ§ÃƒÂ£o: Builder/Quick Copy nÃƒÂ£o estava disponÃƒÂ­vel no ambiente Codex; a referÃƒÂªncia visual foi consultada pela imagem local `_product/proto/Dentro do Post.jpg`.
+ExecuÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o: Builder/Quick Copy nÃƒÆ’Ã‚Â£o estava disponÃƒÆ’Ã‚Â­vel no ambiente Codex; a referÃƒÆ’Ã‚Âªncia visual foi consultada pela imagem local `_product/proto/Dentro do Post.jpg`.
 
 ## Contexto
 
-`Dentro do Post.jpg` ÃƒÂ© uma tela muito longa. A implementaÃƒÂ§ÃƒÂ£o precisa quebrar em componentes e carregar respostas de forma paginada.
+`Dentro do Post.jpg` ÃƒÆ’Ã‚Â© uma tela muito longa. A implementaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o precisa quebrar em componentes e carregar respostas de forma paginada.
 
 ## Objetivo
 
-Criar detalhe de post com respostas, votos, salvamento e paginaÃƒÂ§ÃƒÂ£o de comentÃƒÂ¡rios.
+Criar detalhe de post com respostas, votos, salvamento e paginaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de comentÃƒÆ’Ã‚Â¡rios.
 
-## PrÃƒÂ©-requisitos e bloqueios
+## PrÃƒÆ’Ã‚Â©-requisitos e bloqueios
 
-- Regras de moderaÃƒÂ§ÃƒÂ£o/downvote devem estar em ADR antes de implementar comportamento destrutivo.
+- Regras de moderaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o/downvote devem estar em ADR antes de implementar comportamento destrutivo.
 
-Se qualquer bloqueio obrigatÃƒÂ³rio estiver ativo, pare a implementaÃƒÂ§ÃƒÂ£o, registre ADR/pendÃƒÂªncia e nÃƒÂ£o marque a task como concluÃƒÂ­da.
+Se qualquer bloqueio obrigatÃƒÆ’Ã‚Â³rio estiver ativo, pare a implementaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o, registre ADR/pendÃƒÆ’Ã‚Âªncia e nÃƒÆ’Ã‚Â£o marque a task como concluÃƒÆ’Ã‚Â­da.
 
 ## Escopo frontend
 
-Rotas esperadas (convenÃƒÂ§ÃƒÂ£o canÃƒÂ´nica de `DATA-MODEL.md`):
+Rotas esperadas (convenÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o canÃƒÆ’Ã‚Â´nica de `DATA-MODEL.md`):
 
 - `/app/community/[slug]/post/[id]`
 
-ImplementaÃƒÂ§ÃƒÂ£o esperada:
+ImplementaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o esperada:
 
 - Criar rota de detalhe do post.
 - Exibir post, autor, comunidade, votos, salvar e respostas.
-- Criar formulÃƒÂ¡rio de resposta com validaÃƒÂ§ÃƒÂ£o.
+- Criar formulÃƒÆ’Ã‚Â¡rio de resposta com validaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o.
 - Paginar respostas e evitar render gigante.
 - Aplicar optimistic update com rollback em votos/salvar.
 
-DecomposiÃƒÂ§ÃƒÂ£o de componentes (a tela ÃƒÂ© muito longa Ã¢â‚¬â€ quebrar para evitar render monolÃƒÂ­tico):
+DecomposiÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de componentes (a tela ÃƒÆ’Ã‚Â© muito longa ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â quebrar para evitar render monolÃƒÆ’Ã‚Â­tico):
 
-- `PostHeader`: avatar/autor (`author_id` + `user.role`), comunidade (`community.slug`/nome), data, menu de aÃƒÂ§ÃƒÂµes.
+- `PostHeader`: avatar/autor (`author_id` + `user.role`), comunidade (`community.slug`/nome), data, menu de aÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes.
 - `PostBody`: `community_post.title` + `content`.
-- `PostVoteBar`: upvote/downvote a partir de `community_post.upvotes_count`/`downvotes_count` e do voto do usuÃƒÂ¡rio; aÃƒÂ§ÃƒÂ£o de salvar usando `saves_count`. Downvote nunca exibido como nÃƒÂºmero pÃƒÂºblico (regra `DATA-MODEL.md`).
-- `ReplyComposer`: formulÃƒÂ¡rio (React Hook Form + Zod, `TASK-02`) para criar comentÃƒÂ¡rio (`parent_reply_id = null`) ou resposta (1 nÃƒÂ­vel, `parent_reply_id` preenchido).
-- `RepliesList`: lista de `post_reply` paginada por ÃƒÂ¢ncora (`@@index([post_id, parent_reply_id, createdAt])`), com respostas aninhadas em 1 nÃƒÂ­vel apenas.
+- `PostVoteBar`: upvote/downvote a partir de `community_post.upvotes_count`/`downvotes_count` e do voto do usuÃƒÆ’Ã‚Â¡rio; aÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de salvar usando `saves_count`. Downvote nunca exibido como nÃƒÆ’Ã‚Âºmero pÃƒÆ’Ã‚Âºblico (regra `DATA-MODEL.md`).
+- `ReplyComposer`: formulÃƒÆ’Ã‚Â¡rio (React Hook Form + Zod, `TASK-02`) para criar comentÃƒÆ’Ã‚Â¡rio (`parent_reply_id = null`) ou resposta (1 nÃƒÆ’Ã‚Â­vel, `parent_reply_id` preenchido).
+- `RepliesList`: lista de `post_reply` paginada por ÃƒÆ’Ã‚Â¢ncora (`@@index([post_id, parent_reply_id, createdAt])`), com respostas aninhadas em 1 nÃƒÆ’Ã‚Â­vel apenas.
 
 ## Escopo backend
 
-ImplementaÃƒÂ§ÃƒÂ£o esperada:
+ImplementaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o esperada:
 
 - Endpoints de detalhe, respostas, criar resposta, votar e salvar.
 - Unicidade de voto via `post_vote` (`@@unique([user_id, post_id])` / `@@unique([user_id, reply_id])`); upsert para alterar voto.
 - `value` aceita apenas `1` (upvote) ou `-1` (downvote); downvotes nunca expostos individualmente.
-- Paginar respostas por ÃƒÂ¢ncora.
-- Validar permissÃƒÂ£o e `community_post.status`.
+- Paginar respostas por ÃƒÆ’Ã‚Â¢ncora.
+- Validar permissÃƒÆ’Ã‚Â£o e `community_post.status`.
 
 Modelos/tabelas envolvidos (ver `DATA-MODEL.md`):
 
 - `community_post`
-- `post_reply` (`parent_reply_id` Ã¢â‚¬â€ ÃƒÂ¡rvore de 1 nÃƒÂ­vel)
+- `post_reply` (`parent_reply_id` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ÃƒÆ’Ã‚Â¡rvore de 1 nÃƒÆ’Ã‚Â­vel)
 - `post_vote`
 - `post_save`
 
-Endpoints esperados (convenÃƒÂ§ÃƒÂ£o canÃƒÂ´nica de `DATA-MODEL.md`):
+Endpoints esperados (convenÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o canÃƒÆ’Ã‚Â´nica de `DATA-MODEL.md`):
 
-- GET `/api/private/posts/:id` Ã¢â‚¬â€ detalhe do post.
-- GET `/api/private/posts/:id/replies` Ã¢â‚¬â€ respostas paginadas por ÃƒÂ¢ncora.
-- POST `/api/private/posts/:id/replies` Ã¢â‚¬â€ criar comentÃƒÂ¡rio/resposta; payload `{ content: string, parentReplyId?: string }`.
-- POST `/api/private/posts/:id/vote` Ã¢â‚¬â€ votar/alterar voto; payload `{ value: 1 | -1, replyId?: string }` (sem `replyId` = voto no post). Reenviar o mesmo `value` remove o voto (toggle); upsert por `@@unique`.
-- POST `/api/private/posts/:id/save` Ã¢â‚¬â€ salvar; DELETE `/api/private/posts/:id/save` Ã¢â‚¬â€ remover salvo (`post_save`).
+- GET `/api/private/posts/:id` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â detalhe do post.
+- GET `/api/private/posts/:id/replies` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â respostas paginadas por ÃƒÆ’Ã‚Â¢ncora.
+- POST `/api/private/posts/:id/replies` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â criar comentÃƒÆ’Ã‚Â¡rio/resposta; payload `{ content: string, parentReplyId?: string }`.
+- POST `/api/private/posts/:id/vote` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â votar/alterar voto; payload `{ value: 1 | -1, replyId?: string }` (sem `replyId` = voto no post). Reenviar o mesmo `value` remove o voto (toggle); upsert por `@@unique`.
+- POST `/api/private/posts/:id/save` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â salvar; DELETE `/api/private/posts/:id/save` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â remover salvo (`post_save`).
 
-Request/response: seguir o "Contrato padrÃƒÂ£o de API" de `DATA-MODEL.md` Ã¢â‚¬â€ replies paginadas (`page`/`limit` ou cursor por ÃƒÂ¢ncora); votos/salvar retornam o estado atualizado no envelope de sucesso para o optimistic update reconciliar.
+Request/response: seguir o "Contrato padrÃƒÆ’Ã‚Â£o de API" de `DATA-MODEL.md` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â replies paginadas (`page`/`limit` ou cursor por ÃƒÆ’Ã‚Â¢ncora); votos/salvar retornam o estado atualizado no envelope de sucesso para o optimistic update reconciliar.
 
-## Contrato tÃƒÂ©cnico detalhado
+## Contrato tÃƒÆ’Ã‚Â©cnico detalhado
 
-Arquitetura frontend obrigatÃƒÂ³ria:
+Arquitetura frontend obrigatÃƒÆ’Ã‚Â³ria:
 
-- Telas em `frontend/src/app/{rota}/page.tsx`, `logic.tsx` e `use-form.tsx` quando houver formulÃƒÂ¡rio.
+- Telas em `frontend/src/app/{rota}/page.tsx`, `logic.tsx` e `use-form.tsx` quando houver formulÃƒÆ’Ã‚Â¡rio.
 - Chamadas HTTP em `frontend/src/api/req/{dominio}/index.ts` usando `callEndpoint` e `handleReq`.
 - Hooks React Query em `frontend/src/api/callers/{dominio}/index.tsx`.
 - Query keys em `frontend/src/api/cache/keys.ts`.
 - Shells/templates em `frontend/src/templates`.
 - Componentes existentes em `frontend/src/registry/new-york-v4/ui` e `frontend/src/components/ui` devem ser reutilizados antes de criar novos.
-- Quando houver formulÃƒÂ¡rio ou campo, usar `frontend/src/hooks/form`, `frontend/src/components/controllers`, React Hook Form e Zod conforme `TASK-02`.
+- Quando houver formulÃƒÆ’Ã‚Â¡rio ou campo, usar `frontend/src/hooks/form`, `frontend/src/components/controllers`, React Hook Form e Zod conforme `TASK-02`.
 
-Arquitetura backend obrigatÃƒÂ³ria:
+Arquitetura backend obrigatÃƒÆ’Ã‚Â³ria:
 
 - Novas APIs em `backend/src/modules/api/{public|private}/{dominio}/{caso}`.
 - Rotas registradas em `backend/src/main/server/imports/write.ts`.
-- Validadores em `validator/index.ts` usando os helpers/pacote local de validaÃƒÂ§ÃƒÂ£o.
-- Services e repositories separados quando houver regra de domÃƒÂ­nio ou persistÃƒÂªncia.
-- Respostas usando `send`, `error500`, `error` e traduÃƒÂ§ÃƒÂµes em `backend/locales/pt/translation.json`.
-- Prisma com nomes e padrÃƒÂµes jÃƒÂ¡ definidos em `ARCHITECTURE.md`.
+- Validadores em `validator/index.ts` usando os helpers/pacote local de validaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o.
+- Services e repositories separados quando houver regra de domÃƒÆ’Ã‚Â­nio ou persistÃƒÆ’Ã‚Âªncia.
+- Respostas usando `send`, `error500`, `error` e traduÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes em `backend/locales/pt/translation.json`.
+- Prisma com nomes e padrÃƒÆ’Ã‚Âµes jÃƒÆ’Ã‚Â¡ definidos em `ARCHITECTURE.md`.
 
 Packages permitidos nesta task:
 
@@ -121,45 +121,45 @@ Packages permitidos nesta task:
 - TanStack Query
 - Prisma
 
-Regras anti-recriaÃƒÂ§ÃƒÂ£o especÃƒÂ­ficas:
+Regras anti-recriaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o especÃƒÆ’Ã‚Â­ficas:
 
 - Procurar componente, helper, model, endpoint e query key equivalente antes de criar estrutura nova.
-- NÃƒÂ£o criar client HTTP paralelo, store paralela, autenticaÃƒÂ§ÃƒÂ£o paralela, validator paralelo ou design system paralelo.
-- NÃƒÂ£o usar `sample/` como referÃƒÂªncia direta de implementaÃƒÂ§ÃƒÂ£o futura.
-- NÃƒÂ£o instalar package novo sem consultar `PACKAGES.md` e registrar ADR.
+- NÃƒÆ’Ã‚Â£o criar client HTTP paralelo, store paralela, autenticaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o paralela, validator paralelo ou design system paralelo.
+- NÃƒÆ’Ã‚Â£o usar `sample/` como referÃƒÆ’Ã‚Âªncia direta de implementaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o futura.
+- NÃƒÆ’Ã‚Â£o instalar package novo sem consultar `PACKAGES.md` e registrar ADR.
 
-## Estados obrigatÃƒÂ³rios
+## Estados obrigatÃƒÆ’Ã‚Â³rios
 
 - Loading inicial.
 - Erro de rede/API em PT-BR.
-- Estado vazio quando nÃƒÂ£o houver dado real.
+- Estado vazio quando nÃƒÆ’Ã‚Â£o houver dado real.
 - Sucesso com feedback visual discreto.
 - Responsividade mobile-first baseada nas imagens exportadas.
 
 ## Fora do escopo
 
 - Criar dados fake, seed artificial ou mock para preencher tela.
-- Concluir integraÃƒÂ§ÃƒÂ£o externa ausente.
-- Refatorar mÃƒÂ³dulos nÃƒÂ£o relacionados ÃƒÂ  task.
+- Concluir integraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o externa ausente.
+- Refatorar mÃƒÆ’Ã‚Â³dulos nÃƒÆ’Ã‚Â£o relacionados ÃƒÆ’Ã‚Â  task.
 - Trocar package manager ou stack base.
 
-## CritÃƒÂ©rios de aceite
+## CritÃƒÆ’Ã‚Â©rios de aceite
 
-- [x] As referÃƒÂªncias visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
+- [x] As referÃƒÆ’Ã‚Âªncias visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
 - [x] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
-- [x] Rotas seguem a convenÃƒÂ§ÃƒÂ£o canÃƒÂ´nica do `DATA-MODEL.md`.
+- [x] Rotas seguem a convenÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o canÃƒÆ’Ã‚Â´nica do `DATA-MODEL.md`.
 - [x] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
-- [x] Backend implementado nos endpoints/modelos esperados quando aplicÃƒÂ¡vel.
-- [x] Todos os estados obrigatÃƒÂ³rios existem e usam textos em PT-BR.
-- [x] FormulÃƒÂ¡rios e campos usam a fundaÃƒÂ§ÃƒÂ£o da `TASK-02` quando aplicÃƒÂ¡vel.
+- [x] Backend implementado nos endpoints/modelos esperados quando aplicÃƒÆ’Ã‚Â¡vel.
+- [x] Todos os estados obrigatÃƒÆ’Ã‚Â³rios existem e usam textos em PT-BR.
+- [x] FormulÃƒÆ’Ã‚Â¡rios e campos usam a fundaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o da `TASK-02` quando aplicÃƒÆ’Ã‚Â¡vel.
 - [x] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
-- [x] Nenhum cÃƒÂ³digo gerado por Builder foi aceito sem revisÃƒÂ£o e adequaÃƒÂ§ÃƒÂ£o ÃƒÂ  arquitetura.
+- [x] Nenhum cÃƒÆ’Ã‚Â³digo gerado por Builder foi aceito sem revisÃƒÆ’Ã‚Â£o e adequaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o ÃƒÆ’Ã‚Â  arquitetura.
 - [x] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
 - [x] ADR criado ou atualizado em `adrs/`.
 - [x] Checks/builds relevantes foram executados sem erros.
 - [x] Commit criado com mensagem convencional.
 
-## ValidaÃƒÂ§ÃƒÂ£o mÃƒÂ­nima
+## ValidaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o mÃƒÆ’Ã‚Â­nima
 
 - `pnpm --dir frontend check` quando frontend mudar.
 - `pnpm --dir frontend build` quando mudar rota ou UI.
@@ -170,7 +170,7 @@ Regras anti-recriaÃƒÂ§ÃƒÂ£o especÃƒÂ­ficas:
 
 ## Notas para executor
 
-Esta task deve ser concluÃƒÂ­da em um commit prÃƒÂ³prio. Se houver bloqueio externo, registre claramente o bloqueio e nÃƒÂ£o avance para a prÃƒÂ³xima task.
+Esta task deve ser concluÃƒÆ’Ã‚Â­da em um commit prÃƒÆ’Ã‚Â³prio. Se houver bloqueio externo, registre claramente o bloqueio e nÃƒÆ’Ã‚Â£o avance para a prÃƒÆ’Ã‚Â³xima task.
 
 
 ## Execucao complementar: downvote privado e animacao externa de upvote (2026-06-14)
@@ -190,17 +190,17 @@ Esta task deve ser concluÃƒÂ­da em um commit prÃƒÂ³prio. Se houver bloqu
   - `pnpm check`
   - HTTP local em `/app/community/feed` respondeu `200`.
 
-## ExecuÃƒÂ§ÃƒÂ£o complementar: detalhe do post inspirado no Reddit (2026-06-15)
+## ExecuÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o complementar: detalhe do post inspirado no Reddit (2026-06-15)
 
-- Pedido do usuÃƒÂ¡rio: ajustar a tela interna do post conforme referÃƒÂªncia `Dentro do Post`, com menu de denÃƒÂºncia, composer compacto, composer mobile fixo, mÃƒÂ­dia restrita a psicÃƒÂ³logos assinantes/verificados e vÃƒÂ­deo de resposta em proporÃƒÂ§ÃƒÂ£o 9:16 controlada.
-- ReferÃƒÂªncia visual consultada: `_product/proto/Dentro do Post.jpg`. Builder/Quick Copy nÃƒÂ£o foi usado diretamente no ambiente; a imagem local/PDF foi usada como fallback auditÃƒÂ¡vel.
-- O menu de trÃƒÂªs pontos do post passou a abrir a opÃƒÂ§ÃƒÂ£o `Denunciar post` e o fluxo persistente `POST /api/private/posts/:id/report`.
-- O composer usa placeholder `Participe da conversa`, fica compacto no desktop e fixo no rodapÃƒÂ© mobile, expandindo apenas durante interaÃƒÂ§ÃƒÂ£o/digitaÃƒÂ§ÃƒÂ£o.
-- O upload real de mÃƒÂ­dia de resposta foi adicionado em `POST /api/private/posts/:id/replies/media` e a criaÃƒÂ§ÃƒÂ£o de resposta aceita `mediaUrl`/`mediaType` somente quando originados do fluxo permitido.
-- Backend bloqueia upload e criaÃƒÂ§ÃƒÂ£o de resposta com mÃƒÂ­dia para pacientes, psicÃƒÂ³logos sem CFP verificado ou sem Plano Profissional ativo.
-- VÃƒÂ­deos anexados em respostas usam card 9:16 com largura mÃƒÂ¡xima, alinhado ao padrÃƒÂ£o do feed/comunidade.
+- Pedido do usuÃƒÆ’Ã‚Â¡rio: ajustar a tela interna do post conforme referÃƒÆ’Ã‚Âªncia `Dentro do Post`, com menu de denÃƒÆ’Ã‚Âºncia, composer compacto, composer mobile fixo, mÃƒÆ’Ã‚Â­dia restrita a psicÃƒÆ’Ã‚Â³logos assinantes/verificados e vÃƒÆ’Ã‚Â­deo de resposta em proporÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o 9:16 controlada.
+- ReferÃƒÆ’Ã‚Âªncia visual consultada: `_product/proto/Dentro do Post.jpg`. Builder/Quick Copy nÃƒÆ’Ã‚Â£o foi usado diretamente no ambiente; a imagem local/PDF foi usada como fallback auditÃƒÆ’Ã‚Â¡vel.
+- O menu de trÃƒÆ’Ã‚Âªs pontos do post passou a abrir a opÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o `Denunciar post` e o fluxo persistente `POST /api/private/posts/:id/report`.
+- O composer usa placeholder `Participe da conversa`, fica compacto no desktop e fixo no rodapÃƒÆ’Ã‚Â© mobile, expandindo apenas durante interaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o/digitaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o.
+- O upload real de mÃƒÆ’Ã‚Â­dia de resposta foi adicionado em `POST /api/private/posts/:id/replies/media` e a criaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de resposta aceita `mediaUrl`/`mediaType` somente quando originados do fluxo permitido.
+- Backend bloqueia upload e criaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de resposta com mÃƒÆ’Ã‚Â­dia para pacientes, psicÃƒÆ’Ã‚Â³logos sem CFP verificado ou sem Plano Profissional ativo.
+- VÃƒÆ’Ã‚Â­deos anexados em respostas usam card 9:16 com largura mÃƒÆ’Ã‚Â¡xima, alinhado ao padrÃƒÆ’Ã‚Â£o do feed/comunidade.
 - ADR criado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
-- ValidaÃƒÂ§ÃƒÂµes executadas: `pnpm --dir backend db:migrate --name add_post_reports`, `pnpm --dir frontend check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm check` e HTTP local `200` na rota do detalhe.
+- ValidaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes executadas: `pnpm --dir backend db:migrate --name add_post_reports`, `pnpm --dir frontend check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm check` e HTTP local `200` na rota do detalhe.
 
 ## Execucao complementar: badge TOP Mentor premium no detalhe (2026-06-15)
 
@@ -261,38 +261,38 @@ Esta task deve ser concluÃƒÂ­da em um commit prÃƒÂ³prio. Se houver bloqu
 - ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile em 390px confirmando recolhimento isolado, `Ver 2 respostas`, expansao e preservacao ao clicar no menu.
 
-## ExecuÃƒÂ§ÃƒÂ£o complementar: ÃƒÂ¡rvore compacta e controles de comentÃƒÂ¡rios (2026-06-16)
+## ExecuÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o complementar: ÃƒÆ’Ã‚Â¡rvore compacta e controles de comentÃƒÆ’Ã‚Â¡rios (2026-06-16)
 
-- Pedido do usuÃƒÂ¡rio: ajustar a ÃƒÂ¡rvore de comentÃƒÂ¡rios e os controles de interaÃƒÂ§ÃƒÂ£o em feed, comunidade e detalhe do post, preservando ordenaÃƒÂ§ÃƒÂ£o, regra do psicÃƒÂ³logo verificado mais votado e responsividade mobile.
-- Fonte visual auditÃƒÂ¡vel: `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nÃƒÂ£o estÃƒÂ¡ exposto como ferramenta direta nesta sessÃƒÂ£o, entÃƒÂ£o a execuÃƒÂ§ÃƒÂ£o seguiu as imagens locais/protÃƒÂ³tipos inventariados.
-- O cabeÃƒÂ§alho `DiscussÃƒÂ£o` passou a ser independente, sem a linha azul lateral e sem parecer parte do primeiro comentÃƒÂ¡rio.
-- Cada comentÃƒÂ¡rio direto ao post agora ÃƒÂ© uma ÃƒÂ¡rvore prÃƒÂ³pria de primeira camada; apenas respostas ficam aninhadas sob o comentÃƒÂ¡rio correspondente.
-- O fundo de cada ÃƒÂ¡rvore passou a depender do comentÃƒÂ¡rio raiz: branco para paciente e azul claro para psicÃƒÂ³logo verificado; fundos esverdeados foram removidos dos blocos de destaque compartilhados.
-- A barra azul grossa lateral foi removida; a hierarquia usa apenas linhas finas cinza, com recuos mais compactos e limite visual de trÃƒÂªs nÃƒÂ­veis.
-- Nos comentÃƒÂ¡rios, `CommunityActionBar` usa `size="xs"`, reduzindo upvote/downvote e `Responder`, que permanece texto sem ÃƒÂ­cone.
-- O botÃƒÂ£o `Ver mais resposta(s)` foi alinhado ao nÃƒÂ­vel onde a resposta serÃƒÂ¡ expandida.
-- NÃƒÂ£o houve alteraÃƒÂ§ÃƒÂ£o de backend, Prisma, migrations, packages, endpoints, payloads, ordenaÃƒÂ§ÃƒÂ£o, prioridade de psicÃƒÂ³logo verificado ou lÃƒÂ³gica de envio.
+- Pedido do usuÃƒÆ’Ã‚Â¡rio: ajustar a ÃƒÆ’Ã‚Â¡rvore de comentÃƒÆ’Ã‚Â¡rios e os controles de interaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o em feed, comunidade e detalhe do post, preservando ordenaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o, regra do psicÃƒÆ’Ã‚Â³logo verificado mais votado e responsividade mobile.
+- Fonte visual auditÃƒÆ’Ã‚Â¡vel: `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nÃƒÆ’Ã‚Â£o estÃƒÆ’Ã‚Â¡ exposto como ferramenta direta nesta sessÃƒÆ’Ã‚Â£o, entÃƒÆ’Ã‚Â£o a execuÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o seguiu as imagens locais/protÃƒÆ’Ã‚Â³tipos inventariados.
+- O cabeÃƒÆ’Ã‚Â§alho `DiscussÃƒÆ’Ã‚Â£o` passou a ser independente, sem a linha azul lateral e sem parecer parte do primeiro comentÃƒÆ’Ã‚Â¡rio.
+- Cada comentÃƒÆ’Ã‚Â¡rio direto ao post agora ÃƒÆ’Ã‚Â© uma ÃƒÆ’Ã‚Â¡rvore prÃƒÆ’Ã‚Â³pria de primeira camada; apenas respostas ficam aninhadas sob o comentÃƒÆ’Ã‚Â¡rio correspondente.
+- O fundo de cada ÃƒÆ’Ã‚Â¡rvore passou a depender do comentÃƒÆ’Ã‚Â¡rio raiz: branco para paciente e azul claro para psicÃƒÆ’Ã‚Â³logo verificado; fundos esverdeados foram removidos dos blocos de destaque compartilhados.
+- A barra azul grossa lateral foi removida; a hierarquia usa apenas linhas finas cinza, com recuos mais compactos e limite visual de trÃƒÆ’Ã‚Âªs nÃƒÆ’Ã‚Â­veis.
+- Nos comentÃƒÆ’Ã‚Â¡rios, `CommunityActionBar` usa `size="xs"`, reduzindo upvote/downvote e `Responder`, que permanece texto sem ÃƒÆ’Ã‚Â­cone.
+- O botÃƒÆ’Ã‚Â£o `Ver mais resposta(s)` foi alinhado ao nÃƒÆ’Ã‚Â­vel onde a resposta serÃƒÆ’Ã‚Â¡ expandida.
+- NÃƒÆ’Ã‚Â£o houve alteraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de backend, Prisma, migrations, packages, endpoints, payloads, ordenaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o, prioridade de psicÃƒÆ’Ã‚Â³logo verificado ou lÃƒÆ’Ã‚Â³gica de envio.
 - ADRs atualizados: `adrs/0102-arvore-comentarios-posts-comunidade.md` e `adrs/0104-barra-acoes-comunidade-unificada.md`.
-- ValidaÃƒÂ§ÃƒÂµes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP local `200` em `/app/community/feed`, `/app/community/ansiedade-em-equilibrio` e `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`.
+- ValidaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP local `200` em `/app/community/feed`, `/app/community/ansiedade-em-equilibrio` e `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`.
 
-## ExecuÃƒÂ§ÃƒÂ£o complementar: profundidade 5 e thread isolada (2026-06-16)
+## ExecuÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o complementar: profundidade 5 e thread isolada (2026-06-16)
 
-- Pedido do usuÃƒÂ¡rio: permitir atÃƒÂ© 5 nÃƒÂ­veis visuais na ÃƒÂ¡rvore de comentÃƒÂ¡rios dentro do post, abrir uma tela de thread ao exceder o limite e refinar os controles dos comentÃƒÂ¡rios sem alterar ordenaÃƒÂ§ÃƒÂ£o ou destaque de psicÃƒÂ³logos verificados.
-- Fonte visual auditÃƒÂ¡vel: `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nÃƒÂ£o estÃƒÂ¡ exposto como ferramenta direta nesta sessÃƒÂ£o, entÃƒÂ£o a validaÃƒÂ§ÃƒÂ£o visual usou a referÃƒÂªncia local e browser local.
-- A tela principal do post agora renderiza o comentÃƒÂ¡rio raiz mais 4 nÃƒÂ­veis de respostas aninhadas; nÃƒÂ­veis abaixo disso exibem `Ver mais resposta(s)` alinhado ÃƒÂ  camada onde a continuaÃƒÂ§ÃƒÂ£o existiria.
-- O backend deixou de usar o `take: 3` de respostas imediatas e passou a hidratar descendentes dos comentÃƒÂ¡rios diretos paginados com profundidade limitada por `INLINE_REPLY_DESCENDANT_DEPTH`, preservando comentÃƒÂ¡rios diretos como ÃƒÂ¡rvores de primeira camada.
-- A rota de thread `/app/community/[slug]/post/[id]/thread/[replyId]` passou a exibir o post original no topo e, abaixo, o comentÃƒÂ¡rio raiz do fio selecionado com a continuaÃƒÂ§ÃƒÂ£o da conversa; o composer fica depois da ÃƒÂ¡rvore no desktop e permanece fixo no mobile.
+- Pedido do usuÃƒÆ’Ã‚Â¡rio: permitir atÃƒÆ’Ã‚Â© 5 nÃƒÆ’Ã‚Â­veis visuais na ÃƒÆ’Ã‚Â¡rvore de comentÃƒÆ’Ã‚Â¡rios dentro do post, abrir uma tela de thread ao exceder o limite e refinar os controles dos comentÃƒÆ’Ã‚Â¡rios sem alterar ordenaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o ou destaque de psicÃƒÆ’Ã‚Â³logos verificados.
+- Fonte visual auditÃƒÆ’Ã‚Â¡vel: `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nÃƒÆ’Ã‚Â£o estÃƒÆ’Ã‚Â¡ exposto como ferramenta direta nesta sessÃƒÆ’Ã‚Â£o, entÃƒÆ’Ã‚Â£o a validaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o visual usou a referÃƒÆ’Ã‚Âªncia local e browser local.
+- A tela principal do post agora renderiza o comentÃƒÆ’Ã‚Â¡rio raiz mais 4 nÃƒÆ’Ã‚Â­veis de respostas aninhadas; nÃƒÆ’Ã‚Â­veis abaixo disso exibem `Ver mais resposta(s)` alinhado ÃƒÆ’Ã‚Â  camada onde a continuaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o existiria.
+- O backend deixou de usar o `take: 3` de respostas imediatas e passou a hidratar descendentes dos comentÃƒÆ’Ã‚Â¡rios diretos paginados com profundidade limitada por `INLINE_REPLY_DESCENDANT_DEPTH`, preservando comentÃƒÆ’Ã‚Â¡rios diretos como ÃƒÆ’Ã‚Â¡rvores de primeira camada.
+- A rota de thread `/app/community/[slug]/post/[id]/thread/[replyId]` passou a exibir o post original no topo e, abaixo, o comentÃƒÆ’Ã‚Â¡rio raiz do fio selecionado com a continuaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o da conversa; o composer fica depois da ÃƒÆ’Ã‚Â¡rvore no desktop e permanece fixo no mobile.
 - A resposta da API de thread foi normalizada no client para `{ reply }`, compatibilizando o contrato tipado com o payload real do backend e destravando a tela isolada.
-- Nos comentÃƒÂ¡rios, o grupo de upvote/downvote usa `votePresentation="inline"`, sem cÃƒÂ¡psula/fundo cinza; `Responder` permanece sem ÃƒÂ­cone, em escala menor e com espaÃƒÂ§amento consistente com salvar/compartilhar.
-- NÃƒÂ£o houve alteraÃƒÂ§ÃƒÂ£o de Prisma schema, migrations, packages, regra de ordenaÃƒÂ§ÃƒÂ£o, prioridade de psicÃƒÂ³logo verificado ou lÃƒÂ³gica de envio.
+- Nos comentÃƒÆ’Ã‚Â¡rios, o grupo de upvote/downvote usa `votePresentation="inline"`, sem cÃƒÆ’Ã‚Â¡psula/fundo cinza; `Responder` permanece sem ÃƒÆ’Ã‚Â­cone, em escala menor e com espaÃƒÆ’Ã‚Â§amento consistente com salvar/compartilhar.
+- NÃƒÆ’Ã‚Â£o houve alteraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de Prisma schema, migrations, packages, regra de ordenaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o, prioridade de psicÃƒÆ’Ã‚Â³logo verificado ou lÃƒÆ’Ã‚Â³gica de envio.
 - ADRs atualizados: `adrs/0102-arvore-comentarios-posts-comunidade.md` e `adrs/0104-barra-acoes-comunidade-unificada.md`.
-- ValidaÃƒÂ§ÃƒÂµes executadas:
+- ValidaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes executadas:
   - `pnpm --dir backend check`
   - `pnpm --dir backend build`
   - `pnpm --dir frontend check`
   - `pnpm --dir frontend build`
   - `pnpm check`
-  - HTTP local `200` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video` e `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video/thread/demo-reply-ansiedade-apresentacao-psi-video` com cookie de sessÃƒÂ£o local.
+  - HTTP local `200` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video` e `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video/thread/demo-reply-ansiedade-apresentacao-psi-video` com cookie de sessÃƒÆ’Ã‚Â£o local.
   - Browser local Chrome headless autenticado nas mesmas rotas, conferindo o detalhe do post e a thread isolada com o post original no topo.
 
 ## Execucao complementar: ajuste fino dos controles de comentarios (2026-06-16)
@@ -702,7 +702,7 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 ## Execucao complementar: setas persistentes no carrossel publicado (2026-06-22)
 
 - Pedido do usuario: quando houver carrossel de midias, inserir setas de avancar e voltar nas midias no feed, dentro da comunidade e em todos os locais onde o carrossel aparecer.
-- Frontend: o componente compartilhado `PostMediaCarousel` recebeu botoes nativos de navegacao anterior/proxima com `z-index` alto, fundo escuro translÃƒÂºcido, blur e gradientes laterais para manter contraste sobre imagens claras ou escuras.
+- Frontend: o componente compartilhado `PostMediaCarousel` recebeu botoes nativos de navegacao anterior/proxima com `z-index` alto, fundo escuro translÃƒÆ’Ã‚Âºcido, blur e gradientes laterais para manter contraste sobre imagens claras ou escuras.
 - Como o feed geral, a tela da comunidade, o detalhe do post e os cards reutilizados ja consomem `PostMediaCarousel`, o ajuste se aplica de forma centralizada a todos os locais de exibicao do carrossel publicado.
 - Os dots continuam disponiveis para salto direto entre imagens; setas e dots agora interrompem propagacao de clique para nao abrir o card/post acidentalmente.
 - Nao houve alteracao de backend, Prisma schema, migrations, packages, storage, limites de arquivo, upload, DTOs ou regra de carrossel apenas com imagens.
@@ -755,10 +755,10 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 
 ## Execucao complementar: divisor entre contexto e autor nos cards (2026-06-23)
 
-- Pedido do usuario: nos cards de conteudo, em todos os contextos exceto no detalhe do post, adicionar uma linha fina entre o cabeÃ¯Â¿Â½alho `Postado em` e o nome do psicologo.
+- Pedido do usuario: nos cards de conteudo, em todos os contextos exceto no detalhe do post, adicionar uma linha fina entre o cabeÃƒÂ¯Ã‚Â¿Ã‚Â½alho `Postado em` e o nome do psicologo.
 - Frontend: `CommunityPostCard` passou a renderizar um divisor sutil quando o card exibe simultaneamente contexto da comunidade (`Postado em`/`Respondido em`) e autoria.
-- Frontend: a listagem interna de comunidade recebeu o mesmo divisor no `PostCard` local quando o cabeÃ¯Â¿Â½alho `Postado em` esta visivel.
-- Frontend: os cards de respostas salvas tambem receberam o divisor entre `Respondido em` e o cabeÃ¯Â¿Â½alho do autor, mantendo consistencia nas listas fora do detalhe do post.
+- Frontend: a listagem interna de comunidade recebeu o mesmo divisor no `PostCard` local quando o cabeÃƒÂ¯Ã‚Â¿Ã‚Â½alho `Postado em` esta visivel.
+- Frontend: os cards de respostas salvas tambem receberam o divisor entre `Respondido em` e o cabeÃƒÂ¯Ã‚Â¿Ã‚Â½alho do autor, mantendo consistencia nas listas fora do detalhe do post.
 - O detalhe do post nao foi alterado, conforme excecao definida pelo usuario.
 - Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, upload, votos, salvos, ranking, midia ou tracking de WhatsApp.
 - Fonte visual auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
@@ -818,7 +818,7 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - ADR atualizado: `adrs/0151-padronizacao-frames-midia-comunidade.md`.
 - Validacoes executadas: pnpm --dir frontend biome:fix, pnpm --dir frontend check, pnpm --dir frontend build, pnpm check e git diff --check.
 
-## Execucao complementar: carrossel com fallback quadrado e formatos canÃƒÂ´nicos (2026-06-23)
+## Execucao complementar: carrossel com fallback quadrado e formatos canÃƒÆ’Ã‚Â´nicos (2026-06-23)
 
 - Pedido do usuario: o carrossel continuava vertical no feed mesmo apos a regra de carrossel misto.
 - Frontend: `PostMediaCarousel` passou a resolver o frame a partir dos metadados reais de largura/altura de todas as imagens do carrossel.
@@ -829,7 +829,7 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - ADR atualizado: `adrs/0151-padronizacao-frames-midia-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend biome:fix`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
 
-## Execucao complementar: mÃƒÂ­dias menores apenas no desktop (2026-06-23)
+## Execucao complementar: mÃƒÆ’Ã‚Â­dias menores apenas no desktop (2026-06-23)
 
 - Pedido do usuario: no desktop, diminuir as midias para ficar mais parecido com o Threads e permitir ver todo ou quase todo o post sem rolagem.
 - Frontend: os limites `md:max-w` dos frames compartilhados foram reduzidos para post/detalhe e respostas/comentarios, sem alterar a largura mobile.
@@ -865,7 +865,7 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 ## Execucao complementar: copy compacta no menu de acoes do post (2026-06-23)
 
 - Pedido do usuario: alterar as opcoes do menu do post para `Editar`, `Silenciar` e `Excluir`, removendo o sufixo `post`.
-- Frontend: `PostOwnerActionMenu` passou a exibir os rÃƒÂ³tulos compactos no dropdown de tres pontos e no fluxo de bloqueio para silenciar.
+- Frontend: `PostOwnerActionMenu` passou a exibir os rÃƒÆ’Ã‚Â³tulos compactos no dropdown de tres pontos e no fluxo de bloqueio para silenciar.
 - Frontend: o selo de post silenciado foi simplificado para `Silenciado`, mantendo o estado e a regra de notificacoes inalterados.
 - Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissoes, votos, salvos, ranking, midia publicada ou tracking de WhatsApp.
 - Fonte visual auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
@@ -875,7 +875,7 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 ## Execucao complementar: copy compacta no menu de acoes de comentarios (2026-06-23)
 
 - Pedido do usuario: alterar as opcoes do menu de comentarios/respostas para `Editar`, `Silenciar` e `Excluir`, removendo o sufixo `comentario`.
-- Frontend: `ReplyOwnerActionMenu` passou a exibir os rÃƒÂ³tulos compactos no dropdown de tres pontos, tanto para comentarios quanto para respostas.
+- Frontend: `ReplyOwnerActionMenu` passou a exibir os rÃƒÆ’Ã‚Â³tulos compactos no dropdown de tres pontos, tanto para comentarios quanto para respostas.
 - Frontend: o botao do fluxo de bloqueio de exclusao/silenciamento tambem usa copy compacta (`Silenciar`/`Silenciada`), sem alterar a regra de dominio.
 - Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissoes, votos, salvos, ranking, midia publicada ou tracking de WhatsApp.
 - Fonte visual auditavel: screenshot do usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
@@ -903,37 +903,37 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - ADR atualizado: `adrs/0151-padronizacao-frames-midia-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
 
-## ExecuÃƒÂ§ÃƒÂ£o complementar: botÃƒÂ£o de mÃƒÂ­dia na ediÃƒÂ§ÃƒÂ£o de comentÃƒÂ¡rio (2026-06-23)
+## ExecuÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o complementar: botÃƒÆ’Ã‚Â£o de mÃƒÆ’Ã‚Â­dia na ediÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de comentÃƒÆ’Ã‚Â¡rio (2026-06-23)
 
-- Pedido do usuÃƒÂ¡rio: quando jÃƒÂ¡ houver mÃƒÂ­dia no comentÃƒÂ¡rio, remover o botÃƒÂ£o `Editar mÃƒÂ­dia` da modal de editar comentÃƒÂ¡rio e exibir novamente somente se a mÃƒÂ­dia for removida; se o comentÃƒÂ¡rio nÃƒÂ£o tiver mÃƒÂ­dia, o botÃƒÂ£o deve aparecer.
-- Frontend: `ReplyMediaAttachmentControl` agora mantÃƒÂ©m o input de arquivo disponÃƒÂ­vel, mas sÃƒÂ³ renderiza o botÃƒÂ£o `MÃƒÂ­dia` no modo editor quando nÃƒÂ£o existe mÃƒÂ­dia efetiva atual ou selecionada.
-- Frontend: quando hÃƒÂ¡ mÃƒÂ­dia atual ou recÃƒÂ©m-selecionada, a modal exibe apenas a miniatura com o botÃƒÂ£o `X` de remover; ao remover a mÃƒÂ­dia, o botÃƒÂ£o `MÃƒÂ­dia` volta para permitir anexar uma nova.
-- NÃƒÂ£o houve alteraÃƒÂ§ÃƒÂ£o de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissÃƒÂµes, votos, salvos, ranking ou tracking de WhatsApp.
-- Fonte visual auditÃƒÂ¡vel: screenshot do usuÃƒÂ¡rio; Builder/Quick Copy nÃƒÂ£o estÃƒÂ¡ exposto como ferramenta callable neste ambiente.
+- Pedido do usuÃƒÆ’Ã‚Â¡rio: quando jÃƒÆ’Ã‚Â¡ houver mÃƒÆ’Ã‚Â­dia no comentÃƒÆ’Ã‚Â¡rio, remover o botÃƒÆ’Ã‚Â£o `Editar mÃƒÆ’Ã‚Â­dia` da modal de editar comentÃƒÆ’Ã‚Â¡rio e exibir novamente somente se a mÃƒÆ’Ã‚Â­dia for removida; se o comentÃƒÆ’Ã‚Â¡rio nÃƒÆ’Ã‚Â£o tiver mÃƒÆ’Ã‚Â­dia, o botÃƒÆ’Ã‚Â£o deve aparecer.
+- Frontend: `ReplyMediaAttachmentControl` agora mantÃƒÆ’Ã‚Â©m o input de arquivo disponÃƒÆ’Ã‚Â­vel, mas sÃƒÆ’Ã‚Â³ renderiza o botÃƒÆ’Ã‚Â£o `MÃƒÆ’Ã‚Â­dia` no modo editor quando nÃƒÆ’Ã‚Â£o existe mÃƒÆ’Ã‚Â­dia efetiva atual ou selecionada.
+- Frontend: quando hÃƒÆ’Ã‚Â¡ mÃƒÆ’Ã‚Â­dia atual ou recÃƒÆ’Ã‚Â©m-selecionada, a modal exibe apenas a miniatura com o botÃƒÆ’Ã‚Â£o `X` de remover; ao remover a mÃƒÆ’Ã‚Â­dia, o botÃƒÆ’Ã‚Â£o `MÃƒÆ’Ã‚Â­dia` volta para permitir anexar uma nova.
+- NÃƒÆ’Ã‚Â£o houve alteraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissÃƒÆ’Ã‚Âµes, votos, salvos, ranking ou tracking de WhatsApp.
+- Fonte visual auditÃƒÆ’Ã‚Â¡vel: screenshot do usuÃƒÆ’Ã‚Â¡rio; Builder/Quick Copy nÃƒÆ’Ã‚Â£o estÃƒÆ’Ã‚Â¡ exposto como ferramenta callable neste ambiente.
 - ADR criado: `adrs/0156-botao-midia-edicao-comentario.md`.
-- ValidaÃƒÂ§ÃƒÂµes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
-## ExecuÃƒÂ§ÃƒÂ£o complementar: miniatura horizontal na ediÃƒÂ§ÃƒÂ£o de comentÃƒÂ¡rio (2026-06-23)
+- ValidaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
+## ExecuÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o complementar: miniatura horizontal na ediÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de comentÃƒÆ’Ã‚Â¡rio (2026-06-23)
 
-- Pedido do usuÃƒÂ¡rio: na modal de editar comentÃƒÂ¡rio, se a mÃƒÂ­dia for horizontal, a miniatura tambÃƒÂ©m deve aparecer horizontal.
-- Frontend: `ReplyMediaAttachmentControl` passou a usar `landscape` como orientaÃƒÂ§ÃƒÂ£o visual padrÃƒÂ£o no modo editor enquanto a detecÃƒÂ§ÃƒÂ£o assÃƒÂ­ncrona de dimensÃƒÂµes da mÃƒÂ­dia atual ainda nÃƒÂ£o terminou.
-- Frontend: `ReplyEditModal` passou a detectar a orientaÃƒÂ§ÃƒÂ£o de novas mÃƒÂ­dias selecionadas na ediÃƒÂ§ÃƒÂ£o, reaproveitando `detectReplyMediaOrientation` para manter imagens/vÃƒÂ­deos horizontais em moldura horizontal.
-- NÃƒÂ£o houve alteraÃƒÂ§ÃƒÂ£o de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissÃƒÂµes, votos, salvos, ranking ou tracking de WhatsApp.
-- Fonte visual auditÃƒÂ¡vel: screenshot do usuÃƒÂ¡rio; Builder/Quick Copy nÃƒÂ£o estÃƒÂ¡ exposto como ferramenta callable neste ambiente.
+- Pedido do usuÃƒÆ’Ã‚Â¡rio: na modal de editar comentÃƒÆ’Ã‚Â¡rio, se a mÃƒÆ’Ã‚Â­dia for horizontal, a miniatura tambÃƒÆ’Ã‚Â©m deve aparecer horizontal.
+- Frontend: `ReplyMediaAttachmentControl` passou a usar `landscape` como orientaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o visual padrÃƒÆ’Ã‚Â£o no modo editor enquanto a detecÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o assÃƒÆ’Ã‚Â­ncrona de dimensÃƒÆ’Ã‚Âµes da mÃƒÆ’Ã‚Â­dia atual ainda nÃƒÆ’Ã‚Â£o terminou.
+- Frontend: `ReplyEditModal` passou a detectar a orientaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de novas mÃƒÆ’Ã‚Â­dias selecionadas na ediÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o, reaproveitando `detectReplyMediaOrientation` para manter imagens/vÃƒÆ’Ã‚Â­deos horizontais em moldura horizontal.
+- NÃƒÆ’Ã‚Â£o houve alteraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissÃƒÆ’Ã‚Âµes, votos, salvos, ranking ou tracking de WhatsApp.
+- Fonte visual auditÃƒÆ’Ã‚Â¡vel: screenshot do usuÃƒÆ’Ã‚Â¡rio; Builder/Quick Copy nÃƒÆ’Ã‚Â£o estÃƒÆ’Ã‚Â¡ exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0156-botao-midia-edicao-comentario.md`.
-- ValidaÃƒÂ§ÃƒÂµes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
+- ValidaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `git diff --check`.
 
-## ExecuÃƒÂ§ÃƒÂ£o complementar: reversÃƒÂ£o do fundo branco do feed (2026-06-23)
+## ExecuÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o complementar: reversÃƒÆ’Ã‚Â£o do fundo branco do feed (2026-06-23)
 
-- Pedido do usuÃƒÂ¡rio: desfazer a ÃƒÂºltima alteraÃƒÂ§ÃƒÂ£o e voltar o background do feed ÃƒÂ  cor anterior.
+- Pedido do usuÃƒÆ’Ã‚Â¡rio: desfazer a ÃƒÆ’Ã‚Âºltima alteraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o e voltar o background do feed ÃƒÆ’Ã‚Â  cor anterior.
 - Frontend: `CommunityFeedLogic` voltou a usar `bg-[#F5F7FA]` no `PrivateTemplate` e no header sticky de busca/filtros.
-- Frontend: `CommunityDetailLogic` tambÃƒÂ©m voltou a usar `bg-[#F5F7FA]` para manter a timeline dentro da comunidade consistente com o feed.
-- Ajuste visual: o offset de foco do FAB de criaÃƒÂ§ÃƒÂ£o voltou para `ring-offset-[#F5F7FA]`.
+- Frontend: `CommunityDetailLogic` tambÃƒÆ’Ã‚Â©m voltou a usar `bg-[#F5F7FA]` para manter a timeline dentro da comunidade consistente com o feed.
+- Ajuste visual: o offset de foco do FAB de criaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o voltou para `ring-offset-[#F5F7FA]`.
 - Dark mode preservado com `dark:bg-background`.
-- O ADR da alteraÃƒÂ§ÃƒÂ£o para fundo branco foi removido por nÃƒÂ£o representar mais o estado atual; novo ADR criado: `adrs/0157-reversao-fundo-cinza-feed-comunidade.md`.
-- NÃƒÂ£o houve alteraÃƒÂ§ÃƒÂ£o de backend, Prisma, storage ou packages.
-- Fonte visual: pedido do usuÃƒÂ¡rio; Builder/Quick Copy nÃƒÂ£o estÃƒÂ¡ acessÃƒÂ­vel neste ambiente.
+- O ADR da alteraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o para fundo branco foi removido por nÃƒÆ’Ã‚Â£o representar mais o estado atual; novo ADR criado: `adrs/0157-reversao-fundo-cinza-feed-comunidade.md`.
+- NÃƒÆ’Ã‚Â£o houve alteraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de backend, Prisma, storage ou packages.
+- Fonte visual: pedido do usuÃƒÆ’Ã‚Â¡rio; Builder/Quick Copy nÃƒÆ’Ã‚Â£o estÃƒÆ’Ã‚Â¡ acessÃƒÆ’Ã‚Â­vel neste ambiente.
 
-### ValidaÃƒÂ§ÃƒÂµes
+### ValidaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes
 
 - [x] `pnpm --dir frontend check`
 - [x] `pnpm --dir frontend build`
@@ -955,16 +955,16 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm --dir frontend build`
 - [x] `pnpm check`
 - [x] `git diff --check`
-## ExecuÃƒÂ§ÃƒÂ£o complementar: chips sem sombra no perfil do psicÃƒÂ³logo (2026-06-23)
+## ExecuÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o complementar: chips sem sombra no perfil do psicÃƒÆ’Ã‚Â³logo (2026-06-23)
 
-- Pedido do usuÃƒÂ¡rio: remover o sombreamento atrÃƒÂ¡s dos chips de especialidades, atendimento (`Modalidade`, `Abordagens`, `ServiÃƒÂ§os`, `PÃƒÂºblico atendido`, `Idiomas`) e `FormaÃƒÂ§ÃƒÂ£o & TÃƒÂ­tulos` no perfil pÃƒÂºblico do psicÃƒÂ³logo.
-- Frontend: `ProfileChipList`, `ProfileInfoCard` e os itens de `FormationSection` deixaram de aplicar sombras nos chips/cards internos, mantendo borda, radius e espaÃƒÂ§amentos.
-- As sombras dos cards principais do perfil foram preservadas para nÃƒÂ£o achatar toda a pÃƒÂ¡gina e manter a separaÃƒÂ§ÃƒÂ£o entre seÃƒÂ§ÃƒÂµes.
-- NÃƒÂ£o houve alteraÃƒÂ§ÃƒÂ£o de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissÃƒÂµes, votos, salvos, ranking, posts, comentÃƒÂ¡rios ou tracking de WhatsApp.
-- Fonte visual auditÃƒÂ¡vel: screenshots do usuÃƒÂ¡rio; Builder/Quick Copy nÃƒÂ£o estÃƒÂ¡ exposto como ferramenta callable neste ambiente.
+- Pedido do usuÃƒÆ’Ã‚Â¡rio: remover o sombreamento atrÃƒÆ’Ã‚Â¡s dos chips de especialidades, atendimento (`Modalidade`, `Abordagens`, `ServiÃƒÆ’Ã‚Â§os`, `PÃƒÆ’Ã‚Âºblico atendido`, `Idiomas`) e `FormaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o & TÃƒÆ’Ã‚Â­tulos` no perfil pÃƒÆ’Ã‚Âºblico do psicÃƒÆ’Ã‚Â³logo.
+- Frontend: `ProfileChipList`, `ProfileInfoCard` e os itens de `FormationSection` deixaram de aplicar sombras nos chips/cards internos, mantendo borda, radius e espaÃƒÆ’Ã‚Â§amentos.
+- As sombras dos cards principais do perfil foram preservadas para nÃƒÆ’Ã‚Â£o achatar toda a pÃƒÆ’Ã‚Â¡gina e manter a separaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o entre seÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes.
+- NÃƒÆ’Ã‚Â£o houve alteraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de backend, Prisma schema, migrations, packages, endpoints, storage, upload, limites de arquivo, permissÃƒÆ’Ã‚Âµes, votos, salvos, ranking, posts, comentÃƒÆ’Ã‚Â¡rios ou tracking de WhatsApp.
+- Fonte visual auditÃƒÆ’Ã‚Â¡vel: screenshots do usuÃƒÆ’Ã‚Â¡rio; Builder/Quick Copy nÃƒÆ’Ã‚Â£o estÃƒÆ’Ã‚Â¡ exposto como ferramenta callable neste ambiente.
 - ADR criado: `adrs/0158-remocao-sombra-chips-perfil-psicologo.md`.
 
-### ValidaÃƒÂ§ÃƒÂµes
+### ValidaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes
 
 - [x] `pnpm --dir frontend check`
 - [x] `pnpm --dir frontend build`
@@ -1042,7 +1042,7 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Pedido do usuario: ajustar o CTA de WhatsApp integrado a videos/imagens de posts e respostas da comunidade para que o texto nao pareca cortado, especialmente os descendentes de `WhatsApp`, e adicionar seta discreta em `Falar com {nome}`.
 - Frontend: `CommunityWhatsAppCta` aumentou o padding vertical da variante anexada a midia, ampliou o gap entre linhas e trocou `leading-none` por `leading-[1.35]` nas duas linhas do CTA.
 - Frontend: a linha `WhatsApp` deixou de usar `truncate`/`overflow-hidden`, mantendo `overflow-visible` e `whitespace-nowrap` para evitar corte visual da base das letras.
-- Frontend: a segunda linha agora exibe `Falar com {primeiro nome} →`, preservando o icone de WhatsApp e a largura conectada ao frame de video/imagem.
+- Frontend: a segunda linha agora exibe `Falar com {primeiro nome} â†’`, preservando o icone de WhatsApp e a largura conectada ao frame de video/imagem.
 - Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, permissoes, votos, salvos, ranking ou tracking de WhatsApp.
 - Fonte visual/auditavel: pedido do usuario e referencias locais `_product/proto/Feed Comunidade.jpg`, `_product/proto/Dentro da Comunidade.jpg` e `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0164-cta-whatsapp-conectado-midias-comunidade.md`.
@@ -1051,7 +1051,7 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 ## Complemento 2026-06-25 - CTA WhatsApp sem midia padronizado
 
 - Pedido do usuario: padronizar os elementos do botao de WhatsApp em posts e respostas sem midia.
-- Frontend: `CommunityWhatsAppCta` passou a usar a mesma hierarquia textual em todas as variantes: `WhatsApp` na primeira linha e `Falar com {primeiro nome} →` na segunda linha.
+- Frontend: `CommunityWhatsAppCta` passou a usar a mesma hierarquia textual em todas as variantes: `WhatsApp` na primeira linha e `Falar com {primeiro nome} â†’` na segunda linha.
 - A variante sem midia permanece como botao independente (`w-fit`, cantos arredondados completos), enquanto a variante com midia continua conectada ao frame de imagem/video.
 - A alteracao reaproveita `PsychologistWhatsAppRedirectButton` e `PsychologistWhatsAppButtonContent`, preservando abertura do WhatsApp, tracking, icone, estados de hover/focus e bloqueio de propagacao dos cards.
 - Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, storage, permissoes, votos, salvos, ranking ou tracking de WhatsApp.
@@ -1133,10 +1133,18 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
 - Validacoes executadas nesta execucao: `pnpm.cmd --dir frontend exec biome check --write "src/api/callers/posts/index.tsx" "src/app/app/community/[slug]/post/[id]/logic.tsx"`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, `git diff --check`, HTTP local `200` na rota do post demo e Chrome headless mobile 390x844 confirmando ausencia de `Anterior`, `Proxima` e contador de paginas no DOM renderizado.
 
-## Complemento 2026-06-26 - alias anônimo estável no detalhe do post
+## Complemento 2026-06-26 - alias anÃ´nimo estÃ¡vel no detalhe do post
 
-- Pedido do usuário: manter o mesmo identificador anônimo para um membro em posts anônimos diferentes, para preservar contexto comunitário e apoiar respostas dos psicólogos sem expor a identidade real.
-- Backend: o detalhe do post e as listas relacionadas passaram a receber o mesmo alias `Membro Anônimo #XXXX` derivado de `author.id`, em vez de um número derivado do post.
+- Pedido do usuÃ¡rio: manter o mesmo identificador anÃ´nimo para um membro em posts anÃ´nimos diferentes, para preservar contexto comunitÃ¡rio e apoiar respostas dos psicÃ³logos sem expor a identidade real.
+- Backend: o detalhe do post e as listas relacionadas passaram a receber o mesmo alias `Membro AnÃ´nimo #XXXX` derivado de `author.id`, em vez de um nÃºmero derivado do post.
 - O comportamento preserva anonimato visual: nome real, avatar e perfil do paciente continuam mascarados quando `anonymous=true`.
-- Escopo: sem mudança de schema Prisma, migrations, packages, endpoints, payloads, frontend, votos, salvos, árvore de comentários ou criação de respostas.
+- Escopo: sem mudanÃ§a de schema Prisma, migrations, packages, endpoints, payloads, frontend, votos, salvos, Ã¡rvore de comentÃ¡rios ou criaÃ§Ã£o de respostas.
 - ADR criado: `adrs/0167-alias-anonimo-estavel-por-usuario.md`.
+
+## Complemento 2026-06-26 - mensagem WhatsApp contextual no detalhe do post
+
+- Pedido do usuÃ¡rio: a mensagem pronta do WhatsApp deve iniciar com o primeiro nome do psicÃ³logo.
+- Backend: no detalhe do post, links de WhatsApp do autor do post usam a copy `seu post na Lectum`; links de respostas/comentÃ¡rios usam `sua resposta na Lectum`, ambos com saudaÃ§Ã£o `OlÃ¡ {primeiro nome}` quando o nome existe.
+- Frontend: a modal/transiÃ§Ã£o global de WhatsApp mantÃ©m o texto contextual da origem do clique ao combinar fallback de tela e URL retornada pelo tracking.
+- Escopo: sem alteraÃ§Ã£o de schema Prisma, migrations, endpoints, Ã¡rvore de comentÃ¡rios, votos, salvos, mÃ­dia, permissÃµes ou packages.
+- ADR atualizado: `adrs/0022-contato-whatsapp-wa-me.md`.

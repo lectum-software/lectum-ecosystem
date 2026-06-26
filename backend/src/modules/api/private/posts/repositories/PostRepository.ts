@@ -8,6 +8,7 @@ import {
   activeProfessionalCourtesyEntitlementWhere,
   activeProfessionalEntitlementWhere,
 } from "@/utils/subscription-entitlement";
+import { buildLectumWhatsappUrl, type LectumWhatsappMessageSource } from "@/utils/whatsapp-contact";
 import type {
   IPostCreateReplyDTO,
   IPostDeleteDTO,
@@ -48,9 +49,6 @@ const DEFAULT_LIMIT = 10;
 const MAX_LIMIT = 30;
 const INLINE_REPLY_DESCENDANT_DEPTH = 4;
 const REPLY_DOWNVOTE_RANKING_WEIGHT = 0.6;
-
-const CONTACT_MESSAGE =
-  "Olá, encontrei sua resposta na comunidade Lectum e gostaria de conversar sobre atendimento.";
 
 const communitySelect = {
   id: true,
@@ -249,13 +247,6 @@ const toCommunityResponse = (
   ...(typeof following === "boolean" ? { following } : {}),
 });
 
-const buildWhatsappUrl = (value?: string | null) => {
-  const digits = String(value ?? "").replace(/\D/g, "");
-  if (digits.length < 8) return null;
-
-  return `https://wa.me/${digits}?text=${encodeURIComponent(CONTACT_MESSAGE)}`;
-};
-
 const anonymousDisplayNameForAuthor = (authorId: string) => {
   let hash = 0;
 
@@ -285,8 +276,14 @@ const buildProfessionalWhatsappUrl = (
     subscriptions: { id: string; source?: string | null }[];
     whatsapp: string | null;
   } | null,
+  psychologistName?: string | null,
+  source: LectumWhatsappMessageSource = "community_post",
 ) => {
-  return buildWhatsappUrl(profile?.whatsapp);
+  return buildLectumWhatsappUrl({
+    phone: profile?.whatsapp,
+    psychologistName,
+    source,
+  });
 };
 
 const mentorBadgeForScore = (
@@ -325,6 +322,7 @@ const toAuthorResponse = (
   mentorScore = 0,
   anonymous = false,
   anonymousDisplayName?: string,
+  whatsappMessageSource: LectumWhatsappMessageSource = "community_post",
 ): PostAuthorDTO => {
   const profile = author.psychologist_profile;
   const isPsychologist = author.role === "psicologo";
@@ -351,7 +349,10 @@ const toAuthorResponse = (
     verified: isPsychologist && !isDeletedAuthor && isProfessionalVerified(profile),
     featured_badge:
       isPsychologist && !isDeletedAuthor ? mentorBadgeForScore(profile, mentorScore) : null,
-    whatsapp_url: isPsychologist && !isDeletedAuthor ? buildProfessionalWhatsappUrl(profile) : null,
+    whatsapp_url:
+      isPsychologist && !isDeletedAuthor
+        ? buildProfessionalWhatsappUrl(profile, author.name, whatsappMessageSource)
+        : null,
   };
 };
 
@@ -440,7 +441,13 @@ const toHighlightedProfessionalReply = (
 ): PostProfessionalReplyDTO | null => {
   if (!reply) return null;
 
-  const author = toAuthorResponse(reply.author, reply.upvotes_count);
+  const author = toAuthorResponse(
+    reply.author,
+    reply.upvotes_count,
+    false,
+    undefined,
+    "community_reply",
+  );
   if (!author.verified) return null;
 
   return {
@@ -517,7 +524,7 @@ const toReplyResponse = (
     parent_reply_id: item.parent_reply_id,
     current_user_vote: currentVotes.get(item.id) ?? null,
     saved: savedReplyIds?.has(item.id) ?? false,
-    author: toAuthorResponse(item.author, item.upvotes_count),
+    author: toAuthorResponse(item.author, item.upvotes_count, false, undefined, "community_reply"),
     replies: nestedReplies.map((reply) => toReplyResponse(reply, currentVotes, savedReplyIds)),
   };
 };
@@ -1221,7 +1228,13 @@ export class PostRepository implements IPostRepository {
         parent_content: reply.parent_reply?.content ?? null,
         current_user_vote: replyVoteMap.get(reply.id) ?? null,
         saved: savedReplyIds.has(reply.id),
-        author: toAuthorResponse(reply.author, reply.upvotes_count),
+        author: toAuthorResponse(
+          reply.author,
+          reply.upvotes_count,
+          false,
+          undefined,
+          "community_reply",
+        ),
       },
     }));
     const merged =
@@ -1482,7 +1495,13 @@ export class PostRepository implements IPostRepository {
         parent_content: item.reply.parent_reply?.content ?? null,
         current_user_vote: replyVoteMap.get(item.reply.id) ?? null,
         saved: true,
-        author: toAuthorResponse(item.reply.author, item.reply.upvotes_count),
+        author: toAuthorResponse(
+          item.reply.author,
+          item.reply.upvotes_count,
+          false,
+          undefined,
+          "community_reply",
+        ),
       },
     }));
     const responseItems =

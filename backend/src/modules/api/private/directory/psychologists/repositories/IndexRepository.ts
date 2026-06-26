@@ -2,6 +2,7 @@
 import prisma, { type ORM } from "@/infra/database/prisma";
 import { crpExperienceYears } from "@/utils/professional-experience";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
+import { buildLectumWhatsappUrl } from "@/utils/whatsapp-contact";
 import type {
   DirectoryCatalogItem,
   DirectoryPsychologistResponse,
@@ -12,8 +13,6 @@ import type { IIndexRepository } from "./interfaces/IIndexRepository";
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
-const CONTACT_MESSAGE =
-  "Olá, encontrei seu perfil na Lectum e gostaria de conversar sobre atendimento.";
 const QUALIFIED_VIDEO_WATCH_SECONDS = 3;
 const VIDEO_LEARNING_QUALIFIED_VIEWS = 30;
 const DEFAULT_NEW_VIDEO_SCORE = 0.5;
@@ -156,12 +155,8 @@ const hasAvailableToday = (value: unknown) => {
   return normalizeStringArray(value).includes(currentWeekdayValue());
 };
 
-const buildWhatsappUrl = (value?: string | null) => {
-  const digits = String(value ?? "").replace(/\D/g, "");
-  if (digits.length < 8) return null;
-
-  return `https://wa.me/${digits}?text=${encodeURIComponent(CONTACT_MESSAGE)}`;
-};
+const buildWhatsappUrl = (value?: string | null, psychologistName?: string | null) =>
+  buildLectumWhatsappUrl({ phone: value, psychologistName, source: "profile" });
 
 const clampScore = (value: number) => {
   if (!Number.isFinite(value)) return 0;
@@ -738,7 +733,7 @@ export class IndexRepository implements IIndexRepository {
         social_value: item.social_value,
         accepts_insurance: item.accepts_insurance,
         show_experience_tag: item.show_experience_tag,
-        whatsapp_url: buildWhatsappUrl(item.whatsapp),
+        whatsapp_url: buildWhatsappUrl(item.whatsapp, item.user.name),
         favorited: item.user.favorited_by_patients.length > 0,
         followed: item.user.followed_by_patients.length > 0,
         specialties: item.user.psychologist_specialties

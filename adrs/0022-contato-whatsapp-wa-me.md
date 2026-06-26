@@ -182,3 +182,25 @@ redundantes nem textos auxiliares repetidos no campo.
   consistente e menos colada à borda.
 - Não há alteração em validação de posse do número, Twilio, `wa.me`,
   `contact_request` ou `whatsapp_verified_at`.
+
+## Atualização em 2026-06-26: mensagem WhatsApp personalizada por contexto
+
+### Contexto
+
+Produto solicitou que a mensagem pronta do WhatsApp mencione o primeiro nome do psicólogo, especialmente nos CTAs de posts da comunidade, para deixar o primeiro contato mais natural.
+
+### Decisão
+
+- Centralizar a composição do link `wa.me` em um utilitário backend compartilhado.
+- Gerar mensagens com saudação nominal quando houver nome do psicólogo:
+  - perfil/listagem/favoritos: `Olá {primeiro nome}, encontrei seu perfil na Lectum e gostaria de conversar sobre atendimento.`
+  - post de comunidade: `Olá {primeiro nome}, encontrei seu post na Lectum e gostaria de conversar sobre atendimento.`
+  - resposta/comentário de comunidade: `Olá {primeiro nome}, encontrei sua resposta na Lectum e gostaria de conversar sobre atendimento.`
+- Manter o registro real de `contact_request` antes do redirecionamento.
+- No componente de transição para WhatsApp, preservar o texto contextual recebido da tela de origem mesmo quando o endpoint de tracking retorna uma URL atualizada.
+
+### Consequências
+
+- O paciente chega ao WhatsApp com uma mensagem mais pessoal e coerente com o ponto de origem do clique.
+- CTAs de comunidade deixam de perder o contexto de post/resposta quando a chamada de tracking retorna rapidamente.
+- Não há mudança de schema Prisma, endpoints, permissões, tracking, packages ou exposição do telefone bruto.

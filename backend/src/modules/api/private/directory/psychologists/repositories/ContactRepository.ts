@@ -1,14 +1,12 @@
 ﻿import { parsePhoneNumberFromString } from "libphonenumber-js";
 import prisma from "@/infra/database/prisma";
+import { buildLectumWhatsappUrl } from "@/utils/whatsapp-contact";
 import type {
   DirectoryPsychologistContactResponse,
   IContactClickDTO,
   IContactDTO,
 } from "../DTOs/IContactDTO";
 import type { IContactRepository } from "./interfaces/IContactRepository";
-
-const CONTACT_MESSAGE =
-  "Olá, encontrei seu perfil na Lectum e gostaria de conversar sobre atendimento.";
 
 type ContactError = "not_found" | "patient_phone_invalid" | "whatsapp_unavailable";
 
@@ -30,12 +28,8 @@ const normalizePhone = (value: string) => {
   return parsed.number;
 };
 
-const toWhatsAppUrl = (phone: string) => {
-  const digits = phone.replace(/\D/g, "");
-  const text = encodeURIComponent(CONTACT_MESSAGE);
-
-  return `https://wa.me/${digits}?text=${text}`;
-};
+const toWhatsAppUrl = (phone: string, psychologistName?: string | null) =>
+  buildLectumWhatsappUrl({ phone, psychologistName, source: "profile" });
 
 export class ContactRepository implements IContactRepository {
   async registerClick(data: IContactClickDTO): Promise<ContactRepositoryResult> {
@@ -62,6 +56,7 @@ export class ContactRepository implements IContactRepository {
       },
       select: {
         id: true,
+        name: true,
         psychologist_profile: {
           select: {
             whatsapp: true,
@@ -111,7 +106,7 @@ export class ContactRepository implements IContactRepository {
       data: {
         contact_request_id: contact.id,
         psychologist_id: psychologist.id,
-        whatsapp_url: toWhatsAppUrl(psychologistPhone),
+        whatsapp_url: toWhatsAppUrl(psychologistPhone, psychologist.name) ?? "",
       },
     };
   }
@@ -149,6 +144,7 @@ export class ContactRepository implements IContactRepository {
       },
       select: {
         id: true,
+        name: true,
         psychologist_profile: {
           select: {
             whatsapp: true,
@@ -212,7 +208,7 @@ export class ContactRepository implements IContactRepository {
       data: {
         contact_request_id: contact.id,
         psychologist_id: psychologist.id,
-        whatsapp_url: toWhatsAppUrl(psychologistPhone),
+        whatsapp_url: toWhatsAppUrl(psychologistPhone, psychologist.name) ?? "",
       },
     };
   }

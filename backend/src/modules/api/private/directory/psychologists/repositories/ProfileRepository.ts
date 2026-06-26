@@ -11,6 +11,7 @@ import { getPostIdsWithPsychologistReplies } from "@/utils/community-post-replie
 import { getMutedPostIds } from "@/utils/post-notification-mute";
 import { crpExperienceYears } from "@/utils/professional-experience";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
+import { buildLectumWhatsappUrl, type LectumWhatsappMessageSource } from "@/utils/whatsapp-contact";
 import type {
   DirectoryProfileCatalogItem,
   DirectoryPsychologistAcademicFormation,
@@ -27,9 +28,6 @@ import type { IProfileRepository } from "./interfaces/IProfileRepository";
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
-const CONTACT_MESSAGE =
-  "Olá, encontrei seu perfil na Lectum e gostaria de conversar sobre atendimento.";
-
 const catalogSelect = {
   id: true,
   name: true,
@@ -328,12 +326,11 @@ const hasAvailableToday = (value: unknown) => {
   return normalizeStringArray(value).includes(currentWeekdayValue());
 };
 
-const buildWhatsappUrl = (value?: string | null) => {
-  const digits = String(value ?? "").replace(/\D/g, "");
-  if (digits.length < 8) return null;
-
-  return `https://wa.me/${digits}?text=${encodeURIComponent(CONTACT_MESSAGE)}`;
-};
+const buildWhatsappUrl = (
+  value?: string | null,
+  psychologistName?: string | null,
+  source: LectumWhatsappMessageSource = "profile",
+) => buildLectumWhatsappUrl({ phone: value, psychologistName, source });
 
 const anonymousDisplayNameForAuthor = (authorId: string) => {
   let hash = 0;
@@ -359,10 +356,12 @@ const buildProfessionalWhatsappUrl = (
     subscriptions: { id: string }[];
     whatsapp: string | null;
   } | null,
+  psychologistName?: string | null,
+  source: LectumWhatsappMessageSource = "community_post",
 ) => {
   if (!isProfessionalVerified(profile) || !hasPaidProfessionalEntitlement(profile)) return null;
 
-  return buildWhatsappUrl(profile?.whatsapp);
+  return buildWhatsappUrl(profile?.whatsapp, psychologistName, source);
 };
 
 const mentorBadgeForScore = (
@@ -472,6 +471,7 @@ const toPostAuthorResponse = (
   anonymousDisplayName?: string,
   featuredBadgeOverride?: string | null,
   forceFeaturedBadgeOverride = false,
+  whatsappMessageSource: LectumWhatsappMessageSource = "community_post",
 ): CommunityAuthorDTO => {
   const profile = author.psychologist_profile;
   const isPsychologist = author.role === "psicologo";
@@ -490,7 +490,9 @@ const toPostAuthorResponse = (
     crp: isPsychologist ? (profile?.crp ?? null) : null,
     verified: isPsychologist && isProfessionalVerified(profile),
     featured_badge: isPsychologist ? featuredBadge : null,
-    whatsapp_url: isPsychologist ? buildProfessionalWhatsappUrl(profile) : null,
+    whatsapp_url: isPsychologist
+      ? buildProfessionalWhatsappUrl(profile, author.name, whatsappMessageSource)
+      : null,
   };
 };
 
@@ -510,6 +512,7 @@ const toHighlightedProfessionalReply = (
     undefined,
     featuredBadgeOverride,
     forceFeaturedBadgeOverride,
+    "community_reply",
   );
   if (requireVerified && !author.verified) return null;
 
@@ -1151,7 +1154,7 @@ export class ProfileRepository implements IProfileRepository {
       social_value: profile.social_value,
       accepts_insurance: profile.accepts_insurance,
       show_experience_tag: profile.show_experience_tag,
-      whatsapp_url: buildWhatsappUrl(profile.whatsapp),
+      whatsapp_url: buildWhatsappUrl(profile.whatsapp, item.name),
       favorited: item.favorited_by_patients.length > 0,
       followed: item.followed_by_patients.length > 0,
       whatsapp_available: Boolean(profile.whatsapp),

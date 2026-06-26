@@ -2,6 +2,7 @@ import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import { crpExperienceYears } from "@/utils/professional-experience";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
+import { buildLectumWhatsappUrl } from "@/utils/whatsapp-contact";
 import type {
   FavoriteActionResponse,
   IFavoriteIndexDTO,
@@ -12,9 +13,6 @@ import type { IFavoriteRepository } from "./interfaces/IFavoriteRepository";
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
-const CONTACT_MESSAGE =
-  "Olá, encontrei seu perfil na Lectum e gostaria de conversar sobre atendimento.";
-
 const catalogSelect = {
   id: true,
   name: true,
@@ -69,12 +67,8 @@ const moreExperiencedCutoffDate = () => {
   return date;
 };
 
-const buildWhatsappUrl = (value?: string | null) => {
-  const digits = String(value ?? "").replace(/\D/g, "");
-  if (digits.length < 8) return null;
-
-  return `https://wa.me/${digits}?text=${encodeURIComponent(CONTACT_MESSAGE)}`;
-};
+const buildWhatsappUrl = (value?: string | null, psychologistName?: string | null) =>
+  buildLectumWhatsappUrl({ phone: value, psychologistName, source: "profile" });
 
 const isCatalogItem = (
   value: PatientRelationCatalogItem | null,
@@ -347,7 +341,7 @@ export class FavoriteRepository implements IFavoriteRepository {
             social_value: profile.social_value,
             accepts_insurance: profile.accepts_insurance,
             show_experience_tag: profile.show_experience_tag,
-            whatsapp_url: buildWhatsappUrl(profile.whatsapp),
+            whatsapp_url: buildWhatsappUrl(profile.whatsapp, item.psychologist.name),
             favorited: item.psychologist.favorited_by_patients.length > 0,
             followed: item.psychologist.followed_by_patients.length > 0,
             specialties: item.psychologist.psychologist_specialties

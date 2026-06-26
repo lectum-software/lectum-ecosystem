@@ -52,6 +52,24 @@ type PsychologistWhatsAppRedirectModalProps = {
 
 const delay = (ms: number) => new Promise<null>((resolve) => window.setTimeout(resolve, ms, null));
 
+const preserveFallbackWhatsAppText = (fallbackUrl: string, trackedUrl?: string | null) => {
+  if (!trackedUrl) return fallbackUrl;
+
+  try {
+    const fallback = new URL(fallbackUrl);
+    const fallbackText = fallback.searchParams.get("text");
+
+    if (!fallbackText) return trackedUrl;
+
+    const tracked = new URL(trackedUrl);
+    tracked.searchParams.set("text", fallbackText);
+
+    return tracked.toString();
+  } catch {
+    return fallbackUrl;
+  }
+};
+
 const getInitials = (name: string) => {
   const parts = name.split(/\s+/).filter(Boolean);
 
@@ -266,7 +284,7 @@ export const PsychologistWhatsAppRedirectButton = ({
     const startedAt = performance.now();
     const trackedUrlPromise = tracking
       .mutateAsync()
-      .then((data) => data.whatsapp_url)
+      .then((data) => preserveFallbackWhatsAppText(fallbackUrl, data.whatsapp_url))
       .catch(() => fallbackUrl);
 
     const nextUrl =

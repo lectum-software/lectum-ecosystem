@@ -7,6 +7,7 @@ import {
   activeProfessionalCourtesyEntitlementWhere,
   activeProfessionalEntitlementWhere,
 } from "@/utils/subscription-entitlement";
+import { buildLectumWhatsappUrl, type LectumWhatsappMessageSource } from "@/utils/whatsapp-contact";
 import type {
   CommunityAuthorDTO,
   CommunityDetailResponse,
@@ -189,8 +190,6 @@ type GeneralFeedQueueItem = {
   post: PostResult;
 };
 
-const CONTACT_MESSAGE =
-  "Olá, encontrei seu post na comunidade Lectum e gostaria de conversar sobre atendimento.";
 const COMMUNITY_SORT_PERIOD_KEYS: CommunitySortPeriodKey[] = ["week", "month", "year", "all"];
 const GENERAL_FEED_INITIAL_POOL_SIZE_PER_COMMUNITY = 5;
 const GENERAL_FEED_REFILL_SIZE_PER_COMMUNITY = 3;
@@ -612,13 +611,6 @@ const toCommunityDetailResponse = (
   };
 };
 
-const buildWhatsappUrl = (value?: string | null) => {
-  const digits = String(value ?? "").replace(/\D/g, "");
-  if (digits.length < 8) return null;
-
-  return `https://wa.me/${digits}?text=${encodeURIComponent(CONTACT_MESSAGE)}`;
-};
-
 const anonymousDisplayNameForAuthor = (authorId: string) => {
   let hash = 0;
 
@@ -648,8 +640,14 @@ const buildProfessionalWhatsappUrl = (
     subscriptions: { id: string; source?: string | null }[];
     whatsapp: string | null;
   } | null,
+  psychologistName?: string | null,
+  source: LectumWhatsappMessageSource = "community_post",
 ) => {
-  return buildWhatsappUrl(profile?.whatsapp);
+  return buildLectumWhatsappUrl({
+    phone: profile?.whatsapp,
+    psychologistName,
+    source,
+  });
 };
 
 const mentorBadgeForScore = (
@@ -1095,6 +1093,7 @@ const toAuthorResponse = (
   mentorScore = 0,
   anonymous = false,
   anonymousDisplayName?: string,
+  whatsappMessageSource: LectumWhatsappMessageSource = "community_post",
 ): CommunityAuthorDTO => {
   const profile = author.psychologist_profile;
   const isPsychologist = author.role === "psicologo";
@@ -1121,7 +1120,10 @@ const toAuthorResponse = (
     verified: isPsychologist && !isDeletedAuthor && isProfessionalVerified(profile),
     featured_badge:
       isPsychologist && !isDeletedAuthor ? mentorBadgeForScore(profile, mentorScore) : null,
-    whatsapp_url: isPsychologist && !isDeletedAuthor ? buildProfessionalWhatsappUrl(profile) : null,
+    whatsapp_url:
+      isPsychologist && !isDeletedAuthor
+        ? buildProfessionalWhatsappUrl(profile, author.name, whatsappMessageSource)
+        : null,
   };
 };
 
@@ -1131,7 +1133,13 @@ const toHighlightedProfessionalReply = (
 ): CommunityPostDTO["highlighted_professional_reply"] => {
   if (!reply) return null;
 
-  const author = toAuthorResponse(reply.author, reply.upvotes_count);
+  const author = toAuthorResponse(
+    reply.author,
+    reply.upvotes_count,
+    false,
+    undefined,
+    "community_reply",
+  );
   if (!author.verified) return null;
 
   return {
