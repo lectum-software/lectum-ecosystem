@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowLeft, Send, Star, UserRound } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -13,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { formatCrpLabel } from "@/utils/crp";
+import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { useReviewForm } from "./use-form";
 
 const criteria = ["Acolhimento", "Clareza", "Pontualidade"];
@@ -36,6 +38,28 @@ const getInitials = (name: string) => {
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
 
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+};
+
+const ReviewProfessionalAvatar = ({ avatar, name }: { avatar?: string | null; name: string }) => {
+  const avatarSrc = resolvePublicMediaUrl(avatar ?? null);
+
+  return (
+    <div className="relative grid h-24 w-24 place-items-center overflow-hidden rounded-full bg-primary-soft text-3xl font-bold text-primary ring-2 ring-white shadow-[0_10px_24px_rgb(48_140_232_/_12%)] dark:ring-surface">
+      {avatarSrc ? (
+        <Image
+          alt={`Foto de perfil de ${name}`}
+          className="object-cover"
+          fill
+          priority
+          sizes="96px"
+          src={avatarSrc}
+          unoptimized={isPublicMediaUrl(avatar ?? null)}
+        />
+      ) : (
+        getInitials(name)
+      )}
+    </div>
+  );
 };
 
 export const ReviewsNewLogic = () => {
@@ -145,9 +169,10 @@ export const ReviewsNewLogic = () => {
         {professional?.eligible ? (
           <>
             <section className="grid justify-items-center gap-2 rounded-[var(--lectum-card-radius)] border border-border bg-surface px-6 py-6 text-center shadow-[var(--lectum-shadow-soft)]">
-              <div className="grid h-24 w-24 place-items-center rounded-full bg-primary-soft text-3xl font-bold text-primary">
-                {getInitials(professional.psychologist_name)}
-              </div>
+              <ReviewProfessionalAvatar
+                avatar={professional.psychologist_avatar}
+                name={professional.psychologist_name}
+              />
               <h2 className="inline-flex max-w-full items-center justify-center gap-1.5 text-center text-2xl font-extrabold text-foreground">
                 <span className="min-w-0 truncate">{professional.psychologist_name}</span>
                 {professional.psychologist_verified ? (

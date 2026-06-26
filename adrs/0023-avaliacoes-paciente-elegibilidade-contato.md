@@ -122,3 +122,31 @@ Validação complementar planejada/executada na task:
 - `pnpm check`
 - Smoke HTTP real em `GET /api/private/user/reviews/eligibility/cmqmg35850000asuheq2ucwd0` com usuário autenticado de role `psicologo`, retornando `eligible=true` e `contact_request_id=null`.
 - Browser local em `/app/reviews/new?psychologist_id=cmqmg35850000asuheq2ucwd0`, confirmando ausência do bloqueio por WhatsApp.
+
+## Atualizacao 2026-06-26 - foto real no fluxo de nova avaliacao
+
+### Contexto
+
+O card superior da tela `/app/reviews/new` ja recebia `psychologist_avatar` no contrato de elegibilidade, mas a interface renderizava sempre um avatar textual com as iniciais. Isso quebrava a continuidade visual com o perfil publico e dificultava o reconhecimento do profissional no momento da avaliacao.
+
+### Decisao
+
+- Renderizar a foto de perfil real do psicologo no card de nova avaliacao quando `psychologist_avatar` estiver preenchido.
+- Usar exclusivamente `next/image`, com `resolvePublicMediaUrl` e `isPublicMediaUrl`, seguindo a regra de UI do projeto e os mesmos utilitarios usados na lista de avaliacoes feitas.
+- Manter iniciais como fallback honesto apenas quando nao existir avatar persistido.
+
+### Consequencias
+
+- O usuario reconhece melhor o psicologo avaliado antes de enviar o depoimento.
+- O ajuste reaproveita o contrato e os utilitarios existentes, sem mudar API, schema, elegibilidade, persistencia ou packages.
+- Perfis sem foto continuam com fallback visual estavel e sem mock.
+
+### Validacao
+
+- `pnpm.cmd --dir frontend exec biome check --write "src/app/app/reviews/new/logic.tsx"`
+- `pnpm.cmd --dir frontend check`
+- `pnpm.cmd --dir frontend build`
+- `pnpm.cmd check`
+- `git diff --check`
+- HTTP local `200` em `/app/reviews/new?psychologist_id=cmqmg35850000asuheq2ucwd0`
+- Chrome headless local em viewport mobile 390x844 na mesma rota.

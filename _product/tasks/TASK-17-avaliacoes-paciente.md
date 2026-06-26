@@ -264,3 +264,13 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm check`
 - Smoke HTTP real em `GET /api/private/user/reviews/eligibility/cmqmg35850000asuheq2ucwd0` com usuário autenticado de role `psicologo`, retornando `eligible=true` e `contact_request_id=null`.
 - Browser local em `/app/reviews/new?psychologist_id=cmqmg35850000asuheq2ucwd0`, validando que a tela não exibe bloqueio por WhatsApp e renderiza o formulário quando autenticada.
+
+## Execucao complementar - 2026-06-26 - Foto do psicologo na nova avaliacao
+
+- Pedido do usuario: na tela `/app/reviews/new`, exibir a foto de perfil real do psicologo avaliado no card superior, em vez de mostrar sempre as iniciais.
+- Frontend: o card de `Avaliar Profissional` passou a renderizar `psychologist_avatar` retornado pela elegibilidade com `next/image`, usando `resolvePublicMediaUrl` e `isPublicMediaUrl` para preservar URLs publicas/locais existentes.
+- O fallback por iniciais foi mantido apenas quando o psicologo nao possui avatar persistido, sem criar mock, dado fake ou asset artificial.
+- Nao houve alteracao de backend, Prisma schema, migrations, endpoints, payloads, packages, regras de elegibilidade, envio de avaliacao ou listagem.
+- Fonte visual/auditavel: screenshot do usuario e referencia local `_product/proto/Avaliar do Psicologo.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0023-avaliacoes-paciente-elegibilidade-contato.md`.
+- Validacoes executadas: `pnpm.cmd --dir frontend exec biome check --write "src/app/app/reviews/new/logic.tsx"`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, `git diff --check`, HTTP local `200` em `/app/reviews/new?psychologist_id=cmqmg35850000asuheq2ucwd0` e Chrome headless mobile 390x844 na mesma rota.
