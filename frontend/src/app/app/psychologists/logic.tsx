@@ -27,7 +27,6 @@ import {
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  type CSSProperties,
   type FormEvent,
   type PointerEvent,
   type KeyboardEvent as ReactKeyboardEvent,
@@ -730,11 +729,7 @@ const buildActiveFilterChips = (
   return chips;
 };
 
-type FloatingBenefitBadgeStyle = CSSProperties & {
-  "--benefit-delay": string;
-};
-
-const buildFloatingBenefitBadges = (
+const buildBenefitChips = (
   psychologist:
     | {
         accepts_insurance?: boolean | null;
@@ -749,14 +744,12 @@ const buildFloatingBenefitBadges = (
   const badges: Array<{
     id: string;
     label: string;
-    delay: string;
   }> = [];
 
   if (psychologist.discount_first_session) {
     badges.push({
       id: "discount-first-session",
       label: "Desconto 1ª sessão",
-      delay: "0s",
     });
   }
 
@@ -764,7 +757,6 @@ const buildFloatingBenefitBadges = (
     badges.push({
       id: "social-value",
       label: "Valor social",
-      delay: "0.16s",
     });
   }
 
@@ -772,7 +764,6 @@ const buildFloatingBenefitBadges = (
     badges.push({
       id: "accepts-insurance",
       label: "Aceita convênios",
-      delay: "0.32s",
     });
   }
 
@@ -897,7 +888,7 @@ export const PsychologistsLogic = () => {
   const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const desktopSearchControlsRef = useRef<HTMLDivElement | null>(null);
-  const bioTextRef = useRef<HTMLParagraphElement | null>(null);
+  const bioTextRef = useRef<HTMLElement | null>(null);
   const progressTrackRef = useRef<HTMLDivElement | null>(null);
   const progressFillRef = useRef<HTMLDivElement | null>(null);
   const actionColumnRef = useRef<HTMLDivElement | null>(null);
@@ -993,6 +984,7 @@ export const PsychologistsLogic = () => {
   const isMobileSearchFocusMode = isSearchFocused && !metrics.isDesktopLayout;
   const activeVideoSource = shouldShowVideo ? backgroundVideoSrc : null;
   const featuredBio = featuredPsychologist?.headline?.trim() || "";
+  const featuredBenefitChipsCount = buildBenefitChips(featuredPsychologist).length;
   const featuredPsychologistId = featuredPsychologist?.id;
   const activeVideoResetKey = featuredPsychologistId
     ? `${featuredPsychologistId}:${activeVideoSource ?? ""}`
@@ -1307,18 +1299,18 @@ export const PsychologistsLogic = () => {
   }, [activePsychologistIndex, psychologists.length]);
 
   const syncActionColumnAlignment = useCallback(() => {
-    const baselineText = featuredBio;
+    const hasBaselineContent = Boolean(featuredBio || featuredBenefitChipsCount > 0);
     const bioText = bioTextRef.current;
     const profileLabel = profileTextRef.current;
     const actionColumn = actionColumnRef.current;
 
-    if (!baselineText || !bioText || !profileLabel || !actionColumn) return;
+    if (!hasBaselineContent || !bioText || !profileLabel || !actionColumn) return;
 
     const delta =
       bioText.getBoundingClientRect().bottom - profileLabel.getBoundingClientRect().bottom;
 
     setActionColumnTranslateY((current) => (Math.abs(current - delta) > 0.5 ? delta : current));
-  }, [featuredBio]);
+  }, [featuredBenefitChipsCount, featuredBio]);
 
   const recalculateInfoOverlayLayout = useCallback(() => {
     syncActionColumnAlignment();
@@ -3006,27 +2998,6 @@ export const PsychologistsLogic = () => {
     >
       <style>
         {`
-          @keyframes psychologists-benefit-pill-in {
-            0% {
-              opacity: 0;
-              transform: translate3d(-10px, 6px, 0) scale(0.98);
-            }
-            100% {
-              opacity: 1;
-              transform: translate3d(0, 0, 0) scale(1);
-            }
-          }
-
-          @keyframes psychologists-benefit-pill-float {
-            0%,
-            100% {
-              transform: translate3d(0, 0, 0);
-            }
-            50% {
-              transform: translate3d(0, -4px, 0);
-            }
-          }
-
           @keyframes psychologists-double-tap-feedback {
             0% {
               opacity: 0;
@@ -3085,19 +3056,6 @@ export const PsychologistsLogic = () => {
               opacity: 0.92;
               transform: scale(1.18);
             }
-          }
-
-          .psychologists-benefit-pill {
-            animation:
-              psychologists-benefit-pill-in 520ms var(--benefit-delay) cubic-bezier(0.2, 0.9, 0.25, 1) both,
-              psychologists-benefit-pill-float 4.8s calc(var(--benefit-delay) + 520ms) ease-in-out infinite;
-            background: rgba(244, 247, 251, 0.86);
-            box-shadow:
-              0 10px 22px rgba(15, 23, 42, 0.16),
-              inset 0 1px 0 rgba(255, 255, 255, 0.7);
-            opacity: 0;
-            text-shadow: none;
-            will-change: opacity, transform;
           }
 
           .psychologists-video-feed {
@@ -3168,12 +3126,6 @@ export const PsychologistsLogic = () => {
           }
 
           @media (prefers-reduced-motion: reduce) {
-            .psychologists-benefit-pill {
-              animation: none;
-              opacity: 1;
-              transform: none;
-            }
-
             .psychologists-video-feed {
               scroll-behavior: auto;
             }
@@ -3519,10 +3471,7 @@ export const PsychologistsLogic = () => {
                     (!isActiveSlide || slideShouldShowVideo);
                   const slideBio = psychologist.headline?.trim() || "";
                   const slideNameParts = splitNameForBadge(psychologist.name);
-                  const slideBenefitBadges = buildFloatingBenefitBadges(psychologist);
-                  const slideBenefitBadgesTop = metrics.isDesktopLayout
-                    ? metrics.searchTop + 8
-                    : metrics.searchTop + metrics.searchHeight + 24;
+                  const slideBenefitChips = buildBenefitChips(psychologist);
                   const slideIsFavorited =
                     favoriteOverrides[psychologist.id] ?? Boolean(psychologist.favorited);
                   const slideIsFavoritePending = favoritePendingId === psychologist.id;
@@ -3993,45 +3942,6 @@ export const PsychologistsLogic = () => {
                             </div>
                           ) : null}
 
-                          {slideBenefitBadges.length > 0 ? (
-                            <ul
-                              aria-label="Benefícios do psicólogo"
-                              aria-hidden={slideShouldHideChrome ? true : undefined}
-                              className={cn(
-                                "pointer-events-none absolute z-30 flex w-[min(190px,56vw)] list-none flex-col items-start gap-2 overflow-visible p-0 transition-opacity duration-200 ease-out",
-                                slideOverlayVisibilityClass,
-                              )}
-                              style={{
-                                left: `${metrics.horizontalPadding}px`,
-                                top: `calc(env(safe-area-inset-top) + ${slideBenefitBadgesTop}px)`,
-                              }}
-                            >
-                              {slideBenefitBadges.map((badge) => {
-                                const badgeStyle: FloatingBenefitBadgeStyle = {
-                                  "--benefit-delay": badge.delay,
-                                };
-
-                                return (
-                                  <li
-                                    className={cn(
-                                      "psychologists-benefit-pill pointer-events-auto inline-flex w-max max-w-[172px] items-center gap-1.5 rounded-full border border-white/55 px-2.5 py-1.5 text-[10px] leading-none font-extrabold tracking-[-0.02em] text-[#64748B] backdrop-blur-md",
-                                    )}
-                                    key={badge.id}
-                                    style={badgeStyle}
-                                  >
-                                    <span
-                                      aria-hidden="true"
-                                      className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-white/70 text-[#64748B]"
-                                    >
-                                      <Award className="h-3 w-3" strokeWidth={2.4} />
-                                    </span>
-                                    {badge.label}
-                                  </li>
-                                );
-                              })}
-                            </ul>
-                          ) : null}
-
                           <div
                             aria-hidden="true"
                             className={cn(
@@ -4161,7 +4071,7 @@ export const PsychologistsLogic = () => {
                                   className="pointer-events-auto mt-2 w-full whitespace-pre-line text-left text-white/90"
                                   onPointerDown={stopInteractionPropagation}
                                   ref={(node) => {
-                                    if (isActiveSlide) {
+                                    if (isActiveSlide && slideBenefitChips.length === 0) {
                                       bioTextRef.current = node;
                                     }
                                   }}
@@ -4175,6 +4085,28 @@ export const PsychologistsLogic = () => {
                                 >
                                   {slideBio}
                                 </p>
+                              ) : null}
+
+                              {slideBenefitChips.length > 0 ? (
+                                <ul
+                                  aria-label="Benefícios do psicólogo"
+                                  className="pointer-events-auto mt-2 flex max-w-full list-none flex-nowrap items-center gap-1 overflow-hidden p-0 min-[390px]:gap-1.5"
+                                  onPointerDown={stopInteractionPropagation}
+                                  ref={(node) => {
+                                    if (isActiveSlide) {
+                                      bioTextRef.current = node;
+                                    }
+                                  }}
+                                >
+                                  {slideBenefitChips.map((chip) => (
+                                    <li
+                                      className="inline-flex min-w-0 shrink items-center rounded-full border border-white/70 bg-black/15 px-1.5 py-1 text-[9px] leading-none font-bold whitespace-nowrap text-white/95 shadow-[0_4px_14px_rgba(15,23,42,0.2)] backdrop-blur-[2px] min-[390px]:px-2 min-[390px]:text-[10px]"
+                                      key={chip.id}
+                                    >
+                                      <span className="truncate">{chip.label}</span>
+                                    </li>
+                                  ))}
+                                </ul>
                               ) : null}
 
                               {isActiveSlide && shareFeedback ? (

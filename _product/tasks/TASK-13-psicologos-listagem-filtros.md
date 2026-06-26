@@ -1374,3 +1374,29 @@ Validacoes do complemento:
 - A diversificacao usa randomizacao controlada deterministica por usuario/dia/psicologo, sem ultrapassar a prioridade de verificados.
 - Penalizacoes por repeticao de impressao/skip continuam pendentes de fonte persistida real de impressao do feed; nao foram simuladas.
 - ADR criado: `adrs/0125-ranking-psicologos-video-learning.md`.
+
+## Execucao complementar: chips comerciais abaixo da bio no feed imersivo (2026-06-26)
+
+- Pedido do usuario: mover as chips `Desconto 1ª sessão`, `Valor social` e `Aceita convênios` para baixo da bio nos cards imersivos de `/app/psychologists`, em linha unica no mobile.
+- Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao; a execucao usou o inventario `_product/tasks/PROTO-INVENTORY.md`, o fallback local `_product/proto/Psicólogos.jpg` e a imagem anexada pelo usuario como referencia visual complementar.
+- As chips deixaram de ser badges flutuantes no topo do video e passaram a ficar logo abaixo da bio, sem icones, com `flex-nowrap`, tamanho compacto e overflow protegido para manter uma linha na base mobile de 390px.
+- A coluna mobile de acoes passou a alinhar sua ancora ao fim do bloco de chips quando elas existem, evitando que o avatar de perfil acompanhe apenas o fim da bio.
+- Nao houve alteracao de backend, Prisma, migrations, packages, contratos de API, filtros, ranking, dados ou rotas.
+- ADR atualizado: `adrs/0019-descoberta-psicologos-taxonomias.md`.
+
+Criterios complementares:
+
+- [x] Chips comerciais aparecem abaixo da bio no feed imersivo de psicologos.
+- [x] As tres chips cabem em uma unica linha na viewport mobile base de 390px.
+- [x] Apenas beneficios reais do perfil sao exibidos; nenhum selo comercial e inventado.
+- [x] Nenhum `<img>`, package novo, mock ou endpoint simulado foi usado.
+
+Validacoes do complemento:
+
+- `pnpm --dir frontend biome:fix`
+- `pnpm --dir frontend check` (primeira execucao excedeu o timeout local de 120s; reexecutado com timeout maior e concluido sem erros)
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- Browser local via Chrome/CDP em `http://localhost:3000/app/psychologists` com viewport mobile `390x844`: as chips `Desconto 1ª sessão`, `Valor social` e `Aceita convênios` renderizaram abaixo da bio no mesmo eixo vertical (`y=744.5`) e em uma unica linha.
+- HTTP local em `/app/psychologists` respondeu `200`.

@@ -39,6 +39,10 @@ Ainda em 2026-06-14, os filtros da modal precisaram remover a alternativa `Prefi
 religião, raça e gênero do psicólogo, garantir `Terapia Individual` como primeiro serviço real do catálogo e adicionar
 o filtro combinável `Disponível hoje`.
 
+Em 2026-06-26, o usuário pediu para mover as três chips comerciais do card imersivo de psicólogos para baixo da bio,
+inspirado em tags posicionadas na região inferior do vídeo. O objetivo era reduzir competição visual com o rosto e com
+o header interno `Explorar / Minha Busca`, mantendo as chips em uma única linha no mobile.
+
 ## Decisão
 
 - Criar `GET /api/private/directory/psychologists` como endpoint real de listagem paginada (`page`/`limit`, default 20 e máximo 50), busca e filtros.
@@ -78,6 +82,9 @@ o filtro combinável `Disponível hoje`.
   item da ordenação exibida em `toServiceOptions`.
 - Adicionar `available_today` ao contrato de query da descoberta, validando o parâmetro no backend e filtrando por
   `psychologist_profile.available_days` com o mesmo cálculo de dia atual em `America/Sao_Paulo` já usado no card.
+- Reposicionar as chips `Desconto 1ª sessão`, `Valor social` e `Aceita convênios` para baixo da bio no feed imersivo
+  `/app/psychologists`, renderizando-as como uma linha única `flex-nowrap`, sem ícones, e exibindo apenas benefícios
+  verdadeiros do perfil. A ancoragem da coluna de ações passa a considerar o fim do bloco de chips quando elas existem.
 
 ## Consequências
 
@@ -99,6 +106,9 @@ o filtro combinável `Disponível hoje`.
   pacientes sem opção sintética no banco.
 - O filtro `Disponível hoje` usa disponibilidade real cadastrada no perfil; se o profissional não tiver o dia atual em
   `available_days`, ele não entra no resultado desse recorte.
+- As chips deixam de ocupar a área superior do vídeo, liberando o rosto e o header interno. Em telas próximas de
+  `390px`, as três chips cabem na mesma linha abaixo da bio; se algum benefício não for verdadeiro, a linha usa somente
+  as chips reais restantes, sem inventar selo comercial.
 
 ## Validação
 
@@ -164,6 +174,16 @@ o filtro combinável `Disponível hoje`.
   - `pnpm --dir frontend build`
   - `pnpm check`
   - `git diff --check`
+  - HTTP local em `/app/psychologists` respondeu `200`.
+- Validação complementar das chips abaixo da bio em 2026-06-26:
+  - `pnpm --dir frontend biome:fix`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - `git diff --check`
+  - Browser local via Chrome/CDP em `http://localhost:3000/app/psychologists` com viewport mobile `390x844`: as chips
+    `Desconto 1ª sessão`, `Valor social` e `Aceita convênios` renderizaram abaixo da bio no mesmo eixo vertical
+    (`y=744.5`) e em uma única linha.
   - HTTP local em `/app/psychologists` respondeu `200`.
 
 ## Pendências
