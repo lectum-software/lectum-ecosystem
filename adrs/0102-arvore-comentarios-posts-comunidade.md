@@ -128,3 +128,22 @@ O controle permanece menos importante visualmente que a barra de acoes, por ser 
 - `pnpm.cmd check`
 - `git diff --check`
 - HTTP local `200` em `http://127.0.0.1:3000/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`
+
+## Atualizacao 2026-06-25 - conectores em L entre pai e respostas
+
+### Contexto
+
+A arvore de comentarios ja usava linhas verticais para indicar profundidade, mas as camadas filhas ainda pareciam guias paralelas soltas. A referencia visual enviada pelo usuario foi o padrao do YouTube, em que cada resposta fica pendurada na linha do comentario pai por um pequeno conector curvo/horizontal.
+
+### Decisao
+
+- Manter a linha vertical existente da arvore como guia principal.
+- Adicionar, para cada resposta filha renderizada, um conector visual em `L` (`border-l` + `border-b` arredondado) entre a linha vertical do pai e o inicio do comentario filho.
+- Usar cor azul acinzentada suave (`#DCE4EE`) e variante `dark:border-border` para manter a conexao discreta no padrao Lectum.
+- Preservar o controle explicito de expandir/recolher, a profundidade maxima, deep links, ordenacao, composer e acoes de cada comentario.
+
+### Consequencias
+
+- A relacao pai-filho fica mais clara em arvores profundas, especialmente em mobile.
+- O visual se aproxima do modelo mental conhecido do YouTube sem aumentar muito o ruido visual.
+- A alteracao e puramente visual/frontend e nao modifica dados, APIs, backend, Prisma, packages, votos, salvos ou comentarios.

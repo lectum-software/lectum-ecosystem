@@ -1070,3 +1070,13 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual/auditavel: decisao conversada com o usuario e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
 - Validacoes executadas: `pnpm.cmd --dir frontend exec biome check --write "src/app/app/community/[slug]/post/[id]/logic.tsx"`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, `git diff --check` e HTTP local `200` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`.
+
+## Complemento 2026-06-25 - conectores em L na arvore de comentarios
+
+- Pedido do usuario: aproximar a arvore de comentarios do comportamento visual do YouTube, onde respostas em camadas inferiores ficam conectadas ao comentario raiz por uma linha vertical com curva/conector horizontal.
+- Frontend: cada resposta filha em `/app/community/[slug]/post/[id]` e na thread isolada passa a receber um conector sutil em `L`, ligado a linha vertical da arvore, antes do comentario filho.
+- O ajuste preserva a linha vertical existente, o botao explicito `Ocultar respostas`/`Ver respostas`, profundidade visual, ordenacao, votes, salvos, composer, midias e WhatsApp.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, payloads ou dados persistidos.
+- Fonte visual/auditavel: screenshot do usuario comparando YouTube e rota local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check --write "src/app/app/community/[slug]/post/[id]/logic.tsx"`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check` e HTTP local `200` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`.

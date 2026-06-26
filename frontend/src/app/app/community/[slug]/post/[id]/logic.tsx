@@ -1506,32 +1506,37 @@ const ReplyCard = ({
           id={`reply-children-${reply.id}`}
         >
           {visibleChildren.map((child) => (
-            <ReplyCard
-              activeInlineReplyFormRef={activeInlineReplyFormRef}
-              currentUserId={currentUserId}
-              deleteReplyPending={deleteReplyPending}
-              depth={depth + 1}
-              inlineReplyTargets={inlineReplyTargets}
-              key={child.id}
-              focusReplyId={focusReplyId}
-              maxInlineDepth={maxInlineDepth}
-              mediaPermission={mediaPermission}
-              onCancelInlineReplyTarget={onCancelInlineReplyTarget}
-              onInlineReplyDraftChange={onInlineReplyDraftChange}
-              onDeleteReply={onDeleteReply}
-              onReply={onReply}
-              onReportReply={onReportReply}
-              onShare={onShare}
-              onSubmitReply={onSubmitReply}
-              onVote={onVote}
-              postId={postId}
-              professionalThread={highlightedProfessionalThread}
-              reply={child}
-              replyApiError={replyApiError}
-              replyDisabled={replyDisabled}
-              threadHrefBase={threadHrefBase}
-              votePending={votePending}
-            />
+            <div className="relative" key={child.id}>
+              <span
+                className="pointer-events-none absolute top-0 -left-4 h-4 w-4 rounded-bl-[12px] border-[#DCE4EE] border-b border-l dark:border-border sm:-left-5 sm:h-[1.125rem] sm:w-5"
+                aria-hidden="true"
+              />
+              <ReplyCard
+                activeInlineReplyFormRef={activeInlineReplyFormRef}
+                currentUserId={currentUserId}
+                deleteReplyPending={deleteReplyPending}
+                depth={depth + 1}
+                inlineReplyTargets={inlineReplyTargets}
+                focusReplyId={focusReplyId}
+                maxInlineDepth={maxInlineDepth}
+                mediaPermission={mediaPermission}
+                onCancelInlineReplyTarget={onCancelInlineReplyTarget}
+                onInlineReplyDraftChange={onInlineReplyDraftChange}
+                onDeleteReply={onDeleteReply}
+                onReply={onReply}
+                onReportReply={onReportReply}
+                onShare={onShare}
+                onSubmitReply={onSubmitReply}
+                onVote={onVote}
+                postId={postId}
+                professionalThread={highlightedProfessionalThread}
+                reply={child}
+                replyApiError={replyApiError}
+                replyDisabled={replyDisabled}
+                threadHrefBase={threadHrefBase}
+                votePending={votePending}
+              />
+            </div>
           ))}
           {hiddenRepliesCount > 0 && threadHref ? (
             <Link
