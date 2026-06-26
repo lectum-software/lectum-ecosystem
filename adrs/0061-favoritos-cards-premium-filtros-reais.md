@@ -751,3 +751,20 @@ O produto pediu que as chips de Favoritos replicassem as configuracoes de layout
 
 - A chip de Favoritos passa a diferir da Comunidade apenas pela largura natural necessaria para exibir o numero.
 - A altura, fonte, peso, gap, padding e estados visuais permanecem equivalentes ao padrao da Comunidade.
+## Complemento 2026-06-26 - superficie suave nos contadores das chips
+
+### Contexto
+
+Apos a replica das configuracoes de layout da Comunidade, o produto pediu uma bolinha azul suave atras dos contadores das chips de Favoritos para melhorar a leitura dos numeros sem voltar a aumentar a escala das chips.
+
+### Decisao
+
+- Preservar a classe-base de `favoriteFilterChipClassName` equivalente ao helper da Comunidade (`h-8`, `text-xs`, `px-3`, `gap-1.5`, estados ativo/inativo e foco).
+- Adicionar somente ao contador um `span` circular com `h-5`, `min-w-5`, `rounded-full` e `bg-primary-soft`, mantendo `text-xs font-bold leading-none`.
+- Nao extrair componente compartilhado nesta rodada para limitar o escopo a `/app/favorites` e evitar regressao na Comunidade.
+
+### Consequencias
+
+- Os contadores reais ficam mais legiveis com uma superficie azul suave, sem alterar o tamanho, a fonte ou o comportamento das chips.
+- A diferenca de Favoritos em relacao a Comunidade continua restrita a necessidade de exibir contadores reais.
+- Nenhum contrato de API, schema, endpoint, pacote ou regra de dominio foi alterado.

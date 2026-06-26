@@ -552,3 +552,11 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Frontend: o contador deixou de ser badge com tamanho/fonte propria e passou a ser um `span` simples com `whitespace-nowrap text-xs font-bold leading-none`, igual ao texto da chip; assim a unica diferenca e a largura natural adicional para o numero real.
 - Escopo: sem mudancas de backend, Prisma, migrations, packages, endpoint, filtros reais, paginacao, favoritos persistidos ou tracking de WhatsApp.
 - ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
+## Complemento 2026-06-26 - bolinha azul suave nos contadores das chips
+
+- Pedido do usuario: adicionar uma bolinha azul suave atras dos contadores nas chips de `/app/favorites`, mantendo a configuracao de layout das chips da Comunidade.
+- Referencia visual/auditavel: screenshots do usuario em `/app/favorites`, comparacao com os chips de `/app/community/[slug]` e referencia local `_product/proto/Favoritos.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: `favoriteFilterChipClassName` permanece com a mesma base visual de `communityPostSortChipClassName`; somente o contador voltou a ter uma superficie circular suave (`bg-primary-soft`) com a mesma fonte `text-xs font-bold leading-none`.
+- Escopo: sem mudancas de backend, Prisma, migrations, packages, endpoints, filtros reais, paginacao, favoritos persistidos ou tracking de WhatsApp.
+- ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
+- Validacoes executadas: `pnpm.cmd --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, `git diff --check` e HTTP local `200` em `/app/favorites`.
