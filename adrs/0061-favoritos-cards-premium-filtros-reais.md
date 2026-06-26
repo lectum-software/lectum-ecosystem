@@ -626,14 +626,34 @@ Na tela de Favoritos, a area de capa dos cards estava exibindo apenas fallback v
 
 - Incluir `cover_image_url` na resposta do endpoint de Favoritos, selecionando o campo existente em `psychologist_profile` e adicionando-o ao DTO `PatientRelationPsychologist`.
 - Atualizar o tipo correspondente no frontend.
-- Na capa do card, priorizar `cover_image_url`, depois `video_cover_url`, e usar `avatar` como fallback real quando nao houver capa dedicada.
-- Manter fallback gradiente apenas quando nenhum asset real existir.
+- Na capa do card, priorizar `cover_image_url`, depois `video_cover_url`, sem usar `avatar` como fallback de capa.
+- Manter fallback gradiente quando nenhum asset dedicado de capa existir.
 - Reduzir o peso da bio para `font-medium` e `text-muted/90`.
 - Criar respiro explicito entre bio e CTA com wrapper `pt-4 sm:pt-5`, sem perder o alinhamento inferior do botao.
 
 ### Consequencias
 
 - Cards passam a exibir capas reais sempre que o perfil tiver `cover_image_url` ou `video_cover_url`, sem depender de mock.
-- Perfis sem capa ainda mantem composicao visual consistente usando avatar real ou fallback Lectum.
+- Perfis sem capa ainda mantem composicao visual consistente usando fallback Lectum, enquanto o avatar permanece somente como foto/icone do perfil.
 - A hierarquia do card fica mais leve e respirada.
 - Nao ha mudanca em schema, migrations, pacotes ou tracking.
+
+## Complemento 2026-06-25 - capa dedicada sem avatar em Favoritos
+
+### Contexto
+
+Produto apontou que a capa dos cards de Favoritos estava repetindo a foto/icone do perfil quando nao havia capa dedicada. Isso confundia a hierarquia do card, pois a mesma imagem aparecia como capa e avatar.
+
+### Decisao
+
+- Manter a pagina de Perfil intacta.
+- Na tela de Favoritos, limitar a capa do card aos campos dedicados `cover_image_url` e `video_cover_url`.
+- Ignorar qualquer candidato de capa que seja igual ao `avatar` do profissional.
+- Quando nao houver capa dedicada, usar apenas o fallback visual neutro da Lectum, sem promover a foto do perfil a capa.
+
+### Consequencias
+
+- A area de capa passa a representar somente midia de capa real ou fallback neutro.
+- O avatar continua sendo a unica representacao da foto/icone do perfil no card.
+- Evita duplicidade visual e preserva a diferenca semantica entre capa e foto do psicologo.
+- A mudanca e local ao frontend de Favoritos e nao altera backend, schema, endpoints, pacotes ou tracking.

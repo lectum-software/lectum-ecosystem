@@ -265,9 +265,11 @@ const FavoriteFilterChips = ({
 };
 
 const FavoriteCoverMedia = ({ psychologist }: { psychologist: PatientRelationPsychologist }) => {
-  const coverSrc = resolvePublicMediaUrl(
-    psychologist.cover_image_url || psychologist.video_cover_url || psychologist.avatar,
-  );
+  const avatarSrc = resolvePublicMediaUrl(psychologist.avatar);
+  const coverSrc =
+    [psychologist.cover_image_url, psychologist.video_cover_url]
+      .map((value) => resolvePublicMediaUrl(value))
+      .find((value) => value && value !== avatarSrc) ?? null;
   const coverIsPublic = isPublicMediaUrl(coverSrc);
 
   if (!coverSrc) {

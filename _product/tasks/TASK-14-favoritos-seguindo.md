@@ -490,7 +490,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 - Pedido do usuario: deixar o texto da bio do card mais leve, aumentar o respiro entre bio e CTA de WhatsApp e corrigir a imagem de capa que nao estava aparecendo.
 - Backend: o endpoint de Favoritos passou a retornar `cover_image_url` do perfil profissional, alem de manter `video_cover_url`; nao houve alteracao de schema/migration.
-- Frontend: o card passou a priorizar `cover_image_url`, depois `video_cover_url` e, como fallback real, `avatar` para compor a area de capa, sem usar mock.
+- Frontend: o card passou a priorizar `cover_image_url`, depois `video_cover_url`; quando nao ha capa dedicada, usa fallback visual neutro, sem promover o `avatar` para capa.
 - Bio: a tipografia da bio foi reduzida de peso visual (`font-medium` e `text-muted/90`) para ficar menos pesada no card.
 - WhatsApp: o CTA foi colocado em um wrapper com `pt-4 sm:pt-5`, preservando alinhamento inferior e criando mais respiro entre a bio e o botao.
 - Escopo: sem alteracao na pagina de Perfil, Comunidade, Prisma schema, migrations, packages, filtros reais, paginacao, favoritos ou tracking de WhatsApp.
+
+## Complemento 2026-06-25 - capa de Favoritos sem fallback de avatar
+
+- Pedido do usuario: a imagem de capa em Favoritos nao deve ser a mesma imagem/foto do perfil.
+- Frontend: a capa dos cards de `/app/favorites` passou a aceitar somente assets dedicados de capa (`cover_image_url` ou `video_cover_url`) e ignora candidatos iguais ao `avatar` do profissional.
+- Fallback: quando nao houver capa dedicada real, a area de capa usa a superficie neutra/gradiente Lectum existente, sem repetir a foto ou icone de perfil como imagem de capa.
+- Escopo: nenhuma alteracao na pagina de Perfil, Comunidade, backend, Prisma, migrations, endpoints, filtros reais, paginacao, favoritos ou tracking de WhatsApp.
