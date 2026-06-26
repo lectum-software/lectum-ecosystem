@@ -657,3 +657,23 @@ Produto apontou que a capa dos cards de Favoritos estava repetindo a foto/icone 
 - O avatar continua sendo a unica representacao da foto/icone do perfil no card.
 - Evita duplicidade visual e preserva a diferenca semantica entre capa e foto do psicologo.
 - A mudanca e local ao frontend de Favoritos e nao altera backend, schema, endpoints, pacotes ou tracking.
+
+## Complemento 2026-06-26 - escala dos filtros e CTA em Favoritos
+
+### Contexto
+
+A tela de Favoritos ja usava o card com capa/avatar e os filtros com contagem real, mas a captura do usuario mostrou tres desalinhamentos visuais: chips pequenos demais para a escala atual da tela, indicador verde de disponibilidade praticamente fora da borda do avatar e texto do CTA `WhatsApp` grande em relacao ao icone.
+
+### Decisao
+
+- Aumentar somente as chips de `/app/favorites` para 38px no mobile e 40px a partir de `sm`, com label de 12px/13px e contador maior.
+- Renomear o label visual do filtro `all` de `Tudo` para `Todos`, mantendo a mesma chave de filtro e contrato de URL/API.
+- Reposicionar o indicador `available_today` para dentro da foto/avatar, com offsets internos, sem adicionar borda branca nem simular estado online.
+- No CTA `WhatsApp`, aplicar tamanho do texto no `span` interno do label e tamanhos de icone em pixels, evitando que resets/base de `button` aumentem a tipografia.
+
+### Consequencias
+
+- Os filtros ganham peso proporcional ao header e aos cards sem alterar dados, contagens ou comportamento de rolagem horizontal.
+- O status verde passa a parecer sobreposto ao avatar em vez de pendurado fora da foto.
+- O CTA continua legivel e acionando o mesmo fluxo real de WhatsApp, mas com melhor relacao visual entre icone e texto.
+- A mudanca e local ao frontend de Favoritos e nao altera backend, schema, endpoints, packages, favoritos persistidos, filtros reais ou tracking.

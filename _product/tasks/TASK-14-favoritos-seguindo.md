@@ -501,3 +501,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Frontend: a capa dos cards de `/app/favorites` passou a aceitar somente assets dedicados de capa (`cover_image_url` ou `video_cover_url`) e ignora candidatos iguais ao `avatar` do profissional.
 - Fallback: quando nao houver capa dedicada real, a area de capa usa a superficie neutra/gradiente Lectum existente, sem repetir a foto ou icone de perfil como imagem de capa.
 - Escopo: nenhuma alteracao na pagina de Perfil, Comunidade, backend, Prisma, migrations, endpoints, filtros reais, paginacao, favoritos ou tracking de WhatsApp.
+
+## Complemento 2026-06-26 - proporcao de chips, status e CTA em Favoritos
+
+- Pedido do usuario: aumentar as chips de `/app/favorites`, trocar `Tudo` por `Todos`, reposicionar a bolinha verde pulsante para ficar mais sobreposta ao avatar/foto e reduzir o texto do botao `WhatsApp` para ficar proporcional ao icone.
+- Frontend: as chips de Favoritos passaram de 30px para 38px no mobile e 40px em telas maiores, com label de 12px/13px e badge de contagem maior, preservando rolagem horizontal e contagens reais do endpoint.
+- Frontend: o primeiro filtro agora usa o texto `Todos`, sem alterar a chave `all`, a URL, a paginacao ou as queries reais.
+- Frontend: o indicador `Disponivel hoje` foi movido para dentro do avatar (`right/bottom` internos), mantendo o pulso verde baseado somente em `available_today` real.
+- Frontend: o CTA `WhatsApp` manteve o botao verde e o fluxo `PsychologistWhatsAppRedirectButton`, mas o label passou a ter tamanho explicito menor no `span` interno e o icone usa medida em pixels para equilibrar a proporcao.
+- Escopo: sem mudancas de backend, Prisma, migrations, packages, endpoints, filtros reais, paginacao, favoritos ou tracking de WhatsApp.
+- Fonte visual/auditavel: screenshots do usuario em `/app/favorites` e referencia local `_product/proto/Favoritos.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
+- Validacoes executadas: `pnpm.cmd --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, `git diff --check`, HTTP local `200` em `/app/favorites` e Chrome headless local em viewport 390x844 renderizando a rota.
