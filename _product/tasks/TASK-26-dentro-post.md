@@ -1080,3 +1080,10 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Fonte visual/auditavel: screenshot do usuario comparando YouTube e rota local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check --write "src/app/app/community/[slug]/post/[id]/logic.tsx"`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check` e HTTP local `200` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`.
+
+## Complemento 2026-06-25 - controle de respostas mais discreto
+
+- Pedido do usuario: reduzir a importancia visual/tamanho de `Ver respostas` e `Ocultar respostas`, que estava grande demais na arvore de comentarios.
+- Frontend: o botao explicito de expandir/recolher respostas foi reduzido de escala, com menor margem superior, `text-[10px]`, `font-semibold`, `leading-none`, padding menor e chevrons de 12px.
+- O controle continua abaixo da barra de acoes do comentario raiz e preserva aria-label, aria-expanded, contagem, collapse/expand, deep links e a arvore visual com conectores.
+- Nao houve alteracao de backend, Prisma schema, migrations, packages, endpoints, votos, salvos, ordenacao ou criacao de respostas.

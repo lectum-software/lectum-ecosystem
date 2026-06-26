@@ -147,3 +147,22 @@ A arvore de comentarios ja usava linhas verticais para indicar profundidade, mas
 - A relacao pai-filho fica mais clara em arvores profundas, especialmente em mobile.
 - O visual se aproxima do modelo mental conhecido do YouTube sem aumentar muito o ruido visual.
 - A alteracao e puramente visual/frontend e nao modifica dados, APIs, backend, Prisma, packages, votos, salvos ou comentarios.
+
+## Atualizacao 2026-06-25 - controle de respostas menos proeminente
+
+### Contexto
+
+Apos tornar o recolhimento da arvore uma acao explicita, o botao `Ver respostas`/`Ocultar respostas` ficou visualmente grande demais em relacao a barra de acoes do comentario e passou a competir por atencao.
+
+### Decisao
+
+- Reduzir apenas a escala visual do controle de expandir/recolher.
+- Usar `text-[10px]`, peso `font-semibold`, `leading-none`, padding menor e chevrons menores.
+- Manter o controle como botao acessivel, com `aria-expanded`, `aria-controls` e contagem de respostas quando recolhido.
+- Nao alterar a posicao, semantica, conectores da arvore, profundidade, ordenacao ou interacoes sociais.
+
+### Consequencias
+
+- O controle volta a parecer uma acao secundaria de organizacao da conversa.
+- A barra de acoes e o conteudo do comentario recuperam prioridade visual.
+- A alteracao permanece puramente visual/frontend, sem impacto em APIs, backend ou persistencia.
