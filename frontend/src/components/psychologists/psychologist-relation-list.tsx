@@ -128,7 +128,7 @@ const formatFavoriteChipCount = (count?: number) => {
 
 const favoriteFilterChipClassName = (active: boolean) =>
   cn(
-    "group inline-flex h-7 min-h-7 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full border px-2.5 text-[11px] font-bold leading-none tracking-[-0.01em] shadow-none transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.99]",
+    "group inline-flex h-8 min-h-8 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-xs font-bold leading-none tracking-[-0.01em] shadow-none transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.99]",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8]/20",
     active
       ? "border-primary bg-primary text-white hover:bg-primary/95 dark:border-primary dark:bg-primary dark:text-white"
@@ -137,7 +137,7 @@ const favoriteFilterChipClassName = (active: boolean) =>
 
 const favoriteFilterCountClassName = (active: boolean) =>
   cn(
-    "inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-extrabold leading-none shadow-none",
+    "inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full px-1 text-[9px] font-extrabold leading-none shadow-none",
     active
       ? "border border-white/70 bg-white text-[#247BD1]"
       : "border border-[#D7E8FA] bg-[#F4FAFF] text-[#247BD1]",
@@ -380,7 +380,7 @@ const FavoritePsychologistCard = ({
 
             {psychologist.available_today ? (
               <span
-                className="absolute right-[3px] bottom-[3px] grid h-3.5 w-3.5 place-items-center rounded-full sm:right-[6px] sm:bottom-[6px] sm:h-4 sm:w-4"
+                className="absolute right-1 bottom-1 grid h-3.5 w-3.5 place-items-center rounded-full sm:right-2 sm:bottom-2 sm:h-4 sm:w-4"
                 title="Disponível hoje"
               >
                 <span className="absolute h-3 w-3 rounded-full bg-success/35 motion-safe:animate-[ping_2.4s_cubic-bezier(0,0,0.2,1)_infinite] sm:h-3.5 sm:w-3.5" />
@@ -406,7 +406,7 @@ const FavoritePsychologistCard = ({
         <div className="mt-auto pt-4 sm:pt-5">
           <PsychologistWhatsAppRedirectButton
             aria-label={`Chamar ${psychologist.name} no WhatsApp`}
-            className="inline-flex min-h-[30px] w-full min-w-0 items-center justify-center gap-1.5 rounded-[11px] bg-success px-2 py-1.5 text-[10px] font-extrabold leading-none text-white transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 sm:min-h-[34px] sm:rounded-[13px] sm:px-2.5 sm:py-1.5 sm:text-[11px]"
+            className="inline-flex min-h-[30px] w-full min-w-0 items-center justify-center gap-1 rounded-[11px] bg-success px-2 py-1.5 text-[10px] font-extrabold leading-none text-white transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 sm:min-h-[34px] sm:gap-1.5 sm:rounded-[13px] sm:px-2.5 sm:py-1.5 sm:text-[11px]"
             psychologist={{
               avatar: psychologist.avatar,
               crp: psychologist.crp,
@@ -420,7 +420,7 @@ const FavoritePsychologistCard = ({
             <PsychologistWhatsAppButtonContent
               iconClassName="h-3 w-3 sm:h-3.5 sm:w-3.5"
               label="WhatsApp"
-              labelClassName="inline-flex h-3.5 min-w-max shrink-0 items-center !overflow-visible !text-clip text-[10px] font-extrabold leading-none sm:text-[11px]"
+              labelClassName="inline-flex min-w-max shrink-0 items-center self-center !overflow-visible !text-clip text-[10px] font-extrabold leading-none sm:text-[11px]"
             />
           </PsychologistWhatsAppRedirectButton>
         </div>

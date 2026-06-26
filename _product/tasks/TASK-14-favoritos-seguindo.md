@@ -535,3 +535,13 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Escopo: sem mudanças de backend, Prisma, migrations, packages, endpoint, filtros reais, paginação, favoritos persistidos ou tracking de WhatsApp.
 - ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
 - Validações executadas: `pnpm.cmd --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, `git diff --check` e HTTP local `200` em `/app/favorites`.
+## Complemento 2026-06-26 - replica literal da classe de chips da Comunidade
+
+- Pedido do usuário: corrigir a implementação anterior e replicar literalmente as configurações das chips da Comunidade nas chips de Favoritos, sem aproximações próprias.
+- Referência visual/auditável: comparação direta com `communityPostSortChipClassName` em `frontend/src/app/app/community/[slug]/logic.tsx` e screenshots do usuário em `/app/favorites` e `/app/community/ansiedade-em-equilibrio`; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
+- Frontend: `favoriteFilterChipClassName` voltou a usar a mesma classe-base de `communityPostSortChipClassName` (`h-8`, `min-h-8`, `gap-1.5`, `px-3`, `text-xs`, `font-bold`, foco, transições e estados ativo/inativo equivalentes).
+- Frontend: o contador real de Favoritos foi mantido, mas reduzido para um badge de 16px para não distorcer a altura ou a escala da chip replicada da Comunidade.
+- Frontend: o ponto verde foi recalibrado para a moldura do avatar e o CTA `WhatsApp` teve alinhamento interno simplificado, preservando o fluxo real de contato.
+- Escopo: sem mudanças de backend, Prisma, migrations, packages, endpoint, filtros reais, paginação, favoritos persistidos ou tracking de WhatsApp.
+- ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
+- Validações executadas: `pnpm.cmd --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `git diff --check` e HTTP local `200` em `/app/favorites`.

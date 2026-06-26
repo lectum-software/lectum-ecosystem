@@ -716,3 +716,21 @@ A rodada anterior ainda deixou as chips de Favoritos com volume maior que o espe
 - As chips ficam mais próximas da escala compacta dos filtros da Comunidade, mesmo mantendo badge de contagem próprio de Favoritos.
 - O status verde passa a ocupar a borda/moldura do avatar, sem parecer um elemento solto nem totalmente dentro da foto.
 - O CTA preserva a ação e tracking reais, com alinhamento mais estável em cards de duas colunas no mobile.
+## Complemento 2026-06-26 - replicação literal das chips da Comunidade
+
+### Contexto
+
+O produto apontou corretamente que os ajustes anteriores continuaram criando variações locais nas chips de Favoritos em vez de copiar a configuração existente da Comunidade. A referência operacional passou a ser o helper `communityPostSortChipClassName`, não uma interpretação visual aproximada.
+
+### Decisão
+
+- Usar em `favoriteFilterChipClassName` a mesma classe-base de `communityPostSortChipClassName`: `h-8`, `min-h-8`, `gap-1.5`, `px-3`, `text-xs`, `font-bold`, `leading-none`, `tracking-[-0.01em]`, ausência de sombra, foco e estados ativo/inativo equivalentes.
+- Não extrair componente compartilhado nesta rodada para evitar tocar na página de Comunidade; a replicação permanece local e explícita em Favoritos.
+- Manter o contador real de Favoritos por requisito já aprovado, mas reduzi-lo para 16px para que ele não altere a escala da chip copiada da Comunidade.
+- Manter o indicador verde ancorado na moldura do avatar e simplificar o alinhamento interno do CTA `WhatsApp` sem alterar o redirect/tracking real.
+
+### Consequências
+
+- Favoritos passa a usar a mesma configuração operacional das chips da Comunidade, com a única diferença visual necessária sendo o badge de contagem real.
+- A duplicação local reduz risco de regressão na Comunidade e deixa explícito o vínculo visual pedido pelo produto.
+- Nenhum contrato de API, schema, endpoint, pacote ou regra de domínio foi alterado.
