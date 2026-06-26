@@ -595,3 +595,23 @@ A pagina de Perfil usa um layout mais amplo e imersivo: o header branco ocupa ma
 - O header ganha protagonismo sem criar dependencia entre as paginas.
 - Os cards ficam proporcionais ao novo container, reduzindo a sensacao de conteudo estreito/centralizado demais.
 - A mudanca e visual/local e nao altera backend, schema, endpoints ou pacotes.
+
+## Complemento 2026-06-25 - Perfil como fonte de proporcao para Favoritos
+
+### Contexto
+
+Produto indicou que Favoritos ainda tinha proporcoes diferentes de Perfil. A referencia deveria ser a implementacao real de `/app/profile`, especialmente o header: envelope responsivo, card com tokens globais, padding interno, avatar/icone de 112px, titulo e subtitulo.
+
+### Decisao
+
+- Inspecionar a implementacao de `frontend/src/app/app/profile/logic.tsx` e usar seu header como modelo direto.
+- Nao alterar nenhum arquivo da pagina de Perfil.
+- Atualizar `FavoritePageHeader` para usar a mesma estrutura visual do Perfil: outer card com `rounded-[var(--lectum-card-radius)]`, `border-border`, `bg-surface` e `shadow-[var(--lectum-shadow-soft)]`; inner block `bg-white px-6 py-8 text-center`; icone circular com `h-28 w-28`, borda branca e sombra suave; titulo `text-2xl font-bold leading-7`.
+- Ajustar o envelope de Favoritos para o mesmo padrao responsivo do Perfil: `max-w-[430px]` e `md:max-w-3xl`.
+- Manter chips e cards dentro desse envelope para que acompanhem a largura e o ritmo do header.
+
+### Consequencias
+
+- Favoritos fica proporcionalmente alinhado ao Perfil sem criar dependencia ou modificar Perfil.
+- A diferenca visual entre as paginas passa a ser de conteudo, nao de escala/layout base.
+- O ajuste permanece local e visual, sem impacto em backend, schema, endpoints, pacotes ou tracking.

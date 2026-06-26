@@ -477,3 +477,11 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Chips: a faixa de filtros agora acompanha a mesma largura do container maior, mantendo rolagem horizontal e estados existentes.
 - Cards: a grade e os cards passaram a ocupar a largura disponivel do novo container, mantendo 2 colunas no mobile e 3 no desktop, com capa/avatar/bio/WhatsApp ajustados para a escala ampliada.
 - Escopo: nenhuma alteracao na pagina de Perfil, Comunidade, backend, Prisma, migrations, endpoints, filtros reais, paginacao, favoritos ou tracking de WhatsApp.
+
+## Complemento 2026-06-25 - header de Favoritos usando Perfil como modelo direto
+
+- Pedido do usuario: obter o header da pagina de Perfil como modelo e ajustar o header de Favoritos e os elementos da tela para a mesma proporcao, sem alterar Perfil.
+- Frontend: somente `/app/favorites` foi alterada; o header local passou a usar a mesma estrutura visual do header de Perfil: container com `rounded-[var(--lectum-card-radius)]`, borda/tokens globais, `shadow-[var(--lectum-shadow-soft)]`, bloco interno `px-6 py-8`, icone circular de 112px, titulo `text-2xl` e descricao alinhada como subtitulo.
+- Layout: o container principal de Favoritos voltou ao mesmo envelope responsivo do Perfil (`max-w-[430px]` no mobile e `md:max-w-3xl`), para manter margens, largura e ritmo semelhantes.
+- Chips e cards: continuam abaixo do header e acompanham a largura do novo envelope; a grade preserva 2 colunas no mobile e 3 no desktop com cards preenchendo a coluna disponivel.
+- Escopo: nenhuma alteracao na pagina de Perfil, Comunidade, backend, Prisma, migrations, endpoints, filtros reais, paginacao, favoritos ou tracking de WhatsApp.

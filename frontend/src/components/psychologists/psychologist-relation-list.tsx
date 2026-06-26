@@ -208,17 +208,15 @@ const getFavoriteBio = (psychologist: PatientRelationPsychologist) => {
 };
 
 const FavoritePageHeader = () => (
-  <header className="min-h-[188px] rounded-[12px] border border-[#E2EAF3] bg-white px-5 py-8 shadow-[0_14px_38px_rgba(15,23,42,0.04)] dark:border-border dark:bg-surface sm:min-h-[260px] sm:rounded-[16px] sm:px-8 sm:py-10">
-    <div className="grid h-full min-w-0 place-items-center text-center">
-      <span className="grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary ring-4 ring-white shadow-[0_12px_30px_rgba(48,140,232,0.12)] dark:bg-primary/15 dark:ring-surface sm:h-24 sm:w-24">
-        <Heart className="h-8 w-8 sm:h-10 sm:w-10" aria-hidden="true" strokeWidth={1.9} />
+  <header className="overflow-hidden rounded-[var(--lectum-card-radius)] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
+    <div className="grid justify-items-center bg-white px-6 py-8 text-center dark:bg-surface">
+      <span className="grid h-28 w-28 place-items-center overflow-hidden rounded-full border-4 border-white bg-primary-soft text-primary shadow-[var(--lectum-shadow-soft)] dark:border-surface dark:bg-primary/15">
+        <Heart className="h-11 w-11" aria-hidden="true" strokeWidth={1.85} />
       </span>
 
-      <div className="mt-4 min-w-0 sm:mt-5">
-        <h1 className="text-2xl font-black leading-tight tracking-[-0.04em] text-foreground sm:text-3xl">
-          Favoritos
-        </h1>
-        <p className="mx-auto mt-1.5 max-w-[34rem] text-[0.82rem] font-semibold leading-5 text-muted sm:mt-2 sm:text-base sm:leading-6">
+      <div className="mt-5 min-w-0">
+        <h1 className="text-2xl font-bold leading-7 text-foreground">Favoritos</h1>
+        <p className="mx-auto mt-2 max-w-[34rem] text-sm leading-5 text-muted">
           {FAVORITES_HEADER_DESCRIPTION}
         </p>
       </div>
@@ -532,7 +530,7 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
 
   return (
     <PrivateTemplate>
-      <section className="mx-auto grid min-w-0 w-full max-w-[960px] gap-3 overflow-hidden px-4 py-3 sm:gap-4 sm:px-5 md:py-6">
+      <section className="mx-auto grid min-w-0 w-full max-w-[430px] gap-5 overflow-hidden md:max-w-3xl">
         <FavoritePageHeader />
 
         {!errorMessage ? (
