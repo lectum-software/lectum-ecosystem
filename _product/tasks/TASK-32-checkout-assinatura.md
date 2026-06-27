@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | L |
 | Fase | Assinatura |
-| Status | Pending |
+| Status | Blocked |
 | Dependências | TASK-02, TASK-03, TASK-31 |
 | ADR alvo | ADR de checkout e gateway de pagamento |
 
@@ -177,3 +177,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Enquanto a TASK-32 segue pendente por credenciais Mercado Pago, a tela de checkout informa que a próxima etapa real, após webhook/assinatura ativa confirmada, será `/app/professional/billing/address`.
 - A tela de endereço permanece honesta e sem persistência enquanto o pagamento real estiver bloqueado; quando liberada, ela deve salvar o endereço e seguir para `/app/professional/whatsapp/verify`.
 - Ordem operacional paga atualizada: plano -> pagamento confirmado -> endereço -> telefone -> CRP -> perfil.
+
+## Bloqueio operacional em 2026-06-27
+
+- A execução foi retomada para a TASK-32, mas o bloqueio obrigatório de credenciais Mercado Pago permanece ativo.
+- Evidência local: `.env` e `frontend/.env.local` não existem; `backend/.env` e `frontend/.env` não possuem chaves `MERCADO_PAGO`, `MERCADOPAGO`, `MP_`, `PAYMENT` ou `WEBHOOK`.
+- Sem `MERCADO_PAGO_ACCESS_TOKEN`, public key client-side e segredo de webhook, a task deve parar conforme os pré-requisitos: nenhum SDK foi instalado, nenhum adapter/checkout real foi implementado e nenhum schema/migration foi alterado.
+- As referências visuais da task foram identificadas em `_product/tasks/PROTO-INVENTORY.md` e permanecem disponíveis em `_product/proto/Finalizar Assinatura - Psicólogo.jpg` e `_product/proto/Endereço de Faturamento - Layout Ajustado.jpg`, mas a implementação visual não avançou por depender do gateway real.
+- Critérios de aceite permanecem desmarcados; não houve simulação de pagamento, ativação de assinatura, seed, mock ou endpoint fake.
+- ADR registrado: `adrs/0172-bloqueio-checkout-mercado-pago-credenciais.md`.
