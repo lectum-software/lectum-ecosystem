@@ -226,6 +226,8 @@ Tambem foi decidido que sufixos de papel no titulo da notificacao poluem a leitu
 - Posts anonimos de pacientes usam o alias estavel `Membro Anônimo #1234` derivado de `author_id`, com `id=null` e `avatar=null`.
 - Psicologos nao recebem sufixo textual no titulo (`· Psicóloga`, `· Psicólogo` ou `· Psicólogo(a)`); quando `actor.verified=true`, a UI exibe apenas o selo de verificado ao lado do nome. Membros identificados e membros anonimos tambem nao recebem `· Membro`.
 - A UI substitui o icone principal por avatar/iniciais quando `actor` existe e mantém um pequeno badge do tipo de evento sobreposto ao avatar.
+- A descricao secundaria (`Clique para...`) nao e exibida na central para reduzir ruido; a linha principal concentra a informacao acionavel. Em itens com `actor`, somente o nome do autor recebe negrito, mantendo a acao em peso regular.
+- O avatar/foto do autor usa circulo compacto com imagem centralizada; o badge de evento fica menor e menos invasivo para preservar a foto do psicologo.
 - `nova_resposta` usa `message_props.parent_reply_id` para escolher entre `respondeu ao seu post` e `respondeu ao seu comentário`.
 - Upvotes, salvamentos, compartilhamentos, favoritos, views e cliques permanecem sem identidade de autor na central.
 

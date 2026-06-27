@@ -151,7 +151,7 @@ const getInitials = (name?: string | null) => {
 };
 
 const ActorName = ({ actor }: { actor: NotificationActor }) => (
-  <>
+  <strong className="font-extrabold">
     {actor.name}
     {actor.verified ? (
       <VerifiedBadgeIcon
@@ -159,7 +159,7 @@ const ActorName = ({ actor }: { actor: NotificationActor }) => (
         className="ml-1 inline h-4 w-4 align-[-2px]"
       />
     ) : null}
-  </>
+  </strong>
 );
 
 const getActorTitle = (item: NotificationItem, view: NotificationView): ReactNode => {
@@ -231,7 +231,7 @@ const NotificationVisual = ({ actor, view }: NotificationVisualProps) => {
   if (!actor) {
     return (
       <span
-        className={cn("mt-1 grid h-10 w-10 shrink-0 place-items-center rounded-2xl", view.tone)}
+        className={cn("mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-2xl", view.tone)}
       >
         <Icon className="h-5 w-5" aria-hidden={true} />
       </span>
@@ -239,10 +239,16 @@ const NotificationVisual = ({ actor, view }: NotificationVisualProps) => {
   }
 
   return (
-    <span className="relative mt-1 shrink-0">
-      <span className="relative grid h-11 w-11 overflow-hidden rounded-full border border-border bg-primary-soft text-sm font-extrabold text-primary">
+    <span className="relative mt-0.5 shrink-0">
+      <span className="relative grid h-10 w-10 overflow-hidden rounded-full bg-primary-soft text-sm font-extrabold text-primary ring-1 ring-border/80">
         {actor.avatar ? (
-          <Image alt="" className="object-cover" fill={true} sizes="44px" src={actor.avatar} />
+          <Image
+            alt=""
+            className="rounded-full object-cover object-center"
+            fill={true}
+            sizes="40px"
+            src={actor.avatar}
+          />
         ) : (
           <span className="grid h-full w-full place-items-center">{getInitials(actor.name)}</span>
         )}
@@ -250,11 +256,11 @@ const NotificationVisual = ({ actor, view }: NotificationVisualProps) => {
 
       <span
         className={cn(
-          "-bottom-1 -right-1 absolute grid h-5 w-5 place-items-center rounded-full border-2 border-surface",
+          "-bottom-0.5 -right-0.5 absolute grid h-4 w-4 place-items-center rounded-full border-2 border-surface",
           view.tone,
         )}
       >
-        <Icon className="h-3 w-3" aria-hidden={true} />
+        <Icon className="h-2.5 w-2.5" aria-hidden={true} />
       </span>
     </span>
   );
@@ -365,11 +371,8 @@ export const NotificationsLogic = () => {
         <span className="min-w-0 flex-1 border-b border-border/70 pb-4">
           <span className="flex items-start justify-between gap-3">
             <span className="min-w-0">
-              <span className="block text-[15px] font-extrabold leading-5 text-foreground">
+              <span className="block text-[15px] font-normal leading-5 text-foreground">
                 {title}
-              </span>
-              <span className="mt-1 line-clamp-2 text-sm leading-5 text-muted">
-                {view.description}
               </span>
             </span>
 
@@ -381,7 +384,7 @@ export const NotificationsLogic = () => {
             ) : null}
           </span>
 
-          <span className="mt-1 block text-xs font-medium text-subtle">
+          <span className="mt-1.5 block text-xs font-medium text-subtle">
             {getRelativeTime(item.createdAt)}
           </span>
         </span>
