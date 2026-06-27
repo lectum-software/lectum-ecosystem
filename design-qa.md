@@ -37,3 +37,15 @@ Os arquivos SVG fornecidos contêm PNGs embutidos em base64 e máscaras. A escol
   - `%TEMP%\lectum-welcome-responsive-cdp-3\mobile-step-1.png`
   - `%TEMP%\lectum-welcome-responsive-cdp-3\mobile-step-2.png`
 - Usuario temporario real criado via endpoint do backend para acessar o fluxo e removido do banco ao final da validacao.
+
+## Atualizacao 2026-06-27 - desktop full screen
+
+- Validacao adicional em desktop `1920x879` confirmou que as telas de boas-vindas agora ocupam a tela inteira no eixo horizontal e vertical.
+- O mobile `390x844` continua usando os mesmos assets originais, sem troca de fonte visual.
+- Os backgrounds desktop foram derivados das camadas originais dos SVGs fornecidos pelo produto, com expansao horizontal da paisagem para evitar redesenho manual da ilustracao.
+- Capturas locais finais:
+  - `%TEMP%\lectum-welcome-fullscreen-cdp\desktop-step-1.png`
+  - `%TEMP%\lectum-welcome-fullscreen-cdp\desktop-step-2.png`
+  - `%TEMP%\lectum-welcome-fullscreen-cdp\mobile-step-1.png`
+  - `%TEMP%\lectum-welcome-fullscreen-cdp\mobile-step-2.png`
+- Usuario temporario real criado via endpoint do backend para acessar o fluxo e removido do banco ao final da validacao.

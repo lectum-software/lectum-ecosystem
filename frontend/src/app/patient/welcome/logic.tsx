@@ -45,22 +45,44 @@ const resolvePatientErrorMessage = (error: unknown) => {
 };
 
 const welcomeBackgroundByVariant = {
-  intro: "/images/patient-welcome/welcome-intro-background.svg",
-  choice: "/images/patient-welcome/welcome-choice-background.svg",
+  intro: {
+    desktop: "/images/patient-welcome/welcome-intro-background-desktop.svg",
+    mobile: "/images/patient-welcome/welcome-intro-background.svg",
+  },
+  choice: {
+    desktop: "/images/patient-welcome/welcome-choice-background-desktop.svg",
+    mobile: "/images/patient-welcome/welcome-choice-background.svg",
+  },
 } as const;
 
-const WelcomeBackground = ({ variant }: { variant: keyof typeof welcomeBackgroundByVariant }) => (
-  <Image
-    alt=""
-    aria-hidden="true"
-    className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover"
-    fill
-    priority={variant === "intro"}
-    sizes="(max-width: 430px) 100vw, 430px"
-    src={welcomeBackgroundByVariant[variant]}
-    unoptimized
-  />
-);
+const WelcomeBackground = ({ variant }: { variant: keyof typeof welcomeBackgroundByVariant }) => {
+  const sources = welcomeBackgroundByVariant[variant];
+
+  return (
+    <>
+      <Image
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover sm:hidden"
+        fill
+        priority={variant === "intro"}
+        sizes="100vw"
+        src={sources.mobile}
+        unoptimized
+      />
+      <Image
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-0 hidden h-full w-full object-cover sm:block"
+        fill
+        priority={variant === "intro"}
+        sizes="100vw"
+        src={sources.desktop}
+        unoptimized
+      />
+    </>
+  );
+};
 
 export const WelcomePatientLogic = () => {
   const router = useRouter();
@@ -142,8 +164,8 @@ export const WelcomePatientLogic = () => {
   }
 
   return (
-    <main className="min-h-dvh bg-background text-foreground">
-      <section className="lectum-welcome-screen lectum-welcome-shell relative isolate mx-auto flex w-full overflow-hidden bg-surface text-foreground sm:my-6 sm:rounded-[32px] sm:border sm:border-border sm:shadow-[var(--lectum-shadow)]">
+    <main className="min-h-dvh bg-background text-foreground sm:overflow-hidden">
+      <section className="lectum-welcome-screen lectum-welcome-shell relative isolate mx-auto flex w-full overflow-hidden bg-surface text-foreground">
         {step === 0 ? (
           <div className="relative z-10 min-h-dvh w-full px-0 sm:h-full sm:min-h-0">
             <WelcomeBackground variant="intro" />
@@ -152,30 +174,30 @@ export const WelcomePatientLogic = () => {
               <Image
                 alt=""
                 aria-hidden="true"
-                className="lectum-welcome-symbol h-[34px] w-[34px] object-contain"
+                className="lectum-welcome-symbol h-[34px] w-[34px] object-contain sm:h-[46px] sm:w-[46px]"
                 height={34}
                 priority
                 src="/images/brand/lectum-logo-icon.svg"
                 unoptimized
                 width={34}
               />
-              <h1 className="lectum-welcome-brand mt-[25px] max-w-[338px] text-[1.86rem] font-extrabold leading-[1.04] tracking-[-0.055em] sm:text-[2.04rem]">
+              <h1 className="lectum-welcome-brand mt-[25px] max-w-[338px] text-[1.86rem] font-extrabold leading-[1.04] tracking-[-0.055em] sm:max-w-[760px] sm:text-[3.25rem]">
                 Bem-vindo &agrave; Lectum
               </h1>
-              <p className="lectum-welcome-copy mt-[23px] max-w-[292px] text-[1rem] font-bold leading-[1.62] tracking-[-0.018em]">
+              <p className="lectum-welcome-copy mt-[23px] max-w-[292px] text-[1rem] font-bold leading-[1.62] tracking-[-0.018em] sm:max-w-[560px] sm:text-[1.18rem]">
                 Um espa&ccedil;o seguro para voc&ecirc; compartilhar o que sente e receber apoio
                 profissional com empatia, respeito e humanidade.
               </p>
             </div>
 
-            <div className="absolute right-0 bottom-[31px] left-0 z-20 mx-auto grid w-full max-w-[314px] gap-4">
+            <div className="absolute right-0 bottom-[31px] left-0 z-20 mx-auto grid w-full max-w-[314px] gap-4 sm:bottom-[7vh] sm:max-w-[440px]">
               {visibleError ? (
                 <InlineAlert title="N\u00e3o foi poss\u00edvel continuar" variant="error">
                   {visibleError}
                 </InlineAlert>
               ) : null}
               <button
-                className="group flex h-[68px] w-full items-center justify-center gap-5 rounded-[16px] bg-primary px-6 !text-[1.15rem] !font-extrabold tracking-[-0.02em] text-surface shadow-[var(--lectum-shadow)] transition hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary dark:text-foreground"
+                className="group flex h-[68px] w-full items-center justify-center gap-5 rounded-[16px] bg-primary px-6 !text-[1.15rem] !font-extrabold tracking-[-0.02em] text-surface shadow-[var(--lectum-shadow)] transition hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary sm:h-[76px] sm:rounded-[20px] dark:text-foreground"
                 onClick={goNext}
                 type="button"
               >
@@ -193,13 +215,13 @@ export const WelcomePatientLogic = () => {
           <div className="relative z-10 min-h-dvh w-full px-0 sm:h-full sm:min-h-0">
             <WelcomeBackground variant="choice" />
 
-            <div className="lectum-welcome-fade-up absolute top-[47.6%] right-0 left-0 z-10 px-5 text-center">
-              <h1 className="lectum-welcome-ink mx-auto max-w-[318px] text-[1.78rem] font-extrabold leading-[1.13] tracking-[-0.045em] sm:text-[1.96rem]">
+            <div className="lectum-welcome-fade-up absolute top-[47.6%] right-0 left-0 z-10 px-5 text-center sm:top-[36%]">
+              <h1 className="lectum-welcome-ink mx-auto max-w-[318px] text-[1.78rem] font-extrabold leading-[1.13] tracking-[-0.045em] sm:max-w-[760px] sm:text-[3rem]">
                 Como voc&ecirc; gostaria de come&ccedil;ar?
               </h1>
             </div>
 
-            <div className="absolute top-[58.8%] right-0 left-0 z-10 mx-auto grid w-full max-w-[324px] gap-4 px-0 sm:top-[56%]">
+            <div className="absolute top-[58.8%] right-0 left-0 z-10 mx-auto grid w-full max-w-[324px] gap-4 px-0 sm:top-[51%] sm:max-w-[820px] sm:grid-cols-2 sm:gap-6">
               {goalOptions.map((option, index) => {
                 const selected = selectedGoal === option.value;
                 const isCommunityGoal = option.value === "conhecer_comunidade";
@@ -226,7 +248,7 @@ export const WelcomePatientLogic = () => {
                       <span
                         className={cn(
                           "lectum-welcome-copy mt-3 block text-[0.85rem] font-bold leading-[1.5]",
-                          isCommunityGoal ? "max-w-[242px]" : "max-w-[190px]",
+                          isCommunityGoal ? "max-w-[242px]" : "max-w-[190px] sm:max-w-[240px]",
                         )}
                       >
                         {option.description}

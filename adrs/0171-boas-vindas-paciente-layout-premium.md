@@ -106,3 +106,20 @@ Consequencias adicionais:
 - O layout fica consistente em desktop, mobile e no emulador do DevTools, sem scroll/corte interno indevido no card visual.
 - A implementacao continua mobile-first e baseada nos SVGs fornecidos pelo produto.
 - Nao houve alteracao de backend, schema, endpoint ou pacote.
+
+## Atualizacao 2026-06-27 - desktop full screen com arte original expandida
+
+Apos revisao do produto, o shell proporcional em desktop foi substituido por uma experiencia full screen. A restricao principal foi preservar o mobile exatamente como estava e, no desktop, manter a ilustracao original dos SVGs fornecidos, apenas expandindo-a horizontalmente para ocupar a tela.
+
+Decisao adicional:
+
+- Separar os assets por breakpoint no componente `WelcomeBackground`: mobile continua usando os SVGs originais normalizados e desktop usa variantes `*-desktop.svg`.
+- Gerar as variantes desktop a partir dos mesmos PNGs embutidos e das mesmas mascaras dos SVGs mobile, preenchendo um canvas `3840x2160` com expansao horizontal do layer de paisagem.
+- Remover borda, sombra, raio e largura maxima em `sm+`, deixando o onboarding ocupar `100dvh` e `100%` da largura; manter as classes base mobile sem alteracao.
+- Continuar renderizando tudo via `next/image`, sem `<img>`, sem pacote novo e sem alterar contratos de API.
+
+Consequencias adicionais:
+
+- O desktop passa a ter uma composicao horizontal premium sem trocar a fonte visual da paisagem.
+- Os assets desktop ficam maiores por duplicarem as camadas base64, mas a escolha preserva fidelidade e isola a mudanca do mobile.
+- Se o produto fornecer futuramente uma imagem desktop gerada externamente/otimizada, ela pode substituir os assets `*-desktop.svg` sem mudar a logica de onboarding.

@@ -564,9 +564,9 @@ video::backdrop {
 
 @media (min-width: 640px) {
   .lectum-welcome-shell {
-    width: min(430px, calc((100dvh - 3rem) * 390 / 844));
-    height: min(844px, calc(100dvh - 3rem));
-    min-height: 0;
+    width: 100%;
+    height: 100dvh;
+    min-height: 100dvh;
     max-width: none;
   }
 }

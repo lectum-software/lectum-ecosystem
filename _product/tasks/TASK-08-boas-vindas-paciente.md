@@ -275,3 +275,12 @@ O onboarding só termina quando o backend confirma. Se o shell privado (TASK-12)
 - Em mobile, o fluxo continua ocupando `100dvh` e preserva a experiencia original das referencias.
 - Nao houve alteracao em backend, banco, contratos de API ou pacotes.
 - Validacao: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check` e browser/headless em desktop `1920x879` e mobile `390x844` com usuario temporario real removido ao final.
+
+## Ajuste posterior em 2026-06-27: tela cheia no desktop com arte original expandida
+
+- Pedido direto de produto: no desktop, as duas telas de `/patient/welcome` devem ocupar a tela inteira, inclusive no eixo horizontal, mas sem alterar a experiencia mobile.
+- A implementacao passou a usar fontes de background separadas por breakpoint: mobile continua apontando para os SVGs originais `welcome-intro-background.svg` e `welcome-choice-background.svg`; desktop usa `welcome-intro-background-desktop.svg` e `welcome-choice-background-desktop.svg`.
+- Os assets desktop foram gerados a partir das mesmas camadas PNG e mascaras dos SVGs originais, apenas com expansao horizontal do layer de paisagem para preencher `3840x2160`, evitando redesenhar a ilustracao ou trocar a direcao visual.
+- O shell em `sm+` agora usa `width: 100%`, `height: 100dvh` e `max-width: none`; as classes base mobile nao foram alteradas.
+- Nao houve alteracao em backend, banco, contratos de API, formularios ou pacotes.
+- Validacao: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check` e browser/headless em desktop `1920x879` e mobile `390x844` com usuario temporario real removido ao final.
