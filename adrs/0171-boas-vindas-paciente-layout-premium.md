@@ -56,3 +56,21 @@ Consequencias adicionais:
 - A tela preserva texto HTML acessivel e botoes reais, evitando rasterizar toda a referencia como fundo.
 - A fidelidade visual melhora sem alterar contratos de API, query keys, valores de dominio ou persistencia do onboarding.
 - A validacao continua dependendo de usuario real temporario em ambiente local, limpo depois da verificacao.
+
+## Atualizacao 2026-06-27 - assets SVG de fundo fornecidos pelo produto
+
+Apos nova iteracao, o produto enviou `tela 1.svg` e `tela 2.svg` com as ilustracoes de fundo sem textos, cards ou botoes. Esses arquivos sao exportacoes SVG com PNGs embutidos e mascara, portanto nao sao vetores editaveis puros; ainda assim, sao a fonte mais fiel para a paisagem/caminho das referencias.
+
+Decisao adicional:
+
+- Normalizar os SVGs enviados para a proporcao mobile das referencias (`853x1844`) e versiona-los em `frontend/public/images/patient-welcome/`.
+- Renderizar os fundos com `next/image` (`Image`) em vez de `<img>`, mantendo textos, botoes e cards como UI real/acessivel sobre os assets.
+- Remover a recriacao manual da paisagem em SVG inline na tela e preservar somente animacoes leves de entrada/seta, para nao deslocar a ilustracao pixel a pixel.
+- Nao adicionar pacote novo nem alterar backend, contratos ou persistencia.
+
+Consequencias adicionais:
+
+- A fidelidade visual da paisagem passa a depender dos assets fornecidos pelo produto, reduzindo divergencias de formas, opacidade e posicionamento.
+- O repositorio passa a carregar dois SVGs grandes por conterem imagens base64 embutidas; a escolha e aceita para este onboarding por priorizar fidelidade visual e evitar rasterizar textos/controles.
+- Futuramente, se o produto fornecer os fundos como SVG vetorial limpo ou imagens otimizadas separadas, os assets podem ser substituidos sem alterar a logica de onboarding.
+- A verificacao visual foi registrada em `design-qa.md` com resultado aprovado para viewport mobile 390x844.

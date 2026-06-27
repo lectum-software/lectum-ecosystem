@@ -248,3 +248,14 @@ O onboarding só termina quando o backend confirma. Se o shell privado (TASK-12)
 - O simbolo Lectum foi simplificado como SVG limpo e escalavel no componente `LectumSymbolIcon`, sem dependencia nova e sem usar `<img>`.
 - O fluxo de dados nao mudou: a escolha do objetivo continua persistindo pelo endpoint real `PUT /api/private/patient/onboarding`.
 - Validacao visual feita no browser/headless com viewport 390x844 usando usuario temporario criado por endpoint real; os registros temporarios foram removidos ao final.
+
+## Refino visual solicitado em 2026-06-27: fundos SVG fornecidos pelo produto
+
+- Pedido direto de produto: usar os arquivos anexados `tela 1.svg` e `tela 2.svg` para manter a ilustracao de background exatamente como nas referencias.
+- Os SVGs recebidos foram inspecionados e identificados como exportacoes com PNGs embutidos e mascara, sem textos/cards/botoes como camadas editaveis.
+- Foram gerados assets normalizados em `frontend/public/images/patient-welcome/welcome-intro-background.svg` e `frontend/public/images/patient-welcome/welcome-choice-background.svg`, preservando a ilustracao e a proporcao mobile das referencias.
+- A rota `/patient/welcome` passou a renderizar esses fundos com `next/image`, mantendo o simbolo, textos, CTA e cards como UI real/acessivel por cima do background.
+- A recriacao manual da paisagem em SVG inline foi removida da tela para evitar divergencia visual.
+- O fluxo de dados nao mudou: `GET /api/private/patient/profile` e `PUT /api/private/patient/onboarding` continuam sendo usados sem mock.
+- ADR atualizado: `adrs/0171-boas-vindas-paciente-layout-premium.md`.
+- Validacao repetida em 2026-06-27: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local/headless em 390x844 com usuario temporario real removido ao final.

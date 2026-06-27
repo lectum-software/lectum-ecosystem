@@ -489,25 +489,19 @@ video::backdrop {
 }
 
 .lectum-welcome-screen {
-  background:
-    radial-gradient(
-      circle at 50% 12%,
-      color-mix(in srgb, var(--lectum-primary) 6%, transparent) 0%,
-      transparent 34%
-    ),
-    var(--lectum-surface);
+  background: #fbfcff;
 }
 
 .lectum-welcome-brand {
-  color: color-mix(in srgb, var(--lectum-primary-hover) 70%, var(--foreground) 30%);
+  color: #0b55e8;
 }
 
 .lectum-welcome-ink {
-  color: color-mix(in srgb, var(--foreground) 88%, var(--lectum-primary) 12%);
+  color: #092a74;
 }
 
 .lectum-welcome-copy {
-  color: color-mix(in srgb, var(--lectum-muted) 72%, var(--foreground) 28%);
+  color: #6a74ad;
 }
 
 @keyframes lectum-welcome-fade-up {
@@ -539,17 +533,6 @@ video::backdrop {
   }
 }
 
-@keyframes lectum-welcome-landscape {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-
-  50% {
-    transform: translate3d(0, -8px, 0) scale(1.015);
-  }
-}
-
 @keyframes lectum-welcome-arrow {
   0%,
   100% {
@@ -570,16 +553,6 @@ video::backdrop {
   animation: lectum-welcome-symbol 760ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-.lectum-welcome-landscape {
-  animation: lectum-welcome-landscape 9s ease-in-out infinite;
-  transform-origin: 50% 55%;
-}
-
-.lectum-welcome-landscape-subtle {
-  animation: lectum-welcome-landscape 12s ease-in-out infinite;
-  transform-origin: 50% 35%;
-}
-
 .lectum-welcome-arrow {
   animation: lectum-welcome-arrow 1.8s ease-in-out infinite;
 }
@@ -588,8 +561,6 @@ video::backdrop {
   .lectum-welcome-fade-up,
   .lectum-welcome-choice-card,
   .lectum-welcome-symbol,
-  .lectum-welcome-landscape,
-  .lectum-welcome-landscape-subtle,
   .lectum-welcome-arrow {
     animation: none;
   }
