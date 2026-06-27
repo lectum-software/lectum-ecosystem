@@ -18,14 +18,13 @@ export type PatientOnboardingForm = z.infer<typeof patientOnboardingSchema>;
 export const goalOptions = [
   {
     value: "encontrar_psicologo",
-    title: "Escolher um psicólogo",
-    description:
-      "Vá direto ao ponto e encontre um profissional para a sua primeira sessão hoje mesmo.",
+    title: "Encontrar um profissional",
+    description: "Agende hoje mesmo a sua primeira sessão.",
   },
   {
     value: "conhecer_comunidade",
-    title: "Conhecer a comunidade",
-    description: "Compartilhe o que sente e seja acolhido gratuitamente pelos psicólogos.",
+    title: "Participar da comunidade",
+    description: "Compartilhe o que está sentindo e receba acolhimento dos profissionais.",
   },
 ] satisfies Array<{
   value: (typeof patientOnboardingGoals)[number];

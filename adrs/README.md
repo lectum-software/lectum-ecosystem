@@ -97,3 +97,4 @@ Formato recomendado:
 - [ADR-0168 - Icones azuis na central de notificacoes](0168-icones-azuis-notificacoes-whatsapp.md) - Accepted
 - [ADR-0169 - Autoria em notificacoes profissionais individuais](0169-autoria-notificacoes-profissionais.md) - Accepted
 - [ADR-0170 - Simbolo Lectum em SVG escalavel](0170-simbolo-lectum-svg-escalavel.md) - Accepted
+- [ADR-0171 - Layout premium em duas telas de boas-vindas do paciente](0171-boas-vindas-paciente-layout-premium.md) - Accepted

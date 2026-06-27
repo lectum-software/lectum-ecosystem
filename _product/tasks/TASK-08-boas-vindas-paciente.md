@@ -211,3 +211,30 @@ O onboarding só termina quando o backend confirma. Se o shell privado (TASK-12)
   bem-vindo à Lectum`, ausência da tela "Conte-nos sobre você" e etapa final direta
   "Como você prefere começar?".
 - O usuário temporário da validação foi removido do banco ao final.
+
+## Ajuste posterior em 2026-06-27: layout premium com nova identidade Lectum
+
+- Pedido direto de produto: substituir a composição visual das duas telas atuais por uma
+  experiência mais premium, baseada nas referências anexadas `ChatGPT Image 26 de jun. de
+  2026, 22_24_27.png` e `ChatGPT Image 26 de jun. de 2026, 21_42_25.png`.
+- A etapa 1 passou a exibir o novo `LectumSymbolIcon` SVG, título genérico
+  `Bem-vindo à Lectum`, texto de acolhimento e CTA grande `Vamos começar`.
+- A etapa 2 passou a usar cards grandes para `Encontrar um profissional` e
+  `Participar da comunidade`, mantendo os valores reais de domínio
+  `encontrar_psicologo` e `conhecer_comunidade`.
+- A paisagem/caminho azul foi implementada como SVG inline tokenizado, sem `<img>` e sem
+  adicionar assets rasterizados ou pacotes novos.
+- Foram adicionadas animações decorativas leves com suporte a `prefers-reduced-motion`.
+- O fluxo de backend e persistência não mudou: `GET /api/private/patient/profile` continua
+  evitando repetição do onboarding e a escolha do objetivo continua concluindo via
+  `PUT /api/private/patient/onboarding` real.
+- ADR registrado: `adrs/0171-boas-vindas-paciente-layout-premium.md`.
+
+### Validação do ajuste 2026-06-27
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local/headless em `http://localhost:3000/patient/welcome`, viewport 390x884,
+  com usuário paciente temporário criado via endpoint real, validou a tela 1, o CTA
+  `Vamos começar` e a tela 2. O usuário temporário foi removido do banco ao final.
