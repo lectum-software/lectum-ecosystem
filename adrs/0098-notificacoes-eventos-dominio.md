@@ -70,6 +70,7 @@ Validacao: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` 
 - A decisao de exibir autor fica na leitura da central: o repository hidrata `actor` usando os ids reais e as regras atuais de anonimato/delecao.
 - Essa abordagem evita dados duplicados/obsoletos na tabela `notification` e permite que mudancas de nome/foto ou exclusao de conta sejam respeitadas na proxima leitura.
 - Para posts anonimos, o alias exibido e o mesmo pseudoidentificador estavel por `author_id`; o id real e o avatar nao sao retornados no `actor`.
+- Para psicologos, `actor.verified` segue a mesma semantica de verificacao usada nas telas de comunidade; a central exibe selo quando houver e nao adiciona sufixo textual de papel ao titulo.
 - Eventos passivos seguem sem actor por politica de privacidade e reducao de ruido: `upvote`, `salvamento`, `compartilhamento` e similares nao devem identificar quem interagiu.
 
 Validacao: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`.

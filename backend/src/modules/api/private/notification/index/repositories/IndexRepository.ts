@@ -18,6 +18,7 @@ import type {
 } from "@/interfaces/pagination";
 //Utils
 import { format } from "@/utils/pagination";
+import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 //DTOs
 import type {
   //*
@@ -37,6 +38,13 @@ const notificationAuthorSelect = {
   psychologist_profile: {
     select: {
       gender: true,
+      cfp_verified_at: true,
+      subscriptions: {
+        where: activeProfessionalEntitlementWhere(),
+        select: {
+          source: true,
+        },
+      },
     },
   },
 } satisfies Prisma.userSelect;
@@ -75,6 +83,14 @@ const professionalLabelForGender = (gender?: string | null) => {
   return "Psicólogo(a)";
 };
 
+const isProfessionalVerified = (
+  profile?: { cfp_verified_at: Date | null; subscriptions: { source?: string | null }[] } | null,
+) =>
+  Boolean(
+    profile?.cfp_verified_at ||
+      profile?.subscriptions.some((subscription) => subscription.source === "admin_grant"),
+  );
+
 const toNotificationActor = (author: NotificationAuthor, anonymous = false) => {
   const isPsychologist = author.role === "psicologo";
   const isDeletedAuthor = Boolean(author.deleted);
@@ -97,6 +113,8 @@ const toNotificationActor = (author: NotificationAuthor, anonymous = false) => {
       isPsychologist && !isDeletedAuthor
         ? professionalLabelForGender(author.psychologist_profile?.gender)
         : null,
+    verified:
+      isPsychologist && !isDeletedAuthor && isProfessionalVerified(author.psychologist_profile),
     anonymous: shouldMaskAuthor,
     deleted: isDeletedAuthor,
   } satisfies NonNullable<notification["actor"]>;

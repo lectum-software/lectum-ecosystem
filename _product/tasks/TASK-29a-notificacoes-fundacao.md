@@ -290,7 +290,7 @@ Esta task deixa o canal de recebimento pronto. **Não** ligue eventos de domíni
 ## Complemento 2026-06-26 - identidade do autor na central
 
 - A central `/app/notifications` passou a renderizar nome/foto do autor apenas em notificacoes individuais de `novo_post` e `nova_resposta`.
-- Psicologos recebem sufixo profissional no titulo (`· Psicóloga`, `· Psicólogo` ou `· Psicólogo(a)`), enquanto membros comuns nao recebem `· Membro` para manter a leitura limpa.
+- Psicologos nao recebem sufixo profissional no titulo; quando houver verificacao, a UI exibe apenas o selo de verificado ao lado do nome. Membros comuns continuam sem `· Membro` para manter a leitura limpa.
 - Posts anonimos de pacientes preservam o alias publico `Membro Anônimo #1234`, sem expor id real, foto, perfil ou nome do autor.
 - `nova_resposta` distingue o texto entre `respondeu ao seu post` e `respondeu ao seu comentário` a partir de `message_props.parent_reply_id`.
 - As demais notificacoes (`upvote`, `salvamento`, `compartilhamento`, favoritos, visualizacoes e cliques) continuam sem identificacao do autor na central.

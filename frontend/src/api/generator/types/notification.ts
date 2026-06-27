@@ -11,6 +11,7 @@ export type notification = {
     avatar?: string | null;
     role?: string | null;
     professional_label?: string | null;
+    verified?: boolean | null;
     anonymous?: boolean | null;
     deleted?: boolean | null;
   } | null;

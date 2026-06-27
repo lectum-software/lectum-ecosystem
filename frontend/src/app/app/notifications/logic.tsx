@@ -16,13 +16,14 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import type { ComponentType } from "react";
+import type { ComponentType, ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { useNotification } from "@/api/callers/notification";
 import type { notification as ApiNotification } from "@/api/generator/types";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
 import { SecondaryPageHeader } from "@/components/ui/secondary-page-header";
+import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { getToken } from "@/hooks/cookies/token";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
@@ -149,21 +150,39 @@ const getInitials = (name?: string | null) => {
   return `${parts[0]?.[0] ?? ""}${parts[parts.length - 1]?.[0] ?? ""}`.toUpperCase();
 };
 
-const getActorTitle = (item: NotificationItem, view: NotificationView) => {
+const ActorName = ({ actor }: { actor: NotificationActor }) => (
+  <>
+    {actor.name}
+    {actor.verified ? (
+      <VerifiedBadgeIcon
+        aria-label="Perfil verificado"
+        className="ml-1 inline h-4 w-4 align-[-2px]"
+      />
+    ) : null}
+  </>
+);
+
+const getActorTitle = (item: NotificationItem, view: NotificationView): ReactNode => {
   const actor = item.actor;
   if (!actor || (item.message_key !== "novo_post" && item.message_key !== "nova_resposta")) {
     return view.title;
   }
 
-  const professionalLabel = actor.professional_label ? ` · ${actor.professional_label}` : "";
-
   if (item.message_key === "novo_post") {
-    return `${actor.name}${professionalLabel} publicou na comunidade.`;
+    return (
+      <>
+        <ActorName actor={actor} /> publicou na comunidade.
+      </>
+    );
   }
 
   const replyTarget = getStringProp(item.message_props, "parent_reply_id") ? "comentário" : "post";
 
-  return `${actor.name}${professionalLabel} respondeu ao seu ${replyTarget}.`;
+  return (
+    <>
+      <ActorName actor={actor} /> respondeu ao seu {replyTarget}.
+    </>
+  );
 };
 
 const startOfToday = () => {

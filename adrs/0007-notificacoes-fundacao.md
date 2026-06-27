@@ -217,14 +217,14 @@ A descricao `Responda agora e seja visto primeiro.` em notificacoes `novo_post` 
 
 As notificacoes in-app da Lectum sao exibidas individualmente, diferentemente dos digests/push agrupados. Em `novo_post` e `nova_resposta`, mostrar quem publicou ou respondeu ajuda o usuario a reconhecer o contexto da conversa. Para sinais passivos como upvote, salvamento e compartilhamento, a identificacao acrescentaria exposicao desnecessaria e ruido visual.
 
-Tambem foi decidido que o sufixo profissional tem valor de credencial, enquanto `· Membro` nao agrega informacao suficiente e polui a leitura.
+Tambem foi decidido que sufixos de papel no titulo da notificacao poluem a leitura: para psicologos, o selo de verificado comunica melhor a credencial quando existir; para membros, `· Membro` nao agrega informacao suficiente.
 
 ### Decisao
 
 - A listagem `/api/private/notification/index` hidrata um campo derivado `actor` apenas para `novo_post` e `nova_resposta`, a partir de `message_props.post_id` ou `message_props.reply_id`.
-- O campo `actor` nao altera o schema Prisma; ele e derivado em tempo de leitura e contem nome, avatar, papel, label profissional, flags de anonimato/delecao e id publico quando seguro.
+- O campo `actor` nao altera o schema Prisma; ele e derivado em tempo de leitura e contem nome, avatar, papel, label profissional, flag `verified`, flags de anonimato/delecao e id publico quando seguro.
 - Posts anonimos de pacientes usam o alias estavel `Membro Anônimo #1234` derivado de `author_id`, com `id=null` e `avatar=null`.
-- Psicologos recebem label no titulo (`· Psicóloga`, `· Psicólogo` ou `· Psicólogo(a)`). Membros identificados e membros anonimos nao recebem `· Membro`.
+- Psicologos nao recebem sufixo textual no titulo (`· Psicóloga`, `· Psicólogo` ou `· Psicólogo(a)`); quando `actor.verified=true`, a UI exibe apenas o selo de verificado ao lado do nome. Membros identificados e membros anonimos tambem nao recebem `· Membro`.
 - A UI substitui o icone principal por avatar/iniciais quando `actor` existe e mantém um pequeno badge do tipo de evento sobreposto ao avatar.
 - `nova_resposta` usa `message_props.parent_reply_id` para escolher entre `respondeu ao seu post` e `respondeu ao seu comentário`.
 - Upvotes, salvamentos, compartilhamentos, favoritos, views e cliques permanecem sem identidade de autor na central.

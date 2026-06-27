@@ -249,7 +249,7 @@ Mantida a producao real de eventos sem endpoint paralelo, mas a listagem da cent
 - `novo_post` continua gravando `post_id` em `message_props`; a central usa esse id para buscar o autor do post.
 - `nova_resposta` continua gravando `reply_id` e `parent_reply_id`; a central usa `reply_id` para buscar o autor da resposta e `parent_reply_id` para escolher a copy de post/comentario.
 - Autores de posts anonimos seguem mascarados pelo alias estavel `Membro Anônimo #1234`, derivado de `author_id`, sem expor id real, foto ou perfil.
-- Psicologos recebem label profissional derivado do genero declarado; membros comuns nao recebem label `Membro`.
+- Psicologos nao exibem label profissional no titulo da notificacao; quando houver verificacao profissional, a central mostra apenas o selo de verificado ao lado do nome. Membros comuns continuam sem label `Membro`.
 - Eventos passivos (`upvote`, `salvamento`, `compartilhamento` e equivalentes) permanecem sem identificacao de ator para evitar exposicao desnecessaria.
 
 Validacao:
