@@ -45,3 +45,14 @@ Builder/Quick Copy não esteve disponível como ferramenta MCP nesta execução;
 ## Pendências
 
 - Aplicar a nova identidade Lectum no restante do site em tarefa futura, caso o produto aprove a direção visual.
+
+
+## Atualizacao 2026-06-27 - refino de fidelidade visual
+
+Apos revisao do produto, a primeira implementacao premium foi considerada distante das referencias. A decisao foi manter a abordagem vetorial/tokenizada, mas refinar a composicao para se aproximar das imagens anexadas com medidas mobile-first: conteudo e CTA posicionados por proporcao de viewport na tela 1, cards e bloco de decisao posicionados separadamente na tela 2, e paisagem/caminho redesenhados em coordenadas 390x844.
+
+Consequencias adicionais:
+
+- A tela preserva texto HTML acessivel e botoes reais, evitando rasterizar toda a referencia como fundo.
+- A fidelidade visual melhora sem alterar contratos de API, query keys, valores de dominio ou persistencia do onboarding.
+- A validacao continua dependendo de usuario real temporario em ambiente local, limpo depois da verificacao.

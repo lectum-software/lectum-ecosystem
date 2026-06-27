@@ -491,11 +491,23 @@ video::backdrop {
 .lectum-welcome-screen {
   background:
     radial-gradient(
-      circle at 50% 18%,
-      color-mix(in srgb, var(--lectum-primary) 10%, transparent) 0%,
-      transparent 38%
+      circle at 50% 12%,
+      color-mix(in srgb, var(--lectum-primary) 6%, transparent) 0%,
+      transparent 34%
     ),
     var(--lectum-surface);
+}
+
+.lectum-welcome-brand {
+  color: color-mix(in srgb, var(--lectum-primary-hover) 70%, var(--foreground) 30%);
+}
+
+.lectum-welcome-ink {
+  color: color-mix(in srgb, var(--foreground) 88%, var(--lectum-primary) 12%);
+}
+
+.lectum-welcome-copy {
+  color: color-mix(in srgb, var(--lectum-muted) 72%, var(--foreground) 28%);
 }
 
 @keyframes lectum-welcome-fade-up {
@@ -563,6 +575,11 @@ video::backdrop {
   transform-origin: 50% 55%;
 }
 
+.lectum-welcome-landscape-subtle {
+  animation: lectum-welcome-landscape 12s ease-in-out infinite;
+  transform-origin: 50% 35%;
+}
+
 .lectum-welcome-arrow {
   animation: lectum-welcome-arrow 1.8s ease-in-out infinite;
 }
@@ -572,6 +589,7 @@ video::backdrop {
   .lectum-welcome-choice-card,
   .lectum-welcome-symbol,
   .lectum-welcome-landscape,
+  .lectum-welcome-landscape-subtle,
   .lectum-welcome-arrow {
     animation: none;
   }

@@ -238,3 +238,13 @@ O onboarding só termina quando o backend confirma. Se o shell privado (TASK-12)
 - Browser local/headless em `http://localhost:3000/patient/welcome`, viewport 390x884,
   com usuário paciente temporário criado via endpoint real, validou a tela 1, o CTA
   `Vamos começar` e a tela 2. O usuário temporário foi removido do banco ao final.
+
+
+## Refino visual solicitado em 2026-06-27: fidelidade as referencias premium
+
+- Pedido direto de produto apos validacao em browser: refazer as duas telas para ficarem muito mais proximas das referencias anexadas pelo usuario.
+- A composicao passou a usar coordenadas mobile-first do viewport 390x844: textos, CTA, cards e paisagem foram reposicionados com medidas proporcionais as imagens de referencia.
+- A etapa 1 recebeu ajuste fino de escala do simbolo, titulo, copy, CTA e caminho em S; a etapa 2 recebeu paisagem superior independente, bloco de titulo/copy e cards fixados por proporcao de altura para preservar a referencia no mobile.
+- O simbolo Lectum foi simplificado como SVG limpo e escalavel no componente `LectumSymbolIcon`, sem dependencia nova e sem usar `<img>`.
+- O fluxo de dados nao mudou: a escolha do objetivo continua persistindo pelo endpoint real `PUT /api/private/patient/onboarding`.
+- Validacao visual feita no browser/headless com viewport 390x844 usando usuario temporario criado por endpoint real; os registros temporarios foram removidos ao final.
