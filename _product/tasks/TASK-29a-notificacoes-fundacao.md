@@ -273,3 +273,16 @@ Esta task deixa o canal de recebimento pronto. **Não** ligue eventos de domíni
 - `pnpm --dir frontend build`
 - `pnpm check`
 - ADR atualizado: `adrs/0007-notificacoes-fundacao.md`.
+
+## Complemento 2026-06-26 - icone de novo post na central
+
+- A notificacao `novo_post` em `/app/notifications` passou a usar o icone `Newspaper`, alinhado ao item `Novas postagens` da tela de preferencias.
+- `nova_resposta` continua usando `MessageSquare`, separando visualmente publicacao nova de conversa/resposta.
+- Nao houve alteracao de contrato, backend, persistencia ou regra de segmentacao.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- ADR atualizado: `adrs/0007-notificacoes-fundacao.md`.

@@ -9,6 +9,7 @@ import {
   Heart,
   MessageSquare,
   MousePointerClick,
+  Newspaper,
   Settings,
   Share2,
   Star,
@@ -74,7 +75,7 @@ const LABELS: Record<string, NotificationView> = {
   novo_post: {
     title: "Novo post na comunidade.",
     description: "Responda agora e seja visto primeiro.",
-    icon: MessageSquare,
+    icon: Newspaper,
     tone: "text-sky-600 bg-sky-50",
   },
   nova_resposta: {

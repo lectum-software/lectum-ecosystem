@@ -204,3 +204,9 @@ A descricao `Responda agora e seja visto primeiro.` em notificacoes `novo_post` 
 
 - A mesma notificacao `novo_post` preserva semantica tecnica unica, mas ganha mensagem adequada ao papel do usuario.
 - Nao ha migracao, endpoint novo, preferencia nova nem pacote adicional.
+
+## Complemento 2026-06-26 - Iconografia de novo post na central
+
+- A central de notificacoes passa a usar `Newspaper` para `novo_post`, representando publicacao/conteudo novo.
+- `nova_resposta` permanece com `MessageSquare`, reservado para conversa, comentario e resposta.
+- A decisao reaproveita a mesma iconografia ja adotada em `Novas postagens` na tela de preferencias, sem alterar dados, APIs ou regras de entrega.
