@@ -259,3 +259,10 @@ O onboarding só termina quando o backend confirma. Se o shell privado (TASK-12)
 - O fluxo de dados nao mudou: `GET /api/private/patient/profile` e `PUT /api/private/patient/onboarding` continuam sendo usados sem mock.
 - ADR atualizado: `adrs/0171-boas-vindas-paciente-layout-premium.md`.
 - Validacao repetida em 2026-06-27: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local/headless em 390x844 com usuario temporario real removido ao final.
+
+## Ajuste visual solicitado em 2026-06-27: logo e copy final
+
+- A primeira tela passou a usar o SVG anexado `Logo icon.svg` como simbolo Lectum, preservando o tamanho visual atual do icone.
+- O texto do CTA `Vamos comecar` foi reduzido para ficar proporcional ao botao e ao icone de seta.
+- A segunda tela deixou de exibir o texto auxiliar abaixo do titulo e o badge da opcao comunidade foi alterado para `Espaco gratuito`.
+- Validacao: `pnpm --dir frontend check`, `pnpm --dir frontend build` e browser local/headless em 390x844 com usuario temporario real removido ao final.

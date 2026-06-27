@@ -74,3 +74,18 @@ Consequencias adicionais:
 - O repositorio passa a carregar dois SVGs grandes por conterem imagens base64 embutidas; a escolha e aceita para este onboarding por priorizar fidelidade visual e evitar rasterizar textos/controles.
 - Futuramente, se o produto fornecer os fundos como SVG vetorial limpo ou imagens otimizadas separadas, os assets podem ser substituidos sem alterar a logica de onboarding.
 - A verificacao visual foi registrada em `design-qa.md` com resultado aprovado para viewport mobile 390x844.
+
+## Atualizacao 2026-06-27 - simbolo de marca no onboarding
+
+O produto solicitou que a primeira tela do onboarding use o SVG oficial `Logo icon.svg` enviado como anexo, mantendo o tamanho do icone atual da tela.
+
+Decisao adicional:
+
+- Versionar o SVG anexado em `frontend/public/images/brand/lectum-logo-icon.svg`.
+- Renderizar o simbolo via `next/image` na tela de boas-vindas, sem alterar o componente global `LectumSymbolIcon`, pois a troca global da marca sera tratada em uma iteracao futura.
+- Ajustar somente o tamanho visual do texto do CTA e o copy do badge da comunidade, sem alterar fluxo de dados, APIs ou contratos.
+
+Consequencias adicionais:
+
+- A tela passa a refletir a marca nova apenas neste ponto do onboarding.
+- A troca global da logo continua isolada para uma tarefa futura.

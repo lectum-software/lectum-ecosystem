@@ -7,7 +7,6 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { usePatient } from "@/api/callers/patient";
 import { InlineAlert } from "@/components/ui/inline-alert";
-import { LectumSymbolIcon } from "@/components/ui/lectum-symbol-icon";
 import { LoadingState } from "@/components/ui/loading-state";
 import { cn } from "@/lib/utils";
 import { goalOptions, useForm } from "./use-form";
@@ -150,9 +149,15 @@ export const WelcomePatientLogic = () => {
             <WelcomeBackground variant="intro" />
 
             <div className="lectum-welcome-fade-up absolute top-[14.8vh] right-0 left-0 z-10 grid justify-items-center px-5 text-center">
-              <LectumSymbolIcon
-                className="lectum-welcome-symbol lectum-welcome-brand h-[34px] w-[34px]"
-                title="Simbolo Lectum"
+              <Image
+                alt=""
+                aria-hidden="true"
+                className="lectum-welcome-symbol h-[34px] w-[34px] object-contain"
+                height={34}
+                priority
+                src="/images/brand/lectum-logo-icon.svg"
+                unoptimized
+                width={34}
               />
               <h1 className="lectum-welcome-brand mt-[25px] max-w-[338px] text-[1.86rem] font-extrabold leading-[1.04] tracking-[-0.055em] sm:text-[2.04rem]">
                 Bem-vindo &agrave; Lectum
@@ -170,13 +175,13 @@ export const WelcomePatientLogic = () => {
                 </InlineAlert>
               ) : null}
               <button
-                className="group flex h-[68px] w-full items-center justify-center gap-7 rounded-[16px] bg-primary px-6 !text-[1.58rem] !font-extrabold tracking-[-0.02em] text-surface shadow-[var(--lectum-shadow)] transition hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary dark:text-foreground"
+                className="group flex h-[68px] w-full items-center justify-center gap-5 rounded-[16px] bg-primary px-6 !text-[1.15rem] !font-extrabold tracking-[-0.02em] text-surface shadow-[var(--lectum-shadow)] transition hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary dark:text-foreground"
                 onClick={goNext}
                 type="button"
               >
                 Vamos come&ccedil;ar
                 <ArrowRight
-                  className="lectum-welcome-arrow h-8 w-8 transition-transform group-hover:translate-x-1"
+                  className="lectum-welcome-arrow h-7 w-7 transition-transform group-hover:translate-x-1"
                   aria-hidden="true"
                 />
               </button>
@@ -192,14 +197,9 @@ export const WelcomePatientLogic = () => {
               <h1 className="lectum-welcome-ink mx-auto max-w-[318px] text-[1.78rem] font-extrabold leading-[1.13] tracking-[-0.045em] sm:text-[1.96rem]">
                 Como voc&ecirc; gostaria de come&ccedil;ar?
               </h1>
-              <p className="lectum-welcome-copy mx-auto mt-[17px] max-w-[315px] text-[1rem] font-bold leading-[1.42]">
-                Voc&ecirc; poder&aacute; acessar tudo depois.
-                <br />
-                Escolha apenas por onde deseja iniciar.
-              </p>
             </div>
 
-            <div className="absolute top-[63.6vh] right-0 left-0 z-10 mx-auto grid w-full max-w-[324px] gap-4 px-0">
+            <div className="absolute top-[58.8vh] right-0 left-0 z-10 mx-auto grid w-full max-w-[324px] gap-4 px-0">
               {goalOptions.map((option, index) => {
                 const selected = selectedGoal === option.value;
                 const isCommunityGoal = option.value === "conhecer_comunidade";
@@ -234,7 +234,7 @@ export const WelcomePatientLogic = () => {
                       {isCommunityGoal ? (
                         <span className="mt-3 inline-flex items-center gap-2 rounded-full bg-primary-soft px-4 py-1.5 text-[0.82rem] font-extrabold text-primary">
                           <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-                          Acolhimento gratuito
+                          Espa&ccedil;o gratuito
                         </span>
                       ) : null}
                     </span>

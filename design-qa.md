@@ -11,15 +11,17 @@ final result: passed
 ## Evidências
 
 - Capturas locais finais:
-  - `%TEMP%\lectum-welcome-cdp\welcome-step-1-wait12.png`
-  - `%TEMP%\lectum-welcome-cdp\welcome-step-2.png`
+  - `%TEMP%\lectum-welcome-logo-cdp\welcome-step-1.png`
+  - `%TEMP%\lectum-welcome-logo-cdp\welcome-step-2.png`
 - Usuário temporário real criado via endpoint do backend para acessar o fluxo e removido do banco ao final da validação.
 
 ## Resultado
 
 - A ilustração do background agora usa os SVGs fornecidos pelo produto, preservando a composição do caminho/montanhas das referências.
-- A primeira tela mantém símbolo, título, descrição e CTA em camadas acessíveis, alinhados à referência mobile.
-- A segunda tela mantém título, descrição e cards em camadas acessíveis sobre o background fornecido.
+- A primeira tela usa o SVG oficial `Logo icon.svg` versionado no projeto, mantendo o tamanho visual do ícone atual.
+- A primeira tela mantém título, descrição e CTA em camadas acessíveis, com texto do botão proporcional ao componente.
+- A segunda tela mantém título e cards em camadas acessíveis sobre o background fornecido, sem o texto auxiliar removido por pedido de produto.
+- O badge da opção comunidade exibe `Espaço gratuito`.
 - Não houve alteração em backend, banco, contratos de API ou pacotes.
 
 ## Observação
