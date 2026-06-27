@@ -259,3 +259,17 @@ Esta task deixa o canal de recebimento pronto. **Não** ligue eventos de domíni
 - `pnpm check`
 - Browser local via Chrome/CDP em `/app/settings/notifications` mobile `390x844`, validando `box-shadow: none` no botao fechado, `box-shadow: none` na lista aberta e ausencia de overflow horizontal.
 - ADR atualizado: `adrs/0007-notificacoes-fundacao.md`.
+
+## Complemento 2026-06-26 - copy de novo post por papel
+
+- A central `/app/notifications` passou a ajustar a descricao da notificacao `novo_post` conforme `user.role`.
+- Psicologos mantem a copy orientada a oportunidade profissional: `Responda agora e seja visto primeiro.`
+- Pacientes recebem uma copy de participacao e aprendizado: `Participe da conversa e acompanhe contribuições de psicólogos e da comunidade.`
+- A mudanca e apenas de apresentacao no frontend; o contrato `message_key`, a segmentacao de `novo_post`, os endpoints, persistencia e push permanecem inalterados.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- ADR atualizado: `adrs/0007-notificacoes-fundacao.md`.

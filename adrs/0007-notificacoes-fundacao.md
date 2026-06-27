@@ -187,3 +187,20 @@ O seletor `Novas postagens` ja tinha opcoes compactas por papel (`Profissionais`
 - Estados de hover, item selecionado, opcoes por papel e contrato `novo_post` permanecem inalterados.
 
 Validacao: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile 390px confirmando `box-shadow: none` no botao e no dropdown aberto.
+
+## Complemento 2026-06-26 - Copy de novo post por papel
+
+### Contexto
+
+A descricao `Responda agora e seja visto primeiro.` em notificacoes `novo_post` foi criada para psicologos, pois comunica oportunidade de visibilidade profissional. Para pacientes, a mesma frase soava transacional e desalinhada com o valor de participar da comunidade e aprender com contribuicoes profissionais.
+
+### Decisao
+
+- Manter a copy atual para psicologos.
+- Para pacientes, renderizar a descricao `Participe da conversa e acompanhe contribuições de psicólogos e da comunidade.` na central de notificacoes.
+- Resolver a variacao no frontend a partir de `user.role`, sem alterar `message_key`, payload, schema ou produtor de eventos.
+
+### Consequencias
+
+- A mesma notificacao `novo_post` preserva semantica tecnica unica, mas ganha mensagem adequada ao papel do usuario.
+- Nao ha migracao, endpoint novo, preferencia nova nem pacote adicional.

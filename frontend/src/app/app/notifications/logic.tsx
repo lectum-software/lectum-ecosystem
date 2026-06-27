@@ -21,6 +21,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
 import { SecondaryPageHeader } from "@/components/ui/secondary-page-header";
 import { getToken } from "@/hooks/cookies/token";
+import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -39,6 +40,11 @@ type NotificationView = {
   icon: ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
   tone: string;
 };
+
+type UserRole = "paciente" | "psicologo" | string | null | undefined;
+
+const PATIENT_NEW_POST_DESCRIPTION =
+  "Participe da conversa e acompanhe contribuições de psicólogos e da comunidade.";
 
 const LABELS: Record<string, NotificationView> = {
   nova_avaliacao: {
@@ -108,6 +114,19 @@ const fallbackView: NotificationView = {
   description: "Abra para acompanhar a atualização na Lectum.",
   icon: Bell,
   tone: "text-primary bg-primary-soft",
+};
+
+const getNotificationView = (messageKey: string | null | undefined, role: UserRole) => {
+  const view = LABELS[messageKey ?? ""] ?? fallbackView;
+
+  if (messageKey === "novo_post" && role === "paciente") {
+    return {
+      ...view,
+      description: PATIENT_NEW_POST_DESCRIPTION,
+    };
+  }
+
+  return view;
 };
 
 const startOfToday = () => {
@@ -222,6 +241,7 @@ const NotificationsHeaderActions = ({
 };
 
 export const NotificationsLogic = () => {
+  const sessionRole = useAppSelector((state) => state.user?.role);
   const [hasAuthToken] = useState(() => {
     if (typeof window === "undefined") return false;
 
@@ -235,7 +255,7 @@ export const NotificationsLogic = () => {
   const groups = useMemo(() => groupNotifications(items), [items]);
 
   const renderItem = (item: NotificationItem) => {
-    const view = LABELS[item.message_key ?? ""] ?? fallbackView;
+    const view = getNotificationView(item.message_key, sessionRole);
     const Icon = view.icon;
     const markAsRead = () => {
       if (!item.read && item.id) {
