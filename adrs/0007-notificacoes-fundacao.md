@@ -210,3 +210,37 @@ A descricao `Responda agora e seja visto primeiro.` em notificacoes `novo_post` 
 - A central de notificacoes passa a usar `Newspaper` para `novo_post`, representando publicacao/conteudo novo.
 - `nova_resposta` permanece com `MessageSquare`, reservado para conversa, comentario e resposta.
 - A decisao reaproveita a mesma iconografia ja adotada em `Novas postagens` na tela de preferencias, sem alterar dados, APIs ou regras de entrega.
+
+## Complemento 2026-06-26 - Identidade do autor em novo post/resposta
+
+### Contexto
+
+As notificacoes in-app da Lectum sao exibidas individualmente, diferentemente dos digests/push agrupados. Em `novo_post` e `nova_resposta`, mostrar quem publicou ou respondeu ajuda o usuario a reconhecer o contexto da conversa. Para sinais passivos como upvote, salvamento e compartilhamento, a identificacao acrescentaria exposicao desnecessaria e ruido visual.
+
+Tambem foi decidido que o sufixo profissional tem valor de credencial, enquanto `· Membro` nao agrega informacao suficiente e polui a leitura.
+
+### Decisao
+
+- A listagem `/api/private/notification/index` hidrata um campo derivado `actor` apenas para `novo_post` e `nova_resposta`, a partir de `message_props.post_id` ou `message_props.reply_id`.
+- O campo `actor` nao altera o schema Prisma; ele e derivado em tempo de leitura e contem nome, avatar, papel, label profissional, flags de anonimato/delecao e id publico quando seguro.
+- Posts anonimos de pacientes usam o alias estavel `Membro Anônimo #1234` derivado de `author_id`, com `id=null` e `avatar=null`.
+- Psicologos recebem label no titulo (`· Psicóloga`, `· Psicólogo` ou `· Psicólogo(a)`). Membros identificados e membros anonimos nao recebem `· Membro`.
+- A UI substitui o icone principal por avatar/iniciais quando `actor` existe e mantém um pequeno badge do tipo de evento sobreposto ao avatar.
+- `nova_resposta` usa `message_props.parent_reply_id` para escolher entre `respondeu ao seu post` e `respondeu ao seu comentário`.
+- Upvotes, salvamentos, compartilhamentos, favoritos, views e cliques permanecem sem identidade de autor na central.
+
+### Consequencias
+
+- A central ganha contexto humano em interacoes conversacionais sem abrir mais dados pessoais do que as telas de comunidade ja exibem.
+- O anonimato continua preservado, inclusive sem expor o `user.id` real no payload derivado.
+- Como `actor` e derivado no index, notificacoes antigas tambem podem aparecer com identidade quando seus `message_props` ainda apontam para post/resposta ativos.
+- Notificacoes em tempo real continuam apenas invalidando/refazendo a query, entao a hidratacao ocorre pelo mesmo contrato de listagem.
+
+### Validacao
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local em `/app/notifications`.

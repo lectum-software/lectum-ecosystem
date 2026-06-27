@@ -63,3 +63,13 @@ Validacao: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` 
 - Downvotes deixam de emitir notificacao in-app/tempo real/push pelo produtor real `post_vote`.
 - A listagem da central de notificacoes tambem exclui registros legados com `message_key = "downvote"`, evitando que notificacoes antigas continuem visiveis.
 - A chave `downvote` permanece no contrato historico para compatibilidade com dados ja persistidos e com regras internas de reputacao/ranking, mas nao e mais exposta na central.
+
+## Complemento 2026-06-26 - autoria exibida em eventos conversacionais
+
+- Os produtores reais de `novo_post` e `nova_resposta` continuam persistindo apenas ids em `message_props` (`post_id`, `reply_id`, `parent_reply_id`, `source_id`, `source_type`), sem gravar snapshot de nome/foto dentro da notificação.
+- A decisao de exibir autor fica na leitura da central: o repository hidrata `actor` usando os ids reais e as regras atuais de anonimato/delecao.
+- Essa abordagem evita dados duplicados/obsoletos na tabela `notification` e permite que mudancas de nome/foto ou exclusao de conta sejam respeitadas na proxima leitura.
+- Para posts anonimos, o alias exibido e o mesmo pseudoidentificador estavel por `author_id`; o id real e o avatar nao sao retornados no `actor`.
+- Eventos passivos seguem sem actor por politica de privacidade e reducao de ruido: `upvote`, `salvamento`, `compartilhamento` e similares nao devem identificar quem interagiu.
+
+Validacao: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`.

@@ -28,11 +28,193 @@ import type {
   IIndexRepository,
 } from "./interfaces/IIndexRepository";
 
+const notificationAuthorSelect = {
+  id: true,
+  deleted: true,
+  name: true,
+  avatar: true,
+  role: true,
+  psychologist_profile: {
+    select: {
+      gender: true,
+    },
+  },
+} satisfies Prisma.userSelect;
+
+type NotificationAuthor = Prisma.userGetPayload<{ select: typeof notificationAuthorSelect }>;
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value && typeof value === "object" && !Array.isArray(value));
+
+const getStringProp = (value: unknown, key: string) => {
+  if (!isRecord(value)) return undefined;
+
+  const prop = value[key];
+  return typeof prop === "string" ? prop : undefined;
+};
+
+const anonymousDisplayNameForAuthor = (authorId: string) => {
+  let hash = 0;
+
+  for (const character of authorId) {
+    hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
+  }
+
+  return `Membro Anônimo #${1000 + (hash % 9000)}`;
+};
+
+const professionalLabelForGender = (gender?: string | null) => {
+  const normalizedGender = String(gender ?? "")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+
+  if (normalizedGender.includes("feminino")) return "Psicóloga";
+  if (normalizedGender.includes("masculino")) return "Psicólogo";
+
+  return "Psicólogo(a)";
+};
+
+const toNotificationActor = (author: NotificationAuthor, anonymous = false) => {
+  const isPsychologist = author.role === "psicologo";
+  const isDeletedAuthor = Boolean(author.deleted);
+  const shouldMaskAuthor = !isPsychologist && anonymous;
+  const shouldHideIdentity = isDeletedAuthor || shouldMaskAuthor;
+  const fallbackName = isPsychologist ? "Psicólogo" : "Membro";
+  const deletedName = isPsychologist ? "Psicólogo Excluído" : "Membro Excluído";
+  const publicName = author.name?.trim() || fallbackName;
+
+  return {
+    id: shouldHideIdentity ? null : author.id,
+    name: isDeletedAuthor
+      ? deletedName
+      : shouldMaskAuthor
+        ? anonymousDisplayNameForAuthor(author.id)
+        : publicName,
+    avatar: shouldHideIdentity ? null : author.avatar,
+    role: author.role,
+    professional_label:
+      isPsychologist && !isDeletedAuthor
+        ? professionalLabelForGender(author.psychologist_profile?.gender)
+        : null,
+    anonymous: shouldMaskAuthor,
+    deleted: isDeletedAuthor,
+  } satisfies NonNullable<notification["actor"]>;
+};
+
+const postIdFromNotification = (item: notification) => {
+  const sourceType = getStringProp(item.message_props, "source_type");
+
+  return (
+    getStringProp(item.message_props, "post_id") ??
+    (sourceType === "community_post" ? getStringProp(item.message_props, "source_id") : undefined)
+  );
+};
+
+const replyIdFromNotification = (item: notification) => {
+  const sourceType = getStringProp(item.message_props, "source_type");
+
+  return (
+    getStringProp(item.message_props, "reply_id") ??
+    (sourceType === "post_reply" ? getStringProp(item.message_props, "source_id") : undefined)
+  );
+};
+
 export class IndexRepository implements IIndexRepository {
   readonly repository: ORM["notification"];
 
   constructor() {
     this.repository = prisma.notification;
+  }
+
+  private async withActors(items: notification[]) {
+    const postIds = [
+      ...new Set(
+        items
+          .filter((item) => item.message_key === "novo_post")
+          .map(postIdFromNotification)
+          .filter(Boolean),
+      ),
+    ] as string[];
+    const replyIds = [
+      ...new Set(
+        items
+          .filter((item) => item.message_key === "nova_resposta")
+          .map(replyIdFromNotification)
+          .filter(Boolean),
+      ),
+    ] as string[];
+
+    const [posts, replies] = await Promise.all([
+      postIds.length > 0
+        ? prisma.community_post.findMany({
+            where: {
+              id: {
+                in: postIds,
+              },
+              deleted: false,
+            },
+            select: {
+              id: true,
+              anonymous: true,
+              author: {
+                select: notificationAuthorSelect,
+              },
+            },
+          })
+        : Promise.resolve([]),
+      replyIds.length > 0
+        ? prisma.post_reply.findMany({
+            where: {
+              id: {
+                in: replyIds,
+              },
+              deleted: false,
+            },
+            select: {
+              id: true,
+              author: {
+                select: notificationAuthorSelect,
+              },
+            },
+          })
+        : Promise.resolve([]),
+    ]);
+
+    const postActors = new Map(
+      posts.map((post) => [
+        post.id,
+        toNotificationActor(post.author, post.author.role !== "psicologo" && post.anonymous),
+      ]),
+    );
+    const replyActors = new Map(
+      replies.map((reply) => [reply.id, toNotificationActor(reply.author)]),
+    );
+
+    return items.map((item) => {
+      if (item.message_key === "novo_post") {
+        const postId = postIdFromNotification(item);
+
+        return {
+          ...item,
+          actor: postId ? (postActors.get(postId) ?? null) : null,
+        };
+      }
+
+      if (item.message_key === "nova_resposta") {
+        const replyId = replyIdFromNotification(item);
+
+        return {
+          ...item,
+          actor: replyId ? (replyActors.get(replyId) ?? null) : null,
+        };
+      }
+
+      return {
+        ...item,
+        actor: null,
+      };
+    });
   }
 
   async index(props: IIndexDTO): Promise<PaginationResponse<notification>> {
@@ -62,7 +244,7 @@ export class IndexRepository implements IIndexRepository {
     ]);
 
     return {
-      data: res,
+      data: await this.withActors(res),
       page: pages.page,
       pages: Math.ceil(count / pages.limit),
       count,

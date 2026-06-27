@@ -286,3 +286,22 @@ Esta task deixa o canal de recebimento pronto. **Não** ligue eventos de domíni
 - `pnpm --dir frontend build`
 - `pnpm check`
 - ADR atualizado: `adrs/0007-notificacoes-fundacao.md`.
+
+## Complemento 2026-06-26 - identidade do autor na central
+
+- A central `/app/notifications` passou a renderizar nome/foto do autor apenas em notificacoes individuais de `novo_post` e `nova_resposta`.
+- Psicologos recebem sufixo profissional no titulo (`· Psicóloga`, `· Psicólogo` ou `· Psicólogo(a)`), enquanto membros comuns nao recebem `· Membro` para manter a leitura limpa.
+- Posts anonimos de pacientes preservam o alias publico `Membro Anônimo #1234`, sem expor id real, foto, perfil ou nome do autor.
+- `nova_resposta` distingue o texto entre `respondeu ao seu post` e `respondeu ao seu comentário` a partir de `message_props.parent_reply_id`.
+- As demais notificacoes (`upvote`, `salvamento`, `compartilhamento`, favoritos, visualizacoes e cliques) continuam sem identificacao do autor na central.
+- O visual usa avatar ou iniciais com um pequeno badge do tipo de evento; nao houve uso de `<img>` cru.
+
+### Validacao do ajuste
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local em `/app/notifications`.
+- ADR atualizado: `adrs/0007-notificacoes-fundacao.md`.

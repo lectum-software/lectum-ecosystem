@@ -438,6 +438,7 @@ export interface notification {
   message_props?: unknown;
   user_id?: string | null;
   user?: user | null;
+  actor?: notification_actor | null;
 }
 
 export interface notification_preference {
@@ -500,4 +501,14 @@ export interface user {
   visitor_locations?: visitor_location[] | null;
   notifications?: notification[] | null;
   notification_preference?: notification_preference | null;
+}
+
+export interface notification_actor {
+  id?: string | null;
+  name: string;
+  avatar?: string | null;
+  role?: string | null;
+  professional_label?: string | null;
+  anonymous?: boolean | null;
+  deleted?: boolean | null;
 }

@@ -14,10 +14,12 @@ import {
   Share2,
   Star,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import type { ComponentType } from "react";
 import { useMemo, useState } from "react";
 import { useNotification } from "@/api/callers/notification";
+import type { notification as ApiNotification } from "@/api/generator/types";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
 import { SecondaryPageHeader } from "@/components/ui/secondary-page-header";
@@ -27,13 +29,8 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 
-type NotificationItem = {
-  id?: string;
-  read?: boolean;
-  redirect?: string | null;
-  message_key?: string | null;
-  createdAt?: string;
-};
+type NotificationItem = ApiNotification;
+type NotificationActor = NonNullable<NotificationItem["actor"]>;
 
 type NotificationView = {
   title: string;
@@ -130,6 +127,45 @@ const getNotificationView = (messageKey: string | null | undefined, role: UserRo
   return view;
 };
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value && typeof value === "object" && !Array.isArray(value));
+
+const getStringProp = (value: unknown, key: string) => {
+  if (!isRecord(value)) return undefined;
+
+  const prop = value[key];
+  return typeof prop === "string" ? prop : undefined;
+};
+
+const getInitials = (name?: string | null) => {
+  const parts = String(name ?? "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (parts.length === 0) return "L";
+  if (parts.length === 1) return parts[0]?.slice(0, 2).toUpperCase() ?? "L";
+
+  return `${parts[0]?.[0] ?? ""}${parts[parts.length - 1]?.[0] ?? ""}`.toUpperCase();
+};
+
+const getActorTitle = (item: NotificationItem, view: NotificationView) => {
+  const actor = item.actor;
+  if (!actor || (item.message_key !== "novo_post" && item.message_key !== "nova_resposta")) {
+    return view.title;
+  }
+
+  const professionalLabel = actor.professional_label ? ` · ${actor.professional_label}` : "";
+
+  if (item.message_key === "novo_post") {
+    return `${actor.name}${professionalLabel} publicou na comunidade.`;
+  }
+
+  const replyTarget = getStringProp(item.message_props, "parent_reply_id") ? "comentário" : "post";
+
+  return `${actor.name}${professionalLabel} respondeu ao seu ${replyTarget}.`;
+};
+
 const startOfToday = () => {
   const now = new Date();
   return new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -162,6 +198,46 @@ const groupNotifications = (items: NotificationItem[]) => {
       return acc;
     },
     { today: [] as NotificationItem[], previous: [] as NotificationItem[] },
+  );
+};
+
+type NotificationVisualProps = {
+  actor?: NotificationActor | null;
+  view: NotificationView;
+};
+
+const NotificationVisual = ({ actor, view }: NotificationVisualProps) => {
+  const Icon = view.icon;
+
+  if (!actor) {
+    return (
+      <span
+        className={cn("mt-1 grid h-10 w-10 shrink-0 place-items-center rounded-2xl", view.tone)}
+      >
+        <Icon className="h-5 w-5" aria-hidden={true} />
+      </span>
+    );
+  }
+
+  return (
+    <span className="relative mt-1 shrink-0">
+      <span className="relative grid h-11 w-11 overflow-hidden rounded-full border border-border bg-primary-soft text-sm font-extrabold text-primary">
+        {actor.avatar ? (
+          <Image alt="" className="object-cover" fill={true} sizes="44px" src={actor.avatar} />
+        ) : (
+          <span className="grid h-full w-full place-items-center">{getInitials(actor.name)}</span>
+        )}
+      </span>
+
+      <span
+        className={cn(
+          "-bottom-1 -right-1 absolute grid h-5 w-5 place-items-center rounded-full border-2 border-surface",
+          view.tone,
+        )}
+      >
+        <Icon className="h-3 w-3" aria-hidden={true} />
+      </span>
+    </span>
   );
 };
 
@@ -257,7 +333,7 @@ export const NotificationsLogic = () => {
 
   const renderItem = (item: NotificationItem) => {
     const view = getNotificationView(item.message_key, sessionRole);
-    const Icon = view.icon;
+    const title = getActorTitle(item, view);
     const markAsRead = () => {
       if (!item.read && item.id) {
         update.mutate({ id: item.id, read: true });
@@ -265,17 +341,13 @@ export const NotificationsLogic = () => {
     };
     const content = (
       <>
-        <span
-          className={cn("mt-1 grid h-10 w-10 shrink-0 place-items-center rounded-2xl", view.tone)}
-        >
-          <Icon className="h-5 w-5" aria-hidden={true} />
-        </span>
+        <NotificationVisual actor={item.actor} view={view} />
 
         <span className="min-w-0 flex-1 border-b border-border/70 pb-4">
           <span className="flex items-start justify-between gap-3">
             <span className="min-w-0">
               <span className="block text-[15px] font-extrabold leading-5 text-foreground">
-                {view.title}
+                {title}
               </span>
               <span className="mt-1 line-clamp-2 text-sm leading-5 text-muted">
                 {view.description}

@@ -241,3 +241,23 @@ Validação:
 - `pnpm check`
 
 ADR atualizado: `adrs/0098-notificacoes-eventos-dominio.md`.
+
+## Complemento 2026-06-26 - autoria nas notificacoes individuais
+
+Mantida a producao real de eventos sem endpoint paralelo, mas a listagem da central passou a hidratar autoria para os eventos em que a identidade melhora o contexto da conversa:
+
+- `novo_post` continua gravando `post_id` em `message_props`; a central usa esse id para buscar o autor do post.
+- `nova_resposta` continua gravando `reply_id` e `parent_reply_id`; a central usa `reply_id` para buscar o autor da resposta e `parent_reply_id` para escolher a copy de post/comentario.
+- Autores de posts anonimos seguem mascarados pelo alias estavel `Membro Anônimo #1234`, derivado de `author_id`, sem expor id real, foto ou perfil.
+- Psicologos recebem label profissional derivado do genero declarado; membros comuns nao recebem label `Membro`.
+- Eventos passivos (`upvote`, `salvamento`, `compartilhamento` e equivalentes) permanecem sem identificacao de ator para evitar exposicao desnecessaria.
+
+Validacao:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+
+ADRs atualizados: `adrs/0007-notificacoes-fundacao.md` e `adrs/0098-notificacoes-eventos-dominio.md`.
