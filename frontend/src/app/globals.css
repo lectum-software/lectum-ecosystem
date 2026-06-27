@@ -492,6 +492,11 @@ video::backdrop {
   background: #fbfcff;
 }
 
+.lectum-welcome-shell {
+  min-height: 100dvh;
+  max-width: 430px;
+}
+
 .lectum-welcome-brand {
   color: #0b55e8;
 }
@@ -555,6 +560,15 @@ video::backdrop {
 
 .lectum-welcome-arrow {
   animation: lectum-welcome-arrow 1.8s ease-in-out infinite;
+}
+
+@media (min-width: 640px) {
+  .lectum-welcome-shell {
+    width: min(430px, calc((100dvh - 3rem) * 390 / 844));
+    height: min(844px, calc(100dvh - 3rem));
+    min-height: 0;
+    max-width: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

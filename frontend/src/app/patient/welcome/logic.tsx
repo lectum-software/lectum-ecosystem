@@ -143,12 +143,12 @@ export const WelcomePatientLogic = () => {
 
   return (
     <main className="min-h-dvh bg-background text-foreground">
-      <section className="lectum-welcome-screen relative isolate mx-auto flex min-h-dvh w-full max-w-[430px] overflow-hidden bg-surface text-foreground sm:my-6 sm:min-h-[calc(100dvh-3rem)] sm:rounded-[32px] sm:border sm:border-border sm:shadow-[var(--lectum-shadow)]">
+      <section className="lectum-welcome-screen lectum-welcome-shell relative isolate mx-auto flex w-full overflow-hidden bg-surface text-foreground sm:my-6 sm:rounded-[32px] sm:border sm:border-border sm:shadow-[var(--lectum-shadow)]">
         {step === 0 ? (
-          <div className="relative z-10 min-h-dvh w-full px-0 sm:min-h-[calc(100dvh-3rem)]">
+          <div className="relative z-10 min-h-dvh w-full px-0 sm:h-full sm:min-h-0">
             <WelcomeBackground variant="intro" />
 
-            <div className="lectum-welcome-fade-up absolute top-[14.8vh] right-0 left-0 z-10 grid justify-items-center px-5 text-center">
+            <div className="lectum-welcome-fade-up absolute top-[14.8%] right-0 left-0 z-10 grid justify-items-center px-5 text-center">
               <Image
                 alt=""
                 aria-hidden="true"
@@ -190,16 +190,16 @@ export const WelcomePatientLogic = () => {
         ) : null}
 
         {step === 1 ? (
-          <div className="relative z-10 min-h-dvh w-full px-0 sm:min-h-[calc(100dvh-3rem)]">
+          <div className="relative z-10 min-h-dvh w-full px-0 sm:h-full sm:min-h-0">
             <WelcomeBackground variant="choice" />
 
-            <div className="lectum-welcome-fade-up absolute top-[47.6vh] right-0 left-0 z-10 px-5 text-center">
+            <div className="lectum-welcome-fade-up absolute top-[47.6%] right-0 left-0 z-10 px-5 text-center">
               <h1 className="lectum-welcome-ink mx-auto max-w-[318px] text-[1.78rem] font-extrabold leading-[1.13] tracking-[-0.045em] sm:text-[1.96rem]">
                 Como voc&ecirc; gostaria de come&ccedil;ar?
               </h1>
             </div>
 
-            <div className="absolute top-[58.8vh] right-0 left-0 z-10 mx-auto grid w-full max-w-[324px] gap-4 px-0">
+            <div className="absolute top-[58.8%] right-0 left-0 z-10 mx-auto grid w-full max-w-[324px] gap-4 px-0 sm:top-[56%]">
               {goalOptions.map((option, index) => {
                 const selected = selectedGoal === option.value;
                 const isCommunityGoal = option.value === "conhecer_comunidade";

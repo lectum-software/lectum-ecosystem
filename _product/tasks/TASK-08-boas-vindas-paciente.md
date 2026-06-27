@@ -266,3 +266,12 @@ O onboarding só termina quando o backend confirma. Se o shell privado (TASK-12)
 - O texto do CTA `Vamos comecar` foi reduzido para ficar proporcional ao botao e ao icone de seta.
 - A segunda tela deixou de exibir o texto auxiliar abaixo do titulo e o badge da opcao comunidade foi alterado para `Espaco gratuito`.
 - Validacao: `pnpm --dir frontend check`, `pnpm --dir frontend build` e browser local/headless em 390x844 com usuario temporario real removido ao final.
+
+## Ajuste posterior em 2026-06-27: responsividade desktop/mobile do layout premium
+
+- Pedido direto de produto: ajustar a responsividade das duas telas premium de `/patient/welcome`, pois em desktop o container ficava largo/alto demais e a segunda tela cortava parte dos cards.
+- O shell visual das boas-vindas passou a preservar a proporcao mobile de referencia `390x844` em viewports desktop, com altura limitada por `calc(100dvh - 3rem)` e largura proporcional.
+- Os elementos posicionados sobre os fundos SVG agora usam coordenadas relativas ao container, nao ao viewport da janela, mantendo a composicao consistente quando o container e redimensionado.
+- Em mobile, o fluxo continua ocupando `100dvh` e preserva a experiencia original das referencias.
+- Nao houve alteracao em backend, banco, contratos de API ou pacotes.
+- Validacao: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check` e browser/headless em desktop `1920x879` e mobile `390x844` com usuario temporario real removido ao final.

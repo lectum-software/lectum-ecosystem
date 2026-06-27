@@ -27,3 +27,13 @@ final result: passed
 ## Observação
 
 Os arquivos SVG fornecidos contêm PNGs embutidos em base64 e máscaras. A escolha foi aceita para esta iteração porque a prioridade era fidelidade visual exata do background.
+
+## Atualizacao 2026-06-27 - responsividade
+
+- Validacao adicional em desktop `1920x879` e mobile `390x844` confirmou que o shell visual preserva a proporcao `390x844` em telas maiores e que as duas etapas cabem sem corte.
+- Capturas locais finais:
+  - `%TEMP%\lectum-welcome-responsive-cdp-3\desktop-step-1.png`
+  - `%TEMP%\lectum-welcome-responsive-cdp-3\desktop-step-2.png`
+  - `%TEMP%\lectum-welcome-responsive-cdp-3\mobile-step-1.png`
+  - `%TEMP%\lectum-welcome-responsive-cdp-3\mobile-step-2.png`
+- Usuario temporario real criado via endpoint do backend para acessar o fluxo e removido do banco ao final da validacao.

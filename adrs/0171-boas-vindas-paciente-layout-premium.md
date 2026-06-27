@@ -89,3 +89,20 @@ Consequencias adicionais:
 
 - A tela passa a refletir a marca nova apenas neste ponto do onboarding.
 - A troca global da logo continua isolada para uma tarefa futura.
+
+## Atualizacao 2026-06-27 - responsividade do shell premium
+
+Durante validacao em desktop, o container das telas de boas-vindas ficava grande demais em altura e largura, causando corte visual especialmente na segunda tela. A decisao adicional foi transformar o shell do onboarding em um quadro proporcional ao canvas mobile de referencia (`390x844`) quando a viewport for desktop/tablet, limitando a altura por `100dvh - 3rem` e calculando a largura pela mesma proporcao.
+
+Decisao adicional:
+
+- Manter `100dvh` em mobile para preservar a referencia original.
+- Em `sm+`, usar uma classe dedicada (`lectum-welcome-shell`) para altura/ largura proporcionais e cantos/sombra de preview premium.
+- Trocar posicionamentos principais de `vh` para porcentagens do container, garantindo que titulos, CTA e cards acompanhem o redimensionamento do shell.
+- Ajustar somente a posicao desktop dos cards da segunda tela para evitar corte em viewports com pouca altura, sem mudar copy, APIs, assets ou valores de dominio.
+
+Consequencias adicionais:
+
+- O layout fica consistente em desktop, mobile e no emulador do DevTools, sem scroll/corte interno indevido no card visual.
+- A implementacao continua mobile-first e baseada nos SVGs fornecidos pelo produto.
+- Nao houve alteracao de backend, schema, endpoint ou pacote.
