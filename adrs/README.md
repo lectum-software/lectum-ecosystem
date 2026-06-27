@@ -96,3 +96,4 @@ Formato recomendado:
 - [ADR-0148 - Proporcao 16:9 para imagens horizontais em posts e respostas](0148-imagens-horizontais-16-9-comunidade.md) - Accepted
 - [ADR-0168 - Icones azuis na central de notificacoes](0168-icones-azuis-notificacoes-whatsapp.md) - Accepted
 - [ADR-0169 - Autoria em notificacoes profissionais individuais](0169-autoria-notificacoes-profissionais.md) - Accepted
+- [ADR-0170 - Simbolo Lectum em SVG escalavel](0170-simbolo-lectum-svg-escalavel.md) - Accepted
