@@ -8,7 +8,6 @@ import {
   Eye,
   Heart,
   MessageSquare,
-  MousePointerClick,
   Newspaper,
   Settings,
   Share2,
@@ -24,6 +23,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
 import { SecondaryPageHeader } from "@/components/ui/secondary-page-header";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { getToken } from "@/hooks/cookies/token";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
@@ -45,66 +45,68 @@ type UserRole = "paciente" | "psicologo" | string | null | undefined;
 const PATIENT_NEW_POST_DESCRIPTION =
   "Participe da conversa e acompanhe contribuições de psicólogos e da comunidade.";
 
+const NOTIFICATION_ICON_TONE = "bg-primary-soft text-primary";
+
 const LABELS: Record<string, NotificationView> = {
   nova_avaliacao: {
     title: "Nova avaliação recebida",
     description: "Clique para ver a avaliação no seu perfil.",
     icon: Star,
-    tone: "text-amber-500 bg-amber-50",
+    tone: NOTIFICATION_ICON_TONE,
   },
   novo_favorito: {
     title: "Um novo usuário favoritou seu perfil.",
     description: "Seu perfil foi salvo por alguém que pode chamar no WhatsApp.",
     icon: Heart,
-    tone: "text-rose-500 bg-rose-50",
+    tone: NOTIFICATION_ICON_TONE,
   },
   visualizacao_perfil: {
     title: "Um novo usuário visualizou seu perfil.",
     description: "Acompanhe o interesse pelo seu perfil profissional.",
     icon: Eye,
-    tone: "text-slate-600 bg-slate-100",
+    tone: NOTIFICATION_ICON_TONE,
   },
   clique_whatsapp: {
     title: "Novo clique no seu botão de WhatsApp!",
     description: "Registramos um novo contato iniciado pela Lectum.",
-    icon: MousePointerClick,
-    tone: "text-emerald-600 bg-emerald-50",
+    icon: WhatsAppIcon,
+    tone: NOTIFICATION_ICON_TONE,
   },
   novo_post: {
     title: "Novo post na comunidade.",
     description: "Responda agora e seja visto primeiro.",
     icon: Newspaper,
-    tone: "text-sky-600 bg-sky-50",
+    tone: NOTIFICATION_ICON_TONE,
   },
   nova_resposta: {
     title: "Seu post recebeu uma nova resposta.",
     description: "Clique para acompanhar a conversa.",
     icon: MessageSquare,
-    tone: "text-blue-600 bg-blue-50",
+    tone: NOTIFICATION_ICON_TONE,
   },
   upvote: {
     title: "Seu conteúdo recebeu um novo upvote.",
     description: "Clique para ver o conteúdo em destaque.",
     icon: ArrowUp,
-    tone: "text-sky-600 bg-sky-50",
+    tone: NOTIFICATION_ICON_TONE,
   },
   downvote: {
     title: "Seu conteúdo recebeu uma nova interação.",
     description: "Acompanhe o desempenho da discussão.",
     icon: ArrowUp,
-    tone: "text-slate-600 bg-slate-100",
+    tone: NOTIFICATION_ICON_TONE,
   },
   compartilhamento: {
     title: "Seu conteúdo foi compartilhado.",
     description: "Clique para abrir a publicação relacionada.",
     icon: Share2,
-    tone: "text-emerald-600 bg-emerald-50",
+    tone: NOTIFICATION_ICON_TONE,
   },
   salvamento: {
     title: "Seu conteúdo foi salvo por um novo usuário.",
     description: "Clique para ver o conteúdo salvo.",
     icon: Bookmark,
-    tone: "text-blue-600 bg-blue-50",
+    tone: NOTIFICATION_ICON_TONE,
   },
 };
 

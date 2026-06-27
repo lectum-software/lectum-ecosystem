@@ -94,3 +94,4 @@ Formato recomendado:
 - [ADR-0146 - Ações de respostas do usuário](0146-acoes-respostas-usuario.md) - Accepted
 - [ADR-0147 - Cortesia verificada e WhatsApp na comunidade](0147-cortesia-verificada-whatsapp-comunidade.md) - Accepted
 - [ADR-0148 - Proporcao 16:9 para imagens horizontais em posts e respostas](0148-imagens-horizontais-16-9-comunidade.md) - Accepted
+- [ADR-0168 - Icones azuis na central de notificacoes](0168-icones-azuis-notificacoes-whatsapp.md) - Accepted
