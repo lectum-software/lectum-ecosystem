@@ -138,6 +138,37 @@ const replyIdFromNotification = (item: notification) => {
   );
 };
 
+const reviewIdFromNotification = (item: notification) => {
+  const sourceType = getStringProp(item.message_props, "source_type");
+
+  return (
+    getStringProp(item.message_props, "review_id") ??
+    (sourceType === "professional_review"
+      ? getStringProp(item.message_props, "source_id")
+      : undefined)
+  );
+};
+
+const favoriteIdFromNotification = (item: notification) => {
+  const sourceType = getStringProp(item.message_props, "source_type");
+
+  return (
+    getStringProp(item.message_props, "favorite_id") ??
+    (sourceType === "psychologist_favorite"
+      ? getStringProp(item.message_props, "source_id")
+      : undefined)
+  );
+};
+
+const contactRequestIdFromNotification = (item: notification) => {
+  const sourceType = getStringProp(item.message_props, "source_type");
+
+  return (
+    getStringProp(item.message_props, "contact_request_id") ??
+    (sourceType === "contact_request" ? getStringProp(item.message_props, "source_id") : undefined)
+  );
+};
+
 export class IndexRepository implements IIndexRepository {
   readonly repository: ORM["notification"];
 
@@ -162,8 +193,32 @@ export class IndexRepository implements IIndexRepository {
           .filter(Boolean),
       ),
     ] as string[];
+    const reviewIds = [
+      ...new Set(
+        items
+          .filter((item) => item.message_key === "nova_avaliacao")
+          .map(reviewIdFromNotification)
+          .filter(Boolean),
+      ),
+    ] as string[];
+    const favoriteIds = [
+      ...new Set(
+        items
+          .filter((item) => item.message_key === "novo_favorito")
+          .map(favoriteIdFromNotification)
+          .filter(Boolean),
+      ),
+    ] as string[];
+    const contactRequestIds = [
+      ...new Set(
+        items
+          .filter((item) => item.message_key === "clique_whatsapp")
+          .map(contactRequestIdFromNotification)
+          .filter(Boolean),
+      ),
+    ] as string[];
 
-    const [posts, replies] = await Promise.all([
+    const [posts, replies, reviews, favorites, contactRequests] = await Promise.all([
       postIds.length > 0
         ? prisma.community_post.findMany({
             where: {
@@ -197,6 +252,54 @@ export class IndexRepository implements IIndexRepository {
             },
           })
         : Promise.resolve([]),
+      reviewIds.length > 0
+        ? prisma.professional_review.findMany({
+            where: {
+              id: {
+                in: reviewIds,
+              },
+              deleted: false,
+            },
+            select: {
+              id: true,
+              author: {
+                select: notificationAuthorSelect,
+              },
+            },
+          })
+        : Promise.resolve([]),
+      favoriteIds.length > 0
+        ? prisma.psychologist_favorite.findMany({
+            where: {
+              id: {
+                in: favoriteIds,
+              },
+              deleted: false,
+            },
+            select: {
+              id: true,
+              user: {
+                select: notificationAuthorSelect,
+              },
+            },
+          })
+        : Promise.resolve([]),
+      contactRequestIds.length > 0
+        ? prisma.contact_request.findMany({
+            where: {
+              id: {
+                in: contactRequestIds,
+              },
+              deleted: false,
+            },
+            select: {
+              id: true,
+              user: {
+                select: notificationAuthorSelect,
+              },
+            },
+          })
+        : Promise.resolve([]),
     ]);
 
     const postActors = new Map(
@@ -207,6 +310,18 @@ export class IndexRepository implements IIndexRepository {
     );
     const replyActors = new Map(
       replies.map((reply) => [reply.id, toNotificationActor(reply.author)]),
+    );
+    const reviewActors = new Map(
+      reviews.map((review) => [review.id, toNotificationActor(review.author)]),
+    );
+    const favoriteActors = new Map(
+      favorites.map((favorite) => [favorite.id, toNotificationActor(favorite.user)]),
+    );
+    const contactRequestActors = new Map(
+      contactRequests.map((contactRequest) => [
+        contactRequest.id,
+        contactRequest.user ? toNotificationActor(contactRequest.user) : null,
+      ]),
     );
 
     return items.map((item) => {
@@ -225,6 +340,33 @@ export class IndexRepository implements IIndexRepository {
         return {
           ...item,
           actor: replyId ? (replyActors.get(replyId) ?? null) : null,
+        };
+      }
+
+      if (item.message_key === "nova_avaliacao") {
+        const reviewId = reviewIdFromNotification(item);
+
+        return {
+          ...item,
+          actor: reviewId ? (reviewActors.get(reviewId) ?? null) : null,
+        };
+      }
+
+      if (item.message_key === "novo_favorito") {
+        const favoriteId = favoriteIdFromNotification(item);
+
+        return {
+          ...item,
+          actor: favoriteId ? (favoriteActors.get(favoriteId) ?? null) : null,
+        };
+      }
+
+      if (item.message_key === "clique_whatsapp") {
+        const contactRequestId = contactRequestIdFromNotification(item);
+
+        return {
+          ...item,
+          actor: contactRequestId ? (contactRequestActors.get(contactRequestId) ?? null) : null,
         };
       }
 

@@ -261,3 +261,23 @@ Validacao:
 - `pnpm check`
 
 ADRs atualizados: `adrs/0007-notificacoes-fundacao.md` e `adrs/0098-notificacoes-eventos-dominio.md`.
+
+## Complemento 2026-06-26 - autoria em eventos profissionais
+
+Mantida a producao real de eventos e os mesmos `message_props`, mas a listagem da central passou a hidratar autoria tambem para sinais profissionais individuais:
+
+- `nova_avaliacao`: usa `review_id`/`source_id` para buscar `professional_review.author`; avaliacoes nunca sao anonimas.
+- `novo_favorito`: usa `favorite_id`/`source_id` para buscar `psychologist_favorite.user`; favorito exige usuario autenticado.
+- `clique_whatsapp`: usa `contact_request_id`/`source_id` para buscar `contact_request.user`; quando `user_id` e nulo, a central mantem `actor=null` e mostra a copy generica `Um novo usuario clicou no seu WhatsApp`.
+- `visualizacao_perfil` permanece sem identificacao do usuario.
+- Eventos passivos (`upvote`, `salvamento`, `compartilhamento`) seguem sem identificacao de autor.
+
+Validacao:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+
+ADR criado: `adrs/0169-autoria-notificacoes-profissionais.md`.

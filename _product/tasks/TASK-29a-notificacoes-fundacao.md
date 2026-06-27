@@ -307,3 +307,21 @@ Esta task deixa o canal de recebimento pronto. **Não** ligue eventos de domíni
 - `pnpm check`
 - Browser local em `/app/notifications`.
 - ADR atualizado: `adrs/0007-notificacoes-fundacao.md`.
+
+## Complemento 2026-06-26 - autoria em sinais profissionais individuais
+
+- A central `/app/notifications` tambem passou a renderizar autoria em `nova_avaliacao`, `novo_favorito` e `clique_whatsapp` quando existe usuario autenticado associado ao evento.
+- `visualizacao_perfil` permanece sem identificacao do usuario por decisao de privacidade.
+- Avaliacoes nunca sao anonimas; favoritos exigem usuario autenticado; cliques no WhatsApp sem usuario autenticado continuam com copy generica: `Um novo usuario clicou no seu WhatsApp`.
+- A descricao secundaria abaixo dos itens segue removida; no titulo, apenas o nome do autor fica em negrito e o restante da frase fica regular.
+- `upvote`, `salvamento`, `compartilhamento` e demais interacoes passivas continuam sem identificacao de autor.
+
+### Validacao do ajuste
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local em `/app/notifications`.
+- ADR criado: `adrs/0169-autoria-notificacoes-profissionais.md`.

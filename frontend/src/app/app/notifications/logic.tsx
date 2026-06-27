@@ -67,7 +67,7 @@ const LABELS: Record<string, NotificationView> = {
     tone: NOTIFICATION_ICON_TONE,
   },
   clique_whatsapp: {
-    title: "Novo clique no seu botão de WhatsApp!",
+    title: "Um novo usuário clicou no seu WhatsApp",
     description: "Registramos um novo contato iniciado pela Lectum.",
     icon: WhatsAppIcon,
     tone: NOTIFICATION_ICON_TONE,
@@ -166,11 +166,32 @@ const ActorName = ({ actor }: { actor: NotificationActor }) => (
 
 const getActorTitle = (item: NotificationItem, view: NotificationView): ReactNode => {
   const actor = item.actor;
-  if (!actor || (item.message_key !== "novo_post" && item.message_key !== "nova_resposta")) {
-    return view.title;
+
+  if (actor && item.message_key === "nova_avaliacao") {
+    return (
+      <>
+        <ActorName actor={actor} /> avaliou seu perfil.
+      </>
+    );
   }
 
-  if (item.message_key === "novo_post") {
+  if (actor && item.message_key === "novo_favorito") {
+    return (
+      <>
+        <ActorName actor={actor} /> favoritou seu perfil.
+      </>
+    );
+  }
+
+  if (actor && item.message_key === "clique_whatsapp") {
+    return (
+      <>
+        <ActorName actor={actor} /> clicou no seu WhatsApp.
+      </>
+    );
+  }
+
+  if (actor && item.message_key === "novo_post") {
     return (
       <>
         <ActorName actor={actor} /> publicou na comunidade.
@@ -178,13 +199,19 @@ const getActorTitle = (item: NotificationItem, view: NotificationView): ReactNod
     );
   }
 
-  const replyTarget = getStringProp(item.message_props, "parent_reply_id") ? "comentário" : "post";
+  if (actor && item.message_key === "nova_resposta") {
+    const replyTarget = getStringProp(item.message_props, "parent_reply_id")
+      ? "comentário"
+      : "post";
 
-  return (
-    <>
-      <ActorName actor={actor} /> respondeu ao seu {replyTarget}.
-    </>
-  );
+    return (
+      <>
+        <ActorName actor={actor} /> respondeu ao seu {replyTarget}.
+      </>
+    );
+  }
+
+  return view.title;
 };
 
 const startOfToday = () => {
