@@ -51,6 +51,16 @@ const isPendingProfessional = (subscription?: ProfessionalSubscription | null) =
   subscription.plan?.slug === "profissional" &&
   Boolean(subscription.gateway_subscription_id);
 
+const CREDIT_CARD_PAYMENT_TYPE = "credit_card";
+
+type CardPaymentFormData = {
+  token?: string;
+};
+
+type CardPaymentAdditionalData = {
+  paymentTypeId?: string;
+};
+
 const SummaryCard = ({ plan }: { plan: SubscriptionPlan }) => (
   <aside className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)] md:p-6">
     <div className="flex items-start gap-4">
@@ -82,7 +92,9 @@ const SummaryCard = ({ plan }: { plan: SubscriptionPlan }) => (
     <div className="mt-5 grid gap-3 text-sm text-muted">
       <div className="flex gap-2">
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-        <span>Cartão tokenizado pelo Mercado Pago. PAN e CVV não passam pela Lectum.</span>
+        <span>
+          Cartão de crédito tokenizado pelo Mercado Pago. PAN e CVV não passam pela Lectum.
+        </span>
       </div>
       <div className="flex gap-2">
         <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
@@ -143,6 +155,7 @@ export const ProfessionalBillingCheckoutLogic = () => {
         },
       },
       visual: {
+        hideFormTitle: true,
         style: {
           theme: "default",
         },
@@ -152,16 +165,23 @@ export const ProfessionalBillingCheckoutLogic = () => {
   );
 
   const handleSubmit = useCallback(
-    async (formData: { token?: string }) => {
+    async (formData: CardPaymentFormData, additionalData?: CardPaymentAdditionalData) => {
       const token = formData.token;
+      const paymentTypeId = additionalData?.paymentTypeId;
 
       if (!token) {
         toast.error("Não foi possível tokenizar o cartão. Tente novamente.");
         return;
       }
 
+      if (paymentTypeId && paymentTypeId !== CREDIT_CARD_PAYMENT_TYPE) {
+        toast.error("Use um cartão de crédito para assinar o Plano Profissional.");
+        return;
+      }
+
       await billing.checkout.mutateAsync({
         card_token: token,
+        payment_type_id: CREDIT_CARD_PAYMENT_TYPE,
         return_url: `${window.location.origin}${PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress}`,
       });
     },
@@ -194,8 +214,8 @@ export const ProfessionalBillingCheckoutLogic = () => {
               Pagamento seguro do Plano Profissional
             </h1>
             <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-muted">
-              Informe o cartão no ambiente seguro do Mercado Pago. A Lectum recebe somente o token
-              temporário e aguarda a confirmação real para ativar sua assinatura.
+              Informe um cartão de crédito no ambiente seguro do Mercado Pago. A Lectum recebe
+              somente o token temporário e aguarda a confirmação real para ativar sua assinatura.
             </p>
           </div>
         </div>
@@ -264,6 +284,13 @@ export const ProfessionalBillingCheckoutLogic = () => {
                         billing.checkout.isPending && "pointer-events-none opacity-70",
                       )}
                     >
+                      <div className="mb-4 rounded-2xl bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
+                        <h2 className="text-xl font-bold text-foreground">Cartão de crédito</h2>
+                        <p className="mt-2 text-sm leading-6 text-muted">
+                          Aceitamos apenas cartão de crédito para manter sua assinatura mensal
+                          ativa.
+                        </p>
+                      </div>
                       <CardPayment
                         customization={customization}
                         id="lectum-card-payment-brick"

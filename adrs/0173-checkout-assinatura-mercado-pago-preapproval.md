@@ -19,6 +19,7 @@ Em 2026-06-27, as credenciais sandbox do Mercado Pago foram disponibilizadas loc
 - Implementar a porta `PaymentGateway` e concentrar o SDK Node do Mercado Pago apenas no `MercadoPagoAdapter`.
 - Usar `mercadopago` no backend para criar assinatura recorrente via Preapproval, com `card_token_id`, `auto_recurring` mensal, `payer_email` e `external_reference = professional_subscription.id`.
 - Usar `@mercadopago/sdk-react` no frontend para tokenizar cartão com Card Payment Brick; o backend recebe somente `card_token`.
+- Restringir o checkout e a futura troca de cartão a `credit_card`: o Card Payment Brick oculta débito/pré-pago, a interface explicita "Cartão de crédito" e o backend exige `payment_type_id = credit_card` e rejeita valores diferentes.
 - Persistir a assinatura profissional inicialmente como `inativa` e salvar `gateway_subscription_id` sem ativar o plano na resposta do checkout.
 - Validar `x-signature` dos webhooks públicos com HMAC-SHA256 usando o manifesto `id:<data.id>;request-id:<x-request-id>;ts:<ts>;` antes de persistir `payment_event`.
 - Persistir eventos brutos em `payment_event` com unicidade por `gateway` e `external_id` para idempotência.
@@ -31,6 +32,7 @@ Em 2026-06-27, as credenciais sandbox do Mercado Pago foram disponibilizadas loc
 - O fluxo segue o modelo real exigido pelo produto: plano -> checkout Mercado Pago -> confirmação por webhook -> endereço de faturamento.
 - O backend permanece isolado do SDK Mercado Pago fora do adapter.
 - Dados sensíveis de cartão não são persistidos nem trafegam no backend.
+- A assinatura fica dependente de cartão de crédito, reduzindo risco operacional de recorrência com débito/pré-pago, mas exclui esses meios até nova decisão de produto.
 - Ambientes locais e de produção precisam configurar access token, public key, segredo de webhook e URL pública do webhook no painel Mercado Pago.
 - A validação visual via browser local depende de sessão autenticada de psicólogo; sem sessão, as rotas privadas respondem com redirecionamento de autenticação.
 

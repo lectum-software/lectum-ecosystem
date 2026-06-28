@@ -41,7 +41,7 @@ Permitir que psicólogo veja assinatura atual e altere método de pagamento via 
 ## Pré-requisitos e bloqueios
 
 - Provedor **decidido: Mercado Pago** (ADR-0003), via porta `PaymentGateway`/`MercadoPagoAdapter` herdada da TASK-32. Bloqueio restante = **credenciais MP**; sem elas, construir o fluxo mas não transacionar — parar e registrar pendência.
-- Alteração de cartão = **re-tokenização**: tokenizar o novo cartão no client (Card Payment Brick) → atualizar o cartão do preapproval via adapter (`updateSubscriptionCard`). Tokens não são portáveis entre gateways (ver `DATA-MODEL.md` › "Abstração de gateway").
+- Alteração de cartão = **re-tokenização de cartão de crédito**: tokenizar o novo cartão de crédito no client (Card Payment Brick) → atualizar o cartão do preapproval via adapter (`updateSubscriptionCard`). Tokens não são portáveis entre gateways (ver `DATA-MODEL.md` › "Abstração de gateway"). Débito e pré-pago ficam fora do MVP.
 - Persistir **apenas `gateway_token`** e dados de exibição (`brand`/`last4`/`exp_month`/`exp_year`). **Nunca** armazenar PAN/CVV.
 
 Se qualquer bloqueio obrigatório estiver ativo, pare a implementação, registre ADR/pendência e não marque a task como concluída.
@@ -56,10 +56,10 @@ Rotas esperadas:
 Implementação esperada:
 
 - Criar tela Minha Assinatura.
-- Criar fluxo de alteração de cartão via provider/checkout seguro.
+- Criar fluxo de alteração de cartão de crédito via provider/checkout seguro.
 - Criar confirmação de cartão alterado.
 - Exibir plano, status, próxima cobrança e ações permitidas.
-- Não coletar número de cartão diretamente se gateway exige componente hospedado.
+- Não coletar número de cartão diretamente se gateway exige componente hospedado; manter o fluxo restrito a cartão de crédito.
 
 ## Escopo backend
 

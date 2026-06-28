@@ -11,6 +11,13 @@ export default async (data: ICheckoutDTO) => {
     };
   }
 
+  if (data.b.payment_type_id !== "credit_card") {
+    return {
+      status: 400,
+      ...error("billing_checkout_credit_card_only", {}),
+    };
+  }
+
   const repository = new CheckoutRepository();
   const profile = await repository.findProfileByUserId(data.auth.id!);
 

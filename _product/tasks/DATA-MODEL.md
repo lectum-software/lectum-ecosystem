@@ -513,7 +513,7 @@ Trocar de provedor = novo adapter. **Limite real:** card tokens são específico
 
 ### Modo de integração Mercado Pago
 
-- **Cartão (transparente):** tokenização **client-side** via Checkout Bricks (Card Payment Brick) / SDK MP → `card_token`. PAN/CVV nunca tocam o backend (escopo PCI reduzido). O token vira a referência em `payment_method.gateway_token`.
+- **Cartão de crédito (transparente):** tokenização **client-side** via Checkout Bricks (Card Payment Brick) / SDK MP → `card_token`. PAN/CVV nunca tocam o backend (escopo PCI reduzido). O token vira a referência em `payment_method.gateway_token`. Assinaturas Lectum aceitam somente `credit_card`; débito e pré-pago ficam fora do MVP para reduzir risco de recorrência e falha operacional.
 - **Recorrência:** API de Assinaturas (**Preapproval**) — `POST /preapproval` com `card_token_id`, `auto_recurring { frequency: 1, frequency_type: "months", transaction_amount, currency_id: "BRL" }`, `payer_email`, `external_reference` = nosso `professional_subscription.id`, `status: "authorized"`. O `id` do preapproval → `professional_subscription.gateway_subscription_id`. (Confirmar nomes de campos na doc vigente do MP no momento da TASK-32.)
 - **Webhook:** tópicos `subscription_preapproval`, `subscription_authorized_payment`, `payment`. Validar `x-signature` (HMAC-SHA256 sobre o manifest `id:<data.id>;request-id:<x-request-id>;ts:<ts>;` com o secret da aplicação) **antes** de processar; persistir o payload bruto em `payment_event` com idempotência `@@unique([gateway, external_id])`.
 
@@ -579,6 +579,8 @@ Quando uma concessão `admin_grant` substitui a validação automática do CFP, 
 | `gateway_token` | `String` | **token do provedor**; nunca PAN/CVV. Cartão é delegado ao gateway |
 | `brand?`, `last4?`, `exp_month?`, `exp_year?` | display only | |
 | `@@index([user_id])` | | |
+
+O fluxo de alteração de cartão da TASK-33 segue a mesma regra do checkout: re-tokenizar somente cartão de crédito (`credit_card`) no client, enviar `payment_type_id = credit_card` ao backend e rejeitar débito/pré-pago.
 
 `payment_event` (webhook do gateway, TASK-32/33):
 

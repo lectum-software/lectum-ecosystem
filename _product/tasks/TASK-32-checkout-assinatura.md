@@ -41,7 +41,7 @@ Implementar checkout real de assinatura com endereço de faturamento e gateway d
 
 - Provedor **decidido: Mercado Pago** (ADR-0003; ver `DATA-MODEL.md` › "Assinatura e cobrança"). O bloqueio restante são as **credenciais** (access token + public key, sandbox/prod): sem elas, construir o fluxo/adapter mas **não** transacionar ao vivo nem ativar assinatura — parar e registrar pendência.
 - O fluxo deve ser **agnóstico ao gateway**: implementar atrás da porta `PaymentGateway`; só `MercadoPagoAdapter` conhece o MP. Nenhum import do SDK do MP fora do adapter.
-- Cartão tokenizado **client-side** (Checkout Bricks); PAN/CVV nunca tocam o backend. Persistir apenas `payment_method.gateway_token` + display; nunca PAN/CVV.
+- Cartão de crédito tokenizado **client-side** (Checkout Bricks); PAN/CVV nunca tocam o backend. Persistir apenas `payment_method.gateway_token` + display; nunca PAN/CVV. Débito e pré-pago ficam fora do MVP.
 - CEP via controller `cep` da TASK-02; não criar consulta de CEP paralela.
 
 Se qualquer bloqueio obrigatório estiver ativo, pare a implementação, registre ADR/pendência e não marque a task como concluída.
@@ -57,7 +57,7 @@ Implementação esperada:
 
 - Criar tela de checkout e endereço de faturamento.
 - Validar dados fiscais/endereço com Zod (fundação TASK-02; CEP via controller `cep`).
-- Coletar e tokenizar o cartão com o **Card Payment Brick do Mercado Pago** (SDK MP no client); enviar ao backend apenas o `card_token` (nunca PAN/CVV).
+- Coletar e tokenizar o cartão de crédito com o **Card Payment Brick do Mercado Pago** (SDK MP no client); enviar ao backend apenas o `card_token` (nunca PAN/CVV).
 - Exibir erro de pagamento, pendente e sucesso conforme retorno real (status normalizado do `DATA-MODEL.md`).
 - Não armazenar dados sensíveis de cartão no frontend fora do provedor.
 
@@ -192,6 +192,7 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Bloqueio de credenciais resolvido: o usuário salvou localmente access token, public key e segredo de webhook do Mercado Pago nos arquivos `.env` correspondentes; os valores não foram versionados nem expostos nos commits.
 - Builder Quick Copy não esteve disponível como ferramenta executável neste ambiente; a implementação visual usou as imagens locais indicadas em `_product/proto/Finalizar Assinatura - Psicólogo.jpg` e `_product/proto/Endereço de Faturamento - Layout Ajustado.jpg`.
 - Implementado checkout real com Card Payment Brick no frontend, enviando ao backend apenas `card_token`.
+- A experiência de checkout foi ajustada para aceitar somente cartão de crédito: o Brick oculta débito/pré-pago e o backend exige `payment_type_id = credit_card` e rejeita valores diferentes.
 - Implementada porta `PaymentGateway` com `MercadoPagoAdapter`, Preapproval mensal, persistência de assinatura pendente e ativação somente por webhook assinado.
 - Implementados `billing_address` e `payment_event` com migração Prisma `20260627233217_task32_billing_checkout`.
 - Rotas privadas de billing foram montadas sob `/api/private/psychologist/*` com `requireRole("psicologo")`; webhook público permanece autenticado por assinatura HMAC do Mercado Pago.

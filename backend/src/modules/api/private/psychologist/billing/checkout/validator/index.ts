@@ -1,4 +1,4 @@
-﻿import { type IValidatorRequest, validator } from "@/utils/validator";
+import { type IValidatorRequest, validator } from "@/utils/validator";
 
 export const requestSchema: IValidatorRequest = {
   body: [
@@ -8,6 +8,12 @@ export const requestSchema: IValidatorRequest = {
       method: "string",
       min: 8,
       max: 2048,
+    },
+    {
+      key: "payment_type_id",
+      coerse: "string",
+      method: "enumeric",
+      values: ["credit_card", "debit_card", "prepaid_card"],
     },
     {
       key: "return_url",
