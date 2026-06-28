@@ -256,6 +256,35 @@ export interface professional_subscription {
   plan?: subscription_plan | null;
 }
 
+export interface billing_address {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  user_id?: string | null;
+  zip?: string | null;
+  street?: string | null;
+  number?: string | null;
+  complement?: string | null;
+  district?: string | null;
+  city?: string | null;
+  state?: string | null;
+  user?: user | null;
+}
+
+export interface payment_event {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  gateway?: string | null;
+  external_id?: string | null;
+  type?: string | null;
+  payload?: unknown;
+}
+
 export interface contact_request {
   id?: string | null;
   deleted?: boolean | null;
@@ -499,6 +528,7 @@ export interface user {
   post_notification_mutes?: post_notification_mute[] | null;
   notification_subscriptions?: notification_subscription[] | null;
   visitor_locations?: visitor_location[] | null;
+  billing_addresses?: billing_address[] | null;
   notifications?: notification[] | null;
   notification_preference?: notification_preference | null;
 }

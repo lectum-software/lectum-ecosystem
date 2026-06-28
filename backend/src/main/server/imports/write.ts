@@ -24,6 +24,8 @@ import apiPrivatePatientProfile from "@/modules/api/private/patient/profile";
 import apiPrivatePatientReviews from "@/modules/api/private/patient/reviews";
 import apiPrivatePosts from "@/modules/api/private/posts";
 import apiPrivatePsychologistAnalytics from "@/modules/api/private/psychologist/analytics";
+import apiPrivatePsychologistBillingAddress from "@/modules/api/private/psychologist/billing/address";
+import apiPrivatePsychologistBillingCheckout from "@/modules/api/private/psychologist/billing/checkout";
 import apiPrivatePsychologistBillingCurrent from "@/modules/api/private/psychologist/billing/current";
 import apiPrivatePsychologistBillingPlans from "@/modules/api/private/psychologist/billing/plans";
 import apiPrivatePsychologistBillingSelectFree from "@/modules/api/private/psychologist/billing/select-free";
@@ -35,6 +37,7 @@ import apiPublicAnalyticsLocationCapture from "@/modules/api/public/analytics/lo
 import apiPublicAuthLogin from "@/modules/api/public/auth/login";
 import apiPublicAuthRecovery from "@/modules/api/public/auth/recovery";
 import apiPublicAuthReset from "@/modules/api/public/auth/reset";
+import apiPublicBillingWebhook from "@/modules/api/public/billing/webhook";
 import apiPublicGoogleCallback from "@/modules/api/public/google/callback";
 import apiPublicGoogleLink from "@/modules/api/public/google/link";
 import apiPublicGoogleLogin from "@/modules/api/public/google/login";
@@ -101,6 +104,7 @@ mountRoute("/api/public/analytics/location-capture", apiPublicAnalyticsLocationC
 mountRoute("/api/public/auth/login", apiPublicAuthLogin);
 mountRoute("/api/public/auth/recovery", apiPublicAuthRecovery);
 mountRoute("/api/public/auth/reset", apiPublicAuthReset);
+mountRoute("/api/public/billing/webhook", apiPublicBillingWebhook);
 mountRoute("/api/public/google/callback", apiPublicGoogleCallback);
 mountRoute("/api/public/google/link", apiPublicGoogleLink);
 mountRoute("/api/public/google/login", apiPublicGoogleLogin);
@@ -127,6 +131,16 @@ mountRoleGuardedRoute(
   "/api/private/psychologist/billing/current",
   "psicologo",
   apiPrivatePsychologistBillingCurrent,
+);
+mountRoleGuardedRoute(
+  "/api/private/psychologist/billing/checkout",
+  "psicologo",
+  apiPrivatePsychologistBillingCheckout,
+);
+mountRoleGuardedRoute(
+  "/api/private/psychologist/billing/address",
+  "psicologo",
+  apiPrivatePsychologistBillingAddress,
 );
 mountRoleGuardedRoute(
   "/api/private/psychologist/billing/select-free",

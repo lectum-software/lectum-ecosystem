@@ -61,3 +61,44 @@ export type BillingCurrentResponse = {
 export type BillingSelectFreeResponse = {
   current: ProfessionalSubscription;
 };
+
+export type BillingCheckoutPayload = {
+  card_token: string;
+  return_url?: string | null;
+};
+
+export type BillingCheckoutResponse = {
+  current: ProfessionalSubscription;
+  gateway_status?: string | null;
+  pending_confirmation: boolean;
+  init_point?: string | null;
+};
+
+export type BillingAddress = {
+  id: string;
+  user_id: string;
+  zip: string;
+  street: string;
+  number: string;
+  complement?: string | null;
+  district: string;
+  city: string;
+  state: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type BillingAddressPayload = {
+  zip: string;
+  street: string;
+  number: string;
+  complement?: string | null;
+  district: string;
+  city: string;
+  state: string;
+};
+
+export type BillingAddressResponse = {
+  address: BillingAddress;
+  next_path: string;
+};

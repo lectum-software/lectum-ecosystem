@@ -62,6 +62,7 @@ model user {
   post_reports                          post_report[]                 @relation("post_report_reporter")
   notification_subscriptions            notification_subscription[]   @relation("notification_subscription_user")
   visitor_locations                     visitor_location[]            @relation("visitor_location_user")
+  billing_addresses                     billing_address[]             @relation("billing_address_user")
   logs                                  log__user[]                   @relation("log__user_user")
   notifications                         notification[]                @relation("notifications")
   notification_preference               notification_preference?      @relation("notification_preference_user")
@@ -433,6 +434,41 @@ model professional_subscription {
   @@index([source, status])
   @@index([status, current_period_end])
   @@map("professional_subscriptions")
+}
+
+model billing_address {
+  id         String    @id @default(cuid())
+  deleted    Boolean   @default(false)
+  deletedAt  DateTime? @map("deleted_at")
+  updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  user_id    String
+  zip        String
+  street     String
+  number     String
+  complement String?
+  district   String
+  city       String
+  state      String
+  user       user      @relation("billing_address_user", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("billing_addresses")
+}
+
+model payment_event {
+  id          String    @id @default(cuid())
+  deleted     Boolean   @default(false)
+  deletedAt   DateTime? @map("deleted_at")
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  gateway     String
+  external_id String
+  type        String
+  payload     Json
+
+  @@unique([gateway, external_id])
+  @@map("payment_events")
 }
 
 model contact_request {

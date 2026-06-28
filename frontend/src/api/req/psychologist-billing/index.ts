@@ -1,5 +1,9 @@
 import { callEndpoint } from "@/api/generator";
 import type {
+  BillingAddressPayload,
+  BillingAddressResponse,
+  BillingCheckoutPayload,
+  BillingCheckoutResponse,
   BillingCurrentResponse,
   BillingPlansResponse,
   BillingSelectFreeResponse,
@@ -29,4 +33,24 @@ export const selectPsychologistBillingFreePlan = async () => {
   });
 
   return handleReq<BillingSelectFreeResponse>(handle);
+};
+
+export const createPsychologistBillingCheckout = async (body: BillingCheckoutPayload) => {
+  const handle = callEndpoint({
+    route: "/api/private/psychologist/billing/checkout",
+    method: "POST",
+    body,
+  });
+
+  return handleReq<BillingCheckoutResponse>(handle);
+};
+
+export const savePsychologistBillingAddress = async (body: BillingAddressPayload) => {
+  const handle = callEndpoint({
+    route: "/api/private/psychologist/billing/address",
+    method: "PUT",
+    body,
+  });
+
+  return handleReq<BillingAddressResponse>(handle);
 };

@@ -1,4 +1,4 @@
-# TASK-32: Checkout de assinatura
+﻿# TASK-32: Checkout de assinatura
 
 ## Metadata
 
@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | L |
 | Fase | Assinatura |
-| Status | Blocked |
+| Status | Completed |
 | Dependências | TASK-02, TASK-03, TASK-31 |
 | ADR alvo | ADR de checkout e gateway de pagamento |
 
@@ -137,19 +137,19 @@ Regras anti-recriação específicas:
 
 ## Critérios de aceite
 
-- [ ] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
-- [ ] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
-- [ ] Backend implementado nos endpoints/modelos esperados quando aplicável.
-- [ ] Todos os estados obrigatórios existem e usam textos em PT-BR.
-- [ ] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
-- [ ] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
-- [ ] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
-- [ ] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
-- [ ] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
-- [ ] Rotas sob `/api/private/psychologist/*` exigem `requireRole("psicologo")` (fail-closed), conforme ADR-0002; o webhook `/api/public/billing/webhook` permanece público.
-- [ ] ADR criado ou atualizado em `adrs/`.
-- [ ] Checks/builds relevantes foram executados sem erros.
-- [ ] Commit criado com mensagem convencional.
+- [x] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
+- [x] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
+- [x] Backend implementado nos endpoints/modelos esperados quando aplicável.
+- [x] Todos os estados obrigatórios existem e usam textos em PT-BR.
+- [x] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
+- [x] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
+- [x] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
+- [x] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
+- [x] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
+- [x] Rotas sob `/api/private/psychologist/*` exigem `requireRole("psicologo")` (fail-closed), conforme ADR-0002; o webhook `/api/public/billing/webhook` permanece público.
+- [x] ADR criado ou atualizado em `adrs/`.
+- [x] Checks/builds relevantes foram executados sem erros.
+- [x] Commit criado com mensagem convencional.
 
 ## Validação mínima
 
@@ -186,3 +186,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - As referências visuais da task foram identificadas em `_product/tasks/PROTO-INVENTORY.md` e permanecem disponíveis em `_product/proto/Finalizar Assinatura - Psicólogo.jpg` e `_product/proto/Endereço de Faturamento - Layout Ajustado.jpg`, mas a implementação visual não avançou por depender do gateway real.
 - Critérios de aceite permanecem desmarcados; não houve simulação de pagamento, ativação de assinatura, seed, mock ou endpoint fake.
 - ADR registrado: `adrs/0172-bloqueio-checkout-mercado-pago-credenciais.md`.
+
+## Conclusão em 2026-06-27
+
+- Bloqueio de credenciais resolvido: o usuário salvou localmente access token, public key e segredo de webhook do Mercado Pago nos arquivos `.env` correspondentes; os valores não foram versionados nem expostos nos commits.
+- Builder Quick Copy não esteve disponível como ferramenta executável neste ambiente; a implementação visual usou as imagens locais indicadas em `_product/proto/Finalizar Assinatura - Psicólogo.jpg` e `_product/proto/Endereço de Faturamento - Layout Ajustado.jpg`.
+- Implementado checkout real com Card Payment Brick no frontend, enviando ao backend apenas `card_token`.
+- Implementada porta `PaymentGateway` com `MercadoPagoAdapter`, Preapproval mensal, persistência de assinatura pendente e ativação somente por webhook assinado.
+- Implementados `billing_address` e `payment_event` com migração Prisma `20260627233217_task32_billing_checkout`.
+- Rotas privadas de billing foram montadas sob `/api/private/psychologist/*` com `requireRole("psicologo")`; webhook público permanece autenticado por assinatura HMAC do Mercado Pago.
+- ADR de implementação criado em `adrs/0173-checkout-assinatura-mercado-pago-preapproval.md`.
+- Validações executadas sem erros: `pnpm --dir backend db:migrate -- --name task32_billing_checkout`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`.
+- Smoke local HTTP nas rotas principais da UI retornou `307` sem sessão autenticada, compatível com proteção/redirecionamento das rotas privadas.
