@@ -5,8 +5,11 @@ import type {
   BillingCheckoutPayload,
   BillingCheckoutResponse,
   BillingCurrentResponse,
+  BillingPaymentMethodPayload,
+  BillingPaymentMethodResponse,
   BillingPlansResponse,
   BillingSelectFreeResponse,
+  BillingSubscriptionResponse,
 } from "@/api/generator/types/billing";
 import { handleReq } from "@/api/handle";
 
@@ -24,6 +27,14 @@ export const getPsychologistBillingCurrent = async () => {
   });
 
   return handleReq<BillingCurrentResponse>(handle);
+};
+
+export const getPsychologistBillingSubscription = async () => {
+  const handle = callEndpoint({
+    route: "/api/private/psychologist/billing/subscription",
+  });
+
+  return handleReq<BillingSubscriptionResponse>(handle);
 };
 
 export const selectPsychologistBillingFreePlan = async () => {
@@ -53,4 +64,14 @@ export const savePsychologistBillingAddress = async (body: BillingAddressPayload
   });
 
   return handleReq<BillingAddressResponse>(handle);
+};
+
+export const updatePsychologistBillingPaymentMethod = async (body: BillingPaymentMethodPayload) => {
+  const handle = callEndpoint({
+    route: "/api/private/psychologist/billing/payment-method/session",
+    method: "POST",
+    body,
+  });
+
+  return handleReq<BillingPaymentMethodResponse>(handle);
 };

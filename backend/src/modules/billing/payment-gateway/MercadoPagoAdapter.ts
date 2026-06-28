@@ -5,6 +5,7 @@ import type {
   GatewaySubscription,
   GatewaySubscriptionInput,
   GatewaySubscriptionResult,
+  GatewayUpdateSubscriptionCardInput,
   GatewayWebhookEvent,
   PaymentGateway,
   VerifyWebhookSignatureInput,
@@ -66,6 +67,12 @@ const normalizeStatus = (status?: string | null): BillingSubscriptionStatus => {
 const isObject = (value: unknown): value is RecordBody =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
+const toStringOrNull = (value: unknown) => {
+  if (typeof value === "string" && value) return value;
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  return null;
+};
+
 export class MercadoPagoAdapter implements PaymentGateway {
   private readonly preApproval: PreApproval;
   private readonly webhookSecret: string | null;
@@ -123,6 +130,27 @@ export class MercadoPagoAdapter implements PaymentGateway {
       gateway_status: response.status ?? null,
       init_point: response.init_point ?? null,
       next_payment_date: response.next_payment_date ?? null,
+      raw: response,
+    };
+  }
+
+  async updateSubscriptionCard({
+    gatewaySubscriptionId,
+    cardToken,
+  }: GatewayUpdateSubscriptionCardInput): Promise<GatewaySubscriptionResult> {
+    const response = await this.preApproval.update({
+      id: gatewaySubscriptionId,
+      body: {
+        card_token_id: cardToken,
+      },
+    });
+
+    return {
+      gateway_subscription_id: response.id || gatewaySubscriptionId,
+      status: normalizeStatus(response.status),
+      gateway_status: response.status ?? null,
+      init_point: response.init_point ?? null,
+      next_payment_date: toStringOrNull(response.next_payment_date),
       raw: response,
     };
   }

@@ -58,6 +58,25 @@ export type BillingCurrentResponse = {
   current: ProfessionalSubscription | null;
 };
 
+export type BillingPaymentMethod = {
+  id: string;
+  user_id: string;
+  gateway: string;
+  gateway_token?: string | null;
+  brand?: string | null;
+  last4?: string | null;
+  exp_month?: number | null;
+  exp_year?: number | null;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type BillingSubscriptionResponse = {
+  current: ProfessionalSubscription | null;
+  subscription: ProfessionalSubscription | null;
+  payment_method: BillingPaymentMethod | null;
+};
+
 export type BillingSelectFreeResponse = {
   current: ProfessionalSubscription;
 };
@@ -73,6 +92,23 @@ export type BillingCheckoutResponse = {
   gateway_status?: string | null;
   pending_confirmation: boolean;
   init_point?: string | null;
+};
+
+export type BillingPaymentMethodPayload = {
+  card_token: string;
+  payment_type_id: "credit_card" | "debit_card" | "prepaid_card";
+  brand?: string | null;
+  last4?: string | null;
+  exp_month?: number | null;
+  exp_year?: number | null;
+};
+
+export type BillingPaymentMethodResponse = {
+  current: ProfessionalSubscription;
+  subscription: ProfessionalSubscription;
+  payment_method: BillingPaymentMethod;
+  gateway_status?: string | null;
+  pending_confirmation: boolean;
 };
 
 export type BillingAddress = {

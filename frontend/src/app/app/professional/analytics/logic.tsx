@@ -416,7 +416,7 @@ const PremiumAnalyticsBanner = () => (
         </p>
       </div>
       <Button asChild className="h-12 w-full rounded-full px-6 text-base md:w-auto">
-        <Link href="/app/professional/billing/subscription">
+        <Link href="/app/professional/billing">
           Fazer upgrade
           <ArrowRight className="h-4 w-4" aria-hidden />
         </Link>

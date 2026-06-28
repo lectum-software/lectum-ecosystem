@@ -16,6 +16,7 @@ export type {
   GatewaySubscription,
   GatewaySubscriptionInput,
   GatewaySubscriptionResult,
+  GatewayUpdateSubscriptionCardInput,
   GatewayWebhookEvent,
   PaymentGateway,
   VerifyWebhookSignatureInput,

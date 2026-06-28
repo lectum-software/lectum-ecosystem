@@ -59,6 +59,7 @@
   psychologistBilling: {
     plans: () => ["psychologist_billing_plans"],
     current: () => ["psychologist_billing_current"],
+    subscription: () => ["psychologist_billing_subscription"],
   },
   psychologistCfp: {
     root: () => ["psychologist_cfp"],

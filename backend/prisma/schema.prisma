@@ -63,6 +63,7 @@ model user {
   notification_subscriptions            notification_subscription[]   @relation("notification_subscription_user")
   visitor_locations                     visitor_location[]            @relation("visitor_location_user")
   billing_addresses                     billing_address[]             @relation("billing_address_user")
+  payment_methods                       payment_method[]              @relation("payment_method_user")
   logs                                  log__user[]                   @relation("log__user_user")
   notifications                         notification[]                @relation("notifications")
   notification_preference               notification_preference?      @relation("notification_preference_user")
@@ -469,6 +470,26 @@ model payment_event {
 
   @@unique([gateway, external_id])
   @@map("payment_events")
+}
+
+model payment_method {
+  id            String    @id @default(cuid())
+  deleted       Boolean   @default(false)
+  deletedAt     DateTime? @map("deleted_at")
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  user_id       String
+  gateway       String
+  gateway_token String
+  brand         String?
+  last4         String?
+  exp_month     Int?
+  exp_year      Int?
+  user          user      @relation("payment_method_user", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([user_id, gateway])
+  @@map("payment_methods")
 }
 
 model contact_request {

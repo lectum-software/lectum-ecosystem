@@ -160,7 +160,7 @@ const PremiumReviewsState = () => (
 
     <div className="mt-7 flex justify-center">
       <Button asChild className="h-12 w-full rounded-full text-base sm:w-auto sm:px-8">
-        <Link href="/app/professional/billing/subscription">
+        <Link href="/app/professional/billing">
           Fazer upgrade
           <ArrowRight className="h-4 w-4" aria-hidden />
         </Link>

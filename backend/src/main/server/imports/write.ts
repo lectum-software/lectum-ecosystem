@@ -27,8 +27,10 @@ import apiPrivatePsychologistAnalytics from "@/modules/api/private/psychologist/
 import apiPrivatePsychologistBillingAddress from "@/modules/api/private/psychologist/billing/address";
 import apiPrivatePsychologistBillingCheckout from "@/modules/api/private/psychologist/billing/checkout";
 import apiPrivatePsychologistBillingCurrent from "@/modules/api/private/psychologist/billing/current";
+import apiPrivatePsychologistBillingPaymentMethodSession from "@/modules/api/private/psychologist/billing/payment-method/session";
 import apiPrivatePsychologistBillingPlans from "@/modules/api/private/psychologist/billing/plans";
 import apiPrivatePsychologistBillingSelectFree from "@/modules/api/private/psychologist/billing/select-free";
+import apiPrivatePsychologistBillingSubscription from "@/modules/api/private/psychologist/billing/subscription";
 import apiPrivatePsychologistCfp from "@/modules/api/private/psychologist/cfp";
 import apiPrivatePsychologistFreeProfile from "@/modules/api/private/psychologist/free-profile";
 import apiPrivatePsychologistReviews from "@/modules/api/private/psychologist/reviews";
@@ -133,9 +135,19 @@ mountRoleGuardedRoute(
   apiPrivatePsychologistBillingCurrent,
 );
 mountRoleGuardedRoute(
+  "/api/private/psychologist/billing/subscription",
+  "psicologo",
+  apiPrivatePsychologistBillingSubscription,
+);
+mountRoleGuardedRoute(
   "/api/private/psychologist/billing/checkout",
   "psicologo",
   apiPrivatePsychologistBillingCheckout,
+);
+mountRoleGuardedRoute(
+  "/api/private/psychologist/billing/payment-method/session",
+  "psicologo",
+  apiPrivatePsychologistBillingPaymentMethodSession,
 );
 mountRoleGuardedRoute(
   "/api/private/psychologist/billing/address",

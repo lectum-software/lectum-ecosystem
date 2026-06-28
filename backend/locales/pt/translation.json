@@ -103,7 +103,10 @@
     "billing_gateway_config_error": "Checkout indispon?vel por configura??o do gateway de pagamento.",
     "billing_gateway_checkout_failed": "N?o foi poss?vel iniciar o checkout agora. Tente novamente em instantes.",
     "billing_address_subscription_required": "Confirme sua assinatura profissional antes de salvar o endere?o de faturamento.",
-    "billing_webhook_invalid_signature": "Assinatura do webhook inv?lida."
+    "billing_webhook_invalid_signature": "Assinatura do webhook inv?lida.",
+    "billing_payment_method_credit_card_only": "Use um cartao de credito para atualizar o metodo de pagamento.",
+    "billing_payment_method_subscription_required": "E preciso ter uma assinatura profissional do Mercado Pago para alterar o cartao.",
+    "billing_gateway_payment_method_failed": "Nao foi possivel atualizar o cartao agora. Tente novamente em instantes."
   },
   "message": {
     "store": "dado criado",
@@ -176,7 +179,8 @@
     "post_reply_updated": "Comentário atualizado com sucesso.",
     "billing_checkout_started": "Pagamento enviado para confirma??o. A assinatura ser? ativada ap?s retorno do Mercado Pago.",
     "billing_address_saved": "Endere?o de faturamento salvo com sucesso.",
-    "billing_webhook_processed": "Webhook de cobran?a processado com sucesso."
+    "billing_webhook_processed": "Webhook de cobran?a processado com sucesso.",
+    "billing_payment_method_updated": "Cartao atualizado com sucesso."
   },
   "gender": {
     "o": "o"
@@ -208,7 +212,8 @@
     "post_report": "denúncia de publicação",
     "visitor_location": "localização de visitante",
     "billing_address": "endere?o de faturamento",
-    "payment_event": "evento de pagamento"
+    "payment_event": "evento de pagamento",
+    "payment_method": "metodo de pagamento"
   },
   "property": {
     "email": "email",

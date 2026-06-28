@@ -285,6 +285,22 @@ export interface payment_event {
   payload?: unknown;
 }
 
+export interface payment_method {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  user_id?: string | null;
+  gateway?: string | null;
+  gateway_token?: string | null;
+  brand?: string | null;
+  last4?: string | null;
+  exp_month?: number | null;
+  exp_year?: number | null;
+  user?: user | null;
+}
+
 export interface contact_request {
   id?: string | null;
   deleted?: boolean | null;
@@ -529,6 +545,7 @@ export interface user {
   notification_subscriptions?: notification_subscription[] | null;
   visitor_locations?: visitor_location[] | null;
   billing_addresses?: billing_address[] | null;
+  payment_methods?: payment_method[] | null;
   notifications?: notification[] | null;
   notification_preference?: notification_preference | null;
 }

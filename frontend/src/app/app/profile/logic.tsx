@@ -116,7 +116,7 @@ const Section = ({ rows, title }: { rows: ProfileRow[]; title: string }) => {
 const ProfessionalUpgradeCard = () => (
   <Link
     className="group relative isolate overflow-hidden rounded-[var(--lectum-card-radius)] border border-primary/15 bg-primary-soft/85 p-4 text-primary shadow-[var(--lectum-shadow-soft)] transition hover:-translate-y-0.5 hover:border-primary/25 hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-    href="/app/professional/billing/subscription"
+    href="/app/professional/billing"
   >
     <span
       aria-hidden="true"
@@ -206,7 +206,7 @@ export const ProfileLogic = () => {
           { href: "/app/professional/analytics", icon: BarChart3, label: "Meus Analytics" },
           { href: "/app/professional/reviews", icon: Star, label: "Minhas Avaliações" },
           {
-            href: "/app/professional/billing/subscription",
+            href: "/app/professional/billing",
             icon: BadgeCheck,
             label: "Minha Assinatura",
           },
