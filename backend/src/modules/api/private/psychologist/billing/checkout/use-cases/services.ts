@@ -40,6 +40,18 @@ const sanitizeGatewayError = (err: unknown): GatewayErrorLog => {
   };
 };
 
+const isMercadoPagoSandbox = () => process.env.MERCADO_PAGO_ENV?.trim().toLowerCase() === "sandbox";
+
+const resolvePayerEmail = (fallbackEmail: string) => {
+  if (!isMercadoPagoSandbox()) {
+    return fallbackEmail;
+  }
+
+  const testPayerEmail = process.env.MERCADO_PAGO_TEST_PAYER_EMAIL?.trim();
+
+  return testPayerEmail || fallbackEmail;
+};
+
 export default async (data: ICheckoutDTO) => {
   if (data.auth.role !== "psicologo") {
     return {
@@ -84,13 +96,14 @@ export default async (data: ICheckoutDTO) => {
   }
 
   const email = data.auth.email;
-
   if (!email) {
     return {
       status: 400,
       ...error("billing_checkout_email_required", {}),
     };
   }
+
+  const payerEmail = resolvePayerEmail(email);
 
   const pendingSubscription = await repository.createPendingSubscription(
     profile.id!,
@@ -104,7 +117,7 @@ export default async (data: ICheckoutDTO) => {
       planName: professionalPlan.name || "Plano Profissional Lectum",
       amountCents: professionalPlan.price_cents,
       cardToken: data.b.card_token,
-      payerEmail: email,
+      payerEmail,
       returnUrl: data.b.return_url,
     });
 

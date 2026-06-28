@@ -60,3 +60,13 @@ Decisao complementar:
 - Enviar `X-scope: stage` apenas quando `MERCADO_PAGO_ENV=sandbox`.
 - Reutilizar o mesmo escopo nas operacoes de criacao, consulta e troca de cartao da assinatura.
 - Registrar logs sanitizados de falhas do gateway, sem expor token de cartao, access token ou segredo de webhook.
+
+## Atualizacao 2026-06-28 - payer sandbox
+
+Durante a simulacao local, o Mercado Pago retornou `PA_UNAUTHORIZED_RESULT_FROM_POLICIES` quando o `payer_email` enviado era o e-mail real do usuario autenticado na Lectum. A conta compradora de teste do Mercado Pago possui um e-mail sandbox proprio, obtido ao acessar a conta de teste com as credenciais geradas no painel.
+
+Decisao complementar:
+
+- Quando `MERCADO_PAGO_ENV=sandbox`, permitir sobrescrever o `payer_email` enviado ao Preapproval por meio de `MERCADO_PAGO_TEST_PAYER_EMAIL`.
+- Em ambientes fora do sandbox, manter o e-mail real do usuario autenticado na Lectum como pagador da assinatura.
+- Manter a variavel opcional apenas no backend, sem versionar o valor real no repositorio.
