@@ -70,3 +70,13 @@ Decisao complementar:
 - Quando `MERCADO_PAGO_ENV=sandbox`, permitir sobrescrever o `payer_email` enviado ao Preapproval por meio de `MERCADO_PAGO_TEST_PAYER_EMAIL`.
 - Em ambientes fora do sandbox, manter o e-mail real do usuario autenticado na Lectum como pagador da assinatura.
 - Manter a variavel opcional apenas no backend, sem versionar o valor real no repositorio.
+
+## Atualizacao 2026-06-28 - payer sandbox no Brick
+
+Ao manter o e-mail real do usuario autenticado no `payer.email` do Card Payment Brick, o frontend tokenizava o cartao em um contexto de pagador diferente daquele enviado pelo backend ao Preapproval sandbox. Para reduzir bloqueios de politica do Mercado Pago durante testes locais, o mesmo e-mail comprador de teste passa a ser usado tambem no Brick quando `NEXT_PUBLIC_MERCADO_PAGO_ENV=sandbox`.
+
+Decisao complementar:
+
+- Expor apenas em ambiente local/sandbox a variavel `NEXT_PUBLIC_MERCADO_PAGO_TEST_PAYER_EMAIL`, sem versionar o valor real.
+- Em producao, manter o e-mail real do usuario autenticado na Lectum como pagador informado ao Brick.
+- Documentar a variavel no `frontend/.env.example` para evitar divergencia entre tokenizacao frontend e criacao de assinatura backend nos testes.

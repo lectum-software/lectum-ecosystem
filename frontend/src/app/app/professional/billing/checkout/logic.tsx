@@ -30,6 +30,8 @@ import { PrivateTemplate } from "@/templates/private";
 import { PSYCHOLOGIST_ONBOARDING_PATHS } from "@/utils/psychologist-onboarding";
 
 const publicKey = process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY;
+const mercadoPagoEnv = process.env.NEXT_PUBLIC_MERCADO_PAGO_ENV?.trim().toLowerCase();
+const sandboxPayerEmail = process.env.NEXT_PUBLIC_MERCADO_PAGO_TEST_PAYER_EMAIL?.trim();
 
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -52,6 +54,14 @@ const isPendingProfessional = (subscription?: ProfessionalSubscription | null) =
   Boolean(subscription.gateway_subscription_id);
 
 const CREDIT_CARD_PAYMENT_TYPE = "credit_card";
+
+const resolveBrickPayerEmail = (fallbackEmail: string) => {
+  if (mercadoPagoEnv === "sandbox" && sandboxPayerEmail) {
+    return sandboxPayerEmail;
+  }
+
+  return fallbackEmail;
+};
 
 type CardPaymentFormData = {
   token?: string;
@@ -107,6 +117,7 @@ const SummaryCard = ({ plan }: { plan: SubscriptionPlan }) => (
 export const ProfessionalBillingCheckoutLogic = () => {
   const router = useRouter();
   const userEmail = useAppSelector((state) => state.user?.email || "");
+  const payerEmail = resolveBrickPayerEmail(userEmail);
   const [checkoutResult, setCheckoutResult] = useState<BillingCheckoutResponse | null>(null);
   const billing = usePsychologistBilling({
     callbacks: {
@@ -140,9 +151,9 @@ export const ProfessionalBillingCheckoutLogic = () => {
   const initialization = useMemo(
     () => ({
       amount,
-      payer: userEmail ? { email: userEmail } : undefined,
+      payer: payerEmail ? { email: payerEmail } : undefined,
     }),
-    [amount, userEmail],
+    [amount, payerEmail],
   );
 
   const customization = useMemo(
