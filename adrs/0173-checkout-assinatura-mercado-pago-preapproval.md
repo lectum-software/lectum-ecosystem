@@ -80,3 +80,13 @@ Decisao complementar:
 - Expor apenas em ambiente local/sandbox a variavel `NEXT_PUBLIC_MERCADO_PAGO_TEST_PAYER_EMAIL`, sem versionar o valor real.
 - Em producao, manter o e-mail real do usuario autenticado na Lectum como pagador informado ao Brick.
 - Documentar a variavel no `frontend/.env.example` para evitar divergencia entre tokenizacao frontend e criacao de assinatura backend nos testes.
+
+## Atualizacao 2026-06-28 - headers sandbox do SDK
+
+Ao investigar o erro `PA_UNAUTHORIZED_RESULT_FROM_POLICIES`, foi identificado que o SDK Node do Mercado Pago mescla `requestOptions` de forma rasa nas chamadas de `PreApproval`. Assim, ao adicionar somente o header `X-scope: stage`, o objeto `headers` original do SDK era substituido e o header `Authorization` deixava de ser enviado.
+
+Decisao complementar:
+
+- No sandbox, enviar `X-scope: stage` junto com `Authorization: Bearer <access token>` dentro dos `requestOptions` do adapter.
+- Manter esse ajuste restrito ao `MercadoPagoAdapter`, sem expor access token em logs, frontend ou outros modulos.
+- Em producao, continuar usando o fluxo padrao do SDK sem sobrescrever headers.

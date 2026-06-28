@@ -103,7 +103,11 @@ export class MercadoPagoAdapter implements PaymentGateway {
     this.requestOptions =
       gatewayEnv === "sandbox"
         ? {
+            // O SDK do Mercado Pago mescla `requestOptions` de forma rasa.
+            // Ao enviar headers customizados, precisamos preservar o Authorization
+            // que o próprio SDK adicionaria para evitar 403 por PolicyAgent.
             headers: {
+              Authorization: `Bearer ${accessToken}`,
               [MERCADO_PAGO_SANDBOX_SCOPE_HEADER]: "stage",
             },
           }
