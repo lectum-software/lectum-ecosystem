@@ -50,3 +50,13 @@ Em 2026-06-27, as credenciais sandbox do Mercado Pago foram disponibilizadas loc
 
 - Configurar a URL pública real do webhook no Mercado Pago para cada ambiente.
 - Antes de produção, rotacionar segredos que tenham sido expostos em telas, mensagens ou histórico local.
+
+## Atualizacao 2026-06-28
+
+Durante o teste local com credenciais sandbox, a tokenizacao do cartao foi concluida no frontend, mas a criacao do `preapproval` falhou no backend. A documentacao oficial de assinaturas autorizadas do Mercado Pago exige o cabecalho `X-scope: stage` nos testes de assinatura.
+
+Decisao complementar:
+
+- Enviar `X-scope: stage` apenas quando `MERCADO_PAGO_ENV=sandbox`.
+- Reutilizar o mesmo escopo nas operacoes de criacao, consulta e troca de cartao da assinatura.
+- Registrar logs sanitizados de falhas do gateway, sem expor token de cartao, access token ou segredo de webhook.

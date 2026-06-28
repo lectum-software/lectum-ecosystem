@@ -3,6 +3,43 @@ import { getPaymentGateway } from "@/modules/billing/payment-gateway";
 import type { ICheckoutDTO } from "../DTOs/ICheckoutDTO";
 import { CheckoutRepository } from "../repositories/CheckoutRepository";
 
+type GatewayErrorLog = {
+  name?: string;
+  message?: string;
+  status?: number;
+  code?: string;
+  blocked_by?: string;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const toSafeString = (value: unknown) => (typeof value === "string" ? value : undefined);
+
+const toSafeNumber = (value: unknown) => (typeof value === "number" ? value : undefined);
+
+const sanitizeGatewayError = (err: unknown): GatewayErrorLog => {
+  if (err instanceof Error) {
+    return {
+      name: err.name,
+      message: err.message,
+    };
+  }
+
+  if (!isRecord(err)) {
+    return {
+      message: "Unknown gateway error",
+    };
+  }
+
+  return {
+    message: toSafeString(err.message),
+    status: toSafeNumber(err.status),
+    code: toSafeString(err.code),
+    blocked_by: toSafeString(err.blocked_by),
+  };
+};
+
 export default async (data: ICheckoutDTO) => {
   if (data.auth.role !== "psicologo") {
     return {
@@ -88,6 +125,8 @@ export default async (data: ICheckoutDTO) => {
     };
   } catch (err) {
     await repository.cancelSubscription(pendingSubscription.id!);
+
+    console.error("[BILLING] Mercado Pago checkout failed", sanitizeGatewayError(err));
 
     const message = err instanceof Error ? err.message : "";
     const configError = message.includes("MERCADO_PAGO_ACCESS_TOKEN_NOT_CONFIGURED");
