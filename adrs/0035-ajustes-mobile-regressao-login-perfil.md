@@ -49,3 +49,11 @@ As regras do produto continuam proibindo mocks e métricas simuladas. Também n�
 A decisão de usar `/app/community` como home para usuários já onboardados foi supersedida por novo pedido de produto. O fallback autenticado padrão passa a ser `/app/psychologists`, enquanto a comunidade permanece acessível apenas por navegação manual ou destino explícito (`redirectTo`/`callbackUrl`).
 
 Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, HTTP local e Chrome/CDP em `/auth/login` com sessão ativa confirmando redirecionamento para `/app/psychologists`.
+
+## Atualização em 2026-06-29: prioridade visual do Google no login
+
+O Google passa a ser a primeira ação visível também no login, alinhando retorno e cadastro à estratégia de menor atrito. Diferente do cadastro, o formulário de e-mail/senha permanece aberto no login por ser um fluxo recorrente e esperado por usuários existentes.
+
+A tela de login recebeu compactação localizada de logo, espaçamento do card e divisor para eliminar overflow vertical desnecessário em desktop sem alterar a arquitetura de formulário da TASK-02. O cadastro profissional também adotou a copy neutra `Para psicólogos com registro profissional ativo`, evitando acoplar a promessa de aquisição ao CFP na etapa inicial.
+
+Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e Chrome/CDP local confirmando login sem overflow em `1920x880`, Google acima do e-mail, e novo selo no cadastro de psicólogo em `390x844`.

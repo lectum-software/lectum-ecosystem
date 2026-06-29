@@ -86,11 +86,12 @@ export const AuthLogic = () => {
   };
 
   return (
-    <AuthTemplate>
+    <AuthTemplate contentClassName="py-0 sm:py-0">
       <div className="flex w-full flex-col items-center">
-        <Logo className="mb-5 w-[132px] sm:mb-6 sm:w-[144px]" priority />
+        <Logo className="mb-4 w-[124px] sm:mb-4 sm:w-[136px]" priority />
 
         <AuthCard
+          className="[&>div:first-child]:py-5 sm:[&>div:first-child]:py-6 [&>div:last-child]:py-3"
           footer={
             <span>
               Não tem uma conta?{" "}
@@ -103,16 +104,37 @@ export const AuthLogic = () => {
             </span>
           }
         >
-          <div className="mb-7 grid justify-items-center text-center">
+          <div className="mb-5 grid justify-items-center text-center">
             <h1 className="text-[1.55rem] font-extrabold leading-tight text-foreground sm:text-[1.7rem]">
               Bem-vindo de volta
             </h1>
             <p className="mt-1.5 text-sm text-muted">Faça o login na sua conta</p>
           </div>
 
-          <Form {...formProps} className="grid gap-1.5" onSubmit={hook.handleSubmit(handleSubmit)}>
-            {apiError ? <InlineAlert variant="error">{apiError}</InlineAlert> : null}
+          {apiError ? (
+            <InlineAlert className="mb-4" variant="error">
+              {apiError}
+            </InlineAlert>
+          ) : null}
 
+          <Button
+            className="w-full"
+            disabled={login.isPending || googlePending}
+            onClick={handleGoogleLogin}
+            type="button"
+            variant="outline"
+          >
+            {googlePending ? (
+              <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
+            ) : (
+              <Image src="/svg/google.svg" alt="Google" width={22} height={22} />
+            )}
+            {googlePending ? "Conectando com Google" : "Continuar com Google"}
+          </Button>
+
+          <DividerWithLabel className="my-4">ou</DividerWithLabel>
+
+          <Form {...formProps} className="grid gap-1" onSubmit={hook.handleSubmit(handleSubmit)}>
             <a
               className="-mt-1 justify-self-end text-[13px] font-medium text-primary hover:text-primary-hover"
               href="/auth/recovery"
@@ -133,23 +155,6 @@ export const AuthLogic = () => {
               {login.isPending ? "Entrando" : "Entrar"}
             </Button>
           </Form>
-
-          <DividerWithLabel className="my-5 sm:my-6">ou</DividerWithLabel>
-
-          <Button
-            className="w-full"
-            disabled={login.isPending || googlePending}
-            onClick={handleGoogleLogin}
-            type="button"
-            variant="outline"
-          >
-            {googlePending ? (
-              <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
-            ) : (
-              <Image src="/svg/google.svg" alt="Google" width={22} height={22} />
-            )}
-            {googlePending ? "Conectando com Google" : "Continuar com Google"}
-          </Button>
         </AuthCard>
       </div>
     </AuthTemplate>

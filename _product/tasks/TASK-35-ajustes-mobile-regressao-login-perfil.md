@@ -86,3 +86,12 @@ Corrigir regressões relatadas pelo usuário em fluxo de autenticação/cadastro
 - A home autenticada padrão, quando não há `redirectTo`/`callbackUrl`, agora é `/app/psychologists`.
 - O gate de etapas obrigatórias permanece: e-mail não confirmado vai para `/auth/verify-email` e paciente sem onboarding concluído continua em `/patient/welcome`.
 - Validações do ajuste: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, HTTP local e Chrome/CDP confirmando `/auth/login` com sessão ativa para `/app/psychologists`.
+
+## Ajuste posterior em 2026-06-29: Google como caminho principal no login
+
+- Pedido direto de produto: como o Google é o caminho principal para reduzir atrito, o botão `Continuar com Google` foi movido para cima do formulário de e-mail/senha em `/auth/login`.
+- O login por e-mail continua visível no primeiro carregamento, porque é um fluxo recorrente e não deve ficar escondido atrás de acordeão como no cadastro.
+- A tela de login foi compactada de forma pontual para remover scroll vertical desnecessário em desktop, preservando a fundação de formulários da TASK-02 e sem alterar backend, schema ou pacotes.
+- O selo de `/auth/register/psychologist` passou de `Para psicólogos com registro ativo no CFP` para `Para psicólogos com registro profissional ativo`, evitando atrelar a copy a um órgão específico na etapa de aquisição.
+- Referências visuais checadas: `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/Login.jpg` e `_product/proto/Cadastro de Psicólogo.jpg`; Builder/Quick Copy não está exposto como ferramenta direta neste ambiente.
+- Validações do ajuste: `pnpm --dir frontend check`, `pnpm --dir frontend build` e browser local via Chrome/CDP confirmando `/auth/login?callbackUrl=/app/professional/billing` sem overflow vertical em viewport `1920x880`, Google acima do campo de e-mail, e o novo selo em `/auth/register/psychologist` no viewport mobile `390x844`.
