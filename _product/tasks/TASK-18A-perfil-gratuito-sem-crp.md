@@ -396,3 +396,38 @@ Validacoes executadas:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessao, preservando a protecao da rota privada.
+
+## Ajuste complementar em 2026-06-29 - dicas contextuais para psicólogos
+
+- Pedido do usuário: criar dicas diferentes para o psicólogo, sem dica de perfil completo, priorizando vídeo de apresentação e respostas a pacientes na comunidade.
+- A dica do vídeo passou a aparecer no alvo real do card de vídeo em `/app/professional/profile/setup`, com texto reforçando que o vídeo é o principal destaque nos resultados de busca e pode ser decisivo para converter pacientes.
+- A dica de respostas passou a aparecer em posts de pacientes na comunidade, reforçando que responder pacientes é o principal conversor do psicólogo na Lectum.
+- A dica de criação de conteúdo original ficou secundária e só é elegível depois da dica de resposta ter sido vista.
+- Todas as dicas são exibidas apenas para usuários autenticados com `role="psicologo"`, usam uma dica por contexto e persistem o visto quando a dica aparece ou quando o alvo é clicado antes dela.
+- Builder/Quick Copy não está exposto como ferramenta direta neste ambiente; as referências auditáveis foram `_product/proto/Editar Perfil - Psicologo.jpg`, `_product/proto/Dentro do Post.jpg`, `_product/proto/Feed Comunidade.jpg` e `_product/proto/Dentro da Comunidade.jpg`.
+- ADR atualizado: `adrs/0109-dicas-onboarding-persistidas-por-usuario.md`.
+
+Critérios de aceite complementares:
+
+- [x] Dica de perfil completo não foi criada para psicólogos.
+- [x] Dica do vídeo de apresentação foi implementada no card real de vídeo e é persistida por usuário.
+- [x] Dica de resposta a pacientes foi implementada em posts de pacientes e é persistida por usuário.
+- [x] Dica de conteúdo original para psicólogos só aparece depois da dica de resposta.
+- [x] Dicas são restritas a psicólogos autenticados e reutilizam `/api/private/account/tips`.
+- [x] Clique no alvo real marca a dica como vista e executa a ação do produto, sem CTA separado.
+- [x] Nenhum mock, endpoint simulado ou package novo foi usado.
+
+Validações executadas:
+
+- `pnpm --dir backend db:migrate` executado; o Prisma recusou `migrate dev` por drift preexistente em migrations já aplicadas e também apontou a tentativa inicial desta migration como modificada após rollback. Nenhum reset destrutivo foi executado.
+- `pnpm --dir backend db:migrate-prod`
+- `pnpm --dir backend exec prisma migrate status`
+- Consulta real em `information_schema.columns` confirmou as três novas colunas booleanas em `users` com `default false` e `NOT NULL`.
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- `next start` local em `127.0.0.1:3103`: `/app/professional/profile/setup` respondeu `307` sem sessão; `/app/community/ansiedade-em-equilibrio` e `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video` responderam `200`.
+- Chrome headless local em `/auth/login`, viewport mobile `390x844`, gerou screenshot da tela de login. As dicas autenticadas não foram exercitadas visualmente porque não havia sessão real de psicólogo disponível sem criar mock.

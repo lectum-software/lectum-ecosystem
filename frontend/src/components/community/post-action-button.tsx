@@ -2,7 +2,12 @@
 
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
-import type { ButtonHTMLAttributes, MouseEventHandler, ReactNode } from "react";
+import type {
+  AnchorHTMLAttributes,
+  ButtonHTMLAttributes,
+  MouseEventHandler,
+  ReactNode,
+} from "react";
 import { cn } from "@/lib/utils";
 
 type PostActionSize = "xs" | "sm" | "md";
@@ -95,7 +100,7 @@ export const PostActionButton = ({
   );
 };
 
-type PostActionLinkProps = {
+type PostActionLinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
   children?: ReactNode;
   className?: string;
   count?: number;
@@ -113,6 +118,7 @@ export const PostActionLink = ({
   icon: Icon,
   label,
   size = "md",
+  ...props
 }: PostActionLinkProps) => {
   const iconOnly = typeof count !== "number" && !children;
   const handleClick: MouseEventHandler<HTMLAnchorElement> = (event) => {
@@ -126,6 +132,7 @@ export const PostActionLink = ({
       href={href}
       onClick={handleClick}
       title={label}
+      {...props}
     >
       <Icon className={postActionIconClassName(size)} strokeWidth={2} aria-hidden="true" />
       {children ? <span className={postActionTextClassName(size)}>{children}</span> : null}
