@@ -445,3 +445,34 @@ funcionar como area de assinatura visual da Lectum.
 - Browser local via Chrome/CDP em viewport mobile `390x844` confirmou os estados
   expandidos dos accordions de e-mail de paciente e psicologo, com formulario real
   presente e sem overflow horizontal.
+
+## Atualizacao em 2026-06-29: rodape institucional sem selos de confiança
+
+### Contexto
+
+Apos mover a logo para fora do card, os selos abaixo dos cadastros ("Seguro e
+Criptografado", "Configuracao em 2 minutos" e variacao de perfil protegido) ficaram
+visualmente soltos, pequenos e com baixo contraste, adicionando ruido depois do card.
+
+### Decisao
+
+- Remover os selos de confianca abaixo dos cards em `/auth/register/patient` e
+  `/auth/register/psychologist`.
+- Manter apenas o rodape institucional "© 2026 Lectum. Todos os direitos reservados.",
+  alinhando os cadastros ao padrao ja usado por `/auth/login` via `AuthTemplate`.
+- Nao alterar formularios, OAuth, accordion, rotas, endpoints, packages ou contratos de
+  autenticacao.
+
+### Consequencias
+
+- As telas de cadastro ficam mais limpas e premium, com menor ruido visual abaixo do
+  card.
+- O rodape institucional passa a ser consistente entre login e cadastros.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Browser local via Chrome/CDP em viewport mobile `390x844` confirmou copyright presente,
+  selos ausentes e `docScrollWidth=390` em `/auth/login`, `/auth/register/patient` e
+  `/auth/register/psychologist`.

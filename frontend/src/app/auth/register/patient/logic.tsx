@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, ChevronDown, Loader2, Mail, ShieldCheck, Zap } from "lucide-react";
+import { ArrowRight, ChevronDown, Loader2, Mail } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -212,22 +212,9 @@ export const RegisterPatientLogic = () => {
           </div>
         </section>
 
-        <div className="grid gap-3 pt-4 text-center text-[11px] font-medium leading-5 text-subtle sm:text-xs">
-          <div className="grid grid-cols-2 gap-3">
-            <span className="inline-flex items-center justify-center gap-1.5">
-              <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-              Seguro e Criptografado
-            </span>
-            <span className="inline-flex items-center justify-center gap-1.5">
-              <Zap className="h-3.5 w-3.5" aria-hidden="true" />
-              Configuração em 2 minutos
-            </span>
-          </div>
-          <span className="inline-flex items-center justify-center gap-1.5">
-            <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-            Perfil paciente protegido
-          </span>
-        </div>
+        <footer className="pb-1 pt-5 text-center text-[11px] leading-5 text-subtle sm:text-xs">
+          © 2026 Lectum. Todos os direitos reservados.
+        </footer>
       </div>
     </main>
   );

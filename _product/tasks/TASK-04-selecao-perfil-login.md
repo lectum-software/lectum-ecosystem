@@ -384,3 +384,25 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   e-mail expandidos nos cadastros de paciente e psicologo, com formulario real presente
   e sem overflow horizontal.
 - ADR atualizado: `adrs/0008-fluxo-publico-auth-selecao-perfil-login.md`.
+
+## Ajuste posterior em 2026-06-29: rodapé institucional sem selos de confiança
+
+- Pedido direto de produto: remover os três selos abaixo do card e manter apenas o rodapé
+  institucional "© 2026 Lectum. Todos os direitos reservados.".
+- Cadastro de paciente e cadastro de psicólogo deixaram de exibir "Seguro e
+  Criptografado", "Configuração em 2 minutos" e os textos de perfil protegido abaixo do
+  card.
+- Login já usava o rodapé institucional via `AuthTemplate`; os cadastros foram alinhados
+  ao mesmo padrão visual.
+- Formulários reais, React Hook Form/Zod, Google OAuth, `redirectTo`/`callbackUrl`,
+  accordion de e-mail e `next/image` foram preservados.
+- Nenhum pacote, endpoint, mock, store, schema ou fluxo paralelo foi criado.
+
+### Validação do ajuste
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Browser local via Chrome/CDP em viewport mobile `390x844` confirmou copyright presente,
+  selos ausentes e `docScrollWidth=390` em `/auth/login`, `/auth/register/patient` e
+  `/auth/register/psychologist`.
+- ADR atualizado: `adrs/0008-fluxo-publico-auth-selecao-perfil-login.md`.
