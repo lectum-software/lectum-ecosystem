@@ -1013,15 +1013,20 @@ const useViewportMetrics = () => {
     const isDesktop = width >= 1024;
     const isCompact = effectiveWidth <= 390;
     const isTiny = effectiveWidth < 360;
-    const actionButtonSize = isTiny ? 34 : 36;
+    const actionHitSize = isTiny ? 40 : 44;
+    const actionButtonSize = isTiny ? 30 : 32;
+    const actionPrimaryButtonSize = isTiny ? 34 : 36;
 
     return {
       actionButtonSize,
-      actionGap: isCompact ? 12 : 16,
-      actionIconSize: isTiny ? 13 : 14,
+      actionAvatarSize: actionButtonSize,
+      actionGap: isCompact ? 4 : 6,
+      actionHitSize,
+      actionIconSize: isTiny ? 14 : 15,
+      actionPrimaryButtonSize,
       actionRightPadding: isTiny ? 12 : 16,
-      actionRailWidth: actionButtonSize,
-      actionStandaloneIconSize: isTiny ? 22 : 24,
+      actionRailWidth: actionHitSize,
+      actionStandaloneIconSize: isTiny ? 18 : 20,
       availableBadgeTextSize: isTiny ? 10 : 11,
       bioBottomOffset: isDesktop ? 24 : 8,
       ratingIconSize: isCompact ? 9 : 10,
@@ -1097,7 +1102,7 @@ export const PsychologistsLogic = () => {
   const progressTrackRef = useRef<HTMLDivElement | null>(null);
   const progressFillRef = useRef<HTMLDivElement | null>(null);
   const actionColumnRef = useRef<HTMLDivElement | null>(null);
-  const profileTextRef = useRef<HTMLElement | null>(null);
+  const actionAnchorRef = useRef<HTMLElement | null>(null);
   const videoProgressStateRef = useRef<VideoProgressState>({
     currentTime: 0,
     duration: 0,
@@ -1611,13 +1616,13 @@ export const PsychologistsLogic = () => {
   const syncActionColumnAlignment = useCallback(() => {
     const hasBaselineContent = Boolean(featuredBio || featuredBenefitChipsCount > 0);
     const bioText = bioTextRef.current;
-    const profileLabel = profileTextRef.current;
+    const actionAnchor = actionAnchorRef.current;
     const actionColumn = actionColumnRef.current;
 
-    if (!hasBaselineContent || !bioText || !profileLabel || !actionColumn) return;
+    if (!hasBaselineContent || !bioText || !actionAnchor || !actionColumn) return;
 
     const delta =
-      bioText.getBoundingClientRect().bottom - profileLabel.getBoundingClientRect().bottom;
+      bioText.getBoundingClientRect().bottom - actionAnchor.getBoundingClientRect().bottom;
 
     setActionColumnTranslateY((current) => (Math.abs(current - delta) > 0.5 ? delta : current));
   }, [featuredBenefitChipsCount, featuredBio]);
@@ -4533,6 +4538,48 @@ export const PsychologistsLogic = () => {
                               >
                                 <div className="grid justify-items-center text-center">
                                   <button
+                                    aria-label={`Ver perfil de ${psychologist.name}`}
+                                    className="grid place-items-center rounded-full bg-transparent transition active:scale-95"
+                                    disabled={slideShouldHideChrome}
+                                    onClick={(event) =>
+                                      navigateToPublicPsychologistProfile(psychologist.id, event)
+                                    }
+                                    onPointerDown={stopInteractionPropagation}
+                                    tabIndex={slideShouldHideChrome ? -1 : undefined}
+                                    type="button"
+                                    style={{
+                                      width: `${metrics.actionHitSize}px`,
+                                      height: `${metrics.actionHitSize}px`,
+                                    }}
+                                  >
+                                    <div
+                                      className="relative overflow-hidden rounded-full bg-white p-0.5 text-[#0f172a]"
+                                      style={{
+                                        width: `${metrics.actionAvatarSize}px`,
+                                        height: `${metrics.actionAvatarSize}px`,
+                                        border: "1.5px solid #fff",
+                                      }}
+                                    >
+                                      {psychologist.avatar ? (
+                                        <Image
+                                          alt={psychologist.name}
+                                          className="h-full w-full rounded-full object-cover"
+                                          fill
+                                          sizes={`${metrics.actionAvatarSize}px`}
+                                          src={resolvePublicMediaUrl(psychologist.avatar) ?? ""}
+                                          unoptimized={isPublicMediaUrl(psychologist.avatar)}
+                                        />
+                                      ) : (
+                                        <span className="grid h-full w-full place-items-center rounded-full bg-[#e2e8f0] text-[10px] font-semibold text-[#334155]">
+                                          {getInitials(psychologist.name)}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </button>
+                                </div>
+
+                                <div className="grid justify-items-center text-center">
+                                  <button
                                     aria-label={`Favoritar ${psychologist.name}`}
                                     aria-busy={slideIsFavoritePending}
                                     aria-pressed={slideIsFavorited}
@@ -4547,8 +4594,8 @@ export const PsychologistsLogic = () => {
                                     }}
                                     tabIndex={slideShouldHideChrome ? -1 : undefined}
                                     style={{
-                                      width: `${metrics.actionButtonSize}px`,
-                                      height: `${metrics.actionButtonSize}px`,
+                                      width: `${metrics.actionHitSize}px`,
+                                      height: `${metrics.actionHitSize}px`,
                                     }}
                                     type="button"
                                   >
@@ -4577,8 +4624,8 @@ export const PsychologistsLogic = () => {
                                     tabIndex={slideShouldHideChrome ? -1 : undefined}
                                     type="button"
                                     style={{
-                                      width: `${metrics.actionButtonSize}px`,
-                                      height: `${metrics.actionButtonSize}px`,
+                                      width: `${metrics.actionHitSize}px`,
+                                      height: `${metrics.actionHitSize}px`,
                                     }}
                                   >
                                     <Share2
@@ -4593,10 +4640,17 @@ export const PsychologistsLogic = () => {
                                 </div>
 
                                 {psychologist.whatsapp_url ? (
-                                  <div className="grid justify-items-center text-center">
+                                  <div
+                                    className="grid justify-items-center text-center"
+                                    ref={(node) => {
+                                      if (isActiveSlide) {
+                                        actionAnchorRef.current = node;
+                                      }
+                                    }}
+                                  >
                                     <PsychologistWhatsAppRedirectButton
                                       aria-label={`Chamar ${psychologist.name} no WhatsApp`}
-                                      className="grid place-items-center rounded-full bg-[#22C55E] text-white transition hover:bg-[#16A34A]"
+                                      className="grid place-items-center rounded-full bg-transparent text-white transition active:scale-95"
                                       data-psychologists-tip-target={
                                         isActiveSlide ? "whatsapp" : undefined
                                       }
@@ -4616,91 +4670,71 @@ export const PsychologistsLogic = () => {
                                       stopPropagation
                                       tabIndex={slideShouldHideChrome ? -1 : undefined}
                                       style={{
-                                        width: `${metrics.actionButtonSize}px`,
-                                        height: `${metrics.actionButtonSize}px`,
+                                        width: `${metrics.actionHitSize}px`,
+                                        height: `${metrics.actionHitSize}px`,
                                       }}
                                     >
-                                      <WhatsAppIcon
-                                        aria-hidden="true"
-                                        className="h-4 w-4"
+                                      <span
+                                        className="grid place-items-center rounded-full bg-[#22C55E] transition hover:bg-[#16A34A]"
                                         style={{
-                                          color: "white",
-                                          height: `${metrics.actionIconSize}px`,
-                                          width: `${metrics.actionIconSize}px`,
+                                          height: `${metrics.actionPrimaryButtonSize}px`,
+                                          width: `${metrics.actionPrimaryButtonSize}px`,
                                         }}
-                                      />
+                                      >
+                                        <WhatsAppIcon
+                                          aria-hidden="true"
+                                          className="h-4 w-4"
+                                          style={{
+                                            color: "white",
+                                            height: `${metrics.actionIconSize}px`,
+                                            width: `${metrics.actionIconSize}px`,
+                                          }}
+                                        />
+                                      </span>
                                     </PsychologistWhatsAppRedirectButton>
                                   </div>
                                 ) : (
-                                  <div className="grid justify-items-center text-center">
+                                  <div
+                                    className="grid justify-items-center text-center"
+                                    ref={(node) => {
+                                      if (isActiveSlide) {
+                                        actionAnchorRef.current = node;
+                                      }
+                                    }}
+                                  >
                                     <button
                                       aria-disabled="true"
                                       aria-label={`WhatsApp indisponível para ${psychologist.name}`}
-                                      className="grid place-items-center rounded-full bg-[#22C55E] text-white transition"
+                                      className="grid place-items-center rounded-full bg-transparent text-white transition"
                                       disabled={slideShouldHideChrome}
                                       onClick={stopInteractionPropagation}
                                       tabIndex={slideShouldHideChrome ? -1 : undefined}
                                       type="button"
                                       style={{
-                                        width: `${metrics.actionButtonSize}px`,
-                                        height: `${metrics.actionButtonSize}px`,
+                                        width: `${metrics.actionHitSize}px`,
+                                        height: `${metrics.actionHitSize}px`,
                                       }}
                                     >
-                                      <WhatsAppIcon
-                                        aria-hidden="true"
-                                        className="h-4 w-4"
+                                      <span
+                                        className="grid place-items-center rounded-full bg-[#22C55E]"
                                         style={{
-                                          color: "white",
-                                          height: `${metrics.actionIconSize}px`,
-                                          width: `${metrics.actionIconSize}px`,
+                                          height: `${metrics.actionPrimaryButtonSize}px`,
+                                          width: `${metrics.actionPrimaryButtonSize}px`,
                                         }}
-                                      />
+                                      >
+                                        <WhatsAppIcon
+                                          aria-hidden="true"
+                                          className="h-4 w-4"
+                                          style={{
+                                            color: "white",
+                                            height: `${metrics.actionIconSize}px`,
+                                            width: `${metrics.actionIconSize}px`,
+                                          }}
+                                        />
+                                      </span>
                                     </button>
                                   </div>
                                 )}
-
-                                <div className="grid justify-items-center text-center">
-                                  <button
-                                    aria-label={`Ver perfil de ${psychologist.name}`}
-                                    className="grid place-items-center rounded-full bg-transparent"
-                                    disabled={slideShouldHideChrome}
-                                    onClick={(event) =>
-                                      navigateToPublicPsychologistProfile(psychologist.id, event)
-                                    }
-                                    onPointerDown={stopInteractionPropagation}
-                                    tabIndex={slideShouldHideChrome ? -1 : undefined}
-                                    ref={(node) => {
-                                      if (isActiveSlide) {
-                                        profileTextRef.current = node;
-                                      }
-                                    }}
-                                    type="button"
-                                  >
-                                    <div
-                                      className="relative overflow-hidden rounded-full bg-white p-0.5 text-[#0f172a]"
-                                      style={{
-                                        width: `${metrics.actionButtonSize}px`,
-                                        height: `${metrics.actionButtonSize}px`,
-                                        border: "2px solid #fff",
-                                      }}
-                                    >
-                                      {psychologist.avatar ? (
-                                        <Image
-                                          alt={psychologist.name}
-                                          className="h-full w-full rounded-full object-cover"
-                                          fill
-                                          sizes={`${metrics.actionButtonSize}px`}
-                                          src={resolvePublicMediaUrl(psychologist.avatar) ?? ""}
-                                          unoptimized={isPublicMediaUrl(psychologist.avatar)}
-                                        />
-                                      ) : (
-                                        <span className="grid h-full w-full place-items-center rounded-full bg-[#e2e8f0] text-[11px] font-semibold text-[#334155]">
-                                          {getInitials(psychologist.name)}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </button>
-                                </div>
                               </div>
                             ) : null}
                           </section>
@@ -4970,16 +5004,46 @@ export const PsychologistsLogic = () => {
                 <div
                   aria-hidden={isDesktopActionRailHidden ? true : undefined}
                   className={cn(
-                    "absolute top-1/2 left-0 flex w-[76px] -translate-y-[35%] flex-col items-center gap-4 transition-opacity duration-200 ease-out",
+                    "absolute top-1/2 left-0 flex w-[68px] -translate-y-[35%] flex-col items-center gap-3 transition-opacity duration-200 ease-out",
                     desktopActionRailVisibilityClass,
                   )}
                 >
-                  <div className="grid w-[76px] justify-items-center gap-1.5 text-center">
+                  <div className="grid w-[68px] justify-items-center gap-1 text-center">
+                    <button
+                      aria-label={`Ver perfil de ${desktopActionPsychologist.name}`}
+                      className="grid h-10 w-10 place-items-center overflow-hidden rounded-full border border-[#e2e8f0] bg-white p-0.5 text-[#0f172a] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
+                      disabled={isDesktopActionRailHidden}
+                      onClick={(event) =>
+                        navigateToPublicPsychologistProfile(desktopActionPsychologist.id, event)
+                      }
+                      onPointerDown={stopInteractionPropagation}
+                      tabIndex={isDesktopActionRailHidden ? -1 : undefined}
+                      type="button"
+                    >
+                      <span className="relative grid h-full w-full place-items-center overflow-hidden rounded-full bg-[#e2e8f0] text-[11px] font-bold text-[#334155]">
+                        {desktopActionPsychologist.avatar ? (
+                          <Image
+                            alt={desktopActionPsychologist.name}
+                            className="h-full w-full rounded-full object-cover"
+                            fill
+                            sizes="40px"
+                            src={resolvePublicMediaUrl(desktopActionPsychologist.avatar) ?? ""}
+                            unoptimized={isPublicMediaUrl(desktopActionPsychologist.avatar)}
+                          />
+                        ) : (
+                          getInitials(desktopActionPsychologist.name)
+                        )}
+                      </span>
+                    </button>
+                    <span className="text-[10px] font-bold text-[#475569]">Perfil</span>
+                  </div>
+
+                  <div className="grid w-[68px] justify-items-center gap-1 text-center">
                     <button
                       aria-label={`Favoritar ${desktopActionPsychologist.name}`}
                       aria-busy={desktopActionIsFavoritePending}
                       aria-pressed={desktopActionIsFavorited}
-                      className="grid h-12 w-12 place-items-center rounded-full border border-[#e2e8f0] bg-white text-[#334155] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
+                      className="grid h-10 w-10 place-items-center rounded-full border border-[#e2e8f0] bg-white text-[#334155] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
                       disabled={isDesktopActionRailHidden}
                       onClick={(event) => {
                         event.stopPropagation();
@@ -4989,7 +5053,7 @@ export const PsychologistsLogic = () => {
                       type="button"
                     >
                       <Heart
-                        className="h-6 w-6"
+                        className="h-5 w-5"
                         aria-hidden="true"
                         style={{
                           color: desktopActionIsFavorited ? "#ef4444" : "#334155",
@@ -4997,13 +5061,13 @@ export const PsychologistsLogic = () => {
                         }}
                       />
                     </button>
-                    <span className="text-[11px] font-bold text-[#475569]">Favoritar</span>
+                    <span className="text-[10px] font-bold text-[#475569]">Favoritar</span>
                   </div>
 
-                  <div className="grid w-[76px] justify-items-center gap-1.5 text-center">
+                  <div className="grid w-[68px] justify-items-center gap-1 text-center">
                     <button
                       aria-label={`Compartilhar perfil de ${desktopActionPsychologist.name}`}
-                      className="grid h-12 w-12 place-items-center rounded-full border border-[#e2e8f0] bg-white text-[#334155] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
+                      className="grid h-10 w-10 place-items-center rounded-full border border-[#e2e8f0] bg-white text-[#334155] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
                       disabled={isDesktopActionRailHidden}
                       onClick={(event) => {
                         event.stopPropagation();
@@ -5012,16 +5076,16 @@ export const PsychologistsLogic = () => {
                       tabIndex={isDesktopActionRailHidden ? -1 : undefined}
                       type="button"
                     >
-                      <Share2 className="h-6 w-6" aria-hidden="true" />
+                      <Share2 className="h-5 w-5" aria-hidden="true" />
                     </button>
-                    <span className="text-[11px] font-bold text-[#475569]">Compartilhar</span>
+                    <span className="text-[10px] font-bold text-[#475569]">Compartilhar</span>
                   </div>
 
-                  <div className="grid w-[76px] justify-items-center gap-1.5 text-center">
+                  <div className="grid w-[68px] justify-items-center gap-1 text-center">
                     {desktopActionPsychologist.whatsapp_url ? (
                       <PsychologistWhatsAppRedirectButton
                         aria-label={`Chamar ${desktopActionPsychologist.name} no WhatsApp`}
-                        className="grid h-12 w-12 place-items-center rounded-full border border-[#e2e8f0] bg-white text-[#22C55E] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
+                        className="grid h-10 w-10 place-items-center rounded-full border border-[#d5f5df] bg-white text-[#22C55E] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
                         data-psychologists-tip-target={
                           isDesktopActionRailHidden ? undefined : "whatsapp"
                         }
@@ -5043,7 +5107,7 @@ export const PsychologistsLogic = () => {
                       >
                         <WhatsAppIcon
                           aria-hidden="true"
-                          className="h-6 w-6"
+                          className="h-5 w-5"
                           style={{ color: "#22C55E" }}
                         />
                       </PsychologistWhatsAppRedirectButton>
@@ -5051,7 +5115,7 @@ export const PsychologistsLogic = () => {
                       <button
                         aria-disabled="true"
                         aria-label={`WhatsApp indisponível para ${desktopActionPsychologist.name}`}
-                        className="grid h-12 w-12 place-items-center rounded-full border border-[#e2e8f0] bg-white text-[#22C55E] opacity-55"
+                        className="grid h-10 w-10 place-items-center rounded-full border border-[#d5f5df] bg-white text-[#22C55E] opacity-55"
                         disabled={isDesktopActionRailHidden}
                         onClick={stopInteractionPropagation}
                         tabIndex={isDesktopActionRailHidden ? -1 : undefined}
@@ -5059,42 +5123,12 @@ export const PsychologistsLogic = () => {
                       >
                         <WhatsAppIcon
                           aria-hidden="true"
-                          className="h-6 w-6"
+                          className="h-5 w-5"
                           style={{ color: "#22C55E" }}
                         />
                       </button>
                     )}
-                    <span className="text-[11px] font-bold text-[#475569]">WhatsApp</span>
-                  </div>
-
-                  <div className="grid w-[76px] justify-items-center gap-1.5 text-center">
-                    <button
-                      aria-label={`Ver perfil de ${desktopActionPsychologist.name}`}
-                      className="grid h-12 w-12 place-items-center overflow-hidden rounded-full border border-[#e2e8f0] bg-white p-0.5 text-[#0f172a] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
-                      disabled={isDesktopActionRailHidden}
-                      onClick={(event) =>
-                        navigateToPublicPsychologistProfile(desktopActionPsychologist.id, event)
-                      }
-                      onPointerDown={stopInteractionPropagation}
-                      tabIndex={isDesktopActionRailHidden ? -1 : undefined}
-                      type="button"
-                    >
-                      <span className="relative grid h-full w-full place-items-center overflow-hidden rounded-full bg-[#e2e8f0] text-[12px] font-bold text-[#334155]">
-                        {desktopActionPsychologist.avatar ? (
-                          <Image
-                            alt={desktopActionPsychologist.name}
-                            className="h-full w-full rounded-full object-cover"
-                            fill
-                            sizes="48px"
-                            src={resolvePublicMediaUrl(desktopActionPsychologist.avatar) ?? ""}
-                            unoptimized={isPublicMediaUrl(desktopActionPsychologist.avatar)}
-                          />
-                        ) : (
-                          getInitials(desktopActionPsychologist.name)
-                        )}
-                      </span>
-                    </button>
-                    <span className="text-[11px] font-bold text-[#475569]">Perfil</span>
+                    <span className="text-[10px] font-bold text-[#475569]">WhatsApp</span>
                   </div>
                 </div>
               ) : null}

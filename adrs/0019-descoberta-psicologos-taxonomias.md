@@ -204,6 +204,43 @@ A modal de criar post ja possuia o padrao de entrada mobile-first tipo bottom sh
 - A modal de filtros ganha continuidade visual com a modal de criar post e passa a subir na tela em vez de surgir estaticamente.
 - O fechamento fica mais suave, com desmontagem apos o tempo da transicao.
 - Nenhum contrato de API, schema, endpoint, pacote ou regra de dominio foi alterado.
+
+## Complemento 2026-06-29 - hierarquia das acoes laterais do video
+
+### Contexto
+
+No feed imersivo de psicologos, o produto pediu que a coluna lateral ficasse mais proxima do padrao mental de video
+curto: o perfil deve ser a primeira opcao da coluna e o WhatsApp deve ser a ultima acao, mais perto da zona do polegar
+no mobile. A mesma revisao identificou que os botoes estavam visualmente grandes em relacao ao restante da tela.
+
+### Decisao
+
+- Reordenar as acoes laterais mobile para `Perfil -> Favoritar -> Compartilhar -> WhatsApp`.
+- Manter o WhatsApp como CTA principal, mas como ultima acao da coluna, ancorado ao fim do bloco de bio/chips do card.
+- Separar area clicavel e escala visual: hit area de 44px no mobile base, avatar visual de 32px, icones secundarios de
+  20px e circulo visual do WhatsApp de 36px.
+- Usar o avatar real do psicologo como acao de perfil, preservando `next/image`; quando nao houver avatar, usar iniciais
+  renderizadas em texto dentro do mesmo container.
+- Aplicar a mesma ordem na rail desktop, com escala reduzida de 48px para 40px, para manter consistencia entre
+  breakpoints sem criar componente paralelo.
+
+### Consequencias
+
+- O CTA de WhatsApp fica mais proximo da zona natural de toque no mobile sem invadir a navegacao inferior.
+- Perfil ganha mais proeminencia visual e melhora a leitura "quem e este profissional?" antes das acoes sociais.
+- A interface fica menos pesada, mantendo area de toque suficiente para acessibilidade basica.
+- Nao ha mudanca de backend, Prisma, endpoints, filtros, ranking, dados, packages ou contratos de API.
+
+### Validacao
+
+- `pnpm.cmd --dir frontend exec biome check --write src/app/app/psychologists/logic.tsx`
+- `pnpm.cmd --dir frontend check`
+- `pnpm.cmd --dir frontend build`
+- `pnpm.cmd check`
+- Browser local via Chrome/CDP em `http://localhost:3000/psychologists` com viewport mobile `390x844` confirmou a ordem
+  `Perfil -> Favoritar -> Compartilhar -> WhatsApp` e os tamanhos planejados: hit area 44px, avatar 32px, icones
+  secundarios 20px e WhatsApp visual 36px.
+
 ## Pendências
 
 - Curadoria ou ingestão real dos catálogos `specialty`, `service` e `approach`.

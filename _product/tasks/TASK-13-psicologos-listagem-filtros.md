@@ -1418,3 +1418,37 @@ Validacoes do complemento:
 - `pnpm.cmd check`
 - `git diff --check`
 - HTTP local em `/app/psychologists` respondeu `200`.
+
+## Execucao complementar: ordem e escala das acoes do video (2026-06-29)
+
+- Pedido do usuario: aproximar as acoes laterais do feed de psicologos do padrao mental do TikTok, com o perfil como
+  primeira opcao e o WhatsApp como ultima acao, mais perto do polegar no mobile.
+- Referencia visual ativa: inventario `_product/tasks/PROTO-INVENTORY.md`, fallback local `_product/proto/Psicólogos.jpg`
+  e a imagem anexada pelo usuario `WhatsApp Image 2026-06-29 at 10.39.22.jpeg`; Builder/Quick Copy nao esta exposto
+  como ferramenta callable neste ambiente.
+- A coluna mobile de acoes passou para a ordem `Perfil -> Favoritar -> Compartilhar -> WhatsApp`.
+- O WhatsApp ficou ancorado como ultima acao da coluna, alinhado ao fim do bloco de bio/chips para ficar mais proximo
+  da zona do polegar sem encostar na navegacao inferior.
+- O peso visual foi reduzido mantendo area clicavel confortavel: hit area de 44px no mobile base, avatar visual de
+  32px, icones secundarios de 20px e circulo visual do WhatsApp de 36px.
+- A rail desktop recebeu a mesma ordem visual e reducao discreta de escala, sem alterar dados, ranking, filtros,
+  contratos de API, backend, Prisma, migrations ou packages.
+- ADR atualizado: `adrs/0019-descoberta-psicologos-taxonomias.md`.
+
+Criterios complementares:
+
+- [x] O avatar/perfil aparece como primeira acao lateral do video.
+- [x] Favoritar e compartilhar ficam como acoes intermediarias.
+- [x] WhatsApp aparece como ultima acao da coluna mobile, proxima da zona do polegar.
+- [x] Botoes/icone foram reduzidos proporcionalmente sem perder area de toque no mobile base de 390px.
+- [x] Nenhum `<img>`, package novo, mock, endpoint simulado, dado fake ou mudanca de banco foi usado.
+
+Validacoes do complemento:
+
+- `pnpm.cmd --dir frontend exec biome check --write src/app/app/psychologists/logic.tsx`
+- `pnpm.cmd --dir frontend check`
+- `pnpm.cmd --dir frontend build`
+- `pnpm.cmd check`
+- Browser local via Chrome/CDP em `http://localhost:3000/psychologists` com viewport mobile `390x844`: DOM e screenshot
+  confirmaram a ordem `Ver perfil -> Favoritar -> Compartilhar -> Chamar no WhatsApp`, hit areas de 44px, avatar visual
+  de 32px, icones secundarios de 20px e WhatsApp visual de 36px.
