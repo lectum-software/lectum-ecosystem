@@ -450,3 +450,24 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   largura aproximada de `164px`, `docScrollWidth=390` e rodapé institucional presente em
   `/auth/register/psychologist`.
 - ADR atualizado: `adrs/0008-fluxo-publico-auth-selecao-perfil-login.md`.
+
+## Ajuste posterior em 2026-06-29: título simples e microcopy WhatsApp no cadastro profissional
+
+- Pedido direto de produto: simplificar o título do cadastro de psicólogo para
+  "Cadastre-se" e mover a proposta de valor para a microcopy.
+- A microcopy passou para: "Transforme buscas por psicólogos em conversas pelo
+  WhatsApp.".
+- A copy anterior com "psicólogos online" foi removida para não restringir o fluxo a
+  atendimento online, já que o contato pode apoiar atendimento online ou presencial.
+- Tag "Para psicólogos com CRP ativo", formulário real, Google OAuth, accordion de
+  e-mail, rotas, endpoints e validações existentes foram preservados.
+- Nenhum pacote, endpoint, mock, store, schema ou fluxo paralelo foi criado.
+
+### Validação do ajuste
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Browser local via Chrome/CDP em viewport mobile `390x844` confirmou título curto,
+  microcopy nova, ausência da copy antiga com "online" e `docScrollWidth=390` em
+  `/auth/register/psychologist`.
+- ADR atualizado: `adrs/0008-fluxo-publico-auth-selecao-perfil-login.md`.

@@ -543,3 +543,34 @@ alinhando a comunicacao ao requisito de validacao profissional.
 - Browser local via Chrome/CDP em viewport mobile `390x844` confirmou a tag presente,
   largura de aproximadamente `164px`, `docScrollWidth=390` e rodape institucional
   presente em `/auth/register/psychologist`.
+
+## Atualizacao em 2026-06-29: titulo simples e microcopy WhatsApp no cadastro profissional
+
+### Contexto
+
+O titulo do cadastro profissional ainda era longo e quebrava em varias linhas. A
+microcopy anterior tambem restringia a origem dos pacientes a buscas online, mas o
+produto pode atender intencoes de contato para atendimento online ou presencial.
+
+### Decisao
+
+- Reduzir o titulo de `/auth/register/psychologist` para "Cadastre-se".
+- Mover a promessa comercial para a microcopy: "Transforme buscas por psicologos em
+  conversas pelo WhatsApp.".
+- Preservar a tag "Para psicologos com CRP ativo", formulario real, OAuth, accordion,
+  rotas, endpoints e validacoes existentes.
+
+### Consequencias
+
+- A hierarquia do cadastro profissional fica mais parecida com a de paciente e menos
+  pesada no mobile.
+- A microcopy evita limitar o interesse a atendimento online, mantendo a promessa de
+  conversao para WhatsApp.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Browser local via Chrome/CDP em viewport mobile `390x844` confirmou titulo curto,
+  microcopy nova, ausencia da copy antiga com "online" e `docScrollWidth=390` em
+  `/auth/register/psychologist`.

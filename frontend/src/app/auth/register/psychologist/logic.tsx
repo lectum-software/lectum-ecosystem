@@ -121,11 +121,11 @@ export const RegisterPsychologistLogic = () => {
               <span className="mb-3 rounded-full bg-primary-soft px-2.5 py-1 text-[10px] font-semibold text-primary sm:text-[11px]">
                 Para psicólogos com CRP ativo
               </span>
-              <h1 className="max-w-[310px] text-[1.35rem] font-extrabold leading-[1.18] text-foreground sm:text-[1.45rem]">
-                Cadastre-se para converter pacientes para o WhatsApp
+              <h1 className="text-[1.45rem] font-extrabold leading-tight text-foreground">
+                Cadastre-se
               </h1>
               <p className="mt-3 max-w-[310px] text-sm leading-6 text-muted">
-                Receba contatos de pessoas que procuram psicólogos online.
+                Transforme buscas por psicólogos em conversas pelo WhatsApp.
               </p>
             </div>
 
