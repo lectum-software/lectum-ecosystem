@@ -2739,6 +2739,18 @@ export const PsychologistsLogic = () => {
     ],
   );
 
+  const favoritePsychologistIfNeeded = useCallback(
+    (psychologist: DirectoryPsychologist) => {
+      const psychologistId = psychologist.id;
+      const isFavorited = favoriteOverrides[psychologistId] ?? Boolean(psychologist.favorited);
+
+      if (isFavorited) return;
+
+      toggleFavorite(psychologist);
+    },
+    [favoriteOverrides, toggleFavorite],
+  );
+
   useEffect(() => {
     if (!conversion.isAuthenticated || psychologists.length === 0) return;
 
@@ -2796,20 +2808,7 @@ export const PsychologistsLogic = () => {
     [isSharing],
   );
 
-  const handleVideoAreaTap = useCallback(() => {
-    if (isSearchFocused) return;
-
-    if (suppressNextTapRef.current || didMoveDuringPressRef.current) {
-      suppressNextTapRef.current = false;
-      didMoveDuringPressRef.current = false;
-      return;
-    }
-
-    if (didLongPressRef.current) {
-      didLongPressRef.current = false;
-      return;
-    }
-
+  const runVideoAreaSingleTapAction = useCallback(() => {
     const currentVideo = backgroundVideoRef.current;
 
     if (shouldShowVideo && currentVideo) {
@@ -2832,7 +2831,42 @@ export const PsychologistsLogic = () => {
     }
 
     setIsUiHidden((current) => !current);
-  }, [isSearchFocused, isVideoMuted, isVideoPaused, playCurrentVideoWithSound, shouldShowVideo]);
+  }, [isVideoMuted, isVideoPaused, playCurrentVideoWithSound, shouldShowVideo]);
+
+  const handleVideoAreaTap = useCallback(
+    (psychologist: DirectoryPsychologist, uiHidden: boolean) => {
+      if (isSearchFocused) return;
+
+      if (suppressNextTapRef.current || didMoveDuringPressRef.current) {
+        suppressNextTapRef.current = false;
+        didMoveDuringPressRef.current = false;
+        return;
+      }
+
+      if (didLongPressRef.current) {
+        didLongPressRef.current = false;
+        return;
+      }
+
+      if (!uiHidden && shouldShowVideo) {
+        if (tapTimeoutRef.current) {
+          window.clearTimeout(tapTimeoutRef.current);
+          tapTimeoutRef.current = null;
+          favoritePsychologistIfNeeded(psychologist);
+          return;
+        }
+
+        tapTimeoutRef.current = window.setTimeout(() => {
+          tapTimeoutRef.current = null;
+          runVideoAreaSingleTapAction();
+        }, VIDEO_SINGLE_TAP_DELAY_MS);
+        return;
+      }
+
+      runVideoAreaSingleTapAction();
+    },
+    [favoritePsychologistIfNeeded, isSearchFocused, runVideoAreaSingleTapAction, shouldShowVideo],
+  );
 
   const handleLongPressStart = useCallback(
     (event: PointerEvent<HTMLButtonElement>) => {
@@ -3075,11 +3109,12 @@ export const PsychologistsLogic = () => {
 
   const finishVideoProgressScrub = useCallback(
     (clientX?: number, track?: HTMLDivElement | null) => {
+      const storedPreviewRatio = videoSeekPreviewRatioRef.current;
       const pointerRatio =
-        typeof clientX === "number"
+        storedPreviewRatio === null && typeof clientX === "number"
           ? getVideoProgressRatioFromClientX(clientX, track ?? null)
           : null;
-      const finalRatio = pointerRatio ?? videoSeekPreviewRatioRef.current;
+      const finalRatio = storedPreviewRatio ?? pointerRatio;
       const shouldResumeVideo = wasVideoPlayingBeforeProgressScrubRef.current;
 
       videoSeekPreviewRatioRef.current = null;
@@ -4168,7 +4203,9 @@ export const PsychologistsLogic = () => {
                             aria-label={slideVideoAreaLabel}
                             className="absolute inset-0 z-10 h-full w-full cursor-default border-0 bg-transparent p-0"
                             onClick={
-                              isActiveSlide ? handleVideoAreaTap : stopInteractionPropagation
+                              isActiveSlide
+                                ? () => handleVideoAreaTap(psychologist, slideIsUiHidden)
+                                : stopInteractionPropagation
                             }
                             onPointerCancel={isActiveSlide ? handleLongPressEnd : undefined}
                             onPointerDown={isActiveSlide ? handleLongPressStart : undefined}
