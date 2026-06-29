@@ -79,6 +79,38 @@ type NavigationItem = {
 
 const NOTIFICATIONS_HREF = "/app/notifications";
 const COMMUNITY_NAV_ICON_URL = "/svg/atr_24dp_64748B_FILL0_wght400_GRAD0_opsz24.svg";
+const DEFAULT_RESTRICTED_AREA_COPY = {
+  description:
+    "Entre ou crie sua conta para acessar seu perfil, salvar preferências e continuar sua experiência na Lectum.",
+  title: "Acesse sua conta",
+};
+
+const RESTRICTED_AREA_COPY_BY_PATH = new Map<string, typeof DEFAULT_RESTRICTED_AREA_COPY>([
+  [
+    "/app/favorites",
+    {
+      description:
+        "Crie uma conta gratuita para salvar psicólogos, posts e respostas que quiser consultar depois.",
+      title: "Salve seus favoritos",
+    },
+  ],
+  [
+    "/app/notifications",
+    {
+      description:
+        "Entre ou crie sua conta para acompanhar respostas, interações e atualizações das comunidades.",
+      title: "Acompanhe suas notificações",
+    },
+  ],
+  [
+    "/app/profile",
+    {
+      description:
+        "Crie sua conta gratuita para salvar suas preferências e continuar sua experiência na Lectum.",
+      title: "Acesse sua conta",
+    },
+  ],
+]);
 
 const communityNavigationIconStyle: CSSProperties = {
   WebkitMaskImage: `url("${COMMUNITY_NAV_ICON_URL}")`,
@@ -423,6 +455,20 @@ export const PrivateTemplate = ({
   } as CSSProperties;
   const isSessionLoading = hasToken && !sessionUser && (hidrate.isLoading || hidrate.isPending);
   const shouldShowSessionError = Boolean(hasToken && hidrate.isError && !sessionUser);
+  const restrictedAreaCopy =
+    RESTRICTED_AREA_COPY_BY_PATH.get(normalizedPathname) ?? DEFAULT_RESTRICTED_AREA_COPY;
+  const restrictedAreaReturnTo = normalizedPathname;
+  const restrictedAreaSignupHref = `/auth/profile-selection?redirectTo=${encodeURIComponent(restrictedAreaReturnTo)}`;
+  const restrictedAreaLoginHref = `/auth/login?redirectTo=${encodeURIComponent(restrictedAreaReturnTo)}`;
+
+  const navigateToAuth = (href: string) => {
+    if (hasToken || shouldShowSessionError) {
+      out(href);
+      return;
+    }
+
+    window.location.href = href;
+  };
 
   useEffect(() => {
     recordAppNavigationPoint(pathname);
@@ -723,29 +769,24 @@ export const PrivateTemplate = ({
                 </p>
 
                 <h1 className="text-2xl font-extrabold tracking-[-0.04em] text-foreground sm:text-3xl">
-                  Acesse sua conta
+                  {restrictedAreaCopy.title}
                 </h1>
                 <p className="mt-3 max-w-[360px] text-balance text-sm leading-6 text-muted sm:text-base">
-                  Entre ou crie sua conta para acessar seu perfil, salvar preferências e continuar
-                  sua experiência na Lectum.
+                  {restrictedAreaCopy.description}
                 </p>
 
                 <div className="mt-7 grid w-full gap-3 sm:grid-cols-2">
                   <Button
-                    asChild
                     className="h-12 rounded-2xl text-sm font-extrabold shadow-[0_14px_30px_rgba(47,141,235,0.22)]"
+                    onClick={() => navigateToAuth(restrictedAreaSignupHref)}
+                    type="button"
                   >
-                    <Link
-                      className="inline-flex items-center justify-center gap-2"
-                      href="/auth/profile-selection"
-                    >
-                      <UserPlus className="h-4 w-4 shrink-0" aria-hidden="true" />
-                      <span>Criar conta</span>
-                    </Link>
+                    <UserPlus className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    <span>Criar conta grátis</span>
                   </Button>
                   <Button
                     className="h-12 rounded-2xl border-[#CFE5FB] bg-white text-sm font-extrabold text-primary shadow-none hover:border-primary/40 hover:bg-primary-soft/50"
-                    onClick={() => out("/auth/login")}
+                    onClick={() => navigateToAuth(restrictedAreaLoginHref)}
                     type="button"
                     variant="outline"
                   >

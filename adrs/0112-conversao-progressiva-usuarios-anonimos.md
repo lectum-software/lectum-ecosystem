@@ -51,6 +51,12 @@ proprio conteudo, entao repetir a modal global cria redundancia e aumenta fricca
 O tempo de navegacao nessas rotas tambem nao conta para o gatilho passivo de 90 segundos, evitando que o
 visitante seja abordado imediatamente ao sair de uma tela que ja oferecia CTA de autenticacao.
 
+Em 2026-06-29, o proxy do frontend tambem passou a permitir que visitantes anonimos acessem diretamente
+`/app/profile`, `/app/favorites` e `/app/notifications` sem redirecionamento automatico para login. A
+propria `PrivateTemplate` renderiza o card "Area restrita" com CTA primario de cadastro gratuito e CTA
+secundario de login, preservando o retorno para a rota original. Rotas privadas profundas continuam
+redirecionando para login.
+
 ## Atualizacao em 2026-06-29 - tentativa anonima de favoritar psicologo
 
 Ao tentar favoritar um psicologo sem autenticacao, a modal de conversao passa a usar copy contextual:
