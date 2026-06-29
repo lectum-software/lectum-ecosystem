@@ -26,6 +26,7 @@ import { useAuth } from "@/api/callers/auth";
 import { useUnreadNotificationStatus } from "@/api/callers/notification";
 import type { user } from "@/api/generator/types";
 import { LoadingState } from "@/components/ui/loading-state";
+import { Logo } from "@/components/ui/logo";
 import { PageShell } from "@/components/ui/page-shell";
 import { useSignOut } from "@/hooks/cookies/signout";
 import { getToken } from "@/hooks/cookies/token";
@@ -584,24 +585,21 @@ export const PrivateTemplate = ({
 
       <div
         className={cn(
-          "relative mb-8 flex h-12 items-center text-xl font-black tracking-tight text-foreground",
+          "relative mb-8 flex h-12 items-center",
           isDesktopSidebarCollapsed ? "justify-center" : "justify-start",
         )}
       >
         <Link
           className={cn(
-            "group/brand flex min-w-0 items-center gap-2 rounded-2xl transition-colors duration-200 ease-out hover:text-primary",
-            isDesktopSidebarCollapsed ? "h-12 w-12 justify-center" : "h-12 flex-1",
+            "group/brand flex min-w-0 items-center rounded-2xl transition-opacity duration-200 ease-out hover:opacity-85",
+            isDesktopSidebarCollapsed
+              ? "h-12 w-[72px] justify-center overflow-hidden"
+              : "h-12 flex-1",
           )}
           href="/app/psychologists"
           title={isDesktopSidebarCollapsed ? "Lectum" : undefined}
         >
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-primary text-sm font-black text-white">
-            L
-          </span>
-          <span className={cn("truncate", isDesktopSidebarCollapsed ? "sr-only" : undefined)}>
-            Lectum
-          </span>
+          <Logo className={cn("shrink-0", isDesktopSidebarCollapsed ? "w-[68px]" : "w-[156px]")} />
         </Link>
       </div>
 

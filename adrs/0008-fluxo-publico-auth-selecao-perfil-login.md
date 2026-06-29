@@ -190,7 +190,7 @@ restante da plataforma.
 - Browser local via Chrome/CDP em auth mobile `390x844` confirmou ausencia de overflow
   horizontal em login, selecao de perfil, recuperacao e redefinicao de senha.
 
-## Atualizacao em 2026-06-28: logo completa nas telas publicas de auth
+## Atualizacao em 2026-06-28: logo completa nas telas com marca Lectum
 
 ### Contexto
 
@@ -207,6 +207,9 @@ telas de cadastro e login. O arquivo original foi fornecido fora do workspace co
   `<img>` ou componente paralelo.
 - Ajustar as larguras de exibicao nas telas publicas de auth para preservar altura
   visual semelhante a escala anterior, ja que a nova logo tem proporcao mais larga.
+- Reutilizar o mesmo componente `Logo` tambem nos pontos restantes de marca visual:
+  sidebar desktop do `PrivateTemplate`, boas-vindas do paciente e rodape da tela de
+  carregamento CFP.
 - Usar o mesmo asset para claro e escuro enquanto nao houver variante cromatica separada
   aprovada para tema escuro.
 
@@ -214,6 +217,8 @@ telas de cadastro e login. O arquivo original foi fornecido fora do workspace co
 
 - Login, selecao de perfil, cadastro de paciente, cadastro de psicologo, recuperacao e
   retorno Google exibem a nova marca completa com layout mobile-first preservado.
+- Telas privadas com sidebar desktop e telas auxiliares de onboarding deixam de renderizar
+  marca manual por letra/texto e passam a herdar a logo oficial.
 - Nao houve alteracao de fluxo, formulario, endpoint, sessao, pacote ou regra de dominio.
 
 ### Validacao
@@ -224,3 +229,8 @@ telas de cadastro e login. O arquivo original foi fornecido fora do workspace co
 - Chrome/CDP confirmou `/auth/login`, `/auth/register/patient` e
   `/auth/register/psychologist` com `innerWidth=390`, `docScrollWidth=390` e logo
   `200x41`.
+- Chrome/CDP confirmou a sidebar desktop em `/app/psychologists` com logo oficial
+  `156x32`, `innerWidth=1280` e `docScrollWidth=1280`.
+- `/patient/welcome` e o estado de carregamento de `/psychologist/cfp` sao telas
+  protegidas/condicionais; a troca nesses pontos foi validada por inspeção de componente,
+  `check` e `build`, sem criar token ou sessao simulados.

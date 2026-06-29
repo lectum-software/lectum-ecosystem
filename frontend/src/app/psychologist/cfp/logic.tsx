@@ -11,6 +11,7 @@ import { usePsychologistCfp } from "@/api/callers/psychologist-cfp";
 import type { CfpResult, CfpSearchResponse, user } from "@/api/generator/types";
 import { formatCpf } from "@/components/controllers/utils";
 import { InlineAlert } from "@/components/ui/inline-alert";
+import { Logo } from "@/components/ui/logo";
 import { getToken } from "@/hooks/cookies/token";
 import { useAppSelector } from "@/hooks/redux";
 import { useUserSet } from "@/hooks/user-set";
@@ -77,7 +78,7 @@ const LoadingScreen = () => (
     </div>
     <div className="pb-6 text-center">
       <SecurityBadge />
-      <p className="mt-5 text-3xl font-bold text-border/70">Lectum</p>
+      <Logo className="mx-auto mt-5 w-[178px] opacity-70" />
     </div>
   </PageFrame>
 );
