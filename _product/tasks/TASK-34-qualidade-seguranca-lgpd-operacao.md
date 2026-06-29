@@ -8,7 +8,7 @@
 | Prioridade | P0 |
 | Esforço | L |
 | Fase | Qualidade |
-| Status | Pending |
+| Status | Blocked |
 | Dependências | TASK-13 a TASK-33 |
 | ADR alvo | ADR de hardening operacional |
 
@@ -164,3 +164,19 @@ Regras anti-recriação específicas:
 ## Notas para executor
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
+
+## Execução 2026-06-29 — bloqueada por dependências finais
+
+A execução foi interrompida antes de qualquer implementação de hardening porque a TASK-34 é a revisão final transversal de qualidade, segurança, LGPD e operação, e as fontes de verdade ainda possuem dependências obrigatórias pendentes ou bloqueadas:
+
+- `TASK-29B` permanece `Blocked` no conjunto `TASK-13` a `TASK-33`: os produtores reais de `visualizacao_perfil` e `compartilhamento` ainda não existem de forma persistida, e a task explicitamente proíbe criar eventos fake, endpoint simulado ou mock para fechar o critério.
+- O `README.md` operacional vigente posiciona a `TASK-41` antes da `TASK-34` para publicar ou bloquear explicitamente as páginas legais públicas. A `TASK-41` está `Pending` e as minutas em `_product/legal` ainda contêm placeholders de responsável legal, CNPJ/CPF, e-mails, endereço e datas, além de exigirem aprovação do fundador e revisão jurídica antes de publicação.
+- A revisão final de LGPD não deve mascarar essas pendências com documentação incompleta, dados inventados, publicação de placeholder ou simulação de fluxos de consentimento/exclusão.
+
+Decisão registrada em `adrs/0184-bloqueio-task34-qualidade-lgpd-operacao.md`.
+
+Retomar a TASK-34 somente quando:
+
+1. `TASK-41` estiver `Completed`, ou seu bloqueio legal/editorial tiver sido aceito explicitamente para fora do MVP.
+2. As pendências remanescentes da `TASK-29B` tiverem produtores reais implementados, ou o produto tiver aceito explicitamente manter `visualizacao_perfil`/`compartilhamento` fora do MVP sem mock.
+3. A execução puder auditar rotas, índices, soft delete, paginação, logs e fluxos LGPD com o escopo final estabilizado.
