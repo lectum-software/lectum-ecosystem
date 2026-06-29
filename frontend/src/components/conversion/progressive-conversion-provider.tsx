@@ -197,6 +197,15 @@ const getPathSegments = (pathname: string) => normalizePath(pathname).split("/")
 
 const isAppPath = (pathname: string) => normalizePath(pathname).startsWith("/app");
 
+const CONVERSION_PROMPT_SUPPRESSED_PATHS = new Set([
+  "/app/favorites",
+  "/app/notifications",
+  "/app/profile",
+]);
+
+const isConversionPromptSuppressedPath = (pathname: string) =>
+  CONVERSION_PROMPT_SUPPRESSED_PATHS.has(normalizePath(pathname));
+
 const isPsychologistProfilePath = (pathname: string) => {
   const segments = getPathSegments(pathname);
 
@@ -248,6 +257,8 @@ export const ProgressiveConversionProvider = ({
   }, [pathname]);
 
   const openPrompt = useCallback((trigger: ConversionTrigger, intent?: ConversionIntent) => {
+    if (isConversionPromptSuppressedPath(pathnameRef.current)) return false;
+
     recordConversionAnalytics(trigger, pathnameRef.current);
 
     if (hasPromptBeenShown()) return false;
@@ -331,7 +342,14 @@ export const ProgressiveConversionProvider = ({
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (isAuthenticated || hasPromptBeenShown() || !isAppPath(pathname)) return;
+    if (
+      isAuthenticated ||
+      hasPromptBeenShown() ||
+      !isAppPath(pathname) ||
+      isConversionPromptSuppressedPath(pathname)
+    ) {
+      return;
+    }
 
     let previousTick = Date.now();
     const interval = window.setInterval(() => {

@@ -42,6 +42,15 @@ login.
 - Preservar `redirectTo`/`callbackUrl` nos links de selecao de perfil, login e cadastro para retornar ao
   contexto original.
 
+## Atualizacao em 2026-06-29 - rotas com CTA proprio de autenticacao
+
+As rotas publicas `/app/profile`, `/app/favorites` e `/app/notifications` passam a suprimir a modal de
+conversao progressiva. Essas telas ja apresentam o convite contextual para criar conta ou fazer login no
+proprio conteudo, entao repetir a modal global cria redundancia e aumenta friccao.
+
+O tempo de navegacao nessas rotas tambem nao conta para o gatilho passivo de 90 segundos, evitando que o
+visitante seja abordado imediatamente ao sair de uma tela que ja oferecia CTA de autenticacao.
+
 ## Consequencias
 
 - Visitantes conseguem descobrir conteudo sem cadastro imediato.
