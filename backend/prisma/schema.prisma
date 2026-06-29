@@ -28,6 +28,8 @@ model user {
   confirmed                             Boolean                       @default(false)
   confirmed_date                        DateTime?
   has_seen_discover_psychologists_tip   Boolean                       @default(false)
+  has_seen_psychologists_my_search_tip  Boolean                       @default(false)
+  has_seen_psychologist_whatsapp_tip     Boolean                       @default(false)
   has_seen_community_post_tip           Boolean                       @default(false)
   recovery_code                         String?
   recovery_date                         DateTime?

@@ -91,6 +91,8 @@ export class AccountRepository implements IAccountRepository {
       select: {
         has_seen_community_post_tip: true,
         has_seen_discover_psychologists_tip: true,
+        has_seen_psychologist_whatsapp_tip: true,
+        has_seen_psychologists_my_search_tip: true,
       },
     });
   }
@@ -100,6 +102,8 @@ export class AccountRepository implements IAccountRepository {
     data: {
       has_seen_community_post_tip?: boolean;
       has_seen_discover_psychologists_tip?: boolean;
+      has_seen_psychologist_whatsapp_tip?: boolean;
+      has_seen_psychologists_my_search_tip?: boolean;
     },
   ) {
     return this.repository.update({
@@ -110,6 +114,8 @@ export class AccountRepository implements IAccountRepository {
       select: {
         has_seen_community_post_tip: true,
         has_seen_discover_psychologists_tip: true,
+        has_seen_psychologist_whatsapp_tip: true,
+        has_seen_psychologists_my_search_tip: true,
       },
     });
   }

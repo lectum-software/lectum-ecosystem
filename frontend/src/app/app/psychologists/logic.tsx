@@ -27,6 +27,7 @@ import {
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
+  type CSSProperties,
   type FormEvent,
   type PointerEvent,
   type KeyboardEvent as ReactKeyboardEvent,
@@ -36,6 +37,7 @@ import {
   useCallback,
   useDeferredValue,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -118,6 +120,205 @@ const VIDEO_PROGRESS_TRACK_COLOR = "rgba(255,255,255,0.22)";
 const VIDEO_PROGRESS_FILL_COLOR = "rgba(255,255,255,0.75)";
 const DEFAULT_VIDEO_PLAYBACK_RATE = 1;
 const IMMERSIVE_VIDEO_PLAYBACK_RATES = [1, 1.5, 2] as const;
+
+type PsychologistsOnboardingTip = "mySearch" | "whatsapp";
+
+type CoachMarkPosition = {
+  arrowClassName: string;
+  arrowLeft: number;
+  bubbleStyle: CSSProperties;
+  ringStyle: CSSProperties;
+};
+
+const PSYCHOLOGISTS_ONBOARDING_TARGET: Record<PsychologistsOnboardingTip, string> = {
+  mySearch: "my-search",
+  whatsapp: "whatsapp",
+};
+
+const PSYCHOLOGISTS_ONBOARDING_COPY: Record<
+  PsychologistsOnboardingTip,
+  { description: string; emphasis: string; title: string }
+> = {
+  mySearch: {
+    description:
+      "Toque em Minha Busca para ajustar filtros e encontrar psicólogos mais alinhados ao que você procura.",
+    emphasis: "Minha Busca",
+    title: "Refine sua busca",
+  },
+  whatsapp: {
+    description:
+      "Gostou de um perfil? Toque em Chamar no WhatsApp para iniciar a conversa e combinar os próximos passos.",
+    emphasis: "Chamar no WhatsApp",
+    title: "Fale direto com o psicólogo",
+  },
+};
+
+const clampNumber = (value: number, min: number, max: number) =>
+  Math.min(Math.max(value, min), max);
+
+const isVisibleCoachTarget = (element: HTMLElement) => {
+  const rect = element.getBoundingClientRect();
+
+  if (rect.width <= 0 || rect.height <= 0) return false;
+  if (rect.bottom < 0 || rect.top > window.innerHeight) return false;
+  if (rect.right < 0 || rect.left > window.innerWidth) return false;
+
+  let current: HTMLElement | null = element;
+
+  while (current) {
+    const styles = window.getComputedStyle(current);
+
+    if (styles.display === "none" || styles.visibility === "hidden") return false;
+    if (Number(styles.opacity) === 0) return false;
+    if (current === element && styles.pointerEvents === "none") return false;
+
+    current = current.parentElement;
+  }
+
+  return true;
+};
+
+const findCoachTarget = (tip: PsychologistsOnboardingTip) => {
+  if (typeof document === "undefined") return null;
+
+  const targetName = PSYCHOLOGISTS_ONBOARDING_TARGET[tip];
+  const candidates = Array.from(
+    document.querySelectorAll<HTMLElement>(`[data-psychologists-tip-target="${targetName}"]`),
+  );
+
+  return candidates.find(isVisibleCoachTarget) ?? null;
+};
+
+const getCoachMarkPosition = (
+  tip: PsychologistsOnboardingTip,
+  target: HTMLElement,
+): CoachMarkPosition => {
+  const rect = target.getBoundingClientRect();
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const bubbleWidth = Math.min(320, Math.max(280, viewportWidth - 32));
+  const estimatedBubbleHeight = tip === "mySearch" ? 118 : 128;
+  const preferredTop =
+    tip === "mySearch" ? rect.bottom + 14 : rect.top - estimatedBubbleHeight - 14;
+  let top = preferredTop;
+
+  if (top < 16) {
+    top = rect.bottom + 14;
+  }
+
+  if (top + estimatedBubbleHeight > viewportHeight - 16) {
+    top = Math.max(16, rect.top - estimatedBubbleHeight - 14);
+  }
+
+  const left = clampNumber(
+    rect.left + rect.width / 2 - bubbleWidth / 2,
+    16,
+    Math.max(16, viewportWidth - bubbleWidth - 16),
+  );
+  const arrowLeft = clampNumber(rect.left + rect.width / 2 - left - 7, 24, bubbleWidth - 30);
+  const isBelowTarget = top >= rect.bottom;
+
+  return {
+    arrowClassName: isBelowTarget ? "-top-1.5 border-t border-l" : "-bottom-1.5 border-r border-b",
+    arrowLeft,
+    bubbleStyle: {
+      left,
+      top,
+      width: bubbleWidth,
+    },
+    ringStyle: {
+      borderRadius: "9999px",
+      height: rect.height + 16,
+      left: rect.left - 8,
+      top: rect.top - 8,
+      width: rect.width + 16,
+    },
+  };
+};
+
+const PsychologistsCoachMark = ({
+  onDismiss,
+  tip,
+}: {
+  onDismiss: () => void;
+  tip: PsychologistsOnboardingTip;
+}) => {
+  const [position, setPosition] = useState<CoachMarkPosition | null>(null);
+  const copy = PSYCHOLOGISTS_ONBOARDING_COPY[tip];
+
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+
+    let timeout: number | null = null;
+
+    const updatePosition = () => {
+      const target = findCoachTarget(tip);
+
+      setPosition(target ? getCoachMarkPosition(tip, target) : null);
+    };
+
+    updatePosition();
+    timeout = window.setTimeout(updatePosition, 120);
+
+    window.addEventListener("resize", updatePosition);
+    document.addEventListener("scroll", updatePosition, true);
+
+    return () => {
+      if (timeout) {
+        window.clearTimeout(timeout);
+      }
+
+      window.removeEventListener("resize", updatePosition);
+      document.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [tip]);
+
+  if (!position || typeof document === "undefined") return null;
+
+  const [beforeEmphasis, afterEmphasis] = copy.description.split(copy.emphasis);
+
+  return createPortal(
+    <div className="pointer-events-none fixed inset-0 z-[135]" data-psychologists-coach-mark>
+      <span
+        aria-hidden="true"
+        className="fixed border-2 border-primary/70 shadow-[0_0_0_9999px_rgb(15_23_42_/_42%)] ring-4 ring-primary/25 ring-offset-2 ring-offset-background/80 motion-safe:animate-pulse"
+        style={position.ringStyle}
+      />
+
+      <section
+        aria-live="polite"
+        className="pointer-events-auto fixed rounded-[24px] border border-border bg-surface p-4 pr-11 text-left text-foreground shadow-[0_24px_70px_rgb(15_23_42_/_24%)] ring-1 ring-primary/10"
+        style={position.bubbleStyle}
+      >
+        <span
+          aria-hidden="true"
+          className={cn(
+            "absolute h-3.5 w-3.5 rotate-45 border-border bg-surface",
+            position.arrowClassName,
+          )}
+          style={{ left: position.arrowLeft }}
+        />
+        <button
+          aria-label="Fechar dica"
+          className="absolute top-3 right-3 grid h-7 w-7 place-items-center rounded-full text-subtle transition hover:bg-surface-muted hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15"
+          onClick={onDismiss}
+          type="button"
+        >
+          <X className="h-4 w-4" aria-hidden="true" />
+        </button>
+        <div className="grid gap-1.5">
+          <h2 className="font-extrabold text-[0.98rem] leading-tight">{copy.title}</h2>
+          <p className="text-sm leading-5 text-muted">
+            {beforeEmphasis}
+            <strong className="font-extrabold text-foreground">{copy.emphasis}</strong>
+            {afterEmphasis}
+          </p>
+        </div>
+      </section>
+    </div>,
+    document.body,
+  );
+};
 const LONG_PRESS_MOVE_TOLERANCE_PX = 20;
 const LONG_PRESS_SCROLL_INTENT_THRESHOLD_PX = 32;
 const LONG_PRESS_SIGNIFICANT_DRAG_THRESHOLD_PX = 44;
@@ -397,9 +598,6 @@ const PsychologistFilterSearchSuggestions = ({
     )}
   </div>
 );
-
-const clampNumber = (value: number, min: number, max: number) =>
-  Math.min(max, Math.max(min, value));
 
 const formatPlaybackRate = (rate: number) =>
   `${Number.isInteger(rate) ? rate.toFixed(0) : rate.toFixed(1)}x`;
@@ -871,6 +1069,9 @@ export const PsychologistsLogic = () => {
   const [hasSeenSwipeHint, setHasSeenSwipeHint] = useState(true);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [shouldNudgeSwipeCard, setShouldNudgeSwipeCard] = useState(false);
+  const [activeOnboardingTip, setActiveOnboardingTip] = useState<PsychologistsOnboardingTip | null>(
+    null,
+  );
   const [actionColumnTranslateY, setActionColumnTranslateY] = useState(0);
   const [favoriteOverrides, setFavoriteOverrides] = useState<Record<string, boolean>>({});
   const [isVideoProgressSeeking, setIsVideoProgressSeeking] = useState(false);
@@ -917,6 +1118,9 @@ export const PsychologistsLogic = () => {
   const hasShownInitialSwipeHintRef = useRef(false);
   const hasSyncedSwipeHintPreferenceRef = useRef(false);
   const hasPersistedSwipeHintSeenRef = useRef(false);
+  const hasShownOnboardingTipThisVisitRef = useRef(false);
+  const hasPersistedMySearchTipSeenRef = useRef(false);
+  const hasPersistedWhatsappTipSeenRef = useRef(false);
   const hasPlayedSwipeNudgeRef = useRef(false);
   const suppressNextTapRef = useRef(false);
   const didLongPressRef = useRef(false);
@@ -1173,6 +1377,58 @@ export const PsychologistsLogic = () => {
     accountTips.updateOnboardingTips,
   ]);
 
+  const persistMySearchTipSeen = useCallback(() => {
+    if (
+      !accountTipsUserId ||
+      hasPersistedMySearchTipSeenRef.current ||
+      accountTips.onboardingTips.data?.has_seen_psychologists_my_search_tip
+    ) {
+      return;
+    }
+
+    hasPersistedMySearchTipSeenRef.current = true;
+    accountTips.updateOnboardingTips.mutate(
+      {
+        has_seen_psychologists_my_search_tip: true,
+      },
+      {
+        onError: () => {
+          hasPersistedMySearchTipSeenRef.current = false;
+        },
+      },
+    );
+  }, [
+    accountTips.onboardingTips.data?.has_seen_psychologists_my_search_tip,
+    accountTips.updateOnboardingTips,
+    accountTipsUserId,
+  ]);
+
+  const persistWhatsappTipSeen = useCallback(() => {
+    if (
+      !accountTipsUserId ||
+      hasPersistedWhatsappTipSeenRef.current ||
+      accountTips.onboardingTips.data?.has_seen_psychologist_whatsapp_tip
+    ) {
+      return;
+    }
+
+    hasPersistedWhatsappTipSeenRef.current = true;
+    accountTips.updateOnboardingTips.mutate(
+      {
+        has_seen_psychologist_whatsapp_tip: true,
+      },
+      {
+        onError: () => {
+          hasPersistedWhatsappTipSeenRef.current = false;
+        },
+      },
+    );
+  }, [
+    accountTips.onboardingTips.data?.has_seen_psychologist_whatsapp_tip,
+    accountTips.updateOnboardingTips,
+    accountTipsUserId,
+  ]);
+
   const markSwipeHintSeen = useCallback(() => {
     clearSwipeHintTimers();
     setShowSwipeHint(false);
@@ -1243,11 +1499,15 @@ export const PsychologistsLogic = () => {
   useEffect(() => {
     hasSyncedSwipeHintPreferenceRef.current = false;
     hasPersistedSwipeHintSeenRef.current = false;
+    hasPersistedMySearchTipSeenRef.current = false;
+    hasPersistedWhatsappTipSeenRef.current = false;
     hasShownInitialSwipeHintRef.current = false;
+    hasShownOnboardingTipThisVisitRef.current = false;
     hasPlayedSwipeNudgeRef.current = false;
     clearSwipeHintTimers();
 
     const frame = window.requestAnimationFrame(() => {
+      setActiveOnboardingTip(null);
       setShowSwipeHint(false);
       setShouldNudgeSwipeCard(false);
       setHasSeenSwipeHint(true);
@@ -1300,6 +1560,7 @@ export const PsychologistsLogic = () => {
     }
 
     hasShownInitialSwipeHintRef.current = true;
+    hasShownOnboardingTipThisVisitRef.current = true;
     showSwipeHintUntilNavigation({ nudge: true });
     persistSwipeHintSeen();
   }, [
@@ -1721,6 +1982,16 @@ export const PsychologistsLogic = () => {
     event.stopPropagation();
   }, []);
 
+  const handleWhatsappInteraction = useCallback(
+    (event: { stopPropagation: () => void }) => {
+      event.stopPropagation();
+      hasShownOnboardingTipThisVisitRef.current = true;
+      persistWhatsappTipSeen();
+      setActiveOnboardingTip((current) => (current === "whatsapp" ? null : current));
+    },
+    [persistWhatsappTipSeen],
+  );
+
   const navigateToPublicPsychologistProfile = useCallback(
     (
       psychologistId: string,
@@ -1921,9 +2192,12 @@ export const PsychologistsLogic = () => {
     (event: { stopPropagation: () => void }) => {
       event.stopPropagation();
       registerSwipeHintInteraction();
+      hasShownOnboardingTipThisVisitRef.current = true;
+      persistMySearchTipSeen();
+      setActiveOnboardingTip((current) => (current === "mySearch" ? null : current));
       handleFiltersOpen();
     },
-    [handleFiltersOpen, registerSwipeHintInteraction],
+    [handleFiltersOpen, persistMySearchTipSeen, registerSwipeHintInteraction],
   );
 
   const handleRemoveActiveFilter = useCallback(
@@ -3040,6 +3314,72 @@ export const PsychologistsLogic = () => {
   const shouldRenderDesktopControlRail =
     shouldRenderDesktopActionRail && Boolean(desktopActionPsychologist);
 
+  useEffect(() => {
+    if (!activeOnboardingTip) return;
+    if (!isFiltersOpen && !isSearchFocused && !showInitialLoading && !errorMessage) return;
+
+    const timeout = window.setTimeout(() => {
+      setActiveOnboardingTip(null);
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
+  }, [activeOnboardingTip, errorMessage, isFiltersOpen, isSearchFocused, showInitialLoading]);
+
+  useEffect(() => {
+    if (hasShownOnboardingTipThisVisitRef.current) return;
+    if (!accountTipsUserId) return;
+    if (!hasLoadedSwipeHintPreference) return;
+    if (!accountTips.onboardingTips.isSuccess) return;
+    if (accountTips.onboardingTips.isPending) return;
+    if (activeOnboardingTip) return;
+    if (!shouldRenderGlobalControls || isFiltersOpen || isSearchFocused || isUiHidden) return;
+
+    const tips = accountTips.onboardingTips.data;
+    const hasSeenDiscoverTip = Boolean(tips?.has_seen_discover_psychologists_tip);
+    const hasSeenMySearchTip =
+      hasPersistedMySearchTipSeenRef.current || Boolean(tips?.has_seen_psychologists_my_search_tip);
+    const hasSeenWhatsappTip =
+      hasPersistedWhatsappTipSeenRef.current || Boolean(tips?.has_seen_psychologist_whatsapp_tip);
+    const nextTip: PsychologistsOnboardingTip | null = !hasSeenDiscoverTip
+      ? null
+      : !hasSeenMySearchTip
+        ? "mySearch"
+        : !hasSeenWhatsappTip && featuredPsychologist?.whatsapp_url
+          ? "whatsapp"
+          : null;
+
+    if (!nextTip) return;
+
+    const timeout = window.setTimeout(() => {
+      if (hasShownOnboardingTipThisVisitRef.current) return;
+
+      hasShownOnboardingTipThisVisitRef.current = true;
+      setActiveOnboardingTip(nextTip);
+
+      if (nextTip === "mySearch") {
+        persistMySearchTipSeen();
+      } else {
+        persistWhatsappTipSeen();
+      }
+    }, 650);
+
+    return () => window.clearTimeout(timeout);
+  }, [
+    accountTips.onboardingTips.data,
+    accountTips.onboardingTips.isPending,
+    accountTips.onboardingTips.isSuccess,
+    accountTipsUserId,
+    activeOnboardingTip,
+    featuredPsychologist?.whatsapp_url,
+    hasLoadedSwipeHintPreference,
+    isFiltersOpen,
+    isSearchFocused,
+    isUiHidden,
+    persistMySearchTipSeen,
+    persistWhatsappTipSeen,
+    shouldRenderGlobalControls,
+  ]);
+
   return (
     <PrivateTemplate
       allowAnonymous
@@ -3289,6 +3629,7 @@ export const PsychologistsLogic = () => {
                       "relative inline-flex h-9 items-center justify-center gap-1.5 px-1 text-[15px] font-semibold tracking-[-0.01em] text-white transition-opacity duration-150 ease-out",
                       hasActiveFilters ? "opacity-100" : "opacity-75 hover:opacity-100",
                     )}
+                    data-psychologists-tip-target="my-search"
                     onClick={handleMySearchModeClick}
                     tabIndex={areFeedModeControlsHidden ? -1 : undefined}
                     type="button"
@@ -3611,6 +3952,9 @@ export const PsychologistsLogic = () => {
                                       ? "opacity-100"
                                       : "opacity-75 hover:opacity-100",
                                   )}
+                                  data-psychologists-tip-target={
+                                    isActiveSlide ? "my-search" : undefined
+                                  }
                                   onClick={handleMySearchModeClick}
                                   tabIndex={
                                     !isActiveSlide || areFeedModeControlsHidden ? -1 : undefined
@@ -4253,7 +4597,10 @@ export const PsychologistsLogic = () => {
                                     <PsychologistWhatsAppRedirectButton
                                       aria-label={`Chamar ${psychologist.name} no WhatsApp`}
                                       className="grid place-items-center rounded-full bg-[#22C55E] text-white transition hover:bg-[#16A34A]"
-                                      onClick={stopInteractionPropagation}
+                                      data-psychologists-tip-target={
+                                        isActiveSlide ? "whatsapp" : undefined
+                                      }
+                                      onClick={handleWhatsappInteraction}
                                       psychologist={{
                                         avatar: psychologist.avatar,
                                         crp: psychologist.crp,
@@ -4377,6 +4724,13 @@ export const PsychologistsLogic = () => {
                   <span className="text-[#308CE8]">↑</span> Descubra novos psicólogos
                 </span>
               </div>
+            ) : null}
+
+            {activeOnboardingTip ? (
+              <PsychologistsCoachMark
+                onDismiss={() => setActiveOnboardingTip(null)}
+                tip={activeOnboardingTip}
+              />
             ) : null}
 
             {isFiltersOpen && typeof document !== "undefined"
@@ -4668,7 +5022,10 @@ export const PsychologistsLogic = () => {
                       <PsychologistWhatsAppRedirectButton
                         aria-label={`Chamar ${desktopActionPsychologist.name} no WhatsApp`}
                         className="grid h-12 w-12 place-items-center rounded-full border border-[#e2e8f0] bg-white text-[#22C55E] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
-                        onClick={stopInteractionPropagation}
+                        data-psychologists-tip-target={
+                          isDesktopActionRailHidden ? undefined : "whatsapp"
+                        }
+                        onClick={handleWhatsappInteraction}
                         psychologist={{
                           avatar: desktopActionPsychologist.avatar,
                           crp: desktopActionPsychologist.crp,

@@ -92,6 +92,16 @@ export const onboardingTipsSchema: IValidatorRequest = {
       method: "boolean",
       optional: true,
     },
+    {
+      key: "has_seen_psychologists_my_search_tip",
+      method: "boolean",
+      optional: true,
+    },
+    {
+      key: "has_seen_psychologist_whatsapp_tip",
+      method: "boolean",
+      optional: true,
+    },
   ],
 };
 

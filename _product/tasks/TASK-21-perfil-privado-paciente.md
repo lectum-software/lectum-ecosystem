@@ -246,3 +246,21 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser local/CDP em `/app/profile`, validando a ordem visual `Comunidade` → `Conta` → `Sair da conta` e a linha `Ativar modo escuro` dentro de `Conta`.
+
+## Ajuste complementar em 2026-06-29 - dicas acionaveis na descoberta e comunidade
+
+- Pedido do usuario: adicionar dicas para `Minha Busca` e `WhatsApp` na pagina de psicologos, sem exibir todas ao mesmo tempo, e transformar a dica existente de criar post em dica acionavel no proprio alvo.
+- Referencias visuais consultadas: `_product/proto/Psicologos.jpg`, `_product/proto/Filtros de Psicologos - Servicos Expandidos.jpg`, `_product/proto/Feed Comunidade.jpg` e `_product/proto/Criar Nova Postagem - Pacientes.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente, entao foi usado o fallback local do inventario ativo.
+- Backend: o contrato `GET/PUT /api/private/account/tips` passou a retornar e persistir `has_seen_psychologists_my_search_tip` e `has_seen_psychologist_whatsapp_tip`, mantendo `_auth` e sem `requireRole`.
+- Frontend: `/app/psychologists` passou a usar uma fila mobile-first de dicas por usuario autenticado: primeiro descoberta, depois `Minha Busca`, depois `WhatsApp`, com no maximo uma dica por visita.
+- Frontend: clicar em `Minha Busca` ou no botao real de WhatsApp marca a dica correspondente como vista, mesmo quando o usuario usa a acao antes de a dica aparecer.
+- Frontend: a dica de criar post na comunidade deixou de ter CTA `Entendi`; o alvo destacado `+` abre a criacao de post e a preferencia segue persistida em `has_seen_community_post_tip`.
+- Nenhum mock, endpoint simulado, package novo, Figma ou codigo gerado por Builder foi usado.
+
+Criterios complementares:
+
+- [x] Dicas novas aparecem somente para usuarios autenticados.
+- [x] Apenas uma dica da fila de psicologos aparece por visita da pagina.
+- [x] `Minha Busca` e `WhatsApp` sao salvas como vistas ao visualizar a dica ou ao clicar no alvo antes dela.
+- [x] A dica de criar post e acionavel no alvo `+`, sem CTA separado.
+- [x] Preferencias persistidas por usuario foram documentadas em `DATA-MODEL.md` e ADR.

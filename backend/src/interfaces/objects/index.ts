@@ -516,6 +516,8 @@ export interface user {
   confirmed?: boolean | null;
   confirmed_date?: Date | null;
   has_seen_discover_psychologists_tip?: boolean | null;
+  has_seen_psychologists_my_search_tip?: boolean | null;
+  has_seen_psychologist_whatsapp_tip?: boolean | null;
   has_seen_community_post_tip?: boolean | null;
   recovery_code?: string | null;
   recovery_date?: Date | null;

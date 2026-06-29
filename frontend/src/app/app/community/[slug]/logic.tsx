@@ -2272,8 +2272,12 @@ const COMMUNITY_FLOATING_CREATE_POST_CLASSNAME =
   "group fixed right-5 bottom-[var(--lectum-mobile-nav-aware-fab-bottom)] z-40 grid h-14 w-14 place-items-center rounded-full border-[5px] border-white bg-[#308CE8] text-white shadow-[0_14px_30px_rgba(48,140,232,0.28)] transition-[bottom,transform,background-color,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:bg-[#2579CF] hover:shadow-[0_18px_36px_rgba(48,140,232,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8] focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-safe:animate-[lectum-desktop-create-float_4.2s_ease-in-out_infinite] sm:bottom-[var(--lectum-mobile-nav-aware-fab-bottom-sm)] lg:right-10 lg:bottom-10 lg:h-16 lg:w-16 xl:right-20 2xl:right-28";
 
 const CommunityPublishOnboarding = ({
+  createPostHref,
+  onCreatePostClick,
   variant,
 }: {
+  createPostHref: string;
+  onCreatePostClick?: (event: ReactMouseEvent<HTMLAnchorElement>, href: string) => void;
   variant: CommunityPublishOnboardingVariant;
 }) => {
   const accountTips = useAccount({
@@ -2318,6 +2322,16 @@ const CommunityPublishOnboarding = ({
     setHasSeenOnboarding(true);
     setIsVisible(false);
   }, [persistSeen]);
+
+  const activateCreatePost = useCallback(
+    (event: ReactMouseEvent<HTMLAnchorElement>) => {
+      persistSeen();
+      setHasSeenOnboarding(true);
+      setIsVisible(false);
+      onCreatePostClick?.(event, createPostHref);
+    },
+    [createPostHref, onCreatePostClick, persistSeen],
+  );
 
   useEffect(() => {
     hasSyncedPreferenceRef.current = false;
@@ -2400,19 +2414,22 @@ const CommunityPublishOnboarding = ({
         type="button"
       />
 
-      <div
+      <Link
+        aria-label="Criar publicaÃ§Ã£o agora"
         className={cn(
-          "pointer-events-none fixed z-[125] grid h-16 w-16 place-items-center",
+          "fixed z-[125] grid h-16 w-16 place-items-center focus:outline-none focus:ring-4 focus:ring-primary/25",
           placement.highlight,
         )}
-        aria-hidden="true"
+        href={createPostHref}
+        onClick={activateCreatePost}
+        scroll={false}
       >
         <span className="absolute -inset-3 rounded-full border border-[#308CE8]/25 motion-safe:animate-[lectum-community-publish-ring_1.8s_ease-out_infinite]" />
         <span className="absolute inset-0 rounded-full border-2 border-[#308CE8]/35 motion-safe:animate-[lectum-community-publish-ring_1.8s_ease-out_0.18s_infinite]" />
         <span className="relative grid h-14 w-14 place-items-center rounded-full border-[5px] border-white bg-[#308CE8] text-white shadow-[0_20px_42px_rgba(48,140,232,0.42)] motion-safe:animate-[lectum-community-publish-pulse_1.8s_ease-in-out_infinite] lg:h-16 lg:w-16">
           <Plus className="h-7 w-7 stroke-[2.4] lg:h-8 lg:w-8" aria-hidden="true" />
         </span>
-      </div>
+      </Link>
 
       <section
         aria-labelledby="community-publish-onboarding-title"
@@ -2435,16 +2452,10 @@ const CommunityPublishOnboarding = ({
               Publique sua dúvida ou relato
             </h2>
             <p className="text-sm text-subtle leading-relaxed">
-              Converse gratuitamente na comunidade e receba acolhimento dos psicólogos mediadores.
+              Toque no botão + para conversar gratuitamente na comunidade e receber acolhimento dos
+              psicólogos mediadores.
             </p>
           </div>
-          <Button
-            className="mt-1 h-11 rounded-full bg-[#308CE8] font-extrabold text-white shadow-none hover:bg-[#2579CF]"
-            onClick={dismiss}
-            type="button"
-          >
-            Entendi
-          </Button>
         </div>
       </section>
 
@@ -2804,7 +2815,13 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
         </Link>
       ) : null}
 
-      {community ? <CommunityPublishOnboarding variant="floating" /> : null}
+      {community ? (
+        <CommunityPublishOnboarding
+          createPostHref={communityCreatePostHref(community.slug)}
+          onCreatePostClick={handleCreatePostClick}
+          variant="floating"
+        />
+      ) : null}
     </PrivateTemplate>
   );
 };
@@ -3056,7 +3073,11 @@ export const CommunityFeedLogic = () => {
         <span className="sr-only">Criar publicação</span>
       </Link>
 
-      <CommunityPublishOnboarding variant="floating" />
+      <CommunityPublishOnboarding
+        createPostHref={createPostHref}
+        onCreatePostClick={handleCreatePostClick}
+        variant="floating"
+      />
 
       <style>{`
         @keyframes lectum-desktop-create-float {

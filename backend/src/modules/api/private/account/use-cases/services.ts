@@ -134,6 +134,8 @@ export const onboardingTips = async (data: IAccountDTO) => {
   const response: AccountOnboardingTipsResponse = {
     has_seen_community_post_tip: Boolean(current.has_seen_community_post_tip),
     has_seen_discover_psychologists_tip: Boolean(current.has_seen_discover_psychologists_tip),
+    has_seen_psychologist_whatsapp_tip: Boolean(current.has_seen_psychologist_whatsapp_tip),
+    has_seen_psychologists_my_search_tip: Boolean(current.has_seen_psychologists_my_search_tip),
   };
 
   return {
@@ -162,6 +164,16 @@ export const updateOnboardingTips = async (data: IAccountOnboardingTipsDTO) => {
           has_seen_discover_psychologists_tip: data.b.has_seen_discover_psychologists_tip,
         }
       : {}),
+    ...(typeof data.b.has_seen_psychologist_whatsapp_tip === "boolean"
+      ? {
+          has_seen_psychologist_whatsapp_tip: data.b.has_seen_psychologist_whatsapp_tip,
+        }
+      : {}),
+    ...(typeof data.b.has_seen_psychologists_my_search_tip === "boolean"
+      ? {
+          has_seen_psychologists_my_search_tip: data.b.has_seen_psychologists_my_search_tip,
+        }
+      : {}),
   };
 
   const repository = new AccountRepository();
@@ -169,6 +181,8 @@ export const updateOnboardingTips = async (data: IAccountOnboardingTipsDTO) => {
   const response: AccountOnboardingTipsResponse = {
     has_seen_community_post_tip: Boolean(updated.has_seen_community_post_tip),
     has_seen_discover_psychologists_tip: Boolean(updated.has_seen_discover_psychologists_tip),
+    has_seen_psychologist_whatsapp_tip: Boolean(updated.has_seen_psychologist_whatsapp_tip),
+    has_seen_psychologists_my_search_tip: Boolean(updated.has_seen_psychologists_my_search_tip),
   };
 
   return {

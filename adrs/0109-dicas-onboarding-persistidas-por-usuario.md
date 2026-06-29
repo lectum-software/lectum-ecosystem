@@ -40,3 +40,22 @@ Esse controle era frágil: podia reaparecer após login/refresh/nova sessão, n�
 - `pnpm check`
 - Validação HTTP local de `GET/PUT /api/private/account/tips` com token temporário, restaurando o usuário usado na validação.
 - Renderização local via Chrome headless em `/app/psychologists`.
+
+## Complemento 2026-06-29 - Coach marks acionaveis e fila de dicas
+
+A descoberta de psicologos passou a precisar de duas orientacoes adicionais sem exibir varias dicas ao mesmo tempo: `Minha Busca` e `WhatsApp`.
+
+Decisoes:
+
+- Adicionar em `user` as flags `has_seen_psychologists_my_search_tip` e `has_seen_psychologist_whatsapp_tip`.
+- Manter as dicas apenas para usuarios autenticados; usuario anonimo nao consulta nem grava `/api/private/account/tips`.
+- Na pagina `/app/psychologists`, usar uma fila de prioridade: descoberta de psicologos, `Minha Busca`, depois `WhatsApp`.
+- Mostrar no maximo uma dica por visita/montagem da pagina; usar estado local apenas como throttle de sessao, mantendo o backend como fonte de verdade.
+- Marcar `Minha Busca` e `WhatsApp` como vistas tanto quando a dica aparece quanto quando o usuario clica no alvo antes da dica.
+- Transformar a dica de criar post na comunidade em coach mark acionavel: o alvo `+` abre a criacao de post; nao ha CTA separado `Entendi`.
+
+Consequencias:
+
+- O onboarding fica contextual e menos intrusivo, evitando uma sequencia de pop-ups na mesma sessao.
+- A persistencia continua por usuario e sincronizada entre dispositivos apos login.
+- Se o usuario descobre a acao sozinho, a dica correspondente nao reaparece.
