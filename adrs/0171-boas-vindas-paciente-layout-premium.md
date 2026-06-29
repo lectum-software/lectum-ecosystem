@@ -123,3 +123,35 @@ Consequencias adicionais:
 - O desktop passa a ter uma composicao horizontal premium sem trocar a fonte visual da paisagem.
 - Os assets desktop ficam maiores por duplicarem as camadas base64, mas a escolha preserva fidelidade e isola a mudanca do mobile.
 - Se o produto fornecer futuramente uma imagem desktop gerada externamente/otimizada, ela pode substituir os assets `*-desktop.svg` sem mudar a logica de onboarding.
+
+## Atualizacao 2026-06-29 - desktop centralizado em paisagem
+
+Apos nova revisao do produto, a experiencia desktop full screen das duas telas de
+`/patient/welcome` foi considerada grande demais. A orientacao atual e preservar o mobile
+sem alteracao e, somente em `sm+`, exibir a composicao como um quadro SVG horizontal
+centralizado, sem ocupar a tela inteira.
+
+Decisao adicional:
+
+- Substituir as variantes desktop dos fundos pelos SVGs vetoriais enviados pelo produto
+  (`Tela 1 - background.svg` e `tela 2 - background.svg`), mantendo as variantes mobile
+  originais intactas.
+- Dimensionar o shell desktop como quadro 16:9 centralizado, limitado a `1280x720` e
+  tambem limitado por `100vw - 48px` e `100dvh - 48px`, evitando full screen e cortes.
+- Preservar textos, botoes e cards como UI real/acessivel sobre os fundos, via `next/image`,
+  sem `<img>`, sem pacote novo e sem alterar chamadas, contratos ou persistencia.
+
+Consequencias adicionais:
+
+- Desktop passa a ter aparencia de imagem SVG em paisagem, centralizada no viewport.
+- Mobile continua usando `100dvh` e os assets mobile anteriores, sem mudanca visual
+  intencional.
+- A decisao reverte apenas a parte full screen da atualizacao anterior; o fluxo real de
+  onboarding permanece inalterado.
+
+Validacao adicional:
+
+- Browser local com usuario paciente temporario real validou desktop `1920x879` com shell
+  `1280x720` centralizado e mobile `390x844` sem aplicar as regras desktop.
+- Checks completos de frontend foram tentados, mas ficaram bloqueados por erros
+  preexistentes em arquivos fora desta decisao (`app/psychologists` e `community/[slug]`).

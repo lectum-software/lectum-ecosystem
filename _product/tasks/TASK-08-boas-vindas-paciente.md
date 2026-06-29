@@ -284,3 +284,26 @@ O onboarding só termina quando o backend confirma. Se o shell privado (TASK-12)
 - O shell em `sm+` agora usa `width: 100%`, `height: 100dvh` e `max-width: none`; as classes base mobile nao foram alteradas.
 - Nao houve alteracao em backend, banco, contratos de API, formularios ou pacotes.
 - Validacao: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check` e browser/headless em desktop `1920x879` e mobile `390x844` com usuario temporario real removido ao final.
+
+## Ajuste posterior em 2026-06-29: desktop centralizado em SVG paisagem
+
+- Pedido direto de produto: o desktop nao deve mais ficar full screen; as duas telas devem
+  manter os SVGs centralizados em modo paisagem, sem alterar mobile.
+- As variantes desktop `welcome-intro-background-desktop.svg` e
+  `welcome-choice-background-desktop.svg` foram substituidas pelos SVGs vetoriais enviados
+  pelo produto (`Tela 1 - background.svg` e `tela 2 - background.svg`), mantendo intactos os
+  assets mobile.
+- O shell em `sm+` passou a ser um quadro 16:9 centralizado, limitado a `1280x720` e ao
+  espaco disponivel do viewport, removendo a ocupacao `100dvh`/`100%` de desktop.
+- O fluxo de dados nao mudou: `GET /api/private/patient/profile` e
+  `PUT /api/private/patient/onboarding` continuam reais, sem mock, e a escolha do objetivo
+  continua concluindo o onboarding.
+- ADR atualizado: `adrs/0171-boas-vindas-paciente-layout-premium.md`.
+- Validacao: `git diff --check` nos arquivos alterados e
+  `pnpm --dir frontend exec biome check src/app/globals.css` passaram; browser local em
+  `http://localhost:3000/patient/welcome` validou desktop `1920x879` com shell centralizado
+  `1280x720` e mobile `390x844` mantendo `390x844`, usando usuario paciente temporario real
+  removido ao final. `pnpm --dir frontend check` e `pnpm --dir frontend build` foram
+  executados, mas seguem bloqueados por alteracoes preexistentes fora do escopo em
+  `frontend/src/app/app/psychologists/logic.tsx` e
+  `frontend/src/app/app/community/[slug]/logic.tsx`.
