@@ -686,7 +686,7 @@ export const PrivateTemplate = ({
                 </div>
 
                 <p className="mb-3 rounded-full border border-[#CFE5FB] bg-[#F7FBFF] px-3 py-1 text-[11px] font-extrabold tracking-[0.16em] text-primary uppercase">
-                  Perfil protegido
+                  Área restrita
                 </p>
 
                 <h1 className="text-2xl font-extrabold tracking-[-0.04em] text-foreground sm:text-3xl">
