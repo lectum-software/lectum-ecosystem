@@ -406,3 +406,30 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   selos ausentes e `docScrollWidth=390` em `/auth/login`, `/auth/register/patient` e
   `/auth/register/psychologist`.
 - ADR atualizado: `adrs/0008-fluxo-publico-auth-selecao-perfil-login.md`.
+
+## Ajuste posterior em 2026-06-29: rodapé no fim da viewport e microcopy de paciente
+
+- Pedido direto de produto: o copyright deve ficar no rodapé real da tela, não próximo ao
+  card branco quando houver espaço vertical.
+- Cadastros de paciente e psicólogo passaram a usar rodapé com `mt-auto`; o padding
+  inferior dos shells de auth/cadastro foi reduzido para aproximar o copyright da base da
+  viewport.
+- `AuthTemplate` também foi ajustado para manter o login no mesmo padrão de rodapé de
+  tela.
+- A microcopy do cadastro de paciente passou para: "Publique gratuitamente na comunidade
+  e salve seus psicólogos favoritos.".
+- Formulários reais, React Hook Form/Zod, Google OAuth, `redirectTo`/`callbackUrl`,
+  accordion de e-mail e `next/image` foram preservados.
+- Nenhum pacote, endpoint, mock, store, schema ou fluxo paralelo foi criado.
+
+### Validação do ajuste
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Browser local via Chrome/CDP em viewport mobile `390x844` confirmou footer na base da
+  viewport (`footerBottom=840`) em `/auth/login`, `/auth/register/patient` e
+  `/auth/register/psychologist`, com `docScrollWidth=390`.
+- Browser local via Chrome/CDP confirmou a microcopy nova em `/auth/register/patient` e
+  os accordions de e-mail expandidos nos cadastros de paciente e psicólogo, com
+  formulário real presente e sem overflow horizontal.
+- ADR atualizado: `adrs/0008-fluxo-publico-auth-selecao-perfil-login.md`.

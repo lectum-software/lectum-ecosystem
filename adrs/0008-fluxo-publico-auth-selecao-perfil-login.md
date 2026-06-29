@@ -476,3 +476,43 @@ visualmente soltos, pequenos e com baixo contraste, adicionando ruido depois do 
 - Browser local via Chrome/CDP em viewport mobile `390x844` confirmou copyright presente,
   selos ausentes e `docScrollWidth=390` em `/auth/login`, `/auth/register/patient` e
   `/auth/register/psychologist`.
+
+## Atualizacao em 2026-06-29: rodape no fim da viewport e microcopy de paciente
+
+### Contexto
+
+O rodape institucional dos cadastros ja havia substituido os selos de confianca, mas ainda
+ficava visualmente proximo do card em telas com pouca altura de conteudo. Alem disso, a
+microcopy do cadastro de paciente precisava comunicar melhor as acoes que justificam a
+conta: participar da comunidade e salvar psicologos favoritos.
+
+### Decisao
+
+- Aplicar `mt-auto` aos rodapes dos cadastros e reduzir o padding inferior dos shells de
+  auth/cadastro para posicionar o copyright no fim visual da viewport quando houver
+  espaco livre.
+- Ajustar `AuthTemplate` para manter o rodape de login tambem mais proximo da base da
+  tela, preservando o comportamento responsivo das demais telas que usam o template.
+- Alterar a microcopy do cadastro de paciente para: "Publique gratuitamente na
+  comunidade e salve seus psicologos favoritos.".
+- Preservar formularios reais, Google OAuth, accordion de e-mail, `redirectTo`,
+  `callbackUrl`, `next/image`, rotas e contratos existentes.
+
+### Consequencias
+
+- O copyright deixa de parecer parte do card e passa a funcionar como rodape de tela.
+- A proposta de valor para paciente fica mais concreta, destacando publicacao gratuita na
+  comunidade e favoritos.
+- Quando o formulario de e-mail expande e a pagina precisa rolar, o rodape continua apos
+  o conteudo, sem fixar sobre o formulario.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Browser local via Chrome/CDP em viewport mobile `390x844` confirmou footer na base da
+  viewport (`footerBottom=840`) em `/auth/login`, `/auth/register/patient` e
+  `/auth/register/psychologist`, sem overflow horizontal.
+- Browser local via Chrome/CDP confirmou a microcopy nova em `/auth/register/patient` e
+  os accordions expandidos dos cadastros com formulario real presente e sem overflow
+  horizontal.

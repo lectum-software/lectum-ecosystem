@@ -112,7 +112,7 @@ export const RegisterPatientLogic = () => {
 
   return (
     <main className="min-h-dvh bg-background text-foreground">
-      <div className="mx-auto flex min-h-dvh w-full max-w-[390px] flex-col px-4 py-5 sm:py-6">
+      <div className="mx-auto flex min-h-dvh w-full max-w-[390px] flex-col px-4 pb-1 pt-5 sm:pb-2 sm:pt-6">
         <Logo className="mx-auto mb-5 mt-1 w-[132px] sm:mb-6 sm:w-[144px]" priority />
 
         <section className="overflow-hidden rounded-[var(--lectum-auth-radius)] border border-border bg-surface shadow-[var(--lectum-shadow)]">
@@ -121,7 +121,7 @@ export const RegisterPatientLogic = () => {
               Cadastre-se
             </h1>
             <p className="mx-auto mt-2 max-w-[300px] text-center text-sm leading-6 text-muted">
-              Encontre psicólogos e salve favoritos.
+              Publique gratuitamente na comunidade e salve seus psicólogos favoritos.
             </p>
 
             <Button
@@ -212,7 +212,7 @@ export const RegisterPatientLogic = () => {
           </div>
         </section>
 
-        <footer className="pb-1 pt-5 text-center text-[11px] leading-5 text-subtle sm:text-xs">
+        <footer className="mt-auto pb-1 pt-6 text-center text-[11px] leading-5 text-subtle sm:text-xs">
           © 2026 Lectum. Todos os direitos reservados.
         </footer>
       </div>

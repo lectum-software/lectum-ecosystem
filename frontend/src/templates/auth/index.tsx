@@ -8,7 +8,7 @@ type AuthTemplateProps = PropsWithChildren<{
 export const AuthTemplate = ({ children, contentClassName }: AuthTemplateProps) => {
   return (
     <main className="min-h-dvh bg-background text-foreground">
-      <div className="mx-auto flex min-h-dvh w-full max-w-[390px] flex-col px-4 py-4 sm:max-w-[var(--lectum-container)] sm:py-5">
+      <div className="mx-auto flex min-h-dvh w-full max-w-[390px] flex-col px-4 pb-1 pt-4 sm:max-w-[var(--lectum-container)] sm:pb-2 sm:pt-5">
         <section className={cn("flex flex-1 items-center justify-center py-2", contentClassName)}>
           {children}
         </section>
