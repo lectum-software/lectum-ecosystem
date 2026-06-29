@@ -15,7 +15,7 @@ A pagina publica de descoberta de psicologos usa um player customizado, diferent
 ## Decisao
 
 - Com UI visivel, a barra de progresso permanece como indicador passivo e nao recebe eventos de seek.
-- Com UI escondida/imersiva, o player customizado habilita os controles nativos do elemento `video`, como no player base usado nas comunidades, para que o navegador cuide diretamente do seek/progresso.
+- Com UI escondida/imersiva, o video passa pelo `VerticalVideoPlayer`, o mesmo player base usado nas comunidades, para que o navegador cuide diretamente do seek/progresso.
 - O scrubber customizado nao e renderizado no modo imersivo e a camada transparente de toque nao bloqueia os controles nativos.
 - Ao entrar no modo imersivo, o elemento `video` ativa `controls` imediatamente para exibir play/pause, volume e barra de progresso nativos.
 - O modo imersivo nao renderiza controles Lectum paralelos nem tenta forcar a UI nativa por CSS; a visibilidade e o seek ficam sob controle do navegador, como nos videos de comunidades.
@@ -27,7 +27,7 @@ A pagina publica de descoberta de psicologos usa um player customizado, diferent
 
 - Reduz conflito entre toque para entrar no modo imersivo e seek acidental com UI visivel.
 - Remove a fonte de reinicio/glitch causada pelo scrubber customizado em mobile.
-- Mantem o player customizado necessario para o feed de psicologos, mas reutiliza o comportamento nativo confiavel do player de comunidade para progresso no modo imersivo.
+- Mantem a UI customizada do feed de psicologos, mas reutiliza o `VerticalVideoPlayer` de comunidade para o elemento de video e o seek nativo no modo imersivo.
 - O navegador pode ocultar visualmente os controles nativos durante a reproducao; o usuario pode tocar no proprio video para reexibi-los e o botao `X` retorna a UI Lectum.
 - O toque simples na area do video com UI visivel passa a aguardar uma janela curta para diferenciar duplo toque de acao simples.
 

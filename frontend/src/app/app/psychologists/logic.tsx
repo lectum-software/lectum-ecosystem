@@ -58,6 +58,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
+import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
 import { playVideoWithSound } from "@/lib/video-playback";
@@ -1854,6 +1855,8 @@ export const PsychologistsLogic = () => {
         resetVideoElementToStart(video);
       }
     }
+
+    backgroundVideoRef.current = activeVideo;
 
     if (hasActiveVideoChanged) {
       const nextProgress = {
@@ -4026,79 +4029,72 @@ export const PsychologistsLogic = () => {
                             </div>
                           ) : null}
                           {slideShouldShowVideo ? (
-                            <video
-                              aria-label={`Vídeo de apresentação de ${psychologist.name}`}
-                              data-psychologist-id={psychologist.id}
-                              data-psychologists-background="true"
-                              autoPlay={isActiveSlide && !isVideoPaused}
-                              className="h-full w-full bg-black object-cover"
+                            <VerticalVideoPlayer
+                              className="h-full w-full rounded-none border-0 shadow-none"
                               controls={slideUsesNativeVideoControls}
-                              controlsList="nodownload"
-                              loop
-                              muted={isVideoMuted}
-                              onDurationChange={(event) => {
-                                if (isActiveSlide) syncActiveVideoProgress(event.currentTarget);
-                              }}
-                              onError={() => {
-                                if (isActiveSlide) setIsVideoPlaybackFailed(true);
-                              }}
-                              onLoadedData={() => {
-                                if (!isActiveSlide) return;
-
-                                setIsVideoPlaybackFailed(false);
-                                setIsVideoPaused(false);
-                                syncActiveVideoProgress();
-                              }}
-                              onLoadedMetadata={(event) => {
-                                if (isActiveSlide) syncActiveVideoProgress(event.currentTarget);
-                              }}
-                              onPause={(event) => {
-                                if (!isActiveSlide) return;
-
-                                setIsVideoPaused(true);
-                                syncActiveVideoProgress();
-                                flushFeedVideoAnalytics(event.currentTarget, {
-                                  force: true,
-                                });
-                              }}
-                              onPlay={() => {
-                                if (!isActiveSlide) return;
-
-                                setIsVideoPaused(false);
-                                syncActiveVideoProgress();
-                              }}
-                              onRateChange={(event) => {
-                                if (!isActiveSlide) return;
-
-                                setVideoPlaybackRate(event.currentTarget.playbackRate);
-                              }}
-                              onTimeUpdate={(event) => {
-                                if (!isActiveSlide) return;
-
-                                syncActiveVideoProgress(event.currentTarget);
-                                flushFeedVideoAnalytics(event.currentTarget);
-                              }}
-                              onVolumeChange={(event) => {
-                                if (!isActiveSlide) return;
-
-                                setIsVideoMuted(event.currentTarget.muted);
-                                setVideoVolume(event.currentTarget.volume);
-                              }}
-                              playsInline
+                              fit="cover"
                               poster={slidePosterSrc || undefined}
                               preload={isActiveSlide ? "auto" : "metadata"}
-                              ref={(node) => {
-                                if (isActiveSlide) {
-                                  backgroundVideoRef.current = node;
-                                } else if (
-                                  backgroundVideoRef.current?.dataset.psychologistId ===
-                                  psychologist.id
-                                ) {
-                                  backgroundVideoRef.current = null;
-                                }
+                              src={slideVideoSrc ?? ""}
+                              title={`Vídeo de apresentação de ${psychologist.name}`}
+                              videoClassName="h-full w-full bg-black object-cover"
+                              videoProps={{
+                                "data-psychologist-id": psychologist.id,
+                                "data-psychologists-background": "true",
+                                autoPlay: isActiveSlide && !isVideoPaused,
+                                controlsList: "nodownload",
+                                loop: true,
+                                muted: isVideoMuted,
+                                onDurationChange: (event) => {
+                                  if (isActiveSlide) syncActiveVideoProgress(event.currentTarget);
+                                },
+                                onError: () => {
+                                  if (isActiveSlide) setIsVideoPlaybackFailed(true);
+                                },
+                                onLoadedData: () => {
+                                  if (!isActiveSlide) return;
+
+                                  setIsVideoPlaybackFailed(false);
+                                  setIsVideoPaused(false);
+                                  syncActiveVideoProgress();
+                                },
+                                onLoadedMetadata: (event) => {
+                                  if (isActiveSlide) syncActiveVideoProgress(event.currentTarget);
+                                },
+                                onPause: (event) => {
+                                  if (!isActiveSlide) return;
+
+                                  setIsVideoPaused(true);
+                                  syncActiveVideoProgress();
+                                  flushFeedVideoAnalytics(event.currentTarget, {
+                                    force: true,
+                                  });
+                                },
+                                onPlay: () => {
+                                  if (!isActiveSlide) return;
+
+                                  setIsVideoPaused(false);
+                                  syncActiveVideoProgress();
+                                },
+                                onRateChange: (event) => {
+                                  if (!isActiveSlide) return;
+
+                                  setVideoPlaybackRate(event.currentTarget.playbackRate);
+                                },
+                                onTimeUpdate: (event) => {
+                                  if (!isActiveSlide) return;
+
+                                  syncActiveVideoProgress(event.currentTarget);
+                                  flushFeedVideoAnalytics(event.currentTarget);
+                                },
+                                onVolumeChange: (event) => {
+                                  if (!isActiveSlide) return;
+
+                                  setIsVideoMuted(event.currentTarget.muted);
+                                  setVideoVolume(event.currentTarget.volume);
+                                },
+                                tabIndex: slideUsesNativeVideoControls ? 0 : -1,
                               }}
-                              src={slideVideoSrc ?? undefined}
-                              tabIndex={slideUsesNativeVideoControls ? 0 : -1}
                             />
                           ) : slidePosterSrc ? (
                             <Image

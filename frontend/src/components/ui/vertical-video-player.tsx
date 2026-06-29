@@ -8,12 +8,21 @@ import {
   useEffect,
   useRef,
   useState,
+  type VideoHTMLAttributes,
 } from "react";
 import { cn } from "@/lib/utils";
 import { toggleVideoElementPlayback } from "@/lib/video-interactions";
 
 type VideoFit = "contain" | "cover";
 type ControlsVariant = "native" | "minimal";
+type VideoDataAttributes = {
+  [key: `data-${string}`]: string | undefined;
+};
+type VerticalVideoElementProps = Omit<
+  VideoHTMLAttributes<HTMLVideoElement>,
+  "children" | "className" | "controls" | "poster" | "preload" | "ref" | "src"
+> &
+  VideoDataAttributes;
 
 type VerticalVideoPlayerProps = {
   className?: string;
@@ -28,6 +37,7 @@ type VerticalVideoPlayerProps = {
   style?: CSSProperties;
   title: string;
   videoClassName?: string;
+  videoProps?: VerticalVideoElementProps;
 };
 
 const fitClassName: Record<VideoFit, string> = {
@@ -70,12 +80,18 @@ export const VerticalVideoPlayer = ({
   style,
   title,
   videoClassName,
+  videoProps,
 }: VerticalVideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const storedFullscreenStylesRef = useRef<StoredVideoStyle[] | null>(null);
   const [isPaused, setIsPaused] = useState(true);
   const usesMinimalControls = controls && controlsVariant === "minimal";
   const hasNativeControls = controls && !usesMinimalControls;
+  const {
+    controlsList: videoControlsList,
+    onContextMenu: onVideoContextMenu,
+    ...passthroughVideoProps
+  } = videoProps ?? {};
 
   useEffect(() => {
     onVideoElementReady?.(videoRef.current);
@@ -177,13 +193,15 @@ export const VerticalVideoPlayer = ({
     void toggleVideoElementPlayback(videoRef.current);
   }, []);
 
-  const preventNativeContextMenu = useCallback(
+  const handleVideoContextMenu = useCallback(
     (event: MouseEvent<HTMLVideoElement>) => {
-      if (!usesMinimalControls) return;
+      if (usesMinimalControls) {
+        event.preventDefault();
+      }
 
-      event.preventDefault();
+      onVideoContextMenu?.(event);
     },
-    [usesMinimalControls],
+    [onVideoContextMenu, usesMinimalControls],
   );
 
   return (
@@ -194,21 +212,21 @@ export const VerticalVideoPlayer = ({
       )}
       style={style}
     >
-      {/* biome-ignore lint/a11y/useMediaCaption: Conteúdos enviados por usuários ainda não possuem legenda persistida. */}
       <video
+        {...passthroughVideoProps}
         aria-label={title}
         className={cn("h-full w-full bg-black", fitClassName[fit], videoClassName)}
         controls={hasNativeControls}
         controlsList={
           usesMinimalControls
             ? "nodownload noplaybackrate nofullscreen noremoteplayback"
-            : "nodownload"
+            : (videoControlsList ?? "nodownload")
         }
         data-lectum-content-video={fullscreenVariant === "content" ? "true" : undefined}
         data-lectum-video-player="true"
         disablePictureInPicture={usesMinimalControls}
         disableRemotePlayback={usesMinimalControls}
-        onContextMenu={preventNativeContextMenu}
+        onContextMenu={handleVideoContextMenu}
         playsInline
         poster={poster || undefined}
         preload={preload}
