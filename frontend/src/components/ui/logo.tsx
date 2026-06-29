@@ -18,12 +18,28 @@ export function Logo({ className, priority }: LogoProps) {
   return (
     <Image
       alt={APP_NAME}
-      className={cn("h-auto w-[150px]", className)}
+      className={cn("h-auto w-[136px]", className)}
       height={260}
       loading="eager"
       priority={priority}
       src={path}
       width={1280}
+    />
+  );
+}
+
+export function LogoIcon({ className, priority }: LogoProps) {
+  const APP_NAME = process.env.NEXT_PUBLIC_SYSTEM_NAME || "Lectum";
+
+  return (
+    <Image
+      alt={APP_NAME}
+      className={cn("h-auto w-8", className)}
+      height={1500}
+      loading="eager"
+      priority={priority}
+      src="/logo-icon.svg"
+      width={1500}
     />
   );
 }

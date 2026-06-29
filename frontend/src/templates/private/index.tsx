@@ -26,7 +26,7 @@ import { useAuth } from "@/api/callers/auth";
 import { useUnreadNotificationStatus } from "@/api/callers/notification";
 import type { user } from "@/api/generator/types";
 import { LoadingState } from "@/components/ui/loading-state";
-import { Logo } from "@/components/ui/logo";
+import { Logo, LogoIcon } from "@/components/ui/logo";
 import { PageShell } from "@/components/ui/page-shell";
 import { useSignOut } from "@/hooks/cookies/signout";
 import { getToken } from "@/hooks/cookies/token";
@@ -599,7 +599,11 @@ export const PrivateTemplate = ({
           href="/app/psychologists"
           title={isDesktopSidebarCollapsed ? "Lectum" : undefined}
         >
-          <Logo className={cn("shrink-0", isDesktopSidebarCollapsed ? "w-[68px]" : "w-[156px]")} />
+          {isDesktopSidebarCollapsed ? (
+            <LogoIcon className="h-8 w-8 shrink-0" />
+          ) : (
+            <Logo className="w-[132px] shrink-0" />
+          )}
         </Link>
       </div>
 

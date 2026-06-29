@@ -172,7 +172,7 @@ export const WelcomePatientLogic = () => {
             <WelcomeBackground variant="intro" />
 
             <div className="lectum-welcome-fade-up absolute top-[14.8%] right-0 left-0 z-10 grid justify-items-center px-5 text-center">
-              <Logo className="lectum-welcome-symbol w-[192px] sm:w-[260px]" priority />
+              <Logo className="lectum-welcome-symbol w-[146px] sm:w-[192px]" priority />
               <h1 className="lectum-welcome-brand mt-[25px] max-w-[338px] text-[1.86rem] font-extrabold leading-[1.04] tracking-[-0.055em] sm:max-w-[760px] sm:text-[3.25rem]">
                 Bem-vindo &agrave; Lectum
               </h1>

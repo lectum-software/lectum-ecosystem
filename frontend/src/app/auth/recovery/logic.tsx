@@ -115,7 +115,7 @@ export const RecoveryLogic = () => {
 
       <section className="mx-auto flex min-h-[calc(100dvh-49px)] w-full max-w-[390px] flex-col px-4 py-6 sm:py-8">
         <div className="grid justify-items-center text-center">
-          <Logo className="w-[202px] sm:w-[215px]" priority />
+          <Logo className="w-[148px] sm:w-[156px]" priority />
           <h2 className="mt-6 text-xl font-extrabold leading-tight">Esqueceu sua senha?</h2>
           <p className="mt-3 max-w-[330px] text-sm leading-6 text-muted">
             Não se preocupe! Insira o e-mail associado à sua conta e enviaremos um link para você

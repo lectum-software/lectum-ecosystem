@@ -234,3 +234,41 @@ telas de cadastro e login. O arquivo original foi fornecido fora do workspace co
 - `/patient/welcome` e o estado de carregamento de `/psychologist/cfp` sao telas
   protegidas/condicionais; a troca nesses pontos foi validada por inspeção de componente,
   `check` e `build`, sem criar token ou sessao simulados.
+
+## Atualizacao em 2026-06-29: escala premium da marca, icone recolhido e favicon
+
+### Contexto
+
+A logo completa oficial trouxe uma proporcao mais larga que a marca anterior. Em alguns
+pontos ela passou a competir visualmente com o conteudo principal. Alem disso, quando a
+sidebar desktop ficava recolhida, o wordmark era comprimido/cortado em vez de usar a
+assinatura iconica da marca. O usuario tambem forneceu `Logo icon.svg` como asset
+oficial para o favicon.
+
+### Decisao
+
+- Reduzir a escala da logo completa nas telas publicas de auth, onboarding auxiliar,
+  erro 404 e sidebar expandida para uma presenca mais premium e menos dominante.
+- Criar `LogoIcon` no mesmo componente compartilhado de marca, ainda usando
+  `next/image`, sem introduzir `<img>` nem componente paralelo fora da fundacao atual.
+- Usar `LogoIcon` apenas no estado recolhido da sidebar desktop, mantendo a logo
+  completa na sidebar expandida.
+- Salvar o asset oficial como `frontend/public/logo-icon.svg` e gerar dele o
+  `frontend/src/app/favicon.ico` e `frontend/public/icon.png`, preservando fundo
+  transparente e sem adicionar pacote novo.
+
+### Consequencias
+
+- A marca fica menor e mais alinhada ao layout mobile-first/premium das telas Lectum.
+- A sidebar recolhida deixa de exibir wordmark cortado e passa a usar somente o simbolo.
+- O favicon passa a refletir o icone oficial fornecido, sem alterar rotas, sessao,
+  formularios, endpoints ou dependencias.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Browser local/headless em `/auth/login` confirmou logo com `148px` no mobile e sem
+  overflow horizontal.
+- Browser local/headless em `/app/psychologists` confirmou sidebar recolhida com icone
+  quadrado da marca, sem wordmark cortado.

@@ -111,7 +111,7 @@ export const RegisterPatientLogic = () => {
       <div className="mx-auto flex min-h-dvh w-full max-w-[390px] flex-col px-4 py-5 sm:py-6">
         <section className="overflow-hidden rounded-[var(--lectum-auth-radius)] border border-border bg-surface shadow-[var(--lectum-shadow)]">
           <div className="border-b border-border px-5 py-5 text-center sm:px-6">
-            <Logo className="mx-auto w-[200px] sm:w-[210px]" priority />
+            <Logo className="mx-auto w-[146px] sm:w-[154px]" priority />
           </div>
 
           <div className="px-5 pb-6 pt-5 sm:px-6">

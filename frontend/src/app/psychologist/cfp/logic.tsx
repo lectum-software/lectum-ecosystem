@@ -78,7 +78,7 @@ const LoadingScreen = () => (
     </div>
     <div className="pb-6 text-center">
       <SecurityBadge />
-      <Logo className="mx-auto mt-5 w-[178px] opacity-70" />
+      <Logo className="mx-auto mt-5 w-[128px] opacity-70" />
     </div>
   </PageFrame>
 );
