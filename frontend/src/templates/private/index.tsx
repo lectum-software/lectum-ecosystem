@@ -23,6 +23,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import { useAuth } from "@/api/callers/auth";
+import { useUnreadNotificationStatus } from "@/api/callers/notification";
 import type { user } from "@/api/generator/types";
 import { LoadingState } from "@/components/ui/loading-state";
 import { PageShell } from "@/components/ui/page-shell";
@@ -75,6 +76,7 @@ type NavigationItem = {
   title: string;
 };
 
+const NOTIFICATIONS_HREF = "/app/notifications";
 const COMMUNITY_NAV_ICON_URL = "/svg/atr_24dp_64748B_FILL0_wght400_GRAD0_opsz24.svg";
 
 const communityNavigationIconStyle: CSSProperties = {
@@ -93,6 +95,13 @@ const CommunityNavigationIcon = ({ "aria-hidden": ariaHidden, className }: Navig
     aria-hidden={ariaHidden ?? true}
     className={cn("inline-block bg-current", className)}
     style={communityNavigationIconStyle}
+  />
+);
+
+const NotificationUnreadIndicator = () => (
+  <span
+    aria-hidden="true"
+    className="-right-1 -top-1 absolute h-2.5 w-2.5 rounded-full bg-primary ring-2 ring-surface"
   />
 );
 
@@ -358,6 +367,7 @@ export const PrivateTemplate = ({
   });
 
   const { hidrate } = useAuth({ enableHidrate: hasToken });
+  const { hasUnread: hasUnreadNotifications } = useUnreadNotificationStatus(hasToken);
 
   useEffect(() => {
     if (hidrate.data?.id) {
@@ -490,6 +500,8 @@ export const PrivateTemplate = ({
         {navigation.map((item, index) => {
           const Icon = item.mobileIcon ?? item.icon;
           const isActive = item.href === mobileNavigationActiveHref;
+          const shouldShowUnreadIndicator =
+            hasUnreadNotifications && item.href === NOTIFICATIONS_HREF;
 
           if (bottomNavigationCenterAction && index === 2) {
             return (
@@ -514,6 +526,9 @@ export const PrivateTemplate = ({
           return (
             <li key={item.href}>
               <Link
+                aria-label={
+                  shouldShowUnreadIndicator ? `${item.label}, há notificações não lidas` : undefined
+                }
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
                   "flex min-h-16 flex-col items-center justify-center gap-1 px-1 text-[0.68rem] font-semibold transition",
@@ -521,7 +536,10 @@ export const PrivateTemplate = ({
                 )}
                 href={item.href}
               >
-                <Icon className="h-5 w-5" aria-hidden={true} />
+                <span className="relative inline-grid h-5 w-5 place-items-center">
+                  <Icon className="h-5 w-5" aria-hidden={true} />
+                  {shouldShowUnreadIndicator ? <NotificationUnreadIndicator /> : null}
+                </span>
                 <span className="truncate">{item.label}</span>
               </Link>
             </li>
@@ -591,9 +609,14 @@ export const PrivateTemplate = ({
         {navigation.map((item) => {
           const Icon = item.icon;
           const isActive = isDesktopActivePath(navigationContextPathname, item);
+          const shouldShowUnreadIndicator =
+            hasUnreadNotifications && item.href === NOTIFICATIONS_HREF;
 
           return (
             <Link
+              aria-label={
+                shouldShowUnreadIndicator ? `${item.label}, há notificações não lidas` : undefined
+              }
               aria-current={isActive ? "page" : undefined}
               className={cn(
                 "flex min-h-12 items-center rounded-2xl text-[15px] font-bold transition",
@@ -604,9 +627,18 @@ export const PrivateTemplate = ({
               )}
               href={item.href}
               key={item.href}
-              title={isDesktopSidebarCollapsed ? item.label : undefined}
+              title={
+                isDesktopSidebarCollapsed
+                  ? shouldShowUnreadIndicator
+                    ? `${item.label} — há notificações não lidas`
+                    : item.label
+                  : undefined
+              }
             >
-              <Icon className="h-5 w-5 shrink-0" aria-hidden={true} />
+              <span className="relative inline-grid h-5 w-5 shrink-0 place-items-center">
+                <Icon className="h-5 w-5" aria-hidden={true} />
+                {shouldShowUnreadIndicator ? <NotificationUnreadIndicator /> : null}
+              </span>
               <span className={cn("truncate", isDesktopSidebarCollapsed ? "sr-only" : undefined)}>
                 {item.label}
               </span>

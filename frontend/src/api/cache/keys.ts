@@ -8,7 +8,9 @@
     tips: (userId?: string | null) => ["account_onboarding_tips", userId ?? "anonymous"],
   },
   notification: {
+    root: () => ["notification_index"],
     index: (filters?: unknown) => ["notification_index", filters],
+    unreadStatus: () => ["notification_index", "unread_status"],
     preferences: () => ["notification_preferences"],
   },
   patient: {

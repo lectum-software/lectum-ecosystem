@@ -6,6 +6,8 @@ import type { notification } from "@/api/generator/types";
 import * as api from "@/api/req/notification";
 import type { IUseCallerProps, Pagination } from "@/api/types";
 
+const UNREAD_NOTIFICATION_STATUS_FILTERS = { limit: 1, search: "unread" };
+
 export const useNotification = ({
   callbacks,
   filters,
@@ -26,7 +28,7 @@ export const useNotification = ({
   const update = useMutation({
     mutationFn: (data: { id: string; read: boolean }) => api.update(data.id, { read: data.read }),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: indexKey });
+      queryClient.invalidateQueries({ queryKey: keys.notification.root() });
       callbacks?.update?.onSuccess?.(data);
     },
     onError: callbacks?.update?.onError,
@@ -35,11 +37,26 @@ export const useNotification = ({
   const clean = useMutation({
     mutationFn: () => api.clean(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: indexKey });
+      queryClient.invalidateQueries({ queryKey: keys.notification.root() });
     },
   });
 
   return { index, update, clean };
+};
+
+export const useUnreadNotificationStatus = (enabled = true) => {
+  const query = useQuery<Pagination<notification>>({
+    queryKey: keys.notification.unreadStatus(),
+    queryFn: () => api.index(UNREAD_NOTIFICATION_STATUS_FILTERS),
+    enabled,
+    staleTime: 30_000,
+  });
+
+  return {
+    hasUnread: (query.data?.count ?? 0) > 0,
+    query,
+    unreadCount: query.data?.count ?? 0,
+  };
 };
 
 export const useNotificationPreferences = () => {

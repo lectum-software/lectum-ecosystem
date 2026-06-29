@@ -246,3 +246,30 @@ Tambem foi decidido que sufixos de papel no titulo da notificacao poluem a leitu
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser local em `/app/notifications`.
+
+## Complemento 2026-06-29 - badge de nao lidas no shell privado
+
+### Contexto
+
+O usuario precisa perceber notificacoes ainda nao vistas antes de abrir a central. Como o shell privado ja concentra a navegacao global mobile-first e desktop, o indicador deve ficar no item `Notificações`, sem criar estado global paralelo nem depender de dados simulados.
+
+### Decisao
+
+- Reutilizar o endpoint real `GET /api/private/notification/index` com `search=unread` e `limit=1` para calcular apenas se existe pelo menos uma notificacao nao lida.
+- Criar uma query key raiz de notificacoes no frontend para invalidar, de uma vez, a lista completa e o status leve de nao lidas.
+- Renderizar um ponto `bg-primary` no icone do item `Notificações` da bottom navigation mobile e da sidebar desktop quando `count > 0`.
+- Fazer `update`, `clean` e o listener realtime `socket.on("notification")` invalidarem/refazerem a raiz de notificacoes, garantindo que leitura, limpeza e novos eventos reflitam no badge.
+
+### Consequencias
+
+- O indicador usa apenas notificacoes persistidas reais (`read=false`) e o filtro ja existente no backend, incluindo a omissao de `downvote` legada pela propria listagem.
+- Nao ha novo endpoint, schema Prisma, preferencia, store Redux, package ou mock.
+- O shell passa a fazer uma consulta leve extra quando ha token autenticado; o limite 1 reduz payload e o `count` da paginacao continua sendo a fonte para a existencia de nao lidas.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm --dir backend check`
+- `pnpm check`
+- Browser local via Chrome/CDP em `/app/notifications`, com token real temporario e notificacoes nao lidas reais no banco de desenvolvimento, validando o ponto visivel no mobile `390x844` e no desktop `1280x900`.

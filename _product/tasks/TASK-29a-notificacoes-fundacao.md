@@ -142,6 +142,7 @@ Packages permitidos: `socket.io`, `socket.io-client`, `web-push`, TanStack Query
 - [x] Ajuste fino 2026-06-17: itens de `/app/settings/notifications` ficaram compactos em uma linha, sem descrições, sem rótulo visual `Receber`, com controles alinhados à direita e ícone de WhatsApp azul no item `Cliques no WhatsApp`.
 - [x] Ajuste fino 2026-06-17: `/app/notifications` usa card branco também no mobile, sem fundo azulado nos itens, e a ação `Marcar todas como lidas` ficou alinhada no header ao lado das configurações.
 - [x] Ajuste fino 2026-06-17: o seletor `Novas postagens` em `/app/settings/notifications` abandonou o select nativo visivel e passou a usar dropdown customizado premium, com opcoes segmentadas por papel e `Todos`, sem vazar do card no mobile.
+- [x] Ajuste 2026-06-29: o item `Notificações` da navegação inferior mobile e da sidebar desktop exibe um pontinho azul quando a consulta real de notificações não lidas retorna `count > 0`, com atualização por leitura/limpeza e evento realtime.
 
 ## Validação mínima
 
@@ -325,3 +326,21 @@ Esta task deixa o canal de recebimento pronto. **Não** ligue eventos de domíni
 - `pnpm check`
 - Browser local em `/app/notifications`.
 - ADR criado: `adrs/0169-autoria-notificacoes-profissionais.md`.
+
+## Complemento 2026-06-29 - badge de notificacoes nao lidas na navegacao
+
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a referencia visual auditavel consultada foi `_product/proto/Notificações.jpg`, que mostra a navegacao inferior mobile da central.
+- O `PrivateTemplate` passou a consumir uma consulta real e leve de notificacoes nao lidas (`search=unread`, `limit=1`) para decidir se o item `Notificações` deve exibir o pontinho azul.
+- O indicador aparece no icone do item `Notificações` tanto na bottom navigation mobile quanto no menu lateral desktop, inclusive quando a sidebar esta recolhida.
+- A query de notificacoes ganhou uma key raiz para invalidar todas as variantes de lista/status; marcar uma notificacao como lida, limpar todas e receber evento realtime passam a atualizar tambem o indicador.
+- A mudanca nao altera backend, schema Prisma, endpoints, preferencias, payloads persistidos ou packages.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend exec biome check --write src/api/cache/keys.ts src/api/callers/notification/index.tsx src/providers/socket/index.tsx src/templates/private/index.tsx`
+- `pnpm --dir frontend check` (primeira tentativa isolada teve OOM transitorio no processo Node; subcomandos e reexecucao completa passaram)
+- `pnpm --dir frontend build`
+- Browser local via Chrome/CDP em `/app/notifications`, com token real temporario e notificacoes nao lidas reais do banco de desenvolvimento, validando `visibleDotLinks=1` em mobile `390x844` e desktop `1280x900`.
+- `pnpm --dir backend check`
+- `pnpm check`
+- ADR atualizado: `adrs/0007-notificacoes-fundacao.md`.

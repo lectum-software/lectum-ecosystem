@@ -60,7 +60,7 @@ export const Provider = () => {
     });
 
     socket.on("notification", () => {
-      queryClient.refetchQueries({ queryKey: keys.notification.index() });
+      queryClient.refetchQueries({ queryKey: keys.notification.root() });
     });
   }, [dispatch, token, userId, queryClient]);
 
