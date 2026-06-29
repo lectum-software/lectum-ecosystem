@@ -110,11 +110,11 @@ export const RegisterPatientLogic = () => {
     <main className="min-h-dvh bg-background text-foreground">
       <div className="mx-auto flex min-h-dvh w-full max-w-[390px] flex-col px-4 py-5 sm:py-6">
         <section className="overflow-hidden rounded-[var(--lectum-auth-radius)] border border-border bg-surface shadow-[var(--lectum-shadow)]">
-          <div className="border-b border-border px-5 py-5 text-center sm:px-6">
-            <Logo className="mx-auto w-[146px] sm:w-[154px]" priority />
+          <div className="border-b border-border px-5 py-6 text-center sm:px-6">
+            <Logo className="mx-auto w-[136px] sm:w-[148px]" priority />
           </div>
 
-          <div className="px-5 pb-6 pt-5 sm:px-6">
+          <div className="px-5 pb-6 pt-6 sm:px-6">
             <h1 className="text-center text-[1.45rem] font-extrabold leading-tight text-foreground">
               Cadastre-se
             </h1>

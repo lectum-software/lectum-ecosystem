@@ -296,7 +296,32 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir frontend build`
 - Browser local via Chrome/CDP em viewport mobile `390x844`: `innerWidth=390`,
   `docScrollWidth=390`, logo `126x26` em `y=41`, cards `360px` sem overflow horizontal.
-- `pnpm --dir frontend check` foi executado, mas permaneceu bloqueado por diagnósticos
-  Biome preexistentes em arquivos fora do escopo deste ajuste (`community/*`,
-  `psychologists/*`, `llms.txt`, `navigation-history`) antes de lint/typecheck.
+- ADR atualizado: `adrs/0008-fluxo-publico-auth-selecao-perfil-login.md`.
+
+## Ajuste posterior em 2026-06-29: escala consistente da logo nas telas de auth
+
+- Correção de escopo do ajuste anterior: o refinamento de logo/spacing foi aplicado em
+  todas as telas públicas de auth que exibem a marca, não apenas na seleção de perfil.
+- Login, recuperação de senha e retorno Google usam logo compacta (`132px` mobile,
+  `144px` em telas maiores) e mais respiro antes do título/texto.
+- Cadastro de paciente e cadastro de psicólogo usam header com logo menor (`136px`
+  mobile, `148px` em telas maiores), preservando o card e os formulários reais.
+- No cadastro de psicólogo, o badge "Para Psicólogos" foi reduzido no mobile para não
+  competir com a marca.
+- Telas que não tinham logo como padrão visual (`verify-email`, `reset-password` e erro)
+  não receberam marca nova, para evitar alteração de hierarquia e altura fora do pedido.
+- Nenhum pacote, endpoint, formulário, store, mock ou fluxo paralelo de autenticação foi
+  criado.
+
+### Validação do ajuste
+
+- `pnpm --dir frontend exec biome check src/app/auth/login/logic.tsx src/app/auth/register/patient/logic.tsx src/app/auth/register/psychologist/logic.tsx src/app/auth/recovery/logic.tsx src/app/auth/redirect/logic.tsx src/app/auth/profile-selection/logic.tsx src/templates/auth/index.tsx`
+- `pnpm --dir frontend lint`
+- `pnpm --dir frontend typecheck`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Browser local via Chrome/CDP em viewport mobile `390x844` confirmou
+  `docScrollWidth=390` e logo compacta nas rotas `/auth/profile-selection`,
+  `/auth/login`, `/auth/register/patient`, `/auth/register/psychologist` e
+  `/auth/recovery`.
 - ADR atualizado: `adrs/0008-fluxo-publico-auth-selecao-perfil-login.md`.

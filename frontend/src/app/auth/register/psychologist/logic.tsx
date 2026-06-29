@@ -110,16 +110,16 @@ export const RegisterPsychologistLogic = () => {
     <main className="min-h-dvh bg-background text-foreground">
       <div className="mx-auto flex min-h-dvh w-full max-w-[398px] flex-col px-4 py-5 sm:max-w-[420px] sm:py-6">
         <section className="overflow-hidden rounded-[var(--lectum-auth-radius)] border border-border bg-surface shadow-[var(--lectum-shadow)]">
-          <div className="border-b border-border px-5 py-5 sm:px-6">
+          <div className="border-b border-border px-5 py-6 sm:px-6">
             <div className="flex items-center justify-between gap-3">
-              <Logo className="w-[140px] sm:w-[148px]" priority />
-              <span className="whitespace-nowrap rounded-full bg-primary-soft px-2.5 py-1 text-[11px] font-semibold text-primary">
+              <Logo className="w-[136px] sm:w-[148px]" priority />
+              <span className="whitespace-nowrap rounded-full bg-primary-soft px-2.5 py-1 text-[10px] font-semibold text-primary sm:text-[11px]">
                 Para Psicólogos
               </span>
             </div>
           </div>
 
-          <div className="px-5 pb-6 pt-5 sm:px-6">
+          <div className="px-5 pb-6 pt-6 sm:px-6">
             <div className="grid justify-items-center text-center">
               <h1 className="max-w-[310px] text-[1.35rem] font-extrabold leading-[1.18] text-foreground sm:text-[1.45rem]">
                 Cadastre-se para converter pacientes para o WhatsApp

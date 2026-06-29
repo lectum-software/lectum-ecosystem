@@ -313,6 +313,44 @@ visual grande e proxima demais do texto, competindo com a pergunta "Qual o seu p
 - Browser local via Chrome/CDP em viewport mobile `390x844` confirmou `innerWidth=390`,
   `docScrollWidth=390`, logo em `126x26` posicionada no topo (`y=41`) e cards com
   `360px` de largura sem overflow horizontal.
-- `pnpm --dir frontend check` permaneceu bloqueado por diagnosticos Biome preexistentes
-  em arquivos fora do escopo deste ajuste (`community/*`, `psychologists/*`,
-  `llms.txt`, `navigation-history`), antes de lint/typecheck.
+
+## Atualizacao em 2026-06-29: escala consistente da logo nas telas de auth
+
+### Contexto
+
+O ajuste anterior havia tratado primeiro a selecao de perfil, mas a decisao visual de
+reduzir dominancia da marca precisava valer para todas as telas publicas que exibem logo:
+login, cadastro de paciente, cadastro de psicologo, recuperacao de senha e retorno Google.
+
+### Decisao
+
+- Padronizar a logo em telas de auth com escala compacta:
+  - `132px` mobile / `144px` desktop para telas centralizadas de login, recovery e
+    retorno Google;
+  - `136px` mobile / `148px` desktop para headers de cadastro dentro do card;
+  - `126px` mobile / `144px` desktop para a selecao de perfil, por ficar no topo da
+    viewport e nao dentro de um card.
+- Aumentar o respiro logo -> titulo nas telas em que a logo e o titulo ficam no mesmo
+  bloco, usando `mt-7` no titulo principal.
+- No cadastro de psicologo, manter o badge "Para Psicologos", mas reduzir sua escala no
+  mobile para que ele nao compacte a logo nem dispute hierarquia.
+- Nao adicionar logo em telas que ja usam outro padrao visual intencional, como
+  verificacao de e-mail e redefinicao de senha, para evitar mudanca de fluxo/altura sem
+  necessidade.
+
+### Consequencias
+
+- Todas as telas publicas de auth que exibem a marca passam a ter assinatura visual mais
+  leve e respiro consistente.
+- O fluxo, formularios, OAuth, redirects e contracts existentes permanecem inalterados.
+
+### Validacao
+
+- `pnpm --dir frontend exec biome check src/app/auth/login/logic.tsx src/app/auth/register/patient/logic.tsx src/app/auth/register/psychologist/logic.tsx src/app/auth/recovery/logic.tsx src/app/auth/redirect/logic.tsx src/app/auth/profile-selection/logic.tsx src/templates/auth/index.tsx`
+- `pnpm --dir frontend lint`
+- `pnpm --dir frontend typecheck`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Browser local via Chrome/CDP em viewport mobile `390x844` confirmou
+  `docScrollWidth=390` e logo compacta em `/auth/profile-selection`, `/auth/login`,
+  `/auth/register/patient`, `/auth/register/psychologist` e `/auth/recovery`.

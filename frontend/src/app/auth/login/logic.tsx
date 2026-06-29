@@ -100,9 +100,9 @@ export const AuthLogic = () => {
           </span>
         }
       >
-        <div className="mb-6 grid justify-items-center text-center">
-          <Logo className="w-[148px] sm:w-[156px]" priority />
-          <h1 className="mt-5 text-[1.55rem] font-extrabold leading-tight text-foreground sm:text-[1.7rem]">
+        <div className="mb-7 grid justify-items-center text-center">
+          <Logo className="w-[132px] sm:w-[144px]" priority />
+          <h1 className="mt-7 text-[1.55rem] font-extrabold leading-tight text-foreground sm:text-[1.7rem]">
             Bem-vindo de volta
           </h1>
           <p className="mt-1.5 text-sm text-muted">Faça o login na sua conta</p>
