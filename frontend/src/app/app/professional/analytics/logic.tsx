@@ -428,32 +428,30 @@ const MetricCard = ({ locked, metric }: { locked?: boolean; metric: AnalyticsCar
 
   if (metric.layout === "wide") {
     return (
-      <article className="col-span-2 grid min-h-[124px] min-w-0 gap-3 overflow-hidden rounded-[20px] border border-primary/10 bg-surface p-4 shadow-[var(--lectum-shadow-soft)] sm:min-h-[136px] sm:rounded-[22px]">
-        <div className="flex min-w-0 items-start justify-between gap-4">
-          <div className="flex min-w-0 items-start gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-              <Icon className="h-5 w-5" aria-hidden />
-            </span>
-            <div className="min-w-0">
-              <h2 className="break-words text-[0.84rem] font-extrabold leading-5 text-muted sm:text-sm">
-                {metric.label}
-              </h2>
-              {metric.description ? (
-                <p className="mt-1.5 text-xs font-semibold leading-5 text-subtle sm:text-sm">
-                  {metric.description}
-                </p>
-              ) : null}
-            </div>
-          </div>
-
+      <article className="col-span-2 flex min-h-[124px] min-w-0 flex-col overflow-hidden rounded-[20px] border border-primary/10 bg-surface p-4 shadow-[var(--lectum-shadow-soft)] sm:min-h-[136px] sm:rounded-[22px]">
+        <div className="flex min-w-0 items-center justify-between gap-4">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+            <Icon className="h-5 w-5" aria-hidden />
+          </span>
           <p
             className={cn(
-              "shrink-0 text-3xl font-black leading-none tracking-[-0.05em] text-foreground sm:text-[2rem]",
+              "shrink-0 text-[2rem] font-black leading-none tracking-[-0.06em] text-foreground sm:text-[2.25rem]",
               locked && "select-none blur-[5px]",
             )}
           >
             {metric.value}
           </p>
+        </div>
+
+        <div className="mt-3 min-w-0">
+          <h2 className="break-words text-[0.84rem] font-extrabold leading-5 text-muted sm:text-sm">
+            {metric.label}
+          </h2>
+          {metric.description ? (
+            <p className="mt-1.5 max-w-[18rem] text-xs font-semibold leading-5 text-subtle sm:text-sm">
+              {metric.description}
+            </p>
+          ) : null}
         </div>
       </article>
     );

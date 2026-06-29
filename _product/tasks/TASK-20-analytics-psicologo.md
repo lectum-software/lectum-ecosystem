@@ -342,3 +342,13 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Builder/Quick Copy nao estava exposto como ferramenta MCP direta; a referencia local `_product/proto/Meus Analytics - Psicologo.jpg` foi consultada.
 - ADR atualizado: `adrs/0175-analytics-video-retencao-orientada.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check src/app/app/professional/analytics/logic.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build` e `Invoke-WebRequest` em `/app/professional/analytics` (307 para login sem sessao).
+
+
+## Ajuste complementar em 2026-06-29 - layout do card de Conversoes WhatsApp
+
+- Pedido do usuario: melhorar a disposicao do contador largo `Conversoes WhatsApp`, deixando os textos abaixo do icone e o numero mais bem posicionado.
+- O card largo passou a usar uma linha superior com icone a esquerda e valor destacado a direita; label e descricao ficam abaixo, alinhados ao fluxo vertical do card mobile.
+- A mudanca preserva os dados reais existentes, o grid de duas colunas e o destaque comercial de WhatsApp, sem alterar contrato, schema, migration, package, mock, seed ou endpoint.
+- Builder/Quick Copy nao estava exposto como ferramenta MCP direta; a referencia local `_product/proto/Meus Analytics - Psicologo.jpg` e a captura enviada pelo usuario foram usadas como apoio visual.
+- ADR atualizado: `adrs/0175-analytics-video-retencao-orientada.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check src/app/app/professional/analytics/logic.tsx`, `pnpm --dir frontend build`, `pnpm --dir frontend check` e `Invoke-WebRequest` em `/app/professional/analytics` (307 para login sem sessao).

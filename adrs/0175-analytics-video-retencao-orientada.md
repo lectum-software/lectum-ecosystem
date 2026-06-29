@@ -19,6 +19,7 @@ A secao de video dos Analytics estava tecnicamente correta, mas alguns contadore
 - Agrupar retencao percentual e tempo medio em uma unica frase dentro do card de retencao: `Em media, os visitantes assistiram X% do video, cerca de mm:ss.`.
 - Substituir o insight isolado por um diagnostico contextual dentro do card de retencao, com recomendacoes focadas em permanencia no video, sem misturar WhatsApp, conversao ou convite nesta area.
 - Reordenar os contadores de negocio para que `Conversoes WhatsApp` ocupe um card largo de duas colunas ao final do bloco, removendo o espaco vazio deixado por `Favoritado` e destacando a metrica de maior valor comercial.
+- No card largo de `Conversoes WhatsApp`, manter o icone e o numero em uma linha de topo e posicionar label/descricao abaixo do icone, evitando compressao lateral do texto no mobile.
 
 ## Consequencias
 
@@ -27,6 +28,7 @@ A secao de video dos Analytics estava tecnicamente correta, mas alguns contadore
 - Mantem o backend e o contrato sem quebra, permitindo futuras analises ou comparacoes sem nova migration.
 - O card de WhatsApp ganha mais peso visual por representar intencao real de contato.
 - A secao de retencao passa a orientar melhorias de abertura, ritmo, objetividade e duracao do video, enquanto conversao para WhatsApp permanece nos contadores de negocio e origem de trafego.
+- A leitura mobile do card largo fica mais parecida com os cards verticais existentes, com numero destacado sem competir com a descricao.
 
 ## Validacao
 
