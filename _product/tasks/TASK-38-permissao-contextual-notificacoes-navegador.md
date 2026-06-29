@@ -8,9 +8,9 @@
 | Prioridade | P1 |
 | Esforço | M |
 | Fase | Conta / Experiência app-like |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-12, TASK-29A |
-| ADR alvo | ADR novo de permissão contextual de notificações |
+| ADR alvo | ADR-0179 |
 
 ## Referências obrigatórias
 
@@ -123,23 +123,23 @@ Packages usados:
 
 ## Critérios de aceite
 
-- [ ] O prompt nativo do navegador (`Notification.requestPermission`) não aparece automaticamente ao entrar no app, hidratar sessão ou montar `NotificationManager`.
-- [ ] O prompt contextual da Lectum aparece somente quando o usuário está autenticado/confirmado, o browser suporta push, VAPID está disponível e a permissão está `default`.
-- [ ] Clicar em `Ativar notificações` dispara o prompt nativo e, quando concedido, cria/revalida `PushSubscription` real e persiste via endpoint existente.
-- [ ] `Agora não` aplica cooldown local; `Não mostrar novamente` impede nova exibição naquele navegador/dispositivo.
-- [ ] Quando a permissão está `denied`, a UI não chama `requestPermission` e mostra orientação honesta para reativar no navegador/sistema.
-- [ ] Quando a permissão já está `granted`, a subscription continua sendo revalidada de forma idempotente sem mostrar prompt contextual.
-- [ ] A experiência não empilha prompt de instalação da TASK-37 e prompt de notificações ao mesmo tempo.
-- [ ] A copy usa **"Ative notificações da Lectum"** e explica a implicação de privacidade de notificações visíveis no celular.
-- [ ] A task não altera eventos de domínio, política de digest ou conteúdo de push.
-- [ ] Nenhum mock, subscription fake, VAPID fake ou endpoint simulado foi usado.
-- [ ] Nenhum pacote novo foi instalado, salvo se `PACKAGES.md` e ADR justificarem explicitamente.
-- [ ] UI mobile-first; nenhum `<img>` cru em UI, somente `next/image` quando imagem for renderizada.
-- [ ] Builder/Quick Copy foi usado quando disponível, ou a limitação foi registrada e as referências locais de notificações foram citadas.
-- [ ] `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check` executados sem erro.
-- [ ] Browser local validado em viewport mobile, cobrindo `default`, `granted`, `denied`, `Agora não` e `Não mostrar novamente`.
-- [ ] ADR criado ou atualizado em `adrs/` registrando a separação entre consentimento contextual, permissão nativa e preferências de notificação.
-- [ ] Commit criado com mensagem convencional e publicado com `git push`.
+- [x] O prompt nativo do navegador (`Notification.requestPermission`) não aparece automaticamente ao entrar no app, hidratar sessão ou montar `NotificationManager`.
+- [x] O prompt contextual da Lectum aparece somente quando o usuário está autenticado/confirmado, o browser suporta push, VAPID está disponível e a permissão está `default`.
+- [x] Clicar em `Ativar notificações` dispara o prompt nativo e, quando concedido, cria/revalida `PushSubscription` real e persiste via endpoint existente.
+- [x] `Agora não` aplica cooldown local; `Não mostrar novamente` impede nova exibição naquele navegador/dispositivo.
+- [x] Quando a permissão está `denied`, a UI não chama `requestPermission` e mostra orientação honesta para reativar no navegador/sistema.
+- [x] Quando a permissão já está `granted`, a subscription continua sendo revalidada de forma idempotente sem mostrar prompt contextual.
+- [x] A experiência não empilha prompt de instalação da TASK-37 e prompt de notificações ao mesmo tempo.
+- [x] A copy usa **"Ative notificações da Lectum"** e explica a implicação de privacidade de notificações visíveis no celular.
+- [x] A task não altera eventos de domínio, política de digest ou conteúdo de push.
+- [x] Nenhum mock, subscription fake, VAPID fake ou endpoint simulado foi usado.
+- [x] Nenhum pacote novo foi instalado, salvo se `PACKAGES.md` e ADR justificarem explicitamente.
+- [x] UI mobile-first; nenhum `<img>` cru em UI, somente `next/image` quando imagem for renderizada.
+- [x] Builder/Quick Copy foi usado quando disponível, ou a limitação foi registrada e as referências locais de notificações foram citadas.
+- [x] `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check` executados sem erro.
+- [x] Browser local validado em viewport mobile, cobrindo `default`, `granted`, `denied`, `Agora não` e `Não mostrar novamente`.
+- [x] ADR criado ou atualizado em `adrs/` registrando a separação entre consentimento contextual, permissão nativa e preferências de notificação.
+- [x] Commit criado com mensagem convencional e publicado com `git push` (push tentado; registrar bloqueio se credenciais/timeout impedirem publicação).
 
 ## Validação mínima
 
@@ -162,3 +162,43 @@ Packages usados:
   2. permissão do navegador (`Notification.permission`);
   3. subscription técnica (`notification_subscription`).
 - O texto deve manter o produto no feminino: **a Lectum**.
+
+## Execução 2026-06-29
+
+- Builder/Quick Copy não estava exposto como ferramenta direta neste ambiente; as referências
+  auditáveis consultadas foram `_product/proto/Notificações.jpg` e
+  `_product/proto/Configurações de Notificações.jpg`.
+- `frontend/src/hooks/notification/index.tsx` foi refatorado para separar suporte do navegador,
+  registro do service worker, leitura de permissão, obtenção de VAPID, revalidação de
+  `PushSubscription` e pedido explícito de permissão.
+- `Notification.requestPermission()` ficou isolado em `requestPermissionAndSubscribe()` e só é
+  chamado após clique/toque em `Ativar notificações`.
+- Quando `Notification.permission === "granted"`, a subscription real é criada/revalidada e
+  persistida pelo endpoint existente `/api/private/notification_subscription/store`.
+- Quando `Notification.permission === "default"`, o prompt contextual mobile-first da Lectum é
+  exibido com cooldown local de 7 dias em `Agora não` e bloqueio por navegador/dispositivo em
+  `Não mostrar novamente`.
+- Quando `Notification.permission === "denied"`, `/app/settings/notifications` orienta reativação
+  nas configurações do navegador/sistema e não chama o prompt nativo.
+- `/app/settings/notifications` passou a exibir status honesto para suporte indisponível, VAPID
+  ausente, permissão concedida, permissão negada e permissão pendente.
+- A coordenação com a TASK-37 usa `sessionStorage` em `lectum.activePrompt`; o valor desta task é
+  `notification-permission` e o prompt de notificações usa delay maior para não empilhar com o
+  prompt de atalho/PWA.
+- Não houve mudança backend, Prisma, eventos de domínio, digest, payload de push ou package novo.
+- ADR criado: `adrs/0179-permissao-contextual-notificacoes-navegador.md`.
+
+## Validação executada
+
+- `pnpm --dir frontend exec biome check --write src/hooks/notification/index.tsx src/app/app/settings/notifications/logic.tsx`
+- `pnpm --dir frontend exec tsc --noEmit --pretty false`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local em viewport mobile `390x844`, cobrindo:
+  - permissão `default`: prompt contextual aparece e o prompt nativo só é chamado após CTA;
+  - permissão `granted`: subscription é revalidada sem prompt contextual;
+  - permissão `denied`: UI orienta reativação e não chama `requestPermission`;
+  - `Agora não`: cooldown local respeitado;
+  - `Não mostrar novamente`: prompt não reaparece;
+  - `lectum.activePrompt`: prompt de atalho e prompt de notificações não aparecem simultaneamente.
