@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
+import type { ProfessionalSubscription } from "@/api/generator/types/billing";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -101,7 +102,28 @@ const BenefitGroupCard = ({ group }: { group: BenefitGroup }) => {
 
 export const ProfessionalBillingSubscriptionLogic = () => {
   const { current } = usePsychologistBilling();
-  const subscription = current.data?.current || null;
+
+  return (
+    <ProfessionalBillingSubscriptionView
+      error={current.error}
+      isError={current.isError}
+      isLoading={current.isLoading}
+      subscription={current.data?.current || null}
+    />
+  );
+};
+
+export const ProfessionalBillingSubscriptionView = ({
+  error,
+  isError,
+  isLoading,
+  subscription,
+}: {
+  error?: unknown;
+  isError: boolean;
+  isLoading: boolean;
+  subscription: ProfessionalSubscription | null;
+}) => {
   const isCourtesy =
     subscription?.source === "admin_grant" &&
     subscription.status === "ativa" &&
@@ -112,7 +134,7 @@ export const ProfessionalBillingSubscriptionLogic = () => {
   const shouldShowPlanDetails = Boolean(subscription) && !isFreePlan;
   const shouldShowExpiration =
     shouldShowPlanDetails && (isCourtesy || Boolean(subscription?.current_period_end));
-  const shouldShowUpgradeCta = !current.isLoading && !current.isError && !isCourtesy;
+  const shouldShowUpgradeCta = !isLoading && !isError && !isCourtesy;
   const heroTitle = isCourtesy ? "Plano Profissional de cortesia" : planName;
   const heroDescription = isCourtesy
     ? "Você está com todos os benefícios de um psicólogo assinante liberados durante o período da cortesia."
@@ -133,15 +155,15 @@ export const ProfessionalBillingSubscriptionLogic = () => {
           title="Minha assinatura"
         />
 
-        {current.isLoading ? <LoadingState label="Carregando sua assinatura" /> : null}
+        {isLoading ? <LoadingState label="Carregando sua assinatura" /> : null}
 
-        {current.isError ? (
+        {isError ? (
           <InlineAlert title="Não foi possível carregar sua assinatura" variant="error">
-            {getErrorMessage(current.error)}
+            {getErrorMessage(error)}
           </InlineAlert>
         ) : null}
 
-        {!current.isLoading && !current.isError ? (
+        {!isLoading && !isError ? (
           <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-6 shadow-[var(--lectum-shadow-soft)] md:px-7 md:py-7">
             <div className="grid justify-items-center text-center">
               <span className="relative grid h-[72px] w-[72px] place-items-center rounded-3xl bg-primary-soft text-primary shadow-[var(--lectum-shadow-soft)]">

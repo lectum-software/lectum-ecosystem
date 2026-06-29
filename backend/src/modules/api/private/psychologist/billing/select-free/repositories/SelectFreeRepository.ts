@@ -4,7 +4,10 @@ import type {
   psychologist_profile,
   subscription_plan,
 } from "@/interfaces/objects";
-import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
+import {
+  activeFreeSubscriptionWhere,
+  activeProfessionalEntitlementWhere,
+} from "@/utils/subscription-entitlement";
 import type { ISelectFreeRepository } from "./interfaces/ISelectFreeRepository";
 
 export class SelectFreeRepository implements ISelectFreeRepository {
@@ -43,6 +46,21 @@ export class SelectFreeRepository implements ISelectFreeRepository {
   }
 
   async findCurrentSubscription(psychologistId: string): Promise<professional_subscription | null> {
+    const activeFree = await this.subscriptionRepository.findFirst({
+      where: {
+        ...activeFreeSubscriptionWhere(),
+        psychologist_id: psychologistId,
+      },
+      include: {
+        plan: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    if (activeFree) return activeFree;
+
     return this.subscriptionRepository.findFirst({
       where: {
         psychologist_id: psychologistId,

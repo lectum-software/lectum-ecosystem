@@ -18,6 +18,33 @@ export const activeProfessionalEntitlementWhere =
     },
   });
 
+export const activeFreeSubscriptionWhere = (): Prisma.professional_subscriptionWhereInput => ({
+  ...activeSubscriptionPeriodWhere(),
+  plan: {
+    active: true,
+    deleted: false,
+    slug: "gratuito",
+  },
+});
+
+export const actionableProfessionalGatewaySubscriptionWhere =
+  (): Prisma.professional_subscriptionWhereInput => ({
+    deleted: false,
+    status: {
+      in: ["inativa", "inadimplente"],
+    },
+    gateway_subscription_id: {
+      not: null,
+    },
+    plan: {
+      active: true,
+      deleted: false,
+      slug: {
+        not: "gratuito",
+      },
+    },
+  });
+
 export const activeProfessionalCourtesyEntitlementWhere =
   (): Prisma.professional_subscriptionWhereInput => ({
     ...activeProfessionalEntitlementWhere(),

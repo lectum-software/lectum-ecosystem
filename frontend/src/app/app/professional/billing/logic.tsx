@@ -21,6 +21,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { ProfessionalBillingSubscriptionView } from "./subscription/logic";
 
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -136,11 +137,30 @@ export const ProfessionalBillingLogic = () => {
   const paymentMethod = subscriptionQuery.data?.payment_method ?? null;
   const planName = subscription?.plan?.name || "Plano não encontrado";
   const isPaidPlan = subscription?.plan?.slug === "profissional";
-  const canManageCard = Boolean(isPaidPlan && subscription?.gateway_subscription_id);
+  const isFreePlan = subscription?.plan?.slug === "gratuito";
+  const canManageCard = Boolean(
+    isPaidPlan && subscription?.status !== "cancelada" && subscription?.gateway_subscription_id,
+  );
   const priceLabel = useMemo(
     () => `${formatPrice(subscription?.plan?.price_cents)} / mês`,
     [subscription?.plan?.price_cents],
   );
+
+  if (
+    !subscriptionQuery.isLoading &&
+    !subscriptionQuery.isError &&
+    subscription?.status === "ativa" &&
+    isFreePlan
+  ) {
+    return (
+      <ProfessionalBillingSubscriptionView
+        error={subscriptionQuery.error}
+        isError={subscriptionQuery.isError}
+        isLoading={subscriptionQuery.isLoading}
+        subscription={subscription}
+      />
+    );
+  }
 
   return (
     <PrivateTemplate showHeader={false}>
