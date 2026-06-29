@@ -10,6 +10,8 @@ import {
   HandHeart,
   Heart,
   type LucideIcon,
+  Maximize2,
+  Pause,
   Play,
   Search,
   Share2,
@@ -18,6 +20,7 @@ import {
   Star,
   Stethoscope,
   UsersRound,
+  Volume2,
   VolumeX,
   X,
 } from "lucide-react";
@@ -60,6 +63,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
+import { requestVideoFullscreen } from "@/lib/video-fullscreen";
 import { playVideoWithSound } from "@/lib/video-playback";
 import { PrivateTemplate } from "@/templates/private";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
@@ -594,6 +598,16 @@ const PsychologistFilterSearchSuggestions = ({
 
 const getReadableVideoDuration = (video: HTMLVideoElement) =>
   Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 0;
+
+const formatVideoTime = (seconds: number) => {
+  if (!Number.isFinite(seconds) || seconds <= 0) return "0:00";
+
+  const totalSeconds = Math.floor(seconds);
+  const minutes = Math.floor(totalSeconds / 60);
+  const remainingSeconds = String(totalSeconds % 60).padStart(2, "0");
+
+  return `${minutes}:${remainingSeconds}`;
+};
 
 const resetVideoElementToStart = (video: HTMLVideoElement) => {
   video.pause();
@@ -2920,6 +2934,36 @@ export const PsychologistsLogic = () => {
     [isVideoMuted, isVideoPaused, pauseVideoPlayback, playCurrentVideoWithSound, shouldShowVideo],
   );
 
+  const handleImmersiveVolumeToggle = useCallback(
+    (event: { preventDefault?: () => void; stopPropagation: () => void }) => {
+      stopVideoControlInteraction(event);
+
+      const currentVideo = backgroundVideoRef.current;
+      if (!currentVideo || !shouldShowVideo) return;
+
+      if (isVideoMuted || currentVideo.muted || currentVideo.volume <= 0) {
+        unmuteCurrentVideo();
+        return;
+      }
+
+      currentVideo.muted = true;
+      setIsVideoMuted(true);
+    },
+    [isVideoMuted, shouldShowVideo, stopVideoControlInteraction, unmuteCurrentVideo],
+  );
+
+  const handleImmersiveFullscreen = useCallback(
+    (event: { preventDefault?: () => void; stopPropagation: () => void }) => {
+      stopVideoControlInteraction(event);
+
+      void requestVideoFullscreen(backgroundVideoRef.current, {
+        forceContain: true,
+        temporaryControls: true,
+      });
+    },
+    [stopVideoControlInteraction],
+  );
+
   const seekActiveVideoToTime = useCallback(
     (nextTime: number, durationOverride?: number) => {
       const currentVideo = backgroundVideoRef.current;
@@ -3872,6 +3916,12 @@ export const PsychologistsLogic = () => {
                     isActiveSlide && videoProgress.duration
                       ? clampNumber(videoProgress.currentTime / videoProgress.duration, 0, 1)
                       : 0;
+                  const slideCurrentTimeLabel = formatVideoTime(
+                    isActiveSlide ? videoProgress.currentTime : 0,
+                  );
+                  const slideDurationLabel = formatVideoTime(
+                    isActiveSlide ? videoProgress.duration : 0,
+                  );
                   const slideProgressBottom =
                     metrics.navBarHeight > 0
                       ? `calc(${VIDEO_PROGRESS_VISIBLE_NAV_BAR_HEIGHT}px + env(safe-area-inset-bottom) - ${VIDEO_PROGRESS_NAVBAR_OVERLAP_PX}px)`
@@ -4177,6 +4227,144 @@ export const PsychologistsLogic = () => {
                                 <VolumeX className="h-5 w-5" aria-hidden="true" />
                               ) : null}
                             </button>
+                          ) : null}
+
+                          {slideUsesNativeVideoControls ? (
+                            <div
+                              className="pointer-events-none absolute inset-x-0 bottom-0 z-[72] bg-gradient-to-t from-black/90 via-black/55 to-transparent px-4 pt-16 text-white"
+                              data-psychologists-scroll-lock="true"
+                              style={{
+                                paddingBottom: "calc(env(safe-area-inset-bottom) + 14px)",
+                              }}
+                            >
+                              <div className="pointer-events-auto rounded-[26px] border border-white/10 bg-black/45 px-3 py-2.5 shadow-[0_18px_46px_rgba(0,0,0,0.34)] backdrop-blur-md">
+                                <div
+                                  aria-label={`Progresso do vídeo de ${psychologist.name}`}
+                                  aria-valuemax={
+                                    isActiveSlide ? Math.round(videoProgress.duration) : 0
+                                  }
+                                  aria-valuemin={0}
+                                  aria-valuenow={
+                                    isActiveSlide ? Math.round(videoProgress.currentTime) : 0
+                                  }
+                                  aria-valuetext={`${slideCurrentTimeLabel} de ${slideDurationLabel}`}
+                                  className="group relative flex h-8 cursor-pointer items-center outline-none"
+                                  onClick={stopInteractionPropagation}
+                                  onKeyDown={handleVideoProgressKeyDown}
+                                  onPointerCancel={handleVideoProgressPointerEnd}
+                                  onPointerDown={handleVideoProgressPointerDown}
+                                  onPointerMove={handleVideoProgressPointerMove}
+                                  onPointerUp={handleVideoProgressPointerEnd}
+                                  onTouchCancel={handleVideoProgressTouchEnd}
+                                  onTouchEnd={handleVideoProgressTouchEnd}
+                                  onTouchMove={handleVideoProgressTouchMove}
+                                  onTouchStart={handleVideoProgressTouchStart}
+                                  ref={(node) => {
+                                    if (isActiveSlide) {
+                                      progressTrackRef.current = node;
+                                    } else if (progressTrackRef.current === node) {
+                                      progressTrackRef.current = null;
+                                    }
+                                  }}
+                                  role="slider"
+                                  style={{
+                                    touchAction: "none",
+                                  }}
+                                  tabIndex={0}
+                                >
+                                  <div className="relative h-[5px] w-full rounded-full bg-white/25">
+                                    <div
+                                      className={cn(
+                                        "h-full origin-left rounded-full bg-white",
+                                        isActiveSlide && isVideoProgressSeeking
+                                          ? null
+                                          : "transition-transform duration-75 ease-linear",
+                                      )}
+                                      ref={(node) => {
+                                        if (isActiveSlide) {
+                                          progressFillRef.current = node;
+
+                                          if (node) {
+                                            node.style.transform = `scaleX(${slideProgressRatio})`;
+                                          }
+                                        } else if (progressFillRef.current === node) {
+                                          progressFillRef.current = null;
+                                        }
+                                      }}
+                                      style={{
+                                        transform: `scaleX(${slideProgressRatio})`,
+                                        willChange: "transform",
+                                        width: "100%",
+                                      }}
+                                    />
+                                    <span
+                                      aria-hidden="true"
+                                      className={cn(
+                                        "absolute top-1/2 grid -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white shadow-[0_6px_18px_rgba(0,0,0,0.35)] transition-[height,width] duration-150 ease-out",
+                                        isActiveSlide && isVideoProgressSeeking
+                                          ? "h-4 w-4"
+                                          : "h-3 w-3",
+                                      )}
+                                      style={{
+                                        left: `${slideProgressRatio * 100}%`,
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="mt-1.5 flex items-center gap-2">
+                                  <button
+                                    aria-label={
+                                      isVideoPaused
+                                        ? `Reproduzir vídeo de ${psychologist.name}`
+                                        : `Pausar vídeo de ${psychologist.name}`
+                                    }
+                                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/14 text-white transition hover:bg-white/20 active:scale-95"
+                                    onClick={handleVideoControlTap}
+                                    onPointerDown={stopInteractionPropagation}
+                                    type="button"
+                                  >
+                                    {isVideoPaused ? (
+                                      <Play className="ml-0.5 h-[18px] w-[18px] fill-current" />
+                                    ) : (
+                                      <Pause className="h-[18px] w-[18px] fill-current" />
+                                    )}
+                                  </button>
+
+                                  <span className="min-w-0 flex-1 text-[12px] font-semibold tabular-nums text-white/88">
+                                    {slideCurrentTimeLabel} / {slideDurationLabel}
+                                  </span>
+
+                                  <button
+                                    aria-label={
+                                      isVideoMuted || videoVolume <= 0
+                                        ? `Ativar som do vídeo de ${psychologist.name}`
+                                        : `Mutar vídeo de ${psychologist.name}`
+                                    }
+                                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/14 text-white transition hover:bg-white/20 active:scale-95"
+                                    onClick={handleImmersiveVolumeToggle}
+                                    onPointerDown={stopInteractionPropagation}
+                                    type="button"
+                                  >
+                                    {isVideoMuted || videoVolume <= 0 ? (
+                                      <VolumeX className="h-[18px] w-[18px]" />
+                                    ) : (
+                                      <Volume2 className="h-[18px] w-[18px]" />
+                                    )}
+                                  </button>
+
+                                  <button
+                                    aria-label={`Abrir vídeo de ${psychologist.name} em tela cheia`}
+                                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/14 text-white transition hover:bg-white/20 active:scale-95"
+                                    onClick={handleImmersiveFullscreen}
+                                    onPointerDown={stopInteractionPropagation}
+                                    type="button"
+                                  >
+                                    <Maximize2 className="h-[18px] w-[18px]" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
                           ) : null}
 
                           {slideShouldRenderProgress ? (
