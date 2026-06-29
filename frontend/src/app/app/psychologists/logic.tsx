@@ -3438,6 +3438,14 @@ export const PsychologistsLogic = () => {
           .psychologists-video-feed::-webkit-scrollbar {
             display: none;
           }
+          video[data-psychologists-native-controls="true"]::-webkit-media-controls,
+          video[data-psychologists-native-controls="true"]::-webkit-media-controls-enclosure,
+          video[data-psychologists-native-controls="true"]::-webkit-media-controls-panel {
+            display: flex !important;
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+            visibility: visible !important;
+          }
 
           .psychologists-filter-dialog-scroll {
             scrollbar-width: none;
@@ -4012,6 +4020,9 @@ export const PsychologistsLogic = () => {
                               aria-label={`Vídeo de apresentação de ${psychologist.name}`}
                               data-psychologist-id={psychologist.id}
                               data-psychologists-background="true"
+                              data-psychologists-native-controls={
+                                slideUsesNativeVideoControls ? "true" : undefined
+                              }
                               autoPlay={isActiveSlide && !isVideoPaused}
                               className="h-full w-full bg-black object-cover"
                               controls={slideUsesNativeVideoControls}
