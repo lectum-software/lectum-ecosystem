@@ -6,6 +6,7 @@ import "@/app/globals.css";
 import { LocationCapture } from "@/components/analytics/location-capture";
 import { ProgressiveConversionBoundary } from "@/components/conversion/progressive-conversion-provider";
 import { PwaInstallPrompt } from "@/components/pwa-install-prompt";
+import { absoluteUrl, getSiteUrl, SITE_DESCRIPTION, SITE_NAME } from "@/lib/seo";
 import { Progress } from "@/providers/progress";
 import { Provider as Query } from "@/providers/query";
 import { Provider as Redux } from "@/providers/redux";
@@ -19,14 +20,18 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: process.env.NEXT_PUBLIC_SYSTEM_NAME || "Lectum",
-  description: process.env.NEXT_PUBLIC_SYSTEM_DESCRIPTION || "Frontend Lectum",
-  applicationName: "Lectum",
+  metadataBase: getSiteUrl(),
+  title: {
+    default: `${SITE_NAME} | Psicologia em comunidade`,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Lectum",
+    title: SITE_NAME,
   },
   icons: {
     icon: [
@@ -36,6 +41,54 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: "/pwa/icon-192.png", sizes: "192x192", type: "image/png" }],
   },
+  keywords: [
+    "psicologia",
+    "saúde mental",
+    "psicólogos",
+    "perguntas sobre psicologia",
+    "terapia online",
+    "comunidade de saúde mental",
+  ],
+  alternates: {
+    canonical: "/",
+    languages: {
+      "pt-BR": "/",
+    },
+  },
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    url: absoluteUrl("/"),
+    siteName: SITE_NAME,
+    title: `${SITE_NAME} | Psicologia em comunidade`,
+    description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: absoluteUrl("/logo-light.png"),
+        width: 1280,
+        height: 260,
+        alt: SITE_NAME,
+      },
+    ],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-snippet": -1,
+      "max-image-preview": "large",
+      "max-video-preview": -1,
+    },
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME} | Psicologia em comunidade`,
+    description: SITE_DESCRIPTION,
+    images: [absoluteUrl("/logo-light.png")],
+  },
+  category: "health",
 };
 
 export default function RootLayout({
