@@ -17,7 +17,7 @@ A secao de video dos Analytics estava tecnicamente correta, mas alguns contadore
 - Remover da UI os contadores frios `Taxa de abandono`, `Taxa de conclusao` e `Tempo medio assistido` na secao de video, preservando esses valores no contrato para calculo e auditoria.
 - Manter como contadores de video apenas `Visualizacoes` e `Taxa de replays`.
 - Agrupar retencao percentual e tempo medio em uma unica frase dentro do card de retencao: `Em media, os visitantes assistiram X% do video, cerca de mm:ss.`.
-- Substituir o insight isolado por um diagnostico contextual dentro do card de retencao, usando linguagem simples como `convite para o WhatsApp` em vez de `CTA`.
+- Substituir o insight isolado por um diagnostico contextual dentro do card de retencao, com recomendacoes focadas em permanencia no video, sem misturar WhatsApp, conversao ou convite nesta area.
 - Reordenar os contadores de negocio para que `Conversoes WhatsApp` ocupe um card largo de duas colunas ao final do bloco, removendo o espaco vazio deixado por `Favoritado` e destacando a metrica de maior valor comercial.
 
 ## Consequencias
@@ -26,6 +26,7 @@ A secao de video dos Analytics estava tecnicamente correta, mas alguns contadore
 - Evita que metricas simetricas ou negativas sejam interpretadas como problema quando o comportamento real do video e saudavel.
 - Mantem o backend e o contrato sem quebra, permitindo futuras analises ou comparacoes sem nova migration.
 - O card de WhatsApp ganha mais peso visual por representar intencao real de contato.
+- A secao de retencao passa a orientar melhorias de abertura, ritmo, objetividade e duracao do video, enquanto conversao para WhatsApp permanece nos contadores de negocio e origem de trafego.
 
 ## Validacao
 

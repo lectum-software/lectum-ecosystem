@@ -322,7 +322,7 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 ## Ajuste complementar em 2026-06-29 - leitura orientada dos Analytics de video
 
-- Pedido do usuario: simplificar a leitura para psicologos leigos em marketing, evitando termos como `CTA` e priorizando textos como `convite para o WhatsApp`.
+- Pedido do usuario: simplificar a leitura para psicologos leigos em marketing, evitando termos como `CTA` e mantendo textos compreensiveis nos blocos comerciais.
 - Os contadores principais de negocio foram reorganizados para remover o vazio ao lado de `Favoritado`: `Conversoes WhatsApp` passou para um card largo de duas colunas ao final do bloco, com texto explicativo de contato.
 - Nos contadores do video, a UI passou a destacar apenas `Visualizacoes` e `Taxa de replays`; `Tempo medio assistido`, `Taxa de conclusao` e `Taxa de abandono` continuam disponiveis no contrato, mas deixaram de ser contadores frios na tela.
 - O `Tempo medio assistido` foi agrupado ao percentual de retencao na frase do card: `Em media, os visitantes assistiram X% do video, cerca de mm:ss.`
@@ -330,4 +330,15 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nenhum schema Prisma, migration, package novo, mock, seed ou endpoint simulado foi criado.
 - Builder/Quick Copy nao estava exposto como ferramenta MCP direta; a validacao visual usou as capturas enviadas pelo usuario e a referencia local `_product/proto/Meus Analytics - Psicologo.jpg`.
 - ADR criado: `adrs/0175-analytics-video-retencao-orientada.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check src/app/app/professional/analytics/logic.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build` e `Invoke-WebRequest` em `/app/professional/analytics` (307 para login sem sessao).
+
+
+## Ajuste complementar em 2026-06-29 - retencao focada em permanencia
+
+- Pedido do usuario: a area de retencao do video deve orientar permanencia no video, nao conversao para WhatsApp.
+- As recomendacoes do diagnostico de retencao foram ajustadas para remover mencoes a WhatsApp, conversao ou convite; os textos agora sugerem melhorar abertura, objetividade, ritmo, pausas, exemplos e duracao.
+- As metricas e secoes comerciais permanecem responsaveis por WhatsApp/conversao; a secao `Retencao do video` fica focada em quanto tempo os visitantes assistem e onde abandonam.
+- Nenhum schema Prisma, migration, package novo, mock, seed ou endpoint simulado foi criado.
+- Builder/Quick Copy nao estava exposto como ferramenta MCP direta; a referencia local `_product/proto/Meus Analytics - Psicologo.jpg` foi consultada.
+- ADR atualizado: `adrs/0175-analytics-video-retencao-orientada.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check src/app/app/professional/analytics/logic.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build` e `Invoke-WebRequest` em `/app/professional/analytics` (307 para login sem sessao).

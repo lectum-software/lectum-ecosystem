@@ -838,12 +838,15 @@ const getRetentionHealth = ({
 
   const dropoffMoment = getDropoffMoment(dropoff);
   const hasSmallSample = views < MIN_RETENTION_SAMPLE_FOR_CONFIDENCE;
+  const dropoffObservation = dropoff
+    ? `Observe se a maior queda ${dropoffMoment} se repete e teste deixar esse trecho mais objetivo para manter a atenção.`
+    : "Acompanhe se a curva continua estável conforme novas visualizações chegam.";
 
   if (hasSmallSample) {
     return {
       description:
         averageRetention >= 60
-          ? `Os primeiros sinais são bons, mas ainda há poucas visualizações. Observe se a maior queda ${dropoffMoment} se repete e teste fazer seu convite para o WhatsApp um pouco antes.`
+          ? `Os primeiros sinais são bons, mas ainda há poucas visualizações. ${dropoffObservation}`
           : "Ainda há poucas visualizações para concluir. Teste uma apresentação mais direta e acompanhe como a retenção evolui.",
       label: averageRetention >= 60 ? "Primeiros sinais bons" : "Dados iniciais",
     };
@@ -851,7 +854,9 @@ const getRetentionHealth = ({
 
   if (averageRetention >= 75 && (!dropoff || dropoff.from_milestone >= 75)) {
     return {
-      description: `A maior queda acontece ${dropoffMoment}. Teste fazer seu convite para o WhatsApp um pouco antes desse trecho.`,
+      description: dropoff
+        ? `A maior queda acontece ${dropoffMoment}. O desempenho está bom; teste encerrar de forma mais breve para manter a atenção até o fim.`
+        : "A retenção está boa e não há uma queda concentrada. Mantenha a apresentação objetiva e acompanhe se esse padrão se repete.",
       label: "Bom desempenho",
     };
   }
@@ -859,7 +864,7 @@ const getRetentionHealth = ({
   if (averageRetention >= 60) {
     return {
       description:
-        "Há bom interesse no vídeo. Vale testar uma mensagem mais direta e antecipar seu convite para o WhatsApp.",
+        "Há bom interesse no vídeo. Vale testar uma abertura mais clara, frases mais curtas e exemplos práticos para manter a atenção por mais tempo.",
       label: "Desempenho saudável",
     };
   }
@@ -867,14 +872,14 @@ const getRetentionHealth = ({
   if (averageRetention >= 40) {
     return {
       description:
-        "Parte relevante dos visitantes sai antes de avançar no vídeo. Teste encurtar a apresentação e chegar mais rápido ao convite para o WhatsApp.",
+        "Parte relevante dos visitantes sai antes de avançar no vídeo. Teste encurtar a apresentação, reduzir pausas e chegar mais rápido aos pontos principais.",
       label: "Ponto de atenção",
     };
   }
 
   return {
     description:
-      "A maioria dos visitantes sai cedo. Teste uma abertura mais objetiva e deixe claro, logo no início, como a pessoa pode falar com você.",
+      "A maioria dos visitantes sai cedo. Teste uma abertura mais objetiva, diga logo para quem você atende e mantenha os primeiros segundos mais diretos.",
     label: "Precisa melhorar",
   };
 };
