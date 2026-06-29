@@ -9,7 +9,7 @@ export default function NotFound() {
   return (
     <CenterTemplate>
       <div className="grid w-full justify-items-center gap-6 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-8 text-center shadow-[var(--lectum-shadow-soft)]">
-        <Logo className="w-[150px]" />
+        <Logo className="w-[202px]" />
         <p className="text-6xl font-bold leading-none text-primary">404</p>
         <div className="grid gap-1.5">
           <h1 className="text-xl font-bold text-foreground">Página não encontrada</h1>

@@ -112,7 +112,7 @@ export const RegisterPsychologistLogic = () => {
         <section className="overflow-hidden rounded-[var(--lectum-auth-radius)] border border-border bg-surface shadow-[var(--lectum-shadow)]">
           <div className="border-b border-border px-5 py-5 sm:px-6">
             <div className="flex items-center justify-between gap-3">
-              <Logo className="w-[148px] sm:w-[156px]" priority />
+              <Logo className="w-[200px] sm:w-[210px]" priority />
               <span className="whitespace-nowrap rounded-full bg-primary-soft px-2.5 py-1 text-[11px] font-semibold text-primary">
                 Para Psicólogos
               </span>

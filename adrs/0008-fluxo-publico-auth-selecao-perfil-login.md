@@ -221,3 +221,6 @@ telas de cadastro e login. O arquivo original foi fornecido fora do workspace co
 - `NODE_OPTIONS=--max-old-space-size=4096 pnpm --dir frontend check`
 - `NODE_OPTIONS=--max-old-space-size=4096 pnpm --dir frontend build`
 - Browser local em viewport mobile `390x844` nas rotas de login e cadastro.
+- Chrome/CDP confirmou `/auth/login`, `/auth/register/patient` e
+  `/auth/register/psychologist` com `innerWidth=390`, `docScrollWidth=390` e logo
+  `200x41`.

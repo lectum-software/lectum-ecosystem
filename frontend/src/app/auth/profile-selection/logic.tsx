@@ -39,7 +39,7 @@ export const ProfileSelectionLogic = () => {
     <AuthTemplate>
       <div className="grid w-full gap-6">
         <div className="grid justify-items-center gap-5 text-center">
-          <Logo className="w-[168px] sm:w-[180px]" priority />
+          <Logo className="w-[225px] sm:w-[240px]" priority />
           <h1 className="text-lg font-extrabold text-foreground sm:text-xl">Qual o seu perfil?</h1>
         </div>
 
