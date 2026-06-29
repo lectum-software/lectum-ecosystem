@@ -20,8 +20,12 @@ A TASK-37 exige:
 - manifest/metadados PWA;
 - ícones reais da marca;
 - prompt mobile-first para Android/Chromium e fallback iOS/Safari;
-- respeito a `Agora não` e `Não mostrar novamente`;
+- respeito a `Agora não` com cooldown local;
 - não chamar `Notification.requestPermission`.
+
+Refinamento de produto em 2026-06-29 removeu a opção permanente `Não mostrar novamente`, pediu o
+mesmo ícone visual usado como favicon da Lectum e exigiu um blur escuro de fundo para o prompt não
+se misturar com a tela subjacente.
 
 Builder/Quick Copy não estava exposto como ferramenta direta neste ambiente. A referência visual
 auditável usada foi o shell privado/mobile existente, com consulta a `_product/tasks/PROTO-INVENTORY.md`.
@@ -41,10 +45,13 @@ Não há protótipo específico para o prompt de instalação.
     `Adicionar atalho`;
   - no iOS/Safari exibe instruções manuais para `Compartilhar` > `Adicionar à Tela de Início`;
   - não aparece quando a Lectum já está em `standalone`/`fullscreen`;
-  - usa `localStorage` por navegador/dispositivo para `Agora não`, `Não mostrar novamente` e
-    instalação aceita;
+  - usa `localStorage` por navegador/dispositivo para `Agora não` e instalação aceita;
+  - não exibe nem consulta a antiga preferência permanente `lectum.pwaInstall.neverShowAgain`;
   - usa `sessionStorage` com a chave `lectum.activePrompt` para evitar empilhar prompts de
     produto no mesmo momento. A TASK-38 deve reutilizar essa coordenação para notificações.
+- Após o refinamento de 2026-06-29, o prompt usa `/icon.png` via `next/image` como ícone visual
+  da modal, alinhado ao favicon/ícone real da Lectum, e passa a renderizar um overlay escuro com
+  `backdrop-blur-[8px]`, equivalente à linguagem da modal de novo post.
 - Montar o prompt no layout raiz, dentro dos providers, mas com gate de rota/sessão:
   - só considera rotas `/app`;
   - só exibe para usuário confirmado em Redux Persist;
@@ -55,8 +62,10 @@ Não há protótipo específico para o prompt de instalação.
 
 - Usuários mobile podem adicionar a Lectum à tela inicial com experiência próxima de app.
 - O prompt não depende de pacote novo.
-- A preferência de recusa é local ao navegador/dispositivo; isso é aceitável para o MVP porque não
-é uma preferência de conta nem dado crítico.
+- O cooldown de recusa é local ao navegador/dispositivo; isso é aceitável para o MVP porque não é
+  uma preferência de conta nem dado crítico.
+- Usuários não recebem mais uma saída permanente na própria modal; a escolha de produto prioriza
+  reexibição respeitosa por cooldown em vez de bloqueio indefinido local.
 - Android/Chromium recebe prompt nativo quando o navegador disponibiliza `beforeinstallprompt`.
 - iOS/Safari mantém fallback honesto, pois não há prompt nativo equivalente exposto ao site.
 - Instalar atalho continua separado de ativar notificações. Esta task não pede permissão de
@@ -75,7 +84,20 @@ notificações e não altera Web Push.
     do `prompt()` apenas após clique;
   - cenário iOS/Safari por user agent confirmou instruções manuais;
   - cenário standalone confirmou que o prompt fica oculto;
-  - `Agora não` e `Não mostrar novamente` persistiram em `localStorage`.
+  - `Agora não` persistiu cooldown em `localStorage`.
+
+Refinamento 2026-06-29:
+
+- `pnpm --dir frontend exec biome check --write src/components/pwa-install-prompt.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Browser local via Chrome/CDP em `http://localhost:3000`, viewport mobile `390x844`, com estado
+  local de usuário confirmado e URL `/app/favorites` simulada por `history.pushState` para isolar
+  o prompt sem criar usuário/token fake persistente:
+  - o prompt exibiu overlay escuro com blur;
+  - o ícone renderizado foi `/icon.png`, o mesmo ícone real usado como base do favicon/PWA;
+  - a opção `Não mostrar novamente` não apareceu;
+  - `Agora não` continuou fechando a modal com cooldown local.
 
 ## Pendências
 

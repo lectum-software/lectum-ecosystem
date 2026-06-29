@@ -1,9 +1,9 @@
 "use client";
 
 import { Download, Share, Smartphone, X } from "lucide-react";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { LectumSymbolIcon } from "@/components/ui/lectum-symbol-icon";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
@@ -21,7 +21,6 @@ type BeforeInstallPromptEvent = Event & {
 type PromptKind = "native" | "ios";
 
 const DISMISSED_UNTIL_KEY = "lectum.pwaInstall.dismissedUntil";
-const NEVER_SHOW_KEY = "lectum.pwaInstall.neverShowAgain";
 const INSTALLED_KEY = "lectum.pwaInstall.installed";
 const ACTIVE_PROMPT_KEY = "lectum.activePrompt";
 const ACTIVE_PROMPT_VALUE = "pwa-install";
@@ -80,7 +79,6 @@ const isDismissedByPreference = () => {
   const storage = safeLocalStorage();
   if (!storage) return true;
 
-  if (storage.getItem(NEVER_SHOW_KEY) === "true") return true;
   if (storage.getItem(INSTALLED_KEY) === "true") return true;
 
   const dismissedUntil = Number(storage.getItem(DISMISSED_UNTIL_KEY) ?? 0);
@@ -114,13 +112,6 @@ const markDismissedForCooldown = () => {
   if (!storage) return;
 
   storage.setItem(DISMISSED_UNTIL_KEY, String(Date.now() + DISMISS_COOLDOWN_MS));
-};
-
-const markNeverShowAgain = () => {
-  const storage = safeLocalStorage();
-  if (!storage) return;
-
-  storage.setItem(NEVER_SHOW_KEY, "true");
 };
 
 const markInstalled = () => {
@@ -191,13 +182,9 @@ export function PwaInstallPrompt() {
     return () => window.clearTimeout(timer);
   }, [deferredPrompt, isVisible, pathname, user?.confirmed, user?.id]);
 
-  const closePrompt = useCallback((persist: "cooldown" | "never" | "installed") => {
+  const closePrompt = useCallback((persist: "cooldown" | "installed") => {
     if (persist === "cooldown") {
       markDismissedForCooldown();
-    }
-
-    if (persist === "never") {
-      markNeverShowAgain();
     }
 
     if (persist === "installed") {
@@ -238,70 +225,82 @@ export function PwaInstallPrompt() {
   if (!isVisible) return null;
 
   return (
-    <section
-      aria-label="Instalar atalho da Lectum"
+    <div
       className={cn(
-        "fixed inset-x-3 z-[60] mx-auto max-w-[440px] rounded-[1.75rem] border border-border bg-surface p-4 text-foreground shadow-[var(--lectum-shadow)]",
-        "bottom-[calc(5rem+env(safe-area-inset-bottom))] sm:bottom-6",
+        "fixed inset-0 z-[70] flex items-end justify-center bg-slate-950/35 px-3 pt-6 text-foreground backdrop-blur-[8px] transition-opacity duration-200 ease-out supports-[backdrop-filter]:bg-slate-950/35",
+        "pb-[calc(5rem+env(safe-area-inset-bottom))] sm:items-center sm:px-6 sm:pb-6",
       )}
     >
-      <button
-        aria-label="Agora não"
-        className="absolute right-3 top-3 inline-grid h-8 w-8 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-        onClick={() => closePrompt("cooldown")}
-        type="button"
+      <section
+        aria-label="Instalar atalho da Lectum"
+        aria-modal="true"
+        className="relative w-full max-w-[440px] rounded-[1.75rem] border border-border bg-surface p-4 text-foreground shadow-[var(--lectum-shadow)]"
+        role="dialog"
       >
-        <X className="h-4 w-4" aria-hidden="true" />
-      </button>
-
-      <div className="flex gap-3 pr-8">
-        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
-          <LectumSymbolIcon className="h-7 w-7" aria-hidden="true" />
-        </div>
-
-        <div className="min-w-0">
-          <p className="text-base font-extrabold tracking-[-0.03em] text-foreground">
-            Acesse a Lectum como um app
-          </p>
-          <p className="mt-1 text-sm leading-5 text-muted">
-            Crie um atalho na tela inicial para entrar mais rápido, sem precisar abrir o navegador.
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-3 rounded-2xl border border-border bg-background px-3 py-2.5 text-xs leading-5 text-muted">
-        O ícone ficará visível na tela inicial do celular. Isso não ativa notificações.
-      </div>
-
-      {promptKind === "ios" && showIosSteps ? (
-        <div className="mt-3 rounded-2xl border border-border bg-surface-muted p-3 text-sm text-foreground">
-          <div className="mb-2 flex items-center gap-2 font-bold">
-            <Share className="h-4 w-4 text-primary" aria-hidden="true" />
-            No iPhone ou iPad
-          </div>
-          <ol className="list-decimal space-y-1 pl-5 text-muted">
-            <li>Abra a Lectum no Safari.</li>
-            <li>Toque em Compartilhar.</li>
-            <li>Escolha Adicionar à Tela de Início e confirme.</li>
-          </ol>
-        </div>
-      ) : null}
-
-      <div className="mt-4 grid gap-2">
-        <Button
-          className="h-11 rounded-2xl text-sm font-extrabold"
-          onClick={handleInstall}
+        <button
+          aria-label="Agora não"
+          className="absolute top-3 right-3 inline-grid h-8 w-8 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          onClick={() => closePrompt("cooldown")}
           type="button"
         >
-          {promptKind === "ios" && showIosSteps ? (
-            <Smartphone className="h-4 w-4" aria-hidden="true" />
-          ) : (
-            <Download className="h-4 w-4" aria-hidden="true" />
-          )}
-          <span>{promptKind === "ios" && showIosSteps ? "Entendi" : "Adicionar atalho"}</span>
-        </Button>
+          <X className="h-4 w-4" aria-hidden="true" />
+        </button>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="flex gap-3 pr-8">
+          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary-soft p-1.5">
+            <Image
+              alt=""
+              aria-hidden="true"
+              className="h-9 w-9 object-contain"
+              height={36}
+              src="/icon.png"
+              width={36}
+            />
+          </div>
+
+          <div className="min-w-0">
+            <p className="text-base font-extrabold tracking-[-0.03em] text-foreground">
+              Acesse a Lectum como um app
+            </p>
+            <p className="mt-1 text-sm leading-5 text-muted">
+              Crie um atalho na tela inicial para entrar mais rápido, sem precisar abrir o
+              navegador.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-3 rounded-2xl border border-border bg-background px-3 py-2.5 text-xs leading-5 text-muted">
+          O ícone ficará visível na tela inicial do celular. Isso não ativa notificações.
+        </div>
+
+        {promptKind === "ios" && showIosSteps ? (
+          <div className="mt-3 rounded-2xl border border-border bg-surface-muted p-3 text-sm text-foreground">
+            <div className="mb-2 flex items-center gap-2 font-bold">
+              <Share className="h-4 w-4 text-primary" aria-hidden="true" />
+              No iPhone ou iPad
+            </div>
+            <ol className="list-decimal space-y-1 pl-5 text-muted">
+              <li>Abra a Lectum no Safari.</li>
+              <li>Toque em Compartilhar.</li>
+              <li>Escolha Adicionar à Tela de Início e confirme.</li>
+            </ol>
+          </div>
+        ) : null}
+
+        <div className="mt-4 grid gap-2">
+          <Button
+            className="h-11 rounded-2xl text-sm font-extrabold"
+            onClick={handleInstall}
+            type="button"
+          >
+            {promptKind === "ios" && showIosSteps ? (
+              <Smartphone className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <Download className="h-4 w-4" aria-hidden="true" />
+            )}
+            <span>{promptKind === "ios" && showIosSteps ? "Entendi" : "Adicionar atalho"}</span>
+          </Button>
+
           <Button
             className="h-10 rounded-2xl text-xs font-bold"
             onClick={() => closePrompt("cooldown")}
@@ -310,16 +309,8 @@ export function PwaInstallPrompt() {
           >
             Agora não
           </Button>
-          <Button
-            className="h-10 rounded-2xl text-xs font-bold"
-            onClick={() => closePrompt("never")}
-            type="button"
-            variant="ghost"
-          >
-            Não mostrar novamente
-          </Button>
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
   );
 }

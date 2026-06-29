@@ -49,8 +49,9 @@ Permitir que o usuário mobile adicione a Lectum à tela inicial e acesse a plat
   - copy: **"Acesse a Lectum como um app"**;
   - explicar que o atalho ficará visível na tela inicial do celular, por privacidade;
   - CTA principal `Adicionar atalho`;
-  - ações `Agora não` e `Não mostrar novamente`;
-  - persistir localmente a recusa/cooldown no navegador, sem backend.
+  - ação secundária `Agora não` com cooldown local;
+  - não exibir a opção permanente `Não mostrar novamente`;
+  - persistir localmente apenas cooldown/instalação no navegador, sem backend.
 - Android/Chromium:
   - usar o evento `beforeinstallprompt` quando disponível;
   - chamar o prompt nativo somente após interação explícita do usuário.
@@ -102,7 +103,7 @@ Persistência local:
 - [x] Manifest/metadados PWA configurados para a Lectum com `display: standalone`, `start_url`, `scope`, cores e ícones reais da marca.
 - [x] iOS recebe metadados/ícone compatíveis e instruções manuais quando o prompt nativo não existir.
 - [x] Android/Chromium usa `beforeinstallprompt` e só dispara o prompt após toque em `Adicionar atalho`.
-- [x] A sugestão mobile-first aparece apenas quando a Lectum não está em standalone e respeita `Agora não`/`Não mostrar novamente`.
+- [x] A sugestão mobile-first aparece apenas quando a Lectum não está em standalone, respeita `Agora não` com cooldown e não exibe `Não mostrar novamente`.
 - [x] A copy usa **"Acesse a Lectum como um app"** e mantém o gênero **a Lectum**.
 - [x] A UI informa que o atalho ficará visível na tela inicial do celular, por privacidade.
 - [x] A task não solicita permissão de notificações nem implementa Web Push/offline-first.
@@ -140,7 +141,7 @@ Persistência local:
 - Implementado `PwaInstallPrompt` em `frontend/src/components/pwa-install-prompt.tsx`, com gate para rotas `/app`, usuário confirmado, experiência mobile e ausência de standalone.
 - Android/Chromium: `beforeinstallprompt` é retido e o prompt nativo só é chamado após o CTA `Adicionar atalho`.
 - iOS/Safari: o CTA abre instruções manuais para `Compartilhar` > `Adicionar à Tela de Início`.
-- Preferências locais: `Agora não` usa cooldown de 7 dias; `Não mostrar novamente` usa `localStorage` por navegador/dispositivo.
+- Preferências locais: `Agora não` usa cooldown de 7 dias e instalação aceita usa `localStorage` por navegador/dispositivo; o refinamento de 2026-06-29 removeu a opção `Não mostrar novamente`.
 - Separação preservada: a task não chama `Notification.requestPermission`, não altera service worker de notificações e não implementa Web Push/offline-first.
 
 ## Validação executada
@@ -155,5 +156,14 @@ Persistência local:
   - Android/Chromium com `beforeinstallprompt` injetado confirmou CTA e chamada de `prompt()` após toque;
   - iOS/Safari por user agent confirmou instruções manuais;
   - standalone ocultou o prompt;
-  - `Agora não` e `Não mostrar novamente` persistiram no navegador.
+  - `Agora não` persistiu cooldown no navegador.
+
+## Refinamento 2026-06-29
+
+- Pedido de produto: na modal de criar atalho, usar o mesmo ícone da marca exibido como favicon, remover a opção `Não mostrar novamente` e aplicar blur escuro de fundo como na modal de novo post.
+- Implementação ajustada em `frontend/src/components/pwa-install-prompt.tsx`:
+  - o ícone visual da modal passa a renderizar `/icon.png` com `next/image`, alinhado ao favicon/ícone real da Lectum;
+  - a ação permanente `Não mostrar novamente` foi removida da UI e da lógica de bloqueio por `localStorage`;
+  - o prompt virou um diálogo com overlay `fixed inset-0`, fundo escuro e `backdrop-blur-[8px]`, mantendo layout mobile-first na base ~390px.
+- Validação local do refinamento: Chrome/CDP em viewport `390x844`, com estado local de usuário confirmado e URL `/app/favorites` simulada por `history.pushState` para isolar o prompt sem criar usuário/token fake persistente; confirmou overlay escuro com blur, ícone `/icon.png`, ausência de `Não mostrar novamente` e presença de `Agora não`.
 - ADR criado: `adrs/0177-pwa-atalho-mobile-lectum.md`.
