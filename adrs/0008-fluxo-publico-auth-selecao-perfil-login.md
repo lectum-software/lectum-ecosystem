@@ -407,3 +407,41 @@ a altura inicial do card no mobile.
 - Browser local via Chrome/CDP em viewport mobile `390x844` confirmou as microcopies
   compactas e o aviso legal curto em `/auth/register/patient` e
   `/auth/register/psychologist`, com `docScrollWidth=390`.
+
+## Atualizacao em 2026-06-29: logo fora do card em login e cadastros
+
+### Contexto
+
+Mesmo apos reduzir escala e texto, login e cadastros ainda mantinham a marca dentro do
+card. Isso deixava o card com topo mais pesado e desperdicava o fundo cinza, que podia
+funcionar como area de assinatura visual da Lectum.
+
+### Decisao
+
+- Mover a logo completa para fora do card nas telas `/auth/login`,
+  `/auth/register/patient` e `/auth/register/psychologist`, centralizada no fundo cinza.
+- Remover os headers internos com borda dos cadastros, fazendo o card iniciar direto no
+  conteudo da acao: titulo, microcopy e metodo de cadastro.
+- Manter o login usando `AuthTemplate`/`AuthCard`, apenas envelopando o card com a logo
+  externa para nao criar shell paralelo.
+- Manter o selo "Para Psicologos" no cadastro profissional, mas dentro do card e proximo
+  do titulo, evitando disputa com a marca.
+- Preservar `Logo` com `next/image`, formularios reais, Google OAuth real, accordion de
+  e-mail, redirects e contratos existentes.
+
+### Consequencias
+
+- A marca passa a assinar o fluxo no fundo cinza, sem competir com o conteudo do card.
+- Os cards de login e cadastro ficam mais limpos e com menos divisorias internas.
+- O cadastro profissional preserva sinalizacao de publico sem acoplar o selo ao logo.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Browser local via Chrome/CDP em viewport mobile `390x844` confirmou logo antes do card,
+  sem overflow horizontal (`docScrollWidth=390`), nas rotas `/auth/login`,
+  `/auth/register/patient` e `/auth/register/psychologist`.
+- Browser local via Chrome/CDP em viewport mobile `390x844` confirmou os estados
+  expandidos dos accordions de e-mail de paciente e psicologo, com formulario real
+  presente e sem overflow horizontal.

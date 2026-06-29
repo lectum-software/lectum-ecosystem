@@ -87,64 +87,71 @@ export const AuthLogic = () => {
 
   return (
     <AuthTemplate>
-      <AuthCard
-        footer={
-          <span>
-            Não tem uma conta?{" "}
-            <a
-              className="font-semibold text-primary hover:text-primary-hover"
-              href="/auth/profile-selection"
-            >
-              Cadastre-se
-            </a>
-          </span>
-        }
-      >
-        <div className="mb-7 grid justify-items-center text-center">
-          <Logo className="w-[132px] sm:w-[144px]" priority />
-          <h1 className="mt-7 text-[1.55rem] font-extrabold leading-tight text-foreground sm:text-[1.7rem]">
-            Bem-vindo de volta
-          </h1>
-          <p className="mt-1.5 text-sm text-muted">Faça o login na sua conta</p>
-        </div>
+      <div className="flex w-full flex-col items-center">
+        <Logo className="mb-5 w-[132px] sm:mb-6 sm:w-[144px]" priority />
 
-        <Form {...formProps} className="grid gap-1.5" onSubmit={hook.handleSubmit(handleSubmit)}>
-          {apiError ? <InlineAlert variant="error">{apiError}</InlineAlert> : null}
-
-          <a
-            className="-mt-1 justify-self-end text-[13px] font-medium text-primary hover:text-primary-hover"
-            href="/auth/recovery"
-          >
-            Esqueci minha senha
-          </a>
-
-          <Button className="mt-1 w-full" disabled={login.isPending || googlePending} type="submit">
-            {login.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <LogInIcon className="h-4 w-4" aria-hidden="true" />
-            )}
-            {login.isPending ? "Entrando" : "Entrar"}
-          </Button>
-        </Form>
-
-        <DividerWithLabel className="my-5 sm:my-6">ou</DividerWithLabel>
-
-        <Button
-          className="w-full"
-          disabled={login.isPending || googlePending}
-          onClick={handleGoogleLogin}
-          type="button"
-          variant="outline"
+        <AuthCard
+          footer={
+            <span>
+              Não tem uma conta?{" "}
+              <a
+                className="font-semibold text-primary hover:text-primary-hover"
+                href="/auth/profile-selection"
+              >
+                Cadastre-se
+              </a>
+            </span>
+          }
         >
-          {googlePending ? (
-            <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
-          ) : (
-            <Image src="/svg/google.svg" alt="Google" width={22} height={22} />
-          )}
-          {googlePending ? "Conectando com Google" : "Continuar com Google"}
-        </Button>
-      </AuthCard>
+          <div className="mb-7 grid justify-items-center text-center">
+            <h1 className="text-[1.55rem] font-extrabold leading-tight text-foreground sm:text-[1.7rem]">
+              Bem-vindo de volta
+            </h1>
+            <p className="mt-1.5 text-sm text-muted">Faça o login na sua conta</p>
+          </div>
+
+          <Form {...formProps} className="grid gap-1.5" onSubmit={hook.handleSubmit(handleSubmit)}>
+            {apiError ? <InlineAlert variant="error">{apiError}</InlineAlert> : null}
+
+            <a
+              className="-mt-1 justify-self-end text-[13px] font-medium text-primary hover:text-primary-hover"
+              href="/auth/recovery"
+            >
+              Esqueci minha senha
+            </a>
+
+            <Button
+              className="mt-1 w-full"
+              disabled={login.isPending || googlePending}
+              type="submit"
+            >
+              {login.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <LogInIcon className="h-4 w-4" aria-hidden="true" />
+              )}
+              {login.isPending ? "Entrando" : "Entrar"}
+            </Button>
+          </Form>
+
+          <DividerWithLabel className="my-5 sm:my-6">ou</DividerWithLabel>
+
+          <Button
+            className="w-full"
+            disabled={login.isPending || googlePending}
+            onClick={handleGoogleLogin}
+            type="button"
+            variant="outline"
+          >
+            {googlePending ? (
+              <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
+            ) : (
+              <Image src="/svg/google.svg" alt="Google" width={22} height={22} />
+            )}
+            {googlePending ? "Conectando com Google" : "Continuar com Google"}
+          </Button>
+        </AuthCard>
+      </div>
     </AuthTemplate>
   );
 };

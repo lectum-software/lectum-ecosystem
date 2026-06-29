@@ -358,3 +358,29 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   compactas e o aviso legal curto nas telas `/auth/register/patient` e
   `/auth/register/psychologist`, com `docScrollWidth=390`.
 - ADR atualizado: `adrs/0008-fluxo-publico-auth-selecao-perfil-login.md`.
+
+## Ajuste posterior em 2026-06-29: logo fora do card em login e cadastros
+
+- Pedido direto de produto: nas telas de login e cadastro, mover a logo da Lectum para
+  fora do card, usando o fundo cinza como area de assinatura visual.
+- `/auth/login`, `/auth/register/patient` e `/auth/register/psychologist` agora exibem a
+  logo centralizada acima do card.
+- Os headers internos com borda dos cadastros foram removidos; os cards passam a começar
+  direto pelo conteudo principal.
+- No cadastro de psicologo, o selo "Para Psicologos" foi mantido dentro do card, acima
+  do titulo, sem competir com a logo.
+- Formularios reais, React Hook Form/Zod, Google OAuth, `redirectTo`/`callbackUrl`,
+  accordion de e-mail e `next/image` foram preservados.
+- Nenhum pacote, endpoint, mock, store, schema ou fluxo paralelo foi criado.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Browser local via Chrome/CDP em viewport mobile `390x844` confirmou logo fora e antes
+  do card em `/auth/login`, `/auth/register/patient` e `/auth/register/psychologist`,
+  com `docScrollWidth=390`.
+- Browser local via Chrome/CDP em viewport mobile `390x844` confirmou os accordions de
+  e-mail expandidos nos cadastros de paciente e psicologo, com formulario real presente
+  e sem overflow horizontal.
+- ADR atualizado: `adrs/0008-fluxo-publico-auth-selecao-perfil-login.md`.
