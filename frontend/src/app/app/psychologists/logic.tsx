@@ -10,8 +10,6 @@ import {
   HandHeart,
   Heart,
   type LucideIcon,
-  Maximize2,
-  Pause,
   Play,
   Search,
   Share2,
@@ -20,7 +18,6 @@ import {
   Star,
   Stethoscope,
   UsersRound,
-  Volume2,
   VolumeX,
   X,
 } from "lucide-react";
@@ -63,7 +60,6 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
-import { requestVideoFullscreen } from "@/lib/video-fullscreen";
 import { playVideoWithSound } from "@/lib/video-playback";
 import { PrivateTemplate } from "@/templates/private";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
@@ -113,13 +109,10 @@ const isPsychologistsScrollLockTarget = (target: EventTarget | null) => {
 };
 const VIDEO_LONG_PRESS_DELAY_MS = 520;
 const VIDEO_PROGRESS_VISIBLE_NAV_BAR_HEIGHT = 64;
-const VIDEO_IMMERSIVE_CONTROLS_BOTTOM_GAP = 14;
-const VIDEO_IMMERSIVE_PROGRESS_CONTROLS_OFFSET = 74;
 const VIDEO_PROGRESS_NAVBAR_OVERLAP_PX = 1;
 const VIDEO_PROGRESS_TRACK_COLOR = "rgba(255,255,255,0.22)";
 const VIDEO_PROGRESS_FILL_COLOR = "rgba(255,255,255,0.75)";
 const DEFAULT_VIDEO_PLAYBACK_RATE = 1;
-const IMMERSIVE_VIDEO_PLAYBACK_RATES = [1, 1.5, 2] as const;
 
 type PsychologistsOnboardingTip = "mySearch" | "whatsapp";
 
@@ -598,18 +591,6 @@ const PsychologistFilterSearchSuggestions = ({
     )}
   </div>
 );
-
-const formatPlaybackRate = (rate: number) =>
-  `${Number.isInteger(rate) ? rate.toFixed(0) : rate.toFixed(1)}x`;
-
-const getNextPlaybackRate = (currentRate: number) => {
-  const currentIndex = IMMERSIVE_VIDEO_PLAYBACK_RATES.findIndex(
-    (rate) => Math.abs(rate - currentRate) < 0.01,
-  );
-  const nextIndex = currentIndex >= 0 ? currentIndex + 1 : 0;
-
-  return IMMERSIVE_VIDEO_PLAYBACK_RATES[nextIndex % IMMERSIVE_VIDEO_PLAYBACK_RATES.length];
-};
 
 const getReadableVideoDuration = (video: HTMLVideoElement) =>
   Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 0;
@@ -2337,40 +2318,6 @@ export const PsychologistsLogic = () => {
     });
   }, [shouldShowVideo, unmuteCurrentVideo, videoPlaybackRate]);
 
-  const setAllVideosMuted = useCallback((muted: boolean) => {
-    if (typeof window !== "undefined") {
-      document
-        .querySelectorAll<HTMLVideoElement>(PSYCHOLOGISTS_BACKGROUND_VIDEO_SELECTOR)
-        .forEach((video) => {
-          video.muted = muted;
-        });
-    }
-
-    const currentVideo = backgroundVideoRef.current;
-    if (currentVideo) {
-      currentVideo.muted = muted;
-    }
-
-    setIsVideoMuted(muted);
-  }, []);
-
-  const setAllVideosPlaybackRate = useCallback((playbackRate: number) => {
-    if (typeof window !== "undefined") {
-      document
-        .querySelectorAll<HTMLVideoElement>(PSYCHOLOGISTS_BACKGROUND_VIDEO_SELECTOR)
-        .forEach((video) => {
-          video.playbackRate = playbackRate;
-        });
-    }
-
-    const currentVideo = backgroundVideoRef.current;
-    if (currentVideo) {
-      currentVideo.playbackRate = playbackRate;
-    }
-
-    setVideoPlaybackRate(playbackRate);
-  }, []);
-
   const stopVideoControlInteraction = useCallback(
     (event: { preventDefault?: () => void; stopPropagation: () => void }) => {
       event.stopPropagation();
@@ -2386,59 +2333,6 @@ export const PsychologistsLogic = () => {
       setIsUiHidden(false);
     },
     [stopVideoControlInteraction],
-  );
-
-  const handleImmersivePlaybackToggle = useCallback(
-    (event: { preventDefault?: () => void; stopPropagation: () => void }) => {
-      stopVideoControlInteraction(event);
-
-      const currentVideo = backgroundVideoRef.current;
-      if (!currentVideo || !shouldShowVideo) return;
-
-      if (currentVideo.paused || isVideoPaused) {
-        playCurrentVideo();
-        return;
-      }
-
-      pauseVideoPlayback();
-    },
-    [
-      isVideoPaused,
-      pauseVideoPlayback,
-      playCurrentVideo,
-      shouldShowVideo,
-      stopVideoControlInteraction,
-    ],
-  );
-
-  const handleImmersiveMuteToggle = useCallback(
-    (event: { preventDefault?: () => void; stopPropagation: () => void }) => {
-      stopVideoControlInteraction(event);
-      setAllVideosMuted(!isVideoMuted);
-    },
-    [isVideoMuted, setAllVideosMuted, stopVideoControlInteraction],
-  );
-
-  const handleImmersivePlaybackRateToggle = useCallback(
-    (event: { preventDefault?: () => void; stopPropagation: () => void }) => {
-      stopVideoControlInteraction(event);
-      setAllVideosPlaybackRate(getNextPlaybackRate(videoPlaybackRate));
-    },
-    [setAllVideosPlaybackRate, stopVideoControlInteraction, videoPlaybackRate],
-  );
-
-  const handleImmersiveFullscreen = useCallback(
-    async (event: { preventDefault?: () => void; stopPropagation: () => void }) => {
-      stopVideoControlInteraction(event);
-
-      if (!shouldShowVideo) return;
-
-      await requestVideoFullscreen(backgroundVideoRef.current, {
-        forceContain: true,
-        temporaryControls: true,
-      });
-    },
-    [shouldShowVideo, stopVideoControlInteraction],
   );
 
   const handleFeedScroll = useCallback(
@@ -3934,10 +3828,14 @@ export const PsychologistsLogic = () => {
                     : null;
                   const slideShouldShowVideo =
                     Boolean(slideVideoSrc) && (!isActiveSlide || !isVideoPlaybackFailed);
+                  const slideIsUiHidden = isActiveSlide && isUiHidden;
+                  const slideUsesNativeVideoControls =
+                    isActiveSlide && slideShouldShowVideo && slideIsUiHidden;
                   const slideShouldRenderProgress =
                     Boolean(slideVideoSrc) &&
                     (!metrics.isDesktopLayout || isActiveSlide) &&
-                    (!isActiveSlide || slideShouldShowVideo);
+                    (!isActiveSlide || slideShouldShowVideo) &&
+                    !slideUsesNativeVideoControls;
                   const slideBio = psychologist.headline?.trim() || "";
                   const slideNameParts = splitNameForBadge(psychologist.name);
                   const slideBenefitChips = buildBenefitChips(psychologist);
@@ -3945,7 +3843,6 @@ export const PsychologistsLogic = () => {
                     favoriteOverrides[psychologist.id] ?? Boolean(psychologist.favorited);
                   const slideIsFavoritePending = favoritePendingId === psychologist.id;
                   const slideActionColumnTranslateY = isActiveSlide ? actionColumnTranslateY : 0;
-                  const slideIsUiHidden = isActiveSlide && isUiHidden;
                   const slideShouldHideChrome =
                     slideIsUiHidden || (metrics.isDesktopLayout && !isActiveSlide);
                   const slideUiVisibilityClass = slideShouldHideChrome
@@ -3958,13 +3855,15 @@ export const PsychologistsLogic = () => {
                     isActiveSlide && videoProgress.duration
                       ? clampNumber(videoProgress.currentTime / videoProgress.duration, 0, 1)
                       : 0;
-                  const slideProgressBottom = slideIsUiHidden
-                    ? `calc(env(safe-area-inset-bottom) + ${VIDEO_IMMERSIVE_PROGRESS_CONTROLS_OFFSET}px)`
-                    : metrics.navBarHeight > 0
+                  const slideProgressBottom =
+                    metrics.navBarHeight > 0
                       ? `calc(${VIDEO_PROGRESS_VISIBLE_NAV_BAR_HEIGHT}px + env(safe-area-inset-bottom) - ${VIDEO_PROGRESS_NAVBAR_OVERLAP_PX}px)`
                       : "0px";
                   const slideCanSeekProgress =
-                    isActiveSlide && slideShouldShowVideo && slideIsUiHidden;
+                    isActiveSlide &&
+                    slideShouldShowVideo &&
+                    slideIsUiHidden &&
+                    !slideUsesNativeVideoControls;
                   const slideVideoAreaLabel =
                     isActiveSlide &&
                     slideShouldShowVideo &&
@@ -4106,7 +4005,8 @@ export const PsychologistsLogic = () => {
                               data-psychologists-background="true"
                               autoPlay={isActiveSlide && !isVideoPaused}
                               className="h-full w-full bg-black object-cover"
-                              controls={false}
+                              controls={slideUsesNativeVideoControls}
+                              controlsList="nodownload"
                               loop
                               muted={isVideoMuted}
                               onDurationChange={(event) => {
@@ -4200,8 +4100,13 @@ export const PsychologistsLogic = () => {
                           />
 
                           <button
+                            aria-hidden={slideUsesNativeVideoControls ? true : undefined}
                             aria-label={slideVideoAreaLabel}
-                            className="absolute inset-0 z-10 h-full w-full cursor-default border-0 bg-transparent p-0"
+                            className={cn(
+                              "absolute inset-0 z-10 h-full w-full cursor-default border-0 bg-transparent p-0",
+                              slideUsesNativeVideoControls && "pointer-events-none",
+                            )}
+                            disabled={slideUsesNativeVideoControls}
                             onClick={
                               isActiveSlide
                                 ? () => handleVideoAreaTap(psychologist, slideIsUiHidden)
@@ -4212,6 +4117,7 @@ export const PsychologistsLogic = () => {
                             onPointerLeave={isActiveSlide ? handleLongPressEnd : undefined}
                             onPointerMove={isActiveSlide ? handleLongPressMove : undefined}
                             onPointerUp={isActiveSlide ? handleLongPressEnd : undefined}
+                            tabIndex={slideUsesNativeVideoControls ? -1 : undefined}
                             type="button"
                           />
 
@@ -4337,97 +4243,19 @@ export const PsychologistsLogic = () => {
                           ) : null}
 
                           {isActiveSlide && slideShouldShowVideo && slideIsUiHidden ? (
-                            <div
-                              className="pointer-events-auto absolute inset-x-0 z-[60] flex items-center justify-between px-5"
+                            <button
+                              aria-label="Mostrar interface do video"
+                              className="pointer-events-auto absolute left-4 z-[70] grid h-12 w-12 place-items-center rounded-full border border-white/10 bg-black/55 text-white shadow-[0_12px_30px_rgba(0,0,0,0.28)] backdrop-blur-md transition hover:bg-black/65 active:scale-95"
                               data-psychologists-scroll-lock="true"
+                              onClick={handleImmersiveExit}
                               onPointerDown={stopInteractionPropagation}
                               style={{
-                                bottom: `calc(env(safe-area-inset-bottom) + ${VIDEO_IMMERSIVE_CONTROLS_BOTTOM_GAP}px)`,
+                                top: "calc(env(safe-area-inset-top) + 16px)",
                               }}
+                              type="button"
                             >
-                              <button
-                                aria-label="Sair do modo imersivo"
-                                className="grid h-12 w-12 place-items-center rounded-full border border-white/10 bg-black/55 text-white shadow-[0_12px_30px_rgba(0,0,0,0.28)] backdrop-blur-md transition hover:bg-black/65 active:scale-95"
-                                onClick={handleImmersiveExit}
-                                type="button"
-                              >
-                                <X className="h-6 w-6" aria-hidden="true" strokeWidth={2.3} />
-                              </button>
-
-                              <div className="inline-flex h-12 items-center gap-1 rounded-full border border-white/10 bg-black/55 px-3 text-white shadow-[0_12px_30px_rgba(0,0,0,0.28)] backdrop-blur-md">
-                                <button
-                                  aria-label={isVideoPaused ? "Reproduzir vídeo" : "Pausar vídeo"}
-                                  className="grid h-9 w-9 place-items-center rounded-full text-white transition hover:bg-white/10 active:scale-95"
-                                  onClick={handleImmersivePlaybackToggle}
-                                  type="button"
-                                >
-                                  {isVideoPaused ? (
-                                    <Play
-                                      className="ml-0.5 h-5 w-5"
-                                      aria-hidden="true"
-                                      strokeWidth={2.4}
-                                    />
-                                  ) : (
-                                    <Pause
-                                      className="h-5 w-5"
-                                      aria-hidden="true"
-                                      strokeWidth={2.4}
-                                    />
-                                  )}
-                                </button>
-
-                                <span aria-hidden="true" className="h-6 w-px bg-white/18" />
-
-                                <button
-                                  aria-label={isVideoMuted ? "Ativar som" : "Silenciar vídeo"}
-                                  className="grid h-9 w-9 place-items-center rounded-full text-white transition hover:bg-white/10 active:scale-95"
-                                  onClick={handleImmersiveMuteToggle}
-                                  type="button"
-                                >
-                                  {isVideoMuted ? (
-                                    <VolumeX
-                                      className="h-5 w-5"
-                                      aria-hidden="true"
-                                      strokeWidth={2.4}
-                                    />
-                                  ) : (
-                                    <Volume2
-                                      className="h-5 w-5"
-                                      aria-hidden="true"
-                                      strokeWidth={2.4}
-                                    />
-                                  )}
-                                </button>
-
-                                <span aria-hidden="true" className="h-6 w-px bg-white/18" />
-
-                                <button
-                                  aria-label={`Alterar velocidade do vídeo. Atual: ${formatPlaybackRate(
-                                    videoPlaybackRate,
-                                  )}`}
-                                  className="min-w-10 rounded-full px-2 py-2 text-[15px] leading-none font-semibold text-white/88 transition hover:bg-white/10 active:scale-95"
-                                  onClick={handleImmersivePlaybackRateToggle}
-                                  type="button"
-                                >
-                                  {formatPlaybackRate(videoPlaybackRate)}
-                                </button>
-
-                                <span aria-hidden="true" className="h-6 w-px bg-white/18" />
-
-                                <button
-                                  aria-label="Abrir vídeo em tela cheia"
-                                  className="grid h-9 w-9 place-items-center rounded-full text-white transition hover:bg-white/10 active:scale-95"
-                                  onClick={handleImmersiveFullscreen}
-                                  type="button"
-                                >
-                                  <Maximize2
-                                    className="h-5 w-5"
-                                    aria-hidden="true"
-                                    strokeWidth={2.4}
-                                  />
-                                </button>
-                              </div>
-                            </div>
+                              <X className="h-6 w-6" aria-hidden="true" strokeWidth={2.3} />
+                            </button>
                           ) : null}
 
                           <div

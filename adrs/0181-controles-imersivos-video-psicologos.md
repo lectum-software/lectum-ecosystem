@@ -1,4 +1,4 @@
-﻿# ADR-0181: Controles imersivos do vídeo de descoberta de psicólogos
+﻿# ADR-0181: Controles imersivos do video de descoberta de psicologos
 
 ## Status
 
@@ -6,33 +6,33 @@ Accepted
 
 ## Task relacionada
 
-TASK-13/TASK-40 (ajuste pós-conclusão em `/psychologists`)
+TASK-13/TASK-40 (ajuste pos-conclusao em `/psychologists`)
 
 ## Contexto
 
-A página pública de descoberta de psicólogos usa um player customizado, diferente do player base dos vídeos em comunidades. A barra de progresso do player customizado aceitava seek também com a UI visível e atualizava `currentTime` continuamente durante o arraste, causando instabilidade de frame em alguns navegadores. Além disso, quando o vídeo estava mutado, somente o toque no ícone central ativava o som e entrava no modo imersivo, apesar do ícone ser apenas uma pista visual.
+A pagina publica de descoberta de psicologos usa um player customizado, diferente do player base dos videos em comunidades. A barra de progresso do player customizado aceitava seek tambem com a UI visivel e atualizava `currentTime` continuamente durante o arraste, causando instabilidade de frame em alguns navegadores. Alem disso, quando o video estava mutado, somente o toque no icone central ativava o som e entrava no modo imersivo, apesar do icone ser apenas uma pista visual.
 
-## Decisão
+## Decisao
 
-- Com UI visível, a barra de progresso permanece como indicador passivo e não recebe eventos de seek.
-- Com UI escondida/imersiva, a barra de progresso vira controle interativo.
-- Durante o arraste da barra imersiva, a UI atualiza apenas a prévia visual; o `currentTime` do vídeo é aplicado uma vez ao soltar usando a última posição válida capturada no drag, evitando reinício por eventos finais sem coordenada confiável.
-- Quando o vídeo estiver mutado, pausado ou sem volume, tocar em qualquer área não interativa do vídeo reproduz com som e esconde a UI, mantendo o ícone central como affordance visual.
-- Com UI visível, o duplo toque/clique na área do vídeo favorita o psicólogo sem depender do botão lateral de favorito.
+- Com UI visivel, a barra de progresso permanece como indicador passivo e nao recebe eventos de seek.
+- Com UI escondida/imersiva, o player customizado habilita os controles nativos do elemento `video`, como no player base usado nas comunidades, para que o navegador cuide diretamente do seek/progresso.
+- O scrubber customizado nao e renderizado no modo imersivo e a camada transparente de toque nao bloqueia os controles nativos.
+- Quando o video estiver mutado, pausado ou sem volume, tocar em qualquer area nao interativa do video reproduz com som e esconde a UI, mantendo o icone central como affordance visual.
+- Com UI visivel, o duplo toque/clique na area do video favorita o psicologo sem depender do botao lateral de favorito.
 
-## Consequências
+## Consequencias
 
-- Reduz conflito entre toque para entrar no modo imersivo e seek acidental com UI visível.
-- Evita múltiplos seeks por movimento, diminuindo glitches de frame em mobile.
-- Mantém o player customizado necessário para o feed de psicólogos sem trocar pelo player de comunidade.
-- A prévia durante o arraste é visual; o frame real do vídeo é confirmado no release do controle.
-- O toque simples na área do vídeo com UI visível passa a aguardar uma janela curta para diferenciar duplo toque de ação simples.
+- Reduz conflito entre toque para entrar no modo imersivo e seek acidental com UI visivel.
+- Remove a fonte de reinicio/glitch causada pelo scrubber customizado em mobile.
+- Mantem o player customizado necessario para o feed de psicologos, mas reutiliza o comportamento nativo confiavel do player de comunidade para progresso no modo imersivo.
+- O modo imersivo perde os botoes customizados de velocidade/mute/fullscreen, delegando essas acoes ao controle nativo do navegador.
+- O toque simples na area do video com UI visivel passa a aguardar uma janela curta para diferenciar duplo toque de acao simples.
 
-## Validação
+## Validacao
 
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 
-## Pendências
+## Pendencias
 
-- Validar manualmente em dispositivo/navegador mobile real com vídeos de psicólogos publicados para confirmar o comportamento de scrub no Safari/Chrome mobile.
+- Validar manualmente em dispositivo/navegador mobile real com videos de psicologos publicados para confirmar o comportamento nativo de seek no Safari/Chrome mobile.
