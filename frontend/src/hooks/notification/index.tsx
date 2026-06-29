@@ -1,12 +1,18 @@
 "use client";
 
 import { BellRing, ShieldCheck, X } from "lucide-react";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNotificationSubscription } from "@/api/callers/notification_subscription";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
+import {
+  clearPromptDismissalState,
+  markPromptDismissedWithBackoff,
+  type PromptUserRole,
+} from "@/utils/prompt-cooldown";
 import { urlToBase64 } from "@/utils/urlToBase64";
 
 type PermissionRequestResult =
@@ -19,10 +25,10 @@ type PermissionRequestResult =
 type NotificationPermissionValue = NotificationPermission | "loading" | "unsupported";
 
 const DISMISSED_UNTIL_KEY = "lectum.notificationsPermissionPrompt.dismissedUntil";
-const NEVER_ASK_AGAIN_KEY = "lectum.notificationsPermissionPrompt.neverAskAgain";
+const DISMISS_COUNT_KEY = "lectum.notificationsPermissionPrompt.dismissCount";
+const LEGACY_NEVER_ASK_AGAIN_KEY = "lectum.notificationsPermissionPrompt.neverAskAgain";
 const ACTIVE_PROMPT_KEY = "lectum.activePrompt";
 const ACTIVE_PROMPT_VALUE = "notification-permission";
-const DISMISS_COOLDOWN_MS = 1000 * 60 * 60 * 24 * 7;
 const SHOW_DELAY_MS = 3200;
 
 // A subscription do browser fica presa à VAPID key com que foi criada. Se a key
@@ -76,32 +82,33 @@ const isDismissedByPreference = () => {
   const storage = safeLocalStorage();
   if (!storage) return true;
 
-  if (storage.getItem(NEVER_ASK_AGAIN_KEY) === "true") return true;
-
   const dismissedUntil = Number(storage.getItem(DISMISSED_UNTIL_KEY) ?? 0);
 
   return Number.isFinite(dismissedUntil) && dismissedUntil > Date.now();
 };
 
-const markDismissedForCooldown = () => {
+const markDismissedForCooldown = (role: PromptUserRole) => {
   const storage = safeLocalStorage();
   if (!storage) return;
 
-  storage.setItem(DISMISSED_UNTIL_KEY, String(Date.now() + DISMISS_COOLDOWN_MS));
-};
-
-const markNeverAskAgain = () => {
-  const storage = safeLocalStorage();
-  if (!storage) return;
-
-  storage.setItem(NEVER_ASK_AGAIN_KEY, "true");
+  markPromptDismissedWithBackoff({
+    dismissedUntilKey: DISMISSED_UNTIL_KEY,
+    dismissCountKey: DISMISS_COUNT_KEY,
+    role,
+    storage,
+  });
 };
 
 const clearPromptCooldown = () => {
   const storage = safeLocalStorage();
   if (!storage) return;
 
-  storage.removeItem(DISMISSED_UNTIL_KEY);
+  clearPromptDismissalState({
+    dismissedUntilKey: DISMISSED_UNTIL_KEY,
+    dismissCountKey: DISMISS_COUNT_KEY,
+    legacyPermanentDismissKeys: [LEGACY_NEVER_ASK_AGAIN_KEY],
+    storage,
+  });
 };
 
 const reserveActivePrompt = () => {
@@ -348,66 +355,80 @@ export const useNotificationPushPermission = () => {
 };
 
 const NotificationPermissionPrompt = ({
+  isPsychologist,
   isRequestingPermission,
   onClose,
   onEnable,
 }: {
+  isPsychologist: boolean;
   isRequestingPermission: boolean;
-  onClose: (persist: "cooldown" | "never" | "none") => void;
+  onClose: (persist: "cooldown" | "none") => void;
   onEnable: () => Promise<void>;
 }) => (
-  <section
-    aria-label="Ativar notificações da Lectum"
+  <div
     className={cn(
-      "fixed inset-x-3 z-[60] mx-auto max-w-[440px] rounded-[1.75rem] border border-border bg-surface p-4 text-foreground shadow-[var(--lectum-shadow)]",
-      "bottom-[calc(5rem+env(safe-area-inset-bottom))] sm:bottom-6",
+      "fixed inset-0 z-[70] flex items-end justify-center bg-slate-950/35 px-3 pt-6 text-foreground backdrop-blur-[8px] transition-opacity duration-200 ease-out supports-[backdrop-filter]:bg-slate-950/35",
+      "pb-[calc(5rem+env(safe-area-inset-bottom))] sm:items-center sm:px-6 sm:pb-6",
     )}
   >
-    <button
-      aria-label="Agora não"
-      className="absolute right-3 top-3 inline-grid h-8 w-8 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-      onClick={() => onClose("cooldown")}
-      type="button"
+    <section
+      aria-label="Ativar notificações da Lectum"
+      aria-modal="true"
+      className="relative w-full max-w-[440px] rounded-[1.75rem] border border-border bg-surface p-4 text-foreground shadow-[var(--lectum-shadow)]"
+      role="dialog"
     >
-      <X className="h-4 w-4" aria-hidden="true" />
-    </button>
-
-    <div className="flex gap-3 pr-8">
-      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
-        <BellRing className="h-6 w-6" aria-hidden="true" />
-      </div>
-
-      <div className="min-w-0">
-        <p className="text-base font-extrabold tracking-[-0.03em] text-foreground">
-          Ative notificações da Lectum
-        </p>
-        <p className="mt-1 text-sm leading-5 text-muted">
-          Receba avisos importantes sobre respostas, interações e contatos. As notificações podem
-          aparecer no seu celular; ative apenas se isso fizer sentido para você.
-        </p>
-      </div>
-    </div>
-
-    <div className="mt-3 flex gap-2 rounded-2xl border border-border bg-background px-3 py-2.5 text-xs leading-5 text-muted">
-      <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-      <span>
-        Você continua no controle: pode recusar agora, ajustar preferências depois e desativar no
-        navegador ou no sistema.
-      </span>
-    </div>
-
-    <div className="mt-4 grid gap-2">
-      <Button
-        className="h-11 rounded-2xl text-sm font-extrabold"
-        disabled={isRequestingPermission}
-        onClick={onEnable}
+      <button
+        aria-label="Agora não"
+        className="absolute top-3 right-3 inline-grid h-8 w-8 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+        onClick={() => onClose("cooldown")}
         type="button"
       >
-        <BellRing className="h-4 w-4" aria-hidden="true" />
-        <span>{isRequestingPermission ? "Ativando..." : "Ativar notificações"}</span>
-      </Button>
+        <X className="h-4 w-4" aria-hidden="true" />
+      </button>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="flex gap-3 pr-8">
+        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary-soft p-1.5">
+          <Image
+            alt=""
+            aria-hidden="true"
+            className="h-9 w-9 object-contain"
+            height={36}
+            src="/icon.png"
+            width={36}
+          />
+        </div>
+
+        <div className="min-w-0">
+          <p className="text-base font-extrabold tracking-[-0.03em] text-foreground">
+            Ative notificações da Lectum
+          </p>
+          <p className="mt-1 text-sm leading-5 text-muted">
+            {isPsychologist
+              ? "Ative notificações para não perder novos contatos, avaliações e interações no seu perfil. Elas podem aparecer no seu celular; ative apenas se isso fizer sentido para você."
+              : "Receba avisos importantes sobre respostas, interações e contatos. As notificações podem aparecer no seu celular; ative apenas se isso fizer sentido para você."}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-3 flex gap-2 rounded-2xl border border-border bg-background px-3 py-2.5 text-xs leading-5 text-muted">
+        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+        <span>
+          Você continua no controle: pode recusar agora, ajustar preferências depois e desativar no
+          navegador ou no sistema.
+        </span>
+      </div>
+
+      <div className="mt-4 grid gap-2">
+        <Button
+          className="h-11 rounded-2xl text-sm font-extrabold"
+          disabled={isRequestingPermission}
+          onClick={onEnable}
+          type="button"
+        >
+          <BellRing className="h-4 w-4" aria-hidden="true" />
+          <span>{isRequestingPermission ? "Ativando..." : "Ativar notificações"}</span>
+        </Button>
+
         <Button
           className="h-10 rounded-2xl text-xs font-bold"
           onClick={() => onClose("cooldown")}
@@ -416,17 +437,9 @@ const NotificationPermissionPrompt = ({
         >
           Agora não
         </Button>
-        <Button
-          className="h-10 rounded-2xl text-xs font-bold"
-          onClick={() => onClose("never")}
-          type="button"
-          variant="ghost"
-        >
-          Não mostrar novamente
-        </Button>
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 );
 
 /**
@@ -440,6 +453,7 @@ const NotificationPermissionPrompt = ({
  */
 export const NotificationManager = () => {
   const pathname = usePathname();
+  const user = useAppSelector((state) => state.user);
   const [isVisible, setIsVisible] = useState(false);
   const {
     canRequestPermission,
@@ -485,18 +499,17 @@ export const NotificationManager = () => {
     [],
   );
 
-  const closePrompt = useCallback((persist: "cooldown" | "never" | "none") => {
-    if (persist === "cooldown") {
-      markDismissedForCooldown();
-    }
+  const closePrompt = useCallback(
+    (persist: "cooldown" | "none") => {
+      if (persist === "cooldown") {
+        markDismissedForCooldown(user?.role);
+      }
 
-    if (persist === "never") {
-      markNeverAskAgain();
-    }
-
-    setIsVisible(false);
-    releaseActivePrompt();
-  }, []);
+      setIsVisible(false);
+      releaseActivePrompt();
+    },
+    [user?.role],
+  );
 
   const handleEnable = async () => {
     const result = await requestPermissionAndSubscribe();
@@ -507,6 +520,7 @@ export const NotificationManager = () => {
 
   return (
     <NotificationPermissionPrompt
+      isPsychologist={user?.role === "psicologo"}
       isRequestingPermission={isRequestingPermission}
       onClose={closePrompt}
       onEnable={handleEnable}

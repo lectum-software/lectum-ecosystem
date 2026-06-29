@@ -141,7 +141,7 @@ Persistência local:
 - Implementado `PwaInstallPrompt` em `frontend/src/components/pwa-install-prompt.tsx`, com gate para rotas `/app`, usuário confirmado, experiência mobile e ausência de standalone.
 - Android/Chromium: `beforeinstallprompt` é retido e o prompt nativo só é chamado após o CTA `Adicionar atalho`.
 - iOS/Safari: o CTA abre instruções manuais para `Compartilhar` > `Adicionar à Tela de Início`.
-- Preferências locais: `Agora não` usa cooldown de 7 dias e instalação aceita usa `localStorage` por navegador/dispositivo; o refinamento de 2026-06-29 removeu a opção `Não mostrar novamente`.
+- Preferências locais: `Agora não` usa cooldown por papel em `localStorage` por navegador/dispositivo; instalação aceita limpa esse estado local; o refinamento de 2026-06-29 removeu a opção `Não mostrar novamente`.
 - Separação preservada: a task não chama `Notification.requestPermission`, não altera service worker de notificações e não implementa Web Push/offline-first.
 
 ## Validação executada
@@ -167,3 +167,22 @@ Persistência local:
   - o prompt virou um diálogo com overlay `fixed inset-0`, fundo escuro e `backdrop-blur-[8px]`, mantendo layout mobile-first na base ~390px.
 - Validação local do refinamento: Chrome/CDP em viewport `390x844`, com estado local de usuário confirmado e URL `/app/favorites` simulada por `history.pushState` para isolar o prompt sem criar usuário/token fake persistente; confirmou overlay escuro com blur, ícone `/icon.png`, ausência de `Não mostrar novamente` e presença de `Agora não`.
 - ADR criado: `adrs/0177-pwa-atalho-mobile-lectum.md`.
+
+## Refinamento 2026-06-29 - insistência por perfil
+
+- Pedido de produto: para psicólogos, gratuitos ou assinantes, a insistência para instalar o atalho pode ser maior até a instalação; manter somente `Agora não`.
+- Implementação ajustada em `frontend/src/components/pwa-install-prompt.tsx` e `frontend/src/utils/prompt-cooldown.ts`:
+  - pacientes e papéis desconhecidos continuam com cooldown de 7 dias após `Agora não`;
+  - psicólogos têm 48 horas nas duas primeiras recusas;
+  - a partir da terceira recusa de psicólogo, o cooldown volta para 7 dias;
+  - a contagem local fica em `lectum.pwaInstall.dismissCount`;
+  - `lectum.pwaInstall.neverShowAgain` virou chave legada e não bloqueia mais a exibição.
+- A copy para psicólogos reforça voltar rápido para contatos, perfil e rotina profissional.
+- Validação do refinamento:
+  - `pnpm --dir frontend exec biome check --write src/components/pwa-install-prompt.tsx src/hooks/notification/index.tsx src/app/app/settings/notifications/logic.tsx src/utils/prompt-cooldown.ts`;
+  - `pnpm --dir frontend exec tsc --noEmit --pretty false`;
+  - `pnpm --dir frontend check`;
+  - `pnpm --dir frontend build`;
+  - `pnpm check`;
+  - browser local mobile `390x844` com usuário real de desenvolvimento `psicologo`, confirmando ausência de `Não mostrar novamente`, chave legada `lectum.pwaInstall.neverShowAgain` ignorada, cooldown de 48h nas duas primeiras recusas e 7 dias na terceira.
+- ADR criado: `adrs/0183-insistencia-controlada-atalho-notificacoes-psicologos.md`.

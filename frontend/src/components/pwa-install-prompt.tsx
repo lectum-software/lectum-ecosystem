@@ -7,6 +7,11 @@ import { useCallback, useEffect, useState } from "react";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
+import {
+  clearPromptDismissalState,
+  markPromptDismissedWithBackoff,
+  type PromptUserRole,
+} from "@/utils/prompt-cooldown";
 
 type BeforeInstallPromptChoice = {
   outcome: "accepted" | "dismissed";
@@ -21,10 +26,11 @@ type BeforeInstallPromptEvent = Event & {
 type PromptKind = "native" | "ios";
 
 const DISMISSED_UNTIL_KEY = "lectum.pwaInstall.dismissedUntil";
+const DISMISS_COUNT_KEY = "lectum.pwaInstall.dismissCount";
+const LEGACY_NEVER_SHOW_KEY = "lectum.pwaInstall.neverShowAgain";
 const INSTALLED_KEY = "lectum.pwaInstall.installed";
 const ACTIVE_PROMPT_KEY = "lectum.activePrompt";
 const ACTIVE_PROMPT_VALUE = "pwa-install";
-const DISMISS_COOLDOWN_MS = 1000 * 60 * 60 * 24 * 7;
 const SHOW_DELAY_MS = 1400;
 
 const safeLocalStorage = () => {
@@ -107,11 +113,16 @@ const releaseActivePrompt = () => {
   }
 };
 
-const markDismissedForCooldown = () => {
+const markDismissedForCooldown = (role: PromptUserRole) => {
   const storage = safeLocalStorage();
   if (!storage) return;
 
-  storage.setItem(DISMISSED_UNTIL_KEY, String(Date.now() + DISMISS_COOLDOWN_MS));
+  markPromptDismissedWithBackoff({
+    dismissedUntilKey: DISMISSED_UNTIL_KEY,
+    dismissCountKey: DISMISS_COUNT_KEY,
+    role,
+    storage,
+  });
 };
 
 const markInstalled = () => {
@@ -119,7 +130,12 @@ const markInstalled = () => {
   if (!storage) return;
 
   storage.setItem(INSTALLED_KEY, "true");
-  storage.removeItem(DISMISSED_UNTIL_KEY);
+  clearPromptDismissalState({
+    dismissedUntilKey: DISMISSED_UNTIL_KEY,
+    dismissCountKey: DISMISS_COUNT_KEY,
+    legacyPermanentDismissKeys: [LEGACY_NEVER_SHOW_KEY],
+    storage,
+  });
 };
 
 export function PwaInstallPrompt() {
@@ -129,6 +145,7 @@ export function PwaInstallPrompt() {
   const [promptKind, setPromptKind] = useState<PromptKind>("native");
   const [showIosSteps, setShowIosSteps] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const isPsychologist = user?.role === "psicologo";
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (event: Event) => {
@@ -182,18 +199,21 @@ export function PwaInstallPrompt() {
     return () => window.clearTimeout(timer);
   }, [deferredPrompt, isVisible, pathname, user?.confirmed, user?.id]);
 
-  const closePrompt = useCallback((persist: "cooldown" | "installed") => {
-    if (persist === "cooldown") {
-      markDismissedForCooldown();
-    }
+  const closePrompt = useCallback(
+    (persist: "cooldown" | "installed") => {
+      if (persist === "cooldown") {
+        markDismissedForCooldown(user?.role);
+      }
 
-    if (persist === "installed") {
-      markInstalled();
-    }
+      if (persist === "installed") {
+        markInstalled();
+      }
 
-    setIsVisible(false);
-    releaseActivePrompt();
-  }, []);
+      setIsVisible(false);
+      releaseActivePrompt();
+    },
+    [user?.role],
+  );
 
   const handleInstall = async () => {
     if (promptKind === "ios") {
@@ -263,14 +283,16 @@ export function PwaInstallPrompt() {
               Acesse a Lectum como um app
             </p>
             <p className="mt-1 text-sm leading-5 text-muted">
-              Crie um atalho na tela inicial para entrar mais rápido, sem precisar abrir o
-              navegador.
+              {isPsychologist
+                ? "Deixe a Lectum mais perto para responder contatos, acompanhar seu perfil e voltar ao trabalho sem precisar abrir o navegador."
+                : "Crie um atalho na tela inicial para entrar mais rápido, sem precisar abrir o navegador."}
             </p>
           </div>
         </div>
 
         <div className="mt-3 rounded-2xl border border-border bg-background px-3 py-2.5 text-xs leading-5 text-muted">
-          O ícone ficará visível na tela inicial do celular. Isso não ativa notificações.
+          O ícone ficará visível na tela inicial do celular. Isso não ativa notificações nem muda
+          suas preferências.
         </div>
 
         {promptKind === "ios" && showIosSteps ? (

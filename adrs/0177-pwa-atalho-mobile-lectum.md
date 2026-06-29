@@ -27,6 +27,10 @@ Refinamento de produto em 2026-06-29 removeu a opção permanente `Não mostrar 
 mesmo ícone visual usado como favicon da Lectum e exigiu um blur escuro de fundo para o prompt não
 se misturar com a tela subjacente.
 
+Refinamento adicional em 2026-06-29 definiu insistência moderada para psicólogos gratuitos ou
+assinantes: manter somente `Agora não`, usar 48 horas nas duas primeiras recusas e voltar para 7
+dias da terceira recusa em diante.
+
 Builder/Quick Copy não estava exposto como ferramenta direta neste ambiente. A referência visual
 auditável usada foi o shell privado/mobile existente, com consulta a `_product/tasks/PROTO-INVENTORY.md`.
 Não há protótipo específico para o prompt de instalação.
@@ -47,6 +51,9 @@ Não há protótipo específico para o prompt de instalação.
   - não aparece quando a Lectum já está em `standalone`/`fullscreen`;
   - usa `localStorage` por navegador/dispositivo para `Agora não` e instalação aceita;
   - não exibe nem consulta a antiga preferência permanente `lectum.pwaInstall.neverShowAgain`;
+  - usa `lectum.pwaInstall.dismissCount` para aplicar cooldown por papel: pacientes e papéis
+    desconhecidos ficam em 7 dias; psicólogos ficam em 48 horas nas duas primeiras recusas e 7
+    dias da terceira em diante;
   - usa `sessionStorage` com a chave `lectum.activePrompt` para evitar empilhar prompts de
     produto no mesmo momento. A TASK-38 deve reutilizar essa coordenação para notificações.
 - Após o refinamento de 2026-06-29, o prompt usa `/icon.png` via `next/image` como ícone visual
@@ -98,6 +105,9 @@ Refinamento 2026-06-29:
   - o ícone renderizado foi `/icon.png`, o mesmo ícone real usado como base do favicon/PWA;
   - a opção `Não mostrar novamente` não apareceu;
   - `Agora não` continuou fechando a modal com cooldown local.
+
+Refinamento 2026-06-29 validado no ADR-0183 para backoff por perfil e manutenção de `Agora não`
+como única ação secundária.
 
 ## Pendências
 

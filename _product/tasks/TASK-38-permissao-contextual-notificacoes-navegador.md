@@ -43,7 +43,6 @@ CTAs:
 
 - `Ativar notificações`
 - `Agora não`
-- `Não mostrar novamente`
 
 ## Pré-requisitos e bloqueios
 
@@ -64,7 +63,7 @@ CTAs:
 - Criar ou adaptar componente client-side de prompt contextual no shell privado/mobile:
   - exibir apenas para usuário autenticado e confirmado;
   - exibir apenas quando VAPID estiver configurado e browser suportar push;
-  - não exibir se já estiver `granted`, `denied`, `dismissed` em cooldown ou marcado como `Não mostrar novamente`;
+  - não exibir se já estiver `granted`, `denied` ou `dismissed` em cooldown;
   - respeitar estado local por navegador/dispositivo via `localStorage`, sem backend.
 - Integrar com `/app/settings/notifications` quando fizer sentido:
   - se push estiver bloqueado/negado no navegador, mostrar mensagem honesta;
@@ -102,7 +101,7 @@ Frontend esperado:
 - Se `Notification.permission === "denied"`, não chamar `requestPermission`; renderizar instrução curta para reativar no navegador/sistema, sem insistência.
 - Persistência local sugerida:
   - `lectum.notificationsPermissionPrompt.dismissedUntil` para `Agora não`;
-  - `lectum.notificationsPermissionPrompt.neverAskAgain` para `Não mostrar novamente`.
+  - `lectum.notificationsPermissionPrompt.dismissCount` para backoff local por navegador/dispositivo.
 - Não acessar `localStorage`, `navigator`, `window.Notification` ou `matchMedia` durante SSR.
 - UI mobile-first (~390px), com progressão desktop quando aplicável.
 - Usar tokens de tema (`bg-background`, `bg-surface`, `text-foreground`, `text-muted`, `border-border`, `text-primary`, etc.), sem cores hardcoded.
@@ -126,18 +125,19 @@ Packages usados:
 - [x] O prompt nativo do navegador (`Notification.requestPermission`) não aparece automaticamente ao entrar no app, hidratar sessão ou montar `NotificationManager`.
 - [x] O prompt contextual da Lectum aparece somente quando o usuário está autenticado/confirmado, o browser suporta push, VAPID está disponível e a permissão está `default`.
 - [x] Clicar em `Ativar notificações` dispara o prompt nativo e, quando concedido, cria/revalida `PushSubscription` real e persiste via endpoint existente.
-- [x] `Agora não` aplica cooldown local; `Não mostrar novamente` impede nova exibição naquele navegador/dispositivo.
+- [x] `Agora não` aplica cooldown local/backoff por papel; a UI não exibe `Não mostrar novamente`.
 - [x] Quando a permissão está `denied`, a UI não chama `requestPermission` e mostra orientação honesta para reativar no navegador/sistema.
 - [x] Quando a permissão já está `granted`, a subscription continua sendo revalidada de forma idempotente sem mostrar prompt contextual.
 - [x] A experiência não empilha prompt de instalação da TASK-37 e prompt de notificações ao mesmo tempo.
 - [x] A copy usa **"Ative notificações da Lectum"** e explica a implicação de privacidade de notificações visíveis no celular.
+- [x] A modal contextual usa o favicon da Lectum como ícone e aplica overlay escuro com blur para não se misturar à tela.
 - [x] A task não altera eventos de domínio, política de digest ou conteúdo de push.
 - [x] Nenhum mock, subscription fake, VAPID fake ou endpoint simulado foi usado.
 - [x] Nenhum pacote novo foi instalado, salvo se `PACKAGES.md` e ADR justificarem explicitamente.
 - [x] UI mobile-first; nenhum `<img>` cru em UI, somente `next/image` quando imagem for renderizada.
 - [x] Builder/Quick Copy foi usado quando disponível, ou a limitação foi registrada e as referências locais de notificações foram citadas.
 - [x] `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check` executados sem erro.
-- [x] Browser local validado em viewport mobile, cobrindo `default`, `granted`, `denied`, `Agora não` e `Não mostrar novamente`.
+- [x] Browser local validado em viewport mobile, cobrindo `default`, `granted`, `denied`, `Agora não` e ausência de `Não mostrar novamente`.
 - [x] ADR criado ou atualizado em `adrs/` registrando a separação entre consentimento contextual, permissão nativa e preferências de notificação.
 - [x] Commit criado com mensagem convencional e publicado com `git push` (push tentado; registrar bloqueio se credenciais/timeout impedirem publicação).
 
@@ -151,7 +151,7 @@ Packages usados:
   - permissão `granted`: subscription é criada/revalidada sem prompt;
   - permissão `denied`: orientação é exibida e `requestPermission` não é chamado;
   - `Agora não`: cooldown respeitado;
-  - `Não mostrar novamente`: prompt não reaparece.
+  - ausência de `Não mostrar novamente`.
 
 ## Notas de execução
 
@@ -176,8 +176,7 @@ Packages usados:
 - Quando `Notification.permission === "granted"`, a subscription real é criada/revalidada e
   persistida pelo endpoint existente `/api/private/notification_subscription/store`.
 - Quando `Notification.permission === "default"`, o prompt contextual mobile-first da Lectum é
-  exibido com cooldown local de 7 dias em `Agora não` e bloqueio por navegador/dispositivo em
-  `Não mostrar novamente`.
+  exibido com cooldown local/backoff por papel em `Agora não`, sem opção permanente `Não mostrar novamente`.
 - Quando `Notification.permission === "denied"`, `/app/settings/notifications` orienta reativação
   nas configurações do navegador/sistema e não chama o prompt nativo.
 - `/app/settings/notifications` passou a exibir status honesto para suporte indisponível, VAPID
@@ -200,5 +199,36 @@ Packages usados:
   - permissão `granted`: subscription é revalidada sem prompt contextual;
   - permissão `denied`: UI orienta reativação e não chama `requestPermission`;
   - `Agora não`: cooldown local respeitado;
-  - `Não mostrar novamente`: prompt não reaparece;
+  - `Não mostrar novamente`: ausente da UI do prompt;
   - `lectum.activePrompt`: prompt de atalho e prompt de notificações não aparecem simultaneamente.
+
+## Refinamento 2026-06-29 - insistência por perfil
+
+- Pedido de produto: para psicólogos, gratuitos ou assinantes, a insistência para ativar notificações pode ser maior até a permissão ser concedida, mantendo somente `Agora não`.
+- Implementação ajustada em `frontend/src/hooks/notification/index.tsx`, `frontend/src/app/app/settings/notifications/logic.tsx` e `frontend/src/utils/prompt-cooldown.ts`:
+  - pacientes e papéis desconhecidos continuam com cooldown de 7 dias após `Agora não`;
+  - psicólogos têm 48 horas nas duas primeiras recusas;
+  - a partir da terceira recusa de psicólogo, o cooldown volta para 7 dias;
+  - a contagem local fica em `lectum.notificationsPermissionPrompt.dismissCount`;
+  - `lectum.notificationsPermissionPrompt.neverAskAgain` virou chave legada e não bloqueia mais a exibição.
+- A copy para psicólogos reforça não perder contatos, avaliações e interações no perfil.
+- Se `Notification.permission === "denied"`, não há insistência com prompt nativo; a UI segue orientando reativação nas configurações do navegador/sistema.
+- Validação do refinamento:
+  - `pnpm --dir frontend exec biome check --write src/components/pwa-install-prompt.tsx src/hooks/notification/index.tsx src/app/app/settings/notifications/logic.tsx src/utils/prompt-cooldown.ts`;
+  - `pnpm --dir frontend exec tsc --noEmit --pretty false`;
+  - `pnpm --dir frontend check`;
+  - `pnpm --dir frontend build`;
+  - `pnpm check`;
+  - browser local mobile `390x844` com usuário real de desenvolvimento `psicologo`, confirmando prompt contextual de notificações com copy profissional, ausência de `Não mostrar novamente`, chave legada `lectum.notificationsPermissionPrompt.neverAskAgain` ignorada, nenhuma chamada a `Notification.requestPermission()` antes de CTA e cooldown de 48h no `Agora não`.
+- ADR criado: `adrs/0183-insistencia-controlada-atalho-notificacoes-psicologos.md`.
+
+## Refinamento 2026-06-29 - padrão visual da modal
+
+- Pedido de produto: aplicar na modal contextual de notificações o mesmo padrão visual definido para a modal de atalho/PWA.
+- Implementação ajustada em `frontend/src/hooks/notification/index.tsx`:
+  - o ícone principal da modal passou a renderizar `/icon.png` com `next/image`, igual ao favicon/ícone ativo da Lectum;
+  - o `BellRing` ficou apenas no CTA `Ativar notificações`;
+  - a modal passou a abrir dentro de overlay `fixed inset-0` com fundo escuro translúcido e `backdrop-blur`, alinhada ao padrão da modal de novo post e da modal de atalho;
+  - a estrutura ganhou `role="dialog"` e `aria-modal="true"`, mantendo a experiência mobile-first.
+- A opção `Não mostrar novamente` segue ausente; `Agora não` continua sendo o único caminho de adiamento local.
+- Validação adicional prevista: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local mobile confirmando ícone, blur e ausência de `Não mostrar novamente`.

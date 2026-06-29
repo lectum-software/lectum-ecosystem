@@ -230,6 +230,7 @@ const fromFormValues = (values: NotificationSettingsForm, role: UserRole): Notif
 };
 
 const BrowserNotificationPermissionCard = () => {
+  const sessionRole = useAppSelector((state) => state.user?.role);
   const {
     canRequestPermission,
     hasVapidKey,
@@ -240,6 +241,7 @@ const BrowserNotificationPermissionCard = () => {
     permission,
     requestPermissionAndSubscribe,
   } = useNotificationPushPermission();
+  const isPsychologist = sessionRole === "psicologo";
 
   if (!isConfirmedUser) return null;
 
@@ -356,8 +358,9 @@ const BrowserNotificationPermissionCard = () => {
             <div className="min-w-0">
               <h2 className="font-extrabold text-foreground">Ative notificações da Lectum</h2>
               <p className="mt-1 leading-5 text-muted">
-                Receba avisos importantes sobre respostas, interações e contatos. As notificações
-                podem aparecer no seu celular; ative apenas se isso fizer sentido para você.
+                {isPsychologist
+                  ? "Ative notificações para não perder novos contatos, avaliações e interações no seu perfil. Elas podem aparecer no seu celular; ative apenas se isso fizer sentido para você."
+                  : "Receba avisos importantes sobre respostas, interações e contatos. As notificações podem aparecer no seu celular; ative apenas se isso fizer sentido para você."}
               </p>
             </div>
           </div>
