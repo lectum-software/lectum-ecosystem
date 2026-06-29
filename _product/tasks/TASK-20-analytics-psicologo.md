@@ -318,3 +318,16 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Builder/Quick Copy nao estava exposto como ferramenta MCP direta; a validacao visual usou as capturas enviadas pelo usuario e a referencia local `_product/proto/Meus Analytics - Psicologo.jpg`.
 - ADR atualizado: `adrs/0124-retencao-video-buckets-sincronizados.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check src/app/app/professional/analytics/logic.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build` e `Invoke-WebRequest` em `/app/professional/analytics` (307 para login sem sessao).
+
+
+## Ajuste complementar em 2026-06-29 - leitura orientada dos Analytics de video
+
+- Pedido do usuario: simplificar a leitura para psicologos leigos em marketing, evitando termos como `CTA` e priorizando textos como `convite para o WhatsApp`.
+- Os contadores principais de negocio foram reorganizados para remover o vazio ao lado de `Favoritado`: `Conversoes WhatsApp` passou para um card largo de duas colunas ao final do bloco, com texto explicativo de contato.
+- Nos contadores do video, a UI passou a destacar apenas `Visualizacoes` e `Taxa de replays`; `Tempo medio assistido`, `Taxa de conclusao` e `Taxa de abandono` continuam disponiveis no contrato, mas deixaram de ser contadores frios na tela.
+- O `Tempo medio assistido` foi agrupado ao percentual de retencao na frase do card: `Em media, os visitantes assistiram X% do video, cerca de mm:ss.`
+- A dica isolada `Insight` foi removida; a orientacao agora fica dentro do card de retencao, com diagnostico simples (ex.: `Primeiros sinais bons`, `Bom desempenho`, `Ponto de atencao`) e sugestao em linguagem natural.
+- Nenhum schema Prisma, migration, package novo, mock, seed ou endpoint simulado foi criado.
+- Builder/Quick Copy nao estava exposto como ferramenta MCP direta; a validacao visual usou as capturas enviadas pelo usuario e a referencia local `_product/proto/Meus Analytics - Psicologo.jpg`.
+- ADR criado: `adrs/0175-analytics-video-retencao-orientada.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check src/app/app/professional/analytics/logic.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build` e `Invoke-WebRequest` em `/app/professional/analytics` (307 para login sem sessao).

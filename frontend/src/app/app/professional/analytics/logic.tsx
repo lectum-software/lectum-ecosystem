@@ -9,7 +9,6 @@ import {
   Compass,
   Eye,
   Heart,
-  Lightbulb,
   Link2,
   type LucideIcon,
   PlayCircle,
@@ -78,9 +77,11 @@ const getDefaultCustomRange = () => {
 type AnalyticsCardIcon = LucideIcon | typeof WhatsAppIcon;
 
 type AnalyticsCardView = {
+  description?: string;
   icon: AnalyticsCardIcon;
   id: string;
   label: string;
+  layout?: "default" | "wide";
   source?: PsychologistAnalyticsMetric["source"] | "untracked";
   value: string;
 };
@@ -122,6 +123,13 @@ const videoMetricIcons: Record<PsychologistAnalyticsPresentationVideoMetric["id"
   views: PlayCircle,
 };
 
+const VISIBLE_PRESENTATION_VIDEO_CARD_IDS = new Set<
+  PsychologistAnalyticsPresentationVideoMetric["id"]
+>(["views", "replay_rate"]);
+
+const getPresentationVideoCards = (video?: PsychologistAnalyticsPresentationVideo) =>
+  (video?.cards ?? []).filter((metric) => VISIBLE_PRESENTATION_VIDEO_CARD_IDS.has(metric.id));
+
 const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCardView[] => [
   {
     id: "search_results",
@@ -138,11 +146,11 @@ const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCardView[] 
     source: "untracked",
   },
   {
-    id: "whatsapp_clicks",
-    icon: WhatsAppIcon,
-    label: "Conversões WhatsApp",
-    value: toCount(data?.metrics.whatsapp_clicks),
-    source: "contact_request",
+    id: "favorited",
+    icon: Heart,
+    label: "Favoritado",
+    value: "0",
+    source: "untracked",
   },
   {
     id: "reviews_received",
@@ -152,11 +160,13 @@ const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCardView[] 
     source: "professional_review",
   },
   {
-    id: "favorited",
-    icon: Heart,
-    label: "Favoritado",
-    value: "0",
-    source: "untracked",
+    description: "Pessoas que tocaram para conversar com você.",
+    id: "whatsapp_clicks",
+    icon: WhatsAppIcon,
+    label: "Conversões WhatsApp",
+    layout: "wide",
+    value: toCount(data?.metrics.whatsapp_clicks),
+    source: "contact_request",
   },
 ];
 
@@ -415,6 +425,39 @@ const PremiumAnalyticsBanner = () => (
 
 const MetricCard = ({ locked, metric }: { locked?: boolean; metric: AnalyticsCardView }) => {
   const Icon = metric.icon;
+
+  if (metric.layout === "wide") {
+    return (
+      <article className="col-span-2 grid min-h-[124px] min-w-0 gap-3 overflow-hidden rounded-[20px] border border-primary/10 bg-surface p-4 shadow-[var(--lectum-shadow-soft)] sm:min-h-[136px] sm:rounded-[22px]">
+        <div className="flex min-w-0 items-start justify-between gap-4">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+              <Icon className="h-5 w-5" aria-hidden />
+            </span>
+            <div className="min-w-0">
+              <h2 className="break-words text-[0.84rem] font-extrabold leading-5 text-muted sm:text-sm">
+                {metric.label}
+              </h2>
+              {metric.description ? (
+                <p className="mt-1.5 text-xs font-semibold leading-5 text-subtle sm:text-sm">
+                  {metric.description}
+                </p>
+              ) : null}
+            </div>
+          </div>
+
+          <p
+            className={cn(
+              "shrink-0 text-3xl font-black leading-none tracking-[-0.05em] text-foreground sm:text-[2rem]",
+              locked && "select-none blur-[5px]",
+            )}
+          >
+            {metric.value}
+          </p>
+        </div>
+      </article>
+    );
+  }
 
   return (
     <article className="flex min-h-[132px] min-w-0 flex-col overflow-hidden rounded-[20px] border border-primary/10 bg-surface p-3 shadow-[var(--lectum-shadow-soft)] sm:min-h-[150px] sm:rounded-[22px] sm:p-4">
@@ -744,7 +787,7 @@ const RetentionChart = ({
 
       {dropoff ? (
         <div className="mt-3 w-full rounded-2xl border border-primary/10 bg-surface px-3 py-3 text-left text-xs leading-5 text-muted">
-          <span className="block font-extrabold text-foreground">Maior abandono estimado</span>
+          <span className="block font-extrabold text-foreground">Maior queda estimada</span>
           <span
             className={cn(locked && "select-none blur-[4px]")}
           >{`Entre ${dropoff.from_milestone}% e ${
@@ -757,6 +800,85 @@ const RetentionChart = ({
     </div>
   );
 };
+
+type RetentionHealth = {
+  description: string;
+  label: string;
+};
+
+const MIN_RETENTION_SAMPLE_FOR_CONFIDENCE = 30;
+
+const getDropoffMoment = (
+  dropoff?: PsychologistAnalyticsPresentationVideo["retention"]["dropoff"],
+) => {
+  if (!dropoff) return "sem uma queda concentrada";
+  if (dropoff.from_milestone >= 75) return "no final";
+  if (dropoff.from_milestone >= 50) return "na segunda metade";
+  if (dropoff.from_milestone >= 25) return "antes da metade";
+
+  return "logo no começo";
+};
+
+const getRetentionHealth = ({
+  averageRetention,
+  dropoff,
+  views,
+}: {
+  averageRetention: number;
+  dropoff?: PsychologistAnalyticsPresentationVideo["retention"]["dropoff"];
+  views: number;
+}): RetentionHealth => {
+  if (views <= 0) {
+    return {
+      description:
+        "Assim que o vídeo receber visualizações reais, mostraremos uma leitura simples do desempenho.",
+      label: "Aguardando dados",
+    };
+  }
+
+  const dropoffMoment = getDropoffMoment(dropoff);
+  const hasSmallSample = views < MIN_RETENTION_SAMPLE_FOR_CONFIDENCE;
+
+  if (hasSmallSample) {
+    return {
+      description:
+        averageRetention >= 60
+          ? `Os primeiros sinais são bons, mas ainda há poucas visualizações. Observe se a maior queda ${dropoffMoment} se repete e teste fazer seu convite para o WhatsApp um pouco antes.`
+          : "Ainda há poucas visualizações para concluir. Teste uma apresentação mais direta e acompanhe como a retenção evolui.",
+      label: averageRetention >= 60 ? "Primeiros sinais bons" : "Dados iniciais",
+    };
+  }
+
+  if (averageRetention >= 75 && (!dropoff || dropoff.from_milestone >= 75)) {
+    return {
+      description: `A maior queda acontece ${dropoffMoment}. Teste fazer seu convite para o WhatsApp um pouco antes desse trecho.`,
+      label: "Bom desempenho",
+    };
+  }
+
+  if (averageRetention >= 60) {
+    return {
+      description:
+        "Há bom interesse no vídeo. Vale testar uma mensagem mais direta e antecipar seu convite para o WhatsApp.",
+      label: "Desempenho saudável",
+    };
+  }
+
+  if (averageRetention >= 40) {
+    return {
+      description:
+        "Parte relevante dos visitantes sai antes de avançar no vídeo. Teste encurtar a apresentação e chegar mais rápido ao convite para o WhatsApp.",
+      label: "Ponto de atenção",
+    };
+  }
+
+  return {
+    description:
+      "A maioria dos visitantes sai cedo. Teste uma abertura mais objetiva e deixe claro, logo no início, como a pessoa pode falar com você.",
+    label: "Precisa melhorar",
+  };
+};
+
 const PresentationVideoAnalyticsSection = ({
   locked,
   video,
@@ -771,7 +893,14 @@ const PresentationVideoAnalyticsSection = ({
   const videoSrc = resolvePublicMediaUrl(video?.video_url ?? null);
   const videoCoverSrc = resolvePublicMediaUrl(video?.video_cover_url ?? null);
   const averageRetention = video?.retention.average_retention_rate ?? 0;
+  const averageWatchSeconds = video?.metrics.average_watch_seconds ?? 0;
   const durationSeconds = playerDurationSeconds ?? video?.duration_seconds ?? null;
+  const retentionHealth = getRetentionHealth({
+    averageRetention,
+    dropoff: video?.retention.dropoff,
+    views: video?.metrics.views ?? 0,
+  });
+  const presentationVideoCards = getPresentationVideoCards(video);
 
   const handleVideoElementReady = useCallback((element: HTMLVideoElement | null) => {
     cleanupVideoListenersRef.current?.();
@@ -867,8 +996,8 @@ const PresentationVideoAnalyticsSection = ({
         </div>
       </div>
 
-      <div className="grid min-w-0 grid-cols-2 gap-3 lg:grid-cols-5">
-        {(video?.cards ?? []).map((metric) => (
+      <div className="grid min-w-0 grid-cols-2 gap-3">
+        {presentationVideoCards.map((metric) => (
           <PresentationVideoMetricCard key={metric.id} locked={locked} metric={metric} />
         ))}
       </div>
@@ -884,10 +1013,32 @@ const PresentationVideoAnalyticsSection = ({
           <p className="mt-2 text-sm leading-6 text-muted">
             Em média, os visitantes assistiram{" "}
             <span className={cn("font-extrabold text-foreground", locked && "blur-[4px]")}>
-              {averageRetention}%
-            </span>{" "}
-            do seu vídeo.
+              {averageRetention}% do vídeo
+            </span>
+            {", cerca de "}
+            <span className={cn("font-extrabold text-foreground", locked && "blur-[4px]")}>
+              {formatSeconds(averageWatchSeconds)}
+            </span>
+            .
           </p>
+          <div className="mt-4 rounded-2xl border border-primary/10 bg-surface px-3 py-3 text-sm leading-6 text-muted">
+            <span
+              className={cn(
+                "inline-flex rounded-full border border-primary/10 bg-primary-soft px-2.5 py-1 text-[0.68rem] font-black uppercase tracking-[0.1em] text-primary",
+                locked && "select-none blur-[4px]",
+              )}
+            >
+              {retentionHealth.label}
+            </span>
+            <p
+              className={cn(
+                "mt-2 font-semibold leading-5 text-muted",
+                locked && "select-none blur-[4px]",
+              )}
+            >
+              {retentionHealth.description}
+            </p>
+          </div>
           {!videoSrc ? (
             <p className="mt-3 rounded-2xl border border-primary/10 bg-surface px-3 py-2 text-xs font-semibold leading-5 text-muted">
               Envie um vídeo de apresentação para ativar a análise de retenção.
@@ -921,17 +1072,6 @@ const PresentationVideoAnalyticsSection = ({
           />
         </div>
       </article>
-
-      <div className="flex min-w-0 items-start gap-3 rounded-[22px] border border-primary/10 bg-primary-soft/40 px-4 py-3 text-sm leading-6 text-muted">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface text-primary shadow-[var(--lectum-shadow-soft)]">
-          <Lightbulb className="h-4 w-4" aria-hidden />
-        </span>
-        <p className="min-w-0">
-          <span className="font-extrabold text-foreground">Insight: </span>
-          Vídeos de apresentação com alto engajamento geram mais conversões para o WhatsApp. Faça
-          testes e descubra o que funciona melhor para você.
-        </p>
-      </div>
     </section>
   );
 };
