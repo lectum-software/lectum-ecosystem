@@ -305,3 +305,16 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nenhum contrato de analytics, endpoint, schema, migration, package, mock, seed ou dado simulado foi alterado.
 - ADR relacionado atualizado: `adrs/0025-bloqueio-task19-dependencia-task18.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e Chrome/CDP autenticado confirmando ausencia da secao em `/app/professional/analytics`.
+
+
+## Ajuste complementar em 2026-06-29 - copy e curva do video nos Analytics
+
+- Pedido do usuario: ajustar a secao de video em `/app/professional/analytics` para reduzir redundancia visual e simplificar a leitura mobile.
+- Copy do card de video atualizada para `Acompanhe como os visitantes assistem seu video de apresentacao.`
+- A faixa azul `Atualizado em` foi removida da UI; o contrato `presentation_video.updated_at` permanece disponivel no backend para auditoria/futuros usos, sem alterar schema ou API.
+- O grafico de retencao deixou de desenhar a leitura em patamares/degraus e passou a usar uma curva SVG continua estimada, partindo de 100% e encerrando visualmente em 0%, preservando os buckets reais para metricas e identificacao do trecho de maior abandono.
+- O destaque de maior abandono passou a exibir somente o intervalo: `Entre X e Y% do video (mm:ss - mm:ss).`, sem `Ver trecho` e sem percentual de queda em p.p. na UI.
+- Nenhum schema Prisma, migration, package novo, mock, seed ou endpoint simulado foi criado.
+- Builder/Quick Copy nao estava exposto como ferramenta MCP direta; a validacao visual usou as capturas enviadas pelo usuario e a referencia local `_product/proto/Meus Analytics - Psicologo.jpg`.
+- ADR atualizado: `adrs/0124-retencao-video-buckets-sincronizados.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check src/app/app/professional/analytics/logic.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build` e `Invoke-WebRequest` em `/app/professional/analytics` (307 para login sem sessao).

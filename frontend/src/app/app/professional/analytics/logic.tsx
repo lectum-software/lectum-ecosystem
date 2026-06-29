@@ -114,18 +114,6 @@ const formatVideoMetricValue = (metric: PsychologistAnalyticsPresentationVideoMe
   return toCount(metric.value);
 };
 
-const formatUpdatedAt = (value?: string | null) => {
-  if (!value) return "Aguardando primeiras visualizações";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Aguardando primeiras visualizações";
-
-  return `Atualizado em ${new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(date)}`;
-};
-
 const videoMetricIcons: Record<PsychologistAnalyticsPresentationVideoMetric["id"], LucideIcon> = {
   abandonment_rate: TrendingDown,
   average_watch_seconds: Clock3,
@@ -507,7 +495,37 @@ const toChartPoint = (milestone: number, rate: number) => {
   return { x, y };
 };
 
-const buildSmoothRetentionPath = (points: Array<{ milestone: number; rate: number }>) => {
+type RetentionCurvePoint = {
+  milestone: number;
+  rate: number;
+};
+
+const buildRetentionCurvePoints = ({
+  points,
+  views,
+}: {
+  points: PsychologistAnalyticsPresentationVideo["retention"]["points"];
+  views: number;
+}): RetentionCurvePoint[] => {
+  if (views <= 0) {
+    return [
+      { milestone: 0, rate: 0 },
+      { milestone: 100, rate: 0 },
+    ];
+  }
+
+  const intermediatePoints = points
+    .filter((point) => point.milestone > 0 && point.milestone < 100)
+    .sort((a, b) => a.milestone - b.milestone)
+    .map((point) => ({
+      milestone: clampPercent(point.milestone),
+      rate: clampPercent(point.rate),
+    }));
+
+  return [{ milestone: 0, rate: 100 }, ...intermediatePoints, { milestone: 100, rate: 0 }];
+};
+
+const buildSmoothRetentionPath = (points: RetentionCurvePoint[]) => {
   if (points.length === 0) return "";
 
   const chartPoints = points.map((point) => toChartPoint(point.milestone, point.rate));
@@ -515,15 +533,41 @@ const buildSmoothRetentionPath = (points: Array<{ milestone: number; rate: numbe
   if (!firstPoint) return "";
   let path = `M ${firstPoint.x.toFixed(2)} ${firstPoint.y.toFixed(2)}`;
 
-  for (let index = 1; index < chartPoints.length; index += 1) {
+  if (chartPoints.length === 1) return path;
+
+  if (chartPoints.length === 2) {
+    const lastPoint = chartPoints[1];
+    if (!lastPoint) return path;
+
+    const control1X = firstPoint.x + (lastPoint.x - firstPoint.x) * 0.42;
+    const control2X = firstPoint.x + (lastPoint.x - firstPoint.x) * 0.78;
+
+    return `${path} C ${control1X.toFixed(2)} ${firstPoint.y.toFixed(
+      2,
+    )}, ${control2X.toFixed(2)} ${lastPoint.y.toFixed(2)}, ${lastPoint.x.toFixed(
+      2,
+    )} ${lastPoint.y.toFixed(2)}`;
+  }
+
+  for (let index = 1; index < chartPoints.length - 1; index += 1) {
     const point = chartPoints[index];
-    const previous = chartPoints[index - 1];
+    const nextPoint = chartPoints[index + 1];
 
-    if (!point || !previous) continue;
+    if (!point || !nextPoint) continue;
 
-    const midX = (previous.x + point.x) / 2;
+    const midX = (point.x + nextPoint.x) / 2;
+    const midY = (point.y + nextPoint.y) / 2;
 
-    path += ` C ${midX.toFixed(2)} ${previous.y.toFixed(2)}, ${midX.toFixed(2)} ${point.y.toFixed(2)}, ${point.x.toFixed(2)} ${point.y.toFixed(2)}`;
+    path += ` Q ${point.x.toFixed(2)} ${point.y.toFixed(2)}, ${midX.toFixed(2)} ${midY.toFixed(2)}`;
+  }
+
+  const penultimatePoint = chartPoints[chartPoints.length - 2];
+  const lastPoint = chartPoints[chartPoints.length - 1];
+
+  if (penultimatePoint && lastPoint) {
+    path += ` Q ${penultimatePoint.x.toFixed(2)} ${penultimatePoint.y.toFixed(
+      2,
+    )}, ${lastPoint.x.toFixed(2)} ${lastPoint.y.toFixed(2)}`;
   }
 
   return path;
@@ -538,31 +582,16 @@ const RetentionChart = ({
   points,
   views = 0,
 }: RetentionChartProps) => {
-  const fallbackPoints = Array.from({ length: 20 }, (_, index) => {
-    const milestone = (index + 1) * 5;
-
-    return {
-      milestone,
-      rate: 0,
-      viewers: 0,
-    };
-  });
-  const safePoints = points.length ? points : fallbackPoints;
-  const chartPoints = [
-    {
-      milestone: 0,
-      rate: views > 0 ? 100 : 0,
-      viewers: views,
-    },
-    ...safePoints,
-  ];
+  const chartPoints = buildRetentionCurvePoints({ points, views });
   const smoothPath = buildSmoothRetentionPath(chartPoints);
   const firstChartPoint = chartPoints[0] ?? { milestone: 0, rate: 0 };
   const lastChartPoint = chartPoints[chartPoints.length - 1] ?? { milestone: 100, rate: 0 };
   const firstAreaPoint = toChartPoint(firstChartPoint.milestone, firstChartPoint.rate);
   const lastAreaPoint = toChartPoint(lastChartPoint.milestone, lastChartPoint.rate);
   const areaPath = smoothPath
-    ? `${smoothPath} L ${lastAreaPoint.x.toFixed(2)} ${RETENTION_CHART_BOTTOM} L ${firstAreaPoint.x.toFixed(2)} ${RETENTION_CHART_BOTTOM} Z`
+    ? `${smoothPath} L ${lastAreaPoint.x.toFixed(
+        2,
+      )} ${RETENTION_CHART_BOTTOM} L ${firstAreaPoint.x.toFixed(2)} ${RETENTION_CHART_BOTTOM} Z`
     : "";
   const currentPercent = durationSeconds
     ? clampPercent((Math.max(0, currentTimeSeconds) / durationSeconds) * 100)
@@ -577,12 +606,6 @@ const RetentionChart = ({
     const relativeX = clampPercent(((event.clientX - rect.left) / rect.width) * 100);
 
     onSeek?.(relativeX);
-  };
-
-  const handleSummarySeek = (milestone: number) => {
-    if (!canSeek) return;
-
-    onSeek?.(milestone);
   };
 
   return (
@@ -605,7 +628,7 @@ const RetentionChart = ({
           role="img"
           viewBox="0 0 300 130"
         >
-          <title>Curva estimada de retenção por marcos de 5%</title>
+          <title>Curva contínua estimada de retenção de 100% a 0%</title>
           <defs>
             <linearGradient id="presentation-video-retention-gradient" x1="0" x2="1" y1="0" y2="0">
               <stop offset="0%" stopColor="rgb(46, 143, 230)" />
@@ -720,20 +743,16 @@ const RetentionChart = ({
       </button>
 
       {dropoff ? (
-        <button
-          className="mt-3 w-full rounded-2xl border border-primary/10 bg-surface px-3 py-3 text-left text-xs leading-5 text-muted transition hover:bg-primary-soft/25 disabled:hover:bg-surface"
-          disabled={!canSeek}
-          onClick={() => handleSummarySeek(dropoff.from_milestone)}
-          type="button"
-        >
+        <div className="mt-3 w-full rounded-2xl border border-primary/10 bg-surface px-3 py-3 text-left text-xs leading-5 text-muted">
           <span className="block font-extrabold text-foreground">Maior abandono estimado</span>
           <span
             className={cn(locked && "select-none blur-[4px]")}
-          >{`Entre ${dropoff.from_milestone}% e ${dropoff.to_milestone}% do vídeo (${formatSeconds(dropoff.from_seconds)}–${formatSeconds(dropoff.to_seconds)}), queda de ${dropoff.rate_drop} p.p.`}</span>
-          {canSeek ? (
-            <span className="mt-1 block font-extrabold text-primary">Ver trecho</span>
-          ) : null}
-        </button>
+          >{`Entre ${dropoff.from_milestone}% e ${
+            dropoff.to_milestone
+          }% do vídeo (${formatSeconds(dropoff.from_seconds)} - ${formatSeconds(
+            dropoff.to_seconds,
+          )}).`}</span>
+        </div>
       ) : null}
     </div>
   );
@@ -842,14 +861,10 @@ const PresentationVideoAnalyticsSection = ({
               Métricas principais do vídeo
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-              Acompanhe como os visitantes assistem seu vídeo de apresentação e identifique pontos
-              de aprimoramento.
+              Acompanhe como os visitantes assistem seu vídeo de apresentação.
             </p>
           </div>
         </div>
-        <span className="rounded-full border border-primary/10 bg-primary-soft px-3 py-2 text-xs font-extrabold text-primary">
-          {formatUpdatedAt(video?.updated_at)}
-        </span>
       </div>
 
       <div className="grid min-w-0 grid-cols-2 gap-3 lg:grid-cols-5">
