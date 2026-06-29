@@ -516,3 +516,30 @@ conta: participar da comunidade e salvar psicologos favoritos.
 - Browser local via Chrome/CDP confirmou a microcopy nova em `/auth/register/patient` e
   os accordions expandidos dos cadastros com formulario real presente e sem overflow
   horizontal.
+
+## Atualizacao em 2026-06-29: tag CRP ativo no cadastro profissional
+
+### Contexto
+
+A tag do cadastro profissional dizia apenas "Para Psicologos". O produto precisava
+explicitar que o fluxo se destina a profissionais com registro profissional ativo,
+alinhando a comunicacao ao requisito de validacao profissional.
+
+### Decisao
+
+- Alterar a tag azul do cadastro de psicologo para "Para psicologos com CRP ativo".
+- Manter a tag dentro do card, acima do titulo, sem alterar formulario, OAuth, rotas,
+  endpoints ou validacoes existentes.
+
+### Consequencias
+
+- O escopo do cadastro profissional fica mais claro antes da criacao de conta.
+- A tag permanece compacta e sem quebrar no viewport mobile base.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Browser local via Chrome/CDP em viewport mobile `390x844` confirmou a tag presente,
+  largura de aproximadamente `164px`, `docScrollWidth=390` e rodape institucional
+  presente em `/auth/register/psychologist`.

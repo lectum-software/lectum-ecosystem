@@ -433,3 +433,20 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   os accordions de e-mail expandidos nos cadastros de paciente e psicólogo, com
   formulário real presente e sem overflow horizontal.
 - ADR atualizado: `adrs/0008-fluxo-publico-auth-selecao-perfil-login.md`.
+
+## Ajuste posterior em 2026-06-29: tag CRP ativo no cadastro profissional
+
+- Pedido direto de produto: alterar a tag azul do cadastro de psicólogo para "Para
+  psicólogos com CRP ativo".
+- A tag permanece dentro do card, acima do título, sem alterar formulário, Google OAuth,
+  accordion de e-mail, rotas, endpoints ou validações existentes.
+- Nenhum pacote, endpoint, mock, store, schema ou fluxo paralelo foi criado.
+
+### Validação do ajuste
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Browser local via Chrome/CDP em viewport mobile `390x844` confirmou a tag presente,
+  largura aproximada de `164px`, `docScrollWidth=390` e rodapé institucional presente em
+  `/auth/register/psychologist`.
+- ADR atualizado: `adrs/0008-fluxo-publico-auth-selecao-perfil-login.md`.
