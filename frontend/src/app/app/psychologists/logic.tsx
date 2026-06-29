@@ -10,8 +10,6 @@ import {
   HandHeart,
   Heart,
   type LucideIcon,
-  Maximize2,
-  Pause,
   Play,
   Search,
   Share2,
@@ -20,14 +18,12 @@ import {
   Star,
   Stethoscope,
   UsersRound,
-  Volume2,
   VolumeX,
   X,
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  type ChangeEvent,
   type CSSProperties,
   type FormEvent,
   type PointerEvent,
@@ -64,7 +60,6 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
-import { requestVideoFullscreen } from "@/lib/video-fullscreen";
 import { playVideoWithSound } from "@/lib/video-playback";
 import { PrivateTemplate } from "@/templates/private";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
@@ -599,16 +594,6 @@ const PsychologistFilterSearchSuggestions = ({
 
 const getReadableVideoDuration = (video: HTMLVideoElement) =>
   Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 0;
-
-const formatVideoTime = (seconds: number) => {
-  if (!Number.isFinite(seconds) || seconds <= 0) return "0:00";
-
-  const totalSeconds = Math.floor(seconds);
-  const minutes = Math.floor(totalSeconds / 60);
-  const remainingSeconds = String(totalSeconds % 60).padStart(2, "0");
-
-  return `${minutes}:${remainingSeconds}`;
-};
 
 const resetVideoElementToStart = (video: HTMLVideoElement) => {
   video.pause();
@@ -2935,36 +2920,6 @@ export const PsychologistsLogic = () => {
     [isVideoMuted, isVideoPaused, pauseVideoPlayback, playCurrentVideoWithSound, shouldShowVideo],
   );
 
-  const handleImmersiveVolumeToggle = useCallback(
-    (event: { preventDefault?: () => void; stopPropagation: () => void }) => {
-      stopVideoControlInteraction(event);
-
-      const currentVideo = backgroundVideoRef.current;
-      if (!currentVideo || !shouldShowVideo) return;
-
-      if (isVideoMuted || currentVideo.muted || currentVideo.volume <= 0) {
-        unmuteCurrentVideo();
-        return;
-      }
-
-      currentVideo.muted = true;
-      setIsVideoMuted(true);
-    },
-    [isVideoMuted, shouldShowVideo, stopVideoControlInteraction, unmuteCurrentVideo],
-  );
-
-  const handleImmersiveFullscreen = useCallback(
-    (event: { preventDefault?: () => void; stopPropagation: () => void }) => {
-      stopVideoControlInteraction(event);
-
-      void requestVideoFullscreen(backgroundVideoRef.current, {
-        forceContain: true,
-        temporaryControls: true,
-      });
-    },
-    [stopVideoControlInteraction],
-  );
-
   const seekActiveVideoToTime = useCallback(
     (nextTime: number, durationOverride?: number) => {
       const currentVideo = backgroundVideoRef.current;
@@ -2986,58 +2941,6 @@ export const PsychologistsLogic = () => {
       setVideoProgress(nextProgress);
     },
     [applyVideoProgressRatio, videoProgress.duration],
-  );
-
-  const seekActiveVideoFromRangeValue = useCallback(
-    (value: string) => {
-      const nextTime = Number(value);
-      if (!Number.isFinite(nextTime)) return;
-
-      seekActiveVideoToTime(nextTime);
-      syncActiveVideoProgress(undefined, {
-        forceState: true,
-      });
-    },
-    [seekActiveVideoToTime, syncActiveVideoProgress],
-  );
-
-  const handleImmersiveProgressInput = useCallback(
-    (event: FormEvent<HTMLInputElement>) => {
-      event.stopPropagation();
-      seekActiveVideoFromRangeValue(event.currentTarget.value);
-    },
-    [seekActiveVideoFromRangeValue],
-  );
-
-  const handleImmersiveProgressChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      event.stopPropagation();
-      seekActiveVideoFromRangeValue(event.currentTarget.value);
-    },
-    [seekActiveVideoFromRangeValue],
-  );
-
-  const handleImmersiveProgressSeekStart = useCallback(
-    (event: { stopPropagation: () => void }) => {
-      event.stopPropagation();
-      cancelPendingVideoGestureTimers();
-      isVideoProgressSeekingRef.current = true;
-      setIsVideoProgressSeeking(true);
-    },
-    [cancelPendingVideoGestureTimers],
-  );
-
-  const handleImmersiveProgressSeekEnd = useCallback(
-    (event: { stopPropagation: () => void }) => {
-      event.stopPropagation();
-      isVideoProgressSeekingRef.current = false;
-      videoSeekPreviewRatioRef.current = null;
-      setIsVideoProgressSeeking(false);
-      syncActiveVideoProgress(undefined, {
-        forceState: true,
-      });
-    },
-    [syncActiveVideoProgress],
   );
 
   const getVideoProgressRatioFromClientX = useCallback(
@@ -3535,72 +3438,6 @@ export const PsychologistsLogic = () => {
           .psychologists-video-feed::-webkit-scrollbar {
             display: none;
           }
-          video[data-psychologists-native-controls="true"]::-webkit-media-controls,
-          video[data-psychologists-native-controls="true"]::-webkit-media-controls-enclosure,
-          video[data-psychologists-native-controls="true"]::-webkit-media-controls-panel {
-            display: flex !important;
-            opacity: 1 !important;
-            transform: translateY(0) !important;
-            visibility: visible !important;
-          }
-
-          .psychologists-immersive-progress {
-            --psychologists-video-progress: 0%;
-            appearance: none;
-            -webkit-appearance: none;
-            background: transparent;
-            border-radius: 9999px;
-            height: 28px;
-            outline: none;
-          }
-
-          .psychologists-immersive-progress::-webkit-slider-runnable-track {
-            -webkit-appearance: none;
-            background: linear-gradient(
-              to right,
-              rgba(255, 255, 255, 0.98) 0%,
-              rgba(255, 255, 255, 0.98) var(--psychologists-video-progress),
-              rgba(255, 255, 255, 0.32) var(--psychologists-video-progress),
-              rgba(255, 255, 255, 0.32) 100%
-            );
-            border: 0;
-            border-radius: 9999px;
-            height: 5px;
-          }
-
-          .psychologists-immersive-progress::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            background: #ffffff;
-            border: 0;
-            border-radius: 9999px;
-            box-shadow: 0 2px 9px rgba(0, 0, 0, 0.45);
-            height: 16px;
-            margin-top: -5.5px;
-            width: 16px;
-          }
-
-          .psychologists-immersive-progress::-moz-range-track {
-            background: rgba(255, 255, 255, 0.32);
-            border: 0;
-            border-radius: 9999px;
-            height: 5px;
-          }
-
-          .psychologists-immersive-progress::-moz-range-progress {
-            background: rgba(255, 255, 255, 0.98);
-            border-radius: 9999px;
-            height: 5px;
-          }
-
-          .psychologists-immersive-progress::-moz-range-thumb {
-            background: #ffffff;
-            border: 0;
-            border-radius: 9999px;
-            box-shadow: 0 2px 9px rgba(0, 0, 0, 0.45);
-            height: 16px;
-            width: 16px;
-          }
 
           .psychologists-filter-dialog-scroll {
             scrollbar-width: none;
@@ -4027,12 +3864,6 @@ export const PsychologistsLogic = () => {
                     isActiveSlide && videoProgress.duration
                       ? clampNumber(videoProgress.currentTime / videoProgress.duration, 0, 1)
                       : 0;
-                  const slideCurrentTimeLabel = formatVideoTime(
-                    isActiveSlide ? videoProgress.currentTime : 0,
-                  );
-                  const slideDurationLabel = formatVideoTime(
-                    isActiveSlide ? videoProgress.duration : 0,
-                  );
                   const slideProgressBottom =
                     metrics.navBarHeight > 0
                       ? `calc(${VIDEO_PROGRESS_VISIBLE_NAV_BAR_HEIGHT}px + env(safe-area-inset-bottom) - ${VIDEO_PROGRESS_NAVBAR_OVERLAP_PX}px)`
@@ -4181,9 +4012,6 @@ export const PsychologistsLogic = () => {
                               aria-label={`Vídeo de apresentação de ${psychologist.name}`}
                               data-psychologist-id={psychologist.id}
                               data-psychologists-background="true"
-                              data-psychologists-native-controls={
-                                slideUsesNativeVideoControls ? "true" : undefined
-                              }
                               autoPlay={isActiveSlide && !isVideoPaused}
                               className="h-full w-full bg-black object-cover"
                               controls={slideUsesNativeVideoControls}
@@ -4338,107 +4166,6 @@ export const PsychologistsLogic = () => {
                                 <VolumeX className="h-5 w-5" aria-hidden="true" />
                               ) : null}
                             </button>
-                          ) : null}
-
-                          {slideUsesNativeVideoControls ? (
-                            <div
-                              className="pointer-events-none absolute inset-x-0 bottom-0 z-[72] px-4 text-white"
-                              data-psychologists-scroll-lock="true"
-                              style={{
-                                paddingBottom: "calc(env(safe-area-inset-bottom) + 14px)",
-                              }}
-                            >
-                              <div className="pointer-events-auto [filter:drop-shadow(0_2px_8px_rgba(0,0,0,0.78))]">
-                                <input
-                                  aria-label={`Progresso do vídeo de ${psychologist.name}`}
-                                  aria-valuetext={`${slideCurrentTimeLabel} de ${slideDurationLabel}`}
-                                  className="psychologists-immersive-progress block w-full cursor-pointer"
-                                  disabled={!isActiveSlide || videoProgress.duration <= 0}
-                                  max={Math.max(videoProgress.duration, 0.01)}
-                                  min={0}
-                                  onBlur={handleImmersiveProgressSeekEnd}
-                                  onChange={handleImmersiveProgressChange}
-                                  onClick={stopInteractionPropagation}
-                                  onInput={handleImmersiveProgressInput}
-                                  onKeyDown={stopInteractionPropagation}
-                                  onPointerCancel={handleImmersiveProgressSeekEnd}
-                                  onPointerDown={handleImmersiveProgressSeekStart}
-                                  onPointerUp={handleImmersiveProgressSeekEnd}
-                                  onTouchCancel={handleImmersiveProgressSeekEnd}
-                                  onTouchEnd={handleImmersiveProgressSeekEnd}
-                                  onTouchStart={handleImmersiveProgressSeekStart}
-                                  step="0.01"
-                                  style={
-                                    {
-                                      "--psychologists-video-progress": `${slideProgressRatio * 100}%`,
-                                      touchAction: "none",
-                                    } as CSSProperties
-                                  }
-                                  type="range"
-                                  value={
-                                    isActiveSlide
-                                      ? clampNumber(
-                                          videoProgress.currentTime,
-                                          0,
-                                          Math.max(videoProgress.duration, 0.01),
-                                        )
-                                      : 0
-                                  }
-                                />
-
-                                <div className="mt-2 flex items-center gap-2 text-white">
-                                  <button
-                                    aria-label={
-                                      isVideoPaused
-                                        ? `Reproduzir vídeo de ${psychologist.name}`
-                                        : `Pausar vídeo de ${psychologist.name}`
-                                    }
-                                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10 active:scale-95"
-                                    onClick={handleVideoControlTap}
-                                    onPointerDown={stopInteractionPropagation}
-                                    type="button"
-                                  >
-                                    {isVideoPaused ? (
-                                      <Play className="ml-0.5 h-[18px] w-[18px] fill-current" />
-                                    ) : (
-                                      <Pause className="h-[18px] w-[18px] fill-current" />
-                                    )}
-                                  </button>
-
-                                  <span className="min-w-0 flex-1 text-[12px] font-semibold tabular-nums text-white">
-                                    {slideCurrentTimeLabel} / {slideDurationLabel}
-                                  </span>
-
-                                  <button
-                                    aria-label={
-                                      isVideoMuted || videoVolume <= 0
-                                        ? `Ativar som do vídeo de ${psychologist.name}`
-                                        : `Mutar vídeo de ${psychologist.name}`
-                                    }
-                                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10 active:scale-95"
-                                    onClick={handleImmersiveVolumeToggle}
-                                    onPointerDown={stopInteractionPropagation}
-                                    type="button"
-                                  >
-                                    {isVideoMuted || videoVolume <= 0 ? (
-                                      <VolumeX className="h-[18px] w-[18px]" />
-                                    ) : (
-                                      <Volume2 className="h-[18px] w-[18px]" />
-                                    )}
-                                  </button>
-
-                                  <button
-                                    aria-label={`Abrir vídeo de ${psychologist.name} em tela cheia`}
-                                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10 active:scale-95"
-                                    onClick={handleImmersiveFullscreen}
-                                    onPointerDown={stopInteractionPropagation}
-                                    type="button"
-                                  >
-                                    <Maximize2 className="h-[18px] w-[18px]" />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
                           ) : null}
 
                           {slideShouldRenderProgress ? (
