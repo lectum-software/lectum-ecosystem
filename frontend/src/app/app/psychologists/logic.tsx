@@ -1940,6 +1940,24 @@ export const PsychologistsLogic = () => {
   }, [isVideoMuted]);
 
   useEffect(() => {
+    const currentVideo = backgroundVideoRef.current;
+    if (!currentVideo || !shouldShowVideo) return;
+
+    currentVideo.controls = isUiHidden;
+
+    if (!isUiHidden) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      currentVideo.controls = true;
+      currentVideo.focus({
+        preventScroll: true,
+      });
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [isUiHidden, shouldShowVideo]);
+
+  useEffect(() => {
     if (typeof window === "undefined") return;
     if (!featuredPsychologistId) return;
 
@@ -4080,6 +4098,7 @@ export const PsychologistsLogic = () => {
                                 }
                               }}
                               src={slideVideoSrc ?? undefined}
+                              tabIndex={slideUsesNativeVideoControls ? 0 : -1}
                             />
                           ) : slidePosterSrc ? (
                             <Image
@@ -4129,20 +4148,6 @@ export const PsychologistsLogic = () => {
                             tabIndex={slideUsesNativeVideoControls ? -1 : undefined}
                             type="button"
                           />
-
-                          {slideUsesNativeVideoControls ? (
-                            <button
-                              aria-label="Mostrar interface do video"
-                              className="absolute inset-x-0 top-0 z-[55] cursor-default border-0 bg-transparent p-0"
-                              data-psychologists-scroll-lock="true"
-                              onClick={handleImmersiveExit}
-                              onPointerDown={stopInteractionPropagation}
-                              style={{
-                                bottom: "max(96px, calc(env(safe-area-inset-bottom) + 88px))",
-                              }}
-                              type="button"
-                            />
-                          ) : null}
 
                           {isActiveSlide &&
                           slideShouldShowVideo &&

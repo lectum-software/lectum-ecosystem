@@ -19,7 +19,7 @@ A pagina publica de descoberta de psicologos usa um player customizado, diferent
 - O scrubber customizado nao e renderizado no modo imersivo e a camada transparente de toque nao bloqueia os controles nativos.
 - Ao entrar no modo imersivo, o elemento `video` ativa `controls` imediatamente para exibir play/pause, volume e barra de progresso nativos.
 - O modo imersivo nao renderiza controles Lectum paralelos nem tenta forcar a UI nativa por CSS; a visibilidade e o seek ficam sob controle do navegador, como nos videos de comunidades.
-- No modo imersivo, tocar na area do video acima da regiao dos controles nativos retorna a UI padrao; a faixa inferior fica livre para interacao com o controle nativo.
+- No modo imersivo, a area do video nao recebe overlay transparente de retorno para nao bloquear a UI nativa; o retorno para a UI padrao fica no botao `X`.
 - Quando o video estiver mutado, pausado ou sem volume, tocar em qualquer area nao interativa do video reproduz com som e esconde a UI, mantendo o icone central como affordance visual.
 - Com UI visivel, o duplo toque/clique na area do video favorita o psicologo sem depender do botao lateral de favorito.
 
@@ -28,7 +28,7 @@ A pagina publica de descoberta de psicologos usa um player customizado, diferent
 - Reduz conflito entre toque para entrar no modo imersivo e seek acidental com UI visivel.
 - Remove a fonte de reinicio/glitch causada pelo scrubber customizado em mobile.
 - Mantem o player customizado necessario para o feed de psicologos, mas reutiliza o comportamento nativo confiavel do player de comunidade para progresso no modo imersivo.
-- O navegador pode ocultar visualmente os controles nativos durante a reproducao; essa limitacao e aceita para preservar o seek nativo confiavel.
+- O navegador pode ocultar visualmente os controles nativos durante a reproducao; o usuario pode tocar no proprio video para reexibi-los e o botao `X` retorna a UI Lectum.
 - O toque simples na area do video com UI visivel passa a aguardar uma janela curta para diferenciar duplo toque de acao simples.
 
 ## Validacao
