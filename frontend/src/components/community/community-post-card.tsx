@@ -580,6 +580,19 @@ export const CommunityPostCard = ({
           saves: post.saves_count,
         };
   const handleVote = (value: 1 | -1) => {
+    if (!conversion.isAuthenticated) {
+      conversion.requestConversion("trigger_voto", {
+        intent: {
+          payload: {
+            postId: post.id,
+            value,
+          },
+          type: "vote_post",
+        },
+      });
+      return;
+    }
+
     const previousOverride = voteOverride;
     const nextVote = voteSnapshot.currentVote === value ? null : value;
     const upDelta = (nextVote === 1 ? 1 : 0) - (voteSnapshot.currentVote === 1 ? 1 : 0);

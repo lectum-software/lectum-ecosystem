@@ -1,6 +1,15 @@
 "use client";
 
-import { ArrowRight, Heart, LogIn, Sparkles, UserPlus } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowUp,
+  Bookmark,
+  Heart,
+  LogIn,
+  MessageCircle,
+  Sparkles,
+  UserPlus,
+} from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
   createContext,
@@ -25,6 +34,7 @@ export type ConversionTrigger =
   | "trigger_favorito"
   | "trigger_salvar"
   | "trigger_comentar"
+  | "trigger_voto"
   | "trigger_whatsapp";
 
 export type ConversionIntent = {
@@ -40,7 +50,9 @@ export type ConversionIntent = {
     | "open_whatsapp"
     | "reply_comment"
     | "save_post"
-    | "save_reply";
+    | "save_reply"
+    | "vote_post"
+    | "vote_reply";
 };
 
 type ConversionPromptState = {
@@ -244,6 +256,21 @@ const noopContext: ProgressiveConversionContextValue = {
 
 const ProgressiveConversionContext = createContext<ProgressiveConversionContextValue>(noopContext);
 
+const ACTION_PROMPT_TYPES: ConversionIntent["type"][] = [
+  "comment_post",
+  "create_post",
+  "favorite_psychologist",
+  "follow_community",
+  "reply_comment",
+  "save_post",
+  "save_reply",
+  "vote_post",
+  "vote_reply",
+];
+
+const isActionPromptType = (type?: ConversionIntent["type"]) =>
+  Boolean(type && ACTION_PROMPT_TYPES.includes(type));
+
 export const ProgressiveConversionProvider = ({
   children,
   isAuthenticated,
@@ -261,14 +288,17 @@ export const ProgressiveConversionProvider = ({
 
     recordConversionAnalytics(trigger, pathnameRef.current);
 
-    const shouldBypassSessionLimit =
-      intent?.type === "create_post" ||
-      intent?.type === "favorite_psychologist" ||
-      intent?.type === "follow_community";
+    const shouldBypassSessionLimit = isActionPromptType(intent?.type);
 
     if (hasPromptBeenShown() && !shouldBypassSessionLimit) return false;
 
-    savePendingIntent(intent);
+    const shouldStorePendingIntent = intent?.type !== "vote_post" && intent?.type !== "vote_reply";
+
+    if (shouldStorePendingIntent) {
+      savePendingIntent(intent);
+    } else {
+      clearPendingIntent();
+    }
     markPromptAsShown();
     setPrompt({
       intent,
@@ -474,12 +504,31 @@ export const ProgressiveConversionProvider = ({
   );
 
   const actionPromptType = prompt?.intent?.type;
-  const isActionPrompt =
-    actionPromptType === "create_post" ||
-    actionPromptType === "favorite_psychologist" ||
-    actionPromptType === "follow_community";
-  const PromptIcon = actionPromptType === "favorite_psychologist" ? Heart : UserPlus;
-  const promptBadge = actionPromptType === "favorite_psychologist" ? "Favorito" : "Gratuito";
+  const isActionPrompt = isActionPromptType(actionPromptType);
+  const isCommentPrompt =
+    actionPromptType === "comment_post" || actionPromptType === "reply_comment";
+  const isSavePrompt = actionPromptType === "save_post" || actionPromptType === "save_reply";
+  const isVotePrompt = actionPromptType === "vote_post" || actionPromptType === "vote_reply";
+  const PromptIcon =
+    actionPromptType === "favorite_psychologist"
+      ? Heart
+      : isCommentPrompt
+        ? MessageCircle
+        : isSavePrompt
+          ? Bookmark
+          : isVotePrompt
+            ? ArrowUp
+            : UserPlus;
+  const promptBadge =
+    actionPromptType === "favorite_psychologist"
+      ? "Favorito"
+      : isSavePrompt
+        ? "Salvar"
+        : isCommentPrompt
+          ? "Comunidade"
+          : isVotePrompt
+            ? "Voto"
+            : "Gratuito";
   const promptTitle =
     actionPromptType === "favorite_psychologist"
       ? "Entre para favoritar este psicólogo"
@@ -487,7 +536,17 @@ export const ProgressiveConversionProvider = ({
         ? "Entre para seguir esta comunidade"
         : actionPromptType === "create_post"
           ? "Crie sua conta para publicar"
-          : "Crie sua conta gratuita";
+          : actionPromptType === "save_post"
+            ? "Entre para salvar este post"
+            : actionPromptType === "save_reply"
+              ? "Entre para salvar esta resposta"
+              : actionPromptType === "comment_post"
+                ? "Entre para comentar"
+                : actionPromptType === "reply_comment"
+                  ? "Entre para responder"
+                  : isVotePrompt
+                    ? "Entre para votar"
+                    : "Crie sua conta gratuita";
   const promptDescription =
     actionPromptType === "favorite_psychologist"
       ? "Para salvar este psicólogo nos seus favoritos, crie uma conta gratuita ou faça login. Assim você pode voltar ao perfil quando quiser."
@@ -495,7 +554,17 @@ export const ProgressiveConversionProvider = ({
         ? "Crie uma conta gratuita ou faça login para seguir esta comunidade, acompanhar novos posts e participar das conversas da Lectum."
         : actionPromptType === "create_post"
           ? "Para criar um post, crie uma conta gratuita ou faça login. Você pode participar da comunidade da Lectum gratuitamente e acompanhar as respostas."
-          : "Publique gratuitamente nas comunidades da Lectum e receba respostas de psicólogos verificados.";
+          : actionPromptType === "save_post"
+            ? "Crie uma conta gratuita ou faça login para guardar este post e voltar à conversa quando quiser."
+            : actionPromptType === "save_reply"
+              ? "Crie uma conta gratuita ou faça login para guardar esta resposta e consultar depois."
+              : actionPromptType === "comment_post"
+                ? "Crie uma conta gratuita ou faça login para participar da conversa e acompanhar as respostas."
+                : actionPromptType === "reply_comment"
+                  ? "Crie uma conta gratuita ou faça login para responder e continuar a conversa com a comunidade."
+                  : isVotePrompt
+                    ? "Crie uma conta gratuita ou faça login para marcar conteúdos como úteis ou dar downvote. Isso mantém a votação segura e evita duplicidade."
+                    : "Publique gratuitamente nas comunidades da Lectum e receba respostas de psicólogos verificados.";
 
   return (
     <ProgressiveConversionContext.Provider value={value}>

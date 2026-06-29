@@ -2547,6 +2547,45 @@ export const PostDetailLogic = () => {
     saveMutation.mutate(post.saved);
   };
 
+  const handleVotePost = (value: 1 | -1) => {
+    if (!post) return;
+
+    if (!conversion.isAuthenticated) {
+      conversion.requestConversion("trigger_voto", {
+        intent: {
+          payload: {
+            postId: post.id,
+            value,
+          },
+          type: "vote_post",
+        },
+      });
+      return;
+    }
+
+    voteMutation.mutate({ value });
+  };
+
+  const handleVoteReply = (replyId: string, value: 1 | -1) => {
+    if (!post) return;
+
+    if (!conversion.isAuthenticated) {
+      conversion.requestConversion("trigger_voto", {
+        intent: {
+          payload: {
+            postId: post.id,
+            replyId,
+            value,
+          },
+          type: "vote_reply",
+        },
+      });
+      return;
+    }
+
+    voteMutation.mutate({ replyId, value });
+  };
+
   useEffect(() => {
     if (!conversion.isAuthenticated || !post) return;
 
@@ -2631,7 +2670,7 @@ export const PostDetailLogic = () => {
                 onFocusCommentComposer={focusMainComposer}
                 onShare={sharePost}
                 onToggleSave={handleTogglePostSave}
-                onVote={(value) => voteMutation.mutate({ value })}
+                onVote={handleVotePost}
                 post={post}
               />
             </article>
@@ -2694,7 +2733,7 @@ export const PostDetailLogic = () => {
                 onSubmitReply={(values, parentReplyId, mediaFile) =>
                   submitReply(values, parentReplyId, mediaFile)
                 }
-                onVote={(replyId, value) => voteMutation.mutate({ replyId, value })}
+                onVote={handleVoteReply}
                 postId={post.id}
                 replies={replies}
                 replyApiError={replyError}
@@ -2963,6 +3002,26 @@ export const PostReplyThreadLogic = () => {
     return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, [desktopReplyTargets, isMobile, requestCloseDesktopReplyTarget]);
 
+  const handleVoteThreadReply = (targetReplyId: string, value: 1 | -1) => {
+    if (!post) return;
+
+    if (!conversion.isAuthenticated) {
+      conversion.requestConversion("trigger_voto", {
+        intent: {
+          payload: {
+            postId: post.id,
+            replyId: targetReplyId,
+            value,
+          },
+          type: "vote_reply",
+        },
+      });
+      return;
+    }
+
+    voteMutation.mutate({ replyId: targetReplyId, value });
+  };
+
   useEffect(() => {
     if (!conversion.isAuthenticated || !post || !rootReply) return;
 
@@ -3087,9 +3146,7 @@ export const PostReplyThreadLogic = () => {
               onSubmitReply={(values, parentReplyId, mediaFile) =>
                 submitReply(values, parentReplyId, mediaFile)
               }
-              onVote={(targetReplyId, value) =>
-                voteMutation.mutate({ replyId: targetReplyId, value })
-              }
+              onVote={handleVoteThreadReply}
               postId={post.id}
               replies={[rootReply]}
               replyApiError={replyError}

@@ -1360,6 +1360,19 @@ const PostCard = ({
     ) : null;
 
   const handleVote = (value: 1 | -1) => {
+    if (!conversion.isAuthenticated) {
+      conversion.requestConversion("trigger_voto", {
+        intent: {
+          payload: {
+            postId: post.id,
+            value,
+          },
+          type: "vote_post",
+        },
+      });
+      return;
+    }
+
     const previousSnapshot = voteSnapshot;
     const optimisticSnapshot = resolveVoteSnapshot(voteSnapshot, value);
 

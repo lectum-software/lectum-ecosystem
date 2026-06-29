@@ -66,6 +66,18 @@ visitante a criar uma conta gratuita ou fazer login; quando o login retorna para
 intencao pendente pode reexecutar o follow real. Criar post tambem bypassa o limite da modal por sessao por
 ser uma acao explicita, mantendo o `returnTo` para a tela de publicacao.
 
+## Atualizacao em 2026-06-29 - acoes de post e voto sem autenticacao
+
+As tentativas anonimas de comentar, responder, salvar post, salvar resposta, upvote e downvote passam a
+usar a modal de conversao com copy contextual e botao de login. Comentarios e salvamentos continuam podendo
+preservar a intencao para reexecucao apos login quando o alvo ainda estiver disponivel.
+
+Upvote e downvote permanecem autenticados. Embora seja tecnicamente possivel aceitar voto anonimo, isso
+exigiria uma nova decisao de produto e seguranca para identidade de visitante, prevencao de duplicidade,
+rate limit e mitigacao de abuso. Como o voto altera ranking, contadores e confiabilidade da comunidade, a
+arquitetura atual mantem `POST /api/private/posts/:id/vote` protegido por `privateAuth`; o frontend apenas
+troca a falha silenciosa por orientacao de cadastro/login.
+
 ## Consequencias
 
 - Visitantes conseguem descobrir conteudo sem cadastro imediato.
