@@ -625,7 +625,7 @@ Reutilizar a infraestrutura existente (ver `ARCHITECTURE.md` e o módulo `auth` 
 - **Sem `select`/`include` vindos do frontend**: o frontend NÃO define o shape dos dados (nada de seleção de campos estilo GraphQL). O backend retorna o conjunto de campos que a tela precisa, definido no service/repository. Não reintroduzir `select`/`include` nos validators/DTOs/repos das rotas de produto.
 - **Filtro `deleted`**: toda query de listagem/leitura filtra `deleted: false` diretamente no `where` (soft delete; nunca retornar registros deletados).
 - **GET sem corpo**: endpoints GET sem entrada não precisam de validator de body; se usarem o validator, ele já trata `body/query/params` ausentes como `{}` (evita erro `invalid_structure`).
-- **Validação**: `validator/index.ts` com o pacote local (`method:"email"`, `"password"` = mín. 12 com maiúscula/minúscula/dígito/especial, `"string"`, etc.). Mensagens de erro traduzidas em `backend/locales/pt/translation.json` (incl. `invalid_structure`).
+- **Validação**: `validator/index.ts` com o pacote local (`method:"email"`, `"password"` = mín. 10, máx. 128, sem composição obrigatória, `"string"`, etc.). Mensagens de erro traduzidas em `backend/locales/pt/translation.json` (incl. `invalid_structure`).
 - **Privado**: exige headers `Authorization: Bearer <jwt>` + `x-device`; `req.auth` traz o `user`. Nunca recriar autenticação.
 - **Query keys** (frontend): adicionar famílias em `frontend/src/api/cache/keys.ts` ao lado de `auth.hydrate`; invalidar após mutations que alteram listas/detalhes.
 

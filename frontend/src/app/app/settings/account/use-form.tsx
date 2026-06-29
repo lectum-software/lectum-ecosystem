@@ -1,9 +1,6 @@
 import { z } from "zod";
 import { type Field, useFormList } from "@/hooks/form";
 
-const passwordStrengthRegex =
-  /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).+$/;
-
 export const accountFormSchema = z
   .object({
     current_email: z.string().optional(),
@@ -45,18 +42,10 @@ export const accountFormSchema = z
     }
 
     if (wantsPasswordChange) {
-      if (values.password.length < 12) {
+      if (values.password.length < 10) {
         ctx.addIssue({
           code: "custom",
-          message: "A nova senha precisa ter no mínimo 12 caracteres.",
-          path: ["password"],
-        });
-      }
-
-      if (!passwordStrengthRegex.test(values.password)) {
-        ctx.addIssue({
-          code: "custom",
-          message: "Use maiúscula, minúscula, número e caractere especial.",
+          message: "A nova senha precisa ter no mínimo 10 caracteres.",
           path: ["password"],
         });
       }
@@ -115,7 +104,7 @@ export const passwordFields = [
     name: "password",
     field: "input",
     label: "Nova senha",
-    placeholder: "Mínimo 12 caracteres",
+    placeholder: "Mínimo 10 caracteres",
     type: "password",
     autoComplete: "new-password",
   },

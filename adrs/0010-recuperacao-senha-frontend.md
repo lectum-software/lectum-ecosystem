@@ -29,8 +29,8 @@ direta nesta sessao.
 - O client HTTP continua centralizado em `frontend/src/api/req/auth/index.ts` via
   `callEndpoint` + `handleReq`; os componentes usam somente o hook `useAuth`.
 - Os formularios usam a fundacao da TASK-02 (`useFormList`, controllers e Zod).
-- A validacao frontend da nova senha espelha a regra do backend: minimo 12 caracteres,
-  maiuscula, minuscula, numero, caractere especial e confirmacao igual.
+- A validacao frontend da nova senha espelha a regra atual do backend: minimo 10 caracteres,
+  maximo 128 caracteres, sem composicao obrigatoria, e confirmacao igual.
 - A tela de envio nunca revela se o e-mail existe; qualquer sucesso mostra a mesma
   mensagem de envio.
 - O reset bem-sucedido usa `useUserSet("/dashboard")`, porque o backend retorna o

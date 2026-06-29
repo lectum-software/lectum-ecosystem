@@ -24,7 +24,7 @@ const resolveRegisterErrorMessage = (error: unknown) => {
   }
 
   if (normalized.includes("senha") || normalized.includes("password")) {
-    return "A senha precisa ter no mínimo 12 caracteres, maiúscula, minúscula, número e caractere especial.";
+    return "A senha precisa ter no mínimo 10 caracteres.";
   }
 
   if (normalized.includes("termos") || normalized.includes("terms")) {

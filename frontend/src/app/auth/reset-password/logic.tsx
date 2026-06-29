@@ -21,8 +21,6 @@ type ApiError = Error & {
   data?: ApiErrorData;
 };
 
-const hasSpecialCharacter = (value: string) => /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(value);
-
 const resolveResetErrorMessage = (error: unknown) => {
   const apiError = error as ApiError;
   const rawMessage =
@@ -48,24 +46,8 @@ const resolveResetErrorMessage = (error: unknown) => {
 
 const passwordRequirements = (password: string) => [
   {
-    label: "Mínimo 12 caracteres",
-    valid: password.length >= 12,
-  },
-  {
-    label: "Uma letra maiúscula",
-    valid: /[A-Z]/.test(password),
-  },
-  {
-    label: "Uma letra minúscula",
-    valid: /[a-z]/.test(password),
-  },
-  {
-    label: "Pelo menos um número",
-    valid: /\d/.test(password),
-  },
-  {
-    label: "Um caractere especial",
-    valid: hasSpecialCharacter(password),
+    label: "Mínimo 10 caracteres",
+    valid: password.length >= 10,
   },
 ];
 
@@ -151,7 +133,7 @@ export const ResetPasswordLogic = () => {
 
           <h2 className="mt-6 text-xl font-extrabold leading-tight">Criar nova senha</h2>
           <p className="mt-3 max-w-[330px] text-sm leading-6 text-muted">
-            Sua nova senha deve ser forte e diferente das senhas utilizadas anteriormente.
+            Use pelo menos 10 caracteres. Frases com espaços também são aceitas.
           </p>
         </div>
 

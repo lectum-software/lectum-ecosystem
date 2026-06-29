@@ -41,7 +41,7 @@ O backend **já implementa** o fluxo completo de recuperação de senha por link
 Fonte: `backend/src/modules/api/public/auth/recovery` e `.../reset`, registrados em `backend/src/main/server/imports/write.ts`.
 
 - **`POST /api/public/auth/recovery`** — body `{ email }` (validator `method:"email"`). Sempre responde `200 { success:true, message:"recovery_code_success", data:true }`, inclusive para e-mail inexistente (anti-enumeração — preservar). Efeito: grava `user.recovery_code` (hash) + `user.recovery_date=now` e envia e-mail real com link `${WEB_URL}${RECOVERY_URL}?code=<recovery_code>` (`config/nodemailer/messages/recovery`).
-- **`POST /api/public/auth/reset/:code`** — param `code` (o `recovery_code` do link); body `{ password, password_confirm }` (validator `method:"password"`: mín. 12 com maiúscula/minúscula/dígito/especial; relação `password == password_confirm`); header `x-device` obrigatório. Valida `recovery_code` + janela `CODE_API_USER_VALID_MINUTES` (senão `404 code_incorrect` / `400 code_expired`). Em sucesso: atualiza senha, `confirmed=true`, limpa `recovery_code/recovery_date`, `need_reset=false` e **hidrata** (retorna `user` com `user_tokens[0].token` → usuário já autenticado).
+- **`POST /api/public/auth/reset/:code`** — param `code` (o `recovery_code` do link); body `{ password, password_confirm }` (validator `method:"password"`: mín. 10, máx. 128, sem composição obrigatória; relação `password == password_confirm`); header `x-device` obrigatório. Valida `recovery_code` + janela `CODE_API_USER_VALID_MINUTES` (senão `404 code_incorrect` / `400 code_expired`). Em sucesso: atualiza senha, `confirmed=true`, limpa `recovery_code/recovery_date`, `need_reset=false` e **hidrata** (retorna `user` com `user_tokens[0].token` → usuário já autenticado).
 
 Chaves de tradução já existentes: `message.recovery_code_success`, `message.password_update_success`, `error.code_incorrect`, `error.code_expired`. Não criar mensagens novas sem necessidade.
 
@@ -121,7 +121,7 @@ Regras anti-recriação específicas:
 - [x] As três telas consomem `POST /api/public/auth/recovery` e `POST /api/public/auth/reset/:code` reais.
 - [x] Nenhum endpoint, validator ou service de recuperação foi duplicado.
 - [x] `/auth/reset-password` corresponde ao `RECOVERY_URL` do backend (ou divergência registrada).
-- [x] Formulários usam a fundação da TASK-02; senha valida a regra forte (mín. 12, maiúscula/minúscula/dígito/especial) e confirmação.
+- [x] Formulários usam a fundação da TASK-02; senha valida a política atual (mín. 10, máx. 128, sem composição obrigatória) e confirmação.
 - [x] Todos os estados obrigatórios existem em PT-BR.
 - [x] Anti-enumeração preservado na tela de envio.
 - [x] Nenhum mock, dado fake ou endpoint simulado foi usado.

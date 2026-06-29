@@ -40,7 +40,7 @@ O cadastro de usuário **já existe** no backend (`POST /api/public/user/store`)
 
 Fonte: `backend/src/modules/api/public/user/store`, registrado em `write.ts`.
 
-- **`POST /api/public/user/store`** — body atual `{ name, email, password, password_confirm }` (validator: `email`, `password` forte mín. 12, relação `password == password_confirm`); header `x-device` obrigatório. Cria `user`, grava `log__user` em `$transaction`, **hidrata** (retorna `user` com token → já autenticado). **Não** marca `confirmed` (por isso vai para a verificação de e-mail da TASK-06 em seguida).
+- **`POST /api/public/user/store`** — body atual `{ name, email, password, password_confirm }` (validator: `email`, `password` mín. 10, máx. 128, sem composição obrigatória, relação `password == password_confirm`); header `x-device` obrigatório. Cria `user`, grava `log__user` em `$transaction`, **hidrata** (retorna `user` com token → já autenticado). **Não** marca `confirmed` (por isso vai para a verificação de e-mail da TASK-06 em seguida).
 
 Adaptação esperada nesta task (extensão, não duplicação, espelhando a TASK-07):
 

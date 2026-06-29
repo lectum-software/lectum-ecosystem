@@ -1,9 +1,6 @@
 import { z } from "zod";
 import { type Field, useFormList } from "@/hooks/form";
 
-const strongPasswordRegex =
-  /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).+$/;
-
 export const TERMS_VERSION = "task09-professional-terms-pending-legal-copy";
 
 export const registerPsychologistSchema = z
@@ -16,9 +13,8 @@ export const registerPsychologistSchema = z
     email: z.email("Informe um e-mail profissional válido"),
     password: z
       .string()
-      .min(12, "Use no mínimo 12 caracteres")
-      .max(128, "Use no máximo 128 caracteres")
-      .regex(strongPasswordRegex, "Use maiúscula, minúscula, número e caractere especial"),
+      .min(10, "Use no mínimo 10 caracteres")
+      .max(128, "Use no máximo 128 caracteres"),
     password_confirm: z.string().min(1, "Confirme sua senha"),
     terms_accepted: z.boolean().refine((value) => value, {
       message: "Aceite os termos profissionais para continuar",
