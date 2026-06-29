@@ -333,6 +333,8 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   e-mail.
 - Cadastro de paciente e cadastro de psicólogo passaram a exibir primeiro o CTA
   "Criar conta com Google" e um aviso curto de aceite de termos para o fluxo Google.
+- O cadastro de paciente também recebeu a microcopy abaixo de "Cadastre-se":
+  "Participe da comunidade, salve favoritos e encontre psicólogos com segurança."
 - Os campos de e-mail/senha e o CTA azul foram movidos para um expansor "Cadastrar com
   e-mail", com `aria-expanded` e `aria-controls`.
 - O CTA final do formulário agora diz "Criar conta com e-mail".
@@ -348,4 +350,6 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Browser local via Chrome/CDP em viewport mobile `390x844` confirmou as telas
   `/auth/register/patient` e `/auth/register/psychologist` nos estados recolhido e
   expandido do formulário por e-mail, sem overflow horizontal.
+- Browser local via Chrome/CDP em viewport mobile `390x844` confirmou a microcopy em
+  `/auth/register/patient`, com `docScrollWidth=390`.
 - ADR atualizado: `adrs/0008-fluxo-publico-auth-selecao-perfil-login.md`.

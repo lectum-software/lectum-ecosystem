@@ -122,6 +122,9 @@ export const RegisterPatientLogic = () => {
             <h1 className="text-center text-[1.45rem] font-extrabold leading-tight text-foreground">
               Cadastre-se
             </h1>
+            <p className="mx-auto mt-2 max-w-[300px] text-center text-sm leading-6 text-muted">
+              Participe da comunidade, salve favoritos e encontre psicólogos com segurança.
+            </p>
 
             <Button
               className="mt-5 h-12 w-full rounded-[var(--lectum-control-radius)] text-sm"

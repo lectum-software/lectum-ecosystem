@@ -368,6 +368,8 @@ a altura inicial do card no mobile.
 
 - Tratar Google como acao primaria imediata nas telas `/auth/register/patient` e
   `/auth/register/psychologist`, com texto "Criar conta com Google".
+- Adicionar microcopy abaixo de "Cadastre-se" no cadastro de paciente para explicitar o
+  valor da conta: comunidade, favoritos e descoberta segura de psicologos.
 - Manter o cadastro por e-mail real, mas recolhido atras de um expansor acessivel com
   `aria-expanded`/`aria-controls`, exibindo os campos React Hook Form/Zod somente quando
   o usuario escolhe "Cadastrar com e-mail".
@@ -382,6 +384,8 @@ a altura inicial do card no mobile.
 
 - A primeira dobra mobile fica mais limpa e deixa claro que Google cria a conta sem
   depender do formulario de e-mail.
+- A tela de paciente passa a ter contexto equivalente ao cadastro profissional, sem
+  depender apenas do titulo generico "Cadastre-se".
 - O formulario por e-mail continua disponivel e validado pela fundacao da TASK-02, mas
   deixa de competir visualmente com o CTA Google.
 - O cadastro de psicologo acompanha o mesmo padrao do cadastro de paciente, preservando o
@@ -395,3 +399,5 @@ a altura inicial do card no mobile.
 - Browser local via Chrome/CDP em viewport mobile `390x844` capturou e inspecionou
   `/auth/register/patient` e `/auth/register/psychologist` nos estados recolhido e
   expandido do formulario por e-mail.
+- Browser local via Chrome/CDP em viewport mobile `390x844` confirmou a microcopy abaixo
+  de "Cadastre-se" em `/auth/register/patient`, com `docScrollWidth=390`.
