@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Sparkles, UserPlus } from "lucide-react";
+import { ArrowRight, Heart, LogIn, Sparkles, UserPlus } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
   createContext,
@@ -260,7 +260,9 @@ export const ProgressiveConversionProvider = ({
 
     recordConversionAnalytics(trigger, pathnameRef.current);
 
-    if (hasPromptBeenShown()) return false;
+    const shouldBypassSessionLimit = intent?.type === "favorite_psychologist";
+
+    if (hasPromptBeenShown() && !shouldBypassSessionLimit) return false;
 
     savePendingIntent(intent);
     markPromptAsShown();
@@ -452,6 +454,11 @@ export const ProgressiveConversionProvider = ({
     window.location.href = `/auth/profile-selection?redirectTo=${encodeURIComponent(returnTo)}`;
   };
 
+  const startLogin = () => {
+    const returnTo = prompt?.intent?.returnTo ?? getCurrentReturnTo();
+    window.location.href = `/auth/login?redirectTo=${encodeURIComponent(returnTo)}`;
+  };
+
   const value = useMemo(
     () => ({
       consumePendingIntent,
@@ -461,6 +468,16 @@ export const ProgressiveConversionProvider = ({
     }),
     [consumePendingIntent, isAuthenticated, requestConversion, requestWhatsAppAccess],
   );
+
+  const isFavoritePrompt = prompt?.intent?.type === "favorite_psychologist";
+  const PromptIcon = isFavoritePrompt ? Heart : UserPlus;
+  const promptBadge = isFavoritePrompt ? "Favorito" : "Gratuito";
+  const promptTitle = isFavoritePrompt
+    ? "Entre para favoritar este psicólogo"
+    : "Crie sua conta gratuita";
+  const promptDescription = isFavoritePrompt
+    ? "Para salvar este psicólogo nos seus favoritos, crie uma conta gratuita ou faça login. Assim você pode voltar ao perfil quando quiser."
+    : "Publique gratuitamente nas comunidades da Lectum e receba respostas de psicólogos verificados.";
 
   return (
     <ProgressiveConversionContext.Provider value={value}>
@@ -475,26 +492,25 @@ export const ProgressiveConversionProvider = ({
         >
           <div className="w-full max-w-[430px] rounded-[32px] border border-white/80 bg-white/95 p-5 text-center shadow-[0_28px_80px_rgba(15,23,42,0.22)] ring-1 ring-slate-900/[0.03] supports-[backdrop-filter]:bg-white/90 dark:border-white/10 dark:bg-surface/95 dark:shadow-[0_28px_80px_rgba(0,0,0,0.42)] sm:p-6">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[22px] bg-primary-soft text-primary shadow-[0_14px_34px_rgba(48,140,232,0.18)]">
-              <UserPlus className="h-7 w-7" aria-hidden="true" />
+              <PromptIcon className="h-7 w-7" aria-hidden="true" />
             </div>
 
             <p className="mt-5 inline-flex items-center justify-center gap-1.5 rounded-full border border-primary/10 bg-primary-soft/70 px-3 py-1 text-[0.68rem] font-black uppercase tracking-[0.16em] text-primary">
               <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-              Gratuito
+              {promptBadge}
             </p>
 
             <h2
               className="mt-3 text-2xl font-black tracking-[-0.045em] text-foreground sm:text-[1.7rem]"
               id={MODAL_TITLE_ID}
             >
-              Crie sua conta gratuita
+              {promptTitle}
             </h2>
             <p
               className="mx-auto mt-3 max-w-[340px] text-sm leading-6 text-muted sm:text-[0.96rem]"
               id={MODAL_DESCRIPTION_ID}
             >
-              Publique gratuitamente nas comunidades da Lectum e receba respostas de psicólogos
-              verificados.
+              {promptDescription}
             </p>
 
             <div className="mt-6 grid gap-3">
@@ -506,6 +522,17 @@ export const ProgressiveConversionProvider = ({
                 Criar conta grátis
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Button>
+              {isFavoritePrompt ? (
+                <Button
+                  className="h-11 rounded-2xl border-primary/20 bg-white/80 text-primary hover:bg-primary-soft/60 hover:text-primary-hover dark:bg-surface/70"
+                  onClick={startLogin}
+                  type="button"
+                  variant="outline"
+                >
+                  <LogIn className="h-4 w-4" aria-hidden="true" />
+                  Fazer login
+                </Button>
+              ) : null}
               <Button
                 className="h-11 rounded-2xl border-border/80 bg-white/80 text-muted hover:bg-primary-soft/60 hover:text-foreground dark:bg-surface/70"
                 onClick={closePrompt}

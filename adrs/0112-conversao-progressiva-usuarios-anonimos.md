@@ -51,6 +51,13 @@ proprio conteudo, entao repetir a modal global cria redundancia e aumenta fricca
 O tempo de navegacao nessas rotas tambem nao conta para o gatilho passivo de 90 segundos, evitando que o
 visitante seja abordado imediatamente ao sair de uma tela que ja oferecia CTA de autenticacao.
 
+## Atualizacao em 2026-06-29 - tentativa anonima de favoritar psicologo
+
+Ao tentar favoritar um psicologo sem autenticacao, a modal de conversao passa a usar copy contextual:
+informa que e necessario criar uma conta gratuita ou fazer login para salvar o profissional nos favoritos e
+voltar ao perfil depois. Essa tentativa explicita de acao tambem pode abrir a modal mesmo que um gatilho
+passivo ja tenha sido exibido na sessao, para evitar que o clique no favorito falhe sem feedback.
+
 ## Consequencias
 
 - Visitantes conseguem descobrir conteudo sem cadastro imediato.
