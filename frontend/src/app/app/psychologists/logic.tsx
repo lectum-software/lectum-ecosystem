@@ -2330,6 +2330,10 @@ export const PsychologistsLogic = () => {
   const handleImmersiveExit = useCallback(
     (event: { preventDefault?: () => void; stopPropagation: () => void }) => {
       stopVideoControlInteraction(event);
+      const currentVideo = backgroundVideoRef.current;
+      if (currentVideo) {
+        currentVideo.controls = false;
+      }
       setIsUiHidden(false);
     },
     [stopVideoControlInteraction],
@@ -2715,12 +2719,17 @@ export const PsychologistsLogic = () => {
         isVideoPaused;
 
       if (shouldActivateVideoWithSound) {
+        currentVideo.controls = true;
         playCurrentVideoWithSound();
         setIsUiHidden(true);
         return;
       }
 
-      setIsUiHidden((current) => !current);
+      setIsUiHidden((current) => {
+        const next = !current;
+        currentVideo.controls = next;
+        return next;
+      });
       return;
     }
 
@@ -4120,6 +4129,20 @@ export const PsychologistsLogic = () => {
                             tabIndex={slideUsesNativeVideoControls ? -1 : undefined}
                             type="button"
                           />
+
+                          {slideUsesNativeVideoControls ? (
+                            <button
+                              aria-label="Mostrar interface do video"
+                              className="absolute inset-x-0 top-0 z-[55] cursor-default border-0 bg-transparent p-0"
+                              data-psychologists-scroll-lock="true"
+                              onClick={handleImmersiveExit}
+                              onPointerDown={stopInteractionPropagation}
+                              style={{
+                                bottom: "max(96px, calc(env(safe-area-inset-bottom) + 88px))",
+                              }}
+                              type="button"
+                            />
+                          ) : null}
 
                           {isActiveSlide &&
                           slideShouldShowVideo &&
