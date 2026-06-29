@@ -2622,8 +2622,20 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
     }
   };
 
-  const toggleFollow = () => {
+  const toggleFollow = useCallback(() => {
     if (!community || membershipPending) return;
+
+    if (!conversion.isAuthenticated) {
+      conversion.requestConversion("trigger_comunidade", {
+        intent: {
+          payload: {
+            communitySlug: community.slug,
+          },
+          type: "follow_community",
+        },
+      });
+      return;
+    }
 
     const previousFollowing = following;
     const nextFollowing = !previousFollowing;
@@ -2638,7 +2650,21 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
         setFollowingOverride(data.following);
       },
     });
-  };
+  }, [community, conversion, followMutation, following, membershipPending, unfollowMutation]);
+
+  useEffect(() => {
+    if (!conversion.isAuthenticated || !community || following || membershipPending) return;
+
+    const intent = conversion.consumePendingIntent(
+      (candidate) =>
+        candidate.type === "follow_community" &&
+        String(candidate.payload?.communitySlug ?? "") === community.slug,
+    );
+
+    if (!intent) return;
+
+    window.setTimeout(toggleFollow, 0);
+  }, [community, conversion, following, membershipPending, toggleFollow]);
 
   const handleCreatePostClick = (event: ReactMouseEvent<HTMLAnchorElement>, href: string) => {
     if (conversion.isAuthenticated) return;

@@ -58,6 +58,14 @@ informa que e necessario criar uma conta gratuita ou fazer login para salvar o p
 voltar ao perfil depois. Essa tentativa explicita de acao tambem pode abrir a modal mesmo que um gatilho
 passivo ja tenha sido exibido na sessao, para evitar que o clique no favorito falhe sem feedback.
 
+## Atualizacao em 2026-06-29 - seguir comunidade e criar post sem autenticacao
+
+As tentativas anonimas de seguir uma comunidade e criar novo post passam a usar a mesma modal de conversao
+com copy contextual. Seguir comunidade deixa de chamar a mutacao privada sem sessao e passa a orientar o
+visitante a criar uma conta gratuita ou fazer login; quando o login retorna para a mesma comunidade, a
+intencao pendente pode reexecutar o follow real. Criar post tambem bypassa o limite da modal por sessao por
+ser uma acao explicita, mantendo o `returnTo` para a tela de publicacao.
+
 ## Consequencias
 
 - Visitantes conseguem descobrir conteudo sem cadastro imediato.

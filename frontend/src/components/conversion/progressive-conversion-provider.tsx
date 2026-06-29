@@ -36,6 +36,7 @@ export type ConversionIntent = {
     | "comment_post"
     | "create_post"
     | "favorite_psychologist"
+    | "follow_community"
     | "open_whatsapp"
     | "reply_comment"
     | "save_post"
@@ -260,7 +261,10 @@ export const ProgressiveConversionProvider = ({
 
     recordConversionAnalytics(trigger, pathnameRef.current);
 
-    const shouldBypassSessionLimit = intent?.type === "favorite_psychologist";
+    const shouldBypassSessionLimit =
+      intent?.type === "create_post" ||
+      intent?.type === "favorite_psychologist" ||
+      intent?.type === "follow_community";
 
     if (hasPromptBeenShown() && !shouldBypassSessionLimit) return false;
 
@@ -469,15 +473,29 @@ export const ProgressiveConversionProvider = ({
     [consumePendingIntent, isAuthenticated, requestConversion, requestWhatsAppAccess],
   );
 
-  const isFavoritePrompt = prompt?.intent?.type === "favorite_psychologist";
-  const PromptIcon = isFavoritePrompt ? Heart : UserPlus;
-  const promptBadge = isFavoritePrompt ? "Favorito" : "Gratuito";
-  const promptTitle = isFavoritePrompt
-    ? "Entre para favoritar este psicólogo"
-    : "Crie sua conta gratuita";
-  const promptDescription = isFavoritePrompt
-    ? "Para salvar este psicólogo nos seus favoritos, crie uma conta gratuita ou faça login. Assim você pode voltar ao perfil quando quiser."
-    : "Publique gratuitamente nas comunidades da Lectum e receba respostas de psicólogos verificados.";
+  const actionPromptType = prompt?.intent?.type;
+  const isActionPrompt =
+    actionPromptType === "create_post" ||
+    actionPromptType === "favorite_psychologist" ||
+    actionPromptType === "follow_community";
+  const PromptIcon = actionPromptType === "favorite_psychologist" ? Heart : UserPlus;
+  const promptBadge = actionPromptType === "favorite_psychologist" ? "Favorito" : "Gratuito";
+  const promptTitle =
+    actionPromptType === "favorite_psychologist"
+      ? "Entre para favoritar este psicólogo"
+      : actionPromptType === "follow_community"
+        ? "Entre para seguir esta comunidade"
+        : actionPromptType === "create_post"
+          ? "Crie sua conta para publicar"
+          : "Crie sua conta gratuita";
+  const promptDescription =
+    actionPromptType === "favorite_psychologist"
+      ? "Para salvar este psicólogo nos seus favoritos, crie uma conta gratuita ou faça login. Assim você pode voltar ao perfil quando quiser."
+      : actionPromptType === "follow_community"
+        ? "Crie uma conta gratuita ou faça login para seguir esta comunidade, acompanhar novos posts e participar das conversas da Lectum."
+        : actionPromptType === "create_post"
+          ? "Para criar um post, crie uma conta gratuita ou faça login. Você pode participar da comunidade da Lectum gratuitamente e acompanhar as respostas."
+          : "Publique gratuitamente nas comunidades da Lectum e receba respostas de psicólogos verificados.";
 
   return (
     <ProgressiveConversionContext.Provider value={value}>
@@ -522,7 +540,7 @@ export const ProgressiveConversionProvider = ({
                 Criar conta grátis
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Button>
-              {isFavoritePrompt ? (
+              {isActionPrompt ? (
                 <Button
                   className="h-11 rounded-2xl border-primary/20 bg-white/80 text-primary hover:bg-primary-soft/60 hover:text-primary-hover dark:bg-surface/70"
                   onClick={startLogin}
