@@ -471,3 +471,21 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   microcopy nova, ausência da copy antiga com "online" e `docScrollWidth=390` em
   `/auth/register/psychologist`.
 - ADR atualizado: `adrs/0008-fluxo-publico-auth-selecao-perfil-login.md`.
+
+## Ajuste posterior em 2026-06-29: tag registro ativo no CFP
+
+- Pedido direto de produto: alterar a tag azul do cadastro de psicólogo para "Para
+  psicólogos com registro ativo no CFP".
+- A tag anterior com CRP ativo foi removida.
+- Título, microcopy, formulário real, Google OAuth, accordion de e-mail, rotas, endpoints
+  e validações existentes foram preservados.
+- Nenhum pacote, endpoint, mock, store, schema ou fluxo paralelo foi criado.
+
+### Validação do ajuste
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Browser local via Chrome/CDP em viewport mobile `390x844` confirmou a tag presente,
+  ausência da tag antiga com CRP, largura aproximada de `217px`, `docScrollWidth=390` e
+  rodapé institucional presente em `/auth/register/psychologist`.
+- ADR atualizado: `adrs/0008-fluxo-publico-auth-selecao-perfil-login.md`.

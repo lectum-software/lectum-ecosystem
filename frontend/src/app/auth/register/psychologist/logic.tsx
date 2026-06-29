@@ -119,7 +119,7 @@ export const RegisterPsychologistLogic = () => {
           <div className="px-5 pb-6 pt-6 sm:px-6">
             <div className="grid justify-items-center text-center">
               <span className="mb-3 rounded-full bg-primary-soft px-2.5 py-1 text-[10px] font-semibold text-primary sm:text-[11px]">
-                Para psicólogos com CRP ativo
+                Para psicólogos com registro ativo no CFP
               </span>
               <h1 className="text-[1.45rem] font-extrabold leading-tight text-foreground">
                 Cadastre-se

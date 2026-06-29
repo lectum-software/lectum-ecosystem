@@ -574,3 +574,30 @@ produto pode atender intencoes de contato para atendimento online ou presencial.
 - Browser local via Chrome/CDP em viewport mobile `390x844` confirmou titulo curto,
   microcopy nova, ausencia da copy antiga com "online" e `docScrollWidth=390` em
   `/auth/register/psychologist`.
+
+## Atualizacao em 2026-06-29: tag registro ativo no CFP
+
+### Contexto
+
+A tag profissional ja indicava CRP ativo, mas o produto solicitou copy mais abrangente
+com referencia a registro ativo no CFP.
+
+### Decisao
+
+- Alterar a tag azul do cadastro de psicologo para "Para psicologos com registro ativo
+  no CFP".
+- Preservar titulo, microcopy, formulario real, OAuth, accordion, rotas, endpoints e
+  validacoes existentes.
+
+### Consequencias
+
+- A comunicacao do escopo profissional fica alinhada ao termo solicitado pelo produto.
+- A tag continua compacta no viewport mobile base, sem overflow horizontal.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Browser local via Chrome/CDP em viewport mobile `390x844` confirmou a tag presente,
+  ausencia da tag antiga com CRP, largura aproximada de `217px`, `docScrollWidth=390` e
+  rodape institucional presente em `/auth/register/psychologist`.
