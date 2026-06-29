@@ -226,6 +226,8 @@ export type PostReportResponse = {
   id: string;
   post_id: string;
   reply_id: string | null;
+  target_id: string;
+  target_type: "post" | "reply";
   reason: string;
   description: string | null;
   status: string;

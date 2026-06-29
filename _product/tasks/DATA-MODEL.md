@@ -57,6 +57,9 @@ Campos relacionados ao `user` existente:
 | `has_seen_discover_psychologists_tip` | `Boolean @default(false)` | Preferência persistida por usuário para exibir a dica "Descubra novos psicólogos" apenas uma vez. |
 | `has_seen_psychologists_my_search_tip` | `Boolean @default(false)` | Preferência persistida por usuário para exibir a dica acionável "Minha Busca" da descoberta de psicólogos apenas uma vez. |
 | `has_seen_psychologist_whatsapp_tip` | `Boolean @default(false)` | Preferência persistida por usuário para exibir a dica acionável do botão WhatsApp na descoberta de psicólogos apenas uma vez. |
+| `has_seen_psychologist_original_post_tip` | `Boolean @default(false)` | Preferencia persistida por usuario para dica de contexto em posts originais de psicologos. |
+| `has_seen_psychologist_profile_video_tip` | `Boolean @default(false)` | Preferencia persistida por usuario para dica de video de perfil de psicologos. |
+| `has_seen_psychologist_reply_tip` | `Boolean @default(false)` | Preferencia persistida por usuario para dica de respostas de psicologos. |
 | `has_seen_community_post_tip` | `Boolean @default(false)` | Preferência persistida por usuário para exibir a dica "Publique sua dúvida ou relato" apenas uma vez. |
 | `patient_profile` | relação 1:1 opcional | A criar na TASK-07. |
 | `psychologist_profile` | relação 1:1 opcional | A criar na TASK-09. |
@@ -72,7 +75,7 @@ Resumo dos campos relevantes do `user` atual (fonte: `schema.prisma`):
 - `name`, `email @unique`, `avatar?`, `provider @default("manual")`, `password?`, `password_confirm?`.
 - `active @default(true)`, `need_reset @default(false)`.
 - `confirmed @default(false)`, `confirmed_date?`, `confirm_code?`, `confirm_date?` → verificação de e-mail.
-- `has_seen_discover_psychologists_tip @default(false)`, `has_seen_psychologists_my_search_tip @default(false)`, `has_seen_psychologist_whatsapp_tip @default(false)`, `has_seen_community_post_tip @default(false)` → dicas/onboarding one-shot por usuário.
+- `has_seen_discover_psychologists_tip @default(false)`, `has_seen_psychologists_my_search_tip @default(false)`, `has_seen_psychologist_whatsapp_tip @default(false)`, `has_seen_psychologist_original_post_tip @default(false)`, `has_seen_psychologist_profile_video_tip @default(false)`, `has_seen_psychologist_reply_tip @default(false)`, `has_seen_community_post_tip @default(false)` → dicas/onboarding one-shot por usuário.
 - `recovery_code?`, `recovery_date?` → recuperação de senha.
 
 `user_token` (token JWT por device): `user_id`, `token?`, `device_id?`. **Não tem coluna `type`.** Não tente armazenar tokens tipados (`password_reset`/`email_verification`) aqui — recuperação usa `user.recovery_code`, verificação usa `user.confirm_code`.
@@ -415,7 +418,7 @@ Contratos da tela interna do post (TASK-26):
 - `DELETE /api/private/posts/:id/replies/:replyId` exige autor autenticado e remove a resposta/comentario e sua subarvore. Se o autor for psicologo, pode excluir a qualquer momento; se o autor nao for psicologo, a exclusao e bloqueada quando a subarvore ativa ja contem contribuicao de psicologo, preservando a mesma regra de protecao usada em posts de pacientes com respostas profissionais.
 - `POST /api/private/posts/:id/vote` recebe `{ value: 1|-1, replyId? }`; repetir o mesmo voto remove o voto. Downvotes atualizam contadores denormalizados de posts e comentarios para ranking interno, mas não devem ser exibidos como número público nem gerar item na central de notificações.
 - `POST /api/private/posts/:id/save` e `DELETE /api/private/posts/:id/save` persistem salvos via `post_save` e mantêm `saves_count`.
-- `POST /api/private/posts/:id/report` registra denúncia reativa com motivo e descrição opcional, sem remoção automática do post.
+- `POST /api/private/posts/:id/report` e `POST /api/private/posts/:id/replies/:replyId/report` registram denuncia reativa com motivo e descricao opcional, sem remocao automatica do conteudo; o alvo fica normalizado em `post_report.target_type`/`target_id` para triagem/admin futuro.
 
 Acompanhamento de comentarios do usuario em `GET /api/private/posts/mine?type=replies`: cada item de comentario retorna metadados derivados `replies_received_count`, `saves_count` e `has_verified_professional_reply`; a flag profissional deve ser calculada apenas por respostas diretas ativas daquele comentario especifico feitas por outro psicologo verificado, sem considerar respostas do proprio autor, respostas ao post principal nem respostas de outras arvores. `current_user_vote` e `saved` seguem derivados de `post_vote`/`post_reply_save` para alimentar a barra padrao de interacao. Comentarios diretos ao post usam `community_post.title` como contexto; respostas a comentarios usam `parent_reply.content`.
 
@@ -429,16 +432,21 @@ Acompanhamento de comentarios do usuario em `GET /api/private/posts/mine?type=re
 | `value` | `Int` | `1` (upvote) ou `-1` (downvote) |
 | `@@unique([user_id, post_id])`, `@@unique([user_id, reply_id])`, `@@index([post_id])` | | upsert para alterar voto; downvotes nunca expostos individualmente |
 
-`post_report` (denúncias reativas de posts comunitários):
+`post_report` (denuncias reativas de posts comunitarios; base de entrada para moderacao/admin futuro):
 
 | Campo | Tipo | Notas |
 |---|---|---|
-| `post_id` | `String` | post denunciado |
-| `reporter_id` | `String` | usuário autenticado que denunciou |
-| `reason` | `String` | motivo informado pelo fluxo de denúncia |
+| `post_id` | `String` | post denunciado; sempre preenchido para escopo da comunidade e join com o conteudo principal |
+| `reply_id` | `String?` | comentario/resposta denunciado quando a denuncia nao for do post principal |
+| `target_type` | `String @default("post")` | alvo normalizado para fila de moderacao: `"post" | "reply"` |
+| `target_id` | `String` | id normalizado do alvo: `post_id` para post, `reply_id` para reply |
+| `reporter_id` | `String` | usuario autenticado que denunciou |
+| `reason` | `String` | motivo informado pelo fluxo de denuncia; valores aceitos no backend: `spam`, `abuse`, `self_harm`, `privacy`, `other` |
 | `description` | `String?` | detalhe opcional, limitado pelo backend |
-| `status` | `String @default("pendente")` | reservado para triagem/moderação futura |
-| `@@unique([post_id, reporter_id])`, `@@index([status, createdAt])`, `@@index([reporter_id, createdAt])` | | uma denúncia ativa por usuário/post; reenvio atualiza motivo e descrição |
+| `status` | `String @default("pendente")` | fila de triagem futura: `"pendente" | "em_analise" | "resolvida" | "rejeitada"`; denuncia nao remove conteudo automaticamente |
+| `@@unique([target_type, target_id, reporter_id])`, `@@index([target_type, target_id, status])`, `@@index([status, createdAt])`, `@@index([reporter_id, createdAt])` | | uma denuncia ativa por usuario/alvo; reenvio atualiza motivo, descricao e volta status para `pendente` |
+
+Complemento 2026-06-29: o painel administrativo ainda e reservado/futuro e nao deve ser criado na audiencia `user`; a preparacao desta etapa e persistir denuncias com alvo normalizado e unicidade transacional para que uma futura audiencia admin consiga listar/tria-las sem migrar dados historicos.
 
 `post_save` (TASK-28, "Posts Salvos"):
 

@@ -1148,3 +1148,24 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Frontend: a modal/transiÃ§Ã£o global de WhatsApp mantÃ©m o texto contextual da origem do clique ao combinar fallback de tela e URL retornada pelo tracking.
 - Escopo: sem alteraÃ§Ã£o de schema Prisma, migrations, endpoints, Ã¡rvore de comentÃ¡rios, votos, salvos, mÃ­dia, permissÃµes ou packages.
 - ADR atualizado: `adrs/0022-contato-whatsapp-wa-me.md`.
+
+## Complemento 2026-06-29 - denuncias preparadas para painel administrativo futuro
+
+- Pedido do usuario: preparar o sistema para receber denuncias de posts no painel administrativo que sera desenvolvido futuramente.
+- Escopo tratado como complemento da TASK-26, pois o fluxo de denuncia de post/comentario ja pertence ao detalhe do post e aos endpoints `POST /api/private/posts/:id/report` e `POST /api/private/posts/:id/replies/:replyId/report`.
+- Backend: `post_report` passou a persistir `target_type` e `target_id`, mantendo `post_id`/`reply_id` para joins atuais e criando uma chave unica `target_type + target_id + reporter_id` para uma denuncia ativa por usuario/alvo.
+- Backend: o reenvio da mesma denuncia agora usa `upsert` transacional pela chave de alvo normalizada, atualizando motivo, descricao e recolocando `status="pendente"` sem criar duplicidade para a fila futura de moderacao.
+- API: a resposta de denuncia passou a incluir `target_type` e `target_id` como campos aditivos, preservando `post_id`, `reply_id`, `reason`, `description`, `status` e `created_at`.
+- Fora do escopo: nao foi criado painel administrativo, autenticacao admin, rota manager/admin ou remocao automatica de conteudo; admin continua audiencia separada e futura conforme `DATA-MODEL.md`.
+- Durante a migracao, o banco de desenvolvimento compartilhado continha a migration `20260629041000_add_psychologist_role_onboarding_tips` ja aplicada a partir de outra branch local; a pasta correspondente foi recuperada para alinhar historico sem resetar nem apagar dados.
+- Nao houve UI nova; Builder/Quick Copy e imagens locais nao se aplicam a este complemento.
+- ADR criado: `adrs/0182-denuncias-posts-admin-ready.md`.
+
+### Validacoes
+
+- [x] `pnpm --dir backend db:migrate` (primeira tentativa aplicou a migration e excedeu timeout da ferramenta; segunda execucao retornou "Already in sync")
+- [x] `pnpm --dir backend exec prisma migrate status`
+- [x] `pnpm --dir backend check`
+- [x] `pnpm --dir backend build`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm check`

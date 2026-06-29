@@ -382,6 +382,7 @@ export interface community_post {
   community?: community | null;
   author?: user | null;
   notification_mutes?: post_notification_mute[] | null;
+  reports?: post_report[] | null;
 }
 
 export interface post_reply {
@@ -404,6 +405,7 @@ export interface post_reply {
   parent_reply?: post_reply | null;
   replies?: post_reply[] | null;
   saves?: post_reply_save[] | null;
+  reports?: post_report[] | null;
 }
 
 export interface post_save {
@@ -440,6 +442,25 @@ export interface post_notification_mute {
   post_id?: string | null;
   user?: user | null;
   post?: community_post | null;
+}
+
+export interface post_report {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  post_id?: string | null;
+  reply_id?: string | null;
+  target_type?: "post" | "reply" | string | null;
+  target_id?: string | null;
+  reporter_id?: string | null;
+  reason?: string | null;
+  description?: string | null;
+  status?: "pendente" | "em_analise" | "resolvida" | "rejeitada" | string | null;
+  post?: community_post | null;
+  reply?: post_reply | null;
+  reporter?: user | null;
 }
 
 export interface notification_subscription {
@@ -518,6 +539,9 @@ export interface user {
   has_seen_discover_psychologists_tip?: boolean | null;
   has_seen_psychologists_my_search_tip?: boolean | null;
   has_seen_psychologist_whatsapp_tip?: boolean | null;
+  has_seen_psychologist_original_post_tip?: boolean | null;
+  has_seen_psychologist_profile_video_tip?: boolean | null;
+  has_seen_psychologist_reply_tip?: boolean | null;
   has_seen_community_post_tip?: boolean | null;
   recovery_code?: string | null;
   recovery_date?: Date | null;
@@ -545,6 +569,7 @@ export interface user {
   post_saves?: post_save[] | null;
   post_reply_saves?: post_reply_save[] | null;
   post_notification_mutes?: post_notification_mute[] | null;
+  post_reports?: post_report[] | null;
   notification_subscriptions?: notification_subscription[] | null;
   visitor_locations?: visitor_location[] | null;
   billing_addresses?: billing_address[] | null;

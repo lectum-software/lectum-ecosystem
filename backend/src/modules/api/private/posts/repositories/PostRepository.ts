@@ -1947,57 +1947,49 @@ export class PostRepository implements IPostRepository {
       if (!reply) return { kind: "invalid_target" };
     }
 
-    const existingReport = await prisma.post_report.findFirst({
+    const targetType = replyId ? "reply" : "post";
+    const targetId = replyId || post.id;
+
+    const report = await prisma.post_report.upsert({
       where: {
+        target_type_target_id_reporter_id: {
+          reporter_id: data.auth.id!,
+          target_id: targetId,
+          target_type: targetType,
+        },
+      },
+      update: {
+        deleted: false,
+        deletedAt: null,
+        description: data.b.description || null,
         post_id: post.id,
+        reason: data.b.reason,
+        reply_id: replyId,
+        status: "pendente",
+        target_id: targetId,
+        target_type: targetType,
+      },
+      create: {
+        description: data.b.description || null,
+        post_id: post.id,
+        reason: data.b.reason,
         reply_id: replyId,
         reporter_id: data.auth.id!,
+        target_id: targetId,
+        target_type: targetType,
       },
       select: {
         id: true,
+        post_id: true,
+        reply_id: true,
+        target_id: true,
+        target_type: true,
+        reason: true,
+        description: true,
+        status: true,
+        createdAt: true,
       },
     });
-
-    const report = existingReport
-      ? await prisma.post_report.update({
-          where: {
-            id: existingReport.id,
-          },
-          data: {
-            deleted: false,
-            deletedAt: null,
-            reason: data.b.reason,
-            description: data.b.description || null,
-            status: "pendente",
-          },
-          select: {
-            id: true,
-            post_id: true,
-            reply_id: true,
-            reason: true,
-            description: true,
-            status: true,
-            createdAt: true,
-          },
-        })
-      : await prisma.post_report.create({
-          data: {
-            post_id: post.id,
-            reply_id: replyId,
-            reporter_id: data.auth.id!,
-            reason: data.b.reason,
-            description: data.b.description || null,
-          },
-          select: {
-            id: true,
-            post_id: true,
-            reply_id: true,
-            reason: true,
-            description: true,
-            status: true,
-            createdAt: true,
-          },
-        });
 
     return {
       kind: "ok",
@@ -2005,6 +1997,8 @@ export class PostRepository implements IPostRepository {
         id: report.id,
         post_id: report.post_id,
         reply_id: report.reply_id,
+        target_id: report.target_id,
+        target_type: report.target_type === "reply" ? "reply" : "post",
         reason: report.reason,
         description: report.description,
         status: report.status,
