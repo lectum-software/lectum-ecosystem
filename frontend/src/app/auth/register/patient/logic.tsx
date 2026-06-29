@@ -123,7 +123,7 @@ export const RegisterPatientLogic = () => {
               Cadastre-se
             </h1>
             <p className="mx-auto mt-2 max-w-[300px] text-center text-sm leading-6 text-muted">
-              Participe da comunidade, salve favoritos e encontre psicólogos com segurança.
+              Encontre psicólogos e salve favoritos.
             </p>
 
             <Button
@@ -141,9 +141,8 @@ export const RegisterPatientLogic = () => {
               {googlePending ? "Conectando com Google" : "Criar conta com Google"}
             </Button>
 
-            <p className="mt-3 text-center text-[11px] leading-5 text-subtle">
-              Ao continuar com Google, você concorda com nossos Termos de Serviço e Política de
-              Privacidade.
+            <p className="mx-auto mt-2 max-w-[280px] text-center text-[10px] leading-4 text-subtle">
+              Ao continuar, você aceita os Termos e a Privacidade.
             </p>
 
             {apiError ? (

@@ -129,8 +129,7 @@ export const RegisterPsychologistLogic = () => {
                 Cadastre-se para converter pacientes para o WhatsApp
               </h1>
               <p className="mt-3 max-w-[310px] text-sm leading-6 text-muted">
-                Todos os dias, milhares de pessoas buscam por psicólogos na internet e nós os
-                conectamos ao seu WhatsApp. Comece agora, gratuitamente.
+                Receba contatos de pessoas que procuram psicólogos online.
               </p>
             </div>
 
@@ -149,9 +148,8 @@ export const RegisterPsychologistLogic = () => {
               {googlePending ? "Conectando com Google" : "Criar conta com Google"}
             </Button>
 
-            <p className="mt-3 text-center text-[11px] leading-5 text-subtle">
-              Ao continuar com Google, você concorda com os termos profissionais, Termos de Serviço
-              e Política de Privacidade da Lectum.
+            <p className="mx-auto mt-2 max-w-[280px] text-center text-[10px] leading-4 text-subtle">
+              Ao continuar, você aceita os Termos e a Privacidade.
             </p>
 
             {apiError ? (
