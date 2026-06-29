@@ -1916,7 +1916,11 @@ export const PsychologistsLogic = () => {
   useEffect(() => {
     if (typeof window === "undefined" || !activeVideoSource || !featuredPsychologistId) return;
 
-    if (isVideoPaused || isVideoProgressSeeking) {
+    if (isVideoProgressSeeking) {
+      return;
+    }
+
+    if (isVideoPaused) {
       syncActiveVideoProgress(undefined, {
         forceState: true,
       });
@@ -2809,18 +2813,26 @@ export const PsychologistsLogic = () => {
     const currentVideo = backgroundVideoRef.current;
 
     if (shouldShowVideo && currentVideo) {
-      if (currentVideo.paused || currentVideo.ended) {
-        playCurrentVideo();
-      } else {
-        pauseVideoPlayback();
+      const shouldActivateVideoWithSound =
+        isVideoMuted ||
+        currentVideo.muted ||
+        currentVideo.volume <= 0 ||
+        currentVideo.paused ||
+        currentVideo.ended ||
+        isVideoPaused;
+
+      if (shouldActivateVideoWithSound) {
+        playCurrentVideoWithSound();
+        setIsUiHidden(true);
+        return;
       }
 
-      setIsUiHidden(false);
+      setIsUiHidden((current) => !current);
       return;
     }
 
     setIsUiHidden((current) => !current);
-  }, [isSearchFocused, pauseVideoPlayback, playCurrentVideo, shouldShowVideo]);
+  }, [isSearchFocused, isVideoMuted, isVideoPaused, playCurrentVideoWithSound, shouldShowVideo]);
 
   const handleLongPressStart = useCallback(
     (event: PointerEvent<HTMLButtonElement>) => {
@@ -3028,15 +3040,37 @@ export const PsychologistsLogic = () => {
     [applyVideoProgressRatio, videoProgress.duration],
   );
 
+  const previewActiveVideoSeekToRatio = useCallback(
+    (ratio: number) => {
+      const clampedRatio = clampNumber(ratio, 0, 1);
+      const currentVideo = backgroundVideoRef.current;
+      const duration = currentVideo ? getReadableVideoDuration(currentVideo) : 0;
+      const resolvedDuration = duration || videoProgressStateRef.current.duration;
+
+      applyVideoProgressRatio(clampedRatio);
+
+      if (!resolvedDuration) return;
+
+      const nextProgress = {
+        currentTime: clampedRatio * resolvedDuration,
+        duration: resolvedDuration,
+      };
+
+      videoProgressStateRef.current = nextProgress;
+      setVideoProgress(nextProgress);
+    },
+    [applyVideoProgressRatio],
+  );
+
   const updateVideoSeekFromClientX = useCallback(
     (clientX: number, track: HTMLDivElement | null) => {
       const ratio = getVideoProgressRatioFromClientX(clientX, track);
       if (ratio === null) return;
 
       videoSeekPreviewRatioRef.current = ratio;
-      seekActiveVideoToRatio(ratio);
+      previewActiveVideoSeekToRatio(ratio);
     },
-    [getVideoProgressRatioFromClientX, seekActiveVideoToRatio],
+    [getVideoProgressRatioFromClientX, previewActiveVideoSeekToRatio],
   );
 
   const finishVideoProgressScrub = useCallback(
@@ -3894,6 +3928,16 @@ export const PsychologistsLogic = () => {
                     : metrics.navBarHeight > 0
                       ? `calc(${VIDEO_PROGRESS_VISIBLE_NAV_BAR_HEIGHT}px + env(safe-area-inset-bottom) - ${VIDEO_PROGRESS_NAVBAR_OVERLAP_PX}px)`
                       : "0px";
+                  const slideCanSeekProgress =
+                    isActiveSlide && slideShouldShowVideo && slideIsUiHidden;
+                  const slideVideoAreaLabel =
+                    isActiveSlide &&
+                    slideShouldShowVideo &&
+                    (isVideoMuted || videoVolume <= 0 || isVideoPaused)
+                      ? `Ativar som e reproduzir vÃ­deo de ${psychologist.name}`
+                      : slideIsUiHidden
+                        ? `Mostrar interface de ${psychologist.name}`
+                        : `Ocultar interface de ${psychologist.name}`;
 
                   return (
                     <section
@@ -4121,11 +4165,7 @@ export const PsychologistsLogic = () => {
                           />
 
                           <button
-                            aria-label={
-                              slideIsUiHidden
-                                ? `Mostrar interface de ${psychologist.name}`
-                                : `Ocultar interface de ${psychologist.name}`
-                            }
+                            aria-label={slideVideoAreaLabel}
                             className="absolute inset-0 z-10 h-full w-full cursor-default border-0 bg-transparent p-0"
                             onClick={
                               isActiveSlide ? handleVideoAreaTap : stopInteractionPropagation
@@ -4172,32 +4212,40 @@ export const PsychologistsLogic = () => {
                               }
                               className={cn(
                                 "absolute z-50 flex h-6 items-end outline-none",
-                                isActiveSlide
+                                slideCanSeekProgress
                                   ? "pointer-events-auto cursor-pointer"
                                   : "pointer-events-none",
                               )}
                               data-psychologists-scroll-lock="true"
-                              onClick={stopInteractionPropagation}
-                              onKeyDown={isActiveSlide ? handleVideoProgressKeyDown : undefined}
+                              onClick={
+                                slideCanSeekProgress ? stopInteractionPropagation : undefined
+                              }
+                              onKeyDown={
+                                slideCanSeekProgress ? handleVideoProgressKeyDown : undefined
+                              }
                               onPointerCancel={
-                                isActiveSlide ? handleVideoProgressPointerEnd : undefined
+                                slideCanSeekProgress ? handleVideoProgressPointerEnd : undefined
                               }
                               onPointerDown={
-                                isActiveSlide ? handleVideoProgressPointerDown : undefined
+                                slideCanSeekProgress ? handleVideoProgressPointerDown : undefined
                               }
                               onPointerMove={
-                                isActiveSlide ? handleVideoProgressPointerMove : undefined
+                                slideCanSeekProgress ? handleVideoProgressPointerMove : undefined
                               }
                               onPointerUp={
-                                isActiveSlide ? handleVideoProgressPointerEnd : undefined
+                                slideCanSeekProgress ? handleVideoProgressPointerEnd : undefined
                               }
                               onTouchCancel={
-                                isActiveSlide ? handleVideoProgressTouchEnd : undefined
+                                slideCanSeekProgress ? handleVideoProgressTouchEnd : undefined
                               }
-                              onTouchEnd={isActiveSlide ? handleVideoProgressTouchEnd : undefined}
-                              onTouchMove={isActiveSlide ? handleVideoProgressTouchMove : undefined}
+                              onTouchEnd={
+                                slideCanSeekProgress ? handleVideoProgressTouchEnd : undefined
+                              }
+                              onTouchMove={
+                                slideCanSeekProgress ? handleVideoProgressTouchMove : undefined
+                              }
                               onTouchStart={
-                                isActiveSlide ? handleVideoProgressTouchStart : undefined
+                                slideCanSeekProgress ? handleVideoProgressTouchStart : undefined
                               }
                               ref={(node) => {
                                 if (isActiveSlide) {
@@ -4213,7 +4261,7 @@ export const PsychologistsLogic = () => {
                                 right: 0,
                                 touchAction: "none",
                               }}
-                              tabIndex={isActiveSlide ? 0 : -1}
+                              tabIndex={slideCanSeekProgress ? 0 : -1}
                             >
                               <div
                                 className="relative w-full overflow-hidden transition-[height] duration-150 ease-out"
