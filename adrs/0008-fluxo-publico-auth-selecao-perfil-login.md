@@ -354,3 +354,44 @@ login, cadastro de paciente, cadastro de psicologo, recuperacao de senha e retor
 - Browser local via Chrome/CDP em viewport mobile `390x844` confirmou
   `docScrollWidth=390` e logo compacta em `/auth/profile-selection`, `/auth/login`,
   `/auth/register/patient`, `/auth/register/psychologist` e `/auth/recovery`.
+
+## Atualizacao em 2026-06-29: cadastro com e-mail expansivel
+
+### Contexto
+
+Nas telas de cadastro, o CTA Google e o CTA azul de criar conta por e-mail apareciam no
+mesmo nivel visual. Isso criava conflito de prioridade: para cadastro com Google, o
+botao azul final do formulario nao era necessario antes da escolha do metodo e aumentava
+a altura inicial do card no mobile.
+
+### Decisao
+
+- Tratar Google como acao primaria imediata nas telas `/auth/register/patient` e
+  `/auth/register/psychologist`, com texto "Criar conta com Google".
+- Manter o cadastro por e-mail real, mas recolhido atras de um expansor acessivel com
+  `aria-expanded`/`aria-controls`, exibindo os campos React Hook Form/Zod somente quando
+  o usuario escolhe "Cadastrar com e-mail".
+- Mover o aviso de aceite de termos do fluxo Google para perto do CTA Google, preservando
+  o checkbox de termos dentro do formulario de e-mail.
+- Renomear o CTA azul do formulario para "Criar conta com e-mail", reduzindo ambiguidade
+  entre os dois metodos de cadastro.
+- Implementar o expansor sem pacote novo, sem mock, sem endpoint paralelo e mantendo
+  `next/image` para o icone Google.
+
+### Consequencias
+
+- A primeira dobra mobile fica mais limpa e deixa claro que Google cria a conta sem
+  depender do formulario de e-mail.
+- O formulario por e-mail continua disponivel e validado pela fundacao da TASK-02, mas
+  deixa de competir visualmente com o CTA Google.
+- O cadastro de psicologo acompanha o mesmo padrao do cadastro de paciente, preservando o
+  texto profissional e o badge existente.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local via Chrome/CDP em viewport mobile `390x844` capturou e inspecionou
+  `/auth/register/patient` e `/auth/register/psychologist` nos estados recolhido e
+  expandido do formulario por e-mail.

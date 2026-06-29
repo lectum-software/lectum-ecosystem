@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Loader2, ShieldCheck, Zap } from "lucide-react";
+import { ArrowRight, ChevronDown, Loader2, Mail, ShieldCheck, Zap } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -11,6 +11,7 @@ import { DividerWithLabel } from "@/components/ui/divider-with-label";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { Logo } from "@/components/ui/logo";
 import { useUserSet } from "@/hooks/user-set";
+import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { fingerprint } from "@/utils/fingerprint";
 import { type RegisterPatientForm, TERMS_VERSION, useForm } from "./use-form";
@@ -38,6 +39,8 @@ const resolveRegisterErrorMessage = (error: unknown) => {
   return message || "Não foi possível criar sua conta agora. Tente novamente.";
 };
 
+const PATIENT_EMAIL_FORM_ID = "patient-email-register-form";
+
 export const RegisterPatientLogic = () => {
   const { setter } = useUserSet("/auth/verify-email");
   const searchParams = useSearchParams();
@@ -45,6 +48,7 @@ export const RegisterPatientLogic = () => {
   const { Form, formProps, hook } = useForm();
   const [apiError, setApiError] = useState<string | null>(null);
   const [googlePending, setGooglePending] = useState(false);
+  const [emailFormOpen, setEmailFormOpen] = useState(false);
 
   const { registerPatient } = useAuth({
     callbacks: {
@@ -131,28 +135,66 @@ export const RegisterPatientLogic = () => {
               ) : (
                 <Image src="/svg/google.svg" alt="Google" width={22} height={22} />
               )}
-              {googlePending ? "Conectando com Google" : "Continuar com Google"}
+              {googlePending ? "Conectando com Google" : "Criar conta com Google"}
             </Button>
 
-            <DividerWithLabel className="my-5">ou e-mail</DividerWithLabel>
+            <p className="mt-3 text-center text-[11px] leading-5 text-subtle">
+              Ao continuar com Google, você concorda com nossos Termos de Serviço e Política de
+              Privacidade.
+            </p>
 
-            <Form className="grid gap-2" {...formProps} onSubmit={hook.handleSubmit(handleSubmit)}>
-              {apiError ? <InlineAlert variant="error">{apiError}</InlineAlert> : null}
+            {apiError ? (
+              <InlineAlert className="mt-4" variant="error">
+                {apiError}
+              </InlineAlert>
+            ) : null}
 
-              <Button
-                className="mt-2 h-12 w-full rounded-[var(--lectum-control-radius)] text-sm"
-                disabled={isPending}
-                type="submit"
-              >
-                {registerPatient.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                ) : null}
-                {registerPatient.isPending ? "Criando conta" : "Criar conta gratuita"}
-                {!registerPatient.isPending ? (
-                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                ) : null}
-              </Button>
-            </Form>
+            <DividerWithLabel className="my-5">ou</DividerWithLabel>
+
+            <button
+              aria-controls={PATIENT_EMAIL_FORM_ID}
+              aria-expanded={emailFormOpen}
+              className="flex h-12 w-full items-center justify-between rounded-[var(--lectum-control-radius)] border border-border bg-surface-muted px-4 text-left text-sm font-semibold text-foreground transition hover:border-primary/40 hover:bg-primary-soft/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={isPending}
+              onClick={() => setEmailFormOpen((open) => !open)}
+              type="button"
+            >
+              <span className="inline-flex items-center gap-2">
+                <Mail className="h-4 w-4 text-primary" aria-hidden="true" />
+                Cadastrar com e-mail
+              </span>
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 text-muted transition-transform",
+                  emailFormOpen && "rotate-180",
+                )}
+                aria-hidden="true"
+              />
+            </button>
+
+            <div id={PATIENT_EMAIL_FORM_ID}>
+              {emailFormOpen ? (
+                <Form
+                  className="mt-4 grid gap-2"
+                  {...formProps}
+                  onSubmit={hook.handleSubmit(handleSubmit)}
+                >
+                  <Button
+                    className="mt-2 h-12 w-full rounded-[var(--lectum-control-radius)] text-sm"
+                    disabled={isPending}
+                    type="submit"
+                  >
+                    {registerPatient.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    ) : null}
+                    {registerPatient.isPending ? "Criando conta" : "Criar conta com e-mail"}
+                    {!registerPatient.isPending ? (
+                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    ) : null}
+                  </Button>
+                </Form>
+              ) : null}
+            </div>
           </div>
 
           <div className="border-t border-border bg-surface-muted px-5 py-4 text-center text-[13px] leading-5 text-muted sm:px-6 sm:text-sm">

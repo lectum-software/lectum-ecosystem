@@ -325,3 +325,27 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   `/auth/login`, `/auth/register/patient`, `/auth/register/psychologist` e
   `/auth/recovery`.
 - ADR atualizado: `adrs/0008-fluxo-publico-auth-selecao-perfil-login.md`.
+
+## Ajuste posterior em 2026-06-29: cadastro com e-mail expansível
+
+- Pedido direto de produto: evitar conflito visual entre o botão Google e o botão azul de
+  criação de conta, deixando claro que o botão azul pertence somente ao cadastro por
+  e-mail.
+- Cadastro de paciente e cadastro de psicólogo passaram a exibir primeiro o CTA
+  "Criar conta com Google" e um aviso curto de aceite de termos para o fluxo Google.
+- Os campos de e-mail/senha e o CTA azul foram movidos para um expansor "Cadastrar com
+  e-mail", com `aria-expanded` e `aria-controls`.
+- O CTA final do formulário agora diz "Criar conta com e-mail".
+- React Hook Form, Zod, `useFormList`, controllers existentes, Google OAuth real,
+  `terms_version`, `redirectTo`/`callbackUrl` e `next/image` foram preservados.
+- Nenhum pacote, endpoint, mock, store, schema ou fluxo paralelo foi criado.
+
+### Validação do ajuste
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local via Chrome/CDP em viewport mobile `390x844` confirmou as telas
+  `/auth/register/patient` e `/auth/register/psychologist` nos estados recolhido e
+  expandido do formulário por e-mail, sem overflow horizontal.
+- ADR atualizado: `adrs/0008-fluxo-publico-auth-selecao-perfil-login.md`.
