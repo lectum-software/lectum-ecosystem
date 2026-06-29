@@ -539,6 +539,7 @@ Trocar de provedor = novo adapter. **Limite real:** card tokens são específico
 | `interval` | `String @default("month")` | |
 | `features` | `Json?` | flags (selo, analytics, ranking; `profile_video` permanece verdadeiro em todos os planos atuais) |
 | `active` | `Boolean @default(true)` | |
+| `gateway_plan_id` | `String?` | identificador do plano recorrente no gateway (`preapproval_plan_id` no Mercado Pago), criado uma vez no backend ou importado por env e reutilizado no checkout |
 
 `professional_subscription` (TASK-31/32/33):
 

@@ -189,3 +189,35 @@ restante da plataforma.
   scroll vertical e logo com `156px`.
 - Browser local via Chrome/CDP em auth mobile `390x844` confirmou ausencia de overflow
   horizontal em login, selecao de perfil, recuperacao e redefinicao de senha.
+
+## Atualizacao em 2026-06-28: logo completa nas telas publicas de auth
+
+### Contexto
+
+O produto recebeu um novo asset oficial de marca para substituir a logo anterior nas
+telas de cadastro e login. O arquivo original foi fornecido fora do workspace como
+`Logo completa.png`, com simbolo e wordmark em proporcao horizontal mais larga.
+
+### Decisao
+
+- Substituir os assets `frontend/public/logo-light.png` e
+  `frontend/public/logo-dark.png` pela logo completa fornecida, redimensionada para
+  `1280x260` para manter nitidez sem carregar o arquivo bruto de 3840px.
+- Manter o componente compartilhado `Logo` baseado em `next/image`, sem introduzir
+  `<img>` ou componente paralelo.
+- Ajustar as larguras de exibicao nas telas publicas de auth para preservar altura
+  visual semelhante a escala anterior, ja que a nova logo tem proporcao mais larga.
+- Usar o mesmo asset para claro e escuro enquanto nao houver variante cromatica separada
+  aprovada para tema escuro.
+
+### Consequencias
+
+- Login, selecao de perfil, cadastro de paciente, cadastro de psicologo, recuperacao e
+  retorno Google exibem a nova marca completa com layout mobile-first preservado.
+- Nao houve alteracao de fluxo, formulario, endpoint, sessao, pacote ou regra de dominio.
+
+### Validacao
+
+- `NODE_OPTIONS=--max-old-space-size=4096 pnpm --dir frontend check`
+- `NODE_OPTIONS=--max-old-space-size=4096 pnpm --dir frontend build`
+- Browser local em viewport mobile `390x844` nas rotas de login e cadastro.

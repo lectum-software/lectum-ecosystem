@@ -10,6 +10,7 @@ export interface ICheckoutRepository {
   findActiveProfessionalSubscription(
     psychologistId: string,
   ): Promise<professional_subscription | null>;
+  setGatewayPlanId(planId: string, gatewayPlanId: string): Promise<subscription_plan>;
   createPendingSubscription(
     psychologistId: string,
     planId: string,

@@ -21,6 +21,7 @@ export type SubscriptionPlan = {
   interval: string;
   features?: SubscriptionPlanFeatures | null;
   active: boolean;
+  gateway_plan_id?: string | null;
   createdAt?: string;
   updatedAt?: string;
 };

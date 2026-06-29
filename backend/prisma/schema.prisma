@@ -393,20 +393,22 @@ model psychologist_follow {
 }
 
 model subscription_plan {
-  id            String                      @id @default(cuid())
-  deleted       Boolean                     @default(false)
-  deletedAt     DateTime?                   @map("deleted_at")
-  updatedAt     DateTime                    @default(now()) @updatedAt @map("updated_at")
-  createdAt     DateTime                    @default(now()) @map("created_at")
-  slug          String                      @unique
-  name          String
-  price_cents   Int                         @default(0)
-  interval      String                      @default("month")
-  features      Json?
-  active        Boolean                     @default(true)
-  subscriptions professional_subscription[] @relation("professional_subscription_plan")
+  id              String                      @id @default(cuid())
+  deleted         Boolean                     @default(false)
+  deletedAt       DateTime?                   @map("deleted_at")
+  updatedAt       DateTime                    @default(now()) @updatedAt @map("updated_at")
+  createdAt       DateTime                    @default(now()) @map("created_at")
+  slug            String                      @unique
+  name            String
+  price_cents     Int                         @default(0)
+  interval        String                      @default("month")
+  features        Json?
+  active          Boolean                     @default(true)
+  gateway_plan_id String?
+  subscriptions   professional_subscription[] @relation("professional_subscription_plan")
 
   @@index([active, deleted])
+  @@index([gateway_plan_id])
   @@map("subscription_plans")
 }
 

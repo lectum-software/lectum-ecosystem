@@ -232,6 +232,7 @@ export interface subscription_plan {
   interval?: string | null;
   features?: unknown;
   active?: boolean | null;
+  gateway_plan_id?: string | null;
   subscriptions?: professional_subscription[] | null;
 }
 

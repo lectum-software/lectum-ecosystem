@@ -1,15 +1,20 @@
 ﻿import { error, msg } from "@/helpers/translate";
 import { getPaymentGateway } from "@/modules/billing/payment-gateway";
+import type { PaymentGateway } from "@/modules/billing/payment-gateway/PaymentGateway";
 import type { ICheckoutDTO } from "../DTOs/ICheckoutDTO";
 import { CheckoutRepository } from "../repositories/CheckoutRepository";
 
 type GatewayErrorLog = {
   name?: string;
   message?: string;
+  operation?: string;
+  cause_message?: string;
   status?: number;
   code?: string;
   blocked_by?: string;
 };
+
+type ProfessionalPlan = NonNullable<Awaited<ReturnType<CheckoutRepository["findPlanBySlug"]>>>;
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
@@ -20,9 +25,17 @@ const toSafeNumber = (value: unknown) => (typeof value === "number" ? value : un
 
 const sanitizeGatewayError = (err: unknown): GatewayErrorLog => {
   if (err instanceof Error) {
+    const errorWithDetails = err as Error & { details?: unknown };
+    const details = isRecord(errorWithDetails.details) ? errorWithDetails.details : null;
+
     return {
       name: err.name,
       message: err.message,
+      operation: toSafeString(details?.operation),
+      cause_message: toSafeString(details?.cause_message),
+      status: toSafeNumber(details?.status),
+      code: toSafeString(details?.code),
+      blocked_by: toSafeString(details?.blocked_by),
     };
   }
 
@@ -50,6 +63,97 @@ const resolvePayerEmail = (fallbackEmail: string) => {
   const testPayerEmail = process.env.MERCADO_PAGO_TEST_PAYER_EMAIL?.trim();
 
   return testPayerEmail || fallbackEmail;
+};
+
+const getConfiguredGatewayPlanId = () =>
+  process.env.MERCADO_PAGO_PREAPPROVAL_PLAN_ID?.trim() || null;
+
+const getConfiguredBackUrl = () => process.env.MERCADO_PAGO_BACK_URL?.trim() || null;
+
+const getWebUrl = () => process.env.WEB_URL?.split(",")[0]?.trim() || null;
+
+const isGatewayBackUrlCandidate = (value?: string | null) => {
+  if (!value) return false;
+
+  try {
+    const url = new URL(value);
+    const hostname = url.hostname.toLowerCase();
+
+    return (
+      (url.protocol === "https:" || url.protocol === "http:") &&
+      hostname !== "localhost" &&
+      hostname !== "127.0.0.1" &&
+      hostname !== "0.0.0.0"
+    );
+  } catch {
+    return false;
+  }
+};
+
+const resolveGatewayBackUrl = (returnUrl?: string | null) => {
+  const configuredBackUrl = getConfiguredBackUrl();
+  if (isGatewayBackUrlCandidate(configuredBackUrl)) return configuredBackUrl;
+
+  if (isGatewayBackUrlCandidate(returnUrl)) return returnUrl!;
+
+  const webUrl = getWebUrl();
+  if (isGatewayBackUrlCandidate(webUrl)) {
+    return `${webUrl!.replace(/\/$/, "")}/app/professional/billing/address`;
+  }
+
+  return null;
+};
+
+const buildPlanIdempotencyKey = (plan: ProfessionalPlan) =>
+  `lectum-preapproval-plan-${plan.slug || plan.id}-${plan.price_cents}`;
+
+const ensureGatewayPlanId = async ({
+  gateway,
+  plan,
+  repository,
+  returnUrl,
+}: {
+  gateway: PaymentGateway;
+  plan: ProfessionalPlan;
+  repository: CheckoutRepository;
+  returnUrl?: string | null;
+}) => {
+  if (plan.gateway_plan_id) {
+    return plan.gateway_plan_id;
+  }
+
+  const configuredGatewayPlanId = getConfiguredGatewayPlanId();
+
+  if (configuredGatewayPlanId) {
+    await repository.setGatewayPlanId(plan.id!, configuredGatewayPlanId);
+    return configuredGatewayPlanId;
+  }
+
+  const backUrl = resolveGatewayBackUrl(returnUrl);
+
+  if (!backUrl) {
+    throw new Error("MERCADO_PAGO_BACK_URL_NOT_CONFIGURED");
+  }
+
+  const gatewayPlan = await gateway.createSubscriptionPlan({
+    amountCents: plan.price_cents!,
+    idempotencyKey: buildPlanIdempotencyKey(plan),
+    planName: plan.name || "Plano Profissional Lectum",
+    returnUrl: backUrl,
+  });
+
+  await repository.setGatewayPlanId(plan.id!, gatewayPlan.gateway_plan_id);
+
+  return gatewayPlan.gateway_plan_id;
+};
+
+const isGatewayConfigError = (err: unknown) => {
+  const message = err instanceof Error ? err.message : "";
+
+  return (
+    message.includes("MERCADO_PAGO_ACCESS_TOKEN_NOT_CONFIGURED") ||
+    message.includes("MERCADO_PAGO_BACK_URL_NOT_CONFIGURED")
+  );
 };
 
 export default async (data: ICheckoutDTO) => {
@@ -104,6 +208,30 @@ export default async (data: ICheckoutDTO) => {
   }
 
   const payerEmail = resolvePayerEmail(email);
+  let gateway: PaymentGateway;
+  let gatewayPlanId: string;
+
+  try {
+    gateway = getPaymentGateway();
+    gatewayPlanId = await ensureGatewayPlanId({
+      gateway,
+      plan: professionalPlan,
+      repository,
+      returnUrl: data.b.return_url,
+    });
+  } catch (err) {
+    console.error("[BILLING] Mercado Pago plan setup failed", sanitizeGatewayError(err));
+
+    return {
+      status: isGatewayConfigError(err) ? 503 : 502,
+      ...error(
+        isGatewayConfigError(err)
+          ? "billing_gateway_config_error"
+          : "billing_gateway_checkout_failed",
+        {},
+      ),
+    };
+  }
 
   const pendingSubscription = await repository.createPendingSubscription(
     profile.id!,
@@ -111,9 +239,9 @@ export default async (data: ICheckoutDTO) => {
   );
 
   try {
-    const gateway = getPaymentGateway();
     const gatewayResult = await gateway.createSubscription({
       subscriptionId: pendingSubscription.id!,
+      gatewayPlanId,
       planName: professionalPlan.name || "Plano Profissional Lectum",
       amountCents: professionalPlan.price_cents,
       cardToken: data.b.card_token,
@@ -141,8 +269,7 @@ export default async (data: ICheckoutDTO) => {
 
     console.error("[BILLING] Mercado Pago checkout failed", sanitizeGatewayError(err));
 
-    const message = err instanceof Error ? err.message : "";
-    const configError = message.includes("MERCADO_PAGO_ACCESS_TOKEN_NOT_CONFIGURED");
+    const configError = isGatewayConfigError(err);
 
     return {
       status: configError ? 503 : 502,

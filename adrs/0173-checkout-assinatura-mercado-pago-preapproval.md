@@ -90,3 +90,20 @@ Decisao complementar:
 - No sandbox, enviar `X-scope: stage` junto com `Authorization: Bearer <access token>` dentro dos `requestOptions` do adapter.
 - Manter esse ajuste restrito ao `MercadoPagoAdapter`, sem expor access token em logs, frontend ou outros modulos.
 - Em producao, continuar usando o fluxo padrao do SDK sem sobrescrever headers.
+
+## Atualizacao 2026-06-28 - assinatura associada a plano Mercado Pago
+
+Ao comparar a implementação com a documentação oficial de `POST /preapproval_plan` e `POST /preapproval`, foi identificado que o checkout estava criando assinatura recorrente sem `preapproval_plan_id`. Embora o Mercado Pago permita assinatura sem plano, o fluxo operacional escolhido para a Lectum é assinatura associada a plano: criar o plano uma vez, guardar o id retornado e usá-lo ao criar cada assinatura.
+
+Decisao complementar:
+
+- Adicionar `subscription_plan.gateway_plan_id` para persistir o `preapproval_plan_id` do Mercado Pago no plano interno `profissional`.
+- Antes de criar a assinatura, garantir o plano no gateway:
+  - se `subscription_plan.gateway_plan_id` já existir, reutilizar;
+  - se `MERCADO_PAGO_PREAPPROVAL_PLAN_ID` estiver configurado, importar e persistir esse id;
+  - caso contrário, criar o plano real via `PreApprovalPlan.create` com recorrência mensal, BRL e apenas `credit_card`, persistindo o id retornado.
+- Usar `MERCADO_PAGO_BACK_URL` como URL pública de retorno preferencial para criar `/preapproval_plan`. `localhost` não é aceito pelo Mercado Pago; em desenvolvimento, usar túnel/domínio público ou informar um `MERCADO_PAGO_PREAPPROVAL_PLAN_ID` já criado.
+- Não enviar `X-scope: stage` na criação do `/preapproval_plan`; o escopo `stage` permanece restrito às operações de assinatura (`/preapproval`) que precisam dele em sandbox.
+- Criar a assinatura via `PreApproval.create` enviando `preapproval_plan_id`, `card_token_id`, `payer_email`, `external_reference` e `status="authorized"`, sem duplicar `auto_recurring` quando o plano já define a recorrência.
+- Manter a ativação do entitlement dependente do webhook assinado; a resposta do checkout continua registrando assinatura `inativa` pendente de confirmação real.
+- Enriquecer logs sanitizados do adapter com operação/status/código quando disponíveis, sem registrar access token, webhook secret, PAN, CVV, public key ou `card_token`.

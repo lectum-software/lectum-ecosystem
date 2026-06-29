@@ -199,3 +199,11 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - ADR de implementação criado em `adrs/0173-checkout-assinatura-mercado-pago-preapproval.md`.
 - Validações executadas sem erros: `pnpm --dir backend db:migrate -- --name task32_billing_checkout`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`.
 - Smoke local HTTP nas rotas principais da UI retornou `307` sem sessão autenticada, compatível com proteção/redirecionamento das rotas privadas.
+
+## Ajuste Mercado Pago com plano em 2026-06-28
+
+- O checkout profissional passou a garantir um plano recorrente real no Mercado Pago antes de criar a assinatura.
+- O `subscription_plan.gateway_plan_id` guarda o `preapproval_plan_id` do Mercado Pago; se `MERCADO_PAGO_PREAPPROVAL_PLAN_ID` estiver configurado, ele é importado para o plano interno; se não estiver, o backend cria `/preapproval_plan` uma vez e persiste o id retornado.
+- A criação de `/preapproval_plan` exige `MERCADO_PAGO_BACK_URL` público e válido; `localhost` é rejeitado pelo Mercado Pago, então testes locais precisam de domínio/túnel HTTPS ou de um `MERCADO_PAGO_PREAPPROVAL_PLAN_ID` já criado no painel/API.
+- A criação da assinatura via `/preapproval` passa a enviar `preapproval_plan_id`, `card_token_id`, `payer_email`, `external_reference` e `status="authorized"`, herdando a recorrência do plano do gateway.
+- Logs seguros do adapter foram enriquecidos com operação/status/código quando disponíveis, sem expor access token, public key, webhook secret, PAN, CVV ou token de cartão.

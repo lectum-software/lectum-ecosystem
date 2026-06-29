@@ -59,6 +59,17 @@ export class CheckoutRepository implements ICheckoutRepository {
     });
   }
 
+  async setGatewayPlanId(planId: string, gatewayPlanId: string): Promise<subscription_plan> {
+    return this.planRepository.update({
+      where: {
+        id: planId,
+      },
+      data: {
+        gateway_plan_id: gatewayPlanId,
+      },
+    });
+  }
+
   async createPendingSubscription(
     psychologistId: string,
     planId: string,

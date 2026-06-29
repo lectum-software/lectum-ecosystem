@@ -2,11 +2,26 @@
 
 export type GatewaySubscriptionInput = {
   subscriptionId: string;
+  gatewayPlanId?: string | null;
   planName: string;
   amountCents: number;
   cardToken: string;
   payerEmail: string;
   returnUrl?: string | null;
+};
+
+export type GatewaySubscriptionPlanInput = {
+  planName: string;
+  amountCents: number;
+  returnUrl?: string | null;
+  idempotencyKey?: string | null;
+};
+
+export type GatewaySubscriptionPlanResult = {
+  gateway_plan_id: string;
+  gateway_status?: string | null;
+  init_point?: string | null;
+  raw: unknown;
 };
 
 export type GatewaySubscriptionResult = {
@@ -47,6 +62,9 @@ export type VerifyWebhookSignatureInput = {
 };
 
 export interface PaymentGateway {
+  createSubscriptionPlan(
+    input: GatewaySubscriptionPlanInput,
+  ): Promise<GatewaySubscriptionPlanResult>;
   createSubscription(input: GatewaySubscriptionInput): Promise<GatewaySubscriptionResult>;
   updateSubscriptionCard(
     input: GatewayUpdateSubscriptionCardInput,

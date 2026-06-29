@@ -15,6 +15,8 @@ export type {
   BillingSubscriptionStatus,
   GatewaySubscription,
   GatewaySubscriptionInput,
+  GatewaySubscriptionPlanInput,
+  GatewaySubscriptionPlanResult,
   GatewaySubscriptionResult,
   GatewayUpdateSubscriptionCardInput,
   GatewayWebhookEvent,
