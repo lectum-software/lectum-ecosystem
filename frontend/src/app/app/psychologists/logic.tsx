@@ -27,6 +27,7 @@ import {
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
+  type ChangeEvent,
   type CSSProperties,
   type FormEvent,
   type PointerEvent,
@@ -2987,6 +2988,58 @@ export const PsychologistsLogic = () => {
     [applyVideoProgressRatio, videoProgress.duration],
   );
 
+  const seekActiveVideoFromRangeValue = useCallback(
+    (value: string) => {
+      const nextTime = Number(value);
+      if (!Number.isFinite(nextTime)) return;
+
+      seekActiveVideoToTime(nextTime);
+      syncActiveVideoProgress(undefined, {
+        forceState: true,
+      });
+    },
+    [seekActiveVideoToTime, syncActiveVideoProgress],
+  );
+
+  const handleImmersiveProgressInput = useCallback(
+    (event: FormEvent<HTMLInputElement>) => {
+      event.stopPropagation();
+      seekActiveVideoFromRangeValue(event.currentTarget.value);
+    },
+    [seekActiveVideoFromRangeValue],
+  );
+
+  const handleImmersiveProgressChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      event.stopPropagation();
+      seekActiveVideoFromRangeValue(event.currentTarget.value);
+    },
+    [seekActiveVideoFromRangeValue],
+  );
+
+  const handleImmersiveProgressSeekStart = useCallback(
+    (event: { stopPropagation: () => void }) => {
+      event.stopPropagation();
+      cancelPendingVideoGestureTimers();
+      isVideoProgressSeekingRef.current = true;
+      setIsVideoProgressSeeking(true);
+    },
+    [cancelPendingVideoGestureTimers],
+  );
+
+  const handleImmersiveProgressSeekEnd = useCallback(
+    (event: { stopPropagation: () => void }) => {
+      event.stopPropagation();
+      isVideoProgressSeekingRef.current = false;
+      videoSeekPreviewRatioRef.current = null;
+      setIsVideoProgressSeeking(false);
+      syncActiveVideoProgress(undefined, {
+        forceState: true,
+      });
+    },
+    [syncActiveVideoProgress],
+  );
+
   const getVideoProgressRatioFromClientX = useCallback(
     (clientX: number, track: HTMLDivElement | null) => {
       if (!track) return null;
@@ -3489,6 +3542,64 @@ export const PsychologistsLogic = () => {
             opacity: 1 !important;
             transform: translateY(0) !important;
             visibility: visible !important;
+          }
+
+          .psychologists-immersive-progress {
+            --psychologists-video-progress: 0%;
+            appearance: none;
+            -webkit-appearance: none;
+            background: transparent;
+            border-radius: 9999px;
+            height: 28px;
+            outline: none;
+          }
+
+          .psychologists-immersive-progress::-webkit-slider-runnable-track {
+            -webkit-appearance: none;
+            background: linear-gradient(
+              to right,
+              rgba(255, 255, 255, 0.98) 0%,
+              rgba(255, 255, 255, 0.98) var(--psychologists-video-progress),
+              rgba(255, 255, 255, 0.32) var(--psychologists-video-progress),
+              rgba(255, 255, 255, 0.32) 100%
+            );
+            border: 0;
+            border-radius: 9999px;
+            height: 5px;
+          }
+
+          .psychologists-immersive-progress::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            background: #ffffff;
+            border: 0;
+            border-radius: 9999px;
+            box-shadow: 0 2px 9px rgba(0, 0, 0, 0.45);
+            height: 16px;
+            margin-top: -5.5px;
+            width: 16px;
+          }
+
+          .psychologists-immersive-progress::-moz-range-track {
+            background: rgba(255, 255, 255, 0.32);
+            border: 0;
+            border-radius: 9999px;
+            height: 5px;
+          }
+
+          .psychologists-immersive-progress::-moz-range-progress {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 9999px;
+            height: 5px;
+          }
+
+          .psychologists-immersive-progress::-moz-range-thumb {
+            background: #ffffff;
+            border: 0;
+            border-radius: 9999px;
+            box-shadow: 0 2px 9px rgba(0, 0, 0, 0.45);
+            height: 16px;
+            width: 16px;
           }
 
           .psychologists-filter-dialog-scroll {
@@ -4231,95 +4342,58 @@ export const PsychologistsLogic = () => {
 
                           {slideUsesNativeVideoControls ? (
                             <div
-                              className="pointer-events-none absolute inset-x-0 bottom-0 z-[72] bg-gradient-to-t from-black/90 via-black/55 to-transparent px-4 pt-16 text-white"
+                              className="pointer-events-none absolute inset-x-0 bottom-0 z-[72] px-4 text-white"
                               data-psychologists-scroll-lock="true"
                               style={{
                                 paddingBottom: "calc(env(safe-area-inset-bottom) + 14px)",
                               }}
                             >
-                              <div className="pointer-events-auto rounded-[26px] border border-white/10 bg-black/45 px-3 py-2.5 shadow-[0_18px_46px_rgba(0,0,0,0.34)] backdrop-blur-md">
-                                <div
+                              <div className="pointer-events-auto [filter:drop-shadow(0_2px_8px_rgba(0,0,0,0.78))]">
+                                <input
                                   aria-label={`Progresso do vídeo de ${psychologist.name}`}
-                                  aria-valuemax={
-                                    isActiveSlide ? Math.round(videoProgress.duration) : 0
-                                  }
-                                  aria-valuemin={0}
-                                  aria-valuenow={
-                                    isActiveSlide ? Math.round(videoProgress.currentTime) : 0
-                                  }
                                   aria-valuetext={`${slideCurrentTimeLabel} de ${slideDurationLabel}`}
-                                  className="group relative flex h-8 cursor-pointer items-center outline-none"
+                                  className="psychologists-immersive-progress block w-full cursor-pointer"
+                                  disabled={!isActiveSlide || videoProgress.duration <= 0}
+                                  max={Math.max(videoProgress.duration, 0.01)}
+                                  min={0}
+                                  onBlur={handleImmersiveProgressSeekEnd}
+                                  onChange={handleImmersiveProgressChange}
                                   onClick={stopInteractionPropagation}
-                                  onKeyDown={handleVideoProgressKeyDown}
-                                  onPointerCancel={handleVideoProgressPointerEnd}
-                                  onPointerDown={handleVideoProgressPointerDown}
-                                  onPointerMove={handleVideoProgressPointerMove}
-                                  onPointerUp={handleVideoProgressPointerEnd}
-                                  onTouchCancel={handleVideoProgressTouchEnd}
-                                  onTouchEnd={handleVideoProgressTouchEnd}
-                                  onTouchMove={handleVideoProgressTouchMove}
-                                  onTouchStart={handleVideoProgressTouchStart}
-                                  ref={(node) => {
-                                    if (isActiveSlide) {
-                                      progressTrackRef.current = node;
-                                    } else if (progressTrackRef.current === node) {
-                                      progressTrackRef.current = null;
-                                    }
-                                  }}
-                                  role="slider"
-                                  style={{
-                                    touchAction: "none",
-                                  }}
-                                  tabIndex={0}
-                                >
-                                  <div className="relative h-[5px] w-full rounded-full bg-white/25">
-                                    <div
-                                      className={cn(
-                                        "h-full origin-left rounded-full bg-white",
-                                        isActiveSlide && isVideoProgressSeeking
-                                          ? null
-                                          : "transition-transform duration-75 ease-linear",
-                                      )}
-                                      ref={(node) => {
-                                        if (isActiveSlide) {
-                                          progressFillRef.current = node;
+                                  onInput={handleImmersiveProgressInput}
+                                  onKeyDown={stopInteractionPropagation}
+                                  onPointerCancel={handleImmersiveProgressSeekEnd}
+                                  onPointerDown={handleImmersiveProgressSeekStart}
+                                  onPointerUp={handleImmersiveProgressSeekEnd}
+                                  onTouchCancel={handleImmersiveProgressSeekEnd}
+                                  onTouchEnd={handleImmersiveProgressSeekEnd}
+                                  onTouchStart={handleImmersiveProgressSeekStart}
+                                  step="0.01"
+                                  style={
+                                    {
+                                      "--psychologists-video-progress": `${slideProgressRatio * 100}%`,
+                                      touchAction: "none",
+                                    } as CSSProperties
+                                  }
+                                  type="range"
+                                  value={
+                                    isActiveSlide
+                                      ? clampNumber(
+                                          videoProgress.currentTime,
+                                          0,
+                                          Math.max(videoProgress.duration, 0.01),
+                                        )
+                                      : 0
+                                  }
+                                />
 
-                                          if (node) {
-                                            node.style.transform = `scaleX(${slideProgressRatio})`;
-                                          }
-                                        } else if (progressFillRef.current === node) {
-                                          progressFillRef.current = null;
-                                        }
-                                      }}
-                                      style={{
-                                        transform: `scaleX(${slideProgressRatio})`,
-                                        willChange: "transform",
-                                        width: "100%",
-                                      }}
-                                    />
-                                    <span
-                                      aria-hidden="true"
-                                      className={cn(
-                                        "absolute top-1/2 grid -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white shadow-[0_6px_18px_rgba(0,0,0,0.35)] transition-[height,width] duration-150 ease-out",
-                                        isActiveSlide && isVideoProgressSeeking
-                                          ? "h-4 w-4"
-                                          : "h-3 w-3",
-                                      )}
-                                      style={{
-                                        left: `${slideProgressRatio * 100}%`,
-                                      }}
-                                    />
-                                  </div>
-                                </div>
-
-                                <div className="mt-1.5 flex items-center gap-2">
+                                <div className="mt-2 flex items-center gap-2 text-white">
                                   <button
                                     aria-label={
                                       isVideoPaused
                                         ? `Reproduzir vídeo de ${psychologist.name}`
                                         : `Pausar vídeo de ${psychologist.name}`
                                     }
-                                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/14 text-white transition hover:bg-white/20 active:scale-95"
+                                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10 active:scale-95"
                                     onClick={handleVideoControlTap}
                                     onPointerDown={stopInteractionPropagation}
                                     type="button"
@@ -4331,7 +4405,7 @@ export const PsychologistsLogic = () => {
                                     )}
                                   </button>
 
-                                  <span className="min-w-0 flex-1 text-[12px] font-semibold tabular-nums text-white/88">
+                                  <span className="min-w-0 flex-1 text-[12px] font-semibold tabular-nums text-white">
                                     {slideCurrentTimeLabel} / {slideDurationLabel}
                                   </span>
 
@@ -4341,7 +4415,7 @@ export const PsychologistsLogic = () => {
                                         ? `Ativar som do vídeo de ${psychologist.name}`
                                         : `Mutar vídeo de ${psychologist.name}`
                                     }
-                                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/14 text-white transition hover:bg-white/20 active:scale-95"
+                                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10 active:scale-95"
                                     onClick={handleImmersiveVolumeToggle}
                                     onPointerDown={stopInteractionPropagation}
                                     type="button"
@@ -4355,7 +4429,7 @@ export const PsychologistsLogic = () => {
 
                                   <button
                                     aria-label={`Abrir vídeo de ${psychologist.name} em tela cheia`}
-                                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/14 text-white transition hover:bg-white/20 active:scale-95"
+                                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10 active:scale-95"
                                     onClick={handleImmersiveFullscreen}
                                     onPointerDown={stopInteractionPropagation}
                                     type="button"

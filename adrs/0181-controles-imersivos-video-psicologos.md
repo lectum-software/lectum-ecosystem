@@ -19,7 +19,7 @@ A pagina publica de descoberta de psicologos usa um player customizado, diferent
 - O scrubber customizado nao e renderizado no modo imersivo e a camada transparente de toque nao bloqueia os controles nativos.
 - Ao entrar no modo imersivo, o elemento `video` ativa `controls` imediatamente para exibir play/pause, volume e barra de progresso nativos.
 - O video em modo imersivo recebe `data-psychologists-native-controls="true"` e uma regra CSS de melhor esforco para manter os controles nativos sempre visiveis nos navegadores Chromium/WebKit.
-- Como navegadores podem ocultar os controles nativos durante a reproducao, o modo imersivo tambem renderiza uma faixa persistente Lectum com play/pause, progresso arrastavel, tempo, mute/unmute e tela cheia.
+- Como navegadores podem ocultar os controles nativos durante a reproducao, o modo imersivo tambem renderiza controles persistentes sem painel de fundo, com play/pause, progresso arrastavel via `input[type="range"]`, tempo, mute/unmute e tela cheia.
 - No modo imersivo, tocar na area do video acima da regiao dos controles nativos retorna a UI padrao; a faixa inferior fica livre para interacao com o controle nativo.
 - Quando o video estiver mutado, pausado ou sem volume, tocar em qualquer area nao interativa do video reproduz com som e esconde a UI, mantendo o icone central como affordance visual.
 - Com UI visivel, o duplo toque/clique na area do video favorita o psicologo sem depender do botao lateral de favorito.
@@ -31,7 +31,7 @@ A pagina publica de descoberta de psicologos usa um player customizado, diferent
 - Mantem o player customizado necessario para o feed de psicologos, mas reutiliza o comportamento nativo confiavel do player de comunidade para progresso no modo imersivo.
 - O modo imersivo mantem `video.controls` ativo, mas a interacao principal passa pela faixa persistente Lectum para evitar auto-hide dos controles do navegador.
 - A visibilidade permanente dos controles nativos depende do navegador; em Chromium/WebKit a regra de pseudo-elementos forca painel, enclosure e controles visiveis, enquanto outros motores podem ignorar a customizacao por se tratar de UI nativa.
-- A faixa persistente evita depender do auto-hide do navegador e garante controles visiveis o tempo todo, mantendo `video.controls` ativo como fallback nativo.
+- A faixa persistente evita depender do auto-hide do navegador e garante controles visiveis o tempo todo, mantendo `video.controls` ativo como fallback nativo; o seek passa a usar o controle range nativo do navegador em vez do scrubber por `div`/pointer.
 - O toque simples na area do video com UI visivel passa a aguardar uma janela curta para diferenciar duplo toque de acao simples.
 
 ## Validacao
