@@ -271,3 +271,32 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `/auth/login`, `/auth/profile-selection`, `/auth/recovery` e `/auth/reset-password?code=invalid-task-auth-ui` em viewport mobile `390x844`: sem overflow horizontal;
   - `/auth/register/patient` desktop: sem overflow horizontal, mantendo conteúdo rolável quando necessário por quantidade de campos.
 - ADR atualizado: `adrs/0008-fluxo-publico-auth-selecao-perfil-login.md`.
+
+## Ajuste posterior em 2026-06-29: logo no topo da seleção de perfil
+
+- Pedido direto de produto: em `/auth/profile-selection`, a logo completa deveria sair
+  do bloco central por estar grande e muito próxima do título.
+- A tela de seleção de perfil passou a assinar a marca no topo da viewport, centralizada,
+  com logo menor (`126px` mobile, `144px` em telas maiores), mantendo cards e links reais.
+- O bloco decisório agora começa abaixo da marca com título e microcopy "Escolha como
+  deseja continuar", separando hierarquia de marca e decisão.
+- `AuthTemplate` ganhou apenas o prop opcional `contentClassName` para permitir essa
+  variação sem criar template paralelo; telas de login/cadastro seguem com o padrão
+  centralizado existente.
+- Builder/Quick Copy não apareceu como ferramenta disponível nesta sessão; a referência
+  visual usada foi `_product/proto/Seleção de Perfil.jpg` e as capturas atuais do usuário.
+- Nenhum pacote, endpoint, formulário, store, mock ou fluxo paralelo de autenticação foi
+  criado.
+
+### Validação do ajuste
+
+- `pnpm --dir frontend exec biome check src/app/auth/profile-selection/logic.tsx src/templates/auth/index.tsx`
+- `pnpm --dir frontend lint` (2 warnings preexistentes em `hooks/notification`)
+- `pnpm --dir frontend typecheck`
+- `pnpm --dir frontend build`
+- Browser local via Chrome/CDP em viewport mobile `390x844`: `innerWidth=390`,
+  `docScrollWidth=390`, logo `126x26` em `y=41`, cards `360px` sem overflow horizontal.
+- `pnpm --dir frontend check` foi executado, mas permaneceu bloqueado por diagnósticos
+  Biome preexistentes em arquivos fora do escopo deste ajuste (`community/*`,
+  `psychologists/*`, `llms.txt`, `navigation-history`) antes de lint/typecheck.
+- ADR atualizado: `adrs/0008-fluxo-publico-auth-selecao-perfil-login.md`.

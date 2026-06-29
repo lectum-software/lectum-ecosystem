@@ -272,3 +272,47 @@ oficial para o favicon.
   overflow horizontal.
 - Browser local/headless em `/app/psychologists` confirmou sidebar recolhida com icone
   quadrado da marca, sem wordmark cortado.
+
+## Atualizacao em 2026-06-29: logo no topo da selecao de perfil
+
+### Contexto
+
+Na tela `/auth/profile-selection`, a logo completa ainda ficava dentro do mesmo bloco
+central do titulo e dos cards. Com a nova marca horizontal, isso deixava a assinatura
+visual grande e proxima demais do texto, competindo com a pergunta "Qual o seu perfil?".
+
+### Decisao
+
+- Manter a selecao de perfil como tela sem card de auth, mas mover a logo para o topo da
+  viewport, centralizada e menor (`126px` no mobile, `144px` em telas maiores).
+- Criar uma extensao pequena no `AuthTemplate` (`contentClassName`) para permitir que a
+  selecao de perfil use alinhamento de conteudo proprio, sem criar template paralelo e
+  sem alterar o comportamento padrao de login/cadastro/recuperacao.
+- Separar a marca do bloco decisorio e adicionar a microcopy "Escolha como deseja
+  continuar" abaixo do titulo para reforcar o contexto da escolha.
+- Preservar `Logo` baseado em `next/image`, os links reais de cadastro/login e a
+  propagacao de `redirectTo`/`callbackUrl`.
+
+### Consequencias
+
+- A marca passa a assinar a tela no topo em vez de competir com o titulo.
+- A mudanca fica restrita a `/auth/profile-selection`; demais telas de auth continuam
+  usando o alinhamento central padrao do `AuthTemplate`.
+- O novo prop do template e intencionalmente generico para pequenas variacoes de layout,
+  evitando a criacao de um segundo shell publico.
+
+### Validacao
+
+- Referencia visual consultada: `_product/proto/Seleção de Perfil.jpg` e capturas
+  atuais enviadas pelo usuario. Builder/Quick Copy nao apareceu como ferramenta
+  disponivel nesta sessao, entao a validacao visual usou a imagem local.
+- `pnpm --dir frontend exec biome check src/app/auth/profile-selection/logic.tsx src/templates/auth/index.tsx`
+- `pnpm --dir frontend lint` (2 warnings preexistentes em `hooks/notification`)
+- `pnpm --dir frontend typecheck`
+- `pnpm --dir frontend build`
+- Browser local via Chrome/CDP em viewport mobile `390x844` confirmou `innerWidth=390`,
+  `docScrollWidth=390`, logo em `126x26` posicionada no topo (`y=41`) e cards com
+  `360px` de largura sem overflow horizontal.
+- `pnpm --dir frontend check` permaneceu bloqueado por diagnosticos Biome preexistentes
+  em arquivos fora do escopo deste ajuste (`community/*`, `psychologists/*`,
+  `llms.txt`, `navigation-history`), antes de lint/typecheck.
