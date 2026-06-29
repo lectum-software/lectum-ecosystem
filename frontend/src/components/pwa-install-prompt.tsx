@@ -1,0 +1,325 @@
+"use client";
+
+import { Download, Share, Smartphone, X } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { LectumSymbolIcon } from "@/components/ui/lectum-symbol-icon";
+import { useAppSelector } from "@/hooks/redux";
+import { cn } from "@/lib/utils";
+import { Button } from "@/registry/new-york-v4/ui/button";
+
+type BeforeInstallPromptChoice = {
+  outcome: "accepted" | "dismissed";
+  platform: string;
+};
+
+type BeforeInstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<BeforeInstallPromptChoice>;
+};
+
+type PromptKind = "native" | "ios";
+
+const DISMISSED_UNTIL_KEY = "lectum.pwaInstall.dismissedUntil";
+const NEVER_SHOW_KEY = "lectum.pwaInstall.neverShowAgain";
+const INSTALLED_KEY = "lectum.pwaInstall.installed";
+const ACTIVE_PROMPT_KEY = "lectum.activePrompt";
+const ACTIVE_PROMPT_VALUE = "pwa-install";
+const DISMISS_COOLDOWN_MS = 1000 * 60 * 60 * 24 * 7;
+const SHOW_DELAY_MS = 1400;
+
+const safeLocalStorage = () => {
+  if (typeof window === "undefined") return null;
+
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+};
+
+const safeSessionStorage = () => {
+  if (typeof window === "undefined") return null;
+
+  try {
+    return window.sessionStorage;
+  } catch {
+    return null;
+  }
+};
+
+const isStandaloneMode = () => {
+  if (typeof window === "undefined") return true;
+
+  const navigatorWithStandalone = window.navigator as Navigator & { standalone?: boolean };
+
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.matchMedia("(display-mode: fullscreen)").matches ||
+    navigatorWithStandalone.standalone === true
+  );
+};
+
+const isMobileExperience = () => {
+  if (typeof window === "undefined") return false;
+
+  return window.matchMedia("(max-width: 767px), (pointer: coarse)").matches;
+};
+
+const isIosDevice = () => {
+  if (typeof window === "undefined") return false;
+
+  const userAgent = window.navigator.userAgent.toLowerCase();
+  const platform = window.navigator.platform?.toLowerCase() ?? "";
+  const isTouchMac = platform === "macintel" && window.navigator.maxTouchPoints > 1;
+
+  return /iphone|ipad|ipod/.test(userAgent) || isTouchMac;
+};
+
+const isDismissedByPreference = () => {
+  const storage = safeLocalStorage();
+  if (!storage) return true;
+
+  if (storage.getItem(NEVER_SHOW_KEY) === "true") return true;
+  if (storage.getItem(INSTALLED_KEY) === "true") return true;
+
+  const dismissedUntil = Number(storage.getItem(DISMISSED_UNTIL_KEY) ?? 0);
+
+  return Number.isFinite(dismissedUntil) && dismissedUntil > Date.now();
+};
+
+const reserveActivePrompt = () => {
+  const storage = safeSessionStorage();
+  if (!storage) return true;
+
+  const activePrompt = storage.getItem(ACTIVE_PROMPT_KEY);
+  if (activePrompt && activePrompt !== ACTIVE_PROMPT_VALUE) return false;
+
+  storage.setItem(ACTIVE_PROMPT_KEY, ACTIVE_PROMPT_VALUE);
+
+  return true;
+};
+
+const releaseActivePrompt = () => {
+  const storage = safeSessionStorage();
+  if (!storage) return;
+
+  if (storage.getItem(ACTIVE_PROMPT_KEY) === ACTIVE_PROMPT_VALUE) {
+    storage.removeItem(ACTIVE_PROMPT_KEY);
+  }
+};
+
+const markDismissedForCooldown = () => {
+  const storage = safeLocalStorage();
+  if (!storage) return;
+
+  storage.setItem(DISMISSED_UNTIL_KEY, String(Date.now() + DISMISS_COOLDOWN_MS));
+};
+
+const markNeverShowAgain = () => {
+  const storage = safeLocalStorage();
+  if (!storage) return;
+
+  storage.setItem(NEVER_SHOW_KEY, "true");
+};
+
+const markInstalled = () => {
+  const storage = safeLocalStorage();
+  if (!storage) return;
+
+  storage.setItem(INSTALLED_KEY, "true");
+  storage.removeItem(DISMISSED_UNTIL_KEY);
+};
+
+export function PwaInstallPrompt() {
+  const pathname = usePathname();
+  const user = useAppSelector((state) => state.user);
+  const [isVisible, setIsVisible] = useState(false);
+  const [promptKind, setPromptKind] = useState<PromptKind>("native");
+  const [showIosSteps, setShowIosSteps] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setDeferredPrompt(event as BeforeInstallPromptEvent);
+    };
+
+    const handleAppInstalled = () => {
+      markInstalled();
+      setIsVisible(false);
+      releaseActivePrompt();
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("appinstalled", handleAppInstalled);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener("appinstalled", handleAppInstalled);
+      releaseActivePrompt();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isVisible) return;
+
+    const isPrivateAppRoute = pathname.startsWith("/app");
+    const isConfirmedUser = Boolean(user?.id && user.confirmed);
+    const iosDevice = isIosDevice();
+    const canInstallNatively = Boolean(deferredPrompt);
+    const canOfferInstall = iosDevice || canInstallNatively;
+
+    if (
+      !isPrivateAppRoute ||
+      !isConfirmedUser ||
+      !isMobileExperience() ||
+      !canOfferInstall ||
+      isStandaloneMode() ||
+      isDismissedByPreference()
+    ) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      if (!reserveActivePrompt()) return;
+
+      setPromptKind(iosDevice ? "ios" : "native");
+      setIsVisible(true);
+    }, SHOW_DELAY_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [deferredPrompt, isVisible, pathname, user?.confirmed, user?.id]);
+
+  const closePrompt = useCallback((persist: "cooldown" | "never" | "installed") => {
+    if (persist === "cooldown") {
+      markDismissedForCooldown();
+    }
+
+    if (persist === "never") {
+      markNeverShowAgain();
+    }
+
+    if (persist === "installed") {
+      markInstalled();
+    }
+
+    setIsVisible(false);
+    releaseActivePrompt();
+  }, []);
+
+  const handleInstall = async () => {
+    if (promptKind === "ios") {
+      if (showIosSteps) {
+        closePrompt("cooldown");
+        return;
+      }
+
+      setShowIosSteps(true);
+      return;
+    }
+
+    if (!deferredPrompt) {
+      closePrompt("cooldown");
+      return;
+    }
+
+    try {
+      await deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+      setDeferredPrompt(null);
+
+      closePrompt(choice.outcome === "accepted" ? "installed" : "cooldown");
+    } catch {
+      closePrompt("cooldown");
+    }
+  };
+
+  if (!isVisible) return null;
+
+  return (
+    <section
+      aria-label="Instalar atalho da Lectum"
+      className={cn(
+        "fixed inset-x-3 z-[60] mx-auto max-w-[440px] rounded-[1.75rem] border border-border bg-surface p-4 text-foreground shadow-[var(--lectum-shadow)]",
+        "bottom-[calc(5rem+env(safe-area-inset-bottom))] sm:bottom-6",
+      )}
+    >
+      <button
+        aria-label="Agora não"
+        className="absolute right-3 top-3 inline-grid h-8 w-8 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+        onClick={() => closePrompt("cooldown")}
+        type="button"
+      >
+        <X className="h-4 w-4" aria-hidden="true" />
+      </button>
+
+      <div className="flex gap-3 pr-8">
+        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
+          <LectumSymbolIcon className="h-7 w-7" aria-hidden="true" />
+        </div>
+
+        <div className="min-w-0">
+          <p className="text-base font-extrabold tracking-[-0.03em] text-foreground">
+            Acesse a Lectum como um app
+          </p>
+          <p className="mt-1 text-sm leading-5 text-muted">
+            Crie um atalho na tela inicial para entrar mais rápido, sem precisar abrir o navegador.
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-3 rounded-2xl border border-border bg-background px-3 py-2.5 text-xs leading-5 text-muted">
+        O ícone ficará visível na tela inicial do celular. Isso não ativa notificações.
+      </div>
+
+      {promptKind === "ios" && showIosSteps ? (
+        <div className="mt-3 rounded-2xl border border-border bg-surface-muted p-3 text-sm text-foreground">
+          <div className="mb-2 flex items-center gap-2 font-bold">
+            <Share className="h-4 w-4 text-primary" aria-hidden="true" />
+            No iPhone ou iPad
+          </div>
+          <ol className="list-decimal space-y-1 pl-5 text-muted">
+            <li>Abra a Lectum no Safari.</li>
+            <li>Toque em Compartilhar.</li>
+            <li>Escolha Adicionar à Tela de Início e confirme.</li>
+          </ol>
+        </div>
+      ) : null}
+
+      <div className="mt-4 grid gap-2">
+        <Button
+          className="h-11 rounded-2xl text-sm font-extrabold"
+          onClick={handleInstall}
+          type="button"
+        >
+          {promptKind === "ios" && showIosSteps ? (
+            <Smartphone className="h-4 w-4" aria-hidden="true" />
+          ) : (
+            <Download className="h-4 w-4" aria-hidden="true" />
+          )}
+          <span>{promptKind === "ios" && showIosSteps ? "Entendi" : "Adicionar atalho"}</span>
+        </Button>
+
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            className="h-10 rounded-2xl text-xs font-bold"
+            onClick={() => closePrompt("cooldown")}
+            type="button"
+            variant="outline"
+          >
+            Agora não
+          </Button>
+          <Button
+            className="h-10 rounded-2xl text-xs font-bold"
+            onClick={() => closePrompt("never")}
+            type="button"
+            variant="ghost"
+          >
+            Não mostrar novamente
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}

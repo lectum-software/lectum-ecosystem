@@ -5,6 +5,7 @@ import { ThemeProvider } from "next-themes";
 import "@/app/globals.css";
 import { LocationCapture } from "@/components/analytics/location-capture";
 import { ProgressiveConversionBoundary } from "@/components/conversion/progressive-conversion-provider";
+import { PwaInstallPrompt } from "@/components/pwa-install-prompt";
 import { Progress } from "@/providers/progress";
 import { Provider as Query } from "@/providers/query";
 import { Provider as Redux } from "@/providers/redux";
@@ -20,6 +21,21 @@ const manrope = Manrope({
 export const metadata: Metadata = {
   title: process.env.NEXT_PUBLIC_SYSTEM_NAME || "Lectum",
   description: process.env.NEXT_PUBLIC_SYSTEM_DESCRIPTION || "Frontend Lectum",
+  applicationName: "Lectum",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Lectum",
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/pwa/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/pwa/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/pwa/icon-192.png", sizes: "192x192", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({
@@ -46,6 +62,7 @@ export default function RootLayout({
               <ProgressiveConversionBoundary>
                 {children}
                 <Socket />
+                <PwaInstallPrompt />
                 <Toaster richColors position="top-right" />
               </ProgressiveConversionBoundary>
             </Query>
