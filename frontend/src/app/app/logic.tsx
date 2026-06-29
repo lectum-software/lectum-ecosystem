@@ -7,8 +7,8 @@ import { useAppSelector } from "@/hooks/redux";
 import { PrivateTemplate } from "@/templates/private";
 
 const roleHomePaths = {
-  paciente: "/app/psychologists",
-  psicologo: "/app/psychologists",
+  paciente: "/psychologists",
+  psicologo: "/psychologists",
 } as const;
 
 export const AppHomeLogic = () => {

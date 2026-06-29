@@ -505,7 +505,7 @@ const buildPsychologistDigestContent = (candidate: PsychologistActivityCandidate
 };
 
 const buildPostRedirect = (communitySlug: string, postId: string) =>
-  `/app/community/${communitySlug}/post/${postId}`;
+  `/community/${communitySlug}/post/${postId}`;
 
 const markDigestChecked = (
   state: DigestState,

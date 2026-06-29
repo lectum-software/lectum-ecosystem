@@ -586,7 +586,7 @@ export function PsychologistCard({
   const mediaIsPublic = isPublicMediaUrl(avatarSrc);
   const tags = buildBenefitTags(psychologist);
   const displayName = getHonorificName(psychologist);
-  const route = `/app/psychologist/${psychologist.id}`;
+  const route = `/psychologists/${psychologist.id}`;
   const overlayRef = useRef<HTMLDivElement>(null);
   const shareButtonRef = useRef<HTMLButtonElement>(null);
   const cardRef = useRef<HTMLElement>(null);

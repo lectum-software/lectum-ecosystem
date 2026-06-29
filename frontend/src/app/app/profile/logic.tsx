@@ -229,7 +229,7 @@ export const ProfileLogic = () => {
     },
     { href: "/app/posts/saved", icon: Bookmark, label: "Salvos" },
     { href: "/app/following", icon: UsersRound, label: "Comunidades seguidas" },
-    { href: "/app/community", icon: Compass, label: "Explorar comunidades" },
+    { href: "/community", icon: Compass, label: "Explorar comunidades" },
   ];
 
   return (
@@ -264,7 +264,7 @@ export const ProfileLogic = () => {
             {user.email ? <p className="mt-2 text-xs text-subtle">{user.email}</p> : null}
             {isPsychologist ? (
               <Button asChild className="mt-3 h-10 rounded-full" variant="outline">
-                <Link href={`/app/psychologist/${user.id}`}>Ver perfil público</Link>
+                <Link href={`/psychologists/${user.id}`}>Ver perfil público</Link>
               </Button>
             ) : null}
           </div>

@@ -6,7 +6,7 @@ export const PSYCHOLOGIST_ONBOARDING_PATHS = {
   checkout: "/app/professional/billing/checkout",
   phone: "/app/professional/whatsapp/verify",
   billingAddress: "/app/professional/billing/address",
-  cfp: "/psychologist/cfp",
+  cfp: "/app/professional/cfp",
   profileSetup: "/app/professional/profile/setup",
 } as const;
 

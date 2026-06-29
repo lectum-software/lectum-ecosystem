@@ -14,7 +14,7 @@ export const SuggestCommunitySuccessLogic = () => {
             <Link
               aria-label="Voltar para comunidades"
               className="grid h-10 w-10 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary"
-              href="/app/community"
+              href="/community"
             >
               <X className="h-5 w-5" aria-hidden="true" />
             </Link>
@@ -36,7 +36,7 @@ export const SuggestCommunitySuccessLogic = () => {
           </article>
 
           <Button asChild className="h-14 w-full rounded-full">
-            <Link href="/app/community">
+            <Link href="/community">
               Voltar para a Comunidade
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>

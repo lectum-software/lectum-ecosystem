@@ -66,7 +66,7 @@ const FeaturedCommunity = ({ community }: { community: CommunityExploreCard }) =
   return (
     <Link
       className="group relative block min-h-[190px] overflow-hidden rounded-[24px] border border-white/70 bg-[#101827] p-4 text-white transition duration-300 sm:min-h-[224px] sm:p-5"
-      href={`/app/community/${community.slug}`}
+      href={`/community/${community.slug}`}
     >
       <Image
         alt={`Imagem da comunidade ${community.name}`}
@@ -116,7 +116,7 @@ const CommunityCard = ({ community }: { community: CommunityExploreCard }) => {
   return (
     <Link
       className="group relative flex h-[286px] w-[min(calc(100vw-2.5rem),212px)] shrink-0 snap-start overflow-hidden rounded-[22px] border border-white/70 bg-[#101827] p-3.5 text-white transition duration-300 sm:h-[318px] sm:w-[232px] lg:h-[306px] lg:w-[238px]"
-      href={`/app/community/${community.slug}`}
+      href={`/community/${community.slug}`}
     >
       <Image
         alt={`Imagem da comunidade ${community.name}`}

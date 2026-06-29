@@ -586,7 +586,7 @@ const getProfilePublicationReplyId = (post: PostListPost) => {
 };
 
 const profilePublicationHref = (post: PostListPost) => {
-  const baseHref = `/app/community/${post.community.slug}/post/${post.id}`;
+  const baseHref = `/community/${post.community.slug}/post/${post.id}`;
   const replyId = getProfilePublicationReplyId(post);
 
   if (!replyId) return baseHref;
@@ -1615,7 +1615,7 @@ const PublicationTopMentorCommunity = ({
   <Link
     className="group flex w-[132px] min-w-[132px] snap-start flex-col items-center rounded-[18px] px-1 py-1.5 text-center no-underline transition hover:bg-[#F8FBFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 sm:w-[140px] sm:min-w-[140px]"
     data-top-mentor-community="true"
-    href={`/app/community/${community.slug}`}
+    href={`/community/${community.slug}`}
   >
     <span className="relative flex w-full justify-center pb-4">
       <PublicationCommunityAvatar community={community} />
@@ -2254,7 +2254,7 @@ export const PsychologistProfileLogic = () => {
       mutate(next);
       const queryString = next.toString();
 
-      router.replace(`/app/psychologist/${id}${queryString ? `?${queryString}` : ""}`, {
+      router.replace(`/psychologists/${id}${queryString ? `?${queryString}` : ""}`, {
         scroll: false,
       });
     },
@@ -2388,7 +2388,7 @@ export const PsychologistProfileLogic = () => {
       return;
     }
 
-    router.push("/app/psychologists");
+    router.push("/psychologists");
   };
 
   const goToProfileEdit = () => {
@@ -2466,7 +2466,7 @@ export const PsychologistProfileLogic = () => {
                   {profileErrorMessage}
                 </InlineAlert>
                 <Button asChild variant="outline">
-                  <Link href="/app/psychologists">Voltar para a busca</Link>
+                  <Link href="/psychologists">Voltar para a busca</Link>
                 </Button>
               </div>
             ) : null}

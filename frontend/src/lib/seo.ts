@@ -15,9 +15,24 @@ export const SITE_DESCRIPTION =
 
 export const PUBLIC_INDEXABLE_ROUTES = [
   {
-    path: "/",
-    changeFrequency: "weekly" as const,
+    path: "/psychologists",
+    changeFrequency: "daily" as const,
     priority: 1,
+  },
+  {
+    path: "/community",
+    changeFrequency: "weekly" as const,
+    priority: 0.9,
+  },
+  {
+    path: "/community/feed",
+    changeFrequency: "daily" as const,
+    priority: 0.9,
+  },
+  {
+    path: "/community/top-mentors",
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
   },
 ];
 
@@ -26,7 +41,7 @@ export const NON_INDEXABLE_ROUTES = [
   "/auth/",
   "/dashboard/",
   "/patient/",
-  "/psychologist/",
+  "/psychologist/cfp/",
   "/api/",
 ];
 

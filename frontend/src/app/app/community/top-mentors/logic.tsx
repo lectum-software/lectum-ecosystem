@@ -352,7 +352,7 @@ export const CommunityTopMentorsLogic = () => {
           <EmptyState
             action={
               <Button asChild>
-                <Link href={community ? `/app/community/${community}` : "/app/community"}>
+                <Link href={community ? `/community/${community}` : "/community"}>
                   Explorar comunidade
                 </Link>
               </Button>

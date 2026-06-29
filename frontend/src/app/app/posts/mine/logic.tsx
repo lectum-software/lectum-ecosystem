@@ -36,7 +36,7 @@ type FilterTabValue = Extract<UserPostsType, "posts" | "replies">;
 type FilterTabCounts = Partial<Record<FilterTabValue, number>>;
 
 const focusedReplyHref = (post: PostListPost, replyId: string) =>
-  `/app/community/${post.community.slug}/post/${post.id}?focusReplyId=${encodeURIComponent(replyId)}#reply-${replyId}`;
+  `/community/${post.community.slug}/post/${post.id}?focusReplyId=${encodeURIComponent(replyId)}#reply-${replyId}`;
 
 const isReplyCardInteractiveTarget = (target: EventTarget | null) => {
   const targetElement =
@@ -416,7 +416,7 @@ const ReplyItemCard = ({
           <span className="shrink-0">{interactionCopy.contextLabel}</span>
           <Link
             className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-extrabold text-[#475569] no-underline hover:text-[#475569] hover:no-underline dark:text-muted dark:hover:text-muted"
-            href={`/app/community/${item.post.community.slug}`}
+            href={`/community/${item.post.community.slug}`}
           >
             {item.post.community.name}
           </Link>
@@ -610,7 +610,7 @@ export const MyPostsLogic = () => {
 
     const relativeUrl = replyId
       ? focusedReplyHref(post, replyId)
-      : `/app/community/${post.community.slug}/post/${post.id}`;
+      : `/community/${post.community.slug}/post/${post.id}`;
     const url = `${window.location.origin}${relativeUrl}`;
 
     try {

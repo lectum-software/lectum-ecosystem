@@ -1,5 +1,5 @@
-import { PsychologistCfpLogic } from "./logic";
+import { redirect } from "next/navigation";
 
-export default function Page() {
-  return <PsychologistCfpLogic />;
+export default function LegacyPsychologistCfpPage() {
+  redirect("/app/professional/cfp");
 }

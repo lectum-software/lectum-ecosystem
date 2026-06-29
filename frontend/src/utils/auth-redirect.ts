@@ -2,8 +2,8 @@ import type { user } from "@/api/generator/types";
 import { getPsychologistRegistrationEntryPath } from "./psychologist-onboarding";
 
 export const USER_HOME_PATHS = {
-  paciente: "/app/psychologists",
-  psicologo: "/app/psychologists",
+  paciente: "/psychologists",
+  psicologo: "/psychologists",
 } as const;
 
 type RedirectFallback = string | null;

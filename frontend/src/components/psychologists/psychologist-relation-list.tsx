@@ -326,7 +326,7 @@ const FavoritePsychologistCard = ({
   onToggleFavorite: (psychologist: PatientRelationPsychologist) => void;
   psychologist: PatientRelationPsychologist;
 }) => {
-  const route = `/app/psychologist/${psychologist.id}`;
+  const route = `/psychologists/${psychologist.id}`;
   const favoriteBio = getFavoriteBio(psychologist);
 
   const handleFavoriteClick = (event: MouseEvent<HTMLButtonElement>) => {
@@ -556,7 +556,7 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
           <EmptyState
             action={
               <Button asChild className="rounded-full">
-                <Link href="/app/psychologists">
+                <Link href="/psychologists">
                   <Sparkles className="h-4 w-4" aria-hidden="true" />
                   Explorar psicólogos
                 </Link>

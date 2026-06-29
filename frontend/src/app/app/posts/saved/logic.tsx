@@ -105,7 +105,7 @@ const formatAuthorMeta = (author: CommunityAuthor, createdAt: string) => {
 };
 
 const savedReplyHref = (post: PostListPost, replyId: string) =>
-  `/app/community/${post.community.slug}/post/${post.id}?focusReplyId=${encodeURIComponent(replyId)}#reply-${replyId}`;
+  `/community/${post.community.slug}/post/${post.id}?focusReplyId=${encodeURIComponent(replyId)}#reply-${replyId}`;
 
 const isSavedCardInteractiveTarget = (target: EventTarget | null) => {
   const targetElement =
@@ -178,7 +178,7 @@ const SavedReplyAuthorHeader = ({
   createdAt: string;
 }) => {
   const isPsychologist = author.role === "psicologo";
-  const profileHref = isPsychologist ? `/app/psychologist/${author.id}` : undefined;
+  const profileHref = isPsychologist ? `/psychologists/${author.id}` : undefined;
 
   return (
     <div className="flex items-start gap-3">
@@ -348,7 +348,7 @@ const SavedReplyCard = ({
         <span className="shrink-0">Respondido em</span>
         <Link
           className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-extrabold text-[#475569] underline-offset-4 hover:text-primary hover:underline dark:text-muted md:no-underline md:hover:text-[#475569] md:hover:no-underline dark:md:hover:text-muted"
-          href={`/app/community/${item.post.community.slug}`}
+          href={`/community/${item.post.community.slug}`}
         >
           {item.post.community.name}
         </Link>
@@ -472,7 +472,7 @@ export const SavedPostsLogic = () => {
 
     const relativeUrl = replyId
       ? savedReplyHref(post, replyId)
-      : `/app/community/${post.community.slug}/post/${post.id}`;
+      : `/community/${post.community.slug}/post/${post.id}`;
     const url = `${window.location.origin}${relativeUrl}`;
 
     try {

@@ -262,7 +262,7 @@ const InlineExpandableText = ({
 };
 
 const postDetailHref = (post: PostListPost, focusReplyId?: string) => {
-  const baseHref = `/app/community/${post.community.slug}/post/${post.id}`;
+  const baseHref = `/community/${post.community.slug}/post/${post.id}`;
 
   if (!focusReplyId) return baseHref;
 
@@ -379,7 +379,7 @@ const ProfessionalReplyPreview = ({
 
   if (!reply) return null;
 
-  const profileHref = `/app/psychologist/${reply.author.id}`;
+  const profileHref = `/psychologists/${reply.author.id}`;
   const whatsappCta =
     showWhatsappCta && reply.author.whatsapp_url ? (
       <CommunityWhatsAppCta
@@ -539,7 +539,7 @@ export const CommunityPostCard = ({
   const isPsychologistPost = displayAuthor.role === "psicologo";
   const isAnonymousPatient = !primaryReply && !isPsychologistPost && post.anonymous;
   const psychologistProfileHref = isPsychologistPost
-    ? `/app/psychologist/${displayAuthor.id}`
+    ? `/psychologists/${displayAuthor.id}`
     : undefined;
   const authorWhatsappCta =
     showWhatsappCta && isPsychologistPost && displayAuthor.whatsapp_url ? (
@@ -738,7 +738,7 @@ export const CommunityPostCard = ({
                     ? "md:no-underline md:hover:text-[#64748B] md:hover:no-underline dark:md:hover:text-muted"
                     : "md:no-underline md:hover:text-foreground md:hover:no-underline"),
               )}
-              href={`/app/community/${post.community.slug}`}
+              href={`/community/${post.community.slug}`}
             >
               {post.community.name}
             </Link>

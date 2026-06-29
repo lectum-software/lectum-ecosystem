@@ -17,7 +17,7 @@ import { fingerprint } from "@/utils/fingerprint";
 import { type LoginForm, useForm } from "./use-form";
 
 const allowedRoles = ["paciente", "psicologo"] as const;
-const DEFAULT_AUTHENTICATED_REDIRECT = "/app/psychologists";
+const DEFAULT_AUTHENTICATED_REDIRECT = "/psychologists";
 
 const resolveErrorMessage = (error: unknown) => {
   return error instanceof Error ? error.message : "Não foi possível entrar. Tente novamente.";

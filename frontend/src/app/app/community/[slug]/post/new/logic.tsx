@@ -203,7 +203,7 @@ export const CreateCommunityPostLogic = ({
 
   const mutation = useCreateCommunityPost({
     onSuccess: (post) => {
-      const publicationHref = `/app/community/${post.community.slug}/post/${post.id}`;
+      const publicationHref = `/community/${post.community.slug}/post/${post.id}`;
 
       window.sessionStorage.setItem(LAST_CREATED_POST_HREF_KEY, publicationHref);
       setIsSheetOpen(false);
@@ -347,7 +347,7 @@ export const CreateCommunityPostLogic = ({
     closeTimerRef.current = window.setTimeout(() => {
       const fallbackHref =
         routeSlug && routeSlug !== COMMUNITY_FEED_SLUG
-          ? `/app/community/${routeSlug}`
+          ? `/community/${routeSlug}`
           : communitySlugFromQuery
             ? `${DEFAULT_COMMUNITY_FEED_HREF}?community=${encodeURIComponent(communitySlugFromQuery)}`
             : DEFAULT_COMMUNITY_FEED_HREF;

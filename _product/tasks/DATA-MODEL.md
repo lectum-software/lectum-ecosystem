@@ -100,8 +100,8 @@ Convenção `requireRole(...)` — middleware fino aplicado **depois** do `_auth
 2. **Imposição por namespace no mount, não por handler.** O guard é aplicado no registro do router em `backend/src/main/server/imports/write.ts`, por prefixo, para que toda rota nascida sob o prefixo herde o guard por construção (impossível "esquecer"):
    - `/api/private/psychologist/*` → `[ _auth, requireRole("psicologo") ]`
    - `/api/private/patient/*` → `[ _auth, requireRole("paciente") ]`
-   - `/api/private/*` compartilhado (comunidade, notificações, conta) → `[ _auth ]`
-   - `/api/private/directory/*` (descoberta de psicólogos por pacientes — leitura neutra) → `[ _auth ]`
+   - `/api/private/*` compartilhado sensivel (notificacoes, conta e comandos) -> `[ _auth ]`
+   - `/api/private/directory/*`, `/api/private/community/*` e `/api/private/posts/*` usam leitura publica/`optionalAuth` quando o metodo e conteudo forem publicos; comandos exigem usuario autenticado no handler.
 3. **Ownership scoping no handler.** Toda query é escopada por `req.auth.id`; um psicólogo só lê/edita o próprio `psychologist_profile`, as próprias avaliações/analytics.
 4. **Trava por existência de perfil (redundante de propósito).** Rotas de psicólogo exigem `psychologist_profile` de `req.auth.id`; um paciente não tem esse registro → operação falha mesmo na hipótese de o guard de papel falhar.
 5. **Verificação automatizada.** Check no boot que falha se rota sob `/psychologist/*` ou `/patient/*` subir sem o `requireRole` correspondente; smoke test garantindo que token de paciente recebe `403` em rota psicólogo-only e vice-versa (critério de aceite em TASK-12 e TASK-34).
@@ -113,8 +113,8 @@ Convenção `requireRole(...)` — middleware fino aplicado **depois** do `_auth
 | `/api/private/psychologist/*` | `requireRole("psicologo")` | psicólogo autogestão (perfil, CRP/CFP, analytics, assinatura) | 10, 11, 18, 19, 20, 31, 32, 33 |
 | `/api/private/patient/*` | `requireRole("paciente")` | paciente autogestão (onboarding) e rotas legadas de favoritos/follows/avaliações quando mantidas | 08, 14, 17, 21 |
 | `/api/private/user/favorites/*`, `/api/private/user/reviews*` | só `_auth` | favoritos e avaliações de psicólogos por qualquer usuário autenticado | 14, 17 |
-| `/api/private/directory/*` | só `_auth` | qualquer autenticado (descoberta/leitura de psicólogos) | 13, 15, 16 |
-| `/api/private/community/*`, `/api/private/posts/*` | só `_auth` | qualquer autenticado | 22-28 |
+| `/api/private/directory/*` | publico/sem `_auth` para leitura; `_auth` no handler para comandos | publico para descoberta/leitura de psicologos; autenticado para interacoes | 13, 15, 16, 40 |
+| `/api/private/community/*`, `/api/private/posts/*` | `optionalAuth` no mount; comandos validam `req.auth` | leitura publica de comunidades/posts; interacoes exigem autenticacao | 22-28, 40 |
 | `/api/private/notification/*`, conta | só `_auth` | qualquer autenticado | 29, 30 |
 | `POST /api/public/user/store`, auth/recovery/confirm | público / `_auth` privado | cadastro/login (papel definido na criação) | 04-09 |
 
@@ -166,7 +166,7 @@ Quando construído: módulo de audiência próprio (ex.: `backend/src/modules/ma
 | `headline` | `String?` | bio curta exibida no card/perfil; opcional para publicação pública |
 | `bio` | `String?` | texto de apresentação/"Sobre"/experiência; opcional para publicação pública |
 | `cover_image_url` | `String?` | imagem pública independente de capa do perfil; não reutiliza thumbnail/frame de vídeo |
-| `video_url` | `String?` | vídeo de apresentação público permitido para todos os psicólogos, inclusive Plano Gratuito; obrigatório para publicação/exibição pública do perfil e elegibilidade na listagem `/app/psychologists` |
+| `video_url` | `String?` | vídeo de apresentação público permitido para todos os psicólogos, inclusive Plano Gratuito; obrigatório para publicação/exibição pública do perfil e elegibilidade na listagem `/psychologists` |
 | `video_cover_url` | `String?` | imagem pública opcional de capa do vídeo de apresentação; deve ser limpa junto ao vídeo |
 | `cpf` | `String?` | usado na consulta CFP; dado sensível (LGPD) |
 | `crp` | `String?` | registro profissional exibido no cabeçalho |
@@ -597,23 +597,26 @@ O fluxo de alteração de cartão da TASK-33 segue a mesma regra do checkout: re
 
 ---
 
-## Convenção de rotas (frontend e backend)
+## Convencao de rotas (frontend e backend)
 
-A auditoria achou namespaces conflitantes nas tasks de comunidade (`/communities` vs `/community` vs `/posts`). Padrão canônico:
+A auditoria achou namespaces conflitantes nas tasks de comunidade (`/communities` vs `/community` vs `/posts`). Padrao canonico apos TASK-40:
 
-- Frontend privado sob `/app` ou shell privado da TASK-12 (a TASK-12 define o prefixo real; as tasks seguintes o reaproveitam).
-- Psicólogos (visão do paciente): detalhe do perfil em `/app/psychologist/[id]` (`[id]` = `user.id`), contato em `/app/psychologist/[id]/contact`.
-- Comunidades: explorar/lista em `/app/community`, feed agregado canônico em `/app/community/feed`, detalhe futuro em `/app/community/[slug]`, post em `/app/community/[slug]/post/[id]`. Enquanto o detalhe não existir, chips podem filtrar o feed por query `community` sem tratar `/app/community/[slug]` como página de detalhe.
+- Frontend publico indexavel fora de `/app`:
+  - psicologos: `/psychologists`, perfil em `/psychologists/[id]` (`[id]` = `user.id`) e contato em `/psychologists/[id]/contact`;
+  - comunidades: explorar/lista em `/community`, feed agregado em `/community/feed`, detalhe em `/community/[slug]`, post em `/community/[slug]/post/[id]` e thread em `/community/[slug]/post/[id]/thread/[replyId]`;
+  - ranking de mentores: `/community/top-mentors`.
+- Frontend autenticado sob `/app`: perfil do usuario, favoritos, notificacoes, configuracoes, posts do usuario, area profissional e fluxos de interacao/autoria. Exemplos: `/app/community/suggest`, `/app/community/[slug]/post/new`, `/app/posts/mine`, `/app/posts/saved`, `/app/professional/*`, `/app/profile`.
+- `/app` nao deve hospedar paginas publicas indexaveis. URLs legadas sob `/app/community*` e `/app/psychologist*` podem existir apenas como compatibilidade autenticada/noindex ou redirecionamento, nunca como canonicas publicas.
 
-Backend privado — **o prefixo determina o guard** (ver "Camadas de autenticação e autorização"):
+Backend privado/publico operacional:
 
-- **Descoberta/leitura de psicólogos** (chamada por pacientes): `/api/private/directory/psychologists`, `/api/private/directory/psychologists/:id` → só `_auth`. **Não** usar `/api/private/psychologists` para descoberta — esse namespace é confundível com autogestão.
-- **Autogestão do psicólogo**: `/api/private/psychologist/*` (perfil, CRP, CFP, analytics, assinatura) → `requireRole("psicologo")`.
-- **Relacionamentos/avaliações de psicólogos por usuário**: `/api/private/user/favorites`, `/api/private/user/favorites/:id`, `/api/private/user/reviews` e `/api/private/user/reviews/eligibility/:id` → só `_auth`, porque o produto permite favorito e avaliação para qualquer usuário autenticado.
-- **Autogestão do paciente**: `/api/private/patient/*` (onboarding; favoritos/follows/avaliações legados se mantidos) → `requireRole("paciente")`.
-- **Comunidade/posts** (qualquer autenticado): `/api/private/community`, `/api/private/community/feed/posts`, `/api/private/community/:slug`, `/api/private/community/:slug/members`, `/api/private/community/:slug/posts`, `/api/private/posts/:id` (`GET`, `PUT`, `DELETE` conforme permissão), `/api/private/posts/:id/replies`, `/api/private/posts/:id/vote`, `/api/private/posts/:id/save`. Singular `community`/`posts`.
-- **Conta/preferências compartilhadas** (qualquer autenticado): `/api/private/account/*`, incluindo `GET/PUT /api/private/account/tips` para dicas de onboarding por usuário.
-- Cada task deve usar exatamente esses prefixos; divergência exige atualizar este documento.
+- **Descoberta/leitura de psicologos**: manter o namespace historico `/api/private/directory/psychologists`, `/api/private/directory/psychologists/:id`, posts/reviews/contact-click/video-watch relacionados. Leituras publicas nao exigem sessao; interacoes que dependem de usuario validam autenticacao no handler. **Nao** usar `/api/private/psychologists` para descoberta - esse namespace e confundivel com autogestao.
+- **Autogestao do psicologo**: `/api/private/psychologist/*` (perfil, CRP, CFP, analytics, assinatura) -> `requireRole("psicologo")`.
+- **Relacionamentos/avaliacoes de psicologos por usuario**: `/api/private/user/favorites`, `/api/private/user/favorites/:id`, `/api/private/user/reviews` e `/api/private/user/reviews/eligibility/:id` -> so `_auth`, porque favorito e avaliacao exigem usuario autenticado.
+- **Autogestao do paciente**: `/api/private/patient/*` (onboarding; favoritos/follows/avaliacoes legados se mantidos) -> `requireRole("paciente")`.
+- **Comunidade/posts**: `/api/private/community`, `/api/private/community/feed/posts`, `/api/private/community/:slug`, `/api/private/community/:slug/posts` e `/api/private/posts/:id` podem responder leitura publica com `optionalAuth`; seguir, sugerir, publicar, upload, comentar, votar, salvar, reportar, editar e excluir exigem autenticacao e permissao no handler. Singular `community`/`posts`.
+- **Conta/preferencias compartilhadas** (qualquer autenticado): `/api/private/account/*`, incluindo `GET/PUT /api/private/account/tips` para dicas de onboarding por usuario.
+- Cada task deve usar exatamente esses prefixos; divergencia exige atualizar este documento.
 
 ## Contrato padrão de API
 

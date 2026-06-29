@@ -235,7 +235,7 @@ export const PsychologistContactLogic = () => {
       <div className="mx-auto flex w-full max-w-[430px] flex-col gap-5 sm:max-w-2xl lg:max-w-3xl">
         <header className="flex items-center justify-between gap-3">
           <Button asChild className="h-10 w-10 rounded-full p-0" variant="ghost">
-            <Link aria-label="Voltar ao perfil" href={`/app/psychologist/${psychologistId}`}>
+            <Link aria-label="Voltar ao perfil" href={`/psychologists/${psychologistId}`}>
               <ArrowLeft className="h-5 w-5" aria-hidden="true" />
             </Link>
           </Button>
@@ -283,7 +283,7 @@ export const PsychologistContactLogic = () => {
           <EmptyState
             action={
               <Button asChild variant="outline">
-                <Link href="/app/psychologists">Voltar para a busca</Link>
+                <Link href="/psychologists">Voltar para a busca</Link>
               </Button>
             }
             description={profileErrorMessage}
@@ -336,7 +336,7 @@ export const PsychologistContactLogic = () => {
 
             {isUnavailable ? (
               <Button asChild className="w-full" variant="outline">
-                <Link href={`/app/psychologist/${psychologistId}`}>Voltar ao perfil</Link>
+                <Link href={`/psychologists/${psychologistId}`}>Voltar ao perfil</Link>
               </Button>
             ) : (
               <Form {...formProps} className="grid gap-4" onSubmit={onSubmit}>

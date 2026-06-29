@@ -117,7 +117,7 @@ export const ReviewsNewLogic = () => {
           description="A avaliação precisa estar vinculada a um profissional real da Lectum."
           action={
             <Button asChild>
-              <Link href="/app/psychologists">Buscar psicólogos</Link>
+              <Link href="/psychologists">Buscar psicólogos</Link>
             </Button>
           }
         />
@@ -130,7 +130,7 @@ export const ReviewsNewLogic = () => {
       <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-2xl">
         <header className="flex items-center justify-between px-1 pb-1">
           <Button asChild variant="ghost" className="h-10 w-10 px-0">
-            <Link aria-label="Voltar" href={`/app/psychologist/${psychologistId}`}>
+            <Link aria-label="Voltar" href={`/psychologists/${psychologistId}`}>
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>
@@ -156,7 +156,7 @@ export const ReviewsNewLogic = () => {
                   href={
                     professional.reason === "already_reviewed"
                       ? "/app/reviews"
-                      : `/app/psychologist/${psychologistId}`
+                      : `/psychologists/${psychologistId}`
                   }
                 >
                   Continuar

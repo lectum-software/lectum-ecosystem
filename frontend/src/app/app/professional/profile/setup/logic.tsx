@@ -1098,7 +1098,7 @@ export const ProfessionalProfileSetupLogic = () => {
     deleteVideo.isPending;
   const isSubmitting = update.isPending || isSavingMedia;
   const publicProfileHref = profile.data?.user.id
-    ? `/app/psychologist/${profile.data.user.id}`
+    ? `/psychologists/${profile.data.user.id}`
     : undefined;
   const addressState = form.hook.watch("address_state");
   const addressCity = form.hook.watch("address_city");

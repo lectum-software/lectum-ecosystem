@@ -7,13 +7,13 @@ const APP_DESCRIPTION =
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    id: "/app",
+    id: "/",
     name: APP_NAME,
     short_name: "Lectum",
     description: APP_DESCRIPTION,
     lang: "pt-BR",
-    start_url: "/app/psychologists",
-    scope: "/app",
+    start_url: "/psychologists",
+    scope: "/",
     display: "standalone",
     background_color: "#f6f7f8",
     theme_color: "#308ce8",

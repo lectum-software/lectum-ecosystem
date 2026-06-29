@@ -88,7 +88,7 @@ const sessionStorageSafe = () => {
 };
 
 const getCurrentReturnTo = () => {
-  if (typeof window === "undefined") return "/app/psychologists";
+  if (typeof window === "undefined") return "/psychologists";
 
   return `${window.location.pathname}${window.location.search}${window.location.hash}`;
 };
@@ -195,7 +195,16 @@ const normalizePath = (pathname: string) => {
 
 const getPathSegments = (pathname: string) => normalizePath(pathname).split("/").filter(Boolean);
 
-const isAppPath = (pathname: string) => normalizePath(pathname).startsWith("/app");
+const isPublicDiscoveryPath = (pathname: string) => {
+  const normalizedPathname = normalizePath(pathname);
+
+  return (
+    normalizedPathname === "/community" ||
+    normalizedPathname.startsWith("/community/") ||
+    normalizedPathname === "/psychologists" ||
+    normalizedPathname.startsWith("/psychologists/")
+  );
+};
 
 const CONVERSION_PROMPT_SUPPRESSED_PATHS = new Set([
   "/app/favorites",
@@ -209,30 +218,20 @@ const isConversionPromptSuppressedPath = (pathname: string) =>
 const isPsychologistProfilePath = (pathname: string) => {
   const segments = getPathSegments(pathname);
 
-  return segments.length === 3 && segments[0] === "app" && segments[1] === "psychologist";
+  return segments.length === 2 && segments[0] === "psychologists";
 };
 
 const isCommunityPostPath = (pathname: string) => {
   const segments = getPathSegments(pathname);
 
-  return (
-    segments.length >= 5 &&
-    segments[0] === "app" &&
-    segments[1] === "community" &&
-    segments[3] === "post"
-  );
+  return segments.length >= 4 && segments[0] === "community" && segments[2] === "post";
 };
 
 const isCommunityDetailPath = (pathname: string) => {
   const segments = getPathSegments(pathname);
   const reservedSegments = new Set(["feed", "post", "suggest", "top-mentors"]);
 
-  return (
-    segments.length === 3 &&
-    segments[0] === "app" &&
-    segments[1] === "community" &&
-    !reservedSegments.has(segments[2])
-  );
+  return segments.length === 2 && segments[0] === "community" && !reservedSegments.has(segments[1]);
 };
 
 const noopContext: ProgressiveConversionContextValue = {
@@ -345,7 +344,7 @@ export const ProgressiveConversionProvider = ({
     if (
       isAuthenticated ||
       hasPromptBeenShown() ||
-      !isAppPath(pathname) ||
+      !isPublicDiscoveryPath(pathname) ||
       isConversionPromptSuppressedPath(pathname)
     ) {
       return;
@@ -381,7 +380,7 @@ export const ProgressiveConversionProvider = ({
     if (isAuthenticated || hasPromptBeenShown()) return;
 
     if (isPsychologistProfilePath(pathname)) {
-      const psychologistId = getPathSegments(pathname)[2];
+      const psychologistId = getPathSegments(pathname)[1];
       const count = addToSessionSet(PROFILE_IDS_KEY, psychologistId);
 
       if (count >= 3) {
@@ -391,7 +390,7 @@ export const ProgressiveConversionProvider = ({
 
     if (isCommunityPostPath(pathname)) {
       const segments = getPathSegments(pathname);
-      const postKey = `${segments[2]}:${segments[4]}`;
+      const postKey = `${segments[1]}:${segments[3]}`;
       const count = addToSessionSet(OPENED_POSTS_KEY, postKey);
 
       if (count >= 3) {

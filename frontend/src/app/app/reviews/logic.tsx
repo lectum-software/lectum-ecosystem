@@ -90,7 +90,7 @@ const ReviewCard = ({ review }: { review: PatientReview }) => (
       </div>
 
       <Button asChild className="h-9 w-9 shrink-0 rounded-full p-0 text-muted" variant="ghost">
-        <Link href={`/app/psychologist/${review.psychologist_id}`} aria-label="Abrir perfil">
+        <Link href={`/psychologists/${review.psychologist_id}`} aria-label="Abrir perfil">
           <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
         </Link>
       </Button>
@@ -169,7 +169,7 @@ export const ReviewsLogic = () => {
               className="border-border bg-surface shadow-[var(--lectum-shadow-soft)]"
               action={
                 <Button asChild className="rounded-full px-5">
-                  <Link href="/app/psychologists">Encontrar psicólogos</Link>
+                  <Link href="/psychologists">Encontrar psicólogos</Link>
                 </Button>
               }
             />

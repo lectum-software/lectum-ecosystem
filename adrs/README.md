@@ -99,3 +99,4 @@ Formato recomendado:
 - [ADR-0170 - Simbolo Lectum em SVG escalavel](0170-simbolo-lectum-svg-escalavel.md) - Accepted
 - [ADR-0171 - Layout premium em duas telas de boas-vindas do paciente](0171-boas-vindas-paciente-layout-premium.md) - Accepted
 - [ADR-0176 - Politica de senha com menor friccao](0176-politica-senha-menor-friccao.md) - Accepted
+- [ADR-0180 - Rotas publicas de psicologos e comunidades fora de /app](0180-rotas-publicas-psicologos-comunidades.md) - Accepted

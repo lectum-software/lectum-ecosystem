@@ -1251,7 +1251,7 @@ export const PsychologistsLogic = () => {
     (psychologist: DirectoryPsychologist) => {
       setFilterModalSearchDraft("");
       closeFilterDialogWithMotion();
-      router.push(`/app/psychologist/${psychologist.id}`);
+      router.push(`/psychologists/${psychologist.id}`);
     },
     [closeFilterDialogWithMotion, router],
   );
@@ -2000,7 +2000,7 @@ export const PsychologistsLogic = () => {
       event.preventDefault?.();
       event.stopPropagation();
 
-      router.push(`/app/psychologist/${psychologistId}`);
+      router.push(`/psychologists/${psychologistId}`);
     },
     [router],
   );
@@ -2027,7 +2027,7 @@ export const PsychologistsLogic = () => {
     (values: PsychologistsFilterForm) => {
       const next = buildFiltersParams(normalizeFormValues(values), 1);
 
-      router.replace(next.toString() ? `/app/psychologists?${next}` : "/app/psychologists", {
+      router.replace(next.toString() ? `/psychologists?${next}` : "/psychologists", {
         scroll: false,
       });
     },
@@ -2762,7 +2762,7 @@ export const PsychologistsLogic = () => {
       const url =
         typeof window === "undefined"
           ? ""
-          : `${window.location.origin}/app/psychologist/${psychologist.id}`;
+          : `${window.location.origin}/psychologists/${psychologist.id}`;
 
       try {
         setIsSharing(true);

@@ -645,7 +645,7 @@ const PostHeader = ({
   const isPsychologistPost = post.author.role === "psicologo";
   const isAnonymousPatient = !isPsychologistPost && post.anonymous;
   const psychologistProfileHref = isPsychologistPost
-    ? `/app/psychologist/${post.author.id}`
+    ? `/psychologists/${post.author.id}`
     : undefined;
   const currentUserId = useAppSelector((state) => state.user?.id);
   const isOwnPost = Boolean(currentUserId && post.author.id === currentUserId);
@@ -708,7 +708,7 @@ const PostHeader = ({
         <span className="shrink-0">Postado em</span>
         <Link
           className="block min-w-0 cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap font-bold text-[#64748B] no-underline hover:text-[#64748B] hover:no-underline dark:text-muted dark:hover:text-muted"
-          href={`/app/community/${post.community.slug}`}
+          href={`/community/${post.community.slug}`}
         >
           {post.community.name}
         </Link>
@@ -827,9 +827,9 @@ const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
   const isPsychologistPost = post.author.role === "psicologo";
   const isAnonymousPatient = !isPsychologistPost && post.anonymous;
   const psychologistProfileHref = isPsychologistPost
-    ? `/app/psychologist/${post.author.id}`
+    ? `/psychologists/${post.author.id}`
     : undefined;
-  const postHref = `/app/community/${post.community.slug}/post/${post.id}`;
+  const postHref = `/community/${post.community.slug}/post/${post.id}`;
   const postImageMediaItems = (post.media_items ?? []).filter(
     (item) => item.media_type === "image",
   );
@@ -875,7 +875,7 @@ const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
         <span aria-hidden="true">•</span>
         <Link
           className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-bold text-[#64748B] no-underline hover:text-[#64748B] hover:no-underline dark:text-muted dark:hover:text-muted"
-          href={`/app/community/${post.community.slug}`}
+          href={`/community/${post.community.slug}`}
         >
           {post.community.name}
         </Link>
@@ -1257,7 +1257,7 @@ const ReplyCard = ({
   const highlightedProfessionalThread = professionalThread ?? isVerifiedProfessional;
   const saveReplyMutation = useSaveReply(postId, reply.id);
   const conversion = useProgressiveConversion();
-  const psychologistProfileHref = isProfessional ? `/app/psychologist/${reply.author.id}` : null;
+  const psychologistProfileHref = isProfessional ? `/psychologists/${reply.author.id}` : null;
   const inlineReplyTarget = inlineReplyTargets[reply.id] ?? null;
   const isReplyComposerOpen = Boolean(inlineReplyTarget);
   const [contentExpanded, setContentExpanded] = useState(false);
@@ -1360,7 +1360,7 @@ const ReplyCard = ({
                   {isProfessional ? (
                     <Link
                       className="truncate text-sm font-black text-inherit no-underline hover:text-inherit hover:no-underline"
-                      href={`/app/psychologist/${reply.author.id}`}
+                      href={`/psychologists/${reply.author.id}`}
                       onClick={stopReplyTreeCollapsePropagation}
                     >
                       {reply.author.name}
@@ -2330,7 +2330,7 @@ export const PostDetailLogic = () => {
   const sharePost = async () => {
     if (!post || typeof window === "undefined") return;
 
-    const url = `${window.location.origin}/app/community/${post.community.slug}/post/${post.id}`;
+    const url = `${window.location.origin}/community/${post.community.slug}/post/${post.id}`;
 
     try {
       if (navigator.share) {
@@ -2348,7 +2348,7 @@ export const PostDetailLogic = () => {
   const shareReply = async (reply: PostReply) => {
     if (!post || typeof window === "undefined") return;
 
-    const url = `${window.location.origin}/app/community/${post.community.slug}/post/${post.id}#reply-${reply.id}`;
+    const url = `${window.location.origin}/community/${post.community.slug}/post/${post.id}#reply-${reply.id}`;
 
     try {
       if (navigator.share) {
@@ -2616,10 +2616,8 @@ export const PostDetailLogic = () => {
           <>
             <article className="overflow-hidden bg-white shadow-[0_10px_26px_rgba(15,23,42,0.04)] dark:bg-surface sm:mt-4 sm:rounded-[26px] sm:border sm:border-border">
               <PostHeader
-                onBack={() =>
-                  navigateBackWithFallback(router, `/app/community/${post.community.slug}`)
-                }
-                onDeleted={() => router.replace(`/app/community/${post.community.slug}`)}
+                onBack={() => navigateBackWithFallback(router, `/community/${post.community.slug}`)}
+                onDeleted={() => router.replace(`/community/${post.community.slug}`)}
                 onReport={() => {
                   setReportError(null);
                   setReportTarget({ type: "post" });
@@ -2701,7 +2699,7 @@ export const PostDetailLogic = () => {
                 replies={replies}
                 replyApiError={replyError}
                 replyDisabled={createReplyMutation.isPending || uploadReplyMediaMutation.isPending}
-                threadHrefBase={`/app/community/${post.community.slug}/post/${post.id}/thread`}
+                threadHrefBase={`/community/${post.community.slug}/post/${post.id}/thread`}
                 votePending={voteMutation.isPending}
               />
 
@@ -2801,9 +2799,9 @@ export const PostReplyThreadLogic = () => {
   const post = postQuery.data?.post;
   const rootReply = threadQuery.data?.reply;
   const threadBackFallbackHref = post
-    ? `/app/community/${post.community.slug}`
+    ? `/community/${post.community.slug}`
     : communitySlug
-      ? `/app/community/${communitySlug}`
+      ? `/community/${communitySlug}`
       : DEFAULT_COMMUNITY_FEED_HREF;
   const postError = postQuery.isError ? resolvePostError(postQuery.error) : null;
   const threadError = threadQuery.isError ? resolvePostError(threadQuery.error) : null;
@@ -2818,7 +2816,7 @@ export const PostReplyThreadLogic = () => {
     if (!post || typeof window === "undefined") return;
 
     const threadRootId = rootReply?.id ?? reply.id;
-    const url = `${window.location.origin}/app/community/${post.community.slug}/post/${post.id}/thread/${threadRootId}#reply-${reply.id}`;
+    const url = `${window.location.origin}/community/${post.community.slug}/post/${post.id}/thread/${threadRootId}#reply-${reply.id}`;
 
     try {
       if (navigator.share) {
@@ -3035,7 +3033,7 @@ export const PostReplyThreadLogic = () => {
                   <Link
                     href={
                       post
-                        ? `/app/community/${post.community.slug}/post/${post.id}`
+                        ? `/community/${post.community.slug}/post/${post.id}`
                         : DEFAULT_COMMUNITY_FEED_HREF
                     }
                   >
@@ -3097,7 +3095,7 @@ export const PostReplyThreadLogic = () => {
               replyApiError={replyError}
               replyDisabled={createReplyMutation.isPending || uploadReplyMediaMutation.isPending}
               showSectionTitle={false}
-              threadHrefBase={`/app/community/${post.community.slug}/post/${post.id}/thread`}
+              threadHrefBase={`/community/${post.community.slug}/post/${post.id}/thread`}
               votePending={voteMutation.isPending}
             />
 

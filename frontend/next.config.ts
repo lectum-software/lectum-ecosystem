@@ -1,6 +1,25 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: "/",
+        destination: "/psychologists",
+        permanent: false,
+      },
+      {
+        source: "/psychologist/cfp",
+        destination: "/app/professional/cfp",
+        permanent: false,
+      },
+      {
+        source: "/psychologist/cfp/:path*",
+        destination: "/app/professional/cfp/:path*",
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     return [
       {
@@ -20,7 +39,7 @@ const nextConfig: NextConfig = {
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
       {
-        source: "/psychologist/:path*",
+        source: "/psychologist/cfp/:path*",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
     ];

@@ -808,11 +808,11 @@ const getInitials = (name: string) => {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
 
-const communityDetailHref = (communitySlug: string) => `/app/community/${communitySlug}`;
+const communityDetailHref = (communitySlug: string) => `/community/${communitySlug}`;
 const communityCreatePostHref = (communitySlug: string) =>
   `/app/community/${communitySlug}/post/new`;
 const communityPostDetailHref = (post: CommunityPost) =>
-  `/app/community/${post.community.slug}/post/${post.id}`;
+  `/community/${post.community.slug}/post/${post.id}`;
 
 const isPostCardInteractiveTarget = (target: EventTarget | null) => {
   const targetElement =
@@ -1248,7 +1248,7 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
 
   if (!reply || !isPatientAuthoredPost) return null;
 
-  const profileHref = `/app/psychologist/${reply.author.id}`;
+  const profileHref = `/psychologists/${reply.author.id}`;
   const replyWhatsappCta = reply.author.whatsapp_url ? (
     <CommunityWhatsAppCta
       attached={Boolean(reply.media_url)}
@@ -1348,7 +1348,7 @@ const PostCard = ({
   const postDetailHref = communityPostDetailHref(post);
   const hasPostMedia = Boolean(post.media_url || (post.media_items ?? []).length > 0);
   const psychologistProfileHref = isPsychologistPost
-    ? `/app/psychologist/${post.author.id}`
+    ? `/psychologists/${post.author.id}`
     : undefined;
   const authorWhatsappCta =
     isPsychologistPost && post.author.whatsapp_url ? (
@@ -1955,7 +1955,7 @@ const CommunityHeader = ({
           )}
           <Link
             className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-[var(--community-soft-color)] px-3 py-1.5 text-xs font-black text-[var(--community-text-color)] transition hover:bg-[var(--community-primary-color)] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--community-primary-color)] focus-visible:ring-offset-2"
-            href={`/app/community/top-mentors?community=${community.slug}`}
+            href={`/community/top-mentors?community=${community.slug}`}
           >
             <Award className="h-3.5 w-3.5" aria-hidden="true" />
             Ver Top 5 mentores da comunidade
@@ -2589,7 +2589,7 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
   const sharePost = async (post: CommunityPost) => {
     if (typeof window === "undefined") return;
 
-    const url = `${window.location.origin}/app/community/${post.community.slug}/post/${post.id}`;
+    const url = `${window.location.origin}/community/${post.community.slug}/post/${post.id}`;
 
     try {
       if (navigator.share) {
@@ -2934,7 +2934,7 @@ export const CommunityFeedLogic = () => {
   const sharePost = async (post: CommunityPost) => {
     if (typeof window === "undefined") return;
 
-    const url = `${window.location.origin}/app/community/${post.community.slug}/post/${post.id}`;
+    const url = `${window.location.origin}/community/${post.community.slug}/post/${post.id}`;
 
     try {
       if (navigator.share) {

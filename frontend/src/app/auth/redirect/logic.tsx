@@ -11,7 +11,7 @@ import { getToken } from "@/hooks/cookies/token";
 import { useUserSet } from "@/hooks/user-set";
 import { CenterTemplate } from "@/templates/center";
 
-const DEFAULT_AUTHENTICATED_REDIRECT = "/app/psychologists";
+const DEFAULT_AUTHENTICATED_REDIRECT = "/psychologists";
 const DELETE_ACCOUNT_PATIENT_REDIRECT = "/app/profile/edit?deleteReauth=ok";
 const DELETE_ACCOUNT_PSYCHOLOGIST_REDIRECT = "/app/professional/profile/setup?deleteReauth=ok";
 

@@ -108,7 +108,7 @@ const NotificationUnreadIndicator = () => (
 
 const fallbackNavigation: NavigationItem[] = [
   {
-    href: "/app/psychologists",
+    href: "/psychologists",
     icon: UsersRound,
     label: "Psicólogos",
     title: "Encontre seu psicólogo",
@@ -142,7 +142,7 @@ const fallbackNavigation: NavigationItem[] = [
 const navigationByRole: Record<Extract<UserRole, "paciente" | "psicologo">, NavigationItem[]> = {
   paciente: [
     {
-      href: "/app/psychologists",
+      href: "/psychologists",
       icon: UsersRound,
       label: "Psicólogos",
       title: "Encontre seu psicólogo",
@@ -174,7 +174,7 @@ const navigationByRole: Record<Extract<UserRole, "paciente" | "psicologo">, Navi
   ],
   psicologo: [
     {
-      href: "/app/psychologists",
+      href: "/psychologists",
       icon: UsersRound,
       label: "Psicólogos",
       title: "Psicólogos",
@@ -235,14 +235,14 @@ const getNavigationContextPathname = (pathname: string) => {
       return DEFAULT_COMMUNITY_FEED_HREF;
     }
 
-    return `/app/community/${segments[2]}`;
+    return `/community/${segments[2]}`;
   }
 
   return normalizedPathname;
 };
 
 const PRIMARY_DESKTOP_NAVIGATION_PATHS = new Set([
-  "/app/psychologists",
+  "/psychologists",
   "/app/favorites",
   DEFAULT_COMMUNITY_FEED_HREF,
   "/app/notifications",
@@ -258,7 +258,7 @@ const isDesktopActivePath = (pathname: string, item: NavigationItem) => {
 };
 
 const MOBILE_NAVIGATION_ACTIVE_HREF_BY_PATH = new Map<string, string>([
-  ["/app/psychologists", "/app/psychologists"],
+  ["/psychologists", "/psychologists"],
   ["/app/favorites", "/app/favorites"],
   [DEFAULT_COMMUNITY_FEED_HREF, DEFAULT_COMMUNITY_FEED_HREF],
   ["/app/notifications", "/app/notifications"],
@@ -276,17 +276,16 @@ const isCommunityMainMobileNavigationPath = (pathname: string) => {
   const segments = normalizePathname(pathname).split("/").filter(Boolean);
 
   return (
-    segments.length === 3 &&
-    segments[0] === "app" &&
-    segments[1] === "community" &&
-    !COMMUNITY_MAIN_ROUTE_RESERVED_SEGMENTS.has(segments[2])
+    segments.length === 2 &&
+    segments[0] === "community" &&
+    !COMMUNITY_MAIN_ROUTE_RESERVED_SEGMENTS.has(segments[1])
   );
 };
 
 const isPsychologistProfileMobileNavigationPath = (pathname: string) => {
   const segments = normalizePathname(pathname).split("/").filter(Boolean);
 
-  return segments.length === 3 && segments[0] === "app" && segments[1] === "psychologist";
+  return segments.length === 2 && segments[0] === "psychologists";
 };
 
 const shouldShowMobileNavigationForPath = (pathname: string) => {
@@ -303,7 +302,7 @@ const getMobileNavigationActiveHref = (pathname: string) => {
   const normalizedPathname = normalizePathname(pathname);
 
   if (isPsychologistProfileMobileNavigationPath(normalizedPathname)) {
-    return "/app/psychologists";
+    return "/psychologists";
   }
 
   return MOBILE_NAVIGATION_ACTIVE_HREF_BY_PATH.get(normalizedPathname) ?? null;
@@ -596,7 +595,7 @@ export const PrivateTemplate = ({
               ? "h-12 w-[72px] justify-center overflow-hidden"
               : "h-12 flex-1",
           )}
-          href="/app/psychologists"
+          href="/psychologists"
           title={isDesktopSidebarCollapsed ? "Lectum" : undefined}
         >
           {isDesktopSidebarCollapsed ? (
