@@ -106,7 +106,11 @@ const isPsychologistsScrollLockTarget = (target: EventTarget | null) => {
   const element =
     target instanceof Element ? target : target instanceof Node ? target.parentElement : null;
 
-  return Boolean(element?.closest("[data-psychologists-scroll-lock='true']"));
+  return Boolean(
+    element?.closest(
+      "[data-psychologists-scroll-lock='true'], [data-lectum-video-player-controls='true']",
+    ),
+  );
 };
 const VIDEO_LONG_PRESS_DELAY_MS = 520;
 const VIDEO_PROGRESS_VISIBLE_NAV_BAR_HEIGHT = 64;
@@ -1943,24 +1947,6 @@ export const PsychologistsLogic = () => {
   }, [isVideoMuted]);
 
   useEffect(() => {
-    const currentVideo = backgroundVideoRef.current;
-    if (!currentVideo || !shouldShowVideo) return;
-
-    currentVideo.controls = isUiHidden;
-
-    if (!isUiHidden) return;
-
-    const frame = window.requestAnimationFrame(() => {
-      currentVideo.controls = true;
-      currentVideo.focus({
-        preventScroll: true,
-      });
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  }, [isUiHidden, shouldShowVideo]);
-
-  useEffect(() => {
     if (typeof window === "undefined") return;
     if (!featuredPsychologistId) return;
 
@@ -2348,6 +2334,11 @@ export const PsychologistsLogic = () => {
     [cancelPendingVideoGestureTimers],
   );
 
+  const revealUiFromImmersiveVideo = useCallback(() => {
+    cancelPendingVideoGestureTimers();
+    setIsUiHidden(false);
+  }, [cancelPendingVideoGestureTimers]);
+
   const handleImmersiveExit = useCallback(
     (event: { preventDefault?: () => void; stopPropagation: () => void }) => {
       stopVideoControlInteraction(event);
@@ -2355,9 +2346,9 @@ export const PsychologistsLogic = () => {
       if (currentVideo) {
         currentVideo.controls = false;
       }
-      setIsUiHidden(false);
+      revealUiFromImmersiveVideo();
     },
-    [stopVideoControlInteraction],
+    [revealUiFromImmersiveVideo, stopVideoControlInteraction],
   );
 
   const handleFeedScroll = useCallback(
@@ -2658,18 +2649,6 @@ export const PsychologistsLogic = () => {
     ],
   );
 
-  const favoritePsychologistIfNeeded = useCallback(
-    (psychologist: DirectoryPsychologist) => {
-      const psychologistId = psychologist.id;
-      const isFavorited = favoriteOverrides[psychologistId] ?? Boolean(psychologist.favorited);
-
-      if (isFavorited) return;
-
-      toggleFavorite(psychologist);
-    },
-    [favoriteOverrides, toggleFavorite],
-  );
-
   useEffect(() => {
     if (!conversion.isAuthenticated || psychologists.length === 0) return;
 
@@ -2776,7 +2755,7 @@ export const PsychologistsLogic = () => {
         if (tapTimeoutRef.current) {
           window.clearTimeout(tapTimeoutRef.current);
           tapTimeoutRef.current = null;
-          favoritePsychologistIfNeeded(psychologist);
+          toggleFavorite(psychologist);
           return;
         }
 
@@ -2789,7 +2768,7 @@ export const PsychologistsLogic = () => {
 
       runVideoAreaSingleTapAction();
     },
-    [favoritePsychologistIfNeeded, isSearchFocused, runVideoAreaSingleTapAction, shouldShowVideo],
+    [isSearchFocused, runVideoAreaSingleTapAction, shouldShowVideo, toggleFavorite],
   );
 
   const handleLongPressStart = useCallback(
@@ -3314,14 +3293,23 @@ export const PsychologistsLogic = () => {
 
   useEffect(() => {
     if (!activeOnboardingTip) return;
-    if (!isFiltersOpen && !isSearchFocused && !showInitialLoading && !errorMessage) return;
+    if (!isUiHidden && !isFiltersOpen && !isSearchFocused && !showInitialLoading && !errorMessage) {
+      return;
+    }
 
     const timeout = window.setTimeout(() => {
       setActiveOnboardingTip(null);
     }, 0);
 
     return () => window.clearTimeout(timeout);
-  }, [activeOnboardingTip, errorMessage, isFiltersOpen, isSearchFocused, showInitialLoading]);
+  }, [
+    activeOnboardingTip,
+    errorMessage,
+    isFiltersOpen,
+    isSearchFocused,
+    isUiHidden,
+    showInitialLoading,
+  ]);
 
   useEffect(() => {
     if (hasShownOnboardingTipThisVisitRef.current) return;
@@ -4032,7 +4020,15 @@ export const PsychologistsLogic = () => {
                             <VerticalVideoPlayer
                               className="h-full w-full rounded-none border-0 shadow-none"
                               controls={slideUsesNativeVideoControls}
+                              controlsVariant={
+                                slideUsesNativeVideoControls ? "persistent" : "native"
+                              }
                               fit="cover"
+                              onContentClick={
+                                slideUsesNativeVideoControls
+                                  ? revealUiFromImmersiveVideo
+                                  : undefined
+                              }
                               poster={slidePosterSrc || undefined}
                               preload={isActiveSlide ? "auto" : "metadata"}
                               src={slideVideoSrc ?? ""}
@@ -4697,7 +4693,7 @@ export const PsychologistsLogic = () => {
               </div>
             ) : null}
 
-            {activeOnboardingTip ? (
+            {!isUiHidden && activeOnboardingTip ? (
               <PsychologistsCoachMark
                 onDismiss={() => setActiveOnboardingTip(null)}
                 tip={activeOnboardingTip}
