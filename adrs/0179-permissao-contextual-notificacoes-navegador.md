@@ -67,6 +67,9 @@ auditáveis usadas foram `_product/proto/Notificações.jpg` e
   - chave `lectum.activePrompt`;
   - valor desta task `notification-permission`;
   - valor da TASK-37 `pwa-install`.
+- No cleanup do bootstrap do `NotificationManager`, liberar a assinatura local de boot quando o
+  mesmo ciclo é cancelado, para que o double-effect do React/Next em desenvolvimento não deixe
+  `isChecking` preso e não impeça a validação local da modal.
 - Dar prioridade prática ao prompt de atalho quando ambos são elegíveis no mesmo momento:
   - TASK-37 usa delay menor;
   - TASK-38 usa delay maior;
@@ -82,6 +85,8 @@ auditáveis usadas foram `_product/proto/Notificações.jpg` e
 
 - O prompt nativo do navegador não abre mais automaticamente em montagem, hidratação ou troca de
   sessão.
+- O fluxo continua idempotente em produção e fica validável também no browser local de
+  desenvolvimento com React Strict Mode/double-effect ativo.
 - Se a permissão já estiver `granted`, a assinatura push continua sendo criada/revalidada de forma
   automática e idempotente, pois o consentimento nativo já existe.
 - Se a permissão estiver `default`, o usuário vê contexto da Lectum antes do prompt nativo.
@@ -116,6 +121,7 @@ auditáveis usadas foram `_product/proto/Notificações.jpg` e
   - `Agora não`: cooldown local respeitado;
   - `Não mostrar novamente`: ausente da UI;
   - overlay escuro com blur e ícone `/icon.png` via `next/image` visíveis na modal contextual;
+  - React/Next dev: bootstrap não fica preso em `isChecking` após cleanup do primeiro effect;
   - coordenação com TASK-37: `lectum.activePrompt` impede empilhamento simultâneo.
 - Refinamento 2026-06-29 validado no ADR-0183 para backoff por perfil e remoção do opt-out
   permanente.

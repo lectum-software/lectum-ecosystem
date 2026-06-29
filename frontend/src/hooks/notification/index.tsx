@@ -273,6 +273,9 @@ export const useNotificationPushPermission = () => {
 
     return () => {
       cancelled = true;
+      if (bootSignatureRef.current === bootSignature) {
+        bootSignatureRef.current = null;
+      }
     };
   }, [ensurePushSubscription, isConfirmedUser, loadVapidKey, user?.confirmed, user?.id]);
 

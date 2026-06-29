@@ -229,6 +229,14 @@ Packages usados:
   - o ícone principal da modal passou a renderizar `/icon.png` com `next/image`, igual ao favicon/ícone ativo da Lectum;
   - o `BellRing` ficou apenas no CTA `Ativar notificações`;
   - a modal passou a abrir dentro de overlay `fixed inset-0` com fundo escuro translúcido e `backdrop-blur`, alinhada ao padrão da modal de novo post e da modal de atalho;
-  - a estrutura ganhou `role="dialog"` e `aria-modal="true"`, mantendo a experiência mobile-first.
+  - a estrutura ganhou `role="dialog"` e `aria-modal="true"`, mantendo a experiência mobile-first;
+  - o bootstrap do `NotificationManager` passou a liberar a assinatura de boot no cleanup, evitando que o double-effect do React/Next em desenvolvimento deixe `isChecking` preso e impeça a modal de aparecer no browser local.
 - A opção `Não mostrar novamente` segue ausente; `Agora não` continua sendo o único caminho de adiamento local.
-- Validação adicional prevista: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local mobile confirmando ícone, blur e ausência de `Não mostrar novamente`.
+- Validação adicional executada: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP local mobile `390x844` em `/app/favorites`, com VAPID real e sessão local, confirmando:
+  - `Notification.permission === "default"`;
+  - modal `Ativar notificações da Lectum` visível;
+  - overlay com `bg-slate-950/35` e `backdrop-blur`;
+  - imagem renderizada por `next/image` apontando para `/icon.png`;
+  - `Agora não` presente;
+  - `Não mostrar novamente` ausente;
+  - `lectum.activePrompt === "notification-permission"`.
