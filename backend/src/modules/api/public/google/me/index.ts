@@ -7,6 +7,7 @@ import { send } from "@/helpers/return";
 import { error } from "@/helpers/translate";
 //Middlewares
 import session from "@/modules/api/middlewares/_auth/_session";
+import { getJwtSecret } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
 //Repositories
 import { LoginRepository } from "../../auth/login/repositories/LoginRepository";
 
@@ -32,7 +33,7 @@ routes.get("", async (req: Request, res: Response) => {
       });
     }
 
-    const payload = jwt.verify(token, process.env.JWT_SECRET_KEY!) as JwtPayload;
+    const payload = jwt.verify(token, getJwtSecret()) as JwtPayload;
     const repo = new LoginRepository(payload.device_id);
     const user = await repo.findByEmail({ b: { email: payload.email } });
 

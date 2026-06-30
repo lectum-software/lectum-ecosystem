@@ -7,8 +7,6 @@ const action = async (fileName: string | null | object, dir: string, bucket: str
   if (!fileName) return false;
   const key = `${dir}/${fileName}`;
 
-  console.log(`KEY TO DELETE: ${key}`);
-
   try {
     await S3.send(
       new DeleteObjectCommand({

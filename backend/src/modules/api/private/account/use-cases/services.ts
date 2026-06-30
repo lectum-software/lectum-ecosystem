@@ -3,6 +3,7 @@ import { error, msg } from "@/helpers/translate";
 import type { user } from "@/interfaces/objects";
 import { confirmEmailSend } from "@/modules/api/config/nodemailer/messages/confirm";
 import { getDevice } from "@/modules/api/middlewares/_auth/utils/device";
+import { getJwtSecret } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
 import { LoginRepository } from "@/modules/api/public/auth/login/repositories/LoginRepository";
 import {
   GOOGLE_MANAGE_ACCOUNT_URL,
@@ -337,7 +338,7 @@ export const createDeleteGoogleIntent = async (data: IAccountDeleteGoogleIntentD
       intent: "delete_account_google_reauth",
       user_id: current.id,
     },
-    process.env.JWT_SECRET_KEY as string,
+    getJwtSecret(),
     { expiresIn: DELETE_GOOGLE_REAUTH_TOKEN_EXPIRES_IN },
   );
 

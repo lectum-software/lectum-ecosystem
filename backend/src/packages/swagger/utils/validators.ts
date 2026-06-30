@@ -81,7 +81,16 @@ export async function loadValidations(route) {
     }
 
     const mod = await import(pathToFileURL(fileValidator).href);
-    const validator = mod.default as (opts: { schema: boolean }) => any;
+    const validator =
+      typeof mod.default === "function"
+        ? mod.default
+        : route.middlewares
+            ?.map((middleware) => mod[middleware])
+            .find((item) => typeof item === "function");
+
+    if (typeof validator !== "function") {
+      return [];
+    }
 
     const items = await validator({ schema: true });
     const body = zodToSwagger(items.body, "body");
@@ -90,7 +99,9 @@ export async function loadValidations(route) {
 
     return [body, params, query].flat();
   } catch (e) {
-    console.log(e);
+    if (process.env.SWAGGER_DEBUG === "true") {
+      console.warn("[SWAGGER]: Falha ao carregar validação de rota", e);
+    }
     return [];
   }
 }

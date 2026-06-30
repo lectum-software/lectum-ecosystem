@@ -4,6 +4,7 @@ import jwt, { type JwtPayload } from "jsonwebtoken";
 import type { DefaultEventsMap } from "socket.io";
 import io from "socket.io";
 import { resolve } from "@/helpers/translate/resolve";
+import { getJwtSecret } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
 import { emitAsync } from "./db/async";
 
 type Soc = io.Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>;
@@ -49,7 +50,7 @@ export const socket = (server: Express) => {
       return next(new Error(resolve("error.token_not_provided")));
     }
     try {
-      const payload = jwt.verify(token, process.env.JWT_SECRET_KEY!) as JwtPayload;
+      const payload = jwt.verify(token, getJwtSecret()) as JwtPayload;
 
       (socket as any).payload = payload;
       return next();
@@ -65,7 +66,7 @@ export const socket = (server: Express) => {
     socket.on("client", () => {
       const payload = (socket as any).payload;
 
-      console.log(`[SOCKET] Client connected: ${socket.id}`, payload);
+      console.log(`[SOCKET] Client connected: ${socket.id}`);
       clients.set(socket.id, { socket, data: payload });
       emitAsync(payload.id, payload.device_id);
       socket.emit("server", "Server response!");

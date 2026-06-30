@@ -6,9 +6,9 @@ import storeRoutes from "./store";
 const routes = Router();
 
 routes.get("", async (req, res) => {
-  const page = Number(req.query.page || 1);
-  const take = Math.min(Number(req.query.take || 20), 100);
-  const skip = (Math.max(page, 1) - 1) * take;
+  const page = Math.max(Number(req.query.page || 1), 1);
+  const take = Math.min(Math.max(Number(req.query.take || 20), 1), 100);
+  const skip = (page - 1) * take;
 
   const [items, total] = await prisma.$transaction([
     prisma.user.findMany({
@@ -19,11 +19,9 @@ routes.get("", async (req, res) => {
       select: {
         id: true,
         name: true,
-        email: true,
-        active: true,
-        confirmed: true,
+        avatar: true,
+        role: true,
         createdAt: true,
-        updatedAt: true,
       },
     }),
     prisma.user.count({ where: { deleted: false } }),

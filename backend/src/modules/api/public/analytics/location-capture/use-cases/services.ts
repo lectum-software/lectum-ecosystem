@@ -4,6 +4,7 @@ import type { Request } from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import { msg } from "@/helpers/translate";
 import prisma from "@/infra/database/prisma";
+import { getJwtSecret } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
 import type {
   ILocationCaptureDTO,
   LocationCaptureResult,
@@ -247,10 +248,7 @@ const resolveAuthenticatedUserId = async (req: Request): Promise<string | null> 
   if (!token) return null;
 
   try {
-    const payload = jwt.verify(
-      token,
-      process.env.JWT_SECRET_KEY || "development-secret",
-    ) as AuthPayload;
+    const payload = jwt.verify(token, getJwtSecret()) as AuthPayload;
 
     if (!payload.email || !payload.id) return null;
 

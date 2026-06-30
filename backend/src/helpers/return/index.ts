@@ -1,4 +1,5 @@
 import type { Response } from "express";
+import { sanitizeSensitiveData } from "@/utils/sanitize-sensitive";
 import entities from "./entities";
 
 export type Resolve = {
@@ -14,30 +15,36 @@ export type Resolve = {
 };
 
 export const send = (res: Response, resolve: Resolve) => {
-  if (resolve.success) {
-    return res.status(resolve.status || 200).send(resolve);
+  const sanitizedResolve = {
+    ...resolve,
+    data: sanitizeSensitiveData(resolve.data),
+  };
+
+  if (sanitizedResolve.success) {
+    return res.status(sanitizedResolve.status || 200).send(sanitizedResolve);
   } else {
-    if (!resolve.success && !resolve.entity) resolve.entity = "s";
+    if (!sanitizedResolve.success && !sanitizedResolve.entity) sanitizedResolve.entity = "s";
 
     let currentEntity: string | undefined;
-    if (resolve.entity) {
-      currentEntity = entities?.[resolve.entity];
+    if (sanitizedResolve.entity) {
+      currentEntity = entities?.[sanitizedResolve.entity];
     }
 
     const objectError: Omit<Resolve, "entity"> & { entity?: string } = {
-      status: resolve.status,
-      success: resolve.success,
+      status: sanitizedResolve.status,
+      success: sanitizedResolve.success,
     };
 
-    if (resolve.message) objectError.message = resolve.message;
-    if (resolve.error) objectError.error = resolve.error;
-    if (resolve.errors) objectError.errors = resolve.errors;
-    objectError.code = resolve.code || "Unknown";
-    if (resolve.data) objectError.data = resolve.data;
+    if (sanitizedResolve.message) objectError.message = sanitizedResolve.message;
+    if (sanitizedResolve.error) objectError.error = sanitizedResolve.error;
+    if (sanitizedResolve.errors)
+      objectError.errors = sanitizeSensitiveData(sanitizedResolve.errors);
+    objectError.code = sanitizedResolve.code || "Unknown";
+    if (sanitizedResolve.data) objectError.data = sanitizedResolve.data;
     if (currentEntity) objectError.entity = currentEntity;
-    if (resolve.type) objectError.type = resolve.type;
+    if (sanitizedResolve.type) objectError.type = sanitizedResolve.type;
 
-    return res.status(resolve.status || 400).send(objectError);
+    return res.status(sanitizedResolve.status || 400).send(objectError);
   }
 };
 

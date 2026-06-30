@@ -33,7 +33,6 @@ export default (mode: Option) => (req: Request, res: Response, next: NextFunctio
         if (err.code === "LIMIT_FILE_SIZE")
           error = resolve("error.exceeded_file_limit", { limit: mode.size });
         const name = err.field || "archive";
-        next(error || err);
         return res.status(400).json({
           code: 400,
           status: 400,
@@ -43,7 +42,6 @@ export default (mode: Option) => (req: Request, res: Response, next: NextFunctio
         });
       } else if (err) {
         const name = err.field || "archive";
-        next(err?.message || err);
         return res.status(400).json({
           code: 400,
           status: 400,

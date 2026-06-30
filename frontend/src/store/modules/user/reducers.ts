@@ -12,6 +12,13 @@ type UserAction = {
 };
 
 const initialState = null;
+const sensitiveUserKeys = [
+  "confirm_code",
+  "password",
+  "password_confirm",
+  "recovery_code",
+  "user_tokens",
+] as const;
 
 export default function userReducer(
   state: UserState = initialState,
@@ -43,8 +50,11 @@ const parseUser = (data?: user | null): UserState => {
   const token = data.user_tokens?.[0]?.token;
   if (token) setToken(token);
 
-  const rest = { ...data };
-  delete rest.user_tokens;
+  const rest: Record<string, unknown> = { ...data };
+
+  for (const key of sensitiveUserKeys) {
+    delete rest[key];
+  }
 
   return rest as UserState;
 };

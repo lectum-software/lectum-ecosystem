@@ -98,3 +98,4 @@ Formato recomendado:
 - [ADR-0169 - Autoria em notificacoes profissionais individuais](0169-autoria-notificacoes-profissionais.md) - Accepted
 - [ADR-0170 - Simbolo Lectum em SVG escalavel](0170-simbolo-lectum-svg-escalavel.md) - Accepted
 - [ADR-0171 - Layout premium em duas telas de boas-vindas do paciente](0171-boas-vindas-paciente-layout-premium.md) - Accepted
+- [ADR-0175 - Hardening de code review pré-produção](0175-hardening-code-review-pre-producao.md) - Accepted

@@ -1,6 +1,7 @@
 import type { AxiosRequestConfig } from "axios";
 import { toast } from "sonner";
 import api from "@/api";
+import type { ApiMethod } from "@/api/generator";
 import { signOut } from "@/hooks/cookies/signout";
 
 type ApiResponse<T = unknown> = {
@@ -22,17 +23,10 @@ class CustomError extends Error {
   }
 }
 
-const methods = {
-  POST: api.post,
-  GET: api.get,
-  PUT: api.put,
-  DELETE: api.delete,
-};
-
 type HandleApiRequestParams = {
   url: string;
   body?: object | FormData;
-  method: keyof typeof methods;
+  method: ApiMethod;
   config?: AxiosRequestConfig;
   showSuccess?: boolean;
   successMessage?: string;
@@ -51,7 +45,13 @@ export const handleReq = async <T = unknown>({
   signOutOnUnauthorized = true,
 }: HandleApiRequestParams) => {
   const isGetMethod = method === "GET";
-  const response = await methods[method]<ApiResponse<T>>(url, body, config)
+  const response = await api
+    .request<ApiResponse<T>>({
+      ...config,
+      data: isGetMethod ? undefined : body,
+      method,
+      url,
+    })
     .then((res) => {
       const data = res.data;
 

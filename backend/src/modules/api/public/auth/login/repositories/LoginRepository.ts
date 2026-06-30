@@ -9,6 +9,7 @@ import { generateToken } from "@/modules/api/middlewares/_auth/utils/generateTok
 //
 import { loginInclude } from "@/query/login";
 import { log } from "@/utils/logs";
+import { sanitizeSensitiveData } from "@/utils/sanitize-sensitive";
 import type { IFindByEmailDTO } from "../DTOs/IFindByEmailDTO";
 import type { IFindToEmitDTO } from "../DTOs/IFindToEmitDTO";
 //DTOs
@@ -152,7 +153,7 @@ export class LoginRepository implements ILoginRepository {
         data: {
           action: log.store,
           ref_id: user.id,
-          new: JSON.stringify(user),
+          new: JSON.stringify(sanitizeSensitiveData(user, { removeAuthTokens: true })),
         },
       });
 

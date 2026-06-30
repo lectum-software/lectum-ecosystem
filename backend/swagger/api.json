@@ -1,10 +1,19 @@
 {
   "tags": [
     {
+      "name": "[API] - ANALYTICS (Public)"
+    },
+    {
       "name": "[API] - AUTH (Private)"
     },
     {
       "name": "[API] - AUTH (Public)"
+    },
+    {
+      "name": "[API] - BILLING (Public)"
+    },
+    {
+      "name": "[API] - DIRECTORY (Private)"
     },
     {
       "name": "[API] - GOOGLE (Public)"
@@ -20,6 +29,9 @@
     },
     {
       "name": "[API] - PATIENT (Private)"
+    },
+    {
+      "name": "[API] - PSYCHOLOGIST (Private)"
     },
     {
       "name": "[API] - USER (Public)"
@@ -49,9 +61,7 @@
   "paths": {
     "/api/private/auth/code/:code": {
       "put": {
-        "tags": [
-          "[API] - AUTH (Private)"
-        ],
+        "tags": ["[API] - AUTH (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -88,9 +98,7 @@
     },
     "/api/private/auth/confirm": {
       "get": {
-        "tags": [
-          "[API] - AUTH (Private)"
-        ],
+        "tags": ["[API] - AUTH (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "responses": {
@@ -116,9 +124,7 @@
     },
     "/api/private/auth/hidrate": {
       "get": {
-        "tags": [
-          "[API] - AUTH (Private)"
-        ],
+        "tags": ["[API] - AUTH (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "responses": {
@@ -144,9 +150,7 @@
     },
     "/api/private/auth/need_reset": {
       "post": {
-        "tags": [
-          "[API] - AUTH (Private)"
-        ],
+        "tags": ["[API] - AUTH (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "requestBody": {
@@ -167,10 +171,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "password",
-                  "password_confirm"
-                ],
+                "required": ["password", "password_confirm"],
                 "type": "object"
               }
             }
@@ -199,9 +200,7 @@
     },
     "/api/private/auth/reset": {
       "post": {
-        "tags": [
-          "[API] - AUTH (Private)"
-        ],
+        "tags": ["[API] - AUTH (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "requestBody": {
@@ -228,11 +227,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "current_password",
-                  "password",
-                  "password_confirm"
-                ],
+                "required": ["current_password", "password", "password_confirm"],
                 "type": "object"
               }
             }
@@ -259,11 +254,1598 @@
         ]
       }
     },
+    "/api/private/directory/psychologists": {
+      "get": {
+        "tags": ["[API] - DIRECTORY (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [
+          {
+            "description": "Parâmetro limit do query.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro page do query.",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro search do query.",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro specialty do query.",
+            "in": "query",
+            "name": "specialty",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro service do query.",
+            "in": "query",
+            "name": "service",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro modality do query.",
+            "in": "query",
+            "name": "modality",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro approach do query.",
+            "in": "query",
+            "name": "approach",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro target_audience do query.",
+            "in": "query",
+            "name": "target_audience",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro state do query.",
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro city do query.",
+            "in": "query",
+            "name": "city",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro gender do query.",
+            "in": "query",
+            "name": "gender",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro race_color do query.",
+            "in": "query",
+            "name": "race_color",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro religion do query.",
+            "in": "query",
+            "name": "religion",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro language do query.",
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro more_experienced do query.",
+            "in": "query",
+            "name": "more_experienced",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro discount_first_session do query.",
+            "in": "query",
+            "name": "discount_first_session",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro accepts_insurance do query.",
+            "in": "query",
+            "name": "accepts_insurance",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro social_value do query.",
+            "in": "query",
+            "name": "social_value",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro available_today do query.",
+            "in": "query",
+            "name": "available_today",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro verified do query.",
+            "in": "query",
+            "name": "verified",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/directory/psychologists/:id": {
+      "get": {
+        "tags": ["[API] - DIRECTORY (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [
+          {
+            "description": "Parâmetro limit do query.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro page do query.",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro search do query.",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro specialty do query.",
+            "in": "query",
+            "name": "specialty",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro service do query.",
+            "in": "query",
+            "name": "service",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro modality do query.",
+            "in": "query",
+            "name": "modality",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro approach do query.",
+            "in": "query",
+            "name": "approach",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro target_audience do query.",
+            "in": "query",
+            "name": "target_audience",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro state do query.",
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro city do query.",
+            "in": "query",
+            "name": "city",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro gender do query.",
+            "in": "query",
+            "name": "gender",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro race_color do query.",
+            "in": "query",
+            "name": "race_color",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro religion do query.",
+            "in": "query",
+            "name": "religion",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro language do query.",
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro more_experienced do query.",
+            "in": "query",
+            "name": "more_experienced",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro discount_first_session do query.",
+            "in": "query",
+            "name": "discount_first_session",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro accepts_insurance do query.",
+            "in": "query",
+            "name": "accepts_insurance",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro social_value do query.",
+            "in": "query",
+            "name": "social_value",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro available_today do query.",
+            "in": "query",
+            "name": "available_today",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro verified do query.",
+            "in": "query",
+            "name": "verified",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/directory/psychologists/:id/contact": {
+      "post": {
+        "tags": ["[API] - DIRECTORY (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [
+          {
+            "description": "Parâmetro limit do query.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro page do query.",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro search do query.",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro specialty do query.",
+            "in": "query",
+            "name": "specialty",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro service do query.",
+            "in": "query",
+            "name": "service",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro modality do query.",
+            "in": "query",
+            "name": "modality",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro approach do query.",
+            "in": "query",
+            "name": "approach",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro target_audience do query.",
+            "in": "query",
+            "name": "target_audience",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro state do query.",
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro city do query.",
+            "in": "query",
+            "name": "city",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro gender do query.",
+            "in": "query",
+            "name": "gender",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro race_color do query.",
+            "in": "query",
+            "name": "race_color",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro religion do query.",
+            "in": "query",
+            "name": "religion",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro language do query.",
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro more_experienced do query.",
+            "in": "query",
+            "name": "more_experienced",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro discount_first_session do query.",
+            "in": "query",
+            "name": "discount_first_session",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro accepts_insurance do query.",
+            "in": "query",
+            "name": "accepts_insurance",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro social_value do query.",
+            "in": "query",
+            "name": "social_value",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro available_today do query.",
+            "in": "query",
+            "name": "available_today",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro verified do query.",
+            "in": "query",
+            "name": "verified",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/directory/psychologists/:id/contact-click": {
+      "post": {
+        "tags": ["[API] - DIRECTORY (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [
+          {
+            "description": "Parâmetro limit do query.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro page do query.",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro search do query.",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro specialty do query.",
+            "in": "query",
+            "name": "specialty",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro service do query.",
+            "in": "query",
+            "name": "service",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro modality do query.",
+            "in": "query",
+            "name": "modality",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro approach do query.",
+            "in": "query",
+            "name": "approach",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro target_audience do query.",
+            "in": "query",
+            "name": "target_audience",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro state do query.",
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro city do query.",
+            "in": "query",
+            "name": "city",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro gender do query.",
+            "in": "query",
+            "name": "gender",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro race_color do query.",
+            "in": "query",
+            "name": "race_color",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro religion do query.",
+            "in": "query",
+            "name": "religion",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro language do query.",
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro more_experienced do query.",
+            "in": "query",
+            "name": "more_experienced",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro discount_first_session do query.",
+            "in": "query",
+            "name": "discount_first_session",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro accepts_insurance do query.",
+            "in": "query",
+            "name": "accepts_insurance",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro social_value do query.",
+            "in": "query",
+            "name": "social_value",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro available_today do query.",
+            "in": "query",
+            "name": "available_today",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro verified do query.",
+            "in": "query",
+            "name": "verified",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/directory/psychologists/:id/posts": {
+      "get": {
+        "tags": ["[API] - DIRECTORY (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [
+          {
+            "description": "Parâmetro limit do query.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro page do query.",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro search do query.",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro specialty do query.",
+            "in": "query",
+            "name": "specialty",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro service do query.",
+            "in": "query",
+            "name": "service",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro modality do query.",
+            "in": "query",
+            "name": "modality",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro approach do query.",
+            "in": "query",
+            "name": "approach",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro target_audience do query.",
+            "in": "query",
+            "name": "target_audience",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro state do query.",
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro city do query.",
+            "in": "query",
+            "name": "city",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro gender do query.",
+            "in": "query",
+            "name": "gender",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro race_color do query.",
+            "in": "query",
+            "name": "race_color",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro religion do query.",
+            "in": "query",
+            "name": "religion",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro language do query.",
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro more_experienced do query.",
+            "in": "query",
+            "name": "more_experienced",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro discount_first_session do query.",
+            "in": "query",
+            "name": "discount_first_session",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro accepts_insurance do query.",
+            "in": "query",
+            "name": "accepts_insurance",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro social_value do query.",
+            "in": "query",
+            "name": "social_value",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro available_today do query.",
+            "in": "query",
+            "name": "available_today",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro verified do query.",
+            "in": "query",
+            "name": "verified",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/directory/psychologists/:id/reviews": {
+      "get": {
+        "tags": ["[API] - DIRECTORY (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [
+          {
+            "description": "Parâmetro limit do query.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro page do query.",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro search do query.",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro specialty do query.",
+            "in": "query",
+            "name": "specialty",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro service do query.",
+            "in": "query",
+            "name": "service",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro modality do query.",
+            "in": "query",
+            "name": "modality",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro approach do query.",
+            "in": "query",
+            "name": "approach",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro target_audience do query.",
+            "in": "query",
+            "name": "target_audience",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro state do query.",
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro city do query.",
+            "in": "query",
+            "name": "city",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro gender do query.",
+            "in": "query",
+            "name": "gender",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro race_color do query.",
+            "in": "query",
+            "name": "race_color",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro religion do query.",
+            "in": "query",
+            "name": "religion",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro language do query.",
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro more_experienced do query.",
+            "in": "query",
+            "name": "more_experienced",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro discount_first_session do query.",
+            "in": "query",
+            "name": "discount_first_session",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro accepts_insurance do query.",
+            "in": "query",
+            "name": "accepts_insurance",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro social_value do query.",
+            "in": "query",
+            "name": "social_value",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro available_today do query.",
+            "in": "query",
+            "name": "available_today",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro verified do query.",
+            "in": "query",
+            "name": "verified",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/directory/psychologists/:id/video-watch": {
+      "post": {
+        "tags": ["[API] - DIRECTORY (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [
+          {
+            "description": "Parâmetro limit do query.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro page do query.",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro search do query.",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro specialty do query.",
+            "in": "query",
+            "name": "specialty",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro service do query.",
+            "in": "query",
+            "name": "service",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro modality do query.",
+            "in": "query",
+            "name": "modality",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro approach do query.",
+            "in": "query",
+            "name": "approach",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro target_audience do query.",
+            "in": "query",
+            "name": "target_audience",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro state do query.",
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro city do query.",
+            "in": "query",
+            "name": "city",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro gender do query.",
+            "in": "query",
+            "name": "gender",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro race_color do query.",
+            "in": "query",
+            "name": "race_color",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro religion do query.",
+            "in": "query",
+            "name": "religion",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro language do query.",
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro more_experienced do query.",
+            "in": "query",
+            "name": "more_experienced",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro discount_first_session do query.",
+            "in": "query",
+            "name": "discount_first_session",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro accepts_insurance do query.",
+            "in": "query",
+            "name": "accepts_insurance",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro social_value do query.",
+            "in": "query",
+            "name": "social_value",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro available_today do query.",
+            "in": "query",
+            "name": "available_today",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro verified do query.",
+            "in": "query",
+            "name": "verified",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
     "/api/private/notification_preference/show": {
       "get": {
-        "tags": [
-          "[API] - NOTIFICATION PREFERENCE (Private)"
-        ],
+        "tags": ["[API] - NOTIFICATION PREFERENCE (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "responses": {
@@ -289,9 +1871,7 @@
     },
     "/api/private/notification_preference/update": {
       "put": {
-        "tags": [
-          "[API] - NOTIFICATION PREFERENCE (Private)"
-        ],
+        "tags": ["[API] - NOTIFICATION PREFERENCE (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "requestBody": {
@@ -334,9 +1914,7 @@
     },
     "/api/private/notification_subscription/key": {
       "get": {
-        "tags": [
-          "[API] - NOTIFICATION SUBSCRIPTION (Private)"
-        ],
+        "tags": ["[API] - NOTIFICATION SUBSCRIPTION (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "responses": {
@@ -362,9 +1940,7 @@
     },
     "/api/private/notification_subscription/store": {
       "post": {
-        "tags": [
-          "[API] - NOTIFICATION SUBSCRIPTION (Private)"
-        ],
+        "tags": ["[API] - NOTIFICATION SUBSCRIPTION (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "requestBody": {
@@ -413,9 +1989,7 @@
     },
     "/api/private/notification/clean": {
       "post": {
-        "tags": [
-          "[API] - NOTIFICATION (Private)"
-        ],
+        "tags": ["[API] - NOTIFICATION (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "responses": {
@@ -441,9 +2015,7 @@
     },
     "/api/private/notification/index": {
       "get": {
-        "tags": [
-          "[API] - NOTIFICATION (Private)"
-        ],
+        "tags": ["[API] - NOTIFICATION (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -538,39 +2110,9 @@
         ]
       }
     },
-    "/api/private/notification/test": {
-      "get": {
-        "tags": [
-          "[API] - NOTIFICATION (Private)"
-        ],
-        "description": "Endpoint (Private)",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successful operation"
-          },
-          "400": {
-            "description": "Validation error"
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          },
-          {
-            "deviceHeader": []
-          }
-        ]
-      }
-    },
     "/api/private/notification/update/:id": {
       "put": {
-        "tags": [
-          "[API] - NOTIFICATION (Private)"
-        ],
+        "tags": ["[API] - NOTIFICATION (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -596,9 +2138,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "read"
-                ],
+                "required": ["read"],
                 "type": "object"
               }
             }
@@ -625,11 +2165,317 @@
         ]
       }
     },
+    "/api/private/patient/favorites": {
+      "get": {
+        "tags": ["[API] - PATIENT (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [
+          {
+            "description": "Parâmetro limit do query.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro page do query.",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro search do query.",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro available_today do query.",
+            "in": "query",
+            "name": "available_today",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro accepts_insurance do query.",
+            "in": "query",
+            "name": "accepts_insurance",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro social_value do query.",
+            "in": "query",
+            "name": "social_value",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro discount_first_session do query.",
+            "in": "query",
+            "name": "discount_first_session",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro more_experienced do query.",
+            "in": "query",
+            "name": "more_experienced",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro verified do query.",
+            "in": "query",
+            "name": "verified",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/patient/favorites/:id": {
+      "delete": {
+        "tags": ["[API] - PATIENT (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [
+          {
+            "description": "Parâmetro id do path.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      },
+      "post": {
+        "tags": ["[API] - PATIENT (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [
+          {
+            "description": "Parâmetro id do path.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/patient/follows": {
+      "get": {
+        "tags": ["[API] - PATIENT (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [
+          {
+            "description": "Parâmetro limit do query.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro page do query.",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/patient/follows/:id": {
+      "delete": {
+        "tags": ["[API] - PATIENT (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [
+          {
+            "description": "Parâmetro id do path.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      },
+      "post": {
+        "tags": ["[API] - PATIENT (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [
+          {
+            "description": "Parâmetro id do path.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
     "/api/private/patient/onboarding": {
       "put": {
-        "tags": [
-          "[API] - PATIENT (Private)"
-        ],
+        "tags": ["[API] - PATIENT (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "requestBody": {
@@ -696,9 +2542,629 @@
     },
     "/api/private/patient/profile": {
       "get": {
-        "tags": [
-          "[API] - PATIENT (Private)"
+        "tags": ["[API] - PATIENT (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "bio": {
+                    "description": "Parâmetro bio do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "birthdate": {
+                    "description": "Parâmetro birthdate do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "gender": {
+                    "description": "Parâmetro gender do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "goal": {
+                    "description": "Parâmetro goal do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "Parâmetro name do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  },
+                  "phone": {
+                    "description": "Parâmetro phone do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "required": ["name"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      },
+      "put": {
+        "tags": ["[API] - PATIENT (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "bio": {
+                    "description": "Parâmetro bio do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "birthdate": {
+                    "description": "Parâmetro birthdate do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "gender": {
+                    "description": "Parâmetro gender do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "goal": {
+                    "description": "Parâmetro goal do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "Parâmetro name do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  },
+                  "phone": {
+                    "description": "Parâmetro phone do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "required": ["name"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/patient/profile/avatar": {
+      "delete": {
+        "tags": ["[API] - PATIENT (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "bio": {
+                    "description": "Parâmetro bio do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "birthdate": {
+                    "description": "Parâmetro birthdate do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "gender": {
+                    "description": "Parâmetro gender do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "goal": {
+                    "description": "Parâmetro goal do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "Parâmetro name do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  },
+                  "phone": {
+                    "description": "Parâmetro phone do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "required": ["name"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      },
+      "post": {
+        "tags": ["[API] - PATIENT (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "bio": {
+                    "description": "Parâmetro bio do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "birthdate": {
+                    "description": "Parâmetro birthdate do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "gender": {
+                    "description": "Parâmetro gender do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "goal": {
+                    "description": "Parâmetro goal do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "Parâmetro name do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  },
+                  "phone": {
+                    "description": "Parâmetro phone do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "required": ["name"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/patient/reviews": {
+      "get": {
+        "tags": ["[API] - PATIENT (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [
+          {
+            "description": "Parâmetro limit do query.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro page do query.",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          }
         ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      },
+      "post": {
+        "tags": ["[API] - PATIENT (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "comment": {
+                    "description": "Parâmetro comment do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  },
+                  "psychologist_id": {
+                    "description": "Parâmetro psychologist_id do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  },
+                  "rating": {
+                    "description": "Parâmetro rating do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "required": ["psychologist_id", "rating", "comment"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/patient/reviews/eligibility/:id": {
+      "get": {
+        "tags": ["[API] - PATIENT (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [
+          {
+            "description": "Parâmetro id do path.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/psychologist/analytics": {
+      "get": {
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [
+          {
+            "description": "Parâmetro period do query.",
+            "in": "query",
+            "name": "period",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro start_at do query.",
+            "in": "query",
+            "name": "start_at",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro end_at do query.",
+            "in": "query",
+            "name": "end_at",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/psychologist/cfp/confirm": {
+      "post": {
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "check_id": {
+                    "description": "Parâmetro check_id do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  },
+                  "result_key": {
+                    "description": "Parâmetro result_key do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "required": ["check_id", "result_key"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/psychologist/cfp/search": {
+      "post": {
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "cpf": {
+                    "description": "Parâmetro cpf do body.",
+                    "nullable": false,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "nome": {
+                    "description": "Parâmetro nome do body.",
+                    "nullable": false,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "registro": {
+                    "description": "Parâmetro registro do body.",
+                    "nullable": false,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "uf": {
+                    "description": "Parâmetro uf do body.",
+                    "nullable": false,
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/psychologist/free-profile": {
+      "get": {
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      },
+      "put": {
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "responses": {
@@ -722,11 +3188,448 @@
         ]
       }
     },
+    "/api/private/psychologist/free-profile/avatar": {
+      "delete": {
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      },
+      "post": {
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/psychologist/free-profile/cover-image": {
+      "delete": {
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      },
+      "post": {
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/psychologist/free-profile/video": {
+      "delete": {
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      },
+      "post": {
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/psychologist/free-profile/video/cover": {
+      "post": {
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/psychologist/reviews": {
+      "get": {
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [
+          {
+            "description": "Parâmetro limit do query.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro page do query.",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro rating do query.",
+            "in": "query",
+            "name": "rating",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro period do query.",
+            "in": "query",
+            "name": "period",
+            "required": false,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/psychologist/reviews/:id/response": {
+      "post": {
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [
+          {
+            "description": "Parâmetro id do path.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "response": {
+                    "description": "Parâmetro response do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "required": ["response"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/psychologist/whatsapp-verification/confirm": {
+      "post": {
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "code": {
+                    "description": "Parâmetro code do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  },
+                  "verification_id": {
+                    "description": "Parâmetro verification_id do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "required": ["verification_id", "code"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/private/psychologist/whatsapp-verification/request": {
+      "post": {
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
+        "description": "Endpoint (Private)",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "phone": {
+                    "description": "Parâmetro phone do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "required": ["phone"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/public/analytics/location-capture": {
+      "post": {
+        "tags": ["[API] - ANALYTICS (Public)"],
+        "description": "Endpoint (Public)",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "session_id": {
+                    "description": "Parâmetro session_id do body.",
+                    "nullable": false,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "visitor_id": {
+                    "description": "Parâmetro visitor_id do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "required": ["visitor_id"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
     "/api/public/auth/login": {
       "post": {
-        "tags": [
-          "[API] - AUTH (Public)"
-        ],
+        "tags": ["[API] - AUTH (Public)"],
         "description": "Endpoint (Public)",
         "parameters": [],
         "requestBody": {
@@ -747,10 +3650,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "email",
-                  "password"
-                ],
+                "required": ["email", "password"],
                 "type": "object"
               }
             }
@@ -776,9 +3676,7 @@
     },
     "/api/public/auth/recovery": {
       "post": {
-        "tags": [
-          "[API] - AUTH (Public)"
-        ],
+        "tags": ["[API] - AUTH (Public)"],
         "description": "Endpoint (Public)",
         "parameters": [],
         "requestBody": {
@@ -793,9 +3691,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "email"
-                ],
+                "required": ["email"],
                 "type": "object"
               }
             }
@@ -821,9 +3717,7 @@
     },
     "/api/public/auth/reset/:code": {
       "post": {
-        "tags": [
-          "[API] - AUTH (Public)"
-        ],
+        "tags": ["[API] - AUTH (Public)"],
         "description": "Endpoint (Public)",
         "parameters": [
           {
@@ -855,10 +3749,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "password",
-                  "password_confirm"
-                ],
+                "required": ["password", "password_confirm"],
                 "type": "object"
               }
             }
@@ -882,11 +3773,78 @@
         ]
       }
     },
+    "/api/public/billing/webhook": {
+      "post": {
+        "tags": ["[API] - BILLING (Public)"],
+        "description": "Endpoint (Public)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
     "/api/public/google/callback": {
       "get": {
-        "tags": [
-          "[API] - GOOGLE (Public)"
-        ],
+        "tags": ["[API] - GOOGLE (Public)"],
+        "description": "Endpoint (Public)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/public/google/link": {
+      "delete": {
+        "tags": ["[API] - GOOGLE (Public)"],
+        "description": "Endpoint (Public)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/public/google/link/intent": {
+      "post": {
+        "tags": ["[API] - GOOGLE (Public)"],
         "description": "Endpoint (Public)",
         "parameters": [],
         "responses": {
@@ -909,9 +3867,7 @@
     },
     "/api/public/google/login/:id": {
       "get": {
-        "tags": [
-          "[API] - GOOGLE (Public)"
-        ],
+        "tags": ["[API] - GOOGLE (Public)"],
         "description": "Endpoint (Public)",
         "parameters": [],
         "responses": {
@@ -934,9 +3890,7 @@
     },
     "/api/public/google/me": {
       "get": {
-        "tags": [
-          "[API] - GOOGLE (Public)"
-        ],
+        "tags": ["[API] - GOOGLE (Public)"],
         "description": "Endpoint (Public)",
         "parameters": [],
         "responses": {
@@ -959,9 +3913,7 @@
     },
     "/api/public/user/store": {
       "post": {
-        "tags": [
-          "[API] - USER (Public)"
-        ],
+        "tags": ["[API] - USER (Public)"],
         "description": "Endpoint (Public)",
         "parameters": [
           {
@@ -1043,12 +3995,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "name",
-                  "email",
-                  "password",
-                  "password_confirm"
-                ],
+                "required": ["name", "email", "password", "password_confirm"],
                 "type": "object"
               }
             }

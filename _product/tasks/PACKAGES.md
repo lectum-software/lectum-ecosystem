@@ -1,6 +1,6 @@
 # Packages e Política de Dependências
 
-Última verificação no registry: 2026-06-03, via `pnpm view`.
+Última verificação no registry: 2026-06-30, via `pnpm view` e `pnpm audit --prod`.
 Revisão técnica de frontend em junho/2026: React Hook Form permanece como padrão de formulários; TanStack Query permanece como padrão de server state.
 
 ## Política
@@ -19,16 +19,17 @@ Revisão técnica de frontend em junho/2026: React Hook Form permanece como padr
 
 | Pacote | Versão instalada | Última verificada | Uso |
 |---|---:|---:|---|
-| `next` | `16.2.7` | `16.2.7` | App Router, SSR, build |
+| `next` | `16.2.9` | `16.2.9` | App Router, SSR, build |
 | `react` | `19.2.4` | `19.2.7` | UI |
 | `react-dom` | `19.2.4` | `19.2.7` | UI |
 | `tailwindcss` | `^4` | `4.3.0` | Estilo |
 | `@tailwindcss/postcss` | `^4` | `4.3.0` | PostCSS |
 | `@tanstack/react-query` | `^5.101.0` | `5.101.0` | Server state |
-| `axios` | `^1.16.1` | `1.17.0` | HTTP client |
+| `axios` | `^1.18.1` | `1.18.1` | HTTP client |
 | `react-hook-form` | `^7.77.0` | `7.77.0` | Formulários |
 | `@hookform/resolvers` | `^5.4.0` | `5.4.0` | Zod resolver |
 | `zod` | `^4.4.3` | `4.4.3` | Schema validation |
+| `@mercadopago/sdk-react` | `^1.0.7` | `1.0.7` | Checkout Bricks/Card Payment Brick |
 | `@reduxjs/toolkit` | `^2.12.0` | `2.12.0` | Client state |
 | `react-redux` | `^9.3.0` | `9.3.0` | Redux bindings |
 | `redux-persist` | `^6.0.0` | `6.0.0` | Persistência local |
@@ -54,6 +55,13 @@ Revisão técnica de frontend em junho/2026: React Hook Form permanece como padr
 | URL state | Considerar `nuqs` em filtros complexos | Next expõe `useSearchParams`, mas validação/tipagem de filtros avançados pode justificar package dedicado. |
 | Tabelas/listas densas | Considerar `@tanstack/react-table` e `@tanstack/react-virtual` | São headless e preservam controle visual, úteis para filtros/listas longas sem design system paralelo. |
 | Query quality | Considerar `@tanstack/react-query-devtools` e `@tanstack/eslint-plugin-query` | Melhoram depuração e evitam mau uso de keys/deps em tasks futuras. |
+
+## Configuração frontend sem package novo
+
+- `next/image` não deve permitir `hostname: "**"`.
+- Hosts remotos devem ser explícitos em `frontend/next.config.ts`.
+- Para CDNs/R2 públicos adicionais, usar `NEXT_PUBLIC_IMAGE_REMOTE_HOSTS` no frontend, separado por vírgula, mantendo `NEXT_PUBLIC_API_URL`, `localhost`, `127.0.0.1` e `lh3.googleusercontent.com` como fontes explícitas.
+- Qualquer inclusão de novo host de imagem precisa ser justificada pela task e validada com `pnpm --dir frontend build`.
 
 ## Frontend candidatos por task
 
@@ -113,7 +121,7 @@ Instalar somente na `TASK-02` ou em task que realmente precise do campo.
 | `bcrypt` | `^6.0.0` | `6.0.0` | Compat senha |
 | `zod` | `^4.4.3` | `4.4.3` | Validation |
 | `i18next` | `^26.3.0` | `26.3.0` | i18n |
-| `nodemailer` | `^8.0.10` | `8.0.10` | E-mail transacional via Resend SMTP |
+| `nodemailer` | `^9.0.1` | `9.0.1` | E-mail transacional via Resend SMTP |
 | `twilio` | `^6.0.2` | `6.0.2` | SMS/OTP para verificação de telefone/WhatsApp |
 | `web-push` | `^3.6.7` | `3.6.7` | Push web |
 | `socket.io` | `^4.8.3` | `4.8.3` | Tempo real |
@@ -121,8 +129,9 @@ Instalar somente na `TASK-02` ou em task que realmente precise do campo.
 | `cors` | `^2.8.6` | `2.8.6` | CORS |
 | `cookie-parser` | `^1.4.7` | `1.4.7` | Cookies |
 | `express-session` | `^1.19.0` | `1.19.0` | Sessão OAuth |
-| `multer` | `^2.1.1` | `2.1.1` | Upload |
+| `multer` | `^2.2.0` | `2.2.0` | Upload |
 | `@aws-sdk/client-s3` | `^3.1059.0` | `3.1060.0` | Cloudflare R2 via API S3-compatible |
+| `mercadopago` | `^3.1.0` | `3.1.0` | Gateway Mercado Pago via adapter backend |
 | `date-fns` | `^4.4.0` | `4.4.0` | Datas |
 | `@paralleldrive/cuid2` | `^3.3.0` | `3.3.0` | IDs |
 | `@scalar/express-api-reference` | `^0.9.20` | `0.9.20` | API docs |
@@ -133,13 +142,27 @@ Instalar somente na `TASK-02` ou em task que realmente precise do campo.
 
 | Pacote | Versão verificada | Condição |
 |---|---:|---|
-| `mercadopago` | confirmar no install (SDK Node) | **Gateway escolhido (ADR-0003)**. Instalar só na TASK-32, dentro do `MercadoPagoAdapter`. |
-| `@mercadopago/sdk-react` | confirmar no install | **Frontend** — Checkout Bricks (Card Payment Brick) na TASK-32. Tokenização client-side. |
 | `stripe` | `22.2.0` | Não escolhido. Manter como referência caso troque de gateway (novo adapter). |
 | `asaas` | `1.1.0` | Não escolhido. |
 | `@aws-sdk/s3-request-presigner` | `3.1060.0` | URLs assinadas S3 |
 | `@sentry/nextjs` | `10.56.0` | Observabilidade frontend — decidido, instalar em task dedicada |
 | `@sentry/node` | `10.56.0` | Observabilidade backend — decidido, instalar em task dedicada |
+
+## Overrides transitivos de segurança
+
+Aplicados em `frontend/package.json` e `backend/package.json` porque frontend e backend são aplicações separadas, mesmo estando no mesmo repositório de desenvolvimento. O `pnpm-workspace.yaml` raiz foi removido para não transformar o repositório em monorepo operacional nem invalidar overrides por aplicação.
+
+| Aplicação | Override | Motivo |
+|---|---:|---|
+| Frontend | `ws@8.21.0` | Corrige advisory de DoS transitivo em `socket.io-client > engine.io-client > ws`. |
+| Frontend | `form-data@4.0.6` | Corrige advisory de CRLF injection transitivo em `axios > form-data`. |
+| Frontend | `postcss@8.5.16` | Corrige advisory de XSS transitivo em `next > postcss`. |
+| Backend | `ws@8.21.0` | Corrige advisory de DoS transitivo em `socket.io > engine.io > ws`. |
+| Backend | `form-data@4.0.6` | Corrige advisory de CRLF injection transitivo em `twilio > axios > form-data`. |
+| Backend | `hono@4.12.27` | Corrige advisories transitivos trazidos pelo pacote Prisma dev incluído por `@prisma/client`. |
+| Backend | `@hono/node-server@1.19.13` | Corrige advisory transitivo de `@hono/node-server` mantendo major compatível. |
+
+Validação obrigatória após alteração de dependências de produção: `pnpm --dir frontend audit --prod`, `pnpm --dir backend audit --prod`, `pnpm check`, `pnpm --dir backend build` e `pnpm --dir frontend build`.
 
 ## Testes e qualidade candidatos
 

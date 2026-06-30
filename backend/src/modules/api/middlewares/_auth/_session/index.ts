@@ -4,17 +4,20 @@
 import type { Router } from "express";
 import session from "express-session";
 import passport from "../passport";
+import { getJwtSecret } from "../utils/jwt-secret";
 
 export const middlewareSession = (app: Router) => {
+  const isProduction = process.env.NODE_ENV?.includes("prod");
+
   app.use(
     session({
-      secret: process.env.JWT_SECRET_KEY || "development-secret",
+      secret: getJwtSecret(),
       resave: false,
       saveUninitialized: false,
       cookie: {
         httpOnly: true, // impede JS de ler diretamente
-        secure: true, // em produção: HTTPS obrigatório
-        sameSite: "none", // permite envio em cross-site
+        secure: isProduction, // em produção: HTTPS obrigatório
+        sameSite: isProduction ? "none" : "lax", // permite OAuth local sem HTTPS.
       },
     }),
   );

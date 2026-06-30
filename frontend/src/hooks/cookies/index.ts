@@ -5,6 +5,10 @@ const expires = Number(process.env.NEXT_PUBLIC_COOKIE_EXPIRE_DAYS || 7);
 const options: Cookies.CookieAttributes = {
   expires,
   sameSite: "lax",
+  secure:
+    typeof window !== "undefined"
+      ? window.location.protocol === "https:"
+      : process.env.NODE_ENV === "production",
 };
 
 const set = (key: string, value: string) => {

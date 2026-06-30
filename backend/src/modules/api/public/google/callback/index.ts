@@ -84,8 +84,8 @@ const parseGoogleStateQuery = (state: unknown) => {
         params.set(key, String(value));
       });
     }
-  } catch (e) {
-    console.log(e);
+  } catch {
+    console.warn("[GOOGLE] Estado OAuth inválido ou ausente no callback.");
   }
 
   return {

@@ -27,6 +27,7 @@
     "confirmed_already": "Usuário já confirmado",
     "origin_not_allowed": "Origem não permitida",
     "terms_required": "Aceite os termos para continuar",
+    "too_many_requests": "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
     "role_not_authorized": "Acesso permitido apenas para o perfil autorizado",
     "contact_consent_required": "Aceite a política de privacidade para abrir o WhatsApp",
     "patient_phone_invalid": "Informe um número de WhatsApp válido para continuar",

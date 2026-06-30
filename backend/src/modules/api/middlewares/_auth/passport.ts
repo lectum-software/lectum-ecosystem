@@ -16,6 +16,7 @@ import type { user } from "@/interfaces/objects";
 import { LoginRepository } from "@/modules/api/public/auth/login/repositories/LoginRepository";
 //Emits
 import { emit_hidrate } from "./emit";
+import { getJwtSecret } from "./utils/jwt-secret";
 
 dotenv.config();
 
@@ -92,8 +93,8 @@ passport.use(
                 ? stateObj.query.delete_token
                 : undefined;
           }
-        } catch (e) {
-          console.log(e);
+        } catch {
+          console.warn("[GOOGLE] Estado OAuth inválido ou ausente.");
         }
         //
 
@@ -131,7 +132,7 @@ passport.use(
           let payload: GoogleLinkPayload;
 
           try {
-            payload = jwt.verify(linkToken, process.env.JWT_SECRET_KEY!) as GoogleLinkPayload;
+            payload = jwt.verify(linkToken, getJwtSecret()) as GoogleLinkPayload;
           } catch {
             return done(null, {
               status: 400,
@@ -217,10 +218,7 @@ passport.use(
           let payload: GoogleDeleteAccountPayload;
 
           try {
-            payload = jwt.verify(
-              deleteToken,
-              process.env.JWT_SECRET_KEY!,
-            ) as GoogleDeleteAccountPayload;
+            payload = jwt.verify(deleteToken, getJwtSecret()) as GoogleDeleteAccountPayload;
           } catch {
             return done(null, {
               status: 400,
@@ -355,7 +353,7 @@ passport.use(
 // Estratégia JWT
 const jwtOptions = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-  secretOrKey: process.env.JWT_SECRET_KEY || "development-secret",
+  secretOrKey: getJwtSecret(),
 };
 
 passport.use(
