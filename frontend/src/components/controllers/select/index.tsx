@@ -8,6 +8,9 @@ import { describedBy, fieldId } from "@/components/controllers/utils";
 import type { ControllerFieldProps } from "@/hooks/form";
 import { cn } from "@/lib/utils";
 
+const dropdownContentClassName =
+  "absolute left-0 right-0 top-[calc(100%+6px)] z-30 overflow-y-auto rounded-2xl border border-border bg-surface p-1.5 text-sm text-foreground shadow-[var(--lectum-shadow-soft)]";
+
 export function SelectController<FormType extends FieldValues>({
   name,
   control,
@@ -213,14 +216,11 @@ export function SelectController<FormType extends FieldValues>({
 
                 {isOpen && !resolvedDisabled && !readOnly && !loading ? (
                   <div
-                    className={cn(
-                      "absolute left-0 right-0 top-[calc(100%+6px)] z-30 max-h-72 overflow-y-auto rounded-2xl border border-border bg-white p-1.5 text-sm shadow-[0_18px_45px_rgb(15_23_42_/_16%)]",
-                      selectContentClassName,
-                    )}
+                    className={cn(dropdownContentClassName, "max-h-72", selectContentClassName)}
                     id={listboxId}
                     role="listbox"
                   >
-                    <div className="sticky top-0 z-10 bg-white p-1">
+                    <div className="sticky top-0 z-10 bg-surface p-1">
                       <div className="relative">
                         <Search
                           aria-hidden="true"
@@ -301,10 +301,7 @@ export function SelectController<FormType extends FieldValues>({
 
                 {isOpen && !resolvedDisabled && !readOnly && !loading ? (
                   <div
-                    className={cn(
-                      "absolute left-0 right-0 top-[calc(100%+6px)] z-30 max-h-64 overflow-y-auto rounded-2xl border border-border bg-white p-1.5 text-sm shadow-[0_18px_45px_rgb(15_23_42_/_16%)]",
-                      selectContentClassName,
-                    )}
+                    className={cn(dropdownContentClassName, "max-h-64", selectContentClassName)}
                     id={listboxId}
                     role="listbox"
                   >
@@ -362,10 +359,7 @@ export function SelectController<FormType extends FieldValues>({
 
                 {isOpen && !resolvedDisabled && !readOnly && !loading ? (
                   <div
-                    className={cn(
-                      "absolute left-0 right-0 top-[calc(100%+6px)] z-30 max-h-64 overflow-y-auto rounded-2xl border border-border bg-white p-1.5 text-sm shadow-[0_18px_45px_rgb(15_23_42_/_16%)]",
-                      selectContentClassName,
-                    )}
+                    className={cn(dropdownContentClassName, "max-h-64", selectContentClassName)}
                     id={listboxId}
                     role="listbox"
                   >

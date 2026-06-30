@@ -370,3 +370,12 @@ Validacoes finais deste complemento:
 - Fonte visual auditavel: `_product/proto/Criar Nova Postagem - Pacientes.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e Chrome/CDP local em `http://localhost:3000/app/community/ansiedade-em-equilibrio/post/new`, com cookie/localStorage temporarios e chamadas ao backend local bloqueadas apenas no smoke visual, confirmando `dialog` `Criar Post`, fundo contextual com estado real de erro de conexao da comunidade, ausencia do prompt restrito e backdrop com `blur(6px)`.
+
+## Complemento 2026-06-30 - dropdown de comunidade no modo escuro
+
+- Pedido do usuario: ajustar o dropdown de selecao de comunidade na modal `Criar Post` em modo escuro, onde o painel abria claro e deixava as opcoes com baixo contraste.
+- Frontend: o `SelectController` da fundacao de formularios passou a usar tokens de tema no painel customizado (`bg-surface`, `text-foreground`, `border-border` e `shadow-[var(--lectum-shadow-soft)]`) em vez de `bg-white`/sombra fixa; a area sticky da busca tambem passou para `bg-surface`.
+- Escopo: sem mudancas de backend, Prisma, migrations, endpoints, payload, regras de publicacao, anonimato, midia ou packages.
+- Fonte visual auditavel: `_product/proto/Criar Nova Postagem - Pacientes.jpg` e smoke local em `http://localhost:3000/app/community/feed/post/new`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e Chrome/CDP mobile em modo escuro com token real de desenvolvimento, confirmando dropdown com `backgroundColor=rgb(19, 28, 46)`, texto `rgb(226, 232, 240)`, borda `rgb(39, 51, 73)` e opcoes reais de comunidade legiveis.

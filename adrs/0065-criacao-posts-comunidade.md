@@ -359,3 +359,26 @@ Validacao complementar:
   sucesso ao confirmar dialog `Criar Post`, fundo contextual da comunidade em estado real de erro de
   conexao quando `localhost:3001` foi bloqueado no smoke visual, ausencia do prompt restrito e
   backdrop computado com `blur(6px)`.
+
+## Atualizacao 2026-06-30 - dropdown de comunidade em modo escuro
+
+A validacao visual da modal `Criar Post` em tema escuro mostrou que o painel customizado do seletor de comunidade ainda usava `bg-white` e sombra fixa. Como o texto ja seguia `text-foreground`, as opcoes ficavam quase invisiveis quando o documento estava com a classe `.dark`.
+
+Decisoes complementares:
+
+- Centralizar a superficie do dropdown customizado do `SelectController` em uma classe interna reutilizada pelos modos `searchMode="dropdown"`, `searchable` e `useCustomSelect`.
+- Trocar `bg-white` por `bg-surface`, adicionar `text-foreground` no painel e usar `shadow-[var(--lectum-shadow-soft)]`, preservando `border-border` e os estados existentes de hover/selecionado.
+- Trocar a faixa sticky da busca de `bg-white` para `bg-surface`, evitando recorte claro no topo do painel quando a lista rola.
+- Nao criar componente paralelo para a tela de post; o ajuste fica na fundacao de selects para corrigir tambem outros dropdowns customizados no tema escuro.
+
+Consequencias:
+
+- O dropdown de comunidade passa a herdar os tokens claro/escuro e mantem contraste consistente com a sheet mobile-first.
+- Outros selects customizados que usam o mesmo controller tambem deixam de abrir com fundo branco no modo escuro.
+- O escopo permanece visual/frontend; nao ha alteracao de API, schema, regra de dominio, anonimato, midia, storage ou packages.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- Chrome/CDP mobile em `http://localhost:3000/app/community/feed/post/new`, modo escuro e token real de desenvolvimento: sucesso ao abrir o dropdown e confirmar painel `rgb(19, 28, 46)`, texto `rgb(226, 232, 240)`, borda `rgb(39, 51, 73)` e opcoes reais legiveis.
