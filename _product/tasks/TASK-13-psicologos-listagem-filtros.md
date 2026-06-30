@@ -1476,3 +1476,31 @@ Validacoes do complemento:
 - `git diff --check`
 - Browser local via Chrome/CDP em `http://localhost:3000/psychologists` com filtros ativos e viewports `390x844` e `1440x1000`: mobile manteve chips com altura `30px`, rotulo `15px` e `boxShadow=none`; desktop renderizou chips com altura `28px`, rotulo `11px`, icone `12px` e `boxShadow=none`.
 - `pnpm.cmd check`
+
+## Execucao complementar: scroll desktop das chips de filtros (2026-06-30)
+
+- Pedido do usuario: permitir que o usuario role, no desktop, o carrossel horizontal de chips de filtros selecionados.
+- Referencia visual ativa: inventario `_product/tasks/PROTO-INVENTORY.md`, fallback local `_product/proto/Psicólogos.jpg` e screenshot enviado pelo usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- O carrossel desktop de chips passou a interceptar `wheel`/trackpad apenas dentro da area das chips, convertendo o movimento vertical/horizontal em `scrollLeft` e evitando que o feed troque de video quando o usuario tenta navegar pelos filtros.
+- Foram adicionados fades laterais e setas discretas desktop-only quando ha overflow horizontal; as setas rolam o carrossel suavemente e nao aparecem no mobile.
+- A medicao do overflow roda apos os psicologos carregarem, quando o bloco desktop das chips realmente esta montado.
+- Mobile permanece com a mesma escala e sem setas; o swipe horizontal nativo continua sendo a interacao principal.
+- Nao houve alteracao de backend, Prisma, migrations, packages, filtros reais, query params, ranking, dados, cards de beneficios ou acoes laterais.
+- ADR atualizado: `adrs/0019-descoberta-psicologos-taxonomias.md`.
+
+Criterios complementares:
+
+- [x] No desktop, o wheel/trackpad sobre as chips rola horizontalmente a lista de filtros selecionados.
+- [x] O wheel sobre as chips nao troca o video ativo do feed.
+- [x] Setas/fades aparecem somente no desktop quando ha overflow horizontal.
+- [x] Mobile permanece sem setas e com a altura de chips preservada.
+- [x] Nenhum `<img>`, package novo, mock, endpoint simulado, dado fake ou mudanca de banco foi usado.
+
+Validacoes do complemento:
+
+- `pnpm.cmd --dir frontend exec biome check src/app/app/psychologists/logic.tsx`
+- `pnpm.cmd --dir frontend check`
+- `pnpm.cmd --dir frontend build` com `NODE_OPTIONS=--max-old-space-size=4096`
+- Browser local via Chrome/CDP em `http://localhost:3000/psychologists` com filtros ativos e viewport desktop `1440x1000`: sete chips renderizadas, scroller com `clientWidth=466`, `scrollWidth=820`, seta direita visivel e wheel sobre o scroller mudou `scrollLeft` de `0` para `180`.
+- Browser local via Chrome/CDP em viewport mobile `390x844`: sete chips renderizadas, altura da primeira chip `30px` e nenhuma seta visivel.
+- `pnpm.cmd check` foi executado e bloqueado por erros TypeScript de backend fora deste ajuste em arquivos ja modificados no working tree.

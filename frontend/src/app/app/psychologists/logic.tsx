@@ -7,6 +7,8 @@ import {
   BadgePercent,
   CalendarCheck,
   Check,
+  ChevronLeft,
+  ChevronRight,
   HandHeart,
   Heart,
   type LucideIcon,
@@ -1079,11 +1081,16 @@ export const PsychologistsLogic = () => {
   );
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [activePsychologistIndex, setActivePsychologistIndex] = useState(0);
+  const [desktopFilterChipScroll, setDesktopFilterChipScroll] = useState({
+    canScrollLeft: false,
+    canScrollRight: false,
+  });
 
   const filterDialogRef = useRef<HTMLDivElement | null>(null);
   const filterDialogCloseTimerRef = useRef<number | null>(null);
   const filterDialogOpenFrameRef = useRef<number | null>(null);
   const feedContainerRef = useRef<HTMLDivElement | null>(null);
+  const desktopFilterChipsRef = useRef<HTMLDivElement | null>(null);
   const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const desktopSearchControlsRef = useRef<HTMLDivElement | null>(null);
@@ -1985,6 +1992,76 @@ export const PsychologistsLogic = () => {
   const stopInteractionPropagation = useCallback((event: { stopPropagation: () => void }) => {
     event.stopPropagation();
   }, []);
+
+  const updateDesktopFilterChipScrollState = useCallback(() => {
+    const container = desktopFilterChipsRef.current;
+
+    if (!container || !metrics.isDesktopLayout) {
+      setDesktopFilterChipScroll((current) =>
+        current.canScrollLeft || current.canScrollRight
+          ? { canScrollLeft: false, canScrollRight: false }
+          : current,
+      );
+      return;
+    }
+
+    const maxScrollLeft = Math.max(0, container.scrollWidth - container.clientWidth);
+    const nextState = {
+      canScrollLeft: container.scrollLeft > 1,
+      canScrollRight: container.scrollLeft < maxScrollLeft - 1,
+    };
+
+    setDesktopFilterChipScroll((current) =>
+      current.canScrollLeft === nextState.canScrollLeft &&
+      current.canScrollRight === nextState.canScrollRight
+        ? current
+        : nextState,
+    );
+  }, [metrics.isDesktopLayout]);
+
+  const handleDesktopFilterChipsWheel = useCallback(
+    (event: ReactWheelEvent<HTMLDivElement>) => {
+      if (!metrics.isDesktopLayout) return;
+
+      const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+      if (delta === 0) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      event.currentTarget.scrollBy({ behavior: "auto", left: delta });
+      window.requestAnimationFrame(updateDesktopFilterChipScrollState);
+    },
+    [metrics.isDesktopLayout, updateDesktopFilterChipScrollState],
+  );
+
+  const scrollDesktopFilterChips = useCallback(
+    (direction: -1 | 1, event: { preventDefault: () => void; stopPropagation: () => void }) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const container = desktopFilterChipsRef.current;
+      if (!container) return;
+
+      container.scrollBy({
+        behavior: "smooth",
+        left: direction * Math.max(96, container.clientWidth * 0.68),
+      });
+      window.setTimeout(updateDesktopFilterChipScrollState, 220);
+    },
+    [updateDesktopFilterChipScrollState],
+  );
+
+  useEffect(() => {
+    if (activeFilterChips.length === 0 || psychologists.length === 0) {
+      updateDesktopFilterChipScrollState();
+      return;
+    }
+
+    const frame = window.requestAnimationFrame(updateDesktopFilterChipScrollState);
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
+  }, [activeFilterChips.length, psychologists.length, updateDesktopFilterChipScrollState]);
 
   const handleWhatsappInteraction = useCallback(
     (event: { stopPropagation: () => void }) => {
@@ -3994,41 +4071,94 @@ export const PsychologistsLogic = () => {
                               </div>
 
                               {hasActiveFilters && activeFilterChips.length > 0 ? (
-                                <div className="pointer-events-auto -mx-5 mt-2 overflow-x-auto px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                                  <div className="flex min-w-max items-center justify-center gap-2">
-                                    {activeFilterChips.map((chip) => (
+                                <div className="pointer-events-auto -mx-5 mt-2 px-5">
+                                  <div className="relative">
+                                    <span
+                                      aria-hidden="true"
+                                      className={cn(
+                                        "pointer-events-none absolute inset-y-0 left-0 z-10 hidden w-8 rounded-l-full bg-gradient-to-r from-black/35 to-transparent transition-opacity duration-150 lg:block",
+                                        desktopFilterChipScroll.canScrollLeft
+                                          ? "opacity-100"
+                                          : "opacity-0",
+                                      )}
+                                    />
+                                    <span
+                                      aria-hidden="true"
+                                      className={cn(
+                                        "pointer-events-none absolute inset-y-0 right-0 z-10 hidden w-8 rounded-r-full bg-gradient-to-l from-black/35 to-transparent transition-opacity duration-150 lg:block",
+                                        desktopFilterChipScroll.canScrollRight
+                                          ? "opacity-100"
+                                          : "opacity-0",
+                                      )}
+                                    />
+                                    {desktopFilterChipScroll.canScrollLeft ? (
                                       <button
-                                        aria-label={`Remover filtro ${chip.label}`}
-                                        className="inline-flex h-7 max-w-[144px] items-center gap-1 rounded-full border border-white/20 bg-white/16 px-2.5 text-[11px] font-semibold text-white backdrop-blur-md transition-colors duration-150 ease-out hover:bg-white/24"
-                                        key={`${psychologist.id}-${chip.key}-${chip.label}`}
-                                        onClick={(event) => {
-                                          event.stopPropagation();
-                                          handleRemoveActiveFilter(chip.key);
-                                        }}
-                                        tabIndex={
-                                          !isActiveSlide || areFeedModeControlsHidden
-                                            ? -1
-                                            : undefined
-                                        }
+                                        aria-label="Ver filtros anteriores"
+                                        className="absolute top-1/2 left-0 z-20 hidden h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/35 text-white backdrop-blur-md transition-colors duration-150 hover:bg-black/55 lg:inline-flex"
+                                        onClick={(event) => scrollDesktopFilterChips(-1, event)}
+                                        onPointerDown={stopInteractionPropagation}
                                         type="button"
                                       >
-                                        <span className="truncate text-[11px] leading-none">
-                                          {chip.label}
-                                        </span>
-                                        <X className="h-3 w-3 shrink-0" aria-hidden="true" />
+                                        <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
                                       </button>
-                                    ))}
-
-                                    <button
-                                      className="inline-flex h-7 shrink-0 items-center rounded-full border border-white/25 bg-white px-2.5 text-[11px] font-bold text-[#0f172a] transition-transform duration-150 ease-out hover:scale-[1.02]"
-                                      onClick={handleMySearchModeClick}
-                                      tabIndex={
-                                        !isActiveSlide || areFeedModeControlsHidden ? -1 : undefined
-                                      }
-                                      type="button"
+                                    ) : null}
+                                    {desktopFilterChipScroll.canScrollRight ? (
+                                      <button
+                                        aria-label="Ver mais filtros selecionados"
+                                        className="absolute top-1/2 right-0 z-20 hidden h-6 w-6 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/35 text-white backdrop-blur-md transition-colors duration-150 hover:bg-black/55 lg:inline-flex"
+                                        onClick={(event) => scrollDesktopFilterChips(1, event)}
+                                        onPointerDown={stopInteractionPropagation}
+                                        type="button"
+                                      >
+                                        <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+                                      </button>
+                                    ) : null}
+                                    <div
+                                      className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                                      onScroll={updateDesktopFilterChipScrollState}
+                                      onWheel={handleDesktopFilterChipsWheel}
+                                      ref={desktopFilterChipsRef}
                                     >
-                                      <span className="text-[11px] leading-none">+ Filtros</span>
-                                    </button>
+                                      <div className="flex w-max min-w-full items-center justify-center gap-2">
+                                        {activeFilterChips.map((chip) => (
+                                          <button
+                                            aria-label={`Remover filtro ${chip.label}`}
+                                            className="inline-flex h-7 max-w-[144px] items-center gap-1 rounded-full border border-white/20 bg-white/16 px-2.5 text-[11px] font-semibold text-white backdrop-blur-md transition-colors duration-150 ease-out hover:bg-white/24"
+                                            key={`${psychologist.id}-${chip.key}-${chip.label}`}
+                                            onClick={(event) => {
+                                              event.stopPropagation();
+                                              handleRemoveActiveFilter(chip.key);
+                                            }}
+                                            tabIndex={
+                                              !isActiveSlide || areFeedModeControlsHidden
+                                                ? -1
+                                                : undefined
+                                            }
+                                            type="button"
+                                          >
+                                            <span className="truncate text-[11px] leading-none">
+                                              {chip.label}
+                                            </span>
+                                            <X className="h-3 w-3 shrink-0" aria-hidden="true" />
+                                          </button>
+                                        ))}
+
+                                        <button
+                                          className="inline-flex h-7 shrink-0 items-center rounded-full border border-white/25 bg-white px-2.5 text-[11px] font-bold text-[#0f172a] transition-transform duration-150 ease-out hover:scale-[1.02]"
+                                          onClick={handleMySearchModeClick}
+                                          tabIndex={
+                                            !isActiveSlide || areFeedModeControlsHidden
+                                              ? -1
+                                              : undefined
+                                          }
+                                          type="button"
+                                        >
+                                          <span className="text-[11px] leading-none">
+                                            + Filtros
+                                          </span>
+                                        </button>
+                                      </div>
+                                    </div>
                                   </div>
                                 </div>
                               ) : null}

@@ -275,6 +275,44 @@ densidade desktop e remover a sombra sem alterar o tamanho mobile.
   altura `28px`, rotulo `11px`, icone `12px` e `boxShadow=none`.
 - `pnpm.cmd check`
 
+## Complemento 2026-06-30 - scroll desktop das chips de filtros
+
+### Contexto
+
+Depois da reducao visual das chips, o desktop ainda tinha um problema de interacao: quando havia muitos filtros ativos,
+o usuario nao conseguia navegar confortavelmente pelo carrossel horizontal de chips, porque a area do feed tambem usa
+wheel/trackpad para navegacao vertical entre videos.
+
+### Decisao
+
+- Tratar o carrossel desktop de chips como ilha interativa com `data-psychologists-scroll-lock` ja existente no header do
+  card, impedindo que eventos dentro dele sejam encaminhados para troca de video.
+- Converter `wheel`/trackpad sobre a area das chips em scroll horizontal (`scrollLeft`), usando o maior delta entre
+  `deltaX` e `deltaY` para suportar mouse e trackpad.
+- Exibir fades laterais e setas discretas somente no desktop e somente quando a medicao real indicar overflow
+  horizontal.
+- Atualizar a medicao de overflow quando os filtros ativos mudam e quando os psicologos carregam, porque o header
+  desktop das chips e montado apenas depois que o feed tem slides renderizados.
+- Preservar o mobile sem setas, mantendo swipe horizontal nativo, tamanho das chips e comportamento anterior.
+
+### Consequencias
+
+- O usuario consegue rolar os filtros selecionados no desktop sem mudar acidentalmente de psicologo.
+- A existencia de mais chips fica perceptivel por fade/seta, mesmo com a scrollbar visual escondida.
+- Nao ha novo pacote, componente global ou contrato de API; o ajuste fica restrito a interacao da tela de descoberta.
+
+### Validacao
+
+- `pnpm.cmd --dir frontend exec biome check src/app/app/psychologists/logic.tsx`
+- `pnpm.cmd --dir frontend check`
+- `pnpm.cmd --dir frontend build` com `NODE_OPTIONS=--max-old-space-size=4096`
+- Browser local via Chrome/CDP em `http://localhost:3000/psychologists` com filtros ativos e viewport desktop `1440x1000`:
+  sete chips renderizadas, scroller com `clientWidth=466`, `scrollWidth=820`, seta direita visivel e wheel sobre o scroller
+  mudou `scrollLeft` de `0` para `180`.
+- Browser local via Chrome/CDP em viewport mobile `390x844`: sete chips renderizadas, altura da primeira chip `30px` e
+  nenhuma seta visivel.
+- `pnpm.cmd check` foi executado e bloqueado por erros TypeScript de backend fora deste ajuste, em arquivos ja modificados no working tree como `backend/src/modules/api/private/directory/psychologists/repositories/IndexRepository.ts`.
+
 ## Pendências
 
 - Curadoria ou ingestão real dos catálogos `specialty`, `service` e `approach`.
