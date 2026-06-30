@@ -635,20 +635,40 @@ export const PrivateTemplate = ({
         )}
       >
         <Link
+          aria-label="Ir para a página inicial da Lectum"
           className={cn(
-            "group/brand flex min-w-0 items-center rounded-2xl transition-opacity duration-200 ease-out hover:opacity-85",
+            "group/brand relative flex min-w-0 items-center rounded-2xl transition-[opacity,transform,box-shadow] duration-200 ease-out hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
             isDesktopSidebarCollapsed
-              ? "h-12 w-[72px] justify-center overflow-hidden"
-              : "h-12 flex-1",
+              ? "h-12 w-12 justify-center"
+              : "h-12 flex-1 justify-start overflow-hidden",
           )}
           href="/psychologists"
           title={isDesktopSidebarCollapsed ? "Lectum" : undefined}
         >
-          {isDesktopSidebarCollapsed ? (
-            <LogoIcon className="h-8 w-8 shrink-0" />
-          ) : (
+          <span
+            aria-hidden={isDesktopSidebarCollapsed}
+            className={cn(
+              "flex min-w-0 items-center transition-[opacity,transform,filter] duration-200 ease-out",
+              isDesktopSidebarCollapsed
+                ? "pointer-events-none -translate-x-1 opacity-0 blur-[1px]"
+                : "translate-x-0 opacity-100 blur-0",
+            )}
+          >
             <Logo className="w-[132px] shrink-0" />
-          )}
+          </span>
+          <span
+            aria-hidden={!isDesktopSidebarCollapsed}
+            className={cn(
+              "absolute inset-0 inline-grid place-items-center transition-[opacity,transform,filter] duration-200 ease-out",
+              isDesktopSidebarCollapsed
+                ? "scale-100 opacity-100 blur-0"
+                : "pointer-events-none scale-95 opacity-0 blur-[1px]",
+            )}
+          >
+            <span className="inline-grid h-11 w-11 place-items-center rounded-2xl text-primary">
+              <LogoIcon className="h-[34px] w-[34px] shrink-0" />
+            </span>
+          </span>
         </Link>
       </div>
 
