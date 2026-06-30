@@ -20,7 +20,7 @@ Decisão de produto definida em 2026-06-30:
 
 - o botão existente de **Compartilhar/SHARE** deve ser a entrada única para exportar o layout;
 - não criar botão separado de exportar redes;
-- o layout deve existir em formatos vertical 9:16 (Stories/Reels/TikTok) e quadrado 1:1 (feed);
+- o layout deve existir somente no formato vertical 9:16 (Stories/Reels/TikTok/Shorts);
 - não incluir play central;
 - não incluir botão/link/CTA dentro da arte, porque links clicáveis são configurados dentro do Instagram/TikTok;
 - o topo usa card estilo story com o texto "Perguntaram na Lectum" em azul Lectum;
@@ -39,7 +39,7 @@ A referência é norte visual e não arquitetura final. O Builder/Quick Copy nã
 
 ## Objetivo
 
-Ao tocar em Compartilhar em uma vídeo-resposta profissional, o usuário visualiza o modelo Lectum, escolhe Stories/Reels ou Feed e tenta compartilhar o arquivo gerado pelo navegador. Quando o navegador não suporta compartilhamento de arquivos, o arquivo é baixado e o link direto é copiado quando possível.
+Ao tocar em Compartilhar em uma vídeo-resposta profissional, o usuário visualiza o modelo Lectum vertical 9:16 e tenta compartilhar o arquivo gerado pelo navegador. Quando o navegador não suporta compartilhamento de arquivos, o arquivo é baixado e o link direto é copiado quando possível.
 
 ## Pré-requisitos e bloqueios
 
@@ -107,7 +107,7 @@ Frontend esperado:
 
 - Utilitário de target para decidir quando a resposta é vídeo profissional compartilhável.
 - Utilitário de exportação por canvas/MediaRecorder sem package novo.
-- Modal de preview para escolher `story`/`feed`.
+- Modal de preview vertical 9:16 sem seletor de formato.
 - Integração nas superfícies que já chamam `useSharePost`/`useShareReply`.
 - Persistir `shareReply` quando o compartilhamento/exportação for concluído por Web Share ou fallback com cópia de link.
 
@@ -133,7 +133,7 @@ Regras de UI obrigatórias:
 ## Critérios de aceite
 
 - [x] Botão Compartilhar abre o layout Lectum para vídeo-resposta profissional em posts, comentários/thread, salvos, meus posts e perfil público.
-- [x] Layout vertical e quadrado usam o mesmo card padronizado com "Perguntaram na Lectum".
+- [x] Layout vertical 9:16 usa o card padronizado com "Perguntaram na Lectum"; modelo quadrado/feed foi removido por ficar espremido no preview.
 - [x] Vídeo-resposta de post usa o título/pergunta do post; vídeo-resposta de comentário usa prévia do comentário quando disponível.
 - [x] Identidade do psicólogo remove "Dr./Dra.", não exibe CRP, mostra "Psicóloga" ou "Psicólogo" e exibe selo quando verificado.
 - [x] Exportação não mostra play central e não inclui CTA/link clicável desenhado.
@@ -161,5 +161,7 @@ Regras de UI obrigatórias:
 
 - A geração de vídeo usa capacidades do navegador; em browsers sem `MediaRecorder`/`canvas.captureStream` ou sem suporte a compartilhamento de arquivos, o fallback é download/cópia de link.
 - A duração exportada é limitada a até 60 segundos para evitar arquivos excessivos e travamentos no navegador.
+- Ajuste de produto em 2026-06-30: modelo quadrado/feed removido; manter somente o vertical 9:16 porque preserva melhor a leitura e o enquadramento do vídeo-resposta.
 - Validações executadas em 2026-06-30: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome headless mobile em `http://localhost:3000/community`.
 - O browser local validou render da rota pública sem erro. A base local retornou comunidades reais, mas nenhum post/vídeo-resposta profissional; por isso, a abertura visual do modal não foi exercitada com dados reais para evitar mock/seed artificial.
+- Ajuste vertical-only validado em 2026-06-30 com `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `GET http://localhost:3000/community/ansiedade-em-equilibrio/post/cmr15abhh0004msuh2c5gqi5v` retornando 200. Tentativa de screenshot headless dessa rota excedeu timeout local do Chrome, sem bloquear porque a página já estava validada no browser do usuário.

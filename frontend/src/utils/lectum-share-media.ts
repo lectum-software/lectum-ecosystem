@@ -1,8 +1,4 @@
-import type {
-  LectumShareChannel,
-  LectumShareFormat,
-  LectumShareVideoTarget,
-} from "@/utils/lectum-share-target";
+import type { LectumShareChannel, LectumShareVideoTarget } from "@/utils/lectum-share-target";
 import { resolvePublicMediaUrl } from "@/utils/media";
 
 type ShareNavigator = Navigator & {
@@ -68,65 +64,34 @@ type ShareCanvasLayout = {
 const MAX_VIDEO_EXPORT_SECONDS = 60;
 const VIDEO_EXPORT_FRAME_RATE = 30;
 
-const canvasLayouts: Record<LectumShareFormat, ShareCanvasLayout> = {
-  feed: {
-    card: {
-      bodyFontSize: 56,
-      headerFontSize: 34,
-      lineHeight: 68,
-      paddingX: 58,
-      paddingY: 38,
-      radius: 34,
-      width: 820,
-      x: 130,
-      y: 62,
-    },
-    chip: {
-      avatarSize: 72,
-      height: 96,
-      nameFontSize: 38,
-      roleFontSize: 28,
-      x: 56,
-      y: 922,
-    },
-    height: 1080,
-    logo: {
-      bottom: 58,
-      fontSize: 58,
-      right: 62,
-    },
-    maxQuestionLines: 2,
-    width: 1080,
+const storyCanvasLayout: ShareCanvasLayout = {
+  card: {
+    bodyFontSize: 66,
+    headerFontSize: 40,
+    lineHeight: 78,
+    paddingX: 72,
+    paddingY: 52,
+    radius: 44,
+    width: 930,
+    x: 75,
+    y: 98,
   },
-  story: {
-    card: {
-      bodyFontSize: 66,
-      headerFontSize: 40,
-      lineHeight: 78,
-      paddingX: 72,
-      paddingY: 52,
-      radius: 44,
-      width: 930,
-      x: 75,
-      y: 98,
-    },
-    chip: {
-      avatarSize: 84,
-      height: 118,
-      nameFontSize: 46,
-      roleFontSize: 34,
-      x: 64,
-      y: 1728,
-    },
-    height: 1920,
-    logo: {
-      bottom: 74,
-      fontSize: 72,
-      right: 68,
-    },
-    maxQuestionLines: 3,
-    width: 1080,
+  chip: {
+    avatarSize: 84,
+    height: 118,
+    nameFontSize: 46,
+    roleFontSize: 34,
+    x: 64,
+    y: 1728,
   },
+  height: 1920,
+  logo: {
+    bottom: 74,
+    fontSize: 72,
+    right: 68,
+  },
+  maxQuestionLines: 3,
+  width: 1080,
 };
 
 const getCanvasPalette = (): ShareCanvasPalette => {
@@ -580,16 +545,14 @@ const supportedVideoMimeType = () => {
 
 const extensionFromMimeType = (mimeType: string) => (mimeType.includes("mp4") ? "mp4" : "webm");
 
-const safeFileName = (format: LectumShareFormat, extension: string) =>
-  `lectum-video-resposta-${format === "story" ? "stories-reels" : "feed"}.${extension}`;
+const safeFileName = (extension: string) => `lectum-video-resposta-vertical-9x16.${extension}`;
 
 const createImageShareFile = async (
   target: LectumShareVideoTarget,
-  format: LectumShareFormat,
   video: HTMLVideoElement,
   assets: LoadedVisualAssets,
 ) => {
-  const layout = canvasLayouts[format];
+  const layout = storyCanvasLayout;
   const canvas = createCanvas(layout);
   const ctx = canvas.getContext("2d");
 
@@ -600,24 +563,23 @@ const createImageShareFile = async (
   drawLectumShareFrame(ctx, video, layout, target, assets, getCanvasPalette());
   const blob = await canvasToBlob(canvas, "image/png");
 
-  return new File([blob], safeFileName(format, "png"), {
+  return new File([blob], safeFileName("png"), {
     type: "image/png",
   });
 };
 
 const createVideoShareFile = async (
   target: LectumShareVideoTarget,
-  format: LectumShareFormat,
   video: VideoWithCaptureStream,
   assets: LoadedVisualAssets,
 ) => {
   const mimeType = supportedVideoMimeType();
-  const layout = canvasLayouts[format];
+  const layout = storyCanvasLayout;
   const canvas = createCanvas(layout) as CanvasWithCaptureStream;
   const ctx = canvas.getContext("2d");
 
   if (!ctx || !canvas.captureStream || mimeType === null) {
-    return createImageShareFile(target, format, video, assets);
+    return createImageShareFile(target, video, assets);
   }
 
   const stream = canvas.captureStream(VIDEO_EXPORT_FRAME_RATE);
@@ -688,7 +650,7 @@ const createVideoShareFile = async (
       const outputType = recorder.mimeType || mimeType || "video/webm";
       const blob = new Blob(chunks, { type: outputType });
       const extension = extensionFromMimeType(outputType);
-      resolve(new File([blob], safeFileName(format, extension), { type: outputType }));
+      resolve(new File([blob], safeFileName(extension), { type: outputType }));
     };
 
     const start = async () => {
@@ -724,7 +686,7 @@ const createVideoShareFile = async (
   });
 };
 
-const createLectumShareFile = async (target: LectumShareVideoTarget, format: LectumShareFormat) => {
+const createLectumShareFile = async (target: LectumShareVideoTarget) => {
   const videoUrl = resolvePublicMediaUrl(target.videoUrl);
 
   if (!videoUrl) {
@@ -738,11 +700,11 @@ const createLectumShareFile = async (target: LectumShareVideoTarget, format: Lec
   const [video, assets] = await Promise.all([loadVideoElement(videoUrl), loadVisualAssets(target)]);
 
   try {
-    return await createVideoShareFile(target, format, video, assets);
+    return await createVideoShareFile(target, video, assets);
   } catch {
     const fallbackVideo = await loadVideoElement(videoUrl);
 
-    return createImageShareFile(target, format, fallbackVideo, assets);
+    return createImageShareFile(target, fallbackVideo, assets);
   }
 };
 
@@ -767,9 +729,8 @@ const copyShareUrl = async (url: string) => {
 
 export const shareLectumVideoResponse = async (
   target: LectumShareVideoTarget,
-  format: LectumShareFormat,
 ): Promise<ShareExportResult> => {
-  const file = await createLectumShareFile(target, format);
+  const file = await createLectumShareFile(target);
   const nav = navigator as ShareNavigator;
   const shareData: ShareData = {
     files: [file],

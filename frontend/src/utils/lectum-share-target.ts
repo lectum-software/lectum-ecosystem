@@ -6,8 +6,6 @@ import type {
   UserPostReply,
 } from "@/api/generator/types/posts";
 
-export type LectumShareFormat = "story" | "feed";
-
 export type LectumShareChannel = "clipboard" | "web_share";
 
 export type LectumShareVideoTarget = {
