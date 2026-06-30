@@ -36,7 +36,11 @@ import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import * as userActions from "@/store/modules/user/actions";
-import { COMMUNITY_FEED_SLUG, DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
+import {
+  COMMUNITY_FEED_SLUG,
+  DEFAULT_COMMUNITY_FEED_HREF,
+  LEGACY_COMMUNITY_FEED_HREF,
+} from "@/utils/community";
 import { recordAppNavigationPoint } from "@/utils/navigation-history";
 
 type PrivateTemplateProps = PropsWithChildren<{
@@ -235,6 +239,10 @@ const normalizePathname = (pathname: string) => {
 const getNavigationContextPathname = (pathname: string) => {
   const normalizedPathname = normalizePathname(pathname);
   const segments = normalizedPathname.split("/").filter(Boolean);
+
+  if (normalizedPathname === LEGACY_COMMUNITY_FEED_HREF) {
+    return DEFAULT_COMMUNITY_FEED_HREF;
+  }
 
   if (
     segments.length === 5 &&

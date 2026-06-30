@@ -149,7 +149,7 @@ Templates/shells devem viver em `frontend/src/templates`.
 - Sessão real usa cookie de token e Redux Persist.
 - `proxy.ts` protege rotas privadas.
 - Após a TASK-40, `/app` é namespace autenticado/noindex: páginas públicas de descoberta/leitura vivem fora de
-  `/app` (`/psychologists`, `/psychologists/[id]`, `/community`, `/community/feed`,
+  `/app` (`/`, `/psychologists`, `/psychologists/[id]`, `/community`, `/community/feed` legado/compatibilidade,
   `/community/[slug]/post/[id]`). Interações que exigem conta podem continuar sob `/app`, como criação de post,
   sugestão de comunidade, favoritos, notificações, perfil, posts do usuário e área profissional.
 - `useUserSet` é o caminho para gravar usuário/token pós-login.

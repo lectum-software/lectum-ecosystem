@@ -4,11 +4,6 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
-        source: "/",
-        destination: "/psychologists",
-        permanent: false,
-      },
-      {
         source: "/psychologist/cfp",
         destination: "/app/professional/cfp",
         permanent: false,

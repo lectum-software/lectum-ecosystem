@@ -12,7 +12,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "Lectum",
     description: APP_DESCRIPTION,
     lang: "pt-BR",
-    start_url: "/psychologists",
+    start_url: "/",
     scope: "/",
     display: "standalone",
     background_color: "#f6f7f8",

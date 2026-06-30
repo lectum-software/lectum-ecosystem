@@ -13,21 +13,24 @@ export const SITE_DESCRIPTION =
     ? configuredSiteDescription
     : defaultSiteDescription;
 
+export const COMMUNITY_FEED_DESCRIPTION =
+  "Feed público da Lectum com perguntas, relatos e respostas de psicólogos em comunidades de saúde mental.";
+
 export const PUBLIC_INDEXABLE_ROUTES = [
   {
-    path: "/psychologists",
+    path: "/",
     changeFrequency: "daily" as const,
     priority: 1,
   },
   {
-    path: "/community",
-    changeFrequency: "weekly" as const,
+    path: "/psychologists",
+    changeFrequency: "daily" as const,
     priority: 0.9,
   },
   {
-    path: "/community/feed",
-    changeFrequency: "daily" as const,
-    priority: 0.9,
+    path: "/community",
+    changeFrequency: "weekly" as const,
+    priority: 0.8,
   },
   {
     path: "/community/top-mentors",

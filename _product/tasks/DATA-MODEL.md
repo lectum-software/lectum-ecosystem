@@ -649,8 +649,9 @@ O fluxo de alteração de cartão da TASK-33 segue a mesma regra do checkout: re
 A auditoria achou namespaces conflitantes nas tasks de comunidade (`/communities` vs `/community` vs `/posts`). Padrao canonico apos TASK-40:
 
 - Frontend publico indexavel fora de `/app`:
+  - home/feed agregado: `/` (rota canônica do feed público da comunidade);
   - psicologos: `/psychologists`, perfil em `/psychologists/[id]` (`[id]` = `user.id`) e contato em `/psychologists/[id]/contact`;
-  - comunidades: explorar/lista em `/community`, feed agregado em `/community/feed`, detalhe em `/community/[slug]`, post em `/community/[slug]/post/[id]` e thread em `/community/[slug]/post/[id]/thread/[replyId]`;
+  - comunidades: explorar/lista em `/community`, feed agregado legado/compatível em `/community/feed`, detalhe em `/community/[slug]`, post em `/community/[slug]/post/[id]` e thread em `/community/[slug]/post/[id]/thread/[replyId]`;
   - ranking de mentores: `/community/top-mentors`.
 - Frontend autenticado sob `/app`: perfil do usuario, favoritos, notificacoes, configuracoes, posts do usuario, area profissional e fluxos de interacao/autoria. Exemplos: `/app/community/suggest`, `/app/community/[slug]/post/new`, `/app/posts/mine`, `/app/posts/saved`, `/app/professional/*`, `/app/profile`.
 - `/app` nao deve hospedar paginas publicas indexaveis. URLs legadas sob `/app/community*` e `/app/psychologist*` podem existir apenas como compatibilidade autenticada/noindex ou redirecionamento, nunca como canonicas publicas.

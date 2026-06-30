@@ -22,6 +22,7 @@ export function GET() {
     "- Conteúdo privado, autenticação, dashboards e jornadas de onboarding não devem ser indexados.",
     "",
     "## URLs úteis",
+    `- Feed inicial: ${absoluteUrl("/")}`,
     `- Psicólogos: ${absoluteUrl("/psychologists")}`,
     `- Comunidades: ${absoluteUrl("/community")}`,
     `- Sitemap: ${absoluteUrl("/sitemap.xml")}`,
