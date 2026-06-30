@@ -1131,6 +1131,7 @@ export const ProfessionalProfileSetupLogic = () => {
       "hipnoterapia",
       "terapia-familiar",
       "orientacao-vocacional",
+      "psicologia-organizacional-e-do-trabalho",
       "avaliacao-psicologica",
       "neuropsicologia",
     ];

@@ -190,6 +190,7 @@ const SERVICE_DISPLAY_ORDER = [
   "coach",
   "orientacao-profissional",
   "orientacao-vocacional",
+  "psicologia-organizacional-e-do-trabalho",
   "neuropsicologia",
   "terapia-familiar",
   "hipnoterapia",

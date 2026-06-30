@@ -1551,3 +1551,42 @@ Validacoes do complemento:
 - Browser local via Chrome/CDP em `http://localhost:3000/psychologists` com filtros ativos e viewport desktop `1440x1000`: sete chips renderizadas, scroller com `clientWidth=466`, `scrollWidth=820`, seta direita visivel e wheel sobre o scroller mudou `scrollLeft` de `0` para `180`.
 - Browser local via Chrome/CDP em viewport mobile `390x844`: sete chips renderizadas, altura da primeira chip `30px` e nenhuma seta visivel.
 - `pnpm.cmd check` foi executado e bloqueado por erros TypeScript de backend fora deste ajuste em arquivos ja modificados no working tree.
+
+## Execucao complementar: servico Psicologia Organizacional e do Trabalho (2026-06-30)
+
+- Pedido do usuario: adicionar `Psicologia Organizacional e do Trabalho` nas opcoes de Servicos do perfil profissional.
+- Referencia visual ativa: inventario `_product/tasks/PROTO-INVENTORY.md`, tela local `_product/proto/Editar Perfil - Psicologo.jpg`
+  e screenshot enviado pelo usuario em `/app/professional/profile/setup`; Builder/Quick Copy nao esta exposto como ferramenta
+  callable neste ambiente.
+- Backend: criada migration real de catalogo em `services` com slug estavel
+  `psicologia-organizacional-e-do-trabalho`, id `service-psicologia-organizacional-e-do-trabalho`, `active=true` e
+  `deleted=false`, usando `ON CONFLICT (slug)` para manter idempotencia em ambientes ja migrados.
+- Frontend: a ordenacao mobile-first dos chips em `/app/professional/profile/setup` passou a posicionar o novo servico
+  junto dos servicos de carreira/trabalho, apos `Orientacao Profissional`, sem criar lista paralela nem mock.
+- Frontend: a ordenacao dos filtros de descoberta tambem reconhece o novo slug para manter consistencia quando o catalogo
+  real for exibido em `/psychologists`.
+- Nao houve package novo, schema Prisma novo, endpoint simulado, mock ou dado fake permanente.
+- ADR atualizado: `adrs/0019-descoberta-psicologos-taxonomias.md`.
+
+Criterios complementares:
+
+- [x] `Psicologia Organizacional e do Trabalho` existe como servico ativo no catalogo real `services`.
+- [x] A tela de perfil profissional renderiza a opcao em Servicos no mobile base de 390px.
+- [x] A descoberta de psicologos reconhece o slug na ordenacao de filtros.
+- [x] A migration foi aplicada com `pnpm --dir backend db:migrate`.
+- [x] Nenhum `<img>`, package novo, mock, endpoint simulado ou dado fake permanente foi usado.
+
+Validacoes do complemento:
+
+- `pnpm --dir backend db:migrate`
+- `pnpm --dir backend exec prisma migrate status`
+- Smoke Prisma somente leitura confirmou o item ativo `Psicologia Organizacional e do Trabalho` no slug
+  `psicologia-organizacional-e-do-trabalho`.
+- `pnpm --dir frontend exec biome check src/app/app/professional/profile/setup/logic.tsx src/app/app/psychologists/filter-options.ts`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build` com `NODE_OPTIONS=--max-old-space-size=4096`
+- `pnpm check`
+- Browser local via Chrome/CDP em `http://localhost:3000/app/professional/profile/setup`, viewport mobile `390x844`, com usuario
+  temporario real removido ao final: a pagina renderizou o botao `Psicologia Organizacional e do Trabalho` em Servicos.

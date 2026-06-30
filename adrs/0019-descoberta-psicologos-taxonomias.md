@@ -313,6 +313,47 @@ wheel/trackpad para navegacao vertical entre videos.
   nenhuma seta visivel.
 - `pnpm.cmd check` foi executado e bloqueado por erros TypeScript de backend fora deste ajuste, em arquivos ja modificados no working tree como `backend/src/modules/api/private/directory/psychologists/repositories/IndexRepository.ts`.
 
+## Complemento 2026-06-30 - servico Psicologia Organizacional e do Trabalho
+
+### Contexto
+
+O produto passou a precisar que psicologos que atendem empresas, RH e demandas corporativas possam declarar esse
+servico no perfil profissional. A nomenclatura escolhida foi `Psicologia Organizacional e do Trabalho`, alinhada ao
+uso profissional da area e ao escopo V1 de psicologia da Lectum.
+
+### Decisao
+
+- Adicionar o servico como item real do catalogo `services`, com slug estavel
+  `psicologia-organizacional-e-do-trabalho`.
+- Manter a taxonomia como `service`, e nao como especialidade ou abordagem, porque o usuario escolhe esse item na secao
+  "Servicos" do perfil e ele representa uma oferta de atendimento/consultoria.
+- Aplicar a inclusao por migration idempotente com `ON CONFLICT (slug)`, sem seed fake e sem depender de fallback
+  hardcoded do frontend.
+- Posicionar o slug nas ordenacoes de perfil e descoberta junto dos servicos relacionados a carreira/trabalho, depois
+  de `Orientacao Profissional`, mantendo as listas consumindo o catalogo real do backend.
+
+### Consequencias
+
+- Psicologos podem selecionar `Psicologia Organizacional e do Trabalho` no perfil e o item fica disponivel para filtros
+  de descoberta quando houver profissionais associados a ele.
+- O catalogo continua centralizado no banco, preservando a arquitetura de taxonomias `service`/joins existente.
+- Nao ha mudanca de schema Prisma, contratos de API, packages ou regra de plano; o plano gratuito segue limitado a um
+  servico selecionado e planos profissionais/cortesias seguem com todos os servicos ativos.
+
+### Validacao
+
+- `pnpm --dir backend db:migrate`
+- `pnpm --dir backend exec prisma migrate status`
+- Smoke Prisma somente leitura confirmou o item ativo no slug `psicologia-organizacional-e-do-trabalho`.
+- `pnpm --dir frontend exec biome check src/app/app/professional/profile/setup/logic.tsx src/app/app/psychologists/filter-options.ts`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build` com `NODE_OPTIONS=--max-old-space-size=4096`
+- `pnpm check`
+- Browser local via Chrome/CDP em `/app/professional/profile/setup`, viewport `390x844`, confirmou o botao
+  `Psicologia Organizacional e do Trabalho` em Servicos com usuario temporario real removido ao final.
+
 ## Complemento 2026-06-30 - semantica de modalidade compativel
 
 ### Contexto
