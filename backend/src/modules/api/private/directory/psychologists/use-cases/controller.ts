@@ -7,6 +7,7 @@ import service, {
   reviews as reviewsService,
   show as showService,
   videoWatch as videoWatchService,
+  view as viewService,
 } from "./services";
 
 export const index = async (req: Request, res: Response) => {
@@ -80,5 +81,15 @@ export const videoWatch = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "directory_psychologists_video_watch", err);
+  }
+};
+
+export const view = async (req: Request, res: Response) => {
+  try {
+    const resolve = await viewService(req as unknown as Parameters<typeof viewService>[0]);
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "directory_psychologists_view", err);
   }
 };

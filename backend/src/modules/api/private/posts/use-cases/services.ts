@@ -2,6 +2,7 @@ import { error, msg } from "@/helpers/translate";
 import {
   notifyNewPostReply,
   notifyPostSaved,
+  notifyPostShared,
   notifyPostVote,
 } from "@/main/notification/domain-events";
 import type {
@@ -16,6 +17,7 @@ import type {
   IPostReportDTO,
   IPostSaveDTO,
   IPostSavedDTO,
+  IPostShareDTO,
   IPostShowDTO,
   IPostUpdateDTO,
   IPostUpdateReplyDTO,
@@ -503,6 +505,28 @@ export const report = async (data: IPostReportDTO) => {
   });
 
   return resolveMutationResult(res, 200, "post_report_created");
+};
+
+export const share = async (data: IPostShareDTO) => {
+  const repository = new PostRepository();
+  const res = await repository.share(data);
+
+  if (res.kind !== "ok") return resolveMutationResult(res, 200, "post_shared");
+
+  if (res.data.notification_event_id) {
+    await notifyPostShared({
+      actorId: data.auth?.id ?? null,
+      postId: res.data.post_id,
+      replyId: res.data.reply_id,
+      shareId: res.data.notification_event_id,
+    });
+  }
+
+  return {
+    status: 200,
+    ...msg("post_shared", {}),
+    data: res.data,
+  };
 };
 
 export const vote = async (data: IPostVoteDTO) => {

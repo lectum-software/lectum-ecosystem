@@ -51,7 +51,7 @@ import {
   useInfiniteCommunityPosts,
   useUnfollowCommunity,
 } from "@/api/callers/community";
-import { useSavePost, useVotePost } from "@/api/callers/posts";
+import { useSavePost, useSharePost, useVotePost } from "@/api/callers/posts";
 import type {
   CommunityDetail,
   CommunityFeedScope,
@@ -2528,6 +2528,7 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
   const postsQuery = useInfiniteCommunityPosts(slug, postsQueryParams, Boolean(detail.data));
   const followMutation = useFollowCommunity();
   const unfollowMutation = useUnfollowCommunity();
+  const sharePostMutation = useSharePost();
   const community = detail.data?.community;
   const loadedPosts = useMemo(
     () => flattenCommunityPostPages(postsQuery.data?.pages),
@@ -2605,11 +2606,14 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
     const url = `${window.location.origin}/community/${post.community.slug}/post/${post.id}`;
 
     try {
-      if (navigator.share) {
-        await navigator.share({ title: post.title, url });
+      const nativeShare = (navigator as { share?: (data: ShareData) => Promise<void> }).share;
+      const channel = nativeShare ? "web_share" : "clipboard";
+      if (nativeShare) {
+        await nativeShare.call(navigator, { title: post.title, url });
       } else {
         await navigator.clipboard.writeText(url);
       }
+      sharePostMutation.mutate({ id: post.id, body: { channel } });
       setShareFeedback(post.id);
       window.setTimeout(() => setShareFeedback(null), 2400);
     } catch {
@@ -2896,6 +2900,7 @@ export const CommunityFeedLogic = () => {
     [deferredSearch, scope, selectedCommunitySlug],
   );
   const feed = useInfiniteCommunityFeedPosts(query);
+  const sharePostMutation = useSharePost();
   const posts = useMemo(() => flattenCommunityPostPages(feed.data?.pages), [feed.data?.pages]);
   const errorMessage = feed.isError ? resolveFeedError(feed.error) : null;
   const firstFeedPage = feed.data?.pages[0];
@@ -2976,11 +2981,14 @@ export const CommunityFeedLogic = () => {
     const url = `${window.location.origin}/community/${post.community.slug}/post/${post.id}`;
 
     try {
-      if (navigator.share) {
-        await navigator.share({ title: post.title, url });
+      const nativeShare = (navigator as { share?: (data: ShareData) => Promise<void> }).share;
+      const channel = nativeShare ? "web_share" : "clipboard";
+      if (nativeShare) {
+        await nativeShare.call(navigator, { title: post.title, url });
       } else {
         await navigator.clipboard.writeText(url);
       }
+      sharePostMutation.mutate({ id: post.id, body: { channel } });
       setShareFeedback(post.id);
       window.setTimeout(() => setShareFeedback(null), 2400);
     } catch {

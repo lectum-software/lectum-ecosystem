@@ -21,6 +21,7 @@ import type {
   IPostReportDTO,
   IPostSaveDTO,
   IPostSavedDTO,
+  IPostShareDTO,
   IPostShowDTO,
   IPostUpdateDTO,
   IPostUpdateReplyDTO,
@@ -41,6 +42,7 @@ import type {
   PostReplyDTO,
   PostReportResponse,
   PostSaveResponse,
+  PostShareResponse,
   PostVoteResponse,
 } from "../DTOs/IPostDTO";
 import type { IPostRepository } from "./interfaces/IPostRepository";
@@ -49,6 +51,7 @@ const DEFAULT_LIMIT = 10;
 const MAX_LIMIT = 30;
 const INLINE_REPLY_DESCENDANT_DEPTH = 4;
 const REPLY_DOWNVOTE_RANKING_WEIGHT = 0.6;
+const SHARE_ANTI_SPAM_WINDOW_MS = 60 * 60 * 1000;
 
 const communitySelect = {
   id: true,
@@ -360,6 +363,15 @@ const normalizeVoteValue = (value?: number | null): CurrentVote => {
   if (value === 1 || value === -1) return value;
 
   return null;
+};
+
+const normalizeShareChannel = (value?: string | null): "clipboard" | "web_share" =>
+  value === "clipboard" ? "clipboard" : "web_share";
+
+const getDeviceId = (headers?: Record<string, string | string[] | undefined>) => {
+  const raw = headers?.["x-device"];
+
+  return Array.isArray(raw) ? raw[0] : raw;
 };
 
 const toPostMediaItemsResponse = (
@@ -2003,6 +2015,114 @@ export class PostRepository implements IPostRepository {
         description: report.description,
         status: report.status,
         created_at: report.createdAt,
+      },
+    };
+  }
+
+  async share(data: IPostShareDTO): Promise<PostMutationResult<PostShareResponse>> {
+    const post = await findPublishedPost(data.p.id);
+    if (!post) return { kind: "not_found" };
+
+    const replyId = data.p.replyId?.trim() || data.b.replyId?.trim() || null;
+    let targetAuthorId = post.author_id;
+
+    if (replyId) {
+      const reply = await prisma.post_reply.findFirst({
+        where: {
+          id: replyId,
+          post_id: post.id,
+          deleted: false,
+        },
+        select: {
+          author_id: true,
+          id: true,
+        },
+      });
+
+      if (!reply) return { kind: "invalid_target" };
+
+      targetAuthorId = reply.author_id;
+    }
+
+    const actorId = data.auth?.id ?? null;
+    const deviceId = getDeviceId(data.headers);
+    const targetType = replyId ? "reply" : "post";
+
+    if (actorId && actorId === targetAuthorId) {
+      return {
+        kind: "ok",
+        data: {
+          id: "",
+          notification_event_id: null,
+          post_id: post.id,
+          reply_id: replyId,
+          shared: false,
+          target_type: targetType,
+        },
+      };
+    }
+
+    const actorScope: Prisma.post_shareWhereInput[] = [];
+    if (actorId) actorScope.push({ user_id: actorId });
+    if (deviceId) actorScope.push({ device_id: deviceId });
+
+    if (actorScope.length > 0) {
+      const recent = await prisma.post_share.findFirst({
+        orderBy: {
+          createdAt: "desc",
+        },
+        select: {
+          id: true,
+        },
+        where: {
+          OR: actorScope,
+          createdAt: {
+            gte: new Date(Date.now() - SHARE_ANTI_SPAM_WINDOW_MS),
+          },
+          deleted: false,
+          post_id: post.id,
+          reply_id: replyId,
+        },
+      });
+
+      if (recent) {
+        return {
+          kind: "ok",
+          data: {
+            id: recent.id,
+            notification_event_id: null,
+            post_id: post.id,
+            reply_id: replyId,
+            shared: false,
+            target_type: targetType,
+          },
+        };
+      }
+    }
+
+    const share = await prisma.post_share.create({
+      data: {
+        channel: normalizeShareChannel(data.b.channel),
+        device_id: deviceId ?? null,
+        post_id: post.id,
+        reply_id: replyId,
+        target_type: targetType,
+        user_id: actorId,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    return {
+      kind: "ok",
+      data: {
+        id: share.id,
+        notification_event_id: share.id,
+        post_id: post.id,
+        reply_id: replyId,
+        shared: true,
+        target_type: targetType,
       },
     };
   }

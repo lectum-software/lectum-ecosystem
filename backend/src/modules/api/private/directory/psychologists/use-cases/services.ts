@@ -1,5 +1,5 @@
 import { error, msg } from "@/helpers/translate";
-import { notifyWhatsappClick } from "@/main/notification/domain-events";
+import { notifyProfileView, notifyWhatsappClick } from "@/main/notification/domain-events";
 import type { IContactClickDTO, IContactDTO } from "../DTOs/IContactDTO";
 import type { IIndexDTO } from "../DTOs/IIndexDTO";
 import type { IProfileListDTO, IProfileShowDTO } from "../DTOs/IProfileDTO";
@@ -8,6 +8,7 @@ import { ContactRepository } from "../repositories/ContactRepository";
 import { IndexRepository } from "../repositories/IndexRepository";
 import { ProfileRepository } from "../repositories/ProfileRepository";
 import { ProfileVideoWatchRepository } from "../repositories/ProfileVideoWatchRepository";
+import { ProfileViewRepository } from "../repositories/ProfileViewRepository";
 
 export default async (data: IIndexDTO) => {
   const repository = new IndexRepository();
@@ -178,5 +179,32 @@ export const videoWatch = async (data: IProfileVideoWatchDTO) => {
     data: {
       tracked: res.tracked,
     },
+  };
+};
+
+export const view = async (data: IProfileShowDTO) => {
+  const repository = new ProfileViewRepository();
+  const res = await repository.track(data);
+
+  if (!res) {
+    return {
+      status: 404,
+      ...error("not_found", {
+        model: "psychologist_profile",
+      }),
+    };
+  }
+
+  if (res.notification_event_id) {
+    await notifyProfileView({
+      psychologistId: data.p.id,
+      viewId: res.notification_event_id,
+    });
+  }
+
+  return {
+    status: 200,
+    ...msg("store", {}),
+    data: res,
   };
 };

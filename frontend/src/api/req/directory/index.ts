@@ -7,6 +7,7 @@ import type {
   DirectoryPsychologistProfileListQuery,
   DirectoryPsychologistProfilePostsResponse,
   DirectoryPsychologistProfileReviewsResponse,
+  DirectoryPsychologistProfileViewResponse,
   DirectoryPsychologistsQuery,
   DirectoryPsychologistsResponse,
   DirectoryPsychologistVideoWatchPayload,
@@ -83,6 +84,19 @@ export const createDirectoryPsychologistContactClick = async (id: string) => {
   });
 
   return handleReq<DirectoryPsychologistContactClickResponse>({
+    ...handle,
+    hideError: true,
+  });
+};
+
+export const trackDirectoryPsychologistProfileView = async (id: string) => {
+  const handle = callEndpoint({
+    route: "/api/private/directory/psychologists/:id/view",
+    method: "POST",
+    params: { id },
+  });
+
+  return handleReq<DirectoryPsychologistProfileViewResponse>({
     ...handle,
     hideError: true,
   });

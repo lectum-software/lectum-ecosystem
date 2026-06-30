@@ -398,3 +398,79 @@ export const notifyPostSaved = async (params: {
     },
   });
 };
+
+export const notifyProfileView = async (params: { psychologistId: string; viewId: string }) => {
+  await notifyOnce({
+    messageKey: "visualizacao_perfil",
+    recipientIds: [params.psychologistId],
+    redirect: professionalAnalyticsRedirect,
+    sourceId: params.viewId,
+    sourceType: "profile_view",
+    props: {
+      psychologist_id: params.psychologistId,
+      view_id: params.viewId,
+    },
+  });
+};
+
+export const notifyPostShared = async (params: {
+  actorId?: string | null;
+  postId: string;
+  replyId?: string | null;
+  shareId: string;
+}) => {
+  const target = params.replyId
+    ? await prisma.post_reply.findFirst({
+        where: {
+          id: params.replyId,
+          post_id: params.postId,
+          deleted: false,
+        },
+        select: {
+          author_id: true,
+          post: {
+            select: {
+              community: {
+                select: {
+                  slug: true,
+                },
+              },
+            },
+          },
+        },
+      })
+    : await prisma.community_post.findFirst({
+        where: {
+          id: params.postId,
+          deleted: false,
+        },
+        select: {
+          author_id: true,
+          community: {
+            select: {
+              slug: true,
+            },
+          },
+        },
+      });
+
+  if (!target) return;
+
+  const communitySlug = "post" in target ? target.post.community.slug : target.community.slug;
+  const recipientIds = await filterPostMutedRecipients(params.postId, [target.author_id]);
+
+  await notifyOnce({
+    actorId: params.actorId,
+    messageKey: "compartilhamento",
+    recipientIds,
+    redirect: communityPostRedirect(communitySlug, params.postId),
+    sourceId: params.shareId,
+    sourceType: "post_share",
+    props: {
+      post_id: params.postId,
+      reply_id: params.replyId ?? null,
+      share_id: params.shareId,
+      target_type: params.replyId ? "reply" : "post",
+    },
+  });
+};

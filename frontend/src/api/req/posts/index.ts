@@ -14,6 +14,8 @@ import type {
   PostReportPayload,
   PostReportResponse,
   PostSaveResponse,
+  PostSharePayload,
+  PostShareResponse,
   PostUpdateResponse,
   PostVotePayload,
   PostVoteResponse,
@@ -162,6 +164,38 @@ export const reportReply = async (id: string, replyId: string, body: PostReportP
   return handleReq<PostReportResponse>({
     ...handle,
     showSuccess: true,
+  });
+};
+
+export const sharePost = async (id: string, body: PostSharePayload = {}) => {
+  const handle = callEndpoint({
+    route: "/api/private/posts/:id/share",
+    method: "POST",
+    params: { id },
+    body,
+  });
+
+  return handleReq<PostShareResponse>({
+    ...handle,
+    hideError: true,
+  });
+};
+
+export const shareReply = async (
+  id: string,
+  replyId: string,
+  body: Omit<PostSharePayload, "replyId"> = {},
+) => {
+  const handle = callEndpoint({
+    route: "/api/private/posts/:id/replies/:replyId/share",
+    method: "POST",
+    params: { id, replyId },
+    body,
+  });
+
+  return handleReq<PostShareResponse>({
+    ...handle,
+    hideError: true,
   });
 };
 

@@ -10,6 +10,7 @@ import type {
   IPostReportDTO,
   IPostSaveDTO,
   IPostSavedDTO,
+  IPostShareDTO,
   IPostShowDTO,
   IPostUpdateDTO,
   IPostUpdateReplyDTO,
@@ -24,6 +25,7 @@ import type {
   PostReplyDTO,
   PostReportResponse,
   PostSaveResponse,
+  PostShareResponse,
   PostVoteResponse,
 } from "../../DTOs/IPostDTO";
 
@@ -39,6 +41,7 @@ export interface IPostRepository {
   updatePost(data: IPostUpdateDTO): Promise<PostMutationResult<PostDetailResponse["post"]>>;
   updateReply(data: IPostUpdateReplyDTO): Promise<PostMutationResult<PostReplyDTO>>;
   report(data: IPostReportDTO): Promise<PostMutationResult<PostReportResponse>>;
+  share(data: IPostShareDTO): Promise<PostMutationResult<PostShareResponse>>;
   vote(data: IPostVoteDTO): Promise<PostMutationResult<PostVoteResponse>>;
   save(data: IPostSaveDTO): Promise<PostMutationResult<PostSaveResponse>>;
   unsave(data: IPostSaveDTO): Promise<PostMutationResult<PostSaveResponse>>;

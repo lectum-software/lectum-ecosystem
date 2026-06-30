@@ -22,6 +22,8 @@ import type {
   PostReportPayload,
   PostReportResponse,
   PostSaveResponse,
+  PostSharePayload,
+  PostShareResponse,
   PostUpdateResponse,
   PostVotePayload,
   PostVoteResponse,
@@ -382,6 +384,37 @@ export const useReportReply = (callbacks?: {
       callbacks?.onSuccess?.(data);
     },
     onError: callbacks?.onError,
+  });
+};
+
+export const useSharePost = (callbacks?: {
+  onSuccess?: (data: PostShareResponse) => void;
+  onError?: (error: unknown) => void;
+}) => {
+  return useMutation({
+    mutationFn: ({ body = {}, id }: { body?: PostSharePayload; id: string }) =>
+      api.sharePost(id, body),
+    onError: callbacks?.onError,
+    onSuccess: callbacks?.onSuccess,
+  });
+};
+
+export const useShareReply = (callbacks?: {
+  onSuccess?: (data: PostShareResponse) => void;
+  onError?: (error: unknown) => void;
+}) => {
+  return useMutation({
+    mutationFn: ({
+      body = {},
+      postId,
+      replyId,
+    }: {
+      body?: Omit<PostSharePayload, "replyId">;
+      postId: string;
+      replyId: string;
+    }) => api.shareReply(postId, replyId, body),
+    onError: callbacks?.onError,
+    onSuccess: callbacks?.onSuccess,
   });
 };
 

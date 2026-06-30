@@ -99,6 +99,11 @@ export type DirectoryPsychologistContactResponse = {
 
 export type DirectoryPsychologistContactClickResponse = DirectoryPsychologistContactResponse;
 
+export type DirectoryPsychologistProfileViewResponse = {
+  notification_event_id: string | null;
+  tracked: boolean;
+};
+
 export type DirectoryPsychologistVideoWatchPayload = {
   completed?: boolean;
   duration_seconds?: number;

@@ -10,7 +10,7 @@ A TASK-29A concluiu o dispatcher central de notificacoes in-app, tempo real e pu
 
 Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao. A task nao alterou interface; as referencias obrigatorias foram consultadas para confirmar escopo, arquitetura e ausencia de fonte visual aplicavel.
 
-Durante a auditoria foram encontrados produtores persistidos para avaliacao, favoritos, cliques WhatsApp, posts, respostas, votos e salvamentos. Nao existe fonte persistida para `profile_view_event` nem modelo/endpoint de compartilhamento de posts; os compartilhamentos atuais sao apenas `navigator.share`/clipboard no frontend. Por regra do projeto, esses dois eventos nao foram simulados.
+Durante a auditoria inicial foram encontrados produtores persistidos para avaliacao, favoritos, cliques WhatsApp, posts, respostas, votos e salvamentos. Naquela execucao, ainda nao existia fonte persistida para `profile_view_event` nem modelo/endpoint de compartilhamento de posts; os compartilhamentos eram apenas `navigator.share`/clipboard no frontend. Por regra do projeto, esses dois eventos nao foram simulados ate haver produtores reais.
 
 ## Decisao
 
@@ -26,7 +26,7 @@ Durante a auditoria foram encontrados produtores persistidos para avaliacao, fav
   - `post_vote` -> `upvote` para autor do post/reply quando o voto positivo fica ativo.
   - `post_save` -> `salvamento` para autor do post quando o save e criado/restaurado.
 - Para votos positivos, usar um `source_id` opaco por hash SHA-256 truncado, evitando expor o votante em `message_props`.
-- Manter `visualizacao_perfil` e `compartilhamento` como pendencias documentadas ate existirem produtores persistidos reais (`profile_view_event` e evento/modelo de share).
+- Manter `visualizacao_perfil` e `compartilhamento` como pendencias documentadas ate existirem produtores persistidos reais (`profile_view_event` e evento/modelo de share). O complemento de 2026-06-29 resolve essa pendencia com `profile_view_event` e `post_share`.
 
 ## Consequencias
 
@@ -35,7 +35,7 @@ Durante a auditoria foram encontrados produtores persistidos para avaliacao, fav
 - O historico in-app passa a ter `redirect`, `source_id` e `source_type` para abrir conteudo relacionado e deduplicar.
 - Re-favoritar ou re-salvar sem mudanca real nao gera nova notificacao.
 - Downvote permanece como sinal interno de ranking/moderacao, mas nao deve gerar nem aparecer na central de notificacoes.
-- A task permanece bloqueada para os eventos sem fonte persistida real; conclui-se apenas a ligacao dos produtores existentes.
+- A execucao inicial permaneceu bloqueada para os eventos sem fonte persistida real; o complemento de 2026-06-29 conclui a ligacao dos produtores faltantes.
 
 ## Validacao
 
@@ -74,3 +74,17 @@ Validacao: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` 
 - Eventos passivos seguem sem actor por politica de privacidade e reducao de ruido: `upvote`, `salvamento`, `compartilhamento` e similares nao devem identificar quem interagiu.
 
 Validacao: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`.
+
+## Complemento 2026-06-29 - produtores reais para visualizacao e compartilhamento
+
+- Criar `profile_view_event` como fonte persistida de abertura de perfil profissional publicado.
+- O produtor real fica em `POST /api/private/directory/psychologists/:id/view`, usando `optionalAuth`, header `x-device`, anti-spam de 6 horas por usuario/dispositivo e bloqueio de auto-notificacao.
+- `visualizacao_perfil` e emitida apenas para psicologo com entitlement profissional ativo, direcionando para `/app/professional/analytics`, sem expor identidade do visitante na central.
+- Criar `post_share` como fonte persistida de compartilhamento de post ou resposta, com `user_id?`, `device_id?`, `post_id`, `reply_id?`, `target_type` e `channel`.
+- O produtor real fica em `POST /api/private/posts/:id/share` e `POST /api/private/posts/:id/replies/:replyId/share`, sem endpoint paralelo de notificacao; o frontend chama a mutation somente apos sucesso de Web Share API ou clipboard.
+- `compartilhamento` e emitida ao autor do post/resposta, respeitando preferencias, silenciamento do post e anti-spam de 1 hora por usuario/dispositivo/alvo.
+- Eventos passivos de compartilhamento continuam sem `actor` na central por privacidade.
+- Analytics profissionais passam a usar `profile_view_event` para "Aberturas de perfil"; ranking/feed passam a usar `post_share` como fonte real de compartilhamentos.
+- Como `backend/prisma/schema.prisma` mudou, foi executado `prisma migrate dev` com a migration `20260630000554_add_profile_view_post_share_events`; antes disso, o banco de desenvolvimento foi resetado com autorizacao explicita do usuario porque uma migration ja aplicada estava modificada.
+
+Validacao: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e smoke local HTTP em `http://localhost:3000/psychologists`/`http://localhost:3000/community` com `200 OK`.

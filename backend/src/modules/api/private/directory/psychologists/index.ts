@@ -8,6 +8,7 @@ import {
   reviews,
   show,
   videoWatch,
+  view,
 } from "./use-cases/controller";
 import validator, {
   contactValidator,
@@ -35,6 +36,7 @@ routes.get(
 );
 routes.post("/:id/contact", middlewares, contactValidator, contact);
 routes.post("/:id/contact-click", middlewares, profileShowValidator, contactClick);
+routes.post("/:id/view", optionalAuth, profileShowValidator, view);
 routes.post("/:id/video-watch", optionalAuth, profileVideoWatchValidator, videoWatch);
 routes.get("/:id/posts", optionalAuth, profileListValidator, posts);
 routes.get("/:id/reviews", optionalAuth, profileListValidator, reviews);

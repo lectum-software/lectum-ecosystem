@@ -7,6 +7,7 @@ import type {
   DirectoryPsychologistContactPayload,
   DirectoryPsychologistContactResponse,
   DirectoryPsychologistProfileListQuery,
+  DirectoryPsychologistProfileViewResponse,
   DirectoryPsychologistsQuery,
   DirectoryPsychologistVideoWatchPayload,
   DirectoryPsychologistVideoWatchResponse,
@@ -140,6 +141,19 @@ export const useDirectoryPsychologistContactClick = (
     onError: callbacks?.onError,
   });
 };
+
+export const useDirectoryPsychologistProfileView = (
+  id: string,
+  callbacks?: {
+    onError?: (error: unknown) => void;
+    onSuccess?: (data: DirectoryPsychologistProfileViewResponse) => void;
+  },
+) =>
+  useMutation({
+    mutationFn: () => api.trackDirectoryPsychologistProfileView(id),
+    onError: callbacks?.onError,
+    onSuccess: callbacks?.onSuccess,
+  });
 
 export const useDirectoryPsychologistVideoWatch = (
   id: string,

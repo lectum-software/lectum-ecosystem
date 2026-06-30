@@ -206,6 +206,11 @@ export type PostVotePayload = {
   replyId?: string;
 };
 
+export type PostSharePayload = {
+  channel?: "clipboard" | "web_share";
+  replyId?: string;
+};
+
 export type PostVoteResponse = {
   target_type: "post" | "reply";
   post_id: string;
@@ -213,6 +218,15 @@ export type PostVoteResponse = {
   value: 1 | -1 | null;
   upvotes_count: number;
   downvotes_count: number | null;
+};
+
+export type PostShareResponse = {
+  id: string;
+  post_id: string;
+  reply_id: string | null;
+  target_type: "post" | "reply";
+  notification_event_id: string | null;
+  shared: boolean;
 };
 
 export type PostSaveResponse = {

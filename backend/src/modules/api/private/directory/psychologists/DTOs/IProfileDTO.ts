@@ -111,6 +111,7 @@ export interface IProfileShowDTO {
     id: string;
   };
   auth?: user | null;
+  headers?: Record<string, string | string[] | undefined>;
 }
 
 export interface IProfileListDTO extends IProfileShowDTO {
@@ -119,3 +120,8 @@ export interface IProfileListDTO extends IProfileShowDTO {
     page?: number;
   };
 }
+
+export type DirectoryPsychologistProfileViewResponse = {
+  notification_event_id: string | null;
+  tracked: boolean;
+};

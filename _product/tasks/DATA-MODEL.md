@@ -279,13 +279,19 @@ Especialidade, serviço e abordagem são filtros da busca (TASK-13) e seções d
 | `channel` | `String @default("whatsapp")` | |
 | `@@index([psychologist_id, createdAt])` | | métrica de conversão |
 
-`profile_view_event` (opcional, analytics TASK-20):
+`profile_view_event` (analytics TASK-20 e notificacoes TASK-29B):
 
 | Campo | Tipo | Notas |
 |---|---|---|
-| `psychologist_id` | `String` | |
-| `viewer_id` | `String?` | |
-| `@@index([psychologist_id, createdAt])` | | só criar se a métrica de visualizações entrar no escopo; senão, omitir métrica honestamente |
+| `psychologist_id` | `String` | perfil profissional visualizado; FK `user.id` |
+| `viewer_id` | `String?` | usuario autenticado quando existir; nulo para visitante anonimo |
+| `device_id` | `String?` | header `x-device` para deduplicar visitante anonimo sem identificar pessoa |
+| `source` | `String @default("profile_page")` | origem operacional do evento; no MVP, perfil publico/canonico |
+| `@@index([psychologist_id, createdAt])`, `@@index([viewer_id, createdAt])`, `@@index([device_id, createdAt])` | | analytics por periodo e anti-spam |
+
+Regras: registrar apenas perfil publicado, nunca notificar o proprio psicologo e aplicar anti-spam de 6 horas por
+`viewer_id` ou `device_id`. `visualizacao_perfil` gera notificacao apenas para psicologo com entitlement profissional
+ativo, sem expor identidade do visitante.
 
 `profile_video_watch_session` (analytics do vídeo de apresentação, extensão da TASK-20):
 
@@ -418,6 +424,7 @@ Contratos da tela interna do post (TASK-26):
 - `DELETE /api/private/posts/:id/replies/:replyId` exige autor autenticado e remove a resposta/comentario e sua subarvore. Se o autor for psicologo, pode excluir a qualquer momento; se o autor nao for psicologo, a exclusao e bloqueada quando a subarvore ativa ja contem contribuicao de psicologo, preservando a mesma regra de protecao usada em posts de pacientes com respostas profissionais.
 - `POST /api/private/posts/:id/vote` recebe `{ value: 1|-1, replyId? }`; repetir o mesmo voto remove o voto. Downvotes atualizam contadores denormalizados de posts e comentarios para ranking interno, mas não devem ser exibidos como número público nem gerar item na central de notificações.
 - `POST /api/private/posts/:id/save` e `DELETE /api/private/posts/:id/save` persistem salvos via `post_save` e mantêm `saves_count`.
+- `POST /api/private/posts/:id/share` e `POST /api/private/posts/:id/replies/:replyId/share` persistem compartilhamentos reais via `post_share` apos sucesso de `navigator.share` ou clipboard no frontend. A rota usa `optionalAuth`, aceita `{ channel?: "clipboard"|"web_share", replyId? }`, deduplica por 1 hora por usuario/dispositivo e nao notifica o proprio autor.
 - `POST /api/private/posts/:id/report` e `POST /api/private/posts/:id/replies/:replyId/report` registram denuncia reativa com motivo e descricao opcional, sem remocao automatica do conteudo; o alvo fica normalizado em `post_report.target_type`/`target_id` para triagem/admin futuro.
 
 Acompanhamento de comentarios do usuario em `GET /api/private/posts/mine?type=replies`: cada item de comentario retorna metadados derivados `replies_received_count`, `saves_count` e `has_verified_professional_reply`; a flag profissional deve ser calculada apenas por respostas diretas ativas daquele comentario especifico feitas por outro psicologo verificado, sem considerar respostas do proprio autor, respostas ao post principal nem respostas de outras arvores. `current_user_vote` e `saved` seguem derivados de `post_vote`/`post_reply_save` para alimentar a barra padrao de interacao. Comentarios diretos ao post usam `community_post.title` como contexto; respostas a comentarios usam `parent_reply.content`.
@@ -456,6 +463,22 @@ Complemento 2026-06-29: o painel administrativo ainda e reservado/futuro e nao d
 | `post_id` | `String` | |
 | `@@unique([user_id, post_id])`, `@@index([user_id, createdAt])` | | |
 
+`post_share` (TASK-29B, compartilhamento real de post/comentario):
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `user_id` | `String?` | usuario autenticado quando existir; `onDelete: SetNull` |
+| `device_id` | `String?` | header `x-device` para anti-spam de visitantes anonimos |
+| `post_id` | `String` | post compartilhado ou post pai do comentario |
+| `reply_id` | `String?` | comentario/resposta compartilhado, quando aplicavel |
+| `target_type` | `String @default("post")` | `"post" | "reply"` |
+| `channel` | `String @default("web_share")` | `"web_share" | "clipboard"` |
+| `@@index([post_id, createdAt])`, `@@index([reply_id, createdAt])`, `@@index([user_id, createdAt])`, `@@index([device_id, createdAt])` | | ranking, notificacao e anti-spam |
+
+Regras: criar evento somente no fluxo real de compartilhamento da interface; deduplicar por 1 hora para o mesmo
+usuario/dispositivo/alvo; emitir `compartilhamento` para o autor do post ou comentario, respeitando preferencias e
+silenciamento do post. A identidade de quem compartilhou nao e exposta na central.
+
 ### Ranking de mentores (TASK-27 - derivado)
 
 Nao ha modelo persistido obrigatorio nesta etapa. O ranking e **derivado** de eventos persistidos por comunidade e do entitlement profissional ativo (`professional_subscription`, PRD secao 10: so Plano Profissional). A formula foi aprovada e depois ajustada pelo PDF local `Sistema de Ranking de Mentores.pdf` em ADR-0070:
@@ -464,7 +487,11 @@ Nao ha modelo persistido obrigatorio nesta etapa. O ranking e **derivado** de ev
 score = (upvotes * 5) - (downvotes * 3) + (comentarios recebidos * 2) + (compartilhamentos * 4) + (salvamentos * 3) + (cliques WhatsApp da comunidade * 6) + (posts publicados * 1) + (respostas publicadas * 1) + (dias ativos * 1) - penalidade progressiva por posts removidos
 ```
 
-A penalidade de posts removidos e progressiva por comunidade: `30 * removed_posts * (removed_posts + 1) / 2`. No schema atual, `shares_received` e `community_whatsapp_clicks` permanecem zerados ate existir fonte persistida com origem de comunidade; nao usar mocks para preencher esses componentes. Se for necessario materializar para performance, criar `mentor_score_snapshot` (`psychologist_id`, `community_id`, `score Int`, `period String`, `position Int`) ou modelo equivalente apos ADR especifica de snapshot.
+A penalidade de posts removidos e progressiva por comunidade: `30 * removed_posts * (removed_posts + 1) / 2`.
+`shares_received` deriva de `post_share` para posts e respostas; `community_whatsapp_clicks` permanece zerado ate existir
+fonte persistida com origem de comunidade. Nao usar mocks para preencher componentes sem fonte real. Se for necessario
+materializar para performance, criar `mentor_score_snapshot` (`psychologist_id`, `community_id`, `score Int`, `period
+String`, `position Int`) ou modelo equivalente apos ADR especifica de snapshot.
 
 ---
 
@@ -647,9 +674,10 @@ Para evitar referência a tabela inexistente, criar nesta ordem (cada uma com su
 1. `user.role` + `patient_profile` + `psychologist_profile` (TASK-04/07/09).
 2. catálogos `specialty`/`service`/`approach` + joins (TASK-09/13).
 3. `psychologist_favorite`/`psychologist_follow`/`contact_request`/`professional_review` (TASK-14/16/17).
-4. comunidade: `community` → `community_member`/`community_suggestion` → `community_post` → `post_reply`/`post_vote`/`post_save` (TASK-22..28).
+4. comunidade: `community` → `community_member`/`community_suggestion` → `community_post` → `post_reply`/`post_vote`/`post_save`/`post_share` (TASK-22..29B).
 5. `notification`/`notification_preference` (TASK-29A).
-6. `subscription_plan`/`professional_subscription`/`billing_address`/`payment_method`/`payment_event` (TASK-31..33) — após TASK-03.
+6. `profile_view_event` quando analytics/notificacao de visualizacao entrar no escopo (TASK-20/29B).
+7. `subscription_plan`/`professional_subscription`/`billing_address`/`payment_method`/`payment_event` (TASK-31..33) — após TASK-03.
 
 ## Complemento 2026-06-26 - mensagens `wa.me` personalizadas
 

@@ -46,6 +46,11 @@ export type PostReportBody = {
   reason: string;
 };
 
+export type PostShareBody = {
+  channel?: "clipboard" | "web_share";
+  replyId?: string;
+};
+
 export type PostVoteBody = {
   value: 1 | -1;
   replyId?: string;
@@ -234,6 +239,15 @@ export type PostReportResponse = {
   created_at: Date;
 };
 
+export type PostShareResponse = {
+  id: string;
+  post_id: string;
+  reply_id: string | null;
+  target_type: "post" | "reply";
+  notification_event_id: string | null;
+  shared: boolean;
+};
+
 export type PostReplyDeleteResponse = {
   post_id: string;
   reply_ids: string[];
@@ -323,6 +337,13 @@ export type IPostVoteDTO = {
   p: PostParams;
   b: PostVoteBody;
   auth: user;
+};
+
+export type IPostShareDTO = {
+  p: PostParams & { replyId?: string };
+  b: PostShareBody;
+  auth?: user;
+  headers?: Record<string, string | string[] | undefined>;
 };
 
 export type IPostSaveDTO = {

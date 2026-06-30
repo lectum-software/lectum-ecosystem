@@ -13,6 +13,7 @@ import {
   saved as savedService,
   saveReply as saveReplyService,
   save as saveService,
+  share as shareService,
   show as showService,
   unmute as unmuteService,
   unsaveReply as unsaveReplyService,
@@ -153,6 +154,16 @@ export const report = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "post_report", err);
+  }
+};
+
+export const share = async (req: Request, res: Response) => {
+  try {
+    const resolve = await shareService(req as unknown as Parameters<typeof shareService>[0]);
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_share", err);
   }
 };
 

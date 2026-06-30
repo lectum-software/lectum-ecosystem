@@ -834,7 +834,7 @@ const getCommunityPostSortMetrics = async (postIds: string[]) => {
   if (postIds.length === 0) return metricsByPostId;
 
   const periodStarts = resolveCommunitySortPeriodStarts();
-  const [upvotes, replies] = await Promise.all([
+  const [upvotes, replies, shares] = await Promise.all([
     prisma.post_vote.findMany({
       where: {
         deleted: false,
@@ -864,6 +864,17 @@ const getCommunityPostSortMetrics = async (postIds: string[]) => {
         },
       },
     }),
+    prisma.post_share.findMany({
+      where: {
+        deleted: false,
+        post_id: {
+          in: postIds,
+        },
+      },
+      select: {
+        post_id: true,
+      },
+    }),
   ]);
 
   for (const upvote of upvotes) {
@@ -873,6 +884,13 @@ const getCommunityPostSortMetrics = async (postIds: string[]) => {
     if (!metrics) continue;
 
     incrementCommunitySortPeriodMetrics(metrics.upvotes, upvote.createdAt, periodStarts);
+  }
+
+  for (const share of shares) {
+    const metrics = metricsByPostId.get(share.post_id);
+    if (!metrics) continue;
+
+    metrics.shares_count += 1;
   }
 
   for (const reply of replies) {
@@ -1012,7 +1030,7 @@ const topMentorsFormula = () => ({
   description:
     "score = (upvotes × 5) - (downvotes × 3) + (comentários recebidos × 2) + (compartilhamentos × 4) + (salvamentos × 3) + (cliques WhatsApp da comunidade × 6) + (posts publicados × 1) + (respostas publicadas × 1) + (dias ativos × 1) - penalidade progressiva por posts removidos",
   notes: [
-    "Compartilhamentos e cliques de WhatsApp por comunidade só entram quando houver evento persistido com origem de comunidade; sem essa fonte real, esses componentes permanecem zerados.",
+    "Compartilhamentos usam eventos persistidos de post/reply compartilhado; cliques de WhatsApp por comunidade só entram quando houver origem persistida de comunidade.",
   ],
 });
 
@@ -1688,6 +1706,8 @@ export class CommunityRepository implements ICommunityRepository {
       postCommentsReceived,
       replyCommentsReceived,
       postSaves,
+      postShares,
+      replyShares,
       removedPostParticipation,
       postActivityDays,
       replyActivityDays,
@@ -1839,6 +1859,49 @@ export class CommunityRepository implements ICommunityRepository {
           },
         },
       }),
+      prisma.post_share.findMany({
+        where: {
+          deleted: false,
+          reply_id: null,
+          createdAt: createdAtWindow,
+          post: {
+            ...publishedPostFilter,
+            author_id: {
+              in: eligibleMentorIds,
+            },
+          },
+        },
+        select: {
+          post: {
+            select: {
+              author_id: true,
+            },
+          },
+        },
+      }),
+      prisma.post_share.findMany({
+        where: {
+          deleted: false,
+          reply_id: {
+            not: null,
+          },
+          createdAt: createdAtWindow,
+          reply: {
+            deleted: false,
+            author_id: {
+              in: eligibleMentorIds,
+            },
+            post: publishedPostFilter,
+          },
+        },
+        select: {
+          reply: {
+            select: {
+              author_id: true,
+            },
+          },
+        },
+      }),
       prisma.community_post.groupBy({
         by: ["author_id"],
         where: {
@@ -1941,6 +2004,18 @@ export class CommunityRepository implements ICommunityRepository {
     for (const save of postSaves) {
       if (save.post?.author_id) {
         getMetrics(save.post.author_id).saves_received += 1;
+      }
+    }
+
+    for (const share of postShares) {
+      if (share.post?.author_id) {
+        getMetrics(share.post.author_id).shares_received += 1;
+      }
+    }
+
+    for (const share of replyShares) {
+      if (share.reply?.author_id) {
+        getMetrics(share.reply.author_id).shares_received += 1;
       }
     }
 

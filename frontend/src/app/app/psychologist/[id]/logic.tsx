@@ -36,12 +36,14 @@ import {
 import {
   useDirectoryPsychologist,
   useDirectoryPsychologistPosts,
+  useDirectoryPsychologistProfileView,
   useDirectoryPsychologistReviews,
   useDirectoryPsychologistVideoWatch,
   useInfiniteDirectoryPsychologistPosts,
   useInfiniteDirectoryPsychologistReviews,
 } from "@/api/callers/directory";
 import { usePatient } from "@/api/callers/patient";
+import { useSharePost, useShareReply } from "@/api/callers/posts";
 import { usePsychologistFreeProfile } from "@/api/callers/psychologist-free-profile";
 import type {
   DirectoryCatalogItem,
@@ -2169,6 +2171,7 @@ export const PsychologistProfileLogic = () => {
   const searchParamsString = searchParams.toString();
   const [shareFeedback, setShareFeedback] = useState(false);
   const [pendingScrollTab, setPendingScrollTab] = useState<ProfileTab | null>(null);
+  const trackedProfileViewRef = useRef<string | null>(null);
   const currentUser = useAppSelector((state) => state.user);
   const conversion = useProgressiveConversion();
   const canFavoritePsychologists = conversion.isAuthenticated;
@@ -2184,6 +2187,9 @@ export const PsychologistProfileLogic = () => {
   const infiniteListQuery = useMemo(() => ({ limit: PAGE_LIMIT }), []);
 
   const profileQuery = useDirectoryPsychologist(id);
+  const { mutate: trackProfileView } = useDirectoryPsychologistProfileView(id);
+  const sharePostMutation = useSharePost();
+  const shareReplyMutation = useShareReply();
   const profile = profileQuery.data;
   const postsPreview = useDirectoryPsychologistPosts(
     id,
@@ -2247,6 +2253,14 @@ export const PsychologistProfileLogic = () => {
 
     void fetchNextReviewsPage();
   }, [fetchNextReviewsPage, hasNextReviewsPage, isFetchingNextReviewsPage, isFetchingReviews]);
+
+  useEffect(() => {
+    if (!profile?.id || profile.id !== id) return;
+    if (trackedProfileViewRef.current === profile.id) return;
+
+    trackedProfileViewRef.current = profile.id;
+    trackProfileView();
+  }, [id, profile?.id, trackProfileView]);
 
   const navigateWithParams = useCallback(
     (mutate: (next: URLSearchParams) => void) => {
@@ -2369,12 +2383,20 @@ export const PsychologistProfileLogic = () => {
     const url = `${window.location.origin}${profilePublicationHref(post)}`;
 
     try {
-      if (navigator.share) {
-        await navigator.share({ title: post.title, url });
+      const nativeShare = (navigator as { share?: (data: ShareData) => Promise<void> }).share;
+      const channel = nativeShare ? "web_share" : "clipboard";
+      if (nativeShare) {
+        await nativeShare.call(navigator, { title: post.title, url });
       } else {
         await navigator.clipboard.writeText(url);
       }
 
+      const replyId = getProfilePublicationReplyId(post);
+      if (replyId) {
+        shareReplyMutation.mutate({ postId: post.id, replyId, body: { channel } });
+      } else {
+        sharePostMutation.mutate({ id: post.id, body: { channel } });
+      }
       setShareFeedback(true);
       window.setTimeout(() => setShareFeedback(false), 2500);
     } catch {

@@ -7,6 +7,7 @@ export type PsychologistAnalyticsQuery = {
 };
 
 export type PsychologistAnalyticsMetricId =
+  | "profile_views"
   | "whatsapp_clicks"
   | "reviews_received"
   | "rating_average"
@@ -14,6 +15,7 @@ export type PsychologistAnalyticsMetricId =
   | "post_engagement";
 
 export type PsychologistAnalyticsMetricSource =
+  | "profile_view_event"
   | "contact_request"
   | "professional_review"
   | "psychologist_profile"
@@ -44,6 +46,7 @@ export type PsychologistAnalyticsPeriod = {
 };
 
 export type PsychologistAnalyticsMetrics = {
+  profile_views: number;
   whatsapp_clicks: number;
   reviews_received: number;
   rating_average: number;

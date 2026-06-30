@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | M |
 | Fase | Conta |
-| Status | Blocked |
+| Status | Completed |
 | Dependências | TASK-29A (e as tasks que produzem cada evento: 14, 15/16, 17, 20, 23, 24, 26) |
 | ADR alvo | ADR de eventos de notificação |
 
@@ -83,12 +83,12 @@ Regras:
 
 ## Critérios de aceite
 
-- [ ] Cada evento do PRD §12 dispara o dispatcher da 29A com `type` e destinatário corretos, dentro do fluxo real de origem. Parcial: eventos com fonte persistida real foram ligados; `visualizacao_perfil` e `compartilhamento` seguem pendentes por falta de produtor persistido real.
+- [x] Cada evento do PRD §12 dispara o dispatcher da 29A com `type` e destinatário corretos, dentro do fluxo real de origem.
 - [x] Preferências (`notification_preference`) respeitadas por categoria antes de emitir/enviar.
 - [x] Idempotência/anti-spam aplicada; autor não é notificado das próprias ações; downvote não expõe o votante.
 - [x] `redirect`/`message_key`/`message_props` permitem abrir o conteúdo relacionado.
 - [x] Nenhum mock, evento fake ou endpoint simulado.
-- [x] Eventos sem origem persistida real ficam registrados como pendência e ligados quando a origem existir.
+- [x] Eventos antes sem origem persistida real foram ligados com produtores persistidos reais (`profile_view_event` e `post_share`).
 - [x] Modelos e contratos seguem `DATA-MODEL.md`.
 - [x] ADR criado/atualizado em `adrs/`.
 - [x] `pnpm --dir backend check` e builds relevantes verdes.
@@ -281,3 +281,31 @@ Validacao:
 - `pnpm check`
 
 ADR criado: `adrs/0169-autoria-notificacoes-profissionais.md`.
+
+## Complemento 2026-06-29 - visualizacao de perfil e compartilhamentos reais
+
+Implementadas as duas fontes persistidas que mantinham a task bloqueada:
+
+- `profile_view_event` registra visualizacoes reais de perfis publicados via `POST /api/private/directory/psychologists/:id/view`.
+- O frontend dispara esse evento ao abrir `/psychologists/[id]` ou a rota legada compatibilizada, uma vez por perfil carregado; o backend deduplica por 6 horas usando usuario autenticado ou `x-device`.
+- `visualizacao_perfil` agora chama o dispatcher da 29A somente para psicologos com Plano Profissional/cortesia ativa, sem expor identidade do visitante.
+- `post_share` registra compartilhamentos reais de posts e respostas via `POST /api/private/posts/:id/share` e `POST /api/private/posts/:id/replies/:replyId/share`.
+- As telas de comunidade, detalhe/thread de post, publicacoes do perfil profissional, Meus posts/respostas e Salvos chamam a mutation apos sucesso de `navigator.share` ou clipboard.
+- `compartilhamento` notifica o autor do post ou da resposta, respeitando preferencias, silenciamento do post, anti-spam de 1 hora por usuario/dispositivo/alvo e regra de nao notificar o proprio autor.
+- Analytics profissionais passam a contar `profile_view_event` em "Aberturas de perfil"; ranking/feed passam a usar `post_share` como fonte real de compartilhamentos, sem mock.
+
+Migracao:
+
+- `pnpm --dir backend exec prisma migrate reset --force` executado apos autorizacao explicita do usuario, porque o banco de desenvolvimento acusou migration aplicada modificada.
+- `pnpm --dir backend db:migrate --name add_profile_view_post_share_events`
+
+Validacao:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser/local HTTP smoke: `http://localhost:3000/psychologists` e `http://localhost:3000/community` responderam `200 OK`.
+
+ADR atualizado: `adrs/0098-notificacoes-eventos-dominio.md`.

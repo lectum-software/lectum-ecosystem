@@ -48,6 +48,8 @@ import {
   useReportReply,
   useSavePost,
   useSaveReply,
+  useSharePost,
+  useShareReply,
   useUploadPostReplyMedia,
   useVotePost,
 } from "@/api/callers/posts";
@@ -2198,6 +2200,8 @@ export const PostDetailLogic = () => {
   );
   const voteMutation = useVotePost(postId);
   const saveMutation = useSavePost(postId);
+  const sharePostMutation = useSharePost();
+  const shareReplyMutation = useShareReply();
   const createReplyMutation = useCreatePostReply({
     onSuccess: () => setReplyError(null),
     onError: (error) => setReplyError(resolveReplyError(error)),
@@ -2333,11 +2337,14 @@ export const PostDetailLogic = () => {
     const url = `${window.location.origin}/community/${post.community.slug}/post/${post.id}`;
 
     try {
-      if (navigator.share) {
-        await navigator.share({ title: post.title, url });
+      const nativeShare = (navigator as { share?: (data: ShareData) => Promise<void> }).share;
+      const channel = nativeShare ? "web_share" : "clipboard";
+      if (nativeShare) {
+        await nativeShare.call(navigator, { title: post.title, url });
       } else {
         await navigator.clipboard.writeText(url);
       }
+      sharePostMutation.mutate({ id: post.id, body: { channel } });
       setShareFeedback("post");
       window.setTimeout(() => setShareFeedback(null), 2400);
     } catch {
@@ -2351,11 +2358,14 @@ export const PostDetailLogic = () => {
     const url = `${window.location.origin}/community/${post.community.slug}/post/${post.id}#reply-${reply.id}`;
 
     try {
-      if (navigator.share) {
-        await navigator.share({ title: post.title, text: reply.content, url });
+      const nativeShare = (navigator as { share?: (data: ShareData) => Promise<void> }).share;
+      const channel = nativeShare ? "web_share" : "clipboard";
+      if (nativeShare) {
+        await nativeShare.call(navigator, { title: post.title, text: reply.content, url });
       } else {
         await navigator.clipboard.writeText(url);
       }
+      shareReplyMutation.mutate({ postId: post.id, replyId: reply.id, body: { channel } });
       setShareFeedback(reply.id);
       window.setTimeout(() => setShareFeedback(null), 2400);
     } catch {
@@ -2817,6 +2827,7 @@ export const PostReplyThreadLogic = () => {
   const postQuery = usePostDetail(postId);
   const threadQuery = usePostReplyThread(postId, replyId, Boolean(postId && replyId));
   const voteMutation = useVotePost(postId);
+  const shareReplyMutation = useShareReply();
   const createReplyMutation = useCreatePostReply({
     onSuccess: () => setReplyError(null),
     onError: (error) => setReplyError(resolveReplyError(error)),
@@ -2858,11 +2869,14 @@ export const PostReplyThreadLogic = () => {
     const url = `${window.location.origin}/community/${post.community.slug}/post/${post.id}/thread/${threadRootId}#reply-${reply.id}`;
 
     try {
-      if (navigator.share) {
-        await navigator.share({ title: post.title, text: reply.content, url });
+      const nativeShare = (navigator as { share?: (data: ShareData) => Promise<void> }).share;
+      const channel = nativeShare ? "web_share" : "clipboard";
+      if (nativeShare) {
+        await nativeShare.call(navigator, { title: post.title, text: reply.content, url });
       } else {
         await navigator.clipboard.writeText(url);
       }
+      shareReplyMutation.mutate({ postId: post.id, replyId: reply.id, body: { channel } });
       setShareFeedback(reply.id);
       window.setTimeout(() => setShareFeedback(null), 2400);
     } catch {

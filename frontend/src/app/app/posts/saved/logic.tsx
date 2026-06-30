@@ -13,6 +13,8 @@ import {
 } from "react";
 import {
   useSavedPosts,
+  useSharePost,
+  useShareReply,
   useUnsavePostFromList,
   useUnsaveReplyFromList,
   useVotePost,
@@ -452,6 +454,8 @@ export const SavedPostsLogic = () => {
   const [removedFeedback, setRemovedFeedback] = useState<string | null>(null);
   const query = useMemo(() => ({ page, limit: PAGE_LIMIT }), [page]);
   const postsQuery = useSavedPosts(query);
+  const sharePostMutation = useSharePost();
+  const shareReplyMutation = useShareReply();
   const unsavePostMutation = useUnsavePostFromList({
     onSuccess: () => {
       setRemovedFeedback("Post removido dos salvos.");
@@ -476,10 +480,20 @@ export const SavedPostsLogic = () => {
     const url = `${window.location.origin}${relativeUrl}`;
 
     try {
-      if (navigator.share) {
-        await navigator.share({ title: replyId ? "Resposta salva na Lectum" : post.title, url });
+      const nativeShare = (navigator as { share?: (data: ShareData) => Promise<void> }).share;
+      const channel = nativeShare ? "web_share" : "clipboard";
+      if (nativeShare) {
+        await nativeShare.call(navigator, {
+          title: replyId ? "Resposta salva na Lectum" : post.title,
+          url,
+        });
       } else {
         await navigator.clipboard.writeText(url);
+      }
+      if (replyId) {
+        shareReplyMutation.mutate({ postId: post.id, replyId, body: { channel } });
+      } else {
+        sharePostMutation.mutate({ id: post.id, body: { channel } });
       }
       setShareFeedback(post.id);
       window.setTimeout(() => setShareFeedback(null), 2400);

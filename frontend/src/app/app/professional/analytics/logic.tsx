@@ -142,8 +142,8 @@ const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCardView[] 
     id: "profile_views",
     icon: Eye,
     label: "Aberturas de perfil",
-    value: "0",
-    source: "untracked",
+    value: toCount(data?.metrics.profile_views),
+    source: "profile_view_event",
   },
   {
     id: "favorited",

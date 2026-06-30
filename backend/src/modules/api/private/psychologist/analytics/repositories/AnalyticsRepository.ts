@@ -10,18 +10,8 @@ import type {
   PsychologistAnalyticsResponse,
   PsychologistAnalyticsTrafficSource,
   PsychologistAnalyticsTrafficSources,
-  PsychologistAnalyticsUnavailableMetric,
 } from "../DTOs/IAnalyticsDTO";
 import type { IPsychologistAnalyticsRepository } from "./interfaces/IAnalyticsRepository";
-
-const unavailableProfileViews: PsychologistAnalyticsUnavailableMetric = {
-  id: "profile_views",
-  label: "Visualizações de perfil",
-  source: "profile_view_event",
-  reason: "source_not_available",
-  description:
-    "Visualizações de perfil ainda não possuem evento persistido. A métrica fica ausente para evitar simulação.",
-};
 
 const RETENTION_BUCKETS = Array.from({ length: 20 }, (_, index) => (index + 1) * 5);
 
@@ -78,6 +68,14 @@ const toTrafficSources = (): PsychologistAnalyticsTrafficSources => {
 const toCards = (
   metrics: PsychologistAnalyticsResponse["metrics"],
 ): PsychologistAnalyticsMetric[] => [
+  {
+    id: "profile_views",
+    label: "Visualizações de perfil",
+    value: metrics.profile_views,
+    source: "profile_view_event",
+    unit: "count",
+    description: "Aberturas reais do perfil profissional registradas no período selecionado.",
+  },
   {
     id: "whatsapp_clicks",
     label: "Conversões WhatsApp",
@@ -218,83 +216,96 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
       lte: period.end_at,
     };
 
-    const [whatsappClicks, reviewsReceived, profile, postsAggregate, presentationVideoSessions] =
-      await Promise.all([
-        prisma.contact_request.count({
-          where: {
-            psychologist_id: userId,
-            deleted: false,
-            channel: "whatsapp",
-            createdAt: createdAtWindow,
-          },
-        }),
-        prisma.professional_review.count({
-          where: {
-            psychologist_id: userId,
-            deleted: false,
-            status: "publicada",
-            createdAt: createdAtWindow,
-          },
-        }),
-        prisma.psychologist_profile.findFirst({
-          where: {
-            user_id: userId,
-            deleted: false,
-          },
-          select: {
-            rating_avg: true,
-            rating_count: true,
-            video_cover_url: true,
-            video_url: true,
-          },
-        }),
-        prisma.community_post.aggregate({
-          where: {
-            author_id: userId,
-            deleted: false,
-            status: "publicado",
-            createdAt: createdAtWindow,
-          },
-          _count: { _all: true },
-          _sum: {
-            upvotes_count: true,
-            replies_count: true,
-          },
-        }),
-        prisma.profile_video_watch_session.findMany({
-          where: {
-            psychologist_id: userId,
-            deleted: false,
-            createdAt: createdAtWindow,
-            OR: [
-              {
-                watched_seconds: {
-                  gt: 0,
-                },
+    const [
+      profileViews,
+      whatsappClicks,
+      reviewsReceived,
+      profile,
+      postsAggregate,
+      presentationVideoSessions,
+    ] = await Promise.all([
+      prisma.profile_view_event.count({
+        where: {
+          psychologist_id: userId,
+          deleted: false,
+          createdAt: createdAtWindow,
+        },
+      }),
+      prisma.contact_request.count({
+        where: {
+          psychologist_id: userId,
+          deleted: false,
+          channel: "whatsapp",
+          createdAt: createdAtWindow,
+        },
+      }),
+      prisma.professional_review.count({
+        where: {
+          psychologist_id: userId,
+          deleted: false,
+          status: "publicada",
+          createdAt: createdAtWindow,
+        },
+      }),
+      prisma.psychologist_profile.findFirst({
+        where: {
+          user_id: userId,
+          deleted: false,
+        },
+        select: {
+          rating_avg: true,
+          rating_count: true,
+          video_cover_url: true,
+          video_url: true,
+        },
+      }),
+      prisma.community_post.aggregate({
+        where: {
+          author_id: userId,
+          deleted: false,
+          status: "publicado",
+          createdAt: createdAtWindow,
+        },
+        _count: { _all: true },
+        _sum: {
+          upvotes_count: true,
+          replies_count: true,
+        },
+      }),
+      prisma.profile_video_watch_session.findMany({
+        where: {
+          psychologist_id: userId,
+          deleted: false,
+          createdAt: createdAtWindow,
+          OR: [
+            {
+              watched_seconds: {
+                gt: 0,
               },
-              {
-                max_position_seconds: {
-                  gt: 0,
-                },
+            },
+            {
+              max_position_seconds: {
+                gt: 0,
               },
-            ],
-          },
-          select: {
-            video_url: true,
-            watched_seconds: true,
-            duration_seconds: true,
-            max_position_seconds: true,
-            completed: true,
-            replay_count: true,
-            milestone_25: true,
-            milestone_50: true,
-            milestone_75: true,
-            milestone_100: true,
-            retention_buckets: true,
-            last_event_at: true,
-          },
-        }),
-      ]);
+            },
+          ],
+        },
+        select: {
+          video_url: true,
+          watched_seconds: true,
+          duration_seconds: true,
+          max_position_seconds: true,
+          completed: true,
+          replay_count: true,
+          milestone_25: true,
+          milestone_50: true,
+          milestone_75: true,
+          milestone_100: true,
+          retention_buckets: true,
+          last_event_at: true,
+        },
+      }),
+    ]);
     const currentPresentationVideoSessions = profile?.video_url
       ? presentationVideoSessions.filter((session) => session.video_url === profile.video_url)
       : [];
@@ -302,6 +313,7 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
     const postUpvotes = postsAggregate._sum.upvotes_count || 0;
     const postReplies = postsAggregate._sum.replies_count || 0;
     const metrics = {
+      profile_views: profileViews,
       whatsapp_clicks: whatsappClicks,
       reviews_received: reviewsReceived,
       rating_average: profile?.rating_avg || 0,
@@ -424,7 +436,7 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
       cards: toCards(metrics),
       presentation_video: presentationVideo,
       traffic_sources: toTrafficSources(),
-      unavailable: [unavailableProfileViews],
+      unavailable: [],
     };
   }
 }

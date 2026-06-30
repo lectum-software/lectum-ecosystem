@@ -13,7 +13,14 @@ import {
   useRef,
   useState,
 } from "react";
-import { useInfiniteMyPosts, useMyPosts, useSaveReply, useVotePost } from "@/api/callers/posts";
+import {
+  useInfiniteMyPosts,
+  useMyPosts,
+  useSaveReply,
+  useSharePost,
+  useShareReply,
+  useVotePost,
+} from "@/api/callers/posts";
 import type { PostListPost, UserPostListItem, UserPostsType } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityMediaBlock } from "@/components/community/community-media-frame";
@@ -580,6 +587,8 @@ export const MyPostsLogic = () => {
     [],
   );
   const postsQuery = useInfiniteMyPosts(query);
+  const sharePostMutation = useSharePost();
+  const shareReplyMutation = useShareReply();
   const { fetchNextPage } = postsQuery;
   const postsCountQuery = useMyPosts(postsCountQueryParams, type !== "posts");
   const repliesCountQuery = useMyPosts(repliesCountQueryParams, type !== "replies");
@@ -614,13 +623,20 @@ export const MyPostsLogic = () => {
     const url = `${window.location.origin}${relativeUrl}`;
 
     try {
-      if (navigator.share) {
-        await navigator.share({
+      const nativeShare = (navigator as { share?: (data: ShareData) => Promise<void> }).share;
+      const channel = nativeShare ? "web_share" : "clipboard";
+      if (nativeShare) {
+        await nativeShare.call(navigator, {
           title: replyId ? `${interactionCopy.singularTitle} na Lectum` : post.title,
           url,
         });
       } else {
         await navigator.clipboard.writeText(url);
+      }
+      if (replyId) {
+        shareReplyMutation.mutate({ postId: post.id, replyId, body: { channel } });
+      } else {
+        sharePostMutation.mutate({ id: post.id, body: { channel } });
       }
       setShareFeedback(replyId ? "interaction" : "post");
       window.setTimeout(() => setShareFeedback(null), 2400);

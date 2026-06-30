@@ -217,6 +217,40 @@ export const voteSchema: IValidatorRequest = {
   ],
 };
 
+export const shareSchema: IValidatorRequest = {
+  params: idParams,
+  body: [
+    {
+      key: "channel",
+      coerse: "string",
+      method: "enumeric",
+      values: ["clipboard", "web_share"],
+      optional: true,
+    },
+    {
+      key: "replyId",
+      coerse: "string",
+      method: "string",
+      min: 1,
+      max: 120,
+      optional: true,
+    },
+  ],
+};
+
+export const replyShareSchema: IValidatorRequest = {
+  params: replyIdParams,
+  body: [
+    {
+      key: "channel",
+      coerse: "string",
+      method: "enumeric",
+      values: ["clipboard", "web_share"],
+      optional: true,
+    },
+  ],
+};
+
 export const replySaveSchema: IValidatorRequest = {
   params: replyIdParams,
 };
@@ -254,6 +288,8 @@ export const createReplyValidator = validator(createReplySchema);
 export const updatePostValidator = validator(updatePostSchema);
 export const updateReplyValidator = validator(updateReplySchema);
 export const voteValidator = validator(voteSchema);
+export const shareValidator = validator(shareSchema);
+export const replyShareValidator = validator(replyShareSchema);
 export const saveValidator = validator(showSchema);
 export const replySaveValidator = validator(replySaveSchema);
 export const reportValidator = validator(reportSchema);

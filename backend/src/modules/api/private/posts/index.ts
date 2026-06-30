@@ -14,6 +14,7 @@ import {
   save,
   saved,
   saveReply,
+  share,
   show,
   unmute,
   unsave,
@@ -29,8 +30,10 @@ import {
   repliesValidator,
   replyReportValidator,
   replySaveValidator,
+  replyShareValidator,
   reportValidator,
   saveValidator,
+  shareValidator,
   showValidator,
   updatePostValidator,
   updateReplyValidator,
@@ -65,12 +68,14 @@ routes.post(
 routes.post("/:id/replies", privateAuth, createReplyValidator, createReply);
 routes.post("/:id/replies/:replyId/save", privateAuth, replySaveValidator, saveReply);
 routes.delete("/:id/replies/:replyId/save", privateAuth, replySaveValidator, unsaveReply);
+routes.post("/:id/replies/:replyId/share", replyShareValidator, share);
 routes.post("/:id/replies/:replyId/report", privateAuth, replyReportValidator, report);
 routes.put("/:id/replies/:replyId", privateAuth, updateReplyValidator, updateReply);
 routes.delete("/:id/replies/:replyId", privateAuth, replySaveValidator, deleteReply);
 routes.post("/:id/vote", privateAuth, voteValidator, vote);
 routes.post("/:id/save", privateAuth, saveValidator, save);
 routes.delete("/:id/save", privateAuth, saveValidator, unsave);
+routes.post("/:id/share", shareValidator, share);
 routes.post("/:id/mute", privateAuth, showValidator, mute);
 routes.delete("/:id/mute", privateAuth, showValidator, unmute);
 routes.post("/:id/report", privateAuth, reportValidator, report);
