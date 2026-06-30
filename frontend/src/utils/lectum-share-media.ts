@@ -752,6 +752,13 @@ export const shareLectumVideoResponse = async (
   return { channel: copied ? "clipboard" : null, file, mode: "download" };
 };
 
+export const downloadLectumVideoResponse = async (target: LectumShareVideoTarget) => {
+  const file = await createLectumShareFile(target);
+  downloadFile(file);
+
+  return file;
+};
+
 export const copyLectumShareUrl = async (target: LectumShareVideoTarget) => {
   const copied = await copyShareUrl(target.shareUrl);
 

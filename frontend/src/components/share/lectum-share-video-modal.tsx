@@ -1,12 +1,25 @@
 "use client";
 
-import { Check, Copy, Download, Loader2, X } from "lucide-react";
+import {
+  Camera,
+  Check,
+  Copy,
+  Download,
+  Loader2,
+  MessageCircle,
+  MoreHorizontal,
+  Music2,
+  X,
+} from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
-import { Button } from "@/registry/new-york-v4/ui/button";
-import { copyLectumShareUrl, shareLectumVideoResponse } from "@/utils/lectum-share-media";
+import {
+  copyLectumShareUrl,
+  downloadLectumVideoResponse,
+  shareLectumVideoResponse,
+} from "@/utils/lectum-share-media";
 import type { LectumShareChannel, LectumShareVideoTarget } from "@/utils/lectum-share-target";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
@@ -22,8 +35,52 @@ type LectumShareVideoDialogProps = {
   target: LectumShareVideoTarget;
 };
 
+type ShareActionId = "copy" | "download" | "instagram" | "more" | "tiktok" | "whatsapp";
+
 const sharePreviewCardClassName =
   "top-[6%] left-[7%] right-[7%] rounded-[26px] px-5 py-4 sm:px-6 sm:py-5";
+
+const appShareActions = [
+  {
+    icon: MessageCircle,
+    iconClassName: "bg-success/15 text-success",
+    id: "whatsapp",
+    label: "WhatsApp",
+  },
+  {
+    icon: Camera,
+    iconClassName: "bg-primary-soft text-primary",
+    id: "instagram",
+    label: "Instagram",
+  },
+  {
+    icon: Music2,
+    iconClassName: "bg-foreground text-background",
+    id: "tiktok",
+    label: "TikTok",
+  },
+  {
+    icon: MoreHorizontal,
+    iconClassName: "border border-border bg-surface-muted text-muted",
+    id: "more",
+    label: "Mais",
+  },
+] as const;
+
+const utilityActions = [
+  {
+    icon: Download,
+    iconClassName: "bg-surface-muted text-foreground",
+    id: "download",
+    label: "Baixar",
+  },
+  {
+    icon: Copy,
+    iconClassName: "bg-surface-muted text-foreground",
+    id: "copy",
+    label: "Copiar link",
+  },
+] as const;
 
 const truncatePreviewText = (value: string, maxLength: number) => {
   const normalized = value.replace(/\s+/g, " ").trim();
@@ -40,7 +97,7 @@ const SharePreview = ({ target }: { target: LectumShareVideoTarget }) => {
   const avatarIsPublicMedia = isPublicMediaUrl(target.professional.avatar);
 
   return (
-    <div className="relative mx-auto aspect-[9/16] max-h-[64vh] w-full max-w-[min(78vw,360px)] overflow-hidden rounded-[28px] bg-foreground text-white shadow-[0_28px_70px_rgb(15_23_42_/_28%)]">
+    <div className="relative mx-auto aspect-[9/16] max-h-[56dvh] w-full max-w-[min(76vw,320px)] overflow-hidden rounded-[28px] bg-foreground text-white shadow-[0_28px_70px_rgb(15_23_42_/_28%)]">
       {videoSrc ? (
         <video
           aria-label="Prévia do vídeo-resposta no layout de compartilhamento Lectum"
@@ -112,6 +169,48 @@ const SharePreview = ({ target }: { target: LectumShareVideoTarget }) => {
   );
 };
 
+type ShareSheetOptionProps = {
+  disabled: boolean;
+  icon: (typeof appShareActions)[number]["icon"];
+  iconClassName: string;
+  label: string;
+  onClick: () => void;
+  pending: boolean;
+};
+
+const ShareSheetOption = ({
+  disabled,
+  icon: Icon,
+  iconClassName,
+  label,
+  onClick,
+  pending,
+}: ShareSheetOptionProps) => (
+  <button
+    aria-label={label}
+    className="group grid w-[74px] shrink-0 justify-items-center gap-2 rounded-2xl py-1 text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 disabled:cursor-not-allowed disabled:opacity-60"
+    disabled={disabled}
+    onClick={onClick}
+    type="button"
+  >
+    <span
+      className={cn(
+        "grid h-14 w-14 place-items-center rounded-[20px] shadow-[0_10px_24px_rgb(15_23_42_/_10%)] transition group-hover:scale-[1.03]",
+        iconClassName,
+      )}
+    >
+      {pending ? (
+        <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+      ) : (
+        <Icon className="h-6 w-6" aria-hidden="true" />
+      )}
+    </span>
+    <span className="line-clamp-2 text-[12px] font-semibold leading-[14px] text-foreground">
+      {label}
+    </span>
+  </button>
+);
+
 export const LectumShareVideoModal = (props: LectumShareVideoModalProps) => {
   if (!props.target) return null;
 
@@ -119,16 +218,15 @@ export const LectumShareVideoModal = (props: LectumShareVideoModalProps) => {
 };
 
 const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoDialogProps) => {
+  const [pendingAction, setPendingAction] = useState<ShareActionId | null>(null);
   const [status, setStatus] = useState<"copied" | "downloaded" | "idle" | "shared">("idle");
   const [error, setError] = useState<string | null>(null);
-  const [exporting, setExporting] = useState(false);
+  const exporting = pendingAction !== null;
   const sourceLabel = useMemo(() => {
     return target.sourceKind === "comment" ? "prévia do comentário" : "pergunta do post";
   }, [target]);
 
   useEffect(() => {
-    if (!target) return;
-
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onClose();
@@ -138,10 +236,10 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
     document.addEventListener("keydown", handleKeyDown);
 
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose, target]);
+  }, [onClose]);
 
-  const handleExport = async () => {
-    setExporting(true);
+  const handleShareToDevice = async (actionId: ShareActionId) => {
+    setPendingAction(actionId);
     setError(null);
     setStatus("idle");
 
@@ -156,11 +254,27 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
         "Não foi possível gerar o arquivo agora. Você ainda pode copiar o link direto da resposta.",
       );
     } finally {
-      setExporting(false);
+      setPendingAction(null);
+    }
+  };
+
+  const handleDownload = async () => {
+    setPendingAction("download");
+    setError(null);
+    setStatus("idle");
+
+    try {
+      await downloadLectumVideoResponse(target);
+      setStatus("downloaded");
+    } catch {
+      setError("Não foi possível baixar o vídeo agora. Tente copiar o link direto da resposta.");
+    } finally {
+      setPendingAction(null);
     }
   };
 
   const handleCopyLink = async () => {
+    setPendingAction("copy");
     setError(null);
 
     try {
@@ -169,92 +283,77 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
       setStatus("copied");
     } catch {
       setError("Não foi possível copiar o link neste navegador.");
+    } finally {
+      setPendingAction(null);
     }
   };
 
   return (
     <div
-      aria-labelledby="lectum-share-video-title"
+      aria-label={`Compartilhar vídeo-resposta com ${sourceLabel}`}
       aria-modal="true"
-      className="fixed inset-0 z-[90] grid place-items-end bg-foreground/62 px-3 py-3 backdrop-blur-sm sm:place-items-center sm:px-5"
+      className="fixed inset-0 z-[90] bg-foreground/62 backdrop-blur-sm sm:grid sm:place-items-center sm:px-5"
       role="dialog"
     >
-      <div className="w-full max-w-[430px] rounded-[30px] border border-border bg-surface p-4 text-foreground shadow-[var(--lectum-shadow)] sm:max-w-[520px] sm:p-5">
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-primary">
-              Compartilhar vídeo-resposta
-            </p>
-            <h2
-              className="mt-1 text-lg font-black leading-tight tracking-[-0.03em] text-foreground"
-              id="lectum-share-video-title"
-            >
-              Modelo Lectum para redes sociais
-            </h2>
-            <p className="mt-1 text-sm leading-5 text-muted">
-              Usa a {sourceLabel}, sem botão de play central e sem CRP no identificador.
-            </p>
-          </div>
+      <div className="mx-auto flex min-h-dvh w-full max-w-[430px] items-end sm:min-h-0 sm:max-w-[520px]">
+        <div className="relative max-h-[94dvh] w-full overflow-y-auto rounded-t-[34px] border border-border bg-surface px-4 pt-14 pb-[max(1rem,env(safe-area-inset-bottom))] text-foreground shadow-[var(--lectum-shadow)] sm:rounded-[34px] sm:p-5 sm:pt-14">
           <button
             aria-label="Fechar compartilhamento"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-surface-muted text-muted transition hover:bg-background hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+            className="absolute top-4 right-4 z-20 grid h-11 w-11 place-items-center rounded-full border border-border bg-surface-muted text-foreground shadow-[0_12px_24px_rgb(15_23_42_/_10%)] transition hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
             onClick={onClose}
             type="button"
           >
-            <X className="h-4 w-4" aria-hidden="true" />
+            <X className="h-6 w-6" aria-hidden="true" />
           </button>
-        </div>
 
-        <div className="mb-4 rounded-2xl border border-primary/20 bg-primary-soft px-3 py-2.5 text-primary">
-          <span className="block text-sm font-black">Formato único vertical 9:16</span>
-          <span className="mt-0.5 block text-[11px] font-semibold leading-4">
-            Otimizado para Stories, Reels, TikTok e Shorts.
-          </span>
-        </div>
+          <SharePreview target={target} />
 
-        <SharePreview target={target} />
+          <div className="mt-5 border-border border-t pt-4">
+            <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
+              {appShareActions.map((action) => (
+                <ShareSheetOption
+                  disabled={exporting}
+                  icon={action.icon}
+                  iconClassName={action.iconClassName}
+                  key={action.id}
+                  label={action.label}
+                  onClick={() => handleShareToDevice(action.id)}
+                  pending={pendingAction === action.id}
+                />
+              ))}
+            </div>
 
-        {error ? (
-          <p className="mt-4 rounded-2xl border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-semibold text-danger">
-            {error}
-          </p>
-        ) : null}
+            <div className="mt-3 grid grid-cols-2 gap-3 border-border border-t pt-4">
+              {utilityActions.map((action) => (
+                <ShareSheetOption
+                  disabled={exporting}
+                  icon={action.icon}
+                  iconClassName={action.iconClassName}
+                  key={action.id}
+                  label={action.label}
+                  onClick={action.id === "download" ? handleDownload : handleCopyLink}
+                  pending={pendingAction === action.id}
+                />
+              ))}
+            </div>
+          </div>
 
-        {status !== "idle" ? (
-          <p className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-success/20 bg-success/10 px-3 py-2 text-sm font-bold text-success">
-            <Check className="h-4 w-4" aria-hidden="true" />
-            {status === "downloaded"
-              ? "Arquivo baixado e link copiado quando permitido."
-              : status === "copied"
-                ? "Link copiado."
-                : "Arquivo enviado para o compartilhamento."}
-          </p>
-        ) : null}
+          {error ? (
+            <p className="mt-4 rounded-2xl border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-semibold text-danger">
+              {error}
+            </p>
+          ) : null}
 
-        <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]">
-          <Button
-            className="h-12 rounded-2xl"
-            disabled={exporting}
-            onClick={handleExport}
-            type="button"
-          >
-            {exporting ? (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <Download className="h-4 w-4" aria-hidden="true" />
-            )}
-            {exporting ? "Gerando layout..." : "Compartilhar layout"}
-          </Button>
-          <Button
-            className="h-12 rounded-2xl"
-            disabled={exporting}
-            onClick={handleCopyLink}
-            type="button"
-            variant="outline"
-          >
-            <Copy className="h-4 w-4" aria-hidden="true" />
-            Copiar link
-          </Button>
+          {status !== "idle" ? (
+            <p className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-success/20 bg-success/10 px-3 py-2 text-sm font-bold text-success">
+              <Check className="h-4 w-4" aria-hidden="true" />
+              {status === "downloaded"
+                ? "Arquivo baixado para escolher no app desejado."
+                : status === "copied"
+                  ? "Link copiado."
+                  : "Compartilhamento aberto no dispositivo."}
+            </p>
+          ) : null}
         </div>
       </div>
     </div>
