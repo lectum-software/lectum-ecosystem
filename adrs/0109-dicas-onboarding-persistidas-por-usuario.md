@@ -59,3 +59,27 @@ Consequencias:
 - O onboarding fica contextual e menos intrusivo, evitando uma sequencia de pop-ups na mesma sessao.
 - A persistencia continua por usuario e sincronizada entre dispositivos apos login.
 - Se o usuario descobre a acao sozinho, a dica correspondente nao reaparece.
+
+## Complemento 2026-06-30 - Foco de psicólogos em respostas
+
+Produto decidiu que o foco principal da Lectum para psicólogos é responder dúvidas e relatos da
+comunidade, não criar publicações originais. A dica do botão `+` de criação de post permanece útil
+para pacientes, mas gera mensagem incorreta quando exibida em contas de psicólogo.
+
+Decisões:
+
+- Manter a dica "Publique sua dúvida ou relato" somente para usuários com papel de paciente.
+- Não exibir dica de criação de novo post para psicólogos, mesmo que exista flag histórica para
+  posts originais profissionais.
+- Expor `has_seen_psychologist_reply_tip` em `GET/PUT /api/private/account/tips`.
+- Exibir uma dica única para psicólogos em posts de pacientes, destacando a ação de comentar/responder
+  como principal caminho de autoridade e conversão na Lectum.
+- Marcar a dica de resposta como vista quando ela aparece ou quando o psicólogo aciona o comentário
+  antes dela.
+
+Consequências:
+
+- Pacientes continuam orientados a publicar dúvida/relato pelo `+`.
+- Psicólogos deixam de receber copy de paciente no feed/comunidade.
+- O onboarding profissional fica alinhado ao comportamento esperado: entrar em conversas reais e
+  responder pacientes.

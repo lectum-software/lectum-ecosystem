@@ -19,6 +19,7 @@ type ActionWithCount = {
   href?: string;
   label?: string;
   onClick?: ActionHandler;
+  tipTarget?: string;
 };
 
 type SaveAction = {
@@ -192,6 +193,7 @@ export const CommunityActionBar = ({
           ) : comments.onClick ? (
             <PostActionButton
               count={comments.count}
+              data-psychologist-tip-target={comments.tipTarget}
               icon={MessageCircle}
               label={comments.label ?? "Comentar"}
               onClick={stopActionPropagation(comments.onClick)}

@@ -102,6 +102,11 @@ export const onboardingTipsSchema: IValidatorRequest = {
       method: "boolean",
       optional: true,
     },
+    {
+      key: "has_seen_psychologist_reply_tip",
+      method: "boolean",
+      optional: true,
+    },
   ],
 };
 

@@ -50,6 +50,7 @@ export type user = {
   confirmed?: boolean;
   has_seen_discover_psychologists_tip?: boolean;
   has_seen_psychologists_my_search_tip?: boolean;
+  has_seen_psychologist_reply_tip?: boolean;
   has_seen_psychologist_whatsapp_tip?: boolean;
   has_seen_community_post_tip?: boolean;
   provider?: string | null;

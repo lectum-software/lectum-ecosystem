@@ -73,6 +73,7 @@ import { useProgressiveConversion } from "@/components/conversion/progressive-co
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { Input } from "@/registry/new-york-v4/ui/input";
@@ -2293,9 +2294,10 @@ const CommunityPublishOnboarding = ({
   onCreatePostClick?: (event: ReactMouseEvent<HTMLAnchorElement>, href: string) => void;
   variant: CommunityPublishOnboardingVariant;
 }) => {
+  const isPsychologistUser = useAppSelector((state) => state.user?.role === "psicologo");
   const accountTips = useAccount({
     enableSecurity: false,
-    enableTips: true,
+    enableTips: !isPsychologistUser,
   });
   const accountTipsUserId = accountTips.userId;
   const [hasLoadedPreference, setHasLoadedPreference] = useState(false);
@@ -2306,6 +2308,8 @@ const CommunityPublishOnboarding = ({
   const placement = COMMUNITY_PUBLISH_ONBOARDING_PLACEMENT[variant];
 
   const persistSeen = useCallback(() => {
+    if (isPsychologistUser) return;
+
     if (
       hasPersistedSeenRef.current ||
       accountTips.onboardingTips.data?.has_seen_community_post_tip ||
@@ -2328,6 +2332,7 @@ const CommunityPublishOnboarding = ({
   }, [
     accountTips.onboardingTips.data?.has_seen_community_post_tip,
     accountTips.updateOnboardingTips,
+    isPsychologistUser,
   ]);
 
   const dismiss = useCallback(() => {
@@ -2364,6 +2369,7 @@ const CommunityPublishOnboarding = ({
   }, [accountTipsUserId]);
 
   useEffect(() => {
+    if (isPsychologistUser) return;
     if (hasSyncedPreferenceRef.current) return;
     if (accountTips.onboardingTips.isPending) return;
 
@@ -2385,6 +2391,7 @@ const CommunityPublishOnboarding = ({
     accountTips.onboardingTips.data,
     accountTips.onboardingTips.isPending,
     accountTips.onboardingTips.isSuccess,
+    isPsychologistUser,
   ]);
 
   useEffect(() => {
@@ -2412,7 +2419,7 @@ const CommunityPublishOnboarding = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [dismiss, isVisible]);
 
-  if (!isVisible) return null;
+  if (isPsychologistUser || !isVisible) return null;
 
   return (
     <div
