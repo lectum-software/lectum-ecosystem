@@ -239,3 +239,27 @@ ADRs:
 
 - `adrs/0184-bloqueio-task34-qualidade-lgpd-operacao.md` atualizado como histórico/superado pela exceção.
 - `adrs/0185-hardening-operacional-task34.md` criado para decisões de hardening operacional, LGPD mínima, exceções e validações.
+
+## Complemento 2026-06-30 — bloqueio de CPF/CRP por validação profissional
+
+Decisão de produto: CPF e CRP continuam editáveis para psicólogos gratuitos ou sem validação profissional usada como base de entitlement. Os campos passam a ficar bloqueados somente quando o profissional possui assinatura/cortesia profissional ativa não gratuita e aquele CPF/CRP foi confirmado por consulta real ao CFP/InfoSimples (`cfp_verified_at` preenchido).
+
+Referência visual consultada: `_product/proto/Editar Perfil - Psicólogo.jpg`. Builder/Quick Copy não está disponível como ferramenta direta neste ambiente; a alteração é de regra/estado de campo dentro da tela já existente, preservando a fundação de formulário da `TASK-02`.
+
+Critérios complementares:
+
+- [x] Backend expõe `profile.identity_fields_locked` como flag derivada, sem novo schema.
+- [x] A flag só é verdadeira para plano profissional/cortesia ativa não gratuita com `cfp_verified_at`, CPF e CRP persistidos.
+- [x] Atualização do perfil ignora tentativas de alterar CPF/CRP quando `identity_fields_locked=true`.
+- [x] Frontend bloqueia CPF/CRP com explicação ao psicólogo somente quando a flag do backend estiver ativa.
+- [x] Psicólogo gratuito permanece com CPF/CRP editáveis.
+- [x] Nenhum mock, migration ou package novo foi criado.
+
+Validações executadas:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local headless em `http://localhost:3100/app/professional/profile/setup`, viewport 390x844, contra o build atual.

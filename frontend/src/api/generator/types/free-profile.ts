@@ -66,6 +66,7 @@ export type FreeProfessionalProfile = {
     crp_number: string | null;
     crp_status: string | null;
     cfp_verified_at: string | null;
+    identity_fields_locked: boolean;
   };
   plan: {
     approach_limit: number;

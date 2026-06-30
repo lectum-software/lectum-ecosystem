@@ -1062,22 +1062,16 @@ export const ProfessionalProfileSetupLogic = () => {
   const videoSrc = resolvePublicMediaUrl(profile.data?.profile.video_url);
   const videoCoverSrc = resolvePublicMediaUrl(profile.data?.profile.video_cover_url);
   const canUploadVideo = Boolean(profile.data?.plan.can_upload_video);
-  const storedCourtesyCpfDigits = profile.data?.profile.cpf?.replace(/\D/g, "") || "";
-  const hasCompleteCourtesyIdentity = Boolean(
-    storedCourtesyCpfDigits.length === 11 &&
-      profile.data?.profile.crp_region &&
-      profile.data.profile.crp_number,
-  );
-  const shouldLockCourtesyIdentityFields = Boolean(
-    profile.data?.plan.is_courtesy && !profile.data.plan.is_free && hasCompleteCourtesyIdentity,
+  const shouldLockProfessionalIdentityFields = Boolean(
+    profile.data?.profile.identity_fields_locked,
   );
   const lockedIdentityFieldProps: Partial<(typeof renderedFields)[number]> =
-    shouldLockCourtesyIdentityFields ? { disabled: true } : {};
+    shouldLockProfessionalIdentityFields ? { disabled: true } : {};
   const crpRegionValue = profile.data?.profile.crp_region;
   const crpRegionOptions =
     renderedFields.find((field) => field.name === "crp_region")?.options || [];
   const lockedCrpRegionFieldProps: Partial<(typeof renderedFields)[number]> =
-    shouldLockCourtesyIdentityFields &&
+    shouldLockProfessionalIdentityFields &&
     crpRegionValue &&
     !crpRegionOptions.some((option) => String(option.value) === String(crpRegionValue))
       ? {
@@ -1460,7 +1454,9 @@ export const ProfessionalProfileSetupLogic = () => {
       return;
     }
 
-    const lockedIdentityProfile = shouldLockCourtesyIdentityFields ? profile.data?.profile : null;
+    const lockedIdentityProfile = shouldLockProfessionalIdentityFields
+      ? profile.data?.profile
+      : null;
 
     update.mutate({
       name: values.name,
@@ -1860,6 +1856,13 @@ export const ProfessionalProfileSetupLogic = () => {
                   {renderField("religion")}
                   {renderField("crp_region", lockedCrpRegionFieldProps)}
                   {renderField("crp_number", lockedIdentityFieldProps)}
+                  {shouldLockProfessionalIdentityFields ? (
+                    <InlineAlert title="CPF e CRP validados" variant="info">
+                      Esses dados foram usados para validar seu registro profissional junto ao
+                      Conselho e liberar sua assinatura ou cortesia. Para corrigir, fale com o
+                      suporte da Lectum.
+                    </InlineAlert>
+                  ) : null}
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="min-w-0 flex-1">{renderField("whatsapp")}</div>

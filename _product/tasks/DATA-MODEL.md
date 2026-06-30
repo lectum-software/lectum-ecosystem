@@ -198,6 +198,8 @@ Quando construído: módulo de audiência próprio (ex.: `backend/src/modules/ma
 | `published` | `Boolean @default(false)` | só `true` aparece na busca (PRD §7: apenas ativos/verificados) |
 | `@@index([user_id])`, `@@index([published, deleted])` | | |
 
+Regra complementar de identidade profissional (TASK-34, 2026-06-30): CPF e CRP permanecem editáveis em perfis gratuitos ou sem validação profissional usada para entitlement. A API privada de perfil deve expor o campo derivado `profile.identity_fields_locked=true` somente quando houver assinatura/cortesia profissional ativa não gratuita, `cfp_verified_at` preenchido por consulta real autorizada e CPF/CRP persistidos. Quando essa flag estiver ativa, o backend ignora qualquer tentativa de alterar CPF/CRP pelo perfil e o frontend renderiza os campos bloqueados com explicação ao usuário.
+
 `phone_verification` (OTP por SMS/Twilio para WhatsApp do psicólogo, TASK-16):
 
 | Campo | Tipo | Notas |

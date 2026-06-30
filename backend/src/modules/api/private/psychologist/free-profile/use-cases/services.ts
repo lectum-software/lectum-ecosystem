@@ -47,11 +47,8 @@ const normalizeList = (value?: string[]) => {
   return Array.from(new Set(value.map((item) => item.trim()).filter(Boolean)));
 };
 
-const hasLockedCourtesyIdentityFields = (profile: FreeProfessionalProfileResponse) =>
-  profile.plan.is_courtesy &&
-  !profile.plan.is_free &&
-  normalizeCpf(profile.profile.cpf)?.length === 11 &&
-  Boolean(trimToNull(profile.profile.crp_region) && trimToNull(profile.profile.crp_number));
+const hasLockedProfessionalIdentityFields = (profile: FreeProfessionalProfileResponse) =>
+  profile.profile.identity_fields_locked;
 
 const academicFormationSchema = z.object({
   title: z.string().trim().max(160).nullable().optional(),
@@ -241,7 +238,7 @@ export const update = async (data: IFreeProfessionalProfileUpdateDTO) => {
     };
   }
 
-  const lockIdentityFields = hasLockedCourtesyIdentityFields(current);
+  const lockIdentityFields = hasLockedProfessionalIdentityFields(current);
   const cpf = lockIdentityFields
     ? normalizeCpf(current.profile.cpf)
     : normalizeCpf(parsed.data.cpf);

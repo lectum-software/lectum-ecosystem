@@ -86,6 +86,18 @@ const buildCrp = (region?: string | null, number?: string | null) => {
 
 const hasText = (value?: string | null) => Boolean(value?.trim());
 
+const isProfessionalIdentityLocked = ({
+  cfpVerifiedAt,
+  cpf,
+  crp,
+  isFree,
+}: {
+  cfpVerifiedAt?: Date | null;
+  cpf?: string | null;
+  crp?: string | null;
+  isFree: boolean;
+}) => !isFree && Boolean(cfpVerifiedAt) && onlyDigits(cpf).length === 11 && hasText(crp);
+
 const buildActivationPendingFields = ({
   address,
   approaches,
@@ -286,6 +298,12 @@ const toResponse = async (
   const serviceLimit = isFree ? 1 : Math.max(catalogs.services.length, 1);
   const approachLimit = isFree ? 1 : Math.max(catalogs.approaches.length, 1);
   const crp = parseCrp(profile.crp);
+  const identityFieldsLocked = isProfessionalIdentityLocked({
+    cfpVerifiedAt: profile.cfp_verified_at,
+    cpf: profile.cpf,
+    crp: profile.crp,
+    isFree,
+  });
   const academic = {
     title: profile.academic_title,
     institution: profile.academic_institution,
@@ -359,6 +377,7 @@ const toResponse = async (
       crp_number: crp.crp_number,
       crp_status: profile.crp_status,
       cfp_verified_at: profile.cfp_verified_at,
+      identity_fields_locked: identityFieldsLocked,
     },
     plan: {
       approach_limit: approachLimit,
