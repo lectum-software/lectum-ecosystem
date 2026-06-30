@@ -305,7 +305,7 @@ export const ReplyOwnerActionMenu = ({
 
       {menuOpen ? (
         <div
-          className="absolute top-9 right-0 z-40 w-64 overflow-hidden rounded-2xl border border-border bg-surface p-1.5 text-sm shadow-[var(--lectum-shadow)]"
+          className="absolute top-9 right-0 z-[120] w-64 overflow-hidden rounded-2xl border border-border bg-surface p-1.5 text-sm shadow-[var(--lectum-shadow)]"
           role="menu"
         >
           <button

@@ -1169,3 +1169,21 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm --dir backend build`
 - [x] `pnpm --dir frontend check`
 - [x] `pnpm check`
+
+## Complemento 2026-06-30 - menu de opcoes dos comentarios acima do composer
+
+- Pedido do usuario: ao clicar nos tres pontinhos dos comentarios, a janela de opcoes ficava escondida atras de outros elementos da tela, especialmente no mobile com o composer fixo no rodape.
+- Frontend: o menu inline de comentarios em `/community/[slug]/post/[id]` passou a abrir para cima (`bottom`) em vez de para baixo, mantendo a lista de acoes dentro do viewport quando a barra de interacao esta perto do rodape.
+- Frontend: os menus de acoes do proprio comentario reutilizados em `Meus posts/comentarios` tiveram o z-index elevado para a mesma camada de overlay leve, evitando ficar atras de barras fixas sem alterar a direcao padrao desses cards.
+- Nao houve alteracao de backend, Prisma schema, migrations, endpoints, payloads, packages, votos, salvos, denuncias ou regras de permissao.
+- Fonte visual/auditavel: screenshots do usuario e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR criado: `adrs/0192-menu-opcoes-comentarios-sobreposicao.md`.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write "src/app/app/community/[slug]/post/[id]/logic.tsx" "src/components/community/reply-owner-action-menu.tsx"`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] HTTP local `200` em `/community/ansiedade-em-equilibrio/post/cmr15abhh0004msuh2c5gqi5v`
+- [x] Chrome/CDP local mobile 390x844 confirmou menu de resposta abrindo para cima, dentro do viewport, com `z-index: 120` acima do composer fixo (`z-index: 40`).

@@ -1055,7 +1055,7 @@ const ReplyOverflowMenu = ({
 
       {menuOpen ? (
         <div
-          className="absolute top-8 right-0 z-30 w-56 overflow-hidden rounded-2xl border border-[#E5EAF0] bg-white p-1.5 text-sm shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:border-border dark:bg-surface"
+          className="absolute right-0 bottom-8 z-[120] w-56 overflow-hidden rounded-2xl border border-[#E5EAF0] bg-white p-1.5 text-sm shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:border-border dark:bg-surface"
           role="menu"
         >
           {isOwnReply ? (
