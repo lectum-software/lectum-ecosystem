@@ -307,3 +307,42 @@ O onboarding só termina quando o backend confirma. Se o shell privado (TASK-12)
   executados, mas seguem bloqueados por alteracoes preexistentes fora do escopo em
   `frontend/src/app/app/psychologists/logic.tsx` e
   `frontend/src/app/app/community/[slug]/logic.tsx`.
+
+## Ajuste posterior em 2026-06-30: acabamento premium desktop e logo favicon
+
+- Pedido direto de produto: deixar as duas telas de `/patient/welcome` mais premium no desktop
+  e trocar a logo da primeira tela, em mobile e desktop, para somente o icone sem texto como o
+  favicon da Lectum.
+- A primeira tela passou a renderizar `/icon.png` com `next/image`, removendo o wordmark/texto
+  do componente `Logo` apenas neste onboarding.
+- Apos feedback visual do produto, o desktop manteve o palco externo com gradientes suaves e
+  canvas 16:9 centralizado maior (`1456x819` max.), mas removeu a moldura/contorno externo; a
+  propria ilustracao agora e recortada pelo raio arredondado do shell.
+- Textos, CTA, cards e icones foram compactados para ficarem mais proximos da densidade visual dos
+  demais elementos da Lectum; no mobile, o icone da tela 1 foi reduzido.
+- A segunda tela desktop deixou de exibir os labels `Cuidado individual` e `Comunidade`; os titulos
+  `Encontrar um profissional` e `Participar da comunidade` passaram a iniciar na mesma altura.
+- Nao houve alteracao em backend, banco, contratos de API, formularios ou pacotes. O fluxo real
+  continua usando `GET /api/private/patient/profile` e `PUT /api/private/patient/onboarding`.
+- Referencias visuais consultadas: `_product/proto/Boas-vindas Paciente - 1.jpg`,
+  `_product/proto/Boas-vindas Paciente - 2.jpg`, `_product/proto/Boas-vindas Paciente - 3.jpg`
+  e os assets atuais de `frontend/public/images/patient-welcome/`. Builder/Quick Copy nao ficou
+  exposto como ferramenta direta nesta sessao.
+- Criterios deste ajuste:
+  - [x] Logo da tela 1 usa apenas o icone/favicon em mobile e desktop via `next/image`.
+  - [x] Desktop tem acabamento premium sem voltar para full screen e sem moldura ao redor da
+        ilustracao.
+  - [x] Segunda tela desktop nao exibe labels acima dos cards e mantem os titulos alinhados.
+  - [x] Mobile permanece mobile-first e sem `<img>`.
+  - [x] Nenhum mock, seed permanente, endpoint simulado ou package novo foi usado.
+  - [x] ADR atualizado em `adrs/0171-boas-vindas-paciente-layout-premium.md`.
+- Validacao:
+  - `pnpm --dir frontend exec biome check src/app/patient/welcome/logic.tsx src/app/globals.css`
+  - `git diff --check -- frontend/src/app/patient/welcome/logic.tsx frontend/src/app/globals.css`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build`
+  - `pnpm check`
+  - Browser local via Chrome/CDP em `http://localhost:3000/patient/welcome`, com backend real em
+    `localhost:3001`, usuario paciente temporario criado por `POST /api/public/user/store`,
+    capturas em desktop `1920x1080` e mobile `390x844`, e usuario temporario removido do banco ao
+    final.

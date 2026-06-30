@@ -489,12 +489,13 @@ video::backdrop {
 }
 
 .lectum-welcome-screen {
-  background: #fbfcff;
+  background: var(--background);
 }
 
 .lectum-welcome-shell {
   min-height: 100dvh;
   max-width: 430px;
+  background: #fbfcff;
 }
 
 .lectum-welcome-brand {
@@ -562,15 +563,69 @@ video::backdrop {
   animation: lectum-welcome-arrow 1.8s ease-in-out infinite;
 }
 
+.lectum-welcome-desktop-sheen {
+  display: none;
+}
+
 @media (min-width: 640px) {
+  .lectum-welcome-screen {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    padding: clamp(1.25rem, 3vw, 2.5rem);
+    background:
+      radial-gradient(circle at 18% 12%, rgb(48 140 232 / 7%), transparent 34%),
+      radial-gradient(circle at 82% 6%, rgb(106 116 173 / 8%), transparent 32%),
+      linear-gradient(
+        135deg,
+        var(--background) 0%,
+        rgb(234 245 255 / 42%) 58%,
+        var(--background) 100%
+      );
+  }
+
   .lectum-welcome-shell {
-    width: min(1280px, calc(100vw - 48px), calc(177.7778dvh - 85.3333px));
-    height: min(720px, calc(56.25vw - 27px), calc(100dvh - 48px));
+    z-index: 1;
+    width: min(1456px, calc(100vw - 64px), calc(177.7778dvh - 113.7778px));
+    height: min(819px, calc(56.25vw - 36px), calc(100dvh - 64px));
     min-height: 0;
     max-width: none;
-    top: 50dvh;
-    transform: translateY(-50%);
+    top: auto;
+    transform: none;
     aspect-ratio: 16 / 9;
+    border: 0;
+    border-radius: clamp(1.25rem, 1.8vw, 2rem);
+    box-shadow: none;
+  }
+
+  .lectum-welcome-desktop-sheen {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: block;
+    background:
+      radial-gradient(circle at 50% 16%, rgb(255 255 255 / 42%), transparent 28%),
+      linear-gradient(180deg, rgb(255 255 255 / 16%) 0%, transparent 42%, rgb(48 140 232 / 3%) 100%);
+    pointer-events: none;
+  }
+
+  .lectum-welcome-choice-card {
+    border-color: rgb(255 255 255 / 72%);
+    background: rgb(255 255 255 / 90%);
+    box-shadow:
+      0 24px 70px rgb(15 23 42 / 10%),
+      0 1px 0 rgb(255 255 255 / 80%) inset;
+    backdrop-filter: blur(16px);
+  }
+
+  .lectum-welcome-choice-card:hover {
+    transform: translateY(-4px);
+    box-shadow:
+      0 30px 82px rgb(15 23 42 / 13%),
+      0 12px 28px rgb(48 140 232 / 10%),
+      0 1px 0 rgb(255 255 255 / 88%) inset;
   }
 }
 

@@ -155,3 +155,46 @@ Validacao adicional:
   `1280x720` centralizado e mobile `390x844` sem aplicar as regras desktop.
 - Checks completos de frontend foram tentados, mas ficaram bloqueados por erros
   preexistentes em arquivos fora desta decisao (`app/psychologists` e `community/[slug]`).
+
+## Atualizacao 2026-06-30 - acabamento premium desktop e icone/favicon
+
+Apos revisao visual no desktop, o produto pediu que as telas ficassem mais premium e que a
+primeira tela deixasse de exibir o wordmark `lectum`, usando somente o icone da marca como o
+favicon tambem no mobile. Depois da primeira validacao, o produto pediu remover a moldura em volta
+da ilustracao, compactar tipografia/CTA/cards e remover os labels da segunda tela desktop.
+
+Decisao adicional:
+
+- Manter a experiencia mobile-first e os backgrounds atuais de `/patient/welcome`, alterando a
+  primeira tela para renderizar `/icon.png` via `next/image`, sem `<img>` e sem mudar o componente
+  global `Logo`.
+- Evoluir apenas o acabamento desktop do shell: palco externo com gradientes suaves, canvas 16:9
+  centralizado maior (`1456x819` max.) e ilustracao recortada por bordas arredondadas, sem a
+  moldura/contorno externo que competia com o background.
+- Refinar a densidade visual em mobile e desktop: icone da tela 1 menor no mobile, titulos,
+  subtitulos e CTA mais contidos, cards menores e labels removidos da segunda tela desktop.
+- Alinhar verticalmente os titulos dos dois cards da segunda tela desktop, mantendo o badge
+  `Espaco gratuito` apenas como informacao secundaria do card de comunidade.
+- Preservar contratos e dominio: `GET /api/private/patient/profile` continua decidindo exibicao do
+  onboarding e `PUT /api/private/patient/onboarding` continua concluindo a escolha de objetivo.
+- Nao adicionar pacote, nao alterar backend, schema, rotas, query keys ou persistencia.
+
+Consequencias adicionais:
+
+- Desktop deixa de parecer apenas o canvas mobile ampliado e passa a ter leitura de produto
+  premium/healthcare SaaS, mas sem criar uma moldura adicional ao redor da ilustracao.
+- O icone da primeira tela fica alinhado ao favicon/PWA sem impor troca global de marca em outras
+  telas.
+- O mobile recebe a troca para o icone/favicon e a reducao de escala solicitada para a tela 1,
+  preservando a composicao de referencia.
+
+Validacao adicional:
+
+- `pnpm --dir frontend exec biome check src/app/patient/welcome/logic.tsx src/app/globals.css`
+- `git diff --check -- frontend/src/app/patient/welcome/logic.tsx frontend/src/app/globals.css`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local via Chrome/CDP em `http://localhost:3000/patient/welcome`, com backend real em
+  `localhost:3001`, usuario paciente temporario criado por `POST /api/public/user/store`, capturas
+  em desktop `1920x1080` e mobile `390x844`, e usuario temporario removido do banco ao final.
