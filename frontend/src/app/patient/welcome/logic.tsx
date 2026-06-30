@@ -4,7 +4,6 @@ import { ArrowRight, Loader2, Sparkles } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 import { usePatient } from "@/api/callers/patient";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -98,7 +97,6 @@ export const WelcomePatientLogic = () => {
       completeOnboarding: {
         onSuccess: () => {
           setApiError(null);
-          toast.success("Boas-vindas conclu\u00eddas");
           router.replace("/app");
 
           window.setTimeout(() => {
