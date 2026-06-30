@@ -290,8 +290,25 @@ passport.use(
         }
 
         let user = await repo.findByEmail({ b: { email } });
+        const isRegistrationIntent = intent === "register" || (Boolean(role) && termsAccepted);
 
         if (!user) {
+          if (!isRegistrationIntent) {
+            return done(null, {
+              status: 404,
+              ...error("account_not_registered", {}),
+              type: 3,
+            });
+          }
+
+          if (!role || !termsAccepted) {
+            return done(null, {
+              status: 400,
+              ...error(!role ? "role_not_authorized" : "terms_required", {}),
+              type: 3,
+            });
+          }
+
           user = await repo.store({
             b: {
               name: googleName || email,

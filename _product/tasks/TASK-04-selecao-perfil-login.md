@@ -489,3 +489,20 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   ausência da tag antiga com CRP, largura aproximada de `217px`, `docScrollWidth=390` e
   rodapé institucional presente em `/auth/register/psychologist`.
 - ADR atualizado: `adrs/0008-fluxo-publico-auth-selecao-perfil-login.md`.
+
+## Ajuste posterior em 2026-06-30: login sem cadastro não cria paciente automaticamente
+
+- Pedido direto de produto: ao tentar fazer login com Google usando e-mail sem cadastro, o sistema não deve criar automaticamente um usuário paciente; deve informar que não existe cadastro.
+- O callback Google agora só cria usuário novo quando o `state` representa cadastro real (`intent="register"` ou, por compatibilidade com os cadastros atuais, `role` válido junto de `terms_accepted=true`).
+- Tentativa de login Google sem cadastro retorna `account_not_registered` e não chama `LoginRepository.store`.
+- O login por e-mail/senha foi verificado: ele não criava usuário. A mensagem de e-mail inexistente foi alinhada para `account_not_registered`, enquanto senha incorreta em conta existente continua retornando erro genérico de credenciais.
+- Nenhum endpoint, mock, pacote, schema, migration ou fluxo paralelo de autenticação foi criado.
+
+### Validação do ajuste
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check` executado; bloqueado por erro de sintaxe preexistente no frontend antes de chegar ao backend.
+- Script local com `credentials(...)` e e-mail inexistente confirmou `status=404`, `code="account_not_registered"` e contagem de usuários inalterada (`0 -> 0`).
+- `pnpm --dir frontend check` foi executado e ficou bloqueado por erro de sintaxe preexistente em `frontend/src/templates/private/index.tsx`, arquivo que já estava modificado antes desta correção.
+- ADR atualizado: `adrs/0008-fluxo-publico-auth-selecao-perfil-login.md`.

@@ -69,6 +69,7 @@
     "post_vote_invalid_target": "A publicação ou resposta selecionada não está disponível para voto.",
     "post_vote_value_invalid": "Informe um voto válido para continuar.",
     "account_not_found": "Conta não encontrada.",
+    "account_not_registered": "Não encontramos cadastro para este e-mail. Crie uma conta antes de fazer login.",
     "account_password_login_unavailable": "Esta conta não possui senha cadastrada para confirmar a alteração.",
     "account_current_password_invalid": "A senha atual está incorreta.",
     "account_email_unchanged": "Informe um e-mail diferente do e-mail atual.",

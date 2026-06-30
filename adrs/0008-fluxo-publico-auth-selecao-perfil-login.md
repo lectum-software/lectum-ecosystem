@@ -601,3 +601,45 @@ com referencia a registro ativo no CFP.
 - Browser local via Chrome/CDP em viewport mobile `390x844` confirmou a tag presente,
   ausencia da tag antiga com CRP, largura aproximada de `217px`, `docScrollWidth=390` e
   rodape institucional presente em `/auth/register/psychologist`.
+
+## Atualizacao em 2026-06-30: login Google nao cadastra conta inexistente
+
+### Contexto
+
+O callback Google usava o mesmo endpoint para login e cadastro. Quando o e-mail Google
+nao existia no banco, o backend criava um novo `user` e, sem `role` no `state`, aplicava o
+default `role="paciente"`. Isso fazia uma tentativa de login sem cadastro virar cadastro
+automatico de paciente.
+
+O login por e-mail/senha foi revisado no mesmo ajuste: ele nao criava usuario, mas
+retornava erro generico de credenciais quando o e-mail nao existia.
+
+### Decisao
+
+- Google OAuth so pode criar usuario novo quando o `state` representa fluxo de cadastro:
+  `intent="register"` ou, por compatibilidade com os cadastros atuais, `role` valido junto
+  de `terms_accepted=true`.
+- Tentativas de login Google com e-mail inexistente retornam erro `account_not_registered`
+  e nao chamam `LoginRepository.store`.
+- Login por e-mail/senha com e-mail inexistente passa a retornar o mesmo erro
+  `account_not_registered`, sem criar registro.
+- Senha incorreta para conta existente continua retornando `auth_incorrect`.
+
+### Consequencias
+
+- O login deixa de ser caminho implicito de cadastro.
+- Cadastro Google de paciente e psicologo continua usando o mesmo endpoint real, desde
+  que carregue `role` e aceite de termos no `state` do OAuth.
+- A mensagem explicita de conta inexistente melhora a UX, com o trade-off consciente de
+  revelar que aquele e-mail nao esta cadastrado no fluxo publico de login.
+
+### Validacao
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check` executado; bloqueado por erro de sintaxe preexistente no frontend antes de chegar ao backend.
+- Script local com `credentials(...)` e e-mail inexistente confirmou `status=404`,
+  `code="account_not_registered"` e contagem de usuarios inalterada (`0 -> 0`).
+- `pnpm --dir frontend check` ficou bloqueado por erro de sintaxe preexistente em
+  `frontend/src/templates/private/index.tsx`, arquivo ja modificado antes desta
+  correcao.

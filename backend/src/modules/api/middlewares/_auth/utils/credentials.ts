@@ -13,8 +13,8 @@ export async function credentials<T = user>(email: string, password: string, dev
 
   if (!find)
     return {
-      status: 403,
-      ...error("auth_incorrect", {
+      status: 404,
+      ...error("account_not_registered", {
         //If you need a custom text
       }),
       type: 1,
