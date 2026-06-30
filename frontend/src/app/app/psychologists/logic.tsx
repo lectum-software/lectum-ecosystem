@@ -3371,7 +3371,6 @@ export const PsychologistsLogic = () => {
       allowAnonymous
       contentClassName="h-[100dvh] max-w-none overflow-hidden p-0 sm:p-0 lg:pb-0"
       desktopNavigation="sidebar"
-      desktopSidebarSurface="flat"
       navigationDimmed={isMobileSearchFocusMode}
       navigationHidden={metrics.isDesktopLayout ? false : isUiHidden}
       navigationTheme="solidWhite"
