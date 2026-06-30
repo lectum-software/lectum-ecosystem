@@ -1452,3 +1452,27 @@ Validacoes do complemento:
 - Browser local via Chrome/CDP em `http://localhost:3000/psychologists` com viewport mobile `390x844`: DOM e screenshot
   confirmaram a ordem `Ver perfil -> Favoritar -> Compartilhar -> Chamar no WhatsApp`, hit areas de 44px, avatar visual
   de 32px, icones secundarios de 20px e WhatsApp visual de 36px.
+
+## Execucao complementar: densidade das chips de filtros (2026-06-30)
+
+- Pedido do usuario: reduzir as chips de filtro no desktop, sem alterar tamanho mobile, e remover a sombra/borrado das chips no mobile e no desktop.
+- Referencia visual ativa: inventario `_product/tasks/PROTO-INVENTORY.md`, fallback local `_product/proto/Psicólogos.jpg` e screenshots enviados pelo usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- As chips ativas de filtros mantiveram a escala mobile existente na base `390px`; apenas a sombra foi removida nesse breakpoint.
+- No desktop, as chips ativas e o atalho `+ Filtros` ficaram mais compactos: altura menor, padding/gap reduzidos, icone de remover menor e rotulo interno de `11px`.
+- Nao houve alteracao de backend, Prisma, migrations, packages, filtros reais, query params, ranking, dados, cards de beneficios ou acoes laterais.
+- ADR atualizado: `adrs/0019-descoberta-psicologos-taxonomias.md`.
+
+Criterios complementares:
+
+- [x] Chips de filtro no desktop foram reduzidas sem alterar a escala mobile.
+- [x] A sombra das chips de filtro foi removida no mobile e no desktop.
+- [x] O ajuste preserva filtros reais, URL e remocao individual de cada chip.
+- [x] Nenhum `<img>`, package novo, mock, endpoint simulado, dado fake ou mudanca de banco foi usado.
+
+Validacoes do complemento:
+
+- `pnpm.cmd --dir frontend exec biome check src/app/app/psychologists/logic.tsx`
+- `pnpm.cmd --dir frontend build` com `NODE_OPTIONS=--max-old-space-size=4096`
+- `git diff --check`
+- Browser local via Chrome/CDP em `http://localhost:3000/psychologists` com filtros ativos e viewports `390x844` e `1440x1000`: mobile manteve chips com altura `30px`, rotulo `15px` e `boxShadow=none`; desktop renderizou chips com altura `28px`, rotulo `11px`, icone `12px` e `boxShadow=none`.
+- `pnpm.cmd check`

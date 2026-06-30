@@ -3636,7 +3636,7 @@ export const PsychologistsLogic = () => {
                       {activeFilterChips.map((chip) => (
                         <button
                           aria-label={`Remover filtro ${chip.label}`}
-                          className="inline-flex h-8 max-w-[180px] items-center gap-1.5 rounded-full border border-white/20 bg-white/16 px-3 text-xs font-semibold text-white shadow-[0_8px_24px_rgba(15,23,42,0.22)] backdrop-blur-md transition-colors duration-150 ease-out hover:bg-white/24"
+                          className="inline-flex h-8 max-w-[180px] items-center gap-1.5 rounded-full border border-white/20 bg-white/16 px-3 text-xs font-semibold text-white backdrop-blur-md transition-colors duration-150 ease-out hover:bg-white/24"
                           key={`${chip.key}-${chip.label}`}
                           onClick={(event) => {
                             event.stopPropagation();
@@ -3651,7 +3651,7 @@ export const PsychologistsLogic = () => {
                       ))}
 
                       <button
-                        className="inline-flex h-8 shrink-0 items-center rounded-full border border-white/25 bg-white px-3 text-xs font-bold text-[#0f172a] shadow-[0_8px_24px_rgba(15,23,42,0.18)] transition-transform duration-150 ease-out hover:scale-[1.02]"
+                        className="inline-flex h-8 shrink-0 items-center rounded-full border border-white/25 bg-white px-3 text-xs font-bold text-[#0f172a] transition-transform duration-150 ease-out hover:scale-[1.02]"
                         onClick={handleMySearchModeClick}
                         tabIndex={areFeedModeControlsHidden ? -1 : undefined}
                         type="button"
@@ -3982,7 +3982,7 @@ export const PsychologistsLogic = () => {
                                     {activeFilterChips.map((chip) => (
                                       <button
                                         aria-label={`Remover filtro ${chip.label}`}
-                                        className="inline-flex h-8 max-w-[180px] items-center gap-1.5 rounded-full border border-white/20 bg-white/16 px-3 text-xs font-semibold text-white shadow-[0_8px_24px_rgba(15,23,42,0.22)] backdrop-blur-md transition-colors duration-150 ease-out hover:bg-white/24"
+                                        className="inline-flex h-7 max-w-[144px] items-center gap-1 rounded-full border border-white/20 bg-white/16 px-2.5 text-[11px] font-semibold text-white backdrop-blur-md transition-colors duration-150 ease-out hover:bg-white/24"
                                         key={`${psychologist.id}-${chip.key}-${chip.label}`}
                                         onClick={(event) => {
                                           event.stopPropagation();
@@ -3995,20 +3995,22 @@ export const PsychologistsLogic = () => {
                                         }
                                         type="button"
                                       >
-                                        <span className="truncate">{chip.label}</span>
-                                        <X className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                                        <span className="truncate text-[11px] leading-none">
+                                          {chip.label}
+                                        </span>
+                                        <X className="h-3 w-3 shrink-0" aria-hidden="true" />
                                       </button>
                                     ))}
 
                                     <button
-                                      className="inline-flex h-8 shrink-0 items-center rounded-full border border-white/25 bg-white px-3 text-xs font-bold text-[#0f172a] shadow-[0_8px_24px_rgba(15,23,42,0.18)] transition-transform duration-150 ease-out hover:scale-[1.02]"
+                                      className="inline-flex h-7 shrink-0 items-center rounded-full border border-white/25 bg-white px-2.5 text-[11px] font-bold text-[#0f172a] transition-transform duration-150 ease-out hover:scale-[1.02]"
                                       onClick={handleMySearchModeClick}
                                       tabIndex={
                                         !isActiveSlide || areFeedModeControlsHidden ? -1 : undefined
                                       }
                                       type="button"
                                     >
-                                      + Filtros
+                                      <span className="text-[11px] leading-none">+ Filtros</span>
                                     </button>
                                   </div>
                                 </div>

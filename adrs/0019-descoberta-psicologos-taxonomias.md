@@ -241,6 +241,40 @@ no mobile. A mesma revisao identificou que os botoes estavam visualmente grandes
   `Perfil -> Favoritar -> Compartilhar -> WhatsApp` e os tamanhos planejados: hit area 44px, avatar 32px, icones
   secundarios 20px e WhatsApp visual 36px.
 
+## Complemento 2026-06-30 - densidade das chips de filtros
+
+### Contexto
+
+As chips ativas de filtros no feed imersivo de psicologos estavam visualmente grandes no desktop e tinham sombra
+perceptivel tanto no mobile quanto no desktop, criando um halo/borrado sobre o video. O pedido foi reduzir apenas a
+densidade desktop e remover a sombra sem alterar o tamanho mobile.
+
+### Decisao
+
+- Manter a variante mobile das chips ativas com a mesma altura, paddings, gap, tipografia e icone ja validados na base
+  `390px`.
+- Reduzir somente a variante desktop das chips ativas e do atalho `+ Filtros`, usando altura `h-7`, padding menor,
+  icone de `12px`, limite de largura menor e rotulo interno de `11px`.
+- Remover `box-shadow` das chips/atalho de filtros nos dois breakpoints, preservando borda e translucidez existentes
+  para manter contraste sobre o video.
+- Nao alterar filtros reais, URL, backend, Prisma, ranking, dados, packages, cards de beneficios ou acoes laterais.
+
+### Consequencias
+
+- Desktop fica menos pesado e ocupa menos area sobre o rosto/video.
+- Mobile conserva a escala visual anterior, com a unica mudanca sendo a ausencia da sombra/borrado.
+- A remocao de sombra reduz o halo nas chips sem criar componente paralelo ou nova regra global.
+
+### Validacao
+
+- `pnpm.cmd --dir frontend exec biome check src/app/app/psychologists/logic.tsx`
+- `pnpm.cmd --dir frontend build` com `NODE_OPTIONS=--max-old-space-size=4096`
+- `git diff --check`
+- Browser local via Chrome/CDP em `http://localhost:3000/psychologists` com viewports `390x844` e `1440x1000`:
+  mobile manteve chips visiveis com altura `30px`, rotulo `15px` e `boxShadow=none`; desktop renderizou chips com
+  altura `28px`, rotulo `11px`, icone `12px` e `boxShadow=none`.
+- `pnpm.cmd check`
+
 ## Pendências
 
 - Curadoria ou ingestão real dos catálogos `specialty`, `service` e `approach`.
