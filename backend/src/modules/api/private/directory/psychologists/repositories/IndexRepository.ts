@@ -395,6 +395,20 @@ const moreExperiencedCutoffDate = () => {
   return date;
 };
 
+const buildModalityWhere = (
+  value?: string | null,
+): Prisma.psychologist_profileWhereInput["modality"] => {
+  const normalized = value?.trim().toLowerCase();
+
+  if (!normalized) return { not: null };
+
+  if (normalized === "online") return { in: ["online", "hibrido"] };
+  if (normalized === "presencial") return { in: ["presencial", "hibrido"] };
+  if (normalized === "hibrido") return "hibrido";
+
+  return "__invalid_modality_filter__";
+};
+
 export class IndexRepository implements IIndexRepository {
   readonly repository: ORM["psychologist_profile"];
 
@@ -421,7 +435,7 @@ export class IndexRepository implements IIndexRepository {
       video_url: {
         not: null,
       },
-      modality: props.q.modality || { not: null },
+      modality: buildModalityWhere(props.q.modality),
       gender: props.q.gender || { not: null },
       cpf: { not: null },
       crp: { not: null },

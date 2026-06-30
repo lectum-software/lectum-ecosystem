@@ -6,7 +6,6 @@ import { CITY_OPTIONS_BY_STATE } from "../professional/profile/setup/brazil-citi
 import {
   GENDER_OPTIONS,
   LANGUAGE_OPTIONS,
-  MODALITY_OPTIONS,
   PUBLIC_TARGET_OPTIONS,
   RACE_COLOR_OPTIONS,
   RELIGION_OPTIONS,
@@ -14,11 +13,28 @@ import {
 } from "../professional/profile/setup/options";
 import { toCatalogOptions, toGroupedSpecialtyOptions, toServiceOptions } from "./filter-options";
 
+export type PatientModalityFilter = "online" | "presencial";
+
+export const PATIENT_MODALITY_FILTER_OPTIONS = [
+  { label: "Online", value: "online" },
+  { label: "Presencial", value: "presencial" },
+] satisfies FieldOption[];
+
+export const normalizePatientModalityFilter = (
+  value?: string | null,
+): PatientModalityFilter | null => {
+  const normalized = value?.trim().toLowerCase();
+
+  if (normalized === "online" || normalized === "presencial") return normalized;
+
+  return null;
+};
+
 export const psychologistsFilterSchema = z.object({
   search: z.string().max(120, "Use até 120 caracteres na busca").optional(),
   specialty: z.string().nullable().optional(),
   service: z.string().nullable().optional(),
-  modality: z.string().nullable().optional(),
+  modality: z.enum(["online", "presencial"]).nullable().optional(),
   approach: z.string().nullable().optional(),
   target_audience: z.string().nullable().optional(),
   state: z.string().nullable().optional(),
@@ -138,7 +154,7 @@ export const usePsychologistsFilterForm = ({
         label: "Modalidades de atendimento",
         emptyLabel: "Todas as modalidades",
         inputClassName: filterSelectInputClassName,
-        options: MODALITY_OPTIONS,
+        options: PATIENT_MODALITY_FILTER_OPTIONS,
         searchable: true,
         searchMode: "dropdown",
       },

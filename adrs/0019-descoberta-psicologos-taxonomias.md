@@ -313,6 +313,51 @@ wheel/trackpad para navegacao vertical entre videos.
   nenhuma seta visivel.
 - `pnpm.cmd check` foi executado e bloqueado por erros TypeScript de backend fora deste ajuste, em arquivos ja modificados no working tree como `backend/src/modules/api/private/directory/psychologists/repositories/IndexRepository.ts`.
 
+## Complemento 2026-06-30 - semantica de modalidade compativel
+
+### Contexto
+
+O valor `psychologist_profile.modality = "hibrido"` representa um psicologo que atende tanto presencialmente quanto
+online. Como filtro de intencao do paciente, porem, `Online` e `Presencial` devem responder a compatibilidade de
+atendimento, nao a igualdade exata de string. O produto tambem decidiu que a opcao composta `Presencial e Online` deve
+permanecer como atributo do psicologo, mas nao como uma escolha principal no filtro publico/paciente.
+
+### Decisao
+
+- No backend da descoberta, `modality=online` passa a filtrar por `modality in ["online", "hibrido"]`.
+- No backend da descoberta, `modality=presencial` passa a filtrar por `modality in ["presencial", "hibrido"]`.
+- A query `modality=hibrido` segue suportada como correspondencia exata apenas por compatibilidade com URLs/clientes
+  antigos; a UI publica nao expoe essa opcao.
+- No formulario de filtros do paciente, a lista de modalidades passa a ser propria da descoberta: `Online` e
+  `Presencial`. A lista completa (`Online`, `Presencial`, `Presencial e Online`) continua no formulario de configuracao
+  do perfil profissional.
+- Valores de URL nao suportados pela UI publica, incluindo `hibrido`, sao normalizados para `null` antes de hidratar o
+  React Hook Form, evitando uma opcao invisivel selecionada no filtro.
+
+### Consequencias
+
+- Psicologos hibridos aparecem quando o paciente filtra por atendimento online ou presencial.
+- A interface do paciente fica alinhada a intencao de busca ("quero online" ou "quero presencial") em vez de expor uma
+  busca menos comum por profissionais que oferecam ambas as modalidades.
+- A compatibilidade com clientes que ainda enviem `modality=hibrido` fica preservada no backend, mas novas interacoes da
+  UI publica tendem a remover esse valor.
+- Nao ha mudanca de schema, migrations, seed, dados persistidos, rotas ou packages.
+
+### Validacao
+
+- `pnpm.cmd --dir backend exec biome check src/modules/api/private/directory/psychologists/repositories/IndexRepository.ts`
+- `pnpm.cmd --dir frontend exec biome check src/app/app/psychologists/use-form.tsx src/app/app/psychologists/logic.tsx`
+- `pnpm.cmd --dir backend check`
+- `pnpm.cmd --dir frontend check`
+- `pnpm.cmd --dir backend build`
+- `pnpm.cmd --dir frontend build` com `NODE_OPTIONS=--max-old-space-size=4096`
+- `pnpm.cmd check`
+- Smoke Prisma somente leitura: `hibridoExact=1`, `onlineCompatible=1`, `presencialCompatible=1`.
+- Smoke API local: `modality=online`, `modality=presencial` e `modality=hibrido` retornaram HTTP 200, `success=true`,
+  `count=1` e item `hibrido`.
+- Browser local via Chrome/CDP em `/psychologists?modality=online`, viewport `390x844`: dropdown de modalidades exibiu
+  apenas `Todas as modalidades`, `Online` e `Presencial`.
+
 ## Pendências
 
 - Curadoria ou ingestão real dos catálogos `specialty`, `service` e `approach`.

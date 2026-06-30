@@ -71,7 +71,6 @@ import { CITY_OPTIONS_BY_STATE } from "../professional/profile/setup/brazil-citi
 import {
   GENDER_OPTIONS,
   LANGUAGE_OPTIONS,
-  MODALITY_OPTIONS,
   PUBLIC_TARGET_OPTIONS,
   RACE_COLOR_OPTIONS,
   RELIGION_OPTIONS,
@@ -79,6 +78,8 @@ import {
 } from "../professional/profile/setup/options";
 import {
   defaultPsychologistsFilterValues,
+  normalizePatientModalityFilter,
+  PATIENT_MODALITY_FILTER_OPTIONS,
   type PsychologistsFilterForm,
   usePsychologistsFilterForm,
 } from "./use-form";
@@ -478,13 +479,17 @@ const splitNameForBadge = (name: string) => {
   };
 };
 
+type RawPsychologistsFilterFormValues = Omit<Partial<PsychologistsFilterForm>, "modality"> & {
+  modality?: string | null;
+};
+
 const normalizeFormValues = (
-  values: Partial<PsychologistsFilterForm>,
+  values: RawPsychologistsFilterFormValues,
 ): PsychologistsFilterForm => ({
   search: values.search?.trim() || "",
   specialty: values.specialty?.trim() || null,
   service: values.service?.trim() || null,
-  modality: values.modality?.trim() || null,
+  modality: normalizePatientModalityFilter(values.modality),
   approach: values.approach?.trim() || null,
   target_audience: values.target_audience?.trim() || null,
   state: values.state?.trim() || null,
@@ -862,7 +867,7 @@ const buildActiveFilterChips = (
     findCatalogLabel(filters?.services, normalizedValues.service) ??
       (normalizedValues.service ? humanizeFilterValue(normalizedValues.service) : null),
   );
-  addChip("modality", findOptionLabel(MODALITY_OPTIONS, normalizedValues.modality));
+  addChip("modality", findOptionLabel(PATIENT_MODALITY_FILTER_OPTIONS, normalizedValues.modality));
   addChip(
     "approach",
     findCatalogLabel(filters?.approaches, normalizedValues.approach) ??

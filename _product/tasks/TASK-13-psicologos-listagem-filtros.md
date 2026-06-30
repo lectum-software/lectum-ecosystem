@@ -1477,6 +1477,53 @@ Validacoes do complemento:
 - Browser local via Chrome/CDP em `http://localhost:3000/psychologists` com filtros ativos e viewports `390x844` e `1440x1000`: mobile manteve chips com altura `30px`, rotulo `15px` e `boxShadow=none`; desktop renderizou chips com altura `28px`, rotulo `11px`, icone `12px` e `boxShadow=none`.
 - `pnpm.cmd check`
 
+## Execucao complementar: modalidade hibrida compativel nos filtros (2026-06-30)
+
+- Pedido do usuario: psicologos com modalidade `Presencial e Online` devem aparecer quando o paciente filtrar somente
+  por `Online` ou somente por `Presencial`, e a opcao composta nao deve continuar aparecendo como escolha principal do
+  filtro do paciente.
+- Referencia visual ativa: inventario `_product/tasks/PROTO-INVENTORY.md`, fallback local
+  `_product/proto/Filtros de Psicólogos - Serviços Expandidos.jpg` e `_product/proto/Psicólogos.jpg`; Builder/Quick
+  Copy nao esta exposto como ferramenta callable neste ambiente.
+- Backend: o endpoint real `GET /api/private/directory/psychologists` passou a tratar `modality=online` como
+  compativel com perfis `online` e `hibrido`, e `modality=presencial` como compativel com perfis `presencial` e
+  `hibrido`. A query legada `modality=hibrido` segue suportada como correspondencia exata para clientes antigos.
+- Frontend: o select `Modalidades de atendimento` da busca publica/paciente passou a exibir apenas `Online` e
+  `Presencial`; a modalidade `Presencial e Online` permanece como atributo editavel no perfil do psicologo.
+- Frontend: valores antigos/incompativeis de URL, como `modality=hibrido`, deixam de hidratar o formulario publico do
+  paciente para evitar uma opcao invisivel selecionada.
+- Nao houve alteracao de Prisma, migrations, packages, rotas, seed, mocks ou dados fake.
+- ADR atualizado: `adrs/0019-descoberta-psicologos-taxonomias.md`.
+
+Criterios complementares:
+
+- [x] Filtrar por `Online` inclui psicologos com modalidade `hibrido`.
+- [x] Filtrar por `Presencial` inclui psicologos com modalidade `hibrido`.
+- [x] O filtro visual do paciente exibe somente `Online` e `Presencial`.
+- [x] A opcao `Presencial e Online` continua disponivel no perfil do psicologo, mas nao como escolha principal do
+  filtro do paciente.
+- [x] Nenhum `<img>`, package novo, mock, endpoint simulado, dado fake ou mudanca de banco foi usado.
+
+Validacoes do complemento:
+
+- `pnpm.cmd --dir backend exec biome check src/modules/api/private/directory/psychologists/repositories/IndexRepository.ts`
+- `pnpm.cmd --dir frontend exec biome check src/app/app/psychologists/use-form.tsx src/app/app/psychologists/logic.tsx`
+- `pnpm.cmd --dir backend check`
+- `pnpm.cmd --dir frontend check`
+- `pnpm.cmd --dir backend build`
+- `pnpm.cmd --dir frontend build` com `NODE_OPTIONS=--max-old-space-size=4096` (primeira tentativa encontrou outro
+  `next build` ja em execucao; reexecutado apos o processo concorrente finalizar e concluiu sem erros)
+- `pnpm.cmd check` (primeira tentativa teve falha transitoria de `prisma generate` por diretorio gerado em uso;
+  reexecutado apos 5s e concluiu sem erros)
+- Smoke Prisma somente leitura no banco real: perfis publicaveis atuais retornaram `onlineExact=0`,
+  `presencialExact=0`, `hibridoExact=1`, `onlineCompatible=1` e `presencialCompatible=1`.
+- Smoke API local real em `http://localhost:3001/api/private/directory/psychologists`: `modality=online`,
+  `modality=presencial` e `modality=hibrido` retornaram HTTP 200, `success=true`, `count=1` e item com
+  `modality=hibrido`.
+- Browser local via Chrome/CDP em `http://localhost:3000/psychologists?modality=online`, viewport mobile `390x844`:
+  a modal de filtros abriu, o campo `Modalidades de atendimento` estava selecionado como `Online`, e o dropdown exibiu
+  apenas `Todas as modalidades`, `Online` e `Presencial`, sem `Presencial e Online`.
+
 ## Execucao complementar: scroll desktop das chips de filtros (2026-06-30)
 
 - Pedido do usuario: permitir que o usuario role, no desktop, o carrossel horizontal de chips de filtros selecionados.
