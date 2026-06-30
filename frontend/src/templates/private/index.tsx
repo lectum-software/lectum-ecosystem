@@ -4,6 +4,7 @@ import {
   Bell,
   ChevronLeft,
   Heart,
+  Home,
   LogIn,
   Plus,
   ShieldCheck,
@@ -77,7 +78,6 @@ type NavigationItem = {
 };
 
 const NOTIFICATIONS_HREF = "/app/notifications";
-const COMMUNITY_NAV_ICON_URL = "/svg/atr_24dp_64748B_FILL0_wght400_GRAD0_opsz24.svg";
 const DEFAULT_RESTRICTED_AREA_COPY = {
   description:
     "Entre ou crie sua conta para acessar seu perfil, salvar preferências e continuar sua experiência na Lectum.",
@@ -111,25 +111,6 @@ const RESTRICTED_AREA_COPY_BY_PATH = new Map<string, typeof DEFAULT_RESTRICTED_A
   ],
 ]);
 
-const communityNavigationIconStyle: CSSProperties = {
-  WebkitMaskImage: `url("${COMMUNITY_NAV_ICON_URL}")`,
-  WebkitMaskPosition: "center",
-  WebkitMaskRepeat: "no-repeat",
-  WebkitMaskSize: "contain",
-  maskImage: `url("${COMMUNITY_NAV_ICON_URL}")`,
-  maskPosition: "center",
-  maskRepeat: "no-repeat",
-  maskSize: "contain",
-};
-
-const CommunityNavigationIcon = ({ "aria-hidden": ariaHidden, className }: NavigationIconProps) => (
-  <span
-    aria-hidden={ariaHidden ?? true}
-    className={cn("inline-block bg-current", className)}
-    style={communityNavigationIconStyle}
-  />
-);
-
 const NotificationUnreadIndicator = () => (
   <span
     aria-hidden="true"
@@ -138,6 +119,12 @@ const NotificationUnreadIndicator = () => (
 );
 
 const fallbackNavigation: NavigationItem[] = [
+  {
+    href: DEFAULT_COMMUNITY_FEED_HREF,
+    icon: Home,
+    label: "Início",
+    title: "Início",
+  },
   {
     href: "/psychologists",
     icon: UsersRound,
@@ -149,12 +136,6 @@ const fallbackNavigation: NavigationItem[] = [
     icon: Heart,
     label: "Favoritos",
     title: "Favoritos",
-  },
-  {
-    href: DEFAULT_COMMUNITY_FEED_HREF,
-    icon: CommunityNavigationIcon,
-    label: "Início",
-    title: "Início",
   },
   {
     href: "/app/notifications",
@@ -173,6 +154,12 @@ const fallbackNavigation: NavigationItem[] = [
 const navigationByRole: Record<Extract<UserRole, "paciente" | "psicologo">, NavigationItem[]> = {
   paciente: [
     {
+      href: DEFAULT_COMMUNITY_FEED_HREF,
+      icon: Home,
+      label: "Início",
+      title: "Início",
+    },
+    {
       href: "/psychologists",
       icon: UsersRound,
       label: "Psicólogos",
@@ -183,12 +170,6 @@ const navigationByRole: Record<Extract<UserRole, "paciente" | "psicologo">, Navi
       icon: Heart,
       label: "Favoritos",
       title: "Favoritos",
-    },
-    {
-      href: DEFAULT_COMMUNITY_FEED_HREF,
-      icon: CommunityNavigationIcon,
-      label: "Início",
-      title: "Início",
     },
     {
       href: "/app/notifications",
@@ -205,6 +186,12 @@ const navigationByRole: Record<Extract<UserRole, "paciente" | "psicologo">, Navi
   ],
   psicologo: [
     {
+      href: DEFAULT_COMMUNITY_FEED_HREF,
+      icon: Home,
+      label: "Início",
+      title: "Início",
+    },
+    {
       href: "/psychologists",
       icon: UsersRound,
       label: "Psicólogos",
@@ -215,12 +202,6 @@ const navigationByRole: Record<Extract<UserRole, "paciente" | "psicologo">, Navi
       icon: Heart,
       label: "Favoritos",
       title: "Favoritos",
-    },
-    {
-      href: DEFAULT_COMMUNITY_FEED_HREF,
-      icon: CommunityNavigationIcon,
-      label: "Início",
-      title: "Início",
     },
     {
       href: "/app/notifications",

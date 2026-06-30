@@ -24,6 +24,8 @@ visual entre seções principais.
 
 - Renomear a entrada global `Comunidade` para `Início`, mantendo o destino
   `DEFAULT_COMMUNITY_FEED_HREF`.
+- Posicionar `Início` como primeira opção do menu e usar ícone de casa para
+  reforçar a leitura de entrada principal do produto.
 - Remover a variação `desktopSidebarSurface` do `PrivateTemplate`.
 - Padronizar a sidebar desktop sem sombra, mantendo apenas a borda lateral
   sutil como separador visual.
