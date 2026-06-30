@@ -2255,8 +2255,14 @@ export const ProfessionalProfileSetupLogic = () => {
 
             <section className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
               <label className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-surface-muted p-4 text-left">
-                <span className="block font-bold text-foreground">
-                  Perfil visível para pacientes
+                <span className="grid min-w-0 gap-1">
+                  <span className="block font-bold text-foreground">
+                    Perfil visível para pacientes
+                  </span>
+                  <span className="block text-sm leading-5 text-muted">
+                    Em caso de férias ou agenda lotada, desabilite a visibilidade para pausar a
+                    exibição do seu perfil aos pacientes.
+                  </span>
                 </span>
                 <input
                   checked={published}

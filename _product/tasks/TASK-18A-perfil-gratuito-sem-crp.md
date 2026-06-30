@@ -396,3 +396,22 @@ Validacoes executadas:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessao, preservando a protecao da rota privada.
+
+## Ajuste complementar em 2026-06-30 - descrição de visibilidade do perfil
+
+- Pedido do usuário: adicionar uma descrição em `Perfil visível para pacientes` explicando que o psicólogo pode desabilitar a visibilidade em caso de férias ou agenda lotada.
+- A tela `/app/professional/profile/setup` passou a exibir a orientação diretamente dentro do label do checkbox, mantendo o controle acionável e a hierarquia mobile-first do card.
+- Não houve alteração de backend, Prisma, rotas, contratos, persistência, packages ou regra de publicação; apenas copy/UX explicativa sobre o boolean real `published`.
+- Builder/Quick Copy não está exposto como ferramenta direta neste ambiente; a referência auditável foi o print do usuário e o protótipo local `_product/proto/Editar Perfil - Psicólogo.jpg`.
+
+Critério complementar:
+
+- [x] `Perfil visível para pacientes` informa que, em férias ou agenda lotada, o psicólogo pode desabilitar a visibilidade do perfil.
+
+Validações executadas:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/profile/setup/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessão de CLI, preservando a proteção da rota privada.
+- Verificação estática confirmou a nova copy no bundle de desenvolvimento gerado para a rota.

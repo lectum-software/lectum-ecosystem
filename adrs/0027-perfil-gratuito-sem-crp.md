@@ -164,3 +164,21 @@ Validacao:
 - `pnpm check`
 - HTTP local autenticado em `/app/professional/profile/setup` respondeu `200`.
 - Conferencia estatica confirmou os chips marcados sem `shadow-[0_8px_18px_rgb(48_140_232_/_20%)]` e sem `ring-1 ring-primary/20`.
+
+## Ajuste complementar em 2026-06-30 - orientação de visibilidade do perfil
+
+A tela `/app/professional/profile/setup` passou a exibir uma descrição abaixo de `Perfil visível para pacientes`: em caso de férias ou agenda lotada, o psicólogo pode desabilitar a visibilidade para pausar a exibição do perfil aos pacientes.
+
+Decisão:
+
+- manter a regra de domínio existente (`psychologist_profile.published`) sem criar novo estado de agenda, férias ou indisponibilidade;
+- usar apenas copy explicativa no próprio checkbox, porque o pedido é orientar o profissional sobre o controle já persistido;
+- preservar layout mobile-first com texto em `text-muted`, sem criar componente novo nem alterar backend.
+
+Validações:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/profile/setup/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessão de CLI.
+- Verificação estática confirmou a nova copy no bundle de desenvolvimento da rota.
