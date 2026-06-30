@@ -825,7 +825,7 @@ export const CreateCommunityPostLogic = ({
     <div
       className={cn(
         "fixed inset-0 z-[70] flex items-end justify-center transition-opacity duration-200 ease-out",
-        "bg-background/20 backdrop-blur-[6px] supports-[backdrop-filter]:bg-background/10",
+        "bg-foreground/45 backdrop-blur-[8px] dark:bg-background/75",
         isSheetOpen ? "opacity-100" : "opacity-0",
       )}
     >

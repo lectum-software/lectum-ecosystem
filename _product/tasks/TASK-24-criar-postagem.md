@@ -379,3 +379,13 @@ Validacoes finais deste complemento:
 - Fonte visual auditavel: `_product/proto/Criar Nova Postagem - Pacientes.jpg` e smoke local em `http://localhost:3000/app/community/feed/post/new`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e Chrome/CDP mobile em modo escuro com token real de desenvolvimento, confirmando dropdown com `backgroundColor=rgb(19, 28, 46)`, texto `rgb(226, 232, 240)`, borda `rgb(39, 51, 73)` e opcoes reais de comunidade legiveis.
+
+## Complemento 2026-06-30 - backdrop escuro da modal Criar Post
+
+- Pedido do usuário: deixar o blur/fundo da modal `Criar Post` escuro como nas modais de dicas de uso.
+- Frontend: o overlay fixo de `CreateCommunityPostLogic` passou de `bg-background/20` para um backdrop escuro com tokens (`bg-foreground/45`, `dark:bg-background/75`) e `backdrop-blur-[8px]`, preservando a sheet, o fallback contextual, a rota interceptada e o comportamento mobile-first.
+- Escopo: sem mudanças de backend, Prisma, migrations, endpoints, payload, regras de publicação, anonimato, mídia ou packages.
+- Fonte visual auditável: `_product/proto/Criar Nova Postagem - Pacientes.jpg` e comparação com o padrão já implementado nas dicas de uso; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, ESLint direcionado em `src/app/app/community/[slug]/post/new/logic.tsx` e Chrome/CDP headless em `http://localhost:3000/app/community/feed/post/new`, confirmando dialog `Criar Post`, overlay com `opacity=1`, fundo escuro `bg-foreground/45` computado e `backdrop-filter: blur(8px)`.
+- Observação: uma tentativa posterior de `pnpm check`/`pnpm check:frontend` no workspace sujo falhou por alterações pendentes fora deste escopo (`frontend/src/app/app/community/[slug]/logic.tsx` e `frontend/src/app/app/community/[slug]/post/[id]/logic.tsx`), não relacionadas ao ajuste do backdrop.

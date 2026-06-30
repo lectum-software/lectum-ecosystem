@@ -382,3 +382,26 @@ Validacao complementar:
 - `pnpm --dir frontend check`: sucesso.
 - `pnpm --dir frontend build`: sucesso.
 - Chrome/CDP mobile em `http://localhost:3000/app/community/feed/post/new`, modo escuro e token real de desenvolvimento: sucesso ao abrir o dropdown e confirmar painel `rgb(19, 28, 46)`, texto `rgb(226, 232, 240)`, borda `rgb(39, 51, 73)` e opcoes reais legiveis.
+
+## Atualizacao 2026-06-30 - backdrop escuro da modal Criar Post
+
+O overlay da modal `Criar Post` foi ajustado para seguir a leitura visual escura das dicas de uso/onboarding, evitando que o fundo pareça claro ou apagado quando a sheet está aberta sobre o feed ou comunidade.
+
+Decisoes complementares:
+
+- Substituir o backdrop claro (`bg-background/20` com fallback claro) por `bg-foreground/45` no tema claro e `dark:bg-background/75` no tema escuro, mantendo tokens de tema em vez de introduzir cor fixa nova.
+- Aumentar o blur do overlay para `backdrop-blur-[8px]`, alinhando a modal de criação aos overlays escuros usados em dicas/prompts e preservando a hierarquia do dialog.
+- Manter a mesma implementação para rota interceptada e fallback direto, sem mudar roteamento, API, payload, schema, anonimato, mídia, storage, Prisma ou packages.
+
+Consequencias:
+
+- O feed/comunidade de fundo permanece reconhecível, mas agora com obscurecimento suficiente para a modal se destacar como estado modal real.
+- O comportamento mobile-first da sheet, o foco do editor, o fechamento por `X`/`Esc` e o bloqueio de scroll permanecem inalterados.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`: sucesso antes das alterações pendentes externas aparecerem no workspace.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm --dir frontend exec eslint "src/app/app/community/[slug]/post/new/logic.tsx"`: sucesso.
+- Chrome/CDP headless em `http://localhost:3000/app/community/feed/post/new`: sucesso ao confirmar dialog `Criar Post`, `opacity=1`, classe de overlay com `bg-foreground/45 backdrop-blur-[8px] dark:bg-background/75`, cor de fundo escura computada e `backdrop-filter: blur(8px)`.
+- `pnpm check` e nova rodada de `pnpm check:frontend` ficaram bloqueados por mudanças pendentes fora deste escopo em arquivos já modificados do workspace, especialmente lint `react-hooks/set-state-in-effect` em `frontend/src/app/app/community/[slug]/logic.tsx` e avisos de imports não usados em `frontend/src/app/app/community/[slug]/post/[id]/logic.tsx`.
