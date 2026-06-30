@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import {
   clearPromptDismissalState,
+  hasCompletedRegistrationForPrompts,
   markPromptDismissedWithBackoff,
   type PromptUserRole,
 } from "@/utils/prompt-cooldown";
@@ -464,6 +465,7 @@ export const NotificationManager = () => {
     permission,
     requestPermissionAndSubscribe,
   } = useNotificationPushPermission();
+  const hasCompletedRegistration = hasCompletedRegistrationForPrompts(user);
 
   useEffect(() => {
     if (isVisible) return;
@@ -474,6 +476,7 @@ export const NotificationManager = () => {
     if (
       !isPrivateAppRoute ||
       isNotificationsSettingsRoute ||
+      !hasCompletedRegistration ||
       !canRequestPermission ||
       isDismissedByPreference()
     ) {
@@ -486,7 +489,7 @@ export const NotificationManager = () => {
     }, SHOW_DELAY_MS);
 
     return () => window.clearTimeout(timer);
-  }, [canRequestPermission, isVisible, pathname]);
+  }, [canRequestPermission, hasCompletedRegistration, isVisible, pathname]);
 
   useEffect(() => {
     if (!isVisible) return;
@@ -494,6 +497,12 @@ export const NotificationManager = () => {
       releaseActivePrompt();
     }
   }, [isVisible, permission]);
+
+  useEffect(() => {
+    if (!isVisible || hasCompletedRegistration) return;
+
+    releaseActivePrompt();
+  }, [hasCompletedRegistration, isVisible]);
 
   useEffect(
     () => () => {
@@ -519,7 +528,7 @@ export const NotificationManager = () => {
     closePrompt(result === "granted" ? "none" : "cooldown");
   };
 
-  if (!isVisible || permission !== "default") return null;
+  if (!isVisible || !hasCompletedRegistration || permission !== "default") return null;
 
   return (
     <NotificationPermissionPrompt

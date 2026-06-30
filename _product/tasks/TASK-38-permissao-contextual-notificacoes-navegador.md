@@ -240,3 +240,20 @@ Packages usados:
   - `Agora não` presente;
   - `Não mostrar novamente` ausente;
   - `lectum.activePrompt === "notification-permission"`.
+
+## Refinamento 2026-06-30 - exibição somente após cadastro concluído
+
+- Pedido de produto: a modal **"Ative notificações da Lectum"** não deve aparecer durante cadastro/onboarding; para psicólogos, mesmo com maior insistência, só deve aparecer após finalizar escolha de plano, WhatsApp e configuração/publicação do perfil profissional.
+- Implementação ajustada em `frontend/src/utils/prompt-cooldown.ts` e `frontend/src/hooks/notification/index.tsx`:
+  - pacientes só ficam elegíveis após `patient_profile.onboarding_completed_at`;
+  - psicólogos só ficam elegíveis com assinatura ativa real, WhatsApp salvo e `psychologist_profile.published=true`;
+  - `Notification.requestPermission()` continua isolado no CTA e o gate novo afeta somente a exibição contextual da modal.
+- A alteração é frontend-only, sem package novo, backend, endpoint, evento de domínio, push payload ou migration.
+- Validação de escopo executada:
+  - `pnpm --dir frontend exec biome check --write src/components/pwa-install-prompt.tsx src/hooks/notification/index.tsx src/utils/prompt-cooldown.ts`;
+  - `pnpm --dir frontend exec eslint src/components/pwa-install-prompt.tsx src/hooks/notification/index.tsx src/utils/prompt-cooldown.ts`;
+  - `pnpm --dir frontend exec tsc --noEmit --pretty false`;
+  - `pnpm --dir frontend build`;
+  - browser local mobile `390x844` em `next start` na porta `3002`, confirmando a regra compartilhada de elegibilidade pós-cadastro usada pelos prompts.
+- `pnpm --dir frontend check` e `pnpm check` foram reexecutados, mas ficaram bloqueados por alterações pendentes fora deste refinamento em `frontend/src/app/app/community/[slug]/post/[id]/logic.tsx` e `frontend/src/app/app/community/[slug]/logic.tsx`.
+- ADR atualizado: `adrs/0183-insistencia-controlada-atalho-notificacoes-psicologos.md`.

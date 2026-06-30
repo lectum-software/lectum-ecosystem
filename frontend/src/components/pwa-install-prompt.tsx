@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import {
   clearPromptDismissalState,
+  hasCompletedRegistrationForPrompts,
   markPromptDismissedWithBackoff,
   type PromptUserRole,
 } from "@/utils/prompt-cooldown";
@@ -146,6 +147,7 @@ export function PwaInstallPrompt() {
   const [showIosSteps, setShowIosSteps] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const isPsychologist = user?.role === "psicologo";
+  const hasCompletedRegistration = hasCompletedRegistrationForPrompts(user);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (event: Event) => {
@@ -173,14 +175,13 @@ export function PwaInstallPrompt() {
     if (isVisible) return;
 
     const isPrivateAppRoute = pathname.startsWith("/app");
-    const isConfirmedUser = Boolean(user?.id && user.confirmed);
     const iosDevice = isIosDevice();
     const canInstallNatively = Boolean(deferredPrompt);
     const canOfferInstall = iosDevice || canInstallNatively;
 
     if (
       !isPrivateAppRoute ||
-      !isConfirmedUser ||
+      !hasCompletedRegistration ||
       !isMobileExperience() ||
       !canOfferInstall ||
       isStandaloneMode() ||
@@ -197,7 +198,13 @@ export function PwaInstallPrompt() {
     }, SHOW_DELAY_MS);
 
     return () => window.clearTimeout(timer);
-  }, [deferredPrompt, isVisible, pathname, user?.confirmed, user?.id]);
+  }, [deferredPrompt, hasCompletedRegistration, isVisible, pathname]);
+
+  useEffect(() => {
+    if (!isVisible || hasCompletedRegistration) return;
+
+    releaseActivePrompt();
+  }, [hasCompletedRegistration, isVisible]);
 
   const closePrompt = useCallback(
     (persist: "cooldown" | "installed") => {
@@ -242,7 +249,7 @@ export function PwaInstallPrompt() {
     }
   };
 
-  if (!isVisible) return null;
+  if (!isVisible || !hasCompletedRegistration) return null;
 
   return (
     <div

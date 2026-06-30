@@ -186,3 +186,20 @@ Persistência local:
   - `pnpm check`;
   - browser local mobile `390x844` com usuário real de desenvolvimento `psicologo`, confirmando ausência de `Não mostrar novamente`, chave legada `lectum.pwaInstall.neverShowAgain` ignorada, cooldown de 48h nas duas primeiras recusas e 7 dias na terceira.
 - ADR criado: `adrs/0183-insistencia-controlada-atalho-notificacoes-psicologos.md`.
+
+## Refinamento 2026-06-30 - exibição somente após cadastro concluído
+
+- Pedido de produto: a modal **"Acesse a Lectum como um app"** não deve aparecer durante cadastro/onboarding; para psicólogos, mesmo com maior insistência, só deve aparecer após finalizar escolha de plano, WhatsApp e configuração/publicação do perfil profissional.
+- Implementação ajustada em `frontend/src/utils/prompt-cooldown.ts` e `frontend/src/components/pwa-install-prompt.tsx`:
+  - pacientes só ficam elegíveis após `patient_profile.onboarding_completed_at`;
+  - psicólogos só ficam elegíveis com assinatura ativa real, WhatsApp salvo e `psychologist_profile.published=true`;
+  - o cooldown/backoff mais curto para psicólogos permanece, mas apenas após esse marco de cadastro concluído.
+- A alteração é frontend-only, sem package novo, backend, endpoint ou migration.
+- Validação de escopo executada:
+  - `pnpm --dir frontend exec biome check --write src/components/pwa-install-prompt.tsx src/hooks/notification/index.tsx src/utils/prompt-cooldown.ts`;
+  - `pnpm --dir frontend exec eslint src/components/pwa-install-prompt.tsx src/hooks/notification/index.tsx src/utils/prompt-cooldown.ts`;
+  - `pnpm --dir frontend exec tsc --noEmit --pretty false`;
+  - `pnpm --dir frontend build`;
+  - browser local mobile `390x844` em `next start` na porta `3002`, confirmando prompt oculto para psicólogo incompleto e visível após assinatura ativa + WhatsApp + `published=true`.
+- `pnpm --dir frontend check` e `pnpm check` foram reexecutados, mas ficaram bloqueados por alterações pendentes fora deste refinamento em `frontend/src/app/app/community/[slug]/post/[id]/logic.tsx` e `frontend/src/app/app/community/[slug]/logic.tsx`.
+- ADR atualizado: `adrs/0183-insistencia-controlada-atalho-notificacoes-psicologos.md`.
