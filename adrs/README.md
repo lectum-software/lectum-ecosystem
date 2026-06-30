@@ -102,3 +102,5 @@ Formato recomendado:
 - [ADR-0180 - Rotas publicas de psicologos e comunidades fora de /app](0180-rotas-publicas-psicologos-comunidades.md) - Accepted
 - [ADR-0184 - Bloqueio da revisão final de qualidade, segurança, LGPD e operação](0184-bloqueio-task34-qualidade-lgpd-operacao.md) - Accepted
 - [ADR-0187 - Escopo V1 focado em psicologia e expansao multiprofissional futura](0187-escopo-v1-psicologia-expansao-multiprofissional.md) - Accepted
+- [ADR-0190 - Range requests para midia publica](0190-range-requests-midia-publica.md) - Accepted
+- [ADR-0191 - Layout social de compartilhamento de video-resposta](0191-layout-compartilhamento-social-video-resposta.md) - Accepted

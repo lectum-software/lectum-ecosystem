@@ -64,6 +64,7 @@ import {
   PsychologistWhatsAppButtonContent,
   PsychologistWhatsAppRedirectButton,
 } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
+import { LectumShareVideoModal } from "@/components/share/lectum-share-video-modal";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -75,6 +76,11 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { formatCrpLabel, formatCrpNumber } from "@/utils/crp";
+import {
+  createLectumShareTargetFromHighlightedReply,
+  type LectumShareChannel,
+  type LectumShareVideoTarget,
+} from "@/utils/lectum-share-target";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 const PAGE_LIMIT = 5;
@@ -2170,6 +2176,7 @@ export const PsychologistProfileLogic = () => {
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
   const [shareFeedback, setShareFeedback] = useState(false);
+  const [shareVideoTarget, setShareVideoTarget] = useState<LectumShareVideoTarget | null>(null);
   const [pendingScrollTab, setPendingScrollTab] = useState<ProfileTab | null>(null);
   const trackedProfileViewRef = useRef<string | null>(null);
   const currentUser = useAppSelector((state) => state.user);
@@ -2380,6 +2387,12 @@ export const PsychologistProfileLogic = () => {
   const sharePost = async (post: PostListPost) => {
     if (typeof window === "undefined") return;
 
+    const videoTarget = createLectumShareTargetFromHighlightedReply(post);
+    if (videoTarget) {
+      setShareVideoTarget(videoTarget);
+      return;
+    }
+
     const url = `${window.location.origin}${profilePublicationHref(post)}`;
 
     try {
@@ -2402,6 +2415,18 @@ export const PsychologistProfileLogic = () => {
     } catch {
       setShareFeedback(false);
     }
+  };
+
+  const handleShareVideoShared = (channel: LectumShareChannel) => {
+    if (!shareVideoTarget) return;
+
+    shareReplyMutation.mutate({
+      postId: shareVideoTarget.postId,
+      replyId: shareVideoTarget.replyId,
+      body: { channel },
+    });
+    setShareFeedback(true);
+    window.setTimeout(() => setShareFeedback(false), 2500);
   };
 
   const goBack = () => {
@@ -2578,6 +2603,11 @@ export const PsychologistProfileLogic = () => {
           </div>
         </section>
       </div>
+      <LectumShareVideoModal
+        onClose={() => setShareVideoTarget(null)}
+        onShared={handleShareVideoShared}
+        target={shareVideoTarget}
+      />
     </PrivateTemplate>
   );
 };

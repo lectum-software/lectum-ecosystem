@@ -27,6 +27,7 @@ import { CommunityMediaBlock } from "@/components/community/community-media-fram
 import { CommunityPostCard } from "@/components/community/community-post-card";
 import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
 import { ReplyOwnerActionMenu } from "@/components/community/reply-owner-action-menu";
+import { LectumShareVideoModal } from "@/components/share/lectum-share-video-modal";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -35,6 +36,12 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
+import {
+  createLectumShareTargetFromHighlightedReply,
+  createLectumShareVideoTarget,
+  type LectumShareChannel,
+  type LectumShareVideoTarget,
+} from "@/utils/lectum-share-target";
 
 const PAGE_LIMIT = 10;
 
@@ -580,6 +587,7 @@ export const MyPostsLogic = () => {
   const sessionUser = useAppSelector((state) => state.user);
   const [type, setType] = useState<UserPostsType>("posts");
   const [shareFeedback, setShareFeedback] = useState<"interaction" | "post" | null>(null);
+  const [shareVideoTarget, setShareVideoTarget] = useState<LectumShareVideoTarget | null>(null);
   const query = useMemo(() => ({ limit: PAGE_LIMIT, type }), [type]);
   const postsCountQueryParams = useMemo(() => ({ limit: 1, page: 1, type: "posts" as const }), []);
   const repliesCountQueryParams = useMemo(
@@ -617,6 +625,20 @@ export const MyPostsLogic = () => {
   const sharePost = async (post: PostListPost, replyId?: string) => {
     if (typeof window === "undefined") return;
 
+    const replyTarget = replyId
+      ? items.find((item) => item.reply?.id === replyId && item.post.id === post.id)?.reply
+      : null;
+    const videoTarget = replyTarget
+      ? createLectumShareVideoTarget(post, replyTarget, {
+          parentContent: replyTarget.parent_content ?? null,
+        })
+      : createLectumShareTargetFromHighlightedReply(post);
+
+    if (videoTarget) {
+      setShareVideoTarget(videoTarget);
+      return;
+    }
+
     const relativeUrl = replyId
       ? focusedReplyHref(post, replyId)
       : `/community/${post.community.slug}/post/${post.id}`;
@@ -643,6 +665,18 @@ export const MyPostsLogic = () => {
     } catch {
       setShareFeedback(null);
     }
+  };
+
+  const handleShareVideoShared = (channel: LectumShareChannel) => {
+    if (!shareVideoTarget) return;
+
+    shareReplyMutation.mutate({
+      postId: shareVideoTarget.postId,
+      replyId: shareVideoTarget.replyId,
+      body: { channel },
+    });
+    setShareFeedback("interaction");
+    window.setTimeout(() => setShareFeedback(null), 2400);
   };
 
   const handleFilterChange = (value: UserPostsType) => {
@@ -785,6 +819,11 @@ export const MyPostsLogic = () => {
           />
         </div>
       </section>
+      <LectumShareVideoModal
+        onClose={() => setShareVideoTarget(null)}
+        onShared={handleShareVideoShared}
+        target={shareVideoTarget}
+      />
     </PrivateTemplate>
   );
 };

@@ -29,6 +29,7 @@ import {
   toCommunityWhatsAppIdentity,
 } from "@/components/community/community-whatsapp-cta";
 import { MentorBadge } from "@/components/community/mentor-badge";
+import { LectumShareVideoModal } from "@/components/share/lectum-share-video-modal";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -36,6 +37,12 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
+import {
+  createLectumShareTargetFromHighlightedReply,
+  createLectumShareVideoTarget,
+  type LectumShareChannel,
+  type LectumShareVideoTarget,
+} from "@/utils/lectum-share-target";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 const PAGE_LIMIT = 10;
@@ -451,6 +458,7 @@ const Pagination = ({
 export const SavedPostsLogic = () => {
   const [page, setPage] = useState(1);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
+  const [shareVideoTarget, setShareVideoTarget] = useState<LectumShareVideoTarget | null>(null);
   const [removedFeedback, setRemovedFeedback] = useState<string | null>(null);
   const query = useMemo(() => ({ page, limit: PAGE_LIMIT }), [page]);
   const postsQuery = useSavedPosts(query);
@@ -473,6 +481,20 @@ export const SavedPostsLogic = () => {
 
   const sharePost = async (post: PostListPost, replyId?: string) => {
     if (typeof window === "undefined") return;
+
+    const replyTarget = replyId
+      ? items.find((item) => item.reply?.id === replyId && item.post.id === post.id)?.reply
+      : null;
+    const videoTarget = replyTarget
+      ? createLectumShareVideoTarget(post, replyTarget, {
+          parentContent: replyTarget.parent_content ?? null,
+        })
+      : createLectumShareTargetFromHighlightedReply(post);
+
+    if (videoTarget) {
+      setShareVideoTarget(videoTarget);
+      return;
+    }
 
     const relativeUrl = replyId
       ? savedReplyHref(post, replyId)
@@ -500,6 +522,18 @@ export const SavedPostsLogic = () => {
     } catch {
       setShareFeedback(null);
     }
+  };
+
+  const handleShareVideoShared = (channel: LectumShareChannel) => {
+    if (!shareVideoTarget) return;
+
+    shareReplyMutation.mutate({
+      postId: shareVideoTarget.postId,
+      replyId: shareVideoTarget.replyId,
+      body: { channel },
+    });
+    setShareFeedback(shareVideoTarget.postId);
+    window.setTimeout(() => setShareFeedback(null), 2400);
   };
 
   return (
@@ -609,6 +643,11 @@ export const SavedPostsLogic = () => {
           />
         </div>
       </section>
+      <LectumShareVideoModal
+        onClose={() => setShareVideoTarget(null)}
+        onShared={handleShareVideoShared}
+        target={shareVideoTarget}
+      />
     </PrivateTemplate>
   );
 };

@@ -132,6 +132,12 @@ const profilePostSelect = {
       downvotes_count: true,
       createdAt: true,
       edited_at: true,
+      parent_reply_id: true,
+      parent_reply: {
+        select: {
+          content: true,
+        },
+      },
       author: {
         select: postAuthorSelect,
       },
@@ -149,6 +155,12 @@ const profileReplySelect = {
   downvotes_count: true,
   createdAt: true,
   edited_at: true,
+  parent_reply_id: true,
+  parent_reply: {
+    select: {
+      content: true,
+    },
+  },
   post: {
     select: profilePostSelect,
   },
@@ -525,6 +537,8 @@ const toHighlightedProfessionalReply = (
     upvotes_count: reply.upvotes_count,
     created_at: reply.createdAt,
     edited_at: reply.edited_at,
+    parent_reply_id: reply.parent_reply_id,
+    parent_content: reply.parent_reply?.content ?? null,
     saved: savedReplyIds?.has(reply.id) ?? false,
     author,
   };

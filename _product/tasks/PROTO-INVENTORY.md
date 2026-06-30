@@ -9,6 +9,7 @@ Este documento substitui o inventário Figma como referência visual ativa.
 - Total de arquivos JPEG: 62
 - Total de telas de produto: 61
 - Asset isolado: 1 ícone `post_add_24dp_64748B_FILL0_wght400_GRAD0_opsz24 1.jpg`
+- Referência complementar de produto: 1 PNG gerado/aprovado em conversa para compartilhamento social (`_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png`).
 
 As imagens e o Builder MCP são referência de produto, layout, estados, hierarquia visual e nomenclatura. Elas não definem a arquitetura final, qualidade final de código, contratos de API nem componentes finais.
 
@@ -136,6 +137,7 @@ O comando acima não deve ser usado como geração final automática. Quando usa
 | Posts | Meus Posts - Paciente | `_product/proto/Meus Posts - Paciente.jpg` | 414x1438 | TASK-28 |
 | Posts | Meus Posts - Psicólogo | `_product/proto/Meus Posts - Psicólogo.jpg` | 394x1593 | TASK-28 |
 | Posts | Posts Salvos | `_product/proto/Posts Salvos.jpg` | 390x1784 | TASK-28 |
+| Posts | Compartilhamento Lectum - vídeo-resposta stories referência | `_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png` | 941x1672 | TASK-42 |
 | Conta | Notificações | `_product/proto/Notificações.jpg` | 414x1317 | TASK-29A |
 | Conta | Configurações de Notificações | `_product/proto/Configurações de Notificações.jpg` | 390x1099 | TASK-29A |
 | Conta | Configurações de Conta - Login Google | `_product/proto/Configurações de Conta - Login Google.jpg` | 390x884 | TASK-30 |

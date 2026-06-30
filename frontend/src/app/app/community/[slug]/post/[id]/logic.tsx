@@ -76,6 +76,7 @@ import {
 import { components } from "@/components/controllers";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { ActionableCoachMark } from "@/components/onboarding/actionable-coach-mark";
+import { LectumShareVideoModal } from "@/components/share/lectum-share-video-modal";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -85,6 +86,12 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
+import {
+  createLectumShareVideoTarget,
+  findPostReplyInTree,
+  type LectumShareChannel,
+  type LectumShareVideoTarget,
+} from "@/utils/lectum-share-target";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
 import {
@@ -2195,6 +2202,7 @@ export const PostDetailLogic = () => {
   const [reportError, setReportError] = useState<string | null>(null);
   const [reportTarget, setReportTarget] = useState<ReportTarget>(null);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
+  const [shareVideoTarget, setShareVideoTarget] = useState<LectumShareVideoTarget | null>(null);
   const composerRef = useRef<HTMLFormElement | null>(null);
   const inlineReplyFormRef = useRef<HTMLFormElement | null>(null);
   const inlineReplyHasDraftRef = useRef(false);
@@ -2419,6 +2427,16 @@ export const PostDetailLogic = () => {
   const shareReply = async (reply: PostReply) => {
     if (!post || typeof window === "undefined") return;
 
+    const parentReply = findPostReplyInTree(replies, reply.parent_reply_id);
+    const videoTarget = createLectumShareVideoTarget(post, reply, {
+      parentContent: parentReply?.content ?? null,
+    });
+
+    if (videoTarget) {
+      setShareVideoTarget(videoTarget);
+      return;
+    }
+
     const url = `${window.location.origin}/community/${post.community.slug}/post/${post.id}#reply-${reply.id}`;
 
     try {
@@ -2435,6 +2453,18 @@ export const PostDetailLogic = () => {
     } catch {
       setShareFeedback(null);
     }
+  };
+
+  const handleShareVideoShared = (channel: LectumShareChannel) => {
+    if (!shareVideoTarget) return;
+
+    shareReplyMutation.mutate({
+      postId: shareVideoTarget.postId,
+      replyId: shareVideoTarget.replyId,
+      body: { channel },
+    });
+    setShareFeedback(shareVideoTarget.replyId);
+    window.setTimeout(() => setShareFeedback(null), 2400);
   };
 
   const setInlineReplyDraftState = useCallback((hasDraft: boolean) => {
@@ -2909,6 +2939,11 @@ export const PostDetailLogic = () => {
           </>
         ) : null}
       </section>
+      <LectumShareVideoModal
+        onClose={() => setShareVideoTarget(null)}
+        onShared={handleShareVideoShared}
+        target={shareVideoTarget}
+      />
     </PrivateTemplate>
   );
 };
@@ -2930,6 +2965,7 @@ export const PostReplyThreadLogic = () => {
   const [reportError, setReportError] = useState<string | null>(null);
   const [reportTarget, setReportTarget] = useState<ReportTarget>(null);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
+  const [shareVideoTarget, setShareVideoTarget] = useState<LectumShareVideoTarget | null>(null);
   const composerRef = useRef<HTMLFormElement | null>(null);
   const inlineReplyFormRef = useRef<HTMLFormElement | null>(null);
   const inlineReplyHasDraftRef = useRef(false);
@@ -2975,6 +3011,16 @@ export const PostReplyThreadLogic = () => {
   const shareReply = async (reply: PostReply) => {
     if (!post || typeof window === "undefined") return;
 
+    const parentReply = rootReply ? findPostReplyInTree([rootReply], reply.parent_reply_id) : null;
+    const videoTarget = createLectumShareVideoTarget(post, reply, {
+      parentContent: parentReply?.content ?? null,
+    });
+
+    if (videoTarget) {
+      setShareVideoTarget(videoTarget);
+      return;
+    }
+
     const threadRootId = rootReply?.id ?? reply.id;
     const url = `${window.location.origin}/community/${post.community.slug}/post/${post.id}/thread/${threadRootId}#reply-${reply.id}`;
 
@@ -2992,6 +3038,18 @@ export const PostReplyThreadLogic = () => {
     } catch {
       setShareFeedback(null);
     }
+  };
+
+  const handleShareVideoShared = (channel: LectumShareChannel) => {
+    if (!shareVideoTarget) return;
+
+    shareReplyMutation.mutate({
+      postId: shareVideoTarget.postId,
+      replyId: shareVideoTarget.replyId,
+      body: { channel },
+    });
+    setShareFeedback(shareVideoTarget.replyId);
+    window.setTimeout(() => setShareFeedback(null), 2400);
   };
 
   const setInlineReplyDraftState = useCallback((hasDraft: boolean) => {
@@ -3318,6 +3376,11 @@ export const PostReplyThreadLogic = () => {
           </div>
         ) : null}
       </section>
+      <LectumShareVideoModal
+        onClose={() => setShareVideoTarget(null)}
+        onShared={handleShareVideoShared}
+        target={shareVideoTarget}
+      />
     </PrivateTemplate>
   );
 };
