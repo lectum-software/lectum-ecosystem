@@ -12,14 +12,18 @@ TASK-42
 
 A Lectum passara a ser tambem uma fonte de criacao de conteudo para psicologos. Videos-resposta feitos na comunidade devem poder ser compartilhados em redes sociais mantendo uma identidade visual padronizada da Lectum, mas sem parecer peca institucional.
 
-As decisoes de produto definidas em 2026-06-30 foram: usar o mesmo botao Share, oferecer somente o formato vertical 9:16, remover play central, nao desenhar CTA/link clicavel, exibir "Perguntaram na Lectum", usar titulo do post ou previa do comentario, nao exibir CRP, remover prefixos "Dr./Dra.", mostrar "Psicologa"/"Psicologo" conforme genero conhecido e exibir selo verificado quando o psicologo estiver verificado. O formato quadrado/feed foi removido no mesmo dia apos validacao visual no localhost porque comprimia demais video, pergunta e identidade do psicologo. A tela de compartilhamento tambem foi simplificada para se aproximar da galeria do celular: sem textos acima do video, apenas botao X e opcoes abaixo.
+As decisoes de produto definidas em 2026-06-30 foram: usar o mesmo botao Share, oferecer somente o formato vertical 9:16, remover play central, nao desenhar CTA/link clicavel, exibir "Perguntaram na Lectum", usar titulo do post ou previa do comentario, nao exibir CRP, remover prefixos "Dr./Dra.", mostrar "Psicologa"/"Psicologo" conforme genero conhecido e exibir selo verificado quando o psicologo estiver verificado. O formato quadrado/feed foi removido no mesmo dia apos validacao visual no localhost porque comprimia demais video, pergunta e identidade do psicologo. A tela de compartilhamento tambem foi simplificada para se aproximar da galeria do celular: sem textos acima do video, apenas botao X e opcoes abaixo. Em seguida, a linha de acoes foi ajustada para `Copiar link`, `WhatsApp`, `Instagram`, `TikTok` e `Mais`, removendo a opcao direta de baixar. Para manter a folha mais limpa, o preview e os botoes deixaram de ter sombras externas. A interacao da modal foi refinada com animacao vertical de entrada/saida e gesto de arrastar para baixo para fechar.
 
 ## Decisao
 
 - O layout social sera gerado no frontend com APIs nativas do navegador (`canvas`, `MediaRecorder`, `canvas.captureStream`, Web Share API e clipboard), sem package novo.
 - O Share existente continua sendo a unica entrada. Para video-resposta profissional, abre um modal Lectum com preview vertical 9:16 unico para Stories/Reels/TikTok/Shorts; para outros casos, mantem o compartilhamento de link existente.
 - A arte exportada renderiza video de fundo, card da pergunta/comentario, identificacao do psicologo, selo verificado condicional e wordmark `lectum`, sem play central, sem CTA e sem variante quadrada/feed.
-- O modal usa padrao de share sheet: preview no topo, botao X de saida e opcoes abaixo do video. Atalhos visuais como WhatsApp, Instagram e TikTok acionam a Web Share API nativa; a web nao consegue garantir abertura direta de um app especifico com arquivo anexado.
+- O modal usa padrao de share sheet: preview no topo, botao X de saida e uma unica linha abaixo do video com `Copiar link`, `WhatsApp`, `Instagram`, `TikTok` e `Mais`. Atalhos visuais como WhatsApp, Instagram e TikTok acionam a Web Share API nativa; a web nao consegue garantir abertura direta de um app especifico com arquivo anexado.
+- Os icones de WhatsApp, Instagram e TikTok ficam salvos como SVGs locais em `frontend/public/svg/brand-*.svg`, derivados do Simple Icons, para evitar instalar package novo. Na share sheet, a cor/fundo de marca ocupa todo o bloco visual do botao, enquanto o simbolo interno branco mantem tamanho equivalente ao icone de `Copiar link`.
+- O preview do video, os botoes da linha de acoes e o botao `X` nao usam sombras externas; a hierarquia passa a depender de borda, espacamento e contraste.
+- A bottom sheet usa transicao de `transform`/opacidade para entrada e saida, sem package novo, e aceita gesto de arrastar para baixo com threshold de fechamento.
+- A linha de acoes deixa de usar rolagem horizontal visivel quando as cinco opcoes cabem na modal.
 - O backend apenas enriquece os DTOs de `highlighted_professional_reply` com `parent_reply_id` e `parent_content`, permitindo usar a previa do comentario em cards/listagens sem novo endpoint e sem migration.
 - O evento real continua sendo persistido via `POST /api/private/posts/:id/replies/:replyId/share` quando houver Web Share API ou fallback com copia de link.
 - A duracao exportada e limitada a 60 segundos para reduzir risco de travamento e arquivos excessivos no browser.
@@ -29,6 +33,8 @@ As decisoes de produto definidas em 2026-06-30 foram: usar o mesmo botao Share, 
 - A solucao fica disponivel sem dependencia externa, fila de renderizacao server-side ou integracao direta com Instagram/TikTok.
 - A remocao do quadrado reduz escolha no modal e evita exportacao com composicao espremida.
 - A remocao do header textual acima do preview deixa o fluxo mais parecido com compartilhamento de midia nativa no celular.
+- A remocao da acao direta de baixar reduz ruido visual; download permanece apenas como fallback quando o browser nao suporta compartilhamento com arquivo.
+- SVGs locais reduzem dependencia de CDN/runtime e preservam melhor a leitura dos icones de marca, mas continuam sujeitos as regras de marca dos respectivos proprietarios.
 - Os atalhos de apps sao affordances visuais para o compartilhamento nativo; a selecao final do app continua dependendo da folha nativa do sistema operacional/navegador.
 - A compatibilidade depende do navegador: Web Share API com arquivos, `MediaRecorder`, codecs, audio via `captureStream` e CORS de midia podem variar.
 - Quando o navegador nao suportar o fluxo completo, o fallback baixa o arquivo gerado e tenta copiar o link direto; essa limitacao e exibida na UI sem mascarar suporte.
@@ -44,3 +50,8 @@ As decisoes de produto definidas em 2026-06-30 foram: usar o mesmo botao Share, 
 - Browser local em `http://localhost:3000/community` com Chrome headless mobile (390x844), confirmando render da rota publica sem erro; a base de desenvolvimento local nao possui video-resposta profissional real para abrir o modal sem criar dados artificiais.
 - Ajuste vertical-only em 2026-06-30: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `GET http://localhost:3000/community/ansiedade-em-equilibrio/post/cmr15abhh0004msuh2c5gqi5v` com status 200.
 - Ajuste share sheet em 2026-06-30: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `GET http://localhost:3000/community/ansiedade-em-equilibrio/post/cmr15abhh0004msuh2c5gqi5v` com status 200.
+- Ajuste de icones/linha unica em 2026-06-30: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `GET http://localhost:3000/community/ansiedade-em-equilibrio/post/cmr15abhh0004msuh2c5gqi5v` com status 200.
+- Ajuste visual sem sombras em 2026-06-30: remover sombreamento externo do preview, dos botoes e do `X`; validar junto aos checks frontend/root e rota local da task.
+- Ajuste visual de icones em 2026-06-30: botoes de WhatsApp, Instagram e TikTok passaram a separar fundo de marca em tela cheia do botao e simbolo interno pequeno, removendo o fundo claro intermediario sem ampliar o simbolo.
+- Ajuste de interacao em 2026-06-30: animacao vertical de entrada/saida e gesto de arrastar para baixo para fechar a share sheet; validar junto aos checks frontend/root e rota local da task.
+- Ajuste visual de rolagem em 2026-06-30: remover barra horizontal visivel abaixo dos botoes, distribuindo as cinco acoes na linha.
