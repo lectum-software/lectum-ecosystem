@@ -21,6 +21,7 @@ Decisão de produto definida em 2026-06-30:
 - o botão existente de **Compartilhar/SHARE** deve ser a entrada única para exportar o layout;
 - não criar botão separado de exportar redes;
 - o layout deve existir somente no formato vertical 9:16 (Stories/Reels/TikTok/Shorts);
+- a miniatura/preview da modal também deve preservar 9:16 visualmente, sem compressão por limite de altura em mobile ou desktop;
 - a tela de compartilhamento deve se aproximar da experiência de compartilhar mídia pela galeria do celular: sem textos/cabeçalho acima do vídeo, apenas botão `X` de saída, vídeo em destaque e opções abaixo;
 - a modal deve entrar e sair com animação suave de movimento vertical;
 - o usuário deve conseguir arrastar a modal para baixo para fechá-la, como uma bottom sheet nativa;
@@ -31,13 +32,11 @@ Decisão de produto definida em 2026-06-30:
 - a linha de botões não deve exibir barra de rolagem horizontal quando as ações couberem no espaço disponível;
 - não incluir play central;
 - não incluir botão/link/CTA dentro da arte, porque links clicáveis são configurados dentro do Instagram/TikTok;
-- o topo usa card estilo story com o texto "Perguntaram na Lectum" em azul Lectum;
+- o topo usa card estilo story com o texto "Pergunta na Lectum" em azul Lectum;
 - para vídeo-resposta de post, o card mostra o título/pergunta do post;
 - para vídeo-resposta de comentário, o card mostra uma prévia do comentário;
-- a identidade do psicólogo não exibe CRP nem prefixos "Dr."/"Dra.";
-- a profissão exibida deve respeitar gênero quando conhecido: "Psicóloga" para feminino e "Psicólogo" para masculino/default;
-- se o psicólogo estiver verificado na Lectum, exibir selo de verificado ao lado do nome;
-- a marca "lectum" aparece no rodapé alinhada ao identificador do psicólogo.
+- a arte compartilhável deve suprimir a identidade do psicólogo, selo, função e marca `lectum` no rodapé, porque Instagram/TikTok/Reels já adicionam controles e identificação de usuário na parte inferior;
+- quando a resposta profissional também tiver texto escrito, a modal deve exibir abaixo do preview até duas linhas desse texto e a ação `Copiar texto`, para o psicólogo usar como legenda escrita em Reels/TikTok/feed quando fizer sentido.
 
 Referência visual complementar aprovada pelo usuário:
 
@@ -65,10 +64,7 @@ Ao tocar em Compartilhar em uma vídeo-resposta profissional, o usuário visuali
 - Gerar arquivo via APIs nativas do navegador, mantendo overlay com:
   - card da pergunta/comentário;
   - vídeo de fundo;
-  - identidade do psicólogo;
-  - selo verificado condicional;
-  - wordmark `lectum`;
-  - sem play central e sem CTA/link.
+  - sem identidade do psicólogo, sem selo, sem wordmark de rodapé, sem play central e sem CTA/link.
 - Integrar o mesmo fluxo ao botão Compartilhar em:
   - feed geral de comunidade;
   - página interna da comunidade;
@@ -116,6 +112,7 @@ Frontend esperado:
 - Utilitário de target para decidir quando a resposta é vídeo profissional compartilhável.
 - Utilitário de exportação por canvas/MediaRecorder sem package novo.
 - Modal de preview vertical 9:16 sem seletor de formato e sem textos acima do vídeo.
+- Bloco opcional abaixo do preview com duas linhas do texto escrito da resposta e botão `Copiar texto`.
 - Share sheet abaixo do vídeo com uma única linha de ações: copiar link, WhatsApp, Instagram, TikTok e Mais.
 - Integração nas superfícies que já chamam `useSharePost`/`useShareReply`.
 - Persistir `shareReply` quando o compartilhamento/exportação for concluído por Web Share ou fallback com cópia de link.
@@ -143,14 +140,16 @@ Regras de UI obrigatórias:
 ## Critérios de aceite
 
 - [x] Botão Compartilhar abre o layout Lectum para vídeo-resposta profissional em posts, comentários/thread, salvos, meus posts e perfil público.
-- [x] Layout vertical 9:16 usa o card padronizado com "Perguntaram na Lectum"; modelo quadrado/feed foi removido por ficar espremido no preview.
+- [x] Layout vertical 9:16 usa o card padronizado com "Pergunta na Lectum"; modelo quadrado/feed foi removido por ficar espremido no preview.
+- [x] Preview da modal preserva 9:16 visualmente no mobile e desktop, calculando a largura pelo limite de altura disponível.
 - [x] Modal de compartilhamento não exibe cabeçalho/textos acima do vídeo; mantém somente botão `X` de saída e opções abaixo do vídeo.
 - [x] Modal entra e sai com animação suave de movimento vertical.
 - [x] Modal pode ser arrastada para baixo para fechar, sem depender apenas do botão `X`.
 - [x] Modal bloqueia o scroll da página ao fundo enquanto aberta, mantendo controle de rolagem apenas na própria share sheet.
 - [x] Preview do vídeo e botões da share sheet não exibem sombreamento externo.
 - [x] Vídeo-resposta de post usa o título/pergunta do post; vídeo-resposta de comentário usa prévia do comentário quando disponível.
-- [x] Identidade do psicólogo remove "Dr./Dra.", não exibe CRP, mostra "Psicóloga" ou "Psicólogo" e exibe selo quando verificado.
+- [x] Exportação e preview suprimem identidade do psicólogo, selo, função e wordmark de rodapé para evitar excesso de elementos nas redes sociais.
+- [x] Quando a resposta tem texto escrito, a modal mostra até duas linhas abaixo do preview e oferece `Copiar texto` para uso como legenda escrita.
 - [x] Exportação não mostra play central e não inclui CTA/link clicável desenhado.
 - [x] Share sheet exibe `Copiar link`, `WhatsApp`, `Instagram`, `TikTok` e `Mais` em uma única linha, sem a opção direta de baixar.
 - [x] Botões de WhatsApp, Instagram e TikTok usam fundo de marca ocupando todo o botão, com símbolo interno no mesmo tamanho visual do ícone de `Copiar link`.
@@ -191,3 +190,6 @@ Regras de UI obrigatórias:
 - Ajuste visual em 2026-06-30: os botões de WhatsApp, Instagram e TikTok foram separados em fundo de marca ocupando todo o bloco visual e símbolo interno branco com tamanho equivalente ao ícone de `Copiar link`, evitando ampliar o símbolo junto com o fundo.
 - Ajuste de interação em 2026-06-30: adicionada animação de entrada/saída vertical da bottom sheet e gesto de arrastar para baixo para fechar, com threshold de fechamento e retorno suave quando o gesto não atinge o limite. Refinamentos visuais/interativos validados com `pnpm --dir frontend typecheck`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `GET http://localhost:3000/community/ansiedade-em-equilibrio/post/cmr15abhh0004msuh2c5gqi5v` retornando 200.
 - Ajuste visual em 2026-06-30: removida a rolagem horizontal visível da linha de botões, substituindo `overflow-x-auto` por distribuição fixa das cinco ações. Validação final dos refinamentos com `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`.
+- Ajuste de proporção em 2026-06-30: removido o `max-height` que comprimia o preview; a largura agora usa `min(76vw, 320px, 34.875dvh)` com `aspect-ratio: 9 / 16`, preservando a miniatura vertical em mobile e desktop.
+- Ajuste de composição em 2026-06-30: por análise da visualização de Reels/Instagram, a arte passou a focar somente no card superior, com o texto "Pergunta na Lectum"; identidade do psicólogo, selo, função e wordmark de rodapé foram removidos do preview e do arquivo exportado para evitar conflito com a UI das redes. A modal também passou a exibir, quando existir, duas linhas do texto escrito da resposta e a ação `Copiar texto` para uso como legenda escrita.
+- Validação do ajuste de composição/legenda escrita em 2026-06-30: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `GET http://localhost:3000/community/ansiedade-em-equilibrio/post/cmr15abhh0004msuh2c5gqi5v` retornando 200.

@@ -3,11 +3,14 @@
 import { Check, Copy, Loader2, type LucideIcon, MoreHorizontal, X } from "lucide-react";
 import Image from "next/image";
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
-import { copyLectumShareUrl, shareLectumVideoResponse } from "@/utils/lectum-share-media";
+import {
+  copyLectumShareText,
+  copyLectumShareUrl,
+  shareLectumVideoResponse,
+} from "@/utils/lectum-share-media";
 import type { LectumShareChannel, LectumShareVideoTarget } from "@/utils/lectum-share-target";
-import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { resolvePublicMediaUrl } from "@/utils/media";
 
 type LectumShareVideoModalProps = {
   onClose: () => void;
@@ -21,7 +24,7 @@ type LectumShareVideoDialogProps = {
   target: LectumShareVideoTarget;
 };
 
-type ShareActionId = "copy" | "instagram" | "more" | "tiktok" | "whatsapp";
+type ShareActionId = "copy" | "copy_text" | "instagram" | "more" | "tiktok" | "whatsapp";
 
 type DragState = {
   pointerId: number;
@@ -34,6 +37,10 @@ const DRAG_START_TOLERANCE_PX = 4;
 
 const sharePreviewCardClassName =
   "top-[6%] left-[7%] right-[7%] rounded-[26px] px-5 py-4 sm:px-6 sm:py-5";
+
+const sharePreviewStyle = {
+  width: "min(76vw, 320px, 34.875dvh)",
+} satisfies CSSProperties;
 
 const shareSheetActions = [
   {
@@ -88,12 +95,13 @@ const isInteractiveDragTarget = (target: EventTarget | null) =>
 
 const SharePreview = ({ target }: { target: LectumShareVideoTarget }) => {
   const videoSrc = resolvePublicMediaUrl(target.videoUrl);
-  const avatarSrc = resolvePublicMediaUrl(target.professional.avatar);
   const sourcePreview = truncatePreviewText(target.sourceText, 96);
-  const avatarIsPublicMedia = isPublicMediaUrl(target.professional.avatar);
 
   return (
-    <div className="relative mx-auto aspect-[9/16] max-h-[56dvh] w-full max-w-[min(76vw,320px)] overflow-hidden rounded-[28px] bg-foreground text-white">
+    <div
+      className="relative mx-auto aspect-[9/16] overflow-hidden rounded-[28px] bg-foreground text-white"
+      style={sharePreviewStyle}
+    >
       {videoSrc ? (
         <video
           aria-label="Prévia do vídeo-resposta no layout de compartilhamento Lectum"
@@ -116,7 +124,7 @@ const SharePreview = ({ target }: { target: LectumShareVideoTarget }) => {
         )}
       >
         <p className="text-center text-[15px] font-black leading-none text-primary sm:text-base">
-          Perguntaram na Lectum
+          Pergunta na Lectum
         </p>
         <p
           className={cn(
@@ -127,43 +135,45 @@ const SharePreview = ({ target }: { target: LectumShareVideoTarget }) => {
           {sourcePreview}
         </p>
       </div>
-
-      <div className="absolute bottom-7 left-5 flex min-w-[15.5rem] items-center gap-2 rounded-full border border-background/45 bg-foreground/55 px-2.5 py-2 text-background shadow-[0_14px_34px_rgb(15_23_42_/_24%)] backdrop-blur-md">
-        <span className="relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft text-xs font-black text-primary ring-2 ring-background/80">
-          {avatarSrc ? (
-            <Image
-              alt={target.professional.name}
-              className="object-cover"
-              fill
-              sizes="48px"
-              src={avatarSrc}
-              unoptimized={avatarIsPublicMedia}
-            />
-          ) : (
-            target.professional.name.slice(0, 2).toUpperCase()
-          )}
-        </span>
-        <span className="grid min-w-0">
-          <span className="flex min-w-0 items-center gap-1.5">
-            <span className="truncate text-[16px] font-black leading-tight text-white">
-              {target.professional.name}
-            </span>
-            {target.professional.verified ? (
-              <VerifiedBadgeIcon className="h-4 w-4 shrink-0" aria-label="Perfil verificado" />
-            ) : null}
-          </span>
-          <span className="text-[13px] font-semibold leading-tight text-white/72">
-            {target.professional.roleLabel}
-          </span>
-        </span>
-      </div>
-
-      <div className="absolute right-5 bottom-8 text-[32px] font-black leading-none tracking-[-0.05em] text-white drop-shadow-[0_4px_16px_rgb(15_23_42_/_42%)]">
-        lectum
-      </div>
     </div>
   );
 };
+
+const ShareResponseTextPanel = ({
+  disabled,
+  onCopy,
+  pending,
+  text,
+}: {
+  disabled: boolean;
+  onCopy: () => void;
+  pending: boolean;
+  text: string;
+}) => (
+  <div className="mt-4 rounded-3xl border border-border bg-surface-muted/60 px-3.5 py-3">
+    <div className="flex items-start gap-3">
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] font-black tracking-[0.12em] text-muted uppercase">
+          Texto da resposta
+        </p>
+        <p className="mt-1 line-clamp-2 text-sm font-semibold leading-5 text-foreground">{text}</p>
+      </div>
+      <button
+        className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-2 text-xs font-black text-foreground transition hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 disabled:cursor-not-allowed disabled:opacity-60"
+        disabled={disabled}
+        onClick={onCopy}
+        type="button"
+      >
+        {pending ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+        ) : (
+          <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+        )}
+        Copiar texto
+      </button>
+    </div>
+  </div>
+);
 
 type ShareSheetOptionProps = {
   disabled: boolean;
@@ -238,7 +248,9 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
   const [isClosing, setIsClosing] = useState(false);
   const [isEntered, setIsEntered] = useState(false);
   const [pendingAction, setPendingAction] = useState<ShareActionId | null>(null);
-  const [status, setStatus] = useState<"copied" | "downloaded" | "idle" | "shared">("idle");
+  const [status, setStatus] = useState<"copied" | "downloaded" | "idle" | "shared" | "text_copied">(
+    "idle",
+  );
   const [error, setError] = useState<string | null>(null);
   const exporting = pendingAction !== null;
   const sourceLabel = useMemo(() => {
@@ -396,6 +408,20 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
     }
   };
 
+  const handleCopyText = async () => {
+    setPendingAction("copy_text");
+    setError(null);
+
+    try {
+      await copyLectumShareText(target);
+      setStatus("text_copied");
+    } catch {
+      setError("NÃ£o foi possÃ­vel copiar o texto neste navegador.");
+    } finally {
+      setPendingAction(null);
+    }
+  };
+
   const modalIsVisible = isEntered && !isClosing;
   const sheetTranslateY =
     modalIsVisible && dragOffset > 0
@@ -440,6 +466,15 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
 
           <SharePreview target={target} />
 
+          {target.responseText ? (
+            <ShareResponseTextPanel
+              disabled={exporting}
+              onCopy={handleCopyText}
+              pending={pendingAction === "copy_text"}
+              text={target.responseText}
+            />
+          ) : null}
+
           <div className="mt-5 border-border border-t pt-4">
             <div className="-mx-1 flex justify-between gap-2 overflow-hidden px-1 pb-2 sm:gap-3">
               {shareSheetActions.map((action) => (
@@ -473,7 +508,9 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
                 ? "Arquivo baixado para escolher no app desejado."
                 : status === "copied"
                   ? "Link copiado."
-                  : "Compartilhamento aberto no dispositivo."}
+                  : status === "text_copied"
+                    ? "Texto copiado para usar como legenda."
+                    : "Compartilhamento aberto no dispositivo."}
             </p>
           ) : null}
         </div>

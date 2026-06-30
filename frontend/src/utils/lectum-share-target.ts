@@ -16,6 +16,7 @@ export type LectumShareVideoTarget = {
     roleLabel: "Psicóloga" | "Psicólogo";
     verified: boolean;
   };
+  responseText: string | null;
   replyId: string;
   shareUrl: string;
   sourceKind: "comment" | "post";
@@ -72,6 +73,7 @@ export const createLectumShareVideoTarget = (
     options.parentContent ?? ("parent_content" in reply ? reply.parent_content : null);
   const hasCommentContext = Boolean(parentContent?.trim() || reply.parent_reply_id);
   const sourceText = (hasCommentContext ? parentContent : post.title)?.trim() || post.title;
+  const responseText = reply.content?.trim() || null;
   const relativeUrl = `/community/${post.community.slug}/post/${post.id}?focusReplyId=${encodeURIComponent(
     reply.id,
   )}#reply-${reply.id}`;
@@ -84,6 +86,7 @@ export const createLectumShareVideoTarget = (
       roleLabel: normalizeLectumShareProfessionalRole(reply.author.type_label),
       verified: reply.author.verified,
     },
+    responseText,
     replyId: reply.id,
     shareUrl:
       typeof window === "undefined" ? relativeUrl : `${window.location.origin}${relativeUrl}`,

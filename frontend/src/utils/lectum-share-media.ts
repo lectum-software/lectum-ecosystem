@@ -15,10 +15,6 @@ type CanvasWithCaptureStream = HTMLCanvasElement & {
   captureStream?: (frameRate?: number) => MediaStream;
 };
 
-type LoadedVisualAssets = {
-  avatar: HTMLImageElement | null;
-};
-
 type ShareExportResult = {
   channel: LectumShareChannel | null;
   file: File;
@@ -43,20 +39,7 @@ type ShareCanvasLayout = {
     x: number;
     y: number;
   };
-  chip: {
-    avatarSize: number;
-    height: number;
-    nameFontSize: number;
-    roleFontSize: number;
-    x: number;
-    y: number;
-  };
   height: number;
-  logo: {
-    bottom: number;
-    fontSize: number;
-    right: number;
-  };
   maxQuestionLines: number;
   width: number;
 };
@@ -76,20 +59,7 @@ const storyCanvasLayout: ShareCanvasLayout = {
     x: 75,
     y: 98,
   },
-  chip: {
-    avatarSize: 84,
-    height: 118,
-    nameFontSize: 46,
-    roleFontSize: 34,
-    x: 64,
-    y: 1728,
-  },
   height: 1920,
-  logo: {
-    bottom: 74,
-    fontSize: 72,
-    right: 68,
-  },
   maxQuestionLines: 3,
   width: 1080,
 };
@@ -162,28 +132,6 @@ const loadVideoElement = async (src: string) => {
   }
 
   return video;
-};
-
-const loadImageElement = (src: string) =>
-  new Promise<HTMLImageElement>((resolve, reject) => {
-    const image = new window.Image();
-    image.crossOrigin = "anonymous";
-    image.decoding = "async";
-    image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error("Não foi possível carregar a imagem."));
-    image.src = src;
-  });
-
-const loadVisualAssets = async (target: LectumShareVideoTarget): Promise<LoadedVisualAssets> => {
-  const avatarUrl = target.professional.avatar
-    ? resolvePublicMediaUrl(target.professional.avatar)
-    : null;
-
-  const avatar = avatarUrl ? await loadImageElement(avatarUrl).catch(() => null) : null;
-
-  return {
-    avatar,
-  };
 };
 
 const canvasToBlob = (canvas: HTMLCanvasElement, type: string, quality?: number) =>
@@ -333,7 +281,7 @@ const drawQuestionCard = (
 
   ctx.fillStyle = palette.primary;
   ctx.font = `800 ${card.headerFontSize}px Manrope, Arial, sans-serif`;
-  ctx.fillText("Perguntaram na Lectum", card.x + card.paddingX, card.y + card.paddingY);
+  ctx.fillText("Pergunta na Lectum", card.x + card.paddingX, card.y + card.paddingY);
 
   ctx.fillStyle = "#0f172a";
   ctx.font = `900 ${card.bodyFontSize}px Manrope, Arial, sans-serif`;
@@ -344,190 +292,15 @@ const drawQuestionCard = (
   }
 };
 
-const initialsFromName = (name: string) => {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "L";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-};
-
-const drawCircleImage = (
-  ctx: CanvasRenderingContext2D,
-  image: HTMLImageElement,
-  x: number,
-  y: number,
-  size: number,
-) => {
-  const sourceSize = Math.min(
-    image.naturalWidth || image.width,
-    image.naturalHeight || image.height,
-  );
-  const sourceX = ((image.naturalWidth || image.width) - sourceSize) / 2;
-  const sourceY = ((image.naturalHeight || image.height) - sourceSize) / 2;
-
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
-  ctx.clip();
-  ctx.drawImage(image, sourceX, sourceY, sourceSize, sourceSize, x, y, size, size);
-  ctx.restore();
-};
-
-const drawVerifiedBadge = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number) => {
-  const radius = size / 2;
-
-  ctx.save();
-  ctx.fillStyle = "#2f8deb";
-  ctx.beginPath();
-  ctx.arc(x + radius, y + radius, radius, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.strokeStyle = "#ffffff";
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  ctx.lineWidth = Math.max(4, size * 0.13);
-  ctx.beginPath();
-  ctx.moveTo(x + size * 0.29, y + size * 0.53);
-  ctx.lineTo(x + size * 0.44, y + size * 0.68);
-  ctx.lineTo(x + size * 0.73, y + size * 0.34);
-  ctx.stroke();
-  ctx.restore();
-};
-
-const drawIdentityChip = (
-  ctx: CanvasRenderingContext2D,
-  layout: ShareCanvasLayout,
-  target: LectumShareVideoTarget,
-  assets: LoadedVisualAssets,
-) => {
-  const { chip } = layout;
-  const avatarPadding = (chip.height - chip.avatarSize) / 2;
-  const nameX = chip.x + avatarPadding * 2 + chip.avatarSize;
-  const nameY = chip.y + chip.height * 0.43;
-  const roleY = chip.y + chip.height * 0.73;
-
-  ctx.font = `900 ${chip.nameFontSize}px Manrope, Arial, sans-serif`;
-  const nameWidth = ctx.measureText(target.professional.name).width;
-  ctx.font = `700 ${chip.roleFontSize}px Manrope, Arial, sans-serif`;
-  const roleWidth = ctx.measureText(target.professional.roleLabel).width;
-  const verifiedSpace = target.professional.verified ? chip.nameFontSize * 0.95 : 0;
-  const chipWidth = Math.min(
-    layout.width - chip.x - layout.logo.right - 270,
-    Math.max(
-      360,
-      Math.max(nameWidth + verifiedSpace, roleWidth) + chip.avatarSize + avatarPadding * 4,
-    ),
-  );
-
-  ctx.save();
-  ctx.shadowBlur = 18;
-  ctx.shadowColor = "rgba(15, 23, 42, 0.24)";
-  ctx.shadowOffsetY = 8;
-  drawRoundRect(ctx, chip.x, chip.y, chipWidth, chip.height, chip.height / 2);
-  ctx.fillStyle = "rgba(15, 23, 42, 0.52)";
-  ctx.fill();
-  ctx.restore();
-
-  ctx.save();
-  drawRoundRect(ctx, chip.x, chip.y, chipWidth, chip.height, chip.height / 2);
-  ctx.lineWidth = 1.4;
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.48)";
-  ctx.stroke();
-  ctx.restore();
-
-  const avatarX = chip.x + avatarPadding;
-  const avatarY = chip.y + avatarPadding;
-
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(
-    avatarX + chip.avatarSize / 2,
-    avatarY + chip.avatarSize / 2,
-    chip.avatarSize / 2,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
-  ctx.fill();
-  ctx.restore();
-
-  if (assets.avatar) {
-    drawCircleImage(ctx, assets.avatar, avatarX + 4, avatarY + 4, chip.avatarSize - 8);
-  } else {
-    ctx.fillStyle = "#308ce8";
-    ctx.beginPath();
-    ctx.arc(
-      avatarX + chip.avatarSize / 2,
-      avatarY + chip.avatarSize / 2,
-      chip.avatarSize / 2 - 4,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-    ctx.fillStyle = "#ffffff";
-    ctx.font = `900 ${chip.avatarSize * 0.34}px Manrope, Arial, sans-serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(
-      initialsFromName(target.professional.name),
-      avatarX + chip.avatarSize / 2,
-      avatarY + chip.avatarSize / 2 + 1,
-    );
-    ctx.textAlign = "start";
-    ctx.textBaseline = "alphabetic";
-  }
-
-  ctx.fillStyle = "#ffffff";
-  ctx.font = `900 ${chip.nameFontSize}px Manrope, Arial, sans-serif`;
-  ctx.fillText(target.professional.name, nameX, nameY);
-
-  if (target.professional.verified) {
-    const badgeSize = chip.nameFontSize * 0.72;
-    drawVerifiedBadge(
-      ctx,
-      nameX + nameWidth + chip.nameFontSize * 0.25,
-      nameY - badgeSize + 4,
-      badgeSize,
-    );
-  }
-
-  ctx.fillStyle = "rgba(255, 255, 255, 0.74)";
-  ctx.font = `700 ${chip.roleFontSize}px Manrope, Arial, sans-serif`;
-  ctx.fillText(target.professional.roleLabel, nameX, roleY);
-};
-
-const drawBottomGradient = (ctx: CanvasRenderingContext2D, layout: ShareCanvasLayout) => {
-  const gradient = ctx.createLinearGradient(0, layout.height * 0.58, 0, layout.height);
-  gradient.addColorStop(0, "rgba(15, 23, 42, 0)");
-  gradient.addColorStop(1, "rgba(15, 23, 42, 0.56)");
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, layout.height * 0.56, layout.width, layout.height * 0.44);
-};
-
-const drawLectumLogo = (ctx: CanvasRenderingContext2D, layout: ShareCanvasLayout) => {
-  ctx.save();
-  ctx.fillStyle = "#ffffff";
-  ctx.font = `900 ${layout.logo.fontSize}px Manrope, Arial, sans-serif`;
-  const text = "lectum";
-  const width = ctx.measureText(text).width;
-  ctx.fillText(text, layout.width - layout.logo.right - width, layout.height - layout.logo.bottom);
-  ctx.restore();
-};
-
 const drawLectumShareFrame = (
   ctx: CanvasRenderingContext2D,
   video: HTMLVideoElement,
   layout: ShareCanvasLayout,
   target: LectumShareVideoTarget,
-  assets: LoadedVisualAssets,
   palette: ShareCanvasPalette,
 ) => {
   drawVideoCover(ctx, video, layout.width, layout.height);
-  drawBottomGradient(ctx, layout);
   drawQuestionCard(ctx, layout, target, palette);
-  drawIdentityChip(ctx, layout, target, assets);
-  drawLectumLogo(ctx, layout);
 };
 
 const supportedVideoMimeType = () => {
@@ -547,11 +320,7 @@ const extensionFromMimeType = (mimeType: string) => (mimeType.includes("mp4") ? 
 
 const safeFileName = (extension: string) => `lectum-video-resposta-vertical-9x16.${extension}`;
 
-const createImageShareFile = async (
-  target: LectumShareVideoTarget,
-  video: HTMLVideoElement,
-  assets: LoadedVisualAssets,
-) => {
+const createImageShareFile = async (target: LectumShareVideoTarget, video: HTMLVideoElement) => {
   const layout = storyCanvasLayout;
   const canvas = createCanvas(layout);
   const ctx = canvas.getContext("2d");
@@ -560,7 +329,7 @@ const createImageShareFile = async (
     throw new Error("Canvas indisponível para gerar o compartilhamento.");
   }
 
-  drawLectumShareFrame(ctx, video, layout, target, assets, getCanvasPalette());
+  drawLectumShareFrame(ctx, video, layout, target, getCanvasPalette());
   const blob = await canvasToBlob(canvas, "image/png");
 
   return new File([blob], safeFileName("png"), {
@@ -571,7 +340,6 @@ const createImageShareFile = async (
 const createVideoShareFile = async (
   target: LectumShareVideoTarget,
   video: VideoWithCaptureStream,
-  assets: LoadedVisualAssets,
 ) => {
   const mimeType = supportedVideoMimeType();
   const layout = storyCanvasLayout;
@@ -579,7 +347,7 @@ const createVideoShareFile = async (
   const ctx = canvas.getContext("2d");
 
   if (!ctx || !canvas.captureStream || mimeType === null) {
-    return createImageShareFile(target, video, assets);
+    return createImageShareFile(target, video);
   }
 
   const stream = canvas.captureStream(VIDEO_EXPORT_FRAME_RATE);
@@ -623,7 +391,7 @@ const createVideoShareFile = async (
     };
 
     const draw = () => {
-      drawLectumShareFrame(ctx, video, layout, target, assets, palette);
+      drawLectumShareFrame(ctx, video, layout, target, palette);
       const elapsed = performance.now() - startedAt;
 
       if (elapsed >= durationMs || video.ended) {
@@ -660,7 +428,7 @@ const createVideoShareFile = async (
           await waitForEvent(video, "seeked", 4000).catch(() => undefined);
         }
 
-        drawLectumShareFrame(ctx, video, layout, target, assets, palette);
+        drawLectumShareFrame(ctx, video, layout, target, palette);
         recorder.start(1000);
         startedAt = performance.now();
         await video.play();
@@ -697,14 +465,14 @@ const createLectumShareFile = async (target: LectumShareVideoTarget) => {
     await document.fonts.ready.catch(() => undefined);
   }
 
-  const [video, assets] = await Promise.all([loadVideoElement(videoUrl), loadVisualAssets(target)]);
+  const video = await loadVideoElement(videoUrl);
 
   try {
-    return await createVideoShareFile(target, video, assets);
+    return await createVideoShareFile(target, video);
   } catch {
     const fallbackVideo = await loadVideoElement(videoUrl);
 
-    return createImageShareFile(target, fallbackVideo, assets);
+    return createImageShareFile(target, fallbackVideo);
   }
 };
 
@@ -735,10 +503,11 @@ export const shareLectumVideoResponse = async (
   const shareData: ShareData = {
     files: [file],
     text:
-      target.sourceKind === "comment"
+      target.responseText ||
+      (target.sourceKind === "comment"
         ? "Responderam a um comentário na Lectum."
-        : "Responderam a uma pergunta na Lectum.",
-    title: "Perguntaram na Lectum",
+        : "Responderam a uma pergunta na Lectum."),
+    title: "Pergunta na Lectum",
   };
 
   if (nav.share && (!nav.canShare || nav.canShare(shareData))) {
@@ -754,6 +523,18 @@ export const shareLectumVideoResponse = async (
 
 export const copyLectumShareUrl = async (target: LectumShareVideoTarget) => {
   const copied = await copyShareUrl(target.shareUrl);
+
+  if (!copied) {
+    throw new Error("Clipboard indisponível.");
+  }
+};
+
+export const copyLectumShareText = async (target: LectumShareVideoTarget) => {
+  if (!target.responseText) {
+    throw new Error("Texto indisponível.");
+  }
+
+  const copied = await copyShareUrl(target.responseText);
 
   if (!copied) {
     throw new Error("Clipboard indisponível.");
