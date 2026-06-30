@@ -6,6 +6,16 @@ Este documento é obrigatório para qualquer task de produto. Ele existe para im
 
 Frontend e backend estão no mesmo repositório apenas para desenvolvimento. Em código, decisões e validação, trate-os como aplicações separadas.
 
+## Escopo profissional V1
+
+Ver `adrs/0187-escopo-v1-psicologia-expansao-multiprofissional.md`.
+
+A V1 da Lectum é explicitamente focada em psicólogos. A arquitetura atual mantém `user.role` com `"paciente" | "psicologo"`, `psychologist_profile`, rotas públicas `/psychologists` e validação CFP/CRP real.
+
+Não generalize o produto para outras categorias de saúde dentro de tasks da V1. Nutricionistas, médicos, cardiologistas e demais profissionais devem entrar em versão futura por task própria, com ADR, migração de dados e contratos novos ou compatíveis. Até lá, não crie suporte parcial, mockado ou antecipado para CRM, CRN, CREFITO ou outros conselhos.
+
+Quando uma nova decisão for naturalmente transversal (assinatura, billing, LGPD, analytics operacional, avaliação de profissional), prefira nomes/documentação genéricos somente para código novo. Não renomeie contratos `psychologist_*` existentes sem uma task de migração multiprofissional aprovada.
+
 ## Backend
 
 Stack atual:

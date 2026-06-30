@@ -43,6 +43,16 @@ Todo modelo novo segue o padrão dos modelos atuais:
 
 O `user` atual possui campo de papel desde a TASK-04. O fluxo de produto (PRD §5, fluxograma 19.1) escolhe o perfil já na "Seleção de Perfil", antes do cadastro.
 
+### Escopo V1 e expansão multiprofissional futura
+
+Ver `adrs/0187-escopo-v1-psicologia-expansao-multiprofissional.md`.
+
+A V1 permanece **somente para psicólogos**. Por isso, os valores de `user.role` continuam restritos a `"paciente" | "psicologo"` e o perfil profissional implementado segue como `psychologist_profile`.
+
+Não criar, em tasks da V1, valores genéricos como `"profissional"` nem tabelas paralelas incompletas para outras categorias de saúde. A abertura para nutricionistas, médicos, cardiologistas e demais áreas deve ser tratada como migração futura com task/ADR próprios, provavelmente introduzindo camada profissional genérica, categoria profissional, registros por conselho e providers de validação documental específicos.
+
+Enquanto essa migração não existir, contratos e tabelas `psychologist_*` seguem canônicos para descoberta, perfil, favoritos, avaliações, analytics, assinatura e validação CFP/CRP. Novos conceitos realmente transversais podem usar nomenclatura `professional` em documentação/código novo, desde que não alterem contratos existentes sem plano de migração.
+
 Decisão adotada (ver `adrs/0002-arquitetura-auth-roles.md`):
 
 - Adicionar `user.role String @default("paciente")` com valores **apenas** `"paciente" | "psicologo"`. Um usuário tem exatamente um papel. **`role` nunca recebe `"admin"`** — admin é audiência separada (ver "Admin" e "Camadas de autenticação e autorização").
