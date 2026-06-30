@@ -2500,7 +2500,14 @@ const CommunityPublishOnboarding = ({
   );
 };
 
-const CommunityDetailLogic = ({ slug }: { slug: string }) => {
+type CommunityRouteLogicProps = {
+  suppressPublishOnboarding?: boolean;
+};
+
+const CommunityDetailLogic = ({
+  slug,
+  suppressPublishOnboarding = false,
+}: { slug: string } & CommunityRouteLogicProps) => {
   const router = useRouter();
   const conversion = useProgressiveConversion();
   const [sort, setSort] = useState<CommunityPostSort>("featured");
@@ -2858,7 +2865,7 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
         </Link>
       ) : null}
 
-      {community ? (
+      {community && !suppressPublishOnboarding ? (
         <CommunityPublishOnboarding
           createPostHref={communityCreatePostHref(community.slug)}
           onCreatePostClick={handleCreatePostClick}
@@ -2869,7 +2876,9 @@ const CommunityDetailLogic = ({ slug }: { slug: string }) => {
   );
 };
 
-export const CommunityFeedLogic = () => {
+export const CommunityFeedLogic = ({
+  suppressPublishOnboarding = false,
+}: CommunityRouteLogicProps = {}) => {
   const params = useParams<{ slug: string }>();
   const searchParams = useSearchParams();
   const conversion = useProgressiveConversion();
@@ -3120,11 +3129,13 @@ export const CommunityFeedLogic = () => {
         <span className="sr-only">Criar publicação</span>
       </Link>
 
-      <CommunityPublishOnboarding
-        createPostHref={createPostHref}
-        onCreatePostClick={handleCreatePostClick}
-        variant="floating"
-      />
+      {!suppressPublishOnboarding ? (
+        <CommunityPublishOnboarding
+          createPostHref={createPostHref}
+          onCreatePostClick={handleCreatePostClick}
+          variant="floating"
+        />
+      ) : null}
 
       <style>{`
         @keyframes lectum-desktop-create-float {
@@ -3143,13 +3154,17 @@ export const CommunityFeedLogic = () => {
   );
 };
 
-export const CommunityRouteLogic = () => {
+export const CommunityRouteLogic = ({
+  suppressPublishOnboarding = false,
+}: CommunityRouteLogicProps = {}) => {
   const params = useParams<{ slug: string }>();
   const routeSlug = typeof params.slug === "string" ? params.slug : COMMUNITY_FEED_SLUG;
 
   if (routeSlug === COMMUNITY_FEED_SLUG) {
-    return <CommunityFeedLogic />;
+    return <CommunityFeedLogic suppressPublishOnboarding={suppressPublishOnboarding} />;
   }
 
-  return <CommunityDetailLogic slug={routeSlug} />;
+  return (
+    <CommunityDetailLogic slug={routeSlug} suppressPublishOnboarding={suppressPublishOnboarding} />
+  );
 };

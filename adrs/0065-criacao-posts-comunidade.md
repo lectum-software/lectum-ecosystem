@@ -321,3 +321,41 @@ Validacao complementar:
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
 - Chrome/CDP desktop `1280x900` em `/app/community/feed/post/new`: sucesso ao injetar `YTDown_Shorts_NA_validacao.mp4` no input de midia e confirmar preview com `<video>`, sem nome do arquivo, sem `figcaption`, sem icone de video sobreposto e miniatura com largura de 112px.
+
+## Atualizacao 2026-06-30 - fallback contextual quando a rota interceptada nao preserva a origem
+
+Foi identificada uma regressao na experiencia de criacao: quando a navegacao para
+`/app/community/[slug]/post/new` nao passava pelo slot interceptado do App Router, a pagina
+canonica renderizava apenas a sheet dentro de um `PrivateTemplate` vazio. Visualmente, a modal
+parecia abrir sobre uma tela branca/cinza, em vez de sobre o feed ou a comunidade de origem.
+
+Decisoes complementares:
+
+- Manter a rota canonica direta como fallback obrigatorio, mas renderizar por baixo dela o mesmo
+  `CommunityRouteLogic` usado no feed/detalhe de comunidade. Assim, acesso direto, reload ou
+  navegacoes que nao ativem a parallel route continuam exibindo contexto real atras da sheet.
+- Adicionar a flag `suppressPublishOnboarding` ao `CommunityRouteLogic`, `CommunityFeedLogic` e ao
+  detalhe de comunidade para que o onboarding/coachmark de publicacao nao apareca acima da modal
+  enquanto a tela e usada apenas como plano de fundo contextual.
+- Usar o mesmo backdrop translucido com `backdrop-blur-[6px]` no slot interceptado e no fallback
+  direto. A modalidade permanece visivel, mas sem substituir o plano de fundo por uma pagina vazia.
+- Nao alterar contratos, endpoints, queries, payload, regras de anonimato, midia, storage, Prisma ou
+  packages.
+
+Consequencias:
+
+- Feed e comunidade continuam sendo o contexto visual da criacao mesmo quando o App Router nao
+  preserva a interceptacao client-side.
+- O fallback direto fica mais pesado do que uma pagina branca porque tambem monta a tela de contexto,
+  mas isso e aceitavel para preservar orientacao e compatibilidade de reload/deep link.
+- O onboarding de publicacao continua existindo nas telas normais; ele e suprimido apenas no uso
+  dessa tela como fundo da modal.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- Chrome/CDP local em `http://localhost:3000/app/community/ansiedade-em-equilibrio/post/new`:
+  sucesso ao confirmar dialog `Criar Post`, fundo contextual da comunidade em estado real de erro de
+  conexao quando `localhost:3001` foi bloqueado no smoke visual, ausencia do prompt restrito e
+  backdrop computado com `blur(6px)`.

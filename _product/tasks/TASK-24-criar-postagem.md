@@ -360,3 +360,13 @@ Validacoes finais deste complemento:
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
+
+## Complemento 2026-06-30 - fallback contextual da modal de criacao
+
+- Pedido do usuario: a modal `Criar Post` estava abrindo com fundo cinza/branco, parecendo estar sobre uma pagina vazia, quando o acesso vinha do feed ou da comunidade e a rota interceptada nao era preservada.
+- Frontend: o fallback direto de `/app/community/[slug]/post/new` deixou de renderizar um `PrivateTemplate` vazio e passou a renderizar a propria tela de contexto (`CommunityRouteLogic`) atras da sheet, com o onboarding de publicacao suprimido para nao sobrepor a modal.
+- Frontend: o backdrop do editor passou a ser translúcido com `backdrop-blur-[6px]`, tanto na rota interceptada quanto no fallback direto, evitando a tela cinza opaca e mantendo a sensacao de modal real.
+- Escopo: sem mudancas de backend, Prisma, migrations, endpoints, payload, regras de publicacao, anonimato, midia ou packages.
+- Fonte visual auditavel: `_product/proto/Criar Nova Postagem - Pacientes.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build` e Chrome/CDP local em `http://localhost:3000/app/community/ansiedade-em-equilibrio/post/new`, com cookie/localStorage temporarios e chamadas ao backend local bloqueadas apenas no smoke visual, confirmando `dialog` `Criar Post`, fundo contextual com estado real de erro de conexao da comunidade, ausencia do prompt restrito e backdrop com `blur(6px)`.

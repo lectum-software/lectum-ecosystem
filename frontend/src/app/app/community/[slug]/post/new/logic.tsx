@@ -25,10 +25,10 @@ import { InlineAlert } from "@/components/ui/inline-alert";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
-import { PrivateTemplate } from "@/templates/private";
 import { COMMUNITY_FEED_SLUG, DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
+import { CommunityRouteLogic } from "../../logic";
 import {
   type CreateCommunityPostForm,
   toCreateCommunityPostPayload,
@@ -825,9 +825,7 @@ export const CreateCommunityPostLogic = ({
     <div
       className={cn(
         "fixed inset-0 z-[70] flex items-end justify-center transition-opacity duration-200 ease-out",
-        asModalSlot
-          ? "bg-slate-950/35 backdrop-blur-[8px] supports-[backdrop-filter]:bg-slate-950/35"
-          : "bg-background",
+        "bg-background/20 backdrop-blur-[6px] supports-[backdrop-filter]:bg-background/10",
         isSheetOpen ? "opacity-100" : "opacity-0",
       )}
     >
@@ -962,12 +960,11 @@ export const CreateCommunityPostLogic = ({
   }
 
   return (
-    <PrivateTemplate
-      contentClassName="max-w-none bg-background px-0 py-0"
-      showMobileNavigation={false}
-      showNavigation={false}
-    >
+    <>
+      <div aria-hidden="true" className="min-h-screen">
+        <CommunityRouteLogic suppressPublishOnboarding />
+      </div>
       {sheet}
-    </PrivateTemplate>
+    </>
   );
 };
