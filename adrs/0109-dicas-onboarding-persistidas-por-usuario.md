@@ -83,3 +83,27 @@ Consequências:
 - Psicólogos deixam de receber copy de paciente no feed/comunidade.
 - O onboarding profissional fica alinhado ao comportamento esperado: entrar em conversas reais e
   responder pacientes.
+
+## Complemento 2026-06-30 - Dicas de descoberta exclusivas para pacientes
+
+A mesma decisão de foco profissional também se aplica às dicas acionáveis da descoberta de
+psicólogos. `Minha Busca` e `WhatsApp` orientam a jornada de paciente em busca de atendimento; para
+psicólogos, essas dicas competem com o objetivo principal de responder posts e podem sugerir ações
+que não são prioritárias para a conta profissional.
+
+Decisões:
+
+- Restringir a fila das dicas `Minha Busca` e `WhatsApp` a usuários com `user.role="paciente"`.
+- Não marcar as flags `has_seen_psychologists_my_search_tip` e
+  `has_seen_psychologist_whatsapp_tip` quando o usuário autenticado não for paciente.
+- Limpar qualquer coach mark acionável de descoberta que esteja ativo se a sessão atual não for de
+  paciente.
+- Manter a dica inicial de descoberta de psicólogos sem mudança nesta correção, pois a decisão de
+  produto solicitada aqui trata especificamente de `Minha Busca` e `WhatsApp`.
+
+Consequências:
+
+- Contas de psicólogo deixam de receber dicas de `Minha Busca` e `WhatsApp` na rota
+  `/app/psychologists`.
+- A jornada de onboarding do psicólogo permanece concentrada na dica de responder posts de pacientes.
+- Pacientes continuam recebendo a fila completa de descoberta, com persistência por usuário.

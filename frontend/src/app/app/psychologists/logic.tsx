@@ -60,6 +60,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
+import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { playVideoWithSound } from "@/lib/video-playback";
 import { PrivateTemplate } from "@/templates/private";
@@ -1040,6 +1041,8 @@ export const PsychologistsLogic = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const conversion = useProgressiveConversion();
+  const currentUserRole = useAppSelector((state) => state.user?.role);
+  const shouldShowPatientDiscoveryActionTips = currentUserRole === "paciente";
   const searchParamsString = searchParams.toString();
   const metrics = useViewportMetrics();
   const params = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
@@ -1370,6 +1373,7 @@ export const PsychologistsLogic = () => {
 
   const persistMySearchTipSeen = useCallback(() => {
     if (
+      !shouldShowPatientDiscoveryActionTips ||
       !accountTipsUserId ||
       hasPersistedMySearchTipSeenRef.current ||
       accountTips.onboardingTips.data?.has_seen_psychologists_my_search_tip
@@ -1392,10 +1396,12 @@ export const PsychologistsLogic = () => {
     accountTips.onboardingTips.data?.has_seen_psychologists_my_search_tip,
     accountTips.updateOnboardingTips,
     accountTipsUserId,
+    shouldShowPatientDiscoveryActionTips,
   ]);
 
   const persistWhatsappTipSeen = useCallback(() => {
     if (
+      !shouldShowPatientDiscoveryActionTips ||
       !accountTipsUserId ||
       hasPersistedWhatsappTipSeenRef.current ||
       accountTips.onboardingTips.data?.has_seen_psychologist_whatsapp_tip
@@ -1418,6 +1424,7 @@ export const PsychologistsLogic = () => {
     accountTips.onboardingTips.data?.has_seen_psychologist_whatsapp_tip,
     accountTips.updateOnboardingTips,
     accountTipsUserId,
+    shouldShowPatientDiscoveryActionTips,
   ]);
 
   const markSwipeHintSeen = useCallback(() => {
@@ -3293,7 +3300,14 @@ export const PsychologistsLogic = () => {
 
   useEffect(() => {
     if (!activeOnboardingTip) return;
-    if (!isUiHidden && !isFiltersOpen && !isSearchFocused && !showInitialLoading && !errorMessage) {
+    if (
+      shouldShowPatientDiscoveryActionTips &&
+      !isUiHidden &&
+      !isFiltersOpen &&
+      !isSearchFocused &&
+      !showInitialLoading &&
+      !errorMessage
+    ) {
       return;
     }
 
@@ -3308,11 +3322,13 @@ export const PsychologistsLogic = () => {
     isFiltersOpen,
     isSearchFocused,
     isUiHidden,
+    shouldShowPatientDiscoveryActionTips,
     showInitialLoading,
   ]);
 
   useEffect(() => {
     if (hasShownOnboardingTipThisVisitRef.current) return;
+    if (!shouldShowPatientDiscoveryActionTips) return;
     if (!accountTipsUserId) return;
     if (!hasLoadedSwipeHintPreference) return;
     if (!accountTips.onboardingTips.isSuccess) return;
@@ -3363,6 +3379,7 @@ export const PsychologistsLogic = () => {
     isUiHidden,
     persistMySearchTipSeen,
     persistWhatsappTipSeen,
+    shouldShowPatientDiscoveryActionTips,
     shouldRenderGlobalControls,
   ]);
 
