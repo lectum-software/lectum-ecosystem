@@ -93,7 +93,9 @@ passport.use(
                 : undefined;
           }
         } catch (e) {
-          console.log(e);
+          console.warn("[AUTH] Estado OAuth inválido", {
+            message: e instanceof Error ? e.message : "unknown",
+          });
         }
         //
 

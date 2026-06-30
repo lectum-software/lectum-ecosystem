@@ -120,7 +120,14 @@ export const notify = async (userIds: string[], meta: NotifyMeta) => {
 
     const users = await prisma.user.findMany({
       where: { id: { in: ids }, deleted: false },
-      include: { notification_subscriptions: true, notification_preference: true },
+      include: {
+        notification_preference: true,
+        notification_subscriptions: {
+          where: {
+            deleted: false,
+          },
+        },
+      },
     });
 
     const props = (meta.message_props ?? {}) as Prisma.InputJsonValue;

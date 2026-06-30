@@ -85,7 +85,9 @@ const parseGoogleStateQuery = (state: unknown) => {
       });
     }
   } catch (e) {
-    console.log(e);
+    console.warn("[GOOGLE CALLBACK] Estado OAuth inválido", {
+      message: e instanceof Error ? e.message : "unknown",
+    });
   }
 
   return {

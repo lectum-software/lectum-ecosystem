@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted (histórico; superado por exceção explícita em 2026-06-29)
 
 ## Contexto
 
@@ -43,3 +43,13 @@ Nenhum package de teste ou observabilidade foi instalado nesta tentativa. Sentry
 - Leitura das fontes obrigatórias da skill: `AGENTS.md`, `_product/tasks/README.md`, `ARCHITECTURE.md`, `DATA-MODEL.md`, `PACKAGES.md`, `PROTO-INVENTORY.md`, `ROADMAP-REVALIDADO.md` e arquivo da `TASK-34`.
 - Verificação documental dos status de `TASK-29B` e `TASK-41`.
 - Sem validação de build/check nesta tentativa porque nenhuma implementação de frontend, backend, Prisma ou package foi realizada.
+
+## Complemento 2026-06-29
+
+O bloqueio desta ADR foi superado para a execução atual:
+
+- `TASK-29B` foi concluída com produtores persistidos reais para `visualizacao_perfil` e `compartilhamento`.
+- O produto aceitou explicitamente manter a `TASK-41` fora do MVP por enquanto, sem publicar páginas legais com placeholders.
+- A `TASK-34` foi executada e encerrada na ADR-0185 com auditoria de rotas, role guard, soft delete, paginação, logs, LGPD mínima, packages e validações.
+
+Esta ADR permanece como registro da decisão de não executar hardening parcial enquanto as dependências finais não estavam estabilizadas.

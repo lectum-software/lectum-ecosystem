@@ -51,10 +51,15 @@ export class StoreRepository implements IStoreRepository {
 
     const created = await prisma.$transaction(async (tx) => {
       //#ignore
-      await tx.notification_subscription.deleteMany({
+      await tx.notification_subscription.updateMany({
         where: {
+          deleted: false,
           user_id: props.auth.id!,
           device_id: props.device,
+        },
+        data: {
+          deleted: true,
+          deletedAt: new Date(),
         },
       });
       //@ignore

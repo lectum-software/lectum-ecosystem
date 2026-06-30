@@ -285,7 +285,6 @@ export class AccountRepository implements IAccountRepository {
           action: log.destroy,
           ref_id: userId,
           old: JSON.stringify({
-            email: user.email,
             id: userId,
             provider: user.provider,
             role: user.role,
@@ -293,7 +292,7 @@ export class AccountRepository implements IAccountRepository {
           new: JSON.stringify({
             deleted: true,
             deletedAt: now.toISOString(),
-            email: anonymizedEmail,
+            email: "[anonymized]",
             name: anonymizedName,
           }),
         },
@@ -351,6 +350,38 @@ export class AccountRepository implements IAccountRepository {
           deleted: false,
         },
         data: markDeleted(now),
+      });
+
+      await tx.billing_address.updateMany({
+        where: {
+          user_id: userId,
+          deleted: false,
+        },
+        data: {
+          ...markDeleted(now),
+          city: "[deleted]",
+          complement: null,
+          district: "[deleted]",
+          number: "[deleted]",
+          state: "[deleted]",
+          street: "[deleted]",
+          zip: "[deleted]",
+        },
+      });
+
+      await tx.payment_method.updateMany({
+        where: {
+          user_id: userId,
+          deleted: false,
+        },
+        data: {
+          ...markDeleted(now),
+          brand: null,
+          exp_month: null,
+          exp_year: null,
+          gateway_token: "[deleted]",
+          last4: null,
+        },
       });
 
       const psychologistProfile = await tx.psychologist_profile.findUnique({

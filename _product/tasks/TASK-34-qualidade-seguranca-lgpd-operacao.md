@@ -8,7 +8,7 @@
 | Prioridade | P0 |
 | Esforço | L |
 | Fase | Qualidade |
-| Status | Blocked |
+| Status | Completed |
 | Dependências | TASK-13 a TASK-33 |
 | ADR alvo | ADR de hardening operacional |
 
@@ -135,22 +135,22 @@ Regras anti-recriação específicas:
 
 ## Critérios de aceite
 
-- [ ] Rotas privadas principais foram revisadas quanto a autenticação/autorização (Bearer + `x-device`), sem autenticação paralela.
-- [ ] Guarda de papel auditada: rotas `/psychologist/*` e `/patient/*` com `requireRole` fail-closed, check de boot ativo e smoke test (paciente → `403` em rota psicólogo-only e vice-versa) passando; descoberta em `/directory/*`.
-- [ ] Estados loading/erro/vazio/sucesso revisados nas rotas principais, em PT-BR, desktop e mobile.
-- [ ] Índices `@@index`/`@@unique` nomeados no `DATA-MODEL.md` conferidos no `schema.prisma`.
-- [ ] Soft delete (`deleted=false`) respeitado em todas as queries de produto; sem exclusão física.
-- [ ] Listagens usam a paginação do "Contrato padrão de API" (`page`/`limit`).
-- [ ] Campos LGPD-sensíveis (`psychologist_profile.cpf`, `whatsapp`, `billing_address`, `payment_method`) com manuseio documentado e fora dos logs; `payment_method` sem PAN/CVV.
-- [ ] Auditoria de ações relevantes via `log__user` existente; sem tabela de auditoria paralela.
-- [ ] Logs revisados sem dados sensíveis em claro.
-- [ ] Fluxos LGPD mínimos (consentimento, exclusão/anonimização, privacidade) documentados.
-- [ ] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado restou.
-- [ ] Packages de teste continuam candidatos; nenhum instalado sem consulta a `PACKAGES.md` + ADR. Sentry, embora decidido, só foi instalado/configurado nesta task ou em task dedicada.
-- [ ] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
-- [ ] ADR criado ou atualizado em `adrs/`.
-- [ ] Checks/builds relevantes foram executados sem erros.
-- [ ] Commit criado com mensagem convencional.
+- [x] Rotas privadas principais foram revisadas quanto a autenticação/autorização (Bearer + `x-device`), sem autenticação paralela.
+- [x] Guarda de papel auditada: rotas `/psychologist/*` e `/patient/*` com `requireRole` fail-closed, check de boot ativo e smoke test (paciente → `403` em rota psicólogo-only e vice-versa) passando; descoberta em `/directory/*`.
+- [x] Estados loading/erro/vazio/sucesso revisados nas rotas principais, em PT-BR, desktop e mobile.
+- [x] Índices `@@index`/`@@unique` nomeados no `DATA-MODEL.md` conferidos no `schema.prisma`; exceção documentada: `professional_document @@index([psychologist_id, type])` permanece fora do schema enquanto a `TASK-11`/ADR-0017 bloquear storage privado de CRP.
+- [x] Soft delete (`deleted=false`) respeitado em todas as queries de produto; sem exclusão física.
+- [x] Listagens usam a paginação do "Contrato padrão de API" (`page`/`limit`).
+- [x] Campos LGPD-sensíveis (`psychologist_profile.cpf`, `whatsapp`, `billing_address`, `payment_method`) com manuseio documentado e fora dos logs; `payment_method` sem PAN/CVV.
+- [x] Auditoria de ações relevantes via `log__user` existente; sem tabela de auditoria paralela.
+- [x] Logs revisados sem dados sensíveis em claro.
+- [x] Fluxos LGPD mínimos (consentimento, exclusão/anonimização, privacidade) documentados.
+- [x] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado restou.
+- [x] Packages de teste continuam candidatos; nenhum instalado sem consulta a `PACKAGES.md` + ADR. Sentry, embora decidido, só foi instalado/configurado nesta task ou em task dedicada.
+- [x] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
+- [x] ADR criado ou atualizado em `adrs/`.
+- [x] Checks/builds relevantes foram executados sem erros.
+- [x] Commit criado com mensagem convencional.
 
 ## Validação mínima
 
@@ -165,7 +165,7 @@ Regras anti-recriação específicas:
 
 Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
 
-## Execução 2026-06-29 — bloqueada por dependências finais
+## Execução 2026-06-29 — bloqueada por dependências finais (histórico)
 
 A execução foi interrompida antes de qualquer implementação de hardening porque a TASK-34 é a revisão final transversal de qualidade, segurança, LGPD e operação, e as fontes de verdade ainda possuem dependências obrigatórias pendentes ou bloqueadas:
 
@@ -180,3 +180,62 @@ Retomar a TASK-34 somente quando:
 1. `TASK-41` estiver `Completed`, ou seu bloqueio legal/editorial tiver sido aceito explicitamente para fora do MVP.
 2. As pendências remanescentes da `TASK-29B` tiverem produtores reais implementados, ou o produto tiver aceito explicitamente manter `visualizacao_perfil`/`compartilhamento` fora do MVP sem mock.
 3. A execução puder auditar rotas, índices, soft delete, paginação, logs e fluxos LGPD com o escopo final estabilizado.
+
+## Execução 2026-06-29 — concluída com exceções explícitas
+
+Retomada autorizada pelo produto em 2026-06-29 após aceite explícito de manter a `TASK-41` fora do MVP por enquanto. A `TASK-29B` já estava concluída com produtores reais de `visualizacao_perfil` e `compartilhamento`; nenhum evento fake, endpoint simulado ou mock foi criado.
+
+Limitação de design registrada: Builder/Quick Copy não estava disponível como ferramenta acionável neste ambiente. A revisão visual usou `_product/tasks/PROTO-INVENTORY.md`, `_product/tasks/ROADMAP-REVALIDADO.md`, imagens locais e smoke HTTP/browser local das rotas principais.
+
+Evidências objetivas:
+
+- Autenticação/autorização:
+  - `_auth` continua validando `Authorization: Bearer <jwt>`, sessão/token e `x-device`, preenchendo `req.auth`/`req.device`.
+  - `backend/src/main/server/imports/write.ts` mantém `mountRoleGuardedRoute`, `requireRole` e `assertPrivateRoleGuards()` no boot.
+  - Smoke via `tsx`: paciente em rota psicólogo-only → `403`; psicólogo em rota paciente-only → `403`; papéis corretos chamam `next()`.
+  - Smoke HTTP local sem credenciais: `/api/private/psychologist/analytics` → `401`, `/api/private/patient/profile` → `401`, `/api/private/directory/psychologists?limit=1&page=1` → `200`.
+- Ownership/escopo:
+  - Rotas de paciente/psicólogo revisadas para usar `req.auth.id`/`data.auth.id` como fronteira de ownership em perfil, analytics, favoritos, follows, reviews, billing, WhatsApp, conta, notificações e ações de comunidade.
+  - Descoberta pública/neutra permanece em `/api/private/directory/psychologists`, separada de autogestão do psicólogo.
+- Índices:
+  - Conferência estática por script Node comparou `@@index`/`@@unique` exatos do `DATA-MODEL.md` com `backend/prisma/schema.prisma`: 39 padrões exatos presentes; a única ausência é `professional_document @@index([psychologist_id, type])`, bloqueada por `TASK-11`/ADR-0017 por falta de storage privado de CRP e, portanto, não criada nesta task.
+  - Exemplos críticos confirmados: `payment_event @@unique([gateway, external_id])`, `professional_subscription @@index([psychologist_id, status])`, `notification @@index([user_id])`, relacionamentos comunidade/posts/reviews/favorites/follows.
+- Soft delete e retenção:
+  - Removida exclusão física de relações de catálogo do perfil gratuito (`psychologist_specialty`, `psychologist_service`, `psychologist_approach`): agora `updateMany` com `deleted=true/deletedAt` e `upsert` para restaurar relações.
+  - `user_background` e `notification_subscription` passaram a soft delete; dispatcher web-push filtra subscriptions com `deleted=false`.
+  - Varredura `deleteMany` restante aponta apenas `user_token` (credencial/sessão efêmera) e métodos HTTP `DELETE` que executam soft delete no repository.
+- Paginação:
+  - Listagens revisadas para `page`/`limit`, default `20`, máximo `50`.
+  - Ajustados posts (`DEFAULT_LIMIT=20`, `MAX_LIMIT=50`) e notificações (cap explícito `50` antes de `format`).
+- LGPD mínima:
+  - `psychologist_profile.cpf` e `whatsapp` permanecem fora dos logs; exclusão de conta limpa CPF/WhatsApp e despublica o perfil.
+  - `billing_address` agora é soft-deletado e anonimizado na exclusão de conta.
+  - `payment_method` persiste apenas token do gateway + dados de exibição (`brand`, `last4`, validade), sem PAN/CVV; exclusão de conta remove display e substitui token por marcador não operacional.
+  - `log__user` segue como trilha de auditoria existente; log de exclusão não grava e-mail original em claro.
+  - Consentimento de termos permanece coletado no cadastro/Google OAuth conforme fundação existente; páginas públicas legais da `TASK-41` seguem fora do MVP por aceite explícito e não foram publicadas com placeholders.
+- Logs:
+  - Socket deixou de imprimir payload JWT completo (e-mail/device); log atual expõe apenas `user_id`, `role` e marcador `device_id: "[redacted]"`.
+  - Removido log da chave completa de objeto público em `unlink`.
+  - Erros OAuth/e-mail/servidor foram reduzidos a mensagens/códigos sanitizados.
+- Frontend:
+  - Rotas principais revisadas por check/build e smoke local: `/`, `/auth/login`, `/auth/register/patient`, `/auth/register/psychologist`, `/psychologists`, `/community`, `/app/profile`, `/app/notifications`, `/app/settings/account`, `/app/professional/profile/setup`, `/app/professional/analytics`, `/app/professional/billing`.
+  - Estados PT-BR, loading/erro/vazio/sucesso e acessibilidade básica verificados em componentes compartilhados (`LoadingState`, `InlineAlert`, `EmptyState`, navegações com `aria-label`, foco visível). `rg "<img"` não encontrou `<img>` em `frontend/src`.
+  - Rotas privadas sem sessão redirecionam/mostram shell de autenticação em vez de expor dado privado.
+- Mocks/packages:
+  - Nenhum package instalado; `package.json`/lockfiles sem diff.
+  - `rg mock|fake|faker|sample` não encontrou mock/endpoint simulado em produto; ocorrências restantes são helpers de validação/seed de desenvolvimento e placeholders de formulário.
+
+Validações executadas:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke role guard via `pnpm --dir backend exec tsx -`
+- Smoke HTTP frontend/backend local nas rotas listadas acima
+
+ADRs:
+
+- `adrs/0184-bloqueio-task34-qualidade-lgpd-operacao.md` atualizado como histórico/superado pela exceção.
+- `adrs/0185-hardening-operacional-task34.md` criado para decisões de hardening operacional, LGPD mínima, exceções e validações.

@@ -19,12 +19,17 @@ export class Repository {
     unique?: boolean;
   }): Promise<true> {
     if (data.unique)
-      await this.repository.deleteMany({
+      await this.repository.updateMany({
         where: {
+          deleted: false,
           user_id: {
             in: data.entity.map((user) => user.id),
           },
           type: data.type,
+        },
+        data: {
+          deleted: true,
+          deletedAt: new Date(),
         },
       });
 
@@ -42,6 +47,7 @@ export class Repository {
   async list({ id }: Pick<user, "id">): Promise<user_background[]> {
     const res = await this.repository.findMany({
       where: {
+        deleted: false,
         user_id: id!,
       },
       orderBy: {
@@ -53,8 +59,12 @@ export class Repository {
   }
 
   async delete({ ids, type }: { ids: string[]; type: string }): Promise<true> {
-    await this.repository.deleteMany({
-      where: { user_id: { in: ids }, type },
+    await this.repository.updateMany({
+      where: { deleted: false, user_id: { in: ids }, type },
+      data: {
+        deleted: true,
+        deletedAt: new Date(),
+      },
     });
     return true;
   }

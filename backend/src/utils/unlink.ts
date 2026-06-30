@@ -7,8 +7,6 @@ const action = async (fileName: string | null | object, dir: string, bucket: str
   if (!fileName) return false;
   const key = `${dir}/${fileName}`;
 
-  console.log(`KEY TO DELETE: ${key}`);
-
   try {
     await S3.send(
       new DeleteObjectCommand({
@@ -18,7 +16,10 @@ const action = async (fileName: string | null | object, dir: string, bucket: str
     );
     return true;
   } catch (err: any) {
-    console.error(`[BUCKET]: ${err?.message}`);
+    console.error("[BUCKET]: erro ao remover objeto público", {
+      directory: dir,
+      message: err?.message,
+    });
     return false;
   }
 };

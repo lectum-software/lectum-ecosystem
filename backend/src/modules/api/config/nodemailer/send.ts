@@ -155,7 +155,10 @@ const send = async ({
 
       transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
-          console.log(error);
+          console.error("[EMAIL] Falha ao enviar mensagem", {
+            code: (error as { code?: string }).code,
+            message: error.message,
+          });
           return reject(new Error(`Failed to send email: ${error.message}`));
         } else {
           console.log(`Email sent: ${info.response}`);
@@ -164,7 +167,9 @@ const send = async ({
       });
     });
   } catch (e) {
-    console.log(`[ERROR] -In sending email:${e}`);
+    console.error("[EMAIL] Erro inesperado no envio", {
+      message: e instanceof Error ? e.message : "unknown",
+    });
     return false;
   }
 };

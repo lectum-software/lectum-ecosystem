@@ -11,7 +11,11 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
     });
   }
 
-  console.error(error);
+  console.error("[SERVER] erro não tratado", {
+    message: error?.message,
+    name: error?.name,
+    status: error?.status,
+  });
 
   return res.status(error.status || 500).json({
     success: false,

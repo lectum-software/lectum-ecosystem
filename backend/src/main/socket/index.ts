@@ -7,6 +7,11 @@ import { resolve } from "@/helpers/translate/resolve";
 import { emitAsync } from "./db/async";
 
 type Soc = io.Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>;
+type SocketPayload = JwtPayload & {
+  device_id?: string;
+  id?: string;
+  type?: string;
+};
 
 export let soc: Soc | null = null;
 export let aiSoc: Soc | null = null;
@@ -49,7 +54,7 @@ export const socket = (server: Express) => {
       return next(new Error(resolve("error.token_not_provided")));
     }
     try {
-      const payload = jwt.verify(token, process.env.JWT_SECRET_KEY!) as JwtPayload;
+      const payload = jwt.verify(token, process.env.JWT_SECRET_KEY!) as SocketPayload;
 
       (socket as any).payload = payload;
       return next();
@@ -63,9 +68,17 @@ export const socket = (server: Express) => {
 
   web.on("connection", (socket) => {
     socket.on("client", () => {
-      const payload = (socket as any).payload;
+      const payload = (socket as any).payload as SocketPayload;
+      if (!payload.id) {
+        socket.disconnect(true);
+        return;
+      }
 
-      console.log(`[SOCKET] Client connected: ${socket.id}`, payload);
+      console.log(`[SOCKET] Client connected: ${socket.id}`, {
+        device_id: payload.device_id ? "[redacted]" : undefined,
+        role: payload.type,
+        user_id: payload.id,
+      });
       clients.set(socket.id, { socket, data: payload });
       emitAsync(payload.id, payload.device_id);
       socket.emit("server", "Server response!");

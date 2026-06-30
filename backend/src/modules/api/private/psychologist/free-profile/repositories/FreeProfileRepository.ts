@@ -438,30 +438,113 @@ export class FreeProfileRepository implements IFreeProfileRepository {
         },
       });
 
-      await tx.psychologist_specialty.deleteMany({ where: { psychologist_id: userId } });
-      if (body.specialty_ids.length > 0) {
-        await tx.psychologist_specialty.createMany({
-          data: body.specialty_ids.map((specialty_id) => ({
+      const relationDeletedAt = new Date();
+
+      await tx.psychologist_specialty.updateMany({
+        where: {
+          deleted: false,
+          psychologist_id: userId,
+          ...(body.specialty_ids.length > 0
+            ? {
+                specialty_id: {
+                  notIn: body.specialty_ids,
+                },
+              }
+            : {}),
+        },
+        data: {
+          deleted: true,
+          deletedAt: relationDeletedAt,
+        },
+      });
+      for (const specialty_id of body.specialty_ids) {
+        await tx.psychologist_specialty.upsert({
+          where: {
+            psychologist_id_specialty_id: {
+              psychologist_id: userId,
+              specialty_id,
+            },
+          },
+          create: {
             psychologist_id: userId,
             specialty_id,
-          })),
-          skipDuplicates: true,
+          },
+          update: {
+            deleted: false,
+            deletedAt: null,
+          },
         });
       }
 
-      await tx.psychologist_service.deleteMany({ where: { psychologist_id: userId } });
-      if (body.service_ids.length > 0) {
-        await tx.psychologist_service.createMany({
-          data: body.service_ids.map((service_id) => ({ psychologist_id: userId, service_id })),
-          skipDuplicates: true,
+      await tx.psychologist_service.updateMany({
+        where: {
+          deleted: false,
+          psychologist_id: userId,
+          ...(body.service_ids.length > 0
+            ? {
+                service_id: {
+                  notIn: body.service_ids,
+                },
+              }
+            : {}),
+        },
+        data: {
+          deleted: true,
+          deletedAt: relationDeletedAt,
+        },
+      });
+      for (const service_id of body.service_ids) {
+        await tx.psychologist_service.upsert({
+          where: {
+            psychologist_id_service_id: {
+              psychologist_id: userId,
+              service_id,
+            },
+          },
+          create: {
+            psychologist_id: userId,
+            service_id,
+          },
+          update: {
+            deleted: false,
+            deletedAt: null,
+          },
         });
       }
 
-      await tx.psychologist_approach.deleteMany({ where: { psychologist_id: userId } });
-      if (body.approach_ids.length > 0) {
-        await tx.psychologist_approach.createMany({
-          data: body.approach_ids.map((approach_id) => ({ psychologist_id: userId, approach_id })),
-          skipDuplicates: true,
+      await tx.psychologist_approach.updateMany({
+        where: {
+          deleted: false,
+          psychologist_id: userId,
+          ...(body.approach_ids.length > 0
+            ? {
+                approach_id: {
+                  notIn: body.approach_ids,
+                },
+              }
+            : {}),
+        },
+        data: {
+          deleted: true,
+          deletedAt: relationDeletedAt,
+        },
+      });
+      for (const approach_id of body.approach_ids) {
+        await tx.psychologist_approach.upsert({
+          where: {
+            psychologist_id_approach_id: {
+              psychologist_id: userId,
+              approach_id,
+            },
+          },
+          create: {
+            psychologist_id: userId,
+            approach_id,
+          },
+          update: {
+            deleted: false,
+            deletedAt: null,
+          },
         });
       }
     });

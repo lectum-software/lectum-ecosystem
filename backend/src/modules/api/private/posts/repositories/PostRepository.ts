@@ -47,8 +47,8 @@ import type {
 } from "../DTOs/IPostDTO";
 import type { IPostRepository } from "./interfaces/IPostRepository";
 
-const DEFAULT_LIMIT = 10;
-const MAX_LIMIT = 30;
+const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 50;
 const INLINE_REPLY_DESCENDANT_DEPTH = 4;
 const REPLY_DOWNVOTE_RANKING_WEIGHT = 0.6;
 const SHARE_ANTI_SPAM_WINDOW_MS = 60 * 60 * 1000;
