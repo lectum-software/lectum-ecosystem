@@ -312,7 +312,7 @@ export const CommunityLogic = () => {
           <div className="flex items-center gap-3">
             <button
               aria-label="Voltar"
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#E2E8F0] bg-white text-[#64748B] transition hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-surface-muted text-muted transition hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
               onClick={() => navigateBackWithFallback(router)}
               type="button"
             >
@@ -325,7 +325,7 @@ export const CommunityLogic = () => {
               />
               <Input
                 aria-label="Explorar comunidades"
-                className="h-10 rounded-full border-[#E2E8F0] bg-[#F8FAFC] pl-10 text-sm shadow-none placeholder:text-[#94A3B8] sm:h-11"
+                className="h-10 rounded-full border-border bg-surface-muted pl-10 text-sm text-foreground shadow-none placeholder:text-subtle sm:h-11"
                 onChange={(event) => handleSearchChange(event.target.value)}
                 placeholder="Explorar comunidades..."
                 type="search"
@@ -339,10 +339,10 @@ export const CommunityLogic = () => {
           <p className="text-xs font-extrabold uppercase tracking-[0.08em] text-primary">
             Comunidades Lectum
           </p>
-          <h1 className="text-[2.05rem] font-black leading-[0.98] tracking-[-0.055em] text-[#111827] sm:text-[2.8rem]">
+          <h1 className="text-[2.05rem] font-black leading-[0.98] tracking-[-0.055em] text-foreground sm:text-[2.8rem]">
             Encontre seu espaço seguro
           </h1>
-          <p className="max-w-xl text-sm font-medium leading-6 text-[#64748B] sm:text-[15px]">
+          <p className="max-w-xl text-sm font-medium leading-6 text-muted sm:text-[15px]">
             Conecte-se com pessoas que compartilham jornadas semelhantes à sua.
           </p>
         </header>
@@ -379,7 +379,7 @@ export const CommunityLogic = () => {
           <section className="grid gap-3.5">
             <div className="flex items-center gap-2">
               <Flame className="h-[18px] w-[18px] text-warning" aria-hidden="true" />
-              <h2 className="text-lg font-black tracking-[-0.025em] text-[#111827]">
+              <h2 className="text-lg font-black tracking-[-0.025em] text-foreground">
                 Tendência Hoje
               </h2>
             </div>
@@ -391,7 +391,7 @@ export const CommunityLogic = () => {
           <section className="grid gap-3.5">
             <div className="flex items-center gap-2">
               <UsersRound className="h-[18px] w-[18px] text-primary" aria-hidden="true" />
-              <h2 className="text-lg font-black tracking-[-0.025em] text-[#111827]">
+              <h2 className="text-lg font-black tracking-[-0.025em] text-foreground">
                 {featured ? "Mais Populares" : "Comunidades"}
               </h2>
             </div>
@@ -402,15 +402,15 @@ export const CommunityLogic = () => {
           </section>
         ) : null}
 
-        <section className="grid justify-items-center gap-3.5 rounded-[24px] border border-[#E2E8F0] bg-[#F8FAFC] px-5 py-8 text-center">
-          <span className="grid h-12 w-12 place-items-center rounded-2xl border border-[#DCEBFA] bg-white text-primary">
+        <section className="grid justify-items-center gap-3.5 rounded-[24px] border border-border bg-surface-muted px-5 py-8 text-center">
+          <span className="grid h-12 w-12 place-items-center rounded-2xl border border-border bg-surface text-primary">
             <PlusCircle className="h-6 w-6" aria-hidden="true" />
           </span>
           <div className="grid gap-2">
-            <h2 className="text-xl font-black tracking-[-0.035em] text-[#111827]">
+            <h2 className="text-xl font-black tracking-[-0.035em] text-foreground">
               Sugira uma Comunidade
             </h2>
-            <p className="max-w-sm text-sm font-medium leading-6 text-[#64748B]">
+            <p className="max-w-sm text-sm font-medium leading-6 text-muted">
               Não encontrou o que procurava? Nossa equipe está pronta para criar novos espaços para
               você.
             </p>
