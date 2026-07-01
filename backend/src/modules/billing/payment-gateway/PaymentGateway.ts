@@ -52,6 +52,7 @@ export type GatewaySubscription = {
   status: BillingSubscriptionStatus;
   gateway_status?: string | null;
   external_reference?: string | null;
+  init_point?: string | null;
   next_payment_date?: string | null;
   raw: unknown;
 };

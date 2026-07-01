@@ -314,6 +314,7 @@ const syncSubscription = async (args: SyncArgs) => {
       external_reference: gatewaySubscription.external_reference,
       gateway_status: gatewaySubscription.gateway_status,
       gateway_subscription_id: gatewaySubscription.gateway_subscription_id,
+      init_point: gatewaySubscription.init_point,
       next_payment_date: gatewaySubscription.next_payment_date,
       normalized_status: gatewaySubscription.status,
     },

@@ -27,11 +27,13 @@ A assinatura havia sido criada sem o header sandbox `X-scope: stage`, pois esse 
 1. Consultar assinaturas Mercado Pago (`getSubscription`) sem incluir `X-scope: stage`.
 2. Manter o bloqueio de segurança do script: somente ambiente local/sandbox pode executar `billing:sync`.
 3. Melhorar a saída de erro do script para imprimir os detalhes sanitizados do adapter (`operation`, `status`, `code`, `blocked_by`, `cause_message`) quando disponíveis.
+4. Exibir `init_point` no resultado do `billing:sync` quando o Mercado Pago devolver link de conclusão para uma assinatura pendente.
 
 ## Consequências
 
 - O script de sincronização passa a consultar a mesma preapproval criada pelo checkout/fallback sandbox.
 - Erros futuros do Mercado Pago ficam diagnosticáveis sem expor token ou dados sensíveis.
+- O desenvolvedor consegue reabrir o fluxo hospedado do Mercado Pago pelo `init_point` retornado no `--dry-run`, sem recriar assinatura local.
 - Produção não muda: o adapter só altera o requestOptions da operação de consulta e a sync local segue bloqueada fora de sandbox.
 
 ## Validação

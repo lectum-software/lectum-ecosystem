@@ -386,6 +386,7 @@ export class MercadoPagoAdapter implements PaymentGateway {
       status: normalizeStatus(response.status),
       gateway_status: response.status ?? null,
       external_reference: response.external_reference ?? null,
+      init_point: response.init_point ?? null,
       next_payment_date: response.next_payment_date ?? null,
       raw: response,
     };
