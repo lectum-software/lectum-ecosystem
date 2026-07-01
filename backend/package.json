@@ -19,7 +19,8 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:migrate-prod": "prisma migrate deploy",
-    "db:reset": "node scripts/reset-database.mjs",
+    "reset": "node scripts/reset-database.mjs",
+    "db:reset": "pnpm reset",
     "db:push": "prisma db push",
     "gen:vapid": "npx web-push generate-vapid-keys",
     "subscription:grant": "tsx src/operations/subscriptions/grant-professional-subscription.ts"

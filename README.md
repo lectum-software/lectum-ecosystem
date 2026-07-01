@@ -37,6 +37,20 @@ mas exige atualizar URLs no Mercado Pago sempre que a URL mudar.
 Para evitar trocar URLs no Mercado Pago, crie e configure um Cloudflare Named Tunnel fora do repo,
 apontando o hostname fixo para o proxy local:
 
+```bash
+# 1. Instalar CLI no macOS
+brew install cloudflared
+
+# 2. Autenticar na conta Cloudflare que gerencia o domínio
+cloudflared tunnel login
+
+# 3. Criar o tunnel fixo
+cloudflared tunnel create lectum-dev
+
+# 4. Criar o DNS para o hostname escolhido
+cloudflared tunnel route dns lectum-dev lectum-dev.seudominio.com
+```
+
 ```yaml
 # ~/.cloudflared/config.yml ou equivalente
 tunnel: <id-ou-nome-do-tunnel>
@@ -45,6 +59,13 @@ ingress:
   - hostname: lectum-dev.seudominio.com
     service: http://127.0.0.1:3005
   - service: http_status:404
+```
+
+Valide a configuração local antes de depender dela no Mercado Pago:
+
+```bash
+cloudflared tunnel ingress validate
+cloudflared tunnel ingress rule https://lectum-dev.seudominio.com/api/public/billing/webhook
 ```
 
 Depois configure em `backend/.env`:
