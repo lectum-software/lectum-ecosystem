@@ -61,7 +61,7 @@ type ShareTargetOptions = {
 
 type ShareablePostWithMedia = Pick<
   PostListPost,
-  "author" | "community" | "id" | "media_items" | "media_type" | "media_url" | "title"
+  "author" | "community" | "content" | "id" | "media_items" | "media_type" | "media_url" | "title"
 >;
 
 const normalizeForComparison = (value?: string | null) =>
@@ -147,6 +147,7 @@ export const createLectumSharePostMediaTarget = (
   if (!firstMedia) return null;
 
   const relativeUrl = options.relativeUrl ?? postRelativeUrl(post);
+  const responseText = post.content?.trim() || null;
 
   return {
     cardLabel: "Postado na Lectum",
@@ -163,7 +164,7 @@ export const createLectumSharePostMediaTarget = (
       verified: post.author.verified,
     },
     replyId: null,
-    responseText: null,
+    responseText,
     shareText: post.title,
     shareTitle: "Postado na Lectum",
     shareUrl: toAbsoluteShareUrl(relativeUrl),

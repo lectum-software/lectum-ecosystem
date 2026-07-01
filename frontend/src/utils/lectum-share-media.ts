@@ -56,19 +56,19 @@ const VIDEO_EXPORT_FRAME_RATE = 30;
 
 const storyCanvasLayout: ShareCanvasLayout = {
   card: {
-    bodyFontSize: 66,
-    headerFontSize: 34,
-    headerHeight: 132,
-    lineHeight: 78,
+    bodyFontSize: 54,
+    headerFontSize: 32,
+    headerHeight: 116,
+    lineHeight: 64,
     paddingX: 72,
-    paddingY: 50,
+    paddingY: 42,
     radius: 44,
     width: 930,
     x: 75,
     y: 98,
   },
   height: 1920,
-  maxQuestionLines: 3,
+  maxQuestionLines: 2,
   width: 1080,
 };
 

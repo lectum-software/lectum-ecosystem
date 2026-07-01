@@ -113,7 +113,7 @@ const whatsappShareUrl = (target: LectumShareVideoTarget) => {
 
 const SharePreview = ({ target }: { target: LectumShareSocialTarget }) => {
   const mediaSrc = resolvePublicMediaUrl(target.mediaUrl);
-  const sourcePreview = truncatePreviewText(target.sourceText, 96);
+  const sourcePreview = truncatePreviewText(target.sourceText, 80);
 
   return (
     <div
@@ -168,8 +168,8 @@ const SharePreview = ({ target }: { target: LectumShareSocialTarget }) => {
         </p>
         <p
           className={cn(
-            "px-4 py-3 text-left font-black tracking-[-0.04em] text-foreground sm:px-3 sm:py-2 sm:tracking-[-0.035em]",
-            "text-[clamp(1.05rem,4.4vw,1.55rem)] leading-[1.08] sm:text-base sm:leading-[1.08]",
+            "line-clamp-2 px-4 py-2.5 text-left font-extrabold tracking-[-0.035em] text-foreground sm:px-3 sm:py-2 sm:tracking-[-0.03em]",
+            "text-[clamp(0.92rem,3.4vw,1.18rem)] leading-[1.08] sm:text-sm sm:leading-[1.1]",
           )}
         >
           {sourcePreview}
@@ -190,8 +190,8 @@ const ShareResponseTextPanel = ({
   pending: boolean;
   text: string;
 }) => (
-  <div className="mt-3 flex items-start gap-2 px-1 sm:mt-3">
-    <p className="min-w-0 flex-1 line-clamp-2 text-sm font-semibold leading-5 text-foreground sm:text-[13px] sm:leading-[18px]">
+  <div className="mt-3 flex items-start gap-2 px-1 sm:mt-2.5">
+    <p className="min-w-0 flex-1 line-clamp-2 text-xs font-medium leading-4 text-muted sm:text-xs sm:leading-4">
       {text}
     </p>
     <button
