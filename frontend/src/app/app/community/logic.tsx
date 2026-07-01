@@ -56,10 +56,10 @@ const resolveCommunityError = (error: unknown) => {
   return rawMessage || "Não foi possível carregar as comunidades agora.";
 };
 
-const formatMembers = (value: number) => {
-  if (value === 1) return "1 membro";
+const formatFollowers = (value: number) => {
+  if (value === 1) return "1 seguidor";
 
-  return `${value.toLocaleString("pt-BR")} membros`;
+  return `${value.toLocaleString("pt-BR")} seguidores`;
 };
 
 const FeaturedCommunity = ({ community }: { community: CommunityExploreCard }) => {
@@ -78,11 +78,7 @@ const FeaturedCommunity = ({ community }: { community: CommunityExploreCard }) =
       />
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.34)_0%,rgba(2,6,23,0.58)_48%,rgba(2,6,23,0.94)_100%)]"
-      />
-      <div
-        aria-hidden="true"
-        className="absolute inset-x-0 bottom-0 h-2/3 bg-[radial-gradient(ellipse_at_50%_100%,rgba(15,23,42,0.98),rgba(15,23,42,0.68)_54%,transparent_78%)]"
+        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.3)_0%,rgba(2,6,23,0.42)_35%,rgba(2,6,23,0.7)_68%,rgba(2,6,23,0.95)_100%)]"
       />
       <div className="relative z-10 flex h-full min-h-[154px] flex-col justify-end gap-3 sm:min-h-[184px]">
         <div className="flex flex-wrap items-center gap-2">
@@ -110,7 +106,7 @@ const FeaturedCommunity = ({ community }: { community: CommunityExploreCard }) =
 const CommunityCard = ({ community }: { community: CommunityExploreCard }) => {
   return (
     <Link
-      className="group relative flex h-[286px] w-[min(calc(100vw-2.5rem),212px)] shrink-0 snap-start overflow-hidden rounded-[22px] border border-white/70 bg-[#101827] p-3.5 text-white transition duration-300 sm:h-[318px] sm:w-[232px] lg:h-[306px] lg:w-[238px]"
+      className="group relative flex h-[286px] w-[min(calc(100vw-2.5rem),212px)] shrink-0 snap-start overflow-hidden rounded-[22px] border border-white/70 bg-[#101827] p-3.5 text-white transition duration-300 sm:h-[318px] sm:w-[232px] lg:h-[306px] lg:w-full lg:min-w-0 lg:shrink"
       href={`/community/${community.slug}`}
     >
       <Image
@@ -136,7 +132,7 @@ const CommunityCard = ({ community }: { community: CommunityExploreCard }) => {
             {community.description}
           </p>
           <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-white/65">
-            {formatMembers(community.membersCount)}
+            {formatFollowers(community.membersCount)}
           </p>
         </div>
         <span className="inline-flex min-h-9 items-center justify-center rounded-full bg-white px-4 text-[13px] font-extrabold text-primary transition group-hover:translate-x-1">
@@ -186,10 +182,10 @@ const PopularCommunitiesCarousel = ({ communities }: { communities: CommunityExp
   return (
     <div className="relative min-w-0 max-w-full overflow-hidden">
       <div
-        className="max-w-full overflow-x-auto overscroll-x-contain scroll-smooth pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="max-w-full overflow-x-auto overscroll-x-contain scroll-smooth pb-2 [scrollbar-width:none] lg:overflow-visible [&::-webkit-scrollbar]:hidden"
         ref={scrollRef}
       >
-        <div className="flex w-max max-w-none snap-x snap-mandatory gap-3.5 sm:gap-4">
+        <div className="flex w-max max-w-none snap-x snap-mandatory gap-3.5 sm:gap-4 lg:grid lg:w-full lg:grid-cols-4">
           {communities.map((community) => (
             <CommunityCard community={community} key={community.communityId} />
           ))}

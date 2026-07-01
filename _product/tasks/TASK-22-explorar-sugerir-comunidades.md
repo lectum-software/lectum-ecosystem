@@ -241,3 +241,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nao houve alteracao de backend, Prisma schema, migrations, endpoints, payloads, dados, ordenacao ou packages.
 - ADR atualizado: `adrs/0107-explorar-comunidades-conteudo-centralizado.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check --write "src/app/app/community/logic.tsx"`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, HTTP local `200` em `/community`, screenshot local em desktop/mobile e Chrome/CDP validando tag removida, ausencia de overflow mobile (`documentWidth=390`) e clique da seta com `href` preservado e `scrollLeft` alterado.
+
+## Execucao complementar: cards populares sem carrossel no desktop (2026-07-01)
+
+- Pedido do usuario: suavizar a linha visivel do overlay no card `Tendencia Hoje`, encaixar os cards de `Mais Populares` no desktop sem exigir rolagem horizontal e trocar a copy `membros` por `seguidores`.
+- Fonte visual/auditavel: screenshot do usuario em `/community` e referencia local `_product/proto/Explorar Comunidades.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: o overlay do card de destaque passou a usar um unico gradiente vertical continuo, removendo a camada radial com limite horizontal perceptivel.
+- Frontend: o conjunto `Mais Populares` continua com rolagem horizontal mobile-first, mas no breakpoint desktop passa a usar grade de quatro colunas dentro da largura util, sem seta/scroll horizontal quando os quatro cards cabem.
+- Frontend: a contagem visual dos cards passa a usar `seguidor/seguidores`, mantendo a mesma fonte real de `members_count` retornada pela API.
+- Nao houve alteracao de backend, Prisma schema, migrations, endpoints, payloads, dados, ordenacao ou packages.
+- ADR atualizado: `adrs/0107-explorar-comunidades-conteudo-centralizado.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check --write "src/app/app/community/logic.tsx"`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, HTTP local `200` em `/community`, screenshot local em desktop/mobile e Chrome/CDP validando desktop sem overflow horizontal no bloco de populares, mobile com `documentWidth=390`, overlay sem a segunda camada radial e copy `seguidores`.

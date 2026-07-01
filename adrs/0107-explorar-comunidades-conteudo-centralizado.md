@@ -146,3 +146,32 @@ Na rota publica `/community`, a comunidade em destaque exibida em `Tendencia Hoj
 - HTTP local `200` em `/community`
 - Screenshot local desktop/mobile
 - Chrome/CDP em `/community`: tag `Autocuidado` ausente no card `Tendencia Hoje`, `documentWidth=390` no mobile e clique da seta mantendo `href` em `/community` enquanto altera `scrollLeft`.
+
+## Atualizacao 2026-07-01 - grid desktop e seguidores
+
+### Contexto
+
+A iteracao visual seguinte identificou tres ajustes na mesma superficie `/community`: a camada radial adicional do card `Tendencia Hoje` criava uma linha horizontal perceptivel no overlay; no desktop, os cards de `Mais Populares` ainda se comportavam como carrossel e podiam iniciar parcialmente deslocados; e a contagem de comunidades deveria usar linguagem de acompanhamento social (`seguidores`) em vez de `membros`.
+
+### Decisao
+
+- Remover a segunda camada radial do card de destaque e usar um unico gradiente vertical continuo para preservar legibilidade sem uma marcacao horizontal visivel.
+- Manter o comportamento mobile-first de rolagem horizontal para `Mais Populares`, mas trocar para uma grade de quatro colunas em `lg`, fazendo os quatro cards caberem na largura util da pagina sem seta/scroll horizontal.
+- Alterar apenas a copy exibida da contagem para `seguidor/seguidores`, sem alterar o contrato de API nem o campo real `members_count`.
+
+### Consequencias
+
+- O card em destaque fica visualmente mais suave e sem corte perceptivel no overlay.
+- No desktop, a secao `Mais Populares` deixa de depender do controle de carrossel quando os quatro cards ativos estao presentes.
+- A linguagem fica mais alinhada ao comportamento esperado de acompanhar comunidades, mantendo compatibilidade com os dados persistidos atuais.
+- A mudanca permanece exclusivamente frontend/visual e nao altera backend, Prisma, endpoints, payloads, ordenacao, persistencia ou packages.
+
+### Validacao
+
+- `pnpm --dir frontend exec biome check --write "src/app/app/community/logic.tsx"`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local `200` em `/community`
+- Screenshot local desktop/mobile
+- Chrome/CDP em `/community`: desktop com bloco de populares sem overflow horizontal, mobile com `documentWidth=390`, card de destaque sem segunda camada radial e copy `seguidores` nos cards.
