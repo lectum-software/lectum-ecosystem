@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Copy, Loader2, type LucideIcon, MoreHorizontal, X } from "lucide-react";
+import { Copy, Loader2, type LucideIcon, MoreHorizontal, X } from "lucide-react";
 import Image from "next/image";
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -36,7 +36,7 @@ const CLOSE_ANIMATION_MS = 220;
 const DRAG_CLOSE_THRESHOLD_PX = 96;
 const DRAG_START_TOLERANCE_PX = 4;
 
-const sharePreviewClassName = "w-[min(74vw,300px,31.5dvh)] sm:w-[min(46vw,300px,29dvh)]";
+const sharePreviewClassName = "w-[min(74vw,300px,31.5dvh)] sm:w-[min(38vw,224px,24dvh)]";
 
 const sharePreviewCardClassName =
   "top-[6.5%] left-[8%] right-[8%] overflow-hidden rounded-[22px] sm:top-[7%] sm:left-[10%] sm:right-[10%]";
@@ -107,7 +107,7 @@ const SharePreview = ({ target }: { target: LectumShareVideoTarget }) => {
         <video
           aria-label="Prévia do vídeo-resposta no layout de compartilhamento Lectum"
           autoPlay
-          className="absolute inset-0 h-full w-full object-cover"
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
           crossOrigin="anonymous"
           loop
           muted
@@ -194,7 +194,7 @@ const ShareSheetOption = ({
 }: ShareSheetOptionProps) => (
   <button
     aria-label={label}
-    className="group grid w-[58px] shrink-0 justify-items-center gap-1.5 rounded-2xl py-1 text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 disabled:cursor-not-allowed disabled:opacity-60 sm:w-[68px]"
+    className="group grid w-[58px] shrink-0 justify-items-center gap-1.5 rounded-2xl py-1 text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 disabled:cursor-not-allowed disabled:opacity-60"
     disabled={disabled}
     onClick={onClick}
     type="button"
@@ -238,13 +238,13 @@ export const LectumShareVideoModal = (props: LectumShareVideoModalProps) => {
 
 const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoDialogProps) => {
   const closeTimeoutRef = useRef<number | null>(null);
+  const closeRequestedRef = useRef(false);
   const dragStateRef = useRef<DragState | null>(null);
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const [dragOffset, setDragOffset] = useState(0);
   const [isClosing, setIsClosing] = useState(false);
   const [isEntered, setIsEntered] = useState(false);
   const [pendingAction, setPendingAction] = useState<ShareActionId | null>(null);
-  const [status, setStatus] = useState<"copied" | "downloaded" | "idle" | "shared">("idle");
   const [error, setError] = useState<string | null>(null);
   const exporting = pendingAction !== null;
   const sourceLabel = useMemo(() => {
@@ -252,14 +252,15 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
   }, [target]);
 
   const requestClose = useCallback(() => {
-    if (isClosing) return;
+    if (closeRequestedRef.current) return;
 
+    closeRequestedRef.current = true;
     setDragOffset(0);
     setIsClosing(true);
     closeTimeoutRef.current = window.setTimeout(() => {
       onClose();
     }, CLOSE_ANIMATION_MS);
-  }, [isClosing, onClose]);
+  }, [onClose]);
 
   useEffect(() => {
     const scrollY = window.scrollY;
@@ -370,14 +371,17 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
   const handleShareToDevice = async (actionId: ShareActionId) => {
     setPendingAction(actionId);
     setError(null);
-    setStatus("idle");
 
     try {
       const result = await shareLectumVideoResponse(target);
       if (result.channel) {
         onShared(result.channel);
       }
-      setStatus(result.mode === "download" ? "downloaded" : "shared");
+      toast.success(
+        result.mode === "download"
+          ? "Arquivo baixado para escolher no app desejado."
+          : "Compartilhamento aberto no dispositivo.",
+      );
     } catch {
       setError(
         "Não foi possível gerar o arquivo agora. Você ainda pode copiar o link direto da resposta.",
@@ -394,7 +398,7 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
     try {
       await copyLectumShareUrl(target);
       onShared("clipboard");
-      setStatus("copied");
+      toast.success("Link copiado.");
     } catch {
       setError("Não foi possível copiar o link neste navegador.");
     } finally {
@@ -405,7 +409,6 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
   const handleCopyText = async () => {
     setPendingAction("copy_text");
     setError(null);
-    setStatus("idle");
 
     try {
       await copyLectumShareText(target);
@@ -439,12 +442,14 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
         aria-label="Fechar compartilhamento ao clicar fora"
         className="absolute inset-0 z-0 cursor-default"
         onClick={requestClose}
+        onPointerDown={requestClose}
+        tabIndex={-1}
         type="button"
       />
-      <div className="pointer-events-none relative z-10 mx-auto flex min-h-dvh w-full max-w-[430px] items-end sm:min-h-0 sm:max-w-[450px]">
+      <div className="pointer-events-none relative z-10 mx-auto flex min-h-dvh w-full max-w-[430px] items-end sm:min-h-0 sm:max-w-[380px]">
         <div
           className={cn(
-            "pointer-events-auto relative max-h-[94dvh] w-full overscroll-contain overflow-y-auto rounded-t-[34px] border border-border bg-surface px-4 pt-14 pb-[max(1rem,env(safe-area-inset-bottom))] text-foreground shadow-[var(--lectum-shadow)] sm:max-h-[calc(100dvh-2rem)] sm:overflow-visible sm:rounded-[34px] sm:px-6 sm:pt-12 sm:pb-5",
+            "pointer-events-auto relative max-h-[94dvh] w-full touch-none select-none overscroll-contain overflow-y-auto rounded-t-[34px] border border-border bg-surface px-4 pt-14 pb-[max(1rem,env(safe-area-inset-bottom))] text-foreground shadow-[var(--lectum-shadow)] will-change-transform sm:max-h-[calc(100dvh-2rem)] sm:overflow-visible sm:rounded-[34px] sm:px-5 sm:pt-10 sm:pb-4",
             dragOffset > 0
               ? "transition-none"
               : "transition-transform duration-200 ease-out motion-reduce:transition-none",
@@ -458,9 +463,15 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
         >
           <button
             aria-label="Fechar compartilhamento"
-            className="absolute top-4 right-4 z-20 grid h-10 w-10 place-items-center rounded-full border border-border bg-surface-muted text-foreground transition hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 sm:top-5 sm:right-5"
-            onClick={requestClose}
-            onPointerDown={(event) => event.stopPropagation()}
+            className="absolute top-4 right-4 z-20 grid h-10 w-10 place-items-center rounded-full border border-border bg-surface-muted text-foreground transition hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 sm:top-4 sm:right-4"
+            onClick={(event) => {
+              event.stopPropagation();
+              requestClose();
+            }}
+            onPointerDown={(event) => {
+              event.stopPropagation();
+              requestClose();
+            }}
             type="button"
           >
             <X className="h-5 w-5" aria-hidden="true" />
@@ -500,17 +511,6 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
           {error ? (
             <p className="mt-4 rounded-2xl border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-semibold text-danger">
               {error}
-            </p>
-          ) : null}
-
-          {status !== "idle" ? (
-            <p className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-success/20 bg-success/10 px-3 py-2 text-sm font-bold text-success">
-              <Check className="h-4 w-4" aria-hidden="true" />
-              {status === "downloaded"
-                ? "Arquivo baixado para escolher no app desejado."
-                : status === "copied"
-                  ? "Link copiado."
-                  : "Compartilhamento aberto no dispositivo."}
             </p>
           ) : null}
         </div>
