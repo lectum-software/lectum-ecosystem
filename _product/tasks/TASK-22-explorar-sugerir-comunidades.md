@@ -230,3 +230,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Fonte visual/auditavel: screenshot do usuario em `/app/community/suggest` e referencia local `_product/proto/Sugerir Comunidade.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0106-ilustracao-solicitacao-comunidade.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check --write "src/app/app/community/suggest/logic.tsx"`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check` e HTTP local `200` em `/app/community/suggest`. Observacao de browser: a rota renderiza guard de perfil protegido em perfil headless sem sessao; a validacao visual autenticada foi baseada no screenshot do usuario e no codigo renderizado da tela protegida.
+
+## Execucao complementar: legibilidade dos cards e seta do carrossel (2026-07-01)
+
+- Pedido do usuario: remover a tag `Autocuidado` do card `Tendencia Hoje`, reforcar overlay escuro nos cards para legibilidade e impedir que o clique na seta desktop do carrossel `Mais Populares` abra a comunidade.
+- Fonte visual/auditavel: screenshot do usuario em `/community` e referencia local `_product/proto/Explorar Comunidades.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: o card `Tendencia Hoje` passou a renderizar apenas a tag de destaque/crescimento, sem duplicar a categoria da comunidade em destaque.
+- Frontend: os overlays dos cards principal e populares foram escurecidos de forma mais consistente do topo ao rodape, preservando imagens, gradientes, CTAs, rotas e dados reais.
+- Frontend: a camada da seta desktop do carrossel ganhou prioridade de empilhamento e o clique no botao agora cancela propagacao/navegacao antes de aplicar o scroll horizontal.
+- Nao houve alteracao de backend, Prisma schema, migrations, endpoints, payloads, dados, ordenacao ou packages.
+- ADR atualizado: `adrs/0107-explorar-comunidades-conteudo-centralizado.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check --write "src/app/app/community/logic.tsx"`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, HTTP local `200` em `/community`, screenshot local em desktop/mobile e Chrome/CDP validando tag removida, ausencia de overflow mobile (`documentWidth=390`) e clique da seta com `href` preservado e `scrollLeft` alterado.

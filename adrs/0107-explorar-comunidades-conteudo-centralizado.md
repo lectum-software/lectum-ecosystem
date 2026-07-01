@@ -118,3 +118,31 @@ A rota `/app/community` voltou a exibir o fundo estrutural cinza do token `bg-ba
 - `git diff --check`
 - HTTP local `200` em `/app/community`
 - Chrome/CDP local validando `contentBackground` e `stickyBackground` como `rgb(255, 255, 255)`.
+
+## Atualizacao 2026-07-01 - legibilidade dos cards e clique da seta
+
+### Contexto
+
+Na rota publica `/community`, a comunidade em destaque exibida em `Tendencia Hoje` mostrava duas tags visuais (`Destaque` e `Autocuidado`), deixando o card mais carregado do que o necessario. Alem disso, os textos sobre as imagens dos cards ainda competiam com trechos claros dos assets, e a seta desktop do carrossel `Mais Populares` podia receber o clique de forma ambigua, abrindo a comunidade posicionada abaixo em vez de apenas rolar horizontalmente.
+
+### Decisao
+
+- O card de tendencia renderiza somente a tag de destaque/crescimento; categorias continuam visiveis nos cards populares.
+- Os overlays dos cards foram reforcados de maneira consistente do topo ao rodape, mantendo a mesma estrutura de imagem, CTA e link.
+- A seta desktop do carrossel ganhou `z-index` dedicado e o handler do botao cancela `preventDefault`/`stopPropagation` antes de executar `scrollBy`.
+
+### Consequencias
+
+- A hierarquia do card em destaque fica mais limpa e menos redundante.
+- A legibilidade dos textos dos cards melhora sem trocar assets, dados ou arquitetura.
+- O controle do carrossel passa a ter comportamento previsivel: clique na seta rola o carrossel e nao navega para a comunidade.
+- A mudanca permanece exclusivamente frontend/visual e nao altera backend, Prisma, endpoints, payloads, ordenacao, persistencia ou packages.
+
+### Validacao
+
+- `pnpm --dir frontend exec biome check --write "src/app/app/community/logic.tsx"`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- HTTP local `200` em `/community`
+- Screenshot local desktop/mobile
+- Chrome/CDP em `/community`: tag `Autocuidado` ausente no card `Tendencia Hoje`, `documentWidth=390` no mobile e clique da seta mantendo `href` em `/community` enquanto altera `scrollLeft`.

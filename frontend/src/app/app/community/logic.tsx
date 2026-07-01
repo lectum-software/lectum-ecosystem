@@ -78,22 +78,17 @@ const FeaturedCommunity = ({ community }: { community: CommunityExploreCard }) =
       />
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.08)_0%,rgba(2,6,23,0.44)_42%,rgba(2,6,23,0.9)_100%)]"
+        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.34)_0%,rgba(2,6,23,0.58)_48%,rgba(2,6,23,0.94)_100%)]"
       />
       <div
         aria-hidden="true"
-        className="absolute inset-x-0 bottom-0 h-2/3 bg-[radial-gradient(ellipse_at_50%_100%,rgba(15,23,42,0.96),rgba(15,23,42,0.52)_52%,transparent_76%)]"
+        className="absolute inset-x-0 bottom-0 h-2/3 bg-[radial-gradient(ellipse_at_50%_100%,rgba(15,23,42,0.98),rgba(15,23,42,0.68)_54%,transparent_78%)]"
       />
       <div className="relative z-10 flex h-full min-h-[154px] flex-col justify-end gap-3 sm:min-h-[184px]">
         <div className="flex flex-wrap items-center gap-2">
           <span className="w-fit rounded-full border border-white/20 bg-white/18 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.1em] text-white backdrop-blur">
             {community.growthLabel ?? "Destaque"}
           </span>
-          {community.category ? (
-            <span className="w-fit rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[10px] font-bold text-white/90 backdrop-blur">
-              {community.category}
-            </span>
-          ) : null}
         </div>
         <div className="grid gap-2">
           <h2 className="max-w-xl text-[1.65rem] font-black leading-[0.98] tracking-[-0.05em] sm:text-[2.35rem]">
@@ -127,7 +122,7 @@ const CommunityCard = ({ community }: { community: CommunityExploreCard }) => {
       />
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.04)_0%,rgba(2,6,23,0.26)_44%,rgba(2,6,23,0.92)_100%)]"
+        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.32)_0%,rgba(2,6,23,0.54)_48%,rgba(2,6,23,0.94)_100%)]"
       />
       <span className="absolute left-4 top-4 z-10 w-fit rounded-full border border-white/20 bg-white/18 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.08em] text-white backdrop-blur">
         {community.category ?? "Comunidade"}
@@ -202,11 +197,15 @@ const PopularCommunitiesCarousel = ({ communities }: { communities: CommunityExp
       </div>
 
       {canScrollNext ? (
-        <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-24 items-center justify-end pr-1 lg:flex">
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-20 hidden w-24 items-center justify-end pr-1 lg:flex">
           <button
             aria-label="Ver mais comunidades populares"
             className="pointer-events-auto grid h-10 w-10 place-items-center rounded-full border border-[#DCE7F2] bg-white/92 text-primary backdrop-blur transition hover:border-primary/35 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-            onClick={scrollNext}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              scrollNext();
+            }}
             type="button"
           >
             <ChevronRight className="h-[18px] w-[18px]" aria-hidden="true" />
