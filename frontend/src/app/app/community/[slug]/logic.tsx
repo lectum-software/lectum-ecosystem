@@ -73,6 +73,7 @@ import { useProgressiveConversion } from "@/components/conversion/progressive-co
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { Input } from "@/registry/new-york-v4/ui/input";
@@ -2280,11 +2281,24 @@ const CommunityPublishOnboarding = ({
   onCreatePostClick?: (event: ReactMouseEvent<HTMLAnchorElement>, href: string) => void;
   variant: CommunityPublishOnboardingVariant;
 }) => {
+  const currentUser = useAppSelector((state) => state.user);
+  const isPsychologistUser = currentUser?.role === "psicologo";
   const accountTips = useAccount({
     enableSecurity: false,
     enableTips: true,
   });
   const accountTipsUserId = accountTips.userId;
+  const copy = isPsychologistUser
+    ? {
+        description:
+          "Depois de responder dúvidas, publicar conteúdos originais sobre temas frequentes fortalece sua autoridade e ajuda pacientes a se identificarem com sua abordagem.",
+        title: "Crie conteúdos que aproximam pacientes",
+      }
+    : {
+        description:
+          "Toque no botão + para conversar gratuitamente na comunidade e receber acolhimento dos psicólogos mediadores.",
+        title: "Publique sua dúvida ou relato",
+      };
   const [hasLoadedPreference, setHasLoadedPreference] = useState(false);
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
@@ -2293,9 +2307,13 @@ const CommunityPublishOnboarding = ({
   const placement = COMMUNITY_PUBLISH_ONBOARDING_PLACEMENT[variant];
 
   const persistSeen = useCallback(() => {
+    const hasSeenCurrentTip = isPsychologistUser
+      ? accountTips.onboardingTips.data?.has_seen_psychologist_original_post_tip
+      : accountTips.onboardingTips.data?.has_seen_community_post_tip;
+
     if (
       hasPersistedSeenRef.current ||
-      accountTips.onboardingTips.data?.has_seen_community_post_tip ||
+      hasSeenCurrentTip ||
       accountTips.updateOnboardingTips.isPending
     ) {
       return;
@@ -2303,9 +2321,13 @@ const CommunityPublishOnboarding = ({
 
     hasPersistedSeenRef.current = true;
     accountTips.updateOnboardingTips.mutate(
-      {
-        has_seen_community_post_tip: true,
-      },
+      isPsychologistUser
+        ? {
+            has_seen_psychologist_original_post_tip: true,
+          }
+        : {
+            has_seen_community_post_tip: true,
+          },
       {
         onError: () => {
           hasPersistedSeenRef.current = false;
@@ -2314,7 +2336,9 @@ const CommunityPublishOnboarding = ({
     );
   }, [
     accountTips.onboardingTips.data?.has_seen_community_post_tip,
+    accountTips.onboardingTips.data?.has_seen_psychologist_original_post_tip,
     accountTips.updateOnboardingTips,
+    isPsychologistUser,
   ]);
 
   const dismiss = useCallback(() => {
@@ -2332,6 +2356,33 @@ const CommunityPublishOnboarding = ({
     },
     [createPostHref, onCreatePostClick, persistSeen],
   );
+
+  useEffect(() => {
+    if (!accountTipsUserId || typeof document === "undefined") return;
+
+    const expectedHref = new URL(createPostHref, window.location.origin);
+    const expectedPath = expectedHref.pathname + expectedHref.search + expectedHref.hash;
+
+    const handleCreatePostAnchorClick = (event: globalThis.MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+
+      const anchor = target.closest<HTMLAnchorElement>("a[href]");
+      if (!anchor) return;
+
+      const anchorHref = new URL(anchor.href, window.location.origin);
+      const anchorPath = anchorHref.pathname + anchorHref.search + anchorHref.hash;
+      if (anchorPath !== expectedPath) return;
+
+      persistSeen();
+      setHasSeenOnboarding(true);
+      setIsVisible(false);
+    };
+
+    document.addEventListener("click", handleCreatePostAnchorClick, true);
+
+    return () => document.removeEventListener("click", handleCreatePostAnchorClick, true);
+  }, [accountTipsUserId, createPostHref, persistSeen]);
 
   useEffect(() => {
     hasSyncedPreferenceRef.current = false;
@@ -2363,7 +2414,12 @@ const CommunityPublishOnboarding = ({
         return;
       }
 
-      setHasSeenOnboarding(Boolean(accountTips.onboardingTips.data.has_seen_community_post_tip));
+      const tips = accountTips.onboardingTips.data;
+      const hasSeenCurrentTip = isPsychologistUser
+        ? !tips.has_seen_psychologist_reply_tip || tips.has_seen_psychologist_original_post_tip
+        : tips.has_seen_community_post_tip;
+
+      setHasSeenOnboarding(Boolean(hasSeenCurrentTip));
       setHasLoadedPreference(true);
     });
 
@@ -2372,6 +2428,7 @@ const CommunityPublishOnboarding = ({
     accountTips.onboardingTips.data,
     accountTips.onboardingTips.isPending,
     accountTips.onboardingTips.isSuccess,
+    isPsychologistUser,
   ]);
 
   useEffect(() => {
@@ -2449,12 +2506,9 @@ const CommunityPublishOnboarding = ({
               className="font-extrabold text-[1.05rem] text-foreground leading-tight"
               id="community-publish-onboarding-title"
             >
-              Publique sua dúvida ou relato
+              {copy.title}
             </h2>
-            <p className="text-sm text-subtle leading-relaxed">
-              Toque no botão + para conversar gratuitamente na comunidade e receber acolhimento dos
-              psicólogos mediadores.
-            </p>
+            <p className="text-sm text-subtle leading-relaxed">{copy.description}</p>
           </div>
         </div>
       </section>

@@ -37,6 +37,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useAccount } from "@/api/callers/account";
 import {
   useCreatePostReply,
   useDeleteReply,
@@ -72,6 +73,7 @@ import {
 } from "@/components/community/reply-media-attachment-control";
 import { components } from "@/components/controllers";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
+import { ActionableCoachMark } from "@/components/onboarding/actionable-coach-mark";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -131,6 +133,8 @@ const DETAIL_INLINE_TEXT_LESS_LABEL = "ver menos";
 const COMMENT_GUIDANCE_MESSAGE = "Comente com respeito e empatia, mesmo quando discordar.";
 const POST_DETAIL_MOBILE_QUERY = "(max-width: 639px)";
 const POST_REPLY_CANCEL_DRAG_THRESHOLD = 56;
+const PSYCHOLOGIST_COMMUNITY_REPLY_TIP_SELECTOR =
+  '[data-psychologist-tip-target="community-reply"]';
 const FOCUSED_REPLY_HIGHLIGHT_CLASSES = ["lectum-reply-focus-pulse"] as const;
 const FOCUSED_REPLY_HIGHLIGHT_DURATION_MS = 3200;
 const FOCUSED_REPLY_RETRY_ATTEMPTS = 30;
@@ -958,6 +962,7 @@ const PostVoteBar = ({
   currentVote,
   disabled,
   onFocusCommentComposer,
+  replyTipTarget,
   onShare,
   onToggleSave,
   onVote,
@@ -966,6 +971,7 @@ const PostVoteBar = ({
   currentVote: 1 | -1 | null;
   disabled?: boolean;
   onFocusCommentComposer: () => void;
+  replyTipTarget?: string;
   onShare: () => void;
   onToggleSave: () => void;
   onVote: (value: 1 | -1) => void;
@@ -977,6 +983,7 @@ const PostVoteBar = ({
       count: post.replies_count,
       label: "Comentar no post",
       onClick: onFocusCommentComposer,
+      tipTarget: replyTipTarget,
     }}
     currentVote={currentVote}
     disabled={disabled}
@@ -2168,7 +2175,13 @@ export const PostDetailLogic = () => {
   const postId = typeof params.id === "string" ? params.id : "";
   const focusReplyIdFromUrl = searchParams.get("focusReplyId")?.trim() || null;
   const isMobile = useIsPostDetailMobile();
-  const currentUserId = useAppSelector((state) => state.user?.id ?? null);
+  const currentUser = useAppSelector((state) => state.user);
+  const currentUserId = currentUser?.id ?? null;
+  const isPsychologistUser = currentUser?.role === "psicologo";
+  const accountTips = useAccount({
+    enableSecurity: false,
+    enableTips: isPsychologistUser,
+  });
   const conversion = useProgressiveConversion();
   const [loadedReplyPages, setLoadedReplyPages] = useState(() => createReplyPageRange(1));
   const [activeFocusReplyId, setActiveFocusReplyId] = useState<string | null>(focusReplyIdFromUrl);
@@ -2183,7 +2196,10 @@ export const PostDetailLogic = () => {
   const composerRef = useRef<HTMLFormElement | null>(null);
   const inlineReplyFormRef = useRef<HTMLFormElement | null>(null);
   const inlineReplyHasDraftRef = useRef(false);
+  const hasShownPsychologistReplyTipThisVisitRef = useRef(false);
+  const hasPersistedPsychologistReplyTipSeenRef = useRef(false);
   const loadMoreRepliesRef = useRef<HTMLDivElement | null>(null);
+  const [showPsychologistReplyTip, setShowPsychologistReplyTip] = useState(false);
   const mediaPermission = useReplyMediaPermission();
   const postQuery = usePostDetail(postId);
   const replyPageQueries = usePostRepliesPages(
@@ -2258,6 +2274,14 @@ export const PostDetailLogic = () => {
   const hasDesktopReplyTargets = !isMobile && Object.keys(desktopReplyTargets).length > 0;
   const activeMobileReplyTarget = isMobile ? mobileReplyTarget : null;
   const visibleInlineReplyTargets = isMobile ? EMPTY_REPLY_TARGETS : desktopReplyTargets;
+  const isPatientAuthoredPost = post?.author.role === "paciente";
+  const canShowPsychologistReplyTip =
+    isPsychologistUser &&
+    Boolean(isPatientAuthoredPost) &&
+    accountTips.onboardingTips.isSuccess &&
+    !accountTips.onboardingTips.data?.has_seen_psychologist_reply_tip;
+  const shouldExposePsychologistReplyTipTarget =
+    canShowPsychologistReplyTip || showPsychologistReplyTip;
   const resetReplyFocusHighlight = useReplyFocusHighlight(
     activeFocusReplyId,
     isRepliesFetching || Boolean(focusLookupReplyId),
@@ -2363,6 +2387,46 @@ export const PostDetailLogic = () => {
     }
   };
 
+  const persistPsychologistReplyTipSeen = useCallback(() => {
+    if (
+      !accountTips.userId ||
+      hasPersistedPsychologistReplyTipSeenRef.current ||
+      accountTips.onboardingTips.data?.has_seen_psychologist_reply_tip ||
+      accountTips.updateOnboardingTips.isPending
+    ) {
+      return;
+    }
+
+    hasPersistedPsychologistReplyTipSeenRef.current = true;
+    accountTips.updateOnboardingTips.mutate(
+      {
+        has_seen_psychologist_reply_tip: true,
+      },
+      {
+        onError: () => {
+          hasPersistedPsychologistReplyTipSeenRef.current = false;
+        },
+      },
+    );
+  }, [
+    accountTips.onboardingTips.data?.has_seen_psychologist_reply_tip,
+    accountTips.updateOnboardingTips,
+    accountTips.userId,
+  ]);
+
+  useEffect(() => {
+    hasShownPsychologistReplyTipThisVisitRef.current = false;
+    hasPersistedPsychologistReplyTipSeenRef.current = false;
+
+    const frame = window.requestAnimationFrame(() => setShowPsychologistReplyTip(false));
+
+    if (!accountTips.userId) {
+      return () => window.cancelAnimationFrame(frame);
+    }
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [accountTips.userId]);
+
   const setInlineReplyDraftState = useCallback((hasDraft: boolean) => {
     inlineReplyHasDraftRef.current = hasDraft;
   }, []);
@@ -2383,6 +2447,11 @@ export const PostDetailLogic = () => {
 
   const focusMainComposer = useCallback(() => {
     setReplyError(null);
+    if (isPsychologistUser && isPatientAuthoredPost) {
+      hasShownPsychologistReplyTipThisVisitRef.current = true;
+      persistPsychologistReplyTipSeen();
+      setShowPsychologistReplyTip(false);
+    }
     if (!conversion.isAuthenticated) {
       conversion.requestConversion("trigger_comentar", {
         intent: {
@@ -2407,7 +2476,14 @@ export const PostDetailLogic = () => {
 
       inputNode?.focus({ preventScroll: true });
     }, 0);
-  }, [conversion, isMobile, postId]);
+  }, [
+    conversion,
+    isMobile,
+    isPatientAuthoredPost,
+    isPsychologistUser,
+    persistPsychologistReplyTipSeen,
+    postId,
+  ]);
 
   const handleReplyTarget = useCallback(
     (reply: PostReply) => {
@@ -2548,6 +2624,23 @@ export const PostDetailLogic = () => {
   };
 
   useEffect(() => {
+    if (!canShowPsychologistReplyTip) return;
+    if (hasShownPsychologistReplyTipThisVisitRef.current) return;
+    if (!post) return;
+
+    const timeout = window.setTimeout(() => {
+      if (hasShownPsychologistReplyTipThisVisitRef.current) return;
+      if (!document.querySelector(PSYCHOLOGIST_COMMUNITY_REPLY_TIP_SELECTOR)) return;
+
+      hasShownPsychologistReplyTipThisVisitRef.current = true;
+      setShowPsychologistReplyTip(true);
+      persistPsychologistReplyTipSeen();
+    }, 700);
+
+    return () => window.clearTimeout(timeout);
+  }, [canShowPsychologistReplyTip, persistPsychologistReplyTipSeen, post]);
+
+  useEffect(() => {
     if (!conversion.isAuthenticated || !post) return;
 
     const intent = conversion.consumePendingIntent((candidate) => {
@@ -2590,6 +2683,21 @@ export const PostDetailLogic = () => {
       navigationTheme="solidWhite"
       showHeader
     >
+      {showPsychologistReplyTip ? (
+        <ActionableCoachMark
+          onDismiss={() => setShowPsychologistReplyTip(false)}
+          placement="bottom"
+          targetSelector={PSYCHOLOGIST_COMMUNITY_REPLY_TIP_SELECTOR}
+          title="Sua resposta pode virar uma consulta"
+        >
+          <p>
+            Responder pacientes na comunidade é seu principal conversor na Lectum. Cada resposta
+            mostra sua forma de cuidado, gera confiança antes da primeira conversa e aumenta muito a
+            chance de receber contato.
+          </p>
+        </ActionableCoachMark>
+      ) : null}
+
       <section className="mx-auto min-h-screen w-full max-w-[430px] bg-background pb-6 text-[#182033] dark:text-foreground sm:max-w-2xl lg:max-w-3xl">
         {postQuery.isLoading || postQuery.isPending ? (
           <div className="grid min-h-[70vh] place-items-center px-5">
@@ -2631,6 +2739,9 @@ export const PostDetailLogic = () => {
                 currentVote={post.current_user_vote}
                 disabled={voteMutation.isPending || saveMutation.isPending}
                 onFocusCommentComposer={focusMainComposer}
+                replyTipTarget={
+                  shouldExposePsychologistReplyTipTarget ? "community-reply" : undefined
+                }
                 onShare={sharePost}
                 onToggleSave={handleTogglePostSave}
                 onVote={(value) => voteMutation.mutate({ value })}

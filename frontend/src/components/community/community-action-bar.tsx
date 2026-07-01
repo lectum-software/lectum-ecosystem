@@ -19,6 +19,7 @@ type ActionWithCount = {
   href?: string;
   label?: string;
   onClick?: ActionHandler;
+  tipTarget?: string;
 };
 
 type SaveAction = {
@@ -46,6 +47,7 @@ export type CommunityActionBarProps = {
     label?: string;
     onClick: ActionHandler;
     textOnly?: boolean;
+    tipTarget?: string;
   };
   save?: SaveAction;
   share?: ShareAction;
@@ -184,6 +186,7 @@ export const CommunityActionBar = ({
           comments.href ? (
             <PostActionLink
               count={comments.count}
+              data-psychologist-tip-target={comments.tipTarget}
               href={comments.href}
               icon={MessageCircle}
               label={comments.label ?? "Comentar"}
@@ -192,6 +195,7 @@ export const CommunityActionBar = ({
           ) : comments.onClick ? (
             <PostActionButton
               count={comments.count}
+              data-psychologist-tip-target={comments.tipTarget}
               icon={MessageCircle}
               label={comments.label ?? "Comentar"}
               onClick={stopActionPropagation(comments.onClick)}
@@ -211,6 +215,7 @@ export const CommunityActionBar = ({
           <button
             aria-label={reply.label ?? "Responder"}
             className={textOnlyReplyClassName(size)}
+            data-psychologist-tip-target={reply.tipTarget}
             data-reply-open-trigger="true"
             onClick={stopActionPropagation(reply.onClick)}
             title={reply.label ?? "Responder"}
@@ -220,6 +225,7 @@ export const CommunityActionBar = ({
           </button>
         ) : reply ? (
           <PostActionButton
+            data-psychologist-tip-target={reply.tipTarget}
             icon={Reply}
             label={reply.label ?? "Responder"}
             onClick={stopActionPropagation(reply.onClick)}
