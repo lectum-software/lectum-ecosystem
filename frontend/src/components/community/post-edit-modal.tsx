@@ -39,7 +39,7 @@ const postEditSchema = z.object({
     .string()
     .trim()
     .min(3, "Escreva um título com pelo menos 3 caracteres")
-    .max(140, "Use no máximo 140 caracteres no título"),
+    .max(100, "Use no máximo 100 caracteres no título"),
   content: z
     .string()
     .trim()
@@ -145,7 +145,7 @@ const buildFields = ({
         ? psychologistTitlePlaceholder
         : "Título (Diga o assunto ou faça uma pergunta)",
       required: true,
-      max: 140,
+      max: 100,
       autoFocus: true,
       rows: 1,
       autoGrow: true,

@@ -22,6 +22,7 @@ export function TextareaController<FormType extends FieldValues>({
   readOnly,
   tabIndex,
   rows = 4,
+  max,
   onChangeCallback,
 }: ControllerFieldProps<FormType>) {
   const inputId = fieldId(name, id);
@@ -71,6 +72,7 @@ export function TextareaController<FormType extends FieldValues>({
               disabled={disabled}
               id={inputId}
               name={field.name}
+              maxLength={typeof max === "number" ? max : undefined}
               onBlur={field.onBlur}
               onChange={(event) => {
                 const nextValue = event.target.value;

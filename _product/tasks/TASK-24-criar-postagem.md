@@ -141,6 +141,7 @@ Regras anti-recriação específicas:
 - [x] Decisão de moderação (publicar vs pré-moderar) registrada no ADR alvo.
 - [x] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
 - [x] Backend implementado nos endpoints/modelos esperados quando aplicável.
+- [x] Título de post limitado a 100 caracteres na criação e edição, com validação no backend.
 - [x] Todos os estados obrigatórios existem e usam textos em PT-BR.
 - [x] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
 - [x] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
@@ -389,3 +390,14 @@ Validacoes finais deste complemento:
 - ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, ESLint direcionado em `src/app/app/community/[slug]/post/new/logic.tsx` e Chrome/CDP headless em `http://localhost:3000/app/community/feed/post/new`, confirmando dialog `Criar Post`, overlay com `opacity=1`, fundo escuro `bg-foreground/45` computado e `backdrop-filter: blur(8px)`.
 - Observação: uma tentativa posterior de `pnpm check`/`pnpm check:frontend` no workspace sujo falhou por alterações pendentes fora deste escopo (`frontend/src/app/app/community/[slug]/logic.tsx` e `frontend/src/app/app/community/[slug]/post/[id]/logic.tsx`), não relacionadas ao ajuste do backdrop.
+
+## Complemento 2026-07-01 - limite de 100 caracteres no título
+
+- Pedido do usuário: limitar o título do post a 100 caracteres, sem limitar a exibição a 2 linhas no feed/listagem e sem exibir contador no formulário.
+- Backend: validadores reais de `POST /api/private/community/:slug/posts` e `PUT /api/private/posts/:id` passaram de `max: 140` para `max: 100` no campo `title`.
+- Frontend: os schemas Zod de criação e edição usam o mesmo limite de 100 caracteres; o controller compartilhado de textarea passou a respeitar `max` como `maxLength`, sem contador visual.
+- Contrato de produto atualizado em `DATA-MODEL.md`: `community_post.title` mantém obrigatoriedade e passa a registrar limite de produto/API de 100 caracteres.
+- Escopo deliberadamente excluído conforme orientação do usuário: nenhum clamp de duas linhas no feed/listagem e nenhum contador `x/100` nos formulários.
+- Fonte visual auditável: a decisão nasceu de validação visual sobre o card/feed existente; não houve nova tela nem necessidade de Builder/Quick Copy. O inventário ativo segue `_product/proto/Feed Comunidade.jpg` e `_product/proto/Criar Nova Postagem - Pacientes.jpg`/`Criar Nova Postagem - Psicólogo.jpg` para contexto.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+- Validações executadas: `git diff --check`, `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir backend build`, `pnpm --dir frontend build` e `pnpm check`.

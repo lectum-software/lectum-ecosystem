@@ -389,7 +389,7 @@ Governança: comunidades são criadas/curadas apenas por administradores da plat
 |---|---|---|
 | `community_id` | `String` | |
 | `author_id` | `String` | paciente ou psicólogo (ambos postam, proto separa só o layout) |
-| `title` | `String` | |
+| `title` | `String` | título obrigatório; limite de produto/API: 100 caracteres |
 | `content` | `String` | texto |
 | `media_url` / `media_type` | `String?` | midia opcional em posts de psicologos aptos; `media_type` inicialmente `"video"` ou `"image"` e a URL deve vir do upload R2 em `/public/files/posts/media/` |
 | `media_items` | `community_post_media[]` | itens ativos do carrossel de imagens, ordenados por `position`; manter `media_url`/`media_type` como compatibilidade para a primeira midia ativa |

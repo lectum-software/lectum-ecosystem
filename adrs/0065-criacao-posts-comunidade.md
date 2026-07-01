@@ -405,3 +405,30 @@ Validacao complementar:
 - `pnpm --dir frontend exec eslint "src/app/app/community/[slug]/post/new/logic.tsx"`: sucesso.
 - Chrome/CDP headless em `http://localhost:3000/app/community/feed/post/new`: sucesso ao confirmar dialog `Criar Post`, `opacity=1`, classe de overlay com `bg-foreground/45 backdrop-blur-[8px] dark:bg-background/75`, cor de fundo escura computada e `backdrop-filter: blur(8px)`.
 - `pnpm check` e nova rodada de `pnpm check:frontend` ficaram bloqueados por mudanças pendentes fora deste escopo em arquivos já modificados do workspace, especialmente lint `react-hooks/set-state-in-effect` em `frontend/src/app/app/community/[slug]/logic.tsx` e avisos de imports não usados em `frontend/src/app/app/community/[slug]/post/[id]/logic.tsx`.
+
+## Atualização 2026-07-01 - limite de título de post em 100 caracteres
+
+O título de `community_post` foi reduzido de 140 para 100 caracteres por decisão de produto, mantendo o feed sem clamp obrigatório de duas linhas e os formulários sem contador visual.
+
+Decisões complementares:
+
+- Aplicar `max: 100` nos validadores backend de criação (`POST /api/private/community/:slug/posts`) e edição (`PUT /api/private/posts/:id`) para que integrações diretas não persistam títulos longos.
+- Alinhar os schemas Zod de criação e edição no frontend ao mesmo limite de 100 caracteres.
+- Fazer o `TextareaController` respeitar a propriedade `max` como `maxLength`, sem exibir contador, para limitar a digitação nos títulos que usam textarea pela fundação da TASK-02.
+- Atualizar `DATA-MODEL.md` para registrar que `community_post.title` é obrigatório e tem limite de produto/API de 100 caracteres.
+- Não alterar a renderização do feed/listagens: títulos continuam fluindo naturalmente, sem `line-clamp` de duas linhas.
+
+Consequências:
+
+- O backend passa a ser a fronteira canônica do limite de título para criação e edição de posts.
+- A experiência de escrita fica mais curta e previsível sem adicionar ruído de contador no editor.
+- Posts existentes com títulos maiores permanecem dados legados exibíveis; a nova regra atua nas próximas criações/edições.
+
+Validação complementar 2026-07-01:
+
+- `git diff --check`: sucesso.
+- `pnpm --dir backend check`: sucesso.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir backend build`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.

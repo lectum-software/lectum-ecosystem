@@ -186,7 +186,7 @@ export const createPostSchema: IValidatorRequest = {
       coerse: "string",
       method: "string",
       min: 3,
-      max: 140,
+      max: 100,
     },
     {
       key: "content",
