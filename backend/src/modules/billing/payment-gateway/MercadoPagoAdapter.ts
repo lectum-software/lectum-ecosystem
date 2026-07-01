@@ -3,6 +3,7 @@ import { MercadoPagoConfig, PreApproval, PreApprovalPlan } from "mercadopago";
 import type { Options as MercadoPagoOptions } from "mercadopago/dist/types";
 import type {
   BillingSubscriptionStatus,
+  GatewayPendingSubscriptionInput,
   GatewaySubscription,
   GatewaySubscriptionInput,
   GatewaySubscriptionPlanInput,
@@ -282,6 +283,51 @@ export class MercadoPagoAdapter implements PaymentGateway {
             idempotencyKey: `lectum-preapproval-${subscriptionId}`,
           },
           { includeSandboxScope: !hasAssociatedPlan },
+        ),
+      }),
+    );
+
+    if (!response.id) {
+      throw new Error("MERCADO_PAGO_PREAPPROVAL_ID_MISSING");
+    }
+
+    return {
+      gateway_subscription_id: response.id,
+      status: normalizeStatus(response.status),
+      gateway_status: response.status ?? null,
+      init_point: response.init_point ?? null,
+      next_payment_date: response.next_payment_date ?? null,
+      raw: response,
+    };
+  }
+
+  async createPendingSubscription({
+    subscriptionId,
+    planName,
+    amountCents,
+    payerEmail,
+    returnUrl,
+  }: GatewayPendingSubscriptionInput): Promise<GatewaySubscriptionResult> {
+    const response = await this.runGatewayOperation("create_pending_subscription", () =>
+      this.preApproval.create({
+        body: {
+          auto_recurring: {
+            frequency: 1,
+            frequency_type: "months",
+            transaction_amount: amountCents / 100,
+            currency_id: "BRL",
+          },
+          back_url: returnUrl || undefined,
+          external_reference: subscriptionId,
+          payer_email: payerEmail,
+          reason: planName,
+          status: "pending",
+        },
+        requestOptions: this.withRequestOptions(
+          {
+            idempotencyKey: `lectum-preapproval-pending-${subscriptionId}`,
+          },
+          { includeSandboxScope: false },
         ),
       }),
     );

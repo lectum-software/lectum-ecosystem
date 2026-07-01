@@ -162,6 +162,21 @@ const isGatewayConfigError = (err: unknown) => {
   );
 };
 
+const getGatewayCauseMessage = (err: unknown) => {
+  if (!(err instanceof Error)) return "";
+
+  const errorWithDetails = err as Error & { details?: unknown };
+  const details = isRecord(errorWithDetails.details) ? errorWithDetails.details : null;
+
+  return `${err.message} ${toSafeString(details?.cause_message) || ""}`.trim();
+};
+
+const shouldFallbackToSandboxPendingSubscription = (err: unknown) => {
+  if (!isMercadoPagoSandbox()) return false;
+
+  return getGatewayCauseMessage(err).includes("Card token service not found");
+};
+
 export default async (data: ICheckoutDTO) => {
   if (data.auth.role !== "psicologo") {
     return {
@@ -272,6 +287,52 @@ export default async (data: ICheckoutDTO) => {
       },
     };
   } catch (err) {
+    if (shouldFallbackToSandboxPendingSubscription(err)) {
+      console.warn(
+        "[BILLING] Mercado Pago authorized sandbox checkout failed; trying pending preapproval fallback",
+        sanitizeGatewayError(err),
+      );
+
+      try {
+        const gatewayResult = await gateway.createPendingSubscription({
+          subscriptionId: pendingSubscription.id!,
+          planName: professionalPlan.name || "Plano Profissional Lectum",
+          amountCents: professionalPlan.price_cents,
+          payerEmail,
+          returnUrl: gatewayReturnUrl,
+        });
+
+        const current = await repository.setGatewaySubscriptionId(
+          pendingSubscription.id!,
+          gatewayResult.gateway_subscription_id,
+        );
+
+        return {
+          status: 200,
+          ...msg("billing_checkout_started", {}),
+          data: {
+            current,
+            gateway_status: gatewayResult.gateway_status,
+            pending_confirmation: true,
+            init_point: gatewayResult.init_point,
+            sandbox_pending_payment: true,
+          },
+        };
+      } catch (fallbackErr) {
+        await repository.cancelSubscription(pendingSubscription.id!);
+
+        console.error(
+          "[BILLING] Mercado Pago pending sandbox checkout failed",
+          sanitizeGatewayError(fallbackErr),
+        );
+
+        return {
+          status: 502,
+          ...error("billing_gateway_checkout_failed", {}),
+        };
+      }
+    }
+
     await repository.cancelSubscription(pendingSubscription.id!);
 
     console.error("[BILLING] Mercado Pago checkout failed", sanitizeGatewayError(err));

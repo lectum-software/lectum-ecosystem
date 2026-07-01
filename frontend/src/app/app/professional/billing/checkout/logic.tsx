@@ -146,6 +146,8 @@ export const ProfessionalBillingCheckoutLogic = () => {
   const activeProfessional = isActiveProfessional(current);
   const pendingProfessional =
     Boolean(checkoutResult?.pending_confirmation) || isPendingProfessional(current);
+  const checkoutInitPoint = checkoutResult?.init_point || null;
+  const isSandboxPendingPayment = Boolean(checkoutResult?.sandbox_pending_payment);
   const amount = professionalPlan ? professionalPlan.price_cents / 100 : 0;
 
   const initialization = useMemo(
@@ -275,8 +277,9 @@ export const ProfessionalBillingCheckoutLogic = () => {
                 <div className="grid gap-5">
                   {pendingProfessional ? (
                     <InlineAlert title="Pagamento enviado para confirmação" variant="success">
-                      A assinatura foi criada no Mercado Pago e será ativada automaticamente após o
-                      webhook confirmado. Se a confirmação já tiver ocorrido, atualize o status.
+                      {isSandboxPendingPayment
+                        ? "O Mercado Pago não aceitou o token de cartão no sandbox local, então criamos uma assinatura pendente real. Abra o link de pagamento, conclua no Mercado Pago e depois sincronize o status no backend."
+                        : "A assinatura foi criada no Mercado Pago e será ativada automaticamente após o webhook confirmado. Se a confirmação já tiver ocorrido, atualize o status."}
                     </InlineAlert>
                   ) : null}
 
@@ -322,6 +325,14 @@ export const ProfessionalBillingCheckoutLogic = () => {
 
                   {pendingProfessional ? (
                     <div className="grid gap-3 sm:grid-cols-2">
+                      {checkoutInitPoint ? (
+                        <Button asChild className="h-12 rounded-full sm:col-span-2">
+                          <a href={checkoutInitPoint} rel="noreferrer" target="_blank">
+                            Concluir no Mercado Pago
+                            <ArrowRight className="h-4 w-4" aria-hidden />
+                          </a>
+                        </Button>
+                      ) : null}
                       <Button
                         className="h-12 rounded-full"
                         onClick={() => billing.current.refetch()}

@@ -93,6 +93,7 @@ export type BillingCheckoutResponse = {
   gateway_status?: string | null;
   pending_confirmation: boolean;
   init_point?: string | null;
+  sandbox_pending_payment?: boolean;
 };
 
 export type BillingPaymentMethodPayload = {
