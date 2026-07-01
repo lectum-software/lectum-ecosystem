@@ -2,7 +2,7 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import type { CommunityPostMediaItem } from "@/api/generator/types/community";
 import {
   type CommunityMediaFrameVariant,
@@ -68,6 +68,8 @@ export const PostMediaCarousel = ({
   const [mediaMetadataByItemKey, setMediaMetadataByItemKey] = useState<
     Record<string, CommunityMediaMetadata>
   >({});
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const scrollFrameRef = useRef<number | null>(null);
   const hasMultiple = carouselItems.length > 1;
   const safeActiveIndex = Math.min(activeIndex, Math.max(0, carouselItems.length - 1));
   const activeItem = carouselItems[safeActiveIndex] ?? null;
@@ -105,21 +107,51 @@ export const PostMediaCarousel = ({
     };
   }, [carouselItems]);
 
+  useEffect(
+    () => () => {
+      if (scrollFrameRef.current !== null) {
+        window.cancelAnimationFrame(scrollFrameRef.current);
+      }
+    },
+    [],
+  );
+
   if (!activeItem) return null;
 
   const hasFooter = Boolean(footer);
   const mediaRoundedClassName = cn(roundedClassName, hasFooter && "rounded-b-none");
 
-  const goToPrevious = () => {
-    setActiveIndex((current) => {
-      const safeCurrent = Math.min(current, Math.max(0, carouselItems.length - 1));
-      return safeCurrent <= 0 ? carouselItems.length - 1 : safeCurrent - 1;
+  const scrollToIndex = (index: number) => {
+    setActiveIndex(index);
+
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    viewport.scrollTo({
+      behavior: "smooth",
+      left: index * viewport.clientWidth,
     });
   };
+  const goToPrevious = () => {
+    scrollToIndex(safeActiveIndex <= 0 ? carouselItems.length - 1 : safeActiveIndex - 1);
+  };
   const goToNext = () => {
-    setActiveIndex((current) => {
-      const safeCurrent = Math.min(current, Math.max(0, carouselItems.length - 1));
-      return safeCurrent >= carouselItems.length - 1 ? 0 : safeCurrent + 1;
+    scrollToIndex(safeActiveIndex >= carouselItems.length - 1 ? 0 : safeActiveIndex + 1);
+  };
+  const handleViewportScroll = () => {
+    if (!hasMultiple || scrollFrameRef.current !== null) return;
+
+    scrollFrameRef.current = window.requestAnimationFrame(() => {
+      scrollFrameRef.current = null;
+
+      const viewport = viewportRef.current;
+      if (!viewport || viewport.clientWidth <= 0) return;
+
+      const nextIndex = Math.min(
+        carouselItems.length - 1,
+        Math.max(0, Math.round(viewport.scrollLeft / viewport.clientWidth)),
+      );
+      setActiveIndex((current) => (current === nextIndex ? current : nextIndex));
     });
   };
 
@@ -139,17 +171,38 @@ export const PostMediaCarousel = ({
           viewportClassName,
         )}
       >
-        <Image
-          alt={
-            hasMultiple ? `${alt} — imagem ${safeActiveIndex + 1} de ${carouselItems.length}` : alt
-          }
-          className={cn("object-contain", imageClassName)}
-          fill
-          priority={false}
-          sizes={sizes ?? getCommunityMediaSizes(frameVariant, frameOrientation)}
-          src={activeItem.resolvedUrl}
-          unoptimized={isPublicMediaUrl(activeItem.media_url)}
-        />
+        <div
+          className={cn(
+            "absolute inset-0 flex h-full w-full",
+            hasMultiple &&
+              "snap-x snap-mandatory overflow-x-auto overflow-y-hidden overscroll-x-contain scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+          )}
+          data-carousel-swipe-viewport="true"
+          onScroll={handleViewportScroll}
+          ref={viewportRef}
+          style={hasMultiple ? { overflowX: "auto", overflowY: "hidden" } : undefined}
+        >
+          {carouselItems.map((item, index) => (
+            <div
+              aria-hidden={index !== safeActiveIndex}
+              className={cn(
+                "relative h-full min-w-full shrink-0",
+                hasMultiple && "snap-center snap-always",
+              )}
+              key={item.itemKey}
+            >
+              <Image
+                alt={hasMultiple ? `${alt} — imagem ${index + 1} de ${carouselItems.length}` : alt}
+                className={cn("object-contain", imageClassName)}
+                fill
+                priority={false}
+                sizes={sizes ?? getCommunityMediaSizes(frameVariant, frameOrientation)}
+                src={item.resolvedUrl}
+                unoptimized={isPublicMediaUrl(item.media_url)}
+              />
+            </div>
+          ))}
+        </div>
 
         {hasMultiple ? (
           <>
@@ -193,7 +246,7 @@ export const PostMediaCarousel = ({
                   onClick={(event) => {
                     event.preventDefault();
                     event.stopPropagation();
-                    setActiveIndex(index);
+                    scrollToIndex(index);
                   }}
                   type="button"
                 />

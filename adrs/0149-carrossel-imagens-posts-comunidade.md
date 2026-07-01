@@ -44,7 +44,6 @@ Criamos a tabela `community_post_media` para armazenar os itens do carrossel por
 
 ## Pendencias
 
-- Validacao visual interativa no browser local deve ser feita quando houver ferramenta/sessao de navegador disponivel.
 - Carrossel de videos ou midia mista permanece fora do escopo.
 
 ## Complemento 2026-06-22 - miniaturas individuais na criacao do post
@@ -72,6 +71,33 @@ Validacao complementar:
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
 - `git diff --check`: sucesso.
+
+## Complemento 2026-07-01 - swipe mobile com indicador fixo
+
+O carrossel publicado precisava se comportar no mobile como as setas no desktop: o usuario arrasta a midia lateralmente, a imagem ativa muda, mas os indicadores de posicao permanecem fixos sobre o viewport da imagem. A primeira tentativa de usar o proprio viewport como container rolavel fazia os dots participarem da area de scroll; ao chegar na segunda imagem, o indicador podia sair do enquadramento.
+
+Decisao complementar:
+
+- Manter `PostMediaCarousel` como ponto unico do comportamento em feed, detalhe, perfil e listagens.
+- Separar o viewport visual fixo do container interno rolavel (`data-carousel-swipe-viewport`).
+- No mobile, permitir navegacao por scroll-snap horizontal/arraste do dedo no container interno.
+- Manter dots e setas como camadas absolutas do viewport externo, fora da area que se desloca.
+- Preservar as setas apenas a partir de `sm`, deixando o mobile sem setas visiveis.
+- Sincronizar `activeIndex` pelo `scrollLeft` do container interno para atualizar o dot ativo apos o arraste.
+
+Consequencias:
+
+- O indicador permanece fixo visualmente em todas as imagens do carrossel.
+- O comportamento desktop das setas continua programatico e reutiliza a mesma posicao de scroll.
+- Nao ha mudanca de backend, schema, contrato de API, storage, upload, limite de imagens ou packages.
+
+Validacao complementar:
+
+- `pnpm --dir frontend biome:check`: sucesso.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- Chrome/CDP mobile em `http://localhost:3000/` com viewport 390x844: arraste horizontal moveu o carrossel de `scrollLeft=0` para `scrollLeft=319`, dot ativo mudou para indice 1 e a posicao do indicador permaneceu fixa (`dotLeft=152.8125` antes/depois).
 
 ## Complemento 2026-06-22 - setas persistentes no carrossel publicado
 
