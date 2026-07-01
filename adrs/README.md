@@ -104,3 +104,5 @@ Formato recomendado:
 - [ADR-0187 - Escopo V1 focado em psicologia e expansao multiprofissional futura](0187-escopo-v1-psicologia-expansao-multiprofissional.md) - Accepted
 - [ADR-0190 - Range requests para midia publica](0190-range-requests-midia-publica.md) - Accepted
 - [ADR-0191 - Layout social de compartilhamento de video-resposta](0191-layout-compartilhamento-social-video-resposta.md) - Accepted
+- [ADR-0192 - Menu de opcoes dos comentarios acima do composer fixo](0192-menu-opcoes-comentarios-sobreposicao.md) - Accepted
+- [ADR-0193 - Controles nativos de video da comunidade sem menu extra](0193-controles-nativos-video-comunidade-sem-menu-extra.md) - Accepted

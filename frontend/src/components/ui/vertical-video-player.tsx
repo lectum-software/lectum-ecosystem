@@ -137,10 +137,13 @@ export const VerticalVideoPlayer = ({
   const hasNativeControls = controls && !usesMinimalControls && !usesPersistentControls;
   const {
     controlsList: videoControlsList,
+    disablePictureInPicture: videoDisablePictureInPicture,
+    disableRemotePlayback: videoDisableRemotePlayback,
     onClick: onVideoClick,
     onContextMenu: onVideoContextMenu,
     ...passthroughVideoProps
   } = videoProps ?? {};
+  const defaultNativeControlsList = "nodownload noplaybackrate noremoteplayback";
 
   useEffect(() => {
     onVideoElementReady?.(videoRef.current);
@@ -597,12 +600,16 @@ export const VerticalVideoPlayer = ({
         controlsList={
           usesMinimalControls
             ? "nodownload noplaybackrate nofullscreen noremoteplayback"
-            : (videoControlsList ?? "nodownload")
+            : (videoControlsList ?? defaultNativeControlsList)
         }
         data-lectum-content-video={fullscreenVariant === "content" ? "true" : undefined}
         data-lectum-video-player="true"
-        disablePictureInPicture={usesMinimalControls}
-        disableRemotePlayback={usesMinimalControls}
+        disablePictureInPicture={
+          videoDisablePictureInPicture ?? (usesMinimalControls || hasNativeControls)
+        }
+        disableRemotePlayback={
+          videoDisableRemotePlayback ?? (usesMinimalControls || hasNativeControls)
+        }
         onClick={handleVideoClick}
         onContextMenu={handleVideoContextMenu}
         playsInline
