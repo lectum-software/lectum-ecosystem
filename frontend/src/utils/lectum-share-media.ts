@@ -54,12 +54,12 @@ type ShareCanvasLayout = {
     gap: number;
     height: number;
     maxWidth: number;
+    nameFontSize: number;
     paddingLeft: number;
     paddingRight: number;
     radius: number;
-    textFontSize: number;
+    roleFontSize: number;
     verifiedSize: number;
-    x: number;
   };
   width: number;
 };
@@ -73,31 +73,31 @@ const VIDEO_EXPORT_FRAME_RATE = 30;
 
 const storyCanvasLayout: ShareCanvasLayout = {
   card: {
-    bodyFontSize: 42,
-    headerFontSize: 26,
-    headerHeight: 78,
-    lineHeight: 50,
+    bodyFontSize: 36,
+    headerFontSize: 24,
+    headerHeight: 72,
+    lineHeight: 42,
     paddingX: 56,
-    paddingY: 32,
+    paddingY: 28,
     radius: 24,
-    width: 800,
-    x: 140,
+    width: 780,
+    x: 150,
     y: 112,
   },
   height: 1920,
   maxQuestionLines: 2,
   professionalTag: {
-    avatarSize: 68,
-    bottom: 450,
-    gap: 22,
-    height: 88,
-    maxWidth: 720,
-    paddingLeft: 10,
+    avatarSize: 72,
+    bottom: 448,
+    gap: 18,
+    height: 106,
+    maxWidth: 760,
+    nameFontSize: 31,
+    paddingLeft: 12,
     paddingRight: 34,
-    radius: 44,
-    textFontSize: 34,
+    radius: 53,
+    roleFontSize: 22,
     verifiedSize: 28,
-    x: 92,
   },
   width: 1080,
 };
@@ -503,32 +503,38 @@ const drawProfessionalTag = (
 ) => {
   const { professionalTag: tag } = layout;
   const name = target.professional.name.replace(/\s+/g, " ").trim();
+  const roleLabel = target.professional.roleLabel;
   const y = layout.height - tag.bottom - tag.height;
-  const textY = y + tag.height / 2;
-  const textStartX = tag.x + tag.paddingLeft + tag.avatarSize + tag.gap;
   const badgeSpace = target.professional.verified ? tag.gap * 0.55 + tag.verifiedSize : 0;
   const maxTextWidth =
     tag.maxWidth - tag.paddingLeft - tag.avatarSize - tag.gap - badgeSpace - tag.paddingRight;
 
   ctx.save();
-  ctx.font = `700 ${tag.textFontSize}px Manrope, Arial, sans-serif`;
+  ctx.font = `700 ${tag.nameFontSize}px Manrope, Arial, sans-serif`;
   const displayName = truncateTextToWidth(ctx, name, maxTextWidth);
-  const textWidth = ctx.measureText(displayName).width;
+  const nameWidth = ctx.measureText(displayName).width;
+  ctx.font = `500 ${tag.roleFontSize}px Manrope, Arial, sans-serif`;
+  const roleWidth = ctx.measureText(roleLabel).width;
+  const textBlockWidth = Math.max(nameWidth + badgeSpace, roleWidth);
   const tagWidth = Math.min(
     tag.maxWidth,
-    tag.paddingLeft + tag.avatarSize + tag.gap + textWidth + badgeSpace + tag.paddingRight,
+    tag.paddingLeft + tag.avatarSize + tag.gap + textBlockWidth + tag.paddingRight,
   );
+  const tagX = (layout.width - tagWidth) / 2;
+  const textStartX = tagX + tag.paddingLeft + tag.avatarSize + tag.gap;
+  const nameY = y + tag.height / 2 - tag.roleFontSize * 0.44;
+  const roleY = y + tag.height / 2 + tag.nameFontSize * 0.58;
 
   ctx.shadowBlur = 28;
   ctx.shadowColor = "rgba(0, 0, 0, 0.22)";
   ctx.shadowOffsetY = 12;
-  drawRoundRect(ctx, tag.x, y, tagWidth, tag.height, tag.radius);
-  ctx.fillStyle = "rgba(37, 42, 42, 0.74)";
+  drawRoundRect(ctx, tagX, y, tagWidth, tag.height, tag.radius);
+  ctx.fillStyle = "rgba(37, 42, 42, 0.56)";
   ctx.fill();
   ctx.restore();
 
   ctx.save();
-  drawRoundRect(ctx, tag.x, y, tagWidth, tag.height, tag.radius);
+  drawRoundRect(ctx, tagX, y, tagWidth, tag.height, tag.radius);
   ctx.lineWidth = 1.5;
   ctx.strokeStyle = "rgba(255, 255, 255, 0.16)";
   ctx.stroke();
@@ -538,24 +544,27 @@ const drawProfessionalTag = (
     ctx,
     assets.professionalAvatar,
     name,
-    tag.x + tag.paddingLeft,
+    tagX + tag.paddingLeft,
     y + (tag.height - tag.avatarSize) / 2,
     tag.avatarSize,
   );
 
   ctx.save();
   ctx.fillStyle = "#ffffff";
-  ctx.font = `700 ${tag.textFontSize}px Manrope, Arial, sans-serif`;
+  ctx.font = `700 ${tag.nameFontSize}px Manrope, Arial, sans-serif`;
   ctx.textAlign = "start";
   ctx.textBaseline = "middle";
-  ctx.fillText(displayName, textStartX, textY + 1);
+  ctx.fillText(displayName, textStartX, nameY);
+  ctx.fillStyle = "rgba(255, 255, 255, 0.76)";
+  ctx.font = `500 ${tag.roleFontSize}px Manrope, Arial, sans-serif`;
+  ctx.fillText(roleLabel, textStartX, roleY);
   ctx.restore();
 
   if (target.professional.verified) {
     drawVerifiedBadge(
       ctx,
-      textStartX + textWidth + tag.gap * 0.55 + tag.verifiedSize / 2,
-      textY,
+      textStartX + nameWidth + tag.gap * 0.55 + tag.verifiedSize / 2,
+      nameY,
       tag.verifiedSize,
     );
   }

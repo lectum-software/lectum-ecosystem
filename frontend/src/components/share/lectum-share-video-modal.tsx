@@ -46,6 +46,12 @@ const sharePreviewClassName = "w-[min(74vw,300px,31.5dvh)] sm:w-[min(34vw,340px,
 const sharePreviewCardClassName =
   "top-[6%] left-[10%] right-[10%] overflow-hidden rounded-[12px] sm:top-[6.75%] sm:left-[11%] sm:right-[11%] sm:rounded-[10px]";
 
+const twoLineClampStyle = {
+  WebkitBoxOrient: "vertical",
+  WebkitLineClamp: 2,
+  display: "-webkit-box",
+} as CSSProperties;
+
 const shareSheetActions = [
   {
     icon: Copy,
@@ -116,7 +122,7 @@ const SharePreview = ({ target }: { target: LectumShareSocialTarget }) => {
   const mediaSrc = resolvePublicMediaUrl(target.mediaUrl);
   const professionalAvatarSrc = resolvePublicMediaUrl(target.professional.avatar);
   const professionalInitial = target.professional.name.trim().charAt(0).toUpperCase() || "P";
-  const sourcePreview = truncatePreviewText(target.sourceText, 80);
+  const sourcePreview = truncatePreviewText(target.sourceText, 64);
 
   return (
     <div
@@ -171,16 +177,17 @@ const SharePreview = ({ target }: { target: LectumShareSocialTarget }) => {
         </p>
         <p
           className={cn(
-            "line-clamp-2 bg-[linear-gradient(180deg,rgb(255_255_255_/_0.98)_0%,rgb(248_250_252_/_0.94)_100%)] px-4 py-2.5 text-center font-semibold tracking-[-0.025em] text-foreground sm:px-3.5 sm:py-2",
-            "text-[clamp(0.78rem,2.75vw,0.96rem)] leading-[1.12] sm:text-[12px] sm:leading-[1.12]",
+            "overflow-hidden bg-[linear-gradient(180deg,rgb(255_255_255_/_0.98)_0%,rgb(248_250_252_/_0.94)_100%)] px-3.5 py-2 text-center font-semibold tracking-[-0.02em] text-foreground sm:px-3 sm:py-1.5",
+            "text-[clamp(0.7rem,2.35vw,0.84rem)] leading-[1.08] sm:text-[10px] sm:leading-[1.08]",
           )}
+          style={twoLineClampStyle}
         >
           {sourcePreview}
         </p>
       </div>
 
-      <div className="absolute bottom-[23.5%] left-[8.5%] z-10 flex h-9 max-w-[76%] items-center gap-2 rounded-full border border-white/15 bg-[#252a2a]/72 py-1 pr-3 pl-1 text-white shadow-[0_10px_28px_rgb(0_0_0_/_20%)] backdrop-blur-md sm:h-8 sm:gap-1.5 sm:pr-2.5 sm:pl-1">
-        <span className="relative grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-full border border-white/60 bg-[#0f513f] text-[13px] font-bold leading-none text-white sm:h-6 sm:w-6 sm:text-[11px]">
+      <div className="absolute bottom-[23.5%] left-1/2 z-10 flex h-11 max-w-[78%] -translate-x-1/2 items-center gap-2 rounded-full border border-white/12 bg-[#252a2a]/56 py-1 pr-3.5 pl-1.5 text-white shadow-[0_10px_28px_rgb(0_0_0_/_18%)] backdrop-blur-md sm:h-10 sm:gap-1.5 sm:pr-3 sm:pl-1.5">
+        <span className="relative grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-full border border-white/60 bg-[#0f513f] text-[13px] font-bold leading-none text-white sm:h-7 sm:w-7 sm:text-[11px]">
           {professionalAvatarSrc ? (
             <Image
               alt=""
@@ -195,12 +202,22 @@ const SharePreview = ({ target }: { target: LectumShareSocialTarget }) => {
             professionalInitial
           )}
         </span>
-        <span className="min-w-0 truncate text-[12px] font-semibold leading-none tracking-[-0.02em] text-white sm:text-[10px]">
-          {target.professional.name}
+        <span className="flex min-w-0 flex-col justify-center">
+          <span className="flex min-w-0 items-center justify-center gap-1 leading-none">
+            <span className="min-w-0 truncate text-center text-[12px] font-bold leading-none tracking-[-0.02em] text-white sm:text-[10px]">
+              {target.professional.name}
+            </span>
+            {target.professional.verified ? (
+              <VerifiedBadgeIcon
+                aria-hidden="true"
+                className="h-3.5 w-3.5 shrink-0 sm:h-3 sm:w-3"
+              />
+            ) : null}
+          </span>
+          <span className="mt-1 truncate text-center text-[9px] font-medium leading-none tracking-[-0.01em] text-white/75 sm:text-[8px]">
+            {target.professional.roleLabel}
+          </span>
         </span>
-        {target.professional.verified ? (
-          <VerifiedBadgeIcon aria-hidden="true" className="h-3.5 w-3.5 shrink-0 sm:h-3 sm:w-3" />
-        ) : null}
       </div>
     </div>
   );
