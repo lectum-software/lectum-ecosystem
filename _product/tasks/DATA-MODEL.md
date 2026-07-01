@@ -354,7 +354,7 @@ Regra vigente revalidada em 2026-06-26: qualquer usuário autenticado pode criar
 | `name` | `String` | |
 | `slug` | `String @unique` | namespace canônico (ver "Convenção de rotas") |
 | `description` | `String?` | |
-| `category` | `String?` | categorias de curadoria; catálogo ativo revalidado pela alteração de 2026-06-25: `Ansiedade em Equilíbrio`, `Relacionamentos com Propósito`, `Autocuidado em Prática`, `Depressão`, `TDAH`. `Mulheres em Foco` e `Luto e Ressignificação` foram removidas das listas públicas por soft delete. |
+| `category` | `String?` | categoria de curadoria; categorias persistidas do catálogo ativo: `Ansiedade`, `Relacionamentos`, `Autocuidado`, `Depressão`, `TDAH`. Nomes públicos revalidados em 2026-07-01: `Ansiedade em Equilíbrio`, `Relacionamentos com Propósito`, `Autocuidado em Pequenos Passos`, `Depressão: Redescobrindo a Vida`, `TDAH: Encontrando seu Ritmo`. `Mulheres em Foco` e `Luto e Ressignificação` foram removidas das listas públicas por soft delete. |
 | `members_count` | `Int @default(0)` | denormalizado para o card |
 | `avatar_url` | `String?` | imagem/avatar público da comunidade usado para identidade visual; quando ausente, a UI usa iniciais e fallback azul |
 | `visual_primary_color` | `String?` | cor principal cacheável da comunidade em HEX, derivada do avatar quando disponível |

@@ -32,7 +32,7 @@ const COMMUNITY_EXPLORE_CONTENT_BY_SLUG: Record<string, CommunityExploreContent>
   },
   depressao: {
     id: "explore-depressao",
-    name: "Depressão",
+    name: "Depressão: Redescobrindo a Vida",
     imageUrl: "/images/community/explore/depressao.png",
     description:
       "Apoio para falar sobre desânimo, isolamento, recaídas e caminhos possíveis de cuidado.",
@@ -42,7 +42,7 @@ const COMMUNITY_EXPLORE_CONTENT_BY_SLUG: Record<string, CommunityExploreContent>
   },
   tdah: {
     id: "explore-tdah",
-    name: "TDAH",
+    name: "TDAH: Encontrando seu Ritmo",
     imageUrl: "/images/community/explore/tdah.png",
     description:
       "Trocas sobre foco, organização, impulsividade e rotina com acolhimento e informação.",
@@ -52,7 +52,7 @@ const COMMUNITY_EXPLORE_CONTENT_BY_SLUG: Record<string, CommunityExploreContent>
   },
   "autocuidado-em-pratica": {
     id: "explore-autocuidado-em-pratica",
-    name: "Autocuidado em Prática",
+    name: "Autocuidado em Pequenos Passos",
     imageUrl: "/images/community/explore/autocuidado.png",
     description:
       "Práticas realistas para cuidar de si, criar pequenos hábitos e sustentar bem-estar.",

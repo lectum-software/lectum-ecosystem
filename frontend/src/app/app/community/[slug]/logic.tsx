@@ -1107,7 +1107,7 @@ const FeedCommunitySelectorAvatar = ({
           unoptimized={isPublicMediaUrl(community.iconUrl)}
         />
       ) : (
-        getInitials(community.label)
+        getInitials(community.name)
       )}
     </span>
   );
@@ -1142,9 +1142,7 @@ const FeedCommunitySelect = ({
       >
         <span className="flex min-w-0 items-center gap-2.5">
           <FeedCommunitySelectorAvatar community={activeCommunity} />
-          <span className="min-w-0 truncate">
-            {activeCommunity?.label ?? "Escolher comunidade"}
-          </span>
+          <span className="min-w-0 truncate">{activeCommunity?.name ?? "Escolher comunidade"}</span>
         </span>
         <ChevronDown
           className={cn("h-4 w-4 shrink-0 transition", open ? "rotate-180" : "rotate-0")}
@@ -1186,7 +1184,7 @@ const FeedCommunitySelect = ({
               >
                 <span className="flex min-w-0 items-center gap-2">
                   <FeedCommunitySelectorAvatar community={item} variant="menu" />
-                  <span className="min-w-0 truncate">{item.label}</span>
+                  <span className="min-w-0 truncate">{item.name}</span>
                 </span>
                 {isActive ? <Check className="h-4 w-4 shrink-0" aria-hidden="true" /> : null}
               </Link>

@@ -14,19 +14,19 @@ export const COMMUNITY_FEED_CHIPS = [
   {
     iconUrl: "/community/icons/autocuidado.png",
     label: "Autocuidado",
-    name: "Autocuidado em Prática",
+    name: "Autocuidado em Pequenos Passos",
     slug: "autocuidado-em-pratica",
   },
   {
     iconUrl: "/community/icons/depressao.png",
     label: "Depressão",
-    name: "Depressão",
+    name: "Depressão: Redescobrindo a Vida",
     slug: "depressao",
   },
   {
     iconUrl: "/community/icons/tdah.png",
     label: "TDAH",
-    name: "TDAH",
+    name: "TDAH: Encontrando seu Ritmo",
     slug: "tdah",
   },
 ] as const;
