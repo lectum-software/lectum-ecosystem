@@ -1221,3 +1221,20 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm check`
 - [x] `git diff --check`
 - [x] HTTP local `200` e Chrome headless local em `/community/autocuidado-em-pratica/post/cmr20rokk000cbkuhqiyegeev` confirmaram o carrossel renderizado sem overlays laterais de sombra nas setas.
+
+## Complemento 2026-07-01 - setas do carrossel ocultas somente no mobile
+
+- Pedido do usuario: remover as setas de avancar/voltar do carrossel somente na experiencia mobile.
+- Frontend: os botoes `Imagem anterior` e `Proxima imagem` do `PostMediaCarousel` agora ficam `hidden` na base mobile e voltam como `sm:grid` em telas maiores, mantendo a navegacao por setas no desktop/tablet e os indicadores de slides no mobile.
+- O ajuste e mobile-first e reaproveita o componente compartilhado do carrossel, afetando feed, dentro da comunidade, detalhe do post, salvos/meus posts e publicacoes de perfil sem criar variante paralela.
+- Nao houve alteracao de backend, Prisma schema, migrations, endpoints, payloads, packages, upload, permissao de midia, WhatsApp, votos ou salvos.
+- Fonte visual/auditavel: screenshot do usuario nesta conversa e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0151-padronizacao-frames-midia-comunidade.md`.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] HTTP local `200` e Chrome headless local em `/community/autocuidado-em-pratica/post/cmr20rokk000cbkuhqiyegeev` confirmaram setas ocultas em 390px e visiveis no desktop.

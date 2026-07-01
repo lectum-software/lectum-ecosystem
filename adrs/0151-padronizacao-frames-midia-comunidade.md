@@ -248,3 +248,27 @@ Validacao complementar:
 - `pnpm check`
 - `git diff --check`
 - HTTP local `200` e Chrome headless local em `/community/autocuidado-em-pratica/post/cmr20rokk000cbkuhqiyegeev` confirmando carrossel sem overlays laterais de sombra nas setas.
+
+## Complemento 2026-07-01 - setas do carrossel apenas em telas maiores
+
+A revisao mobile do carrossel mostrou que, em 390px, as setas laterais competiam com a imagem e ficavam pesadas para a composicao. No desktop, elas continuam uteis porque ha mais area visual e hover/foco com ponteiro.
+
+Decisao complementar:
+
+- Ocultar os botoes `Imagem anterior` e `Proxima imagem` na base mobile do `PostMediaCarousel`.
+- Reexibir esses botoes a partir de `sm` com `sm:grid`, preservando a navegacao por setas em telas maiores.
+- Manter indicadores de slides, frame, `object-contain`, CTA de WhatsApp anexado, tamanhos responsivos e comportamento compartilhado do carrossel.
+
+Consequencias:
+
+- Mobile fica mais limpo e a midia ganha protagonismo visual.
+- Desktop/tablet preservam as setas de navegacao existentes.
+- Nao ha impacto em backend, storage, schema, upload ou contratos de API.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- HTTP local `200` e Chrome headless local em `/community/autocuidado-em-pratica/post/cmr20rokk000cbkuhqiyegeev` confirmando setas ocultas em 390px e visiveis no desktop.
