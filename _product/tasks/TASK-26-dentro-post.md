@@ -1187,3 +1187,20 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm check`
 - [x] HTTP local `200` em `/community/ansiedade-em-equilibrio/post/cmr15abhh0004msuh2c5gqi5v`
 - [x] Chrome/CDP local mobile 390x844 confirmou menu de resposta abrindo para cima, dentro do viewport, com `z-index: 120` acima do composer fixo (`z-index: 40`).
+
+## Complemento 2026-07-01 - espacamento compacto entre contexto e comunidade
+
+- Pedido do usuario: verificar se havia excesso de espaco entre `Postado em` e o nome da comunidade no topo dos posts.
+- Frontend: o cabecalho de contexto do detalhe do post reduziu o gap horizontal de `gap-1.5` para `gap-x-1`, preservando o respiro vertical para quebras de linha.
+- Frontend: os cabecalhos equivalentes dos cards da comunidade e do componente compartilhado `CommunityPostCard` tambem passaram a usar `gap-1` entre icone, label e nome da comunidade, mantendo consistencia em feed, comunidade, salvos/meus posts e publicacoes de perfil.
+- Nao houve alteracao de backend, Prisma schema, migrations, endpoints, payloads, packages, votos, salvos, comentarios, midias ou regras de permissao.
+- Fonte visual/auditavel: screenshot do usuario e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0152-divisor-contexto-autor-cards-comunidade.md`.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check` (primeira tentativa excedeu timeout local; repetida com timeout maior e concluiu sem erros)
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] Chrome/CDP local em `/community/ansiedade-em-equilibrio/post/cmr15abhh0004msuh2c5gqi5v` confirmou gap medido de `3.75px` em viewport mobile 390x844 e `4px` em desktop 1365x768 entre `Postado em` e `Ansiedade em Equilibrio`.

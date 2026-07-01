@@ -733,7 +733,7 @@ export const CommunityPostCard = ({
     >
       {showCommunityHeader ? (
         <div className="mb-3 flex min-w-0 items-center gap-2 text-[11px] font-semibold tracking-[-0.01em] text-muted">
-          <div className="flex min-w-0 flex-1 items-center gap-1.5">
+          <div className="flex min-w-0 flex-1 items-center gap-1">
             <CommunityContextIcon
               className={cn("h-3.5 w-3.5 shrink-0", usesMutedCommunityContext && "text-muted/80")}
               aria-hidden="true"

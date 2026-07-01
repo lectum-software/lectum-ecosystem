@@ -1481,7 +1481,7 @@ const PostCard = ({
       onKeyDown={handleCardKeyDown}
     >
       {showCommunityHeader ? (
-        <div className="mb-3 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-subtle">
+        <div className="mb-3 flex min-w-0 items-center gap-1 text-[11px] font-semibold text-subtle">
           <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           <span className="shrink-0">Postado em</span>
           <div className="flex min-w-0 flex-1 items-center gap-1.5">

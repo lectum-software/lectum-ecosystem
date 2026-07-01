@@ -718,7 +718,7 @@ const PostHeader = ({
         )}
       </div>
 
-      <div className="flex min-w-0 flex-wrap items-center gap-1.5 gap-y-2 text-[11px] font-semibold text-muted">
+      <div className="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-2 text-[11px] font-semibold text-muted">
         <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         <span className="shrink-0">Postado em</span>
         <Link

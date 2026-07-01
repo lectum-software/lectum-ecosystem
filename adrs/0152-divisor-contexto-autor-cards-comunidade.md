@@ -35,3 +35,28 @@ Os cards de conteúdo exibidos fora do detalhe do post reúnem duas informaçõe
 - `git diff --check`
 
 Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a validação visual foi orientada pelo screenshot do usuário e pelos componentes existentes.
+
+## Atualizacao 2026-07-01 - gap compacto no contexto da comunidade
+
+### Contexto
+
+No topo do detalhe do post e dos cards de comunidade, o par `Postado em`/`Respondido em` + nome da comunidade deve ser lido como uma unica frase curta. O gap anterior (`gap-1.5`) podia parecer maior que um espaco textual normal, especialmente no desktop.
+
+### Decisao
+
+- Reduzir o gap horizontal entre icone, label de contexto e nome da comunidade para `gap-1`/`gap-x-1`.
+- Preservar o `gap-y-2` no detalhe do post para manter respiro quando a linha quebrar em telas mobile.
+- Aplicar o mesmo ajuste no card local da comunidade e no `CommunityPostCard` compartilhado, sem alterar follow, badges, links, truncamento, dados ou navegacao.
+
+### Consequencias
+
+- O nome da comunidade fica visualmente conectado ao texto `Postado em`, mais proximo da referencia `_product/proto/Dentro do Post.jpg`.
+- A mudanca e apenas visual de frontend; nao altera backend, Prisma, endpoints, tracking, votos, salvos, comentarios, midias ou regras de permissao.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- Chrome/CDP em `/community/ansiedade-em-equilibrio/post/cmr15abhh0004msuh2c5gqi5v`: gap medido de `3.75px` em viewport mobile 390x844 e `4px` em desktop 1365x768.
