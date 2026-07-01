@@ -2481,7 +2481,7 @@ export const PsychologistProfileLogic = () => {
     >
       <div className="-mx-5 overflow-x-hidden bg-[#F5F7FA] dark:bg-background">
         <section className="mx-auto grid w-screen max-w-[430px] bg-[#F5F7FA] dark:bg-background sm:max-w-[430px] lg:max-w-[760px]">
-          <div className="grid gap-0 pb-32 lg:pb-10">
+          <div className="grid gap-0 pb-[calc(var(--lectum-mobile-nav-aware-fab-bottom)+4rem)] lg:pb-10">
             {shareFeedback ? (
               <div className="mx-3 pt-3">
                 <InlineAlert title="Link copiado" variant="success">

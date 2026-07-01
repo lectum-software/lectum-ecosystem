@@ -124,3 +124,17 @@ Validacao complementar:
 - `pnpm check`
 - Chrome/CDP autenticado em desktop 1440px confirmando video de publicacao com largura 318px e centro alinhado ao card (`delta=0`).
 - Chrome/CDP autenticado em mobile 390px confirmando comportamento preservado, video centralizado e sem alteracao de layout textual.
+
+## Atualizacao 2026-07-01 - respiro inferior da previa de publicacoes
+
+- Pedido do usuario: reduzir o espaco cinza excessivo abaixo da previa de publicacoes na aba `Geral` do perfil publico do psicologo.
+- O padding inferior mobile da pagina do perfil deixou de usar valor fixo amplo (`pb-32`) e passou a depender do mesmo token do CTA fixo: `pb-[calc(var(--lectum-mobile-nav-aware-fab-bottom)+4rem)]`.
+- A decisao preserva o espaco necessario para que o botao fixo `Chamar no WhatsApp` nao cubra o ultimo card, mas reduz o vazio entre a previa de publicacoes e o CTA em telas de ~390px.
+- A alteracao e somente frontend e nao muda contratos, backend, banco, Prisma, publicacoes, ordenacao, WhatsApp, packages ou dados persistidos.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome headless/CDP mobile 390x844 em `/psychologists/cmr0lvmb90000l4uh50e6b0zl`, confirmando `lastSectionTitle=Publicações`, `shellPaddingBottom=75px` e `gapBetweenLastSectionAndCta=28px`.

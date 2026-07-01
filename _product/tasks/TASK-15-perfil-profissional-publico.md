@@ -749,3 +749,19 @@ Validacoes executadas:
 - O calculo interno considera todas as comunidades candidatas para montar o mapa de badges, mas o contrato publico de `summary.top_mentor_communities` continua limitado a ate 3 comunidades.
 - Escopo: sem mudancas de Prisma, migrations, packages, frontend, layout, formula do ranking, paginacao, votos ou dados persistidos.
 - ADR atualizado: `adrs/0114-resumo-atuacao-publicacoes-perfil.md`.
+
+## Registro de ajuste complementar em 2026-07-01 - respiro inferior da previa de publicacoes
+
+- Pedido do usuario: reduzir o espaco cinza excessivo abaixo da previa de publicacoes no perfil publico do psicologo em viewport mobile.
+- Fonte visual auditavel: `_product/proto/Perfil Profissional - Publicacoes.jpg`, `_product/proto/Perfil Profissional - Sobre.jpg` e print fornecido pelo usuario. Builder/Quick Copy foi testado via `npx "@builder.io/dev-tools@latest" auth status`, mas retornou `Not Authenticated to Builder.io`; a validacao seguiu com imagens locais e browser local.
+- A pagina reutilizada por `/psychologists/[id]` passou a calcular o padding inferior mobile com `var(--lectum-mobile-nav-aware-fab-bottom) + 4rem`, em vez de `pb-32`, preservando o CTA fixo de WhatsApp sem manter um bloco cinza grande apos o ultimo card.
+- Nao houve alteracao de backend, banco, Prisma, contratos, endpoints, packages, dados persistidos, ordenacao de publicacoes, WhatsApp ou regras de destaque.
+- ADR atualizado: `adrs/0110-publicacoes-perfil-mobile-whatsapp-unico.md`.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write -- 'src/app/app/psychologist/[id]/logic.tsx'`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome headless/CDP mobile 390x844 em `/psychologists/cmr0lvmb90000l4uh50e6b0zl`, confirmando `lastSectionTitle=Publicacoes`, `shellPaddingBottom=75px`, `mobileCtaBottom=15px` e `gapBetweenLastSectionAndCta=28px`.
