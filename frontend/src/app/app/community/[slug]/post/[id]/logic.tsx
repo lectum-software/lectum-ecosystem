@@ -87,6 +87,8 @@ import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
 import {
+  createLectumShareLinkTarget,
+  createLectumSharePostMediaTarget,
   createLectumShareVideoTarget,
   findPostReplyInTree,
   type LectumShareChannel,
@@ -2406,22 +2408,9 @@ export const PostDetailLogic = () => {
   const sharePost = async () => {
     if (!post || typeof window === "undefined") return;
 
-    const url = `${window.location.origin}/community/${post.community.slug}/post/${post.id}`;
-
-    try {
-      const nativeShare = (navigator as { share?: (data: ShareData) => Promise<void> }).share;
-      const channel = nativeShare ? "web_share" : "clipboard";
-      if (nativeShare) {
-        await nativeShare.call(navigator, { title: post.title, url });
-      } else {
-        await navigator.clipboard.writeText(url);
-      }
-      sharePostMutation.mutate({ id: post.id, body: { channel } });
-      setShareFeedback("post");
-      window.setTimeout(() => setShareFeedback(null), 2400);
-    } catch {
-      setShareFeedback(null);
-    }
+    setShareVideoTarget(
+      createLectumSharePostMediaTarget(post) ?? createLectumShareLinkTarget(post),
+    );
   };
 
   const shareReply = async (reply: PostReply) => {
@@ -2437,33 +2426,29 @@ export const PostDetailLogic = () => {
       return;
     }
 
-    const url = `${window.location.origin}/community/${post.community.slug}/post/${post.id}#reply-${reply.id}`;
-
-    try {
-      const nativeShare = (navigator as { share?: (data: ShareData) => Promise<void> }).share;
-      const channel = nativeShare ? "web_share" : "clipboard";
-      if (nativeShare) {
-        await nativeShare.call(navigator, { title: post.title, text: reply.content, url });
-      } else {
-        await navigator.clipboard.writeText(url);
-      }
-      shareReplyMutation.mutate({ postId: post.id, replyId: reply.id, body: { channel } });
-      setShareFeedback(reply.id);
-      window.setTimeout(() => setShareFeedback(null), 2400);
-    } catch {
-      setShareFeedback(null);
-    }
+    setShareVideoTarget(
+      createLectumShareLinkTarget(post, {
+        relativeUrl: `/community/${post.community.slug}/post/${post.id}#reply-${reply.id}`,
+        replyId: reply.id,
+        text: reply.content,
+        title: "Resposta na Lectum",
+      }),
+    );
   };
 
   const handleShareVideoShared = (channel: LectumShareChannel) => {
     if (!shareVideoTarget) return;
 
-    shareReplyMutation.mutate({
-      postId: shareVideoTarget.postId,
-      replyId: shareVideoTarget.replyId,
-      body: { channel },
-    });
-    setShareFeedback(shareVideoTarget.replyId);
+    if (shareVideoTarget.replyId) {
+      shareReplyMutation.mutate({
+        postId: shareVideoTarget.postId,
+        replyId: shareVideoTarget.replyId,
+        body: { channel },
+      });
+    } else {
+      sharePostMutation.mutate({ id: shareVideoTarget.postId, body: { channel } });
+    }
+    setShareFeedback(shareVideoTarget.replyId ?? "post");
     window.setTimeout(() => setShareFeedback(null), 2400);
   };
 
@@ -3022,26 +3007,20 @@ export const PostReplyThreadLogic = () => {
     }
 
     const threadRootId = rootReply?.id ?? reply.id;
-    const url = `${window.location.origin}/community/${post.community.slug}/post/${post.id}/thread/${threadRootId}#reply-${reply.id}`;
-
-    try {
-      const nativeShare = (navigator as { share?: (data: ShareData) => Promise<void> }).share;
-      const channel = nativeShare ? "web_share" : "clipboard";
-      if (nativeShare) {
-        await nativeShare.call(navigator, { title: post.title, text: reply.content, url });
-      } else {
-        await navigator.clipboard.writeText(url);
-      }
-      shareReplyMutation.mutate({ postId: post.id, replyId: reply.id, body: { channel } });
-      setShareFeedback(reply.id);
-      window.setTimeout(() => setShareFeedback(null), 2400);
-    } catch {
-      setShareFeedback(null);
-    }
+    setShareVideoTarget(
+      createLectumShareLinkTarget(post, {
+        relativeUrl: `/community/${post.community.slug}/post/${post.id}/thread/${threadRootId}#reply-${reply.id}`,
+        replyId: reply.id,
+        text: reply.content,
+        title: "Resposta na Lectum",
+      }),
+    );
   };
 
   const handleShareVideoShared = (channel: LectumShareChannel) => {
     if (!shareVideoTarget) return;
+
+    if (!shareVideoTarget.replyId) return;
 
     shareReplyMutation.mutate({
       postId: shareVideoTarget.postId,

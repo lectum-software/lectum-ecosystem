@@ -77,6 +77,8 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { formatCrpLabel, formatCrpNumber } from "@/utils/crp";
 import {
+  createLectumShareLinkTarget,
+  createLectumSharePostMediaTarget,
   createLectumShareTargetFromHighlightedReply,
   type LectumShareChannel,
   type LectumShareVideoTarget,
@@ -2387,44 +2389,37 @@ export const PsychologistProfileLogic = () => {
   const sharePost = async (post: PostListPost) => {
     if (typeof window === "undefined") return;
 
-    const videoTarget = createLectumShareTargetFromHighlightedReply(post);
-    if (videoTarget) {
-      setShareVideoTarget(videoTarget);
+    const relativeUrl = profilePublicationHref(post);
+    const socialTarget =
+      createLectumSharePostMediaTarget(post, { relativeUrl }) ??
+      createLectumShareTargetFromHighlightedReply(post);
+    if (socialTarget) {
+      setShareVideoTarget(socialTarget);
       return;
     }
 
-    const url = `${window.location.origin}${profilePublicationHref(post)}`;
-
-    try {
-      const nativeShare = (navigator as { share?: (data: ShareData) => Promise<void> }).share;
-      const channel = nativeShare ? "web_share" : "clipboard";
-      if (nativeShare) {
-        await nativeShare.call(navigator, { title: post.title, url });
-      } else {
-        await navigator.clipboard.writeText(url);
-      }
-
-      const replyId = getProfilePublicationReplyId(post);
-      if (replyId) {
-        shareReplyMutation.mutate({ postId: post.id, replyId, body: { channel } });
-      } else {
-        sharePostMutation.mutate({ id: post.id, body: { channel } });
-      }
-      setShareFeedback(true);
-      window.setTimeout(() => setShareFeedback(false), 2500);
-    } catch {
-      setShareFeedback(false);
-    }
+    const replyId = getProfilePublicationReplyId(post);
+    setShareVideoTarget(
+      createLectumShareLinkTarget(post, {
+        relativeUrl,
+        replyId,
+        title: post.title,
+      }),
+    );
   };
 
   const handleShareVideoShared = (channel: LectumShareChannel) => {
     if (!shareVideoTarget) return;
 
-    shareReplyMutation.mutate({
-      postId: shareVideoTarget.postId,
-      replyId: shareVideoTarget.replyId,
-      body: { channel },
-    });
+    if (shareVideoTarget.replyId) {
+      shareReplyMutation.mutate({
+        postId: shareVideoTarget.postId,
+        replyId: shareVideoTarget.replyId,
+        body: { channel },
+      });
+    } else {
+      sharePostMutation.mutate({ id: shareVideoTarget.postId, body: { channel } });
+    }
     setShareFeedback(true);
     window.setTimeout(() => setShareFeedback(false), 2500);
   };

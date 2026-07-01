@@ -88,6 +88,8 @@ import {
   getCommunityFeedChip,
 } from "@/utils/community";
 import {
+  createLectumShareLinkTarget,
+  createLectumSharePostMediaTarget,
   createLectumShareTargetFromHighlightedReply,
   type LectumShareChannel,
   type LectumShareVideoTarget,
@@ -2625,39 +2627,24 @@ const CommunityDetailLogic = ({
   const sharePost = async (post: CommunityPost) => {
     if (typeof window === "undefined") return;
 
-    const videoTarget = createLectumShareTargetFromHighlightedReply(post);
-    if (videoTarget) {
-      setShareVideoTarget(videoTarget);
-      return;
-    }
-
-    const url = `${window.location.origin}/community/${post.community.slug}/post/${post.id}`;
-
-    try {
-      const nativeShare = (navigator as { share?: (data: ShareData) => Promise<void> }).share;
-      const channel = nativeShare ? "web_share" : "clipboard";
-      if (nativeShare) {
-        await nativeShare.call(navigator, { title: post.title, url });
-      } else {
-        await navigator.clipboard.writeText(url);
-      }
-      sharePostMutation.mutate({ id: post.id, body: { channel } });
-      setShareFeedback(post.id);
-      window.setTimeout(() => setShareFeedback(null), 2400);
-    } catch {
-      setShareFeedback(null);
-    }
+    const socialTarget =
+      createLectumSharePostMediaTarget(post) ?? createLectumShareTargetFromHighlightedReply(post);
+    setShareVideoTarget(socialTarget ?? createLectumShareLinkTarget(post));
   };
 
   const handleShareVideoShared = (channel: LectumShareChannel) => {
     if (!shareVideoTarget) return;
 
-    shareReplyMutation.mutate({
-      postId: shareVideoTarget.postId,
-      replyId: shareVideoTarget.replyId,
-      body: { channel },
-    });
-    setShareFeedback(shareVideoTarget.replyId);
+    if (shareVideoTarget.replyId) {
+      shareReplyMutation.mutate({
+        postId: shareVideoTarget.postId,
+        replyId: shareVideoTarget.replyId,
+        body: { channel },
+      });
+    } else {
+      sharePostMutation.mutate({ id: shareVideoTarget.postId, body: { channel } });
+    }
+    setShareFeedback(shareVideoTarget.replyId ?? shareVideoTarget.postId);
     window.setTimeout(() => setShareFeedback(null), 2400);
   };
 
@@ -3028,39 +3015,24 @@ export const CommunityFeedLogic = ({
   const sharePost = async (post: CommunityPost) => {
     if (typeof window === "undefined") return;
 
-    const videoTarget = createLectumShareTargetFromHighlightedReply(post);
-    if (videoTarget) {
-      setShareVideoTarget(videoTarget);
-      return;
-    }
-
-    const url = `${window.location.origin}/community/${post.community.slug}/post/${post.id}`;
-
-    try {
-      const nativeShare = (navigator as { share?: (data: ShareData) => Promise<void> }).share;
-      const channel = nativeShare ? "web_share" : "clipboard";
-      if (nativeShare) {
-        await nativeShare.call(navigator, { title: post.title, url });
-      } else {
-        await navigator.clipboard.writeText(url);
-      }
-      sharePostMutation.mutate({ id: post.id, body: { channel } });
-      setShareFeedback(post.id);
-      window.setTimeout(() => setShareFeedback(null), 2400);
-    } catch {
-      setShareFeedback(null);
-    }
+    const socialTarget =
+      createLectumSharePostMediaTarget(post) ?? createLectumShareTargetFromHighlightedReply(post);
+    setShareVideoTarget(socialTarget ?? createLectumShareLinkTarget(post));
   };
 
   const handleShareVideoShared = (channel: LectumShareChannel) => {
     if (!shareVideoTarget) return;
 
-    shareReplyMutation.mutate({
-      postId: shareVideoTarget.postId,
-      replyId: shareVideoTarget.replyId,
-      body: { channel },
-    });
-    setShareFeedback(shareVideoTarget.replyId);
+    if (shareVideoTarget.replyId) {
+      shareReplyMutation.mutate({
+        postId: shareVideoTarget.postId,
+        replyId: shareVideoTarget.replyId,
+        body: { channel },
+      });
+    } else {
+      sharePostMutation.mutate({ id: shareVideoTarget.postId, body: { channel } });
+    }
+    setShareFeedback(shareVideoTarget.replyId ?? shareVideoTarget.postId);
     window.setTimeout(() => setShareFeedback(null), 2400);
   };
 

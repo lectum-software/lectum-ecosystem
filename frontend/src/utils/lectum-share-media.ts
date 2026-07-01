@@ -1,4 +1,8 @@
-import type { LectumShareChannel, LectumShareVideoTarget } from "@/utils/lectum-share-target";
+import type {
+  LectumShareChannel,
+  LectumShareSocialTarget,
+  LectumShareVideoTarget,
+} from "@/utils/lectum-share-target";
 import { resolvePublicMediaUrl } from "@/utils/media";
 
 type ShareNavigator = Navigator & {
@@ -10,6 +14,8 @@ type VideoWithCaptureStream = HTMLVideoElement & {
   captureStream?: () => MediaStream;
   mozCaptureStream?: () => MediaStream;
 };
+
+type ShareMediaElement = HTMLImageElement | HTMLVideoElement;
 
 type CanvasWithCaptureStream = HTMLCanvasElement & {
   captureStream?: (frameRate?: number) => MediaStream;
@@ -136,6 +142,16 @@ const loadVideoElement = async (src: string) => {
   return video;
 };
 
+const loadImageElement = async (src: string) =>
+  new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+
+    image.crossOrigin = "anonymous";
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("NÃ£o foi possÃ­vel carregar a imagem."));
+    image.src = src;
+  });
+
 const canvasToBlob = (canvas: HTMLCanvasElement, type: string, quality?: number) =>
   new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(
@@ -179,30 +195,63 @@ const drawRoundRect = (
   ctx.closePath();
 };
 
-const drawVideoCover = (
+const mediaDimensions = (
+  media: ShareMediaElement,
+  fallbackWidth: number,
+  fallbackHeight: number,
+) => {
+  if (media instanceof HTMLVideoElement) {
+    return {
+      height: media.videoHeight || fallbackHeight,
+      width: media.videoWidth || fallbackWidth,
+    };
+  }
+
+  return {
+    height: media.naturalHeight || fallbackHeight,
+    width: media.naturalWidth || fallbackWidth,
+  };
+};
+
+const drawMediaCover = (
   ctx: CanvasRenderingContext2D,
-  video: HTMLVideoElement,
+  media: ShareMediaElement,
   width: number,
   height: number,
 ) => {
-  const videoWidth = video.videoWidth || width;
-  const videoHeight = video.videoHeight || height;
-  const sourceRatio = videoWidth / videoHeight;
+  const { height: mediaHeight, width: mediaWidth } = mediaDimensions(media, width, height);
+  const sourceRatio = mediaWidth / mediaHeight;
   const targetRatio = width / height;
   let sourceX = 0;
   let sourceY = 0;
-  let sourceWidth = videoWidth;
-  let sourceHeight = videoHeight;
+  let sourceWidth = mediaWidth;
+  let sourceHeight = mediaHeight;
 
   if (sourceRatio > targetRatio) {
-    sourceWidth = videoHeight * targetRatio;
-    sourceX = (videoWidth - sourceWidth) / 2;
+    sourceWidth = mediaHeight * targetRatio;
+    sourceX = (mediaWidth - sourceWidth) / 2;
   } else {
-    sourceHeight = videoWidth / targetRatio;
-    sourceY = (videoHeight - sourceHeight) / 2;
+    sourceHeight = mediaWidth / targetRatio;
+    sourceY = (mediaHeight - sourceHeight) / 2;
   }
 
-  ctx.drawImage(video, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, width, height);
+  ctx.drawImage(media, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, width, height);
+};
+
+const drawMediaContain = (
+  ctx: CanvasRenderingContext2D,
+  media: ShareMediaElement,
+  width: number,
+  height: number,
+) => {
+  const { height: mediaHeight, width: mediaWidth } = mediaDimensions(media, width, height);
+  const scale = Math.min(width / mediaWidth, height / mediaHeight);
+  const targetWidth = mediaWidth * scale;
+  const targetHeight = mediaHeight * scale;
+  const targetX = (width - targetWidth) / 2;
+  const targetY = (height - targetHeight) / 2;
+
+  ctx.drawImage(media, targetX, targetY, targetWidth, targetHeight);
 };
 
 const wrapText = (
@@ -255,7 +304,7 @@ const wrapText = (
 const drawQuestionCard = (
   ctx: CanvasRenderingContext2D,
   layout: ShareCanvasLayout,
-  target: LectumShareVideoTarget,
+  target: LectumShareSocialTarget,
   palette: ShareCanvasPalette,
 ) => {
   const { card } = layout;
@@ -292,7 +341,7 @@ const drawQuestionCard = (
   ctx.font = `800 ${card.headerFontSize}px Manrope, Arial, sans-serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("Pergunta na Lectum", card.x + card.width / 2, card.y + card.headerHeight / 2);
+  ctx.fillText(target.cardLabel, card.x + card.width / 2, card.y + card.headerHeight / 2);
 
   ctx.fillStyle = "#0f172a";
   ctx.font = `900 ${card.bodyFontSize}px Manrope, Arial, sans-serif`;
@@ -307,12 +356,25 @@ const drawQuestionCard = (
 
 const drawLectumShareFrame = (
   ctx: CanvasRenderingContext2D,
-  video: HTMLVideoElement,
+  media: ShareMediaElement,
   layout: ShareCanvasLayout,
-  target: LectumShareVideoTarget,
+  target: LectumShareSocialTarget,
   palette: ShareCanvasPalette,
 ) => {
-  drawVideoCover(ctx, video, layout.width, layout.height);
+  ctx.fillStyle = "#000000";
+  ctx.fillRect(0, 0, layout.width, layout.height);
+
+  if (target.mediaType === "image") {
+    ctx.save();
+    ctx.filter = "blur(34px)";
+    drawMediaCover(ctx, media, layout.width, layout.height);
+    ctx.restore();
+
+    ctx.fillStyle = "rgba(0, 0, 0, 0.42)";
+    ctx.fillRect(0, 0, layout.width, layout.height);
+  }
+
+  drawMediaContain(ctx, media, layout.width, layout.height);
   drawQuestionCard(ctx, layout, target, palette);
 };
 
@@ -331,9 +393,10 @@ const supportedVideoMimeType = () => {
 
 const extensionFromMimeType = (mimeType: string) => (mimeType.includes("mp4") ? "mp4" : "webm");
 
-const safeFileName = (extension: string) => `lectum-video-resposta-vertical-9x16.${extension}`;
+const safeFileName = (target: LectumShareSocialTarget, extension: string) =>
+  `${target.kind === "post_media" ? "lectum-postado" : "lectum-respondido"}-vertical-9x16.${extension}`;
 
-const createImageShareFile = async (target: LectumShareVideoTarget, video: HTMLVideoElement) => {
+const createImageShareFile = async (target: LectumShareSocialTarget, media: ShareMediaElement) => {
   const layout = storyCanvasLayout;
   const canvas = createCanvas(layout);
   const ctx = canvas.getContext("2d");
@@ -342,16 +405,16 @@ const createImageShareFile = async (target: LectumShareVideoTarget, video: HTMLV
     throw new Error("Canvas indisponível para gerar o compartilhamento.");
   }
 
-  drawLectumShareFrame(ctx, video, layout, target, getCanvasPalette());
+  drawLectumShareFrame(ctx, media, layout, target, getCanvasPalette());
   const blob = await canvasToBlob(canvas, "image/png");
 
-  return new File([blob], safeFileName("png"), {
+  return new File([blob], safeFileName(target, "png"), {
     type: "image/png",
   });
 };
 
 const createVideoShareFile = async (
-  target: LectumShareVideoTarget,
+  target: LectumShareSocialTarget,
   video: VideoWithCaptureStream,
 ) => {
   const mimeType = supportedVideoMimeType();
@@ -431,7 +494,7 @@ const createVideoShareFile = async (
       const outputType = recorder.mimeType || mimeType || "video/webm";
       const blob = new Blob(chunks, { type: outputType });
       const extension = extensionFromMimeType(outputType);
-      resolve(new File([blob], safeFileName(extension), { type: outputType }));
+      resolve(new File([blob], safeFileName(target, extension), { type: outputType }));
     };
 
     const start = async () => {
@@ -467,23 +530,29 @@ const createVideoShareFile = async (
   });
 };
 
-const createLectumShareFile = async (target: LectumShareVideoTarget) => {
-  const videoUrl = resolvePublicMediaUrl(target.videoUrl);
+const createLectumShareFile = async (target: LectumShareSocialTarget) => {
+  const mediaUrl = resolvePublicMediaUrl(target.mediaUrl);
 
-  if (!videoUrl) {
-    throw new Error("Vídeo indisponível para compartilhamento.");
+  if (!mediaUrl) {
+    throw new Error("M?dia indispon?vel para compartilhamento.");
   }
 
   if ("fonts" in document) {
     await document.fonts.ready.catch(() => undefined);
   }
 
-  const video = await loadVideoElement(videoUrl);
+  if (target.mediaType === "image") {
+    const image = await loadImageElement(mediaUrl);
+
+    return createImageShareFile(target, image);
+  }
+
+  const video = await loadVideoElement(mediaUrl);
 
   try {
     return await createVideoShareFile(target, video);
   } catch {
-    const fallbackVideo = await loadVideoElement(videoUrl);
+    const fallbackVideo = await loadVideoElement(mediaUrl);
 
     return createImageShareFile(target, fallbackVideo);
   }
@@ -509,18 +578,14 @@ const copyShareUrl = async (url: string) => {
 };
 
 export const shareLectumVideoResponse = async (
-  target: LectumShareVideoTarget,
+  target: LectumShareSocialTarget,
 ): Promise<ShareExportResult> => {
   const file = await createLectumShareFile(target);
   const nav = navigator as ShareNavigator;
   const shareData: ShareData = {
     files: [file],
-    text:
-      target.responseText ||
-      (target.sourceKind === "comment"
-        ? "Responderam a um comentário na Lectum."
-        : "Responderam a uma pergunta na Lectum."),
-    title: "Pergunta na Lectum",
+    text: target.shareText,
+    title: target.shareTitle,
   };
 
   if (nav.share && (!nav.canShare || nav.canShare(shareData))) {
@@ -542,7 +607,7 @@ export const copyLectumShareUrl = async (target: LectumShareVideoTarget) => {
   }
 };
 
-export const copyLectumShareText = async (target: LectumShareVideoTarget) => {
+export const copyLectumShareText = async (target: LectumShareSocialTarget) => {
   if (!target.responseText) {
     throw new Error("Texto indisponível.");
   }

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Copy, Loader2, type LucideIcon, MoreHorizontal, X } from "lucide-react";
 import Image from "next/image";
@@ -10,7 +10,11 @@ import {
   copyLectumShareUrl,
   shareLectumVideoResponse,
 } from "@/utils/lectum-share-media";
-import type { LectumShareChannel, LectumShareVideoTarget } from "@/utils/lectum-share-target";
+import type {
+  LectumShareChannel,
+  LectumShareSocialTarget,
+  LectumShareVideoTarget,
+} from "@/utils/lectum-share-target";
 import { resolvePublicMediaUrl } from "@/utils/media";
 
 type LectumShareVideoModalProps = {
@@ -92,8 +96,23 @@ const isInteractiveDragTarget = (target: EventTarget | null) =>
   target instanceof HTMLElement &&
   Boolean(target.closest("a,button,input,select,textarea,[role='button']"));
 
-const SharePreview = ({ target }: { target: LectumShareVideoTarget }) => {
-  const videoSrc = resolvePublicMediaUrl(target.videoUrl);
+const isSocialShareTarget = (target: LectumShareVideoTarget): target is LectumShareSocialTarget =>
+  target.kind !== "link";
+
+const isLinkOnlyAction = (actionId: ShareActionId) =>
+  actionId === "copy" || actionId === "whatsapp";
+
+const whatsappShareUrl = (target: LectumShareVideoTarget) => {
+  const text =
+    target.kind === "link"
+      ? [target.title, target.shareUrl].filter(Boolean).join("\n")
+      : [target.shareText, target.shareUrl].filter(Boolean).join("\n");
+
+  return `https://wa.me/?text=${encodeURIComponent(text)}`;
+};
+
+const SharePreview = ({ target }: { target: LectumShareSocialTarget }) => {
+  const mediaSrc = resolvePublicMediaUrl(target.mediaUrl);
   const sourcePreview = truncatePreviewText(target.sourceText, 96);
 
   return (
@@ -103,17 +122,37 @@ const SharePreview = ({ target }: { target: LectumShareVideoTarget }) => {
         sharePreviewClassName,
       )}
     >
-      {videoSrc ? (
+      {mediaSrc && target.mediaType === "video" ? (
         <video
-          aria-label="Prévia do vídeo-resposta no layout de compartilhamento Lectum"
+          aria-label="Prévia do vídeo no layout de compartilhamento Lectum"
           autoPlay
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+          className="pointer-events-none absolute inset-0 h-full w-full object-contain"
           crossOrigin="anonymous"
           loop
           muted
           playsInline
-          src={videoSrc}
+          src={mediaSrc}
         />
+      ) : mediaSrc ? (
+        <>
+          <Image
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover opacity-55 blur-xl"
+            fill
+            sizes="300px"
+            src={mediaSrc}
+            unoptimized
+          />
+          <Image
+            alt="Prévia da imagem no layout de compartilhamento Lectum"
+            className="pointer-events-none absolute inset-0 h-full w-full object-contain"
+            fill
+            sizes="300px"
+            src={mediaSrc}
+            unoptimized
+          />
+        </>
       ) : (
         <div className="absolute inset-0 bg-foreground" />
       )}
@@ -125,7 +164,7 @@ const SharePreview = ({ target }: { target: LectumShareVideoTarget }) => {
         )}
       >
         <p className="bg-primary px-4 py-2 text-center text-[13px] font-black leading-none text-white sm:px-3 sm:py-1.5 sm:text-[11px] sm:leading-none">
-          Pergunta na Lectum
+          {target.cardLabel}
         </p>
         <p
           className={cn(
@@ -173,6 +212,7 @@ const ShareResponseTextPanel = ({
 
 type ShareSheetOptionProps = {
   disabled: boolean;
+  disabledReason?: string;
   icon?: LucideIcon;
   iconClassName: string;
   iconSrc?: string;
@@ -184,6 +224,7 @@ type ShareSheetOptionProps = {
 
 const ShareSheetOption = ({
   disabled,
+  disabledReason,
   icon: Icon,
   iconClassName,
   iconSrc,
@@ -197,6 +238,7 @@ const ShareSheetOption = ({
     className="group grid w-[58px] shrink-0 justify-items-center gap-1.5 rounded-2xl py-1 text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 disabled:cursor-not-allowed disabled:opacity-60"
     disabled={disabled}
     onClick={onClick}
+    title={disabled ? disabledReason : undefined}
     type="button"
   >
     <span
@@ -233,7 +275,13 @@ const ShareSheetOption = ({
 export const LectumShareVideoModal = (props: LectumShareVideoModalProps) => {
   if (!props.target) return null;
 
-  return <LectumShareVideoDialog {...props} key={props.target.replyId} target={props.target} />;
+  return (
+    <LectumShareVideoDialog
+      {...props}
+      key={`${props.target.kind}-${props.target.postId}-${props.target.replyId ?? "post"}`}
+      target={props.target}
+    />
+  );
 };
 
 const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoDialogProps) => {
@@ -248,6 +296,8 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
   const [error, setError] = useState<string | null>(null);
   const exporting = pendingAction !== null;
   const sourceLabel = useMemo(() => {
+    if (target.kind === "link") return "link do post";
+
     return target.sourceKind === "comment" ? "prévia do comentário" : "pergunta do post";
   }, [target]);
 
@@ -369,6 +419,8 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
   };
 
   const handleShareToDevice = async (actionId: ShareActionId) => {
+    if (!isSocialShareTarget(target)) return;
+
     setPendingAction(actionId);
     setError(null);
 
@@ -384,8 +436,26 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
       );
     } catch {
       setError(
-        "Não foi possível gerar o arquivo agora. Você ainda pode copiar o link direto da resposta.",
+        "NÃ£o foi possÃ­vel gerar o arquivo agora. VocÃª ainda pode copiar o link direto da resposta.",
       );
+    } finally {
+      setPendingAction(null);
+    }
+  };
+
+  const handleShareLinkToWhatsApp = () => {
+    setPendingAction("whatsapp");
+    setError(null);
+
+    try {
+      const opened = window.open(whatsappShareUrl(target), "_blank", "noopener,noreferrer");
+      if (!opened) {
+        window.location.assign(whatsappShareUrl(target));
+      }
+      onShared("web_share");
+      toast.success("Link preparado para enviar no WhatsApp.");
+    } catch {
+      setError("NÃƒÂ£o foi possÃƒÂ­vel abrir o WhatsApp agora.");
     } finally {
       setPendingAction(null);
     }
@@ -400,13 +470,15 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
       onShared("clipboard");
       toast.success("Link copiado.");
     } catch {
-      setError("Não foi possível copiar o link neste navegador.");
+      setError("NÃ£o foi possÃ­vel copiar o link neste navegador.");
     } finally {
       setPendingAction(null);
     }
   };
 
   const handleCopyText = async () => {
+    if (!isSocialShareTarget(target)) return;
+
     setPendingAction("copy_text");
     setError(null);
 
@@ -414,7 +486,7 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
       await copyLectumShareText(target);
       toast.success("Texto copiado para usar como legenda.");
     } catch {
-      setError("Não foi possível copiar o texto neste navegador.");
+      setError("NÃ£o foi possÃ­vel copiar o texto neste navegador.");
     } finally {
       setPendingAction(null);
     }
@@ -427,10 +499,11 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
       : modalIsVisible
         ? "translate3d(0, 0, 0)"
         : "translate3d(0, 100%, 0)";
+  const socialTarget = isSocialShareTarget(target) ? target : null;
 
   return (
     <div
-      aria-label={`Compartilhar vídeo-resposta com ${sourceLabel}`}
+      aria-label={`Compartilhar ${sourceLabel}`}
       aria-modal="true"
       className={cn(
         "fixed inset-0 z-[90] overscroll-contain bg-foreground/62 backdrop-blur-sm transition-opacity duration-200 ease-out sm:grid sm:place-items-center sm:px-5 motion-reduce:transition-none",
@@ -446,7 +519,12 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
         tabIndex={-1}
         type="button"
       />
-      <div className="pointer-events-none relative z-10 mx-auto flex min-h-dvh w-full max-w-[430px] items-end sm:min-h-0 sm:max-w-[380px]">
+      <div
+        className={cn(
+          "pointer-events-none relative z-10 mx-auto flex min-h-dvh w-full max-w-[430px] items-end sm:min-h-0",
+          socialTarget ? "sm:max-w-[380px]" : "sm:max-w-[360px]",
+        )}
+      >
         <div
           className={cn(
             "pointer-events-auto relative max-h-[94dvh] w-full touch-none select-none overscroll-contain overflow-y-auto rounded-t-[34px] border border-border bg-surface px-4 pt-14 pb-[max(1rem,env(safe-area-inset-bottom))] text-foreground shadow-[var(--lectum-shadow)] will-change-transform sm:max-h-[calc(100dvh-2rem)] sm:overflow-visible sm:rounded-[34px] sm:px-5 sm:pt-10 sm:pb-4",
@@ -477,34 +555,63 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
 
-          <SharePreview target={target} />
+          {socialTarget ? <SharePreview target={socialTarget} /> : null}
 
-          {target.responseText ? (
+          {socialTarget?.responseText ? (
             <ShareResponseTextPanel
               disabled={exporting}
               onCopy={handleCopyText}
               pending={pendingAction === "copy_text"}
-              text={target.responseText}
+              text={socialTarget.responseText}
             />
           ) : null}
 
-          <div className="mt-4 border-border border-t pt-3 sm:mt-3 sm:pt-3">
+          {socialTarget?.kind === "post_media" && socialTarget.carouselCount > 1 ? (
+            <p className="mt-3 px-1 text-xs font-semibold leading-4 text-muted">
+              Carrossel com {socialTarget.carouselCount} imagens. O link abre o post completo.
+            </p>
+          ) : null}
+
+          <div
+            className={cn(
+              socialTarget ? "mt-4 border-border border-t pt-3 sm:mt-3 sm:pt-3" : "pt-1 sm:pt-2",
+            )}
+          >
             <div className="-mx-1 flex justify-between gap-2 overflow-hidden px-1 pb-2 sm:gap-3">
-              {shareSheetActions.map((action) => (
-                <ShareSheetOption
-                  disabled={exporting}
-                  icon={"icon" in action ? action.icon : undefined}
-                  iconClassName={action.iconClassName}
-                  iconSrc={"iconSrc" in action ? action.iconSrc : undefined}
-                  iconStyle={"iconStyle" in action ? action.iconStyle : undefined}
-                  key={action.id}
-                  label={action.label}
-                  onClick={() =>
-                    action.id === "copy" ? handleCopyLink() : handleShareToDevice(action.id)
-                  }
-                  pending={pendingAction === action.id}
-                />
-              ))}
+              {shareSheetActions.map((action) => {
+                const linkActionDisabled = !socialTarget && !isLinkOnlyAction(action.id);
+
+                return (
+                  <ShareSheetOption
+                    disabled={exporting || linkActionDisabled}
+                    disabledReason={
+                      linkActionDisabled
+                        ? "Disponível para vídeos e imagens de psicólogos."
+                        : undefined
+                    }
+                    icon={"icon" in action ? action.icon : undefined}
+                    iconClassName={action.iconClassName}
+                    iconSrc={"iconSrc" in action ? action.iconSrc : undefined}
+                    iconStyle={"iconStyle" in action ? action.iconStyle : undefined}
+                    key={action.id}
+                    label={action.label}
+                    onClick={() => {
+                      if (action.id === "copy") {
+                        void handleCopyLink();
+                        return;
+                      }
+
+                      if (!socialTarget && action.id === "whatsapp") {
+                        handleShareLinkToWhatsApp();
+                        return;
+                      }
+
+                      void handleShareToDevice(action.id);
+                    }}
+                    pending={pendingAction === action.id}
+                  />
+                );
+              })}
             </div>
           </div>
 
