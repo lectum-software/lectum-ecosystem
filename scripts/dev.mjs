@@ -62,13 +62,19 @@ function parsePort(value, fallback) {
   return parsed;
 }
 
-function assertCommandExists(command, installHint) {
-  const result = spawnSync(command, ["--version"], {
+function assertCommandExists(command, installHint, versionArgs = ["--version"]) {
+  const result = spawnSync(command, versionArgs, {
     stdio: "ignore",
   });
 
   if (result.error?.code === "ENOENT") {
     throw new Error(`${command} não encontrado. ${installHint}`);
+  }
+}
+
+function assertSupportedTunnelProvider(provider) {
+  if (!["cloudflared", "ngrok"].includes(provider)) {
+    throw new Error(`DEV_TUNNEL_PROVIDER inválido: ${provider}. Use cloudflared ou ngrok.`);
   }
 }
 
@@ -219,14 +225,22 @@ const apps = [
 ];
 
 if (tunnelEnabled) {
-  if (tunnelProvider !== "cloudflared") {
-    throw new Error(`DEV_TUNNEL_PROVIDER inválido: ${tunnelProvider}. Use cloudflared.`);
+  assertSupportedTunnelProvider(tunnelProvider);
+
+  if (tunnelProvider === "cloudflared") {
+    assertCommandExists(
+      "cloudflared",
+      "Instale o Cloudflare Tunnel CLI ou desative DEV_TUNNEL_ENABLED.",
+    );
   }
 
-  assertCommandExists(
-    "cloudflared",
-    "Instale o Cloudflare Tunnel CLI ou desative DEV_TUNNEL_ENABLED.",
-  );
+  if (tunnelProvider === "ngrok") {
+    assertCommandExists(
+      "ngrok",
+      "Instale o ngrok CLI, configure seu authtoken ou desative DEV_TUNNEL_ENABLED.",
+      ["version"],
+    );
+  }
 }
 
 const children = new Map();
@@ -281,16 +295,28 @@ if (tunnelEnabled) {
     publicUrl: tunnelPublicUrl,
   });
 
-  const tunnelArgs = tunnelName
-    ? ["tunnel", "run", tunnelName]
-    : ["tunnel", "--url", `http://127.0.0.1:${tunnelProxyPort}`];
+  const tunnelApp =
+    tunnelProvider === "ngrok"
+      ? {
+          name: "tunnel",
+          command: "ngrok",
+          commandArgs: [
+            "http",
+            `http://127.0.0.1:${tunnelProxyPort}`,
+            ...(tunnelPublicUrl ? ["--url", tunnelPublicUrl] : []),
+          ],
+          url: tunnelPublicUrl || `ngrok dynamic -> http://127.0.0.1:${tunnelProxyPort}`,
+        }
+      : {
+          name: "tunnel",
+          command: "cloudflared",
+          commandArgs: tunnelName
+            ? ["tunnel", "run", tunnelName]
+            : ["tunnel", "--url", `http://127.0.0.1:${tunnelProxyPort}`],
+          url: tunnelPublicUrl || `quick tunnel -> http://127.0.0.1:${tunnelProxyPort}`,
+        };
 
-  apps.push({
-    name: "tunnel",
-    command: "cloudflared",
-    commandArgs: tunnelArgs,
-    url: tunnelPublicUrl || `quick tunnel -> http://127.0.0.1:${tunnelProxyPort}`,
-  });
+  apps.push(tunnelApp);
 }
 
 console.log("Iniciando aplicações Lectum:");
@@ -300,18 +326,29 @@ for (const app of apps) {
 
 if (tunnelEnabled) {
   console.log(`- tunnel proxy local: http://localhost:${tunnelProxyPort}`);
+  console.log(`- tunnel provider: ${tunnelProvider}`);
   console.log(
     "  Rotas /api, /socket.io, /docs e /swagger seguem para o backend; demais rotas seguem para o frontend.",
   );
 
-  if (tunnelName && !tunnelPublicUrl) {
+  if (tunnelProvider === "cloudflared" && tunnelName && !tunnelPublicUrl) {
     console.log(
       "  DEV_TUNNEL_NAME está configurado sem DEV_TUNNEL_URL; confira o hostname fixo no Cloudflare.",
     );
   }
 
-  if (!tunnelName) {
+  if (tunnelProvider === "cloudflared" && !tunnelName) {
     console.log("  Sem DEV_TUNNEL_NAME, o cloudflared criará uma URL temporária a cada execução.");
+  }
+
+  if (tunnelProvider === "ngrok" && tunnelName) {
+    console.log("  DEV_TUNNEL_NAME é ignorado pelo provider ngrok; use DEV_TUNNEL_URL.");
+  }
+
+  if (tunnelProvider === "ngrok" && !tunnelPublicUrl) {
+    console.log(
+      "  Sem DEV_TUNNEL_URL, o ngrok escolherá a URL conforme a conta/configuração local.",
+    );
   }
 }
 console.log("");

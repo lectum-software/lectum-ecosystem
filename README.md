@@ -13,7 +13,7 @@ O comando sobe:
 
 - backend em `PORT` definido em `backend/.env` (padrão `3001`);
 - frontend em `FRONTEND_PORT` definido em `backend/.env` (padrão `3000`);
-- opcionalmente, um tunnel Cloudflare quando `DEV_TUNNEL_ENABLED=1`.
+- opcionalmente, um tunnel Cloudflare ou ngrok quando `DEV_TUNNEL_ENABLED=1`.
 
 ## Tunnel local para integrações externas
 
@@ -21,9 +21,10 @@ O tunnel existe para testar integrações reais que precisam chamar sua máquina
 Mercado Pago. Não há fallback local para assinatura: se o Mercado Pago não conseguir criar a
 assinatura ou entregar o webhook, o fluxo deve falhar e ser corrigido por configuração.
 
-### Tunnel rápido, URL temporária
+### Cloudflare rápido, URL temporária
 
-Com `DEV_TUNNEL_ENABLED=1` e `DEV_TUNNEL_NAME` vazio, `pnpm dev` executa:
+Com `DEV_TUNNEL_ENABLED=1`, `DEV_TUNNEL_PROVIDER=cloudflared` e `DEV_TUNNEL_NAME` vazio,
+`pnpm dev` executa:
 
 ```bash
 cloudflared tunnel --url http://127.0.0.1:${DEV_TUNNEL_PROXY_PORT}
@@ -31,6 +32,43 @@ cloudflared tunnel --url http://127.0.0.1:${DEV_TUNNEL_PROXY_PORT}
 
 O Cloudflare gera uma URL temporária a cada execução. Esse modo serve para validar conectividade,
 mas exige atualizar URLs no Mercado Pago sempre que a URL mudar.
+
+### ngrok com Dev Domain fixo
+
+Para uma configuração local mais simples, use o ngrok com o Dev Domain da sua conta:
+
+```bash
+# Instalar CLI no macOS
+brew install ngrok
+
+# Configurar authtoken uma vez na máquina
+ngrok config add-authtoken <seu-authtoken>
+```
+
+Depois configure em `backend/.env`:
+
+```env
+DEV_TUNNEL_ENABLED=1
+DEV_TUNNEL_PROVIDER=ngrok
+DEV_TUNNEL_PROXY_PORT=3005
+DEV_TUNNEL_URL=https://seu-dev-domain.ngrok-free.dev
+WEB_URL=http://localhost:3000,https://seu-dev-domain.ngrok-free.dev
+MERCADO_PAGO_BACK_URL=https://seu-dev-domain.ngrok-free.dev/app/professional/billing/address
+```
+
+E, quando quiser acessar o frontend pelo próprio tunnel e manter chamadas same-origin via proxy,
+configure em `frontend/.env`:
+
+```env
+NEXT_PUBLIC_API_URL=https://seu-dev-domain.ngrok-free.dev
+NEXT_PUBLIC_LOGIN_URL=https://seu-dev-domain.ngrok-free.dev/api/public/google/login
+```
+
+No painel do Mercado Pago, configure o webhook para:
+
+```text
+https://seu-dev-domain.ngrok-free.dev/api/public/billing/webhook
+```
 
 ### URL fixa com Cloudflare Named Tunnel
 
