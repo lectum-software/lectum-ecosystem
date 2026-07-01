@@ -259,19 +259,17 @@ export class MercadoPagoAdapter implements PaymentGateway {
     payerEmail,
     returnUrl,
   }: GatewaySubscriptionInput): Promise<GatewaySubscriptionResult> {
+    const hasAssociatedPlan = Boolean(gatewayPlanId);
     const response = await this.runGatewayOperation("create_subscription", () =>
       this.preApproval.create({
         body: {
-          ...(gatewayPlanId
-            ? { preapproval_plan_id: gatewayPlanId }
-            : {
-                auto_recurring: {
-                  frequency: 1,
-                  frequency_type: "months",
-                  transaction_amount: amountCents / 100,
-                  currency_id: "BRL",
-                },
-              }),
+          ...(gatewayPlanId ? { preapproval_plan_id: gatewayPlanId } : {}),
+          auto_recurring: {
+            frequency: 1,
+            frequency_type: "months",
+            transaction_amount: amountCents / 100,
+            currency_id: "BRL",
+          },
           back_url: returnUrl || undefined,
           card_token_id: cardToken,
           external_reference: subscriptionId,
@@ -279,9 +277,12 @@ export class MercadoPagoAdapter implements PaymentGateway {
           reason: planName,
           status: "authorized",
         },
-        requestOptions: this.withRequestOptions({
-          idempotencyKey: `lectum-preapproval-${subscriptionId}`,
-        }),
+        requestOptions: this.withRequestOptions(
+          {
+            idempotencyKey: `lectum-preapproval-${subscriptionId}`,
+          },
+          { includeSandboxScope: !hasAssociatedPlan },
+        ),
       }),
     );
 
