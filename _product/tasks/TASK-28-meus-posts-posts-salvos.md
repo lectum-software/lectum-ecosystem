@@ -414,3 +414,23 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Smoke HTTP local: `http://127.0.0.1:3000/app/posts/mine` retornou 200.
 - `git diff --check`
 - ADR atualizado: `adrs/0145-edicao-post-publicado.md`.
+
+## Ajuste complementar em 2026-07-01 - resposta profissional destacada em Salvos
+
+- Pedido direto de produto: quando um post salvo possuir `highlighted_professional_reply`, o card em
+  `/app/posts/saved` deve exibir essa resposta-destaque como no feed/comunidade.
+- Frontend: a rota de Salvos deixou de desativar a renderizacao da resposta profissional destacada
+  ao reutilizar `CommunityPostCard`; o componente volta a usar o comportamento padrao do feed para
+  posts principais salvos de pacientes com resposta profissional verificada.
+- O backend ja retornava `highlighted_professional_reply` real em `GET /api/private/posts/saved`
+  via `listPostSelect`/`toListPostResponse`; nao houve alteracao de endpoint, DTO, schema Prisma,
+  migrations, packages, votos, salvamentos, respostas salvas independentes ou persistencia.
+- Mobile-first: referencia visual consultada em `_product/proto/Posts Salvos.jpg` e comparada com
+  `_product/proto/Feed Comunidade.jpg`; o Builder/Quick Copy ativo nao esta exposto como ferramenta
+  callable neste ambiente.
+- ADR atualizado: `adrs/0072-meus-posts-e-posts-salvos.md`.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`,
+  `git diff --check` e Chrome headless mobile `390x844` em `/app/posts/saved`; sem sessao
+  persistida no perfil headless, a rota redirecionou para login, entao a comparacao visual
+  autenticada foi feita pelas imagens locais e pelo reuso do `CommunityPostCard` ja validado no
+  feed.

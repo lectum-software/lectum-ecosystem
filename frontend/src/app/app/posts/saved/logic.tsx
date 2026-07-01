@@ -615,7 +615,6 @@ export const SavedPostsLogic = () => {
                       label: "Remover dos salvos",
                       onClick: () => unsavePostMutation.mutate(item.post.id),
                     }}
-                    showHighlightedProfessionalReply={false}
                   />
                 ),
               )}

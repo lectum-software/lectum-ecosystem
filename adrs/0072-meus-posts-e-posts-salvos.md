@@ -430,3 +430,43 @@ Em `Meus posts e respostas`, o conteudo listado pertence ao proprio usuario aute
 - `pnpm check`
 - Smoke API real em `GET /api/private/posts/mine?type=replies`: criou uma resposta propria e uma resposta filha propria do psicologo `tuliosrezende@gmail.com`, confirmou `replies_received_count=1` e `has_verified_professional_reply=false`, e removeu os registros temporarios ao final.
 - Chrome/CDP mobile `390x844` em `/app/posts/mine`: confirmou ausencia de `Chamar no WhatsApp` em conteudo proprio e ausencia de `Respondido por psicologo verificado` no card da resposta propria com filho criado pelo mesmo psicologo.
+
+## Complemento 2026-07-01: resposta profissional destacada em posts salvos
+
+### Contexto
+
+O prototipo local de `Posts Salvos` e o feed exibem a resposta de psicologo em destaque dentro do
+card do post quando o post principal salvo possui `highlighted_professional_reply`. Uma decisao
+anterior ocultava esse bloco em `/app/posts/saved` para evitar ambiguidade com respostas salvas
+independentes, mas o pedido de produto atual prioriza consistencia visual com o feed: salvar o post
+deve preservar tambem a resposta-destaque associada ao post no card.
+
+### Decisao
+
+- Remover a excecao `showHighlightedProfessionalReply={false}` dos cards de posts em
+  `/app/posts/saved`.
+- Reutilizar o default de `CommunityPostCard`, que so renderiza a resposta destacada para posts
+  originais de pacientes com resposta profissional verificada (`highlighted_professional_reply` real
+  vindo do backend).
+- Manter respostas salvas como itens independentes quando o usuario salva uma resposta diretamente;
+  a resposta-destaque dentro de um post salvo continua sendo contexto do post, nao um novo item
+  salvo.
+
+### Consequencias
+
+- A tela Salvos fica alinhada ao feed/comunidade para posts com resposta profissional em destaque.
+- O contrato existente de `GET /api/private/posts/saved` ja era suficiente; nao ha schema novo,
+  endpoint novo, migration ou package novo.
+- A ambiguidade e mitigada pela separacao visual existente: posts principais seguem em
+  `CommunityPostCard`, enquanto respostas salvas independentes usam o header `Respondido em`.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- Chrome headless mobile `390x844` em `/app/posts/saved`; sem sessao persistida no perfil headless,
+  a rota redirecionou para login. A comparacao visual autenticada usou as imagens locais
+  `_product/proto/Posts Salvos.jpg` e `_product/proto/Feed Comunidade.jpg`, alem do reuso do
+  `CommunityPostCard` ja validado no feed.
