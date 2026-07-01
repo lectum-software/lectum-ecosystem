@@ -1,7 +1,8 @@
-import type {
-  LectumShareChannel,
-  LectumShareSocialTarget,
-  LectumShareVideoTarget,
+import {
+  type LectumShareChannel,
+  type LectumShareSocialTarget,
+  type LectumShareVideoTarget,
+  truncateLectumShareProfessionalTagName,
 } from "@/utils/lectum-share-target";
 import { resolvePublicMediaUrl } from "@/utils/media";
 
@@ -49,23 +50,16 @@ type ShareCanvasLayout = {
   height: number;
   maxQuestionLines: number;
   professionalTag: {
-    avatarSize: number;
     bottom: number;
     gap: number;
     height: number;
     maxWidth: number;
     nameFontSize: number;
-    paddingLeft: number;
-    paddingRight: number;
-    radius: number;
+    paddingX: number;
     roleFontSize: number;
     verifiedSize: number;
   };
   width: number;
-};
-
-type ShareFrameAssets = {
-  professionalAvatar: HTMLImageElement | null;
 };
 
 const MAX_VIDEO_EXPORT_SECONDS = 60;
@@ -79,7 +73,7 @@ const storyCanvasLayout: ShareCanvasLayout = {
     lineHeight: 42,
     paddingX: 56,
     paddingY: 28,
-    radius: 24,
+    radius: 16,
     width: 780,
     x: 150,
     y: 112,
@@ -87,17 +81,14 @@ const storyCanvasLayout: ShareCanvasLayout = {
   height: 1920,
   maxQuestionLines: 2,
   professionalTag: {
-    avatarSize: 72,
     bottom: 448,
-    gap: 18,
-    height: 106,
-    maxWidth: 760,
-    nameFontSize: 31,
-    paddingLeft: 12,
-    paddingRight: 34,
-    radius: 53,
-    roleFontSize: 22,
-    verifiedSize: 28,
+    gap: 14,
+    height: 78,
+    maxWidth: 620,
+    nameFontSize: 27,
+    paddingX: 34,
+    roleFontSize: 19,
+    verifiedSize: 24,
   },
   width: 1080,
 };
@@ -181,14 +172,6 @@ const loadImageElement = async (src: string) =>
     image.onerror = () => reject(new Error("NÃ£o foi possÃ­vel carregar a imagem."));
     image.src = src;
   });
-
-const loadProfessionalAvatarElement = async (target: LectumShareSocialTarget) => {
-  const avatarUrl = resolvePublicMediaUrl(target.professional.avatar);
-
-  if (!avatarUrl) return null;
-
-  return loadImageElement(avatarUrl).catch(() => null);
-};
 
 const canvasToBlob = (canvas: HTMLCanvasElement, type: string, quality?: number) =>
   new Promise<Blob>((resolve, reject) => {
@@ -352,61 +335,6 @@ const truncateTextToWidth = (ctx: CanvasRenderingContext2D, text: string, maxWid
   return `${next}...`;
 };
 
-const drawCircularAvatar = (
-  ctx: CanvasRenderingContext2D,
-  avatar: HTMLImageElement | null,
-  name: string,
-  x: number,
-  y: number,
-  size: number,
-) => {
-  const radius = size / 2;
-  const centerX = x + radius;
-  const centerY = y + radius;
-
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-  ctx.closePath();
-  ctx.clip();
-
-  if (avatar) {
-    const { height: avatarHeight, width: avatarWidth } = mediaDimensions(avatar, size, size);
-    const sourceRatio = avatarWidth / avatarHeight;
-    let sourceX = 0;
-    let sourceY = 0;
-    let sourceWidth = avatarWidth;
-    let sourceHeight = avatarHeight;
-
-    if (sourceRatio > 1) {
-      sourceWidth = avatarHeight;
-      sourceX = (avatarWidth - sourceWidth) / 2;
-    } else {
-      sourceHeight = avatarWidth;
-      sourceY = (avatarHeight - sourceHeight) / 2;
-    }
-
-    ctx.drawImage(avatar, sourceX, sourceY, sourceWidth, sourceHeight, x, y, size, size);
-  } else {
-    ctx.fillStyle = "#0f513f";
-    ctx.fillRect(x, y, size, size);
-    ctx.fillStyle = "#ffffff";
-    ctx.font = `700 ${Math.round(size * 0.42)}px Manrope, Arial, sans-serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(name.trim().charAt(0).toUpperCase() || "P", centerX, centerY + 1);
-  }
-  ctx.restore();
-
-  ctx.save();
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.72)";
-  ctx.beginPath();
-  ctx.arc(centerX, centerY, radius - 1.5, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.restore();
-};
-
 const drawVerifiedBadge = (
   ctx: CanvasRenderingContext2D,
   centerX: number,
@@ -499,15 +427,13 @@ const drawProfessionalTag = (
   ctx: CanvasRenderingContext2D,
   layout: ShareCanvasLayout,
   target: LectumShareSocialTarget,
-  assets: ShareFrameAssets,
 ) => {
   const { professionalTag: tag } = layout;
-  const name = target.professional.name.replace(/\s+/g, " ").trim();
+  const name = truncateLectumShareProfessionalTagName(target.professional.name);
   const roleLabel = target.professional.roleLabel;
   const y = layout.height - tag.bottom - tag.height;
   const badgeSpace = target.professional.verified ? tag.gap * 0.55 + tag.verifiedSize : 0;
-  const maxTextWidth =
-    tag.maxWidth - tag.paddingLeft - tag.avatarSize - tag.gap - badgeSpace - tag.paddingRight;
+  const maxTextWidth = tag.maxWidth - tag.paddingX * 2 - badgeSpace;
 
   ctx.save();
   ctx.font = `700 ${tag.nameFontSize}px Manrope, Arial, sans-serif`;
@@ -516,40 +442,17 @@ const drawProfessionalTag = (
   ctx.font = `500 ${tag.roleFontSize}px Manrope, Arial, sans-serif`;
   const roleWidth = ctx.measureText(roleLabel).width;
   const textBlockWidth = Math.max(nameWidth + badgeSpace, roleWidth);
-  const tagWidth = Math.min(
-    tag.maxWidth,
-    tag.paddingLeft + tag.avatarSize + tag.gap + textBlockWidth + tag.paddingRight,
-  );
+  const tagWidth = Math.min(tag.maxWidth, tag.paddingX * 2 + textBlockWidth);
   const tagX = (layout.width - tagWidth) / 2;
-  const textStartX = tagX + tag.paddingLeft + tag.avatarSize + tag.gap;
-  const nameY = y + tag.height / 2 - tag.roleFontSize * 0.44;
-  const roleY = y + tag.height / 2 + tag.nameFontSize * 0.58;
-
-  ctx.shadowBlur = 28;
-  ctx.shadowColor = "rgba(0, 0, 0, 0.22)";
-  ctx.shadowOffsetY = 12;
-  drawRoundRect(ctx, tagX, y, tagWidth, tag.height, tag.radius);
-  ctx.fillStyle = "rgba(37, 42, 42, 0.56)";
-  ctx.fill();
+  const textStartX = tagX + tag.paddingX;
+  const nameY = y + tag.height / 2 - tag.roleFontSize * 0.48;
+  const roleY = y + tag.height / 2 + tag.nameFontSize * 0.56;
   ctx.restore();
 
   ctx.save();
-  drawRoundRect(ctx, tagX, y, tagWidth, tag.height, tag.radius);
-  ctx.lineWidth = 1.5;
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.16)";
-  ctx.stroke();
-  ctx.restore();
-
-  drawCircularAvatar(
-    ctx,
-    assets.professionalAvatar,
-    name,
-    tagX + tag.paddingLeft,
-    y + (tag.height - tag.avatarSize) / 2,
-    tag.avatarSize,
-  );
-
-  ctx.save();
+  ctx.shadowBlur = 8;
+  ctx.shadowColor = "rgba(0, 0, 0, 0.72)";
+  ctx.shadowOffsetY = 2;
   ctx.fillStyle = "#ffffff";
   ctx.font = `700 ${tag.nameFontSize}px Manrope, Arial, sans-serif`;
   ctx.textAlign = "start";
@@ -576,7 +479,6 @@ const drawLectumShareFrame = (
   layout: ShareCanvasLayout,
   target: LectumShareSocialTarget,
   palette: ShareCanvasPalette,
-  assets: ShareFrameAssets,
 ) => {
   ctx.fillStyle = "#000000";
   ctx.fillRect(0, 0, layout.width, layout.height);
@@ -593,7 +495,7 @@ const drawLectumShareFrame = (
 
   drawMediaContain(ctx, media, layout.width, layout.height);
   drawQuestionCard(ctx, layout, target, palette);
-  drawProfessionalTag(ctx, layout, target, assets);
+  drawProfessionalTag(ctx, layout, target);
 };
 
 const supportedVideoMimeType = () => {
@@ -614,11 +516,7 @@ const extensionFromMimeType = (mimeType: string) => (mimeType.includes("mp4") ? 
 const safeFileName = (target: LectumShareSocialTarget, extension: string) =>
   `${target.kind === "post_media" ? "lectum-postado" : "lectum-respondido"}-vertical-9x16.${extension}`;
 
-const createImageShareFile = async (
-  target: LectumShareSocialTarget,
-  media: ShareMediaElement,
-  assets: ShareFrameAssets,
-) => {
+const createImageShareFile = async (target: LectumShareSocialTarget, media: ShareMediaElement) => {
   const layout = storyCanvasLayout;
   const canvas = createCanvas(layout);
   const ctx = canvas.getContext("2d");
@@ -627,7 +525,7 @@ const createImageShareFile = async (
     throw new Error("Canvas indisponível para gerar o compartilhamento.");
   }
 
-  drawLectumShareFrame(ctx, media, layout, target, getCanvasPalette(), assets);
+  drawLectumShareFrame(ctx, media, layout, target, getCanvasPalette());
   const blob = await canvasToBlob(canvas, "image/png");
 
   return new File([blob], safeFileName(target, "png"), {
@@ -638,7 +536,6 @@ const createImageShareFile = async (
 const createVideoShareFile = async (
   target: LectumShareSocialTarget,
   video: VideoWithCaptureStream,
-  assets: ShareFrameAssets,
 ) => {
   const mimeType = supportedVideoMimeType();
   const layout = storyCanvasLayout;
@@ -646,7 +543,7 @@ const createVideoShareFile = async (
   const ctx = canvas.getContext("2d");
 
   if (!ctx || !canvas.captureStream || mimeType === null) {
-    return createImageShareFile(target, video, assets);
+    return createImageShareFile(target, video);
   }
 
   const stream = canvas.captureStream(VIDEO_EXPORT_FRAME_RATE);
@@ -690,7 +587,7 @@ const createVideoShareFile = async (
     };
 
     const draw = () => {
-      drawLectumShareFrame(ctx, video, layout, target, palette, assets);
+      drawLectumShareFrame(ctx, video, layout, target, palette);
       const elapsed = performance.now() - startedAt;
 
       if (elapsed >= durationMs || video.ended) {
@@ -727,7 +624,7 @@ const createVideoShareFile = async (
           await waitForEvent(video, "seeked", 4000).catch(() => undefined);
         }
 
-        drawLectumShareFrame(ctx, video, layout, target, palette, assets);
+        drawLectumShareFrame(ctx, video, layout, target, palette);
         recorder.start(1000);
         startedAt = performance.now();
         await video.play();
@@ -764,24 +661,20 @@ const createLectumShareFile = async (target: LectumShareSocialTarget) => {
     await document.fonts.ready.catch(() => undefined);
   }
 
-  const assets: ShareFrameAssets = {
-    professionalAvatar: await loadProfessionalAvatarElement(target),
-  };
-
   if (target.mediaType === "image") {
     const image = await loadImageElement(mediaUrl);
 
-    return createImageShareFile(target, image, assets);
+    return createImageShareFile(target, image);
   }
 
   const video = await loadVideoElement(mediaUrl);
 
   try {
-    return await createVideoShareFile(target, video, assets);
+    return await createVideoShareFile(target, video);
   } catch {
     const fallbackVideo = await loadVideoElement(mediaUrl);
 
-    return createImageShareFile(target, fallbackVideo, assets);
+    return createImageShareFile(target, fallbackVideo);
   }
 };
 

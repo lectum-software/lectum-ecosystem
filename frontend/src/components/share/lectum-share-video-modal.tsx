@@ -11,10 +11,11 @@ import {
   copyLectumShareUrl,
   shareLectumVideoResponse,
 } from "@/utils/lectum-share-media";
-import type {
-  LectumShareChannel,
-  LectumShareSocialTarget,
-  LectumShareVideoTarget,
+import {
+  type LectumShareChannel,
+  type LectumShareSocialTarget,
+  type LectumShareVideoTarget,
+  truncateLectumShareProfessionalTagName,
 } from "@/utils/lectum-share-target";
 import { resolvePublicMediaUrl } from "@/utils/media";
 
@@ -44,7 +45,7 @@ const DRAG_START_TOLERANCE_PX = 4;
 const sharePreviewClassName = "w-[min(74vw,300px,31.5dvh)] sm:w-[min(34vw,340px,36dvh)]";
 
 const sharePreviewCardClassName =
-  "top-[6%] left-[10%] right-[10%] overflow-hidden rounded-[12px] sm:top-[6.75%] sm:left-[11%] sm:right-[11%] sm:rounded-[10px]";
+  "top-[6%] left-[10%] right-[10%] overflow-hidden rounded-[8px] sm:top-[6.75%] sm:left-[11%] sm:right-[11%] sm:rounded-[7px]";
 
 const twoLineClampStyle = {
   WebkitBoxOrient: "vertical",
@@ -120,8 +121,7 @@ const whatsappShareUrl = (target: LectumShareVideoTarget) => {
 
 const SharePreview = ({ target }: { target: LectumShareSocialTarget }) => {
   const mediaSrc = resolvePublicMediaUrl(target.mediaUrl);
-  const professionalAvatarSrc = resolvePublicMediaUrl(target.professional.avatar);
-  const professionalInitial = target.professional.name.trim().charAt(0).toUpperCase() || "P";
+  const professionalTagName = truncateLectumShareProfessionalTagName(target.professional.name);
   const sourcePreview = truncatePreviewText(target.sourceText, 64);
 
   return (
@@ -186,35 +186,20 @@ const SharePreview = ({ target }: { target: LectumShareSocialTarget }) => {
         </p>
       </div>
 
-      <div className="absolute bottom-[23.5%] left-1/2 z-10 flex h-11 max-w-[78%] -translate-x-1/2 items-center gap-2 rounded-full border border-white/12 bg-[#252a2a]/56 py-1 pr-3.5 pl-1.5 text-white shadow-[0_10px_28px_rgb(0_0_0_/_18%)] backdrop-blur-md sm:h-10 sm:gap-1.5 sm:pr-3 sm:pl-1.5">
-        <span className="relative grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-full border border-white/60 bg-[#0f513f] text-[13px] font-bold leading-none text-white sm:h-7 sm:w-7 sm:text-[11px]">
-          {professionalAvatarSrc ? (
-            <Image
-              alt=""
-              aria-hidden="true"
-              className="object-cover"
-              fill
-              sizes="28px"
-              src={professionalAvatarSrc}
-              unoptimized
-            />
-          ) : (
-            professionalInitial
-          )}
-        </span>
-        <span className="flex min-w-0 flex-col justify-center">
-          <span className="flex min-w-0 items-center justify-center gap-1 leading-none">
-            <span className="min-w-0 truncate text-center text-[12px] font-bold leading-none tracking-[-0.02em] text-white sm:text-[10px]">
-              {target.professional.name}
+      <div className="absolute bottom-[23.5%] left-1/2 z-10 flex max-w-[72%] -translate-x-1/2 items-center px-1 py-0 text-white [text-shadow:0_1px_4px_rgb(0_0_0_/_70%)]">
+        <span className="flex min-w-0 flex-col items-start justify-center">
+          <span className="flex min-w-0 items-center gap-1 leading-[1.05]">
+            <span className="min-w-0 whitespace-nowrap text-left text-[11px] font-bold leading-[1.05] tracking-[-0.02em] text-white sm:text-[9.5px]">
+              {professionalTagName}
             </span>
             {target.professional.verified ? (
               <VerifiedBadgeIcon
                 aria-hidden="true"
-                className="h-3.5 w-3.5 shrink-0 sm:h-3 sm:w-3"
+                className="h-3 w-3 shrink-0 sm:h-2.5 sm:w-2.5"
               />
             ) : null}
           </span>
-          <span className="mt-1 truncate text-center text-[9px] font-medium leading-none tracking-[-0.01em] text-white/75 sm:text-[8px]">
+          <span className="mt-0.5 whitespace-nowrap text-left text-[8.5px] font-medium leading-[1.25] tracking-[-0.01em] text-white/75 sm:text-[7.5px] sm:leading-[1.25]">
             {target.professional.roleLabel}
           </span>
         </span>
