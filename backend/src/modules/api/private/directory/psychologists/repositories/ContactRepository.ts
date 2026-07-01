@@ -31,6 +31,20 @@ const normalizePhone = (value: string) => {
 const toWhatsAppUrl = (phone: string, psychologistName?: string | null) =>
   buildLectumWhatsappUrl({ phone, psychologistName, source: "profile" });
 
+const isSelfProfessionalAction = (authId: string | null | undefined, psychologistId: string) =>
+  Boolean(authId && authId === psychologistId);
+
+const toContactResponse = (
+  psychologist: { id: string; name: string | null },
+  psychologistPhone: string,
+  contactRequestId: string | null,
+): DirectoryPsychologistContactResponse => ({
+  contact_request_id: contactRequestId,
+  psychologist_id: psychologist.id,
+  tracked: Boolean(contactRequestId),
+  whatsapp_url: toWhatsAppUrl(psychologistPhone, psychologist.name) ?? "",
+});
+
 export class ContactRepository implements IContactRepository {
   async registerClick(data: IContactClickDTO): Promise<ContactRepositoryResult> {
     const psychologist = await prisma.user.findFirst({
@@ -90,6 +104,13 @@ export class ContactRepository implements IContactRepository {
       };
     }
 
+    if (isSelfProfessionalAction(data.auth.id, psychologist.id)) {
+      return {
+        ok: true,
+        data: toContactResponse(psychologist, psychologistPhone, null),
+      };
+    }
+
     const contact = await prisma.contact_request.create({
       data: {
         user_id: data.auth.id,
@@ -103,11 +124,7 @@ export class ContactRepository implements IContactRepository {
 
     return {
       ok: true,
-      data: {
-        contact_request_id: contact.id,
-        psychologist_id: psychologist.id,
-        whatsapp_url: toWhatsAppUrl(psychologistPhone, psychologist.name) ?? "",
-      },
+      data: toContactResponse(psychologist, psychologistPhone, contact.id),
     };
   }
 
@@ -178,6 +195,13 @@ export class ContactRepository implements IContactRepository {
       };
     }
 
+    if (isSelfProfessionalAction(data.auth.id, psychologist.id)) {
+      return {
+        ok: true,
+        data: toContactResponse(psychologist, psychologistPhone, null),
+      };
+    }
+
     const contact = await prisma.$transaction(async (tx) => {
       if (data.auth.role === "paciente" && data.auth.id) {
         await tx.patient_profile.updateMany({
@@ -205,11 +229,7 @@ export class ContactRepository implements IContactRepository {
 
     return {
       ok: true,
-      data: {
-        contact_request_id: contact.id,
-        psychologist_id: psychologist.id,
-        whatsapp_url: toWhatsAppUrl(psychologistPhone, psychologist.name) ?? "",
-      },
+      data: toContactResponse(psychologist, psychologistPhone, contact.id),
     };
   }
 }

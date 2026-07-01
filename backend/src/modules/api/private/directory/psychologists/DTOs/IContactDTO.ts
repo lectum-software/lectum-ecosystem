@@ -1,8 +1,9 @@
 import type { user } from "@/interfaces/objects";
 
 export type DirectoryPsychologistContactResponse = {
-  contact_request_id: string;
+  contact_request_id: string | null;
   psychologist_id: string;
+  tracked: boolean;
   whatsapp_url: string;
 };
 

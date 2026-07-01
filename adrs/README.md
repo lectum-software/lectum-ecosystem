@@ -106,3 +106,4 @@ Formato recomendado:
 - [ADR-0191 - Layout social de compartilhamento de video-resposta](0191-layout-compartilhamento-social-video-resposta.md) - Accepted
 - [ADR-0192 - Menu de opcoes dos comentarios acima do composer fixo](0192-menu-opcoes-comentarios-sobreposicao.md) - Accepted
 - [ADR-0193 - Controles nativos de video da comunidade sem menu extra](0193-controles-nativos-video-comunidade-sem-menu-extra.md) - Accepted
+- [ADR-0194 - Autoações do psicólogo fora de Analytics e notificações](0194-autoacoes-profissional-fora-de-analytics-notificacoes.md) - Accepted

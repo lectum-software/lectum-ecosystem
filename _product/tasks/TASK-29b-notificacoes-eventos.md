@@ -309,3 +309,34 @@ Validacao:
 - Browser/local HTTP smoke: `http://localhost:3000/psychologists` e `http://localhost:3000/community` responderam `200 OK`.
 
 ADR atualizado: `adrs/0098-notificacoes-eventos-dominio.md`.
+
+## Complemento 2026-07-01 - autoacoes profissionais sem notificacao
+
+Pedido direto de produto: acoes realizadas pelo proprio psicologo no proprio perfil (visualizar perfil, assistir video
+ou clicar no WhatsApp) nao devem gerar notificacoes nem compor Analytics.
+
+Implementado:
+
+- `clique_whatsapp` agora possui guarda explicita no produtor `notifyWhatsappClick`: se `actorId` for igual ao
+  `psychologistId`, nada e emitido.
+- O fluxo real de clique no WhatsApp nao cria `contact_request` quando o autenticado e o proprio psicologo alvo; assim
+  nao existe evento de origem para notificacao, digest profissional ou autoria na central.
+- `visualizacao_perfil` continua sem identificar visitante e ja nao persiste auto-visualizacao autenticada; a regra foi
+  documentada como fonte de dados e reforcada no agregado de Analytics para ignorar legados.
+- Nao houve endpoint paralelo, evento fake, mock, schema, migration ou package novo.
+
+### Critérios de aceite do complemento
+
+- [x] Psicologo nao recebe `clique_whatsapp` ao clicar no proprio botao de WhatsApp.
+- [x] Psicologo nao recebe `visualizacao_perfil` ao abrir o proprio perfil autenticado.
+- [x] Autoacoes nao entram nos digests por nao gerarem `notification` nem `contact_request` rastreado.
+- [x] Eventos de outros usuarios seguem usando produtores reais e respeitando preferencias.
+- [x] ADR relevante criado e `DATA-MODEL.md` atualizado.
+- [x] Validacoes de backend, frontend e check raiz foram executadas.
+
+### Validação do complemento
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm check`

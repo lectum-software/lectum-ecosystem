@@ -352,3 +352,28 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Builder/Quick Copy nao estava exposto como ferramenta MCP direta; a referencia local `_product/proto/Meus Analytics - Psicologo.jpg` e a captura enviada pelo usuario foram usadas como apoio visual.
 - ADR atualizado: `adrs/0175-analytics-video-retencao-orientada.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check src/app/app/professional/analytics/logic.tsx`, `pnpm --dir frontend build`, `pnpm --dir frontend check` e `Invoke-WebRequest` em `/app/professional/analytics` (307 para login sem sessao).
+
+## Ajuste complementar em 2026-07-01 - autoacoes fora dos Analytics
+
+- Pedido direto de produto: quando o proprio psicologo visualizar o proprio perfil, assistir ao proprio video ou clicar no proprio WhatsApp, esses eventos nao devem aparecer em notificacoes nem compor Analytics.
+- `profile_view_event` e `profile_video_watch_session` ja bloqueavam persistencia de autoacao autenticada; o agregado de Analytics agora tambem exclui registros legados em que `viewer_id = psychologist_id`.
+- `contact_request` deixou de ser persistido quando `user_id = psychologist_id`; o endpoint ainda retorna `whatsapp_url` real para teste operacional do link, mas com `contact_request_id=null` e `tracked=false`.
+- O card `Conversoes WhatsApp` agora conta apenas `contact_request` anonimo ou de usuario diferente do psicologo alvo, evitando inflar conversoes com teste do proprio profissional.
+- Nao houve alteracao de schema Prisma, migration, UI, package novo, mock, seed ou endpoint simulado.
+- ADR criado: `adrs/0194-autoacoes-profissional-fora-de-analytics-notificacoes.md`.
+
+### Critérios de aceite do complemento
+
+- [x] Cliques do proprio psicologo no proprio WhatsApp nao persistem `contact_request` e nao entram em `Conversoes WhatsApp`.
+- [x] Visualizacoes do proprio perfil e sessoes do proprio video autenticadas nao entram nas metricas agregadas de Analytics.
+- [x] Visitantes anonimos e outros usuarios continuam contabilizados como fonte real.
+- [x] Nenhum schema, migration, mock, seed artificial ou package novo foi criado.
+- [x] ADR e documentacao de dados foram atualizados.
+- [x] Validacoes de backend, frontend e check raiz foram executadas.
+
+### Validação do complemento
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm check`

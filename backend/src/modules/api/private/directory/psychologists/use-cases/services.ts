@@ -114,11 +114,13 @@ export const contact = async (data: IContactDTO) => {
     };
   }
 
-  await notifyWhatsappClick({
-    actorId: data.auth.id,
-    contactRequestId: res.data.contact_request_id,
-    psychologistId: res.data.psychologist_id,
-  });
+  if (res.data.contact_request_id) {
+    await notifyWhatsappClick({
+      actorId: data.auth.id,
+      contactRequestId: res.data.contact_request_id,
+      psychologistId: res.data.psychologist_id,
+    });
+  }
 
   return {
     status: 200,
@@ -147,11 +149,13 @@ export const contactClick = async (data: IContactClickDTO) => {
     };
   }
 
-  await notifyWhatsappClick({
-    actorId: data.auth.id,
-    contactRequestId: res.data.contact_request_id,
-    psychologistId: res.data.psychologist_id,
-  });
+  if (res.data.contact_request_id) {
+    await notifyWhatsappClick({
+      actorId: data.auth.id,
+      contactRequestId: res.data.contact_request_id,
+      psychologistId: res.data.psychologist_id,
+    });
+  }
 
   return {
     status: 200,

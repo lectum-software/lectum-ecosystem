@@ -291,6 +291,11 @@ Especialidade, serviço e abordagem são filtros da busca (TASK-13) e seções d
 | `channel` | `String @default("whatsapp")` | |
 | `@@index([psychologist_id, createdAt])` | | métrica de conversão |
 
+Regra: quando o usuário autenticado for o próprio psicólogo alvo (`user_id = psychologist_id`), o backend pode devolver
+o `whatsapp_url` para permitir teste operacional do link, mas **não deve persistir `contact_request`**, emitir
+`clique_whatsapp`, entrar no digest de conversões nem contabilizar em Analytics. Cliques anônimos ou de outros usuários
+continuam sendo fonte real de conversão.
+
 `profile_view_event` (analytics TASK-20 e notificacoes TASK-29B):
 
 | Campo | Tipo | Notas |
@@ -301,9 +306,10 @@ Especialidade, serviço e abordagem são filtros da busca (TASK-13) e seções d
 | `source` | `String @default("profile_page")` | origem operacional do evento; no MVP, perfil publico/canonico |
 | `@@index([psychologist_id, createdAt])`, `@@index([viewer_id, createdAt])`, `@@index([device_id, createdAt])` | | analytics por periodo e anti-spam |
 
-Regras: registrar apenas perfil publicado, nunca notificar o proprio psicologo e aplicar anti-spam de 6 horas por
-`viewer_id` ou `device_id`. `visualizacao_perfil` gera notificacao apenas para psicologo com entitlement profissional
-ativo, sem expor identidade do visitante.
+Regras: registrar apenas perfil publicado, nunca persistir/contabilizar/notificar visualizacao do proprio psicologo
+autenticado (`viewer_id = psychologist_id`) e aplicar anti-spam de 6 horas por `viewer_id` ou `device_id`.
+`visualizacao_perfil` gera notificacao apenas para psicologo com entitlement profissional ativo, sem expor identidade do
+visitante.
 
 `profile_video_watch_session` (analytics do vídeo de apresentação, extensão da TASK-20):
 
@@ -322,6 +328,10 @@ ativo, sem expor identidade do visitante.
 | `retention_buckets` | `Json?` | lista de buckets internos de 5% alcançados (`[5,10,...,100]`), calculada pelo backend a partir da maior posição/duração para gerar curva estimada sem registrar evento por segundo |
 | `last_event_at` | `DateTime @default(now())` | última atualização recebida para exibir recência dos dados |
 | `@@index([psychologist_id, createdAt])`, `@@index([psychologist_id, last_event_at])`, `@@index([viewer_id, createdAt])` | | consultas de analytics por período e auditoria |
+
+Regra: sessão de vídeo autenticada do próprio psicólogo no próprio perfil (`viewer_id = psychologist_id`) não deve ser
+persistida nem entrar nas métricas de Analytics. Visitantes anônimos não podem ser associados com segurança ao dono do
+perfil e seguem contabilizados como anônimos.
 
 ---
 

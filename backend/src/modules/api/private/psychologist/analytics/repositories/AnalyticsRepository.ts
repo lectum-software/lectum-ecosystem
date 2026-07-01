@@ -229,6 +229,16 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
           psychologist_id: userId,
           deleted: false,
           createdAt: createdAtWindow,
+          OR: [
+            {
+              viewer_id: null,
+            },
+            {
+              viewer_id: {
+                not: userId,
+              },
+            },
+          ],
         },
       }),
       prisma.contact_request.count({
@@ -237,6 +247,16 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
           deleted: false,
           channel: "whatsapp",
           createdAt: createdAtWindow,
+          OR: [
+            {
+              user_id: null,
+            },
+            {
+              user_id: {
+                not: userId,
+              },
+            },
+          ],
         },
       }),
       prisma.professional_review.count({
@@ -277,16 +297,32 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
           psychologist_id: userId,
           deleted: false,
           createdAt: createdAtWindow,
-          OR: [
+          AND: [
             {
-              watched_seconds: {
-                gt: 0,
-              },
+              OR: [
+                {
+                  viewer_id: null,
+                },
+                {
+                  viewer_id: {
+                    not: userId,
+                  },
+                },
+              ],
             },
             {
-              max_position_seconds: {
-                gt: 0,
-              },
+              OR: [
+                {
+                  watched_seconds: {
+                    gt: 0,
+                  },
+                },
+                {
+                  max_position_seconds: {
+                    gt: 0,
+                  },
+                },
+              ],
             },
           ],
         },

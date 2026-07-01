@@ -139,6 +139,8 @@ export const notifyWhatsappClick = async (params: {
   contactRequestId: string;
   psychologistId: string;
 }) => {
+  if (params.actorId && params.actorId === params.psychologistId) return;
+
   await notifyOnce({
     actorId: params.actorId,
     messageKey: "clique_whatsapp",
