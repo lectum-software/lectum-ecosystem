@@ -153,14 +153,6 @@ export const PostMediaCarousel = ({
 
         {hasMultiple ? (
           <>
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-slate-950/25 to-transparent"
-            />
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-slate-950/25 to-transparent"
-            />
             <button
               aria-label="Imagem anterior"
               className="absolute top-1/2 left-2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-white/45 bg-slate-950/65 p-0 text-white shadow-none backdrop-blur-md transition hover:bg-slate-950/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 active:scale-95 sm:left-3 sm:h-10 sm:w-10"

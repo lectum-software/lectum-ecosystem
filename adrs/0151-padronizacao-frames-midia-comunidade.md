@@ -224,3 +224,27 @@ Validacao complementar:
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
 - `git diff --check`: sucesso.
+
+## Complemento 2026-07-01 - carrossel sem sombra lateral nos controles
+
+O QA visual de posts com carrossel mostrou que os overlays laterais em gradiente usados para reforcar contraste criavam uma sombra perceptivel sobre/ao redor das setas de navegacao. Como os botoes ja possuem contraste proprio, a camada extra deixava o frame mais pesado sem necessidade.
+
+Decisao complementar:
+
+- Remover os overlays laterais em gradiente do `PostMediaCarousel`.
+- Preservar os botoes circulares de anterior/proxima, o foco visivel, labels acessiveis e os indicadores de slides.
+- Manter a regra de orientacao, `object-contain`, CTA de WhatsApp anexado, tamanhos responsivos e comportamento compartilhado do carrossel.
+
+Consequencias:
+
+- As imagens do carrossel ficam sem faixa/sombra lateral ao redor dos controles.
+- O contraste das setas passa a depender apenas do botao circular, que ja tem fundo translucido e borda sutil.
+- Nao ha impacto em backend, storage, schema, upload ou contratos de API.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- HTTP local `200` e Chrome headless local em `/community/autocuidado-em-pratica/post/cmr20rokk000cbkuhqiyegeev` confirmando carrossel sem overlays laterais de sombra nas setas.

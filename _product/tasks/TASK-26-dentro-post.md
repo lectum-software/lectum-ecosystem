@@ -1204,3 +1204,20 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm check`
 - [x] `git diff --check`
 - [x] Chrome/CDP local em `/community/ansiedade-em-equilibrio/post/cmr15abhh0004msuh2c5gqi5v` confirmou gap medido de `3.75px` em viewport mobile 390x844 e `4px` em desktop 1365x768 entre `Postado em` e `Ansiedade em Equilibrio`.
+
+## Complemento 2026-07-01 - carrossel de imagens sem sombra lateral nas setas
+
+- Pedido do usuario: remover a sombra visivel sobre/ao redor das setas de avancar e voltar nos carrosseis de imagens.
+- Frontend: `PostMediaCarousel` deixou de renderizar os overlays laterais em gradiente (`from-slate-950/25`) sobre as bordas do frame, mantendo apenas os botoes circulares, foco acessivel e navegacao anterior/proxima.
+- O ajuste e mobile-first e afeta o carrossel compartilhado em feed, dentro da comunidade, detalhe do post, salvos/meus posts e publicacoes de perfil que reutilizam o componente.
+- Nao houve alteracao de backend, Prisma schema, migrations, endpoints, payloads, packages, upload, permissao de midia, WhatsApp, votos ou salvos.
+- Fonte visual/auditavel: screenshot do usuario nesta conversa e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0151-padronizacao-frames-midia-comunidade.md`.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] HTTP local `200` e Chrome headless local em `/community/autocuidado-em-pratica/post/cmr20rokk000cbkuhqiyegeev` confirmaram o carrossel renderizado sem overlays laterais de sombra nas setas.
