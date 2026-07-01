@@ -1,4 +1,5 @@
-﻿import { error, msg } from "@/helpers/translate";
+﻿import { isIP } from "node:net";
+import { error, msg } from "@/helpers/translate";
 import { getPaymentGateway } from "@/modules/billing/payment-gateway";
 import type { PaymentGateway } from "@/modules/billing/payment-gateway/PaymentGateway";
 import type { ICheckoutDTO } from "../DTOs/ICheckoutDTO";
@@ -53,61 +54,71 @@ const sanitizeGatewayError = (err: unknown): GatewayErrorLog => {
   };
 };
 
-const isMercadoPagoSandbox = () => process.env.MERCADO_PAGO_ENV?.trim().toLowerCase() === "sandbox";
-
-const resolvePayerEmail = (fallbackEmail: string) => {
-  if (!isMercadoPagoSandbox()) {
-    return fallbackEmail;
-  }
-
-  const testPayerEmail = process.env.MERCADO_PAGO_TEST_PAYER_EMAIL?.trim();
-
-  return testPayerEmail || fallbackEmail;
-};
-
 const getConfiguredGatewayPlanId = () =>
   process.env.MERCADO_PAGO_PREAPPROVAL_PLAN_ID?.trim() || null;
 
 const getConfiguredBackUrl = () => process.env.MERCADO_PAGO_BACK_URL?.trim() || null;
 
-const getWebUrl = () => process.env.WEB_URL?.split(",")[0]?.trim() || null;
+const isPrivateIpv4 = (hostname: string) => {
+  const [first = 0, second = 0] = hostname.split(".").map(Number);
 
-const SANDBOX_BACK_URL_FALLBACK = "https://www.mercadopago.com.br";
+  if (first === 10 || first === 127) return true;
+  if (first === 169) return second === 254;
+  if (first === 192) return second === 168;
 
-const isGatewayBackUrlCandidate = (value?: string | null) => {
+  return first === 172 && second >= 16 && second <= 31;
+};
+
+const isLocalOrPrivateHostname = (hostname: string) => {
+  const normalizedHostname = hostname.toLowerCase().replace(/^\[|\]$/g, "");
+
+  if (
+    normalizedHostname === "localhost" ||
+    normalizedHostname === "0.0.0.0" ||
+    normalizedHostname === "::1" ||
+    normalizedHostname.endsWith(".local")
+  ) {
+    return true;
+  }
+
+  const ipVersion = isIP(normalizedHostname);
+
+  if (ipVersion === 4) {
+    return isPrivateIpv4(normalizedHostname);
+  }
+
+  if (ipVersion === 6) {
+    return (
+      normalizedHostname.startsWith("fc") ||
+      normalizedHostname.startsWith("fd") ||
+      normalizedHostname.startsWith("fe80")
+    );
+  }
+
+  return false;
+};
+
+const isPublicHttpsUrl = (value?: string | null) => {
   if (!value) return false;
 
   try {
     const url = new URL(value);
     const hostname = url.hostname.toLowerCase();
 
-    return (
-      (url.protocol === "https:" || url.protocol === "http:") &&
-      hostname !== "localhost" &&
-      hostname !== "127.0.0.1" &&
-      hostname !== "0.0.0.0"
-    );
+    return url.protocol === "https:" && !isLocalOrPrivateHostname(hostname);
   } catch {
     return false;
   }
 };
 
-const resolveGatewayBackUrl = (returnUrl?: string | null) => {
+const resolveGatewayBackUrl = () => {
   const configuredBackUrl = getConfiguredBackUrl();
-  if (isGatewayBackUrlCandidate(configuredBackUrl)) return configuredBackUrl;
 
-  if (isGatewayBackUrlCandidate(returnUrl)) return returnUrl!;
-
-  const webUrl = getWebUrl();
-  if (isGatewayBackUrlCandidate(webUrl)) {
-    return `${webUrl!.replace(/\/$/, "")}/app/professional/billing/address`;
+  if (!isPublicHttpsUrl(configuredBackUrl)) {
+    throw new Error("MERCADO_PAGO_BACK_URL_NOT_CONFIGURED");
   }
 
-  if (isMercadoPagoSandbox()) {
-    return SANDBOX_BACK_URL_FALLBACK;
-  }
-
-  return null;
+  return configuredBackUrl!;
 };
 
 const buildPlanIdempotencyKey = (plan: ProfessionalPlan) =>
@@ -122,7 +133,7 @@ const ensureGatewayPlanId = async ({
   gateway: PaymentGateway;
   plan: ProfessionalPlan;
   repository: CheckoutRepository;
-  returnUrl?: string | null;
+  returnUrl: string;
 }) => {
   if (plan.gateway_plan_id) {
     return plan.gateway_plan_id;
@@ -135,17 +146,11 @@ const ensureGatewayPlanId = async ({
     return configuredGatewayPlanId;
   }
 
-  const backUrl = resolveGatewayBackUrl(returnUrl);
-
-  if (!backUrl) {
-    throw new Error("MERCADO_PAGO_BACK_URL_NOT_CONFIGURED");
-  }
-
   const gatewayPlan = await gateway.createSubscriptionPlan({
     amountCents: plan.price_cents!,
     idempotencyKey: buildPlanIdempotencyKey(plan),
     planName: plan.name || "Plano Profissional Lectum",
-    returnUrl: backUrl,
+    returnUrl,
   });
 
   await repository.setGatewayPlanId(plan.id!, gatewayPlan.gateway_plan_id);
@@ -158,39 +163,8 @@ const isGatewayConfigError = (err: unknown) => {
 
   return (
     message.includes("MERCADO_PAGO_ACCESS_TOKEN_NOT_CONFIGURED") ||
-    message.includes("MERCADO_PAGO_BACK_URL_NOT_CONFIGURED")
-  );
-};
-
-const getGatewayCauseMessage = (err: unknown) => {
-  if (!(err instanceof Error)) return "";
-
-  const errorWithDetails = err as Error & { details?: unknown };
-  const details = isRecord(errorWithDetails.details) ? errorWithDetails.details : null;
-
-  return `${err.message} ${toSafeString(details?.cause_message) || ""}`.trim();
-};
-
-const shouldFallbackToSandboxPendingSubscription = (err: unknown) => {
-  if (!isMercadoPagoSandbox()) return false;
-
-  return getGatewayCauseMessage(err).includes("Card token service not found");
-};
-
-const shouldRetryPendingSubscriptionWithAuthenticatedEmail = ({
-  authenticatedEmail,
-  err,
-  payerEmail,
-}: {
-  authenticatedEmail: string;
-  err: unknown;
-  payerEmail: string;
-}) => {
-  if (!isMercadoPagoSandbox()) return false;
-  if (!authenticatedEmail || authenticatedEmail === payerEmail) return false;
-
-  return getGatewayCauseMessage(err).includes(
-    "Both payer and collector must be real or test users",
+    message.includes("MERCADO_PAGO_BACK_URL_NOT_CONFIGURED") ||
+    message.includes("MERCADO_PAGO_ENV_INVALID")
   );
 };
 
@@ -237,20 +211,20 @@ export default async (data: ICheckoutDTO) => {
     };
   }
 
-  const email = data.auth.email;
-  if (!email) {
+  const payerEmail = data.auth.email;
+  if (!payerEmail) {
     return {
       status: 400,
       ...error("billing_checkout_email_required", {}),
     };
   }
 
-  const payerEmail = resolvePayerEmail(email);
-  const gatewayReturnUrl = resolveGatewayBackUrl(data.b.return_url);
   let gateway: PaymentGateway;
   let gatewayPlanId: string;
+  let gatewayReturnUrl: string;
 
   try {
+    gatewayReturnUrl = resolveGatewayBackUrl();
     gateway = getPaymentGateway();
     gatewayPlanId = await ensureGatewayPlanId({
       gateway,
@@ -304,105 +278,6 @@ export default async (data: ICheckoutDTO) => {
       },
     };
   } catch (err) {
-    if (shouldFallbackToSandboxPendingSubscription(err)) {
-      console.warn(
-        "[BILLING] Mercado Pago authorized sandbox checkout failed; trying pending preapproval fallback",
-        sanitizeGatewayError(err),
-      );
-
-      try {
-        const gatewayResult = await gateway.createPendingSubscription({
-          subscriptionId: pendingSubscription.id!,
-          planName: professionalPlan.name || "Plano Profissional Lectum",
-          amountCents: professionalPlan.price_cents,
-          payerEmail,
-          returnUrl: gatewayReturnUrl,
-        });
-
-        const current = await repository.setGatewaySubscriptionId(
-          pendingSubscription.id!,
-          gatewayResult.gateway_subscription_id,
-        );
-
-        return {
-          status: 200,
-          ...msg("billing_checkout_started", {}),
-          data: {
-            current,
-            gateway_status: gatewayResult.gateway_status,
-            pending_confirmation: true,
-            init_point: gatewayResult.init_point,
-            sandbox_pending_payment: true,
-          },
-        };
-      } catch (fallbackErr) {
-        if (
-          shouldRetryPendingSubscriptionWithAuthenticatedEmail({
-            authenticatedEmail: email,
-            err: fallbackErr,
-            payerEmail,
-          })
-        ) {
-          console.warn(
-            "[BILLING] Mercado Pago pending sandbox checkout failed by payer/collector type; retrying with authenticated user email",
-            sanitizeGatewayError(fallbackErr),
-          );
-
-          try {
-            const gatewayResult = await gateway.createPendingSubscription({
-              subscriptionId: pendingSubscription.id!,
-              idempotencyKey: `lectum-preapproval-pending-auth-email-${pendingSubscription.id}`,
-              planName: professionalPlan.name || "Plano Profissional Lectum",
-              amountCents: professionalPlan.price_cents,
-              payerEmail: email,
-              returnUrl: gatewayReturnUrl,
-            });
-
-            const current = await repository.setGatewaySubscriptionId(
-              pendingSubscription.id!,
-              gatewayResult.gateway_subscription_id,
-            );
-
-            return {
-              status: 200,
-              ...msg("billing_checkout_started", {}),
-              data: {
-                current,
-                gateway_status: gatewayResult.gateway_status,
-                pending_confirmation: true,
-                init_point: gatewayResult.init_point,
-                sandbox_pending_payment: true,
-              },
-            };
-          } catch (retryErr) {
-            await repository.cancelSubscription(pendingSubscription.id!);
-
-            console.error(
-              "[BILLING] Mercado Pago pending sandbox checkout retry failed",
-              sanitizeGatewayError(retryErr),
-            );
-
-            return {
-              status: 502,
-              ...error("billing_gateway_checkout_failed", {}),
-            };
-          }
-        }
-
-        await repository.cancelSubscription(pendingSubscription.id!);
-
-        console.error(
-          "[BILLING] Mercado Pago pending sandbox checkout failed",
-          sanitizeGatewayError(fallbackErr),
-        );
-
-        return {
-          status: 502,
-          ...error("billing_gateway_checkout_failed", {}),
-        };
-      }
-    }
-
     await repository.cancelSubscription(pendingSubscription.id!);
 
     console.error("[BILLING] Mercado Pago checkout failed", sanitizeGatewayError(err));

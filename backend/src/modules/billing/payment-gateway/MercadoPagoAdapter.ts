@@ -3,7 +3,6 @@ import { MercadoPagoConfig, PreApproval, PreApprovalPlan } from "mercadopago";
 import type { Options as MercadoPagoOptions } from "mercadopago/dist/types";
 import type {
   BillingSubscriptionStatus,
-  GatewayPendingSubscriptionInput,
   GatewaySubscription,
   GatewaySubscriptionInput,
   GatewaySubscriptionPlanInput,
@@ -32,7 +31,6 @@ type MercadoPagoWebhookBody = {
 };
 
 const GATEWAY = "mercadopago";
-const MERCADO_PAGO_SANDBOX_SCOPE_HEADER = "X-scope";
 
 type MercadoPagoSafeErrorDetails = {
   operation: string;
@@ -133,7 +131,6 @@ export class MercadoPagoAdapterError extends Error {
 export class MercadoPagoAdapter implements PaymentGateway {
   private readonly preApproval: PreApproval;
   private readonly preApprovalPlan: PreApprovalPlan;
-  private readonly requestOptions: MercadoPagoRequestOptions | undefined;
   private readonly webhookSecret: string | null;
 
   constructor() {
@@ -141,6 +138,12 @@ export class MercadoPagoAdapter implements PaymentGateway {
 
     if (!accessToken) {
       throw new Error("MERCADO_PAGO_ACCESS_TOKEN_NOT_CONFIGURED");
+    }
+
+    const gatewayEnv = process.env.MERCADO_PAGO_ENV?.trim().toLowerCase();
+
+    if (!gatewayEnv || !["sandbox", "production", "prod"].includes(gatewayEnv)) {
+      throw new Error("MERCADO_PAGO_ENV_INVALID");
     }
 
     const subscriptionConfig = new MercadoPagoConfig({
@@ -156,48 +159,15 @@ export class MercadoPagoAdapter implements PaymentGateway {
       },
     });
 
-    const gatewayEnv = process.env.MERCADO_PAGO_ENV?.trim().toLowerCase();
-
     this.preApproval = new PreApproval(subscriptionConfig);
     this.preApprovalPlan = new PreApprovalPlan(planConfig);
-    this.requestOptions =
-      gatewayEnv === "sandbox"
-        ? {
-            // O SDK do Mercado Pago mescla `requestOptions` de forma rasa.
-            // Ao enviar headers customizados, precisamos preservar o Authorization
-            // que o próprio SDK adicionaria para evitar 403 por PolicyAgent.
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              [MERCADO_PAGO_SANDBOX_SCOPE_HEADER]: "stage",
-            },
-          }
-        : undefined;
     this.webhookSecret = process.env.MERCADO_PAGO_WEBHOOK_SECRET || null;
   }
 
   private withRequestOptions(
     extra?: MercadoPagoRequestOptions,
-    options?: { includeSandboxScope?: boolean },
   ): MercadoPagoRequestOptions | undefined {
-    const baseRequestOptions =
-      options?.includeSandboxScope === false ? undefined : this.requestOptions;
-
-    if (!baseRequestOptions && !extra) return undefined;
-
-    const headers = {
-      ...baseRequestOptions?.headers,
-      ...extra?.headers,
-    };
-    const requestOptions: MercadoPagoRequestOptions = {
-      ...baseRequestOptions,
-      ...extra,
-    };
-
-    if (Object.keys(headers).length > 0) {
-      requestOptions.headers = headers;
-    }
-
-    return requestOptions;
+    return extra;
   }
 
   private async runGatewayOperation<T>(operation: string, action: () => Promise<T>): Promise<T> {
@@ -230,12 +200,9 @@ export class MercadoPagoAdapter implements PaymentGateway {
           reason: planName,
           status: "active",
         },
-        requestOptions: this.withRequestOptions(
-          {
-            idempotencyKey: idempotencyKey || undefined,
-          },
-          { includeSandboxScope: false },
-        ),
+        requestOptions: this.withRequestOptions({
+          idempotencyKey: idempotencyKey || undefined,
+        }),
       }),
     );
 
@@ -260,7 +227,6 @@ export class MercadoPagoAdapter implements PaymentGateway {
     payerEmail,
     returnUrl,
   }: GatewaySubscriptionInput): Promise<GatewaySubscriptionResult> {
-    const hasAssociatedPlan = Boolean(gatewayPlanId);
     const response = await this.runGatewayOperation("create_subscription", () =>
       this.preApproval.create({
         body: {
@@ -278,58 +244,9 @@ export class MercadoPagoAdapter implements PaymentGateway {
           reason: planName,
           status: "authorized",
         },
-        requestOptions: this.withRequestOptions(
-          {
-            idempotencyKey: `lectum-preapproval-${subscriptionId}`,
-          },
-          { includeSandboxScope: !hasAssociatedPlan },
-        ),
-      }),
-    );
-
-    if (!response.id) {
-      throw new Error("MERCADO_PAGO_PREAPPROVAL_ID_MISSING");
-    }
-
-    return {
-      gateway_subscription_id: response.id,
-      status: normalizeStatus(response.status),
-      gateway_status: response.status ?? null,
-      init_point: response.init_point ?? null,
-      next_payment_date: response.next_payment_date ?? null,
-      raw: response,
-    };
-  }
-
-  async createPendingSubscription({
-    subscriptionId,
-    planName,
-    amountCents,
-    idempotencyKey,
-    payerEmail,
-    returnUrl,
-  }: GatewayPendingSubscriptionInput): Promise<GatewaySubscriptionResult> {
-    const response = await this.runGatewayOperation("create_pending_subscription", () =>
-      this.preApproval.create({
-        body: {
-          auto_recurring: {
-            frequency: 1,
-            frequency_type: "months",
-            transaction_amount: amountCents / 100,
-            currency_id: "BRL",
-          },
-          back_url: returnUrl || undefined,
-          external_reference: subscriptionId,
-          payer_email: payerEmail,
-          reason: planName,
-          status: "pending",
-        },
-        requestOptions: this.withRequestOptions(
-          {
-            idempotencyKey: idempotencyKey || `lectum-preapproval-pending-${subscriptionId}`,
-          },
-          { includeSandboxScope: false },
-        ),
+        requestOptions: this.withRequestOptions({
+          idempotencyKey: `lectum-preapproval-${subscriptionId}`,
+        }),
       }),
     );
 
@@ -377,7 +294,7 @@ export class MercadoPagoAdapter implements PaymentGateway {
     const response = await this.runGatewayOperation("get_subscription", () =>
       this.preApproval.get({
         id: gatewaySubscriptionId,
-        requestOptions: this.withRequestOptions(undefined, { includeSandboxScope: false }),
+        requestOptions: this.withRequestOptions(),
       }),
     );
 
@@ -386,7 +303,6 @@ export class MercadoPagoAdapter implements PaymentGateway {
       status: normalizeStatus(response.status),
       gateway_status: response.status ?? null,
       external_reference: response.external_reference ?? null,
-      init_point: response.init_point ?? null,
       next_payment_date: response.next_payment_date ?? null,
       raw: response,
     };

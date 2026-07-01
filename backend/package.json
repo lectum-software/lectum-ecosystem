@@ -20,7 +20,6 @@
     "db:migrate": "prisma migrate dev",
     "db:migrate-prod": "prisma migrate deploy",
     "db:reset": "node scripts/reset-database.mjs",
-    "billing:sync": "tsx src/operations/subscriptions/sync-mercado-pago-subscription.ts",
     "db:push": "prisma db push",
     "gen:vapid": "npx web-push generate-vapid-keys",
     "subscription:grant": "tsx src/operations/subscriptions/grant-professional-subscription.ts"

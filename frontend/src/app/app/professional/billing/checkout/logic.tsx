@@ -11,7 +11,6 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
@@ -30,8 +29,6 @@ import { PrivateTemplate } from "@/templates/private";
 import { PSYCHOLOGIST_ONBOARDING_PATHS } from "@/utils/psychologist-onboarding";
 
 const publicKey = process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY;
-const mercadoPagoEnv = process.env.NEXT_PUBLIC_MERCADO_PAGO_ENV?.trim().toLowerCase();
-const sandboxPayerEmail = process.env.NEXT_PUBLIC_MERCADO_PAGO_TEST_PAYER_EMAIL?.trim();
 
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -54,14 +51,6 @@ const isPendingProfessional = (subscription?: ProfessionalSubscription | null) =
   Boolean(subscription.gateway_subscription_id);
 
 const CREDIT_CARD_PAYMENT_TYPE = "credit_card";
-
-const resolveBrickPayerEmail = (fallbackEmail: string) => {
-  if (mercadoPagoEnv === "sandbox" && sandboxPayerEmail) {
-    return sandboxPayerEmail;
-  }
-
-  return fallbackEmail;
-};
 
 type CardPaymentFormData = {
   token?: string;
@@ -115,9 +104,8 @@ const SummaryCard = ({ plan }: { plan: SubscriptionPlan }) => (
 );
 
 export const ProfessionalBillingCheckoutLogic = () => {
-  const router = useRouter();
   const userEmail = useAppSelector((state) => state.user?.email || "");
-  const payerEmail = resolveBrickPayerEmail(userEmail);
+  const payerEmail = userEmail;
   const [checkoutResult, setCheckoutResult] = useState<BillingCheckoutResponse | null>(null);
   const billing = usePsychologistBilling({
     callbacks: {
@@ -146,8 +134,6 @@ export const ProfessionalBillingCheckoutLogic = () => {
   const activeProfessional = isActiveProfessional(current);
   const pendingProfessional =
     Boolean(checkoutResult?.pending_confirmation) || isPendingProfessional(current);
-  const checkoutInitPoint = checkoutResult?.init_point || null;
-  const isSandboxPendingPayment = Boolean(checkoutResult?.sandbox_pending_payment);
   const amount = professionalPlan ? professionalPlan.price_cents / 100 : 0;
 
   const initialization = useMemo(
@@ -195,7 +181,6 @@ export const ProfessionalBillingCheckoutLogic = () => {
       await billing.checkout.mutateAsync({
         card_token: token,
         payment_type_id: CREDIT_CARD_PAYMENT_TYPE,
-        return_url: `${window.location.origin}${PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress}`,
       });
     },
     [billing.checkout],
@@ -277,9 +262,8 @@ export const ProfessionalBillingCheckoutLogic = () => {
                 <div className="grid gap-5">
                   {pendingProfessional ? (
                     <InlineAlert title="Pagamento enviado para confirmação" variant="success">
-                      {isSandboxPendingPayment
-                        ? "O Mercado Pago não aceitou o token de cartão no sandbox local, então criamos uma assinatura pendente real. Abra o link de pagamento, conclua no Mercado Pago e depois sincronize o status no backend."
-                        : "A assinatura foi criada no Mercado Pago e será ativada automaticamente após o webhook confirmado. Se a confirmação já tiver ocorrido, atualize o status."}
+                      A assinatura foi criada no Mercado Pago e será ativada automaticamente após o
+                      webhook confirmado. Se a confirmação já tiver ocorrido, atualize o status.
                     </InlineAlert>
                   ) : null}
 
@@ -324,33 +308,15 @@ export const ProfessionalBillingCheckoutLogic = () => {
                   ) : null}
 
                   {pendingProfessional ? (
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {checkoutInitPoint ? (
-                        <Button asChild className="h-12 rounded-full sm:col-span-2">
-                          <a href={checkoutInitPoint} rel="noreferrer" target="_blank">
-                            Concluir no Mercado Pago
-                            <ArrowRight className="h-4 w-4" aria-hidden />
-                          </a>
-                        </Button>
-                      ) : null}
-                      <Button
-                        className="h-12 rounded-full"
-                        onClick={() => billing.current.refetch()}
-                        type="button"
-                        variant="outline"
-                      >
-                        <RefreshCw className="h-4 w-4" aria-hidden />
-                        Atualizar status
-                      </Button>
-                      <Button
-                        className="h-12 rounded-full"
-                        onClick={() => router.push(PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress)}
-                        type="button"
-                      >
-                        Ir para endereço
-                        <ArrowRight className="h-4 w-4" aria-hidden />
-                      </Button>
-                    </div>
+                    <Button
+                      className="h-12 rounded-full"
+                      onClick={() => billing.current.refetch()}
+                      type="button"
+                      variant="outline"
+                    >
+                      <RefreshCw className="h-4 w-4" aria-hidden />
+                      Atualizar status
+                    </Button>
                   ) : null}
                 </div>
               )}

@@ -24,15 +24,6 @@ export type GatewaySubscriptionPlanResult = {
   raw: unknown;
 };
 
-export type GatewayPendingSubscriptionInput = {
-  subscriptionId: string;
-  planName: string;
-  amountCents: number;
-  idempotencyKey?: string | null;
-  payerEmail: string;
-  returnUrl?: string | null;
-};
-
 export type GatewaySubscriptionResult = {
   gateway_subscription_id: string;
   status: BillingSubscriptionStatus;
@@ -52,7 +43,6 @@ export type GatewaySubscription = {
   status: BillingSubscriptionStatus;
   gateway_status?: string | null;
   external_reference?: string | null;
-  init_point?: string | null;
   next_payment_date?: string | null;
   raw: unknown;
 };
@@ -76,9 +66,6 @@ export interface PaymentGateway {
     input: GatewaySubscriptionPlanInput,
   ): Promise<GatewaySubscriptionPlanResult>;
   createSubscription(input: GatewaySubscriptionInput): Promise<GatewaySubscriptionResult>;
-  createPendingSubscription(
-    input: GatewayPendingSubscriptionInput,
-  ): Promise<GatewaySubscriptionResult>;
   updateSubscriptionCard(
     input: GatewayUpdateSubscriptionCardInput,
   ): Promise<GatewaySubscriptionResult>;
