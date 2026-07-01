@@ -40,7 +40,7 @@ const CLOSE_ANIMATION_MS = 220;
 const DRAG_CLOSE_THRESHOLD_PX = 96;
 const DRAG_START_TOLERANCE_PX = 4;
 
-const sharePreviewClassName = "w-[min(74vw,300px,31.5dvh)] sm:w-[min(38vw,224px,24dvh)]";
+const sharePreviewClassName = "w-[min(74vw,300px,31.5dvh)] sm:w-[min(34vw,340px,36dvh)]";
 
 const sharePreviewCardClassName =
   "top-[6.5%] left-[9.5%] right-[9.5%] overflow-hidden rounded-[14px] sm:top-[7%] sm:left-[10.5%] sm:right-[10.5%] sm:rounded-[12px]";
@@ -140,7 +140,7 @@ const SharePreview = ({ target }: { target: LectumShareSocialTarget }) => {
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover opacity-55 blur-xl"
             fill
-            sizes="300px"
+            sizes="(min-width: 640px) 340px, 300px"
             src={mediaSrc}
             unoptimized
           />
@@ -148,7 +148,7 @@ const SharePreview = ({ target }: { target: LectumShareSocialTarget }) => {
             alt="Prévia da imagem no layout de compartilhamento Lectum"
             className="pointer-events-none absolute inset-0 h-full w-full object-contain"
             fill
-            sizes="300px"
+            sizes="(min-width: 640px) 340px, 300px"
             src={mediaSrc}
             unoptimized
           />
@@ -522,12 +522,12 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
       <div
         className={cn(
           "pointer-events-none relative z-10 mx-auto flex min-h-dvh w-full max-w-[430px] items-end sm:min-h-0",
-          socialTarget ? "sm:max-w-[380px]" : "sm:max-w-[360px]",
+          socialTarget ? "sm:max-w-[560px]" : "sm:max-w-[360px]",
         )}
       >
         <div
           className={cn(
-            "pointer-events-auto relative max-h-[94dvh] w-full touch-none select-none overscroll-contain overflow-y-auto rounded-t-[34px] border border-border bg-surface px-4 pt-14 pb-[max(1rem,env(safe-area-inset-bottom))] text-foreground shadow-[var(--lectum-shadow)] will-change-transform sm:max-h-[calc(100dvh-2rem)] sm:overflow-visible sm:rounded-[34px] sm:px-5 sm:pt-10 sm:pb-4",
+            "pointer-events-auto relative max-h-[94dvh] w-full touch-none select-none overscroll-contain overflow-y-auto rounded-t-[34px] border border-border bg-surface px-4 pt-14 pb-[max(1rem,env(safe-area-inset-bottom))] text-foreground shadow-[var(--lectum-shadow)] will-change-transform sm:max-h-[calc(100dvh-2rem)] sm:overflow-visible sm:rounded-[34px] sm:px-8 sm:pt-12 sm:pb-6",
             dragOffset > 0
               ? "transition-none"
               : "transition-transform duration-200 ease-out motion-reduce:transition-none",
