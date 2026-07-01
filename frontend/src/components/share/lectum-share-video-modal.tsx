@@ -4,6 +4,7 @@ import { Copy, Loader2, type LucideIcon, MoreHorizontal, X } from "lucide-react"
 import Image from "next/image";
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import {
   copyLectumShareText,
@@ -113,6 +114,8 @@ const whatsappShareUrl = (target: LectumShareVideoTarget) => {
 
 const SharePreview = ({ target }: { target: LectumShareSocialTarget }) => {
   const mediaSrc = resolvePublicMediaUrl(target.mediaUrl);
+  const professionalAvatarSrc = resolvePublicMediaUrl(target.professional.avatar);
+  const professionalInitial = target.professional.name.trim().charAt(0).toUpperCase() || "P";
   const sourcePreview = truncatePreviewText(target.sourceText, 80);
 
   return (
@@ -174,6 +177,30 @@ const SharePreview = ({ target }: { target: LectumShareSocialTarget }) => {
         >
           {sourcePreview}
         </p>
+      </div>
+
+      <div className="absolute bottom-[23.5%] left-[8.5%] z-10 flex h-9 max-w-[76%] items-center gap-2 rounded-full border border-white/15 bg-[#252a2a]/72 py-1 pr-3 pl-1 text-white shadow-[0_10px_28px_rgb(0_0_0_/_20%)] backdrop-blur-md sm:h-8 sm:gap-1.5 sm:pr-2.5 sm:pl-1">
+        <span className="relative grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-full border border-white/60 bg-[#0f513f] text-[13px] font-bold leading-none text-white sm:h-6 sm:w-6 sm:text-[11px]">
+          {professionalAvatarSrc ? (
+            <Image
+              alt=""
+              aria-hidden="true"
+              className="object-cover"
+              fill
+              sizes="28px"
+              src={professionalAvatarSrc}
+              unoptimized
+            />
+          ) : (
+            professionalInitial
+          )}
+        </span>
+        <span className="min-w-0 truncate text-[12px] font-semibold leading-none tracking-[-0.02em] text-white sm:text-[10px]">
+          {target.professional.name}
+        </span>
+        {target.professional.verified ? (
+          <VerifiedBadgeIcon aria-hidden="true" className="h-3.5 w-3.5 shrink-0 sm:h-3 sm:w-3" />
+        ) : null}
       </div>
     </div>
   );

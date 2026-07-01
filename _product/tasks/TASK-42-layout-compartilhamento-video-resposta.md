@@ -36,7 +36,7 @@ Decisão de produto definida em 2026-06-30:
 - o card da pergunta deve se aproximar da caixinha do Instagram, com faixa superior azul Lectum e o texto "Pergunta na Lectum" em branco;
 - para vídeo-resposta de post, o card mostra o título/pergunta do post;
 - para vídeo-resposta de comentário, o card mostra uma prévia do comentário;
-- a arte compartilhável deve suprimir a identidade do psicólogo, selo, função e marca `lectum` no rodapé, porque Instagram/TikTok/Reels já adicionam controles e identificação de usuário na parte inferior;
+- a arte compartilhável deve evitar identidade completa no rodapé (função, CRP e marca `lectum`), mas pode exibir uma tag compacta com avatar, nome do psicólogo e selo quando verificado, posicionada acima da área de UI das redes;
 - quando a resposta profissional também tiver texto escrito, a modal deve exibir abaixo do preview até duas linhas desse texto e uma ação discreta apenas com ícone de copiar, sem fundo cinza nem rótulo "Texto da resposta", para o psicólogo usar como legenda escrita em Reels/TikTok/feed quando fizer sentido;
 - ao copiar o texto da resposta, a confirmação deve usar toast/tag verde global no topo da tela, sem faixa verde inline dentro da modal;
 - no desktop, a composição deve caber na altura visível sem barra de rolagem na modal, mantendo o `X` funcional e permitindo fechar ao clicar fora da share sheet.
@@ -67,7 +67,7 @@ Ao tocar em Compartilhar em uma vídeo-resposta profissional, o usuário visuali
 - Gerar arquivo via APIs nativas do navegador, mantendo overlay com:
   - card da pergunta/comentário;
   - vídeo de fundo;
-  - sem identidade do psicólogo, sem selo, sem wordmark de rodapé, sem play central e sem CTA/link.
+  - tag compacta do psicólogo com nome/avatar/selo quando verificado, sem função, sem CRP, sem wordmark de rodapé, sem play central e sem CTA/link.
 - Integrar o mesmo fluxo ao botão Compartilhar em:
   - feed geral de comunidade;
   - página interna da comunidade;
@@ -151,7 +151,7 @@ Regras de UI obrigatórias:
 - [x] Modal bloqueia o scroll da página ao fundo enquanto aberta, mantendo controle de rolagem apenas na própria share sheet.
 - [x] Preview do vídeo e botões da share sheet não exibem sombreamento externo.
 - [x] Vídeo-resposta de post usa o título/pergunta do post; vídeo-resposta de comentário usa prévia do comentário quando disponível.
-- [x] Exportação e preview suprimem identidade do psicólogo, selo, função e wordmark de rodapé para evitar excesso de elementos nas redes sociais.
+- [x] Exportação e preview exibem apenas tag compacta com nome/avatar/selo do psicólogo, suprimindo função, CRP e wordmark de rodapé para evitar excesso de elementos nas redes sociais.
 - [x] Quando a resposta tem texto escrito, a modal mostra até duas linhas abaixo do preview e oferece ação de cópia para uso como legenda escrita.
 - [x] Card da pergunta usa faixa superior azul Lectum com "Pergunta na Lectum" em branco, aproximando a composição da caixinha do Instagram.
 - [x] Texto escrito da resposta aparece sem título/fundo cinza, com ação de copiar apenas por ícone discreto.
@@ -215,3 +215,5 @@ Regras de UI obrigatórias:
 - Validacao do ajuste de escala desktop em 2026-07-01: `pnpm --dir frontend typecheck`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `GET http://localhost:3000/community/ansiedade-em-equilibrio/post/cmr15abhh0004msuh2c5gqi5v` com status 200.
 - Refinamento premium do card em 2026-07-01: o card superior do layout social ganhou composicao mais editorial, com largura ligeiramente menor, cantos mais contidos, header azul em gradiente, corpo em fundo branco sutilmente tonalizado, tipografia menos pesada e alinhamento central para reduzir o aspecto de banner bruto no preview e no canvas exportado.
 - Validacao do refinamento premium em 2026-07-01: `pnpm --dir frontend typecheck`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `GET http://localhost:3000/community/ansiedade-em-equilibrio/post/cmr15abhh0004msuh2c5gqi5v` com status 200.
+- Ajuste de autoria profissional em 2026-07-01: o layout social voltou a exibir uma tag compacta com avatar, nome do psicologo e selo quando verificado, posicionada no terco inferior do video para preservar autoria sem reintroduzir funcao, CRP ou wordmark de rodape.
+- Validacao da tag de autoria em 2026-07-01: `pnpm --dir frontend typecheck`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `GET http://localhost:3000/community/ansiedade-em-equilibrio/post/cmr15abhh0004msuh2c5gqi5v` com status 200.

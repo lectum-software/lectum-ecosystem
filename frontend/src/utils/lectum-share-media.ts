@@ -48,7 +48,24 @@ type ShareCanvasLayout = {
   };
   height: number;
   maxQuestionLines: number;
+  professionalTag: {
+    avatarSize: number;
+    bottom: number;
+    gap: number;
+    height: number;
+    maxWidth: number;
+    paddingLeft: number;
+    paddingRight: number;
+    radius: number;
+    textFontSize: number;
+    verifiedSize: number;
+    x: number;
+  };
   width: number;
+};
+
+type ShareFrameAssets = {
+  professionalAvatar: HTMLImageElement | null;
 };
 
 const MAX_VIDEO_EXPORT_SECONDS = 60;
@@ -69,6 +86,19 @@ const storyCanvasLayout: ShareCanvasLayout = {
   },
   height: 1920,
   maxQuestionLines: 2,
+  professionalTag: {
+    avatarSize: 68,
+    bottom: 450,
+    gap: 22,
+    height: 88,
+    maxWidth: 720,
+    paddingLeft: 10,
+    paddingRight: 34,
+    radius: 44,
+    textFontSize: 34,
+    verifiedSize: 28,
+    x: 92,
+  },
   width: 1080,
 };
 
@@ -151,6 +181,14 @@ const loadImageElement = async (src: string) =>
     image.onerror = () => reject(new Error("NÃ£o foi possÃ­vel carregar a imagem."));
     image.src = src;
   });
+
+const loadProfessionalAvatarElement = async (target: LectumShareSocialTarget) => {
+  const avatarUrl = resolvePublicMediaUrl(target.professional.avatar);
+
+  if (!avatarUrl) return null;
+
+  return loadImageElement(avatarUrl).catch(() => null);
+};
 
 const canvasToBlob = (canvas: HTMLCanvasElement, type: string, quality?: number) =>
   new Promise<Blob>((resolve, reject) => {
@@ -301,6 +339,100 @@ const wrapText = (
   return lines;
 };
 
+const truncateTextToWidth = (ctx: CanvasRenderingContext2D, text: string, maxWidth: number) => {
+  const normalized = text.replace(/\s+/g, " ").trim();
+
+  if (ctx.measureText(normalized).width <= maxWidth) return normalized;
+
+  let next = normalized;
+  while (next.length > 1 && ctx.measureText(`${next}...`).width > maxWidth) {
+    next = next.slice(0, -1).trimEnd();
+  }
+
+  return `${next}...`;
+};
+
+const drawCircularAvatar = (
+  ctx: CanvasRenderingContext2D,
+  avatar: HTMLImageElement | null,
+  name: string,
+  x: number,
+  y: number,
+  size: number,
+) => {
+  const radius = size / 2;
+  const centerX = x + radius;
+  const centerY = y + radius;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.clip();
+
+  if (avatar) {
+    const { height: avatarHeight, width: avatarWidth } = mediaDimensions(avatar, size, size);
+    const sourceRatio = avatarWidth / avatarHeight;
+    let sourceX = 0;
+    let sourceY = 0;
+    let sourceWidth = avatarWidth;
+    let sourceHeight = avatarHeight;
+
+    if (sourceRatio > 1) {
+      sourceWidth = avatarHeight;
+      sourceX = (avatarWidth - sourceWidth) / 2;
+    } else {
+      sourceHeight = avatarWidth;
+      sourceY = (avatarHeight - sourceHeight) / 2;
+    }
+
+    ctx.drawImage(avatar, sourceX, sourceY, sourceWidth, sourceHeight, x, y, size, size);
+  } else {
+    ctx.fillStyle = "#0f513f";
+    ctx.fillRect(x, y, size, size);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = `700 ${Math.round(size * 0.42)}px Manrope, Arial, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(name.trim().charAt(0).toUpperCase() || "P", centerX, centerY + 1);
+  }
+  ctx.restore();
+
+  ctx.save();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.72)";
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius - 1.5, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+};
+
+const drawVerifiedBadge = (
+  ctx: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  size: number,
+) => {
+  const radius = size / 2;
+
+  ctx.save();
+  ctx.fillStyle = "#308ce8";
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.lineWidth = Math.max(3, size * 0.14);
+  ctx.beginPath();
+  ctx.moveTo(centerX - size * 0.24, centerY + size * 0.01);
+  ctx.lineTo(centerX - size * 0.06, centerY + size * 0.18);
+  ctx.lineTo(centerX + size * 0.26, centerY - size * 0.2);
+  ctx.stroke();
+  ctx.restore();
+};
+
 const drawQuestionCard = (
   ctx: CanvasRenderingContext2D,
   layout: ShareCanvasLayout,
@@ -363,12 +495,79 @@ const drawQuestionCard = (
   }
 };
 
+const drawProfessionalTag = (
+  ctx: CanvasRenderingContext2D,
+  layout: ShareCanvasLayout,
+  target: LectumShareSocialTarget,
+  assets: ShareFrameAssets,
+) => {
+  const { professionalTag: tag } = layout;
+  const name = target.professional.name.replace(/\s+/g, " ").trim();
+  const y = layout.height - tag.bottom - tag.height;
+  const textY = y + tag.height / 2;
+  const textStartX = tag.x + tag.paddingLeft + tag.avatarSize + tag.gap;
+  const badgeSpace = target.professional.verified ? tag.gap * 0.55 + tag.verifiedSize : 0;
+  const maxTextWidth =
+    tag.maxWidth - tag.paddingLeft - tag.avatarSize - tag.gap - badgeSpace - tag.paddingRight;
+
+  ctx.save();
+  ctx.font = `700 ${tag.textFontSize}px Manrope, Arial, sans-serif`;
+  const displayName = truncateTextToWidth(ctx, name, maxTextWidth);
+  const textWidth = ctx.measureText(displayName).width;
+  const tagWidth = Math.min(
+    tag.maxWidth,
+    tag.paddingLeft + tag.avatarSize + tag.gap + textWidth + badgeSpace + tag.paddingRight,
+  );
+
+  ctx.shadowBlur = 28;
+  ctx.shadowColor = "rgba(0, 0, 0, 0.22)";
+  ctx.shadowOffsetY = 12;
+  drawRoundRect(ctx, tag.x, y, tagWidth, tag.height, tag.radius);
+  ctx.fillStyle = "rgba(37, 42, 42, 0.74)";
+  ctx.fill();
+  ctx.restore();
+
+  ctx.save();
+  drawRoundRect(ctx, tag.x, y, tagWidth, tag.height, tag.radius);
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.16)";
+  ctx.stroke();
+  ctx.restore();
+
+  drawCircularAvatar(
+    ctx,
+    assets.professionalAvatar,
+    name,
+    tag.x + tag.paddingLeft,
+    y + (tag.height - tag.avatarSize) / 2,
+    tag.avatarSize,
+  );
+
+  ctx.save();
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `700 ${tag.textFontSize}px Manrope, Arial, sans-serif`;
+  ctx.textAlign = "start";
+  ctx.textBaseline = "middle";
+  ctx.fillText(displayName, textStartX, textY + 1);
+  ctx.restore();
+
+  if (target.professional.verified) {
+    drawVerifiedBadge(
+      ctx,
+      textStartX + textWidth + tag.gap * 0.55 + tag.verifiedSize / 2,
+      textY,
+      tag.verifiedSize,
+    );
+  }
+};
+
 const drawLectumShareFrame = (
   ctx: CanvasRenderingContext2D,
   media: ShareMediaElement,
   layout: ShareCanvasLayout,
   target: LectumShareSocialTarget,
   palette: ShareCanvasPalette,
+  assets: ShareFrameAssets,
 ) => {
   ctx.fillStyle = "#000000";
   ctx.fillRect(0, 0, layout.width, layout.height);
@@ -385,6 +584,7 @@ const drawLectumShareFrame = (
 
   drawMediaContain(ctx, media, layout.width, layout.height);
   drawQuestionCard(ctx, layout, target, palette);
+  drawProfessionalTag(ctx, layout, target, assets);
 };
 
 const supportedVideoMimeType = () => {
@@ -405,7 +605,11 @@ const extensionFromMimeType = (mimeType: string) => (mimeType.includes("mp4") ? 
 const safeFileName = (target: LectumShareSocialTarget, extension: string) =>
   `${target.kind === "post_media" ? "lectum-postado" : "lectum-respondido"}-vertical-9x16.${extension}`;
 
-const createImageShareFile = async (target: LectumShareSocialTarget, media: ShareMediaElement) => {
+const createImageShareFile = async (
+  target: LectumShareSocialTarget,
+  media: ShareMediaElement,
+  assets: ShareFrameAssets,
+) => {
   const layout = storyCanvasLayout;
   const canvas = createCanvas(layout);
   const ctx = canvas.getContext("2d");
@@ -414,7 +618,7 @@ const createImageShareFile = async (target: LectumShareSocialTarget, media: Shar
     throw new Error("Canvas indisponível para gerar o compartilhamento.");
   }
 
-  drawLectumShareFrame(ctx, media, layout, target, getCanvasPalette());
+  drawLectumShareFrame(ctx, media, layout, target, getCanvasPalette(), assets);
   const blob = await canvasToBlob(canvas, "image/png");
 
   return new File([blob], safeFileName(target, "png"), {
@@ -425,6 +629,7 @@ const createImageShareFile = async (target: LectumShareSocialTarget, media: Shar
 const createVideoShareFile = async (
   target: LectumShareSocialTarget,
   video: VideoWithCaptureStream,
+  assets: ShareFrameAssets,
 ) => {
   const mimeType = supportedVideoMimeType();
   const layout = storyCanvasLayout;
@@ -432,7 +637,7 @@ const createVideoShareFile = async (
   const ctx = canvas.getContext("2d");
 
   if (!ctx || !canvas.captureStream || mimeType === null) {
-    return createImageShareFile(target, video);
+    return createImageShareFile(target, video, assets);
   }
 
   const stream = canvas.captureStream(VIDEO_EXPORT_FRAME_RATE);
@@ -476,7 +681,7 @@ const createVideoShareFile = async (
     };
 
     const draw = () => {
-      drawLectumShareFrame(ctx, video, layout, target, palette);
+      drawLectumShareFrame(ctx, video, layout, target, palette, assets);
       const elapsed = performance.now() - startedAt;
 
       if (elapsed >= durationMs || video.ended) {
@@ -513,7 +718,7 @@ const createVideoShareFile = async (
           await waitForEvent(video, "seeked", 4000).catch(() => undefined);
         }
 
-        drawLectumShareFrame(ctx, video, layout, target, palette);
+        drawLectumShareFrame(ctx, video, layout, target, palette, assets);
         recorder.start(1000);
         startedAt = performance.now();
         await video.play();
@@ -550,20 +755,24 @@ const createLectumShareFile = async (target: LectumShareSocialTarget) => {
     await document.fonts.ready.catch(() => undefined);
   }
 
+  const assets: ShareFrameAssets = {
+    professionalAvatar: await loadProfessionalAvatarElement(target),
+  };
+
   if (target.mediaType === "image") {
     const image = await loadImageElement(mediaUrl);
 
-    return createImageShareFile(target, image);
+    return createImageShareFile(target, image, assets);
   }
 
   const video = await loadVideoElement(mediaUrl);
 
   try {
-    return await createVideoShareFile(target, video);
+    return await createVideoShareFile(target, video, assets);
   } catch {
     const fallbackVideo = await loadVideoElement(mediaUrl);
 
-    return createImageShareFile(target, fallbackVideo);
+    return createImageShareFile(target, fallbackVideo, assets);
   }
 };
 
