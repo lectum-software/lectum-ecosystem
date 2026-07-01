@@ -246,6 +246,17 @@ export class IndexRepository implements IIndexRepository {
             },
             select: {
               id: true,
+              post: {
+                select: {
+                  anonymous: true,
+                  author_id: true,
+                  author: {
+                    select: {
+                      role: true,
+                    },
+                  },
+                },
+              },
               author: {
                 select: notificationAuthorSelect,
               },
@@ -309,7 +320,15 @@ export class IndexRepository implements IIndexRepository {
       ]),
     );
     const replyActors = new Map(
-      replies.map((reply) => [reply.id, toNotificationActor(reply.author)]),
+      replies.map((reply) => [
+        reply.id,
+        toNotificationActor(
+          reply.author,
+          reply.post.author.role !== "psicologo" &&
+            reply.post.anonymous &&
+            reply.post.author_id === reply.author.id,
+        ),
+      ]),
     );
     const reviewActors = new Map(
       reviews.map((review) => [review.id, toNotificationActor(review.author)]),

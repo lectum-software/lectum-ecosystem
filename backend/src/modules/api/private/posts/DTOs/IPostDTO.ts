@@ -73,6 +73,7 @@ export type PostAuthorDTO = {
   avatar: string | null;
   role: string | null;
   type_label: string;
+  anonymous: boolean;
   crp: string | null;
   verified: boolean;
   featured_badge: string | null;
@@ -129,6 +130,7 @@ export type PostReplyDTO = {
   created_at: Date;
   edited_at: Date | null;
   parent_reply_id: string | null;
+  is_post_author: boolean;
   current_user_vote: 1 | -1 | null;
   saved: boolean;
   author: PostAuthorDTO;

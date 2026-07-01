@@ -64,6 +64,7 @@ export type CommunityAuthor = {
   avatar: string | null;
   role: string | null;
   type_label: string;
+  anonymous?: boolean | null;
   crp: string | null;
   verified: boolean;
   featured_badge: string | null;

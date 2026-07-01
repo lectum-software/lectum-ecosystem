@@ -201,6 +201,10 @@ type ReplyBaseResult = Prisma.post_replyGetPayload<{ select: typeof replyBaseSel
 type ReplyTreeResult = ReplyBaseResult & { replies: ReplyTreeResult[] };
 type CurrentVote = 1 | -1 | null;
 type MentorRankingSignals = Awaited<ReturnType<typeof getCommunityMentorRankingSignals>>;
+type ReplyAuthorContext = {
+  postAnonymous: boolean;
+  postAuthorId: string;
+};
 
 const normalizePagination = (query: { page?: number; limit?: number }) => {
   const page = Math.max(1, Number(query.page || 1));
@@ -354,6 +358,7 @@ const toAuthorResponse = (
         ? "Psicólogo"
         : "Paciente"
       : authorTypeLabel(author.role, profile?.gender, anonymous),
+    anonymous: shouldMaskAuthor,
     crp: isPsychologist && !isDeletedAuthor ? (profile?.crp ?? null) : null,
     verified: isPsychologist && !isDeletedAuthor && isProfessionalVerified(profile),
     featured_badge:
@@ -527,8 +532,13 @@ const toReplyResponse = (
   item: ReplyBaseResult | ReplyTreeResult,
   currentVotes: Map<string, CurrentVote>,
   savedReplyIds?: Set<string>,
+  authorContext?: ReplyAuthorContext,
 ): PostReplyDTO => {
   const nestedReplies = "replies" in item ? item.replies : [];
+  const isPostAuthor = authorContext?.postAuthorId === item.author.id;
+  const shouldInheritPostAnonymity = Boolean(
+    authorContext?.postAnonymous && isPostAuthor && item.author.role !== "psicologo",
+  );
 
   return {
     id: item.id,
@@ -542,10 +552,19 @@ const toReplyResponse = (
     created_at: item.createdAt,
     edited_at: item.edited_at,
     parent_reply_id: item.parent_reply_id,
+    is_post_author: isPostAuthor,
     current_user_vote: currentVotes.get(item.id) ?? null,
     saved: savedReplyIds?.has(item.id) ?? false,
-    author: toAuthorResponse(item.author, item.upvotes_count, false, undefined, "community_reply"),
-    replies: nestedReplies.map((reply) => toReplyResponse(reply, currentVotes, savedReplyIds)),
+    author: toAuthorResponse(
+      item.author,
+      item.upvotes_count,
+      shouldInheritPostAnonymity,
+      shouldInheritPostAnonymity ? anonymousDisplayNameForAuthor(item.author.id) : undefined,
+      "community_reply",
+    ),
+    replies: nestedReplies.map((reply) =>
+      toReplyResponse(reply, currentVotes, savedReplyIds, authorContext),
+    ),
   };
 };
 
@@ -782,6 +801,7 @@ const findPublishedPost = (id: string) => {
     select: {
       id: true,
       author_id: true,
+      anonymous: true,
       author: {
         select: {
           role: true,
@@ -1708,7 +1728,12 @@ export class PostRepository implements IPostRepository {
     }
 
     return {
-      data: items.map((item) => toReplyResponse(item, voteMap, savedReplyIds)),
+      data: items.map((item) =>
+        toReplyResponse(item, voteMap, savedReplyIds, {
+          postAnonymous: post.author.role !== "psicologo" && post.anonymous,
+          postAuthorId: post.author_id,
+        }),
+      ),
       page: effectivePage,
       pages: Math.ceil(count / pagination.limit),
       count,
@@ -1775,7 +1800,10 @@ export class PostRepository implements IPostRepository {
       }
     }
 
-    return toReplyResponse(thread, voteMap, savedReplyIds);
+    return toReplyResponse(thread, voteMap, savedReplyIds, {
+      postAnonymous: post.author.role !== "psicologo" && post.anonymous,
+      postAuthorId: post.author_id,
+    });
   }
 
   async createReply(data: IPostCreateReplyDTO): Promise<PostMutationResult<PostReplyDTO>> {
@@ -1846,7 +1874,10 @@ export class PostRepository implements IPostRepository {
 
     return {
       kind: "ok",
-      data: toReplyResponse(reply, new Map()),
+      data: toReplyResponse(reply, new Map(), undefined, {
+        postAnonymous: post.author.role !== "psicologo" && post.anonymous,
+        postAuthorId: post.author_id,
+      }),
     };
   }
 
@@ -1942,7 +1973,10 @@ export class PostRepository implements IPostRepository {
 
     return {
       kind: "ok",
-      data: toReplyResponse(updated, voteMap, savedReplyIds),
+      data: toReplyResponse(updated, voteMap, savedReplyIds, {
+        postAnonymous: post.author.role !== "psicologo" && post.anonymous,
+        postAuthorId: post.author_id,
+      }),
     };
   }
 

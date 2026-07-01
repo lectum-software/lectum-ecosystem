@@ -37,6 +37,7 @@ export type PostReply = {
   created_at: string;
   edited_at: string | null;
   parent_reply_id: string | null;
+  is_post_author: boolean;
   current_user_vote: 1 | -1 | null;
   saved: boolean;
   author: CommunityAuthor;

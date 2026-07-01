@@ -1238,3 +1238,36 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm check`
 - [x] `git diff --check`
 - [x] HTTP local `200` e Chrome headless local em `/community/autocuidado-em-pratica/post/cmr20rokk000cbkuhqiyegeev` confirmaram setas ocultas em 390px e visiveis no desktop.
+
+## Complemento 2026-07-01 - autoria anonima preservada nos comentarios do dono do post
+
+- Pedido do usuario: quando o dono de um post publicado anonimamente comentar na propria thread, o comentario tambem deve aparecer anonimo; comentarios do dono do post devem exibir `Autor` antes do horario, no formato `Nome` / `Autor · há ... · editado`.
+- Backend: os DTOs de respostas de `GET /api/private/posts/:id/replies`, `GET /api/private/posts/:id/replies/:replyId`, `POST /api/private/posts/:id/replies` e `PUT /api/private/posts/:id/replies/:replyId` agora derivam `is_post_author` por `post_reply.author_id === community_post.author_id`.
+- Backend: quando `community_post.anonymous=true` e a resposta pertence ao autor do post, a autoria da resposta herda o mesmo alias `Membro Anônimo #XXXX` derivado de `author_id`, sem expor nome/avatar reais.
+- Backend: a hidratacao de atores da central de notificacoes tambem mascara `nova_resposta` quando a resposta vem do autor de um post anonimo.
+- Frontend: o detalhe do post usa `reply.is_post_author` para renderizar `Autor · {horario}` e usa `reply.author.anonymous` para o avatar anonimo no comentario.
+- Nao houve alteracao de schema Prisma, migrations, endpoints novos, packages, regra de votos/salvos, ordenacao ou dados fake.
+- Fonte visual/auditavel: screenshots do usuario nesta conversa e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0167-alias-anonimo-estavel-por-usuario.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Comentarios/respostas do autor de post anonimo aparecem com o alias anonimo do post, sem nome/avatar reais.
+- [x] Comentarios/respostas do autor do post exibem `Autor` antes do horario (`Autor · há ... · editado`).
+- [x] Comentarios de outros usuarios no mesmo post continuam exibindo a identidade propria permitida.
+- [x] A central de notificacoes nao revela o nome real do autor anonimo em `nova_resposta`.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo ou migration foi usado.
+- [x] Validacoes relevantes e browser local mobile foram executados sem erro.
+
+### Validacoes
+
+- [x] `pnpm --dir backend exec biome check --write src/modules/api/private/posts/DTOs/IPostDTO.ts src/modules/api/private/posts/repositories/PostRepository.ts src/modules/api/private/notification/index/repositories/IndexRepository.ts`
+- [x] `pnpm --dir frontend exec biome check --write "src/api/generator/types/community.ts" "src/api/generator/types/posts.ts" "src/app/app/community/[slug]/post/[id]/logic.tsx"`
+- [x] `pnpm --dir backend check`
+- [x] `pnpm --dir backend build`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check` (sem erro; apenas aviso local de normalizacao CRLF/LF no ADR atualizado)
+- [x] API local em `GET /api/private/posts/cmr26lrh70003nouhg6pd23j6/replies?limit=20` confirmou a resposta `cmr2797pm0003msuhqbqs3a4b` como `is_post_author=true`, `author.anonymous=true` e alias `Membro Anônimo #2624`.
+- [x] Chrome/CDP local mobile 390x844 em `/community/autocuidado-em-pratica/post/cmr26lrh70003nouhg6pd23j6?focusReplyId=cmr2797pm0003msuhqbqs3a4b#reply-cmr2797pm0003msuhqbqs3a4b` confirmou `Membro Anônimo #2624`, `Autor · há ... · editado` e ausencia de `Túlio Rezende` no comentario.

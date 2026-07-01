@@ -40,3 +40,16 @@ O produto decidiu que o identificador anônimo deve funcionar como uma identidad
 ## Pendências
 
 - Se a base crescer a ponto de exigir unicidade forte do alias numérico, avaliar persistir um alias público anônimo dedicado por usuário.
+
+## Complemento 2026-07-01: comentários do autor anônimo do post
+
+Quando o paciente publica um post anônimo e participa da própria thread, os comentários/respostas desse mesmo autor também devem preservar a identidade pseudônima do post.
+
+Decisão complementar:
+
+- O backend deriva a regra pelo par `community_post.anonymous=true` + `post_reply.author_id === community_post.author_id`, sem criar campo novo em `post_reply`.
+- A resposta pública do comentário usa o mesmo alias `Membro Anônimo #XXXX` calculado por `author_id`, sem nome real nem avatar.
+- Os DTOs de resposta passam a expor `is_post_author` para a UI renderizar o marcador contextual `Autor · há...` antes do horário.
+- A hidratação de atores de notificações `nova_resposta` também respeita a mesma máscara quando a resposta vem do autor de um post anônimo.
+
+Consequência: a autoria interna continua disponível para permissões, edição, exclusão e deduplicação de notificações, mas a apresentação pública mantém a promessa de anonimato feita na publicação original.

@@ -451,10 +451,12 @@ const formatReplyAuthorMeta = (
   author: PostReply["author"],
   createdAt: string,
   editedAt?: string | null,
+  isPostAuthor = false,
 ) => {
   const relativeTime = formatRelativeTime(createdAt);
   const timeLabel = editedAt ? `${relativeTime} · editado` : relativeTime;
 
+  if (isPostAuthor) return `Autor · ${timeLabel}`;
   if (author.role !== "psicologo") return timeLabel;
 
   return `${author.type_label} • ${timeLabel}`;
@@ -1357,6 +1359,7 @@ const ReplyCard = ({
       <div className="grid grid-cols-[2rem_minmax(0,1fr)] gap-x-2.5 rounded-[20px] transition-colors sm:grid-cols-[2.25rem_minmax(0,1fr)]">
         <div className="relative flex justify-center">
           <AuthorAvatar
+            anonymous={Boolean(reply.author.anonymous)}
             author={reply.author}
             href={psychologistProfileHref ?? undefined}
             onProfileClick={psychologistProfileHref ? stopReplyTreeCollapsePropagation : undefined}
@@ -1405,11 +1408,21 @@ const ReplyCard = ({
                   href={psychologistProfileHref}
                   onClick={stopReplyTreeCollapsePropagation}
                 >
-                  {formatReplyAuthorMeta(reply.author, reply.created_at, reply.edited_at)}
+                  {formatReplyAuthorMeta(
+                    reply.author,
+                    reply.created_at,
+                    reply.edited_at,
+                    reply.is_post_author,
+                  )}
                 </Link>
               ) : (
                 <p className="text-[11px] font-semibold text-muted">
-                  {formatReplyAuthorMeta(reply.author, reply.created_at, reply.edited_at)}
+                  {formatReplyAuthorMeta(
+                    reply.author,
+                    reply.created_at,
+                    reply.edited_at,
+                    reply.is_post_author,
+                  )}
                 </p>
               )}
             </div>
