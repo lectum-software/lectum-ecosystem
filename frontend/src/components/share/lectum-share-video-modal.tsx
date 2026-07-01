@@ -551,7 +551,7 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
       <div
         className={cn(
           "pointer-events-none relative z-10 mx-auto flex min-h-dvh w-full max-w-[430px] items-end sm:min-h-0",
-          socialTarget ? "sm:max-w-[560px]" : "sm:max-w-[360px]",
+          socialTarget ? "sm:max-w-[560px]" : "sm:max-w-[430px]",
         )}
       >
         <div

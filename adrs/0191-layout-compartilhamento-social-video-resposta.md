@@ -90,3 +90,9 @@ As decisoes de produto definidas em 2026-06-30 foram: usar o mesmo botao Share, 
 - Ajuste visual em 2026-07-01: a opacidade do background da tag do psicologo foi reduzida novamente no preview e no canvas exportado para diminuir interferencia sobre a imagem do video.
 - Ajuste visual em 2026-07-01: o background da tag do psicologo foi removido no preview e no canvas exportado; a autoria permanece como texto branco com sombra discreta e selo quando verificado.
 - Validacao do ajuste sem background em 2026-07-01: `pnpm --dir frontend typecheck`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `GET http://localhost:3000/community/ansiedade-em-equilibrio/post/cmr15abhh0004msuh2c5gqi5v` com status 200.
+
+## Complemento 2026-07-01: largura da share sheet textual no desktop
+
+A share sheet de conteudo textual preserva o fluxo simples de link, sem preview social e com apenas `Copiar link` e `WhatsApp` habilitados. No desktop, a largura maxima da sheet textual passa a ser 430px, alinhada a base mobile-first existente, para que a linha completa `Copiar link`, `WhatsApp`, `Instagram`, `TikTok` e `Mais` permaneça visivel sem corte lateral apesar do padding interno da modal. Nao houve mudanca de canal, payload, persistencia de `post_share`, fallback ou composicao social 9:16.
+
+Validacao complementar: `pnpm --dir frontend exec biome check --write "src/components/share/lectum-share-video-modal.tsx"`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, HTTP local `200` em `/community/autocuidado-em-pratica/post/cmr26lrh70003nouhg6pd23j6` e Chrome/CDP local desktop 1365x768 confirmando as cinco acoes dentro da sheet de 430px.
