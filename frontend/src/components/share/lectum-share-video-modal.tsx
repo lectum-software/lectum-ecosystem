@@ -43,7 +43,7 @@ const DRAG_START_TOLERANCE_PX = 4;
 const sharePreviewClassName = "w-[min(74vw,300px,31.5dvh)] sm:w-[min(34vw,340px,36dvh)]";
 
 const sharePreviewCardClassName =
-  "top-[6.5%] left-[9.5%] right-[9.5%] overflow-hidden rounded-[14px] sm:top-[7%] sm:left-[10.5%] sm:right-[10.5%] sm:rounded-[12px]";
+  "top-[6%] left-[10%] right-[10%] overflow-hidden rounded-[12px] sm:top-[6.75%] sm:left-[11%] sm:right-[11%] sm:rounded-[10px]";
 
 const shareSheetActions = [
   {
@@ -159,17 +159,17 @@ const SharePreview = ({ target }: { target: LectumShareSocialTarget }) => {
 
       <div
         className={cn(
-          "absolute border border-white/65 bg-surface/95 text-foreground shadow-[0_10px_26px_rgb(15_23_42_/_16%)] ring-1 ring-foreground/5 backdrop-blur-md",
+          "absolute border border-white/80 bg-surface/95 text-foreground shadow-[0_12px_30px_rgb(2_8_23_/_18%)] ring-1 ring-foreground/10 backdrop-blur-xl",
           sharePreviewCardClassName,
         )}
       >
-        <p className="border-primary/20 border-b bg-primary px-3.5 py-1.5 text-center text-[11px] font-extrabold leading-none tracking-[-0.01em] text-white sm:px-3 sm:py-1.5 sm:text-[9px] sm:leading-none">
+        <p className="border-white/20 border-b bg-[linear-gradient(135deg,#3aa0f3_0%,#1677d2_100%)] px-3.5 py-[7px] text-center text-[10px] font-bold leading-none tracking-[-0.01em] text-white shadow-[inset_0_-1px_0_rgb(255_255_255_/_22%)] sm:px-3 sm:py-[6px] sm:text-[8px] sm:leading-none">
           {target.cardLabel}
         </p>
         <p
           className={cn(
-            "line-clamp-2 px-3.5 py-2.5 text-left font-bold tracking-[-0.03em] text-foreground sm:px-3 sm:py-2 sm:tracking-[-0.025em]",
-            "text-[clamp(0.86rem,3.1vw,1.06rem)] leading-[1.1] sm:text-[13px] sm:leading-[1.1]",
+            "line-clamp-2 bg-[linear-gradient(180deg,rgb(255_255_255_/_0.98)_0%,rgb(248_250_252_/_0.94)_100%)] px-4 py-2.5 text-center font-semibold tracking-[-0.025em] text-foreground sm:px-3.5 sm:py-2",
+            "text-[clamp(0.78rem,2.75vw,0.96rem)] leading-[1.12] sm:text-[12px] sm:leading-[1.12]",
           )}
         >
           {sourcePreview}
