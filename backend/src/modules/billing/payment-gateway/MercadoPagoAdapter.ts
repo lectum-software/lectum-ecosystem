@@ -305,6 +305,7 @@ export class MercadoPagoAdapter implements PaymentGateway {
     subscriptionId,
     planName,
     amountCents,
+    idempotencyKey,
     payerEmail,
     returnUrl,
   }: GatewayPendingSubscriptionInput): Promise<GatewaySubscriptionResult> {
@@ -325,7 +326,7 @@ export class MercadoPagoAdapter implements PaymentGateway {
         },
         requestOptions: this.withRequestOptions(
           {
-            idempotencyKey: `lectum-preapproval-pending-${subscriptionId}`,
+            idempotencyKey: idempotencyKey || `lectum-preapproval-pending-${subscriptionId}`,
           },
           { includeSandboxScope: false },
         ),

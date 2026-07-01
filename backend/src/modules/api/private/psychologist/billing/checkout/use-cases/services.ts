@@ -177,6 +177,23 @@ const shouldFallbackToSandboxPendingSubscription = (err: unknown) => {
   return getGatewayCauseMessage(err).includes("Card token service not found");
 };
 
+const shouldRetryPendingSubscriptionWithAuthenticatedEmail = ({
+  authenticatedEmail,
+  err,
+  payerEmail,
+}: {
+  authenticatedEmail: string;
+  err: unknown;
+  payerEmail: string;
+}) => {
+  if (!isMercadoPagoSandbox()) return false;
+  if (!authenticatedEmail || authenticatedEmail === payerEmail) return false;
+
+  return getGatewayCauseMessage(err).includes(
+    "Both payer and collector must be real or test users",
+  );
+};
+
 export default async (data: ICheckoutDTO) => {
   if (data.auth.role !== "psicologo") {
     return {
@@ -319,6 +336,59 @@ export default async (data: ICheckoutDTO) => {
           },
         };
       } catch (fallbackErr) {
+        if (
+          shouldRetryPendingSubscriptionWithAuthenticatedEmail({
+            authenticatedEmail: email,
+            err: fallbackErr,
+            payerEmail,
+          })
+        ) {
+          console.warn(
+            "[BILLING] Mercado Pago pending sandbox checkout failed by payer/collector type; retrying with authenticated user email",
+            sanitizeGatewayError(fallbackErr),
+          );
+
+          try {
+            const gatewayResult = await gateway.createPendingSubscription({
+              subscriptionId: pendingSubscription.id!,
+              idempotencyKey: `lectum-preapproval-pending-auth-email-${pendingSubscription.id}`,
+              planName: professionalPlan.name || "Plano Profissional Lectum",
+              amountCents: professionalPlan.price_cents,
+              payerEmail: email,
+              returnUrl: gatewayReturnUrl,
+            });
+
+            const current = await repository.setGatewaySubscriptionId(
+              pendingSubscription.id!,
+              gatewayResult.gateway_subscription_id,
+            );
+
+            return {
+              status: 200,
+              ...msg("billing_checkout_started", {}),
+              data: {
+                current,
+                gateway_status: gatewayResult.gateway_status,
+                pending_confirmation: true,
+                init_point: gatewayResult.init_point,
+                sandbox_pending_payment: true,
+              },
+            };
+          } catch (retryErr) {
+            await repository.cancelSubscription(pendingSubscription.id!);
+
+            console.error(
+              "[BILLING] Mercado Pago pending sandbox checkout retry failed",
+              sanitizeGatewayError(retryErr),
+            );
+
+            return {
+              status: 502,
+              ...error("billing_gateway_checkout_failed", {}),
+            };
+          }
+        }
+
         await repository.cancelSubscription(pendingSubscription.id!);
 
         console.error(

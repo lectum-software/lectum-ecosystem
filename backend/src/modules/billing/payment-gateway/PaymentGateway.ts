@@ -28,6 +28,7 @@ export type GatewayPendingSubscriptionInput = {
   subscriptionId: string;
   planName: string;
   amountCents: number;
+  idempotencyKey?: string | null;
   payerEmail: string;
   returnUrl?: string | null;
 };
