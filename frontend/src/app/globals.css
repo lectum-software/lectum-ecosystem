@@ -7,6 +7,7 @@
   --background: #f6f7f8;
   --foreground: #0f172a;
   --lectum-primary: #308ce8;
+  --lectum-primary-foreground: #ffffff;
   --lectum-primary-hover: #247bd1;
   --lectum-primary-soft: #eaf5ff;
   --lectum-surface: #ffffff;
@@ -30,6 +31,7 @@
   --background: #0b1120;
   --foreground: #e2e8f0;
   --lectum-primary: #4aa0f0;
+  --lectum-primary-foreground: #ffffff;
   --lectum-primary-hover: #6cb4f5;
   --lectum-primary-soft: #16243a;
   --lectum-surface: #131c2e;
@@ -49,6 +51,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--lectum-primary);
+  --color-primary-foreground: var(--lectum-primary-foreground);
   --color-primary-hover: var(--lectum-primary-hover);
   --color-primary-soft: var(--lectum-primary-soft);
   --color-surface: var(--lectum-surface);

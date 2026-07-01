@@ -421,7 +421,10 @@ const ProfessionalReplyPreview = ({
                 profilePublicationMode ? (
                   <VerifiedBadgeIcon className="h-4 w-4 shrink-0" aria-label="Perfil verificado" />
                 ) : (
-                  <BadgeCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                  <BadgeCheck
+                    className="h-4 w-4 shrink-0 fill-primary text-primary-foreground"
+                    aria-hidden="true"
+                  />
                 )
               ) : null}
             </span>
@@ -814,7 +817,10 @@ export const CommunityPostCard = ({
                       aria-label="Perfil verificado"
                     />
                   ) : (
-                    <BadgeCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                    <BadgeCheck
+                      className="h-4 w-4 shrink-0 fill-primary text-primary-foreground"
+                      aria-hidden="true"
+                    />
                   )
                 ) : null}
               </div>
