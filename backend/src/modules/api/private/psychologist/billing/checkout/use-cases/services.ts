@@ -72,6 +72,8 @@ const getConfiguredBackUrl = () => process.env.MERCADO_PAGO_BACK_URL?.trim() || 
 
 const getWebUrl = () => process.env.WEB_URL?.split(",")[0]?.trim() || null;
 
+const SANDBOX_BACK_URL_FALLBACK = "https://www.mercadopago.com.br";
+
 const isGatewayBackUrlCandidate = (value?: string | null) => {
   if (!value) return false;
 
@@ -99,6 +101,10 @@ const resolveGatewayBackUrl = (returnUrl?: string | null) => {
   const webUrl = getWebUrl();
   if (isGatewayBackUrlCandidate(webUrl)) {
     return `${webUrl!.replace(/\/$/, "")}/app/professional/billing/address`;
+  }
+
+  if (isMercadoPagoSandbox()) {
+    return SANDBOX_BACK_URL_FALLBACK;
   }
 
   return null;
@@ -208,6 +214,7 @@ export default async (data: ICheckoutDTO) => {
   }
 
   const payerEmail = resolvePayerEmail(email);
+  const gatewayReturnUrl = resolveGatewayBackUrl(data.b.return_url);
   let gateway: PaymentGateway;
   let gatewayPlanId: string;
 
@@ -217,7 +224,7 @@ export default async (data: ICheckoutDTO) => {
       gateway,
       plan: professionalPlan,
       repository,
-      returnUrl: data.b.return_url,
+      returnUrl: gatewayReturnUrl,
     });
   } catch (err) {
     console.error("[BILLING] Mercado Pago plan setup failed", sanitizeGatewayError(err));
@@ -246,7 +253,7 @@ export default async (data: ICheckoutDTO) => {
       amountCents: professionalPlan.price_cents,
       cardToken: data.b.card_token,
       payerEmail,
-      returnUrl: data.b.return_url,
+      returnUrl: gatewayReturnUrl,
     });
 
     const current = await repository.setGatewaySubscriptionId(
