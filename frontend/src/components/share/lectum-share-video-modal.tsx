@@ -39,7 +39,7 @@ const DRAG_START_TOLERANCE_PX = 4;
 const sharePreviewClassName = "w-[min(74vw,300px,31.5dvh)] sm:w-[min(38vw,224px,24dvh)]";
 
 const sharePreviewCardClassName =
-  "top-[6.5%] left-[8%] right-[8%] overflow-hidden rounded-[22px] sm:top-[7%] sm:left-[10%] sm:right-[10%]";
+  "top-[6.5%] left-[8%] right-[8%] overflow-hidden rounded-[22px] sm:top-[7%] sm:left-[9%] sm:right-[9%] sm:rounded-[18px]";
 
 const shareSheetActions = [
   {
@@ -124,13 +124,13 @@ const SharePreview = ({ target }: { target: LectumShareVideoTarget }) => {
           sharePreviewCardClassName,
         )}
       >
-        <p className="bg-primary px-4 py-2 text-center text-[13px] font-black leading-none text-white sm:text-sm">
+        <p className="bg-primary px-4 py-2 text-center text-[13px] font-black leading-none text-white sm:px-3 sm:py-1.5 sm:text-[11px] sm:leading-none">
           Pergunta na Lectum
         </p>
         <p
           className={cn(
-            "px-4 py-3 text-left font-black tracking-[-0.04em] text-foreground",
-            "text-[clamp(1.05rem,4.4vw,1.55rem)] leading-[1.08] sm:text-[clamp(1rem,2.1vw,1.42rem)]",
+            "px-4 py-3 text-left font-black tracking-[-0.04em] text-foreground sm:px-3 sm:py-2 sm:tracking-[-0.035em]",
+            "text-[clamp(1.05rem,4.4vw,1.55rem)] leading-[1.08] sm:text-base sm:leading-[1.08]",
           )}
         >
           {sourcePreview}
