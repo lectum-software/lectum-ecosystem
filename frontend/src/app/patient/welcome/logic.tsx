@@ -14,6 +14,19 @@ const TOTAL_STEPS = 2;
 
 type SelectedGoal = (typeof goalOptions)[number]["value"];
 
+const patientWelcomeRedirectPaths = {
+  encontrar_psicologo: "/psychologists",
+  conhecer_comunidade: "/",
+} as const satisfies Record<SelectedGoal, string>;
+
+const isSelectedGoal = (goal: unknown): goal is SelectedGoal =>
+  goal === "encontrar_psicologo" || goal === "conhecer_comunidade";
+
+const getRedirectPathForGoal = (goal: unknown) =>
+  isSelectedGoal(goal)
+    ? patientWelcomeRedirectPaths[goal]
+    : patientWelcomeRedirectPaths.encontrar_psicologo;
+
 type ApiErrorData = {
   error?: string;
   message?: string;
@@ -95,13 +108,15 @@ export const WelcomePatientLogic = () => {
   const { completeOnboarding, profile } = usePatient({
     callbacks: {
       completeOnboarding: {
-        onSuccess: () => {
+        onSuccess: (data) => {
+          const targetPath = getRedirectPathForGoal(data.goal ?? selectedGoal);
+
           setApiError(null);
-          router.replace("/app");
+          router.replace(targetPath);
 
           window.setTimeout(() => {
-            if (window.location.pathname !== "/app") {
-              window.location.assign("/app");
+            if (window.location.pathname !== targetPath) {
+              window.location.assign(targetPath);
             }
           }, 800);
         },
@@ -114,9 +129,9 @@ export const WelcomePatientLogic = () => {
 
   useEffect(() => {
     if (profile.data?.onboarding_completed_at) {
-      router.replace("/app");
+      router.replace(getRedirectPathForGoal(profile.data.goal));
     }
-  }, [profile.data?.onboarding_completed_at, router]);
+  }, [profile.data?.goal, profile.data?.onboarding_completed_at, router]);
 
   const profileError = useMemo(
     () => (profile.error ? resolvePatientErrorMessage(profile.error) : null),

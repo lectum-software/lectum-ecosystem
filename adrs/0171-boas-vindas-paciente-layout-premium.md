@@ -198,3 +198,37 @@ Validacao adicional:
 - Browser local via Chrome/CDP em `http://localhost:3000/patient/welcome`, com backend real em
   `localhost:3001`, usuario paciente temporario criado por `POST /api/public/user/store`, capturas
   em desktop `1920x1080` e mobile `390x844`, e usuario temporario removido do banco ao final.
+
+## Atualizacao 2026-07-01 - redirecionamento por objetivo do paciente
+
+O produto corrigiu a expectativa de destino da segunda tela de boas-vindas: a escolha de
+comunidade deve levar ao feed/home, enquanto a escolha de profissional deve levar diretamente a
+pagina publica de psicologos.
+
+Decisao adicional:
+
+- Mapear o valor de dominio `conhecer_comunidade` para `/`, rota canonica do feed/home publico
+  definida apos a TASK-40.
+- Mapear o valor de dominio `encontrar_psicologo` para `/psychologists`, rota publica canonica da
+  descoberta de psicologos.
+- Usar o mesmo resolvedor tanto no sucesso do `PUT /api/private/patient/onboarding` quanto no caso
+  em que `GET /api/private/patient/profile` ja retorna `onboarding_completed_at`, evitando o
+  redirecionamento generico para `/app`.
+- Preservar o fallback para `/psychologists` quando um perfil legado nao tiver `goal` reconhecido,
+  mantendo o comportamento efetivo anterior para dados incompletos.
+
+Consequencias adicionais:
+
+- A primeira acao do paciente fica alinhada ao objetivo escolhido sem criar novas rotas nem mudar
+  backend, schema, API ou pacote.
+- `/app` continua existindo como entrada autenticada generica, mas deixa de ser o destino indireto
+  deste fluxo de onboarding.
+
+Validacao adicional:
+
+- `pnpm --dir frontend exec biome check src/app/patient/welcome/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Browser local/headless via Chrome/CDP validou os dois caminhos com usuarios pacientes temporarios
+  reais criados via API e removidos do banco: `Participar da comunidade` -> `/`; `Encontrar um
+  profissional` -> `/psychologists`.

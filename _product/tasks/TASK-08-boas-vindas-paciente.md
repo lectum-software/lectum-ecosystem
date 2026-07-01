@@ -346,3 +346,24 @@ O onboarding só termina quando o backend confirma. Se o shell privado (TASK-12)
     `localhost:3001`, usuario paciente temporario criado por `POST /api/public/user/store`,
     capturas em desktop `1920x1080` e mobile `390x844`, e usuario temporario removido do banco ao
     final.
+
+## Ajuste posterior em 2026-07-01: redirecionamentos por objetivo
+
+- Pedido direto de produto: na segunda tela de `/patient/welcome`, `Participar da comunidade` deve
+  abrir o feed/home e `Encontrar um profissional` deve abrir a pagina publica de psicologos.
+- A conclusao do onboarding agora resolve o destino a partir do `goal` persistido/retornado pelo
+  endpoint real `PUT /api/private/patient/onboarding`: `conhecer_comunidade` -> `/` e
+  `encontrar_psicologo` -> `/psychologists`.
+- O mesmo mapa e usado quando `GET /api/private/patient/profile` indica onboarding ja concluido,
+  evitando retornar sempre para `/app`.
+- Nao houve alteracao em backend, banco, contratos de API, formularios, assets ou pacotes.
+- Validacao:
+  - `pnpm --dir frontend exec biome check src/app/patient/welcome/logic.tsx`
+  - `pnpm --dir frontend check`
+  - `pnpm --dir frontend build` (apos limpar o artefato local `frontend/.next` gerado por tentativa
+    anterior que falhou por `ENOSPC` no disco local)
+  - Browser local/headless via Chrome/CDP em `http://localhost:3000/patient/welcome`, com backend
+    real em `localhost:3001`, criando dois usuarios pacientes temporarios por
+    `POST /api/public/user/store`: `Participar da comunidade` redirecionou para `/`, e
+    `Encontrar um profissional` redirecionou para `/psychologists`. Os usuarios temporarios foram
+    removidos do banco ao final.
