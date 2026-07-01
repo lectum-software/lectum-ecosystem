@@ -449,6 +449,14 @@ Contratos da tela interna do post (TASK-26):
 - `POST /api/private/posts/:id/share` e `POST /api/private/posts/:id/replies/:replyId/share` persistem compartilhamentos reais via `post_share` apos sucesso de `navigator.share` ou clipboard no frontend. A rota usa `optionalAuth`, aceita `{ channel?: "clipboard"|"web_share", replyId? }`, deduplica por 1 hora por usuario/dispositivo e nao notifica o proprio autor. Na TASK-42, vídeo-respostas profissionais continuam usando essa mesma rota de reply share após Web Share API ou fallback de download/cópia de link; não há novo alvo de métrica.
 - `POST /api/private/posts/:id/report` e `POST /api/private/posts/:id/replies/:replyId/report` registram denuncia reativa com motivo e descricao opcional, sem remocao automatica do conteudo; o alvo fica normalizado em `post_report.target_type`/`target_id` para triagem/admin futuro.
 
+Complemento 2026-07-01: autoações autenticadas do autor sobre o próprio `community_post` ou
+`post_reply` (comentar no próprio post/comentário, upvote ativo, salvamento ou compartilhamento do
+próprio conteúdo) não devem criar `notification`, não aparecem em `/app/notifications` e não
+enviam push imediato. Para pacientes, o digest push `community_evening_digest` também deve excluir
+posts de autoria do próprio destinatário para que engajamento gerado no próprio post não vire push
+do navegador. Autores anônimos continuam sendo identificados internamente por `author_id` para essa
+regra, sem expor identidade na central.
+
 Acompanhamento de comentarios do usuario em `GET /api/private/posts/mine?type=replies`: cada item de comentario retorna metadados derivados `replies_received_count`, `saves_count` e `has_verified_professional_reply`; a flag profissional deve ser calculada apenas por respostas diretas ativas daquele comentario especifico feitas por outro psicologo verificado, sem considerar respostas do proprio autor, respostas ao post principal nem respostas de outras arvores. `current_user_vote` e `saved` seguem derivados de `post_vote`/`post_reply_save` para alimentar a barra padrao de interacao. Comentarios diretos ao post usam `community_post.title` como contexto; respostas a comentarios usam `parent_reply.content`.
 
 `post_vote` (PRD §9 regras: 1 voto/usuário, alteração permitida, downvote não público):
@@ -544,7 +552,7 @@ Complemento 2026-06-26: a listagem `GET /api/private/notification/index` pode re
 `user_background` com `type="notification_digest_state"` guarda, sem novo modelo Prisma, o controle anti-duplicidade dos digests push de conteúdo para pacientes e do digest profissional dos psicólogos:
 
 - `favorites_lunch_digest`: janela do almoço para atividade de psicólogos, priorizando favoritos, depois comunidades seguidas, Top Mentors e relevância geral.
-- `community_evening_digest`: janela noturna para resumo de comunidades, priorizando comunidades seguidas, depois categorias relacionadas e conteúdo geral relevante.
+- `community_evening_digest`: janela noturna para resumo de comunidades, priorizando comunidades seguidas, depois categorias relacionadas e conteúdo geral relevante; para pacientes, nunca escolhe post de autoria do próprio destinatário.
 - `professional_daily_digest`: janela de fim de tarde/noite para resumo diário do psicólogo, consolidando eventos reais de conversão e reputação (`clique_whatsapp`, `nova_avaliacao`, `novo_favorito`, `nova_resposta`, `upvote`, `salvamento`) quando o canal push estiver habilitado.
 - Cada chave armazena `last_checked_at`, `last_sent_at` e `last_sent_date` para evitar reenvio no mesmo dia e calcular a próxima janela temporal.
 

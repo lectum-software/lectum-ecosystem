@@ -557,6 +557,7 @@ const processLunchDigest = async (user: DigestTargetUser, now: Date, dateKey: st
 const getCommunityDigestCandidates = async (params: {
   communityIds?: string[];
   excludedCommunityIds?: string[];
+  excludedAuthorId?: string;
   limit?: number;
   now: Date;
   since: Date;
@@ -606,6 +607,13 @@ const getCommunityDigestCandidates = async (params: {
             },
           }
         : {}),
+      ...(params.excludedAuthorId
+        ? {
+            author_id: {
+              not: params.excludedAuthorId,
+            },
+          }
+        : {}),
       createdAt: {
         gte: params.since,
         lte: params.now,
@@ -649,6 +657,7 @@ const getBestCommunityDigestCandidate = async (user: DigestTargetUser, since: Da
     followedCommunityIds.length > 0
       ? await getCommunityDigestCandidates({
           communityIds: followedCommunityIds,
+          excludedAuthorId: user.id,
           now,
           since,
         })
@@ -666,6 +675,7 @@ const getBestCommunityDigestCandidate = async (user: DigestTargetUser, since: Da
       ? await getCommunityDigestCandidates({
           categories: followedCategories,
           excludedCommunityIds: followedCommunityIds,
+          excludedAuthorId: user.id,
           now,
           since,
         })
@@ -679,6 +689,7 @@ const getBestCommunityDigestCandidate = async (user: DigestTargetUser, since: Da
   }
 
   const generalCandidates = await getCommunityDigestCandidates({
+    excludedAuthorId: user.id,
     now,
     since,
   });

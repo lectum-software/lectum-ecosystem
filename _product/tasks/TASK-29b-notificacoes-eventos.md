@@ -340,3 +340,40 @@ Implementado:
 - `pnpm --dir backend build`
 - `pnpm --dir frontend check`
 - `pnpm check`
+
+## Complemento 2026-07-01 - autoações de pacientes em posts próprios sem notificação
+
+Pedido direto de produto: quando o próprio paciente realiza ações no seu post ou comentário
+(`comentar`, `upvote`, `salvar`, `compartilhar` e equivalentes), ele não deve receber notificação
+na central nem push no navegador.
+
+Implementado:
+
+- Os produtores reais de `nova_resposta`, `upvote`, `salvamento` e `compartilhamento` receberam
+  guarda explícita por autoria antes de chamar o dispatcher: se `actorId` é igual ao autor do post
+  ou comentário alvo, nada é emitido.
+- A regra preserva a política de privacidade vigente: eventos passivos seguem sem expor ator na
+  central; a comparação usa apenas `author_id` interno.
+- O digest push `community_evening_digest` para pacientes passou a excluir posts de autoria do
+  próprio destinatário, evitando push de navegador baseado em engajamento gerado no próprio post.
+- Não houve endpoint paralelo, evento fake, mock, schema, migration, alteração visual ou package
+  novo.
+
+### Critérios de aceite do complemento
+
+- [x] Paciente não recebe `nova_resposta` ao comentar o próprio post ou responder o próprio
+  comentário.
+- [x] Paciente não recebe `upvote` ao votar positivamente no próprio post ou comentário.
+- [x] Paciente não recebe `salvamento` ou `compartilhamento` ao salvar/compartilhar o próprio post
+  quando a ação estiver autenticada.
+- [x] Autoações de posts próprios não entram em push imediato nem no `community_evening_digest` do
+  próprio paciente.
+- [x] Ações de outros usuários seguem usando produtores reais e respeitando preferências.
+- [x] ADR relevante criado e `DATA-MODEL.md` atualizado.
+- [x] Validações de backend/check foram executadas.
+
+### Validação do complemento
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`

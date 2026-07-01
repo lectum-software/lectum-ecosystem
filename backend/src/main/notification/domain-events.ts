@@ -49,6 +49,9 @@ const opaqueSourceId = (value: string) =>
 const normalizeRecipients = (recipientIds: string[], actorId?: string | null) =>
   [...new Set(recipientIds)].filter((id) => Boolean(id) && id !== actorId);
 
+const isSelfActionTarget = (actorId: string | null | undefined, targetAuthorId: string) =>
+  Boolean(actorId && actorId === targetAuthorId);
+
 const notificationAlreadyExists = async (
   userId: string,
   messageKey: MessageKey,
@@ -275,6 +278,8 @@ export const notifyNewPostReply = async (params: {
   if (!replyContext) return;
 
   const recipientId = replyContext.author_id;
+  if (isSelfActionTarget(params.actorId, recipientId)) return;
+
   const communitySlug =
     "post" in replyContext ? replyContext.post.community.slug : replyContext.community.slug;
 
@@ -339,6 +344,7 @@ export const notifyPostVote = async (params: {
       });
 
   if (!target) return;
+  if (isSelfActionTarget(params.actorId, target.author_id)) return;
 
   const communitySlug = "post" in target ? target.post.community.slug : target.community.slug;
   const sourceId = opaqueSourceId(
@@ -384,6 +390,7 @@ export const notifyPostSaved = async (params: {
   });
 
   if (!post) return;
+  if (isSelfActionTarget(params.actorId, post.author_id)) return;
 
   const recipientIds = await filterPostMutedRecipients(params.postId, [post.author_id]);
 
@@ -457,6 +464,7 @@ export const notifyPostShared = async (params: {
       });
 
   if (!target) return;
+  if (isSelfActionTarget(params.actorId, target.author_id)) return;
 
   const communitySlug = "post" in target ? target.post.community.slug : target.community.slug;
   const recipientIds = await filterPostMutedRecipients(params.postId, [target.author_id]);
