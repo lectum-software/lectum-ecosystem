@@ -7,6 +7,7 @@ import {
   PsychologistWhatsAppRedirectButton,
 } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { cn } from "@/lib/utils";
+import { getProfessionalShortDisplayName } from "@/utils/professional-name";
 
 export type CommunityWhatsAppAuthor = {
   avatar?: string | null;
@@ -38,8 +39,6 @@ export const toCommunityWhatsAppIdentity = (
   whatsappUrl: author.whatsapp_url,
 });
 
-const getFirstName = (name: string) => name.trim().split(/\s+/).filter(Boolean)[0] ?? "psicólogo";
-
 export const CommunityWhatsAppCta = ({
   attached = false,
   className,
@@ -47,7 +46,7 @@ export const CommunityWhatsAppCta = ({
   stopPropagation = false,
 }: CommunityWhatsAppCtaProps) => {
   const headingLabel = "WhatsApp";
-  const actionLabel = `Falar com ${getFirstName(psychologist.name)}`;
+  const actionLabel = `Falar com ${getProfessionalShortDisplayName(psychologist.name)}`;
 
   return (
     <PsychologistWhatsAppRedirectButton

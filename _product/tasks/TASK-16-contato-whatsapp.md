@@ -305,3 +305,31 @@ Validacoes do complemento:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser local em `/app/professional/whatsapp/verify`, com sessao real de psicologo, validou a nova copy, ausencia dos textos removidos, ausencia do alerta `WhatsApp atual` e do CTA inicial `Configurar perfil`, link inicial `Voltar para planos`, estado de sucesso com `Voltar para configuração de WhatsApp`, novo card de etapa final, icone WhatsApp no cabecalho, seta com respiro no seletor de pais e ausencia de overflow horizontal mobile.
+
+## Complemento em 2026-07-01: nome curto derivado no CTA de WhatsApp da comunidade
+
+- Pedido direto de produto: substituir a regra do CTA `Falar com {primeiro nome}` por uma regra deterministica derivada do nome completo do psicologo, ja que ainda nao existe campo de nome curto/preferido.
+- Regra adotada: normalizar espacos, usar os dois primeiros termos do nome completo e incluir tambem o terceiro termo quando o segundo for particula (`de`, `da`, `do`, `das`, `dos`, `di`, `du` ou `e`). Se houver apenas um termo, usar esse termo; se o nome estiver ausente, usar fallback `psicólogo`.
+- Exemplo validado: `Ana Rúbia Cunha Papi` passa a renderizar `Falar com Ana Rúbia`.
+- Implementacao centralizada no utilitario frontend `getProfessionalShortDisplayName`, consumido por `CommunityWhatsAppCta`.
+- O texto contextual do link `wa.me` no backend nao foi alterado; esta execucao ajusta apenas a copy do CTA visual em posts/respostas da comunidade.
+- Builder Quick Copy foi tentado por `npx "@builder.io/dev-tools@latest" auth status`, mas o ambiente retornou `Not Authenticated to Builder.io`; foi usado fallback visual local/produto.
+- Referencias visuais consultadas: `_product/proto/Dentro do Post.jpg` e browser local mobile `390x844` na rota publica de post.
+- ADR atualizado: `adrs/0164-cta-whatsapp-conectado-midias-comunidade.md`.
+
+### Critérios de aceite do complemento
+
+- [x] CTA de WhatsApp da comunidade deriva o nome de chamada a partir do nome completo real do psicologo.
+- [x] Nomes compostos como `Ana Rúbia Cunha Papi` exibem os dois primeiros termos: `Falar com Ana Rúbia`.
+- [x] Particulas de nome como `de`, `da`, `do`, `das`, `dos`, `di`, `du` e `e` incluem o terceiro termo quando existir.
+- [x] Nenhum schema, endpoint, mock, seed artificial ou pacote novo foi criado.
+- [x] ADR relevante atualizado.
+- [x] Validacoes de frontend, build, check raiz e browser local foram executadas.
+
+### Validação do complemento
+
+- `pnpm --dir frontend exec biome check --write src/components/community/community-whatsapp-cta.tsx src/utils/professional-name.ts`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build` (primeira tentativa bloqueada por um build Next concorrente; repeticao concluida com sucesso)
+- `pnpm check`
+- Browser local via Chrome/CDP mobile `390x844` em `/community/ansiedade-em-equilibrio/post/cmr15abhh0004msuh2c5gqi5v`, confirmando `WhatsApp` + `Falar com Ana Rúbia` sem quebra visual no card.
