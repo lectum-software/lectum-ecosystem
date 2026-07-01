@@ -223,6 +223,20 @@ const parseGatewayDate = (value?: string | null) => {
   return Number.isNaN(date.getTime()) ? null : date;
 };
 
+const formatSyncError = (error: unknown) => {
+  if (!(error instanceof Error)) {
+    return "Erro desconhecido.";
+  }
+
+  const details = (error as Error & { details?: unknown }).details;
+
+  if (!details || typeof details !== "object") {
+    return error.message;
+  }
+
+  return [error.message, JSON.stringify(details, null, 2)].join("\n");
+};
+
 const formatSubscription = (
   subscription: NonNullable<Awaited<ReturnType<typeof findLocalSubscription>>>,
 ) => ({
@@ -319,8 +333,7 @@ const main = async () => {
 
 main()
   .catch((error: unknown) => {
-    const message = error instanceof Error ? error.message : "Erro desconhecido.";
-    console.error(message);
+    console.error(formatSyncError(error));
     process.exitCode = 1;
   })
   .finally(async () => {

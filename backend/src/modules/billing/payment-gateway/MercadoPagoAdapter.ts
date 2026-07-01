@@ -377,7 +377,7 @@ export class MercadoPagoAdapter implements PaymentGateway {
     const response = await this.runGatewayOperation("get_subscription", () =>
       this.preApproval.get({
         id: gatewaySubscriptionId,
-        requestOptions: this.withRequestOptions(),
+        requestOptions: this.withRequestOptions(undefined, { includeSandboxScope: false }),
       }),
     );
 
