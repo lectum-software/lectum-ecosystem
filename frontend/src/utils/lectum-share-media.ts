@@ -56,15 +56,15 @@ const VIDEO_EXPORT_FRAME_RATE = 30;
 
 const storyCanvasLayout: ShareCanvasLayout = {
   card: {
-    bodyFontSize: 54,
-    headerFontSize: 32,
-    headerHeight: 116,
-    lineHeight: 64,
-    paddingX: 72,
-    paddingY: 42,
-    radius: 44,
-    width: 930,
-    x: 75,
+    bodyFontSize: 50,
+    headerFontSize: 30,
+    headerHeight: 96,
+    lineHeight: 58,
+    paddingX: 60,
+    paddingY: 36,
+    radius: 30,
+    width: 860,
+    x: 110,
     y: 98,
   },
   height: 1920,
@@ -315,25 +315,28 @@ const drawQuestionCard = (
   const cardHeight = card.headerHeight + card.paddingY * 2 + lines.length * card.lineHeight;
 
   ctx.save();
-  ctx.shadowBlur = 24;
-  ctx.shadowColor = "rgba(15, 23, 42, 0.24)";
-  ctx.shadowOffsetY = 16;
+  ctx.shadowBlur = 18;
+  ctx.shadowColor = "rgba(15, 23, 42, 0.18)";
+  ctx.shadowOffsetY = 10;
   drawRoundRect(ctx, card.x, card.y, card.width, cardHeight, card.radius);
-  ctx.fillStyle = "rgba(255, 255, 255, 0.88)";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
   ctx.fill();
   ctx.restore();
 
   ctx.save();
   drawRoundRect(ctx, card.x, card.y, card.width, cardHeight, card.radius);
   ctx.clip();
-  ctx.fillStyle = palette.primary;
+  const headerGradient = ctx.createLinearGradient(card.x, card.y, card.x + card.width, card.y);
+  headerGradient.addColorStop(0, palette.primary);
+  headerGradient.addColorStop(1, "#1677d2");
+  ctx.fillStyle = headerGradient;
   ctx.fillRect(card.x, card.y, card.width, card.headerHeight);
   ctx.restore();
 
   ctx.save();
   drawRoundRect(ctx, card.x, card.y, card.width, cardHeight, card.radius);
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.82)";
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.72)";
   ctx.stroke();
   ctx.restore();
 
@@ -344,7 +347,7 @@ const drawQuestionCard = (
   ctx.fillText(target.cardLabel, card.x + card.width / 2, card.y + card.headerHeight / 2);
 
   ctx.fillStyle = "#0f172a";
-  ctx.font = `900 ${card.bodyFontSize}px Manrope, Arial, sans-serif`;
+  ctx.font = `800 ${card.bodyFontSize}px Manrope, Arial, sans-serif`;
   ctx.textAlign = "start";
   ctx.textBaseline = "alphabetic";
   let lineY = card.y + card.headerHeight + card.paddingY + card.bodyFontSize;
