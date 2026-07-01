@@ -175,3 +175,31 @@ A iteracao visual seguinte identificou tres ajustes na mesma superficie `/commun
 - HTTP local `200` em `/community`
 - Screenshot local desktop/mobile
 - Chrome/CDP em `/community`: desktop com bloco de populares sem overflow horizontal, mobile com `documentWidth=390`, card de destaque sem segunda camada radial e copy `seguidores` nos cards.
+
+## Atualizacao 2026-07-01 - cards populares com titulo como texto principal
+
+### Contexto
+
+Na rota publica `/community`, os cards de `Mais Populares` exibiam titulo, descricao, contagem e CTA dentro de uma area visual compacta. A descricao concorria com o titulo e, por causa do `line-clamp` com `leading` muito justo, descendentes de algumas letras podiam parecer cortados na base, como o `Q` em `Ansiedade em Equilibrio`.
+
+### Decisao
+
+- Remover a renderizacao da descricao nos cards populares, mantendo o titulo como texto principal do card.
+- Preservar categoria, contagem real de seguidores e CTA para nao alterar navegacao, dados ou intencao de acao.
+- Remover `line-clamp` do titulo e aumentar o `line-height` para `leading-[1.12]`, com `text-wrap: balance`, evitando overflow oculto no texto do titulo.
+
+### Consequencias
+
+- O card fica mais limpo e com hierarquia mais direta para a leitura do titulo.
+- Titulos longos podem ocupar ate tres linhas naturais nos cards atuais, mas sem corte vertical por overflow oculto.
+- A mudanca permanece exclusivamente visual/frontend e nao altera backend, Prisma, endpoints, payloads, ordenacao, persistencia ou packages.
+
+### Validacao
+
+- `pnpm --dir frontend exec biome check --write "src/app/app/community/logic.tsx"`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- HTTP local `200` em `/community`
+- Chrome/CDP em `/community`: desktop 1440x900 e mobile 390x844 com 4 cards populares sem descricoes, apenas contagem em `p`, titulo com `overflowY=visible` e mobile sem overflow horizontal (`documentWidth=390`).

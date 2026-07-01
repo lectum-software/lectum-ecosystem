@@ -125,12 +125,9 @@ const CommunityCard = ({ community }: { community: CommunityExploreCard }) => {
       </span>
       <div className="relative z-10 flex h-full flex-col justify-end gap-3 text-white">
         <div className="grid gap-2">
-          <h3 className="line-clamp-2 text-xl font-black leading-[0.98] tracking-[-0.04em] sm:text-[1.35rem]">
+          <h3 className="text-xl font-black leading-[1.12] tracking-[-0.04em] [text-wrap:balance] sm:text-[1.35rem]">
             {community.name}
           </h3>
-          <p className="line-clamp-2 text-xs font-semibold leading-5 text-white/82">
-            {community.description}
-          </p>
           <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-white/65">
             {formatFollowers(community.membersCount)}
           </p>

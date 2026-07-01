@@ -252,3 +252,13 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nao houve alteracao de backend, Prisma schema, migrations, endpoints, payloads, dados, ordenacao ou packages.
 - ADR atualizado: `adrs/0107-explorar-comunidades-conteudo-centralizado.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check --write "src/app/app/community/logic.tsx"`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, HTTP local `200` em `/community`, screenshot local em desktop/mobile e Chrome/CDP validando desktop sem overflow horizontal no bloco de populares, mobile com `documentWidth=390`, overlay sem a segunda camada radial e copy `seguidores`.
+
+## Execucao complementar: titulos sem descricao nos cards populares (2026-07-01)
+
+- Pedido do usuario: nos cards `Mais Populares`, remover a descricao e manter o titulo como texto principal; corrigir o corte na base de letras do titulo, como o `Q` em `Ansiedade em Equilibrio`.
+- Fonte visual/auditavel: screenshot do usuario em `/community` e referencia local `_product/proto/Explorar Comunidades.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: os cards populares deixam de renderizar `community.description`, mantendo titulo, categoria, contagem real de seguidores e CTA.
+- Frontend: o titulo deixa de usar `line-clamp` com overflow oculto e passa a usar `leading-[1.12]` com `text-wrap: balance`, evitando corte vertical de descendentes e preservando a leitura mobile-first.
+- Nao houve alteracao de backend, Prisma schema, migrations, endpoints, payloads, dados, ordenacao ou packages.
+- ADR atualizado: `adrs/0107-explorar-comunidades-conteudo-centralizado.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check --write "src/app/app/community/logic.tsx"`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check`, HTTP local `200` em `/community` e Chrome/CDP em desktop 1440x900 e mobile 390x844 validando 4 cards populares sem descricoes, titulos com overflow visivel/line-height maior e `documentWidth=390` no mobile.
