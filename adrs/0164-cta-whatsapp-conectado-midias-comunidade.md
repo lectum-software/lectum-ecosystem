@@ -102,3 +102,22 @@ A regra fica no frontend em `getProfessionalShortDisplayName`, usada pelo `Commu
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser local via Chrome/CDP mobile `390x844` em `/community/ansiedade-em-equilibrio/post/cmr15abhh0004msuh2c5gqi5v`, confirmando `WhatsApp` + `Falar com Ana Rúbia`.
+
+## Atualizacao 2026-07-01 - mesmo nome na prévia do WhatsApp
+
+A mensagem pronta do `wa.me` passa a usar a mesma regra de nome curto derivado exibida no CTA visual. Assim, quando o botão mostra `Falar com Ana Rúbia`, a prévia do WhatsApp passa a iniciar com `Olá Ana Rúbia, ...`, e não mais apenas `Olá Ana, ...`.
+
+Como frontend e backend são aplicações separadas neste repositório, a regra foi espelhada em utilitário backend (`backend/src/utils/professional-name.ts`) e consumida por `buildLectumWhatsappUrl`. O contrato continua sendo uma string pública `whatsapp_url`; não há mudança de schema, endpoint, telefone exposto, tracking, autenticação ou pacote.
+
+### Consequencias
+
+- A experiência visual do CTA e a prévia do WhatsApp ficam consistentes.
+- Todos os pontos que usam `buildLectumWhatsappUrl` herdam a mesma saudação: perfil, listagem, favoritos, posts e respostas.
+- A ausência futura de campo `nome curto/preferido` continua resolvida por regra determinística a partir de `user.name`.
+
+### Validacao desta atualizacao
+
+- `pnpm --dir backend exec biome check --write src/utils/whatsapp-contact.ts src/utils/professional-name.ts`
+- Smoke local do utilitário backend confirmou `Olá Ana Rúbia, encontrei seu post na Lectum e gostaria de conversar sobre atendimento.`
+- `pnpm --dir backend check`
+- `pnpm check`

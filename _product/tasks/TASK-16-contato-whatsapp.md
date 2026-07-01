@@ -333,3 +333,27 @@ Validacoes do complemento:
 - `pnpm --dir frontend build` (primeira tentativa bloqueada por um build Next concorrente; repeticao concluida com sucesso)
 - `pnpm check`
 - Browser local via Chrome/CDP mobile `390x844` em `/community/ansiedade-em-equilibrio/post/cmr15abhh0004msuh2c5gqi5v`, confirmando `WhatsApp` + `Falar com Ana Rúbia` sem quebra visual no card.
+
+## Complemento em 2026-07-01: nome curto derivado também na mensagem do WhatsApp
+
+- Pedido direto de produto: a prévia/mensagem pronta do WhatsApp deve usar o mesmo nome do psicologo exibido no botão `Falar com ...`.
+- O backend passou a usar a mesma regra de nome curto derivado na saudação do `wa.me`: `Ana Rúbia Cunha Papi` gera `Olá Ana Rúbia, ...`.
+- A regra foi adicionada em `backend/src/utils/professional-name.ts` e consumida por `backend/src/utils/whatsapp-contact.ts`, sem alterar schema, endpoint, telefone exposto ou tracking de `contact_request`.
+- `DATA-MODEL.md` foi atualizado apenas no complemento de mensagens `wa.me` para deixar de citar "primeiro nome" e documentar o "mesmo nome curto derivado do CTA".
+- Nenhum pacote novo, mock, seed artificial ou migration foi criado.
+- ADR atualizado: `adrs/0164-cta-whatsapp-conectado-midias-comunidade.md`.
+
+### Critérios de aceite do complemento
+
+- [x] A mensagem pronta do `wa.me` usa o mesmo nome curto derivado do botão.
+- [x] `Ana Rúbia Cunha Papi` gera `Falar com Ana Rúbia` no CTA e `Olá Ana Rúbia, ...` na mensagem.
+- [x] A mudança vale para URLs de WhatsApp de perfil, listagem, favoritos, posts e respostas por usar o utilitário backend compartilhado.
+- [x] Nenhum contrato de API estrutural, banco, schema Prisma, endpoint ou package novo foi alterado.
+- [x] ADR e documentação de task foram atualizados.
+
+### Validação do complemento
+
+- `pnpm --dir backend exec biome check --write src/utils/whatsapp-contact.ts src/utils/professional-name.ts`
+- Smoke local do utilitário backend confirmou que `buildLectumWhatsappUrl` decodifica `text` como `Olá Ana Rúbia, encontrei seu post na Lectum e gostaria de conversar sobre atendimento.`
+- `pnpm --dir backend check`
+- `pnpm check`

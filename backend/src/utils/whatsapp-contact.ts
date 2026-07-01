@@ -1,20 +1,13 @@
+import { getProfessionalShortDisplayName } from "@/utils/professional-name";
+
 export type LectumWhatsappMessageSource = "profile" | "community_post" | "community_reply";
 
 const WHATSAPP_MIN_DIGITS = 8;
 
-const firstNameFrom = (name?: string | null) => {
-  const [firstName] = String(name ?? "")
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
-
-  return firstName ?? null;
-};
-
 const greetingFor = (name?: string | null) => {
-  const firstName = firstNameFrom(name);
+  const shortName = getProfessionalShortDisplayName(name, "");
 
-  return firstName ? `Olá ${firstName},` : "Olá,";
+  return shortName ? `Olá ${shortName},` : "Olá,";
 };
 
 const messageFor = (source: LectumWhatsappMessageSource, psychologistName?: string | null) => {
