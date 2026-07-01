@@ -107,3 +107,5 @@ Formato recomendado:
 - [ADR-0192 - Menu de opcoes dos comentarios acima do composer fixo](0192-menu-opcoes-comentarios-sobreposicao.md) - Accepted
 - [ADR-0193 - Controles nativos de video da comunidade sem menu extra](0193-controles-nativos-video-comunidade-sem-menu-extra.md) - Accepted
 - [ADR-0194 - Autoações do psicólogo fora de Analytics e notificações](0194-autoacoes-profissional-fora-de-analytics-notificacoes.md) - Accepted
+- [ADR-0195 - Autoacoes de pacientes em posts proprios sem notificacoes](0195-autoacoes-paciente-posts-sem-notificacoes.md) - Accepted
+- [ADR-0196 - Controles do card pertencem ao post mesmo com resposta destacada](0196-controles-post-feed-resposta-destacada.md) - Accepted

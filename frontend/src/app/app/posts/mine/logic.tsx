@@ -39,7 +39,6 @@ import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import {
   createLectumShareLinkTarget,
   createLectumSharePostMediaTarget,
-  createLectumShareTargetFromHighlightedReply,
   createLectumShareVideoTarget,
   type LectumShareChannel,
   type LectumShareVideoTarget,
@@ -634,8 +633,7 @@ export const MyPostsLogic = () => {
       ? createLectumShareVideoTarget(post, replyTarget, {
           parentContent: replyTarget.parent_content ?? null,
         })
-      : (createLectumSharePostMediaTarget(post) ??
-        createLectumShareTargetFromHighlightedReply(post));
+      : createLectumSharePostMediaTarget(post);
 
     if (socialTarget) {
       setShareVideoTarget(socialTarget);

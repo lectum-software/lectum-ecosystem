@@ -227,3 +227,31 @@ Regras de UI obrigatórias:
 - Validacao do ajuste sem background em 2026-07-01: `pnpm --dir frontend typecheck`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `GET http://localhost:3000/community/ansiedade-em-equilibrio/post/cmr15abhh0004msuh2c5gqi5v` com status 200.
 - Ajuste textual desktop em 2026-07-01: a share sheet de posts textuais passou a usar a mesma largura maxima mobile-first de 430px tambem no breakpoint desktop, evitando que a linha `Copiar link`, `WhatsApp`, `Instagram`, `TikTok` e `Mais` seja cortada pelo padding interno da modal. A regra de acoes permanece inalterada: em conteudo textual, apenas `Copiar link` e `WhatsApp` ficam habilitados.
 - Validacao do ajuste textual desktop em 2026-07-01: `pnpm --dir frontend exec biome check --write "src/components/share/lectum-share-video-modal.tsx"`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, HTTP local `200` em `/community/autocuidado-em-pratica/post/cmr26lrh70003nouhg6pd23j6` e Chrome/CDP local desktop 1365x768 confirmando as cinco acoes visiveis dentro de uma sheet de 430px, sem corte lateral.
+
+## Complemento 2026-07-01 - controles de cards com resposta destacada pertencem ao post
+
+- Pedido do usuario: quando um post do feed exibe uma resposta destacada de psicologo, a barra unica de controles nao deve misturar entidades diferentes; upvote/downvote, comentar, salvar e compartilhar pertencem ao proprio post.
+- Frontend: em cards de post do feed geral, pagina interna da comunidade, meus posts e posts salvos, o botao Compartilhar deixou de usar a resposta profissional destacada como fallback de layout social. A barra agora compartilha o post: layout `Postado na Lectum` somente quando o post original de psicologo tem midia; caso contrario, share sheet de link do post.
+- Frontend: respostas salvas ou cards cujo item exibido e explicitamente uma resposta continuam podendo compartilhar a propria resposta, pois nesse caso a barra pertence a resposta exibida.
+- Acesso ao compartilhamento do video destaque passa a exigir abrir o detalhe do post e acionar o compartilhamento da resposta no contexto da thread.
+- Nao houve alteracao de backend, Prisma schema, migrations, endpoints, payloads, packages, votos, salvos ou persistencia de `post_share`/`reply_share`.
+- Fonte visual/auditavel: screenshot do usuario nesta conversa e `_product/proto/Feed Comunidade.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR criado: `adrs/0196-controles-post-feed-resposta-destacada.md`.
+
+### Criterios de aceite do complemento
+
+- [x] A barra unica do card de post aciona voto, comentario, salvamento e compartilhamento do proprio post.
+- [x] Compartilhar em card de post com resposta destacada nao abre mais o layout social da resposta destacada.
+- [x] Video-resposta destacada continua compartilhavel ao entrar no detalhe do post e usar a acao da propria resposta.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo ou migration foi usado.
+- [x] Validacoes frontend foram executadas sem erro; browser local mobile-first foi aberto em `/`, mas nao exercitou cards porque a API local `localhost:3001` retornou 500 para o feed nesta sessao, sem uso de mock/seed.
+
+### Validacoes do complemento
+
+- [x] `pnpm --dir frontend exec biome check --write -- "src/app/app/community/[slug]/logic.tsx" "src/app/app/posts/saved/logic.tsx" "src/app/app/posts/mine/logic.tsx"`
+- [x] `pnpm --dir frontend check` (primeira tentativa excedeu timeout durante `tsc`; repetida com timeout maior e concluiu sem erros)
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] HTTP local `200` em `http://localhost:3000/`.
+- [x] Chrome headless local mobile 390x844 abriu `http://localhost:3000/` e confirmou render do shell do feed; a lista permaneceu em loading porque `http://localhost:3001/api/private/community/feed/posts?limit=1` retornou 500 nesta sessao.

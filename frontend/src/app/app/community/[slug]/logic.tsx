@@ -90,7 +90,6 @@ import {
 import {
   createLectumShareLinkTarget,
   createLectumSharePostMediaTarget,
-  createLectumShareTargetFromHighlightedReply,
   type LectumShareChannel,
   type LectumShareVideoTarget,
 } from "@/utils/lectum-share-target";
@@ -1565,7 +1564,7 @@ const PostCard = ({
         comments={{
           count: post.replies_count,
           href: postDetailHref,
-          label: "Comentar",
+          label: "Comentar no post",
         }}
         currentVote={voteSnapshot.currentVote}
         disabled={voteMutation.isPending}
@@ -1578,7 +1577,7 @@ const PostCard = ({
           onClick: handleToggleSave,
         }}
         share={{
-          label: `Compartilhar ${post.title}`,
+          label: `Compartilhar post: ${post.title}`,
           onClick: () => onShare(post),
         }}
         upvotesCount={voteSnapshot.upvotes}
@@ -2625,8 +2624,7 @@ const CommunityDetailLogic = ({
   const sharePost = async (post: CommunityPost) => {
     if (typeof window === "undefined") return;
 
-    const socialTarget =
-      createLectumSharePostMediaTarget(post) ?? createLectumShareTargetFromHighlightedReply(post);
+    const socialTarget = createLectumSharePostMediaTarget(post);
     setShareVideoTarget(socialTarget ?? createLectumShareLinkTarget(post));
   };
 
@@ -3013,8 +3011,7 @@ export const CommunityFeedLogic = ({
   const sharePost = async (post: CommunityPost) => {
     if (typeof window === "undefined") return;
 
-    const socialTarget =
-      createLectumSharePostMediaTarget(post) ?? createLectumShareTargetFromHighlightedReply(post);
+    const socialTarget = createLectumSharePostMediaTarget(post);
     setShareVideoTarget(socialTarget ?? createLectumShareLinkTarget(post));
   };
 
