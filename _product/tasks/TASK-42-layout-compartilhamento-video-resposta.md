@@ -32,11 +32,14 @@ Decisão de produto definida em 2026-06-30:
 - a linha de botões não deve exibir barra de rolagem horizontal quando as ações couberem no espaço disponível;
 - não incluir play central;
 - não incluir botão/link/CTA dentro da arte, porque links clicáveis são configurados dentro do Instagram/TikTok;
-- o topo usa card estilo story com o texto "Pergunta na Lectum" em azul Lectum;
+- o topo usa card estilo story com o texto "Pergunta na Lectum";
+- o card da pergunta deve se aproximar da caixinha do Instagram, com faixa superior azul Lectum e o texto "Pergunta na Lectum" em branco;
 - para vídeo-resposta de post, o card mostra o título/pergunta do post;
 - para vídeo-resposta de comentário, o card mostra uma prévia do comentário;
 - a arte compartilhável deve suprimir a identidade do psicólogo, selo, função e marca `lectum` no rodapé, porque Instagram/TikTok/Reels já adicionam controles e identificação de usuário na parte inferior;
-- quando a resposta profissional também tiver texto escrito, a modal deve exibir abaixo do preview até duas linhas desse texto e a ação `Copiar texto`, para o psicólogo usar como legenda escrita em Reels/TikTok/feed quando fizer sentido.
+- quando a resposta profissional também tiver texto escrito, a modal deve exibir abaixo do preview até duas linhas desse texto e uma ação discreta apenas com ícone de copiar, sem fundo cinza nem rótulo "Texto da resposta", para o psicólogo usar como legenda escrita em Reels/TikTok/feed quando fizer sentido;
+- ao copiar o texto da resposta, a confirmação deve usar toast/tag verde global no topo da tela, sem faixa verde inline dentro da modal;
+- no desktop, a composição deve caber na altura visível sem barra de rolagem na modal, mantendo o `X` funcional e permitindo fechar ao clicar fora da share sheet.
 
 Referência visual complementar aprovada pelo usuário:
 
@@ -112,7 +115,7 @@ Frontend esperado:
 - Utilitário de target para decidir quando a resposta é vídeo profissional compartilhável.
 - Utilitário de exportação por canvas/MediaRecorder sem package novo.
 - Modal de preview vertical 9:16 sem seletor de formato e sem textos acima do vídeo.
-- Bloco opcional abaixo do preview com duas linhas do texto escrito da resposta e botão `Copiar texto`.
+- Bloco opcional abaixo do preview com duas linhas do texto escrito da resposta e botão discreto de copiar apenas com ícone.
 - Share sheet abaixo do vídeo com uma única linha de ações: copiar link, WhatsApp, Instagram, TikTok e Mais.
 - Integração nas superfícies que já chamam `useSharePost`/`useShareReply`.
 - Persistir `shareReply` quando o compartilhamento/exportação for concluído por Web Share ou fallback com cópia de link.
@@ -149,7 +152,11 @@ Regras de UI obrigatórias:
 - [x] Preview do vídeo e botões da share sheet não exibem sombreamento externo.
 - [x] Vídeo-resposta de post usa o título/pergunta do post; vídeo-resposta de comentário usa prévia do comentário quando disponível.
 - [x] Exportação e preview suprimem identidade do psicólogo, selo, função e wordmark de rodapé para evitar excesso de elementos nas redes sociais.
-- [x] Quando a resposta tem texto escrito, a modal mostra até duas linhas abaixo do preview e oferece `Copiar texto` para uso como legenda escrita.
+- [x] Quando a resposta tem texto escrito, a modal mostra até duas linhas abaixo do preview e oferece ação de cópia para uso como legenda escrita.
+- [x] Card da pergunta usa faixa superior azul Lectum com "Pergunta na Lectum" em branco, aproximando a composição da caixinha do Instagram.
+- [x] Texto escrito da resposta aparece sem título/fundo cinza, com ação de copiar apenas por ícone discreto.
+- [x] Cópia do texto usa toast verde global no topo, sem faixa verde inline na modal.
+- [x] Desktop ajustado para caber sem barra de rolagem na modal; `X` e clique fora fecham a share sheet.
 - [x] Exportação não mostra play central e não inclui CTA/link clicável desenhado.
 - [x] Share sheet exibe `Copiar link`, `WhatsApp`, `Instagram`, `TikTok` e `Mais` em uma única linha, sem a opção direta de baixar.
 - [x] Botões de WhatsApp, Instagram e TikTok usam fundo de marca ocupando todo o botão, com símbolo interno no mesmo tamanho visual do ícone de `Copiar link`.
@@ -191,5 +198,6 @@ Regras de UI obrigatórias:
 - Ajuste de interação em 2026-06-30: adicionada animação de entrada/saída vertical da bottom sheet e gesto de arrastar para baixo para fechar, com threshold de fechamento e retorno suave quando o gesto não atinge o limite. Refinamentos visuais/interativos validados com `pnpm --dir frontend typecheck`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `GET http://localhost:3000/community/ansiedade-em-equilibrio/post/cmr15abhh0004msuh2c5gqi5v` retornando 200.
 - Ajuste visual em 2026-06-30: removida a rolagem horizontal visível da linha de botões, substituindo `overflow-x-auto` por distribuição fixa das cinco ações. Validação final dos refinamentos com `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`.
 - Ajuste de proporção em 2026-06-30: removido o `max-height` que comprimia o preview; a largura agora usa `min(76vw, 320px, 34.875dvh)` com `aspect-ratio: 9 / 16`, preservando a miniatura vertical em mobile e desktop.
-- Ajuste de composição em 2026-06-30: por análise da visualização de Reels/Instagram, a arte passou a focar somente no card superior, com o texto "Pergunta na Lectum"; identidade do psicólogo, selo, função e wordmark de rodapé foram removidos do preview e do arquivo exportado para evitar conflito com a UI das redes. A modal também passou a exibir, quando existir, duas linhas do texto escrito da resposta e a ação `Copiar texto` para uso como legenda escrita.
+- Ajuste de composição em 2026-06-30: por análise da visualização de Reels/Instagram, a arte passou a focar somente no card superior, com o texto "Pergunta na Lectum"; identidade do psicólogo, selo, função e wordmark de rodapé foram removidos do preview e do arquivo exportado para evitar conflito com a UI das redes. A modal também passou a exibir, quando existir, duas linhas do texto escrito da resposta e uma ação de copiar para uso como legenda escrita.
 - Validação do ajuste de composição/legenda escrita em 2026-06-30: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `GET http://localhost:3000/community/ansiedade-em-equilibrio/post/cmr15abhh0004msuh2c5gqi5v` retornando 200.
+- Ajuste de refinamento visual em 2026-06-30: card da pergunta passou a ter faixa superior azul Lectum com texto branco, o bloco de texto da resposta removeu título/fundo cinza e passou a usar cópia apenas por ícone, a confirmação de cópia usa toast global, e a modal desktop foi reduzida para caber sem scroll interno com fechamento por `X` e clique fora. Validado com `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `GET http://localhost:3000/community/ansiedade-em-equilibrio/post/cmr15abhh0004msuh2c5gqi5v` retornando 200.

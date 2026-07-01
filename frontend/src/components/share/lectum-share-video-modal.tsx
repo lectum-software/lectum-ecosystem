@@ -3,6 +3,7 @@
 import { Check, Copy, Loader2, type LucideIcon, MoreHorizontal, X } from "lucide-react";
 import Image from "next/image";
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
   copyLectumShareText,
@@ -35,12 +36,10 @@ const CLOSE_ANIMATION_MS = 220;
 const DRAG_CLOSE_THRESHOLD_PX = 96;
 const DRAG_START_TOLERANCE_PX = 4;
 
-const sharePreviewCardClassName =
-  "top-[6%] left-[7%] right-[7%] rounded-[26px] px-5 py-4 sm:px-6 sm:py-5";
+const sharePreviewClassName = "w-[min(74vw,300px,31.5dvh)] sm:w-[min(46vw,300px,29dvh)]";
 
-const sharePreviewStyle = {
-  width: "min(76vw, 320px, 34.875dvh)",
-} satisfies CSSProperties;
+const sharePreviewCardClassName =
+  "top-[6.5%] left-[8%] right-[8%] overflow-hidden rounded-[22px] sm:top-[7%] sm:left-[10%] sm:right-[10%]";
 
 const shareSheetActions = [
   {
@@ -99,8 +98,10 @@ const SharePreview = ({ target }: { target: LectumShareVideoTarget }) => {
 
   return (
     <div
-      className="relative mx-auto aspect-[9/16] overflow-hidden rounded-[28px] bg-foreground text-white"
-      style={sharePreviewStyle}
+      className={cn(
+        "relative mx-auto aspect-[9/16] overflow-hidden rounded-[28px] bg-foreground text-white",
+        sharePreviewClassName,
+      )}
     >
       {videoSrc ? (
         <video
@@ -119,17 +120,17 @@ const SharePreview = ({ target }: { target: LectumShareVideoTarget }) => {
 
       <div
         className={cn(
-          "absolute border border-white/55 bg-surface/80 text-foreground shadow-[0_14px_34px_rgb(15_23_42_/_18%)] backdrop-blur-md",
+          "absolute border border-white/70 bg-surface/90 text-foreground shadow-[0_14px_34px_rgb(15_23_42_/_14%)] backdrop-blur-md",
           sharePreviewCardClassName,
         )}
       >
-        <p className="text-center text-[15px] font-black leading-none text-primary sm:text-base">
+        <p className="bg-primary px-4 py-2 text-center text-[13px] font-black leading-none text-white sm:text-sm">
           Pergunta na Lectum
         </p>
         <p
           className={cn(
-            "mt-3 text-center font-black tracking-[-0.045em] text-foreground",
-            "text-[clamp(1.25rem,5vw,1.9rem)] leading-[1.08]",
+            "px-4 py-3 text-left font-black tracking-[-0.04em] text-foreground",
+            "text-[clamp(1.05rem,4.4vw,1.55rem)] leading-[1.08] sm:text-[clamp(1rem,2.1vw,1.42rem)]",
           )}
         >
           {sourcePreview}
@@ -150,28 +151,23 @@ const ShareResponseTextPanel = ({
   pending: boolean;
   text: string;
 }) => (
-  <div className="mt-4 rounded-3xl border border-border bg-surface-muted/60 px-3.5 py-3">
-    <div className="flex items-start gap-3">
-      <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-black tracking-[0.12em] text-muted uppercase">
-          Texto da resposta
-        </p>
-        <p className="mt-1 line-clamp-2 text-sm font-semibold leading-5 text-foreground">{text}</p>
-      </div>
-      <button
-        className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-2 text-xs font-black text-foreground transition hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 disabled:cursor-not-allowed disabled:opacity-60"
-        disabled={disabled}
-        onClick={onCopy}
-        type="button"
-      >
-        {pending ? (
-          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-        ) : (
-          <Copy className="h-3.5 w-3.5" aria-hidden="true" />
-        )}
-        Copiar texto
-      </button>
-    </div>
+  <div className="mt-3 flex items-start gap-2 px-1 sm:mt-3">
+    <p className="min-w-0 flex-1 line-clamp-2 text-sm font-semibold leading-5 text-foreground sm:text-[13px] sm:leading-[18px]">
+      {text}
+    </p>
+    <button
+      aria-label="Copiar texto da resposta"
+      className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 disabled:cursor-not-allowed disabled:opacity-60"
+      disabled={disabled}
+      onClick={onCopy}
+      type="button"
+    >
+      {pending ? (
+        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+      ) : (
+        <Copy className="h-4 w-4" aria-hidden="true" />
+      )}
+    </button>
   </div>
 );
 
@@ -198,14 +194,14 @@ const ShareSheetOption = ({
 }: ShareSheetOptionProps) => (
   <button
     aria-label={label}
-    className="group grid w-[66px] shrink-0 justify-items-center gap-2 rounded-2xl py-1 text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 disabled:cursor-not-allowed disabled:opacity-60 sm:w-[74px]"
+    className="group grid w-[58px] shrink-0 justify-items-center gap-1.5 rounded-2xl py-1 text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 disabled:cursor-not-allowed disabled:opacity-60 sm:w-[68px]"
     disabled={disabled}
     onClick={onClick}
     type="button"
   >
     <span
       className={cn(
-        "grid h-14 w-14 place-items-center rounded-[20px] transition group-hover:scale-[1.03]",
+        "grid h-14 w-14 place-items-center rounded-[20px] transition group-hover:scale-[1.03] sm:h-12 sm:w-12 sm:rounded-[18px]",
         iconClassName,
       )}
       style={iconStyle}
@@ -216,19 +212,19 @@ const ShareSheetOption = ({
         <Image
           alt=""
           aria-hidden="true"
-          className="h-6 w-6 object-contain"
+          className="h-6 w-6 object-contain sm:h-5 sm:w-5"
           height={24}
           src={iconSrc}
           unoptimized
           width={24}
         />
       ) : Icon ? (
-        <Icon className="h-6 w-6" aria-hidden="true" />
+        <Icon className="h-6 w-6 sm:h-5 sm:w-5" aria-hidden="true" />
       ) : (
-        <MoreHorizontal className="h-6 w-6" aria-hidden="true" />
+        <MoreHorizontal className="h-6 w-6 sm:h-5 sm:w-5" aria-hidden="true" />
       )}
     </span>
-    <span className="line-clamp-2 text-[12px] font-semibold leading-[14px] text-foreground">
+    <span className="line-clamp-2 text-[11px] font-semibold leading-[13px] text-foreground">
       {label}
     </span>
   </button>
@@ -248,9 +244,7 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
   const [isClosing, setIsClosing] = useState(false);
   const [isEntered, setIsEntered] = useState(false);
   const [pendingAction, setPendingAction] = useState<ShareActionId | null>(null);
-  const [status, setStatus] = useState<"copied" | "downloaded" | "idle" | "shared" | "text_copied">(
-    "idle",
-  );
+  const [status, setStatus] = useState<"copied" | "downloaded" | "idle" | "shared">("idle");
   const [error, setError] = useState<string | null>(null);
   const exporting = pendingAction !== null;
   const sourceLabel = useMemo(() => {
@@ -411,12 +405,13 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
   const handleCopyText = async () => {
     setPendingAction("copy_text");
     setError(null);
+    setStatus("idle");
 
     try {
       await copyLectumShareText(target);
-      setStatus("text_copied");
+      toast.success("Texto copiado para usar como legenda.");
     } catch {
-      setError("NÃ£o foi possÃ­vel copiar o texto neste navegador.");
+      setError("Não foi possível copiar o texto neste navegador.");
     } finally {
       setPendingAction(null);
     }
@@ -440,10 +435,16 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
       )}
       role="dialog"
     >
-      <div className="mx-auto flex min-h-dvh w-full max-w-[430px] items-end sm:min-h-0 sm:max-w-[520px]">
+      <button
+        aria-label="Fechar compartilhamento ao clicar fora"
+        className="absolute inset-0 z-0 cursor-default"
+        onClick={requestClose}
+        type="button"
+      />
+      <div className="pointer-events-none relative z-10 mx-auto flex min-h-dvh w-full max-w-[430px] items-end sm:min-h-0 sm:max-w-[450px]">
         <div
           className={cn(
-            "relative max-h-[94dvh] w-full overscroll-contain overflow-y-auto rounded-t-[34px] border border-border bg-surface px-4 pt-14 pb-[max(1rem,env(safe-area-inset-bottom))] text-foreground shadow-[var(--lectum-shadow)] sm:rounded-[34px] sm:p-5 sm:pt-14",
+            "pointer-events-auto relative max-h-[94dvh] w-full overscroll-contain overflow-y-auto rounded-t-[34px] border border-border bg-surface px-4 pt-14 pb-[max(1rem,env(safe-area-inset-bottom))] text-foreground shadow-[var(--lectum-shadow)] sm:max-h-[calc(100dvh-2rem)] sm:overflow-visible sm:rounded-[34px] sm:px-6 sm:pt-12 sm:pb-5",
             dragOffset > 0
               ? "transition-none"
               : "transition-transform duration-200 ease-out motion-reduce:transition-none",
@@ -457,11 +458,12 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
         >
           <button
             aria-label="Fechar compartilhamento"
-            className="absolute top-4 right-4 z-20 grid h-11 w-11 place-items-center rounded-full border border-border bg-surface-muted text-foreground transition hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+            className="absolute top-4 right-4 z-20 grid h-10 w-10 place-items-center rounded-full border border-border bg-surface-muted text-foreground transition hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 sm:top-5 sm:right-5"
             onClick={requestClose}
+            onPointerDown={(event) => event.stopPropagation()}
             type="button"
           >
-            <X className="h-6 w-6" aria-hidden="true" />
+            <X className="h-5 w-5" aria-hidden="true" />
           </button>
 
           <SharePreview target={target} />
@@ -475,7 +477,7 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
             />
           ) : null}
 
-          <div className="mt-5 border-border border-t pt-4">
+          <div className="mt-4 border-border border-t pt-3 sm:mt-3 sm:pt-3">
             <div className="-mx-1 flex justify-between gap-2 overflow-hidden px-1 pb-2 sm:gap-3">
               {shareSheetActions.map((action) => (
                 <ShareSheetOption
@@ -508,9 +510,7 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
                 ? "Arquivo baixado para escolher no app desejado."
                 : status === "copied"
                   ? "Link copiado."
-                  : status === "text_copied"
-                    ? "Texto copiado para usar como legenda."
-                    : "Compartilhamento aberto no dispositivo."}
+                  : "Compartilhamento aberto no dispositivo."}
             </p>
           ) : null}
         </div>

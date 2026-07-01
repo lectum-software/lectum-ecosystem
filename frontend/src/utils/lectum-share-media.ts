@@ -31,6 +31,7 @@ type ShareCanvasLayout = {
   card: {
     bodyFontSize: number;
     headerFontSize: number;
+    headerHeight: number;
     lineHeight: number;
     paddingX: number;
     paddingY: number;
@@ -50,10 +51,11 @@ const VIDEO_EXPORT_FRAME_RATE = 30;
 const storyCanvasLayout: ShareCanvasLayout = {
   card: {
     bodyFontSize: 66,
-    headerFontSize: 40,
+    headerFontSize: 34,
+    headerHeight: 132,
     lineHeight: 78,
     paddingX: 72,
-    paddingY: 52,
+    paddingY: 50,
     radius: 44,
     width: 930,
     x: 75,
@@ -261,15 +263,22 @@ const drawQuestionCard = (
 
   ctx.font = `800 ${card.bodyFontSize}px Manrope, Arial, sans-serif`;
   const lines = wrapText(ctx, target.sourceText, textMaxWidth, layout.maxQuestionLines);
-  const cardHeight = card.paddingY * 2 + card.headerFontSize + 28 + lines.length * card.lineHeight;
+  const cardHeight = card.headerHeight + card.paddingY * 2 + lines.length * card.lineHeight;
 
   ctx.save();
   ctx.shadowBlur = 24;
   ctx.shadowColor = "rgba(15, 23, 42, 0.24)";
   ctx.shadowOffsetY = 16;
   drawRoundRect(ctx, card.x, card.y, card.width, cardHeight, card.radius);
-  ctx.fillStyle = "rgba(255, 255, 255, 0.76)";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.88)";
   ctx.fill();
+  ctx.restore();
+
+  ctx.save();
+  drawRoundRect(ctx, card.x, card.y, card.width, cardHeight, card.radius);
+  ctx.clip();
+  ctx.fillStyle = palette.primary;
+  ctx.fillRect(card.x, card.y, card.width, card.headerHeight);
   ctx.restore();
 
   ctx.save();
@@ -279,13 +288,17 @@ const drawQuestionCard = (
   ctx.stroke();
   ctx.restore();
 
-  ctx.fillStyle = palette.primary;
+  ctx.fillStyle = "#ffffff";
   ctx.font = `800 ${card.headerFontSize}px Manrope, Arial, sans-serif`;
-  ctx.fillText("Pergunta na Lectum", card.x + card.paddingX, card.y + card.paddingY);
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("Pergunta na Lectum", card.x + card.width / 2, card.y + card.headerHeight / 2);
 
   ctx.fillStyle = "#0f172a";
   ctx.font = `900 ${card.bodyFontSize}px Manrope, Arial, sans-serif`;
-  let lineY = card.y + card.paddingY + card.headerFontSize + 68;
+  ctx.textAlign = "start";
+  ctx.textBaseline = "alphabetic";
+  let lineY = card.y + card.headerHeight + card.paddingY + card.bodyFontSize;
   for (const line of lines) {
     ctx.fillText(line, card.x + card.paddingX, lineY);
     lineY += card.lineHeight;
