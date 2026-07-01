@@ -2722,7 +2722,7 @@ const CommunityDetailLogic = ({
     <PrivateTemplate
       allowAnonymous
       autoHideNavigation
-      contentClassName="!pt-0 bg-background sm:!pt-0"
+      contentClassName="lectum-mobile-main-scrollbar-hidden !pt-0 bg-background sm:!pt-0"
       navigationTheme="solidWhite"
       showHeader
     >
@@ -3035,7 +3035,7 @@ export const CommunityFeedLogic = ({
     <PrivateTemplate
       allowAnonymous
       autoHideNavigation
-      contentClassName="bg-background"
+      contentClassName="lectum-mobile-main-scrollbar-hidden bg-background"
       navigationTheme="solidWhite"
       showHeader
     >

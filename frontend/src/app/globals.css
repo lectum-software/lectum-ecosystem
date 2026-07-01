@@ -160,6 +160,21 @@ a {
   outline-color: var(--lectum-primary);
 }
 
+@media (max-width: 1023px) {
+  html:has(.lectum-mobile-main-scrollbar-hidden),
+  body:has(.lectum-mobile-main-scrollbar-hidden),
+  .lectum-mobile-main-scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  html:has(.lectum-mobile-main-scrollbar-hidden)::-webkit-scrollbar,
+  body:has(.lectum-mobile-main-scrollbar-hidden)::-webkit-scrollbar,
+  .lectum-mobile-main-scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 video:fullscreen,
 video:-webkit-full-screen {
   width: 100vw;

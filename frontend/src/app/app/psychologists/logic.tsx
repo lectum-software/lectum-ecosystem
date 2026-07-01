@@ -3468,7 +3468,7 @@ export const PsychologistsLogic = () => {
   return (
     <PrivateTemplate
       allowAnonymous
-      contentClassName="h-[100dvh] max-w-none overflow-hidden p-0 sm:p-0 lg:pb-0"
+      contentClassName="lectum-mobile-main-scrollbar-hidden h-[100dvh] max-w-none overflow-hidden p-0 sm:p-0 lg:pb-0"
       desktopNavigation="sidebar"
       navigationDimmed={isMobileSearchFocusMode}
       navigationHidden={metrics.isDesktopLayout ? false : isUiHidden}
@@ -3539,11 +3539,17 @@ export const PsychologistsLogic = () => {
           .psychologists-video-feed {
             -webkit-overflow-scrolling: touch;
             scroll-behavior: smooth;
-            scrollbar-width: none;
           }
 
-          .psychologists-video-feed::-webkit-scrollbar {
-            display: none;
+          @media (max-width: 1023px) {
+            .psychologists-video-feed {
+              -ms-overflow-style: none;
+              scrollbar-width: none;
+            }
+
+            .psychologists-video-feed::-webkit-scrollbar {
+              display: none;
+            }
           }
 
           .psychologists-filter-dialog-scroll {
