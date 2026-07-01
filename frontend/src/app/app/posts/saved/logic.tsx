@@ -599,13 +599,12 @@ export const SavedPostsLogic = () => {
                   />
                 ) : (
                   <CommunityPostCard
-                    communityContextTone="muted"
-                    desktopPlainLinks
                     key={item.id}
                     interactiveActions
                     onShare={sharePost}
                     openPostOnCardClick
                     post={item.post}
+                    presentation="feed"
                     saveActionOverride={{
                       active: true,
                       count: item.post.saves_count,

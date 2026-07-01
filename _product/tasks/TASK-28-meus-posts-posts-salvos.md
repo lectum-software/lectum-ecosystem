@@ -434,3 +434,24 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   persistida no perfil headless, a rota redirecionou para login, entao a comparacao visual
   autenticada foi feita pelas imagens locais e pelo reuso do `CommunityPostCard` ja validado no
   feed.
+
+## Ajuste complementar em 2026-07-01 - card salvo identico ao feed
+
+- Pedido direto de produto: em `/app/posts/saved`, posts salvos devem usar o mesmo card do feed, incluindo a resposta profissional destacada, sem o rotulo extra e sem espacamentos/cores diferentes.
+- Frontend: `CommunityPostCard` recebeu a apresentacao opt-in `presentation="feed"`, que aplica o mesmo container, header de comunidade com `CommunityFollowToggle`, tipografia, divisores, espacamento, borda do action bar e labels do feed/comunidade.
+- A resposta profissional destacada nessa apresentacao usa a mesma composicao visual do feed: card azul claro, coluna lateral, avatar/identidade do psicologo, metadados, texto expansivel em 2 linhas e midia/WhatsApp no mesmo bloco.
+- `/app/posts/saved` passa `presentation="feed"` somente para itens do tipo post salvo; respostas salvas independentes continuam com o card proprio de resposta, preservando a diferenca sem criar mock ou endpoint paralelo.
+- Nao houve alteracao de backend, schema Prisma, migrations, packages, dados artificiais, votos, salvamentos, DTOs ou persistencia.
+- Mobile-first: referencia visual comparada com `_product/proto/Posts Salvos.jpg` e `_product/proto/Feed Comunidade.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0072-meus-posts-e-posts-salvos.md`.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend exec biome check --write src/components/community/community-post-card.tsx src/app/app/posts/saved/logic.tsx`
+- `pnpm --dir frontend exec tsc --noEmit --pretty false`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- Smoke HTTP local: `http://127.0.0.1:3000/app/posts/saved` retornou 200.
+- Chrome headless mobile `390x844` foi executado contra `/app/posts/saved`, mas sem sessao autenticada persistida o ambiente headless nao permitiu comparacao autenticada; a verificacao visual ficou baseada no reuso da apresentacao do feed e nas imagens locais.

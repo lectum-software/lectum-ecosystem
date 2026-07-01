@@ -470,3 +470,33 @@ deve preservar tambem a resposta-destaque associada ao post no card.
   a rota redirecionou para login. A comparacao visual autenticada usou as imagens locais
   `_product/proto/Posts Salvos.jpg` e `_product/proto/Feed Comunidade.jpg`, alem do reuso do
   `CommunityPostCard` ja validado no feed.
+
+## Complemento 2026-07-01: card de Salvos com apresentacao do feed
+
+### Contexto
+
+A tela `/app/posts/saved` ja exibia `highlighted_professional_reply`, mas o card salvo ainda divergia do feed: a resposta vinha com rotulo extra, outro padding e outra composicao, e o card principal nao tinha o mesmo header, follow toggle, bordas, sombras, gaps e labels do feed. O pedido atual exige que Salvos seja visualmente identico ao feed para posts salvos.
+
+### Decisao
+
+- Adicionar `presentation="feed"` como variacao opt-in de `CommunityPostCard`, mantendo o comportamento default usado por Meus posts/perfis.
+- Aplicar essa apresentacao apenas aos itens do tipo post em `/app/posts/saved`.
+- Na apresentacao feed, reutilizar `CommunityFollowToggle` no header e renderizar a resposta profissional destacada com a mesma hierarquia visual do feed: card azul claro, linha vertical lateral, metadados com upvotes, texto expansivel e midia no bloco.
+- Manter respostas salvas diretamente como cards independentes de resposta, pois elas representam outro tipo de item salvo.
+
+### Consequencias
+
+- Salvos passa a preservar o mesmo contexto visual do feed quando o usuario salvou um post com resposta profissional destacada.
+- A mudanca e somente de frontend/apresentacao; nao ha schema novo, endpoint novo, migration, package novo, mock ou dado artificial.
+- O componente compartilhado concentra a variacao para evitar copiar o card local do feed para a rota de Salvos.
+
+### Validacao
+
+- `pnpm --dir frontend exec biome check --write src/components/community/community-post-card.tsx src/app/app/posts/saved/logic.tsx`
+- `pnpm --dir frontend exec tsc --noEmit --pretty false`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- Smoke HTTP local em `/app/posts/saved` retornou 200.
+- Chrome headless mobile `390x844` sem sessao autenticada nao permitiu comparacao autenticada; a decisao visual foi validada pelo reuso da apresentacao do feed e pelas referencias locais `Posts Salvos`/`Feed Comunidade`.

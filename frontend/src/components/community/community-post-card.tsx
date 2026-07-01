@@ -18,6 +18,7 @@ import {
 import { useSavePost, useVotePost } from "@/api/callers/posts";
 import type { PostListPost, PostProfessionalReply } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
+import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
 import { CommunityMediaBlock } from "@/components/community/community-media-frame";
 import {
   CommunityWhatsAppCta,
@@ -45,6 +46,7 @@ type CommunityPostCardProps = {
   onShare: (post: PostListPost) => void;
   openPostOnCardClick?: boolean;
   post: PostListPost;
+  presentation?: "default" | "feed";
   profilePublicationMode?: boolean;
   saveActionOverride?: {
     active?: boolean;
@@ -367,10 +369,14 @@ const AuthorAvatar = ({
 };
 
 const ProfessionalReplyPreview = ({
+  postHref,
+  presentation = "default",
   profilePublicationMode,
   reply,
   showWhatsappCta = true,
 }: {
+  postHref?: string;
+  presentation?: "default" | "feed";
   profilePublicationMode?: boolean;
   reply: PostProfessionalReply | null;
   showWhatsappCta?: boolean;
@@ -379,15 +385,96 @@ const ProfessionalReplyPreview = ({
 
   if (!reply) return null;
 
+  const isFeedPresentation = presentation === "feed";
   const profileHref = `/psychologists/${reply.author.id}`;
   const whatsappCta =
     showWhatsappCta && reply.author.whatsapp_url ? (
       <CommunityWhatsAppCta
         attached={Boolean(reply.media_url)}
-        className={cn(!reply.media_url && "mt-3")}
+        className={cn(!reply.media_url && !isFeedPresentation && "mt-3")}
         psychologist={toCommunityWhatsAppIdentity(reply.author)}
       />
     ) : null;
+
+  if (isFeedPresentation) {
+    return (
+      <div className="relative grid min-w-0 cursor-pointer grid-cols-[18px_minmax(0,1fr)] gap-2 rounded-2xl border border-[#D8ECFF] bg-[#F4FAFF] p-3 dark:border-primary/20 dark:bg-primary/5">
+        {postHref ? (
+          <Link
+            aria-label="Abrir post pela resposta profissional em destaque"
+            className="absolute inset-0 z-0 cursor-pointer rounded-2xl"
+            href={postHref}
+          />
+        ) : null}
+        <div className="pointer-events-none flex justify-center pt-1" aria-hidden="true">
+          <span className="h-full min-h-24 w-px rounded-full bg-[#BBDFFF] dark:bg-primary/25" />
+        </div>
+        <div className="relative z-10 min-w-0">
+          <div className="flex min-w-0 items-start gap-2.5">
+            <AuthorAvatar
+              avatar={reply.author.avatar}
+              href={profileHref}
+              name={reply.author.name}
+              size="lg"
+            />
+            <div className="grid min-w-0 flex-1 gap-0.5">
+              <div className="flex min-w-0 items-center gap-x-2 gap-y-1">
+                <span className="inline-flex min-w-0 items-center gap-[5px]">
+                  <Link
+                    className="min-w-0 truncate text-sm font-black text-foreground no-underline transition hover:text-foreground hover:no-underline"
+                    href={profileHref}
+                  >
+                    {reply.author.name}
+                  </Link>
+                  {reply.author.verified ? (
+                    <BadgeCheck
+                      className="h-4 w-4 shrink-0 fill-primary text-primary-foreground"
+                      aria-hidden="true"
+                    />
+                  ) : null}
+                </span>
+                <MentorBadge badge={reply.author.featured_badge} href={profileHref} />
+              </div>
+              <Link
+                className="min-w-0 cursor-pointer truncate text-[11px] font-semibold text-muted no-underline transition hover:text-muted hover:no-underline"
+                href={profileHref}
+              >
+                {reply.author.type_label} <span aria-hidden="true">&bull;</span>{" "}
+                {formatPostTimeLabel(reply.created_at, reply.edited_at)}{" "}
+                <span aria-hidden="true">&bull;</span> {reply.upvotes_count.toLocaleString("pt-BR")}{" "}
+                upvotes
+              </Link>
+            </div>
+          </div>
+          <div className="mt-2">
+            <InlineExpandableText
+              className="text-sm leading-6 text-[#334155] dark:text-muted"
+              expanded={contentExpanded}
+              onToggle={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                setContentExpanded((current) => !current);
+              }}
+              text={reply.content}
+            />
+          </div>
+          {reply.media_url ? (
+            <CommunityMediaBlock
+              alt="Mídia da resposta profissional"
+              className="mt-3"
+              footer={whatsappCta}
+              mediaType={reply.media_type}
+              mediaUrl={reply.media_url}
+              roundedClassName="rounded-[18px]"
+              variant="reply"
+            />
+          ) : whatsappCta ? (
+            <div className="mt-3">{whatsappCta}</div>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-[18px] border border-[#D8ECFF] bg-[#F4FAFF] p-4 dark:border-primary/20 dark:bg-primary/5">
@@ -491,6 +578,7 @@ export const CommunityPostCard = ({
   onShare,
   openPostOnCardClick = true,
   post,
+  presentation = "default",
   profilePublicationMode = false,
   saveActionOverride,
   showAuthorHeader = true,
@@ -690,6 +778,7 @@ export const CommunityPostCard = ({
     ? ((post as PostWithOptionalSortMetrics).sort_metrics?.shares_count ?? 0)
     : undefined;
   const postHref = postDetailHref(post, focusedReplyId);
+  const isFeedPresentation = presentation === "feed";
   const handleCardClick = (event: ReactMouseEvent<HTMLElement>) => {
     if (
       !openPostOnCardClick ||
@@ -723,10 +812,13 @@ export const CommunityPostCard = ({
   return (
     <article
       className={cn(
-        "w-full overflow-hidden rounded-[22px] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)] transition",
-        hoverTone === "primary"
-          ? "hover:border-primary/20 hover:bg-primary-soft/20"
-          : "hover:border-border/90 hover:bg-surface-muted/45",
+        isFeedPresentation
+          ? "w-full cursor-pointer overflow-hidden rounded-[22px] border border-[#E6EAF0] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] transition hover:border-primary/20 hover:bg-primary-soft/20 dark:border-border dark:bg-surface"
+          : "w-full overflow-hidden rounded-[22px] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)] transition",
+        !isFeedPresentation &&
+          (hoverTone === "primary"
+            ? "hover:border-primary/20 hover:bg-primary-soft/20"
+            : "hover:border-border/90 hover:bg-surface-muted/45"),
         openPostOnCardClick &&
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 md:cursor-pointer",
       )}
@@ -735,8 +827,18 @@ export const CommunityPostCard = ({
       tabIndex={openPostOnCardClick ? -1 : undefined}
     >
       {showCommunityHeader ? (
-        <div className="mb-3 flex min-w-0 items-center gap-2 text-[11px] font-semibold tracking-[-0.01em] text-muted">
-          <div className="flex min-w-0 flex-1 items-center gap-1">
+        <div
+          className={cn(
+            "mb-3 flex min-w-0 items-center text-[11px] font-semibold",
+            isFeedPresentation ? "gap-1 text-subtle" : "gap-2 tracking-[-0.01em] text-muted",
+          )}
+        >
+          <div
+            className={cn(
+              "flex min-w-0 flex-1 items-center",
+              isFeedPresentation ? "gap-1.5" : "gap-1",
+            )}
+          >
             <CommunityContextIcon
               className={cn("h-3.5 w-3.5 shrink-0", usesMutedCommunityContext && "text-muted/80")}
               aria-hidden="true"
@@ -744,12 +846,16 @@ export const CommunityPostCard = ({
             <span className="shrink-0">{communityContextLabel}</span>
             <Link
               className={cn(
-                "block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-black underline-offset-4 hover:text-primary hover:underline",
-                !communityHeaderIncludesTime && "flex-1",
-                profilePublicationMode || usesMutedCommunityContext
-                  ? "text-[#64748B] dark:text-muted"
-                  : "text-foreground",
-                desktopPlainLinks &&
+                isFeedPresentation
+                  ? "block min-w-0 cursor-pointer truncate font-black text-muted"
+                  : "block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-black underline-offset-4 hover:text-primary hover:underline",
+                !isFeedPresentation && !communityHeaderIncludesTime && "flex-1",
+                !isFeedPresentation &&
+                  (profilePublicationMode || usesMutedCommunityContext
+                    ? "text-[#64748B] dark:text-muted"
+                    : "text-foreground"),
+                !isFeedPresentation &&
+                  desktopPlainLinks &&
                   (profilePublicationMode || usesMutedCommunityContext
                     ? "md:no-underline md:hover:text-[#64748B] md:hover:no-underline dark:md:hover:text-muted"
                     : "md:no-underline md:hover:text-foreground md:hover:no-underline"),
@@ -758,7 +864,14 @@ export const CommunityPostCard = ({
             >
               {post.community.name}
             </Link>
-            {communityHeaderIncludesTime ? (
+            {isFeedPresentation ? (
+              <CommunityFollowToggle
+                className="shrink-0"
+                initialFollowing={Boolean(post.community.following)}
+                slug={post.community.slug}
+              />
+            ) : null}
+            {!isFeedPresentation && communityHeaderIncludesTime ? (
               <>
                 <span className="shrink-0 text-muted" aria-hidden="true">
                   &bull;
@@ -857,6 +970,7 @@ export const CommunityPostCard = ({
           <Link
             className={cn(
               "cursor-pointer text-[1.32rem] font-black leading-[1.18] tracking-[-0.02em] text-foreground no-underline transition hover:text-foreground hover:no-underline",
+              isFeedPresentation && "text-[#182033] dark:text-foreground",
               profilePublicationMode && "line-clamp-2 text-[1.08rem] leading-[1.22]",
               desktopPlainLinks && "md:no-underline md:hover:text-foreground md:hover:no-underline",
             )}
@@ -878,7 +992,10 @@ export const CommunityPostCard = ({
           />
         ) : (
           <InlineExpandableText
-            className="text-sm leading-6 text-muted"
+            className={cn(
+              "text-sm leading-6",
+              isFeedPresentation ? "text-[#64748B] dark:text-muted" : "text-muted",
+            )}
             expanded={false}
             href={postHref}
             text={displayContent}
@@ -886,7 +1003,7 @@ export const CommunityPostCard = ({
         )}
       </div>
 
-      <div className="mt-4 grid gap-4">
+      <div className={cn("mt-4 grid", isFeedPresentation ? "gap-3" : "gap-4")}>
         {shouldShowPostCarousel ? (
           <PostMediaCarousel
             alt={displayTitle ?? "Mídia da publicação"}
@@ -903,6 +1020,8 @@ export const CommunityPostCard = ({
           />
         )}
         <ProfessionalReplyPreview
+          postHref={postHref}
+          presentation={isFeedPresentation ? "feed" : "default"}
           profilePublicationMode={profilePublicationMode}
           reply={highlightedProfessionalReply}
           showWhatsappCta={showWhatsappCta}
@@ -911,11 +1030,14 @@ export const CommunityPostCard = ({
       </div>
 
       <CommunityActionBar
-        className="mt-4 border-border border-t pt-3"
+        className={cn(
+          "mt-4 border-t pt-3",
+          isFeedPresentation ? "border-[#EDF1F5] dark:border-border" : "border-border",
+        )}
         comments={{
           count: post.replies_count,
           href: postHref,
-          label: "Comentários",
+          label: isFeedPresentation ? "Comentar no post" : "Comentários",
         }}
         currentVote={voteSnapshot.currentVote}
         disabled={voteMutation.isPending}
@@ -933,7 +1055,11 @@ export const CommunityPostCard = ({
         }}
         share={{
           count: shareCount,
-          label: displayTitle ? `Compartilhar ${displayTitle}` : "Compartilhar publicação",
+          label: isFeedPresentation
+            ? `Compartilhar post: ${post.title}`
+            : displayTitle
+              ? `Compartilhar ${displayTitle}`
+              : "Compartilhar publicação",
           onClick: () => onShare(post),
         }}
         showUpvoteText={actionBarShowUpvoteText}
