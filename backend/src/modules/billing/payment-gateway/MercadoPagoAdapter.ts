@@ -129,6 +129,8 @@ export class MercadoPagoAdapterError extends Error {
 }
 
 export class MercadoPagoAdapter implements PaymentGateway {
+  private readonly accessToken: string;
+  private readonly isSandbox: boolean;
   private readonly preApproval: PreApproval;
   private readonly preApprovalPlan: PreApprovalPlan;
   private readonly webhookSecret: string | null;
@@ -145,6 +147,9 @@ export class MercadoPagoAdapter implements PaymentGateway {
     if (!gatewayEnv || !["sandbox", "production", "prod"].includes(gatewayEnv)) {
       throw new Error("MERCADO_PAGO_ENV_INVALID");
     }
+
+    this.accessToken = accessToken;
+    this.isSandbox = gatewayEnv === "sandbox";
 
     const subscriptionConfig = new MercadoPagoConfig({
       accessToken,
@@ -166,7 +171,19 @@ export class MercadoPagoAdapter implements PaymentGateway {
 
   private withRequestOptions(
     extra?: MercadoPagoRequestOptions,
+    options: { stageScope?: boolean } = {},
   ): MercadoPagoRequestOptions | undefined {
+    if (this.isSandbox && options.stageScope) {
+      return {
+        ...extra,
+        headers: {
+          ...(extra?.headers ?? {}),
+          Authorization: `Bearer ${this.accessToken}`,
+          "X-scope": "stage",
+        },
+      };
+    }
+
     return extra;
   }
 
@@ -244,9 +261,12 @@ export class MercadoPagoAdapter implements PaymentGateway {
           reason: planName,
           status: "authorized",
         },
-        requestOptions: this.withRequestOptions({
-          idempotencyKey: `lectum-preapproval-${subscriptionId}`,
-        }),
+        requestOptions: this.withRequestOptions(
+          {
+            idempotencyKey: `lectum-preapproval-${subscriptionId}`,
+          },
+          { stageScope: true },
+        ),
       }),
     );
 
@@ -274,9 +294,12 @@ export class MercadoPagoAdapter implements PaymentGateway {
         body: {
           card_token_id: cardToken,
         },
-        requestOptions: this.withRequestOptions({
-          idempotencyKey: `lectum-preapproval-card-${gatewaySubscriptionId}`,
-        }),
+        requestOptions: this.withRequestOptions(
+          {
+            idempotencyKey: `lectum-preapproval-card-${gatewaySubscriptionId}`,
+          },
+          { stageScope: true },
+        ),
       }),
     );
 
@@ -294,7 +317,7 @@ export class MercadoPagoAdapter implements PaymentGateway {
     const response = await this.runGatewayOperation("get_subscription", () =>
       this.preApproval.get({
         id: gatewaySubscriptionId,
-        requestOptions: this.withRequestOptions(),
+        requestOptions: this.withRequestOptions(undefined, { stageScope: true }),
       }),
     );
 

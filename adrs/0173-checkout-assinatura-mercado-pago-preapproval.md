@@ -107,3 +107,28 @@ Decisao complementar:
 - Criar a assinatura via `PreApproval.create` enviando `preapproval_plan_id`, `card_token_id`, `payer_email`, `external_reference` e `status="authorized"`, sem duplicar `auto_recurring` quando o plano já define a recorrência.
 - Manter a ativação do entitlement dependente do webhook assinado; a resposta do checkout continua registrando assinatura `inativa` pendente de confirmação real.
 - Enriquecer logs sanitizados do adapter com operação/status/código quando disponíveis, sem registrar access token, webhook secret, PAN, CVV, public key ou `card_token`.
+
+## Atualizacao 2026-07-02 - escopo stage em sandbox
+
+Durante o teste local via ngrok, o Card Payment Brick voltou a tokenizar corretamente, mas a criação
+do `PreApproval.create` retornou `Card token service not found`. A documentação oficial de
+assinaturas autorizadas em ambiente de teste mostra `X-scope: stage` junto do access token `TEST-*`
+no `POST /preapproval`.
+
+Decisão complementar:
+
+- Restaurar no `MercadoPagoAdapter` o envio de `X-scope: stage` apenas para operações
+  `/preapproval` em `MERCADO_PAGO_ENV=sandbox`.
+- Como o SDK Node mescla headers de forma rasa, enviar também `Authorization: Bearer <access token>`
+  no mesmo objeto de headers quando o escopo stage for aplicado.
+- Manter `/preapproval_plan` sem `X-scope: stage`; a criação do plano sandbox permanece pelo fluxo
+  padrão do SDK.
+- Não introduzir fallback, mock, aprovação manual ou env `test`: se o Mercado Pago ainda rejeitar o
+  token, a falha permanece explícita para investigação de credenciais/tokenização.
+
+Validação executada:
+
+- `pnpm --dir backend exec biome check --write src/modules/billing/payment-gateway/MercadoPagoAdapter.ts`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`
