@@ -38,6 +38,10 @@ Quando `DEV_TUNNEL_ENABLED=1`:
   públicas configuradas em `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_LOGIN_URL` e
   `NEXT_PUBLIC_IMAGE_REMOTE_HOSTS`, evitando bloqueio de HMR/dev resources quando a aplicação é
   acessada pelo tunnel.
+- o backend Socket.IO mantém validação por allowlist de `WEB_URL`, mas quando o navegador não envia
+  header `Origin` em requisição same-origin pelo tunnel, a origem é derivada de
+  `x-forwarded-proto` + `x-forwarded-host` enviados pelo proxy local, somente quando
+  `TRUST_PROXY` está habilitado.
 
 Não será instalado package no repositório. `ngrok` é uma dependência operacional externa do ambiente
 do desenvolvedor, assim como `cloudflared`.

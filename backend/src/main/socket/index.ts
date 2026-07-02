@@ -14,6 +14,40 @@ export let aiSoc: Soc | null = null;
 
 const clients = new Map();
 
+const normalizeOrigin = (value?: string | string[] | null) => {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (!raw) return null;
+
+  try {
+    return new URL(raw).origin;
+  } catch {
+    return null;
+  }
+};
+
+const shouldTrustForwardedOrigin = () => {
+  const raw = process.env.TRUST_PROXY?.trim().toLowerCase();
+
+  return raw === "1" || raw === "true" || raw === "yes" || raw === "on";
+};
+
+const resolveHandshakeOrigin = (headers: Record<string, string | string[] | undefined>) => {
+  const explicitOrigin = normalizeOrigin(headers.origin);
+  if (explicitOrigin) return explicitOrigin;
+  if (!shouldTrustForwardedOrigin()) return null;
+
+  const forwardedHost = Array.isArray(headers["x-forwarded-host"])
+    ? headers["x-forwarded-host"][0]
+    : headers["x-forwarded-host"];
+  const forwardedProto = Array.isArray(headers["x-forwarded-proto"])
+    ? headers["x-forwarded-proto"][0]
+    : headers["x-forwarded-proto"];
+
+  if (!forwardedHost || !forwardedProto) return null;
+
+  return normalizeOrigin(`${forwardedProto}://${forwardedHost}`);
+};
+
 export const setSoc = (server: Soc) => {
   soc = server;
 };
@@ -23,14 +57,18 @@ export const setAiSoc = (server: Soc) => {
 };
 
 export const socket = (server: Express) => {
-  const allowedOrigins = process.env.WEB_URL?.split(",") || [];
+  const allowedOrigins = new Set(
+    (process.env.WEB_URL?.split(",") || [])
+      .map((origin) => normalizeOrigin(origin.trim()))
+      .filter((origin): origin is string => Boolean(origin)),
+  );
 
   const httpServer = http.createServer({ maxHeaderSize: 12800000 }, server);
 
   const web = new io.Server(httpServer, {
     path: "/socket.io",
     cors: {
-      origin: allowedOrigins,
+      origin: Array.from(allowedOrigins),
       methods: ["GET", "POST"],
       allowedHeaders: ["Content-Type", "Authorization"],
       credentials: true,
@@ -38,9 +76,9 @@ export const socket = (server: Express) => {
   });
 
   web.use((socket, next) => {
-    const origin = socket.handshake.headers.origin;
+    const origin = resolveHandshakeOrigin(socket.handshake.headers);
 
-    if (!origin || !allowedOrigins.includes(origin)) {
+    if (!origin || !allowedOrigins.has(origin)) {
       console.warn("[SOCKET] Origem não permitida", origin);
       return next(new Error(resolve("error.origin_not_allowed")));
     }
