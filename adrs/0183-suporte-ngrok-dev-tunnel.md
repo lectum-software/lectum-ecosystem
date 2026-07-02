@@ -34,6 +34,10 @@ Quando `DEV_TUNNEL_ENABLED=1`:
 - quando `DEV_TUNNEL_URL` estiver preenchida, o ngrok recebe `--url <DEV_TUNNEL_URL>`;
 - `DEV_TUNNEL_NAME` permanece específico do Cloudflare e é ignorado pelo provider ngrok;
 - ausência do CLI escolhido faz o `pnpm dev` falhar antes de iniciar a experiência incompleta.
+- o frontend Next.js passa a preencher `allowedDevOrigins` automaticamente a partir das URLs
+  públicas configuradas em `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_LOGIN_URL` e
+  `NEXT_PUBLIC_IMAGE_REMOTE_HOSTS`, evitando bloqueio de HMR/dev resources quando a aplicação é
+  acessada pelo tunnel.
 
 Não será instalado package no repositório. `ngrok` é uma dependência operacional externa do ambiente
 do desenvolvedor, assim como `cloudflared`.
@@ -52,6 +56,8 @@ do desenvolvedor, assim como `cloudflared`.
 - `pnpm --dir backend exec biome check --write ../scripts/dev.mjs`
 - `DEV_TUNNEL_ENABLED=1 DEV_TUNNEL_PROVIDER=ngrok node scripts/dev.mjs` valida falha honesta quando
   o CLI ngrok não está instalado no ambiente atual.
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
 - `pnpm check`
