@@ -29,6 +29,16 @@ import { PrivateTemplate } from "@/templates/private";
 import { PSYCHOLOGIST_ONBOARDING_PATHS } from "@/utils/psychologist-onboarding";
 
 const publicKey = process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY;
+const mercadoPagoEnv = process.env.NEXT_PUBLIC_MERCADO_PAGO_ENV?.trim().toLowerCase();
+const sandboxPayerEmail = process.env.NEXT_PUBLIC_MERCADO_PAGO_SANDBOX_PAYER_EMAIL?.trim();
+
+const resolveMercadoPagoPayerEmail = (authenticatedEmail: string) => {
+  if (mercadoPagoEnv === "sandbox" && sandboxPayerEmail) {
+    return sandboxPayerEmail;
+  }
+
+  return authenticatedEmail;
+};
 
 if (publicKey) {
   initMercadoPago(publicKey, {
@@ -112,7 +122,7 @@ const SummaryCard = ({ plan }: { plan: SubscriptionPlan }) => (
 
 export const ProfessionalBillingCheckoutLogic = () => {
   const userEmail = useAppSelector((state) => state.user?.email || "");
-  const payerEmail = userEmail;
+  const payerEmail = resolveMercadoPagoPayerEmail(userEmail);
   const [checkoutResult, setCheckoutResult] = useState<BillingCheckoutResponse | null>(null);
   const billingCallbacks = useMemo(
     () => ({
@@ -185,10 +195,14 @@ export const ProfessionalBillingCheckoutLogic = () => {
         return;
       }
 
-      await checkoutMutateAsyncRef.current({
-        card_token: token,
-        payment_type_id: CREDIT_CARD_PAYMENT_TYPE,
-      });
+      try {
+        await checkoutMutateAsyncRef.current({
+          card_token: token,
+          payment_type_id: CREDIT_CARD_PAYMENT_TYPE,
+        });
+      } catch {
+        // handleReq já exibe o erro real da API; impedir rejeição não tratada no Brick.
+      }
     },
     [],
   );

@@ -153,3 +153,31 @@ Decisão complementar:
 - Documentar em `backend/.env.example` e `frontend/.env.example` que o teste de
   Subscriptions/Preapproval deve usar as credenciais de produção da conta Mercado Pago de teste
   vendedora.
+
+## Atualizacao 2026-07-02 - pagador comprador sandbox
+
+Com as credenciais `APP_USR-*` da conta vendedora de teste, o Mercado Pago passou a criar/encontrar
+o plano corretamente, mas recusou a assinatura com `Both payer and collector must be real or test
+users` quando o `payer_email` enviado era o e-mail real do usuário Lectum autenticado. Esse bloqueio
+é coerente com a documentação de testes: em Subscriptions sandbox, o vendedor e o comprador precisam
+ser contas de teste.
+
+Decisão complementar:
+
+- Em `MERCADO_PAGO_ENV=sandbox`, exigir `MERCADO_PAGO_SANDBOX_PAYER_EMAIL` no backend e enviar esse
+  e-mail como `payer_email` do Preapproval.
+- No frontend, quando `NEXT_PUBLIC_MERCADO_PAGO_ENV=sandbox`, usar
+  `NEXT_PUBLIC_MERCADO_PAGO_SANDBOX_PAYER_EMAIL` como `payer.email` do Card Payment Brick para que a
+  tokenização do cartão e a criação da assinatura usem o mesmo comprador sandbox.
+- A assinatura local da Lectum continua pertencendo ao psicólogo autenticado; a substituição afeta
+  apenas o pagador externo exigido pelo Mercado Pago sandbox.
+- Não criar fallback nem aprovação manual: ausência do e-mail comprador sandbox passa a ser erro de
+  configuração do gateway.
+
+Validação executada:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`

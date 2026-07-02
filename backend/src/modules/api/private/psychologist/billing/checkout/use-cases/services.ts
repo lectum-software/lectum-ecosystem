@@ -59,6 +59,24 @@ const getConfiguredGatewayPlanId = () =>
 
 const getConfiguredBackUrl = () => process.env.MERCADO_PAGO_BACK_URL?.trim() || null;
 
+const getGatewayEnv = () => process.env.MERCADO_PAGO_ENV?.trim().toLowerCase() || null;
+
+const getSandboxPayerEmail = () => process.env.MERCADO_PAGO_SANDBOX_PAYER_EMAIL?.trim() || null;
+
+const resolvePayerEmail = (authenticatedEmail?: string | null) => {
+  if (getGatewayEnv() === "sandbox") {
+    const sandboxPayerEmail = getSandboxPayerEmail();
+
+    if (!sandboxPayerEmail) {
+      throw new Error("MERCADO_PAGO_SANDBOX_PAYER_EMAIL_NOT_CONFIGURED");
+    }
+
+    return sandboxPayerEmail;
+  }
+
+  return authenticatedEmail || null;
+};
+
 const isPrivateIpv4 = (hostname: string) => {
   const [first = 0, second = 0] = hostname.split(".").map(Number);
 
@@ -164,6 +182,7 @@ const isGatewayConfigError = (err: unknown) => {
   return (
     message.includes("MERCADO_PAGO_ACCESS_TOKEN_NOT_CONFIGURED") ||
     message.includes("MERCADO_PAGO_BACK_URL_NOT_CONFIGURED") ||
+    message.includes("MERCADO_PAGO_SANDBOX_PAYER_EMAIL_NOT_CONFIGURED") ||
     message.includes("MERCADO_PAGO_ENV_INVALID")
   );
 };
@@ -211,7 +230,19 @@ export default async (data: ICheckoutDTO) => {
     };
   }
 
-  const payerEmail = data.auth.email;
+  let payerEmail: string | null;
+
+  try {
+    payerEmail = resolvePayerEmail(data.auth.email);
+  } catch (err) {
+    console.error("[BILLING] Mercado Pago payer setup failed", sanitizeGatewayError(err));
+
+    return {
+      status: 503,
+      ...error("billing_gateway_config_error", {}),
+    };
+  }
+
   if (!payerEmail) {
     return {
       status: 400,
