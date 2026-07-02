@@ -42,6 +42,11 @@ Quando `DEV_TUNNEL_ENABLED=1`:
   header `Origin` em requisição same-origin pelo tunnel, a origem é derivada de
   `x-forwarded-proto` + `x-forwarded-host` enviados pelo proxy local, somente quando
   `TRUST_PROXY` está habilitado.
+- o Card Payment Brick do Mercado Pago é inicializado no módulo client antes de qualquer renderização
+  do Brick, seguindo a ordem esperada pelo SDK React. A tela de checkout só monta o Brick quando já
+  existem public key, valor do plano e e-mail real do pagador, e mantém callbacks estáveis para
+  evitar remounts desnecessários dos Secure Fields durante re-renderizações do Next/React em
+  desenvolvimento.
 
 Não será instalado package no repositório. `ngrok` é uma dependência operacional externa do ambiente
 do desenvolvedor, assim como `cloudflared`.
@@ -53,6 +58,9 @@ do desenvolvedor, assim como `cloudflared`.
 - Para URL fixa com ngrok, o desenvolvedor ainda precisa instalar o CLI, configurar `authtoken` e
   definir `DEV_TUNNEL_URL`, `MERCADO_PAGO_BACK_URL` e o webhook no painel do Mercado Pago.
 - O script não cria conta, domínio nem authtoken do ngrok; falhas de configuração permanecem falhas.
+- A correção do Brick não altera o contrato de checkout nem simula pagamento: falhas de Secure Fields
+  continuam falhando no frontend e precisam ser investigadas no navegador quando causadas por bloqueio
+  externo de iframe/script do Mercado Pago.
 
 ## Validação
 
@@ -65,3 +73,9 @@ do desenvolvedor, assim como `cloudflared`.
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
 - `pnpm check`
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/billing/checkout/logic.tsx`
+- `pnpm --dir frontend check`
+- `curl -I --max-time 10 http://localhost:3000/app/professional/billing/checkout` retornou `307`
+  para login, preservando a proteção da rota privada.
+- `curl -I --max-time 15 https://verbose-trapeze-clapping.ngrok-free.dev/app/professional/billing/checkout`
+  retornou `307` para login pelo tunnel.

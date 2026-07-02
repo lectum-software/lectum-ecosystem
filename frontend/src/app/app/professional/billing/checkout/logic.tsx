@@ -11,7 +11,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
 import type {
@@ -29,6 +29,13 @@ import { PrivateTemplate } from "@/templates/private";
 import { PSYCHOLOGIST_ONBOARDING_PATHS } from "@/utils/psychologist-onboarding";
 
 const publicKey = process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY;
+
+if (publicKey) {
+  initMercadoPago(publicKey, {
+    locale: "pt-BR",
+    advancedFraudPrevention: true,
+  });
+}
 
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -107,25 +114,23 @@ export const ProfessionalBillingCheckoutLogic = () => {
   const userEmail = useAppSelector((state) => state.user?.email || "");
   const payerEmail = userEmail;
   const [checkoutResult, setCheckoutResult] = useState<BillingCheckoutResponse | null>(null);
-  const billing = usePsychologistBilling({
-    callbacks: {
+  const billingCallbacks = useMemo(
+    () => ({
       checkout: {
-        onSuccess: (data) => {
+        onSuccess: (data: BillingCheckoutResponse) => {
           setCheckoutResult(data);
           toast.success("Pagamento enviado para confirmação segura");
         },
       },
-    },
-  });
+    }),
+    [],
+  );
+  const billing = usePsychologistBilling({ callbacks: billingCallbacks });
+  const checkoutMutateAsyncRef = useRef(billing.checkout.mutateAsync);
 
   useEffect(() => {
-    if (!publicKey) return;
-
-    initMercadoPago(publicKey, {
-      locale: "pt-BR",
-      advancedFraudPrevention: true,
-    });
-  }, []);
+    checkoutMutateAsyncRef.current = billing.checkout.mutateAsync;
+  }, [billing.checkout.mutateAsync]);
 
   const isLoading = billing.plans.isLoading || billing.current.isLoading;
   const hasError = billing.plans.isError || billing.current.isError;
@@ -135,6 +140,8 @@ export const ProfessionalBillingCheckoutLogic = () => {
   const pendingProfessional =
     Boolean(checkoutResult?.pending_confirmation) || isPendingProfessional(current);
   const amount = professionalPlan ? professionalPlan.price_cents / 100 : 0;
+  const canRenderCardPayment = Boolean(publicKey && amount > 0 && payerEmail);
+  const cardPaymentKey = `${payerEmail || "anonymous"}-${amount}`;
 
   const initialization = useMemo(
     () => ({
@@ -178,13 +185,17 @@ export const ProfessionalBillingCheckoutLogic = () => {
         return;
       }
 
-      await billing.checkout.mutateAsync({
+      await checkoutMutateAsyncRef.current({
         card_token: token,
         payment_type_id: CREDIT_CARD_PAYMENT_TYPE,
       });
     },
-    [billing.checkout],
+    [],
   );
+
+  const handleBrickReady = useCallback(() => {
+    // Callback obrigatório do Brick; mantém a renderização real sem efeitos paralelos.
+  }, []);
 
   const handleBrickError = useCallback((error: unknown) => {
     console.error("[Mercado Pago CardPayment]", error);
@@ -275,7 +286,14 @@ export const ProfessionalBillingCheckoutLogic = () => {
                     </InlineAlert>
                   ) : null}
 
-                  {publicKey && amount > 0 ? (
+                  {publicKey && amount > 0 && !payerEmail ? (
+                    <InlineAlert title="E-mail do pagador ausente" variant="error">
+                      Recarregue a sessão antes de abrir o formulário de cartão. O Mercado Pago
+                      precisa do e-mail autenticado para tokenizar o pagamento.
+                    </InlineAlert>
+                  ) : null}
+
+                  {canRenderCardPayment ? (
                     <div
                       className={cn(
                         "rounded-3xl border border-border bg-surface-muted p-3 md:p-4",
@@ -293,8 +311,10 @@ export const ProfessionalBillingCheckoutLogic = () => {
                         customization={customization}
                         id="lectum-card-payment-brick"
                         initialization={initialization}
+                        key={cardPaymentKey}
                         locale="pt-BR"
                         onError={handleBrickError}
+                        onReady={handleBrickReady}
                         onSubmit={handleSubmit}
                       />
                     </div>
