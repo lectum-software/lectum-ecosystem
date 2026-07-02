@@ -132,3 +132,24 @@ Validação executada:
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
 - `pnpm check`
+
+## Atualizacao 2026-07-02 - credenciais oficiais para teste de Subscriptions
+
+Após o ajuste de `X-scope: stage`, o Mercado Pago passou a retornar
+`PA_UNAUTHORIZED_RESULT_FROM_POLICIES`, indicando bloqueio de política e não falha de transporte ou
+token ausente. A documentação oficial de testes de Subscriptions com plano associado orienta criar
+duas contas de teste, entrar na conta vendedora de teste, criar uma aplicação e usar a `public_key`
+para gerar o `card_token` e o `access_token` das credenciais de produção dessa conta vendedora de
+teste para criar o plano e a assinatura.
+
+Decisão complementar:
+
+- Manter `MERCADO_PAGO_ENV=sandbox` como semântica operacional da Lectum para ambiente local de
+  desenvolvimento.
+- Aplicar `X-scope: stage` somente quando o access token começar com `TEST-`, pois esse é o caminho
+  usado pelas credenciais de teste da conta real.
+- Ao usar as credenciais oficiais recomendadas para Subscriptions sandbox (`APP_USR-*` da conta
+  vendedora de teste), não enviar `X-scope: stage`.
+- Documentar em `backend/.env.example` e `frontend/.env.example` que o teste de
+  Subscriptions/Preapproval deve usar as credenciais de produção da conta Mercado Pago de teste
+  vendedora.

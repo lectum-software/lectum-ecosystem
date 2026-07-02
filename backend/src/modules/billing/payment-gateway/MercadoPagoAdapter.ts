@@ -130,7 +130,7 @@ export class MercadoPagoAdapterError extends Error {
 
 export class MercadoPagoAdapter implements PaymentGateway {
   private readonly accessToken: string;
-  private readonly isSandbox: boolean;
+  private readonly usesStageScope: boolean;
   private readonly preApproval: PreApproval;
   private readonly preApprovalPlan: PreApprovalPlan;
   private readonly webhookSecret: string | null;
@@ -149,7 +149,7 @@ export class MercadoPagoAdapter implements PaymentGateway {
     }
 
     this.accessToken = accessToken;
-    this.isSandbox = gatewayEnv === "sandbox";
+    this.usesStageScope = gatewayEnv === "sandbox" && accessToken.startsWith("TEST-");
 
     const subscriptionConfig = new MercadoPagoConfig({
       accessToken,
@@ -173,7 +173,7 @@ export class MercadoPagoAdapter implements PaymentGateway {
     extra?: MercadoPagoRequestOptions,
     options: { stageScope?: boolean } = {},
   ): MercadoPagoRequestOptions | undefined {
-    if (this.isSandbox && options.stageScope) {
+    if (this.usesStageScope && options.stageScope) {
       return {
         ...extra,
         headers: {
