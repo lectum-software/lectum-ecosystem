@@ -1,5 +1,5 @@
-﻿import { error, msg } from "@/helpers/translate";
-import { getPaymentGateway } from "@/modules/billing/payment-gateway";
+import { error, msg } from "@/helpers/translate";
+import { syncMercadoPagoSubscriptionRecord } from "@/modules/billing/sync-mercado-pago-subscription";
 import type { ISyncDTO } from "../DTOs/ISyncDTO";
 import { SyncRepository } from "../repositories/SyncRepository";
 
@@ -41,14 +41,6 @@ const sanitizeGatewayError = (err: unknown): GatewayErrorLog => {
   };
 };
 
-const parseDate = (value?: string | null) => {
-  if (!value) return null;
-
-  const date = new Date(value);
-
-  return Number.isNaN(date.getTime()) ? null : date;
-};
-
 const isGatewayConfigError = (err: unknown) => {
   const message = err instanceof Error ? err.message : "";
 
@@ -86,25 +78,18 @@ export default async (data: ISyncDTO) => {
   }
 
   try {
-    const gateway = getPaymentGateway();
-    const gatewaySubscription = await gateway.getSubscription(
-      localSubscription.gateway_subscription_id,
-    );
-
-    const current = await repository.updateSubscriptionStatus({
-      subscriptionId: localSubscription.id,
-      gatewaySubscriptionId: gatewaySubscription.gateway_subscription_id,
-      status: gatewaySubscription.status,
-      currentPeriodEnd: parseDate(gatewaySubscription.next_payment_date),
+    const synced = await syncMercadoPagoSubscriptionRecord({
+      localSubscription,
+      repository,
     });
 
     return {
       status: 200,
       ...msg("billing_subscription_synced", {}),
       data: {
-        current,
-        gateway_status: gatewaySubscription.gateway_status,
-        synced: true,
+        current: synced?.current ?? null,
+        gateway_status: synced?.gatewaySubscription.gateway_status ?? null,
+        synced: Boolean(synced),
       },
     };
   } catch (err) {

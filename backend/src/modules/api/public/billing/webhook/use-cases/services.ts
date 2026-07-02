@@ -1,5 +1,6 @@
-﻿import { error, msg } from "@/helpers/translate";
+import { error, msg } from "@/helpers/translate";
 import { getPaymentGateway } from "@/modules/billing/payment-gateway";
+import { syncMercadoPagoSubscriptionRecord } from "@/modules/billing/sync-mercado-pago-subscription";
 import type { IWebhookDTO } from "../DTOs/IWebhookDTO";
 import { WebhookRepository } from "../repositories/WebhookRepository";
 
@@ -10,34 +11,64 @@ const asRecord = (value: unknown): Record<string, unknown> | null =>
     ? (value as Record<string, unknown>)
     : null;
 
-const getWebhookDataId = (body: unknown) => {
-  const record = asRecord(body);
-  const data = asRecord(record?.data);
-  const id = data?.id;
-
-  if (typeof id === "string" || typeof id === "number") return String(id);
+const toStringValue = (value: unknown) => {
+  if (typeof value === "string" || typeof value === "number") return String(value);
+  if (Array.isArray(value)) return toStringValue(value[0]);
 
   return null;
 };
 
-const isSubscriptionEvent = (type: string) =>
-  type === "subscription_preapproval" ||
-  type === "subscription_authorized_payment" ||
-  type === "preapproval" ||
-  type.includes("preapproval") ||
-  type.includes("subscription");
+const getQueryDataId = (query?: Record<string, unknown>) => {
+  if (!query) return null;
 
-const parseDate = (value?: string | null) => {
-  if (!value) return null;
+  const dottedDataId = toStringValue(query["data.id"]);
+  const underscoredDataId = toStringValue(query.data_id);
+  const nestedData = asRecord(query.data);
+  const nestedDataId = toStringValue(nestedData?.id);
 
-  const date = new Date(value);
-
-  return Number.isNaN(date.getTime()) ? null : date;
+  return dottedDataId || underscoredDataId || nestedDataId;
 };
 
-export default async ({ body, headers }: IWebhookDTO) => {
+const getBodyDataId = (body: unknown) => {
+  const record = asRecord(body);
+  const data = asRecord(record?.data);
+
+  return toStringValue(data?.id);
+};
+
+const getWebhookDataId = (body: unknown, query?: Record<string, unknown>) =>
+  getQueryDataId(query) || getBodyDataId(body);
+
+const getQueryType = (query?: Record<string, unknown>) => {
+  if (!query) return null;
+
+  return toStringValue(query.type) || toStringValue(query.topic);
+};
+
+const buildWebhookPayload = (body: unknown, query?: Record<string, unknown>) => {
+  const record = asRecord(body) ?? {};
+  const data = asRecord(record.data) ?? {};
+  const dataId = getWebhookDataId(body, query);
+  const type = toStringValue(record.type) || getQueryType(query);
+
+  return {
+    ...record,
+    ...(type ? { type } : {}),
+    data: {
+      ...data,
+      ...(dataId ? { id: dataId } : {}),
+    },
+  };
+};
+
+const isPreapprovalSubscriptionEvent = (type: string) =>
+  type === "subscription_preapproval" ||
+  type === "preapproval" ||
+  (type.includes("preapproval") && !type.includes("plan"));
+
+export default async ({ body, headers, query }: IWebhookDTO) => {
   const gateway = getPaymentGateway();
-  const dataId = getWebhookDataId(body);
+  const dataId = getWebhookDataId(body, query);
 
   const signatureValid = gateway.verifyWebhookSignature({
     signature: headers["x-signature"],
@@ -46,13 +77,19 @@ export default async ({ body, headers }: IWebhookDTO) => {
   });
 
   if (!signatureValid) {
+    console.warn("[BILLING] Mercado Pago webhook signature rejected", {
+      data_id: dataId,
+      type: getQueryType(query) || toStringValue(asRecord(body)?.type),
+    });
+
     return {
       status: 401,
       ...error("billing_webhook_invalid_signature", {}),
     };
   }
 
-  const event = gateway.parseWebhookEvent(body);
+  const payload = buildWebhookPayload(body, query);
+  const event = gateway.parseWebhookEvent(payload);
 
   if (!event) {
     return {
@@ -72,26 +109,20 @@ export default async ({ body, headers }: IWebhookDTO) => {
     payload: event.raw,
   });
 
-  if (!paymentEvent.created) {
-    return {
-      status: 200,
-      ...msg("billing_webhook_processed", {}),
-      data: {
-        processed: false,
-        duplicated: true,
-      },
-    };
-  }
-
-  if (isSubscriptionEvent(event.type)) {
-    const subscription = await gateway.getSubscription(event.resourceId);
-
-    await repository.updateSubscriptionByGatewayReference({
-      subscriptionId: subscription.external_reference,
-      gatewaySubscriptionId: subscription.gateway_subscription_id,
-      status: subscription.status,
-      currentPeriodEnd: parseDate(subscription.next_payment_date),
+  if (isPreapprovalSubscriptionEvent(event.type)) {
+    const gatewaySubscription = await gateway.getSubscription(event.resourceId);
+    const localSubscription = await repository.findSubscriptionByGatewayReference({
+      subscriptionId: gatewaySubscription.external_reference,
+      gatewaySubscriptionId: gatewaySubscription.gateway_subscription_id,
     });
+
+    if (localSubscription) {
+      await syncMercadoPagoSubscriptionRecord({
+        gatewaySubscription,
+        localSubscription,
+        repository,
+      });
+    }
   }
 
   return {
@@ -99,6 +130,7 @@ export default async ({ body, headers }: IWebhookDTO) => {
     ...msg("billing_webhook_processed", {}),
     data: {
       processed: true,
+      duplicated: !paymentEvent.created,
     },
   };
 };

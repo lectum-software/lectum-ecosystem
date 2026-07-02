@@ -1,6 +1,14 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, MapPin, ShieldCheck } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  Loader2,
+  MapPin,
+  RefreshCw,
+  ShieldCheck,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -38,8 +46,18 @@ const resolveApiError = (error: unknown) => {
   );
 };
 
+const isCurrentPeriodValid = (currentPeriodEnd?: string | null) => {
+  if (!currentPeriodEnd) return true;
+
+  const periodEnd = new Date(currentPeriodEnd);
+
+  return !Number.isNaN(periodEnd.getTime()) && periodEnd > new Date();
+};
+
 const isActiveProfessional = (subscription?: ProfessionalSubscription | null) =>
-  subscription?.status === "ativa" && subscription.plan?.slug === "profissional";
+  subscription?.status === "ativa" &&
+  subscription.plan?.slug === "profissional" &&
+  isCurrentPeriodValid(subscription.current_period_end);
 
 const AddressHeader = () => (
   <header className="text-center">
@@ -84,6 +102,16 @@ export const ProfessionalBillingAddressLogic = () => {
     billing.address.mutate(toBillingAddressPayload(values));
   });
 
+  const syncSubscriptionStatus = async () => {
+    try {
+      await billing.sync.mutateAsync();
+      await billing.current.refetch();
+      toast.success("Status da assinatura atualizado");
+    } catch {
+      // handleReq já exibe o erro real da API.
+    }
+  };
+
   return (
     <PrivateTemplate showHeader={false}>
       <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-3xl">
@@ -127,9 +155,15 @@ export const ProfessionalBillingAddressLogic = () => {
                 </Button>
                 <Button
                   className="h-12 rounded-full"
-                  onClick={() => billing.current.refetch()}
+                  disabled={billing.sync.isPending}
+                  onClick={syncSubscriptionStatus}
                   type="button"
                 >
+                  {billing.sync.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                  )}
                   Atualizar status
                 </Button>
               </div>

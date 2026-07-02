@@ -99,3 +99,4 @@ Formato recomendado:
 - [ADR-0170 - Simbolo Lectum em SVG escalavel](0170-simbolo-lectum-svg-escalavel.md) - Accepted
 - [ADR-0171 - Layout premium em duas telas de boas-vindas do paciente](0171-boas-vindas-paciente-layout-premium.md) - Accepted
 - [ADR-0175 - Hardening de code review pré-produção](0175-hardening-code-review-pre-producao.md) - Accepted
+- [ADR-0184 - Reconciliação de assinatura Mercado Pago por webhook e entitlement local](0184-reconciliacao-assinatura-mercado-pago-webhook-e-entitlement.md) - Accepted

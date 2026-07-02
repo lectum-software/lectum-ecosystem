@@ -1,4 +1,4 @@
-﻿import type { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { error500, send } from "@/helpers/return";
 import service from "./services";
 
@@ -7,6 +7,7 @@ export const store = async (req: Request, res: Response) => {
     const resolve = await service({
       body: req.body,
       headers: req.headers,
+      query: req.query as Record<string, unknown>,
     });
 
     return send(res, resolve);

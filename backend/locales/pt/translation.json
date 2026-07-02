@@ -103,6 +103,7 @@
     "billing_checkout_credit_card_only": "Use um cartão de crédito para assinar o Plano Profissional.",
     "billing_gateway_config_error": "Checkout indispon?vel por configura??o do gateway de pagamento.",
     "billing_gateway_checkout_failed": "N?o foi poss?vel iniciar o checkout agora. Tente novamente em instantes.",
+    "billing_subscription_confirmation_failed": "Não foi possível confirmar a assinatura no Mercado Pago agora. Tente novamente em instantes.",
     "billing_address_subscription_required": "Confirme sua assinatura profissional antes de salvar o endere?o de faturamento.",
     "billing_webhook_invalid_signature": "Assinatura do webhook inv?lida.",
     "billing_payment_method_credit_card_only": "Use um cartao de credito para atualizar o metodo de pagamento.",

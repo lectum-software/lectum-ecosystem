@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { CardPayment, initMercadoPago } from "@mercadopago/sdk-react";
 import {
@@ -59,8 +59,18 @@ const formatPrice = (priceCents: number) => currencyFormatter.format(priceCents 
 const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : "Não foi possível carregar o checkout agora.";
 
+const isCurrentPeriodValid = (currentPeriodEnd?: string | null) => {
+  if (!currentPeriodEnd) return true;
+
+  const periodEnd = new Date(currentPeriodEnd);
+
+  return !Number.isNaN(periodEnd.getTime()) && periodEnd > new Date();
+};
+
 const isActiveProfessional = (subscription?: ProfessionalSubscription | null) =>
-  subscription?.status === "ativa" && subscription.plan?.slug === "profissional";
+  subscription?.status === "ativa" &&
+  subscription.plan?.slug === "profissional" &&
+  isCurrentPeriodValid(subscription.current_period_end);
 
 const isPendingProfessional = (subscription?: ProfessionalSubscription | null) =>
   subscription?.status === "inativa" &&
@@ -68,6 +78,8 @@ const isPendingProfessional = (subscription?: ProfessionalSubscription | null) =
   Boolean(subscription.gateway_subscription_id);
 
 const CREDIT_CARD_PAYMENT_TYPE = "credit_card";
+const AUTO_SYNC_INTERVAL_MS = 3000;
+const AUTO_SYNC_MAX_ATTEMPTS = 20;
 
 type CardPaymentFormData = {
   token?: string;
@@ -142,6 +154,7 @@ export const ProfessionalBillingCheckoutLogic = () => {
   const checkoutMutateAsyncRef = useRef(checkoutMutateAsync);
   const syncMutateAsyncRef = useRef(syncMutateAsync);
   const currentRefetchRef = useRef(currentRefetch);
+  const autoSyncInFlightRef = useRef(false);
 
   useEffect(() => {
     checkoutMutateAsyncRef.current = checkoutMutateAsync;
@@ -235,6 +248,43 @@ export const ProfessionalBillingCheckoutLogic = () => {
       // handleReq já exibe o erro real da API.
     }
   }, []);
+
+  useEffect(() => {
+    if (!pendingProfessional || activeProfessional) return;
+
+    let attempts = 0;
+    let cancelled = false;
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    const syncPendingSubscription = async () => {
+      if (cancelled || autoSyncInFlightRef.current) return;
+
+      autoSyncInFlightRef.current = true;
+
+      try {
+        await syncMutateAsyncRef.current();
+        await currentRefetchRef.current();
+      } catch {
+        // A UI mantém a confirmação pendente e o botão manual continua disponível.
+      } finally {
+        attempts += 1;
+        autoSyncInFlightRef.current = false;
+
+        if (attempts >= AUTO_SYNC_MAX_ATTEMPTS && interval) {
+          clearInterval(interval);
+        }
+      }
+    };
+
+    const timeout = setTimeout(syncPendingSubscription, 1000);
+    interval = setInterval(syncPendingSubscription, AUTO_SYNC_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+      if (interval) clearInterval(interval);
+    };
+  }, [activeProfessional, pendingProfessional]);
 
   return (
     <PrivateTemplate showHeader={false}>
