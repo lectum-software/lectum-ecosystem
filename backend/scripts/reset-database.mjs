@@ -52,7 +52,7 @@ const databaseTarget = formatDatabaseTarget(parsedDatabaseUrl);
 assertSafeDatabaseTarget(parsedDatabaseUrl);
 
 const r2Config = buildR2Config();
-const mercadoPagoConfig = buildMercadoPagoConfig();
+const mercadoPagoConfig = await buildMercadoPagoConfig();
 const localMercadoPagoReferences = await readLocalMercadoPagoReferences(databaseUrl);
 const mercadoPagoSubscriptions = await collectMercadoPagoSubscriptions({
   ...mercadoPagoConfig,
@@ -119,7 +119,7 @@ Config obrigatória em backend/.env:
   CLOUDFLARE_R2_ACCESS_KEY_SECRET
   CLOUDFLARE_R2_PUBLIC_BUCKET_NAME
   MERCADO_PAGO_ENV=sandbox
-  MERCADO_PAGO_ACCESS_TOKEN=TEST-...
+  MERCADO_PAGO_ACCESS_TOKEN=TEST-... ou APP_USR-... de conta Mercado Pago de teste
 `);
 }
 
@@ -196,7 +196,7 @@ function buildR2Config() {
   };
 }
 
-function buildMercadoPagoConfig() {
+async function buildMercadoPagoConfig() {
   const gatewayEnv = requireEnv("MERCADO_PAGO_ENV").toLowerCase();
 
   if (gatewayEnv !== "sandbox") {
@@ -205,9 +205,7 @@ function buildMercadoPagoConfig() {
 
   const accessToken = requireEnv("MERCADO_PAGO_ACCESS_TOKEN");
 
-  if (!accessToken.startsWith("TEST-")) {
-    fail("Reset bloqueado: MERCADO_PAGO_ACCESS_TOKEN precisa ser uma credencial sandbox TEST-...");
-  }
+  await assertMercadoPagoSandboxAccessToken(accessToken);
 
   const client = new MercadoPagoConfig({
     accessToken,
@@ -223,6 +221,45 @@ function buildMercadoPagoConfig() {
       process.env.LECTUM_RESET_MERCADO_PAGO_STATUSES || "authorized,pending,paused",
     ),
   };
+}
+
+async function assertMercadoPagoSandboxAccessToken(accessToken) {
+  if (accessToken.startsWith("TEST-")) {
+    return;
+  }
+
+  if (!accessToken.startsWith("APP_USR-")) {
+    fail(
+      "Reset bloqueado: MERCADO_PAGO_ACCESS_TOKEN precisa ser TEST-* ou APP_USR-* de uma conta Mercado Pago de teste.",
+    );
+  }
+
+  let response;
+  let user;
+
+  try {
+    response = await fetch("https://api.mercadopago.com/users/me", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    user = await response.json();
+  } catch (err) {
+    fail(
+      `Reset bloqueado: não foi possível validar a conta Mercado Pago de teste (${formatError(err)}).`,
+    );
+  }
+
+  const email = typeof user?.email === "string" ? user.email.toLowerCase() : "";
+
+  if (!response.ok || !email.endsWith("@testuser.com")) {
+    fail(
+      [
+        "Reset bloqueado: APP_USR-* só é permitido quando pertence a uma conta Mercado Pago de teste.",
+        "Use credenciais da conta vendedora de teste ou uma credencial TEST-*.",
+      ].join("\n"),
+    );
+  }
 }
 
 async function collectMercadoPagoSubscriptions({

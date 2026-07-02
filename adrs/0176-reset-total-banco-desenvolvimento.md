@@ -34,7 +34,8 @@ Evoluir o script backend `pnpm --dir backend reset`, implementado por
 2. localizar assinaturas sandbox também por `MERCADO_PAGO_PREAPPROVAL_PLAN_ID` e pela query
    `LECTUM_RESET_MERCADO_PAGO_SEARCH_QUERY` nos status configurados;
 3. cancelar as assinaturas Mercado Pago encontradas usando o SDK real e exigindo
-   `MERCADO_PAGO_ENV=sandbox` + token `TEST-...`;
+   `MERCADO_PAGO_ENV=sandbox` + token `TEST-...` ou `APP_USR-...` validado como conta Mercado Pago
+   de teste;
 4. limpar os objetos publicados no bucket Cloudflare R2 configurado, opcionalmente limitado por
    `LECTUM_RESET_R2_PREFIX`;
 5. executar `prisma migrate reset --force`, apagando o banco local e reaplicando migrations.
@@ -48,7 +49,9 @@ O script mantém e amplia as validações de segurança:
 5. permite por padrão apenas hosts locais, Docker ou redes privadas para o banco;
 6. bloqueia bucket/endpoint R2 com aparência de produção, salvo opt-in explícito
    `LECTUM_ALLOW_PRODUCTION_LIKE_R2_RESET=1`;
-7. exige Mercado Pago sandbox com access token de teste;
+7. exige Mercado Pago sandbox com access token `TEST-*` ou, para o fluxo oficial de Subscriptions
+   sandbox com conta vendedora de teste, `APP_USR-*` cuja conta retorne e-mail `@testuser.com` em
+   `/users/me`;
 8. exige digitar `RESET` em execução interativa;
 9. permite automação apenas com `pnpm --dir backend reset -- --force` ou
    `LECTUM_CONFIRM_DB_RESET=1`, mantendo as validações de segurança;
@@ -75,6 +78,31 @@ O alias `pnpm --dir backend db:reset` continua existindo para compatibilidade e 
 - `pnpm --dir backend reset -- --help`
 - `pnpm --dir backend exec biome check --write package.json scripts/reset-database.mjs`
 - `pnpm --dir backend reset -- --dry-run`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`
+
+## Atualizacao 2026-07-02
+
+Durante a validação do checkout real de Subscriptions sandbox, as credenciais `TEST-*` da aplicação
+principal passaram a ser substituídas por credenciais `APP_USR-*` de uma conta Mercado Pago de teste
+vendedora, conforme exigência operacional do Mercado Pago para Preapproval com vendedor/comprador de
+teste. O reset continuava bloqueando qualquer token que não começasse com `TEST-*`.
+
+Decisão complementar:
+
+- Manter `MERCADO_PAGO_ENV=sandbox` obrigatório.
+- Continuar aceitando `TEST-*`.
+- Aceitar `APP_USR-*` somente após validar o token em `GET /users/me` e confirmar que a conta é uma
+  conta de teste (`email` com domínio `@testuser.com`).
+- Bloquear qualquer outro `APP_USR-*` para evitar cancelar assinaturas de uma conta real.
+
+Validação adicional:
+
+- `node --check backend/scripts/reset-database.mjs`
+- `pnpm --dir backend exec biome check --write scripts/reset-database.mjs`
+- `pnpm --dir backend reset -- --dry-run` com `APP_USR-*` de conta vendedora de teste, retornando
+  1 assinatura sandbox candidata a cancelamento sem executar alterações destrutivas.
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
 - `pnpm check`
