@@ -31,6 +31,7 @@ import apiPrivatePsychologistBillingPaymentMethodSession from "@/modules/api/pri
 import apiPrivatePsychologistBillingPlans from "@/modules/api/private/psychologist/billing/plans";
 import apiPrivatePsychologistBillingSelectFree from "@/modules/api/private/psychologist/billing/select-free";
 import apiPrivatePsychologistBillingSubscription from "@/modules/api/private/psychologist/billing/subscription";
+import apiPrivatePsychologistBillingSync from "@/modules/api/private/psychologist/billing/sync";
 import apiPrivatePsychologistCfp from "@/modules/api/private/psychologist/cfp";
 import apiPrivatePsychologistFreeProfile from "@/modules/api/private/psychologist/free-profile";
 import apiPrivatePsychologistReviews from "@/modules/api/private/psychologist/reviews";
@@ -138,6 +139,11 @@ mountRoleGuardedRoute(
   "/api/private/psychologist/billing/subscription",
   "psicologo",
   apiPrivatePsychologistBillingSubscription,
+);
+mountRoleGuardedRoute(
+  "/api/private/psychologist/billing/sync",
+  "psicologo",
+  apiPrivatePsychologistBillingSync,
 );
 mountRoleGuardedRoute(
   "/api/private/psychologist/billing/checkout",

@@ -107,7 +107,8 @@
     "billing_webhook_invalid_signature": "Assinatura do webhook inv?lida.",
     "billing_payment_method_credit_card_only": "Use um cartao de credito para atualizar o metodo de pagamento.",
     "billing_payment_method_subscription_required": "E preciso ter uma assinatura profissional do Mercado Pago para alterar o cartao.",
-    "billing_gateway_payment_method_failed": "Nao foi possivel atualizar o cartao agora. Tente novamente em instantes."
+    "billing_gateway_payment_method_failed": "Nao foi possivel atualizar o cartao agora. Tente novamente em instantes.",
+    "billing_subscription_sync_required": "Nenhuma assinatura do Mercado Pago foi encontrada para atualizar o status."
   },
   "message": {
     "store": "dado criado",
@@ -181,7 +182,8 @@
     "billing_checkout_started": "Pagamento enviado para confirma??o. A assinatura ser? ativada ap?s retorno do Mercado Pago.",
     "billing_address_saved": "Endere?o de faturamento salvo com sucesso.",
     "billing_webhook_processed": "Webhook de cobran?a processado com sucesso.",
-    "billing_payment_method_updated": "Cartao atualizado com sucesso."
+    "billing_payment_method_updated": "Cartao atualizado com sucesso.",
+    "billing_subscription_synced": "Status da assinatura atualizado com sucesso."
   },
   "gender": {
     "o": "o"

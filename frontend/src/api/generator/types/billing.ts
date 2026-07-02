@@ -94,6 +94,12 @@ export type BillingCheckoutResponse = {
   init_point?: string | null;
 };
 
+export type BillingSyncResponse = {
+  current: ProfessionalSubscription | null;
+  gateway_status?: string | null;
+  synced: boolean;
+};
+
 export type BillingPaymentMethodPayload = {
   card_token: string;
   payment_type_id: "credit_card" | "debit_card" | "prepaid_card";

@@ -136,11 +136,21 @@ export const ProfessionalBillingCheckoutLogic = () => {
     [],
   );
   const billing = usePsychologistBilling({ callbacks: billingCallbacks });
-  const checkoutMutateAsyncRef = useRef(billing.checkout.mutateAsync);
+  const checkoutMutateAsync = billing.checkout.mutateAsync;
+  const syncMutateAsync = billing.sync.mutateAsync;
+  const currentRefetch = billing.current.refetch;
+  const checkoutMutateAsyncRef = useRef(checkoutMutateAsync);
+  const syncMutateAsyncRef = useRef(syncMutateAsync);
+  const currentRefetchRef = useRef(currentRefetch);
 
   useEffect(() => {
-    checkoutMutateAsyncRef.current = billing.checkout.mutateAsync;
-  }, [billing.checkout.mutateAsync]);
+    checkoutMutateAsyncRef.current = checkoutMutateAsync;
+  }, [checkoutMutateAsync]);
+
+  useEffect(() => {
+    syncMutateAsyncRef.current = syncMutateAsync;
+    currentRefetchRef.current = currentRefetch;
+  }, [currentRefetch, syncMutateAsync]);
 
   const isLoading = billing.plans.isLoading || billing.current.isLoading;
   const hasError = billing.plans.isError || billing.current.isError;
@@ -214,6 +224,16 @@ export const ProfessionalBillingCheckoutLogic = () => {
   const handleBrickError = useCallback((error: unknown) => {
     console.error("[Mercado Pago CardPayment]", error);
     toast.error("Não foi possível carregar o formulário de cartão.");
+  }, []);
+
+  const handleSyncStatus = useCallback(async () => {
+    try {
+      await syncMutateAsyncRef.current();
+      await currentRefetchRef.current();
+      toast.success("Status da assinatura atualizado");
+    } catch {
+      // handleReq já exibe o erro real da API.
+    }
   }, []);
 
   return (
@@ -344,12 +364,16 @@ export const ProfessionalBillingCheckoutLogic = () => {
                   {pendingProfessional ? (
                     <Button
                       className="h-12 rounded-full"
-                      onClick={() => billing.current.refetch()}
+                      disabled={billing.sync.isPending}
+                      onClick={handleSyncStatus}
                       type="button"
                       variant="outline"
                     >
-                      <RefreshCw className="h-4 w-4" aria-hidden />
-                      Atualizar status
+                      <RefreshCw
+                        className={cn("h-4 w-4", billing.sync.isPending && "animate-spin")}
+                        aria-hidden
+                      />
+                      {billing.sync.isPending ? "Atualizando status..." : "Atualizar status"}
                     </Button>
                   ) : null}
                 </div>

@@ -10,6 +10,7 @@ import type {
   BillingPaymentMethodPayload,
   BillingPaymentMethodResponse,
   BillingSelectFreeResponse,
+  BillingSyncResponse,
 } from "@/api/generator/types/billing";
 import * as api from "@/api/req/psychologist-billing";
 
@@ -21,6 +22,10 @@ export interface UsePsychologistBillingProps {
     };
     checkout?: {
       onSuccess?: (data: BillingCheckoutResponse) => void;
+      onError?: (error: unknown) => void;
+    };
+    sync?: {
+      onSuccess?: (data: BillingSyncResponse) => void;
       onError?: (error: unknown) => void;
     };
     address?: {
@@ -77,6 +82,16 @@ export const usePsychologistBilling = ({ callbacks }: UsePsychologistBillingProp
     onError: callbacks?.checkout?.onError,
   });
 
+  const sync = useMutation({
+    mutationFn: () => api.syncPsychologistBillingSubscription(),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: keys.psychologistBilling.current() });
+      queryClient.invalidateQueries({ queryKey: keys.psychologistBilling.subscription() });
+      callbacks?.sync?.onSuccess?.(data);
+    },
+    onError: callbacks?.sync?.onError,
+  });
+
   const address = useMutation({
     mutationFn: (body: BillingAddressPayload) => api.savePsychologistBillingAddress(body),
     onSuccess: (data) => {
@@ -104,6 +119,7 @@ export const usePsychologistBilling = ({ callbacks }: UsePsychologistBillingProp
     subscription,
     selectFree,
     checkout,
+    sync,
     address,
     paymentMethod,
   };

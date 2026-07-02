@@ -44,6 +44,8 @@ Em 2026-06-27, as credenciais sandbox do Mercado Pago foram disponibilizadas loc
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
+- Execução local do service de sync para `lectum02@gmail.com`, retornando
+  `gateway_status="authorized"` e `current.status="ativa"` com dados reais do Mercado Pago.
 - Smoke local HTTP nas rotas `/app/professional/billing/checkout` e `/app/professional/billing/address`, ambas respondendo `307` sem sessão autenticada, confirmando proteção/redirecionamento.
 
 ## Pendências
@@ -173,6 +175,33 @@ Decisão complementar:
   apenas o pagador externo exigido pelo Mercado Pago sandbox.
 - Não criar fallback nem aprovação manual: ausência do e-mail comprador sandbox passa a ser erro de
   configuração do gateway.
+
+Validação executada:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+
+## Atualizacao 2026-07-02 - sincronização manual autenticada
+
+Após a criação real da assinatura, o retorno local continuou exibindo `professional_subscription`
+como `inativa` porque o botão "Atualizar status" apenas refazia a leitura local. O Mercado Pago já
+retornava a assinatura como `authorized`, mas o banco Lectum dependia do webhook ou de uma
+reconciliação operacional.
+
+Decisão complementar:
+
+- Criar `POST /api/private/psychologist/billing/sync`, protegido por papel `psicologo`, para
+  reconciliar a assinatura do psicólogo autenticado contra o Mercado Pago.
+- O endpoint busca somente a assinatura Mercado Pago mais recente do próprio psicólogo autenticado,
+  chama `PaymentGateway.getSubscription` e atualiza `status`, `gateway_subscription_id` e
+  `current_period_end` com o retorno real do gateway.
+- O botão "Atualizar status" na tela de checkout passa a chamar esse endpoint antes de refazer a
+  leitura local.
+- A soberania do entitlement continua no banco Lectum; a sincronização é uma reconciliação real
+  autenticada, não fallback, mock ou aprovação manual.
 
 Validação executada:
 
