@@ -253,3 +253,23 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Smoke local com `next start --port 3108`: `/app/professional/billing` retornou `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fbilling` sem sessão e `/auth/login` retornou `200`, preservando a proteção da rota privada.
+
+## Ajuste de UI em 2026-07-04: selo verificado no card do plano
+
+- Pedido direto de produto: substituir o ícone `ShieldCheck` do card principal da rota `/app/professional/billing` pelo selo de verificado usado na Lectum.
+- Referência visual local consultada: `_product/proto/Minhas Assinatura - Psicólogo.jpg`; Builder/Quick Copy não está exposto como ferramenta direta neste ambiente.
+- A UI agora reutiliza `VerifiedBadgeIcon` de `frontend/src/components/ui/verified-badge.tsx`, sem novo asset, package ou design system paralelo.
+- A alteração é somente visual e não muda regra de assinatura, gateway, entitlement ou verificação CFP.
+- ADR registrado: `adrs/0211-icone-verificado-assinatura.md`.
+
+### Critérios de aceite do ajuste
+
+- [x] O ícone de shield do card principal foi substituído pelo selo de verificado da Lectum.
+- [x] A implementação reutiliza componente existente e mantém abordagem mobile-first da tela.
+- [x] Nenhum mock, seed, endpoint simulado, package novo ou alteração de schema foi criado.
+
+### Validação do ajuste de selo verificado
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke local com `next start --port 3109`: `/app/professional/billing` retornou `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fbilling` sem sessão e `/auth/login` retornou `200`, preservando a proteção da rota privada.

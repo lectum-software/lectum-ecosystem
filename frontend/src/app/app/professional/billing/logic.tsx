@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   CreditCard,
   ReceiptText,
-  ShieldCheck,
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
@@ -24,6 +23,7 @@ import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -307,7 +307,7 @@ export const ProfessionalBillingLogic = () => {
               <div className="border-border border-b bg-gradient-to-br from-primary-soft via-surface to-surface px-5 py-6 md:px-7 md:py-8">
                 <div className="flex items-start justify-between gap-4">
                   <span className="grid h-14 w-14 shrink-0 place-items-center rounded-3xl bg-surface text-primary shadow-[var(--lectum-shadow-soft)]">
-                    <ShieldCheck className="h-7 w-7" aria-hidden="true" />
+                    <VerifiedBadgeIcon className="h-8 w-8" aria-hidden="true" />
                   </span>
                   <StatusBadge status={subscription.status} />
                 </div>
