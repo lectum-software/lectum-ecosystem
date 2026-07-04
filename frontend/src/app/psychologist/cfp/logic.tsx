@@ -6,13 +6,12 @@ import {
   CheckCircle2,
   FileQuestion,
   Loader2,
-  type LucideIcon,
   RotateCcw,
   ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { ReactNode } from "react";
+import type { ComponentType, ReactNode, SVGProps } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/api/callers/auth";
@@ -20,6 +19,7 @@ import { usePsychologistCfp } from "@/api/callers/psychologist-cfp";
 import type { CfpResult, CfpSearchResponse, user } from "@/api/generator/types";
 import { formatCpf } from "@/components/controllers/utils";
 import { InlineAlert } from "@/components/ui/inline-alert";
+import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { getToken } from "@/hooks/cookies/token";
 import { useAppSelector } from "@/hooks/redux";
 import { useUserSet } from "@/hooks/user-set";
@@ -39,6 +39,8 @@ type ApiErrorData = {
 type ApiError = Error & {
   data?: ApiErrorData;
 };
+
+type HeroIcon = ComponentType<SVGProps<SVGSVGElement>>;
 
 const resolveApiError = (error: unknown) => {
   const apiError = error as ApiError;
@@ -70,16 +72,17 @@ const PremiumPanel = ({ children, className }: { children: ReactNode; className?
 const CfpHero = ({
   description,
   eyebrow = "Selo de verificado",
-  icon: Icon = BadgeCheck,
+  icon: Icon = VerifiedBadgeIcon,
   title,
   variant = "primary",
 }: {
   description: ReactNode;
   eyebrow?: string;
-  icon?: LucideIcon;
+  icon?: HeroIcon;
   title: string;
   variant?: "primary" | "success" | "warning";
 }) => {
+  const isVerifiedBadgeIcon = Icon === VerifiedBadgeIcon;
   const tone = {
     primary: "bg-primary text-white ring-primary-soft/70",
     success: "bg-success/10 text-success ring-success/10",
@@ -91,10 +94,16 @@ const CfpHero = ({
       <div
         className={cn(
           "grid h-20 w-20 place-items-center rounded-full shadow-[var(--lectum-shadow-soft)] ring-8 md:h-24 md:w-24",
-          tone,
+          isVerifiedBadgeIcon ? "bg-transparent shadow-none ring-0" : tone,
         )}
       >
-        <Icon className="h-10 w-10 md:h-12 md:w-12" aria-hidden="true" />
+        <Icon
+          className={cn(
+            "h-10 w-10 md:h-12 md:w-12",
+            isVerifiedBadgeIcon && "h-16 w-16 md:h-20 md:w-20",
+          )}
+          aria-hidden="true"
+        />
       </div>
       <p className="mt-6 text-xs font-bold uppercase tracking-[0.18em] text-primary">{eyebrow}</p>
       <h1 className="mt-3 text-2xl font-bold leading-tight text-foreground md:text-4xl">{title}</h1>
