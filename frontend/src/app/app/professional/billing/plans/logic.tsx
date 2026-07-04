@@ -84,6 +84,10 @@ const getFeatureRows = (plan: SubscriptionPlan): FeatureRow[] => {
       },
       {
         included: false,
+        label: "Respostas nas comunidades com mídia",
+      },
+      {
+        included: false,
         label: "Elegível ao Top Mentor",
       },
       {
@@ -93,10 +97,6 @@ const getFeatureRows = (plan: SubscriptionPlan): FeatureRow[] => {
       {
         included: false,
         label: "Estatísticas de perfil",
-      },
-      {
-        included: false,
-        label: "Suporte prioritário via WhatsApp",
       },
     ];
   }
@@ -121,6 +121,10 @@ const getFeatureRows = (plan: SubscriptionPlan): FeatureRow[] => {
       },
       {
         included: true,
+        label: "Respostas nas comunidades com mídia",
+      },
+      {
+        included: true,
         label: "Elegível ao Top Mentor",
       },
       {
@@ -134,10 +138,6 @@ const getFeatureRows = (plan: SubscriptionPlan): FeatureRow[] => {
       {
         included: true,
         label: "Estatísticas de perfil",
-      },
-      {
-        included: true,
-        label: "Suporte prioritário via WhatsApp",
       },
     ];
   }

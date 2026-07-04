@@ -247,3 +247,19 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm check`
 - Browser local em `/app/professional/billing/plans` com sessao real de psicologo validou a presenca da nova proposta de valor, `R$ 9,90`, beneficios solicitados e ausencia do bloco tecnico e dos textos removidos.
 
+
+## Ajuste de benefícios em 2026-07-04: mídia nas comunidades sem suporte prioritário
+
+- Pedido direto de produto: remover o benefício `Suporte prioritário via WhatsApp`/`Atendimento prioritário` e adicionar `Respostas nas comunidades com mídia` aos benefícios de visibilidade do Plano Profissional.
+- A tela `/app/professional/billing/plans` foi alinhada para mostrar o novo benefício como indisponível no Plano Gratuito e incluído no Plano Profissional.
+- Nenhuma regra de preço, checkout, gateway, entitlement, API, schema Prisma ou pacote foi alterada.
+- ADR criado: `adrs/0205-beneficios-assinatura-comunidades-midia-sem-suporte-prioritario.md`.
+
+### Validação do ajuste
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/billing/subscription/logic.tsx src/app/app/professional/billing/plans/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local via Chrome/CDP em `/app/professional/billing`, viewport 390x844, com psicólogo temporário real no Plano Gratuito removido ao final, confirmou `Respostas nas comunidades com mídia`, ausência de `Atendimento prioritário`/`Suporte prioritário via WhatsApp` e `scrollWidth=390`.
+- Cleanup confirmado com `codex_smoke_users=0`.

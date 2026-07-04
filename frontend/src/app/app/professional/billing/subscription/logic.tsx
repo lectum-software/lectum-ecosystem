@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   CreditCard,
   Gift,
-  HeartHandshake,
   type LucideIcon,
   Search,
   ShieldCheck,
@@ -62,6 +61,7 @@ const professionalBenefitGroups: BenefitGroup[] = [
     items: [
       "Prioridade na busca de pacientes",
       "Respostas destacadas nas comunidades",
+      "Respostas nas comunidades com mídia",
       "Elegível ao Top Mentor",
     ],
   },
@@ -69,11 +69,6 @@ const professionalBenefitGroups: BenefitGroup[] = [
     icon: BarChart3,
     title: "Mais recursos para seu perfil",
     items: ["Até 10 especialidades", "Serviços profissionais ilimitados", "Estatísticas de perfil"],
-  },
-  {
-    icon: HeartHandshake,
-    title: "Atendimento prioritário",
-    items: ["Suporte prioritário via WhatsApp"],
   },
 ];
 

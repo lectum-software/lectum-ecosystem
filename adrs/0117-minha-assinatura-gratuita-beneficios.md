@@ -57,3 +57,7 @@ O fluxo de cortesia continua separado: profissionais com `source="admin_grant"` 
 
 - TASK-32 continua responsável pelo checkout real Mercado Pago.
 - TASK-33 continua responsável pela gestão completa de assinatura e cartão quando a integração de pagamento estiver disponível.
+
+## Atualização em 2026-07-04: benefícios sem suporte prioritário
+
+O ADR-0205 refinou a lista de benefícios: o grupo `Atendimento prioritário` e o item `Suporte prioritário via WhatsApp` deixam de ser apresentados nas telas de assinatura, enquanto `Respostas nas comunidades com mídia` passa a reforçar o grupo `Mais visibilidade`. A decisão não altera gateway, preço, API, entitlement ou schema.

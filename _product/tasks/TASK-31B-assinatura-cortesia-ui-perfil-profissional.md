@@ -149,3 +149,18 @@ Psicólogos com `professional_subscription.source="admin_grant"` recebem todos o
 - Escopo: sem alteração de API, gateway, entitlement, CTA fixo, schema Prisma, packages ou regras de cobrança.
 - ADR criado: `adrs/0119-header-secundario-premium-compartilhado.md`.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado em mobile 390x844 e desktop 1024x768 confirmando título centralizado, header sem overflow e largura alinhada ao conteúdo.
+
+## Ajuste de benefícios em 2026-07-04: foco em visibilidade com mídia
+
+- Pedido direto de produto: na seção `O que você desbloqueia com a Assinatura Profissional`, remover o card `Atendimento prioritário` e adicionar `Respostas nas comunidades com mídia` dentro de `Mais visibilidade`.
+- A alteração preserva a experiência mobile-first da tela `/app/professional/billing`/`/app/professional/billing/subscription`, sem mudar API, gateway, entitlement, preço, schema Prisma ou packages.
+- ADR criado: `adrs/0205-beneficios-assinatura-comunidades-midia-sem-suporte-prioritario.md`.
+
+### Validação do ajuste
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/billing/subscription/logic.tsx src/app/app/professional/billing/plans/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local via Chrome/CDP em `/app/professional/billing`, viewport 390x844, com psicólogo temporário real no Plano Gratuito removido ao final, confirmou `Respostas nas comunidades com mídia`, ausência de `Atendimento prioritário`/`Suporte prioritário via WhatsApp` e `scrollWidth=390`.
+- Cleanup confirmado com `codex_smoke_users=0`.
