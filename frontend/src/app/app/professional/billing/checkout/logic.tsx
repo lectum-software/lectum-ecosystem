@@ -1,8 +1,7 @@
 "use client";
 
 import { CardPayment, initMercadoPago } from "@mercadopago/sdk-react";
-import { ArrowLeft, CreditCard, RefreshCw } from "lucide-react";
-import Link from "next/link";
+import { CreditCard, RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -286,14 +285,6 @@ export const ProfessionalBillingCheckoutLogic = () => {
   return (
     <PrivateTemplate showHeader={false}>
       <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-5xl">
-        <Link
-          className="inline-flex items-center gap-2 text-sm font-semibold text-muted"
-          href={PSYCHOLOGIST_ONBOARDING_PATHS.plans}
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Voltar para planos
-        </Link>
-
         <div className="grid justify-items-center gap-3 text-center">
           <span className="grid h-16 w-16 place-items-center rounded-[var(--lectum-card-radius)] bg-primary-soft text-primary shadow-[var(--lectum-shadow-soft)]">
             <CreditCard className="h-8 w-8" aria-hidden />
@@ -301,11 +292,10 @@ export const ProfessionalBillingCheckoutLogic = () => {
           <div>
             <p className="text-sm font-semibold text-primary">Finalizar assinatura</p>
             <h1 className="mt-2 text-3xl font-bold leading-tight text-foreground md:text-4xl">
-              Pagamento seguro do Plano Profissional
+              Pagamento do Plano Profissional
             </h1>
             <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-muted">
-              Informe um cartão de crédito no ambiente seguro do Mercado Pago. A Lectum recebe
-              somente o token temporário e aguarda a confirmação real para ativar sua assinatura.
+              Informe um cartão de crédito para ativar sua assinatura
             </p>
           </div>
         </div>
