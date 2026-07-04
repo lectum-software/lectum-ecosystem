@@ -18,6 +18,10 @@ type InfoSimplesSearchParams = CfpSearchBody & {
   token: string;
 };
 
+type InfoSimplesSearchOptions = {
+  traceId?: string;
+};
+
 export type InfoSimplesCfpResponse = {
   code: number | null;
   code_message: string | null;
@@ -59,6 +63,33 @@ const resolveRequestTimeoutMs = () => {
   if (!Number.isFinite(configured) || configured <= 0) return DEFAULT_REQUEST_TIMEOUT_MS;
 
   return Math.min(Math.max(Math.trunc(configured), MIN_REQUEST_TIMEOUT_MS), MAX_REQUEST_TIMEOUT_MS);
+};
+
+const isCfpLogEnabled = () => process.env.CFP_PROVIDER_LOGS !== "false";
+
+const logCfpProvider = (event: string, data: Record<string, unknown>) => {
+  if (!isCfpLogEnabled()) return;
+
+  console.info(`[${event}]`, data);
+};
+
+const summarizeRequest = (params: InfoSimplesSearchParams) => {
+  return {
+    hasCpf: Boolean(params.cpf),
+    hasNome: Boolean(params.nome),
+    hasRegistro: Boolean(params.registro),
+    hasUf: Boolean(params.uf),
+    cpfDigits: params.cpf?.length ?? 0,
+  };
+};
+
+const summarizePayload = (raw: InfoSimplesPayload) => {
+  return {
+    dataCount: Array.isArray(raw.data) ? raw.data.length : null,
+    errorsCount: Array.isArray(raw.errors) ? raw.errors.length : null,
+    hasErrors: Array.isArray(raw.errors) ? raw.errors.length > 0 : Boolean(raw.errors),
+    resultadosCount: Array.isArray(raw.resultados) ? raw.resultados.length : null,
+  };
 };
 
 const toText = (value: unknown): string | null => {
@@ -157,13 +188,23 @@ export const normalizeCfpResults = (payload: InfoSimplesPayload): CfpResult[] =>
 };
 
 export class InfoSimplesCfpProvider {
-  async search(params: InfoSimplesSearchParams): Promise<InfoSimplesCfpResponse> {
+  async search(
+    params: InfoSimplesSearchParams,
+    options: InfoSimplesSearchOptions = {},
+  ): Promise<InfoSimplesCfpResponse> {
     const controller = new AbortController();
     const timeoutMs = resolveRequestTimeoutMs();
     const startedAt = Date.now();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const traceId = options.traceId || "no-trace";
 
     try {
+      logCfpProvider("CFP_PROVIDER_REQUEST_START", {
+        request: summarizeRequest(params),
+        timeoutMs,
+        traceId,
+      });
+
       const response = await fetch(INFOSIMPLES_CFP_ENDPOINT, {
         method: "POST",
         headers: {
@@ -180,6 +221,14 @@ export class InfoSimplesCfpProvider {
       try {
         raw = JSON.parse(responseText) as InfoSimplesPayload;
       } catch {
+        logCfpProvider("CFP_PROVIDER_INVALID_JSON", {
+          contentLength: responseText.length,
+          contentType,
+          elapsedMs: Date.now() - startedAt,
+          httpStatus: response.status,
+          traceId,
+        });
+
         throw new InfoSimplesCfpProviderError(
           "invalid_json",
           "InfoSimples CFP returned a non-JSON response.",
@@ -191,24 +240,50 @@ export class InfoSimplesCfpProvider {
         );
       }
 
+      const results = normalizeCfpResults(raw);
+      const elapsedMs = Date.now() - startedAt;
+
+      logCfpProvider("CFP_PROVIDER_RESPONSE", {
+        contentType,
+        elapsedMs,
+        httpStatus: response.status,
+        payload: summarizePayload(raw),
+        providerCode: typeof raw.code === "number" ? raw.code : null,
+        providerMessage: typeof raw.code_message === "string" ? raw.code_message : null,
+        resultsCount: results.length,
+        traceId,
+      });
+
       return {
         code: typeof raw.code === "number" ? raw.code : null,
         code_message: typeof raw.code_message === "string" ? raw.code_message : null,
         content_type: contentType,
-        elapsed_ms: Date.now() - startedAt,
+        elapsed_ms: elapsedMs,
         http_status: response.status,
         raw,
-        results: normalizeCfpResults(raw),
+        results,
       };
     } catch (err) {
       if (err instanceof InfoSimplesCfpProviderError) throw err;
 
       if (err instanceof Error && err.name === "AbortError") {
+        logCfpProvider("CFP_PROVIDER_TIMEOUT", {
+          elapsedMs: Date.now() - startedAt,
+          timeoutMs,
+          traceId,
+        });
+
         throw new InfoSimplesCfpProviderError("timeout", "InfoSimples CFP request timed out.", {
           elapsedMs: Date.now() - startedAt,
           timeoutMs,
         });
       }
+
+      logCfpProvider("CFP_PROVIDER_NETWORK_ERROR", {
+        elapsedMs: Date.now() - startedAt,
+        errorName: err instanceof Error ? err.name : typeof err,
+        traceId,
+      });
 
       throw new InfoSimplesCfpProviderError("network", "InfoSimples CFP request failed.", {
         elapsedMs: Date.now() - startedAt,

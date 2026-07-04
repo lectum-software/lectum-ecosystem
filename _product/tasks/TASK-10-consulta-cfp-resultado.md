@@ -238,3 +238,9 @@ Todos os criterios aplicaveis foram atendidos. A confirmacao real de um CPF prof
 - Caso real validado sem expor `DOCUMENT_TOKEN` nem payload bruto: a consulta CFP por CPF ultrapassou o timeout local anterior de 20s; com janela maior, a InfoSimples retornou `code=609` apos cerca de 51s, indicando tentativas excedidas na origem CFP, nao problema de saldo.
 - O provider InfoSimples CFP passa a usar timeout padrao de 90s, configuravel por `DOCUMENT_REQUEST_TIMEOUT_MS`, e registra logs sanitizados de erro operacional.
 - `code=609` passa a ser indisponibilidade temporaria (`cfp_provider_unavailable`) em vez de rate limit/saldo; o fluxo permanece sem mock e sem aprovacao automatica quando a origem falha.
+
+## Observabilidade InfoSimples em 2026-07-04
+
+- O fluxo CFP passa a emitir logs estruturados e sanitizados com `traceId` para correlacionar request, provider e classificacao final.
+- Os logs registram tempos, status HTTP, codigo/mensagem InfoSimples, contagens de arrays e presenca/tamanho dos campos de busca, sem `DOCUMENT_TOKEN`, CPF completo, payload bruto, nome ou dados profissionais.
+- Os logs podem ser desligados por `CFP_PROVIDER_LOGS=false` apos estabilizacao operacional.

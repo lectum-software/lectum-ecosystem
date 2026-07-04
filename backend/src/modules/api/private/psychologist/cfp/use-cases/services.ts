@@ -1,4 +1,5 @@
-﻿import { error, msg } from "@/helpers/translate";
+﻿import { randomUUID } from "node:crypto";
+import { error, msg } from "@/helpers/translate";
 import type { professional_registry_check } from "@/interfaces/objects";
 import type {
   CfpResult,
@@ -31,17 +32,60 @@ const isProviderRateLimit = (code: number | null, message: string | null) => {
   return code === 610 || text.includes("limite") || text.includes("saldo");
 };
 
-const logProviderUnavailable = (err: unknown) => {
+const isCfpLogEnabled = () => process.env.CFP_PROVIDER_LOGS !== "false";
+
+const logCfpSearch = (event: string, data: Record<string, unknown>) => {
+  if (!isCfpLogEnabled()) return;
+
+  console.info(`[${event}]`, data);
+};
+
+const logCfpSearchError = (event: string, data: Record<string, unknown>) => {
+  if (!isCfpLogEnabled()) return;
+
+  console.error(`[${event}]`, data);
+};
+
+const summarizeSearchRequest = (request: {
+  cpf?: string;
+  nome?: string;
+  registro?: string;
+  uf?: string;
+}) => {
+  return {
+    cpfDigits: request.cpf?.length ?? 0,
+    hasCpf: Boolean(request.cpf),
+    hasNome: Boolean(request.nome),
+    hasRegistro: Boolean(request.registro),
+    hasUf: Boolean(request.uf),
+  };
+};
+
+const summarizeProviderResponse = (
+  response: Awaited<ReturnType<InfoSimplesCfpProvider["search"]>>,
+) => {
+  return {
+    elapsedMs: response.elapsed_ms,
+    httpStatus: response.http_status,
+    providerCode: response.code,
+    providerMessage: response.code_message,
+    resultsCount: response.results.length,
+  };
+};
+
+const logProviderUnavailable = (err: unknown, traceId: string) => {
   if (err instanceof InfoSimplesCfpProviderError) {
-    console.error("[CFP_PROVIDER_UNAVAILABLE]", {
+    logCfpSearchError("CFP_PROVIDER_UNAVAILABLE", {
       context: err.context,
       reason: err.reason,
+      traceId,
     });
     return;
   }
 
-  console.error("[CFP_PROVIDER_UNAVAILABLE]", {
+  logCfpSearchError("CFP_PROVIDER_UNAVAILABLE", {
     name: err instanceof Error ? err.name : typeof err,
+    traceId,
   });
 };
 
@@ -66,7 +110,14 @@ const extractStoredResults = (check: professional_registry_check): CfpResult[] =
 };
 
 export const search = async (data: ICfpSearchDTO) => {
+  const traceId = randomUUID();
+
   if (data.auth.role !== "psicologo") {
+    logCfpSearchError("CFP_SEARCH_FORBIDDEN", {
+      authRole: data.auth.role || null,
+      traceId,
+    });
+
     return {
       status: 403,
       ...error("role_not_authorized", {}),
@@ -75,6 +126,10 @@ export const search = async (data: ICfpSearchDTO) => {
 
   const token = process.env.DOCUMENT_TOKEN?.trim();
   if (!token) {
+    logCfpSearchError("CFP_SEARCH_PROVIDER_TOKEN_MISSING", {
+      traceId,
+    });
+
     return {
       status: 503,
       ...error("cfp_provider_config_error", {}),
@@ -89,6 +144,11 @@ export const search = async (data: ICfpSearchDTO) => {
   };
 
   if (request.cpf && request.cpf.length !== 11) {
+    logCfpSearchError("CFP_SEARCH_INVALID_CPF", {
+      request: summarizeSearchRequest(request),
+      traceId,
+    });
+
     return {
       status: 400,
       ...error("invalid_cpf", {}),
@@ -96,16 +156,30 @@ export const search = async (data: ICfpSearchDTO) => {
   }
 
   if (!request.cpf && !request.nome && !request.registro) {
+    logCfpSearchError("CFP_SEARCH_EMPTY_QUERY", {
+      request: summarizeSearchRequest(request),
+      traceId,
+    });
+
     return {
       status: 400,
       ...error("cfp_query_required", {}),
     };
   }
 
+  logCfpSearch("CFP_SEARCH_START", {
+    request: summarizeSearchRequest(request),
+    traceId,
+  });
+
   const repository = new CfpRepository();
   const profile = await repository.getProfile(data.auth.id!);
 
   if (!profile) {
+    logCfpSearchError("CFP_SEARCH_PROFILE_NOT_FOUND", {
+      traceId,
+    });
+
     return {
       status: 404,
       ...error("not_found", {
@@ -118,12 +192,15 @@ export const search = async (data: ICfpSearchDTO) => {
   let response: Awaited<ReturnType<InfoSimplesCfpProvider["search"]>>;
 
   try {
-    response = await provider.search({
-      token,
-      ...request,
-    });
+    response = await provider.search(
+      {
+        token,
+        ...request,
+      },
+      { traceId },
+    );
   } catch (err) {
-    logProviderUnavailable(err);
+    logProviderUnavailable(err, traceId);
 
     return {
       status: 502,
@@ -132,6 +209,11 @@ export const search = async (data: ICfpSearchDTO) => {
   }
 
   if (isProviderConfigError(response.code)) {
+    logCfpSearchError("CFP_SEARCH_PROVIDER_CONFIG_ERROR", {
+      response: summarizeProviderResponse(response),
+      traceId,
+    });
+
     return {
       status: 503,
       ...error("cfp_provider_config_error", {}),
@@ -139,6 +221,11 @@ export const search = async (data: ICfpSearchDTO) => {
   }
 
   if (isProviderValidationError(response.code)) {
+    logCfpSearchError("CFP_SEARCH_PROVIDER_VALIDATION_ERROR", {
+      response: summarizeProviderResponse(response),
+      traceId,
+    });
+
     return {
       status: 400,
       ...error("cfp_provider_validation_error", {}),
@@ -146,10 +233,9 @@ export const search = async (data: ICfpSearchDTO) => {
   }
 
   if (isProviderUnavailable(response.code)) {
-    console.error("[CFP_PROVIDER_UNAVAILABLE]", {
-      elapsedMs: response.elapsed_ms,
-      httpStatus: response.http_status,
-      providerCode: response.code,
+    logCfpSearchError("CFP_SEARCH_PROVIDER_UNAVAILABLE", {
+      response: summarizeProviderResponse(response),
+      traceId,
     });
 
     return {
@@ -159,6 +245,11 @@ export const search = async (data: ICfpSearchDTO) => {
   }
 
   if (isProviderRateLimit(response.code, response.code_message)) {
+    logCfpSearchError("CFP_SEARCH_PROVIDER_RATE_LIMITED", {
+      response: summarizeProviderResponse(response),
+      traceId,
+    });
+
     return {
       status: 429,
       ...error("cfp_provider_rate_limited", {}),
@@ -168,6 +259,11 @@ export const search = async (data: ICfpSearchDTO) => {
   const shouldPersistResult = response.code === 200 || isProviderNotFound(response.code);
 
   if (!shouldPersistResult) {
+    logCfpSearchError("CFP_SEARCH_PROVIDER_UNEXPECTED_CODE", {
+      response: summarizeProviderResponse(response),
+      traceId,
+    });
+
     return {
       status: 502,
       ...error("cfp_provider_error", {
@@ -186,6 +282,13 @@ export const search = async (data: ICfpSearchDTO) => {
       response: response.raw,
       normalized_results: response.results,
     },
+  });
+
+  logCfpSearch("CFP_SEARCH_PERSISTED", {
+    checkId: check.id,
+    found: response.results.length > 0,
+    response: summarizeProviderResponse(response),
+    traceId,
   });
 
   return {

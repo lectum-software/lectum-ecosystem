@@ -68,3 +68,9 @@ Pesquisa publica identificou a consulta InfoSimples `Conselho Federal de Psicolo
 - O backend passa a usar timeout operacional maior e configuravel por `DOCUMENT_REQUEST_TIMEOUT_MS` (padrao 90s, com limites internos), para nao abortar consultas CFP validas que demorem mais que 20s.
 - `code=609` passa a ser tratado como indisponibilidade temporaria do provedor/origem, nao como rate limit/saldo. A resposta continua retentavel e nao aprova automaticamente o profissional.
 - Logs operacionais do provider registram apenas motivo, status e tempos, sem `DOCUMENT_TOKEN`, CPF, payload bruto ou dados profissionais.
+
+## Observabilidade sanitizada em 2026-07-04
+
+- Para diagnosticar falhas externas sem expor dados sensiveis, o fluxo CFP passa a emitir eventos estruturados com `traceId`, classificacao, tempos, status HTTP, codigo/mensagem do provedor, contagem de resultados e formato resumido do payload.
+- Os logs nao incluem `DOCUMENT_TOKEN`, CPF completo, payload bruto, nome retornado ou dados profissionais; registram somente presenca/tamanho dos campos de busca.
+- Os logs podem ser desativados por `CFP_PROVIDER_LOGS=false` quando a operacao estiver estabilizada.
