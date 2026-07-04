@@ -13,7 +13,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { ComponentType, CSSProperties, PropsWithChildren } from "react";
 import {
   type MouseEvent as ReactMouseEvent,
@@ -42,6 +42,10 @@ import {
   LEGACY_COMMUNITY_FEED_HREF,
 } from "@/utils/community";
 import { recordAppNavigationPoint } from "@/utils/navigation-history";
+import {
+  getPsychologistPaidOnboardingRequirementPath,
+  PSYCHOLOGIST_ONBOARDING_PATHS,
+} from "@/utils/psychologist-onboarding";
 
 type PrivateTemplateProps = PropsWithChildren<{
   allowAnonymous?: boolean;
@@ -236,6 +240,19 @@ const normalizePathname = (pathname: string) => {
   return pathname.replace(/\/+$/, "");
 };
 
+const isPathOrDescendant = (pathname: string, target: string) =>
+  pathname === target || pathname.startsWith(`${target}/`);
+
+const canStayDuringPaidOnboarding = (pathname: string, requiredPath: string) => {
+  if (isPathOrDescendant(pathname, requiredPath)) return true;
+
+  if (requiredPath === PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress) {
+    return isPathOrDescendant(pathname, PSYCHOLOGIST_ONBOARDING_PATHS.checkout);
+  }
+
+  return PAID_ONBOARDING_MANAGEMENT_PATHS.has(pathname);
+};
+
 const getNavigationContextPathname = (pathname: string) => {
   const normalizedPathname = normalizePathname(pathname);
   const segments = normalizedPathname.split("/").filter(Boolean);
@@ -267,6 +284,14 @@ const PRIMARY_DESKTOP_NAVIGATION_PATHS = new Set([
   DEFAULT_COMMUNITY_FEED_HREF,
   "/app/notifications",
   "/app/profile",
+]);
+
+const PAID_ONBOARDING_MANAGEMENT_PATHS = new Set([
+  "/app/professional/billing",
+  "/app/professional/billing/card",
+  "/app/professional/billing/plans",
+  "/app/professional/billing/subscription",
+  "/app/settings/account",
 ]);
 
 const isPrimaryDesktopNavigationPath = (pathname: string) => {
@@ -376,6 +401,7 @@ export const PrivateTemplate = ({
   showNavigation,
 }: PrivateTemplateProps) => {
   const pathname = usePathname();
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const storedUser = useAppSelector((state) => state.user);
   const { out } = useSignOut();
@@ -460,6 +486,16 @@ export const PrivateTemplate = ({
   useEffect(() => {
     recordAppNavigationPoint(pathname);
   }, [pathname]);
+
+  useEffect(() => {
+    if (!hasToken || isSessionLoading || shouldShowSessionError) return;
+
+    const requiredPath = getPsychologistPaidOnboardingRequirementPath(sessionUser);
+
+    if (!requiredPath || canStayDuringPaidOnboarding(normalizedPathname, requiredPath)) return;
+
+    router.replace(requiredPath);
+  }, [hasToken, isSessionLoading, normalizedPathname, router, sessionUser, shouldShowSessionError]);
 
   useEffect(() => {
     if (!shouldAutoHideNavigation) return;

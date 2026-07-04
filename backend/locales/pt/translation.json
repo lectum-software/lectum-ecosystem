@@ -66,6 +66,7 @@
     "free_service_limit": "O plano gratuito permite selecionar {{limit}} serviço.",
     "free_approach_limit": "O plano gratuito permite selecionar {{limit}} abordagem.",
     "professional_profile_target_audience_required": "Selecione pelo menos um público atendido antes de publicar.",
+    "professional_registry_verification_required": "Conclua a verificação do seu registro profissional antes de editar o perfil.",
     "post_reply_parent_invalid": "A resposta selecionada não pode receber uma nova resposta.",
     "post_vote_invalid_target": "A publicação ou resposta selecionada não está disponível para voto.",
     "post_vote_value_invalid": "Informe um voto válido para continuar.",

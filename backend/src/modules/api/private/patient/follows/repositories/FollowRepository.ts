@@ -1,6 +1,9 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
-import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
+import {
+  activeProfessionalEntitlementWhere,
+  isVerifiedProfessionalEntitlement,
+} from "@/utils/subscription-entitlement";
 import type {
   FollowActionResponse,
   IFollowIndexDTO,
@@ -119,10 +122,12 @@ export class FollowRepository implements IFollowRepository {
                   languages: true,
                   rating_avg: true,
                   rating_count: true,
+                  cfp_verified_at: true,
                   subscriptions: {
                     where: activeProfessionalEntitlementWhere(),
                     select: {
                       id: true,
+                      source: true,
                     },
                     take: 1,
                   },
@@ -196,7 +201,7 @@ export class FollowRepository implements IFollowRepository {
             languages: normalizeStringArray(profile.languages),
             rating_avg: profile.rating_avg,
             rating_count: profile.rating_count,
-            verified: profile.subscriptions.length > 0,
+            verified: isVerifiedProfessionalEntitlement(profile),
             favorited: item.psychologist.favorited_by_patients.length > 0,
             followed: item.psychologist.followed_by_patients.length > 0,
             specialties: item.psychologist.psychologist_specialties

@@ -10,17 +10,38 @@ export const PSYCHOLOGIST_ONBOARDING_PATHS = {
   profileSetup: "/app/professional/profile/setup",
 } as const;
 
-type SubscriptionLike = Pick<ProfessionalSubscription, "status" | "plan"> | null | undefined;
+type SubscriptionValue = Pick<ProfessionalSubscription, "status" | "plan" | "source">;
+type SubscriptionLike = SubscriptionValue | null | undefined;
+
+type PsychologistProfileLike = NonNullable<user["psychologist_profile"]>;
+
+const isActiveSubscription = (subscription: SubscriptionLike): subscription is SubscriptionValue =>
+  subscription?.status === "ativa";
 
 export const isProfessionalSubscriptionActive = (subscription: SubscriptionLike) => {
-  return subscription?.status === "ativa" && subscription.plan?.slug === "profissional";
+  if (!isActiveSubscription(subscription)) return false;
+
+  return subscription.plan?.active !== false && subscription.plan?.slug === "profissional";
 };
+
+export const isPaidRegistryVerificationComplete = (
+  profile: Pick<PsychologistProfileLike, "cfp_verified_at"> | null | undefined,
+  subscription: SubscriptionLike,
+) => Boolean(profile?.cfp_verified_at || subscription?.source === "admin_grant");
+
+export const getActiveProfessionalSubscription = (
+  profile: Pick<PsychologistProfileLike, "subscriptions"> | null | undefined,
+) => profile?.subscriptions?.find(isProfessionalSubscriptionActive) ?? null;
+
+const getActiveSubscription = (
+  profile: Pick<PsychologistProfileLike, "subscriptions"> | null | undefined,
+) => profile?.subscriptions?.find(isActiveSubscription) ?? null;
 
 export const getAfterPhoneVerificationPath = () => PSYCHOLOGIST_ONBOARDING_PATHS.profileSetup;
 
 export const getAfterPlanSelectionPath = () => PSYCHOLOGIST_ONBOARDING_PATHS.phone;
 
-const hasBillingAddress = (profile: NonNullable<user["psychologist_profile"]>) =>
+const hasBillingAddress = (profile: PsychologistProfileLike) =>
   Boolean(
     profile.professional_address_street?.trim() &&
       profile.professional_address_number?.trim() &&
@@ -30,24 +51,21 @@ const hasBillingAddress = (profile: NonNullable<user["psychologist_profile"]>) =
       profile.professional_address_state?.trim(),
   );
 
-export const getPsychologistRegistrationEntryPath = (
+export const getPsychologistPaidOnboardingRequirementPath = (
   data: Partial<Pick<user, "role" | "psychologist_profile">> | null | undefined,
-  fallback: string,
 ) => {
-  if (data?.role !== "psicologo") return fallback;
+  if (data?.role !== "psicologo") return null;
 
   const profile = data.psychologist_profile;
-  const currentSubscription = profile?.subscriptions?.[0];
+  const activeProfessional = getActiveProfessionalSubscription(profile);
 
-  if (!profile || !currentSubscription || currentSubscription.status !== "ativa") {
-    return PSYCHOLOGIST_ONBOARDING_PATHS.plans;
-  }
+  if (!profile || !activeProfessional) return null;
 
-  if (isProfessionalSubscriptionActive(currentSubscription) && !hasBillingAddress(profile)) {
+  if (!hasBillingAddress(profile)) {
     return PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress;
   }
 
-  if (isProfessionalSubscriptionActive(currentSubscription) && !profile.cfp_verified_at) {
+  if (!isPaidRegistryVerificationComplete(profile, activeProfessional)) {
     return PSYCHOLOGIST_ONBOARDING_PATHS.cfp;
   }
 
@@ -59,5 +77,28 @@ export const getPsychologistRegistrationEntryPath = (
     return PSYCHOLOGIST_ONBOARDING_PATHS.profileSetup;
   }
 
-  return fallback;
+  return null;
+};
+
+export const getPsychologistRegistrationEntryPath = (
+  data: Partial<Pick<user, "role" | "psychologist_profile">> | null | undefined,
+  fallback: string,
+) => {
+  if (data?.role !== "psicologo") return fallback;
+
+  const profile = data.psychologist_profile;
+  const currentSubscription = getActiveSubscription(profile);
+
+  if (!profile || !currentSubscription) {
+    return PSYCHOLOGIST_ONBOARDING_PATHS.plans;
+  }
+
+  return (
+    getPsychologistPaidOnboardingRequirementPath(data) ??
+    (!profile.whatsapp
+      ? PSYCHOLOGIST_ONBOARDING_PATHS.phone
+      : !profile.published
+        ? PSYCHOLOGIST_ONBOARDING_PATHS.profileSetup
+        : fallback)
+  );
 };

@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 48 tasks: `TASK-00` a `TASK-40`, `TASK-42` e `TASK-43`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B` e `TASK-31A` a `TASK-31C`.
+- A fila operacional agora possui 49 tasks: `TASK-00` a `TASK-40`, `TASK-42` a `TASK-44`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B` e `TASK-31A` a `TASK-31C`.
 
 ## Inventário visual ativo
 
@@ -123,6 +123,7 @@ ou cortesia manual.
 | 40 | [TASK-40 - Rotas publicas de psicologos e comunidades fora de /app](TASK-40-rotas-publicas-psicologos-comunidades.md) | Completed | 12, 13, 22, 23, 25, 26, 39 |
 | 42 | [TASK-42 - Layout de compartilhamento social para video-resposta](TASK-42-layout-compartilhamento-video-resposta.md) | Completed | 23, 26, 28, 29B |
 | 43 | [TASK-43 - Scrollbar mobile app-like em telas principais](TASK-43-scrollbar-mobile-telas-principais.md) | Completed | 12, 23, 25, 40 |
+| 44 | [TASK-44 - Verificação de registro retomável no fluxo pago](TASK-44-verificacao-registro-assinatura-retomavel.md) | Completed | 10, 16, 18A, 31, 32 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -139,6 +140,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 7. [TASK-40 - Rotas publicas de psicologos e comunidades fora de /app](TASK-40-rotas-publicas-psicologos-comunidades.md) foi adicionada e concluida em 2026-06-29 para tornar `/app` um namespace autenticado e expor leitura publica em `/psychologists` e `/community`.
 8. [TASK-42 - Layout de compartilhamento social para video-resposta](TASK-42-layout-compartilhamento-video-resposta.md) foi adicionada e concluida em 2026-06-30 para padronizar o SHARE de video-respostas profissionais em formato social vertical e quadrado.
 9. [TASK-43 - Scrollbar mobile app-like em telas principais](TASK-43-scrollbar-mobile-telas-principais.md) foi adicionada e concluida em 2026-07-01 para ocultar scrollbars visuais somente nos scrolls principais mobile/tablet de feed/comunidade e psicologos, preservando desktop e containers internos.
+10. [TASK-44 - Verificação de registro retomável no fluxo pago](TASK-44-verificacao-registro-assinatura-retomavel.md) foi adicionada e concluída em 2026-07-04 para diferenciar assinatura paga ativa de verificação CFP concluída, retomando `/app/professional/cfp`, bloqueando edição do perfil profissional pago pendente e removendo selo de verificado baseado apenas em pagamento.
 
 ### 1. Trilha executavel agora apos TASK-10
 

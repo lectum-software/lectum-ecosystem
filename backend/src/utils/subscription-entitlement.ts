@@ -50,3 +50,42 @@ export const activeProfessionalCourtesyEntitlementWhere =
     ...activeProfessionalEntitlementWhere(),
     source: "admin_grant",
   });
+
+export const verifiedProfessionalProfileWhere = (): Prisma.psychologist_profileWhereInput => ({
+  subscriptions: {
+    some: activeProfessionalEntitlementWhere(),
+  },
+  OR: [
+    {
+      cfp_verified_at: {
+        not: null,
+      },
+    },
+    {
+      subscriptions: {
+        some: activeProfessionalCourtesyEntitlementWhere(),
+      },
+    },
+  ],
+});
+
+export type ProfessionalVerificationProfile = {
+  cfp_verified_at?: Date | string | null;
+  subscriptions?: Array<{
+    id?: string | null;
+    source?: string | null;
+  }> | null;
+};
+
+export const isVerifiedProfessionalEntitlement = (
+  profile?: ProfessionalVerificationProfile | null,
+) => {
+  const subscriptions = profile?.subscriptions ?? [];
+  const hasProfessionalEntitlement = subscriptions.length > 0;
+  const hasRegistryVerification = Boolean(profile?.cfp_verified_at);
+  const hasAdministrativeCourtesy = subscriptions.some(
+    (subscription) => subscription.source === "admin_grant",
+  );
+
+  return hasProfessionalEntitlement && (hasRegistryVerification || hasAdministrativeCourtesy);
+};

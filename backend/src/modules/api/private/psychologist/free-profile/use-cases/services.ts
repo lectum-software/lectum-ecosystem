@@ -50,6 +50,16 @@ const normalizeList = (value?: string[]) => {
 const hasLockedProfessionalIdentityFields = (profile: FreeProfessionalProfileResponse) =>
   profile.profile.identity_fields_locked;
 
+const requiresPaidRegistryVerification = (profile: FreeProfessionalProfileResponse) =>
+  !profile.plan.is_free &&
+  profile.plan.source !== "admin_grant" &&
+  !profile.profile.cfp_verified_at;
+
+const paidRegistryVerificationRequired = () => ({
+  status: 403,
+  ...error("professional_registry_verification_required", {}),
+});
+
 const academicFormationSchema = z.object({
   title: z.string().trim().max(160).nullable().optional(),
   institution: z.string().trim().max(160).nullable().optional(),
@@ -203,6 +213,10 @@ export const show = async (data: IFreeProfessionalProfileShowDTO) => {
     };
   }
 
+  if (requiresPaidRegistryVerification(profile)) {
+    return paidRegistryVerificationRequired();
+  }
+
   return {
     status: 200,
     ...msg("show", {}),
@@ -236,6 +250,10 @@ export const update = async (data: IFreeProfessionalProfileUpdateDTO) => {
       status: 404,
       ...error("not_found", { model: "psychologist_profile" }),
     };
+  }
+
+  if (requiresPaidRegistryVerification(current)) {
+    return paidRegistryVerificationRequired();
   }
 
   const lockIdentityFields = hasLockedProfessionalIdentityFields(current);
@@ -396,6 +414,10 @@ export const uploadAvatar = async (data: IFreeProfessionalProfileUploadAvatarDTO
     };
   }
 
+  if (requiresPaidRegistryVerification(current)) {
+    return paidRegistryVerificationRequired();
+  }
+
   const avatarUrl = publicFileUrl(key);
   const updated = await repository.updateAvatar(data.auth.id!, avatarUrl);
 
@@ -425,6 +447,10 @@ export const removeAvatar = async (data: IFreeProfessionalProfileRemoveAvatarDTO
       status: 404,
       ...error("not_found", { model: "psychologist_profile" }),
     };
+  }
+
+  if (requiresPaidRegistryVerification(current)) {
+    return paidRegistryVerificationRequired();
   }
 
   const updated = await repository.removeAvatar(data.auth.id!);
@@ -462,6 +488,10 @@ export const uploadVideo = async (data: IFreeProfessionalProfileUploadVideoDTO) 
       status: 404,
       ...error("not_found", { model: "psychologist_profile" }),
     };
+  }
+
+  if (requiresPaidRegistryVerification(current)) {
+    return paidRegistryVerificationRequired();
   }
 
   if (!current.plan.can_upload_video) {
@@ -510,6 +540,10 @@ export const uploadCoverImage = async (data: IFreeProfessionalProfileUploadCover
     };
   }
 
+  if (requiresPaidRegistryVerification(current)) {
+    return paidRegistryVerificationRequired();
+  }
+
   const coverImageUrl = publicFileUrl(key);
   const updated = await repository.updateCoverImage(data.auth.id!, coverImageUrl);
 
@@ -547,6 +581,10 @@ export const uploadVideoCover = async (data: IFreeProfessionalProfileUploadVideo
       status: 404,
       ...error("not_found", { model: "psychologist_profile" }),
     };
+  }
+
+  if (requiresPaidRegistryVerification(current)) {
+    return paidRegistryVerificationRequired();
   }
 
   if (!current.plan.can_upload_video) {
@@ -587,6 +625,10 @@ export const removeCoverImage = async (data: IFreeProfessionalProfileRemoveCover
     };
   }
 
+  if (requiresPaidRegistryVerification(current)) {
+    return paidRegistryVerificationRequired();
+  }
+
   const updated = await repository.removeCoverImage(data.auth.id!);
 
   return {
@@ -614,6 +656,10 @@ export const removeVideo = async (data: IFreeProfessionalProfileRemoveVideoDTO) 
       status: 404,
       ...error("not_found", { model: "psychologist_profile" }),
     };
+  }
+
+  if (requiresPaidRegistryVerification(current)) {
+    return paidRegistryVerificationRequired();
   }
 
   if (!current.plan.can_upload_video) {

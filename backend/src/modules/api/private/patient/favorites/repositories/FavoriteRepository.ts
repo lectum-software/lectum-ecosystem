@@ -1,7 +1,11 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import { crpExperienceYears } from "@/utils/professional-experience";
-import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
+import {
+  activeProfessionalEntitlementWhere,
+  isVerifiedProfessionalEntitlement,
+  verifiedProfessionalProfileWhere,
+} from "@/utils/subscription-entitlement";
 import { buildLectumWhatsappUrl } from "@/utils/whatsapp-contact";
 import type {
   FavoriteActionResponse,
@@ -111,11 +115,7 @@ export class FavoriteRepository implements IFavoriteRepository {
           }
         : undefined,
       show_experience_tag: data.q.more_experienced ? true : undefined,
-      subscriptions: data.q.verified
-        ? {
-            some: activeProfessionalEntitlementWhere(),
-          }
-        : undefined,
+      AND: data.q.verified ? [verifiedProfessionalProfileWhere()] : undefined,
     };
     const psychologistWhere: Prisma.userWhereInput = {
       role: "psicologo",
@@ -252,11 +252,13 @@ export class FavoriteRepository implements IFavoriteRepository {
                   accepts_insurance: true,
                   show_experience_tag: true,
                   crp_registration_date: true,
+                  cfp_verified_at: true,
                   whatsapp: true,
                   subscriptions: {
                     where: activeProfessionalEntitlementWhere(),
                     select: {
                       id: true,
+                      source: true,
                     },
                     take: 1,
                   },
@@ -334,7 +336,7 @@ export class FavoriteRepository implements IFavoriteRepository {
             languages: normalizeStringArray(profile.languages),
             rating_avg: profile.rating_avg,
             rating_count: profile.rating_count,
-            verified: profile.subscriptions.length > 0,
+            verified: isVerifiedProfessionalEntitlement(profile),
             available_today: hasAvailableToday(profile.available_days),
             formation_years: crpExperienceYears(profile.crp_registration_date),
             discount_first_session: profile.discount_first_session,

@@ -111,3 +111,4 @@ Formato recomendado:
 - [ADR-0194 - Autoações do psicólogo fora de Analytics e notificações](0194-autoacoes-profissional-fora-de-analytics-notificacoes.md) - Accepted
 - [ADR-0195 - Autoacoes de pacientes em posts proprios sem notificacoes](0195-autoacoes-paciente-posts-sem-notificacoes.md) - Accepted
 - [ADR-0196 - Controles do card pertencem ao post mesmo com resposta destacada](0196-controles-post-feed-resposta-destacada.md) - Accepted
+- [ADR-0201 - Verificação CFP retomável no fluxo pago antes do perfil](0201-verificacao-cfp-retomavel-fluxo-pago.md) - Accepted

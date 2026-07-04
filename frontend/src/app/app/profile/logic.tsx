@@ -29,6 +29,10 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { formatCrpLabel } from "@/utils/crp";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import {
+  getActiveProfessionalSubscription,
+  isPaidRegistryVerificationComplete,
+} from "@/utils/psychologist-onboarding";
 
 type ProfileRow = {
   href?: string;
@@ -172,10 +176,12 @@ export const ProfileLogic = () => {
     ? formatCrpLabel(user.psychologist_profile.crp)
     : null;
   const profileGender = getPsychologistGender(user);
+  const activeProfessionalSubscription = getActiveProfessionalSubscription(
+    user.psychologist_profile,
+  );
   const hasVerifiedBadge = Boolean(
-    user.psychologist_profile?.subscriptions?.some(
-      (subscription) => subscription.status === "ativa" && subscription.plan?.slug !== "gratuito",
-    ),
+    activeProfessionalSubscription &&
+      isPaidRegistryVerificationComplete(user.psychologist_profile, activeProfessionalSubscription),
   );
   const showProfessionalUpgradeCard = Boolean(
     isPsychologist && (psychologistProfile.profile.data?.plan.is_free ?? !hasVerifiedBadge),

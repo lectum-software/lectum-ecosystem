@@ -12,7 +12,7 @@ export const loginInclude = () => ({
         orderBy: {
           createdAt: "desc" as const,
         },
-        take: 1,
+        take: 5,
       },
     },
   },

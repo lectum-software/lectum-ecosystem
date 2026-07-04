@@ -1,7 +1,11 @@
 ﻿import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import { crpExperienceYears } from "@/utils/professional-experience";
-import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
+import {
+  activeProfessionalEntitlementWhere,
+  isVerifiedProfessionalEntitlement,
+  verifiedProfessionalProfileWhere,
+} from "@/utils/subscription-entitlement";
 import { buildLectumWhatsappUrl } from "@/utils/whatsapp-contact";
 import type {
   DirectoryCatalogItem,
@@ -105,7 +109,8 @@ type RankingCandidate = {
   modality: string | null;
   rating_avg: number;
   rating_count: number;
-  subscriptions: { id: string }[];
+  cfp_verified_at: Date | null;
+  subscriptions: { id: string; source?: string | null }[];
   user: {
     id: string;
     avatar: string | null;
@@ -339,7 +344,7 @@ const mapGroupCounts = (groups: CountGroup[]) =>
 
 const calculateRanking = (candidate: RankingCandidate, context: RankingContext) => {
   const psychologistId = candidate.user.id;
-  const isVerified = candidate.subscriptions.length > 0;
+  const isVerified = isVerifiedProfessionalEntitlement(candidate);
   const videoStats = context.videoStats.get(psychologistId) ?? {
     score: DEFAULT_NEW_VIDEO_SCORE,
     qualifiedViews: 0,
@@ -500,11 +505,7 @@ export class IndexRepository implements IIndexRepository {
       discount_first_session: props.q.discount_first_session ? true : undefined,
       accepts_insurance: props.q.accepts_insurance ? true : undefined,
       social_value: props.q.social_value ? true : undefined,
-      subscriptions: props.q.verified
-        ? {
-            some: activeProfessionalEntitlementWhere(),
-          }
-        : undefined,
+      AND: props.q.verified ? [verifiedProfessionalProfileWhere()] : undefined,
       user: {
         active: true,
         deleted: false,
@@ -613,6 +614,7 @@ export class IndexRepository implements IIndexRepository {
             where: activeProfessionalEntitlementWhere(),
             select: {
               id: true,
+              source: true,
             },
             take: 1,
           },
@@ -740,7 +742,7 @@ export class IndexRepository implements IIndexRepository {
         languages: normalizeLanguages(item.languages),
         rating_avg: item.rating_avg,
         rating_count: item.rating_count,
-        verified: item.subscriptions.length > 0,
+        verified: isVerifiedProfessionalEntitlement(item),
         available_today: hasAvailableToday(item.available_days),
         formation_years: crpExperienceYears(item.crp_registration_date),
         discount_first_session: item.discount_first_session,

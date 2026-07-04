@@ -10,7 +10,10 @@ import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranki
 import { getPostIdsWithPsychologistReplies } from "@/utils/community-post-replies";
 import { getMutedPostIds } from "@/utils/post-notification-mute";
 import { crpExperienceYears } from "@/utils/professional-experience";
-import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
+import {
+  activeProfessionalEntitlementWhere,
+  isVerifiedProfessionalEntitlement,
+} from "@/utils/subscription-entitlement";
 import { buildLectumWhatsappUrl, type LectumWhatsappMessageSource } from "@/utils/whatsapp-contact";
 import type {
   DirectoryProfileCatalogItem,
@@ -59,6 +62,7 @@ const professionalProfileSelect = {
     where: activeProfessionalEntitlementWhere(),
     select: {
       id: true,
+      source: true,
     },
     take: 1,
   },
@@ -354,9 +358,12 @@ const anonymousDisplayNameForAuthor = (authorId: string) => {
   return `Membro Anônimo #${1000 + (hash % 9000)}`;
 };
 
-const isProfessionalVerified = (profile?: { cfp_verified_at: Date | null } | null) => {
-  return Boolean(profile?.cfp_verified_at);
-};
+const isProfessionalVerified = (
+  profile?: {
+    cfp_verified_at: Date | null;
+    subscriptions: { id?: string; source?: string | null }[];
+  } | null,
+) => isVerifiedProfessionalEntitlement(profile);
 
 const hasPaidProfessionalEntitlement = (profile?: { subscriptions: { id: string }[] } | null) => {
   return Boolean(profile?.subscriptions.length);
@@ -1084,6 +1091,7 @@ export class ProfileRepository implements IProfileRepository {
               where: activeProfessionalEntitlementWhere(),
               select: {
                 id: true,
+                source: true,
               },
               take: 1,
             },
@@ -1161,7 +1169,7 @@ export class ProfileRepository implements IProfileRepository {
       }),
       rating_avg: profile.rating_avg,
       rating_count: profile.rating_count,
-      verified: profile.subscriptions.length > 0,
+      verified: isProfessionalVerified(profile),
       available_today: hasAvailableToday(profile.available_days),
       formation_years: crpExperienceYears(profile.crp_registration_date),
       discount_first_session: profile.discount_first_session,

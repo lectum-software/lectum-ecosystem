@@ -1,6 +1,9 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
-import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
+import {
+  activeProfessionalEntitlementWhere,
+  isVerifiedProfessionalEntitlement,
+} from "@/utils/subscription-entitlement";
 import type {
   CreateReviewResponse,
   IReviewIndexDTO,
@@ -52,9 +55,10 @@ export class ReviewRepository implements IReviewRepository {
                   headline: true,
                   crp: true,
                   gender: true,
+                  cfp_verified_at: true,
                   subscriptions: {
                     where: activeProfessionalEntitlementWhere(),
-                    select: { id: true },
+                    select: { id: true, source: true },
                     take: 1,
                   },
                 },
@@ -75,8 +79,9 @@ export class ReviewRepository implements IReviewRepository {
         psychologist_headline: item.psychologist.psychologist_profile?.headline ?? null,
         psychologist_crp: item.psychologist.psychologist_profile?.crp ?? null,
         psychologist_gender: item.psychologist.psychologist_profile?.gender ?? null,
-        psychologist_verified:
-          (item.psychologist.psychologist_profile?.subscriptions.length || 0) > 0,
+        psychologist_verified: isVerifiedProfessionalEntitlement(
+          item.psychologist.psychologist_profile,
+        ),
         rating: item.rating,
         comment: item.comment,
         response: item.response,
@@ -121,9 +126,10 @@ export class ReviewRepository implements IReviewRepository {
             headline: true,
             crp: true,
             gender: true,
+            cfp_verified_at: true,
             subscriptions: {
               where: activeProfessionalEntitlementWhere(),
-              select: { id: true },
+              select: { id: true, source: true },
               take: 1,
             },
           },
@@ -138,7 +144,7 @@ export class ReviewRepository implements IReviewRepository {
       psychologist_headline: psychologist?.psychologist_profile?.headline ?? null,
       psychologist_crp: psychologist?.psychologist_profile?.crp ?? null,
       psychologist_gender: psychologist?.psychologist_profile?.gender ?? null,
-      psychologist_verified: (psychologist?.psychologist_profile?.subscriptions.length || 0) > 0,
+      psychologist_verified: isVerifiedProfessionalEntitlement(psychologist?.psychologist_profile),
       contact_request_id: null,
       existing_review_id: null,
     };
