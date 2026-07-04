@@ -171,32 +171,36 @@ export const ProfessionalBillingAddressLogic = () => {
           ) : null}
 
           {!isLoading && !billing.current.isError && activeProfessional ? (
-            <AddressForm
-              className="mt-8 grid gap-1 md:grid-cols-2 md:gap-x-4"
-              {...billingAddressForm.formProps}
-              onSubmit={submitAddress}
-            >
-              <InlineAlert className="md:col-span-2" title="Pagamento confirmado" variant="success">
-                <span className="inline-flex items-start gap-2">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                  Sua assinatura profissional está ativa. Agora salve o endereço de faturamento para
-                  seguir para o WhatsApp profissional.
+            <>
+              <div className="mt-6 flex justify-center">
+                <span
+                  className="inline-flex items-center gap-2 rounded-full border border-success/30 bg-success/10 px-4 py-2 text-sm font-extrabold text-success"
+                  role="status"
+                >
+                  <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                  Pagamento bem-sucedido
                 </span>
-              </InlineAlert>
+              </div>
 
-              <Button
-                className="mt-3 h-14 w-full rounded-full text-base md:col-span-2"
-                disabled={billing.address.isPending}
-                type="submit"
+              <AddressForm
+                className="mt-6 grid gap-1 md:grid-cols-2 md:gap-x-4"
+                {...billingAddressForm.formProps}
+                onSubmit={submitAddress}
               >
-                {billing.address.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                ) : (
-                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                )}
-                Salvar e continuar
-              </Button>
-            </AddressForm>
+                <Button
+                  className="mt-3 h-14 w-full rounded-full text-base md:col-span-2"
+                  disabled={billing.address.isPending}
+                  type="submit"
+                >
+                  {billing.address.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  )}
+                  Salvar e continuar
+                </Button>
+              </AddressForm>
+            </>
           ) : null}
         </div>
       </section>
