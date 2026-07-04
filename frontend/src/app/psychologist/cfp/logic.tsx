@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { type CfpSearchForm, useForm } from "./use-form";
 
-const nextStepHref = "/app/professional/profile/setup";
+const nextStepHref = "/app/professional/whatsapp/verify";
 
 type ApiErrorData = {
   error?: string;
@@ -107,6 +107,31 @@ const NotFoundScreen = ({ onRetry }: { onRetry: () => void }) => (
       <Link className="mt-4 inline-block text-sm font-medium text-muted" href="/app/profile">
         Problemas? Fale com o suporte
       </Link>
+    </div>
+  </PageFrame>
+);
+
+const AlreadyVerifiedScreen = ({ cpf }: { cpf?: string | null }) => (
+  <PageFrame>
+    <div className="flex flex-1 flex-col items-center justify-center text-center">
+      <div className="grid h-24 w-24 place-items-center rounded-full bg-success/10 text-success">
+        <ShieldCheck className="h-12 w-12" aria-hidden="true" />
+      </div>
+      <h2 className="mt-8 text-2xl font-bold">Registro já confirmado</h2>
+      <p className="mt-4 max-w-[320px] text-base leading-7 text-muted">
+        {cpf
+          ? `O CPF ${formatCpf(cpf)} já possui confirmação profissional via CFP.`
+          : "Seu cadastro profissional já possui confirmação real via CFP."}
+      </p>
+    </div>
+
+    <div className="sticky bottom-0 -mx-4 border-t border-border bg-surface px-4 py-5 text-center">
+      <Button asChild className="h-14 w-full rounded-full text-base shadow-lg">
+        <Link href={nextStepHref}>
+          Continuar para WhatsApp
+          <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        </Link>
+      </Button>
     </div>
   </PageFrame>
 );
@@ -343,6 +368,10 @@ export const PsychologistCfpLogic = () => {
     );
   }
 
+  if (currentUser?.psychologist_profile?.cfp_verified_at) {
+    return <AlreadyVerifiedScreen cpf={currentUser.psychologist_profile.cpf} />;
+  }
+
   return (
     <PageFrame>
       <div className="flex flex-1 flex-col">
@@ -402,12 +431,6 @@ export const PsychologistCfpLogic = () => {
           </div>
         </Form>
       </div>
-
-      {currentUser?.psychologist_profile?.cfp_verified_at ? (
-        <InlineAlert className="mt-5" title="Registro já confirmado" variant="success">
-          CPF {formatCpf(currentUser.psychologist_profile.cpf)} já possui confirmação CFP real.
-        </InlineAlert>
-      ) : null}
     </PageFrame>
   );
 };

@@ -28,6 +28,13 @@ export type psychologist_profile = {
   crp?: string | null;
   crp_status?: "pendente" | "em_analise" | "aprovado" | "rejeitado" | null;
   cfp_verified_at?: string | null;
+  professional_address_street?: string | null;
+  professional_address_number?: string | null;
+  professional_address_complement?: string | null;
+  professional_address_district?: string | null;
+  professional_address_zip?: string | null;
+  professional_address_city?: string | null;
+  professional_address_state?: string | null;
   whatsapp?: string | null;
   whatsapp_verified_at?: string | null;
   languages?: unknown;

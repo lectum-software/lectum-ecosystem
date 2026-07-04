@@ -16,15 +16,19 @@ export const isProfessionalSubscriptionActive = (subscription: SubscriptionLike)
   return subscription?.status === "ativa" && subscription.plan?.slug === "profissional";
 };
 
-export const getAfterPhoneVerificationPath = (subscription: SubscriptionLike) => {
-  if (isProfessionalSubscriptionActive(subscription)) {
-    return PSYCHOLOGIST_ONBOARDING_PATHS.cfp;
-  }
-
-  return PSYCHOLOGIST_ONBOARDING_PATHS.profileSetup;
-};
+export const getAfterPhoneVerificationPath = () => PSYCHOLOGIST_ONBOARDING_PATHS.profileSetup;
 
 export const getAfterPlanSelectionPath = () => PSYCHOLOGIST_ONBOARDING_PATHS.phone;
+
+const hasBillingAddress = (profile: NonNullable<user["psychologist_profile"]>) =>
+  Boolean(
+    profile.professional_address_street?.trim() &&
+      profile.professional_address_number?.trim() &&
+      profile.professional_address_district?.trim() &&
+      profile.professional_address_zip?.trim() &&
+      profile.professional_address_city?.trim() &&
+      profile.professional_address_state?.trim(),
+  );
 
 export const getPsychologistRegistrationEntryPath = (
   data: Partial<Pick<user, "role" | "psychologist_profile">> | null | undefined,
@@ -37,6 +41,14 @@ export const getPsychologistRegistrationEntryPath = (
 
   if (!profile || !currentSubscription || currentSubscription.status !== "ativa") {
     return PSYCHOLOGIST_ONBOARDING_PATHS.plans;
+  }
+
+  if (isProfessionalSubscriptionActive(currentSubscription) && !hasBillingAddress(profile)) {
+    return PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress;
+  }
+
+  if (isProfessionalSubscriptionActive(currentSubscription) && !profile.cfp_verified_at) {
+    return PSYCHOLOGIST_ONBOARDING_PATHS.cfp;
   }
 
   if (!profile.whatsapp) {

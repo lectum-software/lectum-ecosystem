@@ -39,6 +39,11 @@ export const usePsychologistCfp = ({ callbacks }: UsePsychologistCfpProps = {}) 
         predicate: (query) => query.queryKey[0] === "auth_hydrate",
       });
       queryClient.invalidateQueries({ queryKey: keys.psychologistCfp.root() });
+      queryClient.invalidateQueries({ queryKey: keys.psychologistFreeProfile.root() });
+      queryClient.invalidateQueries({ queryKey: keys.directory.psychologistsRoot() });
+      queryClient.invalidateQueries({
+        predicate: (query) => query.queryKey[0] === "directory_psychologist",
+      });
       callbacks?.confirm?.onSuccess?.(data);
     },
     onError: callbacks?.confirm?.onError,
