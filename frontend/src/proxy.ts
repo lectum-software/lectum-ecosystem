@@ -9,6 +9,7 @@ const USER_COOKIE_NAME = process.env.NEXT_PUBLIC_USER_LOCAL || "lectum.user";
 
 const PUBLIC_ROUTES = ["/auth/profile-selection", "/auth/login", "/auth/redirect", "/auth/error"];
 const AUTH_REQUIRED_ROUTES = ["/auth/verify-email"];
+const AUTH_RESULT_ROUTES = ["/auth/redirect", "/auth/error"];
 const PRIVATE_PREFIXES = [DASHBOARD_PATH, APP_PATH, "/patient"];
 const INLINE_AUTH_PROMPT_ROUTES = ["/app/favorites", "/app/notifications", "/app/profile"];
 const PUBLIC_APP_EXACT_ROUTES = [
@@ -27,6 +28,13 @@ const isPublicCommunityRoute = (pathname: string) => {
   if (pathname.includes("/post/success")) return false;
 
   return true;
+};
+
+const clearRootCookie = (response: NextResponse, name: string) => {
+  response.cookies.set(name, "", {
+    maxAge: 0,
+    path: "/",
+  });
 };
 
 const hasPendingEmailConfirmation = (req: NextRequest) => {
@@ -63,8 +71,20 @@ export function proxy(req: NextRequest) {
     PUBLIC_APP_PREFIXES.some((prefix) => pathname.startsWith(prefix));
   const isPublicRoute = PUBLIC_ROUTES.includes(pathname) || isPublicAppRoute;
   const isAuthRequiredRoute = AUTH_REQUIRED_ROUTES.includes(pathname);
+  const isAuthResultRoute = AUTH_RESULT_ROUTES.includes(pathname);
   const isPrivateRoute = PRIVATE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
   const isInlineAuthPromptRoute = INLINE_AUTH_PROMPT_ROUTES.includes(pathname);
+
+  if (isAuthResultRoute) {
+    const response = NextResponse.next();
+
+    if (pathname === "/auth/error" && req.nextUrl.searchParams.get("clearSession") === "1") {
+      clearRootCookie(response, TOKEN_COOKIE_NAME);
+      clearRootCookie(response, USER_COOKIE_NAME);
+    }
+
+    return response;
+  }
 
   if (pendingEmailConfirmation && !isAuthRequiredRoute && (isAuthRoute || isPrivateRoute)) {
     return NextResponse.redirect(new URL("/auth/verify-email", req.url));

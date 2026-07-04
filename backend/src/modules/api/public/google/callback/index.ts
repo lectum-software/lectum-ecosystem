@@ -61,6 +61,16 @@ const resolveDeleteAccountCallbackUrl = (query: GoogleCallbackQuery, user: Googl
   return new URL(`${url.pathname}${url.search}${url.hash}`, frontendOrigin).toString();
 };
 
+const resolveFailureCallbackUrl = (fallbackPath: string, message: string) => {
+  const isAbsolute = /^https?:\/\//i.test(fallbackPath);
+  const url = new URL(fallbackPath, "https://lectum.local");
+
+  url.searchParams.set("error", message);
+  url.searchParams.set("clearSession", "1");
+
+  return isAbsolute ? url.toString() : `${url.pathname}${url.search}${url.hash}`;
+};
+
 const parseGoogleStateQuery = (state: unknown) => {
   const query: GoogleCallbackQuery = {};
   const params = new URLSearchParams();
@@ -107,11 +117,11 @@ routes.get("", passport.authenticate("google", { failureRedirect: "/" }), (_req,
 
   if (!user?.success) {
     const fallbackPath = failPath || process.env.CALLBACK_URL_API_USER || "/";
-    const separator = fallbackPath.includes("?") ? "&" : "?";
     return res.redirect(
-      `${fallbackPath}${separator}error=${encodeURIComponent(
+      resolveFailureCallbackUrl(
+        fallbackPath,
         user?.error || "N\u00e3o foi poss\u00edvel concluir a autentica\u00e7\u00e3o com o Google.",
-      )}`,
+      ),
     );
   }
 

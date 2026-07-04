@@ -24,6 +24,7 @@ const getAll = () => {
 };
 
 const remove = (key: string) => {
+  Cookies.remove(key, options);
   Cookies.remove(key);
 };
 

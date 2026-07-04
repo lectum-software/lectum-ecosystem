@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { useAuth } from "@/api/callers/auth";
 import type { user } from "@/api/generator/types";
 import { Logo } from "@/components/ui/logo";
-import { getToken } from "@/hooks/cookies/token";
 import { useUserSet } from "@/hooks/user-set";
 import { CenterTemplate } from "@/templates/center";
 
@@ -32,12 +31,10 @@ export const RedirectLogic = () => {
       googleMe: {
         onSuccess: setter,
         onError: (error) => {
-          if (getToken()) return;
-
           const message =
             error instanceof Error ? error.message : "Nao foi possivel concluir o login";
           toast.error(message);
-          window.location.href = "/auth/login";
+          window.location.href = `/auth/error?error=${encodeURIComponent(message)}&clearSession=1`;
         },
       },
     },
