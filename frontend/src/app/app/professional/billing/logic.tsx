@@ -167,9 +167,7 @@ const PaymentHistoryCard = ({ items }: { items: BillingPaymentHistoryItem[] }) =
       </span>
       <div>
         <h2 className="text-base font-extrabold text-foreground">Histórico de pagamentos</h2>
-        <p className="mt-1 text-sm leading-6 text-muted">
-          Cobranças e eventos confirmados pelo Mercado Pago.
-        </p>
+        <p className="mt-1 text-sm leading-6 text-muted">Cobranças confirmadas.</p>
       </div>
     </div>
 
@@ -210,7 +208,7 @@ const PaymentHistoryCard = ({ items }: { items: BillingPaymentHistoryItem[] }) =
       <div className="mt-4 rounded-[var(--lectum-card-radius)] border border-border bg-surface-muted p-4">
         <p className="text-sm font-extrabold text-foreground">Nenhum pagamento registrado ainda</p>
         <p className="mt-1 text-sm leading-6 text-muted">
-          Quando o Mercado Pago confirmar cobranças reais, elas aparecerão aqui.
+          Quando cobranças forem confirmadas, elas aparecerão aqui.
         </p>
       </div>
     )}
