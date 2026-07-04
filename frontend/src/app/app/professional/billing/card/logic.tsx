@@ -1,15 +1,7 @@
 ﻿"use client";
 
 import { CardPayment, initMercadoPago } from "@mercadopago/sdk-react";
-import {
-  ArrowRight,
-  BadgeCheck,
-  CheckCircle2,
-  CreditCard,
-  LockKeyhole,
-  RefreshCw,
-  ShieldCheck,
-} from "lucide-react";
+import { ArrowRight, CheckCircle2, CreditCard } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef } from "react";
@@ -106,21 +98,6 @@ const PaymentMethodPreview = ({
   );
 };
 
-const SecurityNote = () => (
-  <div className="grid gap-3 rounded-[var(--lectum-card-radius)] border border-primary/15 bg-primary-soft p-4 text-sm leading-6 text-muted">
-    <div className="flex gap-3">
-      <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
-      <span>
-        A Lectum recebe somente o token temporário do Mercado Pago para atualizar a assinatura.
-      </span>
-    </div>
-    <div className="flex gap-3">
-      <LockKeyhole className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
-      <span>Número completo do cartão e CVV não são armazenados pela Lectum.</span>
-    </div>
-  </div>
-);
-
 export const ProfessionalBillingCardLogic = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -180,6 +157,9 @@ export const ProfessionalBillingCardLogic = () => {
         hideFormTitle: true,
         style: {
           theme: "default",
+        },
+        texts: {
+          formSubmit: "Alterar cartão",
         },
       },
     }),
@@ -270,14 +250,6 @@ export const ProfessionalBillingCardLogic = () => {
               </div>
 
               <PaymentMethodPreview paymentMethod={paymentMethod} />
-              <SecurityNote />
-
-              <Button asChild className="h-11 rounded-full" variant="outline">
-                <Link href="/app/professional/billing">
-                  Voltar para assinatura
-                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                </Link>
-              </Button>
             </aside>
 
             <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)] md:p-6">
@@ -314,7 +286,7 @@ export const ProfessionalBillingCardLogic = () => {
                   <div className="rounded-[var(--lectum-card-radius)] bg-surface-muted p-4">
                     <div className="flex gap-3">
                       <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-                        <BadgeCheck className="h-5 w-5" aria-hidden="true" />
+                        <CreditCard className="h-5 w-5" aria-hidden="true" />
                       </span>
                       <div>
                         <h2 className="text-xl font-extrabold text-foreground">
@@ -371,20 +343,6 @@ export const ProfessionalBillingCardLogic = () => {
                       {getErrorMessage(billing.paymentMethod.error)}
                     </InlineAlert>
                   ) : null}
-
-                  <Button
-                    className="h-12 rounded-full"
-                    disabled={subscriptionQuery.isFetching}
-                    onClick={() => subscriptionQuery.refetch()}
-                    type="button"
-                    variant="outline"
-                  >
-                    <RefreshCw
-                      className={cn("h-4 w-4", subscriptionQuery.isFetching && "animate-spin")}
-                      aria-hidden="true"
-                    />
-                    Atualizar assinatura
-                  </Button>
                 </div>
               )}
             </div>

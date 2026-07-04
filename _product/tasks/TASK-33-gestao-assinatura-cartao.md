@@ -194,3 +194,18 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir frontend build`
 - Validação de fonte via PowerShell confirmando o CTA `Fazer upgrade` com `href={PSYCHOLOGIST_ONBOARDING_PATHS.checkout}`.
 - Smoke local com `next start --port 3105`: `/app/professional/billing/checkout` retornou `307` para login sem sessão e `/auth/login` retornou `200`.
+
+## Ajuste de UI em 2026-07-04: tela de alteração de cartão mais direta
+
+- Pedido direto de produto: remover da rota `/app/professional/billing/card` a faixa informativa azul com a copy "A Lectum recebe somente o token...", remover o botão **Voltar para assinatura**, remover o botão **Atualizar assinatura** e trocar o texto do botão do Card Payment Brick de **Pagar** para **Alterar cartão**.
+- A chamada de alteração de cartão continua usando o Card Payment Brick real do Mercado Pago, restrito a `credit_card`, sem coletar PAN/CVV fora do provedor.
+- O ícone do bloco **Novo cartão de crédito** passou a ser `CreditCard`, mantendo `lucide-react` e evitando novo package.
+- Referência visual local consultada: `_product/proto/Alterar cartão de crédito.jpg`; Builder/Quick Copy não está exposto como ferramenta direta neste ambiente.
+- ADR registrado: `adrs/0208-alterar-cartao-acao-enxuta.md`.
+
+### Validação do ajuste de UI
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke local com `next start --port 3106`: `/app/professional/billing/card` retornou `307` para login sem sessão, preservando a proteção da rota privada; `/auth/login` retornou `200`.
+
