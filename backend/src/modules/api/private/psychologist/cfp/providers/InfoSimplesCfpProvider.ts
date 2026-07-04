@@ -1,7 +1,9 @@
 ﻿import type { CfpResult, CfpSearchBody } from "../DTOs/ICfpDTO";
 
 const INFOSIMPLES_CFP_ENDPOINT = "https://api.infosimples.com/api/v2/consultas/cfp/cadastro";
-const REQUEST_TIMEOUT_MS = 20_000;
+const DEFAULT_REQUEST_TIMEOUT_MS = 90_000;
+const MIN_REQUEST_TIMEOUT_MS = 30_000;
+const MAX_REQUEST_TIMEOUT_MS = 180_000;
 
 type InfoSimplesPayload = {
   code?: number;
@@ -19,8 +21,44 @@ type InfoSimplesSearchParams = CfpSearchBody & {
 export type InfoSimplesCfpResponse = {
   code: number | null;
   code_message: string | null;
+  content_type: string | null;
+  elapsed_ms: number;
+  http_status: number;
   raw: InfoSimplesPayload;
   results: CfpResult[];
+};
+
+export type InfoSimplesCfpProviderErrorReason = "invalid_json" | "network" | "timeout";
+
+type InfoSimplesCfpProviderErrorContext = {
+  contentType?: string | null;
+  elapsedMs?: number;
+  httpStatus?: number;
+  timeoutMs?: number;
+};
+
+export class InfoSimplesCfpProviderError extends Error {
+  readonly context: InfoSimplesCfpProviderErrorContext;
+  readonly reason: InfoSimplesCfpProviderErrorReason;
+
+  constructor(
+    reason: InfoSimplesCfpProviderErrorReason,
+    message: string,
+    context: InfoSimplesCfpProviderErrorContext = {},
+  ) {
+    super(message);
+    this.name = "InfoSimplesCfpProviderError";
+    this.reason = reason;
+    this.context = context;
+  }
+}
+
+const resolveRequestTimeoutMs = () => {
+  const configured = Number(process.env.DOCUMENT_REQUEST_TIMEOUT_MS);
+
+  if (!Number.isFinite(configured) || configured <= 0) return DEFAULT_REQUEST_TIMEOUT_MS;
+
+  return Math.min(Math.max(Math.trunc(configured), MIN_REQUEST_TIMEOUT_MS), MAX_REQUEST_TIMEOUT_MS);
 };
 
 const toText = (value: unknown): string | null => {
@@ -121,7 +159,9 @@ export const normalizeCfpResults = (payload: InfoSimplesPayload): CfpResult[] =>
 export class InfoSimplesCfpProvider {
   async search(params: InfoSimplesSearchParams): Promise<InfoSimplesCfpResponse> {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    const timeoutMs = resolveRequestTimeoutMs();
+    const startedAt = Date.now();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
       const response = await fetch(INFOSIMPLES_CFP_ENDPOINT, {
@@ -133,14 +173,46 @@ export class InfoSimplesCfpProvider {
         signal: controller.signal,
       });
 
-      const raw = (await response.json()) as InfoSimplesPayload;
+      const contentType = response.headers.get("content-type");
+      const responseText = await response.text();
+      let raw: InfoSimplesPayload;
+
+      try {
+        raw = JSON.parse(responseText) as InfoSimplesPayload;
+      } catch {
+        throw new InfoSimplesCfpProviderError(
+          "invalid_json",
+          "InfoSimples CFP returned a non-JSON response.",
+          {
+            contentType,
+            elapsedMs: Date.now() - startedAt,
+            httpStatus: response.status,
+          },
+        );
+      }
 
       return {
         code: typeof raw.code === "number" ? raw.code : null,
         code_message: typeof raw.code_message === "string" ? raw.code_message : null,
+        content_type: contentType,
+        elapsed_ms: Date.now() - startedAt,
+        http_status: response.status,
         raw,
         results: normalizeCfpResults(raw),
       };
+    } catch (err) {
+      if (err instanceof InfoSimplesCfpProviderError) throw err;
+
+      if (err instanceof Error && err.name === "AbortError") {
+        throw new InfoSimplesCfpProviderError("timeout", "InfoSimples CFP request timed out.", {
+          elapsedMs: Date.now() - startedAt,
+          timeoutMs,
+        });
+      }
+
+      throw new InfoSimplesCfpProviderError("network", "InfoSimples CFP request failed.", {
+        elapsedMs: Date.now() - startedAt,
+      });
     } finally {
       clearTimeout(timer);
     }

@@ -232,3 +232,9 @@ Todos os criterios aplicaveis foram atendidos. A confirmacao real de um CPF prof
 - Caso real validado sem expor `DOCUMENT_TOKEN`: a InfoSimples retornou `code=603` para `cfp/cadastro`, indicando token sem autorizacao de acesso ao servico ou limite de uso especificado.
 - O backend passa a tratar `code=603` como erro de configuracao/acesso do provedor (`cfp_provider_config_error`), e nao como rate limit temporario disparado pela palavra "limite" da mensagem do fornecedor.
 - A correcao nao cria fallback, mock ou aprovacao manual automatica: sem token/contrato/saldo autorizados no provedor, `cfp_verified_at` permanece nulo e o fluxo deve ser resolvido operacionalmente na InfoSimples.
+
+## Correcao de timeout InfoSimples em 2026-07-04
+
+- Caso real validado sem expor `DOCUMENT_TOKEN` nem payload bruto: a consulta CFP por CPF ultrapassou o timeout local anterior de 20s; com janela maior, a InfoSimples retornou `code=609` apos cerca de 51s, indicando tentativas excedidas na origem CFP, nao problema de saldo.
+- O provider InfoSimples CFP passa a usar timeout padrao de 90s, configuravel por `DOCUMENT_REQUEST_TIMEOUT_MS`, e registra logs sanitizados de erro operacional.
+- `code=609` passa a ser indisponibilidade temporaria (`cfp_provider_unavailable`) em vez de rate limit/saldo; o fluxo permanece sem mock e sem aprovacao automatica quando a origem falha.

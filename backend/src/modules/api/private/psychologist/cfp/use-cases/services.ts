@@ -6,7 +6,11 @@ import type {
   ICfpSearchDTO,
   StoredRegistryCheckRaw,
 } from "../DTOs/ICfpDTO";
-import { InfoSimplesCfpProvider, normalizeCfpResults } from "../providers/InfoSimplesCfpProvider";
+import {
+  InfoSimplesCfpProvider,
+  InfoSimplesCfpProviderError,
+  normalizeCfpResults,
+} from "../providers/InfoSimplesCfpProvider";
 import { CfpRepository } from "../repositories/CfpRepository";
 
 const normalizeDigits = (value?: string | null) => (value || "").replace(/\D/g, "");
@@ -19,9 +23,26 @@ const normalizeUf = (value?: string | null) => normalizeText(value)?.toUpperCase
 const isProviderConfigError = (code: number | null) => code === 601 || code === 602 || code === 603;
 const isProviderValidationError = (code: number | null) => code === 606;
 const isProviderNotFound = (code: number | null) => code === 612;
+const isProviderUnavailable = (code: number | null) => code === 609;
 const isProviderRateLimit = (code: number | null, message: string | null) => {
   const text = (message || "").toLowerCase();
-  return code === 609 || code === 610 || text.includes("limite") || text.includes("saldo");
+  if (isProviderUnavailable(code)) return false;
+
+  return code === 610 || text.includes("limite") || text.includes("saldo");
+};
+
+const logProviderUnavailable = (err: unknown) => {
+  if (err instanceof InfoSimplesCfpProviderError) {
+    console.error("[CFP_PROVIDER_UNAVAILABLE]", {
+      context: err.context,
+      reason: err.reason,
+    });
+    return;
+  }
+
+  console.error("[CFP_PROVIDER_UNAVAILABLE]", {
+    name: err instanceof Error ? err.name : typeof err,
+  });
 };
 
 const asStoredRaw = (value: unknown): StoredRegistryCheckRaw | null => {
@@ -52,7 +73,7 @@ export const search = async (data: ICfpSearchDTO) => {
     };
   }
 
-  const token = process.env.DOCUMENT_TOKEN;
+  const token = process.env.DOCUMENT_TOKEN?.trim();
   if (!token) {
     return {
       status: 503,
@@ -101,7 +122,9 @@ export const search = async (data: ICfpSearchDTO) => {
       token,
       ...request,
     });
-  } catch (_err) {
+  } catch (err) {
+    logProviderUnavailable(err);
+
     return {
       status: 502,
       ...error("cfp_provider_unavailable", {}),
@@ -119,6 +142,19 @@ export const search = async (data: ICfpSearchDTO) => {
     return {
       status: 400,
       ...error("cfp_provider_validation_error", {}),
+    };
+  }
+
+  if (isProviderUnavailable(response.code)) {
+    console.error("[CFP_PROVIDER_UNAVAILABLE]", {
+      elapsedMs: response.elapsed_ms,
+      httpStatus: response.http_status,
+      providerCode: response.code,
+    });
+
+    return {
+      status: 502,
+      ...error("cfp_provider_unavailable", {}),
     };
   }
 

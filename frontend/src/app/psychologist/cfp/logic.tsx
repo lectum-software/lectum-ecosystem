@@ -118,7 +118,7 @@ const LoadingScreen = () => (
   <PageFrame>
     <PremiumPanel className="md:max-w-3xl md:justify-self-center">
       <CfpHero
-        description="Estamos verificando suas informações no Conselho Federal de Psicologia. Isso pode levar alguns segundos."
+        description="Estamos verificando suas informações no Conselho Federal de Psicologia. A consulta real pode levar até um minuto."
         title="Consultando seus dados"
       />
       <div className="mx-auto mt-8 grid max-w-md justify-items-center gap-4 rounded-[24px] border border-border bg-surface-muted px-5 py-6 text-center">
