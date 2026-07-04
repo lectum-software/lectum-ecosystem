@@ -2,7 +2,6 @@
 
 import {
   ArrowRight,
-  BadgeCheck,
   CheckCircle2,
   FileQuestion,
   Loader2,
@@ -111,6 +110,28 @@ const shouldShowCfpSupportGuidance = (error?: ResolvedApiError | null) =>
       ((error.code && supportableCfpErrorCodes.has(error.code)) ||
         (typeof error.status === "number" && error.status >= 500)),
   );
+
+const formatCfpRegistrationDate = (value?: string | null) => {
+  const rawValue = value?.trim();
+
+  if (!rawValue) return "Não informada";
+
+  const alreadyFormattedDate = rawValue.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (alreadyFormattedDate) return rawValue;
+
+  const isoDate = rawValue.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoDate) {
+    const [, year, month, day] = isoDate;
+    return `${day}/${month}/${year}`;
+  }
+
+  const parsedDate = new Date(rawValue);
+  if (!Number.isNaN(parsedDate.getTime())) {
+    return new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(parsedDate);
+  }
+
+  return rawValue;
+};
 
 const SupportFooterLink = () => (
   <p className="px-2 text-center text-sm font-medium text-muted">
@@ -332,11 +353,14 @@ const ResultCard = ({
           </span>
         }
       />
-      <ResultField label="Data de inscrição" value={result.data_inscricao || "Não informada"} />
+      <ResultField
+        label="Data de inscrição"
+        value={formatCfpRegistrationDate(result.data_inscricao)}
+      />
     </div>
 
     <p className="mt-5 border-border border-t pt-5 text-sm leading-6 text-muted">
-      Dados retornados pela consulta pública do CFP via InfoSimples.
+      Dados retornados pela consulta pública do CFP.
     </p>
   </button>
 );
@@ -365,7 +389,6 @@ const ResultsScreen = ({
       <PremiumPanel>
         <CfpHero
           description="Encontramos o registro abaixo no Conselho Federal de Psicologia. Confirme se os dados pertencem a você para ativar a validação profissional."
-          icon={BadgeCheck}
           title="Confirme seu registro"
         />
 
