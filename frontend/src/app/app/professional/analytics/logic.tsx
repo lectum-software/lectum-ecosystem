@@ -829,7 +829,7 @@ const getRetentionHealth = ({
   if (views <= 0) {
     return {
       description:
-        "Assim que o vídeo receber visualizações reais, mostraremos uma leitura simples do desempenho.",
+        "Assim que o vídeo receber visualizações reais, mostraremos uma leitura do desempenho.",
       label: "Aguardando dados",
     };
   }
