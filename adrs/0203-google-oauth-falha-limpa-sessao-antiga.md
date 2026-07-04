@@ -22,12 +22,14 @@ O mesmo risco existia no retorno bem-sucedido `/auth/redirect`: uma sessão ante
 - Em falhas do callback Google, redirecionar para `/auth/error` com `clearSession=1`.
 - Quando `clearSession=1` estiver presente, o proxy remove os cookies frontend `lectum.token` e `lectum.user` com `Path=/`.
 - A página `/auth/error` também limpa token/user client-side, remove o `persist:lectum` do Redux Persist e despacha remoção do usuário em memória.
+- A página `/auth/error` oferece CTA primário de cadastro para `/auth/profile-selection`, preservando `redirectTo`/`callbackUrl` quando disponíveis, e mantém o retorno ao login como ação secundária.
 - O erro no consumo de `/api/public/google/me` em `/auth/redirect` deixa de ficar parado quando existe token antigo e passa a ir para `/auth/error?clearSession=1`.
 - A remoção genérica de cookies frontend passa a chamar `Cookies.remove` com os mesmos atributos usados no `set`, além da remoção padrão, para reduzir retenção de cookie antigo em HTTPS/ngrok.
 
 ## Consequências
 
 - Login Google com e-mail não cadastrado mostra erro honesto em vez de reutilizar uma sessão anterior.
+- Conta Google não cadastrada passa a ter caminho direto para cadastro na própria tela de erro.
 - Troca de conta Google consegue passar por `/auth/redirect` mesmo quando havia token frontend antigo.
 - Falhas reais de OAuth encerram a sessão local antiga para evitar que o usuário continue navegando com uma identidade diferente da escolhida no provedor.
 - Usuários que acessarem manualmente `/auth/redirect` sem cookie temporário válido podem ser enviados para `/auth/error` e ter a sessão local limpa; a rota é técnica e não deve ser usada como navegação normal.
@@ -40,6 +42,7 @@ O mesmo risco existia no retorno bem-sucedido `/auth/redirect`: uma sessão ante
 - `pnpm --dir backend build`
 - `pnpm --dir frontend build`
 - Validação local com `next start -p 3100`: requisição a `/auth/error?error=Conta%20n%C3%A3o%20cadastrada&clearSession=1` contendo cookies `lectum.token` e `lectum.user` retornou `200` e `Set-Cookie` removendo ambos com `Path=/; Max-Age=0`.
+- Revalidação em 2026-07-04: CTA de cadastro adicionado em `/auth/error`.
 
 ## Pendências
 

@@ -7,15 +7,30 @@ import { AuthErrorSessionReset } from "./session-reset";
 
 type PageProps = {
   searchParams: Promise<{
+    callbackUrl?: string;
     clearSession?: string;
     error?: string;
+    redirectTo?: string;
   }>;
+};
+
+const buildSignupHref = (redirectTo?: string, callbackUrl?: string) => {
+  const params = new URLSearchParams();
+  const returnTo = redirectTo || callbackUrl;
+
+  if (returnTo) {
+    params.set("redirectTo", returnTo);
+  }
+
+  const queryString = params.toString();
+  return queryString ? `/auth/profile-selection?${queryString}` : "/auth/profile-selection";
 };
 
 export default async function Page({ searchParams }: PageProps) {
   const params = await searchParams;
   const error = params.error || "Não foi possível concluir o login.";
   const shouldResetSession = params.clearSession === "1";
+  const signupHref = buildSignupHref(params.redirectTo, params.callbackUrl);
 
   return (
     <CenterTemplate>
@@ -28,9 +43,14 @@ export default async function Page({ searchParams }: PageProps) {
           <h1 className="text-xl font-bold text-foreground">Erro no login</h1>
           <p className="text-sm leading-6 text-muted">{error}</p>
         </div>
-        <Button asChild className="w-full">
-          <Link href="/auth/login">Voltar para o login</Link>
-        </Button>
+        <div className="grid w-full gap-2">
+          <Button asChild className="w-full">
+            <Link href={signupHref}>Criar conta</Link>
+          </Button>
+          <Button asChild className="w-full" variant="outline">
+            <Link href="/auth/login">Voltar para o login</Link>
+          </Button>
+        </div>
       </div>
     </CenterTemplate>
   );
