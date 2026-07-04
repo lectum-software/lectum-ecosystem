@@ -1,16 +1,9 @@
 "use client";
 
 import { CardPayment, initMercadoPago } from "@mercadopago/sdk-react";
-import {
-  ArrowLeft,
-  ArrowRight,
-  CheckCircle2,
-  CreditCard,
-  Loader2,
-  RefreshCw,
-  ShieldCheck,
-} from "lucide-react";
+import { ArrowLeft, CreditCard, RefreshCw } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
@@ -116,23 +109,11 @@ const SummaryCard = ({ plan }: { plan: SubscriptionPlan }) => (
         <span className="pb-1 text-sm font-semibold text-muted">/mês</span>
       </div>
     </div>
-
-    <div className="mt-5 grid gap-3 text-sm text-muted">
-      <div className="flex gap-2">
-        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-        <span>
-          Cartão de crédito tokenizado pelo Mercado Pago. PAN e CVV não passam pela Lectum.
-        </span>
-      </div>
-      <div className="flex gap-2">
-        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-        <span>A ativação só acontece após webhook confirmado do gateway.</span>
-      </div>
-    </div>
   </aside>
 );
 
 export const ProfessionalBillingCheckoutLogic = () => {
+  const router = useRouter();
   const userEmail = useAppSelector((state) => state.user?.email || "");
   const payerEmail = resolveMercadoPagoPayerEmail(userEmail);
   const [checkoutResult, setCheckoutResult] = useState<BillingCheckoutResponse | null>(null);
@@ -141,7 +122,6 @@ export const ProfessionalBillingCheckoutLogic = () => {
       checkout: {
         onSuccess: (data: BillingCheckoutResponse) => {
           setCheckoutResult(data);
-          toast.success("Pagamento enviado para confirmação segura");
         },
       },
     }),
@@ -165,7 +145,8 @@ export const ProfessionalBillingCheckoutLogic = () => {
     currentRefetchRef.current = currentRefetch;
   }, [currentRefetch, syncMutateAsync]);
 
-  const isLoading = billing.plans.isLoading || billing.current.isLoading;
+  const isCurrentSubscriptionLoading = billing.current.isLoading;
+  const isLoading = billing.plans.isLoading || isCurrentSubscriptionLoading;
   const hasError = billing.plans.isError || billing.current.isError;
   const professionalPlan = billing.plans.data?.plans.find((plan) => plan.slug === "profissional");
   const current = billing.current.data?.current ?? null;
@@ -175,6 +156,12 @@ export const ProfessionalBillingCheckoutLogic = () => {
   const amount = professionalPlan ? professionalPlan.price_cents / 100 : 0;
   const canRenderCardPayment = Boolean(publicKey && amount > 0 && payerEmail);
   const cardPaymentKey = `${payerEmail || "anonymous"}-${amount}`;
+
+  useEffect(() => {
+    if (isCurrentSubscriptionLoading || !activeProfessional) return;
+
+    router.replace(PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress);
+  }, [activeProfessional, isCurrentSubscriptionLoading, router]);
 
   const initialization = useMemo(
     () => ({
@@ -286,6 +273,16 @@ export const ProfessionalBillingCheckoutLogic = () => {
     };
   }, [activeProfessional, pendingProfessional]);
 
+  if (!isCurrentSubscriptionLoading && activeProfessional) {
+    return (
+      <PrivateTemplate showHeader={false}>
+        <section className="mx-auto grid min-h-[55vh] w-full max-w-[430px] place-items-center">
+          <LoadingState label="Redirecionando para endereço" />
+        </section>
+      </PrivateTemplate>
+    );
+  }
+
   return (
     <PrivateTemplate showHeader={false}>
       <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-5xl">
@@ -334,100 +331,64 @@ export const ProfessionalBillingCheckoutLogic = () => {
             <SummaryCard plan={professionalPlan} />
 
             <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)] md:p-6">
-              {activeProfessional ? (
-                <div className="grid gap-5 text-center">
-                  <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-success/10 text-success">
-                    <CheckCircle2 className="h-8 w-8" aria-hidden />
-                  </span>
-                  <div>
-                    <h2 className="text-2xl font-bold text-foreground">Assinatura ativa</h2>
-                    <p className="mt-2 text-base leading-7 text-muted">
-                      Seu Plano Profissional já está ativo. Continue para informar o endereço de
-                      faturamento e finalizar o onboarding profissional.
-                    </p>
+              <div className="grid gap-5">
+                {!publicKey ? (
+                  <InlineAlert title="Public key do Mercado Pago ausente" variant="error">
+                    Configure `NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY` no frontend para carregar o Card
+                    Payment Brick real. Sem essa chave, a Lectum não coleta cartão nem simula
+                    cobrança.
+                  </InlineAlert>
+                ) : null}
+
+                {publicKey && amount > 0 && !payerEmail ? (
+                  <InlineAlert title="E-mail do pagador ausente" variant="error">
+                    Recarregue a sessão antes de abrir o formulário de cartão. O Mercado Pago
+                    precisa do e-mail autenticado para tokenizar o pagamento.
+                  </InlineAlert>
+                ) : null}
+
+                {canRenderCardPayment ? (
+                  <div
+                    className={cn(
+                      "rounded-3xl border border-border bg-surface-muted p-3 md:p-4",
+                      billing.checkout.isPending && "pointer-events-none opacity-70",
+                    )}
+                  >
+                    <div className="mb-4 rounded-2xl bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
+                      <h2 className="text-xl font-bold text-foreground">Cartão de crédito</h2>
+                      <p className="mt-2 text-sm leading-6 text-muted">
+                        Aceitamos apenas cartão de crédito para manter sua assinatura mensal ativa.
+                      </p>
+                    </div>
+                    <CardPayment
+                      customization={customization}
+                      id="lectum-card-payment-brick"
+                      initialization={initialization}
+                      key={cardPaymentKey}
+                      locale="pt-BR"
+                      onError={handleBrickError}
+                      onReady={handleBrickReady}
+                      onSubmit={handleSubmit}
+                    />
                   </div>
-                  <Button asChild className="h-12 rounded-full">
-                    <Link href={PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress}>
-                      Continuar para endereço
-                      <ArrowRight className="h-4 w-4" aria-hidden />
-                    </Link>
+                ) : null}
+
+                {pendingProfessional ? (
+                  <Button
+                    className="h-12 rounded-full"
+                    disabled={billing.sync.isPending}
+                    onClick={handleSyncStatus}
+                    type="button"
+                    variant="outline"
+                  >
+                    <RefreshCw
+                      className={cn("h-4 w-4", billing.sync.isPending && "animate-spin")}
+                      aria-hidden
+                    />
+                    {billing.sync.isPending ? "Atualizando status..." : "Atualizar status"}
                   </Button>
-                </div>
-              ) : (
-                <div className="grid gap-5">
-                  {pendingProfessional ? (
-                    <InlineAlert title="Pagamento enviado para confirmação" variant="success">
-                      A assinatura foi criada no Mercado Pago e será ativada automaticamente após o
-                      webhook confirmado. Se a confirmação já tiver ocorrido, atualize o status.
-                    </InlineAlert>
-                  ) : null}
-
-                  {!publicKey ? (
-                    <InlineAlert title="Public key do Mercado Pago ausente" variant="error">
-                      Configure `NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY` no frontend para carregar o
-                      Card Payment Brick real. Sem essa chave, a Lectum não coleta cartão nem simula
-                      cobrança.
-                    </InlineAlert>
-                  ) : null}
-
-                  {publicKey && amount > 0 && !payerEmail ? (
-                    <InlineAlert title="E-mail do pagador ausente" variant="error">
-                      Recarregue a sessão antes de abrir o formulário de cartão. O Mercado Pago
-                      precisa do e-mail autenticado para tokenizar o pagamento.
-                    </InlineAlert>
-                  ) : null}
-
-                  {canRenderCardPayment ? (
-                    <div
-                      className={cn(
-                        "rounded-3xl border border-border bg-surface-muted p-3 md:p-4",
-                        billing.checkout.isPending && "pointer-events-none opacity-70",
-                      )}
-                    >
-                      <div className="mb-4 rounded-2xl bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
-                        <h2 className="text-xl font-bold text-foreground">Cartão de crédito</h2>
-                        <p className="mt-2 text-sm leading-6 text-muted">
-                          Aceitamos apenas cartão de crédito para manter sua assinatura mensal
-                          ativa.
-                        </p>
-                      </div>
-                      <CardPayment
-                        customization={customization}
-                        id="lectum-card-payment-brick"
-                        initialization={initialization}
-                        key={cardPaymentKey}
-                        locale="pt-BR"
-                        onError={handleBrickError}
-                        onReady={handleBrickReady}
-                        onSubmit={handleSubmit}
-                      />
-                    </div>
-                  ) : null}
-
-                  {billing.checkout.isPending ? (
-                    <div className="inline-flex items-center justify-center gap-2 rounded-full bg-primary-soft px-4 py-3 text-sm font-semibold text-primary">
-                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-                      Enviando token ao backend...
-                    </div>
-                  ) : null}
-
-                  {pendingProfessional ? (
-                    <Button
-                      className="h-12 rounded-full"
-                      disabled={billing.sync.isPending}
-                      onClick={handleSyncStatus}
-                      type="button"
-                      variant="outline"
-                    >
-                      <RefreshCw
-                        className={cn("h-4 w-4", billing.sync.isPending && "animate-spin")}
-                        aria-hidden
-                      />
-                      {billing.sync.isPending ? "Atualizando status..." : "Atualizar status"}
-                    </Button>
-                  ) : null}
-                </div>
-              )}
+                ) : null}
+              </div>
             </div>
           </div>
         ) : null}
