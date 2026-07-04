@@ -259,7 +259,7 @@ export function PwaInstallPrompt() {
       )}
     >
       <section
-        aria-label="Instalar atalho da Lectum"
+        aria-label="Adicionar a Lectum à tela inicial"
         aria-modal="true"
         className="relative w-full max-w-[440px] rounded-[1.75rem] border border-border bg-surface p-4 text-foreground shadow-[var(--lectum-shadow)]"
         role="dialog"
@@ -287,19 +287,19 @@ export function PwaInstallPrompt() {
 
           <div className="min-w-0">
             <p className="text-base font-extrabold tracking-[-0.03em] text-foreground">
-              Acesse a Lectum como um app
+              Adicionar a Lectum à tela inicial
             </p>
             <p className="mt-1 text-sm leading-5 text-muted">
               {isPsychologist
-                ? "Deixe a Lectum mais perto para responder contatos, acompanhar seu perfil e voltar ao trabalho sem precisar abrir o navegador."
-                : "Crie um atalho na tela inicial para entrar mais rápido, sem precisar abrir o navegador."}
+                ? "Crie um atalho para voltar rápido aos contatos, ao perfil e à rotina profissional."
+                : "Crie um atalho para entrar mais rápido, sem precisar digitar o endereço no navegador."}
             </p>
           </div>
         </div>
 
         <div className="mt-3 rounded-2xl border border-border bg-background px-3 py-2.5 text-xs leading-5 text-muted">
-          O ícone ficará visível na tela inicial do celular. Isso não ativa notificações nem muda
-          suas preferências.
+          O ícone ficará visível na tela inicial do celular. É apenas um atalho do site em modo app:
+          não ativa notificações nem muda suas preferências.
         </div>
 
         {promptKind === "ios" && showIosSteps ? (
@@ -327,7 +327,9 @@ export function PwaInstallPrompt() {
             ) : (
               <Download className="h-4 w-4" aria-hidden="true" />
             )}
-            <span>{promptKind === "ios" && showIosSteps ? "Entendi" : "Adicionar atalho"}</span>
+            <span>
+              {promptKind === "ios" && showIosSteps ? "Entendi" : "Adicionar à tela inicial"}
+            </span>
           </Button>
 
           <Button

@@ -31,6 +31,11 @@ Refinamento adicional em 2026-06-29 definiu insistência moderada para psicólog
 assinantes: manter somente `Agora não`, usar 48 horas nas duas primeiras recusas e voltar para 7
 dias da terceira recusa em diante.
 
+Refinamento de produto em 2026-07-04 esclareceu que a sugestão deve ser entendida como PWA/atalho,
+não como "instalar SPA" nem como migração para SPA pura. A copy anterior "Acesse a Lectum como um
+app" gerou ambiguidade com instalação de app/SPA, então a linguagem passou a ser explícita sobre
+adicionar a Lectum à tela inicial.
+
 Builder/Quick Copy não estava exposto como ferramenta direta neste ambiente. A referência visual
 auditável usada foi o shell privado/mobile existente, com consulta a `_product/tasks/PROTO-INVENTORY.md`.
 Não há protótipo específico para o prompt de instalação.
@@ -46,7 +51,7 @@ Não há protótipo específico para o prompt de instalação.
   derivados do ícone real atual da marca (`frontend/public/icon.png`), sem criar marca temporária.
 - Criar o componente client-side `PwaInstallPrompt`:
   - usa `beforeinstallprompt` no Android/Chromium e só chama `prompt()` após clique em
-    `Adicionar atalho`;
+    `Adicionar à tela inicial`;
   - no iOS/Safari exibe instruções manuais para `Compartilhar` > `Adicionar à Tela de Início`;
   - não aparece quando a Lectum já está em `standalone`/`fullscreen`;
   - usa `localStorage` por navegador/dispositivo para `Agora não` e instalação aceita;
@@ -59,6 +64,10 @@ Não há protótipo específico para o prompt de instalação.
 - Após o refinamento de 2026-06-29, o prompt usa `/icon.png` via `next/image` como ícone visual
   da modal, alinhado ao favicon/ícone real da Lectum, e passa a renderizar um overlay escuro com
   `backdrop-blur-[8px]`, equivalente à linguagem da modal de novo post.
+- Após o refinamento de 2026-07-04, a copy principal passa a ser **"Adicionar a Lectum à tela
+  inicial"**, com CTA **"Adicionar à tela inicial"** e explicação de que o ícone é apenas um atalho
+  do site em modo app, sem ativar notificações ou alterar preferências. A arquitetura permanece
+  Next.js App Router; não há migração para SPA pura.
 - Montar o prompt no layout raiz, dentro dos providers, mas com gate de rota/sessão:
   - só considera rotas `/app`;
   - só exibe para usuário confirmado em Redux Persist;
@@ -68,6 +77,7 @@ Não há protótipo específico para o prompt de instalação.
 ## Consequências
 
 - Usuários mobile podem adicionar a Lectum à tela inicial com experiência próxima de app.
+- A copy deixa de sugerir "instalação de SPA" e comunica atalho/PWA de forma mais literal.
 - O prompt não depende de pacote novo.
 - O cooldown de recusa é local ao navegador/dispositivo; isso é aceitável para o MVP porque não é
   uma preferência de conta nem dado crítico.
@@ -108,6 +118,20 @@ Refinamento 2026-06-29:
 
 Refinamento 2026-06-29 validado no ADR-0183 para backoff por perfil e manutenção de `Agora não`
 como única ação secundária.
+
+Refinamento 2026-07-04:
+
+- `pnpm --dir frontend exec biome check --write src/components/pwa-install-prompt.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local via Chrome/CDP em `http://127.0.0.1:3006/app/favorites`, viewport mobile
+  `390x844`, em cenário iOS/Safari com estado local temporário de usuário confirmado:
+  - o prompt exibiu **"Adicionar a Lectum à tela inicial"**;
+  - o CTA exibiu **"Adicionar à tela inicial"**;
+  - a explicação exibiu que é apenas um atalho do site em modo app;
+  - a copy antiga **"Acesse a Lectum como um app"** não apareceu;
+  - o CTA abriu as instruções manuais de iPhone/iPad e exibiu **"Entendi"**.
 
 ## Pendências
 

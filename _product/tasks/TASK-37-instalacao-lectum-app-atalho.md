@@ -23,7 +23,7 @@
 
 Por enquanto a Lectum será entregue somente como site responsivo, mas a experiência mobile deve se aproximar de um aplicativo instalado. A forma correta para o MVP é tornar o frontend instalável como PWA/atalho na tela inicial, com sugestão contextual para o usuário adicionar a Lectum ao celular.
 
-A comunicação deve usar o gênero definido para o produto: **"a Lectum"**. A copy principal recomendada é: **"Acesse a Lectum como um app"**.
+A comunicação deve usar o gênero definido para o produto: **"a Lectum"**. A copy principal recomendada, após refinamento de 2026-07-04, é: **"Adicionar a Lectum à tela inicial"**. A UI não deve usar termos como "instalar SPA" nem sugerir migração para SPA pura; o frontend permanece Next.js App Router com experiência PWA/atalho.
 
 Esta task não substitui app nativo e não deve misturar instalação do atalho com consentimento de notificações. Push notification, Web Push e permissão do navegador continuam separados das tasks de notificações.
 
@@ -46,9 +46,9 @@ Permitir que o usuário mobile adicione a Lectum à tela inicial e acesse a plat
   - metadados compatíveis com iOS, incluindo ícone Apple Touch e status bar quando aplicável;
   - detecção de modo standalone para não exibir sugestão quando a Lectum já estiver instalada/aberta como app.
 - Criar sugestão mobile-first de instalação/atalho:
-  - copy: **"Acesse a Lectum como um app"**;
+  - copy: **"Adicionar a Lectum à tela inicial"**;
   - explicar que o atalho ficará visível na tela inicial do celular, por privacidade;
-  - CTA principal `Adicionar atalho`;
+  - CTA principal `Adicionar à tela inicial`;
   - ação secundária `Agora não` com cooldown local;
   - não exibir a opção permanente `Não mostrar novamente`;
   - persistir localmente apenas cooldown/instalação no navegador, sem backend.
@@ -102,9 +102,9 @@ Persistência local:
 
 - [x] Manifest/metadados PWA configurados para a Lectum com `display: standalone`, `start_url`, `scope`, cores e ícones reais da marca.
 - [x] iOS recebe metadados/ícone compatíveis e instruções manuais quando o prompt nativo não existir.
-- [x] Android/Chromium usa `beforeinstallprompt` e só dispara o prompt após toque em `Adicionar atalho`.
+- [x] Android/Chromium usa `beforeinstallprompt` e só dispara o prompt após toque em `Adicionar à tela inicial`.
 - [x] A sugestão mobile-first aparece apenas quando a Lectum não está em standalone, respeita `Agora não` com cooldown e não exibe `Não mostrar novamente`.
-- [x] A copy usa **"Acesse a Lectum como um app"** e mantém o gênero **a Lectum**.
+- [x] A copy usa **"Adicionar a Lectum à tela inicial"**, mantém o gênero **a Lectum** e evita ambiguidade com SPA pura ou app nativo.
 - [x] A UI informa que o atalho ficará visível na tela inicial do celular, por privacidade.
 - [x] A task não solicita permissão de notificações nem implementa Web Push/offline-first.
 - [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
@@ -139,7 +139,7 @@ Persistência local:
 - Builder/Quick Copy não estava exposto como ferramenta direta neste ambiente; a referência visual auditável foi `_product/tasks/PROTO-INVENTORY.md` e o shell privado/mobile existente. Não há protótipo específico para o prompt de instalação.
 - Implementado `frontend/src/app/manifest.ts`, metadados PWA/iOS em `frontend/src/app/layout.tsx` e ícones reais em `frontend/public/pwa/icon-192.png` e `frontend/public/pwa/icon-512.png`.
 - Implementado `PwaInstallPrompt` em `frontend/src/components/pwa-install-prompt.tsx`, com gate para rotas `/app`, usuário confirmado, experiência mobile e ausência de standalone.
-- Android/Chromium: `beforeinstallprompt` é retido e o prompt nativo só é chamado após o CTA `Adicionar atalho`.
+- Android/Chromium: `beforeinstallprompt` é retido e o prompt nativo só é chamado após o CTA `Adicionar à tela inicial`.
 - iOS/Safari: o CTA abre instruções manuais para `Compartilhar` > `Adicionar à Tela de Início`.
 - Preferências locais: `Agora não` usa cooldown por papel em `localStorage` por navegador/dispositivo; instalação aceita limpa esse estado local; o refinamento de 2026-06-29 removeu a opção `Não mostrar novamente`.
 - Separação preservada: a task não chama `Notification.requestPermission`, não altera service worker de notificações e não implementa Web Push/offline-first.
@@ -189,7 +189,7 @@ Persistência local:
 
 ## Refinamento 2026-06-30 - exibição somente após cadastro concluído
 
-- Pedido de produto: a modal **"Acesse a Lectum como um app"** não deve aparecer durante cadastro/onboarding; para psicólogos, mesmo com maior insistência, só deve aparecer após finalizar escolha de plano, WhatsApp e configuração/publicação do perfil profissional.
+- Pedido de produto: a modal de atalho/PWA não deve aparecer durante cadastro/onboarding; para psicólogos, mesmo com maior insistência, só deve aparecer após finalizar escolha de plano, WhatsApp e configuração/publicação do perfil profissional.
 - Implementação ajustada em `frontend/src/utils/prompt-cooldown.ts` e `frontend/src/components/pwa-install-prompt.tsx`:
   - pacientes só ficam elegíveis após `patient_profile.onboarding_completed_at`;
   - psicólogos só ficam elegíveis com assinatura ativa real, WhatsApp salvo e `psychologist_profile.published=true`;
@@ -203,3 +203,11 @@ Persistência local:
   - browser local mobile `390x844` em `next start` na porta `3002`, confirmando prompt oculto para psicólogo incompleto e visível após assinatura ativa + WhatsApp + `published=true`.
 - `pnpm --dir frontend check` e `pnpm check` foram reexecutados, mas ficaram bloqueados por alterações pendentes fora deste refinamento em `frontend/src/app/app/community/[slug]/post/[id]/logic.tsx` e `frontend/src/app/app/community/[slug]/logic.tsx`.
 - ADR atualizado: `adrs/0183-insistencia-controlada-atalho-notificacoes-psicologos.md`.
+
+## Refinamento 2026-07-04 - copy explícita de PWA/atalho
+
+- Pedido de produto: esclarecer que a sugestão não é para "instalar SPA" nem para transformar a Lectum em SPA pura.
+- Decisão: manter Next.js App Router e a instalação como PWA/atalho mobile; alterar a copy principal da modal para **"Adicionar a Lectum à tela inicial"** e o CTA para **"Adicionar à tela inicial"**.
+- A UI passa a explicar que o ícone é apenas um atalho do site em modo app, não ativa notificações e não muda preferências.
+- A mudança preserva o comportamento existente: `beforeinstallprompt` em Android/Chromium, instruções manuais no iOS/Safari, cooldown local, exibição somente após cadastro concluído e nenhuma alteração de backend, package ou migration.
+- Validação deste refinamento: `pnpm --dir frontend exec biome check --write src/components/pwa-install-prompt.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local mobile `390x844` em `http://127.0.0.1:3006/app/favorites`, com estado local temporário de usuário confirmado apenas para validar a renderização do prompt.
