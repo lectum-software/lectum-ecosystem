@@ -298,3 +298,31 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm check`
 - Smoke local com `next start --port 3113`: `/app/professional/billing` retornou `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fbilling` sem sessão e `/auth/login` retornou `200`.
 - Busca de fonte confirmou ausência de `Mercado Pago` nas strings de UI billing e mensagens backend alteradas.
+
+## Ajuste em 2026-07-04: cortesia sem cobrança nem cartão legado
+
+- Pedido direto de produto: a conta `contato.tuliorezende@gmail.com` está com cortesia operacional, não com assinatura profissional padrão paga.
+- A rota `/app/professional/billing` agora diferencia `professional_subscription.source="admin_grant"` ativa, exibindo **Plano Profissional de Cortesia**, **Sem cobrança**, **Expiração da cortesia** e método de pagamento como cortesia sem cartão vinculado.
+- O endpoint `GET /api/private/psychologist/billing/subscription` deixou de retornar `payment_method` quando a assinatura atual não é gerenciável por gateway real ativo, evitando exibir cartão tokenizado de assinatura paga cancelada.
+- Os alertas de `Pagamento não vinculado` não aparecem para cortesia administrativa, porque ausência de gateway é o estado esperado.
+- Referência visual local consultada: `_product/proto/Minhas Assinatura - Psicólogo.jpg`; Builder/Quick Copy não está exposto como ferramenta direta neste ambiente.
+- ADR registrado: `adrs/0213-billing-cortesia-sem-cobranca-cartao.md`.
+- Nenhum mock, seed, endpoint simulado, package novo ou alteração de schema foi criado.
+
+### Critérios de aceite do ajuste
+
+- [x] Cortesia administrativa ativa aparece explicitamente como cortesia, não como assinatura paga padrão.
+- [x] A UI não exibe preço recorrente pago, próxima renovação paga nem cartão legado para cortesia.
+- [x] O backend só expõe método de pagamento quando a assinatura atual possui gateway real gerenciável.
+- [x] Histórico de pagamentos permanece honesto e usa apenas eventos reais.
+- [x] Validação mobile-first/browser local foi executada na rota de billing com sessão real.
+
+### Validação do ajuste de cortesia
+
+- Consulta real da conta confirmou assinatura atual `admin_grant` ativa e retorno do endpoint com `payment_method=null`.
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local via Chrome headless/CDP em `http://localhost:3002/app/professional/billing`, com sessão real da conta, confirmou **Plano Profissional de Cortesia**, **Sem cobrança**, **Expiração da cortesia**, **Cortesia ativa, sem cartão vinculado** e ausência de `Amex final 6885`, `Pagamento não vinculado` e `R$ 9,90 / mês`.

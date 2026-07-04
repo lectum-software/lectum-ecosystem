@@ -30,11 +30,17 @@ export const showSubscription = async (data: ISubscriptionDTO) => {
     };
   }
 
-  const [subscription, paymentMethod] = await Promise.all([
-    repository.showSubscription(profile.id!),
-    repository.showPaymentMethod(data.auth.id!),
+  const subscription = await repository.showSubscription(profile.id!);
+  const shouldExposePaymentMethod = Boolean(
+    subscription?.source === "mercadopago" &&
+      subscription.gateway === "mercadopago" &&
+      subscription.gateway_subscription_id &&
+      subscription.status !== "cancelada",
+  );
+  const [paymentMethod, paymentHistory] = await Promise.all([
+    shouldExposePaymentMethod ? repository.showPaymentMethod(data.auth.id!) : Promise.resolve(null),
+    repository.showPaymentHistory(subscription),
   ]);
-  const paymentHistory = await repository.showPaymentHistory(subscription);
 
   return {
     status: 200,

@@ -101,6 +101,14 @@ const statusTone: Record<string, string> = {
 };
 
 const getPlanDescription = (subscription?: ProfessionalSubscription | null) => {
+  if (
+    subscription?.source === "admin_grant" &&
+    subscription?.status === "ativa" &&
+    subscription?.plan?.slug === "profissional"
+  ) {
+    return "Cortesia administrativa com os benefícios profissionais liberados, sem cobrança recorrente vinculada.";
+  }
+
   if (subscription?.plan?.slug === "profissional") {
     return "Perfil verificado, prioridade na busca, avaliações, analytics e destaque nas comunidades.";
   }
@@ -113,10 +121,21 @@ const getPlanDescription = (subscription?: ProfessionalSubscription | null) => {
 };
 
 const PaymentMethodSummary = ({
+  isCourtesy,
   paymentMethod,
 }: {
+  isCourtesy?: boolean;
   paymentMethod?: BillingPaymentMethod | null;
 }) => {
+  if (isCourtesy) {
+    return (
+      <div>
+        <p className="text-sm font-bold text-foreground">Método de pagamento</p>
+        <p className="mt-1 text-sm leading-6 text-muted">Cortesia ativa, sem cartão vinculado</p>
+      </div>
+    );
+  }
+
   if (!paymentMethod?.last4) {
     return (
       <div>
@@ -138,7 +157,7 @@ const PaymentMethodSummary = ({
   );
 };
 
-const StatusBadge = ({ status }: { status?: string | null }) => {
+const StatusBadge = ({ label, status }: { label?: string; status?: string | null }) => {
   const value = status || "inativa";
 
   return (
@@ -148,7 +167,7 @@ const StatusBadge = ({ status }: { status?: string | null }) => {
         statusTone[value] || statusTone.inativa,
       )}
     >
-      {statusLabel[value] || "Pendente"}
+      {label || statusLabel[value] || "Pendente"}
     </span>
   );
 };
@@ -161,7 +180,13 @@ const paymentHistoryTone: Record<string, string> = {
   recusado: "border-danger/30 bg-danger/10 text-danger",
 };
 
-const PaymentHistoryCard = ({ items }: { items: BillingPaymentHistoryItem[] }) => (
+const PaymentHistoryCard = ({
+  isCourtesy,
+  items,
+}: {
+  isCourtesy?: boolean;
+  items: BillingPaymentHistoryItem[];
+}) => (
   <article className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
     <div className="flex gap-3">
       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
@@ -169,7 +194,9 @@ const PaymentHistoryCard = ({ items }: { items: BillingPaymentHistoryItem[] }) =
       </span>
       <div>
         <h2 className="text-base font-extrabold text-foreground">Histórico de pagamentos</h2>
-        <p className="mt-1 text-sm leading-6 text-muted">Cobranças confirmadas.</p>
+        <p className="mt-1 text-sm leading-6 text-muted">
+          {isCourtesy ? "Cortesias não geram cobranças automáticas." : "Cobranças confirmadas."}
+        </p>
       </div>
     </div>
 
@@ -208,9 +235,13 @@ const PaymentHistoryCard = ({ items }: { items: BillingPaymentHistoryItem[] }) =
       </ol>
     ) : (
       <div className="mt-4 rounded-[var(--lectum-card-radius)] border border-border bg-surface-muted p-4">
-        <p className="text-sm font-extrabold text-foreground">Nenhum pagamento registrado ainda</p>
+        <p className="text-sm font-extrabold text-foreground">
+          {isCourtesy ? "Nenhuma cobrança na cortesia" : "Nenhum pagamento registrado ainda"}
+        </p>
         <p className="mt-1 text-sm leading-6 text-muted">
-          Quando cobranças forem confirmadas, elas aparecerão aqui.
+          {isCourtesy
+            ? "Este plano de cortesia não possui pagamentos vinculados."
+            : "Quando cobranças forem confirmadas, elas aparecerão aqui."}
         </p>
       </div>
     )}
@@ -234,22 +265,30 @@ export const ProfessionalBillingLogic = () => {
     subscriptionQuery.data?.subscription ?? subscriptionQuery.data?.current ?? null;
   const paymentMethod = subscriptionQuery.data?.payment_method ?? null;
   const paymentHistory = subscriptionQuery.data?.payment_history ?? [];
-  const planName = subscription?.plan?.name || "Plano não encontrado";
   const isPaidPlan = subscription?.plan?.slug === "profissional";
   const isFreePlan = subscription?.plan?.slug === "gratuito";
-  const canManageCard = Boolean(
-    isPaidPlan && subscription?.status !== "cancelada" && subscription?.gateway_subscription_id,
-  );
-  const canCancelSubscription = Boolean(
-    isPaidPlan &&
+  const isCourtesy = Boolean(
+    subscription?.source === "admin_grant" &&
       subscription?.status === "ativa" &&
+      subscription?.plan?.slug === "profissional",
+  );
+  const hasGatewayBilling = Boolean(
+    isPaidPlan &&
       subscription?.source === "mercadopago" &&
       subscription?.gateway === "mercadopago" &&
       subscription?.gateway_subscription_id,
   );
+  const visiblePaymentMethod = hasGatewayBilling ? paymentMethod : null;
+  const planName = isCourtesy
+    ? "Plano Profissional de Cortesia"
+    : subscription?.plan?.name || "Plano não encontrado";
+  const canManageCard = Boolean(hasGatewayBilling && subscription?.status !== "cancelada");
+  const canCancelSubscription = Boolean(hasGatewayBilling && subscription?.status === "ativa");
+  const priceTitle = isCourtesy ? "Valor da cortesia" : "Valor recorrente";
+  const periodTitle = isCourtesy ? "Expiração da cortesia" : "Próxima renovação";
   const priceLabel = useMemo(
-    () => `${formatPrice(subscription?.plan?.price_cents)} / mês`,
-    [subscription?.plan?.price_cents],
+    () => (isCourtesy ? "Sem cobrança" : `${formatPrice(subscription?.plan?.price_cents)} / mês`),
+    [isCourtesy, subscription?.plan?.price_cents],
   );
 
   if (
@@ -309,11 +348,14 @@ export const ProfessionalBillingLogic = () => {
                   <span className="grid h-14 w-14 shrink-0 place-items-center rounded-3xl bg-surface text-primary shadow-[var(--lectum-shadow-soft)]">
                     <VerifiedBadgeIcon className="h-8 w-8" aria-hidden="true" />
                   </span>
-                  <StatusBadge status={subscription.status} />
+                  <StatusBadge
+                    label={isCourtesy ? "Cortesia ativa" : undefined}
+                    status={subscription.status}
+                  />
                 </div>
 
                 <p className="mt-6 text-xs font-black uppercase tracking-[0.18em] text-primary">
-                  Plano atual
+                  {isCourtesy ? "Plano de cortesia" : "Plano atual"}
                 </p>
                 <h1 className="mt-2 text-2xl font-extrabold tracking-[-0.03em] text-foreground md:text-3xl">
                   {planName}
@@ -330,7 +372,7 @@ export const ProfessionalBillingLogic = () => {
                       <BadgeCheck className="h-5 w-5" aria-hidden="true" />
                     </span>
                     <div>
-                      <p className="text-sm font-bold text-muted">Valor recorrente</p>
+                      <p className="text-sm font-bold text-muted">{priceTitle}</p>
                       <p className="mt-1 text-xl font-extrabold text-foreground">{priceLabel}</p>
                     </div>
                   </div>
@@ -342,7 +384,7 @@ export const ProfessionalBillingLogic = () => {
                       <CalendarClock className="h-5 w-5" aria-hidden="true" />
                     </span>
                     <div>
-                      <p className="text-sm font-bold text-muted">Próxima renovação</p>
+                      <p className="text-sm font-bold text-muted">{periodTitle}</p>
                       <p className="mt-1 text-sm font-extrabold text-foreground">
                         {formatDate(subscription.current_period_end)}
                       </p>
@@ -356,7 +398,10 @@ export const ProfessionalBillingLogic = () => {
                       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
                         <CreditCard className="h-5 w-5" aria-hidden="true" />
                       </span>
-                      <PaymentMethodSummary paymentMethod={paymentMethod} />
+                      <PaymentMethodSummary
+                        isCourtesy={isCourtesy}
+                        paymentMethod={visiblePaymentMethod}
+                      />
                     </div>
                     <Button
                       asChild={canManageCard}
@@ -376,7 +421,7 @@ export const ProfessionalBillingLogic = () => {
             </article>
 
             <aside className="grid gap-4">
-              <PaymentHistoryCard items={paymentHistory} />
+              <PaymentHistoryCard isCourtesy={isCourtesy} items={paymentHistory} />
 
               {canCancelSubscription ? (
                 !showCancelConfirm ? (
@@ -435,7 +480,12 @@ export const ProfessionalBillingLogic = () => {
                 )
               ) : null}
 
-              {!canManageCard ? (
+              {isCourtesy ? (
+                <InlineAlert title="Plano de cortesia ativo" variant="info">
+                  Esta conta está com cortesia profissional ativa. Não há cobrança recorrente nem
+                  cartão para alterar durante o período concedido.
+                </InlineAlert>
+              ) : !canManageCard ? (
                 <InlineAlert title="Alteração de cartão indisponível" variant="warning">
                   A troca de cartão exige uma assinatura profissional ativa com método de pagamento
                   cadastrado. Assinaturas gratuitas ou de cortesia não possuem cartão para alterar.
@@ -462,7 +512,7 @@ export const ProfessionalBillingLogic = () => {
                 </InlineAlert>
               ) : null}
 
-              {!subscription.gateway_subscription_id && isPaidPlan ? (
+              {!subscription.gateway_subscription_id && isPaidPlan && !isCourtesy ? (
                 <InlineAlert title="Pagamento não vinculado" variant="warning">
                   <span className="inline-flex items-start gap-2">
                     <AlertTriangle className="mt-1 h-4 w-4 shrink-0" aria-hidden="true" />
