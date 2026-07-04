@@ -1,5 +1,7 @@
 ﻿import prisma, { type ORM } from "@/infra/database/prisma";
 import type {
+  billing_address,
+  payment_method,
   professional_subscription,
   psychologist_profile,
   subscription_plan,
@@ -7,20 +9,57 @@ import type {
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type { ICheckoutRepository } from "./interfaces/ICheckoutRepository";
 
+type CheckoutProfile = Pick<
+  psychologist_profile,
+  | "id"
+  | "deleted"
+  | "professional_address_city"
+  | "professional_address_district"
+  | "professional_address_number"
+  | "professional_address_state"
+  | "professional_address_street"
+  | "professional_address_zip"
+>;
+
+type SubscriptionStatus = "inativa" | "ativa" | "inadimplente" | "cancelada";
+
+const hasText = (value?: string | null) => Boolean(value?.trim());
+
+const hasCompleteBillingAddress = (address?: billing_address | null) =>
+  Boolean(
+    address &&
+      hasText(address.city) &&
+      hasText(address.district) &&
+      hasText(address.number) &&
+      hasText(address.state) &&
+      hasText(address.street) &&
+      hasText(address.zip),
+  );
+
+const hasCompleteProfileAddress = (profile: CheckoutProfile) =>
+  hasText(profile.professional_address_city) &&
+  hasText(profile.professional_address_district) &&
+  hasText(profile.professional_address_number) &&
+  hasText(profile.professional_address_state) &&
+  hasText(profile.professional_address_street) &&
+  hasText(profile.professional_address_zip);
+
 export class CheckoutRepository implements ICheckoutRepository {
+  readonly addressRepository: ORM["billing_address"];
+  readonly paymentMethodRepository: ORM["payment_method"];
   readonly profileRepository: ORM["psychologist_profile"];
   readonly planRepository: ORM["subscription_plan"];
   readonly subscriptionRepository: ORM["professional_subscription"];
 
   constructor() {
+    this.addressRepository = prisma.billing_address;
+    this.paymentMethodRepository = prisma.payment_method;
     this.profileRepository = prisma.psychologist_profile;
     this.planRepository = prisma.subscription_plan;
     this.subscriptionRepository = prisma.professional_subscription;
   }
 
-  async findProfileByUserId(
-    userId: string,
-  ): Promise<Pick<psychologist_profile, "id" | "deleted"> | null> {
+  async findProfileByUserId(userId: string): Promise<CheckoutProfile | null> {
     return this.profileRepository.findUnique({
       where: {
         user_id: userId,
@@ -28,6 +67,12 @@ export class CheckoutRepository implements ICheckoutRepository {
       select: {
         id: true,
         deleted: true,
+        professional_address_city: true,
+        professional_address_district: true,
+        professional_address_number: true,
+        professional_address_state: true,
+        professional_address_street: true,
+        professional_address_zip: true,
       },
     });
   }
@@ -112,6 +157,10 @@ export class CheckoutRepository implements ICheckoutRepository {
   async setGatewaySubscriptionId(
     subscriptionId: string,
     gatewaySubscriptionId: string,
+    options: {
+      currentPeriodEnd?: Date | null;
+      status?: SubscriptionStatus;
+    } = {},
   ): Promise<professional_subscription> {
     return this.subscriptionRepository.update({
       where: {
@@ -119,6 +168,10 @@ export class CheckoutRepository implements ICheckoutRepository {
       },
       data: {
         gateway_subscription_id: gatewaySubscriptionId,
+        ...(options.status ? { status: options.status } : {}),
+        ...(Object.hasOwn(options, "currentPeriodEnd")
+          ? { current_period_end: options.currentPeriodEnd ?? null }
+          : {}),
       },
       include: {
         plan: true,
@@ -135,5 +188,96 @@ export class CheckoutRepository implements ICheckoutRepository {
         status: "cancelada",
       },
     });
+  }
+
+  async findScheduledGatewaySubscription(
+    psychologistId: string,
+  ): Promise<professional_subscription | null> {
+    return this.subscriptionRepository.findFirst({
+      where: {
+        psychologist_id: psychologistId,
+        deleted: false,
+        source: "mercadopago",
+        gateway: "mercadopago",
+        gateway_subscription_id: {
+          not: null,
+        },
+        status: {
+          in: ["inativa", "inadimplente"],
+        },
+        plan: {
+          active: true,
+          deleted: false,
+          slug: "profissional",
+        },
+      },
+      include: {
+        plan: true,
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+    });
+  }
+
+  async savePaymentMethodReference(
+    userId: string,
+    gatewaySubscriptionId: string,
+  ): Promise<payment_method> {
+    const current = await this.paymentMethodRepository.findFirst({
+      where: {
+        user_id: userId,
+        gateway: "mercadopago",
+        deleted: false,
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+    });
+
+    const payload = {
+      gateway_token: gatewaySubscriptionId,
+      brand: null,
+      last4: null,
+      exp_month: null,
+      exp_year: null,
+    };
+
+    if (current?.id) {
+      return this.paymentMethodRepository.update({
+        where: {
+          id: current.id,
+        },
+        data: payload,
+      });
+    }
+
+    return this.paymentMethodRepository.create({
+      data: {
+        user_id: userId,
+        gateway: "mercadopago",
+        ...payload,
+      },
+    });
+  }
+
+  async hasBillingAddress({
+    profile,
+    userId,
+  }: {
+    profile: CheckoutProfile;
+    userId: string;
+  }): Promise<boolean> {
+    const billingAddress = await this.addressRepository.findFirst({
+      where: {
+        user_id: userId,
+        deleted: false,
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+    });
+
+    return hasCompleteBillingAddress(billingAddress) || hasCompleteProfileAddress(profile);
   }
 }

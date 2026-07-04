@@ -2,7 +2,7 @@
 
 import { CardPayment, initMercadoPago } from "@mercadopago/sdk-react";
 import { CreditCard, RefreshCw } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
@@ -48,6 +48,20 @@ const currencyFormatter = new Intl.NumberFormat("pt-BR", {
 
 const formatPrice = (priceCents: number) => currencyFormatter.format(priceCents / 100);
 
+const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
+  day: "2-digit",
+  month: "long",
+  year: "numeric",
+});
+
+const formatDate = (value?: string | null) => {
+  if (!value) return null;
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime()) ? null : dateFormatter.format(date);
+};
+
 const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : "Não foi possível carregar o checkout agora.";
 
@@ -61,6 +75,12 @@ const isCurrentPeriodValid = (currentPeriodEnd?: string | null) => {
 
 const isActiveProfessional = (subscription?: ProfessionalSubscription | null) =>
   subscription?.status === "ativa" &&
+  subscription.plan?.slug === "profissional" &&
+  isCurrentPeriodValid(subscription.current_period_end);
+
+const isActiveCourtesySubscription = (subscription?: ProfessionalSubscription | null) =>
+  subscription?.source === "admin_grant" &&
+  subscription.status === "ativa" &&
   subscription.plan?.slug === "profissional" &&
   isCurrentPeriodValid(subscription.current_period_end);
 
@@ -81,38 +101,68 @@ type CardPaymentAdditionalData = {
   paymentTypeId?: string;
 };
 
-const SummaryCard = ({ plan }: { plan: SubscriptionPlan }) => (
-  <aside className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)] md:p-6">
-    <div className="flex items-start gap-4">
-      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
-        <CreditCard className="h-6 w-6" aria-hidden />
-      </span>
-      <div>
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
-          Plano Profissional
-        </p>
-        <h2 className="mt-1 text-xl font-bold text-foreground">{plan.name}</h2>
-        <p className="mt-2 text-sm leading-6 text-muted">
-          Assinatura mensal com perfil verificado, prioridade na busca, avaliações, analytics e
-          destaque nas comunidades.
-        </p>
-      </div>
-    </div>
+const SummaryCard = ({
+  isCourtesyRenewal,
+  plan,
+  renewalDate,
+}: {
+  isCourtesyRenewal: boolean;
+  plan: SubscriptionPlan;
+  renewalDate?: string | null;
+}) => {
+  const renewalDateLabel = formatDate(renewalDate);
 
-    <div className="mt-6 rounded-2xl bg-surface-muted p-4">
-      <p className="text-sm font-semibold text-muted">Valor recorrente</p>
-      <div className="mt-2 flex items-end gap-2">
-        <strong className="text-3xl font-bold leading-none text-foreground">
-          {formatPrice(plan.price_cents)}
-        </strong>
-        <span className="pb-1 text-sm font-semibold text-muted">/mês</span>
+  return (
+    <aside className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)] md:p-6">
+      <div className="flex items-start gap-4">
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
+          <CreditCard className="h-6 w-6" aria-hidden />
+        </span>
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
+            {isCourtesyRenewal ? "Cobrança futura" : "Plano Profissional"}
+          </p>
+          <h2 className="mt-1 text-xl font-bold text-foreground">
+            {isCourtesyRenewal ? "Plano Profissional após cortesia" : plan.name}
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-muted">
+            {isCourtesyRenewal
+              ? "Cadastre o cartão agora para manter os benefícios profissionais quando a cortesia terminar."
+              : "Assinatura mensal com perfil verificado, prioridade na busca, avaliações, analytics e destaque nas comunidades."}
+          </p>
+        </div>
       </div>
-    </div>
-  </aside>
-);
+
+      <div className="mt-6 rounded-2xl bg-surface-muted p-4">
+        <p className="text-sm font-semibold text-muted">
+          {isCourtesyRenewal ? "Início previsto" : "Valor recorrente"}
+        </p>
+        {isCourtesyRenewal ? (
+          <div className="mt-2 grid gap-2">
+            <strong className="text-2xl font-bold leading-tight text-foreground">
+              {renewalDateLabel ? `Após ${renewalDateLabel}` : "Ao fim da cortesia"}
+            </strong>
+            <span className="text-sm font-semibold text-muted">
+              {formatPrice(plan.price_cents)} /mês quando a cobrança iniciar
+            </span>
+          </div>
+        ) : (
+          <div className="mt-2 flex items-end gap-2">
+            <strong className="text-3xl font-bold leading-none text-foreground">
+              {formatPrice(plan.price_cents)}
+            </strong>
+            <span className="pb-1 text-sm font-semibold text-muted">/mês</span>
+          </div>
+        )}
+      </div>
+    </aside>
+  );
+};
 
 export const ProfessionalBillingCheckoutLogic = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isCourtesyRenewal = searchParams.get("intent") === "courtesy-renewal";
   const userEmail = useAppSelector((state) => state.user?.email || "");
   const payerEmail = resolveMercadoPagoPayerEmail(userEmail);
   const [checkoutResult, setCheckoutResult] = useState<BillingCheckoutResponse | null>(null);
@@ -121,10 +171,14 @@ export const ProfessionalBillingCheckoutLogic = () => {
       checkout: {
         onSuccess: (data: BillingCheckoutResponse) => {
           setCheckoutResult(data);
+          if (isCourtesyRenewal) {
+            toast.success("Cartão cadastrado para cobrança futura");
+            router.replace(data.next_path || "/app/professional/billing");
+          }
         },
       },
     }),
-    [],
+    [isCourtesyRenewal, router],
   );
   const billing = usePsychologistBilling({ callbacks: billingCallbacks });
   const checkoutMutateAsync = billing.checkout.mutateAsync;
@@ -150,17 +204,21 @@ export const ProfessionalBillingCheckoutLogic = () => {
   const professionalPlan = billing.plans.data?.plans.find((plan) => plan.slug === "profissional");
   const current = billing.current.data?.current ?? null;
   const activeProfessional = isActiveProfessional(current);
+  const activeCourtesy = isActiveCourtesySubscription(current);
+  const shouldBypassActiveRedirect = isCourtesyRenewal && activeCourtesy;
   const pendingProfessional =
     Boolean(checkoutResult?.pending_confirmation) || isPendingProfessional(current);
   const amount = professionalPlan ? professionalPlan.price_cents / 100 : 0;
   const canRenderCardPayment = Boolean(publicKey && amount > 0 && payerEmail);
-  const cardPaymentKey = `${payerEmail || "anonymous"}-${amount}`;
+  const cardPaymentKey = `${payerEmail || "anonymous"}-${amount}-${
+    isCourtesyRenewal ? "courtesy" : "checkout"
+  }`;
 
   useEffect(() => {
-    if (isCurrentSubscriptionLoading || !activeProfessional) return;
+    if (isCurrentSubscriptionLoading || !activeProfessional || shouldBypassActiveRedirect) return;
 
     router.replace(PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress);
-  }, [activeProfessional, isCurrentSubscriptionLoading, router]);
+  }, [activeProfessional, isCurrentSubscriptionLoading, router, shouldBypassActiveRedirect]);
 
   const initialization = useMemo(
     () => ({
@@ -200,20 +258,25 @@ export const ProfessionalBillingCheckoutLogic = () => {
       }
 
       if (paymentTypeId && paymentTypeId !== CREDIT_CARD_PAYMENT_TYPE) {
-        toast.error("Use um cartão de crédito para assinar o Plano Profissional.");
+        toast.error(
+          isCourtesyRenewal
+            ? "Use um cartão de crédito para cadastrar a cobrança futura."
+            : "Use um cartão de crédito para assinar o Plano Profissional.",
+        );
         return;
       }
 
       try {
         await checkoutMutateAsyncRef.current({
           card_token: token,
+          ...(isCourtesyRenewal ? { intent: "courtesy_renewal" as const } : {}),
           payment_type_id: CREDIT_CARD_PAYMENT_TYPE,
         });
       } catch {
         // handleReq já exibe o erro real da API; impedir rejeição não tratada no Brick.
       }
     },
-    [],
+    [isCourtesyRenewal],
   );
 
   const handleBrickReady = useCallback(() => {
@@ -272,7 +335,7 @@ export const ProfessionalBillingCheckoutLogic = () => {
     };
   }, [activeProfessional, pendingProfessional]);
 
-  if (!isCurrentSubscriptionLoading && activeProfessional) {
+  if (!isCurrentSubscriptionLoading && activeProfessional && !shouldBypassActiveRedirect) {
     return (
       <PrivateTemplate showHeader={false}>
         <section className="mx-auto grid min-h-[55vh] w-full max-w-[430px] place-items-center">
@@ -290,12 +353,18 @@ export const ProfessionalBillingCheckoutLogic = () => {
             <CreditCard className="h-8 w-8" aria-hidden />
           </span>
           <div>
-            <p className="text-sm font-semibold text-primary">Finalizar assinatura</p>
+            <p className="text-sm font-semibold text-primary">
+              {isCourtesyRenewal ? "Cobrança futura" : "Finalizar assinatura"}
+            </p>
             <h1 className="mt-2 text-3xl font-bold leading-tight text-foreground md:text-4xl">
-              Pagamento do Plano Profissional
+              {isCourtesyRenewal
+                ? "Adicionar cartão de cobrança"
+                : "Pagamento do Plano Profissional"}
             </h1>
             <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-muted">
-              Informe um cartão de crédito para ativar sua assinatura
+              {isCourtesyRenewal
+                ? "Informe um cartão de crédito para preparar a cobrança quando sua cortesia chegar ao fim."
+                : "Informe um cartão de crédito para ativar sua assinatura"}
             </p>
           </div>
         </div>
@@ -318,7 +387,11 @@ export const ProfessionalBillingCheckoutLogic = () => {
 
         {!isLoading && !hasError && professionalPlan ? (
           <div className="grid gap-5 md:grid-cols-[0.9fr_1.1fr] md:items-start">
-            <SummaryCard plan={professionalPlan} />
+            <SummaryCard
+              isCourtesyRenewal={isCourtesyRenewal}
+              plan={professionalPlan}
+              renewalDate={current?.current_period_end}
+            />
 
             <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)] md:p-6">
               <div className="grid gap-5">
@@ -346,7 +419,9 @@ export const ProfessionalBillingCheckoutLogic = () => {
                     <div className="mb-4 rounded-2xl bg-surface p-4 shadow-[var(--lectum-shadow-soft)]">
                       <h2 className="text-xl font-bold text-foreground">Cartão de crédito</h2>
                       <p className="mt-2 text-sm leading-6 text-muted">
-                        Aceitamos apenas cartão de crédito para manter sua assinatura mensal ativa.
+                        {isCourtesyRenewal
+                          ? "Seu cartão será usado apenas para a cobrança futura ao fim da cortesia."
+                          : "Aceitamos apenas cartão de crédito para manter sua assinatura mensal ativa."}
                       </p>
                     </div>
                     <CardPayment

@@ -8,6 +8,7 @@ export type GatewaySubscriptionInput = {
   cardToken: string;
   payerEmail: string;
   returnUrl?: string | null;
+  startDate?: Date | string | null;
 };
 
 export type GatewaySubscriptionPlanInput = {

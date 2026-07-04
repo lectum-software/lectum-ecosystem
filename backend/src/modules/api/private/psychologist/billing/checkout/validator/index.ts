@@ -15,6 +15,13 @@ export const requestSchema: IValidatorRequest = {
       method: "enumeric",
       values: ["credit_card", "debit_card", "prepaid_card"],
     },
+    {
+      key: "intent",
+      coerse: "string",
+      method: "enumeric",
+      optional: true,
+      values: ["courtesy_renewal"],
+    },
   ],
 };
 

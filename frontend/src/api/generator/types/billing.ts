@@ -104,6 +104,7 @@ export type BillingSelectFreeResponse = {
 
 export type BillingCheckoutPayload = {
   card_token: string;
+  intent?: "courtesy_renewal";
   payment_type_id: "credit_card" | "debit_card" | "prepaid_card";
 };
 
@@ -112,6 +113,8 @@ export type BillingCheckoutResponse = {
   gateway_status?: string | null;
   pending_confirmation: boolean;
   init_point?: string | null;
+  next_path?: string | null;
+  scheduled_start_date?: string | null;
 };
 
 export type BillingSyncResponse = {

@@ -16,6 +16,9 @@ type GatewayErrorLog = {
 };
 
 type ProfessionalPlan = NonNullable<Awaited<ReturnType<CheckoutRepository["findPlanBySlug"]>>>;
+type ActiveProfessionalSubscription = NonNullable<
+  Awaited<ReturnType<CheckoutRepository["findActiveProfessionalSubscription"]>>
+>;
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
@@ -187,6 +190,40 @@ const isGatewayConfigError = (err: unknown) => {
   );
 };
 
+const isActiveCourtesySubscription = (subscription?: ActiveProfessionalSubscription | null) =>
+  subscription?.source === "admin_grant" &&
+  subscription.status === "ativa" &&
+  subscription.plan?.slug === "profissional";
+
+const resolveCourtesyStartDate = (subscription: ActiveProfessionalSubscription) => {
+  if (!subscription.current_period_end) return null;
+
+  const date = new Date(subscription.current_period_end);
+
+  if (Number.isNaN(date.getTime()) || date <= new Date()) return null;
+
+  return date;
+};
+
+const resolveCourtesyNextPath = async ({
+  profile,
+  repository,
+  userId,
+}: {
+  profile: NonNullable<Awaited<ReturnType<CheckoutRepository["findProfileByUserId"]>>>;
+  repository: CheckoutRepository;
+  userId: string;
+}) => {
+  const hasBillingAddress = await repository.hasBillingAddress({
+    profile,
+    userId,
+  });
+
+  return hasBillingAddress
+    ? "/app/professional/billing"
+    : "/app/professional/billing/address?intent=courtesy-renewal";
+};
+
 export default async (data: ICheckoutDTO) => {
   if (data.auth.role !== "psicologo") {
     return {
@@ -222,11 +259,30 @@ export default async (data: ICheckoutDTO) => {
   }
 
   const activeProfessional = await repository.findActiveProfessionalSubscription(profile.id!);
+  const isCourtesyRenewal = data.b.intent === "courtesy_renewal";
+  const isActiveCourtesy = isActiveCourtesySubscription(activeProfessional);
 
-  if (activeProfessional) {
+  if (isCourtesyRenewal && !isActiveCourtesy) {
+    return {
+      status: 409,
+      ...error("billing_courtesy_renewal_required", {}),
+    };
+  }
+
+  if (activeProfessional && !isCourtesyRenewal) {
     return {
       status: 409,
       ...error("professional_subscription_active", {}),
+    };
+  }
+
+  const courtesyStartDate =
+    isCourtesyRenewal && activeProfessional ? resolveCourtesyStartDate(activeProfessional) : null;
+
+  if (isCourtesyRenewal && !courtesyStartDate) {
+    return {
+      status: 409,
+      ...error("billing_courtesy_renewal_required", {}),
     };
   }
 
@@ -277,12 +333,55 @@ export default async (data: ICheckoutDTO) => {
     };
   }
 
-  const pendingSubscription = await repository.createPendingSubscription(
-    profile.id!,
-    professionalPlan.id,
-  );
+  let pendingSubscription: Awaited<
+    ReturnType<CheckoutRepository["createPendingSubscription"]>
+  > | null = null;
 
   try {
+    if (isCourtesyRenewal) {
+      const scheduledSubscription = await repository.findScheduledGatewaySubscription(profile.id!);
+
+      if (scheduledSubscription?.id && scheduledSubscription.gateway_subscription_id) {
+        const gatewayResult = await gateway.updateSubscriptionCard({
+          cardToken: data.b.card_token,
+          gatewaySubscriptionId: scheduledSubscription.gateway_subscription_id,
+        });
+        const current = await repository.setGatewaySubscriptionId(
+          scheduledSubscription.id,
+          gatewayResult.gateway_subscription_id,
+          {
+            currentPeriodEnd: null,
+            status: "inativa",
+          },
+        );
+        await repository.savePaymentMethodReference(
+          data.auth.id!,
+          gatewayResult.gateway_subscription_id,
+        );
+
+        return {
+          status: 200,
+          ...msg("billing_courtesy_card_scheduled", {}),
+          data: {
+            current,
+            gateway_status: gatewayResult.gateway_status,
+            init_point: gatewayResult.init_point,
+            next_path: await resolveCourtesyNextPath({
+              profile,
+              repository,
+              userId: data.auth.id!,
+            }),
+            pending_confirmation: false,
+            scheduled_start_date: courtesyStartDate?.toISOString() ?? null,
+          },
+        };
+      }
+    }
+
+    pendingSubscription = await repository.createPendingSubscription(
+      profile.id!,
+      professionalPlan.id,
+    );
     const gatewayResult = await gateway.createSubscription({
       subscriptionId: pendingSubscription.id!,
       gatewayPlanId,
@@ -291,25 +390,51 @@ export default async (data: ICheckoutDTO) => {
       cardToken: data.b.card_token,
       payerEmail,
       returnUrl: gatewayReturnUrl,
+      startDate: courtesyStartDate,
     });
 
     const current = await repository.setGatewaySubscriptionId(
       pendingSubscription.id!,
       gatewayResult.gateway_subscription_id,
+      isCourtesyRenewal
+        ? {
+            currentPeriodEnd: null,
+            status: "inativa",
+          }
+        : undefined,
     );
+    if (isCourtesyRenewal) {
+      await repository.savePaymentMethodReference(
+        data.auth.id!,
+        gatewayResult.gateway_subscription_id,
+      );
+    }
 
     return {
       status: 200,
-      ...msg("billing_checkout_started", {}),
+      ...msg(
+        isCourtesyRenewal ? "billing_courtesy_card_scheduled" : "billing_checkout_started",
+        {},
+      ),
       data: {
         current,
         gateway_status: gatewayResult.gateway_status,
-        pending_confirmation: true,
         init_point: gatewayResult.init_point,
+        next_path: isCourtesyRenewal
+          ? await resolveCourtesyNextPath({
+              profile,
+              repository,
+              userId: data.auth.id!,
+            })
+          : undefined,
+        pending_confirmation: !isCourtesyRenewal,
+        scheduled_start_date: courtesyStartDate?.toISOString() ?? null,
       },
     };
   } catch (err) {
-    await repository.cancelSubscription(pendingSubscription.id!);
+    if (pendingSubscription?.id) {
+      await repository.cancelSubscription(pendingSubscription.id);
+    }
 
     console.error("[BILLING] Mercado Pago checkout failed", sanitizeGatewayError(err));
 

@@ -352,3 +352,34 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser local em `http://localhost:3002/app/professional/billing`, com sessao real da conta em cortesia, confirmou **Adicionar cartao de cobranca**, **Cadastre um cartao para a cobranca quando a cortesia chegar ao fim.**, CTA **Adicionar** e ausencia visual de **Historico de pagamentos**, **Esta conta esta com cortesia profissional ativa**, **Nenhuma cobranca na cortesia** e **Cortesia ativa, sem cartao vinculado**.
+
+## Ajuste em 2026-07-04: cartão futuro antes do endereço na cortesia
+
+- Pedido direto de produto: o CTA **Adicionar cartão de cobrança** da cortesia deve abrir o formulário seguro de cartão de crédito para cobrança futura, e não a página de endereço.
+- A rota `/app/professional/billing/checkout?intent=courtesy-renewal` agora bypassa o redirecionamento automático de cortesia ativa para endereço e renderiza o CardPayment Brick com copy de cobrança futura.
+- O endpoint `POST /api/private/psychologist/billing/checkout` aceita `intent="courtesy_renewal"` apenas para cortesia administrativa ativa do Plano Profissional com data futura de expiração.
+- Ao cadastrar o cartão, o backend cria ou atualiza uma assinatura real no gateway com início previsto na expiração da cortesia e mantém o registro local `inativa` até a cobrança futura.
+- Após sucesso no cartão, o backend verifica dados reais de endereço: `billing_address` completo ou endereço profissional completo no perfil. Se não existir, retorna `/app/professional/billing/address?intent=courtesy-renewal`; se existir, retorna `/app/professional/billing`.
+- A sync de assinatura preserva `inativa` para preapproval autorizada com `auto_recurring.start_date` futura, evitando ativar cobrança antes do fim da cortesia.
+- Referência visual local consultada: `_product/proto/Minhas Assinatura - Psicólogo.jpg`; Builder/Quick Copy não está exposto como ferramenta direta neste ambiente.
+- ADR registrado: `adrs/0215-cartao-futuro-cortesia-antes-endereco.md`.
+- Nenhum mock, seed, endpoint simulado, package novo ou alteração de schema foi criado.
+
+### Critérios de aceite do ajuste
+
+- [x] O CTA de cortesia abre o checkout de cartão e permanece em `/app/professional/billing/checkout?intent=courtesy-renewal`, sem redirecionar antes para endereço.
+- [x] O formulário de cartão usa o CardPayment Brick real e envia `intent="courtesy_renewal"` ao backend.
+- [x] O backend só aceita cartão futuro para cortesia profissional ativa com expiração futura.
+- [x] Após cartão cadastrado, a decisão de abrir endereço usa dados reais de `billing_address` ou endereço profissional do perfil.
+- [x] A assinatura gateway futura fica localmente `inativa` até o `start_date` da cortesia.
+
+### Validação do ajuste de cartão futuro
+
+- `pnpm --dir backend exec biome check --write src/modules/api/private/psychologist/billing/checkout/DTOs/ICheckoutDTO.ts src/modules/api/private/psychologist/billing/checkout/validator/index.ts src/modules/api/private/psychologist/billing/checkout/repositories/CheckoutRepository.ts src/modules/api/private/psychologist/billing/checkout/repositories/interfaces/ICheckoutRepository.ts src/modules/api/private/psychologist/billing/checkout/use-cases/services.ts src/modules/billing/payment-gateway/PaymentGateway.ts src/modules/billing/payment-gateway/MercadoPagoAdapter.ts src/modules/billing/sync-mercado-pago-subscription.ts locales/pt/translation.json`
+- `pnpm --dir frontend exec biome check --write src/api/generator/types/billing.ts src/app/app/professional/billing/checkout/logic.tsx`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local mobile-first via Chrome headless/CDP em `http://localhost:3000/app/professional/billing/checkout?intent=courtesy-renewal`, com sessão real da conta em cortesia, confirmou permanência na rota de checkout, título **Adicionar cartão de cobrança**, seção **Cartão de crédito**, campos do CardPayment Brick e ausência de navegação para `/billing/address` antes do cartão.

@@ -152,6 +152,19 @@ const resolveActiveCurrentPeriodEnd = ({
   );
 };
 
+const resolveLocalSubscriptionStatus = (gatewaySubscription: GatewaySubscription) => {
+  if (gatewaySubscription.status !== "ativa") return gatewaySubscription.status;
+
+  const raw = getRawSubscription(gatewaySubscription);
+  const startDate = parseMercadoPagoSubscriptionDate(toSafeString(raw?.auto_recurring?.start_date));
+
+  if (startDate && startDate > new Date()) {
+    return "inativa";
+  }
+
+  return gatewaySubscription.status;
+};
+
 export const syncMercadoPagoSubscriptionRecord = async ({
   gatewaySubscription: receivedGatewaySubscription,
   localSubscription,
@@ -169,15 +182,19 @@ export const syncMercadoPagoSubscriptionRecord = async ({
   const gatewaySubscription =
     receivedGatewaySubscription ??
     (await gateway.getSubscription(localSubscription.gateway_subscription_id));
+  const status = resolveLocalSubscriptionStatus(gatewaySubscription);
 
   const current = await repository.updateSubscriptionStatus({
     subscriptionId: localSubscription.id,
     gatewaySubscriptionId: gatewaySubscription.gateway_subscription_id,
-    status: gatewaySubscription.status,
-    currentPeriodEnd: resolveActiveCurrentPeriodEnd({
-      gatewaySubscription,
-      localSubscription,
-    }),
+    status,
+    currentPeriodEnd:
+      status === "ativa"
+        ? resolveActiveCurrentPeriodEnd({
+            gatewaySubscription,
+            localSubscription,
+          })
+        : null,
   });
 
   return {

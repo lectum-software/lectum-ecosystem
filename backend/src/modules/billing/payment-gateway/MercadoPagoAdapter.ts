@@ -93,6 +93,14 @@ const toSafeString = (value: unknown) => (typeof value === "string" ? value : un
 
 const toSafeNumber = (value: unknown) => (typeof value === "number" ? value : undefined);
 
+const toIsoDateString = (value?: Date | string | null) => {
+  if (!value) return undefined;
+
+  const date = value instanceof Date ? value : new Date(value);
+
+  return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+};
+
 const sanitizeMercadoPagoError = (operation: string, err: unknown): MercadoPagoSafeErrorDetails => {
   if (err instanceof Error) {
     return {
@@ -244,7 +252,10 @@ export class MercadoPagoAdapter implements PaymentGateway {
     cardToken,
     payerEmail,
     returnUrl,
+    startDate,
   }: GatewaySubscriptionInput): Promise<GatewaySubscriptionResult> {
+    const recurringStartDate = toIsoDateString(startDate);
+
     const response = await this.runGatewayOperation("create_subscription", () =>
       this.preApproval.create({
         body: {
@@ -252,6 +263,7 @@ export class MercadoPagoAdapter implements PaymentGateway {
           auto_recurring: {
             frequency: 1,
             frequency_type: "months",
+            ...(recurringStartDate ? { start_date: recurringStartDate } : {}),
             transaction_amount: amountCents / 100,
             currency_id: "BRL",
           },
