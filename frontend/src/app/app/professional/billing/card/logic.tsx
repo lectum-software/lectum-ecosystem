@@ -263,8 +263,7 @@ export const ProfessionalBillingCardLogic = () => {
                       Cartão alterado com sucesso
                     </h2>
                     <p className="mt-3 max-w-md text-sm leading-6 text-muted md:text-base md:leading-7">
-                      O novo cartão de crédito foi enviado ao Mercado Pago e já está vinculado à sua
-                      assinatura.
+                      O novo cartão de crédito já está vinculado à sua assinatura.
                     </p>
                   </div>
                   <div className="grid w-full gap-3 sm:max-w-sm sm:grid-cols-2">
