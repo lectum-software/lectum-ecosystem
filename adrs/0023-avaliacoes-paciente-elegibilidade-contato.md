@@ -150,3 +150,23 @@ O card superior da tela `/app/reviews/new` ja recebia `psychologist_avatar` no c
 - `git diff --check`
 - HTTP local `200` em `/app/reviews/new?psychologist_id=cmqmg35850000asuheq2ucwd0`
 - Chrome headless local em viewport mobile 390x844 na mesma rota.
+
+
+## Atualizacao 2026-07-04 - CTA de avaliacao no proprio perfil publico
+
+### Contexto
+
+A regra vigente permite que qualquer usuario autenticado avalie psicologos publicos, mas preserva o bloqueio real de autoavaliacao. No perfil publico do proprio psicologo, a UI ainda oferecia o botao `Avaliar` em `Avaliacoes`, levando o profissional para uma acao que a API ja recusaria.
+
+### Decisao
+
+- O perfil publico compara o usuario autenticado em sessao (`currentUser.id`) com o `profile.id` retornado pelo diretorio.
+- Quando os ids sao iguais, a interface oculta apenas o CTA `Avaliar` na previa de `Avaliacoes` da aba `Geral` e no card de resumo da aba completa `Avaliacoes`.
+- A navegacao `Ver todas`, a listagem de avaliacoes, as metricas, a distribuicao de notas e o botao de editar perfil permanecem independentes.
+- A API continua sendo a fronteira de seguranca: a autoavaliacao permanece bloqueada no backend; esconder o botao e um ajuste de experiencia, nao controle de acesso.
+
+### Consequencias
+
+- O psicologo nao ve uma chamada para avaliar a si mesmo no proprio perfil publico.
+- Outros usuarios autenticados ou anonimos continuam vendo o CTA quando as regras visuais do perfil permitirem, seguindo o fluxo existente de login/criacao de avaliacao.
+- Nao houve mudanca de schema, endpoint, contrato de elegibilidade, packages ou dados persistidos.

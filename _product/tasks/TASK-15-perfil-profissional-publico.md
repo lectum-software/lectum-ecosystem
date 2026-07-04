@@ -765,3 +765,25 @@ Validacoes executadas:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Chrome headless/CDP mobile 390x844 em `/psychologists/cmr0lvmb90000l4uh50e6b0zl`, confirmando `lastSectionTitle=Publicacoes`, `shellPaddingBottom=75px`, `mobileCtaBottom=15px` e `gapBetweenLastSectionAndCta=28px`.
+
+
+## Registro de ajuste complementar em 2026-07-04 - ocultar Avaliar no proprio perfil
+
+- Pedido do usuario: quando o psicologo autenticado estiver visualizando o proprio perfil publico, remover o botao `Avaliar` da secao `Avaliacoes`.
+- A regra agora deriva do usuario real em sessao (`currentUser.id`) e do `profile.id` carregado pelo contrato publico; se forem iguais, a UI nao renderiza o CTA de avaliacao.
+- Na aba `Geral`, perfis verificados com avaliacoes continuam exibindo `Ver todas`, mas o proprio psicologo sem avaliacoes nao ve `Avaliar`.
+- Na aba completa `Avaliacoes`, o card de resumo preserva notas/distribuicao reais, mas nao mostra `Avaliar` para o dono do perfil.
+- O backend ja mantem a trava real de autoavaliacao conforme TASK-17/ADR-0023; este ajuste e apenas de experiencia para nao oferecer uma acao impossivel.
+- Fonte visual auditavel: `_product/proto/Perfil Profissional - Avaliacoes.jpg`; Builder/Quick Copy foi testado via `npx "@builder.io/dev-tools@latest" auth status`, mas retornou `Not Authenticated to Builder.io`, entao a validacao visual seguiu com a imagem local e o print do usuario.
+- Nao houve alteracao de backend, banco, Prisma, endpoints, packages, dados persistidos, fluxo de criacao de avaliacao ou regra de elegibilidade.
+- ADR atualizado: `adrs/0023-avaliacoes-paciente-elegibilidade-contato.md`.
+
+Validacoes executadas:
+
+- `npx "@builder.io/dev-tools@latest" auth status` em `frontend/` retornou `Not Authenticated to Builder.io`; Quick Copy nao ficou operacional nesta sessao.
+- `pnpm --dir frontend exec biome check --write -- "src/app/app/psychologist/[id]/logic.tsx"`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome headless/CDP mobile 390x844 em `/psychologists/cmr6pzpbn000h5guht478a9l4` com sessao real do proprio psicologo: `overviewAvaliarCount=0`, usuario persistido igual ao perfil.
+- Chrome headless/CDP mobile 390x844 em `/psychologists/cmr6pzpbn000h5guht478a9l4?tab=avaliacoes`: `reviewsTabAvaliarCount=0`.

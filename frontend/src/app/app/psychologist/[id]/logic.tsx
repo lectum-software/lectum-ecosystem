@@ -1487,6 +1487,7 @@ const ReviewPreviewCard = ({ review }: { review: DirectoryPsychologistProfileRev
 };
 
 const ReviewsPreviewSection = ({
+  canReviewProfile,
   highlightedReview,
   isVerifiedSubscriber,
   isError,
@@ -1496,6 +1497,7 @@ const ReviewsPreviewSection = ({
   reviews,
   summary,
 }: {
+  canReviewProfile: boolean;
   isVerifiedSubscriber: boolean;
   isError: boolean;
   isLoading: boolean;
@@ -1510,11 +1512,11 @@ const ReviewsPreviewSection = ({
   const action = isVerifiedSubscriber ? (
     hasReviews ? (
       <ViewAllChipButton onClick={onViewAll}>Ver todas</ViewAllChipButton>
-    ) : (
+    ) : canReviewProfile ? (
       <SectionChipLink href={`/app/reviews/new?psychologist_id=${psychologistId}`}>
         Avaliar
       </SectionChipLink>
-    )
+    ) : null
   ) : null;
 
   return (
@@ -1760,6 +1762,7 @@ const PostsPreviewSection = ({
 };
 
 const AboutTab = ({
+  canReviewProfile,
   canInteractPosts,
   onTabChange,
   onSharePost,
@@ -1767,6 +1770,7 @@ const AboutTab = ({
   profile,
   reviewsPreview,
 }: {
+  canReviewProfile: boolean;
   canInteractPosts: boolean;
   onTabChange: (tab: ProfileTab, options?: ProfileTabNavigationOptions) => void;
   onSharePost: (post: PostListPost) => void;
@@ -1821,6 +1825,7 @@ const AboutTab = ({
       </ProfileSectionCard>
 
       <ReviewsPreviewSection
+        canReviewProfile={canReviewProfile}
         highlightedReview={reviewsPreview.highlightedReview}
         isVerifiedSubscriber={profile.verified}
         isError={reviewsPreview.isError}
@@ -1951,9 +1956,11 @@ const PostsTab = ({
 };
 
 const ReviewSummaryCard = ({
+  canReviewProfile,
   psychologistId,
   summary,
 }: {
+  canReviewProfile: boolean;
   psychologistId: string;
   summary: DirectoryReviewSummary;
 }) => {
@@ -1983,13 +1990,15 @@ const ReviewSummaryCard = ({
             {summary.rating_count} avaliações
           </p>
         </div>
-        <Button
-          asChild
-          className="h-10 shrink-0 cursor-pointer rounded-full border-[#CFE4FA] bg-white px-4 text-[12.5px] font-extrabold text-[#247BD1] hover:border-[#B8D9F8] hover:bg-[#F4FAFF] hover:text-[#1769B8] focus-visible:outline-[#2F8DEB] sm:px-[18px] sm:text-[13px]"
-          variant="outline"
-        >
-          <Link href={`/app/reviews/new?psychologist_id=${psychologistId}`}>Avaliar</Link>
-        </Button>
+        {canReviewProfile ? (
+          <Button
+            asChild
+            className="h-10 shrink-0 cursor-pointer rounded-full border-[#CFE4FA] bg-white px-4 text-[12.5px] font-extrabold text-[#247BD1] hover:border-[#B8D9F8] hover:bg-[#F4FAFF] hover:text-[#1769B8] focus-visible:outline-[#2F8DEB] sm:px-[18px] sm:text-[13px]"
+            variant="outline"
+          >
+            <Link href={`/app/reviews/new?psychologist_id=${psychologistId}`}>Avaliar</Link>
+          </Button>
+        ) : null}
       </div>
 
       <div className="grid gap-2.5">
@@ -2066,6 +2075,7 @@ const ReviewCard = ({ review }: { review: DirectoryPsychologistProfileReview }) 
 };
 
 const ReviewsTab = ({
+  canReviewProfile,
   error,
   hasNextPage,
   isError,
@@ -2078,6 +2088,7 @@ const ReviewsTab = ({
   reviews,
   summary,
 }: {
+  canReviewProfile: boolean;
   error: unknown;
   hasNextPage: boolean;
   isError: boolean;
@@ -2099,7 +2110,11 @@ const ReviewsTab = ({
         onBack={onBackToOverview}
         title="Avaliações"
       />
-      <ReviewSummaryCard psychologistId={profileId} summary={summary} />
+      <ReviewSummaryCard
+        canReviewProfile={canReviewProfile}
+        psychologistId={profileId}
+        summary={summary}
+      />
 
       {isError ? (
         <InlineAlert title="Não foi possível carregar avaliações" variant="error">
@@ -2458,9 +2473,12 @@ export const PsychologistProfileLogic = () => {
     profileQuery.isError && !showInactiveOwnProfileState
       ? resolveErrorMessage(profileQuery.error, "Não foi possível carregar o perfil profissional.")
       : null;
-  const canEditProfile =
-    currentUser?.role === "psicologo" && Boolean(profile?.id) && currentUser.id === profile?.id;
+  const isViewingOwnProfile = Boolean(
+    currentUser?.id && profile?.id && currentUser.id === profile.id,
+  );
+  const canEditProfile = currentUser?.role === "psicologo" && isViewingOwnProfile;
   const canInteractWithPosts = Boolean(currentUser?.id);
+  const canReviewProfile = !isViewingOwnProfile;
 
   const emptySummary = useMemo<DirectoryReviewSummary>(
     () => ({
@@ -2538,6 +2556,7 @@ export const PsychologistProfileLogic = () => {
                 <div className="grid gap-0" id="profile-content">
                   {activeTab === "geral" ? (
                     <AboutTab
+                      canReviewProfile={canReviewProfile}
                       canInteractPosts={canInteractWithPosts}
                       onTabChange={setActiveTab}
                       onSharePost={sharePost}
@@ -2577,6 +2596,7 @@ export const PsychologistProfileLogic = () => {
                   ) : null}
                   {activeTab === "avaliacoes" ? (
                     <ReviewsTab
+                      canReviewProfile={canReviewProfile}
                       error={profileReviews.error}
                       hasNextPage={Boolean(profileReviews.hasNextPage)}
                       isError={profileReviews.isError}
