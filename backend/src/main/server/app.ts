@@ -70,6 +70,7 @@ server.use(
       "X-Requested-With",
       "Accept",
       "Origin",
+      "ngrok-skip-browser-warning",
       "x-device",
     ],
   }),
