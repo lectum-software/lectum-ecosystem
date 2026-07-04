@@ -146,7 +146,6 @@ export function PwaInstallPrompt() {
   const [promptKind, setPromptKind] = useState<PromptKind>("native");
   const [showIosSteps, setShowIosSteps] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const isPsychologist = user?.role === "psicologo";
   const hasCompletedRegistration = hasCompletedRegistrationForPrompts(user);
 
   useEffect(() => {
@@ -290,16 +289,9 @@ export function PwaInstallPrompt() {
               Adicionar a Lectum à tela inicial
             </p>
             <p className="mt-1 text-sm leading-5 text-muted">
-              {isPsychologist
-                ? "Crie um atalho para voltar rápido aos contatos, ao perfil e à rotina profissional."
-                : "Crie um atalho para entrar mais rápido, sem precisar digitar o endereço no navegador."}
+              Crie um atalho na tela inicial do celular para voltar rapidamente à Lectum.
             </p>
           </div>
-        </div>
-
-        <div className="mt-3 rounded-2xl border border-border bg-background px-3 py-2.5 text-xs leading-5 text-muted">
-          O ícone ficará visível na tela inicial do celular. É apenas um atalho do site em modo app:
-          não ativa notificações nem muda suas preferências.
         </div>
 
         {promptKind === "ios" && showIosSteps ? (

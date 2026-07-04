@@ -23,7 +23,7 @@
 
 Por enquanto a Lectum será entregue somente como site responsivo, mas a experiência mobile deve se aproximar de um aplicativo instalado. A forma correta para o MVP é tornar o frontend instalável como PWA/atalho na tela inicial, com sugestão contextual para o usuário adicionar a Lectum ao celular.
 
-A comunicação deve usar o gênero definido para o produto: **"a Lectum"**. A copy principal recomendada, após refinamento de 2026-07-04, é: **"Adicionar a Lectum à tela inicial"**. A UI não deve usar termos como "instalar SPA" nem sugerir migração para SPA pura; o frontend permanece Next.js App Router com experiência PWA/atalho.
+A comunicação deve usar o gênero definido para o produto: **"a Lectum"**. A copy principal recomendada, após refinamento de 2026-07-04, é: **"Adicionar a Lectum à tela inicial"**. A copy complementar final é: **"Crie um atalho na tela inicial do celular para voltar rapidamente à Lectum."**. A UI não deve usar termos como "instalar SPA", não deve sugerir migração para SPA pura e não deve exibir uma faixa informativa separada sobre a visibilidade do ícone; o frontend permanece Next.js App Router com experiência PWA/atalho.
 
 Esta task não substitui app nativo e não deve misturar instalação do atalho com consentimento de notificações. Push notification, Web Push e permissão do navegador continuam separados das tasks de notificações.
 
@@ -47,7 +47,8 @@ Permitir que o usuário mobile adicione a Lectum à tela inicial e acesse a plat
   - detecção de modo standalone para não exibir sugestão quando a Lectum já estiver instalada/aberta como app.
 - Criar sugestão mobile-first de instalação/atalho:
   - copy: **"Adicionar a Lectum à tela inicial"**;
-  - explicar que o atalho ficará visível na tela inicial do celular, por privacidade;
+  - copy complementar: **"Crie um atalho na tela inicial do celular para voltar rapidamente à Lectum."**;
+  - não exibir faixa informativa separada sobre o ícone ficar visível na tela inicial;
   - CTA principal `Adicionar à tela inicial`;
   - ação secundária `Agora não` com cooldown local;
   - não exibir a opção permanente `Não mostrar novamente`;
@@ -105,7 +106,7 @@ Persistência local:
 - [x] Android/Chromium usa `beforeinstallprompt` e só dispara o prompt após toque em `Adicionar à tela inicial`.
 - [x] A sugestão mobile-first aparece apenas quando a Lectum não está em standalone, respeita `Agora não` com cooldown e não exibe `Não mostrar novamente`.
 - [x] A copy usa **"Adicionar a Lectum à tela inicial"**, mantém o gênero **a Lectum** e evita ambiguidade com SPA pura ou app nativo.
-- [x] A UI informa que o atalho ficará visível na tela inicial do celular, por privacidade.
+- [x] A UI usa **"Crie um atalho na tela inicial do celular para voltar rapidamente à Lectum."** e não exibe a faixa cinza informativa sobre o ícone ficar visível.
 - [x] A task não solicita permissão de notificações nem implementa Web Push/offline-first.
 - [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
 - [x] Nenhum pacote novo foi instalado, salvo se `PACKAGES.md` e ADR justificarem explicitamente.
@@ -208,6 +209,20 @@ Persistência local:
 
 - Pedido de produto: esclarecer que a sugestão não é para "instalar SPA" nem para transformar a Lectum em SPA pura.
 - Decisão: manter Next.js App Router e a instalação como PWA/atalho mobile; alterar a copy principal da modal para **"Adicionar a Lectum à tela inicial"** e o CTA para **"Adicionar à tela inicial"**.
-- A UI passa a explicar que o ícone é apenas um atalho do site em modo app, não ativa notificações e não muda preferências.
+- A UI passa a usar a copy complementar **"Crie um atalho na tela inicial do celular para voltar rapidamente à Lectum."** e remove a faixa cinza separada sobre o ícone ficar visível.
 - A mudança preserva o comportamento existente: `beforeinstallprompt` em Android/Chromium, instruções manuais no iOS/Safari, cooldown local, exibição somente após cadastro concluído e nenhuma alteração de backend, package ou migration.
 - Validação deste refinamento: `pnpm --dir frontend exec biome check --write src/components/pwa-install-prompt.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e browser local mobile `390x844` em `http://127.0.0.1:3006/app/favorites`, com estado local temporário de usuário confirmado apenas para validar a renderização do prompt.
+
+## Refinamento 2026-07-04 - remoção da faixa cinza do atalho
+
+- Pedido de produto: alterar a descrição da modal para **"Crie um atalho na tela inicial do celular para voltar rapidamente à Lectum."** e remover a faixa cinza **"O ícone ficará visível..."**.
+- Implementação ajustada em `frontend/src/components/pwa-install-prompt.tsx`:
+  - a copy complementar deixa de variar por papel e passa a usar a frase única solicitada;
+  - o bloco informativo separado foi removido, reduzindo altura e ruído visual no prompt mobile-first.
+- A alteração é frontend-only, sem package novo, backend, endpoint ou migration.
+- Validação do refinamento:
+  - `pnpm --dir frontend exec biome check --write src/components/pwa-install-prompt.tsx`;
+  - `pnpm --dir frontend check`;
+  - `pnpm --dir frontend build`;
+  - `pnpm check`;
+  - browser local via Chrome/CDP em `http://127.0.0.1:3007/app/favorites`, viewport mobile `390x844`, user agent iOS/Safari e estado local temporário de usuário confirmado, confirmando nova copy, CTA **"Adicionar à tela inicial"** e ausência de **"O ícone ficará visível"**.
