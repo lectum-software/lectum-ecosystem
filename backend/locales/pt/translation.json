@@ -40,7 +40,7 @@
     "invalid_analytics_date_range": "Informe uma data inicial e final válidas para consultar os analytics.",
     "invalid_cpf": "Informe um CPF válido para continuar.",
     "cfp_query_required": "Informe CPF, nome ou registro profissional para consultar o CFP.",
-    "cfp_provider_config_error": "Consulta CFP indisponível por configuração do provedor.",
+    "cfp_provider_config_error": "Consulta CFP indisponível por configuração ou acesso do provedor.",
     "cfp_provider_validation_error": "Não foi possível consultar o CFP com os dados informados.",
     "cfp_provider_unavailable": "Consulta CFP temporariamente indisponível. Tente novamente em instantes.",
     "cfp_provider_rate_limited": "Consulta CFP temporariamente limitada pelo provedor. Tente novamente mais tarde.",

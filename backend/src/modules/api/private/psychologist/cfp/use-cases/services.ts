@@ -16,7 +16,7 @@ const normalizeText = (value?: string | null) => {
 };
 const normalizeUf = (value?: string | null) => normalizeText(value)?.toUpperCase();
 
-const isProviderConfigError = (code: number | null) => code === 601 || code === 602;
+const isProviderConfigError = (code: number | null) => code === 601 || code === 602 || code === 603;
 const isProviderValidationError = (code: number | null) => code === 606;
 const isProviderNotFound = (code: number | null) => code === 612;
 const isProviderRateLimit = (code: number | null, message: string | null) => {

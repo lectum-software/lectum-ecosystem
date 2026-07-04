@@ -54,3 +54,9 @@ Pesquisa publica identificou a consulta InfoSimples `Conselho Federal de Psicolo
 - Em consulta autenticada com CPF sem registro no CFP, a InfoSimples retornou HTTP 200 com `code=612`, `data=[]` e erro textual de nenhum dado encontrado.
 - O backend passa a tratar `code=612` como resultado vazio auditavel, persistindo `professional_registry_check.found=false` e respondendo sucesso funcional `cfp_search_empty` para a UI exibir o estado "Nao encontrado".
 - `code=612` nao aprova profissional e nao e tratado como indisponibilidade do provedor; erros de configuracao, validacao, rate limit e demais codigos continuam falhando de forma honesta.
+
+## Correcao operacional em 2026-07-04
+
+- Em verificacao segura sem expor `DOCUMENT_TOKEN`, a InfoSimples retornou `code=603`, indicando token sem autorizacao de acesso ao servico `cfp/cadastro` ou limite de uso configurado.
+- O backend passa a classificar `code=603` como erro de configuracao/acesso do provedor, nao como rate limit temporario, porque a acao correta e ajustar autorizacao/limite/saldo no painel/contrato InfoSimples.
+- A tela continua sem fallback mockado: quando a conta/token nao tiver acesso ao produto CFP, a consulta deve falhar de forma honesta e nao preencher `cfp_verified_at`.

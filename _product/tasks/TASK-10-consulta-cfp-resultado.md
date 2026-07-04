@@ -226,3 +226,9 @@ Todos os criterios aplicaveis foram atendidos. A confirmacao real de um CPF prof
 - Caso real validado: CPF sem registro no CFP retorna `code=612` na InfoSimples, com `data=[]` e sem `resultados`.
 - Esse codigo agora e tratado como estado vazio funcional, nao como erro de provedor: o backend persiste `professional_registry_check.found=false` e retorna `cfp_search_empty`.
 - A UI de `/psychologist/cfp` passa a receber `found=false` e exibir a tela "Resultado CFP - Nao Encontrado" para o usuario tentar novamente.
+
+## Correcao operacional InfoSimples em 2026-07-04
+
+- Caso real validado sem expor `DOCUMENT_TOKEN`: a InfoSimples retornou `code=603` para `cfp/cadastro`, indicando token sem autorizacao de acesso ao servico ou limite de uso especificado.
+- O backend passa a tratar `code=603` como erro de configuracao/acesso do provedor (`cfp_provider_config_error`), e nao como rate limit temporario disparado pela palavra "limite" da mensagem do fornecedor.
+- A correcao nao cria fallback, mock ou aprovacao manual automatica: sem token/contrato/saldo autorizados no provedor, `cfp_verified_at` permanece nulo e o fluxo deve ser resolvido operacionalmente na InfoSimples.
