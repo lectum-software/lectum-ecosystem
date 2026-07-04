@@ -80,3 +80,4 @@ Pesquisa publica identificou a consulta InfoSimples `Conselho Federal de Psicolo
 - Quando a consulta automatica falhar por indisponibilidade da origem CFP/InfoSimples, a UI deve explicar que o cadastro do Conselho Federal de Psicologia esta instavel no momento.
 - O psicologo deve receber um caminho claro para falar com o suporte da Lectum e solicitar aprovacao manual, sem aprovacao automatica, mock ou preenchimento de `cfp_verified_at`.
 - A mensagem de erro backend de `cfp_provider_unavailable` passa a refletir essa orientacao operacional.
+- A pagina CFP tambem exibe no rodape o CTA "Problemas? Fale com o suporte" apontando para o WhatsApp operacional `wa.me/5537998739534`.

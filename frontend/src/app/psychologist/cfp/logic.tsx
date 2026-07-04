@@ -29,7 +29,14 @@ import { PrivateTemplate } from "@/templates/private";
 import { type CfpSearchForm, useForm } from "./use-form";
 
 const nextStepHref = "/app/professional/whatsapp/verify";
-const supportHref = "/app/profile";
+const supportMessage =
+  "Ol\u00e1, preciso de ajuda com a verifica\u00e7\u00e3o profissional CFP/CRP na Lectum.";
+const supportHref = `https://wa.me/5537998739534?text=${encodeURIComponent(supportMessage)}`;
+const supportLinkProps = {
+  href: supportHref,
+  rel: "noopener noreferrer",
+  target: "_blank",
+} as const;
 
 type ApiErrorData = {
   code?: string;
@@ -62,9 +69,24 @@ type ResolvedApiError = ReturnType<typeof resolveApiError>;
 const isCfpProviderUnavailable = (error?: ResolvedApiError | null) =>
   error?.code === "cfp_provider_unavailable";
 
+const SupportFooterLink = () => (
+  <p className="px-2 text-center text-sm font-medium text-muted">
+    Problemas?{" "}
+    <a
+      {...supportLinkProps}
+      className="font-semibold text-primary underline-offset-4 transition hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+    >
+      Fale com o suporte
+    </a>
+  </p>
+);
+
 const PageFrame = ({ children }: { children: ReactNode }) => (
   <PrivateTemplate allowAnonymous showHeader={false} showMobileNavigation={false}>
-    <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-4xl">{children}</section>
+    <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-4xl">
+      {children}
+      <SupportFooterLink />
+    </section>
   </PrivateTemplate>
 );
 
@@ -164,7 +186,7 @@ const NotFoundScreen = ({ onRetry }: { onRetry: () => void }) => (
           Tentar novamente
         </Button>
         <Button asChild className="h-14 rounded-full text-base" variant="outline">
-          <Link href="/app/profile">Falar com suporte</Link>
+          <a {...supportLinkProps}>Falar com suporte</a>
         </Button>
       </div>
     </PremiumPanel>
@@ -493,7 +515,7 @@ export const PsychologistCfpLogic = () => {
                       }
                     </p>
                     <Button asChild className="h-11 w-full rounded-full" variant="outline">
-                      <Link href={supportHref}>{"Solicitar aprova\u00e7\u00e3o manual"}</Link>
+                      <a {...supportLinkProps}>{"Solicitar aprova\u00e7\u00e3o manual"}</a>
                     </Button>
                   </div>
                 ) : null}

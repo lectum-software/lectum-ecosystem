@@ -249,3 +249,4 @@ Todos os criterios aplicaveis foram atendidos. A confirmacao real de um CPF prof
 
 - Quando a consulta automatica ao cadastro CFP falhar por instabilidade da origem, a tela passa a informar que o sistema do Conselho Federal de Psicologia esta instavel no momento.
 - A tela tambem passa a exibir um link de suporte para o psicologo solicitar aprovacao manual, mantendo a regra de nao aprovar automaticamente sem validacao real/manual.
+- A pagina CFP exibe no rodape "Problemas? Fale com o suporte" com link para o WhatsApp operacional `wa.me/5537998739534`.
