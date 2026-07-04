@@ -97,6 +97,12 @@ export const usePsychologistBilling = ({ callbacks }: UsePsychologistBillingProp
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: keys.psychologistBilling.current() });
       queryClient.invalidateQueries({ queryKey: keys.psychologistBilling.subscription() });
+      queryClient.invalidateQueries({ queryKey: keys.psychologistFreeProfile.root() });
+      queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === "auth_hydrate" });
+      queryClient.invalidateQueries({ queryKey: keys.directory.psychologistsRoot() });
+      queryClient.invalidateQueries({
+        predicate: (query) => query.queryKey[0] === "directory_psychologist",
+      });
       callbacks?.address?.onSuccess?.(data);
     },
     onError: callbacks?.address?.onError,

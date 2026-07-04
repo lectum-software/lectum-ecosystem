@@ -10,5 +10,9 @@ export interface IAddressRepository {
   findActiveProfessionalSubscription(
     psychologistId: string,
   ): Promise<professional_subscription | null>;
-  saveAddress(userId: string, data: IAddressDTO["b"]): Promise<billing_address>;
+  saveAddress(
+    userId: string,
+    psychologistProfileId: string,
+    data: IAddressDTO["b"],
+  ): Promise<billing_address>;
 }

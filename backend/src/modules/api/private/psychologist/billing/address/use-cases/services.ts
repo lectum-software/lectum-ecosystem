@@ -125,7 +125,7 @@ export default async (data: IAddressDTO) => {
     };
   }
 
-  const address = await repository.saveAddress(data.auth.id!, data.b);
+  const address = await repository.saveAddress(data.auth.id!, profile.id!, data.b);
 
   return {
     status: 200,

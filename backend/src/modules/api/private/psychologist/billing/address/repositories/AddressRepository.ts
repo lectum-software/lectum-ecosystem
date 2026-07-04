@@ -94,7 +94,11 @@ export class AddressRepository implements IAddressRepository {
     });
   }
 
-  async saveAddress(userId: string, data: IAddressDTO["b"]): Promise<billing_address> {
+  async saveAddress(
+    userId: string,
+    psychologistProfileId: string,
+    data: IAddressDTO["b"],
+  ): Promise<billing_address> {
     const current = await this.addressRepository.findFirst({
       where: {
         user_id: userId,
@@ -115,20 +119,39 @@ export class AddressRepository implements IAddressRepository {
       state: data.state,
     };
 
-    if (current?.id) {
-      return this.addressRepository.update({
-        where: {
-          id: current.id,
-        },
-        data: payload,
-      });
-    }
+    const profilePayload = {
+      professional_address_zip: data.zip,
+      professional_address_street: data.street,
+      professional_address_number: data.number,
+      professional_address_complement: data.complement || null,
+      professional_address_district: data.district,
+      professional_address_city: data.city,
+      professional_address_state: data.state,
+    };
 
-    return this.addressRepository.create({
-      data: {
-        ...payload,
-        user_id: userId,
-      },
+    return prisma.$transaction(async (tx) => {
+      const address = current?.id
+        ? await tx.billing_address.update({
+            where: {
+              id: current.id,
+            },
+            data: payload,
+          })
+        : await tx.billing_address.create({
+            data: {
+              ...payload,
+              user_id: userId,
+            },
+          });
+
+      await tx.psychologist_profile.update({
+        where: {
+          id: psychologistProfileId,
+        },
+        data: profilePayload,
+      });
+
+      return address;
     });
   }
 }
