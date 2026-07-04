@@ -42,6 +42,8 @@ const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
   year: "numeric",
 });
 
+const COURTESY_CARD_HREF = "/app/professional/billing/checkout?intent=courtesy-renewal";
+
 const formatPrice = (priceCents?: number | null) => {
   if (!priceCents) return "R$ 0,00";
 
@@ -130,8 +132,10 @@ const PaymentMethodSummary = ({
   if (isCourtesy) {
     return (
       <div>
-        <p className="text-sm font-bold text-foreground">Método de pagamento</p>
-        <p className="mt-1 text-sm leading-6 text-muted">Cortesia ativa, sem cartão vinculado</p>
+        <p className="text-sm font-bold text-foreground">Adicionar cartão de cobrança</p>
+        <p className="mt-1 text-sm leading-6 text-muted">
+          Cadastre um cartão para a cobrança quando a cortesia chegar ao fim.
+        </p>
       </div>
     );
   }
@@ -180,13 +184,7 @@ const paymentHistoryTone: Record<string, string> = {
   recusado: "border-danger/30 bg-danger/10 text-danger",
 };
 
-const PaymentHistoryCard = ({
-  isCourtesy,
-  items,
-}: {
-  isCourtesy?: boolean;
-  items: BillingPaymentHistoryItem[];
-}) => (
+const PaymentHistoryCard = ({ items }: { items: BillingPaymentHistoryItem[] }) => (
   <article className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
     <div className="flex gap-3">
       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
@@ -194,9 +192,7 @@ const PaymentHistoryCard = ({
       </span>
       <div>
         <h2 className="text-base font-extrabold text-foreground">Histórico de pagamentos</h2>
-        <p className="mt-1 text-sm leading-6 text-muted">
-          {isCourtesy ? "Cortesias não geram cobranças automáticas." : "Cobranças confirmadas."}
-        </p>
+        <p className="mt-1 text-sm leading-6 text-muted">Cobranças confirmadas.</p>
       </div>
     </div>
 
@@ -235,13 +231,9 @@ const PaymentHistoryCard = ({
       </ol>
     ) : (
       <div className="mt-4 rounded-[var(--lectum-card-radius)] border border-border bg-surface-muted p-4">
-        <p className="text-sm font-extrabold text-foreground">
-          {isCourtesy ? "Nenhuma cobrança na cortesia" : "Nenhum pagamento registrado ainda"}
-        </p>
+        <p className="text-sm font-extrabold text-foreground">Nenhum pagamento registrado ainda</p>
         <p className="mt-1 text-sm leading-6 text-muted">
-          {isCourtesy
-            ? "Este plano de cortesia não possui pagamentos vinculados."
-            : "Quando cobranças forem confirmadas, elas aparecerão aqui."}
+          Quando cobranças forem confirmadas, elas aparecerão aqui.
         </p>
       </div>
     )}
@@ -290,6 +282,12 @@ export const ProfessionalBillingLogic = () => {
     () => (isCourtesy ? "Sem cobrança" : `${formatPrice(subscription?.plan?.price_cents)} / mês`),
     [isCourtesy, subscription?.plan?.price_cents],
   );
+  const paymentActionHref = canManageCard
+    ? "/app/professional/billing/card"
+    : isCourtesy
+      ? COURTESY_CARD_HREF
+      : null;
+  const paymentActionLabel = isCourtesy ? "Adicionar" : "Alterar";
 
   if (
     !subscriptionQuery.isLoading &&
@@ -309,7 +307,12 @@ export const ProfessionalBillingLogic = () => {
 
   return (
     <PrivateTemplate showHeader={false}>
-      <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-4xl">
+      <section
+        className={cn(
+          "mx-auto grid w-full max-w-[430px] gap-5",
+          isCourtesy ? "md:max-w-3xl" : "md:max-w-4xl",
+        )}
+      >
         <AppPageHeader
           backHref="/app/profile"
           backLabel="Voltar ao perfil"
@@ -341,7 +344,12 @@ export const ProfessionalBillingLogic = () => {
         ) : null}
 
         {!subscriptionQuery.isLoading && !subscriptionQuery.isError && subscription ? (
-          <div className="grid gap-5 md:grid-cols-[1fr_0.85fr] md:items-start">
+          <div
+            className={cn(
+              "grid gap-5 md:items-start",
+              isCourtesy ? "md:grid-cols-1" : "md:grid-cols-[1fr_0.85fr]",
+            )}
+          >
             <article className="overflow-hidden rounded-[var(--lectum-card-radius)] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
               <div className="border-border border-b bg-gradient-to-br from-primary-soft via-surface to-surface px-5 py-6 md:px-7 md:py-8">
                 <div className="flex items-start justify-between gap-4">
@@ -404,15 +412,15 @@ export const ProfessionalBillingLogic = () => {
                       />
                     </div>
                     <Button
-                      asChild={canManageCard}
+                      asChild={Boolean(paymentActionHref)}
                       className="h-10 shrink-0 rounded-full px-4 text-xs font-extrabold"
-                      disabled={!canManageCard}
+                      disabled={!paymentActionHref}
                       variant="outline"
                     >
-                      {canManageCard ? (
-                        <Link href="/app/professional/billing/card">Alterar</Link>
+                      {paymentActionHref ? (
+                        <Link href={paymentActionHref}>{paymentActionLabel}</Link>
                       ) : (
-                        <span>Alterar</span>
+                        <span>{paymentActionLabel}</span>
                       )}
                     </Button>
                   </div>
@@ -420,107 +428,105 @@ export const ProfessionalBillingLogic = () => {
               </div>
             </article>
 
-            <aside className="grid gap-4">
-              <PaymentHistoryCard isCourtesy={isCourtesy} items={paymentHistory} />
+            {!isCourtesy ? (
+              <aside className="grid gap-4">
+                <PaymentHistoryCard items={paymentHistory} />
 
-              {canCancelSubscription ? (
-                !showCancelConfirm ? (
-                  <div className="flex justify-center py-2">
-                    <button
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-muted/75 transition hover:text-danger"
-                      onClick={() => setShowCancelConfirm(true)}
-                      type="button"
-                    >
-                      <XCircle className="h-4 w-4" aria-hidden="true" />
-                      Cancelar assinatura
-                    </button>
-                  </div>
-                ) : (
-                  <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-4 shadow-[var(--lectum-shadow-soft)]">
-                    <div className="grid gap-3">
-                      <div>
-                        <p className="text-sm font-extrabold text-foreground">
-                          Cancelar assinatura agora?
-                        </p>
-                        <p className="mt-1 text-xs leading-5 text-muted">
-                          Todos os benefícios do Plano Profissional serão desativados após a
-                          confirmação.
-                        </p>
-                      </div>
-                      <div className="grid gap-2 sm:grid-cols-2">
-                        <Button
-                          className="h-10 rounded-full text-xs font-extrabold"
-                          disabled={billing.cancelSubscription.isPending}
-                          onClick={() => setShowCancelConfirm(false)}
-                          type="button"
-                          variant="outline"
-                        >
-                          Manter
-                        </Button>
-                        <Button
-                          className="h-10 rounded-full text-xs font-extrabold"
-                          disabled={billing.cancelSubscription.isPending}
-                          onClick={() => billing.cancelSubscription.mutate()}
-                          type="button"
-                          variant="destructive"
-                        >
-                          {billing.cancelSubscription.isPending ? "Cancelando..." : "Confirmar"}
-                        </Button>
-                      </div>
+                {canCancelSubscription ? (
+                  !showCancelConfirm ? (
+                    <div className="flex justify-center py-2">
+                      <button
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-muted/75 transition hover:text-danger"
+                        onClick={() => setShowCancelConfirm(true)}
+                        type="button"
+                      >
+                        <XCircle className="h-4 w-4" aria-hidden="true" />
+                        Cancelar assinatura
+                      </button>
                     </div>
-
-                    {billing.cancelSubscription.isError ? (
-                      <div className="mt-3">
-                        <InlineAlert title="Não foi possível cancelar" variant="error">
-                          {getErrorMessage(billing.cancelSubscription.error)}
-                        </InlineAlert>
+                  ) : (
+                    <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-4 shadow-[var(--lectum-shadow-soft)]">
+                      <div className="grid gap-3">
+                        <div>
+                          <p className="text-sm font-extrabold text-foreground">
+                            Cancelar assinatura agora?
+                          </p>
+                          <p className="mt-1 text-xs leading-5 text-muted">
+                            Todos os benefícios do Plano Profissional serão desativados após a
+                            confirmação.
+                          </p>
+                        </div>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          <Button
+                            className="h-10 rounded-full text-xs font-extrabold"
+                            disabled={billing.cancelSubscription.isPending}
+                            onClick={() => setShowCancelConfirm(false)}
+                            type="button"
+                            variant="outline"
+                          >
+                            Manter
+                          </Button>
+                          <Button
+                            className="h-10 rounded-full text-xs font-extrabold"
+                            disabled={billing.cancelSubscription.isPending}
+                            onClick={() => billing.cancelSubscription.mutate()}
+                            type="button"
+                            variant="destructive"
+                          >
+                            {billing.cancelSubscription.isPending ? "Cancelando..." : "Confirmar"}
+                          </Button>
+                        </div>
                       </div>
-                    ) : null}
-                  </div>
-                )
-              ) : null}
 
-              {isCourtesy ? (
-                <InlineAlert title="Plano de cortesia ativo" variant="info">
-                  Esta conta está com cortesia profissional ativa. Não há cobrança recorrente nem
-                  cartão para alterar durante o período concedido.
-                </InlineAlert>
-              ) : !canManageCard ? (
-                <InlineAlert title="Alteração de cartão indisponível" variant="warning">
-                  A troca de cartão exige uma assinatura profissional ativa com método de pagamento
-                  cadastrado. Assinaturas gratuitas ou de cortesia não possuem cartão para alterar.
-                </InlineAlert>
-              ) : null}
+                      {billing.cancelSubscription.isError ? (
+                        <div className="mt-3">
+                          <InlineAlert title="Não foi possível cancelar" variant="error">
+                            {getErrorMessage(billing.cancelSubscription.error)}
+                          </InlineAlert>
+                        </div>
+                      ) : null}
+                    </div>
+                  )
+                ) : null}
 
-              {subscription.status === "inadimplente" ? (
-                <InlineAlert title="Regularize seu pagamento" variant="error">
-                  Identificamos pendência na cobrança. Atualize o cartão ou regularize o pagamento
-                  para manter os benefícios do plano.
-                </InlineAlert>
-              ) : null}
+                {!canManageCard ? (
+                  <InlineAlert title="Alteração de cartão indisponível" variant="warning">
+                    A troca de cartão exige uma assinatura profissional ativa com método de
+                    pagamento cadastrado. Assinaturas gratuitas ou de cortesia não possuem cartão
+                    para alterar.
+                  </InlineAlert>
+                ) : null}
 
-              {subscription.status === "inativa" && subscription.gateway_subscription_id ? (
-                <InlineAlert title="Aguardando confirmação" variant="info">
-                  A assinatura já foi enviada para confirmação e será ativada quando o pagamento
-                  retornar com sucesso.
-                </InlineAlert>
-              ) : null}
+                {subscription.status === "inadimplente" ? (
+                  <InlineAlert title="Regularize seu pagamento" variant="error">
+                    Identificamos pendência na cobrança. Atualize o cartão ou regularize o pagamento
+                    para manter os benefícios do plano.
+                  </InlineAlert>
+                ) : null}
 
-              {subscription.status === "cancelada" ? (
-                <InlineAlert title="Assinatura cancelada" variant="warning">
-                  Escolha um novo plano para retomar os recursos profissionais da Lectum.
-                </InlineAlert>
-              ) : null}
+                {subscription.status === "inativa" && subscription.gateway_subscription_id ? (
+                  <InlineAlert title="Aguardando confirmação" variant="info">
+                    A assinatura já foi enviada para confirmação e será ativada quando o pagamento
+                    retornar com sucesso.
+                  </InlineAlert>
+                ) : null}
 
-              {!subscription.gateway_subscription_id && isPaidPlan && !isCourtesy ? (
-                <InlineAlert title="Pagamento não vinculado" variant="warning">
-                  <span className="inline-flex items-start gap-2">
-                    <AlertTriangle className="mt-1 h-4 w-4 shrink-0" aria-hidden="true" />
-                    Esta assinatura ainda não possui referência de pagamento para troca de cartão.
-                  </span>
-                </InlineAlert>
-              ) : null}
-            </aside>
+                {subscription.status === "cancelada" ? (
+                  <InlineAlert title="Assinatura cancelada" variant="warning">
+                    Escolha um novo plano para retomar os recursos profissionais da Lectum.
+                  </InlineAlert>
+                ) : null}
+
+                {!subscription.gateway_subscription_id && isPaidPlan ? (
+                  <InlineAlert title="Pagamento não vinculado" variant="warning">
+                    <span className="inline-flex items-start gap-2">
+                      <AlertTriangle className="mt-1 h-4 w-4 shrink-0" aria-hidden="true" />
+                      Esta assinatura ainda não possui referência de pagamento para troca de cartão.
+                    </span>
+                  </InlineAlert>
+                ) : null}
+              </aside>
+            ) : null}
           </div>
         ) : null}
       </section>

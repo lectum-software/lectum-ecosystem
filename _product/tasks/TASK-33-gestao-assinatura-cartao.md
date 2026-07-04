@@ -326,3 +326,29 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser local via Chrome headless/CDP em `http://localhost:3002/app/professional/billing`, com sessão real da conta, confirmou **Plano Profissional de Cortesia**, **Sem cobrança**, **Expiração da cortesia**, **Cortesia ativa, sem cartão vinculado** e ausência de `Amex final 6885`, `Pagamento não vinculado` e `R$ 9,90 / mês`.
+
+## Ajuste de UI em 2026-07-04: cortesia sem historico lateral e com cartao futuro
+
+- Pedido direto de produto: no Plano Profissional de Cortesia, remover o quadrante **Historico de pagamentos** e a faixa azul **Esta conta esta com cortesia profissional ativa...**.
+- A rota `/app/professional/billing` agora renderiza a cortesia em coluna unica, sem aside lateral, preservando a composicao mobile-first.
+- O campo antes usado como metodo de pagamento da cortesia passou a exibir **Adicionar cartao de cobranca** com a descricao **Cadastre um cartao para a cobranca quando a cortesia chegar ao fim.** e CTA **Adicionar**.
+- O CTA de cortesia aponta para a entrada existente `/app/professional/billing/checkout?intent=courtesy-renewal`, sem criar endpoint paralelo, mock, seed, package novo ou alteracao de schema.
+- O historico de pagamentos continua disponivel para assinaturas pagas/gerenciaveis e segue usando apenas eventos reais.
+- Referencia visual local consultada: `_product/proto/Minhas Assinatura - Psicologo.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente.
+- ADR registrado: `adrs/0214-billing-cortesia-cta-cartao-futuro.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] A cortesia administrativa ativa nao exibe o quadrante de historico de pagamentos.
+- [x] A cortesia administrativa ativa nao exibe a faixa azul de cortesia ativa.
+- [x] O bloco de cartao da cortesia exibe acao de adicionar cartao de cobranca futura.
+- [x] Assinaturas pagas continuam com historico e acao de alteracao de cartao quando gerenciaveis.
+- [x] Nenhum mock, seed, endpoint simulado, package novo ou alteracao de schema foi criado.
+
+### Validacao do ajuste de cortesia
+
+- `pnpm exec biome check --write src/app/app/professional/billing/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local em `http://localhost:3002/app/professional/billing`, com sessao real da conta em cortesia, confirmou **Adicionar cartao de cobranca**, **Cadastre um cartao para a cobranca quando a cortesia chegar ao fim.**, CTA **Adicionar** e ausencia visual de **Historico de pagamentos**, **Esta conta esta com cortesia profissional ativa**, **Nenhuma cobranca na cortesia** e **Cortesia ativa, sem cartao vinculado**.
