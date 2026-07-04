@@ -7,6 +7,12 @@ export type CfpSearchBody = {
   uf?: string;
 };
 
+export type CfpSearchAttempts = {
+  limit: number;
+  used: number;
+  remaining: number;
+};
+
 export type CfpConfirmBody = {
   check_id: string;
   result_key: string;
@@ -26,6 +32,7 @@ export type CfpSearchResponse = {
   check_id: string;
   found: boolean;
   results: CfpResult[];
+  attempts?: CfpSearchAttempts;
 };
 
 export type CfpConfirmResponse = {
@@ -44,6 +51,20 @@ export type StoredRegistryCheckRaw = {
   request: CfpSearchBody;
   response: unknown;
   normalized_results: CfpResult[];
+  attempt_status?:
+    | "success"
+    | "empty"
+    | "provider_config_error"
+    | "provider_validation_error"
+    | "provider_unavailable"
+    | "provider_rate_limited"
+    | "provider_error";
+  attempt_finished_at?: string;
+  provider_error?: {
+    name?: string;
+    reason?: string;
+    context?: Record<string, unknown>;
+  };
   confirmed_result_key?: string;
   confirmed_at?: string;
 };

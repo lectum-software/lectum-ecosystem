@@ -3,6 +3,7 @@ import type { CfpResult, CfpSearchBody, StoredRegistryCheckRaw } from "../../DTO
 
 export interface ICfpRepository {
   getProfile(userId: string): Promise<psychologist_profile | null>;
+  countCpfSearchAttempts(psychologistId: string): Promise<number>;
   createCheck(props: {
     psychologistId: string;
     request: CfpSearchBody;

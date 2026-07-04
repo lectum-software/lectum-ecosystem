@@ -25,6 +25,18 @@ export class CfpRepository implements ICfpRepository {
     });
   }
 
+  async countCpfSearchAttempts(psychologistId: string): Promise<number> {
+    return this.checkRepository.count({
+      where: {
+        psychologist_id: psychologistId,
+        deleted: false,
+        cpf: {
+          not: null,
+        },
+      },
+    });
+  }
+
   async createCheck(props: {
     psychologistId: string;
     request: CfpSearchBody;

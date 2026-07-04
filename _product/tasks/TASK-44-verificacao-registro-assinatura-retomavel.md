@@ -62,6 +62,7 @@ Tornar a verificação de registro profissional uma etapa persistente e retomáv
 ## Critérios de aceite
 
 - [x] Psicólogo com Plano Profissional pago ativo e `cfp_verified_at=null` é direcionado para `/app/professional/cfp` ao acessar áreas privadas não permitidas.
+- [x] Busca de CPF no CFP para ativação do selo verificado permite no máximo 3 tentativas persistidas por psicólogo e orienta suporte após esgotar.
 - [x] Edição/alteração de perfil profissional fica bloqueada no backend enquanto a verificação CFP do fluxo pago estiver pendente.
 - [x] Plano Gratuito não cai no gate de CFP do fluxo pago.
 - [x] Selo público/privado de verificado não é derivado apenas de assinatura paga ativa; exige `cfp_verified_at` ou cortesia administrativa ativa.
@@ -104,3 +105,12 @@ Tornar a verificação de registro profissional uma etapa persistente e retomáv
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Smoke local com `next start --port 3100` e `curl -I http://127.0.0.1:3100/app/professional/cfp`: rota privada retornou `307` para login sem sessão, confirmando proteção/noindex. A validação autenticada de redirecionamento client-side para usuário pago pendente de CFP ficou limitada pela ausência de sessão real/browser autenticado neste ambiente.
+
+## Correção de limite de tentativas CFP em 2026-07-04
+
+- A busca de CPF em `/api/private/psychologist/cfp/search` passou a contar tentativas persistidas em `professional_registry_check` por psicólogo, limitando novas chamadas reais ao provedor a 3 tentativas com CPF válido.
+- Erros retornados pelo provedor depois da chamada real também passam a ser registrados no log de consulta, com `attempt_status` em `raw`, para que falhas/indisponibilidade não permitam tentativas ilimitadas.
+- Ao esgotar o limite, o backend retorna `cfp_search_attempts_exceeded` com status `429` e mensagem de suporte; não há fallback, mock, aprovação automática ou nova migration.
+- Os tipos frontend de CFP foram atualizados com o campo opcional `attempts` do contrato de resposta, sem alterar a fundação de formulário ou recriar UI.
+- ADR atualizado: `adrs/0201-verificacao-cfp-retomavel-fluxo-pago.md`.
+- Validação desta correção: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm --dir frontend check` e `pnpm check`. A primeira tentativa de `pnpm --dir frontend check` falhou por tipos stale em `.next/types`; a primeira tentativa de `pnpm --dir frontend build` encontrou outro build Next em andamento. Após o build finalizar/regenerar `.next`, `frontend build`, `frontend check` e `pnpm check` executaram sem erros.

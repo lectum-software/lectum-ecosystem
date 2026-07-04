@@ -25,6 +25,7 @@ export type {
   CfpConfirmPayload,
   CfpConfirmResponse,
   CfpResult,
+  CfpSearchAttempts,
   CfpSearchPayload,
   CfpSearchResponse,
 } from "./cfp";

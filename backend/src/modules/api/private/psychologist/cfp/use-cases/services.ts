@@ -3,6 +3,7 @@ import { error, msg } from "@/helpers/translate";
 import type { professional_registry_check } from "@/interfaces/objects";
 import type {
   CfpResult,
+  CfpSearchAttempts,
   ICfpConfirmDTO,
   ICfpSearchDTO,
   StoredRegistryCheckRaw,
@@ -13,6 +14,8 @@ import {
   normalizeCfpResults,
 } from "../providers/InfoSimplesCfpProvider";
 import { CfpRepository } from "../repositories/CfpRepository";
+
+const CPF_SEARCH_ATTEMPT_LIMIT = 3;
 
 const normalizeDigits = (value?: string | null) => (value || "").replace(/\D/g, "");
 const normalizeText = (value?: string | null) => {
@@ -33,6 +36,17 @@ const isProviderRateLimit = (code: number | null, message: string | null) => {
 };
 
 const isCfpLogEnabled = () => process.env.CFP_PROVIDER_LOGS !== "false";
+
+const toAttempts = (used: number): CfpSearchAttempts => ({
+  limit: CPF_SEARCH_ATTEMPT_LIMIT,
+  remaining: Math.max(CPF_SEARCH_ATTEMPT_LIMIT - used, 0),
+  used,
+});
+
+const withAttempts = <T extends Record<string, unknown>>(
+  data: T,
+  attempts: CfpSearchAttempts | null,
+) => (attempts ? { ...data, attempts } : data);
 
 const logCfpSearch = (event: string, data: Record<string, unknown>) => {
   if (!isCfpLogEnabled()) return;
@@ -107,6 +121,44 @@ const extractStoredResults = (check: professional_registry_check): CfpResult[] =
   }
 
   return [];
+};
+
+const createStoredRaw = (props: {
+  request: {
+    cpf?: string;
+    nome?: string;
+    registro?: string;
+    uf?: string;
+  };
+  response: Awaited<ReturnType<InfoSimplesCfpProvider["search"]>> | null;
+  status: NonNullable<StoredRegistryCheckRaw["attempt_status"]>;
+  providerError?: StoredRegistryCheckRaw["provider_error"];
+}): StoredRegistryCheckRaw => ({
+  provider: "infosimples",
+  request: props.request,
+  response: props.response?.raw ?? null,
+  normalized_results: props.response?.results ?? [],
+  attempt_finished_at: new Date().toISOString(),
+  attempt_status: props.status,
+  ...(props.providerError ? { provider_error: props.providerError } : {}),
+});
+
+const createProviderErrorRaw = (err: unknown): Pick<StoredRegistryCheckRaw, "provider_error"> => {
+  if (err instanceof InfoSimplesCfpProviderError) {
+    return {
+      provider_error: {
+        context: { ...err.context },
+        name: err.name,
+        reason: err.reason,
+      },
+    };
+  }
+
+  return {
+    provider_error: {
+      name: err instanceof Error ? err.name : typeof err,
+    },
+  };
 };
 
 export const search = async (data: ICfpSearchDTO) => {
@@ -188,6 +240,24 @@ export const search = async (data: ICfpSearchDTO) => {
     };
   }
 
+  const usedAttempts = request.cpf ? await repository.countCpfSearchAttempts(profile.id!) : 0;
+
+  if (request.cpf && usedAttempts >= CPF_SEARCH_ATTEMPT_LIMIT) {
+    const attempts = toAttempts(usedAttempts);
+
+    logCfpSearchError("CFP_SEARCH_ATTEMPT_LIMIT_REACHED", {
+      attempts,
+      request: summarizeSearchRequest(request),
+      traceId,
+    });
+
+    return {
+      status: 429,
+      ...error("cfp_search_attempts_exceeded", { attempts }),
+    };
+  }
+
+  const attempts = request.cpf ? toAttempts(usedAttempts + 1) : null;
   const provider = new InfoSimplesCfpProvider();
   let response: Awaited<ReturnType<InfoSimplesCfpProvider["search"]>>;
 
@@ -202,9 +272,21 @@ export const search = async (data: ICfpSearchDTO) => {
   } catch (err) {
     logProviderUnavailable(err, traceId);
 
+    await repository.createCheck({
+      found: false,
+      psychologistId: profile.id!,
+      raw: createStoredRaw({
+        ...createProviderErrorRaw(err),
+        request,
+        response: null,
+        status: "provider_unavailable",
+      }),
+      request,
+    });
+
     return {
       status: 502,
-      ...error("cfp_provider_unavailable", {}),
+      ...error("cfp_provider_unavailable", withAttempts({}, attempts)),
     };
   }
 
@@ -214,9 +296,20 @@ export const search = async (data: ICfpSearchDTO) => {
       traceId,
     });
 
+    await repository.createCheck({
+      found: false,
+      psychologistId: profile.id!,
+      raw: createStoredRaw({
+        request,
+        response,
+        status: "provider_config_error",
+      }),
+      request,
+    });
+
     return {
       status: 503,
-      ...error("cfp_provider_config_error", {}),
+      ...error("cfp_provider_config_error", withAttempts({}, attempts)),
     };
   }
 
@@ -226,9 +319,20 @@ export const search = async (data: ICfpSearchDTO) => {
       traceId,
     });
 
+    await repository.createCheck({
+      found: false,
+      psychologistId: profile.id!,
+      raw: createStoredRaw({
+        request,
+        response,
+        status: "provider_validation_error",
+      }),
+      request,
+    });
+
     return {
       status: 400,
-      ...error("cfp_provider_validation_error", {}),
+      ...error("cfp_provider_validation_error", withAttempts({}, attempts)),
     };
   }
 
@@ -238,9 +342,20 @@ export const search = async (data: ICfpSearchDTO) => {
       traceId,
     });
 
+    await repository.createCheck({
+      found: false,
+      psychologistId: profile.id!,
+      raw: createStoredRaw({
+        request,
+        response,
+        status: "provider_unavailable",
+      }),
+      request,
+    });
+
     return {
       status: 502,
-      ...error("cfp_provider_unavailable", {}),
+      ...error("cfp_provider_unavailable", withAttempts({}, attempts)),
     };
   }
 
@@ -250,9 +365,20 @@ export const search = async (data: ICfpSearchDTO) => {
       traceId,
     });
 
+    await repository.createCheck({
+      found: false,
+      psychologistId: profile.id!,
+      raw: createStoredRaw({
+        request,
+        response,
+        status: "provider_rate_limited",
+      }),
+      request,
+    });
+
     return {
       status: 429,
-      ...error("cfp_provider_rate_limited", {}),
+      ...error("cfp_provider_rate_limited", withAttempts({}, attempts)),
     };
   }
 
@@ -264,9 +390,21 @@ export const search = async (data: ICfpSearchDTO) => {
       traceId,
     });
 
+    await repository.createCheck({
+      found: false,
+      psychologistId: profile.id!,
+      raw: createStoredRaw({
+        request,
+        response,
+        status: "provider_error",
+      }),
+      request,
+    });
+
     return {
       status: 502,
       ...error("cfp_provider_error", {
+        ...(attempts ? { attempts } : {}),
         provider_code: response.code || "unknown",
       }),
     };
@@ -277,10 +415,11 @@ export const search = async (data: ICfpSearchDTO) => {
     request,
     found: response.results.length > 0,
     raw: {
-      provider: "infosimples",
-      request,
-      response: response.raw,
-      normalized_results: response.results,
+      ...createStoredRaw({
+        request,
+        response,
+        status: response.results.length > 0 ? "success" : "empty",
+      }),
     },
   });
 
@@ -295,6 +434,7 @@ export const search = async (data: ICfpSearchDTO) => {
     status: 200,
     ...msg(response.results.length > 0 ? "cfp_search_success" : "cfp_search_empty", {}),
     data: {
+      ...(attempts ? { attempts } : {}),
       check_id: check.id,
       found: response.results.length > 0,
       results: response.results,

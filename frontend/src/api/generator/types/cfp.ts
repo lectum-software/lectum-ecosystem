@@ -8,6 +8,12 @@
   active: boolean;
 };
 
+export type CfpSearchAttempts = {
+  limit: number;
+  used: number;
+  remaining: number;
+};
+
 export type CfpSearchPayload = {
   cpf: string;
 };
@@ -16,6 +22,7 @@ export type CfpSearchResponse = {
   check_id: string;
   found: boolean;
   results: CfpResult[];
+  attempts?: CfpSearchAttempts;
 };
 
 export type CfpConfirmPayload = {
