@@ -33,6 +33,9 @@ Refinamento visual em 2026-06-29 alinhou a modal contextual de notificações ao
 modal de atalho/PWA e nas modais privadas: ícone oficial da Lectum, fundo escuro translúcido e blur
 para destacar o diálogo sem misturá-lo com a tela subjacente.
 
+Refinamento de produto em 2026-07-04 reduziu a copy do prompt contextual e removeu a faixa
+secundária de controle para diminuir densidade visual no viewport mobile.
+
 Builder/Quick Copy não estava exposto como ferramenta direta neste ambiente. As referências visuais
 auditáveis usadas foram `_product/proto/Notificações.jpg` e
 `_product/proto/Configurações de Notificações.jpg`, com adaptação ao shell privado/mobile existente.
@@ -49,9 +52,10 @@ auditáveis usadas foram `_product/proto/Notificações.jpg` e
   - chamada a `Notification.requestPermission()` somente dentro de ação explícita do usuário.
 - Criar um prompt contextual da Lectum, mobile-first, com a copy:
   - `Ative notificações da Lectum`;
-  - explicação de respostas, interações e contatos;
-  - aviso de que notificações podem aparecer no celular;
+  - `Receba avisos importantes sobre respostas, interações e contatos.`;
   - CTAs `Ativar notificações` e `Agora não`.
+- Não renderizar faixa secundária explicativa dentro da modal; o controle do usuário permanece nos
+  CTAs e nos estados honestos de permissões em `/app/settings/notifications`.
 - Renderizar o prompt como `role="dialog"`/`aria-modal="true"` dentro de overlay mobile-first:
   - fundo escuro translúcido com `backdrop-blur`;
   - card inferior em mobile e centralizado em telas maiores;
@@ -125,3 +129,6 @@ auditáveis usadas foram `_product/proto/Notificações.jpg` e
   - coordenação com TASK-37: `lectum.activePrompt` impede empilhamento simultâneo.
 - Refinamento 2026-06-29 validado no ADR-0183 para backoff por perfil e remoção do opt-out
   permanente.
+- Refinamento 2026-07-04 validado com `pnpm --dir frontend check`, `pnpm --dir frontend build`,
+  `pnpm check` e Chrome/CDP mobile `390x844` via URL local exposta por ngrok, confirmando copy curta,
+  ausência de `"Você continua no controle"` e ausência da copy longa anterior.

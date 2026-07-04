@@ -37,7 +37,7 @@ Trocar o pedido automático de permissão de notificações por uma experiência
 Copy base recomendada:
 
 > **Ative notificações da Lectum**  
-> Receba avisos importantes sobre respostas, interações e contatos. As notificações podem aparecer no seu celular; ative apenas se isso fizer sentido para você.
+> Receba avisos importantes sobre respostas, interações e contatos.
 
 CTAs:
 
@@ -110,8 +110,8 @@ Frontend esperado:
 
 Regras de privacidade/saúde:
 
-- A copy deve explicar que notificações podem aparecer no celular/lock screen dependendo do sistema.
-- Não usar tom alarmista nem prometer urgência clínica.
+- A copy do modal contextual deve ser curta, neutra e sem promessa de urgência clínica.
+- Não usar tom alarmista.
 - Não revelar conteúdo sensível no prompt contextual.
 - Manter controle do usuário claro: pode recusar, deixar para depois ou ajustar preferências.
 
@@ -129,7 +129,7 @@ Packages usados:
 - [x] Quando a permissão está `denied`, a UI não chama `requestPermission` e mostra orientação honesta para reativar no navegador/sistema.
 - [x] Quando a permissão já está `granted`, a subscription continua sendo revalidada de forma idempotente sem mostrar prompt contextual.
 - [x] A experiência não empilha prompt de instalação da TASK-37 e prompt de notificações ao mesmo tempo.
-- [x] A copy usa **"Ative notificações da Lectum"** e explica a implicação de privacidade de notificações visíveis no celular.
+- [x] A copy usa **"Ative notificações da Lectum"** e o texto **"Receba avisos importantes sobre respostas, interações e contatos."**.
 - [x] A modal contextual usa o favicon da Lectum como ícone e aplica overlay escuro com blur para não se misturar à tela.
 - [x] A task não altera eventos de domínio, política de digest ou conteúdo de push.
 - [x] Nenhum mock, subscription fake, VAPID fake ou endpoint simulado foi usado.
@@ -257,3 +257,21 @@ Packages usados:
   - browser local mobile `390x844` em `next start` na porta `3002`, confirmando a regra compartilhada de elegibilidade pós-cadastro usada pelos prompts.
 - `pnpm --dir frontend check` e `pnpm check` foram reexecutados, mas ficaram bloqueados por alterações pendentes fora deste refinamento em `frontend/src/app/app/community/[slug]/post/[id]/logic.tsx` e `frontend/src/app/app/community/[slug]/logic.tsx`.
 - ADR atualizado: `adrs/0183-insistencia-controlada-atalho-notificacoes-psicologos.md`.
+
+## Refinamento 2026-07-04 - copy curta e sem faixa secundária
+
+- Pedido de produto: reduzir a copy da modal contextual para **"Receba avisos importantes sobre respostas, interações e contatos."** e remover a faixa cinza **"Você continua no controle..."**.
+- Implementação ajustada em `frontend/src/hooks/notification/index.tsx`:
+  - a modal deixou de diferenciar copy por papel e passou a usar o texto único definido pelo produto;
+  - a faixa secundária com ícone de escudo foi removida;
+  - a hierarquia mobile-first, overlay com blur, ícone `/icon.png` via `next/image` e CTAs `Ativar notificações`/`Agora não` foram preservados.
+- Para manter consistência, o card de ativação em `/app/settings/notifications` também passou a usar a mesma copy curta em `frontend/src/app/app/settings/notifications/logic.tsx`.
+- Builder/Quick Copy não estava exposto como ferramenta direta neste ambiente; as referências locais conferidas foram `_product/proto/Notificações.jpg` e `_product/proto/Configurações de Notificações.jpg`, além da captura enviada pelo usuário.
+- Nenhum backend, endpoint, evento de domínio, payload push, migration ou package novo foi alterado.
+- Validação executada:
+  - `pnpm --dir frontend exec biome check --write src/hooks/notification/index.tsx src/app/app/settings/notifications/logic.tsx`;
+  - `pnpm --dir frontend check`;
+  - `pnpm --dir frontend build`;
+  - `pnpm check`;
+  - Chrome/CDP local mobile `390x844` via URL de desenvolvimento exposta por ngrok, confirmando copy curta, ausência de `"Você continua no controle"` e ausência da copy longa anterior.
+- ADR atualizado: `adrs/0179-permissao-contextual-notificacoes-navegador.md`.

@@ -1,6 +1,6 @@
 "use client";
 
-import { BellRing, ShieldCheck, X } from "lucide-react";
+import { BellRing, X } from "lucide-react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -359,12 +359,10 @@ export const useNotificationPushPermission = () => {
 };
 
 const NotificationPermissionPrompt = ({
-  isPsychologist,
   isRequestingPermission,
   onClose,
   onEnable,
 }: {
-  isPsychologist: boolean;
   isRequestingPermission: boolean;
   onClose: (persist: "cooldown" | "none") => void;
   onEnable: () => Promise<void>;
@@ -407,19 +405,9 @@ const NotificationPermissionPrompt = ({
             Ative notificações da Lectum
           </p>
           <p className="mt-1 text-sm leading-5 text-muted">
-            {isPsychologist
-              ? "Ative notificações para não perder novos contatos, avaliações e interações no seu perfil. Elas podem aparecer no seu celular; ative apenas se isso fizer sentido para você."
-              : "Receba avisos importantes sobre respostas, interações e contatos. As notificações podem aparecer no seu celular; ative apenas se isso fizer sentido para você."}
+            Receba avisos importantes sobre respostas, interações e contatos.
           </p>
         </div>
-      </div>
-
-      <div className="mt-3 flex gap-2 rounded-2xl border border-border bg-background px-3 py-2.5 text-xs leading-5 text-muted">
-        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-        <span>
-          Você continua no controle: pode recusar agora, ajustar preferências depois e desativar no
-          navegador ou no sistema.
-        </span>
       </div>
 
       <div className="mt-4 grid gap-2">
@@ -532,7 +520,6 @@ export const NotificationManager = () => {
 
   return (
     <NotificationPermissionPrompt
-      isPsychologist={user?.role === "psicologo"}
       isRequestingPermission={isRequestingPermission}
       onClose={closePrompt}
       onEnable={handleEnable}
