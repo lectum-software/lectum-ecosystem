@@ -353,3 +353,13 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Fonte visual/auditavel: screenshot do usuario em `/app/community/ansiedade-em-equilibrio`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0095-identidade-visual-comunidade-avatar.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check --write -- "src/app/app/community/[slug]/logic.tsx"`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check` e HTTP local `200` em `/app/community/ansiedade-em-equilibrio`.
+
+## Complemento 2026-07-04 - avatar da comunidade em rota publica/ngrok
+
+- Pedido do usuario: corrigir novamente o avatar da comunidade na rota publica `/community/depressao`, onde a requisicao de `depressao.png` retornava 404 e o alt text aparecia dentro do card.
+- Diagnostico: neste ambiente o `NEXT_PUBLIC_API_URL` aponta para o mesmo host publico do frontend via ngrok. Assim, `/community/icons/depressao.png` era resolvido para o host do Next e disputava o namespace da rota publica `/community/[slug]`, retornando HTML 404 em vez do PNG servido pelo backend.
+- Frontend: `resolvePublicMediaUrl` agora preserva o contrato do backend (`/community/icons/*.png`), mas mapeia esses icones curados para os assets estaticos equivalentes ja existentes em `frontend/public/images/community/explore/*.png`. Midias reais de usuarios e uploads continuam usando `/public/files/*` pelo backend.
+- Escopo: sem mudanca de backend, Prisma, migrations, endpoints, dados, posts, membership, filtros, packages ou uso de `<img>` cru; a tela continua mobile-first e usando `next/image`.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia auditavel usada foi o screenshot do usuario e `_product/proto/Dentro da Comunidade.jpg`.
+- ADR atualizado: `adrs/0095-identidade-visual-comunidade-avatar.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check --write src/utils/media.ts`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, HTTP local `200` em `/community/depressao`, HTTP local `200 image/png` em `/images/community/explore/depressao.png` e Chrome/CDP mobile 390x844 na URL ngrok `/community/depressao`, confirmando avatar carregado por `/_next/image?url=%2Fimages%2Fcommunity%2Fexplore%2Fdepressao.png` com `naturalWidth=76` e `naturalHeight=76`.

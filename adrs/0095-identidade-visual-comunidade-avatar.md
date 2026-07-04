@@ -81,3 +81,28 @@ Tambem removemos overlays escuros do gradiente da faixa, mantendo apenas uma luz
 - `pnpm check`
 - `git diff --check`
 - HTTP local `200` em `http://127.0.0.1:3000/app/community/ansiedade-em-equilibrio`
+
+## Atualizacao 2026-07-04 - avatares estaticos em rotas publicas/ngrok
+
+Em ambientes em que `NEXT_PUBLIC_API_URL` aponta para o mesmo host publico do frontend
+(`ngrok`/reverse proxy), o caminho `/community/icons/*.png` passa pela rota publica
+do Next (`/community/...`) e pode retornar `404 text/html` antes de chegar ao
+`express.static` do backend. Isso fazia o componente `Image` exibir o alt text no
+avatar da comunidade, como observado em `/community/depressao`.
+
+Decidimos manter o contrato do backend (`avatar_url=/community/icons/*.png`) e resolver,
+no frontend, esses icones curados para a copia estatica ja existente em
+`frontend/public/images/community/explore/*.png`. Uploads reais e midias publicas de
+usuarios continuam usando `/public/files/*` servido pelo backend; a excecao vale apenas
+para o catalogo curado de icones de comunidade, evitando depender da topologia local de
+proxy/ngrok e sem duplicar pipeline de asset.
+
+### Validacao desta atualizacao
+
+- `pnpm --dir frontend exec biome check --write src/utils/media.ts`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- HTTP local `200 text/html` em `http://127.0.0.1:3010/community/depressao` via `next start` temporario
+- HTTP local `200 image/png` em `http://127.0.0.1:3010/images/community/explore/depressao.png`
+- Chrome/CDP mobile 390x844 em `https://verbose-trapeze-clapping.ngrok-free.dev/community/depressao`, com header `ngrok-skip-browser-warning`, confirmando `Image` do avatar com `src=/_next/image?url=%2Fimages%2Fcommunity%2Fexplore%2Fdepressao.png`, `naturalWidth=76` e `naturalHeight=76`
