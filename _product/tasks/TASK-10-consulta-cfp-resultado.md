@@ -244,3 +244,8 @@ Todos os criterios aplicaveis foram atendidos. A confirmacao real de um CPF prof
 - O fluxo CFP passa a emitir logs estruturados e sanitizados com `traceId` para correlacionar request, provider e classificacao final.
 - Os logs registram tempos, status HTTP, codigo/mensagem InfoSimples, contagens de arrays e presenca/tamanho dos campos de busca, sem `DOCUMENT_TOKEN`, CPF completo, payload bruto, nome ou dados profissionais.
 - Os logs podem ser desligados por `CFP_PROVIDER_LOGS=false` apos estabilizacao operacional.
+
+## Mensagem de suporte em instabilidade CFP em 2026-07-04
+
+- Quando a consulta automatica ao cadastro CFP falhar por instabilidade da origem, a tela passa a informar que o sistema do Conselho Federal de Psicologia esta instavel no momento.
+- A tela tambem passa a exibir um link de suporte para o psicologo solicitar aprovacao manual, mantendo a regra de nao aprovar automaticamente sem validacao real/manual.

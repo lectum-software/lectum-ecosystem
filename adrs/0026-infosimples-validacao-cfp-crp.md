@@ -74,3 +74,9 @@ Pesquisa publica identificou a consulta InfoSimples `Conselho Federal de Psicolo
 - Para diagnosticar falhas externas sem expor dados sensiveis, o fluxo CFP passa a emitir eventos estruturados com `traceId`, classificacao, tempos, status HTTP, codigo/mensagem do provedor, contagem de resultados e formato resumido do payload.
 - Os logs nao incluem `DOCUMENT_TOKEN`, CPF completo, payload bruto, nome retornado ou dados profissionais; registram somente presenca/tamanho dos campos de busca.
 - Os logs podem ser desativados por `CFP_PROVIDER_LOGS=false` quando a operacao estiver estabilizada.
+
+## Orientacao ao psicologo em instabilidade CFP em 2026-07-04
+
+- Quando a consulta automatica falhar por indisponibilidade da origem CFP/InfoSimples, a UI deve explicar que o cadastro do Conselho Federal de Psicologia esta instavel no momento.
+- O psicologo deve receber um caminho claro para falar com o suporte da Lectum e solicitar aprovacao manual, sem aprovacao automatica, mock ou preenchimento de `cfp_verified_at`.
+- A mensagem de erro backend de `cfp_provider_unavailable` passa a refletir essa orientacao operacional.

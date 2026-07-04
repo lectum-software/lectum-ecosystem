@@ -29,8 +29,10 @@ import { PrivateTemplate } from "@/templates/private";
 import { type CfpSearchForm, useForm } from "./use-form";
 
 const nextStepHref = "/app/professional/whatsapp/verify";
+const supportHref = "/app/profile";
 
 type ApiErrorData = {
+  code?: string;
   error?: string;
   message?: string;
   status?: number;
@@ -44,13 +46,21 @@ type HeroIcon = ComponentType<SVGProps<SVGSVGElement>>;
 
 const resolveApiError = (error: unknown) => {
   const apiError = error as ApiError;
-  return (
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "") ||
-    "Não foi possível consultar o CFP agora. Tente novamente."
-  );
+  return {
+    code: apiError?.data?.code,
+    message:
+      apiError?.data?.error ||
+      apiError?.data?.message ||
+      (error instanceof Error ? error.message : "") ||
+      "N\u00e3o foi poss\u00edvel consultar o CFP agora. Tente novamente.",
+    status: apiError?.data?.status,
+  };
 };
+
+type ResolvedApiError = ReturnType<typeof resolveApiError>;
+
+const isCfpProviderUnavailable = (error?: ResolvedApiError | null) =>
+  error?.code === "cfp_provider_unavailable";
 
 const PageFrame = ({ children }: { children: ReactNode }) => (
   <PrivateTemplate allowAnonymous showHeader={false} showMobileNavigation={false}>
@@ -273,7 +283,7 @@ const ResultsScreen = ({
   onConfirm: () => void;
   onRetry: () => void;
   isConfirming: boolean;
-  apiError: string | null;
+  apiError: ResolvedApiError | null;
 }) => {
   const selected = result.results.find((item) => item.key === selectedKey) || null;
 
@@ -306,7 +316,7 @@ const ResultsScreen = ({
 
         {apiError ? (
           <InlineAlert className="mt-5" title="Não foi possível confirmar" variant="error">
-            {apiError}
+            {apiError.message}
           </InlineAlert>
         ) : null}
 
@@ -355,7 +365,7 @@ export const PsychologistCfpLogic = () => {
   const storedUser = useAppSelector((state) => state.user);
   const { setter } = useUserSet(null);
   const { Form, formProps, hook } = useForm();
-  const [apiError, setApiError] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<ResolvedApiError | null>(null);
   const [searchResult, setSearchResult] = useState<CfpSearchResponse | null>(null);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
@@ -472,8 +482,22 @@ export const PsychologistCfpLogic = () => {
 
         <Form className="mt-8 grid gap-5" {...formProps} onSubmit={hook.handleSubmit(handleSubmit)}>
           {apiError ? (
-            <InlineAlert title="Não foi possível consultar" variant="error">
-              {apiError}
+            <InlineAlert title={"N\u00e3o foi poss\u00edvel consultar"} variant="error">
+              <div className="grid gap-3">
+                <p>{apiError.message}</p>
+                {isCfpProviderUnavailable(apiError) ? (
+                  <div className="grid gap-3">
+                    <p className="text-sm leading-6">
+                      {
+                        "Se voc\u00ea j\u00e1 possui CRP/CFP ativo, fale com o suporte para solicitar aprova\u00e7\u00e3o manual enquanto a consulta autom\u00e1tica estiver inst\u00e1vel."
+                      }
+                    </p>
+                    <Button asChild className="h-11 w-full rounded-full" variant="outline">
+                      <Link href={supportHref}>{"Solicitar aprova\u00e7\u00e3o manual"}</Link>
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
             </InlineAlert>
           ) : null}
 
