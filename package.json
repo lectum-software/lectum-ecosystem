@@ -11,7 +11,7 @@
     "check:backend": "pnpm --dir backend check",
     "commitlint": "commitlint",
     "dev": "node scripts/dev.mjs",
-    "dev:frontend": "pnpm --dir frontend exec next dev --webpack --port 3002",
+    "dev:frontend": "pnpm --dir frontend exec next dev --webpack --port 3000",
     "dev:backend": "pnpm --dir backend dev"
   },
   "devDependencies": {

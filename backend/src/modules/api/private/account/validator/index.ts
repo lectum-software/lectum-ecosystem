@@ -103,7 +103,17 @@ export const onboardingTipsSchema: IValidatorRequest = {
       optional: true,
     },
     {
+      key: "has_seen_psychologist_profile_video_tip",
+      method: "boolean",
+      optional: true,
+    },
+    {
       key: "has_seen_psychologist_reply_tip",
+      method: "boolean",
+      optional: true,
+    },
+    {
+      key: "has_seen_psychologist_original_post_tip",
       method: "boolean",
       optional: true,
     },

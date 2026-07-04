@@ -3,6 +3,7 @@ import { error, msg } from "@/helpers/translate";
 import type { user } from "@/interfaces/objects";
 import { confirmEmailSend } from "@/modules/api/config/nodemailer/messages/confirm";
 import { getDevice } from "@/modules/api/middlewares/_auth/utils/device";
+import { getJwtSecret } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
 import { LoginRepository } from "@/modules/api/public/auth/login/repositories/LoginRepository";
 import {
   GOOGLE_MANAGE_ACCOUNT_URL,
@@ -134,9 +135,15 @@ export const onboardingTips = async (data: IAccountDTO) => {
   const response: AccountOnboardingTipsResponse = {
     has_seen_community_post_tip: Boolean(current.has_seen_community_post_tip),
     has_seen_discover_psychologists_tip: Boolean(current.has_seen_discover_psychologists_tip),
-    has_seen_psychologist_reply_tip: Boolean(current.has_seen_psychologist_reply_tip),
-    has_seen_psychologist_whatsapp_tip: Boolean(current.has_seen_psychologist_whatsapp_tip),
     has_seen_psychologists_my_search_tip: Boolean(current.has_seen_psychologists_my_search_tip),
+    has_seen_psychologist_whatsapp_tip: Boolean(current.has_seen_psychologist_whatsapp_tip),
+    has_seen_psychologist_profile_video_tip: Boolean(
+      current.has_seen_psychologist_profile_video_tip,
+    ),
+    has_seen_psychologist_reply_tip: Boolean(current.has_seen_psychologist_reply_tip),
+    has_seen_psychologist_original_post_tip: Boolean(
+      current.has_seen_psychologist_original_post_tip,
+    ),
   };
 
   return {
@@ -165,9 +172,19 @@ export const updateOnboardingTips = async (data: IAccountOnboardingTipsDTO) => {
           has_seen_discover_psychologists_tip: data.b.has_seen_discover_psychologists_tip,
         }
       : {}),
+    ...(typeof data.b.has_seen_psychologists_my_search_tip === "boolean"
+      ? {
+          has_seen_psychologists_my_search_tip: data.b.has_seen_psychologists_my_search_tip,
+        }
+      : {}),
     ...(typeof data.b.has_seen_psychologist_whatsapp_tip === "boolean"
       ? {
           has_seen_psychologist_whatsapp_tip: data.b.has_seen_psychologist_whatsapp_tip,
+        }
+      : {}),
+    ...(typeof data.b.has_seen_psychologist_profile_video_tip === "boolean"
+      ? {
+          has_seen_psychologist_profile_video_tip: data.b.has_seen_psychologist_profile_video_tip,
         }
       : {}),
     ...(typeof data.b.has_seen_psychologist_reply_tip === "boolean"
@@ -175,9 +192,9 @@ export const updateOnboardingTips = async (data: IAccountOnboardingTipsDTO) => {
           has_seen_psychologist_reply_tip: data.b.has_seen_psychologist_reply_tip,
         }
       : {}),
-    ...(typeof data.b.has_seen_psychologists_my_search_tip === "boolean"
+    ...(typeof data.b.has_seen_psychologist_original_post_tip === "boolean"
       ? {
-          has_seen_psychologists_my_search_tip: data.b.has_seen_psychologists_my_search_tip,
+          has_seen_psychologist_original_post_tip: data.b.has_seen_psychologist_original_post_tip,
         }
       : {}),
   };
@@ -187,9 +204,15 @@ export const updateOnboardingTips = async (data: IAccountOnboardingTipsDTO) => {
   const response: AccountOnboardingTipsResponse = {
     has_seen_community_post_tip: Boolean(updated.has_seen_community_post_tip),
     has_seen_discover_psychologists_tip: Boolean(updated.has_seen_discover_psychologists_tip),
-    has_seen_psychologist_reply_tip: Boolean(updated.has_seen_psychologist_reply_tip),
-    has_seen_psychologist_whatsapp_tip: Boolean(updated.has_seen_psychologist_whatsapp_tip),
     has_seen_psychologists_my_search_tip: Boolean(updated.has_seen_psychologists_my_search_tip),
+    has_seen_psychologist_whatsapp_tip: Boolean(updated.has_seen_psychologist_whatsapp_tip),
+    has_seen_psychologist_profile_video_tip: Boolean(
+      updated.has_seen_psychologist_profile_video_tip,
+    ),
+    has_seen_psychologist_reply_tip: Boolean(updated.has_seen_psychologist_reply_tip),
+    has_seen_psychologist_original_post_tip: Boolean(
+      updated.has_seen_psychologist_original_post_tip,
+    ),
   };
 
   return {
@@ -344,7 +367,7 @@ export const createDeleteGoogleIntent = async (data: IAccountDeleteGoogleIntentD
       intent: "delete_account_google_reauth",
       user_id: current.id,
     },
-    process.env.JWT_SECRET_KEY as string,
+    getJwtSecret(),
     { expiresIn: DELETE_GOOGLE_REAUTH_TOKEN_EXPIRES_IN },
   );
 

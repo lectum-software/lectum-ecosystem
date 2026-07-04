@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { error, msg } from "@/helpers/translate";
 import { getDevice } from "@/modules/api/middlewares/_auth/utils/device";
+import { getJwtSecret } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
 import { AccountRepository } from "@/modules/api/private/account/repositories/AccountRepository";
 import { LoginRepository } from "@/modules/api/public/auth/login/repositories/LoginRepository";
 import { isGoogleOAuthConfigured } from "../../utils/config";
@@ -46,7 +47,7 @@ export const createIntent = async (data: IGoogleLinkDTO) => {
       email: data.auth.email,
       device_id: device.id,
     },
-    process.env.JWT_SECRET_KEY as string,
+    getJwtSecret(),
     { expiresIn: LINK_TOKEN_EXPIRES_IN },
   );
 

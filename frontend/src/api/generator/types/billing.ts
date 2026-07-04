@@ -85,7 +85,6 @@ export type BillingSelectFreeResponse = {
 export type BillingCheckoutPayload = {
   card_token: string;
   payment_type_id: "credit_card" | "debit_card" | "prepaid_card";
-  return_url?: string | null;
 };
 
 export type BillingCheckoutResponse = {
@@ -93,6 +92,12 @@ export type BillingCheckoutResponse = {
   gateway_status?: string | null;
   pending_confirmation: boolean;
   init_point?: string | null;
+};
+
+export type BillingSyncResponse = {
+  current: ProfessionalSubscription | null;
+  gateway_status?: string | null;
+  synced: boolean;
 };
 
 export type BillingPaymentMethodPayload = {

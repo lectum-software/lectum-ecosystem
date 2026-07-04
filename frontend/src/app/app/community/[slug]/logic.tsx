@@ -2299,12 +2299,24 @@ const CommunityPublishOnboarding = ({
   onCreatePostClick?: (event: ReactMouseEvent<HTMLAnchorElement>, href: string) => void;
   variant: CommunityPublishOnboardingVariant;
 }) => {
-  const isPsychologistUser = useAppSelector((state) => state.user?.role === "psicologo");
+  const currentUser = useAppSelector((state) => state.user);
+  const isPsychologistUser = currentUser?.role === "psicologo";
   const accountTips = useAccount({
     enableSecurity: false,
     enableTips: !isPsychologistUser,
   });
   const accountTipsUserId = accountTips.userId;
+  const copy = isPsychologistUser
+    ? {
+        description:
+          "Depois de responder dúvidas, publicar conteúdos originais sobre temas frequentes fortalece sua autoridade e ajuda pacientes a se identificarem com sua abordagem.",
+        title: "Crie conteúdos que aproximam pacientes",
+      }
+    : {
+        description:
+          "Toque no botão + para conversar gratuitamente na comunidade e receber acolhimento dos psicólogos mediadores.",
+        title: "Publique sua dúvida ou relato",
+      };
   const [hasLoadedPreference, setHasLoadedPreference] = useState(false);
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
@@ -2315,9 +2327,11 @@ const CommunityPublishOnboarding = ({
   const persistSeen = useCallback(() => {
     if (isPsychologistUser) return;
 
+    const hasSeenCurrentTip = accountTips.onboardingTips.data?.has_seen_community_post_tip;
+
     if (
       hasPersistedSeenRef.current ||
-      accountTips.onboardingTips.data?.has_seen_community_post_tip ||
+      hasSeenCurrentTip ||
       accountTips.updateOnboardingTips.isPending
     ) {
       return;
@@ -2357,6 +2371,33 @@ const CommunityPublishOnboarding = ({
   );
 
   useEffect(() => {
+    if (!accountTipsUserId || typeof document === "undefined") return;
+
+    const expectedHref = new URL(createPostHref, window.location.origin);
+    const expectedPath = expectedHref.pathname + expectedHref.search + expectedHref.hash;
+
+    const handleCreatePostAnchorClick = (event: globalThis.MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+
+      const anchor = target.closest<HTMLAnchorElement>("a[href]");
+      if (!anchor) return;
+
+      const anchorHref = new URL(anchor.href, window.location.origin);
+      const anchorPath = anchorHref.pathname + anchorHref.search + anchorHref.hash;
+      if (anchorPath !== expectedPath) return;
+
+      persistSeen();
+      setHasSeenOnboarding(true);
+      setIsVisible(false);
+    };
+
+    document.addEventListener("click", handleCreatePostAnchorClick, true);
+
+    return () => document.removeEventListener("click", handleCreatePostAnchorClick, true);
+  }, [accountTipsUserId, createPostHref, persistSeen]);
+
+  useEffect(() => {
     hasSyncedPreferenceRef.current = false;
     hasPersistedSeenRef.current = false;
 
@@ -2386,8 +2427,10 @@ const CommunityPublishOnboarding = ({
         setHasLoadedPreference(true);
         return;
       }
+      const tips = accountTips.onboardingTips.data;
+      const hasSeenCurrentTip = tips.has_seen_community_post_tip;
 
-      setHasSeenOnboarding(Boolean(accountTips.onboardingTips.data.has_seen_community_post_tip));
+      setHasSeenOnboarding(Boolean(hasSeenCurrentTip));
       setHasLoadedPreference(true);
     });
 
@@ -2474,12 +2517,9 @@ const CommunityPublishOnboarding = ({
               className="font-extrabold text-[1.05rem] text-foreground leading-tight"
               id="community-publish-onboarding-title"
             >
-              Publique sua dúvida ou relato
+              {copy.title}
             </h2>
-            <p className="text-sm text-subtle leading-relaxed">
-              Toque no botão + para conversar gratuitamente na comunidade e receber acolhimento dos
-              psicólogos mediadores.
-            </p>
+            <p className="text-sm text-subtle leading-relaxed">{copy.description}</p>
           </div>
         </div>
       </section>

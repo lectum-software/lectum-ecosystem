@@ -60,6 +60,39 @@ Consequencias:
 - A persistencia continua por usuario e sincronizada entre dispositivos apos login.
 - Se o usuario descobre a acao sozinho, a dica correspondente nao reaparece.
 
+## Complemento 2026-06-29 - Dicas contextuais para psicólogos
+
+O produto passou a exigir dicas específicas para psicólogos, sem repetir a dica de perfil completo porque a publicação pública já depende de perfil apto. A prioridade definida foi: reforçar o vídeo de apresentação no perfil profissional, depois orientar respostas a pacientes na comunidade como principal conversor, e só então incentivar conteúdo original.
+
+Decisões:
+
+- Adicionar em `user` as flags `has_seen_psychologist_profile_video_tip`, `has_seen_psychologist_reply_tip` e `has_seen_psychologist_original_post_tip`.
+- Reutilizar `GET/PUT /api/private/account/tips` para manter uma única fonte persistida por usuário autenticado; as novas dicas são renderizadas apenas quando `user.role === "psicologo"`.
+- Exibir a dica do vídeo no alvo real do card de vídeo em `/app/professional/profile/setup`, marcando como vista quando aparece ou quando o psicólogo interage com o card antes dela.
+- Exibir a dica de resposta em posts de pacientes na comunidade, marcando como vista quando aparece ou quando o psicólogo clica no alvo de comentar antes dela.
+- Tratar a resposta a pacientes como orientação de maior prioridade: a dica de conteúdo original só fica elegível depois de `has_seen_psychologist_reply_tip=true`.
+- Manter cada dica acionável: o clique no alvo executa a ação do produto, sem CTA separado de "Entendi".
+- A tentativa obrigatória de `pnpm --dir backend db:migrate` foi executada, mas encontrou drift preexistente em migrations já aplicadas. Nenhum reset destrutivo foi executado; a migration desta decisão foi aplicada de forma não destrutiva com `prisma migrate deploy` após resolver a tentativa inicial que falhou por BOM no SQL.
+
+Consequências:
+
+- O onboarding do psicólogo fica contextual, por papel e por momento de uso, sem abrir várias dicas ao mesmo tempo.
+- A tabela `users` recebe mais três flags booleanas; se novas famílias de dicas crescerem, a decisão de uma tabela genérica de preferências deve ser reavaliada.
+- A criação de conteúdo original continua incentivada, mas não compete com a ação de maior impacto comercial para o psicólogo: responder pacientes.
+
+Validações:
+
+- `pnpm --dir backend db:migrate` executado e bloqueado por drift/estado de migrations aplicadas, sem reset.
+- `pnpm --dir backend db:migrate-prod`
+- `pnpm --dir backend exec prisma migrate status`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- HTTP/browser local descritos na task complementar.
+
 ## Complemento 2026-06-30 - Foco de psicólogos em respostas
 
 Produto decidiu que o foco principal da Lectum para psicólogos é responder dúvidas e relatos da

@@ -29,6 +29,7 @@ import {
   type ChangeEvent,
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -36,16 +37,19 @@ import {
 } from "react";
 import { Controller, type FieldPath, useFieldArray } from "react-hook-form";
 import { toast } from "sonner";
+import { useAccount } from "@/api/callers/account";
 import { usePsychologistFreeProfile } from "@/api/callers/psychologist-free-profile";
 import type { FreeProfileCatalogItem } from "@/api/generator/types/free-profile";
 import { AccountDeleteSection } from "@/components/account/account-delete-section";
 import { components } from "@/components/controllers";
 import { Container } from "@/components/controllers/container";
 import { describedBy, fieldId } from "@/components/controllers/utils";
+import { ActionableCoachMark } from "@/components/onboarding/actionable-coach-mark";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
+import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -70,6 +74,7 @@ type ApiError = Error & {
 };
 
 const PROFESSIONAL_PROFILE_MENU_HREF = "/app/profile";
+const PSYCHOLOGIST_PROFILE_VIDEO_TIP_SELECTOR = '[data-psychologist-tip-target="profile-video"]';
 
 const resolveApiError = (error: unknown) => {
   const apiError = error as ApiError;
@@ -962,6 +967,12 @@ const CityField = ({
 
 export const ProfessionalProfileSetupLogic = () => {
   const router = useRouter();
+  const currentUser = useAppSelector((state) => state.user);
+  const isPsychologistUser = currentUser?.role === "psicologo";
+  const accountTips = useAccount({
+    enableSecurity: false,
+    enableTips: isPsychologistUser,
+  });
   const avatarFrameRef = useRef<HTMLDivElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const avatarDraftUrlRef = useRef<string | null>(null);
@@ -978,6 +989,9 @@ export const ProfessionalProfileSetupLogic = () => {
   const [coverImageActionsOpen, setCoverImageActionsOpen] = useState(false);
   const [videoActionsOpen, setVideoActionsOpen] = useState(false);
   const [videoRemovalConfirmOpen, setVideoRemovalConfirmOpen] = useState(false);
+  const [showProfileVideoTip, setShowProfileVideoTip] = useState(false);
+  const hasShownProfileVideoTipThisVisitRef = useRef(false);
+  const hasPersistedProfileVideoTipSeenRef = useRef(false);
   const {
     deleteAvatar,
     deleteCoverImage,
@@ -1065,6 +1079,74 @@ export const ProfessionalProfileSetupLogic = () => {
   const shouldLockProfessionalIdentityFields = Boolean(
     profile.data?.profile.identity_fields_locked,
   );
+  const canShowProfileVideoTip =
+    isPsychologistUser &&
+    canUploadVideo &&
+    profile.isSuccess &&
+    accountTips.onboardingTips.isSuccess &&
+    !accountTips.onboardingTips.data?.has_seen_psychologist_profile_video_tip;
+
+  const persistProfileVideoTipSeen = useCallback(() => {
+    if (
+      !accountTips.userId ||
+      hasPersistedProfileVideoTipSeenRef.current ||
+      accountTips.onboardingTips.data?.has_seen_psychologist_profile_video_tip ||
+      accountTips.updateOnboardingTips.isPending
+    ) {
+      return;
+    }
+
+    hasPersistedProfileVideoTipSeenRef.current = true;
+    accountTips.updateOnboardingTips.mutate(
+      {
+        has_seen_psychologist_profile_video_tip: true,
+      },
+      {
+        onError: () => {
+          hasPersistedProfileVideoTipSeenRef.current = false;
+        },
+      },
+    );
+  }, [
+    accountTips.onboardingTips.data?.has_seen_psychologist_profile_video_tip,
+    accountTips.updateOnboardingTips,
+    accountTips.userId,
+  ]);
+
+  useEffect(() => {
+    hasShownProfileVideoTipThisVisitRef.current = false;
+    hasPersistedProfileVideoTipSeenRef.current = false;
+
+    const frame = window.requestAnimationFrame(() => setShowProfileVideoTip(false));
+
+    if (!accountTips.userId) {
+      return () => window.cancelAnimationFrame(frame);
+    }
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [accountTips.userId]);
+
+  useEffect(() => {
+    if (!canShowProfileVideoTip) return;
+    if (hasShownProfileVideoTipThisVisitRef.current) return;
+    if (videoActionsOpen || videoRemovalConfirmOpen) return;
+
+    const timeout = window.setTimeout(() => {
+      if (hasShownProfileVideoTipThisVisitRef.current) return;
+      if (!document.querySelector(PSYCHOLOGIST_PROFILE_VIDEO_TIP_SELECTOR)) return;
+
+      hasShownProfileVideoTipThisVisitRef.current = true;
+      setShowProfileVideoTip(true);
+      persistProfileVideoTipSeen();
+    }, 700);
+
+    return () => window.clearTimeout(timeout);
+  }, [
+    canShowProfileVideoTip,
+    persistProfileVideoTipSeen,
+    videoActionsOpen,
+    videoRemovalConfirmOpen,
+  ]);
   const lockedIdentityFieldProps: Partial<(typeof renderedFields)[number]> =
     shouldLockProfessionalIdentityFields ? { disabled: true } : {};
   const crpRegionValue = profile.data?.profile.crp_region;
@@ -1420,6 +1502,9 @@ export const ProfessionalProfileSetupLogic = () => {
   };
 
   const openVideoFilePicker = () => {
+    hasShownProfileVideoTipThisVisitRef.current = true;
+    persistProfileVideoTipSeen();
+    setShowProfileVideoTip(false);
     setVideoActionsOpen(false);
     videoInputRef.current?.click();
   };
@@ -1446,7 +1531,24 @@ export const ProfessionalProfileSetupLogic = () => {
   };
 
   const handleVideoCoverRequest = () => {
+    hasShownProfileVideoTipThisVisitRef.current = true;
+    persistProfileVideoTipSeen();
+    setShowProfileVideoTip(false);
     openVideoCoverFilePicker();
+  };
+
+  const handleVideoActionsToggle = () => {
+    hasShownProfileVideoTipThisVisitRef.current = true;
+    persistProfileVideoTipSeen();
+    setShowProfileVideoTip(false);
+    setVideoActionsOpen((current) => !current);
+  };
+
+  const handleVideoUploadCardClick = () => {
+    hasShownProfileVideoTipThisVisitRef.current = true;
+    persistProfileVideoTipSeen();
+    setShowProfileVideoTip(false);
+    videoInputRef.current?.click();
   };
 
   const submit = form.hook.handleSubmit((values) => {
@@ -1737,6 +1839,21 @@ export const ProfessionalProfileSetupLogic = () => {
 
   return (
     <PrivateTemplate showHeader={false}>
+      {showProfileVideoTip ? (
+        <ActionableCoachMark
+          onDismiss={() => setShowProfileVideoTip(false)}
+          placement={videoSrc ? "bottom" : "top"}
+          targetSelector={PSYCHOLOGIST_PROFILE_VIDEO_TIP_SELECTOR}
+          title="Seu vídeo é seu principal destaque"
+        >
+          <p>
+            O vídeo é o elemento principal para destacar seu perfil nos resultados de busca. Ele
+            ajuda pacientes a sentirem confiança antes do contato e pode ser decisivo para converter
+            uma primeira conversa.
+          </p>
+        </ActionableCoachMark>
+      ) : null}
+
       <VideoRemovalConfirmationModal
         disabled={deleteVideo.isPending}
         onClose={() => setVideoRemovalConfirmOpen(false)}
@@ -1912,7 +2029,8 @@ export const ProfessionalProfileSetupLogic = () => {
                             uploadVideoCover.isPending ||
                             deleteVideo.isPending
                           }
-                          onClick={() => setVideoActionsOpen((current) => !current)}
+                          data-psychologist-tip-target={videoSrc ? "profile-video" : undefined}
+                          onClick={handleVideoActionsToggle}
                           type="button"
                         >
                           <PencilLine className="h-4 w-4" aria-hidden="true" />
@@ -1984,7 +2102,8 @@ export const ProfessionalProfileSetupLogic = () => {
                       <button
                         className="mt-4 grid min-h-32 w-full place-items-center rounded-2xl border border-dashed border-border bg-surface px-4 py-6 text-center transition hover:border-primary hover:bg-primary-soft/40 disabled:cursor-not-allowed disabled:opacity-60"
                         disabled={uploadVideo.isPending}
-                        onClick={() => videoInputRef.current?.click()}
+                        data-psychologist-tip-target={!videoSrc ? "profile-video" : undefined}
+                        onClick={handleVideoUploadCardClick}
                         type="button"
                       >
                         <span>

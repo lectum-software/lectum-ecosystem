@@ -11,15 +11,20 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
     });
   }
 
-  console.error("[SERVER] erro não tratado", {
-    message: error?.message,
+  const status = Number(error.status || 500);
+  const message = error instanceof Error ? error.message : "Internal Server Error";
+
+  console.error("[SERVER] erro n?o tratado", {
+    message,
     name: error?.name,
-    status: error?.status,
+    status,
   });
 
-  return res.status(error.status || 500).json({
+  console.error(`[ERROR_HANDLER] ${status}: ${message}`);
+
+  return res.status(status).json({
     success: false,
-    error: error.message || "Internal Server Error",
+    error: status >= 500 ? "Internal Server Error" : message,
   });
 };
 

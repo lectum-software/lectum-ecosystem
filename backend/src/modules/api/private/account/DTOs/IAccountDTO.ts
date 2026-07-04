@@ -27,17 +27,21 @@ export type AccountDeleteGoogleIntentResponse = {
 export type AccountOnboardingTipsBody = {
   has_seen_community_post_tip?: boolean;
   has_seen_discover_psychologists_tip?: boolean;
-  has_seen_psychologist_reply_tip?: boolean;
-  has_seen_psychologist_whatsapp_tip?: boolean;
   has_seen_psychologists_my_search_tip?: boolean;
+  has_seen_psychologist_whatsapp_tip?: boolean;
+  has_seen_psychologist_profile_video_tip?: boolean;
+  has_seen_psychologist_reply_tip?: boolean;
+  has_seen_psychologist_original_post_tip?: boolean;
 };
 
 export type AccountOnboardingTipsResponse = {
   has_seen_community_post_tip: boolean;
   has_seen_discover_psychologists_tip: boolean;
-  has_seen_psychologist_reply_tip: boolean;
-  has_seen_psychologist_whatsapp_tip: boolean;
   has_seen_psychologists_my_search_tip: boolean;
+  has_seen_psychologist_whatsapp_tip: boolean;
+  has_seen_psychologist_profile_video_tip: boolean;
+  has_seen_psychologist_reply_tip: boolean;
+  has_seen_psychologist_original_post_tip: boolean;
 };
 
 export type AccountGoogleSecurity = {

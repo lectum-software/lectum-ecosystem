@@ -11,6 +11,23 @@ const PUBLIC_ROUTES = ["/auth/profile-selection", "/auth/login", "/auth/redirect
 const AUTH_REQUIRED_ROUTES = ["/auth/verify-email"];
 const PRIVATE_PREFIXES = [DASHBOARD_PATH, APP_PATH, "/patient"];
 const INLINE_AUTH_PROMPT_ROUTES = ["/app/favorites", "/app/notifications", "/app/profile"];
+const PUBLIC_APP_EXACT_ROUTES = [
+  "/app/psychologists",
+  "/app/community",
+  "/app/community/top-mentors",
+];
+const PUBLIC_APP_PREFIXES = ["/app/psychologists/", "/app/psychologist/"];
+
+const isPublicCommunityRoute = (pathname: string) => {
+  if (PUBLIC_APP_EXACT_ROUTES.includes(pathname)) return true;
+  if (!pathname.startsWith("/app/community/")) return false;
+  if (pathname.startsWith("/app/community/suggest")) return false;
+  if (pathname === "/app/community/post/new") return false;
+  if (pathname.includes("/post/new")) return false;
+  if (pathname.includes("/post/success")) return false;
+
+  return true;
+};
 
 const hasPendingEmailConfirmation = (req: NextRequest) => {
   const rawUserCookie = req.cookies.get(USER_COOKIE_NAME)?.value;
@@ -40,7 +57,11 @@ export function proxy(req: NextRequest) {
   const pendingEmailConfirmation = Boolean(token) && hasPendingEmailConfirmation(req);
 
   const isAuthRoute = pathname.startsWith(AUTH_PREFIX);
-  const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
+  const isPublicAppRoute =
+    PUBLIC_APP_EXACT_ROUTES.includes(pathname) ||
+    isPublicCommunityRoute(pathname) ||
+    PUBLIC_APP_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+  const isPublicRoute = PUBLIC_ROUTES.includes(pathname) || isPublicAppRoute;
   const isAuthRequiredRoute = AUTH_REQUIRED_ROUTES.includes(pathname);
   const isPrivateRoute = PRIVATE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
   const isInlineAuthPromptRoute = INLINE_AUTH_PROMPT_ROUTES.includes(pathname);

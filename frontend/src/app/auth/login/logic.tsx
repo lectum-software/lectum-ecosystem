@@ -58,7 +58,7 @@ export const AuthLogic = () => {
       const currentDeviceId = await fingerprint();
       const loginUrl =
         process.env.NEXT_PUBLIC_LOGIN_URL ||
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002"}/api/public/google/login`;
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/public/google/login`;
 
       const role = searchParams.get("role");
       const redirectTo = searchParams.get("redirectTo");

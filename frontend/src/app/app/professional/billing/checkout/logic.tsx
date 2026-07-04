@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { CardPayment, initMercadoPago } from "@mercadopago/sdk-react";
 import {
@@ -11,8 +11,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
 import type {
@@ -31,7 +30,22 @@ import { PSYCHOLOGIST_ONBOARDING_PATHS } from "@/utils/psychologist-onboarding";
 
 const publicKey = process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY;
 const mercadoPagoEnv = process.env.NEXT_PUBLIC_MERCADO_PAGO_ENV?.trim().toLowerCase();
-const sandboxPayerEmail = process.env.NEXT_PUBLIC_MERCADO_PAGO_TEST_PAYER_EMAIL?.trim();
+const sandboxPayerEmail = process.env.NEXT_PUBLIC_MERCADO_PAGO_SANDBOX_PAYER_EMAIL?.trim();
+
+const resolveMercadoPagoPayerEmail = (authenticatedEmail: string) => {
+  if (mercadoPagoEnv === "sandbox" && sandboxPayerEmail) {
+    return sandboxPayerEmail;
+  }
+
+  return authenticatedEmail;
+};
+
+if (publicKey) {
+  initMercadoPago(publicKey, {
+    locale: "pt-BR",
+    advancedFraudPrevention: true,
+  });
+}
 
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -45,8 +59,18 @@ const formatPrice = (priceCents: number) => currencyFormatter.format(priceCents 
 const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : "Não foi possível carregar o checkout agora.";
 
+const isCurrentPeriodValid = (currentPeriodEnd?: string | null) => {
+  if (!currentPeriodEnd) return true;
+
+  const periodEnd = new Date(currentPeriodEnd);
+
+  return !Number.isNaN(periodEnd.getTime()) && periodEnd > new Date();
+};
+
 const isActiveProfessional = (subscription?: ProfessionalSubscription | null) =>
-  subscription?.status === "ativa" && subscription.plan?.slug === "profissional";
+  subscription?.status === "ativa" &&
+  subscription.plan?.slug === "profissional" &&
+  isCurrentPeriodValid(subscription.current_period_end);
 
 const isPendingProfessional = (subscription?: ProfessionalSubscription | null) =>
   subscription?.status === "inativa" &&
@@ -54,14 +78,8 @@ const isPendingProfessional = (subscription?: ProfessionalSubscription | null) =
   Boolean(subscription.gateway_subscription_id);
 
 const CREDIT_CARD_PAYMENT_TYPE = "credit_card";
-
-const resolveBrickPayerEmail = (fallbackEmail: string) => {
-  if (mercadoPagoEnv === "sandbox" && sandboxPayerEmail) {
-    return sandboxPayerEmail;
-  }
-
-  return fallbackEmail;
-};
+const AUTO_SYNC_INTERVAL_MS = 3000;
+const AUTO_SYNC_MAX_ATTEMPTS = 20;
 
 type CardPaymentFormData = {
   token?: string;
@@ -115,29 +133,37 @@ const SummaryCard = ({ plan }: { plan: SubscriptionPlan }) => (
 );
 
 export const ProfessionalBillingCheckoutLogic = () => {
-  const router = useRouter();
   const userEmail = useAppSelector((state) => state.user?.email || "");
-  const payerEmail = resolveBrickPayerEmail(userEmail);
+  const payerEmail = resolveMercadoPagoPayerEmail(userEmail);
   const [checkoutResult, setCheckoutResult] = useState<BillingCheckoutResponse | null>(null);
-  const billing = usePsychologistBilling({
-    callbacks: {
+  const billingCallbacks = useMemo(
+    () => ({
       checkout: {
-        onSuccess: (data) => {
+        onSuccess: (data: BillingCheckoutResponse) => {
           setCheckoutResult(data);
           toast.success("Pagamento enviado para confirmação segura");
         },
       },
-    },
-  });
+    }),
+    [],
+  );
+  const billing = usePsychologistBilling({ callbacks: billingCallbacks });
+  const checkoutMutateAsync = billing.checkout.mutateAsync;
+  const syncMutateAsync = billing.sync.mutateAsync;
+  const currentRefetch = billing.current.refetch;
+  const checkoutMutateAsyncRef = useRef(checkoutMutateAsync);
+  const syncMutateAsyncRef = useRef(syncMutateAsync);
+  const currentRefetchRef = useRef(currentRefetch);
+  const autoSyncInFlightRef = useRef(false);
 
   useEffect(() => {
-    if (!publicKey) return;
+    checkoutMutateAsyncRef.current = checkoutMutateAsync;
+  }, [checkoutMutateAsync]);
 
-    initMercadoPago(publicKey, {
-      locale: "pt-BR",
-      advancedFraudPrevention: true,
-    });
-  }, []);
+  useEffect(() => {
+    syncMutateAsyncRef.current = syncMutateAsync;
+    currentRefetchRef.current = currentRefetch;
+  }, [currentRefetch, syncMutateAsync]);
 
   const isLoading = billing.plans.isLoading || billing.current.isLoading;
   const hasError = billing.plans.isError || billing.current.isError;
@@ -147,6 +173,8 @@ export const ProfessionalBillingCheckoutLogic = () => {
   const pendingProfessional =
     Boolean(checkoutResult?.pending_confirmation) || isPendingProfessional(current);
   const amount = professionalPlan ? professionalPlan.price_cents / 100 : 0;
+  const canRenderCardPayment = Boolean(publicKey && amount > 0 && payerEmail);
+  const cardPaymentKey = `${payerEmail || "anonymous"}-${amount}`;
 
   const initialization = useMemo(
     () => ({
@@ -190,19 +218,73 @@ export const ProfessionalBillingCheckoutLogic = () => {
         return;
       }
 
-      await billing.checkout.mutateAsync({
-        card_token: token,
-        payment_type_id: CREDIT_CARD_PAYMENT_TYPE,
-        return_url: `${window.location.origin}${PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress}`,
-      });
+      try {
+        await checkoutMutateAsyncRef.current({
+          card_token: token,
+          payment_type_id: CREDIT_CARD_PAYMENT_TYPE,
+        });
+      } catch {
+        // handleReq já exibe o erro real da API; impedir rejeição não tratada no Brick.
+      }
     },
-    [billing.checkout],
+    [],
   );
+
+  const handleBrickReady = useCallback(() => {
+    // Callback obrigatório do Brick; mantém a renderização real sem efeitos paralelos.
+  }, []);
 
   const handleBrickError = useCallback((error: unknown) => {
     console.error("[Mercado Pago CardPayment]", error);
     toast.error("Não foi possível carregar o formulário de cartão.");
   }, []);
+
+  const handleSyncStatus = useCallback(async () => {
+    try {
+      await syncMutateAsyncRef.current();
+      await currentRefetchRef.current();
+      toast.success("Status da assinatura atualizado");
+    } catch {
+      // handleReq já exibe o erro real da API.
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!pendingProfessional || activeProfessional) return;
+
+    let attempts = 0;
+    let cancelled = false;
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    const syncPendingSubscription = async () => {
+      if (cancelled || autoSyncInFlightRef.current) return;
+
+      autoSyncInFlightRef.current = true;
+
+      try {
+        await syncMutateAsyncRef.current();
+        await currentRefetchRef.current();
+      } catch {
+        // A UI mantém a confirmação pendente e o botão manual continua disponível.
+      } finally {
+        attempts += 1;
+        autoSyncInFlightRef.current = false;
+
+        if (attempts >= AUTO_SYNC_MAX_ATTEMPTS && interval) {
+          clearInterval(interval);
+        }
+      }
+    };
+
+    const timeout = setTimeout(syncPendingSubscription, 1000);
+    interval = setInterval(syncPendingSubscription, AUTO_SYNC_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+      if (interval) clearInterval(interval);
+    };
+  }, [activeProfessional, pendingProfessional]);
 
   return (
     <PrivateTemplate showHeader={false}>
@@ -288,7 +370,14 @@ export const ProfessionalBillingCheckoutLogic = () => {
                     </InlineAlert>
                   ) : null}
 
-                  {publicKey && amount > 0 ? (
+                  {publicKey && amount > 0 && !payerEmail ? (
+                    <InlineAlert title="E-mail do pagador ausente" variant="error">
+                      Recarregue a sessão antes de abrir o formulário de cartão. O Mercado Pago
+                      precisa do e-mail autenticado para tokenizar o pagamento.
+                    </InlineAlert>
+                  ) : null}
+
+                  {canRenderCardPayment ? (
                     <div
                       className={cn(
                         "rounded-3xl border border-border bg-surface-muted p-3 md:p-4",
@@ -306,8 +395,10 @@ export const ProfessionalBillingCheckoutLogic = () => {
                         customization={customization}
                         id="lectum-card-payment-brick"
                         initialization={initialization}
+                        key={cardPaymentKey}
                         locale="pt-BR"
                         onError={handleBrickError}
+                        onReady={handleBrickReady}
                         onSubmit={handleSubmit}
                       />
                     </div>
@@ -321,25 +412,19 @@ export const ProfessionalBillingCheckoutLogic = () => {
                   ) : null}
 
                   {pendingProfessional ? (
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <Button
-                        className="h-12 rounded-full"
-                        onClick={() => billing.current.refetch()}
-                        type="button"
-                        variant="outline"
-                      >
-                        <RefreshCw className="h-4 w-4" aria-hidden />
-                        Atualizar status
-                      </Button>
-                      <Button
-                        className="h-12 rounded-full"
-                        onClick={() => router.push(PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress)}
-                        type="button"
-                      >
-                        Ir para endereço
-                        <ArrowRight className="h-4 w-4" aria-hidden />
-                      </Button>
-                    </div>
+                    <Button
+                      className="h-12 rounded-full"
+                      disabled={billing.sync.isPending}
+                      onClick={handleSyncStatus}
+                      type="button"
+                      variant="outline"
+                    >
+                      <RefreshCw
+                        className={cn("h-4 w-4", billing.sync.isPending && "animate-spin")}
+                        aria-hidden
+                      />
+                      {billing.sync.isPending ? "Atualizando status..." : "Atualizar status"}
+                    </Button>
                   ) : null}
                 </div>
               )}

@@ -1,4 +1,4 @@
-﻿import prisma, { type ORM } from "@/infra/database/prisma";
+import prisma, { type ORM } from "@/infra/database/prisma";
 import type { payment_event, professional_subscription } from "@/interfaces/objects";
 import type { IWebhookRepository } from "./interfaces/IWebhookRepository";
 
@@ -44,13 +44,11 @@ export class WebhookRepository implements IWebhookRepository {
     return { event, created: true };
   }
 
-  async updateSubscriptionByGatewayReference(data: {
+  async findSubscriptionByGatewayReference(data: {
     subscriptionId?: string | null;
     gatewaySubscriptionId: string;
-    status: "inativa" | "ativa" | "inadimplente" | "cancelada";
-    currentPeriodEnd?: Date | null;
   }): Promise<professional_subscription | null> {
-    const subscription = await this.subscriptionRepository.findFirst({
+    return this.subscriptionRepository.findFirst({
       where: {
         deleted: false,
         OR: [
@@ -58,16 +56,24 @@ export class WebhookRepository implements IWebhookRepository {
           { gateway_subscription_id: data.gatewaySubscriptionId },
         ],
       },
+      include: {
+        plan: true,
+      },
       orderBy: {
         createdAt: "desc",
       },
     });
+  }
 
-    if (!subscription?.id) return null;
-
+  async updateSubscriptionStatus(data: {
+    subscriptionId: string;
+    gatewaySubscriptionId: string;
+    status: "inativa" | "ativa" | "inadimplente" | "cancelada";
+    currentPeriodEnd?: Date | null;
+  }): Promise<professional_subscription | null> {
     return this.subscriptionRepository.update({
       where: {
-        id: subscription.id,
+        id: data.subscriptionId,
       },
       data: {
         status: data.status,

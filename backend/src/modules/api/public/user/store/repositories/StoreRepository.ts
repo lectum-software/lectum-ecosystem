@@ -6,6 +6,7 @@ import type { user } from "@/interfaces/objects";
 
 //Utils
 import { log } from "@/utils/logs";
+import { sanitizeSensitiveData } from "@/utils/sanitize-sensitive";
 //DTOs
 import type { IHasDTO, IStoreDTO } from "../DTOs/IStoreDTO";
 import type { IStoreRepository } from "./interfaces/IStoreRepository";
@@ -89,7 +90,7 @@ export class StoreRepository implements IStoreRepository {
         data: {
           action: log.store,
           ref_id: item.id,
-          new: JSON.stringify(newItem),
+          new: JSON.stringify(sanitizeSensitiveData(newItem, { removeAuthTokens: true })),
         },
       });
 

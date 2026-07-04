@@ -44,6 +44,8 @@ Em 2026-06-27, as credenciais sandbox do Mercado Pago foram disponibilizadas loc
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
+- Execução local do service de sync para `lectum02@gmail.com`, retornando
+  `gateway_status="authorized"` e `current.status="ativa"` com dados reais do Mercado Pago.
 - Smoke local HTTP nas rotas `/app/professional/billing/checkout` e `/app/professional/billing/address`, ambas respondendo `307` sem sessão autenticada, confirmando proteção/redirecionamento.
 
 ## Pendências
@@ -107,3 +109,104 @@ Decisao complementar:
 - Criar a assinatura via `PreApproval.create` enviando `preapproval_plan_id`, `card_token_id`, `payer_email`, `external_reference` e `status="authorized"`, sem duplicar `auto_recurring` quando o plano já define a recorrência.
 - Manter a ativação do entitlement dependente do webhook assinado; a resposta do checkout continua registrando assinatura `inativa` pendente de confirmação real.
 - Enriquecer logs sanitizados do adapter com operação/status/código quando disponíveis, sem registrar access token, webhook secret, PAN, CVV, public key ou `card_token`.
+
+## Atualizacao 2026-07-02 - escopo stage em sandbox
+
+Durante o teste local via ngrok, o Card Payment Brick voltou a tokenizar corretamente, mas a criação
+do `PreApproval.create` retornou `Card token service not found`. A documentação oficial de
+assinaturas autorizadas em ambiente de teste mostra `X-scope: stage` junto do access token `TEST-*`
+no `POST /preapproval`.
+
+Decisão complementar:
+
+- Restaurar no `MercadoPagoAdapter` o envio de `X-scope: stage` apenas para operações
+  `/preapproval` em `MERCADO_PAGO_ENV=sandbox`.
+- Como o SDK Node mescla headers de forma rasa, enviar também `Authorization: Bearer <access token>`
+  no mesmo objeto de headers quando o escopo stage for aplicado.
+- Manter `/preapproval_plan` sem `X-scope: stage`; a criação do plano sandbox permanece pelo fluxo
+  padrão do SDK.
+- Não introduzir fallback, mock, aprovação manual ou env `test`: se o Mercado Pago ainda rejeitar o
+  token, a falha permanece explícita para investigação de credenciais/tokenização.
+
+Validação executada:
+
+- `pnpm --dir backend exec biome check --write src/modules/billing/payment-gateway/MercadoPagoAdapter.ts`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`
+
+## Atualizacao 2026-07-02 - credenciais oficiais para teste de Subscriptions
+
+Após o ajuste de `X-scope: stage`, o Mercado Pago passou a retornar
+`PA_UNAUTHORIZED_RESULT_FROM_POLICIES`, indicando bloqueio de política e não falha de transporte ou
+token ausente. A documentação oficial de testes de Subscriptions com plano associado orienta criar
+duas contas de teste, entrar na conta vendedora de teste, criar uma aplicação e usar a `public_key`
+para gerar o `card_token` e o `access_token` das credenciais de produção dessa conta vendedora de
+teste para criar o plano e a assinatura.
+
+Decisão complementar:
+
+- Manter `MERCADO_PAGO_ENV=sandbox` como semântica operacional da Lectum para ambiente local de
+  desenvolvimento.
+- Aplicar `X-scope: stage` somente quando o access token começar com `TEST-`, pois esse é o caminho
+  usado pelas credenciais de teste da conta real.
+- Ao usar as credenciais oficiais recomendadas para Subscriptions sandbox (`APP_USR-*` da conta
+  vendedora de teste), não enviar `X-scope: stage`.
+- Documentar em `backend/.env.example` e `frontend/.env.example` que o teste de
+  Subscriptions/Preapproval deve usar as credenciais de produção da conta Mercado Pago de teste
+  vendedora.
+
+## Atualizacao 2026-07-02 - pagador comprador sandbox
+
+Com as credenciais `APP_USR-*` da conta vendedora de teste, o Mercado Pago passou a criar/encontrar
+o plano corretamente, mas recusou a assinatura com `Both payer and collector must be real or test
+users` quando o `payer_email` enviado era o e-mail real do usuário Lectum autenticado. Esse bloqueio
+é coerente com a documentação de testes: em Subscriptions sandbox, o vendedor e o comprador precisam
+ser contas de teste.
+
+Decisão complementar:
+
+- Em `MERCADO_PAGO_ENV=sandbox`, exigir `MERCADO_PAGO_SANDBOX_PAYER_EMAIL` no backend e enviar esse
+  e-mail como `payer_email` do Preapproval.
+- No frontend, quando `NEXT_PUBLIC_MERCADO_PAGO_ENV=sandbox`, usar
+  `NEXT_PUBLIC_MERCADO_PAGO_SANDBOX_PAYER_EMAIL` como `payer.email` do Card Payment Brick para que a
+  tokenização do cartão e a criação da assinatura usem o mesmo comprador sandbox.
+- A assinatura local da Lectum continua pertencendo ao psicólogo autenticado; a substituição afeta
+  apenas o pagador externo exigido pelo Mercado Pago sandbox.
+- Não criar fallback nem aprovação manual: ausência do e-mail comprador sandbox passa a ser erro de
+  configuração do gateway.
+
+Validação executada:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+
+## Atualizacao 2026-07-02 - sincronização manual autenticada
+
+Após a criação real da assinatura, o retorno local continuou exibindo `professional_subscription`
+como `inativa` porque o botão "Atualizar status" apenas refazia a leitura local. O Mercado Pago já
+retornava a assinatura como `authorized`, mas o banco Lectum dependia do webhook ou de uma
+reconciliação operacional.
+
+Decisão complementar:
+
+- Criar `POST /api/private/psychologist/billing/sync`, protegido por papel `psicologo`, para
+  reconciliar a assinatura do psicólogo autenticado contra o Mercado Pago.
+- O endpoint busca somente a assinatura Mercado Pago mais recente do próprio psicólogo autenticado,
+  chama `PaymentGateway.getSubscription` e atualiza `status`, `gateway_subscription_id` e
+  `current_period_end` com o retorno real do gateway.
+- O botão "Atualizar status" na tela de checkout passa a chamar esse endpoint antes de refazer a
+  leitura local.
+- A soberania do entitlement continua no banco Lectum; a sincronização é uma reconciliação real
+  autenticada, não fallback, mock ou aprovação manual.
+
+Validação executada:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`

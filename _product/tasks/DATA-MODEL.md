@@ -67,9 +67,9 @@ Campos relacionados ao `user` existente:
 | `has_seen_discover_psychologists_tip` | `Boolean @default(false)` | Preferência persistida por usuário para exibir a dica "Descubra novos psicólogos" apenas uma vez. |
 | `has_seen_psychologists_my_search_tip` | `Boolean @default(false)` | Preferência persistida por usuário para exibir a dica acionável "Minha Busca" da descoberta de psicólogos apenas uma vez. |
 | `has_seen_psychologist_whatsapp_tip` | `Boolean @default(false)` | Preferência persistida por usuário para exibir a dica acionável do botão WhatsApp na descoberta de psicólogos apenas uma vez. |
-| `has_seen_psychologist_original_post_tip` | `Boolean @default(false)` | Preferencia persistida por usuario para dica de contexto em posts originais de psicologos. |
-| `has_seen_psychologist_profile_video_tip` | `Boolean @default(false)` | Preferencia persistida por usuario para dica de video de perfil de psicologos. |
-| `has_seen_psychologist_reply_tip` | `Boolean @default(false)` | Preferencia persistida por usuario para dica de respostas de psicologos. |
+| `has_seen_psychologist_profile_video_tip` | `Boolean @default(false)` | Preferência persistida para psicólogos: dica acionável do vídeo de apresentação no perfil profissional. |
+| `has_seen_psychologist_reply_tip` | `Boolean @default(false)` | Preferência persistida para psicólogos: dica acionável de resposta a pacientes na comunidade. |
+| `has_seen_psychologist_original_post_tip` | `Boolean @default(false)` | Preferência persistida para psicólogos: dica acionável de criação de conteúdo original após ver a dica de resposta. |
 | `has_seen_community_post_tip` | `Boolean @default(false)` | Preferência persistida por usuário para exibir a dica "Publique sua dúvida ou relato" apenas uma vez. |
 | `patient_profile` | relação 1:1 opcional | A criar na TASK-07. |
 | `psychologist_profile` | relação 1:1 opcional | A criar na TASK-09. |
@@ -85,7 +85,7 @@ Resumo dos campos relevantes do `user` atual (fonte: `schema.prisma`):
 - `name`, `email @unique`, `avatar?`, `provider @default("manual")`, `password?`, `password_confirm?`.
 - `active @default(true)`, `need_reset @default(false)`.
 - `confirmed @default(false)`, `confirmed_date?`, `confirm_code?`, `confirm_date?` → verificação de e-mail.
-- `has_seen_discover_psychologists_tip @default(false)`, `has_seen_psychologists_my_search_tip @default(false)`, `has_seen_psychologist_whatsapp_tip @default(false)`, `has_seen_psychologist_original_post_tip @default(false)`, `has_seen_psychologist_profile_video_tip @default(false)`, `has_seen_psychologist_reply_tip @default(false)`, `has_seen_community_post_tip @default(false)` → dicas/onboarding one-shot por usuário.
+- `has_seen_discover_psychologists_tip @default(false)`, `has_seen_psychologists_my_search_tip @default(false)`, `has_seen_psychologist_whatsapp_tip @default(false)`, `has_seen_psychologist_profile_video_tip @default(false)`, `has_seen_psychologist_reply_tip @default(false)`, `has_seen_psychologist_original_post_tip @default(false)`, `has_seen_community_post_tip @default(false)` → dicas/onboarding one-shot por usuário.
 - `recovery_code?`, `recovery_date?` → recuperação de senha.
 
 `user_token` (token JWT por device): `user_id`, `token?`, `device_id?`. **Não tem coluna `type`.** Não tente armazenar tokens tipados (`password_reset`/`email_verification`) aqui — recuperação usa `user.recovery_code`, verificação usa `user.confirm_code`.

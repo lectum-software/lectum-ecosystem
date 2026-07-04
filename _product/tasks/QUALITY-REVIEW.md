@@ -249,3 +249,38 @@ Ajustes aplicados:
 Arquitetura preservada: ports & adapters + soberania de dados (nosso banco é a fonte de verdade do entitlement; MP nunca é consultado de forma síncrona para "é Pro?"). Troca de gateway futura = novo adapter + re-tokenização.
 
 Pendência aberta: credenciais Mercado Pago (sandbox/prod) e preço/free-trial final do Plano Profissional — TASK-03.
+
+## Reavaliação 2026-06-30 - Code review técnico pré-produção
+
+Escopo revisado: arquivos versionáveis de `backend/` e `frontend/` fora do `.gitignore`, validações automáticas, build, audit de dependências de produção, rotas, autenticação, dados sensíveis, uploads, CORS/proxy e comparação pontual com o `sample/` para padrões herdados.
+
+Achados críticos corrigidos:
+
+- Dependências: `pnpm audit --prod` apontava advisories em `ws`, `form-data`, `postcss`, `multer`, `nodemailer`, `hono` e `@hono/node-server`. Foram aplicados updates diretos e overrides transitivos por aplicação; audits de frontend e backend passaram sem vulnerabilidades conhecidas.
+- Autenticação: removidos fallbacks `development-secret`; JWT agora passa por `getJwtSecret` e `JWT_SECRET_KEY` mínimo de 32 caracteres é obrigatório no backend.
+- Dados sensíveis: respostas HTTP backend passam por sanitização central para remover senha/hash, códigos, tokens de gateway, secrets e API keys; logs de criação removem também tokens de auth; frontend sanitiza usuário antes do Redux Persist/localStorage.
+- Segurança HTTP: `helmet` passou a ser aplicado no Express.
+- Rate limit: `getLimiter` deixou de ser stub e passou a limitar por IP/janela sem package novo, seguindo a semântica do sample (`window` em minutos, `max` por janela).
+- Privacidade/LGPD: `GET /api/public/user` não expõe mais e-mail, `active` nem `confirmed`; retorna apenas dados públicos mínimos.
+- Frontend proxy: rotas pessoais (`/app/favorites`, `/app/notifications`, `/app/profile`) e rotas de escrita de comunidade (`suggest`, `post/new`, `post/success`) deixaram de ser públicas.
+- API client frontend: `handleReq` passou a usar `api.request`, evitando assinatura incorreta de Axios para GET/DELETE e preservando `config`.
+- Upload: middleware de Multer não chama mais `next(err)` após enviar 400, evitando double-response.
+- Configuração: `.env.example` de backend/frontend foi atualizado com variáveis obrigatórias e portas coerentes (`backend:3001`, `frontend:3000` no runner raiz por padrão).
+- Proxy reverso: `trust proxy` deixou de aceitar todos os proxies por padrão e agora depende de `TRUST_PROXY`, evitando spoof de IP quando a API estiver exposta diretamente.
+- E-mail: Nodemailer passou a exigir TLS mínimo 1.2 e deixou de logar objetos de erro completos.
+- Next/Image: removido wildcard `hostname: "**"`; hosts remotos agora são explícitos e configuráveis via `NEXT_PUBLIC_IMAGE_REMOTE_HOSTS`.
+- Swagger/Scalar: geração deixou de falhar com pastas auxiliares sem `index.ts` e com validators nomeados, removendo erros no boot local.
+- Erros HTTP: handler genérico não devolve mais mensagem interna em respostas 5xx.
+- Workspace: removido `pnpm-workspace.yaml` raiz para manter frontend/backend como aplicações separadas e permitir overrides por app sem warnings.
+
+Validações registradas nesta revisão:
+
+- `pnpm --dir frontend audit --prod`
+- `pnpm --dir backend audit --prod`
+- `pnpm check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend build`
+- `pnpm --dir backend exec prisma migrate status`
+- Smoke local: `pnpm dev`, `GET /health` no backend e `HEAD /auth/login` no frontend.
+
+Decisão registrada em `adrs/0175-hardening-code-review-pre-producao.md`.

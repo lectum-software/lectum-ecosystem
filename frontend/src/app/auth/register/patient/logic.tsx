@@ -93,7 +93,7 @@ export const RegisterPatientLogic = () => {
       const currentDeviceId = await fingerprint();
       const loginUrl =
         process.env.NEXT_PUBLIC_LOGIN_URL ||
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002"}/api/public/google/login`;
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/public/google/login`;
       const query = new URLSearchParams({
         role: "paciente",
         terms_accepted: "true",

@@ -1,4 +1,5 @@
-﻿import { error, msg } from "@/helpers/translate";
+﻿import { isIP } from "node:net";
+import { error, msg } from "@/helpers/translate";
 import { getPaymentGateway } from "@/modules/billing/payment-gateway";
 import type { PaymentGateway } from "@/modules/billing/payment-gateway/PaymentGateway";
 import type { ICheckoutDTO } from "../DTOs/ICheckoutDTO";
@@ -53,55 +54,89 @@ const sanitizeGatewayError = (err: unknown): GatewayErrorLog => {
   };
 };
 
-const isMercadoPagoSandbox = () => process.env.MERCADO_PAGO_ENV?.trim().toLowerCase() === "sandbox";
-
-const resolvePayerEmail = (fallbackEmail: string) => {
-  if (!isMercadoPagoSandbox()) {
-    return fallbackEmail;
-  }
-
-  const testPayerEmail = process.env.MERCADO_PAGO_TEST_PAYER_EMAIL?.trim();
-
-  return testPayerEmail || fallbackEmail;
-};
-
 const getConfiguredGatewayPlanId = () =>
   process.env.MERCADO_PAGO_PREAPPROVAL_PLAN_ID?.trim() || null;
 
 const getConfiguredBackUrl = () => process.env.MERCADO_PAGO_BACK_URL?.trim() || null;
 
-const getWebUrl = () => process.env.WEB_URL?.split(",")[0]?.trim() || null;
+const getGatewayEnv = () => process.env.MERCADO_PAGO_ENV?.trim().toLowerCase() || null;
 
-const isGatewayBackUrlCandidate = (value?: string | null) => {
+const getSandboxPayerEmail = () => process.env.MERCADO_PAGO_SANDBOX_PAYER_EMAIL?.trim() || null;
+
+const resolvePayerEmail = (authenticatedEmail?: string | null) => {
+  if (getGatewayEnv() === "sandbox") {
+    const sandboxPayerEmail = getSandboxPayerEmail();
+
+    if (!sandboxPayerEmail) {
+      throw new Error("MERCADO_PAGO_SANDBOX_PAYER_EMAIL_NOT_CONFIGURED");
+    }
+
+    return sandboxPayerEmail;
+  }
+
+  return authenticatedEmail || null;
+};
+
+const isPrivateIpv4 = (hostname: string) => {
+  const [first = 0, second = 0] = hostname.split(".").map(Number);
+
+  if (first === 10 || first === 127) return true;
+  if (first === 169) return second === 254;
+  if (first === 192) return second === 168;
+
+  return first === 172 && second >= 16 && second <= 31;
+};
+
+const isLocalOrPrivateHostname = (hostname: string) => {
+  const normalizedHostname = hostname.toLowerCase().replace(/^\[|\]$/g, "");
+
+  if (
+    normalizedHostname === "localhost" ||
+    normalizedHostname === "0.0.0.0" ||
+    normalizedHostname === "::1" ||
+    normalizedHostname.endsWith(".local")
+  ) {
+    return true;
+  }
+
+  const ipVersion = isIP(normalizedHostname);
+
+  if (ipVersion === 4) {
+    return isPrivateIpv4(normalizedHostname);
+  }
+
+  if (ipVersion === 6) {
+    return (
+      normalizedHostname.startsWith("fc") ||
+      normalizedHostname.startsWith("fd") ||
+      normalizedHostname.startsWith("fe80")
+    );
+  }
+
+  return false;
+};
+
+const isPublicHttpsUrl = (value?: string | null) => {
   if (!value) return false;
 
   try {
     const url = new URL(value);
     const hostname = url.hostname.toLowerCase();
 
-    return (
-      (url.protocol === "https:" || url.protocol === "http:") &&
-      hostname !== "localhost" &&
-      hostname !== "127.0.0.1" &&
-      hostname !== "0.0.0.0"
-    );
+    return url.protocol === "https:" && !isLocalOrPrivateHostname(hostname);
   } catch {
     return false;
   }
 };
 
-const resolveGatewayBackUrl = (returnUrl?: string | null) => {
+const resolveGatewayBackUrl = () => {
   const configuredBackUrl = getConfiguredBackUrl();
-  if (isGatewayBackUrlCandidate(configuredBackUrl)) return configuredBackUrl;
 
-  if (isGatewayBackUrlCandidate(returnUrl)) return returnUrl!;
-
-  const webUrl = getWebUrl();
-  if (isGatewayBackUrlCandidate(webUrl)) {
-    return `${webUrl!.replace(/\/$/, "")}/app/professional/billing/address`;
+  if (!isPublicHttpsUrl(configuredBackUrl)) {
+    throw new Error("MERCADO_PAGO_BACK_URL_NOT_CONFIGURED");
   }
 
-  return null;
+  return configuredBackUrl!;
 };
 
 const buildPlanIdempotencyKey = (plan: ProfessionalPlan) =>
@@ -116,7 +151,7 @@ const ensureGatewayPlanId = async ({
   gateway: PaymentGateway;
   plan: ProfessionalPlan;
   repository: CheckoutRepository;
-  returnUrl?: string | null;
+  returnUrl: string;
 }) => {
   if (plan.gateway_plan_id) {
     return plan.gateway_plan_id;
@@ -129,17 +164,11 @@ const ensureGatewayPlanId = async ({
     return configuredGatewayPlanId;
   }
 
-  const backUrl = resolveGatewayBackUrl(returnUrl);
-
-  if (!backUrl) {
-    throw new Error("MERCADO_PAGO_BACK_URL_NOT_CONFIGURED");
-  }
-
   const gatewayPlan = await gateway.createSubscriptionPlan({
     amountCents: plan.price_cents!,
     idempotencyKey: buildPlanIdempotencyKey(plan),
     planName: plan.name || "Plano Profissional Lectum",
-    returnUrl: backUrl,
+    returnUrl,
   });
 
   await repository.setGatewayPlanId(plan.id!, gatewayPlan.gateway_plan_id);
@@ -152,7 +181,9 @@ const isGatewayConfigError = (err: unknown) => {
 
   return (
     message.includes("MERCADO_PAGO_ACCESS_TOKEN_NOT_CONFIGURED") ||
-    message.includes("MERCADO_PAGO_BACK_URL_NOT_CONFIGURED")
+    message.includes("MERCADO_PAGO_BACK_URL_NOT_CONFIGURED") ||
+    message.includes("MERCADO_PAGO_SANDBOX_PAYER_EMAIL_NOT_CONFIGURED") ||
+    message.includes("MERCADO_PAGO_ENV_INVALID")
   );
 };
 
@@ -199,25 +230,38 @@ export default async (data: ICheckoutDTO) => {
     };
   }
 
-  const email = data.auth.email;
-  if (!email) {
+  let payerEmail: string | null;
+
+  try {
+    payerEmail = resolvePayerEmail(data.auth.email);
+  } catch (err) {
+    console.error("[BILLING] Mercado Pago payer setup failed", sanitizeGatewayError(err));
+
+    return {
+      status: 503,
+      ...error("billing_gateway_config_error", {}),
+    };
+  }
+
+  if (!payerEmail) {
     return {
       status: 400,
       ...error("billing_checkout_email_required", {}),
     };
   }
 
-  const payerEmail = resolvePayerEmail(email);
   let gateway: PaymentGateway;
   let gatewayPlanId: string;
+  let gatewayReturnUrl: string;
 
   try {
+    gatewayReturnUrl = resolveGatewayBackUrl();
     gateway = getPaymentGateway();
     gatewayPlanId = await ensureGatewayPlanId({
       gateway,
       plan: professionalPlan,
       repository,
-      returnUrl: data.b.return_url,
+      returnUrl: gatewayReturnUrl,
     });
   } catch (err) {
     console.error("[BILLING] Mercado Pago plan setup failed", sanitizeGatewayError(err));
@@ -246,7 +290,7 @@ export default async (data: ICheckoutDTO) => {
       amountCents: professionalPlan.price_cents,
       cardToken: data.b.card_token,
       payerEmail,
-      returnUrl: data.b.return_url,
+      returnUrl: gatewayReturnUrl,
     });
 
     const current = await repository.setGatewaySubscriptionId(

@@ -15,14 +15,6 @@ export const requestSchema: IValidatorRequest = {
       method: "enumeric",
       values: ["credit_card", "debit_card", "prepaid_card"],
     },
-    {
-      key: "return_url",
-      coerse: "string",
-      method: "string",
-      optional: true,
-      nullable: true,
-      max: 512,
-    },
   ],
 };
 

@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
 import type { BillingPaymentMethod, ProfessionalSubscription } from "@/api/generator/types/billing";
@@ -27,6 +27,16 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 
 const publicKey = process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY;
+const mercadoPagoEnv = process.env.NEXT_PUBLIC_MERCADO_PAGO_ENV?.trim().toLowerCase();
+const sandboxPayerEmail = process.env.NEXT_PUBLIC_MERCADO_PAGO_SANDBOX_PAYER_EMAIL?.trim();
+
+const resolveMercadoPagoPayerEmail = (authenticatedEmail: string) => {
+  if (mercadoPagoEnv === "sandbox" && sandboxPayerEmail) {
+    return sandboxPayerEmail;
+  }
+
+  return authenticatedEmail;
+};
 const CREDIT_CARD_PAYMENT_TYPE = "credit_card";
 
 type CardPaymentFormData = {
@@ -116,6 +126,7 @@ export const ProfessionalBillingCardLogic = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const userEmail = useAppSelector((state) => state.user?.email || "");
+  const payerEmail = resolveMercadoPagoPayerEmail(userEmail);
   const billing = usePsychologistBilling({
     callbacks: {
       paymentMethod: {
@@ -126,6 +137,11 @@ export const ProfessionalBillingCardLogic = () => {
       },
     },
   });
+  const paymentMethodMutateAsyncRef = useRef(billing.paymentMethod.mutateAsync);
+
+  useEffect(() => {
+    paymentMethodMutateAsyncRef.current = billing.paymentMethod.mutateAsync;
+  }, [billing.paymentMethod.mutateAsync]);
 
   useEffect(() => {
     if (!publicKey) return;
@@ -147,9 +163,9 @@ export const ProfessionalBillingCardLogic = () => {
   const initialization = useMemo(
     () => ({
       amount,
-      payer: userEmail ? { email: userEmail } : undefined,
+      payer: payerEmail ? { email: payerEmail } : undefined,
     }),
-    [amount, userEmail],
+    [amount, payerEmail],
   );
 
   const customization = useMemo(
@@ -186,14 +202,18 @@ export const ProfessionalBillingCardLogic = () => {
         return;
       }
 
-      await billing.paymentMethod.mutateAsync({
-        card_token: token,
-        payment_type_id: CREDIT_CARD_PAYMENT_TYPE,
-        brand: formData.payment_method_id || null,
-        last4: additionalData?.lastFourDigits || null,
-      });
+      try {
+        await paymentMethodMutateAsyncRef.current({
+          card_token: token,
+          payment_type_id: CREDIT_CARD_PAYMENT_TYPE,
+          brand: formData.payment_method_id || null,
+          last4: additionalData?.lastFourDigits || null,
+        });
+      } catch {
+        // handleReq já exibe o erro real da API; impedir rejeição não tratada no Brick.
+      }
     },
-    [billing.paymentMethod],
+    [],
   );
 
   const handleBrickError = useCallback((error: unknown) => {

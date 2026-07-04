@@ -3,7 +3,7 @@ import axios, { AxiosHeaders } from "axios";
 import { getToken } from "@/hooks/cookies/token";
 import { fingerprint } from "@/utils/fingerprint";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 const api = axios.create({
   baseURL: API_URL,

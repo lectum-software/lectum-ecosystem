@@ -71,7 +71,9 @@ export default async (data: IPaymentMethodSessionDTO) => {
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : "";
-    const configError = message.includes("MERCADO_PAGO_ACCESS_TOKEN_NOT_CONFIGURED");
+    const configError =
+      message.includes("MERCADO_PAGO_ACCESS_TOKEN_NOT_CONFIGURED") ||
+      message.includes("MERCADO_PAGO_ENV_INVALID");
 
     return {
       status: configError ? 503 : 502,

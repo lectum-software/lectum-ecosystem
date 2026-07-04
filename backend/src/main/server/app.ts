@@ -3,6 +3,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from "dotenv";
 import express, { type Application, type Express } from "express";
+import helmet from "helmet";
 import type { TFunction } from "i18next";
 import * as i18nextMiddleware from "i18next-http-middleware";
 
@@ -21,11 +22,31 @@ export let translate: TFunction<"translation", undefined>;
 
 const server: Application = express();
 
+const getTrustProxy = () => {
+  const rawTrustProxy = process.env.TRUST_PROXY?.trim();
+
+  if (!rawTrustProxy) return false;
+  if (rawTrustProxy === "true") return true;
+  if (rawTrustProxy === "false") return false;
+
+  const parsedTrustProxy = Number(rawTrustProxy);
+
+  return Number.isInteger(parsedTrustProxy) && parsedTrustProxy >= 0 ? parsedTrustProxy : false;
+};
+
+server.set("trust proxy", getTrustProxy());
+server.use(
+  helmet({
+    crossOriginResourcePolicy: {
+      policy: "cross-origin",
+    },
+  }),
+);
+
 server.get("/health", (_req, res) => {
   res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-server.set("trust proxy", () => true);
 server.use(getLimiter({}));
 server.use(swagger);
 server.use(express.static(path.resolve(process.cwd(), "public")));

@@ -18,6 +18,9 @@ type Send = {
 
 type TemplateContext = Record<string, unknown>;
 
+const getErrorMessage = (error: unknown) =>
+  error instanceof Error ? error.message : "erro desconhecido";
+
 const getTemplateValue = (context: TemplateContext, key: string) => {
   return key.split(".").reduce<unknown>((acc, item) => {
     if (acc && typeof acc === "object" && item in acc) {
@@ -88,7 +91,7 @@ const send = async ({
     const pass = process.env.EMAIL_API_KEY?.replace(/'/g, "").replace(/"/g, "");
 
     if (!user || !pass) {
-      console.log("**Cred for email not found** this action will be ignored **");
+      console.warn("[EMAIL] Credenciais SMTP ausentes; envio ignorado.");
       return Promise.resolve(true);
     }
 
@@ -149,7 +152,7 @@ const send = async ({
           logo: process.env.SYSTEM_LOGO!,
         },
         tls: {
-          ciphers: "SSLv3",
+          minVersion: "TLSv1.2",
         },
       };
 
@@ -157,7 +160,7 @@ const send = async ({
         if (error) {
           console.error("[EMAIL] Falha ao enviar mensagem", {
             code: (error as { code?: string }).code,
-            message: error.message,
+            message: getErrorMessage(error),
           });
           return reject(new Error(`Failed to send email: ${error.message}`));
         } else {
@@ -168,7 +171,7 @@ const send = async ({
     });
   } catch (e) {
     console.error("[EMAIL] Erro inesperado no envio", {
-      message: e instanceof Error ? e.message : "unknown",
+      message: getErrorMessage(e),
     });
     return false;
   }
