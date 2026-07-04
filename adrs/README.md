@@ -112,3 +112,4 @@ Formato recomendado:
 - [ADR-0195 - Autoacoes de pacientes em posts proprios sem notificacoes](0195-autoacoes-paciente-posts-sem-notificacoes.md) - Accepted
 - [ADR-0196 - Controles do card pertencem ao post mesmo com resposta destacada](0196-controles-post-feed-resposta-destacada.md) - Accepted
 - [ADR-0201 - Verificação CFP retomável no fluxo pago antes do perfil](0201-verificacao-cfp-retomavel-fluxo-pago.md) - Accepted
+- [ADR-0204 - Upgrade direto para checkout profissional](0204-upgrade-direto-checkout-profissional.md) - Accepted

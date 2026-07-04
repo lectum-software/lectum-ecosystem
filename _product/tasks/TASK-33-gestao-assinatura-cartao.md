@@ -178,3 +178,19 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm --dir frontend build`
   - `pnpm check`
 - Valida??o visual manual em browser local ficou limitada pela aus?ncia de uma ferramenta de inspe??o visual automatizada neste ambiente; a rota foi validada por build est?tico do Next.js, incluindo `/app/professional/billing` e `/app/professional/billing/card`.
+
+## Ajuste de conversão em 2026-07-04: upgrade direto para cartão
+
+- Pedido direto de produto: ao clicar em **Fazer upgrade** na tela `/app/professional/billing`, o psicólogo deve ir imediatamente para inserir os dados do cartão do Plano Profissional, sem passar pela seleção de plano.
+- Referências visuais consultadas: `_product/proto/Minhas Assinatura - Psicólogo.jpg` e `_product/proto/Finalizar Assinatura - Psicólogo.jpg`; Builder/Quick Copy não está exposto como ferramenta direta neste ambiente.
+- O CTA fixo da tela de assinatura agora usa `PSYCHOLOGIST_ONBOARDING_PATHS.checkout` e aponta para `/app/professional/billing/checkout`.
+- A tela de planos permanece disponível para acessos explícitos, mas deixa de ser etapa intermediária desse CTA de upgrade.
+- Nenhum mock, seed, endpoint simulado, package novo ou alteração de schema foi criado.
+- ADR registrado: `adrs/0204-upgrade-direto-checkout-profissional.md`.
+
+### Validação do ajuste
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Validação de fonte via PowerShell confirmando o CTA `Fazer upgrade` com `href={PSYCHOLOGIST_ONBOARDING_PATHS.checkout}`.
+- Smoke local com `next start --port 3105`: `/app/professional/billing/checkout` retornou `307` para login sem sessão e `/auth/login` retornou `200`.
