@@ -297,3 +297,11 @@ A seção `Avaliações` da aba `Geral` passou a usar a assinatura profissional 
 A decisão transforma a coleta de avaliações em benefício perceptível do plano profissional sem alterar a elegibilidade real da TASK-17, que continua sendo validada no fluxo `/app/reviews/new` pelo backend. O ajuste ficou restrito ao frontend do perfil público, sem mudança de contrato, Prisma, persistência, packages, WhatsApp ou navegação das abas completas.
 
 Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP mobile nas rotas demo cobrindo assinante com avaliações, assinante temporário sem avaliações e gratuito sem avaliações. A assinatura temporária criada para validação foi removida ao final.
+
+## Ajuste complementar em 2026-07-04 - copy vazia de publicações
+
+O estado vazio de `Publicações` no perfil público do psicólogo passa a usar a frase `Este profissional ainda não fez nenhuma publicação.` tanto na prévia da aba `Geral` quanto na aba completa `Publicações`.
+
+A decisão remove a expressão mais técnica/ambígua `publicações públicas` ou `publicações persistidas e publicadas`, preservando a contagem real `0` e sem alterar backend, contratos, persistência, ordenação, layout estrutural ou regras de publicação.
+
+Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome headless local 390x844 em `/psychologists/cmr6pzpbn000h5guht478a9l4?tab=publicacoes`.

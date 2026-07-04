@@ -1754,7 +1754,7 @@ const PostsPreviewSection = ({
 
       {!isLoading && !isError && !featuredPost ? (
         <p className="mt-3 text-[13px] leading-[1.6] text-[#64748B]">
-          Este profissional ainda não possui publicações públicas.
+          Este profissional ainda não fez nenhuma publicação.
         </p>
       ) : null}
     </ProfileSectionCard>
@@ -1922,7 +1922,7 @@ const PostsTab = ({
 
       {!isLoading && !isError && posts.length === 0 ? (
         <EmptyState
-          description="Este profissional ainda não possui publicações persistidas e publicadas."
+          description="Este profissional ainda não fez nenhuma publicação."
           icon={FileText}
           title="Nenhuma publicação pública"
         />
