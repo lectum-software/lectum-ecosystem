@@ -145,7 +145,7 @@ export const ProfessionalBillingAddressLogic = () => {
           {!isLoading && !billing.current.isError && !activeProfessional ? (
             <div className="mt-8">
               <EmptyState
-                description="A assinatura profissional ainda não está ativa. Conclua o checkout e aguarde a confirmação real do Mercado Pago antes de salvar o endereço."
+                description="A assinatura profissional ainda não está ativa. Conclua o checkout e aguarde a confirmação do pagamento antes de salvar o endereço."
                 icon={ShieldCheck}
                 title="Assinatura ainda não confirmada"
               />

@@ -398,8 +398,8 @@ export const ProfessionalBillingLogic = () => {
                           Cancelar assinatura agora?
                         </p>
                         <p className="mt-1 text-xs leading-5 text-muted">
-                          A Lectum acionará o Mercado Pago e os benefícios do Plano Profissional
-                          serão desativados após a confirmação.
+                          Todos os benefícios do Plano Profissional serão desativados após a
+                          confirmação.
                         </p>
                       </div>
                       <div className="grid gap-2 sm:grid-cols-2">
@@ -437,8 +437,8 @@ export const ProfessionalBillingLogic = () => {
 
               {!canManageCard ? (
                 <InlineAlert title="Alteração de cartão indisponível" variant="warning">
-                  A troca de cartão exige uma assinatura profissional vinculada ao Mercado Pago.
-                  Assinaturas gratuitas ou de cortesia não possuem cartão para alterar.
+                  A troca de cartão exige uma assinatura profissional ativa com método de pagamento
+                  cadastrado. Assinaturas gratuitas ou de cortesia não possuem cartão para alterar.
                 </InlineAlert>
               ) : null}
 
@@ -451,8 +451,8 @@ export const ProfessionalBillingLogic = () => {
 
               {subscription.status === "inativa" && subscription.gateway_subscription_id ? (
                 <InlineAlert title="Aguardando confirmação" variant="info">
-                  A assinatura já foi enviada ao Mercado Pago e será ativada quando o webhook
-                  confirmado retornar com sucesso.
+                  A assinatura já foi enviada para confirmação e será ativada quando o pagamento
+                  retornar com sucesso.
                 </InlineAlert>
               ) : null}
 
@@ -463,11 +463,10 @@ export const ProfessionalBillingLogic = () => {
               ) : null}
 
               {!subscription.gateway_subscription_id && isPaidPlan ? (
-                <InlineAlert title="Gateway não vinculado" variant="warning">
+                <InlineAlert title="Pagamento não vinculado" variant="warning">
                   <span className="inline-flex items-start gap-2">
                     <AlertTriangle className="mt-1 h-4 w-4 shrink-0" aria-hidden="true" />
-                    Esta assinatura ainda não possui referência real do Mercado Pago para troca de
-                    cartão.
+                    Esta assinatura ainda não possui referência de pagamento para troca de cartão.
                   </span>
                 </InlineAlert>
               ) : null}

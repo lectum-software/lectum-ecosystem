@@ -221,7 +221,7 @@ export const ProfessionalBillingCheckoutLogic = () => {
   }, []);
 
   const handleBrickError = useCallback((error: unknown) => {
-    console.error("[Mercado Pago CardPayment]", error);
+    console.error("[Billing CardPayment]", error);
     toast.error("Não foi possível carregar o formulário de cartão.");
   }, []);
 
@@ -323,17 +323,16 @@ export const ProfessionalBillingCheckoutLogic = () => {
             <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)] md:p-6">
               <div className="grid gap-5">
                 {!publicKey ? (
-                  <InlineAlert title="Public key do Mercado Pago ausente" variant="error">
-                    Configure `NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY` no frontend para carregar o Card
-                    Payment Brick real. Sem essa chave, a Lectum não coleta cartão nem simula
-                    cobrança.
+                  <InlineAlert title="Formulário de cartão indisponível" variant="error">
+                    Não foi possível carregar o formulário seguro de cartão. Tente novamente mais
+                    tarde.
                   </InlineAlert>
                 ) : null}
 
                 {publicKey && amount > 0 && !payerEmail ? (
                   <InlineAlert title="E-mail do pagador ausente" variant="error">
-                    Recarregue a sessão antes de abrir o formulário de cartão. O Mercado Pago
-                    precisa do e-mail autenticado para tokenizar o pagamento.
+                    Recarregue a sessão antes de abrir o formulário de cartão. O e-mail da sua conta
+                    é necessário para iniciar o pagamento.
                   </InlineAlert>
                 ) : null}
 

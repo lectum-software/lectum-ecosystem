@@ -216,7 +216,7 @@ export const ProfessionalBillingSubscriptionView = ({
               <>
                 <InlineAlert className="mt-6 text-left" title="Próximo passo" variant="warning">
                   Para continuar como assinante após a cortesia, cadastre os dados do cartão no
-                  checkout real. A cobrança só deve ser ativada pelo fluxo Mercado Pago da TASK-32.
+                  checkout. A cobrança só será ativada após a confirmação do pagamento.
                 </InlineAlert>
 
                 <Button asChild className="mt-6 h-12 w-full rounded-full">

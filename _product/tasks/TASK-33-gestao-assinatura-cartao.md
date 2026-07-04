@@ -273,3 +273,28 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - Smoke local com `next start --port 3109`: `/app/professional/billing` retornou `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fbilling` sem sessão e `/auth/login` retornou `200`, preservando a proteção da rota privada.
+
+## Ajuste de copy em 2026-07-04: cancelamento sem citar fornecedor de pagamento
+
+- Pedido direto de produto: trocar o texto da confirmação de cancelamento para **"Todos os benefícios do Plano Profissional serão desativados após a confirmação."**.
+- A experiência de billing deixou de citar o fornecedor de pagamento para o usuário nas telas e mensagens de erro/sucesso relacionadas; o fornecedor permanece apenas como detalhe interno de integração, código e persistência.
+- Foram atualizadas copies em `/app/professional/billing`, `/app/professional/billing/card`, `/app/professional/billing/checkout`, `/app/professional/billing/address`, `/app/professional/billing/subscription`, mensagens backend de billing e descrições do histórico de pagamentos.
+- Nenhum mock, seed, endpoint simulado, package novo ou alteração de schema foi criado.
+- ADR registrado: `adrs/0212-copy-generica-gateway-usuario.md`.
+
+### Critérios de aceite do ajuste
+
+- [x] Texto de cancelamento usa exatamente a copy solicitada.
+- [x] Copies visíveis ao usuário em billing não citam o fornecedor de pagamento.
+- [x] Mensagens backend de billing que podem chegar ao usuário não citam o fornecedor de pagamento.
+- [x] Nenhum contrato técnico, gateway, adapter, assinatura ou regra de cancelamento foi alterado.
+
+### Validação do ajuste de copy
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`
+- Smoke local com `next start --port 3113`: `/app/professional/billing` retornou `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fbilling` sem sessão e `/auth/login` retornou `200`.
+- Busca de fonte confirmou ausência de `Mercado Pago` nas strings de UI billing e mensagens backend alteradas.

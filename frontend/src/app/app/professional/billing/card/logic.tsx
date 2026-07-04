@@ -65,7 +65,7 @@ const PaymentMethodPreview = ({
   paymentMethod?: BillingPaymentMethod | null;
 }) => {
   const last4 = paymentMethod?.last4 ? `•••• ${paymentMethod.last4}` : "•••• ••••";
-  const brand = paymentMethod?.brand ? paymentMethod.brand.toUpperCase() : "Mercado Pago";
+  const brand = paymentMethod?.brand ? paymentMethod.brand.toUpperCase() : "Cartão seguro";
 
   return (
     <div className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-[#0f5be8] via-primary to-[#6bb6ff] p-5 text-white shadow-[0_24px_70px_rgba(47,141,235,0.28)]">
@@ -196,7 +196,7 @@ export const ProfessionalBillingCardLogic = () => {
   );
 
   const handleBrickError = useCallback((error: unknown) => {
-    console.error("[Mercado Pago CardPayment - card update]", error);
+    console.error("[Billing CardPayment - card update]", error);
     toast.error("Não foi possível carregar o formulário de cartão.");
   }, []);
 
@@ -306,16 +306,16 @@ export const ProfessionalBillingCardLogic = () => {
                           <Link href="/app/professional/billing/plans">Ver planos</Link>
                         </Button>
                       }
-                      description="A troca de cartão exige uma assinatura profissional vinculada ao Mercado Pago."
+                      description="A troca de cartão exige uma assinatura profissional ativa com método de pagamento cadastrado."
                       icon={CreditCard}
                       title="Alteração indisponível"
                     />
                   ) : null}
 
                   {!publicKey ? (
-                    <InlineAlert title="Public key do Mercado Pago ausente" variant="error">
-                      Configure `NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY` no frontend para carregar o
-                      Card Payment Brick real.
+                    <InlineAlert title="Formulário de cartão indisponível" variant="error">
+                      Não foi possível carregar o formulário seguro de cartão. Tente novamente mais
+                      tarde.
                     </InlineAlert>
                   ) : null}
 

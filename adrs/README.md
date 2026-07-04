@@ -114,3 +114,4 @@ Formato recomendado:
 - [ADR-0201 - Verificação CFP retomável no fluxo pago antes do perfil](0201-verificacao-cfp-retomavel-fluxo-pago.md) - Accepted
 - [ADR-0204 - Upgrade direto para checkout profissional](0204-upgrade-direto-checkout-profissional.md) - Accepted
 - [ADR-0205 - Benefícios da assinatura com mídia nas comunidades e sem suporte prioritário](0205-beneficios-assinatura-comunidades-midia-sem-suporte-prioritario.md) - Accepted
+- [ADR-0212 - Copy generica de pagamento para usuarios](0212-copy-generica-gateway-usuario.md) - Accepted

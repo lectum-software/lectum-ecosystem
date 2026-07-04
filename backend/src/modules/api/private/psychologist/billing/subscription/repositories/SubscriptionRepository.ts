@@ -145,8 +145,8 @@ const buildPaymentHistoryItem = (
     id: event.id ?? `${event.gateway ?? "mercadopago"}:${event.external_id ?? type}`,
     title: isPaymentEvent ? "Assinatura mensal" : "Atualização da assinatura",
     description: isPaymentEvent
-      ? "Cobrança registrada pelo Mercado Pago."
-      : "Evento de cobrança confirmado pelo Mercado Pago.",
+      ? "Cobrança registrada com sucesso."
+      : "Evento de cobrança confirmado.",
     amount_cents:
       amountFromPayload ?? (isPaymentEvent ? (subscription.plan?.price_cents ?? null) : null),
     status: status.status,
