@@ -9,9 +9,11 @@ import {
   CreditCard,
   ReceiptText,
   ShieldCheck,
+  XCircle,
 } from "lucide-react";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
 import type {
   BillingPaymentHistoryItem,
@@ -216,7 +218,17 @@ const PaymentHistoryCard = ({ items }: { items: BillingPaymentHistoryItem[] }) =
 );
 
 export const ProfessionalBillingLogic = () => {
-  const billing = usePsychologistBilling();
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const billing = usePsychologistBilling({
+    callbacks: {
+      cancelSubscription: {
+        onSuccess: () => {
+          setShowCancelConfirm(false);
+          toast.success("Assinatura cancelada com sucesso");
+        },
+      },
+    },
+  });
   const subscriptionQuery = billing.subscription;
   const subscription =
     subscriptionQuery.data?.subscription ?? subscriptionQuery.data?.current ?? null;
@@ -227,6 +239,13 @@ export const ProfessionalBillingLogic = () => {
   const isFreePlan = subscription?.plan?.slug === "gratuito";
   const canManageCard = Boolean(
     isPaidPlan && subscription?.status !== "cancelada" && subscription?.gateway_subscription_id,
+  );
+  const canCancelSubscription = Boolean(
+    isPaidPlan &&
+      subscription?.status === "ativa" &&
+      subscription?.source === "mercadopago" &&
+      subscription?.gateway === "mercadopago" &&
+      subscription?.gateway_subscription_id,
   );
   const priceLabel = useMemo(
     () => `${formatPrice(subscription?.plan?.price_cents)} / mês`,
@@ -358,6 +377,63 @@ export const ProfessionalBillingLogic = () => {
 
             <aside className="grid gap-4">
               <PaymentHistoryCard items={paymentHistory} />
+
+              {canCancelSubscription ? (
+                !showCancelConfirm ? (
+                  <div className="flex justify-center py-2">
+                    <button
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-muted/75 transition hover:text-danger"
+                      onClick={() => setShowCancelConfirm(true)}
+                      type="button"
+                    >
+                      <XCircle className="h-4 w-4" aria-hidden="true" />
+                      Cancelar assinatura
+                    </button>
+                  </div>
+                ) : (
+                  <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-4 shadow-[var(--lectum-shadow-soft)]">
+                    <div className="grid gap-3">
+                      <div>
+                        <p className="text-sm font-extrabold text-foreground">
+                          Cancelar assinatura agora?
+                        </p>
+                        <p className="mt-1 text-xs leading-5 text-muted">
+                          A Lectum acionará o Mercado Pago e os benefícios do Plano Profissional
+                          serão desativados após a confirmação.
+                        </p>
+                      </div>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        <Button
+                          className="h-10 rounded-full text-xs font-extrabold"
+                          disabled={billing.cancelSubscription.isPending}
+                          onClick={() => setShowCancelConfirm(false)}
+                          type="button"
+                          variant="outline"
+                        >
+                          Manter
+                        </Button>
+                        <Button
+                          className="h-10 rounded-full text-xs font-extrabold"
+                          disabled={billing.cancelSubscription.isPending}
+                          onClick={() => billing.cancelSubscription.mutate()}
+                          type="button"
+                          variant="destructive"
+                        >
+                          {billing.cancelSubscription.isPending ? "Cancelando..." : "Confirmar"}
+                        </Button>
+                      </div>
+                    </div>
+
+                    {billing.cancelSubscription.isError ? (
+                      <div className="mt-3">
+                        <InlineAlert title="Não foi possível cancelar" variant="error">
+                          {getErrorMessage(billing.cancelSubscription.error)}
+                        </InlineAlert>
+                      </div>
+                    ) : null}
+                  </div>
+                )
+              ) : null}
 
               {!canManageCard ? (
                 <InlineAlert title="Alteração de cartão indisponível" variant="warning">

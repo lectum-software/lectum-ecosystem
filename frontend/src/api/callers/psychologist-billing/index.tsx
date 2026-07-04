@@ -5,6 +5,7 @@ import keys from "@/api/cache/keys";
 import type {
   BillingAddressPayload,
   BillingAddressResponse,
+  BillingCancelSubscriptionResponse,
   BillingCheckoutPayload,
   BillingCheckoutResponse,
   BillingPaymentMethodPayload,
@@ -26,6 +27,10 @@ export interface UsePsychologistBillingProps {
     };
     sync?: {
       onSuccess?: (data: BillingSyncResponse) => void;
+      onError?: (error: unknown) => void;
+    };
+    cancelSubscription?: {
+      onSuccess?: (data: BillingCancelSubscriptionResponse) => void;
       onError?: (error: unknown) => void;
     };
     address?: {
@@ -92,6 +97,22 @@ export const usePsychologistBilling = ({ callbacks }: UsePsychologistBillingProp
     onError: callbacks?.sync?.onError,
   });
 
+  const cancelSubscription = useMutation({
+    mutationFn: () => api.cancelPsychologistBillingSubscription(),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: keys.psychologistBilling.current() });
+      queryClient.invalidateQueries({ queryKey: keys.psychologistBilling.subscription() });
+      queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === "auth_hydrate" });
+      queryClient.invalidateQueries({ queryKey: keys.directory.psychologistsRoot() });
+      queryClient.invalidateQueries({
+        predicate: (query) => query.queryKey[0] === "directory_psychologist",
+      });
+      queryClient.invalidateQueries({ queryKey: keys.psychologistAnalytics.root() });
+      callbacks?.cancelSubscription?.onSuccess?.(data);
+    },
+    onError: callbacks?.cancelSubscription?.onError,
+  });
+
   const address = useMutation({
     mutationFn: (body: BillingAddressPayload) => api.savePsychologistBillingAddress(body),
     onSuccess: (data) => {
@@ -126,6 +147,7 @@ export const usePsychologistBilling = ({ callbacks }: UsePsychologistBillingProp
     selectFree,
     checkout,
     sync,
+    cancelSubscription,
     address,
     paymentMethod,
   };

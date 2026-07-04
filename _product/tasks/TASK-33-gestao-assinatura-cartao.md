@@ -226,3 +226,30 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Smoke local com `next start --port 3107`: `/app/professional/billing` retornou `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fbilling` sem sessao e `/auth/login` retornou `200`.
+
+## Ajuste em 2026-07-04: cancelamento discreto de assinatura profissional
+
+- Pedido direto de produto: quando o psicólogo possuir Plano Profissional ativo pago via Mercado Pago, a tela `/app/professional/billing` deve exibir uma opção discreta de cancelamento.
+- Referência visual local consultada: `_product/proto/Minhas Assinatura - Psicólogo.jpg`, que posiciona **Cancelar Assinatura** como ação secundária no rodapé; Builder/Quick Copy não está exposto como ferramenta direta neste ambiente.
+- A ação aparece somente para `source="mercadopago"`, `gateway="mercadopago"`, `status="ativa"`, plano `profissional` e `gateway_subscription_id` real; cortesia administrativa e plano gratuito não exibem cancelamento pelo usuário.
+- O backend adicionou `POST /api/private/psychologist/billing/subscription/cancel`, protegido por `requireRole("psicologo")`, e usa a porta `PaymentGateway.cancelSubscription` para cancelar o Preapproval real no Mercado Pago (`status="cancelled"`).
+- A assinatura local só muda para `cancelada` após o retorno normalizado do gateway confirmar `cancelada`; sem credenciais/configuração real, a operação retorna erro e não altera o banco.
+- ADR registrado: `adrs/0210-cancelamento-assinatura-profissional.md`.
+
+### Critérios de aceite do ajuste
+
+- [x] Referência visual de assinatura foi consultada e a opção inicial permanece discreta/mobile-first.
+- [x] A opção só aparece para Plano Profissional ativo pago via Mercado Pago com assinatura externa real.
+- [x] O cancelamento aciona o gateway real via porta `PaymentGateway`, sem mock, seed ou endpoint simulado.
+- [x] O status local é atualizado para `cancelada` somente após confirmação normalizada do Mercado Pago.
+- [x] Feedback de confirmação, estado pendente e erro em PT-BR foram adicionados.
+- [x] Nenhum package novo ou alteração de schema foi criado.
+
+### Validação do ajuste de cancelamento
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke local com `next start --port 3108`: `/app/professional/billing` retornou `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fbilling` sem sessão e `/auth/login` retornou `200`, preservando a proteção da rota privada.

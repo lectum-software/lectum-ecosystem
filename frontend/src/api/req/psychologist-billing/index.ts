@@ -2,6 +2,7 @@ import { callEndpoint } from "@/api/generator";
 import type {
   BillingAddressPayload,
   BillingAddressResponse,
+  BillingCancelSubscriptionResponse,
   BillingCheckoutPayload,
   BillingCheckoutResponse,
   BillingCurrentResponse,
@@ -64,6 +65,15 @@ export const syncPsychologistBillingSubscription = async () => {
   });
 
   return handleReq<BillingSyncResponse>(handle);
+};
+
+export const cancelPsychologistBillingSubscription = async () => {
+  const handle = callEndpoint({
+    route: "/api/private/psychologist/billing/subscription/cancel",
+    method: "POST",
+  });
+
+  return handleReq<BillingCancelSubscriptionResponse>(handle);
 };
 
 export const savePsychologistBillingAddress = async (body: BillingAddressPayload) => {

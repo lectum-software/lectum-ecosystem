@@ -244,6 +244,54 @@ export class SubscriptionRepository implements ISubscriptionRepository {
     });
   }
 
+  async findCancelableSubscription(
+    psychologistId: string,
+  ): Promise<professional_subscription | null> {
+    return this.subscriptionRepository.findFirst({
+      where: {
+        psychologist_id: psychologistId,
+        deleted: false,
+        status: "ativa",
+        source: "mercadopago",
+        gateway: "mercadopago",
+        gateway_subscription_id: {
+          not: null,
+        },
+        plan: {
+          active: true,
+          deleted: false,
+          slug: "profissional",
+        },
+      },
+      include: {
+        plan: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  }
+
+  async cancelSubscription(data: {
+    subscriptionId: string;
+    gatewaySubscriptionId: string;
+  }): Promise<professional_subscription> {
+    return this.subscriptionRepository.update({
+      where: {
+        id: data.subscriptionId,
+      },
+      data: {
+        status: "cancelada",
+        gateway: "mercadopago",
+        gateway_subscription_id: data.gatewaySubscriptionId,
+        current_period_end: null,
+      },
+      include: {
+        plan: true,
+      },
+    });
+  }
+
   async showPaymentMethod(userId: string): Promise<payment_method | null> {
     return this.paymentMethodRepository.findFirst({
       where: {

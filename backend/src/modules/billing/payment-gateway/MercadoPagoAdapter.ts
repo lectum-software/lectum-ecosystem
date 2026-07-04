@@ -3,6 +3,7 @@ import { MercadoPagoConfig, PreApproval, PreApprovalPlan } from "mercadopago";
 import type { Options as MercadoPagoOptions } from "mercadopago/dist/types";
 import type {
   BillingSubscriptionStatus,
+  GatewayCancelSubscriptionInput,
   GatewaySubscription,
   GatewaySubscriptionInput,
   GatewaySubscriptionPlanInput,
@@ -297,6 +298,34 @@ export class MercadoPagoAdapter implements PaymentGateway {
         requestOptions: this.withRequestOptions(
           {
             idempotencyKey: `lectum-preapproval-card-${gatewaySubscriptionId}`,
+          },
+          { stageScope: true },
+        ),
+      }),
+    );
+
+    return {
+      gateway_subscription_id: response.id || gatewaySubscriptionId,
+      status: normalizeStatus(response.status),
+      gateway_status: response.status ?? null,
+      init_point: response.init_point ?? null,
+      next_payment_date: toStringOrNull(response.next_payment_date),
+      raw: response,
+    };
+  }
+
+  async cancelSubscription({
+    gatewaySubscriptionId,
+  }: GatewayCancelSubscriptionInput): Promise<GatewaySubscriptionResult> {
+    const response = await this.runGatewayOperation("cancel_subscription", () =>
+      this.preApproval.update({
+        id: gatewaySubscriptionId,
+        body: {
+          status: "cancelled",
+        },
+        requestOptions: this.withRequestOptions(
+          {
+            idempotencyKey: `lectum-preapproval-cancel-${gatewaySubscriptionId}`,
           },
           { stageScope: true },
         ),

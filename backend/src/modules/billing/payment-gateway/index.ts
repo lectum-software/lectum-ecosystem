@@ -13,6 +13,7 @@ export const getPaymentGateway = (): PaymentGateway => {
 
 export type {
   BillingSubscriptionStatus,
+  GatewayCancelSubscriptionInput,
   GatewaySubscription,
   GatewaySubscriptionInput,
   GatewaySubscriptionPlanInput,

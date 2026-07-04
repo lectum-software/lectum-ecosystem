@@ -112,7 +112,9 @@
     "billing_payment_method_credit_card_only": "Use um cartao de credito para atualizar o metodo de pagamento.",
     "billing_payment_method_subscription_required": "E preciso ter uma assinatura profissional do Mercado Pago para alterar o cartao.",
     "billing_gateway_payment_method_failed": "Nao foi possivel atualizar o cartao agora. Tente novamente em instantes.",
-    "billing_subscription_sync_required": "Nenhuma assinatura do Mercado Pago foi encontrada para atualizar o status."
+    "billing_subscription_sync_required": "Nenhuma assinatura do Mercado Pago foi encontrada para atualizar o status.",
+    "billing_subscription_cancel_required": "E preciso ter uma assinatura profissional ativa do Mercado Pago para cancelar.",
+    "billing_gateway_cancel_failed": "Nao foi possivel cancelar a assinatura agora. Tente novamente em instantes."
   },
   "message": {
     "store": "dado criado",
@@ -188,7 +190,8 @@
     "billing_address_saved": "Endere?o de faturamento salvo com sucesso.",
     "billing_webhook_processed": "Webhook de cobran?a processado com sucesso.",
     "billing_payment_method_updated": "Cartao atualizado com sucesso.",
-    "billing_subscription_synced": "Status da assinatura atualizado com sucesso."
+    "billing_subscription_synced": "Status da assinatura atualizado com sucesso.",
+    "billing_subscription_cancelled": "Assinatura cancelada com sucesso."
   },
   "gender": {
     "o": "o"

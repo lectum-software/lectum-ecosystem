@@ -120,6 +120,13 @@ export type BillingSyncResponse = {
   synced: boolean;
 };
 
+export type BillingCancelSubscriptionResponse = {
+  current: ProfessionalSubscription;
+  subscription: ProfessionalSubscription;
+  gateway_status?: string | null;
+  canceled: boolean;
+};
+
 export type BillingPaymentMethodPayload = {
   card_token: string;
   payment_type_id: "credit_card" | "debit_card" | "prepaid_card";

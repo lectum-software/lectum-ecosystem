@@ -38,6 +38,10 @@ export type GatewayUpdateSubscriptionCardInput = {
   cardToken: string;
 };
 
+export type GatewayCancelSubscriptionInput = {
+  gatewaySubscriptionId: string;
+};
+
 export type GatewaySubscription = {
   gateway_subscription_id: string;
   status: BillingSubscriptionStatus;
@@ -69,6 +73,7 @@ export interface PaymentGateway {
   updateSubscriptionCard(
     input: GatewayUpdateSubscriptionCardInput,
   ): Promise<GatewaySubscriptionResult>;
+  cancelSubscription(input: GatewayCancelSubscriptionInput): Promise<GatewaySubscriptionResult>;
   getSubscription(gatewaySubscriptionId: string): Promise<GatewaySubscription>;
   verifyWebhookSignature(input: VerifyWebhookSignatureInput): boolean;
   parseWebhookEvent(body: unknown): GatewayWebhookEvent | null;
