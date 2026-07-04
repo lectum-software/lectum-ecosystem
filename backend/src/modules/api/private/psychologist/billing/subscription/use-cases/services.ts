@@ -24,6 +24,7 @@ export default async (data: ISubscriptionDTO) => {
     repository.showSubscription(profile.id!),
     repository.showPaymentMethod(data.auth.id!),
   ]);
+  const paymentHistory = await repository.showPaymentHistory(subscription);
 
   return {
     status: 200,
@@ -32,6 +33,7 @@ export default async (data: ISubscriptionDTO) => {
       current: subscription,
       subscription,
       payment_method: paymentMethod,
+      payment_history: paymentHistory,
     },
   };
 };

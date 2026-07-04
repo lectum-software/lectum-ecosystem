@@ -72,10 +72,30 @@ export type BillingPaymentMethod = {
   updatedAt?: string;
 };
 
+export type BillingPaymentHistoryStatus =
+  | "pago"
+  | "pendente"
+  | "recusado"
+  | "cancelado"
+  | "processado";
+
+export type BillingPaymentHistoryItem = {
+  id: string;
+  title: string;
+  description: string;
+  amount_cents?: number | null;
+  status: BillingPaymentHistoryStatus | string;
+  status_label: string;
+  occurred_at?: string | null;
+  gateway: string;
+  external_id: string;
+};
+
 export type BillingSubscriptionResponse = {
   current: ProfessionalSubscription | null;
   subscription: ProfessionalSubscription | null;
   payment_method: BillingPaymentMethod | null;
+  payment_history?: BillingPaymentHistoryItem[];
 };
 
 export type BillingSelectFreeResponse = {

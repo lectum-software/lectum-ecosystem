@@ -7,13 +7,17 @@ import {
   CalendarClock,
   CheckCircle2,
   CreditCard,
-  RefreshCw,
+  ReceiptText,
   ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
-import type { BillingPaymentMethod, ProfessionalSubscription } from "@/api/generator/types/billing";
+import type {
+  BillingPaymentHistoryItem,
+  BillingPaymentMethod,
+  ProfessionalSubscription,
+} from "@/api/generator/types/billing";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -49,6 +53,32 @@ const formatDate = (value?: string | null) => {
   if (Number.isNaN(date.getTime())) return "Data indisponível";
 
   return dateFormatter.format(date);
+};
+
+const formatPaymentDate = (value?: string | null) => {
+  if (!value) return "Data indisponível";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Data indisponível";
+
+  return dateFormatter.format(date);
+};
+
+const formatCardBrand = (brand?: string | null) => {
+  if (!brand) return "Cartão";
+
+  const normalized = brand.trim().toLowerCase();
+  if (!normalized) return "Cartão";
+
+  const knownBrands: Record<string, string> = {
+    amex: "Amex",
+    elo: "Elo",
+    hipercard: "Hipercard",
+    mastercard: "Mastercard",
+    visa: "Visa",
+  };
+
+  return knownBrands[normalized] ?? `${normalized.charAt(0).toUpperCase()}${normalized.slice(1)}`;
 };
 
 const getErrorMessage = (error: unknown) =>
@@ -88,27 +118,19 @@ const PaymentMethodSummary = ({
   if (!paymentMethod?.last4) {
     return (
       <div>
-        <p className="text-sm font-bold text-foreground">Cartão não cadastrado</p>
-        <p className="mt-1 text-sm leading-6 text-muted">
-          Atualize o método de pagamento pelo ambiente seguro do Mercado Pago.
-        </p>
+        <p className="text-sm font-bold text-foreground">Método de pagamento</p>
+        <p className="mt-1 text-sm leading-6 text-muted">Cartão não cadastrado</p>
       </div>
     );
   }
 
-  const brand = paymentMethod.brand ? paymentMethod.brand.toUpperCase() : "Cartão";
-  const expiration =
-    paymentMethod.exp_month && paymentMethod.exp_year
-      ? ` · vence ${String(paymentMethod.exp_month).padStart(2, "0")}/${String(paymentMethod.exp_year).slice(-2)}`
-      : "";
+  const brand = formatCardBrand(paymentMethod.brand);
 
   return (
     <div>
-      <p className="text-sm font-bold text-foreground">
-        {brand} final {paymentMethod.last4}
-      </p>
+      <p className="text-sm font-bold text-foreground">Método de pagamento</p>
       <p className="mt-1 text-sm leading-6 text-muted">
-        Cartão de crédito tokenizado pelo Mercado Pago{expiration}.
+        {brand} final {paymentMethod.last4}
       </p>
     </div>
   );
@@ -129,12 +151,79 @@ const StatusBadge = ({ status }: { status?: string | null }) => {
   );
 };
 
+const paymentHistoryTone: Record<string, string> = {
+  cancelado: "border-warning/30 bg-warning/10 text-warning",
+  pago: "border-success/30 bg-success/10 text-success",
+  pendente: "border-warning/30 bg-warning/10 text-warning",
+  processado: "border-primary/25 bg-primary-soft text-primary",
+  recusado: "border-danger/30 bg-danger/10 text-danger",
+};
+
+const PaymentHistoryCard = ({ items }: { items: BillingPaymentHistoryItem[] }) => (
+  <article className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
+    <div className="flex gap-3">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+        <ReceiptText className="h-5 w-5" aria-hidden="true" />
+      </span>
+      <div>
+        <h2 className="text-base font-extrabold text-foreground">Histórico de pagamentos</h2>
+        <p className="mt-1 text-sm leading-6 text-muted">
+          Cobranças e eventos confirmados pelo Mercado Pago.
+        </p>
+      </div>
+    </div>
+
+    {items.length > 0 ? (
+      <ol className="mt-4 divide-y divide-border">
+        {items.map((item) => (
+          <li className="flex items-center gap-3 py-4 first:pt-0 last:pb-0" key={item.id}>
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-success/10 text-success">
+              <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-extrabold text-foreground">
+                {item.title || "Assinatura mensal"}
+              </p>
+              <p className="mt-1 text-xs font-semibold text-muted">
+                {formatPaymentDate(item.occurred_at)}
+              </p>
+            </div>
+            <div className="shrink-0 text-right">
+              {item.amount_cents ? (
+                <p className="text-sm font-extrabold text-foreground">
+                  {formatPrice(item.amount_cents)}
+                </p>
+              ) : null}
+              <span
+                className={cn(
+                  "mt-1 inline-flex rounded-full border px-2.5 py-0.5 text-[0.68rem] font-black uppercase tracking-[0.08em]",
+                  paymentHistoryTone[item.status] ?? paymentHistoryTone.processado,
+                )}
+              >
+                {item.status_label || "Processado"}
+              </span>
+            </div>
+          </li>
+        ))}
+      </ol>
+    ) : (
+      <div className="mt-4 rounded-[var(--lectum-card-radius)] border border-border bg-surface-muted p-4">
+        <p className="text-sm font-extrabold text-foreground">Nenhum pagamento registrado ainda</p>
+        <p className="mt-1 text-sm leading-6 text-muted">
+          Quando o Mercado Pago confirmar cobranças reais, elas aparecerão aqui.
+        </p>
+      </div>
+    )}
+  </article>
+);
+
 export const ProfessionalBillingLogic = () => {
   const billing = usePsychologistBilling();
   const subscriptionQuery = billing.subscription;
   const subscription =
     subscriptionQuery.data?.subscription ?? subscriptionQuery.data?.current ?? null;
   const paymentMethod = subscriptionQuery.data?.payment_method ?? null;
+  const paymentHistory = subscriptionQuery.data?.payment_history ?? [];
   const planName = subscription?.plan?.name || "Plano não encontrado";
   const isPaidPlan = subscription?.plan?.slug === "profissional";
   const isFreePlan = subscription?.plan?.slug === "gratuito";
@@ -270,20 +359,7 @@ export const ProfessionalBillingLogic = () => {
             </article>
 
             <aside className="grid gap-4">
-              <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
-                <div className="flex gap-3">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-                    <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
-                  </span>
-                  <div>
-                    <h2 className="text-base font-extrabold text-foreground">Cobrança protegida</h2>
-                    <p className="mt-2 text-sm leading-6 text-muted">
-                      A Lectum guarda somente dados de exibição do cartão. Número completo e CVV não
-                      passam pelo nosso backend.
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <PaymentHistoryCard items={paymentHistory} />
 
               {!canManageCard ? (
                 <InlineAlert title="Alteração de cartão indisponível" variant="warning">
@@ -291,34 +367,6 @@ export const ProfessionalBillingLogic = () => {
                   Assinaturas gratuitas ou de cortesia não possuem cartão para alterar.
                 </InlineAlert>
               ) : null}
-
-              <div className="grid gap-3">
-                <Button asChild className="h-12 rounded-full">
-                  <Link
-                    href={
-                      canManageCard
-                        ? "/app/professional/billing/card"
-                        : "/app/professional/billing/plans"
-                    }
-                  >
-                    {canManageCard ? "Alterar cartão" : "Ver planos"}
-                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                  </Link>
-                </Button>
-                <Button
-                  className="h-12 rounded-full"
-                  disabled={subscriptionQuery.isFetching}
-                  onClick={() => subscriptionQuery.refetch()}
-                  type="button"
-                  variant="outline"
-                >
-                  <RefreshCw
-                    className={cn("h-4 w-4", subscriptionQuery.isFetching && "animate-spin")}
-                    aria-hidden="true"
-                  />
-                  Atualizar status
-                </Button>
-              </div>
 
               {subscription.status === "inadimplente" ? (
                 <InlineAlert title="Regularize seu pagamento" variant="error">

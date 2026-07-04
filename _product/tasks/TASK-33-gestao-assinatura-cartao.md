@@ -209,3 +209,20 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir frontend build`
 - Smoke local com `next start --port 3106`: `/app/professional/billing/card` retornou `307` para login sem sessão, preservando a proteção da rota privada; `/auth/login` retornou `200`.
 
+
+## Ajuste de UI em 2026-07-04: metodo de pagamento e historico
+
+- Pedido direto de produto: na rota `/app/professional/billing`, o bloco do cartao passa a exibir o titulo **Metodo de pagamento** e a descricao segura **Visa final 5682** conforme dados reais de bandeira/ultimos quatro digitos, sem a copy tecnica "Cartao de credito tokenizado...".
+- Foram removidos da pagina o card informativo **Cobranca protegida**, o CTA azul **Alterar cartao** e o botao **Atualizar status**; a acao contextual **Alterar** permanece dentro do bloco do metodo quando houver assinatura Mercado Pago gerenciavel.
+- A pagina agora exibe **Historico de pagamentos** usando somente eventos reais persistidos em `payment_event` e relacionados por `professional_subscription.id` ou `gateway_subscription_id`; quando nao houver evento real, a UI mostra estado vazio honesto, sem criar entradas ficticias.
+- Referencia visual local consultada: `_product/proto/Minhas Assinatura - Psicologo.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente.
+- ADR registrado: `adrs/0209-historico-pagamentos-billing-real.md`.
+
+### Validacao do ajuste de UI e historico
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke local com `next start --port 3107`: `/app/professional/billing` retornou `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fbilling` sem sessao e `/auth/login` retornou `200`.
