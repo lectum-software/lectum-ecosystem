@@ -107,6 +107,8 @@ function assertPortIsFree(port, label) {
 function shouldRouteToBackend(url = "/") {
   return (
     url.startsWith("/api/") ||
+    url.startsWith("/public/files/") ||
+    url.startsWith("/files/") ||
     url.startsWith("/socket.io/") ||
     url.startsWith("/docs") ||
     url.startsWith("/swagger") ||
