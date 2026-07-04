@@ -37,37 +37,82 @@ const supportLinkProps = {
   rel: "noopener noreferrer",
   target: "_blank",
 } as const;
-
-type ApiErrorData = {
-  code?: string;
-  error?: string;
-  message?: string;
-  status?: number;
-};
+const cfpSystemErrorMessage =
+  "N\u00e3o foi poss\u00edvel consultar o cadastro do Conselho Federal de Psicologia agora.";
+const cfpSupportGuidance =
+  "Se voc\u00ea j\u00e1 possui CRP/CFP ativo ou o problema continuar, fale com o suporte da Lectum para solicitar aprova\u00e7\u00e3o manual enquanto a consulta autom\u00e1tica estiver inst\u00e1vel.";
+const genericStatusErrorPattern = /^Request failed with status code \d+$/i;
 
 type ApiError = Error & {
-  data?: ApiErrorData;
+  data?: unknown;
+  response?: {
+    data?: unknown;
+    status?: unknown;
+  };
 };
 
 type HeroIcon = ComponentType<SVGProps<SVGSVGElement>>;
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const getStringValue = (value: unknown) =>
+  typeof value === "string" && value.trim().length > 0 ? value : undefined;
+
+const getStatusValue = (value: unknown) => {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+
+  return undefined;
+};
+
 const resolveApiError = (error: unknown) => {
   const apiError = error as ApiError;
+  const data = isRecord(apiError?.data) ? apiError.data : {};
+  const responseData = isRecord(apiError?.response?.data) ? apiError.response.data : {};
+  const status =
+    getStatusValue(data.status) ||
+    getStatusValue(responseData.status) ||
+    getStatusValue(apiError?.response?.status);
+  const rawMessage =
+    getStringValue(data.error) ||
+    getStringValue(data.message) ||
+    getStringValue(responseData.error) ||
+    getStringValue(responseData.message) ||
+    (error instanceof Error ? error.message : undefined);
+  const shouldUseCfpSystemMessage =
+    typeof status === "number" &&
+    status >= 500 &&
+    (!rawMessage || genericStatusErrorPattern.test(rawMessage));
+
   return {
-    code: apiError?.data?.code,
+    code: getStringValue(data.code) || getStringValue(responseData.code),
     message:
-      apiError?.data?.error ||
-      apiError?.data?.message ||
-      (error instanceof Error ? error.message : "") ||
+      (shouldUseCfpSystemMessage ? cfpSystemErrorMessage : rawMessage) ||
       "N\u00e3o foi poss\u00edvel consultar o CFP agora. Tente novamente.",
-    status: apiError?.data?.status,
+    status,
   };
 };
 
 type ResolvedApiError = ReturnType<typeof resolveApiError>;
 
-const isCfpProviderUnavailable = (error?: ResolvedApiError | null) =>
-  error?.code === "cfp_provider_unavailable";
+const supportableCfpErrorCodes = new Set([
+  "cfp_provider_config_error",
+  "cfp_provider_error",
+  "cfp_provider_rate_limited",
+  "cfp_provider_unavailable",
+]);
+
+const shouldShowCfpSupportGuidance = (error?: ResolvedApiError | null) =>
+  Boolean(
+    error &&
+      ((error.code && supportableCfpErrorCodes.has(error.code)) ||
+        (typeof error.status === "number" && error.status >= 500)),
+  );
 
 const SupportFooterLink = () => (
   <p className="px-2 text-center text-sm font-medium text-muted">
@@ -79,6 +124,15 @@ const SupportFooterLink = () => (
       Fale com o suporte
     </a>
   </p>
+);
+
+const SupportGuidance = () => (
+  <div className="grid gap-3">
+    <p className="text-sm leading-6">{cfpSupportGuidance}</p>
+    <Button asChild className="h-11 w-full rounded-full" variant="outline">
+      <a {...supportLinkProps}>{"Fale com o suporte"}</a>
+    </Button>
+  </div>
 );
 
 const PageFrame = ({ children }: { children: ReactNode }) => (
@@ -507,18 +561,7 @@ export const PsychologistCfpLogic = () => {
             <InlineAlert title={"N\u00e3o foi poss\u00edvel consultar"} variant="error">
               <div className="grid gap-3">
                 <p>{apiError.message}</p>
-                {isCfpProviderUnavailable(apiError) ? (
-                  <div className="grid gap-3">
-                    <p className="text-sm leading-6">
-                      {
-                        "Se voc\u00ea j\u00e1 possui CRP/CFP ativo, fale com o suporte para solicitar aprova\u00e7\u00e3o manual enquanto a consulta autom\u00e1tica estiver inst\u00e1vel."
-                      }
-                    </p>
-                    <Button asChild className="h-11 w-full rounded-full" variant="outline">
-                      <a {...supportLinkProps}>{"Solicitar aprova\u00e7\u00e3o manual"}</a>
-                    </Button>
-                  </div>
-                ) : null}
+                {shouldShowCfpSupportGuidance(apiError) ? <SupportGuidance /> : null}
               </div>
             </InlineAlert>
           ) : null}

@@ -81,3 +81,4 @@ Pesquisa publica identificou a consulta InfoSimples `Conselho Federal de Psicolo
 - O psicologo deve receber um caminho claro para falar com o suporte da Lectum e solicitar aprovacao manual, sem aprovacao automatica, mock ou preenchimento de `cfp_verified_at`.
 - A mensagem de erro backend de `cfp_provider_unavailable` passa a refletir essa orientacao operacional.
 - A pagina CFP tambem exibe no rodape o CTA "Problemas? Fale com o suporte" apontando para o WhatsApp operacional `wa.me/5537998739534`.
+- Como falhas de proxy/backend podem chegar ao frontend apenas como HTTP 5xx generico, sem `code` JSON do backend, a tela CFP tambem trata status >= 500 como indisponibilidade operacional e mostra a orientacao de suporte/aprovacao manual.
