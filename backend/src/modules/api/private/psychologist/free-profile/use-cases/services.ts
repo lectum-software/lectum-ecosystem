@@ -120,7 +120,7 @@ const updateSchema = z.object({
   gender: z.string().trim().max(40).nullable().optional(),
   race_color: z.string().trim().max(40).nullable().optional(),
   religion: z.string().trim().max(80).nullable().optional(),
-  crp_region: z.string().trim().max(20).nullable().optional(),
+  crp_region: z.string().trim().max(120).nullable().optional(),
   crp_number: z.string().trim().max(40).nullable().optional(),
   whatsapp: z.string().nullable().optional(),
   headline: z.preprocess(emptyTextToNull, z.string().trim().min(3).max(120).nullable().optional()),

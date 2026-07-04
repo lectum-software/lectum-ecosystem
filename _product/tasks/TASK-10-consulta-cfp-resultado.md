@@ -251,3 +251,19 @@ Todos os criterios aplicaveis foram atendidos. A confirmacao real de um CPF prof
 - A tela tambem passa a exibir um link de suporte para o psicologo solicitar aprovacao manual, mantendo a regra de nao aprovar automaticamente sem validacao real/manual.
 - A pagina CFP exibe no rodape "Problemas? Fale com o suporte" com link para o WhatsApp operacional `wa.me/5537998739534`.
 - A UI tambem cobre falhas HTTP 5xx genericas, como 502 de proxy/backend sem `code` JSON, exibindo a mensagem de suporte em vez do texto tecnico do cliente HTTP.
+
+## Correcao de preservacao CRP no perfil em 2026-07-04
+
+- A confirmacao de resultado CFP passou a persistir `psychologist_profile.crp` no formato `nome_regional/registro`, mantendo os dois campos retornados pela consulta publica CFP/InfoSimples.
+- A mudanca evita que a tela de edicao do perfil trate `registro` como regional quando o resultado confirmado possui regional separado.
+- A correcao nao altera schema, nao cria mock e nao aprova profissional sem resultado CFP ativo confirmado.
+- ADR criado: `adrs/0206-crp-cfp-preserva-regional-registro.md`.
+
+Validacoes executadas:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Consulta real ao endpoint `GET /api/private/psychologist/free-profile` com token temporario real removido ao final confirmou que o CRP confirmado e exposto como `06ª Região - SP/161904`, preservando `nome_regional` e `registro` da auditoria CFP.

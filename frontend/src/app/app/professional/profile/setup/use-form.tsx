@@ -91,7 +91,7 @@ export const freeProfileSchema = z
       .string()
       .trim()
       .min(1, "Selecione a Regional do CRP")
-      .max(40, "Regional muito longa"),
+      .max(120, "Regional muito longa"),
     crp_number: z
       .string()
       .trim()

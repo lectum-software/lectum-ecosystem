@@ -1974,13 +1974,6 @@ export const ProfessionalProfileSetupLogic = () => {
                   {renderField("religion")}
                   {renderField("crp_region", lockedCrpRegionFieldProps)}
                   {renderField("crp_number", lockedIdentityFieldProps)}
-                  {shouldLockProfessionalIdentityFields ? (
-                    <InlineAlert title="CPF e CRP validados" variant="info">
-                      Esses dados foram usados para validar seu registro profissional junto ao
-                      Conselho e liberar sua assinatura ou cortesia. Para corrigir, fale com o
-                      suporte da Lectum.
-                    </InlineAlert>
-                  ) : null}
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="min-w-0 flex-1">{renderField("whatsapp")}</div>

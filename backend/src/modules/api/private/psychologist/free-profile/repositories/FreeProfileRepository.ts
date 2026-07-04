@@ -2,6 +2,7 @@ import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { PUBLIC_BUCKET, S3 } from "@/config/multer/s3";
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { parseStoredCrp, resolveCrpFromRegistryChecks } from "@/utils/professional-registry";
 import { activeSubscriptionPeriodWhere } from "@/utils/subscription-entitlement";
 import type {
   FreeProfessionalProfileActivationPendingField,
@@ -58,22 +59,6 @@ const onlyDigits = (value?: string | null) => String(value ?? "").replace(/\D/g,
 const buildWhatsappUrl = (value?: string | null) => {
   const digits = onlyDigits(value);
   return digits ? `https://wa.me/${digits}` : null;
-};
-
-const parseCrp = (value?: string | null) => {
-  const normalized = value?.trim();
-  if (!normalized) {
-    return {
-      crp_region: null,
-      crp_number: null,
-    };
-  }
-
-  const [region, ...numberParts] = normalized.split("/");
-  const crp_region = region?.trim() || null;
-  const crp_number = numberParts.join("/").trim() || null;
-
-  return { crp_region, crp_number };
 };
 
 const buildCrp = (region?: string | null, number?: string | null) => {
@@ -243,6 +228,19 @@ const getUserWithProfile = (userId: string) => {
             },
             take: 1,
           },
+          registry_checks: {
+            where: {
+              deleted: false,
+              found: true,
+            },
+            orderBy: {
+              checked_at: "desc",
+            },
+            take: 5,
+            select: {
+              raw: true,
+            },
+          },
         },
       },
       psychologist_specialties: {
@@ -297,11 +295,12 @@ const toResponse = async (
   const specialtyLimit = isFree ? 3 : 10;
   const serviceLimit = isFree ? 1 : Math.max(catalogs.services.length, 1);
   const approachLimit = isFree ? 1 : Math.max(catalogs.approaches.length, 1);
-  const crp = parseCrp(profile.crp);
+  const displayCrp = resolveCrpFromRegistryChecks(profile.registry_checks) || profile.crp;
+  const crp = parseStoredCrp(displayCrp);
   const identityFieldsLocked = isProfessionalIdentityLocked({
     cfpVerifiedAt: profile.cfp_verified_at,
     cpf: profile.cpf,
-    crp: profile.crp,
+    crp: displayCrp,
     isFree,
   });
   const academic = {
@@ -372,7 +371,7 @@ const toResponse = async (
       available_days: normalizeStringArray(profile.available_days),
       address,
       published: profile.published,
-      crp: profile.crp,
+      crp: displayCrp,
       crp_region: crp.crp_region,
       crp_number: crp.crp_number,
       crp_status: profile.crp_status,

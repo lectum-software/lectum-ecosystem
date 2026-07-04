@@ -450,3 +450,26 @@ Validações executadas:
 - `pnpm --dir frontend build`
 - HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessão de CLI, preservando a proteção da rota privada.
 - Verificação estática confirmou a nova copy no bundle de desenvolvimento gerado para a rota.
+
+## Ajuste complementar em 2026-07-04 - CRP confirmado pelo CFP no setup
+
+- Pedido do usuario: a tela `/app/professional/profile/setup` nao deve trocar o numero retornado pela consulta publica CFP/InfoSimples para o campo de regional nem deixar o numero de registro vazio.
+- O backend do `free-profile` passa a derivar `crp_region` e `crp_number` a partir do `professional_registry_check.raw` confirmado quando houver validacao CFP real, preservando `nome_regional` e `registro` retornados pelo provedor autorizado.
+- O parser de CRP usa o ultimo `/` como separador para preservar nomes de regionais com barra, como `PA/AP`.
+- A faixa azul `CPF e CRP validados` foi removida da secao `Informacoes basicas`, mantendo os campos CPF/CRP travados quando `identity_fields_locked=true`.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a referencia auditavel foi o print enviado pelo usuario da rota mobile em base ~390px.
+- ADR criado: `adrs/0206-crp-cfp-preserva-regional-registro.md`.
+
+Criterio complementar:
+
+- [x] Regional do CRP e No Registro CRP exibem os valores reais da busca CFP/InfoSimples em perfis com CFP confirmado, e a faixa azul de validacao nao aparece mais.
+
+Validacoes executadas:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Consulta real ao endpoint `GET /api/private/psychologist/free-profile` com token temporario real removido ao final confirmou `crp_region="06ª Região - SP"`, `crp_number="161904"` e `identity_fields_locked=true`.
+- Chrome/CDP headless na rota `/app/professional/profile/setup`, viewport mobile 390x844 via URL ngrok, confirmou select `crp_region` desabilitado com valor `06ª Região - SP`, input `crp_number` desabilitado com `161904` e ausencia da faixa `CPF e CRP validados`. Token temporario de validacao removido ao final.
