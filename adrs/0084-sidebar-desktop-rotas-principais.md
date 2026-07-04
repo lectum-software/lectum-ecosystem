@@ -61,3 +61,33 @@ Ajuste complementar de UX desktop do shell privado, relacionado a TASK-12.
 - Para `/app/reviews`, `/app/professional/reviews`, `/app/settings/account` e `/app/posts/mine`, a decisao passa a ser renderizar a navegacao apenas como sidebar desktop recolhida por padrao, usando `showMobileNavigation={false}` e `desktopSidebarDefaultCollapsed`.
 - O mobile permanece sem bottom navigation nessas telas, preservando o comportamento anterior abaixo de `lg`.
 - A expansao manual e a persistencia por rota continuam valendo; rotas principais como Psicologos, Favoritos, Comunidade/feed, Notificacoes e Perfil nao foram alteradas.
+
+## Atualizacao 2026-07-04 - telas profissionais secundarias com sidebar recolhida
+
+### Contexto
+
+O produto pediu que `Editar perfil`, `Meus Analytics` e `Minha Assinatura` exibam, apenas no desktop, o mesmo menu lateral recolhido ja presente em `Minhas Avaliacoes`. Essas telas continuam sendo secundarias e focadas, portanto o mobile deve permanecer sem bottom navigation.
+
+Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente. A referencia visual usada foi o print enviado pelo usuario de `Minhas Avaliacoes`, com apoio das imagens locais `_product/proto/Editar Perfil - Psicologo.jpg`, `_product/proto/Meus Analytics - Psicologo.jpg`, `_product/proto/Minhas Assinatura - Psicologo.jpg` e `_product/proto/Minhas Avaliacoes - Psicologo.jpg`.
+
+### Decisao
+
+- Estender a decisao de telas de conteudo focado com sidebar recolhida para `/app/professional/profile/setup`, `/app/professional/analytics` e `/app/professional/billing`.
+- Reutilizar o `PrivateTemplate` existente com `desktopSidebarDefaultCollapsed` e `showMobileNavigation={false}`.
+- Em telas que antes usavam `showHeader={false}` para remover a navegacao, ativar explicitamente `showNavigation` apenas para permitir a sidebar desktop, mantendo a ausencia de bottom navigation no mobile.
+- Nao criar outro shell, submenu ou componente de navegacao paralelo.
+
+### Consequencias
+
+- As quatro telas profissionais secundarias (`Minhas Avaliacoes`, `Meus Analytics`, `Editar perfil` e `Minha Assinatura`) passam a compartilhar a mesma navegacao desktop recolhida.
+- O mobile continua focado e sem navegacao inferior nessas rotas.
+- A preferencia manual de expandir/recolher por rota continua sendo respeitada pelo `PrivateTemplate`.
+- Nao houve alteracao de contrato, API, autenticacao, backend, Prisma, migrations, packages ou dados persistidos.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check` executado; frontend passou, mas o backend falhou em `biome check` por formatacao em arquivos de checkout/billing ja modificados fora deste ajuste (`CheckoutRepository.ts`, `ICheckoutRepository.ts`, `services.ts`, `sync-mercado-pago-subscription.ts`).
+- Browser local com `next start --port 3114` e Chrome/CDP em desktop 1365x768 confirmou sidebar recolhida (`w-[88px]`) e ausencia de bottom navigation em `/app/professional/profile/setup`, `/app/professional/analytics`, `/app/professional/billing` e `/app/professional/reviews`.
+- Browser local com Chrome/CDP em mobile 390x844 confirmou `asideDisplay=none`, `mobileBottomCount=0` e sem overflow horizontal nas tres rotas alteradas.

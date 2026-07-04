@@ -1838,7 +1838,12 @@ export const ProfessionalProfileSetupLogic = () => {
   );
 
   return (
-    <PrivateTemplate showHeader={false}>
+    <PrivateTemplate
+      desktopSidebarDefaultCollapsed
+      showHeader={false}
+      showMobileNavigation={false}
+      showNavigation
+    >
       {showProfileVideoTip ? (
         <ActionableCoachMark
           onDismiss={() => setShowProfileVideoTip(false)}

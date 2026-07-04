@@ -1337,7 +1337,7 @@ export const ProfessionalAnalyticsLogic = () => {
   const isAnalyticsPreview = data?.access.mode === "preview" || isProfessionalPlanError;
 
   return (
-    <PrivateTemplate showNavigation={false}>
+    <PrivateTemplate desktopSidebarDefaultCollapsed showMobileNavigation={false}>
       <section className="mx-auto grid w-full max-w-[430px] grid-cols-[minmax(0,1fr)] gap-4 md:max-w-3xl">
         <AppPageHeader backLabel="Voltar para perfil" title="Meus Analytics" />
 

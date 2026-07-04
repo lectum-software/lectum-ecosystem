@@ -85,3 +85,28 @@ Aplicar refinamentos mobile-first relatados após a TASK-35, mantendo o perfil p
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser/HTTP local nas rotas afetadas, com a limitação de que rotas privadas autenticadas redirecionam sem token real disponível ao agente.
+
+## Ajuste complementar em 2026-07-04 - menu lateral desktop em telas profissionais secundarias
+
+- Pedido direto de produto: em `Editar perfil`, `Meus Analytics` e `Minha Assinatura`, adicionar apenas no desktop o menu lateral recolhido ja usado em `Minhas Avaliacoes`.
+- As rotas `/app/professional/profile/setup`, `/app/professional/analytics` e `/app/professional/billing` agora renderizam a sidebar desktop do `PrivateTemplate` com `desktopSidebarDefaultCollapsed` e `showMobileNavigation={false}`.
+- O mobile permanece sem navegacao inferior nessas telas secundarias, preservando o fluxo focado e mobile-first.
+- A implementacao reutiliza o shell privado existente e nao cria estrutura de navegacao paralela, package novo, mock, seed, endpoint ou alteracao de schema.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a referencia visual usada foi o print enviado pelo usuario de `Minhas Avaliacoes` e as imagens locais `_product/proto/Editar Perfil - Psicologo.jpg`, `_product/proto/Meus Analytics - Psicologo.jpg`, `_product/proto/Minhas Assinatura - Psicologo.jpg` e `_product/proto/Minhas Avaliacoes - Psicologo.jpg`.
+- ADR atualizado: `adrs/0084-sidebar-desktop-rotas-principais.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] `Editar perfil` renderiza sidebar desktop recolhida e continua sem bottom navigation no mobile.
+- [x] `Meus Analytics` renderiza sidebar desktop recolhida e continua sem bottom navigation no mobile.
+- [x] `Minha Assinatura` renderiza sidebar desktop recolhida e continua sem bottom navigation no mobile.
+- [x] `Minhas Avaliacoes` permanece como referencia do padrao aplicado.
+- [x] Nenhum mock, seed, endpoint simulado, package novo ou alteracao de schema foi criado.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check` executado; frontend passou, mas o backend falhou em `biome check` por formatacao em arquivos de checkout/billing ja modificados fora deste ajuste (`CheckoutRepository.ts`, `ICheckoutRepository.ts`, `services.ts`, `sync-mercado-pago-subscription.ts`).
+- Browser local com `next start --port 3114` e Chrome/CDP: em desktop 1365x768, `/app/professional/profile/setup`, `/app/professional/analytics`, `/app/professional/billing` e `/app/professional/reviews` renderizaram `aside` da navegacao com classe `w-[88px]` e sem bottom navigation.
+- Browser local com Chrome/CDP em mobile 390x844: `/app/professional/profile/setup`, `/app/professional/analytics` e `/app/professional/billing` mantiveram `asideDisplay=none`, `mobileBottomCount=0` e `scrollWidth=390`.

@@ -306,7 +306,12 @@ export const ProfessionalBillingLogic = () => {
   }
 
   return (
-    <PrivateTemplate showHeader={false}>
+    <PrivateTemplate
+      desktopSidebarDefaultCollapsed
+      showHeader={false}
+      showMobileNavigation={false}
+      showNavigation
+    >
       <section
         className={cn(
           "mx-auto grid w-full max-w-[430px] gap-5",
