@@ -39,8 +39,6 @@ const supportLinkProps = {
 } as const;
 const cfpSystemErrorMessage =
   "N\u00e3o foi poss\u00edvel consultar o cadastro do Conselho Federal de Psicologia agora.";
-const cfpSupportGuidance =
-  "Se voc\u00ea j\u00e1 possui CRP/CFP ativo ou o problema continuar, fale com o suporte da Lectum para solicitar aprova\u00e7\u00e3o manual enquanto a consulta autom\u00e1tica estiver inst\u00e1vel.";
 const genericStatusErrorPattern = /^Request failed with status code \d+$/i;
 
 type ApiError = Error & {
@@ -128,7 +126,6 @@ const SupportFooterLink = () => (
 
 const SupportGuidance = () => (
   <div className="grid gap-3">
-    <p className="text-sm leading-6">{cfpSupportGuidance}</p>
     <Button asChild className="h-11 w-full rounded-full" variant="outline">
       <a {...supportLinkProps}>{"Fale com o suporte"}</a>
     </Button>
