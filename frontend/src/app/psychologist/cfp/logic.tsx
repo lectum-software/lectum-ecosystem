@@ -1,6 +1,17 @@
-﻿"use client";
+"use client";
 
-import { ArrowRight, FileQuestion, Info, Loader2, RotateCcw, ShieldCheck } from "lucide-react";
+import {
+  ArrowRight,
+  BadgeCheck,
+  CheckCircle2,
+  FileQuestion,
+  Info,
+  Loader2,
+  type LucideIcon,
+  RotateCcw,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
@@ -11,12 +22,12 @@ import { usePsychologistCfp } from "@/api/callers/psychologist-cfp";
 import type { CfpResult, CfpSearchResponse, user } from "@/api/generator/types";
 import { formatCpf } from "@/components/controllers/utils";
 import { InlineAlert } from "@/components/ui/inline-alert";
-import { Logo } from "@/components/ui/logo";
 import { getToken } from "@/hooks/cookies/token";
 import { useAppSelector } from "@/hooks/redux";
 import { useUserSet } from "@/hooks/user-set";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
+import { PrivateTemplate } from "@/templates/private";
 import { type CfpSearchForm, useForm } from "./use-form";
 
 const nextStepHref = "/app/professional/whatsapp/verify";
@@ -41,103 +52,201 @@ const resolveApiError = (error: unknown) => {
   );
 };
 
-const CfpHeader = () => (
-  <header className="border-b border-border bg-surface px-4 py-4 text-center">
-    <h1 className="text-xl font-bold">Verificação Profissional</h1>
-  </header>
-);
-
 const PageFrame = ({ children }: { children: ReactNode }) => (
-  <main className="min-h-screen bg-[#f7f9fc] text-foreground">
-    <CfpHeader />
-    <section className="mx-auto flex min-h-[calc(100vh-57px)] w-full max-w-[390px] flex-col px-4 py-8">
-      {children}
-    </section>
-  </main>
+  <PrivateTemplate allowAnonymous showHeader={false} showMobileNavigation={false}>
+    <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-4xl">{children}</section>
+  </PrivateTemplate>
 );
 
-const SecurityBadge = () => (
-  <div className="mx-auto inline-flex items-center justify-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-xs font-semibold text-muted shadow-sm">
-    <ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />
-    Segurança é nossa prioridade
+const PremiumPanel = ({ children, className }: { children: ReactNode; className?: string }) => (
+  <div
+    className={cn(
+      "relative overflow-hidden rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-7 shadow-[var(--lectum-shadow-soft)] md:px-8 md:py-9",
+      className,
+    )}
+  >
+    <div className="pointer-events-none absolute inset-x-0 top-0 h-36 bg-primary-soft/45" />
+    <div className="relative">{children}</div>
+  </div>
+);
+
+const CfpHero = ({
+  description,
+  eyebrow = "Validação profissional",
+  icon: Icon = ShieldCheck,
+  title,
+  variant = "primary",
+}: {
+  description: ReactNode;
+  eyebrow?: string;
+  icon?: LucideIcon;
+  title: string;
+  variant?: "primary" | "success" | "warning";
+}) => {
+  const tone = {
+    primary: "bg-primary-soft text-primary ring-primary-soft/70",
+    success: "bg-success/10 text-success ring-success/10",
+    warning: "bg-warning/10 text-warning ring-warning/10",
+  }[variant];
+
+  return (
+    <header className="grid justify-items-center text-center">
+      <div
+        className={cn(
+          "grid h-20 w-20 place-items-center rounded-full shadow-[var(--lectum-shadow-soft)] ring-8 md:h-24 md:w-24",
+          tone,
+        )}
+      >
+        <Icon className="h-10 w-10 md:h-12 md:w-12" aria-hidden="true" />
+      </div>
+      <p className="mt-6 text-xs font-bold uppercase tracking-[0.18em] text-primary">{eyebrow}</p>
+      <h1 className="mt-3 text-2xl font-bold leading-tight text-foreground md:text-4xl">{title}</h1>
+      <div className="mx-auto mt-3 max-w-2xl text-base leading-7 text-muted md:text-lg">
+        {description}
+      </div>
+    </header>
+  );
+};
+
+const FlowRail = () => {
+  const steps = [
+    { label: "Endereço salvo", state: "done" },
+    { label: "CFP seguro", state: "active" },
+    { label: "WhatsApp depois", state: "pending" },
+  ] as const;
+
+  return (
+    <div className="mt-7 grid gap-2 rounded-[24px] border border-border bg-surface-muted p-2 sm:grid-cols-3">
+      {steps.map((step) => (
+        <div
+          className={cn(
+            "flex items-center gap-2 rounded-[18px] px-3 py-3 text-left text-xs font-semibold text-muted",
+            step.state === "active" && "bg-surface text-primary shadow-[var(--lectum-shadow-soft)]",
+          )}
+          key={step.label}
+        >
+          <span
+            className={cn(
+              "grid h-7 w-7 shrink-0 place-items-center rounded-full border border-border bg-surface text-subtle",
+              step.state === "done" && "border-success/20 bg-success/10 text-success",
+              step.state === "active" && "border-primary/20 bg-primary-soft text-primary",
+            )}
+          >
+            {step.state === "done" ? (
+              <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+            ) : step.state === "active" ? (
+              <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <span className="h-2 w-2 rounded-full bg-current" aria-hidden="true" />
+            )}
+          </span>
+          {step.label}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const TrustHighlights = () => (
+  <div className="grid gap-3 md:grid-cols-2">
+    <div className="flex gap-3 rounded-[20px] border border-border bg-surface px-4 py-4 text-sm leading-6 text-muted">
+      <BadgeCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+      <div>
+        <p className="font-semibold text-foreground">Consulta oficial CFP</p>
+        <p className="mt-1">Usamos a InfoSimples para consultar a base pública autorizada.</p>
+      </div>
+    </div>
+    <div className="flex gap-3 rounded-[20px] border border-border bg-surface px-4 py-4 text-sm leading-6 text-muted">
+      <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+      <div>
+        <p className="font-semibold text-foreground">Dados protegidos</p>
+        <p className="mt-1">Seu CPF é usado somente para validar seu registro profissional.</p>
+      </div>
+    </div>
   </div>
 );
 
 const LoadingScreen = () => (
   <PageFrame>
-    <div className="flex flex-1 flex-col items-center justify-center text-center">
-      <div className="relative grid h-20 w-20 place-items-center rounded-full bg-primary-soft text-primary shadow-[0_0_35px_rgb(52_145_230_/_28%)]">
-        <Loader2 className="absolute h-20 w-20 animate-spin" aria-hidden="true" />
-        <ShieldCheck className="h-7 w-7" aria-hidden="true" />
+    <PremiumPanel className="md:max-w-3xl md:justify-self-center">
+      <CfpHero
+        description="Estamos verificando suas informações no Conselho Federal de Psicologia. Isso pode levar alguns segundos."
+        title="Consultando seus dados"
+      />
+      <div className="mx-auto mt-8 grid max-w-md justify-items-center gap-4 rounded-[24px] border border-border bg-surface-muted px-5 py-6 text-center">
+        <div className="relative grid h-16 w-16 place-items-center rounded-full bg-primary-soft text-primary">
+          <Loader2 className="absolute h-16 w-16 animate-spin" aria-hidden="true" />
+          <ShieldCheck className="h-6 w-6" aria-hidden="true" />
+        </div>
+        <p className="text-sm font-semibold text-muted">Conexão segura com a consulta CFP</p>
       </div>
-      <h2 className="mt-10 text-2xl font-bold">Consultando dados...</h2>
-      <p className="mt-4 max-w-[310px] text-base leading-7 text-muted">
-        Estamos verificando suas informações no Conselho Federal de Psicologia. Isso pode levar
-        alguns segundos.
-      </p>
-    </div>
-    <div className="pb-6 text-center">
-      <SecurityBadge />
-      <Logo className="mx-auto mt-5 w-[128px] opacity-70" />
-    </div>
+    </PremiumPanel>
   </PageFrame>
 );
 
 const NotFoundScreen = ({ onRetry }: { onRetry: () => void }) => (
   <PageFrame>
-    <div className="flex flex-1 flex-col">
-      <div className="mt-2 grid justify-items-center text-center">
-        <div className="grid h-48 w-48 place-items-center rounded-[24px] bg-surface text-primary shadow-sm">
-          <FileQuestion className="h-24 w-24" aria-hidden="true" />
-          <p className="-mt-8 text-[10px] text-muted">Não encontramos seu registro.</p>
-        </div>
+    <PremiumPanel className="md:max-w-3xl md:justify-self-center">
+      <CfpHero
+        description="Não encontramos um registro ativo vinculado ao CPF informado. Confira os dados e tente novamente."
+        eyebrow="Validação pendente"
+        icon={FileQuestion}
+        title="Registro não encontrado"
+        variant="warning"
+      />
+
+      <InlineAlert className="mt-7" title="Antes de seguir" variant="warning">
+        A assinatura continua ativa. Você pode tentar outro CPF ou falar com o suporte para análise
+        manual se o cadastro estiver correto.
+      </InlineAlert>
+
+      <div className="mt-7 grid gap-3 sm:grid-cols-2">
+        <Button className="h-14 rounded-full text-base" onClick={onRetry}>
+          <RotateCcw className="h-4 w-4" aria-hidden="true" />
+          Tentar novamente
+        </Button>
+        <Button asChild className="h-14 rounded-full text-base" variant="outline">
+          <Link href="/app/profile">Falar com suporte</Link>
+        </Button>
       </div>
-
-      <p className="mt-8 text-[17px] leading-8 text-muted">
-        Ops! Não encontramos nenhum registro vinculado ao CPF informado. Por favor, verifique se os
-        dados estão corretos e tente novamente.
-      </p>
-    </div>
-
-    <div className="sticky bottom-0 -mx-4 border-t border-border bg-surface px-4 py-5 text-center">
-      <Button className="h-14 w-full rounded-full text-base shadow-lg" onClick={onRetry}>
-        <RotateCcw className="h-4 w-4" aria-hidden="true" />
-        Tentar novamente
-      </Button>
-      <Link className="mt-4 inline-block text-sm font-medium text-muted" href="/app/profile">
-        Problemas? Fale com o suporte
-      </Link>
-    </div>
+    </PremiumPanel>
   </PageFrame>
 );
 
 const AlreadyVerifiedScreen = ({ cpf }: { cpf?: string | null }) => (
   <PageFrame>
-    <div className="flex flex-1 flex-col items-center justify-center text-center">
-      <div className="grid h-24 w-24 place-items-center rounded-full bg-success/10 text-success">
-        <ShieldCheck className="h-12 w-12" aria-hidden="true" />
-      </div>
-      <h2 className="mt-8 text-2xl font-bold">Registro já confirmado</h2>
-      <p className="mt-4 max-w-[320px] text-base leading-7 text-muted">
-        {cpf
-          ? `O CPF ${formatCpf(cpf)} já possui confirmação profissional via CFP.`
-          : "Seu cadastro profissional já possui confirmação real via CFP."}
-      </p>
-    </div>
+    <PremiumPanel className="md:max-w-3xl md:justify-self-center">
+      <CfpHero
+        description={
+          cpf
+            ? `O CPF ${formatCpf(cpf)} já possui confirmação profissional via CFP.`
+            : "Seu cadastro profissional já possui confirmação real via CFP."
+        }
+        eyebrow="Validação concluída"
+        icon={ShieldCheck}
+        title="Registro já confirmado"
+        variant="success"
+      />
 
-    <div className="sticky bottom-0 -mx-4 border-t border-border bg-surface px-4 py-5 text-center">
-      <Button asChild className="h-14 w-full rounded-full text-base shadow-lg">
+      <div className="mt-8 rounded-[24px] border border-success/20 bg-success/10 px-5 py-5 text-center text-success">
+        <CheckCircle2 className="mx-auto h-8 w-8" aria-hidden="true" />
+        <p className="mt-3 text-sm font-semibold">
+          Próximo passo: cadastrar seu WhatsApp profissional para contatos de pacientes.
+        </p>
+      </div>
+
+      <Button asChild className="mt-7 h-14 w-full rounded-full text-base">
         <Link href={nextStepHref}>
           Continuar para WhatsApp
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </Link>
       </Button>
-    </div>
+    </PremiumPanel>
   </PageFrame>
 );
 
 const ResultField = ({ label, value }: { label: string; value: React.ReactNode }) => (
-  <div className="rounded-[12px] border border-border bg-surface-muted px-4 py-4">
+  <div className="rounded-[18px] border border-border bg-surface-muted px-4 py-4">
     <p className="text-xs font-bold uppercase tracking-wide text-subtle">{label}</p>
     <div className="mt-2 text-base font-semibold text-foreground">{value}</div>
   </div>
@@ -155,18 +264,27 @@ const ResultCard = ({
   <button
     aria-pressed={selected}
     className={cn(
-      "w-full rounded-[16px] border bg-surface p-6 text-left shadow-[var(--lectum-shadow-soft)] transition",
+      "w-full rounded-[24px] border bg-surface p-5 text-left shadow-[var(--lectum-shadow-soft)] transition md:p-6",
       selected ? "border-primary ring-4 ring-primary/10" : "border-border hover:border-primary/40",
     )}
     onClick={onSelect}
     type="button"
   >
-    <div>
-      <p className="text-xs font-bold uppercase tracking-wide text-subtle">Nome</p>
-      <h2 className="mt-2 text-2xl font-bold">{result.nome || "Nome não informado"}</h2>
+    <div className="flex items-start justify-between gap-4">
+      <div>
+        <p className="text-xs font-bold uppercase tracking-wide text-subtle">Nome encontrado</p>
+        <h2 className="mt-2 text-2xl font-bold text-foreground">
+          {result.nome || "Nome não informado"}
+        </h2>
+      </div>
+      {selected ? (
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+          <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
+        </span>
+      ) : null}
     </div>
 
-    <div className="mt-5 grid gap-3">
+    <div className="mt-5 grid gap-3 md:grid-cols-2">
       <ResultField label="Regional" value={result.nome_regional || "Não informado"} />
       <ResultField label="Registro" value={result.registro || "Não informado"} />
       <ResultField
@@ -186,8 +304,8 @@ const ResultCard = ({
       <ResultField label="Data de inscrição" value={result.data_inscricao || "Não informada"} />
     </div>
 
-    <p className="mt-6 border-t border-border pt-5 text-sm text-muted">
-      Dados validados via consulta pública do CFP pela InfoSimples.
+    <p className="mt-5 border-border border-t pt-5 text-sm leading-6 text-muted">
+      Dados retornados pela consulta pública do CFP via InfoSimples.
     </p>
   </button>
 );
@@ -213,11 +331,12 @@ const ResultsScreen = ({
 
   return (
     <PageFrame>
-      <div className="flex flex-1 flex-col">
-        <p className="mt-1 text-base leading-7 text-muted">
-          Encontramos o seguinte registro vinculado ao seu CPF. Por favor, confirme se os dados
-          estão corretos.
-        </p>
+      <PremiumPanel>
+        <CfpHero
+          description="Encontramos o registro abaixo no Conselho Federal de Psicologia. Confirme se os dados pertencem a você para ativar a validação profissional."
+          icon={BadgeCheck}
+          title="Confirme seu registro"
+        />
 
         <div className="mt-8 grid gap-4">
           {result.results.map((item) => (
@@ -242,24 +361,45 @@ const ResultsScreen = ({
             {apiError}
           </InlineAlert>
         ) : null}
-      </div>
 
-      <div className="sticky bottom-0 -mx-4 border-t border-border bg-surface px-4 py-5 text-center">
-        <Button
-          className="h-14 w-full rounded-full text-base shadow-lg"
-          disabled={!selected?.active || isConfirming}
-          onClick={onConfirm}
-        >
-          {isConfirming ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
-          {isConfirming ? "Confirmando" : "Sim, sou eu"}
-        </Button>
-        <button className="mt-4 text-sm font-medium text-muted" onClick={onRetry} type="button">
-          Não é você? Tente outro CPF
-        </button>
-      </div>
+        <div className="mt-7 grid gap-3 sm:grid-cols-[1fr_auto]">
+          <Button
+            className="h-14 rounded-full text-base"
+            disabled={!selected?.active || isConfirming}
+            onClick={onConfirm}
+          >
+            {isConfirming ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
+            {isConfirming ? "Confirmando" : "Sim, sou eu"}
+            {!isConfirming ? <ArrowRight className="h-4 w-4" aria-hidden="true" /> : null}
+          </Button>
+          <Button
+            className="h-14 rounded-full text-base"
+            onClick={onRetry}
+            type="button"
+            variant="outline"
+          >
+            Tentar outro CPF
+          </Button>
+        </div>
+      </PremiumPanel>
     </PageFrame>
   );
 };
+
+const SessionMissingScreen = () => (
+  <PageFrame>
+    <PremiumPanel className="md:max-w-3xl md:justify-self-center">
+      <CfpHero
+        description="Entre novamente para validar seu cadastro profissional com segurança."
+        title="Sessão necessária"
+        variant="warning"
+      />
+      <Button asChild className="mt-7 h-14 w-full rounded-full text-base">
+        <Link href="/auth/login?role=psicologo">Ir para login</Link>
+      </Button>
+    </PremiumPanel>
+  </PageFrame>
+);
 
 export const PsychologistCfpLogic = () => {
   const router = useRouter();
@@ -336,18 +476,7 @@ export const PsychologistCfpLogic = () => {
   if (search.isPending) return <LoadingScreen />;
 
   if (!token) {
-    return (
-      <PageFrame>
-        <div className="flex flex-1 flex-col justify-center">
-          <InlineAlert title="Sessão não encontrada" variant="error">
-            Entre novamente para validar seu cadastro profissional.
-          </InlineAlert>
-          <Button asChild className="mt-5 w-full">
-            <Link href="/auth/login?role=psicologo">Ir para login</Link>
-          </Button>
-        </div>
-      </PageFrame>
-    );
+    return <SessionMissingScreen />;
   }
 
   if (searchResult && !searchResult.found) {
@@ -374,18 +503,12 @@ export const PsychologistCfpLogic = () => {
 
   return (
     <PageFrame>
-      <div className="flex flex-1 flex-col">
-        <div className="grid justify-items-center text-center">
-          <div className="grid h-20 w-20 place-items-center rounded-full bg-primary-soft text-primary">
-            <ShieldCheck className="h-9 w-9" aria-hidden="true" />
-          </div>
-
-          <h2 className="mt-8 text-[25px] font-bold leading-tight">Verificação Profissional</h2>
-          <p className="mt-4 max-w-[340px] text-base leading-7 text-muted">
-            Informe seu CPF para buscarmos seus dados de registro automaticamente no Conselho
-            Federal de Psicologia (CFP).
-          </p>
-        </div>
+      <PremiumPanel>
+        <CfpHero
+          description="Informe seu CPF para buscarmos seu registro automaticamente no Conselho Federal de Psicologia. Essa etapa confirma sua identidade profissional antes do WhatsApp."
+          title="Verificação Profissional"
+        />
+        <FlowRail />
 
         {hidrate.isLoading ? (
           <div className="mt-6 flex items-center justify-center gap-2 text-sm text-muted">
@@ -400,37 +523,40 @@ export const PsychologistCfpLogic = () => {
           </InlineAlert>
         ) : null}
 
-        <Form className="mt-9 grid gap-5" {...formProps} onSubmit={hook.handleSubmit(handleSubmit)}>
+        <Form
+          className="mt-8 grid gap-5 rounded-[28px] border border-border bg-surface-muted p-4 md:p-5"
+          {...formProps}
+          onSubmit={hook.handleSubmit(handleSubmit)}
+        >
           {apiError ? (
             <InlineAlert title="Não foi possível consultar" variant="error">
               {apiError}
             </InlineAlert>
           ) : null}
 
-          <div className="flex gap-3 rounded-[14px] border border-border bg-surface px-4 py-4 text-sm leading-6 text-muted shadow-sm">
-            <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+          <div className="flex gap-3 rounded-[20px] border border-primary/20 bg-primary-soft px-4 py-4 text-sm leading-6 text-primary">
+            <Info className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
             <p>
-              Seus dados estão seguros e serão utilizados apenas para fins de validação
-              profissional. Garantimos total privacidade de suas informações de acordo com as normas
-              vigentes.
+              A Lectum consulta apenas o necessário para validar seu registro profissional. Nenhuma
+              confirmação é simulada.
             </p>
           </div>
 
-          <div className="mt-auto pt-10">
-            <Button
-              className="h-14 w-full rounded-full bg-[#0f172a] text-base shadow-lg hover:bg-[#111827]"
-              disabled={search.isPending || currentUser?.role === "paciente"}
-              type="submit"
-            >
-              {search.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-              ) : null}
-              Consultar Registro
-              {!search.isPending ? <ArrowRight className="h-4 w-4" aria-hidden="true" /> : null}
-            </Button>
-          </div>
+          <TrustHighlights />
+
+          <Button
+            className="h-14 w-full rounded-full text-base shadow-[var(--lectum-shadow-soft)]"
+            disabled={search.isPending || currentUser?.role === "paciente"}
+            type="submit"
+          >
+            {search.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : null}
+            Consultar Registro
+            {!search.isPending ? <ArrowRight className="h-4 w-4" aria-hidden="true" /> : null}
+          </Button>
         </Form>
-      </div>
+      </PremiumPanel>
     </PageFrame>
   );
 };
