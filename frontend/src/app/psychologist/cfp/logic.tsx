@@ -5,12 +5,10 @@ import {
   BadgeCheck,
   CheckCircle2,
   FileQuestion,
-  Info,
   Loader2,
   type LucideIcon,
   RotateCcw,
   ShieldCheck,
-  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -65,15 +63,14 @@ const PremiumPanel = ({ children, className }: { children: ReactNode; className?
       className,
     )}
   >
-    <div className="pointer-events-none absolute inset-x-0 top-0 h-36 bg-primary-soft/45" />
     <div className="relative">{children}</div>
   </div>
 );
 
 const CfpHero = ({
   description,
-  eyebrow = "Validação profissional",
-  icon: Icon = ShieldCheck,
+  eyebrow = "Selo de verificado",
+  icon: Icon = BadgeCheck,
   title,
   variant = "primary",
 }: {
@@ -84,7 +81,7 @@ const CfpHero = ({
   variant?: "primary" | "success" | "warning";
 }) => {
   const tone = {
-    primary: "bg-primary-soft text-primary ring-primary-soft/70",
+    primary: "bg-primary text-white ring-primary-soft/70",
     success: "bg-success/10 text-success ring-success/10",
     warning: "bg-warning/10 text-warning ring-warning/10",
   }[variant];
@@ -107,64 +104,6 @@ const CfpHero = ({
     </header>
   );
 };
-
-const FlowRail = () => {
-  const steps = [
-    { label: "Endereço salvo", state: "done" },
-    { label: "CFP seguro", state: "active" },
-    { label: "WhatsApp depois", state: "pending" },
-  ] as const;
-
-  return (
-    <div className="mt-7 grid gap-2 rounded-[24px] border border-border bg-surface-muted p-2 sm:grid-cols-3">
-      {steps.map((step) => (
-        <div
-          className={cn(
-            "flex items-center gap-2 rounded-[18px] px-3 py-3 text-left text-xs font-semibold text-muted",
-            step.state === "active" && "bg-surface text-primary shadow-[var(--lectum-shadow-soft)]",
-          )}
-          key={step.label}
-        >
-          <span
-            className={cn(
-              "grid h-7 w-7 shrink-0 place-items-center rounded-full border border-border bg-surface text-subtle",
-              step.state === "done" && "border-success/20 bg-success/10 text-success",
-              step.state === "active" && "border-primary/20 bg-primary-soft text-primary",
-            )}
-          >
-            {step.state === "done" ? (
-              <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-            ) : step.state === "active" ? (
-              <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-            ) : (
-              <span className="h-2 w-2 rounded-full bg-current" aria-hidden="true" />
-            )}
-          </span>
-          {step.label}
-        </div>
-      ))}
-    </div>
-  );
-};
-
-const TrustHighlights = () => (
-  <div className="grid gap-3 md:grid-cols-2">
-    <div className="flex gap-3 rounded-[20px] border border-border bg-surface px-4 py-4 text-sm leading-6 text-muted">
-      <BadgeCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
-      <div>
-        <p className="font-semibold text-foreground">Consulta oficial CFP</p>
-        <p className="mt-1">Usamos a InfoSimples para consultar a base pública autorizada.</p>
-      </div>
-    </div>
-    <div className="flex gap-3 rounded-[20px] border border-border bg-surface px-4 py-4 text-sm leading-6 text-muted">
-      <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
-      <div>
-        <p className="font-semibold text-foreground">Dados protegidos</p>
-        <p className="mt-1">Seu CPF é usado somente para validar seu registro profissional.</p>
-      </div>
-    </div>
-  </div>
-);
 
 const LoadingScreen = () => (
   <PageFrame>
@@ -505,10 +444,9 @@ export const PsychologistCfpLogic = () => {
     <PageFrame>
       <PremiumPanel>
         <CfpHero
-          description="Informe seu CPF para buscarmos seu registro automaticamente no Conselho Federal de Psicologia. Essa etapa confirma sua identidade profissional antes do WhatsApp."
+          description="Para ativar o selo de verificado no seu perfil, precisamos confirmar que você é um profissional com registro ativo no Conselho Federal de Psicologia"
           title="Verificação Profissional"
         />
-        <FlowRail />
 
         {hidrate.isLoading ? (
           <div className="mt-6 flex items-center justify-center gap-2 text-sm text-muted">
@@ -523,26 +461,12 @@ export const PsychologistCfpLogic = () => {
           </InlineAlert>
         ) : null}
 
-        <Form
-          className="mt-8 grid gap-5 rounded-[28px] border border-border bg-surface-muted p-4 md:p-5"
-          {...formProps}
-          onSubmit={hook.handleSubmit(handleSubmit)}
-        >
+        <Form className="mt-8 grid gap-5" {...formProps} onSubmit={hook.handleSubmit(handleSubmit)}>
           {apiError ? (
             <InlineAlert title="Não foi possível consultar" variant="error">
               {apiError}
             </InlineAlert>
           ) : null}
-
-          <div className="flex gap-3 rounded-[20px] border border-primary/20 bg-primary-soft px-4 py-4 text-sm leading-6 text-primary">
-            <Info className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
-            <p>
-              A Lectum consulta apenas o necessário para validar seu registro profissional. Nenhuma
-              confirmação é simulada.
-            </p>
-          </div>
-
-          <TrustHighlights />
 
           <Button
             className="h-14 w-full rounded-full text-base shadow-[var(--lectum-shadow-soft)]"
