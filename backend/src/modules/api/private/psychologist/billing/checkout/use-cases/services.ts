@@ -224,6 +224,17 @@ const resolveCourtesyNextPath = async ({
     : "/app/professional/billing/address?intent=courtesy-renewal";
 };
 
+const normalizeLast4 = (last4?: string | null) => {
+  const digits = last4?.replace(/\D/g, "").slice(-4) || null;
+
+  return digits && digits.length === 4 ? digits : null;
+};
+
+const resolvePaymentMethodDisplay = (body: ICheckoutDTO["b"]) => ({
+  brand: body.brand?.trim() || null,
+  last4: normalizeLast4(body.last4),
+});
+
 export default async (data: ICheckoutDTO) => {
   if (data.auth.role !== "psicologo") {
     return {
@@ -336,6 +347,7 @@ export default async (data: ICheckoutDTO) => {
   let pendingSubscription: Awaited<
     ReturnType<CheckoutRepository["createPendingSubscription"]>
   > | null = null;
+  const paymentMethodDisplay = resolvePaymentMethodDisplay(data.b);
 
   try {
     if (isCourtesyRenewal) {
@@ -354,10 +366,10 @@ export default async (data: ICheckoutDTO) => {
             status: "inativa",
           },
         );
-        await repository.savePaymentMethodReference(
-          data.auth.id!,
-          gatewayResult.gateway_subscription_id,
-        );
+        await repository.savePaymentMethodReference(data.auth.id!, {
+          gatewaySubscriptionId: gatewayResult.gateway_subscription_id,
+          ...paymentMethodDisplay,
+        });
 
         return {
           status: 200,
@@ -404,10 +416,10 @@ export default async (data: ICheckoutDTO) => {
         : undefined,
     );
     if (isCourtesyRenewal) {
-      await repository.savePaymentMethodReference(
-        data.auth.id!,
-        gatewayResult.gateway_subscription_id,
-      );
+      await repository.savePaymentMethodReference(data.auth.id!, {
+        gatewaySubscriptionId: gatewayResult.gateway_subscription_id,
+        ...paymentMethodDisplay,
+      });
     }
 
     return {

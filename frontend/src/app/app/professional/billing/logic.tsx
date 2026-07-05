@@ -130,6 +130,20 @@ const PaymentMethodSummary = ({
   paymentMethod?: BillingPaymentMethod | null;
 }) => {
   if (isCourtesy) {
+    if (paymentMethod?.gateway_token) {
+      const brand = formatCardBrand(paymentMethod.brand);
+      const cardDescription = paymentMethod.last4
+        ? `${brand} final ${paymentMethod.last4}`
+        : "Cartão cadastrado para cobrança futura.";
+
+      return (
+        <div>
+          <p className="text-sm font-bold text-foreground">Cartão de cobrança cadastrado</p>
+          <p className="mt-1 text-sm leading-6 text-muted">{cardDescription}</p>
+        </div>
+      );
+    }
+
     return (
       <div>
         <p className="text-sm font-bold text-foreground">Adicionar cartão de cobrança</p>
@@ -270,7 +284,11 @@ export const ProfessionalBillingLogic = () => {
       subscription?.gateway === "mercadopago" &&
       subscription?.gateway_subscription_id,
   );
-  const visiblePaymentMethod = hasGatewayBilling ? paymentMethod : null;
+  const visiblePaymentMethod = isCourtesy
+    ? paymentMethod
+    : hasGatewayBilling
+      ? paymentMethod
+      : null;
   const planName = isCourtesy
     ? "Plano Profissional de Cortesia"
     : subscription?.plan?.name || "Plano não encontrado";
@@ -287,7 +305,11 @@ export const ProfessionalBillingLogic = () => {
     : isCourtesy
       ? COURTESY_CARD_HREF
       : null;
-  const paymentActionLabel = isCourtesy ? "Adicionar" : "Alterar";
+  const paymentActionLabel = isCourtesy
+    ? visiblePaymentMethod?.gateway_token
+      ? "Alterar"
+      : "Adicionar"
+    : "Alterar";
 
   if (
     !subscriptionQuery.isLoading &&

@@ -23,7 +23,25 @@ type CheckoutProfile = Pick<
 
 type SubscriptionStatus = "inativa" | "ativa" | "inadimplente" | "cancelada";
 
+type PaymentMethodDisplay = {
+  gatewaySubscriptionId: string;
+  brand?: string | null;
+  last4?: string | null;
+};
+
 const hasText = (value?: string | null) => Boolean(value?.trim());
+
+const normalizeDisplayText = (value?: string | null) => {
+  const normalized = value?.trim();
+
+  return normalized || null;
+};
+
+const normalizeLast4 = (last4?: string | null) => {
+  const digits = last4?.replace(/\D/g, "").slice(-4) || null;
+
+  return digits && digits.length === 4 ? digits : null;
+};
 
 const hasCompleteBillingAddress = (address?: billing_address | null) =>
   Boolean(
@@ -222,7 +240,7 @@ export class CheckoutRepository implements ICheckoutRepository {
 
   async savePaymentMethodReference(
     userId: string,
-    gatewaySubscriptionId: string,
+    data: PaymentMethodDisplay,
   ): Promise<payment_method> {
     const current = await this.paymentMethodRepository.findFirst({
       where: {
@@ -236,9 +254,9 @@ export class CheckoutRepository implements ICheckoutRepository {
     });
 
     const payload = {
-      gateway_token: gatewaySubscriptionId,
-      brand: null,
-      last4: null,
+      gateway_token: data.gatewaySubscriptionId,
+      brand: normalizeDisplayText(data.brand),
+      last4: normalizeLast4(data.last4),
       exp_month: null,
       exp_year: null,
     };

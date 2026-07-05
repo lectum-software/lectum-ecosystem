@@ -16,6 +16,23 @@ export const requestSchema: IValidatorRequest = {
       values: ["credit_card", "debit_card", "prepaid_card"],
     },
     {
+      key: "brand",
+      coerse: "string",
+      method: "string",
+      optional: true,
+      nullable: true,
+      max: 64,
+    },
+    {
+      key: "last4",
+      coerse: "string",
+      method: "string",
+      optional: true,
+      nullable: true,
+      min: 4,
+      max: 4,
+    },
+    {
       key: "intent",
       coerse: "string",
       method: "enumeric",

@@ -95,9 +95,11 @@ const AUTO_SYNC_MAX_ATTEMPTS = 20;
 
 type CardPaymentFormData = {
   token?: string;
+  payment_method_id?: string;
 };
 
 type CardPaymentAdditionalData = {
+  lastFourDigits?: string;
   paymentTypeId?: string;
 };
 
@@ -254,6 +256,8 @@ export const ProfessionalBillingCheckoutLogic = () => {
     async (formData: CardPaymentFormData, additionalData?: CardPaymentAdditionalData) => {
       const token = formData.token;
       const paymentTypeId = additionalData?.paymentTypeId;
+      const brand = formData.payment_method_id || null;
+      const last4 = additionalData?.lastFourDigits || null;
 
       if (!token) {
         toast.error("Não foi possível tokenizar o cartão. Tente novamente.");
@@ -272,7 +276,9 @@ export const ProfessionalBillingCheckoutLogic = () => {
       try {
         await checkoutMutateAsyncRef.current({
           card_token: token,
+          brand,
           ...(isCourtesyRenewal ? { intent: "courtesy_renewal" as const } : {}),
+          last4,
           payment_type_id: CREDIT_CARD_PAYMENT_TYPE,
         });
       } catch {

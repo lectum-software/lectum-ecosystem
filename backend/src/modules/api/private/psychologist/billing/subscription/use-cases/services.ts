@@ -31,14 +31,24 @@ export const showSubscription = async (data: ISubscriptionDTO) => {
   }
 
   const subscription = await repository.showSubscription(profile.id!);
+  const scheduledGatewaySubscription =
+    subscription?.source === "admin_grant" &&
+    subscription.status === "ativa" &&
+    subscription.plan?.slug === "profissional"
+      ? await repository.findScheduledGatewaySubscription(profile.id!)
+      : null;
+  const paymentMethodSubscription = scheduledGatewaySubscription ?? subscription;
   const shouldExposePaymentMethod = Boolean(
-    subscription?.source === "mercadopago" &&
-      subscription.gateway === "mercadopago" &&
-      subscription.gateway_subscription_id &&
-      subscription.status !== "cancelada",
+    paymentMethodSubscription?.source === "mercadopago" &&
+      paymentMethodSubscription.gateway === "mercadopago" &&
+      paymentMethodSubscription.gateway_subscription_id &&
+      paymentMethodSubscription.status !== "cancelada",
   );
+  const paymentMethodGatewayToken = paymentMethodSubscription?.gateway_subscription_id ?? null;
   const [paymentMethod, paymentHistory] = await Promise.all([
-    shouldExposePaymentMethod ? repository.showPaymentMethod(data.auth.id!) : Promise.resolve(null),
+    shouldExposePaymentMethod
+      ? repository.showPaymentMethod(data.auth.id!, paymentMethodGatewayToken)
+      : Promise.resolve(null),
     repository.showPaymentHistory(subscription),
   ]);
 

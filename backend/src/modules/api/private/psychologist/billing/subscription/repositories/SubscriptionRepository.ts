@@ -272,6 +272,36 @@ export class SubscriptionRepository implements ISubscriptionRepository {
     });
   }
 
+  async findScheduledGatewaySubscription(
+    psychologistId: string,
+  ): Promise<professional_subscription | null> {
+    return this.subscriptionRepository.findFirst({
+      where: {
+        psychologist_id: psychologistId,
+        deleted: false,
+        source: "mercadopago",
+        gateway: "mercadopago",
+        gateway_subscription_id: {
+          not: null,
+        },
+        status: {
+          in: ["inativa", "inadimplente"],
+        },
+        plan: {
+          active: true,
+          deleted: false,
+          slug: "profissional",
+        },
+      },
+      include: {
+        plan: true,
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+    });
+  }
+
   async cancelSubscription(data: {
     subscriptionId: string;
     gatewaySubscriptionId: string;
@@ -292,11 +322,15 @@ export class SubscriptionRepository implements ISubscriptionRepository {
     });
   }
 
-  async showPaymentMethod(userId: string): Promise<payment_method | null> {
+  async showPaymentMethod(
+    userId: string,
+    gatewayToken?: string | null,
+  ): Promise<payment_method | null> {
     return this.paymentMethodRepository.findFirst({
       where: {
         user_id: userId,
         gateway: "mercadopago",
+        ...(gatewayToken ? { gateway_token: gatewayToken } : {}),
         deleted: false,
       },
       orderBy: {

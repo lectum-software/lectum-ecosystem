@@ -19,6 +19,12 @@ type CheckoutProfile = Pick<
 
 type SubscriptionStatus = "inativa" | "ativa" | "inadimplente" | "cancelada";
 
+type PaymentMethodDisplay = {
+  gatewaySubscriptionId: string;
+  brand?: string | null;
+  last4?: string | null;
+};
+
 export interface ICheckoutRepository {
   cancelSubscription(subscriptionId: string): Promise<void>;
   createPendingSubscription(
@@ -34,10 +40,7 @@ export interface ICheckoutRepository {
     psychologistId: string,
   ): Promise<professional_subscription | null>;
   hasBillingAddress(data: { profile: CheckoutProfile; userId: string }): Promise<boolean>;
-  savePaymentMethodReference(
-    userId: string,
-    gatewaySubscriptionId: string,
-  ): Promise<payment_method>;
+  savePaymentMethodReference(userId: string, data: PaymentMethodDisplay): Promise<payment_method>;
   setGatewayPlanId(planId: string, gatewayPlanId: string): Promise<subscription_plan>;
   setGatewaySubscriptionId(
     subscriptionId: string,

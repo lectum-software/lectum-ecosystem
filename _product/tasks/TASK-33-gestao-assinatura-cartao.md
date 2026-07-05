@@ -405,3 +405,34 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - Browser local mobile-first via Chrome headless/CDP em `http://localhost:3000/app/professional/billing/checkout?intent=courtesy-renewal`, com sessão real da conta em cortesia, confirmou o texto **Cadastrar cartão** no botão do Brick e ausência de **Pagar** na tela.
+
+## Ajuste em 2026-07-04: exibição do cartão futuro cadastrado
+
+- Pedido direto de produto: após cadastrar o cartão da cortesia, a tela **Minha Assinatura** deve informar o cartão cadastrado e transformar a ação **Adicionar** em **Alterar**.
+- O checkout de cortesia passou a enviar ao backend os dados seguros de exibição fornecidos pelo CardPayment Brick (`payment_method_id` como `brand` e `lastFourDigits` como `last4`), além do token temporário já usado pelo gateway.
+- O backend persiste `brand`/`last4` somente como dados de exibição em `payment_method`, sempre vinculados ao `gateway_subscription_id` da assinatura futura; PAN/CVV continuam fora do banco.
+- O endpoint `GET /api/private/psychologist/billing/subscription` continua retornando a cortesia ativa como assinatura principal, mas agora também procura uma assinatura futura real `mercadopago` (`inativa`/`inadimplente`) para expor o `payment_method` correspondente ao cartão pós-cortesia.
+- A rota `/app/professional/billing` mostra **Cartão de cobrança cadastrado** e CTA **Alterar** quando esse método futuro existir; se o cartão foi cadastrado antes de haver `brand`/`last4`, mostra **Cartão cadastrado para cobrança futura** sem inventar final/bandeira.
+- Consulta real do banco para `contato.tuliorezende@gmail.com` durante a validação confirmou que, neste ambiente, ainda não há assinatura futura gateway nem `payment_method` vinculado; por isso não foi criado backfill, seed ou dado artificial para forçar o estado **Alterar**.
+- Referência visual local consultada: `_product/proto/Minhas Assinatura - Psicólogo.jpg`; Builder/Quick Copy não está exposto como ferramenta direta neste ambiente.
+- ADR atualizado: `adrs/0215-cartao-futuro-cortesia-antes-endereco.md`.
+- Nenhum mock, seed, endpoint simulado, package novo ou alteração de schema foi criado.
+
+### Critérios de aceite do ajuste
+
+- [x] O cartão futuro cadastrado é localizado pela assinatura gateway futura, sem substituir a assinatura de cortesia ativa como plano principal.
+- [x] Quando houver cartão futuro, a UI muda o bloco para cartão cadastrado e o CTA para **Alterar**.
+- [x] Quando não houver cartão futuro real, a UI mantém **Adicionar** sem criar dado artificial.
+- [x] O checkout de cortesia persiste apenas dados seguros de exibição (`brand`/`last4`) e nunca PAN/CVV.
+- [x] Nenhum mock, seed, endpoint simulado, package novo ou alteração de schema foi criado.
+
+### Validação do ajuste de exibição do cartão futuro
+
+- `pnpm --dir backend exec biome check --write src/modules/api/private/psychologist/billing/checkout/DTOs/ICheckoutDTO.ts src/modules/api/private/psychologist/billing/checkout/validator/index.ts src/modules/api/private/psychologist/billing/checkout/repositories/CheckoutRepository.ts src/modules/api/private/psychologist/billing/checkout/repositories/interfaces/ICheckoutRepository.ts src/modules/api/private/psychologist/billing/checkout/use-cases/services.ts src/modules/api/private/psychologist/billing/subscription/repositories/SubscriptionRepository.ts src/modules/api/private/psychologist/billing/subscription/repositories/interfaces/ISubscriptionRepository.ts src/modules/api/private/psychologist/billing/subscription/use-cases/services.ts locales/pt/translation.json`
+- `pnpm --dir frontend exec biome check --write src/api/generator/types/billing.ts src/app/app/professional/billing/logic.tsx src/app/app/professional/billing/checkout/logic.tsx`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local mobile-first via Chrome headless/CDP em `http://localhost:3115/app/professional/billing`, com frontend apontando para backend local `http://localhost:3121` e sessão real da conta em cortesia, confirmou **Minha Assinatura**, **Plano Profissional de Cortesia**, **Adicionar cartão de cobrança**, **Cadastre um cartão para a cobrança quando a cortesia chegar ao fim.**, CTA **Adicionar** e ausência de **Histórico de pagamentos** e da faixa azul de cortesia. O estado **Alterar** não foi forçado porque a base real não possuía cartão futuro cadastrado.

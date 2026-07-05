@@ -24,6 +24,8 @@ Referências consultadas:
 - Após o cartão ser cadastrado, o backend retorna `next_path` calculado por dados reais: se houver `billing_address` completo ou endereço profissional completo no perfil, voltar para `/app/professional/billing`; caso contrário, abrir `/app/professional/billing/address?intent=courtesy-renewal`.
 - O frontend não redireciona cortesia ativa direto para endereço quando está em `intent=courtesy-renewal`; ele renderiza o CardPayment Brick para inserir o cartão primeiro.
 - O CardPayment Brick recebe `customization.visual.texts.formSubmit="Cadastrar cartão"` no fluxo de cortesia, deixando claro que não há cobrança imediata.
+- O checkout de cortesia também envia os dados de exibição permitidos pelo Brick (`payment_method_id` como bandeira e `lastFourDigits` como últimos quatro dígitos) para persistir apenas `brand`/`last4` junto ao `payment_method`.
+- A tela **Minha Assinatura** continua mostrando a assinatura de cortesia como `admin_grant`, mas passa a consultar a assinatura futura `mercadopago` (`inativa`/`inadimplente`) para localizar o cartão cadastrado para cobrança pós-cortesia; quando encontrado, o bloco muda de **Adicionar cartão de cobrança** para **Cartão de cobrança cadastrado** e o CTA muda de **Adicionar** para **Alterar**.
 - Nenhum mock, endpoint simulado, package novo ou alteração de schema foi criado.
 
 ## Consequências
@@ -31,4 +33,5 @@ Referências consultadas:
 - Cortesias mantêm benefícios ativos enquanto a assinatura futura do gateway permanece `inativa` localmente.
 - Webhooks/sync que receberem assinatura autorizada com `start_date` futura preservam o status local `inativa`; quando a data chegar, a sync pode ativar e calcular o próximo período normalmente.
 - A página de endereço só aparece depois da tokenização/cadastro real do cartão e apenas quando os dados de endereço não existem.
-- Como o gateway não retorna metadados completos do cartão no checkout de assinatura, a referência salva em `payment_method` usa o identificador da assinatura gateway e não PAN/CVV.
+- A referência salva em `payment_method` usa o identificador da assinatura gateway e, quando o Brick fornecer, apenas dados seguros de exibição (`brand`/`last4`), nunca PAN/CVV.
+- Cartões cadastrados antes desta decisão podem aparecer como **Cartão cadastrado para cobrança futura** sem bandeira/final, porque não houve backfill artificial de dados de cartão.
