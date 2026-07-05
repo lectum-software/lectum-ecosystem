@@ -130,7 +130,7 @@ const PaymentMethodSummary = ({
   paymentMethod?: BillingPaymentMethod | null;
 }) => {
   if (isCourtesy) {
-    if (paymentMethod?.gateway_token) {
+    if (paymentMethod) {
       const brand = formatCardBrand(paymentMethod.brand);
       const cardDescription = paymentMethod.last4
         ? `${brand} final ${paymentMethod.last4}`
@@ -306,7 +306,7 @@ export const ProfessionalBillingLogic = () => {
       ? COURTESY_CARD_HREF
       : null;
   const paymentActionLabel = isCourtesy
-    ? visiblePaymentMethod?.gateway_token
+    ? visiblePaymentMethod
       ? "Alterar"
       : "Adicionar"
     : "Alterar";

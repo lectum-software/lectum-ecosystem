@@ -436,3 +436,29 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser local mobile-first via Chrome headless/CDP em `http://localhost:3115/app/professional/billing`, com frontend apontando para backend local `http://localhost:3121` e sessão real da conta em cortesia, confirmou **Minha Assinatura**, **Plano Profissional de Cortesia**, **Adicionar cartão de cobrança**, **Cadastre um cartão para a cobrança quando a cortesia chegar ao fim.**, CTA **Adicionar** e ausência de **Histórico de pagamentos** e da faixa azul de cortesia. O estado **Alterar** não foi forçado porque a base real não possuía cartão futuro cadastrado.
+
+## Ajuste em 2026-07-05: cartão de teste sem `gateway_token` exposto
+
+- Pedido direto de produto: após cadastrar cartão de teste Mercado Pago, a tela **Minha Assinatura** ainda mostrava **Adicionar cartão de cobrança**.
+- Investigação real confirmou que o banco já possuía assinatura futura `mercadopago` `inativa` e `payment_method` com `brand="amex"` e `last4="6885"` para a conta `contato.tuliorezende@gmail.com`.
+- O endpoint `GET /api/private/psychologist/billing/subscription` já retornava `payment_method` com bandeira/final, mas não expunha `gateway_token` no payload consumido pelo frontend; a UI dependia indevidamente de `paymentMethod.gateway_token` para considerar o cartão cadastrado.
+- A rota `/app/professional/billing` agora usa a presença do objeto `payment_method` como evidência de cartão futuro cadastrado, porque o backend já filtrou esse método pela assinatura gateway futura antes de responder.
+- Resultado esperado no teste: exibir **Cartão de cobrança cadastrado**, **Amex final 6885** e CTA **Alterar**.
+- ADR atualizado: `adrs/0215-cartao-futuro-cortesia-antes-endereco.md`.
+- Nenhum mock, seed, endpoint simulado, package novo ou alteração de schema foi criado.
+
+### Critérios de aceite do ajuste
+
+- [x] A UI não depende de `gateway_token` exposto para reconhecer cartão futuro.
+- [x] Quando o endpoint retorna `payment_method`, a cortesia mostra cartão cadastrado e CTA **Alterar**.
+- [x] O backend continua sendo a fronteira que decide se o `payment_method` é seguro/pertinente para a assinatura futura.
+
+### Validação do ajuste de cartão de teste
+
+- Consulta real de banco confirmou assinatura futura `mercadopago` `inativa` e `payment_method` com `brand`/`last4`.
+- Chamada real ao endpoint via ngrok confirmou `payment_method_present=true`, `brand="amex"` e `last4="6885"`.
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/billing/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local mobile-first via Chrome headless/CDP em `http://localhost:3115/app/professional/billing`, com frontend apontando para backend local `http://localhost:3121` e sessão real da conta em cortesia, confirmou **Plano Profissional de Cortesia**, **Amex final 6885**, CTA **Alterar**, ausência de CTA **Adicionar**, ausência de **Histórico de pagamentos** e ausência da faixa azul de cortesia.
