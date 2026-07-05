@@ -115,3 +115,4 @@ Formato recomendado:
 - [ADR-0204 - Upgrade direto para checkout profissional](0204-upgrade-direto-checkout-profissional.md) - Accepted
 - [ADR-0205 - Benefícios da assinatura com mídia nas comunidades e sem suporte prioritário](0205-beneficios-assinatura-comunidades-midia-sem-suporte-prioritario.md) - Accepted
 - [ADR-0212 - Copy generica de pagamento para usuarios](0212-copy-generica-gateway-usuario.md) - Accepted
+- [ADR-0216 - Login preserva query string no retorno para rotas privadas](0216-login-preserva-query-callback-privado.md) - Accepted

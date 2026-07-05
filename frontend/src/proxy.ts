@@ -61,6 +61,7 @@ const hasPendingEmailConfirmation = (req: NextRequest) => {
 
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const currentPathWithSearch = `${pathname}${req.nextUrl.search}`;
   const token = req.cookies.get(TOKEN_COOKIE_NAME);
   const pendingEmailConfirmation = Boolean(token) && hasPendingEmailConfirmation(req);
 
@@ -96,13 +97,13 @@ export function proxy(req: NextRequest) {
 
   if (!token && isAuthRequiredRoute) {
     const loginUrl = new URL("/auth/login", req.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
+    loginUrl.searchParams.set("callbackUrl", currentPathWithSearch);
     return NextResponse.redirect(loginUrl);
   }
 
   if (!token && isPrivateRoute && !isPublicRoute && !isInlineAuthPromptRoute) {
     const loginUrl = new URL("/auth/login", req.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
+    loginUrl.searchParams.set("callbackUrl", currentPathWithSearch);
     return NextResponse.redirect(loginUrl);
   }
 
