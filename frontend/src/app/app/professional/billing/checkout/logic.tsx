@@ -242,9 +242,12 @@ export const ProfessionalBillingCheckoutLogic = () => {
         style: {
           theme: "default",
         },
+        texts: {
+          formSubmit: isCourtesyRenewal ? "Cadastrar cartão" : "Pagar",
+        },
       },
     }),
-    [],
+    [isCourtesyRenewal],
   );
 
   const handleSubmit = useCallback(

@@ -23,6 +23,7 @@ Referências consultadas:
 - O backend cria ou atualiza uma assinatura real no gateway com cartão tokenizado e `startDate` igual à expiração da cortesia; localmente, essa assinatura futura fica `inativa` até o início efetivo.
 - Após o cartão ser cadastrado, o backend retorna `next_path` calculado por dados reais: se houver `billing_address` completo ou endereço profissional completo no perfil, voltar para `/app/professional/billing`; caso contrário, abrir `/app/professional/billing/address?intent=courtesy-renewal`.
 - O frontend não redireciona cortesia ativa direto para endereço quando está em `intent=courtesy-renewal`; ele renderiza o CardPayment Brick para inserir o cartão primeiro.
+- O CardPayment Brick recebe `customization.visual.texts.formSubmit="Cadastrar cartão"` no fluxo de cortesia, deixando claro que não há cobrança imediata.
 - Nenhum mock, endpoint simulado, package novo ou alteração de schema foi criado.
 
 ## Consequências

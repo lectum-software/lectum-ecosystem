@@ -383,3 +383,25 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser local mobile-first via Chrome headless/CDP em `http://localhost:3000/app/professional/billing/checkout?intent=courtesy-renewal`, com sessão real da conta em cortesia, confirmou permanência na rota de checkout, título **Adicionar cartão de cobrança**, seção **Cartão de crédito**, campos do CardPayment Brick e ausência de navegação para `/billing/address` antes do cartão.
+
+## Ajuste de copy em 2026-07-04: botão do CardPayment na cortesia
+
+- Pedido direto de produto: trocar o texto do botão do CardPayment Brick no checkout de cortesia de **Pagar** para **Cadastrar cartão**.
+- A rota `/app/professional/billing/checkout?intent=courtesy-renewal` agora envia `customization.visual.texts.formSubmit="Cadastrar cartão"` ao Brick, preservando a submissão/tokenização real do cartão.
+- O checkout pago padrão mantém o texto **Pagar**.
+- Referência técnica consultada: documentação oficial Mercado Pago Card Payment Brick - Change texts (`customization.visual.texts.formSubmit`).
+- ADR atualizado: `adrs/0215-cartao-futuro-cortesia-antes-endereco.md`.
+- Nenhum mock, seed, endpoint simulado, package novo ou alteração de schema foi criado.
+
+### Critérios de aceite do ajuste
+
+- [x] No checkout de cortesia, o botão final do CardPayment Brick exibe **Cadastrar cartão**.
+- [x] O checkout pago padrão não teve regra de pagamento alterada.
+- [x] A alteração usa a customização suportada pelo Brick, sem manipulação manual de DOM.
+
+### Validação do ajuste de copy do botão
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/billing/checkout/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Browser local mobile-first via Chrome headless/CDP em `http://localhost:3000/app/professional/billing/checkout?intent=courtesy-renewal`, com sessão real da conta em cortesia, confirmou o texto **Cadastrar cartão** no botão do Brick e ausência de **Pagar** na tela.
