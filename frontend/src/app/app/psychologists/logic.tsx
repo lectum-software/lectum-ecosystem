@@ -1048,6 +1048,7 @@ export const PsychologistsLogic = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const conversion = useProgressiveConversion();
+  const currentUserId = useAppSelector((state) => state.user?.id);
   const currentUserRole = useAppSelector((state) => state.user?.role);
   const shouldShowPatientDiscoveryActionTips = currentUserRole === "paciente";
   const searchParamsString = searchParams.toString();
@@ -2689,6 +2690,8 @@ export const PsychologistsLogic = () => {
 
       const psychologistId = psychologist.id;
 
+      if (currentUserId && currentUserId === psychologistId) return;
+
       if (!conversion.isAuthenticated) {
         conversion.requestConversion("trigger_favorito", {
           intent: {
@@ -2733,6 +2736,7 @@ export const PsychologistsLogic = () => {
       conversion,
       favoriteOverrides,
       favoritePsychologist,
+      currentUserId,
       isMobileSearchFocusMode,
       unfavoritePsychologist,
     ],
@@ -2748,13 +2752,14 @@ export const PsychologistsLogic = () => {
     );
     const psychologistId = String(intent?.payload?.psychologistId ?? "");
     if (!psychologistId) return;
+    if (currentUserId && currentUserId === psychologistId) return;
 
     const psychologist = psychologists.find((item) => item.id === psychologistId);
     if (!psychologist) return;
     if (favoriteOverrides[psychologistId] ?? psychologist.favorited) return;
 
     window.setTimeout(() => toggleFavorite(psychologist), 0);
-  }, [conversion, favoriteOverrides, psychologists, toggleFavorite]);
+  }, [conversion, currentUserId, favoriteOverrides, psychologists, toggleFavorite]);
 
   const favoritePendingId =
     favoritePsychologist.isPending && typeof favoritePsychologist.variables === "string"
@@ -3360,13 +3365,18 @@ export const PsychologistsLogic = () => {
     ? "psychologists-ui-inert pointer-events-none opacity-0"
     : "opacity-100";
   const desktopActionPsychologist = featuredPsychologist;
-  const desktopActionIsFavorited = desktopActionPsychologist
-    ? (favoriteOverrides[desktopActionPsychologist.id] ??
-      Boolean(desktopActionPsychologist.favorited))
-    : false;
-  const desktopActionIsFavoritePending = desktopActionPsychologist
-    ? favoritePendingId === desktopActionPsychologist.id
-    : false;
+  const desktopActionIsOwnProfile = Boolean(
+    currentUserId && desktopActionPsychologist?.id === currentUserId,
+  );
+  const desktopActionIsFavorited =
+    desktopActionPsychologist && !desktopActionIsOwnProfile
+      ? (favoriteOverrides[desktopActionPsychologist.id] ??
+        Boolean(desktopActionPsychologist.favorited))
+      : false;
+  const desktopActionIsFavoritePending =
+    desktopActionPsychologist && !desktopActionIsOwnProfile
+      ? favoritePendingId === desktopActionPsychologist.id
+      : false;
   const shouldRenderDesktopActionRail =
     metrics.isDesktopLayout && shouldRenderGlobalControls && Boolean(desktopActionPsychologist);
   const shouldRenderDesktopNavigationRail =
@@ -3961,12 +3971,24 @@ export const PsychologistsLogic = () => {
                   const slideBio = psychologist.headline?.trim() || "";
                   const slideNameParts = splitNameForBadge(psychologist.name);
                   const slideBenefitChips = buildBenefitChips(psychologist);
-                  const slideIsFavorited =
-                    favoriteOverrides[psychologist.id] ?? Boolean(psychologist.favorited);
-                  const slideIsFavoritePending = favoritePendingId === psychologist.id;
+                  const slideIsOwnProfile = Boolean(
+                    currentUserId && currentUserId === psychologist.id,
+                  );
+                  const slideIsFavorited = slideIsOwnProfile
+                    ? false
+                    : (favoriteOverrides[psychologist.id] ?? Boolean(psychologist.favorited));
+                  const slideFavoriteLabel = slideIsOwnProfile
+                    ? "Você não pode favoritar o próprio perfil"
+                    : slideIsFavorited
+                      ? `Remover ${psychologist.name} dos favoritos`
+                      : `Favoritar ${psychologist.name}`;
+                  const slideIsFavoritePending =
+                    !slideIsOwnProfile && favoritePendingId === psychologist.id;
                   const slideActionColumnTranslateY = isActiveSlide ? actionColumnTranslateY : 0;
                   const slideShouldHideChrome =
                     slideIsUiHidden || (metrics.isDesktopLayout && !isActiveSlide);
+                  const slideFavoriteDisabled = slideShouldHideChrome || slideIsOwnProfile;
+                  const slideFavoriteTabIndex = slideFavoriteDisabled ? -1 : undefined;
                   const slideUiVisibilityClass = slideShouldHideChrome
                     ? "psychologists-ui-inert pointer-events-none opacity-0"
                     : "opacity-100";
@@ -4672,23 +4694,24 @@ export const PsychologistsLogic = () => {
 
                                 <div className="grid justify-items-center text-center">
                                   <button
-                                    aria-label={`Favoritar ${psychologist.name}`}
+                                    aria-label={slideFavoriteLabel}
                                     aria-busy={slideIsFavoritePending}
                                     aria-pressed={slideIsFavorited}
                                     className={cn(
-                                      "relative z-50 grid cursor-pointer place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10 active:scale-95",
+                                      "relative z-50 grid place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-transparent disabled:active:scale-100",
                                       slideIsFavorited ? "text-[#ef4444]" : "text-white",
                                     )}
-                                    disabled={slideShouldHideChrome}
+                                    disabled={slideFavoriteDisabled}
                                     onClick={(event) => {
                                       event.stopPropagation();
                                       toggleFavorite(psychologist);
                                     }}
-                                    tabIndex={slideShouldHideChrome ? -1 : undefined}
+                                    tabIndex={slideFavoriteTabIndex}
                                     style={{
                                       width: `${metrics.actionHitSize}px`,
                                       height: `${metrics.actionHitSize}px`,
                                     }}
+                                    title={slideIsOwnProfile ? slideFavoriteLabel : undefined}
                                     type="button"
                                   >
                                     <Heart
@@ -5132,16 +5155,29 @@ export const PsychologistsLogic = () => {
 
                   <div className="grid w-[68px] justify-items-center gap-1 text-center">
                     <button
-                      aria-label={`Favoritar ${desktopActionPsychologist.name}`}
+                      aria-label={
+                        desktopActionIsOwnProfile
+                          ? "Você não pode favoritar o próprio perfil"
+                          : desktopActionIsFavorited
+                            ? `Remover ${desktopActionPsychologist.name} dos favoritos`
+                            : `Favoritar ${desktopActionPsychologist.name}`
+                      }
                       aria-busy={desktopActionIsFavoritePending}
                       aria-pressed={desktopActionIsFavorited}
-                      className="grid h-10 w-10 place-items-center rounded-full border border-[#e2e8f0] bg-white text-[#334155] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
-                      disabled={isDesktopActionRailHidden}
+                      className="grid h-10 w-10 place-items-center rounded-full border border-[#e2e8f0] bg-white text-[#334155] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:scale-100 disabled:hover:bg-white disabled:active:scale-100"
+                      disabled={isDesktopActionRailHidden || desktopActionIsOwnProfile}
                       onClick={(event) => {
                         event.stopPropagation();
                         toggleFavorite(desktopActionPsychologist);
                       }}
-                      tabIndex={isDesktopActionRailHidden ? -1 : undefined}
+                      tabIndex={
+                        isDesktopActionRailHidden || desktopActionIsOwnProfile ? -1 : undefined
+                      }
+                      title={
+                        desktopActionIsOwnProfile
+                          ? "Você não pode favoritar o próprio perfil"
+                          : undefined
+                      }
                       type="button"
                     >
                       <Heart

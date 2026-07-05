@@ -428,6 +428,9 @@ export class IndexRepository implements IIndexRepository {
     const viewerRelationWhere = viewerId
       ? {
           user_id: viewerId,
+          psychologist_id: {
+            not: viewerId,
+          },
           deleted: false,
         }
       : {

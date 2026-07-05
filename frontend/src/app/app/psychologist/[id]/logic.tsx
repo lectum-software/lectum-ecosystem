@@ -744,6 +744,7 @@ const ProfileHeroMedia = ({ profile }: { profile: DirectoryPsychologistProfile }
 const ProfileHero = ({
   canFavorite,
   canEditProfile,
+  favoriteDisabledReason,
   favoritePending,
   onBack,
   onEditProfile,
@@ -753,6 +754,7 @@ const ProfileHero = ({
 }: {
   canFavorite: boolean;
   canEditProfile: boolean;
+  favoriteDisabledReason?: string | null;
   favoritePending: boolean;
   onBack: () => void;
   onEditProfile: () => void;
@@ -766,6 +768,10 @@ const ProfileHero = ({
   const formattedCrp = formatCrpLabel(profile.crp);
   const experienceLabel =
     profile.show_experience_tag !== false ? formatExperienceLabel(profile.formation_years) : null;
+  const displayedFavorited = canFavorite && profile.favorited;
+  const favoriteButtonLabel =
+    favoriteDisabledReason ??
+    (displayedFavorited ? `Remover ${profile.name} dos favoritos` : `Favoritar ${profile.name}`);
 
   return (
     <header
@@ -814,31 +820,23 @@ const ProfileHero = ({
           <ProfileAvatar profile={profile} />
 
           <button
-            aria-label={
-              !canFavorite
-                ? "Favoritos disponíveis apenas para usuários autenticados"
-                : profile.favorited
-                  ? `Remover ${profile.name} dos favoritos`
-                  : `Favoritar ${profile.name}`
-            }
-            aria-pressed={profile.favorited}
+            aria-label={favoriteButtonLabel}
+            aria-pressed={displayedFavorited}
             className={cn(
               "mt-10 grid h-10 w-10 shrink-0 place-items-center rounded-full border text-[#64748B] shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
-              profile.favorited
+              displayedFavorited
                 ? "border-[#fecaca] bg-[#fef2f2] text-[#ef4444]"
                 : "border-[#DBEAFE] bg-white text-[#64748B] hover:border-primary/40 hover:bg-primary-soft hover:text-primary dark:border-border dark:bg-surface-muted",
             )}
             disabled={favoritePending || !canFavorite}
             onClick={onToggleFavorite}
-            title={
-              !canFavorite ? "Favoritos disponíveis apenas para usuários autenticados" : undefined
-            }
+            title={!canFavorite ? favoriteButtonLabel : undefined}
             type="button"
           >
             <Heart
               className={cn(
                 "h-5 w-5",
-                profile.favorited ? "fill-[#ef4444] text-[#ef4444]" : "fill-none",
+                displayedFavorited ? "fill-[#ef4444] text-[#ef4444]" : "fill-none",
               )}
               aria-hidden="true"
             />
@@ -2198,7 +2196,6 @@ export const PsychologistProfileLogic = () => {
   const trackedProfileViewRef = useRef<string | null>(null);
   const currentUser = useAppSelector((state) => state.user);
   const conversion = useProgressiveConversion();
-  const canFavoritePsychologists = conversion.isAuthenticated;
   const id = params.id;
   const canInspectInactiveOwnProfile = currentUser?.role === "psicologo" && currentUser.id === id;
   const ownFreeProfile = usePsychologistFreeProfile({
@@ -2346,6 +2343,8 @@ export const PsychologistProfileLogic = () => {
 
   const toggleFavorite = () => {
     if (!profile) return;
+    if (currentUser?.id && currentUser.id === profile.id) return;
+
     if (!conversion.isAuthenticated) {
       conversion.requestConversion("trigger_favorito", {
         intent: {
@@ -2357,7 +2356,6 @@ export const PsychologistProfileLogic = () => {
       });
       return;
     }
-    if (!canFavoritePsychologists) return;
 
     if (profile.favorited) {
       unfavoritePsychologist.mutate(profile.id);
@@ -2378,9 +2376,10 @@ export const PsychologistProfileLogic = () => {
     const psychologistId = String(intent?.payload?.psychologistId ?? "");
 
     if (!psychologistId || psychologistId !== profile.id || profile.favorited) return;
+    if (currentUser?.id && currentUser.id === profile.id) return;
 
     favoritePsychologist.mutate(profile.id);
-  }, [conversion, favoritePsychologist, profile]);
+  }, [conversion, currentUser?.id, favoritePsychologist, profile]);
 
   const shareProfile = async () => {
     if (typeof window === "undefined") return;
@@ -2479,6 +2478,10 @@ export const PsychologistProfileLogic = () => {
   const canEditProfile = currentUser?.role === "psicologo" && isViewingOwnProfile;
   const canInteractWithPosts = Boolean(currentUser?.id);
   const canReviewProfile = !isViewingOwnProfile;
+  const favoriteDisabledReason = isViewingOwnProfile
+    ? "Você não pode favoritar o próprio perfil"
+    : null;
+  const canFavoriteProfile = !favoriteDisabledReason;
 
   const emptySummary = useMemo<DirectoryReviewSummary>(
     () => ({
@@ -2537,8 +2540,9 @@ export const PsychologistProfileLogic = () => {
             profile ? (
               <>
                 <ProfileHero
-                  canFavorite
+                  canFavorite={canFavoriteProfile}
                   canEditProfile={canEditProfile}
+                  favoriteDisabledReason={favoriteDisabledReason}
                   favoritePending={favoritePendingId === profile.id}
                   onBack={goBack}
                   onEditProfile={goToProfileEdit}

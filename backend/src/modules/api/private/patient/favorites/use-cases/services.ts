@@ -19,6 +19,14 @@ export const index = async (data: IFavoriteIndexDTO) => {
 export const action = async (data: IFavoriteActionDTO, actionType: FavoriteAction) => {
   const repository = new FavoriteRepository();
   const psychologistId = data.p.id;
+
+  if (actionType === "favorite" && data.auth.id === psychologistId) {
+    return {
+      status: 403,
+      ...error("favorite_own_profile", {}),
+    };
+  }
+
   const isPublishedPsychologist = await repository.hasPublishedPsychologist(psychologistId);
 
   if (!isPublishedPsychologist) {

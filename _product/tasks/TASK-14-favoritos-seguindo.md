@@ -560,3 +560,14 @@ Esta task deve ser concluÃ­da em um commit prÃ³prio. Se houver bloqueio externo,
 - Escopo: sem mudancas de backend, Prisma, migrations, packages, endpoints, filtros reais, paginacao, favoritos persistidos ou tracking de WhatsApp.
 - ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
 - Validacoes executadas: `pnpm.cmd --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, `git diff --check` e HTTP local `200` em `/app/favorites`.
+
+## Complemento 2026-07-05 - bloquear auto-favorito no próprio perfil/vídeo
+
+- Pedido do usuário: quando o psicólogo autenticado estiver no próprio perfil público ou no próprio vídeo de apresentação em `/psychologists`, o botão de coração deve ficar desabilitado; psicólogos não podem favoritar a si mesmos.
+- Fonte visual/auditável: prints do usuário, `_product/proto/Psicólogos.jpg` e `_product/proto/Perfil Profissional - Sobre.jpg`. Builder/Quick Copy foi testado com `npx "@builder.io/dev-tools@latest" auth status`, mas retornou `Not Authenticated to Builder.io`; a validação visual seguiu com imagens locais e browser local.
+- Backend: `POST /api/private/user/favorites/:id` e a rota legada equivalente agora retornam `403 favorite_own_profile` quando `req.auth.id` é igual ao psicólogo alvo.
+- Backend: leituras contextuais do diretório/perfil e a listagem de favoritos ignoram relações antigas de auto-favorito, mantendo `favorited=false` para o próprio psicólogo.
+- Frontend: o coração do próprio perfil público e o coração do próprio vídeo/card em `/psychologists` renderizam desabilitados, sem estado vermelho, com `aria-label`/`title` em PT-BR: `Você não pode favoritar o próprio perfil`.
+- Escopo: sem alteração de Prisma schema/migrations, sem packages novos, sem mocks e sem endpoints simulados.
+- ADR atualizado: `adrs/0020-favoritar-psicologo-na-listagem.md`.
+- Validações executadas: `npx "@builder.io/dev-tools@latest" auth status`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check`, smoke HTTP local `POST /api/private/user/favorites/:id` retornando `403 favorite_own_profile` para auto-favorito e Chrome headless/CDP mobile 390x844 em `/psychologists/cmr6pzpbn000h5guht478a9l4` e `/psychologists?search=Rezende`, confirmando coração desabilitado (`disabled=true`, `aria-pressed=false`) no próprio perfil/vídeo.

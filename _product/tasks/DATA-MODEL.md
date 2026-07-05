@@ -280,6 +280,11 @@ Especialidade, serviço e abordagem são filtros da busca (TASK-13) e seções d
 | `psychologist_id` | `String` | alvo |
 | `@@unique([user_id, psychologist_id])`, `@@index([psychologist_id])` | | |
 
+Regra de domínio complementar (2026-07-05): `user_id` não pode ser igual a
+`psychologist_id` para criação de favorito. Psicólogos podem favoritar outros
+psicólogos, mas o próprio perfil/vídeo deve aparecer com coração desabilitado e
+`favorited=false` nas leituras contextuais.
+
 `psychologist_follow` (TASK-14): mesma forma de `psychologist_favorite` (seguir é distinto de favoritar; PRD/proto separam "Favoritos" e "Seguindo").
 
 `contact_request` (clique/contato WhatsApp, TASK-16/20; KPI "Cliques em WhatsApp"):

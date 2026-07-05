@@ -35,6 +35,7 @@
     "whatsapp_not_verified": "Este perfil ainda não possui WhatsApp verificado",
     "review_already_exists": "Você já avaliou este profissional.",
     "review_own_profile": "Você não pode avaliar o próprio perfil.",
+    "favorite_own_profile": "Você não pode favoritar o próprio perfil.",
     "professional_reviews_professional_plan": "Somente psicólogos com Plano Profissional ativo ou cortesia manual podem receber avaliações.",
     "professional_analytics_professional_plan": "Analytics estão disponíveis apenas para psicólogos com Plano Profissional ativo ou cortesia manual.",
     "invalid_analytics_date_range": "Informe uma data inicial e final válidas para consultar os analytics.",

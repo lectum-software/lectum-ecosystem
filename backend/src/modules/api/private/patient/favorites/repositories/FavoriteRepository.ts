@@ -193,6 +193,9 @@ export class FavoriteRepository implements IFavoriteRepository {
     };
     const where: Prisma.psychologist_favoriteWhereInput = {
       user_id: data.auth.id!,
+      psychologist_id: {
+        not: data.auth.id!,
+      },
       deleted: false,
       psychologist: psychologistWhere,
     };
