@@ -3549,17 +3549,12 @@ export const PsychologistsLogic = () => {
           .psychologists-video-feed {
             -webkit-overflow-scrolling: touch;
             scroll-behavior: smooth;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
           }
 
-          @media (max-width: 1023px) {
-            .psychologists-video-feed {
-              -ms-overflow-style: none;
-              scrollbar-width: none;
-            }
-
-            .psychologists-video-feed::-webkit-scrollbar {
-              display: none;
-            }
+          .psychologists-video-feed::-webkit-scrollbar {
+            display: none;
           }
 
           .psychologists-filter-dialog-scroll {

@@ -14,7 +14,7 @@
 
 ## Contexto
 
-A experiência mobile da Lectum deve se aproximar de um aplicativo instalado em telas principais de navegação contínua, especialmente o feed público/comunitário e a descoberta de psicólogos. A decisão de produto desta task é ocultar somente a barra visual de rolagem no mobile/tablet para os scrolls principais dessas telas, preservando o comportamento de scroll e mantendo barras visíveis no desktop e em containers internos.
+A experiência mobile da Lectum deve se aproximar de um aplicativo instalado em telas principais de navegação contínua, especialmente o feed público/comunitário e a descoberta de psicólogos. A decisão de produto desta task é ocultar somente a barra visual de rolagem no mobile/tablet para os scrolls principais dessas telas, preservando o comportamento de scroll e mantendo barras visíveis no desktop e em containers internos. Em 2026-07-07, a descoberta de psicólogos recebeu um ajuste pontual para ocultar também a barra visual do container vertical de vídeo no desktop, sem alterar o viewport global nem containers internos.
 
 Referências visuais consultadas em `_product/tasks/PROTO-INVENTORY.md`:
 
@@ -26,7 +26,7 @@ Builder Quick Copy ativo: `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a`
 
 ## Objetivo
 
-Em telas principais mobile-first com scroll contínuo, o usuário rola normalmente por gesto, sem ver a barra de rolagem visual. No desktop, a barra permanece disponível. Scrollbars de containers internos, modais, menus e listas com overflow próprio não recebem a nova regra global desta task.
+Em telas principais mobile-first com scroll contínuo, o usuário rola normalmente por gesto, sem ver a barra de rolagem visual. No desktop, a barra permanece disponível para o scroll principal das telas opt-in, exceto no container vertical de vídeo da página de psicólogos, onde a barra visual fica oculta para evitar ruído ao lado do vídeo. Scrollbars de containers internos, modais, menus e listas com overflow próprio não recebem a nova regra global desta task.
 
 ## Pré-requisitos e bloqueios
 
@@ -43,7 +43,7 @@ Em telas principais mobile-first com scroll contínuo, o usuário rola normalmen
   - feed agregado (`/`, `/community/feed` e compatibilidades que reutilizam `CommunityFeedLogic`);
   - detalhe/feed de comunidade (`/community/[slug]` e equivalente autenticado);
   - descoberta de psicólogos (`/psychologists` e equivalente autenticado).
-- Ajustar o feed vertical de psicólogos para deixar a scrollbar visível no desktop, ocultando apenas no layout mobile/tablet.
+- Ajustar o feed vertical de psicólogos para ocultar a scrollbar visual em todos os breakpoints, sem bloquear rolagem por wheel/gesto/setas e sem aplicar a regra a outros containers.
 
 ## Escopo backend
 
@@ -70,7 +70,7 @@ Frontend esperado:
 - A classe usa `:has(.lectum-mobile-main-scrollbar-hidden)` para afetar o scrollbar do viewport apenas quando a tela principal opt-in estiver presente.
 - A regra não seleciona descendentes com overflow próprio, preservando containers internos.
 - `frontend/src/app/app/community/[slug]/logic.tsx` marca os shells principais de feed e comunidade.
-- `frontend/src/app/app/psychologists/logic.tsx` marca a tela principal e limita a ocultação do container vertical ao mobile/tablet.
+- `frontend/src/app/app/psychologists/logic.tsx` marca a tela principal e oculta a barra visual do container vertical de vídeo em todos os breakpoints.
 
 Packages usados:
 
@@ -78,7 +78,7 @@ Packages usados:
 
 Regras de UI obrigatórias:
 
-- Mobile-first: a alteração é ativada primeiro em telas mobile/tablet e removida no desktop (`lg`, `min-width: 1024px`).
+- Mobile-first: a alteração global permanece ativada primeiro em telas mobile/tablet; a exceção desktop é limitada ao container vertical de vídeo dos psicólogos.
 - Nenhum `<img>` novo foi criado.
 - Cores/tokens não foram alterados.
 - Formulários/campos não foram alterados.
@@ -86,7 +86,7 @@ Regras de UI obrigatórias:
 ## Critérios de aceite
 
 - [x] Feed agregado/comunidade em mobile/tablet oculta a barra visual do scroll principal sem bloquear rolagem.
-- [x] Tela de psicólogos em mobile/tablet oculta a barra visual do feed vertical, mas mantém scrollbar visível no desktop.
+- [x] Tela de psicólogos oculta a barra visual do feed vertical também no desktop, sem bloquear rolagem.
 - [x] Containers internos não recebem a nova regra global; apenas telas com opt-in usam `.lectum-mobile-main-scrollbar-hidden`.
 - [x] UI mobile-first; nenhum `<img>` cru novo foi usado.
 - [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
@@ -114,3 +114,7 @@ A mudança é deliberadamente opt-in por classe para evitar que scrollbars de co
 - Browser local via Chrome headless em `http://localhost:3000/` e `http://localhost:3000/psychologists`:
   - mobile 390x844: `html/body` com `scrollbar-width: none` nas telas opt-in; `.psychologists-video-feed` com `scrollbar-width: none`.
   - desktop 1440x1000: `html/body` com `scrollbar-width: auto`; `.psychologists-video-feed` com `scrollbar-width: auto`.
+- Ajuste de 2026-07-07 para `/psychologists`:
+  - `pnpm --dir frontend check` concluído sem erros.
+  - `pnpm --dir frontend build` concluído sem erros.
+  - Browser local em `http://localhost:3000/psychologists` validou `.psychologists-video-feed` com `scrollbar-width: none` no desktop, mantendo rolagem funcional.
