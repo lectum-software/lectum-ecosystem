@@ -836,16 +836,13 @@ const getRetentionHealth = ({
 
   const dropoffMoment = getDropoffMoment(dropoff);
   const hasSmallSample = views < MIN_RETENTION_SAMPLE_FOR_CONFIDENCE;
-  const dropoffObservation = dropoff
-    ? `Observe se a maior queda ${dropoffMoment} se repete e teste deixar esse trecho mais objetivo para manter a atenção.`
-    : "Acompanhe se a curva continua estável conforme novas visualizações chegam.";
 
   if (hasSmallSample) {
     return {
       description:
         averageRetention >= 60
-          ? `Os primeiros sinais são bons, mas ainda há poucas visualizações. ${dropoffObservation}`
-          : "Ainda há poucas visualizações para concluir. Teste uma apresentação mais direta e acompanhe como a retenção evolui.",
+          ? "Os primeiros sinais são bons, mas ainda há poucas visualizações. Mantenha o vídeo atual por enquanto e acompanhe se esse padrão se repete com mais visitas."
+          : "Ainda há poucas visualizações para concluir. Mantenha o vídeo atual por enquanto e acompanhe a retenção quando houver mais visitas.",
       label: averageRetention >= 60 ? "Primeiros sinais bons" : "Dados iniciais",
     };
   }

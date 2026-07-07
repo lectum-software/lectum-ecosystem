@@ -30,12 +30,25 @@ A secao de video dos Analytics estava tecnicamente correta, mas alguns contadore
 - A secao de retencao passa a orientar melhorias de abertura, ritmo, objetividade e duracao do video, enquanto conversao para WhatsApp permanece nos contadores de negocio e origem de trafego.
 - A leitura mobile do card largo fica mais parecida com os cards verticais existentes, com numero destacado sem competir com a descricao.
 
+## Atualizacao 2026-07-07 - Amostra pequena sem recomendacao de teste
+
+Quando o video ainda tem menos de 30 visualizacoes reais, a leitura de retencao deve tratar a curva como dado inicial e nao recomendar que o psicologo teste uma apresentacao diferente. Nesse volume, uma queda estimada pode ser causada por poucos visitantes e nao e evidencia suficiente para orientar mudanca no conteudo.
+
+Decidimos manter `MIN_RETENTION_SAMPLE_FOR_CONFIDENCE = 30` como limite minimo de confianca para recomendacoes acionaveis. Abaixo desse limite, a copy orienta o profissional a manter o video atual por enquanto e acompanhar novas visitas. As recomendacoes de teste, encurtamento, abertura mais objetiva ou ajuste de trecho continuam permitidas somente quando houver amostra minima.
+
+Consequencias:
+
+- Evita acionar psicologos com conclusoes prematuras baseadas em 1 ou poucas visualizacoes.
+- Mantem a transparencia da secao `Dados iniciais`, sem esconder que a metrica ainda existe, mas reduz o risco de orientar mudancas indevidas.
+- Nao altera contrato, backend, schema, tracking nem limiares de agregacao; a decisao e de interpretacao/copy no frontend.
+
 ## Validacao
 
 - `pnpm --dir frontend exec biome check src/app/app/professional/analytics/logic.tsx`
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `Invoke-WebRequest` em `/app/professional/analytics` retornando `307` para login sem sessao.
+- Atualizacao 2026-07-07: `pnpm --dir frontend exec biome check src/app/app/professional/analytics/logic.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build` e `next start` local com `Invoke-WebRequest` em `/app/professional/analytics` retornando `307` para login sem sessao.
 
 ## Pendencias
 

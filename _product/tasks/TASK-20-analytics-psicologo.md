@@ -377,3 +377,28 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir backend build`
 - `pnpm --dir frontend check`
 - `pnpm check`
+
+## Ajuste complementar em 2026-07-07 - poucas visualizacoes sem recomendacao prematura de teste
+
+- Pedido direto de produto: quando houver poucas visualizacoes do video de apresentacao, a leitura dos Analytics nao deve pedir ao psicologo para testar uma apresentacao diferente.
+- A regra de amostra pequena permanece baseada em `MIN_RETENTION_SAMPLE_FOR_CONFIDENCE = 30`; abaixo desse limite, a copy agora orienta manter o video atual por enquanto e acompanhar novas visitas.
+- Recomendacoes de teste, encurtamento ou ajuste de trecho continuam restritas aos estados com amostra minima de confianca.
+- Nenhum endpoint, schema Prisma, migration, tracking, package novo, mock, seed ou dado simulado foi criado.
+- Builder/Quick Copy nao esteve exposto como ferramenta MCP direta neste ambiente; a referencia visual ativa foi conferida via `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/Meus Analytics - Psicologo.jpg` e captura enviada pelo usuario.
+- ADR atualizado: `adrs/0175-analytics-video-retencao-orientada.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O estado `Dados iniciais` com poucas visualizacoes nao sugere testar outra apresentacao.
+- [x] O estado `Primeiros sinais bons` com poucas visualizacoes tambem evita recomendacao prematura de teste.
+- [x] A decisao de amostra minima permanece explicita e sem alterar dados reais ou agregacao.
+- [x] Nenhum mock, seed, endpoint simulado, package novo ou alteracao de schema foi criado.
+- [x] ADR e documentacao da task foram atualizados.
+- [x] Validacoes de frontend/build e rota privada local foram executadas.
+
+### Validacao do complemento
+
+- `pnpm --dir frontend exec biome check src/app/app/professional/analytics/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Browser/HTTP local com `next start --hostname 127.0.0.1 --port 3137` e `Invoke-WebRequest` em `/app/professional/analytics` retornando `307` para login sem sessao; a rota privada segue protegida e a copy foi validada no fonte/build.
