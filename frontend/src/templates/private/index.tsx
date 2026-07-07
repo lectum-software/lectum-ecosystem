@@ -91,8 +91,15 @@ const DEFAULT_RESTRICTED_AREA_COPY = {
     "Entre ou crie sua conta para acessar seu perfil, salvar preferências e continuar sua experiência na Lectum.",
   title: "Acesse sua conta",
 };
+const COMMUNITY_TOP_MENTORS_RESTRICTED_AREA_COPY = {
+  ...DEFAULT_RESTRICTED_AREA_COPY,
+  description:
+    "Faça login para acessar o ranking dos principais mentores da comunidade e acompanhar quem mais contribui nas discussões.",
+};
 
 const RESTRICTED_AREA_COPY_BY_PATH = new Map<string, typeof DEFAULT_RESTRICTED_AREA_COPY>([
+  ["/app/community/top-mentors", COMMUNITY_TOP_MENTORS_RESTRICTED_AREA_COPY],
+  ["/community/top-mentors", COMMUNITY_TOP_MENTORS_RESTRICTED_AREA_COPY],
   [
     "/app/favorites",
     {
