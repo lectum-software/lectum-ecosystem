@@ -4,6 +4,7 @@ import { canAttachCommunityMedia } from "@/utils/community-media-entitlement";
 import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
 import { getPostIdsWithPsychologistReplies } from "@/utils/community-post-replies";
 import { getMutedPostIds } from "@/utils/post-notification-mute";
+import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import {
   activeProfessionalCourtesyEntitlementWhere,
   activeProfessionalEntitlementWhere,
@@ -343,6 +344,9 @@ const toAuthorResponse = (
   const shouldMaskAuthor = !isPsychologist && anonymous;
   const shouldHideIdentity = isDeletedAuthor || shouldMaskAuthor;
   const deletedName = isPsychologist ? "Psicólogo Excluído" : "Membro Excluído";
+  const displayName = isPsychologist
+    ? normalizeProfessionalDisplayName(author.name) || author.name
+    : author.name;
 
   return {
     id: author.id,
@@ -350,7 +354,7 @@ const toAuthorResponse = (
       ? deletedName
       : shouldMaskAuthor
         ? (anonymousDisplayName ?? "Membro Anônimo")
-        : author.name,
+        : displayName,
     avatar: shouldHideIdentity ? null : author.avatar,
     role: author.role,
     type_label: isDeletedAuthor
@@ -365,7 +369,7 @@ const toAuthorResponse = (
       isPsychologist && !isDeletedAuthor ? mentorBadgeForScore(profile, mentorScore) : null,
     whatsapp_url:
       isPsychologist && !isDeletedAuthor
-        ? buildProfessionalWhatsappUrl(profile, author.name, whatsappMessageSource)
+        ? buildProfessionalWhatsappUrl(profile, displayName, whatsappMessageSource)
         : null,
   };
 };

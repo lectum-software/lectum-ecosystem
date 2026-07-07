@@ -84,6 +84,7 @@ import {
   type LectumShareVideoTarget,
 } from "@/utils/lectum-share-target";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 
 const PAGE_LIMIT = 5;
 const PROFILE_TABS = ["geral", "publicacoes", "avaliacoes"] as const;
@@ -189,12 +190,8 @@ const getPsychologistTitle = (gender?: string | null) => {
   return normalized === "feminino" ? "Psicóloga" : "Psicólogo";
 };
 
-const getHonorificName = (profile: DirectoryPsychologistProfile) => {
-  return profile.name
-    .replace(/^(?:Dr\\.?\\s*|Dra\\.?\\s*)/i, "")
-    .replace(/\s{2,}/g, " ")
-    .trim();
-};
+const getPsychologistDisplayName = (profile: DirectoryPsychologistProfile) =>
+  normalizeProfessionalDisplayName(profile.name);
 
 const formatRatingNumber = (ratingAvg: number, ratingCount: number) => {
   if (ratingCount <= 0) return "0,0";
@@ -219,7 +216,7 @@ const toPsychologistWhatsAppIdentity = (profile: DirectoryPsychologistProfile) =
   avatar: profile.avatar,
   crp: profile.crp ? formatCrpNumber(profile.crp) : null,
   id: profile.id,
-  name: profile.name,
+  name: getPsychologistDisplayName(profile) || profile.name,
   typeLabel: getPsychologistTitle(profile.gender),
   whatsappUrl: profile.whatsapp_url,
 });
@@ -671,6 +668,7 @@ const InfiniteProfileListLoader = ({
 const ProfileAvatar = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
   const avatarSrc = resolvePublicMediaUrl(profile.avatar);
   const avatarIsPublicMedia = isPublicMediaUrl(profile.avatar);
+  const displayName = getPsychologistDisplayName(profile) || profile.name || "Profissional";
 
   return (
     <div
@@ -679,7 +677,7 @@ const ProfileAvatar = ({ profile }: { profile: DirectoryPsychologistProfile }) =
     >
       {avatarSrc ? (
         <Image
-          alt={profile.name}
+          alt={displayName}
           className="object-cover"
           fill
           priority
@@ -688,7 +686,7 @@ const ProfileAvatar = ({ profile }: { profile: DirectoryPsychologistProfile }) =
           unoptimized={avatarIsPublicMedia}
         />
       ) : (
-        getInitials(profile.name)
+        getInitials(displayName)
       )}
     </div>
   );
@@ -699,6 +697,7 @@ const ProfileHeroMedia = ({ profile }: { profile: DirectoryPsychologistProfile }
   const coverImageIsPublicMedia = isPublicMediaUrl(profile.cover_image_url);
   const [failedCoverImageUrl, setFailedCoverImageUrl] = useState<string | null>(null);
   const coverImageFailed = Boolean(coverImageSrc && failedCoverImageUrl === coverImageSrc);
+  const displayName = getPsychologistDisplayName(profile) || profile.name || "Profissional";
 
   if (!coverImageSrc || coverImageFailed) {
     return (
@@ -727,7 +726,7 @@ const ProfileHeroMedia = ({ profile }: { profile: DirectoryPsychologistProfile }
   return (
     <div className="relative h-[132px] overflow-hidden bg-black">
       <Image
-        alt={`Imagem de capa de ${profile.name}`}
+        alt={`Imagem de capa de ${displayName}`}
         className="h-full w-full object-cover object-center"
         fill
         priority={false}
@@ -762,7 +761,7 @@ const ProfileHero = ({
   onToggleFavorite: () => void;
   profile: DirectoryPsychologistProfile;
 }) => {
-  const displayName = getHonorificName(profile) || profile.name || "Profissional";
+  const displayName = getPsychologistDisplayName(profile) || profile.name || "Profissional";
   const headline = (profile.headline?.trim() || profile.bio?.trim() || "").trim();
   const benefitTags = buildBenefitTags(profile);
   const formattedCrp = formatCrpLabel(profile.crp);
@@ -771,7 +770,7 @@ const ProfileHero = ({
   const displayedFavorited = canFavorite && profile.favorited;
   const favoriteButtonLabel =
     favoriteDisabledReason ??
-    (displayedFavorited ? `Remover ${profile.name} dos favoritos` : `Favoritar ${profile.name}`);
+    (displayedFavorited ? `Remover ${displayName} dos favoritos` : `Favoritar ${displayName}`);
 
   return (
     <header
@@ -919,7 +918,7 @@ const ProfileMobileStickyHeader = ({
   onTabChange: (tab: ProfileTab, options?: ProfileTabNavigationOptions) => void;
   profile: DirectoryPsychologistProfile;
 }) => {
-  const stickyName = getHonorificName(profile) || profile.name || "Profissional";
+  const stickyName = getPsychologistDisplayName(profile) || profile.name || "Profissional";
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -1077,6 +1076,7 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
   const videoSrc = resolvePublicMediaUrl(profile.video_url);
   const videoCoverSrc = resolvePublicMediaUrl(profile.video_cover_url);
   const shouldTrack = Boolean(videoSrc && currentUser?.id !== profile.id);
+  const displayName = getPsychologistDisplayName(profile) || profile.name || "Profissional";
 
   const flushVideoAnalytics = useCallback(
     (video: HTMLVideoElement | null, completed = false, force = false) => {
@@ -1249,7 +1249,7 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
             onVideoElementReady={handleVideoReady}
             poster={videoCoverSrc}
             src={videoSrc}
-            title={`Vídeo de apresentação de ${profile.name}`}
+            title={`Vídeo de apresentação de ${displayName}`}
           />
         </article>
       </div>
@@ -2153,6 +2153,8 @@ const WhatsAppCta = ({ profile }: { profile: DirectoryPsychologistProfile }) => 
     return null;
   }
 
+  const displayName = getPsychologistDisplayName(profile) || profile.name || "Profissional";
+
   return (
     <>
       <div
@@ -2170,7 +2172,7 @@ const WhatsAppCta = ({ profile }: { profile: DirectoryPsychologistProfile }) => 
       </div>
 
       <PsychologistWhatsAppRedirectButton
-        aria-label={`Chamar ${profile.name} no WhatsApp`}
+        aria-label={`Chamar ${displayName} no WhatsApp`}
         className="group fixed right-5 bottom-10 z-40 hidden h-14 w-14 place-items-center rounded-full border-[5px] border-white bg-[#16A34A] text-white shadow-[0_14px_30px_rgba(22,163,74,0.26)] transition-[transform,background-color,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:bg-[#15803D] hover:shadow-[0_18px_36px_rgba(22,163,74,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] focus-visible:ring-offset-2 focus-visible:ring-offset-white motion-safe:animate-[lectum-desktop-create-float_4.2s_ease-in-out_infinite] lg:grid lg:h-16 lg:w-16 xl:right-20 2xl:right-28"
         psychologist={toPsychologistWhatsAppIdentity(profile)}
         title="Chamar no WhatsApp"

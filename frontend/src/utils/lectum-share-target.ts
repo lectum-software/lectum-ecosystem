@@ -5,6 +5,7 @@ import type {
   PostReply,
   UserPostReply,
 } from "@/api/generator/types/posts";
+import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 
 export type LectumShareChannel = "clipboard" | "web_share";
 
@@ -80,11 +81,7 @@ export const truncateLectumShareProfessionalTagName = (name: string) => {
   return `${normalized.slice(0, LECTUM_SHARE_PROFESSIONAL_TAG_NAME_MAX_LENGTH).trimEnd()}...`;
 };
 
-export const normalizeLectumShareProfessionalName = (name: string) =>
-  name
-    .replace(/^\s*dr(?:a)?\.?\s+/i, "")
-    .replace(/^\s*doutor(?:a)?\s+/i, "")
-    .trim();
+export const normalizeLectumShareProfessionalName = normalizeProfessionalDisplayName;
 
 export const normalizeLectumShareProfessionalRole = (
   typeLabel?: string | null,

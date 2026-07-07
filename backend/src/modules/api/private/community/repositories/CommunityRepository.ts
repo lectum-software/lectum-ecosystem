@@ -3,6 +3,7 @@ import prisma, { type ORM } from "@/infra/database/prisma";
 import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
 import { getPostIdsWithPsychologistReplies } from "@/utils/community-post-replies";
 import { getMutedPostIds } from "@/utils/post-notification-mute";
+import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import {
   activeProfessionalCourtesyEntitlementWhere,
   activeProfessionalEntitlementWhere,
@@ -1134,6 +1135,9 @@ const toAuthorResponse = (
   const shouldMaskAuthor = !isPsychologist && anonymous;
   const shouldHideIdentity = isDeletedAuthor || shouldMaskAuthor;
   const deletedName = isPsychologist ? "Psicólogo Excluído" : "Membro Excluído";
+  const displayName = isPsychologist
+    ? normalizeProfessionalDisplayName(author.name) || author.name
+    : author.name;
 
   return {
     id: author.id,
@@ -1141,7 +1145,7 @@ const toAuthorResponse = (
       ? deletedName
       : shouldMaskAuthor
         ? (anonymousDisplayName ?? "Membro Anônimo")
-        : author.name,
+        : displayName,
     avatar: shouldHideIdentity ? null : author.avatar,
     role: author.role,
     type_label: isDeletedAuthor
@@ -1155,7 +1159,7 @@ const toAuthorResponse = (
       isPsychologist && !isDeletedAuthor ? mentorBadgeForScore(profile, mentorScore) : null,
     whatsapp_url:
       isPsychologist && !isDeletedAuthor
-        ? buildProfessionalWhatsappUrl(profile, author.name, whatsappMessageSource)
+        ? buildProfessionalWhatsappUrl(profile, displayName, whatsappMessageSource)
         : null,
   };
 };
@@ -2103,7 +2107,9 @@ export class CommunityRepository implements ICommunityRepository {
         const removedPostDiff = a.metrics.removed_posts - b.metrics.removed_posts;
         if (removedPostDiff !== 0) return removedPostDiff;
 
-        const nameDiff = a.mentor.name.localeCompare(b.mentor.name, "pt-BR");
+        const aName = normalizeProfessionalDisplayName(a.mentor.name) || a.mentor.name;
+        const bName = normalizeProfessionalDisplayName(b.mentor.name) || b.mentor.name;
+        const nameDiff = aName.localeCompare(bName, "pt-BR");
         if (nameDiff !== 0) return nameDiff;
 
         return a.mentor.id.localeCompare(b.mentor.id);
@@ -2120,7 +2126,7 @@ export class CommunityRepository implements ICommunityRepository {
         badge: topMentorBadgeForPosition(position),
         professional: {
           id: item.mentor.id,
-          name: item.mentor.name,
+          name: normalizeProfessionalDisplayName(item.mentor.name) || item.mentor.name,
           avatar: item.mentor.avatar,
           headline: profile?.headline ?? null,
           crp: profile?.crp ?? null,

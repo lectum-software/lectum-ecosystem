@@ -7,7 +7,10 @@ import {
   PsychologistWhatsAppRedirectButton,
 } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { cn } from "@/lib/utils";
-import { getProfessionalShortDisplayName } from "@/utils/professional-name";
+import {
+  getProfessionalShortDisplayName,
+  normalizeProfessionalDisplayName,
+} from "@/utils/professional-name";
 
 export type CommunityWhatsAppAuthor = {
   avatar?: string | null;
@@ -34,7 +37,7 @@ export const toCommunityWhatsAppIdentity = (
   avatar: author.avatar,
   crp: author.crp,
   id: author.id,
-  name: author.name,
+  name: normalizeProfessionalDisplayName(author.name) || author.name,
   typeLabel: author.type_label,
   whatsappUrl: author.whatsapp_url,
 });

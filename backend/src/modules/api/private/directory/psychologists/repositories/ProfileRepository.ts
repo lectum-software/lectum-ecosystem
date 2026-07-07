@@ -10,6 +10,7 @@ import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranki
 import { getPostIdsWithPsychologistReplies } from "@/utils/community-post-replies";
 import { getMutedPostIds } from "@/utils/post-notification-mute";
 import { crpExperienceYears } from "@/utils/professional-experience";
+import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import {
   activeProfessionalEntitlementWhere,
   isVerifiedProfessionalEntitlement,
@@ -505,6 +506,9 @@ const toPostAuthorResponse = (
   const profile = author.psychologist_profile;
   const isPsychologist = author.role === "psicologo";
   const shouldMaskAuthor = !isPsychologist && anonymous;
+  const displayName = isPsychologist
+    ? normalizeProfessionalDisplayName(author.name) || author.name
+    : author.name;
   const featuredBadge =
     (forceFeaturedBadgeOverride
       ? featuredBadgeOverride
@@ -512,7 +516,7 @@ const toPostAuthorResponse = (
 
   return {
     id: author.id,
-    name: shouldMaskAuthor ? (anonymousDisplayName ?? "Membro Anônimo") : author.name,
+    name: shouldMaskAuthor ? (anonymousDisplayName ?? "Membro Anônimo") : displayName,
     avatar: shouldMaskAuthor ? null : author.avatar,
     role: author.role,
     type_label: authorTypeLabel(author.role, profile?.gender, anonymous),
@@ -520,7 +524,7 @@ const toPostAuthorResponse = (
     verified: isPsychologist && isProfessionalVerified(profile),
     featured_badge: isPsychologist ? featuredBadge : null,
     whatsapp_url: isPsychologist
-      ? buildProfessionalWhatsappUrl(profile, author.name, whatsappMessageSource)
+      ? buildProfessionalWhatsappUrl(profile, displayName, whatsappMessageSource)
       : null,
   };
 };
@@ -1161,7 +1165,7 @@ export class ProfileRepository implements IProfileRepository {
 
     return {
       id: item.id,
-      name: item.name,
+      name: normalizeProfessionalDisplayName(item.name) || item.name,
       avatar: item.avatar,
       headline: profile.headline,
       bio: profile.bio,
@@ -1189,7 +1193,10 @@ export class ProfileRepository implements IProfileRepository {
       social_value: profile.social_value,
       accepts_insurance: profile.accepts_insurance,
       show_experience_tag: profile.show_experience_tag,
-      whatsapp_url: buildWhatsappUrl(profile.whatsapp, item.name),
+      whatsapp_url: buildWhatsappUrl(
+        profile.whatsapp,
+        normalizeProfessionalDisplayName(item.name) || item.name,
+      ),
       favorited: item.favorited_by_patients.length > 0,
       followed: item.followed_by_patients.length > 0,
       whatsapp_available: Boolean(profile.whatsapp),

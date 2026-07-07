@@ -96,6 +96,7 @@ import {
 } from "@/utils/lectum-share-target";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
+import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import {
   type PostReportForm,
   type ReplyComposerForm,
@@ -444,6 +445,13 @@ const getInitials = (name: string) => {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
 
+const getCommunityAuthorDisplayName = (
+  author: Pick<PostDetail["author"] | PostReply["author"], "name" | "role">,
+) =>
+  author.role === "psicologo"
+    ? normalizeProfessionalDisplayName(author.name) || author.name
+    : author.name;
+
 const isVerifiedProfessionalReply = (reply: PostReply) =>
   reply.author.role === "psicologo" && reply.author.verified;
 
@@ -611,6 +619,7 @@ const AuthorAvatar = ({
 
   const avatarSrc = resolvePublicMediaUrl(author.avatar);
   const avatarIsPublicMedia = isPublicMediaUrl(author.avatar);
+  const displayName = getCommunityAuthorDisplayName(author);
 
   const avatar = (
     <span
@@ -621,7 +630,7 @@ const AuthorAvatar = ({
     >
       {avatarSrc ? (
         <Image
-          alt={author.name}
+          alt={displayName}
           className="object-cover"
           fill
           sizes={imageSize}
@@ -629,7 +638,7 @@ const AuthorAvatar = ({
           unoptimized={avatarIsPublicMedia}
         />
       ) : (
-        getInitials(author.name)
+        getInitials(displayName)
       )}
     </span>
   );
@@ -638,7 +647,7 @@ const AuthorAvatar = ({
 
   return (
     <Link
-      aria-label={`Abrir perfil de ${author.name}`}
+      aria-label={`Abrir perfil de ${displayName}`}
       className="shrink-0 cursor-pointer rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
       href={href}
       onClick={onProfileClick}
@@ -664,6 +673,7 @@ const PostHeader = ({
   const psychologistProfileHref = isPsychologistPost
     ? `/psychologists/${post.author.id}`
     : undefined;
+  const authorDisplayName = getCommunityAuthorDisplayName(post.author);
   const currentUserId = useAppSelector((state) => state.user?.id);
   const isOwnPost = Boolean(currentUserId && post.author.id === currentUserId);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -751,10 +761,10 @@ const PostHeader = ({
                   className="truncate text-sm font-black text-foreground no-underline transition hover:text-foreground hover:no-underline"
                   href={psychologistProfileHref}
                 >
-                  {post.author.name}
+                  {authorDisplayName}
                 </Link>
               ) : (
-                <h2 className="truncate text-sm font-black text-foreground">{post.author.name}</h2>
+                <h2 className="truncate text-sm font-black text-foreground">{authorDisplayName}</h2>
               )}
               {post.author.verified ? (
                 <BadgeCheck
@@ -846,6 +856,7 @@ const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
   const psychologistProfileHref = isPsychologistPost
     ? `/psychologists/${post.author.id}`
     : undefined;
+  const authorDisplayName = getCommunityAuthorDisplayName(post.author);
   const postHref = `/community/${post.community.slug}/post/${post.id}`;
   const postImageMediaItems = (post.media_items ?? []).filter(
     (item) => item.media_type === "image",
@@ -914,11 +925,11 @@ const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
                     className="truncate text-sm font-black text-foreground no-underline transition hover:text-foreground hover:no-underline"
                     href={psychologistProfileHref}
                   >
-                    {post.author.name}
+                    {authorDisplayName}
                   </Link>
                 ) : (
                   <h2 className="truncate text-sm font-black text-foreground">
-                    {post.author.name}
+                    {authorDisplayName}
                   </h2>
                 )}
                 {post.author.verified ? (
@@ -1273,6 +1284,7 @@ const ReplyCard = ({
 }) => {
   const isProfessional = reply.author.role === "psicologo";
   const isVerifiedProfessional = isProfessional && reply.author.verified;
+  const authorDisplayName = getCommunityAuthorDisplayName(reply.author);
   const isOwnReply = Boolean(currentUserId && reply.author.id === currentUserId);
   const highlightedProfessionalThread = professionalThread ?? isVerifiedProfessional;
   const saveReplyMutation = useSaveReply(postId, reply.id);
@@ -1384,10 +1396,10 @@ const ReplyCard = ({
                       href={`/psychologists/${reply.author.id}`}
                       onClick={stopReplyTreeCollapsePropagation}
                     >
-                      {reply.author.name}
+                      {authorDisplayName}
                     </Link>
                   ) : (
-                    <h3 className="truncate text-sm font-black">{reply.author.name}</h3>
+                    <h3 className="truncate text-sm font-black">{authorDisplayName}</h3>
                   )}
                   {reply.author.verified ? (
                     <BadgeCheck
@@ -2539,7 +2551,7 @@ export const PostDetailLogic = () => {
         return;
       }
 
-      const target = { id: reply.id, name: reply.author.name };
+      const target = { id: reply.id, name: getCommunityAuthorDisplayName(reply.author) };
 
       if (isMobile) {
         setMobileReplyTarget(target);
@@ -3078,7 +3090,7 @@ export const PostReplyThreadLogic = () => {
         return;
       }
 
-      const target = { id: reply.id, name: reply.author.name };
+      const target = { id: reply.id, name: getCommunityAuthorDisplayName(reply.author) };
 
       if (isMobile) {
         setMobileReplyTarget(target);
@@ -3343,7 +3355,7 @@ export const PostReplyThreadLogic = () => {
               onSubmit={(values, mediaFile) =>
                 submitReply(values, activeMobileReplyTarget?.id ?? rootReply.id, mediaFile)
               }
-              replyToName={rootReply.author.name}
+              replyToName={getCommunityAuthorDisplayName(rootReply.author)}
               replyTarget={activeMobileReplyTarget}
             />
 

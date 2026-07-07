@@ -95,6 +95,7 @@ import {
 } from "@/utils/lectum-share-target";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
+import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 
 const PAGE_LIMIT = 12;
 
@@ -816,6 +817,11 @@ const getInitials = (name: string) => {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
 
+const getCommunityAuthorDisplayName = (author: Pick<CommunityPost["author"], "name" | "role">) =>
+  author.role === "psicologo"
+    ? normalizeProfessionalDisplayName(author.name) || author.name
+    : author.name;
+
 const communityDetailHref = (communitySlug: string) => `/community/${communitySlug}`;
 const communityCreatePostHref = (communitySlug: string) =>
   `/app/community/${communitySlug}/post/new`;
@@ -884,6 +890,7 @@ const AuthorAvatar = ({
 
   const avatarSrc = resolvePublicMediaUrl(author.avatar);
   const avatarIsPublicMedia = isPublicMediaUrl(author.avatar);
+  const displayName = getCommunityAuthorDisplayName(author);
 
   const avatarNode = (
     <span
@@ -894,7 +901,7 @@ const AuthorAvatar = ({
     >
       {avatarSrc ? (
         <Image
-          alt={author.name}
+          alt={displayName}
           className="object-cover"
           fill
           sizes={imageSize}
@@ -902,7 +909,7 @@ const AuthorAvatar = ({
           unoptimized={avatarIsPublicMedia}
         />
       ) : (
-        getInitials(author.name)
+        getInitials(displayName)
       )}
     </span>
   );
@@ -911,7 +918,7 @@ const AuthorAvatar = ({
 
   return (
     <Link
-      aria-label={`Abrir perfil de ${author.name}`}
+      aria-label={`Abrir perfil de ${displayName}`}
       className="pointer-events-auto shrink-0 cursor-pointer rounded-full no-underline transition hover:brightness-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 active:scale-[0.98]"
       href={href}
       onClick={onClick}
@@ -1285,7 +1292,7 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
             <AuthorIdentityLine
               badge={reply.author.featured_badge}
               href={profileHref}
-              name={reply.author.name}
+              name={getCommunityAuthorDisplayName(reply.author)}
               onClick={(event) => event.stopPropagation()}
               verified={reply.author.verified}
             />
@@ -1514,7 +1521,7 @@ const PostCard = ({
           <AuthorIdentityLine
             badge={post.author.featured_badge ?? post.featured_badge}
             href={psychologistProfileHref}
-            name={post.author.name}
+            name={getCommunityAuthorDisplayName(post.author)}
             verified={post.author.verified}
           />
           {psychologistProfileHref ? (

@@ -31,6 +31,7 @@ import { useProgressiveConversion } from "@/components/conversion/progressive-co
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 
 type CommunityPostCardProps = {
   actionBarShowUpvoteText?: boolean;
@@ -111,6 +112,11 @@ const getInitials = (name: string) => {
 
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
+
+const getCommunityAuthorDisplayName = (author: Pick<PostListPost["author"], "name" | "role">) =>
+  author.role === "psicologo"
+    ? normalizeProfessionalDisplayName(author.name) || author.name
+    : author.name;
 
 const InlineExpandableText = ({
   className,
@@ -387,6 +393,7 @@ const ProfessionalReplyPreview = ({
 
   const isFeedPresentation = presentation === "feed";
   const profileHref = `/psychologists/${reply.author.id}`;
+  const authorDisplayName = getCommunityAuthorDisplayName(reply.author);
   const whatsappCta =
     showWhatsappCta && reply.author.whatsapp_url ? (
       <CommunityWhatsAppCta
@@ -414,7 +421,7 @@ const ProfessionalReplyPreview = ({
             <AuthorAvatar
               avatar={reply.author.avatar}
               href={profileHref}
-              name={reply.author.name}
+              name={authorDisplayName}
               size="lg"
             />
             <div className="grid min-w-0 flex-1 gap-0.5">
@@ -424,7 +431,7 @@ const ProfessionalReplyPreview = ({
                     className="min-w-0 truncate text-sm font-black text-foreground no-underline transition hover:text-foreground hover:no-underline"
                     href={profileHref}
                   >
-                    {reply.author.name}
+                    {authorDisplayName}
                   </Link>
                   {reply.author.verified ? (
                     <BadgeCheck
@@ -487,7 +494,7 @@ const ProfessionalReplyPreview = ({
         <AuthorAvatar
           avatar={reply.author.avatar}
           href={profileHref}
-          name={reply.author.name}
+          name={authorDisplayName}
           size="lg"
         />
         <div className="grid min-w-0 gap-1">
@@ -502,7 +509,7 @@ const ProfessionalReplyPreview = ({
                 className="min-w-0 truncate text-sm font-black text-foreground no-underline transition hover:text-foreground hover:no-underline"
                 href={profileHref}
               >
-                {reply.author.name}
+                {authorDisplayName}
               </Link>
               {reply.author.verified ? (
                 profilePublicationMode ? (
@@ -595,6 +602,7 @@ export const CommunityPostCard = ({
       ? post.highlighted_professional_reply
       : null;
   const displayAuthor = primaryReply?.author ?? post.author;
+  const displayAuthorName = getCommunityAuthorDisplayName(displayAuthor);
   const displayCreatedAt = primaryReply?.created_at ?? post.created_at;
   const displayEditedAt = primaryReply ? primaryReply.edited_at : post.edited_at;
   const displayTimeLabel = formatPostTimeLabel(displayCreatedAt, displayEditedAt);
@@ -901,7 +909,7 @@ export const CommunityPostCard = ({
             anonymous={isAnonymousPatient}
             avatar={displayAuthor.avatar}
             href={psychologistProfileHref}
-            name={displayAuthor.name}
+            name={displayAuthorName}
           />
           <div className="grid min-w-0 flex-1 gap-1">
             <div
@@ -916,11 +924,11 @@ export const CommunityPostCard = ({
                     className="min-w-0 truncate text-sm font-black text-foreground no-underline transition hover:text-foreground hover:no-underline"
                     href={psychologistProfileHref}
                   >
-                    {displayAuthor.name}
+                    {displayAuthorName}
                   </Link>
                 ) : (
                   <h2 className="min-w-0 truncate text-sm font-black text-foreground">
-                    {displayAuthor.name}
+                    {displayAuthorName}
                   </h2>
                 )}
                 {displayAuthor.verified ? (

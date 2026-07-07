@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import {
   activeProfessionalEntitlementWhere,
   isVerifiedProfessionalEntitlement,
@@ -74,7 +75,8 @@ export class ReviewRepository implements IReviewRepository {
       data: items.map((item) => ({
         id: item.id,
         psychologist_id: item.psychologist_id,
-        psychologist_name: item.psychologist.name,
+        psychologist_name:
+          normalizeProfessionalDisplayName(item.psychologist.name) || item.psychologist.name,
         psychologist_avatar: item.psychologist.avatar,
         psychologist_headline: item.psychologist.psychologist_profile?.headline ?? null,
         psychologist_crp: item.psychologist.psychologist_profile?.crp ?? null,
@@ -139,7 +141,10 @@ export class ReviewRepository implements IReviewRepository {
 
     const base = {
       psychologist_id: psychologistId,
-      psychologist_name: psychologist?.name ?? "Psicólogo",
+      psychologist_name:
+        normalizeProfessionalDisplayName(psychologist?.name) ||
+        psychologist?.name ||
+        "Psic\u00f3logo",
       psychologist_avatar: psychologist?.avatar ?? null,
       psychologist_headline: psychologist?.psychologist_profile?.headline ?? null,
       psychologist_crp: psychologist?.psychologist_profile?.crp ?? null,

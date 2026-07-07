@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
+import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import {
   activeProfessionalEntitlementWhere,
   isVerifiedProfessionalEntitlement,
@@ -192,7 +193,8 @@ export class FollowRepository implements IFollowRepository {
             id: item.psychologist.id,
             relation_id: item.id,
             relation_created_at: item.createdAt,
-            name: item.psychologist.name,
+            name:
+              normalizeProfessionalDisplayName(item.psychologist.name) || item.psychologist.name,
             avatar: item.psychologist.avatar,
             headline: profile.headline,
             bio: profile.bio,

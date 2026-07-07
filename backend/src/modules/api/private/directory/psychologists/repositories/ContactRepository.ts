@@ -1,5 +1,6 @@
-﻿import { parsePhoneNumberFromString } from "libphonenumber-js";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
 import prisma from "@/infra/database/prisma";
+import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import { buildLectumWhatsappUrl } from "@/utils/whatsapp-contact";
 import type {
   DirectoryPsychologistContactResponse,
@@ -42,7 +43,8 @@ const toContactResponse = (
   contact_request_id: contactRequestId,
   psychologist_id: psychologist.id,
   tracked: Boolean(contactRequestId),
-  whatsapp_url: toWhatsAppUrl(psychologistPhone, psychologist.name) ?? "",
+  whatsapp_url:
+    toWhatsAppUrl(psychologistPhone, normalizeProfessionalDisplayName(psychologist.name)) ?? "",
 });
 
 export class ContactRepository implements IContactRepository {

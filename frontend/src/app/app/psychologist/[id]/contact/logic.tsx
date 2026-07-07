@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import {
   ArrowLeft,
@@ -28,6 +28,7 @@ import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import { toContactPhoneE164, useForm, type WhatsAppContactForm } from "./use-form";
 
 type ApiErrorData = {
@@ -203,6 +204,7 @@ export const PsychologistContactLogic = () => {
 
   const isProfileLoading = profile.isLoading || profile.isPending;
   const professional = profile.data;
+  const professionalDisplayName = normalizeProfessionalDisplayName(professional?.name);
   const isUnavailable = Boolean(professional && !professional.whatsapp_available);
   const submitDisabled =
     contact.isPending ||
@@ -297,11 +299,11 @@ export const PsychologistContactLogic = () => {
           <section className="grid gap-4 rounded-[32px] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)] sm:p-6">
             <div className="flex items-center gap-3 rounded-[var(--lectum-card-radius)] border border-border bg-surface-muted p-4">
               <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-primary-soft text-lg font-extrabold text-primary">
-                {getInitials(professional.name)}
+                {getInitials(professionalDisplayName)}
               </div>
               <div className="min-w-0">
                 <p className="truncate text-sm font-extrabold text-foreground">
-                  {professional.name}
+                  {professionalDisplayName || "Psicólogo Lectum"}
                 </p>
                 <p className="line-clamp-2 text-xs leading-5 text-muted">
                   {professional.headline || "Perfil profissional Lectum"}
@@ -406,7 +408,7 @@ export const PsychologistContactLogic = () => {
             avatar: professional.avatar,
             crp: professional.crp,
             id: professional.id,
-            name: professional.name,
+            name: professionalDisplayName || professional.name,
             typeLabel: getPsychologistTitle(professional.gender),
             whatsappUrl: whatsappRedirectUrl ?? whatsappUrl,
           }}

@@ -1,6 +1,7 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import { crpExperienceYears } from "@/utils/professional-experience";
+import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import {
   activeProfessionalEntitlementWhere,
   isVerifiedProfessionalEntitlement,
@@ -326,7 +327,8 @@ export class FavoriteRepository implements IFavoriteRepository {
             id: item.psychologist.id,
             relation_id: item.id,
             relation_created_at: item.createdAt,
-            name: item.psychologist.name,
+            name:
+              normalizeProfessionalDisplayName(item.psychologist.name) || item.psychologist.name,
             avatar: item.psychologist.avatar,
             headline: profile.headline,
             bio: profile.bio,
@@ -346,7 +348,10 @@ export class FavoriteRepository implements IFavoriteRepository {
             social_value: profile.social_value,
             accepts_insurance: profile.accepts_insurance,
             show_experience_tag: profile.show_experience_tag,
-            whatsapp_url: buildWhatsappUrl(profile.whatsapp, item.psychologist.name),
+            whatsapp_url: buildWhatsappUrl(
+              profile.whatsapp,
+              normalizeProfessionalDisplayName(item.psychologist.name) || item.psychologist.name,
+            ),
             favorited: item.psychologist.favorited_by_patients.length > 0,
             followed: item.psychologist.followed_by_patients.length > 0,
             specialties: item.psychologist.psychologist_specialties

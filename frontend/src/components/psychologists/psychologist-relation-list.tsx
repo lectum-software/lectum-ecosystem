@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 
 const PAGE_LIMIT = 20;
 const FAVORITES_HEADER_DESCRIPTION =
@@ -291,6 +292,7 @@ const FavoriteCoverMedia = ({ psychologist }: { psychologist: PatientRelationPsy
 const FavoriteMedia = ({ psychologist }: { psychologist: PatientRelationPsychologist }) => {
   const mediaSrc = resolvePublicMediaUrl(psychologist.avatar);
   const mediaIsPublic = isPublicMediaUrl(mediaSrc);
+  const displayName = normalizeProfessionalDisplayName(psychologist.name) || psychologist.name;
 
   if (!mediaSrc) {
     return (
@@ -298,7 +300,7 @@ const FavoriteMedia = ({ psychologist }: { psychologist: PatientRelationPsycholo
         <span className="-top-7 -right-7 absolute h-20 w-20 rounded-full bg-primary/10 blur-2xl" />
         <span className="-bottom-8 -left-7 absolute h-24 w-24 rounded-full bg-success/10 blur-2xl" />
         <span className="relative grid h-full w-full place-items-center rounded-full border border-[#DDE7F2] bg-white/76 text-2xl font-black tracking-[-0.05em] text-primary backdrop-blur-xl sm:text-3xl">
-          {getInitials(psychologist.name)}
+          {getInitials(displayName)}
         </span>
       </div>
     );
@@ -306,7 +308,7 @@ const FavoriteMedia = ({ psychologist }: { psychologist: PatientRelationPsycholo
 
   return (
     <Image
-      alt={psychologist.name}
+      alt={displayName}
       className="object-cover object-top"
       fill
       priority={false}
@@ -328,6 +330,7 @@ const FavoritePsychologistCard = ({
 }) => {
   const route = `/psychologists/${psychologist.id}`;
   const favoriteBio = getFavoriteBio(psychologist);
+  const displayName = normalizeProfessionalDisplayName(psychologist.name) || psychologist.name;
 
   const handleFavoriteClick = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
@@ -337,7 +340,7 @@ const FavoritePsychologistCard = ({
 
   return (
     <article
-      aria-label={`Abrir perfil de ${psychologist.name}`}
+      aria-label={`Abrir perfil de ${displayName}`}
       className="group relative isolate mx-auto flex min-h-[238px] w-full max-w-none flex-col overflow-hidden rounded-[22px] border border-[#E2EAF3] bg-white text-center shadow-[0_10px_24px_rgb(15_23_42_/_5%)] transition duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_18px_42px_rgb(15_23_42_/_10%)] dark:border-border dark:bg-surface sm:min-h-[308px] sm:rounded-[24px] sm:shadow-[0_12px_28px_rgb(15_23_42_/_6%)]"
     >
       <div className="relative h-[58px] w-full overflow-hidden bg-primary-soft sm:h-[86px]">
@@ -347,7 +350,7 @@ const FavoritePsychologistCard = ({
           aria-hidden="true"
         />
         <button
-          aria-label={`Remover ${psychologist.name} dos favoritos`}
+          aria-label={`Remover ${displayName} dos favoritos`}
           aria-pressed="true"
           className="absolute top-2 right-2 z-20 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/90 text-rose-500 shadow-[0_8px_18px_rgba(15,23,42,0.12)] backdrop-blur transition hover:scale-105 hover:bg-white hover:text-rose-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/20 disabled:pointer-events-none disabled:opacity-60 sm:h-9 sm:w-9"
           disabled={favoritePending}
@@ -364,7 +367,7 @@ const FavoritePsychologistCard = ({
 
       <div className="flex flex-1 flex-col px-3 pb-3 sm:px-5 sm:pb-5">
         <Link
-          aria-label={`Abrir perfil de ${psychologist.name}`}
+          aria-label={`Abrir perfil de ${displayName}`}
           className="grid min-h-0 content-start justify-items-center text-center no-underline hover:no-underline"
           href={route}
         >
@@ -387,7 +390,7 @@ const FavoritePsychologistCard = ({
 
           <div className="mt-3 grid min-w-0 justify-items-center gap-1.5 sm:mt-5 sm:gap-2">
             <span className="flex w-full min-w-0 max-w-full items-center justify-center gap-1 text-center text-[0.78rem] font-black leading-[1.12] tracking-[-0.025em] text-foreground sm:text-[1.05rem]">
-              <span className="min-w-0 max-w-full truncate">{psychologist.name}</span>
+              <span className="min-w-0 max-w-full truncate">{displayName}</span>
               {psychologist.verified ? (
                 <VerifiedBadgeIcon className="h-3 w-3 shrink-0 sm:h-4 sm:w-4" />
               ) : null}
@@ -400,13 +403,13 @@ const FavoritePsychologistCard = ({
 
         <div className="mt-auto pt-4 sm:pt-5">
           <PsychologistWhatsAppRedirectButton
-            aria-label={`Chamar ${psychologist.name} no WhatsApp`}
+            aria-label={`Chamar ${displayName} no WhatsApp`}
             className="inline-flex min-h-[30px] w-full min-w-0 items-center justify-center gap-1 rounded-[11px] bg-success px-2 py-1.5 text-[10px] font-extrabold leading-none text-white transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 sm:min-h-[34px] sm:gap-1.5 sm:rounded-[13px] sm:px-2.5 sm:py-1.5 sm:text-[11px]"
             psychologist={{
               avatar: psychologist.avatar,
               crp: psychologist.crp,
               id: psychologist.id,
-              name: psychologist.name,
+              name: displayName,
               typeLabel: getContactProfession(psychologist.gender),
               whatsappUrl: psychologist.whatsapp_url,
             }}

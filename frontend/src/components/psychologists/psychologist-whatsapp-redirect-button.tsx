@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { formatCrpLabel } from "@/utils/crp";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 
 export const WHATSAPP_REDIRECT_MIN_DELAY_MS = 900;
 const TRACKING_WAIT_LIMIT_MS = 1400;
@@ -112,6 +113,7 @@ export const PsychologistWhatsAppRedirectModal = ({
   psychologist,
   redirectUrl,
 }: PsychologistWhatsAppRedirectModalProps) => {
+  const displayName = normalizeProfessionalDisplayName(psychologist.name) || psychologist.name;
   const titleId = useId();
   const descriptionId = useId();
   const dialogRef = useRef<HTMLDivElement | null>(null);
@@ -165,7 +167,7 @@ export const PsychologistWhatsAppRedirectModal = ({
             <span className="relative grid h-20 w-20 place-items-center overflow-hidden rounded-full bg-primary-soft text-xl font-black text-primary ring-4 ring-surface">
               {avatarSrc ? (
                 <Image
-                  alt={psychologist.name}
+                  alt={displayName}
                   className="object-cover"
                   fill
                   sizes="80px"
@@ -173,14 +175,14 @@ export const PsychologistWhatsAppRedirectModal = ({
                   unoptimized={isPublicMediaUrl(psychologist.avatar ?? null)}
                 />
               ) : (
-                getInitials(psychologist.name)
+                getInitials(displayName)
               )}
             </span>
           </div>
         </div>
 
         <h2 className="mt-3 text-xl font-black tracking-[-0.03em] text-foreground" id={titleId}>
-          {psychologist.name}
+          {displayName}
         </h2>
         <p className="mt-1 text-sm font-semibold text-muted">{professionalLabel(psychologist)}</p>
 

@@ -1,6 +1,7 @@
-﻿import type { Prisma } from "@/external/generated/prisma/client";
+import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import { crpExperienceYears } from "@/utils/professional-experience";
+import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import {
   activeProfessionalEntitlementWhere,
   isVerifiedProfessionalEntitlement,
@@ -733,7 +734,7 @@ export class IndexRepository implements IIndexRepository {
     return {
       data: rankedCandidates.map((item) => ({
         id: item.user.id,
-        name: item.user.name,
+        name: normalizeProfessionalDisplayName(item.user.name) || item.user.name,
         avatar: item.user.avatar,
         headline: item.headline,
         bio: item.bio,
@@ -752,7 +753,10 @@ export class IndexRepository implements IIndexRepository {
         social_value: item.social_value,
         accepts_insurance: item.accepts_insurance,
         show_experience_tag: item.show_experience_tag,
-        whatsapp_url: buildWhatsappUrl(item.whatsapp, item.user.name),
+        whatsapp_url: buildWhatsappUrl(
+          item.whatsapp,
+          normalizeProfessionalDisplayName(item.user.name) || item.user.name,
+        ),
         favorited: item.user.favorited_by_patients.length > 0,
         followed: item.user.followed_by_patients.length > 0,
         specialties: item.user.psychologist_specialties

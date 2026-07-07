@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { playVideoWithSound } from "@/lib/video-playback";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 
 export type PsychologistCardItem = {
   id: string;
@@ -95,14 +96,8 @@ const formatRating = (ratingAvg: number, ratingCount: number) => {
   return `${(ratingAvg / 100).toFixed(1)} (${ratingCount})`;
 };
 
-const getHonorificName = (psychologist: PsychologistCardItem) => {
-  if (!psychologist.verified) return psychologist.name;
-
-  const gender = psychologist.gender?.toLowerCase();
-  const honorific = gender === "feminino" ? "Dra." : "Dr.";
-
-  return `${honorific} ${psychologist.name}`;
-};
+const getPsychologistDisplayName = (psychologist: PsychologistCardItem) =>
+  normalizeProfessionalDisplayName(psychologist.name) || psychologist.name;
 
 const getPsychologistTitle = (gender?: string | null) => {
   const normalized = gender?.toLowerCase();
@@ -193,6 +188,7 @@ const FavoriteButton = ({
   className?: string;
 }) => {
   const isFavorited = psychologist.favorited;
+  const displayName = getPsychologistDisplayName(psychologist);
   const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
@@ -220,8 +216,8 @@ const FavoriteButton = ({
         !canFavorite
           ? "Favoritos disponíveis apenas para usuários autenticados"
           : psychologist.favorited
-            ? `Remover ${psychologist.name} dos favoritos`
-            : `Favoritar ${psychologist.name}`
+            ? `Remover ${displayName} dos favoritos`
+            : `Favoritar ${displayName}`
       }
       aria-pressed={psychologist.favorited}
       className={cn(
@@ -585,7 +581,7 @@ export function PsychologistCard({
   const videoSrc = psychologist.verified ? resolvePublicMediaUrl(psychologist.video_url) : null;
   const mediaIsPublic = isPublicMediaUrl(avatarSrc);
   const tags = buildBenefitTags(psychologist);
-  const displayName = getHonorificName(psychologist);
+  const displayName = getPsychologistDisplayName(psychologist);
   const route = `/psychologists/${psychologist.id}`;
   const overlayRef = useRef<HTMLDivElement>(null);
   const shareButtonRef = useRef<HTMLButtonElement>(null);
@@ -698,7 +694,7 @@ export function PsychologistCard({
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-surface-muted text-[clamp(2.4rem,6vw,3.6rem)] font-extrabold text-primary">
-            {getInitials(psychologist.name)}
+            {getInitials(displayName)}
           </div>
         )}
       </div>
@@ -744,7 +740,7 @@ export function PsychologistCard({
         />
 
         <Link
-          aria-label={`Abrir perfil de ${psychologist.name}`}
+          aria-label={`Abrir perfil de ${displayName}`}
           className="pointer-events-auto absolute grid place-items-center rounded-full text-[#334155] transition"
           href={route}
           style={{
@@ -864,7 +860,7 @@ export function PsychologistCard({
                   avatar: psychologist.avatar,
                   crp: psychologist.crp,
                   id: psychologist.id,
-                  name: psychologist.name,
+                  name: displayName,
                   typeLabel: getPsychologistTypeLabel(psychologist.gender),
                   whatsappUrl: psychologist.whatsapp_url,
                 }}
