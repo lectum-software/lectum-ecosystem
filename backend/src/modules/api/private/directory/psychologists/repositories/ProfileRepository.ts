@@ -221,6 +221,12 @@ const PROFILE_PUBLICATION_TOP_MENTOR_REPLY_WEIGHT = 25;
 const PROFILE_PUBLICATION_SHARE_WEIGHT = 4;
 const PROFILE_PUBLICATION_SAVE_WEIGHT = 3;
 
+const professionalReplyVideoTieBreakScore = ({
+  media_type,
+  media_url,
+}: Pick<ProfileProfessionalReplyResult, "media_type" | "media_url">) =>
+  media_type === "video" && media_url ? 1 : 0;
+
 const selectHighlightedProfileReplyPreview = (replies: ProfileProfessionalReplyResult[]) =>
   [...replies].sort((a, b) => {
     const scoreDiff =
@@ -228,6 +234,10 @@ const selectHighlightedProfileReplyPreview = (replies: ProfileProfessionalReplyR
       b.downvotes_count * PROFILE_PUBLICATION_DOWNVOTE_WEIGHT -
       (a.upvotes_count - a.downvotes_count * PROFILE_PUBLICATION_DOWNVOTE_WEIGHT);
     if (scoreDiff !== 0) return scoreDiff;
+
+    const videoDiff =
+      professionalReplyVideoTieBreakScore(b) - professionalReplyVideoTieBreakScore(a);
+    if (videoDiff !== 0) return videoDiff;
 
     const dateDiff = b.createdAt.getTime() - a.createdAt.getTime();
     if (dateDiff !== 0) return dateDiff;

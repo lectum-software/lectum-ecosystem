@@ -764,6 +764,12 @@ const professionalReplyRankingPosition = (
   rankingSignals: Awaited<ReturnType<typeof getCommunityMentorRankingSignals>>,
 ) => rankingSignals.get(reply.author.id)?.position ?? Number.POSITIVE_INFINITY;
 
+const professionalReplyVideoTieBreakScore = ({
+  media_type,
+  media_url,
+}: Pick<ProfessionalReplyResult, "media_type" | "media_url">) =>
+  media_type === "video" && media_url ? 1 : 0;
+
 const compareProfessionalRepliesForHighlight = (
   a: ProfessionalReplyResult,
   b: ProfessionalReplyResult,
@@ -776,6 +782,9 @@ const compareProfessionalRepliesForHighlight = (
     professionalReplyRankingPosition(a, rankingSignals) -
     professionalReplyRankingPosition(b, rankingSignals);
   if (rankingDiff !== 0) return rankingDiff;
+
+  const videoDiff = professionalReplyVideoTieBreakScore(b) - professionalReplyVideoTieBreakScore(a);
+  if (videoDiff !== 0) return videoDiff;
 
   const recencyDiff = b.createdAt.getTime() - a.createdAt.getTime();
   if (recencyDiff !== 0) return recencyDiff;

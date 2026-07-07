@@ -495,10 +495,20 @@ const professionalReplyPreviewScore = ({
 }: Pick<ProfessionalReplyResult, "downvotes_count" | "upvotes_count">) =>
   upvotes_count - downvotes_count * REPLY_DOWNVOTE_RANKING_WEIGHT;
 
+const professionalReplyVideoTieBreakScore = ({
+  media_type,
+  media_url,
+}: Pick<ProfessionalReplyResult, "media_type" | "media_url">) =>
+  media_type === "video" && media_url ? 1 : 0;
+
 const selectHighlightedListProfessionalReply = (replies: ProfessionalReplyResult[]) =>
   [...replies].sort((a, b) => {
     const scoreDiff = professionalReplyPreviewScore(b) - professionalReplyPreviewScore(a);
     if (scoreDiff !== 0) return scoreDiff;
+
+    const videoDiff =
+      professionalReplyVideoTieBreakScore(b) - professionalReplyVideoTieBreakScore(a);
+    if (videoDiff !== 0) return videoDiff;
 
     const dateDiff = b.createdAt.getTime() - a.createdAt.getTime();
     if (dateDiff !== 0) return dateDiff;
