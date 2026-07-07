@@ -41,6 +41,38 @@ const normalizeWhatsapp = (value?: string | null) => {
   return `+${digits.slice(0, 15)}`;
 };
 
+const normalizeBirthdate = (value?: string | null) => {
+  const rawValue = value?.trim();
+  if (!rawValue) return null;
+
+  const dateOnly = rawValue.slice(0, 10);
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateOnly);
+  if (!match) return null;
+
+  const [, yearValue, monthValue, dayValue] = match;
+  const year = Number(yearValue);
+  const month = Number(monthValue);
+  const day = Number(dayValue);
+  const time = Date.UTC(year, month - 1, day);
+  const parsed = new Date(time);
+
+  if (
+    parsed.getUTCFullYear() !== year ||
+    parsed.getUTCMonth() !== month - 1 ||
+    parsed.getUTCDate() !== day
+  ) {
+    return null;
+  }
+
+  const today = new Date();
+  const todayTime = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+  const minimumBirthdateTime = Date.UTC(1900, 0, 1);
+
+  if (time > todayTime || time < minimumBirthdateTime) return null;
+
+  return parsed;
+};
+
 const normalizeList = (value?: string[]) => {
   if (!Array.isArray(value)) return [];
 
@@ -117,6 +149,7 @@ const normalizeAddress = (
 const updateSchema = z.object({
   name: z.string().trim().min(2).max(120),
   cpf: z.string().nullable().optional(),
+  birthdate: z.string().trim().nullable().optional(),
   gender: z.string().trim().max(40).nullable().optional(),
   race_color: z.string().trim().max(40).nullable().optional(),
   religion: z.string().trim().max(80).nullable().optional(),
@@ -158,6 +191,7 @@ const hasRequiredPublishingFields = (
       body.target_audience.length > 0 &&
       body.gender &&
       body.cpf &&
+      body.birthdate &&
       body.crp_region &&
       body.crp_number &&
       body.address.state &&
@@ -267,6 +301,16 @@ export const update = async (data: IFreeProfessionalProfileUpdateDTO) => {
     };
   }
 
+  const birthdate = normalizeBirthdate(
+    typeof parsed.data.birthdate === "string" ? parsed.data.birthdate : null,
+  );
+  if (!birthdate) {
+    return {
+      status: 400,
+      ...error("invalid_birthdate", {}),
+    };
+  }
+
   const whatsapp = normalizeWhatsapp(parsed.data.whatsapp);
   const whatsappDigits = onlyDigits(whatsapp);
   if (whatsapp && (whatsappDigits.length < 8 || whatsappDigits.length > 15)) {
@@ -289,6 +333,7 @@ export const update = async (data: IFreeProfessionalProfileUpdateDTO) => {
   const body: Required<FreeProfessionalProfileUpdateBody> = {
     name: parsed.data.name,
     cpf,
+    birthdate,
     gender: trimToNull(parsed.data.gender),
     race_color: trimToNull(parsed.data.race_color),
     religion: trimToNull(parsed.data.religion),

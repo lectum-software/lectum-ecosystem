@@ -205,6 +205,7 @@ model psychologist_profile {
   video_url                       String?
   video_cover_url                 String?                       @map("video_cover_url")
   cpf                             String?
+  birthdate                       DateTime?
   crp                             String?
   crp_registration_date           DateTime?                     @map("crp_registration_date")
   gender                          String?

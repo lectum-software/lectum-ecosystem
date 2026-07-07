@@ -43,6 +43,7 @@ export type FreeProfessionalProfile = {
     modality: string | null;
     languages: string[];
     cpf: string | null;
+    birthdate: string | null;
     gender: string | null;
     race_color: string | null;
     religion: string | null;
@@ -95,6 +96,7 @@ export type FreeProfessionalProfile = {
 export type FreeProfessionalProfilePayload = {
   name: string;
   cpf: string | null;
+  birthdate: string | null;
   gender: string | null;
   race_color: string | null;
   religion: string | null;

@@ -29,6 +29,7 @@ export type FreeProfileForm = {
   race_color: string | null;
   religion: string | null;
   cpf: string;
+  birthdate: string;
   crp_region: string;
   crp_number: string;
   countryCode: string;
@@ -80,6 +81,31 @@ export const toWhatsappPhoneE164 = (value: string, countryCode = DEFAULT_COUNTRY
   return nationalDigits ? `+${countryCode}${nationalDigits}` : null;
 };
 
+const isValidBirthdate = (value: string) => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return false;
+
+  const [, yearValue, monthValue, dayValue] = match;
+  const year = Number(yearValue);
+  const month = Number(monthValue);
+  const day = Number(dayValue);
+  const time = Date.UTC(year, month - 1, day);
+  const parsed = new Date(time);
+
+  if (
+    parsed.getUTCFullYear() !== year ||
+    parsed.getUTCMonth() !== month - 1 ||
+    parsed.getUTCDate() !== day
+  ) {
+    return false;
+  }
+
+  const today = new Date();
+  const todayTime = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+
+  return time <= todayTime && time >= Date.UTC(1900, 0, 1);
+};
+
 export const freeProfileSchema = z
   .object({
     name: z.string().trim().min(2, "Informe seu nome profissional").max(120),
@@ -87,6 +113,11 @@ export const freeProfileSchema = z
     race_color: z.string().trim().max(40).nullable(),
     religion: z.string().trim().max(80).nullable(),
     cpf: z.string().refine((value) => onlyDigits(value).length === 11, "Informe um CPF válido"),
+    birthdate: z
+      .string()
+      .trim()
+      .min(1, "Informe sua data de nascimento")
+      .refine(isValidBirthdate, "Informe uma data de nascimento válida"),
     crp_region: z
       .string()
       .trim()
@@ -191,6 +222,13 @@ export const fields = [
     placeholder: "000.000.000-00",
     required: true,
     autoComplete: "off",
+  },
+  {
+    name: "birthdate",
+    field: "calendar",
+    label: "Data de Nascimento",
+    required: true,
+    autoComplete: "bday",
   },
   {
     name: "crp_region",
@@ -351,6 +389,7 @@ export const getDefaultValues = (data?: FreeProfessionalProfile | null): FreePro
     race_color: data?.profile.race_color || "",
     religion: data?.profile.religion || "",
     cpf: data?.profile.cpf || "",
+    birthdate: data?.profile.birthdate?.slice(0, 10) || "",
     crp_region: data?.profile.crp_region || "",
     crp_number: data?.profile.crp_number || "",
     countryCode,

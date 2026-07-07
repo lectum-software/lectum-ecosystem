@@ -1564,6 +1564,7 @@ export const ProfessionalProfileSetupLogic = () => {
     update.mutate({
       name: values.name,
       cpf: lockedIdentityProfile ? lockedIdentityProfile.cpf : values.cpf || null,
+      birthdate: values.birthdate || null,
       gender: values.gender || null,
       race_color: values.race_color || null,
       religion: values.religion || null,
@@ -1974,6 +1975,7 @@ export const ProfessionalProfileSetupLogic = () => {
                 <div className="grid gap-3">
                   {renderField("name")}
                   {renderField("cpf", lockedIdentityFieldProps)}
+                  {renderField("birthdate")}
                   {renderField("gender")}
                   {renderField("race_color")}
                   {renderField("religion")}

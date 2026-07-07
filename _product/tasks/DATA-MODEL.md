@@ -182,6 +182,7 @@ Quando construído: módulo de audiência próprio (ex.: `backend/src/modules/ma
 | `video_url` | `String?` | vídeo de apresentação público permitido para todos os psicólogos, inclusive Plano Gratuito; obrigatório para publicação/exibição pública do perfil e elegibilidade na listagem `/psychologists` |
 | `video_cover_url` | `String?` | imagem pública opcional de capa do vídeo de apresentação; deve ser limpa junto ao vídeo |
 | `cpf` | `String?` | usado na consulta CFP; dado sensível (LGPD) |
+| `birthdate` | `DateTime?` | data de nascimento informada na edição privada do perfil; obrigatória no contrato de atualização, mas nullable no banco para compatibilidade com perfis legados até próxima edição |
 | `crp` | `String?` | registro profissional exibido no cabeçalho |
 | `crp_registration_date` | `DateTime?` | data interna de inscrição no CRP, preenchida pela consulta CFP real ou pela operação na concessão `admin_grant`; não é editável pelo psicólogo e é usada para calcular tempo de experiência no card |
 | `show_experience_tag` | `Boolean @default(true)` | controla se o tempo de experiência calculado por `crp_registration_date` aparece como tag pública |

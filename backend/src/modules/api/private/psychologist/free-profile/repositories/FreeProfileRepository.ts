@@ -120,6 +120,9 @@ const buildActivationPendingFields = ({
   }
   if (!hasText(profile.gender)) pending.push({ key: "gender", label: "Gênero" });
   if (!hasText(profile.cpf)) pending.push({ key: "cpf", label: "CPF" });
+  if (!profile.birthdate) {
+    pending.push({ key: "birthdate", label: "Data de nascimento" });
+  }
   if (!hasText(crp.crp_region) || !hasText(crp.crp_number)) {
     pending.push({ key: "crp", label: "CRP" });
   }
@@ -190,6 +193,7 @@ const getUserWithProfile = (userId: string) => {
           modality: true,
           languages: true,
           cpf: true,
+          birthdate: true,
           gender: true,
           race_color: true,
           religion: true,
@@ -353,6 +357,7 @@ const toResponse = async (
       modality: profile.modality,
       languages,
       cpf: profile.cpf,
+      birthdate: profile.birthdate,
       gender: profile.gender,
       race_color: profile.race_color,
       religion: profile.religion,
@@ -427,6 +432,7 @@ export class FreeProfileRepository implements IFreeProfileRepository {
           bio: body.bio,
           modality: body.modality,
           cpf: options.lockIdentityFields ? undefined : body.cpf,
+          birthdate: body.birthdate,
           gender: body.gender,
           race_color: body.race_color,
           religion: body.religion,

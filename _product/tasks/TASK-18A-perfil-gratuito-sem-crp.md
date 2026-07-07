@@ -473,3 +473,38 @@ Validacoes executadas:
 - `pnpm check`
 - Consulta real ao endpoint `GET /api/private/psychologist/free-profile` com token temporario real removido ao final confirmou `crp_region="06ª Região - SP"`, `crp_number="161904"` e `identity_fields_locked=true`.
 - Chrome/CDP headless na rota `/app/professional/profile/setup`, viewport mobile 390x844 via URL ngrok, confirmou select `crp_region` desabilitado com valor `06ª Região - SP`, input `crp_number` desabilitado com `161904` e ausencia da faixa `CPF e CRP validados`. Token temporario de validacao removido ao final.
+
+## Ajuste complementar em 2026-07-07 - Data de Nascimento obrigatoria
+
+- Pedido do usuario: adicionar um campo obrigatorio de `Data de Nascimento` na edicao do perfil em `/app/professional/profile/setup`.
+- O campo foi adicionado em `Informacoes basicas`, logo apos CPF, usando o controller `calendar` da fundacao TASK-02, com largura total, slot de erro reservado e validacao Zod mobile-first.
+- `DATA-MODEL.md` e `psychologist_profile` receberam `birthdate DateTime?`; o banco permanece nullable para nao criar backfill fake em perfis legados, mas o contrato de atualizacao exige uma data valida em todo novo salvamento.
+- O backend valida e persiste a data no endpoint real `/api/private/psychologist/free-profile`, rejeitando data ausente, invalida, futura ou anterior a 1900 com mensagem em PT-BR.
+- `profile.birthdate` e exposto apenas no endpoint privado do psicologo; nenhuma rota publica de descoberta/perfil passou a publicar a data de nascimento.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; as referencias usadas foram `_product/proto/Editar Perfil - Psicologo.jpg` e o print enviado pelo usuario.
+- ADR criado: `adrs/0217-data-nascimento-perfil-psicologo.md`.
+
+Criterios complementares:
+
+- [x] Campo `Data de Nascimento` obrigatorio aparece em `Informacoes basicas` na edicao do perfil profissional.
+- [x] Campo usa React Hook Form, Zod, `useFormList` e controller `calendar` da TASK-02.
+- [x] Backend persiste `psychologist_profile.birthdate` sem backfill artificial para perfis legados.
+- [x] API rejeita salvamento sem data de nascimento valida.
+- [x] A data de nascimento permanece privada e nao foi adicionada a respostas publicas de descoberta/perfil.
+- [x] Migration aditiva foi aplicada com `pnpm --dir backend db:migrate`.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado ou package novo foi usado.
+
+Validacoes executadas:
+
+- `pnpm --dir backend db:migrate` falhou inicialmente por BOM no SQL da migration; o SQL foi regravado sem BOM.
+- `pnpm --dir backend db:migrate` executado novamente com sucesso, reportando schema em sincronia.
+- `pnpm --dir backend exec prisma migrate status` confirmou banco em dia.
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- API local real: `GET /api/private/psychologist/free-profile` com usuario psicologo temporario retornou `profile.birthdate=null`.
+- API local real: `PUT /api/private/psychologist/free-profile` sem `birthdate` retornou `400` com `code="invalid_birthdate"`.
+- Chrome/CDP headless em `http://localhost:3000/app/professional/profile/setup`, viewport mobile 390x844, com usuario psicologo temporario real: confirmou `Data de Nascimento`, input `type="date"`, indicador obrigatorio e `scrollWidth=390`.
+- Usuario psicologo temporario de validacao removido do banco ao final.
