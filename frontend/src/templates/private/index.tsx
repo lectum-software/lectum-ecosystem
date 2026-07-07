@@ -7,10 +7,10 @@ import {
   Home,
   LogIn,
   Plus,
+  Search,
   ShieldCheck,
   UserPlus,
   UserRound,
-  UsersRound,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -142,7 +142,7 @@ const fallbackNavigation: NavigationItem[] = [
   },
   {
     href: "/psychologists",
-    icon: UsersRound,
+    icon: Search,
     label: "Psicólogos",
     title: "Encontre seu psicólogo",
   },
@@ -176,7 +176,7 @@ const navigationByRole: Record<Extract<UserRole, "paciente" | "psicologo">, Navi
     },
     {
       href: "/psychologists",
-      icon: UsersRound,
+      icon: Search,
       label: "Psicólogos",
       title: "Encontre seu psicólogo",
     },
@@ -208,7 +208,7 @@ const navigationByRole: Record<Extract<UserRole, "paciente" | "psicologo">, Navi
     },
     {
       href: "/psychologists",
-      icon: UsersRound,
+      icon: Search,
       label: "Psicólogos",
       title: "Psicólogos",
     },
