@@ -1,5 +1,5 @@
-import { type RequestHandler, Router } from "express";
-import middlewares from "../../../middlewares/_auth";
+import { Router } from "express";
+import optionalAuth from "../../../middlewares/optional-auth";
 import {
   contact,
   contactClick,
@@ -19,12 +19,6 @@ import validator, {
 
 const routes = Router();
 
-const optionalAuth: RequestHandler = (req, res, next) => {
-  if (!req.headers.authorization) return next();
-
-  return middlewares(req, res, next);
-};
-
 routes.get(
   "",
   optionalAuth,
@@ -34,8 +28,8 @@ routes.get(
     }),
   index,
 );
-routes.post("/:id/contact", middlewares, contactValidator, contact);
-routes.post("/:id/contact-click", middlewares, profileShowValidator, contactClick);
+routes.post("/:id/contact", optionalAuth, contactValidator, contact);
+routes.post("/:id/contact-click", optionalAuth, profileShowValidator, contactClick);
 routes.post("/:id/view", optionalAuth, profileShowValidator, view);
 routes.post("/:id/video-watch", optionalAuth, profileVideoWatchValidator, videoWatch);
 routes.get("/:id/posts", optionalAuth, profileListValidator, posts);

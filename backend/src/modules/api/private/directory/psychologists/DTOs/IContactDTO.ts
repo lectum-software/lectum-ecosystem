@@ -15,12 +15,12 @@ export interface IContactDTO {
     patient_phone: string;
     consent_accepted: boolean;
   };
-  auth: user;
+  auth?: user;
 }
 
 export interface IContactClickDTO {
   p: {
     id: string;
   };
-  auth: user;
+  auth?: user;
 }

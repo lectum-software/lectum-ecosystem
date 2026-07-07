@@ -28,6 +28,7 @@ Manter leitura publica em `/app` confundia a semantica do produto, obrigava exce
 5. Atualizar links de leitura, compartilhamento, notificacoes/digests e `profile_url` de ranking para URLs publicas.
 6. Migrar a etapa autenticada de CFP para `/app/professional/cfp`, mantendo `/psychologist/cfp` apenas como redirect legado/noindex.
 7. Manter o namespace historico de APIs (`/api/private/directory`, `/api/private/community`, `/api/private/posts`) por compatibilidade, usando leitura publica/`optionalAuth` quando aplicavel e exigindo autenticacao nos comandos.
+8. A navegacao publica de psicologos inclui listagem, perfil, pagina de contato e clique/abertura de WhatsApp sem exigir login/cadastro. Quando o visitante nao estiver autenticado, a intencao real de contato pode ser persistida com `contact_request.user_id=null`; prompts/tips de cadastro permanecem apenas como camada de conversao quando houver gatilho de produto definido, sem bloquear a leitura nem a abertura do contato. O CTA de WhatsApp em `/psychologists*` nao abre gate de conversao bloqueante.
 
 ## Consequencias
 
@@ -36,6 +37,7 @@ Manter leitura publica em `/app` confundia a semantica do produto, obrigava exce
 - URLs antigas sob `/app` ficam privadas/noindex e podem ser preservadas apenas como compatibilidade para usuarios autenticados.
 - A decisao nao cria aliases em portugues; isso fica para task futura se o produto quiser `/psicologos` e `/comunidades` como rotas adicionais.
 - A separacao e de URL/shell, nao de dados: interacoes continuam protegidas no servidor.
+- Acoes que dependem de identidade pessoal, como favoritar e avaliar, continuam autenticadas; a abertura publica do WhatsApp nao cria usuario, nao usa mock e nao força redirecionamento para login.
 
 ## Validacao
 
@@ -47,3 +49,13 @@ Planejada/executada na TASK-40:
 - `pnpm --dir backend build`
 - `pnpm check`
 - Smoke HTTP/browser local em `/`, `/psychologists`, `/community`, `/community/feed`, `/app/psychologists` sem cookie e `/app/community/suggest` sem cookie.
+
+Complemento de 2026-07-07 executado:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke API local sem `Authorization` em `POST /api/private/directory/psychologists/cmr6pzpbn000h5guht478a9l4/contact-click`, retornando `contact_request.user_id=null`; registro e notificacao de smoke removidos ao final.
+- Browser local headless mobile `390x844` em `/psychologists`, `/psychologists/cmr6pzpbn000h5guht478a9l4/contact` e `/app/favorites`, validando descoberta/contato sem area restrita e favoritos ainda autenticado.

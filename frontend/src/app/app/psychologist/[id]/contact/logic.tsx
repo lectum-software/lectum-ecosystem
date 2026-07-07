@@ -118,7 +118,8 @@ const PrivacyCard = () => {
         </p>
         <p className="flex gap-2">
           <Smartphone className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-          Confirme seu número para manter o registro de contato associado à sua conta.
+          Confirme seu número para registrar o contato; se você estiver logado, ele também fica
+          associado à sua conta.
         </p>
       </div>
     </section>
@@ -231,7 +232,7 @@ export const PsychologistContactLogic = () => {
   });
 
   return (
-    <PrivateTemplate>
+    <PrivateTemplate allowAnonymous>
       <div className="mx-auto flex w-full max-w-[430px] flex-col gap-5 sm:max-w-2xl lg:max-w-3xl">
         <header className="flex items-center justify-between gap-3">
           <Button asChild className="h-10 w-10 rounded-full p-0" variant="ghost">

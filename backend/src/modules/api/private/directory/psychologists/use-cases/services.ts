@@ -116,7 +116,7 @@ export const contact = async (data: IContactDTO) => {
 
   if (res.data.contact_request_id) {
     await notifyWhatsappClick({
-      actorId: data.auth.id,
+      actorId: data.auth?.id ?? null,
       contactRequestId: res.data.contact_request_id,
       psychologistId: res.data.psychologist_id,
     });
@@ -151,7 +151,7 @@ export const contactClick = async (data: IContactClickDTO) => {
 
   if (res.data.contact_request_id) {
     await notifyWhatsappClick({
-      actorId: data.auth.id,
+      actorId: data.auth?.id ?? null,
       contactRequestId: res.data.contact_request_id,
       psychologistId: res.data.psychologist_id,
     });

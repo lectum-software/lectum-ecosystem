@@ -104,7 +104,9 @@ export class ContactRepository implements IContactRepository {
       };
     }
 
-    if (isSelfProfessionalAction(data.auth.id, psychologist.id)) {
+    const actorId = data.auth?.id ?? null;
+
+    if (isSelfProfessionalAction(actorId, psychologist.id)) {
       return {
         ok: true,
         data: toContactResponse(psychologist, psychologistPhone, null),
@@ -113,7 +115,7 @@ export class ContactRepository implements IContactRepository {
 
     const contact = await prisma.contact_request.create({
       data: {
-        user_id: data.auth.id,
+        user_id: actorId,
         psychologist_id: psychologist.id,
         channel: "whatsapp",
       },
@@ -195,7 +197,9 @@ export class ContactRepository implements IContactRepository {
       };
     }
 
-    if (isSelfProfessionalAction(data.auth.id, psychologist.id)) {
+    const actorId = data.auth?.id ?? null;
+
+    if (isSelfProfessionalAction(actorId, psychologist.id)) {
       return {
         ok: true,
         data: toContactResponse(psychologist, psychologistPhone, null),
@@ -203,10 +207,10 @@ export class ContactRepository implements IContactRepository {
     }
 
     const contact = await prisma.$transaction(async (tx) => {
-      if (data.auth.role === "paciente" && data.auth.id) {
+      if (data.auth?.role === "paciente" && actorId) {
         await tx.patient_profile.updateMany({
           where: {
-            user_id: data.auth.id,
+            user_id: actorId,
             deleted: false,
           },
           data: {
@@ -217,7 +221,7 @@ export class ContactRepository implements IContactRepository {
 
       return tx.contact_request.create({
         data: {
-          user_id: data.auth.id,
+          user_id: actorId,
           psychologist_id: psychologist.id,
           channel: "whatsapp",
         },

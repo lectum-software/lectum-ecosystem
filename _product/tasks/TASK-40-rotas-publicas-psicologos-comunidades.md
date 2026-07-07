@@ -122,3 +122,39 @@ Disponibilizar as superfícies públicas principais em rotas canônicas sem `/ap
 
 - `db:migrate` nao se aplica: nao houve alteracao em Prisma schema/migrations.
 - Builder/Quick Copy nao estava acessivel como ferramenta callable; nao houve tela nova, apenas reenderecamento de telas existentes.
+
+## Execucao complementar: navegacao livre em psicologos e contato sem login (2026-07-07)
+
+- Pedido do usuario: a navegacao na pagina de psicologos deve ser livre, sem necessidade de login/cadastro, apenas com exibicao das tips de cadastro quando definido.
+- Referencia visual ativa consultada: `PROTO-INVENTORY.md`; nao houve tela nova, apenas correcao de gate/fluxo nas superficies publicas ja previstas. Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: a rota publica `/psychologists/[id]/contact` passou a usar `PrivateTemplate allowAnonymous`, preservando navegação e formulario real de contato sem mostrar o card de area restrita para visitantes.
+- Backend: `POST /api/private/directory/psychologists/:id/contact` e `POST /api/private/directory/psychologists/:id/contact-click` passaram para `optionalAuth`; visitantes anonimos geram `contact_request` real com `user_id=null` quando houver registro de contato, sem usuario fake e sem redirecionar para login.
+- Frontend: chamadas publicas de contato/WhatsApp deixam de acionar sign-out/redirecionamento em 401 residual, preservando o fallback seguro do fluxo; o CTA de WhatsApp em `/psychologists*` tambem deixa de abrir gate de conversao que bloqueie a saida para o WhatsApp.
+- `DATA-MODEL.md` e `ADR-0180` foram atualizados para explicitar que leitura, contato e WhatsApp em psicologos sao publicos; favoritos/avaliacoes continuam autenticados.
+- Nao houve alteracao de Prisma schema/migrations nem package novo.
+
+### Criterios complementares
+
+- [x] `/psychologists` permanece navegavel sem cookie de sessao e sem redirecionar para login/cadastro.
+- [x] `/psychologists/[id]/contact` renderiza a tela de contato sem exigir login/cadastro.
+- [x] Clique/abertura de WhatsApp na descoberta/perfil nao exige login/cadastro nem modal bloqueante de conversao; quando a API registra contato anonimo, `contact_request.user_id` fica `null`.
+- [x] As tips/prompts de cadastro continuam separadas da autorizacao e aparecem somente quando houver gatilho de produto definido.
+- [x] Favoritos e avaliacoes permanecem autenticados.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo ou `<img>` cru foi usado.
+- [x] Checks/builds relevantes foram executados sem erros.
+- [x] ADR relevante atualizado.
+
+### Validacoes do complemento
+
+- `pnpm --dir backend exec biome check --write src/modules/api/private/directory/psychologists/index.ts src/modules/api/private/directory/psychologists/DTOs/IContactDTO.ts src/modules/api/private/directory/psychologists/repositories/ContactRepository.ts src/modules/api/private/directory/psychologists/use-cases/services.ts`
+- `pnpm --dir frontend exec biome check --write src/api/req/directory/index.ts 'src/app/app/psychologist/[id]/contact/logic.tsx' src/components/conversion/progressive-conversion-provider.tsx`
+- `pnpm --dir backend check`
+- `pnpm --dir frontend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend build` com `NODE_OPTIONS=--max-old-space-size=4096`
+- `pnpm check`
+- Smoke API local sem `Authorization` em `POST /api/private/directory/psychologists/cmr6pzpbn000h5guht478a9l4/contact-click`: retornou HTTP 200 e `contact_request.user_id=null`; o registro e a notificacao gerados pelo smoke foram removidos ao final.
+- Browser local headless em viewport mobile `390x844`:
+  - `/psychologists` sem cookie renderizou sem card de area restrita;
+  - `/psychologists/cmr6pzpbn000h5guht478a9l4/contact` sem cookie renderizou a tela de contato (`Contato seguro`/`Confirmar WhatsApp`) sem card de area restrita;
+  - `/app/favorites` sem cookie continuou exibindo a area restrita de favoritos.

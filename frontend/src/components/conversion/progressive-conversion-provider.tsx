@@ -234,6 +234,14 @@ const isPsychologistProfilePath = (pathname: string) => {
   return segments.length === 2 && segments[0] === "psychologists";
 };
 
+const isPublicPsychologistsPath = (pathname: string) => {
+  const normalizedPathname = normalizePath(pathname);
+
+  return (
+    normalizedPathname === "/psychologists" || normalizedPathname.startsWith("/psychologists/")
+  );
+};
+
 const isCommunityPostPath = (pathname: string) => {
   const segments = getPathSegments(pathname);
 
@@ -333,6 +341,8 @@ export const ProgressiveConversionProvider = ({
 
       const nextCount = readNumber(WHATSAPP_CLICK_COUNT_KEY) + 1;
       writeNumber(WHATSAPP_CLICK_COUNT_KEY, nextCount);
+
+      if (isPublicPsychologistsPath(pathnameRef.current)) return true;
 
       if (nextCount < 2 || hasPromptBeenShown()) return true;
 

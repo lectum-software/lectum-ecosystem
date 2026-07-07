@@ -72,6 +72,7 @@ export const createDirectoryPsychologistContact = async (
 
   return handleReq<DirectoryPsychologistContactResponse>({
     ...handle,
+    signOutOnUnauthorized: false,
     showSuccess: true,
   });
 };
@@ -86,6 +87,7 @@ export const createDirectoryPsychologistContactClick = async (id: string) => {
   return handleReq<DirectoryPsychologistContactClickResponse>({
     ...handle,
     hideError: true,
+    signOutOnUnauthorized: false,
   });
 };
 
