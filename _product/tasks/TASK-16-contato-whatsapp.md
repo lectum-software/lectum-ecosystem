@@ -357,3 +357,32 @@ Validacoes do complemento:
 - Smoke local do utilitário backend confirmou que `buildLectumWhatsappUrl` decodifica `text` como `Olá Ana Rúbia, encontrei seu post na Lectum e gostaria de conversar sobre atendimento.`
 - `pnpm --dir backend check`
 - `pnpm check`
+
+## Complemento em 2026-07-07: primeiro nome útil no CTA e na mensagem do WhatsApp
+
+- Pedido direto de produto: o botão de chamar no WhatsApp deve renderizar `Falar com {primeiro nome}`.
+- Regra adotada: normalizar espaços, remover prefixos/títulos profissionais de início (`Dr.`, `Dra.`, `Psicólogo`, `Psicóloga`, `Psi`/`Psic.`) e usar o primeiro termo restante que não seja partícula de nome (`de`, `da`, `do`, `das`, `dos`, `di`, `du` ou `e`). Se não houver nome útil, manter fallback `psicólogo`.
+- Exemplos validados: `Psicóloga Bruna` gera `Falar com Bruna`; `Psicóloga Thais Bruni` gera `Falar com Thais`; `Dra. Ana Rúbia Cunha Papi` gera `Falar com Ana`.
+- A mensagem pronta do `wa.me` usa a mesma regra para manter consistência com o CTA: `Olá Thais, encontrei seu post na Lectum...`.
+- Builder Quick Copy foi tentado por `npx "@builder.io/dev-tools@latest" auth status`, mas o ambiente retornou `Not Authenticated to Builder.io`; foi usado fallback visual local/produto.
+- Referência visual local consultada: `_product/proto/Dentro do Post.jpg` e a captura enviada pelo usuário da tela de feed/comunidade em desktop.
+- ADR atualizado: `adrs/0164-cta-whatsapp-conectado-midias-comunidade.md`.
+
+### Critérios de aceite do complemento
+
+- [x] CTA de WhatsApp da comunidade usa `Falar com {primeiro nome}` sem incluir `Psicólogo`/`Psicóloga`, `Dr.`/`Dra.` nem sobrenome.
+- [x] A mensagem pronta do `wa.me` usa o mesmo primeiro nome útil do CTA.
+- [x] Nenhum contrato de API estrutural, banco, schema Prisma, endpoint, mock, seed artificial ou package novo foi alterado.
+- [x] ADR e documentação de task foram atualizados.
+
+### Validação do complemento
+
+- `npx "@builder.io/dev-tools@latest" auth status` em `frontend/` (retornou `Not Authenticated to Builder.io`; fallback visual local/produto).
+- `pnpm --dir frontend exec biome check --write src/utils/professional-name.ts`
+- `pnpm --dir backend exec biome check --write src/utils/professional-name.ts`
+- Smoke local do utilitário backend confirmou `Psicóloga Bruna => Bruna`, `Psicóloga Thais Bruni => Thais`, `Dra. Ana Rúbia Cunha Papi => Ana` e mensagem `Olá Thais, encontrei seu post na Lectum e gostaria de conversar sobre atendimento.`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`

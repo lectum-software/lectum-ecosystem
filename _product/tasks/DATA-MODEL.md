@@ -721,6 +721,7 @@ Para evitar referência a tabela inexistente, criar nesta ordem (cada uma com su
 
 ## Complemento 2026-06-26 - mensagens `wa.me` personalizadas
 
-- Links `author.whatsapp_url` e `whatsapp_url` de perfil/listagem/contato passam a incluir mensagem pronta com o mesmo nome curto derivado exibido no CTA `Falar com ...` do psicólogo quando disponível.
+- Links `author.whatsapp_url` e `whatsapp_url` de perfil/listagem/contato passam a incluir mensagem pronta com o mesmo primeiro nome útil exibido no CTA `Falar com ...` do psicólogo quando disponível.
+- O primeiro nome útil normaliza espaços, remove prefixos/títulos profissionais de início (`Dr.`, `Dra.`, `Psicólogo`, `Psicóloga`, `Psi`/`Psic.`) e usa o primeiro termo restante que não seja partícula de nome (`de`, `da`, `do`, `das`, `dos`, `di`, `du`, `e`); se não houver nome, mantém fallback genérico.
 - O texto do `wa.me` é contextual: perfil (`encontrei seu perfil na Lectum`), post profissional (`encontrei seu post na Lectum`) e resposta/comentário profissional (`encontrei sua resposta na Lectum`).
 - O contrato permanece uma string URL pública; não há exposição do telefone bruto fora do link de intenção nem mudança de schema.

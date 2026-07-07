@@ -121,3 +121,39 @@ Como frontend e backend são aplicações separadas neste repositório, a regra 
 - Smoke local do utilitário backend confirmou `Olá Ana Rúbia, encontrei seu post na Lectum e gostaria de conversar sobre atendimento.`
 - `pnpm --dir backend check`
 - `pnpm check`
+
+## Atualizacao 2026-07-07 - primeiro nome util no CTA e no WhatsApp
+
+Produto reforcou que o CTA deve ser `Falar com {primeiro nome}`, sem carregar cargo profissional,
+honorifico ou sobrenome. Como alguns perfis podem ter sido cadastrados com `Psicóloga`, `Psicólogo`,
+`Dr.` ou `Dra.` dentro de `user.name`, a regra deterministica passa a:
+
+1. normalizar espacos;
+2. remover prefixos/titulos profissionais de inicio (`Dr.`, `Dra.`, `Psicólogo`, `Psicóloga`,
+   `Psi`/`Psic.`);
+3. usar o primeiro termo restante que nao seja particula (`de`, `da`, `do`, `das`, `dos`, `di`,
+   `du` ou `e`);
+4. manter fallback generico quando nao houver nome util.
+
+Exemplos esperados:
+
+- `Psicóloga Bruna` -> `Falar com Bruna` e `Olá Bruna, ...`;
+- `Psicóloga Thais Bruni` -> `Falar com Thais` e `Olá Thais, ...`;
+- `Dra. Ana Rúbia Cunha Papi` -> `Falar com Ana` e `Olá Ana, ...`.
+
+A regra continua espelhada em `frontend/src/utils/professional-name.ts` e
+`backend/src/utils/professional-name.ts` para preservar consistencia entre o CTA visual e a mensagem
+pronta do `wa.me`. Nao ha alteracao de schema, endpoint, tracking, exposicao de telefone, pacote ou
+persistencia.
+
+### Validacao desta atualizacao
+
+- `npx "@builder.io/dev-tools@latest" auth status` em `frontend/` retornou `Not Authenticated to Builder.io`; foi usado fallback visual local/produto.
+- `pnpm --dir frontend exec biome check --write src/utils/professional-name.ts`
+- `pnpm --dir backend exec biome check --write src/utils/professional-name.ts`
+- Smoke local do utilitario backend confirmou `Psicóloga Bruna => Bruna`, `Psicóloga Thais Bruni => Thais`, `Dra. Ana Rúbia Cunha Papi => Ana` e a mensagem `Olá Thais, encontrei seu post na Lectum e gostaria de conversar sobre atendimento.`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
