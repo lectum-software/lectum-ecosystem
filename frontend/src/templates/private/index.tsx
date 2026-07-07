@@ -831,7 +831,7 @@ export const PrivateTemplate = ({
                     type="button"
                   >
                     <UserPlus className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    <span>Criar conta grátis</span>
+                    <span>Criar conta</span>
                   </Button>
                   <Button
                     className="h-12 rounded-2xl border-[#CFE5FB] bg-white text-sm font-extrabold text-primary shadow-none hover:border-primary/40 hover:bg-primary-soft/50"

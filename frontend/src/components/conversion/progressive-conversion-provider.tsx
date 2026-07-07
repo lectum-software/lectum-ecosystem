@@ -616,7 +616,7 @@ export const ProgressiveConversionProvider = ({
                 onClick={startSignup}
                 type="button"
               >
-                Criar conta grátis
+                Criar conta
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Button>
               {isActionPrompt ? (
