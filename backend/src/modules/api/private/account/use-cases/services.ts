@@ -6,6 +6,7 @@ import { getDevice } from "@/modules/api/middlewares/_auth/utils/device";
 import { getJwtSecret } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
 import { LoginRepository } from "@/modules/api/public/auth/login/repositories/LoginRepository";
 import {
+  createGoogleOAuthLoginUrl,
   GOOGLE_MANAGE_ACCOUNT_URL,
   isGoogleOAuthConfigured,
 } from "@/modules/api/public/google/utils/config";
@@ -371,8 +372,15 @@ export const createDeleteGoogleIntent = async (data: IAccountDeleteGoogleIntentD
     { expiresIn: DELETE_GOOGLE_REAUTH_TOKEN_EXPIRES_IN },
   );
 
-  const baseUrl = process.env.BASE || "";
-  const url = new URL(`/api/public/google/login/${encodeURIComponent(device.id)}`, baseUrl);
+  const url = createGoogleOAuthLoginUrl(device.id);
+
+  if (!url) {
+    return {
+      status: 403,
+      ...error("google_oauth_not_configured", {}),
+    };
+  }
+
   url.searchParams.set("intent", "delete_account");
   url.searchParams.set("delete_token", token);
   url.searchParams.set("callbackUrl", sanitizeDeleteCallbackUrl(data.b.callback_url, current.role));

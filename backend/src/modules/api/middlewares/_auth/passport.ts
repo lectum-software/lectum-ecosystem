@@ -14,6 +14,7 @@ import prisma from "@/infra/database/prisma";
 import type { user } from "@/interfaces/objects";
 //Repositories
 import { LoginRepository } from "@/modules/api/public/auth/login/repositories/LoginRepository";
+import { getGoogleOAuthCallbackUrl } from "@/modules/api/public/google/utils/config";
 //Emits
 import { emit_hidrate } from "./emit";
 import { getJwtSecret } from "./utils/jwt-secret";
@@ -59,7 +60,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID_API_USER!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET_API_USER!,
-      callbackURL: `${process.env.BASE}/api/public/google/callback`,
+      callbackURL: getGoogleOAuthCallbackUrl(),
       passReqToCallback: true,
     },
     async (req: Request, _accessToken: string, _refreshToken: string, profile: Profile, done) => {

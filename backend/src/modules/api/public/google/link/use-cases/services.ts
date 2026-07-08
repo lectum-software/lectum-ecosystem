@@ -4,7 +4,7 @@ import { getDevice } from "@/modules/api/middlewares/_auth/utils/device";
 import { getJwtSecret } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
 import { AccountRepository } from "@/modules/api/private/account/repositories/AccountRepository";
 import { LoginRepository } from "@/modules/api/public/auth/login/repositories/LoginRepository";
-import { isGoogleOAuthConfigured } from "../../utils/config";
+import { createGoogleOAuthLoginUrl, isGoogleOAuthConfigured } from "../../utils/config";
 import type { GoogleLinkIntentResponse, IGoogleLinkDTO } from "../DTOs/IGoogleLinkDTO";
 
 const LINK_TOKEN_EXPIRES_IN = "10m";
@@ -51,8 +51,15 @@ export const createIntent = async (data: IGoogleLinkDTO) => {
     { expiresIn: LINK_TOKEN_EXPIRES_IN },
   );
 
-  const baseUrl = process.env.BASE || "";
-  const url = new URL(`/api/public/google/login/${encodeURIComponent(device.id)}`, baseUrl);
+  const url = createGoogleOAuthLoginUrl(device.id);
+
+  if (!url) {
+    return {
+      status: 403,
+      ...error("google_oauth_not_configured", {}),
+    };
+  }
+
   url.searchParams.set("intent", "link");
   url.searchParams.set("link_token", token);
   url.searchParams.set("callbackUrl", "/app/settings/account?google=connected");
