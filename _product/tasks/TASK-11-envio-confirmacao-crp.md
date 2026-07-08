@@ -216,3 +216,30 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 Os critérios acima permanecem sem marcação completa porque a task está formalmente
 bloqueada por requisito externo de storage privado. Não houve implementação de tela,
 endpoint, schema, migration, upload, mock ou URL temporária.
+
+## Revalidação de bloqueio em 2026-07-08
+
+- Execução solicitada para finalizar a TASK-11 sem alterar as regras já definidas.
+- Dependências documentais revalidadas no roadmap vigente: TASK-02, TASK-03 e TASK-10
+  estão `Completed`; a própria TASK-11 permanece `Blocked`.
+- Referências obrigatórias revisadas: `AGENTS.md`, `_product/tasks/README.md`,
+  `_product/tasks/ARCHITECTURE.md`, `_product/tasks/DATA-MODEL.md`,
+  `_product/tasks/PACKAGES.md`, `_product/tasks/PROTO-INVENTORY.md` e este arquivo.
+- Referências visuais consultadas via imagens locais porque Builder/Quick Copy não está
+  exposto como ferramenta direta nesta sessão:
+  - `_product/proto/Confirmação de Envio de CRP - Layout Ajustado.jpg`;
+  - `_product/proto/Confirmação de Envio de CRP - Layout Ajustado-1.jpg`;
+  - `_product/proto/Confirmação de Envio de CRP - Layout Ajustado-2.jpg`;
+  - `_product/proto/Confirmação de Envio de CRP - Layout Ajustado-3.jpg`.
+- Ambiente revalidado sem expor segredos: `backend/.env` contém as chaves de endpoint e
+  credenciais R2 e `CLOUDFLARE_R2_PUBLIC_BUCKET_NAME`, mas continua sem variável de
+  bucket privado como `CLOUDFLARE_R2_PRIVATE_BUCKET_NAME`.
+- O código atual de upload (`backend/src/config/multer/storage.ts` e `s3.ts`) continua
+  configurado para o bucket público (`PUBLIC_BUCKET`), portanto não pode ser usado para
+  documentos CRP sem violar a privacidade exigida por esta task.
+- Para preservar as regras existentes, a execução foi interrompida antes de criar rota,
+  endpoint, UI, schema, migration, dado fake, mock, URL temporária ou qualquer alteração
+  no comportamento atual.
+- ADR revalidado: `adrs/0017-bloqueio-storage-privado-crp.md`.
+- Próxima ação para desbloquear: provisionar e informar bucket privado Cloudflare R2 para
+  documentos profissionais, com política privada e credenciais/permissões adequadas.

@@ -81,3 +81,18 @@ com a regra de persistir apenas a chave privada do bucket.
 ## Atualizacao em 2026-06-06
 
 A ADR-0026 desbloqueia a consulta cadastral CFP/CRP via InfoSimples para a TASK-10, mas nao desbloqueia esta task de upload de documento. O ambiente continua sem `CLOUDFLARE_R2_PRIVATE_BUCKET_NAME`; portanto documentos CRP nao podem ser persistidos no bucket publico existente.
+
+## Revalidacao em 2026-07-08
+
+Nova tentativa de finalizar a TASK-11 foi solicitada com a restricao explicita de nao
+alterar as regras ja definidas. O bloqueio externo permanece:
+
+- `backend/.env` possui variaveis de endpoint/credenciais R2 e
+  `CLOUDFLARE_R2_PUBLIC_BUCKET_NAME`, mas nao possui
+  `CLOUDFLARE_R2_PRIVATE_BUCKET_NAME` ou equivalente para documentos profissionais.
+- `backend/src/config/multer/s3.ts` exporta apenas `PUBLIC_BUCKET`.
+- `backend/src/config/multer/storage.ts` grava uploads no `PUBLIC_BUCKET`.
+
+Decisao mantida: nao implementar endpoint, schema, migration, UI ou adaptacao de upload
+para CRP enquanto o bucket privado real nao estiver provisionado. Usar o bucket publico,
+mock, URL temporaria ou dado inventado continuaria violando a TASK-11 e a ADR-0006.
