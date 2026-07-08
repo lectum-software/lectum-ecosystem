@@ -128,6 +128,7 @@ const listPostSelect = {
   replies: {
     where: {
       deleted: false,
+      parent_reply_id: null,
       author: {
         role: "psicologo",
         psychologist_profile: {

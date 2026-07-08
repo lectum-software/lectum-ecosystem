@@ -255,3 +255,25 @@ Regras de UI obrigatórias:
 - [x] `git diff --check`
 - [x] HTTP local `200` em `http://localhost:3000/`.
 - [x] Chrome headless local mobile 390x844 abriu `http://localhost:3000/` e confirmou render do shell do feed; a lista permaneceu em loading porque `http://localhost:3001/api/private/community/feed/posts?limit=1` retornou 500 nesta sessao.
+
+## Complemento 2026-07-07 - destaque automatico somente em respostas diretas
+
+- Pedido do usuario: quando o card do post exibe uma resposta profissional em destaque, essa resposta deve ser uma resposta direta ao post original. Respostas de psicologos a comentarios de outros usuarios nao devem aparecer como se respondessem o autor/pergunta principal.
+- Backend: os seletores automaticos de `highlighted_professional_reply` no feed/comunidade, listas de posts e publicacoes do perfil profissional passam a filtrar `parent_reply_id=null`.
+- Respostas aninhadas continuam existindo e seguem visiveis no detalhe/thread; quando um card representa explicitamente uma contribuicao do tipo resposta, a resposta persistida continua podendo ser exibida como conteudo principal dessa contribuicao.
+- Nao houve alteracao de schema, migration, endpoint, payload, upload, share ou packages.
+- ADR criado: `adrs/0223-destaque-profissional-apenas-resposta-direta.md`.
+
+### Criterios de aceite do complemento
+
+- [x] `highlighted_professional_reply` automatico considera apenas respostas profissionais diretas ao post.
+- [x] Video-resposta profissional a comentario de terceiro deixa de aparecer como destaque do card do post.
+- [x] Respostas aninhadas continuam acessiveis no detalhe/thread, sem exclusao ou mock de dados.
+- [x] Sem package novo, migration ou endpoint paralelo.
+
+### Validacoes do complemento
+
+- [x] `pnpm --dir backend check`
+- [x] `pnpm --dir backend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
