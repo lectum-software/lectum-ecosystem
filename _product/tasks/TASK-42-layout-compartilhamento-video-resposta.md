@@ -277,3 +277,24 @@ Regras de UI obrigatórias:
 - [x] `pnpm --dir backend build`
 - [x] `pnpm check`
 - [x] `git diff --check`
+
+## Complemento 2026-07-07 - exemplos locais com video-respostas diretas
+
+- Pedido do usuario: apos restringir o destaque automatico a respostas diretas ao post, ajustar os exemplos locais para que video-respostas de psicologos aparecam em destaque nos posts de pacientes.
+- Dados operacionais: as cinco video-respostas demonstrativas existentes em ansiedade, autocuidado, depressao, relacionamentos e TDAH foram atualizadas no banco de desenvolvimento para `parent_reply_id=null`, reaproveitando os mesmos registros e URLs de midia reais ja persistidos.
+- Nenhum mock, endpoint paralelo, migration, package ou seed novo foi criado. A alteracao e intencionalmente operacional no banco de desenvolvimento atual para exemplificacao visual.
+- ADR criado: `adrs/0224-exemplos-video-respostas-diretas.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Posts demonstrativos de pacientes exibem `highlighted_professional_reply` com `media_type="video"`.
+- [x] As video-respostas destacadas dos exemplos possuem `parent_reply_id=null`.
+- [x] A regra de dominio da ADR-0223 permanece inalterada.
+- [x] Sem schema, migration, endpoint, package ou seed novo.
+
+### Validacoes do complemento
+
+- [x] `GET http://localhost:3001/api/private/community/feed/posts?limit=30` retornou os cinco posts `[Exemplo Lectum]` com destaque de video e `parent_reply_id=null`.
+- [x] `pnpm --dir backend check`
+- [x] `pnpm check`
+- [x] `git diff --check`
