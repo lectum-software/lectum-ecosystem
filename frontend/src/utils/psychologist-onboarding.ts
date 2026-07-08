@@ -84,7 +84,13 @@ export const getPsychologistRegistrationEntryPath = (
   data: Partial<Pick<user, "role" | "psychologist_profile">> | null | undefined,
   fallback: string,
 ) => {
-  if (data?.role !== "psicologo") return fallback;
+  return getPsychologistRegistrationRequirementPath(data) ?? fallback;
+};
+
+export const getPsychologistPlanSelectionRequirementPath = (
+  data: Partial<Pick<user, "role" | "psychologist_profile">> | null | undefined,
+) => {
+  if (data?.role !== "psicologo") return null;
 
   const profile = data.psychologist_profile;
   const currentSubscription = getActiveSubscription(profile);
@@ -93,12 +99,25 @@ export const getPsychologistRegistrationEntryPath = (
     return PSYCHOLOGIST_ONBOARDING_PATHS.plans;
   }
 
+  return null;
+};
+
+export const getPsychologistRegistrationRequirementPath = (
+  data: Partial<Pick<user, "role" | "psychologist_profile">> | null | undefined,
+) => {
+  const planSelectionRequirement = getPsychologistPlanSelectionRequirementPath(data);
+
+  if (planSelectionRequirement || data?.role !== "psicologo") return planSelectionRequirement;
+
+  const profile = data.psychologist_profile;
+  if (!profile) return null;
+
   return (
     getPsychologistPaidOnboardingRequirementPath(data) ??
     (!profile.whatsapp
       ? PSYCHOLOGIST_ONBOARDING_PATHS.phone
       : !profile.published
         ? PSYCHOLOGIST_ONBOARDING_PATHS.profileSetup
-        : fallback)
+        : null)
   );
 };

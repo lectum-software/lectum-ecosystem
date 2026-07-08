@@ -213,3 +213,34 @@ psicologo: visibilidade, autoridade, reputacao e oportunidades.
 - A explicacao detalhada da jornada continua nos documentos de task/ADR, mas nao
   compete com a decisao comercial do psicologo na tela.
 
+## Atualizacao em 2026-07-08: redirect explicito nao pula planos no cadastro
+
+### Contexto
+
+Foi identificada regressao no cadastro de psicologo iniciado a partir de uma area
+restrita, como `/app/profile`: o parametro `redirectTo` era preservado durante o
+cadastro por e-mail/Google e tinha prioridade sobre a etapa obrigatoria de
+selecao de plano. Com isso, apos verificar e-mail ou concluir o Google, o
+psicologo podia cair direto no perfil em vez de entrar em
+`/app/professional/billing/plans`.
+
+### Decisao
+
+- Centralizar uma funcao de requisito de selecao de plano profissional que retorna
+  `/app/professional/billing/plans` quando o psicologo ainda nao tem assinatura
+  ativa.
+- Fazer o resolvedor de redirect pos-auth aplicar essa etapa de planos antes
+  de honrar `redirectTo`/`callbackUrl`.
+- Manter `redirectTo`/`callbackUrl` para usuarios sem pendencia obrigatoria,
+  preservando o retorno a rotas protegidas para pacientes e psicologos que ja
+  escolheram um plano.
+
+### Consequencias
+
+- Novo cadastro de psicologo, via Google ou e-mail confirmado, sempre volta para
+  a escolha real de planos antes de acessar perfil.
+- Login/cadastro iniciado a partir de `/app/profile` nao consegue pular a etapa
+  de planos.
+- Nenhum endpoint, modelo Prisma, pacote ou mock foi criado; a correcao fica
+  restrita ao resolvedor frontend e ao helper de onboarding.
+

@@ -1,5 +1,8 @@
 import type { user } from "@/api/generator/types";
-import { getPsychologistRegistrationEntryPath } from "./psychologist-onboarding";
+import {
+  getPsychologistPlanSelectionRequirementPath,
+  getPsychologistRegistrationEntryPath,
+} from "./psychologist-onboarding";
 
 export const USER_HOME_PATHS = {
   paciente: "/psychologists",
@@ -41,6 +44,9 @@ export function resolveAuthRedirect(
 
     return "/auth/verify-email";
   }
+
+  const psychologistPlanSelectionRequirement = getPsychologistPlanSelectionRequirementPath(data);
+  if (psychologistPlanSelectionRequirement) return psychologistPlanSelectionRequirement;
 
   if (explicitRedirect) return explicitRedirect;
   if (legacyCallbackUrl) return legacyCallbackUrl;
