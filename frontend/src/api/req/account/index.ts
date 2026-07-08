@@ -34,7 +34,11 @@ export const onboardingTips = async () => {
     route: "/api/private/account/tips",
   });
 
-  return handleReq<AccountOnboardingTipsResponse>(handle);
+  return handleReq<AccountOnboardingTipsResponse>({
+    ...handle,
+    hideError: true,
+    signOutOnUnauthorized: false,
+  });
 };
 
 export const updateOnboardingTips = async (body: AccountOnboardingTipsPayload) => {
@@ -47,6 +51,7 @@ export const updateOnboardingTips = async (body: AccountOnboardingTipsPayload) =
   return handleReq<AccountOnboardingTipsResponse>({
     ...handle,
     hideError: true,
+    signOutOnUnauthorized: false,
   });
 };
 

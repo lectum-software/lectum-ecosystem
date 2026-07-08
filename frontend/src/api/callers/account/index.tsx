@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import keys from "@/api/cache/keys";
 import type { AccountOnboardingTipsResponse, user } from "@/api/generator/types";
 import * as api from "@/api/req/account";
+import { getToken } from "@/hooks/cookies/token";
 import { useAppSelector } from "@/hooks/redux";
 
 export interface UseAccountProps {
@@ -41,6 +42,25 @@ export interface UseAccountProps {
   enableTips?: boolean;
 }
 
+const ANONYMOUS_ONBOARDING_TIPS: AccountOnboardingTipsResponse = {
+  has_seen_community_post_tip: true,
+  has_seen_discover_psychologists_tip: true,
+  has_seen_psychologists_my_search_tip: true,
+  has_seen_psychologist_whatsapp_tip: true,
+  has_seen_psychologist_profile_video_tip: true,
+  has_seen_psychologist_reply_tip: true,
+  has_seen_psychologist_original_post_tip: true,
+};
+
+const resolveLocalOnboardingTips = (
+  body?: api.AccountOnboardingTipsPayload,
+  current?: AccountOnboardingTipsResponse,
+): AccountOnboardingTipsResponse => ({
+  ...ANONYMOUS_ONBOARDING_TIPS,
+  ...current,
+  ...body,
+});
+
 export const useAccount = ({
   callbacks,
   enableSecurity = true,
@@ -48,6 +68,7 @@ export const useAccount = ({
 }: UseAccountProps = {}) => {
   const queryClient = useQueryClient();
   const userId = useAppSelector((state) => state.user?.id);
+  const hasAuthenticatedUser = Boolean(userId && getToken());
   const tipsQueryKey = keys.account.tips(userId);
 
   const invalidateAccount = () => {
@@ -65,8 +86,11 @@ export const useAccount = ({
 
   const onboardingTips = useQuery({
     queryKey: tipsQueryKey,
-    queryFn: () => api.onboardingTips(),
-    enabled: enableTips && Boolean(userId),
+    queryFn: () =>
+      hasAuthenticatedUser
+        ? api.onboardingTips().catch(() => ANONYMOUS_ONBOARDING_TIPS)
+        : ANONYMOUS_ONBOARDING_TIPS,
+    enabled: enableTips && hasAuthenticatedUser,
     refetchOnWindowFocus: false,
     retry: false,
   });
@@ -90,7 +114,15 @@ export const useAccount = ({
   });
 
   const updateOnboardingTips = useMutation({
-    mutationFn: (body: api.AccountOnboardingTipsPayload) => api.updateOnboardingTips(body),
+    mutationFn: async (body: api.AccountOnboardingTipsPayload) => {
+      if (!hasAuthenticatedUser) {
+        return resolveLocalOnboardingTips(body, onboardingTips.data);
+      }
+
+      return api
+        .updateOnboardingTips(body)
+        .catch(() => resolveLocalOnboardingTips(body, onboardingTips.data));
+    },
     onSuccess: (data) => {
       queryClient.setQueryData(tipsQueryKey, data);
       callbacks?.updateOnboardingTips?.onSuccess?.(data);

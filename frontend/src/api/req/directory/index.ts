@@ -101,6 +101,7 @@ export const trackDirectoryPsychologistProfileView = async (id: string) => {
   return handleReq<DirectoryPsychologistProfileViewResponse>({
     ...handle,
     hideError: true,
+    signOutOnUnauthorized: false,
   });
 };
 
@@ -118,5 +119,6 @@ export const trackDirectoryPsychologistVideoWatch = async (
   return handleReq<DirectoryPsychologistVideoWatchResponse>({
     ...handle,
     hideError: true,
+    signOutOnUnauthorized: false,
   });
 };
