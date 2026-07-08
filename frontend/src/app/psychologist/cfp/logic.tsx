@@ -148,7 +148,7 @@ const SupportFooterLink = () => (
 const SupportGuidance = () => (
   <div className="grid gap-3">
     <Button asChild className="h-11 w-full rounded-full" variant="outline">
-      <a {...supportLinkProps}>{"Fale com o suporte"}</a>
+      <a {...supportLinkProps}>{"Fale com o suporte pelo WhatsApp"}</a>
     </Button>
   </div>
 );
