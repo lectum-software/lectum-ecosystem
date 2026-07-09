@@ -1,0 +1,231 @@
+﻿# TASK-65: Configurações administrativas de catálogos e filtros
+
+## Metadata
+
+| Campo | Valor |
+|---|---|
+| ID | TASK-65 |
+| Prioridade | P1 |
+| Esforço | L |
+| Fase | Admin / Configurações |
+| Status | Pending |
+| Dependências | TASK-45, TASK-46, TASK-13, TASK-18A |
+| ADR alvo | ADR sobre catálogos administráveis, especialidades por categoria e restauração de padrões |
+
+## Contexto
+
+A tela **Configurações** do Admin usa como referência `_product/proto/admin/Configurações.png`.
+
+Esta tela não é uma configuração genérica da conta Admin. Ela gerencia as opções de filtros disponíveis na busca de psicólogos e nos formulários de perfil profissional.
+
+Catálogos existentes no backend:
+
+- `specialty`;
+- `approach`;
+- `service`;
+- vínculos `psychologist_specialty`, `psychologist_approach`, `psychologist_service`.
+
+Ponto central definido em conversa: **especialidades são segmentadas por categorias**, não uma lista plana. As categorias são agrupamentos como:
+
+- `Ansiedade e Transtornos Relacionados`;
+- `Humor e Saúde Mental`;
+- demais categorias clínicas/temáticas já usadas no dropdown público de especialidades.
+
+Atualmente, a segmentação das especialidades aparece hardcoded no frontend em:
+
+- `frontend/src/app/app/psychologists/filter-options.ts`;
+- `frontend/src/app/app/professional/profile/setup/logic.tsx`.
+
+A task deve migrar essa segmentação para uma fonte administrável, sem criar inconsistência entre busca pública e cadastro/edição profissional.
+
+## Objetivo
+
+Criar a tela Admin de configurações de catálogos/filtros, permitindo gerenciar especialidades por categoria, abordagens, serviços, idiomas e público atendido, com persistência real, reordenação, ativação/inativação e restauração segura de padrões.
+
+## Pré-requisitos e bloqueios
+
+- TASK-45 concluída: autenticação Admin real.
+- TASK-46 concluída: app `admin/` e shell lateral.
+- TASK-13 concluída: busca/filtros de psicólogos.
+- TASK-18A concluída: perfil profissional gratuito sem CRP e catálogos usados no setup.
+- Ler `ARCHITECTURE.md`, `DATA-MODEL.md`, `PACKAGES.md` e `PROTO-INVENTORY.md`.
+- Usar `_product/proto/admin/Configurações.png` como referência visual local.
+- Validar o schema atual antes de criar tabelas novas.
+- Se alterar `backend/prisma/schema.prisma` ou migrations, executar `pnpm --dir backend db:migrate`.
+
+## Escopo frontend
+
+- Criar rota protegida:
+  - `/settings` ou rota equivalente definida no Admin.
+- Renderizar seções conforme referência:
+  - Especialidades;
+  - Abordagens;
+  - Serviços;
+  - Idiomas;
+  - Público.
+- Especialidades:
+  - exibir e gerenciar categorias;
+  - exibir e gerenciar itens dentro de cada categoria;
+  - permitir adicionar/editar/inativar categoria;
+  - permitir adicionar/editar/inativar especialidade dentro da categoria;
+  - permitir reordenar categorias;
+  - permitir reordenar itens dentro da categoria.
+- Demais catálogos:
+  - adicionar item;
+  - editar nome;
+  - inativar/reativar item;
+  - reordenar opções.
+- Categorias/seções:
+  - permitir ativar/desativar categoria inteira quando fizer sentido;
+  - se a categoria inteira for inativada, seus itens não devem aparecer para usuários finais.
+- Botão **Restaurar padrões**:
+  - abrir modal de confirmação forte;
+  - explicar que altera filtros da busca e do perfil;
+  - não executar ação destrutiva silenciosa.
+- Reordenação:
+  - suportar drag visual se já houver padrão/pacote permitido;
+  - caso contrário, usar botões acessíveis "mover para cima/baixo" sem instalar pacote novo.
+
+## Escopo backend
+
+- Criar endpoints admin privados para gerenciar catálogos:
+  - `GET /api/admin/private/settings/catalogs`;
+  - `POST /api/admin/private/settings/catalogs/specialty-categories`;
+  - `PUT /api/admin/private/settings/catalogs/specialty-categories/:id`;
+  - `POST /api/admin/private/settings/catalogs/specialties`;
+  - `PUT /api/admin/private/settings/catalogs/specialties/:id`;
+  - endpoints equivalentes para `approaches`, `services`, `languages` e `target-audiences`;
+  - endpoint de reordenação por tipo/categoria;
+  - endpoint de restauração de padrões com confirmação.
+- Atualizar endpoints públicos/privados de catálogo usados por:
+  - busca de psicólogos;
+  - setup/edição de perfil profissional;
+  - Admin de psicólogos;
+  - filtros do Admin.
+- Garantir que o dropdown público de especialidade continue agrupado por categoria.
+- Garantir que catálogos inativos não apareçam para usuários finais, mas continuem preservados para vínculos históricos.
+
+## Fora do escopo
+
+- Configurações de conta do Admin.
+- Gestão de permissões/roles administrativas além da autenticação Admin.
+- Feature flags globais.
+- Configurações financeiras.
+- Configurações de notificações.
+- Excluir fisicamente item usado por psicólogos.
+- Reset destrutivo de dados.
+- Instalar pacote de drag-and-drop sem validar `PACKAGES.md` e ADR.
+
+## Contrato técnico detalhado
+
+Modelagem esperada:
+
+- Reaproveitar `specialty`, `approach` e `service`.
+- Adicionar estrutura de categoria para especialidades, por exemplo:
+  - `specialty_category`;
+  - `specialty.category_id`;
+  - `position`/`sort_order`;
+  - `active`;
+  - `deleted`/`deletedAt` conforme padrão do projeto.
+- Adicionar ordenação aos catálogos existentes se ainda não houver:
+  - `specialty.position`;
+  - `approach.position`;
+  - `service.position`.
+- Para idiomas e público atendido:
+  - verificar o estado atual antes de criar estrutura;
+  - hoje `psychologist_profile.languages` e `psychologist_profile.target_audience` são JSON;
+  - se não existir catálogo próprio, criar configuração administrável de opções permitidas e documentar em ADR;
+  - não quebrar perfis existentes que já possuem valores em JSON.
+
+Regras de especialidades por categoria:
+
+- Categorias são entidades administráveis.
+- Itens de especialidade pertencem a exatamente uma categoria ativa por vez na V1.
+- A busca pública deve receber especialidades já agrupadas pela categoria persistida.
+- Remover os arrays hardcoded `SPECIALTY_CATEGORIES` do fluxo público/profissional quando a API real estiver pronta.
+- Se houver especialidades sem categoria após migração, agrupá-las em `Outras especialidades` somente como fallback honesto.
+
+Regras de exclusão/inativação:
+
+- Se um item estiver vinculado a algum psicólogo:
+  - não excluir fisicamente;
+  - permitir inativar para ocultar em novos filtros/cadastros;
+  - manter exibição histórica nos perfis que já usam o item quando necessário.
+- Se um item não estiver vinculado:
+  - ainda preferir soft delete para manter rastreabilidade.
+- Inativar categoria:
+  - oculta a categoria e seus itens para usuários finais;
+  - não remove vínculos existentes.
+
+Restauração de padrões:
+
+- Deve restaurar os catálogos base da Lectum:
+  - categorias de especialidades;
+  - especialidades dentro das categorias;
+  - abordagens;
+  - serviços;
+  - idiomas;
+  - público atendido.
+- Deve ser idempotente:
+  - reativar padrões ausentes/inativos;
+  - atualizar nomes/ordem oficiais;
+  - não apagar opções customizadas sem decisão explícita.
+- Deve exigir confirmação no Admin.
+- Deve registrar o admin responsável se a fundação Admin tiver auditoria.
+
+Endpoints públicos/privados de consumo:
+
+- A resposta de catálogos para busca/perfil deve incluir:
+  - especialidades agrupadas por categoria;
+  - `id`, `slug`, `name`, `position`, `active`;
+  - categorias com `id`, `slug`, `name`, `position`, `active`;
+  - abordagens/serviços/idiomas/públicos ordenados.
+- Usuários finais não devem receber itens inativos para seleção nova.
+
+Frontend esperado:
+
+- Reutilizar shell Admin e tokens existentes.
+- Usar React Hook Form, Zod e controllers da TASK-02 nos formulários de adicionar/editar.
+- Mobile-first:
+  - seções empilhadas;
+  - ações acessíveis por item;
+  - reordenação funcional sem depender só de drag em touch.
+- Não usar `<img>` cru.
+- Nenhum mock: listas devem vir da API real.
+
+## Critérios de aceite
+
+- [ ] Rota Configurações só abre para admin autenticado.
+- [ ] `_product/proto/admin/Configurações.png` foi citada como referência visual.
+- [ ] Especialidades são gerenciadas por categoria, não como lista plana.
+- [ ] Categorias como `Ansiedade e Transtornos Relacionados` e `Humor e Saúde Mental` vêm do backend, não de array hardcoded do frontend.
+- [ ] Busca pública e setup/edição profissional exibem especialidades agrupadas pela categoria persistida.
+- [ ] Abordagens, serviços, idiomas e público atendido são administráveis por dados reais.
+- [ ] Adicionar/editar/inativar/reordenar persiste no backend.
+- [ ] Itens vinculados a psicólogos não são excluídos fisicamente.
+- [ ] Restaurar padrões exige confirmação e é idempotente.
+- [ ] Itens/categorias inativos não aparecem para seleção nova de usuários finais.
+- [ ] Formulários usam React Hook Form, Zod e controllers.
+- [ ] UI mobile-first validada.
+- [ ] Nenhum `<img>` cru foi usado.
+- [ ] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [ ] Se houve alteração de Prisma/migrations, `pnpm --dir backend db:migrate` foi executado sem erro.
+- [ ] Checks/builds relevantes executados sem erros.
+- [ ] ADR criado/atualizado.
+- [ ] Commit criado com mensagem convencional e `git push` executado.
+
+## Validação mínima
+
+- `pnpm --dir backend db:migrate` se houver schema/migration.
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local:
+  - Admin `/settings`;
+  - busca pública de psicólogos com dropdown agrupado;
+  - setup/edição profissional com especialidades agrupadas;
+  - restaurar padrões em ambiente local com confirmação.

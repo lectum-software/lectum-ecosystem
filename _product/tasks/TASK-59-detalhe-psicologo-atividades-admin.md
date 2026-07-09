@@ -1,0 +1,98 @@
+# TASK-59: Detalhe administrativo do psicólogo — Atividades simples
+
+## Metadata
+
+| Campo | Valor |
+|---|---|
+| ID | TASK-59 |
+| Prioridade | P2 |
+| Esforço | M |
+| Fase | Admin |
+| Status | Pending |
+| Dependências | TASK-45, TASK-46, TASK-55, TASK-57, TASK-58 |
+| ADR alvo | ADR apenas se for criado novo modelo de auditoria |
+
+## Contexto
+
+A aba "Atividades" usa como referência `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Atividades.png`.
+
+Regra de produto definida: fazer a versão mais simples e honesta. A tela não deve prometer "todas as ações"; deve listar apenas eventos principais que já possuem fonte real.
+
+Copy recomendada:
+
+> Histórico dos principais eventos registrados para esta psicóloga na plataforma.
+
+## Objetivo
+
+Exibir uma linha do tempo simples de eventos reais associados ao psicólogo, sem criar auditoria completa neste momento.
+
+## Escopo frontend
+
+- Implementar aba Atividades.
+- Filtros:
+  - período;
+  - tipo de atividade;
+  - área;
+  - busca textual simples quando suportada pelo backend.
+- Tabela/lista paginada com:
+  - data/hora;
+  - usuário/ator quando houver;
+  - área;
+  - tipo;
+  - descrição;
+  - link de detalhe quando houver rota real.
+- Exportar somente se houver endpoint real.
+
+## Escopo backend
+
+- Criar endpoint admin privado:
+  - `GET /api/admin/private/psychologists/:id/activities`
+- Construir feed derivado de fontes reais existentes, por exemplo:
+  - criação/atualização de `psychologist_profile` quando confiável;
+  - `profile_video_watch_session`/alterações de vídeo quando houver fonte;
+  - `community_post` criado pelo psicólogo;
+  - `post_reply` criado pelo psicólogo;
+  - `post_save`/`post_reply_save` quando atribuível;
+  - `professional_subscription`/`payment_event`;
+  - `contact_request`;
+  - `professional_review` recebida/respondida;
+  - `post_report` em conteúdo do psicólogo.
+- Não criar modelo novo de auditoria nesta V1, salvo se a execução justificar em ADR.
+
+## Fora do escopo
+
+- Auditoria completa de todas as ações.
+- Capturar ações novas só para preencher a tela.
+- Exportação sem endpoint real.
+- Mostrar eventos sem fonte confiável.
+
+## Contrato técnico detalhado
+
+- O service deve retornar também `coverage_note` ou `unavailable` quando alguma categoria visual não puder ser coberta.
+- A descrição dos eventos deve ser gerada no backend com chaves/copy PT-BR, sem mensagens em inglês.
+- Paginação padrão.
+
+## Critérios de aceite
+
+- [ ] Aba só abre para admin autenticado.
+- [ ] Copy não promete "todas as ações".
+- [ ] Eventos são derivados de fontes reais existentes.
+- [ ] Categorias sem fonte confiável não aparecem ou aparecem como indisponíveis.
+- [ ] Filtros funcionam sobre dados reais.
+- [ ] Links "Ver detalhes" só aparecem quando há destino real.
+- [ ] Exportação só aparece/habilita se houver endpoint real.
+- [ ] UI mobile-first validada.
+- [ ] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [ ] Nenhum `<img>` cru foi usado.
+- [ ] `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Atividades.png` foi citada como referência visual.
+- [ ] Checks/builds relevantes executados sem erros.
+- [ ] Commit criado com mensagem convencional e `git push` executado.
+
+## Validação mínima
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Browser local com admin real e psicólogo real.

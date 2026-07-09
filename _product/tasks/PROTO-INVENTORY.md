@@ -10,6 +10,7 @@ Este documento substitui o inventário Figma como referência visual ativa.
 - Total de telas de produto: 61
 - Asset isolado: 1 ícone `post_add_24dp_64748B_FILL0_wght400_GRAD0_opsz24 1.jpg`
 - Referência complementar de produto: 1 PNG gerado/aprovado em conversa para compartilhamento social (`_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png`).
+- Referência complementar do painel Admin: 19 PNGs enviados em conversa e salvos em `_product/proto/admin` (Dashboard, Tráfego, Comunidades, Psicólogos, Pacientes, Financeiro, Notificações e Configurações).
 
 As imagens e o Builder MCP são referência de produto, layout, estados, hierarquia visual e nomenclatura. Elas não definem a arquitetura final, qualidade final de código, contratos de API nem componentes finais.
 
@@ -148,4 +149,23 @@ O comando acima não deve ser usado como geração final automática. Quando usa
 | Assinatura | Minhas Assinatura - Psicólogo | `_product/proto/Minhas Assinatura - Psicólogo.jpg` | 430x924 | TASK-33 |
 | Assinatura | Alterar cartão de crédito | `_product/proto/Alterar cartão de crédito.jpg` | 466x1218 | TASK-33 |
 | Assinatura | Cartão Alterado com Sucesso | `_product/proto/Cartão Alterado com Sucesso.jpg` | 414x827 | TASK-33 |
+| Admin | Dashboard administrativo | `_product/proto/admin/Dashboard.png` | 1920x1200 | TASK-48 |
+| Admin | Tráfego administrativo | `_product/proto/admin/Tráfego.png` | 1024x1535 | TASK-50 |
+| Admin | Comunidades - Dashboard | `_product/proto/admin/Comunidades/Comunidades - Dashboard.png` | 1122x1402 | TASK-51 |
+| Admin | Comunidades - Detalhes | `_product/proto/admin/Comunidades/Comunidades - Detalhes.png` | 1536x1024 | TASK-52 |
+| Admin | Psicólogos - Dashboard | `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` | 1254x1254 | TASK-53 |
+| Admin | Psicólogos - Lista | `_product/proto/admin/Psicólogos/Psicólogos- Lista.png` | 1536x1024 | TASK-54 |
+| Admin | Psicólogo detalhe - Geral | `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Geral.png` | 1536x1024 | TASK-55 |
+| Admin | Psicólogo detalhe - Perfil e Cadastro | `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Perfil e Cadastro.png` | 1536x1024 | TASK-55 |
+| Admin | Psicólogo detalhe - Plano e pagamentos | `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Plano e pagamentos.png` | 1536x1024 | TASK-56 |
+| Admin | Psicólogo detalhe - Estatísticas | `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Estatísticas.png` | 1536x1024 | TASK-57 |
+| Admin | Psicólogo detalhe - Publicações | `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Publicações.png` | 1536x1024 | TASK-57 |
+| Admin | Psicólogo detalhe - Avaliações | `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Avaliações.png` | 1536x1024 | TASK-58 |
+| Admin | Psicólogo detalhe - Denúncias | `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Denúncias.png` | 1536x1024 | TASK-58 |
+| Admin | Psicólogo detalhe - Atividades | `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Atividades.png` | 1536x1024 | TASK-59 |
+| Admin | Pacientes - Dashboard | `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` | 1024x1536 | TASK-60 |
+| Admin | Pacientes - Detalhes | `_product/proto/admin/Pacientes/Pacientes - Detalhes.png` | 1024x1536 | TASK-61 |
+| Admin | Financeiro | `_product/proto/admin/Financeiro.png` | 1024x1536 | TASK-62 |
+| Admin | Notificações | `_product/proto/admin/Notificações.png` | 1024x1536 | TASK-64 |
+| Admin | Configurações | `_product/proto/admin/Configurações.png` | 1024x1536 | TASK-65 |
 | Asset | Ícone post add | `_product/proto/post_add_24dp_64748B_FILL0_wght400_GRAD0_opsz24 1.jpg` | 24x24 | TASK-24 |

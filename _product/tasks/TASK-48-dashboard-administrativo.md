@@ -1,0 +1,184 @@
+# TASK-48: Dashboard administrativo
+
+## Metadata
+
+| Campo | Valor |
+|---|---|
+| ID | TASK-48 |
+| Prioridade | P1 |
+| Esforço | L |
+| Fase | Admin |
+| Status | Pending |
+| Dependências | TASK-45, TASK-46, TASK-47 |
+| ADR alvo | ADR se houver decisão nova sobre agregação financeira, exportação ou visualização de gráficos sem package externo |
+
+## Contexto
+
+O painel Admin terá uma aba Dashboard para visão geral da plataforma Lectum. A referência visual inicial é `_product/proto/admin/Dashboard.png`, com sidebar escura, filtros de período, cards de métricas, gráficos de comunidades/faturamento/localização/dispositivo e lista de denúncias pendentes.
+
+O Dashboard não pode usar mocks. Cada número exibido deve vir de agregação real do backend ou aparecer como indisponível com explicação honesta.
+
+## Objetivo
+
+Criar a primeira versão funcional do Dashboard Admin com dados reais agregados do backend, filtro de período e layout alinhado à referência visual.
+
+## Pré-requisitos e bloqueios
+
+- TASK-45 concluída: auth admin real.
+- TASK-46 concluída: app `admin/` e shell lateral.
+- TASK-47 concluída: sessões com tipo de dispositivo.
+- Ler `_product/tasks/ARCHITECTURE.md`, `_product/tasks/PACKAGES.md` e `_product/tasks/PROTO-INVENTORY.md`.
+- Usar `_product/proto/admin/Dashboard.png` como referência visual local.
+- Se Builder/Quick Copy estiver disponível no cliente, usar como complemento; se não, registrar limitação e usar a imagem local.
+
+## Escopo frontend
+
+- Implementar rota protegida `/dashboard` no app `admin/`.
+- Renderizar:
+  - cabeçalho "Dashboard" com subtítulo;
+  - filtro de período;
+  - botão de exportação somente se houver endpoint real;
+  - cards de sessões, receita/faturamento, pacientes, psicólogos e denúncias pendentes;
+  - gráfico de atividade nas comunidades;
+  - gráfico financeiro;
+  - card de acessos por localização;
+  - gráfico de atividade por dispositivo;
+  - lista lateral de denúncias pendentes.
+- Estados obrigatórios:
+  - loading;
+  - erro;
+  - vazio/indisponível por métrica sem dado real;
+  - período sem registros.
+- UI mobile-first:
+  - cards em coluna no mobile;
+  - sidebar/drawer herdado da TASK-46;
+  - grids progressivos para tablet/desktop.
+
+## Escopo backend
+
+- Criar endpoint admin privado:
+  - `GET /api/admin/private/dashboard/summary?from=YYYY-MM-DD&to=YYYY-MM-DD`
+- Criar exportação real, se a UI mantiver o botão:
+  - `GET /api/admin/private/dashboard/export?from=YYYY-MM-DD&to=YYYY-MM-DD`
+  - CSV ou JSON documentado, sem dados inventados.
+- Agregar dados reais:
+  - sessões: `visitor_session`;
+  - pacientes: `user.role="paciente"`;
+  - psicólogos: `user.role="psicologo"` e/ou `psychologist_profile`;
+  - denúncias pendentes: `post_report.status="pendente"`;
+  - atividade de comunidade: `community_post` e `post_reply`;
+  - localização: `visitor_location`;
+  - dispositivo: `visitor_session.device_type`;
+  - financeiro: `payment_event` e/ou `professional_subscription` + `subscription_plan`, com campo `source` no retorno deixando claro se é receita confirmada, estimativa de assinatura ativa ou indisponível.
+
+## Fora do escopo
+
+- Criar telas completas de Tráfego, Comunidades, Psicólogos, Pacientes, Financeiro, Notificações ou Configurações.
+- Resolver denúncias/moderar posts a partir do Dashboard.
+- Criar tracking de pageviews detalhado.
+- Instalar biblioteca de gráficos/mapa sem ADR.
+- Exibir mapa mundial se não houver solução real compatível com packages; nesse caso, usar lista/ranking de países e registrar limitação.
+
+## Contrato técnico detalhado
+
+Referências obrigatórias:
+
+- `ARCHITECTURE.md`: módulos backend, rotas, helpers de resposta e separação de aplicações.
+- `PACKAGES.md`: não instalar chart/map/table libs sem necessidade concreta e ADR.
+- `PROTO-INVENTORY.md`: referência visual Admin Dashboard.
+
+Backend esperado:
+
+- Módulo em namespace admin privado, seguindo controller/service/repository/validator.
+- Validator para período:
+  - `from` e `to` opcionais;
+  - default: últimos 7 dias completos ou janela equivalente documentada;
+  - limite máximo inicial: 90 dias, salvo decisão em ADR.
+- Resposta sugerida:
+  - `period`;
+  - `cards`;
+  - `community_activity`;
+  - `financial`;
+  - `locations`;
+  - `devices`;
+  - `pending_reports`.
+- Cada métrica deve incluir metadado de origem/indisponibilidade quando aplicável.
+- Denúncias:
+  - retornar últimas pendentes ordenadas por severidade derivada e `createdAt`;
+  - severidade derivada por mapeamento determinístico de `reason`/`target_type`, documentado no service;
+  - não criar coluna nova de severidade nesta task, salvo ADR.
+- Financeiro:
+  - não somar dados ambíguos como receita confirmada;
+  - se `payment_event` não permitir confirmar valor, retornar financeiro como estimativa ou indisponível, com label honesto para o frontend.
+
+Frontend esperado:
+
+- `admin/src/api/req/dashboard`;
+- `admin/src/api/callers/dashboard`;
+- query keys próprias;
+- componentes internos para cards e gráficos simples.
+- Gráficos:
+  - preferir SVG/CSS próprio e acessível, sem package novo;
+  - incluir alternativa textual/tabela resumida para acessibilidade;
+  - não usar imagem estática de gráfico.
+- Export:
+  - se implementado, baixa dados reais do período;
+  - se não implementado nesta task, o botão não deve aparecer habilitado.
+
+Packages usados:
+
+- Nenhum pacote novo por padrão.
+- Qualquer adoção de chart/table/map lib exige validação de `PACKAGES.md` e ADR.
+
+Regras anti-recriação:
+
+- Reutilizar shell, API client e tokens criados na TASK-46.
+- Reutilizar modelos e dados existentes; não criar tabelas duplicadas para métricas que já podem ser agregadas.
+- Não usar sample data, seed visual ou JSON estático como métrica.
+
+Regras de UI obrigatórias:
+
+- Mobile-first obrigatório.
+- Nenhum `<img>` cru; usar `next/image` se imagem for inevitável.
+- Tema claro/escuro/sistema por tokens, se o admin app tiver suporte de tema desde TASK-46; caso contrário, registrar limitação e manter tokens preparados.
+- Componentes com foco visível e labels acessíveis.
+
+## Critérios de aceite
+
+- [ ] Dashboard carrega somente para admin autenticado.
+- [ ] Cards principais usam dados reais do endpoint admin.
+- [ ] Gráfico de dispositivo usa dados reais de `visitor_session` da TASK-47.
+- [ ] Atividade de comunidades usa `community_post` e `post_reply` reais.
+- [ ] Denúncias pendentes usam `post_report` real e abrem caminho claro para a futura tela de moderação.
+- [ ] Financeiro exibe label honesto conforme origem dos dados; não apresenta estimativa como receita confirmada.
+- [ ] Filtro de período altera todas as consultas/agregações.
+- [ ] Exportação só aparece/habilita se usar endpoint real.
+- [ ] Estados loading, erro, vazio e indisponível foram implementados.
+- [ ] UI mobile-first validada em ~390px, tablet e desktop.
+- [ ] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [ ] Nenhum `<img>` cru foi usado.
+- [ ] `_product/proto/admin/Dashboard.png` foi citado como referência visual; Builder/Quick Copy foi usado se disponível.
+- [ ] `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e `pnpm check` foram executados sem erros.
+- [ ] Browser local validado com admin real.
+- [ ] ADR criado ou atualizado em `adrs/` se houver nova decisão relevante.
+- [ ] Commit criado com mensagem convencional e `git push` executado.
+
+## Validação mínima
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Browser local:
+  - login admin;
+  - abrir `/dashboard`;
+  - trocar período;
+  - validar mobile ~390px e desktop;
+  - conferir estados vazios quando não houver dados.
+
+## Notas de execução
+
+- A imagem de referência mostra números exemplificativos; eles não devem ser copiados para a implementação.
+- O card "Acessos por localização" pode começar com ranking de países se mapa real/package não for aprovado.
+- Se alguma métrica depender de dado ainda não capturado, retornar `unavailable` em vez de simular.
