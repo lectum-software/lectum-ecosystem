@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+:root {
+  --admin-background: #f7f9ff;
+  --admin-foreground: #06104a;
+  --admin-primary: #3300ff;
+  --admin-primary-hover: #2500c7;
+  --admin-primary-soft: #efeaff;
+  --admin-surface: #ffffff;
+  --admin-surface-muted: #f4f6ff;
+  --admin-border: #dfe5f2;
+  --admin-border-strong: #c7d0e4;
+  --admin-muted: #55618a;
+  --admin-subtle: #97a2bc;
+  --admin-danger: #e5484d;
+  --admin-success: #13a85b;
+  --admin-warning: #f59f00;
+  --admin-sidebar: #06133c;
+  --admin-sidebar-foreground: #ffffff;
+  --admin-sidebar-muted: #b9c4e8;
+  --admin-sidebar-active: #3b16f3;
+  --admin-overlay: rgb(6 16 74 / 58%);
+  --admin-shadow: 0 18px 48px rgb(6 16 74 / 10%);
+  --admin-shadow-soft: 0 10px 28px rgb(6 16 74 / 8%);
+  --admin-shadow-control: 0 1px 2px rgb(6 16 74 / 4%);
+  --admin-radius-card: 22px;
+  --admin-radius-control: 16px;
+  --admin-font-sans: Inter, Manrope, Arial, Helvetica, sans-serif;
+}
+
+@theme inline {
+  --color-background: var(--admin-background);
+  --color-foreground: var(--admin-foreground);
+  --color-primary: var(--admin-primary);
+  --color-primary-hover: var(--admin-primary-hover);
+  --color-primary-soft: var(--admin-primary-soft);
+  --color-surface: var(--admin-surface);
+  --color-surface-muted: var(--admin-surface-muted);
+  --color-border: var(--admin-border);
+  --color-border-strong: var(--admin-border-strong);
+  --color-muted: var(--admin-muted);
+  --color-subtle: var(--admin-subtle);
+  --color-danger: var(--admin-danger);
+  --color-success: var(--admin-success);
+  --color-warning: var(--admin-warning);
+  --color-sidebar: var(--admin-sidebar);
+  --color-sidebar-foreground: var(--admin-sidebar-foreground);
+  --color-sidebar-muted: var(--admin-sidebar-muted);
+  --color-sidebar-active: var(--admin-sidebar-active);
+  --color-overlay: var(--admin-overlay);
+  --shadow-admin: var(--admin-shadow);
+  --shadow-admin-soft: var(--admin-shadow-soft);
+  --shadow-control: var(--admin-shadow-control);
+  --radius-card: var(--admin-radius-card);
+  --radius-control: var(--admin-radius-control);
+  --font-sans: var(--admin-font-sans);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: var(--admin-background);
+  font-size: 15px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  background: var(--admin-background);
+  color: var(--admin-foreground);
+  font-family: var(--admin-font-sans);
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button,
+a {
+  cursor: pointer;
+}
+
+button:disabled,
+input:disabled {
+  cursor: not-allowed;
+}
+
+::selection {
+  background: rgb(51 0 255 / 16%);
+}
+
+:focus-visible {
+  outline: 3px solid rgb(51 0 255 / 28%);
+  outline-offset: 2px;
+}

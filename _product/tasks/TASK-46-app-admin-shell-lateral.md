@@ -8,7 +8,7 @@
 | Prioridade | P0 |
 | Esforço | L |
 | Fase | Admin |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-45 |
 | ADR alvo | ADR da TASK-45 ou novo ADR caso a estrutura do app `admin/` diverja do planejado |
 
@@ -108,19 +108,19 @@ Regras anti-recriação:
 
 ## Critérios de aceite
 
-- [ ] App `admin/` existe como aplicação separada e roda localmente.
-- [ ] Login admin usa backend real da TASK-45; não existe admin fake no client.
-- [ ] Token/cookie/storage admin são separados do frontend de pacientes/psicólogos.
-- [ ] Rotas protegidas redirecionam para `/login` quando não há sessão admin válida.
-- [ ] Sidebar contém exatamente: Dashboard, Tráfego, Comunidades, Psicólogos, Pacientes, Financeiro, Notificações e Configurações.
-- [ ] Shell é mobile-first, responsivo e acessível por teclado.
-- [ ] Páginas ainda não implementadas exibem placeholder honesto, sem métricas fake.
-- [ ] Nenhum `<img>` cru foi usado.
-- [ ] Formulário de login usa React Hook Form, Zod e controllers/fundação local alinhada à TASK-02.
-- [ ] `_product/proto/admin/Dashboard.png` foi citado como referência visual; Builder/Quick Copy foi usado se disponível.
-- [ ] `pnpm --dir admin check`, `pnpm --dir admin build` e checks relevantes foram executados sem erros.
-- [ ] ADR criado ou atualizado em `adrs/` se a estrutura do app/admin forms/tokens exigir decisão nova.
-- [ ] Commit criado com mensagem convencional e `git push` executado.
+- [x] App `admin/` existe como aplicação separada e roda localmente.
+- [x] Login admin usa backend real da TASK-45; não existe admin fake no client.
+- [x] Token/cookie/storage admin são separados do frontend de pacientes/psicólogos.
+- [x] Rotas protegidas redirecionam para `/login` quando não há sessão admin válida.
+- [x] Sidebar contém exatamente: Dashboard, Tráfego, Comunidades, Psicólogos, Pacientes, Financeiro, Notificações e Configurações.
+- [x] Shell é mobile-first, responsivo e acessível por teclado.
+- [x] Páginas ainda não implementadas exibem placeholder honesto, sem métricas fake.
+- [x] Nenhum `<img>` cru foi usado.
+- [x] Formulário de login usa React Hook Form, Zod e controllers/fundação local alinhada à TASK-02.
+- [x] `_product/proto/admin/Dashboard.png` foi citado como referência visual; Builder/Quick Copy foi usado se disponível.
+- [x] `pnpm --dir admin check`, `pnpm --dir admin build` e checks relevantes foram executados sem erros.
+- [x] ADR criado ou atualizado em `adrs/` se a estrutura do app/admin forms/tokens exigir decisão nova.
+- [x] Commit criado com mensagem convencional e `git push` executado.
 
 ## Validação mínima
 
@@ -138,3 +138,11 @@ Regras anti-recriação:
 
 - Se o app admin precisar de porta local própria, documentar no README do `admin/` e em scripts raiz somente se isso não transformar o repositório em monorepo operacional.
 - Não usar dados de exemplo nos cards do Dashboard; a TASK-48 cria as métricas reais.
+
+
+## Registro de execução
+
+- Concluída em 2026-07-09.
+- Criado app `admin/` separado, com Next.js App Router na porta local `3002`, login real via backend da TASK-45 e storage `lectum.admin.*`.
+- Builder/Quick Copy não estava disponível nas ferramentas do ambiente; a referência visual usada foi `_product/proto/admin/Dashboard.png`.
+- Validações executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir admin audit --prod`, `pnpm check`, smoke HTTP local em `/login` e `/dashboard`, e smoke API real de login/hidrate/logout com admin temporário removido ao final.
