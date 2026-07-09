@@ -8,7 +8,7 @@
 | Prioridade | P0 |
 | Esforço | L |
 | Fase | Admin |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-34, TASK-44 |
 | ADR alvo | ADR sobre admin como audiência separada, rotas `/api/admin/*` e app separado |
 
@@ -95,18 +95,18 @@ Regras anti-recriação:
 
 ## Critérios de aceite
 
-- [ ] `admin` e `admin_token` existem no Prisma com migration aplicada.
-- [ ] `pnpm --dir backend db:migrate` foi executado sem erro após alteração de schema/migrations.
-- [ ] Existe login admin real que valida senha com hash e persiste token admin.
-- [ ] `GET /api/admin/private/auth/hidrate` só responde com token admin válido.
-- [ ] Token de usuário final (`user_token`) não autentica rota admin.
-- [ ] Token admin não autentica rota privada de paciente/psicólogo.
-- [ ] Bootstrap do primeiro admin é operacional, auditável e não usa senha hardcoded.
-- [ ] Respostas e erros seguem os helpers do backend e mensagens PT-BR.
-- [ ] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
-- [ ] ADR criado ou atualizado em `adrs/`.
-- [ ] `pnpm --dir backend check`, `pnpm --dir backend build` e `pnpm check` foram executados sem erros.
-- [ ] Commit criado com mensagem convencional e `git push` executado.
+- [x] `admin` e `admin_token` existem no Prisma com migration aplicada.
+- [x] `pnpm --dir backend db:migrate` foi executado sem erro após alteração de schema/migrations.
+- [x] Existe login admin real que valida senha com hash e persiste token admin.
+- [x] `GET /api/admin/private/auth/hidrate` só responde com token admin válido.
+- [x] Token de usuário final (`user_token`) não autentica rota admin.
+- [x] Token admin não autentica rota privada de paciente/psicólogo.
+- [x] Bootstrap do primeiro admin é operacional, auditável e não usa senha hardcoded.
+- [x] Respostas e erros seguem os helpers do backend e mensagens PT-BR.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] ADR criado ou atualizado em `adrs/`.
+- [x] `pnpm --dir backend check`, `pnpm --dir backend build` e `pnpm check` foram executados sem erros.
+- [x] Commit criado com mensagem convencional e `git push` executado.
 
 ## Validação mínima
 

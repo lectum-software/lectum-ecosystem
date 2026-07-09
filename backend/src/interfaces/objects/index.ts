@@ -10,6 +10,39 @@ export interface user_token {
   user?: user | null;
 }
 
+export interface admin_token {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  admin_id?: string | null;
+  token?: string | null;
+  device_id?: string | null;
+  admin?: admin | null;
+}
+
+export interface admin {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  name?: string | null;
+  email?: string | null;
+  password?: string | null;
+  password_confirm?: string | null;
+  active?: boolean | null;
+  confirmed?: boolean | null;
+  confirmed_date?: Date | null;
+  confirm_code?: string | null;
+  confirm_date?: Date | null;
+  recovery_code?: string | null;
+  recovery_date?: Date | null;
+  need_reset?: boolean | null;
+  admin_tokens?: admin_token[] | null;
+}
+
 export interface user_background {
   id?: string | null;
   deleted?: boolean | null;

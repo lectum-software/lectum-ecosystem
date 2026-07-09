@@ -5,6 +5,7 @@ declare global {
       q: any;
       b: any;
       auth: any;
+      admin: any;
       medias: any;
       uploads: any;
       select: any;

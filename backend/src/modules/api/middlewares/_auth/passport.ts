@@ -379,6 +379,10 @@ const jwtOptions = {
 passport.use(
   "jwt-user-api",
   new JWTStrategy(jwtOptions, async (payload: JwtPayload, done: VerifiedCallback) => {
+    if (payload.type !== "user" || !payload.email || !payload.device_id) {
+      return done(notAuthorized, false);
+    }
+
     const repo = new LoginRepository(payload.device_id, [
       { model: "company", columns: ["ai_api_key"] },
     ]);

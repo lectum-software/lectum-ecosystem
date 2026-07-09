@@ -1,4 +1,7 @@
 import { type RequestHandler, Router } from "express";
+import apiAdminPrivateAuthHidrate from "@/modules/api/admin/private/auth/hidrate";
+import apiAdminPrivateAuthLogout from "@/modules/api/admin/private/auth/logout";
+import apiAdminPublicAuthLogin from "@/modules/api/admin/public/auth/login";
 import privateAuth from "@/modules/api/middlewares/_auth";
 import optionalAuth from "@/modules/api/middlewares/optional-auth";
 import { requireRole } from "@/modules/api/middlewares/require-role";
@@ -113,6 +116,9 @@ mountRoute("/api/public/google/link", apiPublicGoogleLink);
 mountRoute("/api/public/google/login", apiPublicGoogleLogin);
 mountRoute("/api/public/google/me", apiPublicGoogleMe);
 mountRoute("/api/public/user", apiPublicUser);
+mountRoute("/api/admin/public/auth/login", apiAdminPublicAuthLogin);
+mountRoute("/api/admin/private/auth/hidrate", apiAdminPrivateAuthHidrate);
+mountRoute("/api/admin/private/auth/logout", apiAdminPrivateAuthLogout);
 mountRoute("/api/private/user/favorites", privateAuth, apiPrivatePatientFavorites);
 mountRoute("/api/private/user/reviews", privateAuth, apiPrivatePatientReviews);
 mountRoleGuardedRoute("/api/private/patient/favorites", "paciente", apiPrivatePatientFavorites);

@@ -82,6 +82,48 @@ model user {
   @@map("users")
 }
 
+model admin {
+  id               String        @id @default(cuid())
+  deleted          Boolean       @default(false)
+  deletedAt        DateTime?     @map("deleted_at")
+  updatedAt        DateTime      @default(now()) @updatedAt @map("updated_at")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  name             String
+  email            String        @unique
+  password         String?
+  password_confirm String?
+  active           Boolean       @default(true)
+  confirmed        Boolean       @default(false)
+  confirmed_date   DateTime?
+  confirm_code     String?
+  confirm_date     DateTime?
+  recovery_code    String?
+  recovery_date    DateTime?
+  need_reset       Boolean       @default(false)
+  admin_tokens     admin_token[] @relation("admin_token_admin")
+
+  @@index([email, deleted])
+  @@index([active, deleted])
+  @@map("admins")
+}
+
+model admin_token {
+  id        String    @id @default(cuid())
+  deleted   Boolean   @default(false)
+  deletedAt DateTime? @map("deleted_at")
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  admin_id  String
+  token     String?
+  device_id String?
+  admin     admin     @relation("admin_token_admin", fields: [admin_id], references: [id], onDelete: Cascade)
+
+  @@index([admin_id, device_id])
+  @@index([token])
+  @@index([admin_id, token, device_id])
+  @@map("admin_tokens")
+}
+
 model notification_preference {
   id        String    @id @default(cuid())
   deleted   Boolean   @default(false)
@@ -769,20 +811,20 @@ model post_save {
 }
 
 model post_share {
-  id          String          @id @default(cuid())
-  deleted     Boolean         @default(false)
-  deletedAt   DateTime?       @map("deleted_at")
-  updatedAt   DateTime        @default(now()) @updatedAt @map("updated_at")
-  createdAt   DateTime        @default(now()) @map("created_at")
+  id          String         @id @default(cuid())
+  deleted     Boolean        @default(false)
+  deletedAt   DateTime?      @map("deleted_at")
+  updatedAt   DateTime       @default(now()) @updatedAt @map("updated_at")
+  createdAt   DateTime       @default(now()) @map("created_at")
   user_id     String?
   device_id   String?
   post_id     String
   reply_id    String?
-  target_type String          @default("post")
-  channel     String          @default("web_share")
-  user        user?           @relation("post_share_user", fields: [user_id], references: [id], onDelete: SetNull)
-  post        community_post  @relation("post_share_post", fields: [post_id], references: [id], onDelete: Cascade)
-  reply       post_reply?     @relation("post_share_reply", fields: [reply_id], references: [id], onDelete: Cascade)
+  target_type String         @default("post")
+  channel     String         @default("web_share")
+  user        user?          @relation("post_share_user", fields: [user_id], references: [id], onDelete: SetNull)
+  post        community_post @relation("post_share_post", fields: [post_id], references: [id], onDelete: Cascade)
+  reply       post_reply?    @relation("post_share_reply", fields: [reply_id], references: [id], onDelete: Cascade)
 
   @@index([post_id, createdAt])
   @@index([reply_id, createdAt])
