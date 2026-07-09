@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | L |
 | Fase | Admin |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-45, TASK-46, TASK-47, TASK-49 |
 | ADR alvo | ADR se houver decisão nova sobre fórmulas de métricas, exportação, mapa ou gráficos |
 
@@ -164,27 +164,27 @@ Regras de UI obrigatórias:
 
 ## Critérios de aceite
 
-- [ ] A rota de Tráfego só abre para admin autenticado.
-- [ ] Cards de visão geral usam dados reais.
-- [ ] Origem do tráfego usa `page_view_event.traffic_source` real.
-- [ ] Dispositivos usam `visitor_session.device_type` real.
-- [ ] Tipo de usuário distingue pacientes, psicólogos e anônimos por dados reais.
-- [ ] Localização usa `visitor_location` real.
-- [ ] Páginas de entrada são derivadas da primeira pageview por sessão.
-- [ ] Métricas de qualidade são exibidas somente quando houver fórmula e dados confiáveis; caso contrário, aparecem como indisponíveis.
-- [ ] Conversões são baseadas em eventos reais e documentam limitações de atribuição.
-- [ ] Rankings de comunidade/psicólogo são derivados de pageviews/target real.
-- [ ] Filtro de período atualiza todas as agregações.
-- [ ] Exportação só aparece/habilita se usar endpoint real.
-- [ ] Estados loading, erro, vazio e indisponível foram implementados.
-- [ ] UI mobile-first validada em ~390px, tablet e desktop.
-- [ ] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
-- [ ] Nenhum `<img>` cru foi usado.
-- [ ] `_product/proto/admin/Tráfego.png` foi citado como referência visual; Builder/Quick Copy foi usado se disponível.
-- [ ] `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e `pnpm check` foram executados sem erros.
-- [ ] Browser local validado com admin real.
-- [ ] ADR criado ou atualizado em `adrs/` se houver nova decisão relevante.
-- [ ] Commit criado com mensagem convencional e `git push` executado.
+- [x] A rota de Tráfego só abre para admin autenticado.
+- [x] Cards de visão geral usam dados reais.
+- [x] Origem do tráfego usa `page_view_event.traffic_source` real.
+- [x] Dispositivos usam `visitor_session.device_type` real.
+- [x] Tipo de usuário distingue pacientes, psicólogos e anônimos por dados reais.
+- [x] Localização usa `visitor_location` real.
+- [x] Páginas de entrada são derivadas da primeira pageview por sessão.
+- [x] Métricas de qualidade são exibidas somente quando houver fórmula e dados confiáveis; caso contrário, aparecem como indisponíveis.
+- [x] Conversões são baseadas em eventos reais e documentam limitações de atribuição.
+- [x] Rankings de comunidade/psicólogo são derivados de pageviews/target real.
+- [x] Filtro de período atualiza todas as agregações.
+- [x] Exportação só aparece/habilita se usar endpoint real.
+- [x] Estados loading, erro, vazio e indisponível foram implementados.
+- [x] UI mobile-first validada em ~390px, tablet e desktop.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] Nenhum `<img>` cru foi usado.
+- [x] `_product/proto/admin/Tráfego.png` foi citado como referência visual; Builder/Quick Copy foi usado se disponível.
+- [x] `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e `pnpm check` foram executados sem erros.
+- [x] Browser local validado com admin real.
+- [x] ADR criado ou atualizado em `adrs/` se houver nova decisão relevante.
+- [x] Commit criado com mensagem convencional e `git push` executado.
 
 ## Validação mínima
 
@@ -205,3 +205,26 @@ Regras de UI obrigatórias:
 - Os números do protótipo são referência visual, não dados de seed.
 - Se uma métrica ainda não tiver dado suficiente, retornar `unavailable` com copy clara.
 - A tela pode ser entregue incrementalmente desde que todos os blocos indisponíveis sejam honestos e não simulem dados.
+
+
+## Execucao TASK-50
+
+- Implementada a rota protegida do Admin em `/trafego`, seguindo a convencao adotada no app `admin/`.
+- Implementados os endpoints reais `GET /api/admin/private/traffic/summary` e `GET /api/admin/private/traffic/export`, com agregacoes derivadas de `visitor_session`, `page_view_event`, `important_action_event`, `visitor_location` e modelos reais de dominio.
+- A exportacao CSV usa o mesmo servico de agregacao do resumo, sem dados pessoais sensiveis alem de labels agregados ou publicos.
+- O mapa foi entregue como ranking/lista acessivel de localizacao nesta primeira versao, sem pacote novo e sem imagem do prototipo como grafico final.
+- Builder/Quick Copy nao estava exposto como ferramenta MCP nesta execucao; a referencia visual usada foi `_product/proto/admin/Tráfego.png`.
+- Nenhuma alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; portanto `pnpm --dir backend db:migrate` nao foi necessario.
+- Foram criados registros transitorios para smoke de API com admin real e dados reais relacionais; os registros transitorios foram removidos apos a validacao.
+- Browser local validado com admin real em dev server do Admin na porta 3102 por indisponibilidade/conflito local da porta 3002 durante a validacao; a porta alvo local do app Admin permanece 3002.
+- ADR criado: `adrs/0230-admin-trafego-agregacoes.md`.
+
+## Evidencias de validacao
+
+- `pnpm --dir backend check`: sem erros.
+- `pnpm --dir backend build`: sem erros.
+- `pnpm --dir admin check`: sem erros.
+- `pnpm --dir admin build`: sem erros.
+- `pnpm check`: sem erros.
+- Smoke API: resumo e exportacao retornaram dados agregados reais, incluindo origem, dispositivos, PWA, localizacao, paginas de entrada, conversoes e rankings.
+- Browser local: login admin real, abertura de `/trafego`, troca de periodo para 7 dias, exportacao CSV e validacao visual mobile (~390px), tablet (768px) e desktop.
