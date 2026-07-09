@@ -339,6 +339,24 @@ Regra: sessão de vídeo autenticada do próprio psicólogo no próprio perfil (
 persistida nem entrar nas métricas de Analytics. Visitantes anônimos não podem ser associados com segurança ao dono do
 perfil e seguem contabilizados como anônimos.
 
+`visitor_session` (analytics admin, TASK-47):
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `visitor_id` | `String` | identificador anonimo estavel do visitante, reutilizado da captura publica de analytics |
+| `session_id` | `String` | identificador da sessao do navegador; `@@unique([visitor_id, session_id])` torna o upsert idempotente |
+| `user_id` | `String?` | usuario autenticado quando houver token valido; anônimo fica nulo |
+| `device_type` | `String @default("unknown")` | somente `"mobile" \| "tablet" \| "desktop" \| "unknown"` |
+| `os` | `String?` | normalizado simples; nunca user-agent bruto |
+| `browser` | `String?` | normalizado simples; nunca user-agent bruto |
+| `viewport_width`, `viewport_height` | `Int?` | dimensoes normalizadas do viewport, quando disponiveis |
+| `first_seen_at`, `last_seen_at` | `DateTime @default(now())` | janela de agregacao de sessoes e recencia |
+| `@@index([device_type, createdAt])`, `@@index([user_id, createdAt])`, `@@index([last_seen_at])` | | agregacoes admin por periodo, dispositivo e usuario autenticado |
+
+Regra: a rota publica de analytics pode receber dados normalizados de dispositivo, mas nao deve persistir IP bruto,
+user-agent bruto ou payload sensivel novo. Payloads antigos de localizacao continuam validos; sem `session_id`, a rota
+nao cria `visitor_session` e segue processando localizacao quando aplicavel.
+
 ---
 
 ## Avaliações

@@ -70,6 +70,7 @@ model user {
   post_reports                            post_report[]                 @relation("post_report_reporter")
   notification_subscriptions              notification_subscription[]   @relation("notification_subscription_user")
   visitor_locations                       visitor_location[]            @relation("visitor_location_user")
+  visitor_sessions                        visitor_session[]             @relation("visitor_session_user")
   billing_addresses                       billing_address[]             @relation("billing_address_user")
   payment_methods                         payment_method[]              @relation("payment_method_user")
   logs                                    log__user[]                   @relation("log__user_user")
@@ -158,6 +159,31 @@ model visitor_location {
   @@index([user_id, createdAt])
   @@index([city, state, country])
   @@map("visitor_locations")
+}
+
+model visitor_session {
+  id              String    @id @default(cuid())
+  deleted         Boolean   @default(false)
+  deletedAt       DateTime? @map("deleted_at")
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  visitor_id      String    @map("visitor_id")
+  session_id      String    @map("session_id")
+  user_id         String?   @map("user_id")
+  device_type     String    @default("unknown") @map("device_type")
+  os              String?
+  browser         String?
+  viewport_width  Int?      @map("viewport_width")
+  viewport_height Int?      @map("viewport_height")
+  first_seen_at   DateTime  @default(now()) @map("first_seen_at")
+  last_seen_at    DateTime  @default(now()) @map("last_seen_at")
+  user            user?     @relation("visitor_session_user", fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@unique([visitor_id, session_id])
+  @@index([device_type, createdAt])
+  @@index([user_id, createdAt])
+  @@index([last_seen_at])
+  @@map("visitor_sessions")
 }
 
 model user_token {

@@ -527,6 +527,25 @@ export interface visitor_location {
   user?: user | null;
 }
 
+export interface visitor_session {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  visitor_id?: string | null;
+  session_id?: string | null;
+  user_id?: string | null;
+  device_type?: "mobile" | "tablet" | "desktop" | "unknown" | string | null;
+  os?: string | null;
+  browser?: string | null;
+  viewport_width?: number | null;
+  viewport_height?: number | null;
+  first_seen_at?: Date | null;
+  last_seen_at?: Date | null;
+  user?: user | null;
+}
+
 export interface notification {
   id?: string | null;
   deleted?: boolean | null;
@@ -606,6 +625,7 @@ export interface user {
   post_reports?: post_report[] | null;
   notification_subscriptions?: notification_subscription[] | null;
   visitor_locations?: visitor_location[] | null;
+  visitor_sessions?: visitor_session[] | null;
   billing_addresses?: billing_address[] | null;
   payment_methods?: payment_method[] | null;
   notifications?: notification[] | null;

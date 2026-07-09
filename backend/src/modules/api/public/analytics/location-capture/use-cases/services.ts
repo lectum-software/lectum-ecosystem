@@ -6,6 +6,7 @@ import { msg } from "@/helpers/translate";
 import prisma from "@/infra/database/prisma";
 import { getJwtSecret } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
 import type {
+  DeviceType,
   ILocationCaptureDTO,
   LocationCaptureResult,
   LocationResolution,
@@ -38,6 +39,7 @@ type AuthPayload = JwtPayload & {
 const LOCATION_CAPTURE_WINDOW_HOURS = 24;
 const DEFAULT_PROVIDER_ENDPOINT = "https://ipapi.co/{ip}/json/";
 const PRIVATE_IPV6_PREFIXES = ["fc", "fd", "fe80"];
+const ACCEPTED_DEVICE_TYPES: DeviceType[] = ["mobile", "tablet", "desktop", "unknown"];
 
 const getHeaderValue = (headers: RequestHeaders, names: string[]): string | null => {
   for (const name of names) {
@@ -293,6 +295,42 @@ const resolveLocation = async (req: Request): Promise<LocationResolution | null>
   return resolveLocationFromProvider(ip);
 };
 
+const normalizeDeviceType = (value: string | null | undefined): DeviceType => {
+  if (ACCEPTED_DEVICE_TYPES.includes(value as DeviceType)) return value as DeviceType;
+
+  return "unknown";
+};
+
+const buildSessionResult = (
+  session: Awaited<ReturnType<LocationCaptureRepository["upsertSession"]>> | null,
+): LocationCaptureResult["session"] => {
+  if (!session) {
+    return {
+      captured: false,
+      device_type: "unknown",
+      reason: "missing_session_id",
+    };
+  }
+
+  return {
+    captured: true,
+    device_type: normalizeDeviceType(session.device_type),
+    data: {
+      id: session.id,
+      visitor_id: session.visitor_id,
+      session_id: session.session_id,
+      user_id: session.user_id,
+      device_type: session.device_type,
+      os: session.os,
+      browser: session.browser,
+      viewport_width: session.viewport_width,
+      viewport_height: session.viewport_height,
+      first_seen_at: session.first_seen_at,
+      last_seen_at: session.last_seen_at,
+    },
+  };
+};
+
 export default async (req: Request) => {
   const data = req as Request & ILocationCaptureDTO;
   const repository = new LocationCaptureRepository();
@@ -302,8 +340,27 @@ export default async (req: Request) => {
   let linked = false;
 
   if (userId) {
-    linked = (await repository.linkVisitorToUser(visitorId, userId)) > 0;
+    const [linkedLocations, linkedSessions] = await Promise.all([
+      repository.linkVisitorToUser(visitorId, userId),
+      repository.linkSessionsToUser(visitorId, userId),
+    ]);
+
+    linked = linkedLocations > 0 || linkedSessions > 0;
   }
+
+  const storedSession = sessionId
+    ? await repository.upsertSession({
+        visitorId,
+        sessionId,
+        userId,
+        deviceType: data.b.device_type,
+        os: data.b.os,
+        browser: data.b.browser,
+        viewportWidth: data.b.viewport_width,
+        viewportHeight: data.b.viewport_height,
+      })
+    : null;
+  const session = buildSessionResult(storedSession);
 
   const since = subHours(new Date(), LOCATION_CAPTURE_WINDOW_HOURS);
   const recentLocation = await repository.findRecent({ visitorId, userId, since });
@@ -315,6 +372,7 @@ export default async (req: Request) => {
       authenticated: Boolean(userId),
       reason: "frequency",
       source: "ip",
+      session,
       location: {
         city: recentLocation.city,
         state: recentLocation.state,
@@ -340,6 +398,7 @@ export default async (req: Request) => {
       authenticated: Boolean(userId),
       reason: "unavailable",
       source: "ip",
+      session,
     };
 
     return {
@@ -366,6 +425,7 @@ export default async (req: Request) => {
     linked,
     authenticated: Boolean(userId),
     source: "ip",
+    session,
     location: {
       city: storedLocation.city,
       state: storedLocation.state,

@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | M |
 | Fase | Admin / Analytics |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-39 |
 | ADR alvo | ADR se houver novo modelo `visitor_session` ou mudança no contrato público de analytics |
 
@@ -121,17 +121,17 @@ Regras anti-recriação:
 
 ## Critérios de aceite
 
-- [ ] Sessões reais são persistidas com `visitor_id`, `session_id` e `device_type`.
-- [ ] Usuário autenticado é vinculado à sessão quando houver token válido.
-- [ ] Payload antigo de localização continua funcionando ou migração de contrato foi documentada.
-- [ ] Não há armazenamento de user-agent bruto, IP bruto ou dado sensível novo sem justificativa.
-- [ ] `mobile`, `desktop`, `tablet` e `unknown` são valores aceitos e documentados.
-- [ ] Existe índice adequado para agregação por período e tipo de dispositivo.
-- [ ] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
-- [ ] Se houve alteração de banco/schema/migrations, `pnpm --dir backend db:migrate` foi executado sem erro.
-- [ ] `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check` e `pnpm check` foram executados sem erros.
-- [ ] ADR criado ou atualizado em `adrs/`.
-- [ ] Commit criado com mensagem convencional e `git push` executado.
+- [x] Sessões reais são persistidas com `visitor_id`, `session_id` e `device_type`.
+- [x] Usuário autenticado é vinculado à sessão quando houver token válido.
+- [x] Payload antigo de localização continua funcionando ou migração de contrato foi documentada.
+- [x] Não há armazenamento de user-agent bruto, IP bruto ou dado sensível novo sem justificativa.
+- [x] `mobile`, `desktop`, `tablet` e `unknown` são valores aceitos e documentados.
+- [x] Existe índice adequado para agregação por período e tipo de dispositivo.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] Se houve alteração de banco/schema/migrations, `pnpm --dir backend db:migrate` foi executado sem erro.
+- [x] `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check` e `pnpm check` foram executados sem erros.
+- [x] ADR criado ou atualizado em `adrs/`.
+- [x] Commit criado com mensagem convencional e `git push` executado.
 
 ## Validação mínima
 
@@ -149,3 +149,14 @@ Regras anti-recriação:
 
 - Esta task viabiliza apenas a base de dados. O card "Atividade por dispositivo" entra na TASK-48.
 - Se for necessário resetar banco por conflito de migration local, perguntar ao usuário antes de qualquer comando destrutivo.
+
+## Evidencias de execucao
+
+- Modelo `visitor_session` criado e migration `20260709122232_add_visitor_sessions` aplicada.
+- `pnpm --dir backend db:migrate` executado com sucesso apos criacao da migration.
+- `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check` executados sem erro.
+- Smoke anonimo via rota real confirmou persistencia de `desktop`, `mobile`, `tablet` e `unknown` em `visitor_sessions`.
+- Smoke legado sem `session_id` confirmou compatibilidade da rota e retorno `session.reason="missing_session_id"`.
+- Smoke autenticado com usuario/token transitorios confirmou vinculo de `user_id`; os dados de smoke foram removidos.
+- Build/start local temporario do frontend em porta 3010 respondeu HTTP 200 para `/`.
+- ADR criado: `adrs/0227-sessoes-visitantes-tipo-dispositivo.md`.

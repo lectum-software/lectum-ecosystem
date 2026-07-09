@@ -127,7 +127,7 @@ ou cortesia manual.
 | 44 | [TASK-44 - Verificação de registro retomável no fluxo pago](TASK-44-verificacao-registro-assinatura-retomavel.md) | Completed | 10, 16, 18A, 31, 32 |
 | 45 | [TASK-45 - Fundação backend do Admin](TASK-45-fundacao-backend-admin.md) | Completed | 34, 44 |
 | 46 | [TASK-46 - Aplicação Admin separada e shell lateral](TASK-46-app-admin-shell-lateral.md) | Completed | 45 |
-| 47 | [TASK-47 - Captura de sessão e tipo de dispositivo para analytics admin](TASK-47-captura-sessao-tipo-dispositivo.md) | Pending | 39 |
+| 47 | [TASK-47 - Captura de sessão e tipo de dispositivo para analytics admin](TASK-47-captura-sessao-tipo-dispositivo.md) | Completed | 39 |
 | 48 | [TASK-48 - Dashboard administrativo](TASK-48-dashboard-administrativo.md) | Pending | 45, 46, 47 |
 | 49 | [TASK-49 - Tracking de pageviews e origem de tráfego](TASK-49-tracking-pageviews-origem-trafego.md) | Pending | 39, 40, 47 |
 | 50 | [TASK-50 - Tela Tráfego administrativo](TASK-50-tela-trafego-administrativo.md) | Pending | 45, 46, 47, 49 |
