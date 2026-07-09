@@ -1,6 +1,8 @@
 import { type RequestHandler, Router } from "express";
 import apiAdminPrivateAuthHidrate from "@/modules/api/admin/private/auth/hidrate";
 import apiAdminPrivateAuthLogout from "@/modules/api/admin/private/auth/logout";
+import apiAdminPrivateDashboardExport from "@/modules/api/admin/private/dashboard/export";
+import apiAdminPrivateDashboardSummary from "@/modules/api/admin/private/dashboard/summary";
 import apiAdminPublicAuthLogin from "@/modules/api/admin/public/auth/login";
 import privateAuth from "@/modules/api/middlewares/_auth";
 import optionalAuth from "@/modules/api/middlewares/optional-auth";
@@ -119,6 +121,8 @@ mountRoute("/api/public/user", apiPublicUser);
 mountRoute("/api/admin/public/auth/login", apiAdminPublicAuthLogin);
 mountRoute("/api/admin/private/auth/hidrate", apiAdminPrivateAuthHidrate);
 mountRoute("/api/admin/private/auth/logout", apiAdminPrivateAuthLogout);
+mountRoute("/api/admin/private/dashboard/summary", apiAdminPrivateDashboardSummary);
+mountRoute("/api/admin/private/dashboard/export", apiAdminPrivateDashboardExport);
 mountRoute("/api/private/user/favorites", privateAuth, apiPrivatePatientFavorites);
 mountRoute("/api/private/user/reviews", privateAuth, apiPrivatePatientReviews);
 mountRoleGuardedRoute("/api/private/patient/favorites", "paciente", apiPrivatePatientFavorites);

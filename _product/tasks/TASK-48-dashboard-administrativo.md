@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | L |
 | Fase | Admin |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-45, TASK-46, TASK-47 |
 | ADR alvo | ADR se houver decisão nova sobre agregação financeira, exportação ou visualização de gráficos sem package externo |
 
@@ -145,23 +145,23 @@ Regras de UI obrigatórias:
 
 ## Critérios de aceite
 
-- [ ] Dashboard carrega somente para admin autenticado.
-- [ ] Cards principais usam dados reais do endpoint admin.
-- [ ] Gráfico de dispositivo usa dados reais de `visitor_session` da TASK-47.
-- [ ] Atividade de comunidades usa `community_post` e `post_reply` reais.
-- [ ] Denúncias pendentes usam `post_report` real e abrem caminho claro para a futura tela de moderação.
-- [ ] Financeiro exibe label honesto conforme origem dos dados; não apresenta estimativa como receita confirmada.
-- [ ] Filtro de período altera todas as consultas/agregações.
-- [ ] Exportação só aparece/habilita se usar endpoint real.
-- [ ] Estados loading, erro, vazio e indisponível foram implementados.
-- [ ] UI mobile-first validada em ~390px, tablet e desktop.
-- [ ] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
-- [ ] Nenhum `<img>` cru foi usado.
-- [ ] `_product/proto/admin/Dashboard.png` foi citado como referência visual; Builder/Quick Copy foi usado se disponível.
-- [ ] `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e `pnpm check` foram executados sem erros.
-- [ ] Browser local validado com admin real.
-- [ ] ADR criado ou atualizado em `adrs/` se houver nova decisão relevante.
-- [ ] Commit criado com mensagem convencional e `git push` executado.
+- [x] Dashboard carrega somente para admin autenticado.
+- [x] Cards principais usam dados reais do endpoint admin.
+- [x] Gráfico de dispositivo usa dados reais de `visitor_session` da TASK-47.
+- [x] Atividade de comunidades usa `community_post` e `post_reply` reais.
+- [x] Denúncias pendentes usam `post_report` real e abrem caminho claro para a futura tela de moderação.
+- [x] Financeiro exibe label honesto conforme origem dos dados; não apresenta estimativa como receita confirmada.
+- [x] Filtro de período altera todas as consultas/agregações.
+- [x] Exportação só aparece/habilita se usar endpoint real.
+- [x] Estados loading, erro, vazio e indisponível foram implementados.
+- [x] UI mobile-first validada em ~390px, tablet e desktop.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] Nenhum `<img>` cru foi usado.
+- [x] `_product/proto/admin/Dashboard.png` foi citado como referência visual; Builder/Quick Copy foi usado se disponível.
+- [x] `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e `pnpm check` foram executados sem erros.
+- [x] Browser local validado com admin real.
+- [x] ADR criado ou atualizado em `adrs/` se houver nova decisão relevante.
+- [x] Commit criado com mensagem convencional e `git push` executado.
 
 ## Validação mínima
 
@@ -182,3 +182,13 @@ Regras de UI obrigatórias:
 - A imagem de referência mostra números exemplificativos; eles não devem ser copiados para a implementação.
 - O card "Acessos por localização" pode começar com ranking de países se mapa real/package não for aprovado.
 - Se alguma métrica depender de dado ainda não capturado, retornar `unavailable` em vez de simular.
+
+### Execução TASK-48 (2026-07-09)
+
+- Implementado o endpoint protegido `GET /api/admin/private/dashboard/summary` com agregações reais de `visitor_session`, `visitor_location`, `users`, `community_post`, `post_reply`, `post_report` e `professional_subscription` + `subscription_plan`.
+- Implementado `GET /api/admin/private/dashboard/export` com CSV real do período selecionado; por isso o botão de exportação permanece habilitado na UI.
+- Financeiro exibido como **MRR estimado por assinaturas profissionais ativas**, excluindo cortesias administrativas; `payment_event` continua listado como indisponível para receita confirmada por não possuir campo monetário normalizado.
+- Gráficos de comunidade, financeiro e dispositivo foram implementados com SVG/CSS próprio, sem package novo; localização inicia como ranking de países, sem mapa/package externo.
+- Severidade de denúncias pendentes é derivada deterministicamente de `reason`/`target_type`, sem nova coluna no banco.
+- Referência visual usada: `_product/proto/admin/Dashboard.png`. Builder/Quick Copy não estava acessível como ferramenta MCP neste ambiente; a limitação foi registrada no ADR.
+- Browser local validado em app Admin temporário com backend temporário, admin real transitório, larguras 390px, 768px e 1366px, troca de período para 30 dias e remoção do admin transitório ao final.
