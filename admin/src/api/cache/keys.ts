@@ -1,7 +1,8 @@
+import type { CommunitiesDashboardQuery } from "@/api/req/communities";
 import type { DashboardSummaryQuery } from "@/api/req/dashboard";
 import type { TrafficSummaryQuery } from "@/api/req/traffic";
 
-type AdminRangeQuery = DashboardSummaryQuery | TrafficSummaryQuery;
+type AdminRangeQuery = CommunitiesDashboardQuery | DashboardSummaryQuery | TrafficSummaryQuery;
 
 const normalizeRange = (input: AdminRangeQuery) => ({
   from: input.from || "default",
@@ -18,4 +19,10 @@ export const adminTrafficKeys = {
   all: ["admin", "traffic"] as const,
   summary: (input: TrafficSummaryQuery) =>
     [...adminTrafficKeys.all, "summary", normalizeRange(input)] as const,
+};
+
+export const adminCommunitiesKeys = {
+  all: ["admin", "communities"] as const,
+  dashboard: (input: CommunitiesDashboardQuery) =>
+    [...adminCommunitiesKeys.all, "dashboard", normalizeRange(input)] as const,
 };

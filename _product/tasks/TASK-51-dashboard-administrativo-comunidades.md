@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | L |
 | Fase | Admin |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-45, TASK-46 |
 | ADR alvo | ADR se houver nova decisão sobre agregações, severidade de alertas ou navegação admin de comunidades |
 
@@ -143,21 +143,21 @@ Regras de UI obrigatórias:
 
 ## Critérios de aceite
 
-- [ ] A rota Comunidades só abre para admin autenticado.
-- [ ] Cards usam dados reais de `community_post`, `post_reply`, `community_member` e `user.role`.
-- [ ] Alertas de prioridade usam `post_report` real.
-- [ ] Postagens recentes usam posts reais e mostram comunidade/autor/status de discussão.
-- [ ] Principais comunidades usam comunidades reais.
-- [ ] Filtro de período atualiza as agregações.
-- [ ] Estados loading, erro, vazio e indisponível foram implementados.
-- [ ] UI mobile-first validada em ~390px, tablet e desktop.
-- [ ] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
-- [ ] Nenhum `<img>` cru foi usado.
-- [ ] `_product/proto/admin/Comunidades/Comunidades - Dashboard.png` foi citado como referência visual; Builder/Quick Copy foi usado se disponível.
-- [ ] `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e `pnpm check` foram executados sem erros.
-- [ ] Browser local validado com admin real.
-- [ ] ADR criado ou atualizado em `adrs/` se houver nova decisão relevante.
-- [ ] Commit criado com mensagem convencional e `git push` executado.
+- [x] A rota Comunidades só abre para admin autenticado.
+- [x] Cards usam dados reais de `community_post`, `post_reply`, `community_member` e `user.role`.
+- [x] Alertas de prioridade usam `post_report` real.
+- [x] Postagens recentes usam posts reais e mostram comunidade/autor/status de discussão.
+- [x] Principais comunidades usam comunidades reais.
+- [x] Filtro de período atualiza as agregações.
+- [x] Estados loading, erro, vazio e indisponível foram implementados.
+- [x] UI mobile-first validada em ~390px, tablet e desktop.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] Nenhum `<img>` cru foi usado.
+- [x] `_product/proto/admin/Comunidades/Comunidades - Dashboard.png` foi citado como referência visual; Builder/Quick Copy foi usado se disponível.
+- [x] `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e `pnpm check` foram executados sem erros.
+- [x] Browser local validado com admin real.
+- [x] ADR criado ou atualizado em `adrs/` se houver nova decisão relevante.
+- [x] Commit criado com mensagem convencional e `git push` executado.
 
 ## Validação mínima
 
@@ -177,3 +177,25 @@ Regras de UI obrigatórias:
 
 - Os números do protótipo são referência visual, não seed.
 - Se determinada métrica não puder ser calculada com precisão, retornar `unavailable` com copy clara.
+
+
+## Execucao TASK-51
+
+- Implementada a rota protegida do Admin em `/comunidades`, usando a convencao da TASK-46.
+- Implementado o endpoint real `GET /api/admin/private/communities/dashboard`, com agregacoes derivadas de `community`, `community_member`, `community_post`, `post_reply`, `post_report`, `post_vote`, `post_save` e `user.role`.
+- A severidade dos alertas e derivada de `post_report.reason` por regra deterministica no service, sem criar coluna nova.
+- A navegacao para detalhe foi habilitada em `/comunidades/[slug]` com placeholder honesto da TASK-52, sem dados fake e sem antecipar edicao/moderacao.
+- Builder/Quick Copy nao estava exposto como ferramenta MCP nesta execucao; a referencia visual usada foi `_product/proto/admin/Comunidades/Comunidades - Dashboard.png`.
+- Nenhuma alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; portanto `pnpm --dir backend db:migrate` nao foi necessario.
+- Browser local validado com admin real transitorio em dev server do Admin na porta 3102 por indisponibilidade/conflito local da porta 3002 durante a validacao; a porta alvo local do app Admin permanece 3002.
+- ADR criado: `adrs/0231-admin-comunidades-dashboard-agregacoes.md`.
+
+## Evidencias de validacao
+
+- `pnpm --dir backend check`: sem erros.
+- `pnpm --dir backend build`: sem erros.
+- `pnpm --dir admin check`: sem erros.
+- `pnpm --dir admin build`: sem erros.
+- `pnpm check`: sem erros.
+- Smoke API: endpoint retornou periodo, cards, series, breakdown de posts de pacientes, alertas, posts recentes e principais comunidades com dados reais existentes.
+- Browser local: login admin real, abertura de `/comunidades`, troca de periodo disponivel, validacao mobile (~390px), tablet (768px), desktop e abertura de detalhe `/comunidades/[slug]`.
