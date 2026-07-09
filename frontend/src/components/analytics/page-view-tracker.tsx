@@ -1,0 +1,228 @@
+﻿"use client";
+
+import { usePathname, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useRef } from "react";
+import { useImportantActionTracking, usePageViewTracking } from "@/api/callers/analytics";
+import {
+  type DisplayMode,
+  sendPageViewDurationBeacon,
+  updatePageViewDuration,
+} from "@/api/req/analytics";
+import { getOrCreateAnalyticsIdentity, safeGetItem, safeSetItem } from "./storage";
+
+const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"] as const;
+const SESSION_ATTRIBUTION_KEY = "lectum:analytics:session-attribution";
+const REFERRER_SENT_KEY = "lectum:analytics:initial-referrer-sent";
+
+type UtmKey = (typeof UTM_KEYS)[number];
+type SessionAttribution = Partial<Record<UtmKey, string>>;
+type CurrentPageView = {
+  id: string;
+  visitorId: string;
+  sessionId: string;
+  startedAt: number;
+};
+
+type NavigatorWithStandalone = Navigator & { standalone?: boolean };
+
+const getDisplayMode = (): DisplayMode => {
+  if (typeof window === "undefined") return "unknown";
+
+  const navigatorWithStandalone = window.navigator as NavigatorWithStandalone;
+  if (window.matchMedia("(display-mode: fullscreen)").matches) return "fullscreen";
+  if (window.matchMedia("(display-mode: minimal-ui)").matches) return "minimal-ui";
+
+  if (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    navigatorWithStandalone.standalone === true
+  ) {
+    return "standalone";
+  }
+
+  if (window.matchMedia("(display-mode: browser)").matches) return "browser";
+
+  return "unknown";
+};
+
+const safeReadAttribution = (): SessionAttribution => {
+  if (typeof window === "undefined") return {};
+
+  const value = safeGetItem(window.sessionStorage, SESSION_ATTRIBUTION_KEY);
+  if (!value) return {};
+
+  try {
+    const parsed = JSON.parse(value) as SessionAttribution;
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+};
+
+const resolveAttribution = (searchParams: URLSearchParams): SessionAttribution => {
+  if (typeof window === "undefined") return {};
+
+  const current: SessionAttribution = {};
+  for (const key of UTM_KEYS) {
+    const value = searchParams.get(key)?.trim();
+    if (value) current[key] = value.slice(0, 128);
+  }
+
+  if (Object.keys(current).length > 0) {
+    safeSetItem(window.sessionStorage, SESSION_ATTRIBUTION_KEY, JSON.stringify(current));
+    return current;
+  }
+
+  return safeReadAttribution();
+};
+
+const consumeInitialReferrer = () => {
+  if (typeof window === "undefined") return undefined;
+
+  if (safeGetItem(window.sessionStorage, REFERRER_SENT_KEY) === "true") return undefined;
+
+  safeSetItem(window.sessionStorage, REFERRER_SENT_KEY, "true");
+
+  return document.referrer || undefined;
+};
+
+const buildPathWithSearch = (pathname: string, search: string) => {
+  if (!search) return pathname || "/";
+
+  return `${pathname || "/"}?${search}`;
+};
+
+const buildSafeAnalyticsPath = (pathname: string, search: string) => {
+  const path = pathname || "/";
+  if (!search) return path;
+
+  const allowed = new URLSearchParams();
+  const params = new URLSearchParams(search);
+
+  for (const key of UTM_KEYS) {
+    const value = params.get(key)?.trim();
+    if (value) allowed.set(key, value.slice(0, 128));
+  }
+
+  const query = allowed.toString();
+  return query ? `${path}?${query}` : path;
+};
+
+export const PageViewTracker = () => {
+  const pathname = usePathname() || "/";
+  const searchParams = useSearchParams();
+  const search = searchParams.toString();
+  const routeKey = buildPathWithSearch(pathname, search);
+  const { mutateAsync: trackPageView } = usePageViewTracking();
+  const { mutateAsync: trackImportantAction } = useImportantActionTracking();
+  const currentRef = useRef<CurrentPageView | null>(null);
+  const lastRouteKeyRef = useRef<string | null>(null);
+
+  const flushCurrentDuration = useCallback((keepalive: boolean) => {
+    const current = currentRef.current;
+    if (!current) return;
+
+    currentRef.current = null;
+    const durationSeconds = Math.max(0, Math.round((Date.now() - current.startedAt) / 1000));
+    if (durationSeconds <= 0) return;
+
+    const body = {
+      duration_seconds: durationSeconds,
+      occurred_at: new Date().toISOString(),
+      session_id: current.sessionId,
+      visitor_id: current.visitorId,
+    };
+
+    if (keepalive) {
+      sendPageViewDurationBeacon(current.id, body);
+      return;
+    }
+
+    void updatePageViewDuration(current.id, body).catch(() => {
+      // Analytics must fail silently.
+    });
+  }, []);
+
+  const trackPwaAction = useCallback(
+    (actionType: "pwa_install_prompt_accepted" | "pwa_installed") => {
+      const identity = getOrCreateAnalyticsIdentity();
+      if (!identity) return;
+
+      void trackImportantAction({
+        action_type: actionType,
+        display_mode: getDisplayMode(),
+        occurred_at: new Date().toISOString(),
+        path: pathname,
+        session_id: identity.sessionId,
+        visitor_id: identity.visitorId,
+      }).catch(() => {
+        // Analytics must fail silently.
+      });
+    },
+    [pathname, trackImportantAction],
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (lastRouteKeyRef.current === routeKey) return;
+
+    flushCurrentDuration(false);
+    lastRouteKeyRef.current = routeKey;
+
+    const identity = getOrCreateAnalyticsIdentity();
+    if (!identity) return;
+
+    const attribution = resolveAttribution(new URLSearchParams(search));
+    const startedAt = Date.now();
+    const requestKey = routeKey;
+
+    void trackPageView({
+      display_mode: getDisplayMode(),
+      occurred_at: new Date(startedAt).toISOString(),
+      path: buildSafeAnalyticsPath(pathname, search),
+      referrer: consumeInitialReferrer(),
+      session_id: identity.sessionId,
+      title: document.title || undefined,
+      visitor_id: identity.visitorId,
+      ...attribution,
+    })
+      .then((response) => {
+        if (!response.id || lastRouteKeyRef.current !== requestKey) return;
+
+        currentRef.current = {
+          id: response.id,
+          sessionId: identity.sessionId,
+          startedAt,
+          visitorId: identity.visitorId,
+        };
+      })
+      .catch(() => {
+        // Analytics must fail silently.
+      });
+  }, [flushCurrentDuration, pathname, routeKey, search, trackPageView]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        flushCurrentDuration(true);
+      }
+    };
+    const handlePageHide = () => flushCurrentDuration(true);
+    const handleAppInstalled = () => trackPwaAction("pwa_installed");
+    const handlePromptAccepted = () => trackPwaAction("pwa_install_prompt_accepted");
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pagehide", handlePageHide);
+    window.addEventListener("appinstalled", handleAppInstalled);
+    window.addEventListener("lectum:pwa-install-prompt-accepted", handlePromptAccepted);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pagehide", handlePageHide);
+      window.removeEventListener("appinstalled", handleAppInstalled);
+      window.removeEventListener("lectum:pwa-install-prompt-accepted", handlePromptAccepted);
+      flushCurrentDuration(true);
+    };
+  }, [flushCurrentDuration, trackPwaAction]);
+
+  return null;
+};

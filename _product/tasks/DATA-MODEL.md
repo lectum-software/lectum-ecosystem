@@ -689,6 +689,38 @@ O fluxo de alteração de cartão da TASK-33 segue a mesma regra do checkout: re
 
 ---
 
+## Analytics first-party e tráfego
+
+Adicionado na TASK-49 para sustentar a aba Admin Tráfego sem integração de terceiros, sem IP bruto e sem user-agent bruto.
+
+`page_view_event`:
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `visitor_id` | `String` | Identificador first-party do visitante, gerado no frontend. |
+| `session_id` | `String` | Sessão first-party por `sessionStorage`; também atualiza `visitor_session`. |
+| `user_id` | `String?` | Associado quando houver token real opcional, sem exigir autenticação. |
+| `path` / `normalized_path` | `String` | Caminho sem query sensível; `normalized_path` troca ids longos por `:id` para agregação. |
+| `referrer_host` | `String?` | Apenas host do referrer; nunca URL externa completa. |
+| `traffic_source` / `traffic_medium` | `String` / `String?` | Origem determinística por UTM/referrer (`direct`, busca, social, share, internal, referral). |
+| `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term` | `String?` | Somente UTMs permitidas, normalizadas e limitadas. |
+| `page_kind` | `String` | `home`, `psychologists`, `psychologist_profile`, `community`, `community_post`, `login`, `signup`, `billing`, `other`. |
+| `target_type` / `target_id` | `String?` | Derivado de URLs seguras, como psicólogo, comunidade ou post. |
+| `display_mode` | `String` | `browser`, `standalone`, `fullscreen`, `minimal-ui`, `unknown`. |
+| `is_entry` / `entry_path` | `Boolean` / `String?` | Identifica página de entrada por sessão. |
+| `duration_seconds` | `Int?` | Atualizado por troca de rota/pagehide quando o browser permitir. |
+| `occurred_at` | `DateTime` | Momento do evento; datas fora da janela confiável são normalizadas no backend. |
+
+`important_action_event`:
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `visitor_id`, `session_id`, `user_id` | | Mesma regra de `page_view_event`. |
+| `action_type` | `String` | V1 aceita eventos reais de PWA: `pwa_install_prompt_accepted` e `pwa_installed`. |
+| `path`, `page_kind`, `target_type`, `target_id`, `display_mode`, `occurred_at` | | Contexto mínimo para futuras agregações. |
+
+Ambos seguem soft delete, relação opcional com `user` por `onDelete: SetNull` e índices por período, sessão, visitante, usuário e dimensões de agregação.
+
 ## Convencao de rotas (frontend e backend)
 
 A auditoria achou namespaces conflitantes nas tasks de comunidade (`/communities` vs `/community` vs `/posts`). Padrao canonico apos TASK-40:

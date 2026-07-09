@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { Suspense } from "react";
 
 import "@/app/globals.css";
 import { LocationCapture } from "@/components/analytics/location-capture";
+import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 import { ProgressiveConversionBoundary } from "@/components/conversion/progressive-conversion-provider";
 import { PwaInstallPrompt } from "@/components/pwa-install-prompt";
 import { absoluteUrl, getSiteUrl, SITE_DESCRIPTION, SITE_NAME } from "@/lib/seo";
@@ -112,6 +114,9 @@ export default function RootLayout({
           <Redux>
             <Query>
               <LocationCapture />
+              <Suspense fallback={null}>
+                <PageViewTracker />
+              </Suspense>
               <ProgressiveConversionBoundary>
                 {children}
                 <Socket />

@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | L |
 | Fase | Admin / Analytics |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-39, TASK-40, TASK-47 |
 | ADR alvo | ADR sobre analytics first-party, pageviews, origem de tráfego e privacidade |
 
@@ -160,18 +160,18 @@ Regras anti-recriação:
 
 ## Critérios de aceite
 
-- [ ] Pageviews reais são persistidos ao navegar por rotas públicas e privadas permitidas.
-- [ ] O tracking associa `visitor_id`, `session_id` e `user_id` quando houver usuário autenticado.
-- [ ] Origem de tráfego é normalizada a partir de UTMs/referrer sem salvar URL externa completa.
-- [ ] Páginas de entrada por sessão podem ser identificadas por agregação real.
-- [ ] `display_mode` permite distinguir uso em browser e PWA/standalone quando o browser suportar.
-- [ ] Não há armazenamento de IP bruto, user-agent bruto, texto digitado ou payload de formulário.
-- [ ] Não há pacote externo de analytics.
-- [ ] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
-- [ ] Se houve alteração de banco/schema/migrations, `pnpm --dir backend db:migrate` foi executado sem erro.
-- [ ] `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check` e `pnpm check` foram executados sem erros.
-- [ ] ADR criado ou atualizado em `adrs/`.
-- [ ] Commit criado com mensagem convencional e `git push` executado.
+- [x] Pageviews reais são persistidos ao navegar por rotas públicas e privadas permitidas.
+- [x] O tracking associa `visitor_id`, `session_id` e `user_id` quando houver usuário autenticado.
+- [x] Origem de tráfego é normalizada a partir de UTMs/referrer sem salvar URL externa completa.
+- [x] Páginas de entrada por sessão podem ser identificadas por agregação real.
+- [x] `display_mode` permite distinguir uso em browser e PWA/standalone quando o browser suportar.
+- [x] Não há armazenamento de IP bruto, user-agent bruto, texto digitado ou payload de formulário.
+- [x] Não há pacote externo de analytics.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] Se houve alteração de banco/schema/migrations, `pnpm --dir backend db:migrate` foi executado sem erro.
+- [x] `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check` e `pnpm check` foram executados sem erros.
+- [x] ADR criado ou atualizado em `adrs/`.
+- [x] Commit criado com mensagem convencional e `git push` executado.
 
 ## Validação mínima
 
@@ -192,3 +192,18 @@ Regras anti-recriação:
 - Métricas como taxa de rejeição e tempo médio só devem ser calculadas na TASK-50 se o dado de duração/pageviews por sessão for confiável.
 - Se o navegador bloquear beacon/analytics, a experiência do usuário deve continuar normal.
 - Se `prisma migrate dev` falhar por estado local, perguntar antes de resetar banco.
+
+
+
+### Execucao 2026-07-09
+
+- Dependencias TASK-39, TASK-40 e TASK-47 confirmadas como concluidas em `_product/tasks/README.md`.
+- Builder/Quick Copy nao estava disponivel como ferramenta MCP nesta execucao; a referencia de dados usada foi a imagem local da tela Trafego em `_product/proto/admin/`, registrada no inventario visual.
+- Backend criado com tracking first-party em `page_view_event` e `important_action_event`, endpoint publico de pageview, endpoint publico de acao PWA e atualizacao de duracao por rota/fechamento de pagina.
+- O tracking associa `visitor_id`, `session_id`, `visitor_session` e `user_id` quando ha token real opcional; nao exige autenticacao para navegacao publica.
+- Origem de trafego e normalizada no backend por UTM/referrer; o path remove queries sensiveis e o referrer externo persiste somente como host.
+- Frontend passou a incluir tracker global no layout, reaproveitando os IDs da captura de sessao/localizacao, persistindo UTMs permitidas na sessao e enviando eventos PWA apenas a partir dos eventos reais expostos pelo browser/fluxo de instalacao.
+- Validacao de API criou usuario/token transitorio real, persistiu pageview autenticado, duracao, evento PWA e confirmou limpeza dos registros transitorios.
+- Validacao em browser local usou Chrome DevTools Protocol com app frontend temporario em `http://localhost:3100`, navegou com UTM entre `/psychologists` e `/community`, confirmou registros reais no banco e removeu dados transitorios.
+- Validacao em browser autenticado definiu cookie de token real transitorio, navegou em `/psychologists` e confirmou `user_id` associado no `page_view_event`, sem query sensivel persistida.
+- Migrations aplicadas com `pnpm --dir backend db:migrate`; apos a criacao da migration, o comando foi reexecutado e confirmou schema em sincronia.

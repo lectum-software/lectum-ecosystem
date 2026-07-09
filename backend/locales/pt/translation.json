@@ -184,6 +184,9 @@
     "post_report_created": "Denúncia enviada para análise da equipe Lectum.",
     "location_capture_success": "Localização aproximada registrada com sucesso.",
     "location_capture_skipped": "Captura de localização aproximada ignorada por regra de frequência.",
+    "page_view_tracked": "Pageview registrado com sucesso.",
+    "page_view_duration_updated": "Duração do pageview atualizada com sucesso.",
+    "important_action_tracked": "Evento importante registrado com sucesso.",
     "post_reply_deleted": "Comentário excluído com sucesso.",
     "account_delete_google_intent_created": "Redirecionando para confirmar sua identidade com o Google.",
     "account_delete_google_reauth_success": "Identidade confirmada com o Google. Você já pode excluir a conta.",
@@ -238,7 +241,9 @@
     "payment_event": "evento de pagamento",
     "payment_method": "metodo de pagamento",
     "admin": "administrador",
-    "admin_token": "token administrativo"
+    "admin_token": "token administrativo",
+    "page_view_event": "pageview",
+    "important_action_event": "evento importante"
   },
   "property": {
     "email": "email",

@@ -4,9 +4,14 @@ import { useEffect, useRef } from "react";
 import { useLocationCapture } from "@/api/callers/analytics";
 import type { LocationCaptureRequest } from "@/api/req/analytics";
 import { useAppSelector } from "@/hooks/redux";
+import {
+  getOrCreateStorageId,
+  SESSION_ID_KEY,
+  safeGetItem,
+  safeSetItem,
+  VISITOR_ID_KEY,
+} from "./storage";
 
-const VISITOR_ID_KEY = "lectum:analytics:visitor-id";
-const SESSION_ID_KEY = "lectum:analytics:session-id";
 const SESSION_CAPTURED_KEY = "lectum:analytics:location-captured-session";
 const LAST_USER_ID_KEY = "lectum:analytics:location-captured-user-id";
 
@@ -19,40 +24,6 @@ type NavigatorWithUserAgentData = Navigator & {
 };
 
 type DeviceMetadata = Omit<LocationCaptureRequest, "session_id" | "visitor_id">;
-
-const createTrackingId = () => {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID();
-  }
-
-  return `lectum-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-};
-
-const safeGetItem = (storage: Storage, key: string) => {
-  try {
-    return storage.getItem(key);
-  } catch {
-    return null;
-  }
-};
-
-const safeSetItem = (storage: Storage, key: string, value: string) => {
-  try {
-    storage.setItem(key, value);
-  } catch {
-    // Analytics não deve quebrar a experiência caso storage esteja indisponível.
-  }
-};
-
-const getOrCreateStorageId = (storage: Storage, key: string) => {
-  const existingId = safeGetItem(storage, key);
-  if (existingId) return existingId;
-
-  const newId = createTrackingId();
-  safeSetItem(storage, key, newId);
-
-  return newId;
-};
 
 const normalizeViewportDimension = (value: number | undefined) => {
   if (!value || !Number.isFinite(value) || value <= 0) return undefined;

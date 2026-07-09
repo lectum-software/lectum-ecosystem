@@ -546,6 +546,56 @@ export interface visitor_session {
   user?: user | null;
 }
 
+export interface page_view_event {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  visitor_id?: string | null;
+  session_id?: string | null;
+  user_id?: string | null;
+  path?: string | null;
+  normalized_path?: string | null;
+  title?: string | null;
+  referrer_host?: string | null;
+  traffic_source?: string | null;
+  traffic_medium?: string | null;
+  utm_source?: string | null;
+  utm_medium?: string | null;
+  utm_campaign?: string | null;
+  utm_content?: string | null;
+  utm_term?: string | null;
+  page_kind?: string | null;
+  target_type?: string | null;
+  target_id?: string | null;
+  display_mode?: "browser" | "standalone" | "fullscreen" | "minimal-ui" | "unknown" | string | null;
+  is_entry?: boolean | null;
+  entry_path?: string | null;
+  duration_seconds?: number | null;
+  occurred_at?: Date | null;
+  user?: user | null;
+}
+
+export interface important_action_event {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  visitor_id?: string | null;
+  session_id?: string | null;
+  user_id?: string | null;
+  action_type?: string | null;
+  path?: string | null;
+  page_kind?: string | null;
+  target_type?: string | null;
+  target_id?: string | null;
+  display_mode?: "browser" | "standalone" | "fullscreen" | "minimal-ui" | "unknown" | string | null;
+  occurred_at?: Date | null;
+  user?: user | null;
+}
+
 export interface notification {
   id?: string | null;
   deleted?: boolean | null;
@@ -626,6 +676,8 @@ export interface user {
   notification_subscriptions?: notification_subscription[] | null;
   visitor_locations?: visitor_location[] | null;
   visitor_sessions?: visitor_session[] | null;
+  page_view_events?: page_view_event[] | null;
+  important_action_events?: important_action_event[] | null;
   billing_addresses?: billing_address[] | null;
   payment_methods?: payment_method[] | null;
   notifications?: notification[] | null;

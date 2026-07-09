@@ -242,6 +242,10 @@ export function PwaInstallPrompt() {
       const choice = await deferredPrompt.userChoice;
       setDeferredPrompt(null);
 
+      if (choice.outcome === "accepted") {
+        window.dispatchEvent(new CustomEvent("lectum:pwa-install-prompt-accepted"));
+      }
+
       closePrompt(choice.outcome === "accepted" ? "installed" : "cooldown");
     } catch {
       closePrompt("cooldown");
