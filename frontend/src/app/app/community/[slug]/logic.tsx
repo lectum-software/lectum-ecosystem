@@ -1799,9 +1799,17 @@ const CommunityDetailSkeleton = () => (
   </div>
 );
 
-const CommunityRulesCard = () => {
+const CommunityRulesCard = ({ rules }: { rules: CommunityDetail["rules"] }) => {
   const rulesContentId = useId();
   const [isExpanded, setIsExpanded] = useState(false);
+  const sortedRules = useMemo(
+    () =>
+      [...rules].sort(
+        (left, right) =>
+          left.position - right.position || left.title.localeCompare(right.title, "pt-BR"),
+      ),
+    [rules],
+  );
 
   const toggleRules = () => {
     setIsExpanded((current) => !current);
@@ -1822,7 +1830,9 @@ const CommunityRulesCard = () => {
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-black text-foreground">Regras da comunidade</span>
           <span className="block text-xs font-semibold text-muted">
-            Comunidade mediada por psicólogos e moderada pela equipe Lectum.
+            {sortedRules.length > 0
+              ? `${sortedRules.length} regras ativas cadastradas para este espaço.`
+              : "Nenhuma regra ativa cadastrada para este espaço."}
           </span>
         </span>
         <ChevronDown
@@ -1842,32 +1852,23 @@ const CommunityRulesCard = () => {
         id={rulesContentId}
       >
         <div className="overflow-hidden">
-          <ul className="grid gap-2 pt-3 text-sm leading-6 text-[#64748B] dark:text-muted">
-            <li className="flex gap-2">
-              <ListChecks className="mt-1 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-              Compartilhe sua história à vontade, mas preserve sua privacidade e a de terceiros.
-              Evite publicar informações como telefone, endereço, e-mail, CPF ou nome completo.
-            </li>
-            <li className="flex gap-2">
-              <ListChecks className="mt-1 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-              Comente nos posts com respeito, acolhimento e empatia, mesmo quando discordar.
-            </li>
-            <li className="flex gap-2">
-              <ListChecks className="mt-1 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-              Não publique conteúdos que incentivem violência, autolesão ou comportamentos
-              prejudiciais à saúde física ou mental.
-            </li>
-            <li className="flex gap-2">
-              <ListChecks className="mt-1 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-              Psicólogos participam como mediadores e fontes de conhecimento, mas não realizam
-              consultas, diagnósticos ou acompanhamento pela comunidade.
-            </li>
-            <li className="flex gap-2">
-              <ListChecks className="mt-1 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-              Se desejar uma consulta, diagnóstico ou acompanhamento individualizado, entre em
-              contato diretamente com o psicólogo pelo WhatsApp para agendar um atendimento.
-            </li>
-          </ul>
+          {sortedRules.length > 0 ? (
+            <ul className="grid gap-2 pt-3 text-sm leading-6 text-[#64748B] dark:text-muted">
+              {sortedRules.map((rule) => (
+                <li className="flex gap-2" key={rule.id}>
+                  <ListChecks className="mt-1 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                  <span>
+                    <strong className="text-foreground">{rule.title}: </strong>
+                    {rule.description}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="pt-3 text-sm leading-6 text-[#64748B] dark:text-muted">
+              As regras desta comunidade ainda não foram cadastradas pelo Admin.
+            </p>
+          )}
         </div>
       </div>
     </section>
@@ -2811,7 +2812,9 @@ const CommunityDetailLogic = ({
               />
             )}
 
-            {communitySearchOpen ? null : <CommunityRulesCard key={community.slug} />}
+            {communitySearchOpen ? null : (
+              <CommunityRulesCard key={community.slug} rules={community.rules} />
+            )}
 
             {shareFeedback ? (
               <InlineAlert title="Link preparado" variant="success">

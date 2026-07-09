@@ -63,6 +63,13 @@ const communitySelect = {
   createdAt: true,
 } satisfies Prisma.communitySelect;
 
+const communityRuleSelect = {
+  description: true,
+  id: true,
+  position: true,
+  title: true,
+} satisfies Prisma.community_ruleSelect;
+
 const professionalProfileSelect = {
   gender: true,
   crp: true,
@@ -187,6 +194,7 @@ type PostResult = Prisma.community_postGetPayload<{ select: typeof postSelect }>
 type AuthorResult = PostResult["author"];
 type ProfessionalReplyResult = PostResult["replies"][number];
 type TopMentorUserResult = Prisma.userGetPayload<{ select: typeof topMentorUserSelect }>;
+type CommunityRuleResult = Prisma.community_ruleGetPayload<{ select: typeof communityRuleSelect }>;
 type CurrentVote = 1 | -1 | null;
 type CommunitySortPeriodKey = keyof CommunityPostSortMetricsDTO["comments"];
 type CommunityPostSortValue = "featured" | "new" | "commented" | "voted";
@@ -600,6 +608,7 @@ const toCommunityDetailResponse = (
   community: Parameters<typeof toCommunityResponse>[0],
   postsCount: number,
   membershipCreatedAt: Date | null,
+  rules: CommunityRuleResult[] = [],
 ): CommunityDetailResponse => {
   const following = Boolean(membershipCreatedAt);
   const communityDetail = {
@@ -607,6 +616,12 @@ const toCommunityDetailResponse = (
     posts_count: postsCount,
     following,
     membership_created_at: membershipCreatedAt,
+    rules: rules.map((rule) => ({
+      description: rule.description,
+      id: rule.id,
+      position: rule.position,
+      title: rule.title,
+    })),
   };
 
   return {
@@ -1498,7 +1513,7 @@ export class CommunityRepository implements ICommunityRepository {
     if (!community) return null;
 
     const userId = data.auth?.id;
-    const [postsCount, membership] = await Promise.all([
+    const [postsCount, membership, rules] = await Promise.all([
       prisma.community_post.count({
         where: {
           community_id: community.id,
@@ -1520,12 +1535,22 @@ export class CommunityRepository implements ICommunityRepository {
             },
           })
         : Promise.resolve(null),
+      prisma.community_rule.findMany({
+        where: {
+          active: true,
+          community_id: community.id,
+          deleted: false,
+        },
+        orderBy: [{ position: "asc" }, { createdAt: "asc" }, { id: "asc" }],
+        select: communityRuleSelect,
+      }),
     ]);
 
     return toCommunityDetailResponse(
       community,
       postsCount,
       membership && !membership.deleted ? membership.createdAt : null,
+      rules,
     );
   }
 

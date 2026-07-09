@@ -23,6 +23,7 @@ type ObjectHeaders = {
 const isAllowedPublicFile = (file: string | undefined) =>
   Boolean(
     file?.startsWith("psychologist/avatar/") ||
+      file?.startsWith("community/avatar/") ||
       file?.startsWith("psychologist/cover-image/") ||
       file?.startsWith("psychologist/video/") ||
       file?.startsWith("psychologist/video-cover/") ||

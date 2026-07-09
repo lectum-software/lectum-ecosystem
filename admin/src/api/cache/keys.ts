@@ -25,4 +25,6 @@ export const adminCommunitiesKeys = {
   all: ["admin", "communities"] as const,
   dashboard: (input: CommunitiesDashboardQuery) =>
     [...adminCommunitiesKeys.all, "dashboard", normalizeRange(input)] as const,
+  detail: (id: string) => [...adminCommunitiesKeys.all, "detail", id] as const,
+  rules: (id: string) => [...adminCommunitiesKeys.all, "rules", id] as const,
 };

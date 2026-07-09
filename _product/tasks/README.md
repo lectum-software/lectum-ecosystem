@@ -132,7 +132,7 @@ ou cortesia manual.
 | 49 | [TASK-49 - Tracking de pageviews e origem de tráfego](TASK-49-tracking-pageviews-origem-trafego.md) | Completed | 39, 40, 47 |
 | 50 | [TASK-50 - Tela Tráfego administrativo](TASK-50-tela-trafego-administrativo.md) | Pending | 45, 46, 47, 49 |
 | 51 | [TASK-51 - Dashboard administrativo de comunidades](TASK-51-dashboard-administrativo-comunidades.md) | Completed | 45, 46 |
-| 52 | [TASK-52 - Detalhe e edição de comunidade no Admin](TASK-52-detalhe-edicao-comunidade-admin.md) | Pending | 45, 46, 51 |
+| 52 | [TASK-52 - Detalhe e edição de comunidade no Admin](TASK-52-detalhe-edicao-comunidade-admin.md) | Completed | 45, 46, 51 |
 | 53 | [TASK-53 - Dashboard administrativo de psicólogos](TASK-53-dashboard-administrativo-psicologos.md) | Pending | 45, 46 |
 | 54 | [TASK-54 - Lista administrativa de psicólogos](TASK-54-lista-administrativa-psicologos.md) | Pending | 45, 46, 53 |
 | 55 | [TASK-55 - Detalhe administrativo do psicólogo: Geral e Perfil/Cadastro](TASK-55-detalhe-psicologo-geral-perfil-admin.md) | Pending | 45, 46, 54 |

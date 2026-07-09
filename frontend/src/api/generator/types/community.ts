@@ -56,6 +56,14 @@ export type CommunityDetail = Community & {
   posts_count: number;
   following: boolean;
   membership_created_at: string | null;
+  rules: CommunityRule[];
+};
+
+export type CommunityRule = {
+  id: string;
+  title: string;
+  description: string;
+  position: number;
 };
 
 export type CommunityAuthor = {

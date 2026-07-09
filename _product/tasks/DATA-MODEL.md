@@ -400,6 +400,22 @@ Regra vigente revalidada em 2026-06-26: qualquer usuário autenticado pode criar
 
 Governança: comunidades são criadas/curadas apenas por administradores da plataforma em fluxo administrativo futuro; usuários finais não têm endpoint de criação direta. Usuários podem apenas registrar `community_suggestion`, que fica pendente para análise da equipe. Moderadores de comunidades também serão administradores da plataforma, não usuários comuns ou mentores.
 
+Complemento TASK-52 (2026-07-09): regras exibidas dentro da comunidade deixam de ser hardcoded e passam a ser persistidas em `community_rule`, editáveis somente pelo Admin.
+
+`community_rule`:
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `community_id` | `String` | relação obrigatória com `community`, cascade em exclusão física |
+| `title` | `String` | título curto da regra |
+| `description` | `String` | texto exibido na comunidade |
+| `position` | `Int @default(0)` | ordenação controlada pelo Admin |
+| `active` | `Boolean @default(true)` | regras inativas não aparecem no produto |
+| `deleted` / `deleted_at` | `Boolean` / `DateTime?` | remoção no Admin é soft delete |
+| `@@index([community_id, active, position])`, `@@index([community_id, deleted, position])` | | leitura pública e gestão admin |
+
+Backfill canônico TASK-52 para comunidades existentes: `Respeito e empatia`, `Sem dados pessoais`, `Proibido conteúdo nocivo`, `Psicólogos não fazem atendimento` e `Para atendimento, use o WhatsApp`. O detalhe público/privado de comunidade (`GET /api/private/community/:slug`) deve retornar apenas regras `active=true` e `deleted=false`, ordenadas por `position`, para substituir a copy hardcoded na interface.
+
 `community_suggestion` (TASK-22, "Sugerir Comunidade"):
 
 | Campo | Tipo | Notas |

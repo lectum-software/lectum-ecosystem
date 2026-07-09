@@ -384,6 +384,21 @@ export interface community {
   visual_text_color?: string | null;
   visual_gradient_color?: string | null;
   posts?: community_post[] | null;
+  rules?: community_rule[] | null;
+}
+
+export interface community_rule {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  community_id?: string | null;
+  title?: string | null;
+  description?: string | null;
+  position?: number | null;
+  active?: boolean | null;
+  community?: community | null;
 }
 
 export interface community_suggestion {

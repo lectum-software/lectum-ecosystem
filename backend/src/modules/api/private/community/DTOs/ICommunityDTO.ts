@@ -86,6 +86,14 @@ export type CommunityDetailDTO = CommunityDTO & {
   posts_count: number;
   following: boolean;
   membership_created_at: Date | null;
+  rules: CommunityRuleDTO[];
+};
+
+export type CommunityRuleDTO = {
+  id: string;
+  title: string;
+  description: string;
+  position: number;
 };
 
 export type CommunityAuthorDTO = {

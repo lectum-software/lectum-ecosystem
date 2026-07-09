@@ -119,3 +119,4 @@ Formato recomendado:
 - [ADR-0225 - Admin com audiência JWT separada](0225-admin-audiencia-separada.md) - Accepted
 - [ADR-0226 - App Admin separado com shell lateral próprio](0226-admin-app-separado-shell.md) - Accepted
 - [ADR-0227 - Sessões de visitantes com tipo de dispositivo normalizado](0227-sessoes-visitantes-tipo-dispositivo.md) - Accepted
+- [ADR-0232 - Regras editáveis e identidade visual de comunidades no Admin](0232-regras-editaveis-comunidade-admin.md) - Accepted

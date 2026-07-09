@@ -751,10 +751,29 @@ model community {
   visual_gradient_color     String?            @map("visual_gradient_color")
   members                   community_member[] @relation("community_member_community")
   posts                     community_post[]   @relation("community_post_community")
+  rules                     community_rule[]   @relation("community_rule_community")
 
   @@index([slug])
   @@index([category, deleted])
   @@map("communities")
+}
+
+model community_rule {
+  id           String    @id @default(cuid())
+  deleted      Boolean   @default(false)
+  deletedAt    DateTime? @map("deleted_at")
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  community_id String
+  title        String
+  description  String
+  position     Int       @default(0)
+  active       Boolean   @default(true)
+  community    community @relation("community_rule_community", fields: [community_id], references: [id], onDelete: Cascade)
+
+  @@index([community_id, active, position])
+  @@index([community_id, deleted, position])
+  @@map("community_rules")
 }
 
 model community_member {

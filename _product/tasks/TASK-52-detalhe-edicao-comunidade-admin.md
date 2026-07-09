@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | L |
 | Fase | Admin |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-45, TASK-46, TASK-51 |
 | ADR alvo | ADR sobre regras editáveis de comunidade e edição administrativa de identidade visual |
 
@@ -180,24 +180,24 @@ Regras de UI obrigatórias:
 
 ## Critérios de aceite
 
-- [ ] A tela de detalhe só abre para admin autenticado.
-- [ ] Dados de resumo/desempenho/top mentores/posts populares vêm de dados reais.
-- [ ] Admin consegue editar nome, descrição, avatar e cores da comunidade.
-- [ ] Avatar usa upload real; sem URL temporária/mock.
-- [ ] `community_rule` existe no Prisma e migration foi aplicada.
-- [ ] Comunidades existentes recebem regras padrão reais via backfill/migration/script documentado.
-- [ ] Admin consegue adicionar, editar, ordenar, ativar/desativar e remover regras com persistência real.
-- [ ] Tela de comunidade do produto passa a exibir regras persistidas.
-- [ ] Não foram implementadas configurações fora de escopo como status editável, visibilidade ou bloqueio de posts/comentários.
-- [ ] Formulários usam React Hook Form, Zod e controllers/fundação alinhada à TASK-02/TASK-46.
-- [ ] UI mobile-first validada em ~390px, tablet e desktop.
-- [ ] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
-- [ ] Nenhum `<img>` cru foi usado.
-- [ ] `_product/proto/admin/Comunidades/Comunidades - Detalhes.png` foi citado como referência visual; Builder/Quick Copy foi usado se disponível.
-- [ ] `pnpm --dir backend db:migrate`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir admin check`, `pnpm --dir admin build` e `pnpm check` foram executados sem erros.
-- [ ] Browser local validado com admin real e comunidade real.
-- [ ] ADR criado ou atualizado em `adrs/`.
-- [ ] Commit criado com mensagem convencional e `git push` executado.
+- [x] A tela de detalhe só abre para admin autenticado.
+- [x] Dados de resumo/desempenho/top mentores/posts populares vêm de dados reais.
+- [x] Admin consegue editar nome, descrição, avatar e cores da comunidade.
+- [x] Avatar usa upload real; sem URL temporária/mock.
+- [x] `community_rule` existe no Prisma e migration foi aplicada.
+- [x] Comunidades existentes recebem regras padrão reais via backfill/migration/script documentado.
+- [x] Admin consegue adicionar, editar, ordenar, ativar/desativar e remover regras com persistência real.
+- [x] Tela de comunidade do produto passa a exibir regras persistidas.
+- [x] Não foram implementadas configurações fora de escopo como status editável, visibilidade ou bloqueio de posts/comentários.
+- [x] Formulários usam React Hook Form, Zod e controllers/fundação alinhada à TASK-02/TASK-46.
+- [x] UI mobile-first validada em ~390px, tablet e desktop.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] Nenhum `<img>` cru foi usado.
+- [x] `_product/proto/admin/Comunidades/Comunidades - Detalhes.png` foi citado como referência visual; Builder/Quick Copy foi usado se disponível.
+- [x] `pnpm --dir backend db:migrate`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir admin check`, `pnpm --dir admin build` e `pnpm check` foram executados sem erros.
+- [x] Browser local validado com admin real e comunidade real.
+- [x] ADR criado ou atualizado em `adrs/`.
+- [x] Commit criado com mensagem convencional e `git push` executado.
 
 ## Validação mínima
 
@@ -220,3 +220,14 @@ Regras de UI obrigatórias:
 
 - Se `prisma migrate dev` falhar por conflito com dados/estado local, não resetar banco automaticamente; perguntar antes de comando destrutivo.
 - Se R2 público não estiver configurado, bloquear apenas a parte de upload e registrar pendência; não simular avatar.
+
+## Resultado da execução
+
+- Implementado o detalhe administrativo em `/comunidades/[slug]` no app `admin/`, protegido pelo shell/autenticação administrativa já existente.
+- Criados endpoints administrativos reais para detalhe, edição, upload de avatar e CRUD/ordenação/ativação de regras.
+- Criado o modelo `community_rule` com migration e backfill das cinco regras canônicas para comunidades existentes.
+- Atualizado o detalhe de comunidade do produto (`frontend`) para consumir regras persistidas, removendo as regras hardcoded como fonte ativa.
+- O upload de avatar foi validado com storage real existente; não foi criada URL temporária, mock ou endpoint simulado.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` não estava disponível como ferramenta no ambiente; foi usada a imagem local `_product/proto/admin/Comunidades/Comunidades - Detalhes.png` e a limitação foi registrada no ADR.
+- Validações executadas com sucesso: `pnpm --dir backend db:migrate`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`.
+- Validação local com admin real transitório e comunidade real: API de detalhe/edição/regras/upload, tela Admin em ~390px, 768px e 1440px, e retorno público/privado das regras persistidas.
