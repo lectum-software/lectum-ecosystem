@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | L |
 | Fase | Admin |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-45, TASK-46 |
 | ADR alvo | ADR se houver nova decisão sobre agregações, ranking administrativo ou métricas financeiras |
 
@@ -106,20 +106,20 @@ Packages usados:
 
 ## Critérios de aceite
 
-- [ ] A rota só abre para admin autenticado.
-- [ ] Botão "Adicionar novo psicólogo" não aparece nesta V1.
-- [ ] Cards e gráficos usam dados reais.
-- [ ] Ranking reutiliza a fórmula real da descoberta pública de psicólogos.
-- [ ] Receita/churn têm fórmula honesta e não contam cortesia como receita.
-- [ ] Métricas sem fonte real aparecem como indisponíveis ou são omitidas.
-- [ ] Filtro de período atualiza as agregações.
-- [ ] UI mobile-first validada em ~390px, tablet e desktop.
-- [ ] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
-- [ ] Nenhum `<img>` cru foi usado.
-- [ ] `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` foi citado como referência visual.
-- [ ] Checks/builds relevantes foram executados sem erros.
-- [ ] ADR criado ou atualizado se houver decisão relevante.
-- [ ] Commit criado com mensagem convencional e `git push` executado.
+- [x] A rota só abre para admin autenticado.
+- [x] Botão "Adicionar novo psicólogo" não aparece nesta V1.
+- [x] Cards e gráficos usam dados reais.
+- [x] Ranking reutiliza a fórmula real da descoberta pública de psicólogos.
+- [x] Receita/churn têm fórmula honesta e não contam cortesia como receita.
+- [x] Métricas sem fonte real aparecem como indisponíveis ou são omitidas.
+- [x] Filtro de período atualiza as agregações.
+- [x] UI mobile-first validada em ~390px, tablet e desktop.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] Nenhum `<img>` cru foi usado.
+- [x] `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` foi citado como referência visual.
+- [x] Checks/builds relevantes foram executados sem erros.
+- [x] ADR criado ou atualizado se houver decisão relevante.
+- [x] Commit criado com mensagem convencional e `git push` executado.
 
 ## Validação mínima
 
@@ -134,3 +134,13 @@ Packages usados:
 
 - Os números da imagem são referência visual, não seed.
 - Se `Filtros de busca` ainda não tiver rastreamento real, não preencher com dados inventados.
+- Executado em 2026-07-09.
+- Referência visual usada: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` não estava exposto como ferramenta neste ambiente; a implementação usou a imagem local e registrou a limitação no ADR.
+- O endpoint real criado é `GET /api/admin/private/psychologists/dashboard?from=YYYY-MM-DD&to=YYYY-MM-DD`.
+- A rota do app Admin entregue é `/psicologos`, equivalente à rota administrativa protegida definida pela navegação existente do painel.
+- O ranking administrativo reutiliza o helper compartilhado `backend/src/utils/psychologist-public-ranking.ts`, extraído da descoberta pública sem alterar a fórmula.
+- Receita é MRR estimado com assinaturas profissionais ativas `source=mercadopago`; `admin_grant`/cortesia e plano gratuito não contam como receita.
+- Churn usa cancelamentos reais de assinaturas profissionais Mercado Pago no período dividido por base paga ativa no início + novas assinaturas pagas no período; cortesia e gratuito ficam fora.
+- Filtros mais buscados aparecem como indisponíveis porque não há tracking persistido de filtros/termos de busca.
+- Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, chamada real da API com admin temporário e validação headless local em `/psicologos` nos viewports 390px e desktop.
