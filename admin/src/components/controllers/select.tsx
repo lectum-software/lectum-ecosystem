@@ -1,0 +1,61 @@
+﻿"use client";
+
+import type { FieldPath, FieldValues } from "react-hook-form";
+import { useController, useFormContext } from "react-hook-form";
+import { cn } from "@/lib/utils";
+
+export type SelectControllerOption = {
+  label: string;
+  value: string;
+};
+
+export type SelectControllerProps<TFormValues extends FieldValues> = {
+  name: FieldPath<TFormValues>;
+  label: string;
+  options: SelectControllerOption[];
+  disabled?: boolean;
+  required?: boolean;
+};
+
+export const SelectController = <TFormValues extends FieldValues>({
+  disabled,
+  label,
+  name,
+  options,
+  required,
+}: SelectControllerProps<TFormValues>) => {
+  const { control } = useFormContext<TFormValues>();
+  const { field, fieldState } = useController({ control, name });
+  const errorId = `${String(name)}-error`;
+  const hasError = Boolean(fieldState.error?.message);
+
+  return (
+    <label className="block w-full text-sm font-semibold text-foreground" htmlFor={String(name)}>
+      <span className="mb-2 block">
+        {label}
+        {required ? <span className="text-danger"> *</span> : null}
+      </span>
+      <select
+        {...field}
+        aria-describedby={errorId}
+        aria-invalid={hasError}
+        className={cn(
+          "h-12 w-full rounded-2xl border bg-surface px-4 text-base text-foreground shadow-control outline-none transition",
+          "focus:border-primary focus:ring-4 focus:ring-primary-soft",
+          hasError ? "border-danger" : "border-border",
+        )}
+        disabled={disabled}
+        id={String(name)}
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <span className="mt-1 block min-h-5 text-xs font-medium text-danger" id={errorId}>
+        {fieldState.error?.message || ""}
+      </span>
+    </label>
+  );
+};

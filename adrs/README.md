@@ -121,3 +121,6 @@ Formato recomendado:
 - [ADR-0227 - Sessões de visitantes com tipo de dispositivo normalizado](0227-sessoes-visitantes-tipo-dispositivo.md) - Accepted
 - [ADR-0232 - Regras editáveis e identidade visual de comunidades no Admin](0232-regras-editaveis-comunidade-admin.md) - Accepted
 - [ADR-0233 - Dashboard Admin de psicólogos reutiliza ranking público e métricas honestas](0233-admin-psicologos-dashboard-ranking.md) - Accepted
+- [ADR-0234 - Lista Admin de psicólogos usa ranking público e exposição operacional mínima](0234-admin-lista-psicologos-ranking-filtros.md) - Accepted
+- [ADR-0235 - Exposição administrativa de dados sensíveis no detalhe do psicólogo](0235-admin-detalhe-psicologo-dados-sensiveis.md) - Accepted
+- [ADR-0236 - Plano, pagamentos e cortesia do psicólogo no Admin](0236-admin-plano-pagamentos-cortesia-psicologo.md) - Accepted

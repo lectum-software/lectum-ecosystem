@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | L |
 | Fase | Admin / Financeiro |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-45, TASK-46, TASK-55, TASK-31A, TASK-31C, TASK-32, TASK-33 |
 | ADR alvo | ADR se houver nova decisão sobre concessão por UI, cancelamento ou histórico financeiro admin |
 
@@ -79,19 +79,19 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 
 ## Critérios de aceite
 
-- [ ] Aba só abre para admin autenticado.
-- [ ] Plano atual usa `professional_subscription` real.
-- [ ] Histórico financeiro usa dados reais ou exibe indisponível honesto.
-- [ ] Cortesia pela UI reutiliza regra real do comando operacional.
-- [ ] Data de inscrição CRP é exigida quando necessária.
-- [ ] Cancelar assinatura e alterar cartão não aparecem/habilitam sem implementação real.
-- [ ] Não há simulação de pagamento.
-- [ ] Form usa React Hook Form/Zod/controllers.
-- [ ] UI mobile-first validada.
-- [ ] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
-- [ ] Checks/builds relevantes executados sem erros.
-- [ ] ADR criado/atualizado se houver decisão nova.
-- [ ] Commit criado com mensagem convencional e `git push` executado.
+- [x] Aba só abre para admin autenticado.
+- [x] Plano atual usa `professional_subscription` real.
+- [x] Histórico financeiro usa dados reais ou exibe indisponível honesto.
+- [x] Cortesia pela UI reutiliza regra real do comando operacional.
+- [x] Data de inscrição CRP é exigida quando necessária.
+- [x] Cancelar assinatura e alterar cartão não aparecem/habilitam sem implementação real.
+- [x] Não há simulação de pagamento.
+- [x] Form usa React Hook Form/Zod/controllers.
+- [x] UI mobile-first validada.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] Checks/builds relevantes executados sem erros.
+- [x] ADR criado/atualizado se houver decisão nova.
+- [x] Commit criado com mensagem convencional e `git push` executado.
 
 ## Validação mínima
 
@@ -101,3 +101,25 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - `pnpm --dir admin build`
 - `pnpm check`
 - Teste manual de concessão com psicólogo real.
+
+## Execução 2026-07-10
+
+- Builder/Quick Copy não estava exposto como ferramenta no ambiente desta execução; a referência visual usada foi o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Plano e pagamentos.png`.
+- Criados os endpoints Admin privados reais:
+  - `GET /api/admin/private/psychologists/:id/billing`;
+  - `POST /api/admin/private/psychologists/:id/billing/grant-courtesy`.
+- A regra de concessão foi extraída para serviço compartilhado e reutilizada pelo comando operacional `subscription:grant` e pela UI Admin.
+- O endpoint de billing retorna apenas resumo seguro da forma de pagamento (`brand`, `last4`, validade e gateway), sem token de gateway ou dados sensíveis de cartão.
+- A UI da aba `Plano e pagamentos` usa React Hook Form, Zod e controllers, desabilita concessão quando existe assinatura vinculada ao gateway e não oferece cancelamento/troca de cartão pelo Admin.
+- Validação manual com admin real:
+  - `GET /api/admin/private/psychologists/:id/billing` em psicólogo real retornou `200`, plano real `admin_grant`, histórico financeiro indisponível com label honesto e sem `gateway_token`;
+  - chamada sem autenticação retornou `401`;
+  - tentativa de `POST .../grant-courtesy` no mesmo psicólogo real retornou `409 external_billing_subscription_blocks_admin_grant`, reutilizando a regra real porque havia assinatura Mercado Pago não cancelada a reconciliar. Nenhum perfil demo foi usado para concluir a task e nenhuma cobrança foi simulada.
+- Validação browser local via Edge/CDP em `http://localhost:3002/psicologos/<id>?tab=plano`: desktop e viewport mobile de 390px carregaram a aba, sem botões de cancelar assinatura ou alterar cartão.
+- Validações executadas com sucesso:
+  - `pnpm --dir backend check`;
+  - `pnpm --dir backend build`;
+  - `pnpm --dir admin check`;
+  - `pnpm --dir admin build`;
+  - `pnpm check`.
+- ADR criado: `adrs/0236-admin-plano-pagamentos-cortesia-psicologo.md`.

@@ -1,9 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminPsychologistsKeys } from "@/api/cache/keys";
 import {
+  type AdminPsychologistGrantCourtesyInput,
+  getAdminPsychologistBilling,
   getAdminPsychologistDetail,
   getAdminPsychologistsDashboard,
   getAdminPsychologistsList,
+  grantAdminPsychologistCourtesy,
   type PsychologistsDashboardQuery,
   type PsychologistsListQuery,
 } from "@/api/req/psychologists";
@@ -34,3 +37,26 @@ export const useAdminPsychologistDetail = (id: string, options: { enabled?: bool
     queryFn: () => getAdminPsychologistDetail(id),
     queryKey: adminPsychologistsKeys.detail(id),
   });
+
+export const useAdminPsychologistBilling = (id: string, options: { enabled?: boolean } = {}) =>
+  useQuery({
+    enabled: Boolean(id) && (options.enabled ?? true),
+    queryFn: () => getAdminPsychologistBilling(id),
+    queryKey: adminPsychologistsKeys.billing(id),
+  });
+
+export const useAdminPsychologistGrantCourtesy = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: AdminPsychologistGrantCourtesyInput) =>
+      grantAdminPsychologistCourtesy(id, input),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.all }),
+        queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.detail(id) }),
+        queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.billing(id) }),
+      ]);
+    },
+  });
+};

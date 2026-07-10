@@ -1,18 +1,22 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AlertTriangle,
   ArrowLeft,
   BadgeCheck,
   BookOpen,
+  CalendarDays,
   CheckCircle2,
   Clock,
   CreditCard,
   ExternalLink,
   Eye,
   FileText,
+  Gift,
   Globe2,
   Heart,
+  Info,
   Loader2,
   type LucideIcon,
   Mail,
@@ -29,16 +33,25 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import type { ReactNode } from "react";
-import { useAdminPsychologistDetail } from "@/api/callers/psychologists";
+import { type ReactNode, useEffect } from "react";
+import { FormProvider, type SubmitHandler, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+import {
+  useAdminPsychologistBilling,
+  useAdminPsychologistDetail,
+  useAdminPsychologistGrantCourtesy,
+} from "@/api/callers/psychologists";
 import { resolveApiError } from "@/api/handle";
 import type {
+  AdminPsychologistBilling,
   AdminPsychologistCatalogItem,
   AdminPsychologistDetail,
   AdminPsychologistDetailMetric,
   AdminPsychologistDetailStatus,
   AdminPsychologistIntegrationStatus,
 } from "@/api/req/psychologists";
+import { InputController, SelectController, TextareaController } from "@/components/controllers";
 import { cn } from "@/lib/utils";
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
@@ -57,7 +70,7 @@ const publicFrontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localh
 const TABS = [
   { id: "geral", label: "Geral", ready: true },
   { id: "perfil", label: "Perfil e cadastro", ready: true },
-  { id: "plano", label: "Plano e pagamentos", ready: false, task: "TASK-56" },
+  { id: "plano", label: "Plano e pagamentos", ready: true },
   { id: "estatisticas", label: "Estatísticas", ready: false, task: "TASK-57" },
   { id: "publicacoes", label: "Publicações", ready: false, task: "TASK-57" },
   { id: "avaliacoes", label: "Avaliações", ready: false, task: "TASK-58" },
@@ -92,6 +105,26 @@ const METRIC_ICONS: Record<string, LucideIcon> = {
 };
 
 const CARD = "rounded-card border border-border bg-surface shadow-admin-soft";
+
+const courtesyBaseSchema = z.object({
+  crp_registration_date: z.string().optional(),
+  notes: z.string().max(500, "Use no maximo 500 caracteres.").optional(),
+  period_days: z.string().min(1, "Selecione o periodo."),
+  reason: z.string().trim().min(3, "Informe o motivo da cortesia.").max(200),
+});
+
+type CourtesyFormValues = z.infer<typeof courtesyBaseSchema>;
+
+const createCourtesySchema = (requiresCrpRegistrationDate: boolean) =>
+  courtesyBaseSchema.superRefine((values, ctx) => {
+    if (requiresCrpRegistrationDate && !values.crp_registration_date?.trim()) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Informe a data de inscricao no CRP.",
+        path: ["crp_registration_date"],
+      });
+    }
+  });
 
 const toPublicHref = (url: string) => {
   if (/^https?:\/\//.test(url)) return url;
@@ -144,6 +177,28 @@ const formatMoney = (cents: number | null) => {
   if (cents === null) return "Não informado";
 
   return currencyFormatter.format(cents / 100);
+};
+
+const formatInputDate = (value?: string | null) => {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toISOString().slice(0, 10);
+};
+
+const formatPaymentMethod = (method: AdminPsychologistBilling["payment_method"]) => {
+  if (!method) return "Nao informado";
+
+  const brand = method.brand || "Cartao";
+  const last4 = method.last4 ? `•••• ${method.last4}` : "final nao informado";
+  const expiration =
+    method.exp_month && method.exp_year
+      ? ` · validade ${String(method.exp_month).padStart(2, "0")}/${method.exp_year}`
+      : "";
+
+  return `${brand} ${last4}${expiration}`;
 };
 
 const formatMetricValue = (metric: AdminPsychologistDetailMetric) => {
@@ -646,6 +701,371 @@ const VideoCard = ({ detail }: { detail: AdminPsychologistDetail }) => {
   );
 };
 
+const BillingStatusBadge = ({ status }: { status: string | null }) => {
+  const normalized = (status || "").toLowerCase();
+  const className =
+    normalized === "ativa"
+      ? "bg-emerald-50 text-success"
+      : normalized.includes("cancel")
+        ? "bg-red-50 text-danger"
+        : "bg-surface-muted text-muted";
+
+  return <Badge className={className}>{status || "Nao informado"}</Badge>;
+};
+
+const PaymentHistoryBadge = ({
+  status,
+  label,
+}: {
+  label: string;
+  status: AdminPsychologistBilling["payment_history"]["items"][number]["status"];
+}) => {
+  const className =
+    status === "pago"
+      ? "bg-emerald-50 text-success"
+      : status === "recusado" || status === "cancelado"
+        ? "bg-red-50 text-danger"
+        : status === "pendente"
+          ? "bg-orange-50 text-orange-700"
+          : "bg-surface-muted text-muted";
+
+  return <Badge className={className}>{label}</Badge>;
+};
+
+const BillingLoadingState = () => (
+  <div className="grid gap-5 xl:grid-cols-2" data-psychologist-billing-loading="true">
+    <div className={cn(CARD, "h-72 animate-pulse bg-surface-muted")} />
+    <div className={cn(CARD, "h-72 animate-pulse bg-surface-muted")} />
+    <div className={cn(CARD, "h-96 animate-pulse bg-surface-muted xl:col-span-2")} />
+  </div>
+);
+
+const CurrentPlanCard = ({ billing }: { billing: AdminPsychologistBilling }) => {
+  const plan = billing.plan;
+
+  return (
+    <CardShell className="p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-black text-foreground">Plano atual</h2>
+          <p className="mt-1 text-sm text-muted">
+            Dados reais de professional_subscription, sem simulacao de pagamento.
+          </p>
+        </div>
+        <IconCircle icon={Wallet} />
+      </div>
+
+      <div className="mt-5 rounded-[1.5rem] border border-primary/10 bg-primary-soft/60 p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-lg font-black text-foreground">
+              {plan.plan_name || "Sem plano ativo"}
+            </p>
+            <p className="mt-1 text-sm font-bold text-muted">
+              {formatMoney(plan.price_cents)}
+              {plan.interval ? ` / ${plan.interval}` : ""}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <BillingStatusBadge status={plan.status} />
+            {plan.source_label ? (
+              <Badge className="bg-primary-soft text-primary">{plan.source_label}</Badge>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      <dl className="mt-5 divide-y divide-border text-sm">
+        <FieldRow label="Inicio" value={formatDate(plan.started_at)} />
+        <FieldRow label="Proxima renovacao" value={formatDate(plan.current_period_end)} />
+        <FieldRow label="Gateway" value={plan.gateway_label || "Sem vinculo ativo"} />
+        <FieldRow label="Cortesia" value={plan.is_courtesy ? "Sim" : "Nao"} />
+        {plan.is_courtesy ? (
+          <>
+            <FieldRow label="Concedida por" value={formatNullable(plan.granted_by)} />
+            <FieldRow label="Motivo" value={formatNullable(plan.grant_reason)} />
+          </>
+        ) : null}
+      </dl>
+
+      <div className="mt-5 rounded-2xl bg-primary-soft p-4 text-sm font-bold text-muted">
+        <span className="inline-flex items-center gap-2 font-black text-primary">
+          <Info aria-hidden className="h-4 w-4" />
+          Acoes financeiras pelo Admin
+        </span>
+        <p className="mt-1">
+          Alteracoes de cobranca e troca de cartao ficam fora desta V1. Cartao continua sendo
+          tokenizado pelo usuario no gateway.
+        </p>
+      </div>
+    </CardShell>
+  );
+};
+
+const PaymentMethodCard = ({ billing }: { billing: AdminPsychologistBilling }) => (
+  <CardShell className="p-5">
+    <div className="flex items-start justify-between gap-4">
+      <div>
+        <h2 className="text-xl font-black text-foreground">Forma de pagamento</h2>
+        <p className="mt-1 text-sm text-muted">Somente brand, final e validade quando existirem.</p>
+      </div>
+      <IconCircle icon={CreditCard} />
+    </div>
+
+    <div className="mt-5 rounded-[1.5rem] border border-border bg-surface-muted p-4">
+      {billing.payment_method ? (
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-lg font-black text-foreground">
+              {formatPaymentMethod(billing.payment_method)}
+            </p>
+            <p className="mt-1 text-sm font-bold text-muted">
+              Gateway: {billing.payment_method.gateway}
+            </p>
+          </div>
+          <Badge className="bg-emerald-50 text-success">Mascarado</Badge>
+        </div>
+      ) : (
+        <p className="text-sm font-bold text-muted">
+          Nenhuma forma de pagamento real vinculada foi encontrada para exibicao segura.
+        </p>
+      )}
+    </div>
+
+    <p className="mt-4 text-xs font-bold text-subtle">
+      O endpoint nao retorna credenciais do gateway nem dados sensiveis do cartao.
+    </p>
+  </CardShell>
+);
+
+const PaymentHistoryCard = ({ billing }: { billing: AdminPsychologistBilling }) => (
+  <CardShell className="p-5 xl:col-span-2">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <h2 className="text-xl font-black text-foreground">Historico de pagamentos</h2>
+        <p className="mt-1 text-sm text-muted">
+          Fonte real: payment_event reconciliado com a assinatura.
+        </p>
+      </div>
+      <Badge
+        className={
+          billing.payment_history.available
+            ? "bg-emerald-50 text-success"
+            : "bg-surface-muted text-muted"
+        }
+      >
+        {billing.payment_history.available ? "Disponivel" : "Indisponivel"}
+      </Badge>
+    </div>
+
+    {!billing.payment_history.available ? (
+      <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
+        {billing.payment_history.reason ||
+          "Historico financeiro indisponivel para este psicologo no momento."}
+      </div>
+    ) : (
+      <div className="mt-5 overflow-x-auto">
+        <table className="w-full min-w-[760px] text-left text-sm">
+          <thead className="border-b border-border text-xs text-muted">
+            <tr>
+              <th className="py-3 pr-3 font-black">Data</th>
+              <th className="px-3 py-3 font-black">Descricao</th>
+              <th className="px-3 py-3 font-black">Valor</th>
+              <th className="px-3 py-3 font-black">Metodo</th>
+              <th className="px-3 py-3 font-black">Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {billing.payment_history.items.map((item) => (
+              <tr key={item.id}>
+                <td className="py-3 pr-3 font-bold text-muted">{formatDate(item.occurred_at)}</td>
+                <td className="px-3 py-3">
+                  <p className="font-black text-foreground">{item.title}</p>
+                  <p className="text-xs font-bold text-muted">{item.description}</p>
+                </td>
+                <td className="px-3 py-3 font-black text-foreground">
+                  {formatMoney(item.amount_cents)}
+                </td>
+                <td className="px-3 py-3 font-bold text-muted">{item.gateway}</td>
+                <td className="px-3 py-3">
+                  <PaymentHistoryBadge label={item.status_label} status={item.status} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+  </CardShell>
+);
+
+const CourtesyForm = ({ billing, id }: { billing: AdminPsychologistBilling; id: string }) => {
+  const mutation = useAdminPsychologistGrantCourtesy(id);
+  const form = useForm<CourtesyFormValues>({
+    defaultValues: {
+      crp_registration_date: formatInputDate(billing.courtesy.crp_registration_date),
+      notes: "",
+      period_days: String(billing.courtesy.period_options[1]?.days ?? 90),
+      reason: "",
+    },
+    mode: "onSubmit",
+    resolver: zodResolver(createCourtesySchema(billing.courtesy.requires_crp_registration_date)),
+  });
+  const disabled = !billing.courtesy.can_grant || mutation.isPending;
+
+  useEffect(() => {
+    form.reset({
+      crp_registration_date: formatInputDate(billing.courtesy.crp_registration_date),
+      notes: "",
+      period_days: String(billing.courtesy.period_options[1]?.days ?? 90),
+      reason: "",
+    });
+  }, [billing.courtesy, form]);
+
+  const onSubmit: SubmitHandler<CourtesyFormValues> = async (values) => {
+    const confirmed = window.confirm(
+      "Confirmar concessao de cortesia profissional para este psicologo?",
+    );
+    if (!confirmed) return;
+
+    try {
+      await mutation.mutateAsync({
+        crp_registration_date: values.crp_registration_date?.trim() || null,
+        notes: values.notes?.trim() || null,
+        period_days: Number(values.period_days),
+        reason: values.reason.trim(),
+      });
+      toast.success("Cortesia concedida com sucesso.");
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  return (
+    <CardShell className="p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-black text-foreground">Conceder cortesia</h2>
+          <p className="mt-1 text-sm text-muted">
+            Usa a mesma regra operacional do comando subscription:grant.
+          </p>
+        </div>
+        <IconCircle icon={Gift} />
+      </div>
+
+      {billing.courtesy.blocked_reason ? (
+        <div className="mt-5 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm font-bold text-orange-800">
+          {billing.courtesy.blocked_reason}
+        </div>
+      ) : null}
+
+      <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-3">
+        <div className="rounded-2xl border border-border bg-surface-muted p-3">
+          <dt className="font-black text-muted">CPF</dt>
+          <dd className="mt-1 font-bold text-foreground">{formatNullable(billing.courtesy.cpf)}</dd>
+        </div>
+        <div className="rounded-2xl border border-border bg-surface-muted p-3">
+          <dt className="font-black text-muted">Regional</dt>
+          <dd className="mt-1 font-bold text-foreground">
+            {formatNullable(billing.courtesy.regional_crp)}
+          </dd>
+        </div>
+        <div className="rounded-2xl border border-border bg-surface-muted p-3">
+          <dt className="font-black text-muted">CRP</dt>
+          <dd className="mt-1 font-bold text-foreground">
+            {formatNullable(billing.courtesy.registration_number || billing.courtesy.crp)}
+          </dd>
+        </div>
+      </dl>
+
+      <FormProvider {...form}>
+        <form className="mt-5 space-y-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <SelectController<CourtesyFormValues>
+              disabled={disabled}
+              label="Periodo de cortesia"
+              name="period_days"
+              options={billing.courtesy.period_options.map((option) => ({
+                label: option.label,
+                value: String(option.days),
+              }))}
+              required
+            />
+            <InputController<CourtesyFormValues>
+              disabled={disabled}
+              label="Data de inscricao no CRP"
+              name="crp_registration_date"
+              required={billing.courtesy.requires_crp_registration_date}
+              type="date"
+            />
+          </div>
+          <InputController<CourtesyFormValues>
+            disabled={disabled}
+            label="Motivo da cortesia"
+            name="reason"
+            placeholder="Informe o motivo administrativo"
+            required
+          />
+          <TextareaController<CourtesyFormValues>
+            disabled={disabled}
+            label="Notas internas"
+            name="notes"
+            placeholder="Observacoes opcionais para auditoria"
+            rows={3}
+          />
+
+          <button
+            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control border border-primary bg-surface px-4 text-sm font-black text-primary transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:border-border disabled:text-muted"
+            disabled={disabled}
+            type="submit"
+          >
+            {mutation.isPending ? (
+              <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+            ) : (
+              <Gift aria-hidden className="h-4 w-4" />
+            )}
+            Conceder cortesia
+          </button>
+        </form>
+      </FormProvider>
+
+      <div className="mt-5 rounded-2xl bg-primary-soft p-4 text-sm font-bold text-muted">
+        <span className="inline-flex items-center gap-2 font-black text-primary">
+          <CalendarDays aria-hidden className="h-4 w-4" />
+          Regra de cobranca
+        </span>
+        <p className="mt-1">
+          A cortesia cria source=admin_grant, status=ativa e nao conta como receita.
+        </p>
+      </div>
+    </CardShell>
+  );
+};
+
+const PlanBillingTab = ({ id }: { detail: AdminPsychologistDetail; id: string }) => {
+  const query = useAdminPsychologistBilling(id);
+  const errorMessage = query.error ? resolveApiError(query.error) : null;
+
+  if (query.isLoading) return <BillingLoadingState />;
+
+  if (query.isError && errorMessage) {
+    return <ErrorState message={errorMessage} onRetry={() => void query.refetch()} />;
+  }
+
+  if (!query.data) return null;
+
+  return (
+    <div className="space-y-5" data-psychologist-detail-tab="plano">
+      <div className="grid gap-5 xl:grid-cols-2">
+        <CurrentPlanCard billing={query.data} />
+        <PaymentMethodCard billing={query.data} />
+        <CourtesyForm billing={query.data} id={id} />
+        <PaymentHistoryCard billing={query.data} />
+      </div>
+    </div>
+  );
+};
+
 const ProfileTab = ({ detail }: { detail: AdminPsychologistDetail }) => {
   const profile = detail.profile;
   const professional = profile.professional;
@@ -815,11 +1235,18 @@ const Content = ({
 
     <DetailHeader detail={detail} tab={tab} />
 
-    {tab === "perfil" ? <ProfileTab detail={detail} /> : <GeneralTab detail={detail} />}
+    {tab === "perfil" ? (
+      <ProfileTab detail={detail} />
+    ) : tab === "plano" ? (
+      <PlanBillingTab detail={detail} id={id} />
+    ) : (
+      <GeneralTab detail={detail} />
+    )}
 
     <p className="rounded-2xl bg-primary-soft/70 px-4 py-3 text-xs font-bold text-muted">
-      Referências visuais: _product/proto/admin/Psicólogos/Detalhes do psicólogo/Geral.png e
-      _product/proto/admin/Psicólogos/Detalhes do psicólogo/Perfil e Cadastro.png. Builder/Quick
+      Referências visuais: _product/proto/admin/Psicólogos/Detalhes do psicólogo/Geral.png,
+      _product/proto/admin/Psicólogos/Detalhes do psicólogo/Perfil e Cadastro.png e
+      _product/proto/admin/Psicólogos/Detalhes do psicólogo/Plano e pagamentos.png. Builder/Quick
       Copy não está disponível neste ambiente; a implementação foi feita a partir das imagens
       locais.
     </p>
@@ -829,7 +1256,8 @@ const Content = ({
 export const AdminPsychologistDetailClient = ({ id }: { id: string }) => {
   const searchParams = useSearchParams();
   const requestedTab = searchParams.get("tab") as ActiveTab | null;
-  const tab: ActiveTab = requestedTab === "perfil" ? "perfil" : "geral";
+  const tab: ActiveTab =
+    requestedTab === "perfil" || requestedTab === "plano" ? requestedTab : "geral";
   const query = useAdminPsychologistDetail(id);
   const errorMessage = query.error ? resolveApiError(query.error) : null;
 

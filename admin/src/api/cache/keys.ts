@@ -57,6 +57,7 @@ export const adminCommunitiesKeys = {
 
 export const adminPsychologistsKeys = {
   all: ["admin", "psychologists"] as const,
+  billing: (id: string) => [...adminPsychologistsKeys.all, "billing", id] as const,
   dashboard: (input: PsychologistsDashboardQuery) =>
     [...adminPsychologistsKeys.all, "dashboard", normalizeRange(input)] as const,
   detail: (id: string) => [...adminPsychologistsKeys.all, "detail", id] as const,

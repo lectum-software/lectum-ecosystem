@@ -361,6 +361,100 @@ export type AdminPsychologistDetail = {
   source: "user+psychologist_profile+catalogs+subscriptions+metrics+events";
 };
 
+export type AdminPsychologistBillingPaymentHistoryItem = {
+  amount_cents: number | null;
+  description: string;
+  external_id: string;
+  gateway: string;
+  id: string;
+  occurred_at: string | null;
+  status: "cancelado" | "pago" | "pendente" | "processado" | "recusado";
+  status_label: string;
+  title: string;
+};
+
+export type AdminPsychologistBilling = {
+  courtesy: {
+    blocked_reason: string | null;
+    can_grant: boolean;
+    cpf: string | null;
+    crp: string | null;
+    crp_registration_date: string | null;
+    period_options: { days: number; label: string }[];
+    regional_crp: string | null;
+    registration_number: string | null;
+    requires_crp_registration_date: boolean;
+  };
+  payment_history: {
+    available: boolean;
+    items: AdminPsychologistBillingPaymentHistoryItem[];
+    reason: string | null;
+    source: "payment_event";
+  };
+  payment_method: {
+    brand: string | null;
+    exp_month: number | null;
+    exp_year: number | null;
+    gateway: string;
+    last4: string | null;
+  } | null;
+  plan: {
+    can_cancel: false;
+    can_change_payment_method: false;
+    current_period_end: string | null;
+    gateway: string | null;
+    gateway_label: string | null;
+    grant_notes: string | null;
+    grant_reason: string | null;
+    grant_started_at: string | null;
+    granted_by: string | null;
+    has_external_billing: boolean;
+    id: string | null;
+    interval: string | null;
+    is_courtesy: boolean;
+    is_paid: boolean;
+    plan_name: string | null;
+    plan_slug: string | null;
+    price_cents: number | null;
+    source: string | null;
+    source_label: string | null;
+    started_at: string | null;
+    status: string | null;
+  };
+  source: "professional_subscription+payment_method+payment_event+admin_grant_service";
+};
+
+export type AdminPsychologistGrantCourtesyInput = {
+  crp_registration_date?: string | null;
+  notes?: string | null;
+  period_days: number;
+  reason: string;
+};
+
+export type AdminPsychologistGrantCourtesyResponse = {
+  billing: AdminPsychologistBilling;
+  grant: {
+    crp_registration_date: string | null;
+    granted_to: {
+      email: string;
+      name: string;
+      profileId: string;
+      userId: string;
+    };
+    subscription: {
+      current_period_end: string;
+      id: string;
+      plan: {
+        id: string;
+        name: string;
+        slug: string;
+      };
+      source: string;
+      status: string;
+    };
+  };
+};
+
 export type AdminPsychologistsDashboard = {
   cards: {
     churn: PsychologistsDashboardMetric;
@@ -445,7 +539,27 @@ export const getAdminPsychologistsList = async (input: PsychologistsListQuery) =
 
 export const getAdminPsychologistDetail = async (id: string) => {
   const response = await adminApi.get<ApiResponse<AdminPsychologistDetail>>(
-    `/api/admin/private/psychologists/${id}`,
+    `/api/admin/private/psychologists/${encodeURIComponent(id)}`,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const getAdminPsychologistBilling = async (id: string) => {
+  const response = await adminApi.get<ApiResponse<AdminPsychologistBilling>>(
+    `/api/admin/private/psychologists/${encodeURIComponent(id)}/billing`,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const grantAdminPsychologistCourtesy = async (
+  id: string,
+  input: AdminPsychologistGrantCourtesyInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminPsychologistGrantCourtesyResponse>>(
+    `/api/admin/private/psychologists/${encodeURIComponent(id)}/billing/grant-courtesy`,
+    input,
   );
 
   return resolveApiData(response.data);
