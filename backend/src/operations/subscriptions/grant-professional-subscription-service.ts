@@ -10,7 +10,6 @@ export type GrantProfessionalSubscriptionArgs = {
   psychologistEmail?: string;
   psychologistProfileId?: string;
   psychologistUserId?: string;
-  reason: string;
   registrationDate?: Date;
   until?: Date;
 };
@@ -62,10 +61,6 @@ const assertSingleTarget = (args: GrantProfessionalSubscriptionArgs) => {
 const assertAudit = (args: GrantProfessionalSubscriptionArgs) => {
   if (!args.actor?.trim()) {
     throw new Error("grant_actor_required");
-  }
-
-  if (!args.reason?.trim()) {
-    throw new Error("grant_reason_required");
   }
 
   if (!args.days && !args.until) {
@@ -239,7 +234,7 @@ export const grantProfessionalSubscription = async (args: GrantProfessionalSubsc
         gateway: null,
         gateway_subscription_id: null,
         grant_notes: args.notes?.trim() || null,
-        grant_reason: args.reason.trim(),
+        grant_reason: null,
         grant_started_at: now,
         granted_by: args.actor.trim(),
         plan_id: professionalPlan.id,

@@ -139,7 +139,6 @@ const courtesyBaseSchema = z.object({
   crp_registration_date: z.string().optional(),
   notes: z.string().max(500, "Use no maximo 500 caracteres.").optional(),
   period_days: z.string().min(1, "Selecione o periodo."),
-  reason: z.string().trim().min(3, "Informe o motivo da cortesia.").max(200),
 });
 
 type CourtesyFormValues = z.infer<typeof courtesyBaseSchema>;
@@ -2293,10 +2292,7 @@ const CurrentPlanCard = ({ billing }: { billing: AdminPsychologistBilling }) => 
         <FieldRow label="Gateway" value={plan.gateway_label || "Sem vinculo ativo"} />
         <FieldRow label="Cortesia" value={plan.is_courtesy ? "Sim" : "Nao"} />
         {plan.is_courtesy ? (
-          <>
-            <FieldRow label="Concedida por" value={formatNullable(plan.granted_by)} />
-            <FieldRow label="Motivo" value={formatNullable(plan.grant_reason)} />
-          </>
+          <FieldRow label="Concedida por" value={formatNullable(plan.granted_by)} />
         ) : null}
       </dl>
 
@@ -2418,7 +2414,6 @@ const CourtesyForm = ({ billing, id }: { billing: AdminPsychologistBilling; id: 
       crp_registration_date: formatInputDate(billing.courtesy.crp_registration_date),
       notes: "",
       period_days: String(billing.courtesy.period_options[1]?.days ?? 90),
-      reason: "",
     },
     mode: "onSubmit",
     resolver: zodResolver(createCourtesySchema(billing.courtesy.requires_crp_registration_date)),
@@ -2430,7 +2425,6 @@ const CourtesyForm = ({ billing, id }: { billing: AdminPsychologistBilling; id: 
       crp_registration_date: formatInputDate(billing.courtesy.crp_registration_date),
       notes: "",
       period_days: String(billing.courtesy.period_options[1]?.days ?? 90),
-      reason: "",
     });
   }, [billing.courtesy, form]);
 
@@ -2445,7 +2439,6 @@ const CourtesyForm = ({ billing, id }: { billing: AdminPsychologistBilling; id: 
         crp_registration_date: values.crp_registration_date?.trim() || null,
         notes: values.notes?.trim() || null,
         period_days: Number(values.period_days),
-        reason: values.reason.trim(),
       });
       toast.success("Cortesia concedida com sucesso.");
     } catch (error) {
@@ -2511,13 +2504,6 @@ const CourtesyForm = ({ billing, id }: { billing: AdminPsychologistBilling; id: 
               type="date"
             />
           </div>
-          <InputController<CourtesyFormValues>
-            disabled={disabled}
-            label="Motivo da cortesia"
-            name="reason"
-            placeholder="Informe o motivo administrativo"
-            required
-          />
           <TextareaController<CourtesyFormValues>
             disabled={disabled}
             label="Notas internas"

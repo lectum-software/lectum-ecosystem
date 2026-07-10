@@ -39,7 +39,6 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
   - formulário "Conceder cortesia".
 - Form de cortesia:
   - período;
-  - motivo;
   - CPF/CRP/regional já preenchidos quando existirem;
   - data de inscrição no CRP obrigatória quando necessária para concessão;
   - confirmação antes de aplicar.
@@ -69,7 +68,7 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
   - plano `profissional`;
   - `status="ativa"`;
   - `current_period_end` futuro;
-  - `grant_reason`, `grant_notes`, `granted_by`, `grant_started_at`;
+  - `grant_notes`, `granted_by`, `grant_started_at`;
   - atualizar `crp_registration_date` quando requerido.
 - Receita:
   - `admin_grant` não conta como receita.
@@ -123,3 +122,11 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
   - `pnpm --dir admin build`;
   - `pnpm check`.
 - ADR criado: `adrs/0236-admin-plano-pagamentos-cortesia-psicologo.md`.
+
+## Ajuste complementar 2026-07-10 - sem motivo de cortesia
+
+- Decisão de produto: a concessão de cortesia não deve pedir nem exibir motivo no Admin.
+- O formulário de concessão passou a coletar apenas período, data de inscrição no CRP quando exigida e notas internas opcionais.
+- O serviço compartilhado `grantProfessionalSubscription` deixou de exigir motivo; novas concessões gravam `grant_reason=null`.
+- O campo `grant_reason` permanece no banco apenas por compatibilidade com registros legados.
+- Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir backend subscription:grant -- --help`, `pnpm --dir admin check`, `pnpm --dir admin build` e `pnpm check`.

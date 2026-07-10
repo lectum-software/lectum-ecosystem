@@ -26,12 +26,12 @@ Concessões gratuitas de Plano Profissional são gravadas como uma nova `profess
 - `gateway=null`;
 - `gateway_subscription_id=null`;
 - `current_period_end` futuro obrigatório;
-- `grant_reason`, `grant_notes`, `granted_by` e `grant_started_at` para auditoria operacional.
+- `grant_notes`, `granted_by` e `grant_started_at` para auditoria operacional; `grant_reason` permanece apenas como campo legado opcional.
 
 Enquanto a interface/admin auth não existir, a operação é feita por comando backend versionado:
 
 ```powershell
-pnpm --dir backend subscription:grant -- --psychologist-email psi@example.com --days 90 --reason "Parceria institucional" --actor "Operação Lectum"
+pnpm --dir backend subscription:grant -- --psychologist-email psi@example.com --days 90 --actor "Operação Lectum"
 ```
 
 O comando cancela assinaturas não canceladas do mesmo `psychologist_profile.id` antes de criar a concessão, garantindo uma única assinatura vigente, mas bloqueia alvos que já tenham assinatura não cancelada vinculada a gateway (`source="mercadopago"`, `gateway` ou `gateway_subscription_id`). Nesses casos, a cobrança externa precisa ser cancelada/reconciliada no gateway antes de conceder benefício gratuito. O Plano Gratuito segue sendo criado pelo fluxo normal com `source="free_signup"`.
@@ -52,7 +52,7 @@ A regra de entitlement profissional foi centralizada em helper compartilhado: as
 - `pnpm --dir backend db:migrate -- --name add_admin_subscription_grants`
 - `pnpm --dir backend db:generate`
 - `pnpm --dir backend subscription:grant -- --help`
-- `pnpm --dir backend subscription:grant -- --psychologist-email codex-validation-nonexistent@example.invalid --days 1 --reason "Validacao sem mutacao" --actor "Codex"` retornou erro esperado sem criar assinatura.
+- `pnpm --dir backend subscription:grant -- --psychologist-email codex-validation-nonexistent@example.invalid --days 1 --actor "Codex"` retornou erro esperado sem criar assinatura.
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
 - `pnpm --dir frontend check`
@@ -62,3 +62,9 @@ A regra de entitlement profissional foi centralizada em helper compartilhado: as
 
 - Criar UI/admin auth em task futura, sem usar `user.role="admin"`.
 - Definir rotina operacional de expiração/reconciliação de concessões vencidas, caso seja necessário mudar status automaticamente.
+
+## Complemento 2026-07-10 - sem motivo obrigatório
+
+Produto decidiu não coletar motivo para cortesia administrativa, nem como lista fechada nem como campo livre no Admin.
+Novas concessões gravam `grant_reason=null`; quando houver contexto operacional, a equipe deve usar `grant_notes`.
+O campo `grant_reason` não foi removido do banco para preservar compatibilidade com registros legados e evitar migração destrutiva desnecessária.

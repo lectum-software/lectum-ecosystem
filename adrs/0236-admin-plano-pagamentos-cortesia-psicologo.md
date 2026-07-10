@@ -26,7 +26,7 @@ Também existe o risco de uma concessão administrativa substituir indevidamente
   - `POST /api/admin/private/psychologists/:id/billing/grant-courtesy`.
 - O endpoint de billing agrega dados reais de `professional_subscription`, resumo seguro de `payment_method` e histórico financeiro por `payment_event`; quando não há evento confirmado, retorna indisponibilidade honesta em vez de estimar receita.
 - A resposta Admin nunca expõe credenciais do gateway, token de pagamento, PAN, CVV ou identificadores sensíveis de assinatura.
-- `admin_grant` segue sem contar como receita e cria assinatura `profissional`, `ativa`, com `current_period_end` futuro e campos de auditoria (`grant_reason`, `grant_notes`, `granted_by`, `grant_started_at`).
+- `admin_grant` segue sem contar como receita e cria assinatura `profissional`, `ativa`, com `current_period_end` futuro e campos de auditoria (`grant_notes`, `granted_by`, `grant_started_at`). O campo `grant_reason` é legado e não é mais coletado no Admin.
 - A concessão Admin fica bloqueada quando existe qualquer assinatura externa/gateway não cancelada para o psicólogo. O operador deve reconciliar ou cancelar a cobrança real antes de conceder cortesia.
 - Cancelamento de assinatura e alteração de cartão pelo Admin permanecem fora da V1; cartão continua sendo tokenizado pelo usuário no gateway.
 - A tela Admin usa React Hook Form, Zod e controllers, preservando a fundação de formulários já adotada no produto.
@@ -55,3 +55,7 @@ Também existe o risco de uma concessão administrativa substituir indevidamente
 
 - Builder/Quick Copy não estava disponível como ferramenta no ambiente; a implementação visual foi guiada pelo PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Plano e pagamentos.png`.
 - Não foi criado nem alterado dado fake para obter sucesso artificial na concessão; o fluxo positivo fica dependente de um psicólogo real elegível.
+
+## Complemento 2026-07-10 - remoção do motivo no Admin
+
+Produto decidiu remover o motivo da cortesia do painel administrativo. A UI de concessão não exibe campo de motivo, o endpoint Admin não exige `reason` no body e o serviço compartilhado grava `grant_reason=null` para novas concessões. Notas internas opcionais continuam disponíveis para auditoria operacional quando necessário.

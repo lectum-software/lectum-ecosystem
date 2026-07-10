@@ -10,7 +10,7 @@ import {
 const help = `Concede Plano Profissional por tempo determinado, sem criar cobranca.
 
 Uso:
-  pnpm --dir backend subscription:grant -- --psychologist-email psi@example.com --days 90 --reason "Parceria" --actor "Admin"
+  pnpm --dir backend subscription:grant -- --psychologist-email psi@example.com --days 90 --actor "Admin"
 
 Alvos aceitos, escolha apenas um:
   --psychologist-email <email>
@@ -22,7 +22,6 @@ Periodo, escolha apenas um:
   --until <YYYY-MM-DD ou ISO datetime>
 
 Auditoria:
-  --reason <motivo obrigatorio>
   --actor <responsavel obrigatorio>
   --notes <observacoes opcionais>
 
@@ -118,7 +117,6 @@ const parseArgs = (argv: string[]): GrantProfessionalSubscriptionArgs | null => 
     "psychologist-email",
     "psychologist-profile-id",
     "psychologist-user-id",
-    "reason",
     "until",
   ]);
 
@@ -164,7 +162,6 @@ const parseArgs = (argv: string[]): GrantProfessionalSubscriptionArgs | null => 
     psychologistEmail: getOptionalString(flags, "psychologist-email"),
     psychologistProfileId: getOptionalString(flags, "psychologist-profile-id"),
     psychologistUserId: getOptionalString(flags, "psychologist-user-id"),
-    reason: assertNonEmpty(flags.get("reason"), "--reason e obrigatorio para auditoria."),
     registrationDate: rawRegistrationDate
       ? parseGrantCrpRegistrationDate(rawRegistrationDate)
       : undefined,

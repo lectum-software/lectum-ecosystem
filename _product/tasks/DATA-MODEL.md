@@ -668,7 +668,7 @@ Trocar de provedor = novo adapter. **Limite real:** card tokens são específico
 | `gateway` | `String?` | nome do provedor (TASK-03) |
 | `gateway_subscription_id` | `String?` | id externo; nunca dados de cartão |
 | `current_period_end` | `DateTime?` | obrigatório para concessões administrativas com prazo; `null` em plano gratuito/legado sem expiração |
-| `grant_reason` | `String?` | motivo da concessão administrativa gratuita |
+| `grant_reason` | `String?` | campo legado opcional; o fluxo vigente de cortesia administrativa não coleta motivo |
 | `grant_notes` | `String?` | observações internas opcionais da concessão |
 | `granted_by` | `String?` | responsável operacional pela concessão; texto livre enquanto `admin` segue fora do MVP |
 | `grant_started_at` | `DateTime?` | data/hora da concessão administrativa |

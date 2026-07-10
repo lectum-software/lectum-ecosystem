@@ -24,13 +24,6 @@ export const grantSchema: IValidatorRequest = {
       max: 365,
     },
     {
-      key: "reason",
-      coerse: "string",
-      method: "string",
-      min: 3,
-      max: 200,
-    },
-    {
       key: "notes",
       coerse: "string",
       method: "string",

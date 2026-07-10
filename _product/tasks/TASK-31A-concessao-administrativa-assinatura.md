@@ -44,7 +44,7 @@ Registrar no Supabase/PostgreSQL uma assinatura profissional ativa e auditável,
 
 ## Critérios de aceite
 
-- [x] `professional_subscription` registra `source`, `grant_reason`, `grant_notes`, `granted_by` e `grant_started_at`.
+- [x] `professional_subscription` registra `source`, `grant_notes`, `granted_by` e `grant_started_at`; `grant_reason` fica apenas como campo legado opcional.
 - [x] Concessões administrativas usam `source="admin_grant"`, plano `profissional`, `status="ativa"` e `current_period_end` futuro.
 - [x] O comando operacional cancela assinaturas não canceladas anteriores sem gateway antes de criar a concessão e bloqueia alvos com cobrança externa ativa/pendente.
 - [x] Entitlement profissional ignora concessões expiradas.
@@ -58,7 +58,7 @@ Registrar no Supabase/PostgreSQL uma assinatura profissional ativa e auditável,
 ## Uso operacional
 
 ```powershell
-pnpm --dir backend subscription:grant -- --psychologist-email psi@example.com --days 90 --reason "Parceria institucional" --actor "Operação Lectum"
+pnpm --dir backend subscription:grant -- --psychologist-email psi@example.com --days 90 --actor "Operação Lectum"
 ```
 
 Também é possível usar `--until YYYY-MM-DD`, `--psychologist-user-id` ou `--psychologist-profile-id`.
@@ -77,3 +77,9 @@ Também é possível usar `--until YYYY-MM-DD`, `--psychologist-user-id` ou `--p
 - Comando operacional criado: `pnpm --dir backend subscription:grant -- ...`.
 - Validação negativa sem mutação executada com e-mail inexistente; o comando retornou erro esperado sem criar assinatura.
 - Validações executadas: `pnpm --dir backend db:migrate -- --name add_admin_subscription_grants`, `pnpm --dir backend db:generate`, `pnpm --dir backend subscription:grant -- --help`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm check`.
+
+## Ajuste complementar 2026-07-10 - motivo removido
+
+- Decisão de produto: novas concessões administrativas não coletam motivo.
+- O comando `subscription:grant` deixou de exigir `--reason`; use `--notes` apenas quando houver observação operacional interna.
+- O campo `grant_reason` permanece no schema por compatibilidade com concessões legadas, mas novas concessões gravam `null`.

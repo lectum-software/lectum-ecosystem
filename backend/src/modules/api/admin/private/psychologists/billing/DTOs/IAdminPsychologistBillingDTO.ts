@@ -70,7 +70,6 @@ export type AdminPsychologistBillingGrantBody = {
   crp_registration_date?: string | null;
   notes?: string | null;
   period_days: number;
-  reason: string;
 };
 
 export type IAdminPsychologistBillingShowDTO = Request & {

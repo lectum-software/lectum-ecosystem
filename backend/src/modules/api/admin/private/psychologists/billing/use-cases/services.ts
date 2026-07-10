@@ -188,7 +188,6 @@ const mapGrantError = (err: unknown): Resolve => {
     crp_registration_date_invalid: "A data de inscricao no CRP e invalida.",
     external_billing_subscription_blocks_admin_grant:
       "Existe assinatura vinculada ao gateway. Reconcile a cobranca real antes de conceder cortesia.",
-    grant_reason_required: "Informe o motivo da cortesia.",
     professional_plan_not_found: "Plano profissional ativo nao encontrado.",
     psychologist_profile_not_found_for_grant: "Psicologo nao encontrado para concessao.",
     psychologist_user_not_found_for_grant: "Psicologo nao encontrado para concessao.",
@@ -297,7 +296,6 @@ export const grantCourtesy = async (data: IAdminPsychologistBillingGrantDTO): Pr
       days: data.b.period_days,
       notes: trimOrNull(data.b.notes) ?? undefined,
       psychologistProfileId: profile.id,
-      reason: data.b.reason,
       registrationDate,
     });
 
