@@ -6,6 +6,7 @@ import {
   createCampaign,
   listCampaigns,
   metrics,
+  pushStatus,
   scheduleCampaign,
   sendCampaign,
   showCampaign,
@@ -26,6 +27,7 @@ const routes = Router();
 routes.use(adminAuth);
 
 routes.get("/metrics", metricsValidator, metrics);
+routes.get("/push-status", pushStatus);
 routes.get("/automatic-logs", automaticLogsValidator, automaticLogs);
 routes.get("/campaigns", listCampaignsValidator, listCampaigns);
 routes.post("/campaigns", createCampaignValidator, createCampaign);

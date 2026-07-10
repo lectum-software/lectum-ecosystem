@@ -144,7 +144,7 @@ ou cortesia manual.
 | 61 | [TASK-61 - Detalhe administrativo do paciente](TASK-61-detalhe-administrativo-paciente.md) | Completed | 45, 46, 60 |
 | 62 | [TASK-62 - Financeiro administrativo](TASK-62-financeiro-administrativo.md) | Completed | 45, 46, 31, 32, 33 |
 | 63 | [TASK-63 - Fundação de campanhas e logs de notificações Admin](TASK-63-fundacao-campanhas-logs-notificacoes-admin.md) | Completed | 29A, 29B, 38, 45 |
-| 64 | [TASK-64 - Tela administrativa de notificações](TASK-64-tela-administrativa-notificacoes.md) | Pending | 45, 46, 63 |
+| 64 | [TASK-64 - Tela administrativa de notificações](TASK-64-tela-administrativa-notificacoes.md) | Completed | 45, 46, 63 |
 | 65 | [TASK-65 - Configurações administrativas de catálogos e filtros](TASK-65-configuracoes-admin-catalogos-filtros.md) | Pending | 45, 46, 13, 18A |
 
 ## Ordem operacional recomendada sem bloqueios

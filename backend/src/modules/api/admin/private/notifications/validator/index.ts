@@ -55,6 +55,21 @@ export const listCampaignsValidator = validator({
   query: [
     ...paginationQuery,
     {
+      key: "audience",
+      coerse: "string",
+      method: "enumeric",
+      optional: true,
+      values: [...ADMIN_NOTIFICATION_AUDIENCES],
+    },
+    {
+      key: "channel",
+      coerse: "string",
+      method: "enumeric",
+      optional: true,
+      values: [...ADMIN_NOTIFICATION_CHANNELS],
+    },
+    { key: "q", coerse: "string", method: "string", max: 120, optional: true },
+    {
       key: "status",
       coerse: "string",
       method: "enumeric",

@@ -1,6 +1,11 @@
 import type { CommunitiesDashboardQuery } from "@/api/req/communities";
 import type { DashboardSummaryQuery } from "@/api/req/dashboard";
 import type { FinanceDashboardQuery } from "@/api/req/finance";
+import type {
+  AdminNotificationCampaignsQuery,
+  AdminNotificationLogsQuery,
+  AdminNotificationsRangeQuery,
+} from "@/api/req/notifications";
 import type { PatientsDashboardQuery, PatientsDetailQuery } from "@/api/req/patients";
 import type {
   AdminPsychologistActivitiesQuery,
@@ -84,6 +89,32 @@ const normalizePsychologistActivities = (input: AdminPsychologistActivitiesQuery
   type: input.type || "all",
 });
 
+const normalizeNotificationsRange = (input: AdminNotificationsRangeQuery) => ({
+  from: input.from || "default",
+  to: input.to || "default",
+});
+
+const normalizeNotificationCampaigns = (input: AdminNotificationCampaignsQuery) => ({
+  audience: input.audience || "all",
+  channel: input.channel || "all",
+  from: input.from || "default",
+  limit: input.limit || 10,
+  page: input.page || 1,
+  q: input.q || "",
+  status: input.status || "all",
+  to: input.to || "default",
+});
+
+const normalizeNotificationLogs = (input: AdminNotificationLogsQuery) => ({
+  channel: input.channel || "all",
+  from: input.from || "default",
+  limit: input.limit || 8,
+  page: input.page || 1,
+  status: input.status || "all",
+  to: input.to || "default",
+  trigger_key: input.trigger_key || "",
+});
+
 export const adminDashboardKeys = {
   all: ["admin", "dashboard"] as const,
   summary: (input: DashboardSummaryQuery) =>
@@ -145,4 +176,15 @@ export const adminPatientsKeys = {
     [...adminPatientsKeys.all, "dashboard", normalizeRange(input)] as const,
   detail: (id: string, input: PatientsDetailQuery) =>
     [...adminPatientsKeys.all, "detail", id, normalizeRange(input)] as const,
+};
+
+export const adminNotificationsKeys = {
+  all: ["admin", "notifications"] as const,
+  automaticLogs: (input: AdminNotificationLogsQuery) =>
+    [...adminNotificationsKeys.all, "automatic-logs", normalizeNotificationLogs(input)] as const,
+  campaigns: (input: AdminNotificationCampaignsQuery) =>
+    [...adminNotificationsKeys.all, "campaigns", normalizeNotificationCampaigns(input)] as const,
+  metrics: (input: AdminNotificationsRangeQuery) =>
+    [...adminNotificationsKeys.all, "metrics", normalizeNotificationsRange(input)] as const,
+  pushStatus: () => [...adminNotificationsKeys.all, "push-status"] as const,
 };

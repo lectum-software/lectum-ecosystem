@@ -1,4 +1,4 @@
-﻿import type { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { error500, send } from "@/helpers/return";
 import type { IAdminNotificationsDTO } from "../DTOs/IAdminNotificationsDTO";
 import {
@@ -7,6 +7,7 @@ import {
   createCampaign as createCampaignService,
   listCampaigns as listCampaignsService,
   metrics as metricsService,
+  pushStatus as pushStatusService,
   scheduleCampaign as scheduleCampaignService,
   sendCampaign as sendCampaignService,
   showCampaign as showCampaignService,
@@ -89,5 +90,13 @@ export const metrics = async (req: Request, res: Response) => {
     return send(res, await metricsService(dto(req)));
   } catch (err) {
     return error500(res, "admin_notifications_metrics", err);
+  }
+};
+
+export const pushStatus = async (_req: Request, res: Response) => {
+  try {
+    return send(res, await pushStatusService());
+  } catch (err) {
+    return error500(res, "admin_notifications_push_status", err);
   }
 };

@@ -1,4 +1,5 @@
-﻿import type { Prisma } from "@/external/generated/prisma/client";
+﻿import { isWebPushConfigured } from "@/config/webPush";
+import type { Prisma } from "@/external/generated/prisma/client";
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import prisma from "@/infra/database/prisma";
@@ -527,7 +528,20 @@ export const sendCampaign = async (data: IAdminNotificationsDTO): Promise<Resolv
 export const listCampaigns = async (data: IAdminNotificationsDTO): Promise<Resolve> => {
   const { limit, page } = parsePagination(data.q);
   const status = data.q?.status as AdminNotificationCampaignStatus | undefined;
-  const list = await repository.listCampaigns({ limit, page, status });
+  const audience = data.q?.audience as AdminNotificationAudience | undefined;
+  const channel = data.q?.channel as AdminNotificationChannel | undefined;
+  const range = data.q?.from || data.q?.to ? resolvePeriod(data.q) : null;
+  if ((data.q?.from || data.q?.to) && !range) return fail("invalid_analytics_date_range");
+
+  const list = await repository.listCampaigns({
+    audience,
+    channel,
+    limit,
+    page,
+    q: data.q?.q,
+    range,
+    status,
+  });
   const groups = await repository.groupDeliveriesByCampaign(
     list.data.map((campaign) => campaign.id),
   );
@@ -556,6 +570,21 @@ export const showCampaign = async (data: IAdminNotificationsDTO): Promise<Resolv
 
   const groups = await repository.groupDeliveriesByCampaign([campaign.id]);
   return ok(serializeCampaign(campaign, groups));
+};
+export const pushStatus = async (): Promise<Resolve> => {
+  const configured = isWebPushConfigured();
+  const activeSubscriptions = await repository.countActivePushSubscriptions();
+
+  return ok({
+    active_subscriptions: activeSubscriptions,
+    available: configured && activeSubscriptions > 0,
+    configured,
+    reason: !configured
+      ? "push_vapid_not_configured"
+      : activeSubscriptions === 0
+        ? "push_subscription_missing"
+        : null,
+  });
 };
 
 export const automaticLogs = async (data: IAdminNotificationsDTO): Promise<Resolve> => {

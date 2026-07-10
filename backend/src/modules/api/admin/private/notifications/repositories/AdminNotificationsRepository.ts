@@ -182,12 +182,26 @@ export class AdminNotificationsRepository {
   }
 
   async listCampaigns(params: {
+    audience?: AdminNotificationAudience;
+    channel?: AdminNotificationChannel;
+    q?: string;
+    range?: DateRange | null;
     limit: number;
     page: number;
     status?: AdminNotificationCampaignStatus;
   }) {
+    const search = params.q?.trim();
     const where: Prisma.admin_notification_campaignWhereInput = {
+      audience: params.audience,
+      channels: params.channel ? { array_contains: params.channel } : undefined,
+      createdAt: params.range ? { gte: params.range.start, lte: params.range.end } : undefined,
       deleted: false,
+      OR: search
+        ? [
+            { title: { contains: search, mode: "insensitive" } },
+            { body: { contains: search, mode: "insensitive" } },
+          ]
+        : undefined,
       status: params.status,
     };
 
@@ -213,6 +227,19 @@ export class AdminNotificationsRepository {
     ]);
 
     return { count, data };
+  }
+
+  async countActivePushSubscriptions() {
+    const rows = await prisma.notification_subscription.findMany({
+      select: {
+        subscription: true,
+      },
+      where: {
+        deleted: false,
+      },
+    });
+
+    return rows.filter((row) => Boolean(row.subscription)).length;
   }
 
   async updateCampaign(id: string, data: Prisma.admin_notification_campaignUpdateInput) {

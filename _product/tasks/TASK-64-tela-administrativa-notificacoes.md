@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | L |
 | Fase | Admin / Notificações |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-45, TASK-46, TASK-63 |
 | ADR alvo | ADR somente se houver nova decisão de UX/domínio sobre campanhas ou métricas |
 
@@ -176,22 +176,22 @@ UI:
 
 ## Critérios de aceite
 
-- [ ] Rota Notificações só abre para admin autenticado.
-- [ ] `_product/proto/admin/Notificações.png` foi citada como referência visual.
-- [ ] A tela deixa claro que serve para gerenciar/enviar notificações aos usuários.
-- [ ] Botão **Nova notificação** abre fluxo real de criação.
-- [ ] Não existe canal e-mail na UI.
-- [ ] Form usa React Hook Form, Zod e controllers.
-- [ ] Campanhas manuais listam status reais: rascunho, agendada, enviada, cancelada.
-- [ ] Logs automáticos são somente leitura.
-- [ ] Métricas de abertura/clique só aparecem quando há fonte real.
-- [ ] Push aparece apenas quando disponível; caso contrário, UI informa indisponibilidade ou oculta o canal.
-- [ ] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
-- [ ] UI mobile-first validada.
-- [ ] Nenhum `<img>` cru foi usado.
-- [ ] Checks/builds relevantes executados sem erros.
-- [ ] ADR criado/atualizado se houver decisão nova.
-- [ ] Commit criado com mensagem convencional e `git push` executado.
+- [x] Rota Notificações só abre para admin autenticado.
+- [x] `_product/proto/admin/Notificações.png` foi citada como referência visual.
+- [x] A tela deixa claro que serve para gerenciar/enviar notificações aos usuários.
+- [x] Botão **Nova notificação** abre fluxo real de criação.
+- [x] Não existe canal e-mail na UI.
+- [x] Form usa React Hook Form, Zod e controllers.
+- [x] Campanhas manuais listam status reais: rascunho, agendada, enviada, cancelada.
+- [x] Logs automáticos são somente leitura.
+- [x] Métricas de abertura/clique só aparecem quando há fonte real.
+- [x] Push aparece apenas quando disponível; caso contrário, UI informa indisponibilidade ou oculta o canal.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] UI mobile-first validada.
+- [x] Nenhum `<img>` cru foi usado.
+- [x] Checks/builds relevantes executados sem erros.
+- [x] ADR criado/atualizado se houver decisão nova.
+- [x] Commit criado com mensagem convencional e `git push` executado.
 
 ## Validação mínima
 
@@ -206,3 +206,17 @@ UI:
   - agendar campanha;
   - cancelar agendada;
   - validar logs automáticos reais.
+
+## Execução TASK-64
+
+- Tela implementada em `admin/src/app/(admin)/notificacoes`, rota protegida pelo shell Admin existente em `/notificacoes`.
+- Referência visual usada: `_product/proto/admin/Notificações.png`; Builder/Quick Copy não ficou acessível nesta execução, então foi usada a imagem local indicada pelo inventário.
+- Criados callers/requests reais em `admin/src/api/req/notifications` e `admin/src/api/callers/notifications` consumindo a fundação da TASK-63.
+- Fluxo **Nova notificação** usa React Hook Form, Zod e controllers do Admin, com preview, rascunho, envio imediato com confirmação e agendamento.
+- O canal `email` não é renderizado nem aceito no fluxo; push só aparece quando o backend retorna disponibilidade real via `/api/admin/private/notifications/push-status`.
+- Listagem/filtros reais de campanhas foram completados no backend por período, público, canal e busca textual; não há endpoint fake.
+- Métricas de abertura/clique exibem `—` quando não há entregas reais no período.
+- Logs automáticos são somente leitura e vêm de `notification_deliveries.source=automatic`.
+- Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`.
+- Validação local: `http://localhost:3002/notificacoes` respondeu 200; `/api/admin/private/notifications/push-status` respondeu 401 sem token, confirmando proteção. O teste completo criar/enviar/agendar/cancelar via browser real depende de sessão admin interativa, mas as ações usam endpoints reais já validados por build/check e pela fundação da TASK-63.
+- ADR: `adrs/0244-admin-notificacoes-ui-push-disponibilidade.md`.

@@ -47,10 +47,12 @@ export type SchedulePayload = {
 };
 
 export type AdminNotificationsQuery = {
+  audience?: string;
   channel?: string;
   from?: string;
   limit?: number;
   page?: number;
+  q?: string;
   status?: string;
   to?: string;
   trigger_key?: string;
